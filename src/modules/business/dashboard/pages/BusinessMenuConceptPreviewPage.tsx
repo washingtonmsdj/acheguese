@@ -340,24 +340,21 @@ function FilterSelect({ value, onChange, options, label, className }: { value: s
 
 function MenuFilters({ query, onQueryChange, category, onCategoryChange, status, onStatusChange, categoryOptions, viewMode, onViewModeChange }: { query: string; onQueryChange: (value: string) => void; category: string; onCategoryChange: (value: string) => void; status: string; onStatusChange: (value: string) => void; categoryOptions?: string[]; viewMode?: MenuViewMode; onViewModeChange?: (value: MenuViewMode) => void }) {
   return (
-    <div className="mt-3 grid grid-cols-2 gap-2 md:flex md:flex-wrap md:items-center md:gap-2 lg:gap-3">
-      <label className="relative col-span-2 block min-w-0 md:w-52 md:shrink-0">
+    <div className="mt-3 grid grid-cols-[minmax(0,1fr)_minmax(0,1fr)_auto] gap-2 md:flex md:flex-wrap md:items-center md:gap-2 lg:gap-3">
+      <label className="relative col-span-3 block min-w-0 md:col-span-1 md:w-52 md:basis-full md:shrink-0 lg:basis-auto">
         <span className="sr-only">Buscar item pelo nome</span>
         <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-territory-muted" aria-hidden="true" />
         <input type="search" value={query} onChange={(event) => onQueryChange(event.target.value)} placeholder="Buscar item pelo nome" className="h-10 w-full rounded-lg border border-territory-border bg-territory-surface pl-9 pr-3 text-xs text-territory-ink outline-none placeholder:text-territory-muted focus-visible:border-territory-brand focus-visible:ring-2 focus-visible:ring-territory-brand/25" />
       </label>
-      <FilterSelect className="md:w-44 md:shrink-0" value={category} onChange={onCategoryChange} options={["Todas as categorias", ...(categoryOptions ?? categories)]} label="Filtrar por categoria" />
-      <FilterSelect className="md:w-36 md:shrink-0" value={status} onChange={onStatusChange} options={["Todos os status", "Disponível", "Indisponível", "Rascunho"]} label="Filtrar por status" />
-      {viewMode && onViewModeChange ? <div className="col-span-2 flex items-center justify-end gap-2 md:col-auto md:ml-auto md:flex" aria-label="Modo de visualização">
-        <span className="text-[0.6875rem] font-semibold text-territory-muted md:hidden">Visualizar:</span>
+      <FilterSelect className="md:w-32 md:shrink-0" value={category} onChange={onCategoryChange} options={["Categorias", ...(categoryOptions ?? categories)]} label="Filtrar por categoria" />
+      <FilterSelect className="md:w-24 md:shrink-0" value={status} onChange={onStatusChange} options={["Status", "Disponível", "Indisponível", "Rascunho"]} label="Filtrar por status" />
+      {viewMode && onViewModeChange ? <div className="col-span-1 flex items-center justify-end gap-2 md:col-auto md:ml-auto md:flex" aria-label="Modo de visualização">
         <div className="inline-flex items-center rounded-lg border border-territory-border bg-territory-surface p-0.5">
-        <button type="button" aria-pressed={viewMode === "list"} aria-label="Visualizar em lista" onClick={() => onViewModeChange("list")} className={cn("inline-flex h-9 items-center justify-center gap-1 rounded-md px-2 text-[0.6875rem] font-semibold focus-visible:outline-2 focus-visible:outline-offset-[-2px] focus-visible:outline-territory-brand md:w-9 md:px-0", viewMode === "list" ? "bg-territory-brand text-white" : "text-territory-muted hover:text-territory-ink")}>
+        <button type="button" aria-pressed={viewMode === "list"} aria-label="Visualizar em lista" title="Lista" onClick={() => onViewModeChange("list")} className={cn("inline-flex h-9 w-9 items-center justify-center rounded-md focus-visible:outline-2 focus-visible:outline-offset-[-2px] focus-visible:outline-territory-brand", viewMode === "list" ? "bg-territory-brand text-white" : "text-territory-muted hover:text-territory-ink")}>
           <List className="h-4 w-4" aria-hidden="true" />
-          <span className="md:hidden">Lista</span>
         </button>
-        <button type="button" aria-pressed={viewMode === "grid"} aria-label="Visualizar em grade" onClick={() => onViewModeChange("grid")} className={cn("inline-flex h-9 items-center justify-center gap-1 rounded-md px-2 text-[0.6875rem] font-semibold focus-visible:outline-2 focus-visible:outline-offset-[-2px] focus-visible:outline-territory-brand md:w-9 md:px-0", viewMode === "grid" ? "bg-territory-brand text-white" : "text-territory-muted hover:text-territory-ink")}>
+        <button type="button" aria-pressed={viewMode === "grid"} aria-label="Visualizar em grade" title="Grade" onClick={() => onViewModeChange("grid")} className={cn("inline-flex h-9 w-9 items-center justify-center rounded-md focus-visible:outline-2 focus-visible:outline-offset-[-2px] focus-visible:outline-territory-brand", viewMode === "grid" ? "bg-territory-brand text-white" : "text-territory-muted hover:text-territory-ink")}>
           <LayoutGrid className="h-4 w-4" aria-hidden="true" />
-          <span className="md:hidden">Grade</span>
         </button>
         </div>
       </div> : null}
@@ -422,7 +419,7 @@ function MenuItemList({ items, selectedId, onOpen, onToggle, hideOverflowOnMobil
 
 function MenuItemGrid({ items, selectedId, onOpen, onToggle, onDelete, onMarkSoldOut }: { items: ConceptMenuItem[]; selectedId: string; onOpen: (item: ConceptMenuItem) => void; onToggle: (item: ConceptMenuItem) => void; onDelete: (item: ConceptMenuItem) => void; onMarkSoldOut: (item: ConceptMenuItem) => void }) {
   return (
-    <div className="mt-3 grid gap-3 lg:grid-cols-2 xl:grid-cols-3">
+    <div className="mt-3 grid grid-cols-2 gap-2 md:grid-cols-1 lg:grid-cols-2 lg:gap-3 xl:grid-cols-3">
       {items.length ? items.map((item) => {
         const isAvailable = item.status === "Disponível";
         const isSoldOut = item.stock === 0;
@@ -430,30 +427,30 @@ function MenuItemGrid({ items, selectedId, onOpen, onToggle, onDelete, onMarkSol
         return (
           <article key={item.id} className={cn("overflow-hidden rounded-xl border border-territory-border bg-territory-surface shadow-territory-subtle", selectedId === item.id && "ring-2 ring-territory-brand/30")}>
             <button type="button" onClick={() => onOpen(item)} className="group block w-full text-left focus-visible:outline-2 focus-visible:outline-offset-[-2px] focus-visible:outline-territory-brand">
-              <div className="relative aspect-[4/3] overflow-hidden bg-territory-raised">
+              <div className="relative aspect-[5/3] overflow-hidden bg-territory-raised sm:aspect-[4/3]">
                 <img src={item.image} alt="" className="h-full w-full object-cover transition-transform group-hover:scale-[1.02]" />
                 <div className="absolute inset-x-3 top-3 flex items-start justify-between gap-2">
                   {item.featured ? <span className="inline-flex items-center gap-1 rounded-full bg-territory-sun px-2 py-1 text-[0.625rem] font-bold text-territory-ink"><Star className="h-3 w-3 fill-current" aria-hidden="true" />Destaque</span> : <span />}
                   <span className={cn("rounded-full px-2 py-1 text-[0.625rem] font-bold", item.status === "Disponível" ? "bg-territory-success/95 text-white" : item.status === "Rascunho" ? "bg-territory-warning text-territory-ink" : "bg-territory-ink/75 text-white")}>{item.status}</span>
                 </div>
               </div>
-              <div className="space-y-2 p-3">
-                <div className="flex items-start justify-between gap-2">
-                  <div className="min-w-0"><h3 className="truncate text-sm font-bold text-territory-ink">{item.name}</h3><p className="mt-0.5 text-xs text-territory-muted">{item.category}</p></div>
-                  <span className="shrink-0 text-sm font-bold text-territory-ink">{item.price}</span>
+              <div className="space-y-1.5 p-2 sm:space-y-2 sm:p-3">
+                <div className="flex flex-col gap-0.5 sm:flex-row sm:items-start sm:justify-between sm:gap-2">
+                  <div className="min-w-0"><h3 className="truncate text-xs font-bold text-territory-ink sm:text-sm">{item.name}</h3><p className="mt-0.5 text-[0.625rem] text-territory-muted sm:text-xs">{item.category}</p></div>
+                  <span className="shrink-0 text-xs font-bold text-territory-ink sm:text-sm">{item.price}</span>
                 </div>
-                <p className="min-h-10 line-clamp-2 text-xs leading-5 text-territory-muted">{item.description}</p>
-                <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-[0.6875rem] text-territory-muted">
+                <p className="min-h-8 line-clamp-2 text-[0.6875rem] leading-4 text-territory-muted sm:min-h-10 sm:text-xs sm:leading-5">{item.description}</p>
+                <div className="flex flex-wrap items-center gap-x-2 gap-y-1 text-[0.625rem] text-territory-muted sm:gap-x-3 sm:text-[0.6875rem]">
                   {item.preparationTime ? <span className="inline-flex items-center gap-1"><Clock className="h-3.5 w-3.5" aria-hidden="true" />{item.preparationTime} min</span> : null}
                   {item.stock !== null && item.stock !== undefined ? <span className={cn("inline-flex items-center gap-1", isSoldOut ? "font-semibold text-territory-error" : hasLowStock ? "font-semibold text-territory-warning" : undefined)}>{isSoldOut ? "Esgotado" : `Estoque: ${item.stock}`}</span> : null}
                 </div>
-                {item.dietaryTags?.length ? <div className="flex flex-wrap gap-1">{item.dietaryTags.map((tag) => <span key={tag} className="rounded-full bg-territory-raised px-2 py-1 text-[0.625rem] font-medium text-territory-muted">{tag}</span>)}</div> : null}
+                {item.dietaryTags?.length ? <div className="hidden flex-wrap gap-1 sm:flex">{item.dietaryTags.map((tag) => <span key={tag} className="rounded-full bg-territory-raised px-2 py-1 text-[0.625rem] font-medium text-territory-muted">{tag}</span>)}</div> : null}
               </div>
             </button>
-            <div className="flex items-center justify-between gap-2 border-t border-territory-border px-3 py-2">
-              <div className="flex min-w-0 items-center gap-1 text-[0.6875rem] text-territory-muted">{item.status === "Rascunho" ? <span className="font-semibold text-territory-warning">Rascunho</span> : <><AvailabilityToggle available={isAvailable} onToggle={() => onToggle(item)} name={item.name} /><span className="truncate">{isAvailable ? "Disponível" : "Indisponível"}</span></>}</div>
+            <div className="flex items-center justify-between gap-1 border-t border-territory-border px-2 py-1.5 sm:gap-2 sm:px-3 sm:py-2">
+              <div className="flex min-w-0 items-center gap-1 text-[0.625rem] text-territory-muted sm:text-[0.6875rem]">{item.status === "Rascunho" ? <span className="font-semibold text-territory-warning">Rascunho</span> : <><AvailabilityToggle available={isAvailable} onToggle={() => onToggle(item)} name={item.name} /><span className="sr-only truncate sm:not-sr-only">{isAvailable ? "Disponível" : "Indisponível"}</span></>}</div>
               <div className="flex shrink-0 items-center gap-1">
-                {!isSoldOut && item.status !== "Rascunho" ? <button type="button" onClick={() => onMarkSoldOut(item)} aria-label={`Marcar ${item.name} como esgotado`} title="Marcar esgotado" className="inline-flex h-9 w-9 items-center justify-center rounded-lg text-territory-muted hover:bg-territory-raised hover:text-territory-ink focus-visible:outline-2 focus-visible:outline-offset-[-2px] focus-visible:outline-territory-brand"><PackageX className="h-4 w-4" aria-hidden="true" /></button> : null}
+                {!isSoldOut && item.status !== "Rascunho" ? <button type="button" onClick={() => onMarkSoldOut(item)} aria-label={`Marcar ${item.name} como esgotado`} title="Marcar esgotado" className="hidden h-9 w-9 items-center justify-center rounded-lg text-territory-muted hover:bg-territory-raised hover:text-territory-ink focus-visible:outline-2 focus-visible:outline-offset-[-2px] focus-visible:outline-territory-brand sm:inline-flex"><PackageX className="h-4 w-4" aria-hidden="true" /></button> : null}
                 <button type="button" onClick={() => onOpen(item)} aria-label={`Editar ${item.name}`} title="Editar item" className="inline-flex h-9 w-9 items-center justify-center rounded-lg text-territory-ink hover:bg-territory-raised focus-visible:outline-2 focus-visible:outline-offset-[-2px] focus-visible:outline-territory-brand"><Pencil className="h-4 w-4" aria-hidden="true" /></button>
                 <button type="button" onClick={() => onDelete(item)} aria-label={`Excluir ${item.name}`} title="Excluir item" className="inline-flex h-9 w-9 items-center justify-center rounded-lg text-territory-muted hover:bg-territory-error/10 hover:text-territory-error focus-visible:outline-2 focus-visible:outline-offset-[-2px] focus-visible:outline-territory-brand"><Trash2 className="h-4 w-4" aria-hidden="true" /></button>
               </div>
@@ -533,8 +530,8 @@ export default function BusinessMenuConceptPreviewPage() {
   const [items, setItems] = useState(initialMenuItems);
   const [categoryOrder, setCategoryOrder] = useState(categories);
   const [query, setQuery] = useState("");
-  const [category, setCategory] = useState("Todas as categorias");
-  const [status, setStatus] = useState("Todos os status");
+  const [category, setCategory] = useState("Categorias");
+  const [status, setStatus] = useState("Status");
   const [viewMode, setViewMode] = useState<MenuViewMode>("list");
   const [activeTab, setActiveTab] = useState<"Itens" | "Categorias">("Itens");
   const [selectedId, setSelectedId] = useState("moqueca-de-peixe");
@@ -559,11 +556,11 @@ export default function BusinessMenuConceptPreviewPage() {
   const filteredItems = items.filter((item) => {
     const normalizedQuery = query.trim().toLowerCase();
     const matchesQuery = !normalizedQuery || item.name.toLowerCase().includes(normalizedQuery) || item.description.toLowerCase().includes(normalizedQuery);
-    const matchesCategory = category === "Todas as categorias" || item.category === category;
-    const matchesStatus = status === "Todos os status" || item.status === status;
+    const matchesCategory = category === "Categorias" || item.category === category;
+    const matchesStatus = status === "Status" || item.status === status;
     return matchesQuery && matchesCategory && matchesStatus;
   });
-  const hideOverflowOnMobile = !query.trim() && category === "Todas as categorias" && status === "Todos os status";
+  const hideOverflowOnMobile = !query.trim() && category === "Categorias" && status === "Status";
 
   const openEditor = (item: ConceptMenuItem) => {
     setSelectedId(item.id);
@@ -657,7 +654,7 @@ export default function BusinessMenuConceptPreviewPage() {
   const deleteCategory = (categoryName: string) => {
     if (!window.confirm(`Excluir a categoria “${categoryName}”? Os itens serão mantidos no cardápio.`)) return;
     setCategoryOrder((current) => current.filter((entry) => entry !== categoryName));
-    if (category === categoryName) setCategory("Todas as categorias");
+    if (category === categoryName) setCategory("Categorias");
   };
 
   const reorderCategories = (from: number, to: number) => {

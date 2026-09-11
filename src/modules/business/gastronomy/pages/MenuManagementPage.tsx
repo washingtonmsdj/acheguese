@@ -251,8 +251,8 @@ export default function MenuManagementPage() {
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
-              <div className="flex flex-wrap items-center gap-3">
-                <div className="relative min-w-0 flex-1 basis-full sm:min-w-[14rem] sm:basis-auto">
+              <div className="grid grid-cols-[minmax(0,1fr)_minmax(0,1fr)_auto] gap-2 sm:flex sm:flex-wrap sm:items-center sm:gap-3">
+                <div className="relative col-span-3 min-w-0 sm:col-span-1 sm:basis-full lg:basis-auto">
                   <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
                   <Input
                     placeholder="Buscar itens..."
@@ -264,11 +264,11 @@ export default function MenuManagementPage() {
 
                 {canUseCategories && (
                   <Select value={filterCategory} onValueChange={setFilterCategory}>
-                    <SelectTrigger className="w-[200px]">
+                    <SelectTrigger className="w-full sm:w-[200px]">
                       <SelectValue placeholder="Categoria" />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="all">Todas</SelectItem>
+                      <SelectItem value="all">Categorias</SelectItem>
                       {categories?.map((cat) => (
                         <SelectItem key={cat.id} value={cat.id}>
                           {cat.name}
@@ -283,14 +283,14 @@ export default function MenuManagementPage() {
                     <SelectValue placeholder="Status" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="all">Todos os status</SelectItem>
+                    <SelectItem value="all">Status</SelectItem>
                     <SelectItem value="available">Disponíveis</SelectItem>
                     <SelectItem value="paused">Pausados</SelectItem>
                     <SelectItem value="soldOut">Esgotados</SelectItem>
                   </SelectContent>
                 </Select>
 
-                <div className="inline-flex self-start rounded-lg border border-territory-border bg-territory-surface p-1 sm:self-auto" aria-label="Modo de visualização">
+                <div className="col-span-1 inline-flex self-start justify-self-end rounded-lg border border-territory-border bg-territory-surface p-1 sm:col-auto sm:self-auto sm:justify-self-auto" aria-label="Modo de visualização">
                   <button
                     type="button"
                     aria-label="Visualizar em lista"
@@ -311,7 +311,7 @@ export default function MenuManagementPage() {
                   </button>
                 </div>
 
-                <Button onClick={handleCreateItem} disabled={!canAddMoreItems} className="w-full sm:w-auto">
+                <Button onClick={handleCreateItem} disabled={!canAddMoreItems} className="col-span-3 w-full sm:col-auto sm:w-auto">
                   <Plus className="w-4 h-4 mr-2" />
                   Novo Item
                 </Button>
@@ -352,7 +352,7 @@ export default function MenuManagementPage() {
               </CardContent>
             </Card>
           ) : (
-            <div className={viewMode === 'grid' ? 'grid gap-4 sm:grid-cols-2 xl:grid-cols-3' : 'space-y-4'}>
+            <div className={viewMode === 'grid' ? 'grid grid-cols-2 gap-2 sm:gap-4 xl:grid-cols-3' : 'space-y-4'}>
               {filteredItems.map((item) => (
                 <ItemCard
                   key={item.id}
@@ -363,6 +363,7 @@ export default function MenuManagementPage() {
                     toggleAvailability({ itemId, isAvailable })
                   }
                   onMarkSoldOut={handleMarkItemSoldOut}
+                  layout={viewMode}
                 />
               ))}
             </div>
