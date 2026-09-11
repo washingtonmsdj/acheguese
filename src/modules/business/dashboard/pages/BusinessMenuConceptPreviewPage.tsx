@@ -377,13 +377,13 @@ function MenuItemRow({ item, selected, onOpen, onToggle, className }: { item: Co
   const isDraft = item.status === "Rascunho";
   return (
     <div className={cn("grid min-h-[4.6rem] grid-cols-[minmax(0,1fr)_4.75rem_1.4rem] items-center gap-2 border-b border-territory-border px-3 last:border-b-0 md:grid-cols-[minmax(0,1fr)_1.75rem] md:gap-2 md:px-2 lg:grid-cols-[minmax(0,1fr)_6rem_8rem_1.75rem] xl:grid-cols-[minmax(0,1fr)_7.5rem_9.5rem_2.2rem] xl:gap-3 xl:px-3", selected && "md:bg-[hsl(var(--territory-success)/0.14)]", className)}>
-      <button type="button" onClick={onOpen} className="flex min-w-0 items-center justify-start gap-3 text-left focus-visible:outline-2 focus-visible:outline-offset-[-2px] focus-visible:outline-territory-brand">
-        <img src={item.image} alt="" className="h-16 w-[5.25rem] shrink-0 rounded-lg object-cover md:h-12 md:w-16" />
+      <button type="button" onClick={onOpen} className="flex min-w-0 items-start justify-start gap-3 py-1.5 text-left focus-visible:outline-2 focus-visible:outline-offset-[-2px] focus-visible:outline-territory-brand">
+        <span className="relative flex w-[5.25rem] shrink-0 flex-col items-start gap-0.5 md:w-20">
+          <img src={item.image} alt="" className="h-16 w-full rounded-lg object-cover md:h-12" />
+          {item.featured ? <span className="absolute left-1 top-1 z-10 inline-flex max-w-[calc(100%-0.5rem)] items-center gap-1 rounded-full bg-territory-sun px-1.5 py-0.5 text-[0.5625rem] font-bold leading-4 text-territory-ink shadow-sm"><Star className="h-2.5 w-2.5 shrink-0 fill-current" aria-hidden="true" /><span className="truncate">Destaque</span></span> : null}
+        </span>
         <span className="min-w-0">
-          <span className="flex min-w-0 items-center gap-1.5">
-            <span className="min-w-0 truncate text-sm font-bold text-territory-ink">{item.name}</span>
-            {item.featured ? <span className="inline-flex shrink-0 items-center gap-1 rounded-full bg-territory-sun px-1.5 py-0.5 text-[0.5625rem] font-bold leading-4 text-territory-ink"><Star className="h-2.5 w-2.5 fill-current" aria-hidden="true" />Destaque</span> : null}
-          </span>
+          <span className="block min-w-0 truncate text-sm font-bold text-territory-ink">{item.name}</span>
           <span className="mt-0.5 block truncate text-xs text-territory-muted">{item.category}</span>
           <span className="mt-0.5 block text-xs font-semibold text-territory-ink md:hidden lg:block">{item.price}</span>
           <span className="mt-0.5 hidden truncate text-[0.6875rem] font-medium text-territory-muted md:block lg:hidden">{item.price} · {item.status}</span>
@@ -430,22 +430,15 @@ function MenuItemGrid({ items, selectedId, onOpen, onToggle, onDelete, onMarkSol
         return (
           <article key={item.id} className={cn("overflow-hidden rounded-xl border border-territory-border bg-territory-surface shadow-territory-subtle", selectedId === item.id && "ring-2 ring-territory-brand/30")}>
             <button type="button" onClick={() => onOpen(item)} className="group block w-full text-left focus-visible:outline-2 focus-visible:outline-offset-[-2px] focus-visible:outline-territory-brand">
-              <div className="relative aspect-[2/1] overflow-hidden bg-territory-raised">
+              <div className="relative aspect-[2/1] overflow-hidden bg-territory-raised 3xl:aspect-[2.5/1]">
                 <img src={item.image} alt="" className="h-full w-full object-cover transition-transform group-hover:scale-[1.02]" />
-                <div className="absolute inset-x-2 top-2 hidden flex-col items-start gap-1 sm:inset-x-3 sm:top-3 sm:flex-row sm:items-start sm:justify-between sm:gap-2 lg:flex">
-                  {item.featured ? <span className="inline-flex items-center gap-1 rounded-full bg-territory-sun px-2 py-1 text-[0.625rem] font-bold text-territory-ink"><Star className="h-3 w-3 fill-current" aria-hidden="true" />Destaque</span> : null}
-                  <span className={cn("self-start rounded-full px-2 py-1 text-[0.625rem] font-bold sm:self-auto", item.status === "Disponível" ? "bg-territory-success/95 text-white" : item.status === "Rascunho" ? "bg-territory-warning text-territory-ink" : "bg-territory-ink/75 text-white")}>{item.status}</span>
-                </div>
+                {item.featured ? <span className="absolute left-2 top-2 z-10 inline-flex max-w-[calc(100%-1rem)] items-center gap-1 rounded-full bg-territory-sun px-1.5 py-0.5 text-[0.5625rem] font-bold leading-4 text-territory-ink shadow-sm"><Star className="h-2.5 w-2.5 shrink-0 fill-current" aria-hidden="true" /><span className="truncate">Destaque</span></span> : null}
               </div>
               <div className="space-y-1.5 p-2">
                 <div className="min-w-0">
                   <h3 className="truncate text-xs font-bold text-territory-ink sm:text-sm">{item.name}</h3>
                   <p className="mt-0.5 text-[0.625rem] text-territory-muted sm:text-xs">{item.category}</p>
                   <p className="mt-1 text-xs font-bold leading-4 text-territory-ink sm:text-sm">{item.price}</p>
-                </div>
-                <div className="flex flex-col items-start gap-1 lg:hidden">
-                  {item.featured ? <span className="inline-flex items-center gap-1 rounded-full bg-territory-sun px-2 py-1 text-[0.625rem] font-bold text-territory-ink"><Star className="h-3 w-3 fill-current" aria-hidden="true" />Destaque</span> : null}
-                  <span className={cn("rounded-full px-2 py-1 text-[0.625rem] font-bold", item.status === "Disponível" ? "bg-territory-success/95 text-white" : item.status === "Rascunho" ? "bg-territory-warning text-territory-ink" : "bg-territory-ink/75 text-white")}>{item.status}</span>
                 </div>
                 <div className="flex flex-wrap items-center gap-x-2 gap-y-1 text-[0.625rem] text-territory-muted sm:text-[0.6875rem]">
                   {item.preparationTime ? <span className="inline-flex items-center gap-1"><Clock className="h-3.5 w-3.5" aria-hidden="true" />{item.preparationTime} min</span> : null}

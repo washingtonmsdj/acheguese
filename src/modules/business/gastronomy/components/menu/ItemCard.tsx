@@ -46,35 +46,43 @@ export function ItemCard({
     item.stock_quantity <= item.stock_alert_threshold;
   const isGrid = layout === 'grid';
 
+  const statusBadges = (
+    <div className="pointer-events-none absolute inset-x-2 top-2 z-10 flex flex-wrap items-start gap-1">
+      {item.is_featured && <Badge variant="secondary" className="text-[0.625rem]">Destaque</Badge>}
+      {!item.is_available && <Badge variant="outline" className="text-[0.625rem]">Pausado</Badge>}
+      {isSoldOut && (
+        <Badge variant="outline" className="border-red-200 bg-red-50 text-[0.625rem] text-red-700">
+          Esgotado
+        </Badge>
+      )}
+      {hasLowStock && (
+        <Badge variant="outline" className="border-amber-200 bg-amber-50 text-[0.625rem] text-amber-700">
+          Estoque baixo
+        </Badge>
+      )}
+    </div>
+  );
+
   return (
     <Card className={isGrid ? 'h-full' : undefined}>
       <CardContent className={isGrid ? 'h-full p-2' : 'p-4'}>
         <div className={isGrid ? 'flex h-full flex-col gap-1.5' : 'flex gap-4'}>
-          <div className={isGrid ? 'aspect-[2/1] w-full flex-shrink-0 overflow-hidden rounded-lg bg-muted' : 'aspect-[4/3] w-24 flex-shrink-0 overflow-hidden rounded-lg bg-muted'}>
-            {item.image_url ? (
-              <img src={item.image_url} alt={item.name} className="w-full h-full object-cover" />
-            ) : (
-              <ImageIcon className="w-8 h-8 text-muted-foreground" />
-            )}
+          <div className={isGrid ? 'w-full flex-shrink-0' : 'w-24 flex-shrink-0'}>
+            <div className={isGrid ? 'relative aspect-[2/1] w-full overflow-hidden rounded-lg bg-muted' : 'relative aspect-[4/3] w-full overflow-hidden rounded-lg bg-muted'}>
+              {item.image_url ? (
+                <img src={item.image_url} alt={item.name} className="h-full w-full object-cover" />
+              ) : (
+                <ImageIcon className="h-8 w-8 text-muted-foreground" />
+              )}
+              {statusBadges}
+            </div>
           </div>
 
           <div className="flex min-w-0 flex-1 flex-col">
             <div className="flex items-start justify-between gap-2">
               <div className="flex-1 min-w-0">
-                <div className={isGrid ? 'mb-1 flex flex-col items-start gap-1 sm:flex-row sm:items-center sm:gap-2' : 'mb-1 flex flex-wrap items-center gap-1 sm:gap-2'}>
-                  <h4 className={isGrid ? 'truncate text-xs font-semibold sm:text-base' : 'truncate font-medium'}>{item.name}</h4>
-                  {item.is_featured && <Badge variant="secondary" className={isGrid ? 'text-[0.625rem]' : undefined}>Destaque</Badge>}
-                  {!item.is_available && <Badge variant="outline" className={isGrid ? 'text-[0.625rem]' : undefined}>Pausado</Badge>}
-                  {isSoldOut && (
-                    <Badge variant="outline" className={isGrid ? 'border-red-200 bg-red-50 text-[0.625rem] text-red-700' : 'border-red-200 bg-red-50 text-red-700'}>
-                      Esgotado
-                    </Badge>
-                  )}
-                  {hasLowStock && (
-                    <Badge variant="outline" className={isGrid ? 'border-amber-200 bg-amber-50 text-[0.625rem] text-amber-700' : 'border-amber-200 bg-amber-50 text-amber-700'}>
-                      Estoque baixo
-                    </Badge>
-                  )}
+                <div className="mb-1 flex min-w-0 items-center gap-1 sm:gap-2">
+                  <h4 className={isGrid ? 'truncate text-xs font-semibold sm:text-base' : 'min-w-0 flex-1 truncate font-medium'}>{item.name}</h4>
                 </div>
                 {item.description && !isGrid && (
                   <p className="line-clamp-2 text-sm text-muted-foreground">{item.description}</p>
