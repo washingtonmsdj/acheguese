@@ -10,7 +10,7 @@ const broker = readProjectFile(
   "supabase/migrations/20260909173500_broker_driver_offer_read_model_g10.sql",
 );
 const g60 = readProjectFile(
-  "supabase/migrations/20260910230000_redact_preaccept_offer_location_g60.sql",
+  "supabase/migrations/20260911220000_redact_preaccept_offer_location_g60.sql",
 );
 
 describe("G60 preaccept location privacy boundary", () => {
