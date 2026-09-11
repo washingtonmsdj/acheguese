@@ -331,8 +331,8 @@ function MenuItemRow({ item, selected, onOpen, onToggle, className }: { item: Co
   const isDraft = item.status === "Rascunho";
   return (
     <div className={cn("grid min-h-[4.6rem] grid-cols-[minmax(0,1fr)_4.75rem_1.4rem] items-center gap-2 border-b border-territory-border px-3 last:border-b-0 md:grid-cols-[minmax(0,1fr)_6rem_8rem_1.75rem] md:gap-2 md:px-2 xl:grid-cols-[minmax(0,1fr)_7.5rem_9.5rem_2.2rem] xl:gap-3 xl:px-3", selected && "md:bg-[hsl(var(--territory-success)/0.14)]", className)}>
-      <button type="button" onClick={onOpen} className="flex min-w-0 items-center gap-3 text-left focus-visible:outline-2 focus-visible:outline-offset-[-2px] focus-visible:outline-territory-brand">
-        <img src={item.image} alt="" className="h-14 w-[4.5rem] shrink-0 rounded-lg object-cover md:h-12 md:w-16" />
+      <button type="button" onClick={onOpen} className="flex min-w-0 items-center justify-start gap-3 text-left focus-visible:outline-2 focus-visible:outline-offset-[-2px] focus-visible:outline-territory-brand">
+        <img src={item.image} alt="" className="h-16 w-[5.25rem] shrink-0 rounded-lg object-cover md:h-12 md:w-16" />
         <span className="min-w-0">
           <span className="block truncate text-sm font-bold text-territory-ink">{item.name}</span>
           <span className="mt-0.5 block truncate text-xs text-territory-muted">{item.category}</span>
@@ -344,7 +344,8 @@ function MenuItemRow({ item, selected, onOpen, onToggle, className }: { item: Co
         {isDraft ? <span className="inline-flex items-center gap-1.5 text-territory-warning"><span className="h-2.5 w-2.5 rounded-full bg-territory-warning" />Rascunho</span> : <><span className="md:hidden"><AvailabilityToggle available={isAvailable} onToggle={onToggle} name={item.name} /></span><span className="whitespace-nowrap md:hidden">{isAvailable ? "Disponível" : "Indisponível"}</span><span className="hidden items-center gap-1.5 whitespace-nowrap md:inline-flex"><span className={cn("h-2.5 w-2.5 rounded-full", isAvailable ? "bg-territory-success" : "bg-territory-muted")} />{item.status}</span></>}
       </span>
       <button type="button" onClick={onOpen} aria-label={`Editar ${item.name}`} className="flex h-8 w-8 items-center justify-center rounded-lg text-territory-ink focus-visible:outline-2 focus-visible:outline-offset-[-2px] focus-visible:outline-territory-brand">
-        <MoreHorizontal className="h-4 w-4" aria-hidden="true" />
+        <ChevronRight className="h-4 w-4 md:hidden" aria-hidden="true" />
+        <MoreHorizontal className="hidden h-4 w-4 md:block" aria-hidden="true" />
       </button>
     </div>
   );
@@ -409,7 +410,7 @@ function MenuEditor({ item, name, onNameChange, description, onDescriptionChange
         </div>
         {["Complementos e observações", "Ingredientes e restrições alimentares"].map((section) => <div key={section} className="border-t border-territory-border pt-3"><button type="button" aria-expanded={openSection === section} onClick={() => setOpenSection((current) => current === section ? null : section)} className="flex w-full items-center justify-between text-left text-xs font-bold text-territory-ink focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-territory-brand">{section}<ChevronDown className={cn("h-4 w-4 transition-transform", openSection === section && "rotate-180")} aria-hidden="true" /></button>{openSection === section ? <p className="mt-2 text-xs leading-5 text-territory-muted">Configure as opções que aparecem para quem consulta o cardápio público.</p> : null}</div>)}
         <div className="border-t border-territory-border pt-3">
-          <div className="flex items-center justify-between gap-3"><div><p className="text-xs font-bold text-territory-ink">Disponível no cardápio</p><p className="mt-1 text-[0.6875rem] text-territory-muted">Indisponível não apaga o item.</p></div><div className="flex items-center gap-2 text-xs font-semibold text-territory-ink"><AvailabilityToggle available={available} onToggle={onAvailableChange} name={item.name} />Sim</div></div>
+          <div className="flex items-center justify-between gap-3"><div><p className="text-xs font-bold text-territory-ink">Disponível no cardápio</p><p className="mt-1 text-[0.6875rem] text-territory-muted">Indisponível não apaga o item.</p></div><div className="flex items-center gap-2 text-xs font-semibold text-territory-ink"><AvailabilityToggle available={available} onToggle={onAvailableChange} name={item.name} />{available ? "Sim" : "Não"}</div></div>
         </div>
         <div className="flex items-center justify-end gap-3 border-t border-territory-border pt-4"><button type="button" onClick={onClose} className="min-h-10 px-2 text-xs font-bold text-territory-brand focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-territory-brand">Cancelar</button><button type="button" onClick={onSave} className="min-h-10 rounded-lg bg-territory-brand px-4 text-xs font-bold text-white shadow-territory-subtle focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-territory-brand">Salvar alterações</button></div>
         <p className="text-right text-[0.625rem] text-territory-muted">As alterações aparecem após salvar.</p>
