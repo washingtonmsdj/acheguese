@@ -47,6 +47,20 @@ const emergencyEmailFunction = readProjectFile(
 const emergencyWebhook = readProjectFile(
   "supabase/functions/resend-emergency-webhook/index.ts",
 );
+const edgeAuthPolicy = JSON.parse(
+  readProjectFile(
+    "docs/09-reference/governance/security/EDGE_FUNCTION_AUTH_POLICY.json",
+  ),
+) as {
+  noJwtAllowlist: Record<
+    string,
+    { kind: string; requiredPatterns: string[] }
+  >;
+  serviceRoleAllowlist: Record<
+    string,
+    { kind: string; risk: string; requiredPatterns: string[] }
+  >;
+};
 
 describe("Safety Core Platform security", () => {
   it("normalizes the legacy emergency-alert contract without parallel columns", () => {
@@ -153,6 +167,16 @@ describe("Safety Core Platform security", () => {
     expect(emergencyEmailFunction).toContain("p_contact_id: contactId");
   });
 
+  it("uses canonical authenticated-account authority before emergency delivery", () => {
+    expect(emergencyEmailFunction).toContain(
+      "requireAuthenticatedUser(req, supabaseAdmin)",
+    );
+    expect(emergencyEmailFunction).not.toContain("extractBearerToken(req)");
+    expect(emergencyEmailFunction).not.toContain(
+      "requireOperationalAccount(\n      supabaseAdmin",
+    );
+  });
+
   it("never equates provider acceptance with confirmed delivery", () => {
     expect(durableOutboxMigration).toContain(
       "emergency_delivery_delivered_at_contract",
@@ -209,6 +233,24 @@ describe("Safety Core Platform security", () => {
       "webhookVerifier.verify(rawBody.data",
     );
     expect(emergencyWebhook).toContain(
+      "apply_emergency_delivery_provider_event",
+    );
+
+    const noJwtPolicy = edgeAuthPolicy.noJwtAllowlist[
+      "resend-emergency-webhook"
+    ];
+    expect(noJwtPolicy?.kind).toBe("signed-webhook");
+    expect(noJwtPolicy?.requiredPatterns).toContain(
+      "webhookVerifier\\.verify\\s*\\(",
+    );
+    expect(noJwtPolicy?.requiredPatterns).toContain("RESEND_WEBHOOK_SECRET");
+
+    const serviceRolePolicy = edgeAuthPolicy.serviceRoleAllowlist[
+      "resend-emergency-webhook"
+    ];
+    expect(serviceRolePolicy?.kind).toBe("signed-webhook");
+    expect(serviceRolePolicy?.risk).toBe("Critical");
+    expect(serviceRolePolicy?.requiredPatterns).toContain(
       "apply_emergency_delivery_provider_event",
     );
   });
