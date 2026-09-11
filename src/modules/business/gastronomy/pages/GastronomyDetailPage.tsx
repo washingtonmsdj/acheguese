@@ -28,6 +28,7 @@ import { GastronomyBusinessInfoSidebar } from "./GastronomyBusinessInfoSidebar";
 import { GastronomyDetailHeroSection } from "./GastronomyDetailHeroSection";
 import { CategoryNav, ServiceBar } from "./GastronomyDetailNavigation";
 import { GastronomyDetailSeo } from "./GastronomyDetailSeo";
+import GastronomyDetailConceptPreviewPage from "./GastronomyDetailConceptPreviewPage";
 
 interface GastronomyDetailPageProps {
   routeParams?: {
@@ -76,7 +77,7 @@ function GastronomyDetailSkeleton() {
   );
 }
 
-export default function GastronomyDetailPage({
+function GastronomyDetailLivePage({
   routeParams,
   communityScoped = false,
   canonicalPathOverride,
@@ -316,4 +317,13 @@ export default function GastronomyDetailPage({
       <StickyOrderBar business={business} />
     </>
   );
+}
+
+export default function GastronomyDetailPage(props: GastronomyDetailPageProps = {}) {
+  const conceptMockEnabled =
+    import.meta.env.DEV &&
+    typeof window !== "undefined" &&
+    new URLSearchParams(window.location.search).get("concept-mock") === "1";
+
+  return conceptMockEnabled ? <GastronomyDetailConceptPreviewPage /> : <GastronomyDetailLivePage {...props} />;
 }

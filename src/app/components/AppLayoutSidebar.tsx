@@ -71,6 +71,11 @@ export function AppLayoutSidebar() {
     pathSegments[0] === MODULE_SLUGS.services &&
     pathSegments[3] === "profissional" &&
     pathSegments.length >= 5;
+  const isGastronomyConceptPreview =
+    import.meta.env.DEV &&
+    pathSegments[0] === MODULE_SLUGS.gastronomy &&
+    pathSegments.length >= 5 &&
+    new URLSearchParams(window.location.search).get("concept-mock") === "1";
   const usesTerritoryVivoShell =
     isBarePublicTerritorialRoute ||
     isTerritoryVivoExploreRoute ||
@@ -87,7 +92,8 @@ export function AppLayoutSidebar() {
     isCommunityPublicLandingRoute ||
     isCommunityAliasPublicRoute ||
     isShortCommunityRoute ||
-    isPublicBusinessLandingRoute;
+    isPublicBusinessLandingRoute ||
+    isGastronomyConceptPreview;
 
   const isInternalGroupRoute =
     pathSegments[0] === "grupos" && pathSegments.length >= 2;
@@ -105,14 +111,16 @@ export function AppLayoutSidebar() {
     isCommunityPublicLandingRoute ||
     isCommunityAliasPublicRoute ||
     isShortCommunityRoute ||
-    isPublicBusinessLandingRoute;
+    isPublicBusinessLandingRoute ||
+    isGastronomyConceptPreview;
   const hideMobileBottomNav =
     pathname === "/" ||
     isInternalGroupRoute ||
     isConversationRoute ||
     isPublicEntityDetailRoute ||
     isCommunityPublicLandingRoute ||
-    isCommunityAliasPublicRoute;
+    isCommunityAliasPublicRoute ||
+    isGastronomyConceptPreview;
 
   const isMessagingRoute =
     pathSegments[0] === "mensagens" || pathSegments[0] === "chat";
