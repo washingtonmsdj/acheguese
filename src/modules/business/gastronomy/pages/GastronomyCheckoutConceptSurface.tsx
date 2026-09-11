@@ -227,7 +227,7 @@ function CheckoutHeader({
           </nav>
         </div>
       </header>
-      <div className="border-b border-territory-border bg-territory-surface px-4 py-2.5 lg:hidden">
+      <div className="border-b border-territory-border bg-territory-surface px-3 py-2.5 lg:hidden">
         <button
           type="button"
           onClick={onBack}
@@ -243,7 +243,7 @@ function CheckoutHeader({
 
 function BusinessSummary() {
   return (
-    <div className="flex items-center gap-3 px-1 py-1">
+    <div className="flex items-center gap-3 py-1">
       <img
         src={foodImage}
         alt=""
@@ -605,7 +605,7 @@ function MobileReviewStage({
         <button
           type="button"
           onClick={onGoToDelivery}
-          className="flex w-full items-start gap-3 rounded-lg border border-territory-border bg-territory-surface p-3 text-left focus-visible:outline-2 focus-visible:outline-offset-[-2px] focus-visible:outline-territory-brand"
+          className="flex w-full items-start gap-3 rounded-lg border border-territory-border bg-territory-surface p-2.5 text-left focus-visible:outline-2 focus-visible:outline-offset-[-2px] focus-visible:outline-territory-brand"
         >
           <Truck
             className="mt-0.5 h-5 w-5 shrink-0 text-territory-brand"
@@ -632,7 +632,7 @@ function MobileReviewStage({
         </button>
         <button
           type="button"
-          className="flex w-full items-start gap-3 rounded-lg border border-territory-border bg-territory-surface p-3 text-left focus-visible:outline-2 focus-visible:outline-offset-[-2px] focus-visible:outline-territory-brand"
+          className="flex w-full items-start gap-3 rounded-lg border border-territory-border bg-territory-surface p-2.5 text-left focus-visible:outline-2 focus-visible:outline-offset-[-2px] focus-visible:outline-territory-brand"
         >
           <WalletCards
             className="mt-0.5 h-5 w-5 shrink-0 text-territory-brand"
@@ -653,7 +653,7 @@ function MobileReviewStage({
           </span>
         </button>
       </div>
-      <div className="rounded-lg border border-territory-border bg-territory-surface p-3">
+      <div className="rounded-lg border border-territory-border bg-territory-surface p-2.5">
         <div className="flex items-center justify-between gap-3">
           <h2 className="text-sm font-bold text-territory-ink">
             Itens do pedido
@@ -666,9 +666,9 @@ function MobileReviewStage({
             Editar
           </button>
         </div>
-        <div className="mt-2 divide-y divide-territory-border border-y border-territory-border">
+        <div className="mt-1.5 divide-y divide-territory-border border-y border-territory-border">
           {mockItems.map((item) => (
-            <div key={item.id} className="flex items-center gap-3 py-2.5">
+            <div key={item.id} className="flex items-center gap-3 py-1.5">
               <img
                 src={item.image}
                 alt=""
@@ -691,14 +691,14 @@ function MobileReviewStage({
       </div>
       <button
         type="button"
-        className="flex min-h-11 w-full items-center justify-between rounded-lg border border-territory-border bg-territory-surface px-3 text-left text-xs font-semibold text-territory-ink focus-visible:outline-2 focus-visible:outline-offset-[-2px] focus-visible:outline-territory-brand"
+        className="flex min-h-10 w-full items-center justify-between rounded-lg border border-territory-border bg-territory-surface px-3 text-left text-xs font-semibold text-territory-ink focus-visible:outline-2 focus-visible:outline-offset-[-2px] focus-visible:outline-territory-brand"
       >
         Observações do pedido{" "}
         <span className="flex items-center gap-1 text-territory-brand">
           Adicionar <ChevronDown className="h-4 w-4" aria-hidden="true" />
         </span>
       </button>
-      <div className="rounded-lg border border-territory-border bg-territory-surface p-3 text-xs">
+      <div className="rounded-lg border border-territory-border bg-territory-surface p-2.5 text-xs">
         <div className="flex items-center justify-between gap-3">
           <span className="text-territory-muted">Produtos</span>
           <span>{currency(49)}</span>
@@ -711,7 +711,7 @@ function MobileReviewStage({
           </span>
           <span>{currency(deliveryFeeFor(mode, deliveryOption))}</span>
         </div>
-        <div className="mt-3 flex items-center justify-between gap-3 border-t border-territory-border pt-3 text-base font-bold">
+        <div className="mt-2 flex items-center justify-between gap-3 border-t border-territory-border pt-2 text-base font-bold">
           <span>Total</span>
           <span>{currency(total)}</span>
         </div>
@@ -720,7 +720,7 @@ function MobileReviewStage({
         <button
           type="button"
           onClick={onOpenFallback}
-          className="flex w-full items-center justify-between border-t border-territory-border pt-3 text-left text-xs font-semibold text-territory-brand focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-territory-brand"
+          className="flex w-full items-center justify-between border-t border-territory-border pt-2.5 text-left text-xs font-semibold text-territory-brand focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-territory-brand"
         >
           Se não houver entregador disponível{" "}
           <ChevronDown className="h-4 w-4" aria-hidden="true" />
@@ -1241,7 +1241,7 @@ function MobileCheckoutFooter({
           : onReviewConfirm;
 
   return (
-    <div className="pointer-events-none fixed inset-x-0 bottom-0 z-40 px-4 pb-[calc(1rem+env(safe-area-inset-bottom))] pt-3 lg:hidden">
+    <div className="pointer-events-none fixed inset-x-0 bottom-0 z-40 px-3 pb-[calc(1.5rem+env(safe-area-inset-bottom))] pt-3 lg:hidden">
       <div className="mx-auto max-w-[42rem]">
         <Button
           type="button"
@@ -1292,7 +1292,7 @@ export default function GastronomyCheckoutConceptSurface() {
   return (
     <div className="min-h-screen bg-territory-canvas text-territory-ink">
       <CheckoutHeader onBack={returnToPrevious} stage={stage} />
-      <main className="mx-auto max-w-[84rem] px-4 pb-[calc(5rem+env(safe-area-inset-bottom))] pt-3 sm:px-6 sm:pt-6 lg:px-8 lg:pb-10">
+      <main className="mx-auto max-w-[84rem] px-3 pb-[calc(5.5rem+env(safe-area-inset-bottom))] pt-3 sm:px-6 sm:pt-6 lg:px-8 lg:pb-10">
         <div className="lg:hidden">
           <BusinessSummary />
           <div className="mt-3">
