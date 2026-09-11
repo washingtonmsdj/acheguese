@@ -31,6 +31,17 @@ export interface EmailDeliveryResult {
   metadata?: Record<string, unknown>;
 }
 
+const KNOWN_DELIVERY_STATUSES = new Set<EmailDeliveryStatus>([
+  'pending',
+  'processing',
+  'dispatching',
+  'sent',
+  'delivered',
+  'failed',
+  'cancelled',
+  'reconciliation_required',
+]);
+
 const REQUEST_SUCCESS_STATUSES = new Set<EmailDeliveryStatus>([
   'processing',
   'dispatching',
@@ -51,16 +62,7 @@ function isRecord(value: unknown): value is Record<string, unknown> {
 function isEmailDeliveryStatus(value: unknown): value is EmailDeliveryStatus {
   return (
     typeof value === 'string' &&
-    [
-      'pending',
-      'processing',
-      'dispatching',
-      'sent',
-      'delivered',
-      'failed',
-      'cancelled',
-      'reconciliation_required',
-    ].includes(value)
+    KNOWN_DELIVERY_STATUSES.has(value as EmailDeliveryStatus)
   );
 }
 
