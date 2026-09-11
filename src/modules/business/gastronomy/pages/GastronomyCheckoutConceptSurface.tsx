@@ -448,7 +448,7 @@ function MobileAddressStage({
       <button
         type="button"
         onClick={onContinue}
-        className="flex w-full items-center justify-center gap-2 rounded-lg bg-territory-sun px-4 py-3 text-sm font-bold text-territory-ink hover:bg-territory-sun/90 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-territory-brand"
+        className="hidden w-full items-center justify-center gap-2 rounded-lg bg-territory-sun px-4 py-3 text-sm font-bold text-territory-ink hover:bg-territory-sun/90 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-territory-brand"
       >
         Ver opções de entrega{" "}
         <ChevronRight className="h-4 w-4" aria-hidden="true" />
@@ -557,7 +557,7 @@ function MobileDeliveryStage({
       <button
         type="button"
         onClick={onContinue}
-        className="flex w-full items-center justify-center gap-2 rounded-lg bg-territory-sun px-4 py-3 text-sm font-bold text-territory-ink hover:bg-territory-sun/90 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-territory-brand"
+        className="hidden w-full items-center justify-center gap-2 rounded-lg bg-territory-sun px-4 py-3 text-sm font-bold text-territory-ink hover:bg-territory-sun/90 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-territory-brand"
       >
         Continuar para pagamento{" "}
         <ChevronRight className="h-4 w-4" aria-hidden="true" />
@@ -718,7 +718,7 @@ function MobileReviewStage({
       <button
         type="button"
         onClick={onConfirm}
-        className="flex w-full items-center justify-center gap-2 rounded-lg bg-territory-sun px-4 py-3 text-sm font-bold text-territory-ink hover:bg-territory-sun/90 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-territory-brand"
+        className="hidden w-full items-center justify-center gap-2 rounded-lg bg-territory-sun px-4 py-3 text-sm font-bold text-territory-ink hover:bg-territory-sun/90 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-territory-brand"
       >
         Confirmar pedido · {currency(total)}{" "}
         <ChevronRight className="h-4 w-4" aria-hidden="true" />
@@ -1197,6 +1197,54 @@ function OrderSummary({
   );
 }
 
+function MobileCheckoutFooter({
+  stage,
+  total,
+  onAddressContinue,
+  onDeliveryContinue,
+  onReviewConfirm,
+  onFallbackContinue,
+}: {
+  stage: CheckoutStage;
+  total: number;
+  onAddressContinue: () => void;
+  onDeliveryContinue: () => void;
+  onReviewConfirm: () => void;
+  onFallbackContinue: () => void;
+}) {
+  const label =
+    stage === "address"
+      ? "Ver opções de entrega"
+      : stage === "delivery"
+        ? "Continuar para pagamento"
+        : stage === "fallback"
+          ? "Continuar com entrega da loja"
+          : `Confirmar pedido · ${currency(total)}`;
+  const onClick =
+    stage === "address"
+      ? onAddressContinue
+      : stage === "delivery"
+        ? onDeliveryContinue
+        : stage === "fallback"
+          ? onFallbackContinue
+          : onReviewConfirm;
+
+  return (
+    <div className="fixed inset-x-0 bottom-0 z-40 border-t border-territory-border bg-territory-surface/95 p-3 pb-[calc(0.75rem+env(safe-area-inset-bottom))] shadow-[0_-8px_24px_rgba(18,62,61,0.08)] backdrop-blur lg:hidden">
+      <div className="mx-auto max-w-[42rem]">
+        <Button
+          type="button"
+          onClick={onClick}
+          className="h-12 w-full rounded-lg bg-territory-sun text-sm font-bold text-territory-ink hover:bg-territory-sun/90 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-territory-brand"
+        >
+          {label}
+          <ChevronRight className="h-4 w-4" aria-hidden="true" />
+        </Button>
+      </div>
+    </div>
+  );
+}
+
 export default function GastronomyCheckoutConceptSurface() {
   const navigate = useNavigate();
   const [stage, setStage] = useState<CheckoutStage>("address");
@@ -1233,7 +1281,7 @@ export default function GastronomyCheckoutConceptSurface() {
   return (
     <div className="min-h-screen bg-territory-canvas text-territory-ink">
       <CheckoutHeader onBack={returnToPrevious} stage={stage} />
-      <main className="mx-auto max-w-[84rem] px-4 pb-8 pt-4 sm:px-6 sm:pt-6 lg:px-8 lg:pb-10">
+      <main className="mx-auto max-w-[84rem] px-4 pb-[calc(5.5rem+env(safe-area-inset-bottom))] pt-4 sm:px-6 sm:pt-6 lg:px-8 lg:pb-10">
         <div className="lg:hidden">
           <BusinessSummary />
           <div className="mt-4">
@@ -1394,6 +1442,17 @@ export default function GastronomyCheckoutConceptSurface() {
           </p>
         </div>
       </main>
+      <MobileCheckoutFooter
+        stage={stage}
+        total={total}
+        onAddressContinue={continueFromAddress}
+        onDeliveryContinue={continueFromDelivery}
+        onReviewConfirm={confirmPreview}
+        onFallbackContinue={() => {
+          setDeliveryOption("store");
+          setStage("review");
+        }}
+      />
     </div>
   );
 }
