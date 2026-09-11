@@ -1,6 +1,7 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import type { ReactNode } from "react";
 import { useNavigate } from "react-router-dom";
+import { Helmet } from "react-helmet-async";
 import {
   ArrowLeft,
   Check,
@@ -24,12 +25,40 @@ import { toast } from "sonner";
 import { Button } from "@/shared/components/ui/button";
 import { Textarea } from "@/shared/components/ui/textarea";
 import { cn } from "@/shared/utils/cn";
+import { businessManagementRoutes } from "@/core/business/utils/businessManagementRoutes";
+import { useSessionContext } from "@/core/session";
+import { useAppUrls } from "@/core/routing/hooks";
 import foodImage from "@/assets/gastronomy/cat-restaurantes.jpg";
 import juiceImage from "@/assets/gastronomy/cat-cafes.jpg";
+import {
+  useDeliveryDestination,
+  useGastronomyCart,
+  useGastronomyCheckout,
+} from "../hooks";
+import { GastronomyDeliveryDestinationPanel } from "../components/GastronomyDeliveryDestinationPanel";
+import {
+  applyFulfillmentToCart,
+  buildCartItemSummary,
+  buildCheckoutDeliveryAddress,
+  buildCheckoutOrderNotes,
+  formatDeliveryDestinationDisplayLabel,
+  getEnabledFulfillmentModes,
+  isCheckoutSubmitDisabled,
+  isPlatformCourierCheckoutAvailable,
+  isPlatformCourierUnavailableForCheckout,
+  isStructuredDeliveryDestinationReady,
+  normalizeFulfillmentMode,
+  requiresDeliveryDestination,
+  resolveCheckoutPaymentOptions,
+  type CheckoutPaymentOption,
+  type GastronomyFulfillmentMode,
+} from "../checkout/checkoutRules";
+import { CheckoutDeliveryAddressFields } from "../checkout/CheckoutSections";
+import type { GastronomyBusiness } from "../types/gastronomy";
+import type { Cart, CartItem } from "../types/menu";
 
-type FulfillmentMode = "delivery" | "pickup" | "dine-in";
+type FulfillmentMode = GastronomyFulfillmentMode;
 type DeliveryOption = "store" | "platform";
-type PaymentMethod = "pix" | "link";
 type CheckoutStage = "address" | "delivery" | "review" | "fallback";
 
 const currency = (value: number) =>
@@ -38,27 +67,66 @@ const currency = (value: number) =>
     currency: "BRL",
   }).format(value);
 
-const mockItems = [
-  {
-    id: "moqueca-de-peixe",
-    name: "Moqueca de peixe",
-    detail: "Individual · Farofa extra",
-    price: 41,
-    quantity: 1,
-    image: foodImage,
-  },
-  {
-    id: "suco-de-maracuja",
-    name: "Suco de maracujá",
-    detail: "Sabor à sua escolha",
-    price: 8,
-    quantity: 1,
-    image: juiceImage,
-  },
-] as const;
+type CheckoutDisplayItem = {
+  id: string;
+  name: string;
+  detail: string;
+  price: number;
+  quantity: number;
+  image: string;
+  lineId: string;
+};
 
-const deliveryFeeFor = (mode: FulfillmentMode, option: DeliveryOption) =>
-  mode !== "delivery" ? 0 : option === "platform" ? 7 : 5;
+function cartItemDetail(item: CartItem): string {
+  return buildCartItemSummary(item).join(" · ");
+}
+
+function toDisplayItems(cart: Cart): CheckoutDisplayItem[] {
+  return cart.items.map((item, index) => ({
+    id: item.line_id ?? `${item.item_id}-${index}`,
+    lineId: item.line_id ?? "",
+    name: item.name,
+    detail: cartItemDetail(item),
+    price: item.subtotal,
+    quantity: item.quantity,
+    image:
+      item.image_url ||
+      (/suco|bebida|café|cafe/i.test(item.name) ? juiceImage : foodImage),
+  }));
+}
+
+function fulfillmentLabel(mode: FulfillmentMode): string {
+  switch (mode) {
+    case "delivery":
+      return "Entrega";
+    case "takeout":
+      return "Retirada";
+    case "dine_in":
+      return "No local";
+  }
+}
+
+function deliveryLabel(
+  mode: FulfillmentMode,
+  option: DeliveryOption,
+): string {
+  if (mode === "takeout") return "Retirada na loja";
+  if (mode === "dine_in") return "Consumo no local";
+  return option === "platform" ? "Motoboy Achegue-se" : "Entrega da loja";
+}
+
+function profileTypeLabel(profileType?: string | null): string {
+  switch (profileType) {
+    case "business":
+      return "Negócio";
+    case "professional":
+      return "Profissional";
+    case "driver":
+      return "Motorista";
+    default:
+      return "Pessoal";
+  }
+}
 
 function ChoiceButton({
   active,
@@ -185,12 +253,25 @@ function Stepper({ stage }: { stage: CheckoutStage }) {
 }
 
 function CheckoutHeader({
+  business,
+  profileName,
+  profileType,
   onBack,
+  onAccount,
   stage,
 }: {
+  business: GastronomyBusiness;
+  profileName: string;
+  profileType: string;
   onBack: () => void;
+  onAccount: () => void;
   stage: CheckoutStage;
 }) {
+  const territoryLabel = business.location?.full_name || business.location?.name;
+  const cityLabel = [business.business_city, business.business_state]
+    .filter(Boolean)
+    .join(" · ");
+
   return (
     <>
       <header className="hidden border-b border-territory-border bg-territory-surface lg:block">
@@ -208,8 +289,10 @@ function CheckoutHeader({
               className="h-4 w-4 text-territory-brand"
               aria-hidden="true"
             />
-            <span>Complexo do Nordeste de Amaralina</span>
-            <span className="text-territory-muted">Salvador · BA</span>
+            <span>{territoryLabel || business.name}</span>
+            <span className="text-territory-muted">
+              {cityLabel || "Território não informado"}
+            </span>
           </div>
           <nav
             className="ml-auto flex items-center gap-7 text-xs font-semibold text-territory-ink"
@@ -220,12 +303,13 @@ function CheckoutHeader({
             <span>Apoio à comunidade</span>
             <button
               type="button"
+              onClick={onAccount}
               className="inline-flex h-9 w-9 items-center justify-center rounded-full border border-territory-border focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-territory-brand"
-              aria-label="Conta de Ana Oliveira"
+              aria-label={`Conta de ${profileName}`}
             >
               <UserRound className="h-4 w-4" aria-hidden="true" />
             </button>
-            <span>Ana Oliveira</span>
+            <span>{profileName} · {profileType}</span>
           </nav>
         </div>
       </header>
@@ -243,27 +327,52 @@ function CheckoutHeader({
   );
 }
 
-function BusinessSummary() {
+function BusinessSummary({ business }: { business: GastronomyBusiness }) {
+  const locationLabel = [
+    business.location?.name,
+    business.business_city ?? business.location?.full_name,
+    business.business_state,
+  ]
+    .filter(Boolean)
+    .join(" · ");
+
   return (
     <div className="flex items-center gap-3 py-1">
       <img
-        src={foodImage}
+        src={business.logo_url || foodImage}
         alt=""
         className="h-12 w-12 rounded-full object-cover"
       />
       <div className="min-w-0">
         <p className="truncate text-sm font-bold text-territory-ink">
-          Sabores da Ana
+          {business.name}
         </p>
         <p className="text-xs text-territory-muted">
-          Santa Cruz · Salvador, BA
+          {locationLabel || "Território não informado"}
         </p>
       </div>
     </div>
   );
 }
 
-function AddressCard({ compact = false }: { compact?: boolean }) {
+function AddressCard({
+  destination,
+  compact = false,
+  onEdit,
+  recipientName,
+  recipientPhone,
+  referencePoint,
+}: {
+  destination: ReturnType<typeof buildCheckoutDeliveryAddress>;
+  compact?: boolean;
+  onEdit?: () => void;
+  recipientName?: string;
+  recipientPhone?: string;
+  referencePoint?: string;
+}) {
+  const address = destination;
+  const hasAddress = Boolean(address);
+
   return (
     <div className="rounded-lg border border-territory-border bg-territory-surface p-3 text-xs text-territory-ink">
       <div className="flex items-start justify-between gap-3">
@@ -273,20 +382,36 @@ function AddressCard({ compact = false }: { compact?: boolean }) {
               className="h-4 w-4 shrink-0 text-territory-brand"
               aria-hidden="true"
             />
-            Casa
+            {address?.label ? "Endereço de entrega" : "Endereço do perfil"}
           </p>
-          <p className="mt-1 pl-6 text-territory-muted">
-            Rua Exemplo, 120 · Casa 2
-            <br />
-            Santa Cruz · Salvador, BA {compact ? "" : "· CEP 41900-000"}
-          </p>
+          {hasAddress ? (
+            <p className="mt-1 pl-6 text-territory-muted">
+              {[address?.street, address?.number, address?.complement]
+                .filter(Boolean)
+                .join(" · ") || address?.label}
+              <br />
+              {[address?.neighborhood, address?.city, address?.state]
+                .filter(Boolean)
+                .join(" · ")}
+              {!compact && address?.postal_code
+                ? ` · CEP ${address.postal_code}`
+                : ""}
+            </p>
+          ) : (
+            <p className="mt-1 pl-6 text-territory-muted">
+              Informe um endereço completo para continuar.
+            </p>
+          )}
         </div>
-        <button
-          type="button"
-          className="shrink-0 font-semibold text-territory-brand underline-offset-2 hover:underline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-territory-brand"
-        >
-          Alterar
-        </button>
+        {onEdit ? (
+          <button
+            type="button"
+            onClick={onEdit}
+            className="shrink-0 font-semibold text-territory-brand underline-offset-2 hover:underline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-territory-brand"
+          >
+            {hasAddress ? "Alterar" : "Adicionar"}
+          </button>
+        ) : null}
       </div>
       {!compact ? (
         <>
@@ -295,14 +420,15 @@ function AddressCard({ compact = false }: { compact?: boolean }) {
               className="h-4 w-4 shrink-0 text-territory-brand"
               aria-hidden="true"
             />
-            Ana Oliveira · (71) 9XXXX-1234
+            {recipientName || "Quem recebe"}
+            {recipientPhone ? ` · ${recipientPhone}` : ""}
           </p>
           <p className="mt-2 flex items-center gap-2 border-t border-territory-border pt-2 text-territory-muted">
             <PackageCheck
               className="h-4 w-4 shrink-0 text-territory-brand"
               aria-hidden="true"
             />
-            Ponto de referência: Portão azul
+            Ponto de referência: {referencePoint || "não informado"}
           </p>
         </>
       ) : null}
@@ -313,9 +439,13 @@ function AddressCard({ compact = false }: { compact?: boolean }) {
 function ItemsSummary({
   expanded,
   onToggle,
+  items,
+  subtotal,
 }: {
   expanded: boolean;
   onToggle: () => void;
+  items: CheckoutDisplayItem[];
+  subtotal: number;
 }) {
   return (
     <div className="overflow-hidden rounded-lg border border-territory-border bg-territory-surface">
@@ -326,16 +456,16 @@ function ItemsSummary({
         className="flex min-h-14 w-full items-center gap-3 px-3 text-left focus-visible:outline-2 focus-visible:outline-offset-[-2px] focus-visible:outline-territory-brand"
       >
         <img
-          src={foodImage}
+          src={items[0]?.image || foodImage}
           alt=""
           className="h-10 w-10 shrink-0 rounded-lg object-cover"
         />
         <span className="min-w-0 flex-1">
           <span className="block text-xs font-bold text-territory-ink">
-            Itens do pedido · {currency(49)}
+            Itens do pedido · {currency(subtotal)}
           </span>
           <span className="block text-[0.6875rem] text-territory-muted">
-            2 itens
+            {items.reduce((total, item) => total + item.quantity, 0)} itens
           </span>
         </span>
         <ChevronDown
@@ -348,7 +478,7 @@ function ItemsSummary({
       </button>
       {expanded ? (
         <div className="divide-y divide-territory-border border-t border-territory-border px-3">
-          {mockItems.map((item) => (
+          {items.map((item) => (
             <div key={item.id} className="flex items-center gap-3 py-2.5">
               <img
                 src={item.image}
@@ -378,14 +508,40 @@ function ItemsSummary({
 
 function MobileAddressStage({
   mode,
+  availableModes,
+  destination,
+  addressEditor,
+  addressMode,
+  hasSavedAddress,
+  profileName,
+  profileType,
+  profilePhone,
+  referencePoint,
+  items,
+  subtotal,
   expandedItems,
   onModeChange,
+  onAddressModeChange,
+  onEditAddress,
   onContinue,
   onToggleItems,
 }: {
   mode: FulfillmentMode;
+  availableModes: FulfillmentMode[];
+  destination: ReturnType<typeof buildCheckoutDeliveryAddress>;
+  addressEditor?: ReactNode;
+  addressMode: "saved" | "other";
+  hasSavedAddress: boolean;
+  profileName: string;
+  profileType: string;
+  profilePhone: string;
+  referencePoint: string;
+  items: CheckoutDisplayItem[];
+  subtotal: number;
   expandedItems: boolean;
   onModeChange: (mode: FulfillmentMode) => void;
+  onAddressModeChange: (mode: "saved" | "other") => void;
+  onEditAddress: () => void;
   onContinue: () => void;
   onToggleItems: () => void;
 }) {
@@ -394,25 +550,33 @@ function MobileAddressStage({
       <h1 className="font-heading text-[1.45rem] font-bold tracking-[-0.04em] text-territory-ink">
         Onde vamos entregar?
       </h1>
-      <div className="grid grid-cols-3 gap-2">
-        <ModeButton
-          active={mode === "delivery"}
-          icon={Truck}
-          label="Entrega"
-          onClick={() => onModeChange("delivery")}
-        />
-        <ModeButton
-          active={mode === "pickup"}
-          icon={ShoppingBag}
-          label="Retirada"
-          onClick={() => onModeChange("pickup")}
-        />
-        <ModeButton
-          active={mode === "dine-in"}
-          icon={Store}
-          label="No local"
-          onClick={() => onModeChange("dine-in")}
-        />
+      <div
+        className={cn(
+          "grid gap-2",
+          availableModes.length === 1
+            ? "grid-cols-1"
+            : availableModes.length === 2
+              ? "grid-cols-2"
+              : "grid-cols-3",
+        )}
+      >
+        {availableModes.map((availableMode) => {
+          const Icon =
+            availableMode === "delivery"
+              ? Truck
+              : availableMode === "takeout"
+                ? ShoppingBag
+                : Store;
+          return (
+            <ModeButton
+              key={availableMode}
+              active={mode === availableMode}
+              icon={Icon}
+              label={fulfillmentLabel(availableMode)}
+              onClick={() => onModeChange(availableMode)}
+            />
+          );
+        })}
       </div>
       <div className="flex min-h-12 items-center justify-between gap-3 rounded-lg border border-territory-border bg-territory-surface px-3 text-xs">
         <span className="flex min-w-0 items-center gap-2 font-semibold text-territory-ink">
@@ -420,42 +584,72 @@ function MobileAddressStage({
             className="h-4 w-4 shrink-0 text-territory-brand"
             aria-hidden="true"
           />
-          Ana Oliveira{" "}
-          <span className="font-normal text-territory-muted">· Pessoal</span>
+           {profileName}{" "}
+           <span className="font-normal text-territory-muted">· {profileType}</span>
         </span>
-        <ChevronRight
+          <ChevronRight
           className="h-4 w-4 shrink-0 text-territory-muted"
           aria-hidden="true"
         />
       </div>
-      <div>
+      {mode === "delivery" ? <div>
         <p className="mb-2 text-xs font-bold text-territory-ink">
           Endereço de entrega
         </p>
         <div className="mb-2 grid grid-cols-2 gap-2 text-xs">
           <button
             type="button"
-            className="min-h-9 rounded-lg border border-territory-brand bg-territory-raised px-2 font-semibold text-territory-ink focus-visible:outline-2 focus-visible:outline-offset-[-2px] focus-visible:outline-territory-brand"
+            aria-pressed={addressMode === "saved"}
+            disabled={!hasSavedAddress}
+            onClick={() => onAddressModeChange("saved")}
+            className={cn(
+              "min-h-9 rounded-lg border px-2 font-semibold text-territory-ink focus-visible:outline-2 focus-visible:outline-offset-[-2px] focus-visible:outline-territory-brand",
+              addressMode === "saved"
+                ? "border-territory-brand bg-territory-raised"
+                : "border-territory-border bg-territory-surface",
+              !hasSavedAddress && "cursor-not-allowed opacity-55",
+            )}
           >
             Endereço do perfil
           </button>
           <button
             type="button"
-            className="min-h-9 rounded-lg border border-territory-border bg-territory-surface px-2 text-territory-ink focus-visible:outline-2 focus-visible:outline-offset-[-2px] focus-visible:outline-territory-brand"
+            aria-pressed={addressMode === "other"}
+            onClick={() => onAddressModeChange("other")}
+            className={cn(
+              "min-h-9 rounded-lg border px-2 text-territory-ink focus-visible:outline-2 focus-visible:outline-offset-[-2px] focus-visible:outline-territory-brand",
+              addressMode === "other"
+                ? "border-territory-brand bg-territory-raised font-semibold"
+                : "border-territory-border bg-territory-surface",
+            )}
           >
             Outro endereço
           </button>
         </div>
-        <AddressCard />
-      </div>
-      <p className="flex items-center gap-1.5 rounded-lg bg-territory-info/10 px-3 py-2 text-[0.6875rem] leading-4 text-territory-ink">
-        <Info
-          className="h-3.5 w-3.5 shrink-0 text-territory-brand"
-          aria-hidden="true"
+        <AddressCard
+          destination={destination}
+          onEdit={onEditAddress}
+          recipientName={profileName}
+          recipientPhone={profilePhone}
+          referencePoint={referencePoint}
         />
-        Confira o endereço antes de continuar.
-      </p>
-      <ItemsSummary expanded={expandedItems} onToggle={onToggleItems} />
+        {addressEditor}
+      </div> : null}
+      {mode === "delivery" ? (
+        <p className="flex items-center gap-1.5 rounded-lg bg-territory-info/10 px-3 py-2 text-[0.6875rem] leading-4 text-territory-ink">
+          <Info
+            className="h-3.5 w-3.5 shrink-0 text-territory-brand"
+            aria-hidden="true"
+          />
+          Confira o endereço antes de continuar.
+        </p>
+      ) : null}
+      <ItemsSummary
+        expanded={expandedItems}
+        onToggle={onToggleItems}
+        items={items}
+        subtotal={subtotal}
+      />
       <button
         type="button"
         onClick={onContinue}
@@ -470,13 +664,25 @@ function MobileAddressStage({
 
 function MobileDeliveryStage({
   mode,
+  availableModes,
   deliveryOption,
+  destination,
+  subtotal,
+  deliveryFee,
+  businessName,
+  platformUnavailable,
   onModeChange,
   onDeliveryOptionChange,
   onContinue,
 }: {
   mode: FulfillmentMode;
+  availableModes: FulfillmentMode[];
   deliveryOption: DeliveryOption;
+  destination: ReturnType<typeof buildCheckoutDeliveryAddress>;
+  subtotal: number;
+  deliveryFee: number;
+  businessName: string;
+  platformUnavailable: boolean;
   onModeChange: (mode: FulfillmentMode) => void;
   onDeliveryOptionChange: (option: DeliveryOption) => void;
   onContinue: () => void;
@@ -486,7 +692,7 @@ function MobileDeliveryStage({
       <h1 className="font-heading text-[1.45rem] font-bold tracking-[-0.04em] text-territory-ink">
         Escolha a entrega
       </h1>
-      <AddressCard compact />
+      <AddressCard destination={destination} compact />
       <div className="space-y-2">
         <ChoiceButton
           active={deliveryOption === "store"}
@@ -498,18 +704,19 @@ function MobileDeliveryStage({
               className="h-5 w-5 text-territory-brand"
               aria-hidden="true"
             />
-            Entrega da loja <span className="ml-auto">{currency(5)}</span>
+            Entrega da loja <span className="ml-auto">{currency(deliveryFee)}</span>
           </span>
           <span className="mt-1 block pl-7 text-[0.6875rem] text-territory-muted">
             Equipe do estabelecimento
           </span>
           <span className="mt-1 block pl-7 text-[0.6875rem] text-territory-muted">
-            Seu pedido será entregue pela equipe do Sabores da Ana.
+            Seu pedido será entregue pela equipe do {businessName}.
           </span>
         </ChoiceButton>
         <ChoiceButton
           active={deliveryOption === "platform"}
           activeClassName="border-territory-sun bg-territory-sun/10 text-territory-ink"
+          disabled={platformUnavailable}
           onClick={() => onDeliveryOptionChange("platform")}
         >
           <span className="flex items-center gap-2 font-bold">
@@ -523,48 +730,48 @@ function MobileDeliveryStage({
             Endereço atendido pela plataforma
           </span>
           <span className="mt-1 block pl-7 text-[0.6875rem] text-territory-muted">
-            O entregador será buscado após a confirmação da loja.
+            O entregador seria buscado após a confirmação da loja.
           </span>
           <span className="mt-2 ml-7 inline-flex rounded-full bg-territory-sun/35 px-1.5 py-0.5 text-[0.5625rem] font-bold text-territory-ink">
-            Opção prevista
+            {platformUnavailable ? "Indisponível neste lançamento" : "Opção prevista"}
           </span>
         </ChoiceButton>
-        <button
-          type="button"
-          onClick={() => {
-            onModeChange("pickup");
-            onContinue();
-          }}
-          className="flex min-h-12 w-full items-center justify-between rounded-lg border border-territory-border bg-territory-surface px-3 text-left text-xs font-semibold text-territory-ink hover:border-territory-brand/50 focus-visible:outline-2 focus-visible:outline-offset-[-2px] focus-visible:outline-territory-brand"
-        >
-          <span className="flex items-center gap-2">
-            <Store
-              className="h-5 w-5 text-territory-brand"
-              aria-hidden="true"
-            />
-            Retirar na loja
-          </span>
-          <span className="flex items-center gap-1 text-[0.6875rem] font-normal text-territory-muted">
-            Sem taxa <ChevronRight className="h-4 w-4" aria-hidden="true" />
-          </span>
-        </button>
+        {availableModes.includes("takeout") ? (
+          <button
+            type="button"
+            onClick={() => {
+              onModeChange("takeout");
+              onContinue();
+            }}
+            className="flex min-h-12 w-full items-center justify-between rounded-lg border border-territory-border bg-territory-surface px-3 text-left text-xs font-semibold text-territory-ink hover:border-territory-brand/50 focus-visible:outline-2 focus-visible:outline-offset-[-2px] focus-visible:outline-territory-brand"
+          >
+            <span className="flex items-center gap-2">
+              <Store
+                className="h-5 w-5 text-territory-brand"
+                aria-hidden="true"
+              />
+              Retirar na loja
+            </span>
+            <span className="flex items-center gap-1 text-[0.6875rem] font-normal text-territory-muted">
+              Sem taxa <ChevronRight className="h-4 w-4" aria-hidden="true" />
+            </span>
+          </button>
+        ) : null}
       </div>
       <div className="rounded-lg border border-territory-border bg-territory-surface p-3 text-xs">
         <div className="flex items-center justify-between gap-3">
           <span className="text-territory-muted">Produtos</span>
-          <strong>{currency(49)}</strong>
+          <strong>{currency(subtotal)}</strong>
         </div>
         <div className="mt-1 flex items-center justify-between gap-3">
           <span className="text-territory-muted">
-            {deliveryOption === "platform"
-              ? "Motoboy Achegue-se"
-              : "Entrega da loja"}
+            {deliveryLabel(mode, deliveryOption)}
           </span>
-          <strong>{currency(deliveryFeeFor(mode, deliveryOption))}</strong>
+          <strong>{currency(deliveryOption === "platform" ? 0 : deliveryFee)}</strong>
         </div>
         <div className="mt-3 flex items-center justify-between gap-3 border-t border-territory-border pt-3 text-base font-bold">
           <span>Total</span>
-          <span>{currency(49 + deliveryFeeFor(mode, deliveryOption))}</span>
+          <span>{currency(subtotal + (deliveryOption === "platform" ? 0 : deliveryFee))}</span>
         </div>
       </div>
       <button
@@ -582,21 +789,55 @@ function MobileDeliveryStage({
 function MobileReviewStage({
   mode,
   deliveryOption,
+  paymentLabel,
+  destination,
+  recipientName,
+  businessName,
+  items,
+  subtotal,
+  deliveryFee,
+  notes,
+  notesExpanded,
+  paymentExpanded,
   paymentMethod,
+  paymentOptions,
+  cashChangeFor,
   onGoToDelivery,
-  onGoToAddress,
+  onGoToPayment,
+  onEditItems,
   onOpenFallback,
+  onToggleNotes,
+  onCashChangeForChange,
+  onPaymentMethodChange,
+  onNotesChange,
   onConfirm,
 }: {
   mode: FulfillmentMode;
   deliveryOption: DeliveryOption;
-  paymentMethod: PaymentMethod;
+  paymentLabel: string;
+  destination: ReturnType<typeof buildCheckoutDeliveryAddress>;
+  recipientName: string;
+  businessName: string;
+  items: CheckoutDisplayItem[];
+  subtotal: number;
+  deliveryFee: number;
+  notes: string;
+  notesExpanded: boolean;
+  paymentExpanded: boolean;
+  paymentMethod: string;
+  paymentOptions: CheckoutPaymentOption[];
+  cashChangeFor: string;
   onGoToDelivery: () => void;
-  onGoToAddress: () => void;
+  onGoToPayment: () => void;
+  onEditItems: () => void;
   onOpenFallback: () => void;
+  onToggleNotes: () => void;
+  onCashChangeForChange: (value: string) => void;
+  onPaymentMethodChange: (value: string) => void;
+  onNotesChange: (value: string) => void;
   onConfirm: () => void;
 }) {
-  const total = 49 + deliveryFeeFor(mode, deliveryOption);
+  const total = subtotal + deliveryFee;
   return (
     <div className="space-y-3">
       <h1 className="font-heading text-[1.45rem] font-bold tracking-[-0.04em] text-territory-ink">
@@ -619,13 +860,29 @@ function MobileReviewStage({
                 ? "Motoboy Achegue-se"
                 : mode === "delivery"
                   ? "Entrega da loja"
-                  : mode === "pickup"
+                  : mode === "takeout"
                     ? "Retirada na loja"
                     : "Consumo no local"}
             </strong>
             <span className="mt-0.5 block text-territory-muted">
-              Ana Oliveira · Rua Exemplo, 120 · Casa 2<br />
-              Santa Cruz · Salvador, BA
+              {recipientName || "Cliente"}
+              {destination ? (
+                <>
+                  {" · "}
+                  {[destination.street, destination.number, destination.complement]
+                    .filter(Boolean)
+                    .join(", ") || destination.label}
+                  <br />
+                  {[destination.neighborhood, destination.city, destination.state]
+                    .filter(Boolean)
+                    .join(" · ")}
+                </>
+              ) : (
+                <>
+                  {" · "}
+                  {businessName}
+                </>
+              )}
             </span>
           </span>
           <span className="shrink-0 text-xs font-semibold text-territory-brand">
@@ -634,6 +891,8 @@ function MobileReviewStage({
         </button>
         <button
           type="button"
+          aria-expanded={paymentExpanded}
+          onClick={onGoToPayment}
           className="flex w-full items-start gap-3 rounded-lg border border-territory-border bg-territory-surface p-2.5 text-left focus-visible:outline-2 focus-visible:outline-offset-[-2px] focus-visible:outline-territory-brand"
         >
           <WalletCards
@@ -642,9 +901,7 @@ function MobileReviewStage({
           />
           <span className="min-w-0 flex-1 text-xs">
             <strong className="block">
-              {paymentMethod === "pix"
-                ? "PIX combinado com a loja"
-                : "Link enviado pela loja"}
+              {paymentLabel}
             </strong>
             <span className="mt-0.5 block text-territory-muted">
               Produtos pagos diretamente à loja
@@ -654,6 +911,18 @@ function MobileReviewStage({
             Editar
           </span>
         </button>
+        {paymentExpanded ? (
+          <div className="rounded-lg border border-territory-border bg-territory-surface p-2.5">
+            <PaymentSection
+              method={paymentMethod}
+              options={paymentOptions}
+              cashChangeFor={cashChangeFor}
+              onCashChangeForChange={onCashChangeForChange}
+              onChange={onPaymentMethodChange}
+              compact
+            />
+          </div>
+        ) : null}
       </div>
       <div className="rounded-lg border border-territory-border bg-territory-surface p-2.5">
         <div className="flex items-center justify-between gap-3">
@@ -662,14 +931,14 @@ function MobileReviewStage({
           </h2>
           <button
             type="button"
-            onClick={onGoToAddress}
+            onClick={onEditItems}
             className="text-xs font-semibold text-territory-brand focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-territory-brand"
           >
             Editar
           </button>
         </div>
         <div className="mt-1.5 divide-y divide-territory-border border-y border-territory-border">
-          {mockItems.map((item) => (
+          {items.map((item) => (
             <div key={item.id} className="flex items-center gap-3 py-1.5">
               <img
                 src={item.image}
@@ -693,17 +962,34 @@ function MobileReviewStage({
       </div>
       <button
         type="button"
+        aria-expanded={notesExpanded}
+        onClick={onToggleNotes}
         className="flex min-h-10 w-full items-center justify-between rounded-lg border border-territory-border bg-territory-surface px-3 text-left text-xs font-semibold text-territory-ink focus-visible:outline-2 focus-visible:outline-offset-[-2px] focus-visible:outline-territory-brand"
       >
         Observações do pedido{" "}
+        <span className="sr-only">(opcional)</span>
         <span className="flex items-center gap-1 text-territory-brand">
-          Adicionar <ChevronDown className="h-4 w-4" aria-hidden="true" />
+          {notes ? `${notes.length}/280` : "Adicionar"}{" "}
+          <ChevronDown
+            className={cn("h-4 w-4", notesExpanded && "rotate-180")}
+            aria-hidden="true"
+          />
         </span>
       </button>
+      {notesExpanded ? (
+        <Textarea
+          value={notes}
+          onChange={(event) => onNotesChange(event.target.value)}
+          maxLength={280}
+          rows={3}
+          placeholder="Algo que a loja precisa saber?"
+          className="min-h-20 resize-none rounded-lg border-territory-border bg-territory-surface text-sm placeholder:text-territory-muted"
+        />
+      ) : null}
       <div className="rounded-lg border border-territory-border bg-territory-surface p-2.5 text-xs">
         <div className="flex items-center justify-between gap-3">
           <span className="text-territory-muted">Produtos</span>
-          <span>{currency(49)}</span>
+          <span>{currency(subtotal)}</span>
         </div>
         <div className="mt-1 flex items-center justify-between gap-3">
           <span className="text-territory-muted">
@@ -711,7 +997,7 @@ function MobileReviewStage({
               ? "Motoboy Achegue-se"
               : "Entrega da loja"}
           </span>
-          <span>{currency(deliveryFeeFor(mode, deliveryOption))}</span>
+          <span>{currency(deliveryFee)}</span>
         </div>
         <div className="mt-2 flex items-center justify-between gap-3 border-t border-territory-border pt-2 text-base font-bold">
           <span>Total</span>
@@ -741,9 +1027,17 @@ function MobileReviewStage({
 }
 
 function MobileFallbackStage({
+  destination,
+  subtotal,
+  deliveryFee,
+  items,
   onBackToReview,
   onContinue,
 }: {
+  destination: ReturnType<typeof buildCheckoutDeliveryAddress>;
+  subtotal: number;
+  deliveryFee: number;
+  items: CheckoutDisplayItem[];
   onBackToReview: () => void;
   onContinue: () => void;
 }) {
@@ -764,14 +1058,14 @@ function MobileFallbackStage({
           Você pode escolher outra opção para continuar.
         </p>
       </div>
-      <AddressCard compact />
+      <AddressCard destination={destination} compact />
       <p className="text-xs font-bold text-territory-ink">
         Escolha uma opção disponível
       </p>
       <ChoiceButton active onClick={onContinue}>
         <span className="flex items-center gap-2 font-bold">
           <Truck className="h-5 w-5 text-territory-brand" aria-hidden="true" />
-          Entrega da loja <span className="ml-auto">{currency(5)}</span>
+          Entrega da loja <span className="ml-auto">{currency(deliveryFee)}</span>
         </span>
         <span className="mt-1 block pl-7 text-[0.6875rem] text-territory-muted">
           Equipe do estabelecimento
@@ -792,8 +1086,8 @@ function MobileFallbackStage({
       </button>
       <div className="rounded-lg border border-territory-border bg-territory-surface p-3">
         <div className="flex items-center justify-between gap-3 text-xs font-bold">
-          <span>Seu pedido · 2 itens</span>
-          <span>{currency(49)}</span>
+          <span>Seu pedido · {items.reduce((total, item) => total + item.quantity, 0)} itens</span>
+          <span>{currency(subtotal)}</span>
         </div>
         <p className="mt-1 text-[0.6875rem] text-territory-muted">
           Seus itens foram mantidos.
@@ -802,15 +1096,15 @@ function MobileFallbackStage({
       <div className="rounded-lg border border-territory-border bg-territory-surface p-3 text-xs">
         <div className="flex items-center justify-between gap-3">
           <span className="text-territory-muted">Produtos</span>
-          <span>{currency(49)}</span>
+          <span>{currency(subtotal)}</span>
         </div>
         <div className="mt-1 flex items-center justify-between gap-3">
           <span className="text-territory-muted">Entrega da loja</span>
-          <span>{currency(5)}</span>
+          <span>{currency(deliveryFee)}</span>
         </div>
         <div className="mt-3 flex items-center justify-between gap-3 border-t border-territory-border pt-3 text-base font-bold">
           <span>Total</span>
-          <span>{currency(54)}</span>
+          <span>{currency(subtotal + deliveryFee)}</span>
         </div>
       </div>
       <button
@@ -824,7 +1118,29 @@ function MobileFallbackStage({
   );
 }
 
-function AddressSection({ mode }: { mode: FulfillmentMode }) {
+function AddressSection({
+  mode,
+  destination,
+  addressMode,
+  hasSavedAddress,
+  addressEditor,
+  profileName,
+  profilePhone,
+  referencePoint,
+  onAddressModeChange,
+  onEditAddress,
+}: {
+  mode: FulfillmentMode;
+  destination: ReturnType<typeof buildCheckoutDeliveryAddress>;
+  addressMode: "saved" | "other";
+  hasSavedAddress: boolean;
+  addressEditor?: ReactNode;
+  profileName: string;
+  profilePhone: string;
+  referencePoint: string;
+  onAddressModeChange: (mode: "saved" | "other") => void;
+  onEditAddress: () => void;
+}) {
   if (mode !== "delivery") return null;
   return (
     <section
@@ -840,6 +1156,7 @@ function AddressSection({ mode }: { mode: FulfillmentMode }) {
         </h2>
         <button
           type="button"
+          onClick={onEditAddress}
           className="inline-flex min-h-9 items-center gap-1 text-xs font-semibold text-territory-brand underline-offset-2 hover:underline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-territory-brand"
         >
           <Pencil className="h-3.5 w-3.5" aria-hidden="true" />
@@ -849,20 +1166,43 @@ function AddressSection({ mode }: { mode: FulfillmentMode }) {
       <div className="mt-3 grid grid-cols-2 gap-2 text-xs">
         <button
           type="button"
-          className="min-h-9 rounded-lg border border-territory-brand bg-territory-raised px-2 font-semibold text-territory-ink"
+          aria-pressed={addressMode === "saved"}
+          disabled={!hasSavedAddress}
+          onClick={() => onAddressModeChange("saved")}
+          className={cn(
+            "min-h-9 rounded-lg border px-2 font-semibold text-territory-ink",
+            addressMode === "saved"
+              ? "border-territory-brand bg-territory-raised"
+              : "border-territory-border bg-territory-surface",
+            !hasSavedAddress && "cursor-not-allowed opacity-55",
+          )}
         >
           Endereço do perfil
         </button>
         <button
           type="button"
-          className="min-h-9 rounded-lg border border-territory-border bg-territory-surface px-2 text-territory-ink"
+          aria-pressed={addressMode === "other"}
+          onClick={() => onAddressModeChange("other")}
+          className={cn(
+            "min-h-9 rounded-lg border px-2 text-territory-ink",
+            addressMode === "other"
+              ? "border-territory-brand bg-territory-raised font-semibold"
+              : "border-territory-border bg-territory-surface",
+          )}
         >
           Outro endereço
         </button>
       </div>
       <div className="mt-3">
-        <AddressCard />
+        <AddressCard
+          destination={destination}
+          onEdit={onEditAddress}
+          recipientName={profileName}
+          recipientPhone={profilePhone}
+          referencePoint={referencePoint}
+        />
       </div>
+      {addressEditor}
       <p className="mt-3 flex items-center gap-1.5 rounded-lg bg-territory-info/10 px-3 py-2 text-[0.6875rem] leading-4 text-territory-ink">
         <Info
           className="h-3.5 w-3.5 shrink-0 text-territory-brand"
@@ -877,11 +1217,19 @@ function AddressSection({ mode }: { mode: FulfillmentMode }) {
 function FulfillmentSection({
   mode,
   deliveryOption,
+  availableModes,
+  deliveryFee,
+  businessName,
+  platformUnavailable,
   onModeChange,
   onDeliveryOptionChange,
 }: {
   mode: FulfillmentMode;
   deliveryOption: DeliveryOption;
+  availableModes: FulfillmentMode[];
+  deliveryFee: number;
+  businessName: string;
+  platformUnavailable: boolean;
   onModeChange: (mode: FulfillmentMode) => void;
   onDeliveryOptionChange: (option: DeliveryOption) => void;
 }) {
@@ -899,25 +1247,33 @@ function FulfillmentSection({
         </h2>
         <Clock3 className="h-5 w-5 text-territory-brand" aria-hidden="true" />
       </div>
-      <div className="mt-3 grid grid-cols-3 gap-2">
-        <ModeButton
-          active={mode === "delivery"}
-          icon={Truck}
-          label="Entrega"
-          onClick={() => onModeChange("delivery")}
-        />
-        <ModeButton
-          active={mode === "pickup"}
-          icon={ShoppingBag}
-          label="Retirada"
-          onClick={() => onModeChange("pickup")}
-        />
-        <ModeButton
-          active={mode === "dine-in"}
-          icon={Store}
-          label="No local"
-          onClick={() => onModeChange("dine-in")}
-        />
+      <div
+        className={cn(
+          "mt-3 grid gap-2",
+          availableModes.length === 1
+            ? "grid-cols-1"
+            : availableModes.length === 2
+              ? "grid-cols-2"
+              : "grid-cols-3",
+        )}
+      >
+        {availableModes.map((availableMode) => {
+          const Icon =
+            availableMode === "delivery"
+              ? Truck
+              : availableMode === "takeout"
+                ? ShoppingBag
+                : Store;
+          return (
+            <ModeButton
+              key={availableMode}
+              active={mode === availableMode}
+              icon={Icon}
+              label={fulfillmentLabel(availableMode)}
+              onClick={() => onModeChange(availableMode)}
+            />
+          );
+        })}
       </div>
       {mode === "delivery" ? (
         <>
@@ -931,23 +1287,26 @@ function FulfillmentSection({
             >
               <span className="block font-semibold">
                 Entrega da loja{" "}
-                <span className="float-right">{currency(5)}</span>
+                <span className="float-right">{currency(deliveryFee)}</span>
               </span>
               <span className="mt-0.5 block text-[0.6875rem] text-territory-muted">
                 Equipe do estabelecimento
               </span>
               <span className="mt-1 block text-[0.6875rem] text-territory-muted">
-                Seu pedido será entregue pela equipe do Sabores da Ana.
+                Seu pedido será entregue pela equipe do {businessName}.
               </span>
             </ChoiceButton>
             <ChoiceButton
               active={deliveryOption === "platform"}
+              disabled={platformUnavailable}
               onClick={() => onDeliveryOptionChange("platform")}
             >
               <span className="flex items-center justify-between gap-2 font-semibold">
                 Motoboy Achegue-se{" "}
                 <span className="rounded-full bg-territory-sun/45 px-1.5 py-0.5 text-[0.5625rem]">
-                  Opção prevista
+                  {platformUnavailable
+                    ? "Indisponível neste lançamento"
+                    : "Opção prevista"}
                 </span>
               </span>
               <span className="mt-0.5 block text-[0.6875rem] text-territory-muted">
@@ -979,46 +1338,71 @@ function FulfillmentSection({
 
 function PaymentSection({
   method,
+  options,
+  cashChangeFor,
+  onCashChangeForChange,
   onChange,
+  compact = false,
 }: {
-  method: PaymentMethod;
-  onChange: (method: PaymentMethod) => void;
+  method: string;
+  options: CheckoutPaymentOption[];
+  cashChangeFor: string;
+  onCashChangeForChange: (value: string) => void;
+  onChange: (method: string) => void;
+  compact?: boolean;
 }) {
   return (
     <section
-      className="rounded-xl border border-territory-border bg-territory-surface p-4 sm:p-5"
-      aria-labelledby="checkout-payment-title"
+      className={cn(
+        !compact &&
+          "rounded-xl border border-territory-border bg-territory-surface p-4 sm:p-5",
+      )}
+      aria-label={compact ? "Forma de pagamento" : undefined}
+      aria-labelledby={compact ? undefined : "checkout-payment-title"}
     >
-      <h2
-        id="checkout-payment-title"
-        className="font-heading text-base font-bold text-territory-ink"
-      >
-        3. Pagamento
-      </h2>
-      <p className="mt-2 flex items-center gap-2 rounded-lg bg-territory-sun/20 px-3 py-2 text-[0.6875rem] text-territory-ink sm:text-xs">
-        <WalletCards
-          className="h-4 w-4 shrink-0 text-territory-brand"
-          aria-hidden="true"
-        />
-        Pagamento dos produtos direto com a loja.
-      </p>
+      {!compact ? (
+        <>
+          <h2
+            id="checkout-payment-title"
+            className="font-heading text-base font-bold text-territory-ink"
+          >
+            3. Pagamento
+          </h2>
+          <p className="mt-2 flex items-center gap-2 rounded-lg bg-territory-sun/20 px-3 py-2 text-[0.6875rem] text-territory-ink sm:text-xs">
+            <WalletCards
+              className="h-4 w-4 shrink-0 text-territory-brand"
+              aria-hidden="true"
+            />
+            Pagamento dos produtos direto com a loja.
+          </p>
+        </>
+      ) : null}
       <div className="mt-3 grid gap-2 sm:grid-cols-2">
-        <ChoiceButton active={method === "pix"} onClick={() => onChange("pix")}>
-          <span className="block font-semibold">PIX combinado com a loja</span>
-          <span className="mt-0.5 block text-[0.6875rem] text-territory-muted">
-            A loja envia as instruções
-          </span>
-        </ChoiceButton>
-        <ChoiceButton
-          active={method === "link"}
-          onClick={() => onChange("link")}
-        >
-          <span className="block font-semibold">Link enviado pela loja</span>
-          <span className="mt-0.5 block text-[0.6875rem] text-territory-muted">
-            Pagamento seguro após o aceite
-          </span>
-        </ChoiceButton>
+        {options.map((option) => (
+          <ChoiceButton
+            key={option.value}
+            active={method === option.value}
+            onClick={() => onChange(option.value)}
+          >
+            <span className="block font-semibold">{option.label}</span>
+            <span className="mt-0.5 block text-[0.6875rem] text-territory-muted">
+              Pagamento combinado diretamente com a loja
+            </span>
+          </ChoiceButton>
+        ))}
       </div>
+      {method === "cash" ? (
+        <label className="mt-3 block text-xs font-semibold text-territory-ink">
+          Troco para (opcional)
+          <input
+            value={cashChangeFor}
+            onChange={(event) => onCashChangeForChange(event.target.value)}
+            inputMode="decimal"
+            placeholder="Ex.: 100,00"
+            className="mt-1 h-10 w-full rounded-lg border border-territory-border bg-territory-surface px-3 text-sm font-normal outline-none focus-visible:border-territory-brand focus-visible:ring-2 focus-visible:ring-territory-brand/20"
+          />
+        </label>
+      ) : null}
       <button
         type="button"
         className="mt-3 flex min-h-9 w-full items-center justify-between border-t border-territory-border pt-3 text-left text-xs font-semibold text-territory-ink focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-territory-brand"
@@ -1030,7 +1414,15 @@ function PaymentSection({
   );
 }
 
-function ItemsSection() {
+function ItemsSection({
+  items,
+  onRemoveItem,
+  onAddMoreItems,
+}: {
+  items: CheckoutDisplayItem[];
+  onRemoveItem: (lineId: string) => void;
+  onAddMoreItems: () => void;
+}) {
   return (
     <section
       className="rounded-xl border border-territory-border bg-territory-surface p-4 sm:p-5"
@@ -1045,13 +1437,14 @@ function ItemsSection() {
         </h2>
         <button
           type="button"
+          onClick={onAddMoreItems}
           className="text-xs font-semibold text-territory-brand underline-offset-2 hover:underline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-territory-brand"
         >
           Editar
         </button>
       </div>
       <div className="mt-3 divide-y divide-territory-border border-y border-territory-border">
-        {mockItems.map((item) => (
+        {items.map((item) => (
           <div key={item.id} className="flex items-center gap-3 py-3">
             <img
               src={item.image}
@@ -1068,9 +1461,20 @@ function ItemsSection() {
                 </p>
               ) : null}
             </div>
-            <span className="shrink-0 text-sm font-bold text-territory-ink">
-              {currency(item.price)}
-            </span>
+            <div className="flex shrink-0 flex-col items-end gap-1">
+              <span className="text-sm font-bold text-territory-ink">
+                {currency(item.price)}
+              </span>
+              {item.lineId ? (
+                <button
+                  type="button"
+                  onClick={() => onRemoveItem(item.lineId)}
+                  className="text-[0.6875rem] font-semibold text-territory-brand underline-offset-2 hover:underline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-territory-brand"
+                >
+                  Remover
+                </button>
+              ) : null}
+            </div>
           </div>
         ))}
       </div>
@@ -1081,23 +1485,34 @@ function ItemsSection() {
 function OrderSummary({
   mode,
   deliveryOption,
+  items,
+  subtotal,
+  deliveryFee,
+  minimumOrderRemaining,
+  isSubmitDisabled,
+  isSubmitting,
+  onAddMoreItems,
+  onRemoveItem,
   onConfirm,
   onFallback,
+  onContactStore,
 }: {
   mode: FulfillmentMode;
   deliveryOption: DeliveryOption;
+  items: CheckoutDisplayItem[];
+  subtotal: number;
+  deliveryFee: number;
+  minimumOrderRemaining: number;
+  isSubmitDisabled: boolean;
+  isSubmitting: boolean;
+  onAddMoreItems: () => void;
+  onRemoveItem: (lineId: string) => void;
   onConfirm: () => void;
   onFallback: () => void;
+  onContactStore: () => void;
 }) {
-  const deliveryFee = deliveryFeeFor(mode, deliveryOption);
-  const subtotal = mockItems.reduce((total, item) => total + item.price, 0);
   const total = subtotal + deliveryFee;
-  const deliveryLabel =
-    mode !== "delivery"
-      ? "Sem taxa"
-      : deliveryOption === "platform"
-        ? "Motoboy Achegue-se"
-        : "Entrega da loja";
+  const summaryDeliveryLabel = deliveryLabel(mode, deliveryOption);
   return (
     <aside
       className="rounded-xl border border-territory-border bg-territory-surface p-4 shadow-territory-subtle sm:p-5 lg:sticky lg:top-5"
@@ -1112,13 +1527,14 @@ function OrderSummary({
         </h2>
         <button
           type="button"
+          onClick={onAddMoreItems}
           className="text-xs font-semibold text-territory-brand underline-offset-2 hover:underline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-territory-brand"
         >
           Adicionar mais itens
         </button>
       </div>
       <div className="mt-4 divide-y divide-territory-border border-y border-territory-border">
-        {mockItems.map((item) => (
+        {items.map((item) => (
           <div key={item.id} className="flex gap-3 py-3">
             <img
               src={item.image}
@@ -1142,12 +1558,15 @@ function OrderSummary({
               <div className="mt-2 flex gap-3 text-[0.6875rem] text-territory-brand">
                 <button
                   type="button"
+                  onClick={onAddMoreItems}
                   className="underline-offset-2 hover:underline"
                 >
                   Editar
                 </button>
                 <button
                   type="button"
+                  onClick={() => item.lineId && onRemoveItem(item.lineId)}
+                  disabled={!item.lineId}
                   className="underline-offset-2 hover:underline"
                 >
                   Remover
@@ -1163,7 +1582,7 @@ function OrderSummary({
           <span>{currency(subtotal)}</span>
         </div>
         <div className="flex items-center justify-between gap-3">
-          <span className="text-territory-muted">{deliveryLabel}</span>
+          <span className="text-territory-muted">{summaryDeliveryLabel}</span>
           <span>{currency(deliveryFee)}</span>
         </div>
         <div className="flex items-center justify-between gap-3 border-t border-territory-border pt-3 text-lg font-bold">
@@ -1171,19 +1590,30 @@ function OrderSummary({
           <span>{currency(total)}</span>
         </div>
       </div>
-      <p className="mt-3 flex items-center gap-2 rounded-lg bg-territory-success/10 px-3 py-2 text-[0.6875rem] text-territory-ink">
-        <Check
-          className="h-4 w-4 shrink-0 text-territory-success"
-          aria-hidden="true"
-        />
-        Pedido mínimo de R$ 20,00 atingido.
-      </p>
+      {minimumOrderRemaining > 0 ? (
+        <p className="mt-3 flex items-center gap-2 rounded-lg bg-territory-warning/15 px-3 py-2 text-[0.6875rem] text-territory-ink">
+          <CircleAlert
+            className="h-4 w-4 shrink-0 text-territory-warning"
+            aria-hidden="true"
+          />
+          Faltam {currency(minimumOrderRemaining)} para o pedido mínimo.
+        </p>
+      ) : (
+        <p className="mt-3 flex items-center gap-2 rounded-lg bg-territory-success/10 px-3 py-2 text-[0.6875rem] text-territory-ink">
+          <Check
+            className="h-4 w-4 shrink-0 text-territory-success"
+            aria-hidden="true"
+          />
+          Pedido mínimo atingido.
+        </p>
+      )}
       <Button
         type="button"
         onClick={onConfirm}
+        disabled={isSubmitDisabled}
         className="mt-4 h-12 w-full rounded-lg bg-territory-sun text-sm font-bold text-territory-ink hover:bg-territory-sun/90"
       >
-        Confirmar pedido · {currency(total)}
+        {isSubmitting ? "Criando pedido..." : `Confirmar pedido · ${currency(total)}`}
       </Button>
       <p className="mt-3 text-center text-[0.6875rem] leading-4 text-territory-muted">
         Após confirmar, a loja recebe o pedido e combina os detalhes do
@@ -1201,6 +1631,7 @@ function OrderSummary({
       ) : null}
       <button
         type="button"
+        onClick={onContactStore}
         className="mt-4 flex min-h-10 items-center gap-2 text-xs font-semibold text-territory-brand focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-territory-brand"
       >
         <MessageCircle className="h-4 w-4" aria-hidden="true" />
@@ -1213,6 +1644,7 @@ function OrderSummary({
 function MobileCheckoutFooter({
   stage,
   total,
+  disabled,
   onAddressContinue,
   onDeliveryContinue,
   onReviewConfirm,
@@ -1220,6 +1652,7 @@ function MobileCheckoutFooter({
 }: {
   stage: CheckoutStage;
   total: number;
+  disabled?: boolean;
   onAddressContinue: () => void;
   onDeliveryContinue: () => void;
   onReviewConfirm: () => void;
@@ -1248,6 +1681,7 @@ function MobileCheckoutFooter({
         <Button
           type="button"
           onClick={onClick}
+          disabled={disabled}
           className="pointer-events-auto h-11 w-full rounded-lg bg-territory-sun text-sm font-bold text-territory-ink shadow-[0_4px_12px_rgba(18,62,61,0.12)] hover:bg-territory-sun/90 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-territory-brand"
         >
           {label}
@@ -1258,51 +1692,308 @@ function MobileCheckoutFooter({
   );
 }
 
-export default function GastronomyCheckoutConceptSurface() {
+export default function GastronomyCheckoutConceptSurface({
+  business,
+}: {
+  business: GastronomyBusiness;
+}) {
   const navigate = useNavigate();
-  const [stage, setStage] = useState<CheckoutStage>("address");
-  const [fulfillmentMode, setFulfillmentMode] =
-    useState<FulfillmentMode>("delivery");
-  const [deliveryOption, setDeliveryOption] = useState<DeliveryOption>("store");
-  const [paymentMethod, setPaymentMethod] = useState<PaymentMethod>("pix");
-  const [notes, setNotes] = useState("");
-  const [expandedItems, setExpandedItems] = useState(false);
-  const subtotal = useMemo(
-    () => mockItems.reduce((total, item) => total + item.price, 0),
-    [],
+  const appUrls = useAppUrls();
+  const { user, activeProfile } = useSessionContext();
+  const { cart, hasCart, minimumOrderReached, minimumOrderRemaining, removeItem } =
+    useGastronomyCart(business);
+  const { checkout, isSubmitting, hasActiveProfile } = useGastronomyCheckout();
+  const availableModes = useMemo(
+    () => getEnabledFulfillmentModes(business),
+    [business],
   );
-  const total = subtotal + deliveryFeeFor(fulfillmentMode, deliveryOption);
-  const confirmPreview = () =>
-    toast.success("Prévia do checkout pronta para conectar ao pedido real.", {
-      position: "top-center",
-    });
+  const [fulfillmentMode, setFulfillmentMode] = useState<FulfillmentMode>(() =>
+    normalizeFulfillmentMode(business, cart.fulfillment_mode),
+  );
+  const [deliveryOption, setDeliveryOption] = useState<DeliveryOption>("store");
+  const [paymentMethod, setPaymentMethod] = useState<string>("pix");
+  const [cashChangeFor, setCashChangeFor] = useState("");
+  const [notes, setNotes] = useState("");
+  const [notesExpanded, setNotesExpanded] = useState(false);
+  const [paymentExpanded, setPaymentExpanded] = useState(false);
+  const [expandedItems, setExpandedItems] = useState(false);
+  const [addressMode, setAddressMode] = useState<"saved" | "other">("saved");
+  const [stage, setStage] = useState<CheckoutStage>("address");
+  const [streetNumber, setStreetNumber] = useState("");
+  const [complement, setComplement] = useState("");
+  const [referencePoint, setReferencePoint] = useState("");
+  const [recipientName, setRecipientName] = useState("");
+  const [recipientPhone, setRecipientPhone] = useState("");
+
+  const deliveryDestinationManager = useDeliveryDestination({
+    userId: user?.id ?? activeProfile?.userId,
+    resolved: null,
+    autoRequestLocation: false,
+    navigateOnSavedResidenceApply: false,
+    allowGpsDestination: false,
+  });
+  const {
+    deliveryDestination,
+    showDestinationEditor,
+    destinationAddressQuery,
+    destinationErrorMessage,
+    isResolvingDestinationAddress,
+    isLocatingUser,
+    destinationSourceLabel,
+    savedResidenceLabel,
+    hasSavedResidence,
+    setShowDestinationEditor,
+    setDestinationAddressQuery,
+    handleActivateLocation,
+    handleSubmitAddressDestination,
+    handleUseSavedResidence,
+    handleClearDestination,
+  } = deliveryDestinationManager;
+  const effectiveDestination =
+    deliveryDestination?.source === "gps" ? null : deliveryDestination;
+  const destinationLabel = useMemo(
+    () => formatDeliveryDestinationDisplayLabel(effectiveDestination),
+    [effectiveDestination],
+  );
+  const checkoutAddress = useMemo(
+    () =>
+      buildCheckoutDeliveryAddress(effectiveDestination, {
+        streetNumber,
+        complement,
+        referencePoint,
+        recipientName,
+        recipientPhone,
+      }),
+    [
+      complement,
+      effectiveDestination,
+      recipientName,
+      recipientPhone,
+      referencePoint,
+      streetNumber,
+    ],
+  );
+  const requiresAddress = requiresDeliveryDestination(fulfillmentMode);
+  const structuredAddressReady = isStructuredDeliveryDestinationReady(
+    effectiveDestination,
+    streetNumber,
+  );
+  const checkoutCart = useMemo(
+    () => applyFulfillmentToCart(cart, business, fulfillmentMode),
+    [business, cart, fulfillmentMode],
+  );
+  const items = useMemo(() => toDisplayItems(checkoutCart), [checkoutCart]);
+  const subtotal = checkoutCart.subtotal;
+  const deliveryFee = deliveryOption === "platform" ? 0 : checkoutCart.delivery_fee;
+  const total = subtotal + deliveryFee;
+  const paymentOptions = useMemo(
+    () => resolveCheckoutPaymentOptions(business, fulfillmentMode),
+    [business, fulfillmentMode],
+  );
+  const platformUnavailable = !isPlatformCourierCheckoutAvailable();
+  const platformCourierUnavailable = isPlatformCourierUnavailableForCheckout(
+    business,
+    fulfillmentMode,
+  );
+
+  useEffect(() => {
+    setFulfillmentMode((current) => normalizeFulfillmentMode(business, current));
+  }, [business]);
+
+  useEffect(() => {
+    if (!paymentOptions.some((option) => option.value === paymentMethod)) {
+      setPaymentMethod(paymentOptions[0]?.value ?? "pix");
+    }
+  }, [paymentMethod, paymentOptions]);
+
+  useEffect(() => {
+    if (!effectiveDestination) return;
+    setStreetNumber(effectiveDestination.number ?? "");
+    setComplement(effectiveDestination.complement ?? "");
+    setReferencePoint(effectiveDestination.reference ?? "");
+  }, [effectiveDestination]);
+
+  useEffect(() => {
+    if (!activeProfile) return;
+    setRecipientName((current) =>
+      current || activeProfile.displayName || activeProfile.name || "",
+    );
+    setRecipientPhone((current) => current || activeProfile.phone || "");
+  }, [activeProfile]);
+
+  useEffect(() => {
+    if (!requiresAddress) return;
+    if (addressMode === "saved" && hasSavedResidence && !effectiveDestination) {
+      void handleUseSavedResidence();
+    }
+    if (addressMode === "other") setShowDestinationEditor(true);
+  }, [
+    addressMode,
+    effectiveDestination,
+    handleUseSavedResidence,
+    hasSavedResidence,
+    requiresAddress,
+    setShowDestinationEditor,
+  ]);
+
+  const isSubmitDisabled = isCheckoutSubmitDisabled({
+    hasCart,
+    minimumOrderReached,
+    isSubmitting,
+    hasActiveProfile,
+    availableFulfillmentModes: availableModes,
+    platformCourierUnavailable,
+    requiresDeliveryDestination: requiresAddress,
+    hasDeliveryDestination: Boolean(effectiveDestination),
+    structuredDeliveryReady: structuredAddressReady,
+  });
+  const profileName =
+    activeProfile?.displayName || activeProfile?.name || "Perfil ativo";
+  const profileType = profileTypeLabel(activeProfile?.profileType);
+  const addressEditor = requiresAddress && (showDestinationEditor || !destinationLabel) ? (
+    <div className="space-y-3">
+      <GastronomyDeliveryDestinationPanel
+        destinationLabel={destinationLabel}
+        destinationSourceLabel={effectiveDestination ? destinationSourceLabel : null}
+        isEditing={showDestinationEditor}
+        addressQuery={destinationAddressQuery}
+        isResolvingAddress={isResolvingDestinationAddress}
+        isLocatingUser={isLocatingUser}
+        hasSavedAddressOption={hasSavedResidence}
+        savedAddressLabel={savedResidenceLabel}
+        isAuthenticated={Boolean(user)}
+        errorMessage={destinationErrorMessage}
+        onAddressQueryChange={setDestinationAddressQuery}
+        onSubmitAddress={() => void handleSubmitAddressDestination()}
+        onUseCurrentLocation={handleActivateLocation}
+        onUseSavedAddress={() => void handleUseSavedResidence()}
+        onOpenEditor={() => setShowDestinationEditor(true)}
+        onCloseEditor={() => setShowDestinationEditor(false)}
+        onGoToLogin={() => navigate(appUrls.auth.login)}
+        showCurrentLocationAction={false}
+      />
+      {effectiveDestination && (showDestinationEditor || !structuredAddressReady) ? (
+        <CheckoutDeliveryAddressFields
+          idPrefix="concept-checkout"
+          deliveryDestination={effectiveDestination}
+          streetNumber={streetNumber}
+          complement={complement}
+          referencePoint={referencePoint}
+          recipientName={recipientName}
+          recipientPhone={recipientPhone}
+          onStreetNumberChange={setStreetNumber}
+          onComplementChange={setComplement}
+          onReferencePointChange={setReferencePoint}
+          onRecipientNameChange={setRecipientName}
+          onRecipientPhoneChange={setRecipientPhone}
+        />
+      ) : null}
+    </div>
+  ) : null;
 
   const handleModeChange = (nextMode: FulfillmentMode) => {
     setFulfillmentMode(nextMode);
-    if (nextMode !== "delivery") setDeliveryOption("store");
+    setDeliveryOption("store");
+    if (nextMode !== "delivery") setStage("review");
   };
-  const continueFromAddress = () =>
+  const handleAddressModeChange = (nextMode: "saved" | "other") => {
+    setAddressMode(nextMode);
+    if (nextMode === "saved") {
+      void handleUseSavedResidence();
+    } else {
+      handleClearDestination();
+      setShowDestinationEditor(true);
+    }
+  };
+  const continueFromAddress = () => {
+    if (!hasCart) {
+      toast.error("Adicione pelo menos um item antes de continuar.", {
+        position: "top-center",
+      });
+      return;
+    }
+    if (requiresAddress && !structuredAddressReady) {
+      setShowDestinationEditor(true);
+      toast.error("Informe o endereço completo para continuar.", {
+        position: "top-center",
+      });
+      return;
+    }
     setStage(fulfillmentMode === "delivery" ? "delivery" : "review");
-  const continueFromDelivery = () => setStage("review");
+  };
+  const handleSubmit = async () => {
+    if (isSubmitDisabled) return;
+    try {
+      const order = await checkout({
+        business,
+        cart: checkoutCart,
+        fulfillment_mode: fulfillmentMode,
+        payment_method: paymentMethod,
+        notes: buildCheckoutOrderNotes({
+          paymentMethod,
+          cashChangeFor,
+          customerNotes: notes,
+          deliveryDestination: requiresAddress ? effectiveDestination : null,
+          streetNumber,
+          complement,
+          referencePoint,
+        }),
+        deliveryAddress: checkoutAddress,
+      });
+      toast.success(`Pedido ${order.id.slice(0, 8)} criado com sucesso.`, {
+        position: "top-center",
+      });
+      navigate(businessManagementRoutes.gastronomyPedidoPublico(order.id));
+    } catch (error) {
+      toast.error(
+        error instanceof Error ? error.message : "Falha ao concluir o pedido.",
+        { position: "top-center" },
+      );
+    }
+  };
   const returnToPrevious = () => {
     if (stage === "delivery") setStage("address");
-    else if (stage === "review") setStage("delivery");
+    else if (stage === "review") setStage(fulfillmentMode === "delivery" ? "delivery" : "address");
     else if (stage === "fallback") setStage("review");
     else navigate(-1);
   };
 
   return (
     <div className="min-h-screen bg-territory-canvas text-territory-ink">
-      <CheckoutHeader onBack={returnToPrevious} stage={stage} />
+      <Helmet>
+        <title>Finalizar pedido | {business.name}</title>
+        <meta name="robots" content="noindex, nofollow" />
+      </Helmet>
+      <CheckoutHeader
+        business={business}
+        profileName={profileName}
+        profileType={profileType}
+        onBack={returnToPrevious}
+        onAccount={() => navigate(appUrls.profile.home)}
+        stage={stage}
+      />
       <main className="mx-auto max-w-[84rem] px-3 pb-[calc(5.5rem+env(safe-area-inset-bottom))] pt-3 sm:px-6 sm:pt-6 lg:px-8 lg:pb-10">
         <div className="lg:hidden">
-          <BusinessSummary />
+          <BusinessSummary business={business} />
           <div className="mt-3">
             {stage === "address" ? (
               <MobileAddressStage
                 mode={fulfillmentMode}
+                availableModes={availableModes}
+                destination={checkoutAddress}
+                addressEditor={addressEditor}
+                addressMode={addressMode}
+                hasSavedAddress={hasSavedResidence}
+                profileName={profileName}
+                profileType={profileType}
+                profilePhone={recipientPhone}
+                referencePoint={referencePoint}
+                items={items}
+                subtotal={subtotal}
                 expandedItems={expandedItems}
                 onModeChange={handleModeChange}
+                onAddressModeChange={handleAddressModeChange}
+                onEditAddress={() => setShowDestinationEditor(true)}
                 onContinue={continueFromAddress}
                 onToggleItems={() => setExpandedItems((current) => !current)}
               />
@@ -1310,25 +2001,57 @@ export default function GastronomyCheckoutConceptSurface() {
             {stage === "delivery" ? (
               <MobileDeliveryStage
                 mode={fulfillmentMode}
+                availableModes={availableModes}
                 deliveryOption={deliveryOption}
+                destination={checkoutAddress}
+                subtotal={subtotal}
+                deliveryFee={deliveryFee}
+                businessName={business.name}
+                platformUnavailable={platformUnavailable}
                 onModeChange={handleModeChange}
                 onDeliveryOptionChange={setDeliveryOption}
-                onContinue={continueFromDelivery}
+                onContinue={() => setStage("review")}
               />
             ) : null}
             {stage === "review" ? (
               <MobileReviewStage
                 mode={fulfillmentMode}
                 deliveryOption={deliveryOption}
+                paymentLabel={
+                  paymentOptions.find((option) => option.value === paymentMethod)?.label ??
+                    "Forma de pagamento"
+                }
+                destination={checkoutAddress}
+                recipientName={profileName}
+                businessName={business.name}
+                items={items}
+                subtotal={subtotal}
+                deliveryFee={deliveryFee}
+                notes={notes}
+                notesExpanded={notesExpanded}
+                paymentExpanded={paymentExpanded}
                 paymentMethod={paymentMethod}
-                onGoToDelivery={() => setStage("delivery")}
-                onGoToAddress={() => setStage("address")}
+                paymentOptions={paymentOptions}
+                cashChangeFor={cashChangeFor}
+                onGoToDelivery={() =>
+                  setStage(fulfillmentMode === "delivery" ? "delivery" : "address")
+                }
+                onGoToPayment={() => setPaymentExpanded((current) => !current)}
+                onEditItems={() => navigate("..")}
                 onOpenFallback={() => setStage("fallback")}
-                onConfirm={confirmPreview}
+                onToggleNotes={() => setNotesExpanded((current) => !current)}
+                onCashChangeForChange={setCashChangeFor}
+                onPaymentMethodChange={setPaymentMethod}
+                onNotesChange={setNotes}
+                onConfirm={handleSubmit}
               />
             ) : null}
             {stage === "fallback" ? (
               <MobileFallbackStage
+                destination={checkoutAddress}
+                subtotal={subtotal}
+                deliveryFee={checkoutCart.delivery_fee}
+                items={items}
                 onBackToReview={() => setStage("review")}
                 onContinue={() => {
                   setDeliveryOption("store");
@@ -1358,18 +2081,12 @@ export default function GastronomyCheckoutConceptSurface() {
             </div>
             <div className="flex items-center gap-3 rounded-lg border border-territory-border bg-territory-surface px-4 py-3 text-xs">
               <span className="flex h-8 w-8 items-center justify-center rounded-full bg-territory-raised">
-                <UserRound
-                  className="h-4 w-4 text-territory-brand"
-                  aria-hidden="true"
-                />
+                <UserRound className="h-4 w-4 text-territory-brand" aria-hidden="true" />
               </span>
               <span>
-                Pedido como <strong>Ana Oliveira</strong> · Pessoal
+                 Pedido como <strong>{profileName}</strong> · {profileType}
               </span>
-              <button
-                type="button"
-                className="font-semibold text-territory-brand"
-              >
+              <button type="button" className="font-semibold text-territory-brand">
                 Alterar
               </button>
             </div>
@@ -1377,90 +2094,92 @@ export default function GastronomyCheckoutConceptSurface() {
           <div className="mt-5 flex items-center justify-between gap-6 rounded-xl border border-territory-border bg-territory-surface px-5 py-3">
             <Stepper stage={stage} />
             <p className="max-w-sm text-right text-xs text-territory-muted">
-              Etapa{" "}
-              {stage === "address" ? "1" : stage === "delivery" ? "2" : "3"} de
-              3 · Seus itens ficam preservados durante o ajuste.
+              Etapa {stage === "address" ? "1" : stage === "delivery" ? "2" : "3"} de 3 · Seus itens ficam preservados durante o ajuste.
             </p>
           </div>
           {stage === "fallback" ? (
             <div className="mt-5 flex items-start gap-3 rounded-xl bg-territory-warning/20 p-4 text-sm">
-              <CircleAlert
-                className="mt-0.5 h-5 w-5 shrink-0 text-territory-warning"
-                aria-hidden="true"
-              />
+              <CircleAlert className="mt-0.5 h-5 w-5 shrink-0 text-territory-warning" aria-hidden="true" />
               <span>
-                <strong className="block">
-                  A plataforma não atende este endereço
-                </strong>
-                <span className="text-territory-muted">
-                  Escolha a entrega da loja ou retirada para continuar com os
-                  mesmos itens.
-                </span>
+                <strong className="block">A plataforma não atende este endereço</strong>
+                <span className="text-territory-muted">Escolha a entrega da loja ou retirada para continuar com os mesmos itens.</span>
               </span>
             </div>
           ) : null}
           <div className="mt-5 grid gap-5 lg:grid-cols-[minmax(0,1fr)_22rem] lg:items-start">
             <div className="space-y-4 sm:space-y-5">
-              <AddressSection mode={fulfillmentMode} />
+              <AddressSection
+                mode={fulfillmentMode}
+                destination={checkoutAddress}
+                addressMode={addressMode}
+                hasSavedAddress={hasSavedResidence}
+                addressEditor={addressEditor}
+                profileName={profileName}
+                profilePhone={recipientPhone}
+                referencePoint={referencePoint}
+                onAddressModeChange={handleAddressModeChange}
+                onEditAddress={() => setShowDestinationEditor(true)}
+              />
               <FulfillmentSection
                 mode={fulfillmentMode}
                 deliveryOption={deliveryOption}
+                availableModes={availableModes}
+                deliveryFee={deliveryFee}
+                businessName={business.name}
+                platformUnavailable={platformUnavailable}
                 onModeChange={handleModeChange}
                 onDeliveryOptionChange={setDeliveryOption}
               />
               <PaymentSection
                 method={paymentMethod}
+                options={paymentOptions}
+                cashChangeFor={cashChangeFor}
+                onCashChangeForChange={setCashChangeFor}
                 onChange={setPaymentMethod}
               />
-              <ItemsSection />
-              <section
-                className="rounded-xl border border-territory-border bg-territory-surface p-4 sm:p-5"
-                aria-labelledby="checkout-notes-title"
-              >
+              <ItemsSection
+                items={items}
+                onRemoveItem={removeItem}
+                onAddMoreItems={() => navigate("..")}
+              />
+              <section className="rounded-xl border border-territory-border bg-territory-surface p-4 sm:p-5" aria-labelledby="checkout-notes-title">
                 <div className="flex items-center justify-between gap-3">
-                  <h2
-                    id="checkout-notes-title"
-                    className="font-heading text-base font-bold text-territory-ink"
-                  >
-                    Observações do pedido{" "}
-                    <span className="font-normal text-territory-muted">
-                      (opcional)
-                    </span>
+                  <h2 id="checkout-notes-title" className="font-heading text-base font-bold text-territory-ink">
+                    Observações do pedido <span className="font-normal text-territory-muted">(opcional)</span>
                   </h2>
-                  <span className="text-[0.6875rem] text-territory-muted">
-                    {notes.length}/280
-                  </span>
+                  <span className="text-[0.6875rem] text-territory-muted">{notes.length}/280</span>
                 </div>
-                <Textarea
-                  value={notes}
-                  onChange={(event) => setNotes(event.target.value)}
-                  maxLength={280}
-                  rows={3}
-                  placeholder="Algo que a loja precisa saber?"
-                  className="mt-3 min-h-20 resize-none rounded-lg border-territory-border bg-territory-surface text-sm placeholder:text-territory-muted"
-                />
+                <Textarea value={notes} onChange={(event) => setNotes(event.target.value)} maxLength={280} rows={3} placeholder="Algo que a loja precisa saber?" className="mt-3 min-h-20 resize-none rounded-lg border-territory-border bg-territory-surface text-sm placeholder:text-territory-muted" />
               </section>
             </div>
             <OrderSummary
               mode={fulfillmentMode}
               deliveryOption={deliveryOption}
-              onConfirm={confirmPreview}
+              items={items}
+              subtotal={subtotal}
+              deliveryFee={deliveryFee}
+              minimumOrderRemaining={minimumOrderRemaining}
+              isSubmitDisabled={isSubmitDisabled}
+              isSubmitting={isSubmitting}
+              onAddMoreItems={() => navigate("..")}
+              onRemoveItem={removeItem}
+              onConfirm={handleSubmit}
               onFallback={() => setStage("fallback")}
+              onContactStore={() => navigate(appUrls.messages)}
             />
           </div>
           <p className="mt-6 text-center text-xs text-territory-muted">
-            Conceito visual · Dados demonstrativos · Modalidade Achegue-se
-            prevista, com cobrança e disponibilidade ainda pendentes de
-            definição.
+            Pedido e pagamento serão registrados no fluxo oficial de Gastronomia.
           </p>
         </div>
       </main>
       <MobileCheckoutFooter
         stage={stage}
         total={total}
+        disabled={stage === "review" ? isSubmitDisabled : !hasCart}
         onAddressContinue={continueFromAddress}
-        onDeliveryContinue={continueFromDelivery}
-        onReviewConfirm={confirmPreview}
+        onDeliveryContinue={() => setStage("review")}
+        onReviewConfirm={handleSubmit}
         onFallbackContinue={() => {
           setDeliveryOption("store");
           setStage("review");

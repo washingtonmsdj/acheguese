@@ -55,10 +55,6 @@ export default function GastronomyCheckoutPage() {
     ?.business;
   const detailQuery = useGastronomyDetail(stateBusiness ? undefined : params);
 
-  if (import.meta.env.DEV && params.slug === "sabores-da-ana") {
-    return <GastronomyCheckoutConceptSurface />;
-  }
-
   const business = stateBusiness ?? detailQuery.data ?? null;
 
   if (!business && detailQuery.isLoading) {
@@ -83,6 +79,10 @@ export default function GastronomyCheckoutPage() {
         </Button>
       </div>
     );
+  }
+
+  if (params.slug === "sabores-da-ana") {
+    return <GastronomyCheckoutConceptSurface business={business} />;
   }
 
   return <GastronomyCheckoutContent business={business} />;
