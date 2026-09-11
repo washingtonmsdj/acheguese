@@ -4,7 +4,9 @@ import {
   ArrowLeft,
   ChevronRight,
   Clock3,
+  Grid2X2,
   Heart,
+  List as ListIcon,
   MapPin,
   MessageCircle,
   Minus,
@@ -32,6 +34,7 @@ import dessertImage from "@/assets/gastronomy/cat-lanchonetes.jpg";
 
 type FulfillmentMode = "delivery" | "pickup" | "dine-in";
 type ConceptTab = "menu" | "reviews" | "info";
+type MenuViewMode = "list" | "grid";
 
 type ConceptMenuItem = {
   id: string;
@@ -264,7 +267,7 @@ function FulfillmentBar({ mode, onChange }: { mode: FulfillmentMode; onChange: (
   );
 }
 
-function SearchAndCategories({ query, onQueryChange, category, onCategoryChange }: { query: string; onQueryChange: (value: string) => void; category: string; onCategoryChange: (value: string) => void }) {
+function SearchAndCategories({ query, onQueryChange, category, onCategoryChange, viewMode, onViewModeChange }: { query: string; onQueryChange: (value: string) => void; category: string; onCategoryChange: (value: string) => void; viewMode: MenuViewMode; onViewModeChange: (value: MenuViewMode) => void }) {
   return (
     <div className="space-y-2 sm:space-y-2.5">
       <label className="relative block">
@@ -272,12 +275,22 @@ function SearchAndCategories({ query, onQueryChange, category, onCategoryChange 
         <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-territory-muted" aria-hidden="true" />
         <Input value={query} onChange={(event) => onQueryChange(event.target.value)} placeholder="Buscar no cardápio" className="h-9 rounded-lg border-territory-border bg-territory-surface pl-9 text-xs text-territory-ink placeholder:text-territory-muted sm:h-10 sm:text-sm" />
       </label>
-      <div className="flex gap-1.5 overflow-x-auto pb-0.5 scrollbar-hide" role="tablist" aria-label="Categorias do cardápio">
-        {categories.map((item) => (
-          <button key={item} type="button" role="tab" aria-selected={category === item} onClick={() => onCategoryChange(item)} className={cn("min-h-8 shrink-0 rounded-full px-3 text-[0.6875rem] font-semibold transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-territory-brand sm:px-4 sm:text-xs", category === item ? "bg-territory-brand text-white" : "bg-territory-raised text-territory-ink hover:bg-territory-border")}>
-            {item}
+      <div className="flex items-center gap-2">
+        <div className="flex min-w-0 flex-1 gap-1.5 overflow-x-auto pb-0.5 scrollbar-hide" role="tablist" aria-label="Categorias do cardápio">
+          {categories.map((item) => (
+            <button key={item} type="button" role="tab" aria-selected={category === item} onClick={() => onCategoryChange(item)} className={cn("min-h-8 shrink-0 rounded-full px-3 text-[0.6875rem] font-semibold transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-territory-brand sm:px-4 sm:text-xs", category === item ? "bg-territory-brand text-white" : "bg-territory-raised text-territory-ink hover:bg-territory-border")}>
+              {item}
+            </button>
+          ))}
+        </div>
+        <div className="hidden shrink-0 items-center gap-0.5 rounded-lg border border-territory-border bg-territory-surface p-0.5 sm:inline-flex" role="group" aria-label="Visualização dos itens">
+          <button type="button" aria-label="Visualizar em lista" aria-pressed={viewMode === "list"} onClick={() => onViewModeChange("list")} className={cn("inline-flex h-8 w-8 items-center justify-center rounded-md text-territory-muted transition-colors focus-visible:z-10 focus-visible:outline-2 focus-visible:outline-offset-[-2px] focus-visible:outline-territory-brand", viewMode === "list" ? "bg-territory-brand text-white" : "hover:bg-territory-raised hover:text-territory-ink")}>
+            <ListIcon className="h-4 w-4" aria-hidden="true" />
           </button>
-        ))}
+          <button type="button" aria-label="Visualizar em grade" aria-pressed={viewMode === "grid"} onClick={() => onViewModeChange("grid")} className={cn("inline-flex h-8 w-8 items-center justify-center rounded-md text-territory-muted transition-colors focus-visible:z-10 focus-visible:outline-2 focus-visible:outline-offset-[-2px] focus-visible:outline-territory-brand", viewMode === "grid" ? "bg-territory-brand text-white" : "hover:bg-territory-raised hover:text-territory-ink")}>
+            <Grid2X2 className="h-4 w-4" aria-hidden="true" />
+          </button>
+        </div>
       </div>
     </div>
   );
@@ -296,6 +309,23 @@ function MenuRow({ item, selected, onSelect }: { item: ConceptMenuItem; selected
       <span className="flex shrink-0 items-center gap-1 text-xs font-bold text-territory-ink sm:text-sm">
         {item.available === false ? <span className="rounded-full bg-territory-raised px-1.5 py-0.5 text-[0.5625rem] font-semibold text-territory-muted sm:text-[0.625rem]">Indisponível</span> : money(item.price)}
         <ChevronRight className="h-4 w-4 text-territory-brand" aria-hidden="true" />
+      </span>
+    </button>
+  );
+}
+
+function MenuGridCard({ item, selected, onSelect }: { item: ConceptMenuItem; selected: boolean; onSelect: () => void }) {
+  return (
+    <button type="button" disabled={item.available === false} onClick={onSelect} className={cn("group flex min-w-0 flex-col rounded-lg border border-territory-border bg-territory-surface p-2 text-left transition-colors focus-visible:z-10 focus-visible:outline-2 focus-visible:outline-offset-[-2px] focus-visible:outline-territory-brand sm:rounded-xl sm:p-2.5", selected && "border-territory-brand bg-[hsl(var(--territory-success)/0.12)]", item.available === false ? "cursor-not-allowed opacity-55" : "hover:border-territory-brand/50 hover:bg-territory-raised")}>
+      <span className="relative block aspect-[4/3] w-full overflow-hidden rounded-md bg-territory-raised sm:rounded-lg">
+        <img src={item.image} alt="" className="h-full w-full object-cover transition-transform duration-200 group-hover:scale-[1.02]" />
+        {item.available === false ? <span className="absolute bottom-1 left-1 rounded-full bg-territory-surface/95 px-1.5 py-0.5 text-[0.5625rem] font-semibold text-territory-muted">Indisponível</span> : null}
+      </span>
+      <span className="mt-2 line-clamp-2 min-h-8 text-xs font-bold leading-4 text-territory-ink sm:text-sm">{item.name}</span>
+      <span className="mt-1 line-clamp-2 min-h-8 text-[0.6875rem] leading-4 text-territory-muted sm:text-xs">{item.description}</span>
+      <span className="mt-2 flex items-center justify-between gap-1 text-xs font-bold text-territory-ink sm:text-sm">
+        {item.available === false ? <span className="text-[0.625rem] font-semibold text-territory-muted">Temporariamente indisponível</span> : money(item.price)}
+        <ChevronRight className="h-4 w-4 shrink-0 text-territory-brand" aria-hidden="true" />
       </span>
     </button>
   );
@@ -452,6 +482,7 @@ export default function GastronomyDetailConceptPreviewPage() {
   const [activeTab, setActiveTab] = useState<ConceptTab>("menu");
   const [activeCategory, setActiveCategory] = useState("Todas");
   const [query, setQuery] = useState("");
+  const [viewMode, setViewMode] = useState<MenuViewMode>("list");
   const [fulfillmentMode, setFulfillmentMode] = useState<FulfillmentMode>("pickup");
   const [saved, setSaved] = useState(false);
   const [selectedItemId, setSelectedItemId] = useState("moqueca-de-peixe");
@@ -528,11 +559,11 @@ export default function GastronomyDetailConceptPreviewPage() {
         {activeTab === "menu" ? (
           <div className="grid min-h-0 w-full items-start gap-4 lg:h-full lg:grid-cols-[minmax(0,1fr)_30rem] lg:gap-6">
             <section className="min-w-0 lg:flex lg:h-full lg:min-h-0 lg:flex-col">
-              <SearchAndCategories query={query} onQueryChange={setQuery} category={activeCategory} onCategoryChange={setActiveCategory} />
+              <SearchAndCategories query={query} onQueryChange={setQuery} category={activeCategory} onCategoryChange={setActiveCategory} viewMode={viewMode} onViewModeChange={setViewMode} />
               <div className="mt-3 flex min-h-0 flex-col gap-2 lg:flex-1">
                 <OfferCard onOpen={() => { setSelectedItemId(offerItem.id); setMobileCustomizerOpen(true); }} />
                 <div className="min-h-0 overflow-hidden rounded-xl border border-territory-border bg-territory-surface lg:flex-1 lg:overflow-y-auto lg:overscroll-contain lg:[scrollbar-gutter:stable]">
-                  {filteredItems.map((item) => <MenuRow key={item.id} item={item} selected={selectedItem.id === item.id} onSelect={() => { if (item.available === false) return; setSelectedItemId(item.id); setMobileCustomizerOpen(true); }} />)}
+                  {viewMode === "grid" ? <div className="grid grid-cols-2 gap-2 p-2 sm:gap-3 sm:p-3">{filteredItems.map((item) => <MenuGridCard key={item.id} item={item} selected={selectedItem.id === item.id} onSelect={() => { if (item.available === false) return; setSelectedItemId(item.id); setMobileCustomizerOpen(true); }} />)}</div> : filteredItems.map((item) => <MenuRow key={item.id} item={item} selected={selectedItem.id === item.id} onSelect={() => { if (item.available === false) return; setSelectedItemId(item.id); setMobileCustomizerOpen(true); }} />)}
                   {!filteredItems.length ? <p className="px-4 py-8 text-center text-sm text-territory-muted">Nenhum item encontrado.</p> : null}
                 </div>
               </div>
