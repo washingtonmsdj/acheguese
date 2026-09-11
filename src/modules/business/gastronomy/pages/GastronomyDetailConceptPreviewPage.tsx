@@ -118,7 +118,7 @@ function ConceptPublicHeader({
 
   return (
     <header className="sticky top-0 z-40 border-b border-territory-border bg-territory-surface/95 backdrop-blur-md">
-      <div className="mx-auto hidden h-16 max-w-[92rem] items-center gap-8 px-5 md:flex lg:px-8">
+      <div className="mx-auto hidden h-[3.25rem] max-w-[68rem] items-center gap-6 px-5 md:flex lg:px-8">
         <Link
           to={territoryHref}
           className="font-heading text-[1.4rem] font-bold tracking-[-0.04em] text-territory-brand focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-territory-brand"
@@ -168,7 +168,7 @@ function BusinessIdentity({
 }) {
   return (
     <section className="relative z-10 border-b border-territory-border bg-territory-surface">
-      <div className="mx-auto flex max-w-[92rem] flex-wrap items-end gap-3 px-4 pb-3 pt-0 sm:gap-4 sm:px-6 sm:pb-4 lg:px-8">
+      <div className="mx-auto flex max-w-[68rem] flex-wrap items-end gap-3 px-4 pb-2 pt-0 sm:gap-4 sm:px-6 sm:pb-2 lg:pb-1 lg:px-8">
         <div className="-mt-8 flex h-20 w-20 shrink-0 items-center justify-center rounded-full border-4 border-territory-surface bg-[#ad5944] text-center font-heading text-sm font-bold leading-4 text-white shadow-territory-subtle sm:h-24 sm:w-24 sm:text-base">
           Sabores
           <br />
@@ -206,9 +206,9 @@ function PublicTabs({ activeTab, onChange }: { activeTab: ConceptTab; onChange: 
 
   return (
     <nav className="border-b border-territory-border bg-territory-surface" aria-label="Conteúdo do estabelecimento">
-      <div className="mx-auto flex max-w-[92rem] gap-1 overflow-x-auto px-4 sm:px-6 lg:px-8">
+      <div className="mx-auto flex max-w-[68rem] gap-1 overflow-x-auto px-4 sm:px-6 lg:px-8">
         {tabs.map((tab) => (
-          <button key={tab.value} type="button" onClick={() => onChange(tab.value)} className={cn("relative min-h-11 shrink-0 px-3 text-xs font-semibold text-territory-muted transition-colors focus-visible:outline-2 focus-visible:outline-offset-[-2px] focus-visible:outline-territory-brand sm:px-4 sm:text-sm", activeTab === tab.value && "text-territory-brand") } aria-current={activeTab === tab.value ? "page" : undefined}>
+          <button key={tab.value} type="button" onClick={() => onChange(tab.value)} className={cn("relative min-h-9 shrink-0 px-3 text-xs font-semibold text-territory-muted transition-colors focus-visible:outline-2 focus-visible:outline-offset-[-2px] focus-visible:outline-territory-brand sm:min-h-9 sm:px-4 sm:text-sm lg:min-h-8", activeTab === tab.value && "text-territory-brand") } aria-current={activeTab === tab.value ? "page" : undefined}>
             {tab.label}
             {activeTab === tab.value ? <span className="absolute inset-x-2 bottom-0 h-0.5 rounded-full bg-territory-brand" /> : null}
           </button>
@@ -228,8 +228,8 @@ function FulfillmentBar({ mode, onChange }: { mode: FulfillmentMode; onChange: (
 
   return (
     <section className="border-b border-territory-border bg-territory-surface">
-      <div className="mx-auto flex max-w-[92rem] flex-col gap-2 px-4 py-2.5 sm:flex-row sm:items-center sm:justify-between sm:px-6 lg:px-8">
-        <div className="grid grid-cols-3 overflow-hidden rounded-lg border border-territory-border bg-territory-raised sm:w-[19rem]" role="radiogroup" aria-label="Forma de recebimento">
+      <div className="mx-auto flex max-w-[68rem] flex-col gap-0 px-4 py-0.5 sm:flex-row sm:items-center sm:justify-between sm:gap-2 sm:px-6 sm:py-2 lg:px-8 lg:py-1">
+        <div className="grid grid-cols-3 overflow-hidden rounded-lg border border-territory-border bg-territory-raised sm:w-64" role="radiogroup" aria-label="Forma de recebimento">
           {options.map((option) => {
             const Icon = option.icon;
             const selected = mode === option.value;
@@ -241,8 +241,8 @@ function FulfillmentBar({ mode, onChange }: { mode: FulfillmentMode; onChange: (
             );
           })}
         </div>
-        <div className="flex flex-wrap items-center gap-x-2 gap-y-1 text-[0.6875rem] text-territory-muted sm:text-xs">
-          <span>{modeDescription}</span>
+        <div className="flex min-w-0 flex-nowrap items-center justify-center gap-x-1 overflow-hidden whitespace-nowrap text-[0.625rem] leading-4 text-territory-muted sm:gap-x-2 sm:text-xs">
+          <span className="truncate">{modeDescription}</span>
           <span aria-hidden="true">•</span>
           <span>{mode === "delivery" ? "Taxa calculada no checkout" : "Sem taxa de entrega"}</span>
           <span aria-hidden="true">•</span>
@@ -255,13 +255,13 @@ function FulfillmentBar({ mode, onChange }: { mode: FulfillmentMode; onChange: (
 
 function SearchAndCategories({ query, onQueryChange, category, onCategoryChange }: { query: string; onQueryChange: (value: string) => void; category: string; onCategoryChange: (value: string) => void }) {
   return (
-    <div className="space-y-2.5">
+    <div className="space-y-2 sm:space-y-2.5">
       <label className="relative block">
         <span className="sr-only">Buscar no cardápio</span>
         <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-territory-muted" aria-hidden="true" />
-        <Input value={query} onChange={(event) => onQueryChange(event.target.value)} placeholder="Buscar no cardápio" className="h-10 rounded-lg border-territory-border bg-territory-surface pl-9 text-xs text-territory-ink placeholder:text-territory-muted sm:text-sm" />
+        <Input value={query} onChange={(event) => onQueryChange(event.target.value)} placeholder="Buscar no cardápio" className="h-9 rounded-lg border-territory-border bg-territory-surface pl-9 text-xs text-territory-ink placeholder:text-territory-muted sm:h-10 sm:text-sm" />
       </label>
-      <div className="flex gap-1.5 overflow-x-auto pb-0.5" role="tablist" aria-label="Categorias do cardápio">
+      <div className="flex gap-1.5 overflow-x-auto pb-0.5 scrollbar-hide" role="tablist" aria-label="Categorias do cardápio">
         {categories.map((item) => (
           <button key={item} type="button" role="tab" aria-selected={category === item} onClick={() => onCategoryChange(item)} className={cn("min-h-8 shrink-0 rounded-full px-3 text-[0.6875rem] font-semibold transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-territory-brand sm:px-4 sm:text-xs", category === item ? "bg-territory-brand text-white" : "bg-territory-raised text-territory-ink hover:bg-territory-border")}>
             {item}
@@ -274,8 +274,8 @@ function SearchAndCategories({ query, onQueryChange, category, onCategoryChange 
 
 function MenuRow({ item, selected, onSelect }: { item: ConceptMenuItem; selected: boolean; onSelect: () => void }) {
   return (
-    <button type="button" disabled={item.available === false} onClick={onSelect} className={cn("group flex w-full items-center gap-3 border-b border-territory-border px-2.5 py-2.5 text-left transition-colors last:border-b-0 focus-visible:z-10 focus-visible:outline-2 focus-visible:outline-offset-[-2px] focus-visible:outline-territory-brand sm:gap-4 sm:px-3", selected && "lg:bg-[hsl(var(--territory-success)/0.12)]", item.available === false ? "cursor-not-allowed opacity-55" : "hover:bg-territory-raised")}>
-      <span className="relative h-14 w-[4.5rem] shrink-0 overflow-hidden rounded-lg bg-territory-raised sm:h-12 sm:w-[4.75rem]">
+    <button type="button" disabled={item.available === false} onClick={onSelect} className={cn("group flex w-full items-center gap-2.5 border-b border-territory-border px-2.5 py-2 text-left transition-colors last:border-b-0 focus-visible:z-10 focus-visible:outline-2 focus-visible:outline-offset-[-2px] focus-visible:outline-territory-brand sm:gap-4 sm:px-3 sm:py-2.5", selected && "lg:bg-[hsl(var(--territory-success)/0.12)]", item.available === false ? "cursor-not-allowed opacity-55" : "hover:bg-territory-raised")}>
+      <span className="relative h-12 w-[3.75rem] shrink-0 overflow-hidden rounded-lg bg-territory-raised sm:h-12 sm:w-[4.75rem]">
         <img src={item.image} alt="" className="h-full w-full object-cover" />
       </span>
       <span className="min-w-0 flex-1">
@@ -406,7 +406,7 @@ function CartSummary({ lines, onOpen }: { lines: CartLine[]; onOpen: () => void 
   const names = lines.map((line) => line.name).join(" + ");
 
   return (
-    <div className="flex items-center gap-3 rounded-xl border border-territory-brand/20 bg-territory-brand px-3 py-2.5 text-white shadow-territory-subtle sm:px-4">
+    <div className="flex items-center gap-3 rounded-xl border border-territory-brand/20 bg-territory-brand px-3 py-2 text-white shadow-territory-subtle sm:px-4 sm:py-2.5">
       <ShoppingBag className="h-5 w-5 shrink-0" aria-hidden="true" />
       <div className="min-w-0 flex-1"><p className="truncate text-sm font-bold">Seu carrinho · {itemCount} {itemCount === 1 ? "item" : "itens"} · {money(total)}</p><p className="truncate text-[0.6875rem] text-white/75">{names || "Seu carrinho está vazio"}</p></div>
       <button type="button" onClick={onOpen} className="inline-flex min-h-9 shrink-0 items-center gap-1 text-xs font-bold text-white underline-offset-2 hover:underline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white">Ver carrinho <ChevronRight className="h-4 w-4" aria-hidden="true" /></button>
@@ -491,10 +491,10 @@ export default function GastronomyDetailConceptPreviewPage() {
   };
 
   return (
-    <div className="min-h-screen overflow-x-hidden bg-territory-canvas pb-4 text-territory-ink max-md:scrollbar-hide">
+    <div className="min-h-screen overflow-x-hidden bg-territory-canvas pb-4 text-territory-ink max-md:h-[100dvh] max-md:overflow-y-auto max-md:overscroll-contain max-md:scrollbar-hide max-md:[-ms-overflow-style:none] max-md:[scrollbar-width:none] max-md:[&::-webkit-scrollbar]:hidden">
       <ConceptPublicHeader saved={saved} onSave={() => setSaved((value) => !value)} onShare={handleShare} />
 
-      <section className="relative h-24 overflow-hidden bg-territory-raised sm:h-36">
+      <section className="relative h-16 overflow-hidden bg-territory-raised sm:h-24 lg:h-20">
         <img src={moquecaImage} alt="Comida caseira da Sabores da Ana" className="h-full w-full object-cover" />
         <div className="absolute inset-0 bg-gradient-to-r from-black/35 via-black/10 to-black/45" />
         <p className="absolute right-5 top-1/2 hidden max-w-[14rem] -translate-y-1/2 text-right font-heading text-lg font-bold leading-tight text-white sm:block lg:right-12 lg:text-xl">Comida caseira<br />tem outro sabor.</p>
@@ -504,7 +504,7 @@ export default function GastronomyDetailConceptPreviewPage() {
       <PublicTabs activeTab={activeTab} onChange={setActiveTab} />
       <FulfillmentBar mode={fulfillmentMode} onChange={setFulfillmentMode} />
 
-      <main className="mx-auto max-w-[92rem] px-4 pb-32 pt-4 sm:px-6 sm:pt-5 lg:px-8 lg:pb-6">
+      <main className="mx-auto max-w-[68rem] px-4 pb-24 pt-3 sm:px-6 sm:pt-3 lg:px-8 lg:pb-6">
         {activeTab === "menu" ? (
           <div className="grid items-start gap-4 lg:grid-cols-[minmax(0,1fr)_30rem] lg:gap-6">
             <section className="min-w-0">
@@ -526,9 +526,9 @@ export default function GastronomyDetailConceptPreviewPage() {
         ) : activeTab === "reviews" ? <ReviewsContent /> : <InfoContent />}
       </main>
 
-      <div className="fixed inset-x-0 bottom-0 z-40 border-t border-territory-brand/20 bg-territory-surface/95 px-2 pt-2 shadow-[0_-4px_18px_rgba(18,62,61,0.12)] backdrop-blur-md lg:hidden">
+      <div className="fixed inset-x-0 bottom-0 z-40 border-t border-territory-brand/20 bg-territory-surface/95 px-2 pt-1.5 shadow-[0_-4px_18px_rgba(18,62,61,0.12)] backdrop-blur-md lg:hidden">
         <CartSummary lines={cartLines} onOpen={() => setCartOpen(true)} />
-        <button type="button" onClick={() => toast.success("A loja responderá por aqui.")} className="flex h-10 w-full items-center justify-center gap-1 text-xs font-semibold text-territory-brand focus-visible:outline-2 focus-visible:outline-offset-[-2px] focus-visible:outline-territory-brand"><MessageCircle className="h-4 w-4" aria-hidden="true" />Falar com a loja</button>
+        <button type="button" onClick={() => toast.success("A loja responderá por aqui.")} className="flex h-8 w-full items-center justify-center gap-1 text-xs font-semibold text-territory-brand focus-visible:outline-2 focus-visible:outline-offset-[-2px] focus-visible:outline-territory-brand"><MessageCircle className="h-4 w-4" aria-hidden="true" />Falar com a loja</button>
       </div>
 
       {mobileCustomizerOpen ? <div className="fixed inset-0 z-50 flex items-end bg-black/35 lg:hidden" role="presentation" onMouseDown={() => setMobileCustomizerOpen(false)}><div className="max-h-[90dvh] w-full overflow-y-auto rounded-t-2xl bg-territory-surface p-3 pb-[calc(0.75rem+env(safe-area-inset-bottom))]" onMouseDown={(event) => event.stopPropagation()}><div className="mb-2 flex items-center justify-between"><p className="text-sm font-bold text-territory-ink">Personalizar pedido</p><button type="button" aria-label="Fechar personalização" onClick={() => setMobileCustomizerOpen(false)} className="inline-flex h-9 w-9 items-center justify-center rounded-lg text-territory-ink hover:bg-territory-raised focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-territory-brand"><X className="h-5 w-5" aria-hidden="true" /></button></div><ItemCustomizer item={selectedItem} size={size} setSize={setSize} quantity={quantity} setQuantity={setQuantity} farofa={farofa} setFarofa={setFarofa} arroz={arroz} setArroz={setArroz} notes={notes} setNotes={setNotes} onAdd={addSelectedItem} /></div></div> : null}
