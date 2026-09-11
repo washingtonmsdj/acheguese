@@ -48,9 +48,9 @@ export function ItemCard({
 
   return (
     <Card className={isGrid ? 'h-full' : undefined}>
-      <CardContent className={isGrid ? 'h-full p-2 sm:p-4' : 'p-4'}>
-        <div className={isGrid ? 'flex h-full flex-col gap-2' : 'flex gap-4'}>
-          <div className={isGrid ? 'aspect-[5/3] w-full flex-shrink-0 overflow-hidden rounded-lg bg-muted sm:aspect-[4/3]' : 'aspect-[4/3] w-24 flex-shrink-0 overflow-hidden rounded-lg bg-muted'}>
+      <CardContent className={isGrid ? 'h-full p-2' : 'p-4'}>
+        <div className={isGrid ? 'flex h-full flex-col gap-1.5' : 'flex gap-4'}>
+          <div className={isGrid ? 'aspect-[2/1] w-full flex-shrink-0 overflow-hidden rounded-lg bg-muted' : 'aspect-[4/3] w-24 flex-shrink-0 overflow-hidden rounded-lg bg-muted'}>
             {item.image_url ? (
               <img src={item.image_url} alt={item.name} className="w-full h-full object-cover" />
             ) : (
@@ -76,8 +76,8 @@ export function ItemCard({
                     </Badge>
                   )}
                 </div>
-                {item.description && (
-                  <p className={isGrid ? 'line-clamp-2 text-[0.6875rem] leading-4 text-muted-foreground sm:text-sm sm:leading-5' : 'line-clamp-2 text-sm text-muted-foreground'}>{item.description}</p>
+                {item.description && !isGrid && (
+                  <p className="line-clamp-2 text-sm text-muted-foreground">{item.description}</p>
                 )}
               </div>
 
@@ -108,7 +108,7 @@ export function ItemCard({
               )}
             </div>
 
-            <div className={isGrid ? 'mt-2 hidden flex-wrap gap-1 sm:flex' : 'mt-2 flex flex-wrap gap-1'}>
+            <div className={isGrid ? 'hidden' : 'mt-2 flex flex-wrap gap-1'}>
               {isVegan && <Badge variant="outline" className="text-xs">Vegano</Badge>}
               {isVegetarian && !isVegan && <Badge variant="outline" className="text-xs">Vegetariano</Badge>}
               {isGlutenFree && <Badge variant="outline" className="text-xs">Sem gluten</Badge>}
@@ -128,14 +128,14 @@ export function ItemCard({
                   checked={item.is_available}
                   onCheckedChange={(checked) => onToggleAvailability(item.id, checked)}
                 />
-                <span className={isGrid ? 'sr-only sm:not-sr-only sm:text-sm sm:text-muted-foreground' : 'text-sm text-muted-foreground'}>
+                <span className={isGrid ? 'sr-only lg:not-sr-only lg:text-sm lg:text-muted-foreground' : 'text-sm text-muted-foreground'}>
                   {item.is_available ? 'Disponível para venda' : 'Pausado no cardápio'}
                 </span>
               </div>
               {!isSoldOut && (
-                <Button type="button" variant="outline" size="sm" aria-label={`Marcar ${item.name} como esgotado`} onClick={() => onMarkSoldOut(item.id)} className={isGrid ? 'h-9 w-9 p-0 sm:h-9 sm:w-auto sm:px-3' : undefined}>
-                  <PackageX className="h-4 w-4 sm:mr-2" aria-hidden="true" />
-                  <span className={isGrid ? 'hidden sm:inline' : undefined}>Marcar esgotado</span>
+                <Button type="button" variant="outline" size="sm" aria-label={`Marcar ${item.name} como esgotado`} onClick={() => onMarkSoldOut(item.id)} className={isGrid ? 'h-9 w-9 p-0 lg:h-9 lg:w-auto lg:px-3' : undefined}>
+                  <PackageX className="h-4 w-4 lg:mr-2" aria-hidden="true" />
+                  <span className={isGrid ? 'hidden lg:inline' : undefined}>Marcar esgotado</span>
                 </Button>
               )}
             </div>

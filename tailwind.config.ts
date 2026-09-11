@@ -12,6 +12,10 @@ export default {
   prefix: "",
   theme: {
     extend: {
+      screens: {
+        "3xl": "1920px",
+        "4xl": "2400px",
+      },
       fontFamily: {
         sans: ["Plus Jakarta Sans", "sans-serif"],
         display: ["Plus Jakarta Sans", "sans-serif"],

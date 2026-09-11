@@ -422,7 +422,7 @@ function MenuItemList({ items, selectedId, onOpen, onToggle, hideOverflowOnMobil
 
 function MenuItemGrid({ items, selectedId, onOpen, onToggle, onDelete, onMarkSoldOut }: { items: ConceptMenuItem[]; selectedId: string; onOpen: (item: ConceptMenuItem) => void; onToggle: (item: ConceptMenuItem) => void; onDelete: (item: ConceptMenuItem) => void; onMarkSoldOut: (item: ConceptMenuItem) => void }) {
   return (
-    <div className="mt-3 grid grid-cols-2 gap-2 lg:gap-3 xl:grid-cols-3 2xl:grid-cols-4">
+    <div className="mt-3 grid grid-cols-2 gap-2 lg:gap-3 xl:grid-cols-3 2xl:grid-cols-4 3xl:grid-cols-5 4xl:grid-cols-6">
       {items.length ? items.map((item) => {
         const isAvailable = item.status === "Disponível";
         const isSoldOut = item.stock === 0;
@@ -430,30 +430,29 @@ function MenuItemGrid({ items, selectedId, onOpen, onToggle, onDelete, onMarkSol
         return (
           <article key={item.id} className={cn("overflow-hidden rounded-xl border border-territory-border bg-territory-surface shadow-territory-subtle", selectedId === item.id && "ring-2 ring-territory-brand/30")}>
             <button type="button" onClick={() => onOpen(item)} className="group block w-full text-left focus-visible:outline-2 focus-visible:outline-offset-[-2px] focus-visible:outline-territory-brand">
-              <div className="relative aspect-[5/3] overflow-hidden bg-territory-raised sm:aspect-[4/3]">
+              <div className="relative aspect-[2/1] overflow-hidden bg-territory-raised">
                 <img src={item.image} alt="" className="h-full w-full object-cover transition-transform group-hover:scale-[1.02]" />
                 <div className="absolute inset-x-2 top-2 flex flex-col items-start gap-1 sm:inset-x-3 sm:top-3 sm:flex-row sm:items-start sm:justify-between sm:gap-2">
                   {item.featured ? <span className="inline-flex items-center gap-1 rounded-full bg-territory-sun px-2 py-1 text-[0.625rem] font-bold text-territory-ink"><Star className="h-3 w-3 fill-current" aria-hidden="true" />Destaque</span> : null}
                   <span className={cn("self-start rounded-full px-2 py-1 text-[0.625rem] font-bold sm:self-auto", item.status === "Disponível" ? "bg-territory-success/95 text-white" : item.status === "Rascunho" ? "bg-territory-warning text-territory-ink" : "bg-territory-ink/75 text-white")}>{item.status}</span>
                 </div>
               </div>
-              <div className="space-y-1.5 p-2 sm:space-y-2 sm:p-3">
-                <div className="flex flex-col gap-0.5 sm:flex-row sm:items-start sm:justify-between sm:gap-2">
-                  <div className="min-w-0"><h3 className="truncate text-xs font-bold text-territory-ink sm:text-sm">{item.name}</h3><p className="mt-0.5 text-[0.625rem] text-territory-muted sm:text-xs">{item.category}</p></div>
-                  <span className="shrink-0 text-xs font-bold text-territory-ink sm:text-sm">{item.price}</span>
+              <div className="space-y-1.5 p-2">
+                <div className="min-w-0">
+                  <h3 className="truncate text-xs font-bold text-territory-ink sm:text-sm">{item.name}</h3>
+                  <p className="mt-0.5 text-[0.625rem] text-territory-muted sm:text-xs">{item.category}</p>
+                  <p className="mt-1 text-xs font-bold leading-4 text-territory-ink sm:text-sm">{item.price}</p>
                 </div>
-                <p className="min-h-8 line-clamp-2 text-[0.6875rem] leading-4 text-territory-muted sm:min-h-10 sm:text-xs sm:leading-5">{item.description}</p>
-                <div className="flex flex-wrap items-center gap-x-2 gap-y-1 text-[0.625rem] text-territory-muted sm:gap-x-3 sm:text-[0.6875rem]">
+                <div className="flex flex-wrap items-center gap-x-2 gap-y-1 text-[0.625rem] text-territory-muted sm:text-[0.6875rem]">
                   {item.preparationTime ? <span className="inline-flex items-center gap-1"><Clock className="h-3.5 w-3.5" aria-hidden="true" />{item.preparationTime} min</span> : null}
                   {item.stock !== null && item.stock !== undefined ? <span className={cn("inline-flex items-center gap-1", isSoldOut ? "font-semibold text-territory-error" : hasLowStock ? "font-semibold text-territory-warning" : undefined)}>{isSoldOut ? "Esgotado" : `Estoque: ${item.stock}`}</span> : null}
                 </div>
-                {item.dietaryTags?.length ? <div className="hidden flex-wrap gap-1 sm:flex">{item.dietaryTags.map((tag) => <span key={tag} className="rounded-full bg-territory-raised px-2 py-1 text-[0.625rem] font-medium text-territory-muted">{tag}</span>)}</div> : null}
               </div>
             </button>
-            <div className="flex items-center justify-between gap-1 border-t border-territory-border px-2 py-1.5 sm:gap-2 sm:px-3 sm:py-2">
-              <div className="flex min-w-0 items-center gap-1 text-[0.625rem] text-territory-muted sm:text-[0.6875rem]">{item.status === "Rascunho" ? <span className="font-semibold text-territory-warning">Rascunho</span> : <><AvailabilityToggle available={isAvailable} onToggle={() => onToggle(item)} name={item.name} /><span className="sr-only truncate sm:not-sr-only">{isAvailable ? "Disponível" : "Indisponível"}</span></>}</div>
+            <div className="flex items-center justify-between gap-1 border-t border-territory-border px-2 py-1 sm:gap-2">
+              <div className="flex min-w-0 items-center gap-1 text-[0.625rem] text-territory-muted sm:text-[0.6875rem]">{item.status === "Rascunho" ? <span className="font-semibold text-territory-warning">Rascunho</span> : <><AvailabilityToggle available={isAvailable} onToggle={() => onToggle(item)} name={item.name} /><span className="sr-only truncate lg:not-sr-only">{isAvailable ? "Disponível" : "Indisponível"}</span></>}</div>
               <div className="flex shrink-0 items-center gap-1">
-                {!isSoldOut && item.status !== "Rascunho" ? <button type="button" onClick={() => onMarkSoldOut(item)} aria-label={`Marcar ${item.name} como esgotado`} title="Marcar esgotado" className="hidden h-9 w-9 items-center justify-center rounded-lg text-territory-muted hover:bg-territory-raised hover:text-territory-ink focus-visible:outline-2 focus-visible:outline-offset-[-2px] focus-visible:outline-territory-brand sm:inline-flex"><PackageX className="h-4 w-4" aria-hidden="true" /></button> : null}
+                {!isSoldOut && item.status !== "Rascunho" ? <button type="button" onClick={() => onMarkSoldOut(item)} aria-label={`Marcar ${item.name} como esgotado`} title="Marcar esgotado" className="hidden h-9 w-9 items-center justify-center rounded-lg text-territory-muted hover:bg-territory-raised hover:text-territory-ink focus-visible:outline-2 focus-visible:outline-offset-[-2px] focus-visible:outline-territory-brand lg:inline-flex"><PackageX className="h-4 w-4" aria-hidden="true" /></button> : null}
                 <button type="button" onClick={() => onOpen(item)} aria-label={`Editar ${item.name}`} title="Editar item" className="inline-flex h-9 w-9 items-center justify-center rounded-lg text-territory-ink hover:bg-territory-raised focus-visible:outline-2 focus-visible:outline-offset-[-2px] focus-visible:outline-territory-brand"><Pencil className="h-4 w-4" aria-hidden="true" /></button>
                 <button type="button" onClick={() => onDelete(item)} aria-label={`Excluir ${item.name}`} title="Excluir item" className="inline-flex h-9 w-9 items-center justify-center rounded-lg text-territory-muted hover:bg-territory-error/10 hover:text-territory-error focus-visible:outline-2 focus-visible:outline-offset-[-2px] focus-visible:outline-territory-brand"><Trash2 className="h-4 w-4" aria-hidden="true" /></button>
               </div>
