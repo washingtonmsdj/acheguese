@@ -1,13 +1,13 @@
 /**
- * useDriverOffers - Hook para motoristas receberem ofertas de corrida
+ * useDriverOffers - Hook para motoristas receberem ofertas de corrida.
  *
- * Monitora corridas atribuidas ao motorista em tempo real
- * e permite aceitar/rejeitar ofertas.
+ * G73: oferta pre-aceite pertence exclusivamente ao MobilityOfferService.
+ * Nenhum detalhe da ride_requests e carregado diretamente antes do aceite.
  */
 import { logger } from '@/shared/utils/logger';
 import { useEffect, useState, useCallback } from 'react';
 import { RideOperationalService } from '@/core/mobility/core/RideOperationalService';
-import { getRideWithAddresses, getRidesByDriverProfile } from '@/core/mobility/services/mobility.queries';
+import { MobilityOfferService } from '@/core/mobility/services/MobilityOfferService';
 import { useRideRealtime } from './useRideRealtime';
 
 interface RideOffer {
@@ -26,24 +26,6 @@ interface UseDriverOffersOptions {
   onNewOffer?: (offer: RideOffer) => void;
 }
 
-interface RideOfferDetails {
-  id: string;
-  status: string;
-  driver_profile_id: string | null;
-  suggested_price: number | null;
-  created_at: string;
-  origin?: string | null;
-  destination?: string | null;
-  pickup_address?: {
-    street?: string | null;
-    city?: string | null;
-  } | null;
-  dropoff_address?: {
-    street?: string | null;
-    city?: string | null;
-  } | null;
-}
-
 export function useDriverOffers(options: UseDriverOffersOptions) {
   const { driverProfileId, enabled = true, onNewOffer } = options;
 
@@ -51,13 +33,50 @@ export function useDriverOffers(options: UseDriverOffersOptions) {
   const [isAccepting, setIsAccepting] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
+  const loadOffer = useCallback(async (expectedRideId?: string) => {
+    if (!driverProfileId) return;
+
+    try {
+      const brokerOffer = await MobilityOfferService.getExclusiveOffer(driverProfileId);
+      if (!brokerOffer || (expectedRideId && brokerOffer.rideId !== expectedRideId)) {
+        if (expectedRideId) {
+          logger.warn('Assigned ride is not available through canonical offer broker', {
+            rideId: expectedRideId,
+            driverProfileId,
+          });
+        }
+        return;
+      }
+
+      const offer: RideOffer = {
+        rideId: brokerOffer.rideId,
+        pickupAddress: brokerOffer.originNeighborhood,
+        dropoffAddress: brokerOffer.destinationNeighborhood,
+        suggestedPrice: brokerOffer.suggestedPrice,
+        distance: brokerOffer.estimatedDistance,
+        offeredAt: brokerOffer.offeredAt,
+        expiresAt: brokerOffer.expiresAt,
+      };
+
+      setCurrentOffer(offer);
+      onNewOffer?.(offer);
+
+      logger.info('New ride offer loaded from canonical broker', {
+        rideId: brokerOffer.rideId,
+        driverProfileId,
+      });
+    } catch (err) {
+      logger.error('Error loading ride offer from canonical broker', err as Error);
+    }
+  }, [driverProfileId, onNewOffer]);
+
   useRideRealtime({
     userType: 'driver',
     userId: driverProfileId,
     enabled: enabled && !!driverProfileId,
     onEvent: (event) => {
       if (event.type === 'driver_assigned' && event.driverProfileId === driverProfileId) {
-        loadOffer(event.rideId);
+        void loadOffer(event.rideId);
       } else if (event.type === 'expired' || event.type === 'cancelled') {
         if (currentOffer?.rideId === event.rideId) {
           setCurrentOffer(null);
@@ -65,43 +84,6 @@ export function useDriverOffers(options: UseDriverOffersOptions) {
       }
     },
   });
-
-  const loadOffer = useCallback(async (rideId: string) => {
-    if (!driverProfileId) return;
-
-    try {
-      const ride = (await getRideWithAddresses(rideId)) as RideOfferDetails | null;
-      if (!ride || ride.driver_profile_id !== driverProfileId || ride.status !== 'driver_assigned') {
-        logger.warn('Failed to load ride offer', { rideId, driverProfileId });
-        return;
-      }
-
-      const pickupAddress = [ride.pickup_address?.street, ride.pickup_address?.city]
-        .filter(Boolean)
-        .join(', ') || ride.origin || 'Origem nao informada';
-
-      const dropoffAddress = [ride.dropoff_address?.street, ride.dropoff_address?.city]
-        .filter(Boolean)
-        .join(', ') || ride.destination || 'Destino nao informado';
-
-      const offer: RideOffer = {
-        rideId: ride.id,
-        pickupAddress,
-        dropoffAddress,
-        suggestedPrice: ride.suggested_price || 0,
-        distance: 0,
-        offeredAt: ride.created_at,
-        expiresAt: new Date(new Date(ride.created_at).getTime() + 30000).toISOString(),
-      };
-
-      setCurrentOffer(offer);
-      onNewOffer?.(offer);
-
-      logger.info('New ride offer loaded', { rideId, driverProfileId });
-    } catch (err) {
-      logger.error('Error loading ride offer', err as Error);
-    }
-  }, [driverProfileId, onNewOffer]);
 
   const acceptOffer = useCallback(async (rideId: string) => {
     if (!driverProfileId) {
@@ -143,24 +125,7 @@ export function useDriverOffers(options: UseDriverOffersOptions) {
 
   useEffect(() => {
     if (!enabled || !driverProfileId) return;
-
-    const checkPendingOffer = async () => {
-      try {
-        const rides = (await getRidesByDriverProfile(driverProfileId)) as Array<{
-          id?: string;
-          status?: string;
-        }>;
-
-        const pendingRide = rides.find((item) => item.status === 'driver_assigned');
-        if (pendingRide?.id) {
-          loadOffer(pendingRide.id);
-        }
-      } catch (err) {
-        logger.error('Error checking pending offer', err as Error);
-      }
-    };
-
-    checkPendingOffer();
+    void loadOffer();
   }, [enabled, driverProfileId, loadOffer]);
 
   return {
