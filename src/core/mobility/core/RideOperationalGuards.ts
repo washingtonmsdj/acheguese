@@ -25,11 +25,14 @@ const FAILED_DELIVERY_SERVER_OWNED_FIELDS = new Set([
   "resolution_item_holder",
   "redelivery_pickup_confirmed_at",
   "resolution_plan",
+  "resolution_action",
+  "retry_delivery_requested",
+  "retry_driver_profile_id",
+  "retry_resumed_at",
   "handoff_requested_driver_profile_id",
   "handoff_requested_at",
   "handoff_request_expires_at",
   "handoff_request_distance_m",
-  "resolution_action",
   "handoff_from_driver_profile_id",
   "handoff_confirmed_at",
   "handoff_distance_m",
@@ -164,6 +167,13 @@ export function validateFailedDeliveryResolution(
   resolutionUpdate: FailedDeliveryResolutionUpdate,
 ): void {
   if (
+    resolutionUpdate.resolution_action_notes !== undefined &&
+    resolutionUpdate.resolution_action_notes.length > 2000
+  ) {
+    throw new Error("resolution_action_notes excede o limite permitido.");
+  }
+
+  if (
     resolutionUpdate.resolution_status === "escalated" &&
     !resolutionUpdate.manual_resolution_owner_profile_id
   ) {
@@ -179,6 +189,22 @@ export function validateFailedDeliveryResolution(
     );
   }
 
+  if (resolutionUpdate.retry_delivery_requested === true) {
+    if (!resolutionUpdate.resolution_action_notes?.trim()) {
+      throw new Error("resolution_action_notes obrigatorio para retomar a entrega.");
+    }
+    if (
+      resolutionUpdate.handoff_requested === true ||
+      hasHandoffTarget ||
+      resolutionUpdate.manual_resolution_owner_profile_id ||
+      resolutionUpdate.resolution_status !== undefined
+    ) {
+      throw new Error(
+        "retry_delivery_requested nao pode ser combinado com handoff, escalonamento ou resolution_status manual.",
+      );
+    }
+  }
+
   if (resolutionUpdate.handoff_requested === true) {
     if (!hasHandoffTarget) {
       throw new Error("handoff_driver_profile_id obrigatorio para solicitar handoff.");
@@ -192,8 +218,11 @@ export function validateFailedDeliveryResolution(
     ) {
       throw new Error("resolution_status do handoff deve ser in_progress.");
     }
-    if (resolutionUpdate.next_ride_id || resolutionUpdate.manual_resolution_owner_profile_id) {
-      throw new Error("handoff nao pode ser combinado com reentrega ou escalonamento manual.");
+    if (
+      resolutionUpdate.retry_delivery_requested === true ||
+      resolutionUpdate.manual_resolution_owner_profile_id
+    ) {
+      throw new Error("handoff nao pode ser combinado com nova tentativa ou escalonamento manual.");
     }
   }
 }
