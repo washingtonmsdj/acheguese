@@ -30,11 +30,17 @@ export interface EmailDeliveryResult {
   metadata?: Record<string, unknown>;
 }
 
-const SUCCESS_STATUSES = new Set<EmailDeliveryStatus>([
+const REQUEST_SUCCESS_STATUSES = new Set<EmailDeliveryStatus>([
   'processing',
   'dispatching',
   'sent',
   'delivered',
+]);
+
+const REQUEST_NON_SUCCESS_STATUSES = new Set<EmailDeliveryStatus>([
+  'failed',
+  'cancelled',
+  'reconciliation_required',
 ]);
 
 function isRecord(value: unknown): value is Record<string, unknown> {
@@ -57,26 +63,37 @@ function isEmailDeliveryStatus(value: unknown): value is EmailDeliveryStatus {
   );
 }
 
-function validSuccessResponse(
+function isConsistentWorkerOutcome(
+  success: boolean,
+  status: EmailDeliveryStatus,
+): boolean {
+  return success
+    ? REQUEST_SUCCESS_STATUSES.has(status)
+    : REQUEST_NON_SUCCESS_STATUSES.has(status);
+}
+
+function validWorkerResponse(
   data: unknown,
   expectedContactId: string,
 ): data is {
-  success: true;
+  success: boolean;
   contactId: string;
   channel: 'email';
   timestamp: string;
   status: EmailDeliveryStatus;
+  error?: string;
   metadata?: Record<string, unknown>;
 } {
-  if (!isRecord(data)) return false;
+  if (!isRecord(data) || !isEmailDeliveryStatus(data.status)) return false;
+  if (typeof data.success !== 'boolean') return false;
+
   return (
-    data.success === true &&
     data.contactId === expectedContactId &&
     data.channel === 'email' &&
     typeof data.timestamp === 'string' &&
     data.timestamp.length > 0 &&
-    isEmailDeliveryStatus(data.status) &&
-    SUCCESS_STATUSES.has(data.status) &&
+    isConsistentWorkerOutcome(data.success, data.status) &&
+    (data.error === undefined || typeof data.error === 'string') &&
     (data.metadata === undefined || isRecord(data.metadata))
   );
 }
@@ -106,22 +123,24 @@ export class EmailNotificationProvider {
         throw new Error(message);
       }
 
-      if (!validSuccessResponse(data, contact.id)) {
+      if (!validWorkerResponse(data, contact.id)) {
         throw new Error('Resposta inválida do serviço de email de emergência');
       }
 
       logger.info('[EmailNotificationProvider] Emergency email worker result', {
         contactId: contact.id,
         alertId: alert.id,
+        success: data.success,
         status: data.status,
       });
 
       return {
-        success: true,
+        success: data.success,
         contactId: data.contactId,
         channel: 'email',
         timestamp: data.timestamp,
         status: data.status,
+        error: data.error,
         metadata: data.metadata,
       };
     } catch (error) {
