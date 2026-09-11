@@ -35,6 +35,8 @@ import dessertImage from "@/assets/gastronomy/cat-lanchonetes.jpg";
 type FulfillmentMode = "delivery" | "pickup" | "dine-in";
 type ConceptTab = "menu" | "reviews" | "info";
 type MenuViewMode = "list" | "grid";
+type MenuSortMode = "relevance" | "popular" | "price-asc" | "price-desc";
+type PriceFilter = "all" | "under-20" | "20-to-35" | "over-35";
 
 type ConceptMenuItem = {
   id: string;
@@ -167,6 +169,22 @@ const offerItem: ConceptMenuItem = {
 
 const allSelectableItems = [...menuItems, offerItem];
 
+const popularityByItemId: Record<string, number> = {
+  [offerItem.id]: 120,
+  "prato-do-dia": 98,
+  "moqueca-de-peixe": 92,
+  "suco-de-maracuja": 80,
+  "opcao-vegetariana": 72,
+  "camarao-alho-oleo": 66,
+  "arroz-de-coco": 58,
+  "salada-tropical": 52,
+  "brownie-da-casa": 48,
+  "torta-de-banana": 44,
+  "agua-de-coco": 40,
+  "limonada-da-casa": 36,
+  "pudim-caseiro": 20,
+};
+
 const categories = ["Todas", "Refeições", "Bebidas", "Sobremesas"];
 
 const money = (value: number) =>
@@ -174,6 +192,27 @@ const money = (value: number) =>
     style: "currency",
     currency: "BRL",
   }).format(value);
+
+const matchesPriceFilter = (item: ConceptMenuItem, filter: PriceFilter) => {
+  if (filter === "under-20") return item.price < 20;
+  if (filter === "20-to-35") return item.price >= 20 && item.price <= 35;
+  if (filter === "over-35") return item.price > 35;
+  return true;
+};
+
+const matchesMenuFilters = (item: ConceptMenuItem, category: string, query: string, priceFilter: PriceFilter) => {
+  const matchesCategory = category === "Todas" || item.category === category;
+  const normalizedQuery = query.trim().toLowerCase();
+  const matchesQuery = !normalizedQuery || `${item.name} ${item.description}`.toLowerCase().includes(normalizedQuery);
+  return matchesCategory && matchesQuery && matchesPriceFilter(item, priceFilter);
+};
+
+const sortMenuItems = (items: ConceptMenuItem[], sortMode: MenuSortMode) => [...items].sort((first, second) => {
+  if (sortMode === "popular") return (popularityByItemId[second.id] ?? 0) - (popularityByItemId[first.id] ?? 0);
+  if (sortMode === "price-asc") return first.price - second.price;
+  if (sortMode === "price-desc") return second.price - first.price;
+  return 0;
+});
 
 function ConceptPublicHeader({
   saved,
@@ -323,7 +362,7 @@ function FulfillmentBar({ mode, onChange }: { mode: FulfillmentMode; onChange: (
   );
 }
 
-function SearchAndCategories({ query, onQueryChange, category, onCategoryChange, viewMode, onViewModeChange }: { query: string; onQueryChange: (value: string) => void; category: string; onCategoryChange: (value: string) => void; viewMode: MenuViewMode; onViewModeChange: (value: MenuViewMode) => void }) {
+function SearchAndCategories({ query, onQueryChange, category, onCategoryChange, viewMode, onViewModeChange, priceFilter, onPriceFilterChange, sortMode, onSortModeChange, resultCount }: { query: string; onQueryChange: (value: string) => void; category: string; onCategoryChange: (value: string) => void; viewMode: MenuViewMode; onViewModeChange: (value: MenuViewMode) => void; priceFilter: PriceFilter; onPriceFilterChange: (value: PriceFilter) => void; sortMode: MenuSortMode; onSortModeChange: (value: MenuSortMode) => void; resultCount: number }) {
   return (
     <div className="space-y-2 sm:space-y-2.5">
       <label className="relative block">
@@ -348,6 +387,27 @@ function SearchAndCategories({ query, onQueryChange, category, onCategoryChange,
           </button>
         </div>
       </div>
+      <div className="flex flex-wrap items-center gap-2">
+        <label className="min-w-0 flex-1 sm:flex-none">
+          <span className="sr-only">Filtrar por preço</span>
+          <select value={priceFilter} onChange={(event) => onPriceFilterChange(event.target.value as PriceFilter)} aria-label="Filtrar por preço" className="h-8 w-full min-w-0 rounded-lg border border-territory-border bg-territory-surface px-2.5 text-[0.6875rem] font-semibold text-territory-ink focus-visible:outline-2 focus-visible:outline-offset-[-2px] focus-visible:outline-territory-brand sm:h-9 sm:w-auto sm:text-xs">
+            <option value="all">Preço</option>
+            <option value="under-20">Até R$ 20</option>
+            <option value="20-to-35">R$ 20 a R$ 35</option>
+            <option value="over-35">Acima de R$ 35</option>
+          </select>
+        </label>
+        <label className="min-w-0 flex-1 sm:flex-none">
+          <span className="sr-only">Ordenar cardápio</span>
+          <select value={sortMode} onChange={(event) => onSortModeChange(event.target.value as MenuSortMode)} aria-label="Ordenar cardápio" className="h-8 w-full min-w-0 rounded-lg border border-territory-border bg-territory-surface px-2.5 text-[0.6875rem] font-semibold text-territory-ink focus-visible:outline-2 focus-visible:outline-offset-[-2px] focus-visible:outline-territory-brand sm:h-9 sm:w-auto sm:text-xs">
+            <option value="relevance">Relevância</option>
+            <option value="popular">Mais vendidos</option>
+            <option value="price-asc">Menor preço</option>
+            <option value="price-desc">Maior preço</option>
+          </select>
+        </label>
+        <span className="ml-auto text-[0.6875rem] text-territory-muted sm:text-xs">{resultCount} {resultCount === 1 ? "item" : "itens"}</span>
+      </div>
     </div>
   );
 }
@@ -370,11 +430,12 @@ function MenuRow({ item, selected, onSelect }: { item: ConceptMenuItem; selected
   );
 }
 
-function MenuGridCard({ item, selected, onSelect }: { item: ConceptMenuItem; selected: boolean; onSelect: () => void }) {
+function MenuGridCard({ item, selected, featured = false, onSelect }: { item: ConceptMenuItem; selected: boolean; featured?: boolean; onSelect: () => void }) {
   return (
-    <button type="button" disabled={item.available === false} onClick={onSelect} className={cn("group flex min-w-0 flex-col rounded-lg border border-territory-border bg-territory-surface p-2 text-left transition-colors focus-visible:z-10 focus-visible:outline-2 focus-visible:outline-offset-[-2px] focus-visible:outline-territory-brand sm:rounded-xl sm:p-2.5 lg:flex-row lg:items-center lg:gap-3 lg:p-2.5", selected && "border-territory-brand bg-[hsl(var(--territory-success)/0.12)]", item.available === false ? "cursor-not-allowed opacity-55" : "hover:border-territory-brand/50 hover:bg-territory-raised")}>
+    <button type="button" disabled={item.available === false} onClick={onSelect} className={cn("group flex min-w-0 flex-col rounded-lg border border-territory-border bg-territory-surface p-2 text-left transition-colors focus-visible:z-10 focus-visible:outline-2 focus-visible:outline-offset-[-2px] focus-visible:outline-territory-brand sm:rounded-xl sm:p-2.5 lg:flex-row lg:items-center lg:gap-3 lg:p-2.5", featured && "border-territory-sun/80 bg-territory-sun/20", selected && "border-territory-brand bg-[hsl(var(--territory-success)/0.12)]", item.available === false ? "cursor-not-allowed opacity-55" : "hover:border-territory-brand/50 hover:bg-territory-raised")}>
       <span className="relative block aspect-[5/3] w-full shrink-0 overflow-hidden rounded-md bg-territory-raised sm:rounded-lg lg:h-16 lg:w-24 lg:aspect-auto">
         <img src={item.image} alt="" className="h-full w-full object-cover transition-transform duration-200 group-hover:scale-[1.02]" />
+        {featured ? <span className="absolute left-1 top-1 rounded-full bg-territory-sun px-1.5 py-0.5 text-[0.5625rem] font-bold text-territory-ink">Oferta</span> : null}
         {item.available === false ? <span className="absolute bottom-1 left-1 rounded-full bg-territory-surface/95 px-1.5 py-0.5 text-[0.5625rem] font-semibold text-territory-muted">Indisponível</span> : null}
       </span>
       <span className="min-w-0 flex-1">
@@ -541,6 +602,8 @@ export default function GastronomyDetailConceptPreviewPage() {
   const [activeCategory, setActiveCategory] = useState("Todas");
   const [query, setQuery] = useState("");
   const [viewMode, setViewMode] = useState<MenuViewMode>("list");
+  const [priceFilter, setPriceFilter] = useState<PriceFilter>("all");
+  const [sortMode, setSortMode] = useState<MenuSortMode>("relevance");
   const [fulfillmentMode, setFulfillmentMode] = useState<FulfillmentMode>("pickup");
   const [saved, setSaved] = useState(false);
   const [selectedItemId, setSelectedItemId] = useState<string | null>("moqueca-de-peixe");
@@ -558,12 +621,11 @@ export default function GastronomyDetailConceptPreviewPage() {
   ]);
 
   const selectedItem = selectedItemId ? allSelectableItems.find((item) => item.id === selectedItemId) ?? null : null;
-  const filteredItems = useMemo(() => menuItems.filter((item) => {
-    const matchesCategory = activeCategory === "Todas" || item.category === activeCategory;
-    const normalizedQuery = query.trim().toLowerCase();
-    const matchesQuery = !normalizedQuery || `${item.name} ${item.description}`.toLowerCase().includes(normalizedQuery);
-    return matchesCategory && matchesQuery;
-  }), [activeCategory, query]);
+  const filteredItems = useMemo(() => sortMenuItems(menuItems.filter((item) => matchesMenuFilters(item, activeCategory, query, priceFilter)), sortMode), [activeCategory, priceFilter, query, sortMode]);
+  const filteredGridItems = useMemo(() => {
+    const items = activeCategory === "Todas" ? [offerItem, ...menuItems] : menuItems;
+    return sortMenuItems(items.filter((item) => matchesMenuFilters(item, activeCategory, query, priceFilter)), sortMode);
+  }, [activeCategory, priceFilter, query, sortMode]);
 
   const addLine = (item: ConceptMenuItem, itemQuantity = 1, addonsTotal = 0, itemNotes = "", priceOverride?: number) => {
     setCartLines((current) => [...current, { ...item, price: priceOverride ?? item.price, quantity: itemQuantity, addonsTotal, notes: itemNotes }]);
@@ -636,12 +698,12 @@ export default function GastronomyDetailConceptPreviewPage() {
         {activeTab === "menu" ? (
           <div className={cn("grid min-h-0 w-full items-start gap-4 lg:gap-6", hasPinnedDetails ? "lg:grid-cols-[minmax(0,1fr)_30rem]" : "lg:grid-cols-1")}>
             <section className="min-w-0">
-              <SearchAndCategories query={query} onQueryChange={setQuery} category={activeCategory} onCategoryChange={setActiveCategory} viewMode={viewMode} onViewModeChange={handleViewModeChange} />
+              <SearchAndCategories query={query} onQueryChange={setQuery} category={activeCategory} onCategoryChange={setActiveCategory} viewMode={viewMode} onViewModeChange={handleViewModeChange} priceFilter={priceFilter} onPriceFilterChange={setPriceFilter} sortMode={sortMode} onSortModeChange={setSortMode} resultCount={viewMode === "grid" ? filteredGridItems.length : filteredItems.length} />
               <div className="mt-3 flex flex-col gap-2">
-                <OfferCard onOpen={() => handleSelectItem(offerItem)} />
+                {viewMode === "list" ? <OfferCard onOpen={() => handleSelectItem(offerItem)} /> : null}
                 <div className="overflow-hidden rounded-xl border border-territory-border bg-territory-surface">
-                  {viewMode === "grid" ? <div className={cn("grid grid-cols-2 gap-2 p-2 sm:gap-3 sm:p-3", hasPinnedDetails ? "lg:grid-cols-2" : "lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5")}>{filteredItems.map((item) => <MenuGridCard key={item.id} item={item} selected={selectedItem?.id === item.id} onSelect={() => handleSelectItem(item)} />)}</div> : filteredItems.map((item) => <MenuRow key={item.id} item={item} selected={selectedItem?.id === item.id} onSelect={() => handleSelectItem(item)} />)}
-                  {!filteredItems.length ? <p className="px-4 py-8 text-center text-sm text-territory-muted">Nenhum item encontrado.</p> : null}
+                  {viewMode === "grid" ? <div className={cn("grid grid-cols-2 gap-2 p-2 sm:gap-3 sm:p-3", hasPinnedDetails ? "lg:grid-cols-2" : "lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5")}>{filteredGridItems.map((item) => <MenuGridCard key={item.id} item={item} featured={item.id === offerItem.id} selected={selectedItem?.id === item.id} onSelect={() => handleSelectItem(item)} />)}</div> : filteredItems.map((item) => <MenuRow key={item.id} item={item} selected={selectedItem?.id === item.id} onSelect={() => handleSelectItem(item)} />)}
+                  {!((viewMode === "grid" ? filteredGridItems : filteredItems).length) ? <p className="px-4 py-8 text-center text-sm text-territory-muted">Nenhum item encontrado.</p> : null}
                 </div>
               </div>
             </section>
