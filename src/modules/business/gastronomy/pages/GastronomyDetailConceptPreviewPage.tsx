@@ -131,8 +131,8 @@ function ConceptPublicHeader({
   const navigate = useNavigate();
 
   return (
-    <header className="sticky top-0 z-40 border-b border-territory-border bg-territory-surface/95 backdrop-blur-md">
-      <div className="mx-auto hidden h-[3.25rem] max-w-[68rem] items-center gap-6 px-5 md:flex lg:px-8">
+    <header className="relative z-40 border-b border-territory-border bg-territory-surface/95 backdrop-blur-md">
+      <div className="hidden h-[3.25rem] items-center gap-6 px-5 md:flex lg:px-8">
         <Link
           to={territoryHref}
           className="font-heading text-[1.4rem] font-bold tracking-[-0.04em] text-territory-brand focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-territory-brand"
@@ -182,7 +182,7 @@ function BusinessIdentity({
 }) {
   return (
     <section className="relative z-10 border-b border-territory-border bg-territory-surface">
-      <div className="mx-auto flex max-w-[68rem] flex-wrap items-end gap-3 px-4 pb-2 pt-0 sm:gap-4 sm:px-6 sm:pb-2 lg:pb-1 lg:px-8">
+      <div className="flex flex-wrap items-end gap-3 px-4 pb-2 pt-0 sm:gap-4 sm:px-6 sm:pb-2 lg:pb-1 lg:px-8">
         <div className="-mt-8 flex h-20 w-20 shrink-0 items-center justify-center rounded-full border-4 border-territory-surface bg-[#ad5944] text-center font-heading text-sm font-bold leading-4 text-white shadow-territory-subtle sm:h-24 sm:w-24 sm:text-base">
           Sabores
           <br />
@@ -220,7 +220,7 @@ function PublicTabs({ activeTab, onChange }: { activeTab: ConceptTab; onChange: 
 
   return (
     <nav className="border-b border-territory-border bg-territory-surface" aria-label="Conteúdo do estabelecimento">
-      <div className="mx-auto flex max-w-[68rem] gap-1 overflow-x-auto px-4 sm:px-6 lg:px-8">
+      <div className="flex gap-1 overflow-x-auto px-4 sm:px-6 lg:px-8">
         {tabs.map((tab) => (
           <button key={tab.value} type="button" onClick={() => onChange(tab.value)} className={cn("relative min-h-9 shrink-0 px-3 text-xs font-semibold text-territory-muted transition-colors focus-visible:outline-2 focus-visible:outline-offset-[-2px] focus-visible:outline-territory-brand sm:min-h-9 sm:px-4 sm:text-sm lg:min-h-8", activeTab === tab.value && "text-territory-brand") } aria-current={activeTab === tab.value ? "page" : undefined}>
             {tab.label}
@@ -242,7 +242,7 @@ function FulfillmentBar({ mode, onChange }: { mode: FulfillmentMode; onChange: (
 
   return (
     <section className="border-b border-territory-border bg-territory-surface">
-      <div className="mx-auto flex max-w-[68rem] flex-col gap-0 px-4 py-0.5 sm:flex-row sm:items-center sm:justify-between sm:gap-2 sm:px-6 sm:py-2 lg:px-8 lg:py-1">
+      <div className="flex flex-col gap-0 px-4 py-0.5 sm:flex-row sm:items-center sm:justify-between sm:gap-2 sm:px-6 sm:py-2 lg:px-8 lg:py-1">
         <div className="grid grid-cols-3 overflow-hidden rounded-lg border border-territory-border bg-territory-raised sm:w-64" role="radiogroup" aria-label="Forma de recebimento">
           {options.map((option) => {
             const Icon = option.icon;
@@ -561,7 +561,7 @@ export default function GastronomyDetailConceptPreviewPage() {
   const hasPinnedDetails = viewMode === "list" && Boolean(selectedItem);
 
   return (
-    <div className="flex min-h-screen flex-col overflow-x-hidden bg-territory-canvas pb-4 text-territory-ink max-md:h-[100dvh] max-md:overflow-y-auto max-md:overscroll-contain max-md:scrollbar-hide max-md:[-ms-overflow-style:none] max-md:[scrollbar-width:none] max-md:[&::-webkit-scrollbar]:hidden lg:h-[100dvh] lg:min-h-0 lg:overflow-hidden lg:pb-0">
+    <div className="flex min-h-screen flex-col overflow-x-hidden bg-territory-canvas text-territory-ink">
       <ConceptPublicHeader saved={saved} onSave={() => setSaved((value) => !value)} onShare={handleShare} />
 
       <section className="relative h-16 overflow-hidden bg-territory-raised sm:h-24 lg:h-20">
@@ -574,22 +574,21 @@ export default function GastronomyDetailConceptPreviewPage() {
       <PublicTabs activeTab={activeTab} onChange={setActiveTab} />
       <FulfillmentBar mode={fulfillmentMode} onChange={setFulfillmentMode} />
 
-      <main className="mx-auto w-full max-w-[68rem] px-4 pb-24 pt-3 sm:px-6 sm:pt-3 lg:flex lg:min-h-0 lg:flex-1 lg:overflow-hidden lg:px-8 lg:pb-4">
+      <main className="w-full px-4 pb-28 pt-3 sm:px-6 sm:pt-3 lg:px-8 lg:pb-28">
         {activeTab === "menu" ? (
-          <div className={cn("grid min-h-0 w-full items-start gap-4 lg:h-full lg:gap-6", hasPinnedDetails ? "lg:grid-cols-[minmax(0,1fr)_30rem]" : "lg:grid-cols-1")}>
-            <section className="min-w-0 lg:flex lg:h-full lg:min-h-0 lg:flex-col">
+          <div className={cn("grid min-h-0 w-full items-start gap-4 lg:gap-6", hasPinnedDetails ? "lg:grid-cols-[minmax(0,1fr)_30rem]" : "lg:grid-cols-1")}>
+            <section className="min-w-0">
               <SearchAndCategories query={query} onQueryChange={setQuery} category={activeCategory} onCategoryChange={setActiveCategory} viewMode={viewMode} onViewModeChange={handleViewModeChange} />
-              <div className="mt-3 flex min-h-0 flex-col gap-2 lg:flex-1">
+              <div className="mt-3 flex flex-col gap-2">
                 <OfferCard onOpen={() => handleSelectItem(offerItem)} />
-                <div className="min-h-0 overflow-hidden rounded-xl border border-territory-border bg-territory-surface lg:flex-1 lg:overflow-y-auto lg:overscroll-contain lg:[scrollbar-gutter:stable]">
+                <div className="overflow-hidden rounded-xl border border-territory-border bg-territory-surface">
                   {viewMode === "grid" ? <div className={cn("grid grid-cols-2 gap-2 p-2 sm:gap-3 sm:p-3", hasPinnedDetails ? "lg:grid-cols-2" : "lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5")}>{filteredItems.map((item) => <MenuGridCard key={item.id} item={item} selected={selectedItem?.id === item.id} onSelect={() => handleSelectItem(item)} />)}</div> : filteredItems.map((item) => <MenuRow key={item.id} item={item} selected={selectedItem?.id === item.id} onSelect={() => handleSelectItem(item)} />)}
                   {!filteredItems.length ? <p className="px-4 py-8 text-center text-sm text-territory-muted">Nenhum item encontrado.</p> : null}
                 </div>
               </div>
-              <div className="mt-3 hidden shrink-0 lg:block"><CartSummary lines={cartLines} onOpen={() => setCartOpen(true)} /></div>
             </section>
 
-            {hasPinnedDetails ? <aside className="hidden lg:block lg:h-full lg:min-h-0 lg:overflow-y-auto lg:overscroll-contain lg:scrollbar-hide">
+            {hasPinnedDetails ? <aside className="hidden lg:block">
               <div className="relative">
                 <ItemCustomizer item={selectedItem} size={size} setSize={setSize} quantity={quantity} setQuantity={setQuantity} farofa={farofa} setFarofa={setFarofa} arroz={arroz} setArroz={setArroz} notes={notes} setNotes={setNotes} onAdd={addSelectedItem} />
               </div>
@@ -597,6 +596,10 @@ export default function GastronomyDetailConceptPreviewPage() {
           </div>
         ) : activeTab === "reviews" ? <ReviewsContent /> : <InfoContent />}
       </main>
+
+      <div className={cn("fixed bottom-4 z-40 hidden lg:block", activeTab === "menu" && hasPinnedDetails ? "left-8 right-[32rem]" : "left-8 right-8")}>
+        <CartSummary lines={cartLines} onOpen={() => setCartOpen(true)} />
+      </div>
 
       <div className="fixed inset-x-0 bottom-0 z-40 border-t border-territory-brand/20 bg-territory-surface/95 px-2 pt-1.5 shadow-[0_-4px_18px_rgba(18,62,61,0.12)] backdrop-blur-md lg:hidden">
         <CartSummary lines={cartLines} onOpen={() => setCartOpen(true)} />
