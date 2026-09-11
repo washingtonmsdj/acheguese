@@ -131,7 +131,11 @@ BEGIN
      OR v_availability.active_ride_id IS DISTINCT FROM p_ride_id
      OR v_availability.is_online IS DISTINCT FROM true
      OR v_availability.last_seen_at IS NULL
-     OR v_availability.last_seen_at < v_now - interval '5 minutes' THEN
+     OR v_availability.last_seen_at < v_now - interval '5 minutes'
+     OR v_availability.current_lat IS NULL
+     OR v_availability.current_lng IS NULL
+     OR v_availability.last_location_update IS NULL
+     OR v_availability.last_location_update < v_now - interval '5 minutes' THEN
     RAISE EXCEPTION 'current custodian is not actively operating this delivery'
       USING ERRCODE = '22023';
   END IF;
@@ -337,4 +341,4 @@ GRANT EXECUTE ON FUNCTION public.mobility_update_failed_delivery_resolution_atom
 ) TO service_role;
 
 COMMENT ON FUNCTION public.mobility_update_failed_delivery_resolution_atomic(uuid, jsonb) IS
-  'G82 service-only failed-delivery resolution boundary. Rejects caller-owned next_ride_id; G81 owns receiver-confirmed custody handoff; retry_delivery_requested reopens the same driver-held delivery only after server-side custody, availability, eligibility and linked-order checks.';
+  'G82 service-only failed-delivery resolution boundary. Rejects caller-owned next_ride_id; G81 owns receiver-confirmed custody handoff; retry_delivery_requested reopens the same driver-held delivery only after server-side custody, availability, fresh-location, eligibility and linked-order checks.';
