@@ -61,7 +61,7 @@ export function ItemCard({
           <div className="flex min-w-0 flex-1 flex-col">
             <div className="flex items-start justify-between gap-2">
               <div className="flex-1 min-w-0">
-                <div className="mb-1 flex flex-wrap items-center gap-1 sm:gap-2">
+                <div className={isGrid ? 'mb-1 flex flex-col items-start gap-1 sm:flex-row sm:items-center sm:gap-2' : 'mb-1 flex flex-wrap items-center gap-1 sm:gap-2'}>
                   <h4 className={isGrid ? 'truncate text-xs font-semibold sm:text-base' : 'truncate font-medium'}>{item.name}</h4>
                   {item.is_featured && <Badge variant="secondary" className={isGrid ? 'text-[0.625rem]' : undefined}>Destaque</Badge>}
                   {!item.is_available && <Badge variant="outline" className={isGrid ? 'text-[0.625rem]' : undefined}>Pausado</Badge>}

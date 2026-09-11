@@ -380,7 +380,10 @@ function MenuItemRow({ item, selected, onOpen, onToggle, className }: { item: Co
       <button type="button" onClick={onOpen} className="flex min-w-0 items-center justify-start gap-3 text-left focus-visible:outline-2 focus-visible:outline-offset-[-2px] focus-visible:outline-territory-brand">
         <img src={item.image} alt="" className="h-16 w-[5.25rem] shrink-0 rounded-lg object-cover md:h-12 md:w-16" />
         <span className="min-w-0">
-          <span className="block truncate text-sm font-bold text-territory-ink">{item.name}</span>
+          <span className="flex min-w-0 items-center gap-1.5">
+            <span className="min-w-0 truncate text-sm font-bold text-territory-ink">{item.name}</span>
+            {item.featured ? <span className="inline-flex shrink-0 items-center gap-1 rounded-full bg-territory-sun px-1.5 py-0.5 text-[0.5625rem] font-bold leading-4 text-territory-ink"><Star className="h-2.5 w-2.5 fill-current" aria-hidden="true" />Destaque</span> : null}
+          </span>
           <span className="mt-0.5 block truncate text-xs text-territory-muted">{item.category}</span>
           <span className="mt-0.5 block text-xs font-semibold text-territory-ink md:hidden lg:block">{item.price}</span>
           <span className="mt-0.5 hidden truncate text-[0.6875rem] font-medium text-territory-muted md:block lg:hidden">{item.price} · {item.status}</span>
@@ -429,9 +432,9 @@ function MenuItemGrid({ items, selectedId, onOpen, onToggle, onDelete, onMarkSol
             <button type="button" onClick={() => onOpen(item)} className="group block w-full text-left focus-visible:outline-2 focus-visible:outline-offset-[-2px] focus-visible:outline-territory-brand">
               <div className="relative aspect-[5/3] overflow-hidden bg-territory-raised sm:aspect-[4/3]">
                 <img src={item.image} alt="" className="h-full w-full object-cover transition-transform group-hover:scale-[1.02]" />
-                <div className="absolute inset-x-3 top-3 flex items-start justify-between gap-2">
-                  {item.featured ? <span className="inline-flex items-center gap-1 rounded-full bg-territory-sun px-2 py-1 text-[0.625rem] font-bold text-territory-ink"><Star className="h-3 w-3 fill-current" aria-hidden="true" />Destaque</span> : <span />}
-                  <span className={cn("rounded-full px-2 py-1 text-[0.625rem] font-bold", item.status === "Disponível" ? "bg-territory-success/95 text-white" : item.status === "Rascunho" ? "bg-territory-warning text-territory-ink" : "bg-territory-ink/75 text-white")}>{item.status}</span>
+                <div className="absolute inset-x-2 top-2 flex flex-col items-start gap-1 sm:inset-x-3 sm:top-3 sm:flex-row sm:items-start sm:justify-between sm:gap-2">
+                  {item.featured ? <span className="inline-flex items-center gap-1 rounded-full bg-territory-sun px-2 py-1 text-[0.625rem] font-bold text-territory-ink"><Star className="h-3 w-3 fill-current" aria-hidden="true" />Destaque</span> : null}
+                  <span className={cn("self-start rounded-full px-2 py-1 text-[0.625rem] font-bold sm:self-auto", item.status === "Disponível" ? "bg-territory-success/95 text-white" : item.status === "Rascunho" ? "bg-territory-warning text-territory-ink" : "bg-territory-ink/75 text-white")}>{item.status}</span>
                 </div>
               </div>
               <div className="space-y-1.5 p-2 sm:space-y-2 sm:p-3">
