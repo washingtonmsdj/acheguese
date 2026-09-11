@@ -126,7 +126,10 @@ export function useDriverDashboardBase({
     queryScope,
   });
 
-  const capabilityData = (driverData as { can_do_delivery?: boolean | null; can_do_rides?: boolean | null } | null);
+  const capabilityData = driverData as {
+    can_do_delivery?: boolean | null;
+    can_do_rides?: boolean | null;
+  } | null;
   const canAcceptDeliveryOffers = capabilityData?.can_do_delivery === true;
   const canAcceptRideOffers = capabilityData?.can_do_rides !== false;
 
@@ -148,21 +151,17 @@ export function useDriverDashboardBase({
       "driver-dashboard",
       queryScope,
       "rides",
-      driverProfileId ?? user?.id ?? null,
+      driverProfileId ?? null,
     ],
     queryFn: async (): Promise<MobilityRide[]> => {
-      if (!user) {
-        return [];
-      }
-
-      const identifier = driverProfileId ?? user.id;
-      return (await getRidesByDriverProfile(identifier)) as MobilityRide[];
+      if (!driverProfileId) return [];
+      return (await getRidesByDriverProfile(driverProfileId)) as MobilityRide[];
     },
-    enabled: !!user && (isAdmin || !!driverProfileId),
+    enabled: !!user && !!driverProfileId,
     staleTime: TIMEOUTS.CACHE_STALE_TIME_MEDIUM,
   });
 
-  // GATE: Usar MobilityOfferService ao inves de getAvailableRides generico
+  // Pre-accept offers are always read through the redacted broker boundary.
   const availableRidesQuery = useQuery({
     queryKey: [
       "driver-dashboard",
@@ -176,7 +175,9 @@ export function useDriverDashboardBase({
       if (!driverProfileId) return [];
       if (!canAcceptRideOffers && !canAcceptDeliveryOffers) return [];
 
-      const { MobilityOfferService } = await import('@/core/mobility/services/MobilityOfferService');
+      const { MobilityOfferService } = await import(
+        "@/core/mobility/services/MobilityOfferService"
+      );
       const rides: MobilityRide[] = [];
 
       if (canAcceptRideOffers) {
@@ -192,10 +193,7 @@ export function useDriverDashboardBase({
             type: "viagem",
             ride_mode: "ride",
             created_at: exclusiveOffer.offeredAt,
-            passenger: {
-              name: "Passageiro",
-              rating: exclusiveOffer.passengerRating,
-            },
+            passenger: { name: "Passageiro" },
             driver_trust_risk_level: exclusiveOffer.driverTrustRiskLevel,
             driver_dispatch_policy: exclusiveOffer.driverDispatchPolicy,
             passenger_trust_risk_level: exclusiveOffer.passengerTrustRiskLevel,
@@ -227,7 +225,6 @@ export function useDriverDashboardBase({
             ride_mode: "motoboy",
             created_at: offer.createdAt,
             package_size: offer.packageSize,
-            package_description: offer.packageDescription,
             priority: offer.priority,
             trust_adjusted_priority: offer.trustAdjustedPriority,
             driver_trust_risk_level: offer.driverTrustRiskLevel,
@@ -240,7 +237,7 @@ export function useDriverDashboardBase({
 
       return rides;
     },
-    enabled: !!user && (isAdmin || !!driverProfileId),
+    enabled: !!user && !!driverProfileId,
     staleTime: TIMEOUTS.CACHE_STALE_TIME_SHORT,
     refetchInterval: 5000,
   });
@@ -296,8 +293,8 @@ export function useDriverDashboardBase({
 
   useRideRealtime({
     userType: "driver",
-    userId: driverProfileId ?? user?.id,
-    enabled: !!user && (isAdmin || !!driverProfileId),
+    userId: driverProfileId,
+    enabled: !!user && !!driverProfileId,
     onEvent: (event) => {
       logger.info("useDriverDashboardBase - realtime event", {
         queryScope,
@@ -399,11 +396,13 @@ export function useDriverDashboardBase({
 
       setActionsLoading(true);
       try {
-        // Importar dinamicamente
-        const { MobilityOfferService } = await import('@/core/mobility/services/MobilityOfferService');
-        const { MobilityDispatchConfigService } = await import('@/core/mobility/services/MobilityDispatchConfigService');
+        const { MobilityOfferService } = await import(
+          "@/core/mobility/services/MobilityOfferService"
+        );
+        const { MobilityDispatchConfigService } = await import(
+          "@/core/mobility/services/MobilityDispatchConfigService"
+        );
 
-        // Buscar dados da corrida para determinar estrategia.
         const rideData = await getRideDispatchContextById(rideId);
 
         if (!rideData) {
@@ -421,25 +420,26 @@ export function useDriverDashboardBase({
           return;
         }
 
-        // Determinar estrategia.
         const context = MobilityDispatchConfigService.createContext(rideData);
         const strategy = MobilityDispatchConfigService.determineStrategy(context);
-
-        // Aceitar oferta
-        const result = await MobilityOfferService.acceptOffer(rideId, driverProfileId, strategy);
+        const result = await MobilityOfferService.acceptOffer(
+          rideId,
+          driverProfileId,
+          strategy,
+        );
 
         if (!result.success) {
           switch (result.reason) {
-            case 'already_accepted':
+            case "already_accepted":
               toast.error("Esta corrida ja foi aceita por outro motorista");
               break;
-            case 'expired':
+            case "expired":
               toast.error("Esta oferta expirou");
               break;
-            case 'driver_busy':
+            case "driver_busy":
               toast.error("Voce ja tem uma corrida ativa");
               break;
-            case 'not_eligible':
+            case "not_eligible":
               toast.error(`Nao elegivel: ${result.error}`);
               break;
             default:
@@ -482,7 +482,10 @@ export function useDriverDashboardBase({
         await refetchDashboard();
         toast.success("Corrida iniciada!");
       } catch (error) {
-        logger.error("useDriverDashboardBase.startRide", error as Error, { rideId, driverProfileId });
+        logger.error("useDriverDashboardBase.startRide", error as Error, {
+          rideId,
+          driverProfileId,
+        });
         toast.error("Erro ao iniciar corrida");
       } finally {
         setActionsLoading(false);

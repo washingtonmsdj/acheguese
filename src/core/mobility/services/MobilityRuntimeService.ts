@@ -9,9 +9,9 @@ import type { Tables, TablesUpdate } from "@/integrations/supabase";
 import { profileService } from "@/core/profiles/services/ProfileService";
 import { logger } from "@/shared/utils/logger";
 import type { RideRequest } from "../types/types";
-import { RIDE_STATUS } from "../constants";
 import { toRideRequestContract } from "./RideCanonicalAdapter";
 import { sanitizeDriverSelfServiceUpdate } from "./driverDataSelfService";
+import { DriverEarningsReadService } from "./DriverEarningsReadService";
 
 type ErrorLike = { message?: string | null; code?: string | null } | null;
 
@@ -88,10 +88,6 @@ type AddressSummaryRow = {
   longitude: number | null;
 };
 type LocationNameRow = { name: string | null };
-type RideWithAddressRow = RideRequestRecord & {
-  pickup_address?: AddressSummaryRow | null;
-  dropoff_address?: AddressSummaryRow | null;
-};
 type RideWithAddressesRow = RideRequestRecord & {
   pickup_address?: AddressSummaryRow | null;
   dropoff_address?: AddressSummaryRow | null;
@@ -192,25 +188,6 @@ class MobilityServiceInstance {
     }
   }
 
-  async getRidesByDriver(identifier: string): Promise<RideRequestRecord[]> {
-    try {
-      const driverProfileId = await this.resolveDriverProfileId(identifier);
-      if (!driverProfileId) return [];
-
-      const { data, error } = await db
-        .from<RideRequestRecord>("ride_requests")
-        .select("*")
-        .eq("driver_profile_id", driverProfileId)
-        .order("created_at", { ascending: false });
-
-      if (error) throw error;
-      return data || [];
-    } catch (error) {
-      logger.error("mobilityService.getRidesByDriver", error as Error);
-      return [];
-    }
-  }
-
   async getDriverProfiles(): Promise<{
     data: DriverCompleteProfileRecord[];
     error: unknown;
@@ -301,17 +278,9 @@ class MobilityServiceInstance {
     try {
       const since = new Date();
       since.setDate(since.getDate() - days);
-
-      const { data, error } = await db
-        .from<Pick<RideRequestRecord, "final_price">>("ride_requests")
-        .select("final_price")
-        .eq("driver_profile_id", driverProfileId)
-        .eq("status", RIDE_STATUS.COMPLETED)
-        .gte("updated_at", since.toISOString());
-
-      if (error) throw error;
-      const rows = data || [];
-      return rows.reduce((sum, ride) => sum + (ride.final_price || 0), 0);
+      return await DriverEarningsReadService.total(driverProfileId, {
+        sinceIso: since.toISOString(),
+      });
     } catch (error) {
       logger.error("mobilityService.getDriverEarnings", error as Error);
       return 0;
@@ -393,14 +362,6 @@ class MobilityServiceInstance {
     }
   }
 
-  async incrementRideViewCount(rideId: string): Promise<void> {
-    try {
-      await db.rpc("increment_ride_view_count", { ride_id: rideId });
-    } catch (error) {
-      logger.warn("mobilityService.incrementRideViewCount", error);
-    }
-  }
-
   // -- Seats --------------------------------------------------------------
 
   async getRideAvailableSeats(rideId: string): Promise<number> {
@@ -416,14 +377,6 @@ class MobilityServiceInstance {
     } catch (error) {
       logger.error("mobilityService.getRideAvailableSeats", error as Error);
       return 0;
-    }
-  }
-
-  async decrementRideSeats(rideId: string): Promise<void> {
-    const { error } = await db.rpc("decrement_ride_seats", { ride_id: rideId });
-    if (error) {
-      logger.error("mobilityService.decrementRideSeats", error);
-      throw error;
     }
   }
 }

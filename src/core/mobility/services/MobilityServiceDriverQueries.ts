@@ -1,7 +1,7 @@
 import { supabase } from "@/integrations/supabase";
 import { profileService } from "@/core/profiles/services/ProfileService";
 import { logger } from "@/shared/utils/logger";
-import { RIDE_STATUS } from "../constants";
+import { DriverEarningsReadService } from "./DriverEarningsReadService";
 import { RideRatingService } from "./RideRatingService";
 
 type ErrorLike = { message?: string | null; code?: string | null } | null;
@@ -77,18 +77,6 @@ type DriverDataSummaryRow = {
   can_do_rides: boolean | null;
   is_verified: boolean | null;
   subscription_active: boolean | null;
-};
-
-type DriverEarningsRow = {
-  final_price?: number | null;
-  completed_at?: string | null;
-  updated_at?: string | null;
-};
-
-type CompletedRidePaymentRow = {
-  created_at: string;
-  actual_fare?: number | null;
-  final_price?: number | null;
 };
 
 export async function getDriverOfferCapabilities(
@@ -194,20 +182,13 @@ export async function getMobilityStats(): Promise<{ total_drivers: number; total
   }
 }
 
+/**
+ * G74: earnings are already custody-attributed by the server-side read model.
+ * No terminal ride metadata is fetched by the browser.
+ */
 export async function getDriverEarnings(driverProfileId: string): Promise<unknown[]> {
   try {
-    const { data, error } = await mobilityDriverQueriesDb
-      .from<DriverEarningsRow>("ride_requests")
-      .select("final_price, completed_at, updated_at")
-      .eq("driver_profile_id", driverProfileId)
-      .eq("status", RIDE_STATUS.COMPLETED)
-      .order("updated_at", { ascending: false });
-
-    if (error) throw error;
-    return (data ?? []).map((row) => ({
-      ...row,
-      completed_at: row.completed_at || row.updated_at,
-    }));
+    return await DriverEarningsReadService.list(driverProfileId);
   } catch (error) {
     logger.error("MobilityQueries.getDriverEarnings", error as Error);
     return [];
@@ -218,19 +199,12 @@ export async function getCompletedRidePaymentsByDriver(
   driverProfileId: string,
   sinceIso?: string,
 ): Promise<unknown[]> {
-  let query = mobilityDriverQueriesDb
-    .from<CompletedRidePaymentRow>("ride_requests")
-    .select("created_at, actual_fare, final_price")
-    .eq("driver_profile_id", driverProfileId)
-    .eq("status", RIDE_STATUS.COMPLETED);
-
-  if (sinceIso) {
-    query = query.gte("created_at", sinceIso);
-  }
-
-  const { data, error } = await query;
-  if (error) throw error;
-  return data ?? [];
+  const rows = await DriverEarningsReadService.list(driverProfileId, { sinceIso });
+  return rows.map((row) => ({
+    created_at: row.created_at,
+    actual_fare: row.actual_fare,
+    final_price: row.final_price,
+  }));
 }
 
 export async function getDriverCompleteProfile(profileId: string): Promise<{

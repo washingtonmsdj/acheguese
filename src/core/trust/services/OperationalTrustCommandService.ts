@@ -7,6 +7,20 @@ export interface OperationalTrustFeedbackInput {
   description?: string | null;
 }
 
+export type RideTrustFeedbackSubjectRole =
+  | "counterparty"
+  | "customer"
+  | "merchant"
+  | "driver"
+  | "courier";
+
+export interface OperationalRideTrustFeedbackInput {
+  subjectRole: RideTrustFeedbackSubjectRole;
+  rating: number;
+  reasonCode: string;
+  description?: string | null;
+}
+
 export interface TrustCommandResult {
   eventId: string;
   status: string;
@@ -70,13 +84,13 @@ export class OperationalTrustCommandService {
 
   static async submitRideFeedback(
     rideId: string,
-    input: OperationalTrustFeedbackInput,
+    input: OperationalRideTrustFeedbackInput,
   ): Promise<TrustCommandResult> {
     const { data, error } = await supabase.rpc(
       "submit_ride_trust_feedback",
       {
         p_ride_id: rideId,
-        p_subject_profile_id: input.subjectProfileId,
+        p_subject_role: input.subjectRole,
         p_rating: input.rating,
         p_reason_code: input.reasonCode,
         p_description: input.description?.trim() || null,
