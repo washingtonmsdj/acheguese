@@ -1,22 +1,28 @@
 /**
- *  MOBILITY QUERIES - Leitura de dados
+ * MOBILITY QUERIES - leitura de dados.
  *
- *  Responsabilidade nica: todas as operacoes de consulta (SELECT)
- *  - Sem escritas (INSERT/UPDATE/DELETE)
- *  - Sem lgica de negcio complexa
+ * Responsabilidade unica: consultas do dominio de mobilidade.
+ * Escritas e transicoes permanecem nos comandos/RPCs canonicos.
  */
 
 import { supabase } from "@/integrations/supabase";
 import { logger } from "@/shared/utils/logger";
 import { profileService } from "@/core/profiles/services/ProfileService";
-import { RIDE_STATUS } from "../constants";
+import {
+  DRIVER_OWNED_OPEN_RIDE_STATUSES,
+  QUERYABLE_OPEN_RIDE_STATUSES,
+} from "@/core/mobility/core/RideLifecycleStatus";
 import { MobilityDispatchConfigService } from "./MobilityDispatchConfigService";
-export {  getMobilityConversations,
+import { DriverRideHistoryReadService } from "./DriverRideHistoryReadService";
+
+export {
+  getMobilityConversations,
   getOperationalVerificationEntries,
   getRideAvailableSeats,
   getRideBasicInfo,
   getRideStateAuditEntries,
-  getRideWithAddresses,} from "./mobility.ride-read-queries";
+  getRideWithAddresses,
+} from "./mobility.ride-read-queries";
 export {
   getCompletedRidePaymentsByDriver,
   getDriverCompleteProfile,
@@ -90,26 +96,28 @@ export interface MotoboyRuntimeDatabaseChecks {
   details: string[];
 }
 
+function rideSortTimestamp(ride: unknown): number {
+  if (!ride || typeof ride !== "object" || Array.isArray(ride)) return 0;
+  const row = ride as Record<string, unknown>;
+  for (const field of ["completed_at", "delivered_at", "updated_at", "created_at"]) {
+    const value = row[field];
+    if (typeof value !== "string") continue;
+    const timestamp = new Date(value).getTime();
+    if (!Number.isNaN(timestamp)) return timestamp;
+  }
+  return 0;
+}
+
 /**
- *  Buscar corridas ativas (status em andamento)
+ * Buscar corridas com ciclo operacional ainda aberto.
+ * A lista pertence ao state machine; nao replique subconjuntos locais aqui.
  */
 export async function getActiveRides(): Promise<unknown[]> {
   try {
-    const activeStatuses = [
-      RIDE_STATUS.PENDING,
-      RIDE_STATUS.REQUESTED,
-      RIDE_STATUS.SEARCHING_DRIVER,
-      RIDE_STATUS.DRIVER_ASSIGNED,
-      RIDE_STATUS.DRIVER_ACCEPTED,
-      RIDE_STATUS.IN_PROGRESS,
-      RIDE_STATUS.DRIVER_ARRIVING,
-      RIDE_STATUS.PASSENGER_BOARDED,
-    ].filter(Boolean) as string[];
-
     const { data, error } = await supabaseClient
       .from("ride_requests")
       .select("*")
-      .in("status", activeStatuses)
+      .in("status", QUERYABLE_OPEN_RIDE_STATUSES)
       .order("created_at", { ascending: false });
 
     if (error) throw error;
@@ -120,9 +128,7 @@ export async function getActiveRides(): Promise<unknown[]> {
   }
 }
 
-/**
- *  Buscar corrida por ID
- */
+/** Buscar corrida por ID. */
 export async function getRideById(id: string): Promise<unknown | null> {
   try {
     const { data, error } = await supabaseClient
@@ -139,9 +145,7 @@ export async function getRideById(id: string): Promise<unknown | null> {
   }
 }
 
-/**
- *  Buscar todas as solicitaes de corrida
- */
+/** Buscar todas as solicitacoes de corrida. */
 export async function getAllRideRequests(): Promise<unknown[]> {
   const { data, error } = await supabaseClient
     .from("ride_requests")
@@ -152,9 +156,7 @@ export async function getAllRideRequests(): Promise<unknown[]> {
   return data || [];
 }
 
-/**
- *  Buscar corridas por passageiro
- */
+/** Buscar corridas por passageiro. O passageiro e dono da solicitacao. */
 export async function getRidesByPassenger(passengerProfileId: string): Promise<unknown[]> {
   const { data, error } = await supabaseClient
     .from("ride_requests")
@@ -167,22 +169,32 @@ export async function getRidesByPassenger(passengerProfileId: string): Promise<u
 }
 
 /**
- *  Buscar corridas por motorista
+ * Buscar corridas do motorista sem manter PII terminal no browser.
+ *
+ * - ride_requests: apenas estados em que o motorista ja e participante ativo;
+ * - get_driver_ride_history: historico terminal redigido e escopado ao owner.
+ *
+ * Oferta pre-aceite pertence exclusivamente ao MobilityOfferService.
  */
 export async function getRidesByDriverProfile(driverProfileId: string): Promise<unknown[]> {
-  const { data, error } = await supabaseClient
-    .from("ride_requests")
-    .select("*")
-    .eq("driver_profile_id", driverProfileId)
-    .order("created_at", { ascending: false });
+  const [activeResult, history] = await Promise.all([
+    supabaseClient
+      .from("ride_requests")
+      .select("*")
+      .eq("driver_profile_id", driverProfileId)
+      .in("status", DRIVER_OWNED_OPEN_RIDE_STATUSES)
+      .order("created_at", { ascending: false }),
+    DriverRideHistoryReadService.list(driverProfileId),
+  ]);
 
-  if (error) throw error;
-  return data || [];
+  if (activeResult.error) throw activeResult.error;
+
+  return [...(activeResult.data || []), ...history].sort(
+    (left, right) => rideSortTimestamp(right) - rideSortTimestamp(left),
+  );
 }
 
-/**
- *  Buscar corrida ativa por perfil de motorista
- */
+/** Buscar corrida ativa por perfil de motorista. */
 export async function getActiveRideByDriverProfile(
   driverProfileId: string,
   statuses: string[],
@@ -203,26 +215,25 @@ export async function getActiveRideByDriverProfile(
   return data || null;
 }
 
-/**
- *  Buscar corrida ativa do usurio (passageiro ou motorista)
- */
+/** Buscar a corrida aberta mais recente do usuario (passageiro ou motorista). */
 export async function getActiveRide(userProfileId: string): Promise<unknown | null> {
   const { data, error } = await supabaseClient
     .from("ride_requests")
     .select("*")
     .or(`passenger_profile_id.eq.${userProfileId},driver_profile_id.eq.${userProfileId}`)
-    .in("status", ["pending", "accepted", "in_progress"])
+    .in("status", QUERYABLE_OPEN_RIDE_STATUSES)
     .order("created_at", { ascending: false })
     .limit(1)
     .maybeSingle();
 
-  if (error) return null;
+  if (error) {
+    logger.error("MobilityQueries.getActiveRide", error as Error, { userProfileId });
+    return null;
+  }
   return data || null;
 }
 
-/**
- *  Buscar dados de dispatch da corrida
- */
+/** Buscar dados de dispatch da corrida. */
 export async function getRideDispatchData(rideId: string): Promise<unknown | null> {
   const { data, error } = await supabaseClient
     .from("ride_requests")
@@ -272,15 +283,7 @@ export async function getRideDispatchContextById(
   };
 }
 
-/**
- * Generic open-board query for unassigned rides.
- *
- * Driver dashboards should use MobilityOfferService because it applies
- * dispatch strategy, eligibility and scoring.
- */
-/**
- *  Buscar corridas do usurio (passageiro ou motorista)
- */
+/** Buscar corridas do usuario (passageiro ou motorista) pelo perfil ativo. */
 export async function getUserRides(userId: string): Promise<unknown[]> {
   try {
     const activeProfile = await profileService.getActiveProfile(userId);
@@ -300,10 +303,7 @@ export async function getUserRides(userId: string): Promise<unknown[]> {
   }
 }
 
-
-/**
- *  Buscar dados do motorista por ID de perfil
- */
+/** Buscar dados do motorista por ID de perfil. */
 export async function getDriverDataIdByProfileId(
   profileId: string,
 ): Promise<string | null> {
@@ -349,9 +349,7 @@ export async function getDriverData(profileId: string): Promise<unknown | null> 
   }
 }
 
-/**
- *  Buscar Estatisticas detalhadas do motorista
- */
+/** Buscar estatisticas detalhadas do motorista. */
 export async function getDriverStatsDetailed(driverProfileId: string): Promise<unknown | null> {
   try {
     const { data, error } = await supabaseClient

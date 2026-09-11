@@ -9,10 +9,11 @@
  */
 
 import { supabase } from "@/integrations/supabase";
-import type { Tables, TablesUpdate } from "@/integrations/supabase";
+import type { Tables } from "@/integrations/supabase";
 import { logger } from "@/shared/utils/logger";
 import { profileService } from "@/core/profiles/services/ProfileService";
-import { RIDE_STATUS } from "../constants";
+import { QUERYABLE_OPEN_RIDE_STATUSES } from "@/core/mobility/core/RideLifecycleStatus";
+import { DriverEarningsReadService } from "./DriverEarningsReadService";
 import { RideRatingService } from "./RideRatingService";
 
 type ErrorLike = { message?: string | null; code?: string | null } | null;
@@ -58,8 +59,6 @@ type MobilityImplDbClient = {
 
 const db = supabase as unknown as MobilityImplDbClient;
 
-type DriverDataRecord = Tables<"driver_data">;
-type RideRequestRecord = Tables<"ride_requests">;
 type DriverCompleteProfileRecord = Tables<"driver_complete_profile">;
 
 // --- Static read/admin API ---------------------------------------------------
@@ -199,21 +198,10 @@ export class MobilityService {
 
   static async getActiveRides(): Promise<unknown[]> {
     try {
-      const activeStatuses = [
-        RIDE_STATUS.PENDING,
-        RIDE_STATUS.REQUESTED,
-        RIDE_STATUS.SEARCHING_DRIVER,
-        RIDE_STATUS.DRIVER_ASSIGNED,
-        RIDE_STATUS.DRIVER_ACCEPTED,
-                RIDE_STATUS.IN_PROGRESS,
-        RIDE_STATUS.DRIVER_ARRIVING,
-        RIDE_STATUS.PASSENGER_BOARDED,
-      ].filter(Boolean) as string[];
-
       const { data, error } = await db
         .from("ride_requests")
         .select("*")
-        .in("status", activeStatuses)
+        .in("status", QUERYABLE_OPEN_RIDE_STATUSES)
         .order("created_at", { ascending: false });
 
       if (error) throw error;
@@ -261,17 +249,6 @@ export class MobilityService {
     return data || [];
   }
 
-  static async getRidesByDriverProfile(driverProfileId: string): Promise<unknown[]> {
-    const { data, error } = await db
-      .from("ride_requests")
-      .select("*")
-      .eq("driver_profile_id", driverProfileId)
-      .order("created_at", { ascending: false });
-
-    if (error) throw error;
-    return data || [];
-  }
-
   static async getActiveRideByDriverProfile(
     driverProfileId: string,
     statuses: string[],
@@ -297,12 +274,15 @@ export class MobilityService {
       .from("ride_requests")
       .select("*")
       .or(`passenger_profile_id.eq.${userProfileId},driver_profile_id.eq.${userProfileId}`)
-      .in("status", ["pending", "accepted", "in_progress"])
+      .in("status", QUERYABLE_OPEN_RIDE_STATUSES)
       .order("created_at", { ascending: false })
       .limit(1)
       .maybeSingle();
 
-    if (error) return null;
+    if (error) {
+      logger.error("MobilityService.getActiveRide", error as Error, { userProfileId });
+      return null;
+    }
     return data || null;
   }
 
@@ -392,22 +372,9 @@ export class MobilityService {
     }
   }
 
-  /** Retorna corridas concluídas para cálculo de ganhos (uso no WeeklyEarningsChart). */
   static async getDriverEarnings(driverProfileId: string): Promise<unknown[]> {
     try {
-      const { data, error } = await db
-        .from<Pick<RideRequestRecord, "final_price" | "completed_at" | "updated_at">>("ride_requests")
-        .select("final_price, completed_at, updated_at")
-        .eq("driver_profile_id", driverProfileId)
-        .eq("status", RIDE_STATUS.COMPLETED)
-        .order("updated_at", { ascending: false});
-
-      if (error) throw error;
-      const rows: Pick<RideRequestRecord, "final_price" | "completed_at" | "updated_at">[] = data || [];
-      return rows.map((r) => ({
-        ...r,
-        completed_at: r.completed_at || r.updated_at,
-      }));
+      return await DriverEarningsReadService.list(driverProfileId);
     } catch (error) {
       logger.error("MobilityService.getDriverEarnings", error as Error);
       return [];
@@ -418,19 +385,12 @@ export class MobilityService {
     driverProfileId: string,
     sinceIso?: string,
   ): Promise<unknown[]> {
-    let query = db
-      .from("ride_requests")
-      .select("created_at, actual_fare, final_price")
-      .eq("driver_profile_id", driverProfileId)
-      .eq("status", RIDE_STATUS.COMPLETED);
-
-    if (sinceIso) {
-      query = query.gte("created_at", sinceIso);
-    }
-
-    const { data, error } = await query;
-    if (error) throw error;
-    return data || [];
+    const rows = await DriverEarningsReadService.list(driverProfileId, { sinceIso });
+    return rows.map((row) => ({
+      created_at: row.created_at,
+      actual_fare: row.actual_fare,
+      final_price: row.final_price,
+    }));
   }
 
   /**
@@ -480,17 +440,8 @@ export class MobilityService {
       return 5.0;
     }
   }
-
-
-
-
-
 }
 
 // --- Instance (escrita / runtime) --------------------------------------------
-
-
-
-
 
 export { mobilityService } from "./MobilityRuntimeService";
