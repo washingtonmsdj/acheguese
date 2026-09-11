@@ -485,8 +485,9 @@ export default function GastronomyDetailConceptPreviewPage() {
   const [viewMode, setViewMode] = useState<MenuViewMode>("list");
   const [fulfillmentMode, setFulfillmentMode] = useState<FulfillmentMode>("pickup");
   const [saved, setSaved] = useState(false);
-  const [selectedItemId, setSelectedItemId] = useState<string | null>(null);
+  const [selectedItemId, setSelectedItemId] = useState<string | null>("moqueca-de-peixe");
   const [mobileCustomizerOpen, setMobileCustomizerOpen] = useState(false);
+  const [gridDetailsOpen, setGridDetailsOpen] = useState(false);
   const [cartOpen, setCartOpen] = useState(false);
   const [size, setSize] = useState<"individual" | "share">("individual");
   const [quantity, setQuantity] = useState(1);
@@ -542,6 +543,23 @@ export default function GastronomyDetailConceptPreviewPage() {
     });
   };
 
+  const handleSelectItem = (item: ConceptMenuItem) => {
+    if (item.available === false) return;
+    setSelectedItemId(item.id);
+    setMobileCustomizerOpen(true);
+    if (viewMode === "grid") setGridDetailsOpen(true);
+  };
+
+  const handleViewModeChange = (nextMode: MenuViewMode) => {
+    setViewMode(nextMode);
+    setMobileCustomizerOpen(false);
+    setGridDetailsOpen(false);
+    if (nextMode === "grid") setSelectedItemId(null);
+    else setSelectedItemId((current) => current ?? "moqueca-de-peixe");
+  };
+
+  const hasPinnedDetails = viewMode === "list" && Boolean(selectedItem);
+
   return (
     <div className="flex min-h-screen flex-col overflow-x-hidden bg-territory-canvas pb-4 text-territory-ink max-md:h-[100dvh] max-md:overflow-y-auto max-md:overscroll-contain max-md:scrollbar-hide max-md:[-ms-overflow-style:none] max-md:[scrollbar-width:none] max-md:[&::-webkit-scrollbar]:hidden lg:h-[100dvh] lg:min-h-0 lg:overflow-hidden lg:pb-0">
       <ConceptPublicHeader saved={saved} onSave={() => setSaved((value) => !value)} onShare={handleShare} />
@@ -558,22 +576,21 @@ export default function GastronomyDetailConceptPreviewPage() {
 
       <main className="mx-auto w-full max-w-[68rem] px-4 pb-24 pt-3 sm:px-6 sm:pt-3 lg:flex lg:min-h-0 lg:flex-1 lg:overflow-hidden lg:px-8 lg:pb-4">
         {activeTab === "menu" ? (
-          <div className={cn("grid min-h-0 w-full items-start gap-4 lg:h-full lg:gap-6", selectedItem ? "lg:grid-cols-[minmax(0,1fr)_30rem]" : "lg:grid-cols-1")}>
+          <div className={cn("grid min-h-0 w-full items-start gap-4 lg:h-full lg:gap-6", hasPinnedDetails ? "lg:grid-cols-[minmax(0,1fr)_30rem]" : "lg:grid-cols-1")}>
             <section className="min-w-0 lg:flex lg:h-full lg:min-h-0 lg:flex-col">
-              <SearchAndCategories query={query} onQueryChange={setQuery} category={activeCategory} onCategoryChange={setActiveCategory} viewMode={viewMode} onViewModeChange={setViewMode} />
+              <SearchAndCategories query={query} onQueryChange={setQuery} category={activeCategory} onCategoryChange={setActiveCategory} viewMode={viewMode} onViewModeChange={handleViewModeChange} />
               <div className="mt-3 flex min-h-0 flex-col gap-2 lg:flex-1">
-                <OfferCard onOpen={() => { setSelectedItemId(offerItem.id); setMobileCustomizerOpen(true); }} />
+                <OfferCard onOpen={() => handleSelectItem(offerItem)} />
                 <div className="min-h-0 overflow-hidden rounded-xl border border-territory-border bg-territory-surface lg:flex-1 lg:overflow-y-auto lg:overscroll-contain lg:[scrollbar-gutter:stable]">
-                  {viewMode === "grid" ? <div className={cn("grid grid-cols-2 gap-2 p-2 sm:gap-3 sm:p-3", selectedItem ? "lg:grid-cols-2" : "lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5")}>{filteredItems.map((item) => <MenuGridCard key={item.id} item={item} selected={selectedItem?.id === item.id} onSelect={() => { if (item.available === false) return; setSelectedItemId(item.id); setMobileCustomizerOpen(true); }} />)}</div> : filteredItems.map((item) => <MenuRow key={item.id} item={item} selected={selectedItem?.id === item.id} onSelect={() => { if (item.available === false) return; setSelectedItemId(item.id); setMobileCustomizerOpen(true); }} />)}
+                  {viewMode === "grid" ? <div className={cn("grid grid-cols-2 gap-2 p-2 sm:gap-3 sm:p-3", hasPinnedDetails ? "lg:grid-cols-2" : "lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5")}>{filteredItems.map((item) => <MenuGridCard key={item.id} item={item} selected={selectedItem?.id === item.id} onSelect={() => handleSelectItem(item)} />)}</div> : filteredItems.map((item) => <MenuRow key={item.id} item={item} selected={selectedItem?.id === item.id} onSelect={() => handleSelectItem(item)} />)}
                   {!filteredItems.length ? <p className="px-4 py-8 text-center text-sm text-territory-muted">Nenhum item encontrado.</p> : null}
                 </div>
               </div>
               <div className="mt-3 hidden shrink-0 lg:block"><CartSummary lines={cartLines} onOpen={() => setCartOpen(true)} /></div>
             </section>
 
-            {selectedItem ? <aside className="hidden lg:block lg:h-full lg:min-h-0 lg:overflow-y-auto lg:overscroll-contain lg:scrollbar-hide">
+            {hasPinnedDetails ? <aside className="hidden lg:block lg:h-full lg:min-h-0 lg:overflow-y-auto lg:overscroll-contain lg:scrollbar-hide">
               <div className="relative">
-                <button type="button" aria-label="Fechar detalhes do item" onClick={() => setSelectedItemId(null)} className="absolute right-2 top-2 z-10 inline-flex h-9 w-9 items-center justify-center rounded-lg text-territory-ink hover:bg-territory-raised focus-visible:outline-2 focus-visible:outline-offset-[-2px] focus-visible:outline-territory-brand"><X className="h-4 w-4" aria-hidden="true" /></button>
                 <ItemCustomizer item={selectedItem} size={size} setSize={setSize} quantity={quantity} setQuantity={setQuantity} farofa={farofa} setFarofa={setFarofa} arroz={arroz} setArroz={setArroz} notes={notes} setNotes={setNotes} onAdd={addSelectedItem} />
               </div>
             </aside> : null}
@@ -586,6 +603,7 @@ export default function GastronomyDetailConceptPreviewPage() {
         <button type="button" onClick={() => toast.success("A loja responderá por aqui.")} className="flex h-8 w-full items-center justify-center gap-1 text-xs font-semibold text-territory-brand focus-visible:outline-2 focus-visible:outline-offset-[-2px] focus-visible:outline-territory-brand"><MessageCircle className="h-4 w-4" aria-hidden="true" />Falar com a loja</button>
       </div>
 
+      {viewMode === "grid" && gridDetailsOpen && selectedItem ? <div className="fixed inset-0 z-50 hidden items-center justify-center bg-black/35 p-4 lg:flex" role="presentation" onMouseDown={() => { setGridDetailsOpen(false); setSelectedItemId(null); }}><section className="max-h-[calc(100dvh-2rem)] w-full max-w-[30rem] overflow-y-auto rounded-2xl bg-territory-surface p-3 shadow-2xl" role="dialog" aria-modal="true" aria-label={`Personalizar ${selectedItem.name}`} onMouseDown={(event) => event.stopPropagation()}><div className="mb-2 flex items-center justify-between"><p className="text-sm font-bold text-territory-ink">Personalizar pedido</p><button type="button" aria-label="Fechar detalhes do item" onClick={() => { setGridDetailsOpen(false); setSelectedItemId(null); }} className="inline-flex h-9 w-9 items-center justify-center rounded-lg text-territory-ink hover:bg-territory-raised focus-visible:outline-2 focus-visible:outline-offset-[-2px] focus-visible:outline-territory-brand"><X className="h-5 w-5" aria-hidden="true" /></button></div><ItemCustomizer item={selectedItem} size={size} setSize={setSize} quantity={quantity} setQuantity={setQuantity} farofa={farofa} setFarofa={setFarofa} arroz={arroz} setArroz={setArroz} notes={notes} setNotes={setNotes} onAdd={() => { addSelectedItem(); setGridDetailsOpen(false); }} /></section></div> : null}
       {mobileCustomizerOpen && selectedItem ? <div className="fixed inset-0 z-50 flex items-end bg-black/35 lg:hidden" role="presentation" onMouseDown={() => setMobileCustomizerOpen(false)}><div className="max-h-[90dvh] w-full overflow-y-auto rounded-t-2xl bg-territory-surface p-3 pb-[calc(0.75rem+env(safe-area-inset-bottom))]" onMouseDown={(event) => event.stopPropagation()}><div className="mb-2 flex items-center justify-between"><p className="text-sm font-bold text-territory-ink">Personalizar pedido</p><button type="button" aria-label="Fechar personalização" onClick={() => setMobileCustomizerOpen(false)} className="inline-flex h-9 w-9 items-center justify-center rounded-lg text-territory-ink hover:bg-territory-raised focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-territory-brand"><X className="h-5 w-5" aria-hidden="true" /></button></div><ItemCustomizer item={selectedItem} size={size} setSize={setSize} quantity={quantity} setQuantity={setQuantity} farofa={farofa} setFarofa={setFarofa} arroz={arroz} setArroz={setArroz} notes={notes} setNotes={setNotes} onAdd={addSelectedItem} /></div></div> : null}
       {cartOpen ? <CartDialog lines={cartLines} onClose={() => setCartOpen(false)} onRemove={handleRemoveLine} /> : null}
     </div>
