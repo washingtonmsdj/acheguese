@@ -1,63 +1,17 @@
 import { RIDE_STATUS } from "../constants";
+import { isOpenRideStatus } from "@/core/mobility/core/RideLifecycleStatus";
 import { secureRandomString } from "@/shared/utils/secureRandom";
 import { getRecordValue } from "@/shared/utils/recordLookup";
 import { formatBrl } from "@/shared/utils/currency";
 
+/**
+ * Read/classification helper only.
+ *
+ * Lifecycle action authority belongs to RideStateMachine and the server-owned
+ * operational commands. Do not add canStart/canCancel/canComplete rules here.
+ */
 export function isRideActive(status: string): boolean {
-  const activeStatuses: string[] = [
-    RIDE_STATUS.PENDING,
-    RIDE_STATUS.REQUESTED,
-    RIDE_STATUS.SEARCHING_DRIVER,
-    RIDE_STATUS.DRIVER_ASSIGNED,
-    RIDE_STATUS.DRIVER_ACCEPTED,
-    RIDE_STATUS.DRIVER_ARRIVING,
-    RIDE_STATUS.DRIVER_ON_THE_WAY,
-    RIDE_STATUS.DRIVER_ARRIVED,
-    RIDE_STATUS.PASSENGER_BOARDED,
-    RIDE_STATUS.PASSENGER_ON_BOARD,
-    RIDE_STATUS.IN_PROGRESS,
-    RIDE_STATUS.PICKUP_CONFIRMED,
-    RIDE_STATUS.IN_DELIVERY,
-  ];
-  return activeStatuses.includes(status);
-}
-
-export function canAcceptRide(status: string): boolean {
-  return status === RIDE_STATUS.PENDING || status === RIDE_STATUS.REQUESTED || status === RIDE_STATUS.SEARCHING_DRIVER;
-}
-
-export function canStartRide(status: string): boolean {
-  const startable: string[] = [
-    RIDE_STATUS.DRIVER_ASSIGNED,
-    RIDE_STATUS.DRIVER_ACCEPTED,
-    RIDE_STATUS.DRIVER_ARRIVING,
-    RIDE_STATUS.DRIVER_ON_THE_WAY,
-    RIDE_STATUS.DRIVER_ARRIVED,
-    RIDE_STATUS.PASSENGER_BOARDED,
-    RIDE_STATUS.PASSENGER_ON_BOARD,
-  ];
-  return startable.includes(status);
-}
-
-export function canCompleteRide(status: string): boolean {
-  return status === RIDE_STATUS.IN_PROGRESS;
-}
-
-export function canCancelRide(status: string): boolean {
-  const cancellable: string[] = [
-    RIDE_STATUS.PENDING,
-    RIDE_STATUS.REQUESTED,
-    RIDE_STATUS.SEARCHING_DRIVER,
-    RIDE_STATUS.DRIVER_ASSIGNED,
-    RIDE_STATUS.DRIVER_ACCEPTED,
-    RIDE_STATUS.DRIVER_ARRIVING,
-    RIDE_STATUS.DRIVER_ON_THE_WAY,
-    RIDE_STATUS.DRIVER_ARRIVED,
-    RIDE_STATUS.PASSENGER_BOARDED,
-    RIDE_STATUS.PASSENGER_ON_BOARD,
-    RIDE_STATUS.PICKUP_CONFIRMED,
-  ];
-  return cancellable.includes(status);
+  return isOpenRideStatus(status);
 }
 
 export function calculateEstimatedFare(distanceKm: number, baseFare = 5.0, perKmRate = 2.5): number {

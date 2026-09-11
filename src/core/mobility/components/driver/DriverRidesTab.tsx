@@ -1,7 +1,7 @@
 import React from "react";
 import { MapPin } from "lucide-react";
 import { Button } from "@/shared/components/ui/button";
-import { DriverRidesList } from "./DriverRidesList";
+import { CanonicalDriverRidesList as DriverRidesList } from "./CanonicalDriverRidesList";
 import type { MobilityRide } from "@/core/mobility/types/ride";
 
 type OfferModeFilter = "all" | "ride" | "motoboy";
