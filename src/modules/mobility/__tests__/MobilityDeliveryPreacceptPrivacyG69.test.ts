@@ -7,7 +7,10 @@ function readProjectFile(relativePath: string): string {
 }
 
 const g69 = readProjectFile(
-  "supabase/migrations/20260911102000_harden_preaccept_ride_and_delivery_offer_privacy_g69.sql",
+  "supabase/migrations/20260911221000_harden_preaccept_ride_and_delivery_offer_privacy_g69.sql",
+);
+const reconciliation = readProjectFile(
+  "supabase/migrations/20260911223000_reconcile_ride_participant_privacy_g69_g73.sql",
 );
 const dashboard = readProjectFile(
   "src/core/mobility/hooks/useDriverDashboardBase.ts",
@@ -79,5 +82,15 @@ describe("G69 pre-accept ride and delivery privacy", () => {
     expect(g69).toContain("service_role or postgres session is required");
     expect(g69).toContain("FROM PUBLIC, anon, authenticated");
     expect(g69).toContain("TO service_role");
+  });
+
+  it("reasserts the stricter G73 terminal-history policy after the new integration", () => {
+    expect(reconciliation).toContain('ALTER POLICY "Ride participants view"');
+    expect(reconciliation).toContain("'driver_accepted'");
+    expect(reconciliation).toContain("'failed_delivery'");
+    expect(reconciliation).not.toContain("'driver_assigned'");
+    expect(reconciliation).not.toContain("'completed'");
+    expect(reconciliation).not.toContain("'delivered'");
+    expect(reconciliation).not.toContain("'cancelled_by_driver'");
   });
 });
