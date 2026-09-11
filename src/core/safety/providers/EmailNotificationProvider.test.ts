@@ -33,7 +33,7 @@ describe('EmailNotificationProvider', () => {
     resolveErrorMessage.mockResolvedValue(null);
   });
 
-  it('returns a validated sent result', async () => {
+  it('returns a validated provider-accepted sent result', async () => {
     invoke.mockResolvedValue({
       data: {
         success: true,
@@ -52,7 +52,57 @@ describe('EmailNotificationProvider', () => {
       channel: 'email',
       timestamp: '2026-09-10T17:00:00.000Z',
       status: 'sent',
+      error: undefined,
       metadata: { provider: 'resend' },
+    });
+  });
+
+  it('preserves an in-progress worker outcome without claiming delivery', async () => {
+    invoke.mockResolvedValue({
+      data: {
+        success: true,
+        contactId: contact.id,
+        channel: 'email',
+        timestamp: '2026-09-10T17:00:00.000Z',
+        status: 'dispatching',
+        metadata: { providerAttemptSuppressed: true },
+      },
+      error: null,
+    });
+
+    await expect(provider.sendEmergencyAlert(contact, alert)).resolves.toEqual({
+      success: true,
+      contactId: contact.id,
+      channel: 'email',
+      timestamp: '2026-09-10T17:00:00.000Z',
+      status: 'dispatching',
+      error: undefined,
+      metadata: { providerAttemptSuppressed: true },
+    });
+  });
+
+  it('preserves a valid non-success reconciliation outcome', async () => {
+    invoke.mockResolvedValue({
+      data: {
+        success: false,
+        contactId: contact.id,
+        channel: 'email',
+        timestamp: '2026-09-10T17:00:00.000Z',
+        status: 'reconciliation_required',
+        error: 'Provider outcome needs reconciliation',
+        metadata: { deliveryId: '44444444-4444-4444-8444-444444444444' },
+      },
+      error: null,
+    });
+
+    await expect(provider.sendEmergencyAlert(contact, alert)).resolves.toEqual({
+      success: false,
+      contactId: contact.id,
+      channel: 'email',
+      timestamp: '2026-09-10T17:00:00.000Z',
+      status: 'reconciliation_required',
+      error: 'Provider outcome needs reconciliation',
+      metadata: { deliveryId: '44444444-4444-4444-8444-444444444444' },
     });
   });
 
@@ -88,7 +138,7 @@ describe('EmailNotificationProvider', () => {
     expect(result.error).toBe('Resposta inválida do serviço de email de emergência');
   });
 
-  it('fails closed when a nominal success has an invalid lifecycle status', async () => {
+  it('fails closed when success and lifecycle state contradict each other', async () => {
     invoke.mockResolvedValue({
       data: {
         success: true,
@@ -104,5 +154,6 @@ describe('EmailNotificationProvider', () => {
 
     expect(result.success).toBe(false);
     expect(result.status).toBe('failed');
+    expect(result.error).toBe('Resposta inválida do serviço de email de emergência');
   });
 });
