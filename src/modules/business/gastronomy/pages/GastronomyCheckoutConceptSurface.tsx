@@ -76,7 +76,8 @@ function ChoiceButton({
   return (
     <button
       type="button"
-      aria-pressed={active}
+      role="radio"
+      aria-checked={active}
       disabled={disabled}
       onClick={onClick}
       className={cn(
@@ -119,7 +120,8 @@ function ModeButton({
   return (
     <button
       type="button"
-      aria-pressed={active}
+      role="radio"
+      aria-checked={active}
       onClick={onClick}
       className={cn(
         "inline-flex min-h-10 items-center justify-center gap-1 rounded-lg border px-2 text-[0.6875rem] font-semibold text-territory-ink transition-colors focus-visible:z-10 focus-visible:outline-2 focus-visible:outline-offset-[-2px] focus-visible:outline-territory-brand sm:text-xs",
