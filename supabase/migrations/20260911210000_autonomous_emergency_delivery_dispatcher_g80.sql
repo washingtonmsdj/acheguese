@@ -1,15 +1,17 @@
 BEGIN;
 
--- G80: make the emergency-delivery outbox genuinely autonomous. Browser
--- invocation remains a fast path, but pg_cron now guarantees that durable
--- pending work is eventually picked up even if the browser disappears.
+-- G80: make the emergency-delivery outbox genuinely autonomous without adding
+-- a second delivery authority. Browser invocation remains a fast path, while
+-- pg_cron/pg_net invokes the same send-emergency-email executor when the browser
+-- disappears.
 
 CREATE EXTENSION IF NOT EXISTS pg_cron;
 CREATE EXTENSION IF NOT EXISTS pg_net WITH SCHEMA extensions;
 
 -- Future outbox rows snapshot the human-readable contact label alongside the
 -- already-snapshotted target email. Provider payload creation must not depend
--- on the emergency contact still existing after the SOS transaction commits.
+-- on the emergency contact still existing or remaining active after the SOS
+-- transaction commits.
 CREATE OR REPLACE FUNCTION private.enqueue_emergency_delivery_outbox()
 RETURNS trigger
 LANGUAGE plpgsql
@@ -65,10 +67,11 @@ REVOKE ALL ON FUNCTION private.enqueue_emergency_delivery_outbox()
 -- Recover a worker that died after pending -> processing but before the
 -- irreversible dispatch boundary. attempt_count is intentionally preserved so
 -- repeated crashes still converge on the existing bounded claim limit.
--- Then return a bounded set of pending work plus dispatching work that may need
--- provider-safe idempotent recovery/reconciliation.
--- security-authority: service-rpc public.prepare_emergency_delivery_work
-CREATE OR REPLACE FUNCTION public.prepare_emergency_delivery_work(
+--
+-- Dispatching work is different: once authorization crossed the irreversible
+-- boundary it remains eligible for provider-safe idempotent recovery even if
+-- the owning alert becomes terminal afterwards.
+CREATE OR REPLACE FUNCTION private.prepare_emergency_delivery_work(
   p_limit integer DEFAULT 10
 )
 RETURNS TABLE (
@@ -125,9 +128,11 @@ BEGIN
   JOIN public.emergency_alerts alert
     ON alert.id = delivery.alert_id
   WHERE delivery.channel = 'email'
-    AND alert.status IN ('active', 'acknowledged')
     AND (
-      delivery.status = 'pending'
+      (
+        delivery.status = 'pending'
+        AND alert.status IN ('active', 'acknowledged')
+      )
       OR (
         delivery.status = 'dispatching'
         AND (
@@ -146,28 +151,26 @@ BEGIN
 END;
 $function$;
 
-REVOKE ALL ON FUNCTION public.prepare_emergency_delivery_work(integer)
-  FROM PUBLIC, anon, authenticated;
-GRANT EXECUTE ON FUNCTION public.prepare_emergency_delivery_work(integer)
-  TO service_role;
+REVOKE ALL ON FUNCTION private.prepare_emergency_delivery_work(integer)
+  FROM PUBLIC, anon, authenticated, service_role;
 
-COMMENT ON FUNCTION public.prepare_emergency_delivery_work(integer) IS
-  'G80 service-only autonomous outbox preparation: recovers stale reversible claims and returns bounded pending/idempotent-recovery work.';
-
--- Invoke the dedicated cron Edge worker through the same Vault-backed pg_net
--- pattern already used by canonical scheduled workers. No secret is stored in
--- migration text or cron.command.
--- security-authority: internal-function private.invoke_emergency_delivery_worker
+-- Invoke the canonical send-emergency-email executor once per selected outbox
+-- item. The cron secret stays in Vault and no service-role credential is ever
+-- transported over HTTP. send-emergency-email validates x-cron-secret itself
+-- before using its internal service-role database client.
 CREATE OR REPLACE FUNCTION private.invoke_emergency_delivery_worker()
-RETURNS bigint
+RETURNS jsonb
 LANGUAGE plpgsql
 SECURITY DEFINER
-SET search_path = public, vault, pg_temp
+SET search_path = public, private, vault, pg_temp
 AS $function$
 DECLARE
   v_project_url text;
   v_cron_secret text;
+  v_work record;
   v_request_id bigint;
+  v_dispatched integer := 0;
+  v_last_request_id bigint := NULL;
 BEGIN
   SELECT secret.decrypted_secret
   INTO v_project_url
@@ -187,18 +190,32 @@ BEGIN
       USING ERRCODE = '55000';
   END IF;
 
-  SELECT net.http_post(
-    url := pg_catalog.rtrim(v_project_url, '/')
-      || '/functions/v1/process-emergency-delivery-outbox',
-    headers := pg_catalog.jsonb_build_object(
-      'Content-Type', 'application/json',
-      'x-cron-secret', v_cron_secret
-    ),
-    body := '{"limit":10}'::jsonb,
-    timeout_milliseconds := 45000
-  ) INTO v_request_id;
+  FOR v_work IN
+    SELECT *
+    FROM private.prepare_emergency_delivery_work(10)
+  LOOP
+    SELECT net.http_post(
+      url := pg_catalog.rtrim(v_project_url, '/')
+        || '/functions/v1/send-emergency-email',
+      headers := pg_catalog.jsonb_build_object(
+        'Content-Type', 'application/json',
+        'x-cron-secret', v_cron_secret
+      ),
+      body := pg_catalog.jsonb_build_object(
+        'alertId', v_work.alert_id,
+        'contactId', v_work.contact_id
+      ),
+      timeout_milliseconds := 15000
+    ) INTO v_request_id;
 
-  RETURN v_request_id;
+    v_dispatched := v_dispatched + 1;
+    v_last_request_id := v_request_id;
+  END LOOP;
+
+  RETURN pg_catalog.jsonb_build_object(
+    'dispatched', v_dispatched,
+    'last_request_id', v_last_request_id
+  );
 END;
 $function$;
 
@@ -227,8 +244,10 @@ BEGIN
 END;
 $schedule$;
 
+COMMENT ON FUNCTION private.prepare_emergency_delivery_work(integer) IS
+  'G80 private autonomous outbox preparation. Recovers stale reversible claims and returns bounded pending/idempotent dispatch recovery work.';
 COMMENT ON FUNCTION private.invoke_emergency_delivery_worker() IS
-  'G80 cron-only pg_net dispatcher for the autonomous emergency email outbox worker.';
+  'G80 cron-only pg_net dispatcher. Calls the canonical send-emergency-email executor with a Vault-backed cron secret; no parallel delivery authority exists.';
 
 NOTIFY pgrst, 'reload schema';
 
