@@ -1,13 +1,20 @@
 import { useCallback, useState } from "react";
 import { toast } from "sonner";
 import { RideOperationalService } from "@/core/mobility/core/RideOperationalService";
+import {
+  DRIVER_OWNED_OPEN_RIDE_STATUSES,
+  QUERYABLE_CLOSED_RIDE_STATUSES,
+} from "@/core/mobility/core/RideLifecycleStatus";
 import { buildFailedDeliveryMetadata } from "@/core/mobility/utils/failedDelivery";
 import { RIDE_MODE, RIDE_STATUS } from "@/core/mobility/constants";
 import type { DeliveryProof } from "@/core/mobility/delivery/proof-of-delivery/types";
 import { useDriverDashboardBase } from "./useDriverDashboardBase";
 
 /**
- * Driver dashboard hook with motoboy operations
+ * Driver dashboard hook with passenger-ride and motoboy operations.
+ *
+ * Critical ride transitions are delegated to RideOperationalService; this hook
+ * never mutates ride_requests directly and never treats UI state as authority.
  */
 interface DashboardRide {
   id: string;
@@ -19,21 +26,10 @@ interface DashboardRide {
 export function useMotoristaPage() {
   const base = useDriverDashboardBase({
     queryScope: "motorista",
-    activeStatuses: [
-      RIDE_STATUS.DRIVER_ASSIGNED,
-      RIDE_STATUS.DRIVER_ON_THE_WAY,
-      RIDE_STATUS.DRIVER_ARRIVED,
-      RIDE_STATUS.PASSENGER_ON_BOARD,
-      RIDE_STATUS.IN_PROGRESS,
-      RIDE_STATUS.PICKUP_CONFIRMED,
-      RIDE_STATUS.IN_DELIVERY,
-    ],
-    completedStatuses: [
-      RIDE_STATUS.COMPLETED,
-      RIDE_STATUS.DELIVERED,
-      RIDE_STATUS.FAILED_DELIVERY,
-    ],
+    activeStatuses: [...DRIVER_OWNED_OPEN_RIDE_STATUSES],
+    completedStatuses: [...QUERYABLE_CLOSED_RIDE_STATUSES],
   });
+  const [passengerActionsLoading, setPassengerActionsLoading] = useState(false);
   const [deliveryActionsLoading, setDeliveryActionsLoading] = useState(false);
   const { refetch } = base;
 
@@ -43,6 +39,80 @@ export function useMotoristaPage() {
   const activeRides = base.acceptedByMe.filter(
     (ride: DashboardRide) => base.canAcceptRideOffers && ride.ride_mode !== RIDE_MODE.MOTOBOY,
   );
+
+  const startPassengerPickupRoute = useCallback(async (rideId: string) => {
+    const driverProfileId = base.currentDriverId;
+    if (!driverProfileId) {
+      toast.error("Perfil de motorista nao encontrado");
+      return false;
+    }
+
+    setPassengerActionsLoading(true);
+    try {
+      const result = await RideOperationalService.transitionTo(
+        rideId,
+        RIDE_STATUS.DRIVER_ARRIVING,
+        driverProfileId,
+        "Driver started passenger pickup route",
+      );
+
+      if (!result.success) {
+        toast.error("Nao foi possivel iniciar o deslocamento", {
+          description: "O estado da corrida mudou ou a operacao nao foi autorizada.",
+        });
+        return false;
+      }
+
+      await refetch();
+      toast.success("Deslocamento para o passageiro iniciado");
+      return true;
+    } finally {
+      setPassengerActionsLoading(false);
+    }
+  }, [base.currentDriverId, refetch]);
+
+  const confirmPassengerBoarding = useCallback(async (
+    rideId: string,
+    pin?: string,
+  ) => {
+    const driverProfileId = base.currentDriverId;
+    if (!driverProfileId) {
+      toast.error("Perfil de motorista nao encontrado");
+      return false;
+    }
+
+    setPassengerActionsLoading(true);
+    try {
+      const result = await RideOperationalService.transitionTo(
+        rideId,
+        RIDE_STATUS.PASSENGER_BOARDED,
+        driverProfileId,
+        "Driver confirmed passenger boarding",
+        pin,
+      );
+
+      if (!result.success) {
+        const pinFailure = result.error?.toLowerCase().includes("pin");
+        toast.error(
+          pinFailure
+            ? "PIN nao confirmado"
+            : "Nao foi possivel confirmar o embarque",
+          {
+            description: pinFailure
+              ? "Confira o codigo com o passageiro. As tentativas sao controladas pelo servidor."
+              : "O estado da corrida mudou ou a operacao nao foi autorizada.",
+          },
+        );
+        return false;
+      }
+
+      await refetch();
+      toast.success("Passageiro embarcado confirmado");
+      return true;
+    } finally {
+      setPassengerActionsLoading(false);
+    }
+  }, [base.currentDriverId, refetch]);
 
   const handleGoToPickup = useCallback(async (rideId: string, driverProfileId: string) => {
     if (!driverProfileId) {
@@ -155,9 +225,14 @@ export function useMotoristaPage() {
 
   return {
     ...base,
-    actionsLoading: base.actionsLoading || deliveryActionsLoading,
+    actionsLoading:
+      base.actionsLoading ||
+      passengerActionsLoading ||
+      deliveryActionsLoading,
     activeRides,
     activeDeliveries,
+    startPassengerPickupRoute,
+    confirmPassengerBoarding,
     handleGoToPickup,
     handleConfirmPickup,
     handleStartDelivery,
