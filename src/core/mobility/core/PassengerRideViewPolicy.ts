@@ -8,12 +8,14 @@ export interface PassengerRideViewAvailability {
 }
 
 /**
- * Must stay aligned with the participant-scoped driver_locations SELECT policy.
- * Precise location is intentionally unavailable after terminal/custody states
- * not present in the RLS allowlist.
+ * Passenger live tracking starts only after the assigned driver has explicitly
+ * accepted the operation. A provisional `driver_assigned` dispatch must never
+ * expose the driver's precise position to the passenger.
+ *
+ * This allowlist must stay aligned with the participant-scoped
+ * driver_locations SELECT policy.
  */
 export const PASSENGER_LIVE_TRACKING_STATES: readonly RideState[] = [
-  RIDE_STATE.DRIVER_ASSIGNED,
   RIDE_STATE.DRIVER_ACCEPTED,
   RIDE_STATE.DRIVER_ARRIVING,
   RIDE_STATE.PASSENGER_BOARDED,
