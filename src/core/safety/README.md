@@ -6,11 +6,12 @@ compartilhamento seguro de viagens.
 ## Ownership
 
 - `SafetyService.ts`: facade publica, alertas, incidentes e evidencias.
-- `SafetyEmergencyContactsService.ts`: CRUD de contatos e orquestracao do
-  canal de email.
+- `SafetyEmergencyContactsService.ts`: CRUD de contatos e fast path do canal de
+  email.
 - `SafetyRideShareService.ts`: criacao, leitura publica por token e revogacao
   de compartilhamentos.
-- `send-emergency-email`: worker autenticado de envio/recovery do outbox.
+- `send-emergency-email`: broker canonico user-or-cron de envio/recovery do
+  outbox.
 - `resend-emergency-webhook`: ingestao assinada dos eventos do provedor.
 - RPCs `claim_*`, `authorize_*`, `begin_*`, `confirm_*` e `apply_*`: autoridade
   transacional do lifecycle de entrega externa.
@@ -48,7 +49,10 @@ O schema reproduzivel e as politicas estao em migrations versionadas em
 - Browser nao escreve em `safety_audit_log`, `emergency_delivery_log`, receipts
   de provedor nem snapshots de payload.
 - Status de alerta/incidente passam por RPCs server-owned.
-- O browser envia somente IDs canonicos ao worker de emergencia.
+- O browser envia somente IDs canonicos ao broker de emergencia.
+- O mesmo broker aceita o fallback autonomo apenas quando `x-cron-secret` passa
+  por `requireCronSecret`; uma credencial cron invalida nunca cai no fluxo de
+  usuario.
 - O webhook do Resend nao usa JWT do Supabase, mas exige verificacao Svix do
   corpo bruto com `svix-id`, `svix-timestamp`, `svix-signature` e
   `RESEND_WEBHOOK_SECRET` antes de qualquer mutacao.
@@ -67,7 +71,13 @@ pending -> processing -> dispatching -> sent -> delivered
 pending/processing -> cancelled
 ```
 
-`processing` ainda e reversivel e nao autoriza side effect externo. O worker
+A criacao do alerta grava a obrigacao externa na mesma transacao. O outbox
+snapshotta o email em `target` e o nome do contato em `metadata.contact_name`.
+O primeiro envio nao depende de uma releitura de `emergency_contacts`; portanto
+renomear, desativar ou excluir o contato depois do SOS nao altera uma obrigacao
+ja criada.
+
+`processing` ainda e reversivel e nao autoriza side effect externo. O broker
 monta o payload candidato e chama `authorize_emergency_email_dispatch`, que na
 **mesma transacao**:
 
@@ -84,6 +94,22 @@ nao existir bypass sem snapshot.
 Quando um alerta muda para `resolved` ou `false_alarm`, a mesma transacao
 cancela tudo que ainda esta `pending/processing`. Um `dispatching` ja cruzou a
 fronteira de autorizacao e so pode terminar por envio/reconciliacao idempotente.
+
+### Consumo autonomo do outbox
+
+`private.prepare_emergency_delivery_work` recupera claims `processing`
+abandonados antes do dispatch e preserva `attempt_count`. `pending` so volta ao
+worker quando o alerta ainda esta `active/acknowledged`.
+
+`dispatching` e tratado de forma diferente: como ja cruzou o ponto irreversivel,
+continua elegivel para recovery idempotente mesmo se o alerta ficar terminal
+depois.
+
+`private.invoke_emergency_delivery_worker` usa `pg_cron` + `pg_net`, le URL e
+cron secret do Vault e chama diretamente `/functions/v1/send-emergency-email`
+com apenas `alertId` e `contactId`. Nao existe segundo Edge worker de entrega.
+O browser permanece apenas como fast path; fechar a pagina nao abandona o
+outbox.
 
 ### Payload imutavel e retry idempotente
 
@@ -126,8 +152,8 @@ primaria e `provider_message_id` como secundaria.
 ## Fluxo de uso
 
 ```text
-Component -> Hook -> SafetyService -> RPC/RLS/worker
-Worker -> outbox transacional -> Resend
+Component -> Hook -> SafetyService -> RPC/RLS/broker
+Alert INSERT -> outbox -> browser fast path OR pg_cron -> same broker -> Resend
 Resend -> webhook Svix -> RPC service_role -> outbox
 ```
 
