@@ -130,7 +130,11 @@ export function useMotoristaPage() {
       );
       if (result.success) {
         await refetch();
+        return;
       }
+      toast.error("Nao foi possivel iniciar o deslocamento para coleta", {
+        description: result.error,
+      });
     } finally {
       setDeliveryActionsLoading(false);
     }
@@ -147,7 +151,12 @@ export function useMotoristaPage() {
       const result = await RideOperationalService.confirmPickup(rideId, driverProfileId);
       if (result.success) {
         await refetch();
+        toast.success("Coleta confirmada");
+        return;
       }
+      toast.error("Nao foi possivel confirmar a coleta", {
+        description: result.error,
+      });
     } finally {
       setDeliveryActionsLoading(false);
     }
@@ -164,7 +173,12 @@ export function useMotoristaPage() {
       const result = await RideOperationalService.startDelivery(rideId, driverProfileId);
       if (result.success) {
         await refetch();
+        toast.success("Entrega iniciada");
+        return;
       }
+      toast.error("Nao foi possivel iniciar a entrega", {
+        description: result.error,
+      });
     } finally {
       setDeliveryActionsLoading(false);
     }
@@ -175,10 +189,11 @@ export function useMotoristaPage() {
     driverProfileId: string,
     proof: DeliveryProof,
     finalPrice?: number,
-  ) => {
+    pin?: string,
+  ): Promise<boolean> => {
     if (!driverProfileId) {
       toast.error("Perfil de motorista nao encontrado");
-      return;
+      return false;
     }
 
     setDeliveryActionsLoading(true);
@@ -188,10 +203,24 @@ export function useMotoristaPage() {
         driverProfileId,
         proof,
         finalPrice,
+        pin,
       );
-      if (result.success) {
-        await refetch();
+      if (!result.success) {
+        const lowerError = result.error?.toLowerCase() ?? "";
+        const verificationFailure =
+          lowerError.includes("pin") || lowerError.includes("verification");
+        toast.error(
+          verificationFailure
+            ? "Entrega nao confirmada: verificacao de seguranca pendente"
+            : "Nao foi possivel confirmar a entrega",
+          { description: result.error },
+        );
+        return false;
       }
+
+      await refetch();
+      toast.success("Entrega concluida e encerrada");
+      return true;
     } finally {
       setDeliveryActionsLoading(false);
     }
@@ -217,7 +246,12 @@ export function useMotoristaPage() {
       );
       if (result.success) {
         await refetch();
+        toast.success("Falha registrada; custodia preservada para resolucao");
+        return;
       }
+      toast.error("Nao foi possivel registrar a falha", {
+        description: result.error,
+      });
     } finally {
       setDeliveryActionsLoading(false);
     }
