@@ -63,12 +63,23 @@ describe("G76 idempotent emergency dispatch recovery", () => {
 
   it("keeps retryable provider failures dispatching instead of lying as failed", () => {
     const retryableBranch = worker.indexOf("resendResponse.status === 408");
-    const permanentFailure = worker.indexOf(
-      "await markDeliveryFailed(providerAttempt.id, providerError",
-    );
+    const permanentFailure = worker.indexOf("const failedOrCurrent = await markDeliveryFailed(");
     expect(retryableBranch).toBeGreaterThan(-1);
     expect(permanentFailure).toBeGreaterThan(retryableBranch);
     expect(worker).toContain("emergency_email_provider_retryable_failure");
+    expect(worker).toContain("retryableProviderFailure: true");
+    expect(worker).toContain("buildDeliveryOutcome(contactId, providerAttempt");
+    expect(worker).not.toContain(
+      "errorResponse('Emergency email provider temporarily unavailable'",
+    );
+  });
+
+  it("returns durable lifecycle truth when another canonical actor wins a race", () => {
+    expect(worker).toContain("const current = await getDeliveryById(dispatching.id)");
+    expect(worker).toContain("buildDeliveryOutcome(contactId, current");
+    expect(worker).toContain("const response = buildDeliveryOutcome(");
+    expect(worker).toContain("SUCCESSFUL_DELIVERY_STATUSES");
+    expect(provider).toContain("isConsistentWorkerOutcome");
   });
 
   it("allows only an already-authorized dispatch to continue after terminalization", () => {
