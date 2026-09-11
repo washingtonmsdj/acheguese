@@ -15,8 +15,14 @@ const guards = readProjectFile(
 const builder = readProjectFile(
   "src/core/mobility/utils/failedDelivery.ts",
 );
+const deliveryActions = readProjectFile(
+  "src/core/mobility/core/RideDeliveryOperationalActions.ts",
+);
+const serverAuthority = readProjectFile(
+  "supabase/migrations/20260911222000_complete_delivery_in_single_transaction_g70.sql",
+);
 
-describe("G55 failed-delivery client snapshot boundary", () => {
+describe("G55 failed-delivery snapshot authority", () => {
   it("separates client snapshot input from persisted resolution metadata", () => {
     expect(types).toContain("export interface FailedDeliverySnapshotInput");
     expect(types).toContain("item_current_holder: 'driver'");
@@ -26,13 +32,28 @@ describe("G55 failed-delivery client snapshot boundary", () => {
     expect(types).toContain("resolved_at?: string");
   });
 
-  it("rejects server-owned resolution and custody fields in the initial snapshot", () => {
+  it("rejects server-owned resolution and custody fields before command dispatch", () => {
     expect(guards).toContain("FAILED_DELIVERY_SERVER_OWNED_FIELDS");
     expect(guards).toContain('"handoff_driver_profile_id"');
     expect(guards).toContain('"resolved_at"');
     expect(guards).toContain("item_current_holder deve permanecer driver");
     expect(guards).toContain("resolution_status deve iniciar como pending");
     expect(guards).toContain("Campo server-owned nao permitido no snapshot inicial");
+
+    expect(deliveryActions).toContain("const snapshot: FailedDeliverySnapshotInput");
+    expect(deliveryActions).toContain('item_current_holder: "driver"');
+    expect(deliveryActions).toContain('resolution_status: "pending"');
+    expect(deliveryActions).toContain("metadata: snapshot");
+  });
+
+  it("enforces the same snapshot boundary at the final privileged database command", () => {
+    expect(serverAuthority).toContain("IF p_command = 'fail_delivery' THEN");
+    expect(serverAuthority).toContain("pg_catalog.jsonb_object_keys(p_failed_delivery_metadata)");
+    expect(serverAuthority).toContain("failed delivery snapshot contains server-owned or unsupported fields");
+    expect(serverAuthority).toContain("initial failed delivery custody must remain with driver");
+    expect(serverAuthority).toContain("initial failed delivery resolution status must be pending");
+    expect(serverAuthority).toContain("'handoff_driver_profile_id'");
+    expect(serverAuthority).not.toContain("'handoff_driver_profile_id',\n        'resolved_at'");
   });
 
   it("builds only the strict initial snapshot shape", () => {
