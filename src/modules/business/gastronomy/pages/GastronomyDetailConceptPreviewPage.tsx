@@ -97,6 +97,17 @@ const menuItems: ConceptMenuItem[] = [
   },
 ];
 
+const offerItem: ConceptMenuItem = {
+  id: "oferta-prato-suco",
+  name: "Prato do dia + suco",
+  category: "Ofertas",
+  description: "Prato do dia com suco de maracujá.",
+  price: 29,
+  image: foodImage,
+};
+
+const allSelectableItems = [...menuItems, offerItem];
+
 const categories = ["Todas", "Refeições", "Bebidas", "Sobremesas"];
 
 const money = (value: number) =>
@@ -290,9 +301,9 @@ function MenuRow({ item, selected, onSelect }: { item: ConceptMenuItem; selected
   );
 }
 
-function OfferCard({ onAdd }: { onAdd: () => void }) {
+function OfferCard({ onOpen }: { onOpen: () => void }) {
   return (
-    <button type="button" onClick={onAdd} className="flex w-full items-center gap-3 rounded-lg bg-territory-sun/25 px-2.5 py-2 text-left transition-colors hover:bg-territory-sun/35 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-territory-brand sm:px-3">
+    <button type="button" onClick={onOpen} className="flex w-full items-center gap-3 rounded-lg bg-territory-sun/25 px-2.5 py-2 text-left transition-colors hover:bg-territory-sun/35 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-territory-brand">
       <img src={foodImage} alt="" className="h-11 w-16 shrink-0 rounded-lg object-cover" />
       <span className="min-w-0 flex-1">
         <span className="block text-[0.6875rem] font-semibold text-territory-brand sm:text-xs">Ofertas</span>
@@ -304,8 +315,9 @@ function OfferCard({ onAdd }: { onAdd: () => void }) {
 }
 
 function ItemCustomizer({ item, size, setSize, quantity, setQuantity, farofa, setFarofa, arroz, setArroz, notes, setNotes, onAdd }: { item: ConceptMenuItem; size: "individual" | "share"; setSize: (value: "individual" | "share") => void; quantity: number; setQuantity: (value: number) => void; farofa: boolean; setFarofa: (value: boolean) => void; arroz: boolean; setArroz: (value: boolean) => void; notes: string; setNotes: (value: string) => void; onAdd: () => void }) {
+  const isOffer = item.id === offerItem.id;
   const addonsTotal = (farofa ? 3 : 0) + (arroz ? 5 : 0);
-  const itemPrice = size === "share" ? 68 : item.price;
+  const itemPrice = isOffer ? item.price : size === "share" ? 68 : item.price;
   const total = (itemPrice + addonsTotal) * quantity;
 
   return (
@@ -318,33 +330,41 @@ function ItemCustomizer({ item, size, setSize, quantity, setQuantity, farofa, se
         <img src={item.image} alt="" className="h-20 w-24 shrink-0 rounded-lg object-cover sm:h-24 sm:w-28" />
       </div>
 
-      <fieldset className="mt-4 space-y-1.5">
-        <legend className="text-xs font-bold text-territory-ink sm:text-sm">Tamanho · obrigatório</legend>
-        <label className="flex min-h-9 items-center gap-2 rounded-lg px-2 text-xs text-territory-ink hover:bg-territory-raised">
-          <input type="radio" name="concept-size" checked={size === "individual"} onChange={() => setSize("individual")} className="h-4 w-4 accent-[hsl(var(--territory-brand))]" />
-          <span className="flex-1">Individual</span>
-          <span className="font-semibold">{money(item.price)}</span>
-        </label>
-        <label className="flex min-h-9 items-center gap-2 rounded-lg px-2 text-xs text-territory-ink hover:bg-territory-raised">
-          <input type="radio" name="concept-size" checked={size === "share"} onChange={() => setSize("share")} className="h-4 w-4 accent-[hsl(var(--territory-brand))]" />
-          <span className="flex-1">Para duas pessoas</span>
-          <span className="font-semibold">{money(68)}</span>
-        </label>
-      </fieldset>
+      {isOffer ? (
+        <div className="mt-4 rounded-lg bg-territory-raised px-3 py-2.5 text-xs leading-5 text-territory-ink">
+          Inclui prato do dia e suco de maracujá.
+        </div>
+      ) : (
+        <>
+          <fieldset className="mt-4 space-y-1.5">
+            <legend className="text-xs font-bold text-territory-ink sm:text-sm">Tamanho · obrigatório</legend>
+            <label className="flex min-h-9 items-center gap-2 rounded-lg px-2 text-xs text-territory-ink hover:bg-territory-raised">
+              <input type="radio" name="concept-size" checked={size === "individual"} onChange={() => setSize("individual")} className="h-4 w-4 accent-[hsl(var(--territory-brand))]" />
+              <span className="flex-1">Individual</span>
+              <span className="font-semibold">{money(item.price)}</span>
+            </label>
+            <label className="flex min-h-9 items-center gap-2 rounded-lg px-2 text-xs text-territory-ink hover:bg-territory-raised">
+              <input type="radio" name="concept-size" checked={size === "share"} onChange={() => setSize("share")} className="h-4 w-4 accent-[hsl(var(--territory-brand))]" />
+              <span className="flex-1">Para duas pessoas</span>
+              <span className="font-semibold">{money(68)}</span>
+            </label>
+          </fieldset>
 
-      <fieldset className="mt-3 space-y-1.5">
-        <legend className="text-xs font-bold text-territory-ink sm:text-sm">Adicionais · opcional</legend>
-        <label className="flex min-h-8 items-center gap-2 text-xs text-territory-ink">
-          <input type="checkbox" checked={farofa} onChange={(event) => setFarofa(event.target.checked)} className="h-4 w-4 rounded accent-[hsl(var(--territory-brand))]" />
-          <span className="flex-1">Farofa extra</span>
-          <span>+ {money(3)}</span>
-        </label>
-        <label className="flex min-h-8 items-center gap-2 text-xs text-territory-ink">
-          <input type="checkbox" checked={arroz} onChange={(event) => setArroz(event.target.checked)} className="h-4 w-4 rounded accent-[hsl(var(--territory-brand))]" />
-          <span className="flex-1">Arroz extra</span>
-          <span>+ {money(5)}</span>
-        </label>
-      </fieldset>
+          <fieldset className="mt-3 space-y-1.5">
+            <legend className="text-xs font-bold text-territory-ink sm:text-sm">Adicionais · opcional</legend>
+            <label className="flex min-h-8 items-center gap-2 text-xs text-territory-ink">
+              <input type="checkbox" checked={farofa} onChange={(event) => setFarofa(event.target.checked)} className="h-4 w-4 rounded accent-[hsl(var(--territory-brand))]" />
+              <span className="flex-1">Farofa extra</span>
+              <span>+ {money(3)}</span>
+            </label>
+            <label className="flex min-h-8 items-center gap-2 text-xs text-territory-ink">
+              <input type="checkbox" checked={arroz} onChange={(event) => setArroz(event.target.checked)} className="h-4 w-4 rounded accent-[hsl(var(--territory-brand))]" />
+              <span className="flex-1">Arroz extra</span>
+              <span>+ {money(5)}</span>
+            </label>
+          </fieldset>
+        </>
+      )}
 
       <label className="mt-3 block text-xs font-bold text-territory-ink sm:text-sm">
         Observações
@@ -447,7 +467,7 @@ export default function GastronomyDetailConceptPreviewPage() {
     { ...menuItems[3], quantity: 1 },
   ]);
 
-  const selectedItem = menuItems.find((item) => item.id === selectedItemId) ?? menuItems[1];
+  const selectedItem = allSelectableItems.find((item) => item.id === selectedItemId) ?? menuItems[1];
   const filteredItems = useMemo(() => menuItems.filter((item) => {
     const matchesCategory = activeCategory === "Todas" || item.category === activeCategory;
     const normalizedQuery = query.trim().toLowerCase();
@@ -510,7 +530,7 @@ export default function GastronomyDetailConceptPreviewPage() {
             <section className="min-w-0">
               <SearchAndCategories query={query} onQueryChange={setQuery} category={activeCategory} onCategoryChange={setActiveCategory} />
               <div className="mt-3 space-y-2">
-                <OfferCard onAdd={() => { addLine(menuItems[0]); addLine(menuItems[3]); toast.success("Oferta adicionada ao carrinho."); }} />
+                <OfferCard onOpen={() => { setSelectedItemId(offerItem.id); setMobileCustomizerOpen(true); }} />
                 <div className="overflow-hidden rounded-xl border border-territory-border bg-territory-surface">
                   {filteredItems.map((item) => <MenuRow key={item.id} item={item} selected={selectedItem.id === item.id} onSelect={() => { if (item.available === false) return; setSelectedItemId(item.id); setMobileCustomizerOpen(true); }} />)}
                   {!filteredItems.length ? <p className="px-4 py-8 text-center text-sm text-territory-muted">Nenhum item encontrado.</p> : null}
