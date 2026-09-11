@@ -1,7 +1,10 @@
 import { supabase } from "@/integrations/supabase";
 import type { Database } from "@/integrations/supabase";
 import { logger } from "@/shared/utils/logger";
-import { emailNotificationProvider } from "../providers/EmailNotificationProvider";
+import {
+  emailNotificationProvider,
+  type EmailDeliveryResult,
+} from "../providers/EmailNotificationProvider";
 import type {
   CreateEmergencyContactInput,
   EmergencyAlert,
@@ -33,6 +36,28 @@ interface SafetyDbClient {
     args: Record<string, unknown>,
   ) => Promise<QueryResult<TRow>>;
 }
+
+export interface EmergencyContactDeliverySummary {
+  contactsAttempted: number;
+  contactsNotified: number;
+  contactIds: string[];
+  successful: number;
+  inProgress: number;
+  reconciliationRequired: number;
+  cancelled: number;
+  failed: number;
+}
+
+const NOTIFIED_STATUSES = new Set<EmailDeliveryResult["status"]>([
+  "sent",
+  "delivered",
+]);
+
+const IN_PROGRESS_STATUSES = new Set<EmailDeliveryResult["status"]>([
+  "pending",
+  "processing",
+  "dispatching",
+]);
 
 const safetyDb = supabase as unknown as SafetyDbClient;
 
@@ -68,6 +93,63 @@ function mapToEmergencyContact(data: EmergencyContactRow): EmergencyContact {
     createdAt: data.created_at,
     updatedAt: data.updated_at,
   };
+}
+
+function emptyDeliverySummary(): EmergencyContactDeliverySummary {
+  return {
+    contactsAttempted: 0,
+    contactsNotified: 0,
+    contactIds: [],
+    successful: 0,
+    inProgress: 0,
+    reconciliationRequired: 0,
+    cancelled: 0,
+    failed: 0,
+  };
+}
+
+function summarizeDeliveryResults(
+  results: PromiseSettledResult<EmailDeliveryResult>[],
+): EmergencyContactDeliverySummary {
+  const summary = emptyDeliverySummary();
+  summary.contactsAttempted = results.length;
+
+  for (const result of results) {
+    if (result.status === "rejected") {
+      summary.failed += 1;
+      continue;
+    }
+
+    const delivery = result.value;
+    if (
+      delivery.success &&
+      NOTIFIED_STATUSES.has(delivery.status)
+    ) {
+      summary.contactsNotified += 1;
+      summary.successful += 1;
+      summary.contactIds.push(delivery.contactId);
+      continue;
+    }
+
+    if (IN_PROGRESS_STATUSES.has(delivery.status)) {
+      summary.inProgress += 1;
+      continue;
+    }
+
+    if (delivery.status === "reconciliation_required") {
+      summary.reconciliationRequired += 1;
+      continue;
+    }
+
+    if (delivery.status === "cancelled") {
+      summary.cancelled += 1;
+      continue;
+    }
+
+    summary.failed += 1;
+  }
+
+  return summary;
 }
 
 export class SafetyEmergencyContactsService {
@@ -165,49 +247,30 @@ export class SafetyEmergencyContactsService {
   static async notifyEmergencyContacts(
     profileId: string,
     alert: EmergencyAlert,
-  ): Promise<{
-    contactsNotified: number;
-    contactIds: string[];
-    successful: number;
-    failed: number;
-  }> {
+  ): Promise<EmergencyContactDeliverySummary> {
     try {
       const contacts = await this.listEmergencyContacts(profileId);
       if (contacts.length === 0) {
         logger.warn("[SafetyService] No emergency contacts found for profile:", profileId);
-        return { contactsNotified: 0, contactIds: [], successful: 0, failed: 0 };
+        return emptyDeliverySummary();
       }
 
       const deliveryResults = await Promise.allSettled(
-        contacts.map(async (contact) => {
-          const result = await emailNotificationProvider.sendEmergencyAlert(
-            contact,
-            alert,
-          );
-          return result;
-        }),
+        contacts.map((contact) =>
+          emailNotificationProvider.sendEmergencyAlert(contact, alert),
+        ),
       );
-
-      const successful = deliveryResults.filter(
-        (result) => result.status === "fulfilled" && result.value.success,
-      ).length;
-      const failed = deliveryResults.length - successful;
+      const summary = summarizeDeliveryResults(deliveryResults);
 
       logger.info(
-        `[SafetyService] Notified ${successful}/${contacts.length} emergency contacts about alert ${alert.id}`,
-        { successful, failed },
+        `[SafetyService] Emergency delivery outcomes for alert ${alert.id}`,
+        summary,
       );
 
-      return {
-        contactsNotified: contacts.length,
-        contactIds: contacts.map((contact) => contact.id),
-        successful,
-        failed,
-      };
+      return summary;
     } catch (error) {
       logger.error("[SafetyService] Error notifying emergency contacts:", error);
-      return { contactsNotified: 0, contactIds: [], successful: 0, failed: 0 };
+      return emptyDeliverySummary();
     }
   }
-
 }
