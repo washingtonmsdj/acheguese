@@ -166,9 +166,11 @@ function GastronomyDetailLivePage({
 
   const allMenuItems = useMemo(
     () =>
-      sortedCategories
-        .flatMap((category) => category.items ?? [])
-        .sort((a, b) => a.display_order - b.display_order),
+      sortedCategories.flatMap((category) =>
+        [...(category.items ?? [])].sort(
+          (a, b) => a.display_order - b.display_order,
+        ),
+      ),
     [sortedCategories],
   );
 
@@ -197,7 +199,15 @@ function GastronomyDetailLivePage({
   );
 
   useEffect(() => {
-    if (categoriesWithAll.length > 0 && !activeCategory) {
+    if (categoriesWithAll.length === 0) {
+      if (activeCategory !== null) setActiveCategory(null);
+      return;
+    }
+
+    const activeCategoryStillExists = categoriesWithAll.some(
+      (category) => category.id === activeCategory,
+    );
+    if (!activeCategory || !activeCategoryStillExists) {
       setActiveCategory(categoriesWithAll[0].id);
     }
   }, [categoriesWithAll, activeCategory]);
