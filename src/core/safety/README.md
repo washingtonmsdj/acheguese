@@ -6,14 +6,16 @@ compartilhamento seguro de viagens.
 ## Ownership
 
 - `SafetyService.ts`: facade publica, alertas, incidentes e evidencias.
-- `SafetyEmergencyContactsService.ts`: CRUD de contatos e orquestracao do
-  canal de email.
+- `SafetyEmergencyContactsService.ts`: CRUD de contatos e fast path do canal de
+  email.
 - `SafetyRideShareService.ts`: criacao, leitura publica por token e revogacao
   de compartilhamentos.
-- `send-emergency-email`: broker autenticado; carrega alerta e contato
-  canonicos no backend e grava o delivery log.
-- `private.notification_outbox`: entrega in-app; o destinatario e derivado do
-  perfil no banco.
+- `send-emergency-email`: broker canonico user-or-cron de envio/recovery do
+  outbox.
+- `resend-emergency-webhook`: ingestao assinada dos eventos do provedor.
+- RPCs `claim_*`, `authorize_*`, `begin_*`, `confirm_*` e `apply_*`: autoridade
+  transacional do lifecycle de entrega externa.
+- `private.notification_outbox`: entrega in-app.
 - `private.audit_safety_insert` e RPCs de Safety: auditoria server-side.
 
 O manifesto executavel em
@@ -21,6 +23,8 @@ O manifesto executavel em
 desses owners.
 
 ## Persistencia canonica
+
+Publica:
 
 - `emergency_alerts`
 - `emergency_contacts`
@@ -30,61 +34,128 @@ desses owners.
 - `ride_shares`
 - `safety_audit_log`
 
-O schema reproduzivel e as politicas estao em:
+Privada:
 
-- `supabase/migrations/20260714116000_normalize_safety_notification_producers.sql`
-- `supabase/migrations/20260714117000_normalize_emergency_contact_email.sql`
+- `private.emergency_delivery_provider_events`
+- `private.emergency_delivery_provider_payloads`
+
+O schema reproduzivel e as politicas estao em migrations versionadas em
+`supabase/migrations/`.
 
 ## Fronteiras de seguranca
 
-- IDs `profileId`, `createdBy`, `reportedBy` e `uploadedBy` sao IDs de
-  `profiles`, nunca `auth.users.id`.
-- RLS confirma que o perfil pertence a `auth.uid()` e que a viagem pertence ao
-  participante quando aplicavel.
-- O cliente nao escreve em `safety_audit_log` nem
-  `emergency_delivery_log`.
-- Status de alerta/incidente e revogacao de share passam por RPCs que derivam
-  identidade e privilegio no backend.
-- O browser envia somente `contactId` e `alertId` ao broker de email. Destino,
-  texto e localizacao sao lidos das tabelas canonicas pela Edge Function.
-- O canal ativo de contato e email. `email` e obrigatorio em novos registros;
-  `phone` e opcional e nao implica SMS/voz.
-- A leitura publica de uma viagem usa token aleatorio base62 de 32 caracteres,
-  prazo maximo de sete dias e RPC com retorno limitado. `anon` nao possui
-  `SELECT` direto em `ride_shares`.
-- Alertas e incidentes possuem rate limit transacional por perfil.
+- IDs de atores sao IDs de `profiles`, nunca `auth.users.id`.
+- RLS confirma ownership/participacao quando aplicavel.
+- Browser nao escreve em `safety_audit_log`, `emergency_delivery_log`, receipts
+  de provedor nem snapshots de payload.
+- Status de alerta/incidente passam por RPCs server-owned.
+- O browser envia somente IDs canonicos ao broker de emergencia.
+- O mesmo broker aceita o fallback autonomo apenas quando `x-cron-secret` passa
+  por `requireCronSecret`; uma credencial cron invalida nunca cai no fluxo de
+  usuario.
+- O webhook do Resend nao usa JWT do Supabase, mas exige verificacao Svix do
+  corpo bruto com `svix-id`, `svix-timestamp`, `svix-signature` e
+  `RESEND_WEBHOOK_SECRET` antes de qualquer mutacao.
+- Toda mutacao de webhook e feita por RPC executavel apenas por `service_role`.
+- O canal externo ativo e email; `phone` continua opcional e nao implica SMS.
+
+## Entrega externa de emergencia
+
+`emergency_delivery_log` e o outbox duravel. O lifecycle canonico e:
+
+```text
+pending -> processing -> dispatching -> sent -> delivered
+            |              |
+            +-> failed     +-> failed
+                           +-> reconciliation_required
+pending/processing -> cancelled
+```
+
+A criacao do alerta grava a obrigacao externa na mesma transacao. O outbox
+snapshotta o email em `target` e o nome do contato em `metadata.contact_name`.
+O primeiro envio nao depende de uma releitura de `emergency_contacts`; portanto
+renomear, desativar ou excluir o contato depois do SOS nao altera uma obrigacao
+ja criada.
+
+`processing` ainda e reversivel e nao autoriza side effect externo. O broker
+monta o payload candidato e chama `authorize_emergency_email_dispatch`, que na
+**mesma transacao**:
+
+1. trava o alerta canonico;
+2. confirma `active`/`acknowledged`;
+3. trava a obrigacao `processing`;
+4. valida target e tag `acheguese_delivery_id`;
+5. grava o payload exato em `private.emergency_delivery_provider_payloads`;
+6. move `processing -> dispatching`.
+
+A antiga `authorize_emergency_delivery_dispatch(uuid)` e removida em G78 para
+nao existir bypass sem snapshot.
+
+Quando um alerta muda para `resolved` ou `false_alarm`, a mesma transacao
+cancela tudo que ainda esta `pending/processing`. Um `dispatching` ja cruzou a
+fronteira de autorizacao e so pode terminar por envio/reconciliacao idempotente.
+
+### Consumo autonomo do outbox
+
+`private.prepare_emergency_delivery_work` recupera claims `processing`
+abandonados antes do dispatch e preserva `attempt_count`. `pending` so volta ao
+worker quando o alerta ainda esta `active/acknowledged`.
+
+`dispatching` e tratado de forma diferente: como ja cruzou o ponto irreversivel,
+continua elegivel para recovery idempotente mesmo se o alerta ficar terminal
+depois.
+
+`private.invoke_emergency_delivery_worker` usa `pg_cron` + `pg_net`, le URL e
+cron secret do Vault e chama diretamente `/functions/v1/send-emergency-email`
+com apenas `alertId` e `contactId`. Nao existe segundo Edge worker de entrega.
+O browser permanece apenas como fast path; fechar a pagina nao abandona o
+outbox.
+
+### Payload imutavel e retry idempotente
+
+Todo request usa a chave:
+
+```text
+emergency-delivery/<delivery-id>
+```
+
+Retries nunca reconstroem corpo/destino a partir de perfil, contato ou alerta
+mutavel. Eles recuperam o snapshot privado via
+`get_emergency_email_provider_payload` e enviam exatamente o mesmo JSON.
+
+`begin_emergency_provider_attempt` serializa tentativas, aplica janela minima,
+limite de retries e janela segura menor que a garantia do provedor. Resultado
+indeterminado fora dessa janela vira `reconciliation_required`, nunca sucesso
+ou falha inventados.
+
+### Verdade do provedor
+
+A resposta sincrona do `POST /emails` nao escreve `sent` diretamente. Ela usa
+`confirm_emergency_delivery_provider_acceptance`, que correlaciona o
+`provider_message_id` e nao regride estados `delivered` ou `failed` que um
+webhook tenha confirmado antes.
+
+Cada email inclui a tag `acheguese_delivery_id`. O Resend devolve tags nos seus
+webhooks; `resend-emergency-webhook` usa essa tag assinada como correlacao
+primaria e `provider_message_id` como secundaria.
+
+`apply_emergency_delivery_provider_event`:
+
+- deduplica pelo `svix-id` em ledger privado;
+- suporta `sent`, `delivered`, `delivery_delayed`, `bounced`, `complained`,
+  `failed` e `suppressed`;
+- rejeita evento antes da autoridade de dispatch;
+- impede regressao por eventos fora de ordem;
+- trata `delivered` como confirmacao forte de entrega;
+- preserva `delivered/failed` contra escrita concorrente do caminho sincrono.
 
 ## Fluxo de uso
 
-Componentes usam hooks; hooks usam a facade:
-
 ```text
-Component -> Hook -> SafetyService -> owner especializado/RPC/RLS
+Component -> Hook -> SafetyService -> RPC/RLS/broker
+Alert INSERT -> outbox -> browser fast path OR pg_cron -> same broker -> Resend
+Resend -> webhook Svix -> RPC service_role -> outbox
 ```
-
-Exemplo de alerta:
-
-```typescript
-const result = await safetyService.createEmergencyAlert({
-  profileId: activeProfile.id,
-  rideId,
-  alertType: "sos",
-  location: { latitude, longitude },
-});
-```
-
-Exemplo de share:
-
-```typescript
-const result = await safetyService.createRideShare({
-  rideId,
-  createdBy: activeProfile.id,
-  expiresInHours: 24,
-});
-```
-
-`getSharedRideData(token)` retorna no maximo uma viagem. `revokeRideShare`
-recebe somente o ID do share; o ator e derivado no RPC.
 
 ## Integracao com Mobility
 

@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "updatedAt": "2026-09-10",
+  "updatedAt": "2026-09-11",
   "architecture": "docs/03-architecture/CORE_PLATFORM_ARCHITECTURE_SSOT.md",
   "plan": "docs/08-roadmap/CORE_PLATFORM_CONSOLIDATION_PLAN.md",
   "sourceRoots": ["src", "api", "supabase/functions"],
@@ -140,10 +140,10 @@
     {
       "name": "emergency_delivery_log",
       "status": "canonical",
-      "currentOwner": "supabase/functions/send-emergency-email/index.ts",
-      "targetOwner": "supabase/functions/send-emergency-email/index.ts",
-      "allowedReaders": [{"path": "supabase/functions/send-emergency-email/index.ts", "maxCalls": 1, "role": "trusted-delivery"}],
-      "allowedWriters": [{"path": "supabase/functions/send-emergency-email/index.ts", "maxCalls": 3, "role": "trusted-delivery"}]
+      "currentOwner": "server-owned-emergency-delivery-rpcs",
+      "targetOwner": "server-owned-emergency-delivery-rpcs",
+      "allowedReaders": [{"path": "supabase/functions/send-emergency-email/index.ts", "maxCalls": 2, "role": "trusted-delivery-read-model"}],
+      "allowedWriters": []
     },
     {
       "name": "safety_incidents",
@@ -386,6 +386,14 @@
     {"name":"mark_current_user_notifications_as_read","status":"canonical","currentOwner":"src/core/notifications/services/NotificationService.ts","targetOwner":"src/core/notifications/services/NotificationService.ts","allowedCallers":[{"path":"src/core/notifications/services/NotificationService.ts","maxCalls":1,"role":"canonical"}]},
     {"name":"update_safety_emergency_alert_status","status":"canonical","currentOwner":"src/core/safety/services/SafetyService.ts","targetOwner":"src/core/safety/services/SafetyService.ts","allowedCallers":[{"path":"src/core/safety/services/SafetyService.ts","maxCalls":1,"role":"canonical-command"}]},
     {"name":"update_safety_incident_status","status":"canonical","currentOwner":"src/core/safety/services/SafetyService.ts","targetOwner":"src/core/safety/services/SafetyService.ts","allowedCallers":[{"path":"src/core/safety/services/SafetyService.ts","maxCalls":1,"role":"canonical-command"}]},
+    {"name":"claim_emergency_delivery_attempt","status":"canonical","currentOwner":"server-owned-emergency-delivery-rpcs","targetOwner":"server-owned-emergency-delivery-rpcs","allowedCallers":[{"path":"supabase/functions/send-emergency-email/index.ts","maxCalls":1,"role":"trusted-delivery-command"}]},
+    {"name":"authorize_emergency_email_dispatch","status":"canonical","currentOwner":"server-owned-emergency-delivery-rpcs","targetOwner":"server-owned-emergency-delivery-rpcs","allowedCallers":[{"path":"supabase/functions/send-emergency-email/index.ts","maxCalls":1,"role":"trusted-delivery-command"}]},
+    {"name":"get_emergency_email_provider_payload","status":"canonical","currentOwner":"server-owned-emergency-delivery-rpcs","targetOwner":"server-owned-emergency-delivery-rpcs","allowedCallers":[{"path":"supabase/functions/send-emergency-email/index.ts","maxCalls":1,"role":"trusted-delivery-read-model"}]},
+    {"name":"begin_emergency_provider_attempt","status":"canonical","currentOwner":"server-owned-emergency-delivery-rpcs","targetOwner":"server-owned-emergency-delivery-rpcs","allowedCallers":[{"path":"supabase/functions/send-emergency-email/index.ts","maxCalls":1,"role":"trusted-delivery-command"}]},
+    {"name":"require_emergency_delivery_reconciliation","status":"canonical","currentOwner":"server-owned-emergency-delivery-rpcs","targetOwner":"server-owned-emergency-delivery-rpcs","allowedCallers":[{"path":"supabase/functions/send-emergency-email/index.ts","maxCalls":1,"role":"trusted-delivery-command"}]},
+    {"name":"fail_emergency_delivery_attempt","status":"canonical","currentOwner":"server-owned-emergency-delivery-rpcs","targetOwner":"server-owned-emergency-delivery-rpcs","allowedCallers":[{"path":"supabase/functions/send-emergency-email/index.ts","maxCalls":1,"role":"trusted-delivery-command"}]},
+    {"name":"confirm_emergency_delivery_provider_acceptance","status":"canonical","currentOwner":"server-owned-emergency-delivery-rpcs","targetOwner":"server-owned-emergency-delivery-rpcs","allowedCallers":[{"path":"supabase/functions/send-emergency-email/index.ts","maxCalls":1,"role":"trusted-delivery-command"}]},
+    {"name":"apply_emergency_delivery_provider_event","status":"canonical","currentOwner":"server-owned-emergency-delivery-rpcs","targetOwner":"server-owned-emergency-delivery-rpcs","allowedCallers":[{"path":"supabase/functions/resend-emergency-webhook/index.ts","maxCalls":1,"role":"verified-provider-event-command"}]},
     {"name":"revoke_safety_ride_share","status":"canonical","currentOwner":"src/core/safety/services/SafetyRideShareService.ts","targetOwner":"src/core/safety/services/SafetyRideShareService.ts","allowedCallers":[]},
     {"name":"get_shared_ride_safety_data","status":"canonical","currentOwner":"src/core/safety/services/SafetyRideShareService.ts","targetOwner":"src/core/safety/services/SafetyRideShareService.ts","allowedCallers":[]},
     {"name":"get_current_user_business_favorites","status":"canonical","currentOwner":"src/core/favorites/services/BusinessFavoriteStore.ts","targetOwner":"src/core/favorites/services/BusinessFavoriteStore.ts","allowedCallers":[{"path":"src/core/favorites/services/BusinessFavoriteStore.ts","maxCalls":1,"role":"canonical-read-owner"}]},

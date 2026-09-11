@@ -1,36 +1,36 @@
-// Supabase Edge Function - Send Emergency Email
-// Deploy: supabase functions deploy send-emergency-email
-
-import { serve } from 'https://deno.land/std@0.168.0/http/server.ts';
-import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
-import { jsonSecurityResponse, requireAuthenticatedUser } from '../_shared/businessAuth.ts';
+import { createClient } from '@supabase/supabase-js';
+import { requireAuthenticatedUser } from '../_shared/businessAuth.ts';
 import {
-  checkRateLimit,
-  getAllSecurityHeaders,
-  rateLimitMiddleware,
   auditLog,
-  getAuditInfo,
+  checkRateLimit,
   errorResponse,
+  getAllSecurityHeaders,
+  getAuditInfo,
   getRequiredEnv,
-  isValidUUID,
   isOriginAllowed,
+  isValidUUID,
+  jsonResponse,
+  rateLimitMiddleware,
   readJsonBody,
+  requireCronSecret,
   requireHttpMethod,
-  sanitizeString,
 } from '../_shared/security.ts';
+import {
+  buildEmergencyProviderPayload,
+  extractEmail,
+  type ProviderPayload,
+} from './providerPayload.ts';
 
-const RESEND_API_KEY = Deno.env.get('RESEND_API_KEY');
+const RESEND_API_KEY = getRequiredEnv('RESEND_API_KEY');
 const EMAIL_FROM_DOMAIN = getRequiredEnv('EMAIL_FROM_DOMAIN');
 const EMAIL_FROM_NAME = getRequiredEnv('EMAIL_FROM_NAME');
-const SUPABASE_URL = Deno.env.get('SUPABASE_URL')!;
-const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
+const SUPABASE_URL = getRequiredEnv('SUPABASE_URL');
+const SUPABASE_SERVICE_ROLE_KEY = getRequiredEnv('SUPABASE_SERVICE_ROLE_KEY');
 const ALLOWED_METHODS = 'POST, OPTIONS';
-
-const RATE_LIMIT_MAX = 5;
-const RATE_LIMIT_WINDOW_MINUTES = 5;
+const MAX_CLAIM_ATTEMPTS = 5;
 
 const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY, {
-  auth: { persistSession: false },
+  auth: { persistSession: false, autoRefreshToken: false },
 });
 
 interface EmailRequest {
@@ -38,12 +38,22 @@ interface EmailRequest {
   alertId: string;
 }
 
+type DeliveryStatus =
+  | 'pending'
+  | 'processing'
+  | 'dispatching'
+  | 'sent'
+  | 'delivered'
+  | 'failed'
+  | 'cancelled'
+  | 'reconciliation_required';
+
 interface EmailResponse {
   success: boolean;
   contactId: string;
   channel: 'email';
   timestamp: string;
-  status: 'sent' | 'failed';
+  status: DeliveryStatus;
   error?: string;
   metadata?: Record<string, unknown>;
 }
@@ -65,558 +75,799 @@ interface AlertRecord {
   created_at: string | null;
 }
 
-interface ContactRecord {
+interface DeliveryRecord {
   id: string;
-  profile_id: string | null;
-  name: string | null;
-  email: string | null;
-  phone: string | null;
-  is_active?: boolean | null;
+  status: DeliveryStatus;
+  target?: string | null;
+  metadata?: Record<string, unknown> | null;
+  attempt_count: number;
+  provider_attempt_count?: number;
+  provider_message_id?: string | null;
+  dispatch_authorized_at?: string | null;
+  last_provider_attempt_at?: string | null;
+  cancelled_at?: string | null;
+  reconciliation_required_at?: string | null;
+  created_at?: string | null;
+  updated_at?: string | null;
 }
 
-serve(async (req: Request) => {
-  const auditInfo = getAuditInfo(req);
-  const origin = req.headers.get('origin');
-  const respond = (body: Record<string, unknown>, status = 200) =>
-    jsonSecurityResponse(body, status, ALLOWED_METHODS, req);
+type FailableDeliveryStatus = 'processing' | 'dispatching';
 
-  if (origin && !isOriginAllowed(origin)) {
-    return respond({ error: 'Origin not allowed' }, 403);
-  }
+const SUCCESSFUL_DELIVERY_STATUSES = new Set<DeliveryStatus>([
+  'processing',
+  'dispatching',
+  'sent',
+  'delivered',
+]);
 
-  if (req.method === 'OPTIONS') {
-    return new Response('ok', {
-      status: 204,
-      headers: getAllSecurityHeaders(ALLOWED_METHODS, req),
-    });
-  }
+export default {
+  async fetch(req: Request): Promise<Response> {
+    const auditInfo = getAuditInfo(req);
+    const respond = (body: Record<string, unknown>, status = 200) =>
+      jsonResponse(body, status, ALLOWED_METHODS, req);
 
-  const methodError = requireHttpMethod(req, ['POST'], ALLOWED_METHODS);
-  if (methodError) return methodError;
-
-  const rateLimitResponse = await rateLimitMiddleware(req, 100, 60000);
-  if (rateLimitResponse) return rateLimitResponse;
-
-  if (!RESEND_API_KEY) {
-    return errorResponse('Email service not configured', 500, {
-      code: 'MISSING_RESEND_API_KEY',
-    });
-  }
-
-  const authResult = await requireAuthenticatedUser(req, supabase);
-  if (authResult instanceof Response) {
-    auditLog({
-      timestamp: new Date().toISOString(),
-      action: 'emergency_email_auth_failed',
-      resource: 'emergency_alerts',
-      status: 'failure',
-      details: { reason: 'invalid_or_missing_token' },
-      ...auditInfo,
-    });
-    return authResult;
-  }
-
-  const userId = authResult.user.id;
-  const userRateLimit = await checkRateLimit(`emergency-email:${userId}`, 30, 5 * 60 * 1000);
-  if (!userRateLimit.allowed) {
-    return respond(
-      { error: 'Rate limit exceeded. Try again later.' },
-      429,
-    );
-  }
-
-  try {
-    const rawBody = await readJsonBody<EmailRequest>(req, {
-      maxBytes: 8192,
-      methods: ALLOWED_METHODS,
-    });
-    if (!rawBody.ok) return rawBody.response;
-    const emailRequest = rawBody.data;
-
-    if (!emailRequest.alertId || !isValidUUID(emailRequest.alertId)) {
-      return respond({ error: 'Valid alertId is required' }, 400);
-    }
-    if (!emailRequest.contactId || !isValidUUID(emailRequest.contactId)) {
-      return respond({ error: 'Valid contactId is required' }, 400);
+    const origin = req.headers.get('origin');
+    if (origin && !isOriginAllowed(origin)) {
+      return respond({ error: 'Origin not allowed' }, 403);
     }
 
-    const { data: userProfiles, error: profileError } = await supabase
-      .from('profiles')
-      .select('id, name, phone')
-      .eq('user_id', userId);
-
-    if (profileError) {
-      return errorResponse('Failed to validate user profile', 500, profileError);
-    }
-    if (!userProfiles || userProfiles.length === 0) {
-      return respond({ error: 'User profile not found' }, 403);
-    }
-
-    const userProfileIds = new Set(userProfiles.map((profile: UserProfileRecord) => profile.id));
-
-    const { data: alertData, error: alertError } = await supabase
-      .from('emergency_alerts')
-      .select('id, profile_id, alert_type, status, description, latitude, longitude, created_at')
-      .eq('id', emailRequest.alertId)
-      .maybeSingle();
-
-    if (alertError) {
-      return errorResponse('Failed to validate alert', 500, alertError);
-    }
-    if (!alertData) {
-      return respond({ error: 'Alert not found' }, 404);
-    }
-
-    const alert = alertData as AlertRecord;
-    if (!alert.profile_id || !userProfileIds.has(alert.profile_id)) {
-      auditLog({
-        timestamp: new Date().toISOString(),
-        userId,
-        action: 'emergency_email_forbidden',
-        resource: 'emergency_alerts',
-        status: 'failure',
-        details: { reason: 'alert_not_owned_by_user', alertId: emailRequest.alertId },
-        ...auditInfo,
+    if (req.method === 'OPTIONS') {
+      return new Response('ok', {
+        status: 204,
+        headers: getAllSecurityHeaders(ALLOWED_METHODS, req),
       });
-      return respond({ error: 'Forbidden' }, 403);
     }
 
-    if (alert.status !== 'active') {
-      auditLog({
-        timestamp: new Date().toISOString(),
-        userId,
-        action: 'emergency_email_blocked',
-        resource: 'emergency_alerts',
-        status: 'failure',
-        details: {
-          reason: 'alert_not_active',
-          alertId: emailRequest.alertId,
-          alertStatus: alert.status,
-        },
-        ...auditInfo,
-      });
-      return respond({ error: 'Emergency alert is no longer active' }, 409);
-    }
+    const methodError = requireHttpMethod(req, ['POST'], ALLOWED_METHODS);
+    if (methodError) return methodError;
 
-    const { data: contactData, error: contactError } = await supabase
-      .from('emergency_contacts')
-      .select('id, profile_id, name, email, phone, is_active')
-      .eq('id', emailRequest.contactId)
-      .maybeSingle();
+    const edgeRateLimit = await rateLimitMiddleware(req, 100, 60_000);
+    if (edgeRateLimit) return edgeRateLimit;
 
-    if (contactError) {
-      return errorResponse('Failed to validate emergency contact', 500, contactError);
-    }
-    if (!contactData) {
-      return respond({ error: 'Emergency contact not found' }, 404);
-    }
+    const cronRequested = req.headers.has('x-cron-secret');
+    let userId: string | undefined;
 
-    const contact = contactData as ContactRecord;
-    if (contact.profile_id !== alert.profile_id) {
-      auditLog({
-        timestamp: new Date().toISOString(),
-        userId,
-        action: 'emergency_email_forbidden',
-        resource: 'emergency_contacts',
-        status: 'failure',
-        details: {
-          reason: 'contact_not_linked_to_alert_profile',
-          alertId: emailRequest.alertId,
-          contactId: emailRequest.contactId,
-        },
-        ...auditInfo,
-      });
-      return respond({ error: 'Forbidden' }, 403);
-    }
-    if (contact.is_active === false) {
-      return respond({ error: 'Emergency contact is inactive' }, 403);
-    }
+    if (cronRequested) {
+      const cronAuthError = requireCronSecret(req, ALLOWED_METHODS);
+      if (cronAuthError) {
+        auditLog({
+          timestamp: new Date().toISOString(),
+          action: 'emergency_email_cron_auth_failed',
+          resource: 'emergency_alerts',
+          status: 'failure',
+          details: { reason: 'invalid_cron_secret' },
+          ...auditInfo,
+        });
+        return cronAuthError;
+      }
+    } else {
+      const authResult = await requireAuthenticatedUser(req, supabase);
+      if (authResult instanceof Response) {
+        auditLog({
+          timestamp: new Date().toISOString(),
+          action: 'emergency_email_auth_failed',
+          resource: 'emergency_alerts',
+          status: 'failure',
+          details: { reason: 'invalid_or_missing_token' },
+          ...auditInfo,
+        });
+        return authResult;
+      }
 
-    const contactEmail = extractEmail(contact.email || '');
-    if (!contactEmail) {
-      return respond(
-        { error: 'Emergency contact email is not configured' },
-        400,
+      userId = authResult.user.id;
+      const userRateLimit = await checkRateLimit(
+        `emergency-email:${userId}`,
+        30,
+        5 * 60 * 1000,
       );
+      if (!userRateLimit.allowed) {
+        return respond({ error: 'Rate limit exceeded. Try again later.' }, 429);
+      }
     }
 
-    const windowStart = new Date(
-      Date.now() - RATE_LIMIT_WINDOW_MINUTES * 60 * 1000,
-    ).toISOString();
-
-    const { count: recentCount, error: logsError } = await supabase
-      .from('emergency_delivery_log')
-      .select('id', { count: 'exact', head: true })
-      .eq('alert_id', emailRequest.alertId)
-      .eq('contact_id', emailRequest.contactId)
-      .eq('channel', 'email')
-      .gte('created_at', windowStart);
-
-    if (logsError) {
-      return errorResponse('Failed to validate rate limit', 500, logsError);
-    }
-
-    if ((recentCount || 0) >= RATE_LIMIT_MAX) {
-      await supabase.from('emergency_delivery_log').insert({
-        alert_id: emailRequest.alertId,
-        contact_id: emailRequest.contactId,
-        channel: 'email',
-        status: 'failed',
-        target: contactEmail,
-        error_message: `Rate limit exceeded: ${RATE_LIMIT_MAX} emails per ${RATE_LIMIT_WINDOW_MINUTES} minutes`,
-        metadata: {
-          rate_limit_blocked: true,
-          recent_count: recentCount || 0,
-          window_minutes: RATE_LIMIT_WINDOW_MINUTES,
-        },
-        created_at: new Date().toISOString(),
+    try {
+      const rawBody = await readJsonBody<EmailRequest>(req, {
+        maxBytes: 8192,
+        methods: ALLOWED_METHODS,
       });
+      if (!rawBody.ok) return rawBody.response;
 
-      auditLog({
-        timestamp: new Date().toISOString(),
-        userId,
-        action: 'emergency_email_rate_limited',
-        resource: 'emergency_alerts',
-        status: 'failure',
-        details: { alertId: emailRequest.alertId, contactId: emailRequest.contactId },
-        ...auditInfo,
-      });
+      const { alertId, contactId } = rawBody.data;
+      if (!alertId || !isValidUUID(alertId)) {
+        return respond({ error: 'Valid alertId is required' }, 400);
+      }
+      if (!contactId || !isValidUUID(contactId)) {
+        return respond({ error: 'Valid contactId is required' }, 400);
+      }
 
-      return respond(
-        { error: `Rate limit exceeded. Max ${RATE_LIMIT_MAX} attempts per ${RATE_LIMIT_WINDOW_MINUTES} minutes.` },
-        429,
-      );
-    }
+      const { data: alertData, error: alertError } = await supabase
+        .from('emergency_alerts')
+        .select(
+          'id, profile_id, alert_type, status, description, latitude, longitude, created_at',
+        )
+        .eq('id', alertId)
+        .maybeSingle();
+      if (alertError) {
+        return errorResponse('Failed to validate alert', 500, alertError);
+      }
+      if (!alertData) return respond({ error: 'Alert not found' }, 404);
 
-    const ownerProfile = userProfiles.find(
-      (profile: UserProfileRecord) => profile.id === alert.profile_id,
-    );
+      const alert = alertData as AlertRecord;
+      if (!alert.profile_id) {
+        return respond({ error: 'Emergency alert has no owner profile' }, 409);
+      }
 
-    const sanitizedContactName = sanitizeString(contact.name || 'Contato', 100);
-    const sanitizedUserName = sanitizeString(ownerProfile?.name || 'Usuario', 100);
-    const sanitizedUserPhone = sanitizeString(ownerProfile?.phone || 'Nao informado', 50);
-    const sanitizedDescription =
-      typeof alert.description === 'string' && alert.description.trim().length > 0
-        ? sanitizeString(alert.description, 500)
-        : undefined;
+      let ownerProfile: UserProfileRecord | null = null;
+      if (userId) {
+        const { data: userProfiles, error: profileError } = await supabase
+          .from('profiles')
+          .select('id, name, phone')
+          .eq('user_id', userId);
+        if (profileError) {
+          return errorResponse('Failed to validate user profile', 500, profileError);
+        }
 
-    const alertType = translateAlertType(
-      sanitizeString(alert.alert_type || 'sos', 50).toLowerCase(),
-    );
+        const profileRows = (userProfiles ?? []) as UserProfileRecord[];
+        ownerProfile =
+          profileRows.find((profile) => profile.id === alert.profile_id) ?? null;
+        if (!ownerProfile) {
+          auditLog({
+            timestamp: new Date().toISOString(),
+            userId,
+            action: 'emergency_email_forbidden',
+            resource: 'emergency_alerts',
+            status: 'failure',
+            details: { reason: 'alert_not_owned_by_user', alertId },
+            ...auditInfo,
+          });
+          return respond({ error: 'Forbidden' }, 403);
+        }
+      } else {
+        const { data: ownerData, error: ownerError } = await supabase
+          .from('profiles')
+          .select('id, name, phone')
+          .eq('id', alert.profile_id)
+          .maybeSingle();
+        if (ownerError) {
+          return errorResponse('Failed to load emergency alert owner', 500, ownerError);
+        }
+        if (!ownerData) {
+          return respond({ error: 'Emergency alert owner profile is missing' }, 409);
+        }
+        ownerProfile = ownerData as UserProfileRecord;
+      }
 
-    const alertCreatedAt =
-      normalizeIsoDatetime(alert.created_at) ||
-      new Date().toISOString();
+      const latestBeforeClaim = await getLatestDelivery(alertId, contactId);
+      let dispatching: DeliveryRecord | null =
+        latestBeforeClaim?.status === 'dispatching' ? latestBeforeClaim : null;
 
-    const location = normalizeLocation(
-      alert.latitude != null && alert.longitude != null
-        ? { latitude: alert.latitude, longitude: alert.longitude }
-        : undefined,
-    );
+      if (!['active', 'acknowledged'].includes(alert.status) && !dispatching) {
+        if (
+          latestBeforeClaim &&
+          [
+            'sent',
+            'delivered',
+            'failed',
+            'cancelled',
+            'reconciliation_required',
+          ].includes(latestBeforeClaim.status)
+        ) {
+          return respond(
+            buildDeliveryOutcome(contactId, latestBeforeClaim, {
+              terminalAlert: true,
+            }),
+          );
+        }
+        return respond({ error: 'Emergency alert is no longer actionable' }, 409);
+      }
 
-    const subject = 'ALERTA DE EMERGENCIA';
-    const htmlBody = buildEmailHtml(
-      sanitizedContactName,
-      sanitizedUserName,
-      sanitizedUserPhone,
-      alertType,
-      alertCreatedAt,
-      location,
-      sanitizedDescription,
-    );
-
-    const textBody = buildEmailText(
-      sanitizedContactName,
-      sanitizedUserName,
-      sanitizedUserPhone,
-      alertType,
-      alertCreatedAt,
-      location,
-      sanitizedDescription,
-    );
-
-    const resendResponse = await fetch('https://api.resend.com/emails', {
-      method: 'POST',
-      headers: {
-        Authorization: `Bearer ${RESEND_API_KEY}`,
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        from: `${EMAIL_FROM_NAME} <${EMAIL_FROM_DOMAIN}>`,
-        to: [contactEmail],
-        subject,
-        html: htmlBody,
-        text: textBody,
-      }),
-    });
-
-    const resendRaw = await resendResponse.text();
-    if (!resendResponse.ok) {
-      const providerError = `Email provider returned HTTP ${resendResponse.status}`;
-      const { error: failureLogError } = await supabase
-        .from('emergency_delivery_log')
-        .insert({
-          alert_id: emailRequest.alertId,
-          contact_id: emailRequest.contactId,
-          channel: 'email',
-          status: 'failed',
-          target: contactEmail,
-          error_message: providerError,
-          metadata: {
-            provider: 'resend',
-            provider_status: resendResponse.status,
+      if (!dispatching) {
+        const { data: claimedData, error: claimError } = await supabase.rpc(
+          'claim_emergency_delivery_attempt',
+          {
+            p_alert_id: alertId,
+            p_contact_id: contactId,
+            p_channel: 'email',
           },
-          created_at: new Date().toISOString(),
+        );
+        if (claimError) {
+          return errorResponse(
+            'Failed to claim emergency delivery',
+            500,
+            claimError,
+          );
+        }
+
+        const claimed = claimedData as DeliveryRecord | null;
+        if (!claimed) {
+          const latest = await getLatestDelivery(alertId, contactId);
+          if (!latest) {
+            return respond(
+              { error: 'No emergency delivery obligation', status: 'missing' },
+              409,
+            );
+          }
+
+          if (
+            [
+              'processing',
+              'dispatching',
+              'sent',
+              'delivered',
+              'failed',
+              'cancelled',
+              'reconciliation_required',
+            ].includes(latest.status)
+          ) {
+            return respond(
+              buildDeliveryOutcome(contactId, latest, {
+                idempotent: true,
+                inProgress: ['processing', 'dispatching'].includes(latest.status),
+              }),
+            );
+          }
+
+          return respond(
+            {
+              error: 'Emergency delivery is not dispatchable',
+              status: latest.status,
+            },
+            409,
+          );
+        }
+
+        if (claimed.attempt_count > MAX_CLAIM_ATTEMPTS) {
+          const failedOrCurrent = await markDeliveryFailed(
+            claimed.id,
+            `Claim attempt limit exceeded (${MAX_CLAIM_ATTEMPTS})`,
+            {},
+            'processing',
+          );
+          if (failedOrCurrent) {
+            return respond(
+              buildDeliveryOutcome(contactId, failedOrCurrent, {
+                claimAttemptLimitExceeded: true,
+              }),
+            );
+          }
+          return respond(
+            { error: 'Emergency delivery claim limit exceeded' },
+            429,
+          );
+        }
+
+        const contactEmail = extractEmail(claimed.target || '');
+        if (!contactEmail) {
+          const failedOrCurrent = await markDeliveryFailed(
+            claimed.id,
+            'Queued emergency delivery target is invalid',
+            { reason: 'invalid_queued_target' },
+            'processing',
+          );
+          if (failedOrCurrent) {
+            return respond(
+              buildDeliveryOutcome(contactId, failedOrCurrent, {
+                invalidQueuedTarget: true,
+              }),
+            );
+          }
+          return errorResponse(
+            'Failed to persist invalid emergency delivery target',
+            500,
+          );
+        }
+
+        const candidatePayload = buildEmergencyProviderPayload({
+          deliveryId: claimed.id,
+          fromName: EMAIL_FROM_NAME,
+          fromDomain: EMAIL_FROM_DOMAIN,
+          contactEmail,
+          contactName: readQueuedContactName(claimed.metadata),
+          userName: ownerProfile.name || 'Usuario',
+          userPhone: ownerProfile.phone || 'Nao informado',
+          alertType: alert.alert_type || 'sos',
+          createdAt: alert.created_at || new Date().toISOString(),
+          latitude: alert.latitude,
+          longitude: alert.longitude,
+          description: alert.description,
         });
 
-      if (failureLogError) {
-        console.error('Failed to persist emergency email delivery failure', {
-          status: resendResponse.status,
-          errorCode: failureLogError.code,
+        const { data: dispatchData, error: dispatchError } =
+          await supabase.rpc('authorize_emergency_email_dispatch', {
+            p_delivery_id: claimed.id,
+            p_payload: candidatePayload,
+          });
+        if (dispatchError) {
+          return errorResponse(
+            'Failed to authorize emergency email dispatch',
+            500,
+            dispatchError,
+          );
+        }
+
+        dispatching = dispatchData as DeliveryRecord | null;
+        if (!dispatching) {
+          auditLog({
+            timestamp: new Date().toISOString(),
+            ...(userId ? { userId } : {}),
+            action: 'emergency_email_dispatch_cancelled',
+            resource: 'emergency_delivery_log',
+            status: 'success',
+            details: { alertId, contactId, deliveryId: claimed.id },
+            ...auditInfo,
+          });
+          return respond({
+            success: false,
+            contactId,
+            channel: 'email',
+            timestamp: new Date().toISOString(),
+            status: 'cancelled',
+            error: 'Emergency delivery is no longer dispatchable',
+            metadata: { deliveryId: claimed.id },
+          });
+        }
+      }
+
+      if (!dispatching) {
+        return errorResponse('Emergency delivery dispatch state is missing', 500);
+      }
+
+      const providerPayload = await getProviderPayload(dispatching.id);
+      if (!providerPayload) {
+        await requireDeliveryReconciliation(
+          dispatching.id,
+          'dispatching row missing immutable provider payload',
+        );
+        return respond({
+          success: false,
+          contactId,
+          channel: 'email',
+          timestamp: new Date().toISOString(),
+          status: 'reconciliation_required',
+          error: 'Emergency delivery requires provider reconciliation',
+          metadata: { deliveryId: dispatching.id },
         });
       }
 
+      const { data: providerAttemptData, error: providerAttemptError } =
+        await supabase.rpc('begin_emergency_provider_attempt', {
+          p_delivery_id: dispatching.id,
+        });
+      if (providerAttemptError) {
+        return errorResponse(
+          'Failed to begin emergency provider attempt',
+          500,
+          providerAttemptError,
+        );
+      }
+
+      const providerAttempt = providerAttemptData as DeliveryRecord | null;
+      if (!providerAttempt) {
+        const current = await getDeliveryById(dispatching.id);
+        if (!current) {
+          return errorResponse('Emergency delivery state is missing', 500);
+        }
+
+        return respond(
+          buildDeliveryOutcome(contactId, current, {
+            providerAttemptSuppressed: true,
+          }),
+        );
+      }
+
+      const idempotencyKey = `emergency-delivery/${providerAttempt.id}`;
+      const resendResponse = await fetch('https://api.resend.com/emails', {
+        method: 'POST',
+        headers: {
+          Authorization: `Bearer ${RESEND_API_KEY}`,
+          'Content-Type': 'application/json',
+          'Idempotency-Key': idempotencyKey,
+        },
+        body: JSON.stringify(providerPayload),
+      });
+
+      const resendRaw = await resendResponse.text();
+      const resendResult = parseJsonObject(resendRaw);
+
+      if (!resendResponse.ok) {
+        return handleProviderFailure({
+          resendResponse,
+          resendResult,
+          providerAttempt,
+          alertId,
+          contactId,
+          userId,
+          auditInfo,
+          respond,
+        });
+      }
+
+      const providerMessageId =
+        typeof resendResult.id === 'string' ? resendResult.id.trim() : '';
+      if (!providerMessageId) {
+        await requireDeliveryReconciliation(
+          providerAttempt.id,
+          'provider accepted request without email id',
+        );
+        return respond({
+          success: false,
+          contactId,
+          channel: 'email',
+          timestamp: new Date().toISOString(),
+          status: 'reconciliation_required',
+          error: 'Emergency delivery requires provider reconciliation',
+          metadata: { deliveryId: providerAttempt.id },
+        });
+      }
+
+      const providerAcceptedAt = new Date().toISOString();
+      const { data: confirmedData, error: confirmError } =
+        await supabase.rpc('confirm_emergency_delivery_provider_acceptance', {
+          p_delivery_id: providerAttempt.id,
+          p_provider_message_id: providerMessageId,
+          p_accepted_at: providerAcceptedAt,
+        });
+      if (confirmError || !confirmedData) {
+        auditLog({
+          timestamp: providerAcceptedAt,
+          ...(userId ? { userId } : {}),
+          action: 'emergency_email_provider_acceptance_persist_failed',
+          resource: 'emergency_delivery_log',
+          status: 'failure',
+          details: {
+            alertId,
+            contactId,
+            deliveryId: providerAttempt.id,
+            providerMessageId,
+            errorCode: confirmError?.code,
+          },
+          ...auditInfo,
+        });
+        return errorResponse(
+          'Provider accepted emergency email but tracking persistence failed',
+          500,
+          confirmError,
+        );
+      }
+
+      const confirmed = confirmedData as DeliveryRecord;
       auditLog({
-        timestamp: new Date().toISOString(),
-        userId,
-        action: 'emergency_email_provider_failed',
+        timestamp: providerAcceptedAt,
+        ...(userId ? { userId } : {}),
+        action: 'emergency_email_provider_accepted',
         resource: 'emergency_alerts',
-        status: 'failure',
+        status: 'success',
         details: {
-          alertId: emailRequest.alertId,
-          contactId: emailRequest.contactId,
-          providerStatus: resendResponse.status,
+          alertId,
+          contactId,
+          deliveryId: providerAttempt.id,
+          providerMessageId,
+          providerAttemptCount: providerAttempt.provider_attempt_count,
+          deliveryStatus: confirmed.status,
+          actor: userId ? 'user' : 'cron',
         },
         ...auditInfo,
       });
 
-      return errorResponse('Failed to send emergency email', 502, {
-        status: resendResponse.status,
+      const response = buildDeliveryOutcome(
+        contactId,
+        confirmed,
+        {
+          providerAccepted: true,
+          providerAttemptCount: providerAttempt.provider_attempt_count,
+        },
+        providerAcceptedAt,
+      );
+      return respond(response);
+    } catch (error) {
+      auditLog({
+        timestamp: new Date().toISOString(),
+        ...(userId ? { userId } : {}),
+        action: 'emergency_email_failed',
+        resource: 'emergency_alerts',
+        status: 'failure',
+        details: {
+          error: error instanceof Error ? error.message : 'Unknown error',
+          actor: userId ? 'user' : 'cron',
+        },
+        ...auditInfo,
       });
+      return errorResponse('Failed to send emergency email', 500, error);
     }
+  },
+};
 
-    let resendResult: Record<string, unknown> = {};
-    try {
-      resendResult = resendRaw ? JSON.parse(resendRaw) : {};
-    } catch {
-      resendResult = {};
-    }
+async function getLatestDelivery(
+  alertId: string,
+  contactId: string,
+): Promise<DeliveryRecord | null> {
+  const { data, error } = await supabase
+    .from('emergency_delivery_log')
+    .select(
+      'id, status, target, metadata, attempt_count, provider_attempt_count, provider_message_id, dispatch_authorized_at, last_provider_attempt_at, cancelled_at, reconciliation_required_at, created_at, updated_at',
+    )
+    .eq('alert_id', alertId)
+    .eq('contact_id', contactId)
+    .eq('channel', 'email')
+    .order('created_at', { ascending: false })
+    .limit(1)
+    .maybeSingle();
+  if (error) throw error;
+  return (data as DeliveryRecord | null) ?? null;
+}
 
-    await supabase.from('emergency_delivery_log').insert({
-      alert_id: emailRequest.alertId,
-      contact_id: emailRequest.contactId,
-      channel: 'email',
-      status: 'sent',
-      target: contactEmail,
-      metadata: {
-        emailId: resendResult.id,
-        subject,
-        alertType,
-      },
-      created_at: new Date().toISOString(),
-      delivered_at: new Date().toISOString(),
-    });
+async function getDeliveryById(
+  deliveryId: string,
+): Promise<DeliveryRecord | null> {
+  const { data, error } = await supabase
+    .from('emergency_delivery_log')
+    .select(
+      'id, status, target, metadata, attempt_count, provider_attempt_count, provider_message_id, dispatch_authorized_at, last_provider_attempt_at, cancelled_at, reconciliation_required_at, created_at, updated_at',
+    )
+    .eq('id', deliveryId)
+    .maybeSingle();
+  if (error) throw error;
+  return (data as DeliveryRecord | null) ?? null;
+}
 
+async function getProviderPayload(
+  deliveryId: string,
+): Promise<ProviderPayload | null> {
+  const { data, error } = await supabase.rpc(
+    'get_emergency_email_provider_payload',
+    { p_delivery_id: deliveryId },
+  );
+  if (error) throw error;
+  return isProviderPayload(data) ? data : null;
+}
+
+async function requireDeliveryReconciliation(
+  deliveryId: string,
+  reason: string,
+): Promise<void> {
+  const { error } = await supabase.rpc(
+    'require_emergency_delivery_reconciliation',
+    {
+      p_delivery_id: deliveryId,
+      p_reason: reason,
+    },
+  );
+  if (error) throw error;
+}
+
+async function markDeliveryFailed(
+  deliveryId: string,
+  message: string,
+  metadata: Record<string, unknown> = {},
+  expectedStatus: FailableDeliveryStatus = 'dispatching',
+): Promise<DeliveryRecord | null> {
+  const { data, error } = await supabase.rpc(
+    'fail_emergency_delivery_attempt',
+    {
+      p_delivery_id: deliveryId,
+      p_expected_status: expectedStatus,
+      p_error_message: message,
+      p_metadata: metadata,
+    },
+  );
+  if (error) throw error;
+  return (data as DeliveryRecord | null) ?? null;
+}
+
+async function handleProviderFailure(input: {
+  resendResponse: Response;
+  resendResult: Record<string, unknown>;
+  providerAttempt: DeliveryRecord;
+  alertId: string;
+  contactId: string;
+  userId?: string;
+  auditInfo: Record<string, unknown>;
+  respond: (body: Record<string, unknown>, status?: number) => Response;
+}): Promise<Response> {
+  const {
+    resendResponse,
+    resendResult,
+    providerAttempt,
+    alertId,
+    contactId,
+    userId,
+    auditInfo,
+    respond,
+  } = input;
+  const providerErrorCode = readProviderErrorCode(resendResult);
+  const providerError = `Email provider returned HTTP ${resendResponse.status}`;
+
+  if (
+    resendResponse.status === 409 &&
+    providerErrorCode === 'concurrent_idempotent_requests'
+  ) {
     auditLog({
       timestamp: new Date().toISOString(),
-      userId,
-      action: 'emergency_email_sent',
-      resource: 'emergency_alerts',
+      ...(userId ? { userId } : {}),
+      action: 'emergency_email_provider_attempt_concurrent',
+      resource: 'emergency_delivery_log',
       status: 'success',
-      details: {
-        alertId: emailRequest.alertId,
-        contactId: emailRequest.contactId,
-        emailId: resendResult.id,
-      },
+      details: { alertId, contactId, deliveryId: providerAttempt.id },
       ...auditInfo,
     });
+    return respond(
+      buildDeliveryOutcome(contactId, providerAttempt, {
+        providerAttemptConcurrent: true,
+      }),
+    );
+  }
 
-    const response: EmailResponse = {
-      success: true,
-      contactId: emailRequest.contactId,
+  if (resendResponse.status === 409) {
+    await requireDeliveryReconciliation(
+      providerAttempt.id,
+      providerErrorCode
+        ? `provider idempotency conflict: ${providerErrorCode}`
+        : 'provider idempotency conflict',
+    );
+    return respond({
+      success: false,
+      contactId,
       channel: 'email',
       timestamp: new Date().toISOString(),
-      status: 'sent',
+      status: 'reconciliation_required',
+      error: 'Emergency delivery requires provider reconciliation',
       metadata: {
-        to: contactEmail,
-        subject,
-        alertId: emailRequest.alertId,
-        alertType,
-        emailId: resendResult.id,
+        deliveryId: providerAttempt.id,
+        providerErrorCode,
       },
-    };
-
-    return new Response(JSON.stringify(response), {
-      headers: getAllSecurityHeaders(ALLOWED_METHODS, req),
     });
-  } catch (error) {
+  }
+
+  if (
+    resendResponse.status === 408 ||
+    resendResponse.status === 429 ||
+    resendResponse.status >= 500
+  ) {
     auditLog({
       timestamp: new Date().toISOString(),
-      userId,
-      action: 'emergency_email_failed',
-      resource: 'emergency_alerts',
+      ...(userId ? { userId } : {}),
+      action: 'emergency_email_provider_retryable_failure',
+      resource: 'emergency_delivery_log',
       status: 'failure',
-      details: { error: error instanceof Error ? error.message : 'Unknown error' },
+      details: {
+        alertId,
+        contactId,
+        deliveryId: providerAttempt.id,
+        providerStatus: resendResponse.status,
+        providerErrorCode,
+      },
       ...auditInfo,
     });
-
-    return errorResponse('Failed to send emergency email', 500, error);
-  }
-});
-
-function normalizeIsoDatetime(value: string | null | undefined): string | null {
-  if (!value) return null;
-  const parsed = new Date(value);
-  if (Number.isNaN(parsed.getTime())) return null;
-  return parsed.toISOString();
-}
-
-function normalizeLocation(
-  location: { latitude: number; longitude: number } | undefined,
-): string {
-  if (!location) return 'Nao disponivel';
-  const latitude = Number(location.latitude);
-  const longitude = Number(location.longitude);
-
-  if (Number.isNaN(latitude) || Number.isNaN(longitude)) {
-    return 'Nao disponivel';
+    return respond(
+      buildDeliveryOutcome(contactId, providerAttempt, {
+        retryableProviderFailure: true,
+        providerStatus: resendResponse.status,
+        providerErrorCode,
+      }),
+    );
   }
 
-  if (latitude < -90 || latitude > 90 || longitude < -180 || longitude > 180) {
-    return 'Nao disponivel';
+  const failedOrCurrent = await markDeliveryFailed(
+    providerAttempt.id,
+    providerError,
+    {
+      provider: 'resend',
+      provider_status: resendResponse.status,
+      provider_error_code: providerErrorCode,
+    },
+    'dispatching',
+  );
+  auditLog({
+    timestamp: new Date().toISOString(),
+    ...(userId ? { userId } : {}),
+    action: 'emergency_email_provider_failed',
+    resource: 'emergency_alerts',
+    status: 'failure',
+    details: {
+      alertId,
+      contactId,
+      deliveryId: providerAttempt.id,
+      providerStatus: resendResponse.status,
+      providerErrorCode,
+      deliveryStatus: failedOrCurrent?.status ?? 'missing',
+    },
+    ...auditInfo,
+  });
+
+  if (failedOrCurrent) {
+    return respond(
+      buildDeliveryOutcome(contactId, failedOrCurrent, {
+        providerStatus: resendResponse.status,
+        providerErrorCode,
+      }),
+    );
   }
 
-  return `${latitude}, ${longitude}`;
+  return errorResponse('Failed to persist emergency email provider failure', 500, {
+    status: resendResponse.status,
+    code: providerErrorCode,
+  });
 }
 
-function extractEmail(value: string): string | null {
-  const candidate = value.trim().toLowerCase();
-  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-  if (!candidate || !emailRegex.test(candidate)) {
-    return null;
+function buildDeliveryOutcome(
+  contactId: string,
+  delivery: Pick<DeliveryRecord, 'id' | 'status'>,
+  metadata: Record<string, unknown> = {},
+  timestamp = new Date().toISOString(),
+): EmailResponse {
+  const success = SUCCESSFUL_DELIVERY_STATUSES.has(delivery.status);
+  const response: EmailResponse = {
+    success,
+    contactId,
+    channel: 'email',
+    timestamp,
+    status: delivery.status,
+    metadata: {
+      deliveryId: delivery.id,
+      ...metadata,
+    },
+  };
+
+  if (!success) {
+    response.error = deliveryStatusError(delivery.status);
   }
-  return candidate;
+
+  return response;
 }
 
-function escapeHtml(input: string): string {
-  return input
-    .replaceAll('&', '&amp;')
-    .replaceAll('<', '&lt;')
-    .replaceAll('>', '&gt;')
-    .replaceAll('"', '&quot;')
-    .replaceAll("'", '&#39;');
-}
-
-function translateAlertType(type: string): string {
-  switch (type) {
-    case 'sos':
-      return 'SOS';
-    case 'emergency_button':
-      return 'Botao de Emergencia';
-    case 'automatic':
-      return 'Alerta Automatico';
-    case 'manual':
-      return 'Alerta Manual';
-    case 'panic':
-      return 'Panico';
+function deliveryStatusError(status: DeliveryStatus): string {
+  switch (status) {
+    case 'failed':
+      return 'Emergency delivery failed';
+    case 'cancelled':
+      return 'Emergency delivery was cancelled';
+    case 'reconciliation_required':
+      return 'Emergency delivery requires provider reconciliation';
+    case 'pending':
+      return 'Emergency delivery is still pending';
     default:
-      return type;
+      return 'Emergency delivery did not complete';
   }
 }
 
-function buildEmailHtml(
-  contactName: string,
-  userName: string,
-  userPhone: string,
-  alertType: string,
-  createdAt: string,
-  location: string,
-  description?: string,
+function readQueuedContactName(
+  metadata: Record<string, unknown> | null | undefined,
 ): string {
-  const safeContactName = escapeHtml(contactName);
-  const safeUserName = escapeHtml(userName);
-  const safeUserPhone = escapeHtml(userPhone);
-  const safeAlertType = escapeHtml(alertType);
-  const safeLocation = escapeHtml(location);
-  const safeDescription = description ? escapeHtml(description) : '';
-
-  return `
-<!DOCTYPE html>
-<html>
-<head>
-  <meta charset="utf-8">
-  <style>
-    body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; }
-    .container { max-width: 600px; margin: 0 auto; padding: 20px; }
-    .header { background: #dc2626; color: white; padding: 20px; text-align: center; border-radius: 8px 8px 0 0; }
-    .content { background: #f9fafb; padding: 20px; border: 1px solid #e5e7eb; }
-    .detail { margin: 10px 0; padding: 10px; background: white; border-left: 4px solid #dc2626; }
-    .footer { text-align: center; color: #6b7280; font-size: 12px; margin-top: 20px; }
-  </style>
-</head>
-<body>
-  <div class="container">
-    <div class="header">
-      <h1>ALERTA DE EMERGENCIA</h1>
-    </div>
-    <div class="content">
-      <p>Ola <strong>${safeContactName}</strong>,</p>
-      <p>Este e um <strong>ALERTA DE EMERGENCIA</strong> automatico.</p>
-      <p><strong>${safeUserName}</strong> acionou um alerta de emergencia e voce esta cadastrado como contato de emergencia.</p>
-
-      <h3>DETALHES DO ALERTA:</h3>
-      <div class="detail"><strong>Tipo:</strong> ${safeAlertType}</div>
-      <div class="detail"><strong>Data/Hora:</strong> ${new Date(createdAt).toLocaleString('pt-BR')}</div>
-      <div class="detail"><strong>Localizacao:</strong> ${safeLocation}</div>
-      <div class="detail"><strong>Telefone:</strong> ${safeUserPhone}</div>
-      ${safeDescription ? `<div class="detail"><strong>Descricao:</strong> ${safeDescription}</div>` : ''}
-
-      <p style="margin-top: 20px; padding: 15px; background: #fef2f2; border: 1px solid #fecaca; border-radius: 4px;">
-        <strong>ACAO NECESSARIA:</strong><br>
-        Se voce recebeu este email, entre em contato com <strong>${safeUserName}</strong> imediatamente.
-      </p>
-    </div>
-    <div class="footer">
-      <p>Este e um email automatico do sistema de seguranca.</p>
-      <p>Nao responda a este email.</p>
-    </div>
-  </div>
-</body>
-</html>
-  `.trim();
+  const value = metadata?.contact_name;
+  if (typeof value !== 'string') return 'Contato';
+  const normalized = value.trim();
+  return normalized ? normalized.slice(0, 100) : 'Contato';
 }
 
-function buildEmailText(
-  contactName: string,
-  userName: string,
-  userPhone: string,
-  alertType: string,
-  createdAt: string,
-  location: string,
-  description?: string,
-): string {
-  return `
-ALERTA DE EMERGENCIA
+function isProviderPayload(value: unknown): value is ProviderPayload {
+  if (!value || typeof value !== 'object' || Array.isArray(value)) return false;
+  const payload = value as Record<string, unknown>;
+  return (
+    typeof payload.from === 'string' &&
+    Array.isArray(payload.to) &&
+    payload.to.length === 1 &&
+    typeof payload.to[0] === 'string' &&
+    typeof payload.subject === 'string' &&
+    typeof payload.html === 'string' &&
+    typeof payload.text === 'string' &&
+    Array.isArray(payload.tags)
+  );
+}
 
-Ola ${contactName},
+function parseJsonObject(value: string): Record<string, unknown> {
+  if (!value) return {};
+  try {
+    const parsed: unknown = JSON.parse(value);
+    return parsed && typeof parsed === 'object' && !Array.isArray(parsed)
+      ? (parsed as Record<string, unknown>)
+      : {};
+  } catch {
+    return {};
+  }
+}
 
-Este e um ALERTA DE EMERGENCIA automatico.
-
-${userName} acionou um alerta de emergencia e voce esta cadastrado como contato de emergencia.
-
-DETALHES DO ALERTA:
-- Tipo: ${alertType}
-- Data/Hora: ${new Date(createdAt).toLocaleString('pt-BR')}
-- Localizacao: ${location}
-- Telefone: ${userPhone}
-
-${description ? `Descricao: ${description}` : ''}
-
-ACAO NECESSARIA:
-Se voce recebeu este email, entre em contato com ${userName} imediatamente.
-
----
-Este e um email automatico do sistema de seguranca.
-Nao responda a este email.
-  `.trim();
+function readProviderErrorCode(value: Record<string, unknown>): string | null {
+  if (typeof value.name === 'string') return value.name;
+  if (typeof value.code === 'string') return value.code;
+  return null;
 }

@@ -32,6 +32,7 @@ const TERRITORY_AI = join(
 );
 const CRON_FUNCTIONS = [
   "media-assets-cleanup",
+  "send-emergency-email",
   "process-timeouts",
   "auto-dispatch-ride",
 ] as const;
@@ -106,6 +107,23 @@ describe("Supabase Edge secrets preflight", () => {
       )?.[1] ?? "";
       expect(block).toContain("'CRON_SECRET'");
       expect(block).toContain("'ALLOWED_ORIGINS'");
+    }
+  });
+
+  it("blocks autonomous emergency dispatch unless provider secrets are present", () => {
+    const preflight = readFileSync(PREFLIGHT, "utf8");
+    const block = preflight.match(
+      /'send-emergency-email': Object\.freeze\(\[([\s\S]*?)\]\)/,
+    )?.[1] ?? "";
+
+    for (const secret of [
+      "'CRON_SECRET'",
+      "'ALLOWED_ORIGINS'",
+      "'RESEND_API_KEY'",
+      "'EMAIL_FROM_DOMAIN'",
+      "'EMAIL_FROM_NAME'",
+    ]) {
+      expect(block).toContain(secret);
     }
   });
 

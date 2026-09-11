@@ -177,6 +177,12 @@ A allowlist atual de funcoes sem JWT e:
 - `media-assets-cleanup`: worker de orfaos sem JWT de usuario, protegido por
   `CRON_SECRET`, rate limit e grants `service_role` restritos ao lifecycle de
   MediaAsset.
+- `send-emergency-email`: broker canonico de emergencia com dois ingressos
+  explicitos. Chamadas do browser continuam exigindo identidade via
+  `requireAuthenticatedUser`; o fallback autonomo do outbox exige
+  `x-cron-secret` validado por `requireCronSecret`. A funcao nunca usa
+  `service_role` como credencial HTTP e uma tentativa cron invalida nao faz
+  fallback para o caminho de usuario.
 - `get-push-config`, `nominatim-proxy` e `sitemap`: endpoints publicos de
   leitura/proxy sem dado sensivel, com rate limit e validacao de entrada.
 - `register-community-interest`: broker publico autoritativo da waitlist, com

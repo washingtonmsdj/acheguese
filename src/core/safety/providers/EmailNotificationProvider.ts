@@ -1,9 +1,8 @@
 /**
- * EmailNotificationProvider - Provedor de notificações via Email
- *
- * Usa Supabase Edge Function para envio seguro server-side
- *
- * Padrão: Provider isolado, injetado no SafetyService
+ * EmailNotificationProvider - browser adapter for the canonical durable
+ * emergency-email broker. The browser sends only canonical IDs; delivery state
+ * is owned by the server-side outbox and provider-confirmation pipeline. The
+ * same broker also has a separately authenticated cron ingress for recovery.
  */
 import { logger } from '@/shared/utils/logger';
 import {
@@ -12,7 +11,15 @@ import {
 } from '@/integrations/supabase';
 import type { EmergencyAlert, EmergencyContact } from '../types';
 
-export type EmailDeliveryStatus = 'pending' | 'sent' | 'failed';
+export type EmailDeliveryStatus =
+  | 'pending'
+  | 'processing'
+  | 'dispatching'
+  | 'sent'
+  | 'delivered'
+  | 'failed'
+  | 'cancelled'
+  | 'reconciliation_required';
 
 export interface EmailDeliveryResult {
   success: boolean;
@@ -24,37 +31,77 @@ export interface EmailDeliveryResult {
   metadata?: Record<string, unknown>;
 }
 
+const KNOWN_DELIVERY_STATUSES = new Set<EmailDeliveryStatus>([
+  'pending',
+  'processing',
+  'dispatching',
+  'sent',
+  'delivered',
+  'failed',
+  'cancelled',
+  'reconciliation_required',
+]);
+
+const REQUEST_SUCCESS_STATUSES = new Set<EmailDeliveryStatus>([
+  'processing',
+  'dispatching',
+  'sent',
+  'delivered',
+]);
+
+const REQUEST_NON_SUCCESS_STATUSES = new Set<EmailDeliveryStatus>([
+  'failed',
+  'cancelled',
+  'reconciliation_required',
+]);
+
 function isRecord(value: unknown): value is Record<string, unknown> {
   return Boolean(value) && typeof value === 'object' && !Array.isArray(value);
 }
 
-function validSuccessResponse(
+function isEmailDeliveryStatus(value: unknown): value is EmailDeliveryStatus {
+  return (
+    typeof value === 'string' &&
+    KNOWN_DELIVERY_STATUSES.has(value as EmailDeliveryStatus)
+  );
+}
+
+function isConsistentWorkerOutcome(
+  success: boolean,
+  status: EmailDeliveryStatus,
+): boolean {
+  return success
+    ? REQUEST_SUCCESS_STATUSES.has(status)
+    : REQUEST_NON_SUCCESS_STATUSES.has(status);
+}
+
+function validWorkerResponse(
   data: unknown,
   expectedContactId: string,
 ): data is {
-  success: true;
+  success: boolean;
   contactId: string;
   channel: 'email';
   timestamp: string;
-  status: 'sent';
+  status: EmailDeliveryStatus;
+  error?: string;
   metadata?: Record<string, unknown>;
 } {
-  if (!isRecord(data)) return false;
+  if (!isRecord(data) || !isEmailDeliveryStatus(data.status)) return false;
+  if (typeof data.success !== 'boolean') return false;
+
   return (
-    data.success === true &&
     data.contactId === expectedContactId &&
     data.channel === 'email' &&
     typeof data.timestamp === 'string' &&
     data.timestamp.length > 0 &&
-    data.status === 'sent' &&
+    isConsistentWorkerOutcome(data.success, data.status) &&
+    (data.error === undefined || typeof data.error === 'string') &&
     (data.metadata === undefined || isRecord(data.metadata))
   );
 }
 
 export class EmailNotificationProvider {
-  /**
-   * Envia email de emergência para contato via Edge Function
-   */
   async sendEmergencyAlert(
     contact: EmergencyContact,
     alert: EmergencyAlert,
@@ -62,36 +109,41 @@ export class EmailNotificationProvider {
     const timestamp = new Date().toISOString();
 
     try {
-      const { data, error } = await supabase.functions.invoke('send-emergency-email', {
-        body: {
-          contactId: contact.id,
-          alertId: alert.id,
+      const { data, error } = await supabase.functions.invoke(
+        'send-emergency-email',
+        {
+          body: {
+            contactId: contact.id,
+            alertId: alert.id,
+          },
         },
-      });
+      );
 
       if (error) {
         const message =
           (await resolveSupabaseFunctionErrorMessage(error)) ??
-          'Falha ao enviar email de emergência';
+          'Falha ao processar email de emergência';
         throw new Error(message);
       }
 
-      if (!validSuccessResponse(data, contact.id)) {
+      if (!validWorkerResponse(data, contact.id)) {
         throw new Error('Resposta inválida do serviço de email de emergência');
       }
 
-      logger.info('[EmailNotificationProvider] Email sent via Edge Function', {
+      logger.info('[EmailNotificationProvider] Emergency email worker result', {
         contactId: contact.id,
         alertId: alert.id,
+        success: data.success,
         status: data.status,
       });
 
       return {
-        success: true,
-        contactId: contact.id,
+        success: data.success,
+        contactId: data.contactId,
         channel: 'email',
         timestamp: data.timestamp,
-        status: 'sent',
+        status: data.status,
+        error: data.error,
         metadata: data.metadata,
       };
     } catch (error) {

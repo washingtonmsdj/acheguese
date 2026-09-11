@@ -75,6 +75,20 @@
         "register_stripe_webhook_event"
       ]
     },
+    "resend-emergency-webhook": {
+      "kind": "signed-webhook",
+      "label": "Resend emergency delivery webhook",
+      "requiredPatterns": [
+        "requireHttpMethod\\s*\\(",
+        "readTextBody\\s*\\(",
+        "webhookVerifier\\.verify\\s*\\(",
+        "svix-id",
+        "svix-timestamp",
+        "svix-signature",
+        "RESEND_WEBHOOK_SECRET",
+        "apply_emergency_delivery_provider_event"
+      ]
+    },
     "get-push-config": {
       "kind": "public-read",
       "label": "public VAPID config",
@@ -102,6 +116,17 @@
         "NOMINATIM_BASE_URL",
         "sanitizeString",
         "withCache\\s*\\("
+      ]
+    },
+    "send-emergency-email": {
+      "kind": "cron-secret",
+      "label": "cron ingress for canonical emergency email broker",
+      "requiredPatterns": [
+        "requireCronSecret\\s*\\(",
+        "requireAuthenticatedUser\\s*\\(",
+        "x-cron-secret",
+        "rateLimitMiddleware\\s*\\(",
+        "SUPABASE_SERVICE_ROLE_KEY"
       ]
     },
     "process-timeouts": {
@@ -153,179 +178,143 @@
       "kind": "admin-broker",
       "risk": "Critical",
       "label": "admin business RPC broker",
-      "requiredPatterns": [
-        "require(?:Admin|SuperAdmin)\\s*\\("
-      ]
+      "requiredPatterns": ["require(?:Admin|SuperAdmin)\\s*\\("]
     },
     "admin-communication-rpc": {
       "kind": "admin-broker",
       "risk": "Critical",
       "label": "admin communication RPC broker",
-      "requiredPatterns": [
-        "require(?:Admin|SuperAdmin)\\s*\\("
-      ]
+      "requiredPatterns": ["require(?:Admin|SuperAdmin)\\s*\\("]
     },
     "admin-create-user": {
       "kind": "admin-broker",
       "risk": "Critical",
       "label": "super admin user creation broker",
-      "requiredPatterns": [
-        "require(?:Admin|SuperAdmin)\\s*\\("
-      ]
+      "requiredPatterns": ["require(?:Admin|SuperAdmin)\\s*\\("]
     },
     "admin-get-user": {
       "kind": "admin-broker",
       "risk": "Critical",
       "label": "admin user lookup broker",
-      "requiredPatterns": [
-        "require(?:Admin|SuperAdmin)\\s*\\("
-      ]
+      "requiredPatterns": ["require(?:Admin|SuperAdmin)\\s*\\("]
     },
     "admin-get-user-auth-summary": {
       "kind": "admin-broker",
       "risk": "Critical",
       "label": "admin auth summary broker",
-      "requiredPatterns": [
-        "require(?:Admin|SuperAdmin)\\s*\\("
-      ]
+      "requiredPatterns": ["require(?:Admin|SuperAdmin)\\s*\\("]
     },
     "admin-list-users": {
       "kind": "admin-broker",
       "risk": "Critical",
       "label": "admin user listing broker",
-      "requiredPatterns": [
-        "require(?:Admin|SuperAdmin)\\s*\\("
-      ]
+      "requiredPatterns": ["require(?:Admin|SuperAdmin)\\s*\\("]
     },
     "admin-notifications-rpc": {
       "kind": "admin-broker",
       "risk": "Critical",
       "label": "admin notifications RPC broker",
-      "requiredPatterns": [
-        "require(?:Admin|SuperAdmin)\\s*\\("
-      ]
+      "requiredPatterns": ["require(?:Admin|SuperAdmin)\\s*\\("]
     },
     "admin-pricing-rpc": {
       "kind": "admin-broker",
       "risk": "Critical",
       "label": "admin pricing RPC broker",
-      "requiredPatterns": [
-        "require(?:Admin|SuperAdmin)\\s*\\("
-      ]
+      "requiredPatterns": ["require(?:Admin|SuperAdmin)\\s*\\("]
     },
     "admin-professional-rpc": {
       "kind": "admin-broker",
       "risk": "Critical",
       "label": "admin Professional availability broker",
-      "requiredPatterns": [
-        "require(?:Admin|SuperAdmin)\\s*\\("
-      ]
+      "requiredPatterns": ["require(?:Admin|SuperAdmin)\\s*\\("]
     },
     "admin-role-rpc": {
       "kind": "admin-broker",
       "risk": "Critical",
       "label": "super admin global role lifecycle broker",
-      "requiredPatterns": [
-        "requireSuperAdmin\\s*\\("
-      ]
+      "requiredPatterns": ["requireSuperAdmin\\s*\\("]
     },
     "admin-site-settings-rpc": {
       "kind": "admin-broker",
       "risk": "Critical",
       "label": "admin site settings RPC broker",
-      "requiredPatterns": [
-        "require(?:Admin|SuperAdmin)\\s*\\("
-      ]
+      "requiredPatterns": ["require(?:Admin|SuperAdmin)\\s*\\("]
     },
     "admin-suspend-profile": {
       "kind": "admin-broker",
       "risk": "Critical",
       "label": "admin profile suspension broker",
-      "requiredPatterns": [
-        "require(?:Admin|SuperAdmin)\\s*\\("
-      ]
+      "requiredPatterns": ["require(?:Admin|SuperAdmin)\\s*\\("]
     },
     "admin-verify-profile": {
       "kind": "admin-broker",
       "risk": "Critical",
       "label": "admin profile verification broker",
-      "requiredPatterns": [
-        "require(?:Admin|SuperAdmin)\\s*\\("
-      ]
+      "requiredPatterns": ["require(?:Admin|SuperAdmin)\\s*\\("]
     },
     "auth-username-login": {
       "kind": "public-auth-broker",
       "risk": "Critical",
       "label": "public username login service_role broker",
-      "requiredPatterns": [
-        "rateLimitMiddleware\\s*\\(",
-        "get_email_by_username"
-      ]
+      "requiredPatterns": ["rateLimitMiddleware\\s*\\(", "get_email_by_username"]
     },
     "auto-dispatch-ride": {
       "kind": "cron-secret",
       "risk": "Critical",
       "label": "cron ride dispatch service_role worker",
-      "requiredPatterns": [
-        "requireCronSecret\\s*\\("
-      ]
+      "requiredPatterns": ["requireCronSecret\\s*\\("]
     },
     "billing-create-checkout": {
       "kind": "billing-broker",
       "risk": "Critical",
       "label": "authenticated billing checkout broker",
-      "requiredPatterns": [
-        "auth\\.getUser\\s*\\("
-      ]
+      "requiredPatterns": ["auth\\.getUser\\s*\\("]
     },
     "billing-create-portal": {
       "kind": "billing-broker",
       "risk": "Critical",
       "label": "authenticated billing portal broker",
-      "requiredPatterns": [
-        "auth\\.getUser\\s*\\("
-      ]
+      "requiredPatterns": ["auth\\.getUser\\s*\\("]
     },
     "billing-entitlements-rpc": {
       "kind": "billing-broker",
       "risk": "Critical",
       "label": "authenticated billing entitlements RPC broker",
-      "requiredPatterns": [
-        "auth\\.getUser\\s*\\("
-      ]
+      "requiredPatterns": ["auth\\.getUser\\s*\\("]
     },
     "billing-webhook": {
       "kind": "signed-webhook",
       "risk": "Critical",
       "label": "Stripe webhook service_role broker",
+      "requiredPatterns": ["stripe-signature", "constructEvent\\s*\\("]
+    },
+    "resend-emergency-webhook": {
+      "kind": "signed-webhook",
+      "risk": "Critical",
+      "label": "Resend emergency delivery signed webhook service_role broker",
       "requiredPatterns": [
-        "stripe-signature",
-        "constructEvent\\s*\\("
+        "webhookVerifier\\.verify\\s*\\(",
+        "RESEND_WEBHOOK_SECRET",
+        "apply_emergency_delivery_provider_event"
       ]
     },
     "business-reviews-rpc": {
       "kind": "authenticated-broker",
       "risk": "Critical",
       "label": "authenticated business reviews RPC broker",
-      "requiredPatterns": [
-        "auth\\.getUser\\s*\\("
-      ]
+      "requiredPatterns": ["auth\\.getUser\\s*\\("]
     },
     "communication-rpc": {
       "kind": "authenticated-broker",
       "risk": "Critical",
       "label": "authenticated communication RPC broker",
-      "requiredPatterns": [
-        "auth\\.getUser\\s*\\("
-      ]
+      "requiredPatterns": ["auth\\.getUser\\s*\\("]
     },
     "community-rpc": {
       "kind": "authenticated-broker",
       "risk": "Critical",
       "label": "authenticated community RPC broker",
-      "requiredPatterns": [
-        "auth\\.getUser\\s*\\("
-      ]
+      "requiredPatterns": ["auth\\.getUser\\s*\\("]
     },
     "contact-rpc": {
       "kind": "authenticated-broker",
@@ -341,83 +330,61 @@
       "kind": "authenticated-broker",
       "risk": "Critical",
       "label": "authenticated delivery RPC broker",
-      "requiredPatterns": [
-        "auth\\.getUser\\s*\\("
-      ]
+      "requiredPatterns": ["auth\\.getUser\\s*\\("]
     },
     "event-rpc": {
       "kind": "authenticated-broker",
       "risk": "Critical",
       "label": "authenticated event participation RPC broker",
-      "requiredPatterns": [
-        "auth\\.getUser\\s*\\("
-      ]
+      "requiredPatterns": ["auth\\.getUser\\s*\\("]
     },
     "health-check": {
       "kind": "admin-broker",
       "risk": "Critical",
       "label": "admin health check service_role broker",
-      "requiredPatterns": [
-        "require(?:Admin|SuperAdmin)\\s*\\("
-      ]
+      "requiredPatterns": ["require(?:Admin|SuperAdmin)\\s*\\("]
     },
     "location-rpc": {
       "kind": "authenticated-broker",
       "risk": "Critical",
       "label": "authenticated location RPC broker",
-      "requiredPatterns": [
-        "auth\\.getUser\\s*\\("
-      ]
+      "requiredPatterns": ["auth\\.getUser\\s*\\("]
     },
     "media-assets": {
       "kind": "authenticated-broker",
       "risk": "Critical",
       "label": "authenticated canonical media upload broker",
-      "requiredPatterns": [
-        "auth\\.getUser\\s*\\(",
-        "reserve_media_asset_upload"
-      ]
+      "requiredPatterns": ["auth\\.getUser\\s*\\(", "reserve_media_asset_upload"]
     },
     "media-assets-cleanup": {
       "kind": "cron-secret",
       "risk": "Critical",
       "label": "canonical media orphan cleanup service_role worker",
-      "requiredPatterns": [
-        "requireCronSecret\\s*\\(",
-        "list_media_asset_orphans"
-      ]
+      "requiredPatterns": ["requireCronSecret\\s*\\(", "list_media_asset_orphans"]
     },
     "mobility-rpc": {
       "kind": "authenticated-broker",
       "risk": "Critical",
       "label": "authenticated mobility RPC broker",
-      "requiredPatterns": [
-        "auth\\.getUser\\s*\\("
-      ]
+      "requiredPatterns": ["auth\\.getUser\\s*\\("]
     },
     "privacy-rpc": {
       "kind": "authenticated-broker",
       "risk": "Critical",
       "label": "authenticated privacy RPC broker",
-      "requiredPatterns": [
-        "auth\\.getUser\\s*\\("
-      ]
+      "requiredPatterns": ["auth\\.getUser\\s*\\("]
     },
     "process-timeouts": {
       "kind": "cron-secret",
       "risk": "Critical",
       "label": "cron timeout processor service_role worker",
-      "requiredPatterns": [
-        "requireCronSecret\\s*\\("
-      ]
+      "requiredPatterns": ["requireCronSecret\\s*\\("]
     },
     "professional-notifications-rpc": {
       "kind": "notification-broker",
       "risk": "Critical",
       "label": "authenticated professional notifications RPC broker",
-      "requiredPatterns": [
-        "auth\\.getUser\\s*\\("
-      ]
+      "requiredPatterns": ["auth\\.getUser\\s*\\("]
     },
     "professional-credentials-rpc": {
       "kind": "authenticated-broker",
@@ -433,65 +400,53 @@
       "kind": "authenticated-broker",
       "risk": "Critical",
       "label": "authenticated profile RPC broker",
-      "requiredPatterns": [
-        "auth\\.getUser\\s*\\("
-      ]
+      "requiredPatterns": ["auth\\.getUser\\s*\\("]
     },
     "role-rpc": {
       "kind": "authenticated-broker",
       "risk": "Critical",
       "label": "authenticated role RPC broker",
-      "requiredPatterns": [
-        "auth\\.getUser\\s*\\("
-      ]
+      "requiredPatterns": ["auth\\.getUser\\s*\\("]
     },
     "send-email": {
       "kind": "notification-broker",
       "risk": "Critical",
       "label": "authenticated email send broker",
-      "requiredPatterns": [
-        "auth\\.getUser\\s*\\("
-      ]
+      "requiredPatterns": ["auth\\.getUser\\s*\\("]
     },
     "send-emergency-email": {
       "kind": "notification-broker",
       "risk": "Critical",
-      "label": "authenticated emergency email broker",
+      "label": "canonical user-or-cron emergency email broker",
       "requiredPatterns": [
-        "requireAuthenticatedUser\\s*\\("
+        "requireAuthenticatedUser\\s*\\(",
+        "requireCronSecret\\s*\\(",
+        "x-cron-secret"
       ]
     },
     "send-push": {
       "kind": "notification-broker",
       "risk": "Critical",
       "label": "authenticated push send broker",
-      "requiredPatterns": [
-        "auth\\.getUser\\s*\\("
-      ]
+      "requiredPatterns": ["auth\\.getUser\\s*\\("]
     },
     "session-rpc": {
       "kind": "authenticated-broker",
       "risk": "Critical",
       "label": "authenticated session RPC broker",
-      "requiredPatterns": [
-        "auth\\.getUser\\s*\\("
-      ]
+      "requiredPatterns": ["auth\\.getUser\\s*\\("]
     },
     "subscribe-push": {
       "kind": "notification-broker",
       "risk": "Critical",
       "label": "authenticated push subscription broker",
-      "requiredPatterns": [
-        "auth\\.getUser\\s*\\("
-      ]
+      "requiredPatterns": ["auth\\.getUser\\s*\\("]
     },
     "territorial-get-tree": {
       "kind": "admin-broker",
       "risk": "Critical",
       "label": "admin territorial tree broker",
-      "requiredPatterns": [
-        "require(?:Admin|SuperAdmin)\\s*\\("
-      ]
+      "requiredPatterns": ["require(?:Admin|SuperAdmin)\\s*\\("]
     },
     "territorial-group-admin-rpc": {
       "kind": "admin-broker",
@@ -507,66 +462,49 @@
       "kind": "admin-broker",
       "risk": "Critical",
       "label": "admin territorial group visibility broker",
-      "requiredPatterns": [
-        "require(?:Admin|SuperAdmin)\\s*\\("
-      ]
+      "requiredPatterns": ["require(?:Admin|SuperAdmin)\\s*\\("]
     },
     "territorial-update-location-visibility": {
       "kind": "admin-broker",
       "risk": "Critical",
       "label": "admin territorial location visibility broker",
-      "requiredPatterns": [
-        "require(?:Admin|SuperAdmin)\\s*\\("
-      ]
+      "requiredPatterns": ["require(?:Admin|SuperAdmin)\\s*\\("]
     },
     "territory-ai-content": {
       "kind": "ai-broker",
       "risk": "Critical",
       "label": "admin territory AI content broker",
-      "requiredPatterns": [
-        "require(?:Admin|SuperAdmin)\\s*\\("
-      ]
+      "requiredPatterns": ["require(?:Admin|SuperAdmin)\\s*\\("]
     },
     "track-public-view": {
       "kind": "public-counter-broker",
       "risk": "Critical",
       "label": "public view counter service_role broker",
-      "requiredPatterns": [
-        "rateLimitMiddleware\\s*\\(",
-        "VIEW_COUNTER_RPCS"
-      ]
+      "requiredPatterns": ["rateLimitMiddleware\\s*\\(", "VIEW_COUNTER_RPCS"]
     },
     "tryon-generate": {
       "kind": "ai-broker",
       "risk": "Critical",
       "label": "authenticated virtual try-on generation broker",
-      "requiredPatterns": [
-        "auth\\.getUser\\s*\\("
-      ]
+      "requiredPatterns": ["auth\\.getUser\\s*\\("]
     },
     "unsubscribe-push": {
       "kind": "notification-broker",
       "risk": "Critical",
       "label": "authenticated push unsubscribe broker",
-      "requiredPatterns": [
-        "auth\\.getUser\\s*\\("
-      ]
+      "requiredPatterns": ["auth\\.getUser\\s*\\("]
     },
     "user-delete-account": {
       "kind": "user-data-broker",
       "risk": "Critical",
       "label": "authenticated user account deletion broker",
-      "requiredPatterns": [
-        "auth\\.getUser\\s*\\("
-      ]
+      "requiredPatterns": ["auth\\.getUser\\s*\\("]
     },
     "user-export-data": {
       "kind": "user-data-broker",
       "risk": "Critical",
       "label": "authenticated user data export broker",
-      "requiredPatterns": [
-        "auth\\.getUser\\s*\\("
-      ]
+      "requiredPatterns": ["auth\\.getUser\\s*\\("]
     },
     "education-lead-rpc": {
       "kind": "public-registration-broker",
