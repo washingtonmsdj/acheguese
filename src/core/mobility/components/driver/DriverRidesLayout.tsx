@@ -100,6 +100,8 @@ export function DriverRidesLayout() {
               rides={acceptedRides as MobilityRide[]}
               type="accepted"
               loading={shell.loading}
+              onStartPickupRoute={shell.startPassengerPickupRoute}
+              onConfirmBoarding={shell.confirmPassengerBoarding}
               onStart={(rideId) => shell.startRide(rideId)}
               onComplete={(rideId) => {
                 const ride = acceptedRides.find((item) => item.id === rideId);
