@@ -511,7 +511,7 @@ export default function GastronomyDetailConceptPreviewPage() {
   };
 
   return (
-    <div className="min-h-screen overflow-x-hidden bg-territory-canvas pb-4 text-territory-ink max-md:h-[100dvh] max-md:overflow-y-auto max-md:overscroll-contain max-md:scrollbar-hide max-md:[-ms-overflow-style:none] max-md:[scrollbar-width:none] max-md:[&::-webkit-scrollbar]:hidden">
+    <div className="flex min-h-screen flex-col overflow-x-hidden bg-territory-canvas pb-4 text-territory-ink max-md:h-[100dvh] max-md:overflow-y-auto max-md:overscroll-contain max-md:scrollbar-hide max-md:[-ms-overflow-style:none] max-md:[scrollbar-width:none] max-md:[&::-webkit-scrollbar]:hidden lg:h-[100dvh] lg:min-h-0 lg:overflow-hidden lg:pb-0">
       <ConceptPublicHeader saved={saved} onSave={() => setSaved((value) => !value)} onShare={handleShare} />
 
       <section className="relative h-16 overflow-hidden bg-territory-raised sm:h-24 lg:h-20">
@@ -524,22 +524,22 @@ export default function GastronomyDetailConceptPreviewPage() {
       <PublicTabs activeTab={activeTab} onChange={setActiveTab} />
       <FulfillmentBar mode={fulfillmentMode} onChange={setFulfillmentMode} />
 
-      <main className="mx-auto max-w-[68rem] px-4 pb-24 pt-3 sm:px-6 sm:pt-3 lg:px-8 lg:pb-6">
+      <main className="mx-auto w-full max-w-[68rem] px-4 pb-24 pt-3 sm:px-6 sm:pt-3 lg:flex lg:min-h-0 lg:flex-1 lg:overflow-hidden lg:px-8 lg:pb-4">
         {activeTab === "menu" ? (
-          <div className="grid items-start gap-4 lg:grid-cols-[minmax(0,1fr)_30rem] lg:gap-6">
-            <section className="min-w-0">
+          <div className="grid min-h-0 w-full items-start gap-4 lg:h-full lg:grid-cols-[minmax(0,1fr)_30rem] lg:gap-6">
+            <section className="min-w-0 lg:flex lg:h-full lg:min-h-0 lg:flex-col">
               <SearchAndCategories query={query} onQueryChange={setQuery} category={activeCategory} onCategoryChange={setActiveCategory} />
-              <div className="mt-3 space-y-2">
+              <div className="mt-3 flex min-h-0 flex-col gap-2 lg:flex-1">
                 <OfferCard onOpen={() => { setSelectedItemId(offerItem.id); setMobileCustomizerOpen(true); }} />
-                <div className="overflow-hidden rounded-xl border border-territory-border bg-territory-surface">
+                <div className="min-h-0 overflow-hidden rounded-xl border border-territory-border bg-territory-surface lg:flex-1 lg:overflow-y-auto lg:overscroll-contain lg:[scrollbar-gutter:stable]">
                   {filteredItems.map((item) => <MenuRow key={item.id} item={item} selected={selectedItem.id === item.id} onSelect={() => { if (item.available === false) return; setSelectedItemId(item.id); setMobileCustomizerOpen(true); }} />)}
                   {!filteredItems.length ? <p className="px-4 py-8 text-center text-sm text-territory-muted">Nenhum item encontrado.</p> : null}
                 </div>
               </div>
-              <div className="mt-3 hidden lg:block"><CartSummary lines={cartLines} onOpen={() => setCartOpen(true)} /></div>
+              <div className="mt-3 hidden shrink-0 lg:block"><CartSummary lines={cartLines} onOpen={() => setCartOpen(true)} /></div>
             </section>
 
-            <aside className="sticky top-[5.5rem] hidden lg:block">
+            <aside className="hidden lg:block lg:h-full lg:min-h-0 lg:overflow-y-auto lg:overscroll-contain lg:scrollbar-hide">
               <ItemCustomizer item={selectedItem} size={size} setSize={setSize} quantity={quantity} setQuantity={setQuantity} farofa={farofa} setFarofa={setFarofa} arroz={arroz} setArroz={setArroz} notes={notes} setNotes={setNotes} onAdd={addSelectedItem} />
             </aside>
           </div>
