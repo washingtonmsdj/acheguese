@@ -5,6 +5,10 @@ BEGIN;
 -- redacted offer read model. Direct SELECT on ride_requests would otherwise
 -- bypass that boundary and expose exact addresses, recipient data and free-text
 -- delivery metadata from the base row.
+--
+-- G73 already established the stricter terminal-history boundary in main. This
+-- integration is intentionally monotonic and preserves that final policy:
+-- drivers retain full ride rows only while their participation is operational.
 ALTER POLICY "Ride participants view"
 ON public.ride_requests
 USING (
@@ -26,13 +30,7 @@ USING (
       'in_progress',
       'pickup_confirmed',
       'in_delivery',
-      'delivered',
-      'failed_delivery',
-      'completed',
-      'cancelled_by_passenger',
-      'cancelled_by_driver',
-      'expired',
-      'failed'
+      'failed_delivery'
     )
   )
 );
