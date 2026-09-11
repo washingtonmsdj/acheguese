@@ -13,6 +13,7 @@ import { Input } from "@/shared/components/ui/input";
 import { Skeleton } from "@/shared/components/ui/skeleton";
 import { cn } from "@/shared/utils/cn";
 import { usePublicGastronomySnapshot } from "@/modules/business/public/hooks";
+import type { PublicGastronomySnapshot } from "@/core/business/types/publicSnapshots";
 import { GastronomyUrlService } from "@/core/verticals/gastronomy/services/GastronomyUrlService";
 import { buildGoogleMapsDirectionsUrl } from "@/shared/utils/contactLinks";
 import { openSafeExternalUrl } from "@/shared/utils/safeRedirect";
@@ -33,6 +34,7 @@ import { GastronomyDetailHeroSection } from "./GastronomyDetailHeroSection";
 import { CategoryNav, ServiceBar } from "./GastronomyDetailNavigation";
 import { GastronomyDetailSeo } from "./GastronomyDetailSeo";
 import GastronomyDetailConceptPreviewPage from "./GastronomyDetailConceptPreviewPage";
+import { saboresDaAnaPublicSnapshot } from "../mocks/saboresDaAnaPublicSnapshot";
 
 interface GastronomyDetailPageProps {
   routeParams?: {
@@ -43,6 +45,7 @@ interface GastronomyDetailPageProps {
   };
   communityScoped?: boolean;
   canonicalPathOverride?: string;
+  mockSnapshot?: PublicGastronomySnapshot;
 }
 
 type MenuViewMode = "list" | "grid";
@@ -158,6 +161,7 @@ function GastronomyDetailLivePage({
   routeParams,
   communityScoped = false,
   canonicalPathOverride,
+  mockSnapshot,
 }: GastronomyDetailPageProps = {}) {
   const urlParams = useParams();
   const state = routeParams?.state ?? urlParams.state;
@@ -179,7 +183,10 @@ function GastronomyDetailLivePage({
     isError: hasSnapshotError,
     isLoading: isLoadingSnapshot,
     refetch: refetchSnapshot,
-  } = usePublicGastronomySnapshot({ state, city, district, slug });
+  } = usePublicGastronomySnapshot(
+    { state, city, district, slug },
+    { mockSnapshot },
+  );
 
   const business = snapshot?.gastronomy.business ?? null;
   const profile =
@@ -589,14 +596,22 @@ function GastronomyDetailLivePage({
 export default function GastronomyDetailPage(
   props: GastronomyDetailPageProps = {},
 ) {
+  const searchParams =
+    typeof window !== "undefined"
+      ? new URLSearchParams(window.location.search)
+      : null;
   const conceptMockEnabled =
     import.meta.env.DEV &&
-    typeof window !== "undefined" &&
-    new URLSearchParams(window.location.search).get("concept-mock") === "1";
+    searchParams?.get("concept-mock") === "1";
+  const dataMockEnabled =
+    import.meta.env.DEV && searchParams?.get("data-mock") === "1";
 
   return conceptMockEnabled ? (
     <GastronomyDetailConceptPreviewPage />
   ) : (
-    <GastronomyDetailLivePage {...props} />
+    <GastronomyDetailLivePage
+      {...props}
+      mockSnapshot={dataMockEnabled ? saboresDaAnaPublicSnapshot : undefined}
+    />
   );
 }
