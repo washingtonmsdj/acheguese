@@ -105,7 +105,6 @@ function optionalUuid(value: unknown, field: string): string | null {
   return requireUuid(value, field);
 }
 
-
 function optionalStatus(value: unknown, field: string): string | null {
   if (value === undefined || value === null || value === "") return null;
   if (typeof value !== "string" || !SAFE_STATUS_REGEX.test(value)) {
@@ -1400,6 +1399,7 @@ async function handleAcceptRide(
   }
 
   const { data, error } = await supabaseAdmin.rpc("mobility_accept_ride_atomic", {
+    p_actor_user_id: auth.userId,
     p_ride_id: rideId,
     p_driver_profile_id: driverProfileId,
     p_strategy: strategy,

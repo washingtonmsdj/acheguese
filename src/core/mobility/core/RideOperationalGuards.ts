@@ -17,6 +17,7 @@ import type { CreateRideInput, TransitionResult } from "./RideOperationalTypes";
 
 const FAILED_DELIVERY_SERVER_OWNED_FIELDS = new Set([
   "next_ride_id",
+  "handoff_requested",
   "handoff_driver_profile_id",
   "manual_resolution_owner_profile_id",
   "resolved_at",
@@ -169,5 +170,30 @@ export function validateFailedDeliveryResolution(
     throw new Error(
       "manual_resolution_owner_profile_id obrigatorio quando resolution_status = escalated",
     );
+  }
+
+  const hasHandoffTarget = Boolean(resolutionUpdate.handoff_driver_profile_id?.trim());
+  if (hasHandoffTarget && resolutionUpdate.handoff_requested !== true) {
+    throw new Error(
+      "handoff_driver_profile_id exige handoff_requested=true; custodia nao pode ser transferida por resolucao administrativa direta.",
+    );
+  }
+
+  if (resolutionUpdate.handoff_requested === true) {
+    if (!hasHandoffTarget) {
+      throw new Error("handoff_driver_profile_id obrigatorio para solicitar handoff.");
+    }
+    if (!resolutionUpdate.resolution_action_notes?.trim()) {
+      throw new Error("resolution_action_notes obrigatorio para solicitar handoff.");
+    }
+    if (
+      resolutionUpdate.resolution_status !== undefined &&
+      resolutionUpdate.resolution_status !== "in_progress"
+    ) {
+      throw new Error("resolution_status do handoff deve ser in_progress.");
+    }
+    if (resolutionUpdate.next_ride_id || resolutionUpdate.manual_resolution_owner_profile_id) {
+      throw new Error("handoff nao pode ser combinado com reentrega ou escalonamento manual.");
+    }
   }
 }
