@@ -1,12 +1,10 @@
 import { useMemo } from "react";
-import { useQuery } from "@tanstack/react-query";
 import {
   TRUST_ACTOR_ROLES,
   TrustFeedbackForm,
   type TrustFeedbackReason,
   type TrustFeedbackTarget,
 } from "@/core/trust";
-import { OrderDeliverySSOTService } from "@/core/mobility/delivery/services/OrderDeliverySSOTService";
 import { MobilityTrustService } from "@/core/mobility/services/MobilityTrustService";
 import type { MobilityRide } from "@/core/mobility/types/ride";
 
@@ -25,50 +23,41 @@ const DRIVER_FEEDBACK_REASONS: TrustFeedbackReason[] = [
   { value: "other_operational_issue", label: "Outro problema operacional", severity: "medium" },
 ];
 
-function getString(value: unknown): string | null {
-  return typeof value === "string" && value.trim() ? value : null;
+function getFeedbackRoles(ride: MobilityRide): Set<string> {
+  const value = ride.feedback_roles;
+  if (!Array.isArray(value)) return new Set();
+  return new Set(value.filter((role): role is string => typeof role === "string"));
 }
 
 export function DriverTrustFeedbackPanel({ ride }: DriverTrustFeedbackPanelProps) {
   const isDelivery = ride.ride_mode === "motoboy" || ride.type === "entrega";
-  const sourceType = getString(ride.source_type);
-  const sourceId = getString(ride.source_id);
-  const passengerProfileId = getString(ride.passenger_profile_id);
-
-  const orderQuery = useQuery({
-    queryKey: ["trust-feedback", "ride-order", sourceId],
-    queryFn: async () => {
-      if (!sourceId) return null;
-      const result = await OrderDeliverySSOTService.getOrderById(sourceId);
-      return result.success ? result.data ?? null : null;
-    },
-    enabled: isDelivery && sourceType === "gastronomy" && Boolean(sourceId),
-    staleTime: 5 * 60 * 1000,
-  });
+  const feedbackRoles = getFeedbackRoles(ride);
 
   const targets = useMemo<TrustFeedbackTarget[]>(() => {
-    const feedbackTargets: TrustFeedbackTarget[] = [];
+    const result: TrustFeedbackTarget[] = [];
 
-    if (passengerProfileId) {
-      feedbackTargets.push({
-        id: passengerProfileId,
+    if (feedbackRoles.has("customer")) {
+      result.push({
+        id: "customer",
         label: isDelivery ? "Cliente da entrega" : "Passageiro",
         subjectRole: TRUST_ACTOR_ROLES.CUSTOMER,
         helper: "Feedback privado sobre confianca operacional do solicitante.",
       });
     }
 
-    if (isDelivery && orderQuery.data?.merchant_profile_id) {
-      feedbackTargets.push({
-        id: orderQuery.data.merchant_profile_id,
+    if (feedbackRoles.has("merchant")) {
+      result.push({
+        id: "merchant",
         label: "Loja/restaurante",
         subjectRole: TRUST_ACTOR_ROLES.MERCHANT,
         helper: "Feedback privado do motoboy sobre retirada, pacote e operacao da loja.",
       });
     }
 
-    return feedbackTargets;
-  }, [isDelivery, orderQuery.data?.merchant_profile_id, passengerProfileId]);
+    return result;
+  }, [feedbackRoles, isDelivery]);
+
+  if (targets.length === 0) return null;
 
   return (
     <TrustFeedbackForm
