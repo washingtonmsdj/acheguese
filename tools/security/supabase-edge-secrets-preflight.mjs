@@ -20,7 +20,7 @@ const FUNCTION_SECRET_REQUIREMENTS = Object.freeze({
     'ALLOWED_ORIGINS',
     'CRON_SECRET',
   ]),
-  'process-emergency-delivery-outbox': Object.freeze([
+  'send-emergency-email': Object.freeze([
     'ALLOWED_ORIGINS',
     'CRON_SECRET',
     'RESEND_API_KEY',
