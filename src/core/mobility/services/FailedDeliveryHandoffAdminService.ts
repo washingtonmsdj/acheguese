@@ -9,10 +9,9 @@ export interface FailedDeliveryHandoffCandidate {
 }
 
 export interface FailedDeliveryHandoffRequestResult {
-  updated: boolean;
+  updated: true;
   rideId: string;
   targetDriverProfileId: string;
-  expiresAt?: string;
 }
 
 /**
@@ -67,15 +66,10 @@ export class FailedDeliveryHandoffAdminService {
       throw new Error("O backend nao confirmou a solicitacao de handoff.");
     }
 
-    const raw = result as unknown as Record<string, unknown>;
     return {
       updated: true,
       rideId,
       targetDriverProfileId: target,
-      expiresAt:
-        typeof raw.handoff_request_expires_at === "string"
-          ? raw.handoff_request_expires_at
-          : undefined,
     };
   }
 }
