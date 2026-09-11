@@ -7,7 +7,7 @@ function readProjectFile(relativePath: string): string {
 }
 
 const migration = readProjectFile(
-  "supabase/migrations/20260911114500_complete_delivery_in_single_transaction_g70.sql",
+  "supabase/migrations/20260911222000_complete_delivery_in_single_transaction_g70.sql",
 );
 const deliveryActions = readProjectFile(
   "src/core/mobility/core/RideDeliveryOperationalActions.ts",
@@ -20,6 +20,9 @@ const deliveryUi = readProjectFile(
 );
 const driverHook = readProjectFile(
   "src/core/mobility/hooks/useMotoristaPage.ts",
+);
+const motoboyHook = readProjectFile(
+  "src/modules/mobility/hooks/useMotoboyPage.ts",
 );
 
 describe("G70 atomic terminal delivery", () => {
@@ -90,9 +93,11 @@ describe("G70 atomic terminal delivery", () => {
       'verificationState.status === "required" ? deliveryPin : undefined',
     );
 
-    expect(driverHook).toContain("pin?: string");
-    expect(driverHook).toContain("proof,\n        finalPrice,\n        pin,");
-    expect(driverHook).toContain("Promise<boolean>");
+    for (const hook of [driverHook, motoboyHook]) {
+      expect(hook).toContain("pin?: string");
+      expect(hook).toContain("proof,\n        finalPrice,\n        pin,");
+      expect(hook).toContain("Promise<boolean>");
+    }
   });
 
   it("keeps boarding and delivery verification reads fail-closed", () => {
