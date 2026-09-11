@@ -32,6 +32,9 @@ const immutablePayloadMigration = readProjectFile(
 const singleAuthorityMigration = readProjectFile(
   "supabase/migrations/20260911200000_single_emergency_delivery_failure_authority_g79.sql",
 );
+const autonomousDeliveryMigration = readProjectFile(
+  "supabase/migrations/20260911210000_autonomous_emergency_delivery_dispatcher_g80.sql",
+);
 const safetyService = readProjectFile(
   "src/core/safety/services/SafetyService.ts",
 );
@@ -47,6 +50,7 @@ const emergencyEmailFunction = readProjectFile(
 const emergencyWebhook = readProjectFile(
   "supabase/functions/resend-emergency-webhook/index.ts",
 );
+const supabaseConfig = readProjectFile("supabase/config.toml");
 const edgeAuthPolicy = JSON.parse(
   readProjectFile(
     "docs/09-reference/governance/security/EDGE_FUNCTION_AUTH_POLICY.json",
@@ -150,6 +154,7 @@ describe("Safety Core Platform security", () => {
     expect(durableOutboxMigration).toContain(
       "idx_emergency_delivery_one_open_attempt",
     );
+    expect(autonomousDeliveryMigration).toContain("'contact_name', contact.name");
   });
 
   it("serializes claim, terminal cancellation and provider dispatch on canonical state", () => {
@@ -167,7 +172,11 @@ describe("Safety Core Platform security", () => {
     expect(emergencyEmailFunction).toContain("p_contact_id: contactId");
   });
 
-  it("uses canonical authenticated-account authority before emergency delivery", () => {
+  it("uses fail-closed user-or-cron authority before emergency delivery", () => {
+    expect(emergencyEmailFunction).toContain(
+      "const cronRequested = req.headers.has('x-cron-secret')",
+    );
+    expect(emergencyEmailFunction).toContain("requireCronSecret(req, ALLOWED_METHODS)");
     expect(emergencyEmailFunction).toContain(
       "requireAuthenticatedUser(req, supabase)",
     );
@@ -175,6 +184,28 @@ describe("Safety Core Platform security", () => {
     expect(emergencyEmailFunction).not.toContain(
       "requireOperationalAccount(\n      supabase",
     );
+
+    const noJwtPolicy = edgeAuthPolicy.noJwtAllowlist["send-emergency-email"];
+    expect(noJwtPolicy?.kind).toBe("cron-secret");
+    expect(noJwtPolicy?.requiredPatterns).toContain("requireCronSecret\\s*\\(");
+    expect(noJwtPolicy?.requiredPatterns).toContain(
+      "requireAuthenticatedUser\\s*\\(",
+    );
+
+    const serviceRolePolicy =
+      edgeAuthPolicy.serviceRoleAllowlist["send-emergency-email"];
+    expect(serviceRolePolicy?.kind).toBe("notification-broker");
+    expect(serviceRolePolicy?.risk).toBe("Critical");
+    expect(serviceRolePolicy?.requiredPatterns).toContain(
+      "requireAuthenticatedUser\\s*\\(",
+    );
+    expect(serviceRolePolicy?.requiredPatterns).toContain("requireCronSecret\\s*\\(");
+
+    const configBlock = supabaseConfig.slice(
+      supabaseConfig.indexOf("[functions.send-emergency-email]"),
+      supabaseConfig.indexOf("[functions.resend-emergency-webhook]"),
+    );
+    expect(configBlock).toContain("verify_jwt = false");
   });
 
   it("never equates provider acceptance with confirmed delivery", () => {
@@ -276,7 +307,7 @@ describe("Safety Core Platform security", () => {
     expect(rideShareService).toContain("const data = rows?.[0]");
   });
 
-  it("accepts only IDs from the browser before loading canonical email data", () => {
+  it("accepts only IDs from clients and dispatches the durable queued recipient", () => {
     expect(emailProvider).toContain("contactId: contact.id");
     expect(emailProvider).toContain("alertId: alert.id");
     expect(emailProvider).not.toContain("alertDescription");
@@ -290,15 +321,9 @@ describe("Safety Core Platform security", () => {
     expect(emergencyEmailFunction).toContain(
       "!['active', 'acknowledged'].includes(alert.status)",
     );
-    expect(emergencyEmailFunction).toContain(
-      "contact.profile_id !== profileId",
-    );
-    expect(emergencyEmailFunction).toContain(
-      ".select('id, profile_id, name, email, is_active')",
-    );
-    expect(emergencyEmailFunction).toContain(
-      "extractEmail(contact.email || '')",
-    );
+    expect(emergencyEmailFunction).not.toContain(".from('emergency_contacts')");
+    expect(emergencyEmailFunction).toContain("extractEmail(claimed.target || '')");
+    expect(emergencyEmailFunction).toContain("readQueuedContactName(claimed.metadata)");
     expect(emergencyEmailFunction).toContain(
       "action: 'emergency_email_provider_failed'",
     );
@@ -306,6 +331,25 @@ describe("Safety Core Platform security", () => {
     expect(contactEmailMigration).toContain("ADD COLUMN IF NOT EXISTS email TEXT");
     expect(contactEmailMigration).toContain("emergency_contacts_email_required");
     expect(contactEmailMigration).toContain("ALTER COLUMN phone DROP NOT NULL");
+  });
+
+  it("guarantees autonomous delivery through the same canonical broker", () => {
+    expect(autonomousDeliveryMigration).toContain(
+      "CREATE OR REPLACE FUNCTION private.prepare_emergency_delivery_work",
+    );
+    expect(autonomousDeliveryMigration).toContain(
+      "CREATE OR REPLACE FUNCTION private.invoke_emergency_delivery_worker",
+    );
+    expect(autonomousDeliveryMigration).toContain(
+      "'/functions/v1/send-emergency-email'",
+    );
+    expect(autonomousDeliveryMigration).toContain("'x-cron-secret', v_cron_secret");
+    expect(autonomousDeliveryMigration).toContain(
+      "'emergency-delivery-outbox-every-minute'",
+    );
+    expect(autonomousDeliveryMigration).not.toContain(
+      "'/functions/v1/process-emergency-delivery-outbox'",
+    );
   });
 
   it("uses the canonical emergency-contact owner instead of a missing aggregate Edge Function", () => {
