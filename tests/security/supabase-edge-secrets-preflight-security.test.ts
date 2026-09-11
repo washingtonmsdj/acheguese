@@ -32,7 +32,7 @@ const TERRITORY_AI = join(
 );
 const CRON_FUNCTIONS = [
   "media-assets-cleanup",
-  "process-emergency-delivery-outbox",
+  "send-emergency-email",
   "process-timeouts",
   "auto-dispatch-ride",
 ] as const;
@@ -113,7 +113,7 @@ describe("Supabase Edge secrets preflight", () => {
   it("blocks autonomous emergency dispatch unless provider secrets are present", () => {
     const preflight = readFileSync(PREFLIGHT, "utf8");
     const block = preflight.match(
-      /'process-emergency-delivery-outbox': Object\.freeze\(\[([\s\S]*?)\]\)/,
+      /'send-emergency-email': Object\.freeze\(\[([\s\S]*?)\]\)/,
     )?.[1] ?? "";
 
     for (const secret of [
