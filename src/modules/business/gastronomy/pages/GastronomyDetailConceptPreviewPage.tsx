@@ -283,7 +283,7 @@ function SearchAndCategories({ query, onQueryChange, category, onCategoryChange,
             </button>
           ))}
         </div>
-        <div className="hidden shrink-0 items-center gap-0.5 rounded-lg border border-territory-border bg-territory-surface p-0.5 sm:inline-flex" role="group" aria-label="Visualização dos itens">
+        <div className="inline-flex shrink-0 items-center gap-0.5 rounded-lg border border-territory-border bg-territory-surface p-0.5" role="group" aria-label="Visualização dos itens">
           <button type="button" aria-label="Visualizar em lista" aria-pressed={viewMode === "list"} onClick={() => onViewModeChange("list")} className={cn("inline-flex h-8 w-8 items-center justify-center rounded-md text-territory-muted transition-colors focus-visible:z-10 focus-visible:outline-2 focus-visible:outline-offset-[-2px] focus-visible:outline-territory-brand", viewMode === "list" ? "bg-territory-brand text-white" : "hover:bg-territory-raised hover:text-territory-ink")}>
             <ListIcon className="h-4 w-4" aria-hidden="true" />
           </button>
@@ -485,7 +485,7 @@ export default function GastronomyDetailConceptPreviewPage() {
   const [viewMode, setViewMode] = useState<MenuViewMode>("list");
   const [fulfillmentMode, setFulfillmentMode] = useState<FulfillmentMode>("pickup");
   const [saved, setSaved] = useState(false);
-  const [selectedItemId, setSelectedItemId] = useState("moqueca-de-peixe");
+  const [selectedItemId, setSelectedItemId] = useState<string | null>(null);
   const [mobileCustomizerOpen, setMobileCustomizerOpen] = useState(false);
   const [cartOpen, setCartOpen] = useState(false);
   const [size, setSize] = useState<"individual" | "share">("individual");
@@ -498,7 +498,7 @@ export default function GastronomyDetailConceptPreviewPage() {
     { ...menuItems[3], quantity: 1 },
   ]);
 
-  const selectedItem = allSelectableItems.find((item) => item.id === selectedItemId) ?? menuItems[1];
+  const selectedItem = selectedItemId ? allSelectableItems.find((item) => item.id === selectedItemId) ?? null : null;
   const filteredItems = useMemo(() => menuItems.filter((item) => {
     const matchesCategory = activeCategory === "Todas" || item.category === activeCategory;
     const normalizedQuery = query.trim().toLowerCase();
@@ -511,6 +511,7 @@ export default function GastronomyDetailConceptPreviewPage() {
   };
 
   const addSelectedItem = () => {
+    if (!selectedItem) return;
     addLine(selectedItem, quantity, (farofa ? 3 : 0) + (arroz ? 5 : 0), notes, size === "share" ? 68 : selectedItem.price);
     setSize("individual");
     setQuantity(1);
@@ -557,22 +558,25 @@ export default function GastronomyDetailConceptPreviewPage() {
 
       <main className="mx-auto w-full max-w-[68rem] px-4 pb-24 pt-3 sm:px-6 sm:pt-3 lg:flex lg:min-h-0 lg:flex-1 lg:overflow-hidden lg:px-8 lg:pb-4">
         {activeTab === "menu" ? (
-          <div className="grid min-h-0 w-full items-start gap-4 lg:h-full lg:grid-cols-[minmax(0,1fr)_30rem] lg:gap-6">
+          <div className={cn("grid min-h-0 w-full items-start gap-4 lg:h-full lg:gap-6", selectedItem ? "lg:grid-cols-[minmax(0,1fr)_30rem]" : "lg:grid-cols-1")}>
             <section className="min-w-0 lg:flex lg:h-full lg:min-h-0 lg:flex-col">
               <SearchAndCategories query={query} onQueryChange={setQuery} category={activeCategory} onCategoryChange={setActiveCategory} viewMode={viewMode} onViewModeChange={setViewMode} />
               <div className="mt-3 flex min-h-0 flex-col gap-2 lg:flex-1">
                 <OfferCard onOpen={() => { setSelectedItemId(offerItem.id); setMobileCustomizerOpen(true); }} />
                 <div className="min-h-0 overflow-hidden rounded-xl border border-territory-border bg-territory-surface lg:flex-1 lg:overflow-y-auto lg:overscroll-contain lg:[scrollbar-gutter:stable]">
-                  {viewMode === "grid" ? <div className="grid grid-cols-2 gap-2 p-2 sm:gap-3 sm:p-3">{filteredItems.map((item) => <MenuGridCard key={item.id} item={item} selected={selectedItem.id === item.id} onSelect={() => { if (item.available === false) return; setSelectedItemId(item.id); setMobileCustomizerOpen(true); }} />)}</div> : filteredItems.map((item) => <MenuRow key={item.id} item={item} selected={selectedItem.id === item.id} onSelect={() => { if (item.available === false) return; setSelectedItemId(item.id); setMobileCustomizerOpen(true); }} />)}
+                  {viewMode === "grid" ? <div className={cn("grid grid-cols-2 gap-2 p-2 sm:gap-3 sm:p-3", selectedItem ? "lg:grid-cols-2" : "lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5")}>{filteredItems.map((item) => <MenuGridCard key={item.id} item={item} selected={selectedItem?.id === item.id} onSelect={() => { if (item.available === false) return; setSelectedItemId(item.id); setMobileCustomizerOpen(true); }} />)}</div> : filteredItems.map((item) => <MenuRow key={item.id} item={item} selected={selectedItem?.id === item.id} onSelect={() => { if (item.available === false) return; setSelectedItemId(item.id); setMobileCustomizerOpen(true); }} />)}
                   {!filteredItems.length ? <p className="px-4 py-8 text-center text-sm text-territory-muted">Nenhum item encontrado.</p> : null}
                 </div>
               </div>
               <div className="mt-3 hidden shrink-0 lg:block"><CartSummary lines={cartLines} onOpen={() => setCartOpen(true)} /></div>
             </section>
 
-            <aside className="hidden lg:block lg:h-full lg:min-h-0 lg:overflow-y-auto lg:overscroll-contain lg:scrollbar-hide">
-              <ItemCustomizer item={selectedItem} size={size} setSize={setSize} quantity={quantity} setQuantity={setQuantity} farofa={farofa} setFarofa={setFarofa} arroz={arroz} setArroz={setArroz} notes={notes} setNotes={setNotes} onAdd={addSelectedItem} />
-            </aside>
+            {selectedItem ? <aside className="hidden lg:block lg:h-full lg:min-h-0 lg:overflow-y-auto lg:overscroll-contain lg:scrollbar-hide">
+              <div className="relative">
+                <button type="button" aria-label="Fechar detalhes do item" onClick={() => setSelectedItemId(null)} className="absolute right-2 top-2 z-10 inline-flex h-9 w-9 items-center justify-center rounded-lg text-territory-ink hover:bg-territory-raised focus-visible:outline-2 focus-visible:outline-offset-[-2px] focus-visible:outline-territory-brand"><X className="h-4 w-4" aria-hidden="true" /></button>
+                <ItemCustomizer item={selectedItem} size={size} setSize={setSize} quantity={quantity} setQuantity={setQuantity} farofa={farofa} setFarofa={setFarofa} arroz={arroz} setArroz={setArroz} notes={notes} setNotes={setNotes} onAdd={addSelectedItem} />
+              </div>
+            </aside> : null}
           </div>
         ) : activeTab === "reviews" ? <ReviewsContent /> : <InfoContent />}
       </main>
@@ -582,7 +586,7 @@ export default function GastronomyDetailConceptPreviewPage() {
         <button type="button" onClick={() => toast.success("A loja responderá por aqui.")} className="flex h-8 w-full items-center justify-center gap-1 text-xs font-semibold text-territory-brand focus-visible:outline-2 focus-visible:outline-offset-[-2px] focus-visible:outline-territory-brand"><MessageCircle className="h-4 w-4" aria-hidden="true" />Falar com a loja</button>
       </div>
 
-      {mobileCustomizerOpen ? <div className="fixed inset-0 z-50 flex items-end bg-black/35 lg:hidden" role="presentation" onMouseDown={() => setMobileCustomizerOpen(false)}><div className="max-h-[90dvh] w-full overflow-y-auto rounded-t-2xl bg-territory-surface p-3 pb-[calc(0.75rem+env(safe-area-inset-bottom))]" onMouseDown={(event) => event.stopPropagation()}><div className="mb-2 flex items-center justify-between"><p className="text-sm font-bold text-territory-ink">Personalizar pedido</p><button type="button" aria-label="Fechar personalização" onClick={() => setMobileCustomizerOpen(false)} className="inline-flex h-9 w-9 items-center justify-center rounded-lg text-territory-ink hover:bg-territory-raised focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-territory-brand"><X className="h-5 w-5" aria-hidden="true" /></button></div><ItemCustomizer item={selectedItem} size={size} setSize={setSize} quantity={quantity} setQuantity={setQuantity} farofa={farofa} setFarofa={setFarofa} arroz={arroz} setArroz={setArroz} notes={notes} setNotes={setNotes} onAdd={addSelectedItem} /></div></div> : null}
+      {mobileCustomizerOpen && selectedItem ? <div className="fixed inset-0 z-50 flex items-end bg-black/35 lg:hidden" role="presentation" onMouseDown={() => setMobileCustomizerOpen(false)}><div className="max-h-[90dvh] w-full overflow-y-auto rounded-t-2xl bg-territory-surface p-3 pb-[calc(0.75rem+env(safe-area-inset-bottom))]" onMouseDown={(event) => event.stopPropagation()}><div className="mb-2 flex items-center justify-between"><p className="text-sm font-bold text-territory-ink">Personalizar pedido</p><button type="button" aria-label="Fechar personalização" onClick={() => setMobileCustomizerOpen(false)} className="inline-flex h-9 w-9 items-center justify-center rounded-lg text-territory-ink hover:bg-territory-raised focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-territory-brand"><X className="h-5 w-5" aria-hidden="true" /></button></div><ItemCustomizer item={selectedItem} size={size} setSize={setSize} quantity={quantity} setQuantity={setQuantity} farofa={farofa} setFarofa={setFarofa} arroz={arroz} setArroz={setArroz} notes={notes} setNotes={setNotes} onAdd={addSelectedItem} /></div></div> : null}
       {cartOpen ? <CartDialog lines={cartLines} onClose={() => setCartOpen(false)} onRemove={handleRemoveLine} /> : null}
     </div>
   );
