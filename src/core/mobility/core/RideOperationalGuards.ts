@@ -4,9 +4,40 @@
 
 import { profileService } from "@/core/profiles/services/ProfileService";
 import { MotoboyAuthorizationService } from "../services/MotoboyAuthorizationService";
-import type { FailedDeliveryMetadata, FailedDeliveryResolutionUpdate } from "../types/FailedDeliveryMetadata";
-import { VALID_FAILURE_REASONS, VALID_ITEM_DESTINATIONS, VALID_ITEM_HOLDERS } from "../types/FailedDeliveryMetadata";
+import type {
+  FailedDeliveryMetadata,
+  FailedDeliveryResolutionUpdate,
+  FailedDeliverySnapshotInput,
+} from "../types/FailedDeliveryMetadata";
+import {
+  VALID_FAILURE_REASONS,
+  VALID_ITEM_DESTINATIONS,
+} from "../types/FailedDeliveryMetadata";
 import type { CreateRideInput, TransitionResult } from "./RideOperationalTypes";
+
+const FAILED_DELIVERY_SERVER_OWNED_FIELDS = new Set([
+  "next_ride_id",
+  "handoff_driver_profile_id",
+  "manual_resolution_owner_profile_id",
+  "resolved_at",
+  "resolution_action_notes",
+  "resolution_item_holder",
+  "redelivery_pickup_confirmed_at",
+  "resolution_plan",
+  "handoff_requested_driver_profile_id",
+  "handoff_requested_at",
+  "handoff_request_expires_at",
+  "handoff_request_distance_m",
+  "resolution_action",
+  "handoff_from_driver_profile_id",
+  "handoff_confirmed_at",
+  "handoff_distance_m",
+  "handoff_evidence",
+  "handoff_accepted_at",
+  "handoff_acceptance_source",
+  "courier_settlement_allocation_required",
+  "custody_handoff_history",
+]);
 
 export function isProfileSuspended(profile: Record<string, unknown> | null): boolean {
   const suspended = Boolean(profile?.is_suspended ?? profile?.suspended ?? false);
@@ -56,9 +87,13 @@ export function hasValidRouteCoordinates(input: Pick<CreateRideInput, "originLat
   );
 }
 
-export function validateFailedDeliverySnapshot(metadata: FailedDeliveryMetadata): void {
-  if (!metadata.failure_reason || !metadata.item_destination || !metadata.item_current_holder || !metadata.timestamp) {
-    throw new Error("Campos obrigatorios do snaposhot ausentes: failure_reason, item_destination, item_current_holder, timestamp");
+export function validateFailedDeliverySnapshot(
+  metadata: FailedDeliverySnapshotInput | FailedDeliveryMetadata,
+): void {
+  const rawMetadata = metadata as unknown as Record<string, unknown>;
+
+  if (!metadata.failure_reason || !metadata.item_destination || !metadata.timestamp) {
+    throw new Error("Campos obrigatorios do snapshot ausentes: failure_reason, item_destination, timestamp");
   }
 
   if (!VALID_FAILURE_REASONS.includes(metadata.failure_reason)) {
@@ -69,16 +104,58 @@ export function validateFailedDeliverySnapshot(metadata: FailedDeliveryMetadata)
     throw new Error(`item_destination invalido: ${metadata.item_destination}`);
   }
 
-  if (!VALID_ITEM_HOLDERS.includes(metadata.item_current_holder)) {
-    throw new Error(`item_current_holder invalido: ${metadata.item_current_holder}`);
+  if (metadata.item_current_holder !== "driver") {
+    throw new Error("item_current_holder deve permanecer driver no snapshot inicial.");
   }
 
-  if (metadata.failure_reason === "other" && !metadata.resolution_notes) {
+  if (metadata.resolution_status !== "pending") {
+    throw new Error("resolution_status deve iniciar como pending.");
+  }
+
+  const timestamp = new Date(metadata.timestamp);
+  if (Number.isNaN(timestamp.getTime())) {
+    throw new Error("timestamp invalido no snapshot de falha.");
+  }
+
+  for (const field of FAILED_DELIVERY_SERVER_OWNED_FIELDS) {
+    if (Object.prototype.hasOwnProperty.call(rawMetadata, field)) {
+      throw new Error(`Campo server-owned nao permitido no snapshot inicial: ${field}`);
+    }
+  }
+
+  if (metadata.failure_reason === "other" && !metadata.resolution_notes?.trim()) {
     throw new Error("resolution_notes obrigatorio quando failure_reason = other");
   }
 
-  if (String(metadata.item_current_holder) === "recipient") {
-    throw new Error("item_current_holder no pode ser recipient em failed_delivery");
+  if (metadata.resolution_notes && metadata.resolution_notes.length > 2000) {
+    throw new Error("resolution_notes excede o limite permitido.");
+  }
+
+  if (metadata.failed_at_location) {
+    if (
+      !isValidLatitude(metadata.failed_at_location.lat) ||
+      !isValidLongitude(metadata.failed_at_location.lng) ||
+      typeof metadata.failed_at_location.address !== "string" ||
+      metadata.failed_at_location.address.trim().length === 0
+    ) {
+      throw new Error("failed_at_location invalido.");
+    }
+  }
+
+  if (
+    metadata.photos &&
+    (!Array.isArray(metadata.photos) || metadata.photos.some((photo) => typeof photo !== "string" || !photo.trim()))
+  ) {
+    throw new Error("photos invalido no snapshot de falha.");
+  }
+
+  for (const [field, value] of [
+    ["attempt_number", metadata.attempt_number],
+    ["attempted_delivery_count", metadata.attempted_delivery_count],
+  ] as const) {
+    if (value !== undefined && (!Number.isInteger(value) || value < 0)) {
+      throw new Error(`${field} deve ser inteiro nao negativo.`);
+    }
   }
 }
 

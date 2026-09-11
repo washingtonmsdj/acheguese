@@ -1,30 +1,20 @@
 /**
- * DISPATCH TYPES - Tipos para sistema de dispatch híbrido
- * 
- * Modelo Híbrido:
- * 1. Corrida imediata de passageiro → Oferta exclusiva (1 motorista por vez)
- * 2. Entrega/motoboy → Lista aberta (múltiplos motoristas veem)
- * 3. Corridas agendadas → Reserva (motoristas podem aceitar previamente)
+ * DISPATCH TYPES - contratos do sistema de dispatch hibrido.
+ *
+ * Regra de privacidade: todo objeto de oferta e PRE-ACEITE. Ele pode carregar
+ * apenas rota aproximada, dados economicos/capacidade e decisoes anonimas de
+ * confianca. Identidade, contato, ids internos, texto livre e endereco exato
+ * pertencem ao contrato de corrida depois do aceite.
  */
 
 import { RIDE_MODE, SOURCE_TYPE } from '../constants';
 import type { TrustDispatchPolicy, TrustRiskLevel } from '@/core/trust';
 
-// ============================================
-// DISPATCH STRATEGY
-// ============================================
+export type DispatchStrategy =
+  | 'exclusive_offer'
+  | 'open_board'
+  | 'reservation_board';
 
-/**
- * Estratégia de dispatch baseada no tipo de solicitação
- */
-export type DispatchStrategy = 
-  | 'exclusive_offer'    // Oferta exclusiva - 1 motorista por vez
-  | 'open_board'         // Lista aberta - múltiplos motoristas
-  | 'reservation_board'; // Reserva - agendamento prévio
-
-/**
- * Contexto da solicitação para determinar estratégia
- */
 export interface DispatchContext {
   rideMode: typeof RIDE_MODE[keyof typeof RIDE_MODE];
   sourceType: typeof SOURCE_TYPE[keyof typeof SOURCE_TYPE];
@@ -33,9 +23,6 @@ export interface DispatchContext {
   scheduledFor?: string;
 }
 
-/**
- * Configuração de dispatch por estratégia
- */
 export interface DispatchConfig {
   strategy: DispatchStrategy;
   offerTimeoutSeconds: number;
@@ -44,17 +31,25 @@ export interface DispatchConfig {
   requiresVerification: boolean;
   requiresSubscription: boolean;
   allowsConcurrentOffers: boolean;
-  showFullDetails: boolean; // Se mostra origem/destino completos antes de aceitar
+  /** Must remain false for browser-facing pre-accept offer contracts. */
+  showFullDetails: boolean;
 }
 
-// ============================================
-// OFFER TYPES
-// ============================================
+type CoarseOfferRoute = {
+  /** Canonical region/location label, never the raw street address. */
+  origin: string;
+  /** Canonical region/location label, never the raw street address. */
+  destination: string;
+  /** Approximate 2-decimal coordinates from the broker privacy boundary. */
+  originLat?: number;
+  originLng?: number;
+  destinationLat?: number;
+  destinationLng?: number;
+  locationPrecision: 'coarse_2dp';
+};
 
-/**
- * Oferta exclusiva para motorista específico
- */
-export interface ExclusiveOffer {
+/** Exclusive passenger-ride offer shown before explicit driver acceptance. */
+export interface ExclusiveOffer extends CoarseOfferRoute {
   id: string;
   rideId: string;
   driverProfileId: string;
@@ -62,116 +57,75 @@ export interface ExclusiveOffer {
   expiresAt: string;
   attemptNumber: number;
   status: 'pending' | 'accepted' | 'rejected' | 'expired';
-  
-  // Dados protegidos (apenas após aceite)
-  origin: string;
-  destination: string;
-  originLat?: number;
-  originLng?: number;
-  destinationLat?: number;
-  destinationLng?: number;
-  
-  // Dados públicos (antes do aceite)
   originNeighborhood: string;
   destinationNeighborhood: string;
   estimatedDistance: number;
   estimatedDuration: number;
   suggestedPrice: number;
   paymentMethod: string;
-  passengerRating?: number;
-  passengerTrustLevel?: string;
   driverTrustRiskLevel?: TrustRiskLevel;
   driverDispatchPolicy?: TrustDispatchPolicy;
   passengerTrustRiskLevel?: TrustRiskLevel;
   passengerDispatchPolicy?: TrustDispatchPolicy;
+
+  /** Explicitly forbidden in the pre-accept contract. */
+  passengerRating?: never;
+  passengerTrustLevel?: never;
+  passengerName?: never;
+  passengerPhone?: never;
 }
 
-/**
- * Pedido na lista aberta (motoboy/entrega)
- */
-export interface OpenBoardOffer {
+/** Open-board delivery offer shown before courier acceptance. */
+export interface OpenBoardOffer extends CoarseOfferRoute {
   id: string;
   rideId: string;
   createdAt: string;
   expiresAt: string;
-  
-  // Dados completos (visíveis antes do aceite)
-  origin: string;
-  destination: string;
-  originLat: number;
-  originLng: number;
-  destinationLat: number;
-  destinationLng: number;
-  
-  // Metadados
   packageSize?: string;
-  packageDescription?: string;
   estimatedDistance: number;
   estimatedDuration: number;
   suggestedPrice: number;
   paymentMethod: string;
-  
-  // Filtros
   requiredVehicleType?: string;
   requiredCapacity?: string;
   priority: number;
   trustAdjustedPriority?: number;
   driverTrustRiskLevel?: TrustRiskLevel;
   driverDispatchPolicy?: TrustDispatchPolicy;
-  
-  // Cliente
-  customerName: string;
-  customerRating?: number;
-  customerPhone?: string; // Apenas após aceite
   customerTrustRiskLevel?: TrustRiskLevel;
   customerDispatchPolicy?: TrustDispatchPolicy;
+
+  /** Requester-controlled or identifying data must never leave the offer broker. */
+  packageDescription?: never;
+  customerName?: never;
+  customerRating?: never;
+  customerPhone?: never;
 }
 
-/**
- * Reserva de corrida agendada
- */
-export interface ReservationOffer {
+/** Scheduled ride offer. Scheduling does not relax pre-accept privacy. */
+export interface ReservationOffer extends CoarseOfferRoute {
   id: string;
   rideId: string;
   scheduledFor: string;
   createdAt: string;
-  
-  // Dados completos (agendamento permite transparência)
-  origin: string;
-  destination: string;
-  originLat: number;
-  originLng: number;
-  destinationLat: number;
-  destinationLng: number;
-  
-  // Metadados
   estimatedDistance: number;
   estimatedDuration: number;
   suggestedPrice: number;
   paymentMethod: string;
-  
-  // Passageiro
-  passengerName: string;
-  passengerRating?: number;
-  passengerPhone?: string; // Apenas após aceite
   driverTrustRiskLevel?: TrustRiskLevel;
   driverDispatchPolicy?: TrustDispatchPolicy;
   passengerTrustRiskLevel?: TrustRiskLevel;
   passengerDispatchPolicy?: TrustDispatchPolicy;
-  
-  // Status
-  acceptedBy?: string;
-  acceptedAt?: string;
   status: 'open' | 'reserved' | 'confirmed' | 'cancelled';
+
+  /** Explicitly forbidden until an accepted participant relationship exists. */
+  passengerName?: never;
+  passengerRating?: never;
+  passengerPhone?: never;
+  acceptedBy?: never;
+  acceptedAt?: never;
 }
 
-// ============================================
-// DRIVER ELIGIBILITY
-// ============================================
-
-/**
- * Critérios de elegibilidade do motorista
- */
 export interface DriverEligibilityCriteria {
   isVerified: boolean;
   isOnline: boolean;
@@ -179,44 +133,26 @@ export interface DriverEligibilityCriteria {
   hasActiveRide: boolean;
   isSubscriptionActive: boolean;
   isSuspended: boolean;
-  
-  // Localização
   currentLat?: number;
   currentLng?: number;
   distanceFromOrigin?: number;
-  
-  // Capacidades
   canDoDelivery: boolean;
   vehicleType?: string;
   vehicleCapacity?: number;
-  
-  // Área de atendimento
   serviceNeighborhoods?: string[];
   serviceRadius?: number;
-  
-  // Reputação
   rating: number;
   totalRides: number;
   acceptanceRate: number;
   cancellationRate: number;
 }
 
-/**
- * Resultado de validação de elegibilidade
- */
 export interface EligibilityResult {
   isEligible: boolean;
   reasons: string[];
-  score?: number; // Score para ordenação
+  score?: number;
 }
 
-// ============================================
-// DISPATCH RESULTS
-// ============================================
-
-/**
- * Resultado de tentativa de dispatch
- */
 export interface DispatchAttemptResult {
   success: boolean;
   rideId: string;
@@ -228,9 +164,6 @@ export interface DispatchAttemptResult {
   timestamp: string;
 }
 
-/**
- * Resultado final de dispatch
- */
 export interface DispatchFinalResult {
   success: boolean;
   rideId: string;
@@ -244,13 +177,6 @@ export interface DispatchFinalResult {
   attempts: DispatchAttemptResult[];
 }
 
-// ============================================
-// CONCURRENCY CONTROL
-// ============================================
-
-/**
- * Lock para controle de concorrência
- */
 export interface DispatchLock {
   rideId: string;
   lockedBy: 'system' | 'driver';
@@ -259,9 +185,6 @@ export interface DispatchLock {
   driverProfileId?: string;
 }
 
-/**
- * Resultado de tentativa de aceite
- */
 export interface AcceptOfferResult {
   success: boolean;
   rideId: string;
@@ -271,24 +194,14 @@ export interface AcceptOfferResult {
   acceptedAt?: string;
 }
 
-// ============================================
-// SCORING & RANKING
-// ============================================
-
-/**
- * Fatores para score de motorista
- */
 export interface DriverScoreFactors {
-  distance: number;        // Peso: 40%
-  rating: number;          // Peso: 25%
-  acceptanceRate: number;  // Peso: 15%
-  totalRides: number;      // Peso: 10%
-  responseTime: number;    // Peso: 10%
+  distance: number;
+  rating: number;
+  acceptanceRate: number;
+  totalRides: number;
+  responseTime: number;
 }
 
-/**
- * Score calculado do motorista
- */
 export interface DriverScore {
   driverProfileId: string;
   totalScore: number;
@@ -296,13 +209,6 @@ export interface DriverScore {
   rank: number;
 }
 
-// ============================================
-// FILTERS & SORTING
-// ============================================
-
-/**
- * Filtros para lista aberta
- */
 export interface OpenBoardFilters {
   rideMode?: typeof RIDE_MODE[keyof typeof RIDE_MODE];
   sourceType?: typeof SOURCE_TYPE[keyof typeof SOURCE_TYPE];
@@ -314,10 +220,7 @@ export interface OpenBoardFilters {
   neighborhoods?: string[];
 }
 
-/**
- * Ordenação para lista aberta
- */
-export type OpenBoardSortBy = 
+export type OpenBoardSortBy =
   | 'distance'
   | 'price'
   | 'priority'
@@ -329,15 +232,7 @@ export interface OpenBoardSort {
   order: 'asc' | 'desc';
 }
 
-// ============================================
-// CONFIGURATION
-// ============================================
-
-/**
- * Configuração global de dispatch
- */
 export interface DispatchGlobalConfig {
-  // Exclusive Offer (Corrida imediata)
   exclusiveOffer: {
     enabled: boolean;
     offerTimeoutSeconds: number;
@@ -346,8 +241,6 @@ export interface DispatchGlobalConfig {
     requiresVerification: boolean;
     requiresSubscription: boolean;
   };
-  
-  // Open Board (Entrega/motoboy)
   openBoard: {
     enabled: boolean;
     maxOffersPerDriver: number;
@@ -356,8 +249,6 @@ export interface DispatchGlobalConfig {
     requiresVerification: boolean;
     requiresSubscription: boolean;
   };
-  
-  // Reservation Board (Agendadas)
   reservationBoard: {
     enabled: boolean;
     minAdvanceHours: number;
@@ -365,8 +256,6 @@ export interface DispatchGlobalConfig {
     requiresVerification: boolean;
     requiresSubscription: boolean;
   };
-  
-  // Scoring
   scoring: {
     distanceWeight: number;
     ratingWeight: number;

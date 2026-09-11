@@ -1,15 +1,11 @@
 /**
  * MOBILITY OFFER SERVICE
- * 
- * SSOT para gerenciamento de ofertas de corrida
- * Implementa modelo hibrido:
- * - Exclusive Offer: 1 motorista por vez
- * - Open Board: multiplos motoristas
- * - Reservation Board: agendamentos
+ *
+ * SSOT para ofertas pre-aceite. Toda leitura vem do broker redigido; este
+ * servico jamais reidrata identidade/PII a partir de ids internos da oferta.
  */
 import { logger } from '@/shared/utils/logger';
 import { supabase } from '@/integrations/supabase';
-import { profileService } from '@/core/profiles/services/ProfileService';
 import { TRUST_ACTOR_ROLES, TrustPolicyReadService } from '@/core/trust';
 import { MobilityDispatchConfigService } from './MobilityDispatchConfigService';
 import { DriverAvailabilityService } from './DriverAvailabilityService';
@@ -33,7 +29,6 @@ import type {
   OpenBoardFilters,
   OpenBoardSort,
 } from '../types/dispatch.types';
-import { RIDE_STATUS } from '../constants';
 import { DISPATCH_ATTEMPT_STATUS } from '../constants/dispatchStatus';
 
 type AcceptRideAtomicResult = {
@@ -49,26 +44,24 @@ type TrustDecisionView = Pick<
 
 function normalizeAcceptOfferReason(
   value: string | undefined,
-): AcceptOfferResult["reason"] | undefined {
+): AcceptOfferResult['reason'] | undefined {
   switch (value) {
-    case "accepted":
-    case "already_accepted":
-    case "expired":
-    case "invalid_state":
-    case "driver_busy":
-    case "not_eligible":
+    case 'accepted':
+    case 'already_accepted':
+    case 'expired':
+    case 'invalid_state':
+    case 'driver_busy':
+    case 'not_eligible':
       return value;
     default:
       return undefined;
   }
 }
 
-// ============================================
-// MOBILITY OFFER SERVICE
-// ============================================
-
 export class MobilityOfferService {
-  private static getTrustPriorityMultiplier(decision: TrustDecisionView | null): number {
+  private static getTrustPriorityMultiplier(
+    decision: TrustDecisionView | null,
+  ): number {
     if (!decision) return 1;
     if (decision.risk_level === 'critical') return 0.35;
     if (decision.risk_level === 'restricted') return 0.55;
@@ -76,7 +69,9 @@ export class MobilityOfferService {
     return 1;
   }
 
-  private static getTrustOfferMetadata(decision: TrustDecisionView | null): {
+  private static getTrustOfferMetadata(
+    decision: TrustDecisionView | null,
+  ): {
     driverTrustRiskLevel?: TrustRiskLevel;
     driverDispatchPolicy?: TrustDispatchPolicy;
   } {
@@ -89,16 +84,16 @@ export class MobilityOfferService {
   private static toOfferTrustDecision(
     ride: DriverOfferBrokerRow,
   ): TrustDecisionView | null {
-    if (!ride.risk_level || !ride.dispatch_policy) {
-      return null;
-    }
+    if (!ride.risk_level || !ride.dispatch_policy) return null;
     return {
       risk_level: ride.risk_level as TrustRiskLevel,
       dispatch_policy: ride.dispatch_policy as TrustDispatchPolicy,
     };
   }
 
-  private static getPassengerTrustOfferMetadata(decision: TrustDecisionView | null): {
+  private static getPassengerTrustOfferMetadata(
+    decision: TrustDecisionView | null,
+  ): {
     passengerTrustRiskLevel?: TrustRiskLevel;
     passengerDispatchPolicy?: TrustDispatchPolicy;
   } {
@@ -108,7 +103,9 @@ export class MobilityOfferService {
     };
   }
 
-  private static getCustomerTrustOfferMetadata(decision: TrustDecisionView | null): {
+  private static getCustomerTrustOfferMetadata(
+    decision: TrustDecisionView | null,
+  ): {
     customerTrustRiskLevel?: TrustRiskLevel;
     customerDispatchPolicy?: TrustDispatchPolicy;
   } {
@@ -119,11 +116,17 @@ export class MobilityOfferService {
   }
 
   /**
-   * Busca oferta exclusiva para motorista especifico
-   * Usado em: Corrida imediata de passageiro
+   * Defense in depth for G69. The broker is the authority that coarse-grains
+   * route data; browser code refuses to treat an unlabeled response as a safe
+   * pre-accept offer.
    */
+  private static hasCoarseLocationContract(ride: DriverOfferBrokerRow): boolean {
+    const record = ride as unknown as Record<string, unknown>;
+    return record.location_precision === 'coarse_2dp';
+  }
+
   static async getExclusiveOffer(
-    driverProfileId: string
+    driverProfileId: string,
   ): Promise<ExclusiveOffer | null> {
     try {
       const offerData = await MobilityRpcService.listDriverOffers({
@@ -133,6 +136,13 @@ export class MobilityOfferService {
       });
       const ride = offerData.offers[0];
       if (!ride) return null;
+      if (!this.hasCoarseLocationContract(ride)) {
+        logger.error('Preaccept offer rejected: missing coarse location contract', {
+          rideId: ride.id,
+          strategy: 'exclusive_offer',
+        });
+        return null;
+      }
 
       const trustGate = await TrustPolicyReadService.canCurrentReceiveOperationalCall(
         TRUST_ACTOR_ROLES.DRIVER,
@@ -144,48 +154,39 @@ export class MobilityOfferService {
         });
         return null;
       }
-      const trustMetadata = this.getTrustOfferMetadata(trustGate.decision);
 
-      // Calcular expiracao
       const config = MobilityDispatchConfigService.getConfig('exclusive_offer');
       const assignedAt = new Date(ride.driver_assigned_at || ride.created_at);
-      const expiresAt = new Date(assignedAt.getTime() + config.offerTimeoutSeconds * 1000);
-      const attemptNumber = await this.getLatestAttemptNumber(ride.id, driverProfileId);
+      const expiresAt = new Date(
+        assignedAt.getTime() + config.offerTimeoutSeconds * 1000,
+      );
+      const attemptNumber = await this.getLatestAttemptNumber(
+        ride.id,
+        driverProfileId,
+      );
 
-      // Verificar se expirou
       if (new Date() > expiresAt) {
         logger.warn('Exclusive offer expired', { rideId: ride.id, driverProfileId });
         return null;
       }
 
-      // Buscar dados do passageiro (rating, trust level)
-      const passengerData = ride.passenger_profile_id
-        ? await profileService.getProfileById(ride.passenger_profile_id)
-        : null;
-      const passengerMeta = passengerData as unknown as Record<string, unknown> | null;
-      const passengerRatingValue = passengerMeta?.passenger_rating;
-      const passengerRating =
-        typeof passengerRatingValue === 'number' ? passengerRatingValue : undefined;
-      const passengerTrustLevelValue = passengerMeta?.passenger_trust_level;
-      const passengerTrustLevel =
-        typeof passengerTrustLevelValue === 'string' ? passengerTrustLevelValue : undefined;
       const passengerTrustDecision = this.toOfferTrustDecision(ride);
-      const passengerTrustMetadata =
-        this.getPassengerTrustOfferMetadata(passengerTrustDecision);
-
-      // Extrair bairros (proteger enderecos completos)
       const originNeighborhood = this.extractNeighborhood(ride.origin);
       const destinationNeighborhood = this.extractNeighborhood(ride.destination);
 
-      // Calcular distancia estimada (se tiver coordenadas)
       let estimatedDistance = 0;
       let estimatedDuration = 0;
-      if (ride.origin_lat && ride.origin_lng && ride.destination_lat && ride.destination_lng) {
+      if (
+        ride.origin_lat != null &&
+        ride.origin_lng != null &&
+        ride.destination_lat != null &&
+        ride.destination_lng != null
+      ) {
         estimatedDistance = this.calculateDistance(
           ride.origin_lat,
           ride.origin_lng,
           ride.destination_lat,
-          ride.destination_lng
+          ride.destination_lng,
         );
         estimatedDuration = this.estimateDuration(estimatedDistance);
       }
@@ -198,42 +199,35 @@ export class MobilityOfferService {
         expiresAt: expiresAt.toISOString(),
         attemptNumber,
         status: DISPATCH_ATTEMPT_STATUS.PENDING,
-        
-        // Dados protegidos (apenas apos aceite)
         origin: ride.origin,
         destination: ride.destination,
         originLat: ride.origin_lat ?? undefined,
         originLng: ride.origin_lng ?? undefined,
         destinationLat: ride.destination_lat ?? undefined,
         destinationLng: ride.destination_lng ?? undefined,
-        
-        // Dados publicos (antes do aceite)
+        locationPrecision: 'coarse_2dp',
         originNeighborhood,
         destinationNeighborhood,
         estimatedDistance,
         estimatedDuration,
         suggestedPrice: ride.suggested_price,
         paymentMethod: ride.payment_method,
-        passengerRating,
-        passengerTrustLevel,
-        ...trustMetadata,
-        ...passengerTrustMetadata,
+        ...this.getTrustOfferMetadata(trustGate.decision),
+        ...this.getPassengerTrustOfferMetadata(passengerTrustDecision),
       };
     } catch (error) {
-      logger.error('MobilityOfferService.getExclusiveOffer', error as Error, { driverProfileId });
+      logger.error('MobilityOfferService.getExclusiveOffer', error as Error, {
+        driverProfileId,
+      });
       return null;
     }
   }
 
-  /**
-   * Busca ofertas abertas para motorista (motoboy/entrega)
-   * Usado em: Entrega/motoboy
-   */
   static async getOpenBoardOffers(
     driverProfileId: string,
     filters?: OpenBoardFilters,
     sort?: OpenBoardSort,
-    limit: number = 10
+    limit: number = 10,
   ): Promise<OpenBoardOffer[]> {
     try {
       const trustGate = await TrustPolicyReadService.canCurrentReceiveOperationalCall(
@@ -246,22 +240,15 @@ export class MobilityOfferService {
         });
         return [];
       }
-      const trustPriorityMultiplier = this.getTrustPriorityMultiplier(trustGate.decision);
-      const trustMetadata = this.getTrustOfferMetadata(trustGate.decision);
 
       const driverData = await this.getDriverCapabilities(driverProfileId);
-      if (!driverData?.can_do_delivery) {
-        logger.info('Driver has no delivery capability enabled', { driverProfileId });
-        return [];
-      }
+      if (!driverData?.can_do_delivery) return [];
 
-      // Buscar localizacao atual do motorista
       const driverStatus = await DriverAvailabilityService.getStatus(driverProfileId);
       if (!driverStatus?.currentLocation) {
         logger.warn('Driver has no location', { driverProfileId });
         return [];
       }
-
       const { lat, lng } = driverStatus.currentLocation;
 
       const sortBy = sort?.sortBy ?? 'created_at';
@@ -277,73 +264,57 @@ export class MobilityOfferService {
         ascending: sortOrder === 'asc',
         limit,
       });
-      const rides = offerData.offers;
-      if (rides.length === 0) return [];
-      const customerProfiles = await profileService.getProfilesByIds(
-        rides
-          .map((ride) => ride.passenger_profile_id)
-          .filter((profileId): profileId is string => Boolean(profileId)),
-      );
-      const customerProfilesById = new Map(
-        customerProfiles.map((profile) => [profile.id, profile]),
-      );
 
-      // Processar ofertas
+      const rides = offerData.offers.filter(
+        (offer) =>
+          offer.offer_kind !== 'failed_delivery_handoff' &&
+          this.hasCoarseLocationContract(offer),
+      );
+      if (rides.length === 0) return [];
+
+      const driverTrustMultiplier = this.getTrustPriorityMultiplier(
+        trustGate.decision,
+      );
       const offers: OpenBoardOffer[] = [];
 
       for (const ride of rides) {
-        if (!ride.origin_lat || !ride.origin_lng || !ride.destination_lat || !ride.destination_lng) {
-          continue; // Pular se nao tiver coordenadas
+        if (
+          ride.origin_lat == null ||
+          ride.origin_lng == null ||
+          ride.destination_lat == null ||
+          ride.destination_lng == null
+        ) {
+          continue;
         }
 
-        // Calcular distancia do motorista ate origem
         const distanceToOrigin = this.calculateDistance(
           lat,
           lng,
           ride.origin_lat,
-          ride.origin_lng
+          ride.origin_lng,
         );
-
-        // Filtrar por distancia maxima
         if (filters?.maxDistance && distanceToOrigin > filters.maxDistance) {
           continue;
         }
 
-        // Calcular distancia da corrida
         const estimatedDistance = this.calculateDistance(
           ride.origin_lat,
           ride.origin_lng,
           ride.destination_lat,
-          ride.destination_lng
+          ride.destination_lng,
         );
-
         const estimatedDuration = this.estimateDuration(estimatedDistance);
-
-        // Buscar dados do cliente
-        const customerProfile = ride.passenger_profile_id
-          ? customerProfilesById.get(ride.passenger_profile_id) ?? null
-          : null;
-        const customerRecord = customerProfile as unknown as Record<string, unknown> | null;
-        const customerDisplayNameValue = customerRecord?.display_name;
-        const customerDisplayName =
-          typeof customerDisplayNameValue === 'string' ? customerDisplayNameValue : 'Cliente';
-        const customerRatingValue = customerRecord?.rating;
-        const customerRating =
-          typeof customerRatingValue === 'number' ? customerRatingValue : undefined;
         const customerTrustDecision = this.toOfferTrustDecision(ride);
-        const customerTrustMetadata =
-          this.getCustomerTrustOfferMetadata(customerTrustDecision);
-
-        // Calcular expiracao
-        const config = MobilityDispatchConfigService.getConfig('open_board');
-        const createdAt = new Date(ride.created_at);
-        const expiresAt = new Date(createdAt.getTime() + config.offerTimeoutSeconds * 1000);
-
-        const basePriority = 100;
-        const subjectPriorityMultiplier =
+        const customerTrustMultiplier =
           this.getTrustPriorityMultiplier(customerTrustDecision);
         const trustAdjustedPriority = Math.round(
-          basePriority * trustPriorityMultiplier * subjectPriorityMultiplier,
+          100 * driverTrustMultiplier * customerTrustMultiplier,
+        );
+
+        const config = MobilityDispatchConfigService.getConfig('open_board');
+        const createdAt = new Date(ride.created_at);
+        const expiresAt = new Date(
+          createdAt.getTime() + config.offerTimeoutSeconds * 1000,
         );
 
         offers.push({
@@ -351,32 +322,22 @@ export class MobilityOfferService {
           rideId: ride.id,
           createdAt: ride.created_at,
           expiresAt: expiresAt.toISOString(),
-          
-          // Dados completos (visiveis antes do aceite)
           origin: ride.origin,
           destination: ride.destination,
           originLat: ride.origin_lat,
           originLng: ride.origin_lng,
           destinationLat: ride.destination_lat,
           destinationLng: ride.destination_lng,
-          
-          // Metadados
-          packageSize: ride.package_size,
-          packageDescription: ride.package_description,
+          locationPrecision: 'coarse_2dp',
+          packageSize: ride.package_size ?? undefined,
           estimatedDistance,
           estimatedDuration,
           suggestedPrice: ride.suggested_price,
           paymentMethod: ride.payment_method,
-          
-          // Filtros
           priority: trustAdjustedPriority,
           trustAdjustedPriority,
-          ...trustMetadata,
-          
-          // Cliente
-          customerName: customerDisplayName,
-          customerRating,
-          ...customerTrustMetadata,
+          ...this.getTrustOfferMetadata(trustGate.decision),
+          ...this.getCustomerTrustOfferMetadata(customerTrustDecision),
         });
       }
 
@@ -395,31 +356,22 @@ export class MobilityOfferService {
 
       return offers;
     } catch (error) {
-      logger.error('MobilityOfferService.getOpenBoardOffers', error as Error, { driverProfileId });
+      logger.error('MobilityOfferService.getOpenBoardOffers', error as Error, {
+        driverProfileId,
+      });
       return [];
     }
   }
 
-  /**
-   * Busca reservas de corridas agendadas
-   * Usado em: Corridas agendadas
-   */
   static async getReservationOffers(
     driverProfileId: string,
-    limit: number = 10
+    limit: number = 10,
   ): Promise<ReservationOffer[]> {
     try {
       const trustGate = await TrustPolicyReadService.canCurrentReceiveOperationalCall(
         TRUST_ACTOR_ROLES.DRIVER,
       );
-      if (!trustGate.allowed) {
-        logger.warn('Reservation offers hidden by trust policy', {
-          driverProfileId,
-          reason: trustGate.reason,
-        });
-        return [];
-      }
-      const trustMetadata = this.getTrustOfferMetadata(trustGate.decision);
+      if (!trustGate.allowed) return [];
 
       const offerData = await MobilityRpcService.listDriverOffers({
         driverProfileId,
@@ -428,112 +380,69 @@ export class MobilityOfferService {
         ascending: true,
         limit,
       });
-      const rides = offerData.offers;
-      if (rides.length === 0) return [];
-      const passengerProfiles = await profileService.getProfilesByIds(
-        rides
-          .map((ride) => ride.passenger_profile_id)
-          .filter((profileId): profileId is string => Boolean(profileId)),
-      );
-      const passengerProfilesById = new Map(
-        passengerProfiles.map((profile) => [profile.id, profile]),
-      );
 
-      // Processar reservas
       const offers: ReservationOffer[] = [];
-
-      for (const ride of rides) {
+      for (const ride of offerData.offers) {
         if (
+          !this.hasCoarseLocationContract(ride) ||
           !ride.scheduled_for ||
-          !ride.origin_lat ||
-          !ride.origin_lng ||
-          !ride.destination_lat ||
-          !ride.destination_lng
+          ride.origin_lat == null ||
+          ride.origin_lng == null ||
+          ride.destination_lat == null ||
+          ride.destination_lng == null
         ) {
           continue;
         }
 
-        // Calcular distancia
         const estimatedDistance = this.calculateDistance(
           ride.origin_lat,
           ride.origin_lng,
           ride.destination_lat,
-          ride.destination_lng
+          ride.destination_lng,
         );
-
-        const estimatedDuration = this.estimateDuration(estimatedDistance);
-
-        // Buscar dados do passageiro
-        const passengerProfile = ride.passenger_profile_id
-          ? passengerProfilesById.get(ride.passenger_profile_id) ?? null
-          : null;
-        const passengerRecord = passengerProfile as unknown as Record<string, unknown> | null;
-        const passengerNameValue = passengerRecord?.display_name;
-        const passengerName =
-          typeof passengerNameValue === 'string' ? passengerNameValue : 'Passageiro';
-        const passengerRatingValue = passengerRecord?.passenger_rating;
-        const passengerRating =
-          typeof passengerRatingValue === 'number' ? passengerRatingValue : undefined;
         const passengerTrustDecision = this.toOfferTrustDecision(ride);
-        const passengerTrustMetadata =
-          this.getPassengerTrustOfferMetadata(passengerTrustDecision);
-
-        // Determinar status
-        let status: 'open' | 'reserved' | 'confirmed' | 'cancelled' = 'open';
-        if (ride.driver_profile_id) {
-          status = ride.status === RIDE_STATUS.DRIVER_ACCEPTED ? 'confirmed' : 'reserved';
-        }
 
         offers.push({
           id: `reservation_${ride.id}`,
           rideId: ride.id,
           scheduledFor: ride.scheduled_for,
           createdAt: ride.created_at,
-          
-          // Dados completos
           origin: ride.origin,
           destination: ride.destination,
           originLat: ride.origin_lat,
           originLng: ride.origin_lng,
           destinationLat: ride.destination_lat,
           destinationLng: ride.destination_lng,
-          
-          // Metadados
+          locationPrecision: 'coarse_2dp',
           estimatedDistance,
-          estimatedDuration,
+          estimatedDuration: this.estimateDuration(estimatedDistance),
           suggestedPrice: ride.suggested_price,
           paymentMethod: ride.payment_method,
-          
-          // Passageiro
-          passengerName,
-          passengerRating,
-          ...trustMetadata,
-          ...passengerTrustMetadata,
-          
-          // Status
-          acceptedBy: ride.driver_profile_id,
-          status,
+          ...this.getTrustOfferMetadata(trustGate.decision),
+          ...this.getPassengerTrustOfferMetadata(passengerTrustDecision),
+          status: 'open',
         });
       }
 
       return offers;
     } catch (error) {
-      logger.error('MobilityOfferService.getReservationOffers', error as Error, { driverProfileId });
+      logger.error('MobilityOfferService.getReservationOffers', error as Error, {
+        driverProfileId,
+      });
       return [];
     }
   }
 
-  /**
-   * Aceita oferta (com controle de concorrencia)
-   */
   static async acceptOffer(
     rideId: string,
     driverProfileId: string,
-    strategy: DispatchStrategy
+    strategy: DispatchStrategy,
   ): Promise<AcceptOfferResult> {
     try {
-      // Validar elegibilidade do motorista
-      const eligibility = await this.validateDriverEligibility(driverProfileId, strategy);
+      const eligibility = await this.validateDriverEligibility(
+        driverProfileId,
+        strategy,
+      );
       if (!eligibility.isEligible) {
         return {
           success: false,
@@ -544,14 +453,14 @@ export class MobilityOfferService {
         };
       }
 
-      // Tentar aceitar com lock atomico via broker autenticado
-      const data: AcceptRideAtomicResult = await MobilityRpcService.acceptRideAtomic(
-        rideId,
-        driverProfileId,
-        strategy,
-      );
+      const data: AcceptRideAtomicResult =
+        await MobilityRpcService.acceptRideAtomic(
+          rideId,
+          driverProfileId,
+          strategy,
+        );
 
-      if (!data || !data.success) {
+      if (!data?.success) {
         return {
           success: false,
           rideId,
@@ -561,9 +470,11 @@ export class MobilityOfferService {
         };
       }
 
-      // acceptRideAtomic already owns driver_availability and marks the driver busy.
-      logger.info('Offer accepted successfully', { rideId, driverProfileId, strategy });
-
+      logger.info('Offer accepted successfully', {
+        rideId,
+        driverProfileId,
+        strategy,
+      });
       return {
         success: true,
         rideId,
@@ -572,7 +483,10 @@ export class MobilityOfferService {
         acceptedAt: new Date().toISOString(),
       };
     } catch (error) {
-      logger.error('MobilityOfferService.acceptOffer', error as Error, { rideId, driverProfileId });
+      logger.error('MobilityOfferService.acceptOffer', error as Error, {
+        rideId,
+        driverProfileId,
+      });
       return {
         success: false,
         rideId,
@@ -583,69 +497,42 @@ export class MobilityOfferService {
     }
   }
 
-  /**
-   * Valida elegibilidade do motorista
-   */
   private static async validateDriverEligibility(
     driverProfileId: string,
-    strategy: DispatchStrategy
+    strategy: DispatchStrategy,
   ): Promise<EligibilityResult> {
     const reasons: string[] = [];
-
     try {
       const driverData = await this.getDriverCapabilities(driverProfileId);
-      if (!driverData) {
-        reasons.push('Driver not found');
-        return { isEligible: false, reasons };
-      }
+      if (!driverData) return { isEligible: false, reasons: ['Driver not found'] };
 
-      // Buscar disponibilidade
       const availability = await DriverAvailabilityService.getStatus(driverProfileId);
       if (!availability) {
-        reasons.push('Driver availability not found');
-        return { isEligible: false, reasons };
+        return { isEligible: false, reasons: ['Driver availability not found'] };
       }
 
-      // Obter configuracao
       const config = MobilityDispatchConfigService.getConfig(strategy);
-
-      // Validacoes obrigatorias
       if (config.requiresVerification && !driverData.is_verified) {
         reasons.push('Driver not verified');
       }
-
-      if (driverData.is_suspended) {
-        reasons.push('Driver is suspended');
-      }
-
-      if (!availability.isOnline) {
-        reasons.push('Driver is offline');
-      }
-
-      if (!availability.isAvailable) {
-        reasons.push('Driver is not available');
-      }
-
-      if (availability.activeRideId) {
-        reasons.push('Driver has active ride');
-      }
-
-      // Validacoes opcionais
+      if (driverData.is_suspended) reasons.push('Driver is suspended');
+      if (!availability.isOnline) reasons.push('Driver is offline');
+      if (!availability.isAvailable) reasons.push('Driver is not available');
+      if (availability.activeRideId) reasons.push('Driver has active ride');
       if (config.requiresSubscription && !driverData.subscription_active) {
         reasons.push('Driver subscription is not active');
       }
-
-      // Validacao especifica para motoboy
       if (strategy === 'open_board' && !driverData.can_do_delivery) {
         reasons.push('Driver cannot do deliveries');
       }
-
       if (strategy !== 'open_board' && driverData.can_do_rides === false) {
         reasons.push('Driver cannot do rides');
       }
 
       const trustRole =
-        strategy === 'open_board' ? TRUST_ACTOR_ROLES.COURIER : TRUST_ACTOR_ROLES.DRIVER;
+        strategy === 'open_board'
+          ? TRUST_ACTOR_ROLES.COURIER
+          : TRUST_ACTOR_ROLES.DRIVER;
       const trustGate = await TrustPolicyReadService.canCurrentReceiveOperationalCall(
         trustRole,
       );
@@ -653,30 +540,20 @@ export class MobilityOfferService {
         reasons.push(trustGate.reason || 'Driver blocked by trust policy');
       }
 
-      return {
-        isEligible: reasons.length === 0,
-        reasons,
-      };
+      return { isEligible: reasons.length === 0, reasons };
     } catch (error) {
-      logger.error('MobilityOfferService.validateDriverEligibility', error as Error, { driverProfileId });
-      reasons.push('Error validating eligibility');
-      return { isEligible: false, reasons };
+      logger.error('MobilityOfferService.validateDriverEligibility', error as Error, {
+        driverProfileId,
+      });
+      return { isEligible: false, reasons: ['Error validating eligibility'] };
     }
   }
 
-  // ============================================
-  // HELPER METHODS
-  // ============================================
-
-  /**
-   * Extrai bairro do endereco completo
-   */
   private static extractNeighborhood(address: string): string {
     const parts = address
       .split(',')
       .map((part) => part.trim())
       .filter(Boolean);
-
     if (parts.length === 0) return 'Regiao';
 
     const isAdministrativePart = (part: string) => {
@@ -684,7 +561,6 @@ export class MobilityOfferService {
         .normalize('NFD')
         .replace(/[\u0300-\u036f]/g, '')
         .toLowerCase();
-
       return (
         /^\d+$/.test(normalized) ||
         /^\d{5}-?\d{3}$/.test(normalized) ||
@@ -695,51 +571,40 @@ export class MobilityOfferService {
       );
     };
 
-    const neighborhood = [...parts]
-      .reverse()
-      .find((part) => !isAdministrativePart(part));
-
-    return neighborhood || parts[0] || 'Regiao';
+    return (
+      [...parts].reverse().find((part) => !isAdministrativePart(part)) ||
+      parts[0] ||
+      'Regiao'
+    );
   }
 
-  /**
-   * Calcula distancia Haversine
-   */
   private static calculateDistance(
     lat1: number,
     lng1: number,
     lat2: number,
-    lng2: number
+    lng2: number,
   ): number {
-    const R = 6371; // Raio da Terra em km
+    const earthRadiusKm = 6371;
     const dLat = this.toRad(lat2 - lat1);
     const dLng = this.toRad(lng2 - lng1);
     const a =
-      Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+      Math.sin(dLat / 2) ** 2 +
       Math.cos(this.toRad(lat1)) *
         Math.cos(this.toRad(lat2)) *
-        Math.sin(dLng / 2) *
-        Math.sin(dLng / 2);
-    const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
-    return R * c;
+        Math.sin(dLng / 2) ** 2;
+    return earthRadiusKm * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
   }
 
   private static toRad(degrees: number): number {
     return (degrees * Math.PI) / 180;
   }
 
-  /**
-   * Estima duracao baseada na distancia
-   */
   private static estimateDuration(distanceKm: number): number {
-    // Velocidade media: 30 km/h em cidade
     const avgSpeedKmh = 30;
-    return Math.ceil((distanceKm / avgSpeedKmh) * 60); // minutos
+    return Math.ceil((distanceKm / avgSpeedKmh) * 60);
   }
 
-  private static async getDriverCapabilities(
-    driverProfileId: string
-  ) {
+  private static async getDriverCapabilities(driverProfileId: string) {
     return getDriverOfferCapabilities(driverProfileId);
   }
 
@@ -756,11 +621,11 @@ export class MobilityOfferService {
         .order('attempt_number', { ascending: false })
         .limit(1)
         .maybeSingle();
-
       if (error) throw error;
-
       const attemptNumber = data?.attempt_number;
-      return typeof attemptNumber === 'number' && attemptNumber > 0 ? attemptNumber : 1;
+      return typeof attemptNumber === 'number' && attemptNumber > 0
+        ? attemptNumber
+        : 1;
     } catch (error) {
       logger.warn('Failed to resolve latest dispatch attempt number', {
         rideId,
@@ -771,8 +636,3 @@ export class MobilityOfferService {
     }
   }
 }
-
-
-
-
-

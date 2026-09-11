@@ -27,8 +27,7 @@ type MobilityRpcAction =
   | "updateDriverLocation"
   | "listDriverOffers"
   | "findAvailableDriversForRide"
-  | "reconcileStaleDriverAvailability"
-;
+  | "reconcileStaleDriverAvailability";
 
 export interface DriverAvailabilityBrokerData {
   success?: boolean;
@@ -44,6 +43,12 @@ export interface DriverLocationBrokerData {
   location?: Record<string, unknown>;
 }
 
+/**
+ * Browser-facing PRE-ACCEPT offer row.
+ *
+ * G69 intentionally excludes requester/source ids and requester-controlled free
+ * text. Exact addresses never belong here; route labels/coordinates are coarse.
+ */
 export interface DriverOfferBrokerRow {
   id: string;
   origin: string;
@@ -52,21 +57,22 @@ export interface DriverOfferBrokerRow {
   origin_lng: number | null;
   destination_lat: number | null;
   destination_lng: number | null;
+  location_precision: "coarse_2dp";
   suggested_price: number;
   payment_method: string;
   created_at: string;
   driver_assigned_at: string | null;
   scheduled_for: string | null;
   ride_mode: string | null;
-  passenger_profile_id: string | null;
   driver_profile_id: string | null;
   package_size: string | null;
-  package_description: string | null;
   source_type: string | null;
-  source_id: string | null;
   status: string;
   risk_level: string | null;
   dispatch_policy: string | null;
+  offer_kind?: "failed_delivery_handoff";
+  handoff_from_driver_profile_id?: string | null;
+  handoff_request_expires_at?: string | null;
 }
 
 export interface DriverOffersBrokerData {
@@ -109,10 +115,33 @@ export interface AdminRedispatchBrokerData {
   driver_profile_id?: string;
 }
 
+export interface FailedDeliveryResolutionBrokerData {
+  updated: boolean;
+  ride_id: string;
+  resolution_status?: string | null;
+  redelivery_created?: boolean;
+  next_ride_id?: string | null;
+}
+
 const FUNCTION_NAME = "mobility-rpc";
 const SERVICE_NAME = "MobilityRpcService";
 
 export class MobilityRpcService {
+  private static async invoke<T>(
+    action: MobilityRpcAction,
+    params: Record<string, unknown> = {},
+    client?: SupabaseBrokerClient,
+  ): Promise<T> {
+    return invokeSupabaseBroker<T, MobilityRpcAction>({
+      action,
+      client,
+      functionName: FUNCTION_NAME,
+      noDataMessage: "Mobility broker returned no data",
+      params,
+      serviceName: SERVICE_NAME,
+    });
+  }
+
   static async createDriverProfile(input: {
     handle: string;
     displayName: string;
@@ -194,21 +223,6 @@ export class MobilityRpcService {
     });
   }
 
-  private static async invoke<T>(
-    action: MobilityRpcAction,
-    params: Record<string, unknown> = {},
-    client?: SupabaseBrokerClient,
-  ): Promise<T> {
-    return invokeSupabaseBroker<T, MobilityRpcAction>({
-      action,
-      client,
-      functionName: FUNCTION_NAME,
-      noDataMessage: "Mobility broker returned no data",
-      params,
-      serviceName: SERVICE_NAME,
-    });
-  }
-
   static async transitionRideState(input: {
     rideId: string;
     expectedFromState: string;
@@ -264,17 +278,15 @@ export class MobilityRpcService {
   static async updateFailedDeliveryResolution(input: {
     rideId: string;
     resolutionUpdate: FailedDeliveryResolutionUpdate;
-  }): Promise<{
-    updated: boolean;
-    ride_id: string;
-    resolution_status?: string | null;
-  }> {
-    return this.invoke("updateFailedDeliveryResolution", {
-      rideId: input.rideId,
-      resolutionUpdate: input.resolutionUpdate,
-    });
+  }): Promise<FailedDeliveryResolutionBrokerData> {
+    return this.invoke<FailedDeliveryResolutionBrokerData>(
+      "updateFailedDeliveryResolution",
+      {
+        rideId: input.rideId,
+        resolutionUpdate: input.resolutionUpdate,
+      },
+    );
   }
-
 
   static async acceptRideAtomic(
     rideId: string,
@@ -306,7 +318,6 @@ export class MobilityRpcService {
   }> {
     return this.invoke("confirmPassengerCompletion", { rideId });
   }
-
 
   static async updateDriverAvailability(
     input: {
@@ -408,5 +419,4 @@ export class MobilityRpcService {
       { thresholdMinutes },
     );
   }
-
 }

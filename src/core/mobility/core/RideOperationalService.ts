@@ -162,8 +162,16 @@ export class RideOperationalService {
 
       // GATE 7: Validar PIN antes de passenger_boarded se exigido
       if (toState === RIDE_STATE.PASSENGER_BOARDED) {
-        const verification = await OperationalVerificationService.getVerificationStatus(rideId);
+        const verificationResult =
+          await OperationalVerificationService.getVerificationStatusResult(rideId);
+        if (!verificationResult.success) {
+          return {
+            success: false,
+            error: "Boarding verification state is unavailable",
+          };
+        }
 
+        const verification = verificationResult.data ?? null;
         if (verification?.is_required && verification.status !== 'verified') {
           // Se PIN fornecido, validar
           if (pin) {
@@ -195,7 +203,6 @@ export class RideOperationalService {
       if (deliveryCommand) {
         const expectedDeliveryState = {
           confirm_pickup: RIDE_STATE.PICKUP_CONFIRMED,
-          confirm_delivery: RIDE_STATE.DELIVERED,
           fail_delivery: RIDE_STATE.FAILED_DELIVERY,
         }[deliveryCommand.type];
 
@@ -216,14 +223,6 @@ export class RideOperationalService {
             command: deliveryCommand.type,
             actorProfileId: actor,
             reason,
-            proofOfDelivery:
-              deliveryCommand.type === "confirm_delivery"
-                ? deliveryCommand.proof
-                : undefined,
-            finalPrice:
-              deliveryCommand.type === "confirm_delivery"
-                ? deliveryCommand.finalPrice
-                : undefined,
             failedDeliveryMetadata:
               deliveryCommand.type === "fail_delivery"
                 ? deliveryCommand.metadata
@@ -609,22 +608,24 @@ export class RideOperationalService {
     finalPrice?: number,
     pin?: string // GATE 7: PIN opcional para validacao
   ): Promise<TransitionResult> {
-    return confirmDeliveryOperation(
+    const result = await confirmDeliveryOperation(
       rideId,
       driverProfileId,
       proof,
       finalPrice,
       pin,
-      (nextRideId, toState, actorProfileId, reason, deliveryCommand) =>
-        this.transitionTo(
-          nextRideId,
-          toState,
-          actorProfileId,
-          reason,
-          undefined,
-          deliveryCommand,
-        ),
     );
+
+    if (result.success) {
+      await OrderDeliveryLinkService.syncRideStatusToOrder({
+        rideId,
+        rideStatus: RIDE_STATE.COMPLETED,
+        actorProfileId: driverProfileId,
+        reason: "Delivery confirmed and completed",
+      });
+    }
+
+    return result;
   }
 
   /**
@@ -663,4 +664,3 @@ export class RideOperationalService {
     return updateFailedDeliveryResolutionOperation(rideId, resolutionUpdate);
   }
 }
-

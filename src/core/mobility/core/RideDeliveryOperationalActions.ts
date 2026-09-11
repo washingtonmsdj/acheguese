@@ -2,7 +2,11 @@ import { logger } from "@/shared/utils/logger";
 import { RIDE_STATE, type RideState } from "./RideStateMachine";
 import { getRideById } from "../services/mobility.queries";
 import { MobilityRpcService } from "../services/MobilityRpcService";
-import type { FailedDeliveryMetadata, FailedDeliveryResolutionUpdate } from "../types/FailedDeliveryMetadata";
+import type {
+  FailedDeliveryMetadata,
+  FailedDeliveryResolutionUpdate,
+  FailedDeliverySnapshotInput,
+} from "../types/FailedDeliveryMetadata";
 import { OperationalVerificationService } from "../services/OperationalVerificationService";
 import type {
   CreateDeliveryInput,
@@ -16,18 +20,14 @@ import {
   validateFailedDeliverySnapshot,
 } from "./RideOperationalGuards";
 
+/**
+ * Delivery commands that still belong to the generic state-transition path.
+ * confirm_delivery is intentionally excluded: G70 closes delivered+completed
+ * through one specialized server command so callers cannot split custody close.
+ */
 export type DeliveryTransitionCommand =
   | { type: "confirm_pickup" }
-  | {
-      type: "confirm_delivery";
-      proof: {
-        photo_url?: string;
-        code?: string;
-        observation?: string;
-      };
-      finalPrice?: number;
-    }
-  | { type: "fail_delivery"; metadata: FailedDeliveryMetadata };
+  | { type: "fail_delivery"; metadata: FailedDeliverySnapshotInput };
 
 type TransitionFn = (
   rideId: string,
@@ -102,9 +102,6 @@ export async function createDeliveryOperation(
     const ride = { id: creation.ride_id };
     logger.info("RideOperationalService.createDelivery - success", { rideId: ride.id });
 
-    // A exigencia de PIN e criada de forma atomica no backend com a entrega.
-    // Nenhuma segunda escrita browser-side pode falhar aberta.
-
     await transitionTo(ride.id, RIDE_STATE.SEARCHING_DRIVER, "system");
     return { success: true, rideId: ride.id, newState: RIDE_STATE.SEARCHING_DRIVER };
   } catch (error) {
@@ -177,7 +174,6 @@ export async function confirmDeliveryOperation(
   },
   finalPrice: number | undefined,
   pin: string | undefined,
-  transitionTo: TransitionFn,
 ): Promise<TransitionResult> {
   try {
     const ride = (await getRideById(rideId)) as RideDriverAssignment;
@@ -191,9 +187,6 @@ export async function confirmDeliveryOperation(
     const operatorBlock = await ensureMotoboyCanOperate(driverProfileId, rideId);
     if (operatorBlock) return operatorBlock;
 
-    // Delivery confirmation is safety-sensitive. A verification read failure
-    // must never be interpreted as "PIN not required". The broker performs the
-    // authoritative check again before the atomic delivery transition.
     const verificationResult =
       await OperationalVerificationService.getVerificationStatusResult(rideId);
     if (!verificationResult.success) {
@@ -220,20 +213,40 @@ export async function confirmDeliveryOperation(
       }
     }
 
-    const deliveredResult = await transitionTo(
+    const transition = await MobilityRpcService.transitionDeliveryState({
       rideId,
-      RIDE_STATE.DELIVERED,
-      driverProfileId,
-      "Delivered",
-      {
-        type: "confirm_delivery",
-        proof,
-        finalPrice,
-      },
-    );
-    if (!deliveredResult.success) return deliveredResult;
+      expectedFromState: RIDE_STATE.IN_DELIVERY,
+      command: "confirm_delivery",
+      actorProfileId: driverProfileId,
+      reason: "Delivery confirmed and completed",
+      proofOfDelivery: proof,
+      finalPrice,
+    });
 
-    return await transitionTo(rideId, RIDE_STATE.COMPLETED, driverProfileId, "Delivery completed");
+    if (!transition.updated) {
+      return {
+        success: false,
+        error: "Delivery completion was not applied by the backend.",
+      };
+    }
+
+    if (
+      transition.from_state !== RIDE_STATE.IN_DELIVERY ||
+      transition.to_state !== RIDE_STATE.COMPLETED
+    ) {
+      return {
+        success: false,
+        error: `Delivery completion returned unexpected state: ${transition.to_state}`,
+      };
+    }
+
+    return {
+      success: true,
+      rideId,
+      fromState: RIDE_STATE.IN_DELIVERY,
+      toState: RIDE_STATE.COMPLETED,
+      newState: RIDE_STATE.COMPLETED,
+    };
   } catch (error) {
     logger.error("RideOperationalService.confirmDelivery", error as Error, { rideId });
     return { success: false, error: (error as Error).message };
@@ -243,7 +256,7 @@ export async function confirmDeliveryOperation(
 export async function failDeliveryOperation(
   rideId: string,
   driverProfileId: string,
-  metadata: FailedDeliveryMetadata,
+  metadata: FailedDeliveryMetadata | FailedDeliverySnapshotInput,
   transitionTo: TransitionFn,
 ): Promise<TransitionResult> {
   try {
@@ -259,16 +272,28 @@ export async function failDeliveryOperation(
     if (operatorBlock) return operatorBlock;
 
     validateFailedDeliverySnapshot(metadata);
-    if (!metadata.resolution_status) metadata.resolution_status = "pending";
+
+    const snapshot: FailedDeliverySnapshotInput = {
+      failure_reason: metadata.failure_reason,
+      item_destination: metadata.item_destination,
+      item_current_holder: "driver",
+      timestamp: metadata.timestamp,
+      resolution_status: "pending",
+      resolution_notes: metadata.resolution_notes,
+      failed_at_location: metadata.failed_at_location,
+      photos: metadata.photos,
+      attempt_number: metadata.attempt_number,
+      attempted_delivery_count: metadata.attempted_delivery_count,
+    };
 
     return await transitionTo(
       rideId,
       RIDE_STATE.FAILED_DELIVERY,
       driverProfileId,
-      metadata.failure_reason,
+      snapshot.failure_reason,
       {
         type: "fail_delivery",
-        metadata,
+        metadata: snapshot,
       },
     );
   } catch (error) {
@@ -296,15 +321,31 @@ export async function updateFailedDeliveryResolutionOperation(
 
     validateFailedDeliveryResolution(resolutionUpdate);
 
-    await MobilityRpcService.updateFailedDeliveryResolution({
+    const result = await MobilityRpcService.updateFailedDeliveryResolution({
       rideId,
       resolutionUpdate,
     });
+
+    if (result.updated !== true) {
+      return {
+        success: false,
+        error: "Resolucao da falha nao foi aplicada pelo backend.",
+      };
+    }
+
     logger.info("RideOperationalService.updateFailedDeliveryResolution - success", {
       rideId,
-      resolution_status: resolutionUpdate.resolution_status,
+      resolution_status: result.resolution_status ?? resolutionUpdate.resolution_status,
+      redelivery_created: result.redelivery_created === true,
+      next_ride_id: result.next_ride_id ?? null,
     });
-    return { success: true, rideId };
+
+    return {
+      success: true,
+      rideId,
+      nextRideId: result.next_ride_id ?? undefined,
+      redeliveryCreated: result.redelivery_created === true,
+    };
   } catch (error) {
     logger.error("RideOperationalService.updateFailedDeliveryResolution", error as Error, { rideId });
     return { success: false, error: (error as Error).message };
