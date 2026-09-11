@@ -43,7 +43,7 @@ export const RideTrackingMap = memo(function RideTrackingMap({
   const containerRef    = useRef<HTMLDivElement>(null);
   const mapRef          = useRef<maplibregl.Map | null>(null);
   const driverMarkerRef = useRef<maplibregl.Marker | null>(null);
-  const [routeLoaded, setRouteLoaded] = useState(false);
+  const [mapReady, setMapReady] = useState(false);
 
   const { location, eta, loading, error, isConnected, calculateETA, refetch } = useDriverLocation({
     driverProfileId,
@@ -51,10 +51,21 @@ export const RideTrackingMap = memo(function RideTrackingMap({
     enabled: true,
   });
 
-  // ── Carregar rota real ─────────────────────────────────────────
+  // ── Carregar/atualizar rota real somente depois do MapLibre estar pronto ──
   useEffect(() => {
     const map = mapRef.current;
-    if (!map || !originLat || !originLon || !destinationLat || !destinationLon || routeLoaded) return;
+    if (
+      !map ||
+      !mapReady ||
+      originLat == null ||
+      originLon == null ||
+      destinationLat == null ||
+      destinationLon == null
+    ) {
+      return;
+    }
+
+    let cancelled = false;
 
     const loadRoute = async () => {
       try {
@@ -67,14 +78,14 @@ export const RideTrackingMap = memo(function RideTrackingMap({
           },
         });
 
+        if (cancelled || !mapRef.current) return;
+
         const route = routeResponse.primaryRoute;
-
-        // Converter geometria para formato GeoJSON
         const coordinates = route.geometry.map(coord => [coord.longitude, coord.latitude]);
+        const liveMap = mapRef.current;
 
-        // Adicionar source e layer de rota real
-        if (map.getSource('route-real')) {
-          (map.getSource('route-real') as maplibregl.GeoJSONSource).setData({
+        if (liveMap.getSource('route-real')) {
+          (liveMap.getSource('route-real') as maplibregl.GeoJSONSource).setData({
             type: 'Feature',
             geometry: {
               type: 'LineString',
@@ -83,7 +94,7 @@ export const RideTrackingMap = memo(function RideTrackingMap({
             properties: {},
           });
         } else {
-          map.addSource('route-real', {
+          liveMap.addSource('route-real', {
             type: 'geojson',
             data: {
               type: 'Feature',
@@ -95,7 +106,7 @@ export const RideTrackingMap = memo(function RideTrackingMap({
             },
           });
 
-          map.addLayer({
+          liveMap.addLayer({
             id: 'route-real-line',
             type: 'line',
             source: 'route-real',
@@ -104,18 +115,20 @@ export const RideTrackingMap = memo(function RideTrackingMap({
               'line-width': 4,
               'line-opacity': 0.7,
             },
-          }, 'driver-path-line'); // Adicionar abaixo do trajeto do motorista
+          }, 'driver-path-line');
         }
-
-        setRouteLoaded(true);
       } catch (error) {
         logger.error('[RideTrackingMap] Erro ao carregar rota real:', error);
-        // Não bloquear o mapa se rota falhar
+        // O tracking do motorista continua funcional mesmo se o roteamento falhar.
       }
     };
 
-    loadRoute();
-  }, [originLat, originLon, destinationLat, destinationLon, routeLoaded]);
+    void loadRoute();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [mapReady, originLat, originLon, destinationLat, destinationLon]);
 
   // ── Inicialização ──────────────────────────────────────────────
   useEffect(() => {
@@ -135,40 +148,47 @@ export const RideTrackingMap = memo(function RideTrackingMap({
     map.addControl(new maplibregl.AttributionControl({ compact: true }), 'bottom-left');
 
     map.on('load', () => {
-      // Source de trajeto do motorista
       map.addSource('driver-path', { type: 'geojson', data: { type: 'Feature', geometry: { type: 'LineString', coordinates: [] }, properties: {} } });
       map.addLayer({ id: 'driver-path-line', type: 'line', source: 'driver-path', paint: { 'line-color': '#14b8a6', 'line-width': 4, 'line-opacity': 0.8 } });
 
-      // Marcadores de origem e destino
-      if (originLat && originLon) {
+      if (originLat != null && originLon != null) {
         const el = document.createElement('div');
         el.style.cssText = 'width:24px;height:24px;background:#34d399;border-radius:50%;border:3px solid white;box-shadow:0 2px 8px rgba(0,0,0,0.3);';
         new maplibregl.Marker({ element: el }).setLngLat([originLon, originLat]).addTo(map);
       }
-      if (destinationLat && destinationLon) {
+      if (destinationLat != null && destinationLon != null) {
         const el = document.createElement('div');
         el.style.cssText = 'width:24px;height:24px;background:#ef4444;border-radius:50%;border:3px solid white;box-shadow:0 2px 8px rgba(0,0,0,0.3);';
         new maplibregl.Marker({ element: el }).setLngLat([destinationLon, destinationLat]).addTo(map);
       }
 
-      // Ajustar câmera para cobrir origem e destino
-      if (originLat && originLon && destinationLat && destinationLon) {
+      if (
+        originLat != null &&
+        originLon != null &&
+        destinationLat != null &&
+        destinationLon != null
+      ) {
         map.fitBounds(
           [[Math.min(originLon, destinationLon), Math.min(originLat, destinationLat)],
            [Math.max(originLon, destinationLon), Math.max(originLat, destinationLat)]],
           { padding: 60 }
         );
       }
+
+      setMapReady(true);
     });
 
     mapRef.current = map;
-    return () => { map.remove(); mapRef.current = null; };
+    return () => {
+      map.remove();
+      mapRef.current = null;
+    };
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   // ── Atualizar posição do motorista ─────────────────────────────
   useEffect(() => {
     const map = mapRef.current;
-    if (!map || !location) return;
+    if (!map || !mapReady || !location) return;
 
     const lngLat: [number, number] = [location.longitude, location.latitude];
 
@@ -177,7 +197,6 @@ export const RideTrackingMap = memo(function RideTrackingMap({
     } else {
       const el = document.createElement('div');
       el.style.cssText = 'width:32px;height:32px;background:#14b8a6;border-radius:50%;border:3px solid white;box-shadow:0 2px 8px rgba(0,0,0,0.3);display:flex;align-items:center;justify-content:center;';
-      // ✅ SEGURO - Usa DOM API ao invés de innerHTML
       const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
       svg.setAttribute('width', '16');
       svg.setAttribute('height', '16');
@@ -194,10 +213,11 @@ export const RideTrackingMap = memo(function RideTrackingMap({
 
     map.easeTo({ center: lngLat, duration: 500 });
 
-    if (destinationLat && destinationLon) calculateETA(destinationLat, destinationLon);
-  }, [location, destinationLat, destinationLon, calculateETA]);
+    if (destinationLat != null && destinationLon != null) {
+      calculateETA(destinationLat, destinationLon);
+    }
+  }, [location, destinationLat, destinationLon, calculateETA, mapReady]);
 
-  // ── Estados de loading/error/sem localização ───────────────────
   if (loading && !location) {
     return (
       <Card className={cn('border', className)}>
@@ -246,7 +266,6 @@ export const RideTrackingMap = memo(function RideTrackingMap({
   return (
     <Card className={cn('border border-teal-500/30', className)}>
       <CardContent className="p-0">
-        {/* Header */}
         <div className="p-4 border-b border-white/10 bg-gradient-to-r from-teal-500/10 to-cyan-500/5">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2">
@@ -271,10 +290,8 @@ export const RideTrackingMap = memo(function RideTrackingMap({
           </div>
         </div>
 
-        {/* Mapa */}
         <div ref={containerRef} className="w-full h-64" />
 
-        {/* Badges de telemetria */}
         <div className="absolute bottom-12 left-4 flex gap-2 pointer-events-none">
           {location.speed != null && location.speed > 0 && (
             <Badge variant="outline" className="bg-black/80 text-white border-white/20">
@@ -288,9 +305,8 @@ export const RideTrackingMap = memo(function RideTrackingMap({
           )}
         </div>
 
-        {/* Footer */}
         <div className="p-3 bg-white/5 border-t border-white/10 flex items-center justify-between text-xs">
-          <span className="text-gray-400 font-mono">{location.latitude.toFixed(6)}, {location.longitude.toFixed(6)}</span>
+          <span className="text-gray-400">Posição atualizada</span>
           <span className="text-gray-500">{new Date(location.timestamp).toLocaleTimeString('pt-BR')}</span>
         </div>
       </CardContent>
