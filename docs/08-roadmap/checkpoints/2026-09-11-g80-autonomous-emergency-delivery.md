@@ -132,11 +132,18 @@ authority.
 
 ## Validation status
 
-- Source is versioned only on `integrate/mobility-safety-g71-g79`.
-- `main` is unchanged by this checkpoint.
+- Source remains isolated on `integrate/mobility-safety-g71-g79`.
+- The baseline security fixes that previously blocked Vercel validation were
+  merged separately to `main` as `d68a167683bc973c12a9eefe8880bc467dc9bb38`;
+  they are not part of the G71–G80 diff.
+- The integration branch contains a real merge parent from that `main` and is
+  now `behind_by=0` relative to it.
 - G80 migration has **not** been applied to remote Supabase in this checkpoint.
 - Updated Edge Function has **not** been deployed remotely in this checkpoint.
-- GitHub Actions runner has been failing before job steps start, so no CI PASS is
-  claimed without execution evidence.
-- The PR must remain draft until executable validation is available or an
-  equivalent trusted validation path produces evidence.
+- GitHub Actions runner continues failing before job steps start, so no CI PASS
+  is claimed without execution evidence.
+- Vercel previously executed `security:validate` against the finalized G80
+  authority/config and reported no G71–G80 finding; that run stopped only on the
+  two baseline issues now fixed in `main`.
+- A fresh preview/build is required against the reconciled branch before the PR
+  can leave draft or be merged.
