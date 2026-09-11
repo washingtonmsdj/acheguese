@@ -25,7 +25,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/shared/components/ui/select';
-import { ArrowLeft, Plus, Search } from 'lucide-react';
+import { ArrowLeft, LayoutGrid, List, Plus, Search } from 'lucide-react';
 import type { MenuCategory, MenuItem } from '@/core/business/services/MenuService';
 import { businessManagementRoutes } from '@/core/business/utils/businessManagementRoutes';
 
@@ -45,6 +45,7 @@ export default function MenuManagementPage() {
   const [selectedItem, setSelectedItem] = useState<MenuItem | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
   const [filterCategory, setFilterCategory] = useState<string>('all');
+  const [viewMode, setViewMode] = useState<'list' | 'grid'>('list');
   const [categoryToDelete, setCategoryToDelete] = useState<string | null>(null);
   const [itemToDelete, setItemToDelete] = useState<string | null>(null);
 
@@ -245,7 +246,7 @@ export default function MenuManagementPage() {
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
-              <div className="flex gap-4">
+              <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:gap-4">
                 <div className="flex-1 relative">
                   <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
                   <Input
@@ -271,6 +272,27 @@ export default function MenuManagementPage() {
                     </SelectContent>
                   </Select>
                 )}
+
+                <div className="inline-flex self-start rounded-lg border border-territory-border bg-territory-surface p-1 sm:self-auto" aria-label="Modo de visualização">
+                  <button
+                    type="button"
+                    aria-label="Visualizar em lista"
+                    aria-pressed={viewMode === 'list'}
+                    onClick={() => setViewMode('list')}
+                    className={`inline-flex h-9 w-9 items-center justify-center rounded-md focus-visible:outline-2 focus-visible:outline-offset-[-2px] focus-visible:outline-territory-brand ${viewMode === 'list' ? 'bg-territory-brand text-white' : 'text-territory-muted hover:bg-territory-raised hover:text-territory-ink'}`}
+                  >
+                    <List className="h-4 w-4" aria-hidden="true" />
+                  </button>
+                  <button
+                    type="button"
+                    aria-label="Visualizar em grade"
+                    aria-pressed={viewMode === 'grid'}
+                    onClick={() => setViewMode('grid')}
+                    className={`inline-flex h-9 w-9 items-center justify-center rounded-md focus-visible:outline-2 focus-visible:outline-offset-[-2px] focus-visible:outline-territory-brand ${viewMode === 'grid' ? 'bg-territory-brand text-white' : 'text-territory-muted hover:bg-territory-raised hover:text-territory-ink'}`}
+                  >
+                    <LayoutGrid className="h-4 w-4" aria-hidden="true" />
+                  </button>
+                </div>
 
                 <Button onClick={handleCreateItem} disabled={!canAddMoreItems}>
                   <Plus className="w-4 h-4 mr-2" />
@@ -313,7 +335,7 @@ export default function MenuManagementPage() {
               </CardContent>
             </Card>
           ) : (
-            <div className="space-y-4">
+            <div className={viewMode === 'grid' ? 'grid gap-4 sm:grid-cols-2 xl:grid-cols-3' : 'space-y-4'}>
               {filteredItems.map((item) => (
                 <ItemCard
                   key={item.id}
