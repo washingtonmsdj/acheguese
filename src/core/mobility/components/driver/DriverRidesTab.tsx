@@ -21,6 +21,11 @@ interface DriverRidesTabProps {
   onOfferModeFilterChange: (mode: OfferModeFilter) => void;
   onToggleOnline: () => void;
   onAcceptRide: (rideId: string) => void;
+  onStartPickupRoute: (rideId: string) => Promise<boolean> | boolean | void;
+  onConfirmBoarding: (
+    rideId: string,
+    pin?: string,
+  ) => Promise<boolean> | boolean | void;
   onStartRide: (rideId: string) => void;
   onCompleteRide: (rideId: string, ride?: MobilityRide) => void;
   onCancelRide: (rideId: string) => void;
@@ -36,6 +41,8 @@ export function DriverRidesTab({
   offerModeFilter,
   onOfferModeFilterChange,
   onAcceptRide,
+  onStartPickupRoute,
+  onConfirmBoarding,
   onStartRide,
   onCompleteRide,
   onCancelRide,
@@ -55,6 +62,8 @@ export function DriverRidesTab({
           <DriverRidesList
             rides={acceptedPassengerRides}
             type="accepted"
+            onStartPickupRoute={onStartPickupRoute}
+            onConfirmBoarding={onConfirmBoarding}
             onStart={onStartRide}
             onComplete={onCompleteRide}
             onCancel={onCancelRide}
