@@ -60,14 +60,26 @@ export interface FailedDeliverySnapshotInput extends FailedDeliverySnapshotBase 
 
 /**
  * Campos aceitos no comando administrativo de resolucao posterior.
- * `resolved_at` permanece server-owned.
+ *
+ * G81: `handoff_driver_profile_id` isolado nao transfere mais custodia. Para
+ * iniciar handoff fisico o admin precisa enviar `handoff_requested: true` com o
+ * alvo e notas; o receptor autenticado conclui a transferencia separadamente.
+ * `resolved_at` e toda a evidencia de transferencia permanecem server-owned.
  */
 export interface FailedDeliveryResolutionUpdate {
   next_ride_id?: string;
+  handoff_requested?: true;
   handoff_driver_profile_id?: string;
   manual_resolution_owner_profile_id?: string;
   resolution_status?: ResolutionStatus;
   resolution_action_notes?: string;
+}
+
+export interface CustodyHandoffHistoryEntry {
+  from_driver_profile_id: string;
+  to_driver_profile_id: string;
+  confirmed_at: string;
+  source: 'failed_delivery_handoff';
 }
 
 /**
@@ -82,6 +94,22 @@ export interface FailedDeliveryMetadata extends FailedDeliverySnapshotBase {
   manual_resolution_owner_profile_id?: string;
   resolved_at?: string;
   resolution_action_notes?: string;
+
+  // G81: handoff fisico solicitado por admin, confirmado pelo receptor.
+  resolution_plan?: 'handoff_to_another_driver';
+  resolution_action?: 'handoff_to_another_driver';
+  resolution_item_holder?: ItemHolder;
+  handoff_requested_driver_profile_id?: string;
+  handoff_requested_at?: string;
+  handoff_request_expires_at?: string;
+  handoff_request_distance_m?: number;
+  handoff_from_driver_profile_id?: string;
+  handoff_confirmed_at?: string;
+  handoff_distance_m?: number;
+  handoff_accepted_at?: string;
+  handoff_acceptance_source?: 'authenticated_driver_accept';
+  courier_settlement_allocation_required?: boolean;
+  custody_handoff_history?: CustodyHandoffHistoryEntry[];
 }
 
 export const VALID_FAILURE_REASONS: FailureReason[] = [
