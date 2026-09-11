@@ -309,7 +309,7 @@ export default function BusinessManagementConceptPreviewPage() {
   };
 
   const openMessages = () => navigate("/mensagens?concept-mock=1");
-  const openMenu = () => selectArea("Cardápio");
+  const openMenu = () => navigate("/central/cardapio?concept-mock=1");
   const openPublications = () => selectArea("Publicações e ofertas");
 
   return (

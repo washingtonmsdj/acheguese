@@ -18,6 +18,9 @@ export const BusinessOverviewPage = lazy(() =>
 export const BusinessManagementConceptPreviewPage = lazy(() =>
   import("@/modules/business/dashboard/pages/BusinessManagementConceptPreviewPage"),
 );
+export const BusinessMenuConceptPreviewPage = lazy(() =>
+  import("@/modules/business/dashboard/pages/BusinessMenuConceptPreviewPage"),
+);
 export const BusinessDetailsPage = lazy(() =>
   import("@/modules/business/dashboard/pages/BusinessDetailsPage"),
 );

@@ -14,6 +14,7 @@ export function CentralRoutes() {
     return (
       <Routes>
         <Route index element={<P.BusinessManagementConceptPreviewPage />} />
+        <Route path="cardapio" element={<P.BusinessMenuConceptPreviewPage />} />
       </Routes>
     );
   }
