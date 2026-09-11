@@ -1,15 +1,11 @@
 import type {
-  FailedDeliveryMetadata,
+  FailedDeliverySnapshotInput,
   FailureReason,
   ItemDestination,
-  ItemHolder,
-  ResolutionStatus,
 } from "@/core/mobility/types/FailedDeliveryMetadata";
 import { VALID_FAILURE_REASONS } from "@/core/mobility/types/FailedDeliveryMetadata";
 
 const DEFAULT_ITEM_DESTINATION: ItemDestination = "awaiting_manual_resolution";
-const DEFAULT_ITEM_HOLDER: ItemHolder = "driver";
-const DEFAULT_RESOLUTION_STATUS: ResolutionStatus = "pending";
 
 function normalizeText(value: string): string {
   return value
@@ -55,16 +51,16 @@ function resolveFailureReason(reason: string): FailureReason {
   return "other";
 }
 
-export function buildFailedDeliveryMetadata(reason: string): FailedDeliveryMetadata {
+export function buildFailedDeliveryMetadata(reason: string): FailedDeliverySnapshotInput {
   const trimmedReason = reason.trim();
   const failureReason = resolveFailureReason(trimmedReason);
 
   return {
     failure_reason: failureReason,
     item_destination: DEFAULT_ITEM_DESTINATION,
-    item_current_holder: DEFAULT_ITEM_HOLDER,
+    item_current_holder: "driver",
     timestamp: new Date().toISOString(),
-    resolution_status: DEFAULT_RESOLUTION_STATUS,
+    resolution_status: "pending",
     resolution_notes: failureReason === "other" && trimmedReason.length > 0 ? trimmedReason : undefined,
   };
 }
