@@ -336,7 +336,7 @@ function ItemCustomizer({ item, size, setSize, quantity, setQuantity, farofa, se
         </div>
       ) : (
         <>
-          <fieldset className="mt-4 space-y-1.5">
+          <fieldset className="mt-4 space-y-1.5 rounded-lg border border-territory-border px-2 py-1.5">
             <legend className="text-xs font-bold text-territory-ink sm:text-sm">Tamanho · obrigatório</legend>
             <label className="flex min-h-9 items-center gap-2 rounded-lg px-2 text-xs text-territory-ink hover:bg-territory-raised">
               <input type="radio" name="concept-size" checked={size === "individual"} onChange={() => setSize("individual")} className="h-4 w-4 accent-[hsl(var(--territory-brand))]" />
@@ -350,7 +350,7 @@ function ItemCustomizer({ item, size, setSize, quantity, setQuantity, farofa, se
             </label>
           </fieldset>
 
-          <fieldset className="mt-3 space-y-1.5">
+          <fieldset className="mt-3 space-y-1.5 rounded-lg border border-territory-border px-2 py-1.5">
             <legend className="text-xs font-bold text-territory-ink sm:text-sm">Adicionais · opcional</legend>
             <label className="flex min-h-8 items-center gap-2 text-xs text-territory-ink">
               <input type="checkbox" checked={farofa} onChange={(event) => setFarofa(event.target.checked)} className="h-4 w-4 rounded accent-[hsl(var(--territory-brand))]" />
@@ -368,7 +368,7 @@ function ItemCustomizer({ item, size, setSize, quantity, setQuantity, farofa, se
 
       <label className="mt-3 block text-xs font-bold text-territory-ink sm:text-sm">
         Observações
-        <Textarea value={notes} onChange={(event) => setNotes(event.target.value)} rows={2} placeholder="Ex.: enviar talheres" className="mt-1.5 resize-none rounded-lg border-territory-border text-xs placeholder:text-territory-muted" />
+        <Textarea value={notes} onChange={(event) => setNotes(event.target.value)} rows={1} placeholder="Ex.: enviar talheres" className="mt-1.5 h-10 min-h-0 resize-none rounded-lg border-territory-border bg-territory-surface text-xs placeholder:text-territory-muted" />
       </label>
 
       <div className="mt-4 flex items-center justify-between gap-3 border-t border-territory-border pt-3">
