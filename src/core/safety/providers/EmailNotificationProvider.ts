@@ -1,7 +1,8 @@
 /**
- * EmailNotificationProvider - authenticated client adapter for the durable
- * emergency-email worker. The browser sends only canonical IDs; delivery state
- * is owned by the server-side outbox and provider-confirmation pipeline.
+ * EmailNotificationProvider - browser adapter for the canonical durable
+ * emergency-email broker. The browser sends only canonical IDs; delivery state
+ * is owned by the server-side outbox and provider-confirmation pipeline. The
+ * same broker also has a separately authenticated cron ingress for recovery.
  */
 import { logger } from '@/shared/utils/logger';
 import {
