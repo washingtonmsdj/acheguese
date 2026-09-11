@@ -169,11 +169,11 @@ describe("Safety Core Platform security", () => {
 
   it("uses canonical authenticated-account authority before emergency delivery", () => {
     expect(emergencyEmailFunction).toContain(
-      "requireAuthenticatedUser(req, supabaseAdmin)",
+      "requireAuthenticatedUser(req, supabase)",
     );
     expect(emergencyEmailFunction).not.toContain("extractBearerToken(req)");
     expect(emergencyEmailFunction).not.toContain(
-      "requireOperationalAccount(\n      supabaseAdmin",
+      "requireOperationalAccount(\n      supabase",
     );
   });
 
