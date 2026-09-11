@@ -246,6 +246,9 @@ verify_jwt = true
 [functions.send-emergency-email]
 verify_jwt = true
 
+[functions.resend-emergency-webhook]
+verify_jwt = false
+
 [functions.send-push]
 verify_jwt = true
 

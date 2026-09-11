@@ -17,6 +17,21 @@ const contactEmailMigration = readProjectFile(
 const contactPrivacyMigration = readProjectFile(
   "supabase/migrations/20260826003840_restrict_emergency_contacts_to_direct_owner.sql",
 );
+const durableOutboxMigration = readProjectFile(
+  "supabase/migrations/20260911141000_durable_emergency_delivery_outbox_g72.sql",
+);
+const terminalRaceMigration = readProjectFile(
+  "supabase/migrations/20260911170000_cancel_terminal_emergency_delivery_race_g75.sql",
+);
+const providerEventMigration = readProjectFile(
+  "supabase/migrations/20260911190000_provider_confirmed_emergency_delivery_g77.sql",
+);
+const immutablePayloadMigration = readProjectFile(
+  "supabase/migrations/20260911193000_immutable_emergency_provider_payload_g78.sql",
+);
+const singleAuthorityMigration = readProjectFile(
+  "supabase/migrations/20260911200000_single_emergency_delivery_failure_authority_g79.sql",
+);
 const safetyService = readProjectFile(
   "src/core/safety/services/SafetyService.ts",
 );
@@ -28,6 +43,9 @@ const emailProvider = readProjectFile(
 );
 const emergencyEmailFunction = readProjectFile(
   "supabase/functions/send-emergency-email/index.ts",
+);
+const emergencyWebhook = readProjectFile(
+  "supabase/functions/resend-emergency-webhook/index.ts",
 );
 
 describe("Safety Core Platform security", () => {
@@ -99,18 +117,100 @@ describe("Safety Core Platform security", () => {
     expect(migration).toContain("trg_audit_safety_evidence_insert");
     expect(safetyService).not.toContain("from('safety_audit_log')");
     expect(safetyService).not.toContain("createAuditEntry");
+    expect(singleAuthorityMigration).toContain(
+      "CREATE OR REPLACE FUNCTION public.fail_emergency_delivery_attempt",
+    );
+    expect(emergencyEmailFunction).not.toContain(
+      ".from('emergency_delivery_log')\n    .update(",
+    );
   });
 
-  it("keeps emergency delivery logs as active server-only rate-limit and delivery state", () => {
-    const deliveryLogReferences =
-      emergencyEmailFunction.match(/\.from\('emergency_delivery_log'\)/g) ?? [];
-
-    expect(deliveryLogReferences.length).toBeGreaterThanOrEqual(4);
-    expect(emergencyEmailFunction).toContain(
-      ".select('id', { count: 'exact', head: true })",
+  it("creates external SOS delivery obligations durably with the alert", () => {
+    expect(durableOutboxMigration).toContain(
+      "CREATE OR REPLACE FUNCTION private.enqueue_emergency_delivery_outbox",
     );
-    expect(emergencyEmailFunction).toContain("status: 'sent'");
-    expect(emergencyEmailFunction).toContain("status: 'failed'");
+    expect(durableOutboxMigration).toContain(
+      "AFTER INSERT ON public.emergency_alerts",
+    );
+    expect(durableOutboxMigration).toContain("'pending'");
+    expect(durableOutboxMigration).toContain(
+      "idx_emergency_delivery_one_open_attempt",
+    );
+  });
+
+  it("serializes claim, terminal cancellation and provider dispatch on canonical state", () => {
+    expect(terminalRaceMigration).toContain(
+      "CREATE OR REPLACE FUNCTION public.claim_emergency_delivery_attempt",
+    );
+    expect(terminalRaceMigration).toContain("FOR UPDATE SKIP LOCKED");
+    expect(terminalRaceMigration).toContain("status = 'processing'");
+    expect(terminalRaceMigration).toContain("status = 'cancelled'");
+    expect(terminalRaceMigration).toContain("status = 'dispatching'");
+    expect(emergencyEmailFunction).toContain(
+      "'claim_emergency_delivery_attempt'",
+    );
+    expect(emergencyEmailFunction).toContain("p_alert_id: alertId");
+    expect(emergencyEmailFunction).toContain("p_contact_id: contactId");
+  });
+
+  it("never equates provider acceptance with confirmed delivery", () => {
+    expect(durableOutboxMigration).toContain(
+      "emergency_delivery_delivered_at_contract",
+    );
+    expect(durableOutboxMigration).toContain(
+      "status = 'delivered' AND delivered_at IS NOT NULL",
+    );
+    expect(providerEventMigration).toContain(
+      "WHEN 'email.delivered' THEN 'delivered'",
+    );
+    expect(providerEventMigration).toContain(
+      "confirm_emergency_delivery_provider_acceptance",
+    );
+    expect(emergencyEmailFunction).toContain(
+      "confirm_emergency_delivery_provider_acceptance",
+    );
+    expect(emergencyEmailFunction).not.toContain(
+      "delivered_at: new Date().toISOString()",
+    );
+  });
+
+  it("freezes provider payload before dispatch and reuses it for retries", () => {
+    expect(immutablePayloadMigration).toContain(
+      "private.emergency_delivery_provider_payloads",
+    );
+    expect(immutablePayloadMigration).toContain(
+      "CREATE OR REPLACE FUNCTION public.authorize_emergency_email_dispatch",
+    );
+    expect(immutablePayloadMigration).toContain(
+      "DROP FUNCTION public.authorize_emergency_delivery_dispatch(uuid)",
+    );
+    expect(emergencyEmailFunction).toContain(
+      "'authorize_emergency_email_dispatch'",
+    );
+    expect(emergencyEmailFunction).toContain(
+      "'get_emergency_email_provider_payload'",
+    );
+    expect(emergencyEmailFunction).toContain(
+      "'Idempotency-Key': idempotencyKey",
+    );
+  });
+
+  it("accepts provider events only through signed webhook ingestion", () => {
+    expect(providerEventMigration).toContain(
+      "private.emergency_delivery_provider_events",
+    );
+    expect(providerEventMigration).toContain(
+      "CREATE OR REPLACE FUNCTION public.apply_emergency_delivery_provider_event",
+    );
+    expect(emergencyWebhook).toContain("svix-id");
+    expect(emergencyWebhook).toContain("svix-timestamp");
+    expect(emergencyWebhook).toContain("svix-signature");
+    expect(emergencyWebhook).toContain(
+      "webhookVerifier.verify(rawBody.data",
+    );
+    expect(emergencyWebhook).toContain(
+      "apply_emergency_delivery_provider_event",
+    );
   });
 
   it("derives Safety notification recipients in the database", () => {
@@ -143,17 +243,16 @@ describe("Safety Core Platform security", () => {
       /interface EmailRequest\s*{\s*contactId: string;\s*alertId: string;\s*}/,
     );
     expect(emergencyEmailFunction).toContain(
-      ".select('id, profile_id, alert_type, status, description, latitude, longitude, created_at')",
-    );
-    expect(emergencyEmailFunction).toContain("alert.status !== 'active'");
-    expect(emergencyEmailFunction).toContain(
-      "reason: 'alert_not_active'",
+      "'id, profile_id, alert_type, status, description, latitude, longitude, created_at'",
     );
     expect(emergencyEmailFunction).toContain(
-      "contact.profile_id !== alert.profile_id",
+      "!['active', 'acknowledged'].includes(alert.status)",
     );
     expect(emergencyEmailFunction).toContain(
-      ".select('id, profile_id, name, email, phone, is_active')",
+      "contact.profile_id !== profileId",
+    );
+    expect(emergencyEmailFunction).toContain(
+      ".select('id, profile_id, name, email, is_active')",
     );
     expect(emergencyEmailFunction).toContain(
       "extractEmail(contact.email || '')",
@@ -165,6 +264,19 @@ describe("Safety Core Platform security", () => {
     expect(contactEmailMigration).toContain("ADD COLUMN IF NOT EXISTS email TEXT");
     expect(contactEmailMigration).toContain("emergency_contacts_email_required");
     expect(contactEmailMigration).toContain("ALTER COLUMN phone DROP NOT NULL");
+  });
+
+  it("uses the canonical emergency-contact owner instead of a missing aggregate Edge Function", () => {
+    expect(safetyService).toContain(
+      "SafetyEmergencyContactsService.notifyEmergencyContacts",
+    );
+    expect(safetyService).not.toContain("notify-emergency-contacts");
+    expect(safetyService).toContain(
+      "SafetyEmergencyContactsService.createEmergencyContact",
+    );
+    expect(safetyService).toContain(
+      "SafetyEmergencyContactsService.updateEmergencyContact",
+    );
   });
 
   it("removes obsolete Mobility emergency-alert producers", () => {
