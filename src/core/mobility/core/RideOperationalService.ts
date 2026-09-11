@@ -39,12 +39,17 @@ import {
   type DeliveryTransitionCommand,
 } from "./RideDeliveryOperationalActions";
 export type { CreateDeliveryInput, CreateRideInput } from "./RideOperationalTypes";
+// ============================================
+// RIDE OPERATIONAL SERVICE
+// ============================================
 
 export class RideOperationalService {
+  /**
+   * Cria nova corrida no estado inicial
+   */
   static async createRide(input: CreateRideInput): Promise<TransitionResult> {
     try {
       const initialState = RIDE_STATE.REQUESTED;
-      void initialState;
 
       const requesterBlock = await ensureProfileCanRequest(input.passengerProfileId);
       if (requesterBlock) return requesterBlock;
@@ -62,17 +67,19 @@ export class RideOperationalService {
         };
       }
 
+      // CONTRATO PRICING: Validar coordenadas obrigatorias para calculo oficial
       if (!hasValidRouteCoordinates(input)) {
         return {
           success: false,
-          error: 'Coordenadas sao obrigatorias para calculo de preco oficial. Selecione enderecos validos no mapa.',
+          error: 'Coordenadas so obrigatrias para calculo de preco oficial. Selecione enderecos validos no mapa.',
         };
       }
 
+      // CONTRATO PRICING: Validar preco minimo
       if (input.suggestedPrice && input.suggestedPrice < 5.00) {
         return {
           success: false,
-          error: 'Preco minimo e R$ 5,00 conforme regras de pricing.',
+          error: 'Preo minimo  R$ 5,00 conforme regras de pricing.',
         };
       }
 
@@ -86,6 +93,11 @@ export class RideOperationalService {
       const ride = { id: creation.ride_id };
       logger.info('RideOperationalService.createRide - success', { rideId: ride.id });
 
+      // A exigencia de PIN nasce atomicamente no backend junto com a corrida.
+      // O browser nao decide required_by/is_required e nao cria verificacao separada.
+
+      // Transicionar para searching_driver
+      // IMPORTANTE: Database Webhook dispara edge function auto-dispatch-ride automaticamente
       await this.transitionTo(ride.id, RIDE_STATE.SEARCHING_DRIVER, 'system');
 
       logger.info('RideOperationalService.createRide - Auto-dispatch edge function will be triggered', {
@@ -99,15 +111,20 @@ export class RideOperationalService {
     }
   }
 
+  /**
+   * Transiciona corrida para novo estado
+   * GATE 7: Validar PIN antes de passenger_boarded se exigido
+   */
   static async transitionTo(
     rideId: string,
     toState: RideState,
     actor: string,
     reason?: string,
-    pin?: string,
+    pin?: string, // GATE 7: PIN opcional para validacao
     deliveryCommand?: DeliveryTransitionCommand,
   ): Promise<TransitionResult> {
     try {
+      // DIAGNAOSTICO GATE 7: Log antes do .single()
       logger.info('RideOperationalService.transitionTo - BEFORE .single()', {
         method: 'transitionTo',
         step: 'fetch_current_state',
@@ -116,11 +133,13 @@ export class RideOperationalService {
         actor,
       });
 
+      // Buscar estado atual via SSOT
       const ride = await getRideById(rideId) as {
         status?: string;
         driver_profile_id?: string | null;
       } | null;
 
+      // DIAGNAOSTICO GATE 7: Log apos o .single()
       logger.info('RideOperationalService.transitionTo - AFTER .single()', {
         method: 'transitionTo',
         step: 'fetch_current_state',
@@ -141,6 +160,7 @@ export class RideOperationalService {
 
       const fromState = ride.status as RideState;
 
+      // GATE 7: Validar PIN antes de passenger_boarded se exigido
       if (toState === RIDE_STATE.PASSENGER_BOARDED) {
         const verificationResult =
           await OperationalVerificationService.getVerificationStatusResult(rideId);
@@ -153,6 +173,7 @@ export class RideOperationalService {
 
         const verification = verificationResult.data ?? null;
         if (verification?.is_required && verification.status !== 'verified') {
+          // Se PIN fornecido, validar
           if (pin) {
             const verifyResult = await OperationalVerificationService.verifyPIN({
               rideId,
@@ -160,12 +181,14 @@ export class RideOperationalService {
             });
 
             if (!verifyResult.success || !verifyResult.data?.verified) {
+              // verify_operational_pin persiste contador, ultimo attempt e status.
               return {
                 success: false,
                 error: verifyResult.data?.message || verifyResult.error || 'Invalid PIN',
               };
             }
           } else {
+            // PIN exigido mas no fornecido
             return {
               success: false,
               error: 'PIN verification required before boarding',
@@ -174,6 +197,7 @@ export class RideOperationalService {
         }
       }
 
+      // Validar transicao
       RideStateMachine.assertCanTransition(fromState, toState);
 
       if (deliveryCommand) {
@@ -189,6 +213,9 @@ export class RideOperationalService {
         }
       }
 
+      // Executar transicao e auditoria de forma atomica no backend.
+      // Estados que carregam metadata de entrega usam um command dedicado,
+      // impedindo que o browser grave estado e prova/falha em etapas separadas.
       const transition = deliveryCommand
         ? await MobilityRpcService.transitionDeliveryState({
             rideId,
@@ -233,12 +260,14 @@ export class RideOperationalService {
         newState: toState,
       };
     } catch (error) {
+      // Serializar erro completo para diagnostico
       const providerError =
         error && typeof error === "object" ? (error as ProviderErrorShape) : undefined;
       const errorDetails = {
         message: (error as Error).message,
         name: (error as Error).name,
         stack: (error as Error).stack,
+        // Provider errors podem expor campos adicionais
         code: providerError?.code,
         details: providerError?.details,
         hint: providerError?.hint,
@@ -257,10 +286,14 @@ export class RideOperationalService {
     }
   }
 
+  /**
+   * Cancela corrida
+   */
   static async cancelRide(input: CancelInput): Promise<TransitionResult> {
     try {
       logger.info('RideOperationalService.cancelRide - iniciando', input);
-
+      
+      // Buscar estado atual via SSOT
       const ride = await getRideById(input.rideId) as {
         status?: string;
         passenger_profile_id?: string | null;
@@ -276,7 +309,7 @@ export class RideOperationalService {
       }
 
       const currentState = ride.status as RideState;
-
+      
       logger.info('RideOperationalService.cancelRide - estado atual', {
         rideId: input.rideId,
         currentState,
@@ -291,6 +324,7 @@ export class RideOperationalService {
           ? RIDE_STATE.CANCELLED_BY_PASSENGER
           : RIDE_STATE.CANCELLED_BY_DRIVER;
 
+      // GATE 3: IDEMPOTENCIA - apenas a mesma operacao repetida retorna sucesso.
       if (currentState === RIDE_STATE.CANCELLED_BY_PASSENGER ||
           currentState === RIDE_STATE.CANCELLED_BY_DRIVER) {
         if (currentState !== requestedCancelledState) {
@@ -321,15 +355,16 @@ export class RideOperationalService {
         };
       }
 
+      // Validar se pode cancelar
       const isCancellable = RideStateMachine.isCancellable(currentState);
-      logger.info('RideOperationalService.cancelRide - verificando se e cancelavel', {
+      logger.info('RideOperationalService.cancelRide - verificando se  cancelavel', {
         rideId: input.rideId,
         currentState,
         isCancellable
       });
-
+      
       if (!isCancellable) {
-        logger.warn('RideOperationalService.cancelRide - estado nao cancelavel', {
+        logger.warn('RideOperationalService.cancelRide - estado no cancelavel', {
           rideId: input.rideId,
           currentState
         });
@@ -339,9 +374,10 @@ export class RideOperationalService {
         };
       }
 
+      // Validar quem esta cancelando
       if (input.cancelledBy === 'passenger') {
         if (ride.passenger_profile_id !== input.profileId) {
-          logger.warn('RideOperationalService.cancelRide - perfil nao e o passageiro', {
+          logger.warn('RideOperationalService.cancelRide - perfil no  o passageiro', {
             rideId: input.rideId,
             profileId: input.profileId,
             passengerId: ride.passenger_profile_id
@@ -351,16 +387,16 @@ export class RideOperationalService {
             error: 'Only passenger can cancel',
           };
         }
-
+        
         const canPassengerCancel = RideStateMachine.canPassengerCancel(currentState);
         logger.info('RideOperationalService.cancelRide - verificando se passageiro pode cancelar', {
           rideId: input.rideId,
           currentState,
           canPassengerCancel
         });
-
+        
         if (!canPassengerCancel) {
-          logger.warn('RideOperationalService.cancelRide - passageiro nao pode cancelar neste estado', {
+          logger.warn('RideOperationalService.cancelRide - passageiro no pode cancelar neste estado', {
             rideId: input.rideId,
             currentState
           });
@@ -384,11 +420,14 @@ export class RideOperationalService {
         }
       }
 
+      // GATE 3: Determinar novo estado com semantica correta
       let newState: RideState;
 
       if (input.cancelledBy === 'passenger') {
         newState = requestedCancelledState;
       } else {
+        // Motorista cancelando
+        // Se est em IN_DELIVERY, isso  FALHA operacional, no cancelamento simples
         if (currentState === RIDE_STATE.IN_DELIVERY) {
           return {
             success: false,
@@ -398,6 +437,7 @@ export class RideOperationalService {
         newState = requestedCancelledState;
       }
 
+      // Executar cancelamento
       const result = await this.transitionTo(
         input.rideId,
         newState,
@@ -405,6 +445,7 @@ export class RideOperationalService {
         input.reason || 'Cancelled'
       );
 
+      // O command atomico de transicao invalida ofertas pendentes no mesmo commit.
       return result;
     } catch (error) {
       logger.error('RideOperationalService.cancelRide', error as Error, input);
@@ -415,13 +456,16 @@ export class RideOperationalService {
     }
   }
 
+  /**
+   * Completa corrida
+   */
   static async completeRide(
     rideId: string,
     driverProfileId: string,
     finalPrice?: number
   ): Promise<TransitionResult> {
     try {
-      void finalPrice;
+      // Buscar estado atual via SSOT
       const ride = await getRideById(rideId) as {
         status?: string;
         driver_profile_id?: string | null;
@@ -436,6 +480,7 @@ export class RideOperationalService {
 
       const currentState = ride.status as RideState;
 
+      // Validar se pode completar
       if (currentState !== RIDE_STATE.IN_PROGRESS) {
         return {
           success: false,
@@ -443,6 +488,7 @@ export class RideOperationalService {
         };
       }
 
+      // Validar motorista
       if (ride.driver_profile_id !== driverProfileId) {
         return {
           success: false,
@@ -450,12 +496,15 @@ export class RideOperationalService {
         };
       }
 
-      return await this.transitionTo(
+      // Completar corrida
+      const result = await this.transitionTo(
         rideId,
         RIDE_STATE.COMPLETED,
         driverProfileId,
         'Ride completed successfully'
       );
+
+      return result;
     } catch (error) {
       logger.error('RideOperationalService.completeRide', error as Error, { rideId });
       return {
@@ -465,6 +514,9 @@ export class RideOperationalService {
     }
   }
 
+  /**
+   * Motorista aceita corrida
+   */
   static async acceptRide(
     rideId: string,
     driverProfileId: string
@@ -488,12 +540,25 @@ export class RideOperationalService {
     };
   }
 
+  // ============================================
+  // MOTOBOY - Operacoes de entrega
+  // ============================================
+
+  /**
+   * Cria solicitacao de entrega (motoboy)
+   * Reutiliza o motor de corrida com ride_mode = 'motoboy'
+   *
+   * GATE AUTH: Autorizacao centralizada via MotoboyAuthorizationService antes de qualquer escrita.
+   */
   static async createDelivery(input: CreateDeliveryInput): Promise<TransitionResult> {
     return createDeliveryOperation(input, (rideId, toState, actorProfileId, reason) =>
       this.transitionTo(rideId, toState, actorProfileId, reason),
     );
   }
 
+  /**
+   * Motoboy confirma coleta do pacote
+   */
   static async confirmPickup(
     rideId: string,
     driverProfileId: string
@@ -513,6 +578,9 @@ export class RideOperationalService {
     );
   }
 
+  /**
+   * Motoboy inicia rota de entrega
+   */
   static async startDelivery(
     rideId: string,
     driverProfileId: string
@@ -525,6 +593,10 @@ export class RideOperationalService {
     );
   }
 
+  /**
+   * Motoboy confirma entrega com prova
+   * GATE 7: Validar PIN se exigido
+   */
   static async confirmDelivery(
     rideId: string,
     driverProfileId: string,
@@ -534,7 +606,7 @@ export class RideOperationalService {
       observation?: string;
     },
     finalPrice?: number,
-    pin?: string
+    pin?: string // GATE 7: PIN opcional para validacao
   ): Promise<TransitionResult> {
     const result = await confirmDeliveryOperation(
       rideId,
@@ -556,6 +628,10 @@ export class RideOperationalService {
     return result;
   }
 
+  /**
+   * Motoboy registra falha na entrega
+   * GATE 3: Snaposhot obrigatorio da falha
+   */
   static async failDelivery(
     rideId: string,
     driverProfileId: string,
@@ -577,14 +653,14 @@ export class RideOperationalService {
     );
   }
 
+  /**
+   * Atualiza resolucao de falha de entrega
+   * GATE 3: Resoluo posterior assincrona
+   */
   static async updateFailedDeliveryResolution(
     rideId: string,
     resolutionUpdate: FailedDeliveryResolutionUpdate
   ): Promise<TransitionResult> {
     return updateFailedDeliveryResolutionOperation(rideId, resolutionUpdate);
-  }
-
-  static async getRolloutStatus() {
-    return mobilityRolloutService.getStatus();
   }
 }
