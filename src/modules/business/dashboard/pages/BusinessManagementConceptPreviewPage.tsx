@@ -108,7 +108,7 @@ function ConceptGlobalNavigation() {
   );
 }
 
-function ConceptBusinessNavigation({ onSelect, onBack }: { onSelect: (label: string) => void; onBack: () => void }) {
+function ConceptBusinessNavigation({ onSelect, onBack, selectedArea }: { onSelect: (label: string) => void; onBack: () => void; selectedArea: string }) {
   return (
     <aside className="hidden w-56 shrink-0 border-r border-territory-border bg-territory-surface px-3 py-5 lg:block" aria-label="Navegação do negócio">
       <button type="button" onClick={onBack} className="mb-5 flex items-center gap-2 px-3 text-sm text-territory-ink hover:text-territory-brand focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-territory-brand">
@@ -123,8 +123,8 @@ function ConceptBusinessNavigation({ onSelect, onBack }: { onSelect: (label: str
         </div>
       </div>
       <nav className="space-y-1">
-        {businessNavItems.map(({ label, icon: Icon }, index) => (
-          <button key={label} type="button" onClick={() => onSelect(label)} className={cn("flex min-h-10 w-full items-center gap-3 rounded-xl px-3 text-left text-sm text-territory-ink hover:bg-territory-raised focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-territory-brand", index === 0 && "bg-[hsl(var(--territory-success)/0.14)] font-semibold text-territory-brand")}>
+        {businessNavItems.map(({ label, icon: Icon }) => (
+          <button key={label} type="button" onClick={() => onSelect(label)} className={cn("flex min-h-10 w-full items-center gap-3 rounded-xl px-3 text-left text-sm text-territory-ink hover:bg-territory-raised focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-territory-brand", label === selectedArea && "bg-[hsl(var(--territory-success)/0.14)] font-semibold text-territory-brand")}>
             <Icon className="h-5 w-5 shrink-0" aria-hidden="true" />
             <span className="truncate">{label}</span>
             {label === "Conversas" ? <span className="ml-auto inline-flex h-5 min-w-5 items-center justify-center rounded-full bg-territory-error px-1 text-[0.6875rem] font-bold text-white">12</span> : null}
@@ -317,7 +317,7 @@ export default function BusinessManagementConceptPreviewPage() {
       <ConceptBusinessHeader />
       <div className="flex min-h-[calc(100vh-4rem)] md:h-[calc(100vh-4rem)] md:min-h-0">
         <ConceptGlobalNavigation />
-        <ConceptBusinessNavigation onSelect={selectArea} onBack={() => navigate("/conta?concept-mock=1")} />
+        <ConceptBusinessNavigation selectedArea={selectedArea} onSelect={selectArea} onBack={() => navigate("/conta?concept-mock=1")} />
         <main className="min-w-0 flex-1 px-4 pb-[calc(5.5rem+env(safe-area-inset-bottom))] pt-4 sm:px-6 sm:pt-6 lg:px-6 lg:pb-8 lg:pt-4 xl:px-6 scrollbar-hide md:overflow-y-auto">
           <div className="w-full">
             <div className="md:hidden">
