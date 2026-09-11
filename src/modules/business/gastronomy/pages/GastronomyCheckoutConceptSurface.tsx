@@ -137,21 +137,17 @@ function CheckoutHeader({ onBack }: { onBack: () => void }) {
             <span>Ana Oliveira</span>
           </nav>
         </div>
-        <div className="flex min-h-14 items-center justify-between gap-3 px-4 lg:hidden">
-          <button type="button" onClick={onBack} className="inline-flex min-h-10 items-center gap-2 text-xs font-semibold text-territory-ink focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-territory-brand">
-            <ArrowLeft className="h-4 w-4" aria-hidden="true" />
-            Voltar ao cardápio
-          </button>
-          <span className="font-heading text-base font-bold text-territory-brand">
-            achegue-se<span className="text-territory-sun">.</span>
-          </span>
-        </div>
       </header>
-      <div className="border-b border-territory-border bg-territory-surface px-4 py-3 lg:hidden">
+      <div className="border-b border-territory-border bg-territory-surface px-4 py-4 lg:hidden">
         <div className="flex items-start justify-between gap-3">
-          <div>
-            <h1 className="font-heading text-lg font-bold text-territory-ink">Revisar pedido</h1>
-            <p className="text-xs text-territory-muted">Sabores da Ana</p>
+          <div className="flex min-w-0 items-start gap-2">
+            <button type="button" onClick={onBack} aria-label="Voltar ao cardápio" className="mt-0.5 inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-lg text-territory-ink focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-territory-brand">
+              <ArrowLeft className="h-4 w-4" aria-hidden="true" />
+            </button>
+            <div>
+              <h1 className="font-heading text-lg font-bold text-territory-ink">Revisar pedido</h1>
+              <p className="text-xs text-territory-muted">Sabores da Ana</p>
+            </div>
           </div>
           <ShoppingBag className="mt-1 h-5 w-5 text-territory-brand" aria-hidden="true" />
         </div>
