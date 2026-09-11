@@ -42,6 +42,10 @@ function nonEmptyString(value: unknown): string | undefined {
     : undefined;
 }
 
+function finiteNumber(value: number | null): value is number {
+  return typeof value === "number" && Number.isFinite(value);
+}
+
 function isAcceptedHandoff(
   ride: HandoffRideState | null,
   driverProfileId: string,
@@ -74,10 +78,10 @@ function toPendingOffer(
   if (!Number.isFinite(expiry) || expiry <= Date.now()) return null;
 
   if (
-    !Number.isFinite(offer.origin_lat) ||
-    !Number.isFinite(offer.origin_lng) ||
-    !Number.isFinite(offer.destination_lat) ||
-    !Number.isFinite(offer.destination_lng)
+    !finiteNumber(offer.origin_lat) ||
+    !finiteNumber(offer.origin_lng) ||
+    !finiteNumber(offer.destination_lat) ||
+    !finiteNumber(offer.destination_lng)
   ) {
     return null;
   }
@@ -88,10 +92,10 @@ function toPendingOffer(
     expiresAt,
     origin: offer.origin,
     destination: offer.destination,
-    originLat: offer.origin_lat as number,
-    originLng: offer.origin_lng as number,
-    destinationLat: offer.destination_lat as number,
-    destinationLng: offer.destination_lng as number,
+    originLat: offer.origin_lat,
+    originLng: offer.origin_lng,
+    destinationLat: offer.destination_lat,
+    destinationLng: offer.destination_lng,
     locationPrecision: "coarse_2dp",
     packageSize: offer.package_size,
     suggestedPrice: offer.suggested_price,
