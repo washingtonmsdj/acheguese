@@ -15,6 +15,9 @@ const handoffOfferMigration = readProjectFile(
 const handoffPinMigration = readProjectFile(
   "supabase/migrations/20260911232000_align_handoff_pin_authority_g81.sql",
 );
+const handoffDiscoveryMigration = readProjectFile(
+  "supabase/migrations/20260911233000_route_failed_delivery_candidate_discovery_g81.sql",
+);
 const canonicalLifecycleMigration = readProjectFile(
   "supabase/migrations/20260909192625_restore_canonical_ride_share_terminal_trigger_g20.sql",
 );
@@ -55,14 +58,50 @@ describe("G81 receiver-confirmed failed-delivery custody handoff", () => {
     expect(requestFunction).not.toContain("driver_profile_id = p_target_driver_profile_id");
   });
 
+  it("discovers receivers around the fresh current custodian without leaking coordinates", () => {
+    expect(handoffDiscoveryMigration).toContain(
+      "private.mobility_find_available_drivers_for_ride_base_g81",
+    );
+    expect(handoffDiscoveryMigration).toContain(
+      "private.mobility_find_failed_delivery_handoff_candidates_g81",
+    );
+    expect(handoffDiscoveryMigration).toContain(
+      "Admin authority is required for failed-delivery handoff discovery",
+    );
+    expect(handoffDiscoveryMigration).toContain(
+      "v_custodian_availability.active_ride_id IS DISTINCT FROM p_ride_id",
+    );
+    expect(handoffDiscoveryMigration).toContain(
+      "v_custodian_availability.last_location_update < pg_catalog.now() - interval '5 minutes'",
+    );
+    expect(handoffDiscoveryMigration).toContain(
+      "v_custodian_availability.current_lng",
+    );
+    expect(handoffDiscoveryMigration).toContain(
+      "candidate.distance_km <= 0.5",
+    );
+    expect(handoffDiscoveryMigration).toContain(
+      "p_radius_km > 0.5",
+    );
+
+    const responseShape = handoffDiscoveryMigration.slice(
+      handoffDiscoveryMigration.indexOf("pg_catalog.jsonb_build_object(\n        'profile_id'"),
+      handoffDiscoveryMigration.indexOf("INTO v_result"),
+    );
+    expect(responseShape).toContain("'distance_km'");
+    expect(responseShape).toContain("'rating'");
+    expect(responseShape).toContain("'risk_level'");
+    expect(responseShape).not.toContain("'current_lat'");
+    expect(responseShape).not.toContain("'current_lng'");
+  });
+
   it("requires authenticated receiver acceptance through the actor-bound broker path", () => {
     expect(broker).toContain("p_actor_user_id: auth.userId");
     expect(handoffMigration).toContain(
       "CREATE OR REPLACE FUNCTION public.mobility_accept_ride_atomic(\n  p_actor_user_id uuid,",
     );
-    expect(handoffMigration).toContain(
-      "profile.id = p_driver_profile_id AND profile.user_id = p_actor_user_id",
-    );
+    expect(handoffMigration).toContain("profile.id = p_driver_profile_id");
+    expect(handoffMigration).toContain("profile.user_id = p_actor_user_id");
     expect(handoffMigration).toContain("p_strategy IS DISTINCT FROM 'exclusive_offer'");
     expect(handoffMigration).toContain("actor_bound_accept_required");
     expect(receiverService).toContain('"exclusive_offer"');
