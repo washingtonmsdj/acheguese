@@ -64,11 +64,13 @@ function ChoiceButton({
   active,
   children,
   disabled = false,
+  activeClassName,
   onClick,
 }: {
   active: boolean;
   children: ReactNode;
   disabled?: boolean;
+  activeClassName?: string;
   onClick?: () => void;
 }) {
   return (
@@ -78,20 +80,27 @@ function ChoiceButton({
       disabled={disabled}
       onClick={onClick}
       className={cn(
-        "flex min-h-11 w-full items-center justify-between rounded-lg border px-3 text-left text-xs transition-colors focus-visible:z-10 focus-visible:outline-2 focus-visible:outline-offset-[-2px] focus-visible:outline-territory-brand sm:text-sm",
+        "flex min-h-11 w-full items-start gap-2 rounded-lg border px-3 py-3 text-left text-xs transition-colors focus-visible:z-10 focus-visible:outline-2 focus-visible:outline-offset-[-2px] focus-visible:outline-territory-brand sm:text-sm",
         active
-          ? "border-territory-brand bg-territory-raised text-territory-ink"
+          ? (activeClassName ??
+              "border-territory-brand bg-territory-raised text-territory-ink")
           : "border-territory-border bg-territory-surface text-territory-ink hover:border-territory-brand/50",
         disabled &&
           "cursor-not-allowed opacity-55 hover:border-territory-border",
       )}
     >
-      <span className="min-w-0">{children}</span>
-      {active ? (
-        <span className="ml-2 flex h-4 w-4 shrink-0 items-center justify-center rounded-full bg-territory-brand text-white">
-          <Check className="h-3 w-3" aria-hidden="true" />
-        </span>
-      ) : null}
+      <span
+        className={cn(
+          "mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded-full border",
+          active
+            ? "border-territory-brand bg-territory-brand"
+            : "border-territory-muted bg-territory-surface",
+        )}
+        aria-hidden="true"
+      >
+        {active ? <span className="h-2 w-2 rounded-full bg-white" /> : null}
+      </span>
+      <span className="min-w-0 flex-1">{children}</span>
     </button>
   );
 }
@@ -218,7 +227,7 @@ function CheckoutHeader({
           </nav>
         </div>
       </header>
-      <div className="border-b border-territory-border bg-territory-surface px-4 py-3 lg:hidden">
+      <div className="border-b border-territory-border bg-territory-surface px-4 py-2.5 lg:hidden">
         <button
           type="button"
           onClick={onBack}
@@ -234,18 +243,18 @@ function CheckoutHeader({
 
 function BusinessSummary() {
   return (
-    <div className="flex items-center gap-3 rounded-xl border border-territory-border bg-territory-surface p-3">
+    <div className="flex items-center gap-3 px-1 py-1">
       <img
         src={foodImage}
         alt=""
-        className="h-12 w-12 rounded-lg object-cover"
+        className="h-12 w-12 rounded-full object-cover"
       />
       <div className="min-w-0">
         <p className="truncate text-sm font-bold text-territory-ink">
           Sabores da Ana
         </p>
         <p className="text-xs text-territory-muted">
-          Comida caseira · Santa Cruz, Salvador - BA
+          Santa Cruz · Salvador, BA
         </p>
       </div>
     </div>
@@ -479,6 +488,7 @@ function MobileDeliveryStage({
       <div className="space-y-2">
         <ChoiceButton
           active={deliveryOption === "store"}
+          activeClassName="border-territory-sun bg-territory-sun/10 text-territory-ink"
           onClick={() => onDeliveryOptionChange("store")}
         >
           <span className="flex items-center gap-2 font-bold">
@@ -497,6 +507,7 @@ function MobileDeliveryStage({
         </ChoiceButton>
         <ChoiceButton
           active={deliveryOption === "platform"}
+          activeClassName="border-territory-sun bg-territory-sun/10 text-territory-ink"
           onClick={() => onDeliveryOptionChange("platform")}
         >
           <span className="flex items-center gap-2 font-bold">
@@ -1230,12 +1241,12 @@ function MobileCheckoutFooter({
           : onReviewConfirm;
 
   return (
-    <div className="fixed inset-x-0 bottom-0 z-40 border-t border-territory-border bg-territory-surface/95 p-3 pb-[calc(0.75rem+env(safe-area-inset-bottom))] shadow-[0_-8px_24px_rgba(18,62,61,0.08)] backdrop-blur lg:hidden">
+    <div className="pointer-events-none fixed inset-x-0 bottom-0 z-40 px-4 pb-[calc(1rem+env(safe-area-inset-bottom))] pt-3 lg:hidden">
       <div className="mx-auto max-w-[42rem]">
         <Button
           type="button"
           onClick={onClick}
-          className="h-12 w-full rounded-lg bg-territory-sun text-sm font-bold text-territory-ink hover:bg-territory-sun/90 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-territory-brand"
+          className="pointer-events-auto h-11 w-full rounded-lg bg-territory-sun text-sm font-bold text-territory-ink shadow-[0_4px_12px_rgba(18,62,61,0.12)] hover:bg-territory-sun/90 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-territory-brand"
         >
           {label}
           <ChevronRight className="h-4 w-4" aria-hidden="true" />
@@ -1281,10 +1292,10 @@ export default function GastronomyCheckoutConceptSurface() {
   return (
     <div className="min-h-screen bg-territory-canvas text-territory-ink">
       <CheckoutHeader onBack={returnToPrevious} stage={stage} />
-      <main className="mx-auto max-w-[84rem] px-4 pb-[calc(5.5rem+env(safe-area-inset-bottom))] pt-4 sm:px-6 sm:pt-6 lg:px-8 lg:pb-10">
+      <main className="mx-auto max-w-[84rem] px-4 pb-[calc(5rem+env(safe-area-inset-bottom))] pt-3 sm:px-6 sm:pt-6 lg:px-8 lg:pb-10">
         <div className="lg:hidden">
           <BusinessSummary />
-          <div className="mt-4">
+          <div className="mt-3">
             {stage === "address" ? (
               <MobileAddressStage
                 mode={fulfillmentMode}
