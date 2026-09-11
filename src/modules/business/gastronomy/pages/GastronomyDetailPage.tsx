@@ -3,6 +3,7 @@ import { Link, useNavigate, useParams } from "react-router-dom";
 import {
   Grid2X2,
   List as ListIcon,
+  RefreshCw,
   Search,
   UtensilsCrossed,
 } from "lucide-react";
@@ -102,6 +103,41 @@ function GastronomyDetailNotFound({ homeUrl }: { homeUrl: string }) {
   );
 }
 
+function GastronomyDetailLoadError({
+  homeUrl,
+  onRetry,
+}: {
+  homeUrl: string;
+  onRetry: () => void;
+}) {
+  return (
+    <div
+      className="flex min-h-screen flex-col items-center justify-center px-4 text-center"
+      role="alert"
+    >
+      <div className="rounded-full bg-muted p-6">
+        <RefreshCw className="h-12 w-12 text-muted-foreground/60" aria-hidden="true" />
+      </div>
+      <h1 className="mt-6 text-2xl font-bold text-foreground">
+        Não conseguimos carregar este cardápio
+      </h1>
+      <p className="mt-2 max-w-md text-muted-foreground">
+        O serviço está temporariamente indisponível. Tente novamente em alguns
+        instantes.
+      </p>
+      <div className="mt-6 flex flex-col gap-3 sm:flex-row">
+        <Button type="button" onClick={onRetry}>
+          <RefreshCw className="mr-2 h-4 w-4" aria-hidden="true" />
+          Tentar novamente
+        </Button>
+        <Button asChild variant="outline">
+          <Link to={homeUrl}>Voltar para gastronomia</Link>
+        </Button>
+      </div>
+    </div>
+  );
+}
+
 function GastronomyDetailSkeleton() {
   return (
     <div className="min-h-screen">
@@ -138,8 +174,12 @@ function GastronomyDetailLivePage({
   const [sortMode, setSortMode] = useState<MenuSortMode>("relevance");
   const [viewMode, setViewMode] = useState<MenuViewMode>("list");
 
-  const { data: snapshot, isLoading: isLoadingSnapshot } =
-    usePublicGastronomySnapshot({ state, city, district, slug });
+  const {
+    data: snapshot,
+    isError: hasSnapshotError,
+    isLoading: isLoadingSnapshot,
+    refetch: refetchSnapshot,
+  } = usePublicGastronomySnapshot({ state, city, district, slug });
 
   const business = snapshot?.gastronomy.business ?? null;
   const profile =
@@ -260,6 +300,15 @@ function GastronomyDetailLivePage({
     }
     setShareOpen(true);
   };
+
+  if (hasSnapshotError) {
+    return (
+      <GastronomyDetailLoadError
+        homeUrl={gastronomyHomeUrl}
+        onRetry={() => void refetchSnapshot()}
+      />
+    );
+  }
 
   if (!business && !isLoadingSnapshot) {
     return <GastronomyDetailNotFound homeUrl={gastronomyHomeUrl} />;

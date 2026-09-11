@@ -259,7 +259,7 @@ export class PublicSnapshotRpcService {
 
       if (error) {
         logger.warn("[PublicSnapshotRpcService] gastronomy snapshot RPC failed", error);
-        return null;
+        throw error;
       }
 
       if (!data) return null;
@@ -274,7 +274,9 @@ export class PublicSnapshotRpcService {
       );
     } catch (error) {
       logger.warn("[PublicSnapshotRpcService] gastronomy snapshot RPC failed", error);
-      return null;
+      throw error instanceof Error
+        ? error
+        : new Error("Não foi possível carregar o cardápio público.");
     }
   }
 }
