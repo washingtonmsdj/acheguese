@@ -118,15 +118,15 @@
         "withCache\\s*\\("
       ]
     },
-    "process-emergency-delivery-outbox": {
+    "send-emergency-email": {
       "kind": "cron-secret",
-      "label": "autonomous emergency delivery outbox worker",
+      "label": "cron ingress for canonical emergency email broker",
       "requiredPatterns": [
         "requireCronSecret\\s*\\(",
+        "requireAuthenticatedUser\\s*\\(",
+        "x-cron-secret",
         "rateLimitMiddleware\\s*\\(",
-        "SUPABASE_SERVICE_ROLE_KEY",
-        "prepare_emergency_delivery_work",
-        "executeEmergencyEmailDelivery"
+        "SUPABASE_SERVICE_ROLE_KEY"
       ]
     },
     "process-timeouts": {
@@ -374,16 +374,6 @@
       "label": "authenticated privacy RPC broker",
       "requiredPatterns": ["auth\\.getUser\\s*\\("]
     },
-    "process-emergency-delivery-outbox": {
-      "kind": "cron-secret",
-      "risk": "Critical",
-      "label": "autonomous emergency delivery service_role worker",
-      "requiredPatterns": [
-        "requireCronSecret\\s*\\(",
-        "prepare_emergency_delivery_work",
-        "executeEmergencyEmailDelivery"
-      ]
-    },
     "process-timeouts": {
       "kind": "cron-secret",
       "risk": "Critical",
@@ -427,8 +417,12 @@
     "send-emergency-email": {
       "kind": "notification-broker",
       "risk": "Critical",
-      "label": "authenticated emergency email broker",
-      "requiredPatterns": ["requireAuthenticatedUser\\s*\\("]
+      "label": "canonical user-or-cron emergency email broker",
+      "requiredPatterns": [
+        "requireAuthenticatedUser\\s*\\(",
+        "requireCronSecret\\s*\\(",
+        "x-cron-secret"
+      ]
     },
     "send-push": {
       "kind": "notification-broker",
