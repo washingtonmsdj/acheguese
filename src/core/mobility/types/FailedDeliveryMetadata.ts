@@ -3,7 +3,7 @@
  *
  * Tipos para rastreamento de item em falhas de entrega motoboy.
  * O input inicial do motoboy e deliberadamente separado do metadata persistido
- * e enriquecido pelo backend durante resolucao, handoff e reentrega.
+ * e enriquecido pelo backend durante resolucao, handoff e novas tentativas.
  */
 
 export type FailureReason =
@@ -64,10 +64,14 @@ export interface FailedDeliverySnapshotInput extends FailedDeliverySnapshotBase 
  * G81: `handoff_driver_profile_id` isolado nao transfere mais custodia. Para
  * iniciar handoff fisico o admin precisa enviar `handoff_requested: true` com o
  * alvo e notas; o receptor autenticado conclui a transferencia separadamente.
- * `resolved_at` e toda a evidencia de transferencia permanecem server-owned.
+ *
+ * G82: `next_ride_id` deixa de ser entrada. Nova tentativa com o mesmo
+ * custodiante usa `retry_delivery_requested: true`; o banco reabre a mesma
+ * entrega atomicamente. Isso evita uma segunda ride com pickup/custodia
+ * inventados e mantem a identidade logistica canonica.
  */
 export interface FailedDeliveryResolutionUpdate {
-  next_ride_id?: string;
+  retry_delivery_requested?: true;
   handoff_requested?: true;
   handoff_driver_profile_id?: string;
   manual_resolution_owner_profile_id?: string;
@@ -89,16 +93,27 @@ export interface CustodyHandoffHistoryEntry {
 export interface FailedDeliveryMetadata extends FailedDeliverySnapshotBase {
   item_current_holder: ItemHolder;
   resolution_status: ResolutionStatus;
+
+  /**
+   * Campo legado somente de leitura para linhas historicas anteriores ao G82.
+   * Nunca deve voltar ao contrato de comando administrativo.
+   */
   next_ride_id?: string;
   handoff_driver_profile_id?: string;
   manual_resolution_owner_profile_id?: string;
   resolved_at?: string;
   resolution_action_notes?: string;
 
-  // G81: handoff fisico solicitado por admin, confirmado pelo receptor.
-  resolution_plan?: 'handoff_to_another_driver';
-  resolution_action?: 'handoff_to_another_driver';
+  // G81/G82: planos e acoes sao produzidos pelo backend.
+  resolution_plan?: 'handoff_to_another_driver' | 'retry_same_driver';
+  resolution_action?: 'handoff_to_another_driver' | 'retry_same_driver';
   resolution_item_holder?: ItemHolder;
+
+  // G82: retomada da mesma entrega sem troca de custodia.
+  retry_driver_profile_id?: string;
+  retry_resumed_at?: string;
+
+  // G81: handoff fisico solicitado por admin, confirmado pelo receptor.
   handoff_requested_driver_profile_id?: string;
   handoff_requested_at?: string;
   handoff_request_expires_at?: string;
