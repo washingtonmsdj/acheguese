@@ -81,16 +81,21 @@ describe("G78 immutable emergency provider payload", () => {
     expect(worker).toContain("get_emergency_email_provider_payload");
   });
 
-  it("does not require a live contact lookup for an already-authorized recovery", () => {
+  it("uses the durable queued recipient instead of re-reading mutable contact PII", () => {
+    expect(worker).not.toContain("loadActiveOwnedContact(");
+    expect(worker).not.toContain(".from('emergency_contacts')");
+    expect(worker).toContain("extractEmail(claimed.target || '')");
+    expect(worker).toContain("readQueuedContactName(claimed.metadata)");
+  });
+
+  it("allows already-authorized recovery without mutable contact state", () => {
     const recoveryDetection = worker.indexOf(
       "latestBeforeClaim?.status === 'dispatching'",
     );
-    const newDispatchOnly = worker.indexOf("if (!dispatching) {");
-    const contactLookup = worker.indexOf("loadActiveOwnedContact(");
+    const snapshotLookup = worker.indexOf("getProviderPayload(dispatching.id)");
 
     expect(recoveryDetection).toBeGreaterThan(-1);
-    expect(newDispatchOnly).toBeGreaterThan(recoveryDetection);
-    expect(contactLookup).toBeGreaterThan(newDispatchOnly);
+    expect(snapshotLookup).toBeGreaterThan(recoveryDetection);
   });
 
   it("builds provider tags from the canonical durable delivery id", () => {
