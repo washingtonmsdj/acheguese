@@ -47,13 +47,21 @@ describe("G55 failed-delivery snapshot authority", () => {
   });
 
   it("enforces the same snapshot boundary at the final privileged database command", () => {
-    expect(serverAuthority).toContain("IF p_command = 'fail_delivery' THEN");
-    expect(serverAuthority).toContain("pg_catalog.jsonb_object_keys(p_failed_delivery_metadata)");
-    expect(serverAuthority).toContain("failed delivery snapshot contains server-owned or unsupported fields");
-    expect(serverAuthority).toContain("initial failed delivery custody must remain with driver");
-    expect(serverAuthority).toContain("initial failed delivery resolution status must be pending");
-    expect(serverAuthority).toContain("'handoff_driver_profile_id'");
-    expect(serverAuthority).not.toContain("'handoff_driver_profile_id',\n        'resolved_at'");
+    const failDeliveryGate = serverAuthority.slice(
+      serverAuthority.indexOf("IF p_command = 'fail_delivery' THEN"),
+      serverAuthority.indexOf("v_delivery := private.mobility_transition_delivery_state_atomic_base_g70"),
+    );
+
+    expect(failDeliveryGate).toContain("pg_catalog.jsonb_object_keys(p_failed_delivery_metadata)");
+    expect(failDeliveryGate).toContain("failed delivery snapshot contains server-owned or unsupported fields");
+    expect(failDeliveryGate).toContain("initial failed delivery custody must remain with driver");
+    expect(failDeliveryGate).toContain("initial failed delivery resolution status must be pending");
+    expect(failDeliveryGate).toContain("'failure_reason'");
+    expect(failDeliveryGate).toContain("'failed_at_location'");
+    expect(failDeliveryGate).not.toContain("'handoff_driver_profile_id'");
+    expect(failDeliveryGate).not.toContain("'next_ride_id'");
+    expect(failDeliveryGate).not.toContain("'resolved_at'");
+    expect(failDeliveryGate).not.toContain("'resolution_action_notes'");
   });
 
   it("builds only the strict initial snapshot shape", () => {
