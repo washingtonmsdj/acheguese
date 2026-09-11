@@ -28,7 +28,7 @@ const SUPABASE_SERVICE_ROLE_KEY = getRequiredEnv('SUPABASE_SERVICE_ROLE_KEY');
 const ALLOWED_METHODS = 'POST, OPTIONS';
 const MAX_CLAIM_ATTEMPTS = 5;
 
-const supabaseAdmin = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY, {
+const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY, {
   auth: { persistSession: false, autoRefreshToken: false },
 });
 
@@ -122,7 +122,7 @@ export default {
     const edgeRateLimit = await rateLimitMiddleware(req, 100, 60_000);
     if (edgeRateLimit) return edgeRateLimit;
 
-    const authResult = await requireAuthenticatedUser(req, supabaseAdmin);
+    const authResult = await requireAuthenticatedUser(req, supabase);
     if (authResult instanceof Response) {
       auditLog({
         timestamp: new Date().toISOString(),
@@ -160,7 +160,7 @@ export default {
         return respond({ error: 'Valid contactId is required' }, 400);
       }
 
-      const { data: userProfiles, error: profileError } = await supabaseAdmin
+      const { data: userProfiles, error: profileError } = await supabase
         .from('profiles')
         .select('id, name, phone')
         .eq('user_id', userId);
@@ -174,7 +174,7 @@ export default {
       const profileRows = userProfiles as UserProfileRecord[];
       const ownedProfileIds = new Set(profileRows.map((profile) => profile.id));
 
-      const { data: alertData, error: alertError } = await supabaseAdmin
+      const { data: alertData, error: alertError } = await supabase
         .from('emergency_alerts')
         .select(
           'id, profile_id, alert_type, status, description, latitude, longitude, created_at',
@@ -245,7 +245,7 @@ export default {
           );
         }
 
-        const { data: claimedData, error: claimError } = await supabaseAdmin.rpc(
+        const { data: claimedData, error: claimError } = await supabase.rpc(
           'claim_emergency_delivery_attempt',
           {
             p_alert_id: alertId,
@@ -333,7 +333,7 @@ export default {
           });
 
           const { data: dispatchData, error: dispatchError } =
-            await supabaseAdmin.rpc('authorize_emergency_email_dispatch', {
+            await supabase.rpc('authorize_emergency_email_dispatch', {
               p_delivery_id: claimed.id,
               p_payload: candidatePayload,
             });
@@ -387,7 +387,7 @@ export default {
       }
 
       const { data: providerAttemptData, error: providerAttemptError } =
-        await supabaseAdmin.rpc('begin_emergency_provider_attempt', {
+        await supabase.rpc('begin_emergency_provider_attempt', {
           p_delivery_id: dispatching.id,
         });
       if (providerAttemptError) {
@@ -469,7 +469,7 @@ export default {
 
       const providerAcceptedAt = new Date().toISOString();
       const { data: confirmedData, error: confirmError } =
-        await supabaseAdmin.rpc('confirm_emergency_delivery_provider_acceptance', {
+        await supabase.rpc('confirm_emergency_delivery_provider_acceptance', {
           p_delivery_id: providerAttempt.id,
           p_provider_message_id: providerMessageId,
           p_accepted_at: providerAcceptedAt,
@@ -553,7 +553,7 @@ async function loadActiveOwnedContact(
   | { contact: ContactRecord; response?: never }
   | { contact?: never; response: Response }
 > {
-  const { data, error } = await supabaseAdmin
+  const { data, error } = await supabase
     .from('emergency_contacts')
     .select('id, profile_id, name, email, is_active')
     .eq('id', contactId)
@@ -592,7 +592,7 @@ async function getLatestDelivery(
   alertId: string,
   contactId: string,
 ): Promise<DeliveryRecord | null> {
-  const { data, error } = await supabaseAdmin
+  const { data, error } = await supabase
     .from('emergency_delivery_log')
     .select(
       'id, status, attempt_count, provider_attempt_count, provider_message_id, dispatch_authorized_at, last_provider_attempt_at, cancelled_at, reconciliation_required_at, created_at, updated_at',
@@ -610,7 +610,7 @@ async function getLatestDelivery(
 async function getDeliveryById(
   deliveryId: string,
 ): Promise<DeliveryRecord | null> {
-  const { data, error } = await supabaseAdmin
+  const { data, error } = await supabase
     .from('emergency_delivery_log')
     .select(
       'id, status, attempt_count, provider_attempt_count, provider_message_id, dispatch_authorized_at, last_provider_attempt_at, cancelled_at, reconciliation_required_at, created_at, updated_at',
@@ -624,7 +624,7 @@ async function getDeliveryById(
 async function getProviderPayload(
   deliveryId: string,
 ): Promise<ProviderPayload | null> {
-  const { data, error } = await supabaseAdmin.rpc(
+  const { data, error } = await supabase.rpc(
     'get_emergency_email_provider_payload',
     { p_delivery_id: deliveryId },
   );
@@ -636,7 +636,7 @@ async function requireDeliveryReconciliation(
   deliveryId: string,
   reason: string,
 ): Promise<void> {
-  const { error } = await supabaseAdmin.rpc(
+  const { error } = await supabase.rpc(
     'require_emergency_delivery_reconciliation',
     {
       p_delivery_id: deliveryId,
@@ -652,7 +652,7 @@ async function markDeliveryFailed(
   metadata: Record<string, unknown> = {},
   expectedStatus: FailableDeliveryStatus = 'dispatching',
 ): Promise<DeliveryRecord | null> {
-  const { data, error } = await supabaseAdmin.rpc(
+  const { data, error } = await supabase.rpc(
     'fail_emergency_delivery_attempt',
     {
       p_delivery_id: deliveryId,
