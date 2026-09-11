@@ -422,7 +422,7 @@ function MenuItemList({ items, selectedId, onOpen, onToggle, hideOverflowOnMobil
 
 function MenuItemGrid({ items, selectedId, onOpen, onToggle, onDelete, onMarkSoldOut }: { items: ConceptMenuItem[]; selectedId: string; onOpen: (item: ConceptMenuItem) => void; onToggle: (item: ConceptMenuItem) => void; onDelete: (item: ConceptMenuItem) => void; onMarkSoldOut: (item: ConceptMenuItem) => void }) {
   return (
-    <div className="mt-3 grid grid-cols-2 gap-2 md:grid-cols-1 lg:grid-cols-2 lg:gap-3 xl:grid-cols-3">
+    <div className="mt-3 grid grid-cols-2 gap-2 lg:gap-3 xl:grid-cols-3 2xl:grid-cols-4">
       {items.length ? items.map((item) => {
         const isAvailable = item.status === "Disponível";
         const isSoldOut = item.stock === 0;

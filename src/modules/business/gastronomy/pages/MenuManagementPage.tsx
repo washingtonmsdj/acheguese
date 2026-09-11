@@ -352,7 +352,7 @@ export default function MenuManagementPage() {
               </CardContent>
             </Card>
           ) : (
-            <div className={viewMode === 'grid' ? 'grid grid-cols-2 gap-2 sm:gap-4 xl:grid-cols-3' : 'space-y-4'}>
+            <div className={viewMode === 'grid' ? 'grid grid-cols-2 gap-2 sm:gap-4 xl:grid-cols-3 2xl:grid-cols-4' : 'space-y-4'}>
               {filteredItems.map((item) => (
                 <ItemCard
                   key={item.id}
