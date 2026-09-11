@@ -98,6 +98,62 @@ const menuItems: ConceptMenuItem[] = [
     image: dessertImage,
     available: false,
   },
+  {
+    id: "camarao-alho-oleo",
+    name: "Camarão ao alho e óleo",
+    category: "Refeições",
+    description: "Camarões salteados com ervas frescas.",
+    price: 42,
+    image: foodImage,
+  },
+  {
+    id: "arroz-de-coco",
+    name: "Arroz de coco",
+    category: "Refeições",
+    description: "Acompanhamento cremoso feito na casa.",
+    price: 12,
+    image: foodImage,
+  },
+  {
+    id: "salada-tropical",
+    name: "Salada tropical",
+    category: "Refeições",
+    description: "Folhas, frutas e molho cítrico.",
+    price: 18,
+    image: vegetableImage,
+  },
+  {
+    id: "brownie-da-casa",
+    name: "Brownie da casa",
+    category: "Sobremesas",
+    description: "Brownie de chocolate com castanhas.",
+    price: 14,
+    image: dessertImage,
+  },
+  {
+    id: "torta-de-banana",
+    name: "Torta de banana",
+    category: "Sobremesas",
+    description: "Fatia com canela e farofa crocante.",
+    price: 13,
+    image: dessertImage,
+  },
+  {
+    id: "agua-de-coco",
+    name: "Água de coco",
+    category: "Bebidas",
+    description: "Água de coco gelada.",
+    price: 7,
+    image: juiceImage,
+  },
+  {
+    id: "limonada-da-casa",
+    name: "Limonada da casa",
+    category: "Bebidas",
+    description: "Limonada fresca com hortelã.",
+    price: 9,
+    image: juiceImage,
+  },
 ];
 
 const offerItem: ConceptMenuItem = {
@@ -317,7 +373,7 @@ function MenuRow({ item, selected, onSelect }: { item: ConceptMenuItem; selected
 function MenuGridCard({ item, selected, onSelect }: { item: ConceptMenuItem; selected: boolean; onSelect: () => void }) {
   return (
     <button type="button" disabled={item.available === false} onClick={onSelect} className={cn("group flex min-w-0 flex-col rounded-lg border border-territory-border bg-territory-surface p-2 text-left transition-colors focus-visible:z-10 focus-visible:outline-2 focus-visible:outline-offset-[-2px] focus-visible:outline-territory-brand sm:rounded-xl sm:p-2.5", selected && "border-territory-brand bg-[hsl(var(--territory-success)/0.12)]", item.available === false ? "cursor-not-allowed opacity-55" : "hover:border-territory-brand/50 hover:bg-territory-raised")}>
-      <span className="relative block aspect-[4/3] w-full overflow-hidden rounded-md bg-territory-raised sm:rounded-lg">
+      <span className="relative block aspect-[5/3] w-full overflow-hidden rounded-md bg-territory-raised sm:rounded-lg">
         <img src={item.image} alt="" className="h-full w-full object-cover transition-transform duration-200 group-hover:scale-[1.02]" />
         {item.available === false ? <span className="absolute bottom-1 left-1 rounded-full bg-territory-surface/95 px-1.5 py-0.5 text-[0.5625rem] font-semibold text-territory-muted">Indisponível</span> : null}
       </span>
