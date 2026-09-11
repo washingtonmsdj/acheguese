@@ -273,14 +273,27 @@ export async function failDeliveryOperation(
 
     validateFailedDeliverySnapshot(metadata);
 
+    const snapshot: FailedDeliverySnapshotInput = {
+      failure_reason: metadata.failure_reason,
+      item_destination: metadata.item_destination,
+      item_current_holder: "driver",
+      timestamp: metadata.timestamp,
+      resolution_status: "pending",
+      resolution_notes: metadata.resolution_notes,
+      failed_at_location: metadata.failed_at_location,
+      photos: metadata.photos,
+      attempt_number: metadata.attempt_number,
+      attempted_delivery_count: metadata.attempted_delivery_count,
+    };
+
     return await transitionTo(
       rideId,
       RIDE_STATE.FAILED_DELIVERY,
       driverProfileId,
-      metadata.failure_reason,
+      snapshot.failure_reason,
       {
         type: "fail_delivery",
-        metadata,
+        metadata: snapshot,
       },
     );
   } catch (error) {
