@@ -1,15 +1,18 @@
-import { Badge } from '@/shared/components/ui/badge';
-import { Button } from '@/shared/components/ui/button';
-import { Flame, Leaf, MilkOff, WheatOff } from 'lucide-react';
-import type { MenuItemWithRelations } from '../types';
-import { formatBrl } from '../utils/currency';
+import { Badge } from "@/shared/components/ui/badge";
+import { Button } from "@/shared/components/ui/button";
+import { Flame, Leaf, MilkOff, WheatOff } from "lucide-react";
+import { cn } from "@/shared/utils/cn";
+import type { MenuItemWithRelations } from "../types";
+import { formatBrl } from "../utils/currency";
 
 interface Props {
   item: MenuItemWithRelations;
   onSelect?: (item: MenuItemWithRelations) => void;
+  layout?: "list" | "grid";
 }
 
-export function MenuItemCard({ item, onSelect }: Props) {
+export function MenuItemCard({ item, onSelect, layout = "list" }: Props) {
+  const isGrid = layout === "grid";
   const handleSelect = () => {
     if (!item.is_available || !onSelect) return;
     onSelect(item);
@@ -17,46 +20,77 @@ export function MenuItemCard({ item, onSelect }: Props) {
 
   return (
     <div
-      className={`rounded-xl border bg-card p-4 transition-all ${
+      className={cn(
+        "rounded-xl border bg-card transition-all",
+        isGrid ? "h-full p-3" : "p-4",
         item.is_available
-          ? 'cursor-pointer hover:border-primary/30 hover:shadow-sm'
-          : 'opacity-60'
-      }`}
+          ? "cursor-pointer hover:border-primary/30 hover:shadow-sm"
+          : "opacity-60",
+      )}
       onClick={handleSelect}
-      role={onSelect ? 'button' : undefined}
+      role={onSelect ? "button" : undefined}
       tabIndex={onSelect ? 0 : undefined}
       aria-disabled={!item.is_available}
       onKeyDown={(event) => {
         if (!onSelect) return;
-        if (event.key === 'Enter' || event.key === ' ') {
+        if (event.key === "Enter" || event.key === " ") {
           event.preventDefault();
           handleSelect();
         }
       }}
     >
-      <div className="flex flex-col gap-4 sm:flex-row">
+      <div
+        className={cn(
+          "flex",
+          isGrid ? "h-full flex-col gap-3" : "flex-col gap-4 sm:flex-row",
+        )}
+      >
         {item.image_url && (
           <img
             src={item.image_url}
             alt={item.name}
-            className="aspect-[4/3] w-full rounded-lg object-cover sm:w-32"
+            className={cn(
+              "rounded-lg object-cover",
+              isGrid ? "aspect-[4/3] w-full" : "aspect-[4/3] w-full sm:w-32",
+            )}
           />
         )}
 
         <div className="min-w-0 flex-1">
-          <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between sm:gap-4">
+          <div
+            className={cn(
+              "flex gap-3",
+              isGrid
+                ? "flex-col"
+                : "flex-col sm:flex-row sm:items-start sm:justify-between sm:gap-4",
+            )}
+          >
             <div className="min-w-0">
               <div className="mb-1 flex flex-wrap items-center gap-2">
-                <h4 className="line-clamp-2 font-semibold">{item.name}</h4>
+                <h4
+                  className={cn(
+                    "line-clamp-2 font-semibold",
+                    isGrid ? "text-sm" : "text-base",
+                  )}
+                >
+                  {item.name}
+                </h4>
                 {item.is_featured && (
-                  <Badge className="border-amber-500/20 bg-amber-500/10 text-amber-700">
+                  <Badge className="shrink-0 border-amber-500/20 bg-amber-500/10 text-amber-700">
                     Destaque
                   </Badge>
                 )}
               </div>
 
               {item.description && (
-                <p className="mb-2 line-clamp-3 text-sm text-muted-foreground">{item.description}</p>
+                <p
+                  className={cn(
+                    "mb-2 line-clamp-3 text-sm text-muted-foreground",
+                    isGrid && "line-clamp-2",
+                  )}
+                >
+                  {item.description}
+                </p>
               )}
 
               <div className="flex flex-wrap gap-2">
@@ -93,8 +127,20 @@ export function MenuItemCard({ item, onSelect }: Props) {
               </div>
             </div>
 
-            <div className="flex items-center justify-between gap-3 sm:block sm:text-right">
-              <p className="mb-0 text-lg font-semibold text-primary sm:mb-2">{formatBrl(item.base_price)}</p>
+            <div
+              className={cn(
+                "flex items-center justify-between gap-3",
+                !isGrid && "sm:block sm:text-right",
+              )}
+            >
+              <p
+                className={cn(
+                  "mb-0 font-semibold text-primary",
+                  isGrid ? "text-base" : "text-lg sm:mb-2",
+                )}
+              >
+                {formatBrl(item.base_price)}
+              </p>
               <Button
                 size="sm"
                 disabled={!item.is_available}
@@ -103,7 +149,7 @@ export function MenuItemCard({ item, onSelect }: Props) {
                   handleSelect();
                 }}
               >
-                {item.is_available ? 'Adicionar' : 'Indisponivel'}
+                {item.is_available ? "Adicionar" : "Indisponivel"}
               </Button>
             </div>
           </div>
@@ -112,4 +158,3 @@ export function MenuItemCard({ item, onSelect }: Props) {
     </div>
   );
 }
-
