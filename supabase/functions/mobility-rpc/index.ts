@@ -49,6 +49,8 @@ const ACTIONS = {
   listDriverOffers: true,
   findAvailableDriversForRide: true,
   reconcileStaleDriverAvailability: true,
+  getDriverRideHistory: true,
+  getDriverEarningsHistory: true,
 } as const;
 
 type MobilityRpcAction = keyof typeof ACTIONS;
@@ -1673,6 +1675,46 @@ async function handleReconcileStaleDriverAvailability(
   return result;
 }
 
+async function handleGetDriverRideHistory(
+  supabaseAdmin: SupabaseClient,
+  auth: UserAuthResult,
+  params: Record<string, unknown>,
+) {
+  const limit = optionalInteger(params.limit, "limit", 1, 200) ?? 100;
+  const offset = optionalInteger(params.offset, "offset", 0, 10000) ?? 0;
+  const { data, error } = await supabaseAdmin.rpc(
+    "mobility_get_driver_ride_history",
+    {
+      p_actor_user_id: auth.userId,
+      p_limit: limit,
+      p_offset: offset,
+    },
+  );
+
+  if (error) throw error;
+  return data ?? { rides: [] };
+}
+
+async function handleGetDriverEarningsHistory(
+  supabaseAdmin: SupabaseClient,
+  auth: UserAuthResult,
+  params: Record<string, unknown>,
+) {
+  const since = optionalTimestamp(params.since, "since");
+  const limit = optionalInteger(params.limit, "limit", 1, 1000) ?? 500;
+  const { data, error } = await supabaseAdmin.rpc(
+    "mobility_get_driver_earnings_history",
+    {
+      p_actor_user_id: auth.userId,
+      p_since: since,
+      p_limit: limit,
+    },
+  );
+
+  if (error) throw error;
+  return data ?? { earnings: [] };
+}
+
 async function handleCreateDriverProfile(
   supabaseAdmin: SupabaseClient,
   auth: UserAuthResult,
@@ -1766,6 +1808,10 @@ async function dispatchAction(
       return handleFindAvailableDriversForRide(supabaseAdmin, auth, params);
     case "reconcileStaleDriverAvailability":
       return handleReconcileStaleDriverAvailability(supabaseAdmin, auth, params);
+    case "getDriverRideHistory":
+      return handleGetDriverRideHistory(supabaseAdmin, auth, params);
+    case "getDriverEarningsHistory":
+      return handleGetDriverEarningsHistory(supabaseAdmin, auth, params);
   }
 }
 
