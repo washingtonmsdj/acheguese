@@ -5,7 +5,7 @@ import { ArrowRight, Car, PlayCircle, RotateCcw, Route, ShieldAlert } from "luci
 import { Badge } from "@/shared/components/ui/badge";
 import { Button } from "@/shared/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/shared/components/ui/card";
-import { DriverRidesList } from "@/core/mobility/components/driver/DriverRidesList";
+import { CanonicalDriverRidesList as DriverRidesList } from "@/core/mobility/components/driver/CanonicalDriverRidesList";
 import { useMotoristaPage } from "@/core/mobility/hooks/useMotoristaPage";
 import { getMobilityServicePath } from "@/core/mobility/routes/mobilityNavigation";
 import { getRecordValue } from "@/shared/utils/recordLookup";

@@ -7,7 +7,8 @@
  *  Contratos internos:
  *  - Queries: mobility.queries.ts
  *  - Mutations: mobility.mutations.ts
- *  - Helpers: mobility.helpers.ts
+ *  - Helpers: mobility.helpers.ts (formatacao/classificacao somente)
+ *  - Lifecycle: RideStateMachine.ts
  *  - Runtime/admin: MobilityService.impl.ts e MobilityRuntimeService.ts
  *
  *  Nao adicionar logica de negocio diretamente neste arquivo.
@@ -63,10 +64,6 @@ export {
 //  ============================================================
 export {
   isRideActive,
-  canAcceptRide,
-  canStartRide,
-  canCompleteRide,
-  canCancelRide,
   calculateEstimatedFare,
   calculateDistanceKm,
   formatDuration,
@@ -166,6 +163,7 @@ import * as MobilityHelpers from "./mobility.helpers";
 /**
  *  Facade agregada para os hooks de mobilidade.
  *  Todos os metodos delegam para queries, mutations e helpers especializados.
+ *  Regras de lifecycle nao pertencem a esta facade; use RideStateMachine.
  */
 export class MobilityFacade {
   //  ===== QUERIES =====
@@ -200,12 +198,8 @@ export class MobilityFacade {
   static updateDriverOnlineStatus = MobilityMutations.updateDriverOnlineStatus;
   static updateDriverData = MobilityMutations.updateDriverData;
   static checkSuspensionExpiry = MobilityMutations.checkSuspensionExpiry;
-  //  ===== HELPERS =====
+  //  ===== HELPERS (sem autoridade de lifecycle) =====
   static isRideActive = MobilityHelpers.isRideActive;
-  static canAcceptRide = MobilityHelpers.canAcceptRide;
-  static canStartRide = MobilityHelpers.canStartRide;
-  static canCompleteRide = MobilityHelpers.canCompleteRide;
-  static canCancelRide = MobilityHelpers.canCancelRide;
   static calculateEstimatedFare = MobilityHelpers.calculateEstimatedFare;
   static calculateDistanceKm = MobilityHelpers.calculateDistanceKm;
   static formatDuration = MobilityHelpers.formatDuration;
