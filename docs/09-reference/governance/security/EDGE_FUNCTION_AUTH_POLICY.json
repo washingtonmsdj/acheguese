@@ -75,6 +75,20 @@
         "register_stripe_webhook_event"
       ]
     },
+    "resend-emergency-webhook": {
+      "kind": "signed-webhook",
+      "label": "Resend emergency delivery webhook",
+      "requiredPatterns": [
+        "requireHttpMethod\\s*\\(",
+        "readTextBody\\s*\\(",
+        "webhookVerifier\\.verify\\s*\\(",
+        "svix-id",
+        "svix-timestamp",
+        "svix-signature",
+        "RESEND_WEBHOOK_SECRET",
+        "apply_emergency_delivery_provider_event"
+      ]
+    },
     "get-push-config": {
       "kind": "public-read",
       "label": "public VAPID config",
@@ -301,6 +315,16 @@
       "requiredPatterns": [
         "stripe-signature",
         "constructEvent\\s*\\("
+      ]
+    },
+    "resend-emergency-webhook": {
+      "kind": "signed-webhook",
+      "risk": "Critical",
+      "label": "Resend emergency delivery signed webhook service_role broker",
+      "requiredPatterns": [
+        "webhookVerifier\\.verify\\s*\\(",
+        "RESEND_WEBHOOK_SECRET",
+        "apply_emergency_delivery_provider_event"
       ]
     },
     "business-reviews-rpc": {
