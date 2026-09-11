@@ -3,7 +3,6 @@ import { XCircle, ChevronDown, ChevronUp } from "lucide-react";
 import { Button } from "@/shared/components/ui/button";
 import { cn } from "@/shared/utils/cn";
 import type { RideRequest } from "@/core/mobility/types";
-import { RIDE_STATUS } from "@/shared/types/constants";
 import { StatusTimeline } from "../StatusTimeline";
 import { RideTrackingMap } from "../RideTrackingMap";
 import { RideCardHeader } from "./ride-card/RideCardHeader";
@@ -11,41 +10,13 @@ import { RideRoute } from "./ride-card/RideRoute";
 import { RideInfo } from "./ride-card/RideInfo";
 import { DriverInfo } from "./ride-card/DriverInfo";
 import { OperationalPinCard } from "./OperationalPinCard";
+import { getPassengerRideViewAvailability } from "@/core/mobility/core/PassengerRideViewPolicy";
 
 interface ActiveRideCardProps {
   ride: RideRequest;
   onCancel: (id: string) => void;
   onContact: () => void;
 }
-
-const MAP_VISIBLE_STATUSES = new Set<string>([
-  RIDE_STATUS.DRIVER_ACCEPTED,
-  RIDE_STATUS.DRIVER_ARRIVING,
-  RIDE_STATUS.DRIVER_ASSIGNED,
-  RIDE_STATUS.DRIVER_ON_THE_WAY,
-  RIDE_STATUS.DRIVER_ARRIVED,
-]);
-
-const DRIVER_INFO_STATUSES = new Set<string>([
-  RIDE_STATUS.DRIVER_ACCEPTED,
-  RIDE_STATUS.DRIVER_ARRIVING,
-  RIDE_STATUS.PASSENGER_BOARDED,
-  RIDE_STATUS.DRIVER_ASSIGNED,
-  RIDE_STATUS.IN_PROGRESS,
-  RIDE_STATUS.DRIVER_ON_THE_WAY,
-  RIDE_STATUS.DRIVER_ARRIVED,
-  RIDE_STATUS.PASSENGER_ON_BOARD,
-]);
-
-const CANCELLABLE_STATUSES = new Set<string>([
-  RIDE_STATUS.REQUESTED,
-  RIDE_STATUS.SEARCHING_DRIVER,
-  RIDE_STATUS.PENDING,
-  RIDE_STATUS.DRIVER_ASSIGNED,
-  RIDE_STATUS.DRIVER_ACCEPTED,
-  RIDE_STATUS.DRIVER_ON_THE_WAY,
-  RIDE_STATUS.DRIVER_ARRIVED,
-]);
 
 export function ActiveRideCard({
   ride,
@@ -55,16 +26,11 @@ export function ActiveRideCard({
   const [showTimeline, setShowTimeline] = useState(false);
   const [showMap, setShowMap] = useState(false);
   const isEntrega = ride.type === "entrega" || ride.type === "delivery";
+  const viewPolicy = getPassengerRideViewAvailability(ride.status);
 
-  const shouldShowMapOption =
-    ride.driver &&
-    MAP_VISIBLE_STATUSES.has(ride.status);
-
-  const showDriverInfo =
-    ride.driver &&
-    DRIVER_INFO_STATUSES.has(ride.status);
-
-  const canCancel = CANCELLABLE_STATUSES.has(ride.status);
+  const shouldShowMapOption = Boolean(ride.driver && viewPolicy.showLiveMap);
+  const showDriverInfo = Boolean(ride.driver && viewPolicy.showDriverInfo);
+  const canCancel = viewPolicy.canCancel;
 
   return (
     <div
@@ -113,7 +79,7 @@ export function ActiveRideCard({
             total_rides: 0,
           }}
           ride={ride}
-          shouldShowMapOption={!!shouldShowMapOption}
+          shouldShowMapOption={shouldShowMapOption}
           showMap={showMap}
           onContact={onContact}
           onToggleMap={() => setShowMap(!showMap)}
