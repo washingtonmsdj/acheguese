@@ -98,6 +98,13 @@ interface DeliveryRecord {
 
 type FailableDeliveryStatus = 'processing' | 'dispatching';
 
+const SUCCESSFUL_DELIVERY_STATUSES = new Set<DeliveryStatus>([
+  'processing',
+  'dispatching',
+  'sent',
+  'delivered',
+]);
+
 export default {
   async fetch(req: Request): Promise<Response> {
     const auditInfo = getAuditInfo(req);
@@ -211,19 +218,11 @@ export default {
             latestBeforeClaim.status,
           )
         ) {
-          return respond({
-            success:
-              latestBeforeClaim.status === 'sent' ||
-              latestBeforeClaim.status === 'delivered',
-            contactId,
-            channel: 'email',
-            timestamp: new Date().toISOString(),
-            status: latestBeforeClaim.status,
-            metadata: {
-              deliveryId: latestBeforeClaim.id,
+          return respond(
+            buildDeliveryOutcome(contactId, latestBeforeClaim, {
               terminalAlert: true,
-            },
-          });
+            }),
+          );
         }
         return respond({ error: 'Emergency alert is no longer actionable' }, 409);
       }
@@ -270,100 +269,99 @@ export default {
               409,
             );
           }
-          if (['sent', 'delivered'].includes(latest.status)) {
-            return respond({
-              success: true,
-              contactId,
-              channel: 'email',
-              timestamp: new Date().toISOString(),
+
+          if (
+            ['processing', 'dispatching', 'sent', 'delivered', 'failed', 'cancelled', 'reconciliation_required']
+              .includes(latest.status)
+          ) {
+            return respond(
+              buildDeliveryOutcome(contactId, latest, {
+                idempotent: true,
+                inProgress: ['processing', 'dispatching'].includes(latest.status),
+              }),
+            );
+          }
+
+          return respond(
+            {
+              error: 'Emergency delivery is not dispatchable',
               status: latest.status,
-              metadata: { deliveryId: latest.id, idempotent: true },
-            });
-          }
-          if (latest.status === 'processing') {
-            return respond({
-              success: true,
-              contactId,
-              channel: 'email',
-              timestamp: new Date().toISOString(),
-              status: 'processing',
-              metadata: { deliveryId: latest.id, inProgress: true },
-            });
-          }
-          if (latest.status !== 'dispatching') {
-            return respond(
-              {
-                error: 'Emergency delivery is not dispatchable',
-                status: latest.status,
-              },
-              409,
-            );
-          }
-          dispatching = latest;
-        } else {
-          if (claimed.attempt_count > MAX_CLAIM_ATTEMPTS) {
-            await markDeliveryFailed(
-              claimed.id,
-              `Claim attempt limit exceeded (${MAX_CLAIM_ATTEMPTS})`,
-              {},
-              'processing',
-            );
-            return respond(
-              { error: 'Emergency delivery claim limit exceeded' },
-              429,
-            );
-          }
-
-          const ownerProfile = profileRows.find(
-            (profile) => profile.id === alert.profile_id,
+            },
+            409,
           );
-          const candidatePayload = buildEmergencyProviderPayload({
-            deliveryId: claimed.id,
-            fromName: EMAIL_FROM_NAME,
-            fromDomain: EMAIL_FROM_DOMAIN,
-            contactEmail,
-            contactName: contact.name || 'Contato',
-            userName: ownerProfile?.name || 'Usuario',
-            userPhone: ownerProfile?.phone || 'Nao informado',
-            alertType: alert.alert_type || 'sos',
-            createdAt: alert.created_at || new Date().toISOString(),
-            latitude: alert.latitude,
-            longitude: alert.longitude,
-            description: alert.description,
-          });
+        }
 
-          const { data: dispatchData, error: dispatchError } =
-            await supabase.rpc('authorize_emergency_email_dispatch', {
-              p_delivery_id: claimed.id,
-              p_payload: candidatePayload,
-            });
-          if (dispatchError) {
-            return errorResponse(
-              'Failed to authorize emergency email dispatch',
-              500,
-              dispatchError,
-            );
-          }
-
-          dispatching = dispatchData as DeliveryRecord | null;
-          if (!dispatching) {
-            auditLog({
-              timestamp: new Date().toISOString(),
-              userId,
-              action: 'emergency_email_dispatch_cancelled',
-              resource: 'emergency_delivery_log',
-              status: 'success',
-              details: { alertId, contactId, deliveryId: claimed.id },
-              ...auditInfo,
-            });
+        if (claimed.attempt_count > MAX_CLAIM_ATTEMPTS) {
+          const failedOrCurrent = await markDeliveryFailed(
+            claimed.id,
+            `Claim attempt limit exceeded (${MAX_CLAIM_ATTEMPTS})`,
+            {},
+            'processing',
+          );
+          if (failedOrCurrent) {
             return respond(
-              {
-                error: 'Emergency delivery is no longer dispatchable',
-                status: 'cancelled',
-              },
-              409,
+              buildDeliveryOutcome(contactId, failedOrCurrent, {
+                claimAttemptLimitExceeded: true,
+              }),
             );
           }
+          return respond(
+            { error: 'Emergency delivery claim limit exceeded' },
+            429,
+          );
+        }
+
+        const ownerProfile = profileRows.find(
+          (profile) => profile.id === alert.profile_id,
+        );
+        const candidatePayload = buildEmergencyProviderPayload({
+          deliveryId: claimed.id,
+          fromName: EMAIL_FROM_NAME,
+          fromDomain: EMAIL_FROM_DOMAIN,
+          contactEmail,
+          contactName: contact.name || 'Contato',
+          userName: ownerProfile?.name || 'Usuario',
+          userPhone: ownerProfile?.phone || 'Nao informado',
+          alertType: alert.alert_type || 'sos',
+          createdAt: alert.created_at || new Date().toISOString(),
+          latitude: alert.latitude,
+          longitude: alert.longitude,
+          description: alert.description,
+        });
+
+        const { data: dispatchData, error: dispatchError } =
+          await supabase.rpc('authorize_emergency_email_dispatch', {
+            p_delivery_id: claimed.id,
+            p_payload: candidatePayload,
+          });
+        if (dispatchError) {
+          return errorResponse(
+            'Failed to authorize emergency email dispatch',
+            500,
+            dispatchError,
+          );
+        }
+
+        dispatching = dispatchData as DeliveryRecord | null;
+        if (!dispatching) {
+          auditLog({
+            timestamp: new Date().toISOString(),
+            userId,
+            action: 'emergency_email_dispatch_cancelled',
+            resource: 'emergency_delivery_log',
+            status: 'success',
+            details: { alertId, contactId, deliveryId: claimed.id },
+            ...auditInfo,
+          });
+          return respond({
+            success: false,
+            contactId,
+            channel: 'email',
+            timestamp: new Date().toISOString(),
+            status: 'cancelled',
+            error: 'Emergency delivery is no longer dispatchable',
+            metadata: { deliveryId: claimed.id },
+          });
         }
       }
 
@@ -377,13 +375,15 @@ export default {
           dispatching.id,
           'dispatching row missing immutable provider payload',
         );
-        return respond(
-          {
-            error: 'Emergency delivery requires provider reconciliation',
-            status: 'reconciliation_required',
-          },
-          409,
-        );
+        return respond({
+          success: false,
+          contactId,
+          channel: 'email',
+          timestamp: new Date().toISOString(),
+          status: 'reconciliation_required',
+          error: 'Emergency delivery requires provider reconciliation',
+          metadata: { deliveryId: dispatching.id },
+        });
       }
 
       const { data: providerAttemptData, error: providerAttemptError } =
@@ -401,27 +401,15 @@ export default {
       const providerAttempt = providerAttemptData as DeliveryRecord | null;
       if (!providerAttempt) {
         const current = await getDeliveryById(dispatching.id);
-        if (current?.status === 'reconciliation_required') {
-          return respond(
-            {
-              error: 'Emergency delivery requires provider reconciliation',
-              status: 'reconciliation_required',
-            },
-            409,
-          );
+        if (!current) {
+          return errorResponse('Emergency delivery state is missing', 500);
         }
 
-        return respond({
-          success: true,
-          contactId,
-          channel: 'email',
-          timestamp: new Date().toISOString(),
-          status: current?.status ?? 'dispatching',
-          metadata: {
-            deliveryId: dispatching.id,
+        return respond(
+          buildDeliveryOutcome(contactId, current, {
             providerAttemptSuppressed: true,
-          },
-        });
+          }),
+        );
       }
 
       const idempotencyKey = `emergency-delivery/${providerAttempt.id}`;
@@ -458,13 +446,15 @@ export default {
           providerAttempt.id,
           'provider accepted request without email id',
         );
-        return respond(
-          {
-            error: 'Emergency delivery requires provider reconciliation',
-            status: 'reconciliation_required',
-          },
-          409,
-        );
+        return respond({
+          success: false,
+          contactId,
+          channel: 'email',
+          timestamp: new Date().toISOString(),
+          status: 'reconciliation_required',
+          error: 'Emergency delivery requires provider reconciliation',
+          metadata: { deliveryId: providerAttempt.id },
+        });
       }
 
       const providerAcceptedAt = new Date().toISOString();
@@ -515,18 +505,15 @@ export default {
         ...auditInfo,
       });
 
-      const response: EmailResponse = {
-        success: true,
+      const response = buildDeliveryOutcome(
         contactId,
-        channel: 'email',
-        timestamp: providerAcceptedAt,
-        status: confirmed.status,
-        metadata: {
-          deliveryId: providerAttempt.id,
+        confirmed,
+        {
           providerAccepted: true,
           providerAttemptCount: providerAttempt.provider_attempt_count,
         },
-      };
+        providerAcceptedAt,
+      );
       return respond(response);
     } catch (error) {
       auditLog({
@@ -702,11 +689,9 @@ async function handleProviderFailure(input: {
       ...auditInfo,
     });
     return respond(
-      {
-        error: 'Emergency email provider attempt already in progress',
-        status: 'dispatching',
-      },
-      409,
+      buildDeliveryOutcome(contactId, providerAttempt, {
+        providerAttemptConcurrent: true,
+      }),
     );
   }
 
@@ -717,13 +702,18 @@ async function handleProviderFailure(input: {
         ? `provider idempotency conflict: ${providerErrorCode}`
         : 'provider idempotency conflict',
     );
-    return respond(
-      {
-        error: 'Emergency delivery requires provider reconciliation',
-        status: 'reconciliation_required',
+    return respond({
+      success: false,
+      contactId,
+      channel: 'email',
+      timestamp: new Date().toISOString(),
+      status: 'reconciliation_required',
+      error: 'Emergency delivery requires provider reconciliation',
+      metadata: {
+        deliveryId: providerAttempt.id,
+        providerErrorCode,
       },
-      409,
-    );
+    });
   }
 
   if (
@@ -746,10 +736,13 @@ async function handleProviderFailure(input: {
       },
       ...auditInfo,
     });
-    return errorResponse('Emergency email provider temporarily unavailable', 502, {
-      status: resendResponse.status,
-      code: providerErrorCode,
-    });
+    return respond(
+      buildDeliveryOutcome(contactId, providerAttempt, {
+        retryableProviderFailure: true,
+        providerStatus: resendResponse.status,
+        providerErrorCode,
+      }),
+    );
   }
 
   const failedOrCurrent = await markDeliveryFailed(
@@ -778,10 +771,61 @@ async function handleProviderFailure(input: {
     },
     ...auditInfo,
   });
-  return errorResponse('Failed to send emergency email', 502, {
+
+  if (failedOrCurrent) {
+    return respond(
+      buildDeliveryOutcome(contactId, failedOrCurrent, {
+        providerStatus: resendResponse.status,
+        providerErrorCode,
+      }),
+    );
+  }
+
+  return errorResponse('Failed to persist emergency email provider failure', 500, {
     status: resendResponse.status,
     code: providerErrorCode,
   });
+}
+
+function buildDeliveryOutcome(
+  contactId: string,
+  delivery: Pick<DeliveryRecord, 'id' | 'status'>,
+  metadata: Record<string, unknown> = {},
+  timestamp = new Date().toISOString(),
+): EmailResponse {
+  const success = SUCCESSFUL_DELIVERY_STATUSES.has(delivery.status);
+  const response: EmailResponse = {
+    success,
+    contactId,
+    channel: 'email',
+    timestamp,
+    status: delivery.status,
+    metadata: {
+      deliveryId: delivery.id,
+      ...metadata,
+    },
+  };
+
+  if (!success) {
+    response.error = deliveryStatusError(delivery.status);
+  }
+
+  return response;
+}
+
+function deliveryStatusError(status: DeliveryStatus): string {
+  switch (status) {
+    case 'failed':
+      return 'Emergency delivery failed';
+    case 'cancelled':
+      return 'Emergency delivery was cancelled';
+    case 'reconciliation_required':
+      return 'Emergency delivery requires provider reconciliation';
+    case 'pending':
+      return 'Emergency delivery is still pending';
+    default:
+      return 'Emergency delivery did not complete';
+  }
 }
 
 function isProviderPayload(value: unknown): value is ProviderPayload {
