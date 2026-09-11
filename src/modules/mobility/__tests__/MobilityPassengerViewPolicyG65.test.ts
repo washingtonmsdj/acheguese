@@ -11,7 +11,7 @@ function readProjectFile(path: string): string {
 }
 
 const locationRls = readProjectFile(
-  "supabase/migrations/20260825132718_harden_driver_locations_read_rls.sql",
+  "supabase/migrations/20260911100000_tighten_driver_location_read_window_g68.sql",
 );
 const canonicalStatusGate = readProjectFile(
   "supabase/migrations/20260911032000_enforce_canonical_ride_status_writes_g62.sql",
@@ -20,10 +20,9 @@ const activeCard = readProjectFile(
   "src/modules/mobility/components/passenger/ActiveRideCard.tsx",
 );
 
-describe("G65 passenger ride view policy", () => {
-  it("matches live-map visibility to the canonical precise-location window", () => {
+describe("G65/G68 passenger ride view policy", () => {
+  it("matches live-map visibility to the post-accept precise-location RLS allowlist", () => {
     expect(PASSENGER_LIVE_TRACKING_STATES).toEqual([
-      "driver_assigned",
       "driver_accepted",
       "driver_arriving",
       "passenger_boarded",
@@ -36,6 +35,8 @@ describe("G65 passenger ride view policy", () => {
       expect(locationRls).toContain(`'${status}'`);
       expect(getPassengerRideViewAvailability(status).showLiveMap).toBe(true);
     }
+
+    expect(getPassengerRideViewAvailability("driver_assigned").showLiveMap).toBe(false);
 
     for (const status of [
       "requested",
@@ -52,8 +53,9 @@ describe("G65 passenger ride view policy", () => {
     }
   });
 
-  it("keeps the historical accepted RLS alias non-authoritative after G62", () => {
-    expect(locationRls).toContain("'accepted'");
+  it("removes historical accepted from current tracking authority while preserving G62 cleanup", () => {
+    expect(locationRls).not.toContain("'accepted'");
+    expect(locationRls).not.toContain("'driver_assigned'");
     expect(canonicalStatusGate).toContain("WHERE status::text = 'accepted'");
     expect(canonicalStatusGate).toContain("SET status = 'driver_accepted'");
     const guard = canonicalStatusGate.slice(
