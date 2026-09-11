@@ -585,6 +585,7 @@ export default function BusinessMenuConceptPreviewPage() {
   const markSoldOut = (item: ConceptMenuItem) => {
     if (item.status === "Rascunho") return;
     setItems((current) => current.map((entry) => entry.id === item.id ? { ...entry, status: "Indisponível", stock: 0 } : entry));
+    if (item.id === selectedId) setEditorStock("0");
   };
 
   const deleteItem = (item: ConceptMenuItem) => {

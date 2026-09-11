@@ -45,6 +45,7 @@ export default function MenuManagementPage() {
   const [selectedItem, setSelectedItem] = useState<MenuItem | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
   const [filterCategory, setFilterCategory] = useState<string>('all');
+  const [filterStatus, setFilterStatus] = useState<'all' | 'available' | 'paused' | 'soldOut'>('all');
   const [viewMode, setViewMode] = useState<'list' | 'grid'>('list');
   const [categoryToDelete, setCategoryToDelete] = useState<string | null>(null);
   const [itemToDelete, setItemToDelete] = useState<string | null>(null);
@@ -172,8 +173,12 @@ export default function MenuManagementPage() {
 
   const filteredItems =
     items?.filter((item) =>
-      item.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      item.description?.toLowerCase().includes(searchQuery.toLowerCase()),
+      (item.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        item.description?.toLowerCase().includes(searchQuery.toLowerCase())) &&
+      (filterStatus === 'all' ||
+        (filterStatus === 'soldOut' && item.stock_quantity === 0) ||
+        (filterStatus === 'available' && item.is_available && item.stock_quantity !== 0) ||
+        (filterStatus === 'paused' && !item.is_available && item.stock_quantity !== 0)),
     ) || [];
 
   if (loadingSubscription || loadingMenuId) {
@@ -272,6 +277,18 @@ export default function MenuManagementPage() {
                     </SelectContent>
                   </Select>
                 )}
+
+                <Select value={filterStatus} onValueChange={(value: 'all' | 'available' | 'paused' | 'soldOut') => setFilterStatus(value)}>
+                  <SelectTrigger className="w-full sm:w-[180px]">
+                    <SelectValue placeholder="Status" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">Todos os status</SelectItem>
+                    <SelectItem value="available">Disponíveis</SelectItem>
+                    <SelectItem value="paused">Pausados</SelectItem>
+                    <SelectItem value="soldOut">Esgotados</SelectItem>
+                  </SelectContent>
+                </Select>
 
                 <div className="inline-flex self-start rounded-lg border border-territory-border bg-territory-surface p-1 sm:self-auto" aria-label="Modo de visualização">
                   <button
