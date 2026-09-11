@@ -63,7 +63,10 @@ describe("G76 idempotent emergency dispatch recovery", () => {
 
   it("keeps retryable provider failures dispatching instead of lying as failed", () => {
     const retryableBranch = worker.indexOf("resendResponse.status === 408");
-    const permanentFailure = worker.indexOf("const failedOrCurrent = await markDeliveryFailed(");
+    const permanentFailure = worker.indexOf(
+      "const failedOrCurrent = await markDeliveryFailed(",
+      retryableBranch,
+    );
     expect(retryableBranch).toBeGreaterThan(-1);
     expect(permanentFailure).toBeGreaterThan(retryableBranch);
     expect(worker).toContain("emergency_email_provider_retryable_failure");
