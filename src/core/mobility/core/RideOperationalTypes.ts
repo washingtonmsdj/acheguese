@@ -43,6 +43,7 @@ export interface TransitionResult {
   newState?: RideState;
   fromState?: RideState;
   toState?: RideState;
+  retryReopened?: boolean;
   error?: string;
 }
 
@@ -58,4 +59,3 @@ export interface ProviderErrorShape {
   details?: string;
   hint?: string;
 }
-
