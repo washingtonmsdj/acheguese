@@ -5,6 +5,7 @@
 import { profileService } from "@/core/profiles/services/ProfileService";
 import { MotoboyAuthorizationService } from "../services/MotoboyAuthorizationService";
 import type {
+  FailedDeliveryMetadata,
   FailedDeliveryResolutionUpdate,
   FailedDeliverySnapshotInput,
 } from "../types/FailedDeliveryMetadata";
@@ -86,7 +87,9 @@ export function hasValidRouteCoordinates(input: Pick<CreateRideInput, "originLat
   );
 }
 
-export function validateFailedDeliverySnapshot(metadata: FailedDeliverySnapshotInput): void {
+export function validateFailedDeliverySnapshot(
+  metadata: FailedDeliverySnapshotInput | FailedDeliveryMetadata,
+): void {
   const rawMetadata = metadata as unknown as Record<string, unknown>;
 
   if (!metadata.failure_reason || !metadata.item_destination || !metadata.timestamp) {
