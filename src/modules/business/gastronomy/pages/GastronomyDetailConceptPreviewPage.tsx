@@ -520,7 +520,7 @@ function CartSummary({ lines, onOpen }: { lines: CartLine[]; onOpen: () => void 
   );
 }
 
-function CartDialog({ lines, onClose, onRemove }: { lines: CartLine[]; onClose: () => void; onRemove: (id: string) => void }) {
+function CartDialog({ lines, onClose, onRemove, onContinue }: { lines: CartLine[]; onClose: () => void; onRemove: (id: string) => void; onContinue: () => void }) {
   const total = lines.reduce((sum, line) => sum + (line.price + (line.addonsTotal ?? 0)) * line.quantity, 0);
   return (
     <div className="fixed inset-0 z-50 flex items-end justify-center bg-black/35 p-0 sm:items-center sm:p-4" role="presentation" onMouseDown={onClose}>
@@ -528,13 +528,14 @@ function CartDialog({ lines, onClose, onRemove }: { lines: CartLine[]; onClose: 
         <div className="flex items-center justify-between"><h2 id="concept-cart-title" className="font-heading text-lg font-bold text-territory-ink">Seu carrinho</h2><button type="button" onClick={onClose} aria-label="Fechar carrinho" className="inline-flex h-9 w-9 items-center justify-center rounded-lg text-territory-ink hover:bg-territory-raised focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-territory-brand"><X className="h-5 w-5" aria-hidden="true" /></button></div>
         <div className="mt-4 divide-y divide-territory-border border-y border-territory-border">{lines.length ? lines.map((line) => <div key={`${line.id}-${line.notes ?? ""}`} className="flex items-center gap-3 py-3"><img src={line.image} alt="" className="h-12 w-14 rounded-lg object-cover" /><div className="min-w-0 flex-1"><p className="truncate text-sm font-bold text-territory-ink">{line.quantity}× {line.name}</p><p className="text-xs text-territory-muted">{money((line.price + (line.addonsTotal ?? 0)) * line.quantity)}</p></div><button type="button" onClick={() => onRemove(line.id)} className="text-xs font-semibold text-territory-brand underline-offset-2 hover:underline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-territory-brand">Remover</button></div>) : <p className="py-5 text-sm text-territory-muted">Seu carrinho está vazio.</p>}</div>
         <div className="mt-4 flex items-center justify-between text-sm font-bold text-territory-ink"><span>Total</span><span>{money(total)}</span></div>
-        <Button type="button" className="mt-4 h-11 w-full rounded-lg bg-territory-sun font-bold text-territory-ink hover:bg-territory-sun/90" disabled={!lines.length} onClick={() => toast.success("Fluxo de finalização pronto para continuar.")}>Continuar para finalizar</Button>
+        <Button type="button" className="mt-4 h-11 w-full rounded-lg bg-territory-sun font-bold text-territory-ink hover:bg-territory-sun/90" disabled={!lines.length} onClick={onContinue}>Continuar para finalizar</Button>
       </section>
     </div>
   );
 }
 
 export default function GastronomyDetailConceptPreviewPage() {
+  const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState<ConceptTab>("menu");
   const [activeCategory, setActiveCategory] = useState("Todas");
   const [query, setQuery] = useState("");
@@ -665,7 +666,7 @@ export default function GastronomyDetailConceptPreviewPage() {
 
       {viewMode === "grid" && gridDetailsOpen && selectedItem ? <div className="fixed inset-0 z-50 hidden items-center justify-center bg-black/35 p-4 lg:flex" role="presentation" onMouseDown={() => { setGridDetailsOpen(false); setSelectedItemId(null); }}><section className="max-h-[calc(100dvh-2rem)] w-full max-w-[30rem] overflow-y-auto rounded-2xl bg-territory-surface p-3 shadow-2xl" role="dialog" aria-modal="true" aria-label={`Personalizar ${selectedItem.name}`} onMouseDown={(event) => event.stopPropagation()}><div className="mb-2 flex items-center justify-between"><p className="text-sm font-bold text-territory-ink">Personalizar pedido</p><button type="button" aria-label="Fechar detalhes do item" onClick={() => { setGridDetailsOpen(false); setSelectedItemId(null); }} className="inline-flex h-9 w-9 items-center justify-center rounded-lg text-territory-ink hover:bg-territory-raised focus-visible:outline-2 focus-visible:outline-offset-[-2px] focus-visible:outline-territory-brand"><X className="h-5 w-5" aria-hidden="true" /></button></div><ItemCustomizer item={selectedItem} size={size} setSize={setSize} quantity={quantity} setQuantity={setQuantity} farofa={farofa} setFarofa={setFarofa} arroz={arroz} setArroz={setArroz} notes={notes} setNotes={setNotes} onAdd={() => { addSelectedItem(); setGridDetailsOpen(false); }} /></section></div> : null}
       {mobileCustomizerOpen && selectedItem ? <div className="fixed inset-0 z-50 flex items-end bg-black/35 lg:hidden" role="presentation" onMouseDown={() => setMobileCustomizerOpen(false)}><div className="max-h-[90dvh] w-full overflow-y-auto rounded-t-2xl bg-territory-surface p-3 pb-[calc(0.75rem+env(safe-area-inset-bottom))]" onMouseDown={(event) => event.stopPropagation()}><div className="mb-2 flex items-center justify-between"><p className="text-sm font-bold text-territory-ink">Personalizar pedido</p><button type="button" aria-label="Fechar personalização" onClick={() => setMobileCustomizerOpen(false)} className="inline-flex h-9 w-9 items-center justify-center rounded-lg text-territory-ink hover:bg-territory-raised focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-territory-brand"><X className="h-5 w-5" aria-hidden="true" /></button></div><ItemCustomizer item={selectedItem} size={size} setSize={setSize} quantity={quantity} setQuantity={setQuantity} farofa={farofa} setFarofa={setFarofa} arroz={arroz} setArroz={setArroz} notes={notes} setNotes={setNotes} onAdd={addSelectedItem} /></div></div> : null}
-      {cartOpen ? <CartDialog lines={cartLines} onClose={() => setCartOpen(false)} onRemove={handleRemoveLine} /> : null}
+      {cartOpen ? <CartDialog lines={cartLines} onClose={() => setCartOpen(false)} onRemove={handleRemoveLine} onContinue={() => navigate("checkout")} /> : null}
     </div>
   );
 }

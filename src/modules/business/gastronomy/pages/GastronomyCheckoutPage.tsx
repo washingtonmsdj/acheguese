@@ -40,6 +40,7 @@ import {
 } from "../checkout/CheckoutSections";
 import type { OrderRecord } from "@/core/mobility/delivery/order/types";
 import type { GastronomyBusiness } from "../types/gastronomy";
+import GastronomyCheckoutConceptSurface from "./GastronomyCheckoutConceptSurface";
 
 export default function GastronomyCheckoutPage() {
   const { state } = useLocation();
@@ -53,6 +54,11 @@ export default function GastronomyCheckoutPage() {
   const stateBusiness = (state as { business?: GastronomyBusiness } | null)
     ?.business;
   const detailQuery = useGastronomyDetail(stateBusiness ? undefined : params);
+
+  if (import.meta.env.DEV && params.slug === "sabores-da-ana") {
+    return <GastronomyCheckoutConceptSurface />;
+  }
+
   const business = stateBusiness ?? detailQuery.data ?? null;
 
   if (!business && detailQuery.isLoading) {
