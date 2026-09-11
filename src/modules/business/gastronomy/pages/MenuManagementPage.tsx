@@ -251,8 +251,8 @@ export default function MenuManagementPage() {
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
-              <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:gap-4">
-                <div className="flex-1 relative">
+              <div className="flex flex-wrap items-center gap-3">
+                <div className="relative min-w-0 flex-1 basis-full sm:min-w-[14rem] sm:basis-auto">
                   <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
                   <Input
                     placeholder="Buscar itens..."
@@ -311,7 +311,7 @@ export default function MenuManagementPage() {
                   </button>
                 </div>
 
-                <Button onClick={handleCreateItem} disabled={!canAddMoreItems}>
+                <Button onClick={handleCreateItem} disabled={!canAddMoreItems} className="w-full sm:w-auto">
                   <Plus className="w-4 h-4 mr-2" />
                   Novo Item
                 </Button>

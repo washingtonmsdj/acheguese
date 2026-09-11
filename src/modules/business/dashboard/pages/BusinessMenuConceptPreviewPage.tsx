@@ -326,9 +326,9 @@ function MenuTabs({ activeTab, onChange }: { activeTab: "Itens" | "Categorias"; 
   );
 }
 
-function FilterSelect({ value, onChange, options, label }: { value: string; onChange: (value: string) => void; options: string[]; label: string }) {
+function FilterSelect({ value, onChange, options, label, className }: { value: string; onChange: (value: string) => void; options: string[]; label: string; className?: string }) {
   return (
-    <label className="relative block min-w-0">
+    <label className={cn("relative block min-w-0", className)}>
       <span className="sr-only">{label}</span>
       <select value={value} onChange={(event) => onChange(event.target.value)} className="h-10 w-full appearance-none rounded-lg border border-territory-border bg-territory-surface px-3 pr-9 text-xs font-medium text-territory-ink outline-none focus-visible:border-territory-brand focus-visible:ring-2 focus-visible:ring-territory-brand/25">
         {options.map((option) => <option key={option} value={option}>{option}</option>)}
@@ -340,21 +340,26 @@ function FilterSelect({ value, onChange, options, label }: { value: string; onCh
 
 function MenuFilters({ query, onQueryChange, category, onCategoryChange, status, onStatusChange, categoryOptions, viewMode, onViewModeChange }: { query: string; onQueryChange: (value: string) => void; category: string; onCategoryChange: (value: string) => void; status: string; onStatusChange: (value: string) => void; categoryOptions?: string[]; viewMode?: MenuViewMode; onViewModeChange?: (value: MenuViewMode) => void }) {
   return (
-    <div className="mt-3 grid grid-cols-2 gap-2 md:flex md:items-center md:gap-3">
+    <div className="mt-3 grid grid-cols-2 gap-2 md:flex md:flex-wrap md:items-center md:gap-2 lg:gap-3">
       <label className="relative col-span-2 block min-w-0 md:w-52 md:shrink-0">
         <span className="sr-only">Buscar item pelo nome</span>
         <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-territory-muted" aria-hidden="true" />
         <input type="search" value={query} onChange={(event) => onQueryChange(event.target.value)} placeholder="Buscar item pelo nome" className="h-10 w-full rounded-lg border border-territory-border bg-territory-surface pl-9 pr-3 text-xs text-territory-ink outline-none placeholder:text-territory-muted focus-visible:border-territory-brand focus-visible:ring-2 focus-visible:ring-territory-brand/25" />
       </label>
-      <FilterSelect value={category} onChange={onCategoryChange} options={["Todas as categorias", ...(categoryOptions ?? categories)]} label="Filtrar por categoria" />
-      <FilterSelect value={status} onChange={onStatusChange} options={["Todos os status", "Disponível", "Indisponível", "Rascunho"]} label="Filtrar por status" />
-      {viewMode && onViewModeChange ? <div className="hidden items-center rounded-lg border border-territory-border bg-territory-surface p-0.5 md:ml-auto md:flex" aria-label="Modo de visualização">
-        <button type="button" aria-pressed={viewMode === "list"} aria-label="Visualizar em lista" onClick={() => onViewModeChange("list")} className={cn("inline-flex h-9 w-9 items-center justify-center rounded-md focus-visible:outline-2 focus-visible:outline-offset-[-2px] focus-visible:outline-territory-brand", viewMode === "list" ? "bg-territory-brand text-white" : "text-territory-muted hover:text-territory-ink")}>
+      <FilterSelect className="md:w-44 md:shrink-0" value={category} onChange={onCategoryChange} options={["Todas as categorias", ...(categoryOptions ?? categories)]} label="Filtrar por categoria" />
+      <FilterSelect className="md:w-36 md:shrink-0" value={status} onChange={onStatusChange} options={["Todos os status", "Disponível", "Indisponível", "Rascunho"]} label="Filtrar por status" />
+      {viewMode && onViewModeChange ? <div className="col-span-2 flex items-center justify-end gap-2 md:col-auto md:ml-auto md:flex" aria-label="Modo de visualização">
+        <span className="text-[0.6875rem] font-semibold text-territory-muted md:hidden">Visualizar:</span>
+        <div className="inline-flex items-center rounded-lg border border-territory-border bg-territory-surface p-0.5">
+        <button type="button" aria-pressed={viewMode === "list"} aria-label="Visualizar em lista" onClick={() => onViewModeChange("list")} className={cn("inline-flex h-9 items-center justify-center gap-1 rounded-md px-2 text-[0.6875rem] font-semibold focus-visible:outline-2 focus-visible:outline-offset-[-2px] focus-visible:outline-territory-brand md:w-9 md:px-0", viewMode === "list" ? "bg-territory-brand text-white" : "text-territory-muted hover:text-territory-ink")}>
           <List className="h-4 w-4" aria-hidden="true" />
+          <span className="md:hidden">Lista</span>
         </button>
-        <button type="button" aria-pressed={viewMode === "grid"} aria-label="Visualizar em grade" onClick={() => onViewModeChange("grid")} className={cn("inline-flex h-9 w-9 items-center justify-center rounded-md focus-visible:outline-2 focus-visible:outline-offset-[-2px] focus-visible:outline-territory-brand", viewMode === "grid" ? "bg-territory-brand text-white" : "text-territory-muted hover:text-territory-ink")}>
+        <button type="button" aria-pressed={viewMode === "grid"} aria-label="Visualizar em grade" onClick={() => onViewModeChange("grid")} className={cn("inline-flex h-9 items-center justify-center gap-1 rounded-md px-2 text-[0.6875rem] font-semibold focus-visible:outline-2 focus-visible:outline-offset-[-2px] focus-visible:outline-territory-brand md:w-9 md:px-0", viewMode === "grid" ? "bg-territory-brand text-white" : "text-territory-muted hover:text-territory-ink")}>
           <LayoutGrid className="h-4 w-4" aria-hidden="true" />
+          <span className="md:hidden">Grade</span>
         </button>
+        </div>
       </div> : null}
     </div>
   );
@@ -374,22 +379,23 @@ function MenuItemRow({ item, selected, onOpen, onToggle, className }: { item: Co
   const isAvailable = item.status === "Disponível";
   const isDraft = item.status === "Rascunho";
   return (
-    <div className={cn("grid min-h-[4.6rem] grid-cols-[minmax(0,1fr)_4.75rem_1.4rem] items-center gap-2 border-b border-territory-border px-3 last:border-b-0 md:grid-cols-[minmax(0,1fr)_6rem_8rem_1.75rem] md:gap-2 md:px-2 xl:grid-cols-[minmax(0,1fr)_7.5rem_9.5rem_2.2rem] xl:gap-3 xl:px-3", selected && "md:bg-[hsl(var(--territory-success)/0.14)]", className)}>
+    <div className={cn("grid min-h-[4.6rem] grid-cols-[minmax(0,1fr)_4.75rem_1.4rem] items-center gap-2 border-b border-territory-border px-3 last:border-b-0 md:grid-cols-[minmax(0,1fr)_1.75rem] md:gap-2 md:px-2 lg:grid-cols-[minmax(0,1fr)_6rem_8rem_1.75rem] xl:grid-cols-[minmax(0,1fr)_7.5rem_9.5rem_2.2rem] xl:gap-3 xl:px-3", selected && "md:bg-[hsl(var(--territory-success)/0.14)]", className)}>
       <button type="button" onClick={onOpen} className="flex min-w-0 items-center justify-start gap-3 text-left focus-visible:outline-2 focus-visible:outline-offset-[-2px] focus-visible:outline-territory-brand">
         <img src={item.image} alt="" className="h-16 w-[5.25rem] shrink-0 rounded-lg object-cover md:h-12 md:w-16" />
         <span className="min-w-0">
           <span className="block truncate text-sm font-bold text-territory-ink">{item.name}</span>
           <span className="mt-0.5 block truncate text-xs text-territory-muted">{item.category}</span>
-          <span className="mt-0.5 block text-xs font-semibold text-territory-ink md:hidden">{item.price}</span>
+          <span className="mt-0.5 block text-xs font-semibold text-territory-ink md:hidden lg:block">{item.price}</span>
+          <span className="mt-0.5 hidden truncate text-[0.6875rem] font-medium text-territory-muted md:block lg:hidden">{item.price} · {item.status}</span>
         </span>
       </button>
-      <span className="hidden text-xs font-medium text-territory-ink md:block">{item.price.includes("A partir") ? <><span className="block">A partir de</span><span className="block">R$ 38,00</span></> : item.price}</span>
-      <span className="flex min-w-0 flex-col items-center justify-center gap-1 text-[0.625rem] text-territory-muted md:flex-row md:justify-start md:gap-2 md:text-xs">
+      <span className="hidden text-xs font-medium text-territory-ink lg:block">{item.price.includes("A partir") ? <><span className="block">A partir de</span><span className="block">R$ 38,00</span></> : item.price}</span>
+      <span className="flex min-w-0 flex-col items-center justify-center gap-1 text-[0.625rem] text-territory-muted md:hidden lg:flex lg:flex-row lg:justify-start lg:gap-2 lg:text-xs">
         {isDraft ? <span className="inline-flex items-center gap-1.5 text-territory-warning"><span className="h-2.5 w-2.5 rounded-full bg-territory-warning" />Rascunho</span> : <><span className="md:hidden"><AvailabilityToggle available={isAvailable} onToggle={onToggle} name={item.name} /></span><span className="whitespace-nowrap md:hidden">{isAvailable ? "Disponível" : "Indisponível"}</span><span className="hidden items-center gap-1.5 whitespace-nowrap md:inline-flex"><span className={cn("h-2.5 w-2.5 rounded-full", isAvailable ? "bg-territory-success" : "bg-territory-muted")} />{item.status}</span></>}
       </span>
       <button type="button" onClick={onOpen} aria-label={`Editar ${item.name}`} className="flex h-8 w-8 items-center justify-center rounded-lg text-territory-ink focus-visible:outline-2 focus-visible:outline-offset-[-2px] focus-visible:outline-territory-brand">
-        <ChevronRight className="h-4 w-4 md:hidden" aria-hidden="true" />
-        <MoreHorizontal className="hidden h-4 w-4 md:block" aria-hidden="true" />
+        <ChevronRight className="h-4 w-4 lg:hidden" aria-hidden="true" />
+        <MoreHorizontal className="hidden h-4 w-4 lg:block" aria-hidden="true" />
       </button>
     </div>
   );
@@ -398,7 +404,8 @@ function MenuItemRow({ item, selected, onOpen, onToggle, className }: { item: Co
 function MenuItemList({ items, selectedId, onOpen, onToggle, hideOverflowOnMobile = false }: { items: ConceptMenuItem[]; selectedId: string; onOpen: (item: ConceptMenuItem) => void; onToggle: (item: ConceptMenuItem) => void; hideOverflowOnMobile?: boolean }) {
   return (
     <div className="mt-3 overflow-hidden rounded-xl border border-territory-border bg-territory-surface">
-      <div className="hidden h-10 grid-cols-[minmax(0,1fr)_6rem_8rem_1.75rem] items-center gap-2 border-b border-territory-border bg-territory-raised px-2 text-xs font-semibold text-territory-ink md:grid xl:grid-cols-[minmax(0,1fr)_7.5rem_9.5rem_2.2rem] xl:gap-3 xl:px-3">
+      <div className="hidden h-10 grid-cols-[minmax(0,1fr)_1.75rem] items-center gap-2 border-b border-territory-border bg-territory-raised px-2 text-xs font-semibold text-territory-ink md:grid lg:hidden"><span>Item</span><span className="sr-only">Ações</span></div>
+      <div className="hidden h-10 grid-cols-[minmax(0,1fr)_6rem_8rem_1.75rem] items-center gap-2 border-b border-territory-border bg-territory-raised px-2 text-xs font-semibold text-territory-ink lg:grid xl:grid-cols-[minmax(0,1fr)_7.5rem_9.5rem_2.2rem] xl:gap-3 xl:px-3">
         <span>Item</span><span>Preço</span><span>Disponibilidade</span><span className="sr-only">Ações</span>
       </div>
       {items.length ? items.map((item, index) => <MenuItemRow key={item.id} item={item} selected={selectedId === item.id} onOpen={() => onOpen(item)} onToggle={() => onToggle(item)} className={hideOverflowOnMobile && index >= 5 ? "max-md:hidden" : undefined} />) : <p className="px-4 py-8 text-center text-sm text-territory-muted">Nenhum item encontrado.</p>}
@@ -415,7 +422,7 @@ function MenuItemList({ items, selectedId, onOpen, onToggle, hideOverflowOnMobil
 
 function MenuItemGrid({ items, selectedId, onOpen, onToggle, onDelete, onMarkSoldOut }: { items: ConceptMenuItem[]; selectedId: string; onOpen: (item: ConceptMenuItem) => void; onToggle: (item: ConceptMenuItem) => void; onDelete: (item: ConceptMenuItem) => void; onMarkSoldOut: (item: ConceptMenuItem) => void }) {
   return (
-    <div className="mt-3 grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
+    <div className="mt-3 grid gap-3 lg:grid-cols-2 xl:grid-cols-3">
       {items.length ? items.map((item) => {
         const isAvailable = item.status === "Disponível";
         const isSoldOut = item.stock === 0;
@@ -663,18 +670,18 @@ export default function BusinessMenuConceptPreviewPage() {
   };
 
   return (
-    <div className="min-h-screen bg-territory-canvas text-territory-ink max-md:h-[100dvh] max-md:overflow-y-auto max-md:scrollbar-hide md:h-screen md:overflow-hidden">
+    <div className="min-h-screen overflow-x-hidden bg-territory-canvas text-territory-ink max-md:h-[100dvh] max-md:overflow-y-auto max-md:scrollbar-hide md:h-screen md:overflow-hidden">
       <MenuConceptHeader />
       <div className="flex min-h-[calc(100vh-4rem)] md:h-[calc(100vh-4rem)] md:min-h-0">
         <MenuConceptSidebar />
-        <main className="min-w-0 flex-1 px-4 pb-[calc(5.5rem+env(safe-area-inset-bottom))] pt-4 sm:px-6 md:overflow-y-auto md:px-5 md:py-5 lg:px-4 xl:px-5 scrollbar-hide">
+        <main className="min-w-0 flex-1 overflow-x-hidden px-4 pb-[calc(5.5rem+env(safe-area-inset-bottom))] pt-4 sm:px-6 md:overflow-y-auto md:px-5 md:py-5 lg:px-4 xl:px-5 scrollbar-hide">
           <div className="md:hidden">
             {!mobileEditorOpen ? <>
               <MobileBusinessIdentity onBack={() => navigate("/central?concept-mock=1")} />
               <MenuPageHeading mobile onAdd={addItem} />
               <MenuTabs activeTab={activeTab} onChange={setActiveTab} />
-              <MenuFilters query={query} onQueryChange={setQuery} category={category} onCategoryChange={setCategory} status={status} onStatusChange={setStatus} />
-              {activeTab === "Itens" ? <MenuItemList items={filteredItems} selectedId={selectedId} onOpen={openEditor} onToggle={toggleAvailability} hideOverflowOnMobile={hideOverflowOnMobile} /> : <CategoryPanel categories={categoryOrder} items={items} onAdd={addCategory} onRename={renameCategory} onDelete={deleteCategory} onReorder={reorderCategories} />}
+              <MenuFilters query={query} onQueryChange={setQuery} category={category} onCategoryChange={setCategory} status={status} onStatusChange={setStatus} viewMode={viewMode} onViewModeChange={setViewMode} />
+              {activeTab === "Itens" ? viewMode === "list" ? <MenuItemList items={filteredItems} selectedId={selectedId} onOpen={openEditor} onToggle={toggleAvailability} hideOverflowOnMobile={hideOverflowOnMobile} /> : <MenuItemGrid items={filteredItems} selectedId={selectedId} onOpen={openEditor} onToggle={toggleAvailability} onDelete={deleteItem} onMarkSoldOut={markSoldOut} /> : <CategoryPanel categories={categoryOrder} items={items} onAdd={addCategory} onRename={renameCategory} onDelete={deleteCategory} onReorder={reorderCategories} />}
               <p className="mt-2 text-xs text-territory-muted">24 itens</p>
             </> : <MenuEditor item={selectedItem} name={editorName} onNameChange={setEditorName} description={editorDescription} onDescriptionChange={setEditorDescription} category={editorCategory} onCategoryChange={setEditorCategory} categoryOptions={categoryOrder} price={editorPrice} onPriceChange={setEditorPrice} preparationTime={editorPreparationTime} onPreparationTimeChange={setEditorPreparationTime} stock={editorStock} onStockChange={setEditorStock} stockAlertThreshold={editorStockAlertThreshold} onStockAlertThresholdChange={setEditorStockAlertThreshold} featured={editorFeatured} onFeaturedChange={setEditorFeatured} dietaryTags={editorDietaryTags} onDietaryTagsChange={setEditorDietaryTags} ingredients={editorIngredients} onIngredientsChange={setEditorIngredients} allergens={editorAllergens} onAllergensChange={setEditorAllergens} tags={editorTags} onTagsChange={setEditorTags} image={editorImage} onImageChange={setEditorImage} available={editorAvailable} onAvailableChange={() => toggleAvailability(selectedItem)} onMarkSoldOut={() => markSoldOut(selectedItem)} onDelete={() => deleteItem(selectedItem)} onClose={() => setMobileEditorOpen(false)} onSave={saveEditor} mobile />}
           </div>
