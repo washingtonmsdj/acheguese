@@ -200,7 +200,7 @@ Deno.serve(async (req: Request) => {
   if (!requesterIdentity.ok) return requesterIdentity.response;
 
   try {
-    const outcome = await executeProfessionalLeadIntake<LeadIdRow>(body.data, {
+    const outcome = await executeProfessionalLeadIntake(body.data, {
       requesterUserId: requesterIdentity.userId,
       requesterProfileId: requesterIdentity.profileId,
       verifyTurnstile: async (token) => {
