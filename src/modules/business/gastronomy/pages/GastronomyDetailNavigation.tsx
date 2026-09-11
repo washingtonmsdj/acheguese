@@ -1,12 +1,12 @@
-import { useRef } from 'react';
-import { ShoppingBag, Store, Truck } from 'lucide-react';
+import { useRef } from "react";
+import { ShoppingBag, Store, Truck } from "lucide-react";
 
-import { ScrollArea, ScrollBar } from '@/shared/components/ui/scroll-area';
-import { Separator } from '@/shared/components/ui/separator';
-import { cn } from '@/shared/utils/cn';
+import { ScrollArea, ScrollBar } from "@/shared/components/ui/scroll-area";
+import { Separator } from "@/shared/components/ui/separator";
+import { cn } from "@/shared/utils/cn";
 
-import type { MenuCategory } from '../types';
-import { formatBrl } from '../utils/currency';
+import type { MenuCategory } from "../types";
+import { formatBrl } from "../utils/currency";
 
 interface ServiceBarProps {
   profile: {
@@ -21,22 +21,22 @@ interface ServiceBarProps {
 export function ServiceBar({ profile }: ServiceBarProps) {
   const serviceModes = [
     profile.delivery_enabled && {
-      label: 'Entrega',
+      label: "Entrega",
       icon: Truck,
-      color: 'text-success',
-      bgColor: 'bg-success/10',
+      color: "text-success",
+      bgColor: "bg-success/10",
     },
     profile.takeout_enabled && {
-      label: 'Retirada',
+      label: "Retirada",
       icon: ShoppingBag,
-      color: 'text-warning',
-      bgColor: 'bg-warning/10',
+      color: "text-warning",
+      bgColor: "bg-warning/10",
     },
     profile.dine_in_enabled && {
-      label: 'No local',
+      label: "No local",
       icon: Store,
-      color: 'text-accent',
-      bgColor: 'bg-accent/10',
+      color: "text-accent",
+      bgColor: "bg-accent/10",
     },
   ].filter(Boolean) as Array<{
     label: string;
@@ -49,10 +49,10 @@ export function ServiceBar({ profile }: ServiceBarProps) {
       ? serviceModes
       : [
           {
-            label: 'No local',
+            label: "No local",
             icon: Store,
-            color: 'text-muted-foreground',
-            bgColor: 'bg-muted/60',
+            color: "text-muted-foreground",
+            bgColor: "bg-muted/60",
           },
         ];
 
@@ -65,9 +65,9 @@ export function ServiceBar({ profile }: ServiceBarProps) {
               <div
                 key={mode.label}
                 className={cn(
-                  'flex items-center gap-1.5 rounded-full px-3 py-1.5 text-sm font-medium',
+                  "flex items-center gap-1.5 rounded-full px-3 py-1.5 text-sm font-medium",
                   mode.bgColor,
-                  mode.color
+                  mode.color,
                 )}
               >
                 <mode.icon className="h-4 w-4" />
@@ -80,15 +80,21 @@ export function ServiceBar({ profile }: ServiceBarProps) {
             {profile.delivery_enabled && (
               <div className="flex items-center gap-1.5 text-muted-foreground">
                 <span className="text-muted-foreground/70">Taxa:</span>
-                <span className="font-medium text-foreground">{formatBrl(profile.delivery_fee ?? 0)}</span>
+                <span className="font-medium text-foreground">
+                  {formatBrl(profile.delivery_fee ?? 0)}
+                </span>
               </div>
             )}
             {profile.minimum_order && profile.minimum_order > 0 && (
               <>
-                {profile.delivery_enabled && <Separator orientation="vertical" className="h-4" />}
+                {profile.delivery_enabled && (
+                  <Separator orientation="vertical" className="h-4" />
+                )}
                 <div className="flex items-center gap-1.5 text-muted-foreground">
                   <span className="text-muted-foreground/70">Min:</span>
-                  <span className="font-medium text-foreground">{formatBrl(profile.minimum_order)}</span>
+                  <span className="font-medium text-foreground">
+                    {formatBrl(profile.minimum_order)}
+                  </span>
                 </div>
               </>
             )}
@@ -106,7 +112,12 @@ interface CategoryNavProps {
   itemCounts: Record<string, number>;
 }
 
-export function CategoryNav({ categories, activeCategory, onSelect, itemCounts }: CategoryNavProps) {
+export function CategoryNav({
+  categories,
+  activeCategory,
+  onSelect,
+  itemCounts,
+}: CategoryNavProps) {
   const scrollRef = useRef<HTMLDivElement>(null);
 
   return (
@@ -121,20 +132,24 @@ export function CategoryNav({ categories, activeCategory, onSelect, itemCounts }
               return (
                 <button
                   key={category.id}
+                  type="button"
                   onClick={() => onSelect(category.id)}
+                  aria-pressed={isActive}
                   className={cn(
-                    'relative whitespace-nowrap rounded-full px-4 py-2 text-sm font-medium transition-all',
+                    "relative whitespace-nowrap rounded-full px-4 py-2 text-sm font-medium transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring",
                     isActive
-                      ? 'bg-primary text-primary-foreground shadow-md'
-                      : 'bg-muted text-muted-foreground hover:bg-muted/70'
+                      ? "bg-primary text-primary-foreground shadow-md"
+                      : "bg-muted text-muted-foreground hover:bg-muted/70",
                   )}
                 >
                   {category.name}
                   {count > 0 && (
                     <span
                       className={cn(
-                        'ml-1.5 text-xs',
-                        isActive ? 'text-primary-foreground/70' : 'text-muted-foreground/60'
+                        "ml-1.5 text-xs",
+                        isActive
+                          ? "text-primary-foreground/70"
+                          : "text-muted-foreground/60",
                       )}
                     >
                       {count}
