@@ -1,21 +1,10 @@
--- G81: route failed-delivery receiver discovery around the current package
--- custodian instead of the original pickup point.
+-- G81: replace only the failed-delivery branch of the G81 discovery router.
 --
--- Normal ride discovery remains owned by the G11 implementation. Failed
--- delivery handoff discovery is admin-only, privacy-minimized and uses the
--- current custodian's fresh server-side location as the physical reference.
-
-ALTER FUNCTION public.mobility_find_available_drivers_for_ride(
-  uuid, uuid, numeric, integer
-) RENAME TO mobility_find_available_drivers_for_ride_base_g81;
-
-ALTER FUNCTION public.mobility_find_available_drivers_for_ride_base_g81(
-  uuid, uuid, numeric, integer
-) SET SCHEMA private;
-
-REVOKE ALL ON FUNCTION private.mobility_find_available_drivers_for_ride_base_g81(
-  uuid, uuid, numeric, integer
-) FROM PUBLIC, anon, authenticated, service_role;
+-- The 23:00 G81 migration already moved the original G11 implementation to
+-- private.mobility_find_available_drivers_for_ride_base_g81. Keep that exact
+-- base as the normal-ride authority. This migration narrows failed-delivery
+-- discovery to an admin-only, privacy-minimized <=500m search around the fresh
+-- current package custodian location.
 
 CREATE OR REPLACE FUNCTION private.mobility_find_failed_delivery_handoff_candidates_g81(
   p_actor_user_id uuid,
@@ -263,4 +252,4 @@ GRANT EXECUTE ON FUNCTION public.mobility_find_available_drivers_for_ride(
 COMMENT ON FUNCTION public.mobility_find_available_drivers_for_ride(
   uuid, uuid, numeric, integer
 ) IS
-  'G81 route-preserving discovery command. Normal rides delegate to G11. Failed deliveries are admin-only and discover eligible handoff receivers within 500m of the fresh current package custodian location without returning candidate coordinates.';
+  'G81 route-preserving discovery command. Normal rides delegate to the exact G11 base. Failed deliveries are admin-only and discover eligible handoff receivers within 500m of the fresh current package custodian location without returning candidate coordinates.';
