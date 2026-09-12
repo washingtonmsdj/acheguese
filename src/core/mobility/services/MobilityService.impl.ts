@@ -11,7 +11,6 @@
 import { supabase } from "@/integrations/supabase";
 import { logger } from "@/shared/utils/logger";
 import { profileService } from "@/core/profiles/services/ProfileService";
-import { QUERYABLE_OPEN_RIDE_STATUSES } from "@/core/mobility/core/RideLifecycleStatus";
 import { DriverEarningsReadService } from "./DriverEarningsReadService";
 import { RideRatingService } from "./RideRatingService";
 import { RideOperationalContextReadService } from "./RideOperationalContextReadService";
@@ -221,17 +220,6 @@ export class MobilityService {
     }
   }
 
-  static async getRidesByPassenger(passengerProfileId: string): Promise<unknown[]> {
-    const { data, error } = await db
-      .from("ride_requests")
-      .select("*")
-      .eq("passenger_profile_id", passengerProfileId)
-      .order("created_at", { ascending: false });
-
-    if (error) throw error;
-    return data || [];
-  }
-
   static async getActiveRideByDriverProfile(
     driverProfileId: string,
     statuses: string[],
@@ -252,23 +240,6 @@ export class MobilityService {
     return data || null;
   }
 
-  static async getActiveRide(userProfileId: string): Promise<unknown | null> {
-    const { data, error } = await db
-      .from("ride_requests")
-      .select("*")
-      .or(`passenger_profile_id.eq.${userProfileId},driver_profile_id.eq.${userProfileId}`)
-      .in("status", QUERYABLE_OPEN_RIDE_STATUSES)
-      .order("created_at", { ascending: false })
-      .limit(1)
-      .maybeSingle();
-
-    if (error) {
-      logger.error("MobilityService.getActiveRide", error as Error, { userProfileId });
-      return null;
-    }
-    return data || null;
-  }
-
   static async getRideDispatchData(rideId: string): Promise<unknown | null> {
     const { data, error } = await db
       .from("ride_requests")
@@ -279,7 +250,7 @@ export class MobilityService {
         pickup_address_id,
         pickup_location_id,
         created_at,
-        pickup_address:addresses!pickup_address_id(latitude, longitude)
+        pickup_address:addresses!pickup_address_id_fkey(latitude, longitude)
       `)
       .eq("id", rideId)
       .maybeSingle();
