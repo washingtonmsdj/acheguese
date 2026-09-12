@@ -41,8 +41,6 @@ export const PaymentMethodSchema = z.enum([
   PAYMENT_METHOD.DINHEIRO,
 ]);
 
-export const DriverPlanSchema = z.enum(["padrao", "prioritario"]);
-
 // ============================================================================
 // MIGRATED FROM LIB/VALIDATION/SCHEMAS.TS
 // ============================================================================
@@ -130,11 +128,9 @@ export const DriverProfileSchema = z.object({
   cnh_image_url: z.string().url().optional(),
   is_verified: z.boolean(),
   is_online: z.boolean(),
-  subscription_plan: DriverPlanSchema,
   subscription_active: z.boolean(),
   rating: z.number().min(0).max(5),
   total_rides: z.number().int().min(0),
-  total_earnings: z.number().min(0),
   created_at: z.string().datetime(),
 });
 
