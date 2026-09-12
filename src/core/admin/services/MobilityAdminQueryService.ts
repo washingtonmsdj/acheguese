@@ -2,6 +2,7 @@ import { supabase } from "@/integrations/supabase";
 import type { Tables } from "@/integrations/supabase";
 import { profileService } from "@/core/profiles/services/ProfileService";
 import { logger } from "@/shared/utils/logger";
+import { AdminDriverPresenceReadService } from "@/core/admin/services/AdminDriverPresenceReadService";
 
 type ErrorLike = { message?: string | null; code?: string | null } | null;
 
@@ -55,6 +56,7 @@ type DriverDataWithProfileRow = Pick<
   profiles?: { user_id: string | null } | readonly { user_id: string | null }[] | null;
 };
 
+type DriverCapabilityRow = Pick<Tables<"driver_data">, "profile_id" | "can_do_delivery">;
 type DriverCompleteProfileRow = Tables<"driver_complete_profile">;
 type RideRequestRow = Tables<"ride_requests">;
 type RideRatingRow = Pick<Tables<"ride_ratings">, "rating">;
@@ -111,7 +113,7 @@ export interface RawActiveDriver {
   is_available: boolean | null;
   can_do_delivery: boolean;
   last_location_update: string | null;
-  current_location: unknown;
+  current_location: { lat: number; lng: number } | null;
 }
 
 export interface RawActiveRide {
@@ -391,31 +393,32 @@ export class MobilityAdminQueryService {
 
   static async getActiveDriversForMap(): Promise<RawActiveDriver[]> {
     try {
-      const { data, error } = await mobilityDb
-        .from<
-          Pick<
-            Tables<"driver_data">,
-            | "profile_id"
-            | "is_online"
-            | "is_available"
-            | "can_do_delivery"
-            | "last_location_update"
-            | "current_location"
-          >
-        >("driver_data")
-        .select(
-          "profile_id, is_online, is_available, can_do_delivery, last_location_update, current_location",
-        )
-        .eq("is_online", true);
+      const presence = await AdminDriverPresenceReadService.listOnline();
+      if (presence.length === 0) return [];
+
+      const profileIds = presence.map((row) => row.profile_id);
+      const { data: capabilities, error } = await mobilityDb
+        .from<DriverCapabilityRow>("driver_data")
+        .select("profile_id, can_do_delivery")
+        .in("profile_id", profileIds);
 
       if (error) throw error;
-      return (data ?? []).map((driver) => ({
+      const capabilityByProfile = new Map(
+        (capabilities ?? []).map((row) => [row.profile_id, row]),
+      );
+
+      return presence.map((driver) => ({
         profile_id: driver.profile_id,
-        is_online: Boolean(driver.is_online),
-        is_available: driver.is_available ?? null,
-        can_do_delivery: Boolean(driver.can_do_delivery),
-        last_location_update: driver.last_location_update ?? null,
-        current_location: driver.current_location,
+        is_online: driver.is_online,
+        is_available: driver.is_available,
+        can_do_delivery: Boolean(
+          capabilityByProfile.get(driver.profile_id)?.can_do_delivery,
+        ),
+        last_location_update: driver.last_location_update,
+        current_location:
+          driver.current_lat !== null && driver.current_lng !== null
+            ? { lat: driver.current_lat, lng: driver.current_lng }
+            : null,
       }));
     } catch (error) {
       logger.error("MobilityAdminQueryService.getActiveDriversForMap", error as Error);
