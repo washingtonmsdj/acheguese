@@ -2,7 +2,10 @@ import React from "react";
 import { MapPin, Car, Package, Users, Zap } from "lucide-react";
 import { Badge } from "@/shared/components/ui/badge";
 import type { RideRequest } from "@/core/mobility/types";
-import { RIDE_STATUS } from "@/shared/types/constants";
+import {
+  isDriverOwnedOpenRideStatus,
+  isOpenRideStatus,
+} from "@/core/mobility/core/RideLifecycleStatus";
 import { useTerritoryLabels } from "@/core/location";
 import type { ResolvedTerritory } from "@/core/routing/hooks/useResolveTerritoryFromUrl";
 
@@ -18,11 +21,9 @@ export function MobilidadeRightSidebar({
   resolved,
 }: MobilidadeRightSidebarProps) {
   const territoryLabels = useTerritoryLabels(resolved);
-  const pendingRides = rides.filter((r) => r.status === RIDE_STATUS.PENDING);
-  const activeRides = rides.filter(
-    (r) =>
-      r.status === RIDE_STATUS.DRIVER_ASSIGNED ||
-      r.status === RIDE_STATUS.IN_PROGRESS,
+  const openRides = rides.filter((ride) => isOpenRideStatus(ride.status));
+  const operationalRides = rides.filter((ride) =>
+    isDriverOwnedOpenRideStatus(ride.status),
   );
 
   return (
@@ -57,7 +58,7 @@ export function MobilidadeRightSidebar({
             <div className="flex items-center justify-center gap-1 mb-0.5">
               <Zap className="h-3 w-3 text-amber-400" />
               <span className="text-sm font-bold text-white">
-                {pendingRides.length}
+                {openRides.length}
               </span>
             </div>
             <span className="text-[0.55rem] text-gray-500">Pedidos Ativos</span>
@@ -65,8 +66,8 @@ export function MobilidadeRightSidebar({
         </div>
       </div>
 
-      {/* Active rides summary */}
-      {activeRides.length > 0 && (
+      {/* Accepted operational rides summary */}
+      {operationalRides.length > 0 && (
         <div className="rounded-2xl border border-white/10 bg-[#1E2529] p-3">
           <div className="flex items-center gap-2 mb-2">
             <div className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
@@ -75,7 +76,7 @@ export function MobilidadeRightSidebar({
             </span>
           </div>
           <div className="space-y-2">
-            {activeRides.map((ride) => (
+            {operationalRides.map((ride) => (
               <div
                 key={ride.id}
                 className="flex items-center gap-2 px-2.5 py-2 rounded-lg bg-white/5"
