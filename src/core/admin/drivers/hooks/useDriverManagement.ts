@@ -30,10 +30,8 @@ type AdminDriverRow = {
   vehicle_year?: string | number | null;
   cnh_image_url?: string | null;
   is_online?: boolean | null;
-  subscription_plan?: string | null;
   avg_rating?: number | null;
   total_rides?: number | null;
-  total_earnings?: number | null;
   created_at?: string | null;
   updated_at?: string | null;
   neighborhood?: string | null;
@@ -138,10 +136,8 @@ export function useDriverManagement(filter: FilterStatus, canModerate: boolean, 
             cnh_image_url: driverRow.cnh_image_url,
             profileContext,
             is_online: driverRow.is_online || false,
-            subscription_plan: driverRow.subscription_plan || "padrao",
             rating: driverRow.avg_rating || 0,
             total_rides: driverRow.total_rides || 0,
-            total_earnings: driverRow.total_earnings || 0,
             created_at: driverRow.created_at,
             updated_at: driverRow.updated_at,
             neighborhood: driverRow.neighborhood,
