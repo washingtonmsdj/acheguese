@@ -24,35 +24,33 @@ export function DriverStatsCompact({
   const { data: stats } = useQuery({
     queryKey: MOBILITY_QUERY_KEYS.driverStatsCompact(activeProfile?.id || ""),
     queryFn: async () => {
-      if (!activeProfile?.id) return null;
+      if (!activeProfile?.id || !activeProfile.userId) return null;
 
-      // SSOT: Buscar profile_id do motorista usando ProfileService
-      const driverProfile = await profileService.getProfileByType(
-        activeProfile.id,
-        "driver",
-      );
+      const driverProfileId =
+        activeProfile.profileType === "driver"
+          ? activeProfile.id
+          : (await profileService.getProfileByType(activeProfile.userId, "driver"))?.id;
 
-      if (!driverProfile) return null;
+      if (!driverProfileId) return null;
 
-      // SSOT: Buscar dados de driver_data via MobilityService
       const data = (await mobilityService.getDriverStatsDetailed(
-        driverProfile.id,
+        driverProfileId,
       )) as Record<string, unknown> | null;
 
       if (!data) return null;
 
-      // Calcular completion_rate a partir de acceptance_rate
-      const completion_rate = Number(data.acceptance_rate || 100);
+      const totalRides = Number(data.total_rides ?? 0);
+      const completedRides = Number(data.total_rides_completed ?? 0);
+      const completionRate =
+        totalRides > 0 ? Math.min(100, (completedRides / totalRides) * 100) : 0;
 
       return {
-        completion_rate: completion_rate,
-        cancellation_rate: Number(data.cancellation_rate || 0),
-        rating: Number(data.rating || 5.0),
-        priority_score: Math.max(0, 100 - Number(data.cancellation_rate || 0) * 2), // Score baseado em cancelamento
+        completion_rate: completionRate,
+        cancellation_rate: Number(data.cancellation_rate ?? 0),
+        rating: Number(data.rating ?? 0),
       };
     },
     enabled: !!activeProfile?.id,
-    // ✅ REALTIME: Estatísticas compactas, cache mais longo
     staleTime: TIMEOUTS.CACHE_STALE_TIME_VERY_LONG,
   });
 
@@ -63,7 +61,6 @@ export function DriverStatsCompact({
 
   return (
     <div className={`flex items-center gap-4 ${className}`}>
-      {/* Taxa de Conclusão */}
       <div className="flex items-center gap-1.5">
         <CheckCircle2
           className={`w-4 h-4 ${isCompletionGood ? "text-green-500" : "text-yellow-500"}`}
@@ -87,7 +84,6 @@ export function DriverStatsCompact({
 
       <div className="h-8 w-px bg-border" />
 
-      {/* Taxa de Cancelamento */}
       <div className="flex items-center gap-1.5">
         <XCircle
           className={`w-4 h-4 ${isCancellationGood ? "text-green-500" : "text-red-500"}`}
@@ -111,35 +107,12 @@ export function DriverStatsCompact({
 
       <div className="h-8 w-px bg-border" />
 
-      {/* Rating */}
       <div className="flex items-center gap-1.5">
         <Star className="w-4 h-4 text-yellow-500 fill-yellow-500" />
         <div className="flex flex-col">
           <span className="text-xs text-muted-foreground">Avaliação</span>
           <span className="text-sm font-bold text-yellow-500">
             {stats.rating.toFixed(1)}
-          </span>
-        </div>
-      </div>
-
-      <div className="h-8 w-px bg-border" />
-
-      {/* Priority Score */}
-      <div className="flex items-center gap-1.5">
-        <div className="flex flex-col">
-          <span className="text-xs text-muted-foreground">Prioridade</span>
-          <span
-            className={`text-sm font-bold ${
-              stats.priority_score >= 90
-                ? "text-green-500"
-                : stats.priority_score >= 75
-                  ? "text-blue-500"
-                  : stats.priority_score >= 60
-                    ? "text-yellow-500"
-                    : "text-red-500"
-            }`}
-          >
-            {stats.priority_score.toFixed(0)}/100
           </span>
         </div>
       </div>
