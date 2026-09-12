@@ -278,6 +278,7 @@ export default function BuscandoMotoristaPage() {
   const navigate = useNavigate();
   const { cancelRide } = useMobilidade();
   const [showCancelDialog, setShowCancelDialog] = useState(false);
+  const [liveRideStatus, setLiveRideStatus] = useState<string | null>(null);
 
   const { data: ride } = useQuery({
     queryKey: MOBILITY_QUERY_KEYS.rideBuscando(rideId!),
@@ -299,9 +300,14 @@ export default function BuscandoMotoristaPage() {
     suggested_price?: number | null;
   };
   const rideData = ride as RideWithAddresses | null | undefined;
-  const rideStatus = String(rideData?.status ?? "");
+  const snapshotRideStatus = String(rideData?.status ?? "");
+  const rideStatus = liveRideStatus ?? snapshotRideStatus;
 
   const handleSearchStatusChange = useCallback((status: RideSearchStatus) => {
+    if (status.rideState) {
+      setLiveRideStatus(status.rideState);
+    }
+
     if (
       status.status === 'driver_accepted' ||
       status.status === 'in_progress' ||
