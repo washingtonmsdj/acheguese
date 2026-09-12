@@ -1,6 +1,6 @@
 /**
  * Driver Helpers
- * 
+ *
  * Funções utilitárias para manipulação de dados de motoristas
  */
 
@@ -32,28 +32,30 @@ export function formatDateTime(dateStr: string): string {
 }
 
 /**
- * Verifica se motorista está pendente de aprovação
+ * Verifica se motorista está pendente de aprovação.
+ * O status já chega resolvido pela composição administrativa.
  */
 export function isDriverPending(driver: DriverRequest): boolean {
-  return !driver.profileContext?.verified && !driver.profileContext?.status.isSuspended;
+  return driver.verification_status === "pending" && !driver.is_suspended;
 }
 
 /**
- * Verifica se motorista está aprovado
+ * Verifica se motorista está aprovado.
  */
 export function isDriverApproved(driver: DriverRequest): boolean {
-  return !!driver.profileContext?.verified;
+  return driver.verification_status === "verified";
 }
 
 /**
- * Verifica se motorista está suspenso
+ * Verifica se motorista está suspenso.
  */
 export function isDriverSuspended(driver: DriverRequest): boolean {
-  return !!driver.profileContext?.status.isSuspended;
+  return driver.is_suspended;
 }
 
 /**
- * Verifica se motorista está online
+ * Verifica se motorista está online.
+ * Presença é informativa e vem de driver_availability.
  */
 export function isDriverOnline(driver: DriverRequest): boolean {
   return driver.is_online && !isDriverSuspended(driver);
