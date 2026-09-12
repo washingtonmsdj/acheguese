@@ -32,7 +32,6 @@ export { DriverEarningsCard } from "./components/driver/DriverEarningsCard";
 export { DriverRidesList } from "./components/driver/DriverRidesList";
 export { DriverRegistrationModal } from "./components/DriverRegistrationModal";
 export { DriverRegistrationCTA } from "./components/driver/DriverRegistrationCTA";
-export { DriverProfileCard } from "./components/driver/DriverProfileCard";
 export { MotoboyDeliveryActions } from "./components/driver/MotoboyDeliveryActions";
 
 // Components - Passenger
