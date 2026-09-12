@@ -54,7 +54,6 @@ export interface MobilityConversationSummary {
   unread_count: number;
 }
 
-type RideStateAuditRow = Record<string, unknown>;
 type OperationalVerificationRow = Record<string, unknown>;
 
 export async function getMobilityConversations(): Promise<MobilityConversationSummary[]> {
@@ -89,7 +88,6 @@ export async function getRideBasicInfo(rideId: string): Promise<unknown | null> 
   }
 }
 
-
 export async function getRideAvailableSeats(rideId: string): Promise<number> {
   try {
     return await mobilityService.getRideAvailableSeats(rideId);
@@ -97,21 +95,6 @@ export async function getRideAvailableSeats(rideId: string): Promise<number> {
     logger.error("MobilityQueries.getRideAvailableSeats", error as Error);
     return 0;
   }
-}
-
-export async function getRideStateAuditEntries(
-  rideId: string,
-  limit = 30,
-): Promise<unknown[]> {
-  const { data, error } = await mobilityRideReadDb
-    .from<RideStateAuditRow>("ride_state_audit")
-    .select("*")
-    .eq("ride_id", rideId)
-    .order("created_at", { ascending: false })
-    .limit(limit);
-
-  if (error) throw error;
-  return data ?? [];
 }
 
 export async function getOperationalVerificationEntries(
