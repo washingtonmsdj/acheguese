@@ -14,8 +14,7 @@ export type { RideRequest } from '../types/types';
 
 export class RideService {
   async getRidesByPassenger(passengerId: string): Promise<RideRequest[]> {
-    const rides = await getRidesByPassenger(passengerId);
-    return rides as RideRequest[];
+    return getRidesByPassenger(passengerId);
   }
 
   async getRidesByDriver(driverProfileId: string): Promise<RideRequest[]> {
@@ -24,8 +23,7 @@ export class RideService {
   }
 
   async getActiveRide(userId: string): Promise<RideRequest | null> {
-    const ride = await getActiveRide(userId);
-    return (ride as RideRequest | null) ?? null;
+    return getActiveRide(userId);
   }
 
   async shareRide(rideId: string, _shareData: { message?: string; contacts?: string[] }): Promise<void> {
