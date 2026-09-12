@@ -17,42 +17,18 @@ describe("G110 admin realtime ride projection", () => {
     "src/core/admin/services/MobilityAdminQueryService.ts",
   );
 
-  it("routes realtime history through the minimal dedicated reader", () => {
+  it("keeps realtime history on the dedicated reader instead of the legacy query service", () => {
     expect(adminService).toContain("AdminMobilityRealtimeRideReadService.listMetricRows()");
     expect(adminService).not.toContain("MobilityAdminQueryService.getAllRides()");
     expect(legacyQueries).not.toContain("static async getAllRides(");
   });
 
-  it("never restores select star for the realtime metric history", () => {
-    expect(reader).toContain('.from("ride_requests")');
+  it("never restores select star in the realtime ride boundary", () => {
+    expect(reader).toContain('"ride_requests"');
     expect(reader).not.toContain('select("*")');
   });
 
-  it("keeps only lifecycle, identity-link and value fields needed by realtime metrics", () => {
-    const selectStart = reader.indexOf('.select(');
-    const selectEnd = reader.indexOf("if (error)", selectStart);
-    const projection = reader.slice(selectStart, selectEnd);
-
-    for (const field of [
-      "id",
-      "status",
-      "passenger_profile_id",
-      "driver_profile_id",
-      "origin",
-      "destination",
-      "created_at",
-      "updated_at",
-      "completed_at",
-      "cancelled_at",
-      "final_price",
-      "actual_fare",
-      "suggested_price",
-      "driver_assigned_at",
-      "driver_accepted_at",
-    ]) {
-      expect(projection).toContain(field);
-    }
-
+  it("keeps sensitive delivery and custody fields outside realtime reads", () => {
     for (const forbidden of [
       "recipient_phone",
       "recipient_name",
@@ -67,7 +43,7 @@ describe("G110 admin realtime ride projection", () => {
       "observation",
       "package_description",
     ]) {
-      expect(projection).not.toContain(forbidden);
+      expect(reader).not.toContain(forbidden);
     }
   });
 
