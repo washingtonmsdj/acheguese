@@ -10,41 +10,44 @@ describe("G136 source-linked ride pricing boundary", () => {
   const mobilityImpl = readProjectFile(
     "src/core/mobility/services/MobilityService.impl.ts",
   );
+  const deliveryReader = readProjectFile(
+    "src/core/mobility/delivery/services/OrderDeliveryLinkReadService.ts",
+  );
   const orderService = readProjectFile(
     "src/modules/business/gastronomy/services/OrderService.ts",
   );
 
-  it("keeps the source-linked compatibility lookup pricing-only", () => {
-    const methodStart = mobilityImpl.indexOf("static async getLatestRideBySource(");
-    const methodEnd = mobilityImpl.indexOf("static async getRideSourceIdById(", methodStart);
-    const method = mobilityImpl.slice(methodStart, methodEnd);
+  it("retires the legacy static source-linked pricing compatibility lookup", () => {
+    expect(mobilityImpl).not.toContain("static async getLatestRideBySource(");
+    expect(mobilityImpl).not.toContain("interface SourceLinkedRidePricingRow");
+  });
+
+  it("keeps the dedicated order pricing lookup pricing-only", () => {
+    const methodStart = deliveryReader.indexOf(
+      "static async getLatestPricingByOrderId(",
+    );
+    const methodEnd = deliveryReader.indexOf("static async getByRideId(", methodStart);
+    const method = deliveryReader.slice(methodStart, methodEnd);
 
     expect(method).toContain('.select("final_price, suggested_price")');
     expect(method).not.toContain('select("*")');
     expect(method).not.toContain("recipient_name");
     expect(method).not.toContain("passenger_profile_id");
     expect(method).not.toContain("driver_profile_id");
-    expect(method).not.toContain("origin");
-    expect(method).not.toContain("destination");
+    expect(method).not.toContain("origin_lat");
+    expect(method).not.toContain("destination_lat");
+    expect(method).not.toContain("proof_of_delivery");
   });
 
-  it("uses source identity only as query predicates", () => {
-    const interfaceStart = mobilityImpl.indexOf("interface SourceLinkedRidePricingRow");
-    const interfaceEnd = mobilityImpl.indexOf("const db", interfaceStart);
-    const rowContract = mobilityImpl.slice(interfaceStart, interfaceEnd);
-
-    expect(rowContract).toContain("final_price: number | null");
-    expect(rowContract).toContain("suggested_price: number | null");
-    expect(rowContract).not.toContain("source_type:");
-    expect(rowContract).not.toContain("source_id:");
-    expect(rowContract).not.toContain("status:");
-    expect(rowContract).not.toContain("id:");
-  });
-
-  it("keeps gastronomy enrichment on the bounded pricing lookup", () => {
-    expect(orderService).toContain("MobilityService.getLatestRideBySource(");
+  it("keeps gastronomy enrichment on the bounded delivery-link pricing authority", () => {
+    expect(orderService).toContain(
+      "OrderDeliveryLinkReadService.getLatestPricingByOrderId(order.id)",
+    );
     expect(orderService).toContain("ride.final_price");
     expect(orderService).toContain("ride.suggested_price");
-    expect(orderService).not.toContain("MobilityService.getRideById(order.id)");
+    expect(orderService).not.toContain("MobilityService.getLatestRideBySource(");
+    expect(orderService).not.toContain(
+      "OrderDeliveryLinkReadService.getLatestByOrderId(order.id)",
+    );
   });
 });
