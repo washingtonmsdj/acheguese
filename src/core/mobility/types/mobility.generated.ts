@@ -6,7 +6,7 @@
  *
  * Fontes:
  * - RideRequest, DriverProfile, Vehicle → ./types (tipos de banco)
- * - RideStatus, RideType, DriverPlan, MobilidadeFilters → ../schemas/mobilitySchemas (Zod inferred)
+ * - RideStatus, RideType, MobilidadeFilters → ../schemas/mobilitySchemas (Zod inferred)
  * - DriverStats, DriverEarnings, WeeklyEarning → ../services/DriverService
  */
 
@@ -36,7 +36,6 @@ import type { z } from 'zod';
 import type {
   RideStatusSchema,
   RideTypeSchema,
-  DriverPlanSchema,
   MobilidadeFiltersSchema,
   DriverEarningsSchema,
   DriverStatsSchema,
@@ -44,7 +43,6 @@ import type {
 
 export type RideStatus = z.infer<typeof RideStatusSchema>;
 export type RideType = z.infer<typeof RideTypeSchema>;
-export type DriverPlan = z.infer<typeof DriverPlanSchema>;
 export type MobilidadeFilters = z.infer<typeof MobilidadeFiltersSchema>;
 export type DriverEarnings = z.infer<typeof DriverEarningsSchema>;
 export type DriverStats = z.infer<typeof DriverStatsSchema>;
