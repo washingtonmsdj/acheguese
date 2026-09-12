@@ -10,29 +10,33 @@
 import { useEffect, useState } from "react";
 import { useToast } from "@/shared/hooks/use-toast";
 import { AdminUserService } from "@/core/admin/services/AdminUserService";
-import { profileService } from "@/core/profiles/services/ProfileService";
 import { logger } from "@/shared/utils/logger";
-import type { DriverRequest, FilterStatus, SuspensionHistoryEntry } from "../sections/types";
-import { RIDE_STATUS } from "@/shared/types/constants";
+import type { DriverRequest, SuspensionHistoryEntry } from "../sections/types";
 import {
   adminMobilityRuntimeService,
   type DriverModerationAction,
 } from "@/core/admin/services/AdminMobilityRuntimeService";
-import { AdminDriverModerationService, type DriverModerationRow } from "@/core/admin/services/AdminDriverModerationService";
+import {
+  AdminDriverModerationService,
+  type DriverModerationRow,
+} from "@/core/admin/services/AdminDriverModerationService";
 
 type AdminDriverRow = {
   profile_id: string;
-  user_id?: string | null;
   name?: string | null;
   avatar_url?: string | null;
   vehicle_plate?: string | null;
   vehicle_model?: string | null;
-  vehicle_year?: string | number | null;
-  cnh_image_url?: string | null;
+  vehicle_year?: number | null;
+  license_number?: string | null;
+  license_category?: string | null;
+  license_expiry?: string | null;
+  license_state?: string | null;
+  is_verified?: boolean | null;
   is_online?: boolean | null;
-  avg_rating?: number | null;
+  rating?: number | null;
   total_rides?: number | null;
-  created_at?: string | null;
+  created_at: string;
   updated_at?: string | null;
   neighborhood?: string | null;
   city?: string | null;
@@ -43,7 +47,9 @@ function isAdminDriverRow(value: unknown): value is AdminDriverRow {
     Boolean(value) &&
     typeof value === "object" &&
     "profile_id" in value &&
-    typeof (value as { profile_id?: unknown }).profile_id === "string"
+    typeof (value as { profile_id?: unknown }).profile_id === "string" &&
+    "created_at" in value &&
+    typeof (value as { created_at?: unknown }).created_at === "string"
   );
 }
 
@@ -64,7 +70,7 @@ function getErrorMessage(error: unknown, fallback: string): string {
   return fallback;
 }
 
-export function useDriverManagement(filter: FilterStatus, canModerate: boolean, isChecking: boolean) {
+export function useDriverManagement(canModerate: boolean, isChecking: boolean) {
   const { toast } = useToast();
   const [drivers, setDrivers] = useState<DriverRequest[]>([]);
   const [loading, setLoading] = useState(true);
@@ -88,7 +94,7 @@ export function useDriverManagement(filter: FilterStatus, canModerate: boolean, 
     if (!isChecking && canModerate) {
       void loadDrivers();
     }
-  }, [filter, canModerate, isChecking]);
+  }, [canModerate, isChecking]);
 
   const loadDrivers = async () => {
     setLoading(true);
@@ -107,79 +113,49 @@ export function useDriverManagement(filter: FilterStatus, canModerate: boolean, 
       }
 
       const driverRows = (driversData || []).filter(isAdminDriverRow);
-
-      const profileIds = driverRows
-        .map((driver) => driver.profile_id)
-        .filter((id: unknown): id is string => typeof id === "string" && id.length > 0);
+      const profileIds = driverRows.map((driver) => driver.profile_id);
 
       let moderationMap = new Map<string, DriverModerationRow>();
       if (profileIds.length > 0) {
         moderationMap = await AdminDriverModerationService.getModerationRows(profileIds);
       }
 
-      const driversWithContext = await Promise.all(
-        driverRows.map(async (driverRow) => {
-          const profileContext = driverRow.user_id
-            ? await profileService.getProfileContext(driverRow.user_id)
-            : null;
+      const driverReadModels: DriverRequest[] = driverRows.map((driverRow) => {
+        const moderation = moderationMap.get(driverRow.profile_id);
+        const verificationStatus = AdminDriverModerationService.resolveVerificationStatus({
+          verificationStatus: moderation?.verification_status,
+          fallbackVerified: Boolean(driverRow.is_verified),
+        });
 
-          const moderation = moderationMap.get(driverRow.profile_id);
+        return {
+          id: driverRow.profile_id,
+          profile_id: driverRow.profile_id,
+          name: driverRow.name ?? "Motorista",
+          avatar_url: driverRow.avatar_url ?? null,
+          vehicle_plate: driverRow.vehicle_plate ?? null,
+          vehicle_model: driverRow.vehicle_model ?? null,
+          vehicle_year: driverRow.vehicle_year ?? null,
+          license_number: driverRow.license_number ?? null,
+          license_category: driverRow.license_category ?? null,
+          license_expiry: driverRow.license_expiry ?? null,
+          license_state: driverRow.license_state ?? null,
+          is_online: Boolean(driverRow.is_online),
+          rating: driverRow.rating ?? 0,
+          total_rides: driverRow.total_rides ?? 0,
+          created_at: driverRow.created_at,
+          updated_at: driverRow.updated_at ?? null,
+          neighborhood: driverRow.neighborhood ?? null,
+          city: driverRow.city ?? null,
+          verification_status: verificationStatus,
+          verification_rejection_reason: moderation?.verification_rejection_reason ?? null,
+          is_suspended: moderation?.is_suspended ?? false,
+          suspended_at: moderation?.suspended_at ?? null,
+          suspended_until: moderation?.suspended_until ?? null,
+          suspension_reason: moderation?.suspension_reason ?? null,
+        };
+      });
 
-          return {
-            id: driverRow.profile_id,
-            profile_id: driverRow.profile_id,
-            name: driverRow.name,
-            avatar_url: driverRow.avatar_url,
-            vehicle_plate: driverRow.vehicle_plate,
-            vehicle_model: driverRow.vehicle_model,
-            vehicle_year: driverRow.vehicle_year,
-            cnh_image_url: driverRow.cnh_image_url,
-            profileContext,
-            is_online: driverRow.is_online || false,
-            rating: driverRow.avg_rating || 0,
-            total_rides: driverRow.total_rides || 0,
-            created_at: driverRow.created_at,
-            updated_at: driverRow.updated_at,
-            neighborhood: driverRow.neighborhood,
-            city: driverRow.city,
-            verification_status: moderation?.verification_status ?? null,
-            verification_rejection_reason: moderation?.verification_rejection_reason ?? null,
-            is_suspended: moderation?.is_suspended ?? false,
-            suspended_at: moderation?.suspended_at ?? null,
-            suspended_until: moderation?.suspended_until ?? null,
-            suspension_reason: moderation?.suspension_reason ?? null,
-          } as DriverRequest;
-        }),
-      );
-
-      let filtered = driversWithContext;
-      if (filter === RIDE_STATUS.PENDING) {
-        filtered = driversWithContext.filter(
-          (d) =>
-            AdminDriverModerationService.resolveVerificationStatus({
-              verificationStatus: d.verification_status,
-              fallbackVerified: Boolean(d.profileContext?.verified),
-            }) === "pending",
-        );
-      } else if (filter === "approved") {
-        filtered = driversWithContext.filter(
-          (d) =>
-            AdminDriverModerationService.resolveVerificationStatus({
-              verificationStatus: d.verification_status,
-              fallbackVerified: Boolean(d.profileContext?.verified),
-            }) === "verified",
-        );
-      } else if (filter === "rejected") {
-        filtered = driversWithContext.filter(
-          (d) =>
-            AdminDriverModerationService.resolveVerificationStatus({
-              verificationStatus: d.verification_status,
-              fallbackVerified: Boolean(d.profileContext?.verified),
-            }) === "rejected",
-        );
-      }
-
-      setDrivers(filtered);
+      setDrivers(driverReadModels);
     } catch (error) {
       logger.error("Erro ao carregar motoristas:", error as Error);
       toast({
