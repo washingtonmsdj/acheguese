@@ -353,7 +353,7 @@ async function enrichDeliveryFinancials<T extends Order>(orders: T[]): Promise<T
         };
       }
 
-      const ride = await OrderDeliveryLinkReadService.getLatestByOrderId(order.id);
+      const ride = await OrderDeliveryLinkReadService.getLatestPricingByOrderId(order.id);
 
       const finalPrice =
         typeof ride?.final_price === 'number' && Number.isFinite(ride.final_price)
