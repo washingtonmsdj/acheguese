@@ -18,9 +18,41 @@ import {
 } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/shared/components/ui/button";
-import { RIDE_STATUS } from "@/core/mobility/constants";
+import {
+  isCancelledRideStatus,
+  isClosedRideStatus,
+  isDriverOwnedOpenRideStatus,
+  isPreAcceptRideStatus,
+} from "@/core/mobility/core/RideLifecycleStatus";
+import { RIDE_STATE } from "@/core/mobility/core/RideStateMachine";
+import { getRideStatusLabel } from "@/core/mobility/services/mobility.helpers";
 import { useSharedRideData } from "@/core/safety/hooks/useRideShare";
 import { incrementRideViewCount } from "@/core/mobility/services/mobility.mutations";
+
+function getPublicStatusLabel(status: string): string {
+  if (status === RIDE_STATE.DRIVER_ASSIGNED) {
+    return "Motorista encontrado · aguardando confirmação";
+  }
+  return getRideStatusLabel(status);
+}
+
+function getPublicStatusColor(status: string): string {
+  if (isCancelledRideStatus(status)) {
+    return "bg-red-500/20 text-red-400 border-red-500/30";
+  }
+  if (isClosedRideStatus(status)) {
+    return "bg-gray-500/20 text-gray-400 border-gray-500/30";
+  }
+  if (isDriverOwnedOpenRideStatus(status)) {
+    return "bg-emerald-500/20 text-emerald-400 border-emerald-500/30";
+  }
+  if (isPreAcceptRideStatus(status)) {
+    return status === RIDE_STATE.DRIVER_ASSIGNED
+      ? "bg-blue-500/20 text-blue-400 border-blue-500/30"
+      : "bg-yellow-500/20 text-yellow-400 border-yellow-500/30";
+  }
+  return "bg-muted text-muted-foreground border-border";
+}
 
 export default function TrackRidePage() {
   const { token } = useParams<{ token: string }>();
@@ -84,30 +116,7 @@ export default function TrackRidePage() {
     );
   }
 
-  const statusLabels: Record<string, string> = {
-    [RIDE_STATUS.PENDING]: "Aguardando motorista",
-    [RIDE_STATUS.DRIVER_ASSIGNED]: "Motorista a caminho",
-    [RIDE_STATUS.DRIVER_ON_THE_WAY]: "Motorista chegando",
-    [RIDE_STATUS.IN_PROGRESS]: "Viagem em andamento",
-    [RIDE_STATUS.COMPLETED]: "Viagem concluida",
-    [RIDE_STATUS.CANCELLED]: "Viagem cancelada",
-  };
-
-  const statusColors: Record<string, string> = {
-    [RIDE_STATUS.PENDING]: "bg-yellow-500/20 text-yellow-400 border-yellow-500/30",
-    [RIDE_STATUS.DRIVER_ASSIGNED]: "bg-blue-500/20 text-blue-400 border-blue-500/30",
-    [RIDE_STATUS.DRIVER_ON_THE_WAY]: "bg-purple-500/20 text-purple-400 border-purple-500/30",
-    [RIDE_STATUS.IN_PROGRESS]: "bg-emerald-500/20 text-emerald-400 border-emerald-500/30",
-    [RIDE_STATUS.COMPLETED]: "bg-gray-500/20 text-gray-400 border-gray-500/30",
-    [RIDE_STATUS.CANCELLED]: "bg-red-500/20 text-red-400 border-red-500/30",
-  };
-
-  const activeStatuses: string[] = [
-    RIDE_STATUS.DRIVER_ASSIGNED,
-    RIDE_STATUS.DRIVER_ON_THE_WAY,
-    RIDE_STATUS.IN_PROGRESS,
-  ];
-  const isActive = activeStatuses.includes(data.status);
+  const isActiveTracking = isDriverOwnedOpenRideStatus(data.status);
   const hasDriver = Boolean(data.driverName || data.vehicleModel || data.vehiclePlate);
 
   return (
@@ -124,7 +133,7 @@ export default function TrackRidePage() {
                   Rastreamento de Corrida
                 </h1>
                 <p className="text-sm text-muted-foreground">
-                  Acompanhe em tempo real
+                  Acompanhe o estado compartilhado da corrida
                 </p>
               </div>
             </div>
@@ -143,14 +152,14 @@ export default function TrackRidePage() {
 
       <div className="max-w-2xl mx-auto px-4 py-6 space-y-4">
         <div
-          className={`p-4 rounded-2xl border ${statusColors[data.status] || statusColors.pending}`}
+          className={`p-4 rounded-2xl border ${getPublicStatusColor(data.status)}`}
         >
           <div className="flex items-center gap-3">
             <div className="w-3 h-3 rounded-full bg-current animate-pulse" />
             <div>
               <p className="text-sm font-semibold">Status da Viagem</p>
               <p className="text-lg font-bold">
-                {statusLabels[data.status] || data.status}
+                {getPublicStatusLabel(data.status)}
               </p>
             </div>
           </div>
@@ -200,7 +209,7 @@ export default function TrackRidePage() {
           </div>
         </div>
 
-        {data.currentLocation && (
+        {data.currentLocation && isActiveTracking && (
           <div className="bg-card border border-border rounded-2xl p-4">
             <div className="flex items-center gap-3 mb-3">
               <Clock className="h-5 w-5 text-muted-foreground" />
@@ -217,7 +226,7 @@ export default function TrackRidePage() {
           </div>
         )}
 
-        {isActive && (
+        {isActiveTracking && (
           <div className="bg-emerald-500/10 border border-emerald-500/30 rounded-2xl p-4">
             <div className="flex items-center gap-3">
               <div className="w-3 h-3 rounded-full bg-emerald-400 animate-pulse" />
@@ -225,6 +234,14 @@ export default function TrackRidePage() {
                 Rastreamento ao vivo / Atualizacoes em tempo real
               </p>
             </div>
+          </div>
+        )}
+
+        {isPreAcceptRideStatus(data.status) && (
+          <div className="bg-blue-500/10 border border-blue-500/30 rounded-2xl p-4">
+            <p className="text-sm text-blue-300">
+              A localização e os dados operacionais do motorista só são compartilhados após a confirmação do motorista.
+            </p>
           </div>
         )}
 
