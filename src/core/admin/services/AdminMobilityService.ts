@@ -13,6 +13,7 @@ import {
   isOpenRideStatus,
 } from "@/core/mobility/core/RideLifecycleStatus";
 import { RIDE_STATE } from "@/core/mobility/core/RideStateMachine";
+import { getMobilityStats as getMobilityRecordCounts } from "@/core/mobility/services/MobilityServiceDriverQueries";
 import { profileService } from "@/core/profiles/services/ProfileService";
 import { logger } from "@/shared/utils/logger";
 
@@ -172,15 +173,7 @@ class AdminMobilityServiceClass {
   }
 
   async getMobilityStats(): Promise<{ total_drivers: number; total_rides: number }> {
-    const [drivers, rides] = await Promise.all([
-      MobilityAdminQueryService.getDriversRaw(),
-      MobilityAdminQueryService.getAllRides(),
-    ]);
-
-    return {
-      total_drivers: drivers.length,
-      total_rides: rides.length,
-    };
+    return getMobilityRecordCounts();
   }
 
   async getOperationalSnapshot(
