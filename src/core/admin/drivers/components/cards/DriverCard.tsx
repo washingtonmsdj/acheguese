@@ -1,7 +1,8 @@
 /**
  * DriverCard
- * 
- * Card de motorista na lista
+ *
+ * Card de motorista na lista. O estado online e somente informativo: o Admin
+ * modera elegibilidade, mas nao forja presenca operacional do motorista.
  */
 
 import { Card, CardContent } from "@/shared/components/ui/card";
@@ -58,7 +59,6 @@ export function DriverCard({ driver, actions }: DriverCardProps) {
           </Avatar>
 
           <div className="flex-1 min-w-0">
-            {/* Header */}
             <div className="flex items-start justify-between gap-3 mb-2">
               <div>
                 <div className="flex items-center gap-2">
@@ -79,10 +79,17 @@ export function DriverCard({ driver, actions }: DriverCardProps) {
                     </Badge>
                   )}
                   {driver.is_online && !isSuspended && (
-                    <Badge className="bg-teal-500/10 text-teal-600 border-teal-500/20">
-                      <div className="w-1.5 h-1.5 rounded-full bg-teal-500 animate-pulse mr-1" />
-                      Online
-                    </Badge>
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <Badge className="bg-teal-500/10 text-teal-600 border-teal-500/20">
+                          <div className="w-1.5 h-1.5 rounded-full bg-teal-500 animate-pulse mr-1" />
+                          Online
+                        </Badge>
+                      </TooltipTrigger>
+                      <TooltipContent>
+                        <p>Presença operacional informada pelo motorista.</p>
+                      </TooltipContent>
+                    </Tooltip>
                   )}
                 </div>
                 <div className="flex items-center gap-3 text-sm text-muted-foreground mt-1">
@@ -100,7 +107,6 @@ export function DriverCard({ driver, actions }: DriverCardProps) {
               </div>
             </div>
 
-            {/* Vehicle Info */}
             <div className="flex items-center gap-4 p-3 rounded-lg bg-secondary/50 mb-3">
               <CarFront className="h-5 w-5 text-muted-foreground" />
               <div className="flex-1">
@@ -126,7 +132,6 @@ export function DriverCard({ driver, actions }: DriverCardProps) {
               )}
             </div>
 
-            {/* Actions */}
             <div className="flex gap-2 flex-wrap">
               {isPending && (
                 <Tooltip>
@@ -154,7 +159,7 @@ export function DriverCard({ driver, actions }: DriverCardProps) {
                       </Button>
                     </TooltipTrigger>
                     <TooltipContent>
-                      <p>Remover suspensão e permitir que o motorista volte a aceitar corridas</p>
+                      <p>Remover a suspensão; o motorista decide quando voltar a ficar online</p>
                     </TooltipContent>
                   </Tooltip>
                   <Tooltip>
@@ -174,41 +179,21 @@ export function DriverCard({ driver, actions }: DriverCardProps) {
                 </>
               ) : (
                 isApproved && (
-                  <>
-                    <Tooltip>
-                      <TooltipTrigger asChild>
-                        <Button
-                          size="sm"
-                          variant="outline"
-                          onClick={() => actions.onToggleOnline(driver)}
-                        >
-                          {driver.is_online ? "Colocar Offline" : "Colocar Online"}
-                        </Button>
-                      </TooltipTrigger>
-                      <TooltipContent>
-                        <p>
-                          {driver.is_online
-                            ? "Desativar motorista temporariamente - ele não receberá novas corridas"
-                            : "Ativar motorista para receber corridas"}
-                        </p>
-                      </TooltipContent>
-                    </Tooltip>
-                    <Tooltip>
-                      <TooltipTrigger asChild>
-                        <Button
-                          size="sm"
-                          variant="outline"
-                          className="text-destructive hover:bg-destructive/10"
-                          onClick={() => actions.onSuspend(driver)}
-                        >
-                          <AlertTriangle className="h-4 w-4 mr-1" /> Suspender
-                        </Button>
-                      </TooltipTrigger>
-                      <TooltipContent>
-                        <p>Suspender motorista permanentemente - bloqueia acesso e impede aceitar corridas</p>
-                      </TooltipContent>
-                    </Tooltip>
-                  </>
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        className="text-destructive hover:bg-destructive/10"
+                        onClick={() => actions.onSuspend(driver)}
+                      >
+                        <AlertTriangle className="h-4 w-4 mr-1" /> Suspender
+                      </Button>
+                    </TooltipTrigger>
+                    <TooltipContent>
+                      <p>Suspender a elegibilidade do motorista para novas operações</p>
+                    </TooltipContent>
+                  </Tooltip>
                 )
               )}
             </div>
