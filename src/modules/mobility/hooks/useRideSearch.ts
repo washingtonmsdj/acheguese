@@ -17,6 +17,7 @@ import { useRideRealtime } from './useRideRealtime';
 
 export interface RideSearchStatus {
   rideId: string;
+  rideState?: string;
   status:
     | 'searching'
     | 'driver_found'
@@ -100,9 +101,11 @@ export function useRideSearch(options: UseRideSearchOptions) {
     status: RideSearchStatus['status'],
     driverProfileId?: string,
     message?: string,
+    rideState?: string,
   ) => {
     const newStatus: RideSearchStatus = {
       rideId: rideId || '',
+      rideState,
       status,
       driverProfileId,
       message: message || getDefaultMessage(status),
@@ -122,7 +125,7 @@ export function useRideSearch(options: UseRideSearchOptions) {
   ) => {
     const next = classifyRideSearchStatus(rideState);
     if (!next) return;
-    updateStatus(next.status, driverProfileId, next.message);
+    updateStatus(next.status, driverProfileId, next.message, rideState ?? undefined);
   }, [updateStatus]);
 
   useRideRealtime({
