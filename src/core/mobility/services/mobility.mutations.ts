@@ -10,7 +10,6 @@ import { supabase } from "@/integrations/supabase";
 import { logger } from "@/shared/utils/logger";
 import { profileService } from "@/core/profiles/services/ProfileService";
 import { DriverAvailabilityService } from "@/core/mobility/services/DriverAvailabilityService";
-import { sanitizeDriverSelfServiceUpdate } from "./driverDataSelfService";
 
 type ErrorLike = { message?: string | null; code?: string | null } | null;
 
@@ -94,54 +93,6 @@ export async function updateDriverOnlineStatus(
           ? "Could not set driver online"
           : "Could not set driver offline"),
     );
-  }
-}
-
-/**
- * Atualizar dados cadastrais self-service do motorista.
- */
-export async function updateDriverData(
-  identifier: string,
-  updates: Record<string, unknown>,
-): Promise<unknown | null> {
-  try {
-    // Resolver profile_id se necessário
-    let driverProfileId = identifier;
-    const profile = await profileService.getProfileById(identifier);
-    if (profile?.profile_type === "driver") {
-      driverProfileId = profile.id;
-    } else {
-      const driverProfile = await profileService.getProfileByType(identifier, "driver");
-      if (!driverProfile?.id) {
-        throw new Error("Driver profile not found");
-      }
-      driverProfileId = driverProfile.id;
-    }
-
-    const safeUpdates = sanitizeDriverSelfServiceUpdate(updates);
-    if (Object.keys(safeUpdates).length === 0) {
-      const { data, error } = await mobilityDb
-        .from("driver_data")
-        .select("*")
-        .eq("profile_id", driverProfileId)
-        .single();
-      if (error) throw error;
-      return data;
-    }
-
-    const { data, error } = await mobilityDb.rpc<Record<string, unknown>>(
-      "update_owned_driver_data",
-      {
-        p_profile_id: driverProfileId,
-        p_updates: safeUpdates,
-      },
-    );
-
-    if (error) throw error;
-    return data;
-  } catch (error) {
-    logger.error("MobilityMutations.updateDriverData", error as Error, { identifier, updates });
-    throw error;
   }
 }
 
