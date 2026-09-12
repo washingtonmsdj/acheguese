@@ -1,4 +1,5 @@
 import { Car, DollarSign, Star, Users, type LucideIcon } from "lucide-react";
+
 import { Card, CardContent } from "@/shared/components/ui/card";
 import { cn } from "@/shared/utils/cn";
 import type { MobilidadeStats } from "./AdminMobilityAnalytics.types";
@@ -13,25 +14,25 @@ type StatCard = {
 
 const buildStatCards = (stats: MobilidadeStats): StatCard[] => [
   {
-    label: "Total de Corridas",
+    label: "Corridas criadas no período",
     value: stats.totalRides,
     icon: Car,
     color: "bg-primary/10 text-primary",
   },
   {
-    label: "Receita Total",
-    value: formatAnalyticsCurrency(stats.totalRevenue),
+    label: "Valor concluído no período",
+    value: formatAnalyticsCurrency(stats.completedValue),
     icon: DollarSign,
     color: "bg-emerald-500/10 text-emerald-600",
   },
   {
-    label: "Motoristas Ativos",
+    label: "Motoristas verificados",
     value: stats.verifiedDrivers,
     icon: Users,
     color: "bg-sky-500/10 text-sky-600",
   },
   {
-    label: "Avaliação Média",
+    label: "Avaliação média geral",
     value: `${stats.avgRating} estrela`,
     icon: Star,
     color: "bg-amber-500/10 text-amber-600",
@@ -40,14 +41,14 @@ const buildStatCards = (stats: MobilidadeStats): StatCard[] => [
 
 export function AdminMobilityStatsCards({ stats }: { stats: MobilidadeStats }) {
   return (
-    <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
+    <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
       {buildStatCards(stats).map((item) => (
         <Card key={item.label} className="border">
           <CardContent className="p-4">
-            <div className="flex items-center justify-between mb-3">
+            <div className="mb-3 flex items-center justify-between">
               <div
                 className={cn(
-                  "h-10 w-10 rounded-xl flex items-center justify-center",
+                  "flex h-10 w-10 items-center justify-center rounded-xl",
                   item.color,
                 )}
               >
