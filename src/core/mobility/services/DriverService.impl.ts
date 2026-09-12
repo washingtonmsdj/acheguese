@@ -8,7 +8,7 @@
 import type { Tables } from "@/integrations/supabase";
 import { profileService } from "@/core/profiles/services/ProfileService";
 import { getCompletedRidePaymentsByDriver, getDriverData, getDriverStatsDetailed } from "./mobility.queries";
-import { updateDriverData, updateDriverOnlineStatus } from "./mobility.mutations";
+import { updateDriverOnlineStatus } from "./mobility.mutations";
 import { DriverAvailabilityService } from "./DriverAvailabilityService";
 
 type DriverDataRecord = Tables<"driver_data">;
@@ -154,13 +154,6 @@ export class DriverService {
 
   async updateDriverStatus(driverProfileId: string, isActive: boolean): Promise<void> {
     await updateDriverOnlineStatus(driverProfileId, isActive);
-  }
-
-  async updateDriverRegistration(
-    driverProfileId: string,
-    updates: Record<string, unknown>,
-  ): Promise<unknown | null> {
-    return updateDriverData(driverProfileId, updates);
   }
 }
 
