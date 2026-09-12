@@ -16,9 +16,7 @@ type TableClient<TRow> = PromiseLike<QueryPayload<TRow>> & {
   select(columns?: string, options?: { count?: "exact"; head?: boolean }): TableClient<TRow>;
   eq(column: string, value: unknown): TableClient<TRow>;
   in(column: string, values: readonly unknown[]): TableClient<TRow>;
-  or(filters: string): TableClient<TRow>;
   order(column: string, options?: { ascending: boolean }): TableClient<TRow>;
-  limit(value: number): TableClient<TRow>;
 };
 
 type MobilityAdminDbClient = {
@@ -59,7 +57,6 @@ type DriverDataWithProfileRow = Pick<
 type DriverCapabilityRow = Pick<Tables<"driver_data">, "profile_id" | "can_do_delivery">;
 type RideRequestRow = Tables<"ride_requests">;
 type RideRatingRow = Pick<Tables<"ride_ratings">, "rating">;
-type ProfileRow = Tables<"profiles">;
 
 export interface RawCommunityPost {
   id: string;
@@ -258,57 +255,6 @@ export class MobilityAdminQueryService {
       }));
     } catch (error) {
       logger.error("MobilityAdminQueryService.getRideStats", error as Error);
-      throw error;
-    }
-  }
-
-  static async getRecentRides(limit = 50): Promise<RawRide[]> {
-    try {
-      const { data, error } = await mobilityDb
-        .from<RideRequestRow>("ride_requests")
-        .select("*")
-        .order("created_at", { ascending: false })
-        .limit(limit);
-
-      if (error) throw error;
-      return (data ?? []) as RawRide[];
-    } catch (error) {
-      logger.error("MobilityAdminQueryService.getRecentRides", error as Error, { limit });
-      throw error;
-    }
-  }
-
-  static async getUserRides(userId: string): Promise<RawRide[]> {
-    try {
-      const { data: profiles, error: profileError } = await mobilityDb
-        .from<Pick<ProfileRow, "id">>("profiles")
-        .select("id")
-        .eq("user_id", userId);
-
-      if (profileError) throw profileError;
-
-      const profileIds = (profiles ?? []).map((profile) => profile.id);
-      if (profileIds.length === 0) {
-        return [];
-      }
-
-      const rideFilters = profileIds
-        .flatMap((profileId) => [
-          `passenger_profile_id.eq.${profileId}`,
-          `driver_profile_id.eq.${profileId}`,
-        ])
-        .join(",");
-
-      const { data, error } = await mobilityDb
-        .from<RideRequestRow>("ride_requests")
-        .select("*")
-        .or(rideFilters)
-        .order("created_at", { ascending: false });
-
-      if (error) throw error;
-      return (data ?? []) as RawRide[];
-    } catch (error) {
-      logger.error("MobilityAdminQueryService.getUserRides", error as Error, { userId });
       throw error;
     }
   }
