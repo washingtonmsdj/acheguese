@@ -17,7 +17,6 @@ export function calculateDriverStats(drivers: readonly DriverRequest[]): DriverS
     approved: drivers.filter(isDriverApproved).length,
     online: drivers.filter(isDriverOnline).length,
     totalRides: drivers.reduce((sum, d) => sum + (d.total_rides || 0), 0),
-    totalEarnings: drivers.reduce((sum, d) => sum + (d.total_earnings || 0), 0),
   };
 }
 
