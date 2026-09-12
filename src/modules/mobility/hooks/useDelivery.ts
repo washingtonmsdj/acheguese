@@ -33,28 +33,22 @@ import {
 // ============================================
 
 export interface CreateDeliveryData {
-  // Enderecos canonicos
   pickupAddressId: string;
   dropoffAddressId: string;
   pickupLocationId: string;
   dropoffLocationId: string;
-  // Coordenadas (obrigatorias para pricing)
   originLat: number;
   originLng: number;
   destinationLat: number;
   destinationLng: number;
-  // Dados da entrega
   recipientName: string;
   recipientPhone?: string;
   deliveryNotes?: string;
   packageDescription?: string;
   packageSize?: PackageSize;
-  // Origem da solicitacao
   sourceType: SourceType;
   sourceId?: string;
-  // Usado apenas para autorizacao quando a entidade operacional difere do dono.
   authorizationSourceId?: string;
-  // Pagamento
   paymentMethod?: string;
   observation?: string;
 }
@@ -64,10 +58,6 @@ export interface DeliveryProof {
   code?: string;
   observation?: string;
 }
-
-// ============================================
-// ESTADOS ATIVOS DE ENTREGA
-// ============================================
 
 const ACTIVE_DELIVERY_STATES: RideRequest["status"][] = [
   RIDE_STATUS.REQUESTED,
@@ -80,17 +70,12 @@ const ACTIVE_DELIVERY_STATES: RideRequest["status"][] = [
   RIDE_STATUS.DELIVERED,
 ];
 
-// ============================================
-// HOOK
-// ============================================
-
 export function useDelivery(sourceType: SourceType, sourceId?: string) {
   const { user } = useAuth();
   const queryClient = useQueryClient();
   const [activeDelivery, setActiveDelivery] = useState<RideRequest | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  // Buscar entregas da origem
   const {
     data: deliveries = [],
     isLoading,
@@ -106,18 +91,19 @@ export function useDelivery(sourceType: SourceType, sourceId?: string) {
           (!sourceId || r.source_id === sourceId),
       );
       const active = filtered.find((r: RideRequest) => ACTIVE_DELIVERY_STATES.includes(r.status));
-      if (active) setActiveDelivery(active);
+      setActiveDelivery(active ?? null);
       return filtered;
     },
     enabled: !!user,
     staleTime: TIMEOUTS.CACHE_STALE_TIME_MEDIUM,
   });
 
-  // Realtime para atualizacoes da entrega ativa
+  // Acompanhamento realtime é restrito à entrega ativa. Não reutilizamos Auth
+  // User UUID como se fosse passenger_profile_id.
   useRideRealtime({
+    rideId: activeDelivery?.id,
     userType: "passenger",
-    userId: user?.id,
-    enabled: !!user && !!activeDelivery,
+    enabled: Boolean(activeDelivery),
     onEvent: (event) => {
       queryClient.invalidateQueries({
         queryKey: MOBILITY_QUERY_KEYS.deliveries(sourceType, sourceId || user?.id || ""),
@@ -156,7 +142,6 @@ export function useDelivery(sourceType: SourceType, sourceId?: string) {
     },
   });
 
-  // Criar entrega
   const createDelivery = useCallback(
     async (data: CreateDeliveryData) => {
       if (!user) return { success: false, error: "Usuario nao autenticado." };
@@ -173,7 +158,6 @@ export function useDelivery(sourceType: SourceType, sourceId?: string) {
           return { success: false, error: profileError };
         }
 
-        // Calcular preco via pricing oficial
         let suggestedPrice: number | undefined;
         try {
           const estimate = await pricingService.calculateEstimate({
@@ -184,7 +168,6 @@ export function useDelivery(sourceType: SourceType, sourceId?: string) {
           suggestedPrice = estimate.estimatedPrice;
         } catch (pricingError) {
           logger.warn("useDelivery.createDelivery - pricing fallback", pricingError);
-          // Continua sem preco calculado - sera definido manualmente
         }
 
         const result = await RideOperationalService.createDelivery({
@@ -215,7 +198,6 @@ export function useDelivery(sourceType: SourceType, sourceId?: string) {
     [user, queryClient, sourceType, sourceId],
   );
 
-  // Cancelar entrega (remetente/passenger)
   const cancelDelivery = useCallback(
     async (rideId: string, reason?: string) => {
       if (!user) return { success: false, error: "Usuario nao autenticado." };
@@ -252,7 +234,6 @@ export function useDelivery(sourceType: SourceType, sourceId?: string) {
     [queryClient, sourceType, sourceId, user],
   );
 
-  // Confirmar coleta
   const confirmPickup = useCallback(
     async (rideId: string, driverProfileId: string) => {
       const result = await RideOperationalService.confirmPickup(rideId, driverProfileId);
@@ -269,7 +250,6 @@ export function useDelivery(sourceType: SourceType, sourceId?: string) {
     [queryClient, sourceType, sourceId, user],
   );
 
-  // Iniciar entrega
   const startDelivery = useCallback(
     async (rideId: string, driverProfileId: string) => {
       const result = await RideOperationalService.startDelivery(rideId, driverProfileId);
@@ -286,7 +266,6 @@ export function useDelivery(sourceType: SourceType, sourceId?: string) {
     [queryClient, sourceType, sourceId, user],
   );
 
-  // Confirmar entrega
   const confirmDelivery = useCallback(
     async (rideId: string, driverProfileId: string, proof: DeliveryProof, finalPrice?: number) => {
       const result = await RideOperationalService.confirmDelivery(rideId, driverProfileId, proof, finalPrice);
@@ -304,7 +283,6 @@ export function useDelivery(sourceType: SourceType, sourceId?: string) {
     [queryClient, sourceType, sourceId, user],
   );
 
-  // Registrar falha
   const failDelivery = useCallback(
     async (rideId: string, driverProfileId: string, reason: string) => {
       const metadata = buildFailedDeliveryMetadata(reason);
@@ -337,4 +315,3 @@ export function useDelivery(sourceType: SourceType, sourceId?: string) {
     refetch,
   };
 }
-
