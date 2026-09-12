@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 
+import { AdminMobilityAnalyticsDriverReadService } from "@/core/admin/services/AdminMobilityAnalyticsDriverReadService";
 import { AdminMobilityAnalyticsReadService } from "@/core/admin/services/AdminMobilityAnalyticsReadService";
 import { adminMobilityService } from "@/core/admin";
 import {
@@ -215,7 +216,7 @@ export function useAdminMobilityAnalytics(days: number, enabled: boolean) {
 
         const [windowRides, allDrivers, allRatings] = await Promise.all([
           AdminMobilityAnalyticsReadService.listWindowRides(startISO),
-          adminMobilityService.getAllDriversComplete() as Promise<DriverProfileLite[]>,
+          AdminMobilityAnalyticsDriverReadService.list(),
           adminMobilityService.getAllRideRatings() as Promise<RideRating[]>,
         ]);
         const { stats: nextStats, completedRides } = buildStats(
