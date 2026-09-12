@@ -60,7 +60,8 @@ export function useRideRealtime(options: UseRideRealtimeOptions) {
   }, [onEvent]);
 
   useEffect(() => {
-    if (!enabled || !userId) {
+    const hasSubscriptionScope = Boolean(rideId || userId);
+    if (!enabled || !hasSubscriptionScope) {
       return;
     }
 
@@ -69,7 +70,9 @@ export function useRideRealtime(options: UseRideRealtimeOptions) {
       : userType === 'driver'
         ? 'mobility.driver-rides'
         : 'mobility.passenger-rides';
-    const filterValues = rideId ? { rideId } : { profileId: userId };
+    const filterValues = rideId
+      ? { rideId }
+      : { profileId: userId as string };
 
     const subscription = realtimeService.subscribe(topic, {
       filterValues,
@@ -127,7 +130,7 @@ export function useRideRealtime(options: UseRideRealtimeOptions) {
     return () => {
       subscription.unsubscribe();
       subscriptionRef.current = null;
-      logger.info('Ride realtime unsubscribed', { userId, userType });
+      logger.info('Ride realtime unsubscribed', { userId, userType, rideId });
     };
   }, [enabled, userId, rideId, userType]);
 
