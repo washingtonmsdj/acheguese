@@ -162,10 +162,6 @@ class AdminMobilityServiceClass {
     return drivers.sort((a, b) => b.rating - a.rating).slice(0, limit);
   }
 
-  async getAllDriversComplete(): Promise<unknown[]> {
-    return MobilityAdminQueryService.getAllDriversComplete();
-  }
-
   async getAllRideRatings(): Promise<Array<{ rating: number }>> {
     return MobilityAdminQueryService.getAllRideRatings();
   }
