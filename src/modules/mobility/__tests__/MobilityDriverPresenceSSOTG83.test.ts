@@ -2,8 +2,12 @@ import fs from "node:fs";
 import path from "node:path";
 import { describe, expect, it } from "vitest";
 
+function projectPath(relativePath: string): string {
+  return path.resolve(process.cwd(), relativePath);
+}
+
 function readProjectFile(relativePath: string): string {
-  return fs.readFileSync(path.resolve(process.cwd(), relativePath), "utf8");
+  return fs.readFileSync(projectPath(relativePath), "utf8");
 }
 
 const selfService = readProjectFile(
@@ -23,6 +27,15 @@ const runtimeService = readProjectFile(
 );
 const driverService = readProjectFile(
   "src/core/mobility/services/DriverService.impl.ts",
+);
+const activityStatsService = readProjectFile(
+  "src/core/mobility/services/DriverActivityStatsService.ts",
+);
+const presenceCard = readProjectFile(
+  "src/modules/mobility/components/driver/DriverPresenceStats.tsx",
+);
+const serviceIndex = readProjectFile(
+  "src/core/mobility/services/index.ts",
 );
 const adminHook = readProjectFile(
   "src/core/admin/drivers/hooks/useDriverManagement.ts",
@@ -99,6 +112,26 @@ describe("G83 driver presence SSOT", () => {
     expect(driverService).not.toContain("async createDriverProfile(");
     expect(driverService).not.toContain("is_online: data.is_active");
     expect(driverService).not.toContain("is_verified: data.is_verified");
+  });
+
+  it("does not present ride duration as historical online time", () => {
+    expect(
+      fs.existsSync(projectPath("src/core/mobility/services/DriverPresenceService.ts")),
+    ).toBe(false);
+    expect(serviceIndex).toContain("DriverActivityStatsService");
+    expect(serviceIndex).not.toContain("DriverPresenceService");
+
+    expect(activityStatsService).toContain("DriverAvailabilityService.getStatus");
+    expect(activityStatsService).toContain("completedRideMinutesTotal");
+    expect(activityStatsService).toContain(
+      'Historical\n * duration is intentionally ride duration, not "online time"',
+    );
+    expect(activityStatsService).not.toContain("online_today_minutes");
+    expect(activityStatsService).not.toContain("total_online_time_minutes");
+
+    expect(presenceCard).toContain("Presença operacional em tempo real");
+    expect(presenceCard).toContain("Em corridas concluídas");
+    expect(presenceCard).not.toContain("Sessao atual");
   });
 
   it("makes admin presence read-only instead of impersonating a driver session", () => {
