@@ -18,7 +18,6 @@
 import { logger } from '@/shared/utils/logger';
 import { supabase as supabaseClient } from '@/integrations/supabase';
 import { getDriverOfferCapabilities } from './mobility.queries';
-import { MobilityService } from './MobilityService.impl';
 import { MobilityRpcService } from './MobilityRpcService';
 
 // No browser, sempre usa o cliente público com RLS.
@@ -135,7 +134,11 @@ export class DriverAvailabilityService {
   private static async ensureDriverDataRow(
     driverProfileId: string
   ): Promise<void> {
-    await MobilityService.ensureDriverDataRow(driverProfileId);
+    const { error } = await driverAvailabilityDb.rpc<Record<string, unknown>>(
+      'ensure_owned_driver_data',
+      { p_profile_id: driverProfileId },
+    );
+    if (error) throw error;
   }
 
   private static async getOperationalBlockReason(
@@ -315,14 +318,15 @@ export class DriverAvailabilityService {
     try {
       const { data, error } = await supabase
         .from('driver_availability')
-        .select('*')
+        .select(
+          'profile_id, is_online, is_available, current_lat, current_lng, last_location_update, last_seen_at, active_ride_id, busy_since, active_ride_mode, updated_at',
+        )
         .eq('profile_id', driverProfileId)
         .maybeSingle();
 
       if (error) throw error;
       if (!data) return null;
 
-      // Determinar status conceitual
       let status: AvailabilityStatus;
       if (!data.is_online) {
         status = 'offline';
@@ -339,9 +343,10 @@ export class DriverAvailabilityService {
         isOnline: data.is_online,
         isAvailable: data.is_available,
         status,
-        currentLocation: data.current_lat && data.current_lng
-          ? { lat: data.current_lat, lng: data.current_lng }
-          : undefined,
+        currentLocation:
+          data.current_lat != null && data.current_lng != null
+            ? { lat: data.current_lat, lng: data.current_lng }
+            : undefined,
         lastLocationUpdate: data.last_location_update || undefined,
         lastSeenAt: data.last_seen_at || undefined,
         activeRideId: data.active_ride_id || undefined,
