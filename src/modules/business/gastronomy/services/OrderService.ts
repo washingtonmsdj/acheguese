@@ -9,7 +9,7 @@
 import { logger } from '@/shared/utils/logger';
 import { getRecordValue } from '@/shared/utils/recordLookup';
 import { OrderDeliverySSOTService } from '@/core/mobility/delivery/services/OrderDeliverySSOTService';
-import { MobilityService } from '@/core/mobility/services/runtime';
+import { OrderDeliveryLinkReadService } from '@/core/mobility/delivery/services/OrderDeliveryLinkReadService';
 import {
   asDeliveryOrderSourceMetadata,
   buildDeliveryPricingSnapshot,
@@ -353,17 +353,14 @@ async function enrichDeliveryFinancials<T extends Order>(orders: T[]): Promise<T
         };
       }
 
-      const ride = (await MobilityService.getLatestRideBySource(
-        'gastronomy',
-        order.id,
-      )) as { final_price?: unknown; suggested_price?: unknown } | null;
+      const ride = await OrderDeliveryLinkReadService.getLatestByOrderId(order.id);
 
       const finalPrice =
-        ride && typeof ride.final_price === 'number' && Number.isFinite(ride.final_price)
+        typeof ride?.final_price === 'number' && Number.isFinite(ride.final_price)
           ? ride.final_price
           : null;
       const suggestedPrice =
-        ride && typeof ride.suggested_price === 'number' && Number.isFinite(ride.suggested_price)
+        typeof ride?.suggested_price === 'number' && Number.isFinite(ride.suggested_price)
           ? ride.suggested_price
           : null;
       const courierCost = order.delivery_courier_cost ?? finalPrice ?? suggestedPrice;
