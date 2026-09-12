@@ -5,6 +5,7 @@ import { ModuleKey, RolloutStatus } from "@/core/rollout/types";
 import { MobilityService } from "@/core/mobility/services/runtime";
 import { DriverModerationEventsService } from "@/core/mobility/services/runtime";
 import type { DriverModerationAction, DriverModerationEvent } from "@/core/mobility/services/runtime";
+import { AdminDriverPresenceReadService } from "@/core/admin/services/AdminDriverPresenceReadService";
 import { getRecordValue } from "@/shared/utils/recordLookup";
 
 const MOTOBOY_ENABLED_CONFIG_KEY = "motoboy_enabled";
@@ -15,11 +16,41 @@ function isObjectRecord(value: Record<string, unknown> | null): value is Record<
   return value !== null && typeof value === "object" && !Array.isArray(value);
 }
 
+function getProfileId(value: unknown): string | null {
+  if (!value || typeof value !== "object" || Array.isArray(value)) return null;
+  const profileId = (value as { profile_id?: unknown }).profile_id;
+  return typeof profileId === "string" ? profileId : null;
+}
+
 export class AdminMobilityRuntimeService {
   private rolloutService = new RolloutService(createRolloutRepository(), createLocationRepository());
 
   async getDriverProfiles(): Promise<{ data: unknown[]; error: unknown }> {
-    return MobilityService.getDriverProfiles();
+    const result = await MobilityService.getDriverProfiles();
+    if (result.error || result.data.length === 0) return result;
+
+    const profileIds = result.data
+      .map(getProfileId)
+      .filter((profileId): profileId is string => Boolean(profileId));
+    const presence = await AdminDriverPresenceReadService.list(profileIds);
+    const presenceByProfile = new Map(presence.map((row) => [row.profile_id, row]));
+
+    return {
+      ...result,
+      data: result.data.map((row) => {
+        const profileId = getProfileId(row);
+        if (!profileId || !row || typeof row !== "object" || Array.isArray(row)) {
+          return row;
+        }
+        const operational = presenceByProfile.get(profileId);
+        return {
+          ...(row as Record<string, unknown>),
+          is_online: operational?.is_online ?? false,
+          is_available: operational?.is_available ?? false,
+          last_location_update: operational?.last_location_update ?? null,
+        };
+      }),
+    };
   }
 
   async getTopDrivers(opts: { minRides?: number; limit?: number } = {}): Promise<unknown[]> {
