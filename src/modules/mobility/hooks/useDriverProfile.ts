@@ -15,6 +15,7 @@ export function useDriverProfile() {
   const {
     driverData,
     driverProfileId,
+    sessionDriverProfile,
     isRegistered,
     isLoading,
   } = useDriverProfileIdentity({
@@ -40,6 +41,8 @@ export function useDriverProfile() {
 
   return {
     driverProfile: driverData,
+    driverProfileId,
+    driverIdentity: sessionDriverProfile,
     isDriver: isRegistered,
     isLoading,
     saving,
