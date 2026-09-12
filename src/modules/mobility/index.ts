@@ -51,10 +51,7 @@ export { MobilidadeTabs } from "./components/landing/MobilidadeTabs";
 // Services
 export { rideService } from "@/core/mobility/services/RideService";
 export { driverService } from "@/core/mobility/services/DriverService";
-export {
-  MobilityService,
-  mobilityService,
-} from "@/core/mobility/services/MobilityService";
+export { mobilityService } from "@/core/mobility/services/MobilityRuntimeService";
 
 // Hooks - Rides
 export { useActiveRide } from "./hooks/useActiveRide";
@@ -78,9 +75,7 @@ export { default as HistoricoPage } from "./pages/HistoricoPage";
 export { default as TrackRidePage } from "./pages/TrackRidePage";
 
 // Types
-export type {
-  RideRequest,
-} from "@/core/mobility/services/RideService";
+export type { RideRequest } from "@/core/mobility/services/RideService";
 
 export type {
   DriverProfile,
