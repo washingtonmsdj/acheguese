@@ -25,6 +25,11 @@ export type OrderDeliveryLinkRide = Pick<
   | "created_at"
 >;
 
+export type OrderDeliveryPricingSnapshot = Pick<
+  RideRow,
+  "final_price" | "suggested_price"
+>;
+
 const ORDER_DELIVERY_LINK_SELECT = [
   "id",
   "status",
@@ -72,6 +77,31 @@ export class OrderDeliveryLinkReadService {
       logger.error("OrderDeliveryLinkReadService.getLatestByOrderId", error as Error, {
         orderId,
       });
+      throw error;
+    }
+  }
+
+  static async getLatestPricingByOrderId(
+    orderId: string,
+  ): Promise<OrderDeliveryPricingSnapshot | null> {
+    try {
+      const { data, error } = await supabase
+        .from("ride_requests")
+        .select("final_price, suggested_price")
+        .eq("source_type", "gastronomy")
+        .eq("source_id", orderId)
+        .order("created_at", { ascending: false })
+        .limit(1)
+        .maybeSingle();
+
+      if (error) throw error;
+      return (data as OrderDeliveryPricingSnapshot | null) ?? null;
+    } catch (error) {
+      logger.error(
+        "OrderDeliveryLinkReadService.getLatestPricingByOrderId",
+        error as Error,
+        { orderId },
+      );
       throw error;
     }
   }
