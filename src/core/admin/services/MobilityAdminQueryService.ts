@@ -1,6 +1,5 @@
 import { supabase } from "@/integrations/supabase";
 import type { Tables } from "@/integrations/supabase";
-import { profileService } from "@/core/profiles/services/ProfileService";
 import { logger } from "@/shared/utils/logger";
 import { AdminDriverPresenceReadService } from "@/core/admin/services/AdminDriverPresenceReadService";
 
@@ -90,7 +89,6 @@ export interface RawDriverProfile {
   user_id: string;
   rating: number;
   total_rides: number;
-  total_earnings: number;
   is_verified: boolean;
 }
 
@@ -176,7 +174,6 @@ function mapDriverProfile(row: DriverDataWithProfileRow): RawDriverProfile | nul
     user_id: normalizeProfilesUserId(row.profiles) ?? "",
     rating: row.rating ?? 0,
     total_rides: row.total_rides ?? 0,
-    total_earnings: 0,
     is_verified: row.is_verified ?? false,
   };
 }
@@ -245,38 +242,6 @@ export class MobilityAdminQueryService {
     } catch (error) {
       logger.error("MobilityAdminQueryService.getDriversRaw", error as Error);
       throw error;
-    }
-  }
-
-  static async getDriverRideStatuses(profileId: string): Promise<{ status: string }[]> {
-    try {
-      const { data, error } = await mobilityDb
-        .from<Pick<RideRequestRow, "status">>("ride_requests")
-        .select("status")
-        .eq("driver_profile_id", profileId);
-
-      if (error) throw error;
-      return data ?? [];
-    } catch (error) {
-      logger.error("MobilityAdminQueryService.getDriverRideStatuses", error as Error, {
-        profileId,
-      });
-      return [];
-    }
-  }
-
-  static async countDriverSuspensions(userId: string): Promise<number> {
-    try {
-      const profiles = await profileService.getProfilesByUserId(userId);
-      return profiles.filter(
-        (profile) =>
-          profile.profile_type === "driver" && Boolean(profile.suspended_until),
-      ).length;
-    } catch (error) {
-      logger.error("MobilityAdminQueryService.countDriverSuspensions", error as Error, {
-        userId,
-      });
-      return 0;
     }
   }
 
