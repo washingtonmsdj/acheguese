@@ -81,13 +81,13 @@ function calcStatus(count: number, pendingCount: number): AdminOperationalHealth
 }
 
 function toOnlineDriver(raw: RawRecord): OnlineDriver {
-  const id = getString(raw.profile_id) || getString(raw.id);
-  const rating = getNumeric(raw.avg_rating, getNumeric(raw.rating, 0));
+  const id = getString(raw.profile_id);
+  const rating = getNumeric(raw.rating, 0);
   const totalRides = getNumeric(raw.total_rides, 0);
 
   return {
     id,
-    name: getString(raw.display_name) || getString(raw.name) || "Motorista",
+    name: getString(raw.name) || "Motorista",
     avatar_url: getString(raw.avatar_url) || undefined,
     vehicle_model: getString(raw.vehicle_model) || undefined,
     vehicle_plate: getString(raw.vehicle_plate) || undefined,
@@ -200,22 +200,23 @@ export async function getRealtimeMetrics(): Promise<{
   startOfMonth.setDate(startOfMonth.getDate() - 30);
 
   try {
-    const [metricRidesRaw, activeRidesRaw, allDriversRaw, onlinePresence] =
+    const onlinePresence = await AdminDriverPresenceReadService.listOnline();
+    const onlineProfileIds = onlinePresence.map((presence) => presence.profile_id);
+
+    const [metricRidesRaw, activeRidesRaw, driverMetricRowsRaw, onlineDirectoryRaw] =
       await Promise.all([
         adminMobilityService.getRealtimeMetricRides(),
         adminMobilityService.getRealtimeOpenRides(),
-        adminMobilityService.getAllDriversComplete(),
-        AdminDriverPresenceReadService.listOnline(),
+        adminMobilityService.getRealtimeDriverMetricRows(),
+        adminMobilityService.getRealtimeOnlineDriverDirectory(onlineProfileIds),
       ]);
 
     const rides = (metricRidesRaw as RawRecord[]) || [];
     const openRides = (activeRidesRaw as RawRecord[]) || [];
-    const allDrivers = (allDriversRaw as RawRecord[]) || [];
+    const driverMetrics = (driverMetricRowsRaw as RawRecord[]) || [];
+    const onlineDirectory = (onlineDirectoryRaw as RawRecord[]) || [];
     const driverByProfileId = new Map(
-      allDrivers.map((driver) => [
-        getString(driver.profile_id) || getString(driver.id),
-        driver,
-      ]),
+      onlineDirectory.map((driver) => [getString(driver.profile_id), driver]),
     );
     const onlineDrivers = onlinePresence.map((presence) =>
       toOnlineDriver({
@@ -281,27 +282,22 @@ export async function getRealtimeMetrics(): Promise<{
         : 0;
 
     const avgRating =
-      allDrivers.length > 0
+      driverMetrics.length > 0
         ? Number(
             (
-              allDrivers.reduce(
-                (sum, driver) =>
-                  sum +
-                  getNumeric(
-                    (driver as RawRecord).avg_rating,
-                    getNumeric((driver as RawRecord).rating, 0),
-                  ),
+              driverMetrics.reduce(
+                (sum, driver) => sum + getNumeric(driver.rating, 0),
                 0,
-              ) / allDrivers.length
+              ) / driverMetrics.length
             ).toFixed(2),
           )
         : 0;
 
     const avgResponseTime = getAverageDriverResponseTimeMinutes(rides);
-    const driversVerified = allDrivers.filter((driver) =>
-      isTruthy((driver as RawRecord).is_verified),
+    const driversVerified = driverMetrics.filter((driver) =>
+      isTruthy(driver.is_verified),
     ).length;
-    const driversTotal = allDrivers.length;
+    const driversTotal = driverMetrics.length;
     const driversOnline = onlinePresence.length;
     const driversPending = Math.max(driversTotal - driversVerified, 0);
 
