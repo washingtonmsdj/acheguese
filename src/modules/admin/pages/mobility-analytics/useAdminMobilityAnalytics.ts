@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 
+import { AdminMobilityAnalyticsReadService } from "@/core/admin/services/AdminMobilityAnalyticsReadService";
 import { adminMobilityService } from "@/core/admin";
 import {
   isCancelledRideStatus,
@@ -212,14 +213,13 @@ export function useAdminMobilityAnalytics(days: number, enabled: boolean) {
         startDate.setDate(startDate.getDate() - (days - 1));
         const startISO = startDate.toISOString();
 
-        const [rides, allDrivers, allRatings] = await Promise.all([
-          adminMobilityService.getAllRides(),
+        const [windowRides, allDrivers, allRatings] = await Promise.all([
+          AdminMobilityAnalyticsReadService.listWindowRides(startISO),
           adminMobilityService.getAllDriversComplete() as Promise<DriverProfileLite[]>,
           adminMobilityService.getAllRideRatings() as Promise<RideRating[]>,
         ]);
-        const allRides = (rides || []) as unknown as AnalyticsRide[];
         const { stats: nextStats, completedRides } = buildStats(
-          allRides,
+          windowRides,
           allDrivers,
           allRatings,
           startISO,
@@ -228,7 +228,7 @@ export function useAdminMobilityAnalytics(days: number, enabled: boolean) {
         if (!isMounted) return;
 
         setStats(nextStats);
-        setDailyData(buildDailyData(allRides, days));
+        setDailyData(buildDailyData(windowRides, days));
         setTopDrivers(buildTopDrivers(completedRides, allDrivers));
       } catch (error) {
         logger.error("Error loading mobilidade analytics:", error);
