@@ -15,7 +15,7 @@ import { logger } from '@/shared/utils/logger';
 import { supabase } from '@/integrations/supabase';
 import { buildSafeILikePattern, buildSafeOrILikeFilter } from '@/shared/utils/sqlSanitization';
 import type { Tables } from '@/integrations/supabase';
-import { MobilityService } from '@/core/mobility/services/runtime';
+import { AdminMotoboyReadService } from '@/core/admin/services/AdminMotoboyReadService';
 import { BusinessService } from '@/core/business/services/BusinessService';
 import { AnalyticsService } from '@/core/analytics/AnalyticsService';
 
@@ -207,7 +207,7 @@ export const AdminService = {
             .eq('business_id', business.id)
             .eq('status', 'completed');
 
-          const totalDeliveries = await MobilityService.countDeliveredBySource('business', business.id);
+          const totalDeliveries = await AdminMotoboyReadService.countDeliveredBySource('business', business.id);
           const totalOrders = orderStats?.length || 0;
           const totalRevenue = (orderStats ?? []).reduce((sum, order) => sum + (order.total || 0), 0);
 
@@ -412,7 +412,7 @@ export const AdminService = {
       const totalOrders = completedOrders.length;
       const totalRevenue = completedOrders.reduce((sum, order) => sum + (order.total || 0), 0);
 
-      const totalDeliveries = await MobilityService.countDeliveredMotoboyRides();
+      const totalDeliveries = await AdminMotoboyReadService.countDeliveredTotal();
 
       const { data: subscriptions } = await db
         .from<UserSubscriptionPlanRow>('user_subscriptions')
