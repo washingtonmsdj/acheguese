@@ -41,20 +41,21 @@ export function DriverCard({ driver, actions }: DriverCardProps) {
   const isPending = isDriverPending(driver);
   const isSuspended = isDriverSuspended(driver);
   const isApproved = isDriverApproved(driver);
+  const isRejected = driver.verification_status === "rejected";
 
   return (
     <Card
       className={cn(
         "hover:shadow-md transition-all",
-        isPending && driver.total_rides === 0 && "border-yellow-500/30 bg-yellow-500/5"
+        isPending && driver.total_rides === 0 && "border-yellow-500/30 bg-yellow-500/5",
       )}
     >
       <CardContent className="p-5">
         <div className="flex items-start gap-4">
           <Avatar className="h-14 w-14 border-2 border-background">
-            <AvatarImage src={driver.avatar_url} />
+            <AvatarImage src={driver.avatar_url ?? undefined} />
             <AvatarFallback className="bg-teal-500/10 text-teal-600 font-bold">
-              {getDriverInitials(driver.name ?? "?")}
+              {getDriverInitials(driver.name)}
             </AvatarFallback>
           </Avatar>
 
@@ -62,12 +63,14 @@ export function DriverCard({ driver, actions }: DriverCardProps) {
             <div className="flex items-start justify-between gap-3 mb-2">
               <div>
                 <div className="flex items-center gap-2">
-                  <h3 className="font-semibold text-lg">
-                    {driver.name ?? "Nome não informado"}
-                  </h3>
+                  <h3 className="font-semibold text-lg">{driver.name}</h3>
                   {isSuspended ? (
                     <Badge className="bg-red-500/10 text-red-600 border-red-500/20">
                       <XCircle className="w-3 h-3 mr-1" /> Suspenso
+                    </Badge>
+                  ) : isRejected ? (
+                    <Badge className="bg-red-500/10 text-red-600 border-red-500/20">
+                      <XCircle className="w-3 h-3 mr-1" /> Rejeitado
                     </Badge>
                   ) : isApproved ? (
                     <Badge className="bg-green-500/10 text-green-600 border-green-500/20">
@@ -96,7 +99,7 @@ export function DriverCard({ driver, actions }: DriverCardProps) {
                   {driver.neighborhood && (
                     <span className="flex items-center gap-1">
                       <MapPin className="h-3.5 w-3.5" />
-                      {driver.neighborhood ?? "N/A"}, {driver.city ?? "N/A"}
+                      {driver.neighborhood}, {driver.city ?? "N/A"}
                     </span>
                   )}
                   <span className="flex items-center gap-1">
@@ -141,7 +144,7 @@ export function DriverCard({ driver, actions }: DriverCardProps) {
                     </Button>
                   </TooltipTrigger>
                   <TooltipContent>
-                    <p>Analisar documentos e aprovar/rejeitar o cadastro do motorista</p>
+                    <p>Analisar cadastro e aprovar/rejeitar o motorista</p>
                   </TooltipContent>
                 </Tooltip>
               )}
