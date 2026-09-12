@@ -30,16 +30,12 @@ interface VerificationContext {
 export class AdminDriverModerationService {
   static resolveVerificationStatus(
     context: VerificationContext,
-  ): "pending" | "verified" | "rejected" | "none" {
-    if (context.verificationStatus) {
-      return context.verificationStatus;
-    }
+  ): "pending" | "verified" | "rejected" {
+    if (context.verificationStatus === "verified") return "verified";
+    if (context.verificationStatus === "rejected") return "rejected";
+    if (context.verificationStatus === "pending") return "pending";
 
-    if (context.fallbackVerified) {
-      return "verified";
-    }
-
-    return "pending";
+    return context.fallbackVerified ? "verified" : "pending";
   }
 
   static async getModerationRows(profileIds: string[]): Promise<Map<string, DriverModerationRow>> {
@@ -57,11 +53,13 @@ export class AdminDriverModerationService {
           const profile = profileById.get(profileId);
           const row: DriverModerationRow = {
             id: profileId,
+            // No decision is not the same as pending. The registration read model
+            // supplies driver_data.is_verified as the canonical fallback.
             verification_status: decision
               ? decision.action === "approved"
                 ? "verified"
                 : "rejected"
-              : "pending",
+              : null,
             verification_rejection_reason:
               decision?.action === "rejected" ? decision.reason : null,
             is_suspended: profile?.is_suspended ?? false,
