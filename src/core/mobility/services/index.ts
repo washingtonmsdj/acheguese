@@ -60,8 +60,8 @@ export type {
   BoardingPointSummary,
   BoardingPointSuggestionInput,
 } from "@/core/mobility/services/BoardingPointService";
-export { DriverPresenceService } from "@/core/mobility/services/DriverPresenceService";
-export type { DriverPresenceStats } from "@/core/mobility/services/DriverPresenceService";
+export { DriverActivityStatsService } from "@/core/mobility/services/DriverActivityStatsService";
+export type { DriverActivityStats } from "@/core/mobility/services/DriverActivityStatsService";
 
 //  ============================================================
 //  FACADE UNIFICADA (Recomendado)
