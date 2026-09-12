@@ -1,3 +1,4 @@
+import { isDriverOwnedOpenRideStatus } from "@/core/mobility/core/RideLifecycleStatus";
 import { supabase } from "@/integrations/supabase";
 import type { Database } from "@/integrations/supabase";
 import { logger } from "@/shared/utils/logger";
@@ -71,6 +72,10 @@ export class SafetyRideShareService {
         throw new Error("A validade do compartilhamento deve ficar entre 1 e 168 horas.");
       }
 
+      if (input.rideId == null || input.createdBy == null) {
+        throw new Error("Corrida e perfil criador são obrigatórios.");
+      }
+
       const { data, error } = await safetyRideShareDb.rpc<RideShareRow>(
         "create_safety_ride_share",
         {
@@ -105,7 +110,17 @@ export class SafetyRideShareService {
       const data = rows?.[0];
       if (!data) return null;
 
+      // G122 defense in depth: `driver_assigned` is only an offer relationship.
+      // A public bearer link must not expose proposed-driver identity, vehicle or
+      // exact coordinates before the driver becomes an accepted participant.
+      // The database RPC remains the final authority and must enforce the same
+      // boundary once the pending server-side migration can be validated/applied.
+      const canExposeDriverOperationalData = isDriverOwnedOpenRideStatus(
+        data.ride_status,
+      );
+
       const currentLocation =
+        canExposeDriverOperationalData &&
         data.current_lat != null &&
         data.current_lng != null &&
         data.location_updated_at
@@ -121,9 +136,15 @@ export class SafetyRideShareService {
         status: data.ride_status,
         origin: data.origin,
         destination: data.destination,
-        driverName: data.driver_name ?? undefined,
-        vehicleModel: data.vehicle_model ?? undefined,
-        vehiclePlate: data.vehicle_plate ?? undefined,
+        driverName: canExposeDriverOperationalData
+          ? data.driver_name ?? undefined
+          : undefined,
+        vehicleModel: canExposeDriverOperationalData
+          ? data.vehicle_model ?? undefined
+          : undefined,
+        vehiclePlate: canExposeDriverOperationalData
+          ? data.vehicle_plate ?? undefined
+          : undefined,
         currentLocation,
       };
     } catch (error) {
@@ -150,5 +171,4 @@ export class SafetyRideShareService {
       };
     }
   }
-
 }
