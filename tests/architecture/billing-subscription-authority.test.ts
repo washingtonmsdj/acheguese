@@ -85,20 +85,31 @@ describe("Billing subscription authority", () => {
     expect(existsSync(resolve(root, "src/core/billing/types/admin.types.ts"))).toBe(false);
   });
 
-  it("keeps business subscription authority explicit and blocks the retired root bridge", () => {
+  it("keeps business subscription authority explicit and blocks retired aliases", () => {
     expect(businessSubscription).toContain("export class BusinessSubscriptionService");
     expect(billingIndex).toContain("export * from './BusinessSubscriptionService'");
+    expect(billingIndex).not.toContain("BusinessSubscriptionService as SubscriptionService");
     expect(
       existsSync(resolve(root, "src/core/billing/SubscriptionService.ts")),
     ).toBe(false);
 
-    const oldBridgeCallers = runtimeSources
+    const oldRootBridgeCallers = runtimeSources
       .filter((path) =>
         readFileSync(path, "utf8").includes("@/core/billing/SubscriptionService"),
       )
       .map((path) => path.slice(root.length + 1));
 
-    expect(oldBridgeCallers).toEqual([]);
+    const oldBarrelAliasCallers = runtimeSources
+      .filter((path) => {
+        const source = readFileSync(path, "utf8");
+        return /import\s*\{[^}]*\bSubscriptionService\b[^}]*\}\s*from\s*["']@\/core\/billing["']/s.test(
+          source,
+        );
+      })
+      .map((path) => path.slice(root.length + 1));
+
+    expect(oldRootBridgeCallers).toEqual([]);
+    expect(oldBarrelAliasCallers).toEqual([]);
   });
 
   it("keeps browser runtime free of direct user_subscriptions writes", () => {
