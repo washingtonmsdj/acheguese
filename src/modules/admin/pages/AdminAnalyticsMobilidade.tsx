@@ -1,7 +1,8 @@
 import { lazy, Suspense, useState } from "react";
 import { BarChart3, Loader2, Shield } from "lucide-react";
-import { cn } from "@/shared/utils/cn";
+
 import { useAdminGuard } from "@/modules/admin/hooks/useAdminGuard";
+import { cn } from "@/shared/utils/cn";
 import { AdminMobilityRates } from "./mobility-analytics/AdminMobilityRates";
 import { AdminMobilityStatsCards } from "./mobility-analytics/AdminMobilityStatsCards";
 import { useAdminMobilityAnalytics } from "./mobility-analytics/useAdminMobilityAnalytics";
@@ -22,9 +23,9 @@ const AdminMobilitySidebar = lazy(() =>
 
 function AdminMobilityChartsFallback() {
   return (
-    <div className="lg:col-span-2 space-y-6">
-      <div className="h-[340px] rounded-lg border bg-card animate-pulse" />
-      <div className="h-[300px] rounded-lg border bg-card animate-pulse" />
+    <div className="space-y-6 lg:col-span-2">
+      <div className="h-[340px] animate-pulse rounded-lg border bg-card" />
+      <div className="h-[300px] animate-pulse rounded-lg border bg-card" />
     </div>
   );
 }
@@ -32,9 +33,9 @@ function AdminMobilityChartsFallback() {
 function AdminMobilitySidebarFallback() {
   return (
     <div className="space-y-6">
-      <div className="h-[292px] rounded-lg border bg-card animate-pulse" />
-      <div className="h-[220px] rounded-lg border bg-card animate-pulse" />
-      <div className="h-[160px] rounded-lg border bg-card animate-pulse" />
+      <div className="h-[292px] animate-pulse rounded-lg border bg-card" />
+      <div className="h-[220px] animate-pulse rounded-lg border bg-card" />
+      <div className="h-[160px] animate-pulse rounded-lg border bg-card" />
     </div>
   );
 }
@@ -49,10 +50,10 @@ export default function AdminAnalyticsMobilidade() {
 
   if (!isChecking && !canModerate) {
     return (
-      <div className="min-h-screen bg-[#0A0F14] flex items-center justify-center p-4">
+      <div className="flex min-h-screen items-center justify-center bg-[#0A0F14] p-4">
         <div className="text-center">
-          <Shield className="h-16 w-16 text-red-400 mx-auto mb-4" />
-          <h1 className="text-2xl font-bold text-white mb-2">Acesso Negado</h1>
+          <Shield className="mx-auto mb-4 h-16 w-16 text-red-400" />
+          <h1 className="mb-2 text-2xl font-bold text-white">Acesso Negado</h1>
           <p className="text-gray-400">
             Apenas administradores podem acessar esta página.
           </p>
@@ -72,31 +73,34 @@ export default function AdminAnalyticsMobilidade() {
   if (!stats) return null;
 
   const rideDistribution = [
-    { name: "Completas", value: stats.completedRides },
-    { name: "Em andamento", value: stats.inProgressRides },
+    { name: "Abertas", value: stats.openRides },
+    { name: "Concluídas", value: stats.completedRides },
     { name: "Canceladas", value: stats.cancelledRides },
-    { name: "Pendentes", value: stats.pendingRides },
+    {
+      name: "Falhas/expiradas",
+      value: stats.failedRides + stats.expiredRides,
+    },
   ].filter((item) => item.value > 0);
 
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold font-display mb-0.5 flex items-center gap-2">
+          <h1 className="mb-0.5 flex items-center gap-2 font-display text-2xl font-bold">
             <BarChart3 className="h-6 w-6 text-primary" />
             Analytics Mobilidade
           </h1>
           <p className="text-sm text-muted-foreground">
-            Métricas de corridas, receita e motoristas
+            Lifecycle de corridas, valor concluído e verificação de motoristas
           </p>
         </div>
-        <div className="flex gap-1 bg-muted rounded-lg p-0.5">
+        <div className="flex gap-1 rounded-lg bg-muted p-0.5">
           {PERIOD_OPTIONS.map((option) => (
             <button
               key={option}
               onClick={() => setDays(option)}
               className={cn(
-                "px-3 py-1.5 rounded-md text-xs font-medium transition-colors",
+                "rounded-md px-3 py-1.5 text-xs font-medium transition-colors",
                 days === option
                   ? "bg-card text-foreground shadow-sm"
                   : "text-muted-foreground hover:text-foreground",
@@ -111,7 +115,7 @@ export default function AdminAnalyticsMobilidade() {
       <AdminMobilityStatsCards stats={stats} />
       <AdminMobilityRates stats={stats} />
 
-      <div className="grid lg:grid-cols-3 gap-6">
+      <div className="grid gap-6 lg:grid-cols-3">
         <Suspense fallback={<AdminMobilityChartsFallback />}>
           <AdminMobilityCharts dailyData={dailyData} />
         </Suspense>
