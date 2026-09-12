@@ -37,7 +37,12 @@ function formatValue(value: unknown): string {
  */
 export function DriverProfileLayout({ service }: DriverProfileLayoutProps) {
   const navigate = useNavigate();
-  const { driverData, driverProfileId, isLoading } = useDriverProfileIdentity({
+  const {
+    driverData,
+    driverProfileId,
+    sessionDriverProfile,
+    isLoading,
+  } = useDriverProfileIdentity({
     queryScope: `driver-profile-layout-${service}`,
   });
 
@@ -79,9 +84,9 @@ export function DriverProfileLayout({ service }: DriverProfileLayoutProps) {
       !snapshot?.license_number ? "CNH ou documento principal" : null,
       !snapshot?.vehicle_plate ? vehiclePlateLabel : null,
       !snapshot?.vehicle_model ? vehicleModelLabel : null,
-      snapshot?.avatar_url ? null : "Foto de perfil",
+      sessionDriverProfile?.avatarUrl ? null : "Foto de perfil",
     ].filter(Boolean) as string[],
-    [snapshot, vehiclePlateLabel, vehicleModelLabel],
+    [snapshot, sessionDriverProfile?.avatarUrl, vehiclePlateLabel, vehicleModelLabel],
   );
 
   if (isLoading && !driverData) {
@@ -119,7 +124,7 @@ export function DriverProfileLayout({ service }: DriverProfileLayoutProps) {
 
             {driverProfileId && snapshot ? (
               <DriverOperationalSnapshotCard
-                driverDisplayName={formatValue(snapshot?.display_name)}
+                driverDisplayName={sessionDriverProfile?.displayName ?? "Motorista"}
                 driverSnapshot={snapshot as never}
               />
             ) : (
@@ -147,7 +152,7 @@ export function DriverProfileLayout({ service }: DriverProfileLayoutProps) {
               { label: "Placa", value: formatValue(snapshot?.vehicle_plate) },
               { label: "Modelo", value: formatValue(snapshot?.vehicle_model) },
               { label: "Ano", value: formatValue(snapshot?.vehicle_year) },
-              { label: "Foto", value: snapshot?.avatar_url ? "Enviada" : "Pendente" },
+              { label: "Foto", value: sessionDriverProfile?.avatarUrl ? "Enviada" : "Pendente" },
             ].map((item) => (
               <div key={item.label} className="flex items-center justify-between gap-3 rounded-2xl border border-border bg-background px-3 py-2">
                 <span className="text-sm text-muted-foreground">{item.label}</span>
