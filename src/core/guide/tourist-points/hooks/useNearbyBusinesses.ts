@@ -3,7 +3,7 @@
  *
  * Busca empresas e guias turísticos próximos a um ponto turístico.
  * Ordena por distância Haversine quando coordenadas disponíveis.
- * Retorna apenas dados reais.
+ * Retorna apenas dados reais e usa leitura pública paginada/bounded.
  */
 
 import { useQuery } from '@tanstack/react-query';
@@ -21,8 +21,6 @@ export interface NearbyBusiness extends Business {
   distanceMeters?: number;
 }
 
-// ── Helpers ───────────────────────────────────────────────────────────────────
-
 function withDistance(
   businesses: Business[],
   lat: number | null,
@@ -32,31 +30,49 @@ function withDistance(
   if (!lat || !lng) return businesses.slice(0, TOURIST_POINT_NEARBY_LIMITS.MAX_RESULTS);
 
   return businesses
-    .map((b) => {
-      const bLat = b.address?.latitude ?? null;
-      const bLng = b.address?.longitude ?? null;
-      if (!bLat || !bLng) return { ...b, distanceMeters: undefined };
-      return { ...b, distanceMeters: calculateDistance(lat, lng, bLat, bLng) };
+    .map((business) => {
+      const businessLat = business.address?.latitude ?? null;
+      const businessLng = business.address?.longitude ?? null;
+      if (!businessLat || !businessLng) return { ...business, distanceMeters: undefined };
+      return {
+        ...business,
+        distanceMeters: calculateDistance(lat, lng, businessLat, businessLng),
+      };
     })
-    .filter((b) => b.distanceMeters === undefined || b.distanceMeters <= maxKm * 1000)
-    .sort((a, b) => {
-      if (a.distanceMeters === undefined) return 1;
-      if (b.distanceMeters === undefined) return -1;
-      return a.distanceMeters - b.distanceMeters;
+    .filter(
+      (business) =>
+        business.distanceMeters === undefined ||
+        business.distanceMeters <= maxKm * 1000,
+    )
+    .sort((left, right) => {
+      if (left.distanceMeters === undefined) return 1;
+      if (right.distanceMeters === undefined) return -1;
+      return left.distanceMeters - right.distanceMeters;
     })
     .slice(0, TOURIST_POINT_NEARBY_LIMITS.MAX_RESULTS);
 }
 
-// ── Empresas gerais ───────────────────────────────────────────────────────────
+async function fetchCategoryCandidates(category: string): Promise<Business[]> {
+  const { businesses } = await BusinessService.getBusinessesList({
+    category,
+    sortBy: 'rating',
+    pageParam: 0,
+    pageSize: TOURIST_POINT_NEARBY_LIMITS.CANDIDATES_PER_CATEGORY,
+  });
+  return businesses;
+}
 
 async function fetchNearbyBusinesses(lat: number | null, lng: number | null) {
   const results = await Promise.all(
-    TOURIST_POINT_NEARBY_BUSINESS_CATEGORIES.map((cat) =>
-      BusinessService.getBusinesses({ category: cat, sortBy: 'rating' }),
-    ),
+    TOURIST_POINT_NEARBY_BUSINESS_CATEGORIES.map(fetchCategoryCandidates),
   );
-  const real = withDistance(results.flat(), lat, lng, TOURIST_POINT_NEARBY_LIMITS.MAX_RADIUS_KM);
-  return real;
+
+  return withDistance(
+    results.flat(),
+    lat,
+    lng,
+    TOURIST_POINT_NEARBY_LIMITS.MAX_RADIUS_KM,
+  );
 }
 
 export function useNearbyBusinesses(lat: number | null, lng: number | null) {
@@ -68,27 +84,31 @@ export function useNearbyBusinesses(lat: number | null, lng: number | null) {
   });
 }
 
-// ── Guias turísticos ──────────────────────────────────────────────────────────
-
 async function fetchNearbyGuides(lat: number | null, lng: number | null) {
   const results = await Promise.all(
-    TOURIST_POINT_GUIDE_CATEGORIES.map((category) =>
-      BusinessService.getBusinesses({ category, sortBy: 'rating' }),
-    ),
+    TOURIST_POINT_GUIDE_CATEGORIES.map(fetchCategoryCandidates),
   );
 
-  const guides = results.flat().filter((b) => {
-    const sub = (b.subcategoria ?? '').toLowerCase();
-    const specs = (b.especialidades ?? []).join(' ').toLowerCase();
-    const name = b.name.toLowerCase();
-    const desc = (b.description ?? '').toLowerCase();
-    return TOURIST_POINT_GUIDE_KEYWORDS.some((kw) =>
-      sub.includes(kw) || specs.includes(kw) || name.includes(kw) || desc.includes(kw),
+  const guides = results.flat().filter((business) => {
+    const subcategory = (business.subcategoria ?? '').toLowerCase();
+    const specialties = (business.especialidades ?? []).join(' ').toLowerCase();
+    const name = business.name.toLowerCase();
+    const description = (business.description ?? '').toLowerCase();
+    return TOURIST_POINT_GUIDE_KEYWORDS.some(
+      (keyword) =>
+        subcategory.includes(keyword) ||
+        specialties.includes(keyword) ||
+        name.includes(keyword) ||
+        description.includes(keyword),
     );
   });
 
-  const real = withDistance(guides, lat, lng, TOURIST_POINT_NEARBY_LIMITS.MAX_RADIUS_KM);
-  return real;
+  return withDistance(
+    guides,
+    lat,
+    lng,
+    TOURIST_POINT_NEARBY_LIMITS.MAX_RADIUS_KM,
+  );
 }
 
 export function useNearbyGuides(lat: number | null, lng: number | null) {
