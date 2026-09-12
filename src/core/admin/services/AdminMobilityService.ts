@@ -2,11 +2,13 @@
  * AdminMobilityService
  *
  * Orquestra dados de mobilidade para o painel admin.
- * Todas as queries de banco são delegadas para MobilityAdminQueryService.
+ * Queries de banco ficam nos read services dedicados; este servico apenas
+ * compoe identidades, lifecycle e snapshots administrativos.
  */
 
 import { logger } from "@/shared/utils/logger";
 import { MobilityAdminQueryService } from "@/core/admin/services/MobilityAdminQueryService";
+import { AdminDriverLifecycleMetricsService } from "@/core/admin/services/AdminDriverLifecycleMetricsService";
 import { profileService } from "@/core/profiles/services/ProfileService";
 
 export interface AdminDriverData {
@@ -17,11 +19,10 @@ export interface AdminDriverData {
   avatar_url?: string;
   rating: number;
   total_rides: number;
-  total_earnings: number;
   is_verified: boolean;
-  total_rides_accepted: number;
-  total_rides_cancelled: number;
-  cancellation_rate: number;
+  assigned_ride_count: number;
+  driver_cancelled_ride_count: number;
+  driver_cancellation_rate: number;
   suspension_count: number;
 }
 
@@ -74,53 +75,41 @@ type ProfileSummaryWithAvatar = {
 class AdminMobilityServiceClass {
   async getDriversWithStats(): Promise<AdminDriverData[]> {
     try {
-
-      // ✅ Delegado para MobilityAdminQueryService
       const data = await MobilityAdminQueryService.getDriversRaw();
+      const profileIds = [...new Set(data.map((driver) => driver.profile_id))];
 
-      const profileIds = [...new Set(data.map((d) => d.profile_id))] as string[];
-      const profiles = await profileService.getProfilesSummary(profileIds);
-      const profilesMap = new Map(profiles.map((p) => [p.id, p]));
+      const [profiles, lifecycleByProfile] = await Promise.all([
+        profileService.getProfilesSummary(profileIds),
+        AdminDriverLifecycleMetricsService.load(profileIds),
+      ]);
+      const profilesMap = new Map(profiles.map((profile) => [profile.id, profile]));
 
-      const driversWithStats = await Promise.all(
-        data.map(async (driver) => {
-          const profile = profilesMap.get(driver.profile_id);
+      return data.map((driver) => {
+        const profile = profilesMap.get(driver.profile_id);
+        const lifecycle = lifecycleByProfile.get(driver.profile_id) ?? {
+          assignedRideCount: 0,
+          driverCancelledRideCount: 0,
+          driverCancellationRate: 0,
+          suspensionCount: 0,
+        };
+        const profileWithAvatar = profile as ProfileSummaryWithAvatar | undefined;
 
-          // ✅ Delegado para MobilityAdminQueryService
-          const rideStats = await MobilityAdminQueryService.getDriverRideStatuses(driver.profile_id);
-
-          const totalRidesAccepted = rideStats.filter((r) =>
-            ["accepted", "driver_assigned", "in_progress", "completed"].includes(r.status),
-          ).length;
-
-          const totalRidesCancelled = rideStats.filter((r) => r.status === "cancelled").length;
-
-          const cancellationRate =
-            totalRidesAccepted > 0 ? (totalRidesCancelled / totalRidesAccepted) * 100 : 0;
-
-          // ✅ Delegado para MobilityAdminQueryService
-          const suspensionCount = await MobilityAdminQueryService.countDriverSuspensions(driver.user_id);
-
-          const profileWithAvatar = profile as ProfileSummaryWithAvatar | undefined;
-          return {
-            id: driver.id,
-            profile_id: driver.profile_id,
-            user_id: driver.user_id,
-            name: profile?.displayName || "Motorista",
-            avatar_url: profileWithAvatar?.avatar_url ?? profileWithAvatar?.avatarUrl ?? undefined,
-            rating: driver.rating || 0,
-            total_rides: driver.total_rides || 0,
-            total_earnings: driver.total_earnings || 0,
-            is_verified: driver.is_verified || false,
-            total_rides_accepted: totalRidesAccepted,
-            total_rides_cancelled: totalRidesCancelled,
-            cancellation_rate: cancellationRate,
-            suspension_count: suspensionCount,
-          };
-        }),
-      );
-
-      return driversWithStats;
+        return {
+          id: driver.id,
+          profile_id: driver.profile_id,
+          user_id: driver.user_id,
+          name: profile?.displayName || "Motorista",
+          avatar_url:
+            profileWithAvatar?.avatar_url ?? profileWithAvatar?.avatarUrl ?? undefined,
+          rating: driver.rating || 0,
+          total_rides: driver.total_rides || 0,
+          is_verified: driver.is_verified || false,
+          assigned_ride_count: lifecycle.assignedRideCount,
+          driver_cancelled_ride_count: lifecycle.driverCancelledRideCount,
+          driver_cancellation_rate: lifecycle.driverCancellationRate,
+          suspension_count: lifecycle.suspensionCount,
+        };
+      });
     } catch (error) {
       logger.error("Error in getDriversWithStats:", error);
       throw error;
@@ -129,17 +118,16 @@ class AdminMobilityServiceClass {
 
   async getRideStats(): Promise<AdminRideStats> {
     try {
-      // ✅ Delegado para MobilityAdminQueryService
       const rides = await MobilityAdminQueryService.getRideStats();
 
       return {
         total_rides: rides.length,
-        completed_rides: rides.filter((r) => r.status === "completed").length,
-        cancelled_rides: rides.filter((r) => r.status === "cancelled").length,
-        pending_rides: rides.filter((r) => r.status === "pending").length,
+        completed_rides: rides.filter((ride) => ride.status === "completed").length,
+        cancelled_rides: rides.filter((ride) => ride.status === "cancelled").length,
+        pending_rides: rides.filter((ride) => ride.status === "pending").length,
         total_revenue: rides
-          .filter((r) => r.status === "completed" && r.final_price)
-          .reduce((sum, r) => sum + (r.final_price || 0), 0),
+          .filter((ride) => ride.status === "completed" && ride.final_price)
+          .reduce((sum, ride) => sum + (ride.final_price || 0), 0),
       };
     } catch (error) {
       logger.error("Error in getRideStats:", error);
@@ -158,13 +146,6 @@ class AdminMobilityServiceClass {
   async getTopDrivers(limit = 10): Promise<AdminDriverData[]> {
     const drivers = await this.getDriversWithStats();
     return drivers.sort((a, b) => b.rating - a.rating).slice(0, limit);
-  }
-
-  async getHighCancellationDrivers(threshold = 25): Promise<AdminDriverData[]> {
-    const drivers = await this.getDriversWithStats();
-    return drivers
-      .filter((d) => d.cancellation_rate > threshold)
-      .sort((a, b) => b.cancellation_rate - a.cancellation_rate);
   }
 
   async getAllDriversComplete(): Promise<unknown[]> {
@@ -263,4 +244,3 @@ class AdminMobilityServiceClass {
 }
 
 export const adminMobilityService = new AdminMobilityServiceClass();
-
