@@ -15,6 +15,7 @@ import {
   type AdminFraudAlertRow,
   type FraudRideSummary,
 } from "@/core/admin/services/AdminFraudService";
+import { FRAUD_ALERT_STATUS } from "@/modules/admin/types/fraudDetection";
 
 import {
   AlertTriangle,
@@ -26,7 +27,6 @@ import {
   Eye,
 } from "lucide-react";
 import { toast } from "sonner";
-import { ALERT_STATUS } from "@/shared/types/constants";
 import { logger } from "@/shared/utils/logger";
 
 type FraudDriverSummary = {
@@ -149,13 +149,13 @@ export function FraudDetectionPanel() {
 
   const getStatusColor = (status: string) => {
     switch (status) {
-      case "confirmed":
+      case FRAUD_ALERT_STATUS.CONFIRMED:
         return "bg-red-500/10 text-red-500";
-      case "false_positive":
+      case FRAUD_ALERT_STATUS.FALSE_POSITIVE:
         return "bg-green-500/10 text-green-500";
-      case ALERT_STATUS.RESOLVED:
+      case FRAUD_ALERT_STATUS.RESOLVED:
         return "bg-blue-500/10 text-blue-500";
-      case "investigating":
+      case FRAUD_ALERT_STATUS.INVESTIGATING:
         return "bg-yellow-500/10 text-yellow-500";
       default:
         return "bg-gray-500/10 text-gray-500";
@@ -307,7 +307,7 @@ export function FraudDetectionPanel() {
                   </p>
                 </div>
 
-                {alert.status === ALERT_STATUS.PENDING && (
+                {alert.status === FRAUD_ALERT_STATUS.PENDING && (
                   <Button
                     size="sm"
                     variant="outline"
@@ -331,7 +331,7 @@ export function FraudDetectionPanel() {
                   <div className="flex gap-2 flex-wrap">
                     <Button
                       size="sm"
-                      onClick={() => updateAlertStatus(alert.id, "confirmed")}
+                      onClick={() => updateAlertStatus(alert.id, FRAUD_ALERT_STATUS.CONFIRMED)}
                       className="bg-red-500 hover:bg-red-600"
                     >
                       <XCircle className="h-4 w-4 mr-1" />
@@ -339,7 +339,7 @@ export function FraudDetectionPanel() {
                     </Button>
                     <Button
                       size="sm"
-                      onClick={() => updateAlertStatus(alert.id, "false_positive")}
+                      onClick={() => updateAlertStatus(alert.id, FRAUD_ALERT_STATUS.FALSE_POSITIVE)}
                       className="bg-green-500 hover:bg-green-600"
                     >
                       <CheckCircle2 className="h-4 w-4 mr-1" />
@@ -348,7 +348,7 @@ export function FraudDetectionPanel() {
                     <Button
                       size="sm"
                       variant="outline"
-                      onClick={() => updateAlertStatus(alert.id, "investigating")}
+                      onClick={() => updateAlertStatus(alert.id, FRAUD_ALERT_STATUS.INVESTIGATING)}
                     >
                       Investigar
                     </Button>
