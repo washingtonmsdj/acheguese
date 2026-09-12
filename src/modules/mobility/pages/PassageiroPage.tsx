@@ -1,48 +1,48 @@
 /**
  * Painel do Passageiro - mobile-first
- * UI superior a Uber/99, otimizada para mobile
  */
 
-import { useState, useEffect } from "react";
+import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
+import {
+  isDriverOwnedOpenRideStatus,
+  isOpenRideStatus,
+  isPreAcceptRideStatus,
+} from "@/core/mobility/core/RideLifecycleStatus";
+import { PASSENGER_PAGE_LABELS } from "@/core/mobility/constants/passengerPageLabels";
+import type { RideRequest } from "@/core/mobility/types";
 import { useMobilidade } from "@/modules/mobility/hooks/useMobilidade";
 import { useMobilityUrls } from "@/modules/mobility/hooks/useMobilityUrls";
 import { RIDE_STATUS } from "@/shared/types/constants";
-import { PASSENGER_PAGE_LABELS } from "@/core/mobility/constants/passengerPageLabels";
-import { CreateRideModal } from "../components/CreateRideModal";
-import { RideHistoryUnified } from "../components/RideHistoryUnified";
-import { RateDriverModal } from "../components/passenger/RateDriverModal";
-import { RideCompletionConfirmation } from "../components/passenger/RideCompletionConfirmation";
-import { CancelRideDialog } from "../components/driver/CancelRideDialog";
-import { ActiveRideCard } from "../components/passenger/ActiveRideCard";
-import { RideTrackingMap } from "../components/RideTrackingMap";
-import { EmergencyButton } from "../components/EmergencyButton";
-import { toast } from "sonner";
-import { trackError } from "@/shared/utils/errorTracking";
 import { Button } from "@/shared/components/ui/button";
 import { Badge } from "@/shared/components/ui/badge";
-import { motion, AnimatePresence } from "framer-motion";
+import { cn } from "@/shared/utils/cn";
+import { AnimatePresence, motion } from "framer-motion";
 import {
-  Car,
-  Plus,
   ArrowLeft,
-  MapPin,
-  History,
-  Star,
+  Car,
   CheckCircle2,
-  Shield,
-  Package,
-  Navigation,
-  Clock,
-  Zap,
   ChevronRight,
+  History,
+  Navigation,
+  Package,
+  Plus,
+  Shield,
   Sparkles,
-  TrendingUp,
+  Star,
+  Zap,
 } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
-import { cn } from "@/shared/utils/cn";
-import type { RideRequest } from "@/core/mobility/types";
+import { toast } from "sonner";
+import { CreateRideModal } from "../components/CreateRideModal";
+import { EmergencyButton } from "../components/EmergencyButton";
 import { ErrorBoundary, ErrorState } from "../components/ErrorBoundary";
+import { RideHistoryUnified } from "../components/RideHistoryUnified";
+import { RideTrackingMap } from "../components/RideTrackingMap";
+import { CancelRideDialog } from "../components/driver/CancelRideDialog";
+import { ActiveRideCard } from "../components/passenger/ActiveRideCard";
+import { RateDriverModal } from "../components/passenger/RateDriverModal";
+import { RideCompletionConfirmation } from "../components/passenger/RideCompletionConfirmation";
 
 const fadeUp = {
   hidden: { opacity: 0, y: 20 },
@@ -60,35 +60,6 @@ const stagger = {
 
 type ActiveTab = "ativas" | "historico" | "seguranca";
 
-const ACTIVE_RIDE_STATUSES: string[] = [
-  RIDE_STATUS.PENDING,
-  RIDE_STATUS.REQUESTED,
-  RIDE_STATUS.SEARCHING_DRIVER,
-  RIDE_STATUS.DRIVER_ASSIGNED,
-  RIDE_STATUS.DRIVER_ACCEPTED,
-  RIDE_STATUS.DRIVER_ARRIVING,
-  RIDE_STATUS.DRIVER_ON_THE_WAY,
-  RIDE_STATUS.DRIVER_ARRIVED,
-  RIDE_STATUS.PASSENGER_BOARDED,
-  RIDE_STATUS.PASSENGER_ON_BOARD,
-  RIDE_STATUS.IN_PROGRESS,
-];
-
-const SEARCHING_RIDE_STATUSES: string[] = [
-  RIDE_STATUS.SEARCHING_DRIVER,
-  RIDE_STATUS.REQUESTED,
-];
-
-const TRACKABLE_RIDE_STATUSES: string[] = [
-  RIDE_STATUS.DRIVER_ACCEPTED,
-  RIDE_STATUS.DRIVER_ARRIVING,
-  RIDE_STATUS.PASSENGER_BOARDED,
-  RIDE_STATUS.DRIVER_ASSIGNED,
-  RIDE_STATUS.DRIVER_ON_THE_WAY,
-  RIDE_STATUS.DRIVER_ARRIVED,
-  RIDE_STATUS.IN_PROGRESS,
-];
-
 export default function PassageiroPage() {
   const navigate = useNavigate();
   const mobilityUrls = useMobilityUrls();
@@ -101,35 +72,34 @@ export default function PassageiroPage() {
     reportRideProblem,
     error,
     refetch,
-    passengerRating = 5.0, // SSOT: rating vem do hook.
+    passengerRating = 5.0,
   } = useMobilidade();
   const [isCreateOpen, setIsCreateOpen] = useState(false);
-  const [createModalInitialType, setCreateModalInitialType] = useState<"viagem" | "entrega">("viagem");
+  const [createModalInitialType, setCreateModalInitialType] = useState<
+    "viagem" | "entrega"
+  >("viagem");
   const [ratingRide, setRatingRide] = useState<RideRequest | null>(null);
-  const [confirmationRide, setConfirmationRide] = useState<RideRequest | null>(null);
+  const [confirmationRide, setConfirmationRide] = useState<RideRequest | null>(
+    null,
+  );
   const [cancelDialogOpen, setCancelDialogOpen] = useState(false);
   const [rideToCancel, setRideToCancel] = useState<RideRequest | null>(null);
   const [activeTab, setActiveTab] = useState<ActiveTab>("ativas");
 
-  const activeRides = myRides.filter((r) => ACTIVE_RIDE_STATUSES.includes(r.status));
+  const activeRides = myRides.filter((ride) => isOpenRideStatus(ride.status));
 
-  // Auto-switch para aba "Ativas" quando ha corrida ativa.
   useEffect(() => {
     if (activeRides.length > 0) {
       setActiveTab("ativas");
     }
   }, [activeRides.length]);
+
   const completedRides = myRides.filter(
-    (r) => r.status === RIDE_STATUS.COMPLETED,
+    (ride) => ride.status === RIDE_STATUS.COMPLETED,
   );
-  const cancelledRides = myRides.filter(
-    (r) => r.status === RIDE_STATUS.CANCELLED || 
-           r.status === RIDE_STATUS.CANCELLED_BY_PASSENGER || 
-           r.status === RIDE_STATUS.CANCELLED_BY_DRIVER,
-  );
-  const needsRating = completedRides.filter((r) => !r.rating);
+  const needsRating = completedRides.filter((ride) => !ride.rating);
   const needsConfirmation = completedRides.filter(
-    (r) => !r.passenger_confirmed,
+    (ride) => !ride.passenger_confirmed,
   );
   const pendingConfirmationRide = needsConfirmation[0] ?? null;
 
@@ -179,7 +149,11 @@ export default function PassageiroPage() {
           </div>
           <div className="max-w-lg mx-auto px-4 py-8">
             <ErrorState
-              error={error ? new Error(error) : new Error(PASSENGER_PAGE_LABELS.ERROR_UNKNOWN)}
+              error={
+                error
+                  ? new Error(error)
+                  : new Error(PASSENGER_PAGE_LABELS.ERROR_UNKNOWN)
+              }
               onRetry={() => refetch()}
               title={PASSENGER_PAGE_LABELS.ERROR_TITLE}
               description={PASSENGER_PAGE_LABELS.ERROR_DESCRIPTION}
@@ -190,21 +164,33 @@ export default function PassageiroPage() {
     );
   }
 
-  const tabs: { id: ActiveTab; label: string; icon: LucideIcon; count?: number }[] = [
+  const tabs: {
+    id: ActiveTab;
+    label: string;
+    icon: LucideIcon;
+    count?: number;
+  }[] = [
     {
       id: "ativas",
       label: PASSENGER_PAGE_LABELS.TAB_ACTIVE,
       icon: Navigation,
       count: activeRides.length || undefined,
     },
-    { id: "historico", label: PASSENGER_PAGE_LABELS.TAB_HISTORY, icon: History },
-    { id: "seguranca", label: PASSENGER_PAGE_LABELS.TAB_SECURITY, icon: Shield },
+    {
+      id: "historico",
+      label: PASSENGER_PAGE_LABELS.TAB_HISTORY,
+      icon: History,
+    },
+    {
+      id: "seguranca",
+      label: PASSENGER_PAGE_LABELS.TAB_SECURITY,
+      icon: Shield,
+    },
   ];
 
   return (
     <ErrorBoundary onReset={() => window.location.reload()}>
       <div className="bg-background">
-        {/* Header */}
         <div className="sticky top-0 z-50 bg-card/80 backdrop-blur-2xl border-b border-border">
           <div className="max-w-lg mx-auto h-14 px-4 flex items-center justify-between">
             <div className="flex items-center gap-3">
@@ -244,8 +230,10 @@ export default function PassageiroPage() {
           initial="hidden"
           animate="visible"
         >
-          {/* Quick actions */}
-          <motion.div variants={fadeUp} className="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-5">
+          <motion.div
+            variants={fadeUp}
+            className="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-5"
+          >
             <button
               onClick={() => {
                 setCreateModalInitialType("viagem");
@@ -290,7 +278,6 @@ export default function PassageiroPage() {
             </button>
           </motion.div>
 
-          {/* Stats strip */}
           <motion.div
             variants={fadeUp}
             className="flex items-center gap-2 mb-5 overflow-x-auto pb-1"
@@ -317,32 +304,31 @@ export default function PassageiroPage() {
                 color: "text-warning",
                 bg: "bg-warning/10",
               },
-            ].map((s) => (
+            ].map((stat) => (
               <div
-                key={s.label}
+                key={stat.label}
                 className="flex items-center gap-2.5 px-3.5 py-2.5 rounded-2xl bg-card border border-border min-w-0 flex-1"
               >
                 <div
                   className={cn(
                     "w-8 h-8 rounded-xl flex items-center justify-center flex-shrink-0",
-                    s.bg,
+                    stat.bg,
                   )}
                 >
-                  <s.icon className={cn("h-4 w-4", s.color)} />
+                  <stat.icon className={cn("h-4 w-4", stat.color)} />
                 </div>
                 <div className="min-w-0">
-                  <p className={cn("text-sm font-bold leading-none", s.color)}>
-                    {s.value}
+                  <p className={cn("text-sm font-bold leading-none", stat.color)}>
+                    {stat.value}
                   </p>
                   <p className="text-[0.6rem] text-muted-foreground mt-0.5 truncate">
-                    {s.label}
+                    {stat.label}
                   </p>
                 </div>
               </div>
             ))}
           </motion.div>
 
-          {/* Rating Alert */}
           {needsRating.length > 0 && (
             <motion.div variants={fadeUp}>
               <button
@@ -370,7 +356,6 @@ export default function PassageiroPage() {
             </motion.div>
           )}
 
-          {/* Tab navigation */}
           <motion.div
             variants={fadeUp}
             className="flex items-center gap-1.5 p-1 rounded-2xl bg-card border border-border mb-5"
@@ -404,7 +389,6 @@ export default function PassageiroPage() {
             ))}
           </motion.div>
 
-          {/* Tab Content */}
           <AnimatePresence mode="wait">
             {activeTab === "ativas" && (
               <motion.div
@@ -433,65 +417,72 @@ export default function PassageiroPage() {
                       }}
                       className="bg-gradient-to-r from-primary to-accent text-primary-foreground rounded-xl font-bold shadow-lg shadow-primary/20"
                     >
-                      <Zap className="h-4 w-4 mr-2" /> {PASSENGER_PAGE_LABELS.ACTIVE_EMPTY_BUTTON}
+                      <Zap className="h-4 w-4 mr-2" />
+                      {PASSENGER_PAGE_LABELS.ACTIVE_EMPTY_BUTTON}
                     </Button>
                   </div>
                 ) : (
-                  activeRides.map((ride) => (
-                    <motion.div
-                      key={ride.id}
-                      initial={{ opacity: 0, y: 10 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      className="space-y-3"
-                    >
-                      {/* Card de busca proeminente para searching_driver/requested */}
-                      {SEARCHING_RIDE_STATUSES.includes(ride.status) && (
-                        <div className="rounded-2xl border border-primary/30 bg-gradient-to-br from-primary/10 to-accent/10 p-5 text-center">
-                          <div className="flex items-center justify-center mb-3">
-                            <div className="relative">
-                              <div className="w-14 h-14 rounded-full bg-primary/20 flex items-center justify-center animate-pulse">
-                                <Car className="h-7 w-7 text-primary" />
+                  activeRides.map((ride) => {
+                    const isPreAccept = isPreAcceptRideStatus(ride.status);
+                    const canTrackDriver =
+                      Boolean(ride.driver_profile_id) &&
+                      isDriverOwnedOpenRideStatus(ride.status);
+
+                    return (
+                      <motion.div
+                        key={ride.id}
+                        initial={{ opacity: 0, y: 10 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        className="space-y-3"
+                      >
+                        {isPreAccept ? (
+                          <div className="rounded-2xl border border-primary/30 bg-gradient-to-br from-primary/10 to-accent/10 p-5 text-center">
+                            <div className="flex items-center justify-center mb-3">
+                              <div className="relative">
+                                <div className="w-14 h-14 rounded-full bg-primary/20 flex items-center justify-center animate-pulse">
+                                  <Car className="h-7 w-7 text-primary" />
+                                </div>
+                                <div className="absolute inset-0 rounded-full border-2 border-primary/40 animate-ping" />
                               </div>
-                              <div className="absolute inset-0 rounded-full border-2 border-primary/40 animate-ping" />
                             </div>
+                            <h3 className="text-sm font-bold text-foreground mb-1">
+                              {PASSENGER_PAGE_LABELS.SEARCHING_TITLE}
+                            </h3>
+                            <p className="text-xs text-muted-foreground mb-1">
+                              {ride.origin || "Origem"}{" "}
+                              {PASSENGER_PAGE_LABELS.SEARCHING_ROUTE_SEPARATOR}{" "}
+                              {ride.destination || "Destino"}
+                            </p>
+                            <p className="text-[0.65rem] text-muted-foreground">
+                              {PASSENGER_PAGE_LABELS.SEARCHING_SUBTITLE}
+                            </p>
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              onClick={() => handleOpenCancelDialog(ride)}
+                              className="mt-4 text-xs border-destructive/30 text-destructive hover:bg-destructive/10 rounded-xl"
+                            >
+                              {PASSENGER_PAGE_LABELS.SEARCHING_CANCEL_BUTTON}
+                            </Button>
                           </div>
-                          <h3 className="text-sm font-bold text-foreground mb-1">
-                            {PASSENGER_PAGE_LABELS.SEARCHING_TITLE}
-                          </h3>
-                          <p className="text-xs text-muted-foreground mb-1">
-                            {ride.origin || "Origem"} {PASSENGER_PAGE_LABELS.SEARCHING_ROUTE_SEPARATOR} {ride.destination || "Destino"}
-                          </p>
-                          <p className="text-[0.65rem] text-muted-foreground">
-                            {PASSENGER_PAGE_LABELS.SEARCHING_SUBTITLE}
-                          </p>
-                          <Button
-                            variant="outline"
-                            size="sm"
-                            onClick={() => {
-                              const r = activeRides.find((x) => x.id === ride.id);
-                              if (r) handleOpenCancelDialog(r);
+                        ) : (
+                          <ActiveRideCard
+                            ride={ride}
+                            onCancel={(id) => {
+                              const activeRide = activeRides.find(
+                                (candidate) => candidate.id === id,
+                              );
+                              if (activeRide) handleOpenCancelDialog(activeRide);
                             }}
-                            className="mt-4 text-xs border-destructive/30 text-destructive hover:bg-destructive/10 rounded-xl"
-                          >
-                            {PASSENGER_PAGE_LABELS.SEARCHING_CANCEL_BUTTON}
-                          </Button>
-                        </div>
-                      )}
+                            onContact={() =>
+                              toast.info(
+                                PASSENGER_PAGE_LABELS.TOAST_OPENING_CHAT,
+                              )
+                            }
+                          />
+                        )}
 
-                      {/* Card normal para outros estados */}
-                      {!SEARCHING_RIDE_STATUSES.includes(ride.status) && (
-                        <ActiveRideCard
-                          ride={ride}
-                          onCancel={(id) => {
-                            const r = activeRides.find((x) => x.id === id);
-                            if (r) handleOpenCancelDialog(r);
-                          }}
-                          onContact={() => toast.info(PASSENGER_PAGE_LABELS.TOAST_OPENING_CHAT)}
-                        />
-                      )}
-
-                      {ride.driver_profile_id &&
-                        TRACKABLE_RIDE_STATUSES.includes(ride.status) && (
+                        {canTrackDriver && ride.driver_profile_id && (
                           <div className="rounded-2xl overflow-hidden border border-border">
                             <RideTrackingMap
                               driverProfileId={ride.driver_profile_id}
@@ -504,8 +495,9 @@ export default function PassageiroPage() {
                             />
                           </div>
                         )}
-                    </motion.div>
-                  ))
+                      </motion.div>
+                    );
+                  })
                 )}
               </motion.div>
             )}
@@ -540,7 +532,6 @@ export default function PassageiroPage() {
           </AnimatePresence>
         </motion.div>
 
-        {/* Floating action button */}
         {activeTab !== "ativas" && (
           <motion.div
             initial={{ scale: 0, opacity: 0 }}
@@ -565,7 +556,7 @@ export default function PassageiroPage() {
           onOpenChange={setIsCreateOpen}
           initialType={createModalInitialType}
           onSubmit={async (data) => {
-            const ride = await createRide(data) as { id?: string } | null;
+            const ride = (await createRide(data)) as { id?: string } | null;
             if (ride?.id) {
               navigate(mobilityUrls.passageiro.buscando(ride.id));
             }
@@ -577,7 +568,7 @@ export default function PassageiroPage() {
           onRate={rateRide}
         />
         <RideCompletionConfirmation
-          open={!!confirmationRide}
+          open={Boolean(confirmationRide)}
           onOpenChange={(open) => !open && setConfirmationRide(null)}
           ride={confirmationRide}
           onConfirm={async (rideId: string) => {
