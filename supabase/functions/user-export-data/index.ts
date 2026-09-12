@@ -674,7 +674,7 @@ async function collectExport(
     "driver_data",
     supabaseAdmin,
     "driver_data",
-    "id,profile_id,is_online,is_verified,subscription_active,vehicle,rating,total_rides,total_rides_completed,total_rides_cancelled,acceptance_rate,cancellation_rate,created_at,updated_at,license_number,license_category,license_expiry,license_state,vehicle_type,vehicle_plate,vehicle_model,vehicle_year,vehicle_color,is_available,documents_verified,documents_verified_at,background_check_status,background_check_date,can_do_delivery,can_do_rides",
+    "id,profile_id,is_verified,subscription_active,vehicle,rating,total_rides,total_rides_completed,total_rides_cancelled,acceptance_rate,cancellation_rate,created_at,updated_at,license_number,license_category,license_expiry,license_state,vehicle_type,vehicle_plate,vehicle_model,vehicle_year,vehicle_color,documents_verified,documents_verified_at,background_check_status,background_check_date,can_do_delivery,can_do_rides",
     "profile_id",
     profileIds,
   );
