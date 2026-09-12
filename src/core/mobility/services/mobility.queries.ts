@@ -108,26 +108,6 @@ function rideSortTimestamp(ride: unknown): number {
   return 0;
 }
 
-/**
- * Buscar corridas com ciclo operacional ainda aberto.
- * A lista pertence ao state machine; nao replique subconjuntos locais aqui.
- */
-export async function getActiveRides(): Promise<unknown[]> {
-  try {
-    const { data, error } = await supabaseClient
-      .from("ride_requests")
-      .select("*")
-      .in("status", QUERYABLE_OPEN_RIDE_STATUSES)
-      .order("created_at", { ascending: false });
-
-    if (error) throw error;
-    return data || [];
-  } catch (error) {
-    logger.error("MobilityQueries.getActiveRides", error as Error);
-    return [];
-  }
-}
-
 /** Buscar corrida por ID. */
 export async function getRideById(id: string): Promise<unknown | null> {
   try {
@@ -143,17 +123,6 @@ export async function getRideById(id: string): Promise<unknown | null> {
     logger.error("MobilityQueries.getRideById", error as Error);
     return null;
   }
-}
-
-/** Buscar todas as solicitacoes de corrida. */
-export async function getAllRideRequests(): Promise<unknown[]> {
-  const { data, error } = await supabaseClient
-    .from("ride_requests")
-    .select("*")
-    .order("created_at");
-
-  if (error) throw error;
-  return data || [];
 }
 
 /** Buscar corridas por passageiro. O passageiro e dono da solicitacao. */
