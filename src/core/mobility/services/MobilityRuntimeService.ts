@@ -112,6 +112,35 @@ type RideBasicInfoRow = {
   suggested_price: number | null;
 };
 
+const DRIVER_RUNTIME_IDENTITY_SELECT = [
+  "profile_id",
+  "is_verified",
+  "subscription_active",
+  "rating",
+  "total_rides",
+  "total_rides_completed",
+  "total_rides_cancelled",
+  "acceptance_rate",
+  "cancellation_rate",
+  "license_number",
+  "license_category",
+  "license_expiry",
+  "license_state",
+  "vehicle_type",
+  "vehicle_plate",
+  "vehicle_model",
+  "vehicle_year",
+  "vehicle_color",
+  "documents_verified",
+  "documents_verified_at",
+  "background_check_status",
+  "background_check_date",
+  "can_do_delivery",
+  "can_do_rides",
+  "created_at",
+  "updated_at",
+].join(", ");
+
 class MobilityServiceInstance {
   private async resolveDriverProfileId(identifier: string): Promise<string | null> {
     try {
@@ -161,7 +190,7 @@ class MobilityServiceInstance {
 
       const { data, error } = await db
         .from<DriverDataRecord>("driver_data")
-        .select("*")
+        .select(DRIVER_RUNTIME_IDENTITY_SELECT)
         .eq("profile_id", driverProfileId)
         .maybeSingle();
 
