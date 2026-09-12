@@ -184,27 +184,6 @@ export class MobilityService {
     return data || [];
   }
 
-  static async listRecentRidePickupLocations(limit = 300): Promise<unknown[]> {
-    const { data, error } = await db
-      .from("ride_requests")
-      .select(`
-        pickup_location_id,
-        pickup_location:locations!ride_requests_pickup_location_id_fkey (
-          id,
-          name,
-          full_name,
-          type,
-          geographic_path
-        )
-      `)
-      .not("pickup_location_id", "is", null)
-      .order("created_at", { ascending: false })
-      .limit(limit);
-
-    if (error) throw error;
-    return data || [];
-  }
-
   /**
    * Compatibility lookup for legacy static callers.
    *
