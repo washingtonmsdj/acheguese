@@ -12,7 +12,6 @@ export interface BoardingPointSummary {
   description: string;
   type: "mercado" | "praca" | "padaria" | "escola" | "igreja" | "cafe" | "outro";
   address: string;
-  popular: boolean;
   rides_count: number;
 }
 
@@ -23,6 +22,8 @@ interface PickupLocationJoin {
   type?: string;
   geographic_path?: string;
 }
+
+const RECENT_BOARDING_POINT_SAMPLE_LIMIT = 300;
 
 function classifyLocationType(locationName: string, locationType?: string): BoardingPointSummary["type"] {
   const normalized = `${locationType ?? ""} ${locationName}`.toLowerCase();
@@ -36,9 +37,11 @@ function classifyLocationType(locationName: string, locationType?: string): Boar
 }
 
 export class BoardingPointService {
-  static async listMostUsedPoints(limit = 20): Promise<BoardingPointSummary[]> {
+  static async listRecentFrequentPoints(limit = 20): Promise<BoardingPointSummary[]> {
     try {
-      const data = await MobilityService.listRecentRidePickupLocations(300);
+      const data = await MobilityService.listRecentRidePickupLocations(
+        RECENT_BOARDING_POINT_SAMPLE_LIMIT,
+      );
 
       const aggregate = new Map<string, { location: PickupLocationJoin; ridesCount: number }>();
       for (const rawRow of data ?? []) {
@@ -65,10 +68,9 @@ export class BoardingPointService {
           return {
             id,
             name: locationName,
-            description: `Ponto recorrente de embarque na região`,
+            description: "Ponto recorrente entre as corridas recentes analisadas",
             type: classifyLocationType(locationName, value.location.type),
             address,
-            popular: value.ridesCount >= 5,
             rides_count: value.ridesCount,
           } satisfies BoardingPointSummary;
         })
@@ -85,7 +87,3 @@ export class BoardingPointService {
     return { accepted: false };
   }
 }
-
-
-
-
