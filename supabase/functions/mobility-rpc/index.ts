@@ -8,6 +8,7 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 import { requireOperationalAccount } from "../_shared/accountOperational.ts";
+import { evaluateUserMfaPolicy } from "../_shared/mfaPolicy.ts";
 import {
   auditLog,
   extractBearerToken,
@@ -64,6 +65,7 @@ interface RequestBody {
 
 interface UserAuthResult {
   userId: string;
+  token: string;
   isProjectAdmin: boolean;
 }
 
@@ -391,13 +393,17 @@ function sanitizeDriverRegistrationExtension(
   };
 }
 
-async function isProjectAdmin(supabaseAdmin: SupabaseClient, userId: string): Promise<boolean> {
-  const { data, error } = await supabaseAdmin.rpc("is_admin", {
-    p_user_id: userId,
+async function isProjectAdmin(
+  supabaseAdmin: SupabaseClient,
+  userId: string,
+): Promise<boolean> {
+  const { data: roles, error } = await supabaseAdmin.rpc("get_user_roles", {
+    _user_id: userId,
   });
 
   if (error) throw error;
-  return data === true;
+  return Array.isArray(roles) &&
+    (roles.includes("admin") || roles.includes("super_admin"));
 }
 
 async function requireUser(
@@ -416,8 +422,65 @@ async function requireUser(
 
   return {
     userId: data.user.id,
+    token,
     isProjectAdmin: await isProjectAdmin(supabaseAdmin, data.user.id),
   };
+}
+
+async function requireAdminMfa(
+  supabaseAdmin: SupabaseClient,
+  auth: UserAuthResult,
+  operation: string,
+): Promise<void> {
+  if (!auth.isProjectAdmin) {
+    throw new RequestAuthorizationError(
+      "Project admin authority is required",
+    );
+  }
+
+  const mfaPolicy = await evaluateUserMfaPolicy(
+    supabaseAdmin,
+    auth.userId,
+    auth.token,
+  );
+
+  if (
+    mfaPolicy.enforced === true &&
+    mfaPolicy.required === false &&
+    mfaPolicy.reason === "satisfied"
+  ) {
+    return;
+  }
+
+  auditLog({
+    timestamp: new Date().toISOString(),
+    userId: auth.userId,
+    action: "mobility_admin_mfa_required",
+    resource: "mobility-rpc",
+    status: "failure",
+    details: {
+      operation,
+      reason: mfaPolicy.reason,
+      currentLevel: mfaPolicy.currentLevel,
+      hasVerifiedFactor: mfaPolicy.hasVerifiedFactor,
+    },
+  });
+
+  if (mfaPolicy.reason === "enrollment_required") {
+    throw new RequestAuthorizationError(
+      "MFA enrollment required for admin mobility action",
+    );
+  }
+
+  if (mfaPolicy.reason === "verification_required") {
+    throw new RequestAuthorizationError(
+      "MFA verification required for admin mobility action",
+    );
+  }
+
+  throw new RequestAuthorizationError(
+    "Admin MFA policy is not satisfied",
+  );
 }
 
 async function getRide(supabaseAdmin: SupabaseClient, rideId: string): Promise<RideRow> {
@@ -468,10 +531,6 @@ async function requireRideTransitionActor(
     throw new RequestAuthorizationError("Transition is reserved for dispatch or a dedicated command");
   }
 
-  if (auth.isProjectAdmin) {
-    return `admin:${auth.userId}`;
-  }
-
   const passengerOwned = await profileBelongsToUser(
     supabaseAdmin,
     ride.passenger_profile_id,
@@ -483,13 +542,8 @@ async function requireRideTransitionActor(
     auth.userId,
   );
 
-  if (toState === "searching_driver" || toState === "cancelled_by_passenger") {
-    if (!passengerOwned) {
-      throw new RequestAuthorizationError("Only the ride passenger can perform this transition");
-    }
-    return ride.passenger_profile_id as string;
-  }
-
+  const passengerTransition =
+    toState === "searching_driver" || toState === "cancelled_by_passenger";
   const driverStates = new Set([
     "driver_arriving",
     "passenger_boarded",
@@ -502,12 +556,13 @@ async function requireRideTransitionActor(
     "failed",
     "cancelled_by_driver",
   ]);
+  const driverTransition = driverStates.has(toState);
 
-  if (driverStates.has(toState)) {
-    if (!driverOwned || !ride.driver_profile_id) {
-      throw new RequestAuthorizationError("Only the assigned driver can perform this transition");
-    }
+  if (passengerTransition && passengerOwned && ride.passenger_profile_id) {
+    return ride.passenger_profile_id;
+  }
 
+  if (driverTransition && driverOwned && ride.driver_profile_id) {
     if (
       requestedActor !== undefined &&
       requestedActor !== null &&
@@ -518,6 +573,23 @@ async function requireRideTransitionActor(
     }
 
     return ride.driver_profile_id;
+  }
+
+  if (auth.isProjectAdmin) {
+    await requireAdminMfa(supabaseAdmin, auth, "transitionRideState");
+    return `admin:${auth.userId}`;
+  }
+
+  if (passengerTransition) {
+    throw new RequestAuthorizationError(
+      "Only the ride passenger can perform this transition",
+    );
+  }
+
+  if (driverTransition) {
+    throw new RequestAuthorizationError(
+      "Only the assigned driver can perform this transition",
+    );
   }
 
   throw new RequestAuthorizationError("Transition is not exposed to browser clients");
@@ -545,34 +617,37 @@ async function requireDeliveryTransitionActor(
   ride: RideRow,
   requestedActor: unknown,
 ): Promise<string> {
+  const driverOwned = Boolean(
+    ride.driver_profile_id &&
+      await profileBelongsToUser(
+        supabaseAdmin,
+        ride.driver_profile_id,
+        auth.userId,
+      ),
+  );
+
+  if (driverOwned && ride.driver_profile_id) {
+    if (
+      requestedActor !== undefined &&
+      requestedActor !== null &&
+      requestedActor !== ride.driver_profile_id
+    ) {
+      throw new RequestAuthorizationError(
+        "Actor profile does not match the assigned driver",
+      );
+    }
+
+    return ride.driver_profile_id;
+  }
+
   if (auth.isProjectAdmin) {
+    await requireAdminMfa(supabaseAdmin, auth, "transitionDeliveryState");
     return `admin:${auth.userId}`;
   }
 
-  if (
-    !ride.driver_profile_id ||
-    !await profileBelongsToUser(
-      supabaseAdmin,
-      ride.driver_profile_id,
-      auth.userId,
-    )
-  ) {
-    throw new RequestAuthorizationError(
-      "Only the assigned driver can perform this delivery command",
-    );
-  }
-
-  if (
-    requestedActor !== undefined &&
-    requestedActor !== null &&
-    requestedActor !== ride.driver_profile_id
-  ) {
-    throw new RequestAuthorizationError(
-      "Actor profile does not match the assigned driver",
-    );
-  }
-
-  return ride.driver_profile_id;
+  throw new RequestAuthorizationError(
+    "Only the assigned driver can perform this delivery command",
+  );
 }
 
 async function requireDeliveryVerification(
@@ -1348,11 +1423,11 @@ async function handleUpdateFailedDeliveryResolution(
   auth: UserAuthResult,
   params: Record<string, unknown>,
 ) {
-  if (!auth.isProjectAdmin) {
-    throw new RequestAuthorizationError(
-      "Admin authority is required to resolve failed deliveries",
-    );
-  }
+  await requireAdminMfa(
+    supabaseAdmin,
+    auth,
+    "updateFailedDeliveryResolution",
+  );
 
   const rideId = requireUuid(params.rideId ?? params.ride_id, "rideId");
   const resolutionUpdate = requireObject(
@@ -1391,11 +1466,18 @@ async function handleAcceptRide(
 
   await getRide(supabaseAdmin, rideId);
 
-  if (
-    !auth.isProjectAdmin &&
-    !await profileBelongsToUser(supabaseAdmin, driverProfileId, auth.userId)
-  ) {
-    throw new RequestAuthorizationError("User cannot accept rides with this driver profile");
+  const ownsDriverProfile = await profileBelongsToUser(
+    supabaseAdmin,
+    driverProfileId,
+    auth.userId,
+  );
+  if (!ownsDriverProfile) {
+    if (!auth.isProjectAdmin) {
+      throw new RequestAuthorizationError(
+        "User cannot accept rides with this driver profile",
+      );
+    }
+    await requireAdminMfa(supabaseAdmin, auth, "acceptRide");
   }
 
   const { data, error } = await supabaseAdmin.rpc("mobility_accept_ride_atomic", {
@@ -1414,9 +1496,7 @@ async function handleAdminRedispatch(
   auth: UserAuthResult,
   params: Record<string, unknown>,
 ) {
-  if (!auth.isProjectAdmin) {
-    throw new RequestAuthorizationError("Admin authority is required for redispatch");
-  }
+  await requireAdminMfa(supabaseAdmin, auth, "adminRedispatch");
 
   const rideId = requireUuid(params.rideId ?? params.ride_id, "rideId");
   const reason = optionalAuditReason(params.reason);
@@ -1603,16 +1683,21 @@ async function handleFindAvailableDriversForRide(
   const limit = optionalInteger(params.limit, "limit", 1, 100) ?? 25;
 
   const ride = await getRide(supabaseAdmin, rideId);
-  if (
-    !auth.isProjectAdmin &&
-    !await profileBelongsToUser(
+  const requesterOwned = await profileBelongsToUser(
+    supabaseAdmin,
+    ride.passenger_profile_id,
+    auth.userId,
+  );
+  if (!requesterOwned) {
+    if (!auth.isProjectAdmin) {
+      throw new RequestAuthorizationError(
+        "Only the ride requester or admin can discover drivers",
+      );
+    }
+    await requireAdminMfa(
       supabaseAdmin,
-      ride.passenger_profile_id,
-      auth.userId,
-    )
-  ) {
-    throw new RequestAuthorizationError(
-      "Only the ride requester or admin can discover drivers",
+      auth,
+      "findAvailableDriversForRide",
     );
   }
 
@@ -1635,11 +1720,11 @@ async function handleReconcileStaleDriverAvailability(
   auth: UserAuthResult,
   params: Record<string, unknown>,
 ) {
-  if (!auth.isProjectAdmin) {
-    throw new RequestAuthorizationError(
-      "Admin authority is required to reconcile stale drivers",
-    );
-  }
+  await requireAdminMfa(
+    supabaseAdmin,
+    auth,
+    "reconcileStaleDriverAvailability",
+  );
 
   const thresholdMinutes =
     optionalInteger(params.thresholdMinutes ?? params.threshold_minutes, "thresholdMinutes", 1, 1440)
@@ -1756,11 +1841,11 @@ async function handleEnsureAdminDriverProfile(
   supabaseAdmin: SupabaseClient,
   auth: UserAuthResult,
 ) {
-  if (!auth.isProjectAdmin) {
-    throw new RequestAuthorizationError(
-      "Project admin authority is required",
-    );
-  }
+  await requireAdminMfa(
+    supabaseAdmin,
+    auth,
+    "ensureAdminDriverProfile",
+  );
 
   const { data, error } = await supabaseAdmin.rpc(
     "mobility_rpc_ensure_admin_driver_profile",
