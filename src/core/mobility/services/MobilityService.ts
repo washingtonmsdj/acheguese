@@ -92,7 +92,7 @@ export {
   RideService,
   rideService,
   type RideRequest,
-} from "./RideService.impl";
+} from "./RideService";
 
 export {
   getChatByRideId,
