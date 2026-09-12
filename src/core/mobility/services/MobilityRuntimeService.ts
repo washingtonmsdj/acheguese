@@ -55,17 +55,6 @@ const db = supabase as unknown as MobilityRuntimeDbClient;
 
 type DriverDataRecord = Tables<"driver_data">;
 type RideRequestRecord = Tables<"ride_requests">;
-type DriverCompleteProfileRecord = {
-  profile_id: string;
-  display_name: string;
-  avg_rating: number;
-  total_rides: number;
-  avatar_url?: string | null;
-  created_at?: string;
-  vehicle_model?: string | null;
-  vehicle_color?: string | null;
-  vehicle_plate?: string | null;
-};
 type DriverVerificationStatusRow = {
   is_verified: boolean | null;
   subscription_active: boolean | null;
@@ -235,23 +224,6 @@ class MobilityServiceInstance {
         updates,
       });
       throw error;
-    }
-  }
-
-  async getDriverProfiles(): Promise<{
-    data: DriverCompleteProfileRecord[];
-    error: unknown;
-  }> {
-    try {
-      const { data, error } = await db
-        .from<DriverCompleteProfileRecord>("driver_complete_profile")
-        .select("*")
-        .order("created_at", { ascending: false });
-
-      return { data: data || [], error };
-    } catch (error) {
-      logger.error("mobilityService.getDriverProfiles", error as Error);
-      return { data: [], error };
     }
   }
 
