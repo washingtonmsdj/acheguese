@@ -1,4 +1,5 @@
 import { supabase } from "@/integrations/supabase";
+import type { Tables } from "@/integrations/supabase";
 import { logger } from "@/shared/utils/logger";
 import type {
   FraudAlert,
@@ -17,6 +18,7 @@ type TableClient<TRow> = PromiseLike<QueryPayload<TRow>> & {
   select(columns?: string, options?: { count?: "exact"; head?: boolean }): TableClient<TRow>;
   update(values: Record<string, unknown>): TableClient<TRow>;
   eq(column: string, value: unknown): TableClient<TRow>;
+  in(column: string, values: readonly unknown[]): TableClient<TRow>;
   order(column: string, options?: { ascending: boolean }): TableClient<TRow>;
   limit(value: number): TableClient<TRow>;
 };
@@ -27,6 +29,32 @@ type AdminFraudDbClient = {
 
 const db = supabase as unknown as AdminFraudDbClient;
 
+type FraudAlertReadRow = Pick<
+  FraudAlert,
+  | "id"
+  | "ride_id"
+  | "driver_profile_id"
+  | "status"
+  | "severity"
+  | "fraud_type"
+  | "description"
+  | "evidence"
+  | "created_at"
+>;
+
+type FraudRideSummaryDbRow = Pick<
+  Tables<"ride_requests">,
+  "id" | "origin" | "destination"
+>;
+
+export interface FraudRideSummary {
+  id: string;
+  origin: string | null;
+  destination: string | null;
+}
+
+export type AdminFraudAlertRow = FraudAlertReadRow;
+
 export interface FraudStats {
   total: number;
   pending: number;
@@ -34,11 +62,13 @@ export interface FraudStats {
 }
 
 export class AdminFraudService {
-  static async getAlerts(limit = 50): Promise<FraudAlert[]> {
+  static async getAlerts(limit = 50): Promise<AdminFraudAlertRow[]> {
     try {
       const { data, error } = await db
-        .from<FraudAlert>("fraud_alerts")
-        .select("*")
+        .from<FraudAlertReadRow>("fraud_alerts")
+        .select(
+          "id, ride_id, driver_profile_id, status, severity, fraud_type, description, evidence, created_at",
+        )
         .order("created_at", { ascending: false })
         .limit(limit);
 
@@ -50,17 +80,43 @@ export class AdminFraudService {
     }
   }
 
+  static async getRideSummaries(
+    rideIds: readonly string[],
+  ): Promise<FraudRideSummary[]> {
+    const uniqueRideIds = [...new Set(rideIds.filter(Boolean))];
+    if (uniqueRideIds.length === 0) return [];
+
+    try {
+      const { data, error } = await db
+        .from<FraudRideSummaryDbRow>("ride_requests")
+        .select("id, origin, destination")
+        .in("id", uniqueRideIds);
+
+      if (error) throw error;
+      return (data ?? []).map((ride) => ({
+        id: ride.id,
+        origin: ride.origin ?? null,
+        destination: ride.destination ?? null,
+      }));
+    } catch (error) {
+      logger.error("AdminFraudService.getRideSummaries", error as Error, {
+        rideCount: uniqueRideIds.length,
+      });
+      throw error;
+    }
+  }
+
   static async getStats(): Promise<FraudStats> {
     try {
       const [{ count: total }, { count: pending }, { count: critical }] = await Promise.all([
-        db.from<FraudAlert>("fraud_alerts").select("*", { count: "exact", head: true }),
+        db.from<FraudAlert>("fraud_alerts").select("id", { count: "exact", head: true }),
         db
           .from<FraudAlert>("fraud_alerts")
-          .select("*", { count: "exact", head: true })
+          .select("id", { count: "exact", head: true })
           .eq("status", "pending"),
         db
           .from<FraudAlert>("fraud_alerts")
-          .select("*", { count: "exact", head: true })
+          .select("id", { count: "exact", head: true })
           .eq("severity", "critical"),
       ]);
 
