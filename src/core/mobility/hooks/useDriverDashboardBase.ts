@@ -13,6 +13,7 @@ import {
   getRidesByDriverProfile,
 } from "@/core/mobility/services/mobility.queries";
 import { RideOperationalService } from "@/core/mobility/core/RideOperationalService";
+import { isCancelledRideStatus } from "@/core/mobility/core/RideLifecycleStatus";
 import { RIDE_STATE } from "@/core/mobility/core/RideStateMachine";
 import { logger } from "@/shared/utils/logger";
 import { RIDE_STATUS, TIMEOUTS } from "@/core/mobility/constants";
@@ -82,7 +83,7 @@ function sumRideAmounts(
 }
 
 function isPayableRide(ride: MobilityRide): boolean {
-  return ride.status === RIDE_STATUS.COMPLETED || ride.status === RIDE_STATUS.DELIVERED;
+  return ride.status === RIDE_STATE.COMPLETED;
 }
 
 function clampRating(value: number): number {
@@ -378,7 +379,7 @@ export function useDriverDashboardBase({
     completedRides: driverData?.total_rides_completed ?? payableCompletedByMe.length,
     cancelledRides:
       driverData?.total_rides_cancelled ??
-      rides.filter((ride) => ride.status === RIDE_STATUS.CANCELLED).length,
+      rides.filter((ride) => isCancelledRideStatus(ride.status)).length,
     onlineHoursToday: 0,
   };
 
