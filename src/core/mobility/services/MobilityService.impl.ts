@@ -170,20 +170,6 @@ export class MobilityService {
     if (error) throw error;
   }
 
-  static async getDriverRideSessions(driverProfileId: string, limit = 300): Promise<Array<{ started_at: string | null; completed_at: string | null }>> {
-    const { data, error } = await db
-      .from<{ started_at: string | null; completed_at: string | null }>("ride_requests")
-      .select("started_at, completed_at")
-      .eq("driver_profile_id", driverProfileId)
-      .not("started_at", "is", null)
-      .not("completed_at", "is", null)
-      .order("completed_at", { ascending: false })
-      .limit(limit);
-
-    if (error) throw error;
-    return data || [];
-  }
-
   /**
    * Compatibility lookup for legacy static callers.
    *
