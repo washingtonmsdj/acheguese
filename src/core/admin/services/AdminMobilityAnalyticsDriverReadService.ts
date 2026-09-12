@@ -11,6 +11,7 @@ type QueryPayload<TRow> = {
 
 type TableClient<TRow> = PromiseLike<QueryPayload<TRow>> & {
   select(columns: string): TableClient<TRow>;
+  in(column: string, values: readonly string[]): TableClient<TRow>;
 };
 
 type AnalyticsDriverDbClient = {
@@ -25,9 +26,14 @@ type DriverIdentityRelation = {
   avatar_url: string | null;
 };
 
-type AnalyticsDriverDbRow = Pick<
+type AnalyticsDriverMetricDbRow = Pick<
   Tables<"driver_data">,
   "profile_id" | "is_verified"
+>;
+
+type AnalyticsDriverDirectoryDbRow = Pick<
+  Tables<"driver_data">,
+  "profile_id"
 > & {
   profiles:
     | DriverIdentityRelation
@@ -35,9 +41,13 @@ type AnalyticsDriverDbRow = Pick<
     | null;
 };
 
-export interface AdminMobilityAnalyticsDriverRow {
+export interface AdminMobilityAnalyticsDriverMetricRow {
   id: string;
   is_verified: boolean;
+}
+
+export interface AdminMobilityAnalyticsDriverDirectoryRow {
+  id: string;
   name: string;
   profile: {
     name: string;
@@ -46,27 +56,53 @@ export interface AdminMobilityAnalyticsDriverRow {
 }
 
 function normalizeIdentity(
-  value: AnalyticsDriverDbRow["profiles"],
+  value: AnalyticsDriverDirectoryDbRow["profiles"],
 ): DriverIdentityRelation | null {
   if (Array.isArray(value)) return value[0] ?? null;
   return value as DriverIdentityRelation | null;
 }
 
 /**
- * Temporary analytics driver directory while G104 aggregate RPC is pending.
+ * Temporary analytics driver read boundary while G104 aggregate RPC is pending.
  *
- * The browser needs only verification plus minimal identity for the top-driver
- * presentation. Ratings, ride totals, vehicle fields and operational presence
- * are intentionally excluded from this global analytics payload.
+ * Global analytics only needs driver cardinality + verification. Identity is
+ * fetched separately and only for driver ids that can actually appear in the
+ * selected-window ranking. Operational presence remains owned exclusively by
+ * driver_availability and never enters this service.
  */
 export class AdminMobilityAnalyticsDriverReadService {
-  static async list(): Promise<AdminMobilityAnalyticsDriverRow[]> {
+  static async listMetricRows(): Promise<AdminMobilityAnalyticsDriverMetricRow[]> {
     try {
       const { data, error } = await analyticsDriverDb
-        .from<AnalyticsDriverDbRow>("driver_data")
-        .select(
-          "profile_id, is_verified, profiles!inner(name, display_name, avatar_url)",
-        );
+        .from<AnalyticsDriverMetricDbRow>("driver_data")
+        .select("profile_id, is_verified");
+
+      if (error) throw error;
+
+      return (data ?? []).map((row) => ({
+        id: row.profile_id,
+        is_verified: row.is_verified ?? false,
+      }));
+    } catch (error) {
+      logger.error(
+        "AdminMobilityAnalyticsDriverReadService.listMetricRows",
+        error as Error,
+      );
+      throw error;
+    }
+  }
+
+  static async listDirectory(
+    profileIds: readonly string[],
+  ): Promise<AdminMobilityAnalyticsDriverDirectoryRow[]> {
+    const uniqueProfileIds = [...new Set(profileIds.filter(Boolean))];
+    if (uniqueProfileIds.length === 0) return [];
+
+    try {
+      const { data, error } = await analyticsDriverDb
+        .from<AnalyticsDriverDirectoryDbRow>("driver_data")
+        .select("profile_id, profiles!inner(name, display_name, avatar_url)")
+        .in("profile_id", uniqueProfileIds);
 
       if (error) throw error;
 
@@ -75,7 +111,6 @@ export class AdminMobilityAnalyticsDriverReadService {
         const name = profile?.display_name ?? profile?.name ?? "Motorista";
         return {
           id: row.profile_id,
-          is_verified: row.is_verified ?? false,
           name,
           profile: {
             name,
@@ -84,7 +119,11 @@ export class AdminMobilityAnalyticsDriverReadService {
         };
       });
     } catch (error) {
-      logger.error("AdminMobilityAnalyticsDriverReadService.list", error as Error);
+      logger.error(
+        "AdminMobilityAnalyticsDriverReadService.listDirectory",
+        error as Error,
+        { profileCount: uniqueProfileIds.length },
+      );
       throw error;
     }
   }
