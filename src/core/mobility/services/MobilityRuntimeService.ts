@@ -17,6 +17,10 @@ import {
   toRideRequestReadModel,
   type RideRequestReadRow,
 } from "./RideRequestReadModel";
+import {
+  RIDE_SEARCH_SNAPSHOT_SELECT,
+  type RideSearchSnapshotRow,
+} from "./RideSearchSnapshotReadModel";
 
 type ErrorLike = { message?: string | null; code?: string | null } | null;
 
@@ -58,7 +62,6 @@ type MobilityRuntimeDbClient = {
 const db = supabase as unknown as MobilityRuntimeDbClient;
 
 type DriverDataRecord = Tables<"driver_data">;
-type RideRequestRecord = Tables<"ride_requests">;
 type DriverVerificationStatusRow = {
   is_verified: boolean | null;
   subscription_active: boolean | null;
@@ -82,18 +85,6 @@ type DriverStatsDetailedRow = Pick<
   is_online: boolean;
   is_available: boolean;
   last_location_update: string | null;
-};
-type AddressSummaryRow = {
-  street: string | null;
-  latitude: number | null;
-  longitude: number | null;
-};
-type LocationNameRow = { name: string | null };
-type RideWithAddressesRow = RideRequestRecord & {
-  pickup_address?: AddressSummaryRow | null;
-  dropoff_address?: AddressSummaryRow | null;
-  pickup_location?: LocationNameRow | null;
-  dropoff_location?: LocationNameRow | null;
 };
 type RideAvailableSeatsRow = { available_seats: number | null };
 type RideBasicInfoRow = {
@@ -351,17 +342,11 @@ class MobilityServiceInstance {
     }
   }
 
-  async getRideWithAddresses(rideId: string): Promise<RideWithAddressesRow | null> {
+  async getRideWithAddresses(rideId: string): Promise<RideSearchSnapshotRow | null> {
     try {
       const { data, error } = await db
-        .from<RideWithAddressesRow>("ride_requests")
-        .select(`
-          *,
-          pickup_address:addresses!pickup_address_id(street, latitude, longitude),
-          dropoff_address:addresses!dropoff_address_id(street, latitude, longitude),
-          pickup_location:locations!pickup_location_id(name),
-          dropoff_location:locations!dropoff_location_id(name)
-        `)
+        .from<RideSearchSnapshotRow>("ride_requests")
+        .select(RIDE_SEARCH_SNAPSHOT_SELECT)
         .eq("id", rideId)
         .maybeSingle();
 
