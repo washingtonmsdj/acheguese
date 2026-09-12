@@ -1,34 +1,39 @@
-import { RIDE_STATUS } from "@/shared/types/constants";
-
 export interface MobilidadeStats {
   totalRides: number;
+  openRides: number;
+  preAcceptRides: number;
+  driverOwnedOpenRides: number;
+  resolvedRides: number;
   completedRides: number;
   cancelledRides: number;
-  pendingRides: number;
-  inProgressRides: number;
+  failedRides: number;
+  expiredRides: number;
   totalDrivers: number;
   verifiedDrivers: number;
-  pendingDrivers: number;
-  rejectedDrivers: number;
-  totalRevenue: number;
+  unverifiedDrivers: number;
+  completedValue: number;
   avgRating: number;
-  approvalRate: number;
+  verificationRate: number;
   completionRate: number;
+  cancellationRate: number;
 }
 
 export interface DailyData {
   date: string;
-  rides: number;
-  revenue: number;
+  ridesCreated: number;
+  completedValue: number;
   completed: number;
   cancelled: number;
 }
 
 export interface AnalyticsRide {
   created_at: string;
+  updated_at?: string | null;
+  completed_at?: string | null;
+  cancelled_at?: string | null;
   status: string;
   final_price?: number | null;
-  suggested_price?: number | null;
+  actual_fare?: number | null;
   driver_profile_id?: string | null;
 }
 
@@ -46,7 +51,7 @@ export interface TopDriverAnalytics {
     profile?: { name?: string; avatar_url?: string; neighborhood?: string };
   };
   count: number;
-  revenue: number;
+  completedValue: number;
 }
 
 export interface RideDistributionItem {
@@ -62,13 +67,13 @@ export const PIE_COLORS = [
 ];
 
 export const chartConfig = {
-  rides: { label: "Corridas", color: "hsl(var(--primary))" },
-  revenue: { label: "Receita", color: "hsl(142 71% 45%)" },
-  completed: { label: "Completas", color: "hsl(142 71% 45%)" },
+  ridesCreated: { label: "Corridas criadas", color: "hsl(var(--primary))" },
+  completedValue: { label: "Valor concluído", color: "hsl(142 71% 45%)" },
+  completed: { label: "Concluídas", color: "hsl(142 71% 45%)" },
   cancelled: { label: "Canceladas", color: "hsl(var(--destructive))" },
 };
 
 export const rideStatusDataKeys = {
-  completed: RIDE_STATUS.COMPLETED,
-  cancelled: RIDE_STATUS.CANCELLED,
-};
+  completed: "completed",
+  cancelled: "cancelled",
+} as const;
