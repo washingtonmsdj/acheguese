@@ -56,8 +56,28 @@ type DriverDataWithProfileRow = Pick<
   profiles?: { user_id: string | null } | readonly { user_id: string | null }[] | null;
 };
 
+type DriverAnalyticsProfileRelation = {
+  name: string | null;
+  display_name: string | null;
+  avatar_url: string | null;
+};
+
+type DriverAnalyticsDirectoryRow = Pick<
+  Tables<"driver_data">,
+  | "profile_id"
+  | "rating"
+  | "total_rides"
+  | "is_verified"
+  | "vehicle_model"
+  | "vehicle_plate"
+> & {
+  profiles:
+    | DriverAnalyticsProfileRelation
+    | readonly DriverAnalyticsProfileRelation[]
+    | null;
+};
+
 type DriverCapabilityRow = Pick<Tables<"driver_data">, "profile_id" | "can_do_delivery">;
-type DriverCompleteProfileRow = Tables<"driver_complete_profile">;
 type RideRequestRow = Tables<"ride_requests">;
 type RideRatingRow = Pick<Tables<"ride_ratings">, "rating">;
 type ProfileRow = Tables<"profiles">;
@@ -91,6 +111,24 @@ export interface RawDriverProfile {
   rating: number;
   total_rides: number;
   is_verified: boolean;
+}
+
+export interface AdminDriverAnalyticsRow {
+  id: string;
+  profile_id: string;
+  name: string;
+  display_name: string;
+  avatar_url: string | null;
+  rating: number;
+  avg_rating: number;
+  total_rides: number;
+  is_verified: boolean;
+  vehicle_model: string | null;
+  vehicle_plate: string | null;
+  profile: {
+    name: string;
+    avatar_url: string | null;
+  };
 }
 
 export interface RawRide {
@@ -140,6 +178,13 @@ function isProfilesArray(
   return Array.isArray(value);
 }
 
+function normalizeDriverAnalyticsProfile(
+  value: DriverAnalyticsDirectoryRow["profiles"],
+): DriverAnalyticsProfileRelation | null {
+  if (Array.isArray(value)) return value[0] ?? null;
+  return value as DriverAnalyticsProfileRelation | null;
+}
+
 function mapCommunityPost(row: CommunityRidePostRow): RawCommunityPost {
   return {
     id: row.id,
@@ -176,6 +221,34 @@ function mapDriverProfile(row: DriverDataWithProfileRow): RawDriverProfile | nul
     rating: row.rating ?? 0,
     total_rides: row.total_rides ?? 0,
     is_verified: row.is_verified ?? false,
+  };
+}
+
+function mapDriverAnalyticsRow(
+  row: DriverAnalyticsDirectoryRow,
+): AdminDriverAnalyticsRow | null {
+  if (!row.profile_id) return null;
+
+  const profile = normalizeDriverAnalyticsProfile(row.profiles);
+  const name = profile?.display_name ?? profile?.name ?? "Motorista";
+  const rating = row.rating ?? 0;
+
+  return {
+    id: row.profile_id,
+    profile_id: row.profile_id,
+    name,
+    display_name: name,
+    avatar_url: profile?.avatar_url ?? null,
+    rating,
+    avg_rating: rating,
+    total_rides: row.total_rides ?? 0,
+    is_verified: row.is_verified ?? false,
+    vehicle_model: row.vehicle_model ?? null,
+    vehicle_plate: row.vehicle_plate ?? null,
+    profile: {
+      name,
+      avatar_url: profile?.avatar_url ?? null,
+    },
   };
 }
 
@@ -246,14 +319,23 @@ export class MobilityAdminQueryService {
     }
   }
 
-  static async getAllDriversComplete(): Promise<DriverCompleteProfileRow[]> {
+  /**
+   * Temporary admin analytics directory while G104 backend aggregation is pending.
+   * It is intentionally explicit and presence-free: operational presence is read
+   * from driver_availability by AdminDriverPresenceReadService.
+   */
+  static async getAllDriversComplete(): Promise<AdminDriverAnalyticsRow[]> {
     try {
       const { data, error } = await mobilityDb
-        .from<DriverCompleteProfileRow>("driver_complete_profile")
-        .select("*");
+        .from<DriverAnalyticsDirectoryRow>("driver_data")
+        .select(
+          "profile_id, rating, total_rides, is_verified, vehicle_model, vehicle_plate, profiles!inner(name, display_name, avatar_url)",
+        );
 
       if (error) throw error;
-      return data ?? [];
+      return (data ?? [])
+        .map(mapDriverAnalyticsRow)
+        .filter((driver): driver is AdminDriverAnalyticsRow => Boolean(driver));
     } catch (error) {
       logger.error("MobilityAdminQueryService.getAllDriversComplete", error as Error);
       throw error;
