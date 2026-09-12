@@ -14,6 +14,7 @@ import { profileService } from "@/core/profiles/services/ProfileService";
 import { QUERYABLE_OPEN_RIDE_STATUSES } from "@/core/mobility/core/RideLifecycleStatus";
 import { DriverEarningsReadService } from "./DriverEarningsReadService";
 import { RideRatingService } from "./RideRatingService";
+import { RideOperationalContextReadService } from "./RideOperationalContextReadService";
 
 type ErrorLike = { message?: string | null; code?: string | null } | null;
 
@@ -193,16 +194,15 @@ export class MobilityService {
     return data || [];
   }
 
+  /**
+   * Compatibility lookup for legacy static callers.
+   *
+   * This intentionally exposes only lifecycle/participant fields. UI/readback
+   * payloads belong to MobilityRuntimeService or a dedicated read model.
+   */
   static async getRideById(id: string): Promise<unknown | null> {
     try {
-      const { data, error } = await db
-        .from("ride_requests")
-        .select("*")
-        .eq("id", id)
-        .maybeSingle();
-
-      if (error) throw error;
-      return data;
+      return await RideOperationalContextReadService.getLifecycle(id);
     } catch (error) {
       logger.error("MobilityService.getRideById", error as Error);
       return null;
@@ -327,7 +327,7 @@ export class MobilityService {
   }
 
   /**
-   * Busca avaliação média do passageiro
+   * Busca avaliacao media do passageiro
    * Usado em: PassageiroPage
    */
   static async getPassengerRating(profileId: string): Promise<number> {
