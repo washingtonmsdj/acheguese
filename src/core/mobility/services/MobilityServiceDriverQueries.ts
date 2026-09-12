@@ -1,6 +1,7 @@
 import { supabase } from "@/integrations/supabase";
 import { profileService } from "@/core/profiles/services/ProfileService";
 import { logger } from "@/shared/utils/logger";
+import type { Json } from "@/integrations/supabase/types.generated";
 import { DriverEarningsReadService } from "./DriverEarningsReadService";
 import { RideRatingService } from "./RideRatingService";
 
@@ -59,15 +60,44 @@ export interface DriverOfferCapabilitiesRow {
 }
 
 type DriverCompleteProfileRow = {
+  profile_id: string | null;
+  display_name: string | null;
+  avg_rating: number | null;
+  total_rides: number | null;
+  avatar_url: string | null;
+  created_at: string | null;
+  updated_at: string | null;
+  vehicle: Json | null;
+};
+
+type DriverDirectoryProfileRelation = {
+  user_id: string | null;
+  name: string | null;
+  display_name: string | null;
+  avatar_url: string | null;
+  neighborhood: string | null;
+  city: string | null;
+};
+
+type DriverDirectoryRow = {
   profile_id: string;
-  display_name: string;
-  avg_rating: number;
+  rating: number | null;
   total_rides: number;
-  avatar_url?: string | null;
-  created_at?: string;
-  vehicle_model?: string;
-  vehicle_color?: string;
-  vehicle_plate?: string;
+  is_verified: boolean;
+  created_at: string;
+  updated_at: string;
+  license_number: string | null;
+  license_category: string | null;
+  license_expiry: string | null;
+  license_state: string | null;
+  vehicle_model: string | null;
+  vehicle_color: string | null;
+  vehicle_plate: string | null;
+  vehicle_year: number | null;
+  profiles:
+    | DriverDirectoryProfileRelation
+    | readonly DriverDirectoryProfileRelation[]
+    | null;
 };
 
 type DriverDataSummaryRow = {
@@ -78,6 +108,19 @@ type DriverDataSummaryRow = {
   is_verified: boolean | null;
   subscription_active: boolean | null;
 };
+
+function normalizeDirectoryProfile(
+  value: DriverDirectoryRow["profiles"],
+): DriverDirectoryProfileRelation | null {
+  if (Array.isArray(value)) return value[0] ?? null;
+  return value as DriverDirectoryProfileRelation | null;
+}
+
+function getVehicleField(vehicle: Json | null, key: string): string {
+  if (!vehicle || typeof vehicle !== "object" || Array.isArray(vehicle)) return "";
+  const value = vehicle[key];
+  return typeof value === "string" ? value : "";
+}
 
 export async function getDriverOfferCapabilities(
   driverProfileId: string,
@@ -100,13 +143,51 @@ export async function getDriverOfferCapabilities(
   };
 }
 
+/**
+ * Driver directory read model used by admin tooling.
+ *
+ * Registration facts come from driver_data, identity/location labels come from
+ * the related profile row, and operational presence is intentionally NOT read
+ * here. AdminMobilityRuntimeService overlays driver_availability separately.
+ */
 export async function getDriverProfiles(): Promise<{ data: unknown[]; error: unknown }> {
   try {
     const { data, error } = await mobilityDriverQueriesDb
-      .from<DriverCompleteProfileRow>("driver_complete_profile")
-      .select("*")
+      .from<DriverDirectoryRow>("driver_data")
+      .select(
+        "profile_id, rating, total_rides, is_verified, created_at, updated_at, license_number, license_category, license_expiry, license_state, vehicle_model, vehicle_color, vehicle_plate, vehicle_year, profiles!inner(user_id, name, display_name, avatar_url, neighborhood, city)",
+      )
       .order("created_at", { ascending: false });
-    return { data: data ?? [], error };
+
+    if (error) return { data: [], error };
+
+    return {
+      data: (data ?? []).map((row) => {
+        const profile = normalizeDirectoryProfile(row.profiles);
+        return {
+          profile_id: row.profile_id,
+          user_id: profile?.user_id ?? null,
+          name: profile?.display_name ?? profile?.name ?? null,
+          avatar_url: profile?.avatar_url ?? null,
+          neighborhood: profile?.neighborhood ?? null,
+          city: profile?.city ?? null,
+          rating: row.rating,
+          total_rides: row.total_rides,
+          is_verified: row.is_verified,
+          created_at: row.created_at,
+          updated_at: row.updated_at,
+          license_number: row.license_number,
+          license_category: row.license_category,
+          license_expiry: row.license_expiry,
+          license_state: row.license_state,
+          vehicle_model: row.vehicle_model,
+          vehicle_color: row.vehicle_color,
+          vehicle_plate: row.vehicle_plate,
+          vehicle_year: row.vehicle_year,
+        };
+      }),
+      error: null,
+    };
   } catch (error) {
     logger.error("MobilityQueries.getDriverProfiles", error as Error);
     return { data: [], error };
@@ -152,13 +233,15 @@ export async function getTopDrivers(
       .limit(limit);
 
     if (error) throw error;
-    return (data ?? []).map((row) => ({
-      id: row.profile_id,
-      name: row.display_name,
-      rating: row.avg_rating,
-      total_rides: row.total_rides,
-      profile: { avatar_url: row.avatar_url },
-    }));
+    return (data ?? [])
+      .filter((row) => Boolean(row.profile_id))
+      .map((row) => ({
+        id: row.profile_id as string,
+        name: row.display_name,
+        rating: row.avg_rating ?? 0,
+        total_rides: row.total_rides ?? 0,
+        profile: { avatar_url: row.avatar_url },
+      }));
   } catch (error) {
     logger.error("MobilityQueries.getTopDrivers", error as Error);
     return [];
@@ -207,6 +290,10 @@ export async function getCompletedRidePaymentsByDriver(
   }));
 }
 
+/**
+ * Public/participant-facing driver summary. The view contract exposes vehicle
+ * as JSON, not flattened vehicle_* columns; parse only the supported keys.
+ */
 export async function getDriverCompleteProfile(profileId: string): Promise<{
   display_name: string;
   vehicle_model: string;
@@ -216,18 +303,18 @@ export async function getDriverCompleteProfile(profileId: string): Promise<{
 } | null> {
   try {
     const { data, error } = await mobilityDriverQueriesDb
-      .from<Pick<DriverCompleteProfileRow, "display_name" | "vehicle_model" | "vehicle_color" | "vehicle_plate" | "avg_rating">>("driver_complete_profile")
-      .select("display_name, vehicle_model, vehicle_color, vehicle_plate, avg_rating")
+      .from<Pick<DriverCompleteProfileRow, "display_name" | "vehicle" | "avg_rating">>("driver_complete_profile")
+      .select("display_name, vehicle, avg_rating")
       .eq("profile_id", profileId)
       .single();
 
     if (error) throw error;
     return {
-      display_name: data.display_name,
-      vehicle_model: data.vehicle_model ?? "",
-      vehicle_color: data.vehicle_color ?? "",
-      vehicle_plate: data.vehicle_plate ?? "",
-      avg_rating: data.avg_rating,
+      display_name: data.display_name ?? "Motorista",
+      vehicle_model: getVehicleField(data.vehicle, "model"),
+      vehicle_color: getVehicleField(data.vehicle, "color"),
+      vehicle_plate: getVehicleField(data.vehicle, "plate"),
+      avg_rating: data.avg_rating ?? 0,
     };
   } catch (error) {
     logger.error("MobilityQueries.getDriverCompleteProfile", { profileId, error });
