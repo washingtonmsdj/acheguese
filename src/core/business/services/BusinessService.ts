@@ -123,42 +123,30 @@ import * as BusinessAdmin from "./business.admin";
 import * as BusinessHelpers from "./business.helpers";
 import type { Business, BusinessFilters } from "../types";
 
-const PUBLIC_BUSINESS_PAGE_SIZE = 100;
-const PUBLIC_BUSINESS_MAX_PAGES = 100;
+const PUBLIC_BUSINESS_COMPAT_PAGE_SIZE = 100;
 
 /**
- * Lista publica canonica de empresas.
+ * Lista publica bounded para consumidores ainda nao migrados para paginacao.
  *
- * O caminho legado em business.queries acessa business_data diretamente e e
- * mantido apenas temporariamente para compatibilidade interna. A fachada publica
- * usa exclusivamente public_business_search, evitando SELECT * na tabela-base.
+ * Novos fluxos devem usar getBusinessesList, busca espacial ou read model
+ * especializado. Esta fachada nunca materializa o catalogo inteiro em memoria:
+ * consulta somente a primeira pagina da view publica canonica.
  */
 export async function getBusinesses(
   filters: BusinessFilters = {},
 ): Promise<Business[]> {
-  const businesses: Business[] = [];
-  let pageParam = 0;
+  const { businesses } = await BusinessQueries.getBusinessesList({
+    pageParam: 0,
+    pageSize: PUBLIC_BUSINESS_COMPAT_PAGE_SIZE,
+    category: filters.category,
+    searchQuery: filters.search,
+    sortBy: filters.sortBy === "distancia" ? undefined : filters.sortBy,
+    filter: filters.territoryFilter,
+  });
 
-  for (let pageIndex = 0; pageIndex < PUBLIC_BUSINESS_MAX_PAGES; pageIndex += 1) {
-    const page = await BusinessQueries.getBusinessesList({
-      pageParam,
-      pageSize: PUBLIC_BUSINESS_PAGE_SIZE,
-      category: filters.category,
-      searchQuery: filters.search,
-      sortBy: filters.sortBy === "distancia" ? undefined : filters.sortBy,
-      filter: filters.territoryFilter,
-    });
-
-    businesses.push(...page.businesses);
-
-    if (page.nextPage === undefined) {
-      break;
-    }
-
-    pageParam = page.nextPage;
-  }
-
-  const wantedNeighborhood = filters.neighborhood?.trim().toLocaleLowerCase("pt-BR");
+  const wantedNeighborhood = filters.neighborhood
+    ?.trim()
+    .toLocaleLowerCase("pt-BR");
 
   return businesses.filter((business) => {
     if (filters.hasDelivery && !business.tem_delivery) {
@@ -166,8 +154,10 @@ export async function getBusinesses(
     }
 
     if (wantedNeighborhood) {
-      const locationName = business.location?.name?.trim().toLocaleLowerCase("pt-BR") ?? "";
-      const cityName = business.business_city?.trim().toLocaleLowerCase("pt-BR") ?? "";
+      const locationName =
+        business.location?.name?.trim().toLocaleLowerCase("pt-BR") ?? "";
+      const cityName =
+        business.business_city?.trim().toLocaleLowerCase("pt-BR") ?? "";
 
       if (
         locationName !== wantedNeighborhood &&
