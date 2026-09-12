@@ -1,7 +1,7 @@
 # G109 — Admin Mobility Analytics Ride Window
 
 Data: 2026-09-12
-Status: **SOURCE-CLOSED / G104 AINDA PENDENTE**
+Status: **SOURCE-CLOSED / G104 AINDA PENDENTE / REMOTE SCHEMA PREFLIGHT PENDENTE**
 
 ## Problema
 
@@ -30,10 +30,20 @@ A projeção foi limitada a:
 - `completed_at`;
 - `cancelled_at`;
 - `final_price`;
-- `actual_fare`;
+- `actual_fare` — mantido como divergência explícita até preflight remoto;
 - `driver_profile_id`.
 
 Não entram nesse payload rota, endereço, identidade de passageiro, notas, metadata de custódia ou presença operacional.
+
+## Divergência `actual_fare`
+
+A validação posterior contra `src/integrations/supabase/types.generated.ts` mostrou que o snapshot TypeScript versionado de `ride_requests.Row` não expõe `actual_fare`.
+
+Por outro lado, migrations posteriores G73/G74 referenciam explicitamente `ride.actual_fare` em `public.ride_requests`.
+
+Portanto o repositório possui uma divergência de fontes versionadas que não pode ser resolvida por suposição enquanto a introspecção SQL remota estiver indisponível. O reader G109 modela `actual_fare` explicitamente fora do `Pick<Tables<"ride_requests">,...>` para tornar essa exceção visível.
+
+O preflight remoto deve confirmar a coluna real e regenerar os tipos antes da promoção do G104. Este checkpoint não afirma que `actual_fare` existe ou não no ambiente remoto.
 
 ## Hook
 
@@ -59,7 +69,8 @@ O plano pendente `g104-admin-mobility-analytics-snapshot.md` foi reconciliado:
 
 - a leitura global de corridas já não faz parte do hook de analytics;
 - drivers e ratings globais ainda permanecem;
-- `AdminMobilityAnalyticsReadService` passa a ser a fronteira estável que futuramente trocará sua implementação pelo RPC agregado `mobility_get_admin_analytics_snapshot`.
+- `AdminMobilityAnalyticsReadService` passa a ser a fronteira estável que futuramente trocará sua implementação pelo RPC agregado `mobility_get_admin_analytics_snapshot`;
+- a semântica financeira envolvendo `actual_fare` não pode ser promovida em SQL sem resolver a divergência de schema no preflight.
 
 Nenhum DDL ou deploy Supabase foi executado.
 
@@ -71,10 +82,10 @@ O ratchet impede:
 
 - retorno de `getAllRides()` ao hook;
 - retorno de `select("*")` ao reader janelado;
-- inclusão de campos de rota/passsageiro na projeção;
+- inclusão de campos de rota/passageiro na projeção;
 - perda de qualquer um dos relógios de criação/resolução;
 - mudança silenciosa de “Avaliação média geral” para rating janelado.
 
 ## Validação
 
-Os diffs GitHub foram verificados após as escritas. Este checkpoint não declara suite verde: o ratchet foi versionado, mas nenhuma execução de CI confiável foi observada neste gate.
+Os diffs GitHub e o snapshot de tipos versionado foram verificados após as escritas. Este checkpoint não declara suite verde nem schema remoto certificado: o ratchet foi versionado, mas nenhuma execução de CI confiável foi observada neste gate e a divergência `actual_fare` permanece aberta para preflight remoto.
