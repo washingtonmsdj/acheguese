@@ -1,10 +1,12 @@
 import {
   LocationStatus,
   LocationType,
-  TERRITORIAL_GROUP_STATUS,
   type Location,
-  type TerritorialGroupWithMembers,
 } from "@/core/location/types";
+import {
+  TERRITORIAL_GROUP_STATUS,
+  type TerritorialGroupWithMembers,
+} from "@/core/territorial/contracts";
 import type { ResolvedTerritory } from "@/core/routing/hooks/useResolveTerritoryFromUrl";
 
 type FallbackInput = {
@@ -130,11 +132,15 @@ const complexoNordesteGroup: TerritorialGroupWithMembers = {
   updated_at: FALLBACK_TIMESTAMP,
 };
 
-export function isPublicTerritoryFallbackLocation(location: Location | null | undefined): boolean {
+export function isPublicTerritoryFallbackLocation(
+  location: Location | null | undefined,
+): boolean {
   return Boolean(location?.metadata?.[PUBLIC_FALLBACK_FLAG] === true);
 }
 
-export function resolvePublicTerritoryFallback(input: FallbackInput): ResolvedTerritory {
+export function resolvePublicTerritoryFallback(
+  input: FallbackInput,
+): ResolvedTerritory {
   const state = normalizeSegment(input.state);
   const city = normalizeSegment(input.city);
   const territorySlug = normalizeSegment(input.territorySlug);
