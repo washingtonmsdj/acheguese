@@ -1,220 +1,146 @@
-/**
- * GATE 3: Testes de Failed Delivery Metadata
- * 
- * Valida contrato de rastreamento de item em falhas de entrega
- */
+import { describe, expect, it } from "vitest";
+import type {
+  FailedDeliveryMetadata,
+  FailedDeliveryResolutionUpdate,
+  FailedDeliverySnapshotInput,
+} from "../../src/core/mobility/types/FailedDeliveryMetadata";
 
-import { describe, it, expect } from 'vitest';
-import type { FailedDeliveryMetadata } from '../../src/modules/mobility/types/FailedDeliveryMetadata';
-
-describe('GATE 3 - Failed Delivery Metadata', () => {
-  it('1. Snapshot válido - todos os campos obrigatórios', () => {
-    const metadata: FailedDeliveryMetadata = {
-      failure_reason: 'recipient_unavailable',
-      item_destination: 'return_to_sender',
-      item_current_holder: 'driver',
+describe("GATE 3 - Failed Delivery Metadata", () => {
+  it("accepts only the canonical initial failed-delivery snapshot shape", () => {
+    const metadata: FailedDeliverySnapshotInput = {
+      failure_reason: "recipient_unavailable",
+      item_destination: "awaiting_manual_resolution",
+      item_current_holder: "driver",
       timestamp: new Date().toISOString(),
-      resolution_status: 'pending'
+      resolution_status: "pending",
     };
 
-    expect(metadata.failure_reason).toBe('recipient_unavailable');
-    expect(metadata.item_destination).toBe('return_to_sender');
-    expect(metadata.item_current_holder).toBe('driver');
-    expect(metadata.timestamp).toBeDefined();
-    expect(metadata.resolution_status).toBe('pending');
-
-    console.log('✅ Snapshot válido com campos obrigatórios');
+    expect(metadata.failure_reason).toBe("recipient_unavailable");
+    expect(metadata.item_current_holder).toBe("driver");
+    expect(metadata.resolution_status).toBe("pending");
   });
 
-  it('2. Snapshot com resolution_notes quando failure_reason = other', () => {
-    const metadata: FailedDeliveryMetadata = {
-      failure_reason: 'other',
-      item_destination: 'awaiting_manual_resolution',
-      item_current_holder: 'driver',
+  it("keeps conditional snapshot evidence available without mixing resolution authority", () => {
+    const metadata: FailedDeliverySnapshotInput = {
+      failure_reason: "other",
+      item_destination: "awaiting_manual_resolution",
+      item_current_holder: "driver",
       timestamp: new Date().toISOString(),
-      resolution_status: 'pending',
-      resolution_notes: 'Situação complexa que requer análise'
-    };
-
-    expect(metadata.failure_reason).toBe('other');
-    expect(metadata.resolution_notes).toBeDefined();
-
-    console.log('✅ resolution_notes presente quando failure_reason = other');
-  });
-
-  it('3. Snapshot com campos opcionais', () => {
-    const metadata: FailedDeliveryMetadata = {
-      failure_reason: 'address_not_found',
-      item_destination: 'return_to_sender',
-      item_current_holder: 'driver',
-      timestamp: new Date().toISOString(),
-      resolution_status: 'pending',
+      resolution_status: "pending",
+      resolution_notes: "Situacao complexa que requer analise",
       failed_at_location: {
-        lat: -23.5505,
-        lng: -46.6333,
-        address: 'Rua X, 123'
+        lat: -12.9714,
+        lng: -38.5014,
+        address: "Salvador, BA",
       },
-      photos: ['url1', 'url2'],
-      attempt_number: 1
+      photos: ["evidence://photo-1"],
+      attempt_number: 1,
+      attempted_delivery_count: 1,
     };
 
-    expect(metadata.failed_at_location).toBeDefined();
-    expect(metadata.photos).toHaveLength(2);
-    expect(metadata.attempt_number).toBe(1);
-
-    console.log('✅ Campos opcionais aceitos no snapshot');
+    expect(metadata.resolution_notes).toBeTruthy();
+    expect(metadata.failed_at_location?.lat).toBe(-12.9714);
+    expect(metadata.photos).toHaveLength(1);
   });
 
-  it('4. Resolução posterior - next_ride_id', () => {
-    const metadata: FailedDeliveryMetadata = {
-      failure_reason: 'recipient_unavailable',
-      item_destination: 'return_to_sender',
-      item_current_holder: 'driver',
-      timestamp: new Date().toISOString(),
-      resolution_status: 'in_progress',
-      next_ride_id: '123e4567-e89b-12d3-a456-426614174000'
+  it("uses retry_delivery_requested for same-custodian retry commands", () => {
+    const update: FailedDeliveryResolutionUpdate = {
+      retry_delivery_requested: true,
+      resolution_action_notes: "Destinatario disponivel para nova tentativa.",
     };
 
-    expect(metadata.next_ride_id).toBeDefined();
-    expect(metadata.resolution_status).toBe('in_progress');
-
-    console.log('✅ next_ride_id aceito na resolução posterior');
+    expect(update.retry_delivery_requested).toBe(true);
+    expect(update.resolution_action_notes).toBeTruthy();
+    expect("next_ride_id" in update).toBe(false);
   });
 
-  it('5. Resolução posterior - handoff_driver_profile_id', () => {
-    const metadata: FailedDeliveryMetadata = {
-      failure_reason: 'driver_unavailable',
-      item_destination: 'handoff_to_another_driver',
-      item_current_holder: 'other_driver',
-      timestamp: new Date().toISOString(),
-      resolution_status: 'in_progress',
-      next_ride_id: '123e4567-e89b-12d3-a456-426614174000',
-      handoff_driver_profile_id: '987fcdeb-51a2-43f1-b789-123456789abc'
+  it("keeps handoff request separate from physical custody transfer", () => {
+    const update: FailedDeliveryResolutionUpdate = {
+      handoff_requested: true,
+      handoff_driver_profile_id: "987fcdeb-51a2-43f1-b789-123456789abc",
+      resolution_status: "in_progress",
+      resolution_action_notes: "Transferencia operacional solicitada.",
     };
 
-    expect(metadata.handoff_driver_profile_id).toBeDefined();
-    expect(metadata.item_current_holder).toBe('other_driver');
-
-    console.log('✅ handoff_driver_profile_id aceito na resolução posterior');
+    expect(update.handoff_requested).toBe(true);
+    expect(update.handoff_driver_profile_id).toBeTruthy();
+    expect(update.resolution_status).toBe("in_progress");
   });
 
-  it('6. Resolução posterior - escalated com owner', () => {
-    const metadata: FailedDeliveryMetadata = {
-      failure_reason: 'safety_issue',
-      item_destination: 'awaiting_manual_resolution',
-      item_current_holder: 'driver',
-      timestamp: new Date().toISOString(),
-      resolution_status: 'escalated',
-      manual_resolution_owner_profile_id: 'admin-profile-id'
+  it("supports manual escalation without inventing logistics state", () => {
+    const update: FailedDeliveryResolutionUpdate = {
+      resolution_status: "escalated",
+      manual_resolution_owner_profile_id: "admin-profile-id",
+      resolution_action_notes: "Analise administrativa necessaria.",
     };
 
-    expect(metadata.resolution_status).toBe('escalated');
-    expect(metadata.manual_resolution_owner_profile_id).toBeDefined();
-
-    console.log('✅ Escalation com owner aceito');
+    expect(update.resolution_status).toBe("escalated");
+    expect(update.manual_resolution_owner_profile_id).toBeTruthy();
   });
 
-  it('7. Resolução posterior - resolved com resolved_at', () => {
-    const metadata: FailedDeliveryMetadata = {
-      failure_reason: 'recipient_unavailable',
-      item_destination: 'return_to_sender',
-      item_current_holder: 'sender',
+  it("preserves next_ride_id only as historical read metadata", () => {
+    const legacyMetadata: FailedDeliveryMetadata = {
+      failure_reason: "recipient_unavailable",
+      item_destination: "return_to_sender",
+      item_current_holder: "driver",
       timestamp: new Date().toISOString(),
-      resolution_status: 'resolved',
+      resolution_status: "resolved",
+      next_ride_id: "123e4567-e89b-12d3-a456-426614174000",
       resolved_at: new Date().toISOString(),
-      resolution_action_notes: 'Item devolvido ao remetente com sucesso'
     };
 
-    expect(metadata.resolution_status).toBe('resolved');
-    expect(metadata.resolved_at).toBeDefined();
-    expect(metadata.resolution_action_notes).toBeDefined();
-
-    console.log('✅ Resolução completa com resolved_at');
+    expect(legacyMetadata.next_ride_id).toBeTruthy();
+    expect(legacyMetadata.resolution_status).toBe("resolved");
   });
 
-  it('8. Enums válidos - failure_reason', () => {
-    const validReasons = [
-      'recipient_unavailable',
-      'address_not_found',
-      'address_inaccessible',
-      'recipient_refused',
-      'vehicle_issue',
-      'driver_unavailable',
-      'safety_issue',
-      'package_damaged',
-      'other'
-    ];
+  it("represents the canonical G82 same-ride retry result in persisted metadata", () => {
+    const metadata: FailedDeliveryMetadata = {
+      failure_reason: "recipient_unavailable",
+      item_destination: "awaiting_manual_resolution",
+      item_current_holder: "driver",
+      timestamp: new Date().toISOString(),
+      resolution_status: "resolved",
+      resolution_plan: "retry_same_driver",
+      resolution_action: "retry_same_driver",
+      resolution_item_holder: "driver",
+      retry_driver_profile_id: "driver-profile-id",
+      retry_resumed_at: new Date().toISOString(),
+      resolved_at: new Date().toISOString(),
+    };
 
-    expect(validReasons).toHaveLength(9);
-    console.log('✅ 9 failure_reasons válidos');
+    expect(metadata.resolution_plan).toBe("retry_same_driver");
+    expect(metadata.resolution_action).toBe("retry_same_driver");
+    expect(metadata.retry_driver_profile_id).toBe("driver-profile-id");
+    expect(metadata.next_ride_id).toBeUndefined();
   });
 
-  it('9. Enums válidos - item_destination', () => {
-    const validDestinations = [
-      'return_to_sender',
-      'handoff_to_another_driver',
-      'awaiting_manual_resolution'
-    ];
+  it("represents receiver-confirmed custody lineage without requiring a successor ride", () => {
+    const metadata: FailedDeliveryMetadata = {
+      failure_reason: "driver_unavailable",
+      item_destination: "handoff_to_another_driver",
+      item_current_holder: "other_driver",
+      timestamp: new Date().toISOString(),
+      resolution_status: "resolved",
+      resolution_plan: "handoff_to_another_driver",
+      resolution_action: "handoff_to_another_driver",
+      resolution_item_holder: "other_driver",
+      handoff_driver_profile_id: "receiver-profile-id",
+      handoff_from_driver_profile_id: "original-profile-id",
+      handoff_confirmed_at: new Date().toISOString(),
+      handoff_accepted_at: new Date().toISOString(),
+      handoff_acceptance_source: "authenticated_driver_accept",
+      custody_handoff_history: [
+        {
+          from_driver_profile_id: "original-profile-id",
+          to_driver_profile_id: "receiver-profile-id",
+          confirmed_at: new Date().toISOString(),
+          source: "failed_delivery_handoff",
+        },
+      ],
+    };
 
-    expect(validDestinations).toHaveLength(3);
-    expect(validDestinations).not.toContain('held_at_hub'); // Removido
-
-    console.log('✅ 3 item_destinations válidos (held_at_hub removido)');
-  });
-
-  it('10. Enums válidos - item_current_holder', () => {
-    const validHolders = [
-      'driver',
-      'sender',
-      'other_driver',
-      'hub'
-    ];
-
-    expect(validHolders).toHaveLength(4);
-    expect(validHolders).not.toContain('recipient'); // Removido
-
-    console.log('✅ 4 item_holders válidos (recipient removido)');
-  });
-
-  it('11. Enums válidos - resolution_status', () => {
-    const validStatuses = [
-      'pending',
-      'in_progress',
-      'resolved',
-      'escalated'
-    ];
-
-    expect(validStatuses).toHaveLength(4);
-    console.log('✅ 4 resolution_statuses válidos');
-  });
-
-  it('12. Relatório de contrato implementado', () => {
-    console.log('\n========================================');
-    console.log('GATE 3 - FAILED DELIVERY METADATA');
-    console.log('========================================\n');
-    console.log('SNAPSHOT OBRIGATÓRIO:');
-    console.log('  ✅ failure_reason');
-    console.log('  ✅ item_destination');
-    console.log('  ✅ item_current_holder');
-    console.log('  ✅ timestamp');
-    console.log('  ✅ resolution_status (default: pending)');
-    console.log('\nCAMPOS CONDICIONAIS:');
-    console.log('  ✅ resolution_notes (se failure_reason = other)');
-    console.log('\nRESOLUÇÃO POSTERIOR:');
-    console.log('  ✅ next_ride_id');
-    console.log('  ✅ handoff_driver_profile_id');
-    console.log('  ✅ manual_resolution_owner_profile_id');
-    console.log('  ✅ resolved_at');
-    console.log('  ✅ resolution_action_notes');
-    console.log('\nENUMS FINAIS:');
-    console.log('  ✅ 9 failure_reasons');
-    console.log('  ✅ 3 item_destinations (held_at_hub removido)');
-    console.log('  ✅ 4 item_holders (recipient removido)');
-    console.log('  ✅ 4 resolution_statuses');
-    console.log('\n========================================');
-    console.log('CONTRATO: IMPLEMENTADO ✅');
-    console.log('========================================\n');
-
-    expect(true).toBe(true);
+    expect(metadata.item_current_holder).toBe("other_driver");
+    expect(metadata.custody_handoff_history).toHaveLength(1);
+    expect(metadata.next_ride_id).toBeUndefined();
   });
 });
