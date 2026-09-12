@@ -1,6 +1,6 @@
 /**
  * Admin Types - SSOT v2.0
- * 
+ *
  * Tipos compartilhados para operações administrativas
  */
 
@@ -16,14 +16,14 @@ export interface RealtimeMetrics {
   ridesPending: number;
   ridesToday: number;
   ridesCompleted: number;
-  revenueToday: number;
-  revenueWeek: number;
-  revenueMonth: number;
+  completedValueToday: number;
+  completedValueWeek: number;
+  completedValueMonth: number;
   avgResponseTime: number;
   avgRating: number;
   completionRate: number;
   lastUpdate: string;
-  systemHealth: 'healthy' | 'warning' | 'critical';
+  systemHealth: "healthy" | "warning" | "critical";
 }
 
 /**
