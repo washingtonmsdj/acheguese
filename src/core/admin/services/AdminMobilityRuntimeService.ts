@@ -1,11 +1,8 @@
-import { logger } from "@/shared/utils/logger";
 import { RolloutService } from "@/core/rollout/services/RolloutService";
 import { createRolloutRepository } from "@/core/rollout/repositories/createRolloutRepository";
 import { createLocationRepository } from "@/core/location/repositories/createLocationRepository";
 import { ModuleKey, RolloutStatus } from "@/core/rollout/types";
 import { MobilityService } from "@/core/mobility/services/runtime";
-import { mobilityService } from "@/core/mobility/services/runtime";
-import { DriverAvailabilityService } from "@/core/mobility/services/runtime";
 import { DriverModerationEventsService } from "@/core/mobility/services/runtime";
 import type { DriverModerationAction, DriverModerationEvent } from "@/core/mobility/services/runtime";
 import { getRecordValue } from "@/shared/utils/recordLookup";
@@ -27,19 +24,6 @@ export class AdminMobilityRuntimeService {
 
   async getTopDrivers(opts: { minRides?: number; limit?: number } = {}): Promise<unknown[]> {
     return MobilityService.getTopDrivers(opts);
-  }
-
-  async updateDriverOnlineStatus(driverProfileId: string, isOnline: boolean): Promise<void> {
-    await mobilityService.updateDriverOnlineStatus(driverProfileId, isOnline);
-    if (!isOnline) {
-      const result = await DriverAvailabilityService.goOffline(driverProfileId);
-      if (!result.success) {
-        logger.warn("AdminMobilityRuntimeService.updateDriverOnlineStatus.availability", {
-          driverProfileId,
-          error: result.error,
-        });
-      }
-    }
   }
 
   async createDriverModerationEvent(input: {
