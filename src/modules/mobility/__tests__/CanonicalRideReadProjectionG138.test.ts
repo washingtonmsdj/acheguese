@@ -14,7 +14,7 @@ describe("G138 canonical ride read projection", () => {
     "src/core/mobility/services/RideRequestReadModel.ts",
   );
   const rideService = readProjectFile(
-    "src/core/mobility/services/RideService.impl.ts",
+    "src/core/mobility/services/RideService.ts",
   );
   const rideSearch = readProjectFile(
     "src/modules/mobility/hooks/useRideSearch.ts",
@@ -48,8 +48,12 @@ describe("G138 canonical ride read projection", () => {
   it("returns typed passenger and active rides without facade casts", () => {
     expect(rideService).toContain("return getRidesByPassenger(passengerId)");
     expect(rideService).toContain("return getActiveRide(userId)");
-    expect(rideService).not.toContain("getRidesByPassenger(passengerId);\n    return rides as RideRequest[]");
-    expect(rideService).not.toContain("getActiveRide(userId);\n    return (ride as RideRequest");
+    expect(rideService).not.toContain(
+      "getRidesByPassenger(passengerId);\n    return rides as RideRequest[]",
+    );
+    expect(rideService).not.toContain(
+      "getActiveRide(userId);\n    return (ride as RideRequest",
+    );
   });
 
   it("lets ride search consume the typed canonical lookup directly", () => {
