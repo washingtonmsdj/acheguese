@@ -1,12 +1,12 @@
 # Compatibility Bridges Registry
 
-Status: CANONICAL — G2 structural closure recorded; zero live compatibility bridges  
-Baseline reviewed: `dd2e9cd235cd7a61da2ef85384a76b1fcb1b9836`  
+Status: CANONICAL — G2 structural closure preserved; zero live path/service compatibility bridges  
+Baseline reviewed: `df82871c17042452c726ca510f91518f5413e8f1`  
 Plan authority: `/URGENTE_LEIA_PRIMEIRO_REORGANIZACAO_GLOBAL.md`
 
 ## Purpose
 
-This file is the current compatibility-debt ledger for the completed G2 physical reorganization. No live compatibility bridge remains on `main` at the reviewed baseline, and the legacy global roots retired during G2 are protected against recreation.
+This file is the current compatibility-debt ledger for the completed G2 physical reorganization and the subsequent retirement work. No live path/service compatibility bridge remains on `main` at the reviewed baseline, and retired global/module roots are protected against recreation.
 
 The detailed historical retirement ledger that previously lived in this file remains preserved in Git history, including blob `5c1132f07786fc1fb1661eb7b872d49e779db819`. Retired paths must not be reintroduced merely because they are no longer repeated here.
 
@@ -21,6 +21,7 @@ The detailed historical retirement ledger that previously lived in this file rem
 7. E2E specs/helpers are canonical under `tests/e2e/**`; the retired root `e2e/**` must not be recreated.
 8. Global source configuration belongs to its responsible owner (`app`, `core`, or `shared`); the retired `src/config/**` compatibility root must not be recreated.
 9. Active roadmaps belong to `docs/08-roadmap/**` and completed implementation plans to `docs/10-archive/plans/**`; the retired root `plans/**` must not be recreated.
+10. Data-format compatibility must normalize at the read boundary and must not keep emitting the retired shape. It is not permission to expose a second runtime owner.
 
 ## Global source/config compatibility state
 
@@ -44,6 +45,8 @@ No legacy root `e2e/**` compatibility path remains active. E2E specs and helpers
 
 No `scripts/**` compatibility path remains active. Operational tooling is canonical under `tools/**` by responsibility. `package.json`, security regressions and the service-role boundary policy now point to canonical tooling owners, and `tests/architecture/compatibility-surface-cleanup.test.ts` blocks recreation of the retired root.
 
+The retired `.kiro/**` planning tree was also disconnected from build/security/workflow authority and physically removed on 2026-09-12. Historical planning evidence remains available through Git history and `docs/10-archive/**`; no guardrail may depend on `.kiro/**` again.
+
 ## Planning-root state
 
 No legacy root `plans/**` remains active. Active roadmaps are canonical under `docs/08-roadmap/**`; completed implementation plans are preserved under `docs/10-archive/plans/**`. Live Core Platform manifests point directly to `docs/08-roadmap/CORE_PLATFORM_CONSOLIDATION_PLAN.md`, and Community First architecture tooling points to the archived completed plan only as historical evidence.
@@ -52,13 +55,19 @@ No legacy root `plans/**` remains active. Active roadmaps are canonical under `d
 
 ## Module bridge state
 
+### Billing
+
+No root Business-subscription compatibility service remains active. `src/core/billing/BusinessSubscriptionService.ts` is the explicit Business subscription owner. The deprecated `src/core/billing/SubscriptionService.ts` bridge and the barrel alias `BusinessSubscriptionService as SubscriptionService` were retired on 2026-09-12 after callers in Menu, Dashboard Empresa and Education were migrated.
+
+`tests/architecture/billing-subscription-authority.test.ts` now blocks both recreation of the root bridge and reintroduction of `SubscriptionService` through the `@/core/billing` barrel. The distinct `src/core/billing/services/SubscriptionService.ts` remains valid because it is the canonical **user-subscription** reader, not a Business bridge.
+
 ### Business
 
 No Business public service/type compatibility bridge remains active. Canonical public snapshot ownership is in `src/core/business` and the Business boundary ratchet protects against recreation.
 
 ### Education
 
-No Education persistence/service compatibility bridge remains active. Canonical ownership is in `src/core/education` and the Education boundary ratchet protects against recreation.
+No Education persistence/service compatibility bridge remains active. Canonical ownership is in `src/core/education`; Education subscription integration now calls the explicit Billing Business owner instead of a deprecated alias.
 
 ### Gastronomy
 
@@ -74,7 +83,9 @@ The following module-local contract surfaces are intentional module contracts, n
 
 ### Community
 
-No live Community compatibility bridge remains active for Feed, Groups, Recommendations, Lost & Found, access policy, or route-territory resolution. Canonical ownership is explicit in `src/core/community-feed`, `src/core/community-groups`, `src/core/community-recommendations`, `src/core/community-lost-found`, and `src/core/community-experience`. The historical page/access/route-territory bridges under `src/core/community` were retired after their final runtime callers migrated, with G6 ownership ratchets preventing recreation.
+No live Community path/service compatibility bridge remains active for Feed, Groups, Recommendations, Lost & Found, access policy, or route-territory resolution. Canonical ownership is explicit in `src/core/community-feed`, `src/core/community-groups`, `src/core/community-recommendations`, `src/core/community-lost-found`, and `src/core/community-experience`. The historical page/access/route-territory bridges under `src/core/community` were retired after their final runtime callers migrated, with G6 ownership ratchets preventing recreation.
+
+Local post drafts still accept the historical `savedAt` timestamp while reading old browser snapshots. Current writers emit only `updatedAt`, and legacy snapshots are normalized/re-written at the read boundary. This is bounded persisted-data migration, not a second runtime owner or service bridge.
 
 ### Community Events
 
@@ -84,8 +95,10 @@ No module-local Event service compatibility bridge remains active. UI/applicatio
 
 No legacy Guide routing compatibility bridge remains active. Public tourist-point route ownership is canonical in `src/core/guide/tourist-points/routes`; the historical `src/core/verticals/guide` namespace is retired and protected by `tests/architecture/compatibility-surface-cleanup.test.ts`.
 
-## Recent retirements relevant to G2 closure
+## Recent retirements
 
+- `src/core/billing/SubscriptionService.ts` and the `SubscriptionService` barrel alias → retired after live Business callers migrated to `BusinessSubscriptionService`; `tests/architecture/billing-subscription-authority.test.ts` blocks both forms from returning.
+- `.kiro/**` → detached from Vercel ignore logic, security scanners/policies and CI guidance, then physically removed; Git history/`docs/10-archive/**` preserve evidence without giving the planning tree runtime authority.
 - `plans/**` → retired after active roadmaps moved to `docs/08-roadmap/**`, completed plans moved to `docs/10-archive/plans/**`, and the final Core Platform/Community First path consumers migrated to their canonical destinations; root absence is ratcheted by `tests/architecture/repository-reorganization-contract.test.ts`.
 - `src/config/territory.ts` and the final `src/config/**` compatibility root → retired after all source callers migrated to `src/core/routing/config/territory.ts`; the unused `src/shared/components/landing/LandingFooter.tsx` caller was removed rather than introducing `shared → core`; root absence and legacy-import absence are ratcheted by `tests/architecture/repository-reorganization-contract.test.ts`.
 - `src/config/launchScope.ts` → retired after all runtime and test callers migrated to `src/app/config/launchScope.ts`; bridge absence and legacy-import absence are ratcheted by `tests/architecture/repository-reorganization-contract.test.ts`, and the community security audit now reads the canonical owner directly.
@@ -103,17 +116,17 @@ No legacy Guide routing compatibility bridge remains active. Public tourist-poin
 
 ## G2 closure conditions
 
-The compatibility/root-debt portion of G2 is structurally closed at the reviewed SHA because:
+The compatibility/root-debt portion of G2 remains structurally closed because:
 
 - `src/features`, `src/test`, `src/__tests__`, and `src/config` are absent;
-- `scripts/` is absent and operational tooling is canonical in `tools/**`;
-- `e2e/` is absent and E2E specs/helpers are canonical in `tests/e2e/**`;
-- `plans/` is absent and planning documents are under canonical docs owners;
+- `scripts/`, `e2e/`, `plans/`, and `.kiro/` are absent from the active repository tree;
+- operational tooling is canonical in `tools/**` and E2E specs/helpers in `tests/e2e/**`;
+- planning documents are under canonical docs owners;
 - no canonical `tools/**` owner is intended to depend on a retired `scripts/**` path;
 - no source file is intended to import retired global compatibility paths;
 - `src/core/** → src/modules/**` remains prohibited by architecture tooling;
 - module → integration runtime exceptions remain explicitly ratcheted and cannot grow;
-- workflows/build/deploy guards are configured to observe canonical `tools/**` paths;
+- workflows/build/deploy guards are configured to observe canonical owners;
 - architecture ratchets prevent retired bridges/namespaces from being recreated.
 
-Hosted execution on SHA `dd2e9cd235cd7a61da2ef85384a76b1fcb1b9836` remains **BLOCKED by runner/provider**: observed GitHub Actions jobs had `steps: []` and `runner_id: 0`. No lint, typecheck, test, build, or architecture command was executed by those jobs, so this is neither a PASS nor a source failure.
+Hosted certification remains provider-gated on 2026-09-12: GitHub Actions jobs were observed completing with no runner steps/logs, and Vercel later returned an explicit deployment rate-limit status. Those conditions are neither a PASS nor a source-test failure; they keep same-SHA certification open.
