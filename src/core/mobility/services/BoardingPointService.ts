@@ -1,5 +1,5 @@
+import { supabase } from "@/integrations/supabase";
 import { logger } from "@/shared/utils/logger";
-import { MobilityService } from "@/core/mobility/services/MobilityService.impl";
 
 export interface BoardingPointSuggestionInput {
   name: string;
@@ -23,6 +23,11 @@ interface PickupLocationJoin {
   geographic_path?: string;
 }
 
+interface RecentPickupLocationRow {
+  pickup_location_id: string | null;
+  pickup_location?: PickupLocationJoin | PickupLocationJoin[] | null;
+}
+
 const RECENT_BOARDING_POINT_SAMPLE_LIMIT = 300;
 
 function classifyLocationType(locationName: string, locationType?: string): BoardingPointSummary["type"] {
@@ -36,16 +41,34 @@ function classifyLocationType(locationName: string, locationType?: string): Boar
   return "outro";
 }
 
+async function listRecentPickupLocations(): Promise<RecentPickupLocationRow[]> {
+  const { data, error } = await supabase
+    .from("ride_requests")
+    .select(`
+      pickup_location_id,
+      pickup_location:locations!ride_requests_pickup_location_id_fkey (
+        id,
+        name,
+        full_name,
+        type,
+        geographic_path
+      )
+    `)
+    .not("pickup_location_id", "is", null)
+    .order("created_at", { ascending: false })
+    .limit(RECENT_BOARDING_POINT_SAMPLE_LIMIT);
+
+  if (error) throw error;
+  return (data ?? []) as unknown as RecentPickupLocationRow[];
+}
+
 export class BoardingPointService {
   static async listRecentFrequentPoints(limit = 20): Promise<BoardingPointSummary[]> {
     try {
-      const data = await MobilityService.listRecentRidePickupLocations(
-        RECENT_BOARDING_POINT_SAMPLE_LIMIT,
-      );
+      const data = await listRecentPickupLocations();
 
       const aggregate = new Map<string, { location: PickupLocationJoin; ridesCount: number }>();
-      for (const rawRow of data ?? []) {
-        const row = rawRow as { pickup_location_id?: string; pickup_location?: PickupLocationJoin | PickupLocationJoin[] };
+      for (const row of data) {
         const location = Array.isArray(row.pickup_location) ? row.pickup_location[0] : row.pickup_location;
         const locationId = row.pickup_location_id ?? location?.id;
         if (!locationId || !location?.name) continue;
