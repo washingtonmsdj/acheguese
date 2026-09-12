@@ -17,8 +17,6 @@ export * from './entitlements-extended';
 
 // Business subscription owner
 export * from './BusinessSubscriptionService';
-// Bridge temporario para callers antigos do barrel.
-export { BusinessSubscriptionService as SubscriptionService } from './BusinessSubscriptionService';
 
 // Services
 export * from './services/BillingService';
