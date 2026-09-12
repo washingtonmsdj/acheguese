@@ -14,23 +14,19 @@ import { profileService } from "@/core/profiles/services/ProfileService";
 import { toast } from "sonner";
 import { mobilityService } from "@/core/mobility/services/MobilityService";
 import { RideOperationalService } from "@/core/mobility/core/RideOperationalService";
+import { isOpenRideStatus } from "@/core/mobility/core/RideLifecycleStatus";
 import { pricingService } from "@/core/pricing/services/PricingService";
 import { logger } from "@/shared/utils/logger";
 import { useRideRealtime } from "./useRideRealtime";
 import { buildFailedDeliveryMetadata } from "@/modules/mobility/utils/failedDelivery";
 import type { RideRequest } from "@/core/mobility/types/types";
 import {
-  RIDE_STATUS,
   RIDE_MODE,
   MOBILITY_QUERY_KEYS,
   TIMEOUTS,
   type SourceType,
   type PackageSize,
 } from "@/core/mobility/constants";
-
-// ============================================
-// TIPOS
-// ============================================
 
 export interface CreateDeliveryData {
   pickupAddressId: string;
@@ -59,17 +55,6 @@ export interface DeliveryProof {
   observation?: string;
 }
 
-const ACTIVE_DELIVERY_STATES: RideRequest["status"][] = [
-  RIDE_STATUS.REQUESTED,
-  RIDE_STATUS.SEARCHING_DRIVER,
-  RIDE_STATUS.DRIVER_ASSIGNED,
-  RIDE_STATUS.DRIVER_ACCEPTED,
-  RIDE_STATUS.DRIVER_ARRIVING,
-  RIDE_STATUS.PICKUP_CONFIRMED,
-  RIDE_STATUS.IN_DELIVERY,
-  RIDE_STATUS.DELIVERED,
-];
-
 export function useDelivery(sourceType: SourceType, sourceId?: string) {
   const { user } = useAuth();
   const queryClient = useQueryClient();
@@ -90,7 +75,7 @@ export function useDelivery(sourceType: SourceType, sourceId?: string) {
           r.ride_mode === RIDE_MODE.MOTOBOY &&
           (!sourceId || r.source_id === sourceId),
       );
-      const active = filtered.find((r: RideRequest) => ACTIVE_DELIVERY_STATES.includes(r.status));
+      const active = filtered.find((r: RideRequest) => isOpenRideStatus(r.status));
       setActiveDelivery(active ?? null);
       return filtered;
     },
@@ -111,7 +96,9 @@ export function useDelivery(sourceType: SourceType, sourceId?: string) {
 
       if (activeDelivery?.id === event.rideId) {
         mobilityService.getRideById(event.rideId).then((updated) => {
-          if (updated) setActiveDelivery(updated);
+          setActiveDelivery(
+            updated && isOpenRideStatus(updated.status) ? updated : null,
+          );
         });
       }
 
