@@ -1,7 +1,10 @@
-import React, { useState, useEffect } from "react";
+import React, { useEffect, useState } from "react";
 import { TrendingUp } from "lucide-react";
 import { Card } from "@/shared/components/ui/card";
-import { MobilityService } from "@/core/mobility/services/MobilityService";
+import {
+  DriverEarningsReadService,
+  type DriverEarningReadRow,
+} from "@/core/mobility/services/DriverEarningsReadService";
 import { logger } from "@/shared/utils/logger";
 import { formatBrlNoCents } from "@/shared/utils/currency";
 
@@ -14,9 +17,29 @@ interface DailyEarning {
   amount: number;
 }
 
-interface EarningRow {
-  completed_at: string | null;
-  final_price: number | null;
+function getEarningTimestamp(earning: DriverEarningReadRow): string {
+  return earning.completed_at ?? earning.updated_at;
+}
+
+function getEarningAmount(earning: DriverEarningReadRow): number {
+  return earning.final_price ?? earning.actual_fare ?? 0;
+}
+
+function getEmptyWeek(): DailyEarning[] {
+  const dayNames = ["Dom", "Seg", "Ter", "Qua", "Qui", "Sex", "Sáb"];
+  const today = new Date();
+  const result: DailyEarning[] = [];
+
+  for (let i = 6; i >= 0; i--) {
+    const date = new Date(today);
+    date.setDate(today.getDate() - i);
+    result.push({
+      day: dayNames[date.getDay()],
+      amount: 0,
+    });
+  }
+
+  return result;
 }
 
 export function WeeklyEarningsChart({
@@ -27,35 +50,39 @@ export function WeeklyEarningsChart({
 
   useEffect(() => {
     const fetchWeeklyEarnings = async () => {
-      if (!driverProfileId) return;
+      if (!driverProfileId) {
+        setWeeklyData(getEmptyWeek());
+        setLoading(false);
+        return;
+      }
 
+      setLoading(true);
       try {
-        // SSOT: Buscar ganhos semanais usando MobilityService
-        const earnings = (await MobilityService.getDriverEarnings(driverProfileId)) as EarningRow[];
-
-        // Processar dados para formato do gráfico
-        const dayNames = ["Dom", "Seg", "Ter", "Qua", "Qui", "Sex", "Sáb"];
         const today = new Date();
+        const startOfWindow = new Date(today);
+        startOfWindow.setHours(0, 0, 0, 0);
+        startOfWindow.setDate(startOfWindow.getDate() - 6);
+
+        const earnings = await DriverEarningsReadService.list(driverProfileId, {
+          sinceIso: startOfWindow.toISOString(),
+        });
+
+        const dayNames = ["Dom", "Seg", "Ter", "Qua", "Qui", "Sex", "Sáb"];
         const result: DailyEarning[] = [];
 
         for (let i = 6; i >= 0; i--) {
           const date = new Date(today);
           date.setDate(today.getDate() - i);
-          const dayName = dayNames[date.getDay()];
 
-          // Buscar ganhos deste dia específico
-          const dayEarnings = earnings.filter((e) => {
-            const earnDate = new Date(e.completed_at);
-            return earnDate.toDateString() === date.toDateString();
-          });
-
-          const amount = dayEarnings.reduce(
-            (sum: number, e) => sum + (e.final_price || 0),
-            0,
-          );
+          const amount = earnings
+            .filter((earning) => {
+              const earningDate = new Date(getEarningTimestamp(earning));
+              return earningDate.toDateString() === date.toDateString();
+            })
+            .reduce((sum, earning) => sum + getEarningAmount(earning), 0);
 
           result.push({
-            day: dayName,
+            day: dayNames[date.getDay()],
             amount,
           });
         }
@@ -69,25 +96,8 @@ export function WeeklyEarningsChart({
       }
     };
 
-    fetchWeeklyEarnings();
+    void fetchWeeklyEarnings();
   }, [driverProfileId]);
-
-  const getEmptyWeek = (): DailyEarning[] => {
-    const dayNames = ["Dom", "Seg", "Ter", "Qua", "Qui", "Sex", "Sáb"];
-    const today = new Date();
-    const result: DailyEarning[] = [];
-
-    for (let i = 6; i >= 0; i--) {
-      const date = new Date(today);
-      date.setDate(today.getDate() - i);
-      result.push({
-        day: dayNames[date.getDay()],
-        amount: 0,
-      });
-    }
-
-    return result;
-  };
 
   const maxValue = Math.max(...weeklyData.map((d) => d.amount), 1);
   const totalWeek = weeklyData.reduce((sum, d) => sum + d.amount, 0);
