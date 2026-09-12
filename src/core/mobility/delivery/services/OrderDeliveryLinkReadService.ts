@@ -30,25 +30,8 @@ export type OrderDeliveryPricingSnapshot = Pick<
   "final_price" | "suggested_price"
 >;
 
-const ORDER_DELIVERY_LINK_SELECT = [
-  "id",
-  "status",
-  "source_type",
-  "source_id",
-  "ride_mode",
-  "passenger_profile_id",
-  "driver_profile_id",
-  "origin",
-  "destination",
-  "origin_lat",
-  "origin_lng",
-  "destination_lat",
-  "destination_lng",
-  "proof_of_delivery",
-  "final_price",
-  "suggested_price",
-  "created_at",
-].join(", ");
+const ORDER_DELIVERY_LINK_SELECT =
+  "id, status, source_type, source_id, ride_mode, passenger_profile_id, driver_profile_id, origin, destination, origin_lat, origin_lng, destination_lat, destination_lng, proof_of_delivery, final_price, suggested_price, created_at" as const;
 
 /**
  * Read boundary for the order <-> delivery link.
@@ -72,7 +55,7 @@ export class OrderDeliveryLinkReadService {
         .maybeSingle();
 
       if (error) throw error;
-      return (data as OrderDeliveryLinkRide | null) ?? null;
+      return data ?? null;
     } catch (error) {
       logger.error("OrderDeliveryLinkReadService.getLatestByOrderId", error as Error, {
         orderId,
@@ -95,7 +78,7 @@ export class OrderDeliveryLinkReadService {
         .maybeSingle();
 
       if (error) throw error;
-      return (data as OrderDeliveryPricingSnapshot | null) ?? null;
+      return data ?? null;
     } catch (error) {
       logger.error(
         "OrderDeliveryLinkReadService.getLatestPricingByOrderId",
@@ -117,7 +100,7 @@ export class OrderDeliveryLinkReadService {
         .maybeSingle();
 
       if (error) throw error;
-      return (data as OrderDeliveryLinkRide | null) ?? null;
+      return data ?? null;
     } catch (error) {
       logger.error("OrderDeliveryLinkReadService.getByRideId", error as Error, {
         rideId,
