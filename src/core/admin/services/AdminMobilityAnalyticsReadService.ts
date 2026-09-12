@@ -2,7 +2,9 @@ import { supabase } from "@/integrations/supabase";
 import type { Tables } from "@/integrations/supabase";
 import { logger } from "@/shared/utils/logger";
 
-type AnalyticsRideRow = Pick<
+type ErrorLike = { message?: string | null; code?: string | null } | null;
+
+type AnalyticsRideBaseRow = Pick<
   Tables<"ride_requests">,
   | "status"
   | "created_at"
@@ -10,11 +12,31 @@ type AnalyticsRideRow = Pick<
   | "completed_at"
   | "cancelled_at"
   | "final_price"
-  | "actual_fare"
   | "driver_profile_id"
 >;
 
-export type AdminMobilityAnalyticsRide = AnalyticsRideRow;
+/**
+ * `actual_fare` is consumed by the G73/G74 SQL read models but is not present in
+ * the last generated TypeScript snapshot. Keep the mismatch explicit here until
+ * remote schema introspection/type generation is healthy again.
+ */
+export type AdminMobilityAnalyticsRide = AnalyticsRideBaseRow & {
+  actual_fare: number | null;
+};
+
+type AnalyticsRideTableClient = PromiseLike<{
+  data: AdminMobilityAnalyticsRide[] | null;
+  error: ErrorLike;
+}> & {
+  select(columns: string): AnalyticsRideTableClient;
+  or(filters: string): AnalyticsRideTableClient;
+};
+
+type AnalyticsRideDbClient = {
+  from(table: "ride_requests"): AnalyticsRideTableClient;
+};
+
+const analyticsRideDb = supabase as unknown as AnalyticsRideDbClient;
 
 function assertValidStartIso(startIso: string): void {
   if (!Number.isFinite(Date.parse(startIso))) {
@@ -42,7 +64,7 @@ export class AdminMobilityAnalyticsReadService {
     assertValidStartIso(startIso);
 
     try {
-      const { data, error } = await supabase
+      const { data, error } = await analyticsRideDb
         .from("ride_requests")
         .select(
           "status, created_at, updated_at, completed_at, cancelled_at, final_price, actual_fare, driver_profile_id",
@@ -52,7 +74,7 @@ export class AdminMobilityAnalyticsReadService {
         );
 
       if (error) throw error;
-      return (data ?? []) as AdminMobilityAnalyticsRide[];
+      return data ?? [];
     } catch (error) {
       logger.error("AdminMobilityAnalyticsReadService.listWindowRides", error as Error, {
         startIso,
