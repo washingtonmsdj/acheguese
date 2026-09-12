@@ -1,7 +1,7 @@
 import { logger } from "@/shared/utils/logger";
 import { RIDE_STATE, type RideState } from "./RideStateMachine";
-import { getRideById } from "../services/mobility.queries";
 import { MobilityRpcService } from "../services/MobilityRpcService";
+import { RideOperationalContextReadService } from "../services/RideOperationalContextReadService";
 import type {
   FailedDeliveryMetadata,
   FailedDeliveryResolutionUpdate,
@@ -37,11 +37,9 @@ type TransitionFn = (
   deliveryCommand?: DeliveryTransitionCommand,
 ) => Promise<TransitionResult>;
 
-type RideDriverAssignment = {
-  status?: string;
-  driver_profile_id?: string | null;
-  ride_mode?: string | null;
-} | null;
+type RideDriverAssignment = Awaited<
+  ReturnType<typeof RideOperationalContextReadService.getLifecycle>
+>;
 
 const MOTOBOY_ONLY_ERROR = "Operacao exclusiva de motoboy.";
 const DELIVERY_NOT_FOUND_ERROR = "Entrega nao encontrada.";
@@ -116,7 +114,7 @@ export async function confirmPickupOperation(
   transitionTo: TransitionFn,
 ): Promise<TransitionResult> {
   try {
-    const ride = (await getRideById(rideId)) as RideDriverAssignment;
+    const ride = await RideOperationalContextReadService.getLifecycle(rideId);
     const rideValidation = validateRideDriverOperation(
       ride,
       driverProfileId,
@@ -146,7 +144,7 @@ export async function startDeliveryOperation(
   transitionTo: TransitionFn,
 ): Promise<TransitionResult> {
   try {
-    const ride = (await getRideById(rideId)) as RideDriverAssignment;
+    const ride = await RideOperationalContextReadService.getLifecycle(rideId);
     const rideValidation = validateRideDriverOperation(
       ride,
       driverProfileId,
@@ -176,7 +174,7 @@ export async function confirmDeliveryOperation(
   pin: string | undefined,
 ): Promise<TransitionResult> {
   try {
-    const ride = (await getRideById(rideId)) as RideDriverAssignment;
+    const ride = await RideOperationalContextReadService.getLifecycle(rideId);
     const rideValidation = validateRideDriverOperation(
       ride,
       driverProfileId,
@@ -260,7 +258,7 @@ export async function failDeliveryOperation(
   transitionTo: TransitionFn,
 ): Promise<TransitionResult> {
   try {
-    const ride = (await getRideById(rideId)) as RideDriverAssignment;
+    const ride = await RideOperationalContextReadService.getLifecycle(rideId);
     const rideValidation = validateRideDriverOperation(
       ride,
       driverProfileId,
@@ -307,10 +305,7 @@ export async function updateFailedDeliveryResolutionOperation(
   resolutionUpdate: FailedDeliveryResolutionUpdate,
 ): Promise<TransitionResult> {
   try {
-    const ride = (await getRideById(rideId)) as {
-      status?: string;
-      failed_delivery_metadata?: Record<string, unknown> | null;
-    } | null;
+    const ride = await RideOperationalContextReadService.getFailedDelivery(rideId);
     if (!ride) return { success: false, error: "Corrida nao encontrada" };
     if (ride.status !== RIDE_STATE.FAILED_DELIVERY) {
       return { success: false, error: "Corrida nao esta em failed_delivery" };
