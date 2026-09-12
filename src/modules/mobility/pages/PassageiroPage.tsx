@@ -73,7 +73,7 @@ export default function PassageiroPage() {
     error,
     refetch,
     passengerRating = 5.0,
-  } = useMobilidade();
+  } = useMobilidade({ realtimeEnabled: true });
   const [isCreateOpen, setIsCreateOpen] = useState(false);
   const [createModalInitialType, setCreateModalInitialType] = useState<
     "viagem" | "entrega"
