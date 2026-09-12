@@ -410,21 +410,6 @@ export class MobilityAdminQueryService {
     }
   }
 
-  static async getAllRides(): Promise<RawRide[]> {
-    try {
-      const { data, error } = await mobilityDb
-        .from<RideRequestRow>("ride_requests")
-        .select("*")
-        .order("created_at", { ascending: false });
-
-      if (error) throw error;
-      return (data ?? []) as RawRide[];
-    } catch (error) {
-      logger.error("MobilityAdminQueryService.getAllRides", error as Error);
-      throw error;
-    }
-  }
-
   static async getAllRideRatings(): Promise<{ rating: number }[]> {
     try {
       const { data, error } = await mobilityDb
