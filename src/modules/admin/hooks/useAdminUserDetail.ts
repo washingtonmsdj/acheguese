@@ -3,6 +3,7 @@
  * SSOT - Hook de detalhe de usuario no admin
  * - Perfil: ProfileService
  * - Auth: AdminUserService
+ * - Motorista: AdminDriverDetailReadService
  * - Reports de corrida: ride_reports
  * - Historico de moderacao de motoristas: driver_moderation_events
  */
@@ -10,6 +11,10 @@
 import { useEffect, useState } from "react";
 import { profileService } from "@/core/profiles/services/ProfileService";
 import { AdminUserService } from "@/core/admin/services/AdminUserService";
+import {
+  AdminDriverDetailReadService,
+  type AdminDriverDetail,
+} from "@/core/admin/services/AdminDriverDetailReadService";
 import { logger } from "@/shared/utils/logger";
 import { DriverModerationEventsService } from "@/core/mobility/services/runtime";
 import { AdminUserDetailService, type UserReport } from "@/core/admin/services/AdminUserDetailService";
@@ -56,35 +61,7 @@ function normalizeProfileType(value: string | null | undefined): AdminProfileTyp
     : "personal";
 }
 
-export interface DriverDetail {
-  id: string;
-  profile_id: string;
-  vehicle_plate: string;
-  vehicle_model: string;
-  vehicle_year: number;
-  vehicle_color: string;
-  cnh_number: string;
-  cnh_image_url: string;
-  cnh_expiry_date: string;
-  is_verified: boolean;
-  verified_at: string | null;
-  verified_by: string | null;
-  is_online: boolean;
-  last_online_at: string | null;
-  subscription_plan: string;
-  subscription_active: boolean;
-  subscription_expires_at: string | null;
-  total_requests_received: number;
-  total_requests_accepted: number;
-  cancellation_count: number;
-  acceptance_rate: number;
-  avg_response_time_seconds: number;
-  current_lat: number | null;
-  current_lng: number | null;
-  last_location_update: string | null;
-  created_at: string;
-  updated_at: string;
-}
+export type DriverDetail = AdminDriverDetail;
 
 export interface SuspensionHistory {
   id: string;
@@ -111,7 +88,7 @@ interface UseAdminUserDetailReturn {
 }
 
 export function useAdminUserDetail(
-  userId: string | null,
+  profileId: string | null,
 ): UseAdminUserDetailReturn {
   const [user, setUser] = useState<AdminUserDetail | null>(null);
   const [driverData, setDriverData] = useState<DriverDetail | null>(null);
@@ -124,7 +101,7 @@ export function useAdminUserDetail(
   const [error, setError] = useState<Error | null>(null);
 
   const fetchUserDetail = async () => {
-    if (!userId) {
+    if (!profileId) {
       setUser(null);
       setDriverData(null);
       setReportsReceived([]);
@@ -138,10 +115,10 @@ export function useAdminUserDetail(
       setLoading(true);
       setError(null);
 
-      const profileData = await profileService.getAccessibleProfileById(userId);
+      const profileData = await profileService.getAccessibleProfileById(profileId);
       if (!profileData) throw new Error("Profile not found");
 
-      const adminUser = profileData?.user_id
+      const adminUser = profileData.user_id
         ? await AdminUserService.getUserById(profileData.user_id)
         : null;
       const email = adminUser?.email || "";
@@ -169,18 +146,20 @@ export function useAdminUserDetail(
         updated_at: profileData.updated_at,
       });
 
-      const driverResult = await profileService.getDriverData(userId);
-      if (driverResult) {
-        setDriverData(driverResult as DriverDetail);
+      if (profileData.profile_type === "driver") {
+        setDriverData(await AdminDriverDetailReadService.get(profileData.id));
       } else {
         setDriverData(null);
       }
 
-      const rideReports = await AdminUserDetailService.loadRideReports(userId);
+      const rideReports = await AdminUserDetailService.loadRideReports(profileId);
       setReportsMade(rideReports.reportsMade);
       setReportsReceived(rideReports.reportsReceived);
 
-      const moderationEvents = await DriverModerationEventsService.listByDriverProfile(userId);
+      const moderationEvents =
+        profileData.profile_type === "driver"
+          ? await DriverModerationEventsService.listByDriverProfile(profileId)
+          : [];
       const moderationTimeline = moderationEvents.filter(
         (event) => event.action === "suspended" || event.action === "reactivated",
       );
@@ -202,7 +181,7 @@ export function useAdminUserDetail(
 
           const isSuspensionEvent = event.action === "suspended";
           const isActiveSuspension =
-            isSuspensionEvent && !nextReactivation && Boolean(profileData?.is_suspended);
+            isSuspensionEvent && !nextReactivation && Boolean(profileData.is_suspended);
 
           const liftedAt =
             nextReactivation?.created_at ||
@@ -213,7 +192,7 @@ export function useAdminUserDetail(
 
           return {
             id: event.id,
-            user_id: userId,
+            user_id: profileData.user_id,
             reason:
               event.reason ||
               (event.action === "reactivated"
@@ -221,7 +200,7 @@ export function useAdminUserDetail(
                 : "Suspensao aplicada"),
             suspended_at: event.created_at,
             suspended_until:
-              isActiveSuspension && profileData?.suspended_until
+              isActiveSuspension && profileData.suspended_until
                 ? profileData.suspended_until
                 : "",
             suspended_by: event.admin_profile_id || "admin",
@@ -238,11 +217,11 @@ export function useAdminUserDetail(
               new Date(b.suspended_at).getTime() - new Date(a.suspended_at).getTime(),
           ),
         );
-      } else if (profileData?.is_suspended) {
+      } else if (profileData.is_suspended) {
         setSuspensionHistory([
           {
-            id: `${userId}-active-suspension`,
-            user_id: userId,
+            id: `${profileId}-active-suspension`,
+            user_id: profileData.user_id,
             reason: profileData.suspension_reason || "Suspensao ativa",
             suspended_at:
               profileData.suspended_at ||
@@ -269,7 +248,7 @@ export function useAdminUserDetail(
 
   useEffect(() => {
     void fetchUserDetail();
-  }, [userId]);
+  }, [profileId]);
 
   return {
     user,
@@ -282,7 +261,3 @@ export function useAdminUserDetail(
     refetch: fetchUserDetail,
   };
 }
-
-
-
-
