@@ -7,6 +7,7 @@
  */
 
 import { AdminDriverLifecycleMetricsService } from "@/core/admin/services/AdminDriverLifecycleMetricsService";
+import { AdminMobilityRealtimeRideReadService } from "@/core/admin/services/AdminMobilityRealtimeRideReadService";
 import { MobilityAdminQueryService } from "@/core/admin/services/MobilityAdminQueryService";
 import {
   isCancelledRideStatus,
@@ -168,8 +169,13 @@ class AdminMobilityServiceClass {
     return MobilityAdminQueryService.getAllRideRatings();
   }
 
-  async getAllRides(): Promise<AdminRideData[]> {
-    return MobilityAdminQueryService.getAllRides() as Promise<AdminRideData[]>;
+  /**
+   * Compatibility entrypoint for the realtime dashboard. It intentionally
+   * returns all historical metric rows, but the underlying reader exposes only
+   * the lifecycle/value fields required by that dashboard — never `select("*")`.
+   */
+  async getAllRides() {
+    return AdminMobilityRealtimeRideReadService.listMetricRows();
   }
 
   async getMobilityStats(): Promise<{ total_drivers: number; total_rides: number }> {
