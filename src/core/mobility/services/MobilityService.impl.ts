@@ -57,15 +57,32 @@ type MobilityImplDbClient = {
   }>;
 };
 
+interface SourceLinkedRidePricingRow {
+  id: string;
+  status: string;
+  source_type: string | null;
+  source_id: string | null;
+  final_price: number | null;
+  suggested_price: number | null;
+  created_at: string;
+}
+
 const db = supabase as unknown as MobilityImplDbClient;
 
 // --- Static read/admin API ---------------------------------------------------
 
 export class MobilityService {
-  static async getLatestRideBySource(sourceType: string, sourceId: string): Promise<unknown | null> {
+  /**
+   * Compatibility lookup for a source-linked ride pricing snapshot.
+   * It intentionally does not return the complete ride row.
+   */
+  static async getLatestRideBySource(
+    sourceType: string,
+    sourceId: string,
+  ): Promise<SourceLinkedRidePricingRow | null> {
     const { data, error } = await db
-      .from("ride_requests")
-      .select("*")
+      .from<SourceLinkedRidePricingRow>("ride_requests")
+      .select("id, status, source_type, source_id, final_price, suggested_price, created_at")
       .eq("source_type", sourceType)
       .eq("source_id", sourceId)
       .order("created_at", { ascending: false })
