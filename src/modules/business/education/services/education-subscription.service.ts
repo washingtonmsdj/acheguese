@@ -13,8 +13,8 @@
 
 import { logger } from '@/shared/utils/logger';
 import {
+  BusinessSubscriptionService,
   EntitlementsService,
-  SubscriptionService,
   PlanTier,
   type BusinessSubscription,
   type PlanEntitlements,
@@ -67,7 +67,7 @@ export const EducationSubscriptionService = {
         throw new Error('business_data.id indisponivel para o perfil Education');
       }
 
-      const result = await SubscriptionService.getByBusinessId(businessDataId);
+      const result = await BusinessSubscriptionService.getByBusinessId(businessDataId);
       if (result.error || !result.data) {
         throw new Error(result.error ?? 'Assinatura Business indisponivel');
       }
