@@ -18,7 +18,7 @@ import {
   Settings,
 } from "lucide-react";
 import {
-  DriverEarningsMetrics,
+  DriverOperationalMetrics,
   DriverCancellationMetrics,
   ReputationManagementPanel,
   MobilitySettingsPanel,
@@ -61,13 +61,14 @@ export function AdminMotoristasTabsSection({
       </TabsContent>
 
       <TabsContent value="metricas" className="space-y-6 mt-6">
-        <DriverEarningsMetrics
-          drivers={drivers.map((d) => ({
-            ...d,
-            avg_rating: d.rating,
-            earnings_today: d.total_earnings * 0.1,
-            earnings_week: d.total_earnings * 0.3,
-            earnings_month: d.total_earnings,
+        <DriverOperationalMetrics
+          drivers={drivers.map((driver) => ({
+            id: driver.id,
+            name: driver.name,
+            avatar_url: driver.avatar_url,
+            total_rides: driver.total_rides,
+            rating: driver.rating,
+            is_online: driver.is_online,
           }))}
         />
       </TabsContent>
