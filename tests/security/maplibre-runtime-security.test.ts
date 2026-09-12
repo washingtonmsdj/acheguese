@@ -13,7 +13,6 @@ const MAPLIBRE_RUNTIME_FILES = [
   "src/core/mobility/components/RideTrackingMap.tsx",
   "src/shared/components/standalone/StandaloneMap.tsx",
   "src/modules/mobility/pages/BuscandoMotoristaPage.tsx",
-  "src/modules/mobility/components/map/LiveTrackingMap.tsx",
   "src/core/guide/tourist-points/components/TouristPointsMap.tsx",
   "src/core/community-lost-found/components/LostFoundMiniMap.tsx",
   "src/core/maps/components/v3/MapLibreAdapter.tsx",
