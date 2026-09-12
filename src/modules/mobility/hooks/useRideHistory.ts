@@ -1,5 +1,9 @@
 import { useQuery } from "@tanstack/react-query";
 import { MobilityFacade } from "@/core/mobility/services/MobilityService";
+import {
+  isCancelledRideStatus,
+  isClosedRideStatus,
+} from "@/core/mobility/core/RideLifecycleStatus";
 import { useAuth } from "@/core/auth";
 import { RIDE_STATUS, MOBILITY_QUERY_KEYS } from "@/core/mobility/constants";
 import type { RideRequest } from "../types/types";
@@ -35,6 +39,14 @@ interface RideHistoryResult {
   };
 }
 
+function matchesStatusFilter(ride: RideRequest, status?: string): boolean {
+  if (!status) return true;
+  if (status === RIDE_STATUS.CANCELLED) {
+    return isCancelledRideStatus(ride.status);
+  }
+  return ride.status === status;
+}
+
 export function useRideHistory(
   filters?: RideHistoryFilters,
   page?: number,
@@ -48,11 +60,6 @@ export function useRideHistory(
         dateTo: filters.dateTo,
       } satisfies Record<string, unknown>)
     : undefined;
-  const cancelledStatuses = new Set<string>([
-    RIDE_STATUS.CANCELLED,
-    RIDE_STATUS.CANCELLED_BY_DRIVER,
-    RIDE_STATUS.CANCELLED_BY_PASSENGER,
-  ]);
 
   const { data, isLoading } = useQuery<RideHistoryResult>({
     queryKey: MOBILITY_QUERY_KEYS.rideHistory(
@@ -61,47 +68,72 @@ export function useRideHistory(
       page,
     ),
     queryFn: async () => {
-      if (!user)
+      if (!user) {
         return {
           rides: [],
           stats: { total: 0, completed: 0, cancelled: 0, totalSpent: 0 },
         };
-      const allRides = await MobilityFacade.getUserRides(user.id);
-      let rides = allRides;
-      if (filters?.status)
-        rides = rides.filter((r: RideRequest) => r.status === filters.status);
-      if (pageSize) rides = rides.slice(0, pageSize);
-      const mapped: RideHistoryItem[] = rides.map((r: RideRequest) => ({
-        id: r.id,
-        origin: r.origin_address || "",
-        destination: r.destination_address || "",
-        status: r.status,
-        price: r.estimated_price || 0,
-        final_price: r.final_price || r.estimated_price || 0,
+      }
+
+      const allRides = (await MobilityFacade.getUserRides(user.id)) as RideRequest[];
+      let rides = allRides.filter(
+        (ride) =>
+          isClosedRideStatus(ride.status) &&
+          matchesStatusFilter(ride, filters?.status),
+      );
+
+      if (filters?.dateFrom) {
+        const from = Date.parse(filters.dateFrom);
+        if (Number.isFinite(from)) {
+          rides = rides.filter((ride) => Date.parse(ride.created_at) >= from);
+        }
+      }
+
+      if (filters?.dateTo) {
+        const to = Date.parse(`${filters.dateTo}T23:59:59.999`);
+        if (Number.isFinite(to)) {
+          rides = rides.filter((ride) => Date.parse(ride.created_at) <= to);
+        }
+      }
+
+      if (pageSize) {
+        const pageNumber = Math.max(page ?? 1, 1);
+        const start = (pageNumber - 1) * pageSize;
+        rides = rides.slice(start, start + pageSize);
+      }
+
+      const mapped: RideHistoryItem[] = rides.map((ride) => ({
+        id: ride.id,
+        origin: ride.origin_address || "",
+        destination: ride.destination_address || "",
+        status: ride.status,
+        price: ride.estimated_price || 0,
+        final_price: ride.final_price ?? 0,
         type: "viagem",
-        created_at: r.created_at,
+        created_at: ride.created_at,
         driver_name: undefined,
         driver: undefined,
         passenger: undefined,
         rating: undefined,
       }));
+
       return {
         rides: mapped,
         stats: {
           total: mapped.length,
-          completed: mapped.filter((r) => r.status === RIDE_STATUS.COMPLETED)
-            .length,
-          cancelled: mapped.filter((r) =>
-            cancelledStatuses.has(String(r.status)),
+          completed: mapped.filter(
+            (ride) => ride.status === RIDE_STATUS.COMPLETED,
           ).length,
-          totalSpent: mapped.reduce(
-            (acc: number, r) => acc + (r.final_price || 0),
-            0,
-          ),
+          cancelled: mapped.filter((ride) =>
+            isCancelledRideStatus(ride.status),
+          ).length,
+          totalSpent: mapped
+            .filter((ride) => ride.status === RIDE_STATUS.COMPLETED)
+            .reduce((sum, ride) => sum + ride.final_price, 0),
         },
       };
     },
-    enabled: !!user,
+    enabled: Boolean(user),
   });
 
   return { rides: data?.rides || [], stats: data?.stats, isLoading };
