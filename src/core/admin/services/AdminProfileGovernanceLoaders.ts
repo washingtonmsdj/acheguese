@@ -4,6 +4,7 @@ import type { AppRole } from "@/core/authorization/types";
 import { FamilyService, FAMILY_TABLES } from "@/core/family";
 import { getProfessionalLinkedEntitiesByProfileIds } from "@/core/professional/services/professional.linked-entity";
 import { profileService } from "@/core/profiles/services/ProfileService";
+import { DriverService } from "@/core/profiles/services/multi-profile/driverService";
 import { ProfileMembersService } from "@/core/profiles/services/multi-profile/profileMembersService";
 import { ReviewsService, type ReviewType } from "@/core/reviews";
 import { logger } from "@/shared/utils/logger";
@@ -162,9 +163,9 @@ export async function loadEntityMaps(profileIds: string[]): Promise<{
   await Promise.all(
     profileIds.map(async (profileId) => {
       try {
-        const driverData = await profileService.getDriverData(profileId);
+        const driverData = await DriverService.getDriverData(profileId);
         if (driverData) {
-          driverMap.set(profileId, driverData as RawRecord);
+          driverMap.set(profileId, driverData as unknown as RawRecord);
         }
       } catch (error) {
         logger.error(`AdminProfileGovernanceService.loadEntityMaps.driver for ${profileId}`, error);
