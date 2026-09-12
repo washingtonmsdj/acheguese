@@ -31,7 +31,6 @@ function collectRuntimeSources(directory: string): string[] {
 
 const runtimeSources = collectRuntimeSources("src");
 const businessSubscription = read("src/core/billing/BusinessSubscriptionService.ts");
-const legacyBusinessBridge = read("src/core/billing/SubscriptionService.ts");
 const userSubscription = read("src/core/billing/services/SubscriptionService.ts");
 const subscriptionStatus = read("src/core/billing/services/SubscriptionStatusService.ts");
 const entitlementResolver = read("src/core/billing/services/EntitlementResolver.ts");
@@ -86,14 +85,20 @@ describe("Billing subscription authority", () => {
     expect(existsSync(resolve(root, "src/core/billing/types/admin.types.ts"))).toBe(false);
   });
 
-  it("names business subscription authority explicitly and keeps old path bridge-only", () => {
+  it("keeps business subscription authority explicit and blocks the retired root bridge", () => {
     expect(businessSubscription).toContain("export class BusinessSubscriptionService");
     expect(billingIndex).toContain("export * from './BusinessSubscriptionService'");
-    expect(legacyBusinessBridge).toContain(
-      'BusinessSubscriptionService as SubscriptionService',
-    );
-    expect(legacyBusinessBridge).not.toContain("@/integrations/supabase");
-    expect(legacyBusinessBridge).not.toContain("user_subscriptions");
+    expect(
+      existsSync(resolve(root, "src/core/billing/SubscriptionService.ts")),
+    ).toBe(false);
+
+    const oldBridgeCallers = runtimeSources
+      .filter((path) =>
+        readFileSync(path, "utf8").includes("@/core/billing/SubscriptionService"),
+      )
+      .map((path) => path.slice(root.length + 1));
+
+    expect(oldBridgeCallers).toEqual([]);
   });
 
   it("keeps browser runtime free of direct user_subscriptions writes", () => {
