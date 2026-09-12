@@ -21,7 +21,6 @@ export {
 } from "@/core/mobility/services/mobility.queries";
 
 export {
-  updateDriverData,
   updateDriverOnlineStatus,
 } from "@/core/mobility/services/mobility.mutations";
 
