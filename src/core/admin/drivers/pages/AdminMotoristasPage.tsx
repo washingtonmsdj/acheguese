@@ -1,11 +1,9 @@
 /**
  * AdminMotoristasPage (REFATORADO)
- * 
- * Página de Gestão de Motoristas
- * 
- * REFATORAÇÃO: 1.131 linhas → ~250 linhas (orquestração limpa)
- * SSOT: Todas as sections e componentes tipados
- * Sem gambiarras: Código profissional e modular
+ *
+ * Pagina de Gestao de Motoristas.
+ * Moderacao e presenca operacional sao authorities diferentes: o Admin pode
+ * suspender/reativar/moderar, mas nao pode forjar o estado online do motorista.
  */
 
 import { useState } from "react";
@@ -32,10 +30,7 @@ import { calculateDriverStats, filterDrivers } from "../utils";
 
 export default function AdminMotoristasPage() {
   const { canModerate, isChecking } = useAdminGuard();
-  
-  // ============================================
-  // State Management
-  // ============================================
+
   const [filter, setFilter] = useState<FilterStatus>(RIDE_STATUS.PENDING);
   const [search, setSearch] = useState("");
   const [activeTab, setActiveTab] = useState("gestao");
@@ -53,30 +48,20 @@ export default function AdminMotoristasPage() {
   const [historyOpen, setHistoryOpen] = useState(false);
   const [historyLoading, setHistoryLoading] = useState(false);
 
-  // ============================================
-  // Driver Management Hook
-  // ============================================
   const {
     drivers,
     loading,
     processing,
     handleApprove,
     handleReject,
-    handleToggleOnline,
     handleSuspend,
     handleReactivate,
     loadSuspensionHistory,
   } = useDriverManagement(filter, canModerate, isChecking);
 
-  // ============================================
-  // Computed Values
-  // ============================================
   const stats = calculateDriverStats(drivers);
   const filteredDrivers = filterDrivers(drivers, filter, search);
 
-  // ============================================
-  // Event Handlers
-  // ============================================
   const handleReviewDriver = (driver: DriverRequest) => {
     setSelectedDriver(driver);
     setReviewOpen(true);
@@ -95,33 +80,11 @@ export default function AdminMotoristasPage() {
     setRejectionReason("");
   };
 
-  const handleToggleDriverOnline = (driver: DriverRequest) => {
-    const newOnlineStatus = !driver.is_online;
-
-    if (!newOnlineStatus) {
-      setConfirmDialog({
-        open: true,
-        title: "⏸️ Colocar Motorista Offline",
-        description: `Tem certeza que deseja colocar ${driver.name ?? "este motorista"} offline? Ele não receberá novas corridas até ser reativado.`,
-        variant: "default",
-        action: () => executeToggleOnline(driver, newOnlineStatus),
-      });
-      return;
-    }
-
-    executeToggleOnline(driver, newOnlineStatus);
-  };
-
-  const executeToggleOnline = async (driver: DriverRequest, newOnlineStatus: boolean) => {
-    await handleToggleOnline(driver, newOnlineStatus);
-    setConfirmDialog({ ...confirmDialog, open: false });
-  };
-
   const handleSuspendDriver = (driver: DriverRequest) => {
     setConfirmDialog({
       open: true,
       title: "Suspender motorista",
-      description: `Tem certeza que deseja suspender ${driver.name ?? "este motorista"}? Esta ação bloqueará o acesso dele e ele não poderá aceitar corridas. Você poderá reativá-lo depois.`,
+      description: `Tem certeza que deseja suspender ${driver.name ?? "este motorista"}? Esta acao bloqueia a elegibilidade operacional; a presenca online continua sendo estado fisico do proprio motorista.`,
       variant: "destructive",
       action: () => executeSuspend(driver),
     });
@@ -129,14 +92,14 @@ export default function AdminMotoristasPage() {
 
   const executeSuspend = async (driver: DriverRequest) => {
     await handleSuspend(driver, rejectionReason || "Suspenso pelo administrador");
-    setConfirmDialog({ ...confirmDialog, open: false });
+    setConfirmDialog((current) => ({ ...current, open: false }));
   };
 
   const handleReactivateDriver = (driver: DriverRequest) => {
     setConfirmDialog({
       open: true,
       title: "Reativar motorista",
-      description: `Tem certeza que deseja reativar ${driver.name ?? "este motorista"}? Ele poderá voltar a aceitar corridas na plataforma.`,
+      description: `Tem certeza que deseja reativar ${driver.name ?? "este motorista"}? A reativacao remove a suspensao, mas o motorista precisa entrar online por conta propria para receber ofertas.`,
       variant: "default",
       action: () => executeReactivate(driver),
     });
@@ -144,7 +107,7 @@ export default function AdminMotoristasPage() {
 
   const executeReactivate = async (driver: DriverRequest) => {
     await handleReactivate(driver);
-    setConfirmDialog({ ...confirmDialog, open: false });
+    setConfirmDialog((current) => ({ ...current, open: false }));
   };
 
   const handleViewHistory = async (driverProfileId: string) => {
@@ -158,20 +121,13 @@ export default function AdminMotoristasPage() {
     }
   };
 
-  // ============================================
-  // Driver Actions
-  // ============================================
   const driverActions = {
     onReview: handleReviewDriver,
-    onToggleOnline: handleToggleDriverOnline,
     onSuspend: handleSuspendDriver,
     onReactivate: handleReactivateDriver,
     onViewHistory: handleViewHistory,
   };
 
-  // ============================================
-  // Guard Validation
-  // ============================================
   if (!isChecking && !canModerate) {
     return (
       <div className="min-h-screen bg-[#0A0F14] flex items-center justify-center p-4">
@@ -179,7 +135,7 @@ export default function AdminMotoristasPage() {
           <Shield className="h-16 w-16 text-red-400 mx-auto mb-4" />
           <h1 className="text-2xl font-bold text-white mb-2">Acesso Negado</h1>
           <p className="text-gray-400">
-            Apenas administradores podem acessar esta página.
+            Apenas administradores podem acessar esta pagina.
           </p>
         </div>
       </div>
@@ -194,24 +150,17 @@ export default function AdminMotoristasPage() {
     );
   }
 
-  // ============================================
-  // Main Render
-  // ============================================
   return (
     <AdminMotoristasLayout>
-      {/* Header */}
       <AdminMotoristasHeaderSection />
 
-      {/* Tabs */}
       <AdminMotoristasTabsSection
         activeTab={activeTab}
         onTabChange={setActiveTab}
         drivers={drivers}
       >
-        {/* Stats */}
         <AdminMotoristasStatsSection stats={stats} />
 
-        {/* Filters */}
         <AdminMotoristasFiltersSection
           filter={filter}
           onFilterChange={setFilter}
@@ -219,7 +168,6 @@ export default function AdminMotoristasPage() {
           onSearchChange={setSearch}
         />
 
-        {/* List or Empty */}
         {filteredDrivers.length === 0 ? (
           <AdminMotoristasEmptySection filter={filter} />
         ) : (
@@ -230,7 +178,6 @@ export default function AdminMotoristasPage() {
         )}
       </AdminMotoristasTabsSection>
 
-      {/* Dialogs */}
       <DriverReviewDialog
         open={reviewOpen}
         onOpenChange={setReviewOpen}
@@ -244,7 +191,7 @@ export default function AdminMotoristasPage() {
 
       <ConfirmationDialog
         open={confirmDialog.open}
-        onOpenChange={(open) => setConfirmDialog({ ...confirmDialog, open })}
+        onOpenChange={(open) => setConfirmDialog((current) => ({ ...current, open }))}
         title={confirmDialog.title}
         description={confirmDialog.description}
         onConfirm={confirmDialog.action}
