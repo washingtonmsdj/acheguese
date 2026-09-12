@@ -21,7 +21,6 @@ export function isSkippableVercelPath(filePath) {
   if (!normalized) return false;
 
   if (normalized.startsWith(".github/")) return true;
-  if (normalized.startsWith(".kiro/")) return true;
   if (normalized.startsWith("tests/")) return true;
   if (normalized.startsWith("e2e/")) return true;
 
@@ -73,10 +72,6 @@ function ensureGitCommitAvailable(sha) {
     return { available: true, fetched: false, detail: "" };
   }
 
-  // Vercel can provide a shallow checkout without a configured `origin` remote.
-  // In that case we cannot prove the previous successful deployment tree, so the
-  // safe behavior is to fail open to a normal build instead of emitting a fatal
-  // git fetch error or guessing from HEAD^.
   if (!gitRemoteAvailable("origin")) {
     return {
       available: false,
