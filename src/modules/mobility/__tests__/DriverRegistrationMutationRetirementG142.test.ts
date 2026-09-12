@@ -11,7 +11,7 @@ describe("G142 driver registration mutation retirement", () => {
     "src/core/mobility/services/mobility.mutations.ts",
   );
   const driverService = readProjectFile(
-    "src/core/mobility/services/DriverService.impl.ts",
+    "src/core/mobility/services/DriverService.ts",
   );
   const facade = readProjectFile(
     "src/core/mobility/services/MobilityService.ts",
