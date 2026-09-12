@@ -79,6 +79,17 @@ export const QUERYABLE_CLOSED_RIDE_STATUSES: readonly string[] = [
   ...LEGACY_CLOSED_RIDE_STATUSES,
 ];
 
+/**
+ * Statuses whose terminal meaning is specifically cancellation. The unresolved
+ * historical `cancelled` alias is preserved as cancellation without guessing
+ * whether passenger or driver caused it.
+ */
+export const QUERYABLE_CANCELLED_RIDE_STATUSES: readonly string[] = [
+  RIDE_STATE.CANCELLED_BY_DRIVER,
+  RIDE_STATE.CANCELLED_BY_PASSENGER,
+  ...LEGACY_CLOSED_RIDE_STATUSES,
+];
+
 const PRE_ACCEPT_CANONICAL_RIDE_STATUSES = new Set<RideState>([
   RIDE_STATE.REQUESTED,
   RIDE_STATE.SEARCHING_DRIVER,
@@ -147,6 +158,12 @@ export function isClosedRideStatus(
   status: string | null | undefined,
 ): boolean {
   return Boolean(status && QUERYABLE_CLOSED_RIDE_STATUSES.includes(status));
+}
+
+export function isCancelledRideStatus(
+  status: string | null | undefined,
+): boolean {
+  return Boolean(status && QUERYABLE_CANCELLED_RIDE_STATUSES.includes(status));
 }
 
 export function isPreAcceptRideStatus(
