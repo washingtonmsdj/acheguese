@@ -26,7 +26,7 @@ const runtimeService = readProjectFile(
   "src/core/mobility/services/MobilityRuntimeService.ts",
 );
 const driverService = readProjectFile(
-  "src/core/mobility/services/DriverService.impl.ts",
+  "src/core/mobility/services/DriverService.ts",
 );
 const activityStatsService = readProjectFile(
   "src/core/mobility/services/DriverActivityStatsService.ts",
@@ -106,7 +106,7 @@ describe("G83 driver presence SSOT", () => {
     );
   });
 
-  it("keeps the legacy DriverService profile read aligned with availability", () => {
+  it("keeps DriverService profile reads aligned with availability", () => {
     expect(driverService).toContain("DriverAvailabilityService.getStatus");
     expect(driverService).toContain("availability?.isOnline ?? false");
     expect(driverService).not.toContain("async createDriverProfile(");
