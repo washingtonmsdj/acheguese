@@ -9,6 +9,7 @@
 import { supabase } from "@/integrations/supabase";
 import { logger } from "@/shared/utils/logger";
 import { profileService, ProfileService } from "@/core/profiles/services/ProfileService";
+import { DriverService } from "@/core/profiles/services/multi-profile/driverService";
 import { ProfileMembersService } from "@/core/profiles/services/multi-profile/profileMembersService";
 import { getProfessionalLinkedEntityByProfileId } from "@/core/professional/services/professional.linked-entity";
 import { adminNotificationsService } from "./AdminNotificationsService";
@@ -359,8 +360,7 @@ class AdminProfileGovernanceService {
         profileService.getProfilesByUserId(userId).then((data: unknown[]) => ({ data, error: null })),
         supabase.from("business_data").select("*").eq("profile_id", profileId).maybeSingle(),
         getProfessionalLinkedEntityByProfileId(profileId),
-        // ✅ SSOT: Usar profileService.getDriverData
-        profileService.getDriverData(profileId).then((data: unknown) => ({ data, error: null })),
+        DriverService.getDriverData(profileId).then((data) => ({ data, error: null })),
         adminNotificationsService.getUserSettings(userId),
         ProfileService.getUsernameHistory(profileId),
         loadAuthSummary(userId),
@@ -391,7 +391,6 @@ class AdminProfileGovernanceService {
           professionalResult.error,
         );
       }
-      // Driver data agora vem do ProfileService, não precisa verificar erro
       
       const roles = ((rolesData.data as RawRecord[]) ?? []).map((row) => ({
         id: typeof row === 'string' ? row : requiredText(row.id, "role"),
@@ -416,7 +415,7 @@ class AdminProfileGovernanceService {
       const linkedEntities = buildLinkedEntities({
         business: businessResult.data as RawRecord | null,
         professional: professionalResult.data as RawRecord | null,
-        driver: driverData.data as RawRecord | null,
+        driver: driverData.data as unknown as RawRecord | null,
       });
 
       const members = ((membersResult.data as RawRecord[]) ?? []).map((row) => ({
