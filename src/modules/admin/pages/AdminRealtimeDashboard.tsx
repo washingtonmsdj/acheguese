@@ -286,11 +286,6 @@ export default function AdminRealtimeDashboard() {
                       <p className="text-sm font-bold text-emerald-600">
                         {formatCurrency(ride.current_price)}
                       </p>
-                      {ride.estimated_duration ? (
-                        <p className="text-xs text-muted-foreground">
-                          ~{ride.estimated_duration}min
-                        </p>
-                      ) : null}
                     </div>
                   </div>
                 ))
@@ -419,7 +414,7 @@ export default function AdminRealtimeDashboard() {
 
               <div className="border-t pt-3 text-center">
                 <p className="text-xs text-muted-foreground">
-                  Valores de `final_price`/`actual_fare`; não representam receita líquida da plataforma.
+                  Valores concluídos; não representam receita líquida da plataforma.
                 </p>
                 <p className="mt-1 text-xs text-muted-foreground">
                   Última atualização: {formatTime(metrics.lastUpdate)}
