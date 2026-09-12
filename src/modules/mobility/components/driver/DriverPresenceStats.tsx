@@ -1,13 +1,10 @@
 import { useEffect, useState } from "react";
-import {
-  Card,
-  CardContent,
-} from "@/shared/components/ui/card";
-import { Clock, TrendingUp, Calendar, Award } from "lucide-react";
+import { Card, CardContent } from "@/shared/components/ui/card";
+import { Clock, TrendingUp, Calendar, Radio } from "lucide-react";
 import { cn } from "@/shared/utils/cn";
 import {
-  DriverPresenceService,
-  type DriverPresenceStats as PresenceStats,
+  DriverActivityStatsService,
+  type DriverActivityStats,
 } from "@/core/mobility/services";
 
 interface DriverPresenceStatsProps {
@@ -15,17 +12,31 @@ interface DriverPresenceStatsProps {
   className?: string;
 }
 
+function formatMinutes(minutes: number): string {
+  if (minutes < 60) return `${minutes}min`;
+  const hours = Math.floor(minutes / 60);
+  const mins = minutes % 60;
+  return mins > 0 ? `${hours}h ${mins}min` : `${hours}h`;
+}
+
+function statusLabel(stats: DriverActivityStats): string {
+  if (!stats.isCurrentlyOnline) return "Offline";
+  if (stats.availabilityStatus === "busy") return "Em operação";
+  if (stats.availabilityStatus === "online_available") return "Disponível";
+  return "Online";
+}
+
 export function DriverPresenceStats({
   driverProfileId,
   className,
 }: DriverPresenceStatsProps) {
-  const [stats, setStats] = useState<PresenceStats | null>(null);
+  const [stats, setStats] = useState<DriverActivityStats | null>(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     let isMounted = true;
 
-    DriverPresenceService.getDriverPresenceStats(driverProfileId)
+    DriverActivityStatsService.getStats(driverProfileId)
       .then((data) => {
         if (!isMounted) return;
         setStats(data);
@@ -42,13 +53,6 @@ export function DriverPresenceStats({
     };
   }, [driverProfileId]);
 
-  function formatMinutes(minutes: number): string {
-    if (minutes < 60) return `${minutes}min`;
-    const hours = Math.floor(minutes / 60);
-    const mins = minutes % 60;
-    return mins > 0 ? `${hours}h ${mins}min` : `${hours}h`;
-  }
-
   if (loading || !stats) {
     return null;
   }
@@ -58,13 +62,14 @@ export function DriverPresenceStats({
       <Card>
         <CardContent className="p-4">
           <div className="flex items-center justify-between mb-2">
-            <Clock className="h-4 w-4 text-teal-500" />
-            <span className="text-xs text-muted-foreground">Sessao atual</span>
+            <Radio className="h-4 w-4 text-teal-500" />
+            <span className="text-xs text-muted-foreground">Agora</span>
           </div>
-          <div className="text-2xl font-bold text-teal-500">
-            {stats.is_currently_online
-              ? formatMinutes(stats.current_session_minutes)
-              : "---"}
+          <div className="text-lg font-bold text-teal-500">
+            {statusLabel(stats)}
+          </div>
+          <div className="mt-1 text-xs text-muted-foreground">
+            Presença operacional em tempo real
           </div>
         </CardContent>
       </Card>
@@ -76,7 +81,10 @@ export function DriverPresenceStats({
             <span className="text-xs text-muted-foreground">Hoje</span>
           </div>
           <div className="text-2xl font-bold text-blue-500">
-            {formatMinutes(stats.online_today_minutes)}
+            {formatMinutes(stats.completedRideMinutesToday)}
+          </div>
+          <div className="mt-1 text-xs text-muted-foreground">
+            Em corridas concluídas
           </div>
         </CardContent>
       </Card>
@@ -88,7 +96,10 @@ export function DriverPresenceStats({
             <span className="text-xs text-muted-foreground">Esta semana</span>
           </div>
           <div className="text-2xl font-bold text-purple-500">
-            {formatMinutes(stats.online_this_week_minutes)}
+            {formatMinutes(stats.completedRideMinutesThisWeek)}
+          </div>
+          <div className="mt-1 text-xs text-muted-foreground">
+            Em corridas concluídas
           </div>
         </CardContent>
       </Card>
@@ -96,18 +107,17 @@ export function DriverPresenceStats({
       <Card>
         <CardContent className="p-4">
           <div className="flex items-center justify-between mb-2">
-            <Award className="h-4 w-4 text-amber-500" />
-            <span className="text-xs text-muted-foreground">Total</span>
+            <Clock className="h-4 w-4 text-amber-500" />
+            <span className="text-xs text-muted-foreground">Histórico</span>
           </div>
           <div className="text-2xl font-bold text-amber-500">
-            {formatMinutes(stats.total_online_time_minutes)}
+            {formatMinutes(stats.completedRideMinutesTotal)}
           </div>
           <div className="text-xs text-muted-foreground mt-1">
-            {stats.total_sessions} sessoes
+            {stats.completedRideCount} corridas concluídas
           </div>
         </CardContent>
       </Card>
     </div>
   );
 }
-
