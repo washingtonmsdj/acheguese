@@ -1,34 +1,50 @@
-import { readFileSync } from "node:fs";
+import { existsSync, readFileSync } from "node:fs";
 import { resolve } from "node:path";
 import { describe, expect, it } from "vitest";
 
+function projectPath(path: string): string {
+  return resolve(process.cwd(), path);
+}
+
 function readProjectFile(path: string): string {
-  return readFileSync(resolve(process.cwd(), path), "utf8");
+  return readFileSync(projectPath(path), "utf8");
 }
 
 describe("G137 static ride reader retirement", () => {
-  const staticService = readProjectFile(
-    "src/core/mobility/services/MobilityService.impl.ts",
+  const facade = readProjectFile(
+    "src/core/mobility/services/MobilityService.ts",
   );
   const rideService = readProjectFile(
-    "src/core/mobility/services/RideService.impl.ts",
+    "src/core/mobility/services/RideService.ts",
   );
 
-  it("removes duplicate passenger and active ride readers from the static compatibility class", () => {
-    expect(staticService).not.toContain("static async getRidesByPassenger(");
-    expect(staticService).not.toContain("static async getActiveRide(userProfileId");
-    expect(staticService).not.toContain("QUERYABLE_OPEN_RIDE_STATUSES");
+  it("keeps retired split implementation paths absent", () => {
+    expect(
+      existsSync(projectPath("src/core/mobility/services/MobilityService.impl.ts")),
+    ).toBe(false);
+    expect(
+      existsSync(projectPath("src/core/mobility/services/RideService.impl.ts")),
+    ).toBe(false);
+    expect(facade).not.toContain("MobilityService.impl");
+    expect(facade).not.toContain("RideService.impl");
   });
 
   it("keeps the canonical ride service routed through mobility queries", () => {
     expect(rideService).toContain("getRidesByPassenger,");
     expect(rideService).toContain("getActiveRide,");
-    expect(rideService).toContain("await getRidesByPassenger(passengerId)");
-    expect(rideService).toContain("await getActiveRide(userId)");
+    expect(rideService).toContain("return getRidesByPassenger(passengerId)");
+    expect(rideService).toContain("return getActiveRide(userId)");
   });
 
-  it("does not restore broad passenger or active reads in the static service", () => {
-    expect(staticService).not.toContain('.eq("passenger_profile_id", passengerProfileId)');
-    expect(staticService).not.toContain("passenger_profile_id.eq.${userProfileId}");
+  it("does not restore duplicate passenger or active ride readers in the facade", () => {
+    expect(facade).not.toContain("static async getRidesByPassenger(");
+    expect(facade).not.toContain("static async getActiveRide(userProfileId");
+    expect(facade).not.toContain("QUERYABLE_OPEN_RIDE_STATUSES");
+    expect(facade).not.toContain('.eq("passenger_profile_id", passengerProfileId)');
+  });
+
+  it("does not preserve the dead shareRide no-op", () => {
+    expect(rideService).not.toContain("shareRide(");
+    expect(rideService).not.toContain("Future implementation");
   });
 });
