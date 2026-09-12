@@ -12,6 +12,7 @@ import type { RideRequest } from "../types/types";
 import { toRideRequestContract } from "./RideCanonicalAdapter";
 import { sanitizeDriverSelfServiceUpdate } from "./driverDataSelfService";
 import { DriverEarningsReadService } from "./DriverEarningsReadService";
+import { MobilityRpcService } from "./MobilityRpcService";
 
 type ErrorLike = { message?: string | null; code?: string | null } | null;
 
@@ -67,8 +68,12 @@ type DriverCompleteProfileRecord = {
 };
 type DriverVerificationStatusRow = {
   is_verified: boolean | null;
-  is_online: boolean | null;
   subscription_active: boolean | null;
+};
+type DriverAvailabilityPresenceRow = {
+  is_online: boolean | null;
+  is_available: boolean | null;
+  last_location_update: string | null;
 };
 type DriverStatsDetailedRow = Pick<
   DriverDataRecord,
@@ -78,10 +83,13 @@ type DriverStatsDetailedRow = Pick<
   | "total_rides_cancelled"
   | "acceptance_rate"
   | "cancellation_rate"
-  | "is_online"
   | "is_verified"
   | "subscription_active"
->;
+> & {
+  is_online: boolean;
+  is_available: boolean;
+  last_location_update: string | null;
+};
 type AddressSummaryRow = {
   street: string | null;
   latitude: number | null;
@@ -129,6 +137,19 @@ class MobilityServiceInstance {
       );
       return null;
     }
+  }
+
+  private async getDriverAvailabilityPresence(
+    driverProfileId: string,
+  ): Promise<DriverAvailabilityPresenceRow | null> {
+    const { data, error } = await db
+      .from<DriverAvailabilityPresenceRow>("driver_availability")
+      .select("is_online, is_available, last_location_update")
+      .eq("profile_id", driverProfileId)
+      .maybeSingle();
+
+    if (error) throw error;
+    return data;
   }
 
   // -- Driver --------------------------------------------------------------
@@ -225,25 +246,42 @@ class MobilityServiceInstance {
   }
 
   async updateDriverOnlineStatus(driverProfileId: string, isOnline: boolean): Promise<void> {
-    await this.updateDriverData(driverProfileId, {
-      is_online: isOnline,
-      is_available: isOnline ? undefined : false,
-      updated_at: new Date().toISOString(),
+    const result = await MobilityRpcService.updateDriverAvailability({
+      driverProfileId,
+      availabilityAction: isOnline ? "go_online" : "go_offline",
     });
+
+    if (result.success !== true) {
+      throw new Error(
+        result.error ||
+          result.reason ||
+          (isOnline ? "Could not set driver online" : "Could not set driver offline"),
+      );
+    }
   }
 
   async getDriverStatsDetailed(driverProfileId: string): Promise<DriverStatsDetailedRow | null> {
     try {
-      const { data, error } = await db
-        .from<DriverStatsDetailedRow>("driver_data")
-        .select(
-          "rating, total_rides, total_rides_completed, total_rides_cancelled, acceptance_rate, cancellation_rate, is_online, is_verified, subscription_active",
-        )
-        .eq("profile_id", driverProfileId)
-        .maybeSingle();
+      const [driverResult, availability] = await Promise.all([
+        db
+          .from<Omit<DriverStatsDetailedRow, "is_online" | "is_available" | "last_location_update">>("driver_data")
+          .select(
+            "rating, total_rides, total_rides_completed, total_rides_cancelled, acceptance_rate, cancellation_rate, is_verified, subscription_active",
+          )
+          .eq("profile_id", driverProfileId)
+          .maybeSingle(),
+        this.getDriverAvailabilityPresence(driverProfileId),
+      ]);
 
-      if (error) throw error;
-      return data;
+      if (driverResult.error) throw driverResult.error;
+      if (!driverResult.data) return null;
+
+      return {
+        ...driverResult.data,
+        is_online: availability?.is_online ?? false,
+        is_available: availability?.is_available ?? false,
+        last_location_update: availability?.last_location_update ?? null,
+      };
     } catch (error) {
       logger.error("mobilityService.getDriverStatsDetailed", error as Error);
       return null;
@@ -256,17 +294,20 @@ class MobilityServiceInstance {
     subscription_active: boolean;
   }> {
     try {
-      const { data, error } = await db
-        .from<DriverVerificationStatusRow>("driver_data")
-        .select("is_verified, is_online, subscription_active")
-        .eq("profile_id", driverProfileId)
-        .maybeSingle();
+      const [driverResult, availability] = await Promise.all([
+        db
+          .from<DriverVerificationStatusRow>("driver_data")
+          .select("is_verified, subscription_active")
+          .eq("profile_id", driverProfileId)
+          .maybeSingle(),
+        this.getDriverAvailabilityPresence(driverProfileId),
+      ]);
 
-      if (error) throw error;
+      if (driverResult.error) throw driverResult.error;
       return {
-        is_verified: data?.is_verified ?? false,
-        is_online: data?.is_online ?? false,
-        subscription_active: data?.subscription_active ?? false,
+        is_verified: driverResult.data?.is_verified ?? false,
+        is_online: availability?.is_online ?? false,
+        subscription_active: driverResult.data?.subscription_active ?? false,
       };
     } catch (error) {
       logger.error("mobilityService.getDriverVerificationStatus", error as Error);
