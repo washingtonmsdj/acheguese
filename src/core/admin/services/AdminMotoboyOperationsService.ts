@@ -4,9 +4,9 @@ import {
   RideStateMachine,
   type RideState,
 } from "@/core/mobility/core/RideStateMachine";
-import { getRideById } from "@/core/mobility/services/mobility.queries";
 import { MobilityRpcService } from "@/core/mobility/services/MobilityRpcService";
 import { MobilityService } from "@/core/mobility/services/runtime";
+import { RideOperationalContextReadService } from "@/core/mobility/services/RideOperationalContextReadService";
 
 export interface AdminMotoboyDelivery {
   id: string;
@@ -73,7 +73,7 @@ export class AdminMotoboyOperationsService {
    * operacoes normais, incluindo auditoria e efeitos pos-transicao.
    */
   static async cancelOperational(rideId: string, reason: string): Promise<void> {
-    const ride = (await getRideById(rideId)) as { status?: string } | null;
+    const ride = await RideOperationalContextReadService.getLifecycle(rideId);
     if (!ride?.status) {
       throw new Error("Entrega nao encontrada");
     }
@@ -96,7 +96,6 @@ export class AdminMotoboyOperationsService {
     if (!result.success) {
       throw new Error(result.error || "Cancelamento operacional nao aplicado");
     }
-
   }
 
   /**
