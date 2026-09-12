@@ -1,14 +1,16 @@
-import { supabase } from "@/integrations/supabase";
 import { RIDE_STATUS } from "@/core/mobility/constants";
+import { supabase } from "@/integrations/supabase";
 
 const PAGE_SIZE = 1000;
 
 interface RideLifecycleRow {
+  id: string;
   driver_profile_id: string | null;
   status: string;
 }
 
 interface DriverModerationSuspensionRow {
+  id: string;
   driver_profile_id: string;
   action: string;
 }
@@ -19,6 +21,7 @@ type QueryBuilder<T> = QueryResult<T> & {
   select(columns: string): QueryBuilder<T>;
   in(column: string, values: readonly string[]): QueryBuilder<T>;
   eq(column: string, value: string): QueryBuilder<T>;
+  order(column: string, options: { ascending: boolean }): QueryBuilder<T>;
   range(from: number, to: number): QueryBuilder<T>;
 };
 
@@ -42,8 +45,9 @@ async function readRideRows(profileIds: readonly string[]): Promise<RideLifecycl
   for (let from = 0; ; from += PAGE_SIZE) {
     const { data, error } = await db
       .from("ride_requests")
-      .select("driver_profile_id, status")
+      .select("id, driver_profile_id, status")
       .in("driver_profile_id", profileIds)
+      .order("id", { ascending: true })
       .range(from, from + PAGE_SIZE - 1);
 
     if (error) {
@@ -66,9 +70,10 @@ async function readSuspensionRows(
   for (let from = 0; ; from += PAGE_SIZE) {
     const { data, error } = await db
       .from("driver_moderation_events")
-      .select("driver_profile_id, action")
+      .select("id, driver_profile_id, action")
       .in("driver_profile_id", profileIds)
       .eq("action", "suspended")
+      .order("id", { ascending: true })
       .range(from, from + PAGE_SIZE - 1);
 
     if (error) {
