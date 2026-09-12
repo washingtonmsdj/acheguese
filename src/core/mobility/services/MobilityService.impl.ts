@@ -250,7 +250,7 @@ export class MobilityService {
         pickup_address_id,
         pickup_location_id,
         created_at,
-        pickup_address:addresses!pickup_address_id_fkey(latitude, longitude)
+        pickup_address:addresses!pickup_address_id(latitude, longitude)
       `)
       .eq("id", rideId)
       .maybeSingle();
