@@ -1,6 +1,6 @@
 /**
  * Stats Calculator
- * 
+ *
  * Funções para cálculo de estatísticas de motoristas
  */
 
@@ -16,37 +16,36 @@ export function calculateDriverStats(drivers: readonly DriverRequest[]): DriverS
     pending: drivers.filter(isDriverPending).length,
     approved: drivers.filter(isDriverApproved).length,
     online: drivers.filter(isDriverOnline).length,
-    totalRides: drivers.reduce((sum, d) => sum + (d.total_rides || 0), 0),
+    totalRides: drivers.reduce((sum, d) => sum + d.total_rides, 0),
   };
 }
 
 /**
- * Filtra motoristas por status e busca
+ * Filtra motoristas por status e busca.
+ * A lista recebida é sempre o conjunto administrativo completo; filtros são
+ * somente de apresentação e não alteram as estatísticas globais.
  */
 export function filterDrivers(
   drivers: readonly DriverRequest[],
   filter: FilterStatus,
-  search: string
+  search: string,
 ): DriverRequest[] {
   let filtered = [...drivers];
 
-  // Aplicar filtro de status
   if (filter === "pending") {
     filtered = filtered.filter(isDriverPending);
   } else if (filter === "approved") {
     filtered = filtered.filter(isDriverApproved);
   } else if (filter === "rejected") {
-    // Buscar motoristas rejeitados se houver uma coluna para isso
-    filtered = [];
+    filtered = filtered.filter((driver) => driver.verification_status === "rejected");
   }
 
-  // Aplicar busca
-  if (search) {
-    const q = search.toLowerCase();
+  const query = search.trim().toLowerCase();
+  if (query) {
     filtered = filtered.filter(
-      (d) =>
-        d.name.toLowerCase().includes(q) ||
-        d.vehicle_plate.toLowerCase().includes(q)
+      (driver) =>
+        driver.name.toLowerCase().includes(query) ||
+        (driver.vehicle_plate ?? "").toLowerCase().includes(query),
     );
   }
 
