@@ -9,7 +9,10 @@ export { CommunityRpcOperationsPanel } from "./CommunityRpcOperationsPanel";
 export { AdminDataState } from "./AdminDataState";
 export { AdminErrorState } from "./AdminErrorState";
 export { AdminTable } from "./AdminTable";
-export { DriverEarningsMetrics } from "./DriverEarningsMetrics";
+export {
+  DriverOperationalMetrics,
+  type DriverOperationalMetricRow,
+} from "./DriverOperationalMetrics";
 export { DriverCancellationMetrics } from "./DriverCancellationMetrics";
 export { ReputationManagementPanel } from "./ReputationManagementPanel";
 export { TrustEventsQueue } from "./TrustEventsQueue";
