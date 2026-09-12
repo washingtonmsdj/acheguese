@@ -26,7 +26,6 @@ export {
   getOperationalVerificationEntries,
   getRideAvailableSeats,
   getRideBasicInfo,
-  getRideStateAuditEntries,
   getRideWithAddresses,
 } from "./mobility.ride-read-queries";
 export {
