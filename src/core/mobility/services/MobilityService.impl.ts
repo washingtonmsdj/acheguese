@@ -1,18 +1,13 @@
 /**
- * MobilityService - SSOT de mobilidade.
+ * MobilityService - compatibility surface for mobility operations not yet moved
+ * to dedicated bounded read/command services.
  *
- * Ponto de acesso a leituras administrativas e operacoes runtime de mobilidade.
- *
- * Exporta:
- * - MobilityService: classe estatica para leituras operacionais ainda nao migradas.
- * - mobilityService: instancia singleton para escrita/runtime.
+ * Keep this class intentionally small. New reads belong to dedicated services
+ * or the functional query modules; do not rebuild parallel read authorities here.
  */
 
 import { supabase } from "@/integrations/supabase";
 import { logger } from "@/shared/utils/logger";
-import { profileService } from "@/core/profiles/services/ProfileService";
-import { DriverEarningsReadService } from "./DriverEarningsReadService";
-import { RideRatingService } from "./RideRatingService";
 import { RideOperationalContextReadService } from "./RideOperationalContextReadService";
 
 type ErrorLike = { message?: string | null; code?: string | null } | null;
@@ -26,26 +21,14 @@ type QueryPayload<TRow> = {
 type SingleQueryPayload<TRow> = {
   data: TRow | null;
   error: ErrorLike;
-  count?: number | null;
 };
 
 type TableClient<TRow> = PromiseLike<QueryPayload<TRow>> & {
   select(columns?: string, options?: { count?: "exact"; head?: boolean }): TableClient<TRow>;
-  insert(values: Record<string, unknown> | Record<string, unknown>[]): TableClient<TRow>;
-  update(values: Record<string, unknown>): TableClient<TRow>;
-  delete(): TableClient<TRow>;
   eq(column: string, value: unknown): TableClient<TRow>;
-  neq(column: string, value: unknown): TableClient<TRow>;
-  in(column: string, values: readonly unknown[]): TableClient<TRow>;
-  not(column: string, operator: string, value: unknown): TableClient<TRow>;
-  is(column: string, value: null): TableClient<TRow>;
-  or(filter: string): TableClient<TRow>;
-  gte(column: string, value: unknown): TableClient<TRow>;
   order(column: string, options?: { ascending: boolean }): TableClient<TRow>;
   limit(count: number): TableClient<TRow>;
   maybeSingle(): Promise<SingleQueryPayload<TRow>>;
-  single(): Promise<SingleQueryPayload<TRow>>;
-  throwOnError(): Promise<void>;
 };
 
 type MobilityImplDbClient = {
@@ -58,24 +41,7 @@ type MobilityImplDbClient = {
 
 const db = supabase as unknown as MobilityImplDbClient;
 
-// --- Static read/admin API ---------------------------------------------------
-
 export class MobilityService {
-  static async getRideSourceIdById(rideId: string, sourceType?: string): Promise<string | null> {
-    let query = db
-      .from<{ source_id: string | null }>("ride_requests")
-      .select("source_id")
-      .eq("id", rideId);
-
-    if (sourceType) {
-      query = query.eq("source_type", sourceType);
-    }
-
-    const { data, error } = await query.maybeSingle();
-    if (error) throw error;
-    return data?.source_id || null;
-  }
-
   static async listMotoboyDeliveries(filters: {
     status?: string;
     sourceType?: string;
@@ -102,17 +68,30 @@ export class MobilityService {
     return data || [];
   }
 
-  static async listMotoboyStatsRows(): Promise<Array<{ status: string; created_at: string; driver_profile_id: string | null }>> {
+  static async listMotoboyStatsRows(): Promise<
+    Array<{ status: string; created_at: string; driver_profile_id: string | null }>
+  > {
     const { data, error } = await db
-      .from<{ status: string; created_at: string; driver_profile_id: string | null }>("ride_requests")
+      .from<{ status: string; created_at: string; driver_profile_id: string | null }>(
+        "ride_requests",
+      )
       .select("id, status, created_at, driver_profile_id")
       .eq("ride_mode", "motoboy");
 
     if (error) throw error;
-    return (data as Array<{ status: string; created_at: string; driver_profile_id: string | null }>) || [];
+    return (
+      data as Array<{
+        status: string;
+        created_at: string;
+        driver_profile_id: string | null;
+      }>
+    ) || [];
   }
 
-  static async countDeliveredBySource(sourceType: string, sourceId: string): Promise<number> {
+  static async countDeliveredBySource(
+    sourceType: string,
+    sourceId: string,
+  ): Promise<number> {
     const { count, error } = await db
       .from("ride_requests")
       .select("id", { count: "exact", head: true })
@@ -145,10 +124,8 @@ export class MobilityService {
   }
 
   /**
-   * Compatibility lookup for legacy static callers.
-   *
-   * This intentionally exposes only lifecycle/participant fields. UI/readback
-   * payloads belong to MobilityRuntimeService or a dedicated read model.
+   * Compatibility lookup still used by MotoboyAuthorizationService.
+   * It delegates to the bounded lifecycle reader instead of reading a generic row.
    */
   static async getRideById(id: string): Promise<unknown | null> {
     try {
@@ -158,113 +135,6 @@ export class MobilityService {
       return null;
     }
   }
-
-  static async getActiveRideByDriverProfile(
-    driverProfileId: string,
-    statuses: string[],
-    excludeRideId?: string,
-  ): Promise<unknown | null> {
-    let query = db
-      .from("ride_requests")
-      .select("id")
-      .eq("driver_profile_id", driverProfileId)
-      .in("status", statuses);
-
-    if (excludeRideId) {
-      query = query.neq("id", excludeRideId);
-    }
-
-    const { data, error } = await query.maybeSingle();
-    if (error) throw error;
-    return data || null;
-  }
-
-  static async getRideDispatchData(rideId: string): Promise<unknown | null> {
-    const { data, error } = await db
-      .from("ride_requests")
-      .select(`
-        id,
-        status,
-        passenger_profile_id,
-        pickup_address_id,
-        pickup_location_id,
-        created_at,
-        pickup_address:addresses!pickup_address_id(latitude, longitude)
-      `)
-      .eq("id", rideId)
-      .maybeSingle();
-
-    if (error) throw error;
-    return data || null;
-  }
-
-  static async getDriverDataByProfileIds(profileIds: string[]): Promise<unknown[]> {
-    if (!profileIds.length) return [];
-
-    const { data, error } = await db
-      .from<{ profile_id: string; rating: number | null; can_do_delivery: boolean | null }>("driver_data")
-      .select("profile_id, rating, can_do_delivery")
-      .in("profile_id", profileIds);
-
-    if (error) throw error;
-    return data || [];
-  }
-
-  static async getMobilityStats(): Promise<{ total_drivers: number; total_rides: number }> {
-    try {
-      const [driversResult, ridesResult] = await Promise.all([
-        supabase.from("driver_data").select("id", { count: "exact", head: true }),
-        supabase.from("ride_requests").select("id", { count: "exact", head: true }),
-      ]);
-
-      return {
-        total_drivers: driversResult.count || 0,
-        total_rides: ridesResult.count || 0,
-      };
-    } catch (error) {
-      logger.error("MobilityService.getMobilityStats", error as Error);
-      return { total_drivers: 0, total_rides: 0 };
-    }
-  }
-
-  static async getDriverEarnings(driverProfileId: string): Promise<unknown[]> {
-    try {
-      return await DriverEarningsReadService.list(driverProfileId);
-    } catch (error) {
-      logger.error("MobilityService.getDriverEarnings", error as Error);
-      return [];
-    }
-  }
-
-  static async getCompletedRidePaymentsByDriver(
-    driverProfileId: string,
-    sinceIso?: string,
-  ): Promise<unknown[]> {
-    const rows = await DriverEarningsReadService.list(driverProfileId, { sinceIso });
-    return rows.map((row) => ({
-      created_at: row.created_at,
-      actual_fare: row.actual_fare,
-      final_price: row.final_price,
-    }));
-  }
-
-  /**
-   * Busca avaliacao media do passageiro
-   * Usado em: PassageiroPage
-   */
-  static async getPassengerRating(profileId: string): Promise<number> {
-    try {
-      const summary = await RideRatingService.getSummary(profileId);
-      return summary.totalRatings > 0
-        ? Number(summary.averageRating.toFixed(1))
-        : 5.0;
-    } catch (error) {
-      logger.error("MobilityService.getPassengerRating", error as Error, { profileId });
-      return 5.0;
-    }
-  }
 }
-
-// --- Instance (escrita / runtime) --------------------------------------------
 
 export { mobilityService } from "./MobilityRuntimeService";
