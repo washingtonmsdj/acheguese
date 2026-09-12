@@ -1,9 +1,13 @@
-import { readFileSync } from "node:fs";
+import { existsSync, readFileSync } from "node:fs";
 import { resolve } from "node:path";
 import { describe, expect, it } from "vitest";
 
+function projectPath(path: string): string {
+  return resolve(process.cwd(), path);
+}
+
 function readProjectFile(path: string): string {
-  return readFileSync(resolve(process.cwd(), path), "utf8");
+  return readFileSync(projectPath(path), "utf8");
 }
 
 describe("G142 driver registration mutation retirement", () => {
@@ -19,6 +23,14 @@ describe("G142 driver registration mutation retirement", () => {
   const runtime = readProjectFile(
     "src/core/mobility/services/MobilityRuntimeService.ts",
   );
+
+  it("retires the split DriverService implementation path", () => {
+    expect(
+      existsSync(projectPath("src/core/mobility/services/DriverService.impl.ts")),
+    ).toBe(false);
+    expect(facade).toContain('from "./DriverService"');
+    expect(facade).not.toContain("DriverService.impl");
+  });
 
   it("removes the duplicate registration mutation and its broad fallback", () => {
     expect(mutations).not.toContain("export async function updateDriverData(");
