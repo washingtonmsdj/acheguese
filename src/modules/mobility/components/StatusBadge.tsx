@@ -1,9 +1,8 @@
 import { RIDE_STATUS_LABELS } from "@/core/mobility/constants";
 import { getRecordValue } from "@/shared/utils/recordLookup";
-import type { RideStatus } from "@/core/mobility/types";
 
 interface StatusBadgeProps {
-  status: RideStatus;
+  status: string;
   size?: "sm" | "md" | "lg";
 }
 
@@ -38,12 +37,16 @@ const sizeClasses = {
 };
 
 export function StatusBadge({ status, size = "md" }: StatusBadgeProps) {
-  const colorClass = getRecordValue(statusColorClasses, status) ?? "bg-muted text-muted-foreground border-border";
+  const colorClass =
+    getRecordValue(statusColorClasses, status) ??
+    "bg-muted text-muted-foreground border-border";
   const label = getRecordValue(RIDE_STATUS_LABELS, status) ?? status;
   const sizeClass = getRecordValue(sizeClasses, size) ?? sizeClasses.md;
 
   return (
-    <span className={`inline-flex items-center rounded-full border font-medium ${colorClass} ${sizeClass}`}>
+    <span
+      className={`inline-flex items-center rounded-full border font-medium ${colorClass} ${sizeClass}`}
+    >
       {label}
     </span>
   );
