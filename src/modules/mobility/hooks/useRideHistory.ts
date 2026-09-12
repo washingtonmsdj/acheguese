@@ -47,6 +47,23 @@ function matchesStatusFilter(ride: RideRequest, status?: string): boolean {
   return ride.status === status;
 }
 
+function toHistoryItem(ride: RideRequest): RideHistoryItem {
+  return {
+    id: ride.id,
+    origin: ride.origin_address || "",
+    destination: ride.destination_address || "",
+    status: ride.status,
+    price: ride.estimated_price || 0,
+    final_price: ride.final_price ?? 0,
+    type: "viagem",
+    created_at: ride.created_at,
+    driver_name: undefined,
+    driver: undefined,
+    passenger: undefined,
+    rating: undefined,
+  };
+}
+
 export function useRideHistory(
   filters?: RideHistoryFilters,
   page?: number,
@@ -76,7 +93,7 @@ export function useRideHistory(
       }
 
       const allRides = (await MobilityFacade.getUserRides(user.id)) as RideRequest[];
-      let rides = allRides.filter(
+      let filteredRides = allRides.filter(
         (ride) =>
           isClosedRideStatus(ride.status) &&
           matchesStatusFilter(ride, filters?.status),
@@ -85,52 +102,44 @@ export function useRideHistory(
       if (filters?.dateFrom) {
         const from = Date.parse(filters.dateFrom);
         if (Number.isFinite(from)) {
-          rides = rides.filter((ride) => Date.parse(ride.created_at) >= from);
+          filteredRides = filteredRides.filter(
+            (ride) => Date.parse(ride.created_at) >= from,
+          );
         }
       }
 
       if (filters?.dateTo) {
         const to = Date.parse(`${filters.dateTo}T23:59:59.999`);
         if (Number.isFinite(to)) {
-          rides = rides.filter((ride) => Date.parse(ride.created_at) <= to);
+          filteredRides = filteredRides.filter(
+            (ride) => Date.parse(ride.created_at) <= to,
+          );
         }
       }
 
+      const stats = {
+        total: filteredRides.length,
+        completed: filteredRides.filter(
+          (ride) => ride.status === RIDE_STATUS.COMPLETED,
+        ).length,
+        cancelled: filteredRides.filter((ride) =>
+          isCancelledRideStatus(ride.status),
+        ).length,
+        totalSpent: filteredRides
+          .filter((ride) => ride.status === RIDE_STATUS.COMPLETED)
+          .reduce((sum, ride) => sum + (ride.final_price ?? 0), 0),
+      };
+
+      let visibleRides = filteredRides;
       if (pageSize) {
         const pageNumber = Math.max(page ?? 1, 1);
         const start = (pageNumber - 1) * pageSize;
-        rides = rides.slice(start, start + pageSize);
+        visibleRides = filteredRides.slice(start, start + pageSize);
       }
 
-      const mapped: RideHistoryItem[] = rides.map((ride) => ({
-        id: ride.id,
-        origin: ride.origin_address || "",
-        destination: ride.destination_address || "",
-        status: ride.status,
-        price: ride.estimated_price || 0,
-        final_price: ride.final_price ?? 0,
-        type: "viagem",
-        created_at: ride.created_at,
-        driver_name: undefined,
-        driver: undefined,
-        passenger: undefined,
-        rating: undefined,
-      }));
-
       return {
-        rides: mapped,
-        stats: {
-          total: mapped.length,
-          completed: mapped.filter(
-            (ride) => ride.status === RIDE_STATUS.COMPLETED,
-          ).length,
-          cancelled: mapped.filter((ride) =>
-            isCancelledRideStatus(ride.status),
-          ).length,
-          totalSpent: mapped
-            .filter((ride) => ride.status === RIDE_STATUS.COMPLETED)
-            .reduce((sum, ride) => sum + ride.final_price, 0),
-        },
+        rides: visibleRides.map(toHistoryItem),
+        stats,
       };
     },
     enabled: Boolean(user),
