@@ -41,7 +41,7 @@ type DriverOnlineDirectoryDbRow = Pick<
     | null;
 };
 
-export interface AdminMobilityRealtimeOnlineDriverRow {
+export type AdminMobilityRealtimeOnlineDriverRow = {
   profile_id: string;
   name: string;
   avatar_url: string | null;
@@ -49,7 +49,7 @@ export interface AdminMobilityRealtimeOnlineDriverRow {
   total_rides: number;
   vehicle_model: string | null;
   vehicle_plate: string | null;
-}
+};
 
 function normalizeIdentity(
   value: DriverOnlineDirectoryDbRow["profiles"],
