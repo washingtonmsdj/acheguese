@@ -21,7 +21,8 @@ import SubscriptionPlans from '@/core/business/components/SubscriptionPlans';
 import { NetworkTab } from '@/core/business';
 import { QrCodeWidget } from '@/core/qr';
 import { QrEntityType } from '@/core/qr/types';
-import { PlanTier, SubscriptionService, useBusinessSubscription } from "@/core/billing";
+import { PlanTier, useBusinessSubscription } from "@/core/billing";
+import { BusinessSubscriptionService } from "@/core/billing/BusinessSubscriptionService";
 import { useMultiProfileContext } from "@/core/profiles/contexts/multi-profile-runtime-context";
 import { ActiveProfileBadge } from "@/core/profiles/components/ActiveProfileBadge";
 import type { BusinessData, DashboardTab } from "@/shared/types/dashboard";
@@ -111,7 +112,7 @@ export default function DashboardEmpresaPage() {
   const handlePlanSelect = async (planId: PlanTier) => {
     if (!businessDataId) return;
 
-    const result = await SubscriptionService.updatePlan(businessDataId, planId);
+    const result = await BusinessSubscriptionService.updatePlan(businessDataId, planId);
     if (result.error) {
       toast.error("Erro ao atualizar plano");
       return;
@@ -236,5 +237,3 @@ export default function DashboardEmpresaPage() {
     </div>
   );
 }
-
-
