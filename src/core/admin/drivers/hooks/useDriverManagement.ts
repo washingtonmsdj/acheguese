@@ -3,7 +3,8 @@
  * useDriverManagement
  *
  * Hook para gerenciar motoristas (carregar, aprovar, rejeitar, suspender, etc).
- * SSOT: persistencia de moderacao em profiles.
+ * SSOT: persistencia de moderacao em profiles/eventos; presenca operacional
+ * pertence a driver_availability e nunca e forjada pelo Admin.
  */
 
 import { useEffect, useState } from "react";
@@ -206,7 +207,7 @@ export function useDriverManagement(filter: FilterStatus, canModerate: boolean, 
 
       toast({
         title: "Motorista aprovado",
-        description: `${driver.name ?? "Motorista"} agora pode aceitar corridas.`,
+        description: `${driver.name ?? "Motorista"} foi aprovado na moderacao.`,
       });
       await loadDrivers();
     } catch (error) {
@@ -236,11 +237,7 @@ export function useDriverManagement(filter: FilterStatus, canModerate: boolean, 
         driverProfileId: driver.profile_id,
         action: "rejected",
         reason: reason.trim(),
-        metadata: { forced_offline: true },
       });
-      await adminMobilityRuntimeService.updateDriverOnlineStatus(driver.profile_id, false).catch((err) =>
-        logger.warn("useDriverManagement.handleReject - online status fallback", err),
-      );
 
       toast({
         title: "Cadastro rejeitado",
@@ -251,33 +248,6 @@ export function useDriverManagement(filter: FilterStatus, canModerate: boolean, 
       toast({
         title: "Erro",
         description: getErrorMessage(error, "Nao foi possivel rejeitar o cadastro."),
-        variant: "destructive",
-      });
-    } finally {
-      setProcessing(false);
-    }
-  };
-
-  const handleToggleOnline = async (driver: DriverRequest, newOnlineStatus: boolean) => {
-    setProcessing(true);
-    try {
-      await adminMobilityRuntimeService.updateDriverOnlineStatus(driver.profile_id, newOnlineStatus);
-      await appendModerationEvent({
-        driverProfileId: driver.profile_id,
-        action: newOnlineStatus ? "set_online" : "set_offline",
-      });
-
-      toast({
-        title: newOnlineStatus ? "Motorista online" : "Motorista offline",
-        description: `${driver.name ?? "Motorista"} foi colocado ${newOnlineStatus ? "online" : "offline"}.`,
-      });
-
-      await loadDrivers();
-    } catch (error) {
-      logger.error("Erro ao alterar status:", error as Error);
-      toast({
-        title: "Erro",
-        description: "Nao foi possivel alterar o status do motorista.",
         variant: "destructive",
       });
     } finally {
@@ -297,9 +267,6 @@ export function useDriverManagement(filter: FilterStatus, canModerate: boolean, 
         suspendedUntil,
       );
 
-      await adminMobilityRuntimeService.updateDriverOnlineStatus(driver.profile_id, false).catch((err) =>
-        logger.warn("Aviso ao atualizar driver_data:", err),
-      );
       await appendModerationEvent({
         driverProfileId: driver.profile_id,
         action: "suspended",
@@ -335,7 +302,7 @@ export function useDriverManagement(filter: FilterStatus, canModerate: boolean, 
 
       toast({
         title: "Motorista reativado",
-        description: `${driver.name ?? "Motorista"} foi reativado e pode voltar a aceitar corridas.`,
+        description: `${driver.name ?? "Motorista"} foi reativado. O proprio motorista precisa ficar online para voltar a receber ofertas.`,
       });
 
       await loadDrivers();
@@ -378,11 +345,8 @@ export function useDriverManagement(filter: FilterStatus, canModerate: boolean, 
     loadDrivers,
     handleApprove,
     handleReject,
-    handleToggleOnline,
     handleSuspend,
     handleReactivate,
     loadSuspensionHistory,
   };
 }
-
-
