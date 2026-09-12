@@ -12,13 +12,13 @@ describe("G98 admin ride stats lifecycle", () => {
   );
 
   it("derives open and cancelled states from lifecycle authorities", () => {
-    expect(service).toContain("QUERYABLE_OPEN_RIDE_STATUSES");
-    expect(service).toContain("LEGACY_CLOSED_RIDE_STATUSES");
-    expect(service).toContain("RIDE_STATE.CANCELLED_BY_DRIVER");
-    expect(service).toContain("RIDE_STATE.CANCELLED_BY_PASSENGER");
+    expect(service).toContain("isOpenRideStatus");
+    expect(service).toContain("isCancelledRideStatus");
     expect(service).toContain("RIDE_STATE.COMPLETED");
     expect(service).toContain("RIDE_STATE.FAILED");
     expect(service).toContain("RIDE_STATE.EXPIRED");
+    expect(service).not.toContain("ADMIN_OPEN_RIDE_STATUSES");
+    expect(service).not.toContain("ADMIN_CANCELLED_RIDE_STATUSES");
   });
 
   it("does not expose legacy pending or revenue labels", () => {
