@@ -227,7 +227,10 @@ export default function AdminRealtimeDashboard() {
             <p className="text-2xl font-bold">{metrics.completionRate}%</p>
             <span className="text-xs text-muted-foreground">Taxa de Conclusão</span>
             <p className="mt-1 text-xs text-muted-foreground">
-              Nota {metrics.avgRating} - {metrics.avgResponseTime}min
+              Nota {metrics.avgRating} · resposta{" "}
+              {metrics.avgResponseTime === null
+                ? "sem amostra"
+                : `${metrics.avgResponseTime}min`}
             </p>
           </CardContent>
         </Card>
