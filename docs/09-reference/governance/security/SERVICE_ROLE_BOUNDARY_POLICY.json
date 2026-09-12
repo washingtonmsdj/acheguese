@@ -101,16 +101,6 @@
       "allowedPatternIds": [
         "service-role-key-literal"
       ]
-    },
-    {
-      "prefix": ".kiro/",
-      "kind": "planning-artifact",
-      "risk": "Low",
-      "label": "Historical planning artifacts may reference service_role as text only.",
-      "authority": "docs/09-reference/governance/security/SUPABASE_SECURITY_MODEL.md#secrets",
-      "allowedPatternIds": [
-        "service-role-key-literal"
-      ]
     }
   ],
   "allowedPaths": [
