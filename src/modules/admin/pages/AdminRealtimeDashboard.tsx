@@ -24,6 +24,7 @@ import {
 
 import { useRealtimeMetrics } from "@/core/admin/hooks/useRealtimeMetrics";
 import { useAdminGuard } from "@/modules/admin/hooks/useAdminGuard";
+import { StatusBadge } from "@/modules/mobility/components/StatusBadge";
 import { Avatar, AvatarFallback, AvatarImage } from "@/shared/components/ui/avatar";
 import { Badge } from "@/shared/components/ui/badge";
 import { Button } from "@/shared/components/ui/button";
@@ -79,30 +80,6 @@ const formatTime = (dateString: string) => {
     hour: "2-digit",
     minute: "2-digit",
   });
-};
-
-const getStatusColor = (status: string) => {
-  const colors = {
-    pending: "bg-amber-500/10 text-amber-600 border-amber-500/20",
-    driver_assigned: "bg-sky-500/10 text-sky-600 border-sky-500/20",
-    driver_on_the_way: "bg-violet-500/10 text-violet-600 border-violet-500/20",
-    driver_arrived: "bg-orange-500/10 text-orange-600 border-orange-500/20",
-    passenger_on_board: "bg-indigo-500/10 text-indigo-600 border-indigo-500/20",
-    in_progress: "bg-emerald-500/10 text-emerald-600 border-emerald-500/20",
-  };
-  return colors[status as keyof typeof colors] || "bg-muted text-muted-foreground";
-};
-
-const getStatusText = (status: string) => {
-  const texts = {
-    pending: "Aguardando",
-    driver_assigned: "Motorista Aceito",
-    driver_on_the_way: "A Caminho",
-    driver_arrived: "Chegou",
-    passenger_on_board: "Embarcou",
-    in_progress: "Em Andamento",
-  };
-  return texts[status as keyof typeof texts] || status;
 };
 
 export default function AdminRealtimeDashboard() {
@@ -279,9 +256,7 @@ export default function AdminRealtimeDashboard() {
                   >
                     <div className="min-w-0 flex-1">
                       <div className="mb-1 flex items-center gap-2">
-                        <Badge className={cn("text-xs", getStatusColor(ride.status))}>
-                          {getStatusText(ride.status)}
-                        </Badge>
+                        <StatusBadge status={ride.status} size="sm" />
                         <span className="text-xs text-muted-foreground">
                           {formatTime(ride.created_at)}
                         </span>
