@@ -18,17 +18,9 @@ type QueryPayload<TRow> = {
   count?: number | null;
 };
 
-type SingleQueryPayload<TRow> = {
-  data: TRow | null;
-  error: ErrorLike;
-};
-
 type TableClient<TRow> = PromiseLike<QueryPayload<TRow>> & {
   select(columns?: string, options?: { count?: "exact"; head?: boolean }): TableClient<TRow>;
   eq(column: string, value: unknown): TableClient<TRow>;
-  order(column: string, options?: { ascending: boolean }): TableClient<TRow>;
-  limit(count: number): TableClient<TRow>;
-  maybeSingle(): Promise<SingleQueryPayload<TRow>>;
 };
 
 type MobilityImplDbClient = {
@@ -42,52 +34,6 @@ type MobilityImplDbClient = {
 const db = supabase as unknown as MobilityImplDbClient;
 
 export class MobilityService {
-  static async listMotoboyDeliveries(filters: {
-    status?: string;
-    sourceType?: string;
-    limit?: number;
-  }): Promise<unknown[]> {
-    let query = db
-      .from("ride_requests")
-      .select(
-        "id, status, source_type, source_id, recipient_name, package_size, suggested_price, created_at, updated_at, driver_profile_id, pickup_location_id, delivery_notes, failed_delivery_reason",
-      )
-      .eq("ride_mode", "motoboy")
-      .order("created_at", { ascending: false })
-      .limit(filters.limit ?? 200);
-
-    if (filters.status && filters.status !== "all") {
-      query = query.eq("status", filters.status);
-    }
-    if (filters.sourceType && filters.sourceType !== "all") {
-      query = query.eq("source_type", filters.sourceType);
-    }
-
-    const { data, error } = await query;
-    if (error) throw error;
-    return data || [];
-  }
-
-  static async listMotoboyStatsRows(): Promise<
-    Array<{ status: string; created_at: string; driver_profile_id: string | null }>
-  > {
-    const { data, error } = await db
-      .from<{ status: string; created_at: string; driver_profile_id: string | null }>(
-        "ride_requests",
-      )
-      .select("id, status, created_at, driver_profile_id")
-      .eq("ride_mode", "motoboy");
-
-    if (error) throw error;
-    return (
-      data as Array<{
-        status: string;
-        created_at: string;
-        driver_profile_id: string | null;
-      }>
-    ) || [];
-  }
-
   static async countDeliveredBySource(
     sourceType: string,
     sourceId: string,
