@@ -2,11 +2,12 @@ import { useMemo } from "react";
 import { useNavigate } from "react-router-dom";
 import { Clock3, MapPin, Navigation2, Radio, ToggleLeft, ToggleRight } from "lucide-react";
 
+import { useMotoristaPage } from "@/core/mobility/hooks/useMotoristaPage";
+import { getMobilityServicePath } from "@/core/mobility/routes/mobilityNavigation";
+import { useServiceAreas } from "@/core/service-areas";
 import { Badge } from "@/shared/components/ui/badge";
 import { Button } from "@/shared/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/shared/components/ui/card";
-import { useMotoristaPage } from "@/core/mobility/hooks/useMotoristaPage";
-import { getMobilityServicePath } from "@/core/mobility/routes/mobilityNavigation";
 
 export interface DriverAvailabilityLayoutProps {
   /**
@@ -15,10 +16,11 @@ export interface DriverAvailabilityLayoutProps {
   service: "motorista" | "motoboy";
 }
 
-function formatValue(value: unknown): string {
-  if (typeof value === "string" && value.trim()) return value;
-  if (typeof value === "number" && Number.isFinite(value)) return `${value}`;
-  return "Nao informado";
+function formatTimestamp(value: unknown): string {
+  if (typeof value !== "string" || !value) return "Sem atualizacao registrada";
+  const parsed = new Date(value);
+  if (Number.isNaN(parsed.getTime())) return "Sem atualizacao registrada";
+  return parsed.toLocaleString("pt-BR");
 }
 
 /**
@@ -36,6 +38,11 @@ export function DriverAvailabilityLayout({ service }: DriverAvailabilityLayoutPr
 
   const driverData = shell.driverData as Record<string, unknown> | null;
   const isMotorista = service === "motorista";
+  const {
+    data: serviceAreas = [],
+    isLoading: serviceAreasLoading,
+    error: serviceAreasError,
+  } = useServiceAreas(shell.driverProfileId ?? "");
 
   const modeLabel = useMemo(
     () => isMotorista
@@ -44,10 +51,23 @@ export function DriverAvailabilityLayout({ service }: DriverAvailabilityLayoutPr
     [driverData, isMotorista],
   );
 
-  const radius = formatValue(driverData?.search_radius_km ?? driverData?.max_search_radius_km);
-  const neighborhoods = formatValue(driverData?.service_neighborhoods ?? driverData?.neighborhoods);
-  const hours = formatValue(driverData?.working_hours ?? driverData?.availability_hours);
-  const lastLocation = formatValue(driverData?.current_location ? JSON.stringify(driverData.current_location) : driverData?.last_location_update);
+  const activeServiceAreas = serviceAreas.filter((area) => area.is_active);
+  const primaryServiceArea =
+    activeServiceAreas.find((area) => area.is_primary) ?? activeServiceAreas[0] ?? null;
+  const coverageSummary = serviceAreasLoading
+    ? "Carregando cobertura"
+    : serviceAreasError
+      ? "Cobertura indisponivel"
+      : primaryServiceArea?.location_full_name ?? "Nenhuma area configurada";
+  const coverageMode = primaryServiceArea?.radius_km != null
+    ? `${primaryServiceArea.radius_km} km de raio`
+    : primaryServiceArea
+      ? "Cobertura territorial"
+      : "Nao configurado";
+  const activeAreasSummary = activeServiceAreas.length > 0
+    ? `${activeServiceAreas.length} ${activeServiceAreas.length === 1 ? "area ativa" : "areas ativas"}`
+    : "Nenhuma area ativa";
+  const lastLocationUpdate = formatTimestamp(driverData?.last_location_update);
 
   const title = isMotorista ? "Disponibilidade de Motorista" : "Disponibilidade de Motoboy";
   const description = isMotorista
@@ -104,10 +124,10 @@ export function DriverAvailabilityLayout({ service }: DriverAvailabilityLayoutPr
 
             <div className="grid gap-3 md:grid-cols-2">
               {[
-                { label: "Raio de atendimento", value: radius },
-                { label: "Bairros atendidos", value: neighborhoods },
-                { label: "Horarios", value: hours },
-                { label: "Ultima localizacao", value: lastLocation },
+                { label: "Cobertura principal", value: coverageSummary },
+                { label: "Modelo de cobertura", value: coverageMode },
+                { label: "Areas de atuacao", value: activeAreasSummary },
+                { label: "Ultima atualizacao GPS", value: lastLocationUpdate },
               ].map((item) => (
                 <div key={item.label} className="rounded-2xl border border-border bg-background p-3">
                   <p className="text-[11px] uppercase tracking-wide text-muted-foreground">{item.label}</p>
