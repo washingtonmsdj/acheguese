@@ -1,104 +1,119 @@
-import { RIDE_STATUS } from "@/shared/types/constants";
-import { RideRequest } from "@/core/mobility/types";
+import type { RideRequest } from "@/core/mobility/types";
+import {
+  isCancelledRideStatus,
+  toCanonicalRideState,
+} from "@/core/mobility/core/RideLifecycleStatus";
+import { RIDE_STATE, type RideState } from "@/core/mobility/core/RideStateMachine";
 import { formatDistanceToNow } from "date-fns";
 import { ptBR } from "@/shared/utils/dateLocale";
-import { Car, CheckCircle2, FileText, MapPin, User, XCircle, type LucideIcon } from "lucide-react";
-
-type TimelineRide = RideRequest & {
-  driver_assigned_at?: string | null;
-  driver_on_the_way_at?: string | null;
-  driver_arrived_at?: string | null;
-  passenger_on_board_at?: string | null;
-  started_at?: string | null;
-  completed_at?: string | null;
-  cancelled_at?: string | null;
-  cancellation_reason?: string | null;
-};
+import {
+  Car,
+  CheckCircle2,
+  FileText,
+  MapPin,
+  Search,
+  User,
+  XCircle,
+  type LucideIcon,
+} from "lucide-react";
 
 interface StatusTimelineProps {
-  ride: TimelineRide;
+  ride: RideRequest;
 }
 
-interface TimelineStep {
-  status: string;
+interface TimelineStepDefinition {
+  status: RideState;
   label: string;
   icon: LucideIcon;
-  timestamp?: string;
-  completed: boolean;
-  current: boolean;
+  timestamp?: string | null;
 }
 
+const PASSENGER_RIDE_TIMELINE: readonly RideState[] = [
+  RIDE_STATE.REQUESTED,
+  RIDE_STATE.SEARCHING_DRIVER,
+  RIDE_STATE.DRIVER_ASSIGNED,
+  RIDE_STATE.DRIVER_ACCEPTED,
+  RIDE_STATE.DRIVER_ARRIVING,
+  RIDE_STATE.PASSENGER_BOARDED,
+  RIDE_STATE.IN_PROGRESS,
+  RIDE_STATE.COMPLETED,
+];
+
 export function StatusTimeline({ ride }: StatusTimelineProps) {
-  const steps: TimelineStep[] = [
+  const currentState = toCanonicalRideState(ride.status);
+  const currentIndex = currentState
+    ? PASSENGER_RIDE_TIMELINE.indexOf(currentState)
+    : -1;
+
+  const definitions: TimelineStepDefinition[] = [
     {
-      status: RIDE_STATUS.PENDING,
-      label: "Pedido Criado",
+      status: RIDE_STATE.REQUESTED,
+      label: "Pedido criado",
       icon: FileText,
       timestamp: ride.created_at,
-      completed: true,
-      current: ride.status === RIDE_STATUS.PENDING,
     },
     {
-      status: RIDE_STATUS.DRIVER_ASSIGNED,
-      label: "Motorista Aceitou",
-      icon: CheckCircle2,
+      status: RIDE_STATE.SEARCHING_DRIVER,
+      label: "Buscando motorista",
+      icon: Search,
+    },
+    {
+      status: RIDE_STATE.DRIVER_ASSIGNED,
+      label: "Motorista encontrado · aguardando confirmação",
+      icon: User,
       timestamp: ride.driver_assigned_at,
-      completed: !!ride.driver_assigned_at,
-      current: ride.status === RIDE_STATUS.DRIVER_ASSIGNED,
     },
     {
-      status: RIDE_STATUS.DRIVER_ON_THE_WAY,
-      label: "A Caminho",
+      status: RIDE_STATE.DRIVER_ACCEPTED,
+      label: "Motorista confirmou",
+      icon: CheckCircle2,
+      timestamp: ride.accepted_at,
+    },
+    {
+      status: RIDE_STATE.DRIVER_ARRIVING,
+      label: "Motorista a caminho",
       icon: Car,
-      timestamp: ride.driver_on_the_way_at,
-      completed: !!ride.driver_on_the_way_at,
-      current: ride.status === RIDE_STATUS.DRIVER_ON_THE_WAY,
     },
     {
-      status: RIDE_STATUS.DRIVER_ARRIVED,
-      label: "Motorista Chegou",
-      icon: MapPin,
-      timestamp: ride.driver_arrived_at,
-      completed: !!ride.driver_arrived_at,
-      current: ride.status === RIDE_STATUS.DRIVER_ARRIVED,
-    },
-    {
-      status: RIDE_STATUS.PASSENGER_ON_BOARD,
-      label: "Passageiro Embarcou",
+      status: RIDE_STATE.PASSENGER_BOARDED,
+      label: "Passageiro embarcou",
       icon: User,
       timestamp: ride.passenger_on_board_at,
-      completed: !!ride.passenger_on_board_at,
-      current: ride.status === RIDE_STATUS.PASSENGER_ON_BOARD,
     },
     {
-      status: RIDE_STATUS.IN_PROGRESS,
-      label: "Em Viagem",
+      status: RIDE_STATE.IN_PROGRESS,
+      label: "Viagem em andamento",
       icon: Car,
       timestamp: ride.started_at,
-      completed: !!ride.started_at,
-      current: ride.status === RIDE_STATUS.IN_PROGRESS,
     },
     {
-      status: RIDE_STATUS.COMPLETED,
+      status: RIDE_STATE.COMPLETED,
       label: "Concluída",
       icon: CheckCircle2,
       timestamp: ride.completed_at,
-      completed: !!ride.completed_at,
-      current: ride.status === RIDE_STATUS.COMPLETED,
     },
   ];
 
-  // Filtrar apenas steps relevantes (não mostrar completed se foi cancelada)
-  const relevantSteps =
-    ride.status === RIDE_STATUS.CANCELLED
-      ? steps.filter((s) => s.completed)
-      : steps;
+  const steps = definitions.map((step, index) => {
+    const current = currentState === step.status;
+    const completed =
+      !current &&
+      (currentState === RIDE_STATE.COMPLETED ||
+        (currentIndex >= 0 && currentIndex > index) ||
+        Boolean(step.timestamp));
+
+    return { ...step, completed, current };
+  });
+
+  const cancelled = isCancelledRideStatus(ride.status);
+  const relevantSteps = cancelled
+    ? steps.filter((step) => step.completed || step.current)
+    : steps;
 
   return (
     <div className="space-y-4">
       {relevantSteps.map((step, index) => (
         <div key={step.status} className="flex gap-3">
-          {/* Ícone e linha */}
           <div className="flex flex-col items-center">
             <div
               className={`flex h-8 w-8 items-center justify-center rounded-full border-2 text-sm ${
@@ -121,9 +136,8 @@ export function StatusTimeline({ ride }: StatusTimelineProps) {
             )}
           </div>
 
-          {/* Conteúdo */}
           <div className="flex-1 pb-4">
-            <div className="flex items-center justify-between">
+            <div className="flex items-center justify-between gap-3">
               <p
                 className={`font-medium ${
                   step.completed
@@ -144,15 +158,14 @@ export function StatusTimeline({ ride }: StatusTimelineProps) {
                 </p>
               )}
             </div>
-            {step.current && !step.completed && (
-              <p className="mt-1 text-xs text-gray-500">Em andamento...</p>
+            {step.current && (
+              <p className="mt-1 text-xs text-gray-500">Estado atual</p>
             )}
           </div>
         </div>
       ))}
 
-      {/* Status cancelado */}
-      {ride.status === RIDE_STATUS.CANCELLED && (
+      {cancelled && (
         <div className="flex gap-3">
           <div className="flex h-8 w-8 items-center justify-center rounded-full border-2 border-red-500 bg-red-50 text-sm">
             <XCircle className="h-4 w-4 text-red-600" aria-hidden="true" />
