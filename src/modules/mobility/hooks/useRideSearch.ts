@@ -38,11 +38,6 @@ interface UseRideSearchOptions {
   onStatusChange?: (status: RideSearchStatus) => void;
 }
 
-interface RideStatusRow {
-  status?: string;
-  driver_profile_id?: string;
-}
-
 type SearchStatusInput = Pick<RideSearchStatus, 'status'> & {
   message?: string;
 };
@@ -144,7 +139,7 @@ export function useRideSearch(options: UseRideSearchOptions) {
 
     const loadInitialStatus = async () => {
       try {
-        const ride = (await getRideById(rideId)) as RideStatusRow | null;
+        const ride = await getRideById(rideId);
         if (!isCurrent) return;
         if (!ride) {
           logger.warn('Failed to load ride status', { rideId });
