@@ -15,7 +15,7 @@ import { profileService } from "@/core/profiles/services/ProfileService";
 import { ProfileMembersService } from "@/core/profiles/services/multi-profile/profileMembersService";
 import { logger } from "@/shared/utils/logger";
 import { mobilityRolloutService } from "./MobilityRolloutService";
-import { mobilityService } from "./MobilityService.impl";
+import { mobilityService } from "./MobilityRuntimeService";
 import { DriverAvailabilityService } from "./DriverAvailabilityService";
 import { RideOperationalContextReadService } from "./RideOperationalContextReadService";
 
