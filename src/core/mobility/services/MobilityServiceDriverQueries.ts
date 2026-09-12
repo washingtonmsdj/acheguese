@@ -71,7 +71,6 @@ type DriverCompleteProfileRow = {
 };
 
 type DriverDirectoryProfileRelation = {
-  user_id: string | null;
   name: string | null;
   display_name: string | null;
   avatar_url: string | null;
@@ -146,16 +145,16 @@ export async function getDriverOfferCapabilities(
 /**
  * Driver directory read model used by admin tooling.
  *
- * Registration facts come from driver_data, identity/location labels come from
- * the related profile row, and operational presence is intentionally NOT read
- * here. AdminMobilityRuntimeService overlays driver_availability separately.
+ * Registration facts come from driver_data, public identity/location labels come
+ * from the related profile row, and operational presence is intentionally NOT
+ * read here. AdminMobilityRuntimeService overlays driver_availability separately.
  */
 export async function getDriverProfiles(): Promise<{ data: unknown[]; error: unknown }> {
   try {
     const { data, error } = await mobilityDriverQueriesDb
       .from<DriverDirectoryRow>("driver_data")
       .select(
-        "profile_id, rating, total_rides, is_verified, created_at, updated_at, license_number, license_category, license_expiry, license_state, vehicle_model, vehicle_color, vehicle_plate, vehicle_year, profiles!inner(user_id, name, display_name, avatar_url, neighborhood, city)",
+        "profile_id, rating, total_rides, is_verified, created_at, updated_at, license_number, license_category, license_expiry, license_state, vehicle_model, vehicle_color, vehicle_plate, vehicle_year, profiles!inner(name, display_name, avatar_url, neighborhood, city)",
       )
       .order("created_at", { ascending: false });
 
@@ -166,7 +165,6 @@ export async function getDriverProfiles(): Promise<{ data: unknown[]; error: unk
         const profile = normalizeDirectoryProfile(row.profiles);
         return {
           profile_id: row.profile_id,
-          user_id: profile?.user_id ?? null,
           name: profile?.display_name ?? profile?.name ?? null,
           avatar_url: profile?.avatar_url ?? null,
           neighborhood: profile?.neighborhood ?? null,
