@@ -9,19 +9,12 @@
 import { AdminDriverLifecycleMetricsService } from "@/core/admin/services/AdminDriverLifecycleMetricsService";
 import { MobilityAdminQueryService } from "@/core/admin/services/MobilityAdminQueryService";
 import {
-  LEGACY_CLOSED_RIDE_STATUSES,
-  QUERYABLE_OPEN_RIDE_STATUSES,
+  isCancelledRideStatus,
+  isOpenRideStatus,
 } from "@/core/mobility/core/RideLifecycleStatus";
 import { RIDE_STATE } from "@/core/mobility/core/RideStateMachine";
 import { profileService } from "@/core/profiles/services/ProfileService";
 import { logger } from "@/shared/utils/logger";
-
-const ADMIN_CANCELLED_RIDE_STATUSES = new Set<string>([
-  RIDE_STATE.CANCELLED_BY_DRIVER,
-  RIDE_STATE.CANCELLED_BY_PASSENGER,
-  ...LEGACY_CLOSED_RIDE_STATUSES,
-]);
-const ADMIN_OPEN_RIDE_STATUSES = new Set<string>(QUERYABLE_OPEN_RIDE_STATUSES);
 
 export interface AdminDriverData {
   id: string;
@@ -137,9 +130,9 @@ class AdminMobilityServiceClass {
 
       return {
         total_rides: rides.length,
-        open_rides: rides.filter((ride) => ADMIN_OPEN_RIDE_STATUSES.has(ride.status)).length,
+        open_rides: rides.filter((ride) => isOpenRideStatus(ride.status)).length,
         completed_rides: completedRides.length,
-        cancelled_rides: rides.filter((ride) => ADMIN_CANCELLED_RIDE_STATUSES.has(ride.status)).length,
+        cancelled_rides: rides.filter((ride) => isCancelledRideStatus(ride.status)).length,
         failed_rides: rides.filter((ride) => ride.status === RIDE_STATE.FAILED).length,
         expired_rides: rides.filter((ride) => ride.status === RIDE_STATE.EXPIRED).length,
         completed_value: completedRides.reduce(
