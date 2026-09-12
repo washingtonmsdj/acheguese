@@ -12,19 +12,7 @@ import { RideOperationalContextReadService } from "./RideOperationalContextReadS
 
 type ErrorLike = { message?: string | null; code?: string | null } | null;
 
-type QueryPayload<TRow> = {
-  data: TRow[] | null;
-  error: ErrorLike;
-  count?: number | null;
-};
-
-type TableClient<TRow> = PromiseLike<QueryPayload<TRow>> & {
-  select(columns?: string, options?: { count?: "exact"; head?: boolean }): TableClient<TRow>;
-  eq(column: string, value: unknown): TableClient<TRow>;
-};
-
 type MobilityImplDbClient = {
-  from<TRow = Record<string, unknown>>(table: string): TableClient<TRow>;
   rpc<T>(fn: string, params?: Record<string, unknown>): Promise<{
     data: T | null;
     error: ErrorLike;
@@ -34,33 +22,6 @@ type MobilityImplDbClient = {
 const db = supabase as unknown as MobilityImplDbClient;
 
 export class MobilityService {
-  static async countDeliveredBySource(
-    sourceType: string,
-    sourceId: string,
-  ): Promise<number> {
-    const { count, error } = await db
-      .from("ride_requests")
-      .select("id", { count: "exact", head: true })
-      .eq("ride_mode", "motoboy")
-      .eq("source_type", sourceType)
-      .eq("source_id", sourceId)
-      .eq("status", "delivered");
-
-    if (error) throw error;
-    return count || 0;
-  }
-
-  static async countDeliveredMotoboyRides(): Promise<number> {
-    const { count, error } = await db
-      .from("ride_requests")
-      .select("id", { count: "exact", head: true })
-      .eq("ride_mode", "motoboy")
-      .eq("status", "delivered");
-
-    if (error) throw error;
-    return count || 0;
-  }
-
   static async ensureDriverDataRow(profileId: string): Promise<void> {
     const { error } = await db.rpc<Record<string, unknown>>(
       "ensure_owned_driver_data",
