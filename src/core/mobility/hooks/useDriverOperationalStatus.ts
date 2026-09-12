@@ -1,14 +1,6 @@
 import { useCallback, useState } from "react";
 import { toast } from "sonner";
 import { DriverAvailabilityService } from "@/core/mobility/services/DriverAvailabilityService";
-import { mobilityService } from "@/core/mobility/services/MobilityService";
-
-type DriverDataOperationalUpdate = {
-  is_online?: boolean;
-  is_available?: boolean;
-  last_location_update?: string | null;
-  updated_at?: string;
-};
 
 interface UseDriverOperationalStatusOptions {
   driverProfileId: string | null;
@@ -53,17 +45,9 @@ export function useDriverOperationalStatus({
   const [gpsError, setGpsError] = useState<string | null>(null);
   const [isUpdatingStatus, setIsUpdatingStatus] = useState(false);
 
-  const persistSnapshot = useCallback(
-    async (updates: DriverDataOperationalUpdate) => {
-      if (!driverProfileId) {
-        return;
-      }
-
-      await mobilityService.updateDriverData(driverProfileId, updates);
-      await Promise.resolve(onStatusChanged?.());
-    },
-    [driverProfileId, onStatusChanged],
-  );
+  const refreshCanonicalStatus = useCallback(async () => {
+    await Promise.resolve(onStatusChanged?.());
+  }, [onStatusChanged]);
 
   const toggleDriverOnline = useCallback(async (operationalMode?: OperationalMode) => {
     if (!driverProfileId) {
@@ -80,11 +64,7 @@ export function useDriverOperationalStatus({
           throw new Error(result.error || "Não foi possível ficar offline");
         }
 
-        await persistSnapshot({
-          is_online: false,
-          is_available: false,
-          last_location_update: null,
-        });
+        await refreshCanonicalStatus();
         setGpsError(null);
         toast.success("Motorista offline");
         return;
@@ -109,19 +89,11 @@ export function useDriverOperationalStatus({
           );
         }
 
-        await persistSnapshot({
-          is_online: true,
-          is_available: true,
-          last_location_update: new Date().toISOString(),
-        });
+        await refreshCanonicalStatus();
         setGpsError(null);
         toast.success("Motorista online e disponível");
       } catch (error) {
-        await persistSnapshot({
-          is_online: true,
-          is_available: false,
-          last_location_update: new Date().toISOString(),
-        });
+        await refreshCanonicalStatus();
         setGpsError((error as Error).message);
         toast.warning("Motorista online, mas aguardando GPS para liberar corridas");
       }
@@ -130,7 +102,7 @@ export function useDriverOperationalStatus({
     } finally {
       setIsUpdatingStatus(false);
     }
-  }, [driverProfileId, isOnline, persistSnapshot]);
+  }, [driverProfileId, isOnline, refreshCanonicalStatus]);
 
   const toggleTracking = useCallback(async (operationalMode?: OperationalMode) => {
     if (!driverProfileId) {
@@ -153,11 +125,7 @@ export function useDriverOperationalStatus({
           );
         }
 
-        await persistSnapshot({
-          is_available: false,
-          last_location_update: new Date().toISOString(),
-          updated_at: new Date().toISOString(),
-        });
+        await refreshCanonicalStatus();
         setGpsError(null);
         toast.success("Disponibilidade pausada");
         return;
@@ -173,11 +141,7 @@ export function useDriverOperationalStatus({
         throw new Error(availableResult.error || "Nao foi possivel habilitar a disponibilidade");
       }
 
-      await persistSnapshot({
-        is_available: true,
-        last_location_update: new Date().toISOString(),
-        updated_at: new Date().toISOString(),
-      });
+      await refreshCanonicalStatus();
       setGpsError(null);
       toast.success("Disponibilidade ativada");
     } catch (error) {
@@ -186,7 +150,7 @@ export function useDriverOperationalStatus({
     } finally {
       setIsUpdatingStatus(false);
     }
-  }, [driverProfileId, isAvailable, isOnline, persistSnapshot]);
+  }, [driverProfileId, isAvailable, isOnline, refreshCanonicalStatus]);
 
   return {
     gpsError,
