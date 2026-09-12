@@ -74,18 +74,31 @@ export async function decrementRideSeats(rideId: string): Promise<void> {
 }
 
 /**
- * Atualizar status online do motorista
+ * Atualizar presença operacional do próprio motorista.
+ *
+ * `driver_data` não é authority de presença. Online/offline pertence
+ * exclusivamente a `driver_availability` via mobility-rpc.
  */
-export async function updateDriverOnlineStatus(driverProfileId: string, isOnline: boolean): Promise<void> {
-  await updateDriverData(driverProfileId, {
-    is_online: isOnline,
-    is_available: isOnline ? undefined : false,
-    updated_at: new Date().toISOString(),
-  });
+export async function updateDriverOnlineStatus(
+  driverProfileId: string,
+  isOnline: boolean,
+): Promise<void> {
+  const result = isOnline
+    ? await DriverAvailabilityService.goOnline(driverProfileId)
+    : await DriverAvailabilityService.goOffline(driverProfileId);
+
+  if (!result.success) {
+    throw new Error(
+      result.error ||
+        (isOnline
+          ? "Could not set driver online"
+          : "Could not set driver offline"),
+    );
+  }
 }
 
 /**
- * Atualizar dados do motorista
+ * Atualizar dados cadastrais self-service do motorista.
  */
 export async function updateDriverData(
   identifier: string,
