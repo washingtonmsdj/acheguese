@@ -7,7 +7,7 @@
  * - Desktop (md+): mapa à esquerda, painel à direita (split view)
  */
 import { logger } from '@/shared/utils/logger';
-import { useEffect, useRef, memo, useState } from "react";
+import { useCallback, useEffect, useRef, memo, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import * as maplibregl from "maplibre-gl";
@@ -15,15 +15,14 @@ import "maplibre-gl/dist/maplibre-gl.css";
 import { motion } from "framer-motion";
 import { ArrowLeft, Navigation, X, Car } from "lucide-react";
 import { Button } from "@/shared/components/ui/button";
-import { toast } from "sonner";
 import { useMobilidade } from "@/modules/mobility/hooks/useMobilidade";
+import type { RideSearchStatus } from "@/modules/mobility/hooks/useRideSearch";
 import { mobilityService } from "@/core/mobility/services/MobilityService";
 import { mobilityRoutes } from "@/core/mobility/routes/mobilityRoutes";
 import { DEFAULT_TILE_STYLE } from "@/core/maps/providers/MapProvider";
-import { RIDE_STATUS, MOBILITY_QUERY_KEYS, TIMEOUTS } from "@/core/mobility/constants";
+import { MOBILITY_QUERY_KEYS, TIMEOUTS } from "@/core/mobility/constants";
 import { BUSCANDO_MOTORISTA_PAGE_LABELS } from "@/core/mobility/constants/buscandoMotoristaPageLabels";
 import { PassengerSearchStatus } from "../components/PassengerSearchStatus";
-import { useAuth } from "@/core/auth/hooks/useAuth";
 import { routingService } from "@/core/routing/instance";
 import { CancelRideConfirmDialog } from "../components/CancelRideConfirmDialog";
 // ── Mapa ──────────────────────────────────────────────────────────────────────
@@ -41,7 +40,6 @@ const RouteMap = memo(function RouteMap({
 }) {
   const containerRef = useRef<HTMLDivElement>(null);
   const mapRef = useRef<maplibregl.Map | null>(null);
-  const [routeLoaded, setRouteLoaded] = useState(false);
 
   useEffect(() => {
     if (!containerRef.current || mapRef.current) return;
@@ -144,7 +142,6 @@ const RouteMap = memo(function RouteMap({
               duration: 1000,
             });
 
-            setRouteLoaded(true);
             logger.debug(BUSCANDO_MOTORISTA_PAGE_LABELS.LOG_ROUTE_SUCCESS);
           })
           .catch((error) => {
@@ -280,14 +277,13 @@ export default function BuscandoMotoristaPage() {
   const { rideId } = useParams<{ rideId: string }>();
   const navigate = useNavigate();
   const { cancelRide } = useMobilidade();
-  const { user } = useAuth();
   const [showCancelDialog, setShowCancelDialog] = useState(false);
 
   const { data: ride } = useQuery({
     queryKey: MOBILITY_QUERY_KEYS.rideBuscando(rideId!),
     queryFn: () => mobilityService.getRideWithAddresses(rideId!),
     enabled: !!rideId,
-    // ✅ REALTIME: Removido polling, dados atualizados via subscription
+    // O snapshot carrega rota/endereco; lifecycle ao vivo vem de useRideSearch.
     staleTime: TIMEOUTS.CACHE_STALE_TIME_MEDIUM,
   });
   type RideWithAddresses = {
@@ -305,39 +301,18 @@ export default function BuscandoMotoristaPage() {
   const rideData = ride as RideWithAddresses | null | undefined;
   const rideStatus = String(rideData?.status ?? "");
 
-  // Navegar quando motorista aceitar ou corrida terminar
-  useEffect(() => {
-    if (!rideStatus) return;
-
-    const successStatuses: string[] = [
-      RIDE_STATUS.DRIVER_ACCEPTED,
-      RIDE_STATUS.DRIVER_ARRIVING,
-      RIDE_STATUS.DRIVER_ASSIGNED,
-      RIDE_STATUS.DRIVER_ON_THE_WAY,
-      RIDE_STATUS.IN_PROGRESS,
-    ];
-
+  const handleSearchStatusChange = useCallback((status: RideSearchStatus) => {
     if (
-      successStatuses.includes(rideStatus)
-    ) {
-      toast.success(BUSCANDO_MOTORISTA_PAGE_LABELS.TOAST_DRIVER_FOUND);
-      navigate(mobilityRoutes.passageiro.home, { replace: true });
-    }
-
-    const terminalStatuses: string[] = [
-      RIDE_STATUS.CANCELLED,
-      RIDE_STATUS.CANCELLED_BY_PASSENGER,
-      RIDE_STATUS.CANCELLED_BY_DRIVER,
-      RIDE_STATUS.EXPIRED,
-      RIDE_STATUS.FAILED,
-    ];
-
-    if (
-      terminalStatuses.includes(rideStatus)
+      status.status === 'driver_accepted' ||
+      status.status === 'in_progress' ||
+      status.status === 'completed' ||
+      status.status === 'expired' ||
+      status.status === 'cancelled' ||
+      status.status === 'failed'
     ) {
       navigate(mobilityRoutes.passageiro.home, { replace: true });
     }
-  }, [navigate, rideStatus]);
+  }, [navigate]);
 
   const handleCancel = async () => {
     if (!rideId) return false;
@@ -461,11 +436,11 @@ export default function BuscandoMotoristaPage() {
         </div>
 
         {/* Status de Busca em Tempo Real */}
-        {rideId && user?.id && (
+        {rideId && (
           <div className="mb-4">
             <PassengerSearchStatus
               rideId={rideId}
-              passengerProfileId={user.id}
+              onStatusChange={handleSearchStatusChange}
             />
           </div>
         )}
