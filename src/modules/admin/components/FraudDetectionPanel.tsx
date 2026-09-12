@@ -10,7 +10,11 @@ import { Button } from "@/shared/components/ui/button";
 import { Badge } from "@/shared/components/ui/badge";
 import { Textarea } from "@/shared/components/ui/textarea";
 import { profileService } from "@/core/profiles/services";
-import { AdminFraudService } from "@/core/admin/services/AdminFraudService";
+import {
+  AdminFraudService,
+  type AdminFraudAlertRow,
+  type FraudRideSummary,
+} from "@/core/admin/services/AdminFraudService";
 
 import {
   AlertTriangle,
@@ -22,27 +26,13 @@ import {
   Eye,
 } from "lucide-react";
 import { toast } from "sonner";
-import { RIDE_STATUS, ALERT_STATUS } from "@/shared/types/constants";
+import { ALERT_STATUS } from "@/shared/types/constants";
 import { logger } from "@/shared/utils/logger";
-import { adminMobilityService } from "@/core/admin"; // ✅ MIGRADO - Usa AdminMobilityService do core
-import type { FraudAlertStatus } from "@/modules/admin/types/fraudDetection";
 
-interface FraudEvidence {
-  duration_minutes?: number;
-  quick_rides_count?: number;
-  zero_distance_count?: number;
-  [key: string]: string | number | boolean | undefined;
-}
-type FraudRideSummary = {
-  id: string;
-  origin?: string | null;
-  destination?: string | null;
-};
 type FraudDriverSummary = {
   profile?: { name?: string | null } | null;
 };
-type FraudAlert = { id: string; ride_id?: string | null; driver_profile_id?: string | null; status: FraudAlertStatus; severity?: string; fraud_type?: string; description?: string | null; evidence?: FraudEvidence | null; created_at?: string };
-type FraudAlertExtended = FraudAlert & {
+type FraudAlertExtended = AdminFraudAlertRow & {
   ride?: FraudRideSummary | null;
   driver?: FraudDriverSummary | null;
 };
@@ -67,24 +57,43 @@ export function FraudDetectionPanel() {
     try {
       const rawAlerts = await AdminFraudService.getAlerts(50);
 
-      const rideIds = [...new Set(rawAlerts.map((a) => a.ride_id).filter(Boolean))];
-      const driverProfileIds = [...new Set(rawAlerts.map((a) => a.driver_profile_id).filter(Boolean))];
+      const rideIds = [
+        ...new Set(
+          rawAlerts
+            .map((alert) => alert.ride_id)
+            .filter((rideId): rideId is string => Boolean(rideId)),
+        ),
+      ];
+      const driverProfileIds = [
+        ...new Set(
+          rawAlerts
+            .map((alert) => alert.driver_profile_id)
+            .filter((profileId): profileId is string => Boolean(profileId)),
+        ),
+      ];
 
-      const [ridesData, driversData] = await Promise.all([
-        rideIds.length > 0
-          ? adminMobilityService.getUserRides(driverProfileIds[0] || "").then((data) => ({ data }))
-          : Promise.resolve({ data: [] as FraudRideSummary[] }),
-        profileService.getProfilesSummary(driverProfileIds as string[]),
+      const [rideSummaries, driversData] = await Promise.all([
+        AdminFraudService.getRideSummaries(rideIds),
+        profileService.getProfilesSummary(driverProfileIds),
       ]);
 
-      const rideMap = new Map<string, FraudRideSummary>((((ridesData.data || []) as FraudRideSummary[]).map((r) => [r.id, r] as [string, FraudRideSummary])));
-      const driverMap = new Map(driversData.map((d) => [d.id, { id: d.id, name: d.displayName }]));
+      const rideMap = new Map(
+        rideSummaries.map((ride) => [ride.id, ride] as const),
+      );
+      const driverMap = new Map(
+        driversData.map((driver) => [
+          driver.id,
+          { id: driver.id, name: driver.displayName },
+        ]),
+      );
 
       setAlerts(
         rawAlerts.map((alert) => ({
           ...alert,
-          ride: alert.ride_id ? rideMap.get(alert.ride_id) : null,
-          driver: alert.driver_profile_id ? { profile: driverMap.get(alert.driver_profile_id) } : null,
+          ride: alert.ride_id ? (rideMap.get(alert.ride_id) ?? null) : null,
+          driver: alert.driver_profile_id
+            ? { profile: driverMap.get(alert.driver_profile_id) ?? null }
+            : null,
         })),
       );
     } catch (error) {
@@ -106,10 +115,14 @@ export function FraudDetectionPanel() {
 
   const updateAlertStatus = async (
     alertId: string,
-    newStatus: FraudAlert["status"],
+    newStatus: AdminFraudAlertRow["status"],
   ) => {
     try {
-      await AdminFraudService.updateAlertStatus(alertId, newStatus, resolutionNotes || undefined);
+      await AdminFraudService.updateAlertStatus(
+        alertId,
+        newStatus,
+        resolutionNotes || undefined,
+      );
       toast.success("Status atualizado");
       setSelectedAlert(null);
       setResolutionNotes("");
@@ -166,7 +179,6 @@ export function FraudDetectionPanel() {
 
   return (
     <div className="space-y-6">
-      {/* Header */}
       <div>
         <h2 className="text-2xl font-bold text-foreground flex items-center gap-2">
           <Shield className="h-6 w-6 text-red-500" />
@@ -177,7 +189,6 @@ export function FraudDetectionPanel() {
         </p>
       </div>
 
-      {/* Stats */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
         <Card className="p-4 bg-card border-border">
           <div className="flex items-center gap-3">
@@ -185,9 +196,7 @@ export function FraudDetectionPanel() {
               <TrendingUp className="h-5 w-5 text-blue-500" />
             </div>
             <div>
-              <p className="text-2xl font-bold text-foreground">
-                {stats.total}
-              </p>
+              <p className="text-2xl font-bold text-foreground">{stats.total}</p>
               <p className="text-xs text-muted-foreground">Total de Alertas</p>
             </div>
           </div>
@@ -199,9 +208,7 @@ export function FraudDetectionPanel() {
               <Clock className="h-5 w-5 text-yellow-500" />
             </div>
             <div>
-              <p className="text-2xl font-bold text-foreground">
-                {stats.pending}
-              </p>
+              <p className="text-2xl font-bold text-foreground">{stats.pending}</p>
               <p className="text-xs text-muted-foreground">Pendentes</p>
             </div>
           </div>
@@ -213,16 +220,13 @@ export function FraudDetectionPanel() {
               <AlertTriangle className="h-5 w-5 text-red-500" />
             </div>
             <div>
-              <p className="text-2xl font-bold text-foreground">
-                {stats.critical}
-              </p>
+              <p className="text-2xl font-bold text-foreground">{stats.critical}</p>
               <p className="text-xs text-muted-foreground">Críticos</p>
             </div>
           </div>
         </Card>
       </div>
 
-      {/* Alerts List */}
       <div className="space-y-3">
         {alerts.length === 0 ? (
           <Card className="p-8 text-center bg-card border-border">
@@ -246,7 +250,6 @@ export function FraudDetectionPanel() {
             >
               <div className="flex items-start justify-between gap-4">
                 <div className="flex-1 space-y-2">
-                  {/* Header */}
                   <div className="flex items-center gap-2 flex-wrap">
                     <Badge className={getSeverityColor(alert.severity)}>
                       {String(alert.severity ?? "low").toUpperCase()}
@@ -259,15 +262,13 @@ export function FraudDetectionPanel() {
                     </span>
                   </div>
 
-                  {/* Description */}
-                  <p className="text-sm text-foreground">{String(alert.description ?? "") }</p>
+                  <p className="text-sm text-foreground">
+                    {String(alert.description ?? "")}
+                  </p>
 
-                  {/* Evidence */}
                   {alert.evidence && Object.keys(alert.evidence).length > 0 && (
                     <div className="p-3 rounded-lg bg-muted/50 text-xs space-y-1">
-                      <p className="font-semibold text-foreground">
-                        Evidências:
-                      </p>
+                      <p className="font-semibold text-foreground">Evidências:</p>
                       {alert.evidence.duration_minutes && (
                         <p className="text-muted-foreground">
                           • Duração: {alert.evidence.duration_minutes} minutos
@@ -286,30 +287,27 @@ export function FraudDetectionPanel() {
                     </div>
                   )}
 
-                  {/* Ride Info */}
                   {alert.ride && (
                     <div className="text-xs text-muted-foreground">
                       <p>
-                        Corrida: {alert.ride.origin} → {alert.ride.destination}
+                        Corrida: {alert.ride.origin ?? "Origem não informada"} →{" "}
+                        {alert.ride.destination ?? "Destino não informado"}
                       </p>
                     </div>
                   )}
 
-                  {/* Driver Info */}
                   {alert.driver && (
                     <div className="text-xs text-muted-foreground">
                       <p>Motorista: {alert.driver.profile?.name}</p>
                     </div>
                   )}
 
-                  {/* Date */}
                   <p className="text-xs text-muted-foreground">
-                    {new Date(alert.created_at ?? new Date().toISOString()).toLocaleString("pt-BR")}
+                    {new Date(alert.created_at).toLocaleString("pt-BR")}
                   </p>
                 </div>
 
-                {/* Actions */}
-                {alert.status === RIDE_STATUS.PENDING && (
+                {alert.status === ALERT_STATUS.PENDING && (
                   <Button
                     size="sm"
                     variant="outline"
@@ -322,7 +320,6 @@ export function FraudDetectionPanel() {
                 )}
               </div>
 
-              {/* Review Panel */}
               {selectedAlert?.id === alert.id && (
                 <div className="mt-4 pt-4 border-t border-border space-y-3">
                   <Textarea
@@ -342,9 +339,7 @@ export function FraudDetectionPanel() {
                     </Button>
                     <Button
                       size="sm"
-                      onClick={() =>
-                        updateAlertStatus(alert.id, "false_positive")
-                      }
+                      onClick={() => updateAlertStatus(alert.id, "false_positive")}
                       className="bg-green-500 hover:bg-green-600"
                     >
                       <CheckCircle2 className="h-4 w-4 mr-1" />
@@ -353,9 +348,7 @@ export function FraudDetectionPanel() {
                     <Button
                       size="sm"
                       variant="outline"
-                      onClick={() =>
-                        updateAlertStatus(alert.id, "investigating")
-                      }
+                      onClick={() => updateAlertStatus(alert.id, "investigating")}
                     >
                       Investigar
                     </Button>
