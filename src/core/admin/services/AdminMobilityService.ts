@@ -149,14 +149,6 @@ class AdminMobilityServiceClass {
     }
   }
 
-  async getRecentRides(limit = 50): Promise<AdminRideData[]> {
-    return MobilityAdminQueryService.getRecentRides(limit) as Promise<AdminRideData[]>;
-  }
-
-  async getUserRides(userId: string): Promise<AdminRideData[]> {
-    return MobilityAdminQueryService.getUserRides(userId) as Promise<AdminRideData[]>;
-  }
-
   async getTopDrivers(limit = 10): Promise<AdminDriverData[]> {
     const drivers = await this.getDriversWithStats();
     return drivers.sort((a, b) => b.rating - a.rating).slice(0, limit);
