@@ -667,18 +667,28 @@ export const DOMAIN_REGISTRY: DomainRegistryEntry[] = [
     id: "mobility",
     label: "mobility",
     sourceRoots: [
+      "src/core/mobility",
       "src/modules/mobility",
       "src/core/tracking",
       "src/core/safety",
     ],
-    docsPaths: ["src/core/safety/README.md", "src/core/tracking/README.md"],
+    docsPaths: [
+      "docs/architecture/SSOT_REGISTRY.md",
+      "docs/08-roadmap/EXECUCAO_MAIN_ONLY.md",
+      "src/core/safety/README.md",
+      "src/core/tracking/README.md",
+    ],
     ssotPaths: [
-      "src/modules/mobility/services/MobilityService.ts",
       "src/core/mobility/services/MobilityService.ts",
-      "src/modules/mobility/services/RideService.ts",
-      "src/modules/mobility/services/DriverService.ts",
-      "src/modules/mobility/services/MobilityAdminQueryService.ts",
+      "src/core/mobility/services/MobilityRuntimeService.ts",
+      "src/core/mobility/services/RideService.ts",
+      "src/core/mobility/services/DriverService.ts",
       "src/core/mobility/services/DriverAvailabilityService.ts",
+      "src/core/mobility/services/ChatService.ts",
+      "src/core/mobility/services/MobilityOfferService.ts",
+      "src/core/mobility/services/MobilityDispatchConfigService.ts",
+      "src/core/mobility/services/MobilityAdminQueryService.ts",
+      "src/core/mobility/types/dispatch.types.ts",
     ],
     routePrefixes: [
       "/mobilidade",
@@ -698,18 +708,22 @@ export const DOMAIN_REGISTRY: DomainRegistryEntry[] = [
     criticality: "critical",
     canonicalServiceBasenames: [
       "MobilityService.ts",
+      "MobilityRuntimeService.ts",
       "RideService.ts",
       "DriverService.ts",
       "DriverAvailabilityService.ts",
       "ChatService.ts",
+      "MobilityOfferService.ts",
+      "MobilityDispatchConfigService.ts",
+      "MobilityAdminQueryService.ts",
     ],
-    canonicalTypeBasenames: ["types.ts"],
+    canonicalTypeBasenames: ["types.ts", "dispatch.types.ts", "chat.types.ts"],
     adminSummary:
-      "Boa cobertura operacional para motoristas, passageiros, analytics e pontos de embarque. Ainda faltam governanca explicita de dispatch, chat de corrida e verificacoes operacionais no indice mestre.",
+      "Boa cobertura operacional para motoristas, passageiros, analytics e pontos de embarque. A certificacao publica continua dependente de build, E2E, autorizacao e prova same-SHA.",
     docsSummary:
-      "Parcial e espalhada entre safety, tracking e historico de mobilidade em archive. Falta um documento vivo unico para SSOT operacional da mobilidade.",
+      "O registry SSOT e o plano main-only descrevem os owners ativos. Checkpoints e docs em archive sao evidencia historica e nao devem ser usados como paths executaveis.",
     ssotSummary:
-      "O modulo mobility concentra a operacao, mas ainda possui varios services paralelos e wrappers (`MobilityService`, `RideService`, `DriverService`, `ChatService`) mais tracking/safety em core.",
+      "O ownership operacional de Mobilidade vive em `src/core/mobility`; `src/modules/mobility` concentra UI/testes de feature. Facades publicas so permanecem quando possuem consumidores reais, e compatibility owners aposentados nao fazem parte do registry.",
   },
   {
     id: "notifications",
@@ -756,7 +770,7 @@ export const DOC_OBSERVATIONS = [
   "docs/README.md, docs/INDEX_CANONICO.md e docs/CANONICAL_MAP.md devem permanecer sincronizados como entrada documental.",
   "docs/CURRENT_RULES.md e o contrato vigente para fronteiras, SSOT e schema.",
   "Documentacao de dominio continua misturada entre docs/, src/*/README.md e src/*/docs/, sem indice unico por dominio.",
-  "documentacao datada e historica foi removida do repositorio principal para manter apenas contratos vivos e auditorias acionaveis.",
+  "Documentacao historica deve permanecer explicitamente sob docs/10-archive e nunca ser tratada como contrato executavel atual.",
 ];
 
 export const GOVERNANCE_ALLOWED_DB_PATH_MARKERS = [
@@ -769,7 +783,6 @@ export const GOVERNANCE_ALLOWED_DB_PATH_MARKERS = [
 
 export const GOVERNANCE_SERVICE_FACADE_HINTS = [
   "compatibility facade",
-
   "canonical implementation moved",
   "re-export público",
   "re-export publico",
