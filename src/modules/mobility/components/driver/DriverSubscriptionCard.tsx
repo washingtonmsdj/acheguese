@@ -19,12 +19,6 @@ export type DriverSubscriptionService = "motorista" | "motoboy";
 
 interface DriverSubscriptionCardProps {
   service?: DriverSubscriptionService;
-  /**
-   * Compatibility-only input while callers converge. It is deliberately not
-   * used as subscription authority; worker scope still needs a dedicated
-   * subscription snapshot reader.
-   */
-  currentPlan?: string;
 }
 
 const serviceConfig: Record<
