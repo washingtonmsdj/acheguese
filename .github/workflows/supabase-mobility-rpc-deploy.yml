@@ -27,7 +27,12 @@ env:
 jobs:
   deploy-mobility-rpc:
     name: Exact-main mobility-rpc deploy
-    runs-on: ubuntu-latest
+    runs-on:
+      - self-hosted
+      - windows
+      - x64
+      - acheguese-heavy-windows
+      - remote-only
     timeout-minutes: 20
     env:
       SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
@@ -35,7 +40,7 @@ jobs:
     steps:
       - name: Validate immutable main target
         id: target
-        shell: pwsh
+        shell: powershell
         env:
           EVENT_REF: ${{ github.ref }}
           EVENT_SHA: ${{ github.sha }}
@@ -74,7 +79,7 @@ jobs:
           sparse-checkout-cone-mode: true
 
       - name: Assert checkout provenance
-        shell: pwsh
+        shell: powershell
         working-directory: mobility-edge-gate
         env:
           EXPECTED_SHA: ${{ steps.target.outputs.sha }}
@@ -90,7 +95,7 @@ jobs:
           Write-Host "Exact checkout provenance confirmed: $actual"
 
       - name: Validate Supabase credential
-        shell: pwsh
+        shell: powershell
         run: |
           $ErrorActionPreference = "Stop"
           if ([string]::IsNullOrWhiteSpace($env:SUPABASE_ACCESS_TOKEN)) {
@@ -104,7 +109,7 @@ jobs:
           node-version: "24"
 
       - name: Pin Supabase CLI
-        shell: pwsh
+        shell: powershell
         working-directory: mobility-edge-gate
         run: |
           $ErrorActionPreference = "Stop"
@@ -116,7 +121,7 @@ jobs:
           Write-Host "Supabase CLI pinned: $version"
 
       - name: Validate mobility-rpc source contracts
-        shell: pwsh
+        shell: powershell
         working-directory: mobility-edge-gate
         run: |
           $ErrorActionPreference = "Stop"
@@ -169,7 +174,7 @@ jobs:
 
       - name: Record exact source bundle hashes
         id: bundle
-        shell: pwsh
+        shell: powershell
         working-directory: mobility-edge-gate
         run: |
           $ErrorActionPreference = "Stop"
@@ -190,7 +195,7 @@ jobs:
           }
 
       - name: Deploy mobility-rpc from exact checkout
-        shell: pwsh
+        shell: powershell
         working-directory: mobility-edge-gate
         run: |
           $ErrorActionPreference = "Stop"
@@ -198,7 +203,7 @@ jobs:
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
 
       - name: Verify remote function inventory
-        shell: pwsh
+        shell: powershell
         working-directory: mobility-edge-gate
         run: |
           $ErrorActionPreference = "Stop"
@@ -221,7 +226,7 @@ jobs:
 
       - name: Record deployment provenance
         if: always()
-        shell: pwsh
+        shell: powershell
         env:
           TARGET_SHA: ${{ steps.target.outputs.sha }}
         run: |
