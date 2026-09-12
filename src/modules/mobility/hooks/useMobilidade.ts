@@ -76,7 +76,7 @@ function parseReportSeverity(value: string): ReportSeverity {
 }
 
 export function useMobilidade(options: UseMobilidadeOptions = {}) {
-  const { realtimeEnabled = true } = options;
+  const { realtimeEnabled = false } = options;
   const { user } = useAuth();
   const queryClient = useQueryClient();
   const [activeRide, setActiveRide] = useState<RideRequest | null>(null);
