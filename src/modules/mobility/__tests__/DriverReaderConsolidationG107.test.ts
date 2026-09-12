@@ -28,30 +28,11 @@ describe("G107 driver reader consolidation", () => {
     expect(runtime).not.toContain("driver_complete_profile");
   });
 
-  it("keeps temporary admin analytics driver reads explicit and presence-free", () => {
-    const method = adminQueries.slice(
-      adminQueries.indexOf("static async getAllDriversComplete"),
-      adminQueries.indexOf("static async getRideStats"),
-    );
-
-    expect(method).toContain('.from<DriverAnalyticsDirectoryRow>("driver_data")');
-    expect(method).toContain("profile_id, rating, total_rides, is_verified");
-    expect(method).toContain("vehicle_model, vehicle_plate");
-    expect(method).toContain("profiles!inner(name, display_name, avatar_url)");
-    expect(method).not.toContain("driver_complete_profile");
-    expect(method).not.toContain('select("*")');
-    expect(method).not.toContain("is_online");
-    expect(method).not.toContain("is_available");
-    expect(method).not.toContain("last_location_update");
-    expect(method).not.toContain("current_location");
-  });
-
-  it("returns a compatibility dto whose ids and names are explicit", () => {
-    expect(adminQueries).toContain("export interface AdminDriverAnalyticsRow");
-    expect(adminQueries).toContain("id: row.profile_id");
-    expect(adminQueries).toContain("profile_id: row.profile_id");
-    expect(adminQueries).toContain("display_name: name");
-    expect(adminQueries).toContain("avg_rating: rating");
-    expect(adminQueries).toContain("profile: {");
+  it("does not restore the retired global admin driver directory", () => {
+    expect(adminQueries).not.toContain("static async getAllDriversComplete");
+    expect(adminQueries).not.toContain("DriverAnalyticsDirectoryRow");
+    expect(adminQueries).not.toContain("AdminDriverAnalyticsRow");
+    expect(adminQueries).not.toContain("mapDriverAnalyticsRow");
+    expect(adminQueries).not.toContain("normalizeDriverAnalyticsProfile");
   });
 });
