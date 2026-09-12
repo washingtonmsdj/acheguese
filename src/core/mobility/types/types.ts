@@ -2,6 +2,23 @@
  * Core mobility contracts shared by rides, drivers and delivery integrations.
  */
 
+import type { RideState } from "../core/RideStateMachine";
+
+/**
+ * Runtime ride status contract.
+ *
+ * Canonical states come directly from the state-machine SSOT. The remaining
+ * literals are read-compatibility aliases that can still exist while legacy
+ * rows are reconciled and must never become a second lifecycle authority.
+ */
+export type RideRequestStatus =
+  | RideState
+  | "pending"
+  | "driver_on_the_way"
+  | "driver_arrived"
+  | "passenger_on_board"
+  | "cancelled";
+
 export interface DriverProfile {
   id: string;
   user_id: string;
@@ -48,27 +65,7 @@ export interface RideRequest {
   origin_lng: number;
   destination_lat: number;
   destination_lng: number;
-  status:
-    | "pending"
-    | "requested"
-    | "searching_driver"
-    | "driver_assigned"
-    | "driver_accepted"
-    | "driver_arriving"
-    | "driver_on_the_way"
-    | "driver_arrived"
-    | "passenger_boarded"
-    | "passenger_on_board"
-    | "pickup_confirmed"
-    | "in_progress"
-    | "in_delivery"
-    | "delivered"
-    | "completed"
-    | "cancelled"
-    | "failed"
-    | "expired"
-    | "cancelled_by_passenger"
-    | "cancelled_by_driver";
+  status: RideRequestStatus;
   estimated_price?: number;
   suggested_price?: number;
   final_price?: number;
