@@ -113,7 +113,7 @@ jobs:
             echo "- PLANS hardcoded (use CatalogService)"
             echo "- Import de tabelas legadas (gastronomy_subscriptions, business_subscriptions)"
             echo ""
-            echo "Consulte .kiro/specs/monetization-multi-vertical-refactor/F7_SSOT_ENFORCEMENT.md"
+            echo "Consulte docs/architecture/SSOT_REGISTRY.md e docs/08-roadmap/EXECUCAO_MAIN_ONLY.md"
             exit 1
           }
 
