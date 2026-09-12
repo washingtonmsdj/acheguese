@@ -18,7 +18,6 @@ import { adminStatsService } from "@/core/admin/services/AdminStatsService";
 import {
   LEGACY_RIDE_STATUS_ALIASES,
   QUERYABLE_CLOSED_RIDE_STATUSES,
-  QUERYABLE_OPEN_RIDE_STATUSES,
 } from "@/core/mobility/core/RideLifecycleStatus";
 import { RIDE_STATE } from "@/core/mobility/core/RideStateMachine";
 import { profileService } from "@/core/profiles/services/ProfileService";
@@ -35,7 +34,6 @@ import type {
 
 type RawRecord = Record<string, unknown>;
 
-const ACTIVE_RIDE_STATUS_SET = new Set<string>(QUERYABLE_OPEN_RIDE_STATUSES);
 const CLOSED_RIDE_STATUS_SET = new Set<string>(QUERYABLE_CLOSED_RIDE_STATUSES);
 const AWAITING_DRIVER_TARGET_STATES = new Set<string>([
   RIDE_STATE.REQUESTED,
@@ -111,22 +109,10 @@ function toActiveRide(raw: RawRecord, namesByProfileId: Map<string, string>): Ac
     status: getString(raw.status, RIDE_STATE.REQUESTED),
     passenger_name: namesByProfileId.get(passengerProfileId) || "Passageiro",
     driver_name: namesByProfileId.get(driverProfileId) || "Aguardando motorista",
-    origin:
-      getString(raw.origin) ||
-      getString(raw.pickup_location_name) ||
-      getString(raw.pickup_address) ||
-      "Origem não informada",
-    destination:
-      getString(raw.destination) ||
-      getString(raw.dropoff_location_name) ||
-      getString(raw.dropoff_address) ||
-      "Destino não informado",
+    origin: getString(raw.origin) || "Origem não informada",
+    destination: getString(raw.destination) || "Destino não informado",
     created_at: getString(raw.created_at),
-    estimated_duration: getNumeric(raw.estimated_duration, 0) || undefined,
-    current_price: getNumeric(
-      raw.current_price,
-      getNumeric(raw.final_price, getNumeric(raw.suggested_price, 0)),
-    ),
+    current_price: getNumeric(raw.final_price, getNumeric(raw.suggested_price, 0)),
   };
 }
 
@@ -214,13 +200,16 @@ export async function getRealtimeMetrics(): Promise<{
   startOfMonth.setDate(startOfMonth.getDate() - 30);
 
   try {
-    const [allRidesRaw, allDriversRaw, onlinePresence] = await Promise.all([
-      adminMobilityService.getAllRides(),
-      adminMobilityService.getAllDriversComplete(),
-      AdminDriverPresenceReadService.listOnline(),
-    ]);
+    const [metricRidesRaw, activeRidesRaw, allDriversRaw, onlinePresence] =
+      await Promise.all([
+        adminMobilityService.getRealtimeMetricRides(),
+        adminMobilityService.getRealtimeOpenRides(),
+        adminMobilityService.getAllDriversComplete(),
+        AdminDriverPresenceReadService.listOnline(),
+      ]);
 
-    const rides = (allRidesRaw as unknown as RawRecord[]) || [];
+    const rides = (metricRidesRaw as RawRecord[]) || [];
+    const openRides = (activeRidesRaw as RawRecord[]) || [];
     const allDrivers = (allDriversRaw as RawRecord[]) || [];
     const driverByProfileId = new Map(
       allDrivers.map((driver) => [
@@ -239,13 +228,9 @@ export async function getRealtimeMetrics(): Promise<{
       }),
     );
 
-    const activeRidesRaw = rides.filter((ride) =>
-      ACTIVE_RIDE_STATUS_SET.has(getString(ride.status).toLowerCase()),
-    );
-
     const profileIds = [
       ...new Set(
-        activeRidesRaw
+        openRides
           .flatMap((ride) => [
             getString(ride.passenger_profile_id),
             getString(ride.driver_profile_id),
@@ -255,7 +240,7 @@ export async function getRealtimeMetrics(): Promise<{
     ];
 
     const namesByProfileId = await getProfileNames(profileIds);
-    const activeRides = activeRidesRaw.map((ride) => toActiveRide(ride, namesByProfileId));
+    const activeRides = openRides.map((ride) => toActiveRide(ride, namesByProfileId));
 
     const ridesPending = rides.filter((ride) =>
       AWAITING_DRIVER_STATUS_SET.has(getString(ride.status).toLowerCase()),
