@@ -27,6 +27,8 @@ describe("G147 retired static mobility readers", () => {
       "getDriverEarnings",
       "getCompletedRidePaymentsByDriver",
       "getPassengerRating",
+      "listMotoboyDeliveries",
+      "listMotoboyStatsRows",
     ]) {
       expect(mobilityImpl).not.toContain(`static async ${retiredMethod}(`);
     }
@@ -42,8 +44,6 @@ describe("G147 retired static mobility readers", () => {
   });
 
   it("keeps only compatibility methods with proven current callers", () => {
-    expect(mobilityImpl).toContain("static async listMotoboyDeliveries(");
-    expect(mobilityImpl).toContain("static async listMotoboyStatsRows(");
     expect(mobilityImpl).toContain("static async countDeliveredBySource(");
     expect(mobilityImpl).toContain("static async countDeliveredMotoboyRides(");
     expect(mobilityImpl).toContain("static async ensureDriverDataRow(");
