@@ -2,7 +2,8 @@ import React from "react";
 import { Award, Crown, Medal, Trophy, Zap } from "lucide-react";
 import { cn } from "@/shared/utils/cn";
 import { getRecordValue } from "@/shared/utils/recordLookup";
-import type { NeighborRank } from "@/shared/types/mobilidade";
+
+type NeighborRank = "bronze" | "prata" | "ouro" | "elite";
 
 const rankConfig: Record<
   NeighborRank,
