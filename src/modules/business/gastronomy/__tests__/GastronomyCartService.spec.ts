@@ -9,9 +9,10 @@ function makeMenuItem(
   return {
     id: "item-1",
     category_id: "category-1",
-    name: "Pizza Especial",
-    description: "Molho da casa",
-    base_price: 32,
+      name: "Pizza Especial",
+      description: "Molho da casa",
+      base_price: 32,
+      image_url: "https://cdn.example.test/pizza-especial.jpg",
     is_vegetarian: false,
     is_vegan: false,
     is_gluten_free: false,
@@ -66,6 +67,7 @@ describe("GastronomyCartService", () => {
     });
 
     expect(cartItem.line_id).toBeTruthy();
+    expect(cartItem.image_url).toBe("https://cdn.example.test/pizza-especial.jpg");
     expect(cartItem.variant?.price_adjustment).toBe(8);
     expect(cartItem.addons).toHaveLength(1);
     expect(cartItem.subtotal).toBe(90);

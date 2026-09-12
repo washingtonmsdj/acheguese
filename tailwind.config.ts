@@ -12,10 +12,44 @@ export default {
   prefix: "",
   theme: {
     extend: {
+      screens: {
+        "3xl": "1920px",
+        "4xl": "2400px",
+      },
       fontFamily: {
         sans: ["Plus Jakarta Sans", "sans-serif"],
         display: ["Plus Jakarta Sans", "sans-serif"],
         heading: ["Plus Jakarta Sans", "sans-serif"],
+      },
+      fontSize: {
+        "type-body": [
+          "var(--type-body)",
+          { lineHeight: "var(--type-body-leading)" },
+        ],
+        "type-label": [
+          "var(--type-label)",
+          { lineHeight: "var(--type-label-leading)" },
+        ],
+        "type-caption": [
+          "var(--type-caption)",
+          { lineHeight: "var(--type-caption-leading)" },
+        ],
+        "type-micro": [
+          "var(--type-micro)",
+          { lineHeight: "1rem" },
+        ],
+        "type-section": [
+          "var(--type-section)",
+          { lineHeight: "var(--type-section-leading)" },
+        ],
+        "type-profile": [
+          "var(--type-profile-mobile)",
+          { lineHeight: "1.05" },
+        ],
+        "type-profile-desktop": [
+          "var(--type-profile-desktop)",
+          { lineHeight: "1.05" },
+        ],
       },
       colors: {
         border: "hsl(var(--border))",

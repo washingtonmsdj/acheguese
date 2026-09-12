@@ -9,6 +9,7 @@ import {
   X,
 } from "lucide-react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
+import { cn } from "@/shared/utils/cn";
 
 interface TerritoryTopbarProps {
   territoryName: string;
@@ -19,6 +20,11 @@ interface TerritoryTopbarProps {
   canCreatePost?: boolean;
   searchHref?: string;
   searchLabel?: string;
+  showMobileSearch?: boolean;
+  /** Align the desktop bar with the full territory shell instead of a centered content column. */
+  flushDesktop?: boolean;
+  /** Match compact mobile concepts that place the territory row directly below the brand row. */
+  compactMobile?: boolean;
   messagesHref?: string;
   profileLabel?: string | null;
   profileAvatarUrl?: string | null;
@@ -31,6 +37,9 @@ export function TerritoryTopbar({
   unreadCount = 0,
   searchHref,
   searchLabel = "Buscar neste território",
+  showMobileSearch = true,
+  flushDesktop = false,
+  compactMobile = false,
   messagesHref = "/mensagens",
   profileLabel,
   profileAvatarUrl,
@@ -100,7 +109,13 @@ export function TerritoryTopbar({
       className="sticky top-0 z-40 border-b border-white/10 bg-territory-brand text-white shadow-territory-highlight xl:-ml-44 xl:w-[calc(100%+11rem)]"
       style={{ paddingTop: "env(safe-area-inset-top)" }}
     >
-      <div className="mx-auto grid min-h-16 max-w-[76rem] grid-cols-[1fr_auto] items-center gap-x-3 gap-y-1 px-4 py-2 sm:px-6 lg:flex lg:h-16 lg:gap-6 lg:px-8 lg:py-0">
+      <div
+        className={cn(
+          "grid grid-cols-[1fr_auto] items-center gap-x-3 gap-y-1 px-5 py-2 sm:px-6 lg:flex lg:h-16 lg:gap-6 lg:py-0",
+          compactMobile ? "min-h-0 gap-y-0 px-4 py-0" : "min-h-16",
+          flushDesktop ? "mx-0 max-w-none lg:px-6" : "mx-auto max-w-[76rem] lg:px-8",
+        )}
+      >
         <Link
           to="/"
           className="group flex min-h-11 min-w-0 shrink-0 items-center rounded-territory pr-1 lg:order-1"
@@ -189,11 +204,13 @@ export function TerritoryTopbar({
           )}
         </div>
       </div>
-      <div className="mx-auto flex max-w-[76rem] items-center gap-3 px-4 pb-3 sm:px-6 lg:hidden">
-        <div className="min-w-0 flex-1">
-          {renderSearchForm("territory-home-search", `${searchLabel} no celular`)}
+      {showMobileSearch ? (
+        <div className="mx-auto flex max-w-[76rem] items-center gap-3 px-5 pb-3 sm:px-6 lg:hidden">
+          <div className="min-w-0 flex-1">
+            {renderSearchForm("territory-home-search", `${searchLabel} no celular`)}
+          </div>
         </div>
-      </div>
+      ) : null}
     </header>
   );
 }

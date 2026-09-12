@@ -5,6 +5,20 @@ import LaunchPausedPage from "@/app/pages/LaunchPausedPage";
 import * as P from "../centralLazyImports";
 
 export function CentralRoutes() {
+  const conceptBusinessPreview =
+    import.meta.env.DEV &&
+    typeof window !== "undefined" &&
+    new URLSearchParams(window.location.search).get("concept-mock") === "1";
+
+  if (conceptBusinessPreview) {
+    return (
+      <Routes>
+        <Route index element={<P.BusinessManagementConceptPreviewPage />} />
+        <Route path="cardapio" element={<P.BusinessMenuConceptPreviewPage />} />
+      </Routes>
+    );
+  }
+
   const launchElement = (
     surface: LaunchSurfaceKey,
     moduleName: string,

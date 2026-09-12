@@ -118,6 +118,8 @@ export interface MapLibreAdapterProps {
   attribution?: boolean;
   /** Ocultar controles de navegação. Padrão: false */
   hideNavigationControl?: boolean;
+  /** Canto dos controles de zoom quando visíveis. */
+  navigationControlPosition?: 'top-left' | 'top-right' | 'bottom-left' | 'bottom-right';
   /** Permitir interação direta no mapa (arrasto, zoom, teclado). Padrão: true */
   interactive?: boolean;
   className?: string;
@@ -184,6 +186,7 @@ export const MapLibreAdapter = forwardRef<MapLibreAdapterHandle, MapLibreAdapter
       radiusControl,
       attribution = true,
       hideNavigationControl = false,
+      navigationControlPosition = 'bottom-right',
       interactive = true,
       className 
     },
@@ -290,7 +293,7 @@ export const MapLibreAdapter = forwardRef<MapLibreAdapterHandle, MapLibreAdapter
       if (!hideNavigationControl) {
         map.addControl(
           new maplibregl.NavigationControl({ showCompass: false }),
-          'bottom-right'
+          navigationControlPosition
         );
       }
 

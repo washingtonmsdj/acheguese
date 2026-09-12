@@ -24,7 +24,13 @@ import {
   MODULE_SLUGS,
 } from "@/core/routing/utils/territoryUrls";
 
-export function TerritoryAdaptiveNavigation() {
+export function TerritoryAdaptiveNavigation({
+  hideMobile = false,
+  hideDesktop = false,
+}: {
+  hideMobile?: boolean;
+  hideDesktop?: boolean;
+}) {
   const { pathname } = useLocation();
   const { active } = usePublicBrowsingCity();
   const { user } = useSessionContext();
@@ -102,7 +108,10 @@ export function TerritoryAdaptiveNavigation() {
   return (
     <>
       <nav
-        className="fixed inset-x-0 bottom-0 z-[100] border-t border-territory-border bg-territory-surface/96 backdrop-blur-xl safe-area-bottom md:hidden"
+        className={cn(
+          "fixed inset-x-0 bottom-0 z-[100] border-t border-territory-border bg-territory-surface/96 backdrop-blur-xl safe-area-bottom md:hidden",
+          hideMobile && "hidden",
+        )}
         aria-label="Navegação principal mobile"
         data-territory-navigation="mobile"
       >
@@ -135,7 +144,7 @@ export function TerritoryAdaptiveNavigation() {
                     "flex h-8 w-10 items-center justify-center rounded-full",
                     item.emphasized
                       ? "-mt-4 h-12 w-12 bg-territory-sun text-territory-ink shadow-territory-highlight"
-                      : activeMode && "bg-territory-brand/12",
+                      : activeMode && "bg-[hsl(var(--territory-brand)/0.12)]",
                   )}
                 >
                   <Icon className="h-5 w-5" aria-hidden="true" />
@@ -150,7 +159,7 @@ export function TerritoryAdaptiveNavigation() {
       </nav>
 
       <nav
-        className="fixed inset-y-0 left-0 z-[90] hidden w-[4.5rem] flex-col border-r border-territory-border bg-territory-surface px-2 py-3 md:flex xl:hidden"
+        className={cn("fixed inset-y-0 left-0 z-[90] hidden w-[4.5rem] flex-col border-r border-territory-border bg-territory-surface px-2 py-3 md:flex xl:hidden", hideDesktop && "md:hidden")}
         aria-label="Navegação principal tablet"
         data-territory-navigation="tablet"
       >
@@ -172,7 +181,7 @@ export function TerritoryAdaptiveNavigation() {
                 to={item.href}
                 className={cn(
                   "flex min-h-[3.25rem] flex-col items-center justify-center gap-1 rounded-territory text-territory-muted transition-colors hover:bg-territory-raised hover:text-territory-ink",
-                  activeMode && "bg-territory-brand/12 text-territory-brand",
+                  activeMode && "bg-[hsl(var(--territory-brand)/0.12)] text-territory-brand",
                 )}
                 aria-label={item.label}
                 aria-current={activeMode ? "page" : undefined}
@@ -189,7 +198,7 @@ export function TerritoryAdaptiveNavigation() {
       </nav>
 
       <nav
-        className="fixed inset-y-0 left-0 z-[90] hidden w-44 flex-col border-r border-territory-border bg-territory-surface px-3 py-5 xl:bottom-0 xl:top-16 xl:flex"
+        className={cn("fixed inset-y-0 left-0 z-[90] hidden w-44 flex-col border-r border-territory-border bg-territory-surface px-3 py-5 xl:bottom-0 xl:top-16 xl:flex", hideDesktop && "xl:hidden")}
         aria-label="Navegação principal desktop"
         data-territory-navigation="desktop"
       >
@@ -204,7 +213,7 @@ export function TerritoryAdaptiveNavigation() {
                 to={item.href}
                 className={cn(
                   "group flex min-h-12 items-center gap-3 rounded-xl px-3 text-territory-muted transition-colors hover:bg-territory-raised hover:text-territory-ink",
-                  activeMode && "bg-territory-brand/12 text-territory-brand",
+                  activeMode && "bg-[hsl(var(--territory-brand)/0.12)] text-territory-brand",
                 )}
                 aria-current={activeMode ? "page" : undefined}
               >

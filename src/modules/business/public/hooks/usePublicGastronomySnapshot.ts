@@ -1,10 +1,14 @@
 import { useQuery } from "@tanstack/react-query";
 import { PublicGastronomySnapshotService } from "../services/PublicGastronomySnapshotService";
-import type { PublicSlugRouteParams } from "@/core/business/types/publicSnapshots";
+import type {
+  PublicSlugRouteParams,
+} from "@/core/business/types/publicSnapshots";
 
 const FIVE_MINUTES = 5 * 60 * 1000;
 
-export function usePublicGastronomySnapshot(params: Partial<PublicSlugRouteParams>) {
+export function usePublicGastronomySnapshot(
+  params: Partial<PublicSlugRouteParams>,
+) {
   const hasRoute = Boolean(
     params.state && params.city && params.slug,
   );
@@ -18,7 +22,9 @@ export function usePublicGastronomySnapshot(params: Partial<PublicSlugRouteParam
       params.slug,
     ],
     queryFn: () =>
-      PublicGastronomySnapshotService.getByTerritorySlug(params as PublicSlugRouteParams),
+      PublicGastronomySnapshotService.getByTerritorySlug(
+        params as PublicSlugRouteParams,
+      ),
     enabled: hasRoute,
     staleTime: FIVE_MINUTES,
   });

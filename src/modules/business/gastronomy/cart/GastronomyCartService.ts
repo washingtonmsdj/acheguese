@@ -136,6 +136,7 @@ export class GastronomyCartService {
       line_id: lineId,
       item_id: item.id,
       name: item.name,
+      image_url: item.image_url,
       base_price: money(item.base_price),
       quantity,
       variant,

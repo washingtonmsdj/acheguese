@@ -4,7 +4,7 @@
  * SSOT: Usa hooks que consomem MenuService.
  */
 
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useBusinessDashboardContext } from '@/modules/business/dashboard/businessDashboardContext';
 import { useBusinessSubscription } from '@/core/billing';
@@ -25,9 +25,12 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/shared/components/ui/select';
-import { ArrowLeft, Plus, Search } from 'lucide-react';
+import { ArrowLeft, ChevronLeft, ChevronRight, LayoutGrid, List, Plus, Search } from 'lucide-react';
 import type { MenuCategory, MenuItem } from '@/core/business/services/MenuService';
 import { businessManagementRoutes } from '@/core/business/utils/businessManagementRoutes';
+import { PAGINATION } from '@/shared/constants';
+
+const MENU_ITEMS_PAGE_SIZE = PAGINATION.MEDIUM_LIMIT;
 
 export default function MenuManagementPage() {
   const { businessId, businessDataId } = useBusinessDashboardContext();
@@ -45,6 +48,9 @@ export default function MenuManagementPage() {
   const [selectedItem, setSelectedItem] = useState<MenuItem | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
   const [filterCategory, setFilterCategory] = useState<string>('all');
+  const [filterStatus, setFilterStatus] = useState<'all' | 'available' | 'paused' | 'soldOut'>('all');
+  const [viewMode, setViewMode] = useState<'list' | 'grid'>('list');
+  const [currentPage, setCurrentPage] = useState(1);
   const [categoryToDelete, setCategoryToDelete] = useState<string | null>(null);
   const [itemToDelete, setItemToDelete] = useState<string | null>(null);
 
@@ -70,14 +76,34 @@ export default function MenuManagementPage() {
     toggleAvailability,
     isCreating: creatingItem,
     isUpdating: updatingItem,
-  } = useMenuItems(menuId ?? '', filterCategory === 'all' ? undefined : filterCategory);
+    totalCount: filteredItemsCount,
+    hasNextPage,
+  } = useMenuItems(menuId ?? '', filterCategory === 'all' ? undefined : filterCategory, {
+    page: currentPage,
+    pageSize: MENU_ITEMS_PAGE_SIZE,
+    searchQuery,
+    status: filterStatus,
+  });
 
-  const { items: allItems } = useMenuItems(menuId ?? '');
+  const { totalCount: totalItemsCount } = useMenuItems(menuId ?? '', undefined, {
+    page: 1,
+    pageSize: 1,
+  });
 
   const canUseCategories = entitlements.canUseMenuCategories;
   const canUseImages = entitlements.canUseMenuImages;
   const categoriesCount = categories?.length || 0;
-  const totalItemsCount = allItems?.length || 0;
+  const totalPages = Math.max(1, Math.ceil(filteredItemsCount / MENU_ITEMS_PAGE_SIZE));
+
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [filterCategory, filterStatus, searchQuery]);
+
+  useEffect(() => {
+    if (currentPage > totalPages) {
+      setCurrentPage(totalPages);
+    }
+  }, [currentPage, totalPages]);
 
   const canAddMoreItems =
     entitlements.maxMenuItems === null || totalItemsCount < entitlements.maxMenuItems;
@@ -169,11 +195,14 @@ export default function MenuManagementPage() {
     updateItem({ itemId, stock_quantity: 0, is_available: false });
   };
 
-  const filteredItems =
-    items?.filter((item) =>
-      item.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      item.description?.toLowerCase().includes(searchQuery.toLowerCase()),
-    ) || [];
+  const filteredItems = items ?? [];
+  const firstVisibleItem = filteredItemsCount === 0
+    ? 0
+    : (currentPage - 1) * MENU_ITEMS_PAGE_SIZE + 1;
+  const lastVisibleItem = Math.min(
+    currentPage * MENU_ITEMS_PAGE_SIZE,
+    filteredItemsCount,
+  );
 
   if (loadingSubscription || loadingMenuId) {
     return (
@@ -245,8 +274,8 @@ export default function MenuManagementPage() {
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
-              <div className="flex gap-4">
-                <div className="flex-1 relative">
+              <div className="grid grid-cols-[minmax(0,1fr)_minmax(0,1fr)_auto] gap-2 sm:flex sm:flex-wrap sm:items-center sm:gap-3">
+                <div className="relative col-span-3 min-w-0 sm:col-span-1 sm:basis-full lg:basis-auto">
                   <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
                   <Input
                     placeholder="Buscar itens..."
@@ -258,11 +287,11 @@ export default function MenuManagementPage() {
 
                 {canUseCategories && (
                   <Select value={filterCategory} onValueChange={setFilterCategory}>
-                    <SelectTrigger className="w-[200px]">
+                    <SelectTrigger className="w-full sm:w-[200px]">
                       <SelectValue placeholder="Categoria" />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="all">Todas</SelectItem>
+                      <SelectItem value="all">Categorias</SelectItem>
                       {categories?.map((cat) => (
                         <SelectItem key={cat.id} value={cat.id}>
                           {cat.name}
@@ -272,7 +301,40 @@ export default function MenuManagementPage() {
                   </Select>
                 )}
 
-                <Button onClick={handleCreateItem} disabled={!canAddMoreItems}>
+                <Select value={filterStatus} onValueChange={(value: 'all' | 'available' | 'paused' | 'soldOut') => setFilterStatus(value)}>
+                  <SelectTrigger className="w-full sm:w-[180px]">
+                    <SelectValue placeholder="Status" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">Status</SelectItem>
+                    <SelectItem value="available">Disponíveis</SelectItem>
+                    <SelectItem value="paused">Pausados</SelectItem>
+                    <SelectItem value="soldOut">Esgotados</SelectItem>
+                  </SelectContent>
+                </Select>
+
+                <div className="col-span-1 inline-flex self-start justify-self-end rounded-lg border border-territory-border bg-territory-surface p-1 sm:col-auto sm:self-auto sm:justify-self-auto" aria-label="Modo de visualização">
+                  <button
+                    type="button"
+                    aria-label="Visualizar em lista"
+                    aria-pressed={viewMode === 'list'}
+                    onClick={() => setViewMode('list')}
+                    className={`inline-flex h-9 w-9 items-center justify-center rounded-md focus-visible:outline-2 focus-visible:outline-offset-[-2px] focus-visible:outline-territory-brand ${viewMode === 'list' ? 'bg-territory-brand text-white' : 'text-territory-muted hover:bg-territory-raised hover:text-territory-ink'}`}
+                  >
+                    <List className="h-4 w-4" aria-hidden="true" />
+                  </button>
+                  <button
+                    type="button"
+                    aria-label="Visualizar em grade"
+                    aria-pressed={viewMode === 'grid'}
+                    onClick={() => setViewMode('grid')}
+                    className={`inline-flex h-9 w-9 items-center justify-center rounded-md focus-visible:outline-2 focus-visible:outline-offset-[-2px] focus-visible:outline-territory-brand ${viewMode === 'grid' ? 'bg-territory-brand text-white' : 'text-territory-muted hover:bg-territory-raised hover:text-territory-ink'}`}
+                  >
+                    <LayoutGrid className="h-4 w-4" aria-hidden="true" />
+                  </button>
+                </div>
+
+                <Button onClick={handleCreateItem} disabled={!canAddMoreItems} className="col-span-3 w-full sm:col-auto sm:w-auto">
                   <Plus className="w-4 h-4 mr-2" />
                   Novo Item
                 </Button>
@@ -313,20 +375,60 @@ export default function MenuManagementPage() {
               </CardContent>
             </Card>
           ) : (
-            <div className="space-y-4">
-              {filteredItems.map((item) => (
-                <ItemCard
-                  key={item.id}
-                  item={item}
-                  onEdit={handleEditItem}
-                  onDelete={setItemToDelete}
-                  onToggleAvailability={(itemId, isAvailable) =>
-                    toggleAvailability({ itemId, isAvailable })
-                  }
-                  onMarkSoldOut={handleMarkItemSoldOut}
-                />
-              ))}
-            </div>
+            <>
+              <div className={viewMode === 'grid' ? 'grid grid-cols-2 gap-2 sm:gap-4 xl:grid-cols-3 2xl:grid-cols-4 3xl:grid-cols-5 4xl:grid-cols-6' : 'space-y-4'}>
+                {filteredItems.map((item) => (
+                  <ItemCard
+                    key={item.id}
+                    item={item}
+                    onEdit={handleEditItem}
+                    onDelete={setItemToDelete}
+                    onToggleAvailability={(itemId, isAvailable) =>
+                      toggleAvailability({ itemId, isAvailable })
+                    }
+                    onMarkSoldOut={handleMarkItemSoldOut}
+                    layout={viewMode}
+                  />
+                ))}
+              </div>
+
+              {filteredItemsCount > MENU_ITEMS_PAGE_SIZE && (
+                <Card>
+                  <CardContent className="flex flex-col gap-3 py-4 sm:flex-row sm:items-center sm:justify-between">
+                    <p className="text-sm text-muted-foreground">
+                      Exibindo {firstVisibleItem}–{lastVisibleItem} de {filteredItemsCount} itens
+                    </p>
+                    <div className="flex items-center gap-2">
+                      <Button
+                        type="button"
+                        variant="outline"
+                        size="sm"
+                        aria-label="Página anterior"
+                        disabled={currentPage === 1}
+                        onClick={() => setCurrentPage((page) => Math.max(1, page - 1))}
+                      >
+                        <ChevronLeft className="mr-1 h-4 w-4" aria-hidden="true" />
+                        Anterior
+                      </Button>
+                      <span className="min-w-24 text-center text-sm text-muted-foreground">
+                        Página {currentPage} de {totalPages}
+                      </span>
+                      <Button
+                        type="button"
+                        variant="outline"
+                        size="sm"
+                        aria-label="Próxima página"
+                        disabled={!hasNextPage}
+                        onClick={() => setCurrentPage((page) => Math.min(totalPages, page + 1))}
+                      >
+                        Próxima
+                        <ChevronRight className="ml-1 h-4 w-4" aria-hidden="true" />
+                      </Button>
+                    </div>
+                  </CardContent>
+                </Card>
+              )}
+            </>
           )}
         </TabsContent>
 

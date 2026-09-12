@@ -291,6 +291,14 @@ const DIRECT_PAUSED_ROUTES: DirectPausedRoute[] = [
 
 export function AppLayoutRoutes() {
   const aiVirtualTryOnEnabled = isFeatureEnabled("AI_VIRTUAL_TRYON");
+  const conceptMessagesPreview =
+    import.meta.env.DEV &&
+    typeof window !== "undefined" &&
+    new URLSearchParams(window.location.search).get("concept-mock") === "1";
+  const conceptAccountPreview =
+    import.meta.env.DEV &&
+    typeof window !== "undefined" &&
+    new URLSearchParams(window.location.search).get("concept-mock") === "1";
   const launchElement = (
     surface: LaunchSurfaceKey,
     moduleName: string,
@@ -552,7 +560,10 @@ export function AppLayoutRoutes() {
           path="/conta/editar/:profileId"
           element={protectedElement(<P.ContaEditarPerfilPage />)}
         />
-        <Route path="/conta" element={protectedElement(<P.ContaPage />)} />
+        <Route
+          path="/conta"
+          element={conceptAccountPreview ? <P.ContaPage /> : protectedElement(<P.ContaPage />)}
+        />
         <Route path="/perfil" element={<Navigate to="/conta" replace />} />
         <Route
           path="/perfil/editar"
@@ -607,23 +618,31 @@ export function AppLayoutRoutes() {
 
         <Route
           path="/mensagens"
-          element={protectedElement(
-            launchElement(
-              "communityCommunication",
-              "Mensagens",
-              <P.MensagensPage />,
-            ),
-          )}
+          element={
+            conceptMessagesPreview
+              ? <P.MensagensPage />
+              : protectedElement(
+                  launchElement(
+                    "communityCommunication",
+                    "Mensagens",
+                    <P.MensagensPage />,
+                  ),
+                )
+          }
         />
         <Route
           path="/chat/:conversationId"
-          element={protectedElement(
-            launchElement(
-              "communityCommunication",
-              "Mensagens",
-              <P.ChatPage />,
-            ),
-          )}
+          element={
+            conceptMessagesPreview
+              ? <P.ChatPage />
+              : protectedElement(
+                  launchElement(
+                    "communityCommunication",
+                    "Mensagens",
+                    <P.ChatPage />,
+                  ),
+                )
+          }
         />
         <Route path="/mapa" element={<P.MapaPage />} />
         <Route path="/perto-de-mim" element={<P.NearbyPage />} />

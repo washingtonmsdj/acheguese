@@ -60,14 +60,35 @@ export function AppLayoutSidebar() {
         pathSegments.length >= 3 &&
         pathSegments.length <= 4));
   const isAccountRoute = pathSegments[0] === "conta";
+  const conceptAccountPreview =
+    import.meta.env.DEV &&
+    typeof window !== "undefined" &&
+    isAccountRoute &&
+    new URLSearchParams(window.location.search).get("concept-mock") === "1";
   const isPublicPersonalProfileRoute =
     pathSegments[0] === "u" && pathSegments.length === 2;
+  const isProfessionalPublicRoute =
+    pathSegments[0] === MODULE_SLUGS.services &&
+    pathSegments[3] === "profissional" &&
+    pathSegments.length >= 5;
+  const isGastronomyConceptPreview =
+    import.meta.env.DEV &&
+    pathSegments[0] === MODULE_SLUGS.gastronomy &&
+    pathSegments.length >= 5 &&
+    new URLSearchParams(window.location.search).get("concept-mock") === "1";
+  const isGastronomyMockRestaurantRoute =
+    import.meta.env.DEV &&
+    pathSegments[0] === MODULE_SLUGS.gastronomy &&
+    pathSegments[4] === "sabores-da-ana";
+  const isGastronomyCheckoutConcept =
+    isGastronomyMockRestaurantRoute && pathSegments[5] === "checkout";
   const usesTerritoryVivoShell =
     isBarePublicTerritorialRoute ||
     isTerritoryVivoExploreRoute ||
     isCommunityPublicLandingRoute ||
     isAccountRoute ||
-    isPublicPersonalProfileRoute;
+    isPublicPersonalProfileRoute ||
+    isProfessionalPublicRoute;
 
   // Ocultar sidebar na home e na página de perfil (que tem sua própria sidebar)
   const hideGlobalSidebar =
@@ -77,7 +98,9 @@ export function AppLayoutSidebar() {
     isCommunityPublicLandingRoute ||
     isCommunityAliasPublicRoute ||
     isShortCommunityRoute ||
-    isPublicBusinessLandingRoute;
+    isPublicBusinessLandingRoute ||
+    isGastronomyConceptPreview ||
+    isGastronomyMockRestaurantRoute;
 
   const isInternalGroupRoute =
     pathSegments[0] === "grupos" && pathSegments.length >= 2;
@@ -95,14 +118,30 @@ export function AppLayoutSidebar() {
     isCommunityPublicLandingRoute ||
     isCommunityAliasPublicRoute ||
     isShortCommunityRoute ||
-    isPublicBusinessLandingRoute;
+    isPublicBusinessLandingRoute ||
+    isGastronomyConceptPreview ||
+    isGastronomyMockRestaurantRoute;
   const hideMobileBottomNav =
     pathname === "/" ||
     isInternalGroupRoute ||
     isConversationRoute ||
     isPublicEntityDetailRoute ||
     isCommunityPublicLandingRoute ||
-    isCommunityAliasPublicRoute;
+    isCommunityAliasPublicRoute ||
+    isGastronomyConceptPreview ||
+    isGastronomyMockRestaurantRoute ||
+    isGastronomyCheckoutConcept;
+
+  const isMessagingRoute =
+    pathSegments[0] === "mensagens" || pathSegments[0] === "chat";
+
+  if (isMessagingRoute) {
+    return (
+      <div className="min-h-[100dvh] w-full bg-territory-canvas">
+        <Outlet />
+      </div>
+    );
+  }
 
   // Se deve ocultar a sidebar global, renderizar apenas o conteúdo
   if (usesTerritoryVivoShell) {
@@ -118,7 +157,10 @@ export function AppLayoutSidebar() {
             <Outlet />
           </div>
         </div>
-        <TerritoryAdaptiveNavigation />
+        <TerritoryAdaptiveNavigation
+          hideMobile={isProfessionalPublicRoute || conceptAccountPreview}
+          hideDesktop={conceptAccountPreview}
+        />
       </>
     );
   }
