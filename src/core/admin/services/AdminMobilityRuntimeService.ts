@@ -2,7 +2,10 @@ import { RolloutService } from "@/core/rollout/services/RolloutService";
 import { createRolloutRepository } from "@/core/rollout/repositories/createRolloutRepository";
 import { createLocationRepository } from "@/core/location/repositories/createLocationRepository";
 import { ModuleKey, RolloutStatus } from "@/core/rollout/types";
-import { MobilityService } from "@/core/mobility/services/runtime";
+import {
+  getDriverProfiles,
+  getTopDrivers,
+} from "@/core/mobility/services/mobility.queries";
 import { DriverModerationEventsService } from "@/core/mobility/services/runtime";
 import type { DriverModerationAction, DriverModerationEvent } from "@/core/mobility/services/runtime";
 import { AdminDriverPresenceReadService } from "@/core/admin/services/AdminDriverPresenceReadService";
@@ -26,7 +29,7 @@ export class AdminMobilityRuntimeService {
   private rolloutService = new RolloutService(createRolloutRepository(), createLocationRepository());
 
   async getDriverProfiles(): Promise<{ data: unknown[]; error: unknown }> {
-    const result = await MobilityService.getDriverProfiles();
+    const result = await getDriverProfiles();
     if (result.error || result.data.length === 0) return result;
 
     const profileIds = result.data
@@ -54,7 +57,7 @@ export class AdminMobilityRuntimeService {
   }
 
   async getTopDrivers(opts: { minRides?: number; limit?: number } = {}): Promise<unknown[]> {
-    return MobilityService.getTopDrivers(opts);
+    return getTopDrivers(opts);
   }
 
   async createDriverModerationEvent(input: {
