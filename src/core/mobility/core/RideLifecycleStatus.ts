@@ -79,17 +79,36 @@ export const QUERYABLE_CLOSED_RIDE_STATUSES: readonly string[] = [
   ...LEGACY_CLOSED_RIDE_STATUSES,
 ];
 
+const PRE_ACCEPT_CANONICAL_RIDE_STATUSES = new Set<RideState>([
+  RIDE_STATE.REQUESTED,
+  RIDE_STATE.SEARCHING_DRIVER,
+  RIDE_STATE.DRIVER_ASSIGNED,
+]);
+
+const PRE_ACCEPT_LEGACY_RIDE_STATUSES = Object.entries(
+  LEGACY_RIDE_STATUS_ALIASES,
+)
+  .filter(([, canonical]) => PRE_ACCEPT_CANONICAL_RIDE_STATUSES.has(canonical))
+  .map(([legacy]) => legacy);
+
+/**
+ * Open statuses before the driver becomes an accepted operational participant.
+ * `driver_assigned` is still an offer relationship and must not be treated as
+ * participant-level tracking authority.
+ */
+export const QUERYABLE_PRE_ACCEPT_RIDE_STATUSES: readonly string[] = [
+  ...PRE_ACCEPT_CANONICAL_RIDE_STATUSES,
+  ...PRE_ACCEPT_LEGACY_RIDE_STATUSES,
+];
+
 /**
  * Open-state values that must not use the driver's participant-level base-row
  * read. Assignment is only an offer relationship (G69), and `delivered` is a
  * transient audit milestone closed to `completed` inside one transaction (G70).
  */
 const NON_OPERATIONAL_DRIVER_OPEN_STATUSES = new Set<string>([
-  RIDE_STATE.REQUESTED,
-  RIDE_STATE.SEARCHING_DRIVER,
-  RIDE_STATE.DRIVER_ASSIGNED,
+  ...QUERYABLE_PRE_ACCEPT_RIDE_STATUSES,
   RIDE_STATE.DELIVERED,
-  "pending",
 ]);
 
 /**
@@ -128,4 +147,16 @@ export function isClosedRideStatus(
   status: string | null | undefined,
 ): boolean {
   return Boolean(status && QUERYABLE_CLOSED_RIDE_STATUSES.includes(status));
+}
+
+export function isPreAcceptRideStatus(
+  status: string | null | undefined,
+): boolean {
+  return Boolean(status && QUERYABLE_PRE_ACCEPT_RIDE_STATUSES.includes(status));
+}
+
+export function isDriverOwnedOpenRideStatus(
+  status: string | null | undefined,
+): boolean {
+  return Boolean(status && DRIVER_OWNED_OPEN_RIDE_STATUSES.includes(status));
 }
