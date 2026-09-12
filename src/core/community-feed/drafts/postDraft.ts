@@ -8,8 +8,8 @@
  * localStorage (ver `postDraftCrypto.ts`). Snapshots antigos em texto puro
  * são migrados automaticamente na primeira leitura.
  *
- * O timestamp `updatedAt` registra a última gravação local. `savedAt` é
- * mantido apenas para compatibilidade com snapshots locais antigos.
+ * `updatedAt` é o timestamp canônico. `savedAt` é aceito somente na leitura
+ * de snapshots locais antigos e nunca é emitido pelos writers atuais.
  */
 
 import {
@@ -37,13 +37,18 @@ export interface PostDraftSnapshot {
   eventPlace: string;
   eventLimit: string;
   eventDescription: string;
-  /** Timestamp (ms) da última atualização. */
+  /** Timestamp canônico (ms) da última atualização. */
   updatedAt: number;
-  /** @deprecated usar updatedAt. Mantido para compat com snapshots antigos. */
+  /** Compatibilidade somente de leitura com snapshots locais antigos. */
   savedAt?: number;
 }
 
 export type PostDraftPayload = Omit<PostDraftSnapshot, "updatedAt" | "savedAt">;
+
+type PersistedPostDraftSnapshot = PostDraftPayload & {
+  updatedAt?: number;
+  savedAt?: number;
+};
 
 function keyFor(profileId: string): string {
   return `${STORAGE_PREFIX}${profileId}`;
@@ -57,11 +62,36 @@ function isBrowser(): boolean {
   return typeof window !== "undefined" && !!window.localStorage;
 }
 
+function canonicalizePersistedSnapshot(
+  parsed: PersistedPostDraftSnapshot,
+): PostDraftSnapshot | null {
+  const updatedAt =
+    typeof parsed.updatedAt === "number" && Number.isFinite(parsed.updatedAt)
+      ? parsed.updatedAt
+      : typeof parsed.savedAt === "number" && Number.isFinite(parsed.savedAt)
+        ? parsed.savedAt
+        : null;
+
+  if (updatedAt === null) return null;
+
+  const {
+    updatedAt: _persistedUpdatedAt,
+    savedAt: _legacySavedAt,
+    ...payload
+  } = parsed;
+
+  return {
+    ...payload,
+    updatedAt,
+  };
+}
+
 async function persistEncrypted(
   profileId: string,
   snapshot: PostDraftSnapshot,
 ): Promise<void> {
-  const serialized = JSON.stringify(snapshot);
+  const { savedAt: _legacySavedAt, ...canonicalSnapshot } = snapshot;
+  const serialized = JSON.stringify(canonicalSnapshot);
   const ciphertext = await encryptString(cryptoScopeFor(profileId), serialized);
   window.localStorage.setItem(keyFor(profileId), ciphertext);
 }
@@ -72,11 +102,9 @@ export async function savePostDraft(
 ): Promise<PostDraftSnapshot | null> {
   if (!isBrowser() || !profileId) return null;
   try {
-    const now = Date.now();
     const payload: PostDraftSnapshot = {
       ...snapshot,
-      updatedAt: now,
-      savedAt: now,
+      updatedAt: Date.now(),
     };
     await persistEncrypted(profileId, payload);
     return payload;
@@ -97,34 +125,29 @@ export async function loadPostDraft(
     const plaintext = await decryptString(scope, raw);
     if (!plaintext) return null;
 
-    const parsed = JSON.parse(plaintext) as PostDraftSnapshot;
+    const parsed = JSON.parse(plaintext) as PersistedPostDraftSnapshot;
     if (!parsed || typeof parsed !== "object") return null;
-    if (!parsed.updatedAt && parsed.savedAt) parsed.updatedAt = parsed.savedAt;
 
-    // Migração transparente: se o envelope original estava em texto puro,
-    // reescreve criptografado.
-    if (!isEncryptedEnvelope(raw)) {
+    const canonical = canonicalizePersistedSnapshot(parsed);
+    if (!canonical) return null;
+
+    const hasLegacyTimestamp =
+      typeof parsed.savedAt === "number" ||
+      typeof parsed.updatedAt !== "number";
+
+    // Migração transparente: plaintext e formatos com `savedAt` são sempre
+    // regravados no envelope criptografado e no contrato canônico atual.
+    if (!isEncryptedEnvelope(raw) || hasLegacyTimestamp) {
       try {
-        await persistEncrypted(profileId, parsed);
+        await persistEncrypted(profileId, canonical);
       } catch {
-        // best-effort
+        // best-effort: a leitura continua válida mesmo se a regravação falhar.
       }
     }
-    return parsed;
+
+    return canonical;
   } catch {
     return null;
-  }
-}
-
-export async function writePostDraftSnapshot(
-  profileId: string,
-  snapshot: PostDraftSnapshot,
-): Promise<void> {
-  if (!isBrowser() || !profileId) return;
-  try {
-    await persistEncrypted(profileId, snapshot);
-  } catch {
-    // no-op
   }
 }
 
