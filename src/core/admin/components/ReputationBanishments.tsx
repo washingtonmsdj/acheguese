@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useEffect, useState } from "react";
 import {
   Card,
   CardContent,
@@ -17,7 +17,7 @@ import { toast } from "sonner";
 import { formatDistanceToNow } from "date-fns";
 import { ptBR } from "@/shared/utils/dateLocale";
 import { logger } from "@/shared/utils/logger";
-import { adminMobilityService } from "@/core/admin"; // ✅ MIGRADO - Usa AdminMobilityService do core
+import { AdminSuspendedDriverMetricsService } from "@/core/admin/services/AdminSuspendedDriverMetricsService";
 import { AdminUserService } from "@/core/admin/services/AdminUserService";
 import { profileService } from "@/core/profiles/services";
 
@@ -25,18 +25,10 @@ type AdminUser = Awaited<ReturnType<typeof profileService.getSuspendedUsers>>[nu
 type LowRatedUser = Awaited<ReturnType<typeof profileService.getLowRatedUsers>>[number];
 type SuspendedDriver = AdminUser & { cancellation_rate: number };
 
-function getCancellationRate(value: unknown): number {
-  if (typeof value === "number") return value;
-  return 0;
-}
-
 /**
- * FASE PROFILE.1.3 - FECHAMENTO REAL DA IDENTIDADE
- *
- * Componente migrado para usar ProfileService como fonte única de verdade
- * Elimina acessos diretos a profiles e regras manuais de suspensão
+ * Suspensões são lidas da authority de perfis. O enriquecimento de motorista é
+ * feito em lote e somente para perfis que realmente existem em driver_data.
  */
-
 export function ReputationBanishments() {
   const [suspendedDrivers, setSuspendedDrivers] = useState<SuspendedDriver[]>([]);
   const [lowRatedUsers, setLowRatedUsers] = useState<LowRatedUser[]>([]);
@@ -48,31 +40,32 @@ export function ReputationBanishments() {
 
   async function loadData() {
     try {
-      const suspended = await profileService.getSuspendedUsers();
-
-      const suspendedWithData = await Promise.all(
-        suspended.map(async (user) => {
-          // ✅ SSOT - Usar MobilityService para dados de motorista
-          const driverData = await adminMobilityService.getUserRides(user.id);
-
-          return {
-            ...user,
-            cancellation_rate: getCancellationRate(
-              (driverData as { cancellation_rate?: unknown } | null)?.cancellation_rate,
-            ),
-          };
+      const [suspended, lowRated] = await Promise.all([
+        profileService.getSuspendedUsers(),
+        profileService.getLowRatedUsers({
+          maxRating: 3.0,
+          minRides: 5,
+          limit: 20,
         }),
+      ]);
+
+      const lifecycleByProfile = await AdminSuspendedDriverMetricsService.load(
+        suspended.map((profile) => profile.id),
       );
 
-      setSuspendedDrivers(suspendedWithData);
+      const suspendedWithData = suspended.flatMap((profile) => {
+        const lifecycle = lifecycleByProfile.get(profile.id);
+        if (!lifecycle) return [];
 
-      // ✅ SSOT - Usar ProfileService para usuários com baixo rating
-      const lowRated = await profileService.getLowRatedUsers({
-        maxRating: 3.0,
-        minRides: 5,
-        limit: 20,
+        return [
+          {
+            ...profile,
+            cancellation_rate: lifecycle.driverCancellationRate,
+          },
+        ];
       });
 
+      setSuspendedDrivers(suspendedWithData);
       setLowRatedUsers(lowRated || []);
     } catch (error) {
       logger.error("Error loading data:", error);
@@ -82,10 +75,9 @@ export function ReputationBanishments() {
     }
   }
 
-  async function removeSuspension(userId: string) {
+  async function removeSuspension(profileId: string) {
     try {
-      // ✅ MIGRADO - Usa ProfileService para remover suspensão
-      await AdminUserService.unsuspendProfile(userId);
+      await AdminUserService.unsuspendProfile(profileId);
 
       toast.success("Suspensão removida");
       loadData();
@@ -101,7 +93,6 @@ export function ReputationBanishments() {
 
   return (
     <div className="space-y-6">
-      {/* Motoristas Suspensos */}
       <Card>
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
@@ -142,7 +133,7 @@ export function ReputationBanishments() {
                   </div>
                   <div className="text-right">
                     <Badge variant="destructive">
-                      {driver.cancellation_rate?.toFixed(1)}%
+                      {driver.cancellation_rate.toFixed(1)}%
                     </Badge>
                     <Button
                       size="sm"
@@ -161,7 +152,6 @@ export function ReputationBanishments() {
         </CardContent>
       </Card>
 
-      {/* Usuários com Baixo Rating */}
       <Card>
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
