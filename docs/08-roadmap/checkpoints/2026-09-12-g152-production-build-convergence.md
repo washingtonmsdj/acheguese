@@ -34,7 +34,7 @@ O último build de produção que chegou ao TypeScript mostrou erros reais de in
 - `docs/architecture/SSOT_REGISTRY.md` e `tools/architecture/architecture-registry.ts` foram reconciliados com os owners reais em `src/core/mobility`;
 - `docs/01-product/STATUS.md` foi reduzido a tombstone curto; o antigo snapshot substituído não participa mais da autoridade operacional e seu histórico permanece no Git/arquivo histórico;
 - Vercel ignore, testes de release, scanners de segurança, policy de `service_role` e workflow SSOT deixaram de classificar/consultar `.kiro` como artefato ativo;
-- a árvore histórica `.kiro` foi preparada para remoção física depois da retirada dessas dependências ativas; referências históricas em `docs/10-archive` e entradas necessárias de `.gitleaksignore` não são tratadas como runtime authority.
+- a árvore histórica `.kiro` foi desligada de runtime/release/security e removida fisicamente de `main`; referências históricas em `docs/10-archive` e entradas necessárias de `.gitleaksignore` permanecem apenas como evidência histórica.
 
 ## Commits principais desta convergência
 
@@ -58,7 +58,8 @@ O último build de produção que chegou ao TypeScript mostrou erros reais de in
 - `2365bbca713728af4d4ee68fe39e2c9224ed9a2a` — retirar `.kiro` do boundary scanner;
 - `f533b91af00be1855b41b9c362b8090bc982672f` — retirar guidance `.kiro` do workflow SSOT;
 - `9684cd514555eb23e7a98741c0d53f8d483b6eae` — retirar `.kiro` do scanner global de segurança;
-- `2f3a5b98de40c80d1a7bd5620cbdd4255fd58798` — retirar exceção `.kiro` da policy de service-role.
+- `2f3a5b98de40c80d1a7bd5620cbdd4255fd58798` — retirar exceção `.kiro` da policy de service-role;
+- `28bd11d9c45eb1a00c72a4b21c57b515fc5cc8fa` — remover fisicamente a árvore `.kiro` após desacoplamento dos guardrails ativos.
 
 ## Pendências reais atuais
 
@@ -74,7 +75,8 @@ O último build de produção que chegou ao TypeScript mostrou erros reais de in
 - referência de `MotoboyAuthorizationService` a `MobilityService.impl.ts` — **RESOLVIDA**;
 - coerção `AdminMobilityRealtimeOnlineDriverRow[] -> RawRecord[]` do log Vercel antigo — **não existe mais no source atual**; o read owner atual é `AdminDriverPresenceReadService`;
 - `ProfessionalService.updateProfessionalStatus(string)` — **RESOLVIDA** com contrato derivado do owner real;
-- documentação/guardrails que aceitavam owners de Mobilidade já removidos — **RESOLVIDOS** nos registries/checkers ativos.
+- documentação/guardrails que aceitavam owners de Mobilidade já removidos — **RESOLVIDOS** nos registries/checkers ativos;
+- `.kiro` como planning tree ativa — **REMOVIDA** depois do desacoplamento de release/security/CI.
 
 ## Regra de saída
 
