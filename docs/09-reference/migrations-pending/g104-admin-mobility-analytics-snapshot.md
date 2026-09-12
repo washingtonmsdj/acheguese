@@ -11,7 +11,7 @@ O G109 reduziu o problema sem DDL:
 
 - `ride_requests` deixou de ser baixado como histórico global nessa superfície;
 - `AdminMobilityAnalyticsReadService.listWindowRides(startIso)` lê somente linhas que podem afetar criação ou resolução dentro da janela selecionada;
-- a projeção de corrida ficou limitada a `status`, timestamps de criação/resolução, valor concluído e `driver_profile_id`;
+- a projeção de corrida ficou limitada a lifecycle, valor concluído e `driver_profile_id`;
 - rotas, endereços, identidade de passageiro, notas, metadata e presença operacional não entram no payload de analytics.
 
 Ainda permanecem globais no browser enquanto este gate estiver pendente:
@@ -25,7 +25,7 @@ O G103 corrigiu a semântica dessas métricas; o G104 deve mover a agregação p
 
 ## Bloqueio remoto atual
 
-O projeto Supabase `xhdowzacfujckjelqhtd` está `ACTIVE_HEALTHY`, porém o caminho SQL/metadata estava encerrando por timeout inclusive para `select 1` e geração de tipos no último preflight confirmado.
+O projeto Supabase `xhdowzacfujckjelqhtd` estava `ACTIVE_HEALTHY` no último estado observado, porém o caminho SQL/metadata encerrava por timeout inclusive para `select 1` e geração de tipos no último preflight confirmado.
 
 Por isso este documento **não é uma migration canônica** e nenhum DDL foi aplicado.
 
@@ -36,6 +36,21 @@ supabase migration new mobility_admin_analytics_snapshot_g104
 ```
 
 Somente o arquivo criado por esse comando poderá receber o SQL aprovado e ser promovido.
+
+## Divergência de schema obrigatória no preflight
+
+Há uma inconsistência versionada que precisa ser resolvida antes de escrever/promover o SQL do G104:
+
+- `src/integrations/supabase/types.generated.ts` não expõe `actual_fare` em `ride_requests.Row`;
+- migrations posteriores G73/G74 consultam explicitamente `ride.actual_fare` em `public.ride_requests`.
+
+Logo, **não é permitido assumir** nem que `actual_fare` existe, nem que foi removido no ambiente remoto.
+
+O preflight deve consultar o schema real e então:
+
+1. se `actual_fare` existir, regenerar os tipos e preservar a semântica `COALESCE(final_price, actual_fare, 0)`;
+2. se `actual_fare` não existir, tratar G73/G74 como inconsistência de migration/source e corrigir a authority antes de materializar G104;
+3. nunca substituir `actual_fare` por `suggested_price` como fallback de valor realizado.
 
 ## Authority proposta
 
@@ -105,9 +120,13 @@ O payload deve substituir exatamente o trabalho hoje feito no hook G103/G109:
 
 ## Semântica financeira obrigatória
 
-Valor realizado continua sendo somente:
+A intenção versionada do G103/G73/G74 é que valor realizado use `final_price` e, quando comprovadamente existente no schema, `actual_fare`.
+
+A expressão alvo permanece:
 
 `COALESCE(final_price, actual_fare, 0)`
+
+**somente se o preflight remoto confirmar `actual_fare`**.
 
 Nunca usar `suggested_price` como valor concluído e nunca chamar esse agregado de receita líquida da plataforma.
 
@@ -151,7 +170,7 @@ Antes de promover G104, validar com `EXPLAIN (ANALYZE, BUFFERS)`/advisors e, se 
 
 - `ride_requests(created_at)`;
 - índice parcial/adequado para `completed_at` em `status='completed'`;
-- índice parcial/adequado para `cancelled_at` nos estados de cancelamento;
+- índice parcial/adequado para `cancelled_at` nos estados de cancelamento.
 
 Não adicionar índices por suposição: a escolha final depende do schema/estatísticas remotos e do plano real.
 
@@ -165,23 +184,24 @@ Depois que a migration for aplicada e validada:
 2. `useAdminMobilityAnalytics` passa a consumir um único snapshot agregado;
 3. remover do hook `getAllDriversComplete()` e `getAllRideRatings()`;
 4. remover `getAllRideRatings()` se a busca confirmar que ficou sem outros consumidores;
-5. manter/remover `getAllRides()` e `getAllDriversComplete()` conforme os consumidores reais restantes (`admin.queries.ts`/realtime), nunca por suposição;
+5. manter/remover `getAllDriversComplete()` conforme os consumidores reais restantes, nunca por suposição;
 6. substituir o ratchet G109 por um ratchet que proíba qualquer leitura de linha base dentro do hook de analytics.
 
 ## Preflight obrigatório para promoção
 
 1. conexão SQL remota operacional;
 2. capturar definition/grants atuais de `private.is_admin(uuid)` e confirmar uso suportado;
-3. confirmar colunas atuais de `ride_requests`, `driver_data`, `profiles` e `ride_ratings`;
-4. confirmar índices reais via `pg_indexes`;
-5. materializar migration com `supabase migration new mobility_admin_analytics_snapshot_g104`;
-6. rodar lint/parser da migration;
-7. aplicar em ambiente autorizado;
-8. testar não-admin => `42501`/negado;
-9. testar admin => snapshot sem PII;
-10. comparar numericamente snapshot server-side vs G103/G109 em 7/30/90 dias;
-11. verificar query plan/advisors;
-12. só então fazer o cutover do hook e remover os readers globais sem consumidores.
+3. confirmar colunas atuais de `ride_requests`, incluindo **explicitamente `actual_fare`**, além de `driver_data`, `profiles` e `ride_ratings`;
+4. reconciliar/regenerar `types.generated.ts` contra o schema confirmado;
+5. confirmar índices reais via `pg_indexes`;
+6. materializar migration com `supabase migration new mobility_admin_analytics_snapshot_g104`;
+7. rodar lint/parser da migration;
+8. aplicar em ambiente autorizado;
+9. testar não-admin => `42501`/negado;
+10. testar admin => snapshot sem PII;
+11. comparar numericamente snapshot server-side vs G103/G109 em 7/30/90 dias;
+12. verificar query plan/advisors;
+13. só então fazer o cutover do hook e remover readers globais sem consumidores.
 
 ## Estado deste gate
 
