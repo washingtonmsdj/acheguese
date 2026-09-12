@@ -8,7 +8,6 @@ import { toast } from "sonner";
 import { getUserRides, getRideById, getPassengerRating } from "@/core/mobility/services/mobility.queries";
 import type { RideRequest } from "@/core/mobility/types/types";
 import { RideOperationalService } from "@/core/mobility/core/RideOperationalService";
-import { RideDispatchService } from "@/core/mobility/core/RideDispatchService";
 import {
   isDriverOwnedOpenRideStatus,
   isOpenRideStatus,
@@ -37,6 +36,10 @@ export interface CreateRideRequestData {
   dropoff_address_id: string;
   pickup_location_id: string;
   dropoff_location_id: string;
+}
+
+interface UseMobilidadeOptions {
+  realtimeEnabled?: boolean;
 }
 
 function isValidCoordinate(value: number): boolean {
@@ -72,7 +75,8 @@ function parseReportSeverity(value: string): ReportSeverity {
     : "medium";
 }
 
-export function useMobilidade() {
+export function useMobilidade(options: UseMobilidadeOptions = {}) {
+  const { realtimeEnabled = true } = options;
   const { user } = useAuth();
   const queryClient = useQueryClient();
   const [activeRide, setActiveRide] = useState<RideRequest | null>(null);
@@ -94,10 +98,12 @@ export function useMobilidade() {
     staleTime: TIMEOUTS.CACHE_STALE_TIME_MEDIUM,
   });
 
+  // Passenger realtime is scoped to the concrete active ride. Auth user ids are
+  // never passed as passenger_profile_id filters.
   useRideRealtime({
+    rideId: activeRide?.id,
     userType: "passenger",
-    userId: user?.id,
-    enabled: Boolean(user),
+    enabled: realtimeEnabled && Boolean(activeRide),
     onEvent: (event) => {
       logger.info("useMobilidade - realtime event", event);
 
@@ -423,120 +429,6 @@ export function useMobilidade() {
     [user, queryClient],
   );
 
-  const acceptRide = useCallback(
-    async (rideId: string) => {
-      try {
-        if (!user) {
-          toast.error("Usuario nao autenticado");
-          return null;
-        }
-
-        const driverProfile = await profileService.getProfileByType(
-          user.id,
-          "driver",
-        );
-        if (!driverProfile?.id) {
-          toast.error("Perfil de motorista nao encontrado");
-          return null;
-        }
-
-        const result = await RideDispatchService.acceptRide(
-          rideId,
-          driverProfile.id,
-        );
-
-        if (!result.success) {
-          if (result.reason === "already_accepted") {
-            toast.error("Esta corrida ja foi aceita por outro motorista");
-          } else if (result.reason === "invalid_state") {
-            toast.error("Esta corrida nao esta disponivel para aceite");
-          } else if (result.reason === "driver_busy") {
-            toast.error("Voce ja tem uma corrida ativa");
-          } else if (result.reason === "expired") {
-            toast.error("Esta corrida expirou");
-          } else {
-            toast.error(result.error || "Erro ao aceitar corrida");
-          }
-          return null;
-        }
-
-        const data = (await getRideById(rideId)) as RideRequest | null;
-        setActiveRide(data);
-        queryClient.invalidateQueries({
-          queryKey: MOBILITY_QUERY_KEYS.rides(user.id),
-        });
-        queryClient.invalidateQueries({
-          queryKey: MOBILITY_QUERY_KEYS.activeRide(user.id),
-        });
-        toast.success("Corrida aceita! Indo buscar passageiro...");
-        return data;
-      } catch (error) {
-        logger.error("useMobilidade.acceptRide", error as Error);
-        toast.error("Erro ao aceitar corrida");
-        return null;
-      }
-    },
-    [user, queryClient],
-  );
-
-  const completeRide = useCallback(
-    async (rideId: string, finalPrice?: number) => {
-      try {
-        let calculatedFinalPrice = finalPrice;
-
-        if (!calculatedFinalPrice) {
-          const ride = (await getRideById(rideId)) as RideRequest | null;
-          calculatedFinalPrice = ride?.suggested_price || 0;
-
-          logger.info("useMobilidade.completeRide - confirming suggested price", {
-            rideId,
-            suggestedPrice: ride?.suggested_price,
-            finalPrice: calculatedFinalPrice,
-          });
-        } else {
-          logger.info("useMobilidade.completeRide - manual adjustment", {
-            rideId,
-            manualPrice: finalPrice,
-            finalPrice: calculatedFinalPrice,
-          });
-        }
-
-        const result = await RideOperationalService.completeRide(
-          rideId,
-          user?.id || "",
-          calculatedFinalPrice,
-        );
-
-        if (!result.success) {
-          toast.error(result.error || "Erro ao completar corrida");
-          return;
-        }
-
-        setActiveRide(null);
-        queryClient.invalidateQueries({
-          queryKey: MOBILITY_QUERY_KEYS.rides(user?.id),
-        });
-        queryClient.invalidateQueries({
-          queryKey: MOBILITY_QUERY_KEYS.activeRide(user?.id),
-        });
-
-        if (finalPrice) {
-          toast.success(
-            `Corrida completada! Valor ajustado: ${formatBrl(calculatedFinalPrice)}`,
-          );
-        } else {
-          toast.success(
-            `Corrida completada! Valor confirmado: ${formatBrl(calculatedFinalPrice)}`,
-          );
-        }
-      } catch (error) {
-        logger.error("useMobilidade.completeRide", error as Error);
-        toast.error("Erro ao completar corrida");
-      }
-    },
-    [user, queryClient],
-  );
-
   const rateRide = useCallback(
     async (rideId: string, rating: number, comment?: string) => {
       try {
@@ -648,8 +540,6 @@ export function useMobilidade() {
     activeRide,
     createRide,
     cancelRide,
-    acceptRide,
-    completeRide,
     refetch,
     rateRide,
     confirmRideCompletion,
