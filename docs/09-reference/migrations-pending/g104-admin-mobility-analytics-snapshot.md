@@ -5,19 +5,27 @@ Status: **NÃO EXECUTÁVEL / NÃO APLICADO**
 
 ## Motivo
 
-A superfície `/admin/analytics-mobilidade` ainda baixa três conjuntos globais para o navegador e agrega localmente:
+A superfície `/admin/analytics-mobilidade` ainda agrega dados no navegador e a solução final continua precisando de uma fronteira server-side.
 
-- `adminMobilityService.getAllRides()`;
-- `adminMobilityService.getAllDriversComplete()`;
-- `adminMobilityService.getAllRideRatings()`.
+O G109 reduziu o problema sem DDL:
 
-Isso é incompatível com a escala esperada do projeto: custo de rede, memória e CPU do browser crescem com o total histórico de corridas/motoristas/avaliações e o cliente recebe linhas que não precisa para renderizar métricas agregadas.
+- `ride_requests` deixou de ser baixado como histórico global nessa superfície;
+- `AdminMobilityAnalyticsReadService.listWindowRides(startIso)` lê somente linhas que podem afetar criação ou resolução dentro da janela selecionada;
+- a projeção de corrida ficou limitada a `status`, timestamps de criação/resolução, valor concluído e `driver_profile_id`;
+- rotas, endereços, identidade de passageiro, notas, metadata e presença operacional não entram no payload de analytics.
+
+Ainda permanecem globais no browser enquanto este gate estiver pendente:
+
+- `adminMobilityService.getAllDriversComplete()` para contagem/verificação e identidade mínima do ranking;
+- `adminMobilityService.getAllRideRatings()` porque a UI atual declara explicitamente **“Avaliação média geral”** e janelar ratings mudaria a semântica do produto.
+
+Portanto G109 é uma redução de custo e exposição, não substitui G104. O custo dos dois conjuntos globais remanescentes ainda cresce com a base, e a agregação de métricas continua no cliente.
 
 O G103 corrigiu a semântica dessas métricas; o G104 deve mover a agregação para uma fronteira server-side sem alterar essa semântica.
 
 ## Bloqueio remoto atual
 
-O projeto Supabase `xhdowzacfujckjelqhtd` está `ACTIVE_HEALTHY`, porém o caminho SQL/metadata está encerrando por timeout inclusive para `select 1` e geração de tipos.
+O projeto Supabase `xhdowzacfujckjelqhtd` está `ACTIVE_HEALTHY`, porém o caminho SQL/metadata estava encerrando por timeout inclusive para `select 1` e geração de tipos no último preflight confirmado.
 
 Por isso este documento **não é uma migration canônica** e nenhum DDL foi aplicado.
 
@@ -53,7 +61,7 @@ Características obrigatórias:
 
 ## Contrato de saída
 
-O payload deve substituir exatamente o trabalho hoje feito no hook G103:
+O payload deve substituir exatamente o trabalho hoje feito no hook G103/G109:
 
 ```ts
 {
@@ -109,7 +117,8 @@ Nunca usar `suggested_price` como valor concluído e nunca chamar esse agregado 
 - conclusão: `COALESCE(completed_at, updated_at, created_at)`;
 - cancelamento: `COALESCE(cancelled_at, updated_at, created_at)`;
 - top motoristas: somente corridas `completed` resolvidas dentro da janela;
-- valor concluído: associado ao timestamp de conclusão, não ao dia em que a corrida foi criada.
+- valor concluído: associado ao timestamp de conclusão, não ao dia em que a corrida foi criada;
+- `avgRating` permanece geral enquanto a UI disser “Avaliação média geral”; qualquer mudança para nota da janela exige alteração explícita de contrato/UI.
 
 ## Lifecycle
 
@@ -148,14 +157,16 @@ Não adicionar índices por suposição: a escolha final depende do schema/estat
 
 ## Cutover do frontend
 
+`AdminMobilityAnalyticsReadService` já existe desde o G109 como fronteira estável para o frontend. Enquanto G104 estiver bloqueado, ele lê apenas as linhas de corrida potencialmente relevantes à janela.
+
 Depois que a migration for aplicada e validada:
 
-1. criar `AdminMobilityAnalyticsReadService` como único cliente de `mobility_get_admin_analytics_snapshot`;
-2. `useAdminMobilityAnalytics` passa a consumir um único snapshot;
-3. remover do hook os três full-scans globais;
-4. remover `getAllRideRatings()` se a busca confirmar que ficou sem consumidores;
-5. manter `getAllRides()`/`getAllDriversComplete()` somente enquanto `admin.queries.ts` ainda tiver consumidor — não apagar antes do G105;
-6. adicionar ratchet proibindo `getAllRides/getAllDriversComplete/getAllRideRatings` dentro de `useAdminMobilityAnalytics`.
+1. trocar a implementação de `AdminMobilityAnalyticsReadService` para `mobility_get_admin_analytics_snapshot(p_days)`;
+2. `useAdminMobilityAnalytics` passa a consumir um único snapshot agregado;
+3. remover do hook `getAllDriversComplete()` e `getAllRideRatings()`;
+4. remover `getAllRideRatings()` se a busca confirmar que ficou sem outros consumidores;
+5. manter/remover `getAllRides()` e `getAllDriversComplete()` conforme os consumidores reais restantes (`admin.queries.ts`/realtime), nunca por suposição;
+6. substituir o ratchet G109 por um ratchet que proíba qualquer leitura de linha base dentro do hook de analytics.
 
 ## Preflight obrigatório para promoção
 
@@ -168,7 +179,7 @@ Depois que a migration for aplicada e validada:
 7. aplicar em ambiente autorizado;
 8. testar não-admin => `42501`/negado;
 9. testar admin => snapshot sem PII;
-10. comparar numericamente snapshot server-side vs G103 em 7/30/90 dias;
+10. comparar numericamente snapshot server-side vs G103/G109 em 7/30/90 dias;
 11. verificar query plan/advisors;
 12. só então fazer o cutover do hook e remover os readers globais sem consumidores.
 
