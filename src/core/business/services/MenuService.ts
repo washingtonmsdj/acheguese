@@ -4,7 +4,7 @@
 import { logger } from '@/shared/utils/logger';
 import { supabase } from '@/integrations/supabase';
 import { sanitizeString } from '@/shared/utils/sanitization';
-import { SubscriptionService } from '@/core/billing/SubscriptionService';
+import { BusinessSubscriptionService } from '@/core/billing/BusinessSubscriptionService';
 import { EntitlementsService } from '@/core/billing/entitlements';
 import { BillingPlanService, type PlanEntitlements } from '@/core/billing/services/BillingPlanService';
 import { PlanTier } from '@/core/billing/types';
@@ -367,7 +367,7 @@ async function resolveItem(itemId: string): Promise<Pick<MenuItem, 'id' | 'menu_
 }
 
 async function getEntitlementsForBusiness(businessId: string): Promise<PlanEntitlements> {
-  const subscriptionResult = await SubscriptionService.getByBusinessId(businessId);
+  const subscriptionResult = await BusinessSubscriptionService.getByBusinessId(businessId);
 
   const planTier = Object.values(PlanTier).includes(subscriptionResult.data?.plan_tier as PlanTier)
     ? (subscriptionResult.data?.plan_tier as PlanTier)
