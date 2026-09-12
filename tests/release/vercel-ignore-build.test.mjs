@@ -34,7 +34,6 @@ describe("Vercel ignored build step", () => {
     const skippable = [
       "docs/03-architecture/G5_LIVE_REVALIDATION_2026-08-30.md",
       ".github/workflows/ssot-tests.yml",
-      ".kiro/specs/example/design.md",
       "tests/security/example.test.ts",
       "e2e/example.spec.ts",
       "URGENTE_LEIA_PRIMEIRO_REORGANIZACAO_GLOBAL.md",
