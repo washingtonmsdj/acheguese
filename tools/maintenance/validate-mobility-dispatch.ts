@@ -1,17 +1,18 @@
 /**
- * Script de Validao - Dispatch Automtico
- * 
- * Valida que todos os componentes do dispatch automtico esto funcionando
+ * Validação operacional do dispatch de Mobilidade.
+ *
+ * Este script prova disponibilidade e contratos mínimos sem baixar tabelas
+ * inteiras para o processo de manutenção.
  */
-import { logger } from '@/shared/utils/logger';
-import { supabase } from '@/integrations/supabase';
-import { RideOperationalService } from '@/core/mobility/core/RideOperationalService';
-import { RideDispatchService } from '@/core/mobility/core/RideDispatchService';
-import { getAllRideRequests } from '@/core/mobility/services/mobility.queries';
+import { logger } from "@/shared/utils/logger";
+import { supabase } from "@/integrations/supabase";
+import { RideOperationalService } from "@/core/mobility/core/RideOperationalService";
+import { RideDispatchService } from "@/core/mobility/core/RideDispatchService";
+import { QUERYABLE_PRE_ACCEPT_RIDE_STATUSES } from "@/core/mobility/core/RideLifecycleStatus";
 
 interface ValidationResult {
   check: string;
-  status: 'pass' | 'fail' | 'warning';
+  status: "pass" | "fail" | "warning";
   message: string;
   details?: unknown;
 }
@@ -19,162 +20,160 @@ interface ValidationResult {
 async function validateDispatchSystem(): Promise<ValidationResult[]> {
   const results: ValidationResult[] = [];
 
-  // 1. Verificar tabelas necessrias
+  // 1. Verificar tabelas necessárias com projeções mínimas.
   try {
-    await getAllRideRequests();
+    const { error } = await supabase.from("ride_requests").select("id").limit(1);
+    if (error) throw error;
 
     results.push({
-      check: 'Tabela ride_requests',
-      status: 'pass',
-      message: 'Tabela acessvel',
+      check: "Tabela ride_requests",
+      status: "pass",
+      message: "Tabela acessível",
     });
   } catch (error) {
     results.push({
-      check: 'Tabela ride_requests',
-      status: 'fail',
+      check: "Tabela ride_requests",
+      status: "fail",
       message: (error as Error).message,
     });
   }
 
   try {
     const { error: auditError } = await supabase
-      .from('ride_dispatch_audit')
-      .select('id')
+      .from("ride_dispatch_audit")
+      .select("id")
       .limit(1);
 
     results.push({
-      check: 'Tabela ride_dispatch_audit',
-      status: auditError ? 'fail' : 'pass',
-      message: auditError ? auditError.message : 'Tabela acessvel',
+      check: "Tabela ride_dispatch_audit",
+      status: auditError ? "fail" : "pass",
+      message: auditError ? auditError.message : "Tabela acessível",
     });
   } catch (error) {
     results.push({
-      check: 'Tabela ride_dispatch_audit',
-      status: 'fail',
+      check: "Tabela ride_dispatch_audit",
+      status: "fail",
       message: (error as Error).message,
     });
   }
 
   try {
     const { error: availError } = await supabase
-      .from('driver_availability')
-      .select('profile_id')
+      .from("driver_availability")
+      .select("profile_id")
       .limit(1);
 
     results.push({
-      check: 'Tabela driver_availability',
-      status: availError ? 'fail' : 'pass',
-      message: availError ? availError.message : 'Tabela acessvel',
+      check: "Tabela driver_availability",
+      status: availError ? "fail" : "pass",
+      message: availError ? availError.message : "Tabela acessível",
     });
   } catch (error) {
     results.push({
-      check: 'Tabela driver_availability',
-      status: 'fail',
+      check: "Tabela driver_availability",
+      status: "fail",
       message: (error as Error).message,
     });
   }
 
-  // 2. Verificar motoristas disponveis
+  // 2. Verificar motoristas disponíveis sem carregar driver_data.
   try {
     const { data: drivers, error } = await supabase
-      .from('driver_availability')
-      .select('profile_id, is_online, is_available')
-      .eq('is_online', true)
-      .eq('is_available', true);
+      .from("driver_availability")
+      .select("profile_id")
+      .eq("is_online", true)
+      .eq("is_available", true)
+      .limit(50);
 
-    const count = drivers?.length || 0;
+    if (error) throw error;
+    const count = drivers?.length ?? 0;
     results.push({
-      check: 'Motoristas disponveis',
-      status: count > 0 ? 'pass' : 'warning',
-      message: `${count} motorista(s) online e disponvel(is)`,
-      details: { count },
+      check: "Motoristas disponíveis",
+      status: count > 0 ? "pass" : "warning",
+      message: `${count} motorista(s) online e disponível(is) na amostra operacional`,
+      details: { count, sample_limit: 50 },
     });
   } catch (error) {
     results.push({
-      check: 'Motoristas disponveis',
-      status: 'fail',
+      check: "Motoristas disponíveis",
+      status: "fail",
       message: (error as Error).message,
     });
   }
 
-  // 3. Verificar corridas em busca
+  // 3. Verificar corridas em pré-aceite pela authority compartilhada de lifecycle.
   try {
-    const activeRides = await getAllRideRequests() as Array<{
-      id?: string;
-      status?: string;
-      created_at?: string;
-    }>;
-    const rides = activeRides
-      .filter((ride) => ['searching_driver', 'driver_assigned'].includes(ride.status || ''))
-      .map((ride) => ({
-        id: ride.id,
-        status: ride.status,
-        created_at: ride.created_at,
-      }));
+    const { data: rides, error } = await supabase
+      .from("ride_requests")
+      .select("id, status, created_at")
+      .in("status", QUERYABLE_PRE_ACCEPT_RIDE_STATUSES)
+      .order("created_at", { ascending: false })
+      .limit(50);
 
-    const count = rides?.length || 0;
+    if (error) throw error;
+    const count = rides?.length ?? 0;
     results.push({
-      check: 'Corridas em busca',
-      status: 'pass',
-      message: `${count} corrida(s) aguardando motorista`,
-      details: { count, rides: rides?.slice(0, 3) },
+      check: "Corridas em pré-aceite",
+      status: "pass",
+      message: `${count} corrida(s) em pré-aceite na amostra operacional`,
+      details: { count, rides: rides?.slice(0, 3), sample_limit: 50 },
     });
   } catch (error) {
     results.push({
-      check: 'Corridas em busca',
-      status: 'fail',
+      check: "Corridas em pré-aceite",
+      status: "fail",
       message: (error as Error).message,
     });
   }
 
-  // 4. Verificar auditoria de dispatch
+  // 4. Verificar auditoria de dispatch.
   try {
     const { data: audits, error } = await supabase
-      .from('ride_dispatch_audit')
-      .select('ride_id, driver_profile_id, status, attempt_number')
-      .order('created_at', { ascending: false })
+      .from("ride_dispatch_audit")
+      .select("ride_id, driver_profile_id, status, attempt_number")
+      .order("created_at", { ascending: false })
       .limit(10);
 
-    const count = audits?.length || 0;
+    if (error) throw error;
+    const count = audits?.length ?? 0;
     results.push({
-      check: 'Auditoria de dispatch',
-      status: 'pass',
+      check: "Auditoria de dispatch",
+      status: "pass",
       message: `${count} registro(s) de auditoria encontrados`,
       details: { count, recent: audits?.slice(0, 3) },
     });
   } catch (error) {
     results.push({
-      check: 'Auditoria de dispatch',
-      status: 'warning',
-      message: 'Tabela no existe ou sem dados (normal se nunca rodou)',
+      check: "Auditoria de dispatch",
+      status: "warning",
+      message: "Auditoria indisponível ou sem acesso; revisar o erro do ambiente.",
     });
   }
 
-  // 5. Verificar servios carregados
+  // 5. Verificar serviços carregados.
   results.push({
-    check: 'Dispatch server-side',
-    status: 'pass',
-    message: 'Owner canonico: Database Webhook -> auto-dispatch-ride -> RPCs atomicas',
+    check: "Dispatch server-side",
+    status: "pass",
+    message: "Owner canônico: Database Webhook -> auto-dispatch-ride -> RPCs atômicas",
   });
 
   results.push({
-    check: 'RideOperationalService',
-    status: typeof RideOperationalService.createRide === 'function' ? 'pass' : 'fail',
-    message: 'Servio carregado corretamente',
+    check: "RideOperationalService",
+    status: typeof RideOperationalService.createRide === "function" ? "pass" : "fail",
+    message: "Serviço carregado corretamente",
   });
 
   results.push({
-    check: 'RideDispatchService',
-    status: typeof RideDispatchService.acceptRide === 'function' ? 'pass' : 'fail',
-    message: 'Servio carregado corretamente',
+    check: "RideDispatchService",
+    status: typeof RideDispatchService.acceptRide === "function" ? "pass" : "fail",
+    message: "Serviço carregado corretamente",
   });
 
   return results;
 }
 
-// Executar validao
 export async function runValidation() {
-  console.log(' Validando sistema de dispatch automtico...\n');
+  console.log("Validando sistema de dispatch automático...\n");
 
   const results = await validateDispatchSystem();
 
@@ -183,35 +182,34 @@ export async function runValidation() {
   let warnCount = 0;
 
   results.forEach((result) => {
-    const icon = result.status === 'pass' ? '' : result.status === 'fail' ? '' : '';
-    console.log(`${icon} ${result.check}: ${result.message}`);
-    
+    console.log(`${result.check}: ${result.message}`);
+
     if (result.details) {
-      console.log(`   Detalhes:`, JSON.stringify(result.details, null, 2));
+      console.log("   Detalhes:", JSON.stringify(result.details, null, 2));
     }
 
-    if (result.status === 'pass') passCount++;
-    else if (result.status === 'fail') failCount++;
+    if (result.status === "pass") passCount++;
+    else if (result.status === "fail") failCount++;
     else warnCount++;
   });
 
-  console.log('\n Resumo:');
-  console.log(`    Passou: ${passCount}`);
-  console.log(`     Avisos: ${warnCount}`);
-  console.log(`    Falhou: ${failCount}`);
+  console.log("\nResumo:");
+  console.log(`   Passou: ${passCount}`);
+  console.log(`   Avisos: ${warnCount}`);
+  console.log(`   Falhou: ${failCount}`);
 
   if (failCount === 0) {
-    console.log('\n Sistema de dispatch automtico validado com sucesso!');
+    console.log("\nSistema de dispatch automático validado sem falhas bloqueantes.");
   } else {
-    console.log('\n  Alguns checks falharam. Verifique os erros acima.');
+    console.log("\nAlguns checks falharam. Verifique os erros acima.");
   }
 
   return { results, passCount, failCount, warnCount };
 }
 
-// Se executado diretamente
 if (import.meta.url === `file://${process.argv[1]}`) {
-  runValidation().catch(console.error);
+  runValidation().catch((error) => {
+    logger.error("validate-mobility-dispatch", error as Error);
+    process.exitCode = 1;
+  });
 }
-
-
