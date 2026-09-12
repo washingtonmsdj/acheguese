@@ -11,9 +11,9 @@ import { RIDE_STATE, RideStateMachine, type RideState } from "./RideStateMachine
 import {
   getActiveRideByDriverProfile,
   getDriverOfferCapabilities,
-  getRideById,
 } from "../services/mobility.queries";
 import { MobilityRpcService } from "../services/MobilityRpcService";
+import { RideOperationalContextReadService } from "../services/RideOperationalContextReadService";
 
 interface AcceptResult {
   success: boolean;
@@ -62,11 +62,7 @@ export class RideDispatchService {
     driverProfileId: string,
   ): Promise<AcceptResult> {
     try {
-      const ride = (await getRideById(rideId)) as {
-        status?: string;
-        driver_profile_id?: string | null;
-        ride_mode?: string | null;
-      } | null;
+      const ride = await RideOperationalContextReadService.getLifecycle(rideId);
 
       if (!ride) {
         return { success: false, error: "Ride not found", reason: "unknown" };
