@@ -8,12 +8,18 @@
 import { supabase } from "@/integrations/supabase";
 import { logger } from "@/shared/utils/logger";
 import { profileService } from "@/core/profiles/services/ProfileService";
+import type { RideRequest } from "@/core/mobility/types/types";
 import {
   DRIVER_OWNED_OPEN_RIDE_STATUSES,
   QUERYABLE_OPEN_RIDE_STATUSES,
 } from "@/core/mobility/core/RideLifecycleStatus";
 import { MobilityDispatchConfigService } from "./MobilityDispatchConfigService";
 import { DriverRideHistoryReadService } from "./DriverRideHistoryReadService";
+import {
+  RIDE_REQUEST_READ_SELECT,
+  toRideRequestReadModel,
+  type RideRequestReadRow,
+} from "./RideRequestReadModel";
 
 export {
   getMobilityConversations,
@@ -108,17 +114,17 @@ function rideSortTimestamp(ride: unknown): number {
   return 0;
 }
 
-/** Buscar corrida por ID. */
-export async function getRideById(id: string): Promise<unknown | null> {
+/** Buscar corrida por ID no contrato bounded de runtime/UI. */
+export async function getRideById(id: string): Promise<RideRequest | null> {
   try {
     const { data, error } = await supabaseClient
-      .from("ride_requests")
-      .select("*")
+      .from<RideRequestReadRow>("ride_requests")
+      .select(RIDE_REQUEST_READ_SELECT)
       .eq("id", id)
       .maybeSingle();
 
     if (error) throw error;
-    return data;
+    return data ? toRideRequestReadModel(data) : null;
   } catch (error) {
     logger.error("MobilityQueries.getRideById", error as Error);
     return null;
@@ -126,15 +132,17 @@ export async function getRideById(id: string): Promise<unknown | null> {
 }
 
 /** Buscar corridas por passageiro. O passageiro e dono da solicitacao. */
-export async function getRidesByPassenger(passengerProfileId: string): Promise<unknown[]> {
+export async function getRidesByPassenger(
+  passengerProfileId: string,
+): Promise<RideRequest[]> {
   const { data, error } = await supabaseClient
-    .from("ride_requests")
-    .select("*")
+    .from<RideRequestReadRow>("ride_requests")
+    .select(RIDE_REQUEST_READ_SELECT)
     .eq("passenger_profile_id", passengerProfileId)
     .order("created_at", { ascending: false });
 
   if (error) throw error;
-  return data || [];
+  return (data || []).map(toRideRequestReadModel);
 }
 
 /**
@@ -148,8 +156,8 @@ export async function getRidesByPassenger(passengerProfileId: string): Promise<u
 export async function getRidesByDriverProfile(driverProfileId: string): Promise<unknown[]> {
   const [activeResult, history] = await Promise.all([
     supabaseClient
-      .from("ride_requests")
-      .select("*")
+      .from<RideRequestReadRow>("ride_requests")
+      .select(RIDE_REQUEST_READ_SELECT)
       .eq("driver_profile_id", driverProfileId)
       .in("status", DRIVER_OWNED_OPEN_RIDE_STATUSES)
       .order("created_at", { ascending: false }),
@@ -158,7 +166,8 @@ export async function getRidesByDriverProfile(driverProfileId: string): Promise<
 
   if (activeResult.error) throw activeResult.error;
 
-  return [...(activeResult.data || []), ...history].sort(
+  const activeRides = (activeResult.data || []).map(toRideRequestReadModel);
+  return [...activeRides, ...history].sort(
     (left, right) => rideSortTimestamp(right) - rideSortTimestamp(left),
   );
 }
@@ -185,10 +194,10 @@ export async function getActiveRideByDriverProfile(
 }
 
 /** Buscar a corrida aberta mais recente do usuario (passageiro ou motorista). */
-export async function getActiveRide(userProfileId: string): Promise<unknown | null> {
+export async function getActiveRide(userProfileId: string): Promise<RideRequest | null> {
   const { data, error } = await supabaseClient
-    .from("ride_requests")
-    .select("*")
+    .from<RideRequestReadRow>("ride_requests")
+    .select(RIDE_REQUEST_READ_SELECT)
     .or(`passenger_profile_id.eq.${userProfileId},driver_profile_id.eq.${userProfileId}`)
     .in("status", QUERYABLE_OPEN_RIDE_STATUSES)
     .order("created_at", { ascending: false })
@@ -199,7 +208,7 @@ export async function getActiveRide(userProfileId: string): Promise<unknown | nu
     logger.error("MobilityQueries.getActiveRide", error as Error, { userProfileId });
     return null;
   }
-  return data || null;
+  return data ? toRideRequestReadModel(data) : null;
 }
 
 /** Buscar dados de dispatch da corrida. */
@@ -253,19 +262,19 @@ export async function getRideDispatchContextById(
 }
 
 /** Buscar corridas do usuario (passageiro ou motorista) pelo perfil ativo. */
-export async function getUserRides(userId: string): Promise<unknown[]> {
+export async function getUserRides(userId: string): Promise<RideRequest[]> {
   try {
     const activeProfile = await profileService.getActiveProfile(userId);
     if (!activeProfile?.id) return [];
 
     const { data, error } = await supabaseClient
-      .from("ride_requests")
-      .select("*")
+      .from<RideRequestReadRow>("ride_requests")
+      .select(RIDE_REQUEST_READ_SELECT)
       .or(`passenger_profile_id.eq.${activeProfile.id},driver_profile_id.eq.${activeProfile.id}`)
       .order("created_at", { ascending: false });
 
     if (error) throw error;
-    return data || [];
+    return (data || []).map(toRideRequestReadModel);
   } catch (error) {
     logger.error("MobilityQueries.getUserRides", error as Error);
     return [];
