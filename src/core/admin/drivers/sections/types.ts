@@ -7,7 +7,6 @@
  */
 
 import type { LucideIcon } from "lucide-react";
-import type { ProfileContext } from "@/core/profiles/views/ProfileContext";
 
 // ============================================
 // Driver
@@ -17,22 +16,24 @@ export interface DriverRequest {
   readonly id: string;
   readonly profile_id: string;
   readonly name: string;
-  readonly avatar_url?: string;
-  readonly vehicle_plate: string;
-  readonly vehicle_model: string;
-  readonly vehicle_year: number;
-  readonly cnh_image_url?: string;
-  readonly profileContext?: ProfileContext;
+  readonly avatar_url?: string | null;
+  readonly vehicle_plate?: string | null;
+  readonly vehicle_model?: string | null;
+  readonly vehicle_year?: number | null;
+  readonly license_number?: string | null;
+  readonly license_category?: string | null;
+  readonly license_expiry?: string | null;
+  readonly license_state?: string | null;
   readonly is_online: boolean;
   readonly rating: number;
   readonly total_rides: number;
   readonly created_at: string;
-  readonly updated_at?: string;
-  readonly neighborhood?: string;
-  readonly city?: string;
-  readonly verification_status?: "pending" | "verified" | "rejected" | "none" | null;
+  readonly updated_at?: string | null;
+  readonly neighborhood?: string | null;
+  readonly city?: string | null;
+  readonly verification_status: "pending" | "verified" | "rejected";
   readonly verification_rejection_reason?: string | null;
-  readonly is_suspended?: boolean;
+  readonly is_suspended: boolean;
   readonly suspended_at?: string | null;
   readonly suspended_until?: string | null;
   readonly suspension_reason?: string | null;
