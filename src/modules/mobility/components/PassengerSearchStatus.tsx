@@ -1,28 +1,30 @@
 /**
  * PassengerSearchStatus - Componente para passageiro acompanhar busca
- * 
- * Demonstra uso do hook useRideSearch para acompanhar busca em tempo real
+ *
+ * Demonstra uso do hook useRideSearch para acompanhar busca em tempo real.
  */
 
 import { Card, CardContent } from '@/shared/components/ui/card';
-import { useRideSearch } from '../hooks/useRideSearch';
+import {
+  useRideSearch,
+  type RideSearchStatus,
+} from '../hooks/useRideSearch';
 import { Loader2, CheckCircle, XCircle, User } from 'lucide-react';
 import { useToast } from '@/shared/components/ui/use-toast';
 
 interface PassengerSearchStatusProps {
   rideId: string;
-  passengerProfileId: string;
+  onStatusChange?: (status: RideSearchStatus) => void;
 }
 
 export function PassengerSearchStatus({
   rideId,
-  passengerProfileId,
+  onStatusChange,
 }: PassengerSearchStatusProps) {
   const { toast } = useToast();
 
   const { searchStatus, isSearching } = useRideSearch({
     rideId,
-    passengerProfileId,
     enabled: true,
     onStatusChange: (status) => {
       if (status.status === 'driver_accepted') {
@@ -36,7 +38,15 @@ export function PassengerSearchStatus({
           description: 'Não encontramos motorista disponível',
           variant: 'destructive',
         });
+      } else if (status.status === 'failed') {
+        toast({
+          title: 'Corrida encerrada',
+          description: 'A corrida foi encerrada por uma falha operacional',
+          variant: 'destructive',
+        });
       }
+
+      onStatusChange?.(status);
     },
   });
 
@@ -51,9 +61,12 @@ export function PassengerSearchStatus({
       case 'driver_found':
         return <User className="h-8 w-8 text-blue-600" />;
       case 'driver_accepted':
+      case 'in_progress':
+      case 'completed':
         return <CheckCircle className="h-8 w-8 text-green-600" />;
       case 'expired':
       case 'cancelled':
+      case 'failed':
         return <XCircle className="h-8 w-8 text-red-600" />;
       default:
         return null;
@@ -67,9 +80,12 @@ export function PassengerSearchStatus({
       case 'driver_found':
         return 'border-blue-600';
       case 'driver_accepted':
+      case 'in_progress':
+      case 'completed':
         return 'border-green-600';
       case 'expired':
       case 'cancelled':
+      case 'failed':
         return 'border-red-600';
       default:
         return 'border-gray-300';
@@ -81,7 +97,7 @@ export function PassengerSearchStatus({
       <CardContent className="pt-6">
         <div className="flex flex-col items-center gap-4 text-center">
           {getIcon()}
-          
+
           <div>
             <h3 className="text-lg font-semibold mb-1">
               {getStatusTitle(searchStatus.status)}
@@ -102,7 +118,7 @@ export function PassengerSearchStatus({
   );
 }
 
-function getStatusTitle(status: string): string {
+function getStatusTitle(status: RideSearchStatus['status']): string {
   switch (status) {
     case 'searching':
       return 'Procurando motorista';
@@ -110,10 +126,16 @@ function getStatusTitle(status: string): string {
       return 'Motorista encontrado';
     case 'driver_accepted':
       return 'Corrida confirmada';
+    case 'in_progress':
+      return 'Corrida em andamento';
+    case 'completed':
+      return 'Corrida concluída';
     case 'expired':
       return 'Busca expirada';
     case 'cancelled':
       return 'Corrida cancelada';
+    case 'failed':
+      return 'Corrida encerrada';
     default:
       return '';
   }
