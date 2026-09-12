@@ -1,13 +1,9 @@
 /**
  * MotoboyAuthorizationService
  *
- * SSOT para autorizacao de solicitacao/operacao de motoboy.
- * Componentes e hooks nao devem implementar regra de permissao local.
- * 
- * FASE 6: Migrado para usar EntitlementResolver ao invés de planTier string
- * - Removido parâmetro planTier de canRequestDelivery()
- * - Entitlements resolvidos via EntitlementResolver.resolve()
- * - Zero cálculo de elegibilidade em componentes
+ * Owner de autorizacao para solicitacao e operacao de motoboy.
+ * Elegibilidade de plano pertence ao EntitlementResolver; componentes e hooks
+ * nao implementam regra de permissao local nem calculam tier de assinatura.
  */
 
 import { supabase } from "@/integrations/supabase";
@@ -18,7 +14,6 @@ import { mobilityRolloutService } from "./MobilityRolloutService";
 import { mobilityService } from "./MobilityRuntimeService";
 import { DriverAvailabilityService } from "./DriverAvailabilityService";
 import { RideOperationalContextReadService } from "./RideOperationalContextReadService";
-
 
 type ErrorLike = { message?: string | null } | null;
 
@@ -31,17 +26,10 @@ type GastronomyProfileRow = {
   business_id: string | null;
 };
 
-
 type UserSubscriptionLookupRow = {
   id?: string;
   status_v2?: string | null;
-  plan_code?: string | null;
 };
-
-type QueryResult<T> = Promise<{
-  data: T[] | null;
-  error: ErrorLike;
-}>;
 
 type SingleQueryResult<T> = Promise<{
   data: T | null;
@@ -142,16 +130,12 @@ export class MotoboyAuthorizationService {
       switch (sourceType) {
         case "passenger":
           return this.authorizePassenger(effectiveUserId);
-
         case "business":
           return this.authorizeBusiness(sourceId, effectiveUserId);
-
         case "gastronomy":
           return this.authorizeGastronomy(sourceId, effectiveUserId);
-
         case "service":
           return this.authorizeService(sourceId, effectiveUserId);
-
         default:
           return {
             allowed: false,
@@ -229,7 +213,9 @@ export class MotoboyAuthorizationService {
 
       return { allowed: true };
     } catch (error) {
-      logger.error("MotoboyAuthorizationService.canOperateDelivery", error as Error, { driverProfileId });
+      logger.error("MotoboyAuthorizationService.canOperateDelivery", error as Error, {
+        driverProfileId,
+      });
       return {
         allowed: false,
         reason: "Erro ao verificar elegibilidade do motorista.",
@@ -296,14 +282,17 @@ export class MotoboyAuthorizationService {
     const suspended = Boolean(profile?.is_suspended ?? profile?.suspended ?? false);
     if (!suspended) return false;
 
-    const suspendedUntil = typeof profile?.suspended_until === "string" ? profile.suspended_until : null;
+    const suspendedUntil =
+      typeof profile?.suspended_until === "string" ? profile.suspended_until : null;
     if (!suspendedUntil) return true;
 
     const until = new Date(suspendedUntil);
     return Number.isNaN(until.getTime()) || until > new Date();
   }
 
-  private static async ensureRequesterNotSuspended(userId: string): Promise<AuthorizationResult | null> {
+  private static async ensureRequesterNotSuspended(
+    userId: string,
+  ): Promise<AuthorizationResult | null> {
     const profile =
       (await profileService.getProfileByType(userId, "personal").catch(() => null)) ??
       (await profileService.getActiveProfile(userId).catch(() => null));
@@ -392,8 +381,9 @@ export class MotoboyAuthorizationService {
       };
     }
 
-    const { EntitlementResolver } = await import("@/core/billing/services/EntitlementResolver");
-
+    const { EntitlementResolver } = await import(
+      "@/core/billing/services/EntitlementResolver"
+    );
     const entitlements = await EntitlementResolver.resolve({
       user_id: userId,
       business_id: businessId,
@@ -435,7 +425,10 @@ export class MotoboyAuthorizationService {
     if (suspended) return suspended;
 
     const gastronomyContext = await this.resolveGastronomyContext(gastronomyId);
-    const hasAssociation = await this.checkGastronomyAssociation(userId, gastronomyContext);
+    const hasAssociation = await this.checkGastronomyAssociation(
+      userId,
+      gastronomyContext,
+    );
     if (!hasAssociation) {
       return {
         allowed: false,
@@ -461,8 +454,9 @@ export class MotoboyAuthorizationService {
       };
     }
 
-    const { EntitlementResolver } = await import("@/core/billing/services/EntitlementResolver");
-
+    const { EntitlementResolver } = await import(
+      "@/core/billing/services/EntitlementResolver"
+    );
     const entitlements = await EntitlementResolver.resolve({
       user_id: userId,
       business_id: gastronomyContext.businessDataIds[0],
@@ -527,16 +521,17 @@ export class MotoboyAuthorizationService {
       if (businessById.profile_id) profileIds.add(businessById.profile_id);
     }
 
-    const { data: businessByProfileId, error: businessByProfileError } = await mobilityAuthDb
-      .from("business_data")
-      .select("id, profile_id")
-      .eq("profile_id", sourceId)
-      .maybeSingle();
+    const { data: businessByProfileId, error: businessByProfileError } =
+      await mobilityAuthDb
+        .from("business_data")
+        .select("id, profile_id")
+        .eq("profile_id", sourceId)
+        .maybeSingle();
     if (businessByProfileError) {
-      logger.warn("MotoboyAuthorizationService.resolveBusinessContext.businessByProfileId", {
-        sourceId,
-        error: businessByProfileError,
-      });
+      logger.warn(
+        "MotoboyAuthorizationService.resolveBusinessContext.businessByProfileId",
+        { sourceId, error: businessByProfileError },
+      );
     }
     if (businessByProfileId) {
       businessDataIds.add(businessByProfileId.id);
@@ -565,12 +560,12 @@ export class MotoboyAuthorizationService {
           .select("id, profile_id")
           .in("id", Array.from(businessDataIds));
       if (canonicalBusinessRowsError) {
-        logger.warn("MotoboyAuthorizationService.resolveBusinessContext.canonicalBusinessRows", {
-          sourceId,
-          error: canonicalBusinessRowsError,
-        });
+        logger.warn(
+          "MotoboyAuthorizationService.resolveBusinessContext.canonicalBusinessRows",
+          { sourceId, error: canonicalBusinessRowsError },
+        );
       } else {
-        for (const row of (canonicalBusinessRows || []) as Array<{ id: string; profile_id?: string | null }>) {
+        for (const row of canonicalBusinessRows ?? []) {
           businessDataIds.add(row.id);
           if (row.profile_id) profileIds.add(row.profile_id);
         }
@@ -587,16 +582,17 @@ export class MotoboyAuthorizationService {
     const businessContext = await this.resolveBusinessContext(sourceId);
     const businessDataIds = new Set<string>(businessContext.businessDataIds);
 
-    const { data: gastronomyByBusiness, error: gastronomyByBusinessError } = await mobilityAuthDb
-      .from("gastronomy_profiles")
-      .select("business_id")
-      .eq("business_id", sourceId)
-      .maybeSingle();
+    const { data: gastronomyByBusiness, error: gastronomyByBusinessError } =
+      await mobilityAuthDb
+        .from("gastronomy_profiles")
+        .select("business_id")
+        .eq("business_id", sourceId)
+        .maybeSingle();
     if (gastronomyByBusinessError) {
-      logger.warn("MotoboyAuthorizationService.resolveGastronomyContext.gastronomyByBusiness", {
-        sourceId,
-        error: gastronomyByBusinessError,
-      });
+      logger.warn(
+        "MotoboyAuthorizationService.resolveGastronomyContext.gastronomyByBusiness",
+        { sourceId, error: gastronomyByBusinessError },
+      );
     }
     if (gastronomyByBusiness?.business_id) {
       businessDataIds.add(gastronomyByBusiness.business_id);
@@ -627,9 +623,7 @@ export class MotoboyAuthorizationService {
     }
 
     const gastronomicBusinessIds = uniqueStrings(
-      ((gastronomyRows || []) as Array<{ business_id?: string | null }>).map(
-        (row) => row.business_id,
-      ),
+      (gastronomyRows ?? []).map((row) => row.business_id),
     );
     if (gastronomicBusinessIds.length === 0) {
       return {
@@ -655,7 +649,7 @@ export class MotoboyAuthorizationService {
     }
 
     const profileIds = new Set<string>(businessContext.profileIds);
-    for (const row of (businessRows || []) as Array<{ profile_id?: string | null }>) {
+    for (const row of businessRows ?? []) {
       if (row.profile_id) profileIds.add(row.profile_id);
     }
 
@@ -680,9 +674,7 @@ export class MotoboyAuthorizationService {
       }
 
       const managerChecks = await Promise.all(
-        profileIds.map((profileId) =>
-          ProfileMembersService.isManager(profileId, userId),
-        ),
+        profileIds.map((profileId) => ProfileMembersService.isManager(profileId, userId)),
       );
 
       return managerChecks.some(Boolean);
@@ -710,34 +702,6 @@ export class MotoboyAuthorizationService {
       return false;
     }
     return this.hasProfileAccess(userId, uniqueStrings(gastronomyContext.profileIds));
-  }
-
-  private static async resolvePlanTierByBusinessIds(
-    businessIds: string[],
-  ): Promise<string | undefined> {
-    if (businessIds.length === 0) {
-      return undefined;
-    }
-
-    const { data: currentSubscription, error: currentSubscriptionError } = await mobilityAuthDb
-      .from("user_subscriptions")
-      .select("plan_code")
-      .in("business_id", businessIds)
-      .eq("subscription_scope", "business")
-      .in("status_v2", ["active", "trialing"])
-      .order("updated_at", { ascending: false })
-      .limit(1)
-      .maybeSingle();
-    if (currentSubscriptionError) {
-      logger.warn("MotoboyAuthorizationService.resolvePlanTierByBusinessIds.user_subscriptions", {
-        businessIds,
-        error: currentSubscriptionError,
-      });
-    } else if (currentSubscription?.plan_code) {
-      return currentSubscription.plan_code;
-    }
-
-    return undefined;
   }
 
   private static async checkServiceAssociation(
