@@ -1,3 +1,8 @@
+import { AdminMotoboyReadService } from "@/core/admin/services/AdminMotoboyReadService";
+import type {
+  AdminMotoboyDelivery,
+  AdminMotoboyStatsRow,
+} from "@/core/admin/services/AdminMotoboyReadService";
 import { RideOperationalService } from "@/core/mobility/core/RideOperationalService";
 import {
   RIDE_STATE,
@@ -5,24 +10,9 @@ import {
   type RideState,
 } from "@/core/mobility/core/RideStateMachine";
 import { MobilityRpcService } from "@/core/mobility/services/MobilityRpcService";
-import { MobilityService } from "@/core/mobility/services/runtime";
 import { RideOperationalContextReadService } from "@/core/mobility/services/RideOperationalContextReadService";
 
-export interface AdminMotoboyDelivery {
-  id: string;
-  status: string;
-  source_type: string | null;
-  source_id: string | null;
-  recipient_name: string | null;
-  package_size: string | null;
-  suggested_price: number | null;
-  created_at: string;
-  updated_at: string;
-  driver_profile_id: string | null;
-  pickup_location_id: string | null;
-  delivery_notes: string | null;
-  failed_delivery_reason: string | null;
-}
+export type { AdminMotoboyDelivery } from "@/core/admin/services/AdminMotoboyReadService";
 
 const ADMIN_CANCELLATION_TARGETS: readonly RideState[] = [
   RIDE_STATE.CANCELLED_BY_PASSENGER,
@@ -54,14 +44,11 @@ export class AdminMotoboyOperationsService {
     status?: string;
     sourceType?: string;
   }): Promise<AdminMotoboyDelivery[]> {
-    const data = await MobilityService.listMotoboyDeliveries(filters);
-    return (data as AdminMotoboyDelivery[]) || [];
+    return AdminMotoboyReadService.listDeliveries(filters);
   }
 
-  static async listStatsRows(): Promise<
-    Array<{ status: string; created_at: string; driver_profile_id: string | null }>
-  > {
-    return MobilityService.listMotoboyStatsRows();
+  static async listStatsRows(): Promise<AdminMotoboyStatsRow[]> {
+    return AdminMotoboyReadService.listStatsRows();
   }
 
   /**
