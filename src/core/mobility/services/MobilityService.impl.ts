@@ -4,12 +4,11 @@
  * Ponto de acesso a leituras administrativas e operacoes runtime de mobilidade.
  *
  * Exporta:
- * - MobilityService: classe estatica para leitura/admin.
+ * - MobilityService: classe estatica para leituras operacionais ainda nao migradas.
  * - mobilityService: instancia singleton para escrita/runtime.
  */
 
 import { supabase } from "@/integrations/supabase";
-import type { Tables } from "@/integrations/supabase";
 import { logger } from "@/shared/utils/logger";
 import { profileService } from "@/core/profiles/services/ProfileService";
 import { QUERYABLE_OPEN_RIDE_STATUSES } from "@/core/mobility/core/RideLifecycleStatus";
@@ -58,8 +57,6 @@ type MobilityImplDbClient = {
 };
 
 const db = supabase as unknown as MobilityImplDbClient;
-
-type DriverCompleteProfileRecord = Tables<"driver_complete_profile">;
 
 // --- Static read/admin API ---------------------------------------------------
 
@@ -305,19 +302,6 @@ export class MobilityService {
     return data || null;
   }
 
-  static async getDriverProfiles(): Promise<{ data: unknown[]; error: unknown }> {
-    try {
-      const { data, error } = await db
-        .from<DriverCompleteProfileRecord>("driver_complete_profile")
-        .select("*")
-        .order("created_at", { ascending: false });
-      return { data: data || [], error };
-    } catch (error) {
-      logger.error("MobilityService.getDriverProfiles", error as Error);
-      return { data: [], error };
-    }
-  }
-
   static async getDriverDataByProfileIds(profileIds: string[]): Promise<unknown[]> {
     if (!profileIds.length) return [];
 
@@ -328,31 +312,6 @@ export class MobilityService {
 
     if (error) throw error;
     return data || [];
-  }
-
-  static async getTopDrivers(opts: { minRides?: number; limit?: number } = {}): Promise<unknown[]> {
-    try {
-      const { minRides = 1, limit = 10 } = opts;
-      const { data, error } = await db
-        .from<DriverCompleteProfileRecord>("driver_complete_profile")
-        .select("profile_id, display_name, avg_rating, total_rides, avatar_url")
-        .gte("total_rides", minRides)
-        .order("avg_rating", { ascending: false })
-        .limit(limit);
-
-      if (error) throw error;
-      const rows: DriverCompleteProfileRecord[] = data || [];
-      return rows.map((d) => ({
-        id: d.profile_id,
-        name: d.display_name,
-        rating: d.avg_rating,
-        total_rides: d.total_rides,
-        profile: { avatar_url: d.avatar_url },
-      }));
-    } catch (error) {
-      logger.error("MobilityService.getTopDrivers", error as Error);
-      return [];
-    }
   }
 
   static async getMobilityStats(): Promise<{ total_drivers: number; total_rides: number }> {
@@ -391,38 +350,6 @@ export class MobilityService {
       actual_fare: row.actual_fare,
       final_price: row.final_price,
     }));
-  }
-
-  /**
-   * Busca perfil completo do motorista (driver_complete_profile)
-   * Usado em: TrackRidePage
-   */
-  static async getDriverCompleteProfile(profileId: string): Promise<{
-    display_name: string;
-    vehicle_model: string;
-    vehicle_color: string;
-    vehicle_plate: string;
-    avg_rating: number;
-  } | null> {
-    try {
-      const { data, error } = await db
-        .from<{
-          display_name: string;
-          vehicle_model: string;
-          vehicle_color: string;
-          vehicle_plate: string;
-          avg_rating: number;
-        }>("driver_complete_profile")
-        .select("display_name, vehicle_model, vehicle_color, vehicle_plate, avg_rating")
-        .eq("profile_id", profileId)
-        .single();
-
-      if (error) throw error;
-      return data;
-    } catch (error) {
-      logger.error("MobilityService.getDriverCompleteProfile", { profileId, error });
-      return null;
-    }
   }
 
   /**
