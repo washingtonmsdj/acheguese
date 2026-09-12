@@ -35,7 +35,6 @@ export function AnalyticsTab({
   reportsReceived,
   reportsMade,
 }: AnalyticsTabProps) {
-  // Calcular métricas
   const accountAge = user?.created_at
     ? Math.floor(
         (Date.now() - new Date(user.created_at).getTime()) /
@@ -50,7 +49,6 @@ export function AnalyticsTab({
     (r) => r.severity === "high",
   ).length;
 
-  // Score de risco (0-100)
   let riskScore = 0;
   if (reportsReceived.length > 0)
     riskScore += Math.min(reportsReceived.length * 15, 40);
@@ -83,8 +81,9 @@ export function AnalyticsTab({
   };
 
   const riskLevel = getRiskLevel(riskScore);
+  const driverCancellationCount = driverData?.total_rides_cancelled ?? 0;
+  const driverAcceptanceRate = driverData?.acceptance_rate ?? null;
 
-  // Padrões identificados
   const patterns = [];
   if (reportsReceived.length >= 2) {
     patterns.push({
@@ -100,10 +99,10 @@ export function AnalyticsTab({
       severity: "critical",
     });
   }
-  if (driverData && driverData.cancellation_count > 5) {
+  if (driverData && driverCancellationCount > 5) {
     patterns.push({
       icon: AlertCircle,
-      text: `${driverData.cancellation_count} cancelamentos`,
+      text: `${driverCancellationCount} corridas canceladas`,
       severity: "warning",
     });
   }
@@ -117,7 +116,6 @@ export function AnalyticsTab({
 
   return (
     <div className="space-y-4">
-      {/* Score de Risco */}
       <Card className="bg-[#1E2529] border-white/10">
         <CardHeader>
           <CardTitle className="text-sm flex items-center gap-2">
@@ -149,7 +147,6 @@ export function AnalyticsTab({
         </CardContent>
       </Card>
 
-      {/* Padrões Identificados */}
       {patterns.length > 0 && (
         <Card className="bg-[#1E2529] border-white/10">
           <CardHeader>
@@ -187,7 +184,6 @@ export function AnalyticsTab({
         </Card>
       )}
 
-      {/* Estatísticas Gerais */}
       <Card className="bg-[#1E2529] border-white/10">
         <CardHeader>
           <CardTitle className="text-sm flex items-center gap-2">
@@ -223,13 +219,12 @@ export function AnalyticsTab({
         </CardContent>
       </Card>
 
-      {/* Estatísticas de Motorista */}
       {driverData && (
         <Card className="bg-[#1E2529] border-white/10">
           <CardHeader>
             <CardTitle className="text-sm flex items-center gap-2">
               <Award className="h-4 w-4" />
-              Performance como Motorista
+              Histórico como Motorista
             </CardTitle>
           </CardHeader>
           <CardContent>
@@ -238,29 +233,29 @@ export function AnalyticsTab({
                 <div className="flex justify-between text-xs mb-1">
                   <span className="text-gray-400">Taxa de Aceitação</span>
                   <span className="text-white">
-                    {driverData.acceptance_rate}%
+                    {driverAcceptanceRate === null ? "N/A" : `${driverAcceptanceRate}%`}
                   </span>
                 </div>
-                <Progress value={driverData.acceptance_rate} className="h-2" />
+                <Progress value={driverAcceptanceRate ?? 0} className="h-2" />
               </div>
 
               <div className="grid grid-cols-3 gap-2 mt-3">
                 <div className="p-2 bg-[#0A0F14] rounded text-center">
-                  <p className="text-xs text-gray-400">Solicitações</p>
+                  <p className="text-xs text-gray-400">Registradas</p>
                   <p className="text-sm font-bold text-white">
-                    {driverData.total_requests_received}
+                    {driverData.total_rides ?? 0}
                   </p>
                 </div>
                 <div className="p-2 bg-[#0A0F14] rounded text-center">
-                  <p className="text-xs text-gray-400">Aceitas</p>
+                  <p className="text-xs text-gray-400">Concluídas</p>
                   <p className="text-sm font-bold text-green-400">
-                    {driverData.total_requests_accepted}
+                    {driverData.total_rides_completed ?? 0}
                   </p>
                 </div>
                 <div className="p-2 bg-[#0A0F14] rounded text-center">
                   <p className="text-xs text-gray-400">Canceladas</p>
                   <p className="text-sm font-bold text-red-400">
-                    {driverData.cancellation_count}
+                    {driverCancellationCount}
                   </p>
                 </div>
               </div>
@@ -269,7 +264,6 @@ export function AnalyticsTab({
         </Card>
       )}
 
-      {/* Recomendações */}
       <Card className="bg-[#1E2529] border-white/10">
         <CardHeader>
           <CardTitle className="text-sm flex items-center gap-2">
@@ -303,14 +297,14 @@ export function AnalyticsTab({
             </div>
           )}
 
-          {driverData && driverData.acceptance_rate < 50 && (
+          {driverData && driverAcceptanceRate !== null && driverAcceptanceRate < 50 && (
             <div className="p-3 bg-yellow-500/10 border border-yellow-500/30 rounded text-xs">
               <p className="font-semibold text-yellow-400 mb-1">
                 <BarChart3 className="mr-1.5 inline h-3.5 w-3.5" aria-hidden="true" />
                 Performance
               </p>
               <p className="text-yellow-200">
-                Taxa de aceitação baixa. Considerar treinamento ou advertência.
+                Taxa de aceitação baixa. Revisar o histórico operacional antes de qualquer ação.
               </p>
             </div>
           )}
