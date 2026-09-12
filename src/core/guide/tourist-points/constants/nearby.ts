@@ -3,6 +3,7 @@ import type { BusinessCategory } from "@/shared/taxonomy/businessCategories";
 export const TOURIST_POINT_NEARBY_LIMITS = {
   MAX_RESULTS: 6,
   MAX_RADIUS_KM: 5,
+  CANDIDATES_PER_CATEGORY: 24,
 } as const;
 
 export const TOURIST_POINT_NEARBY_BUSINESS_CATEGORIES = [
