@@ -511,10 +511,6 @@ export class ProfileService {
   async getCurrentUserFavoriteBusinesses(): Promise<BusinessRow[]> {
     return getCurrentUserFavoriteBusinessesQuery();
   }
-  async getDriverData(profileId: string): Promise<unknown | null> {
-    void profileId;
-    return null;
-  }
   async getUserLikeActivity(
     userId: string,
     from: number,
