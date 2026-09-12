@@ -1,6 +1,5 @@
 import React from "react";
 import { MapPin, Car, Package, Users, Zap } from "lucide-react";
-import { Badge } from "@/shared/components/ui/badge";
 import type { RideRequest } from "@/core/mobility/types";
 import {
   isDriverOwnedOpenRideStatus,
@@ -41,7 +40,6 @@ export function MobilidadeRightSidebar({
           </div>
         </div>
 
-        {/* Stats below map */}
         <div className="grid grid-cols-2 gap-px bg-white/5">
           <div className="p-3 text-center bg-[#1E2529]">
             <div className="flex items-center justify-center gap-1 mb-0.5">
@@ -66,7 +64,6 @@ export function MobilidadeRightSidebar({
         </div>
       </div>
 
-      {/* Accepted operational rides summary */}
       {operationalRides.length > 0 && (
         <div className="rounded-2xl border border-white/10 bg-[#1E2529] p-3">
           <div className="flex items-center gap-2 mb-2">
@@ -99,51 +96,6 @@ export function MobilidadeRightSidebar({
           </div>
         </div>
       )}
-
-      {/* Subscription plans */}
-      <div className="rounded-2xl border border-white/10 bg-[#1E2529] p-3">
-        <h3 className="text-xs font-semibold text-white mb-2">
-          Planos para Motorista
-        </h3>
-        <div className="space-y-2">
-          <div className="p-2.5 rounded-xl border border-white/10 bg-white/5">
-            <div className="flex items-center gap-1.5 mb-1">
-              <Car className="h-3 w-3 text-teal-400" />
-              <span className="text-xs font-semibold text-white">Padrao</span>
-            </div>
-            <ul className="space-y-0.5">
-              <li className="text-[0.6rem] text-gray-400">
-                Visualizar pedidos
-              </li>
-              <li className="text-[0.6rem] text-gray-400">
-                Aceitar corridas
-              </li>
-            </ul>
-          </div>
-          <div className="p-2.5 rounded-xl border border-amber-500/20 bg-amber-500/5">
-            <div className="flex items-center gap-1.5 mb-1">
-              <Zap className="h-3 w-3 text-amber-400" />
-              <span className="text-xs font-semibold text-amber-400">
-                Prioritario
-              </span>
-              <Badge className="bg-amber-500/20 text-amber-400 text-[0.5rem] px-1 py-0 rounded-full ml-auto">
-                PRO
-              </Badge>
-            </div>
-            <ul className="space-y-0.5">
-              <li className="text-[0.6rem] text-gray-400">
-                Notificacoes primeiro
-              </li>
-              <li className="text-[0.6rem] text-gray-400">
-                Destaque no mapa
-              </li>
-              <li className="text-[0.6rem] text-gray-400">
-                Destaque na lista
-              </li>
-            </ul>
-          </div>
-        </div>
-      </div>
     </div>
   );
 }
