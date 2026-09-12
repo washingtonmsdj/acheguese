@@ -1,16 +1,13 @@
 import { RIDE_STATE } from "../core/RideStateMachine";
-import { getRideById } from "./mobility.queries";
+import { RideOperationalContextReadService } from "./RideOperationalContextReadService";
 import {
   MobilityRpcService,
   type DriverOfferBrokerRow,
 } from "./MobilityRpcService";
 
-interface HandoffRideState {
-  status?: string;
-  ride_mode?: string | null;
-  driver_profile_id?: string | null;
-  failed_delivery_metadata?: Record<string, unknown> | null;
-}
+type HandoffRideState = Awaited<
+  ReturnType<typeof RideOperationalContextReadService.getFailedDelivery>
+>;
 
 export interface FailedDeliveryHandoffOffer {
   rideId: string;
@@ -47,7 +44,7 @@ function finiteNumber(value: number | null): value is number {
 }
 
 function isAcceptedHandoff(
-  ride: HandoffRideState | null,
+  ride: HandoffRideState,
   driverProfileId: string,
 ): boolean {
   const metadata = ride?.failed_delivery_metadata;
@@ -107,9 +104,9 @@ function toPendingOffer(
  * Receiver-side boundary for failed-delivery physical custody handoff.
  *
  * Before acceptance the receiver is deliberately not a ride participant. The
- * only discovery surface is the targeted, privacy-redacted offer broker. A raw
- * ride read is used only after a possibly committed acceptance for idempotent
- * recovery/read-back confirmation.
+ * only discovery surface is the targeted, privacy-redacted offer broker. A
+ * bounded failed-delivery read is used only after a possibly committed
+ * acceptance for idempotent recovery/read-back confirmation.
  */
 export class FailedDeliveryHandoffService {
   static async listPending(
@@ -142,9 +139,9 @@ export class FailedDeliveryHandoffService {
 
     const pending = await this.listPending(driver, 50);
     if (!pending.some((offer) => offer.rideId === rideId)) {
-      const afterPossibleCommit = (await getRideById(rideId).catch(() => null)) as
-        | HandoffRideState
-        | null;
+      const afterPossibleCommit = await RideOperationalContextReadService
+        .getFailedDelivery(rideId)
+        .catch(() => null);
       if (afterPossibleCommit && isAcceptedHandoff(afterPossibleCommit, driver)) {
         return {
           success: true,
@@ -169,17 +166,18 @@ export class FailedDeliveryHandoffService {
       );
 
       if (result.success === true) {
-        const confirmed = (await getRideById(rideId).catch(() => null)) as
-          | HandoffRideState
-          | null;
+        const confirmed = await RideOperationalContextReadService
+          .getFailedDelivery(rideId)
+          .catch(() => null);
         return {
           success: true,
           rideId,
           driverProfileId: driver,
           status: RIDE_STATE.IN_DELIVERY,
-          acceptedAt: confirmed && isAcceptedHandoff(confirmed, driver)
-            ? nonEmptyString(confirmed.failed_delivery_metadata?.handoff_accepted_at)
-            : undefined,
+          acceptedAt:
+            confirmed && isAcceptedHandoff(confirmed, driver)
+              ? nonEmptyString(confirmed.failed_delivery_metadata?.handoff_accepted_at)
+              : undefined,
         };
       }
 
@@ -193,9 +191,9 @@ export class FailedDeliveryHandoffService {
 
     // A resposta pode se perder depois do commit. Nesse caso o receptor ja e
     // participante e a evidencia persistida e a unica fonte aceita para rescue.
-    const after = (await getRideById(rideId).catch(() => null)) as
-      | HandoffRideState
-      | null;
+    const after = await RideOperationalContextReadService
+      .getFailedDelivery(rideId)
+      .catch(() => null);
     if (after && isAcceptedHandoff(after, driver)) {
       return {
         success: true,
