@@ -1,0 +1,242 @@
+name: Supabase Mobility RPC Deploy
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "supabase/functions/mobility-rpc/**"
+      - "supabase/functions/_shared/accountOperational.ts"
+      - "supabase/functions/_shared/mfaPolicy.ts"
+      - "supabase/functions/_shared/security.ts"
+      - "supabase/config.toml"
+      - ".github/workflows/supabase-mobility-rpc-deploy.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: supabase-mobility-rpc-production
+  cancel-in-progress: true
+
+env:
+  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: "true"
+  SUPABASE_CLI_VERSION: "2.115.0"
+  SUPABASE_PROJECT_REF: "xhdowzacfujckjelqhtd"
+
+jobs:
+  deploy-mobility-rpc:
+    name: Exact-main mobility-rpc deploy
+    runs-on:
+      - self-hosted
+      - windows
+      - x64
+      - acheguese-heavy-windows
+      - remote-only
+    timeout-minutes: 20
+    env:
+      SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
+
+    steps:
+      - name: Validate immutable main target
+        id: target
+        shell: powershell
+        env:
+          EVENT_REF: ${{ github.ref }}
+          EVENT_SHA: ${{ github.sha }}
+        run: |
+          $ErrorActionPreference = "Stop"
+
+          if ($env:GITHUB_REPOSITORY -ne "washingtonmsdj/acheguese") {
+            throw "Unexpected repository: $env:GITHUB_REPOSITORY"
+          }
+          if ($env:EVENT_REF -ne "refs/heads/main") {
+            throw "Only refs/heads/main is authorized. Received $env:EVENT_REF"
+          }
+          if ($env:GITHUB_EVENT_NAME -ne "push" -and $env:GITHUB_EVENT_NAME -ne "workflow_dispatch") {
+            throw "Unsupported event: $env:GITHUB_EVENT_NAME"
+          }
+
+          $targetSha = ([string]$env:EVENT_SHA).Trim().ToLowerInvariant()
+          if ($targetSha -notmatch '^[0-9a-f]{40}$') {
+            throw "Target SHA must be exactly 40 hex characters."
+          }
+
+          Add-Content -Path $env:GITHUB_OUTPUT -Value "sha=$targetSha" -Encoding UTF8
+          Write-Host "Exact main SHA accepted: $targetSha"
+
+      - name: Checkout isolated Supabase source at exact SHA
+        uses: actions/checkout@v6
+        with:
+          repository: washingtonmsdj/acheguese
+          ref: ${{ steps.target.outputs.sha }}
+          fetch-depth: 1
+          persist-credentials: false
+          clean: false
+          path: mobility-edge-gate
+          sparse-checkout: |
+            supabase
+          sparse-checkout-cone-mode: true
+
+      - name: Assert checkout provenance
+        shell: powershell
+        working-directory: mobility-edge-gate
+        env:
+          EXPECTED_SHA: ${{ steps.target.outputs.sha }}
+        run: |
+          $ErrorActionPreference = "Stop"
+          $actual = (git rev-parse HEAD).Trim().ToLowerInvariant()
+          if ($actual -ne $env:EXPECTED_SHA) {
+            throw "Checkout provenance mismatch. expected=$env:EXPECTED_SHA actual=$actual"
+          }
+          if (git status --porcelain) {
+            throw "Isolated worktree must be clean before production Edge deploy."
+          }
+          Write-Host "Exact checkout provenance confirmed: $actual"
+
+      - name: Validate Supabase credential
+        shell: powershell
+        run: |
+          $ErrorActionPreference = "Stop"
+          if ([string]::IsNullOrWhiteSpace($env:SUPABASE_ACCESS_TOKEN)) {
+            throw "GitHub Actions secret SUPABASE_ACCESS_TOKEN is missing."
+          }
+          Write-Host "Supabase access credential is present."
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v6
+        with:
+          node-version: "24"
+
+      - name: Pin Supabase CLI
+        shell: powershell
+        working-directory: mobility-edge-gate
+        run: |
+          $ErrorActionPreference = "Stop"
+          $version = (& npx --yes "supabase@$env:SUPABASE_CLI_VERSION" --version).Trim()
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          if ($version -ne $env:SUPABASE_CLI_VERSION) {
+            throw "Unexpected Supabase CLI version: $version"
+          }
+          Write-Host "Supabase CLI pinned: $version"
+
+      - name: Validate mobility-rpc source contracts
+        shell: powershell
+        working-directory: mobility-edge-gate
+        run: |
+          $ErrorActionPreference = "Stop"
+
+          $config = Get-Content "supabase/config.toml" -Raw
+          $entry = Get-Content "supabase/functions/mobility-rpc/index.ts" -Raw
+          $mfa = Get-Content "supabase/functions/_shared/mfaPolicy.ts" -Raw
+
+          $section = [regex]::Match(
+            $config,
+            '(?ms)^\[functions\.mobility-rpc\]\s*(.*?)(?=^\[|\z)'
+          )
+          if (-not $section.Success -or $section.Groups[1].Value -notmatch '(?m)^verify_jwt\s*=\s*true\s*$') {
+            throw "mobility-rpc must remain verify_jwt=true in supabase/config.toml."
+          }
+
+          $requiredEntryMarkers = @(
+            'evaluateUserMfaPolicy',
+            'get_user_roles',
+            'async function requireAdminMfa(',
+            'handleAdminRedispatch',
+            'handleUpdateFailedDeliveryResolution',
+            'handleReconcileStaleDriverAvailability',
+            'handleEnsureAdminDriverProfile',
+            'getDriverRideHistory',
+            'getDriverEarningsHistory',
+            'p_actor_user_id: auth.userId'
+          )
+          foreach ($marker in $requiredEntryMarkers) {
+            if (-not $entry.Contains($marker)) {
+              throw "mobility-rpc source contract missing: $marker"
+            }
+          }
+          if ($entry -match 'rpc\(\s*["'']is_admin["'']') {
+            throw "mobility-rpc must not restore legacy is_admin role authority."
+          }
+
+          $requiredMfaMarkers = @(
+            'auth.admin.mfa.listFactors',
+            'getAuthenticatorAssuranceLevel(token)',
+            'currentLevel !== "aal2"'
+          )
+          foreach ($marker in $requiredMfaMarkers) {
+            if (-not $mfa.Contains($marker)) {
+              throw "Canonical MFA policy contract missing: $marker"
+            }
+          }
+
+          Write-Host "G84 mobility admin authority contracts confirmed."
+
+      - name: Record exact source bundle hashes
+        id: bundle
+        shell: powershell
+        working-directory: mobility-edge-gate
+        run: |
+          $ErrorActionPreference = "Stop"
+          $files = @(
+            "supabase/functions/mobility-rpc/index.ts",
+            "supabase/functions/_shared/accountOperational.ts",
+            "supabase/functions/_shared/mfaPolicy.ts",
+            "supabase/functions/_shared/security.ts"
+          )
+
+          foreach ($file in $files) {
+            if (-not (Test-Path $file)) {
+              throw "Required Edge source missing: $file"
+            }
+            $hash = (Get-FileHash -Algorithm SHA256 $file).Hash.ToLowerInvariant()
+            Write-Host "BUNDLE_SHA256 $file $hash"
+            Add-Content -Path $env:GITHUB_STEP_SUMMARY -Value "- ``$file`` — ``$hash``" -Encoding UTF8
+          }
+
+      - name: Deploy mobility-rpc from exact checkout
+        shell: powershell
+        working-directory: mobility-edge-gate
+        run: |
+          $ErrorActionPreference = "Stop"
+          & npx --yes "supabase@$env:SUPABASE_CLI_VERSION" functions deploy mobility-rpc --project-ref $env:SUPABASE_PROJECT_REF --use-api
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+
+      - name: Verify remote function inventory
+        shell: powershell
+        working-directory: mobility-edge-gate
+        run: |
+          $ErrorActionPreference = "Stop"
+          $raw = (& npx --yes "supabase@$env:SUPABASE_CLI_VERSION" functions list --project-ref $env:SUPABASE_PROJECT_REF --output json)
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          $functions = $raw | ConvertFrom-Json
+          $mobility = @($functions | Where-Object { $_.slug -eq "mobility-rpc" -or $_.name -eq "mobility-rpc" })
+          if ($mobility.Count -ne 1) {
+            throw "Expected exactly one remote mobility-rpc entry; found $($mobility.Count)."
+          }
+          if ($mobility[0].verify_jwt -ne $true) {
+            throw "Remote mobility-rpc verify_jwt is not true."
+          }
+          if ($mobility[0].status -and $mobility[0].status -ne "ACTIVE") {
+            throw "Remote mobility-rpc is not ACTIVE: $($mobility[0].status)"
+          }
+          Write-Host "REMOTE_MOBILITY_RPC version=$($mobility[0].version) status=$($mobility[0].status) verify_jwt=$($mobility[0].verify_jwt)"
+          Add-Content -Path $env:GITHUB_STEP_SUMMARY -Value "- Remote mobility-rpc version: ``$($mobility[0].version)``" -Encoding UTF8
+          Add-Content -Path $env:GITHUB_STEP_SUMMARY -Value "- Remote verify_jwt: ``$($mobility[0].verify_jwt)``" -Encoding UTF8
+
+      - name: Record deployment provenance
+        if: always()
+        shell: powershell
+        env:
+          TARGET_SHA: ${{ steps.target.outputs.sha }}
+        run: |
+          @(
+            "## Supabase mobility-rpc exact-source gate",
+            "- Repository: washingtonmsdj/acheguese",
+            "- Target SHA: $env:TARGET_SHA",
+            "- Branch authority: main only",
+            "- Project ref: $env:SUPABASE_PROJECT_REF",
+            "- Supabase CLI: $env:SUPABASE_CLI_VERSION",
+            "- verify_jwt must remain true.",
+            "- Deployment source is the isolated exact-SHA checkout, never a reconstructed bundle."
+          ) | Add-Content -Path $env:GITHUB_STEP_SUMMARY -Encoding UTF8
