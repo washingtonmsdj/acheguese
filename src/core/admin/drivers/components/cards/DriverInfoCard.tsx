@@ -53,8 +53,10 @@ export function DriverInfoCard({ driver }: DriverInfoCardProps) {
             <p className="font-medium">{driver.vehicle_year}</p>
           </div>
           <div className="p-3 rounded-lg bg-secondary/50">
-            <p className="text-xs text-muted-foreground">Plano</p>
-            <p className="font-medium capitalize">{driver.subscription_plan}</p>
+            <p className="text-xs text-muted-foreground">Presença</p>
+            <p className="font-medium">
+              {driver.is_online ? "Online" : "Offline"}
+            </p>
           </div>
         </div>
       </div>
