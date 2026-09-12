@@ -1,45 +1,23 @@
 /**
- * RideHistoryUnified - Componente consolidado de histórico
- * 
- * SSOT: Substitui RideHistoryList e PassengerRideHistory
- * Funcionalidades:
- * - Filtros avançados (tipo, status, preço, data, busca)
- * - Estatísticas agregadas
- * - Suporte a avaliação
- * - Paginação
- * - Estados tratados (loading, erro, vazio)
+ * RideHistoryUnified - histórico consolidado de viagens e entregas.
+ *
+ * Lifecycle/status authority pertence a RideLifecycleStatus e StatusBadge.
  */
 
-import { useState, useMemo } from "react";
+import { useMemo, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { useAuth } from "@/core/auth";
-import { mobilityService } from "@/core/mobility/services/MobilityService";
-import { Card, CardContent, CardHeader, CardTitle } from "@/shared/components/ui/card";
-import { Button } from "@/shared/components/ui/button";
-import { Badge } from "@/shared/components/ui/badge";
-import { Input } from "@/shared/components/ui/input";
-import { Skeleton } from "@/shared/components/ui/skeleton";
 import {
-  MapPin,
-  Calendar,
-  DollarSign,
-  Star,
-  Filter,
-  TrendingUp,
-  TrendingDown,
-  Award,
-  Clock,
-  Search,
-  Car,
-  Package,
-  CheckCircle2,
-  XCircle,
-} from "lucide-react";
-import { format } from "date-fns";
-import { ptBR } from "@/shared/utils/dateLocale";
-import { cn } from "@/shared/utils/cn";
-import { formatBrl } from "@/shared/utils/currency";
-import { RIDE_STATUS, RIDE_MODE, MOBILITY_QUERY_KEYS } from "@/core/mobility/constants";
+  isCancelledRideStatus,
+  isClosedRideStatus,
+} from "@/core/mobility/core/RideLifecycleStatus";
+import { mobilityService } from "@/core/mobility/services/MobilityService";
+import { MobilityTrustService } from "@/core/mobility/services/MobilityTrustService";
+import {
+  MOBILITY_QUERY_KEYS,
+  RIDE_MODE,
+  RIDE_STATUS,
+} from "@/core/mobility/constants";
 import type { RideRequest } from "@/core/mobility/types/types";
 import {
   TRUST_ACTOR_ROLES,
@@ -47,7 +25,30 @@ import {
   type TrustFeedbackReason,
   type TrustFeedbackTarget,
 } from "@/core/trust";
-import { MobilityTrustService } from "@/core/mobility/services/MobilityTrustService";
+import { Badge } from "@/shared/components/ui/badge";
+import { Button } from "@/shared/components/ui/button";
+import { Card, CardContent, CardHeader, CardTitle } from "@/shared/components/ui/card";
+import { Input } from "@/shared/components/ui/input";
+import { Skeleton } from "@/shared/components/ui/skeleton";
+import { formatBrl } from "@/shared/utils/currency";
+import { cn } from "@/shared/utils/cn";
+import { ptBR } from "@/shared/utils/dateLocale";
+import { format } from "date-fns";
+import {
+  Award,
+  Calendar,
+  Car,
+  Clock,
+  DollarSign,
+  Filter,
+  MapPin,
+  Package,
+  Search,
+  Star,
+  TrendingDown,
+  TrendingUp,
+} from "lucide-react";
+import { StatusBadge } from "./StatusBadge";
 
 const PASSENGER_FEEDBACK_REASONS: TrustFeedbackReason[] = [
   { value: "smooth_operation", label: "Atendimento correto / sem problema", severity: "low" },
@@ -60,11 +61,8 @@ const PASSENGER_FEEDBACK_REASONS: TrustFeedbackReason[] = [
 ];
 
 interface RideHistoryUnifiedProps {
-  /** Callback para avaliar corrida */
   onRate?: (ride: RideRequest) => void;
-  /** Modo de exibição */
   variant?: "full" | "compact";
-  /** Filtro inicial de tipo */
   initialTypeFilter?: "all" | "viagem" | "motoboy";
 }
 
@@ -74,10 +72,12 @@ export function RideHistoryUnified({
   initialTypeFilter = "all",
 }: RideHistoryUnifiedProps) {
   const { user } = useAuth();
-  
-  // Filtros
-  const [filterType, setFilterType] = useState<"all" | "viagem" | "motoboy">(initialTypeFilter);
-  const [filterStatus, setFilterStatus] = useState<"all" | "completed" | "cancelled">("all");
+  const [filterType, setFilterType] = useState<"all" | "viagem" | "motoboy">(
+    initialTypeFilter,
+  );
+  const [filterStatus, setFilterStatus] = useState<
+    "all" | "completed" | "cancelled"
+  >("all");
   const [filterPriceMin, setFilterPriceMin] = useState("");
   const [filterPriceMax, setFilterPriceMax] = useState("");
   const [filterDateStart, setFilterDateStart] = useState("");
@@ -87,43 +87,37 @@ export function RideHistoryUnified({
   const [page, setPage] = useState(1);
   const pageSize = 10;
 
-  // Buscar histórico
   const { data: rides = [], isLoading } = useQuery<RideRequest[]>({
     queryKey: MOBILITY_QUERY_KEYS.rideHistory(user?.id || ""),
     queryFn: async () => {
       if (!user) return [];
       const allRides = await mobilityService.getUserRides(user.id);
-      return (allRides || []).filter(
-        (r) =>
-          r.status === RIDE_STATUS.COMPLETED || r.status === RIDE_STATUS.CANCELLED,
-      );
+      return (allRides || []).filter((ride) => isClosedRideStatus(ride.status));
     },
-    enabled: !!user,
-    staleTime: 5 * 60 * 1000, // 5 minutos
+    enabled: Boolean(user),
+    staleTime: 5 * 60 * 1000,
   });
 
-  // Aplicar filtros
   const filteredRides = useMemo(() => {
     return rides.filter((ride) => {
-      // Filtro de tipo
       if (filterType === "viagem" && ride.ride_mode !== RIDE_MODE.RIDE) return false;
       if (filterType === "motoboy" && ride.ride_mode !== RIDE_MODE.MOTOBOY) return false;
 
-      // Filtro de status
-      if (filterStatus === "completed" && ride.status !== RIDE_STATUS.COMPLETED) return false;
-      if (filterStatus === "cancelled" && ride.status !== RIDE_STATUS.CANCELLED) return false;
+      if (filterStatus === "completed" && ride.status !== RIDE_STATUS.COMPLETED) {
+        return false;
+      }
+      if (filterStatus === "cancelled" && !isCancelledRideStatus(ride.status)) {
+        return false;
+      }
 
-      // Filtro de preço
-      const price = ride.final_price || ride.suggested_price || 0;
-      if (filterPriceMin && price < parseFloat(filterPriceMin)) return false;
-      if (filterPriceMax && price > parseFloat(filterPriceMax)) return false;
+      const realizedPrice = ride.final_price ?? 0;
+      if (filterPriceMin && realizedPrice < Number.parseFloat(filterPriceMin)) return false;
+      if (filterPriceMax && realizedPrice > Number.parseFloat(filterPriceMax)) return false;
 
-      // Filtro de data
       const rideDate = new Date(ride.updated_at);
       if (filterDateStart && rideDate < new Date(filterDateStart)) return false;
-      if (filterDateEnd && rideDate > new Date(filterDateEnd + "T23:59:59")) return false;
+      if (filterDateEnd && rideDate > new Date(`${filterDateEnd}T23:59:59`)) return false;
 
-      // Busca por texto
       if (searchQuery) {
         const query = searchQuery.toLowerCase();
         const matchOrigin = ride.pickup_address?.toLowerCase().includes(query);
@@ -134,34 +128,48 @@ export function RideHistoryUnified({
 
       return true;
     });
-  }, [rides, filterType, filterStatus, filterPriceMin, filterPriceMax, filterDateStart, filterDateEnd, searchQuery]);
+  }, [
+    rides,
+    filterType,
+    filterStatus,
+    filterPriceMin,
+    filterPriceMax,
+    filterDateStart,
+    filterDateEnd,
+    searchQuery,
+  ]);
 
-  // Paginação
   const paginatedRides = useMemo(() => {
     const start = (page - 1) * pageSize;
     return filteredRides.slice(start, start + pageSize);
   }, [filteredRides, page]);
 
-  // Estatísticas
   const stats = useMemo(() => {
-    const completed = filteredRides.filter((r) => r.status === RIDE_STATUS.COMPLETED);
-    const totalSpent = completed.reduce((sum, r) => sum + (r.final_price || r.suggested_price || 0), 0);
+    const completed = filteredRides.filter(
+      (ride) => ride.status === RIDE_STATUS.COMPLETED,
+    );
     return {
       total: filteredRides.length,
       completed: completed.length,
-      cancelled: filteredRides.filter((r) => r.status === RIDE_STATUS.CANCELLED).length,
-      totalSpent,
+      cancelled: filteredRides.filter((ride) =>
+        isCancelledRideStatus(ride.status),
+      ).length,
+      totalSpent: completed.reduce(
+        (sum, ride) => sum + (ride.final_price ?? 0),
+        0,
+      ),
     };
   }, [filteredRides]);
 
-  const hasActiveFilters =
+  const hasActiveFilters = Boolean(
     filterType !== "all" ||
-    filterStatus !== "all" ||
-    filterPriceMin ||
-    filterPriceMax ||
-    filterDateStart ||
-    filterDateEnd ||
-    searchQuery;
+      filterStatus !== "all" ||
+      filterPriceMin ||
+      filterPriceMax ||
+      filterDateStart ||
+      filterDateEnd ||
+      searchQuery,
+  );
 
   const clearFilters = () => {
     setFilterType("all");
@@ -190,7 +198,7 @@ export function RideHistoryUnified({
         <Clock className="h-10 w-10 text-muted-foreground mx-auto mb-3" />
         <h3 className="text-sm font-semibold mb-1">Nenhum histórico</h3>
         <p className="text-xs text-muted-foreground">
-          Suas viagens e entregas concluídas aparecerão aqui
+          Suas viagens e entregas encerradas aparecerão aqui
         </p>
       </div>
     );
@@ -198,7 +206,6 @@ export function RideHistoryUnified({
 
   return (
     <div className="space-y-6">
-      {/* Estatísticas */}
       {variant === "full" && (
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
           <Card>
@@ -251,7 +258,6 @@ export function RideHistoryUnified({
         </div>
       )}
 
-      {/* Busca e Filtros */}
       <Card>
         <CardHeader>
           <div className="flex items-center justify-between">
@@ -275,18 +281,16 @@ export function RideHistoryUnified({
 
         {showFilters && (
           <CardContent className="border-t pt-4 space-y-4">
-            {/* Busca */}
             <div className="relative">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
               <Input
                 placeholder="Buscar por origem, destino ou motorista..."
                 value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
+                onChange={(event) => setSearchQuery(event.target.value)}
                 className="pl-9"
               />
             </div>
 
-            {/* Tipo e Status */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div className="space-y-2">
                 <label className="text-sm font-medium">Tipo</label>
@@ -295,15 +299,15 @@ export function RideHistoryUnified({
                     { value: "all" as const, label: "Todos" },
                     { value: "viagem" as const, label: "Viagem" },
                     { value: "motoboy" as const, label: "Motoboy" },
-                  ].map((opt) => (
+                  ].map((option) => (
                     <Button
-                      key={opt.value}
-                      onClick={() => setFilterType(opt.value)}
-                      variant={filterType === opt.value ? "default" : "outline"}
+                      key={option.value}
+                      onClick={() => setFilterType(option.value)}
+                      variant={filterType === option.value ? "default" : "outline"}
                       size="sm"
                       className="flex-1"
                     >
-                      {opt.label}
+                      {option.label}
                     </Button>
                   ))}
                 </div>
@@ -316,41 +320,39 @@ export function RideHistoryUnified({
                     { value: "all" as const, label: "Todos" },
                     { value: "completed" as const, label: "Concluídas" },
                     { value: "cancelled" as const, label: "Canceladas" },
-                  ].map((opt) => (
+                  ].map((option) => (
                     <Button
-                      key={opt.value}
-                      onClick={() => setFilterStatus(opt.value)}
-                      variant={filterStatus === opt.value ? "default" : "outline"}
+                      key={option.value}
+                      onClick={() => setFilterStatus(option.value)}
+                      variant={filterStatus === option.value ? "default" : "outline"}
                       size="sm"
                       className="flex-1"
                     >
-                      {opt.label}
+                      {option.label}
                     </Button>
                   ))}
                 </div>
               </div>
             </div>
 
-            {/* Preço */}
             <div className="space-y-2">
-              <label className="text-sm font-medium">Faixa de Preço</label>
+              <label className="text-sm font-medium">Faixa de valor final</label>
               <div className="grid grid-cols-2 gap-2">
                 <Input
                   type="number"
                   placeholder="Mínimo"
                   value={filterPriceMin}
-                  onChange={(e) => setFilterPriceMin(e.target.value)}
+                  onChange={(event) => setFilterPriceMin(event.target.value)}
                 />
                 <Input
                   type="number"
                   placeholder="Máximo"
                   value={filterPriceMax}
-                  onChange={(e) => setFilterPriceMax(e.target.value)}
+                  onChange={(event) => setFilterPriceMax(event.target.value)}
                 />
               </div>
             </div>
 
-            {/* Data */}
             <div className="space-y-2">
               <label className="text-sm font-medium flex items-center gap-1">
                 <Calendar className="h-4 w-4" />
@@ -360,12 +362,12 @@ export function RideHistoryUnified({
                 <Input
                   type="date"
                   value={filterDateStart}
-                  onChange={(e) => setFilterDateStart(e.target.value)}
+                  onChange={(event) => setFilterDateStart(event.target.value)}
                 />
                 <Input
                   type="date"
                   value={filterDateEnd}
-                  onChange={(e) => setFilterDateEnd(e.target.value)}
+                  onChange={(event) => setFilterDateEnd(event.target.value)}
                 />
               </div>
             </div>
@@ -379,7 +381,6 @@ export function RideHistoryUnified({
         )}
       </Card>
 
-      {/* Contador de Resultados */}
       <div className="flex items-center justify-between text-sm text-muted-foreground">
         <span>
           {filteredRides.length} {filteredRides.length === 1 ? "resultado" : "resultados"}
@@ -387,7 +388,6 @@ export function RideHistoryUnified({
         {hasActiveFilters && <span className="text-primary">Filtros ativos</span>}
       </div>
 
-      {/* Lista */}
       {filteredRides.length === 0 ? (
         <Card>
           <CardContent className="py-12 text-center">
@@ -404,7 +404,7 @@ export function RideHistoryUnified({
         <div className="space-y-4">
           {paginatedRides.map((ride) => {
             const isCompleted = ride.status === RIDE_STATUS.COMPLETED;
-            const isCancelled = ride.status === RIDE_STATUS.CANCELLED;
+            const isCancelled = isCancelledRideStatus(ride.status);
             const isMotoboy = ride.ride_mode === RIDE_MODE.MOTOBOY;
             const needsRating = isCompleted && onRate && !ride.driver_rating;
             const driverProfileId =
@@ -414,8 +414,11 @@ export function RideHistoryUnified({
                   {
                     id: driverProfileId,
                     label: isMotoboy ? "Motoboy da entrega" : "Motorista da corrida",
-                    subjectRole: isMotoboy ? TRUST_ACTOR_ROLES.COURIER : TRUST_ACTOR_ROLES.DRIVER,
-                    helper: "Feedback privado para confianca operacional e analise admin.",
+                    subjectRole: isMotoboy
+                      ? TRUST_ACTOR_ROLES.COURIER
+                      : TRUST_ACTOR_ROLES.DRIVER,
+                    helper:
+                      "Feedback privado para confianca operacional e analise admin.",
                   },
                 ]
               : [];
@@ -430,35 +433,36 @@ export function RideHistoryUnified({
               >
                 <CardContent className="pt-6">
                   <div className="flex items-start justify-between mb-4">
-                    <div className="flex items-center gap-2">
+                    <div className="flex items-center gap-2 flex-wrap">
                       <Badge variant={isMotoboy ? "secondary" : "default"}>
-                        {isMotoboy ? <Package className="h-3 w-3 mr-1" /> : <Car className="h-3 w-3 mr-1" />}
+                        {isMotoboy ? (
+                          <Package className="h-3 w-3 mr-1" />
+                        ) : (
+                          <Car className="h-3 w-3 mr-1" />
+                        )}
                         {isMotoboy ? "Motoboy" : "Viagem"}
                       </Badge>
-                      {isCompleted && (
-                        <Badge className="bg-green-600">
-                          <CheckCircle2 className="h-3 w-3 mr-1" /> Concluída
-                        </Badge>
-                      )}
-                      {isCancelled && (
-                        <Badge variant="destructive">
-                          <XCircle className="h-3 w-3 mr-1" /> Cancelada
-                        </Badge>
-                      )}
+                      <StatusBadge status={ride.status} size="sm" />
                     </div>
                     <span className="text-xs text-muted-foreground">
-                      {format(new Date(ride.updated_at), "dd/MM/yyyy HH:mm", { locale: ptBR })}
+                      {format(new Date(ride.updated_at), "dd/MM/yyyy HH:mm", {
+                        locale: ptBR,
+                      })}
                     </span>
                   </div>
 
                   <div className="space-y-2 mb-4">
                     <div className="flex items-start gap-2">
                       <MapPin className="h-4 w-4 text-green-600 mt-1 flex-shrink-0" />
-                      <p className="text-sm font-medium">{ride.pickup_address || "Origem"}</p>
+                      <p className="text-sm font-medium">
+                        {ride.pickup_address || "Origem"}
+                      </p>
                     </div>
                     <div className="flex items-start gap-2">
                       <MapPin className="h-4 w-4 text-red-600 mt-1 flex-shrink-0" />
-                      <p className="text-sm font-medium">{ride.dropoff_address || "Destino"}</p>
+                      <p className="text-sm font-medium">
+                        {ride.dropoff_address || "Destino"}
+                      </p>
                     </div>
                   </div>
 
@@ -473,7 +477,7 @@ export function RideHistoryUnified({
                         <div className="flex items-center gap-1">
                           <Star className="h-4 w-4 fill-yellow-400 text-yellow-400" />
                           <span className="text-sm">
-                            {typeof ride.driver_rating === 'number'
+                            {typeof ride.driver_rating === "number"
                               ? ride.driver_rating.toFixed(1)
                               : ride.driver_rating.rating?.toFixed(1)}
                           </span>
@@ -482,8 +486,9 @@ export function RideHistoryUnified({
                     </div>
 
                     <div className="text-right">
+                      <p className="text-xs text-muted-foreground">Valor final</p>
                       <p className="text-2xl font-bold text-primary">
-                        {formatBrl(ride.final_price || ride.suggested_price || 0)}
+                        {ride.final_price == null ? "—" : formatBrl(ride.final_price)}
                       </p>
                     </div>
                   </div>
@@ -527,12 +532,11 @@ export function RideHistoryUnified({
         </div>
       )}
 
-      {/* Paginação */}
       {filteredRides.length > pageSize && (
         <div className="flex justify-center gap-2">
           <Button
             variant="outline"
-            onClick={() => setPage((p) => Math.max(1, p - 1))}
+            onClick={() => setPage((currentPage) => Math.max(1, currentPage - 1))}
             disabled={page === 1}
           >
             Anterior
@@ -542,7 +546,7 @@ export function RideHistoryUnified({
           </span>
           <Button
             variant="outline"
-            onClick={() => setPage((p) => p + 1)}
+            onClick={() => setPage((currentPage) => currentPage + 1)}
             disabled={page >= Math.ceil(filteredRides.length / pageSize)}
           >
             Próxima
