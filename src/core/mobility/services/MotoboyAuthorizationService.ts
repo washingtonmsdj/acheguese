@@ -15,8 +15,9 @@ import { profileService } from "@/core/profiles/services/ProfileService";
 import { ProfileMembersService } from "@/core/profiles/services/multi-profile/profileMembersService";
 import { logger } from "@/shared/utils/logger";
 import { mobilityRolloutService } from "./MobilityRolloutService";
-import { MobilityService, mobilityService } from "./MobilityService.impl";
+import { mobilityService } from "./MobilityService.impl";
 import { DriverAvailabilityService } from "./DriverAvailabilityService";
+import { RideOperationalContextReadService } from "./RideOperationalContextReadService";
 
 
 type ErrorLike = { message?: string | null } | null;
@@ -249,7 +250,7 @@ export class MotoboyAuthorizationService {
     }
 
     try {
-      const data = await MobilityService.getRideById(rideId) as { passenger_profile_id?: string } | null;
+      const data = await RideOperationalContextReadService.getLifecycle(rideId);
       if (!data) {
         return {
           allowed: false,
@@ -374,7 +375,6 @@ export class MotoboyAuthorizationService {
       };
     }
 
-    // Resolver entitlement via SSOT ao invés de planTier string
     const { data: subscription } = await mobilityAuthDb
       .from("user_subscriptions")
       .select("id, status_v2")
@@ -392,9 +392,8 @@ export class MotoboyAuthorizationService {
       };
     }
 
-    // Importar EntitlementResolver dinamicamente para evitar ciclo
     const { EntitlementResolver } = await import("@/core/billing/services/EntitlementResolver");
-    
+
     const entitlements = await EntitlementResolver.resolve({
       user_id: userId,
       business_id: businessId,
@@ -445,7 +444,6 @@ export class MotoboyAuthorizationService {
       };
     }
 
-    // Resolver entitlement via SSOT ao invés de planTier string
     const { data: subscription } = await mobilityAuthDb
       .from("user_subscriptions")
       .select("id, status_v2")
@@ -463,9 +461,8 @@ export class MotoboyAuthorizationService {
       };
     }
 
-    // Importar EntitlementResolver dinamicamente para evitar ciclo
     const { EntitlementResolver } = await import("@/core/billing/services/EntitlementResolver");
-    
+
     const entitlements = await EntitlementResolver.resolve({
       user_id: userId,
       business_id: gastronomyContext.businessDataIds[0],
