@@ -9,17 +9,13 @@
  *  - Mutations: mobility.mutations.ts
  *  - Helpers: mobility.helpers.ts (formatacao/classificacao somente)
  *  - Lifecycle: RideStateMachine.ts
- *  - Runtime/admin: MobilityService.impl.ts e MobilityRuntimeService.ts
+ *  - Runtime: MobilityRuntimeService.ts
  *
  *  Nao adicionar logica de negocio diretamente neste arquivo.
  *  Use os modulos especializados acima.
  */
 
-//  ============================================================
-//  RE-EXPORTS DAS NOVAS QUERIES
-//  ============================================================
 export {
-  //  Rides
   getRideById,
   getRidesByPassenger,
   getRidesByDriverProfile,
@@ -30,7 +26,6 @@ export {
   getRideBasicInfo,
   getUserRides,
   getRideAvailableSeats,
-  //  Drivers
   getDriverProfiles,
   getDriverDataIdByProfileId,
   getDriverDataByProfileIds,
@@ -38,28 +33,18 @@ export {
   getDriverEarnings,
   getCompletedRidePaymentsByDriver,
   getDriverCompleteProfile,
-  //  Stats
   getMobilityStats,
   getPassengerRating,
-  //  Chat
   getMobilityConversations,
 } from "./mobility.queries";
 
-//  ============================================================
-//  RE-EXPORTS DAS NOVAS MUTATIONS
-//  ============================================================
 export {
-  //  Rides
   incrementRideViewCount,
   decrementRideSeats,
-  //  Driver management
   updateDriverOnlineStatus,
   checkSuspensionExpiry,
 } from "./mobility.mutations";
 
-//  ============================================================
-//  RE-EXPORTS DOS HELPERS
-//  ============================================================
 export {
   isRideActive,
   calculateEstimatedFare,
@@ -74,19 +59,8 @@ export {
   getRideStatusColor,
 } from "./mobility.helpers";
 
-//  ============================================================
-//  SERVICE READ/WRITE EXPORTS
-//  ============================================================
-export {
-  //  Classe estatica de leitura/admin.
-  MobilityService,
-  //  Instancia singleton de escrita/runtime.
-  mobilityService,
-} from "./MobilityService.impl";
+export { mobilityService } from "./MobilityRuntimeService";
 
-//  ============================================================
-//  RE-EXPORTS DE SERVICES ESPECIALIZADOS
-//  ============================================================
 export {
   DriverAvailabilityService,
   AVAILABILITY_CONFIG,
@@ -120,67 +94,49 @@ export {
   type RideRequest,
 } from "./RideService.impl";
 
-//  ============================================================
-//  CHAT SERVICE - SSOT
-//  ============================================================
 export {
-  //  Queries
   getChatByRideId,
   getMessages,
-  //  Mutations
   sendMessage,
   markMessagesAsRead,
   createChat,
-  //  Types
   type RideChat,
   type ChatMessage,
   type SendMessageInput,
 } from "./ChatService";
 
-//  Runtime chat service exports.
 export { ChatService } from "./ChatService.impl";
 export type { Conversation } from "./ChatService";
 
 export { MobilityLocationService } from "./MobilityLocationService";
 export { MobilityRolloutService } from "./MobilityRolloutService";
 
-//  ============================================================
-//  RE-EXPORTS DE VALIDATORS E ADAPTERS
-//  ============================================================
 export * from "./validators";
 export * from "./RideCanonicalAdapter";
-
-//  ============================================================
-//  FACADE AGREGADA DO MODULO
-//  ============================================================
 
 import * as MobilityQueries from "./mobility.queries";
 import * as MobilityMutations from "./mobility.mutations";
 import * as MobilityHelpers from "./mobility.helpers";
 
 /**
- *  Facade agregada para os hooks de mobilidade.
- *  Todos os metodos delegam para queries, mutations e helpers especializados.
- *  Regras de lifecycle nao pertencem a esta facade; use RideStateMachine.
+ * Facade agregada para os hooks de mobilidade.
+ * Todos os metodos delegam para queries, mutations e helpers especializados.
+ * Regras de lifecycle nao pertencem a esta facade; use RideStateMachine.
  */
 export class MobilityFacade {
-  //  ===== QUERIES =====
   static getRideById = MobilityQueries.getRideById;
   static getRidesByPassenger = MobilityQueries.getRidesByPassenger;
   static getRidesByDriverProfile = MobilityQueries.getRidesByDriverProfile;
-  static getActiveRideByDriverProfile =
-    MobilityQueries.getActiveRideByDriverProfile;
+  static getActiveRideByDriverProfile = MobilityQueries.getActiveRideByDriverProfile;
   static getActiveRide = MobilityQueries.getActiveRide;
   static getRideDispatchData = MobilityQueries.getRideDispatchData;
   static getDriverProfiles = MobilityQueries.getDriverProfiles;
-  static getDriverDataIdByProfileId =
-    MobilityQueries.getDriverDataIdByProfileId;
+  static getDriverDataIdByProfileId = MobilityQueries.getDriverDataIdByProfileId;
   static getDriverDataByProfileIds = MobilityQueries.getDriverDataByProfileIds;
   static getTopDrivers = MobilityQueries.getTopDrivers;
   static getMobilityStats = MobilityQueries.getMobilityStats;
   static getDriverEarnings = MobilityQueries.getDriverEarnings;
-  static getCompletedRidePaymentsByDriver =
-    MobilityQueries.getCompletedRidePaymentsByDriver;
+  static getCompletedRidePaymentsByDriver = MobilityQueries.getCompletedRidePaymentsByDriver;
   static getDriverCompleteProfile = MobilityQueries.getDriverCompleteProfile;
   static getPassengerRating = MobilityQueries.getPassengerRating;
   static getMobilityConversations = MobilityQueries.getMobilityConversations;
@@ -188,12 +144,10 @@ export class MobilityFacade {
   static getRideWithAddresses = MobilityQueries.getRideWithAddresses;
   static getRideBasicInfo = MobilityQueries.getRideBasicInfo;
   static getRideAvailableSeats = MobilityQueries.getRideAvailableSeats;
-  //  ===== MUTATIONS =====
   static incrementRideViewCount = MobilityMutations.incrementRideViewCount;
   static decrementRideSeats = MobilityMutations.decrementRideSeats;
   static updateDriverOnlineStatus = MobilityMutations.updateDriverOnlineStatus;
   static checkSuspensionExpiry = MobilityMutations.checkSuspensionExpiry;
-  //  ===== HELPERS (sem autoridade de lifecycle) =====
   static isRideActive = MobilityHelpers.isRideActive;
   static calculateEstimatedFare = MobilityHelpers.calculateEstimatedFare;
   static calculateDistanceKm = MobilityHelpers.calculateDistanceKm;
