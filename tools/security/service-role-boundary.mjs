@@ -96,7 +96,6 @@ const SERVICE_ROLE_BOUNDARY_SCAN_PREFIXES = [
   'tests/helpers/',
   'tests/operational/',
   'tests/security/',
-  '.kiro/',
 ];
 
 function toPosix(path) {
