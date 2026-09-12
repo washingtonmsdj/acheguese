@@ -54,7 +54,6 @@ export {
   decrementRideSeats,
   //  Driver management
   updateDriverOnlineStatus,
-  updateDriverData,
   checkSuspensionExpiry,
 } from "./mobility.mutations";
 
@@ -193,7 +192,6 @@ export class MobilityFacade {
   static incrementRideViewCount = MobilityMutations.incrementRideViewCount;
   static decrementRideSeats = MobilityMutations.decrementRideSeats;
   static updateDriverOnlineStatus = MobilityMutations.updateDriverOnlineStatus;
-  static updateDriverData = MobilityMutations.updateDriverData;
   static checkSuspensionExpiry = MobilityMutations.checkSuspensionExpiry;
   //  ===== HELPERS (sem autoridade de lifecycle) =====
   static isRideActive = MobilityHelpers.isRideActive;
