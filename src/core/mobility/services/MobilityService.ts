@@ -86,7 +86,7 @@ export {
   type DriverProfile,
   type DriverStats,
   type WeeklyEarning,
-} from "./DriverService.impl";
+} from "./DriverService";
 
 export {
   RideService,
