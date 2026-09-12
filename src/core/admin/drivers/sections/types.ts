@@ -24,10 +24,8 @@ export interface DriverRequest {
   readonly cnh_image_url?: string;
   readonly profileContext?: ProfileContext;
   readonly is_online: boolean;
-  readonly subscription_plan: string;
   readonly rating: number;
   readonly total_rides: number;
-  readonly total_earnings: number;
   readonly created_at: string;
   readonly updated_at?: string;
   readonly neighborhood?: string;
@@ -74,7 +72,6 @@ export interface DriverStats {
   readonly approved: number;
   readonly online: number;
   readonly totalRides: number;
-  readonly totalEarnings: number;
 }
 
 export interface StatItem {
