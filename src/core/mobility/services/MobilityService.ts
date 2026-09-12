@@ -95,6 +95,7 @@ export {
 } from "./RideService";
 
 export {
+  ChatService,
   getChatByRideId,
   getMessages,
   sendMessage,
@@ -103,10 +104,8 @@ export {
   type RideChat,
   type ChatMessage,
   type SendMessageInput,
+  type Conversation,
 } from "./ChatService";
-
-export { ChatService } from "./ChatService.impl";
-export type { Conversation } from "./ChatService";
 
 export { MobilityLocationService } from "./MobilityLocationService";
 export { MobilityRolloutService } from "./MobilityRolloutService";
