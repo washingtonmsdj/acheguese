@@ -37,7 +37,6 @@ export interface ActiveRide {
   origin: string;
   destination: string;
   created_at: string;
-  estimated_duration?: number;
   current_price: number;
 }
 
