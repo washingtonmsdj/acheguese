@@ -20,9 +20,7 @@
 //  ============================================================
 export {
   //  Rides
-  getActiveRides,
   getRideById,
-  getAllRideRequests,
   getRidesByPassenger,
   getRidesByDriverProfile,
   getActiveRideByDriverProfile,
@@ -44,7 +42,8 @@ export {
   getMobilityStats,
   getPassengerRating,
   //  Chat
-  getMobilityConversations,} from "./mobility.queries";
+  getMobilityConversations,
+} from "./mobility.queries";
 
 //  ============================================================
 //  RE-EXPORTS DAS NOVAS MUTATIONS
@@ -167,9 +166,7 @@ import * as MobilityHelpers from "./mobility.helpers";
  */
 export class MobilityFacade {
   //  ===== QUERIES =====
-  static getActiveRides = MobilityQueries.getActiveRides;
   static getRideById = MobilityQueries.getRideById;
-  static getAllRideRequests = MobilityQueries.getAllRideRequests;
   static getRidesByPassenger = MobilityQueries.getRidesByPassenger;
   static getRidesByDriverProfile = MobilityQueries.getRidesByDriverProfile;
   static getActiveRideByDriverProfile =
