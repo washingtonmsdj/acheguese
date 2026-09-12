@@ -1,5 +1,5 @@
+import { supabase } from "@/integrations/supabase";
 import { logger } from "@/shared/utils/logger";
-import { MobilityService } from "@/core/mobility/services/MobilityService.impl";
 import { DriverAvailabilityService } from "@/core/mobility/services/DriverAvailabilityService";
 
 export interface DriverActivityStats {
@@ -15,6 +15,13 @@ export interface DriverActivityStats {
   completedRideMinutesThisMonth: number;
 }
 
+interface RideSession {
+  started_at: string | null;
+  completed_at: string | null;
+}
+
+const DRIVER_ACTIVITY_SESSION_LIMIT = 300;
+
 function minutesBetween(start: string, end: string): number {
   const startDate = new Date(start);
   const endDate = new Date(end);
@@ -24,11 +31,6 @@ function minutesBetween(start: string, end: string): number {
 
   const diffMs = endDate.getTime() - startDate.getTime();
   return diffMs > 0 ? Math.floor(diffMs / 60_000) : 0;
-}
-
-interface RideSession {
-  started_at: string | null;
-  completed_at: string | null;
 }
 
 function completedMinutesSince(
@@ -42,6 +44,22 @@ function completedMinutesSince(
   }, 0);
 }
 
+async function listRecentCompletedRideSessions(
+  driverProfileId: string,
+): Promise<RideSession[]> {
+  const { data, error } = await supabase
+    .from("ride_requests")
+    .select("started_at, completed_at")
+    .eq("driver_profile_id", driverProfileId)
+    .not("started_at", "is", null)
+    .not("completed_at", "is", null)
+    .order("completed_at", { ascending: false })
+    .limit(DRIVER_ACTIVITY_SESSION_LIMIT);
+
+  if (error) throw error;
+  return (data ?? []) as RideSession[];
+}
+
 /**
  * Read model for the driver activity card.
  *
@@ -53,12 +71,11 @@ function completedMinutesSince(
 export class DriverActivityStatsService {
   static async getStats(driverProfileId: string): Promise<DriverActivityStats | null> {
     try {
-      const [availability, rideResult] = await Promise.all([
+      const [availability, rides] = await Promise.all([
         DriverAvailabilityService.getStatus(driverProfileId),
-        MobilityService.getDriverRideSessions(driverProfileId, 300),
+        listRecentCompletedRideSessions(driverProfileId),
       ]);
 
-      const rides = (rideResult ?? []) as RideSession[];
       const completedRideMinutes = rides
         .map((ride) => {
           if (!ride.started_at || !ride.completed_at) return 0;
