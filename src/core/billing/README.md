@@ -22,8 +22,8 @@ Este diretório é o owner horizontal de catálogo comercial, assinaturas e enti
 
 ### Assinatura de Business
 
-- `BusinessSubscriptionService.ts` é o owner explícito de leitura/gateway de assinatura de Business.
-- `SubscriptionService.ts` na raiz é apenas bridge deprecated one-way para callers antigos; não contém persistência nem regra comercial.
+- `BusinessSubscriptionService.ts` é o owner explícito de leitura/gateway de assinatura de Business e o único caminho ativo para esse contrato.
+- callers de Business devem importar `BusinessSubscriptionService` diretamente; a antiga bridge `core/billing/SubscriptionService.ts` foi removida após migração do último caller.
 - upgrade pago delega ao Stripe Checkout; downgrade/gestão delega ao Stripe Customer Portal.
 
 ### Entitlements
@@ -54,6 +54,7 @@ Foram retiradas do runtime por não serem autoridade válida ou por estarem órf
 
 - `src/core/subscription`;
 - `src/core/gastronomy/billing` — não existe mais; a referência antiga no registry era drift documental;
+- `core/billing/SubscriptionService.ts` — bridge deprecated removida após migração do último caller para `BusinessSubscriptionService`;
 - `services/SubscriptionContractService.ts`;
 - `services/CatalogAdminService.ts`;
 - `services/CatalogVersionService.ts`;
