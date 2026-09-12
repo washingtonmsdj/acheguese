@@ -158,13 +158,13 @@ export const TIMEOUTS = {
   
   // UI Animations
   ANIMATION_DELAY_SHORT: 300,              // 300ms - animações rápidas
-  ANIMATION_DELAY_MEDIUM: 1000,            // 1s - animações normais
-  ANIMATION_DELAY_LONG: 2000,              // 2s - feedbacks
-  ANIMATION_DELAY_VERY_LONG: 3000,         // 3s - auto-hide
+  ANIMATION_DELAY_MEDIUM: 1000,             // 1s - animações normais
+  ANIMATION_DELAY_LONG: 2000,               // 2s - feedbacks
+  ANIMATION_DELAY_VERY_LONG: 3000,           // 3s - auto-hide
   
   // Location & GPS
-  GPS_UPDATE_INTERVAL: 10 * 1000,          // 10s - atualização GPS
-  LOCATION_STALE_TIME: 30 * 1000,          // 30s - cache de localização
+  GPS_UPDATE_INTERVAL: 10 * 1000,           // 10s - atualização GPS
+  LOCATION_STALE_TIME: 30 * 1000,           // 30s - cache de localização
 } as const;
 
 // ============================================
@@ -187,6 +187,7 @@ export const MOBILITY_QUERY_KEYS = {
   driverStats: (profileId: string) => ['driver-stats', profileId],
   driverStatsCompact: (profileId: string) => ['driver-stats-compact', profileId],
   driverCompleteProfile: (profileId: string) => ['driver-complete-profile', profileId],
+  driverProfileMetrics: (profileId: string) => ['driver-profile-metrics', profileId],
   
   // Passenger
   passengerRating: (userId: string) => ['passengerRating', userId],
@@ -264,7 +265,7 @@ export const BUSINESS_RULES = {
   
   // Validation
   MIN_DESCRIPTION_LENGTH: 10,              // Mínimo de caracteres na descrição
-  MAX_DESCRIPTION_LENGTH: 1000,            // Máximo de caracteres na descrição
+  MAX_DESCRIPTION_LENGTH: 1000,             // Máximo de caracteres na descrição
 } as const;
 
 // ============================================
