@@ -1,6 +1,6 @@
 /**
- * Diálogo de confirmação de cancelamento de corrida
- * Mostra informações sobre o estado atual e consequências do cancelamento
+ * Diálogo de confirmação de cancelamento de corrida.
+ * Mostra o lifecycle atual sem inventar penalidades ou regras comerciais locais.
  */
 
 import { useState } from "react";
@@ -15,6 +15,12 @@ import {
   AlertDialogTitle,
 } from "@/shared/components/ui/alert-dialog";
 import { AlertTriangle, Info } from "lucide-react";
+import {
+  isClosedRideStatus,
+  isDriverOwnedOpenRideStatus,
+  isPreAcceptRideStatus,
+} from "@/core/mobility/core/RideLifecycleStatus";
+import { getRideStatusLabel } from "@/core/mobility/services/mobility.helpers";
 import { logger } from "@/shared/utils/logger";
 
 interface CancelRideConfirmDialogProps {
@@ -37,7 +43,7 @@ export function CancelRideConfirmDialog({
   const handleConfirm = async () => {
     setIsLoading(true);
     logger.info("CancelRideConfirmDialog - confirmando cancelamento", { rideStatus, isDriver });
-    
+
     try {
       const success = await onConfirm();
       if (success) {
@@ -49,18 +55,23 @@ export function CancelRideConfirmDialog({
   };
 
   const getStatusMessage = () => {
-    switch (rideStatus) {
-      case "requested":
-      case "searching_driver":
-        return "A corrida ainda está buscando um motorista. Você pode cancelar sem penalidades.";
-      case "driver_assigned":
-      case "driver_accepted":
-        return "Um motorista já foi atribuído. O cancelamento pode afetar sua avaliação.";
-      case "driver_arriving":
-        return "O motorista está a caminho. O cancelamento pode resultar em penalidades.";
-      default:
-        return "Tem certeza que deseja cancelar esta corrida?";
+    if (!rideStatus) {
+      return "Tem certeza que deseja solicitar o cancelamento desta corrida?";
     }
+
+    if (isPreAcceptRideStatus(rideStatus)) {
+      return "A corrida ainda está na etapa de busca ou oferta ao motorista. Confirme se deseja solicitar o cancelamento.";
+    }
+
+    if (isDriverOwnedOpenRideStatus(rideStatus)) {
+      return "O motorista já confirmou participação e a corrida entrou na etapa operacional. Confirme se deseja solicitar o cancelamento.";
+    }
+
+    if (isClosedRideStatus(rideStatus)) {
+      return "Esta corrida já está encerrada. O servidor validará a solicitação antes de qualquer alteração.";
+    }
+
+    return "Tem certeza que deseja solicitar o cancelamento desta corrida? A regra final é validada pelo servidor.";
   };
 
   return (
@@ -73,18 +84,14 @@ export function CancelRideConfirmDialog({
           </AlertDialogTitle>
           <AlertDialogDescription className="space-y-3 pt-2">
             <p>{getStatusMessage()}</p>
-            
+
             {rideStatus && (
               <div className="flex items-start gap-2 p-3 bg-muted rounded-lg text-xs">
                 <Info className="h-4 w-4 text-muted-foreground flex-shrink-0 mt-0.5" />
                 <div>
                   <p className="font-medium text-foreground mb-1">Estado atual da corrida:</p>
                   <p className="text-muted-foreground">
-                    {rideStatus === "searching_driver" && "Buscando motorista"}
-                    {rideStatus === "driver_assigned" && "Motorista atribuído"}
-                    {rideStatus === "driver_accepted" && "Motorista aceitou"}
-                    {rideStatus === "driver_arriving" && "Motorista a caminho"}
-                    {!["searching_driver", "driver_assigned", "driver_accepted", "driver_arriving"].includes(rideStatus) && rideStatus}
+                    {getRideStatusLabel(rideStatus)}
                   </p>
                 </div>
               </div>
