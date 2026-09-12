@@ -24,10 +24,18 @@ describe("G84 mobility admin MFA authority", () => {
     expect(broker).toContain("token: string;");
     expect(broker).toContain("token,");
     expect(broker).toContain("async function requireAdminMfa(");
-    expect(broker).toContain(
-      "evaluateUserMfaPolicy(supabaseAdmin, auth.userId, auth.token)",
+
+    const adminMfa = sliceBetween(
+      broker,
+      "async function requireAdminMfa(",
+      "async function getRide(",
     );
-    expect(broker).toContain('mfaPolicy.reason === "enrollment_required"');
+    expect(adminMfa).toContain("evaluateUserMfaPolicy(");
+    expect(adminMfa).toContain("auth.userId");
+    expect(adminMfa).toContain("auth.token");
+    expect(adminMfa).toContain('mfaPolicy.reason === "enrollment_required"');
+    expect(adminMfa).toContain('mfaPolicy.reason === "verification_required"');
+    expect(adminMfa).toContain('mfaPolicy.reason === "satisfied"');
 
     expect(mfaPolicy).toContain("auth.admin.mfa.listFactors");
     expect(mfaPolicy).toContain("getAuthenticatorAssuranceLevel(token)");
