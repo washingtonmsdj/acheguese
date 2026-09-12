@@ -1,4 +1,4 @@
-import React from "react";
+import { useQuery } from "@tanstack/react-query";
 import { useNavigate } from "react-router-dom";
 import {
   ArrowLeft,
@@ -6,7 +6,6 @@ import {
   Car,
   CheckCircle2,
   Clock,
-  Crown,
   FileText,
   MapPin,
   Shield,
@@ -14,12 +13,16 @@ import {
   TrendingUp,
 } from "lucide-react";
 
+import { MOBILITY_QUERY_KEYS, TIMEOUTS } from "@/core/mobility/constants";
+import { mobilityService } from "@/core/mobility/services/runtime";
+import { ReviewsService } from "@/core/reviews/services/ReviewsService";
+import { useServiceAreas } from "@/core/service-areas";
 import { useDriverProfile } from "@/modules/mobility/hooks/useDriverProfile";
 import { useMobilityUrls } from "@/modules/mobility/hooks/useMobilityUrls";
+import { Avatar, AvatarFallback, AvatarImage } from "@/shared/components/ui/avatar";
 import { Badge } from "@/shared/components/ui/badge";
 import { Button } from "@/shared/components/ui/button";
 import { Card } from "@/shared/components/ui/card";
-import { Avatar, AvatarFallback, AvatarImage } from "@/shared/components/ui/avatar";
 import { Skeleton } from "@/shared/components/ui/skeleton";
 import { cn } from "@/shared/utils/cn";
 import { formatBrlNoCents } from "@/shared/utils/currency";
@@ -48,7 +51,38 @@ function formatDate(value: unknown): string {
 export default function DriverProfilePage() {
   const navigate = useNavigate();
   const mobilityUrls = useMobilityUrls();
-  const { driverProfile: profile, isLoading: loading } = useDriverProfile();
+  const {
+    driverProfile: profile,
+    driverProfileId,
+    driverIdentity,
+    isLoading: loading,
+  } = useDriverProfile();
+
+  const { data: profileMetrics, isLoading: metricsLoading } = useQuery({
+    queryKey: MOBILITY_QUERY_KEYS.driverProfileMetrics(driverProfileId ?? ""),
+    queryFn: async () => {
+      if (!driverProfileId) return null;
+
+      const [earnings30d, reviewCount] = await Promise.all([
+        mobilityService.getDriverEarnings(driverProfileId, 30),
+        ReviewsService.getReviewCount(driverProfileId, "driver" as never),
+      ]);
+
+      return {
+        earnings30d,
+        reviewCount: reviewCount ?? 0,
+      };
+    },
+    enabled: !!driverProfileId,
+    staleTime: TIMEOUTS.CACHE_STALE_TIME_LONG,
+  });
+
+  const {
+    data: serviceAreas = [],
+    isLoading: serviceAreasLoading,
+    error: serviceAreasError,
+  } = useServiceAreas(driverProfileId ?? "");
+
   const error = !profile && !loading;
 
   if (loading) {
@@ -86,38 +120,33 @@ export default function DriverProfilePage() {
     );
   }
 
-  const profileAny = profile as Record<string, unknown>;
-  const displayName =
-    (typeof profileAny.display_name === "string" && profileAny.display_name) ||
-    (typeof profileAny.name === "string" && profileAny.name) ||
-    "Motorista";
-  const avatarUrl =
-    typeof profileAny.avatar_url === "string" ? profileAny.avatar_url : undefined;
-  const bio = typeof profileAny.bio === "string" ? profileAny.bio : "";
-  const isPrioritario = profileAny.subscription_plan === "prioritario";
+  const displayName = driverIdentity?.displayName || "Motorista";
+  const avatarUrl = driverIdentity?.avatarUrl || undefined;
+  const bio = driverIdentity?.bio || "";
+  const hasActiveSubscription = profile.subscription_active === true;
 
   const ratingText = formatNumber(profile.rating, 1);
   const totalRidesText =
     typeof profile.total_rides === "number" ? String(profile.total_rides) : "0";
-  const totalEarningsText =
-    typeof profileAny.total_earnings === "number" && !Number.isNaN(profileAny.total_earnings)
-      ? formatBrlNoCents(profileAny.total_earnings)
+  const totalEarningsText = metricsLoading
+    ? "Carregando"
+    : profileMetrics
+      ? formatBrlNoCents(profileMetrics.earnings30d)
       : "Nao informado";
   const acceptanceRateText = formatNumber(profile.acceptance_rate, 0);
-  const totalRatingsText =
-    typeof profileAny.total_ratings === "number"
-      ? String(profileAny.total_ratings)
-      : "0";
+  const totalRatingsText = metricsLoading
+    ? "..."
+    : String(profileMetrics?.reviewCount ?? 0);
 
   const licenseNumber =
     typeof profile.license_number === "string" && profile.license_number
       ? profile.license_number
       : "Nao informado";
   const licenseExpiryText = formatDate(profile.license_expiry);
-  const searchRadiusText =
-    typeof profileAny.max_search_radius_km === "number"
-      ? `${profileAny.max_search_radius_km} km`
-      : "Nao informado";
+
+  const activeServiceAreas = serviceAreas.filter((area) => area.is_active);
+  const primaryServiceArea =
+    activeServiceAreas.find((area) => area.is_primary) ?? activeServiceAreas[0] ?? null;
 
   return (
     <div className="bg-background">
@@ -171,17 +200,13 @@ export default function DriverProfilePage() {
                 <Badge
                   className={cn(
                     "text-xs",
-                    isPrioritario
-                      ? "border-amber-500/30 bg-amber-500/20 text-amber-400"
+                    hasActiveSubscription
+                      ? "border-emerald-500/30 bg-emerald-500/10 text-emerald-400"
                       : "bg-white/10 text-gray-400",
                   )}
                 >
-                  {isPrioritario ? (
-                    <Crown className="mr-1 h-3 w-3" />
-                  ) : (
-                    <Shield className="mr-1 h-3 w-3" />
-                  )}
-                  {isPrioritario ? "Prioritario" : "Padrao"}
+                  <Shield className="mr-1 h-3 w-3" />
+                  {hasActiveSubscription ? "Assinatura ativa" : "Sem assinatura ativa"}
                 </Badge>
                 {profile.is_verified ? (
                   <Badge className="border-emerald-500/20 bg-emerald-500/10 text-xs text-emerald-400">
@@ -220,7 +245,7 @@ export default function DriverProfilePage() {
                   <p className="text-lg font-bold text-emerald-400">
                     {totalEarningsText}
                   </p>
-                  <p className="text-xs text-muted-foreground">Total ganho</p>
+                  <p className="text-xs text-muted-foreground">Ganhos nos ultimos 30 dias</p>
                 </div>
                 <div className="rounded-lg border border-purple-500/10 bg-purple-500/5 p-3 text-center">
                   <Clock className="mx-auto mb-1 h-4 w-4 text-purple-400" />
@@ -286,10 +311,46 @@ export default function DriverProfilePage() {
             <MapPin className="h-5 w-5 text-teal-400" />
             <h2 className="text-lg font-semibold">Area de atuacao</h2>
           </div>
-          <div>
-            <p className="mb-1 text-sm text-muted-foreground">Raio de busca</p>
-            <p className="font-medium">{searchRadiusText}</p>
-          </div>
+
+          {serviceAreasLoading ? (
+            <p className="text-sm text-muted-foreground">Carregando cobertura territorial...</p>
+          ) : serviceAreasError ? (
+            <p className="text-sm text-destructive">Nao foi possivel carregar a area de atuacao.</p>
+          ) : !primaryServiceArea ? (
+            <p className="text-sm text-muted-foreground">
+              Nenhuma area de atuacao ativa configurada para este perfil.
+            </p>
+          ) : (
+            <div className="space-y-4">
+              <div className="rounded-lg border border-border bg-muted/20 p-4">
+                <p className="text-xs uppercase tracking-wide text-muted-foreground">
+                  Area principal
+                </p>
+                <p className="mt-1 font-medium">{primaryServiceArea.location_full_name}</p>
+                <p className="mt-1 text-sm text-muted-foreground">
+                  {primaryServiceArea.radius_km != null
+                    ? `Cobertura em raio de ${primaryServiceArea.radius_km} km`
+                    : "Cobertura territorial cadastrada"}
+                </p>
+              </div>
+
+              <div>
+                <p className="mb-2 text-sm text-muted-foreground">
+                  {activeServiceAreas.length} {activeServiceAreas.length === 1 ? "area ativa" : "areas ativas"}
+                </p>
+                <div className="flex flex-wrap gap-2">
+                  {activeServiceAreas.slice(0, 4).map((area) => (
+                    <Badge key={area.id} variant="outline">
+                      {area.location_name}
+                    </Badge>
+                  ))}
+                  {activeServiceAreas.length > 4 ? (
+                    <Badge variant="secondary">+{activeServiceAreas.length - 4}</Badge>
+                  ) : null}
+                </div>
+              </div>
+            </div>
+          )}
         </Card>
       </div>
     </div>
