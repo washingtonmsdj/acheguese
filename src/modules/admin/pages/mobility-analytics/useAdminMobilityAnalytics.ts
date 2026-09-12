@@ -26,6 +26,11 @@ type DriverAggregation = {
   completedValue: number;
 };
 
+type DriverMetricRow = {
+  id: string;
+  is_verified: boolean;
+};
+
 type RideRating = { rating: number };
 
 const getRideCompletedValue = (ride: AnalyticsRide) =>
@@ -131,7 +136,7 @@ const buildTopDrivers = (
 
 const buildStats = (
   rides: AnalyticsRide[],
-  drivers: DriverProfileLite[],
+  drivers: DriverMetricRow[],
   ratings: RideRating[],
   startIso: string,
 ): { stats: MobilidadeStats; completedRides: AnalyticsRide[] } => {
@@ -214,23 +219,34 @@ export function useAdminMobilityAnalytics(days: number, enabled: boolean) {
         startDate.setDate(startDate.getDate() - (days - 1));
         const startISO = startDate.toISOString();
 
-        const [windowRides, allDrivers, allRatings] = await Promise.all([
+        const [windowRides, driverMetricRows, allRatings] = await Promise.all([
           AdminMobilityAnalyticsReadService.listWindowRides(startISO),
-          AdminMobilityAnalyticsDriverReadService.list(),
+          AdminMobilityAnalyticsDriverReadService.listMetricRows(),
           adminMobilityService.getAllRideRatings() as Promise<RideRating[]>,
         ]);
         const { stats: nextStats, completedRides } = buildStats(
           windowRides,
-          allDrivers,
+          driverMetricRows,
           allRatings,
           startISO,
+        );
+
+        const rankingDriverIds = [
+          ...new Set(
+            completedRides
+              .map((ride) => ride.driver_profile_id)
+              .filter((profileId): profileId is string => Boolean(profileId)),
+          ),
+        ];
+        const rankingDrivers = await AdminMobilityAnalyticsDriverReadService.listDirectory(
+          rankingDriverIds,
         );
 
         if (!isMounted) return;
 
         setStats(nextStats);
         setDailyData(buildDailyData(windowRides, days));
-        setTopDrivers(buildTopDrivers(completedRides, allDrivers));
+        setTopDrivers(buildTopDrivers(completedRides, rankingDrivers));
       } catch (error) {
         logger.error("Error loading mobilidade analytics:", error);
       } finally {
