@@ -1,9 +1,8 @@
 /**
  * AdminBusinessService - Serviço de administração de negócios
  *
- * ✅ SSOT COMPLIANCE: Delega para BusinessService
- * Este serviço encapsula operações administrativas de negócios,
- * delegando para o BusinessService (SSOT) sempre que possível.
+ * SSOT COMPLIANCE: delega leitura/mutação de domínio para BusinessService e
+ * comandos administrativos sensíveis para admin-business-rpc.
  */
 
 import { logger } from "@/shared/utils/logger";
@@ -49,51 +48,18 @@ async function invokeAdminBusinessRpc(
 }
 
 class AdminBusinessServiceClass {
-  private buildUsernameFromName(name: string): string {
-    return name.toLowerCase().replace(/\s+/g, "-");
-  }
   /**
-   * Busca todos os negócios
-   * ✅ SSOT: Delega para BusinessService
-   */
-  async getAllBusinesses(): Promise<AdminBusinessData[]> {
-    try {
-      // Usar BusinessService.getBusinesses sem filtros para obter todos
-      const businesses = await BusinessService.getBusinesses({});
-
-      // Mapear para AdminBusinessData
-      return businesses.map(b => ({
-        id: b.id,
-        name: b.name,
-        description: b.description,
-        category: b.category,
-        owner_profile_id: b.profile_id,
-        is_verified: b.is_verified || false,
-        is_premium: b.is_premium || false,
-        rating: b.rating,
-        total_reviews: b.total_reviews,
-        created_at: b.created_at,
-        updated_at: b.updated_at,
-      }));
-    } catch (error) {
-      logger.error("Error in getAllBusinesses:", error);
-      throw error;
-    }
-  }
-
-  /**
-   * Busca um negócio por ID
-   * ✅ SSOT: Usa BusinessService
+   * Busca um negócio por ID.
+   * SSOT: BusinessService.
    */
   async getBusinessById(id: string): Promise<AdminBusinessData | null> {
     try {
       const business = await BusinessService.getBusinessById(id);
-      
+
       if (!business) {
         return null;
       }
 
-      // Mapear para AdminBusinessData
       return {
         id: business.id,
         name: business.name,
@@ -114,24 +80,25 @@ class AdminBusinessServiceClass {
   }
 
   /**
-   * Atualiza um negócio
-   * ✅ SSOT: Usa BusinessService
+   * Atualiza os campos administrativos delegáveis de um negócio.
+   * SSOT: BusinessService.
    */
   async updateBusiness(
     id: string,
     updates: Partial<AdminBusinessData>,
   ): Promise<AdminBusinessData | null> {
     try {
-      // Mapear AdminBusinessData para formato do BusinessService
       const businessUpdates: Record<string, unknown> = {};
-      
+
       if (updates.name) businessUpdates.name = updates.name;
-      if (updates.description !== undefined) businessUpdates.description = updates.description;
-      if (updates.category !== undefined) businessUpdates.category = updates.category;
+      if (updates.description !== undefined) {
+        businessUpdates.description = updates.description;
+      }
+      if (updates.category !== undefined) {
+        businessUpdates.category = updates.category;
+      }
 
       await BusinessService.updateBusiness(id, businessUpdates);
-      
-      // Retornar dados atualizados
       return await this.getBusinessById(id);
     } catch (error) {
       logger.error("Error in updateBusiness:", error);
@@ -139,10 +106,6 @@ class AdminBusinessServiceClass {
     }
   }
 
-  /**
-   * Deleta um negócio
-   * ✅ SSOT: Usa BusinessService
-   */
   async deleteBusiness(id: string): Promise<boolean> {
     try {
       await BusinessService.deleteBusiness(id);
@@ -153,10 +116,6 @@ class AdminBusinessServiceClass {
     }
   }
 
-  /**
-   * Verifica um negócio
-   * ✅ SSOT: Usa BusinessService.updateBusiness
-   */
   async verifyBusiness(id: string): Promise<boolean> {
     try {
       await invokeAdminBusinessRpc("setVerification", {
@@ -170,10 +129,6 @@ class AdminBusinessServiceClass {
     }
   }
 
-  /**
-   * Remove verificação de um negócio
-   * ✅ SSOT: Usa BusinessService.updateBusiness
-   */
   async unverifyBusiness(id: string): Promise<boolean> {
     try {
       await invokeAdminBusinessRpc("setVerification", {
@@ -187,10 +142,6 @@ class AdminBusinessServiceClass {
     }
   }
 
-  /**
-   * Torna um negócio premium
-   * ✅ SSOT: Usa BusinessService.updateBusiness
-   */
   async makePremium(id: string): Promise<boolean> {
     try {
       await invokeAdminBusinessRpc("setPremium", {
@@ -204,10 +155,6 @@ class AdminBusinessServiceClass {
     }
   }
 
-  /**
-   * Remove status premium de um negócio
-   * ✅ SSOT: Usa BusinessService.updateBusiness
-   */
   async removePremium(id: string): Promise<boolean> {
     try {
       await invokeAdminBusinessRpc("setPremium", {
@@ -221,10 +168,6 @@ class AdminBusinessServiceClass {
     }
   }
 
-  /**
-   * Busca reivindicações de negócios
-   * ✅ SSOT: Usa BusinessService
-   */
   async getBusinessClaims(status?: string) {
     try {
       return await BusinessService.getBusinessClaims(status);
@@ -234,42 +177,30 @@ class AdminBusinessServiceClass {
     }
   }
 
-  /**
-   * Atualiza o status de uma reivindicação
-   * ✅ SSOT: Usa BusinessService.updateBusinessClaimStatus
-   */
   async updateClaimStatus(
     claimId: string,
     status: "aprovada" | "rejeitada",
     reviewNotes?: string,
   ): Promise<boolean> {
-    return BusinessService.updateBusinessClaimStatus(claimId, status, reviewNotes);
+    return BusinessService.updateBusinessClaimStatus(
+      claimId,
+      status,
+      reviewNotes,
+    );
   }
 
-  /**
-   * Carrega o read model admin-only de autoridades, escolas e scopes.
-   * ✅ SSOT: BusinessService -> admin-business-rpc -> RPC server-owned
-   */
   async getInstitutionScopeAdminModel(): Promise<
     BusinessInstitutionScopeAdminModel | null
   > {
     return BusinessService.getBusinessInstitutionScopeAdminModel();
   }
 
-  /**
-   * Concede uma autoridade institucional herdada sobre escola pública.
-   * ✅ SSOT: BusinessService -> admin-business-rpc -> RPC server-owned
-   */
   async grantInstitutionScope(
     input: GrantBusinessInstitutionScopeInput,
   ): Promise<string | null> {
     return BusinessService.grantBusinessInstitutionScope(input);
   }
 
-  /**
-   * Revoga uma autoridade institucional herdada.
-   * ✅ SSOT: BusinessService -> admin-business-rpc -> RPC server-owned
-   */
   async revokeInstitutionScope(
     scopeId: string,
     revocationReason: string,
@@ -280,10 +211,6 @@ class AdminBusinessServiceClass {
     );
   }
 
-  /**
-   * Busca detalhes de um negócio para reivindicação (nome + slug para URL)
-   * ✅ SSOT: Usa BusinessService
-   */
   async getBusinessClaimDetails(businessId: string) {
     try {
       return await BusinessService.getBusinessClaimDetails(businessId);
@@ -293,13 +220,12 @@ class AdminBusinessServiceClass {
     }
   }
 
-  /**
-   * Busca visualizações de um negócio
-   * ✅ SSOT: Usa BusinessService.getBusinessMetrics com suporte a startDate
-   */
   async getBusinessViews(businessId: string, startDate?: string) {
     try {
-      const metrics = await BusinessService.getBusinessMetrics(businessId, startDate);
+      const metrics = await BusinessService.getBusinessMetrics(
+        businessId,
+        startDate,
+      );
       return Array(metrics.totalViews).fill({ id: null, viewed_at: null });
     } catch (error) {
       logger.error("Error in getBusinessViews:", error);
@@ -307,13 +233,12 @@ class AdminBusinessServiceClass {
     }
   }
 
-  /**
-   * Conta visualizações de um negócio
-   * ✅ SSOT: Usa BusinessService.getBusinessMetrics com suporte a startDate
-   */
   async countBusinessViews(businessId: string, startDate?: string) {
     try {
-      const metrics = await BusinessService.getBusinessMetrics(businessId, startDate);
+      const metrics = await BusinessService.getBusinessMetrics(
+        businessId,
+        startDate,
+      );
       return metrics.totalViews;
     } catch (error) {
       logger.error("Error in countBusinessViews:", error);
@@ -321,9 +246,6 @@ class AdminBusinessServiceClass {
     }
   }
 
-  /**
-   * Busca avaliações de um negócio
-   */
   async getBusinessReviews(businessId: string) {
     try {
       const reviews = await ReviewsService.getReviewsForProfile(
@@ -331,7 +253,7 @@ class AdminBusinessServiceClass {
         "business",
       );
 
-      return reviews.map((r) => ({ rating: r.rating }));
+      return reviews.map((review) => ({ rating: review.rating }));
     } catch (error) {
       logger.error("Error fetching business reviews:", error);
       return [];
