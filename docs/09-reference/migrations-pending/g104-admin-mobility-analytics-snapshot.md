@@ -14,18 +14,32 @@ O G109 reduziu o problema sem DDL:
 - a projeção de corrida ficou limitada a lifecycle, valor concluído e `driver_profile_id`;
 - rotas, endereços, identidade de passageiro, notas, metadata e presença operacional não entram no payload de analytics.
 
+G113/G114 reduziram também a superfície de motorista:
+
+- `AdminMobilityAnalyticsDriverReadService.listMetricRows()` lê globalmente somente `profile_id + is_verified` para cardinalidade/verificação;
+- identidade (`name/display_name/avatar_url`) é carregada separadamente por `listDirectory(profileIds)` apenas para motoristas que aparecem nas corridas concluídas da janela;
+- o antigo `adminMobilityService.getAllDriversComplete()` e seu DTO global foram removidos fisicamente.
+
 Ainda permanecem globais no browser enquanto este gate estiver pendente:
 
-- `adminMobilityService.getAllDriversComplete()` para contagem/verificação e identidade mínima do ranking;
-- `adminMobilityService.getAllRideRatings()` porque a UI atual declara explicitamente **“Avaliação média geral”** e janelar ratings mudaria a semântica do produto.
+- linhas mínimas `profile_id + is_verified` de todos os motoristas;
+- `adminMobilityService.getAllRideRatings()` porque a UI atual declara explicitamente **“Avaliação média geral”** e janelar ratings mudaria a semântica do produto;
+- a agregação final dessas métricas continua sendo feita no cliente.
 
-Portanto G109 é uma redução de custo e exposição, não substitui G104. O custo dos dois conjuntos globais remanescentes ainda cresce com a base, e a agregação de métricas continua no cliente.
+Portanto G109/G113/G114 reduzem custo e exposição, mas não substituem G104. O custo dos conjuntos globais remanescentes ainda cresce com a base.
 
-O G103 corrigiu a semântica dessas métricas; o G104 deve mover a agregação para uma fronteira server-side sem alterar essa semântica.
+O G103 corrigiu a semântica das métricas; o G104 deve mover a agregação para uma fronteira server-side sem alterá-la.
 
 ## Bloqueio remoto atual
 
-O projeto Supabase `xhdowzacfujckjelqhtd` estava `ACTIVE_HEALTHY` no último estado observado, porém o caminho SQL/metadata encerrava por timeout inclusive para `select 1` e geração de tipos no último preflight confirmado.
+O projeto Supabase `xhdowzacfujckjelqhtd` continua inacessível pelo caminho SQL usado para preflight.
+
+Em 2026-09-12 foram repetidos dois testes via conexão Supabase direta:
+
+1. preflight de metadata/schema;
+2. `select 1 as ok` isolado.
+
+Ambos encerraram com `Connection terminated due to connection timeout`.
 
 Por isso este documento **não é uma migration canônica** e nenhum DDL foi aplicado.
 
@@ -61,7 +75,7 @@ Criar uma função de domínio:
 Características obrigatórias:
 
 - `STABLE`;
-- `SECURITY DEFINER` apenas porque o snapshot administrativo precisa agregar globalmente sem expor linhas base ao browser;
+- `SECURITY DEFINER` somente porque o snapshot administrativo precisa agregar globalmente sem expor linhas base ao browser;
 - `SET search_path TO ''`;
 - `SET statement_timeout TO '5s'`;
 - `auth.uid()` obrigatório;
@@ -74,9 +88,11 @@ Características obrigatórias:
 - `GRANT EXECUTE ... TO authenticated, service_role` somente após o check interno de admin;
 - comentários e verificação de grants no final da migration.
 
+A escolha de `SECURITY DEFINER` só é aceitável com os controles acima porque o snapshot precisa atravessar RLS para agregação administrativa global. Não usar `SECURITY DEFINER` como correção genérica de permissão.
+
 ## Contrato de saída
 
-O payload deve substituir exatamente o trabalho hoje feito no hook G103/G109:
+O payload deve substituir exatamente o trabalho hoje feito no hook G103/G109/G113:
 
 ```ts
 {
@@ -176,16 +192,17 @@ Não adicionar índices por suposição: a escolha final depende do schema/estat
 
 ## Cutover do frontend
 
-`AdminMobilityAnalyticsReadService` já existe desde o G109 como fronteira estável para o frontend. Enquanto G104 estiver bloqueado, ele lê apenas as linhas de corrida potencialmente relevantes à janela.
+`AdminMobilityAnalyticsReadService` e `AdminMobilityAnalyticsDriverReadService` são fronteiras transitórias de redução de exposição enquanto G104 está bloqueado.
 
 Depois que a migration for aplicada e validada:
 
-1. trocar a implementação de `AdminMobilityAnalyticsReadService` para `mobility_get_admin_analytics_snapshot(p_days)`;
+1. trocar a implementação da fronteira de analytics para `mobility_get_admin_analytics_snapshot(p_days)`;
 2. `useAdminMobilityAnalytics` passa a consumir um único snapshot agregado;
-3. remover do hook `getAllDriversComplete()` e `getAllRideRatings()`;
-4. remover `getAllRideRatings()` se a busca confirmar que ficou sem outros consumidores;
-5. manter/remover `getAllDriversComplete()` conforme os consumidores reais restantes, nunca por suposição;
-6. substituir o ratchet G109 por um ratchet que proíba qualquer leitura de linha base dentro do hook de analytics.
+3. remover do hook `AdminMobilityAnalyticsDriverReadService.listMetricRows()` e `adminMobilityService.getAllRideRatings()`;
+4. remover `AdminMobilityAnalyticsDriverReadService.listDirectory()` se o RPC já retornar `topDrivers` completo e a busca confirmar ausência de outros consumidores;
+5. remover `getAllRideRatings()` se a busca confirmar que ficou sem outros consumidores;
+6. manter removido `getAllDriversComplete()` — G114 já aposentou definitivamente esse reader;
+7. substituir os ratchets transitórios G109/G113 por um ratchet que proíba qualquer leitura de linha base dentro do hook de analytics.
 
 ## Preflight obrigatório para promoção
 
@@ -199,9 +216,9 @@ Depois que a migration for aplicada e validada:
 8. aplicar em ambiente autorizado;
 9. testar não-admin => `42501`/negado;
 10. testar admin => snapshot sem PII;
-11. comparar numericamente snapshot server-side vs G103/G109 em 7/30/90 dias;
+11. comparar numericamente snapshot server-side vs G103/G109/G113 em 7/30/90 dias;
 12. verificar query plan/advisors;
-13. só então fazer o cutover do hook e remover readers globais sem consumidores.
+13. só então fazer o cutover do hook e remover readers globais remanescentes sem consumidores.
 
 ## Estado deste gate
 
