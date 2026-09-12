@@ -1,7 +1,7 @@
 /**
  * Canonical cross-domain entrypoint for mobility runtime services.
  */
-export { mobilityService, MobilityService } from '@/core/mobility/services/MobilityService.impl';
+export { mobilityService } from '@/core/mobility/services/MobilityRuntimeService';
 export { DriverAvailabilityService } from '@/core/mobility/services/DriverAvailabilityService';
 export {
   MobilityRolloutService,
