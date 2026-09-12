@@ -117,7 +117,8 @@ export default function TrackRidePage() {
   }
 
   const isActiveTracking = isDriverOwnedOpenRideStatus(data.status);
-  const hasDriver = Boolean(data.driverName || data.vehicleModel || data.vehiclePlate);
+  const hasDriver =
+    isActiveTracking && Boolean(data.driverName || data.vehicleModel || data.vehiclePlate);
 
   return (
     <div className="min-h-screen bg-background">
