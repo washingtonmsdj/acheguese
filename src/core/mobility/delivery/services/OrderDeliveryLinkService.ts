@@ -8,9 +8,12 @@
  */
 
 import { logger } from "@/shared/utils/logger";
-import type { RideRequest } from "@/core/mobility/types/types";
-import { MobilityService } from "@/core/mobility/services/runtime";
+import { isOpenRideStatus } from "@/core/mobility/core/RideLifecycleStatus";
 import { OrderDeliverySSOTService } from "./OrderDeliverySSOTService";
+import {
+  OrderDeliveryLinkReadService,
+  type OrderDeliveryLinkRide,
+} from "./OrderDeliveryLinkReadService";
 import { LOGISTICS_STATUS, type LogisticsStatus } from "../logistics/types";
 import type { DeliveryProof } from "../proof-of-delivery/types";
 import {
@@ -24,17 +27,17 @@ export interface OrderDeliveryLink {
   created_at: string;
 }
 
-interface LinkedRideRecord {
-  id: string;
-  status?: string | null;
-  ride_mode?: string | null;
-  source_type?: string | null;
-  source_id?: string | null;
-  passenger_profile_id?: string | null;
-  driver_profile_id?: string | null;
+export type OrderDeliveryTrackingSnapshot = OrderDeliveryLinkRide;
+
+type LinkedRideRecord = Omit<OrderDeliveryLinkRide, "proof_of_delivery"> & {
   proof_of_delivery?: DeliveryProof | null;
-  final_price?: number | null;
-  suggested_price?: number | null;
+};
+
+function toLinkedRideRecord(ride: OrderDeliveryLinkRide): LinkedRideRecord {
+  return {
+    ...ride,
+    proof_of_delivery: (ride.proof_of_delivery as DeliveryProof | null) ?? null,
+  };
 }
 
 const FORWARD_LOGISTICS_PATH: LogisticsStatus[] = [
@@ -48,12 +51,13 @@ const FORWARD_LOGISTICS_PATH: LogisticsStatus[] = [
 
 export class OrderDeliveryLinkService {
   /**
-   * Busca ride_request vinculado a um order
+   * Busca o snapshot minimo da entrega vinculado a um order.
    */
-  static async getRideRequestByOrderId(orderId: string): Promise<RideRequest | null> {
+  static async getRideRequestByOrderId(
+    orderId: string,
+  ): Promise<OrderDeliveryTrackingSnapshot | null> {
     try {
-      const ride = await MobilityService.getLatestRideBySource('gastronomy', orderId);
-      return (ride as RideRequest | null) ?? null;
+      return await OrderDeliveryLinkReadService.getLatestByOrderId(orderId);
     } catch (error) {
       logger.error('[OrderDeliveryLinkService] Erro ao buscar ride_request', error as Error, {
         order_id: orderId,
@@ -63,11 +67,11 @@ export class OrderDeliveryLinkService {
   }
 
   /**
-   * Busca order vinculado a um ride_request
+   * Busca order vinculado a um ride_request.
    */
   static async getOrderByRideRequestId(rideRequestId: string): Promise<string | null> {
     try {
-      return await MobilityService.getRideSourceIdById(rideRequestId, 'gastronomy');
+      return await OrderDeliveryLinkReadService.getOrderIdByRideId(rideRequestId);
     } catch (error) {
       logger.error('[OrderDeliveryLinkService] Erro ao buscar order', error as Error, {
         ride_request_id: rideRequestId,
@@ -77,30 +81,15 @@ export class OrderDeliveryLinkService {
   }
 
   /**
-   * Verifica se order tem ride_request ativo
+   * Verifica se order tem ride_request operacionalmente aberto.
    */
   static async hasActiveDelivery(orderId: string): Promise<boolean> {
     const rideRequest = await this.getRideRequestByOrderId(orderId);
-    
-    if (!rideRequest) return false;
-
-    const activeStatuses = [
-      'requested',
-      'searching_driver',
-      'driver_assigned',
-      'driver_accepted',
-      'driver_arriving',
-      'pickup_confirmed',
-      'in_delivery',
-    ];
-
-    return activeStatuses.includes(rideRequest.status);
+    return Boolean(rideRequest && isOpenRideStatus(rideRequest.status));
   }
 
   /**
-   * Mapeia status de ride_request para logistics_status de order
-   * 
-   * Usado para sincronizar estados entre os dois sistemas
+   * Mapeia status de ride_request para logistics_status de order.
    */
   static mapRideStatusToLogisticsStatus(rideStatus: string): LogisticsStatus | null {
     switch (rideStatus) {
@@ -135,7 +124,7 @@ export class OrderDeliveryLinkService {
   }
 
   /**
-   * Mapeia logistics_status de order para status de ride_request
+   * Mapeia logistics_status de order para status de ride_request.
    */
   static mapLogisticsStatusToRideStatus(logisticsStatus: string): string | null {
     switch (logisticsStatus) {
@@ -163,7 +152,8 @@ export class OrderDeliveryLinkService {
 
   /**
    * Sincroniza order.logistics_status a partir do status canonico da entrega.
-   * Nao quebra a operacao do motoboy se o pedido estiver em estado incompatível; registra log e retorna false.
+   * Nao quebra a operacao do motoboy se o pedido estiver em estado incompativel;
+   * registra log e retorna false.
    */
   static async syncRideStatusToOrder(params: {
     rideId: string;
@@ -172,12 +162,21 @@ export class OrderDeliveryLinkService {
     reason?: string;
   }): Promise<boolean> {
     try {
-      const ride = (await MobilityService.getRideById(params.rideId)) as LinkedRideRecord | null;
-      if (!ride || ride.ride_mode !== "motoboy" || ride.source_type !== "gastronomy" || !ride.source_id) {
+      const row = await OrderDeliveryLinkReadService.getByRideId(params.rideId);
+      if (!row) return false;
+      const ride = toLinkedRideRecord(row);
+
+      if (
+        ride.ride_mode !== "motoboy" ||
+        ride.source_type !== "gastronomy" ||
+        !ride.source_id
+      ) {
         return false;
       }
 
-      const targetStatus = this.mapRideStatusToLogisticsStatus(params.rideStatus || ride.status || "");
+      const targetStatus = this.mapRideStatusToLogisticsStatus(
+        params.rideStatus || ride.status || "",
+      );
       if (!targetStatus || targetStatus === LOGISTICS_STATUS.PENDING) {
         return false;
       }
@@ -217,13 +216,16 @@ export class OrderDeliveryLinkService {
           actorProfileId,
           courierProfileId: ride.driver_profile_id || undefined,
           reason: params.reason || `Sincronizado pela entrega ${ride.id}`,
-                  proof: ride.proof_of_delivery ?? undefined,
+          proof: ride.proof_of_delivery ?? undefined,
         });
 
         if (!result) return false;
       }
 
-      if (targetStatus === LOGISTICS_STATUS.DELIVERED || targetStatus === LOGISTICS_STATUS.FAILED) {
+      if (
+        targetStatus === LOGISTICS_STATUS.DELIVERED ||
+        targetStatus === LOGISTICS_STATUS.FAILED
+      ) {
         await this.persistDeliveryFinancialSnapshot({
           orderId: ride.source_id,
           actorProfileId,
@@ -246,7 +248,11 @@ export class OrderDeliveryLinkService {
     targetStatus: LogisticsStatus,
   ): LogisticsStatus[] {
     if (currentStatus === targetStatus) return [];
-    if (currentStatus === LOGISTICS_STATUS.DELIVERED || currentStatus === LOGISTICS_STATUS.CANCELED || currentStatus === LOGISTICS_STATUS.FAILED) {
+    if (
+      currentStatus === LOGISTICS_STATUS.DELIVERED ||
+      currentStatus === LOGISTICS_STATUS.CANCELED ||
+      currentStatus === LOGISTICS_STATUS.FAILED
+    ) {
       return [];
     }
     if (targetStatus === LOGISTICS_STATUS.CANCELED || targetStatus === LOGISTICS_STATUS.FAILED) {
@@ -291,13 +297,13 @@ export class OrderDeliveryLinkService {
                 order_id: params.orderId,
                 actor_profile_id: params.actorProfileId,
                 reason: params.reason,
-            })
+              })
             : params.status === LOGISTICS_STATUS.FAILED
               ? await OrderDeliverySSOTService.failOrder({
                   order_id: params.orderId,
                   actor_profile_id: params.actorProfileId,
                   reason: params.reason,
-            })
+                })
               : await OrderDeliverySSOTService.transitionLogisticsStatus({
                   order_id: params.orderId,
                   to_status: params.status,
