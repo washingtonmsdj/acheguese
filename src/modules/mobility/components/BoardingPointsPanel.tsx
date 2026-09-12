@@ -35,7 +35,6 @@ export interface BoardingPoint {
     | "outro";
   address: string;
   distance?: string;
-  popular: boolean;
   rides_count: number;
 }
 
@@ -102,7 +101,6 @@ function mapSummaryToBoardingPoint(point: BoardingPointSummary): BoardingPoint {
     description: point.description,
     type: point.type,
     address: point.address,
-    popular: point.popular,
     rides_count: point.rides_count,
   };
 }
@@ -119,7 +117,7 @@ export function BoardingPointsPanel({
 
   const { data: pointsData = [] } = useQuery({
     queryKey: ["mobility", "boarding-points"],
-    queryFn: () => BoardingPointService.listMostUsedPoints(20),
+    queryFn: () => BoardingPointService.listRecentFrequentPoints(20),
     staleTime: 5 * 60 * 1000,
   });
 
@@ -167,7 +165,7 @@ export function BoardingPointsPanel({
         <div>
           <h3 className="text-sm font-bold text-white">Pontos de embarque</h3>
           <p className="text-xs text-gray-500 mt-0.5">
-            Locais recorrentes para facilitar o encontro com o motorista
+            Locais recorrentes nas corridas recentes para facilitar o encontro com o motorista
           </p>
         </div>
         {!selectable && (
@@ -251,14 +249,6 @@ export function BoardingPointsPanel({
                   : "border-white/10 bg-[#1E2529] hover:border-white/20",
               )}
             >
-              {point.popular && (
-                <div className="absolute top-3 right-3">
-                  <Badge className="bg-amber-500/20 text-amber-400 border-amber-500/20 text-[0.55rem] px-1.5 h-4">
-                    Popular
-                  </Badge>
-                </div>
-              )}
-
               <div className="flex items-start gap-3">
                 <div
                   className={cn(
@@ -299,7 +289,7 @@ export function BoardingPointsPanel({
 
                   <div className="flex items-center gap-3 mt-1.5">
                     <span className="text-xs text-gray-500">
-                      {point.rides_count} corridas neste ponto
+                      {point.rides_count} ocorrencias na amostra recente
                     </span>
                   </div>
                 </div>
@@ -322,4 +312,3 @@ export function BoardingPointsPanel({
     </div>
   );
 }
-
