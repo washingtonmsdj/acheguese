@@ -6,10 +6,22 @@
  * compoe identidades, lifecycle e snapshots administrativos.
  */
 
-import { logger } from "@/shared/utils/logger";
-import { MobilityAdminQueryService } from "@/core/admin/services/MobilityAdminQueryService";
 import { AdminDriverLifecycleMetricsService } from "@/core/admin/services/AdminDriverLifecycleMetricsService";
+import { MobilityAdminQueryService } from "@/core/admin/services/MobilityAdminQueryService";
+import {
+  LEGACY_CLOSED_RIDE_STATUSES,
+  QUERYABLE_OPEN_RIDE_STATUSES,
+} from "@/core/mobility/core/RideLifecycleStatus";
+import { RIDE_STATE } from "@/core/mobility/core/RideStateMachine";
 import { profileService } from "@/core/profiles/services/ProfileService";
+import { logger } from "@/shared/utils/logger";
+
+const ADMIN_CANCELLED_RIDE_STATUSES = new Set<string>([
+  RIDE_STATE.CANCELLED_BY_DRIVER,
+  RIDE_STATE.CANCELLED_BY_PASSENGER,
+  ...LEGACY_CLOSED_RIDE_STATUSES,
+]);
+const ADMIN_OPEN_RIDE_STATUSES = new Set<string>(QUERYABLE_OPEN_RIDE_STATUSES);
 
 export interface AdminDriverData {
   id: string;
@@ -39,10 +51,12 @@ export interface AdminRideData {
 
 export interface AdminRideStats {
   total_rides: number;
+  open_rides: number;
   completed_rides: number;
   cancelled_rides: number;
-  pending_rides: number;
-  total_revenue: number;
+  failed_rides: number;
+  expired_rides: number;
+  completed_value: number;
 }
 
 export type AdminMobilityOperationalFilter =
@@ -79,7 +93,7 @@ class AdminMobilityServiceClass {
       const profileIds = [...new Set(data.map((driver) => driver.profile_id))];
 
       const [profiles, lifecycleByProfile] = await Promise.all([
-        profileService.getProfilesSummary(profileIds),
+        profileIds.length ? profileService.getProfilesSummary(profileIds) : Promise.resolve([]),
         AdminDriverLifecycleMetricsService.load(profileIds),
       ]);
       const profilesMap = new Map(profiles.map((profile) => [profile.id, profile]));
@@ -119,15 +133,19 @@ class AdminMobilityServiceClass {
   async getRideStats(): Promise<AdminRideStats> {
     try {
       const rides = await MobilityAdminQueryService.getRideStats();
+      const completedRides = rides.filter((ride) => ride.status === RIDE_STATE.COMPLETED);
 
       return {
         total_rides: rides.length,
-        completed_rides: rides.filter((ride) => ride.status === "completed").length,
-        cancelled_rides: rides.filter((ride) => ride.status === "cancelled").length,
-        pending_rides: rides.filter((ride) => ride.status === "pending").length,
-        total_revenue: rides
-          .filter((ride) => ride.status === "completed" && ride.final_price)
-          .reduce((sum, ride) => sum + (ride.final_price || 0), 0),
+        open_rides: rides.filter((ride) => ADMIN_OPEN_RIDE_STATUSES.has(ride.status)).length,
+        completed_rides: completedRides.length,
+        cancelled_rides: rides.filter((ride) => ADMIN_CANCELLED_RIDE_STATUSES.has(ride.status)).length,
+        failed_rides: rides.filter((ride) => ride.status === RIDE_STATE.FAILED).length,
+        expired_rides: rides.filter((ride) => ride.status === RIDE_STATE.EXPIRED).length,
+        completed_value: completedRides.reduce(
+          (sum, ride) => sum + (ride.final_price ?? 0),
+          0,
+        ),
       };
     } catch (error) {
       logger.error("Error in getRideStats:", error);
