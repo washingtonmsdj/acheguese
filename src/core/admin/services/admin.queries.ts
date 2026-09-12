@@ -5,16 +5,24 @@
  * Não contém mutações.
  */
 
-import { logger } from "@/shared/utils/logger";
-import { adminStatsService } from "@/core/admin/services/AdminStatsService";
-import { adminMobilityService } from "@/core/admin/services/AdminMobilityService";
 import {
   adminCommunityAlertsService,
   adminCommunityIssuesService,
   adminNotificationsService,
 } from "@/core/admin";
-import { profileService } from "@/core/profiles/services/ProfileService";
 import { adminClassifiedsService } from "@/core/admin/services/AdminClassifiedsService";
+import { AdminDriverModerationService } from "@/core/admin/services/AdminDriverModerationService";
+import { AdminDriverPresenceReadService } from "@/core/admin/services/AdminDriverPresenceReadService";
+import { adminMobilityService } from "@/core/admin/services/AdminMobilityService";
+import { adminStatsService } from "@/core/admin/services/AdminStatsService";
+import {
+  LEGACY_RIDE_STATUS_ALIASES,
+  QUERYABLE_CLOSED_RIDE_STATUSES,
+  QUERYABLE_OPEN_RIDE_STATUSES,
+} from "@/core/mobility/core/RideLifecycleStatus";
+import { RIDE_STATE } from "@/core/mobility/core/RideStateMachine";
+import { profileService } from "@/core/profiles/services/ProfileService";
+import { logger } from "@/shared/utils/logger";
 import type {
   ActiveRide,
   AdminModuleCoverage,
@@ -27,23 +35,18 @@ import type {
 
 type RawRecord = Record<string, unknown>;
 
-const ACTIVE_RIDE_STATUSES = new Set([
-  "pending",
-  "requested",
-  "searching_driver",
-  "driver_assigned",
-  "driver_accepted",
-  "driver_on_the_way",
-  "driver_arriving",
-  "driver_arrived",
-  "passenger_on_board",
-  "in_progress",
+const ACTIVE_RIDE_STATUS_SET = new Set<string>(QUERYABLE_OPEN_RIDE_STATUSES);
+const CLOSED_RIDE_STATUS_SET = new Set<string>(QUERYABLE_CLOSED_RIDE_STATUSES);
+const AWAITING_DRIVER_TARGET_STATES = new Set<string>([
+  RIDE_STATE.REQUESTED,
+  RIDE_STATE.SEARCHING_DRIVER,
+  RIDE_STATE.DRIVER_ASSIGNED,
 ]);
-
-const PENDING_RIDE_STATUSES = new Set([
-  "pending",
-  "requested",
-  "searching_driver",
+const AWAITING_DRIVER_STATUS_SET = new Set<string>([
+  ...AWAITING_DRIVER_TARGET_STATES,
+  ...Object.entries(LEGACY_RIDE_STATUS_ALIASES)
+    .filter(([, canonical]) => AWAITING_DRIVER_TARGET_STATES.has(canonical))
+    .map(([legacy]) => legacy),
 ]);
 
 function getNumeric(value: unknown, fallback = 0): number {
@@ -93,8 +96,8 @@ function toOnlineDriver(raw: RawRecord): OnlineDriver {
     rating: Number(rating.toFixed(2)),
     total_rides: totalRides,
     last_location_update:
-      getString(raw.last_location_update) || getString(raw.updated_at) || undefined,
-    is_available: raw.is_available === false ? false : true,
+      getString(raw.last_location_update) || getString(raw.last_seen_at) || undefined,
+    is_available: raw.is_available === true,
     current_ride_id: getString(raw.current_ride_id) || undefined,
   };
 }
@@ -105,7 +108,7 @@ function toActiveRide(raw: RawRecord, namesByProfileId: Map<string, string>): Ac
 
   return {
     id: getString(raw.id),
-    status: getString(raw.status, "pending"),
+    status: getString(raw.status, RIDE_STATE.REQUESTED),
     passenger_name: namesByProfileId.get(passengerProfileId) || "Passageiro",
     driver_name: namesByProfileId.get(driverProfileId) || "Aguardando motorista",
     origin:
@@ -147,7 +150,7 @@ function getSystemHealth(metrics: {
   driversOnline: number;
   ridesPending: number;
   completionRate: number;
-  ridesTotal: number;
+  resolvedRides: number;
 }): RealtimeMetrics["systemHealth"] {
   if (metrics.driversOnline === 0 && metrics.ridesPending > 0) {
     return "critical";
@@ -157,7 +160,7 @@ function getSystemHealth(metrics: {
     return "warning";
   }
 
-  if (metrics.ridesTotal > 10 && metrics.completionRate < 60) {
+  if (metrics.resolvedRides > 10 && metrics.completionRate < 60) {
     return "warning";
   }
 
@@ -183,25 +186,33 @@ export async function getRealtimeMetrics(): Promise<{
   startOfMonth.setDate(startOfMonth.getDate() - 30);
 
   try {
-    const [allRidesRaw, allDriversRaw] = await Promise.all([
+    const [allRidesRaw, allDriversRaw, onlinePresence] = await Promise.all([
       adminMobilityService.getAllRides(),
       adminMobilityService.getAllDriversComplete(),
+      AdminDriverPresenceReadService.listOnline(),
     ]);
 
     const rides = (allRidesRaw as unknown as RawRecord[]) || [];
     const allDrivers = (allDriversRaw as RawRecord[]) || [];
-    const onlineDrivers = allDrivers
-      .filter((driver) => {
-        const online =
-          isTruthy(driver.is_online) ||
-          isTruthy(driver.online) ||
-          getString(driver.status).toLowerCase() === "online";
-        return online;
-      })
-      .map(toOnlineDriver);
+    const driverByProfileId = new Map(
+      allDrivers.map((driver) => [
+        getString(driver.profile_id) || getString(driver.id),
+        driver,
+      ]),
+    );
+    const onlineDrivers = onlinePresence.map((presence) =>
+      toOnlineDriver({
+        ...(driverByProfileId.get(presence.profile_id) ?? {}),
+        profile_id: presence.profile_id,
+        is_available: presence.is_available,
+        last_location_update: presence.last_location_update,
+        last_seen_at: presence.last_seen_at,
+        current_ride_id: presence.active_ride_id,
+      }),
+    );
 
     const activeRidesRaw = rides.filter((ride) =>
-      ACTIVE_RIDE_STATUSES.has(getString(ride.status).toLowerCase()),
+      ACTIVE_RIDE_STATUS_SET.has(getString(ride.status).toLowerCase()),
     );
 
     const profileIds = [
@@ -219,19 +230,22 @@ export async function getRealtimeMetrics(): Promise<{
     const activeRides = activeRidesRaw.map((ride) => toActiveRide(ride, namesByProfileId));
 
     const ridesPending = rides.filter((ride) =>
-      PENDING_RIDE_STATUSES.has(getString(ride.status).toLowerCase()),
+      AWAITING_DRIVER_STATUS_SET.has(getString(ride.status).toLowerCase()),
     ).length;
 
     const ridesCompleted = rides.filter(
-      (ride) => getString(ride.status).toLowerCase() === "completed",
+      (ride) => getString(ride.status).toLowerCase() === RIDE_STATE.COMPLETED,
     );
+    const resolvedRidesCount = rides.filter((ride) =>
+      CLOSED_RIDE_STATUS_SET.has(getString(ride.status).toLowerCase()),
+    ).length;
 
     const ridesToday = rides.filter((ride) => {
       const createdAt = Date.parse(getString(ride.created_at));
       return Number.isFinite(createdAt) && createdAt >= startOfToday.getTime();
     }).length;
 
-    const getRevenue = (startDate: Date) =>
+    const getCompletedValue = (startDate: Date) =>
       ridesCompleted
         .filter((ride) => {
           const completedAtRaw =
@@ -243,25 +257,27 @@ export async function getRealtimeMetrics(): Promise<{
         })
         .reduce(
           (sum, ride) =>
-            sum +
-            getNumeric(
-              ride.final_price,
-              getNumeric(ride.actual_fare, getNumeric(ride.suggested_price, 0)),
-            ),
+            sum + getNumeric(ride.final_price, getNumeric(ride.actual_fare, 0)),
           0,
         );
 
-    const totalRides = rides.length;
     const completedCount = ridesCompleted.length;
     const completionRate =
-      totalRides > 0 ? Number(((completedCount / totalRides) * 100).toFixed(1)) : 0;
+      resolvedRidesCount > 0
+        ? Number(((completedCount / resolvedRidesCount) * 100).toFixed(1))
+        : 0;
 
     const avgRating =
       allDrivers.length > 0
         ? Number(
             (
               allDrivers.reduce(
-                (sum, driver) => sum + getNumeric((driver as RawRecord).avg_rating, getNumeric((driver as RawRecord).rating, 0)),
+                (sum, driver) =>
+                  sum +
+                  getNumeric(
+                    (driver as RawRecord).avg_rating,
+                    getNumeric((driver as RawRecord).rating, 0),
+                  ),
                 0,
               ) / allDrivers.length
             ).toFixed(2),
@@ -286,14 +302,14 @@ export async function getRealtimeMetrics(): Promise<{
       isTruthy((driver as RawRecord).is_verified),
     ).length;
     const driversTotal = allDrivers.length;
-    const driversOnline = onlineDrivers.length;
+    const driversOnline = onlinePresence.length;
     const driversPending = Math.max(driversTotal - driversVerified, 0);
 
     const systemHealth = getSystemHealth({
       driversOnline,
       ridesPending,
       completionRate,
-      ridesTotal: totalRides,
+      resolvedRides: resolvedRidesCount,
     });
 
     return {
@@ -306,9 +322,9 @@ export async function getRealtimeMetrics(): Promise<{
         ridesPending,
         ridesToday,
         ridesCompleted: completedCount,
-        revenueToday: getRevenue(startOfToday),
-        revenueWeek: getRevenue(startOfWeek),
-        revenueMonth: getRevenue(startOfMonth),
+        completedValueToday: getCompletedValue(startOfToday),
+        completedValueWeek: getCompletedValue(startOfWeek),
+        completedValueMonth: getCompletedValue(startOfMonth),
         avgResponseTime,
         avgRating,
         completionRate,
@@ -331,9 +347,9 @@ export async function getRealtimeMetrics(): Promise<{
         ridesPending: 0,
         ridesToday: 0,
         ridesCompleted: 0,
-        revenueToday: 0,
-        revenueWeek: 0,
-        revenueMonth: 0,
+        completedValueToday: 0,
+        completedValueWeek: 0,
+        completedValueMonth: 0,
         avgResponseTime: 0,
         avgRating: 0,
         completionRate: 0,
@@ -368,8 +384,11 @@ export async function getReputationStats(): Promise<ReputationStats> {
           )
         : 0;
 
-    const suspendedDrivers = driversWithStats.filter(
-      (driver) => driver.suspension_count > 0,
+    const moderationRows = await AdminDriverModerationService.getModerationRows(
+      driversWithStats.map((driver) => driver.profile_id),
+    );
+    const suspendedDrivers = [...moderationRows.values()].filter(
+      (row) => row.is_suspended === true,
     ).length;
 
     const trustedPassengers = verifiedProfiles.length;
@@ -598,4 +617,3 @@ export async function getOperationalOverview(
     };
   }
 }
-
