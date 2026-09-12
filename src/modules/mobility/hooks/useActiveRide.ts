@@ -1,7 +1,8 @@
 import { useQuery } from "@tanstack/react-query";
 import { MobilityFacade } from "@/core/mobility/services/MobilityService";
+import { isOpenRideStatus } from "@/core/mobility/core/RideLifecycleStatus";
 import { useAuth } from "@/core/auth";
-import { RIDE_STATUS, MOBILITY_QUERY_KEYS } from "@/core/mobility/constants";
+import { MOBILITY_QUERY_KEYS } from "@/core/mobility/constants";
 import type { RideRequest } from "../types/types";
 
 export function useActiveRide() {
@@ -12,16 +13,10 @@ export function useActiveRide() {
     queryFn: async () => {
       if (!user) return null;
       const rides = (await MobilityFacade.getUserRides(user.id)) as RideRequest[];
-      const activeStatuses: RideRequest["status"][] = [
-        RIDE_STATUS.PENDING,
-        RIDE_STATUS.DRIVER_ACCEPTED,
-        RIDE_STATUS.IN_PROGRESS,
-      ];
-      const active = rides.find((r) => activeStatuses.includes(r.status));
-      return active || null;
+      return rides.find((ride) => isOpenRideStatus(ride.status)) ?? null;
     },
     enabled: !!user,
   });
 
-  return { activeRide, isLoading, hasActiveRide: !!activeRide };
+  return { activeRide, isLoading, hasActiveRide: Boolean(activeRide) };
 }
