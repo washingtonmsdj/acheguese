@@ -57,7 +57,7 @@ export default function AdminMotoristasPage() {
     handleSuspend,
     handleReactivate,
     loadSuspensionHistory,
-  } = useDriverManagement(filter, canModerate, isChecking);
+  } = useDriverManagement(canModerate, isChecking);
 
   const stats = calculateDriverStats(drivers);
   const filteredDrivers = filterDrivers(drivers, filter, search);
