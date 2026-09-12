@@ -267,7 +267,7 @@ export default function MotoristaPage() {
         {/* Conteudo */}
 
         {/* Conteudo */}
-              <DriverSubscriptionCard currentPlan="prioritario" service="motorista" />
+              <DriverSubscriptionCard service="motorista" />
         {/* Conteudo */}
 
         {/* Conteudo */}
