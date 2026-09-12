@@ -19,7 +19,7 @@ export interface RealtimeMetrics {
   completedValueToday: number;
   completedValueWeek: number;
   completedValueMonth: number;
-  avgResponseTime: number;
+  avgResponseTime: number | null;
   avgRating: number;
   completionRate: number;
   lastUpdate: string;
