@@ -1,76 +1,31 @@
-/**
- * PROFILE.1.3b - BURN-DOWN AGRESSIVO
- *
- * DriverCancellationMetrics migrado para usar ProfileService como fonte única de verdade
- * Elimina regras manuais: is_verified, is_suspended
- * Score original: 132 (11 regras manuais)
- */
-
 import { useEffect, useState } from "react";
-import {
-  Card,
-  CardContent,
-  CardHeader,
-  CardTitle,
-} from "@/shared/components/ui/card";
-import { Badge } from "@/shared/components/ui/badge";
-import {
-  Avatar,
-  AvatarFallback,
-  AvatarImage,
-} from "@/shared/components/ui/avatar";
-import { Button } from "@/shared/components/ui/button";
-import {
-  AlertTriangle,
-  Ban,
-  TrendingDown,
-  Users,
-  XCircle,
-  CheckCircle,
-  Clock,
-  Shield,
-} from "lucide-react";
-import { cn } from "@/shared/utils/cn";
 import { formatDistanceToNow } from "date-fns";
-import { ptBR } from "@/shared/utils/dateLocale";
+import { Ban, Clock, Shield, TrendingDown, Users, XCircle } from "lucide-react";
 import { toast } from "sonner";
+
+import { adminMobilityService } from "@/core/admin";
+import {
+  AdminDriverModerationService,
+  type DriverModerationRow,
+} from "@/core/admin/services/AdminDriverModerationService";
+import { adminMobilityRuntimeService } from "@/core/admin/services/AdminMobilityRuntimeService";
+import { AdminUserService } from "@/core/admin/services/AdminUserService";
+import { Avatar, AvatarFallback, AvatarImage } from "@/shared/components/ui/avatar";
+import { Badge } from "@/shared/components/ui/badge";
+import { Button } from "@/shared/components/ui/button";
+import { Card, CardContent, CardHeader, CardTitle } from "@/shared/components/ui/card";
+import { ptBR } from "@/shared/utils/dateLocale";
 import { logger } from "@/shared/utils/logger";
-import { profileService } from "@/core/profiles/services/ProfileService";
-import { AdminUserService } from "@/core/admin/services/AdminUserService"; // ✅ MIGRADO - Usa ProfileService
-import type { ProfileContext } from "@/core/profiles/views/ProfileContext"; // ✅ MIGRADO - views/ProfileContext
-import { adminMobilityService } from "@/core/admin"; // ✅ MIGRADO - Usa AdminMobilityService do core
-
-interface DriverData {
-  profile_id: string;
-  name: string;
-  rating: number;
-  total_rides: number;
-  total_earnings: number;
-  is_verified: boolean;
-}
-
-interface ProfileData {
-  id: string;
-  avatar_url: string;
-  total_rides_accepted: number;
-  total_rides_cancelled: number;
-  cancellation_rate: number;
-  is_suspended: boolean;
-  suspension_reason?: string;
-  suspended_until?: string;
-  suspension_count: number;
-}
 
 interface DriverCancellationData {
   id: string;
   name: string;
   avatar_url?: string;
-  total_rides_accepted: number;
-  total_rides_cancelled: number;
-  cancellation_rate: number;
-  suspension_count: number;
-  // ✅ MIGRADO - Removidas regras manuais, dados vêm do ProfileService
-  profileContext?: ProfileContext; // Contexto completo do ProfileService
+  assignedRideCount: number;
+  driverCancelledRideCount: number;
+  driverCancellationRate: number;
+  suspensionCount: number;
+  moderation?: DriverModerationRow;
 }
 
 export function DriverCancellationMetrics() {
@@ -78,43 +33,31 @@ export function DriverCancellationMetrics() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    loadDriversData();
+    void loadDriversData();
   }, []);
 
   async function loadDriversData() {
+    setLoading(true);
     try {
-      // ✅ MIGRADO - Buscar motoristas usando AdminMobilityService (core)
       const driversData = await adminMobilityService.getDriversWithStats();
+      const profileIds = driversData.map((driver) => driver.profile_id);
+      const moderationByProfile = await AdminDriverModerationService.getModerationRows(profileIds);
 
-      // ✅ MIGRADO - Buscar contextos dos usuários usando ProfileService
-      const driversWithContext = await Promise.all(
-        driversData.map(async (driver) => {
-          // Buscar contexto completo do usuário usando ProfileService
-          const profileContext = await profileService.getProfileContext(
-            driver.user_id,
-          );
+      const rows = driversData.map((driver) => ({
+        id: driver.profile_id,
+        name: driver.name,
+        avatar_url: driver.avatar_url,
+        assignedRideCount: driver.assigned_ride_count,
+        driverCancelledRideCount: driver.driver_cancelled_ride_count,
+        driverCancellationRate: driver.driver_cancellation_rate,
+        suspensionCount: driver.suspension_count,
+        moderation: moderationByProfile.get(driver.profile_id),
+      }));
 
-          return {
-            id: driver.profile_id,
-            name: driver.name,
-            avatar_url: driver.avatar_url || "",
-            total_rides_accepted: driver.total_rides_accepted,
-            total_rides_cancelled: driver.total_rides_cancelled,
-            cancellation_rate: driver.cancellation_rate,
-            suspension_count: driver.suspension_count,
-            profileContext, // ✅ MIGRADO - Contexto completo do ProfileService
-          } as DriverCancellationData;
-        }),
-      );
-
-      // Ordenar por taxa de cancelamento
-      driversWithContext.sort(
-        (a, b) => b.cancellation_rate - a.cancellation_rate,
-      );
-
-      setDrivers(driversWithContext);
+      rows.sort((left, right) => right.driverCancellationRate - left.driverCancellationRate);
+      setDrivers(rows);
     } catch (error) {
-      logger.error("Error loading drivers:", error);
+      logger.error("DriverCancellationMetrics.loadDriversData", error as Error);
       toast.error("Erro ao carregar dados dos motoristas");
     } finally {
       setLoading(false);
@@ -123,13 +66,19 @@ export function DriverCancellationMetrics() {
 
   async function removeSuspension(driverProfileId: string) {
     try {
-      // ✅ MIGRADO - Usa ProfileService para remover suspensão
       await AdminUserService.unsuspendProfile(driverProfileId);
+      await adminMobilityRuntimeService.createDriverModerationEvent({
+        driverProfileId,
+        action: "reactivated",
+        reason: "Suspensao removida pelo administrador no painel de cancelamentos",
+      });
 
       toast.success("Suspensão removida com sucesso");
-      loadDriversData();
+      await loadDriversData();
     } catch (error) {
-      logger.error("Error removing suspension:", error);
+      logger.error("DriverCancellationMetrics.removeSuspension", error as Error, {
+        driverProfileId,
+      });
       toast.error("Erro ao remover suspensão");
     }
   }
@@ -137,99 +86,98 @@ export function DriverCancellationMetrics() {
   if (loading) {
     return (
       <div className="flex items-center justify-center p-8">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+        <div className="h-8 w-8 animate-spin rounded-full border-b-2 border-primary" />
       </div>
     );
   }
 
-  const suspendedDrivers = drivers.filter(
-    (d) => d.profileContext?.status.isSuspended,
+  const suspendedDrivers = drivers.filter((driver) => driver.moderation?.is_suspended === true);
+  const totalAssignedRides = drivers.reduce(
+    (sum, driver) => sum + driver.assignedRideCount,
+    0,
   );
-  const highRiskDrivers = drivers.filter(
-    (d) => !d.profileContext?.status.isSuspended && d.cancellation_rate > 25,
+  const totalDriverCancellations = drivers.reduce(
+    (sum, driver) => sum + driver.driverCancelledRideCount,
+    0,
   );
-  const avgCancellationRate =
-    drivers.length > 0
-      ? drivers.reduce((sum, d) => sum + d.cancellation_rate, 0) /
-        drivers.length
-      : 0;
-  const totalCancellations = drivers.reduce(
-    (sum, d) => sum + d.total_rides_cancelled,
+  const overallDriverCancellationRate = totalAssignedRides > 0
+    ? (totalDriverCancellations / totalAssignedRides) * 100
+    : 0;
+  const totalSuspensionEvents = drivers.reduce(
+    (sum, driver) => sum + driver.suspensionCount,
     0,
   );
 
   return (
     <div className="space-y-6">
-      {/* Overview Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+      <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-4">
         <Card>
           <CardContent className="p-6">
-            <div className="flex items-center justify-between mb-2">
-              <span className="text-sm text-muted-foreground">Taxa Média</span>
+            <div className="mb-2 flex items-center justify-between">
+              <span className="text-sm text-muted-foreground">Taxa atribuível ao motorista</span>
               <TrendingDown className="h-4 w-4 text-blue-500" />
             </div>
             <div className="text-2xl font-bold text-blue-500">
-              {avgCancellationRate.toFixed(1)}%
+              {overallDriverCancellationRate.toFixed(1)}%
             </div>
-            <p className="text-xs text-muted-foreground mt-1">
-              Cancelamento geral
+            <p className="mt-1 text-xs text-muted-foreground">
+              Canceladas pelo motorista / corridas atribuídas
             </p>
           </CardContent>
         </Card>
 
         <Card>
           <CardContent className="p-6">
-            <div className="flex items-center justify-between mb-2">
-              <span className="text-sm text-muted-foreground">Suspensos</span>
+            <div className="mb-2 flex items-center justify-between">
+              <span className="text-sm text-muted-foreground">Suspensos agora</span>
               <Ban className="h-4 w-4 text-red-500" />
             </div>
             <div className="text-2xl font-bold text-red-500">
               {suspendedDrivers.length}
             </div>
-            <p className="text-xs text-muted-foreground mt-1">
-              Motoristas bloqueados
+            <p className="mt-1 text-xs text-muted-foreground">
+              Estado atual de moderação
             </p>
           </CardContent>
         </Card>
 
         <Card>
           <CardContent className="p-6">
-            <div className="flex items-center justify-between mb-2">
-              <span className="text-sm text-muted-foreground">Alto Risco</span>
-              <AlertTriangle className="h-4 w-4 text-yellow-500" />
+            <div className="mb-2 flex items-center justify-between">
+              <span className="text-sm text-muted-foreground">Cancelamentos do motorista</span>
+              <XCircle className="h-4 w-4 text-orange-500" />
             </div>
-            <div className="text-2xl font-bold text-yellow-500">
-              {highRiskDrivers.length}
+            <div className="text-2xl font-bold text-orange-500">
+              {totalDriverCancellations}
             </div>
-            <p className="text-xs text-muted-foreground mt-1">Taxa {">"} 25%</p>
+            <p className="mt-1 text-xs text-muted-foreground">
+              Somente status cancelled_by_driver
+            </p>
           </CardContent>
         </Card>
 
         <Card>
           <CardContent className="p-6">
-            <div className="flex items-center justify-between mb-2">
-              <span className="text-sm text-muted-foreground">
-                Total Cancelamentos
-              </span>
-              <XCircle className="h-4 w-4 text-orange-500" />
+            <div className="mb-2 flex items-center justify-between">
+              <span className="text-sm text-muted-foreground">Suspensões registradas</span>
+              <Shield className="h-4 w-4 text-violet-500" />
             </div>
-            <div className="text-2xl font-bold text-orange-500">
-              {totalCancellations}
+            <div className="text-2xl font-bold text-violet-500">
+              {totalSuspensionEvents}
             </div>
-            <p className="text-xs text-muted-foreground mt-1">
-              Corridas canceladas
+            <p className="mt-1 text-xs text-muted-foreground">
+              Eventos históricos de moderação
             </p>
           </CardContent>
         </Card>
       </div>
 
-      {/* Suspended Drivers */}
-      {suspendedDrivers.length > 0 && (
+      {suspendedDrivers.length > 0 ? (
         <Card>
           <CardHeader>
-            <CardTitle className="text-base flex items-center gap-2">
+            <CardTitle className="flex items-center gap-2 text-base">
               <Ban className="h-4 w-4 text-red-500" />
-              Motoristas Suspensos ({suspendedDrivers.length})
+              Motoristas suspensos ({suspendedDrivers.length})
             </CardTitle>
           </CardHeader>
           <CardContent>
@@ -237,177 +185,107 @@ export function DriverCancellationMetrics() {
               {suspendedDrivers.map((driver) => (
                 <div
                   key={driver.id}
-                  className="flex items-center gap-3 p-3 rounded-lg bg-red-50 border border-red-200"
+                  className="flex flex-wrap items-center gap-3 rounded-lg border border-red-200 bg-red-50 p-3 dark:border-red-950 dark:bg-red-950/20"
                 >
                   <Avatar className="h-10 w-10">
                     <AvatarImage src={driver.avatar_url} />
                     <AvatarFallback className="text-xs">
-                      {(driver.name ?? '?').charAt(0)}
+                      {(driver.name || "?").charAt(0)}
                     </AvatarFallback>
                   </Avatar>
 
-                  <div className="flex-1 min-w-0">
+                  <div className="min-w-0 flex-1">
                     <div className="flex items-center gap-2">
-                      <p className="font-medium text-sm truncate">
-                        {driver.name ?? 'Nome não informado'}
-                      </p>
+                      <p className="truncate text-sm font-medium">{driver.name}</p>
                       <Badge variant="destructive" className="text-[0.65rem]">
                         Suspenso
                       </Badge>
                     </div>
                     <p className="text-xs text-muted-foreground">
-                      {driver.profileContext?.status.suspensionReason}
+                      {driver.moderation?.suspension_reason || "Motivo não informado"}
                     </p>
-                    {driver.profileContext?.status.suspendedUntil && (
-                      <p className="text-xs text-red-600 mt-1 flex items-center gap-1">
+                    {driver.moderation?.suspended_until ? (
+                      <p className="mt-1 flex items-center gap-1 text-xs text-red-600">
                         <Clock className="h-3 w-3" />
                         Expira{" "}
-                        {formatDistanceToNow(
-                          new Date(driver.profileContext.status.suspendedUntil),
-                          {
-                            addSuffix: true,
-                            locale: ptBR,
-                          },
-                        )}
+                        {formatDistanceToNow(new Date(driver.moderation.suspended_until), {
+                          addSuffix: true,
+                          locale: ptBR,
+                        })}
                       </p>
-                    )}
+                    ) : null}
                   </div>
 
                   <div className="text-right">
-                    <p className="font-bold text-red-600 text-lg">
-                      {driver.cancellation_rate.toFixed(1)}%
+                    <p className="text-lg font-bold">
+                      {driver.driverCancellationRate.toFixed(1)}%
                     </p>
                     <p className="text-xs text-muted-foreground">
-                      {driver.total_rides_cancelled}/
-                      {driver.total_rides_accepted}
+                      {driver.driverCancelledRideCount}/{driver.assignedRideCount} atribuídas
                     </p>
                     <p className="text-xs text-muted-foreground">
-                      {driver.suspension_count}ª suspensão
+                      {driver.suspensionCount} suspensões registradas
                     </p>
                   </div>
 
                   <Button
                     size="sm"
                     variant="outline"
-                    onClick={() => removeSuspension(driver.id)}
+                    onClick={() => void removeSuspension(driver.id)}
                     className="text-xs"
                   >
-                    <Shield className="h-3 w-3 mr-1" />
-                    Remover
+                    <Shield className="mr-1 h-3 w-3" />
+                    Reativar
                   </Button>
                 </div>
               ))}
             </div>
           </CardContent>
         </Card>
-      )}
+      ) : null}
 
-      {/* High Risk Drivers */}
-      {highRiskDrivers.length > 0 && (
-        <Card>
-          <CardHeader>
-            <CardTitle className="text-base flex items-center gap-2">
-              <AlertTriangle className="h-4 w-4 text-yellow-500" />
-              Motoristas em Risco ({highRiskDrivers.length})
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="space-y-3">
-              {highRiskDrivers.slice(0, 10).map((driver) => (
-                <div
-                  key={driver.id}
-                  className="flex items-center gap-3 p-3 rounded-lg bg-yellow-50 border border-yellow-200"
-                >
-                  <Avatar className="h-10 w-10">
-                    <AvatarImage src={driver.avatar_url} />
-                    <AvatarFallback className="text-xs">
-                      {(driver.name ?? '?').charAt(0)}
-                    </AvatarFallback>
-                  </Avatar>
-
-                  <div className="flex-1 min-w-0">
-                    <div className="flex items-center gap-2">
-                      <p className="font-medium text-sm truncate">
-                        {driver.name ?? 'Nome não informado'}
-                      </p>
-                      <Badge
-                        variant="outline"
-                        className="text-[0.65rem] border-yellow-500 text-yellow-700"
-                      >
-                        Atenção
-                      </Badge>
-                    </div>
-                    <p className="text-xs text-muted-foreground">
-                      Próximo de suspensão (limite: 30%)
-                    </p>
-                  </div>
-
-                  <div className="text-right">
-                    <p className="font-bold text-yellow-600 text-lg">
-                      {driver.cancellation_rate.toFixed(1)}%
-                    </p>
-                    <p className="text-xs text-muted-foreground">
-                      {driver.total_rides_cancelled}/
-                      {driver.total_rides_accepted}
-                    </p>
-                  </div>
-                </div>
-              ))}
-            </div>
-          </CardContent>
-        </Card>
-      )}
-
-      {/* All Drivers - Sorted by Cancellation Rate */}
       <Card>
         <CardHeader>
-          <CardTitle className="text-base flex items-center gap-2">
+          <CardTitle className="flex items-center gap-2 text-base">
             <Users className="h-4 w-4 text-teal-500" />
-            Todos os Motoristas - Taxa de Cancelamento
+            Cancelamentos atribuíveis por motorista
           </CardTitle>
         </CardHeader>
         <CardContent>
+          <p className="mb-4 text-xs text-muted-foreground">
+            Ordenação informativa. Nenhum percentual nesta tela aplica suspensão automática.
+          </p>
           <div className="space-y-2">
             {drivers.map((driver) => (
               <div
                 key={driver.id}
-                className="flex items-center gap-3 p-2 rounded-lg hover:bg-secondary/50 transition-colors"
+                className="flex items-center gap-3 rounded-lg p-2 transition-colors hover:bg-secondary/50"
               >
                 <Avatar className="h-8 w-8">
                   <AvatarImage src={driver.avatar_url} />
                   <AvatarFallback className="text-xs">
-                    {(driver.name ?? '?').charAt(0)}
+                    {(driver.name || "?").charAt(0)}
                   </AvatarFallback>
                 </Avatar>
 
-                <div className="flex-1 min-w-0">
-                  <p className="font-medium text-sm truncate">{driver.name ?? 'Nome não informado'}</p>
+                <div className="min-w-0 flex-1">
+                  <div className="flex items-center gap-2">
+                    <p className="truncate text-sm font-medium">{driver.name}</p>
+                    {driver.moderation?.is_suspended ? (
+                      <Badge variant="destructive" className="text-[0.65rem]">
+                        Suspenso
+                      </Badge>
+                    ) : null}
+                  </div>
                   <p className="text-xs text-muted-foreground">
-                    {driver.total_rides_cancelled} de{" "}
-                    {driver.total_rides_accepted} corridas
+                    {driver.driverCancelledRideCount} canceladas pelo motorista de{" "}
+                    {driver.assignedRideCount} corridas atribuídas
                   </p>
                 </div>
 
-                <div className="flex items-center gap-2">
-                  <div
-                    className={cn(
-                      "px-2 py-1 rounded text-xs font-bold",
-                      driver.cancellation_rate > 30 &&
-                        "bg-red-100 text-red-700",
-                      driver.cancellation_rate > 25 &&
-                        driver.cancellation_rate <= 30 &&
-                        "bg-yellow-100 text-yellow-700",
-                      driver.cancellation_rate <= 25 &&
-                        "bg-green-100 text-green-700",
-                    )}
-                  >
-                    {driver.cancellation_rate.toFixed(1)}%
-                  </div>
-
-                  {driver.cancellation_rate <= 10 && (
-                    <CheckCircle className="h-4 w-4 text-green-500" />
-                  )}
-                </div>
+                <Badge variant="outline" className="font-semibold">
+                  {driver.driverCancellationRate.toFixed(1)}%
+                </Badge>
               </div>
             ))}
           </div>
