@@ -1,17 +1,17 @@
 # SSOT Registry — Single Source of Truth
 
-> Mapa completo de todos os SSOTs do projeto.
-> Última atualização: 2026-08-30
-> Status documental: CANONICO. Este registry segue o contrato executável atual; `docs/feed/FEED-FREEZE.md` preserva invariantes históricas do Freeze, mas nomes/paths removidos daquele snapshot não reabrem autoridade.
+> Mapa dos SSOTs ativos do projeto.
+> Última atualização: 2026-09-12
+> Status documental: CANÔNICO. Este registry descreve o contrato executável atual. Snapshots históricos em `docs/10-archive` preservam contexto, mas paths aposentados nesses documentos não reabrem autoridade.
 
 ---
 
 ## O que é um SSOT aqui?
 
-Um SSOT é o arquivo de tipos/interfaces que define **canonicamente** um domínio.
-Nenhum outro arquivo deve redefinir esses tipos — apenas importar daqui.
+Um SSOT é a autoridade canônica de tipos, estado ou acesso de um domínio. Outros arquivos devem consumir esse contrato, não recriá-lo.
 
 Violações são detectadas automaticamente por:
+
 ```bash
 npm run check:ssot
 # ou
@@ -23,7 +23,7 @@ npx tsx tools/architecture/check-ssot-compliance.ts
 ## Índice
 
 - [Core SSOTs](#core-ssots)
-- [Module SSOTs](#module-ssots)
+- [Feature SSOTs](#feature-ssots)
 - [Shared / Infrastructure SSOTs](#shared--infrastructure-ssots)
 - [Tabelas Protegidas](#tabelas-protegidas)
 - [Regras de Uso](#regras-de-uso)
@@ -31,8 +31,6 @@ npx tsx tools/architecture/check-ssot-compliance.ts
 ---
 
 ## Core SSOTs
-
-SSOTs da camada `src/core/` — domínios fundamentais do sistema.
 
 ### 1. Location (Territorial)
 
@@ -44,7 +42,7 @@ SSOTs da camada `src/core/` — domínios fundamentais do sistema.
 | **Tipos principais** | `Location`, `LocationTree`, `TerritoryFilter`, `TerritorialGroup`, `ActiveTerritory` |
 | **Tabela** | `locations` |
 
-> ⚠️ **Crítico.** Todos os módulos que filtram dados por território devem usar `TerritoryFilter` deste SSOT. Nunca construir filtros ad-hoc em componentes.
+> ⚠️ Todos os módulos que filtram dados por território devem usar `TerritoryFilter`. Não construir filtro territorial ad-hoc em componente.
 
 ---
 
@@ -108,7 +106,7 @@ SSOTs da camada `src/core/` — domínios fundamentais do sistema.
 | **Cache composition** | `src/core/feed/queryKeys.ts` |
 | **Responsabilidade** | Compor a experiência territorial sem recriar CRUD/SSOT paralelo; timeline usa `postService.getFeed()`, detalhe público usa `postService.getPublicPostById(..., TerritoryFilter)`. |
 
-> O antigo `FeedService`/`FeedRepository` foi removido na consolidação CP-008 após zero consumidores. As invariantes de território, visibilidade e falha fechada continuam obrigatórias, mas são aplicadas pelos owners atuais. `docs/feed/FEED-FREEZE.md` é evidência histórica dessas invariantes, não um motivo para restaurar paths removidos.
+> O antigo `FeedService`/`FeedRepository` foi removido após zero consumidores. `docs/feed/FEED-FREEZE.md` preserva invariantes históricas e não autoriza restaurar paths aposentados.
 
 ---
 
@@ -118,15 +116,10 @@ SSOTs da camada `src/core/` — domínios fundamentais do sistema.
 |---|---|
 | **Arquivo** | `src/core/authorization/types/roles.types.ts` |
 | **Service** | `src/core/authorization/services/` |
-| **Responsabilidade** | Sistema de roles e permissões baseado em roles |
+| **Responsabilidade** | Sistema de roles e permissões |
 | **Tipos principais** | `AppRole`, `UserRole`, `RoleHistory`, `GrantRoleRequest`, `RoleCheckResult` |
 | **Tabela** | `user_roles`, `role_history` |
 | **Alinhado com** | `supabase/migrations/20260418000000_create_roles_system.sql` |
-
-Hierarquia de roles (maior → menor privilégio):
-```
-super_admin → admin → moderator → business_owner → driver → user
-```
 
 ---
 
@@ -135,10 +128,10 @@ super_admin → admin → moderator → business_owner → driver → user
 | | |
 |---|---|
 | **Arquivo** | `src/core/admin/types/adminDatabase.types.ts` |
-| **Responsabilidade** | Tipos para tabelas admin não presentes no `types.generated.ts` |
+| **Responsabilidade** | Tipos administrativos complementares ao contrato Supabase gerado |
 | **Tipos principais** | `FraudAlert`, `CommunityIssue`, `Notification`, `GastronomyProfile`, `AdminDatabase`, `AdminSupabaseClient` |
 
-> Estende `types.generated.ts` sem modificá-lo. Padrão correto para tabelas admin.
+> Este contrato complementa `types.generated.ts`; não substitui nem duplica o arquivo gerado.
 
 ---
 
@@ -158,7 +151,7 @@ super_admin → admin → moderator → business_owner → driver → user
 |---|---|
 | **Arquivo** | `src/core/routing/types/index.ts` |
 | **Service** | `src/core/routing/services/` |
-| **Responsabilidade** | Roteamento, ETA, distância, navegação |
+| **Responsabilidade** | Roteamento, ETA, distância e navegação |
 
 ---
 
@@ -188,7 +181,7 @@ super_admin → admin → moderator → business_owner → driver → user
 | **Responsabilidade** | Catálogo comercial horizontal, leitura de contratos, gates e integração Stripe; browser não escreve estado comercial |
 | **Tabelas canônicas** | `user_subscriptions`, `commercial_catalog_version`, `catalog_item`, `catalog_entitlement_policy`, `catalog_eligibility_rule`, `catalog_pricing_policy` |
 
-> `src/core/gastronomy/billing` foi aposentado. `billing_plans`, `subscription_plans`, `business_subscriptions` e `gastronomy_subscriptions` não são SSOT runtime e permanecem como legado para provenance/reconciliação em G5.
+> `billing_plans`, `subscription_plans`, `business_subscriptions` e `gastronomy_subscriptions` não são SSOT runtime; referências remanescentes só podem existir para provenance/migração explicitamente governada.
 
 ---
 
@@ -247,13 +240,11 @@ super_admin → admin → moderator → business_owner → driver → user
 | **Tabelas Classified** | `conversations`, `messages` |
 | **Tabelas Community Direct** | `community_direct_threads`, `community_direct_thread_participants`, `community_direct_messages`, `community_direct_message_reports` |
 
-> A UI de Mensagens/Chat permanece launch-paused e não pertence a `src/core/messaging`. Quando retomada, deve viver em `src/modules/messaging` consumindo as facades de core.
-
 ---
 
-## Module SSOTs
+## Feature SSOTs
 
-SSOTs da camada `src/modules/` — features verticais.
+SSOTs de features verticais e superfícies de aplicação. O owner pode estar em `src/core` ou `src/modules`; o path real do owner prevalece sobre snapshots históricos.
 
 ### 16. Vagas
 
@@ -264,8 +255,6 @@ SSOTs da camada `src/modules/` — features verticais.
 | **Responsabilidade** | Sistema completo de vagas de emprego |
 | **Tipos principais** | `Vaga`, `VagaRow`, `VagaStatus`, `VagaContrato`, `VagaApplicationChannel`, `VagaFilters`, `VagasPaginatedResult`, `Candidatura` |
 | **Alinhado com** | `supabase/migrations/20260416170000_vagas_domain_aaa.sql` |
-
-> ⭐ Exemplo de SSOT nível AAA: 400+ linhas, 8 enums, domínio completo com helpers e constantes.
 
 ---
 
@@ -286,7 +275,7 @@ SSOTs da camada `src/modules/` — features verticais.
 | | |
 |---|---|
 | **Arquivo** | `src/modules/classifieds/services/types.ts` |
-| **Responsabilidade** | Tipos de operação do serviço de classificados (complementa o SSOT 17) |
+| **Responsabilidade** | Tipos de operação do serviço de classificados |
 
 ---
 
@@ -294,9 +283,11 @@ SSOTs da camada `src/modules/` — features verticais.
 
 | | |
 |---|---|
-| **Arquivo** | `src/modules/mobility/services/chat.types.ts` |
-| **Responsabilidade** | Chat de corridas entre motorista e passageiro |
-| **Tipos principais** | `RideChat`, `ChatMessage`, `SendMessageInput`, `Conversation` |
+| **Tipos canônicos** | `src/core/mobility/services/chat.types.ts` |
+| **API pública** | `src/core/mobility/services/ChatService.ts` |
+| **Implementação** | `chat.queries.ts`, `chat.mutations.ts`, `ChatService.impl.ts` |
+| **Responsabilidade** | Chat de corridas entre participantes autorizados |
+| **Tipos principais** | `RideChat`, `ChatMessage`, `SendMessageInput`, `Conversation`, `CreateMessageData` |
 
 ---
 
@@ -304,8 +295,11 @@ SSOTs da camada `src/modules/` — features verticais.
 
 | | |
 |---|---|
-| **Arquivo** | `src/modules/mobility/types/dispatch.types.ts` |
-| **Responsabilidade** | Despacho e matching de corridas |
+| **Tipos canônicos** | `src/core/mobility/types/dispatch.types.ts` |
+| **Offer/dispatch owner** | `src/core/mobility/services/MobilityOfferService.ts` |
+| **Config owner** | `src/core/mobility/services/MobilityDispatchConfigService.ts` |
+| **Broker** | `src/core/mobility/services/MobilityRpcService.ts` |
+| **Responsabilidade** | Despacho, elegibilidade, ofertas e matching de corridas |
 
 ---
 
@@ -347,7 +341,7 @@ SSOTs da camada `src/modules/` — features verticais.
 | **Comando** | `npm run generate:types` |
 | **Responsabilidade** | Única autoridade gerada para o contrato TypeScript do schema Supabase |
 
-> ⛔ **Nunca editar manualmente nem criar snapshot paralelo.** `src/shared/types/database.types.ts` e `src/integrations/supabase/types.ts` foram aposentados no G5. Regenerar somente pelo fluxo canônico apontado acima.
+> ⛔ Nunca editar manualmente nem criar snapshot paralelo. Regenerar pelo fluxo canônico a partir do projeto remoto.
 
 ---
 
@@ -356,7 +350,7 @@ SSOTs da camada `src/modules/` — features verticais.
 | | |
 |---|---|
 | **Arquivo** | `src/core/auth/types/branded.types.ts` |
-| **Responsabilidade** | Tipos branded para autenticação (UserId, SessionToken, etc.) |
+| **Responsabilidade** | Tipos branded para autenticação (`UserId`, `SessionToken`, etc.) |
 
 ---
 
@@ -378,35 +372,34 @@ SSOTs da camada `src/modules/` — features verticais.
 | | |
 |---|---|
 | **Arquivo** | `tools/release/economic-benchmark-ssot.mjs` |
-| **Responsabilidade** | Orquestracao canônica do benchmark operacional de circulacao economica (before/after/compare/report/finalize) |
-| **Escopo** | Feed economico, oportunidades e vagas estruturadas |
+| **Responsabilidade** | Orquestração canônica do benchmark operacional de circulação econômica |
+| **Escopo** | Feed econômico, oportunidades e vagas estruturadas |
 | **Artefatos** | `.tmp/bench/economic-circulation-*.txt` + `.md` |
-
-> Use apenas os comandos `bench:economic:*` do `package.json`. Evitar orquestracao paralela por scripts soltos.
 
 ---
 
 ## Tabelas Protegidas
 
-Tabelas que **só podem ser acessadas via service SSOT**. Acesso direto em hooks/components/pages é violação.
+Tabelas que só podem ser acessadas através de services/owners autorizados. Acesso direto em hooks, componentes, páginas ou utilitários é violação.
 
-| Tabela | Service SSOT |
-|--------|-------------|
+| Tabela | Service / owner canônico |
+|--------|--------------------------|
 | `locations` | `LocationService` |
 | `profiles` | `ProfileService` |
 | `business_data` | `BusinessService` |
 | `professional_data` | `ProfessionalService` |
-| `driver_data` | `MobilityService` |
+| `driver_data` | `MobilityRuntimeService` / `DriverService` e queries especializadas de Mobilidade |
+| `ride_requests` | `RideService` e read models especializados de Mobilidade |
 | `posts` | `PostService` |
 | `comments` | `CommentService` |
 | `classifieds` | `ClassifiedService` |
 | `events` | `EventService` |
 | `reviews` | `ReviewsService` |
-| `user_subscriptions` | `services/SubscriptionService` + `BusinessSubscriptionService` (read); `billing-webhook` (write) |
+| `user_subscriptions` | `SubscriptionService` + `BusinessSubscriptionService` (read); `billing-webhook` (write) |
 | `commercial_catalog_version`, `catalog_item`, `catalog_*_policy` | `CatalogService` / `BillingPlanService` (read); trusted server/service_role (write) |
 | `conversations`, `messages` | `ClassifiedMessagingService`; mutations pelos RPCs server-owned |
 | `community_direct_threads`, `community_direct_thread_participants`, `community_direct_messages`, `community_direct_message_reports` | `CommunityDirectMessagingService`; mutations pelos RPCs do agregado |
-| `notifications` | `NotificationService` para inbox self-state; `create_notification`/outbox para criação; sem INSERT/hard DELETE browser |
+| `notifications` | `NotificationService` para inbox self-state; outbox/RPC server-owned para criação |
 | `notification_preferences` | `NotificationPreferencesService` via RPCs canônicos |
 | `gastronomy_establishments` | `GastronomyService` |
 | `menu_categories` | `MenuService` |
@@ -420,37 +413,29 @@ Tabelas que **só podem ser acessadas via service SSOT**. Acesso direto em hooks
 ### ✅ Correto
 
 ```typescript
-// Importar tipos do SSOT
 import type { Vaga, VagaFilters } from '@/modules/classifieds/jobs/types/vagas.types';
-
-// Acessar dados via service
 import { VagasService } from '@/modules/classifieds/jobs/services/VagasService';
-const vagas = await VagasService.list(params);
-
-// Filtro territorial via TerritoryFilter
 import type { TerritoryFilter } from '@/core/location/types';
+
+const vagas = await VagasService.list(params);
 const filter: TerritoryFilter = { scope: 'location', location_id: id };
 ```
 
 ### ❌ Violação
 
 ```typescript
-// Acesso direto ao Supabase em hook/component
-const { data } = await supabase.from('vagas').select('*'); // ❌
-
-// Redefinir tipos que já existem no SSOT
-interface MinhaVaga { titulo: string; ... } // ❌ usar Vaga de vagas.types.ts
-
-// Filtro territorial ad-hoc
-.eq('city', 'Salvador') // ❌ usar TerritoryFilter
+const { data } = await supabase.from('vagas').select('*');
+interface MinhaVaga { titulo: string }
+.eq('city', 'Salvador')
 ```
 
 ### Adicionando um novo SSOT
 
-1. Criar `src/core/{dominio}/types/index.ts` ou `src/modules/{feature}/types/{feature}.types.ts`
-2. Documentar com cabeçalho identificando como SSOT
-3. Adicionar tabela protegida em `tools/architecture/check-ssot-compliance.ts`
-4. Registrar neste documento
+1. Definir owner e contrato no domínio correto.
+2. Reutilizar tipos gerados/canônicos em vez de duplicá-los.
+3. Adicionar tabela protegida em `tools/architecture/check-ssot-compliance.ts` quando aplicável.
+4. Registrar somente paths existentes neste documento.
+5. Se um owner for aposentado, migrar callers e atualizar guardrails/registry na mesma mudança.
 
 ---
 
@@ -459,7 +444,7 @@ interface MinhaVaga { titulo: string; ... } // ❌ usar Vaga de vagas.types.ts
 | Camada | Quantidade |
 |--------|------------|
 | Core | 15 |
-| Modules | 8 |
+| Features | 8 |
 | Shared / Infra | 3 |
 | Operations SSOT | 1 |
 | **Total** | **27** |
