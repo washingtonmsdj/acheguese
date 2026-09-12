@@ -1,7 +1,8 @@
+import { AdminDriverPresenceReadService } from "@/core/admin/services/AdminDriverPresenceReadService";
+import { QUERYABLE_OPEN_RIDE_STATUSES } from "@/core/mobility/core/RideLifecycleStatus";
 import { supabase } from "@/integrations/supabase";
 import type { Tables } from "@/integrations/supabase";
 import { logger } from "@/shared/utils/logger";
-import { AdminDriverPresenceReadService } from "@/core/admin/services/AdminDriverPresenceReadService";
 
 type ErrorLike = { message?: string | null; code?: string | null } | null;
 
@@ -393,22 +394,6 @@ export class MobilityAdminQueryService {
 
   static async getActiveRidesForMap(): Promise<RawActiveRide[]> {
     try {
-      const activeStatuses = [
-        "pending",
-        "requested",
-        "searching_driver",
-        "driver_assigned",
-        "driver_accepted",
-        "driver_arriving",
-        "driver_on_the_way",
-        "driver_arrived",
-        "passenger_boarded",
-        "passenger_on_board",
-        "in_progress",
-        "pickup_confirmed",
-        "in_delivery",
-      ];
-
       const { data, error } = await mobilityDb
         .from<
           Pick<
@@ -425,7 +410,7 @@ export class MobilityAdminQueryService {
         .select(
           "id, status, ride_mode, driver_profile_id, passenger_profile_id, updated_at, created_at",
         )
-        .in("status", activeStatuses)
+        .in("status", QUERYABLE_OPEN_RIDE_STATUSES)
         .order("updated_at", { ascending: false });
 
       if (error) throw error;
