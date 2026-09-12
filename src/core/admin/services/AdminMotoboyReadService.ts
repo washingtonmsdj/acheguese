@@ -43,10 +43,10 @@ const DELIVERY_SELECT = [
 ].join(", ");
 
 /**
- * Admin-only read boundary for motoboy operational screens.
+ * Admin-only read boundary for motoboy operational screens and aggregates.
  *
  * Commands remain owned by RideOperationalService/MobilityRpcService. This
- * service owns only the bounded projections required by admin list/stats UI.
+ * service owns only bounded admin reads over the motoboy projection.
  */
 export class AdminMotoboyReadService {
   static async listDeliveries(filters: {
@@ -92,6 +92,46 @@ export class AdminMotoboyReadService {
       return (data as AdminMotoboyStatsRow[] | null) ?? [];
     } catch (error) {
       logger.error("AdminMotoboyReadService.listStatsRows", error as Error);
+      throw error;
+    }
+  }
+
+  static async countDeliveredBySource(
+    sourceType: string,
+    sourceId: string,
+  ): Promise<number> {
+    try {
+      const { count, error } = await supabase
+        .from("ride_requests")
+        .select("id", { count: "exact", head: true })
+        .eq("ride_mode", "motoboy")
+        .eq("source_type", sourceType)
+        .eq("source_id", sourceId)
+        .eq("status", "delivered");
+
+      if (error) throw error;
+      return count ?? 0;
+    } catch (error) {
+      logger.error("AdminMotoboyReadService.countDeliveredBySource", error as Error, {
+        sourceType,
+        sourceId,
+      });
+      throw error;
+    }
+  }
+
+  static async countDeliveredTotal(): Promise<number> {
+    try {
+      const { count, error } = await supabase
+        .from("ride_requests")
+        .select("id", { count: "exact", head: true })
+        .eq("ride_mode", "motoboy")
+        .eq("status", "delivered");
+
+      if (error) throw error;
+      return count ?? 0;
+    } catch (error) {
+      logger.error("AdminMotoboyReadService.countDeliveredTotal", error as Error);
       throw error;
     }
   }
