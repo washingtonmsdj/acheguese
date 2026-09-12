@@ -169,13 +169,12 @@ class AdminMobilityServiceClass {
     return MobilityAdminQueryService.getAllRideRatings();
   }
 
-  /**
-   * Compatibility entrypoint for the realtime dashboard. It intentionally
-   * returns all historical metric rows, but the underlying reader exposes only
-   * the lifecycle/value fields required by that dashboard — never `select("*")`.
-   */
-  async getAllRides() {
+  async getRealtimeMetricRides() {
     return AdminMobilityRealtimeRideReadService.listMetricRows();
+  }
+
+  async getRealtimeOpenRides() {
+    return AdminMobilityRealtimeRideReadService.listOpenRideRows();
   }
 
   async getMobilityStats(): Promise<{ total_drivers: number; total_rides: number }> {
