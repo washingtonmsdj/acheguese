@@ -31,6 +31,10 @@ function isRecord(value: unknown): value is Record<string, unknown> {
   return typeof value === "object" && value !== null && !Array.isArray(value);
 }
 
+function readNullableString(value: unknown): string | null {
+  return typeof value === "string" ? value : null;
+}
+
 function toAiError(raw: unknown): AiError {
   const err = isRecord(raw) ? raw : {};
   const rawCode = typeof err.code === "string" ? err.code : "server_error";
@@ -41,10 +45,7 @@ function toAiError(raw: unknown): AiError {
     (typeof err.error === "string" && err.error) ||
     (typeof err.message === "string" && err.message) ||
     "Falha ao chamar a IA. Tente novamente em instantes.";
-  const requestId =
-    typeof err.requestId === "string" || err.requestId === null
-      ? err.requestId
-      : null;
+  const requestId = readNullableString(err.requestId);
   return { code, message, requestId };
 }
 
@@ -104,10 +105,7 @@ function parseTextResult<T>(
     text: data.text,
     structured: data.structured as T | null,
     model: data.model,
-    requestId:
-      typeof data.requestId === "string" || data.requestId === null
-        ? data.requestId
-        : null,
+    requestId: readNullableString(data.requestId),
   };
 }
 
