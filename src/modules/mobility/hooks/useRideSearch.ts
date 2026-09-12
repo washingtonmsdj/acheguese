@@ -5,13 +5,27 @@
  * motorista e encontrado, aceita ou corrida expira.
  */
 import { logger } from '@/shared/utils/logger';
-import { useEffect, useState, useCallback } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
+import {
+  isCancelledRideStatus,
+  isDriverOwnedOpenRideStatus,
+  isPreAcceptRideStatus,
+} from '@/core/mobility/core/RideLifecycleStatus';
+import { RIDE_STATE } from '@/core/mobility/core/RideStateMachine';
 import { getRideById } from '@/core/mobility/services/mobility.queries';
 import { useRideRealtime } from './useRideRealtime';
 
-interface RideSearchStatus {
+export interface RideSearchStatus {
   rideId: string;
-  status: 'searching' | 'driver_found' | 'driver_accepted' | 'in_progress' | 'completed' | 'expired' | 'cancelled';
+  status:
+    | 'searching'
+    | 'driver_found'
+    | 'driver_accepted'
+    | 'in_progress'
+    | 'completed'
+    | 'expired'
+    | 'cancelled'
+    | 'failed';
   driverProfileId?: string;
   message: string;
   timestamp: string;
@@ -19,7 +33,6 @@ interface RideSearchStatus {
 
 interface UseRideSearchOptions {
   rideId?: string;
-  passengerProfileId?: string;
   enabled?: boolean;
   onStatusChange?: (status: RideSearchStatus) => void;
 }
@@ -29,11 +42,59 @@ interface RideStatusRow {
   driver_profile_id?: string;
 }
 
+type SearchStatusInput = Pick<RideSearchStatus, 'status'> & {
+  message?: string;
+};
+
+function classifyRideSearchStatus(status: string | null | undefined): SearchStatusInput | null {
+  if (!status) return null;
+
+  if (status === RIDE_STATE.COMPLETED) {
+    return { status: 'completed', message: 'Corrida concluida.' };
+  }
+
+  if (status === RIDE_STATE.EXPIRED) {
+    return { status: 'expired' };
+  }
+
+  if (status === RIDE_STATE.FAILED) {
+    return { status: 'failed', message: 'Corrida encerrada por falha.' };
+  }
+
+  if (isCancelledRideStatus(status)) {
+    return { status: 'cancelled' };
+  }
+
+  // Atribuicao e apenas uma oferta: o motorista ainda nao e participante aceito.
+  if (status === RIDE_STATE.DRIVER_ASSIGNED) {
+    return { status: 'driver_found' };
+  }
+
+  // Qualquer estado operacional apos aceite encerra a tela de busca.
+  if (isDriverOwnedOpenRideStatus(status)) {
+    if (status === RIDE_STATE.IN_PROGRESS || status === RIDE_STATE.PASSENGER_BOARDED) {
+      return { status: 'in_progress', message: 'Corrida iniciada.' };
+    }
+    return { status: 'driver_accepted' };
+  }
+
+  if (isPreAcceptRideStatus(status)) {
+    return { status: 'searching' };
+  }
+
+  return null;
+}
+
 export function useRideSearch(options: UseRideSearchOptions) {
-  const { rideId, passengerProfileId, enabled = true, onStatusChange } = options;
+  const { rideId, enabled = true, onStatusChange } = options;
 
   const [searchStatus, setSearchStatus] = useState<RideSearchStatus | null>(null);
   const [isSearching, setIsSearching] = useState(false);
+  const onStatusChangeRef = useRef(onStatusChange);
+
+  useEffect(() => {
+    onStatusChangeRef.current = onStatusChange;
+  }, [onStatusChange]);
 
   const updateStatus = useCallback((
     status: RideSearchStatus['status'],
@@ -50,73 +111,57 @@ export function useRideSearch(options: UseRideSearchOptions) {
 
     setSearchStatus(newStatus);
     setIsSearching(status === 'searching' || status === 'driver_found');
-    onStatusChange?.(newStatus);
+    onStatusChangeRef.current?.(newStatus);
 
     logger.info('Ride search status updated', newStatus);
-  }, [rideId, onStatusChange]);
+  }, [rideId]);
+
+  const updateFromRideState = useCallback((
+    rideState: string | null | undefined,
+    driverProfileId?: string,
+  ) => {
+    const next = classifyRideSearchStatus(rideState);
+    if (!next) return;
+    updateStatus(next.status, driverProfileId, next.message);
+  }, [updateStatus]);
 
   useRideRealtime({
     rideId,
     userType: 'passenger',
-    userId: passengerProfileId,
-    enabled: enabled && !!rideId && !!passengerProfileId,
+    enabled: enabled && !!rideId,
     onEvent: (event) => {
-      switch (event.type) {
-        case 'driver_assigned':
-          updateStatus('driver_found', event.driverProfileId);
-          break;
-        case 'driver_accepted':
-          updateStatus('driver_accepted', event.driverProfileId);
-          break;
-        case 'in_progress':
-          updateStatus('in_progress', event.driverProfileId, 'Corrida iniciada.');
-          break;
-        case 'completed':
-          updateStatus('completed', event.driverProfileId, 'Corrida concluida.');
-          break;
-        case 'expired':
-          updateStatus('expired');
-          break;
-        case 'cancelled':
-          updateStatus('cancelled');
-          break;
-      }
+      updateFromRideState(event.newState, event.driverProfileId);
     },
   });
 
   useEffect(() => {
     if (!enabled || !rideId) return;
 
+    let isCurrent = true;
+
     const loadInitialStatus = async () => {
       try {
         const ride = (await getRideById(rideId)) as RideStatusRow | null;
+        if (!isCurrent) return;
         if (!ride) {
           logger.warn('Failed to load ride status', { rideId });
           return;
         }
 
-        if (ride.status === 'searching_driver') {
-          updateStatus('searching');
-        } else if (ride.status === 'driver_assigned') {
-          updateStatus('driver_found', ride.driver_profile_id);
-        } else if (ride.status === 'driver_accepted') {
-          updateStatus('driver_accepted', ride.driver_profile_id);
-        } else if (ride.status === 'in_progress') {
-          updateStatus('in_progress', ride.driver_profile_id, 'Corrida iniciada.');
-        } else if (ride.status === 'completed') {
-          updateStatus('completed', ride.driver_profile_id, 'Corrida concluida.');
-        } else if (ride.status === 'expired') {
-          updateStatus('expired');
-        } else if (ride.status?.includes('cancelled')) {
-          updateStatus('cancelled');
-        }
+        updateFromRideState(ride.status, ride.driver_profile_id);
       } catch (err) {
-        logger.error('Error loading ride status', err as Error);
+        if (isCurrent) {
+          logger.error('Error loading ride status', err as Error);
+        }
       }
     };
 
-    loadInitialStatus();
-  }, [enabled, rideId, updateStatus]);
+    void loadInitialStatus();
+
+    return () => {
+      isCurrent = false;
+    };
+  }, [enabled, rideId, updateFromRideState]);
 
   return {
     searchStatus,
@@ -140,6 +185,8 @@ function getDefaultMessage(status: RideSearchStatus['status']): string {
       return 'Nao encontramos motorista disponivel. Tente novamente.';
     case 'cancelled':
       return 'Corrida cancelada.';
+    case 'failed':
+      return 'Corrida encerrada por falha.';
     default:
       return '';
   }
