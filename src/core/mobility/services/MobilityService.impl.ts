@@ -193,22 +193,6 @@ export class MobilityService {
     return data || [];
   }
 
-  static async getActiveRides(): Promise<unknown[]> {
-    try {
-      const { data, error } = await db
-        .from("ride_requests")
-        .select("*")
-        .in("status", QUERYABLE_OPEN_RIDE_STATUSES)
-        .order("created_at", { ascending: false });
-
-      if (error) throw error;
-      return data || [];
-    } catch (error) {
-      logger.error("MobilityService.getActiveRides", error as Error);
-      return [];
-    }
-  }
-
   static async getRideById(id: string): Promise<unknown | null> {
     try {
       const { data, error } = await db
@@ -223,16 +207,6 @@ export class MobilityService {
       logger.error("MobilityService.getRideById", error as Error);
       return null;
     }
-  }
-
-  static async getAllRideRequests(): Promise<unknown[]> {
-    const { data, error } = await db
-      .from("ride_requests")
-      .select("*")
-      .order("created_at");
-
-    if (error) throw error;
-    return data || [];
   }
 
   static async getRidesByPassenger(passengerProfileId: string): Promise<unknown[]> {
