@@ -56,10 +56,7 @@ const edgeAuthPolicy = JSON.parse(
     "docs/09-reference/governance/security/EDGE_FUNCTION_AUTH_POLICY.json",
   ),
 ) as {
-  noJwtAllowlist: Record<
-    string,
-    { kind: string; requiredPatterns: string[] }
-  >;
+  noJwtAllowlist: Record<string, { kind: string; requiredPatterns: string[] }>;
   serviceRoleAllowlist: Record<
     string,
     { kind: string; risk: string; requiredPatterns: string[] }
@@ -176,7 +173,9 @@ describe("Safety Core Platform security", () => {
     expect(emergencyEmailFunction).toContain(
       "const cronRequested = req.headers.has('x-cron-secret')",
     );
-    expect(emergencyEmailFunction).toContain("requireCronSecret(req, ALLOWED_METHODS)");
+    expect(emergencyEmailFunction).toContain(
+      "requireCronSecret(req, ALLOWED_METHODS)",
+    );
     expect(emergencyEmailFunction).toContain(
       "requireAuthenticatedUser(req, supabase)",
     );
@@ -199,7 +198,9 @@ describe("Safety Core Platform security", () => {
     expect(serviceRolePolicy?.requiredPatterns).toContain(
       "requireAuthenticatedUser\\s*\\(",
     );
-    expect(serviceRolePolicy?.requiredPatterns).toContain("requireCronSecret\\s*\\(");
+    expect(serviceRolePolicy?.requiredPatterns).toContain(
+      "requireCronSecret\\s*\\(",
+    );
 
     const configBlock = supabaseConfig.slice(
       supabaseConfig.indexOf("[functions.send-emergency-email]"),
@@ -267,18 +268,16 @@ describe("Safety Core Platform security", () => {
       "apply_emergency_delivery_provider_event",
     );
 
-    const noJwtPolicy = edgeAuthPolicy.noJwtAllowlist[
-      "resend-emergency-webhook"
-    ];
+    const noJwtPolicy =
+      edgeAuthPolicy.noJwtAllowlist["resend-emergency-webhook"];
     expect(noJwtPolicy?.kind).toBe("signed-webhook");
     expect(noJwtPolicy?.requiredPatterns).toContain(
       "webhookVerifier\\.verify\\s*\\(",
     );
     expect(noJwtPolicy?.requiredPatterns).toContain("RESEND_WEBHOOK_SECRET");
 
-    const serviceRolePolicy = edgeAuthPolicy.serviceRoleAllowlist[
-      "resend-emergency-webhook"
-    ];
+    const serviceRolePolicy =
+      edgeAuthPolicy.serviceRoleAllowlist["resend-emergency-webhook"];
     expect(serviceRolePolicy?.kind).toBe("signed-webhook");
     expect(serviceRolePolicy?.risk).toBe("Critical");
     expect(serviceRolePolicy?.requiredPatterns).toContain(
@@ -293,7 +292,9 @@ describe("Safety Core Platform security", () => {
     expect(migration).toContain("WHERE profile.id = v_profile_id");
     expect(migration).toContain("private.enqueue_notification(");
     expect(safetyService).not.toContain("NotificationService.createNotification");
-    expect(rideShareService).not.toContain("NotificationService.createNotification");
+    expect(rideShareService).not.toContain(
+      "NotificationService.createNotification",
+    );
   });
 
   it("exposes shared rides through a bounded bearer-token RPC only", () => {
@@ -302,7 +303,9 @@ describe("Safety Core Platform security", () => {
     );
     expect(migration).toContain("p_share_token ~ '^[A-Za-z0-9]{32}$'");
     expect(migration).toContain("share.expires_at > now()");
-    expect(migration).toContain("REVOKE ALL ON TABLE public.ride_shares FROM anon");
+    expect(migration).toContain(
+      "REVOKE ALL ON TABLE public.ride_shares FROM anon",
+    );
     expect(rideShareService).toContain("get_shared_ride_safety_data");
     expect(rideShareService).toContain("const data = rows?.[0]");
   });
@@ -323,7 +326,9 @@ describe("Safety Core Platform security", () => {
     );
     expect(emergencyEmailFunction).not.toContain(".from('emergency_contacts')");
     expect(emergencyEmailFunction).toContain("extractEmail(claimed.target || '')");
-    expect(emergencyEmailFunction).toContain("readQueuedContactName(claimed.metadata)");
+    expect(emergencyEmailFunction).toContain(
+      "readQueuedContactName(claimed.metadata)",
+    );
     expect(emergencyEmailFunction).toContain(
       "action: 'emergency_email_provider_failed'",
     );
@@ -343,7 +348,9 @@ describe("Safety Core Platform security", () => {
     expect(autonomousDeliveryMigration).toContain(
       "'/functions/v1/send-emergency-email'",
     );
-    expect(autonomousDeliveryMigration).toContain("'x-cron-secret', v_cron_secret");
+    expect(autonomousDeliveryMigration).toContain(
+      "'x-cron-secret', v_cron_secret",
+    );
     expect(autonomousDeliveryMigration).toContain(
       "'emergency-delivery-outbox-every-minute'",
     );
@@ -369,8 +376,7 @@ describe("Safety Core Platform security", () => {
     for (const path of [
       "src/core/mobility/services/mobility.mutations.ts",
       "src/core/mobility/services/MobilityService.ts",
-      "src/core/mobility/services/MobilityService.impl.ts",
-      "src/core/mobility/services/RideService.impl.ts",
+      "src/core/mobility/services/RideService.ts",
     ]) {
       expect(readProjectFile(path)).not.toContain("from('emergency_alerts')");
       expect(readProjectFile(path)).not.toContain('from("emergency_alerts")');
