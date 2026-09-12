@@ -1,6 +1,14 @@
 import { useEffect, useState } from "react";
+
 import { adminMobilityService } from "@/core/admin";
-import { RIDE_STATUS } from "@/shared/types/constants";
+import {
+  isCancelledRideStatus,
+  isClosedRideStatus,
+  isDriverOwnedOpenRideStatus,
+  isOpenRideStatus,
+  isPreAcceptRideStatus,
+} from "@/core/mobility/core/RideLifecycleStatus";
+import { RIDE_STATE } from "@/core/mobility/core/RideStateMachine";
 import { logger } from "@/shared/utils/logger";
 import type {
   AnalyticsRide,
@@ -13,42 +21,71 @@ import type {
 type DriverAggregation = {
   driver?: TopDriverAnalytics["driver"];
   count: number;
-  revenue: number;
+  completedValue: number;
 };
 
 type RideRating = { rating: number };
 
-const getRideRevenue = (ride: AnalyticsRide) =>
-  ride.final_price || ride.suggested_price || 0;
+const getRideCompletedValue = (ride: AnalyticsRide) =>
+  ride.final_price ?? ride.actual_fare ?? 0;
+
+const getResolutionTimestamp = (ride: AnalyticsRide): string => {
+  if (ride.status === RIDE_STATE.COMPLETED) {
+    return ride.completed_at ?? ride.updated_at ?? ride.created_at;
+  }
+
+  if (isCancelledRideStatus(ride.status)) {
+    return ride.cancelled_at ?? ride.updated_at ?? ride.created_at;
+  }
+
+  return ride.updated_at ?? ride.created_at;
+};
+
+const toDateKey = (value: string | null | undefined): string | null => {
+  if (!value) return null;
+  const timestamp = Date.parse(value);
+  if (!Number.isFinite(timestamp)) return null;
+  return new Date(timestamp).toISOString().split("T")[0];
+};
+
+const isOnOrAfter = (value: string | null | undefined, startIso: string): boolean => {
+  if (!value) return false;
+  const timestamp = Date.parse(value);
+  const start = Date.parse(startIso);
+  return Number.isFinite(timestamp) && Number.isFinite(start) && timestamp >= start;
+};
 
 const buildDailyData = (rides: AnalyticsRide[], days: number): DailyData[] => {
   const dailyMap = new Map<string, DailyData>();
 
   for (let i = 0; i < days; i++) {
     const date = new Date();
+    date.setHours(0, 0, 0, 0);
     date.setDate(date.getDate() - (days - 1 - i));
     const key = date.toISOString().split("T")[0];
     dailyMap.set(key, {
       date: key,
-      rides: 0,
-      revenue: 0,
+      ridesCreated: 0,
+      completedValue: 0,
       completed: 0,
       cancelled: 0,
     });
   }
 
   rides.forEach((ride) => {
-    const key = ride.created_at?.split("T")[0];
-    const daily = dailyMap.get(key);
-    if (!daily) return;
-
-    daily.rides += 1;
-    if (ride.status === RIDE_STATUS.COMPLETED) {
-      daily.completed += 1;
-      daily.revenue += getRideRevenue(ride);
+    const createdDay = dailyMap.get(toDateKey(ride.created_at) ?? "");
+    if (createdDay) {
+      createdDay.ridesCreated += 1;
     }
-    if (ride.status === RIDE_STATUS.CANCELLED) {
-      daily.cancelled += 1;
+
+    const resolutionDay = dailyMap.get(toDateKey(getResolutionTimestamp(ride)) ?? "");
+    if (!resolutionDay) return;
+
+    if (ride.status === RIDE_STATE.COMPLETED) {
+      resolutionDay.completed += 1;
+      resolutionDay.completedValue += getRideCompletedValue(ride);
+    } else if (isCancelledRideStatus(ride.status)) {
+      resolutionDay.cancelled += 1;
     }
   });
 
@@ -60,19 +97,20 @@ const buildTopDrivers = (
   drivers: DriverProfileLite[],
 ): TopDriverAnalytics[] => {
   const driverRideCount = new Map<string, DriverAggregation>();
+  const driverById = new Map(drivers.map((driver) => [driver.id, driver]));
 
   completedRides.forEach((ride) => {
     const driverProfileId = ride.driver_profile_id;
     if (!driverProfileId) return;
 
     if (!driverRideCount.has(driverProfileId)) {
-      const driver = drivers.find((item) => item.id === driverProfileId);
+      const driver = driverById.get(driverProfileId);
       driverRideCount.set(driverProfileId, {
         driver: driver
           ? { id: driver.id, name: driver.name, profile: driver.profile }
           : undefined,
         count: 0,
-        revenue: 0,
+        completedValue: 0,
       });
     }
 
@@ -80,7 +118,7 @@ const buildTopDrivers = (
     if (!entry) return;
 
     entry.count += 1;
-    entry.revenue += getRideRevenue(ride);
+    entry.completedValue += getRideCompletedValue(ride);
   });
 
   return Array.from(driverRideCount.values())
@@ -93,43 +131,64 @@ const buildStats = (
   rides: AnalyticsRide[],
   drivers: DriverProfileLite[],
   ratings: RideRating[],
+  startIso: string,
 ): { stats: MobilidadeStats; completedRides: AnalyticsRide[] } => {
-  const completedRides = rides.filter((ride) => ride.status === RIDE_STATUS.COMPLETED);
-  const cancelled = rides.filter((ride) => ride.status === RIDE_STATUS.CANCELLED);
-  const pending = rides.filter((ride) => ride.status === RIDE_STATUS.PENDING);
-  const inProgress = rides.filter(
+  const createdRides = rides.filter((ride) => isOnOrAfter(ride.created_at, startIso));
+  const openRides = createdRides.filter((ride) => isOpenRideStatus(ride.status));
+  const resolvedRides = rides.filter(
     (ride) =>
-      ride.status === RIDE_STATUS.IN_PROGRESS || ride.status === "driver_assigned",
+      isClosedRideStatus(ride.status) &&
+      isOnOrAfter(getResolutionTimestamp(ride), startIso),
   );
+  const completedRides = resolvedRides.filter(
+    (ride) => ride.status === RIDE_STATE.COMPLETED,
+  );
+  const cancelledRides = resolvedRides.filter((ride) =>
+    isCancelledRideStatus(ride.status),
+  );
+  const failedRides = resolvedRides.filter((ride) => ride.status === RIDE_STATE.FAILED);
+  const expiredRides = resolvedRides.filter((ride) => ride.status === RIDE_STATE.EXPIRED);
   const verified = drivers.filter((driver) => driver.is_verified === true);
-  const pendingDrivers = drivers.filter((driver) => driver.is_verified === false);
-  const totalRevenue = completedRides.reduce(
-    (sum, ride) => sum + getRideRevenue(ride),
+  const unverified = drivers.filter((driver) => driver.is_verified !== true);
+  const completedValue = completedRides.reduce(
+    (sum, ride) => sum + getRideCompletedValue(ride),
     0,
   );
   const avgRating =
     ratings.length > 0
       ? ratings.reduce((sum, rating) => sum + rating.rating, 0) / ratings.length
       : 0;
+  const resolutionCount = resolvedRides.length;
 
   return {
     completedRides,
     stats: {
-      totalRides: rides.length,
+      totalRides: createdRides.length,
+      openRides: openRides.length,
+      preAcceptRides: openRides.filter((ride) => isPreAcceptRideStatus(ride.status)).length,
+      driverOwnedOpenRides: openRides.filter((ride) =>
+        isDriverOwnedOpenRideStatus(ride.status),
+      ).length,
+      resolvedRides: resolutionCount,
       completedRides: completedRides.length,
-      cancelledRides: cancelled.length,
-      pendingRides: pending.length,
-      inProgressRides: inProgress.length,
+      cancelledRides: cancelledRides.length,
+      failedRides: failedRides.length,
+      expiredRides: expiredRides.length,
       totalDrivers: drivers.length,
       verifiedDrivers: verified.length,
-      pendingDrivers: pendingDrivers.length,
-      rejectedDrivers: 0,
-      totalRevenue,
+      unverifiedDrivers: unverified.length,
+      completedValue,
       avgRating: Math.round(avgRating * 10) / 10,
-      approvalRate:
+      verificationRate:
         drivers.length > 0 ? Math.round((verified.length / drivers.length) * 100) : 0,
       completionRate:
-        rides.length > 0 ? Math.round((completedRides.length / rides.length) * 100) : 0,
+        resolutionCount > 0
+          ? Math.round((completedRides.length / resolutionCount) * 100)
+          : 0,
+      cancellationRate:
+        resolutionCount > 0
+          ? Math.round((cancelledRides.length / resolutionCount) * 100)
+          : 0,
     },
   };
 };
@@ -149,21 +208,21 @@ export function useAdminMobilityAnalytics(days: number, enabled: boolean) {
       setLoading(true);
       try {
         const startDate = new Date();
-        startDate.setDate(startDate.getDate() - days);
+        startDate.setHours(0, 0, 0, 0);
+        startDate.setDate(startDate.getDate() - (days - 1));
         const startISO = startDate.toISOString();
 
-        const rides = await adminMobilityService.getAllRides();
-        const allRides = ((rides || []) as unknown as AnalyticsRide[]).filter(
-          (ride) => ride.created_at >= startISO,
-        );
-        const allDrivers =
-          (await adminMobilityService.getAllDriversComplete()) as DriverProfileLite[];
-        const allRatings =
-          (await adminMobilityService.getAllRideRatings()) as RideRating[];
+        const [rides, allDrivers, allRatings] = await Promise.all([
+          adminMobilityService.getAllRides(),
+          adminMobilityService.getAllDriversComplete() as Promise<DriverProfileLite[]>,
+          adminMobilityService.getAllRideRatings() as Promise<RideRating[]>,
+        ]);
+        const allRides = (rides || []) as unknown as AnalyticsRide[];
         const { stats: nextStats, completedRides } = buildStats(
           allRides,
           allDrivers,
           allRatings,
+          startISO,
         );
 
         if (!isMounted) return;
