@@ -12,7 +12,6 @@ import {
   CheckCircle2,
   XCircle,
   Loader2,
-  User,
   Ban,
 } from "lucide-react";
 import { Button } from "@/shared/components/ui/button";
@@ -25,12 +24,9 @@ import { cn } from "@/shared/utils/cn";
 import { formatBrl } from "@/shared/utils/currency";
 import { getRecordValue } from "@/shared/utils/recordLookup";
 import type { MobilityRide } from "@/core/mobility/types/ride";
+import { getDriverRideActionAvailability } from "@/core/mobility/core/DriverRideActionPolicy";
 import { useSessionContext } from "@/core/session";
 import { RIDE_STATUS, PAYMENT_METHOD } from "@/shared/types/constants";
-import { toast } from "sonner";
-import { logger } from "@/shared/utils/logger";
-import { profileService } from "@/core/profiles/services";
-import { mobilityService } from "@/core/mobility/services/MobilityService";
 import { DriverTrustFeedbackPanel } from "./DriverTrustFeedbackPanel";
 import { buildTelUrl, openContactUrl } from "@/shared/utils/contactLinks";
 
@@ -124,53 +120,6 @@ export function DriverRidesList({
   ) => {
     if (!actionFn || loadingAction) return;
 
-    // SSOT: Validar motorista verificado antes de aceitar corrida
-    if (actionFn === onAccept && activeProfile) {
-      try {
-        // SSOT: Buscar profile_id do motorista usando ProfileService
-        const driverProfile = await profileService.getProfileByType(
-          activeProfile.id,
-          "driver",
-        );
-
-        if (!driverProfile) {
-          toast.error("Perfil de motorista não encontrado");
-          return;
-        }
-
-        // SSOT: Buscar dados de driver_data via MobilityService
-        const driver = await mobilityService.getDriverVerificationStatus(
-          driverProfile.id,
-        );
-
-        if (!driver.is_verified) {
-          toast.error("Motorista não verificado", {
-            description:
-              "Complete o processo de verificação para aceitar corridas.",
-          });
-          return;
-        }
-
-        if (!driver.is_online) {
-          toast.error("Você está offline", {
-            description: "Ative o modo online para aceitar corridas.",
-          });
-          return;
-        }
-
-        if (!driver.subscription_active) {
-          toast.error("Assinatura inativa", {
-            description: "Renove sua assinatura para aceitar corridas.",
-          });
-          return;
-        }
-      } catch (err) {
-        logger.error("Erro ao validar motorista:", err);
-        toast.error("Erro ao validar motorista");
-        return;
-      }
-    }
-
     setLoadingAction(rideId);
     try {
       await actionFn(rideId, ride);
@@ -179,7 +128,6 @@ export function DriverRidesList({
     }
   };
 
-  // U7: Skeleton loading
   if (loading) {
     return (
       <div className="space-y-3">
@@ -257,27 +205,10 @@ export function DriverRidesList({
         const isActionLoading = loadingAction === ride.id;
         const passengerPhone =
           typeof ride.passenger?.phone === "string" ? ride.passenger.phone : null;
-        const canStartStatuses: string[] = [
-          RIDE_STATUS.DRIVER_ASSIGNED,
-          RIDE_STATUS.DRIVER_ACCEPTED,
-          RIDE_STATUS.DRIVER_ARRIVING,
-          RIDE_STATUS.DRIVER_ARRIVED,
-          RIDE_STATUS.PASSENGER_BOARDED,
-          RIDE_STATUS.PASSENGER_ON_BOARD,
-        ];
-        const canStartRide = canStartStatuses.includes(ride.status);
-        const canCompleteRide = ride.status === RIDE_STATUS.IN_PROGRESS;
-        const canCancelStatuses: string[] = [
-          RIDE_STATUS.REQUESTED,
-          RIDE_STATUS.SEARCHING_DRIVER,
-          RIDE_STATUS.DRIVER_ASSIGNED,
-          RIDE_STATUS.DRIVER_ACCEPTED,
-          RIDE_STATUS.DRIVER_ARRIVING,
-          RIDE_STATUS.DRIVER_ARRIVED,
-          RIDE_STATUS.PASSENGER_BOARDED,
-          RIDE_STATUS.PASSENGER_ON_BOARD,
-        ];
-        const canCancelRide = canCancelStatuses.includes(ride.status);
+        const actions = getDriverRideActionAvailability(ride.status);
+        const canStartRide = actions.canStart;
+        const canCompleteRide = actions.canComplete;
+        const canCancelRide = actions.canCancel;
         const canTrustFeedback =
           type === "history" &&
           (ride.status === RIDE_STATUS.COMPLETED || ride.status === RIDE_STATUS.DELIVERED);
@@ -292,7 +223,6 @@ export function DriverRidesList({
                 : "border-border",
             )}
           >
-            {/* Header */}
             <div className="flex items-center gap-2 mb-2">
               <Avatar className="h-9 w-9 border-2 border-primary/30">
                 <AvatarFallback className="bg-gradient-to-br from-primary to-accent text-primary-foreground text-xs font-bold">
@@ -351,7 +281,6 @@ export function DriverRidesList({
               </Badge>
             </div>
 
-            {/* Route */}
             <div className="flex items-start gap-2 mb-2">
               <div className="mt-1 flex flex-col items-center">
                 <div className="w-2 h-2 rounded-full bg-primary" />
@@ -374,7 +303,6 @@ export function DriverRidesList({
               </div>
             </div>
 
-            {/* Info */}
             <div className="flex items-center gap-3 mb-2 text-xs text-muted-foreground">
               <div className="flex items-center gap-1">
                 <Clock className="h-3.5 w-3.5 text-primary" />
@@ -401,7 +329,6 @@ export function DriverRidesList({
               </div>
             )}
 
-            {/* Actions — U1: Loading states */}
             {type === "available" && onAccept && (
               <Button
                 onClick={() => handleAction(onAccept, ride.id)}
@@ -509,7 +436,6 @@ export function DriverRidesList({
         );
       })}
 
-      {/* Chat Dialog */}
       {selectedRide && activeProfile && (
         <RideChatDialog
           open={chatOpen}
