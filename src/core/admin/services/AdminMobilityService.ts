@@ -7,6 +7,7 @@
  */
 
 import { AdminDriverLifecycleMetricsService } from "@/core/admin/services/AdminDriverLifecycleMetricsService";
+import { AdminMobilityRealtimeDriverReadService } from "@/core/admin/services/AdminMobilityRealtimeDriverReadService";
 import { AdminMobilityRealtimeRideReadService } from "@/core/admin/services/AdminMobilityRealtimeRideReadService";
 import { MobilityAdminQueryService } from "@/core/admin/services/MobilityAdminQueryService";
 import {
@@ -175,6 +176,14 @@ class AdminMobilityServiceClass {
 
   async getRealtimeOpenRides() {
     return AdminMobilityRealtimeRideReadService.listOpenRideRows();
+  }
+
+  async getRealtimeDriverMetricRows() {
+    return AdminMobilityRealtimeDriverReadService.listMetricRows();
+  }
+
+  async getRealtimeOnlineDriverDirectory(profileIds: readonly string[]) {
+    return AdminMobilityRealtimeDriverReadService.listOnlineDirectory(profileIds);
   }
 
   async getMobilityStats(): Promise<{ total_drivers: number; total_rides: number }> {
