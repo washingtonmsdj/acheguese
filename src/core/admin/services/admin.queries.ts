@@ -168,6 +168,34 @@ function getSystemHealth(metrics: {
 }
 
 /**
+ * Driver response latency is an event/lifecycle metric, not a driver-profile fact.
+ * Dispatch writes driver_assigned_at when the offer is assigned and acceptance
+ * writes driver_accepted_at. Missing or inverted timestamps are excluded rather
+ * than converted into a fake zero-minute response.
+ */
+function getAverageDriverResponseTimeMinutes(rides: RawRecord[]): number | null {
+  const samples = rides.flatMap((ride) => {
+    const assignedAt = Date.parse(getString(ride.driver_assigned_at));
+    const acceptedAt = Date.parse(getString(ride.driver_accepted_at));
+
+    if (
+      !Number.isFinite(assignedAt) ||
+      !Number.isFinite(acceptedAt) ||
+      acceptedAt < assignedAt
+    ) {
+      return [];
+    }
+
+    return [(acceptedAt - assignedAt) / 60_000];
+  });
+
+  if (samples.length === 0) return null;
+
+  const average = samples.reduce((sum, value) => sum + value, 0) / samples.length;
+  return Number(average.toFixed(1));
+}
+
+/**
  * Snapshot operacional em tempo real.
  */
 export async function getRealtimeMetrics(): Promise<{
@@ -284,20 +312,7 @@ export async function getRealtimeMetrics(): Promise<{
           )
         : 0;
 
-    const avgResponseTimeRaw =
-      allDrivers.length > 0
-        ? allDrivers.reduce(
-            (sum, driver) =>
-              sum +
-              getNumeric(
-                (driver as RawRecord).avg_response_time_minutes,
-                getNumeric((driver as RawRecord).avg_response_time_seconds, 0) / 60,
-              ),
-            0,
-          ) / allDrivers.length
-        : 0;
-
-    const avgResponseTime = Number(avgResponseTimeRaw.toFixed(1));
+    const avgResponseTime = getAverageDriverResponseTimeMinutes(rides);
     const driversVerified = allDrivers.filter((driver) =>
       isTruthy((driver as RawRecord).is_verified),
     ).length;
@@ -350,7 +365,7 @@ export async function getRealtimeMetrics(): Promise<{
         completedValueToday: 0,
         completedValueWeek: 0,
         completedValueMonth: 0,
-        avgResponseTime: 0,
+        avgResponseTime: null,
         avgRating: 0,
         completionRate: 0,
         lastUpdate: now.toISOString(),
