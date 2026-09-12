@@ -1,13 +1,15 @@
 /**
  * DriverService - canonical implementation.
  *
- * Driver aggregate over `profiles (driver)` and MobilityService.
+ * Driver aggregate over `profiles (driver)`, registration data and the
+ * canonical `driver_availability` operational state.
  */
 
 import type { Tables } from "@/integrations/supabase";
 import { profileService } from "@/core/profiles/services/ProfileService";
 import { getCompletedRidePaymentsByDriver, getDriverData, getDriverStatsDetailed } from "./mobility.queries";
 import { updateDriverData, updateDriverOnlineStatus } from "./mobility.mutations";
+import { DriverAvailabilityService } from "./DriverAvailabilityService";
 
 type DriverDataRecord = Tables<"driver_data">;
 
@@ -57,6 +59,7 @@ function mapDriverProfileRecord(
   profileId: string,
   driverData: Partial<DriverDataRecord>,
   totalEarnings: number,
+  isActive: boolean,
 ): DriverProfile {
   return {
     id: profileId,
@@ -66,7 +69,7 @@ function mapDriverProfileRecord(
     total_rides: driverData.total_rides ?? 0,
     total_earnings: totalEarnings,
     is_verified: driverData.is_verified ?? false,
-    is_active: driverData.is_online ?? false,
+    is_active: isActive,
     created_at: driverData.created_at,
     updated_at: driverData.updated_at,
   };
@@ -87,40 +90,18 @@ export class DriverService {
       return null;
     }
 
+    const [availability, totalEarnings] = await Promise.all([
+      DriverAvailabilityService.getStatus(driverProfile.id),
+      sumCompletedRidePayments(driverProfile.id),
+    ]);
+
     return mapDriverProfileRecord(
       userId,
       driverProfile.id,
       driverData,
-      await sumCompletedRidePayments(driverProfile.id),
+      totalEarnings,
+      availability?.isOnline ?? false,
     );
-  }
-
-  async createDriverProfile(
-    data: Omit<
-      DriverProfile,
-      "id" | "created_at" | "updated_at" | "rating" | "total_rides"
-    >,
-  ): Promise<DriverProfile> {
-    const existingDriverData = (await getDriverData(
-      data.profile_id,
-    )) as DriverDataRecord | null;
-
-    if (!existingDriverData) {
-      throw new Error(
-        "Driver profile must be created via the canonical multi-profile flow before driver data can be updated",
-      );
-    }
-
-    const updatedDriverData = (await updateDriverData(data.profile_id, {
-      is_online: data.is_active ?? false,
-      is_verified: data.is_verified,
-    })) as DriverDataRecord | null;
-
-    if (!updatedDriverData) {
-      throw new Error("Unable to update canonical driver data");
-    }
-
-    return mapDriverProfileRecord(data.user_id, data.profile_id, updatedDriverData, 0);
   }
 
   async getDriverStats(driverProfileId: string): Promise<DriverStats | null> {
@@ -174,7 +155,13 @@ export class DriverService {
   async updateDriverStatus(driverProfileId: string, isActive: boolean): Promise<void> {
     await updateDriverOnlineStatus(driverProfileId, isActive);
   }
+
+  async updateDriverRegistration(
+    driverProfileId: string,
+    updates: Record<string, unknown>,
+  ): Promise<unknown | null> {
+    return updateDriverData(driverProfileId, updates);
+  }
 }
 
 export const driverService = new DriverService();
-
