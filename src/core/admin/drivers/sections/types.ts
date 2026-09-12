@@ -1,8 +1,9 @@
 /**
  * Types compartilhados para AdminMotoristas
- * 
- * SSOT: Todas as sections e componentes tipados
- * Sem gambiarras: Props explícitas, sem "any" ou "unknown"
+ *
+ * SSOT: Todas as sections e componentes tipados.
+ * Presenca online e informativa; a authority de entrada/saida operacional e do
+ * proprio motorista em driver_availability.
  */
 
 import type { LucideIcon } from "lucide-react";
@@ -101,7 +102,6 @@ export interface ConfirmDialogState {
 
 export interface DriverActions {
   readonly onReview: (driver: DriverRequest) => void;
-  readonly onToggleOnline: (driver: DriverRequest) => void;
   readonly onSuspend: (driver: DriverRequest) => void;
   readonly onReactivate: (driver: DriverRequest) => void;
   readonly onViewHistory: (driverProfileId: string) => void;
