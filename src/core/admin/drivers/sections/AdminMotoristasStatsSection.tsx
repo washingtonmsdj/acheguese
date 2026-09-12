@@ -10,11 +10,9 @@ import {
   CheckCircle,
   Car,
   TrendingUp,
-  DollarSign,
 } from "lucide-react";
 import type { AdminMotoristasStatsSectionProps, StatItem } from "./types";
 import { StatCard } from "../components/cards";
-import { formatCurrency } from "../utils";
 
 export function AdminMotoristasStatsSection({
   stats,
@@ -50,16 +48,10 @@ export function AdminMotoristasStatsSection({
       icon: TrendingUp,
       color: "text-blue-500",
     },
-    {
-      label: "Receita",
-      value: formatCurrency(stats.totalEarnings),
-      icon: DollarSign,
-      color: "text-emerald-500",
-    },
   ];
 
   return (
-    <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3">
+    <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-3">
       {statItems.map((stat) => (
         <StatCard key={stat.label} stat={stat} />
       ))}
