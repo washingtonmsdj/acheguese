@@ -8,6 +8,7 @@ import {
   XAxis,
   YAxis,
 } from "recharts";
+
 import { Card, CardContent, CardHeader, CardTitle } from "@/shared/components/ui/card";
 import {
   ChartContainer,
@@ -23,12 +24,12 @@ import { formatAnalyticsDate } from "./AdminMobilityAnalytics.formatters";
 
 export function AdminMobilityCharts({ dailyData }: { dailyData: DailyData[] }) {
   return (
-    <div className="lg:col-span-2 space-y-6">
+    <div className="space-y-6 lg:col-span-2">
       <Card>
         <CardHeader className="pb-2">
           <div className="flex items-center gap-2">
             <Activity className="h-4 w-4 text-muted-foreground" />
-            <CardTitle className="text-sm font-medium">Corridas por Dia</CardTitle>
+            <CardTitle className="text-sm font-medium">Resoluções por Dia</CardTitle>
           </div>
         </CardHeader>
         <CardContent>
@@ -80,7 +81,9 @@ export function AdminMobilityCharts({ dailyData }: { dailyData: DailyData[] }) {
         <CardHeader className="pb-2">
           <div className="flex items-center gap-2">
             <DollarSign className="h-4 w-4 text-emerald-500" />
-            <CardTitle className="text-sm font-medium">Receita Diária (R$)</CardTitle>
+            <CardTitle className="text-sm font-medium">
+              Valor de Corridas Concluídas por Dia (R$)
+            </CardTitle>
           </div>
         </CardHeader>
         <CardContent>
@@ -99,7 +102,11 @@ export function AdminMobilityCharts({ dailyData }: { dailyData: DailyData[] }) {
                   <ChartTooltipContent labelFormatter={(value) => formatAnalyticsDate(value as string)} />
                 }
               />
-              <Bar dataKey="revenue" fill="hsl(142 71% 45%)" radius={[4, 4, 0, 0]} />
+              <Bar
+                dataKey="completedValue"
+                fill="hsl(142 71% 45%)"
+                radius={[4, 4, 0, 0]}
+              />
             </BarChart>
           </ChartContainer>
         </CardContent>
