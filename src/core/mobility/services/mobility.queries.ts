@@ -329,11 +329,15 @@ export async function getDriverDataIdByProfileId(
   }
 }
 
+/**
+ * Runtime summary consumed by DriverService.impl.
+ * Presence, availability and GPS belong exclusively to driver_availability.
+ */
 export async function getDriverData(profileId: string): Promise<unknown | null> {
   try {
     const { data, error } = await supabaseClient
       .from("driver_data")
-      .select("*")
+      .select("profile_id, rating, total_rides, is_verified, created_at, updated_at")
       .eq("profile_id", profileId)
       .maybeSingle();
 
@@ -349,12 +353,17 @@ export async function getDriverData(profileId: string): Promise<unknown | null> 
   }
 }
 
-/** Buscar estatisticas detalhadas do motorista. */
+/**
+ * Estatisticas do motorista sem carregar o agregado inteiro de driver_data.
+ * Campos de presenca/localizacao nao pertencem a este read model.
+ */
 export async function getDriverStatsDetailed(driverProfileId: string): Promise<unknown | null> {
   try {
     const { data, error } = await supabaseClient
       .from("driver_data")
-      .select("*")
+      .select(
+        "profile_id, rating, total_rides, total_rides_completed, total_rides_cancelled, acceptance_rate, cancellation_rate, is_suspended, is_verified, subscription_active, can_do_delivery, can_do_rides, created_at, updated_at",
+      )
       .eq("profile_id", driverProfileId)
       .maybeSingle();
 
