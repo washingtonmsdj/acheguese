@@ -23,14 +23,17 @@ describe("mobility rpc broker security", () => {
 
     expect(edgeFunction).toContain("function requireUser(");
     expect(edgeFunction).toContain('getRequiredEnv("SUPABASE_SERVICE_ROLE_KEY")');
-    expect(edgeFunction).toContain('supabaseAdmin.rpc("accept_ride_atomic"');
+    expect(edgeFunction).toContain('supabaseAdmin.rpc("mobility_accept_ride_atomic"');
     expect(edgeFunction).not.toContain('supabaseAdmin.rpc("cancel_pending_ride_offers"');
     expect(edgeFunction).not.toContain('supabaseAdmin.rpc("release_driver_availability_for_ride"');
     expect(edgeFunction).toContain('.from("ride_requests")');
     expect(edgeFunction).toContain('.from("profiles")');
-    expect(edgeFunction).toContain('supabaseAdmin.rpc("is_admin"');
-    expect(edgeFunction).toContain("p_user_id: userId");
+    expect(edgeFunction).toContain('supabaseAdmin.rpc("get_user_roles"');
+    expect(edgeFunction).toContain("_user_id: userId");
+    expect(edgeFunction).not.toContain('supabaseAdmin.rpc("is_admin"');
     expect(edgeFunction).not.toContain('.from("user_roles")');
+    expect(edgeFunction).toContain('import { evaluateUserMfaPolicy } from "../_shared/mfaPolicy.ts"');
+    expect(edgeFunction).toContain("async function requireAdminMfa(");
     expect(edgeFunction).toContain("requireDispatchStrategy");
     expect(edgeFunction).toContain("handleAcceptRide");
     expect(edgeFunction).not.toContain("canWriteDispatchAudit");
