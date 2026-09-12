@@ -14,17 +14,13 @@ import { join, relative } from 'path';
 
 const rootDir = process.cwd();
 
-// ============================================================================
-// CONFIGURATION
-// ============================================================================
-
-// Tables that should only be accessed through SSOT services/repositories
 const PROTECTED_TABLES = [
   'locations',
   'profiles',
   'business_data',
   'professional_data',
   'driver_data',
+  'ride_requests',
   'posts',
   'comments',
   'classifieds',
@@ -39,42 +35,67 @@ const PROTECTED_TABLES = [
   'community_entity_links',
 ];
 
-// Table -> allowed SSOT owners (avoids false positives in canonical files)
 const TABLE_SSOTS: Record<string, string[]> = {
   locations: ['LocationService.ts', 'GeospatialRepository'],
   profiles: ['ProfileService.ts', 'ProfileRepository'],
   business_data: ['BusinessService.ts', 'BusinessRepository'],
   professional_data: ['ProfessionalService.ts', 'ProfessionalRepository'],
-  driver_data: ['MobilityService.ts', 'MobilityService.impl.ts', 'DriverService.ts', 'DriverService.impl.ts'],
-  ride_requests: ['RideService.ts', 'RideService.impl.ts', 'RideCanonicalAdapter.ts'],
+  driver_data: [
+    'MobilityRuntimeService.ts',
+    'MobilityServiceDriverQueries.ts',
+    'DriverService.ts',
+    'DriverService.impl.ts',
+    'mobility.queries.ts',
+  ],
+  ride_requests: [
+    'RideService.ts',
+    'RideService.impl.ts',
+    'RideCanonicalAdapter.ts',
+    'mobility.ride-read-queries.ts',
+  ],
   posts: ['PostService.ts', 'PostRepository'],
   comments: ['CommentService.ts', 'CommentRepository'],
-  classifieds: ['ClassifiedService.ts', 'ClassifiedService.impl.ts', 'ClassifiedUrlService.ts', 'ClassifiedRepository'],
+  classifieds: [
+    'ClassifiedService.ts',
+    'ClassifiedService.impl.ts',
+    'ClassifiedUrlService.ts',
+    'ClassifiedRepository',
+  ],
   events: ['EventService.ts', 'EventRepository'],
   reviews: ['ReviewsService.ts', 'ReviewRepository'],
   user_subscriptions: ['SubscriptionService.ts'],
-  gastronomy_establishments: ['GastronomyService.ts', 'GastronomyQueryService.ts'],
+  gastronomy_establishments: [
+    'GastronomyService.ts',
+    'GastronomyQueryService.ts',
+  ],
   menu_categories: ['MenuService.ts', 'MenuQueryService.ts'],
   menu_items: ['MenuService.ts', 'MenuQueryService.ts'],
   tourist_points: ['TouristPointService.ts'],
-  community_memberships: ['CommunityMembershipRepository.ts', 'CommunityMembershipService.ts'],
-  community_entity_links: ['CommunityEntityLinkRepository.ts', 'CommunityEntityLinkService.ts'],
+  community_memberships: [
+    'CommunityMembershipRepository.ts',
+    'CommunityMembershipService.ts',
+  ],
+  community_entity_links: [
+    'CommunityEntityLinkRepository.ts',
+    'CommunityEntityLinkService.ts',
+  ],
   business_slug_history: ['BusinessService.ts', 'BusinessIdentityAdapter.ts'],
-  professional_slug_history: ['ProfessionalService.ts', 'ProfessionalIdentityAdapter.ts'],
+  professional_slug_history: [
+    'ProfessionalService.ts',
+    'ProfessionalIdentityAdapter.ts',
+  ],
   profile_username_history: ['ProfileService.ts', 'ProfileIdentityAdapter.ts'],
   profile_members: ['ProfileService.ts'],
   business_views: ['BusinessService.ts'],
   business_claims: ['BusinessService.ts'],
 };
 
-// Paths where direct Supabase access is allowed by architecture
 const ALLOWED_PATH_PATTERNS = [
   '/services/',
   '/repositories/',
   '/integrations/supabase/',
 ];
 
-// Layer paths where direct supabase access should never happen
 const BOUNDARY_ENFORCED_PATH_PATTERNS = [
   '/hooks/',
   '/components/',
@@ -82,7 +103,6 @@ const BOUNDARY_ENFORCED_PATH_PATTERNS = [
   '/utils/',
 ];
 
-// File path exceptions (migrations, tests, seeds, etc)
 const EXCEPTION_PATTERNS = [
   /\/migrations?\//,
   /\/seeds?\//,
@@ -94,10 +114,6 @@ const EXCEPTION_PATTERNS = [
   /scripts\/seed/,
 ];
 
-// ============================================================================
-// TYPES
-// ============================================================================
-
 interface Violation {
   file: string;
   line: number;
@@ -108,17 +124,15 @@ interface Violation {
   suggestedFix?: string;
 }
 
-// ============================================================================
-// HELPERS
-// ============================================================================
-
 function normalizePath(filePath: string): string {
   return filePath.replace(/\\/g, '/');
 }
 
 function isAllowedDirectory(filePath: string): boolean {
   const normalizedPath = normalizePath(filePath);
-  return ALLOWED_PATH_PATTERNS.some((pattern) => normalizedPath.includes(pattern));
+  return ALLOWED_PATH_PATTERNS.some((pattern) =>
+    normalizedPath.includes(pattern),
+  );
 }
 
 function isException(filePath: string): boolean {
@@ -126,9 +140,6 @@ function isException(filePath: string): boolean {
   return EXCEPTION_PATTERNS.some((pattern) => pattern.test(normalizedPath));
 }
 
-/**
- * Checks whether this file is one of the SSOT owners for the table.
- */
 function isTableSSot(filePath: string, table: string): boolean {
   const ssots = TABLE_SSOTS[table] || [];
   return ssots.some((ssot) => filePath.includes(ssot));
@@ -140,7 +151,8 @@ function getSuggestedService(table: string): string {
     profiles: 'profileService',
     business_data: 'BusinessService',
     professional_data: 'ProfessionalService',
-    driver_data: 'MobilityService',
+    driver_data: 'MobilityRuntimeService/DriverService',
+    ride_requests: 'RideService',
     posts: 'postService',
     comments: 'commentService',
     classifieds: 'classifiedService',
@@ -196,8 +208,8 @@ function detectViolations(filePath: string, content: string): Violation[] {
     /(\(\s*supabase\s+as\s+any\s*\)|\bsupabase\s*\.\s*(from|rpc|channel|functions|auth|storage|removeChannel)\s*\(|from\s+['"]@\/integrations\/supabase(?:\/client)?['"])/;
   const boundaryQueryPattern = /\.\s*(from|rpc|channel)\s*\(\s*['"`]/;
   const normalizedFilePath = normalizePath(filePath);
-  const enforceSupabaseBoundary = BOUNDARY_ENFORCED_PATH_PATTERNS.some((pattern) =>
-    normalizedFilePath.includes(pattern),
+  const enforceSupabaseBoundary = BOUNDARY_ENFORCED_PATH_PATTERNS.some(
+    (pattern) => normalizedFilePath.includes(pattern),
   );
   let inBlockComment = false;
 
@@ -270,8 +282,10 @@ function detectViolations(filePath: string, content: string): Violation[] {
         table: 'layer_boundary',
         code: scanLine.trim(),
         severity: 'error',
-        message: 'Direct Supabase access in UI/utility layer. Route data access through a service.',
-        suggestedFix: 'Move this database call/import to a service and consume it via hook/component boundary',
+        message:
+          'Direct Supabase access in UI/utility layer. Route data access through a service.',
+        suggestedFix:
+          'Move this database call/import to a service and consume it via hook/component boundary',
       });
     }
   });
@@ -293,15 +307,13 @@ function scanDirectory(dir: string): Violation[] {
         if (!['node_modules', '.git', 'dist', 'build', '.next'].includes(entry)) {
           violations = violations.concat(scanDirectory(fullPath));
         }
-      } else if (stat.isFile()) {
-        if (/\.(ts|tsx|js|jsx)$/.test(entry)) {
-          const relativePath = relative(rootDir, fullPath);
+      } else if (stat.isFile() && /\.(ts|tsx|js|jsx)$/.test(entry)) {
+        const relativePath = relative(rootDir, fullPath);
 
-          if (!isException(relativePath) && !isAllowedDirectory(relativePath)) {
-            const content = readFileSync(fullPath, 'utf-8');
-            const fileViolations = detectViolations(relativePath, content);
-            violations = violations.concat(fileViolations);
-          }
+        if (!isException(relativePath) && !isAllowedDirectory(relativePath)) {
+          const content = readFileSync(fullPath, 'utf-8');
+          const fileViolations = detectViolations(relativePath, content);
+          violations = violations.concat(fileViolations);
         }
       }
     }
@@ -312,7 +324,9 @@ function scanDirectory(dir: string): Violation[] {
   return violations;
 }
 
-function groupViolationsByFile(violations: Violation[]): Map<string, Violation[]> {
+function groupViolationsByFile(
+  violations: Violation[],
+): Map<string, Violation[]> {
   const grouped = new Map<string, Violation[]>();
 
   violations.forEach((violation) => {
@@ -353,7 +367,9 @@ function printReport(violations: Violation[]): void {
   });
 
   console.log('='.repeat(80));
-  console.log('Documentation: See SSOT_REGISTRY.md for correct usage');
+  console.log(
+    'Documentation: See docs/architecture/SSOT_REGISTRY.md for correct usage',
+  );
   console.log('='.repeat(80) + '\n');
 }
 
@@ -361,13 +377,18 @@ function printSummary(violations: Violation[]): void {
   const tableCount = new Map<string, number>();
 
   violations.forEach((violation) => {
-    tableCount.set(violation.table, (tableCount.get(violation.table) || 0) + 1);
+    tableCount.set(
+      violation.table,
+      (tableCount.get(violation.table) || 0) + 1,
+    );
   });
 
   if (tableCount.size > 0) {
     console.log('Violations by table:');
     tableCount.forEach((count, table) => {
-      console.log(`  - ${table}: ${count} violation(s) -> Use ${getSuggestedService(table)}`);
+      console.log(
+        `  - ${table}: ${count} violation(s) -> Use ${getSuggestedService(table)}`,
+      );
     });
     console.log();
   }
