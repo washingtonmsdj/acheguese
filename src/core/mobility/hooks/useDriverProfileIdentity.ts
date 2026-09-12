@@ -2,6 +2,7 @@ import { useQuery } from "@tanstack/react-query";
 import { useIsAdmin } from "@/core/auth/hooks/useIsAdmin";
 import { useSessionContext } from "@/core/session";
 import type { DriverDataRecord } from "@/core/mobility/types/DriverDataRecord";
+import { DriverAvailabilityService } from "@/core/mobility/services/DriverAvailabilityService";
 import { MobilityRpcService } from "@/core/mobility/services/MobilityRpcService";
 
 interface UseDriverProfileIdentityOptions {
@@ -9,6 +10,25 @@ interface UseDriverProfileIdentityOptions {
   enabled?: boolean;
   queryKey?: readonly unknown[];
   queryScope?: string;
+}
+
+async function withCanonicalAvailability(
+  driverData: DriverDataRecord | null,
+): Promise<DriverDataRecord | null> {
+  if (!driverData?.profile_id) {
+    return driverData;
+  }
+
+  const availability = await DriverAvailabilityService.getStatus(
+    driverData.profile_id,
+  );
+
+  return {
+    ...driverData,
+    is_online: availability?.isOnline ?? false,
+    is_available: availability?.isAvailable ?? false,
+    last_location_update: availability?.lastLocationUpdate ?? null,
+  };
 }
 
 export function useDriverProfileIdentity({
@@ -37,7 +57,7 @@ export function useDriverProfileIdentity({
       const { mobilityService } = await import("@/core/mobility/services/runtime");
       const existing = (await mobilityService.getDriverData(user.id)) as DriverDataRecord | null;
       if (existing || !allowAdminBootstrap || !isAdmin) {
-        return existing;
+        return withCanonicalAvailability(existing);
       }
 
       const result = await MobilityRpcService.ensureAdminDriverProfile();
@@ -45,7 +65,9 @@ export function useDriverProfileIdentity({
         throw new Error(result.error || "Falha ao preparar perfil operacional de motorista");
       }
 
-      return result.data as unknown as DriverDataRecord;
+      return withCanonicalAvailability(
+        result.data as unknown as DriverDataRecord,
+      );
     },
     enabled: enabled && !!user,
     retry: false,
