@@ -138,7 +138,7 @@ export function OrderTrackingCard({ order, className }: OrderTrackingCardProps) 
           )}
         </div>
 
-        {!canTrackDriver && (
+        {isActive && !canTrackDriver && (
           <div
             className="flex items-center justify-center p-8 rounded-lg border border-dashed bg-muted/50"
             role="status"
@@ -147,14 +147,26 @@ export function OrderTrackingCard({ order, className }: OrderTrackingCardProps) 
             <div className="text-center space-y-2">
               <Navigation className="h-8 w-8 text-muted-foreground mx-auto animate-pulse" />
               <p className="text-sm font-medium">
-                {hasTracking
-                  ? "Aguardando confirmacao operacional do entregador..."
-                  : "Entrega manual pela loja"}
+                Aguardando confirmacao operacional do entregador...
               </p>
               <p className="text-xs text-muted-foreground">
-                {hasTracking
-                  ? "O rastreamento preciso sera disponibilizado somente depois que o entregador aceitar a operacao."
-                  : "Para frota propria, acompanhe pelos status do pedido. Quando houver entrega SSOT vinculada, o acompanhamento aparecera aqui."}
+                O rastreamento preciso sera disponibilizado somente depois que o entregador aceitar a operacao.
+              </p>
+            </div>
+          </div>
+        )}
+
+        {!hasTracking && (
+          <div
+            className="flex items-center justify-center p-8 rounded-lg border border-dashed bg-muted/50"
+            role="status"
+            aria-live="polite"
+          >
+            <div className="text-center space-y-2">
+              <Navigation className="h-8 w-8 text-muted-foreground mx-auto" />
+              <p className="text-sm font-medium">Entrega manual pela loja</p>
+              <p className="text-xs text-muted-foreground">
+                Para frota propria, acompanhe pelos status do pedido. Quando houver entrega SSOT vinculada, o acompanhamento aparecera aqui.
               </p>
             </div>
           </div>
