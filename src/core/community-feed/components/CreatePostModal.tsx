@@ -520,7 +520,7 @@ export function CreatePostModal({
       setEventPlace(draft.eventPlace);
       setEventLimit(draft.eventLimit);
       setEventDescription(draft.eventDescription);
-      setLastSavedAt(draft.updatedAt ?? draft.savedAt ?? Date.now());
+      setLastSavedAt(draft.updatedAt);
       setHasStoredDraft(true);
     },
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -529,7 +529,6 @@ export function CreatePostModal({
 
   React.useEffect(() => {
     if (!open) return;
-    // Suprime autosave durante a hidratação inicial do modal.
     suppressAutosaveRef.current = true;
     form.setType(
       (initialType ?? defaultType ?? selectedIntent.structuralType) as PostType,
@@ -552,7 +551,6 @@ export function CreatePostModal({
     setPendingDraftForRestore(null);
     setSaveStatus("idle");
 
-    // Detecta rascunho local criptografado e oferece "Continuar rascunho".
     if (!editPostId && profile?.id) {
       const profileId = profile.id;
       void (async () => {
@@ -561,13 +559,12 @@ export function CreatePostModal({
           local && hasMeaningfulDraft(local) ? local : null;
         if (candidate) {
           setHasStoredDraft(true);
-          setLastSavedAt(candidate.updatedAt ?? candidate.savedAt ?? null);
+          setLastSavedAt(candidate.updatedAt);
           setPendingDraftForRestore(candidate);
           setSaveStatus("saved");
         }
       })();
     }
-    // Libera autosave após o próximo tick, quando os estados já settlaram.
     const t = window.setTimeout(() => {
       suppressAutosaveRef.current = false;
     }, 300);
@@ -579,7 +576,6 @@ export function CreatePostModal({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [selectedIntent.structuralType]);
 
-  // Snapshot atual dos campos textuais (mesma forma do PostDraftPayload).
   const currentDraftPayload = React.useMemo<PostDraftPayload>(
     () => ({
       intent,
@@ -617,7 +613,6 @@ export function CreatePostModal({
     ],
   );
 
-  // Autosave local criptografado (debounce 400ms).
   React.useEffect(() => {
     if (!open || editPostId) return;
     if (!profile?.id) return;
