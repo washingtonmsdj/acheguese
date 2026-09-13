@@ -14,10 +14,7 @@ import {
   QUERYABLE_OPEN_RIDE_STATUSES,
 } from "@/core/mobility/core/RideLifecycleStatus";
 import { MobilityDispatchConfigService } from "./MobilityDispatchConfigService";
-import {
-  DriverRideHistoryReadService,
-  type DriverRideHistoryRow,
-} from "./DriverRideHistoryReadService";
+import { DriverRideHistoryReadService } from "./DriverRideHistoryReadService";
 import {
   RIDE_REQUEST_READ_SELECT,
   toRideRequestReadModel,
@@ -43,8 +40,6 @@ export {
   getTopDrivers,
   type DriverOfferCapabilitiesRow,
 } from "./MobilityServiceDriverQueries";
-
-export type DriverRideListItem = RideRequest | DriverRideHistoryRow;
 
 type ErrorLike = { message?: string | null; code?: string | null } | null;
 
@@ -157,9 +152,7 @@ export async function getRidesByPassenger(
  *
  * Oferta pre-aceite pertence exclusivamente ao MobilityOfferService.
  */
-export async function getRidesByDriverProfile(
-  driverProfileId: string,
-): Promise<DriverRideListItem[]> {
+export async function getRidesByDriverProfile(driverProfileId: string): Promise<unknown[]> {
   const [activeResult, history] = await Promise.all([
     supabaseClient
       .from<RideRequestReadRow>("ride_requests")
@@ -173,8 +166,7 @@ export async function getRidesByDriverProfile(
   if (activeResult.error) throw activeResult.error;
 
   const activeRides = (activeResult.data || []).map(toRideRequestReadModel);
-  const rides: DriverRideListItem[] = [...activeRides, ...history];
-  return rides.sort(
+  return [...activeRides, ...history].sort(
     (left, right) => rideSortTimestamp(right) - rideSortTimestamp(left),
   );
 }
@@ -268,147 +260,171 @@ export async function getRideDispatchContextById(
   };
 }
 
-/** Normaliza perfil do motorista para shape esperado. */
-export function normalizeDriverProfile(profile: Record<string, unknown> | null): Record<string, unknown> | null {
-  if (!profile) return null;
-  return {
-    ...profile,
-    profile_id: profile.id,
-    user_id: profile.user_id,
-    name: profile.name || "Motorista",
-    avatar_url: profile.avatar_url,
-    rating: profile.rating || 5.0,
-  };
-}
-
-/** Buscar perfil do passageiro por profile_id. */
-export async function getPassengerProfile(passengerId: string): Promise<Record<string, unknown> | null> {
-  return profileService.getAccessibleProfileById(passengerId);
-}
-
-/** Buscar corridas do usuario - alias para compatibilidade. */
+/** Buscar corridas do usuario (passageiro ou motorista) pelo perfil ativo. */
 export async function getUserRides(userId: string): Promise<RideRequest[]> {
-  const { profile } = await profileService.getCurrentUserWithProfile();
-  if (!profile) return [];
-  return getRidesByPassenger(profile.id);
-}
-
-/** Buscar dados basicos de corrida para verificacao. */
-export async function getRideBasic(rideId: string): Promise<{
-  id: string;
-  status: string | null;
-  driver_profile_id: string | null;
-  passenger_profile_id: string | null;
-} | null> {
-  const { data, error } = await supabaseClient
-    .from<{
-      id: string;
-      status: string | null;
-      driver_profile_id: string | null;
-      passenger_profile_id: string | null;
-    }>("ride_requests")
-    .select("id, status, driver_profile_id, passenger_profile_id")
-    .eq("id", rideId)
-    .maybeSingle();
-  if (error) throw error;
-  return data || null;
-}
-
-/** Verificar se viagem esta finalizada. */
-export async function isRideCompleted(rideId: string): Promise<boolean> {
-  const { data, error } = await supabaseClient
-    .from<{ status: string | null }>("ride_requests")
-    .select("status")
-    .eq("id", rideId)
-    .maybeSingle();
-  if (error) return false;
-  return data?.status === "completed";
-}
-
-/** Buscar dados da corrida para pricing (sem joins). */
-export async function getRideForPricing(rideId: string): Promise<Record<string, unknown> | null> {
-  const { data, error } = await supabaseClient
-    .from<Record<string, unknown>>("ride_requests")
-    .select("id, ride_mode, delivery_type, delivery_size, distance_km")
-    .eq("id", rideId)
-    .maybeSingle();
-  if (error) return null;
-  return data;
-}
-
-/** Compatibilidade: preço aceito e campos de distância. */
-export async function getRidePricingFields(rideId: string): Promise<Record<string, unknown> | null> {
-  const { data, error } = await supabaseClient
-    .from<Record<string, unknown>>("ride_requests")
-    .select("id, accepted_price, suggested_price, final_price, actual_fare, distance_km")
-    .eq("id", rideId)
-    .maybeSingle();
-  if (error) return null;
-  return data;
-}
-
-/** Verificar se entregador esta disponivel para nova entrega. */
-export async function getDriverAvailability(profileId: string): Promise<Record<string, unknown> | null> {
-  const { data, error } = await supabaseClient
-    .from<Record<string, unknown>>("driver_availability")
-    .select("profile_id, is_available, online_since, last_activity_at, active_ride_id")
-    .eq("profile_id", profileId)
-    .maybeSingle();
-  if (error) return null;
-  return data;
-}
-
-/** Verificacoes de banco do modulo motoboy. */
-export async function verifyMotoboyRuntimeDatabase(): Promise<MotoboyRuntimeDatabaseChecks> {
-  const details: string[] = [];
-
   try {
-    const rideCheck = await supabaseClient
-      .from<Record<string, unknown>>("ride_requests")
-      .select("ride_mode, delivery_type, delivery_size, volume_m3")
-      .limit(1);
-    const driverCheck = await supabaseClient
-      .from<Record<string, unknown>>("driver_data")
-      .select("vehicle_type, vehicle_subtype, can_do_delivery, can_do_rides")
-      .limit(1);
-    const availabilityCheck = await supabaseClient
-      .from<Record<string, unknown>>("driver_availability")
-      .select("profile_id, is_available, active_ride_id")
-      .limit(1);
-    const pricingCheck = await supabaseClient
-      .from<Record<string, unknown>>("mobility_pricing_config")
-      .select("ride_mode, is_active")
-      .eq("ride_mode", "motoboy")
-      .eq("is_active", true)
-      .limit(1);
-    const driverCapabilityCheck = await supabaseClient
-      .from<Record<string, unknown>>("driver_data")
-      .select("profile_id")
-      .eq("can_do_delivery", true)
-      .limit(100);
+    const activeProfile = await profileService.getActiveProfile(userId);
+    if (!activeProfile?.id) return [];
 
-    const checks = [rideCheck, driverCheck, availabilityCheck, pricingCheck];
-    for (const result of checks) {
-      if (result.error) details.push(result.error.message ?? "database check failed");
+    const { data, error } = await supabaseClient
+      .from<RideRequestReadRow>("ride_requests")
+      .select(RIDE_REQUEST_READ_SELECT)
+      .or(`passenger_profile_id.eq.${activeProfile.id},driver_profile_id.eq.${activeProfile.id}`)
+      .order("created_at", { ascending: false });
+
+    if (error) throw error;
+    return (data || []).map(toRideRequestReadModel);
+  } catch (error) {
+    logger.error("MobilityQueries.getUserRides", error as Error);
+    return [];
+  }
+}
+
+/** Buscar dados do motorista por ID de perfil. */
+export async function getDriverDataIdByProfileId(
+  profileId: string,
+): Promise<string | null> {
+  try {
+    const { data, error } = await supabaseClient
+      .from<{ id: string }>("driver_data")
+      .select("id")
+      .eq("profile_id", profileId)
+      .maybeSingle();
+
+    if (error) {
+      logger.error("MobilityQueries.getDriverDataIdByProfileId", error);
+      return null;
     }
 
-    return {
-      rideRequestsColumnsOk: !rideCheck.error,
-      driverDataColumnsOk: !driverCheck.error,
-      driverAvailabilityColumnsOk: !availabilityCheck.error,
-      motoboyPricingActive: !pricingCheck.error && Boolean(pricingCheck.data?.length),
-      motoboyEnabledDrivers: driverCapabilityCheck.data?.length ?? 0,
-      details,
-    };
+    return data?.id ?? null;
   } catch (error) {
-    details.push(error instanceof Error ? error.message : "database verification failed");
-    return {
-      rideRequestsColumnsOk: false,
-      driverDataColumnsOk: false,
-      driverAvailabilityColumnsOk: false,
-      motoboyPricingActive: false,
-      motoboyEnabledDrivers: 0,
-      details,
-    };
+    logger.error(
+      "MobilityQueries.getDriverDataIdByProfileId - unexpected error",
+      error,
+    );
+    return null;
   }
+}
+
+/**
+ * Runtime summary consumed by DriverService.impl.
+ * Presence, availability and GPS belong exclusively to driver_availability.
+ */
+export async function getDriverData(profileId: string): Promise<unknown | null> {
+  try {
+    const { data, error } = await supabaseClient
+      .from("driver_data")
+      .select("profile_id, rating, total_rides, is_verified, created_at, updated_at")
+      .eq("profile_id", profileId)
+      .maybeSingle();
+
+    if (error) {
+      logger.error("MobilityQueries.getDriverData", error);
+      return null;
+    }
+
+    return data;
+  } catch (error) {
+    logger.error("MobilityQueries.getDriverData - unexpected error", error);
+    return null;
+  }
+}
+
+/**
+ * Estatisticas do motorista sem carregar o agregado inteiro de driver_data.
+ * Campos de presenca/localizacao nao pertencem a este read model.
+ */
+export async function getDriverStatsDetailed(driverProfileId: string): Promise<unknown | null> {
+  try {
+    const { data, error } = await supabaseClient
+      .from("driver_data")
+      .select(
+        "profile_id, rating, total_rides, total_rides_completed, total_rides_cancelled, acceptance_rate, cancellation_rate, is_suspended, is_verified, subscription_active, can_do_delivery, can_do_rides, created_at, updated_at",
+      )
+      .eq("profile_id", driverProfileId)
+      .maybeSingle();
+
+    if (error) {
+      logger.error("MobilityQueries.getDriverStatsDetailed", error);
+      return null;
+    }
+
+    return data;
+  } catch (error) {
+    logger.error("MobilityQueries.getDriverStatsDetailed - unexpected error", error);
+    return null;
+  }
+}
+
+export async function getMotoboyRuntimeDatabaseChecks(): Promise<MotoboyRuntimeDatabaseChecks> {
+  const details: string[] = [];
+
+  const rideColumnsResult = await supabaseClient
+    .from("ride_requests")
+    .select(
+      [
+        "id",
+        "ride_mode",
+        "source_type",
+        "source_id",
+        "recipient_name",
+        "recipient_phone",
+        "delivery_notes",
+        "package_description",
+        "package_size",
+        "proof_of_delivery",
+        "pickup_confirmed_at",
+        "delivered_at",
+        "failed_delivery_at",
+        "failed_delivery_reason",
+      ].join(", "),
+    )
+    .limit(1);
+
+  const driverDataColumnsResult = await supabaseClient
+    .from("driver_data")
+    .select("profile_id, can_do_delivery, can_do_rides")
+    .limit(1);
+
+  const driverAvailabilityColumnsResult = await supabaseClient
+    .from("driver_availability")
+    .select("profile_id, active_ride_id, active_ride_mode, busy_since, last_seen_at")
+    .limit(1);
+
+  const pricingResult = await supabaseClient
+    .from("pricing_rules")
+    .select("id")
+    .eq("mode", "motoboy")
+    .eq("is_active", true)
+    .limit(1);
+
+  const motoboyDriversResult = await supabaseClient
+    .from("driver_data")
+    .select("profile_id", { count: "exact", head: true })
+    .eq("can_do_delivery", true);
+
+  if (rideColumnsResult.error) {
+    details.push(`ride_requests columns error: ${rideColumnsResult.error.message}`);
+  }
+  if (driverDataColumnsResult.error) {
+    details.push(`driver_data columns error: ${driverDataColumnsResult.error.message}`);
+  }
+  if (driverAvailabilityColumnsResult.error) {
+    details.push(`driver_availability columns error: ${driverAvailabilityColumnsResult.error.message}`);
+  }
+  if (pricingResult.error) {
+    details.push(`pricing query error: ${pricingResult.error.message}`);
+  }
+  if (motoboyDriversResult.error) {
+    details.push(`motoboy drivers query error: ${motoboyDriversResult.error.message}`);
+  }
+
+  return {
+    rideRequestsColumnsOk: !rideColumnsResult.error,
+    driverDataColumnsOk: !driverDataColumnsResult.error,
+    driverAvailabilityColumnsOk: !driverAvailabilityColumnsResult.error,
+    motoboyPricingActive: ((pricingResult.data as { id: string }[] | null) ?? []).length > 0,
+    motoboyEnabledDrivers: (motoboyDriversResult as { count?: number | null }).count ?? 0,
+    details,
+  };
 }
