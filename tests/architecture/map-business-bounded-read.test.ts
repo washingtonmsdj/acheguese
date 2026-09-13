@@ -10,6 +10,9 @@ describe('business map bounded read', () => {
   const service = readProjectFile(
     'src/core/maps/services/MapBusinessLayerRuntimeService.ts',
   );
+  const mapPage = readProjectFile(
+    'src/core/maps/pages/MapaPageV4.tsx',
+  );
   const migration = readProjectFile(
     'supabase/migrations/20260913004500_index_public_business_map_bounds_g154.sql',
   );
@@ -25,15 +28,23 @@ describe('business map bounded read', () => {
     expect(service).not.toContain('isInsideBounds');
   });
 
+  it('keeps MapaPage on the bounded Business map boundary', () => {
+    expect(mapPage).toContain('mapBusinessLayerRuntimeService.getBusinessesByBounds(bounds');
+    expect(mapPage).not.toContain('BusinessService.getBusinesses(');
+    expect(mapPage).not.toContain('function isInsideBounds(');
+  });
+
   it('bounds result cardinality and rejects the retired businesses spatial table', () => {
     expect(service).toContain('MAX_BUSINESS_MAP_LIMIT = 200');
     expect(service).toContain('.limit(limit)');
     expect(service).not.toContain('from<BusinessMapRow>("businesses")');
   });
 
-  it('indexes both coordinate axes on the canonical public read model', () => {
+  it('indexes rectangular and radius searches on the canonical public read model', () => {
     expect(migration).toContain('ON public.public_business_search (latitude)');
     expect(migration).toContain('ON public.public_business_search (longitude)');
+    expect(migration).toContain('public_business_search_geography_idx');
+    expect(migration).toContain('USING gist');
     expect(migration).not.toContain('ON public.businesses');
   });
 });
