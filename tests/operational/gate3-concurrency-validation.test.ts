@@ -6,11 +6,6 @@
  * - Cancelamento simultâneo (passageiro + motorista)
  * - Cancelamento durante dispatch
  * - Cancelamento com realtime atrasado
- * 
- * Pré-requisitos:
- * 1. CHECK constraint aplicada
- * 2. Motorista de teste criado
- * 3. Passageiro de teste criado
  */
 
 import { it, expect, beforeAll, afterAll } from 'vitest';
@@ -55,8 +50,6 @@ describeOperational('GATE 3 - Validação de Concorrência', {
     passengerFixture = await createGate3PassengerFixture(admin, 'gate3-concurrency-passenger');
     passengerProfileId = passengerFixture.profileId;
     passengerClient = passengerFixture.client;
-
-    console.log('Setup completo:', { passengerProfileId, driverProfileId });
   });
 
   afterAll(async () => {
@@ -97,13 +90,6 @@ describeOperational('GATE 3 - Validação de Concorrência', {
       .single();
 
     expect(finalRide?.status).toBe(RIDE_STATE.CANCELLED_BY_PASSENGER);
-
-    console.log('Cancelamento bloqueou aceite posterior:', {
-      cancelSuccess: cancelResult.success,
-      acceptSuccess: acceptResult.success,
-      finalState: finalRide?.status,
-    });
-
     await admin.from('ride_requests').delete().eq('id', rideId);
   });
 
@@ -143,18 +129,10 @@ describeOperational('GATE 3 - Validação de Concorrência', {
       .single();
 
     expect(finalRide?.status).toBe(RIDE_STATE.CANCELLED_BY_PASSENGER);
-
-    console.log('Cancelamento contraditorio bloqueado:', {
-      passengerSuccess: passengerCancel.success,
-      driverSuccess: driverCancel.success,
-      finalState: finalRide?.status,
-    });
-
     await admin.from('ride_requests').delete().eq('id', rideId);
   });
 
   it('3. Cancelamento após corrida finalizada - deve falhar', async () => {
-    // Criar corrida completada
     const { data: ride } = await admin
       .from('ride_requests')
       .insert({
@@ -166,7 +144,6 @@ describeOperational('GATE 3 - Validação de Concorrência', {
 
     const rideId = ride?.id || '';
 
-    // Tentar cancelar
     await authenticateGate3RuntimeAs(passengerFixture!);
     const result = await RideOperationalService.cancelRide({
       rideId,
@@ -177,15 +154,10 @@ describeOperational('GATE 3 - Validação de Concorrência', {
 
     expect(result.success).toBe(false);
     expect(result.error).toContain('Cannot cancel');
-
-    console.log('✅ Cancelamento de corrida finalizada bloqueado');
-
-    // Limpar
     await admin.from('ride_requests').delete().eq('id', rideId);
   });
 
   it('4. Cancelamento com refresh no meio - idempotência', async () => {
-    // Criar corrida
     const { data: ride } = await admin
       .from('ride_requests')
       .insert(createGate3RidePayload(passengerProfileId, passengerFixture!, RIDE_STATE.DRIVER_ASSIGNED, 18.00, driverProfileId))
@@ -194,7 +166,6 @@ describeOperational('GATE 3 - Validação de Concorrência', {
 
     const rideId = ride?.id || '';
 
-    // Primeiro cancelamento
     await authenticateGate3RuntimeAs(passengerFixture!);
     const result1 = await RideOperationalService.cancelRide({
       rideId,
@@ -205,7 +176,6 @@ describeOperational('GATE 3 - Validação de Concorrência', {
 
     expect(result1.success).toBe(true);
 
-    // Simular refresh - buscar estado atual
     const { data: refreshedRide } = await admin
       .from('ride_requests')
       .select('status')
@@ -214,7 +184,6 @@ describeOperational('GATE 3 - Validação de Concorrência', {
 
     expect(refreshedRide?.status).toBe(RIDE_STATE.CANCELLED_BY_PASSENGER);
 
-    // Segundo cancelamento (idempotente)
     await authenticateGate3RuntimeAs(passengerFixture!);
     const result2 = await RideOperationalService.cancelRide({
       rideId,
@@ -225,15 +194,10 @@ describeOperational('GATE 3 - Validação de Concorrência', {
 
     expect(result2.success).toBe(true);
     expect(result2.toState).toBe(RIDE_STATE.CANCELLED_BY_PASSENGER);
-
-    console.log('✅ Idempotência com refresh validada');
-
-    // Limpar
     await admin.from('ride_requests').delete().eq('id', rideId);
   });
 
   it('5. Validar que offers são canceladas ao cancelar corrida', async () => {
-    // Criar corrida
     const { data: ride } = await admin
       .from('ride_requests')
       .insert(createGate3RidePayload(passengerProfileId, passengerFixture!, RIDE_STATE.DRIVER_ASSIGNED, 22.00, driverProfileId))
@@ -242,7 +206,6 @@ describeOperational('GATE 3 - Validação de Concorrência', {
 
     const rideId = ride?.id || '';
 
-    // Criar offer pendente (simular dispatch)
     const { data: offer, error: offerError } = await admin
       .from('ride_offers')
       .insert({
@@ -258,7 +221,6 @@ describeOperational('GATE 3 - Validação de Concorrência', {
     expect(offerError).toBeNull();
     expect(offer?.id).toBeTruthy();
 
-    // Cancelar corrida
     await authenticateGate3RuntimeAs(passengerFixture!);
     const result = await RideOperationalService.cancelRide({
       rideId,
@@ -269,7 +231,6 @@ describeOperational('GATE 3 - Validação de Concorrência', {
 
     expect(result.success).toBe(true);
 
-    // Verificar que offer foi cancelada
     const { data: cancelledOffer, error: cancelledOfferError } = await admin
       .from('ride_offers')
       .select('status')
@@ -279,26 +240,7 @@ describeOperational('GATE 3 - Validação de Concorrência', {
     expect(cancelledOfferError).toBeNull();
     expect(cancelledOffer?.status).toBe('cancelled');
 
-    console.log('✅ Offers canceladas corretamente ao cancelar corrida');
-
-    // Limpar
     await admin.from('ride_offers').delete().eq('ride_id', rideId);
     await admin.from('ride_requests').delete().eq('id', rideId);
-  });
-
-  it('6. Relatório de evidências de concorrência', () => {
-    console.log('\n========================================');
-    console.log('GATE 3 - VALIDAÇÃO DE CONCORRÊNCIA');
-    console.log('========================================\n');
-    console.log('✅ Race condition (cancelar vs aceitar): VALIDADO');
-    console.log('✅ Cancelamento simultâneo: VALIDADO');
-    console.log('✅ Cancelamento de corrida finalizada: BLOQUEADO');
-    console.log('✅ Idempotência com refresh: VALIDADA');
-    console.log('✅ Offers canceladas: VALIDADO');
-    console.log('\n========================================');
-    console.log('CONCORRÊNCIA: TRATADA ✅');
-    console.log('========================================\n');
-
-    expect(true).toBe(true);
   });
 });
