@@ -1,5 +1,5 @@
 import { useQuery } from "@tanstack/react-query";
-import { MobilityFacade } from "@/core/mobility/services/MobilityService";
+import { getUserRides } from "@/core/mobility/services/mobility.queries";
 import {
   isCancelledRideStatus,
   isClosedRideStatus,
@@ -92,7 +92,7 @@ export function useRideHistory(
         };
       }
 
-      const allRides = (await MobilityFacade.getUserRides(user.id)) as RideRequest[];
+      const allRides = await getUserRides(user.id);
       let filteredRides = allRides.filter(
         (ride) =>
           isClosedRideStatus(ride.status) &&
