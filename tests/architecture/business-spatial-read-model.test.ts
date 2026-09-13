@@ -29,8 +29,10 @@ describe('Business spatial read-model ownership', () => {
     expect(migration).toContain('b.business_name AS name');
   });
 
-  it('keeps spatial reads bounded and search_path explicit', () => {
+  it('keeps spatial reads bounded and search_path explicit even for null limits', () => {
     expect(migration).toContain("SET search_path TO 'pg_catalog', 'public', 'pg_temp'");
-    expect(migration).toContain('LEAST(GREATEST(p_limit, 1), 200)');
+    expect(migration).toContain('LEAST(GREATEST(COALESCE(p_limit, 50), 1), 200)');
+    expect(migration).toContain('LEAST(GREATEST(COALESCE(p_limit, 100), 1), 200)');
+    expect(migration).toContain('GREATEST(COALESCE(p_offset, 0), 0)');
   });
 });
