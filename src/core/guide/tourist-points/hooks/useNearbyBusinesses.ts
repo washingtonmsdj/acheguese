@@ -1,13 +1,15 @@
 /**
  * useNearbyBusinesses / useNearbyGuides
  *
- * Busca empresas e guias turísticos próximos a um ponto turístico.
- * Ordena por distância Haversine quando coordenadas disponíveis.
- * Retorna apenas dados reais e usa leitura pública paginada/bounded.
+ * Nearby businesses use the canonical spatial boundary first and hydrate only
+ * the small result set needed by the UI. Guide discovery keeps the bounded
+ * catalog path because its matching contract depends on specialty metadata
+ * that is not part of the spatial projection.
  */
 
 import { useQuery } from '@tanstack/react-query';
 import { BusinessService } from '@/core/business/services/BusinessService';
+import { spatialSearchService } from '@/core/geospatial/services/SpatialSearchService';
 import { calculateDistance } from '@/shared/utils/geolocation';
 import type { Business } from '@/core/business/types/Business';
 import {
@@ -21,19 +23,27 @@ export interface NearbyBusiness extends Business {
   distanceMeters?: number;
 }
 
+const NEARBY_SPATIAL_CANDIDATE_LIMIT =
+  TOURIST_POINT_NEARBY_LIMITS.CANDIDATES_PER_CATEGORY *
+  TOURIST_POINT_NEARBY_BUSINESS_CATEGORIES.length;
+
 function withDistance(
   businesses: Business[],
   lat: number | null,
   lng: number | null,
   maxKm: number,
 ): NearbyBusiness[] {
-  if (!lat || !lng) return businesses.slice(0, TOURIST_POINT_NEARBY_LIMITS.MAX_RESULTS);
+  if (lat == null || lng == null) {
+    return businesses.slice(0, TOURIST_POINT_NEARBY_LIMITS.MAX_RESULTS);
+  }
 
   return businesses
     .map((business) => {
       const businessLat = business.address?.latitude ?? null;
       const businessLng = business.address?.longitude ?? null;
-      if (!businessLat || !businessLng) return { ...business, distanceMeters: undefined };
+      if (businessLat == null || businessLng == null) {
+        return { ...business, distanceMeters: undefined };
+      }
       return {
         ...business,
         distanceMeters: calculateDistance(lat, lng, businessLat, businessLng),
@@ -62,17 +72,58 @@ async function fetchCategoryCandidates(category: string): Promise<Business[]> {
   return businesses;
 }
 
-async function fetchNearbyBusinesses(lat: number | null, lng: number | null) {
-  const results = await Promise.all(
-    TOURIST_POINT_NEARBY_BUSINESS_CATEGORIES.map(fetchCategoryCandidates),
+async function fetchNearbyBusinesses(
+  lat: number | null,
+  lng: number | null,
+): Promise<NearbyBusiness[]> {
+  if (lat == null || lng == null) {
+    const results = await Promise.all(
+      TOURIST_POINT_NEARBY_BUSINESS_CATEGORIES.map(fetchCategoryCandidates),
+    );
+    return withDistance(
+      results.flat(),
+      lat,
+      lng,
+      TOURIST_POINT_NEARBY_LIMITS.MAX_RADIUS_KM,
+    );
+  }
+
+  const spatialResults = await spatialSearchService.searchByRadius({
+    center: { latitude: lat, longitude: lng },
+    radiusKm: TOURIST_POINT_NEARBY_LIMITS.MAX_RADIUS_KM,
+    entityType: 'business',
+    limit: NEARBY_SPATIAL_CANDIDATE_LIMIT,
+  });
+
+  if (spatialResults.length === 0) return [];
+
+  const summaries = await BusinessService.getBusinessesByIds(
+    spatialResults.map((result) => result.id),
+  );
+  const summaryById = new Map(summaries.map((business) => [business.id, business]));
+  const allowedCategories = new Set<string>(TOURIST_POINT_NEARBY_BUSINESS_CATEGORIES);
+
+  const selectedSpatial = spatialResults
+    .filter((result) => {
+      const summary = summaryById.get(result.id);
+      return Boolean(summary && allowedCategories.has(summary.category));
+    })
+    .slice(0, TOURIST_POINT_NEARBY_LIMITS.MAX_RESULTS);
+
+  const businesses = await Promise.all(
+    selectedSpatial.map((result) => BusinessService.getBusinessById(result.id)),
+  );
+  const distanceById = new Map(
+    selectedSpatial.map((result) => [result.id, result.distance_meters]),
   );
 
-  return withDistance(
-    results.flat(),
-    lat,
-    lng,
-    TOURIST_POINT_NEARBY_LIMITS.MAX_RADIUS_KM,
-  );
+  return businesses.flatMap((business) => {
+    if (!business) return [];
+    return [{
+      ...business,
+      distanceMeters: distanceById.get(business.id),
+    }];
+  });
 }
 
 export function useNearbyBusinesses(lat: number | null, lng: number | null) {
