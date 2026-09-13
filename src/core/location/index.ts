@@ -10,6 +10,9 @@
  * - Navegação de árvore (ancestors, descendants, children)
  * - Contexto geográfico do app — único, tipado, sem hardcode
  *
+ * Grupos territoriais pertencem ao módulo `@/core/territorial` e não são
+ * reexportados por Location.
+ *
  * @see docs/GEOGRAPHIC_FOUNDATION.md
  */
 
@@ -27,9 +30,6 @@ export type {
   ActiveTerritory,
   TerritoryMode,
   TerritoryFilter,
-  TerritorialGroup,
-  TerritorialGroupMember,
-  TerritorialGroupWithMembers,
   GetLocationByIdInput,
   GetLocationByPathInput,
   GetAncestorsInput,
