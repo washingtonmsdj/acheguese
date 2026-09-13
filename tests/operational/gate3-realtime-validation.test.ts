@@ -50,8 +50,6 @@ async function subscribeAndWait(channel: ReturnType<SupabaseClient['channel']>):
     });
   });
 
-  // Supabase can acknowledge the channel before postgres_changes is fully warm
-  // on the first realtime connection of the process.
   await new Promise((resolve) => setTimeout(resolve, 1000));
 }
 
@@ -98,8 +96,6 @@ describeOperational('GATE 3 - Realtime validation', {
     passengerFixture = await createGate3PassengerFixture(admin, 'gate3-realtime-passenger');
     passengerProfileId = passengerFixture.profileId;
     passengerClient = passengerFixture.client;
-
-    console.log('Gate3 realtime setup completed:', { passengerProfileId, driverProfileId });
   });
 
   afterAll(async () => {
@@ -152,11 +148,6 @@ describeOperational('GATE 3 - Realtime validation', {
 
       const lastEvent = await waitForRideStatusEvent(driverEvents, RIDE_STATE.CANCELLED_BY_PASSENGER);
       expect(lastEvent.new.status).toBe(RIDE_STATE.CANCELLED_BY_PASSENGER);
-
-      console.log('Driver received passenger cancellation via realtime:', {
-        eventsReceived: driverEvents.length,
-        finalState: lastEvent.new.status,
-      });
     } finally {
       await driverChannel.unsubscribe();
       await admin.from('ride_requests').delete().eq('id', rideId);
@@ -205,11 +196,6 @@ describeOperational('GATE 3 - Realtime validation', {
 
       const lastEvent = await waitForRideStatusEvent(passengerEvents, RIDE_STATE.CANCELLED_BY_DRIVER);
       expect(lastEvent.new.status).toBe(RIDE_STATE.CANCELLED_BY_DRIVER);
-
-      console.log('Passenger received driver cancellation via realtime:', {
-        eventsReceived: passengerEvents.length,
-        finalState: lastEvent.new.status,
-      });
     } finally {
       await passengerChannel.unsubscribe();
       await admin.from('ride_requests').delete().eq('id', rideId);
@@ -282,31 +268,10 @@ describeOperational('GATE 3 - Realtime validation', {
       expect(passengerFinalState).toBe(RIDE_STATE.CANCELLED_BY_PASSENGER);
       expect(driverFinalState).toBe(RIDE_STATE.CANCELLED_BY_PASSENGER);
       expect(passengerFinalState).toBe(driverFinalState);
-
-      console.log('Realtime state convergence validated:', {
-        passengerState: passengerFinalState,
-        driverState: driverFinalState,
-        converged: passengerFinalState === driverFinalState,
-      });
     } finally {
       await passengerChannel.unsubscribe();
       await driverChannel.unsubscribe();
       await admin.from('ride_requests').delete().eq('id', rideId);
     }
-  });
-
-  it('4. Realtime evidence report', () => {
-    console.log('\n========================================');
-    console.log('GATE 3 - REALTIME VALIDATION');
-    console.log('========================================\n');
-    console.log('Passenger cancellation reaches driver: VALIDATED');
-    console.log('Driver cancellation reaches passenger: VALIDATED');
-    console.log('State convergence: VALIDATED');
-    console.log('Bidirectional sync: WORKING');
-    console.log('\n========================================');
-    console.log('REALTIME: VALIDATED');
-    console.log('========================================\n');
-
-    expect(true).toBe(true);
   });
 });
