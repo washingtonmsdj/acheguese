@@ -8,6 +8,8 @@ const read = (path: string) => readFileSync(resolve(root, path), "utf8");
 describe("Mobility query surface integrity", () => {
   const queries = read("src/core/mobility/services/mobility.queries.ts");
   const rideService = read("src/core/mobility/services/RideService.ts");
+  const mobilityService = read("src/core/mobility/services/MobilityService.ts");
+  const serviceIndex = read("src/core/mobility/services/index.ts");
 
   it("preserves the driver query owners required by active mobility consumers", () => {
     expect(queries).toContain("export async function getDriverDataIdByProfileId(");
@@ -21,5 +23,12 @@ describe("Mobility query surface integrity", () => {
     expect(rideService).not.toContain("getRidesByDriver(");
     expect(rideService).toContain("getRidesByPassenger");
     expect(rideService).toContain("getActiveRide");
+  });
+
+  it("keeps ride-by-id on the direct query owner instead of duplicating it in MobilityFacade", () => {
+    expect(queries).toContain("export async function getRideById(");
+    expect(serviceIndex).toContain("getRideById,");
+    expect(mobilityService).not.toContain("static getRideById");
+    expect(mobilityService).not.toMatch(/export\s*\{[^}]*\bgetRideById\b/s);
   });
 });
