@@ -103,7 +103,6 @@
     "validate:phase:core": "npm run typecheck && npm run lint && npm run validate:docs-live-links && npm run test:ssot:community && npm run test:e2e:phase-core",
     "validate:phase:core:ci": "npm run typecheck && npm run lint && npm run validate:docs-live-links && npm run validate:migrations && npm run test:ssot:community",
     "generate:migration": "tsx tools/migrations/generate-migration-template.ts",
-    "generate:service": "tsx tools/architecture/generate-service-template.ts",
     "lint:ssot": "eslint src api --config eslint.config.js",
     "generate:types": "tsx tools/supabase/generate-supabase-types.ts",
     "prepare": "husky",
