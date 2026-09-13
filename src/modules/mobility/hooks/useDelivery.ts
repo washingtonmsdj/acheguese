@@ -13,6 +13,7 @@ import { useAuth } from "@/core/auth";
 import { profileService } from "@/core/profiles/services/ProfileService";
 import { toast } from "sonner";
 import { mobilityService } from "@/core/mobility/services/MobilityService";
+import { getRideById } from "@/core/mobility/services/mobility.queries";
 import { RideOperationalService } from "@/core/mobility/core/RideOperationalService";
 import { isOpenRideStatus } from "@/core/mobility/core/RideLifecycleStatus";
 import { pricingService } from "@/core/pricing/services/PricingService";
@@ -95,7 +96,7 @@ export function useDelivery(sourceType: SourceType, sourceId?: string) {
       });
 
       if (activeDelivery?.id === event.rideId) {
-        mobilityService.getRideById(event.rideId).then((updated) => {
+        getRideById(event.rideId).then((updated) => {
           setActiveDelivery(
             updated && isOpenRideStatus(updated.status) ? updated : null,
           );
