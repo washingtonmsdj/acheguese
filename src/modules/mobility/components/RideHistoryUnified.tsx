@@ -11,7 +11,7 @@ import {
   isCancelledRideStatus,
   isClosedRideStatus,
 } from "@/core/mobility/core/RideLifecycleStatus";
-import { mobilityService } from "@/core/mobility/services/MobilityService";
+import { getUserRides } from "@/core/mobility/services/mobility.queries";
 import { MobilityTrustService } from "@/core/mobility/services/MobilityTrustService";
 import {
   MOBILITY_QUERY_KEYS,
@@ -91,8 +91,8 @@ export function RideHistoryUnified({
     queryKey: MOBILITY_QUERY_KEYS.rideHistory(user?.id || ""),
     queryFn: async () => {
       if (!user) return [];
-      const allRides = await mobilityService.getUserRides(user.id);
-      return (allRides || []).filter((ride) => isClosedRideStatus(ride.status));
+      const allRides = await getUserRides(user.id);
+      return allRides.filter((ride) => isClosedRideStatus(ride.status));
     },
     enabled: Boolean(user),
     staleTime: 5 * 60 * 1000,
