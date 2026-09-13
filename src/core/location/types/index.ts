@@ -4,10 +4,6 @@
  * Canonical contracts for the geographic hierarchy.
  */
 
-// ============================================
-// ENUMS
-// ============================================
-
 export enum LocationType {
   COUNTRY = 'country',
   STATE = 'state',
@@ -20,10 +16,6 @@ export enum LocationStatus {
   ACTIVE = 'active',
   INACTIVE = 'inactive',
 }
-
-// ============================================
-// CORE TYPES
-// ============================================
 
 export interface Location {
   id: string;
@@ -53,10 +45,6 @@ export interface LocationTree {
   children: LocationTree[];
   depth: number;
 }
-
-// ============================================
-// INPUT TYPES
-// ============================================
 
 export interface GetLocationByIdInput {
   id: string;
@@ -98,10 +86,6 @@ export interface ValidateLocationInput {
   required_type?: LocationType;
 }
 
-// ============================================
-// OUTPUT TYPES
-// ============================================
-
 export interface GetLocationOutput {
   location: Location;
 }
@@ -138,54 +122,14 @@ export interface GetLocationTreeOutput {
   total_nodes: number;
 }
 
-// ============================================
-// TERRITORIAL GROUP COMPATIBILITY TYPES
-// ============================================
-// Groups are owned by core/territorial. These exports remain temporarily so
-// existing consumers of @/core/location/types do not break during G4 cleanup.
-
-export { TERRITORIAL_GROUP_STATUS } from '@/core/territorial/contracts';
-export type {
-  TerritorialGroupStatus,
-  TerritorialGroup,
-  TerritorialGroupMember,
-  TerritorialGroupWithMembers,
-} from '@/core/territorial/contracts';
-
-// ============================================
-// ACTIVE TERRITORY
-// ============================================
-
 export type ActiveTerritory = { type: 'location'; location: Location } | null;
 
-// ============================================
-// TERRITORY MODE
-// ============================================
-// 'bairro' = conteúdo filtrado apenas pelo bairro do usuário
-// 'cidade' = conteúdo da cidade inteira com filtros por bairro
-// null     = visitante sem modo (apenas cidade com filtros públicos)
-
 export type TerritoryMode = 'bairro' | 'cidade' | null;
-
-// ============================================
-// TERRITORY FILTER — Contrato único de filtro territorial
-//
-// Todos os módulos que filtram dados por território devem usar este tipo.
-// Nunca construir filtros ad-hoc em componentes ou hooks de módulo.
-//
-// scope: 'location' → eq(location_id, id)   — bairro único
-// scope: 'group'    → in(location_id, ids)  — grupo de bairros
-// scope: 'none'     → sem filtro territorial (território não resolvido)
-// ============================================
 
 export type TerritoryFilter =
   | { scope: 'location'; location_id: string }
   | { scope: 'group'; location_ids: string[] }
   | { scope: 'none' };
-
-// ============================================
-// CONTEXT TYPES
-// ============================================
 
 export interface LocationContextValue {
   activeTerritory: ActiveTerritory;
@@ -195,10 +139,6 @@ export interface LocationContextValue {
   isLoading: boolean;
   error: LocationError | null;
 }
-
-// ============================================
-// ERROR TYPES
-// ============================================
 
 export enum LocationErrorCode {
   LOCATION_NOT_FOUND = 'LOCATION_NOT_FOUND',
@@ -218,10 +158,6 @@ export interface LocationError {
   message: string;
   details?: Record<string, unknown>;
 }
-
-// ============================================
-// PAGINATION RULES
-// ============================================
 
 export const LOCATION_PAGINATION = {
   DEFAULT_PAGE_SIZE: 50,
