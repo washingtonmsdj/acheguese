@@ -7,6 +7,9 @@ function readProjectFile(path: string): string {
 }
 
 describe("map runtime bounded reads", () => {
+  const gastronomy = readProjectFile(
+    "src/core/maps/services/MapGastronomyLayerRuntimeService.ts",
+  );
   const services = readProjectFile(
     "src/core/maps/services/MapServicesLayerRuntimeService.ts",
   );
@@ -16,6 +19,28 @@ describe("map runtime bounded reads", () => {
   const classifiedsQuery = readProjectFile(
     "src/core/classifieds/services/classifieds.map-queries.ts",
   );
+
+  it("reads gastronomy candidates from the bounded public Business projection", () => {
+    expect(gastronomy).toContain(
+      '.from<PublicBusinessGastronomyRow>("public_business_search")',
+    );
+    expect(gastronomy).toContain('.eq("has_active_gastronomy_profile", true)');
+    expect(gastronomy).toContain('.gte("longitude", west)');
+    expect(gastronomy).toContain('.lte("longitude", east)');
+    expect(gastronomy).toContain('.gte("latitude", south)');
+    expect(gastronomy).toContain('.lte("latitude", north)');
+    expect(gastronomy).toContain(
+      'applyTerritoryFilter(businessQuery, territoryFilter)',
+    );
+    expect(gastronomy).toContain('.limit(limit)');
+    expect(gastronomy).toContain(
+      '.from<GastronomyProfileRow>("gastronomy_profiles")',
+    );
+    expect(gastronomy).toContain('.in("business_id", businessIds)');
+    expect(gastronomy).not.toContain('.from<GastronomyMapRow>("business_data")');
+    expect(gastronomy).not.toContain("isInsideBounds");
+    expect(gastronomy).not.toContain("limit * 3");
+  });
 
   it("reads public professionals by viewport before limiting", () => {
     expect(services).toContain('.from<ServiceMapRow>("public_professional_search")');
