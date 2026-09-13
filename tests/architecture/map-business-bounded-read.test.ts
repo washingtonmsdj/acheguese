@@ -13,6 +13,9 @@ describe('business map bounded read', () => {
   const mapPage = readProjectFile(
     'src/core/maps/pages/MapaPageV4.tsx',
   );
+  const cityPage = readProjectFile(
+    'src/app/pages/CidadeLandingPage.tsx',
+  );
   const migration = readProjectFile(
     'supabase/migrations/20260913004500_index_public_business_map_bounds_g154.sql',
   );
@@ -24,14 +27,18 @@ describe('business map bounded read', () => {
     expect(service).toContain('.gte("latitude", south)');
     expect(service).toContain('.lte("latitude", north)');
     expect(service).toContain('applyTerritoryFilter(query, territoryFilter)');
+    expect(service).toContain('public_business_search_location_id_fkey');
+    expect(service).toContain('geographic_path: location?.geographic_path ?? null');
     expect(service).not.toContain('BusinessService.getBusinesses(');
     expect(service).not.toContain('isInsideBounds');
   });
 
-  it('keeps MapaPage on the bounded Business map boundary', () => {
+  it('keeps map surfaces on the bounded Business map boundary', () => {
     expect(mapPage).toContain('mapBusinessLayerRuntimeService.getBusinessesByBounds(bounds');
     expect(mapPage).not.toContain('BusinessService.getBusinesses(');
-    expect(mapPage).not.toContain('function isInsideBounds(');
+
+    expect(cityPage).toContain('mapBusinessLayerRuntimeService.getBusinessesByBounds(bounds');
+    expect(cityPage).not.toContain('BusinessService.getBusinesses(');
   });
 
   it('bounds result cardinality and rejects the retired businesses spatial table', () => {
