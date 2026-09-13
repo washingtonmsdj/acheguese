@@ -11,10 +11,8 @@ import { logger } from "@/shared/utils/logger";
 import { sanitizeDriverSelfServiceUpdate } from "./driverDataSelfService";
 import { DriverEarningsReadService } from "./DriverEarningsReadService";
 import { MobilityRpcService } from "./MobilityRpcService";
-import {
-  RIDE_SEARCH_SNAPSHOT_SELECT,
-  type RideSearchSnapshotRow,
-} from "./RideSearchSnapshotReadModel";
+import { getRideWithAddresses as readRideSearchSnapshot } from "./mobility.ride-read-queries";
+import type { RideSearchSnapshotRow } from "./RideSearchSnapshotReadModel";
 
 type ErrorLike = { message?: string | null; code?: string | null } | null;
 
@@ -79,15 +77,6 @@ type DriverStatsDetailedRow = Pick<
   is_online: boolean;
   is_available: boolean;
   last_location_update: string | null;
-};
-type RideAvailableSeatsRow = { available_seats: number | null };
-type RideBasicInfoRow = {
-  id: string;
-  origin: string | null;
-  destination: string | null;
-  status: string | null;
-  final_price: number | null;
-  suggested_price: number | null;
 };
 
 const DRIVER_RUNTIME_IDENTITY_SELECT = [
@@ -320,54 +309,12 @@ class MobilityServiceInstance {
 
   // -- Ride ---------------------------------------------------------------
 
+  /**
+   * Temporary UI compatibility facade. The bounded query and DB ownership live
+   * in mobility.ride-read-queries; new consumers must import that owner directly.
+   */
   async getRideWithAddresses(rideId: string): Promise<RideSearchSnapshotRow | null> {
-    try {
-      const { data, error } = await db
-        .from<RideSearchSnapshotRow>("ride_requests")
-        .select(RIDE_SEARCH_SNAPSHOT_SELECT)
-        .eq("id", rideId)
-        .maybeSingle();
-
-      if (error) throw error;
-      return data;
-    } catch (error) {
-      logger.error("mobilityService.getRideWithAddresses", error as Error);
-      return null;
-    }
-  }
-
-  async getRideBasicInfo(rideId: string): Promise<RideBasicInfoRow | null> {
-    try {
-      const { data, error } = await db
-        .from<RideBasicInfoRow>("ride_requests")
-        .select("id, origin, destination, status, final_price, suggested_price")
-        .eq("id", rideId)
-        .maybeSingle();
-
-      if (error) throw error;
-      return data;
-    } catch (error) {
-      logger.error("mobilityService.getRideBasicInfo", error as Error);
-      return null;
-    }
-  }
-
-  // -- Seats --------------------------------------------------------------
-
-  async getRideAvailableSeats(rideId: string): Promise<number> {
-    try {
-      const { data, error } = await db
-        .from<RideAvailableSeatsRow>("ride_requests")
-        .select("available_seats")
-        .eq("id", rideId)
-        .maybeSingle();
-
-      if (error) throw error;
-      return data?.available_seats ?? 0;
-    } catch (error) {
-      logger.error("mobilityService.getRideAvailableSeats", error as Error);
-      return 0;
-    }
+    return readRideSearchSnapshot(rideId);
   }
 }
 
