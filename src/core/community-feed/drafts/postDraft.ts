@@ -8,8 +8,8 @@
  * localStorage (ver `postDraftCrypto.ts`). Snapshots antigos em texto puro
  * são migrados automaticamente na primeira leitura.
  *
- * `updatedAt` é o timestamp canônico. `savedAt` é aceito somente na leitura
- * de snapshots locais antigos e nunca é emitido pelos writers atuais.
+ * `updatedAt` é o único timestamp do contrato público. `savedAt` existe apenas
+ * no shape persistido legado e é convertido durante a leitura.
  */
 
 import {
@@ -37,16 +37,14 @@ export interface PostDraftSnapshot {
   eventPlace: string;
   eventLimit: string;
   eventDescription: string;
-  /** Timestamp canônico (ms) da última atualização. */
   updatedAt: number;
-  /** Compatibilidade somente de leitura com snapshots locais antigos. */
-  savedAt?: number;
 }
 
-export type PostDraftPayload = Omit<PostDraftSnapshot, "updatedAt" | "savedAt">;
+export type PostDraftPayload = Omit<PostDraftSnapshot, "updatedAt">;
 
 type PersistedPostDraftSnapshot = PostDraftPayload & {
   updatedAt?: number;
+  /** Legacy v1 timestamp. Never expose this outside the storage parser. */
   savedAt?: number;
 };
 
@@ -90,8 +88,7 @@ async function persistEncrypted(
   profileId: string,
   snapshot: PostDraftSnapshot,
 ): Promise<void> {
-  const { savedAt: _legacySavedAt, ...canonicalSnapshot } = snapshot;
-  const serialized = JSON.stringify(canonicalSnapshot);
+  const serialized = JSON.stringify(snapshot);
   const ciphertext = await encryptString(cryptoScopeFor(profileId), serialized);
   window.localStorage.setItem(keyFor(profileId), ciphertext);
 }
@@ -158,7 +155,6 @@ export function clearPostDraft(profileId: string): void {
   } catch {
     // no-op
   }
-  // Chave AES pode ser descartada com o rascunho — próxima gravação gera nova.
   void purgeCryptoKey(cryptoScopeFor(profileId));
 }
 
