@@ -7,6 +7,7 @@ const read = (path: string) => readFileSync(resolve(root, path), "utf8");
 
 describe("Mobility query surface integrity", () => {
   const queries = read("src/core/mobility/services/mobility.queries.ts");
+  const rideReads = read("src/core/mobility/services/mobility.ride-read-queries.ts");
   const rideService = read("src/core/mobility/services/RideService.ts");
   const mobilityService = read("src/core/mobility/services/MobilityService.ts");
   const runtimeService = read("src/core/mobility/services/MobilityRuntimeService.ts");
@@ -53,5 +54,18 @@ describe("Mobility query surface integrity", () => {
     expect(useRideHistory).not.toContain("MobilityFacade.getUserRides");
     expect(useDelivery).not.toContain("mobilityService.getUserRides");
     expect(rideHistoryUnified).not.toContain("mobilityService.getUserRides");
+  });
+
+  it("keeps bounded ride projections owned by the query layer", () => {
+    expect(rideReads).not.toContain('from "./MobilityRuntimeService"');
+    expect(rideReads).toContain('.from<RideSearchSnapshotRow>("ride_requests")');
+    expect(rideReads).toContain(".select(RIDE_SEARCH_SNAPSHOT_SELECT)");
+    expect(rideReads).toContain('.from<RideBasicInfoRow>("ride_requests")');
+    expect(rideReads).toContain('.select("id, origin, destination, status, final_price, suggested_price")');
+    expect(rideReads).toContain('.from<RideAvailableSeatsRow>("ride_requests")');
+    expect(rideReads).toContain('.select("available_seats")');
+    expect(runtimeService).not.toContain("async getRideBasicInfo(");
+    expect(runtimeService).not.toContain("async getRideAvailableSeats(");
+    expect(runtimeService).toContain("return readRideSearchSnapshot(rideId)");
   });
 });

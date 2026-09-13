@@ -7,6 +7,9 @@ function readProjectFile(path: string): string {
 }
 
 describe("G140 passenger search snapshot boundary", () => {
+  const rideReads = readProjectFile(
+    "src/core/mobility/services/mobility.ride-read-queries.ts",
+  );
   const runtime = readProjectFile(
     "src/core/mobility/services/MobilityRuntimeService.ts",
   );
@@ -14,16 +17,24 @@ describe("G140 passenger search snapshot boundary", () => {
     "src/core/mobility/services/RideSearchSnapshotReadModel.ts",
   );
 
-  it("uses a dedicated bounded projection for the passenger search snapshot", () => {
-    const start = runtime.indexOf("async getRideWithAddresses(");
-    const end = runtime.indexOf("async getUserRides(", start);
-    const method = runtime.slice(start, end);
+  it("uses a dedicated bounded projection on the canonical ride query owner", () => {
+    const start = rideReads.indexOf("export async function getRideWithAddresses(");
+    const end = rideReads.indexOf("export async function getRideBasicInfo(", start);
+    const method = rideReads.slice(start, end);
 
     expect(method).toContain("Promise<RideSearchSnapshotRow | null>");
     expect(method).toContain(".from<RideSearchSnapshotRow>(\"ride_requests\")");
     expect(method).toContain(".select(RIDE_SEARCH_SNAPSHOT_SELECT)");
     expect(method).not.toContain("*,");
     expect(method).not.toContain('select("*")');
+  });
+
+  it("keeps the runtime compatibility method as delegation only", () => {
+    const start = runtime.indexOf("async getRideWithAddresses(");
+    const method = runtime.slice(start, runtime.indexOf("\n  }", start) + 4);
+    expect(method).toContain("return readRideSearchSnapshot(rideId)");
+    expect(method).not.toContain(".from<");
+    expect(method).not.toContain(".select(");
   });
 
   it("limits the snapshot to route presentation, lifecycle and offered price", () => {
