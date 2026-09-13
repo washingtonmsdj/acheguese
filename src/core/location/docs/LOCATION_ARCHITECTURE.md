@@ -1,86 +1,90 @@
-# Location & Address Architecture - SSOT
+# Location & Address Architecture — SSOT
 
-## Tipos de Entidade com Localizacao
+## Tipos de entidade com localização
 
-| Tipo | Coleta | Exibicao publica | Mapa |
-|------|--------|------------------|------|
-| `user_gps` | GPS do dispositivo, com permissao | Bairro/Cidade | Nenhum |
-| `verified_resident` | Endereco estruturado (CEP, rua, numero) | Bairro/Cidade | Nenhum |
-| `physical_business` | Endereco e coordenadas | Endereco completo | Pin exato |
-| `mobile_service` | Area de cobertura por territorios | Areas atendidas | Area |
-| `territorial` | `location_id` canonico | Nome do territorio | Poligono |
+| Tipo | Coleta | Exibição pública | Mapa |
+|---|---|---|---|
+| `user_gps` | GPS do dispositivo, com permissão | Bairro/Cidade | Nenhum |
+| `verified_resident` | Endereço estruturado | Bairro/Cidade | Nenhum |
+| `physical_business` | Endereço e coordenadas | Endereço publicado | Pin exato |
+| `mobile_service` | Área de cobertura | Áreas atendidas | Área |
+| `territorial` | `location_id` canônico | Nome do território | Polígono |
 
-## Regras de Privacidade
+## Regras de privacidade
 
-- Morador: nunca expor rua ou numero publicamente.
-- Empresa fisica: pode mostrar endereco completo quando publicado pelo responsavel.
-- Servico movel: mostrar area atendida, sem simular endereco fixo.
-- Usuario comum: exibir apenas bairro/cidade.
+- morador: nunca expor rua, número, complemento ou CEP publicamente;
+- empresa física: pode publicar endereço comercial conforme contrato do domínio;
+- serviço móvel: representa cobertura, não inventa endereço fixo;
+- localização de usuário comum é contexto operacional, não dado público de GPS.
 
-## GPS e Fallback
+## GPS e fallback
 
-O sistema nao depende exclusivamente de GPS:
+O sistema não depende exclusivamente de GPS:
 
-1. GPS disponivel: usar coordenadas reais.
-2. GPS negado: usar o centro do territorio ativo no seletor.
-3. Sem territorio: usar o centro padrao configurado por ambiente.
+1. quando autorizado, `GeolocationService` resolve a posição do dispositivo;
+2. sem GPS, a experiência usa o território resolvido/canônico quando o fluxo
+   permite fallback territorial;
+3. qualquer fallback visual deve ser explícito e não pode ser persistido como
+   coordenada real do usuário.
 
-## Componentes Chave
+## Geocoding + território
 
-- `UserLocationResolver`: resolve posicao com fallback progressivo.
-- `useResolvedUserLocation`: hook que sempre retorna posicao util apos resolucao.
-- `GeolocationService`: SSOT para acesso ao GPS.
+`src/core/location/services/LocationGeocodingService.ts` é a boundary usada por
+fluxos de domínio que precisam transformar CEP/endereço/coordenada **e**
+reconciliar o resultado com o SSOT `locations`.
 
-## Endereco Residencial
+Ele usa `core/geocoding` como engine/provider e mantém separadas duas coisas:
 
-Fluxo:
+- informação retornada pelo provider (`providerAddress`);
+- território/endereço reconciliado pelo sistema (`territory` / `systemAddress`).
 
-1. CEP via `CepService.lookup()`.
-2. Usuario preenche numero e complemento.
-3. `ResidentAddressService.registerResidentAddress()` valida, normaliza, resolve `location_id`, calcula precisao, persiste via `AddressService` e cria residencia via `ResidenceService`.
+Texto livre retornado por provider nunca substitui `location_id` como autoridade
+territorial.
 
-Campos relevantes:
+## Endereço residencial
 
-- `address_precision`: `exact`, `interpolated`, `street`, `neighborhood`, `district`, `city`.
-- `verification_status`: `pending`, `verified`, `rejected`.
+Fluxo atual:
 
-## Exibicao no Mapa e Perto de Mim
+1. CEP via `LocationGeocodingService.lookupPostalCode()`;
+2. reconciliação com estado/cidade/bairro oficiais em `locations`;
+3. usuário completa número/complemento quando necessário;
+4. `ResidentAddressService.registerResidentAddress()` valida e normaliza o
+   payload de Address;
+5. `AddressService` persiste o endereço;
+6. `ResidenceService` mantém o vínculo usuário ↔ endereço ↔ território.
 
-Distincoes no mapa:
+O antigo `CepService` não é owner ativo e não deve ser recriado.
 
-- Pin exato: apenas `physical_business`.
-- Area de cobertura: `mobile_service`.
-- Poligono territorial: `territorial`.
-- Sem representacao: `user_gps`, `verified_resident`.
+## Mapa e “perto de mim”
 
-Perto de Mim:
+- pin exato: entidade cuja política permite coordenada pública, como empresa
+  física publicada;
+- cobertura: serviço móvel/área de atendimento;
+- polígono: território;
+- usuário/morador: sem pin público de residência/GPS.
 
-- Com GPS: distancia real.
-- Sem GPS: contexto territorial.
+Busca espacial e containment pertencem a `core/geospatial`; renderização e
+interação pertencem a `core/maps`.
 
-## Arquitetura
-
-```text
-Banco -> Repository -> Service -> Hook -> Component
-```
-
-## Proibicoes
-
-- Acesso direto ao Supabase em componentes.
-- Geocoding em hooks de UI.
-- Bairro como texto livre virando fonte de verdade.
-- CEP sozinho como localizacao de empresa.
-- Endereco de morador publico.
-- Pin de servico movel como se fosse loja fisica.
-
-## Arquivos Chave
+## Arquivos-chave
 
 | Arquivo | Responsabilidade |
-|---------|------------------|
-| `core/location/types/entityLocation.ts` | Tipos e regras de exibicao por entidade |
-| `core/location/services/UserLocationResolver.ts` | Resolucao GPS com fallback territorial |
-| `core/location/hooks/useResolvedUserLocation.ts` | Hook SSOT para posicao do usuario |
-| `core/location/utils/entityLocationDisplay.ts` | Utilitario de exibicao publica |
-| `core/address/services/ResidentAddressService.ts` | Orquestrador de endereco residencial |
-| `core/address/services/AddressPrivacyGuard.ts` | Blindagem de privacidade |
-| `core/maps/services/GeolocationService.ts` | SSOT de acesso ao GPS |
+|---|---|
+| `core/location/services/LocationGeocodingService.ts` | Geocoding reconciliado com `locations` |
+| `core/location/services/UserLocationResolver.ts` | Resolução de posição/contexto do usuário |
+| `core/location/hooks/useResolvedUserLocation.ts` | Hook de posição resolvida |
+| `core/location/utils/entityLocationDisplay.ts` | Projeção pública por tipo de entidade |
+| `core/address/services/ResidentAddressService.ts` | Orquestração de endereço residencial |
+| `core/address/services/AddressPrivacyGuard.ts` | Boundary de privacidade de Address |
+| `core/maps/services/GeolocationService.ts` | Acesso ao GPS/device geolocation |
+| `core/geocoding` | Providers de CEP/geocoding/reverse geocoding |
+| `core/geospatial` | Bounds, containment e operações espaciais |
+
+## Proibições
+
+- acesso direto ao Supabase em UI;
+- provider de geocoding chamado diretamente por componente;
+- bairro/cidade digitados ou retornados por provider virarem SSOT territorial;
+- endereço residencial completo em superfície pública;
+- pin de serviço móvel fingindo estabelecimento físico;
+- duplicar geocoding, containment ou identidade territorial em módulos de UI.
