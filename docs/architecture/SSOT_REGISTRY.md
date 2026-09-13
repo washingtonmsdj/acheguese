@@ -38,11 +38,12 @@ npx tsx tools/architecture/check-ssot-compliance.ts
 |---|---|
 | **Arquivo** | `src/core/location/types/index.ts` |
 | **Service** | `src/core/location/LocationService.ts` |
-| **Responsabilidade** | Sistema territorial completo: país → estado → cidade → bairro |
-| **Tipos principais** | `Location`, `LocationTree`, `TerritoryFilter`, `TerritorialGroup`, `ActiveTerritory` |
+| **Grupos territoriais** | `src/core/territorial/contracts.ts` + `src/core/territorial/repositories/` + `src/core/territorial/services/` |
+| **Responsabilidade** | `Location` mantém a hierarquia geográfica país → estado → cidade → bairro; grupos territoriais pertencem ao domínio `core/territorial` |
+| **Tipos principais** | `Location`, `LocationTree`, `TerritoryFilter`, `ActiveTerritory` |
 | **Tabela** | `locations` |
 
-> ⚠️ Todos os módulos que filtram dados por território devem usar `TerritoryFilter`. Não construir filtro territorial ad-hoc em componente.
+> ⚠️ Todos os módulos que filtram dados por território devem usar `TerritoryFilter`. Não construir filtro territorial ad-hoc em componente. `TerritorialGroup*` nunca deve ser reexportado por `core/location/types`; o owner é `core/territorial/contracts.ts`.
 
 ---
 
@@ -55,6 +56,7 @@ npx tsx tools/architecture/check-ssot-compliance.ts
 | **Responsabilidade** | Empresas, negócios, filiais e unidades |
 | **Tipos principais** | `Business`, `BusinessInput`, `BusinessFilters`, `BusinessDataRecord`, `BusinessDataWithProfiles` |
 | **Tabela** | `business_data` |
+| **Read model público** | `public.public_business_search` |
 
 ---
 
@@ -140,8 +142,9 @@ npx tsx tools/architecture/check-ssot-compliance.ts
 | | |
 |---|---|
 | **Arquivo** | `src/core/geocoding/types/index.ts` |
-| **Service** | `src/core/geocoding/services/` |
-| **Responsabilidade** | Geocoding, reverse geocoding, busca por CEP |
+| **Provider/orquestrador** | `src/core/geocoding/services/GeocodingService.ts` |
+| **Boundary territorial** | `src/core/location/services/LocationGeocodingService.ts` |
+| **Responsabilidade** | Geocoding, reverse geocoding e busca por CEP; resultados usados por domínio territorial são reconciliados com `locations` |
 
 ---
 
@@ -189,8 +192,8 @@ npx tsx tools/architecture/check-ssot-compliance.ts
 
 | | |
 |---|---|
-| **Arquivo** | `src/core/tourist-points/types/index.ts` |
-| **Service** | `src/core/tourist-points/services/TouristPointService.ts` |
+| **Arquivo** | `src/core/guide/tourist-points/types/index.ts` |
+| **Service** | `src/core/guide/tourist-points/services/TouristPointService.ts` |
 | **Responsabilidade** | Pontos turísticos |
 | **Tabela** | `tourist_points` |
 
@@ -284,10 +287,12 @@ SSOTs de features verticais e superfícies de aplicação. O owner pode estar em
 | | |
 |---|---|
 | **Tipos canônicos** | `src/core/mobility/services/chat.types.ts` |
-| **API pública** | `src/core/mobility/services/ChatService.ts` |
-| **Implementação** | `chat.queries.ts`, `chat.mutations.ts`, `ChatService.impl.ts` |
+| **API pública / facade** | `src/core/mobility/services/ChatService.ts` |
+| **Queries / mutations** | `src/core/mobility/services/chat.queries.ts`, `src/core/mobility/services/chat.mutations.ts` |
 | **Responsabilidade** | Chat de corridas entre participantes autorizados |
 | **Tipos principais** | `RideChat`, `ChatMessage`, `SendMessageInput`, `Conversation`, `CreateMessageData` |
+
+> `ChatService.impl.ts` foi aposentado; não recriar split `.impl` para Driver/Ride/Chat.
 
 ---
 
