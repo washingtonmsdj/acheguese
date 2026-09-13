@@ -41,7 +41,12 @@ export interface BusinessMapEntity {
   is_premium: boolean;
   is_verified: boolean;
   category: string | null;
+  geographic_path: string | null;
 }
+
+type BusinessMapLocationRow = {
+  geographic_path: string | null;
+};
 
 interface BusinessMapRow {
   id: string;
@@ -55,6 +60,7 @@ interface BusinessMapRow {
   is_verified: boolean | null;
   category: string | null;
   location_id: string | null;
+  location: BusinessMapLocationRow | BusinessMapLocationRow[] | null;
   status: string;
 }
 
@@ -73,6 +79,12 @@ function normalizeLimit(value: number | undefined): number {
   return Math.max(1, Math.min(MAX_BUSINESS_MAP_LIMIT, Math.trunc(value)));
 }
 
+function firstLocation(
+  value: BusinessMapLocationRow | BusinessMapLocationRow[] | null,
+): BusinessMapLocationRow | null {
+  return Array.isArray(value) ? (value[0] ?? null) : value;
+}
+
 class MapBusinessLayerRuntimeService {
   async getBusinessesByBounds(
     bounds: BoundingBox,
@@ -89,7 +101,7 @@ class MapBusinessLayerRuntimeService {
       let query = mapBusinessDb
         .from<BusinessMapRow>("public_business_search")
         .select(
-          "id, profile_id, business_name, slug, latitude, longitude, rating, is_premium, is_verified, category, location_id, status",
+          "id, profile_id, business_name, slug, latitude, longitude, rating, is_premium, is_verified, category, location_id, status, location:locations!public_business_search_location_id_fkey(geographic_path)",
         )
         .eq("status", "active")
         .gte("longitude", west)
@@ -108,6 +120,7 @@ class MapBusinessLayerRuntimeService {
 
       return (data ?? []).flatMap((row) => {
         if (row.latitude == null || row.longitude == null) return [];
+        const location = firstLocation(row.location);
 
         return [{
           id: row.profile_id,
@@ -120,6 +133,7 @@ class MapBusinessLayerRuntimeService {
           is_premium: Boolean(row.is_premium),
           is_verified: Boolean(row.is_verified),
           category: row.category,
+          geographic_path: location?.geographic_path ?? null,
         }];
       });
     } catch (error) {
