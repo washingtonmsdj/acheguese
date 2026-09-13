@@ -3,26 +3,29 @@
  * Prova real de expansão territorial com fixtures determinísticas
  */
 
+import { readFileSync } from 'node:fs';
+import { resolve } from 'node:path';
 import { describe, it, expect } from 'vitest';
 import { supabase } from '@/integrations/supabase';
 
-// Fixtures determinísticas criadas pelo seed
 const FIXTURES = {
   locations: {
-    city: '00000000-0000-0000-0000-000000000001', // Salvador Teste Fase2
-    district1: '00000000-0000-0000-0000-000000000002', // Barra Teste Fase2
-    district2: '00000000-0000-0000-0000-000000000003', // Pelourinho Teste Fase2
+    city: '00000000-0000-0000-0000-000000000001',
+    district1: '00000000-0000-0000-0000-000000000002',
+    district2: '00000000-0000-0000-0000-000000000003',
   },
 };
+
+function readProjectFile(path: string): string {
+  return readFileSync(resolve(process.cwd(), path), 'utf8');
+}
 
 describe('Sprint 2 - Fase 2: Comprovação Objetiva de Expansão Territorial', () => {
   describe('Cenário 1: expandLocationIds(city) inclui cidade + distritos', () => {
     it('deve retornar cidade + 2 distritos filhos', async () => {
-      // Simular a lógica de expandLocationIds para city
       const locationId = FIXTURES.locations.city;
       const expanded: string[] = [];
 
-      // 1. Buscar a location
       const { data: location } = await supabase
         .from('locations')
         .select('id, type, parent_id')
@@ -31,16 +34,13 @@ describe('Sprint 2 - Fase 2: Comprovação Objetiva de Expansão Territorial', (
         .single();
 
       if (!location) {
-        // Ambiente sem seed/conectividade: não falhar por infraestrutura.
         expect(location).toBeNull();
         return;
       }
       expect(location.type).toBe('city');
 
-      // 2. Adicionar a própria cidade
       expanded.push(locationId);
 
-      // 3. Se for city, buscar distritos filhos
       if (location.type === 'city') {
         const { data: districts } = await supabase
           .from('locations')
@@ -54,23 +54,18 @@ describe('Sprint 2 - Fase 2: Comprovação Objetiva de Expansão Territorial', (
         }
       }
 
-      // 4. Validar resultado
-      expect(expanded).toHaveLength(3); // city + 2 districts
+      expect(expanded).toHaveLength(3);
       expect(expanded).toContain(FIXTURES.locations.city);
       expect(expanded).toContain(FIXTURES.locations.district1);
       expect(expanded).toContain(FIXTURES.locations.district2);
-
-      console.log('✅ COMPROVADO: expandLocationIds(city) retorna:', expanded);
     });
   });
 
   describe('Cenário 2: expandLocationIds(district) inclui bairro + cidade-pai', () => {
     it('deve retornar bairro + cidade pai', async () => {
-      // Simular a lógica de expandLocationIds para district
       const locationId = FIXTURES.locations.district1;
       const expanded: string[] = [];
 
-      // 1. Buscar a location
       const { data: location } = await supabase
         .from('locations')
         .select('id, type, parent_id')
@@ -79,45 +74,34 @@ describe('Sprint 2 - Fase 2: Comprovação Objetiva de Expansão Territorial', (
         .single();
 
       if (!location) {
-        // Ambiente sem seed/conectividade: não falhar por infraestrutura.
         expect(location).toBeNull();
         return;
       }
       expect(location.type).toBe('district');
       expect(location.parent_id).toBe(FIXTURES.locations.city);
 
-      // 2. Adicionar o próprio bairro
       expanded.push(locationId);
-
-      // 3. Se for district, adicionar cidade pai
       if (location.type === 'district' && location.parent_id) {
         expanded.push(location.parent_id);
       }
 
-      // 4. Validar resultado
-      expect(expanded).toHaveLength(2); // district + city
+      expect(expanded).toHaveLength(2);
       expect(expanded).toContain(FIXTURES.locations.district1);
       expect(expanded).toContain(FIXTURES.locations.city);
-
-      console.log('✅ COMPROVADO: expandLocationIds(district) retorna:', expanded);
     });
   });
 
-  describe('Cenário 3: Validação de tipo no service (city/district only)', () => {
-    it('deve confirmar que apenas city e district são aceitos', async () => {
-      // Verificar que o código de createPost valida tipos
+  describe('Cenário 3: validação de tipo e publicação territorial', () => {
+    it('confirma que o createPost mantém tipos territoriais explícitos', async () => {
       const { postService } = await import('@/core/posts/services/PostService');
       const createPostCode = postService.createPost.toString();
 
       expect(createPostCode).toMatch(/LocationType\.CITY|city/);
       expect(createPostCode).toMatch(/LocationType\.DISTRICT|district/);
       expect(createPostCode).toContain('INVALID_LOCATION_TYPE');
-
-      console.log('✅ COMPROVADO: createPost() valida type in [city, district]');
     });
 
-    it('deve confirmar que type=group não existe na constraint do banco', async () => {
-      // Tentar inserir uma location com type='group'
+    it('confirma que type=group não é aceito pela tabela locations', async () => {
       const { error } = await supabase
         .from('locations')
         .insert({
@@ -131,26 +115,25 @@ describe('Sprint 2 - Fase 2: Comprovação Objetiva de Expansão Territorial', (
           status: 'active',
         });
 
-      // Deve falhar com constraint ou controle de autoridade (RLS/grant)
       expect(error).toBeDefined();
       if (error?.message?.includes('fetch failed')) {
-        // Ambiente offline/sem DNS do Supabase.
         expect(error.message).toContain('fetch failed');
         return;
       }
-      expect(error!.message).toMatch(/locations_type_check|invalid input value.*group|row-level security|permission denied/i);
-
-      console.log('✅ COMPROVADO: type=group não existe na constraint do banco');
-      console.log('   Tipos válidos: country, state, city, district');
-      console.log('   Erro:', error!.message);
+      expect(error!.message).toMatch(
+        /locations_type_check|invalid input value.*group|row-level security|permission denied/i,
+      );
     });
 
-    it('placeholder: UI deve bloquear filter.scope === group (Fase 3)', () => {
-      // Este teste será implementado na Fase 3
-      // Regra: quando filter.scope === 'group', o formulário deve bloquear publicação
-      // e exibir: "Selecione uma cidade ou bairro específico para publicar"
-      console.log('⏭️  Teste de bloqueio de grupo na UI será implementado na Fase 3');
-      expect(true).toBe(true);
+    it('bloqueia publicação de post quando o filtro está em group scope', () => {
+      const source = readProjectFile(
+        'src/core/community-feed/components/CreatePostModal.tsx',
+      );
+
+      expect(source).toContain('if (territoryFilter.scope === "group")');
+      expect(source).toContain(
+        'Selecione uma cidade ou bairro específico para publicar.',
+      );
     });
   });
 });
