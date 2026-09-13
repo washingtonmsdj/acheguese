@@ -12,6 +12,9 @@ describe("Trust operational command boundary", () => {
   const migration = readProjectFile(
     "supabase/migrations/20260715109000_consolidate_trust_commands.sql",
   );
+  const rideFeedbackMigration = readProjectFile(
+    "supabase/migrations/20260911152000_redact_driver_history_and_derive_feedback_targets_g73.sql",
+  );
   const rateLimitSchemaMigration = readProjectFile(
     "supabase/migrations/20260715111000_fix_trust_command_rate_limit.sql",
   );
@@ -20,6 +23,9 @@ describe("Trust operational command boundary", () => {
   );
   const commandService = readProjectFile(
     "src/core/trust/services/OperationalTrustCommandService.ts",
+  );
+  const rideFeedbackGateway = readProjectFile(
+    "src/core/trust/services/RideTrustFeedbackRpcGateway.ts",
   );
   const adminService = readProjectFile(
     "src/core/trust/services/TrustAdminService.ts",
@@ -58,6 +64,21 @@ describe("Trust operational command boundary", () => {
     );
     expect(migration).toContain("private.enforce_trust_feedback_rate_limit");
     expect(migration).toContain("ride_feedback_target_not_authorized");
+  });
+
+  it("keeps ride feedback on the G73 semantic-role contract", () => {
+    expect(rideFeedbackMigration).toContain(
+      "CREATE FUNCTION public.submit_ride_trust_feedback(\n  p_ride_id uuid,\n  p_subject_role text,",
+    );
+    expect(rideFeedbackMigration).toContain(
+      "p_subject_role NOT IN (\n    'counterparty', 'customer', 'merchant', 'driver', 'courier'",
+    );
+    expect(commandService).toContain("submitRideTrustFeedbackRpc({");
+    expect(commandService).not.toContain(
+      'supabase.rpc(\n      "submit_ride_trust_feedback"',
+    );
+    expect(rideFeedbackGateway).toContain("p_subject_role: RideTrustFeedbackRpcSubjectRole");
+    expect(rideFeedbackGateway).not.toContain("p_subject_profile_id");
   });
 
   it("keeps Trust tables private and exposes only RPC boundaries", () => {
