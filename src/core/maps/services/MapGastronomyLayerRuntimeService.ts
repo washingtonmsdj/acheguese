@@ -9,13 +9,15 @@ type ErrorLike = { message?: string | null; code?: string | null } | null;
 type QueryPayload<TRow> = {
   data: TRow[] | null;
   error: ErrorLike;
-  count?: number | null;
 };
 
 type TableClient<TRow> = PromiseLike<QueryPayload<TRow>> & {
-  select(columns?: string, options?: { count?: "exact"; head?: boolean }): TableClient<TRow>;
+  select(columns?: string): TableClient<TRow>;
   eq(column: string, value: unknown): TableClient<TRow>;
+  gte(column: string, value: unknown): TableClient<TRow>;
+  lte(column: string, value: unknown): TableClient<TRow>;
   in(column: string, values: readonly unknown[]): TableClient<TRow>;
+  order(column: string, options?: { ascending: boolean }): TableClient<TRow>;
   limit(count: number): TableClient<TRow>;
 };
 
@@ -24,6 +26,9 @@ type MapGastronomyDbClient = {
 };
 
 const mapGastronomyDb = supabase as unknown as MapGastronomyDbClient;
+
+const DEFAULT_GASTRONOMY_MAP_LIMIT = 100;
+const MAX_GASTRONOMY_MAP_LIMIT = 200;
 
 export interface GastronomyMapEntity {
   id: string;
@@ -40,32 +45,44 @@ export interface GastronomyMapEntity {
   delivery_enabled: boolean;
 }
 
-interface GastronomyProfileRow {
-  cuisine_type: string | null;
-  delivery_enabled: boolean | null;
-}
-
-interface GastronomyMapRow {
+interface PublicBusinessGastronomyRow {
   id: string;
   profile_id: string | null;
-  business_name: string | null;
+  business_name: string;
   slug: string | null;
+  latitude: number | null;
+  longitude: number | null;
   rating: number | null;
   is_premium: boolean | null;
   is_verified: boolean | null;
   category: string | null;
-  address: { latitude: number | null; longitude: number | null } | null;
-  gastronomy_profiles: GastronomyProfileRow | GastronomyProfileRow[] | null;
+  location_id: string | null;
+  status: string;
+  has_active_gastronomy_profile: boolean;
 }
 
-function isInsideBounds(
-  lat: number | null | undefined,
-  lng: number | null | undefined,
-  bounds: BoundingBox,
-): lat is number {
-  if (lat == null || lng == null) return false;
+interface GastronomyProfileRow {
+  business_id: string;
+  cuisine_type: string | null;
+  delivery_enabled: boolean | null;
+  status: string;
+}
+
+function validateBounds(bounds: BoundingBox): void {
   const [west, south, east, north] = bounds;
-  return lng >= west && lng <= east && lat >= south && lat <= north;
+  if (![west, south, east, north].every(Number.isFinite)) {
+    throw new Error("MapGastronomyLayerRuntimeService requires finite bounds");
+  }
+  if (west >= east || south >= north) {
+    throw new Error("MapGastronomyLayerRuntimeService received inverted bounds");
+  }
+}
+
+function normalizeLimit(value: number | undefined): number {
+  if (!Number.isFinite(value) || value == null) {
+    return DEFAULT_GASTRONOMY_MAP_LIMIT;
+  }
+  return Math.max(1, Math.min(MAX_GASTRONOMY_MAP_LIMIT, Math.trunc(value)));
 }
 
 class MapGastronomyLayerRuntimeService {
@@ -73,76 +90,81 @@ class MapGastronomyLayerRuntimeService {
     bounds: BoundingBox,
     options: { territoryFilter?: TerritoryFilter; limit?: number } = {},
   ): Promise<GastronomyMapEntity[]> {
-    const { territoryFilter, limit = 200 } = options;
+    const { territoryFilter } = options;
+    if (territoryFilter?.scope === "none") return [];
 
     try {
-      if (territoryFilter?.scope === "none") return [];
+      validateBounds(bounds);
+      const [west, south, east, north] = bounds;
+      const limit = normalizeLimit(options.limit);
 
-      let query = mapGastronomyDb
-        .from<GastronomyMapRow>("business_data")
+      let businessQuery = mapGastronomyDb
+        .from<PublicBusinessGastronomyRow>("public_business_search")
         .select(
-          `
-            id,
-            profile_id,
-            business_name,
-            slug,
-            rating,
-            is_premium,
-            is_verified,
-            category,
-            location_id,
-            address:addresses!address_id(latitude, longitude),
-            gastronomy_profiles!inner(cuisine_type, delivery_enabled, status)
-          `,
+          "id, profile_id, business_name, slug, latitude, longitude, rating, is_premium, is_verified, category, location_id, status, has_active_gastronomy_profile",
         )
         .eq("status", "active")
-        .eq("gastronomy_profiles.status", "active")
-        .limit(limit * 3);
+        .eq("has_active_gastronomy_profile", true)
+        .gte("longitude", west)
+        .lte("longitude", east)
+        .gte("latitude", south)
+        .lte("latitude", north)
+        .order("rating", { ascending: false })
+        .limit(limit);
 
       if (territoryFilter) {
-        query = applyTerritoryFilter(query, territoryFilter);
+        businessQuery = applyTerritoryFilter(businessQuery, territoryFilter);
       }
 
-      const { data, error } = await query;
-      if (error) throw error;
+      const { data: businessRows, error: businessError } = await businessQuery;
+      if (businessError) throw businessError;
+      if (!businessRows?.length) return [];
 
-      return (data ?? [])
-        .flatMap((row) => {
-          if (!isInsideBounds(row.address?.latitude, row.address?.longitude, bounds)) {
-            return [];
-          }
+      const businessIds = businessRows.map((row) => row.id);
+      const { data: profileRows, error: profileError } = await mapGastronomyDb
+        .from<GastronomyProfileRow>("gastronomy_profiles")
+        .select("business_id, cuisine_type, delivery_enabled, status")
+        .in("business_id", businessIds)
+        .eq("status", "active");
 
-          const latitude = row.address?.latitude;
-          const longitude = row.address?.longitude;
-          if (latitude == null || longitude == null) return [];
+      if (profileError) throw profileError;
 
-          const rawProfile = row.gastronomy_profiles;
-          const profile = Array.isArray(rawProfile) ? rawProfile[0] : rawProfile;
-          const profileId = row.profile_id ?? row.id;
+      const profileByBusinessId = new globalThis.Map(
+        (profileRows ?? []).map((profile) => [profile.business_id, profile]),
+      );
 
-          return [
-            {
-              id: `gastronomy-${profileId}`,
-              profile_id: profileId,
-              name: row.business_name ?? "Estabelecimento",
-              slug: row.slug,
-              latitude,
-              longitude,
-              rating: row.rating ?? 0,
-              is_premium: Boolean(row.is_premium),
-              is_verified: Boolean(row.is_verified),
-              category: row.category,
-              cuisine_type: profile?.cuisine_type ?? null,
-              delivery_enabled: Boolean(profile?.delivery_enabled),
-            },
-          ];
-        })
-        .slice(0, limit);
+      return businessRows.flatMap((row) => {
+        if (row.latitude == null || row.longitude == null) return [];
+        const profile = profileByBusinessId.get(row.id);
+        if (!profile) return [];
+
+        const profileId = row.profile_id ?? row.id;
+        return [
+          {
+            id: `gastronomy-${profileId}`,
+            profile_id: profileId,
+            name: row.business_name,
+            slug: row.slug,
+            latitude: row.latitude,
+            longitude: row.longitude,
+            rating: row.rating ?? 0,
+            is_premium: Boolean(row.is_premium),
+            is_verified: Boolean(row.is_verified),
+            category: row.category,
+            cuisine_type: profile.cuisine_type,
+            delivery_enabled: Boolean(profile.delivery_enabled),
+          },
+        ];
+      });
     } catch (error) {
-      logger.error("MapGastronomyLayerRuntimeService.getGastronomyByBounds", error as Error);
+      logger.error(
+        "MapGastronomyLayerRuntimeService.getGastronomyByBounds",
+        error as Error,
+      );
       return [];
     }
   }
 }
 
-export const mapGastronomyLayerRuntimeService = new MapGastronomyLayerRuntimeService();
+export const mapGastronomyLayerRuntimeService =
+  new MapGastronomyLayerRuntimeService();
