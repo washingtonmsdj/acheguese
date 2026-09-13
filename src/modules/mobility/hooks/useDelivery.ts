@@ -12,8 +12,10 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useAuth } from "@/core/auth";
 import { profileService } from "@/core/profiles/services/ProfileService";
 import { toast } from "sonner";
-import { mobilityService } from "@/core/mobility/services/MobilityService";
-import { getRideById } from "@/core/mobility/services/mobility.queries";
+import {
+  getRideById,
+  getUserRides,
+} from "@/core/mobility/services/mobility.queries";
 import { RideOperationalService } from "@/core/mobility/core/RideOperationalService";
 import { isOpenRideStatus } from "@/core/mobility/core/RideLifecycleStatus";
 import { pricingService } from "@/core/pricing/services/PricingService";
@@ -70,8 +72,8 @@ export function useDelivery(sourceType: SourceType, sourceId?: string) {
     queryKey: MOBILITY_QUERY_KEYS.deliveries(sourceType, sourceId || user?.id || ""),
     queryFn: async () => {
       if (!user) return [];
-      const all = await mobilityService.getUserRides(user.id);
-      const filtered = (all || []).filter(
+      const all = await getUserRides(user.id);
+      const filtered = all.filter(
         (r: RideRequest) =>
           r.ride_mode === RIDE_MODE.MOTOBOY &&
           (!sourceId || r.source_id === sourceId),
