@@ -1,6 +1,9 @@
 import { supabase } from "@/integrations/supabase";
 import { logger } from "@/shared/utils/logger";
-import { mobilityService } from "./MobilityRuntimeService";
+import {
+  RIDE_SEARCH_SNAPSHOT_SELECT,
+  type RideSearchSnapshotRow,
+} from "./RideSearchSnapshotReadModel";
 
 type ErrorLike = { message?: string | null; code?: string | null } | null;
 
@@ -54,6 +57,16 @@ export interface MobilityConversationSummary {
   unread_count: number;
 }
 
+export interface RideBasicInfoRow {
+  id: string;
+  origin: string | null;
+  destination: string | null;
+  status: string | null;
+  final_price: number | null;
+  suggested_price: number | null;
+}
+
+type RideAvailableSeatsRow = { available_seats: number | null };
 type OperationalVerificationRow = Record<string, unknown>;
 
 export async function getMobilityConversations(): Promise<MobilityConversationSummary[]> {
@@ -70,18 +83,36 @@ export async function getMobilityConversations(): Promise<MobilityConversationSu
   }
 }
 
-export async function getRideWithAddresses(rideId: string): Promise<unknown | null> {
+export async function getRideWithAddresses(
+  rideId: string,
+): Promise<RideSearchSnapshotRow | null> {
   try {
-    return await mobilityService.getRideWithAddresses(rideId);
+    const { data, error } = await mobilityRideReadDb
+      .from<RideSearchSnapshotRow>("ride_requests")
+      .select(RIDE_SEARCH_SNAPSHOT_SELECT)
+      .eq("id", rideId)
+      .maybeSingle();
+
+    if (error) throw error;
+    return data;
   } catch (error) {
     logger.error("MobilityQueries.getRideWithAddresses", error as Error);
     return null;
   }
 }
 
-export async function getRideBasicInfo(rideId: string): Promise<unknown | null> {
+export async function getRideBasicInfo(
+  rideId: string,
+): Promise<RideBasicInfoRow | null> {
   try {
-    return await mobilityService.getRideBasicInfo(rideId);
+    const { data, error } = await mobilityRideReadDb
+      .from<RideBasicInfoRow>("ride_requests")
+      .select("id, origin, destination, status, final_price, suggested_price")
+      .eq("id", rideId)
+      .maybeSingle();
+
+    if (error) throw error;
+    return data;
   } catch (error) {
     logger.error("MobilityQueries.getRideBasicInfo", error as Error);
     return null;
@@ -90,7 +121,14 @@ export async function getRideBasicInfo(rideId: string): Promise<unknown | null> 
 
 export async function getRideAvailableSeats(rideId: string): Promise<number> {
   try {
-    return await mobilityService.getRideAvailableSeats(rideId);
+    const { data, error } = await mobilityRideReadDb
+      .from<RideAvailableSeatsRow>("ride_requests")
+      .select("available_seats")
+      .eq("id", rideId)
+      .maybeSingle();
+
+    if (error) throw error;
+    return data?.available_seats ?? 0;
   } catch (error) {
     logger.error("MobilityQueries.getRideAvailableSeats", error as Error);
     return 0;
