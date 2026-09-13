@@ -692,6 +692,7 @@ function projectBusinessMarkers(
         id: business.id,
         slug: business.slug ?? undefined,
         is_premium: business.is_premium,
+        geographic_path: business.geographic_path,
       },
       urls.business,
     ),
