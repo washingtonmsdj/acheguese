@@ -1,78 +1,74 @@
-# Address SSOT - Sistema de Endereços
+# Address SSOT — Sistema de Endereços
 
 ## Arquitetura
 
+```text
+Component → Hook → Address/Residence services → Repository → Supabase
+                    ↓
+          LocationGeocodingService
+                    ↓
+       core/geocoding + locations SSOT
 ```
-Component → Hook → Service → Repository → Supabase
-```
 
-### Módulos
+### Owners atuais
 
-| Módulo | Responsabilidade |
-|--------|-----------------|
-| `core/address/types` | Tipos canônicos (Address, AddressPublicDTO, etc.) |
-| `core/address/services/CepService` | Consulta ViaCEP, formatação, validação |
-| `core/address/services/AddressService` | CRUD de endereços (repositório) |
-| `core/address/services/ResidentAddressService` | **Orquestrador** — fluxo completo de cadastro |
-| `core/address/services/AddressPrivacyGuard` | Mascaramento para exibição pública |
-| `core/address/hooks/useResidentAddress` | Hook para formulários de endereço residencial |
-| `core/residence/` | Vínculo usuário ↔ endereço ↔ território |
-| `core/verification/` | Verificação documental |
+| Owner | Responsabilidade |
+|---|---|
+| `core/address/types` | Tipos canônicos de endereço postal |
+| `core/address/services/AddressService` | Persistência/lifecycle de endereços |
+| `core/address/services/ResidentAddressService` | Orquestração do cadastro residencial |
+| `core/address/services/AddressPrivacyGuard` | Projeção/mascaramento para exibição pública |
+| `core/address/hooks/useResidentAddress` | Estado do formulário e integração com os owners |
+| `core/location/services/LocationGeocodingService` | CEP/geocoding reconciliados com `locations` |
+| `core/geocoding` | Providers e transformação geográfica de baixo nível |
+| `core/residence` | Vínculo usuário ↔ endereço ↔ território |
+| `core/verification` | Verificação documental |
 
-## Fluxo de Cadastro de Morador
+`src/core/address/services/CepService.ts` não existe mais e não deve ser
+recriado. Lookup postal usado por fluxos territoriais passa por
+`LocationGeocodingService`, que combina provider de geocoding com o SSOT de
+`locations`.
 
-1. Usuário digita **CEP** → `CepService.lookup()` consulta ViaCEP
-2. Autopreenchimento de logradouro, bairro, cidade, UF
-3. Usuário preenche **número** e **complemento** (opcional)
-4. `ResidentAddressService.registerResidentAddress()`:
-   - Valida input
-   - Normaliza endereço (CEP + dados do ViaCEP)
-   - Resolve `location_id` canônico via território
-   - Calcula `address_precision`
-   - Persiste via `AddressService`
-   - Cria `user_residence` via `ResidenceService`
-5. Usuário envia documentos (comprovante + foto)
-6. `VerificationService` cria solicitação vinculada ao `address_id`
+## Fluxo de cadastro de morador
+
+1. O usuário informa o CEP.
+2. `useResidentAddress` consulta `LocationGeocodingService.lookupPostalCode()`.
+3. O retorno traz dados do provider e reconciliação territorial canônica.
+4. O usuário completa número/complemento quando necessário.
+5. `ResidentAddressService.registerResidentAddress()` valida e normaliza o
+   payload de domínio.
+6. `AddressService` persiste o endereço sob as regras do domínio Address.
+7. `ResidenceService` mantém o vínculo residencial/territorial.
+8. Quando exigido, o fluxo de Verification registra a comprovação vinculada ao
+   endereço.
 
 ## Privacidade
 
-**REGRA ABSOLUTA**: Endereço completo (rua, número, CEP) **nunca** é público.
+**Endereço residencial completo não é dado público.**
 
-### Exibição por contexto:
+- componentes públicos não consomem a linha privada de `addresses`;
+- use projeção pública/guard de privacidade do domínio;
+- rua, número, complemento e CEP não devem ser expostos por superfícies
+  públicas apenas porque a entidade possui localização;
+- `location_id`/território público não equivale a autorização para ler o
+  endereço privado.
 
-| Contexto | Dados visíveis |
-|----------|---------------|
-| Público | Bairro, cidade (via `location`) |
-| Próprio usuário | Endereço completo |
-| Admin | Endereço completo |
-| Mapa/perto de mim | Coordenadas (só se verificado) |
+## Separação de responsabilidades
 
-### Como garantir:
+- **Address**: entidade postal, persistência, privacidade e lifecycle;
+- **Geocoding**: provider/normalização de CEP, texto e coordenadas;
+- **Location**: reconciliação com território oficial e hierarquia canônica;
+- **Geospatial**: bounds, containment e operações espaciais;
+- **Residence**: vínculo de residência do usuário.
 
-- **Nunca** usar `Address` diretamente em componentes públicos
-- Usar `AddressPrivacyGuard.toPublic()` ou `AddressPublicDTO`
-- View `addresses_public` no banco já mascara dados
-
-## Campos
-
-### `address_precision` (qualidade do geocoding)
-- `exact` — GPS ou geocoding de alta confiança
-- `interpolated` — Estimado entre pontos conhecidos
-- `street` — Nível de rua
-- `neighborhood` — Nível de bairro
-- `district` — Nível de distrito
-- `city` — Nível de cidade (mais baixa)
-
-### `verification_status`
-- `pending` — Aguardando verificação
-- `verified` — Confirmado
-- `rejected` — Rejeitado
+Não duplicar essas responsabilidades em hooks/componentes.
 
 ## Proibições
 
-❌ Acessar ViaCEP diretamente em componentes  
-❌ Fazer geocoding em hooks de UI  
-❌ Normalizar endereço fora do service  
-❌ Exibir `street`, `number`, `postal_code` publicamente  
-❌ Usar `bairro` digitado manualmente como fonte de verdade  
-❌ Acessar tabela `addresses` diretamente (usar `AddressService`)  
+- não acessar ViaCEP/Nominatim diretamente em UI;
+- não recriar `CepService` ou `maps/GeocodingService` como bridges;
+- não normalizar território a partir de bairro/cidade digitados como fonte de
+  verdade;
+- não acessar `addresses` diretamente de componente/hook;
+- não expor campos privados de endereço em superfície pública;
+- não mover containment/bounds para Address ou Geocoding.
