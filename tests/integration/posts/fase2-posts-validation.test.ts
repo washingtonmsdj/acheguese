@@ -28,8 +28,8 @@ const FIXTURES = {
   },
 };
 
-function readPostMutationsSource(): string {
-  return readFileSync(resolve(process.cwd(), 'src/core/posts/services/posts.mutations.ts'), 'utf8');
+function readProjectFile(path: string): string {
+  return readFileSync(resolve(process.cwd(), path), 'utf8');
 }
 
 describe('Sprint 2 - Fase 2: PostService Refatorado', () => {
@@ -57,7 +57,7 @@ describe('Sprint 2 - Fase 2: PostService Refatorado', () => {
     });
 
     it('accepts only city, district and neighborhood in the creation contract', () => {
-      const source = readPostMutationsSource();
+      const source = readProjectFile('src/core/posts/services/posts.mutations.ts');
 
       expect(source).toMatch(
         /allowedLocationTypes:\s*\[\s*LocationType\.CITY,\s*LocationType\.DISTRICT,\s*LocationType\.NEIGHBORHOOD,\s*\]/,
@@ -181,9 +181,16 @@ describe('Sprint 2 - Fase 2: PostService Refatorado', () => {
     });
   });
 
-  describe('Territorial group lock in the UI (covered later in Fase 3)', () => {
-    it('keeps the placeholder expectation documented', () => {
-      expect(true).toBe(true);
+  describe('Territorial group publication lock', () => {
+    it('requires an explicit city or neighborhood instead of publishing to group scope', () => {
+      const source = readProjectFile(
+        'src/core/community-feed/components/CreatePostModal.tsx',
+      );
+
+      expect(source).toContain('if (territoryFilter.scope === "group")');
+      expect(source).toContain(
+        'Selecione uma cidade ou bairro específico para publicar.',
+      );
     });
   });
 });
