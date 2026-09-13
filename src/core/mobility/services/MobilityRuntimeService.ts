@@ -326,22 +326,6 @@ class MobilityServiceInstance {
 
   // -- Ride ---------------------------------------------------------------
 
-  async getRideById(rideId: string): Promise<RideRequest | null> {
-    try {
-      const { data, error } = await db
-        .from<RideRequestReadRow>("ride_requests")
-        .select(RIDE_REQUEST_READ_SELECT)
-        .eq("id", rideId)
-        .maybeSingle();
-
-      if (error) throw error;
-      return data ? toRideRequestReadModel(data) : null;
-    } catch (error) {
-      logger.error("mobilityService.getRideById", error as Error);
-      return null;
-    }
-  }
-
   async getRideWithAddresses(rideId: string): Promise<RideSearchSnapshotRow | null> {
     try {
       const { data, error } = await db
