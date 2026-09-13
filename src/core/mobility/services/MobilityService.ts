@@ -137,7 +137,6 @@ export class MobilityFacade {
   static getDriverCompleteProfile = MobilityQueries.getDriverCompleteProfile;
   static getPassengerRating = MobilityQueries.getPassengerRating;
   static getMobilityConversations = MobilityQueries.getMobilityConversations;
-  static getUserRides = MobilityQueries.getUserRides;
   static getRideWithAddresses = MobilityQueries.getRideWithAddresses;
   static getRideBasicInfo = MobilityQueries.getRideBasicInfo;
   static getRideAvailableSeats = MobilityQueries.getRideAvailableSeats;
