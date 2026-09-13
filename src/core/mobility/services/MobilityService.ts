@@ -16,7 +16,6 @@
  */
 
 export {
-  getRideById,
   getRidesByPassenger,
   getRidesByDriverProfile,
   getActiveRideByDriverProfile,
@@ -123,7 +122,6 @@ import * as MobilityHelpers from "./mobility.helpers";
  * Regras de lifecycle nao pertencem a esta facade; use RideStateMachine.
  */
 export class MobilityFacade {
-  static getRideById = MobilityQueries.getRideById;
   static getRidesByPassenger = MobilityQueries.getRidesByPassenger;
   static getRidesByDriverProfile = MobilityQueries.getRidesByDriverProfile;
   static getActiveRideByDriverProfile = MobilityQueries.getActiveRideByDriverProfile;
