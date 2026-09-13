@@ -4,7 +4,7 @@
  * SSoTs respeitados:
  * - Território   → useModuleTerritoryFilter({ routeResolved, activeMemberIds })
  * - Focus target → URL com lat/lng explicita, sem herdar filtro territorial artificial
- * - Businesses   → BusinessService.getBusinesses com territoryFilter
+ * - Businesses   → MapBusinessLayerRuntimeService com bounds + territoryFilter no banco
  * - Eventos      → EventsService.getByBounds com territoryFilter
  * - Projeção     → mapEntityProjection (MapEntityProjectionService)
  * - Viewport     → useMapViewportFetch + MapLibreAdapter
@@ -26,9 +26,9 @@ import {
   MAP_PUBLIC_RUNTIME_LAYER_KEYS,
   isMapRuntimeLayerEnabled,
 } from '../config/runtimeConfig';
-import { BusinessService } from '@/core/business/services/BusinessService';
 import { eventsReadService } from '@/core/community-events';
 import { eventPublicRoutes } from '@/core/community-events/routes/eventPublicRoutes';
+import { mapBusinessLayerRuntimeService } from '@/core/maps/services/MapBusinessLayerRuntimeService';
 import { mapClassifiedsLayerRuntimeService } from '@/core/maps/services/MapClassifiedsLayerRuntimeService';
 import { mapGastronomyLayerRuntimeService } from '@/core/maps/services/MapGastronomyLayerRuntimeService';
 import { mapServicesLayerRuntimeService } from '@/core/maps/services/MapServicesLayerRuntimeService';
@@ -49,31 +49,18 @@ import { useTouristPointPublicUrls } from '@/core/guide/tourist-points/routes/us
 import { EntityStatus } from '@/shared/types/enums';
 import type { BoundingBox, MapLayerKey, MapMarker, MapViewport } from '../types/core';
 import { LocationStatus, type Location, type TerritoryFilter } from '@/core/location/types';
-import type { Business } from '@/core/business/types/Business';
 import type { ResolvedTerritory } from '@/core/routing/hooks/useResolveTerritoryFromUrl';
 
-// ─── Props ────────────────────────────────────────────────────────────────────
-
 interface MapaPageV4Props {
-  /** Território resolvido pela rota (vem do TerritorialLayout via TerritorialMapPage) */
   resolved?: ResolvedTerritory | null;
-  /** IDs dos membros ativos do grupo (para rollout parcial) */
   activeMemberIds?: string[];
-  /** Standalone owns its page chrome; embedded reuses the persistent community shell. */
   presentation?: 'standalone' | 'embedded';
-  /** Camadas inicialmente focadas. O usuario ainda pode habilitar outras no controle do mapa. */
   initialLayers?: readonly MapLayerKey[];
 }
 
-// ─── Tile style — SSOT: DEFAULT_TILE_STYLE do MapProvider ────────────────────
-// Mesmo estilo usado pelo StandaloneMap (mini mapa da empresa).
-// Os avisos de sprite (office, swimming_pool, etc.) são suprimidos via
-// styleimagemissing no MapLibreAdapter — não trocamos de estilo por isso.
 const TILE_STYLE_URL = DEFAULT_TILE_STYLE.styleUrl;
 const BUSINESS_MAP_BASE_URL = buildAppModulePath(APP_MODULE_SLUGS.business);
 const GASTRONOMY_MAP_BASE_URL = buildAppModulePath(APP_MODULE_SLUGS.gastronomy);
-
-// ─── Bounds e zoom iniciais vindos do SSOT de mapas ───────────────────────────
 const INITIAL_BOUNDS: BoundingBox = MAP_DEFAULT_BOUNDS;
 const INITIAL_ZOOM = MAP_DEFAULT_ZOOM;
 
@@ -370,40 +357,26 @@ function resolvedCenterKey(resolved: ResolvedTerritory | null): string {
   return `group:${resolved.group.id}`;
 }
 
-// ─── Helper de filtro por bounds (client-side) ────────────────────────────────
-function isInsideBounds(
-  lat: number | null | undefined,
-  lng: number | null | undefined,
-  bounds: BoundingBox,
-): boolean {
-  if (lat == null || lng == null) return false;
-  const [west, south, east, north] = bounds;
-  return lng >= west && lng <= east && lat >= south && lat <= north;
-}
-
-// ─── Factories de fetchers ────────────────────────────────────────────────────
-
-function makeBusinessFetcher(territoryFilter: TerritoryFilter) {
+function makeBusinessFetcher(territoryFilter: TerritoryFilter | undefined) {
   return async (bounds: BoundingBox): Promise<MapMarker[]> => {
     try {
-      const businesses: Business[] = await BusinessService.getBusinesses({
-        sortBy: 'created_at',
+      const businesses = await mapBusinessLayerRuntimeService.getBusinessesByBounds(bounds, {
         territoryFilter,
+        limit: 200,
       });
-      const filtered = businesses.filter((b) =>
-        isInsideBounds(b.address?.latitude, b.address?.longitude, bounds),
-      );
+
       return mapEntityProjection.projectEntities(
-        filtered.map((b) => ({
-          id: b.id,
-          name: b.name,
-          latitude: b.address?.latitude ?? null,
-          longitude: b.address?.longitude ?? null,
-          status: b.status,
-          slug: b.slug,
-          is_premium: b.is_premium,
-          is_verified: b.is_verified,
-          rating: b.rating,
+        businesses.map((business) => ({
+          id: business.id,
+          name: business.name,
+          latitude: business.latitude,
+          longitude: business.longitude,
+          status: EntityStatus.ACTIVE,
+          slug: business.slug ?? undefined,
+          is_premium: business.is_premium,
+          is_verified: business.is_verified,
+          rating: business.rating,
+          category: business.category,
           map_layer_key: 'businesses',
         })),
         'business',
@@ -415,7 +388,7 @@ function makeBusinessFetcher(territoryFilter: TerritoryFilter) {
   };
 }
 
-function makeGastronomyFetcher(territoryFilter: TerritoryFilter) {
+function makeGastronomyFetcher(territoryFilter: TerritoryFilter | undefined) {
   return async (bounds: BoundingBox): Promise<MapMarker[]> => {
     try {
       const gastronomyBusinesses = await mapGastronomyLayerRuntimeService.getGastronomyByBounds(bounds, {
@@ -448,7 +421,7 @@ function makeGastronomyFetcher(territoryFilter: TerritoryFilter) {
   };
 }
 
-function makeServicesFetcher(territoryFilter: TerritoryFilter) {
+function makeServicesFetcher(territoryFilter: TerritoryFilter | undefined) {
   return async (bounds: BoundingBox): Promise<MapMarker[]> => {
     try {
       const services = await mapServicesLayerRuntimeService.getServicesByBounds(bounds, {
@@ -480,7 +453,7 @@ function makeServicesFetcher(territoryFilter: TerritoryFilter) {
   };
 }
 
-function makeClassifiedsFetcher(territoryFilter: TerritoryFilter) {
+function makeClassifiedsFetcher(territoryFilter: TerritoryFilter | undefined) {
   return async (bounds: BoundingBox): Promise<MapMarker[]> => {
     try {
       const classifieds = await mapClassifiedsLayerRuntimeService.getClassifiedsByBounds(bounds, {
@@ -511,7 +484,6 @@ function makeClassifiedsFetcher(territoryFilter: TerritoryFilter) {
     }
   };
 }
-
 
 function makeEventsFetcher(territoryFilter: TerritoryFilter | undefined) {
   return async (bounds: BoundingBox): Promise<MapMarker[]> => {
@@ -545,8 +517,6 @@ function makeEventsFetcher(territoryFilter: TerritoryFilter | undefined) {
     }
   };
 }
-
-// ─── Componente ───────────────────────────────────────────────────────────────
 
 export default function MapaPageV4({
   resolved,
@@ -647,15 +617,14 @@ export default function MapaPageV4({
     [canonicalTerritoryCenter, fallbackMapLocation, focusTarget],
   );
 
-  // Localização do usuário com fallback territorial
-  const { 
-    coords: userLocation, 
+  const {
+    coords: userLocation,
     isGps,
     status: locationStatus,
     sourceMessage,
-  } = useResolvedUserLocation({ 
+  } = useResolvedUserLocation({
     autoResolve: true,
-    tryGps: true 
+    tryGps: true,
   });
 
   const moduleTerritory = useModuleTerritoryFilter({
@@ -745,14 +714,10 @@ export default function MapaPageV4({
     }
   }, [initialLayers, requestedLayers, requestedLayersKey]);
 
-  // Fetch inicial com bounds configurados.
-  // Quando os polígonos do território chegarem, o MapLibreAdapter centraliza
-  // automaticamente e o onViewportChange dispara fetchByBounds com os bounds reais.
   useEffect(() => {
     fetchByBounds(INITIAL_BOUNDS, INITIAL_ZOOM);
   }, [fetchByBounds]);
 
-  // Re-fetch quando o território muda (fetchers recriados com novo territoryFilter)
   useEffect(() => {
     if (territoryPolygons.length === 0) return;
     const allCoords = territoryPolygons.flatMap((p) => p.coordinates);
@@ -774,8 +739,6 @@ export default function MapaPageV4({
     [fetchByBounds],
   );
 
-  // Marcadores de dados — MapMarker[] canônico, sem conversão.
-  // O marcador de usuário é gerenciado pelo MapLibreAdapter via userLocationMarker.autoAdd.
   const focusMarkers = React.useMemo(() => {
     if (!focusTarget) return [] as MapMarker[];
 
@@ -796,8 +759,6 @@ export default function MapaPageV4({
   }, [focusTarget]);
 
   const markers = React.useMemo(() => {
-    // Modo normal: busca por bounds
-    // Combinar marcadores de viewport fetch + pontos turísticos
     const touristPointMarkers = touristLayerVisible
       ? mapEntityProjection.projectEntities(
           (touristPointsData || []).map((result) => ({
@@ -899,13 +860,12 @@ export default function MapaPageV4({
         </div>
       )}
 
-      {/* Indicador de fonte de localização */}
       {sourceMessage && locationStatus !== 'idle' && locationStatus !== 'resolving' && (
         <div
-          style={{ 
-            position: 'absolute', 
+          style={{
+            position: 'absolute',
             bottom: isCommunityScopedSurface ? 88 : 16,
-            left: '50%', 
+            left: '50%',
             transform: 'translateX(-50%)',
             zIndex: 10,
             background: isGps ? 'rgba(34, 197, 94, 0.95)' : 'rgba(59, 130, 246, 0.95)',
@@ -917,7 +877,7 @@ export default function MapaPageV4({
             boxShadow: '0 2px 8px rgba(0,0,0,0.2)',
             display: 'flex',
             alignItems: 'center',
-            gap: '8px'
+            gap: '8px',
           }}
           role="status"
           aria-live="polite"
