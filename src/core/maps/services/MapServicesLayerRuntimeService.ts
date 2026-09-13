@@ -10,13 +10,15 @@ type ErrorLike = { message?: string | null; code?: string | null } | null;
 type QueryPayload<TRow> = {
   data: TRow[] | null;
   error: ErrorLike;
-  count?: number | null;
 };
 
 type TableClient<TRow> = PromiseLike<QueryPayload<TRow>> & {
-  select(columns?: string, options?: { count?: "exact"; head?: boolean }): TableClient<TRow>;
+  select(columns?: string): TableClient<TRow>;
   eq(column: string, value: unknown): TableClient<TRow>;
+  gte(column: string, value: unknown): TableClient<TRow>;
+  lte(column: string, value: unknown): TableClient<TRow>;
   in(column: string, values: readonly unknown[]): TableClient<TRow>;
+  order(column: string, options?: { ascending: boolean }): TableClient<TRow>;
   limit(count: number): TableClient<TRow>;
 };
 
@@ -25,6 +27,8 @@ type MapServicesDbClient = {
 };
 
 const mapServicesDb = supabase as unknown as MapServicesDbClient;
+const DEFAULT_SERVICE_MAP_LIMIT = 100;
+const MAX_SERVICE_MAP_LIMIT = 200;
 
 export interface ServiceMapEntity {
   id: string;
@@ -42,10 +46,6 @@ export interface ServiceMapEntity {
   url: string | null;
 }
 
-interface ServiceLocationRow {
-  geographic_path: string | null;
-}
-
 interface ServiceMapRow {
   id: string;
   profile_id: string | null;
@@ -56,23 +56,25 @@ interface ServiceMapRow {
   description: string | null;
   rating: number | null;
   is_verified: boolean | null;
-  address: { latitude: number | null; longitude: number | null } | null;
-  location: ServiceLocationRow | ServiceLocationRow[] | null;
+  location_id: string | null;
+  latitude: number | null;
+  longitude: number | null;
+  geographic_path: string | null;
 }
 
-function firstRelation<T>(relation: T | T[] | null | undefined): T | null {
-  if (Array.isArray(relation)) return relation[0] ?? null;
-  return relation ?? null;
-}
-
-function isInsideBounds(
-  lat: number | null | undefined,
-  lng: number | null | undefined,
-  bounds: BoundingBox,
-): lat is number {
-  if (lat == null || lng == null) return false;
+function validateBounds(bounds: BoundingBox): void {
   const [west, south, east, north] = bounds;
-  return lng >= west && lng <= east && lat >= south && lat <= north;
+  if (![west, south, east, north].every(Number.isFinite)) {
+    throw new Error("MapServicesLayerRuntimeService requires finite bounds");
+  }
+  if (west >= east || south >= north) {
+    throw new Error("MapServicesLayerRuntimeService received inverted bounds");
+  }
+}
+
+function normalizeLimit(value: number | undefined): number {
+  if (value == null || !Number.isFinite(value)) return DEFAULT_SERVICE_MAP_LIMIT;
+  return Math.max(1, Math.min(MAX_SERVICE_MAP_LIMIT, Math.trunc(value)));
 }
 
 class MapServicesLayerRuntimeService {
@@ -80,32 +82,25 @@ class MapServicesLayerRuntimeService {
     bounds: BoundingBox,
     options: { territoryFilter?: TerritoryFilter; limit?: number } = {},
   ): Promise<ServiceMapEntity[]> {
-    const { territoryFilter, limit = 200 } = options;
+    const { territoryFilter } = options;
+    if (territoryFilter?.scope === "none") return [];
 
     try {
-      if (territoryFilter?.scope === "none") return [];
+      validateBounds(bounds);
+      const [west, south, east, north] = bounds;
+      const limit = normalizeLimit(options.limit);
 
       let query = mapServicesDb
-        .from<ServiceMapRow>("professional_data")
+        .from<ServiceMapRow>("public_professional_search")
         .select(
-          `
-            id,
-            profile_id,
-            slug,
-            professional_name,
-            service_category,
-            service_subcategory,
-            description,
-            rating,
-            is_verified,
-            location_id,
-            address:addresses!address_id(latitude, longitude),
-            location:locations!professional_data_location_id_fkey(geographic_path)
-          `,
+          "id, profile_id, slug, professional_name, service_category, service_subcategory, description, rating, is_verified, location_id, latitude, longitude, geographic_path",
         )
-        .eq("is_accepting_clients", true)
-        .eq("visibility", "public_listed")
-        .limit(limit * 3);
+        .gte("longitude", west)
+        .lte("longitude", east)
+        .gte("latitude", south)
+        .lte("latitude", north)
+        .order("rating", { ascending: false })
+        .limit(limit);
 
       if (territoryFilter) {
         query = applyTerritoryFilter(query, territoryFilter);
@@ -114,44 +109,33 @@ class MapServicesLayerRuntimeService {
       const { data, error } = await query;
       if (error) throw error;
 
-      return (data ?? [])
-        .flatMap((row) => {
-          if (!isInsideBounds(row.address?.latitude, row.address?.longitude, bounds)) {
-            return [];
-          }
+      return (data ?? []).flatMap((row) => {
+        if (row.latitude == null || row.longitude == null) return [];
 
-          const latitude = row.address?.latitude;
-          const longitude = row.address?.longitude;
-          if (latitude == null || longitude == null) return [];
+        const profileId = row.profile_id ?? row.id;
+        const url = ProfessionalUrlService.getCanonicalUrlFromTarget({
+          id: row.id,
+          profile_id: profileId,
+          slug: row.slug,
+          geographic_path: row.geographic_path,
+        });
 
-          const location = firstRelation(row.location);
-          const profileId = row.profile_id ?? row.id;
-          const url = ProfessionalUrlService.getCanonicalUrlFromTarget({
-            id: row.id,
-            profile_id: profileId,
-            slug: row.slug,
-            geographic_path: location?.geographic_path ?? null,
-          });
-
-          return [
-            {
-              id: `service-${row.id}`,
-              profile_id: profileId,
-              name: row.professional_name ?? "Profissional",
-              slug: row.slug,
-              latitude,
-              longitude,
-              rating: row.rating ?? 0,
-              is_verified: Boolean(row.is_verified),
-              category: row.service_category,
-              subcategory: row.service_subcategory,
-              description: row.description,
-              geographic_path: location?.geographic_path ?? null,
-              url,
-            },
-          ];
-        })
-        .slice(0, limit);
+        return [{
+          id: `service-${row.id}`,
+          profile_id: profileId,
+          name: row.professional_name ?? "Profissional",
+          slug: row.slug,
+          latitude: row.latitude,
+          longitude: row.longitude,
+          rating: row.rating ?? 0,
+          is_verified: Boolean(row.is_verified),
+          category: row.service_category,
+          subcategory: row.service_subcategory,
+          description: row.description,
+          geographic_path: row.geographic_path,
+          url,
+        }];
+      });
     } catch (error) {
       logger.error("MapServicesLayerRuntimeService.getServicesByBounds", error as Error);
       return [];
