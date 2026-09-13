@@ -3,20 +3,13 @@
  *
  * SSOT para geração de title, description, canonical e Open Graph
  * em rotas territoriais. Nunca montar strings de SEO fora daqui.
- *
- * Regras:
- *   - Bairro e grupo geram metadata distintos
- *   - Cada módulo gera metadata distinto
- *   - Canonical sempre aponta para a URL territorial canônica
- *   - Redirects legados não competem (não têm canonical próprio)
  */
 
-import type { Location, TerritorialGroupWithMembers } from '@/core/location/types';
+import type { Location } from '@/core/location/types';
+import type { TerritorialGroupWithMembers } from '@/core/territorial/contracts';
 import type { ModuleSlug } from '../utils/territoryUrls';
 import { MODULE_SLUGS } from '../utils/territoryUrls';
 import { buildPublicAbsoluteUrl, getPublicAppOrigin } from '@/shared/config/publicAppOrigin';
-
-// Textos para a landing hub (sem módulo)
 
 const HUB_COPY = {
   label: 'Vitrine',
@@ -24,12 +17,8 @@ const HUB_COPY = {
   descriptionSuffix: 'Comunidade, empresas, serviços, classificados, mapa e guia local.',
 };
 
-// Configuração da marca
-
 const BRAND = 'Achegue-se';
 const DEFAULT_OG_IMAGE = '/og-image.png';
-
-// Textos por módulo
 
 interface ModuleCopy {
   label: string;
@@ -110,8 +99,6 @@ const MODULE_COPY: Record<ModuleSlug, ModuleCopy> = {
   },
 };
 
-// Tipos de saída
-
 export interface TerritorialMetadata {
   title: string;
   description: string;
@@ -133,27 +120,21 @@ export interface TerritorialMetadata {
   };
 }
 
-// Input types
-
 export interface LocationSeoInput {
   kind: 'location';
   location: Location;
-  /** null = landing hub (sem módulo) */
   module: ModuleSlug | null;
-  canonicalPath: string; // ex: /br/ba/salvador/nordeste-de-amaralina/community
+  canonicalPath: string;
 }
 
 export interface GroupSeoInput {
   kind: 'group';
   group: TerritorialGroupWithMembers;
-  /** null = landing hub (sem módulo) */
   module: ModuleSlug | null;
-  canonicalPath: string; // ex: /ba/salvador/complexo-do-nordeste-de-amaralina
+  canonicalPath: string;
 }
 
 export type TerritorialSeoInput = LocationSeoInput | GroupSeoInput;
-
-// Builder principal
 
 export function buildTerritorialMetadata(input: TerritorialSeoInput): TerritorialMetadata {
   const copy = input.module ? MODULE_COPY[input.module] : HUB_COPY;
@@ -165,16 +146,12 @@ export function buildTerritorialMetadata(input: TerritorialSeoInput): Territoria
   return buildGroupMetadata(input, copy, canonical);
 }
 
-// Builder para bairro (Location)
-
 function buildLocationMetadata(
   input: LocationSeoInput,
   copy: ModuleCopy,
   canonical: string,
 ): TerritorialMetadata {
   const { location, module } = input;
-
-  // Extrai cidade do geographic_path: /br/ba/salvador/nordeste-de-amaralina -> Salvador
   const cityName = extractCityName(location.geographic_path);
 
   const title = module
@@ -187,22 +164,16 @@ function buildLocationMetadata(
   return buildMetadata(title, description, canonical);
 }
 
-// Builder para grupo territorial
-
 function buildGroupMetadata(
   input: GroupSeoInput,
   copy: ModuleCopy,
   canonical: string,
 ): TerritorialMetadata {
   const { group, module } = input;
-
-  // Lista de bairros membros para enriquecer a description
   const memberNames = group.members.map((m) => m.name);
   const membersText = memberNames.length > 0
     ? ` Reúne ${formatList(memberNames)}.`
     : '';
-
-  // Extrai cidade do canonical path: /ba/salvador/... -> Salvador
   const cityName = extractCityNameFromGroupPath(input.canonicalPath);
 
   const title = module
@@ -214,8 +185,6 @@ function buildGroupMetadata(
 
   return buildMetadata(title, description, canonical);
 }
-
-// Montagem final
 
 function buildMetadata(
   title: string,
@@ -247,37 +216,20 @@ function buildMetadata(
   };
 }
 
-// Helpers
-
-/**
- * Extrai o nome da cidade a partir do geographic_path de um district.
- * /br/ba/salvador/nordeste-de-amaralina -> "Salvador"
- */
 function extractCityName(geographicPath: string): string {
   const parts = geographicPath.split('/').filter(Boolean);
-  // parts: ['br', 'ba', 'salvador', 'nordeste-de-amaralina']
   const citySlug = parts[2] ?? '';
   return slugToTitle(citySlug);
 }
 
-/**
- * Extrai o nome da cidade a partir do canonical path de um grupo.
- * /ba/salvador/complexo-... -> "Salvador"
- */
 function extractCityNameFromGroupPath(canonicalPath: string): string {
   const parts = canonicalPath.split('/').filter(Boolean);
-  // Hub:    ['ba', 'salvador', 'complexo-...']
-  // Modulo: ['empresas', 'ba', 'salvador', 'complexo-...']
   const moduleSlugs = new Set<string>(Object.values(MODULE_SLUGS));
   const offset = moduleSlugs.has(parts[0] ?? '') ? 1 : 0;
   const citySlug = parts[offset + 1] ?? '';
   return slugToTitle(citySlug);
 }
 
-/**
- * Converte slug para título legível.
- * "nordeste-de-amaralina" -> "Nordeste de Amaralina"
- */
 function slugToTitle(slug: string): string {
   const LOWERCASE_WORDS = new Set(['de', 'da', 'do', 'das', 'dos', 'e', 'em', 'a', 'o']);
   return slug
@@ -290,10 +242,6 @@ function slugToTitle(slug: string): string {
     .join(' ');
 }
 
-/**
- * Formata lista de nomes com vírgulas e "e" no final.
- * ["A", "B", "C"] -> "A, B e C"
- */
 function formatList(items: string[]): string {
   if (items.length === 0) return '';
   if (items.length === 1) return items[0];
