@@ -57,8 +57,8 @@ BEGIN
         )
         AND (p_location_id IS NULL OR b.location_id = p_location_id)
       ORDER BY distance_meters
-      LIMIT LEAST(GREATEST(p_limit, 1), 200)
-      OFFSET GREATEST(p_offset, 0);
+      LIMIT LEAST(GREATEST(COALESCE(p_limit, 50), 1), 200)
+      OFFSET GREATEST(COALESCE(p_offset, 0), 0);
 
     WHEN 'event' THEN
       RETURN QUERY
@@ -82,8 +82,8 @@ BEGIN
         )
         AND (p_location_id IS NULL OR e.location_id = p_location_id)
       ORDER BY 5
-      LIMIT LEAST(GREATEST(p_limit, 1), 200)
-      OFFSET GREATEST(p_offset, 0);
+      LIMIT LEAST(GREATEST(COALESCE(p_limit, 50), 1), 200)
+      OFFSET GREATEST(COALESCE(p_offset, 0), 0);
 
     WHEN 'tourist_point' THEN
       RETURN QUERY
@@ -107,8 +107,8 @@ BEGIN
         )
         AND (p_location_id IS NULL OR t.location_id = p_location_id)
       ORDER BY 5
-      LIMIT LEAST(GREATEST(p_limit, 1), 200)
-      OFFSET GREATEST(p_offset, 0);
+      LIMIT LEAST(GREATEST(COALESCE(p_limit, 50), 1), 200)
+      OFFSET GREATEST(COALESCE(p_offset, 0), 0);
 
     WHEN 'classified' THEN
       RETURN QUERY
@@ -132,8 +132,8 @@ BEGIN
         )
         AND (p_location_id IS NULL OR c.location_id = p_location_id)
       ORDER BY 5
-      LIMIT LEAST(GREATEST(p_limit, 1), 200)
-      OFFSET GREATEST(p_offset, 0);
+      LIMIT LEAST(GREATEST(COALESCE(p_limit, 50), 1), 200)
+      OFFSET GREATEST(COALESCE(p_offset, 0), 0);
 
     WHEN 'alert' THEN
       RAISE EXCEPTION 'Alert geospatial search not implemented';
@@ -185,7 +185,7 @@ BEGIN
         AND b.longitude BETWEEN p_west AND p_east
         AND b.latitude BETWEEN p_south AND p_north
         AND (p_location_id IS NULL OR b.location_id = p_location_id)
-      LIMIT LEAST(GREATEST(p_limit, 1), 200);
+      LIMIT LEAST(GREATEST(COALESCE(p_limit, 100), 1), 200);
 
     WHEN 'event' THEN
       RETURN QUERY
@@ -204,7 +204,7 @@ BEGIN
         AND e.longitude BETWEEN p_west AND p_east
         AND e.latitude BETWEEN p_south AND p_north
         AND (p_location_id IS NULL OR e.location_id = p_location_id)
-      LIMIT LEAST(GREATEST(p_limit, 1), 200);
+      LIMIT LEAST(GREATEST(COALESCE(p_limit, 100), 1), 200);
 
     WHEN 'tourist_point' THEN
       RETURN QUERY
@@ -223,7 +223,7 @@ BEGIN
         AND t.longitude BETWEEN p_west AND p_east
         AND t.latitude BETWEEN p_south AND p_north
         AND (p_location_id IS NULL OR t.location_id = p_location_id)
-      LIMIT LEAST(GREATEST(p_limit, 1), 200);
+      LIMIT LEAST(GREATEST(COALESCE(p_limit, 100), 1), 200);
 
     WHEN 'classified' THEN
       RETURN QUERY
@@ -242,7 +242,7 @@ BEGIN
         AND c.longitude BETWEEN p_west AND p_east
         AND c.latitude BETWEEN p_south AND p_north
         AND (p_location_id IS NULL OR c.location_id = p_location_id)
-      LIMIT LEAST(GREATEST(p_limit, 1), 200);
+      LIMIT LEAST(GREATEST(COALESCE(p_limit, 100), 1), 200);
 
     WHEN 'alert' THEN
       RAISE EXCEPTION 'Alert geospatial search not implemented';
@@ -305,7 +305,7 @@ BEGIN
           p_radius_km * 1000
         )
       ORDER BY in_territory DESC, distance_meters
-      LIMIT LEAST(GREATEST(p_limit, 1), 200);
+      LIMIT LEAST(GREATEST(COALESCE(p_limit, 50), 1), 200);
 
     ELSE
       RAISE EXCEPTION 'Hybrid search not implemented for entity type: %', p_entity_type;
