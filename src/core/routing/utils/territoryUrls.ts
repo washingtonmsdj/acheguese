@@ -25,12 +25,11 @@
  *   Nao e superficie canonica nova; links novos devem usar /comunidade/:alias.
  */
 
-import type { Location, TerritorialGroup } from '@/core/location/types';
+import type { Location } from '@/core/location/types';
+import type { TerritorialGroup } from '@/core/territorial/contracts';
 import { ROUTING_MODULE_SLUGS } from '@/shared/config/moduleSlugs';
 
-// ── Slugs de módulo canônicos ────────────────────────────────────────────────
 export const MODULE_SLUGS = ROUTING_MODULE_SLUGS;
-
 export type ModuleSlug = typeof MODULE_SLUGS[keyof typeof MODULE_SLUGS];
 
 export const COMMUNITY_CANONICAL_SUFFIX_SEGMENTS = [
@@ -99,41 +98,16 @@ export function extractCommunityTerritoryBaseUrl(pathname: string): string | nul
   return `/${parts[1]}/${parts[2]}`;
 }
 
-// ── Helpers internos ─────────────────────────────────────────────────────────
-
-/**
- * Detecta se um pathname corresponde a uma página de detalhe de entidade.
- *
- * Paginas de detalhe/fallback de entidade tem 5+ segmentos:
- * /[modulo]/:state/:city/:district/:slug
- *
- * Ex: /empresas/ba/salvador/pituba/nome-do-negocio
- *     /gastronomia/ba/salvador/rio-vermelho/pizza-do-forno (legado)
- *
- * Páginas territoriais (listagem) têm no máximo 4 segmentos:
- * Ex: /gastronomia/ba/salvador           (3 segmentos)
- *     /gastronomia/ba/salvador/pituba    (4 segmentos)
- */
 export function isEntityDetailRoute(pathname: string): boolean {
   const segments = pathname.split('/').filter(Boolean);
   return segments.length >= 5;
 }
 
-/**
- * Converte geographic_path interno (/br/ba/salvador/pituba)
- * para URL pública (/ba/salvador/pituba) removendo o country.
- */
 export function geoPathToPublicUrl(geoPath: string): string {
   const parts = geoPath.split('/').filter(Boolean);
   return '/' + parts.slice(1).join('/');
 }
 
-/**
- * Normaliza caminhos territoriais internos ou públicos para o formato público:
- * - /br/ba/salvador/pituba -> /ba/salvador/pituba
- * - /ba/salvador/pituba -> /ba/salvador/pituba
- * - ba/salvador/pituba -> /ba/salvador/pituba
- */
 export function normalizePublicTerritoryPath(path: string): string {
   const parts = path.split('/').filter(Boolean);
   if (!parts.length) return '/';
@@ -181,35 +155,19 @@ export function hasPublicCityTerritoryPath(path: string | null | undefined): boo
   return publicParts.length >= 2;
 }
 
-// ── Builders ─────────────────────────────────────────────────────────────────
-
-/**
- * URL base de uma location (cidade ou bairro).
- * geographic_path: /br/ba/salvador/pituba → /ba/salvador/pituba
- */
 export function buildLocationBaseUrl(location: Location): string {
   return geoPathToPublicUrl(location.geographic_path);
 }
 
-/**
- * URL base de um grupo territorial.
- * cityPath: geographic_path da cidade âncora (ex: /br/ba/salvador)
- */
 export function buildGroupBaseUrl(group: TerritorialGroup, cityPath: string): string {
   const publicCity = geoPathToPublicUrl(cityPath);
   return `${publicCity}/${group.slug}`;
 }
 
-/**
- * URL de um módulo dentro de um bairro.
- */
 export function buildLocationModuleUrl(location: Location, module: ModuleSlug): string {
   return buildModuleTerritoryUrl(module, buildLocationBaseUrl(location));
 }
 
-/**
- * URL de um módulo dentro de um grupo territorial.
- */
 export function buildGroupModuleUrl(
   group: TerritorialGroup,
   cityPath: string,
@@ -218,9 +176,6 @@ export function buildGroupModuleUrl(
   return buildModuleTerritoryUrl(module, buildGroupBaseUrl(group, cityPath));
 }
 
-/**
- * Constrói a URL base do território ativo.
- */
 export function buildTerritoryBaseUrl(
   territory:
     | { kind: 'location'; location: Location }
@@ -232,9 +187,6 @@ export function buildTerritoryBaseUrl(
   return buildGroupBaseUrl(territory.group, territory.cityPath);
 }
 
-/**
- * Constrói a URL de um módulo no território ativo.
- */
 export function buildTerritoryModuleUrl(
   territory:
     | { kind: 'location'; location: Location }
@@ -269,52 +221,18 @@ export function buildModuleTerritoryEntityUrl(
   return `${buildModuleTerritoryUrl(module, territoryBaseUrl)}/${normalizedSlug}`;
 }
 
-/**
- * Constrói a URL territorial de fallback da comunidade para cidade, bairro ou grupo.
- *
- * Padrões:
- *   /comunidade/:state/:city
- *   /comunidade/:state/:city/:districtOrGroup
- *
- * Aceita base territorial pública no formato:
- *   /:state/:city ou /:state/:city/:territorySlug
- * Nunca usar /area/ em URLs publicas de comunidade.
- *
- * Exemplos:
- *   buildCommunityTerritoryUrl('/ba/salvador/pituba')
- *   → '/comunidade/ba/salvador/pituba'
- *
- *   buildCommunityTerritoryUrl('/ba/salvador/pituba', 'feed')
- *   → '/comunidade/ba/salvador/pituba/feed'
- */
 export function buildCommunityTerritoryUrl(territoryBaseUrl: string, suffix = ''): string {
   const scopedBase = buildScopedTerritoryBaseUrl(territoryBaseUrl);
   const normalizedSuffix = suffix ? `/${suffix.replace(/^\/+/, '')}` : '';
   return `/${MODULE_SLUGS.community}${scopedBase}${normalizedSuffix}`;
 }
 
-/**
- * URL canonica do portal comunitario por alias.
- *
- * Novos links de portal devem usar /comunidade/:communityAlias.
- */
 export function buildCommunityAliasUrl(alias: string, suffix = ''): string {
   const cleanAlias = cleanUrlSegment(alias, 'alias publico da comunidade');
   const normalizedSuffix = suffix ? `/${suffix.replace(/^\/+/, '')}` : '';
   return `/${MODULE_SLUGS.community}/${cleanAlias}${normalizedSuffix}`;
 }
 
-/**
- * Constrói uma URL dentro da base pública da comunidade.
- *
- * Funciona para fallback tecnico:
- *   /comunidade/ba/salvador/pituba + empresas
- *   → /comunidade/ba/salvador/pituba/empresas
- *
- * e para portal canonico por alias:
- *   /comunidade/pituba + empresas
- *   -> /comunidade/pituba/empresas
- */
 export function buildCommunityScopedUrl(communityBaseUrl: string, suffix = ''): string {
   const cleanBase = communityBaseUrl.trim().replace(/\/+$/g, '');
   if (!cleanBase.startsWith('/') || cleanBase === '/' || /[?#]/.test(cleanBase)) {
@@ -336,10 +254,6 @@ export function buildCommunityScopedUrl(communityBaseUrl: string, suffix = ''): 
 
 export type CommunityTabSuffix = 'feed' | 'grupos';
 
-/**
- * Deriva URL de aba da comunidade a partir de uma rota territorial atual.
- * Suporta o fallback /comunidade/:state/:city e normaliza rotas antigas com slug territorial.
- */
 export function buildCommunityTabUrlFromPath(pathname: string, tab: CommunityTabSuffix): string | null {
   const parts = pathname.split('/').filter(Boolean);
   if (parts[0] !== MODULE_SLUGS.community || parts.length < 3) return null;
@@ -354,66 +268,35 @@ export function buildCommunityTabUrlFromPath(pathname: string, tab: CommunityTab
   return `/${base.join('/')}/${tab}`;
 }
 
-// ── Route Context Extraction ─────────────────────────────────────────────────
-
-/**
- * Extrai o contexto da rota atual (módulo + sufixo após o território).
- * 
- * Exemplos:
- *   /empresas/ba/salvador/categoria/restaurantes → { module: 'empresas', suffix: '/categoria/restaurantes' }
- *   /empresas/ba/salvador/pituba/categoria/saude → { module: 'empresas', suffix: '/categoria/saude' }
- *   /empresas/ba/salvador → { module: 'empresas', suffix: '' }
- *   /comunidade/ba/salvador → { module: 'comunidade', suffix: '' }
- *   /ba/salvador → { module: null, suffix: '' }
- * 
- * @param pathname - pathname da URL atual (ex: location.pathname)
- * @returns Objeto com módulo e sufixo, ou null se não for uma rota territorial
- */
 export function extractRouteContext(pathname: string): {
   module: ModuleSlug | null;
   suffix: string;
 } {
   const parts = pathname.split('/').filter(Boolean);
-  
-  // Verifica se o primeiro segmento é um módulo conhecido
   const firstSegment = parts[0];
   const moduleValues = Object.values(MODULE_SLUGS);
   const isModule = moduleValues.includes(firstSegment as ModuleSlug);
-  
+
   if (!isModule) {
-    // Não é uma rota de módulo (ex: /ba/salvador)
     return { module: null, suffix: '' };
   }
-  
+
   const module = firstSegment as ModuleSlug;
-  
-  // Encontra onde termina o território e começa o sufixo
-  // Padrões possíveis:
-  // /empresas/:state/:city → 3 segmentos, sem sufixo
-  // /empresas/:state/:city/:district → 4 segmentos, sem sufixo
-  // /empresas/:state/:city/categoria/:category → 5 segmentos, sufixo = /categoria/:category
-  // /empresas/:state/:city/:district/categoria/:category → 6 segmentos, sufixo = /categoria/:category
-  
-  // Detecta se há um sufixo após o território
-  // Sufixos conhecidos: /categoria/:slug
   let suffixStartIndex = -1;
-  
+
   for (let i = 1; i < parts.length; i++) {
-    // Se encontrar "categoria" ou outros sufixos conhecidos
     if (parts.at(i) === 'categoria') {
       suffixStartIndex = i;
       break;
     }
   }
-  
+
   if (suffixStartIndex === -1) {
-    // Sem sufixo
     return { module, suffix: '' };
   }
-  
-  // Constrói o sufixo
+
   const suffixParts = parts.slice(suffixStartIndex);
   const suffix = '/' + suffixParts.join('/');
-  
+
   return { module, suffix };
 }
