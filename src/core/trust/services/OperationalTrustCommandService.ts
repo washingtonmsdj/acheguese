@@ -1,4 +1,8 @@
 import { supabase } from "@/integrations/supabase";
+import {
+  submitRideTrustFeedbackRpc,
+  type RideTrustFeedbackRpcSubjectRole,
+} from "./RideTrustFeedbackRpcGateway";
 
 export interface OperationalTrustFeedbackInput {
   subjectProfileId: string;
@@ -7,12 +11,7 @@ export interface OperationalTrustFeedbackInput {
   description?: string | null;
 }
 
-export type RideTrustFeedbackSubjectRole =
-  | "counterparty"
-  | "customer"
-  | "merchant"
-  | "driver"
-  | "courier";
+export type RideTrustFeedbackSubjectRole = RideTrustFeedbackRpcSubjectRole;
 
 export interface OperationalRideTrustFeedbackInput {
   subjectRole: RideTrustFeedbackSubjectRole;
@@ -86,16 +85,13 @@ export class OperationalTrustCommandService {
     rideId: string,
     input: OperationalRideTrustFeedbackInput,
   ): Promise<TrustCommandResult> {
-    const { data, error } = await supabase.rpc(
-      "submit_ride_trust_feedback",
-      {
-        p_ride_id: rideId,
-        p_subject_role: input.subjectRole,
-        p_rating: input.rating,
-        p_reason_code: input.reasonCode,
-        p_description: input.description?.trim() || null,
-      },
-    );
+    const { data, error } = await submitRideTrustFeedbackRpc({
+      p_ride_id: rideId,
+      p_subject_role: input.subjectRole,
+      p_rating: input.rating,
+      p_reason_code: input.reasonCode,
+      p_description: input.description?.trim() || null,
+    });
     if (error) throw error;
     return normalizeCommandResult(data);
   }
