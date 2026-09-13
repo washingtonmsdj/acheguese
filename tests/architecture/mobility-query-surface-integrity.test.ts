@@ -9,7 +9,11 @@ describe("Mobility query surface integrity", () => {
   const queries = read("src/core/mobility/services/mobility.queries.ts");
   const rideService = read("src/core/mobility/services/RideService.ts");
   const mobilityService = read("src/core/mobility/services/MobilityService.ts");
+  const runtimeService = read("src/core/mobility/services/MobilityRuntimeService.ts");
   const serviceIndex = read("src/core/mobility/services/index.ts");
+  const useDelivery = read("src/modules/mobility/hooks/useDelivery.ts");
+  const useActiveRide = read("src/modules/mobility/hooks/useActiveRide.ts");
+  const useRideHistory = read("src/modules/mobility/hooks/useRideHistory.ts");
 
   it("preserves the driver query owners required by active mobility consumers", () => {
     expect(queries).toContain("export async function getDriverDataIdByProfileId(");
@@ -25,10 +29,22 @@ describe("Mobility query surface integrity", () => {
     expect(rideService).toContain("getActiveRide");
   });
 
-  it("keeps ride-by-id on the direct query owner instead of duplicating it in MobilityFacade", () => {
+  it("keeps ride-by-id on the direct query owner", () => {
     expect(queries).toContain("export async function getRideById(");
     expect(serviceIndex).toContain("getRideById,");
     expect(mobilityService).not.toContain("static getRideById");
     expect(mobilityService).not.toMatch(/export\s*\{[^}]*\bgetRideById\b/s);
+    expect(runtimeService).not.toContain("async getRideById(");
+    expect(useDelivery).toContain("getRideById(event.rideId)");
+    expect(useDelivery).not.toContain("mobilityService.getRideById");
+  });
+
+  it("keeps user ride reads on the typed query owner instead of MobilityFacade", () => {
+    expect(queries).toContain("export async function getUserRides(");
+    expect(mobilityService).not.toContain("static getUserRides");
+    expect(useActiveRide).toContain("getUserRides(user.id)");
+    expect(useRideHistory).toContain("getUserRides(user.id)");
+    expect(useActiveRide).not.toContain("MobilityFacade.getUserRides");
+    expect(useRideHistory).not.toContain("MobilityFacade.getUserRides");
   });
 });
