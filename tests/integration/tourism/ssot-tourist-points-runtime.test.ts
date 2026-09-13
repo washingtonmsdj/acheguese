@@ -1,13 +1,10 @@
 // @ts-nocheck
 /**
  * Testes SSOT - tourist_points (Runtime Services)
- * 
- * Valida comportamento real dos services com dados no banco:
- * - list() com location_id
- * - getBySlug() com contexto territorial
- * - countByCity() com resolução territorial
- * - getCategoriesByCity() com resolução territorial
- * - getCommunityPhotos() com resolução territorial
+ *
+ * Valida comportamento real dos services com dados no banco.
+ * Quando o runtime externo não está disponível, os casos dependentes dele
+ * retornam sem fabricar uma assertion de sucesso.
  */
 
 import { describe, it, expect, beforeAll } from 'vitest';
@@ -28,12 +25,12 @@ describe('SSOT Territorial - tourist_points (Runtime Services)', () => {
 
   function requireRuntime(): boolean {
     if (!runtimeAvailable) {
-      expect(true).toBe(true);
+      console.warn('Tourism runtime integration unavailable; runtime-dependent assertion not executed.');
       return false;
     }
     return true;
   }
-  
+
   const BARRA_LOCATION_ID = '5c91b9e1-17bf-4707-9ba7-0dd82ada7eb3';
   const PELOURINHO_LOCATION_ID = '40000000-0000-0000-0000-000000000003';
 
