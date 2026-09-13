@@ -5,7 +5,8 @@
  * de forma dinâmica, sem hardcoded.
  */
 
-import type { Location, TerritorialGroupWithMembers } from '../types';
+import type { Location } from '../types';
+import type { TerritorialGroupWithMembers } from '@/core/territorial';
 import type { ResolvedTerritory } from '@/core/routing/hooks/useResolveTerritoryFromUrl';
 
 /**
