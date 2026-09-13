@@ -14,6 +14,7 @@ describe("Mobility query surface integrity", () => {
   const useDelivery = read("src/modules/mobility/hooks/useDelivery.ts");
   const useActiveRide = read("src/modules/mobility/hooks/useActiveRide.ts");
   const useRideHistory = read("src/modules/mobility/hooks/useRideHistory.ts");
+  const rideHistoryUnified = read("src/modules/mobility/components/RideHistoryUnified.tsx");
 
   it("preserves the driver query owners required by active mobility consumers", () => {
     expect(queries).toContain("export async function getDriverDataIdByProfileId(");
@@ -39,12 +40,18 @@ describe("Mobility query surface integrity", () => {
     expect(useDelivery).not.toContain("mobilityService.getRideById");
   });
 
-  it("keeps user ride reads on the typed query owner instead of MobilityFacade", () => {
+  it("keeps user ride reads on the typed query owner", () => {
     expect(queries).toContain("export async function getUserRides(");
     expect(mobilityService).not.toContain("static getUserRides");
+    expect(runtimeService).not.toContain("async getUserRides(");
+    expect(runtimeService).not.toContain("RideRequestReadModel");
     expect(useActiveRide).toContain("getUserRides(user.id)");
     expect(useRideHistory).toContain("getUserRides(user.id)");
+    expect(useDelivery).toContain("getUserRides(user.id)");
+    expect(rideHistoryUnified).toContain("getUserRides(user.id)");
     expect(useActiveRide).not.toContain("MobilityFacade.getUserRides");
     expect(useRideHistory).not.toContain("MobilityFacade.getUserRides");
+    expect(useDelivery).not.toContain("mobilityService.getUserRides");
+    expect(rideHistoryUnified).not.toContain("mobilityService.getUserRides");
   });
 });
