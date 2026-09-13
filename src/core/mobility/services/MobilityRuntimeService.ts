@@ -8,15 +8,9 @@ import { supabase } from "@/integrations/supabase";
 import type { Tables, TablesUpdate } from "@/integrations/supabase";
 import { profileService } from "@/core/profiles/services/ProfileService";
 import { logger } from "@/shared/utils/logger";
-import type { RideRequest } from "../types/types";
 import { sanitizeDriverSelfServiceUpdate } from "./driverDataSelfService";
 import { DriverEarningsReadService } from "./DriverEarningsReadService";
 import { MobilityRpcService } from "./MobilityRpcService";
-import {
-  RIDE_REQUEST_READ_SELECT,
-  toRideRequestReadModel,
-  type RideRequestReadRow,
-} from "./RideRequestReadModel";
 import {
   RIDE_SEARCH_SNAPSHOT_SELECT,
   type RideSearchSnapshotRow,
@@ -339,25 +333,6 @@ class MobilityServiceInstance {
     } catch (error) {
       logger.error("mobilityService.getRideWithAddresses", error as Error);
       return null;
-    }
-  }
-
-  async getUserRides(userId: string): Promise<RideRequest[]> {
-    try {
-      const activeProfile = await profileService.getActiveProfile(userId);
-      if (!activeProfile?.id) return [];
-
-      const { data, error } = await db
-        .from<RideRequestReadRow>("ride_requests")
-        .select(RIDE_REQUEST_READ_SELECT)
-        .or(`passenger_profile_id.eq.${activeProfile.id},driver_profile_id.eq.${activeProfile.id}`)
-        .order("created_at", { ascending: false });
-
-      if (error) throw error;
-      return (data || []).map(toRideRequestReadModel);
-    } catch (error) {
-      logger.error("mobilityService.getUserRides", error as Error);
-      return [];
     }
   }
 
