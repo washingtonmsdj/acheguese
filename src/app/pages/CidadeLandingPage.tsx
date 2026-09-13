@@ -60,8 +60,6 @@ import { BusinessLogo } from "@/shared/components/ui/business-logo";
 import { useTheme } from "@/shared/hooks/useTheme";
 import { getRecordValue } from "@/shared/utils/recordLookup";
 import { useAuth } from "@/core/auth/hooks/useAuth";
-import { BusinessService } from "@/core/business/services/BusinessService";
-import type { Business } from "@/core/business/types/Business";
 import { useCityFeatured } from "@/core/city/hooks/useCityFeatured";
 import { useCityMetadata } from "@/core/city/hooks/useCityMetadata";
 import {
@@ -91,6 +89,10 @@ import {
   type MapMarker,
   type TerritoryPolygon,
 } from "@/core/maps";
+import {
+  mapBusinessLayerRuntimeService,
+  type BusinessMapEntity,
+} from "@/core/maps/services/MapBusinessLayerRuntimeService";
 import { mapClassifiedsLayerRuntimeService } from "@/core/maps/services/MapClassifiedsLayerRuntimeService";
 import { mapGastronomyLayerRuntimeService } from "@/core/maps/services/MapGastronomyLayerRuntimeService";
 import { mapServicesLayerRuntimeService } from "@/core/maps/services/MapServicesLayerRuntimeService";
@@ -671,45 +673,33 @@ function useCurrentTemperature(
 }
 
 function projectBusinessMarkers(
-  businesses: Business[],
-  bounds: BoundingBox,
+  businesses: BusinessMapEntity[],
   urls: CityModuleUrls,
 ): MapMarker[] {
-  const entities = businesses
-    .filter((business) =>
-      isInsideBounds(
-        business.address?.latitude,
-        business.address?.longitude,
-        bounds,
-      ),
-    )
-    .slice(0, 90)
-    .map((business) => ({
-      id: `business-${business.profile_id || business.id}`,
-      name: business.name,
-      latitude: business.address?.latitude ?? null,
-      longitude: business.address?.longitude ?? null,
-      status: business.status,
-      subtitle: formatLocationFromGeoPath(
-        business.location?.geographic_path ?? business.geographic_path,
-      ),
-      category: business.category,
-      slug: business.slug,
-      url: getBusinessPublicUrl(
-        {
-          id: business.profile_id || business.id,
-          slug: business.slug,
-          is_premium: business.is_premium,
-          geographic_path:
-            business.location?.geographic_path ?? business.geographic_path,
-        },
-        urls.business,
-      ),
-      is_premium: business.is_premium,
-      is_verified: business.is_verified,
-      rating: business.rating,
-      map_layer_key: "businesses",
-    }));
+  const entities = businesses.map((business) => ({
+    id: `business-${business.id}`,
+    name: business.name,
+    latitude: business.latitude,
+    longitude: business.longitude,
+    status: "active",
+    subtitle: business.category
+      ? formatCategory(business.category)
+      : "Empresa local",
+    category: business.category,
+    slug: business.slug,
+    url: getBusinessPublicUrl(
+      {
+        id: business.id,
+        slug: business.slug ?? undefined,
+        is_premium: business.is_premium,
+      },
+      urls.business,
+    ),
+    is_premium: business.is_premium,
+    is_verified: business.is_verified,
+    rating: business.rating,
+    map_layer_key: "businesses",
+  }));
 
   return mapEntityProjection.projectEntities(entities, "business", {
     includeMetadata: true,
@@ -725,7 +715,10 @@ async function fetchCityMapMarkers(
   if (territoryFilter.scope === "none") return [];
 
   const [businesses, gastronomy, services, classifieds] = await Promise.all([
-    BusinessService.getBusinesses({ sortBy: "rating", territoryFilter }),
+    mapBusinessLayerRuntimeService.getBusinessesByBounds(bounds, {
+      territoryFilter,
+      limit: 80,
+    }),
     mapGastronomyLayerRuntimeService.getGastronomyByBounds(bounds, {
       territoryFilter,
       limit: 80,
@@ -740,7 +733,7 @@ async function fetchCityMapMarkers(
     }),
   ]);
 
-  const businessMarkers = projectBusinessMarkers(businesses, bounds, urls);
+  const businessMarkers = projectBusinessMarkers(businesses, urls);
   const gastronomyMarkers = mapEntityProjection.projectEntities(
     gastronomy.map((item) => ({
       id: item.id,
