@@ -312,7 +312,6 @@ export default function TerritoryEntryPage() {
             city={launchCity}
             resolvedTerritory={launchTerritory}
             label={LAUNCH_COMMUNITY_NAME}
-            isLoading={false}
             className="entry-map"
           />
 
