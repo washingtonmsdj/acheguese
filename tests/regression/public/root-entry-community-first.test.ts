@@ -47,6 +47,16 @@ describe("root community-first MVP entry", () => {
     expect(source).not.toContain("scheduleBrowserIdleWork");
   });
 
+  it("keeps the root page free of the icon library", () => {
+    const source = read("src/app/pages/TerritoryEntryPage.tsx");
+    const arrival = read("src/app/components/territory-vivo/TerritoryEntryMapArrival.tsx");
+    const runtime = read("src/app/components/territory-vivo/TerritoryEntryMapRuntime.tsx");
+
+    expect(source).not.toContain("lucide-react");
+    expect(arrival).not.toContain("lucide-react");
+    expect(runtime).not.toContain("lucide-react");
+  });
+
   it("uses a lightweight low-priority community preview", () => {
     const source = read("src/app/pages/TerritoryEntryPage.tsx");
     const asset = path.join(ROOT, "src/assets/complexo-cultura.jpg");
