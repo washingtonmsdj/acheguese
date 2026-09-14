@@ -3,7 +3,10 @@ import TerritoryEntryMap from "@/app/components/territory-vivo/TerritoryEntryMap
 import communityThumbnail from "@/assets/complexo-cultura.jpg";
 import { AUTH_PATHS } from "@/core/auth/constants/authFlow";
 import { LAUNCH_URLS, TERRITORY_CONFIG } from "@/core/routing/config/territory";
-import { resolvePublicTerritoryFallback } from "@/core/routing/utils/publicTerritoryFallbacks";
+import {
+  getPublicTerritoryLocationLabel,
+  resolvePublicTerritoryFallback,
+} from "@/core/routing/utils/publicTerritoryFallbacks";
 import { lastTerritoryStore } from "@/core/routing/stores/LastTerritoryStore";
 import { scheduleAfterPublicRootMap } from "@/shared/utils/publicRootReadiness";
 
@@ -35,6 +38,8 @@ const launchTerritory = resolvePublicTerritoryFallback({
 });
 const launchCity =
   launchCityResolved?.kind === "location" ? launchCityResolved.location : null;
+const launchCommunityMembers =
+  launchTerritory?.kind === "group" ? launchTerritory.group.members : [];
 
 export default function TerritoryEntryPage() {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
@@ -208,10 +213,9 @@ export default function TerritoryEntryPage() {
               </span>
             </div>
             <div className="entry-neighborhoods" aria-label={`Bairros de ${LAUNCH_COMMUNITY_NAME}`}>
-              <span>Nordeste de Amaralina</span>
-              <span>Santa Cruz</span>
-              <span>Vale das Pedrinhas</span>
-              <span>Chapada</span>
+              {launchCommunityMembers.map((member) => (
+                <span key={member.id}>{getPublicTerritoryLocationLabel(member)}</span>
+              ))}
             </div>
             <a
               href={LAUNCH_URLS.community}
