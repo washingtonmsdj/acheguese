@@ -38,7 +38,9 @@ function removeStoredValue(storage: Storage, key: string): void {
  *
  * O envelope versionado e com expiração é o único formato aceito. Valores
  * antigos, corrompidos ou sem TTL são descartados em vez de contaminarem uma
- * jornada nova. Credenciais e outros dados sensíveis nunca pertencem a esta API.
+ * jornada nova. Compatibilidade transitória com o formato legado foi removida:
+ * dados antigos não são promovidos nem reinterpretados. Credenciais e outros
+ * dados sensíveis nunca pertencem a esta API.
  */
 export function setAuthFlowSessionValue(
   key: string,
