@@ -8,6 +8,21 @@
     padding-right: max(1.5rem, env(safe-area-inset-right)) !important;
   }
 
+  /* As quebras dos títulos são parte da composição aprovada em 390 px. */
+  main#main-content:has(#login-identifier)
+    > section:last-child
+    > div:first-child
+    > h1 {
+    max-width: 15.25rem !important;
+  }
+
+  main#main-content:has(#cadastro-password)
+    > section:last-child
+    > div:first-child
+    > h1 {
+    max-width: 17.75rem !important;
+  }
+
   /* Cadastro não tem rodapé no concept: preserve o respiro do home indicator. */
   main#main-content:has(#cadastro-password) {
     padding-bottom: max(1rem, env(safe-area-inset-bottom)) !important;
