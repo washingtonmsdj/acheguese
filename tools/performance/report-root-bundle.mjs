@@ -96,6 +96,10 @@ function groupFromStartKeys(name, startKeys) {
   };
 }
 
+function isKeyOutsideClosure(key, closureKeys) {
+  return key ? !closureKeys.has(key) : null;
+}
+
 const mainKey =
   findKeyBySrc("src/main.tsx") ??
   Object.entries(manifest).find(([, entry]) => entry.isEntry)?.[0] ??
@@ -112,8 +116,14 @@ const mapRuntimeKey = findKeyBySrc(
 const passiveRuntimeKey = findKeyBySrc(
   "src/core/maps/components/v3/MapLibrePassiveRuntime.tsx",
 );
+const fullMapRuntimeKey = findKeyBySrc(
+  "src/core/maps/components/v3/MapLibreAdapterRuntime.tsx",
+);
 const boundaryKey = findKeyBySrc(
   "src/core/geospatial/data/officialFeatureServerBoundary.ts",
+);
+const routedAppRuntimeKey = findKeyBySrc(
+  "src/app/components/RoutedAppRuntime.tsx",
 );
 const sentryKeys = findKeysByFileFragment("vendor-sentry");
 const mapLibreVendorKeys = findKeysByFileFragment("vendor-maplibre");
@@ -125,12 +135,38 @@ const mapEngine = groupFromStartKeys("maplibre-engine", mapLibreVendorKeys);
 const boundary = groupFromStartKeys("official-boundary", [boundaryKey]);
 const sentry = groupFromStartKeys("deferred-sentry", sentryKeys);
 
+const initialManifestKeys = new Set(initial.manifestKeys);
+const firstUsableMapManifestKeys = new Set([
+  ...initial.manifestKeys,
+  ...mapShell.manifestKeys,
+  ...passiveMap.manifestKeys,
+  ...mapEngine.manifestKeys,
+]);
 const firstUsableMapFiles = new Set([
   ...initial.files,
   ...mapShell.files,
   ...passiveMap.files,
   ...mapEngine.files,
 ]);
+
+const invariants = {
+  fullMapRuntimeDeferredFromFirstUsableMap: isKeyOutsideClosure(
+    fullMapRuntimeKey,
+    firstUsableMapManifestKeys,
+  ),
+  officialBoundaryDeferredFromFirstUsableMap: isKeyOutsideClosure(
+    boundaryKey,
+    firstUsableMapManifestKeys,
+  ),
+  routedAppRuntimeDeferredFromInitialBootstrap: isKeyOutsideClosure(
+    routedAppRuntimeKey,
+    initialManifestKeys,
+  ),
+  sentryDeferredFromInitialBootstrap:
+    sentryKeys.length > 0
+      ? sentryKeys.every((key) => !initialManifestKeys.has(key))
+      : null,
+};
 
 const groups = {
   initialBootstrap: summarizeFiles(initial.files),
@@ -148,15 +184,24 @@ const report = {
   sourcesFound: {
     mapRuntime: Boolean(mapRuntimeKey),
     passiveRuntime: Boolean(passiveRuntimeKey),
+    fullMapRuntime: Boolean(fullMapRuntimeKey),
     officialBoundary: Boolean(boundaryKey),
+    routedAppRuntime: Boolean(routedAppRuntimeKey),
     mapLibreVendorChunks: mapLibreVendorKeys.length,
     sentryVendorChunks: sentryKeys.length,
   },
+  invariants,
   groups,
 };
 
 function kib(bytes) {
   return `${(bytes / 1024).toFixed(1)} KiB`;
+}
+
+function invariantLabel(value) {
+  if (value === true) return "PASS";
+  if (value === false) return "FAIL";
+  return "NOT FOUND";
 }
 
 const tableRows = Object.entries(groups)
@@ -166,12 +211,16 @@ const tableRows = Object.entries(groups)
   )
   .join("\n");
 
+const invariantRows = Object.entries(invariants)
+  .map(([name, value]) => `| ${name} | ${invariantLabel(value)} |`)
+  .join("\n");
+
 const largestFirstMapFiles = groups.firstUsableMap.files
   .slice(0, 12)
   .map((file) => `- \`${file.file}\` — ${kib(file.raw)} raw / ${kib(file.brotli)} brotli`)
   .join("\n");
 
-const markdown = `# Root bundle report\n\nSHA: \`${report.commitSha ?? "local"}\`\n\n| Group | Raw | Gzip | Brotli | Files |\n|---|---:|---:|---:|---:|\n${tableRows}\n\n## Largest files in first usable map closure\n\n${largestFirstMapFiles || "- none"}\n`;
+const markdown = `# Root bundle report\n\nSHA: \`${report.commitSha ?? "local"}\`\n\n| Group | Raw | Gzip | Brotli | Files |\n|---|---:|---:|---:|---:|\n${tableRows}\n\n## Separation invariants\n\n| Invariant | Result |\n|---|---|\n${invariantRows}\n\n## Largest files in first usable map closure\n\n${largestFirstMapFiles || "- none"}\n`;
 
 fs.writeFileSync(JSON_REPORT_PATH, `${JSON.stringify(report, null, 2)}\n`);
 fs.writeFileSync(MARKDOWN_REPORT_PATH, markdown);
@@ -181,3 +230,15 @@ if (process.env.GITHUB_STEP_SUMMARY) {
 }
 
 console.log(markdown);
+
+const failedInvariants = Object.entries(invariants).filter(
+  ([, value]) => value === false,
+);
+if (failedInvariants.length > 0) {
+  console.error(
+    `Public root bundle separation failed: ${failedInvariants
+      .map(([name]) => name)
+      .join(", ")}`,
+  );
+  process.exitCode = 1;
+}
