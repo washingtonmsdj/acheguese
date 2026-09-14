@@ -43,7 +43,7 @@ describe("public launch scope SSOT", () => {
       "src/app/components/AppRuntime.tsx",
       "src/app/routes/RootRouteEntry.tsx",
       "src/app/routes/AppRoutes.tsx",
-      "src/app/components/privacy/ConsentBanner.tsx",
+      "src/app/components/privacy/ConsentBannerContent.tsx",
     ];
 
     consumers.forEach((relativePath) => {
@@ -55,7 +55,7 @@ describe("public launch scope SSOT", () => {
   });
 
   it("keeps consent auth-surface detection on AUTH_PATHS", () => {
-    const banner = read("src/app/components/privacy/ConsentBanner.tsx");
+    const banner = read("src/app/components/privacy/ConsentBannerContent.tsx");
 
     expect(banner).toContain("AUTH_PATHS.login");
     expect(banner).toContain("AUTH_PATHS.signup");
