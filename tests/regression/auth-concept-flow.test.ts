@@ -55,7 +55,24 @@ describe("account and access concept contract", () => {
     expect(footer).toContain('env(safe-area-inset-bottom)');
   });
 
-  it("keeps initial signup account-first and territory optional", () => {
+  it("keeps Google OAuth visible in production and wired through the real provider flow", () => {
+    const productionEnv = readProjectFile(".env.production");
+    const login = readProjectFile("src/app/pages/LoginPage.tsx");
+    const cadastro = readProjectFile(
+      "src/app/features/onboarding/pages/CadastroPage.tsx",
+    );
+    const authService = readProjectFile("src/core/auth/services/AuthService.ts");
+
+    expect(productionEnv).toContain("VITE_AUTH_GOOGLE_ENABLED=true");
+    expect(login).toContain("Continuar com Google");
+    expect(login).toContain("googleAuthAvailable");
+    expect(cadastro).toContain("Continuar com Google");
+    expect(cadastro).toContain('setPendingAuthReturn("/cadastro/primeiro-acesso")');
+    expect(authService).toContain('provider: "google"');
+    expect(authService).toContain("getTermsAcceptanceRedirectUrl");
+  });
+
+  it("keeps initial signup account-first, territory optional and username-aware", () => {
     const cadastro = readProjectFile(
       "src/app/features/onboarding/pages/CadastroPage.tsx",
     );
@@ -68,6 +85,10 @@ describe("account and access concept contract", () => {
 
     expect(cadastro).toContain("Comece pelo seu perfil pessoal.");
     expect(cadastro).toContain("Depois, adicione perfis de negócio ou profissional.");
+    expect(cadastro).toContain("useIdentityAvailability");
+    expect(cadastro).toContain("Verificando disponibilidade");
+    expect(cadastro).toContain("Nome de usuário disponível.");
+    expect(cadastroHook).toContain("PublicIdentityService.checkAvailability");
     expect(schema).not.toContain("confirmPassword");
     expect(schema).not.toContain("neighborhood");
     expect(schema).not.toContain("city:");
