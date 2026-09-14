@@ -1,10 +1,9 @@
 /**
  * AddressEditor
- * 
+ *
  * Editor de endereço completo com busca automática por CEP.
- * Integra com API ViaCEP e permite seleção de coordenadas no mapa.
+ * CEP e GPS passam pelos owners canônicos de localização.
  */
-import { logger } from '@/shared/utils/logger';
 import { useState } from "react";
 import { MapPin, Search, Loader2, Check, X, Map as MapIcon } from "lucide-react";
 import { Input } from "@/shared/components/ui/input";
@@ -12,6 +11,11 @@ import { Button } from "@/shared/components/ui/button";
 import { Label } from "@/shared/components/ui/label";
 import { cn } from "@/shared/utils/cn";
 import { toast } from "sonner";
+import { locationGeocodingService } from "@/core/location/services/LocationGeocodingService";
+import { GEOLOCATION_RUNTIME } from "@/shared/config/geolocation";
+import { GeolocationService } from "@/shared/services/GeolocationService";
+import { logger } from "@/shared/utils/logger";
+
 interface Address {
   street?: string;
   number?: string;
@@ -35,16 +39,6 @@ interface AddressEditorProps {
   className?: string;
 }
 
-interface ViaCEPResponse {
-  cep: string;
-  logradouro: string;
-  complemento: string;
-  bairro: string;
-  localidade: string;
-  uf: string;
-  erro?: boolean;
-}
-
 export function AddressEditor({
   address,
   onChange,
@@ -56,9 +50,10 @@ export function AddressEditor({
   className,
 }: AddressEditorProps) {
   const [loading, setLoading] = useState(false);
+  const [loadingLocation, setLoadingLocation] = useState(false);
   const [cepError, setCepError] = useState<string | null>(null);
 
-  const handleChange = (field: keyof Address, value: string | number) => {
+  const handleChange = (field: keyof Address, value: string | number | undefined) => {
     onChange({
       ...address,
       [field]: value,
@@ -66,9 +61,7 @@ export function AddressEditor({
   };
 
   const formatCEP = (value: string): string => {
-    // Remove tudo que não é número
     const numbers = value.replace(/\D/g, "");
-    // Aplica máscara 00000-000
     if (numbers.length <= 5) {
       return numbers;
     }
@@ -83,7 +76,7 @@ export function AddressEditor({
 
   const searchCEP = async () => {
     const cep = address.postal_code?.replace(/\D/g, "");
-    
+
     if (!cep || cep.length !== 8) {
       setCepError("CEP deve ter 8 dígitos");
       return;
@@ -93,28 +86,29 @@ export function AddressEditor({
     setCepError(null);
 
     try {
-      const response = await fetch(`https://viacep.com.br/ws/${cep}/json/`);
-      const data: ViaCEPResponse = await response.json();
+      const data = await locationGeocodingService.lookupPostalCode({ postalCode: cep });
 
-      if (data.erro) {
+      if (!data) {
         setCepError("CEP não encontrado");
         toast.error("CEP não encontrado");
         return;
       }
 
-      // Preencher campos automaticamente
       onChange({
         ...address,
-        postal_code: formatCEP(data.cep),
-        street: data.logradouro || address.street,
-        neighborhood: data.bairro || address.neighborhood,
-        city: data.localidade || address.city,
-        state: data.uf || address.state,
+        postal_code: formatCEP(data.postalCode),
+        street: data.street ?? address.street,
+        complement: data.complement ?? address.complement,
+        neighborhood: data.neighborhood ?? address.neighborhood,
+        city: data.city ?? address.city,
+        state: data.stateCode ?? data.state ?? address.state,
+        latitude: data.coordinates?.latitude ?? address.latitude,
+        longitude: data.coordinates?.longitude ?? address.longitude,
       });
 
       toast.success("Endereço encontrado!");
     } catch (error) {
-      logger.error("Erro ao buscar CEP:", error);
+      logger.error("AddressEditor.searchCEP", error);
       setCepError("Erro ao buscar CEP");
       toast.error("Erro ao buscar CEP. Tente novamente.");
     } finally {
@@ -122,28 +116,44 @@ export function AddressEditor({
     }
   };
 
-  const handleGetCurrentLocation = () => {
-    if (!navigator.geolocation) {
-      toast.error("Geolocalização não suportada pelo navegador");
+  const handleGetCurrentLocation = async () => {
+    setLoadingLocation(true);
+    toast.info("Obtendo localização...");
+
+    try {
+      const result = await GeolocationService.getCurrentLocation({
+        useCache: false,
+        forcePrompt: true,
+        allowIpFallback: false,
+        gpsMode: "precise",
+        timeout: GEOLOCATION_RUNTIME.requestTimeoutMs,
+        maxRetries: 1,
+      });
+
+      onChange({
+        ...address,
+        latitude: result.coords.latitude,
+        longitude: result.coords.longitude,
+      });
+      toast.success("Localização obtida!");
+    } catch (error) {
+      logger.error("AddressEditor.handleGetCurrentLocation", error);
+      toast.error("Erro ao obter localização. Verifique as permissões.");
+    } finally {
+      setLoadingLocation(false);
+    }
+  };
+
+  const handleCoordinateChange = (field: "latitude" | "longitude", value: string) => {
+    if (value.trim() === "") {
+      handleChange(field, undefined);
       return;
     }
 
-    toast.info("Obtendo localização...");
-
-    navigator.geolocation.getCurrentPosition(
-      (position) => {
-        onChange({
-          ...address,
-          latitude: position.coords.latitude,
-          longitude: position.coords.longitude,
-        });
-        toast.success("Localização obtida!");
-      },
-      (error) => {
-        logger.error("Erro ao obter localização:", error);
-        toast.error("Erro ao obter localização. Verifique as permissões.");
-      }
-    );
+    const parsed = Number(value);
+    if (Number.isFinite(parsed)) {
+      handleChange(field, parsed);
+    }
   };
 
   const isAddressComplete = Boolean(
@@ -157,7 +167,6 @@ export function AddressEditor({
 
   return (
     <div className={cn("space-y-4", className)}>
-      {/* Header */}
       <div>
         <h3 className="text-sm font-semibold text-foreground flex items-center gap-2">
           <MapPin className="h-4 w-4 text-primary" />
@@ -168,7 +177,6 @@ export function AddressEditor({
         </p>
       </div>
 
-      {/* CEP with search */}
       {features.cepLookup && (
         <div className="space-y-2">
           <Label htmlFor="postal_code" className="text-sm font-medium">
@@ -213,7 +221,6 @@ export function AddressEditor({
         </div>
       )}
 
-      {/* Street */}
       <div className="space-y-2">
         <Label htmlFor="street" className="text-sm font-medium">
           Rua/Avenida
@@ -226,7 +233,6 @@ export function AddressEditor({
         />
       </div>
 
-      {/* Number and Complement */}
       <div className="grid grid-cols-2 gap-3">
         <div className="space-y-2">
           <Label htmlFor="number" className="text-sm font-medium">
@@ -252,7 +258,6 @@ export function AddressEditor({
         </div>
       </div>
 
-      {/* Neighborhood */}
       <div className="space-y-2">
         <Label htmlFor="neighborhood" className="text-sm font-medium">
           Bairro
@@ -265,7 +270,6 @@ export function AddressEditor({
         />
       </div>
 
-      {/* City and State */}
       <div className="grid grid-cols-2 gap-3">
         <div className="space-y-2">
           <Label htmlFor="city" className="text-sm font-medium">
@@ -292,7 +296,6 @@ export function AddressEditor({
         </div>
       </div>
 
-      {/* Coordinates */}
       {features.coordinates && (
         <div className="pt-3 border-t border-border space-y-3">
           <div className="flex items-center justify-between">
@@ -310,9 +313,14 @@ export function AddressEditor({
               variant="outline"
               size="sm"
               onClick={handleGetCurrentLocation}
+              disabled={loadingLocation}
               className="gap-2"
             >
-              <MapPin className="h-3.5 w-3.5" />
+              {loadingLocation ? (
+                <Loader2 className="h-3.5 w-3.5 animate-spin" />
+              ) : (
+                <MapPin className="h-3.5 w-3.5" />
+              )}
               Usar Localização Atual
             </Button>
           </div>
@@ -326,8 +334,8 @@ export function AddressEditor({
                 id="latitude"
                 type="number"
                 step="any"
-                value={address.latitude || ""}
-                onChange={(e) => handleChange("latitude", parseFloat(e.target.value) || 0)}
+                value={address.latitude ?? ""}
+                onChange={(e) => handleCoordinateChange("latitude", e.target.value)}
                 placeholder="-12.975"
               />
             </div>
@@ -339,8 +347,8 @@ export function AddressEditor({
                 id="longitude"
                 type="number"
                 step="any"
-                value={address.longitude || ""}
-                onChange={(e) => handleChange("longitude", parseFloat(e.target.value) || 0)}
+                value={address.longitude ?? ""}
+                onChange={(e) => handleCoordinateChange("longitude", e.target.value)}
                 placeholder="-38.476"
               />
             </div>
@@ -348,7 +356,6 @@ export function AddressEditor({
         </div>
       )}
 
-      {/* Status indicator */}
       {isAddressComplete ? (
         <div className="bg-emerald-500/10 border border-emerald-500/20 rounded-lg p-3 text-xs text-emerald-600 flex items-center gap-2">
           <Check className="h-4 w-4" />
