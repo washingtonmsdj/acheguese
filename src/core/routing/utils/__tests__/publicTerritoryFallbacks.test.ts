@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 import {
+  getPublicTerritoryGroupPresentation,
   getPublicTerritoryLocationLabel,
   resolvePublicTerritoryFallback,
 } from "@/core/routing/utils/publicTerritoryFallbacks";
@@ -15,6 +16,11 @@ describe("publicTerritoryFallbacks", () => {
     expect(resolved?.kind).toBe("group");
     if (resolved?.kind !== "group") return;
 
+    expect(resolved.group.name).toBe("Complexo do Nordeste de Amaralina");
+    expect(getPublicTerritoryGroupPresentation(resolved.group)).toEqual({
+      label: "Complexo",
+      article: "o",
+    });
     expect(resolved.group.members.map((member) => member.name)).toEqual([
       "Nordeste de Amaralina",
       "Santa Cruz",
