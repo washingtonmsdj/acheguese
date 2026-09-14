@@ -4,6 +4,7 @@ import { describe, expect, it } from "vitest";
 
 const ROOT = process.cwd();
 const read = (p: string) => fs.readFileSync(path.join(ROOT, p), "utf8");
+const main = read("src/main.tsx");
 const wrapper = read("src/app/components/territory-vivo/TerritoryEntryMap.tsx");
 const runtime = read("src/app/components/territory-vivo/TerritoryEntryMapRuntime.tsx");
 const arrival = read("src/app/components/territory-vivo/TerritoryEntryMapArrival.tsx");
@@ -25,14 +26,17 @@ describe("territory entry map arrival", () => {
     expect(wrapper).toContain("isLoading={isLoading}");
   });
 
-  it("keeps official boundary post-paint without serializing it behind the runtime", () => {
+  it("discovers style before render and keeps official boundary post-paint", () => {
+    expect(main).toContain("DEFAULT_TILE_STYLE");
+    expect(main).toContain('mapStylePreload.setAttribute("fetchpriority", "high")');
+    expect(main.indexOf("data-entry-map-style-preload")).toBeLessThan(
+      main.indexOf("root.render(<App />)"),
+    );
+    expect(wrapper).not.toContain("preloadEntryMapStyle");
     expect(wrapper).toContain("preloadEntryOfficialBoundary(preloadResolved)");
     expect(wrapper).toContain("loadOfficialFeatureServerBoundaries");
-    expect(wrapper).toContain('link.setAttribute("fetchpriority", "high")');
     expect(wrapper).not.toContain("preloadEntryMapEngine");
     expect(wrapper).not.toContain("void loadTerritoryEntryMapRuntime()");
-    expect(wrapper).not.toContain("module.preloadTerritoryEntryMapEngine");
-    expect(wrapper).not.toContain("module.preloadTerritoryEntryBoundary");
     expect(runtime).not.toContain("preloadTerritoryEntryMapEngine");
     expect(runtime).not.toContain("preloadTerritoryEntryBoundary");
   });
