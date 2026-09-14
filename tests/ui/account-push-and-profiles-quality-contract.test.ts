@@ -35,6 +35,13 @@ describe("account push and managed-profile quality contract", () => {
     expect(pushHook).toContain("document.removeEventListener('visibilitychange', handleVisibilityChange)");
   });
 
+  it("describes the self-test as account-wide instead of pretending it targets only this device", () => {
+    expect(pushHook).toContain("Confira os dispositivos registrados para esta conta.");
+    expect(pushSettings).toContain("Enviar notificação de teste para os dispositivos registrados nesta conta");
+    expect(pushSettings).toContain('"Enviar teste"');
+    expect(pushHook).not.toContain("Verifique se você recebeu a notificação de teste.");
+  });
+
   it("shows precise empty and per-device mutation states", () => {
     expect(pushHook).toContain("unsubscribingSubscriptionId");
     expect(pushSettings).toContain("Nenhum dispositivo está registrado para receber push nesta conta.");
