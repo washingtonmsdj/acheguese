@@ -1,6 +1,3 @@
-import { supabase } from "@/integrations/supabase";
-import { PrivacyRpcService } from "./PrivacyRpcService";
-
 export interface ConsentPreferenceInput {
   analytics: boolean;
   marketing: boolean;
@@ -8,14 +5,22 @@ export interface ConsentPreferenceInput {
 }
 
 export class ConsentService {
-  static async getExistingConsents(userId?: string): Promise<Array<{ consent_type: string; granted: boolean }> | null> {
+  static async getExistingConsents(
+    userId?: string,
+  ): Promise<Array<{ consent_type: string; granted: boolean }> | null> {
     const localConsent = localStorage.getItem("lgpd-consent");
     if (localConsent) {
-      return JSON.parse(localConsent) as Array<{ consent_type: string; granted: boolean }>;
+      return JSON.parse(localConsent) as Array<{
+        consent_type: string;
+        granted: boolean;
+      }>;
     }
 
+    // Visitante anonimo permanece 100% local: nao carregar Supabase apenas para
+    // descobrir que ainda nao ha consentimento persistido no navegador.
     if (!userId) return null;
 
+    const { supabase } = await import("@/integrations/supabase");
     const { data, error } = await supabase
       .from("user_consents")
       .select("consent_type, granted")
@@ -46,8 +51,11 @@ export class ConsentService {
 
     localStorage.setItem("lgpd-consent", JSON.stringify(consentsArray));
 
+    // Para visitante anonimo, salvar localmente e suficiente. O RPC so entra no
+    // bundle quando existe usuario autenticado que precisa persistir no backend.
     if (!input.userId) return;
 
+    const { PrivacyRpcService } = await import("./PrivacyRpcService");
     for (const consent of consentsArray) {
       await PrivacyRpcService.recordConsent({
         consentType: consent.consent_type,
@@ -59,4 +67,3 @@ export class ConsentService {
     }
   }
 }
-
