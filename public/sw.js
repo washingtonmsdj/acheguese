@@ -8,11 +8,11 @@
  * - Image caching (Stale-While-Revalidate)
  * - Offline fallback
  * 
- * @version 2.0.2
+ * @version 2.0.4
  */
 
 // Service Worker version
-const SW_VERSION = '2.0.3';
+const SW_VERSION = '2.0.4';
 const IS_LOCALHOST =
   self.location.hostname === 'localhost' ||
   self.location.hostname === '127.0.0.1' ||
@@ -33,13 +33,14 @@ const CACHE_LIMITS = {
   api: 50,
 };
 
-// Assets to cache on install
+// Assets to cache on install. The large sidebar logo is intentionally omitted:
+// image requests are stale-while-revalidate and cache it only when a surface
+// actually renders it.
 const STATIC_ASSETS = [
   '/',
   '/manifest.json',
   OFFLINE_FALLBACK_URL,
   '/offline.js',
-  '/images/logo-icon.png',
   '/icon-192x192.png',
   '/icon-512x512.png',
   '/badge-72x72.png',
@@ -170,7 +171,7 @@ self.addEventListener('notificationclick', (event) => {
             return client.focus();
           }
         }
-        // Open new window
+        // Open new window if possible
         if (clients.openWindow) {
           return clients.openWindow(urlToOpen);
         }
