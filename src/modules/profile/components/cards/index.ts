@@ -24,6 +24,3 @@ export type { MobilityDetailRowProps } from "./MobilityDetailRow";
 
 export { DriverOperationalSnapshotCard } from "./DriverOperationalSnapshotCard";
 export { DriverVehicleDetailsCard } from "./DriverVehicleDetailsCard";
-
-export { SecurityActionCard } from "./SecurityActionCard";
-export type { SecurityActionCardProps } from "./SecurityActionCard";
