@@ -1,6 +1,7 @@
 import type * as MapLibreRuntime from "maplibre-gl";
 
 let runtimePromise: Promise<typeof MapLibreRuntime> | null = null;
+let workersPrewarmed = false;
 
 /**
  * Owner canônico do runtime MapLibre.
@@ -31,4 +32,18 @@ export function loadMapLibreRuntime(): Promise<typeof MapLibreRuntime> {
 
 export function preloadMapLibreRuntime(): Promise<void> {
   return loadMapLibreRuntime().then(() => undefined);
+}
+
+/**
+ * Aquece o pool compartilhado de workers depois que o worker URL canônico já
+ * foi configurado. É opt-in: use apenas quando um mapa será montado
+ * imediatamente, para não manter workers vivos em rotas que talvez nunca usem
+ * mapa.
+ */
+export function prewarmMapLibreWorkers(): Promise<void> {
+  return loadMapLibreRuntime().then((runtime) => {
+    if (workersPrewarmed) return;
+    runtime.prewarm();
+    workersPrewarmed = true;
+  });
 }
