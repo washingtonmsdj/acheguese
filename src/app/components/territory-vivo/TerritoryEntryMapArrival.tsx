@@ -1,4 +1,4 @@
-export type TerritoryEntryArrivalStage = "community" | "map" | "boundary";
+export type TerritoryEntryArrivalStage = "community" | "map";
 
 interface TerritoryEntryMapArrivalProps {
   label: string;
@@ -10,7 +10,6 @@ interface TerritoryEntryMapArrivalProps {
 const STAGE_LABEL: Record<TerritoryEntryArrivalStage, string> = {
   community: "Preparando comunidade",
   map: "Abrindo mapa",
-  boundary: "Finalizando limite oficial",
 };
 
 /**
