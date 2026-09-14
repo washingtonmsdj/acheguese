@@ -1,6 +1,6 @@
 import * as React from "react";
-import { Eye, EyeOff } from "lucide-react";
 
+import { AuthConceptIcon } from "@/app/components/auth/AuthConceptIcon";
 import { Input } from "@/shared/components/ui/input";
 import { cn } from "@/shared/utils/cn";
 import {
@@ -15,22 +15,9 @@ type PasswordInputBaseProps = Omit<
 
 export interface PasswordInputProps extends PasswordInputBaseProps {
   invalid?: boolean;
-  /** Mostra o medidor de força (barra). */
   showStrength?: boolean;
-  /**
-   * Mostra a checklist de requisitos abaixo da barra.
-   * Default: true (compat). No login usamos `false` para manter só a barra.
-   */
   showRequirements?: boolean;
-  /**
-   * Valor do input quando o campo é controlado externamente via RHF
-   * (por causa de `register` o componente não recebe `value` diretamente).
-   */
   strengthValue?: string;
-  /**
-   * Exibe aviso de Caps Lock quando ativa enquanto o campo tem foco.
-   * Default: true.
-   */
   showCapsLockHint?: boolean;
 }
 
@@ -42,18 +29,7 @@ const strengthColor: Record<number, string> = {
   4: "bg-primary",
 };
 
-/**
- * PasswordInput
- * SSOT visual para campos de senha (login, cadastro, reset).
- *
- * Recursos:
- * - Toggle mostrar/ocultar
- * - (Opcional) medidor de força + checklist de requisitos
- *
- * O componente permanece "não controlado" para funcionar com `react-hook-form`
- * via `{...register(...)}`. Quando `showStrength` está ligado, o valor exibido
- * no medidor pode ser passado via `strengthValue` (ex.: `watch("password")`).
- */
+/** Campo de senha compartilhado do fluxo de autenticação. */
 export const PasswordInput = React.forwardRef<HTMLInputElement, PasswordInputProps>(
   function PasswordInput(
     {
@@ -67,6 +43,7 @@ export const PasswordInput = React.forwardRef<HTMLInputElement, PasswordInputPro
       onKeyDown,
       onBlur,
       onFocus,
+      id,
       ...props
     },
     ref,
@@ -100,8 +77,9 @@ export const PasswordInput = React.forwardRef<HTMLInputElement, PasswordInputPro
         <div className="relative">
           <Input
             ref={ref}
+            id={id}
             type={visible ? "text" : "password"}
-            className={cn("h-11 pr-10", invalid && "border-destructive", className)}
+            className={cn("h-11 pr-12", invalid && "border-destructive", className)}
             onKeyUp={(event) => {
               detectCapsLock(event);
               onKeyUp?.(event);
@@ -124,24 +102,20 @@ export const PasswordInput = React.forwardRef<HTMLInputElement, PasswordInputPro
           <button
             type="button"
             onClick={() => setVisible((current) => !current)}
-            className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+            className="absolute right-1.5 top-1/2 flex h-9 w-9 -translate-y-1/2 items-center justify-center rounded-full text-muted-foreground transition-colors hover:bg-muted hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
             aria-label={visible ? "Ocultar senha" : "Mostrar senha"}
-            tabIndex={-1}
+            aria-pressed={visible}
+            aria-controls={id}
           >
-            {visible ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+            <AuthConceptIcon name={visible ? "eye-off" : "eye"} />
           </button>
         </div>
 
         {showCapsLockHint && focused && capsLock ? (
-          <p
-            role="status"
-            aria-live="polite"
-            className="text-xs font-medium text-amber-600"
-          >
+          <p role="status" aria-live="polite" className="text-xs font-medium text-amber-600">
             Caps Lock ativado
           </p>
         ) : null}
-
 
         {showStrength && strengthValue ? (
           <div className="space-y-2 rounded-2xl border border-border/60 bg-secondary/35 p-3">
@@ -170,7 +144,7 @@ export const PasswordInput = React.forwardRef<HTMLInputElement, PasswordInputPro
                     key={requirement.id}
                     className={cn(
                       "text-xs",
-                      requirement.satisfied ? "text-emerald-500" : "text-muted-foreground",
+                      requirement.satisfied ? "text-emerald-600" : "text-muted-foreground",
                     )}
                   >
                     {requirement.satisfied ? "✓" : "•"} {requirement.label}
