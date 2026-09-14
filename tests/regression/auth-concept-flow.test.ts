@@ -57,6 +57,7 @@ describe("account and access concept contract", () => {
 
   it("keeps Google OAuth visible in production and wired through the real provider flow", () => {
     const productionEnv = readProjectFile(".env.production");
+    const remoteEnv = readProjectFile(".env.remote.example");
     const login = readProjectFile("src/app/pages/LoginPage.tsx");
     const cadastro = readProjectFile(
       "src/app/features/onboarding/pages/CadastroPage.tsx",
@@ -64,6 +65,7 @@ describe("account and access concept contract", () => {
     const authService = readProjectFile("src/core/auth/services/AuthService.ts");
 
     expect(productionEnv).toContain("VITE_AUTH_GOOGLE_ENABLED=true");
+    expect(remoteEnv).toContain('VITE_AUTH_GOOGLE_ENABLED="true"');
     expect(login).toContain("Continuar com Google");
     expect(login).toContain("googleAuthAvailable");
     expect(cadastro).toContain("Continuar com Google");
@@ -97,6 +99,21 @@ describe("account and access concept contract", () => {
     expect(cadastroHook).not.toContain("city:");
   });
 
+  it("persists the username chosen during email signup instead of discarding it in the auth trigger", () => {
+    const migration = readProjectFile(
+      "supabase/migrations/20260914173000_honor_signup_username_in_auth_trigger.sql",
+    );
+
+    expect(migration).toContain("NEW.raw_user_meta_data->>'handle'");
+    expect(migration).toContain("NEW.raw_user_meta_data->>'username'");
+    expect(migration).toContain("private.profile_username_is_reserved");
+    expect(migration).toContain("^[a-z][a-z0-9_]{2,29}$");
+    expect(migration).toContain("signup-username:");
+    expect(migration).toContain("INSERT INTO public.profiles");
+    expect(migration).toContain("v_username");
+    expect(migration).toContain("INSERT INTO public.user_roles");
+  });
+
   it("always sends a confirmed new signup through first access before its return target", () => {
     const login = readProjectFile("src/app/pages/LoginPage.tsx");
     const firstAccess = readProjectFile(
@@ -113,6 +130,19 @@ describe("account and access concept contract", () => {
     expect(firstAccess).toContain("Informar cidade e bairro");
     expect(firstAccess).toContain("Agora não");
     expect(firstAccess).toContain('public_location_visibility: "hidden"');
+    expect(firstAccess).toContain("getAuthReturnContext");
+    expect(firstAccess).toContain("Tentar carregar novamente");
+  });
+
+  it("keeps confirmation recoverable when signup context is missing", () => {
+    const confirmation = readProjectFile(
+      "src/app/features/onboarding/pages/CadastroConfirmacaoPage.tsx",
+    );
+
+    expect(confirmation).toContain("Vamos localizar sua inscrição.");
+    expect(confirmation).toContain("Voltar para criar conta");
+    expect(confirmation).toContain("Já confirmei — entrar");
+    expect(confirmation).not.toContain('{email || "o e-mail informado"}');
   });
 
   it("keeps recovery states implemented instead of decorative-only screens", () => {
