@@ -1,4 +1,4 @@
-import { useEffect, useMemo } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { Helmet } from "react-helmet-async";
 import { Link, useLocation, useNavigate, useSearchParams } from "react-router-dom";
 
@@ -10,10 +10,13 @@ import { PasswordInput } from "@/app/components/auth/PasswordInput";
 import { useAuthTurnstile } from "@/app/components/auth/useAuthTurnstile";
 import { useCadastroForm } from "@/app/features/onboarding/hooks/useCadastro";
 import { useAuth } from "@/core/auth/hooks/useAuth";
+import { setPendingAuthReturn } from "@/core/auth/utils/pendingAuthReturn";
+import { setPendingSignupRedirect } from "@/core/auth/utils/pendingSignup";
 import {
   COMMUNITY_GUIDELINES_PATH,
   TERMS_OF_SERVICE_PATH,
 } from "@/core/legal/termsOfService";
+import { useIdentityAvailability } from "@/core/public-identity/hooks/useIdentityAvailability";
 import { Checkbox } from "@/shared/components/ui/checkbox";
 import {
   Form,
@@ -29,6 +32,7 @@ import { PRIVACY_POLICY_PATH } from "@/shared/constants/legal";
 import { useToast } from "@/shared/hooks/use-toast";
 import { resolveSafeInternalPath } from "@/shared/utils/safeRedirect";
 import { cn } from "@/shared/utils/cn";
+import { getAuthErrorMessage } from "@/core/auth/utils/authMessages";
 import { getPasswordRequirementsSummary } from "@/shared/validation/passwordPolicy";
 
 type CadastroLocationState = { redirectTo?: unknown } | null;
@@ -36,12 +40,27 @@ type CadastroLocationState = { redirectTo?: unknown } | null;
 const MOBILE_PASSWORD_HINT = getPasswordRequirementsSummary();
 const DESKTOP_PASSWORD_HINT = getPasswordRequirementsSummary(true);
 
+function getUsernameAvailabilityCopy(status?: string, fallback?: string) {
+  if (fallback) return fallback;
+  switch (status) {
+    case "taken":
+      return "Este nome de usuário já está em uso.";
+    case "reserved":
+      return "Este nome de usuário é reservado.";
+    case "invalid":
+      return "Escolha outro nome de usuário.";
+    default:
+      return "Não foi possível confirmar a disponibilidade.";
+  }
+}
+
 export default function CadastroPage() {
-  const { user } = useAuth();
+  const { user, signInWithGoogle, googleAuthAvailable } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
   const [searchParams] = useSearchParams();
   const { toast } = useToast();
+  const [googleLoading, setGoogleLoading] = useState(false);
 
   const redirectTo = useMemo(() => {
     const stateRedirect = (location.state as CadastroLocationState)?.redirectTo;
@@ -50,14 +69,71 @@ export default function CadastroPage() {
 
   const { form, loading, submit } = useCadastroForm(redirectTo);
   const turnstile = useAuthTurnstile();
+  const usernameAvailability = useIdentityAvailability({
+    entityType: "profile",
+    debounceMs: 420,
+  });
   const password = form.watch("password") ?? "";
+  const username = form.watch("username") ?? "";
   const termsAccepted = form.watch("termsAccepted") === true;
 
   useEffect(() => {
     if (user) navigate(redirectTo, { replace: true });
   }, [navigate, redirectTo, user]);
 
-  const canSubmit = !loading && termsAccepted && turnstile.isReady;
+  const usernameBlocked =
+    usernameAvailability.result !== null &&
+    usernameAvailability.result.identifier === username &&
+    usernameAvailability.result.status !== "available";
+  const canSubmit =
+    !loading && !googleLoading && !usernameBlocked && termsAccepted && turnstile.isReady;
+
+  const handleSubmit = async () => {
+    if (!turnstile.isReady) {
+      toast({
+        title: "Verificação necessária",
+        description: "Conclua a verificação de segurança para continuar.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    const currentUsername = form.getValues("username").trim();
+    if (currentUsername) {
+      const availability = await usernameAvailability.check(currentUsername);
+      if (availability && availability.status !== "available") {
+        form.setError("username", {
+          type: "availability",
+          message: getUsernameAvailabilityCopy(
+            availability.status,
+            availability.message,
+          ),
+        });
+        return;
+      }
+    }
+
+    await submit();
+  };
+
+  const handleGoogleSignup = async () => {
+    if (!googleAuthAvailable || googleLoading) return;
+    setGoogleLoading(true);
+    try {
+      // OAuth pode criar a conta no primeiro uso. Depois do aceite legal,
+      // o novo usuário passa pelo mesmo primeiro acesso do cadastro por senha.
+      setPendingSignupRedirect(redirectTo);
+      setPendingAuthReturn("/cadastro/primeiro-acesso");
+      await signInWithGoogle();
+    } catch (error) {
+      toast({
+        title: "Não foi possível continuar com Google",
+        description: getAuthErrorMessage(error),
+        variant: "destructive",
+      });
+      setGoogleLoading(false);
+    }
+  };
 
   return (
     <>
@@ -113,22 +189,33 @@ export default function CadastroPage() {
               Criar minha conta
             </h2>
 
+            {googleAuthAvailable ? (
+              <>
+                <button
+                  type="button"
+                  onClick={() => void handleGoogleSignup()}
+                  disabled={loading || googleLoading}
+                  className="mt-5 flex h-11 w-full items-center justify-center gap-3 rounded-[9px] border border-[#8da1a3] bg-white text-[14px] font-bold text-[#17363a] transition-colors hover:bg-[#f7f8f5] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#0b5b59]/35 disabled:opacity-55 lg:mt-4"
+                >
+                  <AuthConceptIcon name="google" />
+                  {googleLoading ? "Abrindo Google…" : "Continuar com Google"}
+                </button>
+                <div className="my-4 flex items-center gap-3 text-[12px] text-[#607477]">
+                  <span className="h-px flex-1 bg-[#c7d0d0]" />
+                  <span>ou crie com e-mail</span>
+                  <span className="h-px flex-1 bg-[#c7d0d0]" />
+                </div>
+              </>
+            ) : null}
+
             <Form {...form}>
               <form
-                className="mt-5 space-y-3.5 lg:mt-4"
+                className={cn("space-y-3.5", googleAuthAvailable ? "" : "mt-5 lg:mt-4")}
                 noValidate
-                aria-busy={loading}
+                aria-busy={loading || googleLoading}
                 onSubmit={(event) => {
                   event.preventDefault();
-                  if (!turnstile.isReady) {
-                    toast({
-                      title: "Verificação necessária",
-                      description: "Conclua a verificação de segurança para continuar.",
-                      variant: "destructive",
-                    });
-                    return;
-                  }
-                  void submit();
+                  void handleSubmit();
                 }}
               >
                 <FormField
@@ -144,7 +231,7 @@ export default function CadastroPage() {
                         <Input
                           {...field}
                           autoComplete="name"
-                          disabled={loading}
+                          disabled={loading || googleLoading}
                           className={cn(
                             "h-11 rounded-lg border-[#b9c5c6] bg-white px-3 text-[16px] shadow-none",
                             fieldState.error && "border-destructive",
@@ -170,23 +257,58 @@ export default function CadastroPage() {
                             autoComplete="username"
                             autoCapitalize="none"
                             spellCheck={false}
-                            disabled={loading}
-                            onChange={(event) =>
-                              field.onChange(
-                                event.target.value
-                                  .replace(/^@/, "")
-                                  .replace(/[^a-z0-9_]/g, "")
-                                  .toLowerCase(),
-                              )
-                            }
+                            disabled={loading || googleLoading}
+                            aria-describedby="cadastro-username-status"
+                            onChange={(event) => {
+                              const normalized = event.target.value
+                                .replace(/^@/, "")
+                                .replace(/[^a-z0-9_]/g, "")
+                                .toLowerCase();
+                              field.onChange(normalized);
+                              form.clearErrors("username");
+                              if (normalized.length >= 3) {
+                                usernameAvailability.checkDebounced(normalized);
+                              } else {
+                                usernameAvailability.reset();
+                              }
+                            }}
                             className={cn(
                               "h-11 rounded-lg border-[#b9c5c6] bg-white pl-8 pr-3 text-[16px] shadow-none",
                               fieldState.error && "border-destructive",
+                              usernameAvailability.result?.status === "available" && "border-[#4d9b78]",
                             )}
                           />
                         </div>
                       </FormControl>
-                      <p className="text-[12px] leading-4 text-[#607477] lg:hidden">Seu identificador público.</p>
+                      <div id="cadastro-username-status" aria-live="polite" className="min-h-4 text-[11.5px] leading-4">
+                        {usernameAvailability.isChecking ? (
+                          <span className="text-[#607477]">Verificando disponibilidade…</span>
+                        ) : usernameAvailability.result?.identifier === username && usernameAvailability.result.status === "available" ? (
+                          <span className="font-medium text-[#287255]">Nome de usuário disponível.</span>
+                        ) : usernameAvailability.result?.identifier === username && usernameAvailability.result.status !== "available" ? (
+                          <span className="text-[#a83f37]">
+                            {getUsernameAvailabilityCopy(
+                              usernameAvailability.result.status,
+                              usernameAvailability.result.message,
+                            )}
+                            {usernameAvailability.result.suggestion ? (
+                              <button
+                                type="button"
+                                onClick={() => {
+                                  const suggestion = usernameAvailability.result?.suggestion ?? "";
+                                  form.setValue("username", suggestion, { shouldDirty: true, shouldValidate: true });
+                                  usernameAvailability.checkDebounced(suggestion);
+                                }}
+                                className="ml-1 font-semibold underline underline-offset-2"
+                              >
+                                Usar @{usernameAvailability.result.suggestion}
+                              </button>
+                            ) : null}
+                          </span>
+                        ) : (
+                          <span className="text-[#607477]">Seu identificador público. Use letras, números e _.</span>
+                        )}
+                      </div>
                       <FormMessage className="text-xs" />
                     </FormItem>
                   )}
@@ -205,7 +327,7 @@ export default function CadastroPage() {
                           autoComplete="email"
                           autoCapitalize="none"
                           spellCheck={false}
-                          disabled={loading}
+                          disabled={loading || googleLoading}
                           className={cn(
                             "h-11 rounded-lg border-[#b9c5c6] bg-white px-3 text-[16px] shadow-none",
                             fieldState.error && "border-destructive",
@@ -228,7 +350,7 @@ export default function CadastroPage() {
                           {...field}
                           id="cadastro-password"
                           autoComplete="new-password"
-                          disabled={loading}
+                          disabled={loading || googleLoading}
                           invalid={Boolean(fieldState.error)}
                           strengthValue={password}
                           showStrength={false}
@@ -255,7 +377,7 @@ export default function CadastroPage() {
                             id="cadastro-terms-acceptance"
                             checked={field.value === true}
                             onCheckedChange={(checked) => field.onChange(checked === true)}
-                            disabled={loading}
+                            disabled={loading || googleLoading}
                             aria-invalid={Boolean(fieldState.error)}
                             className="mt-0.5 h-5 w-5 rounded-[3px] border-[#31575a]"
                           />
@@ -318,8 +440,15 @@ export default function CadastroPage() {
                   {loading ? "Criando conta…" : "Criar minha conta"}
                 </button>
 
-                <p className="text-center text-[11.5px] text-[#607477] lg:hidden">
-                  Você pode se cadastrar de qualquer lugar.
+                <p className="text-center text-[11.5px] text-[#607477]">
+                  <span className="lg:hidden">Você pode se cadastrar de qualquer lugar. </span>
+                  Já tem conta?{" "}
+                  <Link
+                    to={redirectTo === "/" ? "/login" : `/login?redirect=${encodeURIComponent(redirectTo)}`}
+                    className="font-medium text-[#0b4e52] underline underline-offset-2"
+                  >
+                    Entrar
+                  </Link>
                 </p>
               </form>
             </Form>
