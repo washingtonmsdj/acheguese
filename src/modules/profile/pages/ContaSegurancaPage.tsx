@@ -9,6 +9,7 @@ import {
   KeyRound,
   Laptop,
   Loader2,
+  LockKeyhole,
   Mail,
   Pencil,
   RefreshCw,
@@ -149,6 +150,7 @@ export default function ContaSegurancaPage() {
   const [verificationCode, setVerificationCode] = useState("");
   const [verifying, setVerifying] = useState(false);
   const [disablingMfa, setDisablingMfa] = useState(false);
+  const [cancellingEnrollment, setCancellingEnrollment] = useState(false);
   const [revokingSessions, setRevokingSessions] = useState(false);
   const [newEmail, setNewEmail] = useState("");
   const [emailError, setEmailError] = useState<string | null>(null);
@@ -210,7 +212,7 @@ export default function ContaSegurancaPage() {
     }
   };
 
-  const handleStartMfa = async () => {
+  const handleStartMfa = async (openDedicatedFlow = false) => {
     const next = await startEnrollment();
     if (!next) {
       toast.error("Não foi possível iniciar a autenticação em duas etapas.");
@@ -218,6 +220,7 @@ export default function ContaSegurancaPage() {
     }
     setEnrollment(next);
     setVerificationCode("");
+    if (openDedicatedFlow) navigate(ACCOUNT_PATHS.mfa);
   };
 
   const handleVerifyMfa = async () => {
@@ -229,9 +232,29 @@ export default function ContaSegurancaPage() {
       setEnrollment(null);
       setVerificationCode("");
       toast.success("Autenticação em duas etapas ativada.");
+      navigate(ACCOUNT_PATHS.security, { replace: true });
       return;
     }
     toast.error("Código inválido. Confira o aplicativo autenticador.");
+  };
+
+  const handleCancelMfaEnrollment = async () => {
+    if (!enrollment) {
+      navigate(ACCOUNT_PATHS.security, { replace: true });
+      return;
+    }
+
+    setCancellingEnrollment(true);
+    const removed = await disable(enrollment.factorId);
+    setCancellingEnrollment(false);
+    if (!removed) {
+      toast.error("Não foi possível cancelar a configuração com segurança.");
+      return;
+    }
+
+    setEnrollment(null);
+    setVerificationCode("");
+    navigate(ACCOUNT_PATHS.security, { replace: true });
   };
 
   const handleDisableMfa = async () => {
@@ -240,7 +263,7 @@ export default function ContaSegurancaPage() {
       const factors = await listFactors();
       if (factors.length === 0) {
         await loadStatus();
-        toast.error("Nenhum fator ativo foi encontrado para remover.");
+        toast.error("Nenhum fator cadastrado foi encontrado para remover.");
         return;
       }
 
@@ -275,6 +298,7 @@ export default function ContaSegurancaPage() {
   const accessView = location.hash === "#acesso";
   const emailView = location.hash === "#email";
   const passwordView = location.hash === "#senha";
+  const mfaView = location.hash === "#mfa";
   const handle = activeProfile?.handle ? `@${activeProfile.handle}` : "Nome de usuário ainda não definido";
 
   if (emailView) {
@@ -338,7 +362,6 @@ export default function ContaSegurancaPage() {
               </div>
             )}
           </Surface>
-
           <div className="mt-4"><HelpRow onClick={() => navigate(SUPPORT_PATH)} /></div>
         </AccountSettingsShell>
       </>
@@ -349,17 +372,10 @@ export default function ContaSegurancaPage() {
     return (
       <>
         <Helmet><title>Alterar senha | Achegue-se</title></Helmet>
-        <AccountSettingsShell
-          title="Alterar senha"
-          description="Escolha uma senha forte e exclusiva para a sua conta."
-        >
+        <AccountSettingsShell title="Alterar senha" description="Escolha uma senha forte e exclusiva para a sua conta.">
           <Surface className="p-4 sm:p-5">
-            <ChangePasswordForm
-              onSave={handleChangePassword}
-              onCancel={() => navigate(ACCOUNT_PATHS.security)}
-            />
+            <ChangePasswordForm onSave={handleChangePassword} onCancel={() => navigate(ACCOUNT_PATHS.security)} />
           </Surface>
-
           <Surface className="mt-4 p-4 sm:p-5">
             <div className="flex items-start gap-3">
               <Mail className="mt-0.5 h-5 w-5 shrink-0 text-territory-brand" aria-hidden="true" />
@@ -368,18 +384,112 @@ export default function ContaSegurancaPage() {
                 <p className="mt-1 break-all text-sm text-territory-muted">{user.email}</p>
               </div>
             </div>
-            <Button
-              type="button"
-              variant="outline"
-              className="mt-4 min-h-11 w-full"
-              onClick={handleResetPassword}
-              disabled={resetSent || sendingReset}
-            >
+            <Button type="button" variant="outline" className="mt-4 min-h-11 w-full" onClick={handleResetPassword} disabled={resetSent || sendingReset}>
               {sendingReset ? <Loader2 className="mr-2 h-4 w-4 animate-spin" aria-hidden="true" /> : null}
               {resetSent ? "E-mail enviado" : "Enviar recuperação por e-mail"}
             </Button>
           </Surface>
+          <div className="mt-4"><HelpRow onClick={() => navigate(SUPPORT_PATH)} /></div>
+        </AccountSettingsShell>
+      </>
+    );
+  }
 
+  if (mfaView) {
+    return (
+      <>
+        <Helmet><title>Configurar autenticação | Achegue-se</title></Helmet>
+        <AccountSettingsShell
+          eyebrow="Configurar autenticação"
+          title="Adicione uma camada de proteção"
+          description="Use um aplicativo autenticador para confirmar novos acessos."
+        >
+          {isMFAEnabled ? (
+            <Surface className="p-4 sm:p-5">
+              <div className="flex items-start gap-3">
+                <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-emerald-100 text-emerald-700">
+                  <CheckCircle2 className="h-6 w-6" aria-hidden="true" />
+                </span>
+                <div>
+                  <h2 className="font-heading text-base font-bold text-territory-ink">Proteção já ativada</h2>
+                  <p className="mt-1 text-sm leading-5 text-territory-muted">Sua conta já possui um fator TOTP verificado.</p>
+                </div>
+              </div>
+              <Button type="button" variant="outline" className="mt-4 min-h-11 w-full" onClick={() => navigate(ACCOUNT_PATHS.security, { replace: true })}>
+                Voltar para Segurança
+              </Button>
+            </Surface>
+          ) : enrollment ? (
+            <Surface className="p-4 sm:p-5">
+              <div className="space-y-5">
+                <div className="flex items-start gap-3">
+                  <StepNumber>1</StepNumber>
+                  <div>
+                    <p className="font-semibold text-territory-ink">Abra seu aplicativo autenticador</p>
+                    <p className="mt-1 text-sm text-territory-muted">Use um aplicativo compatível com códigos TOTP.</p>
+                  </div>
+                </div>
+
+                <div className="flex items-start gap-3">
+                  <StepNumber>2</StepNumber>
+                  <div className="min-w-0 flex-1">
+                    <p className="font-semibold text-territory-ink">Escaneie o código</p>
+                    <div className="mt-3 flex justify-center rounded-2xl bg-white p-4">
+                      <img src={enrollment.qrCode} alt="QR code para configurar autenticação em duas etapas" className="h-44 w-44 sm:h-48 sm:w-48" />
+                    </div>
+                    <details className="mt-2 rounded-xl border border-territory-border bg-territory-raised px-3 py-2">
+                      <summary className="cursor-pointer text-sm font-semibold text-territory-brand">Não consigo escanear</summary>
+                      <p className="mt-2 text-xs text-territory-muted">Digite esta chave manualmente no autenticador:</p>
+                      <code className="mt-1 block break-all text-sm text-territory-ink">{enrollment.secret}</code>
+                    </details>
+                  </div>
+                </div>
+
+                <div className="flex items-start gap-3">
+                  <StepNumber>3</StepNumber>
+                  <div className="min-w-0 flex-1">
+                    <Label htmlFor="mfa-code" className="font-semibold text-territory-ink">Digite o código do aplicativo</Label>
+                    <Input
+                      id="mfa-code"
+                      inputMode="numeric"
+                      autoComplete="one-time-code"
+                      maxLength={6}
+                      value={verificationCode}
+                      onChange={(event) => setVerificationCode(event.target.value.replace(/\D/g, "").slice(0, 6))}
+                      placeholder="000000"
+                      className="mt-2 h-12 text-lg tracking-[0.28em]"
+                    />
+                  </div>
+                </div>
+
+                <Button type="button" className="min-h-12 w-full bg-territory-sun text-territory-ink hover:bg-territory-sun/90" onClick={handleVerifyMfa} disabled={verificationCode.length !== 6 || verifying || cancellingEnrollment}>
+                  {verifying ? <Loader2 className="mr-2 h-4 w-4 animate-spin" aria-hidden="true" /> : null}
+                  {verifying ? "Confirmando..." : "Confirmar ativação"}
+                </Button>
+                <Button type="button" variant="ghost" className="min-h-11 w-full text-territory-muted" onClick={() => void handleCancelMfaEnrollment()} disabled={verifying || cancellingEnrollment}>
+                  {cancellingEnrollment ? <Loader2 className="mr-2 h-4 w-4 animate-spin" aria-hidden="true" /> : null}
+                  {cancellingEnrollment ? "Cancelando..." : "Cancelar configuração"}
+                </Button>
+                <p className="text-center text-xs leading-4 text-territory-muted">A proteção só será ativada depois da confirmação do código.</p>
+              </div>
+            </Surface>
+          ) : (
+            <Surface className="p-4 sm:p-5">
+              <div className="flex items-start gap-3">
+                <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-territory-brand/10 text-territory-brand">
+                  <LockKeyhole className="h-5 w-5" aria-hidden="true" />
+                </span>
+                <div>
+                  <h2 className="font-heading text-base font-bold text-territory-ink">Começar configuração</h2>
+                  <p className="mt-1 text-sm leading-5 text-territory-muted">Um QR code será criado somente quando você iniciar. Isso evita fatores incompletos apenas por abrir esta tela.</p>
+                </div>
+              </div>
+              <Button type="button" className="mt-5 min-h-12 w-full bg-territory-sun text-territory-ink hover:bg-territory-sun/90" onClick={() => void handleStartMfa()} disabled={mfaLoading}>
+                {mfaLoading ? <Loader2 className="mr-2 h-4 w-4 animate-spin" aria-hidden="true" /> : null}
+                Gerar código de configuração
+              </Button>
+            </Surface>
+          )}
           <div className="mt-4"><HelpRow onClick={() => navigate(SUPPORT_PATH)} /></div>
         </AccountSettingsShell>
       </>
@@ -387,18 +497,8 @@ export default function ContaSegurancaPage() {
   }
 
   if (accessView) {
-    const googleStatusLabel = providersLoading
-      ? "Consultando"
-      : googleLinked
-        ? "Conectado"
-        : googleAuthAvailable
-          ? "Disponível"
-          : "Indisponível";
-    const googleStatusClass = googleLinked
-      ? "bg-emerald-100 text-emerald-800"
-      : googleAuthAvailable
-        ? "bg-territory-brand/10 text-territory-brand"
-        : "bg-territory-raised text-territory-muted";
+    const googleStatusLabel = providersLoading ? "Consultando" : googleLinked ? "Conectado" : googleAuthAvailable ? "Disponível" : "Indisponível";
+    const googleStatusClass = googleLinked ? "bg-emerald-100 text-emerald-800" : googleAuthAvailable ? "bg-territory-brand/10 text-territory-brand" : "bg-territory-raised text-territory-muted";
     const googleDescription = providersLoading
       ? "Consultando os métodos vinculados à sua conta..."
       : providersError
@@ -412,87 +512,44 @@ export default function ContaSegurancaPage() {
     return (
       <>
         <Helmet><title>Dados de acesso | Achegue-se</title></Helmet>
-        <AccountSettingsShell
-          title="Dados de acesso"
-          description="Revise como você entra e identifica sua conta."
-        >
+        <AccountSettingsShell title="Dados de acesso" description="Revise como você entra e identifica sua conta.">
           <Surface className="p-4 sm:p-5">
             <AccessRow
               icon={<Mail className="h-5 w-5" aria-hidden="true" />}
               title="E-mail de acesso"
               value={user.email}
               meta={user.emailConfirmed ? (
-                <span className="inline-flex items-center gap-1 rounded-full bg-emerald-100 px-2 py-1 text-xs font-semibold text-emerald-800">
-                  <CheckCircle2 className="h-3.5 w-3.5" aria-hidden="true" /> Confirmado
-                </span>
+                <span className="inline-flex items-center gap-1 rounded-full bg-emerald-100 px-2 py-1 text-xs font-semibold text-emerald-800"><CheckCircle2 className="h-3.5 w-3.5" aria-hidden="true" /> Confirmado</span>
               ) : (
                 <span className="rounded-full bg-amber-100 px-2 py-1 text-xs font-semibold text-amber-800">Confirmação pendente</span>
               )}
-              action={(
-                <button
-                  type="button"
-                  className="min-h-9 text-sm font-semibold text-territory-brand underline-offset-4 hover:underline"
-                  onClick={() => navigate(ACCOUNT_PATHS.email)}
-                >
-                  Alterar e-mail
-                </button>
-              )}
+              action={<button type="button" className="min-h-9 text-sm font-semibold text-territory-brand underline-offset-4 hover:underline" onClick={() => navigate(ACCOUNT_PATHS.email)}>Alterar e-mail</button>}
             />
             <AccessRow
               icon={<UserRound className="h-5 w-5" aria-hidden="true" />}
               title="Nome de usuário"
               value={handle}
-              action={activeProfile?.id ? (
-                <button
-                  type="button"
-                  className="min-h-9 text-sm font-semibold text-territory-brand underline-offset-4 hover:underline"
-                  onClick={() => navigate(appUrls.profile.edit(activeProfile.id))}
-                >
-                  Editar perfil
-                </button>
-              ) : null}
+              action={activeProfile?.id ? <button type="button" className="min-h-9 text-sm font-semibold text-territory-brand underline-offset-4 hover:underline" onClick={() => navigate(appUrls.profile.edit(activeProfile.id))}>Editar perfil</button> : null}
             />
             <AccessRow
               icon={<KeyRound className="h-5 w-5" aria-hidden="true" />}
               title="Senha"
               value="Altere sua senha pela sessão autenticada ou use a recuperação por e-mail quando necessário."
-              action={(
-                <button
-                  type="button"
-                  className="min-h-9 text-sm font-semibold text-territory-brand underline-offset-4 hover:underline"
-                  onClick={() => navigate(ACCOUNT_PATHS.password)}
-                >
-                  Alterar senha
-                </button>
-              )}
+              action={<button type="button" className="min-h-9 text-sm font-semibold text-territory-brand underline-offset-4 hover:underline" onClick={() => navigate(ACCOUNT_PATHS.password)}>Alterar senha</button>}
             />
             <AccessRow
               icon={<Globe2 className="h-5 w-5" aria-hidden="true" />}
               title="Acesso com Google"
               value={googleDescription}
               meta={<span className={`rounded-full px-2 py-1 text-xs font-semibold ${googleStatusClass}`}>{googleStatusLabel}</span>}
-              action={providersError ? (
-                <button
-                  type="button"
-                  className="min-h-9 text-sm font-semibold text-territory-brand underline-offset-4 hover:underline"
-                  onClick={() => void refreshProviders()}
-                >
-                  Tentar novamente
-                </button>
-              ) : null}
+              action={providersError ? <button type="button" className="min-h-9 text-sm font-semibold text-territory-brand underline-offset-4 hover:underline" onClick={() => void refreshProviders()}>Tentar novamente</button> : null}
             />
           </Surface>
 
           {activeProfile?.id ? (
             <Surface className="mt-4 p-4 sm:p-5">
-              <button
-                type="button"
-                onClick={() => navigate(appUrls.profile.edit(activeProfile.id))}
-                className="flex min-h-12 w-full items-center gap-3 text-left focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-territory-brand"
-              >
-                <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-territory-brand/10 text-territory-brand">
-                  <Pencil className="h-5 w-5" aria-hidden="true" />
-                </span>
+              <button type="button" onClick={() => navigate(appUrls.profile.edit(activeProfile.id))} className="flex min-h-12 w-full items-center gap-3 text-left focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-territory-brand">
+                <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-territory-brand/10 text-territory-brand"><Pencil className="h-5 w-5" aria-hidden="true" /></span>
                 <span className="min-w-0 flex-1">
                   <span className="block font-semibold text-territory-ink">Editar nome, foto e identidade</span>
                   <span className="mt-1 block text-sm text-territory-muted">Esses dados pertencem ao perfil e não às credenciais de autenticação.</span>
@@ -512,63 +569,34 @@ export default function ContaSegurancaPage() {
         <div className="grid gap-4 lg:grid-cols-2">
           <Surface className="p-4 sm:p-5">
             <div className="flex items-start gap-3">
-              <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-territory-brand/10 text-territory-brand">
-                <ShieldCheck className="h-5 w-5" aria-hidden="true" />
-              </span>
+              <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-territory-brand/10 text-territory-brand"><ShieldCheck className="h-5 w-5" aria-hidden="true" /></span>
               <div className="min-w-0 flex-1">
                 <div className="flex flex-wrap items-center gap-2">
                   <h2 className="font-heading text-base font-bold text-territory-ink">Autenticação em duas etapas</h2>
-                  {!mfaLoading ? (
-                    <span className={`rounded-full px-2 py-1 text-xs font-semibold ${isMFAEnabled ? "bg-emerald-100 text-emerald-800" : "bg-red-50 text-red-700"}`}>
-                      {isMFAEnabled ? "Ativada" : "Não ativada"}
-                    </span>
-                  ) : null}
+                  {!mfaLoading ? <span className={`rounded-full px-2 py-1 text-xs font-semibold ${isMFAEnabled ? "bg-emerald-100 text-emerald-800" : "bg-red-50 text-red-700"}`}>{isMFAEnabled ? "Ativada" : "Não ativada"}</span> : null}
                 </div>
-                <p className="mt-2 text-sm leading-5 text-territory-muted">
-                  Confirme novos acessos com um aplicativo autenticador compatível.
-                </p>
+                <p className="mt-2 text-sm leading-5 text-territory-muted">Confirme novos acessos com um aplicativo autenticador compatível.</p>
               </div>
             </div>
 
             {mfaError ? (
               <div className="mt-4 rounded-xl bg-red-50 p-3 text-sm text-red-700" role="alert">
                 <p>Não foi possível consultar o estado da autenticação agora.</p>
-                <button
-                  type="button"
-                  onClick={() => void loadStatus()}
-                  className="mt-2 inline-flex min-h-9 items-center gap-2 font-semibold underline-offset-4 hover:underline"
-                >
-                  <RefreshCw className="h-4 w-4" aria-hidden="true" /> Tentar novamente
-                </button>
+                <button type="button" onClick={() => void loadStatus()} className="mt-2 inline-flex min-h-9 items-center gap-2 font-semibold underline-offset-4 hover:underline"><RefreshCw className="h-4 w-4" aria-hidden="true" /> Tentar novamente</button>
               </div>
             ) : null}
 
-            {!isMFAEnabled && !enrollment ? (
-              <Button
-                type="button"
-                className="mt-5 min-h-11 w-full bg-territory-sun text-territory-ink hover:bg-territory-sun/90"
-                onClick={handleStartMfa}
-                disabled={mfaLoading}
-              >
+            {!isMFAEnabled ? (
+              <Button type="button" className="mt-5 min-h-11 w-full bg-territory-sun text-territory-ink hover:bg-territory-sun/90" onClick={() => void handleStartMfa(true)} disabled={mfaLoading}>
                 {mfaLoading ? <Loader2 className="mr-2 h-4 w-4 animate-spin" aria-hidden="true" /> : null}
                 Configurar autenticação
               </Button>
-            ) : null}
-
-            {isMFAEnabled ? (
+            ) : (
               <>
-                <div className="mt-5 flex items-center gap-2 rounded-xl border border-emerald-200 bg-emerald-50 px-3 py-3 text-sm text-emerald-800">
-                  <CheckCircle2 className="h-5 w-5 shrink-0" aria-hidden="true" />
-                  Autenticação em duas etapas ativa nesta conta.
-                </div>
+                <div className="mt-5 flex items-center gap-2 rounded-xl border border-emerald-200 bg-emerald-50 px-3 py-3 text-sm text-emerald-800"><CheckCircle2 className="h-5 w-5 shrink-0" aria-hidden="true" />Autenticação em duas etapas ativa nesta conta.</div>
                 <AlertDialog>
                   <AlertDialogTrigger asChild>
-                    <Button
-                      type="button"
-                      variant="ghost"
-                      className="mt-2 min-h-10 w-full text-destructive hover:bg-destructive/5 hover:text-destructive"
-                      disabled={disablingMfa || mfaLoading}
-                    >
+                    <Button type="button" variant="ghost" className="mt-2 min-h-10 w-full text-destructive hover:bg-destructive/5 hover:text-destructive" disabled={disablingMfa || mfaLoading}>
                       <ShieldOff className="mr-2 h-4 w-4" aria-hidden="true" />
                       Desativar autenticação em duas etapas
                     </Button>
@@ -576,98 +604,27 @@ export default function ContaSegurancaPage() {
                   <AlertDialogContent className="max-w-md rounded-2xl">
                     <AlertDialogHeader>
                       <AlertDialogTitle>Desativar proteção adicional?</AlertDialogTitle>
-                      <AlertDialogDescription>
-                        Todos os fatores TOTP cadastrados serão removidos. Novos acessos deixarão de exigir o código do aplicativo autenticador.
-                      </AlertDialogDescription>
+                      <AlertDialogDescription>Todos os fatores TOTP cadastrados serão removidos. Novos acessos deixarão de exigir o código do aplicativo autenticador.</AlertDialogDescription>
                     </AlertDialogHeader>
                     <AlertDialogFooter>
                       <AlertDialogCancel>Manter ativada</AlertDialogCancel>
-                      <AlertDialogAction
-                        onClick={() => void handleDisableMfa()}
-                        className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
-                      >
-                        Desativar
-                      </AlertDialogAction>
+                      <AlertDialogAction onClick={() => void handleDisableMfa()} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">Desativar</AlertDialogAction>
                     </AlertDialogFooter>
                   </AlertDialogContent>
                 </AlertDialog>
               </>
-            ) : null}
-
-            {enrollment ? (
-              <div className="mt-5 space-y-5 border-t border-territory-border pt-5">
-                <div className="flex items-start gap-3">
-                  <StepNumber>1</StepNumber>
-                  <div>
-                    <p className="font-semibold text-territory-ink">Abra seu aplicativo autenticador</p>
-                    <p className="mt-1 text-sm text-territory-muted">Use um aplicativo compatível com códigos TOTP.</p>
-                  </div>
-                </div>
-                <div className="flex items-start gap-3">
-                  <StepNumber>2</StepNumber>
-                  <div className="min-w-0 flex-1">
-                    <p className="font-semibold text-territory-ink">Escaneie o código</p>
-                    <div className="mt-3 flex justify-center rounded-2xl bg-white p-4">
-                      <img src={enrollment.qrCode} alt="QR code para configurar autenticação em duas etapas" className="h-44 w-44" />
-                    </div>
-                    <details className="mt-2 rounded-xl border border-territory-border bg-territory-raised px-3 py-2">
-                      <summary className="cursor-pointer text-sm font-semibold text-territory-brand">Não consigo escanear</summary>
-                      <p className="mt-2 text-xs text-territory-muted">Digite esta chave manualmente no autenticador:</p>
-                      <code className="mt-1 block break-all text-sm text-territory-ink">{enrollment.secret}</code>
-                    </details>
-                  </div>
-                </div>
-                <div className="flex items-start gap-3">
-                  <StepNumber>3</StepNumber>
-                  <div className="min-w-0 flex-1">
-                    <Label htmlFor="mfa-code" className="font-semibold text-territory-ink">Digite o código do aplicativo</Label>
-                    <Input
-                      id="mfa-code"
-                      inputMode="numeric"
-                      autoComplete="one-time-code"
-                      maxLength={6}
-                      value={verificationCode}
-                      onChange={(event) => setVerificationCode(event.target.value.replace(/\D/g, "").slice(0, 6))}
-                      placeholder="000000"
-                      className="mt-2 h-12 text-lg tracking-[0.28em]"
-                    />
-                  </div>
-                </div>
-                <Button
-                  type="button"
-                  className="min-h-11 w-full bg-territory-sun text-territory-ink hover:bg-territory-sun/90"
-                  onClick={handleVerifyMfa}
-                  disabled={verificationCode.length !== 6 || verifying}
-                >
-                  {verifying ? <Loader2 className="mr-2 h-4 w-4 animate-spin" aria-hidden="true" /> : null}
-                  Confirmar ativação
-                </Button>
-                <p className="text-center text-xs leading-4 text-territory-muted">
-                  A proteção só será ativada depois da confirmação do código.
-                </p>
-              </div>
-            ) : null}
+            )}
           </Surface>
 
           <Surface className="p-4 sm:p-5">
             <div className="flex items-start gap-3">
-              <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-territory-brand/10 text-territory-brand">
-                <Laptop className="h-5 w-5" aria-hidden="true" />
-              </span>
+              <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-territory-brand/10 text-territory-brand"><Laptop className="h-5 w-5" aria-hidden="true" /></span>
               <div>
                 <h2 className="font-heading text-base font-bold text-territory-ink">Acessos à conta</h2>
-                <p className="mt-2 text-sm leading-5 text-territory-muted">
-                  A lista detalhada de dispositivos não está disponível, mas você pode encerrar todas as outras sessões sem sair deste dispositivo.
-                </p>
+                <p className="mt-2 text-sm leading-5 text-territory-muted">A lista detalhada de dispositivos não está disponível, mas você pode encerrar todas as outras sessões sem sair deste dispositivo.</p>
               </div>
             </div>
-            <Button
-              type="button"
-              variant="outline"
-              className="mt-5 min-h-11 w-full border-territory-brand text-territory-brand hover:bg-territory-brand/5"
-              onClick={handleSignOutOtherSessions}
-              disabled={revokingSessions}
-            >
+            <Button type="button" variant="outline" className="mt-5 min-h-11 w-full border-territory-brand text-territory-brand hover:bg-territory-brand/5" onClick={handleSignOutOtherSessions} disabled={revokingSessions}>
               {revokingSessions ? <Loader2 className="mr-2 h-4 w-4 animate-spin" aria-hidden="true" /> : null}
               {revokingSessions ? "Encerrando..." : "Sair dos outros dispositivos"}
             </Button>
@@ -676,11 +633,7 @@ export default function ContaSegurancaPage() {
         </div>
 
         <Surface className="mt-4 px-4 sm:px-5">
-          <button
-            type="button"
-            onClick={() => navigate(ACCOUNT_PATHS.password)}
-            className="group flex min-h-16 w-full items-center gap-3 text-left focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-territory-brand"
-          >
+          <button type="button" onClick={() => navigate(ACCOUNT_PATHS.password)} className="group flex min-h-16 w-full items-center gap-3 text-left focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-territory-brand">
             <KeyRound className="h-5 w-5 shrink-0 text-territory-brand" aria-hidden="true" />
             <span className="min-w-0 flex-1">
               <span className="block text-sm font-semibold text-territory-ink">Alterar senha</span>
