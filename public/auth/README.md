@@ -11,3 +11,5 @@ Os arquivos raster deste diretório são recortes otimizados das pranchas de con
 - `confirm-envelope.webp` — envelope usado na confirmação mobile.
 
 Os ícones funcionais do fluxo são desenhados pelo componente `AuthConceptIcon` em HTML/CSS, sem SVG genérico. As telas desktop usam as artes acima somente nas composições que possuem ilustração explícita na prancha aprovada; não criar arte fictícia para estados que não receberam referência visual.
+
+> Integridade: os assets devem permanecer WebP válidos e manter as dimensões do recorte aprovado. A suíte `tests/regression/auth-concept-flow.test.ts` protege esse contrato para evitar trocas de arquivo, blobs truncados ou arte genérica.
