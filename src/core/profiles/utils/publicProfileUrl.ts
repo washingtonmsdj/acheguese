@@ -1,4 +1,5 @@
 import type { Profile } from '@/core/profiles';
+import { ACCOUNT_PATHS } from '@/core/routing/config/account';
 
 /**
  * Constroi URL publica para perfil pessoal.
@@ -44,5 +45,5 @@ export function buildProfileEditUrl(profileId: string): string {
 export function buildProfileSettingsUrl(
   tab?: "privacy" | "links" | "members",
 ): string {
-  return tab ? `/conta/perfil/configuracoes?tab=${tab}` : "/conta/perfil/configuracoes";
+  return tab ? `${ACCOUNT_PATHS.profileSettings}?tab=${tab}` : ACCOUNT_PATHS.profileSettings;
 }
