@@ -7,7 +7,7 @@
  */
 import { logger } from '@/shared/utils/logger';
 import { useEffect, useRef, useState } from 'react';
-import * as maplibregl from "maplibre-gl";
+import type { GeoJSONSource, Map as MapLibreMap } from "maplibre-gl";
 import { routingService } from '@/core/routing';
 import type { RouteRequest, TransportProfile } from '@/core/routing/types';
 import type { Coordinates } from '@/core/maps/types';
@@ -59,13 +59,13 @@ export function RouteLayer({
   onRouteCalculated,
   onError,
 }: RouteLayerProps) {
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+  const [, setLoading] = useState(false);
+  const [, setError] = useState<string | null>(null);
   const routeSourceRef = useRef<string | null>(null);
 
   useEffect(() => {
     const mapRegistry = window as unknown as Window & Record<string, unknown>;
-    const map = mapRegistry[`maplibre-map-${mapId}`] as maplibregl.Map | undefined;
+    const map = mapRegistry[`maplibre-map-${mapId}`] as MapLibreMap | undefined;
     if (!map) {
       logger.warn(`[RouteLayer] Mapa ${mapId} não encontrado`);
       return;
@@ -101,8 +101,7 @@ export function RouteLayer({
         routeSourceRef.current = sourceId;
         
         if (map.getSource(sourceId)) {
-          // Atualizar source existente
-          const source = map.getSource(sourceId) as maplibregl.GeoJSONSource;
+          const source = map.getSource(sourceId) as GeoJSONSource;
           source.setData({
             type: 'Feature',
             geometry: {
@@ -112,7 +111,6 @@ export function RouteLayer({
             properties: {},
           });
         } else {
-          // Criar novo source
           map.addSource(sourceId, {
             type: 'geojson',
             data: {
@@ -125,7 +123,6 @@ export function RouteLayer({
             },
           });
           
-          // Criar layer
           map.addLayer({
             id: `route-layer-${mapId}`,
             type: 'line',
@@ -151,7 +148,6 @@ export function RouteLayer({
 
     calculateAndRenderRoute();
 
-    // Cleanup
     return () => {
       if (routeSourceRef.current) {
         const sourceId = routeSourceRef.current;
@@ -168,6 +164,5 @@ export function RouteLayer({
     };
   }, [mapId, routeRequest, origin, destination, profile, lineColor, lineWidth, lineOpacity, onRouteCalculated, onError]);
 
-  // Componente não renderiza nada visualmente
   return null;
 }
