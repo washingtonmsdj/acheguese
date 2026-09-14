@@ -68,17 +68,18 @@ export function PushNotificationSettings() {
   }
 
   const permissionBlocked = permission === "denied";
-  const currentDeviceDescription = isSubscribed
-    ? "Este navegador está registrado para receber notificações push."
-    : hasPermission
-      ? "A permissão já foi concedida. Falta registrar este navegador para receber push."
-      : permissionBlocked
-        ? "As notificações estão bloqueadas nas permissões deste navegador."
+  const deliveryReady = isSubscribed && !permissionBlocked;
+  const currentDeviceDescription = permissionBlocked
+    ? "As notificações estão bloqueadas nas permissões deste navegador."
+    : deliveryReady
+      ? "Este navegador está registrado e autorizado para receber notificações push."
+      : hasPermission
+        ? "A permissão já foi concedida. Falta registrar este navegador para receber push."
         : "Ao ativar, o navegador solicitará sua permissão para receber notificações.";
-  const currentDeviceLabel = isSubscribed
-    ? "Push ativado neste navegador"
-    : permissionBlocked
-      ? "Push bloqueado no navegador"
+  const currentDeviceLabel = permissionBlocked
+    ? "Push bloqueado no navegador"
+    : deliveryReady
+      ? "Push ativado neste navegador"
       : hasPermission
         ? "Push permitido; falta ativar"
         : "Push não ativado neste navegador";
@@ -87,8 +88,8 @@ export function PushNotificationSettings() {
     <div className="space-y-3">
       <div className="rounded-xl bg-territory-raised px-3 py-3">
         <div className="flex items-center gap-3">
-          <span className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-territory-surface ${isSubscribed ? "text-emerald-700" : "text-territory-muted"}`}>
-            {isSubscribed ? (
+          <span className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-territory-surface ${deliveryReady ? "text-emerald-700" : "text-territory-muted"}`}>
+            {deliveryReady ? (
               <CheckCircle2 className="h-5 w-5" aria-hidden="true" />
             ) : (
               <MonitorSmartphone className="h-5 w-5" aria-hidden="true" />
@@ -98,7 +99,7 @@ export function PushNotificationSettings() {
             <p className="text-sm font-medium text-territory-ink">{currentDeviceLabel}</p>
             <p className="mt-0.5 text-xs leading-4 text-territory-muted">{currentDeviceDescription}</p>
           </div>
-          {isSubscribed ? (
+          {deliveryReady ? (
             <span className="shrink-0 rounded-full bg-emerald-100 px-2 py-1 text-[0.6875rem] font-semibold text-emerald-800">
               Ativado
             </span>
@@ -116,7 +117,7 @@ export function PushNotificationSettings() {
           ) : null}
         </div>
 
-        {permissionBlocked && !isSubscribed ? (
+        {permissionBlocked ? (
           <details className="group mt-2 pl-12">
             <summary className="inline-flex min-h-8 cursor-pointer list-none items-center gap-1 text-xs font-semibold text-territory-brand underline underline-offset-2 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-territory-brand [&::-webkit-details-marker]:hidden">
               Como permitir
@@ -152,7 +153,7 @@ export function PushNotificationSettings() {
           <ChevronDown className="h-4 w-4 text-territory-muted transition-transform group-open:rotate-180" aria-hidden="true" />
         </summary>
         <div className="space-y-3 border-t border-territory-border p-3">
-          {isSubscribed ? (
+          {deliveryReady ? (
             <Button
               type="button"
               variant="outline"
