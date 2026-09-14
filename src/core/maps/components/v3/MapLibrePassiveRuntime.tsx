@@ -8,12 +8,12 @@ import {
 import type { Map as MapLibreMap } from "maplibre-gl";
 
 import { loadMapLibreRuntime } from "@/core/maps/runtime/loadMapLibreRuntime";
+import { readMapState, writeMapState } from "@/core/maps/runtime/mapRuntimeState";
 import { logger } from "@/shared/utils/logger";
 import type {
   MapLibreAdapterHandle,
   MapLibreAdapterProps,
 } from "./MapLibreAdapterRuntime";
-import { readMapState, writeMapState } from "./MapLibreAdapter.helpers";
 
 const DEFAULT_CENTER: [number, number] = [-51.9253, -14.235];
 const DEFAULT_ZOOM = 13;
