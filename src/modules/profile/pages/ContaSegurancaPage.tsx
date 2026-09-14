@@ -66,13 +66,13 @@ function AccessRow({
 }: {
   icon: ReactNode;
   title: string;
-  value: string;
+  value?: string;
   meta?: ReactNode;
   action?: ReactNode;
 }) {
   return (
-    <div className="flex min-h-[88px] items-start gap-3 border-b border-territory-border py-4 last:border-b-0">
-      <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-territory-brand/10 text-territory-brand">
+    <div className="flex min-h-[82px] items-start gap-3 px-4 py-4 lg:min-h-[88px] lg:border-b lg:border-territory-border lg:px-0 lg:last:border-b-0">
+      <span className="flex h-9 w-9 shrink-0 items-center justify-center text-territory-ink lg:h-10 lg:w-10 lg:rounded-xl lg:bg-territory-brand/10 lg:text-territory-brand">
         {icon}
       </span>
       <div className="min-w-0 flex-1">
@@ -80,7 +80,7 @@ function AccessRow({
           <h2 className="font-heading text-base font-bold text-territory-ink">{title}</h2>
           {meta}
         </div>
-        <p className="mt-1 break-all text-sm leading-5 text-territory-muted">{value}</p>
+        {value ? <p className="mt-1 break-all text-sm leading-5 text-territory-muted">{value}</p> : null}
         {action ? <div className="mt-2">{action}</div> : null}
       </div>
     </div>
@@ -549,48 +549,83 @@ export default function ContaSegurancaPage() {
     return (
       <>
         <Helmet><title>Dados de acesso | Achegue-se</title></Helmet>
-        <AccountSettingsShell title="Dados de acesso" description="Revise como você entra e identifica sua conta.">
-          <Surface className="p-4 sm:p-5">
-            <AccessRow
-              icon={<Mail className="h-5 w-5" aria-hidden="true" />}
-              title="E-mail de acesso"
-              value={user.email}
-              meta={user.emailConfirmed ? (
-                <span className="inline-flex items-center gap-1 rounded-full bg-emerald-100 px-2 py-1 text-xs font-semibold text-emerald-800"><CheckCircle2 className="h-3.5 w-3.5" aria-hidden="true" /> Confirmado</span>
-              ) : (
-                <span className="rounded-full bg-amber-100 px-2 py-1 text-xs font-semibold text-amber-800">Confirmação pendente</span>
-              )}
-              action={<button type="button" className="min-h-9 text-sm font-semibold text-territory-brand underline-offset-4 hover:underline" onClick={() => navigate(ACCOUNT_PATHS.email)}>Alterar e-mail</button>}
-            />
-            <AccessRow
-              icon={<UserRound className="h-5 w-5" aria-hidden="true" />}
-              title="Nome de usuário"
-              value={handle}
-              action={activeProfile?.id ? <button type="button" className="min-h-9 text-sm font-semibold text-territory-brand underline-offset-4 hover:underline" onClick={() => navigate(appUrls.profile.edit(activeProfile.id))}>Editar perfil</button> : null}
-            />
-            <AccessRow
-              icon={<KeyRound className="h-5 w-5" aria-hidden="true" />}
-              title="Senha"
-              value="Altere sua senha quando quiser ou use a recuperação por e-mail quando necessário."
-              action={<button type="button" className="min-h-9 text-sm font-semibold text-territory-brand underline-offset-4 hover:underline" onClick={() => navigate(ACCOUNT_PATHS.password)}>Alterar senha</button>}
-            />
-            <AccessRow
-              icon={<Globe2 className="h-5 w-5" aria-hidden="true" />}
-              title="Acesso com Google"
-              value={googleDescription}
-              meta={<span className={`rounded-full px-2 py-1 text-xs font-semibold ${googleStatusClass}`}>{googleStatusLabel}</span>}
-              action={providersError ? <button type="button" className="min-h-9 text-sm font-semibold text-territory-brand underline-offset-4 hover:underline" onClick={() => void refreshProviders()}>Tentar novamente</button> : null}
-            />
-          </Surface>
+        <AccountSettingsShell
+          title="Dados de acesso"
+          description="Revise como você entra e identifica sua conta."
+          mobileDescription=""
+        >
+          <div className="grid gap-3 lg:block lg:rounded-2xl lg:border lg:border-territory-border lg:bg-territory-surface lg:px-5">
+            <div className="rounded-2xl border border-territory-border bg-territory-surface lg:contents">
+              <AccessRow
+                icon={<Mail className="h-5 w-5" aria-hidden="true" />}
+                title="E-mail de acesso"
+                value={user.email}
+                meta={user.emailConfirmed ? (
+                  <span className="inline-flex items-center gap-1 rounded-full bg-emerald-100 px-2 py-1 text-xs font-semibold text-emerald-800"><CheckCircle2 className="h-3.5 w-3.5" aria-hidden="true" /> Confirmado</span>
+                ) : (
+                  <span className="rounded-full bg-amber-100 px-2 py-1 text-xs font-semibold text-amber-800">Confirmação pendente</span>
+                )}
+                action={(
+                  <button type="button" className="inline-flex min-h-9 items-center gap-1 text-sm font-semibold text-territory-brand underline-offset-4 hover:underline" onClick={() => navigate(ACCOUNT_PATHS.email)}>
+                    Alterar e-mail <ChevronRight className="h-4 w-4" aria-hidden="true" />
+                  </button>
+                )}
+              />
+            </div>
+
+            <div className="rounded-2xl border border-territory-border bg-territory-surface lg:contents">
+              <AccessRow
+                icon={<UserRound className="h-5 w-5" aria-hidden="true" />}
+                title="Nome de usuário"
+                value={handle}
+                action={activeProfile?.id ? (
+                  <button type="button" className="inline-flex min-h-9 items-center gap-1 text-sm font-semibold text-territory-brand underline-offset-4 hover:underline" onClick={() => navigate(appUrls.profile.edit(activeProfile.id))}>
+                    Editar <ChevronRight className="h-4 w-4" aria-hidden="true" />
+                  </button>
+                ) : null}
+              />
+            </div>
+
+            <div className="rounded-2xl border border-territory-border bg-territory-surface lg:contents">
+              <AccessRow
+                icon={<KeyRound className="h-5 w-5" aria-hidden="true" />}
+                title="Senha"
+                action={(
+                  <button type="button" className="inline-flex min-h-9 items-center gap-1 text-sm font-semibold text-territory-brand underline-offset-4 hover:underline" onClick={() => navigate(ACCOUNT_PATHS.password)}>
+                    Alterar senha <ChevronRight className="h-4 w-4" aria-hidden="true" />
+                  </button>
+                )}
+              />
+            </div>
+
+            <div className="rounded-2xl border border-territory-border bg-territory-surface lg:contents">
+              <AccessRow
+                icon={<Globe2 className="h-5 w-5" aria-hidden="true" />}
+                title="Acesso com Google"
+                value={googleDescription}
+                meta={<span className={`rounded-full px-2 py-1 text-xs font-semibold ${googleStatusClass}`}>{googleStatusLabel}</span>}
+                action={providersError ? (
+                  <button type="button" className="inline-flex min-h-9 items-center gap-1 text-sm font-semibold text-territory-brand underline-offset-4 hover:underline" onClick={() => void refreshProviders()}>
+                    Tentar novamente <RefreshCw className="h-4 w-4" aria-hidden="true" />
+                  </button>
+                ) : null}
+              />
+              <div className="mx-4 mb-4 flex items-start gap-2 rounded-xl bg-territory-raised px-3 py-2.5 text-xs leading-4 text-territory-muted lg:mx-0 lg:mb-4">
+                <ShieldCheck className="mt-0.5 h-4 w-4 shrink-0 text-territory-brand" aria-hidden="true" />
+                <span>Não remova seu único método de acesso.</span>
+              </div>
+            </div>
+          </div>
 
           {activeProfile?.id ? (
-            <Surface className="mt-4 p-4 sm:p-5">
-              <button type="button" onClick={() => navigate(appUrls.profile.edit(activeProfile.id))} className="flex min-h-12 w-full items-center gap-3 text-left focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-territory-brand">
-                <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-territory-brand/10 text-territory-brand"><Pencil className="h-5 w-5" aria-hidden="true" /></span>
+            <Surface className="mt-4 px-4 sm:px-5">
+              <button type="button" onClick={() => navigate(appUrls.profile.edit(activeProfile.id))} className="flex min-h-16 w-full items-center gap-3 text-left focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-territory-brand">
+                <span className="flex h-9 w-9 items-center justify-center text-territory-brand lg:h-10 lg:w-10 lg:rounded-xl lg:bg-territory-brand/10"><Pencil className="h-5 w-5" aria-hidden="true" /></span>
                 <span className="min-w-0 flex-1">
-                  <span className="block font-semibold text-territory-ink">Editar nome, foto e identidade</span>
-                  <span className="mt-1 block text-sm text-territory-muted">Esses dados pertencem ao perfil e não às credenciais de autenticação.</span>
+                  <span className="block font-semibold text-territory-ink">Editar nome e foto em Meus perfis</span>
+                  <span className="mt-1 hidden text-sm text-territory-muted lg:block">Esses dados pertencem ao perfil e não às credenciais de autenticação.</span>
                 </span>
+                <ChevronRight className="h-5 w-5 shrink-0 text-territory-muted" aria-hidden="true" />
               </button>
             </Surface>
           ) : null}
@@ -603,8 +638,8 @@ export default function ContaSegurancaPage() {
     <>
       <Helmet><title>Senha e segurança | Achegue-se</title></Helmet>
       <AccountSettingsShell title="Senha e segurança" description="Mantenha sua conta protegida.">
-        <div className="grid gap-4 lg:grid-cols-2">
-          <Surface className="p-4 sm:p-5">
+        <div className="grid gap-4 lg:grid-cols-2 lg:grid-rows-[auto_auto] lg:items-start">
+          <Surface className="p-4 sm:p-5 lg:col-start-1 lg:row-start-1">
             <div className="flex items-start gap-3">
               <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-territory-brand/10 text-territory-brand"><ShieldCheck className="h-5 w-5" aria-hidden="true" /></span>
               <div className="min-w-0 flex-1">
@@ -618,7 +653,7 @@ export default function ContaSegurancaPage() {
                     <span className="rounded-full bg-territory-raised px-2 py-1 text-xs font-semibold text-territory-muted">Indisponível</span>
                   ) : null}
                 </div>
-                <p className="mt-2 text-sm leading-5 text-territory-muted">Confirme novos acessos com um aplicativo autenticador compatível.</p>
+                <p className="mt-2 text-sm leading-5 text-territory-muted">Use um aplicativo autenticador para confirmar seu acesso.</p>
               </div>
             </div>
 
@@ -659,42 +694,40 @@ export default function ContaSegurancaPage() {
             ) : null}
           </Surface>
 
-          <Surface className="p-4 sm:p-5">
+          <Surface className="px-4 sm:px-5 lg:col-start-1 lg:row-start-2">
+            <button type="button" onClick={() => navigate(ACCOUNT_PATHS.password)} className="group flex min-h-16 w-full items-center gap-3 text-left focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-territory-brand">
+              <KeyRound className="h-5 w-5 shrink-0 text-territory-brand" aria-hidden="true" />
+              <span className="min-w-0 flex-1">
+                <span className="block text-sm font-semibold text-territory-ink">Alterar senha</span>
+                <span className="mt-0.5 hidden text-xs text-territory-muted lg:block">Atualize sua senha ou acesse a recuperação por e-mail.</span>
+              </span>
+              <ChevronRight className="h-5 w-5 text-territory-muted transition-transform group-hover:translate-x-0.5" aria-hidden="true" />
+            </button>
+          </Surface>
+
+          <Surface className="p-4 sm:p-5 lg:col-start-2 lg:row-span-2 lg:row-start-1">
             <div className="flex items-start gap-3">
               <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-territory-brand/10 text-territory-brand"><Laptop className="h-5 w-5" aria-hidden="true" /></span>
               <div>
                 <h2 className="font-heading text-base font-bold text-territory-ink">Acessos à conta</h2>
-                <p className="mt-2 text-sm leading-5 text-territory-muted">Você pode encerrar todas as outras sessões sem desconectar o navegador que está usando agora.</p>
+                <p className="mt-2 hidden text-sm leading-5 text-territory-muted lg:block">Encerre outras sessões sem desconectar o navegador que está usando agora.</p>
               </div>
             </div>
-            <div className="mt-4 flex items-center gap-3 rounded-xl border border-territory-border bg-territory-raised p-3">
+
+            <div className="mt-4 flex items-center gap-3 rounded-xl border border-territory-border bg-territory-raised p-3 text-territory-muted">
               <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-territory-surface text-territory-brand">
                 <Laptop className="h-4 w-4" aria-hidden="true" />
               </span>
-              <div className="min-w-0 flex-1">
-                <p className="text-sm font-semibold text-territory-ink">Este dispositivo</p>
-                <p className="mt-0.5 text-xs text-territory-muted">Sessão atual</p>
-              </div>
-              <span className="rounded-full bg-emerald-100 px-2 py-1 text-xs font-semibold text-emerald-800">Atual</span>
+              <p className="text-sm leading-5">A lista de dispositivos não está disponível agora.</p>
             </div>
+
             <Button type="button" variant="outline" className="mt-4 min-h-11 w-full border-territory-brand text-territory-brand hover:bg-territory-brand/5" onClick={handleSignOutOtherSessions} disabled={revokingSessions}>
               {revokingSessions ? <Loader2 className="mr-2 h-4 w-4 animate-spin" aria-hidden="true" /> : null}
               {revokingSessions ? "Encerrando..." : "Sair dos outros dispositivos"}
             </Button>
-            <p className="mt-2 text-center text-xs text-territory-muted">A lista detalhada de outros dispositivos ainda não está disponível.</p>
+            <p className="mt-2 text-center text-xs text-territory-muted">Este dispositivo permanece conectado quando a operação é concluída.</p>
           </Surface>
         </div>
-
-        <Surface className="mt-4 px-4 sm:px-5">
-          <button type="button" onClick={() => navigate(ACCOUNT_PATHS.password)} className="group flex min-h-16 w-full items-center gap-3 text-left focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-territory-brand">
-            <KeyRound className="h-5 w-5 shrink-0 text-territory-brand" aria-hidden="true" />
-            <span className="min-w-0 flex-1">
-              <span className="block text-sm font-semibold text-territory-ink">Alterar senha</span>
-              <span className="mt-0.5 block text-xs text-territory-muted">Atualize sua senha ou acesse a recuperação por e-mail.</span>
-            </span>
-            <ChevronRight className="h-5 w-5 text-territory-muted transition-transform group-hover:translate-x-0.5" aria-hidden="true" />
-          </button>
-        </Surface>
 
         <div className="mt-4"><HelpRow onClick={() => navigate(SUPPORT_PATH)} /></div>
       </AccountSettingsShell>
