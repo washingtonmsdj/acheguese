@@ -17,6 +17,11 @@ const DOMAIN_RULES = {
   classified: {
     tables: ['classifieds', 'classified_views', 'classified_favorites'],
     service: 'ClassifiedService',
+    tableOwners: {
+      classifieds: ['ClassifiedService', 'classifieds.map-queries'],
+      classified_views: ['ClassifiedService'],
+      classified_favorites: ['ClassifiedService'],
+    },
   },
   messaging: {
     tables: ['messages', 'conversations', 'conversation_participants'],
@@ -54,6 +59,37 @@ const DOMAIN_RULES = {
     tables: ['ride_requests', 'drivers', 'driver_data', 'driver_location', 'driver_documents', 'vehicle_data', 'community_ride_posts', 'community_post_interests', 'community_post_flags'],
     service: 'MobilityService',
     additionalServices: ['MobilityAdminQueryService'],
+    tableOwners: {
+      ride_requests: [
+        'MobilityService',
+        'MobilityAdminQueryService',
+        'AdminDriverLifecycleMetricsService',
+        'AdminFraudService',
+        'AdminMobilityAnalyticsReadService',
+        'AdminMobilityRealtimeRideReadService',
+        'AdminMotoboyReadService',
+        'BoardingPointService',
+        'OrderDeliveryLinkReadService',
+        'RideOperationalContextReadService',
+        'DriverActivityStatsService',
+        'mobility.ride-read-queries',
+      ],
+      driver_data: [
+        'MobilityService',
+        'MobilityAdminQueryService',
+        'AdminDriverDetailReadService',
+        'AdminMobilityAnalyticsDriverReadService',
+        'AdminMobilityRealtimeDriverReadService',
+        'AdminSuspendedDriverMetricsService',
+      ],
+      drivers: ['MobilityService', 'MobilityAdminQueryService'],
+      driver_location: ['MobilityService', 'MobilityAdminQueryService'],
+      driver_documents: ['MobilityService', 'MobilityAdminQueryService'],
+      vehicle_data: ['MobilityService', 'MobilityAdminQueryService'],
+      community_ride_posts: ['MobilityService', 'MobilityAdminQueryService'],
+      community_post_interests: ['MobilityService', 'MobilityAdminQueryService'],
+      community_post_flags: ['MobilityService', 'MobilityAdminQueryService'],
+    },
   },
   gamification: {
     tables: ['pontos_log', 'user_badges', 'badges', 'achievements', 'user_achievements'],
@@ -88,9 +124,6 @@ const STORAGE_CANONICAL_ALLOWLIST = [
   'src/integrations/supabase',
 ];
 
-/**
- * Factory: cria uma regra ESLint para um domínio SSOT
- */
 function createTableGuardRule(domain) {
   const { tables, service } = DOMAIN_RULES[domain];
   return {
@@ -141,26 +174,12 @@ function createTableGuardRule(domain) {
   };
 }
 
-// Gera todas as regras automaticamente
 const rules = {};
 for (const domain of Object.keys(DOMAIN_RULES)) {
   rules[`no-direct-${domain}-access`] = createTableGuardRule(domain);
 }
 
 module.exports = { rules, DOMAIN_RULES };
-
-
-/**
- * ============================================================================
- * REGRA: Validação de Nomenclatura (User vs Profile vs Author)
- * ============================================================================
- * Referência: docs/SSOT_ARCHITECTURE.md
- *
- * Proíbe nomes ambíguos e força nomenclatura explícita:
- * - Contexto social → *_profile_id
- * - Contexto global → *_user_id
- * - Proibido: author_id, owner_id, creator_id (ambíguos)
- */
 
 const AMBIGUOUS_NAMES = [
   'author_id',
@@ -187,7 +206,6 @@ const NAMING_PATTERN_RULE = {
   },
   create(context) {
     return {
-      // Detectar em interfaces TypeScript
       TSPropertySignature(node) {
         if (node.key && node.key.type === 'Identifier') {
           const name = node.key.name;
@@ -201,8 +219,6 @@ const NAMING_PATTERN_RULE = {
           }
         }
       },
-
-      // Detectar em objetos JavaScript
       Property(node) {
         if (node.key && node.key.type === 'Identifier') {
           const name = node.key.name;
@@ -216,8 +232,6 @@ const NAMING_PATTERN_RULE = {
           }
         }
       },
-
-      // Detectar em strings (queries SQL)
       Literal(node) {
         if (typeof node.value === 'string') {
           AMBIGUOUS_NAMES.forEach(ambiguous => {
@@ -236,15 +250,8 @@ const NAMING_PATTERN_RULE = {
   },
 };
 
-// Adicionar regra ao exports
 module.exports.rules['no-ambiguous-naming'] = NAMING_PATTERN_RULE;
 
-/**
- * ========================================================================
- * REGRA: Storage SSOT
- * ========================================================================
- * Proibe acesso direto a supabase.storage fora da camada canonica.
- */
 module.exports.rules['no-direct-storage-access'] = {
   meta: {
     type: 'problem',
