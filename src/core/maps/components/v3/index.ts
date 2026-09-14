@@ -9,5 +9,5 @@ export type { MapLayerToggleProps } from './MapLayerToggle';
 
 export { useViewportBridge } from './useViewportBridge';
 
-export { MapLibreAdapter } from './LazyMapLibreAdapter';
-export type { MapLibreAdapterHandle, MapLibreAdapterProps } from './LazyMapLibreAdapter';
+export { MapLibreAdapter } from './MapLibreAdapter';
+export type { MapLibreAdapterHandle, MapLibreAdapterProps } from './MapLibreAdapter';
