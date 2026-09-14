@@ -5,7 +5,10 @@ import { useTerritoryPolygon } from "@/core/maps/hooks/useTerritoryPolygon";
 import { DEFAULT_TILE_STYLE, NEIGHBORHOOD_COLORS } from "@/core/maps/providers/MapProvider";
 import type { ResolvedTerritory } from "@/core/routing/hooks/useResolveTerritoryFromUrl";
 import { MAP_DEFAULT_COORDINATES } from "@/shared/config/mapDefaults";
-import { markPublicRootMapReady } from "@/shared/utils/publicRootReadiness";
+import {
+  markPublicRootMapReady,
+  PUBLIC_ROOT_MAP_TERMINAL_TIMEOUT_MS,
+} from "@/shared/utils/publicRootReadiness";
 import { TerritoryEntryMapArrival } from "./TerritoryEntryMapArrival";
 
 const DEFAULT_ENTRY_VIEWPORT = {
@@ -13,7 +16,6 @@ const DEFAULT_ENTRY_VIEWPORT = {
   zoom: 10.1,
 };
 const ARRIVAL_CROSSFADE_MS = 160;
-const MAP_TIMEOUT_MS = 6000;
 const BOUNDARY_TIMEOUT_MS = 8000;
 
 function readLocationCenter(location: Location | null | undefined) {
@@ -208,7 +210,7 @@ export default function TerritoryEntryMapRuntime({
     const id = window.setTimeout(() => {
       mapTimedOutRef.current = true;
       setMapUnavailable(true);
-    }, MAP_TIMEOUT_MS);
+    }, PUBLIC_ROOT_MAP_TERMINAL_TIMEOUT_MS);
     return () => window.clearTimeout(id);
   }, [mapReady, mapUnavailable]);
 
