@@ -26,7 +26,7 @@ describe("root boundary and font performance", () => {
     expect(loader).not.toContain("@/integrations/supabase");
   });
 
-  it("keeps Google Fonts out of render-blocking CSS and auxiliary scripts", () => {
+  it("keeps Google Fonts entirely outside the root initial network window", () => {
     const postcss = read("postcss.config.cjs");
     const html = read("index.html");
     const main = read("src/main.tsx");
@@ -35,20 +35,20 @@ describe("root boundary and font performance", () => {
     expect(postcss).toContain('atRule.params.includes("fonts.googleapis.com")');
     expect(postcss).toContain("atRule.remove()");
 
-    expect(html).toContain('rel="preload"');
-    expect(html).toContain('as="style"');
     expect(html).toContain("data-public-font-stylesheet");
-    expect(html).toContain('fetchpriority="low"');
     expect(html).toContain("display=optional");
+    expect(html).not.toContain('data-public-font-stylesheet\n      href=');
+    expect(html).not.toContain('fetchpriority="low"');
+    expect(html).not.toContain('rel="preconnect" href="https://fonts.googleapis.com"');
+    expect(html).not.toContain('rel="preconnect" href="https://fonts.gstatic.com"');
     expect(html).not.toContain("font-bootstrap.js");
-    expect(html).not.toContain(
-      '<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans',
-    );
     expect(fs.existsSync(path.join(ROOT, "public/font-bootstrap.js"))).toBe(false);
 
-    expect(main).toContain('link[data-public-font-stylesheet]');
-    expect(main).toContain('fontStylesheet.rel = "stylesheet"');
-    expect(main).toContain("deferFrame(() =>");
+    expect(main).toContain('meta[data-public-font-stylesheet]');
+    expect(main).toContain('document.createElement("link")');
+    expect(main).toContain('stylesheet.rel = "stylesheet"');
+    expect(main).toContain("scheduleAfterPublicRootMap(loadOptionalFontStylesheet");
+    expect(main).toContain("maxWaitMs: 2400");
   });
 
   it("keeps monitoring out of the deferred bootstrap utility", () => {
