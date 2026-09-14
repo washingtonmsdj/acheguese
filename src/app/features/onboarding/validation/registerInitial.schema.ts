@@ -24,10 +24,8 @@ export const RegisterInitialSchema = z.object({
     .trim()
     .email(validationMessages.string.email),
   password: strongPasswordValidator,
-  termsAccepted: z.literal(true, {
-    errorMap: () => ({
-      message: "Você precisa aceitar os Termos de Uso para criar sua conta",
-    }),
+  termsAccepted: z.boolean().refine((accepted) => accepted, {
+    message: "Você precisa aceitar os Termos de Uso para criar sua conta",
   }),
 });
 
