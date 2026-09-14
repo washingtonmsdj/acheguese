@@ -85,3 +85,10 @@ export function buildEmailConfirmationLoginPath(): string {
   });
   return `${AUTH_PATHS.login}?${query.toString()}`;
 }
+
+export function buildPasswordResetSuccessLoginPath(): string {
+  const query = new URLSearchParams({
+    [AUTH_QUERY_KEYS.passwordReset]: AUTH_QUERY_VALUES.enabled,
+  });
+  return `${AUTH_PATHS.login}?${query.toString()}`;
+}
