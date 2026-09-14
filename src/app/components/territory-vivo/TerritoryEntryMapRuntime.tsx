@@ -136,6 +136,7 @@ export default function TerritoryEntryMapRuntime({
     !isLoading &&
     !isBoundaryLoading &&
     !hasCompleteGroupBoundary;
+  const mapPresented = mapReady && !isBoundaryLoading;
 
   useEffect(() => {
     setMapReady(false);
@@ -143,20 +144,20 @@ export default function TerritoryEntryMapRuntime({
   }, [territoryKey, isLoading]);
 
   useEffect(() => {
-    if (isLoading || mapReady) return;
+    if (isLoading || mapPresented) return;
 
     const timeoutId = window.setTimeout(() => {
       setMapUnavailable(true);
     }, 8000);
 
     return () => window.clearTimeout(timeoutId);
-  }, [isLoading, mapReady]);
+  }, [isLoading, mapPresented]);
 
   return (
     <section
       className={`territory-entry-map relative overflow-hidden bg-territory-raised ${className}`}
       aria-labelledby="territory-entry-map-title"
-      aria-busy={!mapReady}
+      aria-busy={!mapPresented}
     >
       <Suspense fallback={<RuntimeMapLoadingSurface label={territoryLabel} />}>
         <LazyMapLibreAdapter
@@ -177,11 +178,13 @@ export default function TerritoryEntryMapRuntime({
             setMapReady(true);
             setMapUnavailable(false);
           }}
-          className="pointer-events-none h-full w-full"
+          className={`pointer-events-none h-full w-full transition-opacity duration-300 motion-reduce:transition-none ${
+            mapPresented ? "opacity-100" : "opacity-0"
+          }`}
         />
       </Suspense>
 
-      {!mapReady && !mapUnavailable ? (
+      {!mapPresented && !mapUnavailable ? (
         <RuntimeMapLoadingSurface label={territoryLabel} />
       ) : null}
 
@@ -225,7 +228,7 @@ export default function TerritoryEntryMapRuntime({
           : `Perímetro de ${territoryLabel}`}
       </h2>
 
-      {!isCity && mapReady ? (
+      {!isCity && mapPresented ? (
         <div className="entry-map-label" aria-hidden="true">
           <MapPin className="h-5 w-5" />
           <span>
