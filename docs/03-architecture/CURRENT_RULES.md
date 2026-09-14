@@ -2,7 +2,7 @@
 
 Data-base: 2026-09-14  
 Status: ATIVO / CANONICO  
-Versao documental: 5.2
+Versao documental: 5.3
 
 Este documento define regras arquiteturais globais. Contratos detalhados de domínio permanecem nos owners executáveis e nos documentos específicos listados em `docs/README.md`; este arquivo não deve duplicar implementação.
 
@@ -102,7 +102,8 @@ Os contratos detalhados vivem em `docs/07-modules/` e nos owners executáveis co
 - Coverage/Mobility;
 - Maps/MapLibre runtime;
 - Geolocation/Location resolution;
-- Auth flow/callback classification.
+- Auth flow/callback classification;
+- Accessibility preferences.
 
 ### 6.1 Maps / MapLibre runtime e boundaries
 
@@ -138,6 +139,14 @@ Os contratos detalhados vivem em `docs/07-modules/` e nos owners executáveis co
 - `hasAuthCallbackMarker(search, hash)` diferencia marcadores reais de autenticação de âncoras ordinárias de página. Um hash como `#main-content` não é motivo para carregar runtime autenticado/completo.
 - bootstrap público enxuto pode consumir constants/utilitários puros de Auth, mas não importa `AuthService`, Supabase ou `SessionService` apenas para classificar URL.
 - `AppRuntime` delega classificação de callback ao owner de `core/auth`; não mantém parser/classificador concorrente.
+
+### 6.4 Accessibility preferences
+
+- `src/shared/accessibility/preferences.ts` é o owner puro de chaves de persistência, normalização, leitura/escrita e aplicação das classes de alto contraste/tamanho de fonte.
+- `AppRuntime` pode aplicar essas preferências em `useLayoutEffect` para preservar o primeiro paint da `/`, mas não duplica literais de `localStorage`, parser nem mapeamento de classes.
+- `AccessibilityProvider` consome o mesmo owner para inicialização, persistência e classes; o Provider continua sendo owner do contexto/ações React, não do formato persistido.
+- o owner de preferências permanece dependency-light e não importa React, Provider, router, query runtime ou Supabase.
+- o ratchet `tests/architecture/accessibility-preferences-ssot.test.ts` impede novas chaves de storage concorrentes em `.ts/.tsx`.
 
 Regra: este documento não replica lifecycle, tabelas, RPCs ou allowlists desses contratos. Mudanças devem ocorrer no owner técnico e em seu teste/validator.
 
@@ -203,6 +212,7 @@ Mudanças de segurança/schema executam adicionalmente os gates indicados em `SE
 - não tratar coordenada `0` como valor ausente;
 - não duplicar paths/query keys/classificação de callback de Auth em páginas/bootstrap quando `authFlow.ts`/`authCallback.ts` atendem o caso;
 - não tratar hash/âncora ordinária como retorno de autenticação apenas por ser não vazio;
+- não duplicar chaves/parser/aplicação de preferências de acessibilidade fora de `src/shared/accessibility/preferences.ts`;
 - não usar placeholder, `paused`, fallback vazio ou retorno antecipado como prova de módulo funcional;
 - não declarar `MVP READY` sem cumprir o DoD de `docs/08-roadmap/EXECUCAO_MAIN_ONLY.md`;
 - não reduzir gate de segurança/CI para obter status verde.
