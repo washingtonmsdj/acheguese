@@ -127,6 +127,7 @@ export default function TerritoryEntryPage() {
 
     const handleMediaChange = () => {
       if (desktopMedia.matches) {
+        setIsMobileMenuOpen(false);
         scheduleImage();
         return;
       }
