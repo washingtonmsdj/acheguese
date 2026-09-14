@@ -1,42 +1,43 @@
-import { Home } from "lucide-react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
+
+import { AuthConceptIcon } from "@/app/components/auth/AuthConceptIcon";
 
 interface AuthBrandHeaderProps {
-  secondaryHref: string;
-  secondaryLabel: string;
+  secondaryHref?: string;
+  secondaryLabel?: string;
+  showBack?: boolean;
 }
 
-export function AuthBrandHeader({
-  secondaryHref,
-  secondaryLabel,
-}: AuthBrandHeaderProps) {
+export function AuthBrandHeader({ showBack = true }: AuthBrandHeaderProps) {
+  const navigate = useNavigate();
+
   return (
-    <header className="sticky top-0 z-20 border-b border-border/70 bg-background/92 backdrop-blur-md supports-[backdrop-filter]:bg-background/78">
+    <header className="bg-[#fffdfa] text-[#0b3b3f]">
       <a
         href="#main-content"
-        className="sr-only focus:not-sr-only focus:absolute focus:left-4 focus:top-2 focus:z-30 focus:rounded-md focus:bg-primary focus:px-3 focus:py-1.5 focus:text-sm focus:font-medium focus:text-primary-foreground focus:shadow"
+        className="sr-only focus:not-sr-only focus:absolute focus:left-4 focus:top-2 focus:z-30 focus:rounded-md focus:bg-[#0b3b3f] focus:px-3 focus:py-1.5 focus:text-sm focus:font-medium focus:text-white"
       >
         Pular para o conteúdo
       </a>
-      <div className="mx-auto flex h-14 w-full max-w-5xl items-center justify-between gap-3 px-4 sm:h-16 sm:px-6">
-        <Link
-          to="/"
-          className="flex min-w-0 items-center gap-2 transition-opacity hover:opacity-80"
-          aria-label="Voltar ao inicio"
-        >
-          <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-primary text-primary-foreground shadow-[0_10px_24px_-14px_hsl(var(--primary))]">
-            <Home className="h-4.5 w-4.5" />
-          </div>
-          <span className="truncate font-heading text-base font-bold text-foreground sm:text-lg">
-            Achegue<span className="text-primary">-se</span>
-          </span>
-        </Link>
+      <div className="relative mx-auto flex h-[68px] w-full max-w-[430px] items-center justify-center px-5 sm:max-w-5xl">
+        {showBack ? (
+          <button
+            type="button"
+            onClick={() => navigate(-1)}
+            className="absolute left-4 flex h-10 w-10 items-center justify-center rounded-full text-[#0b3b3f] transition-colors hover:bg-[#0b3b3f]/5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#0b3b3f]/35"
+            aria-label="Voltar"
+          >
+            <AuthConceptIcon name="back" />
+          </button>
+        ) : null}
 
         <Link
-          to={secondaryHref}
-          className="shrink-0 rounded-full border border-border/70 px-3 py-1.5 text-sm font-medium text-primary transition-colors hover:border-primary/25 hover:text-primary/80"
+          to="/"
+          aria-label="Achegue-se — início"
+          className="inline-flex items-baseline gap-[2px] rounded-md px-2 py-1 font-heading text-[1.36rem] font-extrabold tracking-[-0.045em] text-[#0b3b3f] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#0b3b3f]/35"
         >
-          {secondaryLabel}
+          achegue-se
+          <span aria-hidden="true" className="relative -top-[1px] h-[6px] w-[6px] rounded-full bg-[#f3bd18]" />
         </Link>
       </div>
     </header>
