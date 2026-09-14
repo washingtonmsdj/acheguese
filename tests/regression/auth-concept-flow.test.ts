@@ -8,6 +8,36 @@ function readProjectFile(path: string): string {
   return readFileSync(resolve(repoRoot, path), "utf8");
 }
 
+function readWebpDimensions(path: string): { width: number; height: number } {
+  const filePath = resolve(repoRoot, path);
+  const data = readFileSync(filePath);
+
+  expect(data.subarray(0, 4).toString("ascii"), `${path} must start with RIFF`).toBe(
+    "RIFF",
+  );
+  expect(data.subarray(8, 12).toString("ascii"), `${path} must be WEBP`).toBe(
+    "WEBP",
+  );
+  expect(
+    data.readUInt32LE(4) + 8,
+    `${path} RIFF length must match the checked-in blob`,
+  ).toBe(data.length);
+
+  const chunk = data.subarray(12, 16).toString("ascii");
+  expect(chunk, `${path} must use a supported WebP frame`).toBe("VP8 ");
+
+  const payload = 20;
+  expect(
+    Array.from(data.subarray(payload + 3, payload + 6)),
+    `${path} must contain a valid VP8 keyframe`,
+  ).toEqual([0x9d, 0x01, 0x2a]);
+
+  return {
+    width: data.readUInt16LE(payload + 6) & 0x3fff,
+    height: data.readUInt16LE(payload + 8) & 0x3fff,
+  };
+}
+
 describe("account and access concept contract", () => {
   it("keeps initial signup account-first and territory optional", () => {
     const cadastro = readProjectFile(
@@ -69,17 +99,51 @@ describe("account and access concept contract", () => {
     expect(recovery).toContain("Este link não está");
   });
 
-  it("ships the approved raster artwork used by desktop account screens", () => {
+  it("ships valid concept raster artwork with the approved crop dimensions", () => {
     const expectedAssets = [
-      "public/auth/login-hero.webp",
-      "public/auth/signup-hero.webp",
-      "public/auth/confirm-hero.webp",
-      "public/auth/recovery-hero.webp",
-      "public/auth/confirm-envelope.webp",
-    ];
+      {
+        path: "public/auth/login-hero.webp",
+        width: 376,
+        height: 264,
+        minBytes: 9_000,
+      },
+      {
+        path: "public/auth/signup-hero.webp",
+        width: 340,
+        height: 186,
+        minBytes: 5_000,
+      },
+      {
+        path: "public/auth/confirm-hero.webp",
+        width: 355,
+        height: 188,
+        minBytes: 5_000,
+      },
+      {
+        path: "public/auth/recovery-hero.webp",
+        width: 368,
+        height: 149,
+        minBytes: 7_000,
+      },
+      {
+        path: "public/auth/confirm-envelope.webp",
+        width: 120,
+        height: 115,
+        minBytes: 1_000,
+      },
+    ] as const;
 
     for (const asset of expectedAssets) {
-      expect(existsSync(resolve(repoRoot, asset)), `${asset} must exist`).toBe(true);
+      const absolutePath = resolve(repoRoot, asset.path);
+      expect(existsSync(absolutePath), `${asset.path} must exist`).toBe(true);
+      const data = readFileSync(absolutePath);
+      expect(data.length, `${asset.path} must not be a truncated placeholder`).toBeGreaterThanOrEqual(
+        asset.minBytes,
+      );
+      expect(readWebpDimensions(asset.path), `${asset.path} crop dimensions`).toEqual({
+        width: asset.width,
+        height: asset.height,
+      });
     }
 
     expect(readProjectFile("src/app/pages/LoginPage.tsx")).toContain(
