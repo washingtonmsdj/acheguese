@@ -5,7 +5,6 @@ import {
   CheckCircle2,
   ChevronRight,
   CircleHelp,
-  Globe2,
   KeyRound,
   Laptop,
   Loader2,
@@ -29,6 +28,7 @@ import { ACCOUNT_PATHS } from "@/core/routing/config/account";
 import { useAppUrls } from "@/core/routing/hooks/useAppUrls";
 import { AccountSettingsShell } from "@/modules/profile/components/AccountSettingsShell";
 import { ChangePasswordForm } from "@/modules/profile/components/ChangePasswordForm";
+import { GoogleProviderMark } from "@/shared/components/branding/GoogleProviderMark";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -615,7 +615,7 @@ export default function ContaSegurancaPage() {
 
             <div className="rounded-2xl border border-territory-border bg-territory-surface lg:contents">
               <AccessRow
-                icon={<Globe2 className="h-5 w-5" aria-hidden="true" />}
+                icon={<GoogleProviderMark />}
                 title="Acesso com Google"
                 value={googleDescription}
                 meta={<span className={`rounded-full px-2 py-1 text-xs font-semibold ${googleStatusClass}`}>{googleStatusLabel}</span>}
