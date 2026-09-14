@@ -1,5 +1,7 @@
 import type { CSSProperties } from "react";
 
+import { GoogleProviderMark } from "@/shared/components/branding/GoogleProviderMark";
+
 import "./auth-concept-icons.css";
 
 type AuthConceptIconName =
@@ -34,6 +36,10 @@ interface AuthConceptIconProps {
  * Desenhados em CSS/HTML: sem SVG, icon font ou pacote de ícones genérico.
  */
 export function AuthConceptIcon({ name, className = "", style }: AuthConceptIconProps) {
+  if (name === "google") {
+    return <GoogleProviderMark className={className} style={style} />;
+  }
+
   return (
     <span
       aria-hidden="true"
