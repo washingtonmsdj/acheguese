@@ -14,6 +14,10 @@ interface SubscriptionTarget {
   endpoint: string;
 }
 
+function getBrowserNotificationPermission(): NotificationPermission | null {
+  return typeof Notification === 'undefined' ? null : Notification.permission;
+}
+
 export function usePush(userId?: string) {
   const [isSupportResolved, setIsSupportResolved] = useState(false);
   const [isSupported, setIsSupported] = useState(false);
@@ -40,7 +44,7 @@ export function usePush(userId?: string) {
         PushService.getCurrentBrowserSubscriptionEndpoint(),
       ]);
       setHasPermission(granted);
-      setPermission(Notification.permission);
+      setPermission(getBrowserNotificationPermission());
       setCurrentBrowserEndpoint(endpoint);
     } finally {
       setIsSupportResolved(true);
@@ -93,7 +97,7 @@ export function usePush(userId?: string) {
         toast({
           title: 'Não foi possível ativar',
           description:
-            Notification.permission === 'denied'
+            getBrowserNotificationPermission() === 'denied'
               ? 'As notificações estão bloqueadas nas permissões deste navegador.'
               : 'Tente novamente. Nenhum registro foi confirmado para este dispositivo.',
           variant: 'destructive',
