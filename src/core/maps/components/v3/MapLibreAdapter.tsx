@@ -1,11 +1,14 @@
 import { forwardRef, lazy, Suspense } from "react";
-import { loadMapLibreRuntime } from "../../runtime/loadMapLibreRuntime";
+import {
+  loadMapLibreRuntime,
+  preloadMapLibreRuntime,
+} from "../../runtime/loadMapLibreRuntime";
 import type {
   MapLibreAdapterHandle,
   MapLibreAdapterProps,
 } from "./MapLibreAdapterRuntime";
 
-const loadAdapterRuntime = async () => {
+const loadFullAdapterRuntime = async () => {
   const [, adapterModule] = await Promise.all([
     loadMapLibreRuntime(),
     import("./MapLibreAdapterRuntime"),
@@ -14,22 +17,53 @@ const loadAdapterRuntime = async () => {
   return { default: adapterModule.MapLibreAdapter };
 };
 
-const LazyMapLibreRuntime = lazy(loadAdapterRuntime);
+const loadPassiveAdapterRuntime = async () => {
+  const [, adapterModule] = await Promise.all([
+    loadMapLibreRuntime(),
+    import("./MapLibrePassiveRuntime"),
+  ]);
 
+  return { default: adapterModule.MapLibrePassiveRuntime };
+};
+
+const LazyFullMapLibreRuntime = lazy(loadFullAdapterRuntime);
+const LazyPassiveMapLibreRuntime = lazy(loadPassiveAdapterRuntime);
+
+/**
+ * Aquece somente engine/CSS/worker. O runtime React correto continua sendo
+ * escolhido pelas props quando o mapa realmente montar.
+ */
 export function preloadMapLibreAdapterRuntime(): Promise<void> {
-  return loadAdapterRuntime().then(() => undefined);
+  return preloadMapLibreRuntime();
+}
+
+function canUsePassiveRuntime(props: MapLibreAdapterProps): boolean {
+  return (
+    props.interactive === false &&
+    (props.markers?.length ?? 0) === 0 &&
+    !props.controls &&
+    !props.circle &&
+    !props.onMarkerClick &&
+    !props.onMapClick &&
+    !props.onViewportChange &&
+    !props.enableClustering &&
+    !props.userLocationMarker?.enabled &&
+    !props.radiusControl?.enabled
+  );
 }
 
 /**
  * Owner público canônico do MapLibre.
  *
- * Todo consumidor deve importar este caminho (diretamente ou pelo barrel).
- * A implementação pesada permanece interna em MapLibreAdapterRuntime.tsx.
+ * Mapas passivos recebem um runtime interno enxuto; mapas interativos recebem
+ * o runtime completo. Consumidores mantêm uma única API/SSOT.
  */
 export const MapLibreAdapter = forwardRef<
   MapLibreAdapterHandle,
   MapLibreAdapterProps
 >(function MapLibreAdapter(props, ref) {
+  const usePassiveRuntime = canUsePassiveRuntime(props);
+
   return (
     <Suspense
       fallback={
@@ -40,7 +74,11 @@ export const MapLibreAdapter = forwardRef<
         />
       }
     >
-      <LazyMapLibreRuntime {...props} ref={ref} />
+      {usePassiveRuntime ? (
+        <LazyPassiveMapLibreRuntime {...props} ref={ref} />
+      ) : (
+        <LazyFullMapLibreRuntime {...props} ref={ref} />
+      )}
     </Suspense>
   );
 });
