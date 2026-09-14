@@ -16,10 +16,10 @@ export const CONSENT_PREFERENCES_CHANGED_EVENT =
 function readLocalConsentRecords(): ConsentRecord[] | null {
   if (typeof window === "undefined") return null;
 
-  const localConsent = window.localStorage.getItem(LOCAL_CONSENT_STORAGE_KEY);
-  if (!localConsent) return null;
-
   try {
+    const localConsent = window.localStorage.getItem(LOCAL_CONSENT_STORAGE_KEY);
+    if (!localConsent) return null;
+
     const parsed = JSON.parse(localConsent) as unknown;
     if (!Array.isArray(parsed)) return null;
 
@@ -31,6 +31,8 @@ function readLocalConsentRecords(): ConsentRecord[] | null {
         typeof (record as ConsentRecord).granted === "boolean",
     );
   } catch {
+    // Storage bloqueado ou payload invalido: nenhuma permissao opcional deve
+    // ser inferida. O consumidor permanece em fail-closed.
     return null;
   }
 }
@@ -38,6 +40,21 @@ function readLocalConsentRecords(): ConsentRecord[] | null {
 function notifyLocalConsentChanged(): void {
   if (typeof window === "undefined") return;
   window.dispatchEvent(new Event(CONSENT_PREFERENCES_CHANGED_EVENT));
+}
+
+function writeLocalConsentRecords(records: ConsentRecord[]): boolean {
+  if (typeof window === "undefined") return false;
+
+  try {
+    window.localStorage.setItem(
+      LOCAL_CONSENT_STORAGE_KEY,
+      JSON.stringify(records),
+    );
+    notifyLocalConsentChanged();
+    return true;
+  } catch {
+    return false;
+  }
 }
 
 export class ConsentService {
@@ -98,11 +115,10 @@ export class ConsentService {
 
     const consentRecords = (data ?? []) as ConsentRecord[];
     if (consentRecords.length > 0) {
-      window.localStorage.setItem(
-        LOCAL_CONSENT_STORAGE_KEY,
-        JSON.stringify(consentRecords),
-      );
-      notifyLocalConsentChanged();
+      // Cache local e best-effort. Se o browser bloquear storage, a leitura do
+      // backend continua valida, mas permissões opcionais permanecem desligadas
+      // no gate local desta sessao.
+      writeLocalConsentRecords(consentRecords);
     }
 
     return consentRecords;
@@ -121,11 +137,9 @@ export class ConsentService {
       { consent_type: "privacy_policy", granted: true },
     ];
 
-    window.localStorage.setItem(
-      LOCAL_CONSENT_STORAGE_KEY,
-      JSON.stringify(consentsArray),
-    );
-    notifyLocalConsentChanged();
+    if (!writeLocalConsentRecords(consentsArray)) {
+      throw new Error("Consent storage unavailable");
+    }
 
     // Para visitante anonimo, salvar localmente e suficiente. O RPC so entra no
     // bundle quando existe usuario autenticado que precisa persistir no backend.
