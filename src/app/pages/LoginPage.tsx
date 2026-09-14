@@ -15,6 +15,10 @@ import { parseAuthIdentifier } from "@/core/auth/utils/authIdentifier";
 import { getAuthErrorMessage } from "@/core/auth/utils/authMessages";
 import { getAuthReturnContext } from "@/core/auth/utils/authReturnContext";
 import {
+  clearPendingAuthReturn,
+  setPendingAuthReturn,
+} from "@/core/auth/utils/pendingAuthReturn";
+import {
   clearPendingSignupContext,
   getPendingSignupRedirect,
 } from "@/core/auth/utils/pendingSignup";
@@ -137,9 +141,11 @@ export default function LoginPage() {
 
   const handleGoogleLogin = async () => {
     setPendingAction("google");
+    setPendingAuthReturn(redirectTo);
     try {
       await signInWithGoogle();
     } catch (error) {
+      clearPendingAuthReturn();
       toast({
         title: "Google indisponível",
         description: getAuthErrorMessage(error),
