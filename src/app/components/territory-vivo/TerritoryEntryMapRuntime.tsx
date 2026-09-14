@@ -160,9 +160,11 @@ export default function TerritoryEntryMapRuntime({
   const boundaryPending =
     mapReady &&
     !boundaryUnavailable &&
+    !boundarySlow &&
     (!boundaryStarted || isLoading || isBoundaryLoading);
   const mapRegionBusy =
     !mapUnavailable &&
+    !boundarySlow &&
     (!mapReady || isLoading || !boundaryStarted || isBoundaryLoading);
 
   useEffect(() => {
@@ -261,10 +263,15 @@ export default function TerritoryEntryMapRuntime({
           <p className="font-semibold text-territory-ink">Limite territorial oficial indisponível agora.</p>
           <p className="mt-1 leading-5 text-territory-muted-strong">Não exibimos contorno aproximado ou incompleto de {territoryLabel}.</p>
         </div>
+      ) : boundarySlow ? (
+        <div role="status" className="pointer-events-none absolute inset-x-3 bottom-3 z-10 rounded-2xl border border-territory-border bg-territory-surface/95 px-4 py-3 text-sm shadow-territory-highlight lg:inset-x-auto lg:bottom-6 lg:left-6 lg:max-w-md">
+          <p className="font-semibold text-territory-ink">Mapa pronto. Limite oficial ainda carregando.</p>
+          <p className="mt-1 leading-5 text-territory-muted-strong">Você já pode continuar. O contorno de {territoryLabel} segue sendo buscado em segundo plano, sem usar aproximação.</p>
+        </div>
       ) : boundaryPending ? (
         <div role="status" className="pointer-events-none absolute bottom-3 left-3 z-10 inline-flex max-w-[calc(100%-1.5rem)] items-center gap-2 rounded-full border border-territory-border bg-territory-surface/95 px-3 py-2 text-xs font-semibold text-territory-muted-strong shadow-sm lg:bottom-6 lg:left-6">
           <span className="h-2 w-2 shrink-0 rounded-full bg-territory-brand motion-safe:animate-pulse motion-reduce:animate-none" aria-hidden="true" />
-          <span className="truncate">{boundarySlow ? "Mapa aberto. Limite oficial ainda carregando." : "Mapa pronto. Carregando limite oficial..."}</span>
+          <span className="truncate">Mapa pronto. Carregando limite oficial...</span>
         </div>
       ) : null}
 
