@@ -8,11 +8,7 @@ import {
   type TerritoryEntryArrivalStage,
 } from "./TerritoryEntryMapArrival";
 
-const loadTerritoryEntryMapRuntime = async () => {
-  const module = await import("./TerritoryEntryMapRuntime");
-  void module.preloadTerritoryEntryMapEngine();
-  return module;
-};
+const loadTerritoryEntryMapRuntime = () => import("./TerritoryEntryMapRuntime");
 const LazyTerritoryEntryMapRuntime = lazy(loadTerritoryEntryMapRuntime);
 
 function preloadEntryMapStyle(): void {
@@ -85,7 +81,14 @@ export default function TerritoryEntryMap({
     if (shouldMountRuntime) return;
 
     preloadEntryMapStyle();
-    void loadTerritoryEntryMapRuntime();
+    const runtimePromise = loadTerritoryEntryMapRuntime();
+    const preloadResolved =
+      resolvedTerritory ?? (city ? { kind: "location" as const, location: city } : null);
+
+    void runtimePromise.then(async (module) => {
+      await module.preloadTerritoryEntryMapEngine();
+      await module.preloadTerritoryEntryBoundary(preloadResolved);
+    });
 
     const section = sectionRef.current;
     if (!section || typeof IntersectionObserver === "undefined") {
@@ -104,7 +107,7 @@ export default function TerritoryEntryMap({
 
     observer.observe(section);
     return () => observer.disconnect();
-  }, [shouldMountRuntime]);
+  }, [city, resolvedTerritory, shouldMountRuntime]);
 
   if (!shouldMountRuntime) {
     return (
