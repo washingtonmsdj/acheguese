@@ -9,7 +9,7 @@
 1. `docs/README.md` — índice documental canônico;
 2. `docs/03-architecture/CURRENT_RULES.md` — regras arquiteturais vigentes;
 3. `docs/08-roadmap/EXECUCAO_MAIN_ONLY.md` — plano operacional ativo;
-4. `docs/08-roadmap/checkpoints/2026-09-14-g183-root-navigation-and-sitemap-runtime-hardening.md` — checkpoint mais recente desta linha;
+4. `docs/08-roadmap/checkpoints/2026-09-14-g184-root-deferred-runtime-and-consent-boundary.md` — checkpoint mais recente desta linha;
 5. `SECURITY.md` — segurança e gates de release.
 
 ## Regras que não podem ser perdidas
@@ -34,10 +34,15 @@
 - alto contraste precisa cobrir também os tokens `--territory-*`; superfícies Territory não podem ignorar a preferência global;
 - metadata/PWA da raiz deve seguir o headline e a identidade visual aprovados; canonical da `/` não pode ser estático no `index.html`, que atende todas as rotas SPA;
 - `src/shared/components/advertising/AdSense.tsx` é o owner do client/script AdSense; `main.tsx` não carrega provider global nem contém publisher ID hardcoded;
+- consentimento local pertence a `ConsentService`; componentes não duplicam a chave `lgpd-consent`, parser ou mecanismo de notificação;
+- `@vercel/analytics/react` só pode ser importado pelo owner consent-aware e não monta antes de `analytics=true`;
+- overlays tardios da `/` permanecem router-free; pathname é passado explicitamente quando a superfície não precisa de React Router;
 - Plus Jakarta Sans é a família aprovada; `tailwind.config.ts` é o owner executável do stack e do `--font-heading`/`--font-sans`; peso 800 é permitido onde o concept versionado exige e deve ser carregado de forma real;
 - paths/query keys/classificação de callback de Auth vêm de `authFlow.ts`/`authCallback.ts`; âncora comum não é retorno OAuth;
 - fallback geográfico reutilizável vem de `mapDefaults`; não reintroduzir coordenadas locais quando o SSOT compartilhado atende o caso;
 - carregamento de boundary/polígono precisa ser limitado e não bloqueante; timeout não autoriza contorno aproximado;
+- timeout terminal da entrada pública pertence a `publicRootReadiness.ts`; consumidores não duplicam o mesmo orçamento de 6000 ms;
+- mídia decorativa de baixa prioridade da `/` não deve competir com mapa ainda dentro do orçamento terminal;
 - fonte opcional da `/` não volta para `@import` remoto no CSS crítico nem para plugin de build que esconda esse import;
 - timeout final de mapa precisa encerrar estado acessível de carregamento; fallback visual resolvido não permanece `aria-busy=true`;
 - regra exclusiva da `/` só permanece local quando depender de prioridade/UX específica da entrada pública;
