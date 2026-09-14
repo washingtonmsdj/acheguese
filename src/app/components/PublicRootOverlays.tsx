@@ -1,4 +1,5 @@
 import { lazy, Suspense } from "react";
+import { BrowserRouter } from "react-router-dom";
 
 import { ConsentBanner } from "@/app/components/privacy/ConsentBanner";
 
@@ -18,18 +19,19 @@ const VercelAnalytics = shouldLoadVercelAnalytics
 /**
  * Overlays mínimos da raiz pública.
  *
- * O consentimento mantém estado próprio e Analytics continua lazy. QueryClient,
- * toaster, Sonner e UI offline pertencem apenas ao runtime completo.
+ * Este chunk só monta após load + idle. O BrowserRouter existe aqui apenas
+ * para o banner de consentimento ler pathname sem colocar react-router-dom no
+ * bootstrap crítico da `/`.
  */
 export default function PublicRootOverlays() {
   return (
-    <>
+    <BrowserRouter>
       <ConsentBanner />
       {VercelAnalytics ? (
         <Suspense fallback={null}>
           <VercelAnalytics />
         </Suspense>
       ) : null}
-    </>
+    </BrowserRouter>
   );
 }
