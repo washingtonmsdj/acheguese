@@ -20,11 +20,15 @@ describe("root community-first MVP entry", () => {
     expect(source).not.toContain("homeCity");
   });
 
-  it("preserves the explicit prelaunch lockdown override", () => {
+  it("preserves lockdown without shipping the prelaunch page in the normal entry bundle", () => {
     const source = read("src/app/routes/RootRouteEntry.tsx");
 
     expect(source).toContain("VITE_PRELAUNCH_LOCKDOWN");
-    expect(source).toContain("return <PreLaunchLandingPage />");
+    expect(source).toContain("LazyPreLaunchLandingPage");
+    expect(source).toContain('import("@/app/pages/PreLaunchLandingPage")');
+    expect(source).not.toContain(
+      'import PreLaunchLandingPage from "@/app/pages/PreLaunchLandingPage"',
+    );
   });
 
   it("keeps the entry map wrapper light until near the viewport and browser idle", () => {
