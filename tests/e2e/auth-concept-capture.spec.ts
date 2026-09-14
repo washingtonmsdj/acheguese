@@ -31,10 +31,12 @@ test.describe("Auth concept capture", () => {
 
     await page.goto("/login?redirect=%2Fmensagens%2Fsabores-da-ana", { waitUntil: "domcontentloaded" });
     await expect(page.getByRole("heading", { name: "Bom ter você por aqui." })).toBeVisible();
+    await expect(page.getByRole("button", { name: "Continuar com Google" })).toBeVisible();
     await capture(page, "mobile-login.png");
 
     await page.goto("/cadastro", { waitUntil: "domcontentloaded" });
     await expect(page.getByRole("heading", { name: "Comece pelo seu perfil pessoal." })).toBeVisible();
+    await expect(page.getByRole("button", { name: "Continuar com Google" })).toBeVisible();
     await capture(page, "mobile-signup.png");
 
     await page.goto("/cadastro/confirmacao", { waitUntil: "domcontentloaded" });
@@ -51,10 +53,12 @@ test.describe("Auth concept capture", () => {
 
     await page.goto("/login?redirect=%2Fmensagens%2Fsabores-da-ana", { waitUntil: "domcontentloaded" });
     await expect(page.getByText("Seu lugar, mais perto.", { exact: true })).toBeVisible();
+    await expect(page.getByRole("button", { name: "Continuar com Google" })).toBeVisible();
     await capture(page, "desktop-login.png");
 
     await page.goto("/cadastro", { waitUntil: "domcontentloaded" });
     await expect(page.getByText("Comece por você.", { exact: true })).toBeVisible();
+    await expect(page.getByRole("button", { name: "Continuar com Google" })).toBeVisible();
     await capture(page, "desktop-signup.png");
 
     await page.goto("/cadastro/confirmacao", { waitUntil: "domcontentloaded" });
