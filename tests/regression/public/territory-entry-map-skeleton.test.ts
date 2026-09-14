@@ -27,11 +27,24 @@ describe("territory entry map skeleton", () => {
   });
 
   it("uses one shared full-area skeleton before and during MapLibre startup", () => {
-    expect(wrapper).toContain("h-full min-h-full w-full");
-    expect(runtime).toContain("h-full min-h-full w-full");
+    expect(wrapper).toContain("h-full min-h-[12rem] w-full");
+    expect(wrapper).toContain("md:min-h-[18rem]");
+    expect(wrapper).toContain("lg:min-h-[24rem]");
+    expect(runtime).toContain("h-full min-h-[12rem] w-full");
+    expect(runtime).toContain("md:min-h-[18rem]");
+    expect(runtime).toContain("lg:min-h-[24rem]");
     expect(runtime).toContain("<TerritoryEntryMapSkeleton");
-    expect(skeleton).toContain("absolute inset-0");
+    expect(skeleton).toContain("absolute inset-0 z-20");
     expect(skeleton).toContain("data-entry-map-skeleton");
+  });
+
+  it("renders unmistakable map-like loading structure instead of only a status strip", () => {
+    expect(skeleton).toContain("backgroundImage");
+    expect(skeleton).toContain("backgroundSize");
+    expect(skeleton).toContain("border border-territory-border bg-territory-raised");
+    expect(skeleton).toContain("top-[31%]");
+    expect(skeleton).toContain("top-[55%]");
+    expect(skeleton).toContain("motion-safe:animate-pulse");
   });
 
   it("adapts the loading composition for both mobile and desktop map areas", () => {
