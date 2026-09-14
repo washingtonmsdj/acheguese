@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo } from "react";
 import { Helmet } from "react-helmet-async";
 import { Link2, Loader2, Settings2, Shield, Users } from "lucide-react";
 import { useNavigate, useSearchParams } from "react-router-dom";
@@ -63,25 +63,24 @@ export default function ProfileSettingsPage() {
   const navigate = useNavigate();
   const { activeProfile, loading } = useActiveProfile();
   const [searchParams, setSearchParams] = useSearchParams();
-  const [activeTab, setActiveTab] = useState<ProfileSettingsTab>(
-    normalizeTab(searchParams.get("tab")),
-  );
-
   const canHaveMembers = canProfileHaveMembers(activeProfile);
+  const requestedTab = normalizeTab(searchParams.get("tab"));
 
-  const resolvedTab = useMemo<ProfileSettingsTab>(() => {
-    const requestedTab = normalizeTab(searchParams.get("tab"));
-
+  const activeTab = useMemo<ProfileSettingsTab>(() => {
     if (requestedTab === "members" && !canHaveMembers) {
       return "privacy";
     }
 
     return requestedTab;
-  }, [canHaveMembers, searchParams]);
+  }, [canHaveMembers, requestedTab]);
 
   useEffect(() => {
-    setActiveTab(resolvedTab);
-  }, [resolvedTab]);
+    if (loading || requestedTab !== "members" || canHaveMembers) return;
+
+    const nextParams = new URLSearchParams(searchParams);
+    nextParams.delete("tab");
+    setSearchParams(nextParams, { replace: true });
+  }, [canHaveMembers, loading, requestedTab, searchParams, setSearchParams]);
 
   const handleTabChange = (nextValue: string) => {
     const nextTab = normalizeTab(nextValue);
@@ -94,7 +93,6 @@ export default function ProfileSettingsPage() {
     }
 
     setSearchParams(nextParams, { replace: true });
-    setActiveTab(nextTab);
   };
 
   if (loading) {
