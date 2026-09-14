@@ -193,10 +193,7 @@ export default function TerritoryEntryPage() {
 
   return (
     <div className="territory-vivo territory-entry-page">
-      <a
-        href="#main-content"
-        className="sr-only focus:not-sr-only focus:absolute focus:left-4 focus:top-4 focus:z-[60] focus:rounded-lg focus:bg-territory-surface focus:px-3 focus:py-2 focus:text-sm focus:font-semibold focus:text-territory-ink focus:shadow-lg"
-      >
+      <a href="#main-content" className="skip-link">
         Pular para o conteúdo principal
       </a>
 
@@ -252,6 +249,8 @@ export default function TerritoryEntryPage() {
               <img
                 src={communityThumbnail}
                 alt=""
+                width={1920}
+                height={1080}
                 loading="lazy"
                 decoding="async"
                 fetchPriority="low"
