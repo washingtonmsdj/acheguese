@@ -7,6 +7,9 @@ const SRC = path.join(ROOT, "src");
 const ANALYTICS_OWNER = path.normalize(
   "src/app/components/privacy/ConsentAwareVercelAnalytics.tsx",
 );
+const CONSENT_STORAGE_OWNER = path.normalize(
+  "src/core/privacy/services/ConsentService.ts",
+);
 
 const read = (relativePath: string) =>
   fs.readFileSync(path.join(ROOT, relativePath), "utf8");
@@ -37,14 +40,31 @@ describe("analytics consent boundary", () => {
     expect(owner).toContain('import("@vercel/analytics/react")');
   });
 
+  it("keeps the local consent storage key and parsing in one owner", () => {
+    const storageKeyOwners = collectSourceFiles(SRC)
+      .map((absolute) => ({
+        relative: path.normalize(path.relative(ROOT, absolute)),
+        source: fs.readFileSync(absolute, "utf8"),
+      }))
+      .filter(({ source }) => source.includes('"lgpd-consent"'))
+      .map(({ relative }) => relative);
+
+    expect(storageKeyOwners).toEqual([CONSENT_STORAGE_OWNER]);
+
+    const service = read(CONSENT_STORAGE_OWNER);
+    expect(service).toContain('LOCAL_CONSENT_STORAGE_KEY = "lgpd-consent"');
+    expect(service).toContain("function readLocalConsentRecords()");
+    expect(service).toContain("JSON.parse(localConsent)");
+    expect(service).toContain("catch {");
+  });
+
   it("reacts to same-tab and cross-tab consent changes", () => {
-    const service = read("src/core/privacy/services/ConsentService.ts");
+    const service = read(CONSENT_STORAGE_OWNER);
     const hook = read("src/core/privacy/hooks/useConsentPermission.ts");
 
     expect(service).toContain(
       'CONSENT_PREFERENCES_CHANGED_EVENT =\n  "acheguese:consent-preferences-changed"',
     );
-    expect(service).toContain('LOCAL_CONSENT_STORAGE_KEY = "lgpd-consent"');
     expect(service).toContain("notifyLocalConsentChanged()");
     expect(service).toContain('window.addEventListener("storage", handleStorage)');
     expect(service).toContain("CONSENT_PREFERENCES_CHANGED_EVENT");
