@@ -10,6 +10,7 @@ import {
   Shield,
   SlidersHorizontal,
   UserRound,
+  type LucideIcon,
 } from "lucide-react";
 
 import { useMultiProfileContext } from "@/core/profiles/contexts/multi-profile-runtime-context";
@@ -21,7 +22,19 @@ import {
 } from "@/shared/components/ui/avatar";
 import { cn } from "@/shared/utils/cn";
 
-const settingsItems = [
+interface SettingsNavItem {
+  label: string;
+  href: string;
+  icon: LucideIcon;
+  exact?: boolean;
+  hashes?: readonly string[];
+  excludeHashes?: readonly string[];
+  search?: string;
+  excludeSearch?: string;
+  dividerBefore?: boolean;
+}
+
+const settingsItems: readonly SettingsNavItem[] = [
   { label: "Visão geral", href: ACCOUNT_PATHS.home, icon: Home, exact: true, excludeSearch: "?section=profiles" },
   { label: "Dados de acesso", href: ACCOUNT_PATHS.access, icon: KeyRound, hashes: ["#acesso", "#email"] },
   { label: "Segurança", href: ACCOUNT_PATHS.security, icon: LockKeyhole, exact: true, excludeHashes: ["#acesso", "#email"] },
@@ -30,7 +43,7 @@ const settingsItems = [
   { label: "Meus perfis", href: ACCOUNT_PATHS.profiles, icon: UserRound, exact: true, search: "?section=profiles" },
   { label: "Preferências", href: ACCOUNT_PATHS.preferences, icon: SlidersHorizontal, exact: true, excludeHashes: ["#acessibilidade"], dividerBefore: true },
   { label: "Acessibilidade", href: ACCOUNT_PATHS.accessibility, icon: Accessibility, hashes: ["#acessibilidade"] },
-] as const;
+];
 
 function isActive(
   pathname: string,
