@@ -22,6 +22,18 @@ export function AuthBrandHeader({
   const showRecoveryBackLabel = location.pathname === AUTH_PATHS.passwordReset;
   const hasSecondaryAction = Boolean(secondaryHref && secondaryLabel);
 
+  const handleBack = () => {
+    // Em uma entrada direta não existe histórico interno confiável para voltar.
+    // Nesse caso usamos a ação secundária da própria tela (quando houver) ou a
+    // página inicial, evitando mandar a pessoa para fora do Achegue-se.
+    if (location.key === "default") {
+      navigate(secondaryHref ?? "/");
+      return;
+    }
+
+    navigate(-1);
+  };
+
   return (
     <header
       className="bg-[#fffdfa] text-[#0b3b3f]"
@@ -37,7 +49,7 @@ export function AuthBrandHeader({
         {showBack ? (
           <button
             type="button"
-            onClick={() => navigate(-1)}
+            onClick={handleBack}
             className={`absolute left-4 flex h-10 items-center justify-center rounded-full text-[#0b3b3f] transition-colors hover:bg-[#0b3b3f]/5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#0b3b3f]/35 lg:hidden ${showRecoveryBackLabel ? "gap-1.5 px-1.5" : "w-10"}`}
             aria-label="Voltar"
           >
