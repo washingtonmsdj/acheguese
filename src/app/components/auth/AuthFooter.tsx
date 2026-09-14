@@ -1,4 +1,4 @@
-import { Link } from "react-router-dom";
+import { Link, useLocation } from "react-router-dom";
 
 import {
   PRIVACY_POLICY_PATH,
@@ -7,8 +7,14 @@ import {
 } from "@/shared/constants/legal";
 
 export function AuthFooter() {
+  const { pathname } = useLocation();
+
+  // No concept, os links legais ficam visíveis no rodapé apenas da tela
+  // mobile de entrada. As demais telas têm suas próprias ações contextuais.
+  if (pathname !== "/login") return null;
+
   return (
-    <footer className="bg-[#fffdfa] pb-5 pt-2 text-[#25484b]">
+    <footer className="bg-[#fffdfa] pb-5 pt-2 text-[#25484b] lg:hidden">
       <nav
         aria-label="Links legais"
         className="mx-auto flex w-full max-w-[430px] items-center justify-center gap-3 px-6 text-[11px]"
