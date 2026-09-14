@@ -11,6 +11,9 @@ const mocks = vi.hoisted(() => ({
   navigate: vi.fn(),
   refreshUser: vi.fn(),
   clearPendingSignupContext: vi.fn(),
+  usernameCheck: vi.fn(),
+  usernameCheckDebounced: vi.fn(),
+  usernameReset: vi.fn(),
 }));
 
 vi.mock("react-router-dom", async () => {
@@ -46,6 +49,16 @@ vi.mock("@/core/profiles/services/ProfileService", () => ({
   },
 }));
 
+vi.mock("@/core/public-identity/hooks/useIdentityAvailability", () => ({
+  useIdentityAvailability: () => ({
+    result: null,
+    isChecking: false,
+    check: mocks.usernameCheck,
+    checkDebounced: mocks.usernameCheckDebounced,
+    reset: mocks.usernameReset,
+  }),
+}));
+
 vi.mock("@/core/location/hooks/useLocationCascade", () => ({
   useLocationCascade: () => ({
     states: [{ id: "state-ba", name: "Bahia" }],
@@ -67,7 +80,7 @@ const PROFILE = {
   profile_type: "personal",
   name: "Ana Oliveira",
   display_name: "Ana Oliveira",
-  username: "ana.oliveira",
+  username: "ana_oliveira",
   city: "",
   verified: false,
   reputation: 0,
@@ -94,6 +107,10 @@ describe("CadastroPrimeiroAcessoPage", () => {
     );
     vi.mocked(profileService.updateProfile).mockResolvedValue(PROFILE as never);
     mocks.refreshUser.mockResolvedValue(undefined);
+    mocks.usernameCheck.mockResolvedValue({
+      identifier: "ana_oliveira",
+      status: "available",
+    });
   });
 
   it("preserva o retorno da conversa e permite adiar o perfil", async () => {
@@ -111,6 +128,67 @@ describe("CadastroPrimeiroAcessoPage", () => {
     expect(mocks.navigate).toHaveBeenCalledWith("/mensagens/abc", {
       replace: true,
     });
+  });
+
+  it("oferece @usuário amigável quando OAuth criou um identificador automático", async () => {
+    const user = userEvent.setup();
+    const generatedProfile = {
+      ...PROFILE,
+      username: "ana_1a2b3c4d",
+    };
+    const friendlyProfile = {
+      ...PROFILE,
+      username: "ana_oliveira",
+    };
+    vi.mocked(profileService.getRequiredActiveProfile).mockResolvedValue(
+      generatedProfile as never,
+    );
+    vi.mocked(profileService.updateProfile).mockResolvedValue(
+      friendlyProfile as never,
+    );
+
+    renderPage();
+
+    expect(await screen.findByText("@ana_1a2b3c4d")).toBeInTheDocument();
+    expect(
+      screen.getByText(/identificador atual foi criado automaticamente/i),
+    ).toBeInTheDocument();
+
+    await user.click(
+      screen.getByRole("button", { name: /Escolher meu @usuário/i }),
+    );
+
+    const usernameInput = screen.getByLabelText("Seu @usuário");
+    await user.clear(usernameInput);
+    await user.type(usernameInput, "Ana_Oliveira");
+
+    expect(usernameInput).toHaveValue("ana_oliveira");
+    expect(mocks.usernameCheckDebounced).toHaveBeenLastCalledWith("ana_oliveira");
+
+    await user.click(
+      screen.getByRole("button", { name: /Salvar @usuário/i }),
+    );
+
+    await waitFor(() => {
+      expect(mocks.usernameCheck).toHaveBeenCalledWith("ana_oliveira");
+      expect(profileService.updateProfile).toHaveBeenCalledWith("profile-1", {
+        username: "ana_oliveira",
+      });
+    });
+    expect(mocks.refreshUser).toHaveBeenCalledTimes(1);
+    expect(await screen.findByText("@ana_oliveira")).toBeInTheDocument();
+    expect(
+      screen.queryByRole("button", { name: /Escolher meu @usuário/i }),
+    ).not.toBeInTheDocument();
+  });
+
+  it("não oferece troca obrigatória quando o @usuário já é amigável", async () => {
+    renderPage();
+
+    expect(await screen.findByText("@ana_oliveira")).toBeInTheDocument();
+    expect(
+      screen.queryByRole("button", { name: /Escolher meu @usuário/i }),
+    ).not.toBeInTheDocument();
   });
 
   it("salva território real depois da criação e mantém localização pública oculta", async () => {
