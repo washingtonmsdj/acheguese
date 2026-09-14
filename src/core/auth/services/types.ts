@@ -1,8 +1,8 @@
 /**
- * Authentication Service Types
+ * Tipos públicos da autenticação.
  *
- * Tipos TypeScript para o serviço de autenticação.
- * Identidade runtime deriva do contrato canônico de core/session.
+ * O cadastro inicial cria somente a conta + perfil pessoal. Localização e
+ * demais atributos de perfil pertencem ao primeiro acesso/ProfileService.
  */
 
 import type { TermsAcceptance } from "@/core/legal/termsOfService";
@@ -17,16 +17,8 @@ export interface SignUpData {
   email: string;
   password: string;
   name: string;
-  username?: string;
-  handle?: string; // handle desejado para o perfil personal
-  display_name?: string; // nome de exibição (fallback: name)
-  // Localização — strings legíveis para exibição
-  city?: string;
-  neighborhood?: string;
-  state?: string;
-  street?: string;
-  // UUID canônico do bairro (tabela locations) — SSOT territorial
-  neighborhood_id?: string;
+  /** Identificador público desejado para o perfil pessoal criado no signup. */
+  handle?: string;
   termsAcceptance: TermsAcceptance;
 }
 
@@ -40,9 +32,6 @@ export interface SignInWithUsernameData {
   password: string;
 }
 
-/**
- * Custom error class for authentication errors
- */
 export class AuthError extends Error {
   constructor(
     message: string,
