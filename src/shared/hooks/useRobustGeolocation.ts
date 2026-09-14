@@ -70,16 +70,15 @@ export function useRobustGeolocation(options: UseRobustGeolocationOptions = {}) 
           useCache: requestOptions.useCache ?? useCache,
           timeout,
         });
-        const permissionState =
-          result.source === "gps" ? "granted" : state.permissionState;
 
-        setState({
+        setState((prev) => ({
+          ...prev,
           coords: result.coords,
           loading: false,
           error: null,
-          permissionState,
+          permissionState: result.source === "gps" ? "granted" : prev.permissionState,
           source: result.source,
-        });
+        }));
         onSuccessRef.current?.(result.coords);
       } catch (error: unknown) {
         const msg = error instanceof Error ? error.message : "Nao foi possivel obter localizacao.";
@@ -102,7 +101,7 @@ export function useRobustGeolocation(options: UseRobustGeolocationOptions = {}) 
         requestInFlight.current = false;
       }
     },
-    [state.permissionState, timeout, useCache],
+    [timeout, useCache],
   );
 
   const startWatching = useCallback(() => {
