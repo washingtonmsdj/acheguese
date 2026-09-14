@@ -22,6 +22,7 @@ on:
       - "tests/e2e/auth-concept-capture.spec.ts"
       - "tests/regression/auth-concept-flow.test.ts"
       - "tests/regression/auth-return-context.test.ts"
+      - "tests/regression/auth-google-oauth.test.ts"
       - "playwright.config.ts"
       - "package.json"
       - "package-lock.json"
@@ -46,6 +47,7 @@ on:
       - "tests/e2e/auth-concept-capture.spec.ts"
       - "tests/regression/auth-concept-flow.test.ts"
       - "tests/regression/auth-return-context.test.ts"
+      - "tests/regression/auth-google-oauth.test.ts"
       - "playwright.config.ts"
       - "package.json"
       - "package-lock.json"
@@ -79,6 +81,7 @@ jobs:
           npx vitest run
           tests/regression/auth-concept-flow.test.ts
           tests/regression/auth-return-context.test.ts
+          tests/regression/auth-google-oauth.test.ts
 
   responsive-layout:
     name: auth responsive layout and captures
