@@ -53,6 +53,13 @@ describe("Sentry optional telemetry consent boundary", () => {
     expect(exceptionBlock).not.toContain("optionalTelemetryEnabled");
   });
 
+  it("does not expose the unused legacy transaction shim", () => {
+    const sentry = read("src/shared/config/sentry.config.ts");
+
+    expect(sentry).not.toContain("startSentryTransaction");
+    expect(sentry).not.toContain("startTransaction");
+  });
+
   it("keeps consent ownership outside the Sentry config layer", () => {
     const sentry = read("src/shared/config/sentry.config.ts");
 
