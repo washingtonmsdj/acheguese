@@ -18,6 +18,8 @@ describe("responsive account concept contract", () => {
     expect(shell).toContain('className="hidden lg:inline"');
     expect(shell).toContain("resolvedMobileTitle");
     expect(shell).toContain("resolvedDesktopTitle");
+    expect(shell).toContain("hideMobileHeading = false");
+    expect(shell).toContain('hideMobileHeading && "hidden lg:block"');
   });
 
   it("keeps notification behavior real while matching the mobile and desktop concepts", () => {
