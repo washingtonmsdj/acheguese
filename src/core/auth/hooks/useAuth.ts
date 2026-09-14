@@ -28,6 +28,7 @@ interface UseAuthReturn {
   signInWithUsername: (data: SignInWithUsernameData) => Promise<void>;
   signInWithGoogle: () => Promise<void>;
   signOut: () => Promise<void>;
+  signOutOtherSessions: () => Promise<void>;
   resetPassword: (email: string) => Promise<void>;
   resetPasswordByIdentifier: (identifier: string) => Promise<void>;
   resendConfirmationEmail: (email: string) => Promise<void>;
@@ -95,6 +96,19 @@ export function useAuth(): UseAuthReturn {
       setLoading(true);
       setError(null);
       await AuthService.signOut();
+    } catch (err) {
+      setError(err as AuthError);
+      throw err;
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  const signOutOtherSessions = useCallback(async () => {
+    try {
+      setLoading(true);
+      setError(null);
+      await AuthService.signOutOtherSessions();
     } catch (err) {
       setError(err as AuthError);
       throw err;
@@ -204,6 +218,7 @@ export function useAuth(): UseAuthReturn {
     signInWithUsername,
     signInWithGoogle,
     signOut,
+    signOutOtherSessions,
     resetPassword,
     resetPasswordByIdentifier,
     resendConfirmationEmail,
