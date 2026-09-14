@@ -27,13 +27,26 @@ describe("Achegue-se typography SSOT", () => {
     expect(globalCss).toContain("var(--font-heading, ui-sans-serif)");
   });
 
+  it("loads the real approved 800 display weight instead of synthesizing it", () => {
+    const html = read("index.html");
+    const globalCss = read("src/index.css");
+
+    expect(globalCss).toContain("font-weight: 800;");
+    expect(html).toContain(
+      "Plus+Jakarta+Sans:wght@400;500;600;700;800&display=optional",
+    );
+  });
+
   it("keeps living design documentation aligned with the approved concept font", () => {
     const tokens = read("docs/04-design/DESIGN-TOKENS.md");
     const identity = read("docs/04-design/ACHEGUE-SE-VISUAL-IDENTITY.md");
 
     expect(tokens).toContain("Plus Jakarta Sans");
+    expect(tokens).toContain("Display / wordmark do concept");
+    expect(tokens).toContain("800 só para display/wordmark aprovado pelo concept");
     expect(tokens).not.toContain("`DM Sans`");
     expect(tokens).not.toContain("`Space Grotesk`");
     expect(identity).toContain("Fonte migrada para Plus Jakarta Sans");
+    expect(identity).toContain("800 reservado a display/wordmark");
   });
 });
