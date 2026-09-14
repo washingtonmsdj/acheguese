@@ -18,6 +18,7 @@ export function usePush(userId?: string) {
   const [isSupportResolved, setIsSupportResolved] = useState(false);
   const [isSupported, setIsSupported] = useState(false);
   const [hasPermission, setHasPermission] = useState(false);
+  const [permission, setPermission] = useState<NotificationPermission | null>(null);
   const [currentBrowserEndpoint, setCurrentBrowserEndpoint] = useState<string | null>(null);
   const queryClient = useQueryClient();
   const { toast } = useToast();
@@ -29,15 +30,17 @@ export function usePush(userId?: string) {
 
       if (!supported) {
         setHasPermission(false);
+        setPermission(null);
         setCurrentBrowserEndpoint(null);
         return;
       }
 
-      const [permission, endpoint] = await Promise.all([
+      const [granted, endpoint] = await Promise.all([
         PushService.hasPermission(),
         PushService.getCurrentBrowserSubscriptionEndpoint(),
       ]);
-      setHasPermission(permission);
+      setHasPermission(granted);
+      setPermission(Notification.permission);
       setCurrentBrowserEndpoint(endpoint);
     } finally {
       setIsSupportResolved(true);
@@ -86,17 +89,22 @@ export function usePush(userId?: string) {
           description: 'Este dispositivo foi registrado para receber notificações push.',
         });
       } else {
+        await refreshBrowserState();
         toast({
-          title: 'Erro ao ativar',
-          description: result.error || 'Não foi possível ativar as notificações.',
+          title: 'Não foi possível ativar',
+          description:
+            Notification.permission === 'denied'
+              ? 'As notificações estão bloqueadas nas permissões deste navegador.'
+              : 'Tente novamente. Nenhum registro foi confirmado para este dispositivo.',
           variant: 'destructive',
         });
       }
     },
-    onError: (error) => {
+    onError: async () => {
+      await refreshBrowserState();
       toast({
-        title: 'Erro',
-        description: String(error),
+        title: 'Não foi possível ativar',
+        description: 'Tente novamente. Nenhum registro foi confirmado para este dispositivo.',
         variant: 'destructive',
       });
     },
@@ -120,16 +128,16 @@ export function usePush(userId?: string) {
         });
       } else {
         toast({
-          title: 'Erro ao desativar',
-          description: result.error || 'Não foi possível remover o dispositivo.',
+          title: 'Não foi possível remover',
+          description: 'O dispositivo continua registrado. Tente novamente.',
           variant: 'destructive',
         });
       }
     },
-    onError: (error) => {
+    onError: () => {
       toast({
-        title: 'Erro',
-        description: String(error),
+        title: 'Não foi possível remover',
+        description: 'O dispositivo continua registrado. Tente novamente.',
         variant: 'destructive',
       });
     },
@@ -148,16 +156,16 @@ export function usePush(userId?: string) {
         });
       } else {
         toast({
-          title: 'Erro ao enviar',
-          description: result.error || 'Não foi possível enviar a notificação de teste.',
+          title: 'Não foi possível enviar o teste',
+          description: 'Confira a conexão e o registro deste dispositivo e tente novamente.',
           variant: 'destructive',
         });
       }
     },
-    onError: (error) => {
+    onError: () => {
       toast({
-        title: 'Erro',
-        description: String(error),
+        title: 'Não foi possível enviar o teste',
+        description: 'Confira a conexão e o registro deste dispositivo e tente novamente.',
         variant: 'destructive',
       });
     },
@@ -167,6 +175,7 @@ export function usePush(userId?: string) {
     isSupportResolved,
     isSupported,
     hasPermission,
+    permission,
     isSubscribed,
     currentBrowserEndpoint,
     currentSubscriptionId: currentSubscription?.id ?? null,
@@ -174,6 +183,7 @@ export function usePush(userId?: string) {
     isLoadingSubscriptions,
     isSubscribing: subscribeMutation.isPending,
     isUnsubscribing: unsubscribeMutation.isPending,
+    unsubscribingSubscriptionId: unsubscribeMutation.variables?.id ?? null,
     isSendingTest: sendTestMutation.isPending,
     subscriptionsError,
     subscribe: () => subscribeMutation.mutate(),
