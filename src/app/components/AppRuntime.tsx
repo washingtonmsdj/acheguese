@@ -1,4 +1,4 @@
-import { lazy, Suspense, useEffect, useState } from "react";
+import { lazy, Suspense, useEffect, useLayoutEffect, useState } from "react";
 import { BrowserRouter, useLocation } from "react-router-dom";
 
 import RootRouteEntry from "@/app/routes/RootRouteEntry";
@@ -17,6 +17,29 @@ const PRELAUNCH_LOCKDOWN_ENABLED =
 
 function LeanPublicRootRuntime() {
   const [shouldMountOverlays, setShouldMountOverlays] = useState(false);
+
+  useLayoutEffect(() => {
+    try {
+      const body = document.body;
+      const highContrast =
+        localStorage.getItem("accessibility-high-contrast") === "true";
+      const fontSize = localStorage.getItem("accessibility-font-size");
+
+      body.classList.toggle("accessibility-high-contrast", highContrast);
+      body.classList.remove(
+        "accessibility-font-large",
+        "accessibility-font-extra-large",
+      );
+
+      if (fontSize === "large") {
+        body.classList.add("accessibility-font-large");
+      } else if (fontSize === "extra-large") {
+        body.classList.add("accessibility-font-extra-large");
+      }
+    } catch {
+      // Storage pode estar indisponivel; a raiz continua funcional sem preferencia.
+    }
+  }, []);
 
   useEffect(() => {
     let cancelIdleWork: (() => void) | null = null;
