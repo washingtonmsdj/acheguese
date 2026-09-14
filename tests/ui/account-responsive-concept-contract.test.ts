@@ -37,4 +37,25 @@ describe("responsive account concept contract", () => {
     expect(notifications).toContain("QUIET_DAY_OPTIONS");
     expect(notifications).toContain('aria-pressed={selected}');
   });
+
+  it("keeps quiet hours compact on mobile without dropping the full editor", () => {
+    expect(notifications).toContain("const quietHoursSummary");
+    expect(notifications).toContain('"Intervalo incompleto"');
+    expect(notifications).toContain('"Definir horário"');
+    expect(notifications).toContain("renderQuietHoursControls");
+    expect(notifications).toContain('renderQuietHoursControls("mobile")');
+    expect(notifications).toContain('renderQuietHoursControls("desktop")');
+    expect(notifications).toContain("open={quietHoursInvalid || undefined}");
+    expect(notifications).toContain("Horário local do dispositivo.");
+    expect(notifications).toContain('className="mt-4 lg:hidden"');
+    expect(notifications).toContain('className="mt-4 hidden p-4 sm:p-5 lg:block"');
+  });
+
+  it("gives the mobile and desktop quiet-hours editors unique form ids", () => {
+    expect(notifications).toContain('const startId = `${idPrefix}-quiet-start`');
+    expect(notifications).toContain('const endId = `${idPrefix}-quiet-end`');
+    expect(notifications).toContain('const errorId = `${idPrefix}-quiet-hours-error`');
+    expect(notifications).not.toContain('id="quiet-start"');
+    expect(notifications).not.toContain('id="quiet-end"');
+  });
 });
