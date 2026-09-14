@@ -35,7 +35,7 @@ describe("root community-first MVP entry", () => {
 
   it("uses the versioned launch territory without database discovery", () => {
     const source = read("src/app/pages/TerritoryEntryPage.tsx");
-    expect(source).toContain('resolvePublicTerritoryFallback');
+    expect(source).toContain("resolvePublicTerritoryFallback");
     expect(source).toContain("const launchTerritory = resolvePublicTerritoryFallback");
     expect(source).toContain("resolvedTerritory={launchTerritory}");
     expect(source).toContain("isLoading={false}");
@@ -56,10 +56,15 @@ describe("root community-first MVP entry", () => {
     expect(runtime).not.toContain("lucide-react");
   });
 
-  it("uses a lightweight low-priority community preview", () => {
+  it("defers the low-priority community preview behind the entry map", () => {
     const source = read("src/app/pages/TerritoryEntryPage.tsx");
     const asset = path.join(ROOT, "src/assets/complexo-cultura.jpg");
     expect(source).toContain('import communityThumbnail from "@/assets/complexo-cultura.jpg"');
+    expect(source).toContain("shouldLoadCommunityImage");
+    expect(source).toContain('window.matchMedia("(min-width: 768px)")');
+    expect(source).toContain('window.addEventListener("load", scheduleAfterLoad');
+    expect(source).toContain("requestIdleCallback");
+    expect(source).toContain("shouldLoadCommunityImage ? communityThumbnail : undefined");
     expect(source).toContain('width={1024}');
     expect(source).toContain('height={768}');
     expect(source).toContain('loading="lazy"');
