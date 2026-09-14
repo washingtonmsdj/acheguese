@@ -216,24 +216,19 @@ export function ContaHubLayout({
               Sair da conta
             </button>
           </>
-        ) : null}
-
-        <div
-          id="account-details"
-          className={`${profilesView ? "mt-4" : "mt-8 border-t border-territory-border pt-6"} [&>div>div:first-child>section:first-child]:hidden`}
-        >
-          <div className="mb-4">
-            <h2 className="font-heading text-lg font-bold text-territory-ink">
-              {profilesView ? "Perfis disponíveis" : "Perfis e recursos da conta"}
-            </h2>
-            <p className="mt-1 text-sm text-territory-muted">
-              {profilesView
-                ? "Troque de identidade e acesse recursos já existentes para seus perfis."
-                : "Recursos já existentes continuam disponíveis sem duplicar os controles principais acima."}
-            </p>
+        ) : (
+          <div id="account-details" className="mt-4">
+            <div className="mb-4">
+              <h2 className="font-heading text-lg font-bold text-territory-ink">
+                Perfis disponíveis
+              </h2>
+              <p className="mt-1 text-sm text-territory-muted">
+                Troque de identidade e acesse os recursos já existentes para seus perfis.
+              </p>
+            </div>
+            <div className="space-y-4 sm:space-y-6">{children}</div>
           </div>
-          <div className="space-y-4 sm:space-y-6">{children}</div>
-        </div>
+        )}
       </AccountSettingsShell>
     </>
   );
