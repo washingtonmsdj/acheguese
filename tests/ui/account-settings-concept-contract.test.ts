@@ -15,11 +15,14 @@ const managedProfiles = read("src/modules/profile/components/ManagedProfilesPane
 const security = read("src/modules/profile/pages/ContaSegurancaPage.tsx");
 const passwordForm = read("src/modules/profile/components/ChangePasswordForm.tsx");
 const preferences = read("src/modules/profile/pages/ContaPreferenciasPage.tsx");
+const addresses = read("src/modules/profile/pages/ContaEnderecosPage.tsx");
 const accessibilityProvider = read("src/shared/components/accessibility/AccessibilityProvider.tsx");
 const auth = read("src/core/auth/services/AuthService.ts");
 const identities = read("src/core/auth/services/AuthIdentityService.ts");
 const notifications = read("src/app/pages/NotificationPreferencesPage.tsx");
 const privacy = read("src/app/pages/PrivacySettingsPage.tsx");
+const privacyService = read("src/core/privacy/services/PrivacySettingsService.ts");
+const legal = read("src/shared/constants/legal.ts");
 const push = read("src/app/components/notifications/PushNotificationSettings.tsx");
 const appLayout = read("src/app/components/AppLayoutSidebar.tsx");
 
@@ -36,17 +39,21 @@ describe("account settings concept contract", () => {
       'notifications: "/conta/notificacoes"',
       'privacy: "/conta/privacidade"',
       'exportData: "/conta/privacidade#exportar"',
+      'consentHistory: "/conta/privacidade#historico"',
       'preferences: "/conta/preferencias"',
       'accessibility: "/conta/preferencias#acessibilidade"',
+      'addresses: "/conta/enderecos"',
     ]) {
       expect(accountRoutes).toContain(path);
     }
     expect(appUrls).toContain("ACCOUNT_PATHS.home");
     expect(appUrls).toContain("ACCOUNT_PATHS.accessibility");
+    expect(accountRoutes).toContain("ACCOUNT_PATHS.addresses");
     expect(appLayout).toContain("ACCOUNT_SETTINGS_SHELL_PATHS");
     expect(shell).toContain("ACCOUNT_PATHS.profiles");
     expect(overview).toContain("ACCOUNT_PATHS.access");
     expect(preferences).toContain("ACCOUNT_PATHS.accessibility");
+    expect(preferences).toContain("ACCOUNT_PATHS.addresses");
   });
 
   it("keeps the canonical account information architecture in one shell", () => {
@@ -58,6 +65,7 @@ describe("account settings concept contract", () => {
       "Privacidade e dados",
       "Meus perfis",
       "Preferências",
+      "Endereços e território",
       "Acessibilidade",
     ]) {
       expect(shell).toContain(label);
@@ -71,10 +79,14 @@ describe("account settings concept contract", () => {
     expect(shell).toContain("dividerBefore: true");
   });
 
-  it("owns mobile safe areas and uses the real active identity in the desktop header", () => {
+  it("owns mobile safe areas, nested back targets and the real desktop identity", () => {
     expect(shell).toContain("env(safe-area-inset-top)");
     expect(shell).toContain("env(safe-area-inset-bottom)");
     expect(shell).toContain('id="main-content"');
+    expect(shell).toContain("resolveDefaultBackTarget");
+    expect(shell).toContain('["#email", "#senha", "#mfa"]');
+    expect(shell).toContain("pathname === ACCOUNT_PATHS.privacy && hash");
+    expect(shell).toContain('hash === "#acessibilidade"');
     expect(shell).toContain("useMultiProfileContext()");
     expect(shell).toContain("activeProfile?.display_name");
     expect(shell).toContain("activeProfile?.avatar_url");
@@ -87,11 +99,13 @@ describe("account settings concept contract", () => {
     expect(overview).toContain("Senha e segurança");
     expect(overview).toContain("Privacidade e dados");
     expect(overview).toContain("Acessibilidade");
+    expect(overview).toContain("Endereços e território");
     expect(overview).toContain("Meus perfis");
     expect(overview).toContain("Sair da conta");
     expect(overview).toContain("<ManagedProfilesPanel />");
-    expect(overview).toContain("Controles avançados e recursos operacionais");
+    expect(overview).toContain("Recursos adicionais da conta");
     expect(overview).toContain("{children}");
+    expect(overview).toContain("navigate(ACCOUNT_PATHS.addresses)");
     expect(overview).toContain("navigate(ACCOUNT_PATHS.profiles)");
   });
 
@@ -127,10 +141,12 @@ describe("account settings concept contract", () => {
     expect(security).toContain("useLinkedAuthProviders");
     expect(security).toContain("googleLinked");
     expect(security).toContain("useMFA()");
+    expect(security).toContain("isMFAStatusResolved");
     expect(security).toContain("startEnrollment");
     expect(security).toContain("verifyAndEnable");
     expect(security).toContain("handleCancelMfaEnrollment");
     expect(security).toContain("listFactors");
+    expect(security).toContain("factors === null");
     expect(security).toContain("disable(factor.id)");
     expect(security).toContain("signOutOtherSessions");
     expect(auth).toContain('signOut({ scope: "others" })');
@@ -159,6 +175,19 @@ describe("account settings concept contract", () => {
     expect(accessibilityProvider).toContain("applyAccessibilityPreferences");
   });
 
+  it("migrates the existing address feature into the same account quality bar", () => {
+    expect(accountRoutes).toContain("ACCOUNT_PATHS.addresses");
+    expect(shell).toContain('label: "Endereços e território"');
+    expect(preferences).toContain('hrefKey: "addresses"');
+    expect(addresses).toContain("<AccountSettingsShell");
+    expect(addresses).toContain('title="Endereços e território"');
+    expect(addresses).toContain("<ResidenceManager />");
+    expect(addresses).toContain("Seu endereço detalhado permanece privado");
+    expect(addresses).toContain("Abrir Central profissional");
+    expect(addresses).not.toContain("useAppUrls");
+    expect(addresses).not.toContain("ArrowLeft");
+  });
+
   it("preserves canonical notification and privacy service writes", () => {
     expect(notifications).toContain("NotificationPreferencesService.get()");
     expect(notifications).toContain("NotificationPreferencesService.patchAll(prefs)");
@@ -166,6 +195,18 @@ describe("account settings concept contract", () => {
     expect(privacy).toContain("PrivacySettingsService.exportUserData");
     expect(privacy).toContain("PrivacySettingsService.requestAccountDeletion");
     expect(privacy).toContain("PrivacySettingsService.cancelAccountDeletion");
+  });
+
+  it("keeps real consent history and the existing data-protection contact channel", () => {
+    expect(privacy).toContain('location.hash === "#historico"');
+    expect(privacy).toContain("PrivacySettingsService.getConsentHistory(user!.id)");
+    expect(privacy).toContain("ConsentHistoryItem");
+    expect(privacy).toContain("DATA_PROTECTION_CONTACT_PATH");
+    expect(privacy).toContain("Falar sobre meus dados");
+    expect(privacyService).toContain("static async getConsentHistory");
+    expect(privacyService).toContain('order("created_at", { ascending: false })');
+    expect(privacyService).toContain("revoked_at: row.revoked_at ?? null");
+    expect(legal).toContain('DATA_PROTECTION_CONTACT_PATH = "/dpo"');
   });
 
   it("keeps the existing quiet-hours day scope editable instead of dropping it for concept fidelity", () => {
@@ -177,7 +218,7 @@ describe("account settings concept contract", () => {
     expect(notifications).toContain("quietDaysInvalid");
   });
 
-  it("fails closed when consent or deletion authority cannot be loaded", () => {
+  it("fails closed when consent, deletion or MFA authority cannot be loaded", () => {
     expect(privacy).toContain("consentsError");
     expect(privacy).toContain("deletionStatusLoading");
     expect(privacy).toContain("deletionStatusError");
@@ -185,6 +226,8 @@ describe("account settings concept contract", () => {
     expect(privacy).toContain("Suas escolhas não serão presumidas como desativadas");
     expect(privacy).toContain("!deletionStatusLoading && !deletionStatusError");
     expect(privacy).toContain("event.preventDefault()");
+    expect(security).toContain("!isMFAStatusResolved");
+    expect(security).toContain("Nenhuma nova configuração será criada enquanto a autoridade de fatores estiver indisponível.");
   });
 
   it("removes the duplicate legacy account-data dialog owner", () => {
@@ -217,11 +260,12 @@ describe("account settings concept contract", () => {
     expect(push).toContain("isSubscribed");
   });
 
-  it("scopes exclusive shell ownership to migrated account routes", () => {
+  it("scopes exclusive shell ownership to every migrated account route", () => {
     expect(appLayout).toContain("ACCOUNT_SETTINGS_SHELL_PATHS");
     expect(appLayout).toContain("accountUsesSettingsShell");
     expect(appLayout).toContain('id={accountUsesSettingsShell ? undefined : "main-content"}');
     expect(appLayout).toContain("conceptAccountPreview || accountUsesSettingsShell");
     expect(appLayout).toContain("accountUsesSettingsShell && !isAccountOverview");
+    expect(accountRoutes).toContain("ACCOUNT_PATHS.addresses");
   });
 });
