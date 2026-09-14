@@ -77,7 +77,7 @@ export function ChangePasswordForm({
             Defina uma nova senha
           </h2>
           <p className="mt-1 text-sm leading-5 text-territory-muted">
-            A alteração usa a sessão autenticada atual. Quando o provedor exigir confirmação adicional, o próprio serviço recusará a troca e o fluxo de recuperação por e-mail continuará disponível.
+            Crie uma senha forte e que você não use em outros serviços. Se precisar, a recuperação por e-mail continua disponível.
           </p>
         </div>
       </div>
