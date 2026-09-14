@@ -22,6 +22,16 @@ async function expectNoHorizontalOverflow(page: Page) {
   expect(dimensions.scrollWidth).toBeLessThanOrEqual(dimensions.clientWidth + 1);
 }
 
+async function expectConceptViewportFit(page: Page) {
+  const dimensions = await page.evaluate(() => ({
+    scrollHeight: document.documentElement.scrollHeight,
+    clientHeight: document.documentElement.clientHeight,
+  }));
+  // A prancha aprovada de Entrar/Criar conta cabe inteira em 390x844. Um pixel
+  // de arredondamento é tolerado, mas uma segunda dobra não pertence ao concept.
+  expect(dimensions.scrollHeight).toBeLessThanOrEqual(dimensions.clientHeight + 1);
+}
+
 async function expectNoGenericSvgInMain(page: Page) {
   await expect(page.locator("main#main-content svg")).toHaveCount(0);
 }
@@ -42,6 +52,7 @@ test.describe("Conta e acesso — contrato visual responsivo do concept", () => 
       page.getByRole("button", { name: "Continuar com Google" }),
     ).toBeVisible();
     await expectNoHorizontalOverflow(page);
+    await expectConceptViewportFit(page);
     await expectNoGenericSvgInMain(page);
 
     await page.goto("/cadastro", { waitUntil: "domcontentloaded" });
@@ -62,6 +73,7 @@ test.describe("Conta e acesso — contrato visual responsivo do concept", () => 
       page.getByRole("button", { name: "Continuar com Google" }),
     ).toHaveCount(0);
     await expectNoHorizontalOverflow(page);
+    await expectConceptViewportFit(page);
     await expectNoGenericSvgInMain(page);
 
     await page.goto("/cadastro/confirmacao", { waitUntil: "domcontentloaded" });
