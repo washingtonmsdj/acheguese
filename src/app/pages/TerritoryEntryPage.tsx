@@ -6,17 +6,16 @@ import { resolvePublicTerritoryFallback } from "@/core/routing/utils/publicTerri
 import { lastTerritoryStore } from "@/core/routing/stores/LastTerritoryStore";
 import { scheduleAfterPublicRootMap } from "@/shared/utils/publicRootReadiness";
 
-const COMPLEX_TERRITORY_NAME = "Complexo do Nordeste de Amaralina";
-const COMPLEX_FALLBACK_SLUG = "complexo-do-nordeste-de-amaralina";
-const LAUNCH_STATE = TERRITORY_CONFIG.launch.state || "ba";
-const LAUNCH_CITY = TERRITORY_CONFIG.launch.city || "salvador";
-const LAUNCH_COMMUNITY_SLUG =
-  TERRITORY_CONFIG.launch.community.slug ?? COMPLEX_FALLBACK_SLUG;
+const LAUNCH_STATE = TERRITORY_CONFIG.launch.state;
+const LAUNCH_CITY = TERRITORY_CONFIG.launch.city;
+const LAUNCH_COMMUNITY_SLUG = TERRITORY_CONFIG.launch.community.slug;
+const LAUNCH_COMMUNITY_NAME = TERRITORY_CONFIG.launch.community.name;
 
 /**
  * A entrada pública não depende do banco para descobrir o território inicial.
  * O fallback versionado é o contrato oficial de lançamento e já contém os
  * quatro membros do Complexo com metadados da fonte municipal GeoSalvador.
+ * O contexto de launch, porém, pertence exclusivamente a TERRITORY_CONFIG.
  */
 const launchCityResolved = resolvePublicTerritoryFallback({
   state: LAUNCH_STATE,
@@ -111,9 +110,9 @@ export default function TerritoryEntryPage() {
     };
   }, [shouldLoadCommunityImage]);
 
-  const rememberComplex = () => {
+  const rememberLaunchCommunity = () => {
     lastTerritoryStore.set({
-      name: COMPLEX_TERRITORY_NAME,
+      name: LAUNCH_COMMUNITY_NAME,
       baseUrl: TERRITORY_CONFIG.launch.community.path,
     });
   };
@@ -197,7 +196,7 @@ export default function TerritoryEntryPage() {
                 className="bg-territory-raised"
               />
               <span>
-                <strong id="entry-community-title">{COMPLEX_TERRITORY_NAME}</strong>
+                <strong id="entry-community-title">{LAUNCH_COMMUNITY_NAME}</strong>
                 <em>Salvador · Bahia</em>
               </span>
             </div>
@@ -210,7 +209,7 @@ export default function TerritoryEntryPage() {
             <a
               href={LAUNCH_URLS.community}
               className="entry-explore-link"
-              onClick={rememberComplex}
+              onClick={rememberLaunchCommunity}
             >
               Explorar o Complexo
               <span aria-hidden="true" className="text-lg leading-none">→</span>
@@ -228,7 +227,7 @@ export default function TerritoryEntryPage() {
         <TerritoryEntryMap
           city={launchCity}
           resolvedTerritory={launchTerritory}
-          label={COMPLEX_TERRITORY_NAME}
+          label={LAUNCH_COMMUNITY_NAME}
           isLoading={false}
           className="entry-map"
         />
