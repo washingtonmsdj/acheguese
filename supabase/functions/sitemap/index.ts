@@ -42,7 +42,6 @@ interface SitemapURL {
 const STATIC_PAGES: SitemapURL[] = [
   { loc: '/', changefreq: 'daily', priority: 1.0 },
   { loc: '/gastronomia', changefreq: 'daily', priority: 0.9 },
-  { loc: '/mobilidade', changefreq: 'hourly', priority: 0.9 },
   { loc: '/classificados', changefreq: 'hourly', priority: 0.8 },
   { loc: '/eventos', changefreq: 'daily', priority: 0.8 },
   { loc: '/comunidade', changefreq: 'hourly', priority: 0.8 },
@@ -464,4 +463,3 @@ Deno.serve(async (req: Request) => {
     return errorResponse('Failed to generate sitemap', 500, error);
   }
 });
-
