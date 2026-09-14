@@ -78,9 +78,11 @@ export interface AppUrls {
     notifications: string;
     privacy: string;
     exportData: string;
+    consentHistory: string;
     access: string;
     email: string;
     password: string;
+    mfa: string;
     mobilidade: {
       home: string;
       motorista: {
@@ -204,9 +206,11 @@ export function useAppUrls(routeResolved?: ResolvedTerritory | null): AppUrls {
       notifications: ACCOUNT_PATHS.notifications,
       privacy: ACCOUNT_PATHS.privacy,
       exportData: ACCOUNT_PATHS.exportData,
+      consentHistory: ACCOUNT_PATHS.consentHistory,
       access: ACCOUNT_PATHS.access,
       email: ACCOUNT_PATHS.email,
       password: ACCOUNT_PATHS.password,
+      mfa: ACCOUNT_PATHS.mfa,
       mobilidade: {
         home: '/central',
         motorista: mobility.motorista,
@@ -242,4 +246,3 @@ export function useAppUrls(routeResolved?: ResolvedTerritory | null): AppUrls {
     },
   };
 }
-
