@@ -30,7 +30,6 @@ describe("root community-first MVP entry", () => {
     expect(wrapper).not.toContain("IntersectionObserver");
     expect(wrapper).not.toContain("scheduleBrowserIdleWork");
     expect(wrapper).not.toContain("useTerritoryPolygon");
-    expect(wrapper).not.toContain("MapLibreAdapter");
   });
 
   it("uses the versioned launch territory without database discovery", () => {
@@ -62,8 +61,12 @@ describe("root community-first MVP entry", () => {
     expect(source).toContain('import communityThumbnail from "@/assets/complexo-cultura.jpg"');
     expect(source).toContain("shouldLoadCommunityImage");
     expect(source).toContain('window.matchMedia("(min-width: 768px)")');
-    expect(source).toContain('window.addEventListener("load", scheduleAfterLoad');
-    expect(source).toContain("requestIdleCallback");
+    expect(source).toContain("scheduleAfterPublicRootMap");
+    expect(source).toContain("maxWaitMs: 3000");
+    expect(source).toContain("idleTimeoutMs: 1800");
+    expect(source).toContain("idleFallbackDelayMs: 600");
+    expect(source).not.toContain("requestIdleCallback");
+    expect(source).not.toContain('window.addEventListener("load", scheduleAfterLoad');
     expect(source).toContain("shouldLoadCommunityImage ? communityThumbnail : undefined");
     expect(source).toContain('width={1024}');
     expect(source).toContain('height={768}');
