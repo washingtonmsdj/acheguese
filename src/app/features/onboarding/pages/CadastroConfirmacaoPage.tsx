@@ -1,31 +1,45 @@
-import React, { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { Helmet } from "react-helmet-async";
-import { useLocation, useNavigate } from "react-router-dom";
-import { ArrowRight, Loader2, MailCheck, RefreshCcw } from "lucide-react";
+import { Link, useLocation, useNavigate } from "react-router-dom";
 
 import { AuthBrandHeader } from "@/app/components/auth/AuthBrandHeader";
+import { AuthConceptIcon } from "@/app/components/auth/AuthConceptIcon";
 import { AuthFooter } from "@/app/components/auth/AuthFooter";
+import { AuthTurnstileGate } from "@/app/components/auth/AuthTurnstileGate";
+import { useAuthTurnstile } from "@/app/components/auth/useAuthTurnstile";
 import { useAuth } from "@/core/auth/hooks/useAuth";
 import { getAuthErrorMessage } from "@/core/auth/utils/authMessages";
-import { getPendingSignupEmail } from "@/core/auth/utils/pendingSignup";
-import { Button } from "@/shared/components/ui/button";
+import {
+  clearPendingSignupEmail,
+  getPendingSignupEmail,
+  getPendingSignupRedirect,
+} from "@/core/auth/utils/pendingSignup";
+import { SUPPORT_PATH } from "@/shared/constants/legal";
 import { useToast } from "@/shared/hooks/use-toast";
+import { resolveSafeInternalPath } from "@/shared/utils/safeRedirect";
 
 const RESEND_COOLDOWN_SECONDS = 60;
+type ConfirmationState = { email?: string; redirectTo?: unknown } | null;
 
 export default function CadastroConfirmacaoPage() {
   const navigate = useNavigate();
   const location = useLocation();
   const { resendConfirmationEmail } = useAuth();
   const { toast } = useToast();
+  const turnstile = useAuthTurnstile();
   const [isResending, setIsResending] = useState(false);
   const [cooldown, setCooldown] = useState(0);
   const intervalRef = useRef<number | null>(null);
 
-  const email = useMemo(() => {
-    const stateEmail = (location.state as { email?: string } | null)?.email;
-    return stateEmail || getPendingSignupEmail();
-  }, [location.state]);
+  const state = location.state as ConfirmationState;
+  const email = useMemo(
+    () => state?.email || getPendingSignupEmail(),
+    [state?.email],
+  );
+  const redirectTo = useMemo(
+    () => resolveSafeInternalPath(state?.redirectTo ?? getPendingSignupRedirect(), "/"),
+    [state?.redirectTo],
+  );
 
   useEffect(() => {
     if (cooldown <= 0) {
@@ -36,7 +50,7 @@ export default function CadastroConfirmacaoPage() {
       return;
     }
     intervalRef.current = window.setInterval(() => {
-      setCooldown((current) => (current > 0 ? current - 1 : 0));
+      setCooldown((current) => Math.max(0, current - 1));
     }, 1000);
     return () => {
       if (intervalRef.current) window.clearInterval(intervalRef.current);
@@ -46,26 +60,34 @@ export default function CadastroConfirmacaoPage() {
   const handleResend = async () => {
     if (!email) {
       toast({
-        title: "Email não encontrado",
-        description: "Refaça o cadastro para solicitar um novo email de confirmação.",
+        title: "Não encontramos o e-mail desta inscrição",
+        description: "Reinicie o cadastro para solicitar uma nova confirmação.",
         variant: "destructive",
       });
       return;
     }
     if (cooldown > 0 || isResending) return;
+    if (!turnstile.isReady) {
+      toast({
+        title: "Verificação necessária",
+        description: "Conclua a verificação de segurança para reenviar.",
+        variant: "destructive",
+      });
+      return;
+    }
 
     setIsResending(true);
-
     try {
       await resendConfirmationEmail(email);
-      toast({
-        title: "Email reenviado",
-        description: "Verifique sua caixa de entrada e a pasta de spam.",
-      });
       setCooldown(RESEND_COOLDOWN_SECONDS);
+      turnstile.reset();
+      toast({
+        title: "E-mail reenviado",
+        description: "Confira sua caixa de entrada e também a pasta de spam.",
+      });
     } catch (error) {
       toast({
-        title: "Não foi possível reenviar",
+        title: "Não foi possível reenviar agora",
         description: getAuthErrorMessage(error),
         variant: "destructive",
       });
@@ -74,103 +96,129 @@ export default function CadastroConfirmacaoPage() {
     }
   };
 
-  const resendDisabled = isResending || cooldown > 0;
-  const resendLabel = cooldown > 0 ? `Reenviar em ${cooldown}s` : "Reenviar email";
+  const restartSignup = () => {
+    clearPendingSignupEmail();
+    const query = redirectTo === "/" ? "" : `?redirect=${encodeURIComponent(redirectTo)}`;
+    navigate(`/cadastro${query}`, { replace: true });
+  };
+
+  const resendDisabled = isResending || cooldown > 0 || !turnstile.isReady;
 
   return (
     <>
       <Helmet>
-        <title>Confirmar email | Achegue-se</title>
+        <title>Confirmar e-mail | Achegue-se</title>
         <meta
           name="description"
-          content="Confirme seu email para ativar sua conta Achegue-se e concluir seu acesso à comunidade."
+          content="Confirme seu e-mail para ativar sua conta Achegue-se."
         />
       </Helmet>
 
-      <div className="min-h-screen bg-background">
+      <div className="min-h-[100dvh] bg-[#fffdfa] text-[#102f33]">
         <AuthBrandHeader secondaryHref="/login" secondaryLabel="Entrar" />
 
         <main
           id="main-content"
           tabIndex={-1}
-          className="mx-auto flex min-h-[calc(100vh-3.5rem)] w-full max-w-5xl items-start justify-center px-4 pb-28 pt-6 focus:outline-none sm:min-h-[calc(100vh-4rem)] sm:px-6 sm:pb-10 sm:pt-10 lg:items-center"
+          className="mx-auto w-full max-w-[430px] px-6 pb-5 pt-3 focus:outline-none lg:grid lg:max-w-[1180px] lg:grid-cols-[minmax(0,1fr)_430px] lg:items-center lg:gap-16 lg:px-10 lg:pb-10 lg:pt-8"
         >
-          <section className="w-full max-w-md rounded-[28px] border border-border/70 bg-card/78 p-5 text-center shadow-[0_32px_120px_-64px_rgba(0,0,0,0.9)] backdrop-blur-sm sm:p-8">
-            <div className="space-y-5 sm:space-y-6">
-              <div className="space-y-3 sm:space-y-4">
-                <div className="mx-auto flex h-11 w-11 items-center justify-center rounded-2xl bg-primary/12 text-primary sm:h-12 sm:w-12">
-                  <MailCheck className="h-6 w-6" />
-                </div>
+          <section className="hidden lg:block" aria-label="Confirmação de e-mail">
+            <h1 className="font-heading text-[46px] font-extrabold leading-[.94] tracking-[-0.05em] text-[#0b3b3f]">
+              Só falta<br />confirmar<br />seu e-mail.
+            </h1>
+            <img
+              src="/auth/confirm-hero.webp"
+              alt="Ilustração de uma mensagem chegando ao território"
+              className="mt-5 w-full max-w-[390px] rounded-[24px] object-cover"
+            />
+          </section>
 
-                <div className="space-y-1.5 sm:space-y-2">
-                  <p className="text-[0.7rem] font-semibold uppercase tracking-[0.18em] text-primary/90">
-                    Confirmação de conta
-                  </p>
-                  <h1 className="font-heading text-2xl font-bold text-foreground sm:text-[2rem]">
-                    Confirme seu email
-                  </h1>
-                  <p className="text-sm leading-5 text-muted-foreground sm:leading-6">
-                    Enviamos um link de confirmação para{" "}
-                    {email ? <span className="font-medium text-foreground">{email}</span> : "o email informado"}.
-                  </p>
-                </div>
+          <section className="w-full text-center lg:rounded-[18px] lg:bg-white lg:p-7 lg:text-left lg:shadow-[0_18px_55px_rgba(17,55,59,.08)]">
+            <img
+              src="/auth/confirm-envelope.webp"
+              alt="Envelope amarelo com uma mensagem"
+              className="mx-auto h-[104px] w-[110px] object-contain lg:hidden"
+            />
+            <h1 className="mt-2 font-heading text-[29px] font-extrabold leading-tight tracking-[-0.04em] text-[#102f33] lg:mt-0 lg:text-[24px]">
+              <span className="lg:hidden">Confira seu e-mail</span>
+              <span className="hidden lg:inline">Confira sua caixa de entrada</span>
+            </h1>
+            <p className="mt-2 text-[14px] leading-5 text-[#3c575a]">
+              Enviamos um link para{" "}
+              <span className="font-bold text-[#173a3e]">{email || "o e-mail informado"}</span>.
+            </p>
+
+            <ol className="mt-6 space-y-3 text-left">
+              {["Abra a mensagem do Achegue-se.", "Toque em Confirmar e-mail.", "Volte para continuar."].map((step, index) => (
+                <li key={step} className="flex items-center gap-3 text-[13px] text-[#314f52]">
+                  <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-[#eceae2] text-[12px] font-bold text-[#244448]">
+                    {index + 1}
+                  </span>
+                  <span>{step}</span>
+                </li>
+              ))}
+            </ol>
+
+            <div className="mt-6 flex items-start gap-3 rounded-xl bg-[#f6f2e7] px-4 py-3 text-left">
+              <span className="mt-0.5 text-[#d89b00]"><AuthConceptIcon name="info" /></span>
+              <div>
+                <p className="text-[12px] font-bold">Não encontrou?</p>
+                <p className="text-[11.5px] text-[#50686b]">Confira a pasta de spam.</p>
               </div>
+            </div>
 
-              <div className="rounded-2xl border border-border/70 bg-secondary/30 p-3.5 text-left sm:p-4">
-                <p className="text-xs font-semibold uppercase tracking-[0.16em] text-foreground">
-                  Próximos passos
-                </p>
-                <ol className="mt-3 space-y-2">
-                  {[
-                    "Abra sua caixa de entrada.",
-                    "Procure o email do Achegue-se.",
-                    'Clique em "Confirmar email".',
-                    "Volte para entrar na sua conta.",
-                  ].map((step, index) => (
-                    <li key={step} className="flex items-start gap-2.5 text-sm text-muted-foreground">
-                      <span className="mt-0.5 inline-flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-primary/12 text-[0.68rem] font-bold text-primary">
-                        {index + 1}
-                      </span>
-                      <span className="leading-5">{step}</span>
-                    </li>
-                  ))}
-                </ol>
+            {turnstile.enabled ? (
+              <div className="mt-4 text-left">
+                <AuthTurnstileGate
+                  action="signup"
+                  onVerify={turnstile.setToken}
+                  onExpire={turnstile.reset}
+                  onError={turnstile.reset}
+                />
               </div>
+            ) : null}
 
-              <div className="space-y-2.5 sm:space-y-3">
-                <Button className="h-10.5 w-full gap-2 sm:h-11" onClick={() => navigate("/login")}>
-                  Ir para o login
-                  <ArrowRight className="h-4 w-4" />
-                </Button>
+            <button
+              type="button"
+              onClick={handleResend}
+              disabled={resendDisabled}
+              aria-live="polite"
+              className="mt-4 h-11 w-full rounded-[9px] border border-[#31575a] bg-white text-[14px] font-bold text-[#173d41] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#0b5b59]/35 disabled:opacity-55"
+            >
+              {isResending ? "Reenviando…" : cooldown > 0 ? `Reenviar em ${cooldown}s` : "Reenviar e-mail"}
+            </button>
 
-                <Button
-                  type="button"
-                  variant="outline"
-                  className="h-10.5 w-full gap-2 sm:h-11"
-                  onClick={handleResend}
-                  disabled={resendDisabled}
-                  aria-live="polite"
-                >
-                  {isResending ? (
-                    <Loader2 className="h-4 w-4 animate-spin" />
-                  ) : (
-                    <RefreshCcw className="h-4 w-4" />
-                  )}
-                  {resendLabel}
-                </Button>
+            <button
+              type="button"
+              onClick={restartSignup}
+              className="mx-auto mt-2 block min-h-10 rounded px-2 text-[12px] font-medium text-[#0b4e52] underline underline-offset-2 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#0b5b59]/35 lg:mx-0"
+            >
+              Informei o e-mail errado
+            </button>
 
-                <Button
-                  variant="ghost"
-                  className="h-10.5 w-full text-sm text-muted-foreground sm:h-11"
-                  onClick={() => navigate("/cadastro")}
-                >
-                  Voltar ao cadastro
-                </Button>
-              </div>
+            <div className="my-5 h-px bg-[#d4d8d5]" />
+            <div className="flex items-start gap-3 text-left text-[#526b6e]">
+              <AuthConceptIcon name="clock" className="mt-0.5 text-[#174d55]" />
+              <p className="text-[11px] leading-4">Sua conta ainda aguarda confirmação.</p>
+            </div>
+            <div className="my-5 h-px bg-[#d4d8d5]" />
 
-              <p className="text-[0.76rem] leading-5 text-muted-foreground">
-                Não recebeu o email? Verifique a pasta de spam ou tente reenviar.
-              </p>
+            <div className="space-y-1 text-left">
+              <button
+                type="button"
+                onClick={() => navigate(redirectTo === "/" ? "/login" : `/login?redirect=${encodeURIComponent(redirectTo)}`)}
+                className="flex min-h-10 items-center gap-3 rounded px-1 text-[13px] text-[#0b4e52] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#0b5b59]/35"
+              >
+                <AuthConceptIcon name="back" />
+                Voltar para entrar
+              </button>
+              <Link
+                to={SUPPORT_PATH}
+                className="flex min-h-10 items-center gap-3 rounded px-1 text-[13px] text-[#0b4e52] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#0b5b59]/35"
+              >
+                <AuthConceptIcon name="help" />
+                Preciso de ajuda
+              </Link>
             </div>
           </section>
         </main>
