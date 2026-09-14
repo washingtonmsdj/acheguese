@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
-import { Map, MapPin } from "lucide-react";
+import { Map, MapPin, ShieldCheck } from "lucide-react";
 import { LocationType, type Location } from "@/core/location/types";
 import { MapLibreAdapter } from "@/core/maps/components/v3/LazyMapLibreAdapter";
 import { useTerritoryPolygon } from "@/core/maps/hooks/useTerritoryPolygon";
@@ -16,6 +16,7 @@ const SALVADOR_VIEWPORT = {
 };
 
 const ARRIVAL_CROSSFADE_MS = 360;
+type EntryMapUnavailableReason = "map" | "boundary";
 
 export interface TerritoryEntryMapRuntimeProps {
   city: Location | null;
@@ -34,6 +35,8 @@ export default function TerritoryEntryMapRuntime({
 }: TerritoryEntryMapRuntimeProps) {
   const [mapReady, setMapReady] = useState(false);
   const [mapUnavailable, setMapUnavailable] = useState(false);
+  const [mapUnavailableReason, setMapUnavailableReason] =
+    useState<EntryMapUnavailableReason>("map");
   const [showArrival, setShowArrival] = useState(true);
   const [arrivalLeaving, setArrivalLeaving] = useState(false);
   const resolved = useMemo<ResolvedTerritory>(
@@ -110,6 +113,7 @@ export default function TerritoryEntryMapRuntime({
   useEffect(() => {
     setMapReady(false);
     setMapUnavailable(false);
+    setMapUnavailableReason("map");
     setShowArrival(true);
     setArrivalLeaving(false);
   }, [territoryKey, isLoading]);
@@ -140,11 +144,14 @@ export default function TerritoryEntryMapRuntime({
     if (isLoading || mapPresented) return;
 
     const timeoutId = window.setTimeout(() => {
+      setMapUnavailableReason(mapReady ? "boundary" : "map");
       setMapUnavailable(true);
     }, 8000);
 
     return () => window.clearTimeout(timeoutId);
-  }, [isLoading, mapPresented]);
+  }, [isLoading, mapPresented, mapReady]);
+
+  const boundaryTimedOut = mapUnavailableReason === "boundary";
 
   return (
     <section
@@ -191,13 +198,21 @@ export default function TerritoryEntryMapRuntime({
         >
           <div className="w-full max-w-xs rounded-3xl border border-territory-border bg-territory-surface/95 px-5 py-5 shadow-territory-highlight sm:px-6 lg:max-w-sm lg:px-7 lg:py-6">
             <div className="mx-auto grid h-11 w-11 place-items-center rounded-2xl border border-territory-border bg-territory-raised text-territory-brand shadow-sm lg:h-12 lg:w-12">
-              <Map className="h-5 w-5 lg:h-6 lg:w-6" aria-hidden="true" />
+              {boundaryTimedOut ? (
+                <ShieldCheck className="h-5 w-5 lg:h-6 lg:w-6" aria-hidden="true" />
+              ) : (
+                <Map className="h-5 w-5 lg:h-6 lg:w-6" aria-hidden="true" />
+              )}
             </div>
             <p className="mt-3 font-heading text-base font-bold text-territory-ink lg:text-lg">
-              A comunidade continua aqui.
+              {boundaryTimedOut
+                ? "O limite oficial ainda está chegando."
+                : "A comunidade continua aqui."}
             </p>
             <p className="mx-auto mt-1.5 max-w-sm text-sm leading-5 text-territory-muted-strong">
-              O mapa não respondeu agora, mas você pode continuar entrando no Complexo normalmente.
+              {boundaryTimedOut
+                ? "Para não mostrar um contorno incompleto, preferimos não revelar o mapa agora. Você pode continuar entrando no Complexo."
+                : "O mapa não respondeu agora, mas você pode continuar entrando no Complexo normalmente."}
             </p>
           </div>
         </div>
