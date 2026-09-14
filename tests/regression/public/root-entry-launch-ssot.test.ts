@@ -51,6 +51,26 @@ describe("public root launch territory SSOT", () => {
     expect(fallbacks).toContain("export function getPublicTerritoryLocationLabel");
   });
 
+  it("derives short launch copy from group presentation metadata", () => {
+    const entry = read("src/app/pages/TerritoryEntryPage.tsx");
+    const fallbacks = read("src/core/routing/utils/publicTerritoryFallbacks.ts");
+
+    expect(fallbacks).toContain('const PUBLIC_ARTICLE_KEY = "public_article";');
+    expect(fallbacks).toContain('[PUBLIC_LABEL_KEY]: "Complexo"');
+    expect(fallbacks).toContain('[PUBLIC_ARTICLE_KEY]: "o"');
+    expect(fallbacks).toContain(
+      "export function getPublicTerritoryGroupPresentation",
+    );
+    expect(entry).toContain("getPublicTerritoryGroupPresentation(launchTerritory.group)");
+    expect(entry).toContain("Explorar {launchCommunityDefiniteLabel}");
+    expect(entry).toContain("{launchCommunitySentenceLabel} é só o começo.");
+    expect(entry).toContain("Começamos {launchCommunityOriginLabel}.");
+
+    expect(entry).not.toContain("Explorar o Complexo");
+    expect(entry).not.toContain("O Complexo é só o começo");
+    expect(entry).not.toContain("Começamos pelo Complexo");
+  });
+
   it("uses the canonical raised surface token on active root navigation", () => {
     const entry = read("src/app/pages/TerritoryEntryPage.tsx");
     const tailwind = read("tailwind.config.ts");
