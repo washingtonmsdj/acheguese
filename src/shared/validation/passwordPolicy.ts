@@ -16,34 +16,87 @@ export interface PasswordRequirementStatus {
   satisfied: boolean;
 }
 
+export type PasswordConceptRequirementId =
+  | "length"
+  | "letters"
+  | "number_symbol";
+
+export interface PasswordConceptRequirementStatus {
+  id: PasswordConceptRequirementId;
+  label: string;
+  satisfied: boolean;
+}
+
 export function getPasswordRequirementStatus(
   password: string,
 ): PasswordRequirementStatus[] {
   return [
     {
       id: "length",
-      label: `Minimo de ${PASSWORD_POLICY.MIN_LENGTH} caracteres`,
+      label: `Mínimo de ${PASSWORD_POLICY.MIN_LENGTH} caracteres`,
       satisfied: password.length >= PASSWORD_POLICY.MIN_LENGTH,
     },
     {
       id: "uppercase",
-      label: "Pelo menos uma letra maiuscula",
+      label: "Pelo menos uma letra maiúscula",
       satisfied: /[A-Z]/.test(password),
     },
     {
       id: "lowercase",
-      label: "Pelo menos uma letra minuscula",
+      label: "Pelo menos uma letra minúscula",
       satisfied: /[a-z]/.test(password),
     },
     {
       id: "number",
-      label: "Pelo menos um numero",
+      label: "Pelo menos um número",
       satisfied: /\d/.test(password),
     },
     {
       id: "special",
       label: "Pelo menos um caractere especial",
       satisfied: PASSWORD_POLICY.SPECIAL_CHARACTER_REGEX.test(password),
+    },
+  ];
+}
+
+/**
+ * Copy compacta usada nas telas do concept sem duplicar a política de senha.
+ */
+export function getPasswordRequirementsSummary(): string {
+  return `${PASSWORD_POLICY.MIN_LENGTH} ou mais caracteres, maiúscula, minúscula, número e símbolo.`;
+}
+
+/**
+ * Agrupa os cinco requisitos canônicos nas três linhas mostradas no concept.
+ * O estado continua derivado da mesma política usada na validação do formulário.
+ */
+export function getPasswordConceptRequirementStatus(
+  password: string,
+): PasswordConceptRequirementStatus[] {
+  const canonical = new Map(
+    getPasswordRequirementStatus(password).map((requirement) => [
+      requirement.id,
+      requirement.satisfied,
+    ]),
+  );
+
+  return [
+    {
+      id: "length",
+      label: `${PASSWORD_POLICY.MIN_LENGTH} ou mais caracteres`,
+      satisfied: canonical.get("length") === true,
+    },
+    {
+      id: "letters",
+      label: "Maiúscula e minúscula",
+      satisfied:
+        canonical.get("uppercase") === true && canonical.get("lowercase") === true,
+    },
+    {
+      id: "number_symbol",
+      label: "Número e símbolo",
+      satisfied:
+        canonical.get("number") === true && canonical.get("special") === true,
     },
   ];
 }
@@ -71,7 +124,7 @@ export function getPasswordStrength(password: string): {
   }
 
   if (satisfiedCount <= 3) {
-    return { level: 2, label: "Razoavel" };
+    return { level: 2, label: "Razoável" };
   }
 
   if (satisfiedCount === 4) {
