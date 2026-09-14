@@ -1,7 +1,6 @@
 import { Suspense } from "react";
 
 import { AppRoutes } from "@/app/routes/AppRoutes";
-import { FullScreenLoader } from "@/shared/components/loading/PageLoader";
 import { SessionProvider } from "@/core/session/providers/SessionProvider";
 import {
   MultiProfileProvider,
@@ -22,7 +21,7 @@ export default function SessionProfileRuntimeShell() {
       <MultiProfileProvider>
         <TerritoryModeInitializer />
         <ModuleContextSync />
-        <Suspense fallback={<FullScreenLoader />}>
+        <Suspense fallback={null}>
           <AppRoutes />
         </Suspense>
       </MultiProfileProvider>
