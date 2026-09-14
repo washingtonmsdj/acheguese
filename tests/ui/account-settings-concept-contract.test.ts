@@ -84,7 +84,9 @@ describe("account settings concept contract", () => {
     expect(shell).toContain("env(safe-area-inset-bottom)");
     expect(shell).toContain('id="main-content"');
     expect(shell).toContain("resolveDefaultBackTarget");
-    expect(shell).toContain('["#email", "#senha", "#mfa"]');
+    expect(shell).toContain('hash === "#email"');
+    expect(shell).toContain("return ACCOUNT_PATHS.access");
+    expect(shell).toContain('["#senha", "#mfa"]');
     expect(shell).toContain("pathname === ACCOUNT_PATHS.privacy && hash");
     expect(shell).toContain('hash === "#acessibilidade"');
     expect(shell).toContain("useMultiProfileContext()");
