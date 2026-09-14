@@ -66,7 +66,7 @@ export function AccountSettingsShell({
   return (
     <div className="territory-vivo min-h-[100dvh] bg-territory-canvas text-territory-ink">
       <div className="mx-auto flex min-h-[100dvh] w-full max-w-[1440px] bg-territory-surface lg:border-x lg:border-territory-border">
-        <aside className="hidden w-[252px] shrink-0 bg-[hsl(var(--territory-brand))] px-3 py-5 text-white lg:block">
+        <aside className="hidden w-[252px] shrink-0 bg-[hsl(var(--territory-brand))] px-3 py-5 text-white lg:sticky lg:top-0 lg:block lg:h-[100dvh] lg:overflow-y-auto">
           <Link
             to="/"
             className="mb-8 inline-flex px-3 font-heading text-[1.65rem] font-bold tracking-[-0.06em] text-white"
@@ -109,7 +109,7 @@ export function AccountSettingsShell({
         </aside>
 
         <div className="min-w-0 flex-1 bg-territory-canvas">
-          <header className="hidden h-16 items-center justify-end border-b border-territory-border bg-territory-surface px-6 lg:flex xl:px-8">
+          <header className="hidden h-16 items-center justify-end border-b border-territory-border bg-territory-surface px-6 lg:sticky lg:top-0 lg:z-20 lg:flex xl:px-8">
             <Link
               to={ACCOUNT_PATHS.home}
               className="flex min-h-10 items-center gap-2 rounded-full px-2 text-sm font-semibold text-territory-ink hover:bg-territory-raised focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-territory-brand"
