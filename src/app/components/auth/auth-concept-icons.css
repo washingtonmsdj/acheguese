@@ -1,1 +1,35 @@
 .auth-concept-icon{position:relative;display:inline-block;width:1.25rem;height:1.25rem;flex:0 0 auto;color:currentColor}.auth-concept-icon>span{position:absolute;display:block;box-sizing:border-box}.auth-concept-icon--back .auth-concept-icon__a{left:.22rem;top:.35rem;width:.62rem;height:.62rem;border-left:2px solid currentColor;border-bottom:2px solid currentColor;transform:rotate(45deg)}.auth-concept-icon--back .auth-concept-icon__b{left:.31rem;top:.59rem;width:.8rem;height:2px;border-radius:999px;background:currentColor}.auth-concept-icon--eye .auth-concept-icon__a{left:.12rem;top:.35rem;width:1rem;height:.58rem;border:2px solid currentColor;border-radius:60% 45% 60% 45%;transform:rotate(-45deg)}.auth-concept-icon--eye .auth-concept-icon__b{left:.49rem;top:.49rem;width:.28rem;height:.28rem;border-radius:50%;background:currentColor}.auth-concept-icon--shield .auth-concept-icon__a{left:.24rem;top:.08rem;width:.78rem;height:1rem;border:2px solid currentColor;border-radius:.32rem .32rem .5rem .5rem}.auth-concept-icon--shield .auth-concept-icon__b{left:.47rem;top:.49rem;width:.34rem;height:.18rem;border-left:2px solid currentColor;border-bottom:2px solid currentColor;transform:rotate(-45deg)}.auth-concept-icon--store .auth-concept-icon__a{left:.17rem;top:.45rem;width:.92rem;height:.62rem;border:2px solid currentColor;border-radius:.08rem}.auth-concept-icon--store .auth-concept-icon__b{left:.1rem;top:.2rem;width:1.06rem;height:.34rem;border:2px solid currentColor;border-bottom:0;border-radius:.18rem .18rem 0 0}.auth-concept-icon--store .auth-concept-icon__c{left:.57rem;top:.72rem;width:.22rem;height:.35rem;border-left:2px solid currentColor}.auth-concept-icon--info .auth-concept-icon__a{inset:.13rem;border:2px solid currentColor;border-radius:50%}.auth-concept-icon--info .auth-concept-icon__b{left:.58rem;top:.48rem;width:2px;height:.39rem;border-radius:999px;background:currentColor}.auth-concept-icon--info .auth-concept-icon__c{left:.56rem;top:.28rem;width:.12rem;height:.12rem;border-radius:50%;background:currentColor}.auth-concept-icon--google{font-weight:800;font-family:Arial,sans-serif;font-size:1.08rem;line-height:1.25rem;text-align:center;color:#4285f4}.auth-concept-icon--google:before{content:'G';position:absolute;inset:0}.auth-concept-icon--google .auth-concept-icon__a{display:none}.auth-concept-icon--google .auth-concept-icon__b{display:none}.auth-concept-icon--google .auth-concept-icon__c{display:none}
+
+@media (max-width:767px){
+  body:has(#login-identifier),body:has(input[name="username"]){background:#fffdfa}
+  main#main-content:has(#login-identifier),main#main-content:has(input[name="username"]){min-height:auto!important;max-width:430px!important;padding:12px 24px 28px!important;display:block!important}
+  main#main-content:has(#login-identifier)>section{display:none!important}
+  main#main-content:has(#login-identifier)>div{max-width:none!important;border:0!important;border-radius:0!important;background:transparent!important;padding:0!important;box-shadow:none!important;backdrop-filter:none!important}
+  main#main-content:has(#login-identifier)>div>div{gap:18px!important}
+  main#main-content:has(#login-identifier) .text-center{text-align:left!important}
+  main#main-content:has(#login-identifier) .text-center>div:first-child{display:none!important}
+  main#main-content:has(#login-identifier) .text-center p:first-child{display:none!important}
+  main#main-content:has(#login-identifier) h1{font-size:0!important;line-height:1!important;margin:0!important;color:#0b3b3f!important}
+  main#main-content:has(#login-identifier) h1:after{content:"Bom ter você por aqui.";display:block;max-width:290px;font-size:32px;line-height:1.03;font-weight:800;letter-spacing:-.045em}
+  main#main-content:has(#login-identifier) h1+p{font-size:0!important;margin-top:8px!important}
+  main#main-content:has(#login-identifier) h1+p:after{content:"Entre para continuar sua conversa.";font-size:16px;line-height:24px;color:#253e42}
+  main#main-content:has(#login-identifier) label{font-size:14px;font-weight:650;color:#15383c}
+  main#main-content:has(#login-identifier) input{height:44px!important;border-radius:8px!important;background:#fff!important;border-color:#b9c5c6!important;font-size:16px!important;box-shadow:none!important}
+  main#main-content:has(#login-identifier) form button[type="submit"]{height:44px!important;border-radius:9px!important;background:#ffc91a!important;color:#102f33!important;font-weight:800!important;box-shadow:0 3px 10px rgba(226,171,0,.16)!important}
+  main#main-content:has(#login-identifier) form button[type="submit"]:hover{background:#f7bf00!important}
+  main#main-content:has(#login-identifier) button[class*="border-border"]{height:46px!important;border-radius:9px!important;background:white!important;border-color:#9fadae!important}
+  main#main-content:has(#login-identifier) .rounded-\[28px\]{border-radius:0!important}
+
+  main#main-content:has(input[name="username"])>div{max-width:none!important;gap:14px!important}
+  main#main-content:has(input[name="username"])>div>div:first-child{display:none!important}
+  main#main-content:has(input[name="username"])>div>div:nth-child(2){display:none!important}
+  main#main-content:has(input[name="username"]) form section{border:0!important;border-radius:0!important;background:transparent!important;padding:0!important;box-shadow:none!important;backdrop-filter:none!important}
+  main#main-content:has(input[name="username"]) form section>div>div:first-child{text-align:left!important}
+  main#main-content:has(input[name="username"]) form section>div>div:first-child p:first-child{display:none!important}
+  main#main-content:has(input[name="username"]) form section h1{font-size:0!important;line-height:1!important;color:#0b3b3f!important}
+  main#main-content:has(input[name="username"]) form section h1:after{content:"Comece pelo seu perfil pessoal.";display:block;max-width:315px;font-size:31px;line-height:1.03;font-weight:800;letter-spacing:-.045em}
+  main#main-content:has(input[name="username"]) form section h1+p{font-size:0!important}
+  main#main-content:has(input[name="username"]) form section h1+p:after{content:"Depois, adicione perfis de negócio ou profissional.";font-size:15px;line-height:22px;color:#253e42}
+  main#main-content:has(input[name="username"]) label{font-size:14px;font-weight:650;color:#15383c}
+  main#main-content:has(input[name="username"]) input{height:44px!important;border-radius:8px!important;background:#fff!important;border-color:#b9c5c6!important;font-size:16px!important;box-shadow:none!important}
+}
