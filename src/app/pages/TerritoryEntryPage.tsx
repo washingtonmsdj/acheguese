@@ -233,7 +233,11 @@ export default function TerritoryEntryPage() {
           className="entry-map"
         />
 
-        <section className="entry-indication" aria-labelledby="entry-indication-title">
+        <section
+          className="entry-indication [content-visibility:auto] [contain-intrinsic-size:auto_9rem]"
+          aria-labelledby="entry-indication-title"
+          data-entry-deferred-paint
+        >
           <div className="entry-indication-copy">
             <span className="entry-indication-icon relative block h-8 w-8 shrink-0" aria-hidden="true">
               <span className="absolute left-1 top-1 h-2.5 w-2.5 rounded-full border-2 border-current" />
@@ -254,7 +258,10 @@ export default function TerritoryEntryPage() {
         </section>
       </main>
 
-      <footer className="entry-footer">
+      <footer
+        className="entry-footer [content-visibility:auto] [contain-intrinsic-size:auto_4rem]"
+        data-entry-deferred-paint
+      >
         <span>Começamos pelo Complexo. Aos poucos, o Achegue-se chega a novos lugares.</span>
         <nav aria-label="Links institucionais">
           <a href="/privacidade">Privacidade</a>
