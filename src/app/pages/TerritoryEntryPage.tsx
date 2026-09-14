@@ -1,5 +1,4 @@
 import { useEffect, useRef, useState } from "react";
-import { Link } from "react-router-dom";
 import TerritoryEntryMap from "@/app/components/territory-vivo/TerritoryEntryMap";
 import communityThumbnail from "@/assets/complexo-cultura.jpg";
 import { LAUNCH_URLS, TERRITORY_CONFIG } from "@/core/routing/config/territory";
@@ -84,13 +83,13 @@ export default function TerritoryEntryPage() {
 
       <header className="territory-entry-header">
         <div className="territory-entry-header-inner">
-          <Link to="/" className="entry-wordmark" aria-label="Achegue-se — início">
+          <a href="/" className="entry-wordmark" aria-label="Achegue-se — início">
             achegue-se<span aria-hidden="true">.</span>
-          </Link>
+          </a>
           <nav className="entry-desktop-nav" aria-label="Navegação pública">
-            <Link to="/como-funciona">Como funciona</Link>
+            <a href="/como-funciona">Como funciona</a>
             <span className="entry-nav-divider" aria-hidden="true" />
-            <Link to="/login">Entrar</Link>
+            <a href="/login">Entrar</a>
           </nav>
           <button
             ref={mobileMenuButtonRef}
@@ -121,12 +120,12 @@ export default function TerritoryEntryPage() {
               className="entry-mobile-menu-popover"
               aria-label="Navegação pública móvel"
             >
-              <Link to="/como-funciona" onClick={() => setIsMobileMenuOpen(false)}>
+              <a href="/como-funciona" onClick={() => setIsMobileMenuOpen(false)}>
                 Como funciona
-              </Link>
-              <Link to="/login" onClick={() => setIsMobileMenuOpen(false)}>
+              </a>
+              <a href="/login" onClick={() => setIsMobileMenuOpen(false)}>
                 Entrar
-              </Link>
+              </a>
             </nav>
           ) : null}
         </div>
@@ -164,18 +163,18 @@ export default function TerritoryEntryPage() {
               <span>Vale das Pedrinhas</span>
               <span>Chapada</span>
             </div>
-            <Link
-              to={LAUNCH_URLS.community}
+            <a
+              href={LAUNCH_URLS.community}
               className="entry-explore-link"
               onClick={rememberComplex}
             >
               Explorar o Complexo
               <span aria-hidden="true" className="text-lg leading-none">→</span>
-            </Link>
+            </a>
             <p className="entry-no-account">Sem cadastro para explorar.</p>
-            <Link className="entry-account-link" to="/cadastro">
+            <a className="entry-account-link" href="/cadastro">
               Criar minha conta
-            </Link>
+            </a>
             <p className="entry-residence-note">
               Você pode conhecer a comunidade mesmo morando em outro lugar.
             </p>
@@ -205,18 +204,18 @@ export default function TerritoryEntryPage() {
               </p>
             </div>
           </div>
-          <Link className="entry-indication-button" to="/indicar-comunidade">
+          <a className="entry-indication-button" href="/indicar-comunidade">
             Indicar minha comunidade
-          </Link>
+          </a>
         </section>
       </main>
 
       <footer className="entry-footer">
         <span>Começamos pelo Complexo. Aos poucos, o Achegue-se chega a novos lugares.</span>
         <nav aria-label="Links institucionais">
-          <Link to="/privacidade">Privacidade</Link>
+          <a href="/privacidade">Privacidade</a>
           <i aria-hidden="true" />
-          <Link to="/como-funciona">Como funciona</Link>
+          <a href="/como-funciona">Como funciona</a>
         </nav>
       </footer>
     </div>
