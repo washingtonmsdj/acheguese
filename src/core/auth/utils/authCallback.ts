@@ -65,6 +65,26 @@ export function hasPasswordRecoverySessionMarker(
   );
 }
 
+/**
+ * Classifica somente marcadores reais de retorno de autenticação.
+ * Âncoras comuns da página (ex.: #main-content) não devem forçar o runtime
+ * completo nem ser interpretadas como callback de OAuth/recovery.
+ */
+export function hasAuthCallbackMarker(search: string, hash: string): boolean {
+  const searchParams = parseParams(search);
+  const hashParams = parseParams(hash);
+
+  return (
+    searchParams.has(AUTH_QUERY_KEYS.code) ||
+    isPasswordRecoveryCallback(search, hash) ||
+    searchParams.has(AUTH_QUERY_KEYS.accessToken) ||
+    searchParams.has(AUTH_QUERY_KEYS.refreshToken) ||
+    hashParams.has(AUTH_QUERY_KEYS.accessToken) ||
+    hashParams.has(AUTH_QUERY_KEYS.refreshToken) ||
+    getAuthCallbackError(search, hash) !== null
+  );
+}
+
 export function isExpiredPasswordRecoveryError(
   search: string,
   hash: string,
