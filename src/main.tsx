@@ -27,6 +27,23 @@ if (import.meta.env.DEV && "serviceWorker" in navigator) {
 
 const isPublicRootAtBoot = window.location.pathname === "/";
 
+// `index.html` is shared by every SPA route, so a static canonical there would
+// incorrectly canonicalize internal pages to `/`. On the lean public root,
+// reuse the already-versioned Open Graph URL as the canonical source.
+if (isPublicRootAtBoot && !document.querySelector('link[rel="canonical"]')) {
+  const canonicalSource = document.querySelector<HTMLMetaElement>(
+    'meta[property="og:url"]',
+  );
+  const canonicalHref = canonicalSource?.content.trim();
+  if (canonicalHref) {
+    const canonical = document.createElement("link");
+    canonical.rel = "canonical";
+    canonical.href = canonicalHref;
+    canonical.dataset.publicRootCanonical = "true";
+    document.head.appendChild(canonical);
+  }
+}
+
 // The root map is a primary surface. Discover the style and its vector-source
 // TileJSON before React renders, cutting the otherwise sequential
 // style -> TileJSON -> vector-tile network cascade. Both URLs remain owned by
