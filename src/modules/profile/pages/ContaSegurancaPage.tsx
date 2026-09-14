@@ -135,6 +135,7 @@ export default function ContaSegurancaPage() {
   } = useLinkedAuthProviders();
   const {
     isMFAEnabled,
+    isMFAStatusResolved,
     loading: mfaLoading,
     error: mfaError,
     loadStatus,
@@ -261,6 +262,10 @@ export default function ContaSegurancaPage() {
     setDisablingMfa(true);
     try {
       const factors = await listFactors();
+      if (factors === null) {
+        toast.error("Não foi possível confirmar os fatores cadastrados. Nenhuma alteração foi feita.");
+        return;
+      }
       if (factors.length === 0) {
         await loadStatus();
         toast.error("Nenhum fator cadastrado foi encontrado para remover.");
@@ -404,22 +409,7 @@ export default function ContaSegurancaPage() {
           title="Adicione uma camada de proteção"
           description="Use um aplicativo autenticador para confirmar novos acessos."
         >
-          {isMFAEnabled ? (
-            <Surface className="p-4 sm:p-5">
-              <div className="flex items-start gap-3">
-                <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-emerald-100 text-emerald-700">
-                  <CheckCircle2 className="h-6 w-6" aria-hidden="true" />
-                </span>
-                <div>
-                  <h2 className="font-heading text-base font-bold text-territory-ink">Proteção já ativada</h2>
-                  <p className="mt-1 text-sm leading-5 text-territory-muted">Sua conta já possui um fator TOTP verificado.</p>
-                </div>
-              </div>
-              <Button type="button" variant="outline" className="mt-4 min-h-11 w-full" onClick={() => navigate(ACCOUNT_PATHS.security, { replace: true })}>
-                Voltar para Segurança
-              </Button>
-            </Surface>
-          ) : enrollment ? (
+          {enrollment ? (
             <Surface className="p-4 sm:p-5">
               <div className="space-y-5">
                 <div className="flex items-start gap-3">
@@ -473,6 +463,38 @@ export default function ContaSegurancaPage() {
                 <p className="text-center text-xs leading-4 text-territory-muted">A proteção só será ativada depois da confirmação do código.</p>
               </div>
             </Surface>
+          ) : mfaLoading ? (
+            <Surface className="flex min-h-40 items-center justify-center p-5">
+              <div className="text-center" role="status">
+                <Loader2 className="mx-auto h-6 w-6 animate-spin text-territory-brand" aria-hidden="true" />
+                <p className="mt-2 text-sm text-territory-muted">Confirmando o estado de segurança da conta...</p>
+              </div>
+            </Surface>
+          ) : !isMFAStatusResolved ? (
+            <Surface className="p-4 sm:p-5">
+              <div role="alert" className="rounded-xl bg-red-50 p-4 text-sm text-red-700">
+                <p className="font-semibold">Não foi possível confirmar o estado da autenticação em duas etapas.</p>
+                <p className="mt-1 leading-5">Nenhuma nova configuração será criada enquanto a autoridade de fatores estiver indisponível.</p>
+                <button type="button" onClick={() => void loadStatus()} className="mt-3 inline-flex min-h-9 items-center gap-2 font-semibold underline-offset-4 hover:underline">
+                  <RefreshCw className="h-4 w-4" aria-hidden="true" /> Tentar novamente
+                </button>
+              </div>
+            </Surface>
+          ) : isMFAEnabled ? (
+            <Surface className="p-4 sm:p-5">
+              <div className="flex items-start gap-3">
+                <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-emerald-100 text-emerald-700">
+                  <CheckCircle2 className="h-6 w-6" aria-hidden="true" />
+                </span>
+                <div>
+                  <h2 className="font-heading text-base font-bold text-territory-ink">Proteção já ativada</h2>
+                  <p className="mt-1 text-sm leading-5 text-territory-muted">Sua conta já possui um fator TOTP verificado.</p>
+                </div>
+              </div>
+              <Button type="button" variant="outline" className="mt-4 min-h-11 w-full" onClick={() => navigate(ACCOUNT_PATHS.security, { replace: true })}>
+                Voltar para Segurança
+              </Button>
+            </Surface>
           ) : (
             <Surface className="p-4 sm:p-5">
               <div className="flex items-start gap-3">
@@ -484,8 +506,7 @@ export default function ContaSegurancaPage() {
                   <p className="mt-1 text-sm leading-5 text-territory-muted">Um QR code será criado somente quando você iniciar. Isso evita fatores incompletos apenas por abrir esta tela.</p>
                 </div>
               </div>
-              <Button type="button" className="mt-5 min-h-12 w-full bg-territory-sun text-territory-ink hover:bg-territory-sun/90" onClick={() => void handleStartMfa()} disabled={mfaLoading}>
-                {mfaLoading ? <Loader2 className="mr-2 h-4 w-4 animate-spin" aria-hidden="true" /> : null}
+              <Button type="button" className="mt-5 min-h-12 w-full bg-territory-sun text-territory-ink hover:bg-territory-sun/90" onClick={() => void handleStartMfa()}>
                 Gerar código de configuração
               </Button>
             </Surface>
@@ -573,7 +594,13 @@ export default function ContaSegurancaPage() {
               <div className="min-w-0 flex-1">
                 <div className="flex flex-wrap items-center gap-2">
                   <h2 className="font-heading text-base font-bold text-territory-ink">Autenticação em duas etapas</h2>
-                  {!mfaLoading ? <span className={`rounded-full px-2 py-1 text-xs font-semibold ${isMFAEnabled ? "bg-emerald-100 text-emerald-800" : "bg-red-50 text-red-700"}`}>{isMFAEnabled ? "Ativada" : "Não ativada"}</span> : null}
+                  {!mfaLoading && isMFAStatusResolved ? (
+                    <span className={`rounded-full px-2 py-1 text-xs font-semibold ${isMFAEnabled ? "bg-emerald-100 text-emerald-800" : "bg-red-50 text-red-700"}`}>
+                      {isMFAEnabled ? "Ativada" : "Não ativada"}
+                    </span>
+                  ) : !mfaLoading && mfaError ? (
+                    <span className="rounded-full bg-territory-raised px-2 py-1 text-xs font-semibold text-territory-muted">Indisponível</span>
+                  ) : null}
                 </div>
                 <p className="mt-2 text-sm leading-5 text-territory-muted">Confirme novos acessos com um aplicativo autenticador compatível.</p>
               </div>
@@ -586,12 +613,12 @@ export default function ContaSegurancaPage() {
               </div>
             ) : null}
 
-            {!isMFAEnabled ? (
+            {isMFAStatusResolved && !isMFAEnabled ? (
               <Button type="button" className="mt-5 min-h-11 w-full bg-territory-sun text-territory-ink hover:bg-territory-sun/90" onClick={() => void handleStartMfa(true)} disabled={mfaLoading}>
                 {mfaLoading ? <Loader2 className="mr-2 h-4 w-4 animate-spin" aria-hidden="true" /> : null}
                 Configurar autenticação
               </Button>
-            ) : (
+            ) : isMFAStatusResolved && isMFAEnabled ? (
               <>
                 <div className="mt-5 flex items-center gap-2 rounded-xl border border-emerald-200 bg-emerald-50 px-3 py-3 text-sm text-emerald-800"><CheckCircle2 className="h-5 w-5 shrink-0" aria-hidden="true" />Autenticação em duas etapas ativa nesta conta.</div>
                 <AlertDialog>
@@ -613,7 +640,7 @@ export default function ContaSegurancaPage() {
                   </AlertDialogContent>
                 </AlertDialog>
               </>
-            )}
+            ) : null}
           </Surface>
 
           <Surface className="p-4 sm:p-5">
