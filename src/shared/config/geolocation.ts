@@ -6,6 +6,7 @@ export const GEOLOCATION_RUNTIME = {
   requestTimeoutMs: TIMEOUTS.GPS_LOCATION,
   requestMaximumAgeMs: 10_000,
   watchMaximumAgeMs: 5_000,
+  interactivePreciseTimeoutMs: 8_000,
   mobileFastTimeoutMs: 8_000,
   mobileFastMaximumAgeMs: 60_000,
   fallbackTimeoutExtensionMs: 5_000,
