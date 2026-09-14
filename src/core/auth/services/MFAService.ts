@@ -38,11 +38,6 @@ export interface MFARequirement {
 }
 
 class MFAService {
-  /**
-   * Sincroniza o tracker auxiliar pelo broker server-owned após uma mutação
-   * confirmada pelo Supabase Auth. Falha de sincronização não desfaz uma
-   * operação que o Auth já confirmou.
-   */
   private async reconcilePolicyTracker(): Promise<void> {
     try {
       const required = await SessionRpcService.checkMfaRequired();
@@ -57,12 +52,6 @@ class MFAService {
     }
   }
 
-  /**
-   * Verificar se MFA é obrigatório para o usuário atual.
-   *
-   * Para uma sessão autenticada, falha de `session-rpc` não pode ser convertida
-   * em `required: false`: isso seria um bypass fail-open da política de MFA.
-   */
   async checkMFARequired(): Promise<MFARequirement> {
     try {
       const user = await SessionService.getCurrentUser();
@@ -76,7 +65,6 @@ class MFAService {
         throw new Error('session-rpc returned no MFA requirement');
       }
 
-      // Grace period é metadata de UX. A decisão `required` vem do broker.
       const { data: statusData, error: statusError } = await supabase
         .from('user_mfa_status')
         .select('grace_period_expires_at')
@@ -110,12 +98,9 @@ class MFAService {
   }
 
   /**
-   * Buscar status de MFA do usuário atual.
-   *
-   * `mfaEnabled` e `mfaMethod` são derivados exclusivamente de fatores TOTP
-   * cujo status autoritativo no Supabase Auth é `verified`. `enroll()` cria um
-   * fator `unverified`, que não pode ser apresentado como proteção já ativa.
-   * A tabela auxiliar fornece somente metadata de política.
+   * `mfaEnabled` vem somente de fatores TOTP `verified`. Uma falha ao consultar
+   * a autoridade também precisa subir como erro; transformar indisponibilidade
+   * em "não ativado" permitiria uma tela de segurança fail-open.
    */
   async getMFAStatus(): Promise<MFAStatus | null> {
     try {
@@ -128,11 +113,7 @@ class MFAService {
       const { data: factorData, error: factorError } =
         await supabase.auth.mfa.listFactors();
       if (factorError || !factorData) {
-        logger.error(
-          'MFAService.getMFAStatus - factors',
-          factorError ?? new Error('Supabase Auth returned no MFA factors payload'),
-        );
-        return null;
+        throw factorError ?? new Error('Supabase Auth returned no MFA factors payload');
       }
 
       const hasVerifiedTotp =
@@ -156,8 +137,6 @@ class MFAService {
         mfaMethod: hasVerifiedTotp ? 'totp' : null,
         enrolledAt: policyData?.enrolled_at ?? null,
         lastVerifiedAt: policyData?.last_verified_at ?? null,
-        // O projeto não habilita recovery codes do Auth. Os códigos locais
-        // históricos foram removidos porque nunca constituíram recuperação real.
         backupCodesGenerated: false,
         backupCodesCount: 0,
         gracePeriodExpiresAt: policyData?.grace_period_expires_at ?? null,
@@ -166,14 +145,10 @@ class MFAService {
       };
     } catch (error) {
       logger.error('MFAService.getMFAStatus', error);
-      return null;
+      throw error;
     }
   }
 
-  /**
-   * Iniciar enrollment de MFA (TOTP).
-   * O `factorId` retornado pelo Auth deve ser usado para challenge/verify.
-   */
   async enrollMFA(): Promise<MFAEnrollmentData | null> {
     try {
       const { data, error } = await supabase.auth.mfa.enroll({
@@ -200,14 +175,9 @@ class MFAService {
     }
   }
 
-  /**
-   * Verificar código TOTP e completar enrollment.
-   */
   async verifyAndEnableMFA(factorId: string, code: string): Promise<boolean> {
     try {
-      const { data, error } = await supabase.auth.mfa.challenge({
-        factorId,
-      });
+      const { data, error } = await supabase.auth.mfa.challenge({ factorId });
 
       if (error || !data?.id) {
         logger.error(
@@ -236,14 +206,9 @@ class MFAService {
     }
   }
 
-  /**
-   * Desabilitar um fator MFA pelo ID autoritativo do Supabase Auth.
-   */
   async disableMFA(factorId: string): Promise<boolean> {
     try {
-      const { error } = await supabase.auth.mfa.unenroll({
-        factorId,
-      });
+      const { error } = await supabase.auth.mfa.unenroll({ factorId });
 
       if (error) {
         logger.error('MFAService.disableMFA', error);
@@ -259,34 +224,27 @@ class MFAService {
   }
 
   /**
-   * Listar fatores TOTP do usuário no Supabase Auth. A lista pode conter
-   * fatores `unverified`; consumidores devem observar `status` quando a
-   * diferença entre enrollment iniciado e MFA ativo for relevante.
+   * A indisponibilidade da lista não equivale a uma lista vazia. Consumidores
+   * de ações destrutivas precisam diferenciar "nenhum fator" de "não consegui
+   * consultar".
    */
   async listMFAFactors() {
-    try {
-      const { data, error } = await supabase.auth.mfa.listFactors();
+    const { data, error } = await supabase.auth.mfa.listFactors();
 
-      if (error) {
-        logger.error('MFAService.listMFAFactors', error);
-        return [];
-      }
-
-      return data.totp || [];
-    } catch (error) {
+    if (error) {
       logger.error('MFAService.listMFAFactors', error);
-      return [];
+      throw error;
     }
+    if (!data) {
+      throw new Error('Supabase Auth returned no MFA factors payload');
+    }
+
+    return data.totp || [];
   }
 
-  /**
-   * Verificar código MFA durante login.
-   */
   async verifyMFACode(factorId: string, code: string): Promise<boolean> {
     try {
-      const { data, error } = await supabase.auth.mfa.challenge({
-        factorId,
-      });
+      const { data, error } = await supabase.auth.mfa.challenge({ factorId });
 
       if (error || !data?.id) {
         logger.error(
