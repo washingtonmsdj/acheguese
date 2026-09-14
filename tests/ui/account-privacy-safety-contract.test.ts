@@ -48,6 +48,14 @@ describe("account privacy safety contract", () => {
     expect(privacy).not.toContain("autoridade de consentimento");
   });
 
+  it("lets the scheduled mobile state own the icon-first concept heading", () => {
+    expect(privacy).toContain("hideMobileHeading={scheduled}");
+    expect(privacy).toContain('className="mb-4 text-center lg:hidden"');
+    expect(privacy).toContain("mx-auto flex h-16 w-16");
+    expect(privacy).toContain(">Exclusão da conta solicitada</h1>");
+    expect(privacy).toContain(">Consulte o andamento e as opções disponíveis.</p>");
+  });
+
   it("shows scheduled deletion details without pretending the DPO page is the status detail view", () => {
     expect(privacy).toContain("Ver detalhes");
     expect(privacy).toContain("Data informada para processamento");
