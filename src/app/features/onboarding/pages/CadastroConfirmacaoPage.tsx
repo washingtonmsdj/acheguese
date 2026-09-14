@@ -7,13 +7,17 @@ import { AuthConceptIcon } from "@/app/components/auth/AuthConceptIcon";
 import { AuthFooter } from "@/app/components/auth/AuthFooter";
 import { AuthTurnstileGate } from "@/app/components/auth/AuthTurnstileGate";
 import { useAuthTurnstile } from "@/app/components/auth/useAuthTurnstile";
-import { useAuth } from "@/core/auth/hooks/useAuth";
-import { getAuthErrorMessage } from "@/core/auth/utils/authMessages";
 import {
-  clearPendingSignupEmail,
-  getPendingSignupEmail,
-  getPendingSignupRedirect,
-} from "@/core/auth/utils/pendingSignup";
+  AUTH_PATHS,
+  buildLoginPath,
+  buildSignupPath,
+} from "@/core/auth/constants/authFlow";
+import { useAuth } from "@/core/auth/hooks/useAuth";
+import {
+  getSignupConfirmationContext,
+  restartEmailSignupJourney,
+} from "@/core/auth/utils/authJourney";
+import { getAuthErrorMessage } from "@/core/auth/utils/authMessages";
 import { SUPPORT_PATH } from "@/shared/constants/legal";
 import { useToast } from "@/shared/hooks/use-toast";
 import { resolveSafeInternalPath } from "@/shared/utils/safeRedirect";
@@ -32,13 +36,14 @@ export default function CadastroConfirmacaoPage() {
   const intervalRef = useRef<number | null>(null);
 
   const state = location.state as ConfirmationState;
+  const journeyContext = useMemo(() => getSignupConfirmationContext(), []);
   const email = useMemo(
-    () => state?.email?.trim().toLowerCase() || getPendingSignupEmail()?.trim().toLowerCase() || null,
-    [state?.email],
+    () => state?.email?.trim().toLowerCase() || journeyContext.email,
+    [journeyContext.email, state?.email],
   );
   const redirectTo = useMemo(
-    () => resolveSafeInternalPath(state?.redirectTo ?? getPendingSignupRedirect(), "/"),
-    [state?.redirectTo],
+    () => resolveSafeInternalPath(state?.redirectTo ?? journeyContext.returnTo, "/"),
+    [journeyContext.returnTo, state?.redirectTo],
   );
 
   useEffect(() => {
@@ -90,13 +95,12 @@ export default function CadastroConfirmacaoPage() {
   };
 
   const restartSignup = () => {
-    clearPendingSignupEmail();
-    const query = redirectTo === "/" ? "" : `?redirect=${encodeURIComponent(redirectTo)}`;
-    navigate(`/cadastro${query}`, { replace: true });
+    restartEmailSignupJourney();
+    navigate(buildSignupPath(redirectTo), { replace: true });
   };
 
   const resendDisabled = isResending || cooldown > 0 || !turnstile.isReady;
-  const backToLogin = redirectTo === "/" ? "/login" : `/login?redirect=${encodeURIComponent(redirectTo)}`;
+  const backToLogin = buildLoginPath(redirectTo);
 
   return (
     <>
@@ -110,7 +114,7 @@ export default function CadastroConfirmacaoPage() {
       </Helmet>
 
       <div className="min-h-[100dvh] bg-[#fffdfa] text-[#102f33] lg:bg-[radial-gradient(circle_at_16%_32%,rgba(216,234,224,.55),transparent_31%),radial-gradient(circle_at_70%_18%,rgba(255,236,185,.28),transparent_30%),#fffdfa]">
-        <AuthBrandHeader secondaryHref="/login" secondaryLabel="Entrar" />
+        <AuthBrandHeader secondaryHref={AUTH_PATHS.login} secondaryLabel="Entrar" />
 
         <main
           id="main-content"
