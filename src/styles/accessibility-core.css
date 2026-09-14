@@ -45,6 +45,33 @@
   --input: 0 0% 20%;
   --ring: 0 0% 100%;
   --radius: 0.5rem;
+
+  /* Territory surfaces have their own semantic palette. Keep it complete here
+   * so enabling high contrast also affects the community-first root and every
+   * `territory-vivo` screen instead of only generic shadcn tokens. A light
+   * high-contrast territory palette preserves the existing sun/ink and
+   * brand/on-image foreground contracts without per-component exceptions. */
+  --territory-canvas: 0 0% 100%;
+  --territory-surface: 0 0% 100%;
+  --territory-surface-raised: 0 0% 94%;
+  --territory-ink: 0 0% 0%;
+  --territory-muted: 0 0% 20%;
+  --territory-muted-strong: 0 0% 10%;
+  --territory-brand: 0 0% 0%;
+  --territory-brand-strong: 0 0% 0%;
+  --territory-warm: 35 100% 30%;
+  --territory-sun: 48 100% 50%;
+  --territory-border: 0 0% 20%;
+  --territory-focus: 220 100% 35%;
+  --territory-error: 0 100% 35%;
+  --territory-success: 140 100% 25%;
+  --territory-warning: 35 100% 30%;
+  --territory-info: 210 100% 35%;
+  --territory-selection: 48 100% 75%;
+  --territory-disabled: 0 0% 80%;
+  --territory-disabled-foreground: 0 0% 25%;
+  --territory-on-image: 0 0% 100%;
+  --territory-image-overlay: 0 0% 0%;
 }
 
 .accessibility-high-contrast * {
