@@ -1,0 +1,83 @@
+name: Auth Concept Regression
+
+on:
+  pull_request:
+    paths:
+      - "src/app/components/auth/**"
+      - "src/app/pages/LoginPage.tsx"
+      - "src/app/pages/ResetPasswordPage.tsx"
+      - "src/app/features/onboarding/pages/Cadastro*.tsx"
+      - "src/app/features/onboarding/hooks/useCadastro.ts"
+      - "src/app/features/onboarding/validation/**"
+      - "src/core/auth/**"
+      - "src/shared/components/ui/checkbox.tsx"
+      - "public/auth/**"
+      - "tests/e2e/auth-concept-layout.spec.ts"
+      - "tests/regression/auth-concept-flow.test.ts"
+      - "playwright.config.ts"
+      - "package.json"
+      - "package-lock.json"
+      - ".github/workflows/auth-concept-regression.yml"
+  workflow_dispatch:
+
+concurrency:
+  group: auth-concept-regression-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  contract:
+    name: auth contract
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+
+      - name: Setup Node
+        uses: actions/setup-node@v6
+        with:
+          node-version: "24"
+          cache: "npm"
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Run account/access contract
+        run: npx vitest run tests/regression/auth-concept-flow.test.ts
+
+  responsive-layout:
+    name: auth responsive layout
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+
+      - name: Setup Node
+        uses: actions/setup-node@v6
+        with:
+          node-version: "24"
+          cache: "npm"
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Install Chromium
+        run: npx playwright install --with-deps chromium
+
+      - name: Run mobile and desktop layout regression
+        env:
+          CI: "true"
+        run: npx playwright test tests/e2e/auth-concept-layout.spec.ts --project=chromium
+
+      - name: Upload Playwright diagnostics on failure
+        if: failure()
+        continue-on-error: true
+        uses: actions/upload-artifact@v7
+        with:
+          name: auth-concept-playwright-report
+          path: |
+            playwright-report/
+            test-results/
+          retention-days: 14
+          if-no-files-found: ignore
