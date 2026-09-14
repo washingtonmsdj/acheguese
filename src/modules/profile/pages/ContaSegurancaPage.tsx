@@ -17,6 +17,7 @@ import {
 import { toast } from "sonner";
 
 import { useAuth } from "@/core/auth/hooks/useAuth";
+import { useLinkedAuthProviders } from "@/core/auth/hooks/useLinkedAuthProviders";
 import { useMFA } from "@/core/auth/hooks/useMFA";
 import type { MFAEnrollmentData } from "@/core/auth/services/MFAService";
 import { getAuthErrorMessage } from "@/core/auth/utils/authMessages";
@@ -111,6 +112,12 @@ export default function ContaSegurancaPage() {
     googleAuthAvailable,
     signOutOtherSessions,
   } = useAuth();
+  const {
+    hasGoogle: googleLinked,
+    loading: providersLoading,
+    error: providersError,
+    refresh: refreshProviders,
+  } = useLinkedAuthProviders();
   const {
     isMFAEnabled,
     loading: mfaLoading,
@@ -340,6 +347,28 @@ export default function ContaSegurancaPage() {
   }
 
   if (accessView) {
+    const googleStatusLabel = providersLoading
+      ? "Consultando"
+      : googleLinked
+        ? "Conectado"
+        : googleAuthAvailable
+          ? "Disponível"
+          : "Indisponível";
+    const googleStatusClass = googleLinked
+      ? "bg-emerald-100 text-emerald-800"
+      : googleAuthAvailable
+        ? "bg-territory-brand/10 text-territory-brand"
+        : "bg-territory-raised text-territory-muted";
+    const googleDescription = providersLoading
+      ? "Consultando os métodos vinculados à sua conta..."
+      : providersError
+        ? "Não foi possível confirmar agora se uma identidade Google está vinculada."
+        : googleLinked
+          ? "Uma identidade Google está vinculada a esta conta."
+          : googleAuthAvailable
+            ? "O provedor Google está disponível, mas nenhum vínculo foi confirmado para esta conta."
+            : "O acesso com Google não está habilitado neste ambiente.";
+
     return (
       <>
         <Helmet>
@@ -409,15 +438,22 @@ export default function ContaSegurancaPage() {
             <AccessRow
               icon={<Globe2 className="h-5 w-5" aria-hidden="true" />}
               title="Acesso com Google"
-              value={
-                googleAuthAvailable
-                  ? "O provedor Google está disponível. O estado de vínculo não é inferido sem confirmação do serviço de autenticação."
-                  : "O acesso com Google não está habilitado neste ambiente."
-              }
+              value={googleDescription}
               meta={
-                <span className={`rounded-full px-2 py-1 text-xs font-semibold ${googleAuthAvailable ? "bg-territory-brand/10 text-territory-brand" : "bg-territory-raised text-territory-muted"}`}>
-                  {googleAuthAvailable ? "Disponível" : "Indisponível"}
+                <span className={`rounded-full px-2 py-1 text-xs font-semibold ${googleStatusClass}`}>
+                  {googleStatusLabel}
                 </span>
+              }
+              action={
+                providersError ? (
+                  <button
+                    type="button"
+                    className="min-h-9 text-sm font-semibold text-territory-brand underline-offset-4 hover:underline"
+                    onClick={() => void refreshProviders()}
+                  >
+                    Tentar novamente
+                  </button>
+                ) : null
               }
             />
           </Surface>
