@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import TerritoryEntryMap from "@/app/components/territory-vivo/TerritoryEntryMap";
 import communityThumbnail from "@/assets/complexo-cultura.jpg";
+import { AUTH_PATHS } from "@/core/auth/constants/authFlow";
 import { LAUNCH_URLS, TERRITORY_CONFIG } from "@/core/routing/config/territory";
 import { resolvePublicTerritoryFallback } from "@/core/routing/utils/publicTerritoryFallbacks";
 import { lastTerritoryStore } from "@/core/routing/stores/LastTerritoryStore";
@@ -137,7 +138,7 @@ export default function TerritoryEntryPage() {
           <nav className="entry-desktop-nav" aria-label="Navegação pública">
             <a href="/como-funciona">Como funciona</a>
             <span className="entry-nav-divider" aria-hidden="true" />
-            <a href="/login">Entrar</a>
+            <a href={AUTH_PATHS.login}>Entrar</a>
           </nav>
           <button
             ref={mobileMenuButtonRef}
@@ -171,7 +172,7 @@ export default function TerritoryEntryPage() {
               <a href="/como-funciona" onClick={() => setIsMobileMenuOpen(false)}>
                 Como funciona
               </a>
-              <a href="/login" onClick={() => setIsMobileMenuOpen(false)}>
+              <a href={AUTH_PATHS.login} onClick={() => setIsMobileMenuOpen(false)}>
                 Entrar
               </a>
             </nav>
@@ -221,7 +222,7 @@ export default function TerritoryEntryPage() {
               <span aria-hidden="true" className="text-lg leading-none">→</span>
             </a>
             <p className="entry-no-account">Sem cadastro para explorar.</p>
-            <a className="entry-account-link" href="/cadastro">
+            <a className="entry-account-link" href={AUTH_PATHS.signup}>
               Criar minha conta
             </a>
             <p className="entry-residence-note">
