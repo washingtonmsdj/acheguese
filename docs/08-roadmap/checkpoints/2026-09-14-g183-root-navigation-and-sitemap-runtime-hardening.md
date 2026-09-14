@@ -4,7 +4,7 @@ Data: 2026-09-14
 
 ## Escopo
 
-Continuação da linha da entrada pública `/`, consolidando navegação institucional, responsividade do menu móvel e projeção SEO/sitemap no source e no runtime Supabase sem reabrir bridges ou aliases antigos.
+Continuação da linha da entrada pública `/`, consolidando navegação institucional, responsividade do menu móvel, recuperação progressiva do mapa e projeção SEO/sitemap no source e no runtime Supabase sem reabrir bridges ou aliases antigos.
 
 ## Implementado no source
 
@@ -13,6 +13,9 @@ Continuação da linha da entrada pública `/`, consolidando navegação institu
 - `TerritoryEntryPage.tsx` passou a consumir `PRIVACY_POLICY_PATH` de `src/shared/constants/legal.ts` no menu móvel e no footer; a página não mantém mais `href="/privacidade"` paralelo.
 - o menu móvel fecha automaticamente ao cruzar o breakpoint para desktop, evitando que um popover oculto permaneça aberto e reapareça ao reduzir o viewport novamente.
 - `root-entry-community-first.test.ts` protege o path legal canônico e o reset responsivo do menu.
+- `TerritoryEntryMapRuntime.tsx` agora registra quando o fallback terminal de 6 s foi exibido. Se o MapLibre carregar depois desse timeout, a recuperação revela o canvas real diretamente e não revive o skeleton por mais um crossfade de 160 ms.
+- o carregamento normal, sem timeout, preserva o crossfade existente do arrival skeleton.
+- `territory-entry-map-progressive-performance.test.ts` protege a distinção entre carregamento normal e recuperação tardia.
 
 ### Sitemap de release
 
@@ -25,7 +28,9 @@ Continuação da linha da entrada pública `/`, consolidando navegação institu
 - foram removidas duas URLs estáticas sem rota canônica: `/comunidade` e `/cookies`.
 - `/comunidade` é explicitamente proibida como top-level route pelo contrato `communityRoutesCanonical.spec.ts`; comunidade pública usa a arquitetura territorial/aliases vigentes.
 - o Edge sitemap continua usando `_shared/security.ts`, `_shared/url_validation.ts`, `business_data`, aliases públicos de comunidade e URLs territoriais/classificados atuais.
-- `production-sitemap-release-boundary.test.ts` agora protege rollout de Mobilidade, paths legais e ausência de `/comunidade`/`/cookies` no Edge sitemap.
+- `_shared/security.ts` ampliou `errorResponse` de forma retrocompatível para aceitar opcionalmente o `Request` e a lista de métodos, preservando a política CORS real também em respostas de erro.
+- o sitemap usa `errorResponse(..., req, "GET, OPTIONS")`, alinhando sucesso, preflight, método inválido e falha interna à mesma política HTTP/CORS.
+- `production-sitemap-release-boundary.test.ts` agora protege rollout de Mobilidade, paths legais, ausência de `/comunidade`/`/cookies` e CORS request-aware no erro do sitemap.
 
 ## Drift remoto encontrado e corrigido
 
@@ -37,18 +42,19 @@ A inspeção do projeto Supabase `xhdowzacfujckjelqhtd` encontrou `sitemap` remo
 - tabela/rotas antigas (`businesses`, `/negocios/...`);
 - Mobilidade anunciada apesar do rollout pausado.
 
-O runtime foi promovido em duas passagens, terminando em:
+O runtime foi promovido de forma incremental até o estado atual:
 
 - função: `sitemap`;
 - status: `ACTIVE`;
-- versão remota: **16**;
+- versão remota: **17**;
 - `verify_jwt=false`;
 - entrypoint atual da `main`;
-- `_shared/security.ts` integral da `main`;
+- `_shared/security.ts` integral da `main`, incluindo `errorResponse` request-aware;
 - `_shared/url_validation.ts` integral da `main`;
-- sem `/mobilidade`, `/comunidade` ou `/cookies` no inventário estático.
+- sem `/mobilidade`, `/comunidade` ou `/cookies` no inventário estático;
+- falhas do handler preservam o request e `GET, OPTIONS` ao montar headers CORS.
 
-A releitura via API de gerenciamento do Supabase confirmou a versão 16 e o conteúdo implantado.
+A releitura via API de gerenciamento do Supabase confirmou a versão 17, `ACTIVE`, `verify_jwt=false`, SHA remoto `ee3be3ff0edea6081de0cc498f1c013c53870af1619464191e613b1d0839b46f` e o conteúdo implantado.
 
 ## Validação — o que foi e o que não foi provado
 
@@ -56,8 +62,8 @@ A releitura via API de gerenciamento do Supabase confirmou a versão 16 e o cont
 
 - conteúdo atual dos arquivos na `main`;
 - configuração local/política de `verify_jwt=false` para `sitemap`;
-- metadata remota da Edge Function depois do deploy (`ACTIVE`, v16, `verify_jwt=false`);
-- source remoto reconsultado depois do deploy;
+- metadata remota da Edge Function depois do deploy (`ACTIVE`, v17, `verify_jwt=false`);
+- source remoto reconsultado depois do deploy, incluindo inventário estático e `errorResponse(..., req, "GET, OPTIONS")`;
 - preservação de commits concorrentes da linha de Conta/Auth/Notificações na `main`.
 
 ### Não certificado nesta sessão
@@ -78,5 +84,7 @@ Portanto, **deploy/config/source remoto estão verificados; resposta HTTP do end
 
 - sitemap público não pode anunciar superfície pausada nem top-level alias sem rota canônica;
 - `sitemap` Edge permanece endpoint `public-read`, com `verify_jwt=false` e segurança dentro do handler/shared owner;
+- erros de Edge Function que dependem de CORS por origem devem repassar o `Request` ao owner compartilhado, não recriar headers locais;
 - o sitemap de release continua sendo o artefato canônico servido no deploy frontend; a Edge Function é um endpoint complementar e deve permanecer coerente com rotas/rollout atuais;
-- mudanças remotas Supabase só contam como verificadas quando a configuração/source remoto forem relidos; smoke HTTP deve ser registrado separadamente quando houver conectividade.
+- mudanças remotas Supabase só contam como verificadas quando a configuração/source remoto forem relidos; smoke HTTP deve ser registrado separadamente quando houver conectividade;
+- recuperação tardia do mapa após fallback terminal não deve reapresentar skeleton de arrival já resolvido.
