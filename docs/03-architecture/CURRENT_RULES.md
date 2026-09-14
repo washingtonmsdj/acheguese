@@ -2,7 +2,7 @@
 
 Data-base: 2026-09-14  
 Status: ATIVO / CANONICO  
-Versao documental: 5.0
+Versao documental: 5.1
 
 Este documento define regras arquiteturais globais. Contratos detalhados de domínio permanecem nos owners executáveis e nos documentos específicos listados em `docs/README.md`; este arquivo não deve duplicar implementação.
 
@@ -101,18 +101,22 @@ Os contratos detalhados vivem em `docs/07-modules/` e nos owners executáveis co
 - Gastronomy;
 - Coverage/Mobility;
 - Maps/MapLibre runtime;
-- Geolocation/Location resolution.
+- Geolocation/Location resolution;
+- Auth flow/callback classification.
 
-### 6.1 Maps / MapLibre runtime
+### 6.1 Maps / MapLibre runtime e boundaries
 
 - `src/core/maps/runtime/loadMapLibreRuntime.ts` é o owner canônico de engine, CSS e configuração de worker do MapLibre.
 - `src/core/maps/components/v3/MapLibreAdapter.tsx` é o owner público canônico para superfícies React que cabem no contrato do adapter; ele decide runtime passivo versus completo sem criar um segundo provider.
-- `src/shared/config/mapDefaults.ts` é o SSOT de URLs/configuração base de tiles; `src/core/maps/providers/MapProvider.ts` somente projeta esse contrato para o domínio de mapas.
+- `src/shared/config/mapDefaults.ts` é o SSOT de URLs/configuração base de tiles **e dos fallbacks geográficos genéricos**; `src/core/maps/providers/MapProvider.ts` somente projeta esse contrato para o domínio de mapas.
+- services/hooks genéricos de mapa/boundary não embutem coordenadas de uma cidade específica como fallback universal. `BoundaryService` e `useNeighborhoodBounds` derivam seu centro fallback de `MAP_DEFAULT_COORDINATES`.
 - CSS do MapLibre entra pelo owner `src/core/maps/runtime/maplibreRuntimeCss.ts`; páginas e módulos não importam `maplibre-gl/dist/maplibre-gl.css` diretamente.
 - consumidores imperativos fora do núcleo podem importar **tipos** de `maplibre-gl`, mas carregam a engine por `loadMapLibreRuntime()`; não criam loader, worker config, preload de CSS ou provider paralelo.
+- `src/core/maps/hooks/useTerritoryPolygon.ts` possui espera limitada para a chain de boundary. Consumidor não pode ficar indefinidamente em `isLoading` por fonte oficial externa travada.
+- ausência/timeout de boundary oficial não autoriza geometria aproximada. Superfícies podem degradar para basemap/centro canônico e continuar úteis, mantendo a busca oficial não bloqueante quando fizer sentido.
 - otimização reutilizável de mapa deve ser implementada no owner canônico para beneficiar todas as páginas. Agendamento específico da `/` pode continuar em `publicRootReadiness` somente quando a regra depende da prioridade exclusiva da entrada pública.
 - `prewarmMapLibreWorkers()` é opt-in para superfícies que montarão mapa imediatamente; não deve virar warmup global em rotas sem mapa.
-- regressões de arquitetura devem impedir novos imports runtime/CSS diretos fora do núcleo canônico.
+- regressões de arquitetura devem impedir novos imports runtime/CSS diretos, fallbacks geográficos paralelos e waits infinitos fora dos owners canônicos.
 
 ### 6.2 Geolocation / Location resolution
 
@@ -126,6 +130,14 @@ Os contratos detalhados vivem em `docs/07-modules/` e nos owners executáveis co
 - fallback IP é aproximação e só pode ser usado em fluxos cujo contrato aceite explicitamente baixa precisão.
 - geolocalização de leitura/cache não deve disparar prompt GPS escondido quando o contrato do consumidor é apenas hidratação passiva.
 
+### 6.3 Auth flow / callback classification
+
+- `src/core/auth/constants/authFlow.ts` é o owner dos paths públicos de autenticação, query keys/values, chaves de storage e TTLs do fluxo; páginas não duplicam esses literais quando o contrato canônico atende o caso.
+- `src/core/auth/utils/authCallback.ts` é o owner puro de classificação de callback OAuth/PKCE/recovery/erro.
+- `hasAuthCallbackMarker(search, hash)` diferencia marcadores reais de autenticação de âncoras ordinárias de página. Um hash como `#main-content` não é motivo para carregar runtime autenticado/completo.
+- bootstrap público enxuto pode consumir constants/utilitários puros de Auth, mas não importa `AuthService`, Supabase ou `SessionService` apenas para classificar URL.
+- `AppRuntime` delega classificação de callback ao owner de `core/auth`; não mantém parser/classificador concorrente.
+
 Regra: este documento não replica lifecycle, tabelas, RPCs ou allowlists desses contratos. Mudanças devem ocorrer no owner técnico e em seu teste/validator.
 
 ## 7. Roteamento e território
@@ -133,6 +145,7 @@ Regra: este documento não replica lifecycle, tabelas, RPCs ou allowlists desses
 - Território é contexto raiz da experiência pública/community-first.
 - entidade pública possui namespace canônico único; alias legado não cria segunda superfície oficial.
 - contexto `/comunidade/...` é explícito e não deve sequestrar automaticamente uma URL pública de entidade.
+- contexto de lançamento da `/` vem de `TERRITORY_CONFIG`/`LAUNCH_URLS`; a entrada não cria segundo owner local de estado, cidade, slug ou nome do território de launch.
 - ações comunitárias mutáveis exigem autenticação/Profile e autorização territorial conforme o backend.
 - residência/endereço privado nunca é projetado para superfície pública apenas para resolver contexto.
 - rotas e telas públicas devem ser reconciliadas com `docs/SCREEN-MAP.md` e `docs/FEATURE-MAP.md`.
@@ -181,9 +194,13 @@ Mudanças de segurança/schema executam adicionalmente os gates indicados em `SE
 - não criar rota pública concorrente para a mesma identidade;
 - não importar runtime ou CSS de MapLibre diretamente em páginas/módulos quando o loader/adapter canônico atende o caso;
 - não criar segundo worker configurator, segundo tile provider default ou warmup global paralelo;
+- não embutir fallback universal de Salvador/outra cidade em service/hook genérico quando `mapDefaults` já é o owner;
+- não deixar carregamento de boundary/polígono compartilhado pendente indefinidamente; timeout não autoriza boundary aproximado;
 - não chamar `navigator.geolocation` fora do owner compartilhado nem criar novo hook/service paralelo para contornar esse boundary;
 - não chamar ViaCEP/provider de geocoding diretamente na UI quando `LocationGeocodingService` atende o contrato;
 - não tratar coordenada `0` como valor ausente;
+- não duplicar paths/query keys/classificação de callback de Auth em páginas/bootstrap quando `authFlow.ts`/`authCallback.ts` atendem o caso;
+- não tratar hash/âncora ordinária como retorno de autenticação apenas por ser não vazio;
 - não usar placeholder, `paused`, fallback vazio ou retorno antecipado como prova de módulo funcional;
 - não declarar `MVP READY` sem cumprir o DoD de `docs/08-roadmap/EXECUCAO_MAIN_ONLY.md`;
 - não reduzir gate de segurança/CI para obter status verde.
