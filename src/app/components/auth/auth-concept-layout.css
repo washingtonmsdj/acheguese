@@ -1,6 +1,66 @@
 /* Shared layout rules owned by the approved account/access concept.
    Keep presentation here instead of coupling editorial artwork sizing to icon styles. */
 
+@media (max-width: 1023px) {
+  main#main-content:has(#login-identifier),
+  main#main-content:has(#cadastro-password) {
+    padding-left: max(1.5rem, env(safe-area-inset-left)) !important;
+    padding-right: max(1.5rem, env(safe-area-inset-right)) !important;
+  }
+
+  /* Cadastro não tem rodapé no concept: preserve o respiro do home indicator. */
+  main#main-content:has(#cadastro-password) {
+    padding-bottom: max(1rem, env(safe-area-inset-bottom)) !important;
+  }
+
+  /* O back mobile continua visualmente preso à margem segura, sem deslocar a marca. */
+  header:has(a[aria-label="Achegue-se — início"]) button[aria-label="Voltar"] {
+    left: max(1rem, env(safe-area-inset-left)) !important;
+  }
+
+  /* Setas do concept são desenhadas pelo próprio sistema visual, não pelo glifo da fonte. */
+  main#main-content:has(#login-identifier) span[aria-hidden="true"].text-xl {
+    width: 0.48rem;
+    height: 0.48rem;
+    flex: 0 0 auto;
+    border-right: 1.5px solid currentColor;
+    border-bottom: 1.5px solid currentColor;
+    font-size: 0 !important;
+    line-height: 0 !important;
+    transform: rotate(-45deg);
+  }
+
+  main#main-content:has(#cadastro-password) details > summary {
+    list-style: none;
+  }
+
+  main#main-content:has(#cadastro-password) details > summary::-webkit-details-marker {
+    display: none;
+  }
+
+  main#main-content:has(#cadastro-password)
+    details
+    > summary
+    > span[aria-hidden="true"]:last-child {
+    width: 0.46rem;
+    height: 0.46rem;
+    flex: 0 0 auto;
+    border-right: 1.5px solid currentColor;
+    border-bottom: 1.5px solid currentColor;
+    font-size: 0 !important;
+    line-height: 0 !important;
+    transform: rotate(-45deg);
+    transition: transform 160ms ease;
+  }
+
+  main#main-content:has(#cadastro-password)
+    details[open]
+    > summary
+    > span[aria-hidden="true"]:last-child {
+    transform: rotate(45deg);
+  }
+}
+
 @media (min-width: 1024px) {
   img[src="/auth/login-hero.webp"] {
     width: clamp(450px, 40vw, 540px) !important;
