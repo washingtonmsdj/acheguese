@@ -18,6 +18,19 @@ describe("territory polygon loading resilience", () => {
     expect(hook).toContain("polygonPromises.delete(territoryKey)");
   });
 
+  it("aborts a stalled request to the official FeatureServer before the shared hook timeout", () => {
+    const source = read(
+      "src/core/geospatial/data/officialFeatureServerBoundary.ts",
+    );
+
+    expect(source).toContain("const OFFICIAL_BOUNDARY_FETCH_TIMEOUT_MS = 7_000;");
+    expect(source).toContain("const controller = new AbortController();");
+    expect(source).toContain("() => controller.abort()");
+    expect(source).toContain("signal: controller.signal");
+    expect(source).toContain("clearTimeout(timeoutId)");
+    expect(source).toContain("not negative-cached");
+  });
+
   it("keeps the public root slow-boundary state non-blocking while the shared load is bounded", () => {
     const runtime = read(
       "src/app/components/territory-vivo/TerritoryEntryMapRuntime.tsx",
