@@ -1,6 +1,7 @@
 import { lazy, Suspense, useEffect, useLayoutEffect, useState } from "react";
 
 import RootRouteEntry from "@/app/routes/RootRouteEntry";
+import { AUTH_QUERY_KEYS } from "@/core/auth/constants/authFlow";
 import { scheduleAfterPublicRootMap } from "@/shared/utils/publicRootReadiness";
 
 const RoutedAppRuntime = lazy(() =>
@@ -19,14 +20,14 @@ function hasRootAuthReturnMarkers(): boolean {
   const hashParams = new URLSearchParams(window.location.hash.replace(/^#/, ""));
 
   return (
-    searchParams.has("code") ||
-    searchParams.get("mode") === "recovery" ||
-    searchParams.get("type") === "recovery" ||
-    hashParams.has("access_token") ||
-    hashParams.has("refresh_token") ||
-    hashParams.has("error") ||
-    hashParams.has("error_code") ||
-    hashParams.get("type") === "recovery"
+    searchParams.has(AUTH_QUERY_KEYS.code) ||
+    searchParams.get(AUTH_QUERY_KEYS.mode) === "recovery" ||
+    searchParams.get(AUTH_QUERY_KEYS.type) === "recovery" ||
+    hashParams.has(AUTH_QUERY_KEYS.accessToken) ||
+    hashParams.has(AUTH_QUERY_KEYS.refreshToken) ||
+    hashParams.has(AUTH_QUERY_KEYS.error) ||
+    hashParams.has(AUTH_QUERY_KEYS.errorCode) ||
+    hashParams.get(AUTH_QUERY_KEYS.type) === "recovery"
   );
 }
 
