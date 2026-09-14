@@ -101,13 +101,18 @@ describe("territory entry premium arrival loading", () => {
     expect(runtime).toContain("duration-500");
   });
 
-  it("keeps a premium non-blocking fallback when the map provider does not answer", () => {
+  it("distinguishes map timeout from official-boundary timeout", () => {
+    expect(runtime).toContain('type EntryMapUnavailableReason = "map" | "boundary"');
+    expect(runtime).toContain('setMapUnavailableReason(mapReady ? "boundary" : "map")');
+    expect(runtime).toContain('const boundaryTimedOut = mapUnavailableReason === "boundary"');
+    expect(runtime).toContain("O limite oficial ainda está chegando.");
     expect(runtime).toContain("A comunidade continua aqui.");
+    expect(runtime).toContain(
+      "Para não mostrar um contorno incompleto, preferimos não revelar o mapa agora.",
+    );
     expect(runtime).toContain(
       "O mapa não respondeu agora, mas você pode continuar entrando no Complexo normalmente.",
     );
-    expect(runtime).toContain("setMapUnavailable(true)");
-    expect(runtime).toContain("8000");
   });
 
   it("keeps loading bounded and only reveals the real map after boundary settling", () => {
@@ -116,5 +121,7 @@ describe("territory entry premium arrival loading", () => {
     );
     expect(runtime).toContain('aria-busy={!mapPresented}');
     expect(runtime).toContain('mapPresented ? "opacity-100" : "opacity-0"');
+    expect(runtime).toContain("setMapUnavailable(true)");
+    expect(runtime).toContain("8000");
   });
 });
