@@ -30,7 +30,7 @@ import type {
   AccountSnapshot,
   Context,
   Identity,
-} from "@/modules/profile/sections/types";
+} from "@/modules/profile/types/account";
 import { SUPPORT_PATH } from "@/shared/constants/legal";
 
 export interface ContaHubLayoutProps {
