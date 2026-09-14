@@ -46,7 +46,7 @@ describe("territory entry progressive map performance", () => {
     expect(wrapper).not.toContain("services6.arcgis.com");
   });
 
-  it("preloads style, engine and official boundary concurrently", () => {
+  it("starts style, engine, runtime and official boundary independently", () => {
     const wrapper = read("src/app/components/territory-vivo/TerritoryEntryMap.tsx");
     const runtime = read("src/app/components/territory-vivo/TerritoryEntryMapRuntime.tsx");
     const owner = read("src/core/maps/components/v3/MapLibreAdapter.tsx");
@@ -56,13 +56,16 @@ describe("territory entry progressive map performance", () => {
     expect(wrapper).toContain('link.rel = "preload"');
     expect(wrapper).toContain('link.as = "fetch"');
     expect(wrapper).toContain('link.setAttribute("fetchpriority", "high")');
-    expect(wrapper).toContain("Promise.all([");
-    expect(wrapper).toContain("module.preloadTerritoryEntryMapEngine()");
-    expect(wrapper).toContain("module.preloadTerritoryEntryBoundary(preloadResolved)");
-    expect(wrapper).not.toContain("await module.preloadTerritoryEntryMapEngine()");
+    expect(wrapper).toContain("void loadTerritoryEntryMapRuntime()");
+    expect(wrapper).toContain("preloadEntryMapEngine()");
+    expect(wrapper).toContain("preloadEntryOfficialBoundary(preloadResolved)");
+    expect(wrapper).toContain("preloadPassiveMapLibreAdapterRuntime");
+    expect(wrapper).toContain("loadOfficialFeatureServerBoundaries");
+    expect(wrapper).not.toContain("module.preloadTerritoryEntryMapEngine");
+    expect(wrapper).not.toContain("module.preloadTerritoryEntryBoundary");
 
-    expect(runtime).toContain("preloadPassiveMapLibreAdapterRuntime");
-    expect(runtime).toContain("preloadTerritoryPolygons");
+    expect(runtime).not.toContain("preloadPassiveMapLibreAdapterRuntime");
+    expect(runtime).not.toContain("preloadTerritoryPolygons");
     expect(runtime).toContain('from "@/core/maps/components/v3/MapLibreAdapter"');
     expect(runtime).not.toContain("LazyMapLibreAdapter");
 
