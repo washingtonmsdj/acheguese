@@ -43,6 +43,8 @@ import { useDelivery } from "../hooks/useDelivery";
 import { useLocationContext } from "@/core/location";
 import type { SourceType, PackageSize } from "@/core/mobility/constants";
 import { MotoboySourceResolverService } from "@/core/mobility/services/MotoboySourceResolverService";
+import { GEOLOCATION_RUNTIME } from "@/shared/config/geolocation";
+import { GeolocationService } from "@/shared/services/GeolocationService";
 
 interface PickupPoint {
   addressId?: string;
@@ -53,14 +55,12 @@ interface PickupPoint {
 }
 
 interface CreateDeliveryModalProps {
-  // API controlada.
   open?: boolean;
   onOpenChange?: (open: boolean) => void;
   onSubmit?: (data: CreateDeliveryData) => Promise<{ success: boolean; error?: string }>;
   defaultPickup?: PickupPoint;
   isSubmitting?: boolean;
   businessName?: string;
-
   sourceType: SourceType;
   sourceId?: string;
 }
@@ -101,7 +101,6 @@ function extractCoordsFromMetadata(metadata: Record<string, unknown> | null | un
   return { lat, lng };
 }
 
-
 export function CreateDeliveryModal({
   open,
   onOpenChange,
@@ -139,25 +138,20 @@ export function CreateDeliveryModal({
 
   const [recipientName, setRecipientName] = useState("");
   const [recipientPhone, setRecipientPhone] = useState("");
-
   const [dropoffText, setDropoffText] = useState("");
   const [dropoffCoords, setDropoffCoords] = useState<{ latitude: number; longitude: number } | null>(null);
   const [dropoffLocationId, setDropoffLocationId] = useState("");
   const [loadingDropoffGps, setLoadingDropoffGps] = useState(false);
   const [geocodingDropoff, setGeocodingDropoff] = useState(false);
-
   const [packageSize, setPackageSize] = useState<PackageSize>("small");
   const [packageDescription, setPackageDescription] = useState("");
   const [deliveryNotes, setDeliveryNotes] = useState("");
-
   const [paymentMethod, setPaymentMethod] = useState<"pix" | "dinheiro">("pix");
-
   const [submitting, setSubmitting] = useState(false);
   const [resolvingPickup, setResolvingPickup] = useState(false);
   const [resolvedPickup, setResolvedPickup] = useState<PickupPoint | null>(null);
 
   const effectivePickup = defaultPickup ?? resolvedPickup;
-
   const canEstimate = !!effectivePickup && !!dropoffCoords;
   const { data: priceEstimate } = usePriceEstimate(
     canEstimate
@@ -298,16 +292,17 @@ export function CreateDeliveryModal({
   const captureDropoffGps = async () => {
     setLoadingDropoffGps(true);
     try {
-      const coords = await new Promise<GeolocationPosition>((resolve, reject) =>
-        navigator.geolocation.getCurrentPosition(resolve, reject, {
-          enableHighAccuracy: true,
-          timeout: 8000,
-        }),
-      );
+      const geolocation = await GeolocationService.getCurrentLocation({
+        useCache: false,
+        forcePrompt: true,
+        allowIpFallback: false,
+        gpsMode: "precise",
+        timeout: GEOLOCATION_RUNTIME.requestTimeoutMs,
+        maxRetries: 1,
+      });
 
-      const latitude = coords.coords.latitude;
-      const longitude = coords.coords.longitude;
-
+      const latitude = geolocation.coords.latitude;
+      const longitude = geolocation.coords.longitude;
       setDropoffCoords({ latitude, longitude });
 
       const result = await geocodingService.reverseGeocode(latitude, longitude);
@@ -326,7 +321,8 @@ export function CreateDeliveryModal({
       if (!locationId) {
         toast.error("Localizacao fora da cobertura territorial atendida.");
       }
-    } catch {
+    } catch (error) {
+      logger.debug("CreateDeliveryModal.captureDropoffGps", error);
       toast.error("Nao foi possivel obter sua localizacao.");
       setDropoffLocationId("");
     } finally {
