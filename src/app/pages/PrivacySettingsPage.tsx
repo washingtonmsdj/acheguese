@@ -72,6 +72,16 @@ const CONSENT_LABELS: Readonly<Record<string, string>> = {
   privacy_policy: "Política de privacidade",
 };
 
+const CONSENT_ROWS = [
+  ["analytics", "Medição de uso", "Ajuda a melhorar a experiência."],
+  ["marketing", "Ofertas e novidades", "Permite sugestões e comunicações promocionais."],
+  ["cookies", "Cookies não essenciais", "Preferências e recursos que não são estritamente necessários."],
+  ["geolocation", "Localização neste dispositivo", "Uso da localização quando você autorizar."],
+  ["notifications", "Notificações push", "Permissão de avisos no dispositivo."],
+  ["data_processing", "Processamento de dados", "Consentimentos aplicáveis ao tratamento de dados."],
+  ["third_party", "Compartilhamento com terceiros", "Compartilhamentos que dependem de consentimento."],
+] as const;
+
 function Surface({
   children,
   className = "",
@@ -122,8 +132,8 @@ function ConsentRow({
   const id = `${idPrefix}-consent-${type}`;
 
   return (
-    <div className="flex min-h-[66px] items-center gap-3 border-b border-territory-border py-3 last:border-b-0">
-      <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-territory-brand/10 text-territory-brand">
+    <div className="flex min-h-[58px] items-center gap-3 border-b border-territory-border py-2.5 last:border-b-0 lg:min-h-[66px] lg:py-3">
+      <span className="flex h-8 w-8 shrink-0 items-center justify-center text-territory-ink lg:h-9 lg:w-9 lg:rounded-xl lg:bg-territory-brand/10 lg:text-territory-brand">
         <Icon className="h-5 w-5" aria-hidden="true" />
       </span>
       <div className="min-w-0 flex-1">
@@ -144,7 +154,7 @@ function ConsentRow({
 function ExportItem({ icon, title, description }: { icon: ReactNode; title: string; description: string }) {
   return (
     <div className="flex items-start gap-3 border-b border-territory-border py-4 last:border-b-0">
-      <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-territory-brand/10 text-territory-brand">{icon}</span>
+      <span className="flex h-9 w-9 shrink-0 items-center justify-center text-territory-ink lg:h-10 lg:w-10 lg:rounded-xl lg:bg-territory-brand/10 lg:text-territory-brand">{icon}</span>
       <div>
         <h2 className="text-sm font-semibold text-territory-ink">{title}</h2>
         <p className="mt-1 text-xs leading-4 text-territory-muted">{description}</p>
@@ -185,10 +195,7 @@ function formatDeletionDate(value: string | null | undefined): string | null {
 function formatConsentTimestamp(value: string): string {
   const date = new Date(value);
   if (Number.isNaN(date.getTime())) return "Data indisponível";
-  return date.toLocaleString("pt-BR", {
-    dateStyle: "medium",
-    timeStyle: "short",
-  });
+  return date.toLocaleString("pt-BR", { dateStyle: "medium", timeStyle: "short" });
 }
 
 function ConsentHistoryItem({ record }: { record: ConsentHistoryRecord }) {
@@ -209,24 +216,12 @@ function ConsentHistoryItem({ record }: { record: ConsentHistoryRecord }) {
         </span>
         <div className="min-w-0 flex-1">
           <div className="flex flex-wrap items-center gap-2">
-            <h2 className="text-sm font-semibold text-territory-ink">
-              {CONSENT_LABELS[record.consent_type] ?? record.consent_type}
-            </h2>
-            <span className={`rounded-full px-2 py-1 text-xs font-semibold ${statusClass}`}>
-              {status}
-            </span>
+            <h2 className="text-sm font-semibold text-territory-ink">{CONSENT_LABELS[record.consent_type] ?? record.consent_type}</h2>
+            <span className={`rounded-full px-2 py-1 text-xs font-semibold ${statusClass}`}>{status}</span>
           </div>
-          <p className="mt-1 text-xs text-territory-muted">
-            Registrado em {formatConsentTimestamp(record.created_at || record.granted_at)}
-          </p>
-          {record.revoked_at ? (
-            <p className="mt-1 text-xs text-territory-muted">
-              Revogado em {formatConsentTimestamp(record.revoked_at)}
-            </p>
-          ) : null}
-          {record.revoke_reason ? (
-            <p className="mt-2 text-xs leading-4 text-territory-muted">Motivo: {record.revoke_reason}</p>
-          ) : null}
+          <p className="mt-1 text-xs text-territory-muted">Registrado em {formatConsentTimestamp(record.created_at || record.granted_at)}</p>
+          {record.revoked_at ? <p className="mt-1 text-xs text-territory-muted">Revogado em {formatConsentTimestamp(record.revoked_at)}</p> : null}
+          {record.revoke_reason ? <p className="mt-2 text-xs leading-4 text-territory-muted">Motivo: {record.revoke_reason}</p> : null}
           {(record.terms_version || record.privacy_policy_version) ? (
             <p className="mt-2 text-xs leading-4 text-territory-muted">
               {record.terms_version ? `Termos ${record.terms_version}` : ""}
@@ -237,6 +232,19 @@ function ConsentHistoryItem({ record }: { record: ConsentHistoryRecord }) {
         </div>
       </div>
     </article>
+  );
+}
+
+function LinkRow({ icon, title, description, onClick }: { icon: ReactNode; title: string; description?: string; onClick: () => void }) {
+  return (
+    <button type="button" onClick={onClick} className="flex min-h-14 w-full items-center gap-3 border-b border-territory-border text-left last:border-b-0 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-territory-brand">
+      <span className="flex h-8 w-8 shrink-0 items-center justify-center text-territory-ink lg:text-territory-brand">{icon}</span>
+      <span className="min-w-0 flex-1">
+        <span className="block text-sm font-semibold text-territory-ink">{title}</span>
+        {description ? <span className="mt-0.5 block text-xs text-territory-muted">{description}</span> : null}
+      </span>
+      <ChevronRight className="h-5 w-5 shrink-0 text-territory-muted" aria-hidden="true" />
+    </button>
   );
 }
 
@@ -336,25 +344,17 @@ export default function PrivacySettingsPage() {
 
   const handleDeleteAccount = async () => {
     if (deletionStatusLoading || deletionStatusError || deletionStatus?.status === "scheduled") return;
-
     setDeleting(true);
     try {
       const accessToken = await PrivacySettingsService.getAccessToken();
       const result = await PrivacySettingsService.requestAccountDeletion({ accessToken, reason: deleteReason.trim() });
       await queryClient.invalidateQueries({ queryKey: ["deletion-status", user.id] });
-      toast({
-        title: "Solicitação registrada",
-        description: `A exclusão foi solicitada. Prazo informado pelo serviço: ${result.days_until_purge} dias.`,
-      });
+      toast({ title: "Solicitação registrada", description: `A exclusão foi solicitada. Prazo informado pelo serviço: ${result.days_until_purge} dias.` });
       setDeleteReason("");
       setDeleteAcknowledged(false);
       setShowDeleteConfirm(false);
     } catch (error: unknown) {
-      toast({
-        title: "Erro",
-        description: (error instanceof Error ? error.message : null) || "Não foi possível solicitar a exclusão da conta.",
-        variant: "destructive",
-      });
+      toast({ title: "Erro", description: (error instanceof Error ? error.message : null) || "Não foi possível solicitar a exclusão da conta.", variant: "destructive" });
     } finally {
       setDeleting(false);
     }
@@ -374,16 +374,6 @@ export default function PrivacySettingsPage() {
     }
   };
 
-  const consentRows = [
-    ["analytics", "Medição de uso", "Ajuda a melhorar a experiência."],
-    ["marketing", "Ofertas e novidades", "Permite sugestões e comunicações promocionais."],
-    ["cookies", "Cookies não essenciais", "Preferências e recursos que não são estritamente necessários."],
-    ["geolocation", "Localização neste dispositivo", "Uso da localização quando você autorizar."],
-    ["notifications", "Notificações push", "Permissão de avisos no dispositivo."],
-    ["data_processing", "Processamento de dados", "Consentimentos aplicáveis ao tratamento de dados."],
-    ["third_party", "Compartilhamento com terceiros", "Compartilhamentos que dependem de consentimento."],
-  ] as const;
-
   const scheduled = deletionStatus?.status === "scheduled";
   const scheduledDate = formatDeletionDate(deletionStatus?.scheduled_purge_at);
 
@@ -393,28 +383,35 @@ export default function PrivacySettingsPage() {
         <Helmet><title>Exportar meus dados | Achegue-se</title></Helmet>
         <AccountSettingsShell title="Uma cópia dos seus dados" description="Baixe os dados disponibilizados para a sua conta.">
           <Surface className="px-4 sm:px-5">
-            <ExportItem icon={<FileText className="h-5 w-5" aria-hidden="true" />} title="Dados da conta" description="Informações básicas e dados disponíveis no arquivo de exportação." />
-            <ExportItem icon={<UsersRound className="h-5 w-5" aria-hidden="true" />} title="Perfis e registros incluídos" description="Conteúdos e configurações que o serviço de exportação disponibilizar para sua conta." />
-            <ExportItem icon={<Settings2 className="h-5 w-5" aria-hidden="true" />} title="Preferências e consentimentos" description="Escolhas e registros de privacidade disponíveis no escopo da exportação." />
+            <ExportItem icon={<FileText className="h-5 w-5" aria-hidden="true" />} title="Dados da conta" description="Suas informações básicas." />
+            <ExportItem icon={<UsersRound className="h-5 w-5" aria-hidden="true" />} title="Perfis e registros incluídos" description="Conteúdos e configurações dos perfis disponíveis na exportação." />
+            <ExportItem icon={<Settings2 className="h-5 w-5" aria-hidden="true" />} title="Preferências e consentimentos" description="Suas escolhas e configurações de privacidade disponíveis." />
           </Surface>
 
           <div className="mt-4 flex items-start gap-3 rounded-2xl border border-blue-200 bg-blue-50 p-4 text-sm text-blue-900">
             <Info className="mt-0.5 h-5 w-5 shrink-0" aria-hidden="true" />
-            <p>A exportação respeita permissões e retorna apenas os dados que o serviço autoritativo disponibiliza para a conta atual.</p>
+            <p>A exportação respeita as permissões e o escopo dos dados disponíveis.</p>
           </div>
 
           <Button type="button" onClick={handleExportData} disabled={isExporting} className="mt-4 min-h-12 w-full bg-territory-sun text-territory-ink hover:bg-territory-sun/90">
             {isExporting ? <Loader2 className="mr-2 h-4 w-4 animate-spin" aria-hidden="true" /> : <Download className="mr-2 h-4 w-4" aria-hidden="true" />}
             {isExporting ? "Preparando arquivo..." : "Exportar meus dados"}
           </Button>
-          <p className="mt-3 text-center text-xs text-territory-muted">Guarde o arquivo em um local seguro após o download.</p>
+          <p className="mt-3 text-center text-xs text-territory-muted">Guarde o arquivo em um local seguro.</p>
+
+          {isExporting ? (
+            <Surface className="mt-4 p-4 sm:p-5" >
+              <h2 className="font-heading text-base font-bold text-territory-ink">Durante a exportação</h2>
+              <div className="mt-4 text-center" role="status">
+                <Loader2 className="mx-auto h-8 w-8 animate-spin text-territory-sun" aria-hidden="true" />
+                <p className="mt-3 text-sm font-medium text-territory-ink">Preparando arquivo...</p>
+                <p className="mt-1 text-xs text-territory-muted">O download começa após a confirmação do serviço.</p>
+              </div>
+            </Surface>
+          ) : null}
 
           <Surface className="mt-4 px-4 sm:px-5">
-            <button type="button" onClick={() => navigate(SUPPORT_PATH)} className="flex min-h-14 w-full items-center gap-3 text-left text-sm font-semibold text-territory-ink focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-territory-brand">
-              <HelpCircle className="h-5 w-5 text-territory-brand" aria-hidden="true" />
-              <span className="flex-1">Preciso de ajuda</span>
-              <ChevronRight className="h-5 w-5 text-territory-muted" aria-hidden="true" />
-            </button>
+            <LinkRow icon={<HelpCircle className="h-5 w-5" aria-hidden="true" />} title="Preciso de ajuda" onClick={() => navigate(SUPPORT_PATH)} />
           </Surface>
         </AccountSettingsShell>
       </>
@@ -425,30 +422,15 @@ export default function PrivacySettingsPage() {
     return (
       <>
         <Helmet><title>Histórico de consentimentos | Achegue-se</title></Helmet>
-        <AccountSettingsShell
-          title="Histórico de consentimentos"
-          description="Consulte os registros disponibilizados para suas escolhas de privacidade."
-        >
+        <AccountSettingsShell title="Histórico de consentimentos" description="Consulte os registros disponibilizados para suas escolhas de privacidade.">
           {historyLoading ? (
-            <Surface className="flex min-h-32 items-center justify-center p-5" >
-              <div className="text-center" role="status">
-                <Loader2 className="mx-auto h-6 w-6 animate-spin text-territory-brand" aria-hidden="true" />
-                <p className="mt-2 text-sm text-territory-muted">Carregando histórico...</p>
-              </div>
+            <Surface className="flex min-h-32 items-center justify-center p-5">
+              <div className="text-center" role="status"><Loader2 className="mx-auto h-6 w-6 animate-spin text-territory-brand" aria-hidden="true" /><p className="mt-2 text-sm text-territory-muted">Carregando histórico...</p></div>
             </Surface>
           ) : historyError ? (
-            <Surface className="p-4 sm:p-5">
-              <QueryErrorState
-                message="Nenhum registro será presumido enquanto o histórico não puder ser consultado."
-                onRetry={() => void refetchHistory()}
-              />
-            </Surface>
+            <Surface className="p-4 sm:p-5"><QueryErrorState message="Nenhum registro será presumido enquanto o histórico não puder ser consultado." onRetry={() => void refetchHistory()} /></Surface>
           ) : consentHistory && consentHistory.length > 0 ? (
-            <Surface className="px-4 sm:px-5">
-              {consentHistory.map((record) => (
-                <ConsentHistoryItem key={record.id} record={record} />
-              ))}
-            </Surface>
+            <Surface className="px-4 sm:px-5">{consentHistory.map((record) => <ConsentHistoryItem key={record.id} record={record} />)}</Surface>
           ) : (
             <Surface className="p-6 text-center sm:p-8">
               <FileClock className="mx-auto h-8 w-8 text-territory-brand" aria-hidden="true" />
@@ -456,16 +438,8 @@ export default function PrivacySettingsPage() {
               <p className="mt-1 text-sm text-territory-muted">Quando houver registros de consentimento disponíveis para sua conta, eles aparecerão aqui.</p>
             </Surface>
           )}
-
           <Surface className="mt-4 px-4 sm:px-5">
-            <button type="button" onClick={() => navigate(DATA_PROTECTION_CONTACT_PATH)} className="flex min-h-14 w-full items-center gap-3 text-left text-sm font-semibold text-territory-ink focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-territory-brand">
-              <MessageCircleMore className="h-5 w-5 text-territory-brand" aria-hidden="true" />
-              <span className="min-w-0 flex-1">
-                <span className="block">Falar sobre meus dados</span>
-                <span className="mt-0.5 block text-xs font-normal text-territory-muted">Abra o canal existente de contato com proteção de dados.</span>
-              </span>
-              <ChevronRight className="h-5 w-5 text-territory-muted" aria-hidden="true" />
-            </button>
+            <LinkRow icon={<MessageCircleMore className="h-5 w-5" aria-hidden="true" />} title="Falar sobre meus dados" description="Abra o canal de contato com proteção de dados." onClick={() => navigate(DATA_PROTECTION_CONTACT_PATH)} />
           </Surface>
         </AccountSettingsShell>
       </>
@@ -476,8 +450,10 @@ export default function PrivacySettingsPage() {
     <>
       <Helmet><title>Privacidade e dados | Achegue-se</title></Helmet>
       <AccountSettingsShell
-        title={scheduled ? "Exclusão da conta solicitada" : "Suas escolhas, seus dados"}
-        description={scheduled ? "Consulte o andamento e as opções ainda disponíveis." : "Você no controle da sua privacidade."}
+        title={scheduled ? "Exclusão da conta solicitada" : "Privacidade e dados"}
+        desktopTitle={scheduled ? "Exclusão da conta solicitada" : "Suas escolhas, seus dados"}
+        mobileDescription={scheduled ? "Consulte o andamento e as opções disponíveis." : "Preferências da sua conta."}
+        desktopDescription={scheduled ? "Consulte o andamento e as opções disponíveis." : "Você no controle da sua privacidade."}
       >
         {deletionStatusLoading ? (
           <div className="mb-4 flex items-center gap-3 rounded-2xl border border-territory-border bg-territory-surface p-4 text-sm text-territory-muted" role="status">
@@ -486,170 +462,111 @@ export default function PrivacySettingsPage() {
           </div>
         ) : null}
         {deletionStatusError ? (
-          <div className="mb-4">
-            <QueryErrorState
-              message="Ações de exclusão ficam indisponíveis até que o estado atual da conta seja confirmado."
-              onRetry={() => void refetchDeletionStatus()}
-            />
-          </div>
+          <div className="mb-4"><QueryErrorState message="Ações de exclusão ficam indisponíveis até que o estado atual da conta seja confirmado." onRetry={() => void refetchDeletionStatus()} /></div>
         ) : null}
 
         {scheduled ? (
           <>
-            <div className="rounded-2xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-emerald-800" role="status">
-              <div className="flex items-center gap-2 font-semibold">
-                <CheckCircle2 className="h-5 w-5" aria-hidden="true" />
-                Solicitação registrada
-              </div>
+            <div className="mb-4 flex justify-center lg:hidden">
+              <span className="flex h-16 w-16 items-center justify-center rounded-full bg-red-50 text-red-600"><Trash2 className="h-8 w-8" aria-hidden="true" /></span>
             </div>
+            <div className="rounded-2xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-emerald-800" role="status">
+              <div className="flex items-center justify-center gap-2 font-semibold lg:justify-start"><CheckCircle2 className="h-5 w-5" aria-hidden="true" />Solicitação registrada</div>
+            </div>
+
             <Surface className="mt-4 p-4 sm:p-5">
               <h2 className="font-heading text-base font-bold text-territory-ink">Antes da conclusão</h2>
-              <p className="mt-2 text-sm leading-5 text-territory-muted">
-                O processamento segue as condições registradas na solicitação. Enquanto o cancelamento estiver permitido, você pode manter a conta.
-              </p>
+              <p className="mt-2 text-sm leading-5 text-territory-muted">A exclusão será processada conforme as condições apresentadas na solicitação.</p>
               {scheduledDate ? (
                 <div className="mt-4 flex items-start gap-3 rounded-xl bg-territory-raised p-3 text-sm text-territory-muted">
                   <Clock3 className="mt-0.5 h-5 w-5 shrink-0 text-territory-brand" aria-hidden="true" />
                   <span>Data informada para processamento: {scheduledDate}.</span>
                 </div>
               ) : null}
-              <Button type="button" variant="outline" className="mt-4 min-h-11 w-full" onClick={handleCancelDeletion} disabled={cancellingDeletion}>
-                {cancellingDeletion ? <Loader2 className="mr-2 h-4 w-4 animate-spin" aria-hidden="true" /> : <XCircle className="mr-2 h-4 w-4" aria-hidden="true" />}
-                {cancellingDeletion ? "Cancelando..." : "Cancelar solicitação"}
-              </Button>
-              <Button type="button" variant="link" className="mt-2 w-full text-territory-brand" onClick={() => navigate(ACCOUNT_PATHS.exportData)}>
-                <Download className="mr-2 h-4 w-4" aria-hidden="true" />
-                Exportar meus dados
-              </Button>
+              <Button type="button" variant="outline" className="mt-4 min-h-11 w-full" onClick={() => navigate(DATA_PROTECTION_CONTACT_PATH)}>Ver detalhes</Button>
             </Surface>
 
-            <Surface className="mt-4 px-4 sm:px-5">
-              <button type="button" onClick={() => navigate(ACCOUNT_PATHS.profiles)} className="flex min-h-16 w-full items-center gap-3 text-left focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-territory-brand">
-                <UsersRound className="h-5 w-5 shrink-0 text-territory-brand" aria-hidden="true" />
-                <span className="min-w-0 flex-1">
-                  <span className="block text-sm font-semibold text-territory-ink">Perfis e equipes</span>
-                  <span className="mt-0.5 block text-xs leading-4 text-territory-muted">Confira o impacto nos perfis e contextos que você administra.</span>
-                </span>
-                <ChevronRight className="h-5 w-5 text-territory-muted" aria-hidden="true" />
-              </button>
-            </Surface>
+            <Button type="button" className="mt-4 min-h-12 w-full bg-territory-brand text-white hover:bg-territory-brand/90" onClick={handleCancelDeletion} disabled={cancellingDeletion}>
+              {cancellingDeletion ? <Loader2 className="mr-2 h-4 w-4 animate-spin" aria-hidden="true" /> : <XCircle className="mr-2 h-4 w-4" aria-hidden="true" />}
+              {cancellingDeletion ? "Cancelando..." : "Cancelar solicitação"}
+            </Button>
+            <p className="mt-2 text-center text-xs text-territory-muted">Disponível enquanto o cancelamento for permitido.</p>
+            <Button type="button" variant="link" className="mt-1 w-full text-territory-brand" onClick={() => navigate(ACCOUNT_PATHS.exportData)}><Download className="mr-2 h-4 w-4" aria-hidden="true" />Exportar meus dados</Button>
 
             <Surface className="mt-4 px-4 sm:px-5">
-              <button type="button" onClick={() => navigate(SUPPORT_PATH)} className="flex min-h-14 w-full items-center gap-3 text-left text-sm font-semibold text-territory-ink focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-territory-brand">
-                <HelpCircle className="h-5 w-5 text-territory-brand" aria-hidden="true" />
-                <span className="flex-1">Preciso de ajuda</span>
-                <ChevronRight className="h-5 w-5 text-territory-muted" aria-hidden="true" />
-              </button>
+              <LinkRow icon={<UsersRound className="h-5 w-5" aria-hidden="true" />} title="Perfis e equipes" description="Confira o impacto nos perfis que você administra." onClick={() => navigate(ACCOUNT_PATHS.profiles)} />
+            </Surface>
+            <Surface className="mt-4 px-4 sm:px-5">
+              <LinkRow icon={<HelpCircle className="h-5 w-5" aria-hidden="true" />} title="Preciso de ajuda" onClick={() => navigate(SUPPORT_PATH)} />
             </Surface>
           </>
         ) : (
-          <div className="grid gap-4 lg:grid-cols-2">
-            <Surface className="p-4 sm:p-5">
-              <h2 className="font-heading text-base font-bold text-territory-ink">Preferências de dados</h2>
-              <div className="mt-2">
+          <>
+            <div className="grid gap-4 lg:grid-cols-2 lg:items-start">
+              <div className="grid gap-4">
+                <Surface className="p-4 sm:p-5">
+                  <h2 className="font-heading text-base font-bold text-territory-ink">Preferências de dados</h2>
+                  <div className="mt-2">
+                    {consentsLoading ? (
+                      <div className="flex items-center justify-center py-8" role="status"><Loader2 className="h-6 w-6 animate-spin text-territory-brand" aria-hidden="true" /></div>
+                    ) : consentsError ? (
+                      <QueryErrorState message="Suas escolhas não serão presumidas como desativadas." onRetry={() => void refetchConsents()} />
+                    ) : (
+                      CONSENT_ROWS.slice(0, 2).map(([type, label, description]) => (
+                        <ConsentRow key={type} idPrefix="summary" type={type} label={label} description={description} consent={consents?.find((item) => item.consent_type === type)} disabled={updateConsentMutation.isPending} onChange={(checked) => updateConsentMutation.mutate({ consentType: type, granted: checked })} />
+                      ))
+                    )}
+                  </div>
+                  {!consentsError ? (
+                    <div className="mt-1 border-t border-territory-border">
+                      <LinkRow icon={<Cookie className="h-5 w-5" aria-hidden="true" />} title="Cookies e permissões" onClick={() => document.getElementById("privacy-more")?.scrollIntoView({ behavior: "smooth" })} />
+                      <LinkRow icon={<MapPin className="h-5 w-5" aria-hidden="true" />} title="Localização neste dispositivo" description="Permissão gerenciada no navegador." onClick={() => document.getElementById("privacy-more")?.scrollIntoView({ behavior: "smooth" })} />
+                    </div>
+                  ) : null}
+                </Surface>
+
+                <Surface className="p-4 sm:p-5">
+                  <div className="flex items-start gap-3">
+                    <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-territory-sun/30 text-territory-ink"><UserRound className="h-5 w-5" aria-hidden="true" /></span>
+                    <div className="min-w-0 flex-1"><h2 className="font-heading text-base font-bold text-territory-ink">Visibilidade dos perfis</h2><p className="mt-1 text-sm leading-5 text-territory-muted">Escolha o que aparece em cada perfil.</p></div>
+                  </div>
+                  <Button type="button" className="mt-4 min-h-11 w-full bg-territory-sun text-territory-ink hover:bg-territory-sun/90" onClick={() => navigate(ACCOUNT_PATHS.profiles)}>Gerenciar em Meus perfis</Button>
+                </Surface>
+              </div>
+
+              <div className="grid gap-4">
+                <Surface className="p-4 sm:p-5">
+                  <div className="flex items-start gap-3">
+                    <Download className="mt-0.5 h-5 w-5 shrink-0 text-territory-brand" aria-hidden="true" />
+                    <div className="min-w-0 flex-1"><h2 className="font-heading text-base font-bold text-territory-ink">Exportar meus dados</h2><p className="mt-1 text-sm leading-5 text-territory-muted">Baixe uma cópia dos dados disponíveis para sua conta.</p></div>
+                  </div>
+                  <Button type="button" variant="outline" className="mt-4 min-h-11 w-full" onClick={() => navigate(ACCOUNT_PATHS.exportData)}>Exportar</Button>
+                </Surface>
+
+                <Surface className="px-4 sm:px-5">
+                  <LinkRow icon={<FileClock className="h-5 w-5" aria-hidden="true" />} title="Histórico de consentimentos" onClick={() => navigate(ACCOUNT_PATHS.consentHistory)} />
+                  <LinkRow icon={<MessageCircleMore className="h-5 w-5" aria-hidden="true" />} title="Falar sobre meus dados" onClick={() => navigate(DATA_PROTECTION_CONTACT_PATH)} />
+                </Surface>
+              </div>
+            </div>
+
+            <Surface id="privacy-more" className="mt-4 p-4 sm:p-5">
+              <h2 className="font-heading text-base font-bold text-territory-ink">Consentimentos e permissões</h2>
+              <p className="mt-1 text-sm text-territory-muted">Os controles existentes continuam disponíveis além do recorte principal do concept.</p>
+              <div className="mt-2 grid gap-x-6 lg:grid-cols-2">
                 {consentsLoading ? (
-                  <div className="flex items-center justify-center py-8" role="status"><Loader2 className="h-6 w-6 animate-spin text-territory-brand" aria-hidden="true" /></div>
+                  <div className="col-span-full flex items-center justify-center py-8" role="status"><Loader2 className="h-6 w-6 animate-spin text-territory-brand" aria-hidden="true" /></div>
                 ) : consentsError ? (
-                  <QueryErrorState message="Suas escolhas não serão presumidas como desativadas." onRetry={() => void refetchConsents()} />
+                  <div className="col-span-full"><QueryErrorState message="Não exibimos estados padrão quando a autoridade de consentimento está indisponível." onRetry={() => void refetchConsents()} /></div>
                 ) : (
-                  consentRows.slice(0, 2).map(([type, label, description]) => (
-                    <ConsentRow
-                      key={type}
-                      idPrefix="summary"
-                      type={type}
-                      label={label}
-                      description={description}
-                      consent={consents?.find((item) => item.consent_type === type)}
-                      disabled={updateConsentMutation.isPending}
-                      onChange={(checked) => updateConsentMutation.mutate({ consentType: type, granted: checked })}
-                    />
+                  CONSENT_ROWS.map(([type, label, description]) => (
+                    <ConsentRow key={type} idPrefix="details" type={type} label={label} description={description} consent={consents?.find((item) => item.consent_type === type)} disabled={updateConsentMutation.isPending} onChange={(checked) => updateConsentMutation.mutate({ consentType: type, granted: checked })} />
                   ))
                 )}
               </div>
-              {!consentsError ? (
-                <button type="button" className="mt-3 flex min-h-10 w-full items-center justify-between text-left text-sm font-medium text-territory-brand" onClick={() => document.getElementById("privacy-more")?.scrollIntoView({ behavior: "smooth" })}>
-                  Cookies e permissões
-                  <ChevronRight className="h-4 w-4" aria-hidden="true" />
-                </button>
-              ) : null}
             </Surface>
-
-            <div className="grid gap-4">
-              <Surface className="p-4 sm:p-5">
-                <div className="flex items-start gap-3">
-                  <Download className="mt-0.5 h-5 w-5 shrink-0 text-territory-brand" aria-hidden="true" />
-                  <div className="min-w-0 flex-1">
-                    <h2 className="font-heading text-base font-bold text-territory-ink">Exportar meus dados</h2>
-                    <p className="mt-1 text-sm leading-5 text-territory-muted">Veja o que será preparado antes de iniciar o download.</p>
-                  </div>
-                </div>
-                <Button type="button" variant="outline" className="mt-4 min-h-11 w-full" onClick={() => navigate(ACCOUNT_PATHS.exportData)}>
-                  <Download className="mr-2 h-4 w-4" aria-hidden="true" />
-                  Abrir exportação
-                </Button>
-              </Surface>
-
-              <Surface className="p-4 sm:p-5">
-                <div className="flex items-start gap-3">
-                  <UserRound className="mt-0.5 h-5 w-5 shrink-0 text-territory-brand" aria-hidden="true" />
-                  <div>
-                    <h2 className="font-heading text-base font-bold text-territory-ink">Visibilidade dos perfis</h2>
-                    <p className="mt-1 text-sm leading-5 text-territory-muted">Defina o que aparece em cada identidade pelo gerenciamento de perfis.</p>
-                  </div>
-                </div>
-                <Button type="button" variant="link" className="mt-2 px-0 text-territory-brand" onClick={() => navigate(ACCOUNT_PATHS.profiles)}>Abrir Meus perfis</Button>
-              </Surface>
-            </div>
-          </div>
+          </>
         )}
-
-        {!scheduled ? (
-          <Surface id="privacy-more" className="mt-4 p-4 sm:p-5">
-            <h2 className="font-heading text-base font-bold text-territory-ink">Consentimentos e permissões</h2>
-            <p className="mt-1 text-sm text-territory-muted">Os controles existentes no produto continuam disponíveis além do recorte visual do concept.</p>
-            <div className="mt-2 grid gap-x-6 lg:grid-cols-2">
-              {consentsLoading ? (
-                <div className="col-span-full flex items-center justify-center py-8" role="status"><Loader2 className="h-6 w-6 animate-spin text-territory-brand" aria-hidden="true" /></div>
-              ) : consentsError ? (
-                <div className="col-span-full"><QueryErrorState message="Não exibimos estados padrão quando a autoridade de consentimento está indisponível." onRetry={() => void refetchConsents()} /></div>
-              ) : (
-                consentRows.map(([type, label, description]) => (
-                  <ConsentRow
-                    key={type}
-                    idPrefix="details"
-                    type={type}
-                    label={label}
-                    description={description}
-                    consent={consents?.find((item) => item.consent_type === type)}
-                    disabled={updateConsentMutation.isPending}
-                    onChange={(checked) => updateConsentMutation.mutate({ consentType: type, granted: checked })}
-                  />
-                ))
-              )}
-            </div>
-          </Surface>
-        ) : null}
-
-        {!scheduled ? (
-          <Surface className="mt-4 px-4 sm:px-5">
-            <button type="button" onClick={() => navigate(ACCOUNT_PATHS.consentHistory)} className="flex min-h-14 w-full items-center gap-3 border-b border-territory-border text-left focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-territory-brand">
-              <FileClock className="h-5 w-5 shrink-0 text-territory-brand" aria-hidden="true" />
-              <span className="min-w-0 flex-1">
-                <span className="block text-sm font-semibold text-territory-ink">Histórico de consentimentos</span>
-                <span className="mt-0.5 block text-xs text-territory-muted">Consulte registros disponíveis das suas escolhas de privacidade.</span>
-              </span>
-              <ChevronRight className="h-5 w-5 text-territory-muted" aria-hidden="true" />
-            </button>
-            <button type="button" onClick={() => navigate(DATA_PROTECTION_CONTACT_PATH)} className="flex min-h-14 w-full items-center gap-3 text-left focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-territory-brand">
-              <MessageCircleMore className="h-5 w-5 shrink-0 text-territory-brand" aria-hidden="true" />
-              <span className="min-w-0 flex-1">
-                <span className="block text-sm font-semibold text-territory-ink">Falar sobre meus dados</span>
-                <span className="mt-0.5 block text-xs text-territory-muted">Entre em contato pelo canal existente de proteção de dados.</span>
-              </span>
-              <ChevronRight className="h-5 w-5 text-territory-muted" aria-hidden="true" />
-            </button>
-          </Surface>
-        ) : null}
 
         {!scheduled && !deletionStatusLoading && !deletionStatusError ? (
           <div className="mt-4 border-t border-territory-border pt-4">
@@ -659,17 +576,15 @@ export default function PrivacySettingsPage() {
               if (!open) setDeleteAcknowledged(false);
             }}>
               <AlertDialogTrigger asChild>
-                <Button type="button" variant="ghost" className="min-h-11 text-destructive hover:bg-destructive/5 hover:text-destructive">
-                  <Trash2 className="mr-2 h-4 w-4" aria-hidden="true" />
+                <Button type="button" variant="ghost" className="min-h-12 w-full justify-start rounded-2xl bg-red-50 px-4 text-destructive hover:bg-red-100 hover:text-destructive lg:w-auto lg:bg-transparent">
+                  <Trash2 className="mr-2 h-5 w-5" aria-hidden="true" />
                   Solicitar exclusão da conta
                 </Button>
               </AlertDialogTrigger>
               <AlertDialogContent className="max-w-[520px] rounded-2xl">
                 <AlertDialogHeader>
                   <AlertDialogTitle className="font-heading text-xl">Solicitar exclusão da sua conta?</AlertDialogTitle>
-                  <AlertDialogDescription>
-                    Confira o impacto antes de continuar. O prazo e as condições finais são definidos pelo serviço de exclusão quando a solicitação é registrada.
-                  </AlertDialogDescription>
+                  <AlertDialogDescription>Confira o impacto antes de continuar. O prazo e as condições finais são definidos pelo serviço de exclusão quando a solicitação é registrada.</AlertDialogDescription>
                 </AlertDialogHeader>
                 <div className="space-y-3 text-sm text-territory-muted">
                   <div className="flex items-start gap-2"><Shield className="mt-0.5 h-4 w-4 shrink-0" aria-hidden="true" /><span>Você perderá o acesso após a conclusão do fluxo.</span></div>
@@ -677,31 +592,12 @@ export default function PrivacySettingsPage() {
                   <div className="flex items-start gap-2"><FileText className="mt-0.5 h-4 w-4 shrink-0" aria-hidden="true" /><span>Alguns registros podem ser mantidos conforme obrigações e condições aplicáveis.</span></div>
                   <div>
                     <Label htmlFor="delete-reason">Motivo (opcional)</Label>
-                    <Textarea
-                      id="delete-reason"
-                      value={deleteReason}
-                      onChange={(event) => setDeleteReason(event.target.value.slice(0, 500))}
-                      disabled={deleting}
-                      className="mt-2 min-h-[92px]"
-                      placeholder="Conte-nos, se quiser."
-                      maxLength={500}
-                    />
+                    <Textarea id="delete-reason" value={deleteReason} onChange={(event) => setDeleteReason(event.target.value.slice(0, 500))} disabled={deleting} className="mt-2 min-h-[92px]" placeholder="Conte-nos, se quiser." maxLength={500} />
                     <p className="mt-1 text-right text-xs text-territory-muted">{deleteReason.length}/500</p>
                   </div>
-                  <Button type="button" variant="link" disabled={deleting} className="h-auto p-0 text-territory-brand" onClick={() => {
-                    setShowDeleteConfirm(false);
-                    navigate(ACCOUNT_PATHS.exportData);
-                  }}>
-                    Exportar meus dados antes
-                  </Button>
+                  <Button type="button" variant="link" disabled={deleting} className="h-auto p-0 text-territory-brand" onClick={() => { setShowDeleteConfirm(false); navigate(ACCOUNT_PATHS.exportData); }}>Exportar meus dados antes</Button>
                   <label className="flex cursor-pointer items-start gap-2 text-sm text-territory-ink">
-                    <input
-                      type="checkbox"
-                      checked={deleteAcknowledged}
-                      onChange={(event) => setDeleteAcknowledged(event.target.checked)}
-                      disabled={deleting}
-                      className="mt-0.5 h-4 w-4 rounded border-territory-border"
-                    />
+                    <input type="checkbox" checked={deleteAcknowledged} onChange={(event) => setDeleteAcknowledged(event.target.checked)} disabled={deleting} className="mt-0.5 h-4 w-4 rounded border-territory-border" />
                     <span>Entendi as consequências da solicitação.</span>
                   </label>
                 </div>
