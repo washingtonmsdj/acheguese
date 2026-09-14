@@ -259,7 +259,7 @@ describe("BoundaryService", () => {
     expect(result.rings[0][0]).toEqual([-12.98, -38.49]);
   });
 
-  it("hydrates boundary from the official FeatureServer declared on location metadata", async () => {
+  it("hydrates boundary from the canonical official FeatureServer owner", async () => {
     const { state, city } = createStateCityDistrict();
     const district = buildLocation({
       id: "district-nordeste",
@@ -274,6 +274,7 @@ describe("BoundaryService", () => {
         source_url:
           "https://services6.arcgis.com/demo/arcgis/rest/services/bairros/FeatureServer/0",
         source_object_id: 112,
+        official: true,
       },
     });
     const fetchMock = vi.fn(async () => ({
@@ -281,6 +282,7 @@ describe("BoundaryService", () => {
       json: async () => ({
         features: [
           {
+            properties: { OBJECTID: 112 },
             geometry: {
               type: "Polygon",
               coordinates: [
@@ -312,7 +314,8 @@ describe("BoundaryService", () => {
 
     const firstCall = fetchMock.mock.calls[0] as unknown as [string];
     const requestUrl = new URL(firstCall[0]);
-    expect(requestUrl.searchParams.get("where")).toBe("OBJECTID = 112");
+    expect(requestUrl.searchParams.get("where")).toBe("OBJECTID IN (112)");
+    expect(requestUrl.searchParams.get("outFields")).toBe("OBJECTID");
     expect(requestUrl.searchParams.get("f")).toBe("geojson");
   });
 
