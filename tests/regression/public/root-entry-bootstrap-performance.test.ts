@@ -38,21 +38,37 @@ describe("anonymous root bootstrap performance", () => {
     expect(runtime).not.toContain("HelmetProvider");
     expect(runtime).not.toContain("AccessibilityProvider");
     expect(runtime).not.toContain('import { AppRoutes }');
+    expect(runtime).not.toContain("FullScreenLoader");
 
     expect(fullShell).toContain("QueryClientProvider");
     expect(fullShell).toContain("HelmetProvider");
     expect(fullShell).toContain("AccessibilityProvider");
   });
 
-  it("loads public overlays only after the root becomes idle", () => {
+  it("mounts only minimal public overlays after load and browser idle", () => {
     const runtime = read("src/app/components/AppRuntime.tsx");
     const overlays = read("src/app/components/PublicRootOverlays.tsx");
 
     expect(runtime).toContain("shouldMountOverlays");
-    expect(runtime).toContain("timeoutMs: 1800");
-    expect(runtime).toContain("fallbackDelayMs: 900");
+    expect(runtime).toContain('document.readyState === "complete"');
+    expect(runtime).toContain('window.addEventListener("load", scheduleOverlays');
+    expect(runtime).toContain("timeoutMs: 2500");
+    expect(runtime).toContain("fallbackDelayMs: 1200");
+
     expect(overlays).toContain("QueryClientProvider");
-    expect(overlays).toContain("<GlobalOverlays />");
+    expect(overlays).toContain("<ConsentBanner />");
+    expect(overlays).toContain("<Toaster />");
+    expect(overlays).not.toContain("GlobalOverlays");
+    expect(overlays).not.toContain("OfflineIndicator");
+    expect(overlays).not.toContain("Sonner");
+  });
+
+  it("discovers the font and map host before runtime work begins", () => {
+    const html = read("index.html");
+
+    expect(html).toContain('rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans');
+    expect(html).toContain('rel="preconnect" href="https://tiles.openfreemap.org" crossorigin');
+    expect(html).toContain('rel="dns-prefetch" href="//tiles.openfreemap.org"');
   });
 
   it("keeps AdSense off load-critical work and schedules it on browser idle", () => {
