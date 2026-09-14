@@ -24,17 +24,62 @@ describe("anonymous root bootstrap performance", () => {
     expect(source).toContain("if (!input.userId) return");
   });
 
-  it("keeps AdSense off the parser and first-load critical path", () => {
+  it("renders the public root outside the full app provider tree", () => {
+    const runtime = read("src/app/components/AppRuntime.tsx");
+    const fullShell = read("src/app/components/FullAppRuntimeShell.tsx");
+
+    expect(runtime).toContain('import RootRouteEntry from "@/app/routes/RootRouteEntry"');
+    expect(runtime).toContain('import("@/app/components/FullAppRuntimeShell")');
+    expect(runtime).toContain('import("@/app/components/PublicRootOverlays")');
+    expect(runtime).toContain("<RootRouteEntry />");
+    expect(runtime).toContain("scheduleBrowserIdleWork");
+
+    expect(runtime).not.toContain("QueryClientProvider");
+    expect(runtime).not.toContain("HelmetProvider");
+    expect(runtime).not.toContain("AccessibilityProvider");
+    expect(runtime).not.toContain('import { AppRoutes }');
+
+    expect(fullShell).toContain("QueryClientProvider");
+    expect(fullShell).toContain("HelmetProvider");
+    expect(fullShell).toContain("AccessibilityProvider");
+  });
+
+  it("loads public overlays only after the root becomes idle", () => {
+    const runtime = read("src/app/components/AppRuntime.tsx");
+    const overlays = read("src/app/components/PublicRootOverlays.tsx");
+
+    expect(runtime).toContain("shouldMountOverlays");
+    expect(runtime).toContain("timeoutMs: 1800");
+    expect(runtime).toContain("fallbackDelayMs: 900");
+    expect(overlays).toContain("QueryClientProvider");
+    expect(overlays).toContain("<GlobalOverlays />");
+  });
+
+  it("keeps AdSense off load-critical work and schedules it on browser idle", () => {
     const html = read("index.html");
     const bootstrap = read("public/adsense-bootstrap.js");
 
     expect(html).toContain('<script src="/adsense-bootstrap.js" defer></script>');
-    expect(bootstrap).toContain('window.addEventListener("load", loadAds');
+    expect(bootstrap).toContain("scheduleAds");
+    expect(bootstrap).toContain('"requestIdleCallback" in window');
+    expect(bootstrap).toContain("timeout: 2500");
+    expect(bootstrap).toContain("window.setTimeout(loadAds, 1200)");
+    expect(bootstrap).toContain('window.addEventListener("load", scheduleAds');
     expect(bootstrap).toContain("ads.async = true");
   });
 
-  it("keeps MapLibre and its worker behind dynamic runtime loading", () => {
+  it("does not run the obsolete service-worker bootstrap before React", () => {
+    const html = read("index.html");
+
+    expect(html).not.toContain("service-worker-bootstrap.js");
+    expect(
+      fs.existsSync(path.join(ROOT, "public/service-worker-bootstrap.js")),
+    ).toBe(false);
+  });
+
+  it("keeps MapLibre and full-route services out of the public bootstrap", () => {
     const main = read("src/main.tsx");
+    const fullShell = read("src/app/components/FullAppRuntimeShell.tsx");
     const lazyAdapter = read(
       "src/core/maps/components/v3/LazyMapLibreAdapter.tsx",
     );
@@ -43,7 +88,13 @@ describe("anonymous root bootstrap performance", () => {
     );
 
     expect(main).not.toContain('from "maplibre-gl"');
-    expect(main).toContain('import("@/core/maps/config/maplibreWorkerRuntime")');
+    expect(main).not.toContain("CapabilityPreviewService");
+    expect(main).not.toContain("setupDefaultProviders");
+    expect(main).not.toContain("maplibreWorkerRuntime");
+
+    expect(fullShell).toContain("CapabilityPreviewService");
+    expect(fullShell).toContain("setupDefaultProviders");
+    expect(fullShell).toContain('import("@/core/maps/config/maplibreWorkerRuntime")');
     expect(lazyAdapter).toContain('import("../../config/maplibreWorkerRuntime")');
     expect(lazyAdapter).toContain('import("./MapLibreAdapter")');
     expect(workerRuntime).toContain('from "maplibre-gl"');
