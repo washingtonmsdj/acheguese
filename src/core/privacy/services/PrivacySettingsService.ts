@@ -12,6 +12,12 @@ export interface UserConsentRecord {
   privacy_policy_version: string;
 }
 
+export interface ConsentHistoryRecord extends UserConsentRecord {
+  revoked_at: string | null;
+  revoke_reason: string | null;
+  created_at: string;
+}
+
 export interface DeletionStatusRecord {
   status:
     | "scheduled"
@@ -36,25 +42,31 @@ interface ConsentRow {
   granted_at: string;
   terms_version: string;
   privacy_policy_version: string;
+  revoked_at?: string | null;
+  revoke_reason?: string | null;
+  created_at?: string;
+}
+
+interface ConsentUserQuery {
+  is: (
+    column: string,
+    value: null,
+  ) => {
+    order: (
+      column: string,
+      options: { ascending: boolean },
+    ) => Promise<QueryResult<ConsentRow[]>>;
+  };
+  order: (
+    column: string,
+    options: { ascending: boolean },
+  ) => Promise<QueryResult<ConsentRow[]>>;
 }
 
 interface PrivacySettingsDbClient {
   from: (table: string) => {
     select: (_columns: string) => {
-      eq: (
-        column: string,
-        value: string,
-      ) => {
-        is: (
-          column: string,
-          value: null,
-        ) => {
-          order: (
-            column: string,
-            options: { ascending: boolean },
-          ) => Promise<QueryResult<ConsentRow[]>>;
-        };
-      };
+      eq: (column: string, value: string) => ConsentUserQuery;
     };
   };
 }
@@ -71,7 +83,38 @@ export class PrivacySettingsService {
       .order("consent_type", { ascending: true });
 
     if (error) throw error;
-    return data ?? [];
+    return (data ?? []).map((row) => ({
+      id: row.id,
+      consent_type: row.consent_type,
+      granted: row.granted,
+      granted_at: row.granted_at,
+      terms_version: row.terms_version,
+      privacy_policy_version: row.privacy_policy_version,
+    }));
+  }
+
+  static async getConsentHistory(userId: string): Promise<ConsentHistoryRecord[]> {
+    const { data, error } = await this.db
+      .from("user_consents")
+      .select(
+        "id,consent_type,granted,granted_at,revoked_at,revoke_reason,terms_version,privacy_policy_version,created_at",
+      )
+      .eq("user_id", userId)
+      .order("created_at", { ascending: false });
+
+    if (error) throw error;
+
+    return (data ?? []).map((row) => ({
+      id: row.id,
+      consent_type: row.consent_type,
+      granted: row.granted,
+      granted_at: row.granted_at,
+      revoked_at: row.revoked_at ?? null,
+      revoke_reason: row.revoke_reason ?? null,
+      terms_version: row.terms_version,
+      privacy_policy_version: row.privacy_policy_version,
+      created_at: row.created_at ?? row.granted_at,
+    }));
   }
 
   static async getDeletionStatus(
