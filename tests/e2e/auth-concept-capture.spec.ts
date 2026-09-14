@@ -10,6 +10,7 @@ async function prepare(page: Page) {
     try {
       window.sessionStorage.setItem("auth.pending-signup-email", "ana@example.com");
       window.sessionStorage.setItem("auth.pending-signup-redirect", "/mensagens/sabores-da-ana");
+      window.sessionStorage.setItem("auth.pending-return-path", "/mensagens/sabores-da-ana");
       const style = document.createElement("style");
       style.textContent = `*,*::before,*::after{animation:none!important;transition:none!important;caret-color:transparent!important}`;
       document.documentElement.appendChild(style);
@@ -46,6 +47,11 @@ test.describe("Auth concept capture", () => {
     await page.goto("/reset-password?mode=request&email=ana%40example.com", { waitUntil: "domcontentloaded" });
     await expect(page.getByRole("heading", { name: /Vamos recuperar/ })).toBeVisible();
     await capture(page, "mobile-recovery-request.png");
+
+    await page.goto("/aceitar-termos", { waitUntil: "domcontentloaded" });
+    await expect(page.getByRole("heading", { name: "Antes de continuar" })).toBeVisible();
+    await expect(page.getByText("Conversas", { exact: true })).toBeVisible();
+    await capture(page, "mobile-terms-signed-out.png");
   });
 
   test("captures desktop concept screens", async ({ page }) => {
@@ -68,5 +74,10 @@ test.describe("Auth concept capture", () => {
     await page.goto("/reset-password?mode=request&email=ana%40example.com", { waitUntil: "domcontentloaded" });
     await expect(page.getByText("Vamos ajudar você a voltar.", { exact: true })).toBeVisible();
     await capture(page, "desktop-recovery-request.png");
+
+    await page.goto("/aceitar-termos", { waitUntil: "domcontentloaded" });
+    await expect(page.getByRole("heading", { name: "Antes de continuar" })).toBeVisible();
+    await expect(page.getByText("Conversas", { exact: true })).toBeVisible();
+    await capture(page, "desktop-terms-signed-out.png");
   });
 });
