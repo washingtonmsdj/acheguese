@@ -1,6 +1,8 @@
 import { useCallback, useState } from "react";
 import { toast } from "sonner";
 import { DriverAvailabilityService } from "@/core/mobility/services/DriverAvailabilityService";
+import { GEOLOCATION_RUNTIME } from "@/shared/config/geolocation";
+import { GeolocationService } from "@/shared/services/GeolocationService";
 
 interface UseDriverOperationalStatusOptions {
   driverProfileId: string | null;
@@ -11,29 +13,17 @@ interface UseDriverOperationalStatusOptions {
 
 type OperationalMode = "ride" | "motoboy";
 
-function getCurrentCoordinates(): Promise<{ lat: number; lng: number }> {
-  if (typeof navigator === "undefined" || !navigator.geolocation) {
-    return Promise.reject(new Error("Geolocalização indisponível neste dispositivo"));
-  }
-
-  return new Promise((resolve, reject) => {
-    navigator.geolocation.getCurrentPosition(
-      (position) => {
-        resolve({
-          lat: position.coords.latitude,
-          lng: position.coords.longitude,
-        });
-      },
-      (error) => {
-        reject(new Error(error.message || "Falha ao obter a localização atual"));
-      },
-      {
-        enableHighAccuracy: true,
-        timeout: 15000,
-        maximumAge: 0,
-      },
-    );
+async function getCurrentCoordinates(): Promise<{ lat: number; lng: number }> {
+  const result = await GeolocationService.getCurrentLocation({
+    useCache: false,
+    timeout: GEOLOCATION_RUNTIME.requestTimeoutMs,
+    gpsMode: "precise",
+    allowIpFallback: false,
   });
+  return {
+    lat: result.coords.latitude,
+    lng: result.coords.longitude,
+  };
 }
 
 export function useDriverOperationalStatus({
