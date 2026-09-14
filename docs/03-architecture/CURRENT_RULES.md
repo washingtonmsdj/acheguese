@@ -2,7 +2,7 @@
 
 Data-base: 2026-09-14  
 Status: ATIVO / CANONICO  
-Versao documental: 4.9
+Versao documental: 5.0
 
 Este documento define regras arquiteturais globais. Contratos detalhados de domínio permanecem nos owners executáveis e nos documentos específicos listados em `docs/README.md`; este arquivo não deve duplicar implementação.
 
@@ -100,7 +100,8 @@ Os contratos detalhados vivem em `docs/07-modules/` e nos owners executáveis co
 - Entity Private Data;
 - Gastronomy;
 - Coverage/Mobility;
-- Maps/MapLibre runtime.
+- Maps/MapLibre runtime;
+- Geolocation/Location resolution.
 
 ### 6.1 Maps / MapLibre runtime
 
@@ -112,6 +113,18 @@ Os contratos detalhados vivem em `docs/07-modules/` e nos owners executáveis co
 - otimização reutilizável de mapa deve ser implementada no owner canônico para beneficiar todas as páginas. Agendamento específico da `/` pode continuar em `publicRootReadiness` somente quando a regra depende da prioridade exclusiva da entrada pública.
 - `prewarmMapLibreWorkers()` é opt-in para superfícies que montarão mapa imediatamente; não deve virar warmup global em rotas sem mapa.
 - regressões de arquitetura devem impedir novos imports runtime/CSS diretos fora do núcleo canônico.
+
+### 6.2 Geolocation / Location resolution
+
+- `src/shared/services/GeolocationService.ts` é o owner único da Browser Geolocation API no web: GPS one-shot, cache, permissão, retry, watch e fallback IP pertencem a esse service.
+- `src/shared/config/geolocation.ts` é o owner da política e dos tempos de geolocalização; consumidores não replicam timeout, retry ou semântica de fallback quando o contrato compartilhado atende o caso.
+- `src/shared/hooks/useRobustGeolocation.ts` é camada React sobre o service, não um segundo owner de infraestrutura.
+- `src/core/location/services/LocationGeocodingService.ts` é o owner de geocoding, reverse geocoding e lookup de CEP reconciliados com o SSOT territorial `locations`; UI não chama provider de CEP/geocoding diretamente quando esse owner atende o caso.
+- páginas, componentes e hooks de domínio não chamam `navigator.geolocation` diretamente. O ratchet em `tests/architecture/geolocation-ssot-boundary.test.ts` protege essa fronteira.
+- ação explícita “usar minha localização” exige GPS preciso e não pode degradar silenciosamente para localização por IP; cache/IP também não equivalem a permissão GPS concedida.
+- coordenada `0` é válida. Presença de latitude/longitude deve usar validação finita/nullish, nunca truthiness (`lat && lng`, `value || fallback`) que converta zero em ausente.
+- fallback IP é aproximação e só pode ser usado em fluxos cujo contrato aceite explicitamente baixa precisão.
+- geolocalização de leitura/cache não deve disparar prompt GPS escondido quando o contrato do consumidor é apenas hidratação passiva.
 
 Regra: este documento não replica lifecycle, tabelas, RPCs ou allowlists desses contratos. Mudanças devem ocorrer no owner técnico e em seu teste/validator.
 
@@ -168,6 +181,9 @@ Mudanças de segurança/schema executam adicionalmente os gates indicados em `SE
 - não criar rota pública concorrente para a mesma identidade;
 - não importar runtime ou CSS de MapLibre diretamente em páginas/módulos quando o loader/adapter canônico atende o caso;
 - não criar segundo worker configurator, segundo tile provider default ou warmup global paralelo;
+- não chamar `navigator.geolocation` fora do owner compartilhado nem criar novo hook/service paralelo para contornar esse boundary;
+- não chamar ViaCEP/provider de geocoding diretamente na UI quando `LocationGeocodingService` atende o contrato;
+- não tratar coordenada `0` como valor ausente;
 - não usar placeholder, `paused`, fallback vazio ou retorno antecipado como prova de módulo funcional;
 - não declarar `MVP READY` sem cumprir o DoD de `docs/08-roadmap/EXECUCAO_MAIN_ONLY.md`;
 - não reduzir gate de segurança/CI para obter status verde.
