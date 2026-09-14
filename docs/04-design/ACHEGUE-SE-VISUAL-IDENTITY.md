@@ -23,7 +23,7 @@ Estados semânticos não reutilizam o solar: erro (`--semantic-error`), sucesso 
 
 ## Validação de acessibilidade
 
-- Fonte migrada para Plus Jakarta Sans, com 400 para texto, 500–600 para controles e 700 para títulos.
+- Fonte migrada para Plus Jakarta Sans, com 400 para texto, 500–600 para controles, 700 para títulos e 800 reservado a display/wordmark quando o concept exige ênfase extra.
 - Áreas de toque e controles preservam o mínimo de 44px definido pelo sistema de acessibilidade existente.
 - Foco visível usa `--semantic-focus`; movimento reduzido continua desabilitando transições e animações.
 - `#123E3D` sobre `#FAFBF7`: contraste aproximado 11,34:1.
