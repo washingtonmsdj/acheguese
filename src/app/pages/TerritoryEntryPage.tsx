@@ -178,7 +178,7 @@ export default function TerritoryEntryPage() {
         Pular para o conteúdo principal
       </a>
 
-      <header className="territory-entry-header">
+      <header className="territory-entry-header max-md:min-h-[calc(3.5rem+env(safe-area-inset-top))]">
         <div className="territory-entry-header-inner">
           <a href="/" className="entry-wordmark" aria-label="Achegue-se — início">
             achegue-se<span aria-hidden="true">.</span>
