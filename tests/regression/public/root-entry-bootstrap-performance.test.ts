@@ -128,10 +128,17 @@ describe("anonymous root bootstrap performance", () => {
     expect(overlays).not.toContain("Sonner");
   });
 
-  it("discovers the font and map hosts before runtime work begins", () => {
+  it("discovers font and map hosts without render-blocking Google Fonts", () => {
     const html = read("index.html");
 
-    expect(html).toContain('rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans');
+    expect(html).toContain("data-public-font-stylesheet");
+    expect(html).toContain('rel="preload"');
+    expect(html).toContain('as="style"');
+    expect(html).toContain("display=optional");
+    expect(html).toContain('<script src="/font-bootstrap.js" defer></script>');
+    expect(html).not.toContain(
+      '<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans',
+    );
     expect(html).toContain('rel="preconnect" href="https://tiles.openfreemap.org" crossorigin');
     expect(html).toContain('rel="dns-prefetch" href="//tiles.openfreemap.org"');
   });
