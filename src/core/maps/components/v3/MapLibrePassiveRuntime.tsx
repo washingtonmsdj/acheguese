@@ -9,7 +9,6 @@ import type { Map as MapLibreMap } from "maplibre-gl";
 
 import { loadMapLibreRuntime } from "@/core/maps/runtime/loadMapLibreRuntime";
 import { readMapState, writeMapState } from "@/core/maps/runtime/mapRuntimeState";
-import { logger } from "@/shared/utils/logger";
 import type {
   MapLibreAdapterHandle,
   MapLibreAdapterProps,
@@ -29,6 +28,18 @@ function isFiniteCoordinate(latitude: unknown, longitude: unknown): boolean {
     longitude >= -180 &&
     longitude <= 180
   );
+}
+
+function reportPassiveMapIssue(
+  level: "debug" | "warn",
+  message: string,
+  context?: unknown,
+): void {
+  void import("@/shared/utils/logger")
+    .then(({ logger }) => {
+      logger[level](message, context);
+    })
+    .catch(() => undefined);
 }
 
 /**
@@ -156,7 +167,7 @@ export const MapLibrePassiveRuntime = forwardRef<
           event.preventDefault?.();
           return;
         }
-        logger.warn("[MapLibrePassiveRuntime] Map error:", message);
+        reportPassiveMapIssue("warn", "[MapLibrePassiveRuntime] Map error:", message);
         if (typeof window !== "undefined") {
           const state = readMapState();
           (state.errors = state.errors || []).push(message || "unknown");
@@ -318,7 +329,11 @@ export const MapLibrePassiveRuntime = forwardRef<
               },
             );
           } catch (error) {
-            logger.debug("[MapLibrePassiveRuntime] Ignoring invalid territory bounds:", error);
+            reportPassiveMapIssue(
+              "debug",
+              "[MapLibrePassiveRuntime] Ignoring invalid territory bounds:",
+              error,
+            );
           }
         }
       }
