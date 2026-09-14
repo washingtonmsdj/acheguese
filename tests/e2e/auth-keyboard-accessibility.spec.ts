@@ -1,5 +1,10 @@
 import { expect, test } from "@playwright/test";
 
+import {
+  AUTH_JOURNEY_INTENTS,
+  seedAuthFlowState,
+} from "./helpers/authFlowState";
+
 test.describe("Conta e acesso — teclado e foco", () => {
   test("login mantém ordem de foco útil e controles de senha operáveis", async ({ page }) => {
     await page.setViewportSize({ width: 390, height: 844 });
@@ -61,8 +66,9 @@ test.describe("Conta e acesso — teclado e foco", () => {
   });
 
   test("retomada de erro OAuth é alcançável e ativável pelo teclado", async ({ page }) => {
-    await page.addInitScript(() => {
-      window.sessionStorage.setItem("auth.pending-return-path", "/mensagens/sabores-da-ana");
+    await seedAuthFlowState(page, {
+      pendingReturn: "/mensagens/sabores-da-ana",
+      pendingIntent: AUTH_JOURNEY_INTENTS.login,
     });
     await page.setViewportSize({ width: 390, height: 844 });
     await page.goto("/aceitar-termos?error=access_denied", {
@@ -75,6 +81,8 @@ test.describe("Conta e acesso — teclado e foco", () => {
     await page.keyboard.press("Enter");
 
     await expect(page).toHaveURL(/\/login\?redirect=%2Fmensagens%2Fsabores-da-ana$/);
-    await expect(page.getByRole("button", { name: "Continuar com Google" })).toBeVisible();
+    await expect(
+      page.getByRole("button", { name: "Continuar com Google" }),
+    ).toBeVisible();
   });
 });
