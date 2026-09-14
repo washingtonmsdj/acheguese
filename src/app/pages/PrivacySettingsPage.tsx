@@ -10,12 +10,14 @@ import {
   Clock3,
   Cookie,
   Download,
+  FileClock,
   FileText,
   HelpCircle,
   Info,
   Loader2,
   Mail,
   MapPin,
+  MessageCircleMore,
   RefreshCw,
   Settings2,
   Shield,
@@ -27,7 +29,11 @@ import {
 } from "lucide-react";
 
 import { useAuth } from "@/core/auth/hooks/useAuth";
-import { PrivacySettingsService, type UserConsentRecord } from "@/core/privacy/services/PrivacySettingsService";
+import {
+  PrivacySettingsService,
+  type ConsentHistoryRecord,
+  type UserConsentRecord,
+} from "@/core/privacy/services/PrivacySettingsService";
 import { ACCOUNT_PATHS } from "@/core/routing/config/account";
 import { useAppUrls } from "@/core/routing/hooks/useAppUrls";
 import { AccountSettingsShell } from "@/modules/profile/components/AccountSettingsShell";
@@ -46,10 +52,25 @@ import { Button } from "@/shared/components/ui/button";
 import { Label } from "@/shared/components/ui/label";
 import { Switch } from "@/shared/components/ui/switch";
 import { Textarea } from "@/shared/components/ui/textarea";
-import { SUPPORT_PATH } from "@/shared/constants/legal";
+import {
+  DATA_PROTECTION_CONTACT_PATH,
+  SUPPORT_PATH,
+} from "@/shared/constants/legal";
 import { useToast } from "@/shared/hooks/use-toast";
 
 type UserConsent = UserConsentRecord;
+
+const CONSENT_LABELS: Readonly<Record<string, string>> = {
+  analytics: "Medição de uso",
+  marketing: "Ofertas e novidades",
+  cookies: "Cookies não essenciais",
+  geolocation: "Localização",
+  notifications: "Notificações push",
+  data_processing: "Processamento de dados",
+  third_party: "Compartilhamento com terceiros",
+  terms_of_service: "Termos de uso",
+  privacy_policy: "Política de privacidade",
+};
 
 function Surface({
   children,
@@ -161,6 +182,64 @@ function formatDeletionDate(value: string | null | undefined): string | null {
   return date.toLocaleDateString("pt-BR");
 }
 
+function formatConsentTimestamp(value: string): string {
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return "Data indisponível";
+  return date.toLocaleString("pt-BR", {
+    dateStyle: "medium",
+    timeStyle: "short",
+  });
+}
+
+function ConsentHistoryItem({ record }: { record: ConsentHistoryRecord }) {
+  const Icon = getConsentIcon(record.consent_type);
+  const revoked = Boolean(record.revoked_at);
+  const status = revoked ? "Revogado" : record.granted ? "Concedido" : "Negado";
+  const statusClass = revoked
+    ? "bg-territory-raised text-territory-muted"
+    : record.granted
+      ? "bg-emerald-100 text-emerald-800"
+      : "bg-amber-100 text-amber-900";
+
+  return (
+    <article className="border-b border-territory-border py-4 last:border-b-0">
+      <div className="flex items-start gap-3">
+        <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-territory-brand/10 text-territory-brand">
+          <Icon className="h-5 w-5" aria-hidden="true" />
+        </span>
+        <div className="min-w-0 flex-1">
+          <div className="flex flex-wrap items-center gap-2">
+            <h2 className="text-sm font-semibold text-territory-ink">
+              {CONSENT_LABELS[record.consent_type] ?? record.consent_type}
+            </h2>
+            <span className={`rounded-full px-2 py-1 text-xs font-semibold ${statusClass}`}>
+              {status}
+            </span>
+          </div>
+          <p className="mt-1 text-xs text-territory-muted">
+            Registrado em {formatConsentTimestamp(record.created_at || record.granted_at)}
+          </p>
+          {record.revoked_at ? (
+            <p className="mt-1 text-xs text-territory-muted">
+              Revogado em {formatConsentTimestamp(record.revoked_at)}
+            </p>
+          ) : null}
+          {record.revoke_reason ? (
+            <p className="mt-2 text-xs leading-4 text-territory-muted">Motivo: {record.revoke_reason}</p>
+          ) : null}
+          {(record.terms_version || record.privacy_policy_version) ? (
+            <p className="mt-2 text-xs leading-4 text-territory-muted">
+              {record.terms_version ? `Termos ${record.terms_version}` : ""}
+              {record.terms_version && record.privacy_policy_version ? " · " : ""}
+              {record.privacy_policy_version ? `Privacidade ${record.privacy_policy_version}` : ""}
+            </p>
+          ) : null}
+        </div>
+      </div>
+    </article>
+  );
+}
+
 export default function PrivacySettingsPage() {
   const appUrls = useAppUrls();
   const location = useLocation();
@@ -175,6 +254,9 @@ export default function PrivacySettingsPage() {
   const [deleting, setDeleting] = useState(false);
   const [cancellingDeletion, setCancellingDeletion] = useState(false);
 
+  const exportView = location.hash === "#exportar";
+  const historyView = location.hash === "#historico";
+
   const {
     data: consents,
     isLoading: consentsLoading,
@@ -184,6 +266,17 @@ export default function PrivacySettingsPage() {
     queryKey: ["user-consents", user?.id],
     queryFn: async () => PrivacySettingsService.getUserConsents(user!.id),
     enabled: !!user?.id,
+  });
+
+  const {
+    data: consentHistory,
+    isLoading: historyLoading,
+    isError: historyError,
+    refetch: refetchHistory,
+  } = useQuery({
+    queryKey: ["consent-history", user?.id],
+    queryFn: async () => PrivacySettingsService.getConsentHistory(user!.id),
+    enabled: !!user?.id && historyView,
   });
 
   const {
@@ -207,7 +300,10 @@ export default function PrivacySettingsPage() {
       });
     },
     onSuccess: async () => {
-      await queryClient.invalidateQueries({ queryKey: ["user-consents", user?.id] });
+      await Promise.all([
+        queryClient.invalidateQueries({ queryKey: ["user-consents", user?.id] }),
+        queryClient.invalidateQueries({ queryKey: ["consent-history", user?.id] }),
+      ]);
       toast({ title: "Preferência atualizada", description: "Sua preferência de privacidade foi salva." });
     },
     onError: () => {
@@ -290,7 +386,6 @@ export default function PrivacySettingsPage() {
 
   const scheduled = deletionStatus?.status === "scheduled";
   const scheduledDate = formatDeletionDate(deletionStatus?.scheduled_purge_at);
-  const exportView = location.hash === "#exportar";
 
   if (exportView) {
     return (
@@ -318,6 +413,57 @@ export default function PrivacySettingsPage() {
             <button type="button" onClick={() => navigate(SUPPORT_PATH)} className="flex min-h-14 w-full items-center gap-3 text-left text-sm font-semibold text-territory-ink focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-territory-brand">
               <HelpCircle className="h-5 w-5 text-territory-brand" aria-hidden="true" />
               <span className="flex-1">Preciso de ajuda</span>
+              <ChevronRight className="h-5 w-5 text-territory-muted" aria-hidden="true" />
+            </button>
+          </Surface>
+        </AccountSettingsShell>
+      </>
+    );
+  }
+
+  if (historyView) {
+    return (
+      <>
+        <Helmet><title>Histórico de consentimentos | Achegue-se</title></Helmet>
+        <AccountSettingsShell
+          title="Histórico de consentimentos"
+          description="Consulte os registros disponibilizados para suas escolhas de privacidade."
+        >
+          {historyLoading ? (
+            <Surface className="flex min-h-32 items-center justify-center p-5" >
+              <div className="text-center" role="status">
+                <Loader2 className="mx-auto h-6 w-6 animate-spin text-territory-brand" aria-hidden="true" />
+                <p className="mt-2 text-sm text-territory-muted">Carregando histórico...</p>
+              </div>
+            </Surface>
+          ) : historyError ? (
+            <Surface className="p-4 sm:p-5">
+              <QueryErrorState
+                message="Nenhum registro será presumido enquanto o histórico não puder ser consultado."
+                onRetry={() => void refetchHistory()}
+              />
+            </Surface>
+          ) : consentHistory && consentHistory.length > 0 ? (
+            <Surface className="px-4 sm:px-5">
+              {consentHistory.map((record) => (
+                <ConsentHistoryItem key={record.id} record={record} />
+              ))}
+            </Surface>
+          ) : (
+            <Surface className="p-6 text-center sm:p-8">
+              <FileClock className="mx-auto h-8 w-8 text-territory-brand" aria-hidden="true" />
+              <h2 className="mt-3 font-heading text-base font-bold text-territory-ink">Nenhum registro disponível</h2>
+              <p className="mt-1 text-sm text-territory-muted">Quando houver registros de consentimento disponíveis para sua conta, eles aparecerão aqui.</p>
+            </Surface>
+          )}
+
+          <Surface className="mt-4 px-4 sm:px-5">
+            <button type="button" onClick={() => navigate(DATA_PROTECTION_CONTACT_PATH)} className="flex min-h-14 w-full items-center gap-3 text-left text-sm font-semibold text-territory-ink focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-territory-brand">
+              <MessageCircleMore className="h-5 w-5 text-territory-brand" aria-hidden="true" />
+              <span className="min-w-0 flex-1">
+                <span className="block">Falar sobre meus dados</span>
+                <span className="mt-0.5 block text-xs font-normal text-territory-muted">Abra o canal existente de contato com proteção de dados.</span>
+              </span>
               <ChevronRight className="h-5 w-5 text-territory-muted" aria-hidden="true" />
             </button>
           </Surface>
@@ -375,6 +521,25 @@ export default function PrivacySettingsPage() {
                 <Download className="mr-2 h-4 w-4" aria-hidden="true" />
                 Exportar meus dados
               </Button>
+            </Surface>
+
+            <Surface className="mt-4 px-4 sm:px-5">
+              <button type="button" onClick={() => navigate(ACCOUNT_PATHS.profiles)} className="flex min-h-16 w-full items-center gap-3 text-left focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-territory-brand">
+                <UsersRound className="h-5 w-5 shrink-0 text-territory-brand" aria-hidden="true" />
+                <span className="min-w-0 flex-1">
+                  <span className="block text-sm font-semibold text-territory-ink">Perfis e equipes</span>
+                  <span className="mt-0.5 block text-xs leading-4 text-territory-muted">Confira o impacto nos perfis e contextos que você administra.</span>
+                </span>
+                <ChevronRight className="h-5 w-5 text-territory-muted" aria-hidden="true" />
+              </button>
+            </Surface>
+
+            <Surface className="mt-4 px-4 sm:px-5">
+              <button type="button" onClick={() => navigate(SUPPORT_PATH)} className="flex min-h-14 w-full items-center gap-3 text-left text-sm font-semibold text-territory-ink focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-territory-brand">
+                <HelpCircle className="h-5 w-5 text-territory-brand" aria-hidden="true" />
+                <span className="flex-1">Preciso de ajuda</span>
+                <ChevronRight className="h-5 w-5 text-territory-muted" aria-hidden="true" />
+              </button>
             </Surface>
           </>
         ) : (
@@ -462,6 +627,27 @@ export default function PrivacySettingsPage() {
                 ))
               )}
             </div>
+          </Surface>
+        ) : null}
+
+        {!scheduled ? (
+          <Surface className="mt-4 px-4 sm:px-5">
+            <button type="button" onClick={() => navigate(ACCOUNT_PATHS.consentHistory)} className="flex min-h-14 w-full items-center gap-3 border-b border-territory-border text-left focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-territory-brand">
+              <FileClock className="h-5 w-5 shrink-0 text-territory-brand" aria-hidden="true" />
+              <span className="min-w-0 flex-1">
+                <span className="block text-sm font-semibold text-territory-ink">Histórico de consentimentos</span>
+                <span className="mt-0.5 block text-xs text-territory-muted">Consulte registros disponíveis das suas escolhas de privacidade.</span>
+              </span>
+              <ChevronRight className="h-5 w-5 text-territory-muted" aria-hidden="true" />
+            </button>
+            <button type="button" onClick={() => navigate(DATA_PROTECTION_CONTACT_PATH)} className="flex min-h-14 w-full items-center gap-3 text-left focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-territory-brand">
+              <MessageCircleMore className="h-5 w-5 shrink-0 text-territory-brand" aria-hidden="true" />
+              <span className="min-w-0 flex-1">
+                <span className="block text-sm font-semibold text-territory-ink">Falar sobre meus dados</span>
+                <span className="mt-0.5 block text-xs text-territory-muted">Entre em contato pelo canal existente de proteção de dados.</span>
+              </span>
+              <ChevronRight className="h-5 w-5 text-territory-muted" aria-hidden="true" />
+            </button>
           </Surface>
         ) : null}
 
