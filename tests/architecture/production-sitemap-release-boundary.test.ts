@@ -83,4 +83,15 @@ describe("production sitemap release boundary", () => {
     expect(edgeSitemap).not.toContain("{ loc: '/comunidade'");
     expect(edgeSitemap).not.toContain("{ loc: '/cookies'");
   });
+
+  it("preserves GET request CORS on sitemap error responses", () => {
+    const edgeSitemap = read("supabase/functions/sitemap/index.ts");
+    const security = read("supabase/functions/_shared/security.ts");
+
+    expect(security).toContain("req?: Request");
+    expect(security).toContain("methods = 'POST, OPTIONS'");
+    expect(security).toContain("headers: getAllSecurityHeaders(methods, req)");
+    expect(edgeSitemap).toContain("errorResponse(\n      'Failed to generate sitemap'");
+    expect(edgeSitemap).toContain("req,\n      'GET, OPTIONS'");
+  });
 });
