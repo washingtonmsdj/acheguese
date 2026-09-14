@@ -6,39 +6,28 @@ const ROOT = process.cwd();
 const read = (filePath: string) => fs.readFileSync(path.join(ROOT, filePath), "utf8");
 
 describe("public root auth-return runtime boundary", () => {
-  it("does not treat every root hash anchor as an auth callback", () => {
+  it("delegates root callback classification to the canonical auth utility", () => {
     const runtime = read("src/app/components/AppRuntime.tsx");
 
-    expect(runtime).toContain("function hasRootAuthReturnMarkers(): boolean");
-    expect(runtime).toContain('window.location.hash.replace(/^#/, "")');
+    expect(runtime).toContain(
+      'import { hasAuthCallbackMarker } from "@/core/auth/utils/authCallback";',
+    );
+    expect(runtime).toContain("!hasAuthCallbackMarker(");
+    expect(runtime).toContain("window.location.search");
+    expect(runtime).toContain("window.location.hash");
+    expect(runtime).not.toContain("function hasRootAuthReturnMarkers");
     expect(runtime).not.toContain("window.location.hash.length > 1");
   });
 
-  it("keeps real PKCE, recovery and hash-error markers on the full runtime through the auth SSOT", () => {
-    const runtime = read("src/app/components/AppRuntime.tsx");
-    const authFlow = read("src/core/auth/constants/authFlow.ts");
+  it("keeps ordinary anchors distinct from real callback markers in the canonical utility", () => {
+    const callback = read("src/core/auth/utils/authCallback.ts");
 
-    expect(runtime).toContain(
-      'import { AUTH_QUERY_KEYS } from "@/core/auth/constants/authFlow";',
-    );
-    expect(runtime).toContain("searchParams.has(AUTH_QUERY_KEYS.code)");
-    expect(runtime).toContain(
-      'searchParams.get(AUTH_QUERY_KEYS.mode) === "recovery"',
-    );
-    expect(runtime).toContain(
-      'searchParams.get(AUTH_QUERY_KEYS.type) === "recovery"',
-    );
-    expect(runtime).toContain("hashParams.has(AUTH_QUERY_KEYS.accessToken)");
-    expect(runtime).toContain("hashParams.has(AUTH_QUERY_KEYS.refreshToken)");
-    expect(runtime).toContain("hashParams.has(AUTH_QUERY_KEYS.error)");
-    expect(runtime).toContain("hashParams.has(AUTH_QUERY_KEYS.errorCode)");
-    expect(runtime).toContain(
-      'hashParams.get(AUTH_QUERY_KEYS.type) === "recovery"',
-    );
-    expect(runtime).toContain("return !hasRootAuthReturnMarkers();");
-
-    expect(authFlow).toContain('accessToken: "access_token"');
-    expect(authFlow).toContain('refreshToken: "refresh_token"');
+    expect(callback).toContain("export function hasAuthCallbackMarker(");
+    expect(callback).toContain("searchParams.has(AUTH_QUERY_KEYS.code)");
+    expect(callback).toContain("isPasswordRecoveryCallback(search, hash)");
+    expect(callback).toContain("hashParams.has(AUTH_QUERY_KEYS.accessToken)");
+    expect(callback).toContain("hashParams.has(AUTH_QUERY_KEYS.refreshToken)");
+    expect(callback).toContain("getAuthCallbackError(search, hash) !== null");
   });
 
   it("keeps auth detection dependency-light on the lean bootstrap", () => {
