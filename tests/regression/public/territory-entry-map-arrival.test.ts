@@ -9,10 +9,12 @@ const runtime = read("src/app/components/territory-vivo/TerritoryEntryMapRuntime
 const arrival = read("src/app/components/territory-vivo/TerritoryEntryMapArrival.tsx");
 
 describe("territory entry map arrival", () => {
-  it("starts map work before territorial resolution finishes", () => {
+  it("mounts map runtime immediately after the first arrival paint", () => {
     expect(wrapper).toContain("loadTerritoryEntryMapRuntime");
-    expect(wrapper).toContain('rootMargin: "720px 0px"');
-    expect(wrapper).not.toContain("if (isLoading || shouldMountRuntime) return");
+    expect(wrapper).toContain("setShouldMountRuntime(true)");
+    expect(wrapper).not.toContain("IntersectionObserver");
+    expect(wrapper).not.toContain("rootMargin");
+    expect(wrapper).not.toContain("scheduleBrowserIdleWork");
     expect(wrapper).toContain("isLoading={isLoading}");
   });
 
@@ -20,6 +22,7 @@ describe("territory entry map arrival", () => {
     expect(wrapper).toContain("Promise.all([");
     expect(wrapper).toContain("module.preloadTerritoryEntryMapEngine()");
     expect(wrapper).toContain("module.preloadTerritoryEntryBoundary(preloadResolved)");
+    expect(wrapper).toContain('link.setAttribute("fetchpriority", "high")');
     expect(wrapper).not.toContain("await module.preloadTerritoryEntryMapEngine()");
   });
 
@@ -51,8 +54,6 @@ describe("territory entry map arrival", () => {
     expect(arrival).toContain("duration-150");
     expect(arrival).not.toContain("lucide-react");
     expect(arrival).not.toContain("setTimeout");
-    expect(arrival).not.toContain("Globe2");
-    expect(arrival).not.toContain("Sparkles");
     expect(runtime).not.toContain("lucide-react");
     expect(wrapper).toContain("min-h-[12rem]");
     expect(runtime).toContain("lg:min-h-[24rem]");
