@@ -42,4 +42,20 @@ describe("production sitemap release boundary", () => {
       'const PRODUCTION_SITEMAP_BASE_URL = "https://acheguese.com.br";',
     );
   });
+
+  it("reuses canonical legal paths instead of redefining them in the sitemap", () => {
+    const sitemap = read("src/core/routing/seo/generateSitemap.ts");
+    const legal = read("src/shared/constants/legal.ts");
+
+    expect(legal).toContain('TERMS_OF_SERVICE_PATH = "/termos"');
+    expect(legal).toContain('PRIVACY_POLICY_PATH = "/privacidade"');
+    expect(legal).toContain('SUPPORT_PATH = "/contato"');
+
+    expect(sitemap).toContain("TERMS_OF_SERVICE_PATH");
+    expect(sitemap).toContain("PRIVACY_POLICY_PATH");
+    expect(sitemap).toContain("SUPPORT_PATH");
+    expect(sitemap).not.toContain("{ path: '/termos'");
+    expect(sitemap).not.toContain("{ path: '/privacidade'");
+    expect(sitemap).not.toContain("{ path: '/contato'");
+  });
 });
