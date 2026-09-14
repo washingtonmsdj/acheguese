@@ -1,16 +1,10 @@
-export type TerritoryEntryArrivalStage = "community" | "map";
-
 interface TerritoryEntryMapArrivalProps {
   label: string;
-  stage?: TerritoryEntryArrivalStage;
   statusText?: string;
   leaving?: boolean;
 }
 
-const STAGE_LABEL: Record<TerritoryEntryArrivalStage, string> = {
-  community: "Preparando comunidade",
-  map: "Abrindo mapa",
-};
+const ARRIVAL_LABEL = "Abrindo mapa";
 
 /**
  * Skeleton visual da entrada territorial.
@@ -25,8 +19,7 @@ const STAGE_LABEL: Record<TerritoryEntryArrivalStage, string> = {
  */
 export function TerritoryEntryMapArrival({
   label,
-  stage = "community",
-  statusText = "Carregando território",
+  statusText = "Carregando mapa territorial",
   leaving = false,
 }: TerritoryEntryMapArrivalProps) {
   return (
@@ -36,7 +29,7 @@ export function TerritoryEntryMapArrival({
       }`}
       aria-hidden="true"
       data-entry-arrival-loading
-      data-entry-arrival-stage={stage}
+      data-entry-arrival-stage="map"
       data-entry-arrival-leaving={leaving ? "true" : "false"}
       data-entry-skeleton
     >
@@ -58,7 +51,7 @@ export function TerritoryEntryMapArrival({
       <div className="absolute left-4 top-4 z-10 flex items-center gap-2 rounded-full border border-territory-border/80 bg-territory-surface/90 px-3 py-2 shadow-sm md:left-5 md:top-5 lg:left-6 lg:top-6">
         <span className="h-2 w-2 rounded-full bg-territory-brand" />
         <span className="text-[0.62rem] font-bold uppercase tracking-[0.12em] text-territory-muted-strong md:text-[0.68rem]">
-          {STAGE_LABEL[stage]}
+          {ARRIVAL_LABEL}
         </span>
       </div>
 
