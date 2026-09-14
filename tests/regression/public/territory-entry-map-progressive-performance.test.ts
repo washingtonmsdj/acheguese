@@ -25,6 +25,17 @@ describe("territory entry progressive map performance", () => {
     expect(runtime).toContain('className="pointer-events-none h-full min-h-[12rem] w-full');
   });
 
+  it("preconnects official boundary authorities from SSOT metadata", () => {
+    const wrapper = read("src/app/components/territory-vivo/TerritoryEntryMap.tsx");
+
+    expect(wrapper).toContain("preconnectOfficialBoundarySources");
+    expect(wrapper).toContain("location.metadata?.source_url");
+    expect(wrapper).toContain('preconnect.rel = "preconnect"');
+    expect(wrapper).toContain('dnsPrefetch.rel = "dns-prefetch"');
+    expect(wrapper).toContain("preconnectOfficialBoundarySources(preloadResolved)");
+    expect(wrapper).not.toContain("services6.arcgis.com");
+  });
+
   it("preloads engine and official boundary concurrently", () => {
     const wrapper = read("src/app/components/territory-vivo/TerritoryEntryMap.tsx");
     const runtime = read("src/app/components/territory-vivo/TerritoryEntryMapRuntime.tsx");
