@@ -4,13 +4,9 @@ import { ArrowRight, Menu, Users } from "lucide-react";
 import TerritoryEntryMap from "@/app/components/territory-vivo/TerritoryEntryMap";
 import communityThumbnail from "@/assets/hero-complexo-nordeste.jpg";
 import { LAUNCH_URLS, TERRITORY_CONFIG } from "@/core/routing/config/territory";
-import { createLocationRepository } from "@/core/location/repositories/createLocationRepository";
 import { LocationStatus, LocationType, type Location } from "@/core/location/types";
 import { lastTerritoryStore } from "@/core/routing/stores/LastTerritoryStore";
-import { resolvePublicTerritoryFallback } from "@/core/routing/utils/publicTerritoryFallbacks";
 import type { ResolvedTerritory } from "@/core/routing/hooks/useResolveTerritoryFromUrl";
-import { isTerritoryPubliclyNavigable } from "@/core/routing/utils/territoryVisibility";
-import { territorialGroupService } from "@/core/territorial";
 import { scheduleBrowserIdleWork } from "@/shared/utils/browserIdle";
 import { normalizeTerritoryText } from "@/shared/utils/slugify";
 
@@ -28,6 +24,9 @@ function getLaunchCityPaths(): string[] {
 }
 
 async function resolveLaunchCity(): Promise<Location | null> {
+  const { createLocationRepository } = await import(
+    "@/core/location/repositories/createLocationRepository"
+  );
   const repository = createLocationRepository();
   for (const path of getLaunchCityPaths()) {
     const location = await repository.findByPath(path);
@@ -54,6 +53,11 @@ async function getLaunchTerritories(): Promise<Location[]> {
     launchTerritoriesPromise = (async () => {
       const city = await getLaunchCity();
       if (!city) return [];
+      const [{ createLocationRepository }, { isTerritoryPubliclyNavigable }] =
+        await Promise.all([
+          import("@/core/location/repositories/createLocationRepository"),
+          import("@/core/routing/utils/territoryVisibility"),
+        ]);
       const result = await createLocationRepository().findDescendants(city.id, { include_self: false, max_depth: 2, page: 1, page_size: 200 });
       return result.locations.filter((location) => location.status === LocationStatus.ACTIVE && isTerritoryPubliclyNavigable(location.metadata));
     })().catch(() => []);
@@ -70,6 +74,7 @@ async function resolveLaunchTerritory(): Promise<ResolvedTerritory | null> {
   const launchSlug = getLaunchCommunitySlug();
 
   if (city) {
+    const { territorialGroupService } = await import("@/core/territorial");
     const group = await territorialGroupService
       .getGroupBySlugAndCity(launchSlug, city.id)
       .catch(() => null);
@@ -85,6 +90,9 @@ async function resolveLaunchTerritory(): Promise<ResolvedTerritory | null> {
     }
   }
 
+  const { resolvePublicTerritoryFallback } = await import(
+    "@/core/routing/utils/publicTerritoryFallbacks"
+  );
   const fallback = resolvePublicTerritoryFallback({
     state: TERRITORY_CONFIG.launch.state || "ba",
     city: TERRITORY_CONFIG.launch.city || "salvador",
