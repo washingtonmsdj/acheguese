@@ -13,13 +13,13 @@ export function useMFA() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  // Carregar status de MFA.
   const loadStatus = async () => {
     try {
       setLoading(true);
       setError(null);
-      // Não preservar uma decisão anterior enquanto a autoridade está sendo
-      // reavaliada. `null` significa desconhecido, nunca "MFA dispensado".
+      // Nunca preservar uma decisão anterior durante nova consulta. `null`
+      // significa desconhecido, não "desativado" nem "dispensado".
+      setStatus(null);
       setRequirement(null);
 
       const [statusData, requirementData] = await Promise.all([
@@ -31,6 +31,7 @@ export function useMFA() {
       setRequirement(requirementData);
     } catch (err) {
       logger.error('useMFA.loadStatus', err);
+      setStatus(null);
       setRequirement(null);
       setError('Erro ao carregar status de MFA');
     } finally {
@@ -38,23 +39,19 @@ export function useMFA() {
     }
   };
 
-  // Carregar ao montar.
   useEffect(() => {
-    loadStatus();
+    void loadStatus();
   }, []);
 
-  // Iniciar enrollment.
   const startEnrollment = async () => {
     try {
       setLoading(true);
       setError(null);
 
       const enrollmentData = await mfaService.enrollMFA();
-
       if (!enrollmentData) {
         throw new Error('Falha ao iniciar enrollment de MFA');
       }
-
       return enrollmentData;
     } catch (err) {
       logger.error('useMFA.startEnrollment', err);
@@ -65,17 +62,13 @@ export function useMFA() {
     }
   };
 
-  // Verificar e habilitar MFA.
   const verifyAndEnable = async (factorId: string, code: string) => {
     try {
       setLoading(true);
       setError(null);
 
       const success = await mfaService.verifyAndEnableMFA(factorId, code);
-
-      if (!success) {
-        throw new Error('Código inválido');
-      }
+      if (!success) throw new Error('Código inválido');
 
       await loadStatus();
       return true;
@@ -88,17 +81,13 @@ export function useMFA() {
     }
   };
 
-  // Desabilitar MFA.
   const disable = async (factorId: string) => {
     try {
       setLoading(true);
       setError(null);
 
       const success = await mfaService.disableMFA(factorId);
-
-      if (!success) {
-        throw new Error('Falha ao desabilitar MFA');
-      }
+      if (!success) throw new Error('Falha ao desabilitar MFA');
 
       await loadStatus();
       return true;
@@ -111,18 +100,13 @@ export function useMFA() {
     }
   };
 
-  // Verificar código durante login.
   const verifyCode = async (factorId: string, code: string) => {
     try {
       setLoading(true);
       setError(null);
 
       const success = await mfaService.verifyMFACode(factorId, code);
-
-      if (!success) {
-        throw new Error('Código inválido');
-      }
-
+      if (!success) throw new Error('Código inválido');
       return true;
     } catch (err) {
       logger.error('useMFA.verifyCode', err);
@@ -133,16 +117,10 @@ export function useMFA() {
     }
   };
 
-  // Listar fatores.
-  const listFactors = async () => {
-    try {
-      return await mfaService.listMFAFactors();
-    } catch (err) {
-      logger.error('useMFA.listFactors', err);
-      return [];
-    }
-  };
+  // Ações destrutivas precisam receber falha real, não uma lista vazia falsa.
+  const listFactors = async () => mfaService.listMFAFactors();
 
+  const isMFAStatusResolved = status !== null && error === null;
   const isMFARequirementResolved = requirement !== null && error === null;
 
   return {
@@ -156,10 +134,9 @@ export function useMFA() {
     disable,
     verifyCode,
     listFactors,
-    // Computed properties. Quando a política está desconhecida, `isMFARequired`
-    // permanece true (fail-closed); consumidores podem usar o resolved flag para
-    // distinguir exigência real de indisponibilidade da autoridade.
     isMFAEnabled: status?.mfaEnabled ?? false,
+    isMFAStatusResolved,
+    // Quando a política está desconhecida, required permanece true (fail-closed).
     isMFARequired: requirement?.required ?? true,
     isMFARequirementResolved,
     gracePeriodDaysRemaining: requirement?.daysRemaining ?? null,
