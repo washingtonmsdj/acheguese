@@ -9,7 +9,7 @@
 1. `docs/README.md` — índice documental canônico;
 2. `docs/03-architecture/CURRENT_RULES.md` — regras arquiteturais vigentes;
 3. `docs/08-roadmap/EXECUCAO_MAIN_ONLY.md` — plano operacional ativo;
-4. `docs/08-roadmap/checkpoints/2026-09-14-g182-root-a11y-metadata-navigation-seo-hardening.md` — checkpoint mais recente desta linha;
+4. `docs/08-roadmap/checkpoints/2026-09-14-g183-root-navigation-and-sitemap-runtime-hardening.md` — checkpoint mais recente desta linha;
 5. `SECURITY.md` — segurança e gates de release.
 
 ## Regras que não podem ser perdidas
@@ -43,6 +43,7 @@
 - regra exclusiva da `/` só permanece local quando depender de prioridade/UX específica da entrada pública;
 - erro de bootstrap pode carregar observabilidade somente no caminho de falha; Sentry não volta a ser import estático do bootstrap normal;
 - o deploy canônico gera e valida sitemap antes do build e valida novamente `dist`; não publicar placeholder vazio como sitemap de produção;
+- `supabase/functions/sitemap` é endpoint complementar `public-read`: `verify_jwt=false`, segurança no handler/shared owner e nenhuma superfície pausada/top-level alias inexistente pode ser anunciada;
 - trabalhar na `main` sem force-push e preservar trabalhos concorrentes;
 - GitHub Actions com `steps=[]`/`runner_id=0` é falha de execução do provider, não certificação do source;
 - rate-limit Vercel não é build aprovado nem reprovado;
