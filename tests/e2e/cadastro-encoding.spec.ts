@@ -3,6 +3,7 @@ import { expect, test } from "@playwright/test";
 const UNIQUE = Date.now();
 const EMAIL = `e2e-encoding-${UNIQUE}@example.com`;
 const PASSWORD = "SenhaSegura@2026";
+const NAME_LABEL = /Nome completo|^Nome$/i;
 
 test.describe("Cadastro — encoding da identidade", () => {
   test.beforeEach(async ({ page }) => {
@@ -22,7 +23,7 @@ test.describe("Cadastro — encoding da identidade", () => {
     await page.goto("/cadastro");
 
     await expect(page.getByText(/Comece pelo seu perfil pessoal/i)).toBeVisible();
-    await page.getByLabel(/^Nome$/i).fill("Ana Conceição");
+    await page.getByLabel(NAME_LABEL).fill("Ana Conceição");
     await page.getByLabel(/Nome de usuário/i).fill(`ana_enc_${UNIQUE}`);
     await page.getByLabel(/^E-mail$/i).fill(EMAIL);
     await page.getByLabel(/^Senha$/i).fill(PASSWORD);
