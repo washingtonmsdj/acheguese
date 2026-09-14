@@ -1,4 +1,4 @@
-import { readFileSync } from "node:fs";
+import { existsSync, readFileSync } from "node:fs";
 import { resolve } from "node:path";
 import { describe, expect, it } from "vitest";
 
@@ -7,6 +7,8 @@ const read = (path: string) => readFileSync(resolve(root, path), "utf8");
 
 const accountRoutes = read("src/core/routing/config/account.ts");
 const appUrls = read("src/core/routing/hooks/useAppUrls.ts");
+const workspace = read("src/core/profiles/hooks/useContaWorkspace.ts");
+const profileHub = read("src/core/profiles/hooks/useProfileHub.ts");
 const shell = read("src/modules/profile/components/AccountSettingsShell.tsx");
 const overview = read("src/modules/profile/pages/ContaHubLayout.tsx");
 const managedProfiles = read(
@@ -136,6 +138,31 @@ describe("account settings concept contract", () => {
     expect(privacy).toContain("PrivacySettingsService.exportUserData");
     expect(privacy).toContain("PrivacySettingsService.requestAccountDeletion");
     expect(privacy).toContain("PrivacySettingsService.cancelAccountDeletion");
+  });
+
+  it("removes the duplicate legacy account-data dialog owner", () => {
+    for (const legacySymbol of [
+      "downloadDataOpen",
+      "viewDataOpen",
+      "deactivateOpen",
+      "deleteConfirm",
+      "handleDownloadData",
+      "handleDeactivateAccount",
+      "handleDeleteAccount",
+    ]) {
+      expect(workspace).not.toContain(legacySymbol);
+      expect(profileHub).not.toContain(legacySymbol);
+    }
+
+    expect(
+      existsSync(resolve(root, "src/modules/profile/components/DataManagementDialogs.tsx")),
+    ).toBe(false);
+    expect(
+      existsSync(resolve(root, "src/modules/profile/sections/SegurancaSection.tsx")),
+    ).toBe(false);
+    expect(
+      existsSync(resolve(root, "src/modules/profile/components/cards/SecurityActionCard.tsx")),
+    ).toBe(false);
   });
 
   it("exposes concept export and device states without inventing data", () => {
