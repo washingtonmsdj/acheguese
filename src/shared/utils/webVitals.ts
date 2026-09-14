@@ -1,16 +1,15 @@
 /**
- * Web Vitals Monitoring
- * Tracks Core Web Vitals (LCP, INP, CLS) for performance monitoring
- * Integrado com Sentry para monitoramento em produção
- * 
- * @version 2.0.0
+ * Web Vitals measurement.
+ *
+ * Measurement stays lightweight and independent from Sentry. Telemetry can be
+ * attached later through setWebVitalsReporter(), which lets the public root
+ * collect buffered metrics without downloading observability code while the
+ * map is still competing for CPU/network.
  */
 
 import { onCLS, onINP, onLCP, onFCP, onTTFB, type Metric } from "web-vitals";
-import { logger } from "@/shared/utils/logger";
-import { addSentryBreadcrumb } from "@/shared/config/sentry.config";
 
-interface VitalsReport {
+export interface VitalsReport {
   name: string;
   value: number;
   rating: "good" | "needs-improvement" | "poor";
@@ -18,10 +17,16 @@ interface VitalsReport {
   id: string;
 }
 
-// Thresholds based on Google's recommendations
+type VitalsReporter = (report: VitalsReport) => void;
+
+const MAX_PENDING_REPORTS = 16;
+const pendingReports: VitalsReport[] = [];
+let reporter: VitalsReporter | null = null;
+
+// Thresholds based on Google's recommendations.
 const THRESHOLDS = {
   LCP: { good: 2500, poor: 4000 },
-  INP: { good: 200, poor: 500 }, // Replaces FID
+  INP: { good: 200, poor: 500 },
   CLS: { good: 0.1, poor: 0.25 },
   FCP: { good: 1800, poor: 3000 },
   TTFB: { good: 800, poor: 1800 },
@@ -39,7 +44,15 @@ function getRating(
   return "poor";
 }
 
-function reportMetric(metric: Metric) {
+export function setWebVitalsReporter(nextReporter: VitalsReporter | null): void {
+  reporter = nextReporter;
+  if (!reporter || pendingReports.length === 0) return;
+
+  const queued = pendingReports.splice(0, pendingReports.length);
+  queued.forEach((report) => reporter?.(report));
+}
+
+function reportMetric(metric: Metric): void {
   const report: VitalsReport = {
     name: metric.name,
     value: metric.value,
@@ -48,39 +61,29 @@ function reportMetric(metric: Metric) {
     id: metric.id,
   };
 
-  // Log to console in development (opt-in)
   if (import.meta.env.DEV && import.meta.env.VITE_DEBUG_WEB_VITALS === "true") {
-    logger.info(
+    console.debug(
       `[WebVitals] ${report.name}: ${Math.round(report.value)}ms (${report.rating})`,
     );
   }
 
-  // Send to analytics in production
-  if (import.meta.env.PROD) {
-    // Enviar para Sentry
-    addSentryBreadcrumb(
-      `Web Vital: ${report.name}`,
-      'performance',
-      report.rating === 'poor' ? 'warning' : 'info',
-      {
-        name: report.name,
-        value: report.value,
-        rating: report.rating,
-        delta: report.delta,
-        id: report.id,
-      }
-    );
+  if (!import.meta.env.PROD) return;
+
+  if (reporter) {
+    reporter(report);
+    return;
   }
+
+  if (pendingReports.length >= MAX_PENDING_REPORTS) {
+    pendingReports.shift();
+  }
+  pendingReports.push(report);
 }
 
-export function initWebVitals() {
-  // Core Web Vitals
-  onLCP(reportMetric); // Largest Contentful Paint
-  onINP(reportMetric); // Interaction to Next Paint (replaces FID)
-  onCLS(reportMetric); // Cumulative Layout Shift
-
-  // Additional metrics
-  onFCP(reportMetric); // First Contentful Paint
-  onTTFB(reportMetric); // Time to First Byte
+export function initWebVitals(): void {
+  onLCP(reportMetric);
+  onINP(reportMetric);
+  onCLS(reportMetric);
+  onFCP(reportMetric);
+  onTTFB(reportMetric);
 }
-
