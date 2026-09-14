@@ -9,12 +9,22 @@ const privacy = readFileSync(
 );
 
 describe("account privacy safety contract", () => {
-  it("renders each consent control once while preserving the concept summary", () => {
+  it("keeps the concept summary and gives responsive detail controls unique ids", () => {
     expect(privacy).toContain("CONSENT_ROWS.slice(0, 2)");
     expect(privacy).toContain("CONSENT_ROWS.slice(2)");
     expect(privacy).not.toContain("CONSENT_ROWS.map(");
     expect(privacy).toContain('idPrefix="summary"');
-    expect(privacy).toContain('idPrefix="details"');
+    expect(privacy).toContain('idPrefix="mobile-details"');
+    expect(privacy).toContain('idPrefix="desktop-details"');
+    expect(privacy).not.toContain('idPrefix="details"');
+  });
+
+  it("keeps extra account permissions collapsed on mobile and fully available on desktop", () => {
+    expect(privacy).toContain('id="privacy-more"');
+    expect(privacy).toContain("Outras permissões");
+    expect(privacy).toContain("lg:hidden");
+    expect(privacy).toContain('className="hidden p-4 sm:p-5 lg:block"');
+    expect(privacy).toContain("Consentimentos e permissões");
   });
 
   it("does not conflate account location consent with browser permission", () => {
@@ -36,6 +46,15 @@ describe("account privacy safety contract", () => {
     expect(privacy).not.toContain("error instanceof Error ? error.message");
     expect(privacy).not.toContain("recorte principal do concept");
     expect(privacy).not.toContain("autoridade de consentimento");
+  });
+
+  it("shows scheduled deletion details without pretending the DPO page is the status detail view", () => {
+    expect(privacy).toContain("Ver detalhes");
+    expect(privacy).toContain("Data informada para processamento");
+    expect(privacy).toContain("O serviço não informou uma data de processamento neste momento.");
+    expect(privacy).toContain("Falar com proteção de dados");
+    expect(privacy).toContain("navigate(DATA_PROTECTION_CONTACT_PATH)");
+    expect(privacy).not.toContain('onClick={() => navigate(DATA_PROTECTION_CONTACT_PATH)}>Ver detalhes</Button>');
   });
 
   it("keeps the destructive confirmation usable in a 360px-class viewport", () => {
