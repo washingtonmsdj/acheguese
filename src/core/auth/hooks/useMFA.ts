@@ -48,6 +48,17 @@ export function useMFA() {
       setLoading(true);
       setError(null);
 
+      // Antes de criar outro fator, reconfirmar a autoridade real. Uma falha
+      // de consulta não pode ser interpretada como "MFA desativado".
+      const currentStatus = await mfaService.getMFAStatus();
+      if (!currentStatus) {
+        throw new Error('Status de MFA indisponível');
+      }
+      if (currentStatus.mfaEnabled) {
+        setStatus(currentStatus);
+        throw new Error('MFA já está ativado');
+      }
+
       const enrollmentData = await mfaService.enrollMFA();
       if (!enrollmentData) {
         throw new Error('Falha ao iniciar enrollment de MFA');
@@ -55,7 +66,7 @@ export function useMFA() {
       return enrollmentData;
     } catch (err) {
       logger.error('useMFA.startEnrollment', err);
-      setError('Erro ao iniciar configuração de MFA');
+      setError('Não foi possível confirmar o estado da conta para iniciar a configuração de MFA');
       return null;
     } finally {
       setLoading(false);
@@ -117,8 +128,15 @@ export function useMFA() {
     }
   };
 
-  // Ações destrutivas precisam receber falha real, não uma lista vazia falsa.
-  const listFactors = async () => mfaService.listMFAFactors();
+  const listFactors = async () => {
+    try {
+      return await mfaService.listMFAFactors();
+    } catch (err) {
+      logger.error('useMFA.listFactors', err);
+      setError('Não foi possível consultar os fatores de MFA');
+      return [];
+    }
+  };
 
   const isMFAStatusResolved = status !== null && error === null;
   const isMFARequirementResolved = requirement !== null && error === null;
@@ -136,7 +154,6 @@ export function useMFA() {
     listFactors,
     isMFAEnabled: status?.mfaEnabled ?? false,
     isMFAStatusResolved,
-    // Quando a política está desconhecida, required permanece true (fail-closed).
     isMFARequired: requirement?.required ?? true,
     isMFARequirementResolved,
     gracePeriodDaysRemaining: requirement?.daysRemaining ?? null,
