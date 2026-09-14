@@ -36,7 +36,7 @@ describe("territory entry progressive map performance", () => {
     expect(runtime).toContain("initialViewport={initialViewport}");
   });
 
-  it("gives the basemap an exclusive first-paint window before boundary network", () => {
+  it("gives the basemap an exclusive first-paint window before boundary network and style reads", () => {
     const html = read("index.html");
     const wrapper = read("src/app/components/territory-vivo/TerritoryEntryMap.tsx");
     const runtime = read("src/app/components/territory-vivo/TerritoryEntryMapRuntime.tsx");
@@ -51,16 +51,20 @@ describe("territory entry progressive map performance", () => {
     expect(runtime).toContain("useTerritoryPolygon(resolved, {");
     expect(runtime).toContain("enabled: boundaryStarted");
     expect(runtime).toContain("window.requestAnimationFrame(() => setBoundaryStarted(true))");
+    expect(runtime).toContain("if (!boundaryStarted || typeof document === \"undefined\")");
+    expect(runtime).toContain("getComputedStyle(document.documentElement)");
+    expect(runtime).toContain("}, [boundaryStarted]);");
     expect(runtime).toContain("markPublicRootMapReady();");
     expect(runtime).toContain("!boundaryStarted || isLoading || isBoundaryLoading");
   });
 
-  it("preloads style and TileJSON before React while runtime and engine start together", () => {
+  it("preloads style and TileJSON before React while runtime, engine and workers start together", () => {
     const main = read("src/main.tsx");
     const defaults = read("src/shared/config/mapDefaults.ts");
     const wrapper = read("src/app/components/territory-vivo/TerritoryEntryMap.tsx");
     const runtime = read("src/app/components/territory-vivo/TerritoryEntryMapRuntime.tsx");
     const owner = read("src/core/maps/components/v3/MapLibreAdapter.tsx");
+    const loader = read("src/core/maps/runtime/loadMapLibreRuntime.ts");
     const passive = read("src/core/maps/components/v3/MapLibrePassiveRuntime.tsx");
 
     expect(defaults).toContain('styleUrl: "https://tiles.openfreemap.org/styles/positron"');
@@ -97,6 +101,13 @@ describe("territory entry progressive map performance", () => {
     expect(owner).toContain('import("./MapLibrePassiveRuntime")');
     expect(owner).toContain('import("./MapLibreAdapterRuntime")');
     expect(owner).toContain("preloadPassiveMapLibreAdapterRuntime");
+    expect(owner).toContain("prewarmMapLibreWorkers");
+    expect(loader).toContain("let workersPrewarmed = false");
+    expect(loader).toContain("ensureMapLibreWorkerConfigured(runtime.setWorkerUrl)");
+    expect(loader).toContain("runtime.prewarm()");
+    expect(loader.indexOf("ensureMapLibreWorkerConfigured(runtime.setWorkerUrl)")).toBeLessThan(
+      loader.indexOf("runtime.prewarm()"),
+    );
 
     expect(passive).toContain('data-maplibre-runtime="passive"');
     expect(passive).toContain('from "@/core/maps/runtime/mapRuntimeState"');
