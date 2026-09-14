@@ -119,5 +119,7 @@ describe("root community-first MVP entry", () => {
     expect(source).toContain('event.key === "Escape"');
     expect(source).toContain('href="#main-content"');
     expect(source.match(/href=\{PRIVACY_POLICY_PATH\}/g)?.length ?? 0).toBeGreaterThanOrEqual(2);
+    expect(source).toContain('window.matchMedia("(min-width: 768px)")');
+    expect(source).toContain("if (desktopMedia.matches) {\n        setIsMobileMenuOpen(false);");
   });
 });
