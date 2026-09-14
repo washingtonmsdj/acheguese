@@ -94,76 +94,179 @@ export default function AceiteTermosPage() {
   return (
     <>
       <Helmet>
-        <title>Aceitar termos | Achegue-se</title>
+        <title>Termos da conta | Achegue-se</title>
+        <meta
+          name="description"
+          content="Revise os termos necessários para concluir seu acesso ao Achegue-se."
+        />
         <meta name="robots" content="noindex, nofollow" />
       </Helmet>
-      <div className="min-h-[100dvh] bg-[#fffdfa] text-[#102f33]">
+
+      <div className="min-h-[100dvh] bg-[#fffdfa] text-[#102f33] lg:bg-[radial-gradient(circle_at_16%_32%,rgba(216,234,224,.55),transparent_31%),radial-gradient(circle_at_70%_18%,rgba(255,236,185,.28),transparent_30%),#fffdfa]">
         <AuthBrandHeader secondaryHref="/login" secondaryLabel="Entrar" />
-        <main id="main-content" tabIndex={-1} className="mx-auto w-full max-w-[430px] px-6 pb-6 pt-4 focus:outline-none">
-          <section className="rounded-2xl border border-[#d6dedc] bg-white p-5 shadow-[0_18px_55px_rgba(17,55,59,.06)]">
-            <div className="flex items-start gap-3">
-              <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-[#e7f0ed] text-[#0b5b59]">
+
+        <main
+          id="main-content"
+          tabIndex={-1}
+          className="mx-auto w-full max-w-[430px] px-6 pb-6 pt-3 focus:outline-none lg:grid lg:min-h-[calc(100dvh-144px)] lg:max-w-[1180px] lg:grid-cols-[minmax(0,1fr)_430px] lg:items-center lg:gap-16 lg:px-10 lg:pb-10 lg:pt-8"
+        >
+          <section className="hidden lg:block" aria-label="Participação e confiança">
+            <div className="max-w-[510px]">
+              <p className="text-[12px] font-bold uppercase tracking-[0.17em] text-[#0b5b59]">
+                Conta e comunidade
+              </p>
+              <h1 className="mt-3 max-w-[470px] font-heading text-[46px] font-extrabold leading-[.95] tracking-[-0.05em] text-[#0b3b3f]">
+                Entre sabendo<br />como cuidamos<br />desse espaço.
+              </h1>
+              <p className="mt-5 max-w-[430px] text-[17px] leading-6 text-[#244448]">
+                O Achegue-se conecta pessoas, perfis e territórios. Por isso, participação e privacidade precisam começar com regras claras.
+              </p>
+
+              <div className="mt-8 grid max-w-[500px] gap-3 sm:grid-cols-2">
+                <div className="rounded-2xl border border-[#d6dedc] bg-white/75 p-4">
+                  <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-[#e7f0ed] text-[#0b5b59]">
+                    <AuthConceptIcon name="shield" />
+                  </span>
+                  <p className="mt-3 text-[13px] font-bold">Regras transparentes</p>
+                  <p className="mt-1 text-[12px] leading-5 text-[#607477]">
+                    Termos e diretrizes ficam disponíveis antes do aceite.
+                  </p>
+                </div>
+                <div className="rounded-2xl border border-[#d6dedc] bg-white/75 p-4">
+                  <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-[#eef4ef] text-[#0b5b59]">
+                    <AuthConceptIcon name="users" />
+                  </span>
+                  <p className="mt-3 text-[13px] font-bold">Convivência responsável</p>
+                  <p className="mt-1 text-[12px] leading-5 text-[#607477]">
+                    As Diretrizes da Comunidade fazem parte da experiência real do produto.
+                  </p>
+                </div>
+              </div>
+            </div>
+          </section>
+
+          <section className="w-full lg:rounded-[10px] lg:bg-white lg:p-7 lg:shadow-[0_18px_55px_rgba(17,55,59,.08)]">
+            <div className="flex items-start gap-3 lg:block">
+              <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-[#e7f0ed] text-[#0b5b59] lg:hidden">
                 <AuthConceptIcon name="shield" />
               </span>
               <div>
-                <p className="text-[11px] font-bold uppercase tracking-[0.12em] text-[#0b5b59]">Conta e comunidade</p>
-                <h1 className="mt-1 font-heading text-[24px] font-extrabold tracking-[-0.035em]">Termos de Uso</h1>
+                <p className="text-[11px] font-bold uppercase tracking-[0.12em] text-[#0b5b59] lg:hidden">
+                  Conta e comunidade
+                </p>
+                <h1 className="mt-1 font-heading text-[27px] font-extrabold leading-tight tracking-[-0.04em] lg:mt-0 lg:text-[24px]">
+                  Antes de continuar
+                </h1>
                 <p className="mt-2 text-[13px] leading-5 text-[#526a6d]">
-                  As Diretrizes da Comunidade fazem parte dos Termos e orientam a participação segura no Achegue-se.
+                  Revise os Termos de Uso e as Diretrizes da Comunidade para concluir seu acesso.
                 </p>
               </div>
             </div>
 
+            <div className="mt-5 flex items-start gap-3 rounded-xl bg-[#eef4f2] px-4 py-3 text-[#405f62]">
+              <AuthConceptIcon name="info" className="mt-0.5 text-[#0b5b59]" />
+              <p className="text-[11.5px] leading-5">
+                Entrar com Google não pula esta etapa. O aceite é registrado na sua conta e pode ser consultado depois.
+              </p>
+            </div>
+
             {state === "checking" ? (
-              <div role="status" className="flex items-center gap-3 py-10 text-[13px] text-[#607477]">
+              <div role="status" className="flex min-h-[185px] items-center justify-center gap-3 py-10 text-[13px] text-[#607477]">
                 <span className="h-5 w-5 animate-spin rounded-full border-2 border-[#cbd5d3] border-t-[#0b5b59]" />
                 Verificando o aceite da sua conta…
               </div>
             ) : null}
 
             {state === "signed-out" ? (
-              <div className="mt-7 space-y-4">
-                <p className="text-[13px] leading-5 text-[#607477]">Conclua sua autenticação para registrar o aceite.</p>
+              <div className="mt-6 space-y-4">
+                <div className="rounded-xl border border-[#d6dedc] bg-[#f8f7f2] p-4">
+                  <p className="text-[13px] font-bold">Sua sessão não está disponível</p>
+                  <p className="mt-1 text-[12px] leading-5 text-[#607477]">
+                    Entre novamente para que o aceite seja associado à conta correta.
+                  </p>
+                </div>
                 <Link
                   to={returnTo === "/" ? "/login" : `/login?redirect=${encodeURIComponent(returnTo)}`}
-                  className="flex h-11 w-full items-center justify-center rounded-[9px] bg-[#ffc91a] text-[14px] font-extrabold text-[#102f33]"
+                  className="flex h-11 w-full items-center justify-center rounded-[9px] bg-[#ffc91a] text-[14px] font-extrabold text-[#102f33] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#0b5b59]/40"
                 >
-                  Ir para entrar
+                  Voltar para entrar
                 </Link>
               </div>
             ) : null}
 
             {state === "needs-acceptance" ? (
-              <div className="mt-7 space-y-5">
-                <div className="rounded-xl bg-[#f3f1ea] p-4">
+              <div className="mt-6 space-y-4">
+                <div className="rounded-xl border border-[#d6dedc] bg-[#f8f7f2] p-4">
                   <div className="flex items-start gap-3">
-                    <Checkbox id="terms-acceptance" checked={accepted} onCheckedChange={(checked) => setAccepted(checked === true)} className="mt-0.5" />
-                    <Label htmlFor="terms-acceptance" className="cursor-pointer text-[13px] font-normal leading-5">
+                    <Checkbox
+                      id="terms-acceptance"
+                      checked={accepted}
+                      onCheckedChange={(checked) => setAccepted(checked === true)}
+                      disabled={submitting}
+                      className="mt-0.5 h-5 w-5 rounded-[3px] border-[#31575a]"
+                    />
+                    <Label
+                      htmlFor="terms-acceptance"
+                      className="cursor-pointer text-[13px] font-normal leading-5"
+                    >
                       Li e aceito os Termos de Uso, incluindo as Diretrizes da Comunidade.
                     </Label>
                   </div>
                   <p className="mt-3 pl-8 text-[11px] leading-4 text-[#607477]">
-                    Consulte os <Link to={TERMS_OF_SERVICE_PATH} target="_blank" rel="noreferrer" className="font-medium underline">Termos</Link> e as <Link to={COMMUNITY_GUIDELINES_PATH} target="_blank" rel="noreferrer" className="font-medium underline">Diretrizes da comunidade</Link>.
+                    Abra os{" "}
+                    <Link
+                      to={TERMS_OF_SERVICE_PATH}
+                      target="_blank"
+                      rel="noreferrer"
+                      className="font-medium text-[#0b4e52] underline underline-offset-2"
+                    >
+                      Termos
+                    </Link>{" "}
+                    e as{" "}
+                    <Link
+                      to={COMMUNITY_GUIDELINES_PATH}
+                      target="_blank"
+                      rel="noreferrer"
+                      className="font-medium text-[#0b4e52] underline underline-offset-2"
+                    >
+                      Diretrizes da comunidade
+                    </Link>{" "}
+                    em outra aba antes de aceitar.
                   </p>
                 </div>
+
                 <button
                   type="button"
                   disabled={!accepted || submitting}
                   onClick={() => void handleAccept()}
-                  className="h-11 w-full rounded-[9px] bg-[#ffc91a] text-[14px] font-extrabold text-[#102f33] disabled:opacity-55"
+                  className="h-11 w-full rounded-[9px] bg-[#ffc91a] text-[14px] font-extrabold text-[#102f33] shadow-[0_3px_10px_rgba(226,171,0,.16)] transition-colors hover:bg-[#f7bf00] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#0b5b59]/40 disabled:cursor-not-allowed disabled:opacity-55"
                 >
-                  {submitting ? "Registrando…" : "Registrar aceite e continuar"}
+                  {submitting ? "Registrando…" : "Aceitar e continuar"}
                 </button>
+                <p className="text-center text-[10.5px] leading-4 text-[#607477]">
+                  Versão dos termos: {TERMS_OF_SERVICE_VERSION}
+                </p>
               </div>
             ) : null}
 
             {state === "accepted" ? (
-              <div className="mt-7 space-y-4">
-                <div className="flex items-start gap-3 rounded-xl bg-[#eaf7ef] p-4 text-[#276a4d]">
-                  <AuthConceptIcon name="check" />
-                  <p className="text-[12px] leading-5">O aceite da versão {TERMS_OF_SERVICE_VERSION} está registrado.</p>
+              <div className="mt-6 space-y-4">
+                <div role="status" className="flex items-start gap-3 rounded-xl bg-[#eaf7ef] p-4 text-[#276a4d]">
+                  <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-[#d4efdf]">
+                    <AuthConceptIcon name="check" />
+                  </span>
+                  <div>
+                    <p className="text-[13px] font-bold">Tudo certo com os termos.</p>
+                    <p className="mt-0.5 text-[11.5px] leading-5">
+                      O aceite da versão {TERMS_OF_SERVICE_VERSION} está registrado na sua conta.
+                    </p>
+                  </div>
                 </div>
-                <button type="button" onClick={continueSafely} className="h-11 w-full rounded-[9px] bg-[#0b5b59] text-[14px] font-bold text-white">
+                <button
+                  type="button"
+                  onClick={continueSafely}
+                  className="h-11 w-full rounded-[9px] bg-[#0b5b59] text-[14px] font-bold text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#0b5b59]/40"
+                >
                   Continuar para o Achegue-se
                 </button>
               </div>
