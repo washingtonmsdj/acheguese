@@ -66,6 +66,19 @@ function isActive(
   return true;
 }
 
+function resolveDefaultBackTarget(pathname: string, hash: string): string {
+  if (pathname === ACCOUNT_PATHS.security && ["#email", "#senha", "#mfa"].includes(hash)) {
+    return ACCOUNT_PATHS.security;
+  }
+  if (pathname === ACCOUNT_PATHS.privacy && hash) {
+    return ACCOUNT_PATHS.privacy;
+  }
+  if (pathname === ACCOUNT_PATHS.preferences && hash === "#acessibilidade") {
+    return ACCOUNT_PATHS.preferences;
+  }
+  return ACCOUNT_PATHS.home;
+}
+
 function getInitials(name?: string | null): string {
   if (!name) return "U";
   return name
@@ -83,7 +96,7 @@ export function AccountSettingsShell({
   description,
   eyebrow = "Minha conta",
   showBack = true,
-  backTo = ACCOUNT_PATHS.home,
+  backTo,
 }: {
   children: ReactNode;
   title: string;
@@ -96,6 +109,7 @@ export function AccountSettingsShell({
   const navigate = useNavigate();
   const { activeProfile, loading: profilesLoading } = useMultiProfileContext();
   const activeProfileName = activeProfile?.display_name?.trim() || "Minha conta";
+  const resolvedBackTo = backTo ?? resolveDefaultBackTarget(location.pathname, location.hash);
 
   return (
     <div className="territory-vivo min-h-[100dvh] bg-territory-canvas text-territory-ink">
@@ -165,7 +179,7 @@ export function AccountSettingsShell({
               <button
                 type="button"
                 aria-label="Voltar"
-                onClick={() => navigate(backTo)}
+                onClick={() => navigate(resolvedBackTo)}
                 className="absolute bottom-1 left-2 flex h-11 w-11 items-center justify-center rounded-full text-territory-ink hover:bg-territory-raised focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-territory-brand"
               >
                 <ArrowLeft className="h-5 w-5" aria-hidden="true" />
