@@ -273,4 +273,20 @@ export class AuthService {
     });
     if (error) throw error;
   }
+
+  /**
+   * Solicita a troca do e-mail de autenticação. A confirmação e a política de
+   * secure email change pertencem ao Supabase Auth; a UI não deve assumir que
+   * o e-mail mudou antes de uma sessão futura refletir o valor confirmado.
+   */
+  static async updateEmail(newEmail: string): Promise<void> {
+    const email = newEmail.trim();
+    if (!email) throw new Error("Informe o novo e-mail.");
+
+    const { error } = await supabase.auth.updateUser(
+      { email },
+      { emailRedirectTo: AuthService.getEmailConfirmationRedirectUrl() },
+    );
+    if (error) throw error;
+  }
 }
