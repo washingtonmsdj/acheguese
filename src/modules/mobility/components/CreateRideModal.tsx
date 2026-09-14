@@ -40,6 +40,8 @@ import { usePriceEstimate } from "@/core/pricing/hooks/usePriceEstimate";
 import type { PriceEstimateRequest } from "@/core/pricing/types";
 import { geocodingService } from "@/core/maps/services/MapGeocodingAdapter";
 import type { CreateRideRequestData } from "@/modules/mobility/hooks/useMobilidade";
+import { GEOLOCATION_RUNTIME } from "@/shared/config/geolocation";
+import { GeolocationService } from "@/shared/services/GeolocationService";
 
 const rideTypeOptions: {
   value: RideType;
@@ -98,7 +100,6 @@ export function CreateRideModal({ open, onOpenChange, onSubmit, initialType = "v
     setType(initialType);
   }, [initialType, open]);
 
-  // Auto-capturar GPS na origem ao abrir o modal
   // Auto-preencher horário para viagens imediatas
   useEffect(() => {
     if (type !== "agendada" && !departureTime) {
@@ -131,7 +132,6 @@ export function CreateRideModal({ open, onOpenChange, onSubmit, initialType = "v
     setUserEditedPrice(false);
   }, [originCoords, destinationCoords]);
 
-  // Helper: inferir location_id a partir de geocoding
   const inferLocationId = useCallback(
     (info: ReturnType<typeof geocodingService.extractLocationInfo>): string | undefined => {
       return info.locationId ?? undefined;
@@ -215,27 +215,32 @@ export function CreateRideModal({ open, onOpenChange, onSubmit, initialType = "v
     [],
   );
 
-  // Capturar GPS e geocodificar para origem
   const captureOriginGps = useCallback(async () => {
     setLoadingOriginGps(true);
     try {
-      const coords = await new Promise<GeolocationCoordinates>((resolve, reject) => {
-        navigator.geolocation.getCurrentPosition(
-          (pos) => resolve({ latitude: pos.coords.latitude, longitude: pos.coords.longitude, accuracy: pos.coords.accuracy }),
-          reject,
-          { enableHighAccuracy: true, timeout: 8000 }
-        );
+      const result = await GeolocationService.getCurrentLocation({
+        useCache: false,
+        forcePrompt: true,
+        allowIpFallback: false,
+        gpsMode: "precise",
+        timeout: GEOLOCATION_RUNTIME.requestTimeoutMs,
+        maxRetries: 1,
       });
+      const coords: GeolocationCoordinates = {
+        latitude: result.coords.latitude,
+        longitude: result.coords.longitude,
+        accuracy: result.coords.accuracy,
+      };
       setOriginCoords(coords);
-      const result = await geocodingService.reverseGeocode(coords.latitude, coords.longitude);
-      if (result) {
-        setOrigin(geocodingService.formatCompactAddress(result));
-        const info = geocodingService.extractLocationInfo(result);
+      const reverseResult = await geocodingService.reverseGeocode(coords.latitude, coords.longitude);
+      if (reverseResult) {
+        setOrigin(geocodingService.formatCompactAddress(reverseResult));
+        const info = geocodingService.extractLocationInfo(reverseResult);
         const locId = inferLocationId(info);
         if (locId) setOriginLocationId(locId);
       }
-    } catch {
-      // GPS falhou silenciosamente — usuário digita manualmente
+    } catch (error) {
+      logger.debug("CreateRideModal.captureOriginGps", error);
     } finally {
       setLoadingOriginGps(false);
     }
@@ -244,27 +249,29 @@ export function CreateRideModal({ open, onOpenChange, onSubmit, initialType = "v
   useEffect(() => {
     if (!open) return;
     if (origin || originCoords) return;
-    captureOriginGps();
+    void captureOriginGps();
   }, [open, origin, originCoords, captureOriginGps]);
 
-  // Criar address canônico
   const createAddress = async (
     locationId: string,
     street: string,
     coords: GeolocationCoordinates | null
   ): Promise<string> => {
-    const hasCoords = !!(coords?.latitude && coords?.longitude);
+    const hasCoords =
+      coords !== null &&
+      Number.isFinite(coords.latitude) &&
+      Number.isFinite(coords.longitude);
     const hasText = street.trim().length > 0;
-    const addressType: 'exact' | 'approximate' | 'gps_only' =
-      hasCoords && !hasText ? 'gps_only' : 'approximate';
+    const addressType: "exact" | "approximate" | "gps_only" =
+      hasCoords && !hasText ? "gps_only" : "approximate";
 
     const addr = await addressService.createAddress({
       location_id: locationId,
-      street: addressType !== 'gps_only' ? street : null,
+      street: addressType !== "gps_only" ? street : null,
       address_type: addressType,
-      latitude: coords?.latitude || null,
-      longitude: coords?.longitude || null,
-      geocoding_source: hasCoords ? 'gps' : 'manual',
+      latitude: coords?.latitude ?? null,
+      longitude: coords?.longitude ?? null,
+      geocoding_source: hasCoords ? "gps" : "manual",
     });
     return addr.id;
   };
@@ -347,7 +354,6 @@ export function CreateRideModal({ open, onOpenChange, onSubmit, initialType = "v
         dropoff_location_id: dropoffLocId,
       });
 
-      // Reset
       setOrigin(""); setDestination(""); setDepartureTime(""); setSuggestedPrice("");
       setObservation(""); setSeats("1"); setSelectedPoint(null);
       setTrustPreference("qualquer"); setOriginCoords(null); setDestinationCoords(null);
@@ -386,8 +392,6 @@ export function CreateRideModal({ open, onOpenChange, onSubmit, initialType = "v
           </div>
         ) : (
           <form onSubmit={handleSubmit} className="space-y-4">
-
-            {/* Tipo */}
             <div className="grid grid-cols-2 gap-2">
               {rideTypeOptions.map((opt) => (
                 <button
@@ -408,7 +412,6 @@ export function CreateRideModal({ open, onOpenChange, onSubmit, initialType = "v
               ))}
             </div>
 
-            {/* Banners informativos */}
             {type === "carona_compartilhada" && (
               <div className="flex items-start gap-2 text-xs text-muted-foreground p-3 rounded-xl bg-secondary/50 border border-border">
                 <Users className="h-3.5 w-3.5 mt-0.5 shrink-0" aria-hidden="true" />
@@ -428,7 +431,6 @@ export function CreateRideModal({ open, onOpenChange, onSubmit, initialType = "v
               </div>
             )}
 
-            {/* ── ORIGEM ── */}
             <div className="space-y-1.5">
               <Label className="text-xs text-muted-foreground flex items-center gap-1">
                 <div className="w-2 h-2 rounded-full bg-primary flex-shrink-0" />
@@ -439,7 +441,6 @@ export function CreateRideModal({ open, onOpenChange, onSubmit, initialType = "v
                   value={origin}
                   onChange={(e) => {
                     setOrigin(e.target.value);
-                    // Limpar coords se usuário editar manualmente
                     if (originCoords) setOriginCoords(null);
                     if (originLocationId) setOriginLocationId("");
                   }}
@@ -483,7 +484,6 @@ export function CreateRideModal({ open, onOpenChange, onSubmit, initialType = "v
                 </div>
               </div>
 
-              {/* Ponto de embarque (apenas viagem/compartilhada) */}
               {type !== "entrega" && (
                 <button
                   type="button"
@@ -510,7 +510,6 @@ export function CreateRideModal({ open, onOpenChange, onSubmit, initialType = "v
               )}
             </div>
 
-            {/* ── DESTINO ── */}
             <div className="space-y-1.5">
               <Label className="text-xs text-muted-foreground flex items-center gap-1">
                 <div className="w-2 h-2 rounded-sm bg-warning flex-shrink-0" />
@@ -550,7 +549,6 @@ export function CreateRideModal({ open, onOpenChange, onSubmit, initialType = "v
               </div>
             </div>
 
-            {/* Estimativa de rota */}
             {priceEstimate && originCoords && destinationCoords && (
               <div className="space-y-1">
                 <RouteEstimateCard
@@ -578,7 +576,6 @@ export function CreateRideModal({ open, onOpenChange, onSubmit, initialType = "v
               </div>
             )}
 
-            {/* Horário (apenas agendada) */}
             {type === "agendada" && (
               <div className="space-y-1.5">
                 <Label className="text-xs text-muted-foreground flex items-center gap-1">
@@ -594,7 +591,6 @@ export function CreateRideModal({ open, onOpenChange, onSubmit, initialType = "v
               </div>
             )}
 
-            {/* Valor */}
             <div className="space-y-1.5">
               <Label className="text-xs text-muted-foreground flex items-center gap-1">
                 <DollarSign className="h-3 w-3" />
@@ -611,7 +607,6 @@ export function CreateRideModal({ open, onOpenChange, onSubmit, initialType = "v
               />
             </div>
 
-            {/* Vagas (compartilhada) */}
             {type === "carona_compartilhada" && (
               <div className="space-y-1.5">
                 <Label className="text-xs text-muted-foreground flex items-center gap-1">
@@ -625,7 +620,6 @@ export function CreateRideModal({ open, onOpenChange, onSubmit, initialType = "v
               </div>
             )}
 
-            {/* Pagamento */}
             <div className="space-y-1.5">
               <Label className="text-xs text-muted-foreground">Pagamento</Label>
               <div className="grid grid-cols-2 gap-2">
@@ -652,12 +646,10 @@ export function CreateRideModal({ open, onOpenChange, onSubmit, initialType = "v
               </div>
             </div>
 
-            {/* Filtro de confiança */}
             {type !== "entrega" && (
               <TrustRideFilter value={trustPreference} onChange={setTrustPreference} />
             )}
 
-            {/* Observação */}
             <div className="space-y-1.5">
               <Label className="text-xs text-muted-foreground">
                 {type === "entrega" ? "Descrição do objeto (obrigatório)" : "Observação (opcional)"}
@@ -692,4 +684,3 @@ export function CreateRideModal({ open, onOpenChange, onSubmit, initialType = "v
     </Dialog>
   );
 }
-
