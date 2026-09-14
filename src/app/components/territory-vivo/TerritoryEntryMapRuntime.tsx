@@ -116,7 +116,7 @@ export default function TerritoryEntryMapRuntime({
 
   return (
     <section
-      className={`territory-entry-map relative h-full min-h-full w-full overflow-hidden bg-territory-raised ${className}`}
+      className={`territory-entry-map relative h-full min-h-[12rem] w-full overflow-hidden bg-territory-raised md:min-h-[18rem] lg:min-h-[24rem] ${className}`}
       aria-labelledby="territory-entry-map-title"
       aria-busy={!mapPresented}
     >
@@ -138,7 +138,7 @@ export default function TerritoryEntryMapRuntime({
           setMapReady(true);
           setMapUnavailable(false);
         }}
-        className={`pointer-events-none h-full min-h-full w-full transition-opacity duration-300 motion-reduce:transition-none ${
+        className={`pointer-events-none h-full min-h-[12rem] w-full transition-opacity duration-300 motion-reduce:transition-none md:min-h-[18rem] lg:min-h-[24rem] ${
           mapPresented ? "opacity-100" : "opacity-0"
         }`}
       />
