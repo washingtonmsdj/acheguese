@@ -44,13 +44,11 @@ const STATIC_PAGES: SitemapURL[] = [
   { loc: '/gastronomia', changefreq: 'daily', priority: 0.9 },
   { loc: '/classificados', changefreq: 'hourly', priority: 0.8 },
   { loc: '/eventos', changefreq: 'daily', priority: 0.8 },
-  { loc: '/comunidade', changefreq: 'hourly', priority: 0.8 },
   { loc: '/servicos', changefreq: 'daily', priority: 0.8 },
   { loc: '/sobre', changefreq: 'monthly', priority: 0.5 },
   { loc: '/contato', changefreq: 'monthly', priority: 0.5 },
   { loc: '/privacidade', changefreq: 'monthly', priority: 0.3 },
   { loc: '/termos', changefreq: 'monthly', priority: 0.3 },
-  { loc: '/cookies', changefreq: 'monthly', priority: 0.3 },
 ];
 
 type LocationRelation = { geographic_path?: string | null } | null;
