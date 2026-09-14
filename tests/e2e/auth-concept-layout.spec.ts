@@ -42,10 +42,14 @@ test.describe("Conta e acesso — contrato visual responsivo do concept", () => 
   test("mobile mantém a composição de uma coluna do concept", async ({ page }) => {
     await page.setViewportSize(MOBILE);
 
-    await page.goto("/login", { waitUntil: "domcontentloaded" });
+    await page.goto("/login?redirect=%2Fmensagens%2Fsabores-da-ana", {
+      waitUntil: "domcontentloaded",
+    });
     await expect(
       page.getByRole("heading", { name: "Bom ter você por aqui." }),
     ).toBeVisible();
+    await expect(page.getByText("Você voltará para", { exact: true })).toBeVisible();
+    await expect(page.getByText("Sabores da Ana", { exact: true })).toBeVisible();
     await expect(page.locator('img[src="/auth/login-hero.webp"]')).toBeHidden();
     await expect(page.getByRole("button", { name: "Entrar" })).toBeVisible();
     await expect(
