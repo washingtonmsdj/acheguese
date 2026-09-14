@@ -20,6 +20,7 @@ function preloadEntryMapStyle(): void {
   link.as = "fetch";
   link.href = DEFAULT_TILE_STYLE.styleUrl;
   link.crossOrigin = "anonymous";
+  link.setAttribute("fetchpriority", "high");
   link.dataset.entryMapStylePreload = "true";
   document.head.appendChild(link);
 }
