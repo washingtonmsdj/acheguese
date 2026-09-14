@@ -103,6 +103,7 @@ export default function CadastroConfirmacaoPage() {
   };
 
   const resendDisabled = isResending || cooldown > 0 || !turnstile.isReady;
+  const backToLogin = redirectTo === "/" ? "/login" : `/login?redirect=${encodeURIComponent(redirectTo)}`;
 
   return (
     <>
@@ -114,7 +115,7 @@ export default function CadastroConfirmacaoPage() {
         />
       </Helmet>
 
-      <div className="min-h-[100dvh] bg-[#fffdfa] text-[#102f33]">
+      <div className="min-h-[100dvh] bg-[#fffdfa] text-[#102f33] lg:bg-[radial-gradient(circle_at_16%_32%,rgba(216,234,224,.55),transparent_31%),radial-gradient(circle_at_70%_18%,rgba(255,236,185,.28),transparent_30%),#fffdfa]">
         <AuthBrandHeader secondaryHref="/login" secondaryLabel="Entrar" />
 
         <main
@@ -129,11 +130,11 @@ export default function CadastroConfirmacaoPage() {
             <img
               src="/auth/confirm-hero.webp"
               alt="Ilustração de uma mensagem chegando ao território"
-              className="mt-5 w-full max-w-[390px] rounded-[24px] object-cover"
+              className="mt-5 w-full max-w-[390px] object-cover"
             />
           </section>
 
-          <section className="w-full text-center lg:rounded-[18px] lg:bg-white lg:p-7 lg:text-left lg:shadow-[0_18px_55px_rgba(17,55,59,.08)]">
+          <section className="w-full text-center lg:rounded-[10px] lg:bg-white lg:p-7 lg:text-left lg:shadow-[0_18px_55px_rgba(17,55,59,.08)]">
             <img
               src="/auth/confirm-envelope.webp"
               alt="Envelope amarelo com uma mensagem"
@@ -149,17 +150,22 @@ export default function CadastroConfirmacaoPage() {
             </p>
 
             <ol className="mt-6 space-y-3 text-left">
-              {["Abra a mensagem do Achegue-se.", "Toque em Confirmar e-mail.", "Volte para continuar."].map((step, index) => (
-                <li key={step} className="flex items-center gap-3 text-[13px] text-[#314f52]">
-                  <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-[#eceae2] text-[12px] font-bold text-[#244448]">
-                    {index + 1}
-                  </span>
-                  <span>{step}</span>
-                </li>
-              ))}
+              <li className="flex items-center gap-3 text-[13px] text-[#314f52]">
+                <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-[#eceae2] text-[12px] font-bold text-[#244448]">1</span>
+                <span>Abra a mensagem do Achegue-se.</span>
+              </li>
+              <li className="flex items-center gap-3 text-[13px] text-[#314f52]">
+                <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-[#eceae2] text-[12px] font-bold text-[#244448]">2</span>
+                <span className="lg:hidden">Toque em Confirmar e-mail.</span>
+                <span className="hidden lg:inline">Clique em Confirmar e-mail.</span>
+              </li>
+              <li className="flex items-center gap-3 text-[13px] text-[#314f52]">
+                <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-[#eceae2] text-[12px] font-bold text-[#244448]">3</span>
+                <span>Volte para continuar.</span>
+              </li>
             </ol>
 
-            <div className="mt-6 flex items-start gap-3 rounded-xl bg-[#f6f2e7] px-4 py-3 text-left">
+            <div className="mt-6 flex items-start gap-3 rounded-xl bg-[#f6f2e7] px-4 py-3 text-left lg:hidden">
               <span className="mt-0.5 text-[#d89b00]"><AuthConceptIcon name="info" /></span>
               <div>
                 <p className="text-[12px] font-bold">Não encontrou?</p>
@@ -183,7 +189,7 @@ export default function CadastroConfirmacaoPage() {
               onClick={handleResend}
               disabled={resendDisabled}
               aria-live="polite"
-              className="mt-4 h-11 w-full rounded-[9px] border border-[#31575a] bg-white text-[14px] font-bold text-[#173d41] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#0b5b59]/35 disabled:opacity-55"
+              className="mt-4 h-11 w-full rounded-[9px] border border-[#31575a] bg-white text-[14px] font-bold text-[#173d41] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#0b5b59]/35 disabled:opacity-55 lg:mt-6"
             >
               {isResending ? "Reenviando…" : cooldown > 0 ? `Reenviar em ${cooldown}s` : "Reenviar e-mail"}
             </button>
@@ -191,22 +197,26 @@ export default function CadastroConfirmacaoPage() {
             <button
               type="button"
               onClick={restartSignup}
-              className="mx-auto mt-2 block min-h-10 rounded px-2 text-[12px] font-medium text-[#0b4e52] underline underline-offset-2 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#0b5b59]/35 lg:mx-0"
+              className="mx-auto mt-2 block min-h-10 rounded px-2 text-[12px] font-medium text-[#0b4e52] underline underline-offset-2 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#0b5b59]/35 lg:mx-auto"
             >
               Informei o e-mail errado
             </button>
 
+            <p className="mt-1 hidden text-center text-[11px] text-[#607477] lg:block">
+              Confira também a pasta de spam.
+            </p>
+
             <div className="my-5 h-px bg-[#d4d8d5]" />
-            <div className="flex items-start gap-3 text-left text-[#526b6e]">
+            <div className="flex items-start gap-3 text-left text-[#526b6e] lg:hidden">
               <AuthConceptIcon name="clock" className="mt-0.5 text-[#174d55]" />
               <p className="text-[11px] leading-4">Sua conta ainda aguarda confirmação.</p>
             </div>
-            <div className="my-5 h-px bg-[#d4d8d5]" />
+            <div className="my-5 h-px bg-[#d4d8d5] lg:hidden" />
 
-            <div className="space-y-1 text-left">
+            <div className="space-y-1 text-left lg:hidden">
               <button
                 type="button"
-                onClick={() => navigate(redirectTo === "/" ? "/login" : `/login?redirect=${encodeURIComponent(redirectTo)}`)}
+                onClick={() => navigate(backToLogin)}
                 className="flex min-h-10 items-center gap-3 rounded px-1 text-[13px] text-[#0b4e52] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#0b5b59]/35"
               >
                 <AuthConceptIcon name="back" />
@@ -220,6 +230,12 @@ export default function CadastroConfirmacaoPage() {
                 Preciso de ajuda
               </Link>
             </div>
+
+            <nav aria-label="Ações de confirmação" className="hidden items-center justify-center gap-2 text-[11px] text-[#0b4e52] lg:flex">
+              <button type="button" onClick={() => navigate(backToLogin)} className="underline underline-offset-2">Voltar para entrar</button>
+              <span aria-hidden="true">·</span>
+              <Link to={SUPPORT_PATH} className="underline underline-offset-2">Ajuda</Link>
+            </nav>
           </section>
         </main>
         <AuthFooter />
