@@ -139,17 +139,15 @@ export function AccountSettingsShell({
   const activeProfileName = activeProfile?.display_name?.trim() || "Minha conta";
   const resolvedBackTo = backTo ?? resolveDefaultBackTarget(location.pathname, location.hash);
   const backLabel = resolveBackLabel(resolvedBackTo);
-  // The adaptive mobile nav remains mounted only on the /conta overview family.
-  // Sub-settings own the whole viewport, so they must not reserve a phantom nav gap.
   const hasMobileAccountNav = location.pathname === ACCOUNT_PATHS.home;
 
   return (
     <div className="territory-vivo min-h-[100dvh] bg-territory-canvas text-territory-ink">
-      <div className="mx-auto flex min-h-[100dvh] w-full max-w-[1440px] bg-territory-surface lg:border-x lg:border-territory-border">
-        <aside className="hidden w-[252px] shrink-0 bg-[hsl(var(--territory-brand))] px-3 py-5 text-white lg:sticky lg:top-0 lg:block lg:h-[100dvh] lg:overflow-y-auto">
+      <div className="mx-auto flex min-h-[100dvh] w-full max-w-[1536px] bg-territory-surface lg:border-x lg:border-territory-border">
+        <aside className="hidden w-[220px] shrink-0 bg-[hsl(var(--territory-brand))] px-3 py-5 text-white lg:sticky lg:top-0 lg:block lg:h-[100dvh] lg:overflow-y-auto xl:w-[224px]">
           <Link
             to="/"
-            className="mb-8 inline-flex px-3 font-heading text-[1.65rem] font-bold tracking-[-0.06em] text-white"
+            className="mb-8 inline-flex px-3 font-heading text-[1.55rem] font-bold tracking-[-0.06em] text-white"
             aria-label="Achegue-se — início"
           >
             achegue-se<span className="text-territory-sun">.</span>
@@ -174,14 +172,14 @@ export function AccountSettingsShell({
                     to={href}
                     aria-current={active ? "page" : undefined}
                     className={cn(
-                      "relative flex min-h-12 items-center gap-3 rounded-lg px-3 text-sm font-medium text-white/90 transition-colors hover:bg-white/10 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-territory-sun",
+                      "relative flex min-h-11 items-center gap-3 rounded-lg px-3 text-[0.82rem] font-medium text-white/90 transition-colors hover:bg-white/10 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-territory-sun",
                       active && "bg-white/15 font-semibold text-white",
                     )}
                   >
                     {active ? (
                       <span className="absolute inset-y-2 left-0 w-1 rounded-r-full bg-territory-sun" aria-hidden="true" />
                     ) : null}
-                    <Icon className={cn("h-5 w-5 shrink-0", active && "text-territory-sun")} aria-hidden="true" />
+                    <Icon className={cn("h-[18px] w-[18px] shrink-0", active && "text-territory-sun")} aria-hidden="true" />
                     <span>{label}</span>
                   </Link>
                 </div>
@@ -230,15 +228,15 @@ export function AccountSettingsShell({
           <main id="main-content" tabIndex={-1} className="focus:outline-none">
             <div
               className={cn(
-                "mx-auto w-full max-w-[1040px] px-4 pt-5 sm:px-6 sm:pb-12 sm:pt-6 xl:px-8",
+                "mx-auto w-full max-w-[1100px] px-4 pt-4 sm:px-6 sm:pb-12 sm:pt-6 lg:px-7 xl:px-8",
                 hasMobileAccountNav
                   ? "pb-[calc(env(safe-area-inset-bottom)+6rem)]"
                   : "pb-[calc(env(safe-area-inset-bottom)+2rem)]",
               )}
             >
-              <div className="mb-5 sm:mb-6">
-                <p className="text-[0.72rem] font-semibold text-territory-brand">{eyebrow}</p>
-                <h1 className="mt-1 font-heading text-[1.65rem] font-bold leading-tight tracking-[-0.035em] text-territory-ink sm:text-3xl">
+              <div className="mb-4 sm:mb-6">
+                <p className="hidden text-[0.72rem] font-semibold text-territory-brand lg:block">{eyebrow}</p>
+                <h1 className="font-heading text-[1.72rem] font-bold leading-tight tracking-[-0.04em] text-territory-ink sm:text-3xl lg:mt-1">
                   {title}
                 </h1>
                 {description ? (
