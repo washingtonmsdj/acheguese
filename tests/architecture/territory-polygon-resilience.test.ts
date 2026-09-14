@@ -31,6 +31,27 @@ describe("territory polygon loading resilience", () => {
     expect(source).toContain("not negative-cached");
   });
 
+  it("keeps one owner for FeatureServer parsing, cache and network access", () => {
+    const service = read("src/core/geospatial/services/BoundaryService.ts");
+    const source = read(
+      "src/core/geospatial/data/officialFeatureServerBoundary.ts",
+    );
+
+    expect(service).toContain(
+      'import { loadOfficialFeatureServerBoundary } from "../data/officialFeatureServerBoundary";',
+    );
+    expect(service).toContain("await loadOfficialFeatureServerBoundary(location)");
+    expect(service).not.toContain("metadataSourceBoundaryCache");
+    expect(service).not.toContain("getOfficialFeatureServerSource(");
+    expect(service).not.toContain("await fetch(");
+    expect(service).not.toContain("FeatureServer responded with");
+
+    expect(source).toContain("const boundaryCache = new Map");
+    expect(source).toContain("const pendingBatches = new Map");
+    expect(source).toContain("function getOfficialSource(location: Location)");
+    expect(source).toContain("const response = await fetch(url.toString(), {");
+  });
+
   it("keeps the public root slow-boundary state non-blocking while the shared load is bounded", () => {
     const runtime = read(
       "src/app/components/territory-vivo/TerritoryEntryMapRuntime.tsx",
