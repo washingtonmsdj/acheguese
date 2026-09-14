@@ -31,6 +31,7 @@ const launchCity =
 
 export default function TerritoryEntryPage() {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const [shouldLoadCommunityImage, setShouldLoadCommunityImage] = useState(false);
   const mobileMenuButtonRef = useRef<HTMLButtonElement | null>(null);
   const mobileMenuPopoverRef = useRef<HTMLElement | null>(null);
 
@@ -67,6 +68,50 @@ export default function TerritoryEntryPage() {
       document.removeEventListener("pointerdown", handlePointerDown);
     };
   }, [isMobileMenuOpen]);
+
+  useEffect(() => {
+    const desktopMedia = window.matchMedia("(min-width: 768px)");
+    let idleId: number | null = null;
+    let timeoutId: number | null = null;
+    let loadListenerAttached = false;
+
+    const requestImage = () => {
+      if (!desktopMedia.matches || shouldLoadCommunityImage) return;
+
+      if ("requestIdleCallback" in window) {
+        idleId = window.requestIdleCallback(
+          () => setShouldLoadCommunityImage(true),
+          { timeout: 1800 },
+        );
+      } else {
+        timeoutId = window.setTimeout(() => setShouldLoadCommunityImage(true), 600);
+      }
+    };
+
+    const scheduleAfterLoad = () => requestImage();
+    const handleMediaChange = () => {
+      if (desktopMedia.matches) requestImage();
+    };
+
+    if (document.readyState === "complete") {
+      requestImage();
+    } else {
+      window.addEventListener("load", scheduleAfterLoad, { once: true });
+      loadListenerAttached = true;
+    }
+    desktopMedia.addEventListener("change", handleMediaChange);
+
+    return () => {
+      if (loadListenerAttached) {
+        window.removeEventListener("load", scheduleAfterLoad);
+      }
+      desktopMedia.removeEventListener("change", handleMediaChange);
+      if (idleId !== null && "cancelIdleCallback" in window) {
+        window.cancelIdleCallback(idleId);
+      }
+      if (timeoutId !== null) window.clearTimeout(timeoutId);
+    };
+  }, [shouldLoadCommunityImage]);
 
   const rememberComplex = () => {
     lastTerritoryStore.set({
@@ -144,13 +189,14 @@ export default function TerritoryEntryPage() {
           <section className="entry-selection" aria-labelledby="entry-community-title">
             <div className="entry-community-preview">
               <img
-                src={communityThumbnail}
+                src={shouldLoadCommunityImage ? communityThumbnail : undefined}
                 alt=""
                 width={1024}
                 height={768}
                 loading="lazy"
                 decoding="async"
                 fetchPriority="low"
+                className="bg-territory-raised"
               />
               <span>
                 <strong id="entry-community-title">{COMPLEX_TERRITORY_NAME}</strong>
