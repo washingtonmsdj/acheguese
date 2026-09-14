@@ -68,11 +68,13 @@ describe("useCadastroForm", () => {
     expect(result.current.form.formState.errors.termsAccepted).toBeDefined();
   });
 
-  it("cria somente o perfil pessoal inicial e preserva o destino seguro", async () => {
+  it("cria somente a conta/perfil pessoal inicial e preserva o destino seguro", async () => {
     const { result } = renderHook(() => useCadastroForm("/mensagens/abc"));
     fillAccount(result);
     act(() => {
-      result.current.form.setValue("termsAccepted", true as never, { shouldValidate: true });
+      result.current.form.setValue("termsAccepted", true, {
+        shouldValidate: true,
+      });
     });
 
     await act(async () => {
@@ -83,7 +85,6 @@ describe("useCadastroForm", () => {
       email: "ana@example.com",
       password: "SenhaSegura@2026",
       name: "Ana Souza",
-      display_name: "Ana Souza",
       handle: "ana_souza",
       termsAcceptance: {
         accepted: true,
