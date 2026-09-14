@@ -152,6 +152,7 @@ export function AccountSettingsShell({
   const resolvedDesktopTitle = desktopTitle ?? title;
   const resolvedMobileDescription = mobileDescription ?? description;
   const resolvedDesktopDescription = desktopDescription ?? description;
+  const showDedicatedMobileEyebrow = eyebrow !== "Minha conta";
 
   return (
     <div className="territory-vivo min-h-[100dvh] bg-territory-canvas text-territory-ink">
@@ -247,6 +248,9 @@ export function AccountSettingsShell({
               )}
             >
               <div className="mb-4 sm:mb-6">
+                {showDedicatedMobileEyebrow ? (
+                  <p className="mb-2 text-sm font-medium text-territory-ink lg:hidden">{eyebrow}</p>
+                ) : null}
                 <p className="hidden text-[0.72rem] font-semibold text-territory-brand lg:block">{eyebrow}</p>
                 <h1 className="font-heading text-[1.72rem] font-bold leading-tight tracking-[-0.04em] text-territory-ink sm:text-3xl lg:mt-1">
                   <span className="lg:hidden">{resolvedMobileTitle}</span>
