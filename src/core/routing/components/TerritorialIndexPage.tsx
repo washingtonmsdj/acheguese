@@ -1,6 +1,6 @@
 import { lazy, Suspense } from "react";
 import type { ComponentType } from "react";
-import { FullScreenLoader } from "@/shared/components/loading/PageLoader";
+import { PassivePageFallback } from "@/shared/components/loading/PassivePageFallback";
 
 const TerritorialLandingPage = lazy(() =>
   import("./TerritorialLandingPage").then((module) => ({ default: module.TerritorialLandingPage })),
@@ -13,14 +13,14 @@ interface TerritorialIndexPageProps {
 export function TerritorialIndexPage({ CityLandingComponent }: TerritorialIndexPageProps = {}) {
   if (CityLandingComponent) {
     return (
-      <Suspense fallback={<FullScreenLoader />}>
+      <Suspense fallback={<PassivePageFallback />}>
         <CityLandingComponent />
       </Suspense>
     );
   }
 
   return (
-    <Suspense fallback={<FullScreenLoader />}>
+    <Suspense fallback={<PassivePageFallback />}>
       <TerritorialLandingPage />
     </Suspense>
   );
