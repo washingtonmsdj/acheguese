@@ -36,19 +36,24 @@ Continuação da entrada pública `/` após G183, concentrada em reduzir trabalh
 - `ConsentService` passou a ser também o owner observável do consentimento local:
   - `LOCAL_CONSENT_STORAGE_KEY` centraliza `lgpd-consent`;
   - leitura tolera JSON inválido e registros malformados sem quebrar a UI;
+  - leitura de storage bloqueado também falha fechada, sem lançar durante render;
+  - escrita bloqueada rejeita a nova escolha em vez de fingir persistência e habilitar integração opcional;
   - `CONSENT_PREFERENCES_CHANGED_EVENT` notifica mudanças na mesma aba;
   - evento nativo `storage` cobre mudanças em outras abas;
   - `hasGrantedLocalConsent()` expõe leitura de permissão sem duplicar parsing.
 - `useAnalyticsConsent()` projeta esse owner via `useSyncExternalStore`.
 - `ConsentAwareVercelAnalytics.tsx` é o único importador de `@vercel/analytics/react` e só renderiza/importa a integração quando `analytics=true` e o ambiente é produção não-local.
 - tanto `PublicRootOverlays` quanto `GlobalOverlays` usam esse mesmo owner; não existe segundo gate de analytics.
-- `tests/architecture/analytics-consent-boundary.test.ts` protege o import único, o subscription model e o uso pelos dois overlays.
+- `tests/architecture/analytics-consent-boundary.test.ts` protege o import único, ownership da chave local, subscription model e uso pelos dois overlays.
+- `src/core/privacy/services/ConsentService.test.ts` cobre JSON inválido, storage de leitura bloqueado, storage de escrita bloqueado, opt-in local e notificação cross-tab.
 
 ## Semântica de privacidade
 
 O Achegue-se possui uma preferência explícita `analytics`. Por isso, a integração de analytics não deve ser carregada antes do opt-in, mesmo quando o fornecedor use um modelo first-party/privacy-friendly.
 
 Revogar a preferência atualiza o estado observável e remove a integração React. Código de terceiro que o navegador já tenha baixado anteriormente não pode ser retroativamente "descarregado"; o contrato protegido aqui é principalmente **não importar/montar antes de consentimento** e não manter uma segunda montagem fora desse gate.
+
+Quando storage local estiver indisponível, permissões opcionais permanecem desligadas. O sistema não interpreta falha de persistência como consentimento.
 
 ## Validação desta sessão
 
@@ -60,6 +65,8 @@ Revogar a preferência atualiza o estado observável e remove a integração Rea
 - `ConsentBanner.tsx` reduzido a adapter roteado;
 - `ConsentBannerContent.tsx` sem dependência de `react-router-dom`;
 - `@vercel/analytics/react` centralizado no owner consent-aware;
+- `lgpd-consent` centralizado no owner de privacidade dentro de `src`;
+- cobertura comportamental versionada para o consent owner;
 - preservação de commits concorrentes de Conta/Auth/Privacidade na `main`.
 
 ### Status remoto observado
@@ -91,3 +98,4 @@ Isso é limite do provider e **não certifica nem reprova o build do source**.
 - overlays da raiz permanecem router-free; necessidades de pathname recebem o valor diretamente quando a superfície não é roteada.
 - `@vercel/analytics/react` só pode ser importado pelo owner consent-aware e não deve montar antes de `analytics=true`.
 - mudanças de consentimento local devem passar pelo owner observável; não recriar parsing/evento/storage key em componentes.
+- falha de storage local mantém permissões opcionais em fail-closed; não habilitar analytics/marketing/geolocation por fallback implícito.
