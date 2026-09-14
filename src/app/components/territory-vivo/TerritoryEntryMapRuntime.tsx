@@ -82,6 +82,7 @@ export default function TerritoryEntryMapRuntime({
 }: TerritoryEntryMapRuntimeProps) {
   const [mapReady, setMapReady] = useState(false);
   const [mapUnavailable, setMapUnavailable] = useState(false);
+  const [boundaryStarted, setBoundaryStarted] = useState(false);
   const [boundarySlow, setBoundarySlow] = useState(false);
   const [showArrival, setShowArrival] = useState(true);
   const [arrivalLeaving, setArrivalLeaving] = useState(false);
@@ -94,7 +95,9 @@ export default function TerritoryEntryMapRuntime({
     () => resolveInitialViewport(resolved, city),
     [city, resolved],
   );
-  const { polygons, isLoading: isBoundaryLoading } = useTerritoryPolygon(resolved);
+  const { polygons, isLoading: isBoundaryLoading } = useTerritoryPolygon(resolved, {
+    enabled: boundaryStarted,
+  });
   const color = useMemo(() => {
     if (typeof document === "undefined") return NEIGHBORHOOD_COLORS[1];
     const root = getComputedStyle(document.documentElement);
@@ -128,8 +131,29 @@ export default function TerritoryEntryMapRuntime({
       ? resolved.location.name
       : city?.name ?? "Salvador";
   const territoryLabel = label ?? territoryName;
-  const boundaryUnavailable = resolved?.kind === "group" && !isLoading && !isBoundaryLoading && !hasCompleteGroupBoundary;
-  const boundaryPending = mapReady && !boundaryUnavailable && (isLoading || isBoundaryLoading);
+  const boundaryUnavailable =
+    boundaryStarted &&
+    resolved?.kind === "group" &&
+    !isLoading &&
+    !isBoundaryLoading &&
+    !hasCompleteGroupBoundary;
+  const boundaryPending =
+    mapReady &&
+    !boundaryUnavailable &&
+    (!boundaryStarted || isLoading || isBoundaryLoading);
+
+  useEffect(() => {
+    if (!mapReady) {
+      setBoundaryStarted(false);
+      return;
+    }
+
+    // Give the first usable basemap frame its own paint before starting the
+    // official geometry request. This keeps GeoSalvador from competing with
+    // the tiles that make the entry map visibly ready.
+    const frameId = window.requestAnimationFrame(() => setBoundaryStarted(true));
+    return () => window.cancelAnimationFrame(frameId);
+  }, [mapReady, resolved]);
 
   useEffect(() => {
     if (!mapReady) {
@@ -150,19 +174,25 @@ export default function TerritoryEntryMapRuntime({
   }, [mapReady, mapUnavailable]);
 
   useEffect(() => {
-    if (!mapReady || !resolved || resolved.kind !== "group" || !isBoundaryLoading) {
+    if (
+      !mapReady ||
+      !boundaryStarted ||
+      !resolved ||
+      resolved.kind !== "group" ||
+      !isBoundaryLoading
+    ) {
       setBoundarySlow(false);
       return;
     }
     const id = window.setTimeout(() => setBoundarySlow(true), BOUNDARY_TIMEOUT_MS);
     return () => window.clearTimeout(id);
-  }, [isBoundaryLoading, mapReady, resolved]);
+  }, [boundaryStarted, isBoundaryLoading, mapReady, resolved]);
 
   return (
     <section
       className={`territory-entry-map relative h-full min-h-[12rem] w-full overflow-hidden bg-territory-raised md:min-h-[18rem] lg:min-h-[24rem] ${className}`}
       aria-labelledby="territory-entry-map-title"
-      aria-busy={!mapReady || isLoading || isBoundaryLoading}
+      aria-busy={!mapReady || isLoading || !boundaryStarted || isBoundaryLoading}
     >
       <MapLibreAdapter
         styleUrl={DEFAULT_TILE_STYLE.styleUrl}
