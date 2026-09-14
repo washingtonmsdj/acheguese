@@ -177,6 +177,9 @@ async function fetchSourceBatch(
             where: `OBJECTID IN (${objectIds.join(",")})`,
             outFields: "OBJECTID",
             returnGeometry: "true",
+            geometryPrecision: "6",
+            returnZ: "false",
+            returnM: "false",
             f: "geojson",
             outSR: "4326",
           }).toString();
