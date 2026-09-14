@@ -21,6 +21,13 @@ const boundsDelta = parseNumber(publicEnv.VITE_DEFAULT_MAP_BOUNDS_DELTA, 0.15);
 const launchCityName = publicEnv.VITE_LAUNCH_CITY_NAME?.trim() || "Território inicial";
 const launchState = (publicEnv.VITE_LAUNCH_STATE?.trim() || "").toUpperCase();
 
+/**
+ * Canonical OpenFreeMap vector TileJSON endpoint used by the hosted styles.
+ * Keeping this beside the style URLs lets performance preloads reuse the same
+ * map-provider SSOT instead of hardcoding provider internals in bootstrap code.
+ */
+export const OPENFREEMAP_TILEJSON_URL = "https://tiles.openfreemap.org/planet";
+
 export const MAP_TILE_STYLES = {
   streets: {
     name: "openfreemap",
