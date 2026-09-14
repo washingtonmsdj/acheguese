@@ -42,18 +42,34 @@ if (isPublicRootAtBoot && !document.querySelector("link[data-entry-map-style-pre
 const root = createRoot(document.getElementById("root")!);
 root.render(<App />);
 
-// The public font stylesheet is already being fetched as a low-priority preload.
-// Promote it only after the first paint without an extra bootstrap-script request.
-deferFrame(() => {
-  const fontStylesheet = document.querySelector<HTMLLinkElement>(
-    "link[data-public-font-stylesheet]",
-  );
-  if (!fontStylesheet || fontStylesheet.rel === "stylesheet") return;
+function loadOptionalFontStylesheet(): void {
+  if (document.querySelector("link[data-public-font-loaded]")) return;
 
-  fontStylesheet.rel = "stylesheet";
-  fontStylesheet.removeAttribute("as");
-  fontStylesheet.removeAttribute("fetchpriority");
-});
+  const source = document.querySelector<HTMLMetaElement>(
+    "meta[data-public-font-stylesheet]",
+  );
+  const href = source?.content.trim();
+  if (!href) return;
+
+  const stylesheet = document.createElement("link");
+  stylesheet.rel = "stylesheet";
+  stylesheet.href = href;
+  stylesheet.dataset.publicFontLoaded = "true";
+  document.head.appendChild(stylesheet);
+}
+
+// Typography is optional on the community-first root. Let hero + map own the
+// first network window; display=optional keeps the system fallback stable if
+// the webfont arrives too late to improve this navigation.
+if (isPublicRootAtBoot) {
+  scheduleAfterPublicRootMap(loadOptionalFontStylesheet, {
+    maxWaitMs: 2400,
+    idleTimeoutMs: 1600,
+    idleFallbackDelayMs: 650,
+  });
+} else {
+  deferFrame(loadOptionalFontStylesheet);
+}
 
 // Measurement stays lightweight and starts after the first paint/load. The
 // Sentry telemetry sink is attached later, after the public map has priority.
