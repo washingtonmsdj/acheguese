@@ -19,7 +19,7 @@ import {
 import { VisuallyHidden } from "@/shared/components/ui/visually-hidden";
 import { cn } from "@/shared/utils/cn";
 import { useSessionContext } from "@/core/session";
-import { GeolocationService } from "@/core/maps/services/GeolocationService";
+import { GeolocationService } from "@/shared/services/GeolocationService";
 import { useEmergencyAlerts } from "@/core/safety";
 import type { RideRequest } from "@/core/mobility/types";
 import { logger } from "@/shared/utils/logger";
@@ -255,7 +255,6 @@ function EmergencyDialog({
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="bg-[#1a1010] border-red-900/50 text-white max-w-sm">
-        {/* ✅ CORREÇÃO AAA: Adicionar DialogTitle e DialogDescription para WCAG */}
         <DialogTitle className="text-xl font-bold text-red-400 text-center">
           Emergência
         </DialogTitle>
@@ -265,12 +264,10 @@ function EmergencyDialog({
         </DialogDescription>
 
         <div className="text-center space-y-4">
-          {/* Icon */}
           <div className="w-20 h-20 rounded-full bg-red-500/20 border-4 border-red-500/40 flex items-center justify-center mx-auto animate-pulse">
             <AlertTriangle className="h-10 w-10 text-red-400" />
           </div>
 
-          {/* Ride info */}
           {ride && (
             <div className="text-left p-3 rounded-xl bg-white/5 border border-white/10 space-y-1">
               <p className="text-xs text-gray-400 font-semibold">
@@ -286,7 +283,6 @@ function EmergencyDialog({
             </div>
           )}
 
-          {/* Actions */}
           <div className="space-y-2">
             <Button
               onClick={onTrigger}
@@ -299,10 +295,10 @@ function EmergencyDialog({
                   Enviando...
                 </>
               ) : (
-                  <>
-                    <AlertTriangle className="h-5 w-5 mr-2" />
-                    ACIONAR EMERGÊNCIA
-                  </>
+                <>
+                  <AlertTriangle className="h-5 w-5 mr-2" />
+                  ACIONAR EMERGÊNCIA
+                </>
               )}
             </Button>
 
@@ -328,7 +324,6 @@ function EmergencyDialog({
   );
 }
 
-// Security features checklist component
 export function SecurityChecklist({
   isVerified = false,
 }: {
@@ -386,6 +381,3 @@ export function SecurityChecklist({
     </div>
   );
 }
-
-
-
