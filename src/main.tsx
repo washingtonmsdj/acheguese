@@ -26,6 +26,19 @@ root.render(<App />);
 
 const isPublicRootAtBoot = window.location.pathname === "/";
 
+// The public font stylesheet is already being fetched as a low-priority preload.
+// Promote it only after the first paint without an extra bootstrap-script request.
+deferFrame(() => {
+  const fontStylesheet = document.querySelector<HTMLLinkElement>(
+    "link[data-public-font-stylesheet]",
+  );
+  if (!fontStylesheet || fontStylesheet.rel === "stylesheet") return;
+
+  fontStylesheet.rel = "stylesheet";
+  fontStylesheet.removeAttribute("as");
+  fontStylesheet.removeAttribute("fetchpriority");
+});
+
 // Keep measurements off the root's first paint. Other routes can start them
 // earlier because their runtime already carries a larger application shell.
 const scheduleVitals = isPublicRootAtBoot ? deferLoad : deferFrame;
@@ -42,6 +55,26 @@ scheduleSentry(() => {
   import("./shared/config/sentry.config.ts").then(({ initializeSentry }) => {
     initializeSentry();
   });
+});
+
+// AdSense must not download or execute while the public entry and map are
+// competing for the network/main thread. deferLoad already means load + idle.
+deferLoad(() => {
+  const isLocalhost =
+    window.location.hostname === "localhost" ||
+    window.location.hostname === "127.0.0.1" ||
+    window.location.hostname === "::1";
+  if (isLocalhost) return;
+
+  if (document.querySelector("script[data-acheguese-adsense]")) return;
+
+  const ads = document.createElement("script");
+  ads.async = true;
+  ads.src =
+    "https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-6454131132519516";
+  ads.crossOrigin = "anonymous";
+  ads.dataset.achegueseAdsense = "true";
+  document.head.appendChild(ads);
 });
 
 deferLoad(() => {
