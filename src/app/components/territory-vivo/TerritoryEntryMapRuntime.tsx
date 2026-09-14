@@ -1,6 +1,7 @@
-import { lazy, Suspense, useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { Map, MapPin } from "lucide-react";
 import { LocationType, type Location } from "@/core/location/types";
+import { MapLibreAdapter } from "@/core/maps/components/v3/LazyMapLibreAdapter";
 import { useTerritoryPolygon } from "@/core/maps/hooks/useTerritoryPolygon";
 import {
   DEFAULT_TILE_STYLE,
@@ -12,12 +13,6 @@ const SALVADOR_VIEWPORT = {
   center: { latitude: -12.95, longitude: -38.48 },
   zoom: 10.1,
 };
-
-const LazyMapLibreAdapter = lazy(() =>
-  import("@/core/maps/components/v3/MapLibreAdapter").then((module) => ({
-    default: module.MapLibreAdapter,
-  })),
-);
 
 export interface TerritoryEntryMapRuntimeProps {
   city: Location | null;
@@ -159,30 +154,28 @@ export default function TerritoryEntryMapRuntime({
       aria-labelledby="territory-entry-map-title"
       aria-busy={!mapPresented}
     >
-      <Suspense fallback={<RuntimeMapLoadingSurface label={territoryLabel} />}>
-        <LazyMapLibreAdapter
-          styleUrl={DEFAULT_TILE_STYLE.styleUrl}
-          initialViewport={SALVADOR_VIEWPORT}
-          territoryPolygons={entryPolygons}
-          resolved={resolved}
-          fitTerritoryBounds={entryPolygons.length > 0}
-          territoryFitPadding={24}
-          territoryFitMaxZoom={isCity ? 10.5 : 14}
-          markers={[]}
-          userLocationMarker={{ enabled: false, autoAdd: false }}
-          enableClustering={false}
-          attribution={false}
-          hideNavigationControl
-          interactive={false}
-          onLoad={() => {
-            setMapReady(true);
-            setMapUnavailable(false);
-          }}
-          className={`pointer-events-none h-full w-full transition-opacity duration-300 motion-reduce:transition-none ${
-            mapPresented ? "opacity-100" : "opacity-0"
-          }`}
-        />
-      </Suspense>
+      <MapLibreAdapter
+        styleUrl={DEFAULT_TILE_STYLE.styleUrl}
+        initialViewport={SALVADOR_VIEWPORT}
+        territoryPolygons={entryPolygons}
+        resolved={resolved}
+        fitTerritoryBounds={entryPolygons.length > 0}
+        territoryFitPadding={24}
+        territoryFitMaxZoom={isCity ? 10.5 : 14}
+        markers={[]}
+        userLocationMarker={{ enabled: false, autoAdd: false }}
+        enableClustering={false}
+        attribution={false}
+        hideNavigationControl
+        interactive={false}
+        onLoad={() => {
+          setMapReady(true);
+          setMapUnavailable(false);
+        }}
+        className={`pointer-events-none h-full w-full transition-opacity duration-300 motion-reduce:transition-none ${
+          mapPresented ? "opacity-100" : "opacity-0"
+        }`}
+      />
 
       {!mapPresented && !mapUnavailable ? (
         <RuntimeMapLoadingSurface label={territoryLabel} />
