@@ -32,12 +32,19 @@ describe("root community-first MVP entry", () => {
     expect(wrapper).not.toContain("MapLibreAdapter");
   });
 
-  it("keeps territorial data resolution deferred from first paint", () => {
+  it("uses the versioned launch territory without database discovery", () => {
     const source = read("src/app/pages/TerritoryEntryPage.tsx");
-    expect(source).toContain("scheduleBrowserIdleWork");
-    expect(source).toContain("Promise.all([getLaunchCity(), getLaunchResolvedTerritory()])");
-    expect(source).toContain('await import("@/core/territorial")');
-    expect(source).not.toContain('import { territorialGroupService } from "@/core/territorial"');
+
+    expect(source).toContain(
+      'import { resolvePublicTerritoryFallback } from "@/core/routing/utils/publicTerritoryFallbacks"',
+    );
+    expect(source).toContain("const launchTerritory = resolvePublicTerritoryFallback");
+    expect(source).toContain("resolvedTerritory={launchTerritory}");
+    expect(source).toContain("isLoading={false}");
+    expect(source).not.toContain("createLocationRepository");
+    expect(source).not.toContain("territorialGroupService");
+    expect(source).not.toContain("findDescendants");
+    expect(source).not.toContain("scheduleBrowserIdleWork");
   });
 
   it("uses a lightweight low-priority community preview", () => {
