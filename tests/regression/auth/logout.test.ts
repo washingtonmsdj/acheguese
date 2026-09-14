@@ -80,6 +80,29 @@ describe("auth logout regression guard", () => {
     expect(mocks.loggerWarn).not.toHaveBeenCalled();
   });
 
+  it("revokes only other sessions while preserving this browser session", async () => {
+    mocks.signOut.mockResolvedValue({ error: null });
+
+    await expect(AuthService.signOutOtherSessions()).resolves.toBeUndefined();
+
+    expect(mocks.signOut).toHaveBeenCalledTimes(1);
+    expect(mocks.signOut).toHaveBeenCalledWith({ scope: "others" });
+    expect(mocks.storageRemoveItem).not.toHaveBeenCalled();
+    expect(mocks.storageGetItem).not.toHaveBeenCalled();
+  });
+
+  it("does not fake success or clear local auth when other-session revocation fails", async () => {
+    mocks.signOut.mockResolvedValue({ error: new Error("remote revocation failed") });
+
+    await expect(AuthService.signOutOtherSessions()).rejects.toThrow(
+      "remote revocation failed",
+    );
+
+    expect(mocks.signOut).toHaveBeenCalledWith({ scope: "others" });
+    expect(mocks.storageRemoveItem).not.toHaveBeenCalled();
+    expect(mocks.storageGetItem).not.toHaveBeenCalled();
+  });
+
   it("clears the Achegue-se auth storage when Supabase returns a sign-out error", async () => {
     mocks.signOut.mockResolvedValue({ error: new Error("remote sign-out failed") });
 
