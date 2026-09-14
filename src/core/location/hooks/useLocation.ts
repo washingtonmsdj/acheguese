@@ -1,14 +1,14 @@
 /**
  * Hooks para Location - SSOT
- * Usa LocationService para todas as operações
+ * Usa LocationService para persistencia e GeolocationService para device GPS.
  */
-import { logger } from '@/shared/utils/logger';
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { locationService, type LocationHistory } from "@/core/location";
+import { GEOLOCATION_RUNTIME } from "@/shared/config/geolocation";
 import { useToast } from "@/shared/hooks/use-toast";
-/**
- * Hook para buscar histórico de localização
- */
+import { GeolocationService } from "@/shared/services/GeolocationService";
+import { logger } from '@/shared/utils/logger';
+
 export function useLocationHistory(
   profileId: string | undefined,
   limit: number = 100,
@@ -17,28 +17,22 @@ export function useLocationHistory(
     queryKey: ["location-history", profileId, limit],
     queryFn: () => locationService.getLocationHistory(profileId!, limit),
     enabled: !!profileId,
-    staleTime: 5 * 60 * 1000, // 5 minutos
+    staleTime: 5 * 60 * 1000,
     retry: 1,
   });
 }
 
-/**
- * Hook para buscar última localização
- */
 export function useLastLocation(profileId: string | undefined) {
   return useQuery({
     queryKey: ["last-location", profileId],
     queryFn: () => locationService.getLastLocation(profileId!),
     enabled: !!profileId,
-    staleTime: 30 * 1000, // 30 segundos (mais frequente)
+    staleTime: 30 * 1000,
     retry: 1,
-    refetchInterval: 60 * 1000, // Atualizar a cada minuto
+    refetchInterval: 60 * 1000,
   });
 }
 
-/**
- * Hook para salvar localização
- */
 export function useSaveLocation() {
   const queryClient = useQueryClient();
   const { toast } = useToast();
@@ -47,7 +41,6 @@ export function useSaveLocation() {
     mutationFn: (data: Omit<LocationHistory, "id" | "created_at">) =>
       locationService.saveLocation(data),
     onSuccess: (_, variables) => {
-      // Invalidar cache de localização do perfil
       queryClient.invalidateQueries({
         queryKey: ["location-history", variables.profile_id],
       });
@@ -64,9 +57,6 @@ export function useSaveLocation() {
   });
 }
 
-/**
- * Hook para limpeza de histórico antigo (admin)
- */
 export function useCleanOldLocationHistory() {
   const queryClient = useQueryClient();
   const { toast } = useToast();
@@ -75,7 +65,6 @@ export function useCleanOldLocationHistory() {
     mutationFn: (daysOld: number = 30) =>
       locationService.cleanOldHistory(daysOld),
     onSuccess: () => {
-      // Invalidar todo o cache de localização
       queryClient.invalidateQueries({ queryKey: ["location-history"] });
       queryClient.invalidateQueries({ queryKey: ["last-location"] });
       toast({ title: "Histórico antigo removido!" });
@@ -89,38 +78,36 @@ export function useCleanOldLocationHistory() {
   });
 }
 
-/**
- * Hook personalizado para rastreamento em tempo real
- */
 export function useLocationTracking(profileId: string | undefined) {
   const saveMutation = useSaveLocation();
 
   const startTracking = () => {
-    if (!profileId || !navigator.geolocation) return;
+    if (!profileId) return undefined;
 
-    const watchId = navigator.geolocation.watchPosition(
-      (position) => {
+    const watchId = GeolocationService.watchLocation(
+      (coords) => {
         saveMutation.mutate({
           profile_id: profileId,
-          latitude: position.coords.latitude,
-          longitude: position.coords.longitude,
-          accuracy: position.coords.accuracy,
-          timestamp: new Date().toISOString(),
+          latitude: coords.latitude,
+          longitude: coords.longitude,
+          accuracy: coords.accuracy,
+          timestamp: new Date(coords.timestamp).toISOString(),
         });
       },
       (error) => {
-        logger.error("Erro ao obter localização:", error);
+        logger.warn("[useLocationTracking] Localização indisponível", {
+          message: error instanceof Error ? error.message : String(error),
+        });
       },
       {
         enableHighAccuracy: true,
-        timeout: 10000,
-        maximumAge: 60000, // 1 minuto
+        timeout: GEOLOCATION_RUNTIME.backgroundWatchTimeoutMs,
+        maximumAge: GEOLOCATION_RUNTIME.backgroundWatchMaximumAgeMs,
       },
     );
 
-    return () => {
-      navigator.geolocation.clearWatch(watchId);
-    };
+    if (watchId === null) return undefined;
+    return () => GeolocationService.clearWatch(watchId);
   };
 
   return {
