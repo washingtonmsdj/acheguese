@@ -1,7 +1,18 @@
+import type { CSSProperties } from "react";
+
 interface TerritoryEntryMapSkeletonProps {
   label: string;
   statusText?: string;
 }
+
+const BLOCK_STYLE: CSSProperties = {
+  background: "hsl(var(--territory-ink) / 0.08)",
+  borderColor: "hsl(var(--territory-ink) / 0.14)",
+};
+
+const ROAD_STYLE: CSSProperties = {
+  background: "hsl(var(--territory-ink) / 0.14)",
+};
 
 /**
  * Skeleton responsivo compartilhado pela entrada territorial.
@@ -23,7 +34,7 @@ export function TerritoryEntryMapSkeleton({
         className="absolute inset-0 opacity-100"
         style={{
           backgroundImage:
-            "linear-gradient(90deg, hsl(var(--territory-border) / 0.5) 1px, transparent 1px), linear-gradient(hsl(var(--territory-border) / 0.5) 1px, transparent 1px), radial-gradient(circle at 70% 24%, hsl(var(--territory-brand) / 0.16), transparent 32%), linear-gradient(145deg, hsl(var(--territory-raised)), hsl(var(--territory-surface)))",
+            "linear-gradient(90deg, hsl(var(--territory-ink) / 0.08) 1px, transparent 1px), linear-gradient(hsl(var(--territory-ink) / 0.08) 1px, transparent 1px), radial-gradient(circle at 70% 24%, hsl(var(--territory-brand) / 0.2), transparent 34%), linear-gradient(145deg, hsl(var(--territory-raised)), hsl(var(--territory-surface)))",
           backgroundSize: "56px 56px, 56px 56px, 100% 100%, 100% 100%",
         }}
       />
@@ -32,18 +43,45 @@ export function TerritoryEntryMapSkeleton({
         className="absolute inset-0 motion-safe:animate-pulse motion-reduce:animate-none"
         aria-hidden="true"
       >
-        <span className="absolute left-[6%] top-[8%] h-[20%] w-[30%] rounded-2xl border border-territory-border bg-territory-raised shadow-sm lg:left-[7%] lg:top-[8%] lg:h-[18%] lg:w-[25%] lg:rounded-3xl" />
-        <span className="absolute right-[7%] top-[14%] h-[24%] w-[36%] rounded-2xl border border-territory-border bg-territory-raised shadow-sm lg:right-[8%] lg:top-[11%] lg:h-[25%] lg:w-[31%] lg:rounded-3xl" />
-        <span className="absolute left-[24%] top-[42%] h-[21%] w-[42%] rounded-2xl border border-territory-border bg-territory-raised shadow-sm lg:left-[31%] lg:top-[39%] lg:h-[22%] lg:w-[32%] lg:rounded-3xl" />
-        <span className="absolute bottom-[12%] right-[8%] hidden h-[20%] w-[25%] rounded-3xl border border-territory-border bg-territory-raised shadow-sm lg:block" />
-        <span className="absolute bottom-[11%] left-[6%] hidden h-[22%] w-[21%] rounded-3xl border border-territory-border bg-territory-raised shadow-sm xl:block" />
+        <span
+          style={BLOCK_STYLE}
+          className="absolute left-[6%] top-[8%] h-[20%] w-[30%] rounded-2xl border shadow-sm lg:left-[7%] lg:top-[8%] lg:h-[18%] lg:w-[25%] lg:rounded-3xl"
+        />
+        <span
+          style={BLOCK_STYLE}
+          className="absolute right-[7%] top-[14%] h-[24%] w-[36%] rounded-2xl border shadow-sm lg:right-[8%] lg:top-[11%] lg:h-[25%] lg:w-[31%] lg:rounded-3xl"
+        />
+        <span
+          style={BLOCK_STYLE}
+          className="absolute left-[24%] top-[42%] h-[21%] w-[42%] rounded-2xl border shadow-sm lg:left-[31%] lg:top-[39%] lg:h-[22%] lg:w-[32%] lg:rounded-3xl"
+        />
+        <span
+          style={BLOCK_STYLE}
+          className="absolute bottom-[12%] right-[8%] hidden h-[20%] w-[25%] rounded-3xl border shadow-sm lg:block"
+        />
+        <span
+          style={BLOCK_STYLE}
+          className="absolute bottom-[11%] left-[6%] hidden h-[22%] w-[21%] rounded-3xl border shadow-sm xl:block"
+        />
       </div>
 
       <div className="absolute inset-0 overflow-hidden" aria-hidden="true">
-        <span className="absolute -left-[12%] top-[31%] h-2.5 w-[78%] rotate-[7deg] rounded-full bg-territory-border/80 shadow-sm lg:h-3.5 lg:w-[72%]" />
-        <span className="absolute -right-[14%] top-[55%] h-2.5 w-[80%] -rotate-[10deg] rounded-full bg-territory-border/80 shadow-sm lg:h-3.5 lg:w-[74%]" />
-        <span className="absolute left-[55%] top-[-15%] h-[82%] w-2.5 rotate-[18deg] rounded-full bg-territory-border/75 shadow-sm lg:w-3.5" />
-        <span className="absolute left-[17%] top-[5%] hidden h-[96%] w-2.5 -rotate-[24deg] rounded-full bg-territory-border/70 shadow-sm lg:block lg:w-3.5" />
+        <span
+          style={ROAD_STYLE}
+          className="absolute -left-[12%] top-[31%] h-2.5 w-[78%] rotate-[7deg] rounded-full shadow-sm lg:h-3.5 lg:w-[72%]"
+        />
+        <span
+          style={ROAD_STYLE}
+          className="absolute -right-[14%] top-[55%] h-2.5 w-[80%] -rotate-[10deg] rounded-full shadow-sm lg:h-3.5 lg:w-[74%]"
+        />
+        <span
+          style={ROAD_STYLE}
+          className="absolute left-[55%] top-[-15%] h-[82%] w-2.5 rotate-[18deg] rounded-full shadow-sm lg:w-3.5"
+        />
+        <span
+          style={ROAD_STYLE}
+          className="absolute left-[17%] top-[5%] hidden h-[96%] w-2.5 -rotate-[24deg] rounded-full shadow-sm lg:block lg:w-3.5"
+        />
       </div>
 
       <div
