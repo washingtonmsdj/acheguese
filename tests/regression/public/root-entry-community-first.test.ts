@@ -44,4 +44,14 @@ describe("root community-first MVP entry", () => {
     expect(source).toContain('loading="lazy"');
     expect(source).toContain('decoding="async"');
   });
+
+  it("renders the root entry without loading the full app route tree first", () => {
+    const source = read("src/app/routes/AppRoutes.tsx");
+
+    expect(source).toContain('<Route path="/" element={<RootRouteEntry />} />');
+    expect(source).toContain('const AppLayoutRoutes = lazy(() =>');
+    expect(source).not.toContain(
+      'import { AppLayoutRoutes } from "@/app/routes/sections/AppLayoutRoutes"',
+    );
+  });
 });
