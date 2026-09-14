@@ -23,7 +23,10 @@ describe("public root font source boundary", () => {
     const main = read("src/main.tsx");
 
     expect(html).toContain("data-public-font-stylesheet");
-    expect(html).toContain("display=optional");
+    expect(html).toContain(
+      "Plus+Jakarta+Sans:wght@400;500;600;700;800&display=optional",
+    );
+    expect(html.match(/wght@400;500;600;700;800&display=optional/g)).toHaveLength(2);
     expect(main).toContain('meta[data-public-font-stylesheet]');
     expect(main).toContain('stylesheet.rel = "stylesheet"');
     expect(main).toContain(
