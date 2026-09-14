@@ -1,169 +1,128 @@
 /**
- * Componente reutilizável para Google AdSense
- * SSOT: O Publisher ID vem da variável de ambiente VITE_ADSENSE_CLIENT_ID
- * 
- * @example
- * // Uso básico
- * <AdSense slot="1234567890" />
- * 
- * // Com formato específico
- * <AdSense slot="1234567890" format="horizontal" />
- * 
- * // Anúncio in-feed
- * <AdSense slot="1234567890" format="fluid" layout="in-article" />
+ * Componente reutilizável para Google AdSense.
+ * SSOT: o Publisher ID vem de VITE_ADSENSE_CLIENT_ID.
+ *
+ * O script do provider só é carregado quando um slot real monta. A carga é
+ * deduplicada por client ID e a inicialização do anúncio aguarda o evento real
+ * de `load`, em vez de depender de um timeout arbitrário de rede.
  */
 
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef } from "react";
 
 interface AdSenseProps {
-  /**
-   * ID da unidade de anúncio (obrigatório)
-   * Exemplo: "1234567890"
-   */
   slot: string;
-  
-  /**
-   * Publisher ID do AdSense
-   * Padrão: variável de ambiente VITE_ADSENSE_CLIENT_ID
-   */
   client?: string;
-  
-  /**
-   * Formato do anúncio
-   * - auto: Responsivo automático (padrão)
-   * - fluid: Fluido (adapta-se ao container)
-   * - rectangle: Retângulo
-   * - vertical: Vertical
-   * - horizontal: Horizontal
-   */
-  format?: 'auto' | 'fluid' | 'rectangle' | 'vertical' | 'horizontal';
-  
-  /**
-   * Se o anúncio deve ser responsivo
-   * Padrão: true
-   */
+  format?: "auto" | "fluid" | "rectangle" | "vertical" | "horizontal";
   responsive?: boolean;
-  
-  /**
-   * Layout especial para anúncios
-   * - in-article: Para dentro de artigos
-   * - in-feed: Para feeds de conteúdo
-   */
-  layout?: 'in-article' | 'in-feed';
-  
-  /**
-   * Estilos customizados
-   */
+  layout?: "in-article" | "in-feed";
   style?: React.CSSProperties;
-  
-  /**
-   * Classes CSS adicionais
-   */
   className?: string;
 }
 
-// Declaração global para TypeScript
 declare global {
   interface Window {
     adsbygoogle: unknown[];
   }
 }
 
-/**
- * Hook para carregar o script do AdSense dinamicamente (SSOT)
- */
+const adsenseScriptPromises = new Map<string, Promise<void>>();
+
 function isConfiguredAdSenseClient(clientId: string | undefined): clientId is string {
-  return Boolean(clientId && clientId !== 'ca-pub-XXXXXXXXXXXXXXXX');
+  return Boolean(clientId && clientId !== "ca-pub-XXXXXXXXXXXXXXXX");
 }
 
-function useAdSenseScript(clientId: string | null) {
-  useEffect(() => {
-    if (!clientId) {
-      return;
-    }
+function getAdSenseScriptSelector(clientId: string): string {
+  return `script[src*="adsbygoogle.js"][src*="${clientId}"]`;
+}
 
-    // Verifica se o script já foi carregado
-    const existingScript = document.querySelector(
-      `script[src*="adsbygoogle.js"][src*="${clientId}"]`
+function loadAdSenseScript(clientId: string): Promise<void> {
+  if (typeof document === "undefined") return Promise.resolve();
+  if (typeof window !== "undefined" && window.adsbygoogle) {
+    return Promise.resolve();
+  }
+
+  const pending = adsenseScriptPromises.get(clientId);
+  if (pending) return pending;
+
+  const promise = new Promise<void>((resolve, reject) => {
+    const existingScript = document.querySelector<HTMLScriptElement>(
+      getAdSenseScriptSelector(clientId),
     );
+    const script = existingScript ?? document.createElement("script");
 
-    if (existingScript) {
-      return;
+    const handleLoad = () => resolve();
+    const handleError = () => reject(new Error("adsense_script_failed"));
+
+    script.addEventListener("load", handleLoad, { once: true });
+    script.addEventListener("error", handleError, { once: true });
+
+    if (!existingScript) {
+      script.src = `https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=${clientId}`;
+      script.async = true;
+      script.crossOrigin = "anonymous";
+      script.dataset.achegueseAdsense = "true";
+      document.head.appendChild(script);
     }
+  }).catch((error) => {
+    adsenseScriptPromises.delete(clientId);
+    throw error;
+  });
 
-    // Cria e adiciona o script dinamicamente
-    const script = document.createElement('script');
-    script.src = `https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=${clientId}`;
-    script.async = true;
-    script.crossOrigin = 'anonymous';
-    
-    document.head.appendChild(script);
-
-    return () => {
-      // Cleanup: remove o script quando o componente é desmontado
-      // (opcional, geralmente queremos manter o script carregado)
-    };
-  }, [clientId]);
+  adsenseScriptPromises.set(clientId, promise);
+  return promise;
 }
 
 export function AdSense(props: AdSenseProps) {
   const {
     slot,
     client = import.meta.env.VITE_ADSENSE_CLIENT_ID,
-    format = 'auto',
+    format = "auto",
     responsive = true,
     layout,
     style,
-    className = '',
+    className = "",
   } = props;
 
   const adRef = useRef<HTMLModElement>(null);
   const isInitialized = useRef(false);
   const adsenseConfigured = isConfiguredAdSenseClient(client);
 
-  // Carrega o script do AdSense dinamicamente (SSOT)
-  useAdSenseScript(adsenseConfigured ? client : null);
-
   useEffect(() => {
-    if (!adsenseConfigured) {
-      return;
-    }
+    if (!adsenseConfigured || isInitialized.current) return;
 
-    // Evita inicialização duplicada
-    if (isInitialized.current) {
-      return;
-    }
+    let cancelled = false;
 
-    // Aguarda o script do AdSense carregar
-    const initAd = () => {
-      try {
-        if (window.adsbygoogle && adRef.current) {
-          (window.adsbygoogle = window.adsbygoogle || []).push({});
-          isInitialized.current = true;
+    void loadAdSenseScript(client)
+      .then(() => {
+        if (cancelled || isInitialized.current || !adRef.current) return;
+
+        window.adsbygoogle = window.adsbygoogle || [];
+        window.adsbygoogle.push({});
+        isInitialized.current = true;
+      })
+      .catch((error) => {
+        if (!cancelled) {
+          console.error("AdSense initialization error:", error);
         }
-      } catch (err) {
-        console.error('AdSense initialization error:', err);
-      }
-    };
+      });
 
-    // Se o script já estiver carregado, inicializa imediatamente
-    if (window.adsbygoogle) {
-      initAd();
-    } else {
-      // Caso contrário, aguarda o carregamento
-      const timer = setTimeout(initAd, 100);
-      return () => clearTimeout(timer);
-    }
-  }, [adsenseConfigured]);
+    return () => {
+      cancelled = true;
+    };
+  }, [adsenseConfigured, client]);
 
   const defaultStyle: React.CSSProperties = {
-    display: 'block',
-    width: '100%',
-    minHeight: format === 'horizontal' ? '90px' : format === 'vertical' ? '250px' : '90px',
+    display: "block",
+    width: "100%",
+    minHeight:
+      format === "horizontal"
+        ? "90px"
+        : format === "vertical"
+          ? "250px"
+          : "90px",
     ...style,
   };
 
-  // Validação: se não houver client ID configurado, mostra placeholder
   if (!adsenseConfigured) {
     return import.meta.env.DEV ? (
       <AdSensePlaceholder text="Configure VITE_ADSENSE_CLIENT_ID no .env.local" />
@@ -179,20 +138,15 @@ export function AdSense(props: AdSenseProps) {
         data-ad-client={client}
         data-ad-slot={slot}
         data-ad-format={format}
-        data-full-width-responsive={responsive ? 'true' : 'false'}
-        {...(layout && { 'data-ad-layout': layout })}
+        data-full-width-responsive={responsive ? "true" : "false"}
+        {...(layout && { "data-ad-layout": layout })}
       />
     </div>
   );
 }
 
-/**
- * Componente de placeholder para quando o AdSense não está configurado
- * Útil para desenvolvimento
- */
 export function AdSensePlaceholder(props: { height?: string; text?: string }) {
-  const { height = '90px', text = 'Espaço para anúncio' } = props;
-
+  const { height = "90px", text = "Espaço para anúncio" } = props;
   return (
     <div
       className="flex items-center justify-center rounded-xl bg-muted/40 border border-border/50 text-muted-foreground text-sm"
