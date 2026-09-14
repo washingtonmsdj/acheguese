@@ -194,12 +194,12 @@ export default function CadastroPage() {
             </h2>
 
             {googleAuthAvailable ? (
-              <>
+              <div className="hidden lg:block">
                 <button
                   type="button"
                   onClick={() => void handleGoogleSignup()}
                   disabled={loading || googleLoading}
-                  className="mt-5 flex h-11 w-full items-center justify-center gap-3 rounded-[9px] border border-[#8da1a3] bg-white text-[14px] font-bold text-[#17363a] transition-colors hover:bg-[#f7f8f5] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#0b5b59]/35 disabled:opacity-55 lg:mt-4"
+                  className="mt-4 flex h-11 w-full items-center justify-center gap-3 rounded-[9px] border border-[#8da1a3] bg-white text-[14px] font-bold text-[#17363a] transition-colors hover:bg-[#f7f8f5] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#0b5b59]/35 disabled:opacity-55"
                 >
                   <AuthConceptIcon name="google" />
                   {googleLoading ? "Abrindo Google…" : "Continuar com Google"}
@@ -209,12 +209,15 @@ export default function CadastroPage() {
                   <span>ou crie com e-mail</span>
                   <span className="h-px flex-1 bg-[#c7d0d0]" />
                 </div>
-              </>
+              </div>
             ) : null}
 
             <Form {...form}>
               <form
-                className={cn("space-y-3.5", googleAuthAvailable ? "" : "mt-5 lg:mt-4")}
+                className={cn(
+                  "mt-5 space-y-3.5 lg:mt-4",
+                  googleAuthAvailable && "lg:mt-0",
+                )}
                 noValidate
                 aria-busy={loading || googleLoading}
                 onSubmit={(event) => {
@@ -312,7 +315,10 @@ export default function CadastroPage() {
                             ) : null}
                           </span>
                         ) : (
-                          <span className="text-[#607477]">Seu identificador público. Use letras, números e _.</span>
+                          <span className="text-[#607477]">
+                            <span className="lg:hidden">Seu identificador público.</span>
+                            <span className="hidden lg:inline">Seu identificador público. Use letras, números e _.</span>
+                          </span>
                         )}
                       </div>
                       <FormMessage className="text-xs" />
@@ -447,14 +453,16 @@ export default function CadastroPage() {
                 </button>
 
                 <p className="text-center text-[11.5px] text-[#607477]">
-                  <span className="lg:hidden">Você pode se cadastrar de qualquer lugar. </span>
-                  Já tem conta?{" "}
-                  <Link
-                    to={buildLoginPath(redirectTo)}
-                    className="font-medium text-[#0b4e52] underline underline-offset-2"
-                  >
-                    Entrar
-                  </Link>
+                  <span className="lg:hidden">Você pode se cadastrar de qualquer lugar.</span>
+                  <span className="hidden lg:inline">
+                    Já tem conta?{" "}
+                    <Link
+                      to={buildLoginPath(redirectTo)}
+                      className="font-medium text-[#0b4e52] underline underline-offset-2"
+                    >
+                      Entrar
+                    </Link>
+                  </span>
                 </p>
               </form>
             </Form>
