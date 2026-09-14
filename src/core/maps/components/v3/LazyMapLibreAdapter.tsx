@@ -4,22 +4,25 @@ import type {
   MapLibreAdapterProps,
 } from "./MapLibreAdapter";
 
-const LazyMapLibreRuntime = lazy(async () => {
+const loadMapLibreRuntime = async () => {
   const [{ ensureMapLibreWorkerConfigured }, adapterModule] = await Promise.all([
     import("../../config/maplibreWorkerRuntime"),
     import("./MapLibreAdapter"),
   ]);
 
   ensureMapLibreWorkerConfigured();
-
   return { default: adapterModule.MapLibreAdapter };
-});
+};
+
+const LazyMapLibreRuntime = lazy(loadMapLibreRuntime);
+
+export function preloadMapLibreAdapterRuntime(): Promise<void> {
+  return loadMapLibreRuntime().then(() => undefined);
+}
 
 /**
  * Owner público do runtime MapLibre.
- *
- * Mantém a mesma API do MapLibreAdapter, mas deixa maplibre-gl e seu worker
- * fora do bundle inicial até um mapa realmente ser renderizado.
+ * Mantém a mesma API do adapter pesado e permite preload pós-paint.
  */
 export const MapLibreAdapter = forwardRef<
   MapLibreAdapterHandle,
