@@ -7,7 +7,17 @@ import {
   type TerritoryEntryArrivalStage,
 } from "./TerritoryEntryMapArrival";
 
-const loadTerritoryEntryMapRuntime = () => import("./TerritoryEntryMapRuntime");
+const loadTerritoryEntryMapRuntime = async () => {
+  const [runtimeModule] = await Promise.all([
+    import("./TerritoryEntryMapRuntime"),
+    import("@/core/maps/components/v3/MapLibreAdapter").then(
+      ({ preloadPassiveMapLibreAdapterRuntime }) =>
+        preloadPassiveMapLibreAdapterRuntime(),
+    ),
+  ]);
+
+  return runtimeModule;
+};
 const LazyTerritoryEntryMapRuntime = lazy(loadTerritoryEntryMapRuntime);
 
 function preloadEntryMapStyle(): void {
@@ -99,14 +109,6 @@ function preconnectOfficialBoundarySources(
   });
 }
 
-function preloadEntryMapEngine(): void {
-  void import("@/core/maps/components/v3/MapLibreAdapter")
-    .then(({ preloadPassiveMapLibreAdapterRuntime }) =>
-      preloadPassiveMapLibreAdapterRuntime(),
-    )
-    .catch(() => undefined);
-}
-
 function preloadEntryOfficialBoundary(
   resolved: ResolvedTerritory | null | undefined,
 ): void {
@@ -174,10 +176,9 @@ export default function TerritoryEntryMap({
     preloadEntryMapStyle();
     preconnectOfficialBoundarySources(preloadResolved);
 
-    // Three independent pipelines start together: React runtime, MapLibre
-    // engine/worker/CSS and the official municipal boundary request.
-    void loadTerritoryEntryMapRuntime();
-    preloadEntryMapEngine();
+    // Boundary starts after the first paint. The React map runtime and the
+    // MapLibre engine/worker/CSS already started together from the lazy loader
+    // during this component's first render.
     preloadEntryOfficialBoundary(preloadResolved);
   }, [preloadResolved]);
 
