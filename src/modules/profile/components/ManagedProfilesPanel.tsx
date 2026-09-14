@@ -6,6 +6,7 @@ import {
   Car,
   CheckCircle2,
   Eye,
+  Loader2,
   MessageCircle,
   Pencil,
   Search,
@@ -78,10 +79,12 @@ function ProfileTypeIcon({ type }: { type: ProfileType }) {
 function ManagedProfileCard({
   profile,
   active,
+  switching,
   onSwitch,
 }: {
   profile: Profile;
   active: boolean;
+  switching: boolean;
   onSwitch: () => Promise<void>;
 }) {
   const navigate = useNavigate();
@@ -91,6 +94,7 @@ function ManagedProfileCard({
     .filter(Boolean)
     .join(", ");
   const summary = profile.short_bio || profile.bio;
+  const displayName = profile.display_name || "Perfil sem nome";
 
   return (
     <article
@@ -100,6 +104,7 @@ function ManagedProfileCard({
           ? "border-territory-brand/45 ring-1 ring-territory-brand/10"
           : "border-territory-border hover:border-territory-brand/30",
       )}
+      aria-busy={switching || undefined}
     >
       <div className="flex min-w-0 items-start gap-3">
         <Avatar className="h-14 w-14 shrink-0 border border-territory-border bg-territory-raised sm:h-16 sm:w-16">
@@ -112,7 +117,7 @@ function ManagedProfileCard({
         <div className="min-w-0 flex-1">
           <div className="flex flex-wrap items-center gap-2">
             <h3 className="min-w-0 truncate font-heading text-base font-bold text-territory-ink sm:text-lg">
-              {profile.display_name || "Perfil sem nome"}
+              {displayName}
             </h3>
             {profile.verified ? (
               <CheckCircle2
@@ -166,8 +171,11 @@ function ManagedProfileCard({
             size="sm"
             className="min-h-10 bg-territory-sun text-territory-ink hover:bg-territory-sun/90"
             onClick={() => void onSwitch()}
+            disabled={switching}
+            aria-label={`Usar ${displayName} como perfil ativo`}
           >
-            Usar este perfil
+            {switching ? <Loader2 className="mr-2 h-4 w-4 animate-spin" aria-hidden="true" /> : null}
+            {switching ? "Trocando..." : "Usar este perfil"}
           </Button>
         ) : null}
         <Button
@@ -176,6 +184,7 @@ function ManagedProfileCard({
           variant="outline"
           className="min-h-10 border-territory-border bg-territory-surface text-territory-ink"
           onClick={() => navigate(buildProfileEditUrl(profile.id))}
+          disabled={switching}
         >
           <Pencil className="mr-2 h-4 w-4" aria-hidden="true" />
           Editar
@@ -187,6 +196,7 @@ function ManagedProfileCard({
             variant="ghost"
             className="min-h-10 text-territory-brand"
             onClick={() => navigate(buildPublicProfileUrl(handle!))}
+            disabled={switching}
           >
             <Eye className="mr-2 h-4 w-4" aria-hidden="true" />
             Ver público
@@ -201,6 +211,7 @@ export function ManagedProfilesPanel() {
   const { activeProfile, allProfiles, switchProfile } = useMultiProfileContext();
   const [search, setSearch] = useState("");
   const [filter, setFilter] = useState<ProfileFilter>("all");
+  const [switchingProfileId, setSwitchingProfileId] = useState<string | null>(null);
 
   const filteredProfiles = useMemo(() => {
     const normalizedQuery = normalizeSearch(search);
@@ -229,12 +240,26 @@ export function ManagedProfilesPanel() {
   }, [allProfiles, filter, search]);
 
   const handleSwitch = async (profile: Profile) => {
-    const changed = await switchProfile(profile.id);
-    if (changed) {
-      toast.success(`Perfil ativo: ${profile.display_name}`);
-      return;
+    if (switchingProfileId || profile.id === activeProfile?.id) return;
+
+    setSwitchingProfileId(profile.id);
+    try {
+      const changed = await switchProfile(profile.id);
+      if (changed) {
+        toast.success(`Perfil ativo: ${profile.display_name || "Perfil"}`);
+        return;
+      }
+      toast.error("Não foi possível trocar o perfil ativo agora.");
+    } catch {
+      toast.error("Não foi possível trocar o perfil ativo agora.");
+    } finally {
+      setSwitchingProfileId(null);
     }
-    toast.error("Não foi possível trocar o perfil ativo agora.");
+  };
+
+  const clearFilters = () => {
+    setSearch("");
+    setFilter("all");
   };
 
   return (
@@ -250,26 +275,32 @@ export function ManagedProfilesPanel() {
             </p>
           </div>
           <label className="relative block w-full lg:max-w-sm">
-            <span className="sr-only">Buscar perfil</span>
+            <span className="sr-only">Buscar perfil pelo nome, usuário ou território</span>
             <Search className="pointer-events-none absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-territory-muted" aria-hidden="true" />
             <input
               type="search"
               value={search}
               onChange={(event) => setSearch(event.target.value)}
               placeholder="Buscar perfil"
+              autoComplete="off"
               className="h-11 w-full rounded-xl border border-territory-border bg-territory-surface pl-10 pr-3 text-sm text-territory-ink outline-none placeholder:text-territory-muted focus:border-territory-brand focus:ring-2 focus:ring-territory-brand/15"
             />
           </label>
         </div>
 
-        <div className="mt-4 flex gap-2 overflow-x-auto pb-1 scrollbar-hide" aria-label="Filtrar perfis">
+        <div
+          className="mt-4 flex gap-2 overflow-x-auto pb-1 scrollbar-hide"
+          role="tablist"
+          aria-label="Filtrar perfis por tipo"
+        >
           {FILTERS.map((option) => {
             const selected = filter === option.value;
             return (
               <button
                 key={option.value}
                 type="button"
-                aria-pressed={selected}
+                role="tab"
+                aria-selected={selected}
                 onClick={() => setFilter(option.value)}
                 className={cn(
                   "min-h-10 shrink-0 rounded-xl px-3 text-sm font-semibold transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-territory-brand",
@@ -285,12 +316,13 @@ export function ManagedProfilesPanel() {
         </div>
       </div>
 
-      <div className="mt-3 grid gap-3" aria-live="polite">
+      <div className="mt-3 grid gap-3" aria-live="polite" aria-busy={switchingProfileId !== null || undefined}>
         {filteredProfiles.map((profile) => (
           <ManagedProfileCard
             key={profile.id}
             profile={profile}
             active={profile.id === activeProfile?.id}
+            switching={profile.id === switchingProfileId}
             onSwitch={() => handleSwitch(profile)}
           />
         ))}
@@ -300,6 +332,15 @@ export function ManagedProfilesPanel() {
             <p className="mt-1 text-sm text-territory-muted">
               Ajuste a busca ou selecione outro tipo de perfil.
             </p>
+            {(search || filter !== "all") ? (
+              <button
+                type="button"
+                onClick={clearFilters}
+                className="mt-3 min-h-10 rounded-xl px-3 text-sm font-semibold text-territory-brand hover:bg-territory-brand/5 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-territory-brand"
+              >
+                Limpar filtros
+              </button>
+            ) : null}
           </div>
         ) : null}
       </div>
