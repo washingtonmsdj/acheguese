@@ -17,6 +17,7 @@ import type {
 const DEFAULT_CENTER: [number, number] = [-51.9253, -14.235];
 const DEFAULT_ZOOM = 13;
 const PASSIVE_MAX_PIXEL_RATIO = 2;
+const PASSIVE_CAMERA_DURATION_MS = 180;
 
 function isFiniteCoordinate(latitude: unknown, longitude: unknown): boolean {
   return (
@@ -85,7 +86,7 @@ export const MapLibrePassiveRuntime = forwardRef<
       map.flyTo({
         center: center ? [center.longitude, center.latitude] : undefined,
         zoom: Number.isFinite(viewport.zoom) ? viewport.zoom : undefined,
-        duration: 800,
+        duration: PASSIVE_CAMERA_DURATION_MS,
       });
     },
     getMapId: () => "passive-map",
@@ -334,7 +335,7 @@ export const MapLibrePassiveRuntime = forwardRef<
               {
                 padding: territoryFitPadding ?? 32,
                 maxZoom: territoryFitMaxZoom,
-                duration: 800,
+                duration: PASSIVE_CAMERA_DURATION_MS,
               },
             );
           } catch (error) {
