@@ -1,5 +1,4 @@
 import { useEffect, useState } from "react";
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { Cookie, Shield, X } from "lucide-react";
 import { useLocation } from "react-router-dom";
 
@@ -16,7 +15,6 @@ import {
 } from "@/shared/components/ui/dialog";
 import { Label } from "@/shared/components/ui/label";
 import { Switch } from "@/shared/components/ui/switch";
-import { useToast } from "@/shared/hooks/use-toast";
 
 interface ConsentPreferences {
   necessary: boolean;
@@ -25,14 +23,21 @@ interface ConsentPreferences {
   geolocation: boolean;
 }
 
+type ExistingConsent = {
+  consent_type: string;
+  granted: boolean;
+};
+
 const PRELAUNCH_LOCKDOWN_ENABLED =
   (import.meta.env.VITE_PRELAUNCH_LOCKDOWN ?? "false") === "true";
 
 export function ConsentBanner() {
   const userId = useSessionUserId();
   const { pathname } = useLocation();
-  const { toast } = useToast();
-  const queryClient = useQueryClient();
+  const [existingConsents, setExistingConsents] = useState<ExistingConsent[] | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
+  const [isSaving, setIsSaving] = useState(false);
+  const [saveError, setSaveError] = useState<string | null>(null);
   const [showBanner, setShowBanner] = useState(false);
   const [showDetails, setShowDetails] = useState(false);
   const [preferences, setPreferences] = useState<ConsentPreferences>({
@@ -42,21 +47,48 @@ export function ConsentBanner() {
     geolocation: false,
   });
 
-  const { data: existingConsents, isLoading } = useQuery({
-    queryKey: ["user-consents-check", userId],
-    queryFn: async () => ConsentService.getExistingConsents(userId ?? undefined),
-    enabled: true,
-  });
+  useEffect(() => {
+    let cancelled = false;
+
+    setIsLoading(true);
+    setSaveError(null);
+
+    void ConsentService.getExistingConsents(userId ?? undefined)
+      .then((consents) => {
+        if (cancelled) return;
+        setExistingConsents(consents);
+      })
+      .catch(() => {
+        if (cancelled) return;
+        // Falha na leitura nao deve suprimir a escolha do usuario.
+        setExistingConsents(null);
+      })
+      .finally(() => {
+        if (!cancelled) setIsLoading(false);
+      });
+
+    return () => {
+      cancelled = true;
+    };
+  }, [userId]);
 
   useEffect(() => {
-    if (!isLoading && !existingConsents?.length) {
-      const timer = setTimeout(() => setShowBanner(true), 1000);
-      return () => clearTimeout(timer);
+    if (isLoading || existingConsents?.length) {
+      setShowBanner(false);
+      return;
     }
+
+    const timer = window.setTimeout(() => setShowBanner(true), 1000);
+    return () => window.clearTimeout(timer);
   }, [existingConsents, isLoading]);
 
-  const saveConsentsMutation = useMutation({
-    mutationFn: async (consents: ConsentPreferences) => {
+  const saveConsentPreferences = async (consents: ConsentPreferences) => {
+    if (isSaving) return;
+
+    setIsSaving(true);
+    setSaveError(null);
+
+    try {
       await ConsentService.saveConsentPreferences({
         userId: userId ?? undefined,
         preferences: {
@@ -66,18 +98,21 @@ export function ConsentBanner() {
         },
         userAgent: navigator.userAgent,
       });
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({
-        queryKey: ["user-consents-check", userId],
-      });
       setShowBanner(false);
-      toast({
-        title: "Preferências salvas",
-        description: "Suas preferências de privacidade foram registradas.",
-      });
-    },
-  });
+      setShowDetails(false);
+      setExistingConsents([
+        { consent_type: "cookies", granted: true },
+        { consent_type: "analytics", granted: consents.analytics },
+        { consent_type: "marketing", granted: consents.marketing },
+        { consent_type: "geolocation", granted: consents.geolocation },
+        { consent_type: "privacy_policy", granted: true },
+      ]);
+    } catch {
+      setSaveError("Não foi possível salvar suas preferências. Tente novamente.");
+    } finally {
+      setIsSaving(false);
+    }
+  };
 
   const isAuthSurface =
     pathname === "/login" ||
@@ -91,21 +126,23 @@ export function ConsentBanner() {
       ? "bottom-[calc(env(safe-area-inset-bottom)+0.75rem)]"
       : "bottom-[calc(env(safe-area-inset-bottom)+5.5rem)]";
 
-  const rejectOptionalConsents = () =>
-    saveConsentsMutation.mutate({
+  const rejectOptionalConsents = () => {
+    void saveConsentPreferences({
       necessary: true,
       analytics: false,
       marketing: false,
       geolocation: false,
     });
+  };
 
-  const acceptAllConsents = () =>
-    saveConsentsMutation.mutate({
+  const acceptAllConsents = () => {
+    void saveConsentPreferences({
       necessary: true,
       analytics: true,
       marketing: true,
       geolocation: true,
     });
+  };
 
   if (pathname === "/onboarding") return null;
   if (PRELAUNCH_LOCKDOWN_ENABLED && pathname === "/") return null;
@@ -138,7 +175,7 @@ export function ConsentBanner() {
                 size="sm"
                 className="h-7 rounded-lg border-slate-300 !bg-white px-2 text-[0.62rem] font-medium !text-slate-950 hover:!bg-slate-100"
                 onClick={rejectOptionalConsents}
-                disabled={saveConsentsMutation.isPending}
+                disabled={isSaving}
               >
                 {"N\u00e3o"}
               </Button>
@@ -146,7 +183,7 @@ export function ConsentBanner() {
                 size="sm"
                 className="h-7 rounded-lg !bg-teal-700 px-2 text-[0.62rem] font-medium !text-white hover:!bg-teal-800"
                 onClick={acceptAllConsents}
-                disabled={saveConsentsMutation.isPending}
+                disabled={isSaving}
               >
                 OK
               </Button>
@@ -168,6 +205,11 @@ export function ConsentBanner() {
               </button>
             </div>
           </div>
+          {saveError ? (
+            <p role="alert" className="mt-2 text-[0.62rem] text-destructive">
+              {saveError}
+            </p>
+          ) : null}
         </div>
       ) : (
         <div
@@ -186,7 +228,7 @@ export function ConsentBanner() {
               size="sm"
               className="h-7 shrink-0 rounded-lg border-slate-300 !bg-white px-2 text-[0.65rem] font-semibold !text-slate-950 hover:!bg-slate-100"
               onClick={rejectOptionalConsents}
-              disabled={saveConsentsMutation.isPending}
+              disabled={isSaving}
             >
               Rejeitar
             </Button>
@@ -194,7 +236,7 @@ export function ConsentBanner() {
               size="sm"
               className="h-7 shrink-0 rounded-lg !bg-teal-700 px-2.5 text-[0.65rem] font-semibold !text-white hover:!bg-teal-800"
               onClick={acceptAllConsents}
-              disabled={saveConsentsMutation.isPending}
+              disabled={isSaving}
             >
               Aceitar
             </Button>
@@ -234,7 +276,7 @@ export function ConsentBanner() {
                 size="sm"
                 className="h-9 whitespace-nowrap rounded-xl border-slate-300 !bg-white px-4 text-xs font-medium !text-slate-950 hover:!bg-slate-100"
                 onClick={rejectOptionalConsents}
-                disabled={saveConsentsMutation.isPending}
+                disabled={isSaving}
               >
                 Rejeitar
               </Button>
@@ -242,7 +284,7 @@ export function ConsentBanner() {
                 size="sm"
                 className="h-9 whitespace-nowrap rounded-xl !bg-teal-700 px-4 text-xs font-semibold !text-white hover:!bg-teal-800"
                 onClick={acceptAllConsents}
-                disabled={saveConsentsMutation.isPending}
+                disabled={isSaving}
               >
                 Aceitar todos
               </Button>
@@ -256,6 +298,11 @@ export function ConsentBanner() {
               </button>
             </div>
           </div>
+          {saveError ? (
+            <p role="alert" className="mt-2 text-xs text-destructive">
+              {saveError}
+            </p>
+          ) : null}
         </div>
       )}
 
@@ -321,10 +368,9 @@ export function ConsentBanner() {
             </Button>
             <Button
               onClick={() => {
-                saveConsentsMutation.mutate(preferences);
-                setShowDetails(false);
+                void saveConsentPreferences(preferences);
               }}
-              disabled={saveConsentsMutation.isPending}
+              disabled={isSaving}
               className="w-full sm:w-auto"
             >
               Salvar preferências
