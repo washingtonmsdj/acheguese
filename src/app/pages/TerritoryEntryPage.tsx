@@ -11,6 +11,7 @@ import { resolvePublicTerritoryFallback } from "@/core/routing/utils/publicTerri
 import type { ResolvedTerritory } from "@/core/routing/hooks/useResolveTerritoryFromUrl";
 import { isTerritoryPubliclyNavigable } from "@/core/routing/utils/territoryVisibility";
 import { territorialGroupService } from "@/core/territorial";
+import { scheduleBrowserIdleWork } from "@/shared/utils/browserIdle";
 import { normalizeTerritoryText } from "@/shared/utils/slugify";
 
 const COMPLEX_TERRITORY_NAME = "Complexo do Nordeste de Amaralina";
@@ -118,18 +119,26 @@ export default function TerritoryEntryPage() {
 
   useEffect(() => {
     let cancelled = false;
-    const loadingTimeout = window.setTimeout(() => { if (!cancelled) setIsMapLoading(false); }, 8000);
+    const loadingTimeout = window.setTimeout(() => {
+      if (!cancelled) setIsMapLoading(false);
+    }, 8000);
 
-    Promise.all([getLaunchCity(), getLaunchResolvedTerritory()]).then(([city, territory]) => {
-      if (cancelled) return;
-      window.clearTimeout(loadingTimeout);
-      setLaunchCity(city);
-      setPreviewTerritory(territory);
-      setIsMapLoading(false);
-    });
+    const cancelIdleResolution = scheduleBrowserIdleWork(
+      () => {
+        Promise.all([getLaunchCity(), getLaunchResolvedTerritory()]).then(([city, territory]) => {
+          if (cancelled) return;
+          window.clearTimeout(loadingTimeout);
+          setLaunchCity(city);
+          setPreviewTerritory(territory);
+          setIsMapLoading(false);
+        });
+      },
+      { timeoutMs: 700, fallbackDelayMs: 120 },
+    );
 
     return () => {
       cancelled = true;
+      cancelIdleResolution();
       window.clearTimeout(loadingTimeout);
     };
   }, []);
