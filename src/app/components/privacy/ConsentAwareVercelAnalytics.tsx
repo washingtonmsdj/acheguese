@@ -14,8 +14,9 @@ const VercelAnalytics = lazy(() =>
 );
 
 /**
- * Analytics só entra no bundle/runtime depois de consentimento explícito.
- * Rejeitar ou revogar a preferência desmonta o componente imediatamente.
+ * Analytics não é importado nem montado antes de consentimento explícito.
+ * Mudanças posteriores de consentimento controlam a integração React; código
+ * de terceiro já baixado pelo navegador não pode ser "descarregado" retroativamente.
  */
 export function ConsentAwareVercelAnalytics() {
   const analyticsConsent = useAnalyticsConsent();
