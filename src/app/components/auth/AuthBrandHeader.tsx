@@ -18,6 +18,7 @@ export function AuthBrandHeader({ showBack = true }: AuthBrandHeaderProps) {
   const navigate = useNavigate();
   const location = useLocation();
   const [searchParams] = useSearchParams();
+  const showRecoveryBackLabel = location.pathname === "/reset-password";
 
   useEffect(() => {
     const stateRedirect = (location.state as AuthLocationState)?.redirectTo;
@@ -39,15 +40,18 @@ export function AuthBrandHeader({ showBack = true }: AuthBrandHeaderProps) {
       >
         Pular para o conteúdo
       </a>
-      <div className="relative mx-auto flex h-[68px] w-full max-w-[430px] items-center justify-center px-5 lg:h-[72px] lg:max-w-[1180px] lg:justify-start lg:px-10">
+      <div className="relative mx-auto flex h-[68px] w-full max-w-[430px] items-center justify-center px-5 lg:h-[72px] lg:max-w-none lg:justify-start lg:px-10 xl:px-12">
         {showBack ? (
           <button
             type="button"
             onClick={() => navigate(-1)}
-            className="absolute left-4 flex h-10 w-10 items-center justify-center rounded-full text-[#0b3b3f] transition-colors hover:bg-[#0b3b3f]/5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#0b3b3f]/35 lg:hidden"
+            className={`absolute left-4 flex h-10 items-center justify-center rounded-full text-[#0b3b3f] transition-colors hover:bg-[#0b3b3f]/5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#0b3b3f]/35 lg:hidden ${showRecoveryBackLabel ? "gap-1.5 px-1.5" : "w-10"}`}
             aria-label="Voltar"
           >
             <AuthConceptIcon name="back" />
+            {showRecoveryBackLabel ? (
+              <span className="pr-1 text-[13px] font-medium leading-none">Voltar</span>
+            ) : null}
           </button>
         ) : null}
 
