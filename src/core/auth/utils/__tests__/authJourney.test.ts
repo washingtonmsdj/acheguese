@@ -5,6 +5,7 @@ import {
   AUTH_JOURNEY_INTENTS,
   AUTH_PATHS,
 } from "@/core/auth/constants/authFlow";
+import { getAuthFlowSessionValue } from "@/core/auth/utils/authFlowStorage";
 import {
   cancelGoogleLogin,
   cancelGoogleSignup,
@@ -20,12 +21,10 @@ import {
   prepareGoogleSignup,
   restartEmailSignupJourney,
 } from "@/core/auth/utils/authJourney";
-import { getPendingAuthReturn } from "@/core/auth/utils/pendingAuthReturn";
-import {
-  getPendingSignupEmail,
-  getPendingSignupRedirect,
-  setPendingSignupEmail,
-} from "@/core/auth/utils/pendingSignup";
+
+function getStored(key: string): string | null {
+  return getAuthFlowSessionValue(key);
+}
 
 describe("authJourney", () => {
   beforeEach(() => {
@@ -40,15 +39,16 @@ describe("authJourney", () => {
   });
 
   it("prepares Google login without carrying stale signup state", () => {
-    setPendingSignupEmail("OLD@EXAMPLE.COM");
+    prepareEmailSignupConfirmation("old@example.com", "/conta");
     prepareGoogleLogin("/mensagens/abc");
 
-    expect(getPendingSignupEmail()).toBeNull();
+    expect(getStored(AUTH_FLOW_STORAGE_KEYS.pendingSignupEmail)).toBeNull();
+    expect(getStored(AUTH_FLOW_STORAGE_KEYS.pendingSignupRedirect)).toBeNull();
     expect(getAuthJourneyReturnTarget()).toBe("/mensagens/abc");
     expect(getPendingAuthJourneyIntent()).toBe(AUTH_JOURNEY_INTENTS.login);
 
     cancelGoogleLogin();
-    expect(getPendingAuthReturn()).toBeNull();
+    expect(getStored(AUTH_FLOW_STORAGE_KEYS.pendingReturn)).toBeNull();
     expect(getPendingAuthJourneyIntent()).toBeNull();
   });
 
@@ -57,12 +57,12 @@ describe("authJourney", () => {
 
     expect(getAuthJourneyReturnTarget()).toBe(AUTH_PATHS.firstAccess);
     expect(getSignupJourneyReturnTarget()).toBe("/mensagens/abc");
-    expect(getPendingSignupEmail()).toBeNull();
+    expect(getStored(AUTH_FLOW_STORAGE_KEYS.pendingSignupEmail)).toBeNull();
     expect(getPendingAuthJourneyIntent()).toBe(AUTH_JOURNEY_INTENTS.signup);
 
     cancelGoogleSignup();
-    expect(getPendingAuthReturn()).toBeNull();
-    expect(getPendingSignupRedirect()).toBeNull();
+    expect(getStored(AUTH_FLOW_STORAGE_KEYS.pendingReturn)).toBeNull();
+    expect(getStored(AUTH_FLOW_STORAGE_KEYS.pendingSignupRedirect)).toBeNull();
     expect(getPendingAuthJourneyIntent()).toBeNull();
   });
 
@@ -74,7 +74,7 @@ describe("authJourney", () => {
       email: "ana@example.com",
       returnTo: "/mensagens/abc",
     });
-    expect(getPendingAuthReturn()).toBeNull();
+    expect(getStored(AUTH_FLOW_STORAGE_KEYS.pendingReturn)).toBeNull();
     expect(getPendingAuthJourneyIntent()).toBeNull();
   });
 
@@ -89,7 +89,7 @@ describe("authJourney", () => {
     prepareEmailSignupConfirmation("ana@example.com", "/mensagens/abc");
     restartEmailSignupJourney();
 
-    expect(getPendingSignupEmail()).toBeNull();
+    expect(getStored(AUTH_FLOW_STORAGE_KEYS.pendingSignupEmail)).toBeNull();
     expect(getSignupJourneyReturnTarget()).toBe("/mensagens/abc");
   });
 
@@ -97,30 +97,30 @@ describe("authJourney", () => {
     prepareGoogleSignup("/conta");
     completeStandardLoginJourney();
 
-    expect(getPendingAuthReturn()).toBeNull();
-    expect(getPendingSignupRedirect()).toBeNull();
+    expect(getStored(AUTH_FLOW_STORAGE_KEYS.pendingReturn)).toBeNull();
+    expect(getStored(AUTH_FLOW_STORAGE_KEYS.pendingSignupRedirect)).toBeNull();
     expect(getPendingAuthJourneyIntent()).toBeNull();
-    expect(
-      window.sessionStorage.getItem(AUTH_FLOW_STORAGE_KEYS.pendingSignupEmail),
-    ).toBeNull();
+    expect(getStored(AUTH_FLOW_STORAGE_KEYS.pendingSignupEmail)).toBeNull();
   });
 
   it("preserves signup redirect after email confirmation until first access", () => {
     prepareEmailSignupConfirmation("ana@example.com", "/mensagens/abc");
     completeEmailConfirmationLoginJourney();
 
-    expect(getPendingAuthReturn()).toBeNull();
+    expect(getStored(AUTH_FLOW_STORAGE_KEYS.pendingReturn)).toBeNull();
     expect(getSignupJourneyReturnTarget()).toBe("/mensagens/abc");
-    expect(getPendingSignupEmail()).toBe("ana@example.com");
+    expect(getStored(AUTH_FLOW_STORAGE_KEYS.pendingSignupEmail)).toBe(
+      "ana@example.com",
+    );
   });
 
   it("cleans the complete signup context only when first access finishes", () => {
     prepareEmailSignupConfirmation("ana@example.com", "/mensagens/abc");
     completeFirstAccessJourney();
 
-    expect(getPendingAuthReturn()).toBeNull();
+    expect(getStored(AUTH_FLOW_STORAGE_KEYS.pendingReturn)).toBeNull();
     expect(getPendingAuthJourneyIntent()).toBeNull();
-    expect(getPendingSignupEmail()).toBeNull();
-    expect(getPendingSignupRedirect()).toBeNull();
+    expect(getStored(AUTH_FLOW_STORAGE_KEYS.pendingSignupEmail)).toBeNull();
+    expect(getStored(AUTH_FLOW_STORAGE_KEYS.pendingSignupRedirect)).toBeNull();
   });
 });
