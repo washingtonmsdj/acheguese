@@ -59,11 +59,16 @@ describe("root community-first MVP entry", () => {
     expect(runtime).not.toContain("lucide-react");
   });
 
-  it("defers the low-priority community preview behind the entry map", () => {
+  it("defers the low-priority community preview module and request behind the entry map", () => {
     const source = read("src/app/pages/TerritoryEntryPage.tsx");
     const asset = path.join(ROOT, "src/assets/complexo-cultura.jpg");
-    expect(source).toContain('import communityThumbnail from "@/assets/complexo-cultura.jpg"');
-    expect(source).toContain("shouldLoadCommunityImage");
+
+    expect(source).not.toContain(
+      'import communityThumbnail from "@/assets/complexo-cultura.jpg"',
+    );
+    expect(source).toContain('import("@/assets/complexo-cultura.jpg")');
+    expect(source).toContain("const [communityImageSrc, setCommunityImageSrc]");
+    expect(source).toContain("imageModulePromise ??=");
     expect(source).toContain('window.matchMedia("(min-width: 768px)")');
     expect(source).toContain("scheduleAfterPublicRootMap");
     expect(source).toContain("maxWaitMs: 3000");
@@ -71,7 +76,8 @@ describe("root community-first MVP entry", () => {
     expect(source).toContain("idleFallbackDelayMs: 600");
     expect(source).not.toContain("requestIdleCallback");
     expect(source).not.toContain('window.addEventListener("load", scheduleAfterLoad');
-    expect(source).toContain("shouldLoadCommunityImage ? communityThumbnail : undefined");
+    expect(source).toContain("src={communityImageSrc ?? undefined}");
+    expect(source).toContain("if (!disposed && desktopMedia.matches && imageSrc)");
     expect(source).toContain('width={1024}');
     expect(source).toContain('height={768}');
     expect(source).toContain('loading="lazy"');
