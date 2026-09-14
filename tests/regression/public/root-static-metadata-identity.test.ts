@@ -9,11 +9,11 @@ const read = (relativePath: string) =>
 describe("public root static metadata identity", () => {
   it("keeps crawler metadata aligned with the approved root concept", () => {
     const html = read("index.html");
+    const main = read("src/main.tsx");
     const homeSpec = read("docs/05-ux/HOME-SPEC.md");
 
     expect(homeSpec).toContain("Seu lugar, mais perto.");
     expect(html).toContain("<title>Achegue-se | Seu lugar, mais perto.</title>");
-    expect(html).toContain('rel="canonical" href="https://acheguese.com.br/"');
     expect(html).toContain(
       'property="og:title" content="Achegue-se | Seu lugar, mais perto."',
     );
@@ -21,6 +21,13 @@ describe("public root static metadata identity", () => {
       'name="twitter:title" content="Achegue-se | Seu lugar, mais perto."',
     );
     expect(html).toContain('property="og:url" content="https://acheguese.com.br/"');
+
+    // index.html serves every SPA route: never publish a root canonical there.
+    expect(html).not.toContain('rel="canonical"');
+    expect(main).toContain('isPublicRootAtBoot && !document.querySelector(\'link[rel="canonical"]\')');
+    expect(main).toContain('meta[property="og:url"]');
+    expect(main).toContain('canonical.rel = "canonical"');
+    expect(main).toContain('canonical.dataset.publicRootCanonical = "true"');
   });
 
   it("keeps browser and PWA chrome on the canonical visual identity", () => {
