@@ -13,7 +13,7 @@ const VIEWPORTS = [
 ] as const;
 
 const ACCOUNT_ROUTES = [
-  { path: "/conta", expected: /\/conta(?:\?|$)/, heading: /^Conta$/ },
+  { path: "/conta", expected: /\/conta(?:\?|$)/, heading: /^Minha conta$/ },
   {
     path: "/conta/editar",
     expected: /\/conta\/editar\/[^/?#]+(?:\?|$)/,
@@ -22,17 +22,17 @@ const ACCOUNT_ROUTES = [
   {
     path: "/conta/preferencias",
     expected: /\/conta\/preferencias(?:\?|$)/,
-    heading: /Preferências da conta/i,
+    heading: /Preferências do aplicativo/i,
   },
   {
     path: "/conta/enderecos",
     expected: /\/conta\/enderecos(?:\?|$)/,
-    heading: /Meus endereços/i,
+    heading: /Endereços e território/i,
   },
   {
     path: "/conta/seguranca",
     expected: /\/conta\/seguranca(?:\?|$)/,
-    heading: /Segurança da conta/i,
+    heading: /Senha e segurança/i,
   },
 ] as const;
 
@@ -143,8 +143,12 @@ test.describe("Conta autenticada — fixture remota determinística", () => {
         });
       }
 
-      await test.step("Conta -> Empresas e vínculos abre a Central canônica", async () => {
-        await page.goto("/conta", { waitUntil: "domcontentloaded" });
+      await test.step("Meus perfis preserva o acesso à Central canônica", async () => {
+        await page.goto("/conta?section=profiles", { waitUntil: "domcontentloaded" });
+        await expect(
+          page.getByRole("heading", { name: "Meus perfis" }).first(),
+        ).toBeVisible({ timeout: 30_000 });
+        await page.getByText("Recursos adicionais da conta", { exact: true }).click();
         await expect(
           page.getByRole("heading", { name: "Empresas e vínculos" }),
         ).toBeVisible({ timeout: 30_000 });
@@ -162,15 +166,12 @@ test.describe("Conta autenticada — fixture remota determinística", () => {
       const visibleNavigation = page.locator(
         `[data-territory-navigation="${viewport.navigation}"]:visible`,
       );
-      await expect(visibleNavigation).toHaveCount(1);
-      await expect(
-        page.getByRole("navigation", { name: /seções do perfil/i }),
-      ).toHaveCount(0);
 
-      const accountItem = visibleNavigation.locator(
-        '[data-bottom-nav-item="conta"]',
-      );
       if (viewport.navigation === "mobile") {
+        await expect(visibleNavigation).toHaveCount(1);
+        const accountItem = visibleNavigation.locator(
+          '[data-bottom-nav-item="conta"]',
+        );
         const accountBox = await accountItem.boundingBox();
         expect(accountBox?.height ?? 0).toBeGreaterThanOrEqual(44);
 
@@ -181,7 +182,24 @@ test.describe("Conta autenticada — fixture remota determinística", () => {
           (element) => element.scrollWidth <= element.clientWidth + 1,
         );
         expect(communityFits).toBe(true);
+      } else {
+        // The account settings shell owns tablet/desktop navigation and hides
+        // the global TerritoryAdaptiveNavigation to avoid duplicate sidebars.
+        await expect(visibleNavigation).toHaveCount(0);
+        if (viewport.navigation === "desktop") {
+          await expect(
+            page.getByRole("navigation", { name: "Configurações da conta" }),
+          ).toBeVisible();
+        } else {
+          await expect(
+            page.locator('a[aria-label="Achegue-se — início"]:visible'),
+          ).toHaveCount(1);
+        }
       }
+
+      await expect(
+        page.getByRole("navigation", { name: /seções do perfil/i }),
+      ).toHaveCount(0);
 
       await testInfo.attach(`conta-${viewport.name}`, {
         body: await page.screenshot({ fullPage: true }),
