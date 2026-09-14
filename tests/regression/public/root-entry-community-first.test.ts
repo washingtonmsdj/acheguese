@@ -27,16 +27,24 @@ describe("root community-first MVP entry", () => {
     expect(source).toContain("return <PreLaunchLandingPage />");
   });
 
-  it("keeps map WebGL and boundary work off the initial path until near the viewport and browser idle", () => {
-    const source = read(
+  it("keeps the entry map wrapper light until near the viewport and browser idle", () => {
+    const wrapper = read(
       "src/app/components/territory-vivo/TerritoryEntryMap.tsx",
     );
+    const runtime = read(
+      "src/app/components/territory-vivo/TerritoryEntryMapRuntime.tsx",
+    );
 
-    expect(source).toContain("lazy(() =>");
-    expect(source).toContain("IntersectionObserver");
-    expect(source).toContain('rootMargin: "240px 0px"');
-    expect(source).toContain("enabled: shouldMountMap");
-    expect(source).toContain("scheduleBrowserIdleWork");
+    expect(wrapper).toContain("LazyTerritoryEntryMapRuntime");
+    expect(wrapper).toContain("IntersectionObserver");
+    expect(wrapper).toContain('rootMargin: "240px 0px"');
+    expect(wrapper).toContain("scheduleBrowserIdleWork");
+    expect(wrapper).not.toContain("useTerritoryPolygon");
+    expect(wrapper).not.toContain("MapLibreAdapter");
+
+    expect(runtime).toContain("useTerritoryPolygon");
+    expect(runtime).toContain("LazyMapLibreAdapter");
+    expect(runtime).toContain('interactive={false}');
   });
 
   it("defers territorial data resolution so the first paint stays independent of Supabase", () => {
