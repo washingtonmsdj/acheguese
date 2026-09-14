@@ -477,13 +477,28 @@ export default function PrivacySettingsPage() {
             <Surface className="mt-4 p-4 sm:p-5">
               <h2 className="font-heading text-base font-bold text-territory-ink">Antes da conclusão</h2>
               <p className="mt-2 text-sm leading-5 text-territory-muted">A exclusão será processada conforme as condições apresentadas na solicitação.</p>
-              {scheduledDate ? (
-                <div className="mt-4 flex items-start gap-3 rounded-xl bg-territory-raised p-3 text-sm text-territory-muted">
-                  <Clock3 className="mt-0.5 h-5 w-5 shrink-0 text-territory-brand" aria-hidden="true" />
-                  <span>Data informada para processamento: {scheduledDate}.</span>
+              <details className="group mt-4">
+                <summary className="flex min-h-11 cursor-pointer list-none items-center justify-center rounded-xl border border-territory-border px-4 text-sm font-semibold text-territory-ink hover:bg-territory-raised focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-territory-brand [&::-webkit-details-marker]:hidden">
+                  Ver detalhes
+                </summary>
+                <div className="mt-3 rounded-xl bg-territory-raised p-3 text-sm leading-5 text-territory-muted">
+                  {scheduledDate ? (
+                    <div className="flex items-start gap-2">
+                      <Clock3 className="mt-0.5 h-4 w-4 shrink-0 text-territory-brand" aria-hidden="true" />
+                      <span>Data informada para processamento: {scheduledDate}.</span>
+                    </div>
+                  ) : (
+                    <p>O serviço não informou uma data de processamento neste momento.</p>
+                  )}
+                  <button
+                    type="button"
+                    onClick={() => navigate(DATA_PROTECTION_CONTACT_PATH)}
+                    className="mt-2 min-h-9 font-semibold text-territory-brand underline underline-offset-4"
+                  >
+                    Falar com proteção de dados
+                  </button>
                 </div>
-              ) : null}
-              <Button type="button" variant="outline" className="mt-4 min-h-11 w-full" onClick={() => navigate(DATA_PROTECTION_CONTACT_PATH)}>Ver detalhes</Button>
+              </details>
             </Surface>
 
             <Button type="button" className="mt-4 min-h-12 w-full bg-territory-brand text-white hover:bg-territory-brand/90" onClick={handleCancelDeletion} disabled={cancellingDeletion}>
@@ -550,21 +565,42 @@ export default function PrivacySettingsPage() {
               </div>
             </div>
 
-            <Surface id="privacy-more" className="mt-4 p-4 sm:p-5">
-              <h2 className="font-heading text-base font-bold text-territory-ink">Consentimentos e permissões</h2>
-              <p className="mt-1 text-sm text-territory-muted">Revise permissões adicionais relacionadas aos dados da sua conta.</p>
-              <div className="mt-2 grid gap-x-6 lg:grid-cols-2">
-                {consentsLoading ? (
-                  <div className="col-span-full flex items-center justify-center py-8" role="status"><Loader2 className="h-6 w-6 animate-spin text-territory-brand" aria-hidden="true" /></div>
-                ) : consentsError ? (
-                  <div className="col-span-full"><QueryErrorState message="Suas escolhas permanecem inalteradas até conseguirmos consultá-las novamente." onRetry={() => void refetchConsents()} /></div>
-                ) : (
-                  CONSENT_ROWS.slice(2).map(([type, label, description]) => (
-                    <ConsentRow key={type} idPrefix="details" type={type} label={label} description={description} consent={consents?.find((item) => item.consent_type === type)} disabled={updateConsentMutation.isPending} onChange={(checked) => updateConsentMutation.mutate({ consentType: type, granted: checked })} />
-                  ))
-                )}
-              </div>
-            </Surface>
+            <div id="privacy-more" className="mt-4">
+              <details className="group rounded-2xl border border-territory-border bg-territory-surface lg:hidden">
+                <summary className="flex min-h-12 cursor-pointer list-none items-center gap-3 px-4 py-3 text-sm font-semibold text-territory-ink focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-territory-brand [&::-webkit-details-marker]:hidden">
+                  <Settings2 className="h-5 w-5 shrink-0 text-territory-brand" aria-hidden="true" />
+                  <span className="flex-1">Outras permissões</span>
+                  <ChevronRight className="h-4 w-4 shrink-0 text-territory-muted transition-transform group-open:rotate-90" aria-hidden="true" />
+                </summary>
+                <div className="border-t border-territory-border px-4 pb-2">
+                  {consentsLoading ? (
+                    <div className="flex items-center justify-center py-8" role="status"><Loader2 className="h-6 w-6 animate-spin text-territory-brand" aria-hidden="true" /></div>
+                  ) : consentsError ? (
+                    <div className="py-4"><QueryErrorState message="Suas escolhas permanecem inalteradas até conseguirmos consultá-las novamente." onRetry={() => void refetchConsents()} /></div>
+                  ) : (
+                    CONSENT_ROWS.slice(2).map(([type, label, description]) => (
+                      <ConsentRow key={type} idPrefix="mobile-details" type={type} label={label} description={description} consent={consents?.find((item) => item.consent_type === type)} disabled={updateConsentMutation.isPending} onChange={(checked) => updateConsentMutation.mutate({ consentType: type, granted: checked })} />
+                    ))
+                  )}
+                </div>
+              </details>
+
+              <Surface className="hidden p-4 sm:p-5 lg:block">
+                <h2 className="font-heading text-base font-bold text-territory-ink">Consentimentos e permissões</h2>
+                <p className="mt-1 text-sm text-territory-muted">Revise permissões adicionais relacionadas aos dados da sua conta.</p>
+                <div className="mt-2 grid gap-x-6 lg:grid-cols-2">
+                  {consentsLoading ? (
+                    <div className="col-span-full flex items-center justify-center py-8" role="status"><Loader2 className="h-6 w-6 animate-spin text-territory-brand" aria-hidden="true" /></div>
+                  ) : consentsError ? (
+                    <div className="col-span-full"><QueryErrorState message="Suas escolhas permanecem inalteradas até conseguirmos consultá-las novamente." onRetry={() => void refetchConsents()} /></div>
+                  ) : (
+                    CONSENT_ROWS.slice(2).map(([type, label, description]) => (
+                      <ConsentRow key={type} idPrefix="desktop-details" type={type} label={label} description={description} consent={consents?.find((item) => item.consent_type === type)} disabled={updateConsentMutation.isPending} onChange={(checked) => updateConsentMutation.mutate({ consentType: type, granted: checked })} />
+                    ))
+                  )}
+                </div>
+              </Surface>
+            </div>
           </>
         )}
 
