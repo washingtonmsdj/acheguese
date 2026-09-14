@@ -51,7 +51,8 @@ function renderPage(path = "/cadastro") {
 }
 
 async function fillAccount(user: ReturnType<typeof userEvent.setup>) {
-  await user.type(screen.getByLabelText(/^Nome$/i), "Ana Souza");
+  const nameFields = screen.getAllByLabelText(/Nome/i);
+  await user.type(nameFields[0], "Ana Souza");
   await user.type(screen.getByLabelText(/Nome de usuário/i), "ana_souza");
   await user.type(screen.getByLabelText(/^E-mail$/i), "ana@example.com");
   await user.type(screen.getByLabelText(/^Senha$/i), "SenhaSegura@2026");
