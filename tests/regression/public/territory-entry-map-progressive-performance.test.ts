@@ -46,16 +46,21 @@ describe("territory entry progressive map performance", () => {
     expect(wrapper).not.toContain("services6.arcgis.com");
   });
 
-  it("starts React runtime and MapLibre engine together on first render", () => {
+  it("preloads style before React while runtime and engine start together on first render", () => {
+    const main = read("src/main.tsx");
     const wrapper = read("src/app/components/territory-vivo/TerritoryEntryMap.tsx");
     const runtime = read("src/app/components/territory-vivo/TerritoryEntryMapRuntime.tsx");
     const owner = read("src/core/maps/components/v3/MapLibreAdapter.tsx");
     const passive = read("src/core/maps/components/v3/MapLibrePassiveRuntime.tsx");
 
-    expect(wrapper).toContain("preloadEntryMapStyle");
-    expect(wrapper).toContain('link.rel = "preload"');
-    expect(wrapper).toContain('link.as = "fetch"');
-    expect(wrapper).toContain('link.setAttribute("fetchpriority", "high")');
+    expect(main).toContain("DEFAULT_TILE_STYLE");
+    expect(main).toContain('mapStylePreload.rel = "preload"');
+    expect(main).toContain('mapStylePreload.as = "fetch"');
+    expect(main).toContain('mapStylePreload.setAttribute("fetchpriority", "high")');
+    expect(main.indexOf("data-entry-map-style-preload")).toBeLessThan(
+      main.indexOf("root.render(<App />)"),
+    );
+    expect(wrapper).not.toContain("preloadEntryMapStyle");
     expect(wrapper).toContain("const loadTerritoryEntryMapRuntime = async () =>");
     expect(wrapper).toContain("const [runtimeModule] = await Promise.all([");
     expect(wrapper).toContain('import("./TerritoryEntryMapRuntime")');
