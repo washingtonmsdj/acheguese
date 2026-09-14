@@ -66,9 +66,12 @@ export default function TerritoryEntryMap({
   useEffect(() => {
     if (shouldMountRuntime) return;
 
+    // Start downloading the lightweight entry runtime after first paint. WebGL
+    // still mounts only when the map is near the viewport.
+    void loadTerritoryEntryMapRuntime();
+
     const section = sectionRef.current;
     if (!section || typeof IntersectionObserver === "undefined") {
-      void loadTerritoryEntryMapRuntime();
       const timeoutId = window.setTimeout(() => setShouldMountRuntime(true), 32);
       return () => window.clearTimeout(timeoutId);
     }
@@ -77,7 +80,6 @@ export default function TerritoryEntryMap({
       (entries) => {
         if (!entries.some((entry) => entry.isIntersecting)) return;
         observer.disconnect();
-        void loadTerritoryEntryMapRuntime();
         setShouldMountRuntime(true);
       },
       { rootMargin: "720px 0px", threshold: 0.01 },
