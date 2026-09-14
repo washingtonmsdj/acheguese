@@ -64,7 +64,8 @@ export default function ProfileSettingsPage() {
   const { activeProfile, loading } = useActiveProfile();
   const [searchParams, setSearchParams] = useSearchParams();
   const canHaveMembers = canProfileHaveMembers(activeProfile);
-  const requestedTab = normalizeTab(searchParams.get("tab"));
+  const rawTab = searchParams.get("tab");
+  const requestedTab = normalizeTab(rawTab);
 
   const activeTab = useMemo<ProfileSettingsTab>(() => {
     if (requestedTab === "members" && !canHaveMembers) {
@@ -75,12 +76,16 @@ export default function ProfileSettingsPage() {
   }, [canHaveMembers, requestedTab]);
 
   useEffect(() => {
-    if (loading || requestedTab !== "members" || canHaveMembers) return;
+    if (loading) return;
+
+    const invalidTab = rawTab !== null && rawTab !== "links" && rawTab !== "members";
+    const unavailableMembers = rawTab === "members" && !canHaveMembers;
+    if (!invalidTab && !unavailableMembers) return;
 
     const nextParams = new URLSearchParams(searchParams);
     nextParams.delete("tab");
     setSearchParams(nextParams, { replace: true });
-  }, [canHaveMembers, loading, requestedTab, searchParams, setSearchParams]);
+  }, [canHaveMembers, loading, rawTab, searchParams, setSearchParams]);
 
   const handleTabChange = (nextValue: string) => {
     const nextTab = normalizeTab(nextValue);
@@ -97,44 +102,50 @@ export default function ProfileSettingsPage() {
 
   if (loading) {
     return (
-      <AccountSettingsShell
-        title="Configurações da identidade"
-        description="Privacidade, vínculos e permissões do perfil em uso."
-        backTo={ACCOUNT_PATHS.preferences}
-      >
-        <section className="flex min-h-40 items-center justify-center rounded-2xl border border-territory-border bg-territory-surface p-5">
-          <div className="text-center" role="status">
-            <Loader2 className="mx-auto h-7 w-7 animate-spin text-territory-brand" aria-hidden="true" />
-            <p className="mt-2 text-sm text-territory-muted">Carregando identidade...</p>
-          </div>
-        </section>
-      </AccountSettingsShell>
+      <>
+        <Helmet><title>Configurações da identidade | Achegue-se</title></Helmet>
+        <AccountSettingsShell
+          title="Configurações da identidade"
+          description="Privacidade, vínculos e permissões do perfil em uso."
+          backTo={ACCOUNT_PATHS.preferences}
+        >
+          <section className="flex min-h-40 items-center justify-center rounded-2xl border border-territory-border bg-territory-surface p-5">
+            <div className="text-center" role="status">
+              <Loader2 className="mx-auto h-7 w-7 animate-spin text-territory-brand" aria-hidden="true" />
+              <p className="mt-2 text-sm text-territory-muted">Carregando identidade...</p>
+            </div>
+          </section>
+        </AccountSettingsShell>
+      </>
     );
   }
 
   if (!activeProfile) {
     return (
-      <AccountSettingsShell
-        title="Configurações da identidade"
-        description="Privacidade, vínculos e permissões do perfil em uso."
-        backTo={ACCOUNT_PATHS.preferences}
-      >
-        <section className="rounded-2xl border border-territory-border bg-territory-surface p-5 text-center sm:p-6">
-          <Users className="mx-auto h-8 w-8 text-territory-brand" aria-hidden="true" />
-          <h2 className="mt-3 font-heading text-base font-bold text-territory-ink">Nenhum perfil ativo encontrado</h2>
-          <p className="mt-1 text-sm leading-5 text-territory-muted">
-            Escolha uma identidade antes de alterar privacidade, vínculos ou membros.
-          </p>
-          <Button
-            type="button"
-            variant="outline"
-            className="mt-4 min-h-11"
-            onClick={() => navigate(ACCOUNT_PATHS.profiles)}
-          >
-            Abrir Meus perfis
-          </Button>
-        </section>
-      </AccountSettingsShell>
+      <>
+        <Helmet><title>Configurações da identidade | Achegue-se</title></Helmet>
+        <AccountSettingsShell
+          title="Configurações da identidade"
+          description="Privacidade, vínculos e permissões do perfil em uso."
+          backTo={ACCOUNT_PATHS.preferences}
+        >
+          <section className="rounded-2xl border border-territory-border bg-territory-surface p-5 text-center sm:p-6">
+            <Users className="mx-auto h-8 w-8 text-territory-brand" aria-hidden="true" />
+            <h2 className="mt-3 font-heading text-base font-bold text-territory-ink">Nenhum perfil ativo encontrado</h2>
+            <p className="mt-1 text-sm leading-5 text-territory-muted">
+              Escolha uma identidade antes de alterar privacidade, vínculos ou membros.
+            </p>
+            <Button
+              type="button"
+              variant="outline"
+              className="mt-4 min-h-11"
+              onClick={() => navigate(ACCOUNT_PATHS.profiles)}
+            >
+              Abrir Meus perfis
+            </Button>
+          </section>
+        </AccountSettingsShell>
+      </>
     );
   }
 
