@@ -18,17 +18,31 @@ describe("territory entry progressive map performance", () => {
     expect(runtime).toContain('mapReady ? "opacity-100" : "opacity-0"');
   });
 
-  it("preloads the entry runtime, MapLibre engine and OpenFreeMap style", () => {
+  it("preloads the entry runtime, passive MapLibre path and OpenFreeMap style", () => {
     const wrapper = read("src/app/components/territory-vivo/TerritoryEntryMap.tsx");
     const runtime = read("src/app/components/territory-vivo/TerritoryEntryMapRuntime.tsx");
-    const lazyAdapter = read("src/core/maps/components/v3/LazyMapLibreAdapter.tsx");
+    const owner = read("src/core/maps/components/v3/MapLibreAdapter.tsx");
+    const passive = read("src/core/maps/components/v3/MapLibrePassiveRuntime.tsx");
 
     expect(wrapper).toContain("loadTerritoryEntryMapRuntime");
     expect(wrapper).toContain("preloadEntryMapStyle");
     expect(wrapper).toContain('link.rel = "preload"');
     expect(wrapper).toContain('link.as = "fetch"');
     expect(wrapper).toContain("preloadTerritoryEntryMapEngine");
-    expect(runtime).toContain("preloadMapLibreAdapterRuntime");
-    expect(lazyAdapter).toContain("preloadMapLibreAdapterRuntime");
+
+    expect(runtime).toContain("preloadPassiveMapLibreAdapterRuntime");
+    expect(runtime).toContain('from "@/core/maps/components/v3/MapLibreAdapter"');
+    expect(runtime).not.toContain("LazyMapLibreAdapter");
+
+    expect(owner).toContain("canUsePassiveRuntime");
+    expect(owner).toContain('import("./MapLibrePassiveRuntime")');
+    expect(owner).toContain('import("./MapLibreAdapterRuntime")');
+    expect(owner).toContain("preloadPassiveMapLibreAdapterRuntime");
+
+    expect(passive).toContain('data-maplibre-runtime="passive"');
+    expect(passive).toContain("mapCreated");
+    expect(passive).not.toContain("useRobustGeolocation");
+    expect(passive).not.toContain("useMapClustering");
+    expect(passive).not.toContain("MapSearchControl");
   });
 });
