@@ -50,12 +50,6 @@ export default function FullAppRuntimeShell({
         void import("@/integrations/maps").then(({ setupDefaultProviders }) => {
           setupDefaultProviders();
         });
-
-        void import("@/core/maps/config/maplibreWorkerRuntime").then(
-          ({ ensureMapLibreWorkerConfigured }) => {
-            ensureMapLibreWorkerConfigured();
-          },
-        );
       },
       { timeoutMs: 2200, fallbackDelayMs: 900 },
     ),
