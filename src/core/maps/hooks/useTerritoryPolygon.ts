@@ -1,8 +1,10 @@
 /**
  * useTerritoryPolygon — Busca o polígono geográfico do território ativo.
  *
- * O serviço de boundary é carregado sob demanda para não bloquear o primeiro
- * render de mapas que podem exibir o basemap antes da geometria oficial.
+ * A fonte oficial declarada no próprio Location é tentada primeiro por um
+ * loader leve/batch. O BoundaryService completo só entra quando essa fonte não
+ * atende o território, mantendo Supabase e repositórios fora do caminho feliz
+ * da entrada pública.
  */
 
 import { useEffect, useState } from "react";
@@ -32,27 +34,6 @@ interface CachedTerritoryPolygons {
 const POLYGON_CACHE_TTL_MS = 5 * 60 * 1000;
 const polygonCache = new Map<string, CachedTerritoryPolygons>();
 const polygonPromises = new Map<string, Promise<TerritoryPolygon[]>>();
-
-function parseGeoPath(
-  geoPath: string,
-): { neighborhood: string | null; city: string; state: string } | null {
-  const parts = geoPath.split("/").filter(Boolean);
-  if (parts.length === 3) {
-    return {
-      state: parts[1],
-      city: parts[2].replace(/-/g, " "),
-      neighborhood: null,
-    };
-  }
-  if (parts.length >= 4) {
-    return {
-      state: parts[1],
-      city: parts[2],
-      neighborhood: parts[3].replace(/-/g, " "),
-    };
-  }
-  return null;
-}
 
 function getTerritoryKey(
   resolved: ResolvedTerritory | null | undefined,
@@ -85,7 +66,56 @@ function isCompleteBoundary(
   return resolved.group.members.every((member) => names.has(member.name));
 }
 
-async function fetchTerritoryPolygons(
+async function fetchOfficialSourcePolygons(
+  resolved: ResolvedTerritory,
+): Promise<TerritoryPolygon[] | null> {
+  if (!resolved) return null;
+
+  const { loadOfficialFeatureServerBoundaries } = await import(
+    "@/core/geospatial/data/officialFeatureServerBoundary"
+  );
+  const locations =
+    resolved.kind === "location" ? [resolved.location] : resolved.group.members;
+  const official = await loadOfficialFeatureServerBoundaries(locations);
+
+  if (resolved.kind === "location") {
+    const result = official.get(resolved.location.id);
+    if (!result) return null;
+
+    return result.rings.map((ring, index) => ({
+      name: resolved.location.name,
+      coordinates: ring,
+      center: result.center,
+      color: NEIGHBORHOOD_COLORS[index % NEIGHBORHOOD_COLORS.length],
+    }));
+  }
+
+  if (
+    resolved.group.members.length === 0 ||
+    !resolved.group.members.every((member) => official.has(member.id))
+  ) {
+    return null;
+  }
+
+  const built: TerritoryPolygon[] = [];
+  resolved.group.members.forEach((member, memberIndex) => {
+    const result = official.get(member.id);
+    if (!result) return;
+    const color = NEIGHBORHOOD_COLORS[memberIndex % NEIGHBORHOOD_COLORS.length];
+    result.rings.forEach((ring) => {
+      built.push({
+        name: member.name,
+        coordinates: ring,
+        center: result.center,
+        color,
+      });
+    });
+  });
+
+  return built;
+}
+
+async function fetchBoundaryServicePolygons(
   resolved: ResolvedTerritory,
 ): Promise<TerritoryPolygon[]> {
   if (!resolved) return [];
@@ -105,18 +135,16 @@ async function fetchTerritoryPolygons(
   }
 
   const results = await Promise.all(
-    resolved.group.members.map((member) => {
-      const parsed = parseGeoPath(member.geographic_path);
-      if (!parsed) return Promise.resolve(null);
-      return boundaryService
+    resolved.group.members.map((member) =>
+      boundaryService
         .getLocationBounds(member)
-        .then((result) => ({ member, result }));
-    }),
+        .then((result) => ({ member, result })),
+    ),
   );
 
   const built: TerritoryPolygon[] = [];
   results.forEach((item, memberIndex) => {
-    if (!item || item.result.rings.length === 0) return;
+    if (item.result.rings.length === 0) return;
     const color = NEIGHBORHOOD_COLORS[memberIndex % NEIGHBORHOOD_COLORS.length];
     item.result.rings.forEach((ring) => {
       built.push({
@@ -129,6 +157,24 @@ async function fetchTerritoryPolygons(
   });
 
   return built;
+}
+
+async function fetchTerritoryPolygons(
+  resolved: ResolvedTerritory,
+): Promise<TerritoryPolygon[]> {
+  if (!resolved) return [];
+
+  const officialPolygons = await fetchOfficialSourcePolygons(resolved).catch(
+    () => null,
+  );
+  if (
+    officialPolygons &&
+    isCompleteBoundary(resolved, officialPolygons)
+  ) {
+    return officialPolygons;
+  }
+
+  return fetchBoundaryServicePolygons(resolved);
 }
 
 async function loadTerritoryPolygons(
