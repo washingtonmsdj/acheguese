@@ -7,6 +7,7 @@ import {
   NEIGHBORHOOD_COLORS,
 } from "@/core/maps/providers/MapProvider";
 import type { ResolvedTerritory } from "@/core/routing/hooks/useResolveTerritoryFromUrl";
+import { scheduleBrowserIdleWork } from "@/shared/utils/browserIdle";
 
 const SALVADOR_VIEWPORT = {
   center: { latitude: -12.95, longitude: -38.48 },
@@ -112,21 +113,25 @@ export default function TerritoryEntryMap({
 
     const section = sectionRef.current;
     if (!section || typeof IntersectionObserver === "undefined") {
-      const timeoutId = window.setTimeout(() => setShouldMountMap(true), 0);
-      return () => window.clearTimeout(timeoutId);
+      return scheduleBrowserIdleWork(
+        () => setShouldMountMap(true),
+        { timeoutMs: 900, fallbackDelayMs: 180 },
+      );
     }
 
-    let activationTimeoutId: number | null = null;
+    let cancelIdleMount: (() => void) | null = null;
     const observer = new IntersectionObserver(
       (entries) => {
         if (!entries.some((entry) => entry.isIntersecting)) return;
         observer.disconnect();
 
-        // O mapa usa WebGL e e mais caro que o restante da entrada. Deixe o
-        // browser concluir o primeiro paint/interacao antes de inicializa-lo.
-        activationTimeoutId = window.setTimeout(() => {
-          setShouldMountMap(true);
-        }, 0);
+        // MapLibre/WebGL e mais caro que o restante da entrada. Mesmo quando o
+        // mapa esta proximo da viewport, deixe o primeiro paint e a primeira
+        // interacao terem prioridade antes de baixar/inicializar o chunk.
+        cancelIdleMount = scheduleBrowserIdleWork(
+          () => setShouldMountMap(true),
+          { timeoutMs: 900, fallbackDelayMs: 180 },
+        );
       },
       { rootMargin: "240px 0px", threshold: 0.01 },
     );
@@ -134,9 +139,7 @@ export default function TerritoryEntryMap({
     observer.observe(section);
     return () => {
       observer.disconnect();
-      if (activationTimeoutId !== null) {
-        window.clearTimeout(activationTimeoutId);
-      }
+      cancelIdleMount?.();
     };
   }, [isLoading, shouldMountMap]);
 
