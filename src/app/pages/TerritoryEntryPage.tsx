@@ -10,6 +10,12 @@ const LAUNCH_STATE = TERRITORY_CONFIG.launch.state;
 const LAUNCH_CITY = TERRITORY_CONFIG.launch.city;
 const LAUNCH_COMMUNITY_SLUG = TERRITORY_CONFIG.launch.community.slug;
 const LAUNCH_COMMUNITY_NAME = TERRITORY_CONFIG.launch.community.name;
+const LAUNCH_PLACE_LABEL = [
+  TERRITORY_CONFIG.launch.name,
+  TERRITORY_CONFIG.launch.state.toUpperCase(),
+]
+  .filter(Boolean)
+  .join(" · ");
 
 /**
  * A entrada pública não depende do banco para descobrir o território inicial.
@@ -179,7 +185,7 @@ export default function TerritoryEntryPage() {
             <p className="entry-eyebrow">Nossa primeira comunidade</p>
             <h1 id="territory-entry-title">Seu lugar, mais perto.</h1>
             <p className="entry-hero-subtitle">
-              Descubra o que está perto: negócios, serviços e histórias do Complexo do Nordeste de Amaralina.
+              Descubra o que está perto: negócios, serviços e histórias de {LAUNCH_COMMUNITY_NAME}.
             </p>
           </div>
 
@@ -197,10 +203,10 @@ export default function TerritoryEntryPage() {
               />
               <span>
                 <strong id="entry-community-title">{LAUNCH_COMMUNITY_NAME}</strong>
-                <em>Salvador · Bahia</em>
+                <em>{LAUNCH_PLACE_LABEL}</em>
               </span>
             </div>
-            <div className="entry-neighborhoods" aria-label="Bairros do Complexo">
+            <div className="entry-neighborhoods" aria-label={`Bairros de ${LAUNCH_COMMUNITY_NAME}`}>
               <span>Nordeste de Amaralina</span>
               <span>Santa Cruz</span>
               <span>Vale das Pedrinhas</span>
