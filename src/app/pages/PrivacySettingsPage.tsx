@@ -47,9 +47,17 @@ import {
 
 type UserConsent = UserConsentRecord;
 
-function Surface({ children, className = "" }: { children: ReactNode; className?: string }) {
+function Surface({
+  children,
+  className = "",
+  id,
+}: {
+  children: ReactNode;
+  className?: string;
+  id?: string;
+}) {
   return (
-    <section className={`rounded-2xl border border-territory-border bg-territory-surface ${className}`}>
+    <section id={id} className={`rounded-2xl border border-territory-border bg-territory-surface ${className}`}>
       {children}
     </section>
   );
@@ -87,7 +95,7 @@ function ConsentRow({
   const isGranted = consent?.granted ?? false;
   return (
     <div className="flex min-h-[66px] items-center gap-3 border-b border-territory-border py-3 last:border-b-0">
-      <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-territory-brand/8 text-territory-brand">
+      <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-territory-brand/10 text-territory-brand">
         <Icon className="h-5 w-5" aria-hidden="true" />
       </span>
       <div className="min-w-0 flex-1">
