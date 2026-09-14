@@ -2,7 +2,10 @@ import React from "react";
 import { createRoot } from "react-dom/client";
 import App from "./App.tsx";
 import "./index.css";
-import { DEFAULT_TILE_STYLE } from "./shared/config/mapDefaults.ts";
+import {
+  DEFAULT_TILE_STYLE,
+  OPENFREEMAP_TILEJSON_URL,
+} from "./shared/config/mapDefaults.ts";
 import { deferFrame, deferIdle, deferLoad } from "./shared/utils/deferredInit.ts";
 import { scheduleAfterPublicRootMap } from "./shared/utils/publicRootReadiness.ts";
 
@@ -24,18 +27,32 @@ if (import.meta.env.DEV && "serviceWorker" in navigator) {
 
 const isPublicRootAtBoot = window.location.pathname === "/";
 
-// The root map is a primary surface. Discover its small style document before
-// React renders so MapLibre can reuse the response immediately when the canvas
-// mounts. The URL remains owned by the canonical map defaults SSOT.
-if (isPublicRootAtBoot && !document.querySelector("link[data-entry-map-style-preload]")) {
-  const mapStylePreload = document.createElement("link");
-  mapStylePreload.rel = "preload";
-  mapStylePreload.as = "fetch";
-  mapStylePreload.href = DEFAULT_TILE_STYLE.styleUrl;
-  mapStylePreload.crossOrigin = "anonymous";
-  mapStylePreload.setAttribute("fetchpriority", "high");
-  mapStylePreload.dataset.entryMapStylePreload = "true";
-  document.head.appendChild(mapStylePreload);
+// The root map is a primary surface. Discover the style and its vector-source
+// TileJSON before React renders, cutting the otherwise sequential
+// style -> TileJSON -> vector-tile network cascade. Both URLs remain owned by
+// the canonical map defaults SSOT.
+if (isPublicRootAtBoot) {
+  if (!document.querySelector("link[data-entry-map-style-preload]")) {
+    const mapStylePreload = document.createElement("link");
+    mapStylePreload.rel = "preload";
+    mapStylePreload.as = "fetch";
+    mapStylePreload.href = DEFAULT_TILE_STYLE.styleUrl;
+    mapStylePreload.crossOrigin = "anonymous";
+    mapStylePreload.setAttribute("fetchpriority", "high");
+    mapStylePreload.dataset.entryMapStylePreload = "true";
+    document.head.appendChild(mapStylePreload);
+  }
+
+  if (!document.querySelector("link[data-entry-map-tilejson-preload]")) {
+    const tileJsonPreload = document.createElement("link");
+    tileJsonPreload.rel = "preload";
+    tileJsonPreload.as = "fetch";
+    tileJsonPreload.href = OPENFREEMAP_TILEJSON_URL;
+    tileJsonPreload.crossOrigin = "anonymous";
+    tileJsonPreload.setAttribute("fetchpriority", "high");
+    tileJsonPreload.dataset.entryMapTilejsonPreload = "true";
+    document.head.appendChild(tileJsonPreload);
+  }
 }
 
 // Critical path: render the app before starting non-critical services.
