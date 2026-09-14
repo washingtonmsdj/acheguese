@@ -1,7 +1,6 @@
 import { lazy, Suspense, useEffect } from "react";
 import type { Location } from "@/core/location/types";
 import type { ResolvedTerritory } from "@/core/routing/hooks/useResolveTerritoryFromUrl";
-import { DEFAULT_TILE_STYLE } from "@/shared/config/mapDefaults";
 import {
   TerritoryEntryMapArrival,
   type TerritoryEntryArrivalStage,
@@ -19,20 +18,6 @@ const loadTerritoryEntryMapRuntime = async () => {
   return runtimeModule;
 };
 const LazyTerritoryEntryMapRuntime = lazy(loadTerritoryEntryMapRuntime);
-
-function preloadEntryMapStyle(): void {
-  if (typeof document === "undefined") return;
-  if (document.querySelector("link[data-entry-map-style-preload]")) return;
-
-  const link = document.createElement("link");
-  link.rel = "preload";
-  link.as = "fetch";
-  link.href = DEFAULT_TILE_STYLE.styleUrl;
-  link.crossOrigin = "anonymous";
-  link.setAttribute("fetchpriority", "high");
-  link.dataset.entryMapStylePreload = "true";
-  document.head.appendChild(link);
-}
 
 function getResolvedLocations(
   resolved: ResolvedTerritory | null | undefined,
@@ -173,12 +158,11 @@ export default function TerritoryEntryMap({
     resolvedTerritory ?? (city ? { kind: "location" as const, location: city } : null);
 
   useEffect(() => {
-    preloadEntryMapStyle();
     preconnectOfficialBoundarySources(preloadResolved);
 
-    // Boundary starts after the first paint. The React map runtime and the
-    // MapLibre engine/worker/CSS already started together from the lazy loader
-    // during this component's first render.
+    // Boundary starts after the first paint. The map style preload is already
+    // in main.tsx before React renders, while the React runtime and MapLibre
+    // engine/worker/CSS start together from the lazy loader on first render.
     preloadEntryOfficialBoundary(preloadResolved);
   }, [preloadResolved]);
 
