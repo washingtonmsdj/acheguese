@@ -1,4 +1,5 @@
 import { useState, useCallback, useEffect, useRef } from "react";
+import { GEOLOCATION_RUNTIME } from "@/shared/config/geolocation";
 import { logger } from "@/shared/utils/logger";
 
 export interface GeolocationCoords {
@@ -32,8 +33,6 @@ interface RequestLocationOptions {
   useCache?: boolean;
 }
 
-const CACHE_KEY = "robust_geolocation_cache_v1";
-
 function isPermissionDeniedError(error: unknown): boolean {
   const errorLike = error as { code?: unknown; message?: unknown } | null;
   const message = String(errorLike?.message ?? "").toLowerCase();
@@ -45,14 +44,49 @@ function isPermissionDeniedError(error: unknown): boolean {
   );
 }
 
+function hasValidCoordinates(
+  coords: Pick<GeolocationCoords, "latitude" | "longitude">,
+): boolean {
+  return (
+    Number.isFinite(coords.latitude) &&
+    Number.isFinite(coords.longitude) &&
+    coords.latitude >= -90 &&
+    coords.latitude <= 90 &&
+    coords.longitude >= -180 &&
+    coords.longitude <= 180
+  );
+}
+
+function toGeolocationCoords(position: GeolocationPosition): GeolocationCoords {
+  return {
+    latitude: position.coords.latitude,
+    longitude: position.coords.longitude,
+    accuracy: position.coords.accuracy,
+    altitude: position.coords.altitude,
+    altitudeAccuracy: position.coords.altitudeAccuracy,
+    heading: position.coords.heading,
+    speed: position.coords.speed,
+    timestamp: position.timestamp || Date.now(),
+  };
+}
+
 function readCache(): GeolocationCoords | null {
   try {
-    const raw = localStorage.getItem(CACHE_KEY);
+    const raw = localStorage.getItem(GEOLOCATION_RUNTIME.cacheKey);
     if (!raw) return null;
+
     const parsed = JSON.parse(raw) as GeolocationCoords;
-    if (!parsed?.latitude || !parsed?.longitude) return null;
+    if (
+      !parsed ||
+      !hasValidCoordinates(parsed) ||
+      !Number.isFinite(parsed.timestamp) ||
+      !Number.isFinite(parsed.accuracy)
+    ) {
+      return null;
+    }
+
     const ageMs = Date.now() - parsed.timestamp;
-    if (ageMs > 15 * 60 * 1000) return null;
+    if (ageMs < 0 || ageMs > GEOLOCATION_RUNTIME.cacheTtlMs) return null;
     return parsed;
   } catch {
     return null;
@@ -60,17 +94,19 @@ function readCache(): GeolocationCoords | null {
 }
 
 function writeCache(coords: GeolocationCoords): void {
+  if (!hasValidCoordinates(coords)) return;
+
   try {
-    localStorage.setItem(CACHE_KEY, JSON.stringify(coords));
+    localStorage.setItem(GEOLOCATION_RUNTIME.cacheKey, JSON.stringify(coords));
   } catch {
-    // ignore cache failures
+    // Cache is an optimization only; storage failures must not block GPS usage.
   }
 }
 
 export function useRobustGeolocation(options: UseRobustGeolocationOptions = {}) {
   const {
     watch = false,
-    timeout = 15000,
+    timeout = GEOLOCATION_RUNTIME.requestTimeoutMs,
     useCache = true,
     onSuccess,
     onError,
@@ -128,21 +164,11 @@ export function useRobustGeolocation(options: UseRobustGeolocationOptions = {}) 
           navigator.geolocation.getCurrentPosition(resolve, reject, {
             enableHighAccuracy: true,
             timeout,
-            maximumAge: 10000,
+            maximumAge: GEOLOCATION_RUNTIME.requestMaximumAgeMs,
           });
         });
 
-        const coords: GeolocationCoords = {
-          latitude: position.coords.latitude,
-          longitude: position.coords.longitude,
-          accuracy: position.coords.accuracy,
-          altitude: position.coords.altitude,
-          altitudeAccuracy: position.coords.altitudeAccuracy,
-          heading: position.coords.heading,
-          speed: position.coords.speed,
-          timestamp: position.timestamp || Date.now(),
-        };
-
+        const coords = toGeolocationCoords(position);
         writeCache(coords);
         setState({
           coords,
@@ -154,16 +180,19 @@ export function useRobustGeolocation(options: UseRobustGeolocationOptions = {}) 
         onSuccessRef.current?.(coords);
       } catch (error: unknown) {
         const msg = error instanceof Error ? error.message : "Nao foi possivel obter localizacao.";
-        if (isPermissionDeniedError(error)) {
+        const permissionDenied = isPermissionDeniedError(error);
+
+        if (permissionDenied) {
           logger.info("[useRobustGeolocation] requestLocation denied by user", { msg });
         } else {
           logger.warn("[useRobustGeolocation] requestLocation failed", { msg });
         }
+
         setState((prev) => ({
           ...prev,
           loading: false,
           error: msg,
-          permissionState: "denied",
+          permissionState: permissionDenied ? "denied" : prev.permissionState,
         }));
         onErrorRef.current?.(msg);
       } finally {
@@ -175,18 +204,10 @@ export function useRobustGeolocation(options: UseRobustGeolocationOptions = {}) 
 
   const startWatching = useCallback(() => {
     if (!("geolocation" in navigator) || watchIdRef.current !== null) return;
+
     watchIdRef.current = navigator.geolocation.watchPosition(
       (position) => {
-        const coords: GeolocationCoords = {
-          latitude: position.coords.latitude,
-          longitude: position.coords.longitude,
-          accuracy: position.coords.accuracy,
-          altitude: position.coords.altitude,
-          altitudeAccuracy: position.coords.altitudeAccuracy,
-          heading: position.coords.heading,
-          speed: position.coords.speed,
-          timestamp: position.timestamp || Date.now(),
-        };
+        const coords = toGeolocationCoords(position);
         writeCache(coords);
         setState((prev) => ({
           ...prev,
@@ -199,15 +220,26 @@ export function useRobustGeolocation(options: UseRobustGeolocationOptions = {}) 
       },
       (error) => {
         const msg = error?.message ?? "Falha ao acompanhar localizacao.";
-        if (isPermissionDeniedError(error)) {
+        const permissionDenied = isPermissionDeniedError(error);
+
+        if (permissionDenied) {
           logger.info("[useRobustGeolocation] watch denied by user", { msg });
         } else {
           logger.warn("[useRobustGeolocation] watch failed", { msg });
         }
-        setState((prev) => ({ ...prev, error: msg, permissionState: "denied" }));
+
+        setState((prev) => ({
+          ...prev,
+          error: msg,
+          permissionState: permissionDenied ? "denied" : prev.permissionState,
+        }));
         onErrorRef.current?.(msg);
       },
-      { enableHighAccuracy: true, timeout, maximumAge: 5000 },
+      {
+        enableHighAccuracy: true,
+        timeout,
+        maximumAge: GEOLOCATION_RUNTIME.watchMaximumAgeMs,
+      },
     );
   }, [timeout]);
 
@@ -236,7 +268,7 @@ export function useRobustGeolocation(options: UseRobustGeolocationOptions = {}) 
   }, []);
 
   const clearCache = useCallback(() => {
-    localStorage.removeItem(CACHE_KEY);
+    localStorage.removeItem(GEOLOCATION_RUNTIME.cacheKey);
   }, []);
 
   useEffect(() => {
@@ -251,6 +283,8 @@ export function useRobustGeolocation(options: UseRobustGeolocationOptions = {}) 
     stopWatching,
     checkPermission,
     clearCache,
-    isHighAccuracy: state.coords ? state.coords.accuracy < 100 : false,
+    isHighAccuracy: state.coords
+      ? state.coords.accuracy < GEOLOCATION_RUNTIME.highAccuracyThresholdMeters
+      : false,
   };
 }
