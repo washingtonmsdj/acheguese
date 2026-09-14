@@ -60,6 +60,7 @@ export function AppLayoutSidebar() {
         pathSegments.length >= 3 &&
         pathSegments.length <= 4));
   const isAccountRoute = pathSegments[0] === "conta";
+  const isAccountOverview = pathname === "/conta";
   const conceptAccountPreview =
     import.meta.env.DEV &&
     typeof window !== "undefined" &&
@@ -150,11 +151,18 @@ export function AppLayoutSidebar() {
     );
   }
 
-  // Se deve ocultar a sidebar global, renderizar apenas o conteúdo
+  // Superfícies Territory Vivo. A área /conta possui shell próprio no desktop;
+  // no mobile, apenas a visão geral conserva a navegação inferior global.
   if (usesTerritoryVivoShell) {
     return (
       <>
-        <div className="territory-vivo w-full md:pl-[4.5rem] xl:pl-44">
+        <div
+          className={
+            isAccountRoute
+              ? "territory-vivo w-full"
+              : "territory-vivo w-full md:pl-[4.5rem] xl:pl-44"
+          }
+        >
           <div
             id="main-content"
             className="territory-vivo-safe-bottom min-h-[100dvh] min-w-0 max-md:h-[100dvh] max-md:overflow-y-auto max-md:scrollbar-hide"
@@ -165,8 +173,12 @@ export function AppLayoutSidebar() {
           </div>
         </div>
         <TerritoryAdaptiveNavigation
-          hideMobile={isProfessionalPublicRoute || conceptAccountPreview}
-          hideDesktop={conceptAccountPreview}
+          hideMobile={
+            isProfessionalPublicRoute ||
+            conceptAccountPreview ||
+            (isAccountRoute && !isAccountOverview)
+          }
+          hideDesktop={conceptAccountPreview || isAccountRoute}
         />
       </>
     );
