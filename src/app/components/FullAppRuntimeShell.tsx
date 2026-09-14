@@ -1,4 +1,4 @@
-import { lazy, Suspense } from "react";
+import { lazy, Suspense, useEffect } from "react";
 import { QueryClientProvider } from "@tanstack/react-query";
 import { HelmetProvider } from "react-helmet-async";
 
@@ -7,6 +7,7 @@ import { queryClient } from "@/shared/utils/queryClient";
 import { FullScreenLoader } from "@/shared/components/loading/PageLoader";
 import { AccessibilityProvider } from "@/shared/components/accessibility/AccessibilityProvider";
 import { SkipToContent } from "@/shared/components/accessibility/SkipToContent";
+import { scheduleBrowserIdleWork } from "@/shared/utils/browserIdle";
 
 const GlobalOverlays = lazy(() =>
   import("@/app/components/GlobalOverlays").then((module) => ({
@@ -37,6 +38,27 @@ interface FullAppRuntimeShellProps {
 export default function FullAppRuntimeShell({
   shouldCheckAuthRedirect,
 }: FullAppRuntimeShellProps) {
+  useEffect(() =>
+    scheduleBrowserIdleWork(
+      () => {
+        void import("@/core/authorization/services/CapabilityPreviewService").then(
+          ({ CapabilityPreviewService }) => CapabilityPreviewService.initialize(),
+        );
+
+        void import("@/integrations/maps").then(({ setupDefaultProviders }) => {
+          setupDefaultProviders();
+        });
+
+        void import("@/core/maps/config/maplibreWorkerRuntime").then(
+          ({ ensureMapLibreWorkerConfigured }) => {
+            ensureMapLibreWorkerConfigured();
+          },
+        );
+      },
+      { timeoutMs: 2200, fallbackDelayMs: 900 },
+    ),
+  []);
+
   return (
     <HelmetProvider>
       <SEO />
