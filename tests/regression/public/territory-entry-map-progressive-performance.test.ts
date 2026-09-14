@@ -27,7 +27,11 @@ describe("territory entry progressive map performance", () => {
 
   it("does not replay the arrival skeleton after a terminal timeout recovers late", () => {
     const runtime = read("src/app/components/territory-vivo/TerritoryEntryMapRuntime.tsx");
+    const readiness = read("src/shared/utils/publicRootReadiness.ts");
 
+    expect(readiness).toContain("PUBLIC_ROOT_MAP_TERMINAL_TIMEOUT_MS = 6000");
+    expect(runtime).toContain("PUBLIC_ROOT_MAP_TERMINAL_TIMEOUT_MS");
+    expect(runtime).not.toContain("const MAP_TIMEOUT_MS = 6000");
     expect(runtime).toContain("const mapTimedOutRef = useRef(false)");
     expect(runtime).toContain("mapTimedOutRef.current = true");
     expect(runtime).toContain("if (mapTimedOutRef.current) {");
