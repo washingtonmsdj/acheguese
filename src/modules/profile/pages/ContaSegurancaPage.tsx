@@ -131,6 +131,7 @@ export default function ContaSegurancaPage() {
     hasGoogle: googleLinked,
     loading: providersLoading,
     error: providersError,
+    isResolved: providersResolved,
     refresh: refreshProviders,
   } = useLinkedAuthProviders();
   const {
@@ -518,11 +519,26 @@ export default function ContaSegurancaPage() {
   }
 
   if (accessView) {
-    const googleStatusLabel = providersLoading ? "Consultando" : googleLinked ? "Conectado" : googleAuthAvailable ? "Disponível" : "Indisponível";
-    const googleStatusClass = googleLinked ? "bg-emerald-100 text-emerald-800" : googleAuthAvailable ? "bg-territory-brand/10 text-territory-brand" : "bg-territory-raised text-territory-muted";
+    const providersUnknown = providersError !== null || !providersResolved;
+    const googleStatusLabel = providersLoading
+      ? "Consultando"
+      : providersUnknown
+        ? "Não confirmado"
+        : googleLinked
+          ? "Conectado"
+          : googleAuthAvailable
+            ? "Disponível"
+            : "Indisponível";
+    const googleStatusClass = providersUnknown
+      ? "bg-territory-raised text-territory-muted"
+      : googleLinked
+        ? "bg-emerald-100 text-emerald-800"
+        : googleAuthAvailable
+          ? "bg-territory-brand/10 text-territory-brand"
+          : "bg-territory-raised text-territory-muted";
     const googleDescription = providersLoading
       ? "Consultando os métodos vinculados à sua conta..."
-      : providersError
+      : providersUnknown
         ? "Não foi possível confirmar agora se uma identidade Google está vinculada."
         : googleLinked
           ? "Uma identidade Google está vinculada a esta conta."
