@@ -1,21 +1,26 @@
-const PENDING_AUTH_RETURN_KEY = "auth.pending-return-path";
-
-function canUseSessionStorage(): boolean {
-  return typeof window !== "undefined" && typeof window.sessionStorage !== "undefined";
-}
+import {
+  AUTH_FLOW_STORAGE_KEYS,
+  AUTH_FLOW_TTL_MS,
+} from "@/core/auth/constants/authFlow";
+import {
+  clearAuthFlowSessionValue,
+  getAuthFlowSessionValue,
+  setAuthFlowSessionValue,
+} from "@/core/auth/utils/authFlowStorage";
 
 /** O chamador deve fornecer somente um caminho interno já validado. */
 export function setPendingAuthReturn(path: string): void {
-  if (!canUseSessionStorage()) return;
-  window.sessionStorage.setItem(PENDING_AUTH_RETURN_KEY, path);
+  setAuthFlowSessionValue(
+    AUTH_FLOW_STORAGE_KEYS.pendingReturn,
+    path,
+    AUTH_FLOW_TTL_MS.pendingReturn,
+  );
 }
 
 export function getPendingAuthReturn(): string | null {
-  if (!canUseSessionStorage()) return null;
-  return window.sessionStorage.getItem(PENDING_AUTH_RETURN_KEY);
+  return getAuthFlowSessionValue(AUTH_FLOW_STORAGE_KEYS.pendingReturn);
 }
 
 export function clearPendingAuthReturn(): void {
-  if (!canUseSessionStorage()) return;
-  window.sessionStorage.removeItem(PENDING_AUTH_RETURN_KEY);
+  clearAuthFlowSessionValue(AUTH_FLOW_STORAGE_KEYS.pendingReturn);
 }
