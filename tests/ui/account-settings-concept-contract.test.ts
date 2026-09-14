@@ -151,6 +151,9 @@ describe("account settings concept contract", () => {
     expect(security).toContain("factors === null");
     expect(security).toContain("disable(factor.id)");
     expect(security).toContain("signOutOtherSessions");
+    expect(security).toContain("Este dispositivo");
+    expect(security).toContain("Sessão atual");
+    expect(security).toContain("A lista detalhada de outros dispositivos ainda não está disponível.");
     expect(auth).toContain('signOut({ scope: "others" })');
     expect(auth).toContain("static async updateEmail");
     expect(identities).toContain("supabase.auth.getUser()");
@@ -162,6 +165,7 @@ describe("account settings concept contract", () => {
     expect(passwordForm).toContain('autoComplete="new-password"');
     expect(passwordForm).not.toContain('id="current-password"');
     expect(passwordForm).not.toContain('autoComplete="current-password"');
+    expect(passwordForm).toContain("Crie uma senha forte e que você não use em outros serviços.");
     expect(security).toContain("updatePassword(data.newPassword)");
   });
 
@@ -229,7 +233,7 @@ describe("account settings concept contract", () => {
     expect(privacy).toContain("!deletionStatusLoading && !deletionStatusError");
     expect(privacy).toContain("event.preventDefault()");
     expect(security).toContain("!isMFAStatusResolved");
-    expect(security).toContain("Nenhuma nova configuração será criada enquanto a autoridade de fatores estiver indisponível.");
+    expect(security).toContain("Nenhuma nova configuração será criada enquanto o serviço de autenticação estiver indisponível.");
   });
 
   it("removes the duplicate legacy account-data dialog owner", () => {
