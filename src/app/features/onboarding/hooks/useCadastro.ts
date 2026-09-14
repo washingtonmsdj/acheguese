@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 
+import { AUTH_PATHS } from "@/core/auth/constants/authFlow";
 import { AuthService } from "@/core/auth/services/AuthService";
 import { getAuthErrorMessage } from "@/core/auth/utils/authMessages";
 import { checkPasswordCompromise } from "@/core/auth/utils/compromisedPassword";
@@ -26,7 +27,7 @@ const defaultValues: CadastroFormValues = {
   username: "",
   email: "",
   password: "",
-  termsAccepted: false as unknown as true,
+  termsAccepted: false,
 };
 
 function getUsernameAvailabilityMessage(
@@ -49,8 +50,8 @@ function getUsernameAvailabilityMessage(
 /**
  * SSOT do cadastro inicial.
  *
- * A conta nasce com o perfil pessoal. Cidade/bairro deixam de bloquear a criação
- * da conta e passam a ser uma melhoria opcional de primeiro acesso.
+ * A conta nasce com o perfil pessoal. Cidade/bairro não pertencem a esta
+ * fronteira: são melhoria opcional do primeiro acesso/ProfileService.
  */
 export function useCadastroForm(requestedRedirect = "/") {
   const navigate = useNavigate();
@@ -72,8 +73,8 @@ export function useCadastroForm(requestedRedirect = "/") {
     form.clearErrors("root.serverError");
 
     try {
-      // A checagem visual do formulário melhora a UX, mas esta verificação
-      // canônica no submit protege qualquer outro consumidor deste hook.
+      // A checagem visual melhora a UX; esta checagem autoritativa no submit
+      // protege qualquer consumidor futuro deste hook.
       const availability = await PublicIdentityService.checkAvailability({
         identifier: values.username,
         entityType: "profile",
@@ -112,17 +113,16 @@ export function useCadastroForm(requestedRedirect = "/") {
         email: values.email,
         password: values.password,
         name: values.name,
-        display_name: values.name,
         handle: values.username,
         termsAcceptance: {
-          accepted: true,
+          accepted: values.termsAccepted,
           version: TERMS_OF_SERVICE_VERSION,
         },
       });
 
       setPendingSignupEmail(values.email);
       setPendingSignupRedirect(redirectTo);
-      navigate("/cadastro/confirmacao", {
+      navigate(AUTH_PATHS.signupConfirmation, {
         state: { email: values.email, redirectTo },
       });
     } catch (error: unknown) {
