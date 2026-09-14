@@ -23,11 +23,11 @@ import {
   cancelGoogleLogin,
   completeEmailConfirmationLoginJourney,
   completeStandardLoginJourney,
+  getSignupJourneyReturnTarget,
   prepareGoogleLogin,
 } from "@/core/auth/utils/authJourney";
 import { getAuthErrorMessage } from "@/core/auth/utils/authMessages";
 import { getAuthReturnContext } from "@/core/auth/utils/authReturnContext";
-import { getPendingSignupRedirect } from "@/core/auth/utils/pendingSignup";
 import { InlineFieldError } from "@/shared/components/ui/InlineFieldError";
 import { Input } from "@/shared/components/ui/input";
 import { Label } from "@/shared/components/ui/label";
@@ -70,7 +70,7 @@ export default function LoginPage() {
     const stateRedirect = (location.state as LoginLocationState)?.redirectTo;
     const queryRedirect = searchParams.get(AUTH_QUERY_KEYS.redirect);
     const pendingSignupRedirect = isEmailConfirmed
-      ? getPendingSignupRedirect()
+      ? getSignupJourneyReturnTarget()
       : null;
     return resolveSafeInternalPath(
       stateRedirect ?? queryRedirect ?? pendingSignupRedirect,
