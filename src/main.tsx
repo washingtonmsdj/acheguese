@@ -24,34 +24,24 @@ if (import.meta.env.DEV && "serviceWorker" in navigator) {
 const root = createRoot(document.getElementById("root")!);
 root.render(<App />);
 
-// Defer one frame to keep the first paint responsive.
-deferFrame(() => {
+const isPublicRootAtBoot = window.location.pathname === "/";
+
+// Keep measurements off the root's first paint. Other routes can start them
+// earlier because their runtime already carries a larger application shell.
+const scheduleVitals = isPublicRootAtBoot ? deferLoad : deferFrame;
+scheduleVitals(() => {
   import("./shared/utils/webVitals.ts").then(({ initWebVitals }) => {
     initWebVitals();
   });
 });
 
-// Services that are useful but should not block page startup.
-deferIdle(() => {
+// Error reporting is useful on every surface, but does not need to compete
+// with the community-first root for first paint, map startup or interaction.
+const scheduleSentry = isPublicRootAtBoot ? deferLoad : deferIdle;
+scheduleSentry(() => {
   import("./shared/config/sentry.config.ts").then(({ initializeSentry }) => {
     initializeSentry();
   });
-
-  import("@/core/authorization/services/CapabilityPreviewService").then(({ CapabilityPreviewService }) => {
-    CapabilityPreviewService.initialize();
-  });
-
-  import("@/integrations/maps").then(({ setupDefaultProviders }) => {
-    setupDefaultProviders();
-  });
-
-  // Compatibilidade para rotas antigas que ainda montam o adapter pesado
-  // diretamente. A entrada pública usa o owner lazy e não depende deste warmup.
-  import("@/core/maps/config/maplibreWorkerRuntime").then(
-    ({ ensureMapLibreWorkerConfigured }) => {
-      ensureMapLibreWorkerConfigured();
-    },
-  );
 });
 
 deferLoad(() => {
