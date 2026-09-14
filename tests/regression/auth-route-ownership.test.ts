@@ -46,6 +46,37 @@ describe("auth/public route ownership", () => {
     expect(appLayout).not.toContain("RootRouteEntry");
   });
 
+  it("keeps root-owned screens out of the AppLayout lazy barrel", () => {
+    const lazyImports = read("src/app/routes/lazyImports.ts");
+
+    for (const rootOwnedExport of [
+      "LoginPage",
+      "CadastroPage",
+      "CadastroConfirmacaoPage",
+      "ResetPasswordPage",
+      "AboutPage",
+      "ContactPage",
+      "SplashPage",
+      "OnboardingPage",
+      "StatusPage",
+      "QrResolverPage",
+      "EmpresaCatalogoPublicoPage",
+      "PremiumBusinessSiteRoute",
+      "PremiumBusinessHomePage",
+      "PremiumBusinessMenuPage",
+      "PremiumBusinessProductPage",
+      "PremiumBusinessCartPage",
+      "PremiumBusinessCheckoutPage",
+    ]) {
+      expect(
+        lazyImports,
+        `${rootOwnedExport} belongs to AppRoutes and must not be redeclared in lazyImports`,
+      ).not.toContain(`export const ${rootOwnedExport}`);
+    }
+
+    expect(lazyImports).toContain("Rotas publicas sem layout pertencem diretamente a AppRoutes");
+  });
+
   it("does not let the root tree permanently pause launch-gated event routes", () => {
     const root = read("src/app/routes/AppRoutes.tsx");
     const appLayout = read("src/app/routes/sections/AppLayoutRoutes.tsx");
