@@ -59,7 +59,9 @@ export const OrdersPage = lazy(() =>
 export const OrderDetailsPage = lazy(() =>
   import("@/modules/business/gastronomy/pages/OrderDetailsPage"),
 );
-export const DeliveryManagementPage = createLaunchPausedRoute("Entregas");
+export const DeliveryManagementPage = lazy(() =>
+  import("@/modules/mobility/delivery/pages/DeliveryManagementPage"),
+);
 export const AnalyticsPage = createLaunchPausedRoute("Analytics");
 export const GastronomyPromotionsPage = createLaunchPausedRoute("Promocoes");
 
