@@ -275,6 +275,23 @@ export default function NotificationPreferencesPage() {
     );
   };
 
+  const saveButtonLabel = saveMutation.isPending
+    ? "Salvando..."
+    : isDirty
+      ? "Salvar preferências"
+      : "Preferências salvas";
+
+  const renderSaveButton = (className: string) => (
+    <Button
+      onClick={() => saveMutation.mutate(preferences)}
+      disabled={saveMutation.isPending || quietHoursInvalid || !isDirty}
+      className={className}
+    >
+      {saveMutation.isPending ? <Loader2 className="mr-2 h-4 w-4 animate-spin" aria-hidden="true" /> : null}
+      {saveButtonLabel}
+    </Button>
+  );
+
   return (
     <>
       <Helmet><title>Notificações | Achegue-se</title></Helmet>
@@ -286,8 +303,8 @@ export default function NotificationPreferencesPage() {
         desktopDescription="Escolha como e sobre o que deseja ser notificado."
       >
         <div className="grid gap-4 lg:grid-cols-2 lg:items-start">
-          <div className="grid gap-4">
-            <Surface className="px-4 py-3 sm:px-5 sm:py-4">
+          <div className="grid gap-4 lg:block lg:rounded-2xl lg:border lg:border-territory-border lg:bg-territory-surface lg:px-5 lg:py-4">
+            <section className="rounded-2xl border border-territory-border bg-territory-surface px-4 py-3 sm:px-5 sm:py-4 lg:rounded-none lg:border-0 lg:bg-transparent lg:px-0 lg:py-0">
               <h2 className="font-heading text-sm font-bold text-territory-ink lg:text-base">Canais<span className="hidden lg:inline"> de notificação</span></h2>
               <div className="mt-1 lg:mt-2">
                 <PreferenceRow
@@ -307,9 +324,9 @@ export default function NotificationPreferencesPage() {
                   onCheckedChange={(checked) => setPreferences({ ...preferences, inapp_enabled: checked })}
                 />
               </div>
-            </Surface>
+            </section>
 
-            <Surface className="p-4 sm:p-5">
+            <section className="rounded-2xl border border-territory-border bg-territory-surface p-4 sm:p-5 lg:mt-2 lg:rounded-none lg:border-0 lg:border-t lg:bg-transparent lg:px-0 lg:pb-0 lg:pt-3">
               <div className="flex items-start gap-3">
                 <span className="flex h-9 w-9 shrink-0 items-center justify-center text-territory-ink lg:rounded-xl lg:bg-territory-brand/10 lg:text-territory-brand">
                   <MonitorSmartphone className="h-5 w-5" aria-hidden="true" />
@@ -320,18 +337,26 @@ export default function NotificationPreferencesPage() {
                 </div>
               </div>
 
-              <div className="mt-2 border-t border-territory-border pt-1">
-                <PreferenceRow
-                  id="push"
-                  icon={<Bell className="h-5 w-5" aria-hidden="true" />}
-                  label="Receber push"
-                  description="Ativa ou desativa avisos push para a sua conta."
-                  checked={preferences.push_enabled}
-                  onCheckedChange={(checked) => setPreferences({ ...preferences, push_enabled: checked })}
-                />
-              </div>
               <div className="mt-3"><PushNotificationSettings /></div>
-            </Surface>
+
+              <details className="group mt-3 rounded-xl border border-territory-border bg-territory-surface">
+                <summary className="flex min-h-10 cursor-pointer list-none items-center gap-2 px-3 py-2 text-xs font-semibold text-territory-brand focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-territory-brand [&::-webkit-details-marker]:hidden">
+                  <Bell className="h-4 w-4 shrink-0" aria-hidden="true" />
+                  <span className="flex-1">Preferência de push da conta</span>
+                  <ChevronDown className="h-4 w-4 shrink-0 text-territory-muted transition-transform group-open:rotate-180" aria-hidden="true" />
+                </summary>
+                <div className="border-t border-territory-border px-3">
+                  <PreferenceRow
+                    id="push"
+                    icon={<Bell className="h-5 w-5" aria-hidden="true" />}
+                    label="Receber push"
+                    description="Ativa ou desativa avisos push para a sua conta."
+                    checked={preferences.push_enabled}
+                    onCheckedChange={(checked) => setPreferences({ ...preferences, push_enabled: checked })}
+                  />
+                </div>
+              </details>
+            </section>
           </div>
 
           <Surface className="px-4 py-3 sm:px-5 sm:py-4">
@@ -389,6 +414,7 @@ export default function NotificationPreferencesPage() {
             </div>
           </details>
           <p className="mt-1 px-1 text-xs text-territory-muted">Horário local do dispositivo.</p>
+          {renderSaveButton("mt-4 min-h-12 w-full bg-territory-sun text-territory-ink hover:bg-territory-sun/90 disabled:bg-territory-raised disabled:text-territory-muted")}
         </div>
 
         <Surface className="mt-4 hidden p-4 sm:p-5 lg:block">
@@ -429,14 +455,9 @@ export default function NotificationPreferencesPage() {
           </div>
         </details>
 
-        <Button
-          onClick={() => saveMutation.mutate(preferences)}
-          disabled={saveMutation.isPending || quietHoursInvalid || !isDirty}
-          className="mt-4 min-h-12 w-full bg-territory-sun text-territory-ink hover:bg-territory-sun/90 disabled:bg-territory-raised disabled:text-territory-muted lg:ml-auto lg:flex lg:w-auto lg:min-w-44"
-        >
-          {saveMutation.isPending ? <Loader2 className="mr-2 h-4 w-4 animate-spin" aria-hidden="true" /> : null}
-          {saveMutation.isPending ? "Salvando..." : isDirty ? "Salvar preferências" : "Preferências salvas"}
-        </Button>
+        <div className="hidden lg:block">
+          {renderSaveButton("mt-4 ml-auto flex min-h-12 w-auto min-w-44 bg-territory-sun text-territory-ink hover:bg-territory-sun/90 disabled:bg-territory-raised disabled:text-territory-muted")}
+        </div>
       </AccountSettingsShell>
     </>
   );
