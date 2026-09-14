@@ -17,4 +17,18 @@ describe("territory entry progressive map performance", () => {
     expect(runtime).not.toContain("setMapReady(false)");
     expect(runtime).toContain('mapReady ? "opacity-100" : "opacity-0"');
   });
+
+  it("preloads the entry runtime, MapLibre engine and OpenFreeMap style", () => {
+    const wrapper = read("src/app/components/territory-vivo/TerritoryEntryMap.tsx");
+    const runtime = read("src/app/components/territory-vivo/TerritoryEntryMapRuntime.tsx");
+    const lazyAdapter = read("src/core/maps/components/v3/LazyMapLibreAdapter.tsx");
+
+    expect(wrapper).toContain("loadTerritoryEntryMapRuntime");
+    expect(wrapper).toContain("preloadEntryMapStyle");
+    expect(wrapper).toContain('link.rel = "preload"');
+    expect(wrapper).toContain('link.as = "fetch"');
+    expect(wrapper).toContain("preloadTerritoryEntryMapEngine");
+    expect(runtime).toContain("preloadMapLibreAdapterRuntime");
+    expect(lazyAdapter).toContain("preloadMapLibreAdapterRuntime");
+  });
 });
