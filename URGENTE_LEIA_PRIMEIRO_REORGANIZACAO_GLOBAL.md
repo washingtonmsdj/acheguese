@@ -9,7 +9,7 @@
 1. `docs/README.md` — índice documental canônico;
 2. `docs/03-architecture/CURRENT_RULES.md` — regras arquiteturais vigentes;
 3. `docs/08-roadmap/EXECUCAO_MAIN_ONLY.md` — plano operacional ativo;
-4. `docs/08-roadmap/checkpoints/2026-09-14-g180-community-launch-projection-and-waitlist-territory-ssot.md` — checkpoint mais recente desta linha;
+4. `docs/08-roadmap/checkpoints/2026-09-14-g181-root-bundle-adsense-accessibility-bootstrap-hardening.md` — checkpoint mais recente desta linha;
 5. `SECURITY.md` — segurança e gates de release.
 
 ## Regras que não podem ser perdidas
@@ -19,6 +19,7 @@
 - remover somente legado/duplicação/bridge/owner substituído depois de censar callers, preservar capacidade e provar o substituto;
 - corrigir causa raiz; não recriar wrappers, aliases, writers paralelos, hardcodes ou paliativos apenas para fazer build/test passar;
 - otimização reutilizável de mapas pertence aos owners canônicos descritos em `CURRENT_RULES.md`; não copiar loaders/CSS/workers/providers por página;
+- análise de bundle da `/` deve preservar runtime completo de MapLibre, boundary oficial, app roteado e Sentry fora dos closures críticos definidos no relatório de build;
 - leitura HTTP/cache/abort de FeatureServer oficial pertence a `officialFeatureServerBoundary.ts`; `BoundaryService` não cria segundo parser/cache/fetch da mesma fonte;
 - Browser Geolocation pertence a `src/shared/services/GeolocationService.ts`; não chamar `navigator.geolocation` diretamente em páginas/componentes/hooks de domínio;
 - “usar minha localização” exige GPS preciso sem fallback IP silencioso; coordenada `0` continua válida;
@@ -29,7 +30,8 @@
 - waitlist envia slug/path territorial canônico da opção selecionada; label visual não é transformado em identidade por `slugify` no submit;
 - nome geográfico canônico não é encurtado para satisfazer concept; rótulo/artigo público explícito podem existir em metadata de apresentação;
 - `src/app/config/launchScope.ts` é o owner do rollout público e do `PRELAUNCH_LOCKDOWN_ENABLED`; consumidores não reinterpretam `VITE_PRELAUNCH_LOCKDOWN`;
-- preferências persistidas de acessibilidade pertencem a `src/shared/accessibility/preferences.ts`; bootstrap lean e Provider usam o mesmo owner sem duplicar chaves/parser/classes;
+- preferências persistidas de acessibilidade pertencem a `src/shared/accessibility/preferences.ts`; classes são aplicadas no `documentElement` para escalar `rem` sem achatar a hierarquia tipográfica;
+- `src/shared/components/advertising/AdSense.tsx` é o owner do client/script AdSense; `main.tsx` não carrega provider global nem contém publisher ID hardcoded;
 - Plus Jakarta Sans é a família aprovada; `tailwind.config.ts` é o owner executável do stack e do `--font-heading`/`--font-sans`; peso 800 é permitido onde o concept versionado exige e deve ser carregado de forma real;
 - paths/query keys/classificação de callback de Auth vêm de `authFlow.ts`/`authCallback.ts`; âncora comum não é retorno OAuth;
 - fallback geográfico reutilizável vem de `mapDefaults`; não reintroduzir coordenadas locais quando o SSOT compartilhado atende o caso;
@@ -37,6 +39,7 @@
 - fonte opcional da `/` não volta para `@import` remoto no CSS crítico nem para plugin de build que esconda esse import;
 - timeout final de mapa precisa encerrar estado acessível de carregamento; fallback visual resolvido não permanece `aria-busy=true`;
 - regra exclusiva da `/` só permanece local quando depender de prioridade/UX específica da entrada pública;
+- erro de bootstrap pode carregar observabilidade somente no caminho de falha; Sentry não volta a ser import estático do bootstrap normal;
 - trabalhar na `main` sem force-push e preservar trabalhos concorrentes;
 - GitHub Actions com `steps=[]`/`runner_id=0` é falha de execução do provider, não certificação do source;
 - rate-limit Vercel não é build aprovado nem reprovado;
