@@ -63,15 +63,28 @@ describe("anonymous root bootstrap performance", () => {
     expect(store).not.toContain("constructor()");
   });
 
-  it("renders the public root outside the full app provider tree", () => {
+  it("renders the public root outside router and the full app provider tree", () => {
     const runtime = read("src/app/components/AppRuntime.tsx");
+    const routedRuntime = read("src/app/components/RoutedAppRuntime.tsx");
+    const rootPage = read("src/app/pages/TerritoryEntryPage.tsx");
     const fullShell = read("src/app/components/FullAppRuntimeShell.tsx");
 
     expect(runtime).toContain('import RootRouteEntry from "@/app/routes/RootRouteEntry"');
-    expect(runtime).toContain('import("@/app/components/FullAppRuntimeShell")');
+    expect(runtime).toContain('import("@/app/components/RoutedAppRuntime")');
     expect(runtime).toContain('import("@/app/components/PublicRootOverlays")');
     expect(runtime).toContain("<RootRouteEntry />");
+    expect(runtime).toContain("shouldUseLeanPublicRoot");
     expect(runtime).toContain("scheduleBrowserIdleWork");
+    expect(runtime).not.toContain('from "react-router-dom"');
+    expect(runtime).not.toContain("BrowserRouter");
+
+    expect(rootPage).not.toContain('from "react-router-dom"');
+    expect(rootPage).not.toContain("<Link");
+    expect(rootPage).toContain('href={LAUNCH_URLS.community}');
+
+    expect(routedRuntime).toContain('from "react-router-dom"');
+    expect(routedRuntime).toContain("<BrowserRouter>");
+    expect(routedRuntime).toContain("<FullAppRuntimeShell");
 
     expect(runtime).not.toContain("QueryClientProvider");
     expect(runtime).not.toContain("HelmetProvider");
@@ -105,6 +118,7 @@ describe("anonymous root bootstrap performance", () => {
     expect(runtime).toContain("timeoutMs: 2500");
     expect(runtime).toContain("fallbackDelayMs: 1200");
 
+    expect(overlays).toContain("<BrowserRouter>");
     expect(overlays).toContain("<ConsentBanner />");
     expect(overlays).not.toContain("QueryClientProvider");
     expect(overlays).not.toContain("queryClient");
@@ -120,7 +134,6 @@ describe("anonymous root bootstrap performance", () => {
     expect(html).toContain('rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans');
     expect(html).toContain('rel="preconnect" href="https://tiles.openfreemap.org" crossorigin');
     expect(html).toContain('rel="dns-prefetch" href="//tiles.openfreemap.org"');
-    expect(html).toContain('rel="preconnect" href="https://services6.arcgis.com" crossorigin');
   });
 
   it("keeps router, query and state libraries in separate vendor chunks", () => {
