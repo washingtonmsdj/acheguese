@@ -14,15 +14,23 @@ export interface LastTerritory {
 
 class LastTerritoryStoreClass {
   private current: LastTerritory | null = null;
+  private hydrated = false;
   private listeners: Set<() => void> = new Set();
 
-  constructor() {
+  private hydrate(): void {
+    if (this.hydrated) return;
+    this.hydrated = true;
+
     try {
       const raw = sessionStorage.getItem(STORAGE_KEY);
       if (!raw) return;
 
       const parsed: LastTerritory = JSON.parse(raw);
-      if (parsed.baseUrl && !parsed.baseUrl.startsWith("/br/") && !parsed.baseUrl.startsWith("/local/")) {
+      if (
+        parsed.baseUrl &&
+        !parsed.baseUrl.startsWith("/br/") &&
+        !parsed.baseUrl.startsWith("/local/")
+      ) {
         this.current = parsed;
       } else {
         sessionStorage.removeItem(STORAGE_KEY);
@@ -33,11 +41,21 @@ class LastTerritoryStoreClass {
   }
 
   get(): LastTerritory | null {
+    this.hydrate();
     return this.current;
   }
 
   set(territory: LastTerritory): void {
-    if (this.current?.baseUrl === territory.baseUrl && this.current?.name === territory.name) return;
+    // A gravação explícita é autoritativa; não deixe uma hidratação posterior
+    // sobrescrever o valor recém-escolhido pelo usuário.
+    this.hydrated = true;
+
+    if (
+      this.current?.baseUrl === territory.baseUrl &&
+      this.current?.name === territory.name
+    ) {
+      return;
+    }
 
     this.current = territory;
 
@@ -51,6 +69,7 @@ class LastTerritoryStoreClass {
   }
 
   subscribe(listener: () => void): () => void {
+    this.hydrate();
     this.listeners.add(listener);
     return () => this.listeners.delete(listener);
   }
