@@ -3,6 +3,7 @@ import {
   useEffect,
   useImperativeHandle,
   useRef,
+  useState,
 } from "react";
 import type { Map as MapLibreMap } from "maplibre-gl";
 
@@ -60,6 +61,7 @@ export const MapLibrePassiveRuntime = forwardRef<
   const mapRef = useRef<MapLibreMap | null>(null);
   const styleUrlRef = useRef(styleUrl);
   const fittedTerritoryKeyRef = useRef<string | null>(null);
+  const [mapCreated, setMapCreated] = useState(false);
 
   useImperativeHandle(ref, () => ({
     getMap: () => mapRef.current,
@@ -170,6 +172,7 @@ export const MapLibrePassiveRuntime = forwardRef<
       });
 
       mapRef.current = map;
+      setMapCreated(true);
     })();
 
     return () => {
@@ -183,11 +186,11 @@ export const MapLibrePassiveRuntime = forwardRef<
 
   useEffect(() => {
     const map = mapRef.current;
-    if (!map || styleUrlRef.current === styleUrl) return;
+    if (!mapCreated || !map || styleUrlRef.current === styleUrl) return;
     styleUrlRef.current = styleUrl;
     fittedTerritoryKeyRef.current = null;
     map.setStyle(styleUrl);
-  }, [styleUrl]);
+  }, [mapCreated, styleUrl]);
 
   useEffect(() => {
     fittedTerritoryKeyRef.current = null;
@@ -195,7 +198,7 @@ export const MapLibrePassiveRuntime = forwardRef<
 
   useEffect(() => {
     const map = mapRef.current;
-    if (!map) return;
+    if (!mapCreated || !map) return;
 
     const SOURCE_PREFIX = "territory-source-";
     const FILL_PREFIX = "territory-fill-";
@@ -343,6 +346,7 @@ export const MapLibrePassiveRuntime = forwardRef<
     };
   }, [
     fitTerritoryBounds,
+    mapCreated,
     territoryFitMaxZoom,
     territoryFitPadding,
     territoryPolygons,
