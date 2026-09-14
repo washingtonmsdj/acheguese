@@ -13,6 +13,7 @@ interface TerritoryEntryMapArrivalProps {
   label: string;
   stage?: TerritoryEntryArrivalStage;
   statusText?: string;
+  leaving?: boolean;
 }
 
 const ARRIVAL_STAGES = [
@@ -52,6 +53,7 @@ export function TerritoryEntryMapArrival({
   label,
   stage = "community",
   statusText = "Preparando sua chegada ao território",
+  leaving = false,
 }: TerritoryEntryMapArrivalProps) {
   const activeStageIndex = Math.max(
     0,
@@ -61,10 +63,13 @@ export function TerritoryEntryMapArrival({
 
   return (
     <div
-      className="pointer-events-none absolute inset-0 z-20 isolate overflow-hidden bg-territory-surface"
+      className={`pointer-events-none absolute inset-0 z-20 isolate overflow-hidden bg-territory-surface transition-opacity duration-500 motion-reduce:transition-none ${
+        leaving ? "opacity-0" : "opacity-100"
+      }`}
       aria-hidden="true"
       data-entry-arrival-loading
       data-entry-arrival-stage={stage}
+      data-entry-arrival-leaving={leaving ? "true" : "false"}
     >
       <div
         className="absolute inset-0"
