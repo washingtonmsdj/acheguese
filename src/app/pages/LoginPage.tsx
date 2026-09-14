@@ -222,7 +222,7 @@ export default function LoginPage() {
 
           <section className="w-full lg:rounded-[10px] lg:bg-white lg:p-7 lg:shadow-[0_18px_55px_rgba(17,55,59,.08)]">
             <div className="lg:hidden">
-              <h1 className="max-w-[280px] font-heading text-[31px] font-extrabold leading-[1.04] tracking-[-0.045em] text-[#0b3b3f]">
+              <h1 className="max-w-[245px] font-heading text-[31px] font-extrabold leading-[1.04] tracking-[-0.045em] text-[#0b3b3f]">
                 Bom ter você por aqui.
               </h1>
               <p className="mt-1.5 text-[15px] leading-[21px] text-[#263f43]">
@@ -250,7 +250,7 @@ export default function LoginPage() {
                     {returnContext.label}
                   </p>
                 </div>
-                <span aria-hidden="true" className="text-xl">›</span>
+                <AuthConceptIcon name="chevron-right" className="h-4 w-4" />
               </div>
             ) : null}
 
@@ -399,12 +399,12 @@ export default function LoginPage() {
               className="flex min-h-10 items-center justify-between rounded-lg px-1 text-[13px] font-medium text-[#0b4e52] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#0b5b59]/35 lg:hidden"
             >
               <span>Continuar explorando sem conta</span>
-              <span aria-hidden="true" className="text-xl">›</span>
+              <AuthConceptIcon name="chevron-right" className="h-4 w-4" />
             </Link>
 
             <div className="mt-4 flex items-start gap-3 text-[#35575a]">
-              <span className="mt-0.5 flex h-8 w-8 items-center justify-center rounded-lg bg-[#e6efed] text-[#0b5b59] lg:h-6 lg:w-6 lg:bg-transparent">
-                <AuthConceptIcon name="shield" />
+              <span className="mt-0.5 flex h-7 w-7 items-center justify-center text-[#0b5b59] lg:h-6 lg:w-6">
+                <AuthConceptIcon name="shield-filled" />
               </span>
               <div>
                 <p className="text-[11px] font-semibold lg:hidden">
