@@ -7,6 +7,9 @@ const read = (path: string) => readFileSync(resolve(root, path), "utf8");
 
 const shell = read("src/modules/profile/components/AccountSettingsShell.tsx");
 const overview = read("src/modules/profile/pages/ContaHubLayout.tsx");
+const managedProfiles = read(
+  "src/modules/profile/components/ManagedProfilesPanel.tsx",
+);
 const security = read("src/modules/profile/pages/ContaSegurancaPage.tsx");
 const preferences = read("src/modules/profile/pages/ContaPreferenciasPage.tsx");
 const accessibilityProvider = read(
@@ -46,10 +49,26 @@ describe("account settings concept contract", () => {
     expect(overview).toContain("Dados de acesso");
     expect(overview).toContain("Senha e segurança");
     expect(overview).toContain("Privacidade e dados");
+    expect(overview).toContain("Acessibilidade");
     expect(overview).toContain("Meus perfis");
     expect(overview).toContain("Sair da conta");
+    expect(overview).toContain("<ManagedProfilesPanel />");
+    expect(overview).toContain("Controles avançados e recursos operacionais");
     expect(overview).toContain("{children}");
     expect(overview).toContain('navigate("/conta?section=profiles")');
+  });
+
+  it("uses real multi-profile state for the managed profiles concept surface", () => {
+    expect(managedProfiles).toContain("useMultiProfileContext()");
+    expect(managedProfiles).toContain("activeProfile");
+    expect(managedProfiles).toContain("allProfiles");
+    expect(managedProfiles).toContain("switchProfile(profile.id)");
+    expect(managedProfiles).toContain("buildProfileEditUrl(profile.id)");
+    expect(managedProfiles).toContain("buildPublicProfileUrl(handle!)");
+    expect(managedProfiles).toContain("profile.is_public === true");
+    expect(managedProfiles).toContain('type="search"');
+    expect(managedProfiles).toContain('aria-pressed={selected}');
+    expect(managedProfiles).not.toContain("conceptManagedProfiles");
   });
 
   it("renders access, email, password and MFA as explicit real states", () => {
