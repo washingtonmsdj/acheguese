@@ -99,13 +99,26 @@ describe("anonymous root bootstrap performance", () => {
     expect(fullShell).toContain("<ErrorBoundary>");
   });
 
-  it("preserves saved accessibility preferences without loading the provider", () => {
+  it("preserves saved accessibility preferences through the lightweight shared owner", () => {
     const runtime = read("src/app/components/AppRuntime.tsx");
+    const preferences = read("src/shared/accessibility/preferences.ts");
 
     expect(runtime).toContain("useLayoutEffect");
-    expect(runtime).toContain('localStorage.getItem("accessibility-high-contrast")');
-    expect(runtime).toContain('localStorage.getItem("accessibility-font-size")');
-    expect(runtime).toContain('body.classList.toggle("accessibility-high-contrast"');
+    expect(runtime).toContain(
+      'from "@/shared/accessibility/preferences"',
+    );
+    expect(runtime).toContain("readAccessibilityPreferences()");
+    expect(runtime).toContain("applyAccessibilityPreferences(");
+    expect(runtime).not.toContain("localStorage.getItem");
+    expect(runtime).not.toContain('"accessibility-high-contrast"');
+    expect(runtime).not.toContain('"accessibility-font-size"');
+
+    expect(preferences).toContain(
+      'highContrast: "accessibility-high-contrast"',
+    );
+    expect(preferences).toContain('fontSize: "accessibility-font-size"');
+    expect(preferences).toContain("export function readAccessibilityPreferences");
+    expect(preferences).toContain("export function applyAccessibilityPreferences");
   });
 
   it("mounts provider-free public overlays after load and first-map readiness", () => {
