@@ -1,27 +1,14 @@
-import { useEffect, useState } from "react";
+import { lazy, Suspense, useEffect, useState } from "react";
 import { Cookie, Shield, X } from "lucide-react";
 import { useLocation } from "react-router-dom";
 
 import { ConsentService } from "@/core/privacy/services/ConsentService";
 import { useSessionUserId } from "@/core/session/hooks/useSessionUserId";
 import { Button } from "@/shared/components/ui/button";
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from "@/shared/components/ui/dialog";
-import { Label } from "@/shared/components/ui/label";
-import { Switch } from "@/shared/components/ui/switch";
+import type { ConsentPreferences } from "./ConsentPreferencesDialog";
 
-interface ConsentPreferences {
-  necessary: boolean;
-  analytics: boolean;
-  marketing: boolean;
-  geolocation: boolean;
-}
+const loadConsentPreferencesDialog = () => import("./ConsentPreferencesDialog");
+const ConsentPreferencesDialog = lazy(loadConsentPreferencesDialog);
 
 type ExistingConsent = {
   consent_type: string;
@@ -144,6 +131,10 @@ export function ConsentBanner() {
     });
   };
 
+  const warmPreferencesDialog = () => {
+    void loadConsentPreferencesDialog();
+  };
+
   if (pathname === "/onboarding") return null;
   if (PRELAUNCH_LOCKDOWN_ENABLED && pathname === "/") return null;
   if (!showBanner) return null;
@@ -189,6 +180,8 @@ export function ConsentBanner() {
               </Button>
               <button
                 type="button"
+                onMouseEnter={warmPreferencesDialog}
+                onFocus={warmPreferencesDialog}
                 onClick={() => setShowDetails(true)}
                 className="inline-flex h-7 w-7 items-center justify-center rounded-lg text-slate-100 transition-colors hover:bg-white/15 hover:text-white"
                 aria-label="Personalizar cookies"
@@ -242,6 +235,8 @@ export function ConsentBanner() {
             </Button>
             <button
               type="button"
+              onMouseEnter={warmPreferencesDialog}
+              onFocus={warmPreferencesDialog}
               onClick={() => setShowDetails(true)}
               className="inline-flex h-7 w-7 shrink-0 items-center justify-center rounded-lg text-muted-foreground transition-colors hover:bg-white/10 hover:text-foreground"
               aria-label="Personalizar cookies"
@@ -267,6 +262,8 @@ export function ConsentBanner() {
                 variant="ghost"
                 size="sm"
                 className="h-9 whitespace-nowrap rounded-xl px-3 text-xs !text-muted-foreground hover:!bg-white/10 hover:!text-foreground"
+                onMouseEnter={warmPreferencesDialog}
+                onFocus={warmPreferencesDialog}
                 onClick={() => setShowDetails(true)}
               >
                 Personalizar
@@ -306,78 +303,21 @@ export function ConsentBanner() {
         </div>
       )}
 
-      <Dialog open={showDetails} onOpenChange={setShowDetails}>
-        <DialogContent className="max-w-lg">
-          <DialogHeader>
-            <DialogTitle className="flex items-center gap-2">
-              <Shield className="h-5 w-5" />
-              Preferências de privacidade
-            </DialogTitle>
-            <DialogDescription>
-              Personalize como seus dados são utilizados.
-            </DialogDescription>
-          </DialogHeader>
-          <div className="space-y-6 py-4">
-            <div className="flex items-start justify-between gap-4">
-              <div className="space-y-1">
-                <Label className="font-medium">Cookies necessários</Label>
-              </div>
-              <Switch checked={true} disabled />
-            </div>
-            <div className="flex items-start justify-between gap-4">
-              <div className="space-y-1">
-                <Label className="font-medium">Analytics e métricas</Label>
-              </div>
-              <Switch
-                checked={preferences.analytics}
-                onCheckedChange={(checked) =>
-                  setPreferences({ ...preferences, analytics: checked })
-                }
-              />
-            </div>
-            <div className="flex items-start justify-between gap-4">
-              <div className="space-y-1">
-                <Label className="font-medium">Marketing</Label>
-              </div>
-              <Switch
-                checked={preferences.marketing}
-                onCheckedChange={(checked) =>
-                  setPreferences({ ...preferences, marketing: checked })
-                }
-              />
-            </div>
-            <div className="flex items-start justify-between gap-4">
-              <div className="space-y-1">
-                <Label className="font-medium">Geolocalização</Label>
-              </div>
-              <Switch
-                checked={preferences.geolocation}
-                onCheckedChange={(checked) =>
-                  setPreferences({ ...preferences, geolocation: checked })
-                }
-              />
-            </div>
-          </div>
-          <DialogFooter className="flex-col gap-2 sm:flex-row">
-            <Button
-              variant="outline"
-              onClick={() => setShowDetails(false)}
-              className="w-full sm:w-auto"
-            >
-              Cancelar
-            </Button>
-            <Button
-              onClick={() => {
-                void saveConsentPreferences(preferences);
-              }}
-              disabled={isSaving}
-              className="w-full sm:w-auto"
-            >
-              Salvar preferências
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+      {showDetails ? (
+        <Suspense fallback={null}>
+          <ConsentPreferencesDialog
+            open={showDetails}
+            onOpenChange={setShowDetails}
+            preferences={preferences}
+            onPreferencesChange={setPreferences}
+            onSave={() => {
+              void saveConsentPreferences(preferences);
+            }}
+            isSaving={isSaving}
+            saveError={saveError}
+          />
+        </Suspense>
+      ) : null}
     </>
   );
 }
