@@ -48,12 +48,21 @@ describe("public root launch territory SSOT", () => {
     const runtime = read(
       "src/app/components/territory-vivo/TerritoryEntryMapRuntime.tsx",
     );
+    const wrapper = read(
+      "src/app/components/territory-vivo/TerritoryEntryMap.tsx",
+    );
 
     expect(runtime).toContain("const cityContext = formatCityContext(city);");
     expect(runtime).toContain("{cityContext ? <small>{cityContext}</small> : null}");
     expect(runtime).toContain("entrando em {territoryLabel} normalmente");
     expect(runtime).toContain("contorno aproximado ou incompleto de {territoryLabel}");
     expect(runtime).not.toContain("<small>Salvador · BA</small>");
+
+    expect(wrapper).toContain("function resolveTerritoryLabel(");
+    expect(wrapper).toContain("return resolvedTerritory.group.name;");
+    expect(wrapper).toContain("return resolvedTerritory.location.name;");
+    expect(wrapper).toContain('return city?.name ?? "Território";');
+    expect(wrapper).not.toContain('label ?? "Complexo do Nordeste de Amaralina"');
   });
 
   it("settles aria-busy when the map timeout fallback becomes final", () => {
