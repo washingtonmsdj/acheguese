@@ -106,9 +106,10 @@ export function PushNotificationSettings() {
               onClick={sendTest}
               disabled={isSendingTest}
               className="min-h-10"
+              aria-label="Enviar notificação de teste para os dispositivos registrados nesta conta"
             >
               <Send className="mr-1.5 h-4 w-4" aria-hidden="true" />
-              {isSendingTest ? "Enviando..." : "Testar"}
+              {isSendingTest ? "Enviando..." : "Enviar teste"}
             </Button>
           ) : (
             <Button
