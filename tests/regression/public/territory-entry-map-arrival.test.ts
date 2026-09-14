@@ -9,7 +9,7 @@ const runtime = read("src/app/components/territory-vivo/TerritoryEntryMapRuntime
 const arrival = read("src/app/components/territory-vivo/TerritoryEntryMapArrival.tsx");
 
 describe("territory entry map arrival", () => {
-  it("mounts map runtime immediately after the first arrival paint", () => {
+  it("mounts map runtime immediately after the first skeleton paint", () => {
     expect(wrapper).toContain("loadTerritoryEntryMapRuntime");
     expect(wrapper).toContain("setShouldMountRuntime(true)");
     expect(wrapper).not.toContain("IntersectionObserver");
@@ -45,15 +45,20 @@ describe("territory entry map arrival", () => {
     expect(runtime).not.toContain("fallback_boundary_rings");
   });
 
-  it("keeps the arrival placeholder premium, translucent and dependency-free", () => {
-    expect(arrival).toContain("data-entry-arrival-loading");
-    expect(arrival).toContain("data-entry-arrival-signal");
-    expect(arrival).toContain("Preparando sua chegada");
-    expect(arrival).toContain("Abrindo o mapa do Complexo");
-    expect(arrival).toContain("territory-surface) / 0.88");
+  it("uses an Instagram-like page-native skeleton instead of a conceptual loader", () => {
+    expect(arrival).toContain("data-entry-skeleton");
+    expect(arrival).toContain("data-entry-skeleton-grid");
+    expect(arrival).toContain("data-entry-skeleton-card");
+    expect(arrival).toContain("data-entry-skeleton-shimmer");
+    expect(arrival).toContain("Preparando comunidade");
+    expect(arrival).toContain("Abrindo mapa");
     expect(arrival).toContain("duration-150");
     expect(arrival).not.toContain("lucide-react");
     expect(arrival).not.toContain("setTimeout");
+    expect(arrival).not.toContain("Globe");
+    expect(arrival).not.toContain("Sparkles");
+    expect(arrival).not.toContain("Preparando sua chegada");
+    expect(arrival).not.toContain("Conectando você ao território");
     expect(runtime).not.toContain("lucide-react");
     expect(wrapper).toContain("min-h-[12rem]");
     expect(runtime).toContain("lg:min-h-[24rem]");
