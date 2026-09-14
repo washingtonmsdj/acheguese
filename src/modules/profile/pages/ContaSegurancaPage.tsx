@@ -264,19 +264,19 @@ export default function ContaSegurancaPage() {
     try {
       const factors = await listFactors();
       if (factors === null) {
-        toast.error("Não foi possível confirmar os fatores cadastrados. Nenhuma alteração foi feita.");
+        toast.error("Não foi possível confirmar os métodos cadastrados. Nenhuma alteração foi feita.");
         return;
       }
       if (factors.length === 0) {
         await loadStatus();
-        toast.error("Nenhum fator cadastrado foi encontrado para remover.");
+        toast.error("Nenhum método de autenticação em duas etapas foi encontrado para remover.");
         return;
       }
 
       for (const factor of factors) {
         const disabled = await disable(factor.id);
         if (!disabled) {
-          toast.error("Não foi possível remover todos os fatores de autenticação.");
+          toast.error("Não foi possível remover todos os métodos de autenticação em duas etapas.");
           return;
         }
       }
@@ -417,7 +417,7 @@ export default function ContaSegurancaPage() {
                   <StepNumber>1</StepNumber>
                   <div>
                     <p className="font-semibold text-territory-ink">Abra seu aplicativo autenticador</p>
-                    <p className="mt-1 text-sm text-territory-muted">Use um aplicativo compatível com códigos TOTP.</p>
+                    <p className="mt-1 text-sm text-territory-muted">Use um aplicativo que gere códigos de segurança de 6 dígitos.</p>
                   </div>
                 </div>
 
@@ -475,7 +475,7 @@ export default function ContaSegurancaPage() {
             <Surface className="p-4 sm:p-5">
               <div role="alert" className="rounded-xl bg-red-50 p-4 text-sm text-red-700">
                 <p className="font-semibold">Não foi possível confirmar o estado da autenticação em duas etapas.</p>
-                <p className="mt-1 leading-5">Nenhuma nova configuração será criada enquanto a autoridade de fatores estiver indisponível.</p>
+                <p className="mt-1 leading-5">Nenhuma nova configuração será criada enquanto o serviço de autenticação estiver indisponível.</p>
                 <button type="button" onClick={() => void loadStatus()} className="mt-3 inline-flex min-h-9 items-center gap-2 font-semibold underline-offset-4 hover:underline">
                   <RefreshCw className="h-4 w-4" aria-hidden="true" /> Tentar novamente
                 </button>
@@ -489,7 +489,7 @@ export default function ContaSegurancaPage() {
                 </span>
                 <div>
                   <h2 className="font-heading text-base font-bold text-territory-ink">Proteção já ativada</h2>
-                  <p className="mt-1 text-sm leading-5 text-territory-muted">Sua conta já possui um fator TOTP verificado.</p>
+                  <p className="mt-1 text-sm leading-5 text-territory-muted">Sua conta já está protegida por um aplicativo autenticador.</p>
                 </div>
               </div>
               <Button type="button" variant="outline" className="mt-4 min-h-11 w-full" onClick={() => navigate(ACCOUNT_PATHS.security, { replace: true })}>
@@ -504,7 +504,7 @@ export default function ContaSegurancaPage() {
                 </span>
                 <div>
                   <h2 className="font-heading text-base font-bold text-territory-ink">Começar configuração</h2>
-                  <p className="mt-1 text-sm leading-5 text-territory-muted">Um QR code será criado somente quando você iniciar. Isso evita fatores incompletos apenas por abrir esta tela.</p>
+                  <p className="mt-1 text-sm leading-5 text-territory-muted">O QR code só será criado quando você iniciar a configuração.</p>
                 </div>
               </div>
               <Button type="button" className="mt-5 min-h-12 w-full bg-territory-sun text-territory-ink hover:bg-territory-sun/90" onClick={() => void handleStartMfa()}>
@@ -571,7 +571,7 @@ export default function ContaSegurancaPage() {
             <AccessRow
               icon={<KeyRound className="h-5 w-5" aria-hidden="true" />}
               title="Senha"
-              value="Altere sua senha pela sessão autenticada ou use a recuperação por e-mail quando necessário."
+              value="Altere sua senha quando quiser ou use a recuperação por e-mail quando necessário."
               action={<button type="button" className="min-h-9 text-sm font-semibold text-territory-brand underline-offset-4 hover:underline" onClick={() => navigate(ACCOUNT_PATHS.password)}>Alterar senha</button>}
             />
             <AccessRow
@@ -647,7 +647,7 @@ export default function ContaSegurancaPage() {
                   <AlertDialogContent className="max-w-md rounded-2xl">
                     <AlertDialogHeader>
                       <AlertDialogTitle>Desativar proteção adicional?</AlertDialogTitle>
-                      <AlertDialogDescription>Todos os fatores TOTP cadastrados serão removidos. Novos acessos deixarão de exigir o código do aplicativo autenticador.</AlertDialogDescription>
+                      <AlertDialogDescription>Os aplicativos autenticadores cadastrados serão removidos. Novos acessos deixarão de exigir o código de segurança.</AlertDialogDescription>
                     </AlertDialogHeader>
                     <AlertDialogFooter>
                       <AlertDialogCancel>Manter ativada</AlertDialogCancel>
@@ -664,14 +664,24 @@ export default function ContaSegurancaPage() {
               <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-territory-brand/10 text-territory-brand"><Laptop className="h-5 w-5" aria-hidden="true" /></span>
               <div>
                 <h2 className="font-heading text-base font-bold text-territory-ink">Acessos à conta</h2>
-                <p className="mt-2 text-sm leading-5 text-territory-muted">A lista detalhada de dispositivos não está disponível, mas você pode encerrar todas as outras sessões sem sair deste dispositivo.</p>
+                <p className="mt-2 text-sm leading-5 text-territory-muted">Você pode encerrar todas as outras sessões sem desconectar o navegador que está usando agora.</p>
               </div>
             </div>
-            <Button type="button" variant="outline" className="mt-5 min-h-11 w-full border-territory-brand text-territory-brand hover:bg-territory-brand/5" onClick={handleSignOutOtherSessions} disabled={revokingSessions}>
+            <div className="mt-4 flex items-center gap-3 rounded-xl border border-territory-border bg-territory-raised p-3">
+              <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-territory-surface text-territory-brand">
+                <Laptop className="h-4 w-4" aria-hidden="true" />
+              </span>
+              <div className="min-w-0 flex-1">
+                <p className="text-sm font-semibold text-territory-ink">Este dispositivo</p>
+                <p className="mt-0.5 text-xs text-territory-muted">Sessão atual</p>
+              </div>
+              <span className="rounded-full bg-emerald-100 px-2 py-1 text-xs font-semibold text-emerald-800">Atual</span>
+            </div>
+            <Button type="button" variant="outline" className="mt-4 min-h-11 w-full border-territory-brand text-territory-brand hover:bg-territory-brand/5" onClick={handleSignOutOtherSessions} disabled={revokingSessions}>
               {revokingSessions ? <Loader2 className="mr-2 h-4 w-4 animate-spin" aria-hidden="true" /> : null}
               {revokingSessions ? "Encerrando..." : "Sair dos outros dispositivos"}
             </Button>
-            <p className="mt-2 text-center text-xs text-territory-muted">Sua sessão atual permanece conectada.</p>
+            <p className="mt-2 text-center text-xs text-territory-muted">A lista detalhada de outros dispositivos ainda não está disponível.</p>
           </Surface>
         </div>
 
