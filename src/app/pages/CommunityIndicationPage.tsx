@@ -1,85 +1,175 @@
-import { type FormEvent, useMemo, useState } from "react";
-import { Link, useNavigate, useSearchParams } from "react-router-dom";
+import { useRef, useState, type FormEvent } from "react";
+import { Link, useNavigate } from "react-router-dom";
+import { ArrowLeft, ArrowRight, Check, Info, Megaphone } from "lucide-react";
 import {
-  ArrowLeft,
-  ArrowRight,
-  Check,
-  Info,
-  Megaphone,
-  Users,
-} from "lucide-react";
+  registerCommunityInterest,
+  type CommunityInterestRole,
+} from "@/core/routing/services";
 import { LAUNCH_URLS } from "@/core/routing/config/territory";
+import { COMMUNITY_INTEREST_ANTI_ABUSE_CONFIG } from "@/shared/config/security.config";
+import { TurnstileWidget } from "@/shared/components/security/TurnstileWidget";
+import { slugifyTerritory } from "@/shared/utils/slugify";
 
-type IndicationView = "form" | "confirmation" | "notices" | "account";
+const TURNSTILE_SITE_KEY = (import.meta.env.VITE_TURNSTILE_SITE_KEY ?? "").trim();
+const TURNSTILE_REQUIRED =
+  COMMUNITY_INTEREST_ANTI_ABUSE_CONFIG.turnstileRequiredInProduction && import.meta.env.PROD;
 
-const VIEW_VALUES: IndicationView[] = [
-  "form",
-  "confirmation",
-  "notices",
-  "account",
+const RELATIONSHIP_OPTIONS: { value: CommunityInterestRole; label: string }[] = [
+  { value: "morador", label: "Moro aqui" },
+  { value: "comerciante", label: "Tenho um negócio" },
+  { value: "prestador", label: "Trabalho ou presto serviços aqui" },
+  { value: "visitante", label: "Conheço ou frequento a região" },
 ];
 
-function getView(value: string | null): IndicationView {
-  return VIEW_VALUES.includes(value as IndicationView)
-    ? (value as IndicationView)
-    : "form";
-}
+type SubmitState =
+  | { status: "idle" }
+  | { status: "submitting" }
+  | { status: "success"; alreadyRegistered?: boolean }
+  | { status: "error"; message: string };
 
 export default function CommunityIndicationPage() {
   const navigate = useNavigate();
-  const [searchParams, setSearchParams] = useSearchParams();
-  const view = getView(searchParams.get("view"));
+  const mountedAtRef = useRef(Date.now());
   const [state, setState] = useState("Bahia");
-  const [city, setCity] = useState("Feira de Santana");
-  const [neighborhood, setNeighborhood] = useState("Centro");
-  const [relationship, setRelationship] = useState("Moro aqui");
-  const [noticeEmail, setNoticeEmail] = useState("");
-  const [noticeOptIn, setNoticeOptIn] = useState(false);
-  const [accountName, setAccountName] = useState("");
-  const [accountEmail, setAccountEmail] = useState("");
+  const [city, setCity] = useState("");
+  const [neighborhood, setNeighborhood] = useState("");
+  const [relationship, setRelationship] = useState<CommunityInterestRole>("morador");
+  const [name, setName] = useState("");
+  const [contact, setContact] = useState("");
+  const [wantsUpdates, setWantsUpdates] = useState(false);
+  const [honeypot, setHoneypot] = useState("");
+  const [turnstileToken, setTurnstileToken] = useState<string | null>(null);
+  const [turnstileGeneration, setTurnstileGeneration] = useState(0);
+  const [turnstileError, setTurnstileError] = useState<string | null>(null);
+  const [submitState, setSubmitState] = useState<SubmitState>({ status: "idle" });
 
-  const regionLabel = useMemo(
-    () => `${neighborhood}, ${city} · ${state === "Bahia" ? "BA" : state}`,
-    [city, neighborhood, state],
-  );
+  const isEmail = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(contact.trim());
+  const phoneDigits = contact.replace(/\D/g, "");
+  const validContact = isEmail || (phoneDigits.length >= 10 && phoneDigits.length <= 15);
+  const canSubmit =
+    name.trim().length >= 2 &&
+    city.trim().length >= 2 &&
+    neighborhood.trim().length >= 2 &&
+    validContact &&
+    submitState.status !== "submitting";
 
-  const changeView = (nextView: IndicationView) => {
-    const nextParams = new URLSearchParams(searchParams);
-    if (nextView === "form") {
-      nextParams.delete("view");
-    } else {
-      nextParams.set("view", nextView);
-    }
-    setSearchParams(nextParams);
-  };
+  const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    if (!canSubmit) return;
 
-  const handleBack = () => {
-    if (view === "form") {
-      navigate("/");
+    if (
+      Date.now() - mountedAtRef.current <
+      COMMUNITY_INTEREST_ANTI_ABUSE_CONFIG.minimumFillMs
+    ) {
+      setSubmitState({ status: "error", message: "Revise os dados antes de enviar." });
       return;
     }
-    changeView(view === "confirmation" ? "form" : "confirmation");
+
+    if (TURNSTILE_REQUIRED && !TURNSTILE_SITE_KEY) {
+      setTurnstileError("A proteção anti-spam não está configurada para este ambiente.");
+      return;
+    }
+
+    if (TURNSTILE_SITE_KEY && !turnstileToken) {
+      setTurnstileError("Confirme a verificação anti-spam para enviar.");
+      return;
+    }
+
+    setSubmitState({ status: "submitting" });
+    try {
+      const normalizedCity = slugifyTerritory(city.trim());
+      const normalizedNeighborhood = slugifyTerritory(neighborhood.trim());
+      const phone = isEmail ? null : contact.trim();
+      const email = isEmail
+        ? contact.trim().toLowerCase()
+        : `whatsapp+${phoneDigits}@waitlist.acheguese.local`;
+
+      const result = await registerCommunityInterest({
+        communityId: null,
+        communitySlug: normalizedCity,
+        territoryPath: `/ba/${normalizedCity}/${normalizedNeighborhood}`,
+        fullName: name.trim(),
+        email,
+        phone,
+        role: relationship,
+        message: `Indicação de expansão. Estado: ${state.trim()}. Cidade: ${city.trim()}. Bairro: ${neighborhood.trim()}.`,
+        wantsUpdates,
+        source: "community-indication",
+        honeypot,
+        turnstileToken,
+      });
+
+      if (result.status === "turnstile_failed") {
+        setTurnstileToken(null);
+        setTurnstileGeneration((value) => value + 1);
+        setTurnstileError("Não foi possível validar a proteção anti-spam. Tente novamente.");
+        setSubmitState({ status: "idle" });
+        return;
+      }
+
+      setSubmitState({
+        status: "success",
+        alreadyRegistered: result.status === "already_registered",
+      });
+    } catch (error) {
+      setTurnstileToken(null);
+      setTurnstileGeneration((value) => value + 1);
+      setSubmitState({
+        status: "error",
+        message: error instanceof Error ? error.message : "Não foi possível enviar agora.",
+      });
+    }
   };
 
-  const handleIndicationSubmit = (event: FormEvent<HTMLFormElement>) => {
-    event.preventDefault();
-    changeView("confirmation");
-  };
-
-  const handleAccountSubmit = (event: FormEvent<HTMLFormElement>) => {
-    event.preventDefault();
-    navigate("/cadastro");
-  };
+  if (submitState.status === "success") {
+    return (
+      <div className="community-indication-page">
+        <header className="community-indication-header">
+          <Link className="community-indication-wordmark" to="/">
+            achegue-se<span aria-hidden="true">.</span>
+          </Link>
+        </header>
+        <main className="community-indication-main is-confirmation">
+          <section className="community-indication-screen is-confirmation" aria-labelledby="confirmation-title">
+            <div className="community-indication-success-icon" aria-hidden="true">
+              <Check />
+            </div>
+            <h1 id="confirmation-title">
+              {submitState.alreadyRegistered ? "Sua indicação já está registrada" : "Sua indicação foi registrada"}
+            </h1>
+            <div className="community-indication-region">
+              <strong>{neighborhood}</strong>
+              <span>{city} · {state}</span>
+            </div>
+            <p className="community-indication-copy">
+              Estamos começando pelo Complexo do Nordeste de Amaralina.
+              <br />
+              A expansão será por etapas, sem prazo artificial.
+            </p>
+            <div className="community-indication-actions">
+              <Link className="community-indication-primary" to={LAUNCH_URLS.community}>
+                <span>Explorar o Complexo</span>
+                <ArrowRight aria-hidden="true" />
+              </Link>
+              <Link className="community-indication-secondary" to="/cadastro">
+                Criar minha conta
+              </Link>
+              <button type="button" className="community-indication-text-action" onClick={() => navigate("/")}>Voltar ao início</button>
+            </div>
+            <div className="community-indication-bottom-note">
+              <Info aria-hidden="true" />
+              <span>Indicar uma região não ativa uma comunidade e não cria uma conta.</span>
+            </div>
+          </section>
+        </main>
+      </div>
+    );
+  }
 
   return (
     <div className="community-indication-page">
       <header className="community-indication-header">
-        <button
-          type="button"
-          className="community-indication-back"
-          aria-label="Voltar"
-          onClick={handleBack}
-        >
+        <button type="button" className="community-indication-back" aria-label="Voltar" onClick={() => navigate("/")}>
           <ArrowLeft aria-hidden="true" />
         </button>
         <Link className="community-indication-wordmark" to="/">
@@ -88,276 +178,85 @@ export default function CommunityIndicationPage() {
         <div className="community-indication-header-spacer" aria-hidden="true" />
       </header>
 
-      <main className={`community-indication-main is-${view}`}>
-        <div className="community-indication-content">
-          {view === "form" ? (
-            <section className="community-indication-screen" aria-labelledby="indication-title">
-              <div className="community-indication-heading-block">
-                <h1 id="indication-title">
-                  Onde você quer
-                  <br />
-                  o Achegue-se?
-                </h1>
-                <p className="community-indication-lead">
-                  Sua indicação ajuda a planejar
-                  <br />
-                  os próximos lugares.
-                </p>
-              </div>
+      <main className="community-indication-main is-form">
+        <section className="community-indication-screen" aria-labelledby="indication-title">
+          <div className="community-indication-heading-block">
+            <p className="entry-eyebrow">Expansão por etapas</p>
+            <h1 id="indication-title">Quer o Achegue-se na sua comunidade?</h1>
+            <p className="community-indication-lead">
+              Conte de onde você é e ajude a indicar os próximos lugares.
+            </p>
+          </div>
 
-              <form className="community-indication-form" onSubmit={handleIndicationSubmit}>
-                <label className="community-indication-field">
-                  <span>Estado <b aria-hidden="true">*</b></span>
-                  <select value={state} onChange={(event) => setState(event.target.value)} required>
-                    <option>Bahia</option>
-                    <option>Pernambuco</option>
-                    <option>Sergipe</option>
-                  </select>
-                </label>
+          <form className="community-indication-form" onSubmit={handleSubmit} noValidate>
+            <div className="hidden" aria-hidden="true">
+              <label htmlFor="community-indication-company">Empresa</label>
+              <input id="community-indication-company" tabIndex={-1} autoComplete="off" value={honeypot} onChange={(event) => setHoneypot(event.target.value)} />
+            </div>
 
-                <label className="community-indication-field">
-                  <span>Cidade <b aria-hidden="true">*</b></span>
-                  <select value={city} onChange={(event) => setCity(event.target.value)} required>
-                    <option>Feira de Santana</option>
-                    <option>Salvador</option>
-                    <option>Vitória da Conquista</option>
-                  </select>
-                </label>
+            <label className="community-indication-field">
+              <span>Estado</span>
+              <input value={state} onChange={(event) => setState(event.target.value)} required />
+            </label>
+            <label className="community-indication-field">
+              <span>Cidade</span>
+              <input value={city} onChange={(event) => setCity(event.target.value)} placeholder="Ex.: Salvador" required />
+            </label>
+            <label className="community-indication-field">
+              <span>Bairro</span>
+              <input value={neighborhood} onChange={(event) => setNeighborhood(event.target.value)} placeholder="Ex.: Nordeste de Amaralina" required />
+            </label>
+            <label className="community-indication-field is-optional">
+              <span>Como você se relaciona com esse lugar? <em>(opcional)</em></span>
+              <select value={relationship} onChange={(event) => setRelationship(event.target.value as CommunityInterestRole)}>
+                {RELATIONSHIP_OPTIONS.map((option) => <option key={option.value} value={option.value}>{option.label}</option>)}
+              </select>
+            </label>
 
-                <label className="community-indication-field">
-                  <span>Bairro <b aria-hidden="true">*</b></span>
-                  <select
-                    value={neighborhood}
-                    onChange={(event) => setNeighborhood(event.target.value)}
-                    required
-                  >
-                    <option>Centro</option>
-                    <option>Santa Cruz</option>
-                    <option>Nordeste de Amaralina</option>
-                  </select>
-                </label>
+            <div className="community-indication-note is-starting">
+              <Megaphone aria-hidden="true" />
+              <span>
+                Hoje, começamos pelo Complexo
+                <strong>do Nordeste de Amaralina, em Salvador.</strong>
+              </span>
+            </div>
 
-                <label className="community-indication-field is-optional">
-                  <span>Como você se relaciona com esse lugar? <em>(opcional)</em></span>
-                  <select
-                    value={relationship}
-                    onChange={(event) => setRelationship(event.target.value)}
-                  >
-                    <option>Moro aqui</option>
-                    <option>Tenho um negócio</option>
-                    <option>Trabalho aqui</option>
-                    <option>Conheço a região</option>
-                  </select>
-                  <small>Também pode indicar como negócio, profissional ou organização.</small>
-                </label>
+            <div className="community-indication-field">
+              <span>Seu nome</span>
+              <input value={name} onChange={(event) => setName(event.target.value)} autoComplete="name" placeholder="Como você se chama?" required />
+            </div>
+            <div className="community-indication-field">
+              <span>E-mail ou WhatsApp</span>
+              <input value={contact} onChange={(event) => setContact(event.target.value)} autoComplete="email" placeholder="Para identificarmos sua indicação" required />
+            </div>
+            <label className="community-indication-check-row">
+              <input type="checkbox" checked={wantsUpdates} onChange={(event) => setWantsUpdates(event.target.checked)} />
+              <span>Quero receber novidades sobre a expansão nesta região. <em>(opcional)</em></span>
+            </label>
 
-                <div className="community-indication-note is-starting">
-                  <Megaphone aria-hidden="true" />
-                  <span>
-                    Hoje, começamos pelo Complexo
-                    <strong>do Nordeste de Amaralina, em Salvador.</strong>
-                  </span>
-                </div>
+            {TURNSTILE_SITE_KEY ? (
+              <TurnstileWidget
+                key={turnstileGeneration}
+                siteKey={TURNSTILE_SITE_KEY}
+                action={COMMUNITY_INTEREST_ANTI_ABUSE_CONFIG.turnstileAction}
+                theme="light"
+                className="min-h-[65px]"
+                onVerify={(token) => { setTurnstileToken(token); setTurnstileError(null); }}
+                onExpire={() => setTurnstileToken(null)}
+                onError={() => { setTurnstileToken(null); setTurnstileError("Falha ao carregar a verificação anti-spam."); }}
+              />
+            ) : null}
 
-                <button type="submit" className="community-indication-primary">
-                  <span>Enviar indicação</span>
-                  <ArrowRight aria-hidden="true" />
-                </button>
-                <p className="community-indication-caption">Sem criar conta para indicar.</p>
-              </form>
-            </section>
-          ) : null}
+            {turnstileError ? <p role="alert" className="community-indication-error">{turnstileError}</p> : null}
+            {submitState.status === "error" ? <p role="alert" className="community-indication-error">{submitState.message}</p> : null}
 
-          {view === "confirmation" ? (
-            <section className="community-indication-screen is-confirmation" aria-labelledby="confirmation-title">
-              <div className="community-indication-success-icon" aria-hidden="true">
-                <span className="community-indication-success-rays">
-                  <i />
-                  <i />
-                  <i />
-                  <i />
-                  <i />
-                  <i />
-                  <i />
-                  <i />
-                </span>
-                <Check />
-              </div>
-              <h1 id="confirmation-title">
-                Sua indicação
-                <br />
-                foi registrada
-              </h1>
-              <div className="community-indication-region">
-                <strong>{neighborhood}</strong>
-                <span>{city} · {state}</span>
-              </div>
-              <p className="community-indication-copy">
-                Essa indicação ajuda no planejamento.
-                <br />
-                Ainda não há previsão de lançamento
-                <br />
-                para esse local.
-              </p>
-              <div className="community-indication-actions">
-                <Link className="community-indication-primary" to={LAUNCH_URLS.community}>
-                  <span>Explorar o Complexo</span>
-                  <ArrowRight aria-hidden="true" />
-                </Link>
-                <button
-                  type="button"
-                  className="community-indication-secondary"
-                  onClick={() => changeView("notices")}
-                >
-                  Quero receber novidades
-                </button>
-                <button
-                  type="button"
-                  className="community-indication-text-action"
-                  onClick={() => changeView("account")}
-                >
-                  Criar minha conta
-                </button>
-              </div>
-              <div className="community-indication-bottom-note">
-                <Users aria-hidden="true" />
-                <span>Você pode explorar mesmo morando em outra região.</span>
-              </div>
-            </section>
-          ) : null}
-
-          {view === "notices" ? (
-            <section className="community-indication-screen" aria-labelledby="notices-title">
-              <div className="community-indication-heading-block">
-                <h1 id="notices-title">
-                  Quer acompanhar
-                  <br />
-                  as novidades?
-                </h1>
-                <p className="community-indication-lead">
-                  Sobre {regionLabel}.
-                </p>
-              </div>
-
-              <form
-                className="community-indication-form community-indication-notices-form"
-                onSubmit={(event) => {
-                  event.preventDefault();
-                  if (noticeEmail && noticeOptIn) changeView("confirmation");
-                }}
-              >
-                <label className="community-indication-field">
-                  <span>E-mail</span>
-                  <input
-                    type="email"
-                    value={noticeEmail}
-                    onChange={(event) => setNoticeEmail(event.target.value)}
-                    placeholder="Seu e-mail"
-                  />
-                </label>
-
-                <label className="community-indication-check-row">
-                  <input
-                    type="checkbox"
-                    checked={noticeOptIn}
-                    onChange={(event) => setNoticeOptIn(event.target.checked)}
-                  />
-                  <span>Quero receber avisos sobre a expansão nesta região.</span>
-                </label>
-
-                <Link className="community-indication-data-link" to="/sobre">
-                  Como usamos seus dados
-                </Link>
-
-                <button
-                  type="submit"
-                  className="community-indication-primary"
-                  disabled={!noticeEmail || !noticeOptIn}
-                >
-                  Receber novidades
-                </button>
-                <button
-                  type="button"
-                  className="community-indication-text-action"
-                  onClick={() => changeView("confirmation")}
-                >
-                  Agora não
-                </button>
-                <p className="community-indication-cancel-note">
-                  Você pode cancelar os avisos quando quiser.
-                </p>
-              </form>
-
-              <div className="community-indication-note is-neutral">
-                <Info aria-hidden="true" />
-                <span>Receber avisos não cria uma conta.</span>
-              </div>
-            </section>
-          ) : null}
-
-          {view === "account" ? (
-            <section className="community-indication-screen" aria-labelledby="account-title">
-              <div className="community-indication-heading-block">
-                <h1 id="account-title">
-                  Você também pode
-                  <br />
-                  participar
-                </h1>
-                <p className="community-indication-lead">
-                  Uma conta para conhecer o Achegue-se
-                  <br />
-                  e usar os recursos disponíveis.
-                </p>
-              </div>
-
-              <div className="community-indication-note is-warning">
-                <Users aria-hidden="true" />
-                <span>
-                  <strong>Sua região ainda não está ativa</strong>
-                  Isso não impede você de criar uma conta e explorar o Complexo.
-                </span>
-              </div>
-
-              <form className="community-indication-form community-indication-account-form" onSubmit={handleAccountSubmit}>
-                <label className="community-indication-field">
-                  <span>Nome</span>
-                  <input
-                    type="text"
-                    value={accountName}
-                    onChange={(event) => setAccountName(event.target.value)}
-                    placeholder="Como você se chama?"
-                  />
-                </label>
-                <label className="community-indication-field">
-                  <span>E-mail</span>
-                  <input
-                    type="email"
-                    value={accountEmail}
-                    onChange={(event) => setAccountEmail(event.target.value)}
-                    placeholder="Seu e-mail"
-                  />
-                </label>
-                <button type="submit" className="community-indication-primary">
-                  <span>Continuar cadastro</span>
-                  <ArrowRight aria-hidden="true" />
-                </button>
-              </form>
-
-              <p className="community-indication-account-note">
-                Você continuará para as próximas etapas da conta.
-              </p>
-              <div className="community-indication-account-separator" />
-              <p className="community-indication-independent-note">
-                Criar conta não ativa sua comunidade
-                <br />
-                nem inscreve você em avisos.
-              </p>
-              <p className="community-indication-login-note">
-                Já tem conta? <Link to="/login">Entrar</Link>
-              </p>
-            </section>
-          ) : null}
-        </div>
+            <button type="submit" className="community-indication-primary" disabled={!canSubmit}>
+              {submitState.status === "submitting" ? <span>Enviando…</span> : <span>Indicar minha comunidade</span>}
+              <ArrowRight aria-hidden="true" />
+            </button>
+            <p className="community-indication-caption">Sem criar uma conta. Seus dados servem apenas para registrar a indicação.</p>
+          </form>
+        </section>
       </main>
     </div>
   );
