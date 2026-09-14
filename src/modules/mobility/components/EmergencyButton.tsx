@@ -1,10 +1,9 @@
-import React, { useState } from "react";
+import { useState } from "react";
 import {
   AlertTriangle,
   Phone,
   Shield,
   MapPin,
-  X,
   Check,
   Users,
   Share2,
@@ -16,7 +15,6 @@ import {
   DialogTitle,
   DialogDescription,
 } from "@/shared/components/ui/dialog";
-import { VisuallyHidden } from "@/shared/components/ui/visually-hidden";
 import { cn } from "@/shared/utils/cn";
 import { useSessionContext } from "@/core/session";
 import { GeolocationService } from "@/shared/services/GeolocationService";
@@ -49,7 +47,6 @@ export function EmergencyButton({
   const { activeProfile } = useSessionContext();
   const { createAlert } = useEmergencyAlerts();
   const [isOpen, setIsOpen] = useState(false);
-  const [triggered, setTriggered] = useState(false);
   const [sending, setSending] = useState(false);
 
   const handleTrigger = async () => {
@@ -61,7 +58,6 @@ export function EmergencyButton({
     setSending(true);
 
     try {
-      // Capturar localização GPS via SSOT
       let location: { latitude: number; longitude: number } | null = null;
       try {
         const geoResult = await GeolocationService.getCurrentLocation({ useCache: true });
@@ -70,7 +66,6 @@ export function EmergencyButton({
         logger.warn("GPS não disponível:", gpsError);
       }
 
-      // ✅ SSOT - Criar alerta via core/safety
       const result = await createAlert({
         profileId: activeProfile.id,
         rideId: ride?.id,
@@ -93,7 +88,6 @@ export function EmergencyButton({
         return;
       }
 
-      setTriggered(true);
       setIsOpen(false);
 
       toast.error("Alerta de emergência enviado", {
@@ -102,8 +96,6 @@ export function EmergencyButton({
           : "Dados da corrida foram salvos. GPS não disponível.",
         duration: 8000,
       });
-
-      // Notificacoes de emergencia sao tratadas no SafetyService (contatos + trilha operacional).
     } catch (error) {
       logger.error("Erro ao acionar emergência:", error);
       toast.error("Erro ao enviar alerta. Tente novamente.");
