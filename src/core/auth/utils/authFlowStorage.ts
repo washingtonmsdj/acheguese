@@ -25,12 +25,20 @@ function isEnvelope(value: unknown): value is AuthFlowStorageEnvelope {
   );
 }
 
+function removeStoredValue(storage: Storage, key: string): void {
+  try {
+    storage.removeItem(key);
+  } catch {
+    // Limpeza é best-effort quando o navegador bloqueia storage.
+  }
+}
+
 /**
- * Armazena contexto efêmero do fluxo de autenticação.
+ * Armazena apenas contexto efêmero do fluxo de autenticação.
  *
- * O envelope inclui expiração para impedir que uma tentativa antiga de login,
- * OAuth ou cadastro contamine uma jornada nova na mesma aba. Nada sensível ou
- * credencial deve ser salvo por esta API.
+ * O envelope versionado e com expiração é o único formato aceito. Valores
+ * antigos, corrompidos ou sem TTL são descartados em vez de contaminarem uma
+ * jornada nova. Credenciais e outros dados sensíveis nunca pertencem a esta API.
  */
 export function setAuthFlowSessionValue(
   key: string,
@@ -69,31 +77,20 @@ export function getAuthFlowSessionValue(key: string): string | null {
 
   try {
     const parsed = JSON.parse(raw) as unknown;
-    if (!isEnvelope(parsed)) {
-      // Compatibilidade transitória com o formato legado em string pura.
-      return raw;
-    }
-
-    if (parsed.expiresAt <= Date.now()) {
-      storage.removeItem(key);
+    if (!isEnvelope(parsed) || parsed.expiresAt <= Date.now()) {
+      removeStoredValue(storage, key);
       return null;
     }
 
     return parsed.value;
   } catch {
-    // Strings legadas não eram JSON. Elas continuam legíveis durante a migração
-    // e serão substituídas pelo envelope na próxima escrita.
-    return raw;
+    removeStoredValue(storage, key);
+    return null;
   }
 }
 
 export function clearAuthFlowSessionValue(key: string): void {
   const storage = getSessionStorage();
   if (!storage) return;
-
-  try {
-    storage.removeItem(key);
-  } catch {
-    // Limpeza é best-effort; não deve quebrar logout/login por storage bloqueado.
-  }
+  removeStoredValue(storage, key);
 }
