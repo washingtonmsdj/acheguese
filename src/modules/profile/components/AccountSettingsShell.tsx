@@ -81,7 +81,10 @@ function isActive(
 }
 
 function resolveDefaultBackTarget(pathname: string, hash: string): string {
-  if (pathname === ACCOUNT_PATHS.security && ["#email", "#senha", "#mfa"].includes(hash)) {
+  if (pathname === ACCOUNT_PATHS.security && hash === "#email") {
+    return ACCOUNT_PATHS.access;
+  }
+  if (pathname === ACCOUNT_PATHS.security && ["#senha", "#mfa"].includes(hash)) {
     return ACCOUNT_PATHS.security;
   }
   if (pathname === ACCOUNT_PATHS.privacy && hash) {
