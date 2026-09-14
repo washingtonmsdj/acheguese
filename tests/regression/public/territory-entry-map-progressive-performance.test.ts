@@ -6,10 +6,15 @@ const ROOT = process.cwd();
 const read = (p: string) => fs.readFileSync(path.join(ROOT, p), "utf8");
 
 describe("territory entry progressive map performance", () => {
-  it("keeps boundary infrastructure out of the map render path", () => {
+  it("keeps boundary infrastructure lazy and deduplicated", () => {
     const hook = read("src/core/maps/hooks/useTerritoryPolygon.ts");
+
     expect(hook).not.toContain('import { boundaryService } from "@/core/geospatial"');
-    expect(hook).toContain('import(\n          "@/core/geospatial/services/BoundaryService"');
+    expect(hook).toContain("@/core/geospatial/services/BoundaryService");
+    expect(hook).toContain("polygonCache");
+    expect(hook).toContain("polygonPromises");
+    expect(hook).toContain("POLYGON_CACHE_TTL_MS");
+    expect(hook).toContain("preloadTerritoryPolygons");
   });
 
   it("does not reset MapLibre readiness when territory data arrives", () => {
@@ -18,7 +23,7 @@ describe("territory entry progressive map performance", () => {
     expect(runtime).toContain('mapReady ? "opacity-100" : "opacity-0"');
   });
 
-  it("preloads the entry runtime, passive MapLibre path and OpenFreeMap style", () => {
+  it("preloads engine before the cached official boundary", () => {
     const wrapper = read("src/app/components/territory-vivo/TerritoryEntryMap.tsx");
     const runtime = read("src/app/components/territory-vivo/TerritoryEntryMapRuntime.tsx");
     const owner = read("src/core/maps/components/v3/MapLibreAdapter.tsx");
@@ -28,9 +33,12 @@ describe("territory entry progressive map performance", () => {
     expect(wrapper).toContain("preloadEntryMapStyle");
     expect(wrapper).toContain('link.rel = "preload"');
     expect(wrapper).toContain('link.as = "fetch"');
-    expect(wrapper).toContain("preloadTerritoryEntryMapEngine");
+    expect(wrapper).toContain("await module.preloadTerritoryEntryMapEngine()");
+    expect(wrapper).toContain("await module.preloadTerritoryEntryBoundary(preloadResolved)");
 
     expect(runtime).toContain("preloadPassiveMapLibreAdapterRuntime");
+    expect(runtime).toContain("preloadTerritoryPolygons");
+    expect(runtime).toContain("preloadTerritoryEntryBoundary");
     expect(runtime).toContain('from "@/core/maps/components/v3/MapLibreAdapter"');
     expect(runtime).not.toContain("LazyMapLibreAdapter");
 
