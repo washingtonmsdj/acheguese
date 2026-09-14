@@ -3,7 +3,6 @@ import { BrowserRouter, useLocation } from "react-router-dom";
 
 import { ErrorBoundary } from "@/app/components/ErrorBoundary";
 import RootRouteEntry from "@/app/routes/RootRouteEntry";
-import { FullScreenLoader } from "@/shared/components/loading/PageLoader";
 import { scheduleBrowserIdleWork } from "@/shared/utils/browserIdle";
 
 const FullAppRuntimeShell = lazy(() =>
@@ -20,12 +19,27 @@ const PRELAUNCH_LOCKDOWN_ENABLED =
 function LeanPublicRootRuntime() {
   const [shouldMountOverlays, setShouldMountOverlays] = useState(false);
 
-  useEffect(() =>
-    scheduleBrowserIdleWork(
-      () => setShouldMountOverlays(true),
-      { timeoutMs: 1800, fallbackDelayMs: 900 },
-    ),
-  []);
+  useEffect(() => {
+    let cancelIdleWork: (() => void) | null = null;
+
+    const scheduleOverlays = () => {
+      cancelIdleWork = scheduleBrowserIdleWork(
+        () => setShouldMountOverlays(true),
+        { timeoutMs: 2500, fallbackDelayMs: 1200 },
+      );
+    };
+
+    if (document.readyState === "complete") {
+      scheduleOverlays();
+    } else {
+      window.addEventListener("load", scheduleOverlays, { once: true });
+    }
+
+    return () => {
+      window.removeEventListener("load", scheduleOverlays);
+      cancelIdleWork?.();
+    };
+  }, []);
 
   return (
     <>
@@ -36,6 +50,16 @@ function LeanPublicRootRuntime() {
         </Suspense>
       ) : null}
     </>
+  );
+}
+
+function RuntimeLoadingFallback() {
+  return (
+    <div
+      className="min-h-screen bg-background"
+      role="status"
+      aria-label="Carregando aplicação"
+    />
   );
 }
 
@@ -56,7 +80,7 @@ function RuntimeRouteTree() {
   }
 
   return (
-    <Suspense fallback={<FullScreenLoader />}>
+    <Suspense fallback={<RuntimeLoadingFallback />}>
       <FullAppRuntimeShell shouldCheckAuthRedirect={shouldCheckAuthRedirect} />
     </Suspense>
   );
