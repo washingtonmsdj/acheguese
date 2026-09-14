@@ -11,6 +11,10 @@ const hook = readFileSync(
   join(root, "src/core/auth/hooks/useLinkedAuthProviders.ts"),
   "utf8",
 );
+const securityPage = readFileSync(
+  join(root, "src/modules/profile/pages/ContaSegurancaPage.tsx"),
+  "utf8",
+);
 
 describe("linked auth provider authority", () => {
   it("requires an authenticated authority before interpreting linked identities", () => {
@@ -27,5 +31,16 @@ describe("linked auth provider authority", () => {
     expect(hook).toContain("setData(null)");
     expect(hook).toContain("isResolved: data !== null && error === null");
     expect(hook).not.toContain("setData(EMPTY_PROVIDERS);");
+  });
+
+  it("does not present an unresolved Google linkage as available or disconnected", () => {
+    expect(securityPage).toContain("isResolved: providersResolved");
+    expect(securityPage).toContain(
+      "const providersUnknown = providersError !== null || !providersResolved;",
+    );
+    expect(securityPage).toContain('providersUnknown\n        ? "Não confirmado"');
+    expect(securityPage).toContain(
+      'providersUnknown\n        ? "Não foi possível confirmar agora se uma identidade Google está vinculada."',
+    );
   });
 });
