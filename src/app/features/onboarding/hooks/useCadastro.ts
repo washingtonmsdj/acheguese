@@ -5,12 +5,9 @@ import { zodResolver } from "@hookform/resolvers/zod";
 
 import { AUTH_PATHS } from "@/core/auth/constants/authFlow";
 import { AuthService } from "@/core/auth/services/AuthService";
+import { prepareEmailSignupConfirmation } from "@/core/auth/utils/authJourney";
 import { getAuthErrorMessage } from "@/core/auth/utils/authMessages";
 import { checkPasswordCompromise } from "@/core/auth/utils/compromisedPassword";
-import {
-  setPendingSignupEmail,
-  setPendingSignupRedirect,
-} from "@/core/auth/utils/pendingSignup";
 import { TERMS_OF_SERVICE_VERSION } from "@/core/legal/termsOfService";
 import { PublicIdentityService } from "@/core/public-identity/services/PublicIdentityService";
 import { useToast } from "@/shared/hooks/use-toast";
@@ -120,8 +117,7 @@ export function useCadastroForm(requestedRedirect = "/") {
         },
       });
 
-      setPendingSignupEmail(values.email);
-      setPendingSignupRedirect(redirectTo);
+      prepareEmailSignupConfirmation(values.email, redirectTo);
       navigate(AUTH_PATHS.signupConfirmation, {
         state: { email: values.email, redirectTo },
       });
