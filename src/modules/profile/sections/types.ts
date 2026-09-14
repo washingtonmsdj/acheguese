@@ -12,8 +12,6 @@ import type {
   ProfileAssociatedBusiness,
   ProfileBusinessModuleSnapshot,
 } from "@/core/profiles/services/ProfileBusinessTypes";
-import type { ProfileActivityStats } from "@/core/profiles/services/ProfileOperationTypes";
-import type { ProfileAccountSnapshot } from "@/core/profiles/views/ProfileAccountSnapshot";
 import type { ProfileRow } from "@/core/profiles/services/types";
 import type { ProfileVerificationStatus as VerificationStatus } from "@/core/verification/verificationStatus";
 import type { DriverDataRecord } from "@/core/mobility/types/DriverDataRecord";
@@ -250,31 +248,6 @@ export interface PreferenciasSectionProps extends BaseSectionProps {
   readonly canManageProfileMembers: boolean;
 }
 
-export interface SegurancaSectionProps extends BaseSectionProps {
-  readonly profile: ProfileRow | null;
-  readonly identity: Identity | null;
-  readonly context: Context | null;
-  readonly account: ProfileAccountSnapshot | null;
-  readonly roles: readonly string[];
-  readonly activeProfile: MultiProfileRecord | null;
-  readonly stats: ProfileActivityStats;
-  readonly verificationStatus: VerificationStatus;
-  readonly verificationRejectionReason?: string;
-  readonly downloadDataOpen: boolean;
-  readonly setDownloadDataOpen: (open: boolean) => void;
-  readonly viewDataOpen: boolean;
-  readonly setViewDataOpen: (open: boolean) => void;
-  readonly deactivateOpen: boolean;
-  readonly setDeactivateOpen: (open: boolean) => void;
-  readonly deleteOpen: boolean;
-  readonly setDeleteOpen: (open: boolean) => void;
-  readonly deleteConfirm: string;
-  readonly setDeleteConfirm: (value: string) => void;
-  readonly handleDownloadData: () => void;
-  readonly handleDeactivateAccount: () => void;
-  readonly handleDeleteAccount: () => void;
-}
-
 // ============================================
 // Section Map Type (para type safety)
 // ============================================
@@ -288,5 +261,4 @@ export type SectionPropsMap = {
   readonly planos: PlanosSectionProps;
   readonly notificacoes: NotificacoesSectionProps;
   readonly preferencias: PreferenciasSectionProps;
-  readonly seguranca: SegurancaSectionProps;
 };
