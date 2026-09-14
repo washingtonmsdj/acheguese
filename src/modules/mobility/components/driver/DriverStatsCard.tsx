@@ -16,6 +16,7 @@ import {
   AlertTriangle,
 } from "lucide-react";
 import { useSessionContext } from "@/core/session";
+import { profileService } from "@/core/profiles/services";
 import { useQuery } from "@tanstack/react-query";
 import { mobilityService } from "@/core/mobility/services/MobilityService";
 import { ReviewsService } from "@/core/reviews/services/ReviewsService";
@@ -37,14 +38,10 @@ export function DriverStatsCard() {
   const { data: stats, isLoading } = useQuery({
     queryKey: MOBILITY_QUERY_KEYS.driverStats(activeProfile?.id || ""),
     queryFn: async () => {
-      if (!activeProfile?.id) return null;
+      if (!activeProfile?.id || !activeProfile.userId) return null;
 
-      const driverProfile = activeProfile.userId
-        ? await import("@/core/profiles/services/ProfileService").then(({ profileService }) =>
-            profileService.getProfileByType(activeProfile.userId, "driver"),
-          )
-        : null;
-      const driverProfileId = driverProfile?.id ?? null;
+      const driverProfileId =
+        (await profileService.getProfileByType(activeProfile.userId, "driver"))?.id ?? null;
 
       if (!driverProfileId) return null;
 
