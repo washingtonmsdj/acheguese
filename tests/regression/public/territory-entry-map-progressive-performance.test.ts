@@ -70,7 +70,8 @@ describe("territory entry progressive map performance", () => {
     expect(runtime).toContain("getComputedStyle(document.documentElement)");
     expect(runtime).toContain("}, [boundaryStarted]);");
     expect(runtime).toContain("markPublicRootMapReady();");
-    expect(runtime).toContain("!boundaryStarted || isLoading || isBoundaryLoading");
+    expect(runtime).toContain("!boundaryStarted || isBoundaryLoading");
+    expect(runtime).not.toContain("isLoading: boolean");
   });
 
   it("preloads style and TileJSON before React while runtime, engine and workers start together", () => {
