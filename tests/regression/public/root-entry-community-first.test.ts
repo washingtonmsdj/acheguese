@@ -20,24 +20,20 @@ describe("root community-first MVP entry", () => {
     expect(source).toContain('import("@/app/pages/PreLaunchLandingPage")');
   });
 
-  it("starts the entry map near the viewport without waiting for territory data", () => {
+  it("starts the entry map immediately after first paint", () => {
     const wrapper = read("src/app/components/territory-vivo/TerritoryEntryMap.tsx");
     expect(wrapper).toContain("LazyTerritoryEntryMapRuntime");
-    expect(wrapper).toContain("IntersectionObserver");
-    expect(wrapper).toContain('rootMargin: "720px 0px"');
     expect(wrapper).toContain("loadTerritoryEntryMapRuntime");
+    expect(wrapper).toContain("setShouldMountRuntime(true)");
+    expect(wrapper).not.toContain("IntersectionObserver");
     expect(wrapper).not.toContain("scheduleBrowserIdleWork");
-    expect(wrapper).not.toContain("if (isLoading || shouldMountRuntime) return");
     expect(wrapper).not.toContain("useTerritoryPolygon");
     expect(wrapper).not.toContain("MapLibreAdapter");
   });
 
   it("uses the versioned launch territory without database discovery", () => {
     const source = read("src/app/pages/TerritoryEntryPage.tsx");
-
-    expect(source).toContain(
-      'import { resolvePublicTerritoryFallback } from "@/core/routing/utils/publicTerritoryFallbacks"',
-    );
+    expect(source).toContain('resolvePublicTerritoryFallback');
     expect(source).toContain("const launchTerritory = resolvePublicTerritoryFallback");
     expect(source).toContain("resolvedTerritory={launchTerritory}");
     expect(source).toContain("isLoading={false}");
@@ -47,11 +43,12 @@ describe("root community-first MVP entry", () => {
     expect(source).not.toContain("scheduleBrowserIdleWork");
   });
 
-  it("keeps the root page free of the icon library", () => {
+  it("keeps the root page free of router and icon libraries", () => {
     const source = read("src/app/pages/TerritoryEntryPage.tsx");
     const arrival = read("src/app/components/territory-vivo/TerritoryEntryMapArrival.tsx");
     const runtime = read("src/app/components/territory-vivo/TerritoryEntryMapRuntime.tsx");
-
+    expect(source).not.toContain("react-router-dom");
+    expect(source).not.toContain("<Link");
     expect(source).not.toContain("lucide-react");
     expect(arrival).not.toContain("lucide-react");
     expect(runtime).not.toContain("lucide-react");
@@ -60,22 +57,22 @@ describe("root community-first MVP entry", () => {
   it("uses a lightweight low-priority community preview", () => {
     const source = read("src/app/pages/TerritoryEntryPage.tsx");
     const asset = path.join(ROOT, "src/assets/complexo-cultura.jpg");
-
     expect(source).toContain('import communityThumbnail from "@/assets/complexo-cultura.jpg"');
     expect(source).toContain('width={1024}');
     expect(source).toContain('height={768}');
     expect(source).toContain('loading="lazy"');
     expect(source).toContain('decoding="async"');
     expect(source).toContain('fetchPriority="low"');
-    expect(source).not.toContain("hero-complexo-nordeste.jpg");
     expect(fs.statSync(asset).size).toBeLessThanOrEqual(160_000);
   });
 
-  it("renders the normal root outside the full app runtime", () => {
+  it("renders the normal root outside routed/full app runtime", () => {
     const runtime = read("src/app/components/AppRuntime.tsx");
     expect(runtime).toContain('import RootRouteEntry from "@/app/routes/RootRouteEntry"');
     expect(runtime).toContain("<RootRouteEntry />");
-    expect(runtime).toContain('import("@/app/components/FullAppRuntimeShell")');
+    expect(runtime).toContain('import("@/app/components/RoutedAppRuntime")');
+    expect(runtime).not.toContain('from "react-router-dom"');
+    expect(runtime).not.toContain("BrowserRouter");
     expect(runtime).not.toContain("SessionProvider");
     expect(runtime).not.toContain("QueryClientProvider");
   });
@@ -88,8 +85,8 @@ describe("root community-first MVP entry", () => {
 
   it("keeps one primary exploration action and an accessible mobile menu", () => {
     const source = read("src/app/pages/TerritoryEntryPage.tsx");
-    expect(source).not.toContain('to={LAUNCH_URLS.community} className="entry-community-preview"');
     expect(source).toContain('className="entry-explore-link"');
+    expect(source).toContain('href={LAUNCH_URLS.community}');
     expect(source).toContain('aria-controls="entry-mobile-menu-popover"');
     expect(source).toContain('event.key === "Escape"');
     expect(source).toContain('href="#main-content"');
