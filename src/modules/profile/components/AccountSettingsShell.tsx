@@ -16,17 +16,28 @@ import { cn } from "@/shared/utils/cn";
 
 const settingsItems = [
   { label: "Visão geral", href: "/conta", icon: Home, exact: true },
-  { label: "Dados de acesso", href: "/conta/seguranca#acesso", icon: KeyRound },
-  { label: "Segurança", href: "/conta/seguranca", icon: LockKeyhole, exact: true },
+  { label: "Dados de acesso", href: "/conta/seguranca#acesso", icon: KeyRound, hash: "#acesso" },
+  { label: "Segurança", href: "/conta/seguranca", icon: LockKeyhole, exact: true, excludeHash: "#acesso" },
   { label: "Notificações", href: "/conta/notificacoes", icon: Bell, exact: true },
   { label: "Privacidade e dados", href: "/conta/privacidade", icon: Shield, exact: true },
   { label: "Preferências", href: "/conta/preferencias", icon: SlidersHorizontal, exact: true },
-  { label: "Meus perfis", href: "/conta?section=profiles", icon: UserRound },
+  { label: "Meus perfis", href: "/conta?section=profiles", icon: UserRound, exact: true },
 ] as const;
 
-function isActive(pathname: string, href: string, exact?: boolean) {
+function isActive(
+  pathname: string,
+  locationHash: string,
+  href: string,
+  exact?: boolean,
+  hash?: string,
+  excludeHash?: string,
+) {
   const target = href.split("?")[0].split("#")[0];
-  return exact ? pathname === target : pathname.startsWith(target);
+  const pathMatches = exact ? pathname === target : pathname.startsWith(target);
+  if (!pathMatches) return false;
+  if (hash) return locationHash === hash;
+  if (excludeHash && locationHash === excludeHash) return false;
+  return true;
 }
 
 export function AccountSettingsShell({
@@ -55,15 +66,15 @@ export function AccountSettingsShell({
             achegue-se<span className="text-territory-sun">.</span>
           </Link>
           <nav aria-label="Configurações da conta" className="space-y-1">
-            {settingsItems.map(({ label, href, icon: Icon, exact }) => {
-              const active = isActive(location.pathname, href, exact);
+            {settingsItems.map(({ label, href, icon: Icon, exact, hash, excludeHash }) => {
+              const active = isActive(location.pathname, location.hash, href, exact, hash, excludeHash);
               return (
                 <Link
                   key={label}
                   to={href}
                   aria-current={active ? "page" : undefined}
                   className={cn(
-                    "relative flex min-h-12 items-center gap-3 rounded-lg px-3 text-sm font-medium text-white/88 transition-colors hover:bg-white/10 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-territory-sun",
+                    "relative flex min-h-12 items-center gap-3 rounded-lg px-3 text-sm font-medium text-white/90 transition-colors hover:bg-white/10 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-territory-sun",
                     active && "bg-white/15 font-semibold text-white",
                   )}
                 >
