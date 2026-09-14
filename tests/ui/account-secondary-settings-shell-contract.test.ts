@@ -17,6 +17,7 @@ describe("secondary account settings shell contract", () => {
     expect(accountRoutes).toContain("ACCOUNT_PATHS.profileSettings");
     expect(addresses).toContain("<AccountSettingsShell");
     expect(profileSettings).toContain("<AccountSettingsShell");
+    expect(addresses).toContain("backTo={ACCOUNT_PATHS.preferences}");
     expect(profileSettings).toContain("backTo={ACCOUNT_PATHS.preferences}");
   });
 
