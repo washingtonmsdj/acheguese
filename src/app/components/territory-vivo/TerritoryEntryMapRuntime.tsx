@@ -165,10 +165,7 @@ export default function TerritoryEntryMapRuntime({
     !boundaryUnavailable &&
     !boundarySlow &&
     (!boundaryStarted || isLoading || isBoundaryLoading);
-  const mapRegionBusy =
-    !mapUnavailable &&
-    !boundarySlow &&
-    (!mapReady || isLoading || !boundaryStarted || isBoundaryLoading);
+  const mapRegionBusy = !mapUnavailable && !mapReady;
 
   useEffect(() => {
     if (!mapReady) {
