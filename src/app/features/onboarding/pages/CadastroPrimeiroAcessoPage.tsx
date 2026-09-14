@@ -13,15 +13,66 @@ import {
 import { useLocationCascade } from "@/core/location/hooks/useLocationCascade";
 import { profileService } from "@/core/profiles/services/ProfileService";
 import type { ProfileRow } from "@/core/profiles/services/types";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/shared/components/ui/select";
 import { useToast } from "@/shared/hooks/use-toast";
 import { resolveSafeInternalPath } from "@/shared/utils/safeRedirect";
+
+interface TerritoryOption {
+  id: string;
+  name: string;
+}
+
+interface ConceptSelectProps {
+  id: string;
+  label: string;
+  value: string;
+  placeholder: string;
+  options: TerritoryOption[];
+  disabled?: boolean;
+  onChange: (value: string) => void;
+}
+
+/**
+ * Controle nativo do fluxo de primeiro acesso.
+ * O indicador é desenhado com bordas CSS para manter esta superfície sem SVG
+ * ou pacote de ícones genérico e preservar semântica/acessibilidade do select.
+ */
+function ConceptSelect({
+  id,
+  label,
+  value,
+  placeholder,
+  options,
+  disabled = false,
+  onChange,
+}: ConceptSelectProps) {
+  return (
+    <div>
+      <label className="mb-1 block text-[11px] font-semibold" htmlFor={id}>
+        {label}
+      </label>
+      <div className="relative">
+        <select
+          id={id}
+          value={value}
+          disabled={disabled}
+          onChange={(event) => onChange(event.target.value)}
+          className="h-10 w-full appearance-none rounded-md border border-[#b9c5c6] bg-white px-3 pr-10 text-[13px] text-[#173d41] shadow-none outline-none transition-colors focus:border-[#0b5b59] focus:ring-2 focus:ring-[#0b5b59]/20 disabled:cursor-not-allowed disabled:bg-[#f2f3f0] disabled:text-[#819092]"
+        >
+          <option value="">{placeholder}</option>
+          {options.map((item) => (
+            <option key={item.id} value={item.id}>
+              {item.name}
+            </option>
+          ))}
+        </select>
+        <span
+          aria-hidden="true"
+          className="pointer-events-none absolute right-4 top-1/2 h-2 w-2 -translate-y-[65%] rotate-45 border-b-2 border-r-2 border-[#446063]"
+        />
+      </div>
+    </div>
+  );
+}
 
 export default function CadastroPrimeiroAcessoPage() {
   const { user, refreshUser } = useAuth();
@@ -209,27 +260,40 @@ export default function CadastroPrimeiroAcessoPage() {
 
             {showTerritoryForm ? (
               <div className="mt-4 space-y-3">
-                <div>
-                  <label className="mb-1 block text-[11px] font-semibold" htmlFor="first-access-state">Estado</label>
-                  <Select value={stateId} onValueChange={(value) => { setStateId(value); setCityId(""); setNeighborhoodId(""); }} disabled={loadingStates || saving}>
-                    <SelectTrigger id="first-access-state" className="h-10"><SelectValue placeholder={loadingStates ? "Carregando…" : "Selecione"} /></SelectTrigger>
-                    <SelectContent>{states.map((item) => <SelectItem key={item.id} value={item.id}>{item.name}</SelectItem>)}</SelectContent>
-                  </Select>
-                </div>
-                <div>
-                  <label className="mb-1 block text-[11px] font-semibold" htmlFor="first-access-city">Cidade</label>
-                  <Select value={cityId} onValueChange={(value) => { setCityId(value); setNeighborhoodId(""); }} disabled={!stateId || loadingCities || saving}>
-                    <SelectTrigger id="first-access-city" className="h-10"><SelectValue placeholder={loadingCities ? "Carregando…" : "Selecione"} /></SelectTrigger>
-                    <SelectContent>{cities.map((item) => <SelectItem key={item.id} value={item.id}>{item.name}</SelectItem>)}</SelectContent>
-                  </Select>
-                </div>
-                <div>
-                  <label className="mb-1 block text-[11px] font-semibold" htmlFor="first-access-neighborhood">Bairro</label>
-                  <Select value={neighborhoodId} onValueChange={setNeighborhoodId} disabled={!cityId || loadingNeighborhoods || saving}>
-                    <SelectTrigger id="first-access-neighborhood" className="h-10"><SelectValue placeholder={loadingNeighborhoods ? "Carregando…" : "Selecione"} /></SelectTrigger>
-                    <SelectContent>{neighborhoods.map((item) => <SelectItem key={item.id} value={item.id}>{item.name}</SelectItem>)}</SelectContent>
-                  </Select>
-                </div>
+                <ConceptSelect
+                  id="first-access-state"
+                  label="Estado"
+                  value={stateId}
+                  placeholder={loadingStates ? "Carregando…" : "Selecione"}
+                  options={states}
+                  disabled={loadingStates || saving}
+                  onChange={(value) => {
+                    setStateId(value);
+                    setCityId("");
+                    setNeighborhoodId("");
+                  }}
+                />
+                <ConceptSelect
+                  id="first-access-city"
+                  label="Cidade"
+                  value={cityId}
+                  placeholder={loadingCities ? "Carregando…" : "Selecione"}
+                  options={cities}
+                  disabled={!stateId || loadingCities || saving}
+                  onChange={(value) => {
+                    setCityId(value);
+                    setNeighborhoodId("");
+                  }}
+                />
+                <ConceptSelect
+                  id="first-access-neighborhood"
+                  label="Bairro"
+                  value={neighborhoodId}
+                  placeholder={loadingNeighborhoods ? "Carregando…" : "Selecione"}
+                  options={neighborhoods}
+                  disabled={!cityId || loadingNeighborhoods || saving}
+                  onChange={setNeighborhoodId}
+                />
                 <button type="button" onClick={() => void saveTerritory()} disabled={saving || !neighborhoodId} className="h-10 w-full rounded-[9px] bg-[#0b5b59] text-[12px] font-bold text-white disabled:opacity-55">
                   {saving ? "Salvando…" : "Salvar cidade e bairro"}
                 </button>
