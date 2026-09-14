@@ -6,16 +6,20 @@ on:
     paths:
       - ".env.production"
       - ".env.remote.example"
+      - ".env.example"
+      - ".env.local.example"
       - "src/app/components/auth/**"
       - "src/app/pages/LoginPage.tsx"
       - "src/app/pages/ResetPasswordPage.tsx"
       - "src/app/features/onboarding/pages/Cadastro*.tsx"
+      - "src/app/features/onboarding/pages/AceiteTermosPage.tsx"
       - "src/app/features/onboarding/hooks/useCadastro.ts"
       - "src/app/features/onboarding/validation/**"
       - "src/core/auth/**"
       - "src/shared/components/ui/checkbox.tsx"
       - "public/auth/**"
       - "tests/e2e/auth-concept-layout.spec.ts"
+      - "tests/e2e/auth-concept-capture.spec.ts"
       - "tests/regression/auth-concept-flow.test.ts"
       - "tests/regression/auth-return-context.test.ts"
       - "playwright.config.ts"
@@ -26,16 +30,20 @@ on:
     paths:
       - ".env.production"
       - ".env.remote.example"
+      - ".env.example"
+      - ".env.local.example"
       - "src/app/components/auth/**"
       - "src/app/pages/LoginPage.tsx"
       - "src/app/pages/ResetPasswordPage.tsx"
       - "src/app/features/onboarding/pages/Cadastro*.tsx"
+      - "src/app/features/onboarding/pages/AceiteTermosPage.tsx"
       - "src/app/features/onboarding/hooks/useCadastro.ts"
       - "src/app/features/onboarding/validation/**"
       - "src/core/auth/**"
       - "src/shared/components/ui/checkbox.tsx"
       - "public/auth/**"
       - "tests/e2e/auth-concept-layout.spec.ts"
+      - "tests/e2e/auth-concept-capture.spec.ts"
       - "tests/regression/auth-concept-flow.test.ts"
       - "tests/regression/auth-return-context.test.ts"
       - "playwright.config.ts"
@@ -73,7 +81,7 @@ jobs:
           tests/regression/auth-return-context.test.ts
 
   responsive-layout:
-    name: auth responsive layout
+    name: auth responsive layout and captures
     runs-on: ubuntu-latest
     timeout-minutes: 20
     steps:
@@ -92,10 +100,25 @@ jobs:
       - name: Install Chromium
         run: npx playwright install --with-deps chromium
 
-      - name: Run mobile and desktop layout regression
+      - name: Run mobile and desktop auth regression and capture
         env:
           CI: "true"
-        run: npx playwright test tests/e2e/auth-concept-layout.spec.ts --project=chromium
+          VITE_AUTH_GOOGLE_ENABLED: "true"
+        run: >-
+          npx playwright test
+          tests/e2e/auth-concept-layout.spec.ts
+          tests/e2e/auth-concept-capture.spec.ts
+          --project=chromium
+
+      - name: Upload account/access screenshots
+        if: always()
+        continue-on-error: true
+        uses: actions/upload-artifact@v7
+        with:
+          name: auth-concept-captures
+          path: auth-concept-captures/
+          retention-days: 14
+          if-no-files-found: warn
 
       - name: Upload Playwright diagnostics on failure
         if: failure()
