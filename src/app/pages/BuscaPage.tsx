@@ -534,12 +534,14 @@ export default function BuscaPage() {
                 </button>
               ),
             )}
-            <Link
-              to={moduleUrls.education}
-              className="relative hidden min-h-10 shrink-0 items-center whitespace-nowrap px-0.5 text-sm font-medium text-territory-muted transition-colors hover:text-territory-ink md:inline-flex"
-            >
-              Educação
-            </Link>
+            {isLaunchSurfaceEnabled("education") ? (
+              <Link
+                to={moduleUrls.education}
+                className="relative hidden min-h-10 shrink-0 items-center whitespace-nowrap px-0.5 text-sm font-medium text-territory-muted transition-colors hover:text-territory-ink md:inline-flex"
+              >
+                Educação
+              </Link>
+            ) : null}
           </div>
         </nav>
 
