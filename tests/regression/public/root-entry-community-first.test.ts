@@ -58,8 +58,9 @@ describe("root community-first MVP entry", () => {
     expect(source).toContain(
       "Promise.all([getLaunchCity(), getLaunchResolvedTerritory()])",
     );
+    expect(source).toContain("await import(");
     expect(source).toContain(
-      'await import("@/core/location/repositories/createLocationRepository")',
+      '"@/core/location/repositories/createLocationRepository"',
     );
     expect(source).toContain('await import("@/core/territorial")');
     expect(source).not.toContain(
