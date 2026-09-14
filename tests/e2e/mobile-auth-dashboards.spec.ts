@@ -33,9 +33,29 @@ const MOBILE_AUTH_ROUTES = [
     expectedUrlPattern: /\/conta\/seguranca(\?|$)/i,
   },
   {
+    name: "conta dados de acesso",
+    path: "/conta/seguranca#acesso",
+    expectedUrlPattern: /\/conta\/seguranca#acesso$/i,
+  },
+  {
+    name: "conta alterar senha",
+    path: "/conta/seguranca#senha",
+    expectedUrlPattern: /\/conta\/seguranca#senha$/i,
+  },
+  {
+    name: "conta configurar duas etapas",
+    path: "/conta/seguranca#mfa",
+    expectedUrlPattern: /\/conta\/seguranca#mfa$/i,
+  },
+  {
     name: "conta hub",
     path: "/conta",
     expectedUrlPattern: /\/conta(\?|$)/i,
+  },
+  {
+    name: "conta meus perfis",
+    path: "/conta?section=profiles",
+    expectedUrlPattern: /\/conta\?section=profiles$/i,
   },
   {
     name: "conta editar perfil",
@@ -53,6 +73,11 @@ const MOBILE_AUTH_ROUTES = [
     expectedUrlPattern: /\/conta\/preferencias(\?|$)/i,
   },
   {
+    name: "conta acessibilidade",
+    path: "/conta/preferencias#acessibilidade",
+    expectedUrlPattern: /\/conta\/preferencias#acessibilidade$/i,
+  },
+  {
     name: "conta notificacoes",
     path: "/conta/notificacoes",
     expectedUrlPattern: /\/conta\/notificacoes(\?|$)/i,
@@ -61,6 +86,16 @@ const MOBILE_AUTH_ROUTES = [
     name: "conta privacidade",
     path: "/conta/privacidade",
     expectedUrlPattern: /\/conta\/privacidade(\?|$)/i,
+  },
+  {
+    name: "conta exportar dados",
+    path: "/conta/privacidade#exportar",
+    expectedUrlPattern: /\/conta\/privacidade#exportar$/i,
+  },
+  {
+    name: "conta historico de consentimentos",
+    path: "/conta/privacidade#historico",
+    expectedUrlPattern: /\/conta\/privacidade#historico$/i,
   },
   {
     name: "conta perfil configuracoes",
