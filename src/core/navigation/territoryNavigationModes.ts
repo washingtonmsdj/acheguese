@@ -31,6 +31,7 @@ export interface TerritoryNavigationContext {
     state: string;
     city: string;
   };
+  fallbackBaseUrl?: string | null;
   authenticated: boolean;
 }
 
@@ -38,14 +39,32 @@ function normalizePath(value: string): string {
   return value.replace(/\/+$/, "") || "/";
 }
 
+function resolveFallbackBaseUrl(value?: string | null): string | null {
+  if (!value?.trim()) return null;
+
+  const candidate = normalizePath(
+    value.startsWith("/") ? value : `/${value}`,
+  );
+  const parsed = parsePublicTerritoryPath(candidate);
+  if (!parsed.state || !parsed.city) return null;
+
+  return `/${parsed.state}/${parsed.city}${
+    parsed.territorySlug ? `/${parsed.territorySlug}` : ""
+  }`;
+}
+
 export function resolveTerritoryNavigationBase(
   pathname: string,
   fallback: { state: string; city: string },
+  fallbackBaseUrl?: string | null,
 ): string {
   const parsed = parsePublicTerritoryPath(pathname);
 
   if (!parsed.state || !parsed.city) {
-    return `/${fallback.state}/${fallback.city}`;
+    return (
+      resolveFallbackBaseUrl(fallbackBaseUrl) ??
+      `/${fallback.state}/${fallback.city}`
+    );
   }
 
   return `/${parsed.state}/${parsed.city}${
@@ -56,11 +75,13 @@ export function resolveTerritoryNavigationBase(
 export function buildTerritoryNavigationModes({
   pathname,
   fallback,
+  fallbackBaseUrl,
   authenticated,
 }: TerritoryNavigationContext): TerritoryNavigationMode[] {
   const territoryBase = resolveTerritoryNavigationBase(
     pathname,
     fallback,
+    fallbackBaseUrl,
   );
   const territoryModule = (module: string) =>
     `/${module}${territoryBase}`;
