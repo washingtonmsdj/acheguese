@@ -1,28 +1,28 @@
 /**
- * useGeolocationTracking - Hook para rastreio GPS do dispositivo
+ * useGeolocationTracking - Hook para rastreio GPS do dispositivo.
  *
- * Usa Geolocation API do navegador.
- * Integra com TrackingService para persistência.
- *
- * Padrão: Banco → Service → Hook → Component
+ * Browser Geolocation pertence ao GeolocationService compartilhado; este hook
+ * cuida apenas de estado React, throttling e persistencia no TrackingService.
  */
-import { logger } from '@/shared/utils/logger';
 import { useState, useCallback, useEffect, useRef } from 'react';
+import { GEOLOCATION_RUNTIME } from '@/shared/config/geolocation';
+import {
+  GeolocationService,
+  getGeolocationErrorCode,
+  isGeolocationPermissionDeniedError,
+  type GeolocationCoords,
+  type GeolocationWatchOptions,
+} from '@/shared/services/GeolocationService';
+import { logger } from '@/shared/utils/logger';
 import { trackingService } from '../services/TrackingService';
 import type { TrackingPosition } from '../types';
-
-interface GeolocationOptions {
-  enableHighAccuracy?: boolean;
-  timeout?: number;
-  maximumAge?: number;
-}
 
 interface UseGeolocationTrackingOptions {
   entityId: string;
   entityType?: 'driver' | 'user' | 'vehicle' | 'device';
   enabled?: boolean;
   updateInterval?: number;
-  geolocationOptions?: GeolocationOptions;
+  geolocationOptions?: GeolocationWatchOptions;
   autoStart?: boolean;
 }
 
@@ -35,8 +35,29 @@ interface UseGeolocationTrackingResult {
   stopTracking: () => void;
 }
 
+function toTrackingPosition(coords: GeolocationCoords): TrackingPosition {
+  return {
+    latitude: coords.latitude,
+    longitude: coords.longitude,
+    accuracy: coords.accuracy,
+    heading: coords.heading ?? undefined,
+    speed: coords.speed != null ? coords.speed * 3.6 : undefined,
+    altitude: coords.altitude ?? undefined,
+    timestamp: new Date(coords.timestamp).toISOString(),
+  };
+}
+
+function getTrackingErrorMessage(error: unknown, fallback: string): string {
+  if (isGeolocationPermissionDeniedError(error)) return 'Permissão de localização negada';
+
+  const code = getGeolocationErrorCode(error) ?? (error as { code?: unknown } | null)?.code;
+  if (code === 'POSITION_UNAVAILABLE' || code === 2) return 'Localização indisponível';
+  if (code === 3) return 'Timeout ao obter localização';
+  return error instanceof Error && error.message ? error.message : fallback;
+}
+
 export function useGeolocationTracking(
-  options: UseGeolocationTrackingOptions
+  options: UseGeolocationTrackingOptions,
 ): UseGeolocationTrackingResult {
   const {
     entityId,
@@ -53,36 +74,21 @@ export function useGeolocationTracking(
   const [lastUpdate, setLastUpdate] = useState<Date | null>(null);
 
   const watchIdRef = useRef<number | null>(null);
-  const lastSentRef = useRef<number>(0);
+  const lastSentRef = useRef(0);
 
   const {
     enableHighAccuracy = true,
-    timeout = 15000,
+    timeout = GEOLOCATION_RUNTIME.requestTimeoutMs,
     maximumAge = 0,
   } = geolocationOptions;
 
-  // Enviar posição para o servidor com throttling
   const sendPosition = useCallback(
-    async (position: GeolocationPosition) => {
+    async (coords: GeolocationCoords) => {
       const now = Date.now();
-      
-      // Throttle: não enviar mais que o intervalo configurado
-      if (now - lastSentRef.current < updateInterval) {
-        return;
-      }
-
-      const trackingPosition: TrackingPosition = {
-        latitude: position.coords.latitude,
-        longitude: position.coords.longitude,
-        accuracy: position.coords.accuracy,
-        heading: position.coords.heading ?? undefined,
-        speed: position.coords.speed ? position.coords.speed * 3.6 : undefined, // m/s para km/h
-        altitude: position.coords.altitude ?? undefined,
-        timestamp: new Date().toISOString(),
-      };
+      if (now - lastSentRef.current < updateInterval) return;
 
       try {
-        await trackingService.updatePosition(entityId, trackingPosition, entityType);
+        await trackingService.updatePosition(entityId, toTrackingPosition(coords), entityType);
         lastSentRef.current = now;
         setLastUpdate(new Date());
         setError(null);
@@ -91,104 +97,65 @@ export function useGeolocationTracking(
         setError('Erro ao enviar localização');
       }
     },
-    [entityId, entityType, updateInterval]
+    [entityId, entityType, updateInterval],
   );
 
-  // Iniciar rastreamento
+  const handlePosition = useCallback((coords: GeolocationCoords) => {
+    setCurrentPosition(toTrackingPosition(coords));
+    void sendPosition(coords);
+  }, [sendPosition]);
+
   const startTracking = useCallback(() => {
     if (!enabled || isTracking) return;
 
-    if (!navigator.geolocation) {
+    setError(null);
+
+    void GeolocationService.getCurrentLocation({
+      useCache: false,
+      timeout,
+      gpsMode: 'precise',
+      allowIpFallback: false,
+    })
+      .then((result) => handlePosition(result.coords))
+      .catch((err) => {
+        const message = getTrackingErrorMessage(err, 'Erro ao obter localização');
+        setError(message);
+        logger.warn('[useGeolocationTracking] Initial position unavailable', { message });
+      });
+
+    const watchId = GeolocationService.watchLocation(
+      handlePosition,
+      (err) => {
+        const message = getTrackingErrorMessage(err, 'Erro ao monitorar localização');
+        setError(message);
+        logger.warn('[useGeolocationTracking] Watch position unavailable', { message });
+      },
+      { enableHighAccuracy, timeout, maximumAge },
+    );
+
+    if (watchId === null) {
       setError('Geolocalização não suportada');
       return;
     }
 
-    logger.info('[useGeolocationTracking] Iniciando rastreamento GPS...');
-
-    // Obter posição inicial
-    navigator.geolocation.getCurrentPosition(
-      (position) => {
-        const trackingPosition: TrackingPosition = {
-          latitude: position.coords.latitude,
-          longitude: position.coords.longitude,
-          accuracy: position.coords.accuracy,
-          heading: position.coords.heading ?? undefined,
-          speed: position.coords.speed ? position.coords.speed * 3.6 : undefined,
-          altitude: position.coords.altitude ?? undefined,
-          timestamp: new Date().toISOString(),
-        };
-        setCurrentPosition(trackingPosition);
-        sendPosition(position);
-      },
-      (err) => {
-        let errorMsg = 'Erro ao obter localização';
-        switch (err.code) {
-          case err.PERMISSION_DENIED:
-            errorMsg = 'Permissão de localização negada';
-            break;
-          case err.POSITION_UNAVAILABLE:
-            errorMsg = 'Localização indisponível';
-            break;
-          case err.TIMEOUT:
-            errorMsg = 'Timeout ao obter localização';
-            break;
-        }
-        setError(errorMsg);
-        logger.error('[useGeolocationTracking] Error getting position:', err);
-      },
-      { enableHighAccuracy, timeout, maximumAge }
-    );
-
-    // Monitorar posição continuamente
-    const id = navigator.geolocation.watchPosition(
-      (position) => {
-        const trackingPosition: TrackingPosition = {
-          latitude: position.coords.latitude,
-          longitude: position.coords.longitude,
-          accuracy: position.coords.accuracy,
-          heading: position.coords.heading ?? undefined,
-          speed: position.coords.speed ? position.coords.speed * 3.6 : undefined,
-          altitude: position.coords.altitude ?? undefined,
-          timestamp: new Date().toISOString(),
-        };
-        setCurrentPosition(trackingPosition);
-        sendPosition(position);
-      },
-      (err) => {
-        logger.error('[useGeolocationTracking] Error watching position:', err);
-        setError('Erro ao monitorar localização');
-      },
-      { enableHighAccuracy, timeout, maximumAge }
-    );
-
-    watchIdRef.current = id;
+    watchIdRef.current = watchId;
     setIsTracking(true);
-    logger.info('[useGeolocationTracking] Rastreamento iniciado');
-  }, [enabled, isTracking, enableHighAccuracy, timeout, maximumAge, sendPosition]);
+  }, [enabled, isTracking, enableHighAccuracy, timeout, maximumAge, handlePosition]);
 
-  // Parar rastreamento
   const stopTracking = useCallback(() => {
-    if (watchIdRef.current !== null) {
-      navigator.geolocation.clearWatch(watchIdRef.current);
-      watchIdRef.current = null;
-    }
+    GeolocationService.clearWatch(watchIdRef.current);
+    watchIdRef.current = null;
     setIsTracking(false);
-    logger.info('[useGeolocationTracking] Rastreamento parado');
   }, []);
 
-  // Auto-start se configurado
   useEffect(() => {
-    if (autoStart && enabled) {
-      startTracking();
-    }
+    if (autoStart && enabled) startTracking();
   }, [autoStart, enabled, startTracking]);
 
-  // Cleanup ao desmontar
   useEffect(() => {
     return () => {
-      if (watchIdRef.current !== null) {
-        navigator.geolocation.clearWatch(watchIdRef.current);
-      }
+      GeolocationService.clearWatch(watchIdRef.current);
+      watchIdRef.current = null;
     };
   }, []);
 
