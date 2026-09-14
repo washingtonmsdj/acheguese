@@ -14,6 +14,7 @@ describe("territory entry progressive map performance", () => {
     expect(hook).toContain("polygonPromises");
     expect(hook).toContain("POLYGON_CACHE_TTL_MS");
     expect(hook).toContain("preloadTerritoryPolygons");
+    expect(hook).toContain("options: { enabled?: boolean } = {}");
   });
 
   it("never hides the passive map canvas while territory data arrives", () => {
@@ -35,15 +36,23 @@ describe("territory entry progressive map performance", () => {
     expect(runtime).toContain("initialViewport={initialViewport}");
   });
 
-  it("preconnects official boundary authorities from SSOT metadata", () => {
+  it("gives the basemap an exclusive first-paint window before boundary network", () => {
+    const html = read("index.html");
     const wrapper = read("src/app/components/territory-vivo/TerritoryEntryMap.tsx");
-    expect(wrapper).toContain("preconnectOfficialBoundarySources");
-    expect(wrapper).toContain("location.metadata?.source_url");
-    expect(wrapper).toContain('link[rel="preconnect"]');
-    expect(wrapper).toContain('preconnect.rel = "preconnect"');
-    expect(wrapper).toContain('dnsPrefetch.rel = "dns-prefetch"');
-    expect(wrapper).toContain("preconnectOfficialBoundarySources(preloadResolved)");
-    expect(wrapper).not.toContain("services6.arcgis.com");
+    const runtime = read("src/app/components/territory-vivo/TerritoryEntryMapRuntime.tsx");
+
+    expect(html).not.toContain("services6.arcgis.com");
+    expect(wrapper).not.toContain("preconnectOfficialBoundarySources");
+    expect(wrapper).not.toContain("preloadEntryOfficialBoundary");
+    expect(wrapper).not.toContain("loadOfficialFeatureServerBoundaries");
+    expect(wrapper).not.toContain("source_url");
+
+    expect(runtime).toContain("const [boundaryStarted, setBoundaryStarted] = useState(false)");
+    expect(runtime).toContain("useTerritoryPolygon(resolved, {");
+    expect(runtime).toContain("enabled: boundaryStarted");
+    expect(runtime).toContain("window.requestAnimationFrame(() => setBoundaryStarted(true))");
+    expect(runtime).toContain("markPublicRootMapReady();");
+    expect(runtime).toContain("!boundaryStarted || isLoading || isBoundaryLoading");
   });
 
   it("preloads style before React while runtime and engine start together on first render", () => {
@@ -66,8 +75,6 @@ describe("territory entry progressive map performance", () => {
     expect(wrapper).toContain('import("./TerritoryEntryMapRuntime")');
     expect(wrapper).toContain('import("@/core/maps/components/v3/MapLibreAdapter")');
     expect(wrapper).toContain("preloadPassiveMapLibreAdapterRuntime");
-    expect(wrapper).toContain("preloadEntryOfficialBoundary(preloadResolved)");
-    expect(wrapper).toContain("loadOfficialFeatureServerBoundaries");
     expect(wrapper).not.toContain("preloadEntryMapEngine");
     expect(wrapper).not.toContain("void loadTerritoryEntryMapRuntime()");
 
