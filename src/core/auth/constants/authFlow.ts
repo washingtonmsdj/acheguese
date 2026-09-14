@@ -29,14 +29,24 @@ export const AUTH_QUERY_VALUES = {
   expiredOtp: "otp_expired",
 } as const;
 
+export const AUTH_JOURNEY_INTENTS = {
+  login: "login",
+  signup: "signup",
+} as const;
+
+export type AuthJourneyIntent =
+  (typeof AUTH_JOURNEY_INTENTS)[keyof typeof AUTH_JOURNEY_INTENTS];
+
 export const AUTH_FLOW_STORAGE_KEYS = {
   pendingReturn: "auth.pending-return-path",
+  pendingIntent: "auth.pending-intent",
   pendingSignupEmail: "auth.pending-signup-email",
   pendingSignupRedirect: "auth.pending-signup-redirect",
 } as const;
 
 export const AUTH_FLOW_TTL_MS = {
   pendingReturn: 2 * 60 * 60 * 1000,
+  pendingIntent: 2 * 60 * 60 * 1000,
   pendingSignup: 24 * 60 * 60 * 1000,
 } as const;
 
