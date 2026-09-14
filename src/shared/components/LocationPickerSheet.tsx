@@ -1,6 +1,7 @@
 /**
  * LocationPickerSheet — Sheet para seleção de localização no mapa.
  * Engine: MapLibre GL JS via runtime canônico lazy.
+ * Geolocalização: useRobustGeolocation (SSOT compartilhado).
  */
 
 import { useState, useRef, useEffect, useCallback } from 'react';
@@ -8,8 +9,10 @@ import type { Map as MapLibreMap, Marker as MapLibreMarker } from "maplibre-gl";
 import { loadMapLibreRuntime } from '@/core/maps/runtime/loadMapLibreRuntime';
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetDescription } from '@/shared/components/ui/sheet';
 import { Button } from '@/shared/components/ui/button';
-import { MapPin, Navigation, Check } from 'lucide-react';
+import { Check, Loader2, MapPin, Navigation } from 'lucide-react';
 import { DEFAULT_TILE_STYLE, MAP_DEFAULT_CENTER_LNGLAT } from '@/shared/config/mapDefaults';
+import { useRobustGeolocation } from '@/shared/hooks';
+import type { GeolocationCoords } from '@/shared/hooks/useRobustGeolocation';
 
 interface LocationPickerSheetProps {
   open: boolean;
@@ -19,16 +22,32 @@ interface LocationPickerSheetProps {
   initialLng?: number;
 }
 
+function resolvePickerPosition(initialLat?: number, initialLng?: number): [number, number] {
+  if (initialLat != null && initialLng != null) {
+    return [initialLat, initialLng];
+  }
+
+  return [MAP_DEFAULT_CENTER_LNGLAT[1], MAP_DEFAULT_CENTER_LNGLAT[0]];
+}
+
 export function LocationPickerSheet({ open, onOpenChange, onConfirm, initialLat, initialLng }: LocationPickerSheetProps) {
   const containerRef = useRef<HTMLDivElement>(null);
   const mapRef = useRef<MapLibreMap | null>(null);
   const markerRef = useRef<MapLibreMarker | null>(null);
-  const [position, setPosition] = useState<[number, number]>(
-    initialLat && initialLng
-      ? [initialLat, initialLng]
-      : [MAP_DEFAULT_CENTER_LNGLAT[1], MAP_DEFAULT_CENTER_LNGLAT[0]],
-  );
+  const [position, setPosition] = useState<[number, number]>(() => resolvePickerPosition(initialLat, initialLng));
   const [ready, setReady] = useState(false);
+
+  const handleGeolocationSuccess = useCallback((coords: GeolocationCoords) => {
+    const { latitude: lat, longitude: lng } = coords;
+    mapRef.current?.flyTo({ center: [lng, lat], zoom: 17, duration: 800 });
+    markerRef.current?.setLngLat([lng, lat]);
+    setPosition([lat, lng]);
+  }, []);
+
+  const { loading: locatingUser, requestLocation } = useRobustGeolocation({
+    useCache: false,
+    onSuccess: handleGeolocationSuccess,
+  });
 
   useEffect(() => {
     if (!open) {
@@ -46,8 +65,7 @@ export function LocationPickerSheet({ open, onOpenChange, onConfirm, initialLat,
         const maplibregl = await loadMapLibreRuntime();
         if (disposed || !containerRef.current || mapRef.current) return;
 
-        const startLat = initialLat ?? MAP_DEFAULT_CENTER_LNGLAT[1];
-        const startLng = initialLng ?? MAP_DEFAULT_CENTER_LNGLAT[0];
+        const [startLat, startLng] = resolvePickerPosition(initialLat, initialLng);
 
         const map = new maplibregl.Map({
           container: containerRef.current,
@@ -104,24 +122,9 @@ export function LocationPickerSheet({ open, onOpenChange, onConfirm, initialLat,
     };
   }, [open, initialLat, initialLng]);
 
-  const centerOnUser = useCallback(async () => {
-    try {
-      const userPosition = await new Promise<GeolocationPosition>((resolve, reject) => {
-        navigator.geolocation.getCurrentPosition(resolve, reject, {
-          enableHighAccuracy: true,
-          timeout: 10000,
-          maximumAge: 60000,
-        });
-      });
-      const lat = userPosition.coords.latitude;
-      const lng = userPosition.coords.longitude;
-      mapRef.current?.flyTo({ center: [lng, lat], zoom: 17, duration: 800 });
-      markerRef.current?.setLngLat([lng, lat]);
-      setPosition([lat, lng]);
-    } catch {
-      // permissão negada ou indisponível — silencioso
-    }
-  }, []);
+  const centerOnUser = useCallback(() => {
+    void requestLocation({ useCache: false });
+  }, [requestLocation]);
 
   return (
     <Sheet open={open} onOpenChange={onOpenChange}>
@@ -134,8 +137,19 @@ export function LocationPickerSheet({ open, onOpenChange, onConfirm, initialLat,
         <div className="relative flex-1 h-[calc(85vh-140px)]">
           <div ref={containerRef} className="absolute inset-0" />
 
-          <Button size="icon" variant="secondary" className="absolute top-3 right-3 z-10 h-9 w-9 rounded-full shadow-lg" onClick={centerOnUser}>
-            <Navigation className="h-4 w-4" />
+          <Button
+            size="icon"
+            variant="secondary"
+            className="absolute top-3 right-3 z-10 h-9 w-9 rounded-full shadow-lg"
+            onClick={centerOnUser}
+            disabled={locatingUser}
+            aria-label="Usar minha localização atual"
+          >
+            {locatingUser ? (
+              <Loader2 className="h-4 w-4 animate-spin" aria-hidden="true" />
+            ) : (
+              <Navigation className="h-4 w-4" aria-hidden="true" />
+            )}
           </Button>
 
           {!ready && (
