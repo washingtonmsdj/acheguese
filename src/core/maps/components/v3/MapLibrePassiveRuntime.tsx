@@ -9,13 +9,15 @@ import type { Map as MapLibreMap } from "maplibre-gl";
 
 import { loadMapLibreRuntime } from "@/core/maps/runtime/loadMapLibreRuntime";
 import { readMapState, writeMapState } from "@/core/maps/runtime/mapRuntimeState";
+import {
+  MAP_DEFAULT_CENTER_LNGLAT,
+  MAP_DEFAULT_ZOOM,
+} from "@/shared/config/mapDefaults";
 import type {
   MapLibreAdapterHandle,
   MapLibreAdapterProps,
 } from "./MapLibreAdapterRuntime";
 
-const DEFAULT_CENTER: [number, number] = [-51.9253, -14.235];
-const DEFAULT_ZOOM = 13;
 const PASSIVE_MAX_PIXEL_RATIO = 2;
 const PASSIVE_CAMERA_DURATION_MS = 180;
 
@@ -105,7 +107,7 @@ export const MapLibrePassiveRuntime = forwardRef<
         requestedCenter &&
         isFiniteCoordinate(requestedCenter.latitude, requestedCenter.longitude)
           ? [requestedCenter.longitude, requestedCenter.latitude]
-          : DEFAULT_CENTER;
+          : MAP_DEFAULT_CENTER_LNGLAT;
       const passivePixelRatio = Math.min(
         window.devicePixelRatio || 1,
         PASSIVE_MAX_PIXEL_RATIO,
@@ -115,7 +117,7 @@ export const MapLibrePassiveRuntime = forwardRef<
         container: containerRef.current,
         style: styleUrl,
         center,
-        zoom: initialViewport?.zoom ?? DEFAULT_ZOOM,
+        zoom: initialViewport?.zoom ?? MAP_DEFAULT_ZOOM,
         bearing: initialViewport?.bearing ?? 0,
         pitch: initialViewport?.pitch ?? 0,
         attributionControl: false,
