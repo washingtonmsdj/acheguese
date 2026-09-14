@@ -58,4 +58,16 @@ describe("production sitemap release boundary", () => {
     expect(sitemap).not.toContain("{ path: '/privacidade'");
     expect(sitemap).not.toContain("{ path: '/contato'");
   });
+
+  it("does not advertise mobility while the canonical launch surface is paused", () => {
+    const launchScope = read("src/app/config/launchScope.ts");
+    const releaseSitemap = read("src/core/routing/seo/generateSitemap.ts");
+    const edgeSitemap = read("supabase/functions/sitemap/index.ts");
+
+    expect(launchScope).toContain("mobility: false");
+    expect(releaseSitemap).toContain(
+      "TERRITORY_SITEMAP_MODULES.filter((module) => isLaunchSurfaceEnabled(module.surface))",
+    );
+    expect(edgeSitemap).not.toContain("{ loc: '/mobilidade'");
+  });
 });
