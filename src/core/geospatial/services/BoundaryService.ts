@@ -15,6 +15,7 @@ import { createLocationRepository } from "@/core/location/repositories/createLoc
 import type { ILocationRepository } from "@/core/location/repositories/ILocationRepository";
 import type { Location } from "@/core/location/types";
 import { LocationStatus, LocationType } from "@/core/location/types";
+import { loadOfficialFeatureServerBoundary } from "../data/officialFeatureServerBoundary";
 import { loadVersionedOfficialBoundary } from "../data/officialBoundaryRegistry";
 
 export interface BoundsResult {
@@ -71,12 +72,6 @@ interface InlineLocationBoundaryRow {
 
 interface NeighborhoodBoundaryRow {
   geometry: GeoJsonBoundary | string | null;
-}
-
-interface GeoJsonFeatureCollection {
-  features?: Array<{
-    geometry?: GeoJsonBoundary | null;
-  }>;
 }
 
 interface BoundaryQueryError {
@@ -167,7 +162,6 @@ class BoundaryServiceClass {
   private locationBoundariesUnavailableLogged = false;
   private inlineLocationBoundaryAvailable: boolean | null = null;
   private neighborhoodBoundariesAvailable: boolean | null = null;
-  private metadataSourceBoundaryCache = new Map<string, BoundsResult | null>();
 
   constructor(deps: BoundaryServiceDeps = {}) {
     this.locationRepository =
@@ -590,65 +584,10 @@ class BoundaryServiceClass {
   private async getMetadataSourceBoundary(
     location: Location,
   ): Promise<BoundsResult | null> {
-    const source = this.getOfficialFeatureServerSource(location);
-    if (!source) {
-      return null;
-    }
-
-    const cacheKey = `${source.sourceUrl}::${source.objectId}`;
-    if (this.metadataSourceBoundaryCache.has(cacheKey)) {
-      return this.metadataSourceBoundaryCache.get(cacheKey) ?? null;
-    }
-
-    if (typeof fetch !== "function") {
-      this.metadataSourceBoundaryCache.set(cacheKey, null);
-      return null;
-    }
-
-    try {
-      const url = new URL(`${source.sourceUrl.replace(/\/+$/, "")}/query`);
-      url.search = new URLSearchParams({
-        where: `OBJECTID = ${source.objectId}`,
-        outFields: "*",
-        returnGeometry: "true",
-        f: "geojson",
-        outSR: "4326",
-      }).toString();
-
-      const response = await fetch(url.toString());
-      if (!response.ok) {
-        throw new Error(`FeatureServer responded with ${response.status}`);
-      }
-
-      const payload = (await response.json()) as GeoJsonFeatureCollection;
-      const geometry = payload.features?.find(
-        (feature) => feature.geometry,
-      )?.geometry;
-      const rings = geometry ? this.extractRingsFromGeoJSON(geometry) : [];
-
-      if (rings.length === 0) {
-        this.metadataSourceBoundaryCache.set(cacheKey, null);
-        return null;
-      }
-
-      const result = {
-        rings,
-        center:
-          getLocationCenterFromMetadata(location) ??
-          this.calculateCenter(rings),
-      };
-      this.metadataSourceBoundaryCache.set(cacheKey, result);
-      return result;
-    } catch (error) {
-      logger.warn("[BoundaryService] Official boundary source unavailable", {
-        locationId: location.id,
-        sourceUrl: source.sourceUrl,
-        sourceObjectId: source.objectId,
-        error,
-      });
-      this.metadataSourceBoundaryCache.set(cacheKey, null);
-      return null;
-    }
+    const officialBoundary = await loadOfficialFeatureServerBoundary(location);
+    return officialBoundary
+      ? { rings: officialBoundary.rings, center: officialBoundary.center }
+      : null;
   }
 
   private async resolveLocationCenter(
@@ -904,29 +843,6 @@ class BoundaryServiceClass {
     } catch {
       return null;
     }
-  }
-
-  private getOfficialFeatureServerSource(
-    location: Location,
-  ): { sourceUrl: string; objectId: number } | null {
-    const sourceUrl = location.metadata?.source_url;
-    const sourceObjectId = location.metadata?.source_object_id;
-
-    if (
-      typeof sourceUrl !== "string" ||
-      !sourceUrl.includes("/FeatureServer/") ||
-      sourceObjectId === null ||
-      sourceObjectId === undefined
-    ) {
-      return null;
-    }
-
-    const objectId = Number(sourceObjectId);
-    if (!Number.isFinite(objectId)) {
-      return null;
-    }
-
-    return { sourceUrl, objectId };
   }
 
   private extractRingsFromGeoJSON(geojson: {
