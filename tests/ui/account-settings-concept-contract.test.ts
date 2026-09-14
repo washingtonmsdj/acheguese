@@ -8,6 +8,7 @@ const read = (path: string) => readFileSync(resolve(root, path), "utf8");
 const shell = read("src/modules/profile/components/AccountSettingsShell.tsx");
 const overview = read("src/modules/profile/pages/ContaHubLayout.tsx");
 const security = read("src/modules/profile/pages/ContaSegurancaPage.tsx");
+const auth = read("src/core/auth/services/AuthService.ts");
 const notifications = read("src/app/pages/NotificationPreferencesPage.tsx");
 const privacy = read("src/app/pages/PrivacySettingsPage.tsx");
 const push = read("src/app/components/notifications/PushNotificationSettings.tsx");
@@ -43,14 +44,18 @@ describe("account settings concept contract", () => {
     expect(overview).toContain('navigate("/conta?section=profiles")');
   });
 
-  it("renders data access as an explicit state and keeps MFA connected to its canonical hook", () => {
+  it("renders access, password and MFA as explicit real states", () => {
     expect(security).toContain('location.hash === "#acesso"');
+    expect(security).toContain('location.hash === "#senha"');
     expect(security).toContain('title="Dados de acesso"');
+    expect(security).toContain('title="Alterar senha"');
     expect(security).toContain("user.emailConfirmed");
     expect(security).toContain("googleAuthAvailable");
     expect(security).toContain("useMFA()");
     expect(security).toContain("startEnrollment");
     expect(security).toContain("verifyAndEnable");
+    expect(security).toContain("signOutOtherSessions");
+    expect(auth).toContain('signOut({ scope: "others" })');
   });
 
   it("preserves canonical notification and privacy service writes", () => {
