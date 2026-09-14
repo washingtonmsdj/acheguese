@@ -68,8 +68,14 @@ describe("account settings concept contract", () => {
     expect(shell).toContain("showBack");
     expect(shell).toContain('search: "?section=profiles"');
     expect(shell).toContain('excludeSearch: "?section=profiles"');
-    expect(shell).toContain('hash: "#acessibilidade"');
-    expect(shell).toContain('excludeHash: "#acessibilidade"');
+    expect(shell).toContain('hashes: ["#acessibilidade"]');
+    expect(shell).toContain('excludeHashes: ["#acessibilidade"]');
+  });
+
+  it("owns mobile safe areas without adding a second shell", () => {
+    expect(shell).toContain("env(safe-area-inset-top)");
+    expect(shell).toContain("env(safe-area-inset-bottom)");
+    expect(shell).toContain('id="main-content"');
   });
 
   it("keeps live overview aligned with the concept without dropping real features", () => {
@@ -91,11 +97,15 @@ describe("account settings concept contract", () => {
     expect(managedProfiles).toContain("activeProfile");
     expect(managedProfiles).toContain("allProfiles");
     expect(managedProfiles).toContain("switchProfile(profile.id)");
+    expect(managedProfiles).toContain("switchingProfileId");
     expect(managedProfiles).toContain("buildProfileEditUrl(profile.id)");
     expect(managedProfiles).toContain("buildPublicProfileUrl(handle!)");
     expect(managedProfiles).toContain("profile.is_public === true");
     expect(managedProfiles).toContain('type="search"');
-    expect(managedProfiles).toContain('aria-pressed={selected}');
+    expect(managedProfiles).toContain('role="tablist"');
+    expect(managedProfiles).toContain('role="tab"');
+    expect(managedProfiles).toContain('aria-selected={selected}');
+    expect(managedProfiles).toContain("Limpar filtros");
     expect(managedProfiles).not.toContain("conceptManagedProfiles");
   });
 
