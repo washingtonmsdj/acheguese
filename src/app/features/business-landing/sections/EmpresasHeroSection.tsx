@@ -6,7 +6,7 @@ import {
   ShieldCheck,
   Sparkles,
 } from "lucide-react";
-import { MapLibreAdapter } from "@/core/maps/components/v3/LazyMapLibreAdapter";
+import { MapLibreAdapter } from "@/core/maps/components/v3/MapLibreAdapter";
 import { DEFAULT_TILE_STYLE } from "@/core/maps/providers/MapProvider";
 import { cn } from "@/shared/utils/cn";
 import { HERO_BADGES, HERO_TRUST_ITEMS } from "../utils";
