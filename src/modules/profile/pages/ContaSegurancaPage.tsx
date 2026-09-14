@@ -1,14 +1,17 @@
 import { useState } from "react";
-import { Navigate } from "react-router-dom";
+import { Navigate, useLocation, useNavigate } from "react-router-dom";
 import { Helmet } from "react-helmet-async";
 import {
   CheckCircle2,
+  Globe2,
   KeyRound,
   Laptop,
   Loader2,
   LockKeyhole,
   Mail,
+  Pencil,
   ShieldCheck,
+  UserRound,
 } from "lucide-react";
 import { toast } from "sonner";
 
@@ -16,6 +19,7 @@ import { useAuth } from "@/core/auth/hooks/useAuth";
 import { useMFA } from "@/core/auth/hooks/useMFA";
 import type { MFAEnrollmentData } from "@/core/auth/services/MFAService";
 import { getAuthErrorMessage } from "@/core/auth/utils/authMessages";
+import { useMultiProfileContext } from "@/core/profiles/contexts/multi-profile-runtime-context";
 import { useAppUrls } from "@/core/routing/hooks/useAppUrls";
 import { AccountSettingsShell } from "@/modules/profile/components/AccountSettingsShell";
 import { ChangePasswordForm } from "@/modules/profile/components/ChangePasswordForm";
@@ -32,9 +36,42 @@ function Surface({ children, className = "" }: { children: React.ReactNode; clas
   );
 }
 
+function AccessRow({
+  icon,
+  title,
+  value,
+  meta,
+  action,
+}: {
+  icon: React.ReactNode;
+  title: string;
+  value: string;
+  meta?: React.ReactNode;
+  action?: React.ReactNode;
+}) {
+  return (
+    <div className="flex min-h-[88px] items-start gap-3 border-b border-territory-border py-4 last:border-b-0">
+      <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-territory-brand/10 text-territory-brand">
+        {icon}
+      </span>
+      <div className="min-w-0 flex-1">
+        <div className="flex flex-wrap items-center gap-2">
+          <h2 className="font-heading text-base font-bold text-territory-ink">{title}</h2>
+          {meta}
+        </div>
+        <p className="mt-1 break-all text-sm text-territory-muted">{value}</p>
+        {action ? <div className="mt-2">{action}</div> : null}
+      </div>
+    </div>
+  );
+}
+
 export default function ContaSegurancaPage() {
   const appUrls = useAppUrls();
-  const { user, updatePassword, resetPassword } = useAuth();
+  const location = useLocation();
+  const navigate = useNavigate();
+  const { activeProfile } = useMultiProfileContext();
+  const { user, updatePassword, resetPassword, googleAuthAvailable } = useAuth();
   const {
     isMFAEnabled,
     loading: mfaLoading,
@@ -98,6 +135,113 @@ export default function ContaSegurancaPage() {
       toast.error("Código inválido. Confira o aplicativo autenticador.");
     }
   };
+
+  const accessView = location.hash === "#acesso";
+  const handle = activeProfile?.handle ? `@${activeProfile.handle}` : "Nome de usuário ainda não definido";
+
+  if (accessView) {
+    return (
+      <>
+        <Helmet>
+          <title>Dados de acesso | Achegue-se</title>
+        </Helmet>
+        <AccountSettingsShell
+          title="Dados de acesso"
+          description="Revise como você entra e identifica sua conta."
+        >
+          <Surface className="p-4 sm:p-5">
+            <AccessRow
+              icon={<Mail className="h-5 w-5" aria-hidden="true" />}
+              title="E-mail de acesso"
+              value={user.email}
+              meta={
+                user.emailConfirmed ? (
+                  <span className="inline-flex items-center gap-1 rounded-full bg-emerald-100 px-2 py-1 text-xs font-semibold text-emerald-800">
+                    <CheckCircle2 className="h-3.5 w-3.5" aria-hidden="true" />
+                    Confirmado
+                  </span>
+                ) : (
+                  <span className="rounded-full bg-amber-100 px-2 py-1 text-xs font-semibold text-amber-800">Confirmação pendente</span>
+                )
+              }
+              action={
+                <button
+                  type="button"
+                  className="min-h-9 text-sm font-semibold text-territory-brand underline-offset-4 hover:underline"
+                  onClick={handleResetPassword}
+                  disabled={sendingReset || resetSent}
+                >
+                  {sendingReset ? "Enviando..." : resetSent ? "Recuperação enviada" : "Enviar recuperação por e-mail"}
+                </button>
+              }
+            />
+            <AccessRow
+              icon={<UserRound className="h-5 w-5" aria-hidden="true" />}
+              title="Nome de usuário"
+              value={handle}
+              action={
+                activeProfile?.id ? (
+                  <button
+                    type="button"
+                    className="min-h-9 text-sm font-semibold text-territory-brand underline-offset-4 hover:underline"
+                    onClick={() => navigate(appUrls.profile.edit(activeProfile.id))}
+                  >
+                    Editar perfil
+                  </button>
+                ) : null
+              }
+            />
+            <AccessRow
+              icon={<KeyRound className="h-5 w-5" aria-hidden="true" />}
+              title="Senha"
+              value="Altere sua senha pela área segura da conta."
+              action={
+                <button
+                  type="button"
+                  className="min-h-9 text-sm font-semibold text-territory-brand underline-offset-4 hover:underline"
+                  onClick={() => navigate("/conta/seguranca")}
+                >
+                  Alterar senha
+                </button>
+              }
+            />
+            <AccessRow
+              icon={<Globe2 className="h-5 w-5" aria-hidden="true" />}
+              title="Acesso com Google"
+              value={
+                googleAuthAvailable
+                  ? "O provedor Google está disponível no projeto. O estado de vínculo não é inferido nesta tela."
+                  : "O acesso com Google não está habilitado neste ambiente."
+              }
+              meta={
+                <span className={`rounded-full px-2 py-1 text-xs font-semibold ${googleAuthAvailable ? "bg-territory-brand/10 text-territory-brand" : "bg-territory-raised text-territory-muted"}`}>
+                  {googleAuthAvailable ? "Disponível" : "Indisponível"}
+                </span>
+              }
+            />
+          </Surface>
+
+          {activeProfile?.id ? (
+            <Surface className="mt-4 p-4 sm:p-5">
+              <button
+                type="button"
+                onClick={() => navigate(appUrls.profile.edit(activeProfile.id))}
+                className="flex min-h-12 w-full items-center gap-3 text-left focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-territory-brand"
+              >
+                <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-territory-brand/10 text-territory-brand">
+                  <Pencil className="h-5 w-5" aria-hidden="true" />
+                </span>
+                <span className="min-w-0 flex-1">
+                  <span className="block font-semibold text-territory-ink">Editar nome, foto e identidade</span>
+                  <span className="mt-1 block text-sm text-territory-muted">Esses dados pertencem ao perfil e não às credenciais de autenticação.</span>
+                </span>
+              </button>
+            </Surface>
+          ) : null}
+        </AccountSettingsShell>
+      </>
+    );
+  }
 
   return (
     <>
@@ -215,7 +359,7 @@ export default function ContaSegurancaPage() {
           </Surface>
         </div>
 
-        <div id="acesso" className="mt-4 grid gap-4 lg:grid-cols-2">
+        <div className="mt-4 grid gap-4 lg:grid-cols-2">
           <Surface className="p-4 sm:p-5">
             <div className="flex items-start gap-3">
               <Mail className="mt-0.5 h-5 w-5 shrink-0 text-territory-brand" aria-hidden="true" />
