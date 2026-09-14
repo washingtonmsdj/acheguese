@@ -1,6 +1,6 @@
 import { ArrowRight, ArrowUpRight, Map } from "lucide-react";
 import { Link } from "react-router-dom";
-import { MapLibreAdapter } from "@/core/maps/components/v3/LazyMapLibreAdapter";
+import { MapLibreAdapter } from "@/core/maps/components/v3/MapLibreAdapter";
 import type { ControlPosition } from "@/core/maps/components/v3/controls/types";
 import type { TerritoryPolygon } from "@/core/maps/hooks/useTerritoryPolygon";
 import { useTerritoryPolygon } from "@/core/maps/hooks/useTerritoryPolygon";
