@@ -6,16 +6,22 @@ import { AuthBrandHeader } from "@/app/components/auth/AuthBrandHeader";
 import { AuthConceptIcon } from "@/app/components/auth/AuthConceptIcon";
 import { AuthFooter } from "@/app/components/auth/AuthFooter";
 import {
+  AUTH_JOURNEY_INTENTS,
   AUTH_PATHS,
   buildLoginPath,
+  buildSignupPath,
 } from "@/core/auth/constants/authFlow";
 import { useAuth } from "@/core/auth/hooks/useAuth";
 import { isOAuthTermsCallbackError } from "@/core/auth/utils/authCallback";
-import { getAuthReturnContext } from "@/core/auth/utils/authReturnContext";
 import {
-  clearPendingAuthReturn,
-  getPendingAuthReturn,
-} from "@/core/auth/utils/pendingAuthReturn";
+  cancelGoogleLogin,
+  cancelGoogleSignup,
+  completeTermsJourney,
+  getGoogleSignupOriginalReturn,
+  getPendingAuthJourneyIntent,
+} from "@/core/auth/utils/authJourney";
+import { getAuthReturnContext } from "@/core/auth/utils/authReturnContext";
+import { getPendingAuthReturn } from "@/core/auth/utils/pendingAuthReturn";
 import {
   COMMUNITY_GUIDELINES_PATH,
   hasCurrentTermsAcceptance,
@@ -43,12 +49,19 @@ export default function AceiteTermosPage() {
   const [state, setState] = useState<AcceptanceState>("checking");
   const [accepted, setAccepted] = useState(false);
   const [submitting, setSubmitting] = useState(false);
+
   const returnTo = useMemo(
     () => resolveSafeInternalPath(getPendingAuthReturn(), "/"),
     [],
   );
+  const journeyIntent = useMemo(() => getPendingAuthJourneyIntent(), []);
+  const signupOriginalReturn = useMemo(
+    () => getGoogleSignupOriginalReturn(),
+    [],
+  );
   const returnContext = useMemo(() => getAuthReturnContext(returnTo), [returnTo]);
-  const hasSpecificReturnContext = returnTo !== "/" && returnContext.kind !== "generic";
+  const hasSpecificReturnContext =
+    returnTo !== "/" && returnContext.kind !== "generic";
   const oauthCallbackFailed = useMemo(
     () =>
       isOAuthTermsCallbackError(
@@ -67,6 +80,10 @@ export default function AceiteTermosPage() {
           ? "users"
           : "store";
   const loginPath = buildLoginPath(returnTo);
+  const oauthRetryPath =
+    journeyIntent === AUTH_JOURNEY_INTENTS.signup
+      ? buildSignupPath(signupOriginalReturn)
+      : loginPath;
 
   useEffect(() => {
     if (!user) {
@@ -119,8 +136,16 @@ export default function AceiteTermosPage() {
   };
 
   const continueSafely = () => {
-    clearPendingAuthReturn();
+    completeTermsJourney();
     navigate(returnTo, { replace: true });
+  };
+
+  const clearFailedOAuthJourney = () => {
+    if (journeyIntent === AUTH_JOURNEY_INTENTS.signup) {
+      cancelGoogleSignup();
+      return;
+    }
+    cancelGoogleLogin();
   };
 
   return (
@@ -135,7 +160,10 @@ export default function AceiteTermosPage() {
       </Helmet>
 
       <div className="min-h-[100dvh] bg-[#fffdfa] text-[#102f33] lg:bg-[radial-gradient(circle_at_16%_32%,rgba(216,234,224,.55),transparent_31%),radial-gradient(circle_at_70%_18%,rgba(255,236,185,.28),transparent_30%),#fffdfa]">
-        <AuthBrandHeader secondaryHref={AUTH_PATHS.login} secondaryLabel="Entrar" />
+        <AuthBrandHeader
+          secondaryHref={AUTH_PATHS.login}
+          secondaryLabel="Entrar"
+        />
 
         <main
           id="main-content"
@@ -151,7 +179,8 @@ export default function AceiteTermosPage() {
                 Entre sabendo<br />como cuidamos<br />desse espaço.
               </h1>
               <p className="mt-5 max-w-[430px] text-[17px] leading-6 text-[#244448]">
-                O Achegue-se conecta pessoas, perfis e territórios. Por isso, participação e privacidade precisam começar com regras claras.
+                O Achegue-se conecta pessoas, perfis e territórios. Por isso,
+                participação e privacidade precisam começar com regras claras.
               </p>
 
               <div className="mt-8 grid max-w-[500px] gap-3 sm:grid-cols-2">
@@ -170,7 +199,8 @@ export default function AceiteTermosPage() {
                   </span>
                   <p className="mt-3 text-[13px] font-bold">Convivência responsável</p>
                   <p className="mt-1 text-[12px] leading-5 text-[#607477]">
-                    As Diretrizes da Comunidade fazem parte da experiência real do produto.
+                    As Diretrizes da Comunidade fazem parte da experiência real
+                    do produto.
                   </p>
                 </div>
               </div>
@@ -190,7 +220,8 @@ export default function AceiteTermosPage() {
                   Antes de continuar
                 </h1>
                 <p className="mt-2 text-[13px] leading-5 text-[#526a6d]">
-                  Revise os Termos de Uso e as Diretrizes da Comunidade para concluir seu acesso.
+                  Revise os Termos de Uso e as Diretrizes da Comunidade para
+                  concluir seu acesso.
                 </p>
               </div>
             </div>
@@ -198,7 +229,8 @@ export default function AceiteTermosPage() {
             <div className="mt-5 flex items-start gap-3 rounded-xl bg-[#eef4f2] px-4 py-3 text-[#405f62]">
               <AuthConceptIcon name="info" className="mt-0.5 text-[#0b5b59]" />
               <p className="text-[11.5px] leading-5">
-                Entrar com Google não pula esta etapa. O aceite é registrado na sua conta e pode ser consultado depois.
+                Entrar com Google não pula esta etapa. O aceite é registrado na
+                sua conta e pode ser consultado depois.
               </p>
             </div>
 
@@ -208,14 +240,21 @@ export default function AceiteTermosPage() {
                   <AuthConceptIcon name={returnContextIcon} />
                 </span>
                 <div className="min-w-0">
-                  <p className="text-[10.5px] text-[#607477]">Depois dos termos, você volta para</p>
-                  <p className="truncate text-[12.5px] font-bold text-[#18383c]">{returnContext.label}</p>
+                  <p className="text-[10.5px] text-[#607477]">
+                    Depois dos termos, você volta para
+                  </p>
+                  <p className="truncate text-[12.5px] font-bold text-[#18383c]">
+                    {returnContext.label}
+                  </p>
                 </div>
               </div>
             ) : null}
 
             {state === "checking" ? (
-              <div role="status" className="flex min-h-[185px] items-center justify-center gap-3 py-10 text-[13px] text-[#607477]">
+              <div
+                role="status"
+                className="flex min-h-[185px] items-center justify-center gap-3 py-10 text-[13px] text-[#607477]"
+              >
                 <span className="h-5 w-5 animate-spin rounded-full border-2 border-[#cbd5d3] border-t-[#0b5b59]" />
                 Verificando o aceite da sua conta…
               </div>
@@ -223,19 +262,26 @@ export default function AceiteTermosPage() {
 
             {state === "oauth-error" ? (
               <div className="mt-6 space-y-4">
-                <div role="alert" className="rounded-xl border border-[#ead8c7] bg-[#fff7ed] p-4">
+                <div
+                  role="alert"
+                  className="rounded-xl border border-[#ead8c7] bg-[#fff7ed] p-4"
+                >
                   <p className="text-[13px] font-bold text-[#71401d]">
                     Não foi possível concluir a entrada com Google
                   </p>
                   <p className="mt-1 text-[12px] leading-5 text-[#735a49]">
-                    O acesso foi cancelado ou interrompido antes de criar uma sessão. Seu destino foi preservado para você tentar novamente.
+                    O acesso foi cancelado ou interrompido antes de criar uma
+                    sessão. Seu destino foi preservado para você tentar novamente.
                   </p>
                 </div>
                 <Link
-                  to={loginPath}
+                  to={oauthRetryPath}
+                  onClick={clearFailedOAuthJourney}
                   className="flex h-11 w-full items-center justify-center rounded-[9px] bg-[#ffc91a] text-[14px] font-extrabold text-[#102f33] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#0b5b59]/40"
                 >
-                  Voltar e tentar novamente
+                  {journeyIntent === AUTH_JOURNEY_INTENTS.signup
+                    ? "Voltar para criar conta"
+                    : "Voltar e tentar novamente"}
                 </Link>
               </div>
             ) : null}
@@ -272,7 +318,8 @@ export default function AceiteTermosPage() {
                       htmlFor="terms-acceptance"
                       className="cursor-pointer text-[13px] font-normal leading-5"
                     >
-                      Li e aceito os Termos de Uso, incluindo as Diretrizes da Comunidade.
+                      Li e aceito os Termos de Uso, incluindo as Diretrizes da
+                      Comunidade.
                     </Label>
                   </div>
                   <p className="mt-3 pl-8 text-[11px] leading-4 text-[#607477]">
@@ -314,14 +361,18 @@ export default function AceiteTermosPage() {
 
             {state === "accepted" ? (
               <div className="mt-6 space-y-4">
-                <div role="status" className="flex items-start gap-3 rounded-xl bg-[#eaf7ef] p-4 text-[#276a4d]">
+                <div
+                  role="status"
+                  className="flex items-start gap-3 rounded-xl bg-[#eaf7ef] p-4 text-[#276a4d]"
+                >
                   <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-[#d4efdf]">
                     <AuthConceptIcon name="check" />
                   </span>
                   <div>
                     <p className="text-[13px] font-bold">Tudo certo com os termos.</p>
                     <p className="mt-0.5 text-[11.5px] leading-5">
-                      O aceite da versão {TERMS_OF_SERVICE_VERSION} está registrado na sua conta.
+                      O aceite da versão {TERMS_OF_SERVICE_VERSION} está registrado
+                      na sua conta.
                     </p>
                   </div>
                 </div>
