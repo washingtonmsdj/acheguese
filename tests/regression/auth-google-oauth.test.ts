@@ -67,8 +67,12 @@ describe("Google OAuth account/access contract", () => {
     expect(signup).toContain("cancelGoogleSignup()");
     expect(journey).toContain("setPendingSignupRedirect");
     expect(journey).toContain("setPendingAuthReturn(AUTH_PATHS.firstAccess)");
-    expect(terms).toContain("getPendingAuthReturn");
-    expect(terms).toContain('resolveSafeInternalPath(getPendingAuthReturn(), "/")');
+    expect(journey).toContain("getAuthJourneyReturnTarget");
+    expect(journey).toContain("getSignupJourneyReturnTarget");
+    expect(terms).toContain("getAuthJourneyReturnTarget()");
+    expect(terms).toContain("getSignupJourneyReturnTarget()");
+    expect(terms).not.toContain("pendingAuthReturn");
+    expect(terms).not.toContain("pendingSignup");
     expect(terms).toContain("recordConsent");
     expect(terms).toContain("TERMS_OF_SERVICE_VERSION");
     expect(terms).toContain("Entrar com Google não pula esta etapa");
