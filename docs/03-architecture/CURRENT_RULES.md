@@ -2,7 +2,7 @@
 
 Data-base: 2026-09-14  
 Status: ATIVO / CANONICO  
-Versao documental: 5.1
+Versao documental: 5.2
 
 Este documento define regras arquiteturais globais. Contratos detalhados de domínio permanecem nos owners executáveis e nos documentos específicos listados em `docs/README.md`; este arquivo não deve duplicar implementação.
 
@@ -110,13 +110,14 @@ Os contratos detalhados vivem em `docs/07-modules/` e nos owners executáveis co
 - `src/core/maps/components/v3/MapLibreAdapter.tsx` é o owner público canônico para superfícies React que cabem no contrato do adapter; ele decide runtime passivo versus completo sem criar um segundo provider.
 - `src/shared/config/mapDefaults.ts` é o SSOT de URLs/configuração base de tiles **e dos fallbacks geográficos genéricos**; `src/core/maps/providers/MapProvider.ts` somente projeta esse contrato para o domínio de mapas.
 - services/hooks genéricos de mapa/boundary não embutem coordenadas de uma cidade específica como fallback universal. `BoundaryService` e `useNeighborhoodBounds` derivam seu centro fallback de `MAP_DEFAULT_COORDINATES`.
+- `src/core/geospatial/data/officialFeatureServerBoundary.ts` é o owner único, no runtime web, para interpretar metadata oficial de FeatureServer e executar/deduplicar/cachear/cancelar as respectivas leituras HTTP. `BoundaryService` orquestra precedência de fontes e consome esse owner; não recria parser de `source_url`/`source_object_id`, cache paralelo nem `fetch()` próprio para a mesma fonte.
 - CSS do MapLibre entra pelo owner `src/core/maps/runtime/maplibreRuntimeCss.ts`; páginas e módulos não importam `maplibre-gl/dist/maplibre-gl.css` diretamente.
 - consumidores imperativos fora do núcleo podem importar **tipos** de `maplibre-gl`, mas carregam a engine por `loadMapLibreRuntime()`; não criam loader, worker config, preload de CSS ou provider paralelo.
 - `src/core/maps/hooks/useTerritoryPolygon.ts` possui espera limitada para a chain de boundary. Consumidor não pode ficar indefinidamente em `isLoading` por fonte oficial externa travada.
 - ausência/timeout de boundary oficial não autoriza geometria aproximada. Superfícies podem degradar para basemap/centro canônico e continuar úteis, mantendo a busca oficial não bloqueante quando fizer sentido.
 - otimização reutilizável de mapa deve ser implementada no owner canônico para beneficiar todas as páginas. Agendamento específico da `/` pode continuar em `publicRootReadiness` somente quando a regra depende da prioridade exclusiva da entrada pública.
 - `prewarmMapLibreWorkers()` é opt-in para superfícies que montarão mapa imediatamente; não deve virar warmup global em rotas sem mapa.
-- regressões de arquitetura devem impedir novos imports runtime/CSS diretos, fallbacks geográficos paralelos e waits infinitos fora dos owners canônicos.
+- regressões de arquitetura devem impedir novos imports runtime/CSS diretos, fallbacks geográficos paralelos, segundo owner de rede de boundary oficial e waits infinitos fora dos owners canônicos.
 
 ### 6.2 Geolocation / Location resolution
 
@@ -195,6 +196,7 @@ Mudanças de segurança/schema executam adicionalmente os gates indicados em `SE
 - não importar runtime ou CSS de MapLibre diretamente em páginas/módulos quando o loader/adapter canônico atende o caso;
 - não criar segundo worker configurator, segundo tile provider default ou warmup global paralelo;
 - não embutir fallback universal de Salvador/outra cidade em service/hook genérico quando `mapDefaults` já é o owner;
+- não recriar leitura HTTP/cache/parser paralelo de FeatureServer oficial dentro de `BoundaryService` ou outro consumidor quando `officialFeatureServerBoundary.ts` atende o contrato;
 - não deixar carregamento de boundary/polígono compartilhado pendente indefinidamente; timeout não autoriza boundary aproximado;
 - não chamar `navigator.geolocation` fora do owner compartilhado nem criar novo hook/service paralelo para contornar esse boundary;
 - não chamar ViaCEP/provider de geocoding diretamente na UI quando `LocationGeocodingService` atende o contrato;
