@@ -222,11 +222,16 @@ export default {
           "0%": { backgroundPosition: "200% center" },
           "100%": { backgroundPosition: "-200% center" },
         },
+        "entry-shimmer": {
+          "0%": { transform: "translate3d(-150%, 0, 0)" },
+          "100%": { transform: "translate3d(430%, 0, 0)" },
+        },
       },
       animation: {
         "accordion-down": "accordion-down 0.2s ease-out",
         "accordion-up": "accordion-up 0.2s ease-out",
         "fade-in": "fade-in 0.3s ease-out",
+        "entry-shimmer": "entry-shimmer 1.8s ease-in-out infinite",
       },
     },
   },
