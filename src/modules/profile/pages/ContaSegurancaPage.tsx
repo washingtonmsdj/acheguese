@@ -1,9 +1,10 @@
 import { useState } from "react";
-import { Navigate, useNavigate } from "react-router-dom";
+import { Navigate } from "react-router-dom";
 import { Helmet } from "react-helmet-async";
 import {
-  AlertTriangle,
-  ArrowLeft,
+  CheckCircle2,
+  KeyRound,
+  Laptop,
   Loader2,
   LockKeyhole,
   Mail,
@@ -12,24 +13,40 @@ import {
 import { toast } from "sonner";
 
 import { useAuth } from "@/core/auth/hooks/useAuth";
+import { useMFA } from "@/core/auth/hooks/useMFA";
+import type { MFAEnrollmentData } from "@/core/auth/services/MFAService";
 import { getAuthErrorMessage } from "@/core/auth/utils/authMessages";
 import { useAppUrls } from "@/core/routing/hooks/useAppUrls";
+import { AccountSettingsShell } from "@/modules/profile/components/AccountSettingsShell";
 import { ChangePasswordForm } from "@/modules/profile/components/ChangePasswordForm";
 import { Button } from "@/shared/components/ui/button";
-import {
-  Card,
-  CardContent,
-  CardHeader,
-  CardTitle,
-} from "@/shared/components/ui/card";
+import { Input } from "@/shared/components/ui/input";
+import { Label } from "@/shared/components/ui/label";
 import type { UpdatePasswordInput } from "@/shared/validation/schemas/user.schema";
 
+function Surface({ children, className = "" }: { children: React.ReactNode; className?: string }) {
+  return (
+    <section className={`rounded-2xl border border-territory-border bg-territory-surface ${className}`}>
+      {children}
+    </section>
+  );
+}
+
 export default function ContaSegurancaPage() {
-  const navigate = useNavigate();
   const appUrls = useAppUrls();
   const { user, updatePassword, resetPassword } = useAuth();
+  const {
+    isMFAEnabled,
+    loading: mfaLoading,
+    error: mfaError,
+    startEnrollment,
+    verifyAndEnable,
+  } = useMFA();
   const [sendingReset, setSendingReset] = useState(false);
   const [resetSent, setResetSent] = useState(false);
+  const [enrollment, setEnrollment] = useState<MFAEnrollmentData | null>(null);
+  const [verificationCode, setVerificationCode] = useState("");
+  const [verifying, setVerifying] = useState(false);
 
   if (!user) {
     return <Navigate to={appUrls.auth.login} replace />;
@@ -47,7 +64,6 @@ export default function ContaSegurancaPage() {
 
   const handleResetPassword = async () => {
     setSendingReset(true);
-
     try {
       await resetPassword(user.email);
       setResetSent(true);
@@ -59,193 +75,186 @@ export default function ContaSegurancaPage() {
     }
   };
 
+  const handleStartMfa = async () => {
+    const next = await startEnrollment();
+    if (!next) {
+      toast.error("Não foi possível iniciar a autenticação em duas etapas.");
+      return;
+    }
+    setEnrollment(next);
+    setVerificationCode("");
+  };
+
+  const handleVerifyMfa = async () => {
+    if (!enrollment || verificationCode.trim().length !== 6) return;
+    setVerifying(true);
+    const ok = await verifyAndEnable(enrollment.factorId, verificationCode.trim());
+    setVerifying(false);
+    if (ok) {
+      setEnrollment(null);
+      setVerificationCode("");
+      toast.success("Autenticação em duas etapas ativada.");
+    } else {
+      toast.error("Código inválido. Confira o aplicativo autenticador.");
+    }
+  };
+
   return (
     <>
       <Helmet>
-        <title>Minha conta | Segurança</title>
+        <title>Senha e segurança | Achegue-se</title>
       </Helmet>
 
-      <div className="territory-vivo min-h-[100dvh] bg-territory-canvas text-territory-ink">
-        <main className="mx-auto w-full max-w-[1080px] px-3 pb-24 pt-4 sm:px-6 sm:pb-10 sm:pt-6 lg:px-8">
-          <div className="sticky top-0 z-20 -mx-3 mb-5 border-b border-territory-border bg-territory-canvas/95 px-3 py-3 backdrop-blur sm:static sm:mx-0 sm:mb-6 sm:border-0 sm:bg-transparent sm:px-0 sm:py-0">
-            <div className="flex items-start justify-between gap-3">
-              <div className="flex min-w-0 items-center gap-3">
+      <AccountSettingsShell
+        title="Senha e segurança"
+        description="Mantenha sua conta protegida."
+      >
+        <div className="grid gap-4 lg:grid-cols-2">
+          <Surface className="p-4 sm:p-5">
+            <div className="flex items-start gap-3">
+              <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-territory-brand/10 text-territory-brand">
+                <ShieldCheck className="h-5 w-5" aria-hidden="true" />
+              </span>
+              <div className="min-w-0 flex-1">
+                <div className="flex flex-wrap items-center gap-2">
+                  <h2 className="font-heading text-base font-bold text-territory-ink">Autenticação em duas etapas</h2>
+                  {!mfaLoading ? (
+                    <span className={`rounded-full px-2 py-1 text-xs font-semibold ${isMFAEnabled ? "bg-emerald-100 text-emerald-800" : "bg-red-50 text-red-700"}`}>
+                      {isMFAEnabled ? "Ativada" : "Não ativada"}
+                    </span>
+                  ) : null}
+                </div>
+                <p className="mt-2 text-sm leading-5 text-territory-muted">
+                  Confirme novos acessos com um aplicativo autenticador compatível.
+                </p>
+              </div>
+            </div>
+
+            {mfaError ? (
+              <p className="mt-4 rounded-xl bg-red-50 px-3 py-2 text-sm text-red-700">
+                Não foi possível consultar o estado da autenticação agora.
+              </p>
+            ) : null}
+
+            {!isMFAEnabled && !enrollment ? (
+              <Button
+                type="button"
+                className="mt-5 min-h-11 w-full bg-territory-sun text-territory-ink hover:bg-territory-sun/90"
+                onClick={handleStartMfa}
+                disabled={mfaLoading}
+              >
+                {mfaLoading ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
+                Configurar autenticação
+              </Button>
+            ) : null}
+
+            {isMFAEnabled ? (
+              <div className="mt-5 flex items-center gap-2 rounded-xl border border-emerald-200 bg-emerald-50 px-3 py-3 text-sm text-emerald-800">
+                <CheckCircle2 className="h-5 w-5 shrink-0" aria-hidden="true" />
+                Sua conta já exige o segundo fator configurado.
+              </div>
+            ) : null}
+
+            {enrollment ? (
+              <div className="mt-5 space-y-4 border-t border-territory-border pt-5">
+                <div>
+                  <p className="font-semibold text-territory-ink">1. Abra seu aplicativo autenticador</p>
+                  <p className="mt-1 text-sm text-territory-muted">Escaneie o QR code ou use a chave manual.</p>
+                </div>
+                <div className="flex justify-center rounded-2xl bg-white p-4">
+                  <img src={enrollment.qrCode} alt="QR code para configurar autenticação em duas etapas" className="h-44 w-44" />
+                </div>
+                <div className="rounded-xl bg-territory-raised p-3">
+                  <p className="text-xs font-semibold uppercase tracking-[0.12em] text-territory-muted">Chave manual</p>
+                  <code className="mt-1 block break-all text-sm text-territory-ink">{enrollment.secret}</code>
+                </div>
+                <div>
+                  <Label htmlFor="mfa-code">2. Digite o código de 6 dígitos</Label>
+                  <Input
+                    id="mfa-code"
+                    inputMode="numeric"
+                    autoComplete="one-time-code"
+                    maxLength={6}
+                    value={verificationCode}
+                    onChange={(event) => setVerificationCode(event.target.value.replace(/\D/g, "").slice(0, 6))}
+                    placeholder="000000"
+                    className="mt-2 h-12 text-lg tracking-[0.28em]"
+                  />
+                </div>
                 <Button
-                  variant="ghost"
-                  size="icon"
-                  className="shrink-0 rounded-full"
-                  onClick={() => navigate(appUrls.profile.home)}
                   type="button"
+                  className="min-h-11 w-full bg-territory-sun text-territory-ink hover:bg-territory-sun/90"
+                  onClick={handleVerifyMfa}
+                  disabled={verificationCode.length !== 6 || verifying}
                 >
-                  <ArrowLeft className="h-5 w-5" />
+                  {verifying ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
+                  Confirmar ativação
                 </Button>
-                <div className="min-w-0">
-                  <p className="text-xs font-semibold uppercase tracking-[0.16em] text-muted-foreground">
-                    Conta e acesso
-                  </p>
-                  <h1 className="truncate text-xl font-bold tracking-tight text-foreground sm:text-2xl">
-                    Segurança da conta
-                  </h1>
-                  <p className="mt-1 text-xs text-muted-foreground sm:text-sm">
-                    Senha, recuperação e proteção do login.
-                  </p>
-                </div>
               </div>
-              <div className="hidden shrink-0 items-center gap-2 rounded-full border border-primary/20 bg-primary/10 px-3 py-1 text-xs font-medium text-primary sm:flex">
-                <ShieldCheck className="h-3.5 w-3.5" />
-                Conta protegida
+            ) : null}
+          </Surface>
+
+          <Surface className="p-4 sm:p-5">
+            <div className="flex items-start gap-3">
+              <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-territory-brand/10 text-territory-brand">
+                <Laptop className="h-5 w-5" aria-hidden="true" />
+              </span>
+              <div>
+                <h2 className="font-heading text-base font-bold text-territory-ink">Acessos à conta</h2>
+                <p className="mt-2 text-sm leading-5 text-territory-muted">
+                  A lista de dispositivos ainda não está disponível para esta conta.
+                </p>
               </div>
             </div>
-          </div>
+            <Button type="button" variant="outline" className="mt-5 min-h-11 w-full" disabled>
+              Sair dos outros dispositivos
+            </Button>
+            <p className="mt-2 text-center text-xs text-territory-muted">
+              O recurso será habilitado quando houver autoridade de sessão para revogação seletiva.
+            </p>
+          </Surface>
+        </div>
 
-          <div className="grid gap-5 lg:grid-cols-[minmax(0,1fr)_280px]">
-            <div className="space-y-5">
-              <section className="rounded-territory-highlight border border-territory-border bg-territory-surface p-5 sm:p-6">
-                <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
-                  <div className="min-w-0 space-y-2">
-                    <p className="text-[0.72rem] font-semibold uppercase tracking-[0.18em] text-primary/90">
-                      Autenticação
-                    </p>
-                    <h2 className="break-all text-2xl font-semibold tracking-tight text-foreground">
-                      {user.email}
-                    </h2>
-                    <p className="max-w-2xl text-sm leading-6 text-muted-foreground">
-                      Esta área cuida apenas do acesso da conta. Identidade
-                      pública, perfis vinculados e configurações operacionais
-                      seguem separados.
-                    </p>
-                  </div>
-                  <div className="grid grid-cols-2 gap-2 sm:w-auto sm:grid-cols-1">
-                    <div className="rounded-2xl border border-border/60 bg-muted/20 px-3 py-2 text-xs">
-                      <p className="font-medium text-foreground">
-                        Email principal
-                      </p>
-                      <p className="mt-1 text-muted-foreground">
-                        Login e recuperação
-                      </p>
-                    </div>
-                    <div className="rounded-2xl border border-border/60 bg-muted/20 px-3 py-2 text-xs">
-                      <p className="font-medium text-foreground">Senha forte</p>
-                      <p className="mt-1 text-muted-foreground">
-                        Obrigatória para acesso
-                      </p>
-                    </div>
-                  </div>
-                </div>
-              </section>
-
-              <Card className="rounded-territory-highlight border-territory-border bg-territory-surface shadow-none">
-                <CardHeader className="pb-3">
-                  <CardTitle className="flex items-center gap-2 text-sm">
-                    <Mail className="h-4 w-4" />
-                    Email de login
-                  </CardTitle>
-                </CardHeader>
-                <CardContent className="space-y-2">
-                  <p className="break-all text-sm font-medium text-foreground">
-                    {user.email}
-                  </p>
-                  <p className="text-sm leading-6 text-muted-foreground">
-                    Esse e-mail é usado para entrar na conta e receber fluxos de
-                    recuperação. Alterações devem passar pelo suporte.
-                  </p>
-                </CardContent>
-              </Card>
-
-              <section className="rounded-territory-highlight border border-territory-border bg-territory-surface p-5 sm:p-6">
-                <ChangePasswordForm
-                  onSave={handleChangePassword}
-                  onCancel={() => {
-                    return;
-                  }}
-                />
-              </section>
-
-              <Card className="rounded-territory-highlight border-territory-border bg-territory-surface shadow-none">
-                <CardHeader className="pb-3">
-                  <CardTitle className="flex items-center gap-2 text-sm">
-                    <Mail className="h-4 w-4" />
-                    Recuperação por e-mail
-                  </CardTitle>
-                </CardHeader>
-                <CardContent className="space-y-3">
-                  <p className="text-sm leading-6 text-muted-foreground">
-                    Envie um fluxo de redefinição para o e-mail principal da
-                    conta.
-                  </p>
-                  <Button
-                    type="button"
-                    variant="outline"
-                    className="w-full justify-center sm:w-auto"
-                    onClick={handleResetPassword}
-                    disabled={resetSent || sendingReset}
-                  >
-                    {sendingReset ? (
-                      <>
-                        <Loader2 className="mr-1.5 h-3.5 w-3.5 animate-spin" />
-                        Enviando...
-                      </>
-                    ) : resetSent ? (
-                      "E-mail enviado"
-                    ) : (
-                      "Redefinir por e-mail"
-                    )}
-                  </Button>
-                </CardContent>
-              </Card>
-
-              <Card className="rounded-territory-highlight border-destructive/30 bg-territory-surface shadow-none">
-                <CardHeader className="pb-3">
-                  <CardTitle className="flex items-center gap-2 text-sm text-destructive">
-                    <AlertTriangle className="h-4 w-4" />
-                    Zona de risco
-                  </CardTitle>
-                </CardHeader>
-                <CardContent className="space-y-3">
-                  <p className="text-sm leading-6 text-muted-foreground">
-                    Excluir a conta remove perfis, dados e conteudo associados.
-                    Essa ação é permanente.
-                  </p>
-                  <Button
-                    type="button"
-                    variant="outline"
-                    className="w-full justify-center border-destructive/30 text-destructive hover:bg-destructive/5 sm:w-auto"
-                    onClick={() => {
-                      toast.error(
-                        "Para excluir sua conta, entre em contato com o suporte.",
-                      );
-                    }}
-                  >
-                    Solicitar exclusao da conta
-                  </Button>
-                </CardContent>
-              </Card>
+        <div id="acesso" className="mt-4 grid gap-4 lg:grid-cols-2">
+          <Surface className="p-4 sm:p-5">
+            <div className="flex items-start gap-3">
+              <Mail className="mt-0.5 h-5 w-5 shrink-0 text-territory-brand" aria-hidden="true" />
+              <div className="min-w-0">
+                <h2 className="font-heading text-base font-bold text-territory-ink">E-mail de acesso</h2>
+                <p className="mt-1 break-all text-sm font-medium text-territory-ink">{user.email}</p>
+                <p className="mt-1 text-sm text-territory-muted">Usado para login e recuperação da conta.</p>
+              </div>
             </div>
+            <Button type="button" variant="outline" className="mt-5 min-h-11 w-full" onClick={handleResetPassword} disabled={resetSent || sendingReset}>
+              {sendingReset ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
+              {resetSent ? "E-mail enviado" : "Enviar recuperação por e-mail"}
+            </Button>
+          </Surface>
 
-            <aside className="space-y-4">
-              <Card className="rounded-territory-highlight border-territory-border bg-territory-surface shadow-none">
-                <CardHeader className="pb-3">
-                  <CardTitle className="flex items-center gap-2 text-sm">
-                    <LockKeyhole className="h-4 w-4" />
-                    Boas praticas
-                  </CardTitle>
-                </CardHeader>
-                <CardContent className="space-y-3 text-sm text-muted-foreground">
-                  <div className="rounded-2xl border border-border/60 bg-muted/20 p-3">
-                    Use uma senha exclusiva para o Achegue-se.
-                  </div>
-                  <div className="rounded-2xl border border-border/60 bg-muted/20 p-3">
-                    Renove a senha se houver suspeita de acesso indevido.
-                  </div>
-                  <div className="rounded-2xl border border-border/60 bg-muted/20 p-3">
-                    Mantenha e-mail e acesso sob sua própria gestão.
-                  </div>
-                </CardContent>
-              </Card>
-            </aside>
+          <Surface className="p-4 sm:p-5">
+            <div className="mb-4 flex items-center gap-2">
+              <KeyRound className="h-5 w-5 text-territory-brand" aria-hidden="true" />
+              <div>
+                <h2 className="font-heading text-base font-bold text-territory-ink">Senha</h2>
+                <p className="text-sm text-territory-muted">Mantenha uma senha exclusiva e atualizada.</p>
+              </div>
+            </div>
+            <ChangePasswordForm onSave={handleChangePassword} onCancel={() => undefined} />
+          </Surface>
+        </div>
+
+        <Surface className="mt-4 p-4 sm:p-5">
+          <div className="flex items-start gap-3">
+            <LockKeyhole className="mt-0.5 h-5 w-5 shrink-0 text-territory-brand" aria-hidden="true" />
+            <div>
+              <h2 className="font-heading text-base font-bold text-territory-ink">Proteção da conta</h2>
+              <p className="mt-1 text-sm leading-5 text-territory-muted">
+                Senha, recuperação e autenticação em duas etapas usam os serviços canônicos de autenticação do projeto. Nenhuma credencial é armazenada nesta tela.
+              </p>
+            </div>
           </div>
-        </main>
-      </div>
+        </Surface>
+      </AccountSettingsShell>
     </>
   );
 }
