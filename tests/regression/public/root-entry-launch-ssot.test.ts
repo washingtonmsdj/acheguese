@@ -77,4 +77,18 @@ describe("public root launch territory SSOT", () => {
       "aria-busy={!mapReady || isLoading || !boundaryStarted || isBoundaryLoading}",
     );
   });
+
+  it("makes a slow official boundary non-blocking while it keeps loading in background", () => {
+    const runtime = read(
+      "src/app/components/territory-vivo/TerritoryEntryMapRuntime.tsx",
+    );
+
+    expect(runtime).toContain("!boundarySlow &&");
+    expect(runtime).toContain("boundarySlow ? (");
+    expect(runtime).toContain("Mapa pronto. Limite oficial ainda carregando.");
+    expect(runtime).toContain("segue sendo buscado em segundo plano, sem usar aproximação");
+    expect(runtime).not.toContain(
+      'boundarySlow ? "Mapa aberto. Limite oficial ainda carregando." : "Mapa pronto. Carregando limite oficial..."',
+    );
+  });
 });
