@@ -17,7 +17,8 @@ type FallbackInput = {
 
 const FALLBACK_TIMESTAMP = "2026-01-01T00:00:00.000Z";
 const PUBLIC_FALLBACK_FLAG = "public_fallback";
-const FALLBACK_BOUNDARY_RINGS_KEY = "fallback_boundary_rings";
+const GEO_SALVADOR_BOUNDARY_SOURCE =
+  "https://services6.arcgis.com/GP5qdNaePRPh2SdT/arcgis/rest/services/bairros_app_dados_2010_e_2022/FeatureServer/0";
 
 function normalizeSegment(value?: string | null): string {
   return (value ?? "")
@@ -50,50 +51,77 @@ const salvadorLocation: Location = {
   updated_at: FALLBACK_TIMESTAMP,
 };
 
-const nordesteDeAmaralinaBoundaryRing: [number, number][] = [
-  [-13.0102057813107, -38.468414921628],
-  [-13.0115226680028, -38.4691783378043],
-  [-13.0114147793063, -38.4713333988658],
-  [-13.0113831914868, -38.4730950903594],
-  [-13.0123859903208, -38.4765858689933],
-  [-13.0133818207799, -38.4784734441026],
-  [-13.0132611972067, -38.4799048645921],
-  [-13.0121886008536, -38.4802610996028],
-  [-13.0111380325854, -38.4803303085073],
-  [-13.0099008359757, -38.4799341676366],
-  [-13.0092473939278, -38.4761190405913],
-  [-13.0073730488038, -38.4737322069999],
-  [-13.0061638823089, -38.4724059379077],
-  [-13.0041371641039, -38.4699277115159],
-  [-13.0035465352826, -38.4678916987891],
-  [-13.005546538012, -38.4669350756565],
-  [-13.0086881615054, -38.4673729585435],
-  [-13.0102057813107, -38.468414921628],
-];
+type OfficialFallbackLocationInput = {
+  slug: string;
+  name: string;
+  sourceObjectId: number;
+  centerLatitude: number;
+  centerLongitude: number;
+};
 
-const nordesteDeAmaralinaLocation: Location = {
-  id: "fallback-location-nordeste-de-amaralina",
-  parent_id: salvadorLocation.id,
-  type: LocationType.DISTRICT,
+function createOfficialComplexLocation({
+  slug,
+  name,
+  sourceObjectId,
+  centerLatitude,
+  centerLongitude,
+}: OfficialFallbackLocationInput): Location {
+  return {
+    id: `fallback-location-${slug}`,
+    parent_id: salvadorLocation.id,
+    type: LocationType.DISTRICT,
+    slug,
+    name,
+    full_name: `${name}, Salvador - BA`,
+    geographic_path: `/br/ba/salvador/${slug}`,
+    status: LocationStatus.ACTIVE,
+    metadata: {
+      center_latitude: centerLatitude,
+      center_longitude: centerLongitude,
+      source_name: "GeoSalvador bairros_app_dados_2010_e_2022",
+      source_level: "municipal_neighborhood",
+      source_url: GEO_SALVADOR_BOUNDARY_SOURCE,
+      source_object_id: sourceObjectId,
+      official: true,
+      geometry_format: "GeoJSON",
+      [PUBLIC_FALLBACK_FLAG]: true,
+    },
+    created_at: FALLBACK_TIMESTAMP,
+    updated_at: FALLBACK_TIMESTAMP,
+  };
+}
+
+const chapadaDoRioVermelhoLocation = createOfficialComplexLocation({
+  slug: "chapada-do-rio-vermelho",
+  name: "Chapada do Rio Vermelho",
+  sourceObjectId: 54,
+  centerLatitude: -13.00516291,
+  centerLongitude: -38.48064788,
+});
+
+const nordesteDeAmaralinaLocation = createOfficialComplexLocation({
   slug: "nordeste-de-amaralina",
   name: "Nordeste de Amaralina",
-  full_name: "Nordeste de Amaralina, Salvador - BA",
-  geographic_path: "/br/ba/salvador/nordeste-de-amaralina",
-  status: LocationStatus.ACTIVE,
-  metadata: {
-    population: 1248,
-    business_count: 82,
-    services_count: 37,
-    classifieds_count: 18,
-    center_latitude: -13.00912935,
-    center_longitude: -38.47367582,
-    [FALLBACK_BOUNDARY_RINGS_KEY]: [nordesteDeAmaralinaBoundaryRing],
-    source_object_id: 112,
-    [PUBLIC_FALLBACK_FLAG]: true,
-  },
-  created_at: FALLBACK_TIMESTAMP,
-  updated_at: FALLBACK_TIMESTAMP,
-};
+  sourceObjectId: 112,
+  centerLatitude: -13.00912935,
+  centerLongitude: -38.47367582,
+});
+
+const santaCruzLocation = createOfficialComplexLocation({
+  slug: "santa-cruz",
+  name: "Santa Cruz",
+  sourceObjectId: 142,
+  centerLatitude: -13.00369176,
+  centerLongitude: -38.47539865,
+});
+
+const valeDasPedrinhasLocation = createOfficialComplexLocation({
+  slug: "vale-das-pedrinhas",
+  name: "Vale das Pedrinhas",
+  sourceObjectId: 163,
+  centerLatitude: -13.00852241,
+  centerLongitude: -38.4803529,
+});
 
 const pitubaLocation: Location = {
   id: "fallback-location-pituba",
@@ -127,7 +155,12 @@ const complexoNordesteGroup: TerritorialGroupWithMembers = {
   metadata: {
     [PUBLIC_FALLBACK_FLAG]: true,
   },
-  members: [nordesteDeAmaralinaLocation],
+  members: [
+    nordesteDeAmaralinaLocation,
+    santaCruzLocation,
+    valeDasPedrinhasLocation,
+    chapadaDoRioVermelhoLocation,
+  ],
   created_at: FALLBACK_TIMESTAMP,
   updated_at: FALLBACK_TIMESTAMP,
 };
