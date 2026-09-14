@@ -46,6 +46,7 @@ test.describe("Conta e acesso — contrato visual responsivo do concept", () => 
     await page.goto("/reset-password?mode=request", { waitUntil: "domcontentloaded" });
     await expect(page.getByRole("heading", { name: /Vamos recuperar/ })).toBeVisible();
     await expect(page.locator('img[src="/auth/recovery-hero.webp"]')).toBeHidden();
+    await expect(page.getByRole("button", { name: "Voltar" })).toContainText("Voltar");
     await expect(page.getByRole("button", { name: "Enviar link de recuperação" })).toBeVisible();
     await expectNoHorizontalOverflow(page);
     await expectNoGenericSvgInMain(page);
