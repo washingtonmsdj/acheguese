@@ -59,6 +59,12 @@ const launchCommunitySentenceLabel = launchCommunityDefiniteLabel.replace(
   /^./,
   (character) => character.toUpperCase(),
 );
+const launchCommunityGenitiveLabel =
+  launchCommunityPresentation.article === "o"
+    ? `do ${launchCommunityPresentation.label}`
+    : launchCommunityPresentation.article === "a"
+      ? `da ${launchCommunityPresentation.label}`
+      : `de ${launchCommunityPresentation.label}`;
 const launchCommunityOriginLabel =
   launchCommunityPresentation.article === "o"
     ? `pelo ${launchCommunityPresentation.label}`
@@ -199,6 +205,7 @@ export default function TerritoryEntryPage() {
             aria-label={isMobileMenuOpen ? "Fechar menu" : "Abrir menu"}
             aria-expanded={isMobileMenuOpen}
             aria-controls="entry-mobile-menu-popover"
+            aria-haspopup="true"
             onClick={() => setIsMobileMenuOpen((open) => !open)}
           >
             <span aria-hidden="true" className="relative block h-5 w-5">
@@ -257,7 +264,7 @@ export default function TerritoryEntryPage() {
               <p className="entry-eyebrow">Nossa primeira comunidade</p>
               <h1 id="territory-entry-title">Seu lugar, mais perto.</h1>
               <p className="entry-hero-subtitle">
-                Descubra o que está perto: negócios, serviços e histórias de {LAUNCH_COMMUNITY_NAME}.
+                Descubra o que está perto: negócios, serviços e histórias {launchCommunityGenitiveLabel}.
               </p>
             </div>
 
@@ -340,7 +347,7 @@ export default function TerritoryEntryPage() {
         data-entry-deferred-paint
       >
         <span>
-          Começamos {launchCommunityOriginLabel}. Aos poucos, o Achegue-se chega a novos lugares.
+          Estamos começando {launchCommunityOriginLabel}. A expansão será por etapas.
         </span>
         <nav aria-label="Links institucionais">
           <a href={PRIVACY_POLICY_PATH}>Privacidade</a>
