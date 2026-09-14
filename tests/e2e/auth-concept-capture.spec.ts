@@ -52,6 +52,12 @@ test.describe("Auth concept capture", () => {
     await expect(page.getByRole("heading", { name: "Antes de continuar" })).toBeVisible();
     await expect(page.getByText("Conversas", { exact: true })).toBeVisible();
     await capture(page, "mobile-terms-signed-out.png");
+
+    await page.goto("/aceitar-termos?error=access_denied", { waitUntil: "domcontentloaded" });
+    await expect(page.getByRole("alert")).toContainText(
+      "Não foi possível concluir a entrada com Google",
+    );
+    await capture(page, "mobile-google-oauth-cancelled.png");
   });
 
   test("captures desktop concept screens", async ({ page }) => {
@@ -79,5 +85,11 @@ test.describe("Auth concept capture", () => {
     await expect(page.getByRole("heading", { name: "Antes de continuar" })).toBeVisible();
     await expect(page.getByText("Conversas", { exact: true })).toBeVisible();
     await capture(page, "desktop-terms-signed-out.png");
+
+    await page.goto("/aceitar-termos?error=access_denied", { waitUntil: "domcontentloaded" });
+    await expect(page.getByRole("alert")).toContainText(
+      "Não foi possível concluir a entrada com Google",
+    );
+    await capture(page, "desktop-google-oauth-cancelled.png");
   });
 });
