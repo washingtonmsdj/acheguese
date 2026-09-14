@@ -15,6 +15,7 @@ interface SubscriptionTarget {
 }
 
 export function usePush(userId?: string) {
+  const [isSupportResolved, setIsSupportResolved] = useState(false);
   const [isSupported, setIsSupported] = useState(false);
   const [hasPermission, setHasPermission] = useState(false);
   const [currentBrowserEndpoint, setCurrentBrowserEndpoint] = useState<string | null>(null);
@@ -22,21 +23,25 @@ export function usePush(userId?: string) {
   const { toast } = useToast();
 
   const refreshBrowserState = async () => {
-    const supported = PushService.isSupported();
-    setIsSupported(supported);
+    try {
+      const supported = PushService.isSupported();
+      setIsSupported(supported);
 
-    if (!supported) {
-      setHasPermission(false);
-      setCurrentBrowserEndpoint(null);
-      return;
+      if (!supported) {
+        setHasPermission(false);
+        setCurrentBrowserEndpoint(null);
+        return;
+      }
+
+      const [permission, endpoint] = await Promise.all([
+        PushService.hasPermission(),
+        PushService.getCurrentBrowserSubscriptionEndpoint(),
+      ]);
+      setHasPermission(permission);
+      setCurrentBrowserEndpoint(endpoint);
+    } finally {
+      setIsSupportResolved(true);
     }
-
-    const [permission, endpoint] = await Promise.all([
-      PushService.hasPermission(),
-      PushService.getCurrentBrowserSubscriptionEndpoint(),
-    ]);
-    setHasPermission(permission);
-    setCurrentBrowserEndpoint(endpoint);
   };
 
   useEffect(() => {
@@ -51,7 +56,7 @@ export function usePush(userId?: string) {
   } = useQuery<StoredPushSubscription[]>({
     queryKey: ['push-subscriptions', userId],
     queryFn: () => (userId ? PushService.getSubscriptions(userId) : Promise.resolve([])),
-    enabled: !!userId && isSupported,
+    enabled: !!userId && isSupportResolved && isSupported,
     staleTime: 1000 * 60 * 5,
   });
 
@@ -159,6 +164,7 @@ export function usePush(userId?: string) {
   });
 
   return {
+    isSupportResolved,
     isSupported,
     hasPermission,
     isSubscribed,
