@@ -9,6 +9,7 @@ export const ACCOUNT_PATHS = {
   notifications: "/conta/notificacoes",
   privacy: "/conta/privacidade",
   exportData: "/conta/privacidade#exportar",
+  consentHistory: "/conta/privacidade#historico",
   preferences: "/conta/preferencias",
   accessibility: "/conta/preferencias#acessibilidade",
   addresses: "/conta/enderecos",
