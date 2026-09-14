@@ -20,13 +20,16 @@ import { mobilityService } from "@/core/mobility/services/MobilityService";
 import { mobilityRoutes } from "@/core/mobility/routes/mobilityRoutes";
 import { DEFAULT_TILE_STYLE } from "@/core/maps/providers/MapProvider";
 import { loadMapLibreRuntime } from "@/core/maps/runtime/loadMapLibreRuntime";
-import { MOBILITY_QUERY_KEYS, TIMEOUTS } from "@/core/mobility/constants";
+import {
+  MOBILITY_MAP_VISUALS,
+  MOBILITY_QUERY_KEYS,
+  TIMEOUTS,
+} from "@/core/mobility/constants";
 import { BUSCANDO_MOTORISTA_PAGE_LABELS } from "@/core/mobility/constants/buscandoMotoristaPageLabels";
+import { createMobilityMapMarkerElement } from "@/core/mobility/utils/createMobilityMapMarkerElement";
 import { PassengerSearchStatus } from "../components/PassengerSearchStatus";
 import { routingService } from "@/core/routing/instance";
 import { CancelRideConfirmDialog } from "../components/CancelRideConfirmDialog";
-
-// ── Mapa ──────────────────────────────────────────────────────────────────────
 
 const RouteMap = memo(function RouteMap({
   originLat,
@@ -71,35 +74,20 @@ const RouteMap = memo(function RouteMap({
       map.on("load", () => {
         if (disposed) return;
 
-        // Marcador origem — círculo verde
         if (originLat != null && originLng != null) {
-          const el = document.createElement("div");
-          el.style.cssText = `
-            width:18px;height:18px;
-            background:#22c55e;border-radius:50%;
-            border:3px solid white;
-            box-shadow:0 2px 8px rgba(0,0,0,.35);
-          `;
-          new maplibregl.Marker({ element: el })
+          const element = createMobilityMapMarkerElement("origin", "compact");
+          new maplibregl.Marker({ element })
             .setLngLat([originLng, originLat])
             .addTo(map);
         }
 
-        // Marcador destino — quadrado vermelho
         if (destinationLat != null && destinationLng != null) {
-          const el = document.createElement("div");
-          el.style.cssText = `
-            width:18px;height:18px;
-            background:#ef4444;border-radius:4px;
-            border:3px solid white;
-            box-shadow:0 2px 8px rgba(0,0,0,.35);
-          `;
-          new maplibregl.Marker({ element: el })
+          const element = createMobilityMapMarkerElement("destination", "compact");
+          new maplibregl.Marker({ element })
             .setLngLat([destinationLng, destinationLat])
             .addTo(map);
         }
 
-        // GATE 1: Carregar rota real via OSRM
         if (
           originLat != null &&
           originLng != null &&
@@ -141,9 +129,9 @@ const RouteMap = memo(function RouteMap({
                 type: 'line',
                 source: 'route-real',
                 paint: {
-                  'line-color': '#6366f1',
-                  'line-width': 4,
-                  'line-opacity': 0.85,
+                  'line-color': MOBILITY_MAP_VISUALS.route.color,
+                  'line-width': MOBILITY_MAP_VISUALS.route.width,
+                  'line-opacity': MOBILITY_MAP_VISUALS.route.opacity,
                 },
               });
 
@@ -196,8 +184,6 @@ const RouteMap = memo(function RouteMap({
   return <div ref={containerRef} className="w-full h-full" />;
 });
 
-// ── Painel de busca ───────────────────────────────────────────────────────────
-
 function SearchPanel({
   originText,
   destinationText,
@@ -211,7 +197,6 @@ function SearchPanel({
 }) {
   return (
     <div className="flex flex-col h-full">
-      {/* Status */}
       <div className="flex items-center gap-3 mb-5">
         <div className="w-11 h-11 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0">
           <motion.div
@@ -227,7 +212,6 @@ function SearchPanel({
             {BUSCANDO_MOTORISTA_PAGE_LABELS.SEARCH_SUBTITLE}
           </p>
         </div>
-        {/* Dots animados */}
         <div className="flex gap-1 flex-shrink-0">
           {[0, 1, 2].map((i) => (
             <motion.div
@@ -240,14 +224,18 @@ function SearchPanel({
         </div>
       </div>
 
-      {/* Percurso */}
       <div className="bg-secondary/50 rounded-2xl p-4 mb-5 flex-1">
         <div className="flex items-start gap-3">
-          {/* Linha de percurso visual */}
           <div className="flex flex-col items-center gap-1 pt-0.5 flex-shrink-0">
-            <div className="w-3 h-3 rounded-full bg-primary" />
+            <div
+              className="w-3 h-3 rounded-full"
+              style={{ backgroundColor: MOBILITY_MAP_VISUALS.markers.origin.color }}
+            />
             <div className="w-0.5 flex-1 min-h-[24px] bg-border" />
-            <div className="w-3 h-3 rounded-sm bg-destructive" />
+            <div
+              className="w-3 h-3 rounded-sm"
+              style={{ backgroundColor: MOBILITY_MAP_VISUALS.markers.destination.color }}
+            />
           </div>
 
           <div className="flex-1 min-w-0 space-y-3">
@@ -280,7 +268,6 @@ function SearchPanel({
         )}
       </div>
 
-      {/* Cancelar */}
       <Button
         variant="outline"
         className="w-full rounded-2xl h-12 border-destructive/30 text-destructive hover:bg-destructive/10 font-semibold"
@@ -293,8 +280,6 @@ function SearchPanel({
   );
 }
 
-// ── Página ────────────────────────────────────────────────────────────────────
-
 export default function BuscandoMotoristaPage() {
   const { rideId } = useParams<{ rideId: string }>();
   const navigate = useNavigate();
@@ -306,7 +291,6 @@ export default function BuscandoMotoristaPage() {
     queryKey: MOBILITY_QUERY_KEYS.rideBuscando(rideId!),
     queryFn: () => mobilityService.getRideWithAddresses(rideId!),
     enabled: !!rideId,
-    // O snapshot carrega rota/endereco; lifecycle ao vivo vem de useRideSearch.
     staleTime: TIMEOUTS.CACHE_STALE_TIME_MEDIUM,
   });
   type RideWithAddresses = {
@@ -352,14 +336,11 @@ export default function BuscandoMotoristaPage() {
   };
 
   const r = rideData;
-
-  // Coordenadas — vêm da tabela addresses (join)
   const originLat = r?.pickup_address?.latitude;
   const originLng = r?.pickup_address?.longitude;
   const destinationLat = r?.dropoff_address?.latitude;
   const destinationLng = r?.dropoff_address?.longitude;
 
-  // Textos de endereço — street do address ou nome da location como fallback
   const originText =
     r?.pickup_address?.street ||
     r?.pickup_location?.name ||
@@ -370,14 +351,7 @@ export default function BuscandoMotoristaPage() {
     BUSCANDO_MOTORISTA_PAGE_LABELS.ROUTE_DESTINATION_DEFAULT;
 
   return (
-    /**
-     * Layout:
-     * - Mobile: coluna (mapa em cima, painel embaixo)
-     * - md+: linha (mapa à esquerda 60%, painel à direita 40%)
-     */
     <div className="fixed inset-0 bg-background flex flex-col md:flex-row overflow-hidden">
-
-      {/* ── Botão voltar (flutuante, sempre visível) ── */}
       <div className="absolute top-4 left-4 z-30 safe-top">
         <button
           onClick={() => navigate(mobilityRoutes.passageiro.home, { replace: true })}
@@ -388,8 +362,6 @@ export default function BuscandoMotoristaPage() {
         </button>
       </div>
 
-      {/* ── MAPA ── */}
-      {/* Mobile: altura fixa ~55vh | Desktop: flex-1 (ocupa toda a altura) */}
       <div className="relative h-[55vh] md:h-full md:flex-1 flex-shrink-0">
         <RouteMap
           originLat={originLat}
@@ -398,7 +370,6 @@ export default function BuscandoMotoristaPage() {
           destinationLng={destinationLng}
         />
 
-        {/* Animação de busca centralizada no mapa */}
         <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
           <div className="relative flex items-center justify-center">
             {[1, 2, 3].map((i) => (
@@ -421,49 +392,54 @@ export default function BuscandoMotoristaPage() {
           </div>
         </div>
 
-        {/* Legenda de marcadores — mobile only, canto inferior direito do mapa */}
         <div className="absolute bottom-3 right-3 flex flex-col gap-1.5 md:hidden">
           <div className="flex items-center gap-1.5 bg-card/90 backdrop-blur-sm rounded-lg px-2 py-1 text-[0.6rem] font-medium text-foreground shadow">
-            <div className="w-2.5 h-2.5 rounded-full bg-green-500 flex-shrink-0" />
+            <div
+              className="w-2.5 h-2.5 rounded-full flex-shrink-0"
+              style={{ backgroundColor: MOBILITY_MAP_VISUALS.markers.origin.color }}
+            />
             {BUSCANDO_MOTORISTA_PAGE_LABELS.LEGEND_ORIGIN}
           </div>
           <div className="flex items-center gap-1.5 bg-card/90 backdrop-blur-sm rounded-lg px-2 py-1 text-[0.6rem] font-medium text-foreground shadow">
-            <div className="w-2.5 h-2.5 rounded-sm bg-red-500 flex-shrink-0" />
+            <div
+              className="w-2.5 h-2.5 rounded-sm flex-shrink-0"
+              style={{ backgroundColor: MOBILITY_MAP_VISUALS.markers.destination.color }}
+            />
             {BUSCANDO_MOTORISTA_PAGE_LABELS.LEGEND_DESTINATION}
           </div>
         </div>
       </div>
 
-      {/* ── PAINEL ── */}
-      {/* Mobile: bottom sheet animado | Desktop: painel lateral fixo */}
       <motion.div
         initial={{ y: 60, opacity: 0 }}
         animate={{ y: 0, opacity: 1 }}
         transition={{ duration: 0.35, ease: "easeOut" }}
         className={[
-          // Base
           "bg-card z-10 flex flex-col",
-          // Mobile: rounded top, padding bottom safe area
           "rounded-t-3xl px-5 pt-5 pb-6",
           "shadow-[0_-8px_32px_rgba(0,0,0,0.12)]",
-          // Desktop: sem rounded, borda esquerda, largura fixa, scroll se necessário
           "md:rounded-none md:border-l md:border-border md:w-[380px] md:overflow-y-auto md:shadow-none md:pt-16",
         ].join(" ")}
       >
-        {/* Handle — mobile only */}
         <div className="w-10 h-1 rounded-full bg-border mx-auto mb-5 md:hidden" />
 
-        {/* Legenda desktop */}
         <div className="hidden md:flex items-center gap-3 mb-6">
           <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
-            <div className="w-3 h-3 rounded-full bg-green-500" /> {BUSCANDO_MOTORISTA_PAGE_LABELS.LEGEND_ORIGIN}
+            <div
+              className="w-3 h-3 rounded-full"
+              style={{ backgroundColor: MOBILITY_MAP_VISUALS.markers.origin.color }}
+            />
+            {BUSCANDO_MOTORISTA_PAGE_LABELS.LEGEND_ORIGIN}
           </div>
           <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
-            <div className="w-3 h-3 rounded-sm bg-red-500" /> {BUSCANDO_MOTORISTA_PAGE_LABELS.LEGEND_DESTINATION}
+            <div
+              className="w-3 h-3 rounded-sm"
+              style={{ backgroundColor: MOBILITY_MAP_VISUALS.markers.destination.color }}
+            />
+            {BUSCANDO_MOTORISTA_PAGE_LABELS.LEGEND_DESTINATION}
           </div>
         </div>
 
-        {/* Status de Busca em Tempo Real */}
         {rideId && (
           <div className="mb-4">
             <PassengerSearchStatus
@@ -481,7 +457,6 @@ export default function BuscandoMotoristaPage() {
         />
       </motion.div>
 
-      {/* Diálogo de confirmação de cancelamento */}
       <CancelRideConfirmDialog
         open={showCancelDialog}
         onOpenChange={setShowCancelDialog}
