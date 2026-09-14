@@ -1,5 +1,4 @@
-import { lazy, Suspense, useEffect, useRef, useState } from "react";
-import type { RefObject } from "react";
+import { lazy, Suspense, useEffect, useState } from "react";
 import type { Location } from "@/core/location/types";
 import type { ResolvedTerritory } from "@/core/routing/hooks/useResolveTerritoryFromUrl";
 import { DEFAULT_TILE_STYLE } from "@/shared/config/mapDefaults";
@@ -106,12 +105,10 @@ function EntryMapArrivalSurface({
   className,
   stage,
   label,
-  sectionRef,
 }: {
   className: string;
   stage: TerritoryEntryArrivalStage;
   label: string;
-  sectionRef?: RefObject<HTMLElement | null>;
 }) {
   const statusText =
     stage === "community"
@@ -120,7 +117,6 @@ function EntryMapArrivalSurface({
 
   return (
     <section
-      ref={sectionRef}
       className={`territory-entry-map relative h-full min-h-[12rem] w-full overflow-hidden bg-territory-raised md:min-h-[18rem] lg:min-h-[24rem] ${className}`}
       role="status"
       aria-live="polite"
@@ -143,7 +139,6 @@ export default function TerritoryEntryMap({
   isLoading,
   className = "",
 }: TerritoryEntryMapProps) {
-  const sectionRef = useRef<HTMLElement | null>(null);
   const [shouldMountRuntime, setShouldMountRuntime] = useState(false);
   const territoryLabel = label ?? "Complexo do Nordeste de Amaralina";
 
@@ -163,23 +158,9 @@ export default function TerritoryEntryMap({
       ]).then(() => undefined),
     );
 
-    const section = sectionRef.current;
-    if (!section || typeof IntersectionObserver === "undefined") {
-      const timeoutId = window.setTimeout(() => setShouldMountRuntime(true), 32);
-      return () => window.clearTimeout(timeoutId);
-    }
-
-    const observer = new IntersectionObserver(
-      (entries) => {
-        if (!entries.some((entry) => entry.isIntersecting)) return;
-        observer.disconnect();
-        setShouldMountRuntime(true);
-      },
-      { rootMargin: "720px 0px", threshold: 0.01 },
-    );
-
-    observer.observe(section);
-    return () => observer.disconnect();
+    // O primeiro paint já exibiu o Arrival leve. A partir daqui não há motivo
+    // para esperar IntersectionObserver: o mapa é parte da primeira tela.
+    setShouldMountRuntime(true);
   }, [city, resolvedTerritory, shouldMountRuntime]);
 
   if (!shouldMountRuntime) {
@@ -188,7 +169,6 @@ export default function TerritoryEntryMap({
         className={className}
         stage={isLoading ? "community" : "map"}
         label={territoryLabel}
-        sectionRef={sectionRef}
       />
     );
   }
