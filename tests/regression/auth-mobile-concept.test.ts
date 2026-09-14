@@ -61,6 +61,8 @@ describe("mobile account concept composition", () => {
     expect(layout).toContain("env(safe-area-inset-right)");
     expect(layout).toContain("env(safe-area-inset-bottom)");
     expect(layout).toContain('button[aria-label="Voltar"]');
+    expect(layout).toContain("max-width: 15.25rem !important");
+    expect(layout).toContain("max-width: 17.75rem !important");
     expect(layout).toContain('main#main-content:has(#login-identifier) span[aria-hidden="true"].text-xl');
     expect(layout).toContain("font-size: 0 !important");
     expect(layout).toContain("border-right: 1.5px solid currentColor");
