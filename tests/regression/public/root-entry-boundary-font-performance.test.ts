@@ -26,15 +26,26 @@ describe("root boundary and font performance", () => {
     expect(loader).not.toContain("@/integrations/supabase");
   });
 
-  it("strips the legacy Google Fonts import from generated CSS", () => {
+  it("keeps Google Fonts out of render-blocking CSS", () => {
     const postcss = read("postcss.config.cjs");
     const html = read("index.html");
+    const bootstrap = read("public/font-bootstrap.js");
 
     expect(postcss).toContain("strip-duplicate-google-font-import");
     expect(postcss).toContain('atRule.params.includes("fonts.googleapis.com")');
     expect(postcss).toContain("atRule.remove()");
-    expect(html).toContain(
-      'rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans',
+
+    expect(html).toContain('rel="preload"');
+    expect(html).toContain('as="style"');
+    expect(html).toContain("data-public-font-stylesheet");
+    expect(html).toContain('fetchpriority="low"');
+    expect(html).toContain("display=optional");
+    expect(html).toContain('<script src="/font-bootstrap.js" defer></script>');
+    expect(html).not.toContain(
+      '<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans',
     );
+
+    expect(bootstrap).toContain('link.rel = "stylesheet"');
+    expect(bootstrap).toContain("requestAnimationFrame");
   });
 });
