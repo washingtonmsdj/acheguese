@@ -4,6 +4,7 @@ import communityThumbnail from "@/assets/complexo-cultura.jpg";
 import { LAUNCH_URLS, TERRITORY_CONFIG } from "@/core/routing/config/territory";
 import { resolvePublicTerritoryFallback } from "@/core/routing/utils/publicTerritoryFallbacks";
 import { lastTerritoryStore } from "@/core/routing/stores/LastTerritoryStore";
+import { scheduleAfterPublicRootMap } from "@/shared/utils/publicRootReadiness";
 
 const COMPLEX_TERRITORY_NAME = "Complexo do Nordeste de Amaralina";
 const COMPLEX_FALLBACK_SLUG = "complexo-do-nordeste-de-amaralina";
@@ -71,45 +72,42 @@ export default function TerritoryEntryPage() {
 
   useEffect(() => {
     const desktopMedia = window.matchMedia("(min-width: 768px)");
-    let idleId: number | null = null;
-    let timeoutId: number | null = null;
-    let loadListenerAttached = false;
+    let cancelScheduledImage: (() => void) | null = null;
 
-    const requestImage = () => {
-      if (!desktopMedia.matches || shouldLoadCommunityImage) return;
-
-      if ("requestIdleCallback" in window) {
-        idleId = window.requestIdleCallback(
-          () => setShouldLoadCommunityImage(true),
-          { timeout: 1800 },
-        );
-      } else {
-        timeoutId = window.setTimeout(() => setShouldLoadCommunityImage(true), 600);
+    const scheduleImage = () => {
+      if (!desktopMedia.matches || shouldLoadCommunityImage || cancelScheduledImage) {
+        return;
       }
+
+      cancelScheduledImage = scheduleAfterPublicRootMap(
+        () => {
+          cancelScheduledImage = null;
+          if (desktopMedia.matches) setShouldLoadCommunityImage(true);
+        },
+        {
+          maxWaitMs: 3000,
+          idleTimeoutMs: 1800,
+          idleFallbackDelayMs: 600,
+        },
+      );
     };
 
-    const scheduleAfterLoad = () => requestImage();
     const handleMediaChange = () => {
-      if (desktopMedia.matches) requestImage();
+      if (desktopMedia.matches) {
+        scheduleImage();
+        return;
+      }
+
+      cancelScheduledImage?.();
+      cancelScheduledImage = null;
     };
 
-    if (document.readyState === "complete") {
-      requestImage();
-    } else {
-      window.addEventListener("load", scheduleAfterLoad, { once: true });
-      loadListenerAttached = true;
-    }
+    scheduleImage();
     desktopMedia.addEventListener("change", handleMediaChange);
 
     return () => {
-      if (loadListenerAttached) {
-        window.removeEventListener("load", scheduleAfterLoad);
-      }
       desktopMedia.removeEventListener("change", handleMediaChange);
-      if (idleId !== null && "cancelIdleCallback" in window) {
-        window.cancelIdleCallback(idleId);
-      }
-      if (timeoutId !== null) window.clearTimeout(timeoutId);
+      cancelScheduledImage?.();
     };
   }, [shouldLoadCommunityImage]);
 
