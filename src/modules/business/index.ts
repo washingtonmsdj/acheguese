@@ -11,9 +11,6 @@
 // Components
 export { ContactLink } from "./components/ContactLink";
 
-// Services
-export { BusinessService } from "./services/BusinessService";
-
 // Hooks
 export { useBusiness } from "@/core/business/hooks/useBusiness";
 export { useBusinessById } from "./hooks/useBusinessById";
