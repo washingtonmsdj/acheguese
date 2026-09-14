@@ -108,6 +108,7 @@ describe("account and access concept contract", () => {
       "src/app/features/onboarding/pages/CadastroPage.tsx",
       "src/app/features/onboarding/pages/CadastroConfirmacaoPage.tsx",
       "src/app/features/onboarding/pages/CadastroPrimeiroAcessoPage.tsx",
+      "src/shared/components/ui/checkbox.tsx",
     ];
 
     for (const path of conceptOwnedFiles) {
@@ -117,5 +118,11 @@ describe("account and access concept contract", () => {
       );
       expect(source, `${path} must not embed svg markup`).not.toMatch(/<svg\b/i);
     }
+
+    const firstAccess = readProjectFile(
+      "src/app/features/onboarding/pages/CadastroPrimeiroAcessoPage.tsx",
+    );
+    expect(firstAccess).not.toContain('@/shared/components/ui/select');
+    expect(firstAccess).toContain("function ConceptSelect(");
   });
 });
