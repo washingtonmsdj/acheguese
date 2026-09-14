@@ -51,6 +51,16 @@ describe("public root launch territory SSOT", () => {
     expect(fallbacks).toContain("export function getPublicTerritoryLocationLabel");
   });
 
+  it("uses the canonical raised surface token on active root navigation", () => {
+    const entry = read("src/app/pages/TerritoryEntryPage.tsx");
+    const tailwind = read("tailwind.config.ts");
+
+    expect(tailwind).toContain(
+      'raised: "hsl(var(--territory-surface-raised))"',
+    );
+    expect(entry.match(/hover:bg-territory-raised/g)?.length ?? 0).toBeGreaterThanOrEqual(5);
+  });
+
   it("keeps the root map fallback on canonical map defaults", () => {
     const runtime = read(
       "src/app/components/territory-vivo/TerritoryEntryMapRuntime.tsx",
