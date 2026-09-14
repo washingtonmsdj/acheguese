@@ -31,6 +31,12 @@ describe("account security concept polish", () => {
     expect(security).toContain("navigate(SUPPORT_PATH)");
   });
 
+  it("uses the shared provider artwork instead of a generic Google placeholder", () => {
+    expect(security).toContain("GoogleProviderMark");
+    expect(security).toContain("icon={<GoogleProviderMark />}");
+    expect(security).not.toContain("Globe2");
+  });
+
   it("keeps account access truthfully limited to the supported other-session action", () => {
     expect(security).toContain('mobileDescription=""');
     expect(security).toContain('desktopDescription="Mantenha sua conta protegida."');
