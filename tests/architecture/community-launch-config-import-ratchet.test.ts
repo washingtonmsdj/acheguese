@@ -25,7 +25,7 @@ function collectSourceFiles(directory: string): string[] {
   return files;
 }
 
-describe("communityLaunch legacy config import ratchet", () => {
+describe("communityLaunch config ownership ratchet", () => {
   it("keeps communityLaunch on the canonical core owner and forbids bridge recreation", () => {
     expect(existsSync(resolve(root, legacyBridge))).toBe(false);
 
@@ -41,5 +41,27 @@ describe("communityLaunch legacy config import ratchet", () => {
       "utf8",
     );
     expect(comunidadePage).toContain(canonicalImport);
+  });
+
+  it("projects rollout membership from routing territory SSOT instead of copying slugs", () => {
+    const source = readFileSync(
+      resolve(root, "src/core/community/config/communityLaunch.ts"),
+      "utf8",
+    );
+
+    expect(source).toContain(
+      'import { TERRITORY_CONFIG } from "@/core/routing/config/territory";',
+    );
+    expect(source).toContain("resolvePublicTerritoryFallback");
+    expect(source).toContain("configuredLaunchGroup?.members");
+    expect(source).toContain("getPublicTerritoryLocationLabel(member)");
+
+    expect(source).not.toContain('slug: "nordeste-de-amaralina"');
+    expect(source).not.toContain('slug: "santa-cruz"');
+    expect(source).not.toContain('slug: "vale-das-pedrinhas"');
+    expect(source).not.toContain('slug: "chapada"');
+    expect(source).not.toContain(
+      '"complexo-do-nordeste-de-amaralina"',
+    );
   });
 });
