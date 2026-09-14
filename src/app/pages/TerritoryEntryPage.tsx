@@ -8,12 +8,16 @@ import { createLocationRepository } from "@/core/location/repositories/createLoc
 import { LocationStatus, LocationType, type Location } from "@/core/location/types";
 import { lastTerritoryStore } from "@/core/routing/stores/LastTerritoryStore";
 import { resolvePublicTerritoryFallback } from "@/core/routing/utils/publicTerritoryFallbacks";
+import type { ResolvedTerritory } from "@/core/routing/hooks/useResolveTerritoryFromUrl";
 import { isTerritoryPubliclyNavigable } from "@/core/routing/utils/territoryVisibility";
+import { territorialGroupService } from "@/core/territorial";
 import { normalizeTerritoryText } from "@/shared/utils/slugify";
 
 const COMPLEX_TERRITORY_NAME = "Complexo do Nordeste de Amaralina";
+const COMPLEX_FALLBACK_SLUG = "complexo-do-nordeste-de-amaralina";
 let launchCityPromise: Promise<Location | null> | null = null;
 let launchTerritoriesPromise: Promise<Location[]> | null = null;
+let launchResolvedTerritoryPromise: Promise<ResolvedTerritory | null> | null = null;
 
 function getLaunchCityPaths(): string[] {
   const country = TERRITORY_CONFIG.launch.country || "br";
@@ -56,38 +60,78 @@ async function getLaunchTerritories(): Promise<Location[]> {
   return launchTerritoriesPromise;
 }
 
-function findComplexTerritory(locations: Location[]): Location | null {
+function getLaunchCommunitySlug(): string {
+  return TERRITORY_CONFIG.launch.community.slug ?? COMPLEX_FALLBACK_SLUG;
+}
+
+async function resolveLaunchTerritory(): Promise<ResolvedTerritory | null> {
+  const city = await getLaunchCity();
+  const launchSlug = getLaunchCommunitySlug();
+
+  if (city) {
+    const group = await territorialGroupService
+      .getGroupBySlugAndCity(launchSlug, city.id)
+      .catch(() => null);
+
+    if (group) {
+      const fullGroup = await territorialGroupService
+        .getGroupWithMembers(group.id)
+        .catch(() => null);
+
+      if (fullGroup?.members.length) {
+        return { kind: "group", group: fullGroup };
+      }
+    }
+  }
+
+  const fallback = resolvePublicTerritoryFallback({
+    state: TERRITORY_CONFIG.launch.state || "ba",
+    city: TERRITORY_CONFIG.launch.city || "salvador",
+    territorySlug: launchSlug,
+  });
+  if (fallback) return fallback;
+
   const normalizedName = normalizeTerritoryText(COMPLEX_TERRITORY_NAME);
-  return locations.find((location) => normalizeTerritoryText(location.name).includes(normalizedName)) ??
+  const locations = await getLaunchTerritories();
+  const fallbackLocation =
+    locations.find((location) => normalizeTerritoryText(location.name).includes(normalizedName)) ??
     locations.find((location) => normalizeTerritoryText(location.name).includes("nordeste de amaralina")) ??
-    (() => {
-      const fallback = resolvePublicTerritoryFallback({ state: TERRITORY_CONFIG.launch.state || "ba", city: TERRITORY_CONFIG.launch.city || "salvador", territorySlug: "nordeste-de-amaralina" });
-      return fallback?.kind === "location" ? fallback.location : null;
-    })();
+    null;
+
+  return fallbackLocation
+    ? { kind: "location", location: fallbackLocation }
+    : null;
+}
+
+function getLaunchResolvedTerritory(): Promise<ResolvedTerritory | null> {
+  if (!launchResolvedTerritoryPromise) {
+    launchResolvedTerritoryPromise = resolveLaunchTerritory().catch(() => null);
+  }
+  return launchResolvedTerritoryPromise;
 }
 
 export default function TerritoryEntryPage() {
   const [launchCity, setLaunchCity] = useState<Location | null>(null);
-  const [previewTerritory, setPreviewTerritory] = useState<Location | null>(null);
+  const [previewTerritory, setPreviewTerritory] = useState<ResolvedTerritory | null>(null);
   const [isMapLoading, setIsMapLoading] = useState(true);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
   useEffect(() => {
     let cancelled = false;
     const loadingTimeout = window.setTimeout(() => { if (!cancelled) setIsMapLoading(false); }, 8000);
-    getLaunchCity().then((city) => {
+
+    Promise.all([getLaunchCity(), getLaunchResolvedTerritory()]).then(([city, territory]) => {
       if (cancelled) return;
       window.clearTimeout(loadingTimeout);
       setLaunchCity(city);
+      setPreviewTerritory(territory);
       setIsMapLoading(false);
     });
-    return () => { cancelled = true; window.clearTimeout(loadingTimeout); };
-  }, []);
 
-  useEffect(() => {
-    let cancelled = false;
-    getLaunchTerritories().then((locations) => { if (!cancelled) setPreviewTerritory(findComplexTerritory(locations)); });
-    return () => { cancelled = true; };
+    return () => {
+      cancelled = true;
+      window.clearTimeout(loadingTimeout);
+    };
   }, []);
 
   const rememberComplex = () => {
@@ -146,7 +190,13 @@ export default function TerritoryEntryPage() {
           </section>
         </section>
 
-        <TerritoryEntryMap city={launchCity} territory={previewTerritory} label={COMPLEX_TERRITORY_NAME} isLoading={isMapLoading} className="entry-map" />
+        <TerritoryEntryMap
+          city={launchCity}
+          resolvedTerritory={previewTerritory}
+          label={COMPLEX_TERRITORY_NAME}
+          isLoading={isMapLoading}
+          className="entry-map"
+        />
 
         <section className="entry-indication" aria-labelledby="entry-indication-title">
           <div className="entry-indication-copy">
