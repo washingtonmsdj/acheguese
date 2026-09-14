@@ -7,7 +7,11 @@ import {
   type TerritoryEntryArrivalStage,
 } from "./TerritoryEntryMapArrival";
 
-const loadTerritoryEntryMapRuntime = () => import("./TerritoryEntryMapRuntime");
+const loadTerritoryEntryMapRuntime = async () => {
+  const module = await import("./TerritoryEntryMapRuntime");
+  void module.preloadTerritoryEntryMapEngine();
+  return module;
+};
 const LazyTerritoryEntryMapRuntime = lazy(loadTerritoryEntryMapRuntime);
 
 interface TerritoryEntryMapProps {
@@ -66,8 +70,6 @@ export default function TerritoryEntryMap({
   useEffect(() => {
     if (shouldMountRuntime) return;
 
-    // Start downloading the lightweight entry runtime after first paint. WebGL
-    // still mounts only when the map is near the viewport.
     void loadTerritoryEntryMapRuntime();
 
     const section = sectionRef.current;
