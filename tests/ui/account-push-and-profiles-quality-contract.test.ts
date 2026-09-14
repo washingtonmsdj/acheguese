@@ -26,6 +26,15 @@ describe("account push and managed-profile quality contract", () => {
     expect(pushHook).toContain("Nenhum registro foi confirmado para este dispositivo");
   });
 
+  it("refreshes browser permission after the user returns from browser settings", () => {
+    expect(pushHook).toContain("useCallback");
+    expect(pushHook).toContain("window.addEventListener('focus', handleFocus)");
+    expect(pushHook).toContain("document.addEventListener('visibilitychange', handleVisibilityChange)");
+    expect(pushHook).toContain("document.visibilityState === 'visible'");
+    expect(pushHook).toContain("window.removeEventListener('focus', handleFocus)");
+    expect(pushHook).toContain("document.removeEventListener('visibilitychange', handleVisibilityChange)");
+  });
+
   it("shows precise empty and per-device mutation states", () => {
     expect(pushHook).toContain("unsubscribingSubscriptionId");
     expect(pushSettings).toContain("Nenhum dispositivo está registrado para receber push nesta conta.");
@@ -45,6 +54,9 @@ describe("account push and managed-profile quality contract", () => {
     }
     expect(managedProfiles).toContain('label: "Mobilidade"');
     expect(managedProfiles).toContain('label: "Comunicação"');
+    expect(managedProfiles).toContain('role="group"');
+    expect(managedProfiles).toContain('aria-pressed={selected}');
+    expect(managedProfiles).not.toContain('role="tablist"');
   });
 
   it("keeps repeated profile actions distinguishable to assistive technology", () => {
