@@ -8,6 +8,7 @@ const main = read("src/main.tsx");
 const wrapper = read("src/app/components/territory-vivo/TerritoryEntryMap.tsx");
 const runtime = read("src/app/components/territory-vivo/TerritoryEntryMapRuntime.tsx");
 const arrival = read("src/app/components/territory-vivo/TerritoryEntryMapArrival.tsx");
+const tailwind = read("tailwind.config.ts");
 
 describe("territory entry map arrival", () => {
   it("requests map runtime and engine in the same render that shows the skeleton fallback", () => {
@@ -62,7 +63,7 @@ describe("territory entry map arrival", () => {
     expect(runtime).not.toContain("fallback_boundary_rings");
   });
 
-  it("uses an Instagram-like page-native skeleton instead of a conceptual loader", () => {
+  it("uses an Instagram-like page-native skeleton with compositor-only shimmer", () => {
     expect(arrival).toContain("data-entry-skeleton");
     expect(arrival).toContain("data-entry-skeleton-grid");
     expect(arrival).toContain("data-entry-skeleton-card");
@@ -70,6 +71,15 @@ describe("territory entry map arrival", () => {
     expect(arrival).toContain("Preparando comunidade");
     expect(arrival).toContain("Abrindo mapa");
     expect(arrival).toContain("duration-150");
+    expect(arrival).toContain("motion-safe:animate-entry-shimmer");
+    expect(arrival).toContain("will-change-transform");
+    expect(arrival).toContain("w-[32%]");
+    expect(arrival).not.toContain("animate-shimmer");
+    expect(arrival).not.toContain("bg-[length:55rem_100%]");
+    expect(tailwind).toContain('"entry-shimmer"');
+    expect(tailwind).toContain('transform: "translate3d(-150%, 0, 0)"');
+    expect(tailwind).toContain('transform: "translate3d(430%, 0, 0)"');
+    expect(tailwind).toContain('"entry-shimmer": "entry-shimmer 1.8s ease-in-out infinite"');
     expect(arrival).not.toContain("lucide-react");
     expect(arrival).not.toContain("setTimeout");
     expect(arrival).not.toContain("Globe");
