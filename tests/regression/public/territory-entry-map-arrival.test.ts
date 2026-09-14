@@ -9,8 +9,12 @@ const runtime = read("src/app/components/territory-vivo/TerritoryEntryMapRuntime
 const arrival = read("src/app/components/territory-vivo/TerritoryEntryMapArrival.tsx");
 
 describe("territory entry map arrival", () => {
-  it("requests map runtime in the same render that shows the skeleton fallback", () => {
+  it("requests map runtime and engine in the same render that shows the skeleton fallback", () => {
     expect(wrapper).toContain("loadTerritoryEntryMapRuntime");
+    expect(wrapper).toContain("Promise.all([");
+    expect(wrapper).toContain('import("./TerritoryEntryMapRuntime")');
+    expect(wrapper).toContain('import("@/core/maps/components/v3/MapLibreAdapter")');
+    expect(wrapper).toContain("preloadPassiveMapLibreAdapterRuntime");
     expect(wrapper).toContain("LazyTerritoryEntryMapRuntime");
     expect(wrapper).toContain("<Suspense");
     expect(wrapper).not.toContain("shouldMountRuntime");
@@ -21,13 +25,12 @@ describe("territory entry map arrival", () => {
     expect(wrapper).toContain("isLoading={isLoading}");
   });
 
-  it("starts runtime, engine and official boundary as independent pipelines", () => {
-    expect(wrapper).toContain("void loadTerritoryEntryMapRuntime()");
-    expect(wrapper).toContain("preloadEntryMapEngine()");
+  it("keeps official boundary post-paint without serializing it behind the runtime", () => {
     expect(wrapper).toContain("preloadEntryOfficialBoundary(preloadResolved)");
-    expect(wrapper).toContain("preloadPassiveMapLibreAdapterRuntime");
     expect(wrapper).toContain("loadOfficialFeatureServerBoundaries");
     expect(wrapper).toContain('link.setAttribute("fetchpriority", "high")');
+    expect(wrapper).not.toContain("preloadEntryMapEngine");
+    expect(wrapper).not.toContain("void loadTerritoryEntryMapRuntime()");
     expect(wrapper).not.toContain("module.preloadTerritoryEntryMapEngine");
     expect(wrapper).not.toContain("module.preloadTerritoryEntryBoundary");
     expect(runtime).not.toContain("preloadTerritoryEntryMapEngine");
