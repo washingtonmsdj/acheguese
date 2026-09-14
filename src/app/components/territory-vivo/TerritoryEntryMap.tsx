@@ -24,13 +24,19 @@ function preloadEntryMapStyle(): void {
   document.head.appendChild(link);
 }
 
+function getResolvedLocations(
+  resolved: ResolvedTerritory | null | undefined,
+): Location[] {
+  if (!resolved) return [];
+  return resolved.kind === "group" ? resolved.group.members : [resolved.location];
+}
+
 function preconnectOfficialBoundarySources(
   resolved: ResolvedTerritory | null | undefined,
 ): void {
   if (typeof document === "undefined" || !resolved) return;
 
-  const locations =
-    resolved.kind === "group" ? resolved.group.members : [resolved.location];
+  const locations = getResolvedLocations(resolved);
   const origins = new Set<string>();
 
   locations.forEach((location) => {
@@ -93,6 +99,27 @@ function preconnectOfficialBoundarySources(
   });
 }
 
+function preloadEntryMapEngine(): void {
+  void import("@/core/maps/components/v3/MapLibreAdapter")
+    .then(({ preloadPassiveMapLibreAdapterRuntime }) =>
+      preloadPassiveMapLibreAdapterRuntime(),
+    )
+    .catch(() => undefined);
+}
+
+function preloadEntryOfficialBoundary(
+  resolved: ResolvedTerritory | null | undefined,
+): void {
+  const locations = getResolvedLocations(resolved);
+  if (locations.length === 0) return;
+
+  void import("@/core/geospatial/data/officialFeatureServerBoundary")
+    .then(({ loadOfficialFeatureServerBoundaries }) =>
+      loadOfficialFeatureServerBoundaries(locations),
+    )
+    .catch(() => undefined);
+}
+
 interface TerritoryEntryMapProps {
   city: Location | null;
   resolvedTerritory?: ResolvedTerritory | null;
@@ -147,12 +174,11 @@ export default function TerritoryEntryMap({
     preloadEntryMapStyle();
     preconnectOfficialBoundarySources(preloadResolved);
 
-    void loadTerritoryEntryMapRuntime().then((module) =>
-      Promise.all([
-        module.preloadTerritoryEntryMapEngine(),
-        module.preloadTerritoryEntryBoundary(preloadResolved),
-      ]).then(() => undefined),
-    );
+    // Three independent pipelines start together: React runtime, MapLibre
+    // engine/worker/CSS and the official municipal boundary request.
+    void loadTerritoryEntryMapRuntime();
+    preloadEntryMapEngine();
+    preloadEntryOfficialBoundary(preloadResolved);
   }, [preloadResolved]);
 
   return (
