@@ -1,6 +1,5 @@
 import { useEffect, useRef, useState } from "react";
 import { Link } from "react-router-dom";
-import { ArrowRight, Menu, Users, X } from "lucide-react";
 import TerritoryEntryMap from "@/app/components/territory-vivo/TerritoryEntryMap";
 import communityThumbnail from "@/assets/complexo-cultura.jpg";
 import { LAUNCH_URLS, TERRITORY_CONFIG } from "@/core/routing/config/territory";
@@ -102,11 +101,18 @@ export default function TerritoryEntryPage() {
             aria-controls="entry-mobile-menu-popover"
             onClick={() => setIsMobileMenuOpen((open) => !open)}
           >
-            {isMobileMenuOpen ? (
-              <X className="h-6 w-6" aria-hidden="true" />
-            ) : (
-              <Menu className="h-6 w-6" aria-hidden="true" />
-            )}
+            <span aria-hidden="true" className="relative block h-5 w-5">
+              <span
+                className={`absolute left-0 top-[0.38rem] h-0.5 w-5 rounded-full bg-current transition-transform duration-150 motion-reduce:transition-none ${
+                  isMobileMenuOpen ? "translate-y-[0.24rem] rotate-45" : ""
+                }`}
+              />
+              <span
+                className={`absolute left-0 top-[0.86rem] h-0.5 w-5 rounded-full bg-current transition-transform duration-150 motion-reduce:transition-none ${
+                  isMobileMenuOpen ? "-translate-y-[0.24rem] -rotate-45" : ""
+                }`}
+              />
+            </span>
           </button>
           {isMobileMenuOpen ? (
             <nav
@@ -163,7 +169,8 @@ export default function TerritoryEntryPage() {
               className="entry-explore-link"
               onClick={rememberComplex}
             >
-              Explorar o Complexo <ArrowRight aria-hidden="true" />
+              Explorar o Complexo
+              <span aria-hidden="true" className="text-lg leading-none">→</span>
             </Link>
             <p className="entry-no-account">Sem cadastro para explorar.</p>
             <Link className="entry-account-link" to="/cadastro">
@@ -185,7 +192,12 @@ export default function TerritoryEntryPage() {
 
         <section className="entry-indication" aria-labelledby="entry-indication-title">
           <div className="entry-indication-copy">
-            <Users className="entry-indication-icon" aria-hidden="true" />
+            <span className="entry-indication-icon relative block h-8 w-8 shrink-0" aria-hidden="true">
+              <span className="absolute left-1 top-1 h-2.5 w-2.5 rounded-full border-2 border-current" />
+              <span className="absolute right-1 top-1.5 h-2 w-2 rounded-full border-2 border-current opacity-70" />
+              <span className="absolute bottom-1 left-0.5 h-3 w-5 rounded-t-full border-2 border-b-0 border-current" />
+              <span className="absolute bottom-1 right-0.5 h-2.5 w-4 rounded-t-full border-2 border-b-0 border-current opacity-70" />
+            </span>
             <div>
               <h2 id="entry-indication-title">Quer o Achegue-se na sua comunidade?</h2>
               <p>
