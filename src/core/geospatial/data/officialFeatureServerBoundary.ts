@@ -24,6 +24,7 @@ type OfficialSource = {
   objectId: number;
 };
 
+const OFFICIAL_BOUNDARY_FETCH_TIMEOUT_MS = 7_000;
 const boundaryCache = new Map<string, OfficialSourceBounds | null>();
 const pendingBatches = new Map<string, Promise<Map<string, OfficialSourceBounds>>>();
 
@@ -171,6 +172,12 @@ async function fetchSourceBatch(
     if (!pending) {
       pending = (async () => {
         const result = new Map<string, OfficialSourceBounds>();
+        const controller = new AbortController();
+        const timeoutId = setTimeout(
+          () => controller.abort(),
+          OFFICIAL_BOUNDARY_FETCH_TIMEOUT_MS,
+        );
+
         try {
           const url = new URL(`${sourceUrl}/query`);
           url.search = new URLSearchParams({
@@ -184,7 +191,9 @@ async function fetchSourceBatch(
             outSR: "4326",
           }).toString();
 
-          const response = await fetch(url.toString());
+          const response = await fetch(url.toString(), {
+            signal: controller.signal,
+          });
           if (!response.ok) return result;
 
           const payload = (await response.json()) as GeoJsonFeatureCollection;
@@ -215,6 +224,10 @@ async function fetchSourceBatch(
           });
         } catch {
           // Network/source failures fall back to the BoundaryService chain.
+          // Aborted requests are deliberately not negative-cached so a later
+          // visit can retry the official source.
+        } finally {
+          clearTimeout(timeoutId);
         }
 
         return result;
