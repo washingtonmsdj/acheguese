@@ -1,6 +1,7 @@
 import { Link, useLocation, useNavigate } from "react-router-dom";
 
 import { AuthConceptIcon } from "@/app/components/auth/AuthConceptIcon";
+import { AUTH_PATHS } from "@/core/auth/constants/authFlow";
 import { SUPPORT_PATH } from "@/shared/constants/legal";
 
 import "./auth-concept-layout.css";
@@ -11,10 +12,15 @@ interface AuthBrandHeaderProps {
   showBack?: boolean;
 }
 
-export function AuthBrandHeader({ showBack = true }: AuthBrandHeaderProps) {
+export function AuthBrandHeader({
+  secondaryHref,
+  secondaryLabel,
+  showBack = true,
+}: AuthBrandHeaderProps) {
   const navigate = useNavigate();
   const location = useLocation();
-  const showRecoveryBackLabel = location.pathname === "/reset-password";
+  const showRecoveryBackLabel = location.pathname === AUTH_PATHS.passwordReset;
+  const hasSecondaryAction = Boolean(secondaryHref && secondaryLabel);
 
   return (
     <header
@@ -58,6 +64,14 @@ export function AuthBrandHeader({ showBack = true }: AuthBrandHeaderProps) {
           <Link to={SUPPORT_PATH} className="rounded px-1 py-2 hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#0b5b59]/35">
             Ajuda
           </Link>
+          {hasSecondaryAction ? (
+            <Link
+              to={secondaryHref!}
+              className="rounded-[9px] border border-[#31575a] bg-white px-3 py-2 font-bold text-[#173d41] transition-colors hover:bg-[#f7f8f5] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#0b5b59]/35"
+            >
+              {secondaryLabel}
+            </Link>
+          ) : null}
         </nav>
       </div>
     </header>
