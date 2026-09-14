@@ -9,7 +9,7 @@
 1. `docs/README.md` — índice documental canônico;
 2. `docs/03-architecture/CURRENT_RULES.md` — regras arquiteturais vigentes;
 3. `docs/08-roadmap/EXECUCAO_MAIN_ONLY.md` — plano operacional ativo;
-4. `docs/08-roadmap/checkpoints/2026-09-14-g184-root-deferred-runtime-and-consent-boundary.md` — checkpoint mais recente desta linha;
+4. `docs/08-roadmap/checkpoints/2026-09-14-g185-root-mvp-viewport-and-concept-closure.md` — checkpoint mais recente desta linha;
 5. `SECURITY.md` — segurança e gates de release.
 
 ## Regras que não podem ser perdidas
@@ -18,6 +18,7 @@
 - não remover feature válida porque está quebrada, incompleta, `launch-paused` ou com teste falhando;
 - remover somente legado/duplicação/bridge/owner substituído depois de censar callers, preservar capacidade e provar o substituto;
 - corrigir causa raiz; não recriar wrappers, aliases, writers paralelos, hardcodes ou paliativos apenas para fazer build/test passar;
+- a `/` está feature-complete no source para o contrato MVP atual; não abrir nova funcionalidade nela sem regressão, mudança de concept/SSOT ou evidência de viewport/runtime;
 - otimização reutilizável de mapas pertence aos owners canônicos descritos em `CURRENT_RULES.md`; não copiar loaders/CSS/workers/providers por página;
 - análise de bundle da `/` deve preservar runtime completo de MapLibre, boundary oficial, app roteado e Sentry fora dos closures críticos definidos no relatório de build;
 - leitura HTTP/cache/abort de FeatureServer oficial pertence a `officialFeatureServerBoundary.ts`; `BoundaryService` não cria segundo parser/cache/fetch da mesma fonte;
