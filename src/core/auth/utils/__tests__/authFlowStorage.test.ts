@@ -38,9 +38,21 @@ describe("authFlowStorage", () => {
     expect(window.sessionStorage.getItem("auth.test")).toBeNull();
   });
 
-  it("reads the previous raw-string format during the migration window", () => {
+  it("rejects obsolete raw-string values instead of keeping a legacy branch alive", () => {
     window.sessionStorage.setItem("auth.test", "/conta");
-    expect(getAuthFlowSessionValue("auth.test")).toBe("/conta");
+
+    expect(getAuthFlowSessionValue("auth.test")).toBeNull();
+    expect(window.sessionStorage.getItem("auth.test")).toBeNull();
+  });
+
+  it("rejects malformed or unsupported envelopes", () => {
+    window.sessionStorage.setItem(
+      "auth.test",
+      JSON.stringify({ version: 2, value: "/conta", expiresAt: Date.now() + 60_000 }),
+    );
+
+    expect(getAuthFlowSessionValue("auth.test")).toBeNull();
+    expect(window.sessionStorage.getItem("auth.test")).toBeNull();
   });
 
   it("clears a stored value idempotently", () => {
