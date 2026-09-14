@@ -9,7 +9,7 @@
 1. `docs/README.md` — índice documental canônico;
 2. `docs/03-architecture/CURRENT_RULES.md` — regras arquiteturais vigentes;
 3. `docs/08-roadmap/EXECUCAO_MAIN_ONLY.md` — plano operacional ativo;
-4. `docs/08-roadmap/checkpoints/2026-09-14-g181-root-bundle-adsense-accessibility-bootstrap-hardening.md` — checkpoint mais recente desta linha;
+4. `docs/08-roadmap/checkpoints/2026-09-14-g182-root-a11y-metadata-seo-and-mobile-navigation-hardening.md` — checkpoint mais recente desta linha;
 5. `SECURITY.md` — segurança e gates de release.
 
 ## Regras que não podem ser perdidas
@@ -31,6 +31,8 @@
 - nome geográfico canônico não é encurtado para satisfazer concept; rótulo/artigo público explícito podem existir em metadata de apresentação;
 - `src/app/config/launchScope.ts` é o owner do rollout público e do `PRELAUNCH_LOCKDOWN_ENABLED`; consumidores não reinterpretam `VITE_PRELAUNCH_LOCKDOWN`;
 - preferências persistidas de acessibilidade pertencem a `src/shared/accessibility/preferences.ts`; classes são aplicadas no `documentElement` para escalar `rem` sem achatar a hierarquia tipográfica;
+- alto contraste precisa cobrir também os tokens `--territory-*`; superfícies Territory não podem ignorar a preferência global;
+- metadata/PWA da raiz deve seguir o headline e a identidade visual aprovados; canonical da `/` não pode ser estático no `index.html`, que atende todas as rotas SPA;
 - `src/shared/components/advertising/AdSense.tsx` é o owner do client/script AdSense; `main.tsx` não carrega provider global nem contém publisher ID hardcoded;
 - Plus Jakarta Sans é a família aprovada; `tailwind.config.ts` é o owner executável do stack e do `--font-heading`/`--font-sans`; peso 800 é permitido onde o concept versionado exige e deve ser carregado de forma real;
 - paths/query keys/classificação de callback de Auth vêm de `authFlow.ts`/`authCallback.ts`; âncora comum não é retorno OAuth;
@@ -40,6 +42,7 @@
 - timeout final de mapa precisa encerrar estado acessível de carregamento; fallback visual resolvido não permanece `aria-busy=true`;
 - regra exclusiva da `/` só permanece local quando depender de prioridade/UX específica da entrada pública;
 - erro de bootstrap pode carregar observabilidade somente no caminho de falha; Sentry não volta a ser import estático do bootstrap normal;
+- o deploy canônico gera e valida sitemap antes do build e valida novamente `dist`; não publicar placeholder vazio como sitemap de produção;
 - trabalhar na `main` sem force-push e preservar trabalhos concorrentes;
 - GitHub Actions com `steps=[]`/`runner_id=0` é falha de execução do provider, não certificação do source;
 - rate-limit Vercel não é build aprovado nem reprovado;
