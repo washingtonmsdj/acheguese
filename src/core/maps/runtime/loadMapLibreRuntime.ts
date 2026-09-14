@@ -17,7 +17,7 @@ export function loadMapLibreRuntime(): Promise<typeof MapLibreRuntime> {
       import("./maplibreRuntimeCss"),
     ])
       .then(([runtime, { ensureMapLibreWorkerConfigured }]) => {
-        ensureMapLibreWorkerConfigured();
+        ensureMapLibreWorkerConfigured(runtime.setWorkerUrl);
         return runtime;
       })
       .catch((error) => {
