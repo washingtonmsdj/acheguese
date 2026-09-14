@@ -20,6 +20,7 @@ on:
       - "public/auth/**"
       - "tests/e2e/auth-concept-layout.spec.ts"
       - "tests/e2e/auth-concept-capture.spec.ts"
+      - "tests/e2e/auth-oauth-recovery.spec.ts"
       - "tests/regression/auth-concept-flow.test.ts"
       - "tests/regression/auth-return-context.test.ts"
       - "tests/regression/auth-google-oauth.test.ts"
@@ -45,6 +46,7 @@ on:
       - "public/auth/**"
       - "tests/e2e/auth-concept-layout.spec.ts"
       - "tests/e2e/auth-concept-capture.spec.ts"
+      - "tests/e2e/auth-oauth-recovery.spec.ts"
       - "tests/regression/auth-concept-flow.test.ts"
       - "tests/regression/auth-return-context.test.ts"
       - "tests/regression/auth-google-oauth.test.ts"
@@ -111,6 +113,7 @@ jobs:
           npx playwright test
           tests/e2e/auth-concept-layout.spec.ts
           tests/e2e/auth-concept-capture.spec.ts
+          tests/e2e/auth-oauth-recovery.spec.ts
           --project=chromium
 
       - name: Upload account/access screenshots
