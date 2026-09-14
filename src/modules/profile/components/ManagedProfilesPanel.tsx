@@ -1,13 +1,13 @@
 import { useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import {
-  BriefcaseBusiness,
+  Briefcase,
   Building2,
-  CarFront,
+  Car,
   CheckCircle2,
   Eye,
+  MessageCircle,
   Pencil,
-  RadioTower,
   Search,
   ShieldCheck,
   UserRound,
@@ -65,11 +65,11 @@ function ProfileTypeIcon({ type }: { type: ProfileType }) {
     type === "business"
       ? Building2
       : type === "professional"
-        ? BriefcaseBusiness
+        ? Briefcase
         : type === "driver"
-          ? CarFront
+          ? Car
           : type === "communication_channel"
-            ? RadioTower
+            ? MessageCircle
             : UserRound;
 
   return <Icon className="h-4 w-4" aria-hidden="true" />;
@@ -123,7 +123,7 @@ function ManagedProfileCard({
           </div>
 
           <div className="mt-1 flex flex-wrap items-center gap-2 text-xs text-territory-muted">
-            <span className="inline-flex items-center gap-1 rounded-full bg-territory-brand/8 px-2 py-1 font-semibold text-territory-brand">
+            <span className="inline-flex items-center gap-1 rounded-full bg-territory-brand/10 px-2 py-1 font-semibold text-territory-brand">
               <ProfileTypeIcon type={profile.profile_type} />
               {getProfileTypeLabel(profile)}
             </span>
