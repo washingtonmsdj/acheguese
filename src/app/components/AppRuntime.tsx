@@ -1,11 +1,10 @@
 import { lazy, Suspense, useEffect, useLayoutEffect, useState } from "react";
-import { BrowserRouter, useLocation } from "react-router-dom";
 
 import RootRouteEntry from "@/app/routes/RootRouteEntry";
 import { scheduleBrowserIdleWork } from "@/shared/utils/browserIdle";
 
-const FullAppRuntimeShell = lazy(() =>
-  import("@/app/components/FullAppRuntimeShell"),
+const RoutedAppRuntime = lazy(() =>
+  import("@/app/components/RoutedAppRuntime"),
 );
 
 const PublicRootOverlays = lazy(() =>
@@ -14,6 +13,20 @@ const PublicRootOverlays = lazy(() =>
 
 const PRELAUNCH_LOCKDOWN_ENABLED =
   (import.meta.env.VITE_PRELAUNCH_LOCKDOWN ?? "false") === "true";
+
+function shouldUseLeanPublicRoot(): boolean {
+  if (PRELAUNCH_LOCKDOWN_ENABLED || window.location.pathname !== "/") {
+    return false;
+  }
+
+  const searchParams = new URLSearchParams(window.location.search);
+  const shouldCheckAuthRedirect =
+    window.location.hash.length > 1 ||
+    searchParams.has("code") ||
+    searchParams.get("mode") === "recovery";
+
+  return !shouldCheckAuthRedirect;
+}
 
 function LeanPublicRootRuntime() {
   const [shouldMountOverlays, setShouldMountOverlays] = useState(false);
@@ -85,33 +98,14 @@ function RuntimeLoadingFallback() {
   );
 }
 
-function RuntimeRouteTree() {
-  const location = useLocation();
-  const searchParams = new URLSearchParams(location.search);
-  const shouldCheckAuthRedirect =
-    location.hash.length > 1 ||
-    searchParams.has("code") ||
-    searchParams.get("mode") === "recovery";
-  const isLeanPublicRoot =
-    !PRELAUNCH_LOCKDOWN_ENABLED &&
-    location.pathname === "/" &&
-    !shouldCheckAuthRedirect;
-
-  if (isLeanPublicRoot) {
+export function AppRuntime() {
+  if (shouldUseLeanPublicRoot()) {
     return <LeanPublicRootRuntime />;
   }
 
   return (
     <Suspense fallback={<RuntimeLoadingFallback />}>
-      <FullAppRuntimeShell shouldCheckAuthRedirect={shouldCheckAuthRedirect} />
+      <RoutedAppRuntime />
     </Suspense>
-  );
-}
-
-export function AppRuntime() {
-  return (
-    <BrowserRouter>
-      <RuntimeRouteTree />
-    </BrowserRouter>
   );
 }
