@@ -35,6 +35,7 @@ const ARRIVAL_COPY: Record<
  * - não importa ícones, SVGs, mapa ou bibliotecas de animação;
  * - não possui timer nem controla o carregamento do MapLibre;
  * - só ocupa a área visual enquanto runtime, style e boundary carregam em paralelo;
+ * - deixa o canvas aparecer progressivamente por baixo, sem funcionar como cortina;
  * - animação única e opcional, desativada por prefers-reduced-motion.
  */
 export function TerritoryEntryMapArrival({
@@ -48,7 +49,7 @@ export function TerritoryEntryMapArrival({
 
   return (
     <div
-      className={`pointer-events-none absolute inset-0 z-20 overflow-hidden bg-territory-surface transition-opacity duration-200 motion-reduce:transition-none ${
+      className={`pointer-events-none absolute inset-0 z-20 overflow-hidden transition-opacity duration-150 motion-reduce:transition-none ${
         leaving ? "opacity-0" : "opacity-100"
       }`}
       aria-hidden="true"
@@ -60,14 +61,14 @@ export function TerritoryEntryMapArrival({
         className="absolute inset-0"
         style={{
           background:
-            "radial-gradient(circle at 18% 52%, hsl(var(--territory-brand) / 0.13), transparent 30%), radial-gradient(circle at 88% 15%, hsl(var(--territory-sun) / 0.10), transparent 26%), linear-gradient(145deg, hsl(var(--territory-raised)), hsl(var(--territory-surface)))",
+            "radial-gradient(circle at 18% 52%, hsl(var(--territory-brand) / 0.12), transparent 30%), radial-gradient(circle at 88% 15%, hsl(var(--territory-sun) / 0.10), transparent 26%), linear-gradient(145deg, hsl(var(--territory-raised) / 0.84), hsl(var(--territory-surface) / 0.88))",
         }}
       />
 
       <div className="absolute inset-0 flex items-center px-4 py-3 sm:px-5 md:px-8 lg:px-12">
         <div className="mx-auto grid w-full max-w-[54rem] grid-cols-[3.5rem_minmax(0,1fr)] items-center gap-4 md:grid-cols-[5.5rem_minmax(0,1fr)] md:gap-7 lg:grid-cols-[8rem_minmax(0,1fr)] lg:gap-10">
           <div
-            className="relative grid h-14 w-14 place-items-center justify-self-center rounded-full border border-territory-brand/20 bg-territory-surface shadow-sm md:h-20 md:w-20 lg:h-28 lg:w-28"
+            className="relative grid h-14 w-14 place-items-center justify-self-center rounded-full border border-territory-brand/20 bg-territory-surface/90 shadow-sm md:h-20 md:w-20 lg:h-28 lg:w-28"
             data-entry-arrival-signal
           >
             <span className="absolute inset-[14%] rounded-full border border-territory-brand/20" />
@@ -100,7 +101,7 @@ export function TerritoryEntryMapArrival({
               {[0, 1, 2].map((index) => (
                 <span
                   key={index}
-                  className={`h-1.5 rounded-full transition-[width,background-color] duration-200 motion-reduce:transition-none ${
+                  className={`h-1.5 rounded-full transition-[width,background-color] duration-150 motion-reduce:transition-none ${
                     index === stageIndex
                       ? "w-6 bg-territory-brand"
                       : index < stageIndex
