@@ -128,17 +128,21 @@ describe("anonymous root bootstrap performance", () => {
     expect(overlays).not.toContain("Sonner");
   });
 
-  it("discovers font and map hosts without render-blocking Google Fonts", () => {
+  it("discovers font and map hosts without render-blocking font helpers", () => {
     const html = read("index.html");
+    const main = read("src/main.tsx");
 
     expect(html).toContain("data-public-font-stylesheet");
     expect(html).toContain('rel="preload"');
     expect(html).toContain('as="style"');
     expect(html).toContain("display=optional");
-    expect(html).toContain('<script src="/font-bootstrap.js" defer></script>');
+    expect(html).not.toContain("font-bootstrap.js");
     expect(html).not.toContain(
       '<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans',
     );
+    expect(main).toContain('link[data-public-font-stylesheet]');
+    expect(main).toContain('fontStylesheet.rel = "stylesheet"');
+    expect(fs.existsSync(path.join(ROOT, "public/font-bootstrap.js"))).toBe(false);
     expect(html).toContain('rel="preconnect" href="https://tiles.openfreemap.org" crossorigin');
     expect(html).toContain('rel="dns-prefetch" href="//tiles.openfreemap.org"');
   });
@@ -153,17 +157,16 @@ describe("anonymous root bootstrap performance", () => {
     expect(vite).not.toContain('return "vendor-runtime"');
   });
 
-  it("keeps AdSense off load-critical work and schedules it on browser idle", () => {
+  it("keeps AdSense off HTML parsing and schedules the network request after load + idle", () => {
     const html = read("index.html");
-    const bootstrap = read("public/adsense-bootstrap.js");
+    const main = read("src/main.tsx");
 
-    expect(html).toContain('<script src="/adsense-bootstrap.js" defer></script>');
-    expect(bootstrap).toContain("scheduleAds");
-    expect(bootstrap).toContain('"requestIdleCallback" in window');
-    expect(bootstrap).toContain("timeout: 2500");
-    expect(bootstrap).toContain("window.setTimeout(loadAds, 1200)");
-    expect(bootstrap).toContain('window.addEventListener("load", scheduleAds');
-    expect(bootstrap).toContain("ads.async = true");
+    expect(html).not.toContain("adsense-bootstrap.js");
+    expect(fs.existsSync(path.join(ROOT, "public/adsense-bootstrap.js"))).toBe(false);
+    expect(main).toContain("data-acheguese-adsense");
+    expect(main).toContain("pagead2.googlesyndication.com/pagead/js/adsbygoogle.js");
+    expect(main).toContain("ads.async = true");
+    expect(main).toContain("deferLoad(() => {");
   });
 
   it("does not run the obsolete service-worker bootstrap before React", () => {
