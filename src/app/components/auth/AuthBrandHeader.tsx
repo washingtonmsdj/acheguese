@@ -1,10 +1,7 @@
-import { useEffect } from "react";
-import { Link, useLocation, useNavigate, useSearchParams } from "react-router-dom";
+import { Link, useLocation, useNavigate } from "react-router-dom";
 
 import { AuthConceptIcon } from "@/app/components/auth/AuthConceptIcon";
-import { setPendingAuthReturn } from "@/core/auth/utils/pendingAuthReturn";
 import { SUPPORT_PATH } from "@/shared/constants/legal";
-import { resolveSafeInternalPath } from "@/shared/utils/safeRedirect";
 
 import "./auth-concept-layout.css";
 
@@ -14,22 +11,10 @@ interface AuthBrandHeaderProps {
   showBack?: boolean;
 }
 
-type AuthLocationState = { redirectTo?: unknown } | null;
-
 export function AuthBrandHeader({ showBack = true }: AuthBrandHeaderProps) {
   const navigate = useNavigate();
   const location = useLocation();
-  const [searchParams] = useSearchParams();
   const showRecoveryBackLabel = location.pathname === "/reset-password";
-
-  useEffect(() => {
-    const stateRedirect = (location.state as AuthLocationState)?.redirectTo;
-    const queryRedirect = searchParams.get("redirect");
-    if (stateRedirect == null && queryRedirect == null) return;
-
-    const safeReturn = resolveSafeInternalPath(stateRedirect ?? queryRedirect, "/");
-    if (safeReturn !== "/") setPendingAuthReturn(safeReturn);
-  }, [location.state, searchParams]);
 
   return (
     <header
