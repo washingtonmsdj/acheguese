@@ -52,6 +52,8 @@ describe("root community-first MVP entry", () => {
     const asset = path.join(ROOT, "src/assets/complexo-cultura.jpg");
 
     expect(source).toContain('import communityThumbnail from "@/assets/complexo-cultura.jpg"');
+    expect(source).toContain('width={1024}');
+    expect(source).toContain('height={768}');
     expect(source).toContain('loading="lazy"');
     expect(source).toContain('decoding="async"');
     expect(source).toContain('fetchPriority="low"');
