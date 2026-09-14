@@ -3,7 +3,10 @@ import type { RefObject } from "react";
 import type { Location } from "@/core/location/types";
 import type { ResolvedTerritory } from "@/core/routing/hooks/useResolveTerritoryFromUrl";
 import { scheduleBrowserIdleWork } from "@/shared/utils/browserIdle";
-import { TerritoryEntryMapArrival } from "./TerritoryEntryMapArrival";
+import {
+  TerritoryEntryMapArrival,
+  type TerritoryEntryArrivalStage,
+} from "./TerritoryEntryMapArrival";
 
 const LazyTerritoryEntryMapRuntime = lazy(() =>
   import("./TerritoryEntryMapRuntime"),
@@ -19,18 +22,19 @@ interface TerritoryEntryMapProps {
 
 function EntryMapArrivalSurface({
   className,
-  isLoading,
+  stage,
   label,
   sectionRef,
 }: {
   className: string;
-  isLoading: boolean;
+  stage: TerritoryEntryArrivalStage;
   label: string;
   sectionRef?: RefObject<HTMLElement | null>;
 }) {
-  const statusText = isLoading
-    ? "Procurando comunidade e dados territoriais"
-    : "Preparando mapa e limite territorial oficial";
+  const statusText =
+    stage === "community"
+      ? "Reconhecendo sua comunidade"
+      : "Preparando o mapa oficial do território";
 
   return (
     <section
@@ -41,7 +45,11 @@ function EntryMapArrivalSurface({
       aria-busy="true"
       aria-label={`${statusText} de ${label}`}
     >
-      <TerritoryEntryMapArrival label={label} statusText={statusText} />
+      <TerritoryEntryMapArrival
+        label={label}
+        stage={stage}
+        statusText={statusText}
+      />
     </section>
   );
 }
@@ -93,7 +101,7 @@ export default function TerritoryEntryMap({
     return (
       <EntryMapArrivalSurface
         className={className}
-        isLoading={isLoading}
+        stage={isLoading ? "community" : "map"}
         label={territoryLabel}
         sectionRef={sectionRef}
       />
@@ -105,7 +113,7 @@ export default function TerritoryEntryMap({
       fallback={
         <EntryMapArrivalSurface
           className={className}
-          isLoading={false}
+          stage="map"
           label={territoryLabel}
         />
       }
