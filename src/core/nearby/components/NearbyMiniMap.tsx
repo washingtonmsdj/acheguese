@@ -1,7 +1,7 @@
 import { useMemo, useRef } from "react";
 import { MapPin } from "lucide-react";
 import { mapEntityProjection } from "@/core/maps";
-import { MapLibreAdapter } from "@/core/maps/components/v3/MapLibreAdapter";
+import { MapLibreAdapter } from "@/core/maps/components/v3/LazyMapLibreAdapter";
 import { MAP_DEFAULT_COORDINATES } from "@/core/maps/config/defaultCoordinates";
 import { DEFAULT_TILE_STYLE } from "@/core/maps/providers/MapProvider";
 import type { MapMarker } from "@/core/maps/types";
