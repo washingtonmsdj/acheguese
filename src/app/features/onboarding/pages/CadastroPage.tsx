@@ -29,8 +29,12 @@ import { PRIVACY_POLICY_PATH } from "@/shared/constants/legal";
 import { useToast } from "@/shared/hooks/use-toast";
 import { resolveSafeInternalPath } from "@/shared/utils/safeRedirect";
 import { cn } from "@/shared/utils/cn";
+import { getPasswordRequirementsSummary } from "@/shared/validation/passwordPolicy";
 
 type CadastroLocationState = { redirectTo?: unknown } | null;
+
+const MOBILE_PASSWORD_HINT = getPasswordRequirementsSummary();
+const DESKTOP_PASSWORD_HINT = getPasswordRequirementsSummary(true);
 
 export default function CadastroPage() {
   const { user } = useAuth();
@@ -232,8 +236,8 @@ export default function CadastroPage() {
                         />
                       </FormControl>
                       <p className="text-[11.5px] leading-4 text-[#607477]">
-                        <span className="lg:hidden">12 ou mais caracteres, maiúscula, minúscula, número e símbolo.</span>
-                        <span className="hidden lg:inline">12+ caracteres, maiúscula, minúscula, número e símbolo.</span>
+                        <span className="lg:hidden">{MOBILE_PASSWORD_HINT}</span>
+                        <span className="hidden lg:inline">{DESKTOP_PASSWORD_HINT}</span>
                       </p>
                       <FormMessage className="text-xs" />
                     </FormItem>
