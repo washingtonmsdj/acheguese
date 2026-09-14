@@ -5,7 +5,12 @@ import { Link, useLocation, useNavigate } from "react-router-dom";
 import { AuthBrandHeader } from "@/app/components/auth/AuthBrandHeader";
 import { AuthConceptIcon } from "@/app/components/auth/AuthConceptIcon";
 import { AuthFooter } from "@/app/components/auth/AuthFooter";
+import {
+  AUTH_PATHS,
+  buildLoginPath,
+} from "@/core/auth/constants/authFlow";
 import { useAuth } from "@/core/auth/hooks/useAuth";
+import { isOAuthTermsCallbackError } from "@/core/auth/utils/authCallback";
 import { getAuthReturnContext } from "@/core/auth/utils/authReturnContext";
 import {
   clearPendingAuthReturn,
@@ -30,14 +35,6 @@ type AcceptanceState =
   | "signed-out"
   | "oauth-error";
 
-function containsOAuthCallbackError(search: string, hash: string): boolean {
-  const searchParams = new URLSearchParams(search);
-  if (searchParams.has("error") || searchParams.has("error_code")) return true;
-
-  const hashParams = new URLSearchParams(hash.startsWith("#") ? hash.slice(1) : hash);
-  return hashParams.has("error") || hashParams.has("error_code");
-}
-
 export default function AceiteTermosPage() {
   const { user } = useAuth();
   const location = useLocation();
@@ -53,8 +50,13 @@ export default function AceiteTermosPage() {
   const returnContext = useMemo(() => getAuthReturnContext(returnTo), [returnTo]);
   const hasSpecificReturnContext = returnTo !== "/" && returnContext.kind !== "generic";
   const oauthCallbackFailed = useMemo(
-    () => containsOAuthCallbackError(location.search, location.hash),
-    [location.hash, location.search],
+    () =>
+      isOAuthTermsCallbackError(
+        location.pathname,
+        location.search,
+        location.hash,
+      ),
+    [location.hash, location.pathname, location.search],
   );
   const returnContextIcon =
     returnContext.kind === "conversation"
@@ -64,8 +66,7 @@ export default function AceiteTermosPage() {
         : returnContext.kind === "community"
           ? "users"
           : "store";
-  const loginPath =
-    returnTo === "/" ? "/login" : `/login?redirect=${encodeURIComponent(returnTo)}`;
+  const loginPath = buildLoginPath(returnTo);
 
   useEffect(() => {
     if (!user) {
@@ -134,7 +135,7 @@ export default function AceiteTermosPage() {
       </Helmet>
 
       <div className="min-h-[100dvh] bg-[#fffdfa] text-[#102f33] lg:bg-[radial-gradient(circle_at_16%_32%,rgba(216,234,224,.55),transparent_31%),radial-gradient(circle_at_70%_18%,rgba(255,236,185,.28),transparent_30%),#fffdfa]">
-        <AuthBrandHeader secondaryHref="/login" secondaryLabel="Entrar" />
+        <AuthBrandHeader secondaryHref={AUTH_PATHS.login} secondaryLabel="Entrar" />
 
         <main
           id="main-content"
