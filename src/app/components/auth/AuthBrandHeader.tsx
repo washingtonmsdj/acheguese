@@ -1,7 +1,10 @@
-import { Link, useNavigate } from "react-router-dom";
+import { useEffect } from "react";
+import { Link, useLocation, useNavigate, useSearchParams } from "react-router-dom";
 
 import { AuthConceptIcon } from "@/app/components/auth/AuthConceptIcon";
+import { setPendingAuthReturn } from "@/core/auth/utils/pendingAuthReturn";
 import { SUPPORT_PATH } from "@/shared/constants/legal";
+import { resolveSafeInternalPath } from "@/shared/utils/safeRedirect";
 
 interface AuthBrandHeaderProps {
   secondaryHref?: string;
@@ -9,8 +12,21 @@ interface AuthBrandHeaderProps {
   showBack?: boolean;
 }
 
+type AuthLocationState = { redirectTo?: unknown } | null;
+
 export function AuthBrandHeader({ showBack = true }: AuthBrandHeaderProps) {
   const navigate = useNavigate();
+  const location = useLocation();
+  const [searchParams] = useSearchParams();
+
+  useEffect(() => {
+    const stateRedirect = (location.state as AuthLocationState)?.redirectTo;
+    const queryRedirect = searchParams.get("redirect");
+    if (stateRedirect == null && queryRedirect == null) return;
+
+    const safeReturn = resolveSafeInternalPath(stateRedirect ?? queryRedirect, "/");
+    if (safeReturn !== "/") setPendingAuthReturn(safeReturn);
+  }, [location.state, searchParams]);
 
   return (
     <header className="bg-[#fffdfa] text-[#0b3b3f]">
