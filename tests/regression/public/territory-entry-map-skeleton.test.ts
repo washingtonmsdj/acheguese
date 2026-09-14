@@ -41,7 +41,10 @@ describe("territory entry map skeleton", () => {
   it("renders unmistakable map-like loading structure instead of only a status strip", () => {
     expect(skeleton).toContain("backgroundImage");
     expect(skeleton).toContain("backgroundSize");
-    expect(skeleton).toContain("border border-territory-border bg-territory-raised");
+    expect(skeleton).toContain("BLOCK_STYLE");
+    expect(skeleton).toContain("ROAD_STYLE");
+    expect(skeleton).toContain("territory-ink) / 0.08");
+    expect(skeleton).toContain("territory-ink) / 0.14");
     expect(skeleton).toContain("top-[31%]");
     expect(skeleton).toContain("top-[55%]");
     expect(skeleton).toContain("motion-safe:animate-pulse");
