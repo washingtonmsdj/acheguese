@@ -199,8 +199,9 @@ describe("anonymous root bootstrap performance", () => {
     expect(passiveRuntime).not.toContain("useRobustGeolocation");
     expect(passiveRuntime).not.toContain("useMapClustering");
     expect(runtimeLoader).toContain('import("maplibre-gl")');
-    expect(runtimeLoader).toContain("ensureMapLibreWorkerConfigured");
-    expect(workerRuntime).toContain('from "maplibre-gl"');
+    expect(runtimeLoader).toContain("ensureMapLibreWorkerConfigured(runtime.setWorkerUrl)");
+    expect(workerRuntime).not.toContain('from "maplibre-gl"');
+    expect(workerRuntime).toContain("maplibre-gl-worker.mjs?worker&url");
     expect(workerRuntime).toContain("workerConfigured");
   });
 });
