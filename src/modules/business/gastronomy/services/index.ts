@@ -9,7 +9,7 @@ export { GastronomyFacade, type GastronomyFacadeContract } from './GastronomySer
 export { MenuService } from '@/core/business/services/MenuService';
 export { MenuService as menuService } from '@/core/business/services/MenuService';
 export { GastronomyProfileService } from '@/core/business/services/GastronomyProfileService';
-export { GastronomyUrlService } from './GastronomyUrlService';
+export { GastronomyUrlService } from '@/core/verticals/gastronomy/services/GastronomyUrlService';
 export { OrderTrustService } from './OrderTrustService';
 
 // Runtime queries
