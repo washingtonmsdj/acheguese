@@ -502,11 +502,15 @@ export function validateSchema<T>(
  *
  * - Erros 5xx: mensagem genérica ao cliente, detalhes apenas no log interno.
  * - Erros 4xx: mensagem descritiva ao cliente (sem stack/detalhes de infra).
+ * - Callers HTTP que precisam preservar CORS específico devem repassar `req`
+ *   e a lista de métodos; callers antigos continuam usando os defaults.
  */
 export function errorResponse(
   message: string,
   status = 500,
-  logDetails?: unknown
+  logDetails?: unknown,
+  req?: Request,
+  methods = 'POST, OPTIONS',
 ): Response {
   if (logDetails) {
     console.error('[Error]', message, logDetails);
@@ -518,7 +522,7 @@ export function errorResponse(
     JSON.stringify({ error: clientMessage }),
     {
       status,
-      headers: getAllSecurityHeaders(),
+      headers: getAllSecurityHeaders(methods, req),
     }
   );
 }
