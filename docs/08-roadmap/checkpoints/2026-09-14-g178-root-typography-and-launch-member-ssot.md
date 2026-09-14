@@ -72,6 +72,20 @@ Para preservar a fidelidade do concept, que exibe **Chapada** no chip compacto, 
 
 Isso mantém geografia e apresentação separadas: nenhuma renomeação do domínio foi feita para satisfazer a copy visual.
 
+## Raised surface ativo da `/` usa o token canônico
+
+O censo encontrou regras CSS diretas antigas usando `hsl(var(--territory-raised))`, apesar de o token raiz vigente ser `--territory-surface-raised`.
+
+As classes Tailwind `bg-territory-raised` / `hover:bg-territory-raised` são diferentes e estão corretas: `tailwind.config.ts` resolve `territory.raised` para `hsl(var(--territory-surface-raised))`.
+
+Para não criar alias de compatibilidade nem reescrever o grande `src/index.css` sem checkout seguro, os controles **ativos** do header da `/` foram migrados para a utility canônica:
+
+- links do desktop;
+- botão do menu mobile;
+- links do popover mobile.
+
+Assim, o hover atual não depende mais da declaração CSS inválida. As regras diretas antigas continuam como dívida de source e devem ser removidas na limpeza source-aware, não mascaradas por alias ou plugin.
+
 ## Regressões versionadas
 
 `tests/regression/public/root-entry-launch-ssot.test.ts` agora exige que:
@@ -79,7 +93,9 @@ Isso mantém geografia e apresentação separadas: nenhuma renomeação do domí
 - a lista venha de `launchTerritory.group.members`;
 - a página use `getPublicTerritoryLocationLabel(member)`;
 - os quatro `<span>` hardcoded não reapareçam no JSX;
-- o fallback mantenha `Chapada do Rio Vermelho` como nome canônico e `Chapada` apenas como `publicLabel`.
+- o fallback mantenha `Chapada do Rio Vermelho` como nome canônico e `Chapada` apenas como `publicLabel`;
+- os controles ativos do header usem `hover:bg-territory-raised`;
+- `territory.raised` continue mapeando para `--territory-surface-raised` no Tailwind.
 
 Novo `src/core/routing/utils/__tests__/publicTerritoryFallbacks.test.ts` verifica:
 
@@ -102,22 +118,22 @@ Tipografia:
 - `08a2eaa8e509d749814d147303b74a381f95b658` — `Allow approved 800 display weight in design tokens`;
 - `1d7c80304aedd37f0819c58527ea45170821b64b` — `Guard typography documentation and 800 font loading`.
 
-Território da `/`:
+Território e superfície ativa da `/`:
 
 - `d2d031119f970de7f03d85f61b90e2fffbe8faf6` — adiciona label público opcional sem alterar o nome geográfico;
 - `0eb8dbae81e0dc7b01d910d22e814870c8854f84` — `Render launch neighborhoods from territorial group SSOT`;
 - `fb8d7eb3b2a40c27269de5be4d1a0475a80ac57e` — `Guard launch neighborhood list through territorial SSOT`;
-- `37de5c5f5a4e5a437ac217753840ce0ac30ffeca` — `Test public territory labels without changing geographic names`.
+- `37de5c5f5a4e5a437ac217753840ce0ac30ffeca` — `Test public territory labels without changing geographic names`;
+- `d9b406137f0bb86dc5bb185ca37fccb823fa6fd4` — `Use canonical raised surface token on active root navigation`;
+- `6fcf9e0b99b5476dc368a28c8a3a1dfeb253dcfc` — `Guard active root navigation on canonical raised token`.
 
 Commits concorrentes de Auth continuaram entrando na `main` e foram preservados. Nenhum force-push foi usado.
 
 ## Auditoria adicional encontrada
 
-O censo de tokens encontrou um débito separado em `src/index.css`: algumas regras CSS diretas antigas usam `hsl(var(--territory-raised))`, enquanto o token canônico é `--territory-surface-raised`.
+Ainda existe débito separado em `src/index.css`: algumas regras CSS diretas antigas usam `hsl(var(--territory-raised))`, enquanto o token canônico é `--territory-surface-raised`.
 
-Isso é diferente das classes Tailwind `bg-territory-raised`, que estão corretas: em `tailwind.config.ts`, `territory.raised` mapeia para `hsl(var(--territory-surface-raised))`.
-
-Não foi criado alias `--territory-raised` e não foi adicionado plugin compensatório. A correção deve acontecer removendo/substituindo as regras-fonte antigas durante a limpeza source-aware do grande `src/index.css`, junto da aposentadoria de `strip-dead-entry-legacy-selectors`.
+Não foi criado alias `--territory-raised` e não foi adicionado plugin compensatório. A correção definitiva deve acontecer removendo/substituindo essas regras-fonte durante a limpeza source-aware do grande `src/index.css`, junto da aposentadoria de `strip-dead-entry-legacy-selectors`.
 
 Também restam dois literais idênticos de `Plus Jakarta Sans` no CSS-base (`body` e headings). Eles não mudam a família executada, mas devem sair quando essa mesma limpeza puder ser feita de forma segura sobre o arquivo-fonte completo.
 
