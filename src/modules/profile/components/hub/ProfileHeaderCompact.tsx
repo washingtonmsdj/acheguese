@@ -150,7 +150,7 @@ export function ProfileHeaderCompact(props: ProfileHeaderCompactProps) {
             ) : null}
           </div>
           <p className="mt-1 truncate text-sm text-territory-muted">{props.userEmail}</p>
-          <div className="mt-1 flex flex-wrap items-center gap-x-2 gap-y-1 text-xs text-territory-muted">
+          <div className="mt-1 hidden flex-wrap items-center gap-x-2 gap-y-1 text-xs text-territory-muted sm:flex">
             {props.handle ? <span>@{props.handle}</span> : <span>Sem nome público</span>}
             <span aria-hidden="true">·</span>
             <span>{getProfileTypeLabel(activeProfile)}</span>
