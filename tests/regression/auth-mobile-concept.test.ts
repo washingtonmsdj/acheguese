@@ -53,4 +53,18 @@ describe("mobile account concept composition", () => {
     expect(login).toContain("Continuar explorando sem conta");
     expect(login).toContain("Verificação de segurança");
   });
+
+  it("keeps notch/home-indicator spacing and concept-owned chevrons in CSS", () => {
+    const layout = read("src/app/components/auth/auth-concept-layout.css");
+
+    expect(layout).toContain("env(safe-area-inset-left)");
+    expect(layout).toContain("env(safe-area-inset-right)");
+    expect(layout).toContain("env(safe-area-inset-bottom)");
+    expect(layout).toContain('button[aria-label="Voltar"]');
+    expect(layout).toContain('main#main-content:has(#login-identifier) span[aria-hidden="true"].text-xl');
+    expect(layout).toContain("font-size: 0 !important");
+    expect(layout).toContain("border-right: 1.5px solid currentColor");
+    expect(layout).toContain("border-bottom: 1.5px solid currentColor");
+    expect(layout).toContain("details > summary::-webkit-details-marker");
+  });
 });
