@@ -1,17 +1,17 @@
 import { expect, test, type Page } from "@playwright/test";
 
+import { seedAuthFlowState } from "./helpers/authFlowState";
+
 const MOBILE = { width: 390, height: 844 };
 const DESKTOP = { width: 1440, height: 900 };
 const AUTH_RETURN_PATH = "/mensagens/sabores-da-ana";
 
 async function prepareAuthVisualState(page: Page) {
-  await page.addInitScript((returnPath) => {
-    try {
-      window.sessionStorage.setItem("auth.pending-signup-email", "ana@example.com");
-      window.sessionStorage.setItem("auth.pending-signup-redirect", returnPath);
-      window.sessionStorage.setItem("auth.pending-return-path", returnPath);
-    } catch {}
-  }, AUTH_RETURN_PATH);
+  await seedAuthFlowState(page, {
+    pendingReturn: AUTH_RETURN_PATH,
+    pendingSignupEmail: "ana@example.com",
+    pendingSignupRedirect: AUTH_RETURN_PATH,
+  });
 }
 
 async function expectNoHorizontalOverflow(page: Page) {
@@ -33,25 +33,35 @@ test.describe("Conta e acesso — contrato visual responsivo do concept", () => 
     await page.setViewportSize(MOBILE);
 
     await page.goto("/login", { waitUntil: "domcontentloaded" });
-    await expect(page.getByRole("heading", { name: "Bom ter você por aqui." })).toBeVisible();
+    await expect(
+      page.getByRole("heading", { name: "Bom ter você por aqui." }),
+    ).toBeVisible();
     await expect(page.locator('img[src="/auth/login-hero.webp"]')).toBeHidden();
     await expect(page.getByRole("button", { name: "Entrar" })).toBeVisible();
-    await expect(page.getByRole("button", { name: "Continuar com Google" })).toBeVisible();
+    await expect(
+      page.getByRole("button", { name: "Continuar com Google" }),
+    ).toBeVisible();
     await expectNoHorizontalOverflow(page);
     await expectNoGenericSvgInMain(page);
 
     await page.goto("/cadastro", { waitUntil: "domcontentloaded" });
-    await expect(page.getByRole("heading", { name: "Comece pelo seu perfil pessoal." })).toBeVisible();
+    await expect(
+      page.getByRole("heading", { name: "Comece pelo seu perfil pessoal." }),
+    ).toBeVisible();
     await expect(page.locator('img[src="/auth/signup-hero.webp"]')).toBeHidden();
     await expect(page.getByLabel("Nome de usuário")).toBeVisible();
     await expect(page.getByLabel("Confirmar senha")).toHaveCount(0);
     await expect(page.getByLabel("Estado")).toHaveCount(0);
-    await expect(page.getByRole("button", { name: "Continuar com Google" })).toBeVisible();
+    await expect(
+      page.getByRole("button", { name: "Continuar com Google" }),
+    ).toBeVisible();
     await expectNoHorizontalOverflow(page);
     await expectNoGenericSvgInMain(page);
 
     await page.goto("/cadastro/confirmacao", { waitUntil: "domcontentloaded" });
-    await expect(page.getByRole("heading", { name: "Confira seu e-mail" })).toBeVisible();
+    await expect(
+      page.getByRole("heading", { name: "Confira seu e-mail" }),
+    ).toBeVisible();
     await expect(page.locator('img[src="/auth/confirm-envelope.webp"]')).toBeVisible();
     await expect(page.locator('img[src="/auth/confirm-hero.webp"]')).toBeHidden();
     await expect(page.getByText("Toque em Confirmar e-mail.")).toBeVisible();
@@ -62,12 +72,16 @@ test.describe("Conta e acesso — contrato visual responsivo do concept", () => 
     await expect(page.getByRole("heading", { name: /Vamos recuperar/ })).toBeVisible();
     await expect(page.locator('img[src="/auth/recovery-hero.webp"]')).toBeHidden();
     await expect(page.getByRole("button", { name: "Voltar" })).toContainText("Voltar");
-    await expect(page.getByRole("button", { name: "Enviar link de recuperação" })).toBeVisible();
+    await expect(
+      page.getByRole("button", { name: "Enviar link de recuperação" }),
+    ).toBeVisible();
     await expectNoHorizontalOverflow(page);
     await expectNoGenericSvgInMain(page);
 
     await page.goto("/aceitar-termos", { waitUntil: "domcontentloaded" });
-    await expect(page.getByRole("heading", { name: "Antes de continuar" })).toBeVisible();
+    await expect(
+      page.getByRole("heading", { name: "Antes de continuar" }),
+    ).toBeVisible();
     await expect(page.getByText("Conversas", { exact: true })).toBeVisible();
     await expect(page.getByRole("link", { name: "Voltar para entrar" })).toHaveAttribute(
       "href",
@@ -144,8 +158,12 @@ test.describe("Conta e acesso — contrato visual responsivo do concept", () => 
     const termsMain = page.locator("main#main-content");
     await expect(termsMain).toBeVisible();
     await expect(termsMain.locator(":scope > section")).toHaveCount(2);
-    await expect(page.getByText("Entre sabendo como cuidamos desse espaço.", { exact: true })).toBeVisible();
-    await expect(page.getByRole("heading", { name: "Antes de continuar" })).toBeVisible();
+    await expect(
+      page.getByText("Entre sabendo como cuidamos desse espaço.", { exact: true }),
+    ).toBeVisible();
+    await expect(
+      page.getByRole("heading", { name: "Antes de continuar" }),
+    ).toBeVisible();
     await expect(page.getByText("Conversas", { exact: true })).toBeVisible();
     await expectNoHorizontalOverflow(page);
     await expectNoGenericSvgInMain(page);
