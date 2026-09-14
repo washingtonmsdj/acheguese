@@ -35,7 +35,7 @@ export function AccessibilityProvider({
   );
 
   useEffect(() => {
-    applyAccessibilityPreferences(document.body, {
+    applyAccessibilityPreferences(document.documentElement, {
       isHighContrast,
       fontSize,
     });
