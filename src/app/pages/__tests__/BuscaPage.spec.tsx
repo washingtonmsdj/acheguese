@@ -96,7 +96,7 @@ describe("BuscaPage", () => {
   beforeEach(() => {
     vi.clearAllMocks();
     mocks.isLaunchSurfaceEnabled.mockImplementation(
-      (surface: string) => surface !== "events" && surface !== "jobs",
+      (surface: string) => !["events", "jobs", "education"].includes(surface),
     );
     mocks.useGlobalSearch.mockImplementation(
       (initialQuery, initialFilters, options) => ({
@@ -139,6 +139,9 @@ describe("BuscaPage", () => {
     ).not.toBeInTheDocument();
     expect(
       screen.queryByRole("button", { name: /Oportunidades/i }),
+    ).not.toBeInTheDocument();
+    expect(
+      screen.queryByRole("link", { name: /Educação/i }),
     ).not.toBeInTheDocument();
     expect(mocks.useGlobalSearch).toHaveBeenCalledWith(
       "pizzaria",
