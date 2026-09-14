@@ -82,4 +82,21 @@ describe("mobile account concept composition", () => {
     expect(iconCss).toContain("border-left:2px solid #fff");
     expect(iconCss).toContain("border-bottom:2px solid #fff");
   });
+
+  it("keeps the Google provider artwork on one shared owner", () => {
+    const iconCss = read("src/app/components/auth/auth-concept-icons.css");
+    const iconComponent = read("src/app/components/auth/AuthConceptIcon.tsx");
+    const googleMark = read("src/shared/components/branding/GoogleProviderMark.tsx");
+    const googleMarkCss = read("src/shared/components/branding/google-provider-mark.css");
+
+    expect(iconComponent).toContain("GoogleProviderMark");
+    expect(iconComponent).toContain('if (name === "google")');
+    expect(googleMark).toContain("google-provider-mark");
+    expect(googleMarkCss).toContain("conic-gradient");
+    expect(googleMarkCss).toContain("#4285f4");
+    expect(googleMarkCss).toContain("#34a853");
+    expect(googleMarkCss).toContain("#fbbc05");
+    expect(googleMarkCss).toContain("#ea4335");
+    expect(iconCss).not.toContain("auth-concept-icon--google");
+  });
 });
