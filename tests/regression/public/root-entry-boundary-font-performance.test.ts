@@ -26,10 +26,10 @@ describe("root boundary and font performance", () => {
     expect(loader).not.toContain("@/integrations/supabase");
   });
 
-  it("keeps Google Fonts out of render-blocking CSS", () => {
+  it("keeps Google Fonts out of render-blocking CSS and auxiliary scripts", () => {
     const postcss = read("postcss.config.cjs");
     const html = read("index.html");
-    const bootstrap = read("public/font-bootstrap.js");
+    const main = read("src/main.tsx");
 
     expect(postcss).toContain("strip-duplicate-google-font-import");
     expect(postcss).toContain('atRule.params.includes("fonts.googleapis.com")');
@@ -40,13 +40,15 @@ describe("root boundary and font performance", () => {
     expect(html).toContain("data-public-font-stylesheet");
     expect(html).toContain('fetchpriority="low"');
     expect(html).toContain("display=optional");
-    expect(html).toContain('<script src="/font-bootstrap.js" defer></script>');
+    expect(html).not.toContain("font-bootstrap.js");
     expect(html).not.toContain(
       '<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans',
     );
+    expect(fs.existsSync(path.join(ROOT, "public/font-bootstrap.js"))).toBe(false);
 
-    expect(bootstrap).toContain('link.rel = "stylesheet"');
-    expect(bootstrap).toContain("requestAnimationFrame");
+    expect(main).toContain('link[data-public-font-stylesheet]');
+    expect(main).toContain('fontStylesheet.rel = "stylesheet"');
+    expect(main).toContain("deferFrame(() =>");
   });
 
   it("keeps monitoring out of the deferred bootstrap utility", () => {
