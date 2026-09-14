@@ -134,7 +134,11 @@ export default function CadastroPrimeiroAcessoPage() {
       </Helmet>
       <div className="min-h-[100dvh] bg-[#fffdfa] text-[#102f33]">
         <AuthBrandHeader showBack={false} />
-        <main id="main-content" tabIndex={-1} className="mx-auto w-full max-w-[430px] px-6 pb-5 pt-2 focus:outline-none">
+        <main
+          id="main-content"
+          tabIndex={-1}
+          className="mx-auto w-full max-w-[430px] px-6 pb-5 pt-2 focus:outline-none lg:max-w-[520px] lg:pt-8"
+        >
           <div className="text-center">
             <span className="mx-auto flex h-14 w-14 items-center justify-center rounded-full bg-[#dff5e8] text-[#0b5b59]">
               <span style={{ transform: "scale(1.35)" }}><AuthConceptIcon name="check" /></span>
@@ -163,7 +167,7 @@ export default function CadastroPrimeiroAcessoPage() {
                   <AuthConceptIcon name="chat" />
                 </span>
                 <div>
-                  <p className="text-[12px] font-bold">Seu caminho está esperando</p>
+                  <p className="text-[12px] font-bold">Sua conversa está esperando</p>
                   <p className="text-[11px] leading-4 text-[#4c6862]">Continue de onde parou sem precisar completar seu perfil agora.</p>
                 </div>
               </div>
@@ -172,9 +176,13 @@ export default function CadastroPrimeiroAcessoPage() {
                 onClick={() => leaveFirstAccess(redirectTo)}
                 className="mt-3 h-10 w-full rounded-[9px] bg-[#ffc91a] text-[13px] font-extrabold text-[#102f33] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#0b5b59]/40"
               >
-                Continuar para onde parei
+                Continuar para a conversa
               </button>
-              <button type="button" onClick={() => leaveFirstAccess("/conta")} className="mx-auto mt-1 block min-h-9 rounded px-2 text-[11px] underline underline-offset-2 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#0b5b59]/35">
+              <button
+                type="button"
+                onClick={() => leaveFirstAccess(redirectTo)}
+                className="mx-auto mt-1 block min-h-9 rounded px-2 text-[11px] underline underline-offset-2 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#0b5b59]/35"
+              >
                 Completar meu perfil depois
               </button>
             </section>
@@ -188,7 +196,7 @@ export default function CadastroPrimeiroAcessoPage() {
               <div className="flex-1">
                 <p className="text-[12px] font-bold">Seu vínculo com o território</p>
                 <p className="mt-0.5 text-[11px] leading-4 text-[#607477]">
-                  Conte sua cidade e bairro para ver conteúdos mais relevantes. Isso é opcional.
+                  Conte pra gente sua cidade e bairro para ver conteúdos mais relevantes.
                 </p>
               </div>
             </div>
