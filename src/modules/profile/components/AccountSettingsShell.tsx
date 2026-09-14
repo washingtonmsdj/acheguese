@@ -15,28 +15,33 @@ import {
 import { cn } from "@/shared/utils/cn";
 
 const settingsItems = [
-  { label: "Visão geral", href: "/conta", icon: Home, exact: true },
+  { label: "Visão geral", href: "/conta", icon: Home, exact: true, excludeSearch: "?section=profiles" },
   { label: "Dados de acesso", href: "/conta/seguranca#acesso", icon: KeyRound, hash: "#acesso" },
   { label: "Segurança", href: "/conta/seguranca", icon: LockKeyhole, exact: true, excludeHash: "#acesso" },
   { label: "Notificações", href: "/conta/notificacoes", icon: Bell, exact: true },
   { label: "Privacidade e dados", href: "/conta/privacidade", icon: Shield, exact: true },
   { label: "Preferências", href: "/conta/preferencias", icon: SlidersHorizontal, exact: true },
-  { label: "Meus perfis", href: "/conta?section=profiles", icon: UserRound, exact: true },
+  { label: "Meus perfis", href: "/conta?section=profiles", icon: UserRound, exact: true, search: "?section=profiles" },
 ] as const;
 
 function isActive(
   pathname: string,
   locationHash: string,
+  locationSearch: string,
   href: string,
   exact?: boolean,
   hash?: string,
   excludeHash?: string,
+  search?: string,
+  excludeSearch?: string,
 ) {
   const target = href.split("?")[0].split("#")[0];
   const pathMatches = exact ? pathname === target : pathname.startsWith(target);
   if (!pathMatches) return false;
   if (hash) return locationHash === hash;
   if (excludeHash && locationHash === excludeHash) return false;
+  if (search) return locationSearch === search;
+  if (excludeSearch && locationSearch === excludeSearch) return false;
   return true;
 }
 
@@ -68,8 +73,18 @@ export function AccountSettingsShell({
             achegue-se<span className="text-territory-sun">.</span>
           </Link>
           <nav aria-label="Configurações da conta" className="space-y-1">
-            {settingsItems.map(({ label, href, icon: Icon, exact, hash, excludeHash }) => {
-              const active = isActive(location.pathname, location.hash, href, exact, hash, excludeHash);
+            {settingsItems.map(({ label, href, icon: Icon, exact, hash, excludeHash, search, excludeSearch }) => {
+              const active = isActive(
+                location.pathname,
+                location.hash,
+                location.search,
+                href,
+                exact,
+                hash,
+                excludeHash,
+                search,
+                excludeSearch,
+              );
               return (
                 <Link
                   key={label}
