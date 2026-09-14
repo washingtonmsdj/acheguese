@@ -6,6 +6,7 @@
 
 import { lazy } from "react";
 import { Navigate, Route, Routes } from "react-router-dom";
+import { PRELAUNCH_LOCKDOWN_ENABLED } from "@/app/config/launchScope";
 import { AUTH_PATHS } from "@/core/auth/constants/authFlow";
 
 const RootRouteEntry = lazy(() => import("@/app/routes/RootRouteEntry"));
@@ -73,8 +74,6 @@ const AdminRoutes = lazy(() =>
     default: module.AdminRoutes,
   })),
 );
-const PRELAUNCH_LOCKDOWN_ENABLED =
-  (import.meta.env.VITE_PRELAUNCH_LOCKDOWN ?? "false") === "true";
 
 export function AppRoutes() {
   if (PRELAUNCH_LOCKDOWN_ENABLED) {
