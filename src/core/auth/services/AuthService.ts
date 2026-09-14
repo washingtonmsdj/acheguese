@@ -1,19 +1,24 @@
 /**
- *  AUTH SERVICE - Verificações de Autenticação Centralizadas
+ * AUTH SERVICE
  *
- * Verificação de admin centralizada
- * Cache de permissões
- * Fonte única para autorizações
+ * Fronteira canônica para operações de autenticação. Estado de sessão pertence
+ * a core/session; identidade pública pertence a core/public-identity/profiles.
  */
 
 import { supabase } from "@/integrations/supabase";
 import { createBrowserAuthStorage } from "@/integrations/supabase/cookieStorage";
+import {
+  AUTH_PATHS,
+  buildEmailConfirmationLoginPath,
+  buildPasswordRecoveryPath,
+} from "@/core/auth/constants/authFlow";
 import { SessionService } from "@/core/session/services/SessionService";
 import { logger } from "@/shared/utils/logger";
 import { RoleService } from "@/core/authorization/services/RoleService";
 import { parseAuthIdentifier } from "@/core/auth/utils/authIdentifier";
 import { isCurrentTermsAcceptance } from "@/core/legal/termsOfService";
 import { AUTH_STORAGE_KEY } from "@/shared/config/security.config";
+import { buildPublicAbsoluteUrl } from "@/shared/config/publicAppOrigin";
 import { AuthError } from "./types";
 import {
   buildSupabaseFunctionUrl,
@@ -29,6 +34,7 @@ interface UsernameLoginResponse {
 }
 
 const SIGN_OUT_TIMEOUT_MS = 8_000;
+const ADMIN_CACHE_DURATION_MS = 5 * 60 * 1000;
 
 type SignOutAttemptResult =
   | { kind: "completed"; error: unknown | null }
@@ -38,22 +44,17 @@ type SignOutAttemptResult =
 export class AuthService {
   private static adminCache = new Map<string, boolean>();
   private static cacheExpiry = new Map<string, number>();
-  private static CACHE_DURATION = 5 * 60 * 1000; // 5 minutos
-
-  private static getOrigin(): string {
-    return window.location.origin;
-  }
 
   static getEmailConfirmationRedirectUrl(): string {
-    return `${AuthService.getOrigin()}/login?confirmed=1`;
+    return buildPublicAbsoluteUrl(buildEmailConfirmationLoginPath());
   }
 
   static getPasswordResetRedirectUrl(): string {
-    return `${AuthService.getOrigin()}/reset-password?mode=recovery`;
+    return buildPublicAbsoluteUrl(buildPasswordRecoveryPath());
   }
 
   static getTermsAcceptanceRedirectUrl(): string {
-    return `${AuthService.getOrigin()}/aceitar-termos`;
+    return buildPublicAbsoluteUrl(AUTH_PATHS.termsAcceptance);
   }
 
   static isGoogleAuthEnabled(): boolean {
@@ -82,15 +83,14 @@ export class AuthService {
     return new URLSearchParams(window.location.hash.replace(/^#/, ""));
   }
 
-  /**
-   * Detecta se a URL atual contém um erro de auth do Supabase (ex: link expirado).
-   */
+  /** Detecta erro de auth no hash legado do Supabase. */
   static getAuthHashError(): { error: string; errorCode: string } | null {
     const params = AuthService.captureAuthHash();
     const error = params.get("error");
     const errorCode = params.get("error_code");
-    if (error || errorCode)
+    if (error || errorCode) {
       return { error: error ?? "", errorCode: errorCode ?? "" };
+    }
     return null;
   }
 
@@ -119,13 +119,10 @@ export class AuthService {
     }
   }
 
-  /**
-   *  VERIFICAR SE USUÁRIO É ADMIN
-   */
+  /** Verifica autorização administrativa. */
   static async isAdmin(userId: string): Promise<boolean> {
     if (!userId) return false;
 
-    // Check cache
     const cached = this.adminCache.get(userId);
     const expiry = this.cacheExpiry.get(userId);
     if (cached !== undefined && expiry && Date.now() < expiry) {
@@ -134,20 +131,15 @@ export class AuthService {
 
     try {
       const isAdmin = await RoleService.isAdmin(userId);
-
       this.adminCache.set(userId, isAdmin);
-      this.cacheExpiry.set(userId, Date.now() + this.CACHE_DURATION);
-
+      this.cacheExpiry.set(userId, Date.now() + ADMIN_CACHE_DURATION_MS);
       return isAdmin;
-    } catch (err) {
+    } catch {
       logger.warn("AuthService.isAdmin failed", { userId });
       return false;
     }
   }
 
-  /**
-   *  LIMPAR CACHE DE ADMIN
-   */
   static clearAdminCache(userId?: string): void {
     if (userId) {
       this.adminCache.delete(userId);
@@ -159,9 +151,8 @@ export class AuthService {
   }
 
   /**
-   *  OBTER USER.ID PARA CONTEXTO ADMINISTRATIVO
-   * USO RESTRITO: Apenas para ações de moderação/admin
-   * Para contexto social, use ProfileService.getRequiredActiveProfile()
+   * Obtém user.id somente para contexto administrativo/moderação.
+   * Para contexto social, use o ProfileService canônico.
    */
   static async getAdminUserId(): Promise<string> {
     const user = await SessionService.getCurrentUser();
@@ -169,10 +160,7 @@ export class AuthService {
     return user.id;
   }
 
-  // ── Canonical auth facade used by useAuth hook ──
-
   static async getCurrentUser(): Promise<import("./types").AuthUser | null> {
-    // Delegate every current-user read to the canonical SessionService owner.
     const user = await SessionService.getCurrentUser();
     if (!user) return null;
     return {
@@ -196,13 +184,8 @@ export class AuthService {
       options: {
         data: {
           name: data.name,
-          display_name: data.display_name || data.name,
-          handle: data.handle || data.username || undefined,
-          city: data.city || undefined,
-          neighborhood: data.neighborhood || undefined,
-          state: data.state || undefined,
-          street: data.street || undefined,
-          neighborhood_id: data.neighborhood_id || undefined,
+          display_name: data.name,
+          handle: data.handle || undefined,
           terms_accepted: data.termsAcceptance.accepted,
           terms_version: data.termsAcceptance.version,
         },
@@ -220,7 +203,7 @@ export class AuthService {
 
     if (error) {
       if (import.meta.env.DEV) {
-        logger.error(" Erro no login:", {
+        logger.error("Erro no login", {
           message: error.message,
           status: error.status,
           code: error.code,
