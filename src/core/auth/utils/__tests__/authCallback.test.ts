@@ -3,6 +3,7 @@ import { describe, expect, it } from "vitest";
 import { AUTH_PATHS } from "@/core/auth/constants/authFlow";
 import {
   getAuthCallbackError,
+  hasAuthCallbackMarker,
   hasPasswordRecoverySessionMarker,
   isExpiredPasswordRecoveryError,
   isOAuthTermsCallbackError,
@@ -46,6 +47,18 @@ describe("authCallback", () => {
       hasPasswordRecoverySessionMarker("", "#access_token=token&type=recovery"),
     ).toBe(true);
     expect(hasPasswordRecoverySessionMarker("?mode=request", "")).toBe(false);
+  });
+
+  it("classifies only real auth callback markers, not ordinary page anchors", () => {
+    expect(hasAuthCallbackMarker("", "#main-content")).toBe(false);
+    expect(hasAuthCallbackMarker("", "#entry-community-title")).toBe(false);
+    expect(hasAuthCallbackMarker("?code=abc", "")).toBe(true);
+    expect(hasAuthCallbackMarker("?mode=recovery", "")).toBe(true);
+    expect(hasAuthCallbackMarker("", "#type=recovery")).toBe(true);
+    expect(hasAuthCallbackMarker("", "#access_token=token")).toBe(true);
+    expect(hasAuthCallbackMarker("", "#refresh_token=token")).toBe(true);
+    expect(hasAuthCallbackMarker("?error=access_denied", "")).toBe(true);
+    expect(hasAuthCallbackMarker("", "#error_code=otp_expired")).toBe(true);
   });
 
   it("does not expose arbitrary provider descriptions through its error contract", () => {
