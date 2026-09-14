@@ -40,6 +40,19 @@ describe("anonymous root bootstrap performance", () => {
     expect(selector).not.toContain("SessionService");
   });
 
+  it("loads advanced consent controls only when personalization is requested", () => {
+    const banner = read("src/app/components/privacy/ConsentBanner.tsx");
+    const details = read("src/app/components/privacy/ConsentPreferencesDialog.tsx");
+
+    expect(banner).toContain('import("./ConsentPreferencesDialog")');
+    expect(banner).toContain("lazy(loadConsentPreferencesDialog)");
+    expect(banner).toContain("showDetails ?");
+    expect(banner).not.toContain('from "@/shared/components/ui/dialog"');
+    expect(banner).not.toContain('from "@/shared/components/ui/switch"');
+    expect(details).toContain('from "@/shared/components/ui/dialog"');
+    expect(details).toContain('from "@/shared/components/ui/switch"');
+  });
+
   it("renders the public root outside the full app provider tree", () => {
     const runtime = read("src/app/components/AppRuntime.tsx");
     const fullShell = read("src/app/components/FullAppRuntimeShell.tsx");
