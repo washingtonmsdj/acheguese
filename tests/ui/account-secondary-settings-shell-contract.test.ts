@@ -62,6 +62,15 @@ describe("secondary account settings shell contract", () => {
     expect(profileSettings).not.toContain("useAppUrls");
   });
 
+  it("uses the URL query as the identity-settings tab source of truth", () => {
+    expect(profileSettings).toContain('const requestedTab = normalizeTab(searchParams.get("tab"))');
+    expect(profileSettings).toContain("const activeTab = useMemo<ProfileSettingsTab>");
+    expect(profileSettings).toContain('requestedTab === "members" && !canHaveMembers');
+    expect(profileSettings).toContain('nextParams.delete("tab")');
+    expect(profileSettings).not.toContain("setActiveTab");
+    expect(profileSettings).not.toContain("useState<ProfileSettingsTab>");
+  });
+
   it("keeps addresses discoverable without mixing private residence with professional coverage", () => {
     expect(preferences).toContain('title: "Endereços e território"');
     expect(preferences).toContain('hrefKey: "addresses"');
