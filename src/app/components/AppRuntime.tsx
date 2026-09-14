@@ -14,18 +14,28 @@ const PublicRootOverlays = lazy(() =>
 const PRELAUNCH_LOCKDOWN_ENABLED =
   (import.meta.env.VITE_PRELAUNCH_LOCKDOWN ?? "false") === "true";
 
+function hasRootAuthReturnMarkers(): boolean {
+  const searchParams = new URLSearchParams(window.location.search);
+  const hashParams = new URLSearchParams(window.location.hash.replace(/^#/, ""));
+
+  return (
+    searchParams.has("code") ||
+    searchParams.get("mode") === "recovery" ||
+    searchParams.get("type") === "recovery" ||
+    hashParams.has("access_token") ||
+    hashParams.has("refresh_token") ||
+    hashParams.has("error") ||
+    hashParams.has("error_code") ||
+    hashParams.get("type") === "recovery"
+  );
+}
+
 function shouldUseLeanPublicRoot(): boolean {
   if (PRELAUNCH_LOCKDOWN_ENABLED || window.location.pathname !== "/") {
     return false;
   }
 
-  const searchParams = new URLSearchParams(window.location.search);
-  const shouldCheckAuthRedirect =
-    window.location.hash.length > 1 ||
-    searchParams.has("code") ||
-    searchParams.get("mode") === "recovery";
-
-  return !shouldCheckAuthRedirect;
+  return !hasRootAuthReturnMarkers();
 }
 
 function LeanPublicRootRuntime() {
