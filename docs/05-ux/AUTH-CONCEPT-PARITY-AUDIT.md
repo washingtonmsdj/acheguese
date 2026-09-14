@@ -45,7 +45,7 @@
 
 | Item | Estado | Pente fino |
 | --- | --- | --- |
-| Envelope central | OK | `confirm-envelope.webp` voltou ao recorte 120×115 aprovado. |
+| Envelope central | OK | `confirm-envelope.webp` usa o recorte 120×115 aprovado. |
 | Título / e-mail / 3 passos | OK | Estrutura e ordem do concept. |
 | Spam | OK | Aviso presente. |
 | Reenviar | OK funcional | Tem estado real de envio e cooldown após sucesso. |
@@ -71,7 +71,7 @@
 
 | Item | Estado | Pente fino |
 | --- | --- | --- |
-| Voltar com texto | OK | Fluxo `/reset-password` agora mostra seta + `Voltar`, sem alterar login/cadastro/confirmar. |
+| Voltar com texto | OK | Fluxo `/reset-password` mostra seta + `Voltar`, sem alterar login/cadastro/confirmar. |
 | Logo central | OK | O botão é absoluto e não desloca a marca. |
 | Título / subtítulo | OK | Composição correspondente. |
 | E-mail | OK | Recuperação é por e-mail mesmo para quem entra com @usuário. |
@@ -89,8 +89,8 @@ Estrutura principal, e-mail informado, spam, reenvio, usar outro e-mail e voltar
 | Item | Estado | Pente fino |
 | --- | --- | --- |
 | Dois campos + olho | OK | Correspondente. |
-| Checklist visual | PARCIAL | O concept agrupa em 3 linhas (`12+`, `maiúscula e minúscula`, `número e símbolo`); a UI ainda apresenta os 5 requisitos canônicos separadamente. A validação deve continuar centralizada; só a apresentação precisa ser agrupada. |
-| Senha comprometida | OK extra necessário | Checagem real deve continuar mesmo não aparecendo na prancha. |
+| Checklist visual | OK | A UI agrupa a política canônica nas 3 linhas da prancha (`12+`, `maiúscula e minúscula`, `número e símbolo`) sem duplicar a validação. |
+| Senha comprometida | OK extra necessário | Checagem real permanece mesmo não aparecendo na prancha. |
 | CTA / termos | OK | Funcionais. |
 | Sucesso | OK funcional | Após salvar, troca para sucesso real; não simula dois estados ao mesmo tempo. |
 
@@ -105,31 +105,31 @@ Estrutura principal, e-mail informado, spam, reenvio, usar outro e-mail e voltar
 | Item | Estado | Pente fino |
 | --- | --- | --- |
 | Coluna editorial + card | OK estrutural | Grid e card correspondem ao concept. |
-| Arte da comunidade | OK de crop | `login-hero.webp` está em 376×264 e a suíte protege dimensão/validade. A versão atual ainda é comprimida e precisa de comparação renderizada para aceite final. |
-| Cabeçalho largo | MELHORADO | O desktop deixou de limitar o header ao mesmo `max-width` do conteúdo e agora acompanha melhor a prancha, mantendo logo à esquerda e ações à direita. |
+| Arte da comunidade | MELHORADO | `login-hero.webp` mantém o crop 376×264, mas agora é renderizado com footprint responsivo de aproximadamente 450–540 px para ocupar a coluna como na prancha. |
+| Cabeçalho largo | MELHORADO | O desktop não limita o header ao mesmo `max-width` do conteúdo, mantendo logo à esquerda e ações à direita. |
 | Copy e formulário | OK | Título, subtítulo, campos, Google condicional, segurança e links legais. |
 
 ### 02 · Criar conta
 
-Estrutura de duas colunas, card, labels desktop, CTA e arte 340×186 estão presentes. **PARCIAL** somente porque a comparação pixel a pixel do render ainda não foi executada.
+Estrutura de duas colunas, card, labels desktop e CTA estão presentes. A arte `signup-hero.webp` agora ocupa aproximadamente **440–520 px** no desktop, em vez de ficar presa a 390 px. **PARCIAL** somente porque a comparação pixel a pixel do render ainda não foi executada.
 
 ### 03 · Confirmar e-mail
 
-Estrutura correta e hero no crop aprovado 355×188. O envelope mobile permanece separado em 120×115. **PARCIAL** somente até screenshot real confirmar escala, offset e compressão.
+Estrutura correta e hero no crop aprovado 355×188. O hero agora ocupa aproximadamente **450–540 px** no desktop; o envelope mobile permanece separado em 120×115. **PARCIAL** somente até screenshot real confirmar escala e offset.
 
 ### 04 · Recuperar acesso
 
-Estrutura de duas colunas e arte territorial 368×149 estão corretas no contrato. **PARCIAL** até a comparação renderizada.
+Estrutura de duas colunas e arte territorial 368×149 estão corretas no contrato. A arte agora ocupa aproximadamente **470–560 px**, condizente com a presença visual da prancha. **PARCIAL** até a comparação renderizada.
 
 ## Assets — estado atual verificado
 
 | Arquivo | Tamanho atual | Dimensão protegida | Estado |
 | --- | ---: | ---: | --- |
-| `login-hero.webp` | 10.528 B | 376×264 | OK de conteúdo/crop; compressão ainda entra no QA visual. |
-| `signup-hero.webp` | 5.626 B | 340×186 | OK de conteúdo/crop; compressão ainda entra no QA visual. |
-| `confirm-hero.webp` | 6.424 B | 355×188 | OK de conteúdo/crop. |
-| `recovery-hero.webp` | 8.512 B | 368×149 | OK de conteúdo/crop. |
-| `confirm-envelope.webp` | 2.230 B | 120×115 | OK; mapeamento corrigido. |
+| `login-hero.webp` | 10.528 B | 376×264 | OK de conteúdo/crop; render desktop ampliado. |
+| `signup-hero.webp` | 5.626 B | 340×186 | OK de conteúdo/crop; render desktop ampliado. |
+| `confirm-hero.webp` | 6.424 B | 355×188 | OK de conteúdo/crop; render desktop ampliado. |
+| `recovery-hero.webp` | 8.512 B | 368×149 | OK de conteúdo/crop; render desktop ampliado. |
+| `confirm-envelope.webp` | 2.230 B | 120×115 | OK; exclusivo da confirmação mobile. |
 
 A suíte `tests/regression/auth-concept-flow.test.ts` valida RIFF/WEBP, integridade do tamanho, dimensões aprovadas e referências das telas, evitando novamente a troca entre hero e envelope.
 
@@ -142,6 +142,7 @@ A suíte `tests/regression/auth-concept-flow.test.ts` valida RIFF/WEBP, integrid
 | Altura de input/CTA | `44px` | `44px` | Mantém ritmo consistente. |
 | CTA primário | amarelo `#ffc91a` | amarelo `#ffc91a` | Direção visual correta. |
 | Card desktop | `430px` | `430px` | Próximo à largura vista na prancha. |
+| Hero desktop | oculto | `440–560px` conforme a tela | Aumentado para eliminar o vazio excessivo da coluna editorial. |
 | Título mobile | ~`31px` | — | Próximo à hierarquia do concept. |
 | Título editorial desktop | — | `46px` | Próximo à prancha. |
 | Fundo | `#fffdfa` | marfim + radiais discretos | Correspondente à linguagem visual. |
@@ -150,10 +151,10 @@ A suíte `tests/regression/auth-concept-flow.test.ts` valida RIFF/WEBP, integrid
 ## Pendências em ordem P0 → P2
 
 1. **P0 — Captura real do navegador:** gerar 390×844 e 1440×900 e comparar lado a lado com as pranchas. Testes estruturais não substituem pixel diff.
-2. **P1 — Nova senha:** agrupar visualmente os 5 requisitos canônicos nas 3 linhas da prancha, sem duplicar regra de validação.
-3. **P1 — Contexto amigável:** mostrar nome legível (`Sabores da Ana`) quando o retorno tiver metadado/slug resolvível; manter fallback seguro.
-4. **P1 — Username com ponto:** decidir se é requisito real ou apenas dado demonstrativo. Se virar requisito, alterar SSOT frontend + policy + Edge Function + RPC/migration + testes em uma única mudança.
-5. **P2 — Ajustes finos de spacing/crop:** só depois da captura real, medindo offsets, baseline, borda, raio, sombra e escala.
+2. **P1 — Contexto amigável:** mostrar nome legível (`Sabores da Ana`) quando o retorno tiver metadado/slug resolvível; manter fallback seguro.
+3. **P1 — Username com ponto:** decidir se é requisito real ou apenas dado demonstrativo. Se virar requisito, alterar SSOT frontend + policy + Edge Function + RPC/migration + testes em uma única mudança.
+4. **P2 — Ajustes finos de spacing/crop:** depois da captura real, medir offsets, baseline, borda, raio, sombra e escala; reduzir/ampliar cada hero individualmente se necessário.
+5. **P2 — Qualidade raster:** se a ampliação revelar suavização perceptível em telas densas, substituir os crops por versões 2× derivadas da mesma arte do concept, sem trocar a direção visual.
 
 ## Regra de aceite visual
 
