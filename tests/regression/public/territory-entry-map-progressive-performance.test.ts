@@ -55,18 +55,28 @@ describe("territory entry progressive map performance", () => {
     expect(runtime).toContain("!boundaryStarted || isLoading || isBoundaryLoading");
   });
 
-  it("preloads style before React while runtime and engine start together on first render", () => {
+  it("preloads style and TileJSON before React while runtime and engine start together", () => {
     const main = read("src/main.tsx");
+    const defaults = read("src/shared/config/mapDefaults.ts");
     const wrapper = read("src/app/components/territory-vivo/TerritoryEntryMap.tsx");
     const runtime = read("src/app/components/territory-vivo/TerritoryEntryMapRuntime.tsx");
     const owner = read("src/core/maps/components/v3/MapLibreAdapter.tsx");
     const passive = read("src/core/maps/components/v3/MapLibrePassiveRuntime.tsx");
 
+    expect(defaults).toContain('styleUrl: "https://tiles.openfreemap.org/styles/positron"');
+    expect(defaults).toContain('OPENFREEMAP_TILEJSON_URL = "https://tiles.openfreemap.org/planet"');
     expect(main).toContain("DEFAULT_TILE_STYLE");
+    expect(main).toContain("OPENFREEMAP_TILEJSON_URL");
     expect(main).toContain('mapStylePreload.rel = "preload"');
     expect(main).toContain('mapStylePreload.as = "fetch"');
     expect(main).toContain('mapStylePreload.setAttribute("fetchpriority", "high")');
+    expect(main).toContain('tileJsonPreload.rel = "preload"');
+    expect(main).toContain('tileJsonPreload.as = "fetch"');
+    expect(main).toContain('tileJsonPreload.setAttribute("fetchpriority", "high")');
     expect(main.indexOf("data-entry-map-style-preload")).toBeLessThan(
+      main.indexOf("root.render(<App />)"),
+    );
+    expect(main.indexOf("data-entry-map-tilejson-preload")).toBeLessThan(
       main.indexOf("root.render(<App />)"),
     );
     expect(wrapper).not.toContain("preloadEntryMapStyle");
