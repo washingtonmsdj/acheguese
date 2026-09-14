@@ -33,6 +33,7 @@ interface SettingsNavItem {
   search?: string;
   excludeSearch?: string;
   dividerBefore?: boolean;
+  extraPaths?: readonly string[];
 }
 
 const settingsItems: readonly SettingsNavItem[] = [
@@ -42,7 +43,15 @@ const settingsItems: readonly SettingsNavItem[] = [
   { label: "Notificações", href: ACCOUNT_PATHS.notifications, icon: Bell, exact: true },
   { label: "Privacidade e dados", href: ACCOUNT_PATHS.privacy, icon: Shield, exact: true },
   { label: "Meus perfis", href: ACCOUNT_PATHS.profiles, icon: UserRound, exact: true, search: "?section=profiles" },
-  { label: "Preferências", href: ACCOUNT_PATHS.preferences, icon: SlidersHorizontal, exact: true, excludeHashes: ["#acessibilidade"], dividerBefore: true },
+  {
+    label: "Preferências",
+    href: ACCOUNT_PATHS.preferences,
+    icon: SlidersHorizontal,
+    exact: true,
+    excludeHashes: ["#acessibilidade"],
+    dividerBefore: true,
+    extraPaths: [ACCOUNT_PATHS.profileSettings],
+  },
   { label: "Endereços e território", href: ACCOUNT_PATHS.addresses, icon: MapPin, exact: true },
   { label: "Acessibilidade", href: ACCOUNT_PATHS.accessibility, icon: Accessibility, hashes: ["#acessibilidade"] },
 ];
@@ -57,9 +66,12 @@ function isActive(
   excludeHashes?: readonly string[],
   search?: string,
   excludeSearch?: string,
+  extraPaths?: readonly string[],
 ) {
   const target = href.split("?")[0].split("#")[0];
-  const pathMatches = exact ? pathname === target : pathname.startsWith(target);
+  const pathMatches =
+    Boolean(extraPaths?.includes(pathname)) ||
+    (exact ? pathname === target : pathname.startsWith(target));
   if (!pathMatches) return false;
   if (hashes && !hashes.includes(locationHash)) return false;
   if (excludeHashes?.includes(locationHash)) return false;
@@ -76,6 +88,9 @@ function resolveDefaultBackTarget(pathname: string, hash: string): string {
     return ACCOUNT_PATHS.privacy;
   }
   if (pathname === ACCOUNT_PATHS.preferences && hash === "#acessibilidade") {
+    return ACCOUNT_PATHS.preferences;
+  }
+  if (pathname === ACCOUNT_PATHS.profileSettings) {
     return ACCOUNT_PATHS.preferences;
   }
   return ACCOUNT_PATHS.home;
@@ -125,7 +140,7 @@ export function AccountSettingsShell({
             achegue-se<span className="text-territory-sun">.</span>
           </Link>
           <nav aria-label="Configurações da conta" className="space-y-1">
-            {settingsItems.map(({ label, href, icon: Icon, exact, hashes, excludeHashes, search, excludeSearch, dividerBefore }) => {
+            {settingsItems.map(({ label, href, icon: Icon, exact, hashes, excludeHashes, search, excludeSearch, dividerBefore, extraPaths }) => {
               const active = isActive(
                 location.pathname,
                 location.hash,
@@ -136,6 +151,7 @@ export function AccountSettingsShell({
                 excludeHashes,
                 search,
                 excludeSearch,
+                extraPaths,
               );
               return (
                 <div key={label} className={dividerBefore ? "mt-3 border-t border-white/15 pt-3" : undefined}>
