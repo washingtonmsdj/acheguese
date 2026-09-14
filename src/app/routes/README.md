@@ -1,153 +1,112 @@
-# Sistema de Rotas
+# Sistema de rotas
 
-> Configuração centralizada de rotas da plataforma
-> 
-> Este módulo foi refatorado em Abril 2026 para reduzir a complexidade do App.tsx
+Este diretório define a fronteira canônica de navegação do Achegue-se. A regra principal é simples: **cada URL tem um único owner**. Não redeclare a mesma rota em `AppRoutes` e `AppLayoutRoutes`.
 
----
+## Estrutura atual
 
-## Estrutura
-
-```
+```text
 src/app/routes/
-├── index.ts          # Exportações públicas
-├── lazyImports.ts    # Lazy imports organizados por domínio
-├── AppRoutes.tsx     # Componente de rotas principal
-└── README.md         # Esta documentação
+├── AppRoutes.tsx                         # árvore raiz
+├── RootRouteEntry.tsx                    # resolução da entrada `/`
+├── lazyImports.ts                        # páginas pertencentes ao AppLayout
+├── adminLazyImports.ts                   # imports da árvore administrativa
+├── sections/
+│   ├── AppLayoutRoutes.tsx               # rotas que vivem no layout principal
+│   ├── AppLayoutRouteRegistry.tsx        # descritores territoriais/domínio
+│   ├── CommunityTerritoryRoutes.tsx      # portal/comunidade territorial
+│   ├── CentralRoutes.tsx                 # operação privada `/central/*`
+│   └── AdminRoutes.tsx                   # administração `/admin/*`
+└── README.md
 ```
 
----
+## Owners
 
-## Arquitetura
+### `AppRoutes.tsx`
 
-### Princípios
+É o owner das superfícies públicas **sem** `AppLayoutSidebar` e das subárvores independentes:
 
-1. **Separação de Responsabilidades**: Rotas separadas do componente App
-2. **Organização por Domínio**: Imports lazy organizados por funcionalidade
-3. **Lazy Loading Otimizado**: Todas as páginas não-críticas são lazy-loaded
-4. **Critical Path**: Apenas componentes essenciais para FCP são eager-loaded
+- `/`;
+- `/q/:token`;
+- `/status`;
+- `/splash`;
+- Conta e acesso (`AUTH_PATHS`): Login, Cadastro, Confirmação, Primeiro acesso, Termos OAuth e Recuperação;
+- `/indicar-comunidade`, `/como-funciona`, `/sobre`, `/contato`, `/onboarding`;
+- `/empresas/:id/catalogo`;
+- `/p/:slug/*` e páginas do mini-site premium;
+- `/central/*`;
+- `/admin/*`;
+- fallback `/*` para `AppLayoutRoutes`.
 
-### Critical vs Lazy
+Essas páginas usam `lazy()` diretamente em `AppRoutes`. **Não** devem voltar para `lazyImports.ts`.
 
-**Eager (Carregados Imediatamente):**
-- `LoginPage` - Página de entrada
-- `TerritorialLayout` - Layout base territorial
-- `Territorial*Page` - Páginas territoriais canônicas
+### `AppLayoutRoutes.tsx`
 
-**Lazy (Carregados Sob Demanda):**
-- Todas as páginas de admin (40+)
-- Todas as páginas de módulos (mobilidade, gastronomia, etc.)
-- Páginas de detalhe e formulários
+É o owner das superfícies que pertencem à aplicação principal e/ou ao `AppLayoutSidebar`, incluindo:
 
----
+- `/inicio`;
+- conta privada (`/conta/*`);
+- mensagens, mapa, busca e módulos públicos;
+- vitrines territoriais;
+- eventos, vagas, educação, comunicação e outras superfícies sujeitas ao launch scope;
+- aliases de perfil mantidos apenas quando ainda fazem parte do contrato público atual.
 
-## Como Adicionar Novas Rotas
+Rotas sujeitas a lançamento usam `isLaunchSurfaceEnabled()` / `launchElement()`. A árvore raiz não deve interceptá-las com um placeholder permanente.
 
-### 1. Adicionar o Lazy Import
+### `lazyImports.ts`
 
-No arquivo `lazyImports.ts`, adicione na seção apropriada:
+É um barrel exclusivo da árvore de `AppLayoutRoutes` e seus registries. Não contém novamente Login, Cadastro, Recuperação, Splash, Status, QR, páginas institucionais root-owned, catálogo público sem layout ou mini-site premium.
 
-```typescript
-// ============================================================
-// 🆕 NOVO MÓDULO
-// ============================================================
-export const NovaPaginaPage = lazy(() => import("@/modules/novo/pages/NovaPaginaPage"));
+## Conta e acesso
+
+Caminhos de autenticação vêm de `src/core/auth/constants/authFlow.ts`:
+
+```ts
+AUTH_PATHS.login
+AUTH_PATHS.signup
+AUTH_PATHS.signupConfirmation
+AUTH_PATHS.firstAccess
+AUTH_PATHS.termsAcceptance
+AUTH_PATHS.passwordReset
 ```
 
-### 2. Adicionar a Rota
+Não introduza literais duplicados para esses caminhos em novas árvores. Estado transitório de autenticação pertence a `authJourney`, não à configuração de rotas.
 
-No arquivo `AppRoutes.tsx`, adicione dentro do componente `Routes`:
+## Rotas territoriais
 
-```tsx
-<Route path="/nova-rota" element={<P.NovaPaginaPage />} />
-```
+Rotas públicas territoriais devem ser construídas pelos helpers canônicos de `core/routing/config/territorialRoutePatterns` e pelos registries do diretório `sections/`.
 
-### 3. Considerações
+Princípios:
 
-- Use `AppLayoutSidebar` como wrapper para rotas que precisam do layout padrão
-- Rotas territoriais devem usar `TerritorialLayout`
-- Sempre use lazy loading para páginas não-críticas
+- vitrines de módulo (`/empresas/...`, `/servicos/...`) são públicas/SEO;
+- `/comunidade/:communitySlug/...` representa experiência social/local;
+- detalhe público de empresa mantém sua URL canônica territorial;
+- `/p/:slug/*` é o mini-site premium e não substitui a URL pública canônica da empresa;
+- rotas operacionais ficam em `/central`;
+- identidade/configuração pessoal fica em `/conta`;
+- aliases só permanecem quando há contrato explícito e teste de regressão.
 
----
+## Como adicionar uma rota
 
-## Padrões de Rota
+1. Defina primeiro o owner: raiz, AppLayout, Central ou Admin.
+2. Se for root-owned, faça o `lazy()` em `AppRoutes.tsx`.
+3. Se pertencer ao AppLayout, adicione o import a `lazyImports.ts` apenas se necessário e registre a rota em `AppLayoutRoutes`/registry apropriado.
+4. Para autenticação, reutilize `AUTH_PATHS`/builders.
+5. Para território, reutilize os builders canônicos; não concatene padrões paralelos manualmente.
+6. Adicione um contrato quando a rota puder colidir com fallback territorial, alias ou outra árvore.
 
-### Territorial (Geográfica)
+## Invariantes protegidos
 
-```
-/:state/:city                                  # Hub publico da cidade
-/:state/:city/:district                       # Hub publico do bairro
-/:state/:city/:groupSlug                      # Hub publico do grupo territorial
-/empresas/:state/:city                        # Vitrine publica do modulo na cidade
-/empresas/:state/:city/:district              # Vitrine publica do modulo no bairro
-/empresas/:state/:city/:groupSlug             # Vitrine publica do modulo no grupo
-/comunidade/:communitySlug                    # Portal publico/preview da comunidade
-/comunidade/:communitySlug/empresas           # Empresas dentro do contexto da comunidade
-/comunidade/:communitySlug/empresas/:slug     # Empresa com acoes comunitarias
-/comunidade/:communitySlug/gastronomia        # Gastronomia dentro do contexto da comunidade
-/comunidade/:communitySlug/gastronomia/:slug  # Gastronomia com acoes comunitarias
-/:communitySlug                               # Alias curto legado do portal; normaliza para /comunidade/:communitySlug quando inequivoco
-/:communitySlug/empresas/:slug                # Alias legado de entidade; nao e superficie canonica e falha quando nao canonico
-/:communitySlug/gastronomia/:slug             # Alias legado de entidade; nao e superficie canonica e falha quando nao canonico
-/comunidade/:state/:city                      # Fallback tecnico de comunidade municipal
-/comunidade/:state/:city/:communitySlug       # Fallback tecnico de bairro/grupo
-/comunidade/:state/:city/feed                 # Fallback tecnico do feed comunitario municipal
-/empresas/:state/:city/:district/:businessSlug # Detalhe publico canonico de empresa
-/gastronomia/:state/:city/:district/:slug     # Detalhe publico de gastronomia quando existir; senao resolve empresa
-/p/:slug                                      # Mini-site premium, separado da URL publica da empresa
-```
+`tests/regression/auth-route-ownership.test.ts` protege especificamente a fronteira Conta/acesso e páginas root-owned. A suíte de arquitetura também cobre registries territoriais e taxonomia do projeto.
 
-Regra de intencao:
+Uma mudança de rota não está concluída se:
 
-- Rotas diretas de modulo (`/empresas/...`, `/servicos/...`) sao vitrines publicas e SEO.
-- Rotas em `/comunidade/:communitySlug/...` sao a experiencia social/local com contexto comunitario.
-- `/:communitySlug` e compatibilidade curta do portal e so e valido quando existe alias publico
-  unico em `community_public_aliases`; em caso de colisao, a rota territorial fica como fallback
-  tecnico.
-- Detalhes publicos de empresa e restaurante usam `/empresas/:state/:city/:district/:slug`.
-- Detalhes em `/:communitySlug/empresas/:slug`,
-  `/:communitySlug/gastronomia/:slug` e `/:communitySlug/:slug` sao aliases
-  legados de entidade, nao sao emitidos por codigo novo e falham visivelmente quando nao
-  correspondem a uma rota comunitaria canonica.
-- Detalhe em `/gastronomia/:state/:city/:district/:slug` deve permanecer publico;
-  se a vertical nao tiver detalhe proprio, resolve para a URL publica da empresa.
-- `/comunidade/:communitySlug...` e rota canonica do portal comunitario.
-- Em comunidade, a URL canonica do portal nao expoe tipo tecnico (`district` vs `territorial_group`).
-  O alias curto `/:communitySlug` permanece somente como compatibilidade; o fallback tecnico
-  continua em `/comunidade/:state/:city/:communitySlug`.
-- O premium usa `/p/:slug`; ele nao substitui a URL publica canonica da empresa.
-- Nenhuma rota publica de comunidade usa `/area/`.
-- Rotas operacionais ficam em `/central`.
-- Rotas de identidade/configuracao pessoal ficam em `/conta`.
+- a mesma URL existir em duas árvores;
+- uma página root-owned continuar exportada inutilmente por `lazyImports.ts`;
+- uma superfície launch-gated for bloqueada incondicionalmente acima do seu owner;
+- um redirect de autenticação for montado fora dos builders canônicos;
+- um alias legado for mantido sem consumidor/contrato atual.
 
-### Admin
-
-```
-/admin
-/admin/:module
-/admin/:module/:acao
-```
-
-### Módulos
-
-```
-/mobilidade/passageiro
-/central
-/central/motorista
-/central/motoboy
-```
-
----
-
-## Manutenção
-
-### Quando Modificar
-
-- **Novas páginas**: Adicionar lazy import + rota
-- **Remover páginas**: Remover lazy import + rota
-- **Renomear rotas**: Atualizar path canônico único (sem manter padrão legado durante desenvolvimento)
-
-### Validar Alterações
+## Validação
 
 ```bash
 npm run typecheck
@@ -155,15 +114,4 @@ npm run lint
 npm run test
 ```
 
----
-
-## Histórico
-
-| Data | Mudança | Autor |
-|------|---------|-------|
-| 2026-04-16 | Criação do sistema de rotas separado | Cascade |
-| 2026-04-16 | Refatoração App.tsx (604 → 73 linhas) | Cascade |
-
----
-
-*Documento mantido pela equipe de Frontend*
+Para Conta e acesso, o workflow `Auth Concept Regression` adiciona os contratos específicos de jornada, ownership de rotas e Playwright responsivo.
