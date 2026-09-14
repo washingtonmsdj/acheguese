@@ -25,6 +25,7 @@ import {
   NotificationPreferencesService,
   type NotificationPreferences,
 } from "@/core/notifications/services";
+import { ACCOUNT_PATHS } from "@/core/routing/config/account";
 import { useAppUrls } from "@/core/routing/hooks/useAppUrls";
 import { AccountSettingsShell } from "@/modules/profile/components/AccountSettingsShell";
 import { Button } from "@/shared/components/ui/button";
@@ -38,6 +39,19 @@ import {
 } from "@/shared/components/ui/select";
 import { Switch } from "@/shared/components/ui/switch";
 import { useToast } from "@/shared/hooks/use-toast";
+import { cn } from "@/shared/utils/cn";
+
+const QUIET_DAY_OPTIONS = [
+  { value: 1, short: "Seg", label: "Segunda-feira" },
+  { value: 2, short: "Ter", label: "Terça-feira" },
+  { value: 3, short: "Qua", label: "Quarta-feira" },
+  { value: 4, short: "Qui", label: "Quinta-feira" },
+  { value: 5, short: "Sex", label: "Sexta-feira" },
+  { value: 6, short: "Sáb", label: "Sábado" },
+  { value: 7, short: "Dom", label: "Domingo" },
+] as const;
+
+const ALL_QUIET_DAYS = QUIET_DAY_OPTIONS.map((day) => day.value);
 
 function PreferenceRow({
   id,
@@ -123,7 +137,7 @@ export default function NotificationPreferencesPage() {
   });
 
   if (location.pathname === "/settings/notifications") {
-    return <Navigate to="/conta/notificacoes" replace />;
+    return <Navigate to={ACCOUNT_PATHS.notifications} replace />;
   }
 
   if (!user) return <Navigate to={appUrls.auth.login} replace />;
@@ -141,10 +155,7 @@ export default function NotificationPreferencesPage() {
 
   if (isError) {
     return (
-      <AccountSettingsShell
-        title="Notificações"
-        description="Não foi possível carregar suas preferências agora."
-      >
+      <AccountSettingsShell title="Notificações" description="Não foi possível carregar suas preferências agora.">
         <Surface className="p-5 text-center">
           <AlertCircle className="mx-auto h-8 w-8 text-destructive" aria-hidden="true" />
           <p className="mt-3 text-sm text-territory-muted">
@@ -159,19 +170,26 @@ export default function NotificationPreferencesPage() {
     );
   }
 
-  const quietHoursInvalid = Boolean(preferences.quiet_hours_start) !== Boolean(preferences.quiet_hours_end);
+  const quietHoursActive = Boolean(preferences.quiet_hours_start && preferences.quiet_hours_end);
+  const quietHoursPairInvalid = Boolean(preferences.quiet_hours_start) !== Boolean(preferences.quiet_hours_end);
+  const selectedQuietDays = preferences.quiet_hours_days ?? ALL_QUIET_DAYS;
+  const quietDaysInvalid = quietHoursActive && selectedQuietDays.length === 0;
+  const quietHoursInvalid = quietHoursPairInvalid || quietDaysInvalid;
   const isDirty = data ? JSON.stringify(preferences) !== JSON.stringify(data) : false;
+
+  const toggleQuietDay = (day: number) => {
+    const current = preferences.quiet_hours_days ?? ALL_QUIET_DAYS;
+    const next = current.includes(day)
+      ? current.filter((value) => value !== day)
+      : [...current, day].sort((a, b) => a - b);
+    setPreferences({ ...preferences, quiet_hours_days: next });
+  };
 
   return (
     <>
-      <Helmet>
-        <title>Notificações | Achegue-se</title>
-      </Helmet>
+      <Helmet><title>Notificações | Achegue-se</title></Helmet>
 
-      <AccountSettingsShell
-        title="Controle o que chega até você"
-        description="Escolha como e sobre o que deseja ser notificado."
-      >
+      <AccountSettingsShell title="Controle o que chega até você" description="Escolha como e sobre o que deseja ser notificado.">
         <div className="grid gap-4 lg:grid-cols-2">
           <Surface className="p-4 sm:p-5">
             <h2 className="font-heading text-base font-bold text-territory-ink">Canais de notificação</h2>
@@ -195,8 +213,8 @@ export default function NotificationPreferencesPage() {
               <PreferenceRow
                 id="push"
                 icon={<MonitorSmartphone className="h-5 w-5" aria-hidden="true" />}
-                label="Neste dispositivo"
-                description="Permita push quando quiser receber avisos fora da tela atual."
+                label="Canal push"
+                description="Permita avisos push nos dispositivos que você registrar."
                 checked={preferences.push_enabled}
                 onCheckedChange={(checked) => setPreferences({ ...preferences, push_enabled: checked })}
               />
@@ -206,38 +224,10 @@ export default function NotificationPreferencesPage() {
           <Surface className="p-4 sm:p-5">
             <h2 className="font-heading text-base font-bold text-territory-ink">Tipos de notificação</h2>
             <div className="mt-2">
-              <PreferenceRow
-                id="transactional"
-                icon={<ShoppingCart className="h-5 w-5" aria-hidden="true" />}
-                label="Pedidos e atendimentos"
-                description="Pedidos, pagamentos e confirmações essenciais."
-                checked={preferences.transactional_enabled}
-                disabled
-              />
-              <PreferenceRow
-                id="social"
-                icon={<UsersRound className="h-5 w-5" aria-hidden="true" />}
-                label="Comunidade"
-                description="Comentários, menções e interações."
-                checked={preferences.social_enabled}
-                onCheckedChange={(checked) => setPreferences({ ...preferences, social_enabled: checked })}
-              />
-              <PreferenceRow
-                id="system"
-                icon={<Settings2 className="h-5 w-5" aria-hidden="true" />}
-                label="Sistema"
-                description="Atualizações e avisos importantes."
-                checked={preferences.system_enabled}
-                onCheckedChange={(checked) => setPreferences({ ...preferences, system_enabled: checked })}
-              />
-              <PreferenceRow
-                id="marketing"
-                icon={<Tag className="h-5 w-5" aria-hidden="true" />}
-                label="Ofertas e novidades"
-                description="Promoções e conteúdos especiais."
-                checked={preferences.marketing_enabled}
-                onCheckedChange={(checked) => setPreferences({ ...preferences, marketing_enabled: checked })}
-              />
+              <PreferenceRow id="transactional" icon={<ShoppingCart className="h-5 w-5" aria-hidden="true" />} label="Pedidos e atendimentos" description="Pedidos, pagamentos e confirmações essenciais." checked={preferences.transactional_enabled} disabled />
+              <PreferenceRow id="social" icon={<UsersRound className="h-5 w-5" aria-hidden="true" />} label="Comunidade" description="Comentários, menções e interações." checked={preferences.social_enabled} onCheckedChange={(checked) => setPreferences({ ...preferences, social_enabled: checked })} />
+              <PreferenceRow id="system" icon={<Settings2 className="h-5 w-5" aria-hidden="true" />} label="Sistema" description="Atualizações e avisos importantes." checked={preferences.system_enabled} onCheckedChange={(checked) => setPreferences({ ...preferences, system_enabled: checked })} />
+              <PreferenceRow id="marketing" icon={<Tag className="h-5 w-5" aria-hidden="true" />} label="Ofertas e novidades" description="Promoções e conteúdos especiais." checked={preferences.marketing_enabled} onCheckedChange={(checked) => setPreferences({ ...preferences, marketing_enabled: checked })} />
             </div>
           </Surface>
         </div>
@@ -251,17 +241,19 @@ export default function NotificationPreferencesPage() {
                 </span>
                 <div>
                   <h2 className="font-heading text-base font-bold text-territory-ink">Horário de silêncio</h2>
-                  <p className="text-xs text-territory-muted">Defina início e fim juntos para suspender avisos nesse intervalo.</p>
+                  <p className="text-xs text-territory-muted">Defina o intervalo e os dias em que deseja suspender avisos.</p>
                 </div>
               </div>
+
               <div className="mt-4 grid gap-3 sm:grid-cols-2">
                 <div>
                   <Label htmlFor="quiet-start" className="text-xs font-semibold text-territory-muted">Início</Label>
                   <input
                     id="quiet-start"
                     type="time"
-                    aria-invalid={quietHoursInvalid}
-                    className="mt-1 h-11 w-full rounded-xl border border-territory-border bg-territory-surface px-3 text-sm text-territory-ink"
+                    aria-invalid={quietHoursPairInvalid}
+                    aria-describedby={quietHoursPairInvalid ? "quiet-hours-error" : undefined}
+                    className="mt-1 h-11 w-full rounded-xl border border-territory-border bg-territory-surface px-3 text-sm text-territory-ink focus:border-territory-brand focus:outline-none focus:ring-2 focus:ring-territory-brand/15"
                     value={preferences.quiet_hours_start || ""}
                     onChange={(event) => setPreferences({ ...preferences, quiet_hours_start: event.target.value || null })}
                   />
@@ -271,25 +263,60 @@ export default function NotificationPreferencesPage() {
                   <input
                     id="quiet-end"
                     type="time"
-                    aria-invalid={quietHoursInvalid}
-                    className="mt-1 h-11 w-full rounded-xl border border-territory-border bg-territory-surface px-3 text-sm text-territory-ink"
+                    aria-invalid={quietHoursPairInvalid}
+                    aria-describedby={quietHoursPairInvalid ? "quiet-hours-error" : undefined}
+                    className="mt-1 h-11 w-full rounded-xl border border-territory-border bg-territory-surface px-3 text-sm text-territory-ink focus:border-territory-brand focus:outline-none focus:ring-2 focus:ring-territory-brand/15"
                     value={preferences.quiet_hours_end || ""}
                     onChange={(event) => setPreferences({ ...preferences, quiet_hours_end: event.target.value || null })}
                   />
                 </div>
               </div>
-              {quietHoursInvalid ? (
-                <p className="mt-2 text-xs font-medium text-destructive" role="alert">
+
+              {quietHoursActive ? (
+                <fieldset className="mt-4">
+                  <legend className="text-xs font-semibold text-territory-muted">Dias</legend>
+                  <div className="mt-2 flex flex-wrap gap-2">
+                    {QUIET_DAY_OPTIONS.map((day) => {
+                      const selected = selectedQuietDays.includes(day.value);
+                      return (
+                        <button
+                          key={day.value}
+                          type="button"
+                          aria-pressed={selected}
+                          aria-label={`${day.label}: ${selected ? "incluído" : "não incluído"} no horário de silêncio`}
+                          onClick={() => toggleQuietDay(day.value)}
+                          className={cn(
+                            "min-h-10 min-w-12 rounded-xl border px-3 text-xs font-semibold transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-territory-brand",
+                            selected
+                              ? "border-territory-brand bg-territory-brand text-white"
+                              : "border-territory-border bg-territory-surface text-territory-ink hover:border-territory-brand/50",
+                          )}
+                        >
+                          {day.short}
+                        </button>
+                      );
+                    })}
+                  </div>
+                </fieldset>
+              ) : null}
+
+              {quietHoursPairInvalid ? (
+                <p id="quiet-hours-error" className="mt-2 text-xs font-medium text-destructive" role="alert">
                   Informe início e fim do horário silencioso, ou deixe os dois campos vazios.
+                </p>
+              ) : quietDaysInvalid ? (
+                <p className="mt-2 text-xs font-medium text-destructive" role="alert">
+                  Selecione pelo menos um dia para aplicar o horário de silêncio.
                 </p>
               ) : null}
             </div>
+
             <Button
               onClick={() => saveMutation.mutate(preferences)}
               disabled={saveMutation.isPending || quietHoursInvalid || !isDirty}
               className="min-h-11 w-full bg-territory-sun text-territory-ink hover:bg-territory-sun/90 disabled:bg-territory-raised disabled:text-territory-muted lg:w-auto lg:min-w-44"
             >
-              {saveMutation.isPending ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
+              {saveMutation.isPending ? <Loader2 className="mr-2 h-4 w-4 animate-spin" aria-hidden="true" /> : null}
               {saveMutation.isPending ? "Salvando..." : isDirty ? "Salvar preferências" : "Preferências salvas"}
             </Button>
           </div>
@@ -300,13 +327,11 @@ export default function NotificationPreferencesPage() {
             <div className="flex items-center gap-3">
               <Bell className="h-5 w-5 text-territory-brand" aria-hidden="true" />
               <div>
-                <h2 className="font-heading text-base font-bold text-territory-ink">Push no dispositivo</h2>
+                <h2 className="font-heading text-base font-bold text-territory-ink">Neste dispositivo</h2>
                 <p className="text-sm text-territory-muted">Permissão e registro reais do navegador atual.</p>
               </div>
             </div>
-            <div className="mt-4">
-              <PushNotificationSettings />
-            </div>
+            <div className="mt-4"><PushNotificationSettings /></div>
           </Surface>
 
           <Surface className="p-4 sm:p-5">
