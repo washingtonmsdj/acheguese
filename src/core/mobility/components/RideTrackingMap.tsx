@@ -12,7 +12,7 @@ import { MapPin, Navigation, Clock, Loader2, RefreshCw } from 'lucide-react';
 import { useDriverLocation, type DriverLocationData } from '@/core/mobility/hooks/useDriverLocation';
 import { routingService } from '@/core/routing';
 import { cn } from '@/shared/utils/cn';
-import { DEFAULT_TILE_STYLE } from '@/core/maps/providers/MapProvider';
+import { DEFAULT_CAMERA, DEFAULT_TILE_STYLE } from '@/core/maps/providers/MapProvider';
 import { loadMapLibreRuntime } from '@/core/maps/runtime/loadMapLibreRuntime';
 import { MOBILITY_MAP_VISUALS } from '@/core/mobility/constants/mapVisuals';
 import { createMobilityMapMarkerElement } from '@/core/mobility/utils/createMobilityMapMarkerElement';
@@ -156,8 +156,8 @@ export const RideTrackingMap = memo(function RideTrackingMap({
       if (disposed || !containerRef.current || mapRef.current) return;
 
       maplibreRuntimeRef.current = maplibregl;
-      const centerLng = originLon ?? destinationLon ?? -38.476;
-      const centerLat = originLat ?? destinationLat ?? -12.975;
+      const centerLng = originLon ?? destinationLon ?? DEFAULT_CAMERA.center[0];
+      const centerLat = originLat ?? destinationLat ?? DEFAULT_CAMERA.center[1];
 
       const map = new maplibregl.Map({
         container: containerRef.current,
