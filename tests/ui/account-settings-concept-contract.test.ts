@@ -32,6 +32,7 @@ describe("account settings concept contract", () => {
       'access: "/conta/seguranca#acesso"',
       'email: "/conta/seguranca#email"',
       'password: "/conta/seguranca#senha"',
+      'mfa: "/conta/seguranca#mfa"',
       'notifications: "/conta/notificacoes"',
       'privacy: "/conta/privacidade"',
       'exportData: "/conta/privacidade#exportar"',
@@ -55,9 +56,9 @@ describe("account settings concept contract", () => {
       "Segurança",
       "Notificações",
       "Privacidade e dados",
+      "Meus perfis",
       "Preferências",
       "Acessibilidade",
-      "Meus perfis",
     ]) {
       expect(shell).toContain(label);
     }
@@ -67,6 +68,7 @@ describe("account settings concept contract", () => {
     expect(shell).toContain('excludeSearch: "?section=profiles"');
     expect(shell).toContain('hashes: ["#acessibilidade"]');
     expect(shell).toContain('excludeHashes: ["#acessibilidade"]');
+    expect(shell).toContain("dividerBefore: true");
   });
 
   it("owns mobile safe areas and uses the real active identity in the desktop header", () => {
@@ -114,15 +116,20 @@ describe("account settings concept contract", () => {
     expect(security).toContain('location.hash === "#acesso"');
     expect(security).toContain('location.hash === "#email"');
     expect(security).toContain('location.hash === "#senha"');
+    expect(security).toContain('location.hash === "#mfa"');
     expect(security).toContain('title="Dados de acesso"');
     expect(security).toContain('title="Alterar e-mail de acesso"');
     expect(security).toContain('title="Alterar senha"');
+    expect(security).toContain('title="Adicione uma camada de proteção"');
+    expect(security).toContain('eyebrow="Configurar autenticação"');
+    expect(security).toContain("ACCOUNT_PATHS.mfa");
     expect(security).toContain("user.emailConfirmed");
     expect(security).toContain("useLinkedAuthProviders");
     expect(security).toContain("googleLinked");
     expect(security).toContain("useMFA()");
     expect(security).toContain("startEnrollment");
     expect(security).toContain("verifyAndEnable");
+    expect(security).toContain("handleCancelMfaEnrollment");
     expect(security).toContain("listFactors");
     expect(security).toContain("disable(factor.id)");
     expect(security).toContain("signOutOtherSessions");
