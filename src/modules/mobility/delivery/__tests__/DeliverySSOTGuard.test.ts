@@ -11,7 +11,7 @@ function readProjectFile(path: string): string {
 }
 
 describe("delivery ssot guard", () => {
-  it("keeps motoboy delivery flow bound to ride_requests without legacy delivery_requests table", () => {
+  it("keeps delivery operations on orders SSOT and the management surface in mobility", () => {
     const ssotServiceSource = readProjectFile(
       "src/core/mobility/delivery/services/OrderDeliverySSOTService.ts",
     );
@@ -24,11 +24,11 @@ describe("delivery ssot guard", () => {
     const centralLazyImportsSource = readProjectFile(
       "src/app/routes/centralLazyImports.ts",
     );
-    const appLazyImportsSource = readProjectFile(
-      "src/app/routes/lazyImports.ts",
-    );
     const notificationMigrationSource = readProjectFile(
       "supabase/migrations/20260714115000_migrate_mobility_admin_notifications.sql",
+    );
+    const managementPageSource = readProjectFile(
+      "src/modules/mobility/delivery/pages/DeliveryManagementPage.tsx",
     );
 
     expect(ssotServiceSource).not.toContain("OrderDeliveryNotificationService");
@@ -58,11 +58,13 @@ describe("delivery ssot guard", () => {
       ),
     ).toBe(false);
     expect(centralLazyImportsSource).toContain(
-      'export const DeliveryManagementPage = createLaunchPausedRoute("Entregas")',
+      'import("@/modules/mobility/delivery/pages/DeliveryManagementPage")',
     );
-    expect(appLazyImportsSource).toContain(
-      'export const DeliveryManagementPage = createLaunchPausedRoute("Entregas")',
+    expect(managementPageSource).toContain(
+      "OrderDeliverySSOTService.listOrdersBySource",
     );
+    expect(managementPageSource).toContain("ORDER_SOURCE_TYPE.GASTRONOMY");
+    expect(managementPageSource).toContain("Frota própria da loja");
 
     expect(ssotServiceSource).not.toMatch(
       /\.from\((['"])delivery_requests\1\)/,
