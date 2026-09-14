@@ -1,16 +1,18 @@
 import { act, renderHook } from "@testing-library/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
-import { TERMS_OF_SERVICE_VERSION } from "@/core/legal/termsOfService";
+import { AUTH_PATHS } from "@/core/auth/constants/authFlow";
 import { AuthService } from "@/core/auth/services/AuthService";
+import { prepareEmailSignupConfirmation } from "@/core/auth/utils/authJourney";
 import { checkPasswordCompromise } from "@/core/auth/utils/compromisedPassword";
+import { TERMS_OF_SERVICE_VERSION } from "@/core/legal/termsOfService";
+import { PublicIdentityService } from "@/core/public-identity/services/PublicIdentityService";
 import { useCadastroForm } from "./useCadastro";
 
 const mocks = vi.hoisted(() => ({
   navigate: vi.fn(),
   toast: vi.fn(),
-  setEmail: vi.fn(),
-  setRedirect: vi.fn(),
+  prepareEmailSignupConfirmation: vi.fn(),
 }));
 
 vi.mock("react-router-dom", () => ({
@@ -21,13 +23,16 @@ vi.mock("@/core/auth/services/AuthService", () => ({
   AuthService: { signUp: vi.fn() },
 }));
 
+vi.mock("@/core/auth/utils/authJourney", () => ({
+  prepareEmailSignupConfirmation: mocks.prepareEmailSignupConfirmation,
+}));
+
 vi.mock("@/core/auth/utils/compromisedPassword", () => ({
   checkPasswordCompromise: vi.fn(),
 }));
 
-vi.mock("@/core/auth/utils/pendingSignup", () => ({
-  setPendingSignupEmail: mocks.setEmail,
-  setPendingSignupRedirect: mocks.setRedirect,
+vi.mock("@/core/public-identity/services/PublicIdentityService", () => ({
+  PublicIdentityService: { checkAvailability: vi.fn() },
 }));
 
 vi.mock("@/shared/hooks/use-toast", () => ({
@@ -48,6 +53,12 @@ function fillAccount(
 describe("useCadastroForm", () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    vi.mocked(PublicIdentityService.checkAvailability).mockResolvedValue({
+      status: "available",
+      identifier: "ana_souza",
+      suggestion: null,
+      message: undefined,
+    });
     vi.mocked(checkPasswordCompromise).mockResolvedValue({
       blocked: false,
       count: 0,
@@ -65,10 +76,11 @@ describe("useCadastroForm", () => {
     });
 
     expect(AuthService.signUp).not.toHaveBeenCalled();
+    expect(prepareEmailSignupConfirmation).not.toHaveBeenCalled();
     expect(result.current.form.formState.errors.termsAccepted).toBeDefined();
   });
 
-  it("cria somente a conta/perfil pessoal inicial e preserva o destino seguro", async () => {
+  it("cria somente a conta/perfil pessoal inicial e delega o contexto transitório ao owner de jornada", async () => {
     const { result } = renderHook(() => useCadastroForm("/mensagens/abc"));
     fillAccount(result);
     act(() => {
@@ -81,6 +93,10 @@ describe("useCadastroForm", () => {
       await result.current.submit();
     });
 
+    expect(PublicIdentityService.checkAvailability).toHaveBeenCalledWith({
+      identifier: "ana_souza",
+      entityType: "profile",
+    });
     expect(AuthService.signUp).toHaveBeenCalledWith({
       email: "ana@example.com",
       password: "SenhaSegura@2026",
@@ -91,9 +107,11 @@ describe("useCadastroForm", () => {
         version: TERMS_OF_SERVICE_VERSION,
       },
     });
-    expect(mocks.setEmail).toHaveBeenCalledWith("ana@example.com");
-    expect(mocks.setRedirect).toHaveBeenCalledWith("/mensagens/abc");
-    expect(mocks.navigate).toHaveBeenCalledWith("/cadastro/confirmacao", {
+    expect(prepareEmailSignupConfirmation).toHaveBeenCalledWith(
+      "ana@example.com",
+      "/mensagens/abc",
+    );
+    expect(mocks.navigate).toHaveBeenCalledWith(AUTH_PATHS.signupConfirmation, {
       state: { email: "ana@example.com", redirectTo: "/mensagens/abc" },
     });
   });
