@@ -1,8 +1,5 @@
-﻿import { useState } from "react";
-import { useNavigate } from "react-router-dom";
-import { useToast } from "@/shared/hooks/use-toast";
+﻿import { useNavigate } from "react-router-dom";
 import { usePrivateProfileWorkspace } from "./usePrivateProfileWorkspace";
-import { usePasswordChange } from "@/core/auth/hooks/usePasswordChange";
 import { useAvatarUpload } from "@/core/auth/hooks/useAvatarUpload";
 import { useFavorites } from "@/core/favorites/hooks/useFavorites";
 import { useAppUrls } from '@/core/routing/hooks/useAppUrls';
@@ -11,14 +8,14 @@ import type { ProfileAssociatedBusiness } from "@/core/profiles/services/Profile
 import { logger } from "@/shared/utils/logger";
 
 /**
- * SSOT COMPLIANT - Hook de workspace privado da conta
- * Usa AuthService via useAuth para logout
- * Usa useAppUrls para navegação (sem hardcoded URLs)
+ * Workspace privado da conta.
+ *
+ * Mantém somente dados e ações de perfil/empresa pertencentes a este domínio.
+ * Privacidade, exportação e exclusão pertencem a PrivacySettingsService e às
+ * superfícies dedicadas de /conta/privacidade.
  */
-
 export function useContaWorkspace() {
   const navigate = useNavigate();
-  const { toast } = useToast();
   const appUrls = useAppUrls();
   const {
     workspace,
@@ -34,10 +31,8 @@ export function useContaWorkspace() {
     account,
     stats,
     operations,
-    managedAssets,
     notifications,
     roles,
-    businesses: myBusinesses,
     businessModules,
     activeRide,
     hasActiveRide,
@@ -45,83 +40,17 @@ export function useContaWorkspace() {
     verificationRejectionReason,
   } = workspace;
 
-  // Data management dialogs
-  const [downloadDataOpen, setDownloadDataOpen] = useState(false);
-  const [viewDataOpen, setViewDataOpen] = useState(false);
-  const [deactivateOpen, setDeactivateOpen] = useState(false);
-  const [deleteOpen, setDeleteOpen] = useState(false);
-  const [deleteConfirm, setDeleteConfirm] = useState("");
-
-  // Password change
-  const passwordChange = usePasswordChange();
-
-  // Avatar upload
-  const avatarUpload = useAvatarUpload((avatarUrl: string) => {
-    void avatarUrl; // Profile is managed by refetch
+  const avatarUpload = useAvatarUpload(() => {
     void refetchWorkspace();
   });
 
-  // Favorites
   const favorites = useFavorites(profile?.id ?? null);
 
-  // Handlers
-  const handleAvatarChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
+  const handleAvatarChange = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
     if (file) {
       await avatarUpload.uploadAvatar(file);
     }
-  };
-
-  const handleDownloadData = () => {
-    if (!profile) return;
-
-    try {
-      const userData = {
-        profile,
-        context,
-        identity,
-        account,
-        stats,
-        operations,
-        managedAssets,
-        notifications,
-        roles,
-        businesses: myBusinesses,
-        businessModules,
-        verificationStatus,
-        verificationRejectionReason,
-        activeRide,
-        exportDate: new Date().toISOString(),
-      };
-
-      const dataStr = JSON.stringify(userData, null, 2);
-      const dataBlob = new Blob([dataStr], { type: "application/json" });
-      const url = URL.createObjectURL(dataBlob);
-
-      const link = document.createElement("a");
-      link.href = url;
-      link.download = `meus-dados-${(profile.name || "user").replace(/\s+/g, "-")}-${
-        new Date().toISOString().split("T")[0]
-      }.json`;
-      link.click();
-
-      URL.revokeObjectURL(url);
-      toast({ title: "Dados baixados com sucesso!" });
-      setDownloadDataOpen(false);
-    } catch {
-      toast({ title: "Erro ao baixar dados", variant: "destructive" });
-    }
-  };
-
-  const handleDeactivateAccount = () => {
-    setDeactivateOpen(false);
-    navigate(appUrls.profile.account);
-  };
-
-  const handleDeleteAccount = () => {
-    if (deleteConfirm !== "EXCLUIR") return;
-    setDeleteOpen(false);
-    navigate(appUrls.profile.account);
   };
 
   const handleBusinessClick = async (business: ProfileAssociatedBusiness) => {
@@ -142,61 +71,35 @@ export function useContaWorkspace() {
     navigate(url);
   };
 
-  const handleEditBusiness = (e: React.MouseEvent, business: ProfileAssociatedBusiness) => {
-    e.stopPropagation();
+  const handleEditBusiness = (event: React.MouseEvent, business: ProfileAssociatedBusiness) => {
+    event.stopPropagation();
     navigate(appUrls.business.edit(business.id));
   };
 
-  const handleDashboardBusiness = (e: React.MouseEvent, businessId: string) => {
-    e.stopPropagation();
+  const handleDashboardBusiness = (event: React.MouseEvent, businessId: string) => {
+    event.stopPropagation();
     navigate(appUrls.business.dashboard(businessId));
   };
 
   return {
-    // Data
     profile,
     context,
     identity,
     account,
     stats,
     operations,
-    managedAssets,
     notifications,
     roles,
-    myBusinesses,
     businessModules,
     loading: workspaceLoading,
     error: workspaceError,
     activeRide,
     hasActiveRide,
-
-    // Verification
     verificationStatus,
     verificationRejectionReason,
-
-    // Dialogs
-    downloadDataOpen,
-    setDownloadDataOpen,
-    viewDataOpen,
-    setViewDataOpen,
-    deactivateOpen,
-    setDeactivateOpen,
-    deleteOpen,
-    setDeleteOpen,
-    deleteConfirm,
-    setDeleteConfirm,
-
-    // Hooks
-    passwordChange,
-    avatarUpload,
     favorites,
     refreshWorkspace: refetchWorkspace,
-
-    // Handlers
     handleAvatarChange,
-    handleDownloadData,
-    handleDeactivateAccount,
-    handleDeleteAccount,
     handleBusinessClick,
     handleEditBusiness,
     handleDashboardBusiness,
