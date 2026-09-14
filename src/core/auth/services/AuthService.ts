@@ -2,28 +2,28 @@
  * AUTH SERVICE
  *
  * Fronteira canônica para operações de autenticação. Estado de sessão pertence
- * a core/session; identidade pública pertence a core/public-identity/profiles.
+ * a core/session; autorização global pertence a core/authorization; identidade
+ * pública pertence a core/public-identity/profiles.
  */
 
-import { supabase } from "@/integrations/supabase";
-import { createBrowserAuthStorage } from "@/integrations/supabase/cookieStorage";
 import {
   AUTH_PATHS,
   buildEmailConfirmationLoginPath,
   buildPasswordRecoveryPath,
 } from "@/core/auth/constants/authFlow";
-import { SessionService } from "@/core/session/services/SessionService";
-import { logger } from "@/shared/utils/logger";
-import { RoleService } from "@/core/authorization/services/RoleService";
 import { parseAuthIdentifier } from "@/core/auth/utils/authIdentifier";
 import { isCurrentTermsAcceptance } from "@/core/legal/termsOfService";
+import { SessionService } from "@/core/session/services/SessionService";
+import { supabase } from "@/integrations/supabase";
+import { createBrowserAuthStorage } from "@/integrations/supabase/cookieStorage";
 import { AUTH_STORAGE_KEY } from "@/shared/config/security.config";
 import { buildPublicAbsoluteUrl } from "@/shared/config/publicAppOrigin";
-import { AuthError } from "./types";
 import {
   buildSupabaseFunctionUrl,
   PUBLIC_SUPABASE_CONFIG,
 } from "@/shared/config/publicSupabase";
+import { logger } from "@/shared/utils/logger";
+import { AuthError } from "./types";
 
 interface UsernameLoginResponse {
   session?: {
@@ -34,7 +34,6 @@ interface UsernameLoginResponse {
 }
 
 const SIGN_OUT_TIMEOUT_MS = 8_000;
-const ADMIN_CACHE_DURATION_MS = 5 * 60 * 1000;
 
 type SignOutAttemptResult =
   | { kind: "completed"; error: unknown | null }
@@ -42,9 +41,6 @@ type SignOutAttemptResult =
   | { kind: "timeout" };
 
 export class AuthService {
-  private static adminCache = new Map<string, boolean>();
-  private static cacheExpiry = new Map<string, number>();
-
   static getEmailConfirmationRedirectUrl(): string {
     return buildPublicAbsoluteUrl(buildEmailConfirmationLoginPath());
   }
@@ -86,47 +82,6 @@ export class AuthService {
     } catch {
       return {};
     }
-  }
-
-  /** Verifica autorização administrativa. */
-  static async isAdmin(userId: string): Promise<boolean> {
-    if (!userId) return false;
-
-    const cached = this.adminCache.get(userId);
-    const expiry = this.cacheExpiry.get(userId);
-    if (cached !== undefined && expiry && Date.now() < expiry) {
-      return cached;
-    }
-
-    try {
-      const isAdmin = await RoleService.isAdmin(userId);
-      this.adminCache.set(userId, isAdmin);
-      this.cacheExpiry.set(userId, Date.now() + ADMIN_CACHE_DURATION_MS);
-      return isAdmin;
-    } catch {
-      logger.warn("AuthService.isAdmin failed", { userId });
-      return false;
-    }
-  }
-
-  static clearAdminCache(userId?: string): void {
-    if (userId) {
-      this.adminCache.delete(userId);
-      this.cacheExpiry.delete(userId);
-    } else {
-      this.adminCache.clear();
-      this.cacheExpiry.clear();
-    }
-  }
-
-  /**
-   * Obtém user.id somente para contexto administrativo/moderação.
-   * Para contexto social, use o ProfileService canônico.
-   */
-  static async getAdminUserId(): Promise<string> {
-    const user = await SessionService.getCurrentUser();
-    if (!user) throw new Error("Not authenticated");
-    return user.id;
   }
 
   static async getCurrentUser(): Promise<import("./types").AuthUser | null> {
@@ -190,17 +145,14 @@ export class AuthService {
       throw new Error("E-mail, usuário ou senha incorretos.");
     }
 
-    const response = await fetch(
-      buildSupabaseFunctionUrl("auth-username-login"),
-      {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          apikey: PUBLIC_SUPABASE_CONFIG.publishableKey,
-        },
-        body: JSON.stringify({ username, password: data.password }),
+    const response = await fetch(buildSupabaseFunctionUrl("auth-username-login"), {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        apikey: PUBLIC_SUPABASE_CONFIG.publishableKey,
       },
-    );
+      body: JSON.stringify({ username, password: data.password }),
+    });
 
     const payload = await AuthService.readAuthFunctionResponse(response);
 
