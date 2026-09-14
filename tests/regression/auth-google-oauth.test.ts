@@ -66,7 +66,7 @@ describe("Google OAuth account/access contract", () => {
     expect(signup).toContain("prepareGoogleSignup(redirectTo)");
     expect(signup).toContain("cancelGoogleSignup()");
     expect(journey).toContain("setPendingSignupRedirect");
-    expect(journey).toContain("setPendingAuthReturn(AUTH_PATHS.firstAccess)");
+    expect(journey).toContain("setPendingReturn(AUTH_PATHS.firstAccess)");
     expect(journey).toContain("getAuthJourneyReturnTarget");
     expect(journey).toContain("getSignupJourneyReturnTarget");
     expect(terms).toContain("getAuthJourneyReturnTarget()");
