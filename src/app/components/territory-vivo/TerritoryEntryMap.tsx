@@ -1,10 +1,7 @@
 import { lazy, Suspense } from "react";
 import type { Location } from "@/core/location/types";
 import type { ResolvedTerritory } from "@/core/routing/hooks/useResolveTerritoryFromUrl";
-import {
-  TerritoryEntryMapArrival,
-  type TerritoryEntryArrivalStage,
-} from "./TerritoryEntryMapArrival";
+import { TerritoryEntryMapArrival } from "./TerritoryEntryMapArrival";
 
 const loadTerritoryEntryMapRuntime = async () => {
   const [runtimeModule] = await Promise.all([
@@ -23,23 +20,17 @@ interface TerritoryEntryMapProps {
   city: Location | null;
   resolvedTerritory?: ResolvedTerritory | null;
   label?: string;
-  isLoading: boolean;
   className?: string;
 }
 
 function EntryMapArrivalSurface({
   className,
-  stage,
   label,
 }: {
   className: string;
-  stage: TerritoryEntryArrivalStage;
   label: string;
 }) {
-  const statusText =
-    stage === "community"
-      ? "Reconhecendo sua comunidade"
-      : "Preparando o mapa oficial do território";
+  const statusText = "Preparando o mapa oficial do território";
 
   return (
     <section
@@ -51,7 +42,6 @@ function EntryMapArrivalSurface({
     >
       <TerritoryEntryMapArrival
         label={label}
-        stage={stage}
         statusText={statusText}
       />
     </section>
@@ -75,7 +65,6 @@ export default function TerritoryEntryMap({
   city,
   resolvedTerritory = null,
   label,
-  isLoading,
   className = "",
 }: TerritoryEntryMapProps) {
   const territoryLabel = label ?? resolveTerritoryLabel(resolvedTerritory, city);
@@ -85,7 +74,6 @@ export default function TerritoryEntryMap({
       fallback={
         <EntryMapArrivalSurface
           className={className}
-          stage={isLoading ? "community" : "map"}
           label={territoryLabel}
         />
       }
@@ -94,7 +82,6 @@ export default function TerritoryEntryMap({
         city={city}
         resolvedTerritory={resolvedTerritory}
         label={territoryLabel}
-        isLoading={isLoading}
         className={className}
       />
     </Suspense>
