@@ -123,10 +123,11 @@ para uma única família: **Plus Jakarta Sans**. O runtime atual (`tailwind.conf
 `src/index.css` e o bootstrap opcional de fonte) segue esse contrato. A referência
 anterior a `DM Sans` + `Space Grotesk` está substituída e não deve ser reintroduzida.
 
-| Papel            | Fonte               | Peso permitido |
-| ---------------- | ------------------- | -------------- |
-| Headings (h1–h6) | `Plus Jakarta Sans` | 600, 700       |
-| Corpo / UI       | `Plus Jakarta Sans` | 400, 500, 600  |
+| Papel                          | Fonte               | Peso permitido |
+| ------------------------------ | ------------------- | -------------- |
+| Headings (h1–h6)               | `Plus Jakarta Sans` | 600, 700       |
+| Display / wordmark do concept  | `Plus Jakarta Sans` | 800            |
+| Corpo / UI                     | `Plus Jakarta Sans` | 400, 500, 600  |
 
 Regras:
 
@@ -134,8 +135,10 @@ Regras:
   `font-display` e `font-heading` apontam para a mesma família;
 - o mesmo owner emite `--font-heading`/`--font-sans` para CSS territorial que não
   passa por classes Tailwind, evitando fallback acidental para `ui-sans-serif`;
-- 400 é padrão de corpo; 500–600 para controles/ênfase; 700 para títulos e
-  labels de marca quando o concept exigir;
+- 400 é padrão de corpo; 500–600 para controles/ênfase; 700 para títulos; 800 é
+  reservado a display/wordmark quando o concept aprovado realmente o utiliza;
+- o bootstrap de fonte precisa solicitar todo peso efetivamente usado acima da dobra;
+  não depender de peso sintético do navegador para reproduzir o concept;
 - não introduzir uma segunda família na mesma superfície sem decisão de design
   versionada e atualização deste SSOT;
 - a fonte web é opcional no bootstrap público: a ausência/atraso de rede usa o
@@ -267,7 +270,7 @@ Ao criar/alterar qualquer componente:
 - [ ] Empty state via `<TerritoryState />` na experiência territorial ou `<EmptyState />` no legado, sempre com próximo passo.
 - [ ] Header do território presente no topo (`TerritoryTopbar` na Home/Explorar ou equivalente no domínio).
 - [ ] Tipografia usa Plus Jakarta Sans via `font-sans`/`font-heading`/tokens; nenhuma segunda família sem decisão versionada.
-- [ ] Máx. 3 pesos tipográficos por tela, preferindo 400/500–600/700 por papel.
+- [ ] Máx. 3 níveis de peso tipográfico por tela; 800 só para display/wordmark aprovado pelo concept, nunca por conveniência.
 - [ ] Ícones Lucide outline, tamanho 20 ou 24, cor semântica.
 
 Descumprimento bloqueia review. Este documento é atualizado sempre que um novo
