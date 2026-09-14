@@ -39,11 +39,20 @@ export function preloadMapLibreRuntime(): Promise<void> {
  * foi configurado. É opt-in: use apenas quando um mapa será montado
  * imediatamente, para não manter workers vivos em rotas que talvez nunca usem
  * mapa.
+ *
+ * O prewarm é uma otimização, não uma dependência funcional. Falha ao importar
+ * a engine continua rejeitando normalmente; uma exceção síncrona do prewarm
+ * não pode impedir que o mapa tente montar com criação lazy de workers.
  */
 export function prewarmMapLibreWorkers(): Promise<void> {
   return loadMapLibreRuntime().then((runtime) => {
     if (workersPrewarmed) return;
-    runtime.prewarm();
-    workersPrewarmed = true;
+
+    try {
+      runtime.prewarm();
+      workersPrewarmed = true;
+    } catch {
+      // Best-effort only. Keep false so a later map may retry the optimization.
+    }
   });
 }
