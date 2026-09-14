@@ -98,6 +98,10 @@ export default function TerritoryEntryMapRuntime({
     !isBoundaryLoading &&
     !hasCompleteGroupBoundary;
   const mapPresented = mapReady && !isBoundaryLoading;
+  const arrivalStage = mapReady ? "boundary" : "map";
+  const arrivalStatusText = mapReady
+    ? "Conferindo o limite territorial oficial"
+    : "Conectando o mapa para sua chegada";
 
   useEffect(() => {
     setMapReady(false);
@@ -146,11 +150,8 @@ export default function TerritoryEntryMapRuntime({
       {!mapPresented && !mapUnavailable ? (
         <TerritoryEntryMapArrival
           label={territoryLabel}
-          statusText={
-            isBoundaryLoading
-              ? "Buscando o limite territorial oficial"
-              : "Preparando o mapa para sua chegada"
-          }
+          stage={arrivalStage}
+          statusText={arrivalStatusText}
         />
       ) : null}
 
