@@ -34,14 +34,15 @@ describe("root community-first MVP entry", () => {
     expect(wrapper).not.toContain("IntersectionObserver");
     expect(wrapper).not.toContain("scheduleBrowserIdleWork");
     expect(wrapper).not.toContain("useTerritoryPolygon");
+    expect(wrapper).not.toContain("isLoading");
   });
 
-  it("uses the versioned launch territory without database discovery", () => {
+  it("uses the versioned launch territory without database discovery or fake loading state", () => {
     const source = read("src/app/pages/TerritoryEntryPage.tsx");
     expect(source).toContain("resolvePublicTerritoryFallback");
     expect(source).toContain("const launchTerritory = resolvePublicTerritoryFallback");
     expect(source).toContain("resolvedTerritory={launchTerritory}");
-    expect(source).toContain("isLoading={false}");
+    expect(source).not.toContain("isLoading={false}");
     expect(source).not.toContain("createLocationRepository");
     expect(source).not.toContain("territorialGroupService");
     expect(source).not.toContain("findDescendants");
