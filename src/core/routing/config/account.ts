@@ -5,6 +5,7 @@ export const ACCOUNT_PATHS = {
   access: "/conta/seguranca#acesso",
   email: "/conta/seguranca#email",
   password: "/conta/seguranca#senha",
+  mfa: "/conta/seguranca#mfa",
   notifications: "/conta/notificacoes",
   privacy: "/conta/privacidade",
   exportData: "/conta/privacidade#exportar",
