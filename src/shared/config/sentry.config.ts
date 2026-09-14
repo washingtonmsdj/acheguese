@@ -28,6 +28,7 @@ let sentryInitialized = false;
 let optionalTelemetryEnabled = false;
 let optionalReplayMode: OptionalReplayMode | null = null;
 let optionalReplayRecording = false;
+let optionalReplaySyncPromise: Promise<void> = Promise.resolve();
 
 function loadSentryModule(): Promise<SentryModule> {
   sentryModulePromise ??= import("@sentry/react");
@@ -59,41 +60,60 @@ function chooseOptionalReplayMode(config: SentryConfig): OptionalReplayMode {
   return "off";
 }
 
-function syncOptionalReplay(
+async function syncOptionalReplayNow(
   Sentry: SentryModule,
   config: SentryConfig,
-): void {
+): Promise<void> {
   const replay = (Sentry as SentryModuleWithReplay).getReplay?.();
   if (!replay) return;
 
+  // Read the current global preference only when this queued transition runs.
+  // A rapid off -> on toggle therefore converges to the latest consent state
+  // instead of replaying an obsolete stop/start request captured earlier.
   if (!optionalTelemetryEnabled) {
     if (!optionalReplayRecording) return;
-    optionalReplayRecording = false;
-    void Promise.resolve(replay.stop()).catch((error: unknown) => {
+
+    try {
+      await Promise.resolve(replay.stop());
+      optionalReplayRecording = false;
+    } catch (error) {
+      // Keep the recording flag true when stop fails so a later sync can retry
+      // instead of assuming the SDK stopped when it may still be recording.
       logSentryDebug("Erro ao interromper Session Replay:", error);
-    });
+    }
     return;
   }
 
   if (optionalReplayRecording) return;
 
+  // Keep the sampled mode stable for the lifetime of this document. Consent
+  // can pause/resume optional telemetry without repeatedly resampling the user.
   optionalReplayMode ??= chooseOptionalReplayMode(config);
   if (optionalReplayMode === "off") return;
 
   try {
-    const startResult =
-      optionalReplayMode === "session"
-        ? replay.start()
-        : replay.startBuffering();
+    if (optionalReplayMode === "session") {
+      await Promise.resolve(replay.start());
+    } else {
+      await Promise.resolve(replay.startBuffering());
+    }
     optionalReplayRecording = true;
-    void Promise.resolve(startResult).catch((error: unknown) => {
-      optionalReplayRecording = false;
-      logSentryDebug("Erro ao iniciar Session Replay:", error);
-    });
   } catch (error) {
     optionalReplayRecording = false;
     logSentryDebug("Erro ao iniciar Session Replay:", error);
   }
+}
+
+function queueOptionalReplaySync(
+  Sentry: SentryModule,
+  config: SentryConfig,
+): void {
+  optionalReplaySyncPromise = optionalReplaySyncPromise
+    .catch(() => undefined)
+    .then(() => syncOptionalReplayNow(Sentry, config))
+    .catch((error: unknown) => {
+      logSentryDebug("Erro ao sincronizar telemetria opcional do Sentry:", error);
+    });
 }
 
 function ensureSentryInitialized(): Promise<SentryModule | null> {
@@ -107,7 +127,7 @@ function ensureSentryInitialized(): Promise<SentryModule | null> {
   sentryInitPromise ??= loadSentryModule()
     .then((Sentry) => {
       if (sentryInitialized) {
-        syncOptionalReplay(Sentry, config);
+        queueOptionalReplaySync(Sentry, config);
         return Sentry;
       }
 
@@ -168,7 +188,7 @@ function ensureSentryInitialized(): Promise<SentryModule | null> {
       });
 
       sentryInitialized = true;
-      syncOptionalReplay(Sentry, config);
+      queueOptionalReplaySync(Sentry, config);
       logSentryDebug("Sentry inicializado com sucesso");
       return Sentry;
     })
@@ -211,9 +231,9 @@ export function setSentryOptionalTelemetryEnabled(enabled: boolean): void {
   if (!sentryInitialized || !sentryModulePromise) return;
 
   void sentryModulePromise
-    .then((Sentry) => syncOptionalReplay(Sentry, getSentryConfig()))
+    .then((Sentry) => queueOptionalReplaySync(Sentry, getSentryConfig()))
     .catch((error: unknown) => {
-      logSentryDebug("Erro ao sincronizar telemetria opcional do Sentry:", error);
+      logSentryDebug("Erro ao carregar Sentry para telemetria opcional:", error);
     });
 }
 
