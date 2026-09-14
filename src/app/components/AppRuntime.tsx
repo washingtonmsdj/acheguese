@@ -33,7 +33,7 @@ function LeanPublicRootRuntime() {
 
   useLayoutEffect(() => {
     applyAccessibilityPreferences(
-      document.body,
+      document.documentElement,
       readAccessibilityPreferences(),
     );
   }, []);
