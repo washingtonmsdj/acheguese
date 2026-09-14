@@ -248,86 +248,91 @@ export default function TerritoryEntryPage() {
       </header>
 
       <main id="main-content" tabIndex={-1} className="territory-entry-main">
-        <section className="entry-left" aria-labelledby="territory-entry-title">
-          <div className="entry-hero">
-            <p className="entry-eyebrow">Nossa primeira comunidade</p>
-            <h1 id="territory-entry-title">Seu lugar, mais perto.</h1>
-            <p className="entry-hero-subtitle">
-              Descubra o que está perto: negócios, serviços e histórias de {LAUNCH_COMMUNITY_NAME}.
-            </p>
-          </div>
-
-          <section className="entry-selection" aria-labelledby="entry-community-title">
-            <div className="entry-community-preview">
-              <img
-                src={communityImageSrc ?? undefined}
-                alt=""
-                width={1024}
-                height={768}
-                loading="lazy"
-                decoding="async"
-                fetchPriority="low"
-                className="bg-territory-raised"
-              />
-              <span>
-                <strong id="entry-community-title">{LAUNCH_COMMUNITY_NAME}</strong>
-                <em>{LAUNCH_PLACE_LABEL}</em>
-              </span>
-            </div>
-            <div className="entry-neighborhoods" aria-label={`Bairros de ${LAUNCH_COMMUNITY_NAME}`}>
-              {launchCommunityMembers.map((member) => (
-                <span key={member.id}>{getPublicTerritoryLocationLabel(member)}</span>
-              ))}
-            </div>
-            <a
-              href={LAUNCH_URLS.community}
-              className="entry-explore-link"
-              onClick={rememberLaunchCommunity}
-            >
-              Explorar {launchCommunityDefiniteLabel}
-              <span aria-hidden="true" className="text-lg leading-none">→</span>
-            </a>
-            <p className="entry-no-account">Sem cadastro para explorar.</p>
-            <a className="entry-account-link" href={AUTH_PATHS.signup}>
-              Criar minha conta
-            </a>
-            <p className="entry-residence-note">
-              Você pode conhecer a comunidade mesmo morando em outro lugar.
-            </p>
-          </section>
-        </section>
-
-        <TerritoryEntryMap
-          city={launchCity}
-          resolvedTerritory={launchTerritory}
-          label={LAUNCH_COMMUNITY_NAME}
-          isLoading={false}
-          className="entry-map"
-        />
-
-        <section
-          className="entry-indication [content-visibility:auto] [contain-intrinsic-size:auto_9rem]"
-          aria-labelledby="entry-indication-title"
-          data-entry-deferred-paint
+        <div
+          className="contents max-md:flex max-md:min-h-0 max-md:flex-1 max-md:flex-col max-md:gap-[0.45rem] max-md:overflow-y-auto max-md:overscroll-contain max-md:pb-[calc(0.35rem+env(safe-area-inset-bottom))] max-md:pt-[env(safe-area-inset-top)]"
+          data-entry-mobile-scroll-owner
         >
-          <div className="entry-indication-copy">
-            <span className="entry-indication-icon relative block h-8 w-8 shrink-0" aria-hidden="true">
-              <span className="absolute left-1 top-1 h-2.5 w-2.5 rounded-full border-2 border-current" />
-              <span className="absolute right-1 top-1.5 h-2 w-2 rounded-full border-2 border-current opacity-70" />
-              <span className="absolute bottom-1 left-0.5 h-3 w-5 rounded-t-full border-2 border-b-0 border-current" />
-              <span className="absolute bottom-1 right-0.5 h-2.5 w-4 rounded-t-full border-2 border-b-0 border-current opacity-70" />
-            </span>
-            <div>
-              <h2 id="entry-indication-title">Quer o Achegue-se na sua comunidade?</h2>
-              <p>
-                {launchCommunitySentenceLabel} é só o começo. Conte de onde você é e ajude a orientar os próximos lugares.
+          <section className="entry-left" aria-labelledby="territory-entry-title">
+            <div className="entry-hero">
+              <p className="entry-eyebrow">Nossa primeira comunidade</p>
+              <h1 id="territory-entry-title">Seu lugar, mais perto.</h1>
+              <p className="entry-hero-subtitle">
+                Descubra o que está perto: negócios, serviços e histórias de {LAUNCH_COMMUNITY_NAME}.
               </p>
             </div>
-          </div>
-          <a className="entry-indication-button" href="/indicar-comunidade">
-            Indicar minha comunidade
-          </a>
-        </section>
+
+            <section className="entry-selection" aria-labelledby="entry-community-title">
+              <div className="entry-community-preview">
+                <img
+                  src={communityImageSrc ?? undefined}
+                  alt=""
+                  width={1024}
+                  height={768}
+                  loading="lazy"
+                  decoding="async"
+                  fetchPriority="low"
+                  className="bg-territory-raised"
+                />
+                <span>
+                  <strong id="entry-community-title">{LAUNCH_COMMUNITY_NAME}</strong>
+                  <em>{LAUNCH_PLACE_LABEL}</em>
+                </span>
+              </div>
+              <div className="entry-neighborhoods" aria-label={`Bairros de ${LAUNCH_COMMUNITY_NAME}`}>
+                {launchCommunityMembers.map((member) => (
+                  <span key={member.id}>{getPublicTerritoryLocationLabel(member)}</span>
+                ))}
+              </div>
+              <a
+                href={LAUNCH_URLS.community}
+                className="entry-explore-link"
+                onClick={rememberLaunchCommunity}
+              >
+                Explorar {launchCommunityDefiniteLabel}
+                <span aria-hidden="true" className="text-lg leading-none">→</span>
+              </a>
+              <p className="entry-no-account">Sem cadastro para explorar.</p>
+              <a className="entry-account-link" href={AUTH_PATHS.signup}>
+                Criar minha conta
+              </a>
+              <p className="entry-residence-note">
+                Você pode conhecer a comunidade mesmo morando em outro lugar.
+              </p>
+            </section>
+          </section>
+
+          <TerritoryEntryMap
+            city={launchCity}
+            resolvedTerritory={launchTerritory}
+            label={LAUNCH_COMMUNITY_NAME}
+            isLoading={false}
+            className="entry-map"
+          />
+
+          <section
+            className="entry-indication [content-visibility:auto] [contain-intrinsic-size:auto_9rem]"
+            aria-labelledby="entry-indication-title"
+            data-entry-deferred-paint
+          >
+            <div className="entry-indication-copy">
+              <span className="entry-indication-icon relative block h-8 w-8 shrink-0" aria-hidden="true">
+                <span className="absolute left-1 top-1 h-2.5 w-2.5 rounded-full border-2 border-current" />
+                <span className="absolute right-1 top-1.5 h-2 w-2 rounded-full border-2 border-current opacity-70" />
+                <span className="absolute bottom-1 left-0.5 h-3 w-5 rounded-t-full border-2 border-b-0 border-current" />
+                <span className="absolute bottom-1 right-0.5 h-2.5 w-4 rounded-t-full border-2 border-b-0 border-current opacity-70" />
+              </span>
+              <div>
+                <h2 id="entry-indication-title">Quer o Achegue-se na sua comunidade?</h2>
+                <p>
+                  {launchCommunitySentenceLabel} é só o começo. Conte de onde você é e ajude a orientar os próximos lugares.
+                </p>
+              </div>
+            </div>
+            <a className="entry-indication-button" href="/indicar-comunidade">
+              Indicar minha comunidade
+            </a>
+          </section>
+        </div>
       </main>
 
       <footer
