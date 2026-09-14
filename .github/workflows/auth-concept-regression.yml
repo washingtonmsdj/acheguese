@@ -1,25 +1,6 @@
 name: Auth Concept Regression
 
 on:
-  push:
-    branches:
-      - main
-    paths:
-      - "src/app/components/auth/**"
-      - "src/app/pages/LoginPage.tsx"
-      - "src/app/pages/ResetPasswordPage.tsx"
-      - "src/app/features/onboarding/pages/Cadastro*.tsx"
-      - "src/app/features/onboarding/hooks/useCadastro.ts"
-      - "src/app/features/onboarding/validation/**"
-      - "src/core/auth/**"
-      - "src/shared/components/ui/checkbox.tsx"
-      - "public/auth/**"
-      - "tests/e2e/auth-concept-layout.spec.ts"
-      - "tests/regression/auth-concept-flow.test.ts"
-      - "playwright.config.ts"
-      - "package.json"
-      - "package-lock.json"
-      - ".github/workflows/auth-concept-regression.yml"
   pull_request:
     paths:
       - "src/app/components/auth/**"
