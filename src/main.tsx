@@ -105,8 +105,8 @@ if (isPublicRootAtBoot) {
   deferFrame(loadOptionalFontStylesheet);
 }
 
-// Measurement stays lightweight and starts after the first paint/load. The
-// Sentry telemetry sink is attached later, after the public map has priority.
+// Measurement stays lightweight and starts after the first paint/load. It is
+// local-only until the consent-aware Sentry reporter is explicitly attached.
 const scheduleVitals = isPublicRootAtBoot ? deferLoad : deferFrame;
 scheduleVitals(() => {
   import("./shared/utils/webVitals.ts").then(({ initWebVitals }) => {
@@ -114,13 +114,53 @@ scheduleVitals(() => {
   });
 });
 
+let observabilityBootstrapped = false;
+let webVitalsReporterInstalled = false;
+
 const initializeObservability = () => {
-  void import("./shared/config/sentry.config.ts").then(async ({ initializeSentry }) => {
-    initializeSentry();
-    const { installWebVitalsSentryReporter } = await import(
-      "./shared/utils/webVitalsSentryReporter.ts"
-    );
-    installWebVitalsSentryReporter();
+  if (observabilityBootstrapped) return;
+  observabilityBootstrapped = true;
+
+  void Promise.all([
+    import("./shared/config/sentry.config.ts"),
+    import("./core/privacy/services/ConsentService.ts"),
+  ]).then(async ([sentry, { ConsentService }]) => {
+    const syncOptionalTelemetry = async () => {
+      const analyticsEnabled =
+        ConsentService.hasGrantedLocalConsent("analytics");
+
+      sentry.setSentryOptionalTelemetryEnabled(analyticsEnabled);
+
+      if (analyticsEnabled) {
+        if (webVitalsReporterInstalled) return;
+
+        const { installWebVitalsSentryReporter } = await import(
+          "./shared/utils/webVitalsSentryReporter.ts"
+        );
+        // Consent may have changed while the reporter chunk was downloading.
+        if (!ConsentService.hasGrantedLocalConsent("analytics")) return;
+
+        installWebVitalsSentryReporter();
+        webVitalsReporterInstalled = true;
+        return;
+      }
+
+      if (!webVitalsReporterInstalled) return;
+      webVitalsReporterInstalled = false;
+      const { setWebVitalsReporter } = await import(
+        "./shared/utils/webVitals.ts"
+      );
+      setWebVitalsReporter(null);
+    };
+
+    // Configure optional tracing/replay before Sentry initializes. Error
+    // monitoring itself remains independent from the analytics preference.
+    await syncOptionalTelemetry();
+    sentry.initializeSentry();
+
+    ConsentService.subscribeToLocalConsent(() => {
+      void syncOptionalTelemetry();
+    });
   });
 };
 
