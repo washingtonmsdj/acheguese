@@ -8,21 +8,6 @@
     padding-right: max(1.5rem, env(safe-area-inset-right)) !important;
   }
 
-  /* As quebras dos títulos são parte da composição aprovada em 390 px. */
-  main#main-content:has(#login-identifier)
-    > section:last-child
-    > div:first-child
-    > h1 {
-    max-width: 15.25rem !important;
-  }
-
-  main#main-content:has(#cadastro-password)
-    > section:last-child
-    > div:first-child
-    > h1 {
-    max-width: 17.75rem !important;
-  }
-
   /* Cadastro não tem rodapé no concept: preserve o respiro do home indicator. */
   main#main-content:has(#cadastro-password) {
     padding-bottom: max(1rem, env(safe-area-inset-bottom)) !important;
@@ -33,79 +18,12 @@
     left: max(1rem, env(safe-area-inset-left)) !important;
   }
 
-  /* Setas do concept são desenhadas pelo próprio sistema visual, não pelo glifo da fonte. */
-  main#main-content:has(#login-identifier) span[aria-hidden="true"].text-xl {
-    width: 0.48rem;
-    height: 0.48rem;
-    flex: 0 0 auto;
-    border-right: 1.5px solid currentColor;
-    border-bottom: 1.5px solid currentColor;
-    font-size: 0 !important;
-    line-height: 0 !important;
-    transform: rotate(-45deg);
-  }
-
-  /* No Entrar mobile, o concept usa um escudo petróleo preenchido com check branco. */
-  main#main-content:has(#login-identifier)
-    span:has(> .auth-concept-icon--shield) {
-    width: 1.7rem !important;
-    height: 1.7rem !important;
-    background: transparent !important;
-  }
-
-  main#main-content:has(#login-identifier)
-    .auth-concept-icon--shield
-    .auth-concept-icon__a {
-    left: 0.14rem;
-    top: 0.03rem;
-    width: 0.98rem;
-    height: 1.12rem;
-    border: 0;
-    border-radius: 0;
-    background: currentColor;
-    clip-path: polygon(50% 0, 94% 17%, 88% 68%, 50% 100%, 12% 68%, 6% 17%);
-  }
-
-  main#main-content:has(#login-identifier)
-    .auth-concept-icon--shield
-    .auth-concept-icon__b {
-    left: 0.39rem;
-    top: 0.48rem;
-    z-index: 1;
-    width: 0.42rem;
-    height: 0.22rem;
-    border-left-color: #fff;
-    border-bottom-color: #fff;
-  }
-
   main#main-content:has(#cadastro-password) details > summary {
     list-style: none;
   }
 
   main#main-content:has(#cadastro-password) details > summary::-webkit-details-marker {
     display: none;
-  }
-
-  main#main-content:has(#cadastro-password)
-    details
-    > summary
-    > span[aria-hidden="true"]:last-child {
-    width: 0.46rem;
-    height: 0.46rem;
-    flex: 0 0 auto;
-    border-right: 1.5px solid currentColor;
-    border-bottom: 1.5px solid currentColor;
-    font-size: 0 !important;
-    line-height: 0 !important;
-    transform: rotate(-45deg);
-    transition: transform 160ms ease;
-  }
-
-  main#main-content:has(#cadastro-password)
-    details[open]
-    > summary
-    > span[aria-hidden="true"]:last-child {
-    transform: rotate(45deg);
   }
 }
 
