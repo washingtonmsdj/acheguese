@@ -270,12 +270,12 @@ export default function TerritoryEntryMapRuntime({
       ) : boundaryUnavailable ? (
         <div role="status" className="pointer-events-none absolute inset-x-3 bottom-3 z-10 rounded-2xl border border-territory-border bg-territory-surface/95 px-4 py-3 text-sm shadow-territory-highlight lg:inset-x-auto lg:bottom-6 lg:left-6 lg:max-w-md">
           <p className="font-semibold text-territory-ink">Limite territorial oficial indisponível agora.</p>
-          <p className="mt-1.5 text-sm leading-5 text-territory-muted-strong">Não exibimos contorno aproximado ou incompleto de {territoryLabel}.</p>
+          <p className="mt-1 leading-5 text-territory-muted-strong">Não exibimos contorno aproximado ou incompleto de {territoryLabel}.</p>
         </div>
       ) : boundarySlow ? (
         <div role="status" className="pointer-events-none absolute inset-x-3 bottom-3 z-10 rounded-2xl border border-territory-border bg-territory-surface/95 px-4 py-3 text-sm shadow-territory-highlight lg:inset-x-auto lg:bottom-6 lg:left-6 lg:max-w-md">
           <p className="font-semibold text-territory-ink">Mapa pronto. Limite oficial ainda carregando.</p>
-          <p className="mt-1.5 text-sm leading-5 text-territory-muted-strong">Você já pode continuar. O contorno de {territoryLabel} segue sendo buscado em segundo plano, sem usar aproximação.</p>
+          <p className="mt-1 leading-5 text-territory-muted-strong">Você já pode continuar. O contorno de {territoryLabel} segue sendo buscado em segundo plano, sem usar aproximação.</p>
         </div>
       ) : boundaryPending ? (
         <div role="status" className="pointer-events-none absolute bottom-3 left-3 z-10 inline-flex max-w-[calc(100%-1.5rem)] items-center gap-2 rounded-full border border-territory-border bg-territory-surface/95 px-3 py-2 text-xs font-semibold text-territory-muted-strong shadow-sm lg:bottom-6 lg:left-6">
