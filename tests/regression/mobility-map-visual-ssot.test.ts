@@ -27,15 +27,18 @@ describe("mobility map visual SSOT", () => {
     expect(constantsIndex).toContain("MOBILITY_MAP_VISUALS");
   });
 
-  it("keeps mobility map consumers free of duplicated semantic map colors", () => {
+  it("keeps mobility map consumers free of duplicated map constants", () => {
     for (const consumerPath of CONSUMERS) {
       const source = read(consumerPath);
 
       expect(source).toContain("MOBILITY_MAP_VISUALS");
       expect(source).toContain("createMobilityMapMarkerElement");
+      expect(source).toContain("DEFAULT_CAMERA.center");
       expect(source).not.toMatch(/['\"]#(?:6366f1|22c55e|34d399|ef4444|14b8a6)['\"]/i);
       expect(source).not.toContain("box-shadow:0 2px 8px rgba(0,0,0");
       expect(source).not.toContain("border:3px solid white");
+      expect(source).not.toContain("-38.476");
+      expect(source).not.toContain("-12.975");
     }
   });
 });
