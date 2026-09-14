@@ -10,19 +10,6 @@ import {
   getAuthFlowSessionValue,
   setAuthFlowSessionValue,
 } from "@/core/auth/utils/authFlowStorage";
-import {
-  clearPendingAuthReturn,
-  getPendingAuthReturn,
-  setPendingAuthReturn,
-} from "@/core/auth/utils/pendingAuthReturn";
-import {
-  clearPendingSignupContext,
-  clearPendingSignupEmail,
-  getPendingSignupEmail,
-  getPendingSignupRedirect,
-  setPendingSignupEmail,
-  setPendingSignupRedirect,
-} from "@/core/auth/utils/pendingSignup";
 import { resolveSafeInternalPath } from "@/shared/utils/safeRedirect";
 
 export interface SignupConfirmationContext {
@@ -42,6 +29,59 @@ function setPendingAuthJourneyIntent(intent: AuthJourneyIntent): void {
   );
 }
 
+function setPendingReturn(path: string): void {
+  setAuthFlowSessionValue(
+    AUTH_FLOW_STORAGE_KEYS.pendingReturn,
+    resolveSafeInternalPath(path, "/"),
+    AUTH_FLOW_TTL_MS.pendingReturn,
+  );
+}
+
+function getPendingReturn(): string | null {
+  return getAuthFlowSessionValue(AUTH_FLOW_STORAGE_KEYS.pendingReturn);
+}
+
+function clearPendingReturn(): void {
+  clearAuthFlowSessionValue(AUTH_FLOW_STORAGE_KEYS.pendingReturn);
+}
+
+function setPendingSignupEmail(email: string): void {
+  setAuthFlowSessionValue(
+    AUTH_FLOW_STORAGE_KEYS.pendingSignupEmail,
+    normalizeEmail(email),
+    AUTH_FLOW_TTL_MS.pendingSignup,
+  );
+}
+
+function getPendingSignupEmail(): string | null {
+  return getAuthFlowSessionValue(AUTH_FLOW_STORAGE_KEYS.pendingSignupEmail);
+}
+
+function clearPendingSignupEmail(): void {
+  clearAuthFlowSessionValue(AUTH_FLOW_STORAGE_KEYS.pendingSignupEmail);
+}
+
+function setPendingSignupRedirect(path: string): void {
+  setAuthFlowSessionValue(
+    AUTH_FLOW_STORAGE_KEYS.pendingSignupRedirect,
+    resolveSafeInternalPath(path, "/"),
+    AUTH_FLOW_TTL_MS.pendingSignup,
+  );
+}
+
+function getPendingSignupRedirect(): string | null {
+  return getAuthFlowSessionValue(AUTH_FLOW_STORAGE_KEYS.pendingSignupRedirect);
+}
+
+function clearPendingSignupRedirect(): void {
+  clearAuthFlowSessionValue(AUTH_FLOW_STORAGE_KEYS.pendingSignupRedirect);
+}
+
+function clearPendingSignupContext(): void {
+  clearPendingSignupEmail();
+  clearPendingSignupRedirect();
+}
+
 export function getPendingAuthJourneyIntent(): AuthJourneyIntent | null {
   const value = getAuthFlowSessionValue(AUTH_FLOW_STORAGE_KEYS.pendingIntent);
   return value === AUTH_JOURNEY_INTENTS.login ||
@@ -56,7 +96,7 @@ export function clearPendingAuthJourneyIntent(): void {
 
 /** Destino seguro preservado para o callback OAuth atual. */
 export function getAuthJourneyReturnTarget(): string {
-  return resolveSafeInternalPath(getPendingAuthReturn(), "/");
+  return resolveSafeInternalPath(getPendingReturn(), "/");
 }
 
 /** Destino original preservado durante cadastro -> confirmação -> primeiro acesso. */
@@ -82,16 +122,16 @@ export function prepareEmailSignupConfirmation(
   email: string,
   returnTo: string,
 ): void {
-  clearPendingAuthReturn();
+  clearPendingReturn();
   clearPendingAuthJourneyIntent();
-  setPendingSignupEmail(normalizeEmail(email));
-  setPendingSignupRedirect(resolveSafeInternalPath(returnTo, "/"));
+  setPendingSignupEmail(email);
+  setPendingSignupRedirect(returnTo);
 }
 
 /** Reinicia somente a etapa de dados da conta, preservando o destino original. */
 export function restartEmailSignupJourney(): void {
   clearPendingSignupEmail();
-  clearPendingAuthReturn();
+  clearPendingReturn();
   clearPendingAuthJourneyIntent();
 }
 
@@ -99,11 +139,11 @@ export function restartEmailSignupJourney(): void {
 export function prepareGoogleLogin(returnTo: string): void {
   clearPendingSignupContext();
   setPendingAuthJourneyIntent(AUTH_JOURNEY_INTENTS.login);
-  setPendingAuthReturn(resolveSafeInternalPath(returnTo, "/"));
+  setPendingReturn(returnTo);
 }
 
 export function cancelGoogleLogin(): void {
-  clearPendingAuthReturn();
+  clearPendingReturn();
   clearPendingAuthJourneyIntent();
 }
 
@@ -115,38 +155,38 @@ export function cancelGoogleLogin(): void {
 export function prepareGoogleSignup(returnTo: string): void {
   clearPendingSignupEmail();
   setPendingAuthJourneyIntent(AUTH_JOURNEY_INTENTS.signup);
-  setPendingSignupRedirect(resolveSafeInternalPath(returnTo, "/"));
-  setPendingAuthReturn(AUTH_PATHS.firstAccess);
+  setPendingSignupRedirect(returnTo);
+  setPendingReturn(AUTH_PATHS.firstAccess);
 }
 
 export function cancelGoogleSignup(): void {
-  clearPendingAuthReturn();
+  clearPendingReturn();
   clearPendingAuthJourneyIntent();
   clearPendingSignupContext();
 }
 
 /** Limpeza para login comum já concluído. */
 export function completeStandardLoginJourney(): void {
-  clearPendingAuthReturn();
+  clearPendingReturn();
   clearPendingAuthJourneyIntent();
   clearPendingSignupContext();
 }
 
 /** Confirmação por e-mail ainda precisa do redirect de signup no primeiro acesso. */
 export function completeEmailConfirmationLoginJourney(): void {
-  clearPendingAuthReturn();
+  clearPendingReturn();
   clearPendingAuthJourneyIntent();
 }
 
 /** Primeiro acesso é o último owner do contexto transitório de cadastro. */
 export function completeFirstAccessJourney(): void {
-  clearPendingAuthReturn();
+  clearPendingReturn();
   clearPendingAuthJourneyIntent();
   clearPendingSignupContext();
 }
 
 /** Termos concluídos: o próximo destino já foi resolvido; intenção OAuth não é mais necessária. */
 export function completeTermsJourney(): void {
-  clearPendingAuthReturn();
+  clearPendingReturn();
   clearPendingAuthJourneyIntent();
 }
