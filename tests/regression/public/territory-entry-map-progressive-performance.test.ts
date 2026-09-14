@@ -46,7 +46,7 @@ describe("territory entry progressive map performance", () => {
     expect(wrapper).not.toContain("services6.arcgis.com");
   });
 
-  it("starts style, engine, runtime and official boundary independently", () => {
+  it("starts React runtime and MapLibre engine together on first render", () => {
     const wrapper = read("src/app/components/territory-vivo/TerritoryEntryMap.tsx");
     const runtime = read("src/app/components/territory-vivo/TerritoryEntryMapRuntime.tsx");
     const owner = read("src/core/maps/components/v3/MapLibreAdapter.tsx");
@@ -56,13 +56,15 @@ describe("territory entry progressive map performance", () => {
     expect(wrapper).toContain('link.rel = "preload"');
     expect(wrapper).toContain('link.as = "fetch"');
     expect(wrapper).toContain('link.setAttribute("fetchpriority", "high")');
-    expect(wrapper).toContain("void loadTerritoryEntryMapRuntime()");
-    expect(wrapper).toContain("preloadEntryMapEngine()");
-    expect(wrapper).toContain("preloadEntryOfficialBoundary(preloadResolved)");
+    expect(wrapper).toContain("const loadTerritoryEntryMapRuntime = async () =>");
+    expect(wrapper).toContain("const [runtimeModule] = await Promise.all([");
+    expect(wrapper).toContain('import("./TerritoryEntryMapRuntime")');
+    expect(wrapper).toContain('import("@/core/maps/components/v3/MapLibreAdapter")');
     expect(wrapper).toContain("preloadPassiveMapLibreAdapterRuntime");
+    expect(wrapper).toContain("preloadEntryOfficialBoundary(preloadResolved)");
     expect(wrapper).toContain("loadOfficialFeatureServerBoundaries");
-    expect(wrapper).not.toContain("module.preloadTerritoryEntryMapEngine");
-    expect(wrapper).not.toContain("module.preloadTerritoryEntryBoundary");
+    expect(wrapper).not.toContain("preloadEntryMapEngine");
+    expect(wrapper).not.toContain("void loadTerritoryEntryMapRuntime()");
 
     expect(runtime).not.toContain("preloadPassiveMapLibreAdapterRuntime");
     expect(runtime).not.toContain("preloadTerritoryPolygons");
