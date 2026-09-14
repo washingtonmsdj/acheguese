@@ -121,37 +121,10 @@ if (isPublicRootAtBoot) {
   deferIdle(initializeObservability);
 }
 
-const loadAds = () => {
-  const isLocalhost =
-    window.location.hostname === "localhost" ||
-    window.location.hostname === "127.0.0.1" ||
-    window.location.hostname === "::1";
-  if (isLocalhost) return;
-
-  if (document.querySelector("script[data-acheguese-adsense]")) return;
-
-  const ads = document.createElement("script");
-  ads.async = true;
-  ads.src =
-    "https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-6454131132519516";
-  ads.crossOrigin = "anonymous";
-  ads.dataset.achegueseAdsense = "true";
-  document.head.appendChild(ads);
-};
-
-// Ads remain entirely outside HTML parsing and, on `/`, wait for the map or a
-// bounded timeout before consuming network/main-thread time.
-if (isPublicRootAtBoot) {
-  deferLoad(() => {
-    scheduleAfterPublicRootMap(loadAds, {
-      maxWaitMs: 3200,
-      idleTimeoutMs: 2600,
-      idleFallbackDelayMs: 1400,
-    });
-  });
-} else {
-  deferLoad(loadAds);
-}
+// AdSense is intentionally absent from the global bootstrap. The reusable
+// AdSense component owns its configured client ID and loads the provider only
+// when an actual ad slot is mounted, keeping ad networking off pages such as `/`
+// that have no advertising surface.
 
 deferLoad(() => {
   if (import.meta.env.DEV && import.meta.env.VITE_DEBUG_BOOT === "true") {
