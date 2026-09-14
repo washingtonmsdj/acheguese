@@ -72,19 +72,17 @@ export function useUserPosition(): UseUserPositionResult {
     GeolocationService.clearCache();
   }, []);
 
-  // Carrega somente cache existente ao montar; não infere permissão atual do navegador.
+  // Hidrata apenas do cache; não dispara GPS nem fallback IP durante a montagem.
   useEffect(() => {
-    GeolocationService.getCurrentLocation({ useCache: true, maxRetries: 0 })
-      .then((result) => {
-        if (result.source !== 'cache') return;
-        setPosition({
-          latitude: result.coords.latitude,
-          longitude: result.coords.longitude,
-          accuracy: result.coords.accuracy,
-          timestamp: result.coords.timestamp,
-        });
-      })
-      .catch(() => {/* sem cache, sem problema */});
+    const result = GeolocationService.getCachedLocation();
+    if (!result) return;
+
+    setPosition({
+      latitude: result.coords.latitude,
+      longitude: result.coords.longitude,
+      accuracy: result.coords.accuracy,
+      timestamp: result.coords.timestamp,
+    });
   }, []);
 
   return { position, requestPosition, clearPosition, loading, error, isAvailable, hasPermission };
