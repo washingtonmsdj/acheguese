@@ -454,6 +454,7 @@ export default function PrivacySettingsPage() {
         desktopTitle={scheduled ? "Exclusão da conta solicitada" : "Suas escolhas, seus dados"}
         mobileDescription={scheduled ? "Consulte o andamento e as opções disponíveis." : "Preferências da sua conta."}
         desktopDescription={scheduled ? "Consulte o andamento e as opções disponíveis." : "Você no controle da sua privacidade."}
+        hideMobileHeading={scheduled}
       >
         {deletionStatusLoading ? (
           <div className="mb-4 flex items-center gap-3 rounded-2xl border border-territory-border bg-territory-surface p-4 text-sm text-territory-muted" role="status">
@@ -467,8 +468,10 @@ export default function PrivacySettingsPage() {
 
         {scheduled ? (
           <>
-            <div className="mb-4 flex justify-center lg:hidden">
-              <span className="flex h-16 w-16 items-center justify-center rounded-full bg-red-50 text-red-600"><Trash2 className="h-8 w-8" aria-hidden="true" /></span>
+            <div className="mb-4 text-center lg:hidden">
+              <span className="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-red-50 text-red-600"><Trash2 className="h-8 w-8" aria-hidden="true" /></span>
+              <h1 className="mt-4 font-heading text-[1.35rem] font-bold leading-tight tracking-[-0.035em] text-territory-ink">Exclusão da conta solicitada</h1>
+              <p className="mt-1 text-sm leading-5 text-territory-muted">Consulte o andamento e as opções disponíveis.</p>
             </div>
             <div className="rounded-2xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-emerald-800" role="status">
               <div className="flex items-center justify-center gap-2 font-semibold lg:justify-start"><CheckCircle2 className="h-5 w-5" aria-hidden="true" />Solicitação registrada</div>
