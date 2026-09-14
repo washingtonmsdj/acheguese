@@ -66,4 +66,23 @@ describe("public launch scope SSOT", () => {
     expect(banner).not.toContain('pathname === "/cadastro"');
     expect(banner).not.toContain('pathname === "/reset-password"');
   });
+
+  it("keeps prelaunch interest submission on canonical territory slugs", () => {
+    const waitlist = read("src/app/pages/PreLaunchWaitlist.tsx");
+
+    expect(waitlist).toContain("LAUNCH_CITY_PATH");
+    expect(waitlist).toContain("TERRITORY_CONFIG.launch.community.slug");
+    expect(waitlist).toContain("SALVADOR_COMMUNITY_LAUNCH_CLUSTER");
+    expect(waitlist).toContain(
+      "territoryPath: `${LAUNCH_CITY_PATH}/${selectedTerritory.slug}`",
+    );
+    expect(waitlist).toContain(
+      "communitySlug: TERRITORY_CONFIG.launch.city || null",
+    );
+    expect(waitlist).not.toContain(
+      "territoryPath: `/ba/salvador/${territorySlug}`",
+    );
+    expect(waitlist).not.toContain("slugifyTerritory(selectedBairro)");
+    expect(waitlist).not.toContain('"Complexo Nordeste de Amaralina"');
+  });
 });
