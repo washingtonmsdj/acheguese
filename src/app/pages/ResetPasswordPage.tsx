@@ -15,7 +15,11 @@ import { AuthService } from "@/core/auth/services/AuthService";
 import { getAuthErrorMessage } from "@/core/auth/utils/authMessages";
 import { checkPasswordCompromise } from "@/core/auth/utils/compromisedPassword";
 import { AUTH_BROWSER_STORAGE_CONFIG } from "@/shared/config/security.config";
-import { SUPPORT_PATH } from "@/shared/constants/legal";
+import {
+  PRIVACY_POLICY_PATH,
+  SUPPORT_PATH,
+  TERMS_OF_SERVICE_PATH,
+} from "@/shared/constants/legal";
 import { InlineFieldError } from "@/shared/components/ui/InlineFieldError";
 import { Input } from "@/shared/components/ui/input";
 import { Label } from "@/shared/components/ui/label";
@@ -173,7 +177,7 @@ export default function ResetPasswordPage() {
         <meta name="description" content="Recupere o acesso à sua conta Achegue-se com segurança." />
       </Helmet>
 
-      <div className="min-h-[100dvh] bg-[#fffdfa] text-[#102f33]">
+      <div className="min-h-[100dvh] bg-[#fffdfa] text-[#102f33] lg:bg-[radial-gradient(circle_at_16%_32%,rgba(216,234,224,.55),transparent_31%),radial-gradient(circle_at_70%_18%,rgba(255,236,185,.28),transparent_30%),#fffdfa]">
         <AuthBrandHeader secondaryHref="/login" secondaryLabel="Entrar" />
         <main
           id="main-content"
@@ -190,11 +194,11 @@ export default function ResetPasswordPage() {
             <img
               src="/auth/recovery-hero.webp"
               alt="Ilustração de um território e placas de orientação"
-              className="mt-5 w-full max-w-[390px] rounded-[24px] object-cover"
+              className="mt-5 w-full max-w-[390px] object-cover"
             />
           </section>
 
-          <section className="w-full lg:rounded-[18px] lg:bg-white lg:p-7 lg:shadow-[0_18px_55px_rgba(17,55,59,.08)]">
+          <section className="w-full lg:rounded-[10px] lg:bg-white lg:p-7 lg:shadow-[0_18px_55px_rgba(17,55,59,.08)]">
             {view === "request" ? (
               <div>
                 <h1 className="font-heading text-[31px] font-extrabold leading-[1.05] tracking-[-0.045em] text-[#102f33] lg:text-[24px]">
@@ -205,7 +209,7 @@ export default function ResetPasswordPage() {
                   Informe o e-mail usado na sua conta.
                 </p>
 
-                <div className="mt-6 space-y-2">
+                <div className="mt-6 space-y-2 lg:mt-7">
                   <Label htmlFor="recovery-email" className="text-[14px] font-semibold text-[#15383c]">E-mail</Label>
                   <Input
                     id="recovery-email"
@@ -249,7 +253,15 @@ export default function ResetPasswordPage() {
                   {sending ? "Enviando…" : "Enviar link de recuperação"}
                 </button>
 
-                <button type="button" onClick={() => navigate("/login")} className="mx-auto mt-4 block min-h-10 rounded px-2 text-[13px] text-[#0b4e52] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#0b5b59]/35">
+                <p className="mt-4 hidden text-center text-[11px] leading-4 text-[#607477] lg:block">
+                  Se houver uma conta associada, enviaremos as instruções.
+                </p>
+
+                <button
+                  type="button"
+                  onClick={() => navigate("/login")}
+                  className="mx-auto mt-4 block min-h-10 rounded px-2 text-[13px] text-[#0b4e52] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#0b5b59]/35 lg:hidden"
+                >
                   Voltar para entrar
                 </button>
 
@@ -259,6 +271,18 @@ export default function ResetPasswordPage() {
                     Não consegue acessar esse e-mail?<br />
                     <Link to={SUPPORT_PATH} className="font-medium text-[#0b4e52] underline underline-offset-2">Preciso de ajuda</Link>
                   </p>
+                </div>
+
+                <div className="my-5 hidden h-px bg-[#d4d8d5] lg:block" />
+                <div className="hidden space-y-2 text-center text-[12px] text-[#0b4e52] lg:block">
+                  <button type="button" onClick={() => navigate("/login")} className="rounded px-2 py-1 underline underline-offset-2">
+                    Voltar para entrar
+                  </button>
+                  <div>
+                    <Link to={SUPPORT_PATH} className="rounded px-2 py-1 underline underline-offset-2">
+                      Não tenho acesso ao e-mail
+                    </Link>
+                  </div>
                 </div>
               </div>
             ) : null}
@@ -374,6 +398,14 @@ export default function ResetPasswordPage() {
                 >
                   {form.formState.isSubmitting ? "Salvando…" : "Salvar nova senha"}
                 </button>
+
+                <div className="mt-4 text-center text-[10.5px] leading-4 text-[#607477]">
+                  <span aria-hidden="true" className="mx-auto mb-3 block h-px w-8 bg-[#cbd3d2]" />
+                  Ao continuar, você concorda com nossos{" "}
+                  <Link to={TERMS_OF_SERVICE_PATH} className="underline underline-offset-2">Termos de Uso</Link>{" "}
+                  e{" "}
+                  <Link to={PRIVACY_POLICY_PATH} className="underline underline-offset-2">Política de Privacidade</Link>.
+                </div>
               </form>
             ) : null}
 
