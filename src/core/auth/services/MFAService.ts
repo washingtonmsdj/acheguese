@@ -149,8 +149,42 @@ class MFAService {
     }
   }
 
+  /**
+   * Começa um novo enrollment apenas depois de reconciliar a autoridade real.
+   *
+   * Um fator TOTP `unverified` pode sobrar quando o usuário fecha a tela antes
+   * de confirmar o código. Reabrir a configuração não deve acumular fatores
+   * órfãos nem criar um novo segredo ao lado de um fator já verificado.
+   *
+   * A limpeza acontece somente após ação explícita de iniciar/reiniciar a
+   * configuração e falha de forma fechada: se listar ou remover um fator órfão
+   * falhar, nenhum novo fator é criado.
+   */
   async enrollMFA(): Promise<MFAEnrollmentData | null> {
     try {
+      const { data: factorData, error: factorError } =
+        await supabase.auth.mfa.listFactors();
+      if (factorError || !factorData) {
+        throw factorError ?? new Error('Supabase Auth returned no MFA factors payload');
+      }
+
+      const totpFactors = factorData.totp ?? [];
+      if (totpFactors.some((factor) => factor.status === 'verified')) {
+        throw new Error('A verified TOTP factor already exists');
+      }
+
+      const abandonedFactors = totpFactors.filter(
+        (factor) => factor.status !== 'verified',
+      );
+      for (const factor of abandonedFactors) {
+        const { error: cleanupError } = await supabase.auth.mfa.unenroll({
+          factorId: factor.id,
+        });
+        if (cleanupError) {
+          throw cleanupError;
+        }
+      }
+
       const { data, error } = await supabase.auth.mfa.enroll({
         factorType: 'totp',
       });
