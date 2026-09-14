@@ -52,6 +52,7 @@ describe("account and access concept contract", () => {
     expect(header).toContain('env(safe-area-inset-top)');
     expect(header).toContain('location.pathname === "/reset-password"');
     expect(header).toContain(">Voltar</span>");
+    expect(header).not.toContain("setPendingAuthReturn");
     expect(footer).toContain('env(safe-area-inset-bottom)');
   });
 
@@ -68,6 +69,7 @@ describe("account and access concept contract", () => {
     expect(remoteEnv).toContain('VITE_AUTH_GOOGLE_ENABLED="true"');
     expect(login).toContain("Continuar com Google");
     expect(login).toContain("googleAuthAvailable");
+    expect(login).toContain("setPendingAuthReturn(redirectTo)");
     expect(cadastro).toContain("Continuar com Google");
     expect(cadastro).toContain('setPendingAuthReturn("/cadastro/primeiro-acesso")');
     expect(authService).toContain('provider: "google"');
@@ -245,6 +247,7 @@ describe("account and access concept contract", () => {
       "src/app/features/onboarding/pages/CadastroPage.tsx",
       "src/app/features/onboarding/pages/CadastroConfirmacaoPage.tsx",
       "src/app/features/onboarding/pages/CadastroPrimeiroAcessoPage.tsx",
+      "src/app/features/onboarding/pages/AceiteTermosPage.tsx",
       "src/shared/components/ui/checkbox.tsx",
     ];
 
