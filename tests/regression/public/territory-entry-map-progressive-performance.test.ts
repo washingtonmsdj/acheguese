@@ -21,9 +21,10 @@ describe("territory entry progressive map performance", () => {
     const runtime = read("src/app/components/territory-vivo/TerritoryEntryMapRuntime.tsx");
     expect(runtime).not.toContain("setMapReady(false)");
     expect(runtime).toContain('mapReady ? "opacity-100" : "opacity-0"');
+    expect(runtime).not.toContain("duration-500");
   });
 
-  it("preloads engine before the cached official boundary", () => {
+  it("preloads engine and official boundary concurrently", () => {
     const wrapper = read("src/app/components/territory-vivo/TerritoryEntryMap.tsx");
     const runtime = read("src/app/components/territory-vivo/TerritoryEntryMapRuntime.tsx");
     const owner = read("src/core/maps/components/v3/MapLibreAdapter.tsx");
@@ -33,8 +34,10 @@ describe("territory entry progressive map performance", () => {
     expect(wrapper).toContain("preloadEntryMapStyle");
     expect(wrapper).toContain('link.rel = "preload"');
     expect(wrapper).toContain('link.as = "fetch"');
-    expect(wrapper).toContain("await module.preloadTerritoryEntryMapEngine()");
-    expect(wrapper).toContain("await module.preloadTerritoryEntryBoundary(preloadResolved)");
+    expect(wrapper).toContain("Promise.all([");
+    expect(wrapper).toContain("module.preloadTerritoryEntryMapEngine()");
+    expect(wrapper).toContain("module.preloadTerritoryEntryBoundary(preloadResolved)");
+    expect(wrapper).not.toContain("await module.preloadTerritoryEntryMapEngine()");
 
     expect(runtime).toContain("preloadPassiveMapLibreAdapterRuntime");
     expect(runtime).toContain("preloadTerritoryPolygons");
@@ -49,6 +52,10 @@ describe("territory entry progressive map performance", () => {
 
     expect(passive).toContain('data-maplibre-runtime="passive"');
     expect(passive).toContain("mapCreated");
+    expect(passive).toContain('from "@/core/maps/runtime/mapRuntimeState"');
+    expect(passive).toContain('import("@/shared/utils/logger")');
+    expect(passive).not.toContain('import { logger } from "@/shared/utils/logger"');
+    expect(passive).not.toContain("MapLibreAdapter.helpers");
     expect(passive).not.toContain("useRobustGeolocation");
     expect(passive).not.toContain("useMapClustering");
     expect(passive).not.toContain("MapSearchControl");
