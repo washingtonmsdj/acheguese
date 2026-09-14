@@ -44,6 +44,14 @@ deferIdle(() => {
   import("@/integrations/maps").then(({ setupDefaultProviders }) => {
     setupDefaultProviders();
   });
+
+  // Compatibilidade para rotas antigas que ainda montam o adapter pesado
+  // diretamente. A entrada pública usa o owner lazy e não depende deste warmup.
+  import("@/core/maps/config/maplibreWorkerRuntime").then(
+    ({ ensureMapLibreWorkerConfigured }) => {
+      ensureMapLibreWorkerConfigured();
+    },
+  );
 });
 
 deferLoad(() => {
