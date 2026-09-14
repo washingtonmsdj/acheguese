@@ -17,6 +17,7 @@ type FallbackInput = {
 
 const FALLBACK_TIMESTAMP = "2026-01-01T00:00:00.000Z";
 const PUBLIC_FALLBACK_FLAG = "public_fallback";
+const PUBLIC_LABEL_KEY = "public_label";
 const GEO_SALVADOR_BOUNDARY_SOURCE =
   "https://services6.arcgis.com/GP5qdNaePRPh2SdT/arcgis/rest/services/bairros_app_dados_2010_e_2022/FeatureServer/0";
 
@@ -54,6 +55,7 @@ const salvadorLocation: Location = {
 type OfficialFallbackLocationInput = {
   slug: string;
   name: string;
+  publicLabel?: string;
   sourceObjectId: number;
   centerLatitude: number;
   centerLongitude: number;
@@ -62,6 +64,7 @@ type OfficialFallbackLocationInput = {
 function createOfficialComplexLocation({
   slug,
   name,
+  publicLabel,
   sourceObjectId,
   centerLatitude,
   centerLongitude,
@@ -84,6 +87,7 @@ function createOfficialComplexLocation({
       source_object_id: sourceObjectId,
       official: true,
       geometry_format: "GeoJSON",
+      ...(publicLabel ? { [PUBLIC_LABEL_KEY]: publicLabel } : {}),
       [PUBLIC_FALLBACK_FLAG]: true,
     },
     created_at: FALLBACK_TIMESTAMP,
@@ -94,6 +98,7 @@ function createOfficialComplexLocation({
 const chapadaDoRioVermelhoLocation = createOfficialComplexLocation({
   slug: "chapada-do-rio-vermelho",
   name: "Chapada do Rio Vermelho",
+  publicLabel: "Chapada",
   sourceObjectId: 54,
   centerLatitude: -13.00516291,
   centerLongitude: -38.48064788,
@@ -164,6 +169,13 @@ const complexoNordesteGroup: TerritorialGroupWithMembers = {
   created_at: FALLBACK_TIMESTAMP,
   updated_at: FALLBACK_TIMESTAMP,
 };
+
+export function getPublicTerritoryLocationLabel(location: Location): string {
+  const publicLabel = location.metadata?.[PUBLIC_LABEL_KEY];
+  return typeof publicLabel === "string" && publicLabel.trim().length > 0
+    ? publicLabel.trim()
+    : location.name;
+}
 
 export function isPublicTerritoryFallbackLocation(
   location: Location | null | undefined,
