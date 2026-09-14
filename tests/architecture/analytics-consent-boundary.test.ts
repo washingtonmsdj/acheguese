@@ -53,7 +53,7 @@ describe("analytics consent boundary", () => {
 
     const service = read(CONSENT_STORAGE_OWNER);
     expect(service).toContain('LOCAL_CONSENT_STORAGE_KEY = "lgpd-consent"');
-    expect(service).toContain("function readLocalConsentRecords()");
+    expect(service).toContain("function readLocalConsentRecords");
     expect(service).toContain("JSON.parse(localConsent)");
     expect(service).toContain("catch {");
   });
