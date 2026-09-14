@@ -32,6 +32,37 @@ describe("public root production bundle analysis", () => {
     expect(reporter).toContain("GITHUB_STEP_SUMMARY");
   });
 
+  it("fails analysis when deferred runtimes leak into critical public-root closures", () => {
+    const reporter = read("tools/performance/report-root-bundle.mjs");
+
+    expect(reporter).toContain("fullMapRuntimeDeferredFromFirstUsableMap");
+    expect(reporter).toContain("officialBoundaryDeferredFromFirstUsableMap");
+    expect(reporter).toContain("routedAppRuntimeDeferredFromInitialBootstrap");
+    expect(reporter).toContain("sentryDeferredFromInitialBootstrap");
+    expect(reporter).toContain("firstUsableMapManifestKeys");
+    expect(reporter).toContain("initialManifestKeys");
+    expect(reporter).toContain("failedInvariants");
+    expect(reporter).toContain("process.exitCode = 1");
+  });
+
+  it("keeps source boundaries compatible with the manifest separation contract", () => {
+    const mapHook = read("src/core/maps/hooks/useTerritoryPolygon.ts");
+    const adapter = read("src/core/maps/components/v3/MapLibreAdapter.tsx");
+    const runtime = read("src/app/components/AppRuntime.tsx");
+    const main = read("src/main.tsx");
+
+    expect(mapHook).toContain(
+      'await import(\n    "@/core/geospatial/data/officialFeatureServerBoundary"',
+    );
+    expect(mapHook).toContain(
+      'await import(\n    "@/core/geospatial/services/BoundaryService"',
+    );
+    expect(adapter).toContain('import("./MapLibrePassiveRuntime")');
+    expect(adapter).toContain('import("./MapLibreAdapterRuntime")');
+    expect(runtime).toContain('import("@/app/components/RoutedAppRuntime")');
+    expect(main).toContain("scheduleAfterPublicRootMap(initializeObservability");
+  });
+
   it("runs production build analysis inside the existing explicit-SHA heavy certification", () => {
     const workflow = read(".github/workflows/certify-heavy.yml");
 
