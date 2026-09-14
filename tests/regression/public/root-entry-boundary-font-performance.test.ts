@@ -48,4 +48,12 @@ describe("root boundary and font performance", () => {
     expect(bootstrap).toContain('link.rel = "stylesheet"');
     expect(bootstrap).toContain("requestAnimationFrame");
   });
+
+  it("keeps monitoring out of the deferred bootstrap utility", () => {
+    const deferred = read("src/shared/utils/deferredInit.ts");
+
+    expect(deferred).not.toContain('import { logger } from "@/shared/utils/logger"');
+    expect(deferred).toContain('import("@/shared/utils/logger")');
+    expect(deferred).toContain("reportDeferredError");
+  });
 });
