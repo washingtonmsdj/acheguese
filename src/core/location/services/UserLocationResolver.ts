@@ -8,9 +8,13 @@
  * 4. Cidade de lancamento configurada
  */
 
-import { logger } from "@/shared/utils/logger";
-import { GeolocationService } from "@/core/maps/services/GeolocationService";
+import { GEOLOCATION_RUNTIME } from "@/shared/config/geolocation";
 import { MAP_DEFAULT_COORDINATES, MAP_DEFAULT_LOCATION } from "@/shared/config/mapDefaults";
+import {
+  GeolocationService,
+  isGeolocationPermissionDeniedError,
+} from "@/shared/services/GeolocationService";
+import { logger } from "@/shared/utils/logger";
 import { locationContextStore } from "../stores/LocationContextStore";
 import type { ResolvedEntityLocation } from "../types/entityLocation";
 
@@ -29,7 +33,11 @@ class UserLocationResolverClass {
   }
 
   async resolve(options: UserLocationResolverOptions = {}): Promise<ResolvedEntityLocation> {
-    const { tryGps = true, gpsTimeout = 10000, useCache = true } = options;
+    const {
+      tryGps = true,
+      gpsTimeout = GEOLOCATION_RUNTIME.requestTimeoutMs,
+      useCache = true,
+    } = options;
 
     if (tryGps) {
       try {
@@ -50,14 +58,8 @@ class UserLocationResolverClass {
           confidence: result.isHighAccuracy ? "high" : result.source === "ip" ? "low" : "medium",
         };
       } catch (error: unknown) {
-        const normalizedError =
-          typeof error === "object" && error !== null
-            ? (error as { code?: number; message?: string })
-            : {};
-        const message = normalizedError.message ?? "";
-        const isDenied = normalizedError.code === 1 || message.includes("negada") || message.includes("denied");
-
-        if (isDenied) {
+        const message = error instanceof Error ? error.message : "";
+        if (isGeolocationPermissionDeniedError(error)) {
           logger.info("[UserLocationResolver] GPS negado, usando fallback territorial");
         } else {
           logger.warn("[UserLocationResolver] GPS falhou, usando fallback territorial", message);
@@ -77,16 +79,17 @@ class UserLocationResolverClass {
 
       const metaLat = loc.metadata?.center_latitude as number | undefined;
       const metaLng = loc.metadata?.center_longitude as number | undefined;
+      const hasMetadataCenter = Number.isFinite(metaLat) && Number.isFinite(metaLng);
 
-      const lat = metaLat ?? systemFallback.lat;
-      const lng = metaLng ?? systemFallback.lng;
+      const lat = hasMetadataCenter ? metaLat : systemFallback.lat;
+      const lng = hasMetadataCenter ? metaLng : systemFallback.lng;
 
       return {
         entityType: "user_gps",
         source: "territory_center",
         latitude: lat,
         longitude: lng,
-        accuracy: metaLat && metaLng ? 5000 : 10000,
+        accuracy: hasMetadataCenter ? 5000 : 10000,
         locationId: loc.id,
         locationName: loc.name,
         confidence: "low",
@@ -113,7 +116,7 @@ class UserLocationResolverClass {
   }
 
   isGoodForProximity(location: ResolvedEntityLocation): boolean {
-    if (!location.latitude || !location.longitude) return false;
+    if (!Number.isFinite(location.latitude) || !Number.isFinite(location.longitude)) return false;
     return location.source === "gps" && (location.accuracy ?? Infinity) < 1000;
   }
 }
