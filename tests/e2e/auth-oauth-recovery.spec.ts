@@ -1,8 +1,13 @@
-import { expect, test } from "@playwright/test";
+import { expect, test, type Page } from "@playwright/test";
+
+import {
+  AUTH_JOURNEY_INTENTS,
+  seedAuthFlowState,
+} from "./helpers/authFlowState";
 
 const RETURN_PATH = "/mensagens/sabores-da-ana";
 
-async function expectNoHorizontalOverflow(page: import("@playwright/test").Page) {
+async function expectNoHorizontalOverflow(page: Page) {
   const dimensions = await page.evaluate(() => ({
     scrollWidth: document.documentElement.scrollWidth,
     clientWidth: document.documentElement.clientWidth,
@@ -12,9 +17,10 @@ async function expectNoHorizontalOverflow(page: import("@playwright/test").Page)
 
 test.describe("Google OAuth — recuperação de callback", () => {
   test.beforeEach(async ({ page }) => {
-    await page.addInitScript((returnPath) => {
-      window.sessionStorage.setItem("auth.pending-return-path", returnPath);
-    }, RETURN_PATH);
+    await seedAuthFlowState(page, {
+      pendingReturn: RETURN_PATH,
+      pendingIntent: AUTH_JOURNEY_INTENTS.login,
+    });
   });
 
   test("cancelamento do Google preserva o destino e oferece retomada segura", async ({ page }) => {
