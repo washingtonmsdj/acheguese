@@ -24,7 +24,7 @@ import { InlineFieldError } from "@/shared/components/ui/InlineFieldError";
 import { Input } from "@/shared/components/ui/input";
 import { Label } from "@/shared/components/ui/label";
 import { useToast } from "@/shared/hooks/use-toast";
-import { getPasswordRequirementStatus } from "@/shared/validation/passwordPolicy";
+import { getPasswordConceptRequirementStatus } from "@/shared/validation/passwordPolicy";
 import {
   ResetPasswordFormSchema,
   type ResetPasswordFormInput,
@@ -57,7 +57,7 @@ export default function ResetPasswordPage() {
   });
   const newPassword = form.watch("newPassword") ?? "";
   const requirements = useMemo(
-    () => getPasswordRequirementStatus(newPassword),
+    () => getPasswordConceptRequirementStatus(newPassword),
     [newPassword],
   );
 
