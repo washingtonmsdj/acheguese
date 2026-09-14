@@ -21,11 +21,19 @@ describe("territory entry map skeleton", () => {
     expect(wrapper).toContain("Complexo do Nordeste de Amaralina");
   });
 
-  it("keeps a loading surface over MapLibre until the map reports ready", () => {
+  it("keeps the loading surface until both MapLibre and boundary loading settle", () => {
     expect(runtime).toContain("RuntimeMapLoadingSurface");
-    expect(runtime).toContain("!mapReady && !mapUnavailable");
-    expect(runtime).toContain('aria-busy={!mapReady}');
+    expect(runtime).toContain("const mapPresented = mapReady && !isBoundaryLoading");
+    expect(runtime).toContain("!mapPresented && !mapUnavailable");
+    expect(runtime).toContain('aria-busy={!mapPresented}');
+    expect(runtime).toContain('mapPresented ? "opacity-100" : "opacity-0"');
     expect(runtime).toContain("setMapReady(true)");
+  });
+
+  it("keeps a bounded failure path instead of an endless skeleton", () => {
+    expect(runtime).toContain("if (isLoading || mapPresented) return");
+    expect(runtime).toContain("setMapUnavailable(true)");
+    expect(runtime).toContain("8000");
   });
 
   it("respects reduced motion and does not encode a fake territorial boundary", () => {
