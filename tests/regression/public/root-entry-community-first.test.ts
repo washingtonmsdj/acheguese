@@ -20,11 +20,13 @@ describe("root community-first MVP entry", () => {
     expect(source).toContain('import("@/app/pages/PreLaunchLandingPage")');
   });
 
-  it("starts the entry map immediately after first paint", () => {
+  it("requests the entry map runtime on the first render", () => {
     const wrapper = read("src/app/components/territory-vivo/TerritoryEntryMap.tsx");
     expect(wrapper).toContain("LazyTerritoryEntryMapRuntime");
+    expect(wrapper).toContain("<Suspense");
     expect(wrapper).toContain("loadTerritoryEntryMapRuntime");
-    expect(wrapper).toContain("setShouldMountRuntime(true)");
+    expect(wrapper).not.toContain("shouldMountRuntime");
+    expect(wrapper).not.toContain("setShouldMountRuntime");
     expect(wrapper).not.toContain("IntersectionObserver");
     expect(wrapper).not.toContain("scheduleBrowserIdleWork");
     expect(wrapper).not.toContain("useTerritoryPolygon");
