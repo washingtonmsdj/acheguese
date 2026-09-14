@@ -50,11 +50,17 @@ test.describe("Conta e acesso — contrato visual responsivo do concept", () => 
     ).toBeVisible();
     await expect(page.locator('img[src="/auth/signup-hero.webp"]')).toBeHidden();
     await expect(page.getByLabel("Nome de usuário")).toBeVisible();
+    await expect(page.getByText("Seu identificador público.", { exact: true })).toBeVisible();
+    await expect(
+      page.getByText("Você pode se cadastrar de qualquer lugar.", { exact: true }),
+    ).toBeVisible();
     await expect(page.getByLabel("Confirmar senha")).toHaveCount(0);
     await expect(page.getByLabel("Estado")).toHaveCount(0);
+    // O concept mobile de criação não possui uma etapa OAuth paralela. O Google
+    // continua disponível no card desktop sem alterar a composição aprovada.
     await expect(
       page.getByRole("button", { name: "Continuar com Google" }),
-    ).toBeVisible();
+    ).toHaveCount(0);
     await expectNoHorizontalOverflow(page);
     await expectNoGenericSvgInMain(page);
 
@@ -153,6 +159,11 @@ test.describe("Conta e acesso — contrato visual responsivo do concept", () => 
       await expectNoHorizontalOverflow(page);
       await expectNoGenericSvgInMain(page);
     }
+
+    await page.goto("/cadastro", { waitUntil: "domcontentloaded" });
+    await expect(
+      page.getByRole("button", { name: "Continuar com Google" }),
+    ).toBeVisible();
 
     await page.goto("/aceitar-termos", { waitUntil: "domcontentloaded" });
     const termsMain = page.locator("main#main-content");
