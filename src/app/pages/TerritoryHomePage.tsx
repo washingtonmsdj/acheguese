@@ -690,6 +690,7 @@ export default function TerritoryHomePage() {
       href: string;
       icon: LucideIcon;
       tone: string;
+      surface: Parameters<typeof isLaunchSurfaceEnabled>[0];
     }> = [
       {
         label: "Comida",
@@ -697,6 +698,7 @@ export default function TerritoryHomePage() {
         href: urls.gastronomy,
         icon: Utensils,
         tone: "bg-territory-raised text-territory-brand",
+        surface: "gastronomy",
       },
       {
         label: "Negócios",
@@ -704,6 +706,7 @@ export default function TerritoryHomePage() {
         href: urls.business,
         icon: Store,
         tone: "bg-territory-raised text-territory-brand",
+        surface: "business",
       },
       {
         label: "Serviços",
@@ -711,6 +714,7 @@ export default function TerritoryHomePage() {
         href: urls.services,
         icon: Wrench,
         tone: "bg-territory-raised text-territory-brand",
+        surface: "services",
       },
       {
         label: "Mobilidade",
@@ -718,6 +722,7 @@ export default function TerritoryHomePage() {
         href: urls.mobility,
         icon: BusFront,
         tone: "bg-territory-raised text-territory-brand",
+        surface: "mobility",
       },
       {
         label: "Classificados",
@@ -725,6 +730,7 @@ export default function TerritoryHomePage() {
         href: urls.classifieds,
         icon: Tag,
         tone: "bg-territory-raised text-territory-brand",
+        surface: "classifieds",
       },
       {
         label: "Educação",
@@ -732,12 +738,10 @@ export default function TerritoryHomePage() {
         href: urls.education,
         icon: BookOpen,
         tone: "bg-territory-raised text-territory-brand",
+        surface: "education",
       },
     ];
-    return actions.filter(
-      (action) =>
-        action.href !== urls.gastronomy || isLaunchSurfaceEnabled("gastronomy"),
-    );
+    return actions.filter((action) => isLaunchSurfaceEnabled(action.surface));
   }, [urls]);
 
   const moreQuickAction = useMemo(
@@ -933,7 +937,7 @@ export default function TerritoryHomePage() {
                   })}
                 </div>
               </div>
-              <div className="hidden md:grid md:grid-cols-6 md:gap-6">
+              <div className="hidden md:grid md:grid-cols-[repeat(auto-fit,minmax(7rem,1fr))] md:gap-6">
                 {quickActions.map((action) => {
                   const Icon = action.icon;
                   return (
