@@ -56,6 +56,15 @@ const settingsItems: readonly SettingsNavItem[] = [
   { label: "Acessibilidade", href: ACCOUNT_PATHS.accessibility, icon: Accessibility, hashes: ["#acessibilidade"] },
 ];
 
+function matchesSearchConstraint(locationSearch: string, constraint: string): boolean {
+  const current = new URLSearchParams(locationSearch);
+  const expected = new URLSearchParams(constraint.startsWith("?") ? constraint.slice(1) : constraint);
+  for (const [key, value] of expected.entries()) {
+    if (current.get(key) !== value) return false;
+  }
+  return true;
+}
+
 function isActive(
   pathname: string,
   locationHash: string,
@@ -75,8 +84,8 @@ function isActive(
   if (!pathMatches) return false;
   if (hashes && !hashes.includes(locationHash)) return false;
   if (excludeHashes?.includes(locationHash)) return false;
-  if (search) return locationSearch === search;
-  if (excludeSearch && locationSearch === excludeSearch) return false;
+  if (search && !matchesSearchConstraint(locationSearch, search)) return false;
+  if (excludeSearch && matchesSearchConstraint(locationSearch, excludeSearch)) return false;
   return true;
 }
 
