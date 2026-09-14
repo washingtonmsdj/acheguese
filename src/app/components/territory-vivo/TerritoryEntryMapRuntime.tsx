@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { LocationType, type Location } from "@/core/location/types";
 import { MapLibreAdapter } from "@/core/maps/components/v3/MapLibreAdapter";
 import { useTerritoryPolygon } from "@/core/maps/hooks/useTerritoryPolygon";
@@ -101,6 +101,7 @@ export default function TerritoryEntryMapRuntime({
   const [boundarySlow, setBoundarySlow] = useState(false);
   const [showArrival, setShowArrival] = useState(true);
   const [arrivalLeaving, setArrivalLeaving] = useState(false);
+  const mapTimedOutRef = useRef(false);
 
   const resolved = useMemo<ResolvedTerritory>(
     () => resolvedTerritory ?? (city ? { kind: "location", location: city } : null),
@@ -186,6 +187,16 @@ export default function TerritoryEntryMapRuntime({
       setArrivalLeaving(false);
       return;
     }
+
+    // If the terminal timeout fallback was already shown, a late MapLibre
+    // recovery should reveal the real canvas directly instead of replaying the
+    // arrival skeleton for one more crossfade.
+    if (mapTimedOutRef.current) {
+      setShowArrival(false);
+      setArrivalLeaving(false);
+      return;
+    }
+
     setShowArrival(true);
     setArrivalLeaving(true);
     const id = window.setTimeout(() => setShowArrival(false), ARRIVAL_CROSSFADE_MS);
@@ -194,7 +205,10 @@ export default function TerritoryEntryMapRuntime({
 
   useEffect(() => {
     if (mapReady || mapUnavailable) return;
-    const id = window.setTimeout(() => setMapUnavailable(true), MAP_TIMEOUT_MS);
+    const id = window.setTimeout(() => {
+      mapTimedOutRef.current = true;
+      setMapUnavailable(true);
+    }, MAP_TIMEOUT_MS);
     return () => window.clearTimeout(id);
   }, [mapReady, mapUnavailable]);
 
