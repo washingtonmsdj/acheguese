@@ -144,7 +144,7 @@ export function ProfileHeaderCompact(props: ProfileHeaderCompactProps) {
             </h2>
             {props.isVerified ? (
               <CheckCircle2
-                className="h-4.5 w-4.5 shrink-0 text-territory-brand"
+                className="h-[18px] w-[18px] shrink-0 text-territory-brand"
                 aria-label="Perfil verificado"
               />
             ) : null}
