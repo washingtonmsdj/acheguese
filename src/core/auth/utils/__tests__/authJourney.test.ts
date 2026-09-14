@@ -1,4 +1,4 @@
-import { beforeEach, describe, expect, it, vi } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 import { AUTH_FLOW_STORAGE_KEYS, AUTH_PATHS } from "@/core/auth/constants/authFlow";
 import {
@@ -21,6 +21,11 @@ describe("authJourney", () => {
     window.sessionStorage.clear();
     vi.useFakeTimers();
     vi.setSystemTime(new Date("2026-09-14T18:00:00.000Z"));
+  });
+
+  afterEach(() => {
+    vi.useRealTimers();
+    window.sessionStorage.clear();
   });
 
   it("prepares Google login without carrying stale signup state", () => {
