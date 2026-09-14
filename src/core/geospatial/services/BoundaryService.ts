@@ -9,6 +9,7 @@
  * - Quando não existir polígono cadastrado, o serviço retorna somente o centro canônico do território.
  */
 import { logger } from "@/shared/utils/logger";
+import { MAP_DEFAULT_COORDINATES } from "@/shared/config/mapDefaults";
 import { supabase } from "@/integrations/supabase";
 import { createLocationRepository } from "@/core/location/repositories/createLocationRepository";
 import type { ILocationRepository } from "@/core/location/repositories/ILocationRepository";
@@ -152,7 +153,10 @@ function isUsableCenter(latitude: unknown, longitude: unknown): boolean {
 class BoundaryServiceClass {
   private static instance: BoundaryServiceClass;
 
-  private readonly FALLBACK_CENTER: [number, number] = [-12.975, -38.476];
+  private readonly FALLBACK_CENTER: [number, number] = [
+    MAP_DEFAULT_COORDINATES.latitude,
+    MAP_DEFAULT_COORDINATES.longitude,
+  ];
   private readonly locationRepository: ILocationRepository;
   private readonly supabaseClient: BoundaryDbClient;
   private readonly locationCacheTtlMs: number;
