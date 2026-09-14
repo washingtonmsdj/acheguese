@@ -4,6 +4,8 @@ const UNIQUE = Date.now();
 const EMAIL = `e2e-cadastro-${UNIQUE}@example.com`;
 const PASSWORD = "SenhaSegura@2026";
 
+const NAME_LABEL = /Nome completo|^Nome$/i;
+
 test.describe("Cadastro — fluxo account-first", () => {
   test.beforeEach(async ({ page }) => {
     await page.route(/\/auth\/v1\/signup/, async (route) => {
@@ -29,7 +31,7 @@ test.describe("Cadastro — fluxo account-first", () => {
   test("cria a conta pessoal sem obrigar território e chega à confirmação", async ({ page }) => {
     await page.goto("/cadastro?redirect=%2Fmensagens%2Fabc");
 
-    await page.getByLabel(/^Nome$/i).fill("Ana E2E");
+    await page.getByLabel(NAME_LABEL).fill("Ana E2E");
     await page.getByLabel(/Nome de usuário/i).fill(`ana_e2e_${UNIQUE}`);
     await page.getByLabel(/^E-mail$/i).fill(EMAIL);
     await page.getByLabel(/^Senha$/i).fill(PASSWORD);
@@ -59,7 +61,7 @@ test.describe("Cadastro — fluxo account-first", () => {
     });
 
     await page.goto("/cadastro");
-    await page.getByLabel(/^Nome$/i).fill("Ana Dup");
+    await page.getByLabel(NAME_LABEL).fill("Ana Dup");
     await page.getByLabel(/Nome de usuário/i).fill(`ana_dup_${UNIQUE}`);
     await page.getByLabel(/^E-mail$/i).fill(EMAIL);
     await page.getByLabel(/^Senha$/i).fill(PASSWORD);
