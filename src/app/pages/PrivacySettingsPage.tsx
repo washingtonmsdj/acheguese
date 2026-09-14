@@ -3,6 +3,7 @@ import { Navigate, useLocation, useNavigate } from "react-router-dom";
 import { Helmet } from "react-helmet-async";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import {
+  AlertCircle,
   BarChart3,
   CheckCircle2,
   ChevronRight,
@@ -15,6 +16,7 @@ import {
   Loader2,
   Mail,
   MapPin,
+  RefreshCw,
   Settings2,
   Shield,
   Tag,
@@ -25,18 +27,10 @@ import {
 } from "lucide-react";
 
 import { useAuth } from "@/core/auth/hooks/useAuth";
+import { PrivacySettingsService, type UserConsentRecord } from "@/core/privacy/services/PrivacySettingsService";
+import { ACCOUNT_PATHS } from "@/core/routing/config/account";
 import { useAppUrls } from "@/core/routing/hooks/useAppUrls";
-import {
-  PrivacySettingsService,
-  type UserConsentRecord,
-} from "@/core/privacy/services/PrivacySettingsService";
 import { AccountSettingsShell } from "@/modules/profile/components/AccountSettingsShell";
-import { Button } from "@/shared/components/ui/button";
-import { Label } from "@/shared/components/ui/label";
-import { Switch } from "@/shared/components/ui/switch";
-import { Textarea } from "@/shared/components/ui/textarea";
-import { useToast } from "@/shared/hooks/use-toast";
-import { SUPPORT_PATH } from "@/shared/constants/legal";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -48,6 +42,12 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from "@/shared/components/ui/alert-dialog";
+import { Button } from "@/shared/components/ui/button";
+import { Label } from "@/shared/components/ui/label";
+import { Switch } from "@/shared/components/ui/switch";
+import { Textarea } from "@/shared/components/ui/textarea";
+import { SUPPORT_PATH } from "@/shared/constants/legal";
+import { useToast } from "@/shared/hooks/use-toast";
 
 type UserConsent = UserConsentRecord;
 
@@ -98,7 +98,6 @@ function ConsentRow({
   idPrefix: string;
 }) {
   const Icon = getConsentIcon(type);
-  const isGranted = consent?.granted ?? false;
   const id = `${idPrefix}-consent-${type}`;
 
   return (
@@ -112,7 +111,7 @@ function ConsentRow({
       </div>
       <Switch
         id={id}
-        checked={isGranted}
+        checked={consent?.granted ?? false}
         onCheckedChange={onChange}
         disabled={disabled}
         className="shrink-0"
@@ -133,6 +132,35 @@ function ExportItem({ icon, title, description }: { icon: ReactNode; title: stri
   );
 }
 
+function QueryErrorState({ message, onRetry }: { message: string; onRetry: () => void }) {
+  return (
+    <div className="rounded-xl border border-red-200 bg-red-50 p-4 text-sm text-red-800" role="alert">
+      <div className="flex items-start gap-2">
+        <AlertCircle className="mt-0.5 h-5 w-5 shrink-0" aria-hidden="true" />
+        <div className="min-w-0 flex-1">
+          <p className="font-semibold">Não foi possível confirmar este estado.</p>
+          <p className="mt-1 leading-5">{message}</p>
+          <button
+            type="button"
+            onClick={onRetry}
+            className="mt-2 inline-flex min-h-9 items-center gap-2 font-semibold underline-offset-4 hover:underline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-red-700"
+          >
+            <RefreshCw className="h-4 w-4" aria-hidden="true" />
+            Tentar novamente
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function formatDeletionDate(value: string | null | undefined): string | null {
+  if (!value) return null;
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return null;
+  return date.toLocaleDateString("pt-BR");
+}
+
 export default function PrivacySettingsPage() {
   const appUrls = useAppUrls();
   const location = useLocation();
@@ -144,14 +172,26 @@ export default function PrivacySettingsPage() {
   const [deleteReason, setDeleteReason] = useState("");
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [deleteAcknowledged, setDeleteAcknowledged] = useState(false);
+  const [deleting, setDeleting] = useState(false);
+  const [cancellingDeletion, setCancellingDeletion] = useState(false);
 
-  const { data: consents, isLoading: consentsLoading } = useQuery({
+  const {
+    data: consents,
+    isLoading: consentsLoading,
+    isError: consentsError,
+    refetch: refetchConsents,
+  } = useQuery({
     queryKey: ["user-consents", user?.id],
     queryFn: async () => PrivacySettingsService.getUserConsents(user!.id),
     enabled: !!user?.id,
   });
 
-  const { data: deletionStatus } = useQuery({
+  const {
+    data: deletionStatus,
+    isLoading: deletionStatusLoading,
+    isError: deletionStatusError,
+    refetch: refetchDeletionStatus,
+  } = useQuery({
     queryKey: ["deletion-status", user?.id],
     queryFn: async () => PrivacySettingsService.getDeletionStatus(user!.id),
     enabled: !!user?.id,
@@ -166,8 +206,8 @@ export default function PrivacySettingsPage() {
         userAgent: navigator.userAgent,
       });
     },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["user-consents", user?.id] });
+    onSuccess: async () => {
+      await queryClient.invalidateQueries({ queryKey: ["user-consents", user?.id] });
       toast({ title: "Preferência atualizada", description: "Sua preferência de privacidade foi salva." });
     },
     onError: () => {
@@ -199,32 +239,42 @@ export default function PrivacySettingsPage() {
   };
 
   const handleDeleteAccount = async () => {
+    if (deletionStatusLoading || deletionStatusError || deletionStatus?.status === "scheduled") return;
+
+    setDeleting(true);
     try {
       const accessToken = await PrivacySettingsService.getAccessToken();
-      const result = await PrivacySettingsService.requestAccountDeletion({ accessToken, reason: deleteReason });
-      queryClient.invalidateQueries({ queryKey: ["deletion-status", user.id] });
+      const result = await PrivacySettingsService.requestAccountDeletion({ accessToken, reason: deleteReason.trim() });
+      await queryClient.invalidateQueries({ queryKey: ["deletion-status", user.id] });
       toast({
         title: "Solicitação registrada",
         description: `A exclusão foi solicitada. Prazo informado pelo serviço: ${result.days_until_purge} dias.`,
       });
-      setShowDeleteConfirm(false);
+      setDeleteReason("");
       setDeleteAcknowledged(false);
+      setShowDeleteConfirm(false);
     } catch (error: unknown) {
       toast({
         title: "Erro",
         description: (error instanceof Error ? error.message : null) || "Não foi possível solicitar a exclusão da conta.",
         variant: "destructive",
       });
+    } finally {
+      setDeleting(false);
     }
   };
 
   const handleCancelDeletion = async () => {
+    if (cancellingDeletion) return;
+    setCancellingDeletion(true);
     try {
       await PrivacySettingsService.cancelAccountDeletion();
-      queryClient.invalidateQueries({ queryKey: ["deletion-status", user.id] });
+      await queryClient.invalidateQueries({ queryKey: ["deletion-status", user.id] });
       toast({ title: "Exclusão cancelada", description: "Sua conta não será mais excluída." });
     } catch {
       toast({ title: "Erro", description: "Não foi possível cancelar a exclusão.", variant: "destructive" });
+    } finally {
+      setCancellingDeletion(false);
     }
   };
 
@@ -239,32 +289,18 @@ export default function PrivacySettingsPage() {
   ] as const;
 
   const scheduled = deletionStatus?.status === "scheduled";
+  const scheduledDate = formatDeletionDate(deletionStatus?.scheduled_purge_at);
   const exportView = location.hash === "#exportar";
 
   if (exportView) {
     return (
       <>
         <Helmet><title>Exportar meus dados | Achegue-se</title></Helmet>
-        <AccountSettingsShell
-          title="Uma cópia dos seus dados"
-          description="Baixe os dados disponibilizados para a sua conta."
-        >
+        <AccountSettingsShell title="Uma cópia dos seus dados" description="Baixe os dados disponibilizados para a sua conta.">
           <Surface className="px-4 sm:px-5">
-            <ExportItem
-              icon={<FileText className="h-5 w-5" aria-hidden="true" />}
-              title="Dados da conta"
-              description="Informações básicas e dados disponíveis no arquivo de exportação."
-            />
-            <ExportItem
-              icon={<UsersRound className="h-5 w-5" aria-hidden="true" />}
-              title="Perfis e registros incluídos"
-              description="Conteúdos e configurações que o serviço de exportação disponibilizar para sua conta."
-            />
-            <ExportItem
-              icon={<Settings2 className="h-5 w-5" aria-hidden="true" />}
-              title="Preferências e consentimentos"
-              description="Escolhas e registros de privacidade disponíveis no escopo da exportação."
-            />
+            <ExportItem icon={<FileText className="h-5 w-5" aria-hidden="true" />} title="Dados da conta" description="Informações básicas e dados disponíveis no arquivo de exportação." />
+            <ExportItem icon={<UsersRound className="h-5 w-5" aria-hidden="true" />} title="Perfis e registros incluídos" description="Conteúdos e configurações que o serviço de exportação disponibilizar para sua conta." />
+            <ExportItem icon={<Settings2 className="h-5 w-5" aria-hidden="true" />} title="Preferências e consentimentos" description="Escolhas e registros de privacidade disponíveis no escopo da exportação." />
           </Surface>
 
           <div className="mt-4 flex items-start gap-3 rounded-2xl border border-blue-200 bg-blue-50 p-4 text-sm text-blue-900">
@@ -272,26 +308,14 @@ export default function PrivacySettingsPage() {
             <p>A exportação respeita permissões e retorna apenas os dados que o serviço autoritativo disponibiliza para a conta atual.</p>
           </div>
 
-          <Button
-            type="button"
-            onClick={handleExportData}
-            disabled={isExporting}
-            className="mt-4 min-h-12 w-full bg-territory-sun text-territory-ink hover:bg-territory-sun/90"
-          >
-            {isExporting ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Download className="mr-2 h-4 w-4" />}
+          <Button type="button" onClick={handleExportData} disabled={isExporting} className="mt-4 min-h-12 w-full bg-territory-sun text-territory-ink hover:bg-territory-sun/90">
+            {isExporting ? <Loader2 className="mr-2 h-4 w-4 animate-spin" aria-hidden="true" /> : <Download className="mr-2 h-4 w-4" aria-hidden="true" />}
             {isExporting ? "Preparando arquivo..." : "Exportar meus dados"}
           </Button>
-
-          <p className="mt-3 text-center text-xs text-territory-muted">
-            Guarde o arquivo em um local seguro após o download.
-          </p>
+          <p className="mt-3 text-center text-xs text-territory-muted">Guarde o arquivo em um local seguro após o download.</p>
 
           <Surface className="mt-4 px-4 sm:px-5">
-            <button
-              type="button"
-              onClick={() => navigate(SUPPORT_PATH)}
-              className="flex min-h-14 w-full items-center gap-3 text-left text-sm font-semibold text-territory-ink focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-territory-brand"
-            >
+            <button type="button" onClick={() => navigate(SUPPORT_PATH)} className="flex min-h-14 w-full items-center gap-3 text-left text-sm font-semibold text-territory-ink focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-territory-brand">
               <HelpCircle className="h-5 w-5 text-territory-brand" aria-hidden="true" />
               <span className="flex-1">Preciso de ajuda</span>
               <ChevronRight className="h-5 w-5 text-territory-muted" aria-hidden="true" />
@@ -304,17 +328,29 @@ export default function PrivacySettingsPage() {
 
   return (
     <>
-      <Helmet>
-        <title>Privacidade e dados | Achegue-se</title>
-      </Helmet>
-
+      <Helmet><title>Privacidade e dados | Achegue-se</title></Helmet>
       <AccountSettingsShell
         title={scheduled ? "Exclusão da conta solicitada" : "Suas escolhas, seus dados"}
         description={scheduled ? "Consulte o andamento e as opções ainda disponíveis." : "Você no controle da sua privacidade."}
       >
+        {deletionStatusLoading ? (
+          <div className="mb-4 flex items-center gap-3 rounded-2xl border border-territory-border bg-territory-surface p-4 text-sm text-territory-muted" role="status">
+            <Loader2 className="h-5 w-5 shrink-0 animate-spin text-territory-brand" aria-hidden="true" />
+            Confirmando o estado da conta antes de liberar ações sensíveis...
+          </div>
+        ) : null}
+        {deletionStatusError ? (
+          <div className="mb-4">
+            <QueryErrorState
+              message="Ações de exclusão ficam indisponíveis até que o estado atual da conta seja confirmado."
+              onRetry={() => void refetchDeletionStatus()}
+            />
+          </div>
+        ) : null}
+
         {scheduled ? (
           <>
-            <div className="rounded-2xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-emerald-800">
+            <div className="rounded-2xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-emerald-800" role="status">
               <div className="flex items-center gap-2 font-semibold">
                 <CheckCircle2 className="h-5 w-5" aria-hidden="true" />
                 Solicitação registrada
@@ -325,18 +361,18 @@ export default function PrivacySettingsPage() {
               <p className="mt-2 text-sm leading-5 text-territory-muted">
                 O processamento segue as condições registradas na solicitação. Enquanto o cancelamento estiver permitido, você pode manter a conta.
               </p>
-              {deletionStatus.scheduled_purge_at ? (
+              {scheduledDate ? (
                 <div className="mt-4 flex items-start gap-3 rounded-xl bg-territory-raised p-3 text-sm text-territory-muted">
                   <Clock3 className="mt-0.5 h-5 w-5 shrink-0 text-territory-brand" aria-hidden="true" />
-                  <span>Data informada para processamento: {new Date(deletionStatus.scheduled_purge_at).toLocaleDateString("pt-BR")}.</span>
+                  <span>Data informada para processamento: {scheduledDate}.</span>
                 </div>
               ) : null}
-              <Button type="button" variant="outline" className="mt-4 min-h-11 w-full" onClick={handleCancelDeletion}>
-                <XCircle className="mr-2 h-4 w-4" aria-hidden="true" />
-                Cancelar solicitação
+              <Button type="button" variant="outline" className="mt-4 min-h-11 w-full" onClick={handleCancelDeletion} disabled={cancellingDeletion}>
+                {cancellingDeletion ? <Loader2 className="mr-2 h-4 w-4 animate-spin" aria-hidden="true" /> : <XCircle className="mr-2 h-4 w-4" aria-hidden="true" />}
+                {cancellingDeletion ? "Cancelando..." : "Cancelar solicitação"}
               </Button>
-              <Button type="button" variant="link" className="mt-2 w-full text-territory-brand" onClick={() => navigate("/conta/privacidade#exportar")}>
-                <Download className="mr-2 h-4 w-4" />
+              <Button type="button" variant="link" className="mt-2 w-full text-territory-brand" onClick={() => navigate(ACCOUNT_PATHS.exportData)}>
+                <Download className="mr-2 h-4 w-4" aria-hidden="true" />
                 Exportar meus dados
               </Button>
             </Surface>
@@ -347,7 +383,9 @@ export default function PrivacySettingsPage() {
               <h2 className="font-heading text-base font-bold text-territory-ink">Preferências de dados</h2>
               <div className="mt-2">
                 {consentsLoading ? (
-                  <div className="flex items-center justify-center py-8"><Loader2 className="h-6 w-6 animate-spin text-territory-brand" /></div>
+                  <div className="flex items-center justify-center py-8" role="status"><Loader2 className="h-6 w-6 animate-spin text-territory-brand" aria-hidden="true" /></div>
+                ) : consentsError ? (
+                  <QueryErrorState message="Suas escolhas não serão presumidas como desativadas." onRetry={() => void refetchConsents()} />
                 ) : (
                   consentRows.slice(0, 2).map(([type, label, description]) => (
                     <ConsentRow
@@ -363,10 +401,12 @@ export default function PrivacySettingsPage() {
                   ))
                 )}
               </div>
-              <button type="button" className="mt-3 flex min-h-10 w-full items-center justify-between text-left text-sm font-medium text-territory-brand" onClick={() => document.getElementById("privacy-more")?.scrollIntoView({ behavior: "smooth" })}>
-                Cookies e permissões
-                <ChevronRight className="h-4 w-4" aria-hidden="true" />
-              </button>
+              {!consentsError ? (
+                <button type="button" className="mt-3 flex min-h-10 w-full items-center justify-between text-left text-sm font-medium text-territory-brand" onClick={() => document.getElementById("privacy-more")?.scrollIntoView({ behavior: "smooth" })}>
+                  Cookies e permissões
+                  <ChevronRight className="h-4 w-4" aria-hidden="true" />
+                </button>
+              ) : null}
             </Surface>
 
             <div className="grid gap-4">
@@ -378,8 +418,8 @@ export default function PrivacySettingsPage() {
                     <p className="mt-1 text-sm leading-5 text-territory-muted">Veja o que será preparado antes de iniciar o download.</p>
                   </div>
                 </div>
-                <Button type="button" variant="outline" className="mt-4 min-h-11 w-full" onClick={() => navigate("/conta/privacidade#exportar")}>
-                  <Download className="mr-2 h-4 w-4" />
+                <Button type="button" variant="outline" className="mt-4 min-h-11 w-full" onClick={() => navigate(ACCOUNT_PATHS.exportData)}>
+                  <Download className="mr-2 h-4 w-4" aria-hidden="true" />
                   Abrir exportação
                 </Button>
               </Surface>
@@ -392,38 +432,43 @@ export default function PrivacySettingsPage() {
                     <p className="mt-1 text-sm leading-5 text-territory-muted">Defina o que aparece em cada identidade pelo gerenciamento de perfis.</p>
                   </div>
                 </div>
-                <Button type="button" variant="link" className="mt-2 px-0 text-territory-brand" onClick={() => navigate("/conta?section=profiles")}>Abrir Meus perfis</Button>
+                <Button type="button" variant="link" className="mt-2 px-0 text-territory-brand" onClick={() => navigate(ACCOUNT_PATHS.profiles)}>Abrir Meus perfis</Button>
               </Surface>
             </div>
           </div>
         )}
 
-        <Surface id="privacy-more" className="mt-4 p-4 sm:p-5">
-          <h2 className="font-heading text-base font-bold text-territory-ink">Consentimentos e permissões</h2>
-          <p className="mt-1 text-sm text-territory-muted">Os controles existentes no produto continuam disponíveis além do recorte visual do concept.</p>
-          <div className="mt-2 grid gap-x-6 lg:grid-cols-2">
-            {consentsLoading ? (
-              <div className="col-span-full flex items-center justify-center py-8"><Loader2 className="h-6 w-6 animate-spin text-territory-brand" /></div>
-            ) : (
-              consentRows.map(([type, label, description]) => (
-                <ConsentRow
-                  key={type}
-                  idPrefix="details"
-                  type={type}
-                  label={label}
-                  description={description}
-                  consent={consents?.find((item) => item.consent_type === type)}
-                  disabled={updateConsentMutation.isPending}
-                  onChange={(checked) => updateConsentMutation.mutate({ consentType: type, granted: checked })}
-                />
-              ))
-            )}
-          </div>
-        </Surface>
-
         {!scheduled ? (
+          <Surface id="privacy-more" className="mt-4 p-4 sm:p-5">
+            <h2 className="font-heading text-base font-bold text-territory-ink">Consentimentos e permissões</h2>
+            <p className="mt-1 text-sm text-territory-muted">Os controles existentes no produto continuam disponíveis além do recorte visual do concept.</p>
+            <div className="mt-2 grid gap-x-6 lg:grid-cols-2">
+              {consentsLoading ? (
+                <div className="col-span-full flex items-center justify-center py-8" role="status"><Loader2 className="h-6 w-6 animate-spin text-territory-brand" aria-hidden="true" /></div>
+              ) : consentsError ? (
+                <div className="col-span-full"><QueryErrorState message="Não exibimos estados padrão quando a autoridade de consentimento está indisponível." onRetry={() => void refetchConsents()} /></div>
+              ) : (
+                consentRows.map(([type, label, description]) => (
+                  <ConsentRow
+                    key={type}
+                    idPrefix="details"
+                    type={type}
+                    label={label}
+                    description={description}
+                    consent={consents?.find((item) => item.consent_type === type)}
+                    disabled={updateConsentMutation.isPending}
+                    onChange={(checked) => updateConsentMutation.mutate({ consentType: type, granted: checked })}
+                  />
+                ))
+              )}
+            </div>
+          </Surface>
+        ) : null}
+
+        {!scheduled && !deletionStatusLoading && !deletionStatusError ? (
           <div className="mt-4 border-t border-territory-border pt-4">
             <AlertDialog open={showDeleteConfirm} onOpenChange={(open) => {
+              if (deleting) return;
               setShowDeleteConfirm(open);
               if (!open) setDeleteAcknowledged(false);
             }}>
@@ -441,32 +486,51 @@ export default function PrivacySettingsPage() {
                   </AlertDialogDescription>
                 </AlertDialogHeader>
                 <div className="space-y-3 text-sm text-territory-muted">
-                  <div className="flex items-start gap-2"><Shield className="mt-0.5 h-4 w-4 shrink-0" /><span>Você perderá o acesso após a conclusão do fluxo.</span></div>
-                  <div className="flex items-start gap-2"><UsersRound className="mt-0.5 h-4 w-4 shrink-0" /><span>Revise os perfis e contextos que você administra.</span></div>
-                  <div className="flex items-start gap-2"><FileText className="mt-0.5 h-4 w-4 shrink-0" /><span>Alguns registros podem ser mantidos conforme obrigações e condições aplicáveis.</span></div>
+                  <div className="flex items-start gap-2"><Shield className="mt-0.5 h-4 w-4 shrink-0" aria-hidden="true" /><span>Você perderá o acesso após a conclusão do fluxo.</span></div>
+                  <div className="flex items-start gap-2"><UsersRound className="mt-0.5 h-4 w-4 shrink-0" aria-hidden="true" /><span>Revise os perfis e contextos que você administra.</span></div>
+                  <div className="flex items-start gap-2"><FileText className="mt-0.5 h-4 w-4 shrink-0" aria-hidden="true" /><span>Alguns registros podem ser mantidos conforme obrigações e condições aplicáveis.</span></div>
                   <div>
                     <Label htmlFor="delete-reason">Motivo (opcional)</Label>
-                    <Textarea id="delete-reason" value={deleteReason} onChange={(event) => setDeleteReason(event.target.value)} className="mt-2 min-h-[92px]" placeholder="Conte-nos, se quiser." />
+                    <Textarea
+                      id="delete-reason"
+                      value={deleteReason}
+                      onChange={(event) => setDeleteReason(event.target.value.slice(0, 500))}
+                      disabled={deleting}
+                      className="mt-2 min-h-[92px]"
+                      placeholder="Conte-nos, se quiser."
+                      maxLength={500}
+                    />
+                    <p className="mt-1 text-right text-xs text-territory-muted">{deleteReason.length}/500</p>
                   </div>
-                  <Button type="button" variant="link" className="h-auto p-0 text-territory-brand" onClick={() => {
+                  <Button type="button" variant="link" disabled={deleting} className="h-auto p-0 text-territory-brand" onClick={() => {
                     setShowDeleteConfirm(false);
-                    navigate("/conta/privacidade#exportar");
+                    navigate(ACCOUNT_PATHS.exportData);
                   }}>
                     Exportar meus dados antes
                   </Button>
                   <label className="flex cursor-pointer items-start gap-2 text-sm text-territory-ink">
-                    <input type="checkbox" checked={deleteAcknowledged} onChange={(event) => setDeleteAcknowledged(event.target.checked)} className="mt-0.5 h-4 w-4 rounded border-territory-border" />
+                    <input
+                      type="checkbox"
+                      checked={deleteAcknowledged}
+                      onChange={(event) => setDeleteAcknowledged(event.target.checked)}
+                      disabled={deleting}
+                      className="mt-0.5 h-4 w-4 rounded border-territory-border"
+                    />
                     <span>Entendi as consequências da solicitação.</span>
                   </label>
                 </div>
                 <AlertDialogFooter>
-                  <AlertDialogCancel>Manter minha conta</AlertDialogCancel>
+                  <AlertDialogCancel disabled={deleting}>Manter minha conta</AlertDialogCancel>
                   <AlertDialogAction
-                    onClick={handleDeleteAccount}
-                    disabled={!deleteAcknowledged}
+                    onClick={(event) => {
+                      event.preventDefault();
+                      void handleDeleteAccount();
+                    }}
+                    disabled={!deleteAcknowledged || deleting}
                     className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
                   >
-                    Solicitar exclusão
+                    {deleting ? <Loader2 className="mr-2 h-4 w-4 animate-spin" aria-hidden="true" /> : null}
+                    {deleting ? "Solicitando..." : "Solicitar exclusão"}
                   </AlertDialogAction>
                 </AlertDialogFooter>
               </AlertDialogContent>
