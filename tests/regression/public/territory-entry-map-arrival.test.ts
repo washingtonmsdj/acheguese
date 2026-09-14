@@ -21,12 +21,17 @@ describe("territory entry map arrival", () => {
     expect(wrapper).toContain("isLoading={isLoading}");
   });
 
-  it("preloads engine and official boundary in parallel", () => {
-    expect(wrapper).toContain("Promise.all([");
-    expect(wrapper).toContain("module.preloadTerritoryEntryMapEngine()");
-    expect(wrapper).toContain("module.preloadTerritoryEntryBoundary(preloadResolved)");
+  it("starts runtime, engine and official boundary as independent pipelines", () => {
+    expect(wrapper).toContain("void loadTerritoryEntryMapRuntime()");
+    expect(wrapper).toContain("preloadEntryMapEngine()");
+    expect(wrapper).toContain("preloadEntryOfficialBoundary(preloadResolved)");
+    expect(wrapper).toContain("preloadPassiveMapLibreAdapterRuntime");
+    expect(wrapper).toContain("loadOfficialFeatureServerBoundaries");
     expect(wrapper).toContain('link.setAttribute("fetchpriority", "high")');
-    expect(wrapper).not.toContain("await module.preloadTerritoryEntryMapEngine()");
+    expect(wrapper).not.toContain("module.preloadTerritoryEntryMapEngine");
+    expect(wrapper).not.toContain("module.preloadTerritoryEntryBoundary");
+    expect(runtime).not.toContain("preloadTerritoryEntryMapEngine");
+    expect(runtime).not.toContain("preloadTerritoryEntryBoundary");
   });
 
   it("never hides the canvas while MapLibre is progressively rendering", () => {
