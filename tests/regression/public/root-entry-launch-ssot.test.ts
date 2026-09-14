@@ -116,14 +116,16 @@ describe("public root launch territory SSOT", () => {
     expect(wrapper).not.toContain('label ?? "Complexo do Nordeste de Amaralina"');
   });
 
-  it("settles aria-busy when the map timeout fallback becomes final", () => {
+  it("settles aria-busy when the basemap is usable or the timeout fallback becomes final", () => {
     const runtime = read(
       "src/app/components/territory-vivo/TerritoryEntryMapRuntime.tsx",
     );
 
-    expect(runtime).toContain("const mapRegionBusy =");
-    expect(runtime).toContain("!mapUnavailable &&");
+    expect(runtime).toContain(
+      "const mapRegionBusy = !mapUnavailable && !mapReady;",
+    );
     expect(runtime).toContain("aria-busy={mapRegionBusy}");
+    expect(runtime).toContain("Mapa pronto. Carregando limite oficial...");
     expect(runtime).not.toContain(
       "aria-busy={!mapReady || isLoading || !boundaryStarted || isBoundaryLoading}",
     );
