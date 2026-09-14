@@ -4,7 +4,7 @@
  * React hook for the current user's push subscription and self-test flow.
  */
 
-import { useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { PushService, type StoredPushSubscription } from '../services/PushService';
 import { useToast } from '@/shared/hooks/use-toast';
@@ -27,7 +27,7 @@ export function usePush(userId?: string) {
   const queryClient = useQueryClient();
   const { toast } = useToast();
 
-  const refreshBrowserState = async () => {
+  const refreshBrowserState = useCallback(async () => {
     try {
       const supported = PushService.isSupported();
       setIsSupported(supported);
@@ -49,11 +49,27 @@ export function usePush(userId?: string) {
     } finally {
       setIsSupportResolved(true);
     }
-  };
+  }, []);
 
   useEffect(() => {
     void refreshBrowserState();
-  }, []);
+
+    const handleFocus = () => {
+      void refreshBrowserState();
+    };
+    const handleVisibilityChange = () => {
+      if (document.visibilityState === 'visible') {
+        void refreshBrowserState();
+      }
+    };
+
+    window.addEventListener('focus', handleFocus);
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+    return () => {
+      window.removeEventListener('focus', handleFocus);
+      document.removeEventListener('visibilitychange', handleVisibilityChange);
+    };
+  }, [refreshBrowserState]);
 
   const {
     data: subscriptions,
