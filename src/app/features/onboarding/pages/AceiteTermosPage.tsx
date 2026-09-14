@@ -17,11 +17,11 @@ import {
   cancelGoogleLogin,
   cancelGoogleSignup,
   completeTermsJourney,
-  getGoogleSignupOriginalReturn,
+  getAuthJourneyReturnTarget,
   getPendingAuthJourneyIntent,
+  getSignupJourneyReturnTarget,
 } from "@/core/auth/utils/authJourney";
 import { getAuthReturnContext } from "@/core/auth/utils/authReturnContext";
-import { getPendingAuthReturn } from "@/core/auth/utils/pendingAuthReturn";
 import {
   COMMUNITY_GUIDELINES_PATH,
   hasCurrentTermsAcceptance,
@@ -32,7 +32,6 @@ import { PrivacySettingsService } from "@/core/privacy/services/PrivacySettingsS
 import { Checkbox } from "@/shared/components/ui/checkbox";
 import { Label } from "@/shared/components/ui/label";
 import { useToast } from "@/shared/hooks/use-toast";
-import { resolveSafeInternalPath } from "@/shared/utils/safeRedirect";
 
 type AcceptanceState =
   | "checking"
@@ -50,13 +49,10 @@ export default function AceiteTermosPage() {
   const [accepted, setAccepted] = useState(false);
   const [submitting, setSubmitting] = useState(false);
 
-  const returnTo = useMemo(
-    () => resolveSafeInternalPath(getPendingAuthReturn(), "/"),
-    [],
-  );
+  const returnTo = useMemo(() => getAuthJourneyReturnTarget(), []);
   const journeyIntent = useMemo(() => getPendingAuthJourneyIntent(), []);
   const signupOriginalReturn = useMemo(
-    () => getGoogleSignupOriginalReturn(),
+    () => getSignupJourneyReturnTarget(),
     [],
   );
   const returnContext = useMemo(() => getAuthReturnContext(returnTo), [returnTo]);
