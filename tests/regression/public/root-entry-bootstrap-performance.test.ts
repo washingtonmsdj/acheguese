@@ -25,7 +25,7 @@ describe("anonymous root bootstrap performance", () => {
   });
 
   it("reads consent identity from SessionState without auth or query runtimes", () => {
-    const banner = read("src/app/components/privacy/ConsentBanner.tsx");
+    const banner = read("src/app/components/privacy/ConsentBannerContent.tsx");
     const selector = read("src/core/session/hooks/useSessionUserId.ts");
 
     expect(banner).toContain("useSessionUserId");
@@ -41,7 +41,7 @@ describe("anonymous root bootstrap performance", () => {
   });
 
   it("loads advanced consent controls only when personalization is requested", () => {
-    const banner = read("src/app/components/privacy/ConsentBanner.tsx");
+    const banner = read("src/app/components/privacy/ConsentBannerContent.tsx");
     const details = read("src/app/components/privacy/ConsentPreferencesDialog.tsx");
 
     expect(banner).toContain('import("./ConsentPreferencesDialog")');
@@ -121,9 +121,11 @@ describe("anonymous root bootstrap performance", () => {
     expect(preferences).toContain("export function applyAccessibilityPreferences");
   });
 
-  it("mounts provider-free public overlays after load and first-map readiness", () => {
+  it("mounts provider-free, router-free public overlays after load and first-map readiness", () => {
     const runtime = read("src/app/components/AppRuntime.tsx");
     const overlays = read("src/app/components/PublicRootOverlays.tsx");
+    const routedBanner = read("src/app/components/privacy/ConsentBanner.tsx");
+    const bannerContent = read("src/app/components/privacy/ConsentBannerContent.tsx");
 
     expect(runtime).toContain("shouldMountOverlays");
     expect(runtime).toContain('document.readyState === "complete"');
@@ -133,14 +135,22 @@ describe("anonymous root bootstrap performance", () => {
     expect(runtime).toContain("idleTimeoutMs: 2500");
     expect(runtime).toContain("idleFallbackDelayMs: 1200");
 
-    expect(overlays).toContain("<BrowserRouter>");
-    expect(overlays).toContain("<ConsentBanner />");
+    expect(overlays).toContain("<ConsentBannerContent pathname={pathname} />");
+    expect(overlays).not.toContain("BrowserRouter");
+    expect(overlays).not.toContain("react-router-dom");
+    expect(overlays).not.toContain("<ConsentBanner />");
     expect(overlays).not.toContain("QueryClientProvider");
     expect(overlays).not.toContain("queryClient");
     expect(overlays).not.toContain("<Toaster />");
     expect(overlays).not.toContain("GlobalOverlays");
     expect(overlays).not.toContain("OfflineIndicator");
     expect(overlays).not.toContain("Sonner");
+
+    expect(routedBanner).toContain('from "react-router-dom"');
+    expect(routedBanner).toContain("useLocation()");
+    expect(routedBanner).toContain("<ConsentBannerContent pathname={pathname} />");
+    expect(bannerContent).not.toContain("react-router-dom");
+    expect(bannerContent).not.toContain("useLocation");
   });
 
   it("keeps optional font networking behind the first-map priority window", () => {
