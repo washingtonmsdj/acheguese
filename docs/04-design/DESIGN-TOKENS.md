@@ -16,12 +16,12 @@ sem criar um segundo tema independente.
 | Camada                         | Arquivo                                                      | Papel                                                           |
 | ------------------------------ | ------------------------------------------------------------ | --------------------------------------------------------------- |
 | Tokens raiz (CSS vars)         | `src/index.css`                                              | Definição HSL de todos os tokens (dark + light).                |
-| Tailwind (classes utilitárias) | `tailwind.config.ts`                                         | Mapeia tokens para `bg-*`, `text-*`, `border-*`.                |
-| Facade tipada                  | `src/styles/theme.ts`                                        | `THEME`, `INLINE_STYLES`, `TAILWIND_CLASSES`.                   |
+| Tailwind (classes utilitárias) | `tailwind.config.ts`                                         | Mapeia tokens e o stack tipográfico canônico para classes/utilitários. |
+| Fachada tipada                 | `src/styles/theme.ts`                                        | `THEME`, `INLINE_STYLES`, `TAILWIND_CLASSES`.                   |
 | Categorias semânticas          | `src/shared/design-system/contentCategories.ts`              | `getCategoryTokens(type)` — SSOT de cor por tipo de conteúdo.   |
 | Empty state SSOT               | `src/shared/components/EmptyState.tsx`                       | Estado vazio contextual em todas as telas.                      |
 | Primitives territoriais        | `src/app/components/territory-vivo/` + `src/shared/components/territory-vivo/` | Superfície, busca, estado e navegação em app; topbar reutilizável em shared. |
-| Header territorial atual       | `src/shared/components/territory-vivo/TerritoryTopbar.tsx`      | Contexto e troca de território na Home/Explorar.                |
+| Header territorial atual       | `src/shared/components/territory-vivo/TerritoryTopbar.tsx`   | Contexto e troca de território na Home/Explorar.                |
 | Header social legado           | `src/core/community/components/feed/TerritoryFeedHeader.tsx` | Cabeçalho do Feed até sua migração visual posterior.            |
 
 > Regra: NENHUM componente usa `#hex`, `rgb()`, ou classes arbitrárias
@@ -118,15 +118,28 @@ não migram, ficam bloqueadas de expansão — nada novo pode nascer com cor sol
 
 ## 4. Tipografia
 
-| Papel            | Fonte           | Peso permitido |
-| ---------------- | --------------- | -------------- |
-| Headings (h1–h6) | `Space Grotesk` | 500, 600       |
-| Corpo / UI       | `DM Sans`       | 400, 500       |
+A identidade visual aprovada em `ACHEGUE-SE-VISUAL-IDENTITY.md` migrou o produto
+para uma única família: **Plus Jakarta Sans**. O runtime atual (`tailwind.config.ts`,
+`src/index.css` e o bootstrap opcional de fonte) segue esse contrato. A referência
+anterior a `DM Sans` + `Space Grotesk` está substituída e não deve ser reintroduzida.
 
-Regra: usar `DM Sans` no corpo/UI e `Space Grotesk` na hierarquia editorial,
-exposta por `font-heading`. Priorizar pesos 400, 500 e 600; 700 fica restrito a
-labels compactos/eyebrows em 9–11 px quando necessário para legibilidade. Não
-introduzir uma terceira família tipográfica na mesma superfície.
+| Papel            | Fonte               | Peso permitido |
+| ---------------- | ------------------- | -------------- |
+| Headings (h1–h6) | `Plus Jakarta Sans` | 600, 700       |
+| Corpo / UI       | `Plus Jakarta Sans` | 400, 500, 600  |
+
+Regras:
+
+- `tailwind.config.ts` é o owner do stack tipográfico executável: `font-sans`,
+  `font-display` e `font-heading` apontam para a mesma família;
+- o mesmo owner emite `--font-heading`/`--font-sans` para CSS territorial que não
+  passa por classes Tailwind, evitando fallback acidental para `ui-sans-serif`;
+- 400 é padrão de corpo; 500–600 para controles/ênfase; 700 para títulos e
+  labels de marca quando o concept exigir;
+- não introduzir uma segunda família na mesma superfície sem decisão de design
+  versionada e atualização deste SSOT;
+- a fonte web é opcional no bootstrap público: a ausência/atraso de rede usa o
+  fallback `sans-serif` sem bloquear o primeiro mapa.
 
 Escala tipográfica canônica (Tailwind default):
 
@@ -253,7 +266,8 @@ Ao criar/alterar qualquer componente:
 - [ ] Uma única CTA primária visível por tela.
 - [ ] Empty state via `<TerritoryState />` na experiência territorial ou `<EmptyState />` no legado, sempre com próximo passo.
 - [ ] Header do território presente no topo (`TerritoryTopbar` na Home/Explorar ou equivalente no domínio).
-- [ ] Máx. 2 pesos tipográficos por tela.
+- [ ] Tipografia usa Plus Jakarta Sans via `font-sans`/`font-heading`/tokens; nenhuma segunda família sem decisão versionada.
+- [ ] Máx. 3 pesos tipográficos por tela, preferindo 400/500–600/700 por papel.
 - [ ] Ícones Lucide outline, tamanho 20 ou 24, cor semântica.
 
 Descumprimento bloqueia review. Este documento é atualizado sempre que um novo
