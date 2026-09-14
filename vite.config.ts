@@ -22,7 +22,7 @@ function getVendorChunk(id: string): string | undefined {
     id.includes("clsx") ||
     id.includes("tailwind-merge")
   ) {
-    return "vendor-utils";
+    return "vendor-ui-utils";
   }
 
   if (
@@ -48,10 +48,21 @@ function getVendorChunk(id: string): string | undefined {
 
   if (
     id.includes("react-router-dom") ||
-    id.includes("@tanstack/react-query") ||
-    id.includes("zustand")
+    id.includes(`${path.sep}react-router${path.sep}`) ||
+    id.includes("/react-router/")
   ) {
-    return "vendor-runtime";
+    return "vendor-router";
+  }
+
+  if (
+    id.includes("@tanstack/react-query") ||
+    id.includes("@tanstack/query-core")
+  ) {
+    return "vendor-query";
+  }
+
+  if (id.includes("zustand")) {
+    return "vendor-state";
   }
 
   if (id.includes("@radix-ui")) {
@@ -62,12 +73,16 @@ function getVendorChunk(id: string): string | undefined {
     return "vendor-motion";
   }
 
-  if (
-    id.includes("date-fns") ||
-    id.includes("zod") ||
-    id.includes("lodash-es")
-  ) {
-    return "vendor-utils";
+  if (id.includes("date-fns")) {
+    return "vendor-date";
+  }
+
+  if (id.includes("zod")) {
+    return "vendor-validation";
+  }
+
+  if (id.includes("lodash-es")) {
+    return "vendor-lodash";
   }
 
   return undefined;
