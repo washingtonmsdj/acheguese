@@ -18,19 +18,12 @@ import { BottomNav } from "@/core/navigation/BottomNav";
 import { TerritoryAdaptiveNavigation } from "./territory-vivo";
 import { TerritoryMismatchBanner } from "@/core/location/components/TerritoryMismatchBanner";
 import { prefetchRouteByHref, scheduleIdleRouteWarmup } from "@/app/routes/prefetch";
+import { ACCOUNT_PATHS, ACCOUNT_SETTINGS_SHELL_PATHS } from "@/core/routing/config/account";
 import { isReservedSlug } from "@/core/routing/reservedSlugs";
 import {
   MODULE_SLUGS,
   isCommunityRouteSuffixSegment,
 } from "@/core/routing/utils/territoryUrls";
-
-const ACCOUNT_SETTINGS_SHELL_PATHS = new Set([
-  "/conta",
-  "/conta/seguranca",
-  "/conta/notificacoes",
-  "/conta/privacidade",
-  "/conta/preferencias",
-]);
 
 export function AppLayoutSidebar() {
   const { pathname } = useLocation();
@@ -68,7 +61,7 @@ export function AppLayoutSidebar() {
         pathSegments.length >= 3 &&
         pathSegments.length <= 4));
   const isAccountRoute = pathSegments[0] === "conta";
-  const isAccountOverview = pathname === "/conta";
+  const isAccountOverview = pathname === ACCOUNT_PATHS.home;
   const accountUsesSettingsShell = ACCOUNT_SETTINGS_SHELL_PATHS.has(pathname);
   const conceptAccountPreview =
     import.meta.env.DEV &&
