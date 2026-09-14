@@ -14,8 +14,8 @@ describe("account push and managed-profile quality contract", () => {
     expect(pushHook).toContain("permission");
     expect(pushHook).toContain("Notification.permission");
     expect(pushSettings).toContain('permission === "denied"');
-    expect(pushSettings).toContain('hasPermission');
-    expect(pushSettings).toContain('isSubscribed');
+    expect(pushSettings).toContain("hasPermission");
+    expect(pushSettings).toContain("isSubscribed");
     expect(pushSettings).toContain("Ao ativar, o navegador solicitará sua permissão");
     expect(pushSettings).toContain("As notificações estão bloqueadas nas permissões deste navegador");
   });
@@ -52,5 +52,17 @@ describe("account push and managed-profile quality contract", () => {
     expect(managedProfiles).toContain('aria-label={`Ver perfil público de ${displayName}`}');
     expect(managedProfiles).toContain('aria-label={`Usar ${displayName} como perfil ativo`}');
     expect(managedProfiles).not.toContain("owners canônicos");
+  });
+
+  it("keeps non-personal profile creation on canonical product flows", () => {
+    expect(managedProfiles).toContain('centralRoutes.empresas.create');
+    expect(managedProfiles).toContain('centralRoutes.profissional.home');
+    expect(managedProfiles).toContain('centralRoutes.motorista.cadastro');
+    expect(managedProfiles).toContain('centralRoutes.motoboy.cadastro');
+    expect(managedProfiles).toContain("Criar ou ativar outro perfil");
+    expect(managedProfiles).toContain("Criar perfil de negócio");
+    expect(managedProfiles).toContain("Ativar perfil profissional");
+    expect(managedProfiles).toContain("Ativar como motorista");
+    expect(managedProfiles).toContain("Ativar como entregador");
   });
 });
