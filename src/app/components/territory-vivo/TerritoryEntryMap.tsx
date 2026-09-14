@@ -35,7 +35,7 @@ function EntryMapPlaceholder({
   return (
     <section
       ref={sectionRef}
-      className={`territory-entry-map relative h-full min-h-full w-full overflow-hidden bg-territory-raised ${className}`}
+      className={`territory-entry-map relative h-full min-h-[12rem] w-full overflow-hidden bg-territory-raised md:min-h-[18rem] lg:min-h-[24rem] ${className}`}
       role="status"
       aria-live="polite"
       aria-busy="true"
