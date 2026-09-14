@@ -30,4 +30,15 @@ describe("public root head resource budget", () => {
     expect(html).not.toContain('rel="preconnect" href="https://fonts.googleapis.com"');
     expect(html).not.toContain('rel="preconnect" href="https://fonts.gstatic.com"');
   });
+
+  it("does not precache the heavy sidebar logo during service-worker install", () => {
+    const sw = read("public/sw.js");
+    const staticAssetsBlock = sw.match(/const STATIC_ASSETS = \[([\s\S]*?)\];/)?.[1] ?? "";
+
+    expect(sw).toContain("const SW_VERSION = '2.0.4'");
+    expect(staticAssetsBlock).not.toContain("/images/logo-icon.png");
+    expect(staticAssetsBlock).toContain("/icon-192x192.png");
+    expect(staticAssetsBlock).toContain("/icon-512x512.png");
+    expect(sw).toContain("staleWhileRevalidate(request, CACHE_NAMES.images)");
+  });
 });
