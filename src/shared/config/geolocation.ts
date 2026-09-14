@@ -7,6 +7,8 @@ export const GEOLOCATION_RUNTIME = {
   requestMaximumAgeMs: 10_000,
   watchMaximumAgeMs: 5_000,
   interactivePreciseTimeoutMs: 8_000,
+  backgroundWatchTimeoutMs: TIMEOUTS.USER_LOCATION,
+  backgroundWatchMaximumAgeMs: 60_000,
   mobileFastTimeoutMs: 8_000,
   mobileFastMaximumAgeMs: 60_000,
   fallbackTimeoutExtensionMs: 5_000,
