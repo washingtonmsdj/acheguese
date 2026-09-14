@@ -141,14 +141,18 @@ export default function TerritoryEntryPage() {
             achegue-se<span aria-hidden="true">.</span>
           </a>
           <nav className="entry-desktop-nav" aria-label="Navegação pública">
-            <a href="/como-funciona">Como funciona</a>
+            <a className="hover:bg-territory-raised" href="/como-funciona">
+              Como funciona
+            </a>
             <span className="entry-nav-divider" aria-hidden="true" />
-            <a href={AUTH_PATHS.login}>Entrar</a>
+            <a className="hover:bg-territory-raised" href={AUTH_PATHS.login}>
+              Entrar
+            </a>
           </nav>
           <button
             ref={mobileMenuButtonRef}
             type="button"
-            className="entry-mobile-menu"
+            className="entry-mobile-menu hover:bg-territory-raised"
             aria-label={isMobileMenuOpen ? "Fechar menu" : "Abrir menu"}
             aria-expanded={isMobileMenuOpen}
             aria-controls="entry-mobile-menu-popover"
@@ -174,10 +178,18 @@ export default function TerritoryEntryPage() {
               className="entry-mobile-menu-popover"
               aria-label="Navegação pública móvel"
             >
-              <a href="/como-funciona" onClick={() => setIsMobileMenuOpen(false)}>
+              <a
+                className="hover:bg-territory-raised"
+                href="/como-funciona"
+                onClick={() => setIsMobileMenuOpen(false)}
+              >
                 Como funciona
               </a>
-              <a href={AUTH_PATHS.login} onClick={() => setIsMobileMenuOpen(false)}>
+              <a
+                className="hover:bg-territory-raised"
+                href={AUTH_PATHS.login}
+                onClick={() => setIsMobileMenuOpen(false)}
+              >
                 Entrar
               </a>
             </nav>
