@@ -1,16 +1,32 @@
-import { Navigate, useNavigate, useSearchParams } from "react-router-dom";
+import { useEffect, useState } from "react";
+import {
+  Navigate,
+  useLocation,
+  useNavigate,
+  useSearchParams,
+} from "react-router-dom";
 import { Helmet } from "react-helmet-async";
 import {
+  Accessibility,
   Bell,
+  CheckCircle2,
   ChevronRight,
+  Eye,
   Link2,
+  Move,
+  RotateCcw,
   Shield,
   SlidersHorizontal,
+  Text,
   UserRound,
 } from "lucide-react";
 
 import { useAppUrls } from "@/core/routing/hooks/useAppUrls";
 import { AccountSettingsShell } from "@/modules/profile/components/AccountSettingsShell";
+import { useAccessibility } from "@/shared/components/accessibility/AccessibilityProvider";
+import { Switch } from "@/shared/components/ui/switch";
+import type { AccessibilityFontSize } from "@/shared/accessibility/preferences";
+import { cn } from "@/shared/utils/cn";
 
 const PREFERENCE_ROWS = [
   {
@@ -37,13 +53,83 @@ const PREFERENCE_ROWS = [
     icon: UserRound,
     hrefKey: "identity",
   },
+  {
+    title: "Acessibilidade",
+    description: "Contraste, tamanho do texto e preferências do dispositivo.",
+    icon: Accessibility,
+    hrefKey: "accessibility",
+  },
 ] as const;
+
+const FONT_SIZE_OPTIONS: Array<{
+  value: AccessibilityFontSize;
+  label: string;
+  description: string;
+}> = [
+  { value: "normal", label: "Normal", description: "100%" },
+  { value: "large", label: "Grande", description: "118%" },
+  { value: "extra-large", label: "Extra grande", description: "132%" },
+];
+
+function AccessibilityPreferenceRow({
+  icon,
+  title,
+  description,
+  control,
+}: {
+  icon: React.ReactNode;
+  title: string;
+  description: string;
+  control: React.ReactNode;
+}) {
+  return (
+    <div className="flex min-h-[78px] items-center gap-3 border-b border-territory-border py-3 last:border-b-0">
+      <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-territory-brand/10 text-territory-brand">
+        {icon}
+      </span>
+      <div className="min-w-0 flex-1">
+        <p className="text-sm font-semibold text-territory-ink">{title}</p>
+        <p className="mt-1 text-xs leading-4 text-territory-muted">{description}</p>
+      </div>
+      <div className="shrink-0">{control}</div>
+    </div>
+  );
+}
 
 export default function ContaPreferenciasPage() {
   const navigate = useNavigate();
+  const location = useLocation();
   const appUrls = useAppUrls();
   const [searchParams] = useSearchParams();
   const legacyTab = searchParams.get("tab");
+  const accessibilityView = location.hash === "#acessibilidade";
+  const {
+    isHighContrast,
+    toggleHighContrast,
+    fontSize,
+    setFontSize,
+  } = useAccessibility();
+  const [prefersReducedMotion, setPrefersReducedMotion] = useState(() =>
+    typeof window !== "undefined" &&
+    typeof window.matchMedia === "function"
+      ? window.matchMedia("(prefers-reduced-motion: reduce)").matches
+      : false,
+  );
+
+  useEffect(() => {
+    if (typeof window === "undefined" || typeof window.matchMedia !== "function") {
+      return undefined;
+    }
+
+    const media = window.matchMedia("(prefers-reduced-motion: reduce)");
+    const handleChange = (event: MediaQueryListEvent) => {
+      setPrefersReducedMotion(event.matches);
+    };
+
+    setPrefersReducedMotion(media.matches);
+    media.addEventListener("change", handleChange);
+    return () => media.removeEventListener("change", handleChange);
+  }, []);
 
   if (
     legacyTab === "privacy" ||
@@ -65,10 +151,126 @@ export default function ContaPreferenciasPage() {
         return appUrls.profile.settings("links");
       case "identity":
         return appUrls.profile.settings("privacy");
+      case "accessibility":
+        return "/conta/preferencias#acessibilidade";
       default:
         return appUrls.profile.home;
     }
   };
+
+  if (accessibilityView) {
+    const restoreDefaults = () => {
+      if (isHighContrast) toggleHighContrast();
+      setFontSize("normal");
+    };
+
+    return (
+      <>
+        <Helmet>
+          <title>Acessibilidade | Achegue-se</title>
+        </Helmet>
+
+        <AccountSettingsShell
+          title="Acessibilidade"
+          description="Ajuste a leitura sem criar uma configuração paralela ao restante do aplicativo."
+        >
+          <section className="rounded-2xl border border-territory-border bg-territory-surface px-4 sm:px-5">
+            <AccessibilityPreferenceRow
+              icon={<Eye className="h-5 w-5" aria-hidden="true" />}
+              title="Contraste reforçado"
+              description="Aumenta a separação visual de textos, controles e estados de foco."
+              control={
+                <Switch
+                  id="account-high-contrast"
+                  checked={isHighContrast}
+                  onCheckedChange={(checked) => {
+                    if (checked !== isHighContrast) toggleHighContrast();
+                  }}
+                  aria-label="Ativar contraste reforçado"
+                />
+              }
+            />
+
+            <div className="border-b border-territory-border py-4">
+              <div className="flex items-start gap-3">
+                <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-territory-brand/10 text-territory-brand">
+                  <Text className="h-5 w-5" aria-hidden="true" />
+                </span>
+                <div className="min-w-0 flex-1">
+                  <p className="text-sm font-semibold text-territory-ink">Tamanho do texto</p>
+                  <p className="mt-1 text-xs leading-4 text-territory-muted">
+                    A preferência é aplicada ao aplicativo neste dispositivo.
+                  </p>
+                </div>
+              </div>
+
+              <div className="mt-4 grid grid-cols-3 gap-2" role="group" aria-label="Tamanho do texto">
+                {FONT_SIZE_OPTIONS.map((option) => {
+                  const selected = fontSize === option.value;
+                  return (
+                    <button
+                      key={option.value}
+                      type="button"
+                      aria-pressed={selected}
+                      onClick={() => setFontSize(option.value)}
+                      className={cn(
+                        "min-h-14 rounded-xl border px-2 py-2 text-center transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-territory-brand",
+                        selected
+                          ? "border-territory-brand bg-territory-brand text-white"
+                          : "border-territory-border bg-territory-raised text-territory-ink hover:border-territory-brand/50",
+                      )}
+                    >
+                      <span className="block text-sm font-semibold">{option.label}</span>
+                      <span className={cn("mt-0.5 block text-xs", selected ? "text-white/80" : "text-territory-muted")}>
+                        {option.description}
+                      </span>
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+
+            <AccessibilityPreferenceRow
+              icon={<Move className="h-5 w-5" aria-hidden="true" />}
+              title="Movimento reduzido"
+              description="O Achegue-se respeita automaticamente a preferência de movimento configurada no sistema operacional ou navegador."
+              control={
+                <span
+                  className={cn(
+                    "inline-flex min-h-8 items-center gap-1.5 rounded-full px-2.5 text-xs font-semibold",
+                    prefersReducedMotion
+                      ? "bg-territory-brand/10 text-territory-brand"
+                      : "bg-territory-raised text-territory-muted",
+                  )}
+                  aria-live="polite"
+                >
+                  {prefersReducedMotion ? (
+                    <CheckCircle2 className="h-3.5 w-3.5" aria-hidden="true" />
+                  ) : null}
+                  {prefersReducedMotion ? "Ativo" : "Padrão"}
+                </span>
+              }
+            />
+          </section>
+
+          <section className="mt-4 rounded-2xl border border-territory-border bg-territory-raised p-4 sm:p-5">
+            <p className="text-sm leading-5 text-territory-muted">
+              Contraste e tamanho do texto são preferências locais deste dispositivo. Nenhuma opção desta tela altera seus dados de perfil ou permissões da conta.
+            </p>
+            <button
+              type="button"
+              onClick={restoreDefaults}
+              disabled={!isHighContrast && fontSize === "normal"}
+              className="mt-3 inline-flex min-h-11 items-center gap-2 rounded-xl px-3 text-sm font-semibold text-territory-brand hover:bg-territory-brand/5 disabled:cursor-not-allowed disabled:text-territory-muted disabled:opacity-60 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-territory-brand"
+            >
+              <RotateCcw className="h-4 w-4" aria-hidden="true" />
+              Restaurar padrão
+            </button>
+          </section>
+        </AccountSettingsShell>
+      </>
+    );
+  }
 
   return (
     <>
@@ -118,7 +320,7 @@ export default function ContaPreferenciasPage() {
         </section>
 
         <section className="mt-4 rounded-2xl border border-territory-border bg-territory-raised p-4 text-sm leading-5 text-territory-muted sm:p-5">
-          Preferências de comunicação e privacidade permanecem em serviços separados. Isso evita que um único controle altere dados ou consentimentos sem contexto.
+          Preferências de comunicação, privacidade e acessibilidade permanecem em seus próprios owners. Isso evita que um único controle altere dados, consentimentos ou comportamento visual sem contexto.
         </section>
       </AccountSettingsShell>
     </>
