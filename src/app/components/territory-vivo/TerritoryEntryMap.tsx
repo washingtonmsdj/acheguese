@@ -3,7 +3,7 @@ import type { RefObject } from "react";
 import type { Location } from "@/core/location/types";
 import type { ResolvedTerritory } from "@/core/routing/hooks/useResolveTerritoryFromUrl";
 import { scheduleBrowserIdleWork } from "@/shared/utils/browserIdle";
-import { TerritoryEntryMapSkeleton } from "./TerritoryEntryMapSkeleton";
+import { TerritoryEntryMapArrival } from "./TerritoryEntryMapArrival";
 
 const LazyTerritoryEntryMapRuntime = lazy(() =>
   import("./TerritoryEntryMapRuntime"),
@@ -17,7 +17,7 @@ interface TerritoryEntryMapProps {
   className?: string;
 }
 
-function EntryMapPlaceholder({
+function EntryMapArrivalSurface({
   className,
   isLoading,
   label,
@@ -29,7 +29,7 @@ function EntryMapPlaceholder({
   sectionRef?: RefObject<HTMLElement | null>;
 }) {
   const statusText = isLoading
-    ? "Carregando mapa e limite territorial oficial"
+    ? "Procurando comunidade e dados territoriais"
     : "Preparando mapa e limite territorial oficial";
 
   return (
@@ -41,7 +41,7 @@ function EntryMapPlaceholder({
       aria-busy="true"
       aria-label={`${statusText} de ${label}`}
     >
-      <TerritoryEntryMapSkeleton label={label} statusText={statusText} />
+      <TerritoryEntryMapArrival label={label} statusText={statusText} />
     </section>
   );
 }
@@ -91,7 +91,7 @@ export default function TerritoryEntryMap({
 
   if (isLoading || !shouldMountRuntime) {
     return (
-      <EntryMapPlaceholder
+      <EntryMapArrivalSurface
         className={className}
         isLoading={isLoading}
         label={territoryLabel}
@@ -103,7 +103,7 @@ export default function TerritoryEntryMap({
   return (
     <Suspense
       fallback={
-        <EntryMapPlaceholder
+        <EntryMapArrivalSurface
           className={className}
           isLoading={false}
           label={territoryLabel}
