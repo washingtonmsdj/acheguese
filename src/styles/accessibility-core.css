@@ -67,20 +67,17 @@
   outline-offset: 2px !important;
 }
 
+/*
+ * Applied to the document element so rem-based design tokens scale together.
+ * Do not force descendants to inherit one font-size: that destroys the
+ * hierarchy between headings, labels, body copy and microcopy.
+ */
 .accessibility-font-large {
   font-size: 118% !important;
 }
 
-.accessibility-font-large * {
-  font-size: inherit !important;
-}
-
 .accessibility-font-extra-large {
   font-size: 136% !important;
-}
-
-.accessibility-font-extra-large * {
-  font-size: inherit !important;
 }
 
 *:focus {
