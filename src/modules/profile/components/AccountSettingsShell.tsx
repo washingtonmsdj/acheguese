@@ -122,6 +122,10 @@ export function AccountSettingsShell({
   children,
   title,
   description,
+  mobileTitle,
+  desktopTitle,
+  mobileDescription,
+  desktopDescription,
   eyebrow = "Minha conta",
   showBack = true,
   backTo,
@@ -129,6 +133,10 @@ export function AccountSettingsShell({
   children: ReactNode;
   title: string;
   description?: string;
+  mobileTitle?: string;
+  desktopTitle?: string;
+  mobileDescription?: string;
+  desktopDescription?: string;
   eyebrow?: string;
   showBack?: boolean;
   backTo?: string;
@@ -140,6 +148,10 @@ export function AccountSettingsShell({
   const resolvedBackTo = backTo ?? resolveDefaultBackTarget(location.pathname, location.hash);
   const backLabel = resolveBackLabel(resolvedBackTo);
   const hasMobileAccountNav = location.pathname === ACCOUNT_PATHS.home;
+  const resolvedMobileTitle = mobileTitle ?? title;
+  const resolvedDesktopTitle = desktopTitle ?? title;
+  const resolvedMobileDescription = mobileDescription ?? description;
+  const resolvedDesktopDescription = desktopDescription ?? description;
 
   return (
     <div className="territory-vivo min-h-[100dvh] bg-territory-canvas text-territory-ink">
@@ -237,10 +249,14 @@ export function AccountSettingsShell({
               <div className="mb-4 sm:mb-6">
                 <p className="hidden text-[0.72rem] font-semibold text-territory-brand lg:block">{eyebrow}</p>
                 <h1 className="font-heading text-[1.72rem] font-bold leading-tight tracking-[-0.04em] text-territory-ink sm:text-3xl lg:mt-1">
-                  {title}
+                  <span className="lg:hidden">{resolvedMobileTitle}</span>
+                  <span className="hidden lg:inline">{resolvedDesktopTitle}</span>
                 </h1>
-                {description ? (
-                  <p className="mt-1 text-sm leading-5 text-territory-muted sm:text-[0.95rem]">{description}</p>
+                {resolvedMobileDescription || resolvedDesktopDescription ? (
+                  <p className="mt-1 text-sm leading-5 text-territory-muted sm:text-[0.95rem]">
+                    {resolvedMobileDescription ? <span className="lg:hidden">{resolvedMobileDescription}</span> : null}
+                    {resolvedDesktopDescription ? <span className="hidden lg:inline">{resolvedDesktopDescription}</span> : null}
+                  </p>
                 ) : null}
               </div>
               {children}
