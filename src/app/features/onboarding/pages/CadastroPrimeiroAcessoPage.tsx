@@ -14,6 +14,7 @@ import {
 import { useLocationCascade } from "@/core/location/hooks/useLocationCascade";
 import { profileService } from "@/core/profiles/services/ProfileService";
 import type { ProfileRow } from "@/core/profiles/services/types";
+import { useIdentityAvailability } from "@/core/public-identity/hooks/useIdentityAvailability";
 import { SUPPORT_PATH } from "@/shared/constants/legal";
 import { useToast } from "@/shared/hooks/use-toast";
 import { resolveSafeInternalPath } from "@/shared/utils/safeRedirect";
@@ -31,6 +32,30 @@ interface ConceptSelectProps {
   options: TerritoryOption[];
   disabled?: boolean;
   onChange: (value: string) => void;
+}
+
+const GENERATED_USERNAME_SUFFIX = /_[0-9a-f]{8}$/i;
+
+function normalizeUsernameDraft(value: string): string {
+  return value
+    .replace(/^@+/, "")
+    .replace(/[^a-z0-9_]/gi, "")
+    .toLowerCase()
+    .slice(0, 30);
+}
+
+function getUsernameAvailabilityCopy(status?: string, fallback?: string): string {
+  if (fallback) return fallback;
+  switch (status) {
+    case "taken":
+      return "Este nome de usuário já está em uso.";
+    case "reserved":
+      return "Este nome de usuário é reservado.";
+    case "invalid":
+      return "Escolha outro nome de usuário.";
+    default:
+      return "Não foi possível confirmar a disponibilidade.";
+  }
 }
 
 /**
@@ -89,6 +114,9 @@ export default function CadastroPrimeiroAcessoPage() {
   const [neighborhoodId, setNeighborhoodId] = useState("");
   const [saving, setSaving] = useState(false);
   const [territorySaved, setTerritorySaved] = useState(false);
+  const [editingUsername, setEditingUsername] = useState(false);
+  const [usernameDraft, setUsernameDraft] = useState("");
+  const [savingUsername, setSavingUsername] = useState(false);
 
   const redirectTo = useMemo(
     () => resolveSafeInternalPath(getPendingSignupRedirect(), "/"),
@@ -123,6 +151,11 @@ export default function CadastroPrimeiroAcessoPage() {
 
   const { states, cities, neighborhoods, loadingStates, loadingCities, loadingNeighborhoods } =
     useLocationCascade(stateId || null, cityId || null);
+  const usernameAvailability = useIdentityAvailability({
+    entityType: "profile",
+    excludeEntityId: profile?.id,
+    debounceMs: 420,
+  });
 
   const loadProfile = useCallback(async () => {
     if (!user) return;
@@ -192,6 +225,66 @@ export default function CadastroPrimeiroAcessoPage() {
     }
   };
 
+  const beginUsernameEdit = () => {
+    if (!profile) return;
+    setUsernameDraft(normalizeUsernameDraft(profile.username ?? ""));
+    usernameAvailability.reset();
+    setEditingUsername(true);
+  };
+
+  const cancelUsernameEdit = () => {
+    usernameAvailability.reset();
+    setUsernameDraft("");
+    setEditingUsername(false);
+  };
+
+  const saveUsername = async () => {
+    if (!profile || savingUsername) return;
+    const normalized = normalizeUsernameDraft(usernameDraft);
+    if (normalized.length < 3) {
+      toast({
+        title: "Escolha um @usuário válido",
+        description: "Use pelo menos 3 caracteres.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    setSavingUsername(true);
+    try {
+      const availability = await usernameAvailability.check(normalized);
+      if (!availability || availability.status !== "available") {
+        toast({
+          title: "Este @usuário não está disponível",
+          description: getUsernameAvailabilityCopy(
+            availability?.status,
+            availability?.message,
+          ),
+          variant: "destructive",
+        });
+        return;
+      }
+
+      const updated = await profileService.updateProfile(profile.id, {
+        username: normalized,
+      });
+      setProfile(updated);
+      setUsernameDraft(normalized);
+      setEditingUsername(false);
+      usernameAvailability.reset();
+      await refreshUser();
+      toast({ title: "Nome de usuário atualizado" });
+    } catch {
+      toast({
+        title: "Não foi possível atualizar o @usuário",
+        description: "Tente outro nome ou faça isso depois em Meus perfis.",
+        variant: "destructive",
+      });
+    } finally {
+      setSavingUsername(false);
+    }
+  };
+
   if (loadingProfile) {
     return (
       <div className="flex min-h-[100dvh] items-center justify-center bg-[#fffdfa] text-[#486367]">
@@ -244,7 +337,12 @@ export default function CadastroPrimeiroAcessoPage() {
   }
 
   const displayName = profile.display_name || profile.name || user?.email?.split("@")[0] || "você";
-  const username = profile.username ? `@${profile.username.replace(/^@/, "")}` : null;
+  const usernameValue = normalizeUsernameDraft(profile.username ?? "");
+  const username = usernameValue ? `@${usernameValue}` : null;
+  const shouldOfferUsernameChoice =
+    !usernameValue || GENERATED_USERNAME_SUFFIX.test(usernameValue);
+  const availabilityMatchesDraft =
+    usernameAvailability.result?.identifier === usernameDraft;
 
   return (
     <>
@@ -275,15 +373,97 @@ export default function CadastroPrimeiroAcessoPage() {
 
           <div className="lg:mt-6 lg:grid lg:grid-cols-[0.9fr_1.1fr] lg:gap-4">
             <div>
-              <section className="mt-4 flex items-center gap-3 rounded-xl border border-[#d5dcda] bg-white p-3 lg:mt-0 lg:p-4">
-                <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-[#e8eeec] text-[#0b5b59]">
-                  <AuthConceptIcon name="person" />
-                </span>
-                <div>
-                  <p className="text-[13px] font-bold">{displayName}</p>
-                  {username ? <p className="text-[11px] text-[#607477]">{username}</p> : null}
-                  <p className="text-[11px] text-[#607477]">Perfil pessoal</p>
+              <section className="mt-4 rounded-xl border border-[#d5dcda] bg-white p-3 lg:mt-0 lg:p-4">
+                <div className="flex items-center gap-3">
+                  <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-[#e8eeec] text-[#0b5b59]">
+                    <AuthConceptIcon name="person" />
+                  </span>
+                  <div className="min-w-0 flex-1">
+                    <p className="truncate text-[13px] font-bold">{displayName}</p>
+                    {username ? <p className="truncate text-[11px] text-[#607477]">{username}</p> : null}
+                    <p className="text-[11px] text-[#607477]">Perfil pessoal</p>
+                  </div>
                 </div>
+
+                {shouldOfferUsernameChoice && !editingUsername ? (
+                  <div className="mt-3 rounded-lg bg-[#f6f4ed] px-3 py-2.5">
+                    <p className="text-[10.5px] leading-4 text-[#607477]">
+                      O identificador atual foi criado automaticamente. Você pode escolher um @usuário mais fácil de lembrar agora.
+                    </p>
+                    <button
+                      type="button"
+                      onClick={beginUsernameEdit}
+                      className="mt-1 min-h-8 rounded px-1 text-[11.5px] font-bold text-[#0b4e52] underline underline-offset-2 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#0b5b59]/35"
+                    >
+                      Escolher meu @usuário
+                    </button>
+                  </div>
+                ) : null}
+
+                {editingUsername ? (
+                  <div className="mt-3 rounded-lg border border-[#d7e1de] bg-[#fbfcf9] p-3">
+                    <label htmlFor="first-access-username" className="text-[11px] font-bold text-[#173d41]">
+                      Seu @usuário
+                    </label>
+                    <div className="relative mt-1">
+                      <span className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-[14px] text-[#315356]">@</span>
+                      <input
+                        id="first-access-username"
+                        value={usernameDraft}
+                        maxLength={30}
+                        autoComplete="username"
+                        autoCapitalize="none"
+                        spellCheck={false}
+                        disabled={savingUsername}
+                        aria-describedby="first-access-username-status"
+                        onChange={(event) => {
+                          const normalized = normalizeUsernameDraft(event.target.value);
+                          setUsernameDraft(normalized);
+                          if (normalized.length >= 3) {
+                            usernameAvailability.checkDebounced(normalized);
+                          } else {
+                            usernameAvailability.reset();
+                          }
+                        }}
+                        className="h-10 w-full rounded-md border border-[#b9c5c6] bg-white pl-8 pr-3 text-[14px] text-[#173d41] outline-none transition-colors focus:border-[#0b5b59] focus:ring-2 focus:ring-[#0b5b59]/20 disabled:bg-[#f2f3f0]"
+                      />
+                    </div>
+                    <div id="first-access-username-status" aria-live="polite" className="mt-1 min-h-4 text-[10.5px] leading-4">
+                      {usernameAvailability.isChecking ? (
+                        <span className="text-[#607477]">Verificando disponibilidade…</span>
+                      ) : availabilityMatchesDraft && usernameAvailability.result?.status === "available" ? (
+                        <span className="font-medium text-[#287255]">Nome de usuário disponível.</span>
+                      ) : availabilityMatchesDraft && usernameAvailability.result?.status !== "available" ? (
+                        <span className="text-[#a83f37]">
+                          {getUsernameAvailabilityCopy(
+                            usernameAvailability.result?.status,
+                            usernameAvailability.result?.message,
+                          )}
+                        </span>
+                      ) : (
+                        <span className="text-[#607477]">Use letras, números e _.</span>
+                      )}
+                    </div>
+                    <div className="mt-2 flex gap-2">
+                      <button
+                        type="button"
+                        onClick={() => void saveUsername()}
+                        disabled={savingUsername || usernameAvailability.isChecking || usernameDraft.length < 3}
+                        className="h-9 flex-1 rounded-[8px] bg-[#0b5b59] px-3 text-[11px] font-bold text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#0b5b59]/35 disabled:opacity-55"
+                      >
+                        {savingUsername ? "Salvando…" : "Salvar @usuário"}
+                      </button>
+                      <button
+                        type="button"
+                        onClick={cancelUsernameEdit}
+                        disabled={savingUsername}
+                        className="h-9 rounded-[8px] border border-[#9babad] bg-white px-3 text-[11px] font-bold text-[#315356] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#0b5b59]/35 disabled:opacity-55"
+                      >
+                        Agora não
+                      </button>
+                    </div>
+                  </div>
+                ) : null}
               </section>
 
               {hasReturnContext ? (
