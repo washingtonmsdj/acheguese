@@ -69,10 +69,14 @@ describe("account settings concept contract", () => {
     expect(shell).toContain('excludeHashes: ["#acessibilidade"]');
   });
 
-  it("owns mobile safe areas without adding a second shell", () => {
+  it("owns mobile safe areas and uses the real active identity in the desktop header", () => {
     expect(shell).toContain("env(safe-area-inset-top)");
     expect(shell).toContain("env(safe-area-inset-bottom)");
     expect(shell).toContain('id="main-content"');
+    expect(shell).toContain("useMultiProfileContext()");
+    expect(shell).toContain("activeProfile?.display_name");
+    expect(shell).toContain("activeProfile?.avatar_url");
+    expect(shell).toContain("to={ACCOUNT_PATHS.profiles}");
   });
 
   it("keeps live overview aligned with the concept without dropping real features", () => {
@@ -155,6 +159,15 @@ describe("account settings concept contract", () => {
     expect(privacy).toContain("PrivacySettingsService.exportUserData");
     expect(privacy).toContain("PrivacySettingsService.requestAccountDeletion");
     expect(privacy).toContain("PrivacySettingsService.cancelAccountDeletion");
+  });
+
+  it("keeps the existing quiet-hours day scope editable instead of dropping it for concept fidelity", () => {
+    expect(notifications).toContain("QUIET_DAY_OPTIONS");
+    expect(notifications).toContain("quiet_hours_days");
+    expect(notifications).toContain("toggleQuietDay");
+    expect(notifications).toContain('aria-pressed={selected}');
+    expect(notifications).toContain("Selecione pelo menos um dia");
+    expect(notifications).toContain("quietDaysInvalid");
   });
 
   it("fails closed when consent or deletion authority cannot be loaded", () => {
