@@ -17,12 +17,12 @@ import { cn } from "@/shared/utils/cn";
 
 const settingsItems = [
   { label: "Visão geral", href: ACCOUNT_PATHS.home, icon: Home, exact: true, excludeSearch: "?section=profiles" },
-  { label: "Dados de acesso", href: ACCOUNT_PATHS.access, icon: KeyRound, hash: "#acesso" },
-  { label: "Segurança", href: ACCOUNT_PATHS.security, icon: LockKeyhole, exact: true, excludeHash: "#acesso" },
+  { label: "Dados de acesso", href: ACCOUNT_PATHS.access, icon: KeyRound, hashes: ["#acesso", "#email"] },
+  { label: "Segurança", href: ACCOUNT_PATHS.security, icon: LockKeyhole, exact: true, excludeHashes: ["#acesso", "#email"] },
   { label: "Notificações", href: ACCOUNT_PATHS.notifications, icon: Bell, exact: true },
   { label: "Privacidade e dados", href: ACCOUNT_PATHS.privacy, icon: Shield, exact: true },
-  { label: "Preferências", href: ACCOUNT_PATHS.preferences, icon: SlidersHorizontal, exact: true, excludeHash: "#acessibilidade" },
-  { label: "Acessibilidade", href: ACCOUNT_PATHS.accessibility, icon: Accessibility, hash: "#acessibilidade" },
+  { label: "Preferências", href: ACCOUNT_PATHS.preferences, icon: SlidersHorizontal, exact: true, excludeHashes: ["#acessibilidade"] },
+  { label: "Acessibilidade", href: ACCOUNT_PATHS.accessibility, icon: Accessibility, hashes: ["#acessibilidade"] },
   { label: "Meus perfis", href: ACCOUNT_PATHS.profiles, icon: UserRound, exact: true, search: "?section=profiles" },
 ] as const;
 
@@ -32,16 +32,16 @@ function isActive(
   locationSearch: string,
   href: string,
   exact?: boolean,
-  hash?: string,
-  excludeHash?: string,
+  hashes?: readonly string[],
+  excludeHashes?: readonly string[],
   search?: string,
   excludeSearch?: string,
 ) {
   const target = href.split("?")[0].split("#")[0];
   const pathMatches = exact ? pathname === target : pathname.startsWith(target);
   if (!pathMatches) return false;
-  if (hash) return locationHash === hash;
-  if (excludeHash && locationHash === excludeHash) return false;
+  if (hashes && !hashes.includes(locationHash)) return false;
+  if (excludeHashes?.includes(locationHash)) return false;
   if (search) return locationSearch === search;
   if (excludeSearch && locationSearch === excludeSearch) return false;
   return true;
@@ -75,15 +75,15 @@ export function AccountSettingsShell({
             achegue-se<span className="text-territory-sun">.</span>
           </Link>
           <nav aria-label="Configurações da conta" className="space-y-1">
-            {settingsItems.map(({ label, href, icon: Icon, exact, hash, excludeHash, search, excludeSearch }) => {
+            {settingsItems.map(({ label, href, icon: Icon, exact, hashes, excludeHashes, search, excludeSearch }) => {
               const active = isActive(
                 location.pathname,
                 location.hash,
                 location.search,
                 href,
                 exact,
-                hash,
-                excludeHash,
+                hashes,
+                excludeHashes,
                 search,
                 excludeSearch,
               );
