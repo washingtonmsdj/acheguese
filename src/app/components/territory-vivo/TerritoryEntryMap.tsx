@@ -24,6 +24,54 @@ function preloadEntryMapStyle(): void {
   document.head.appendChild(link);
 }
 
+function preconnectOfficialBoundarySources(
+  resolved: ResolvedTerritory | null | undefined,
+): void {
+  if (typeof document === "undefined" || !resolved) return;
+
+  const locations =
+    resolved.kind === "group" ? resolved.group.members : [resolved.location];
+  const origins = new Set<string>();
+
+  locations.forEach((location) => {
+    const sourceUrl = location.metadata?.source_url;
+    if (typeof sourceUrl !== "string" || !sourceUrl) return;
+
+    try {
+      const source = new URL(sourceUrl);
+      if (source.protocol !== "https:" && source.protocol !== "http:") return;
+      origins.add(source.origin);
+    } catch {
+      // Invalid optional metadata must never affect entry rendering.
+    }
+  });
+
+  const existingPreconnects = Array.from(
+    document.head.querySelectorAll<HTMLLinkElement>(
+      "link[data-entry-boundary-preconnect]",
+    ),
+  );
+
+  origins.forEach((origin) => {
+    if (existingPreconnects.some((link) => link.href === `${origin}/`)) return;
+
+    const source = new URL(origin);
+
+    const dnsPrefetch = document.createElement("link");
+    dnsPrefetch.rel = "dns-prefetch";
+    dnsPrefetch.href = `//${source.host}`;
+    dnsPrefetch.dataset.entryBoundaryDnsPrefetch = "true";
+    document.head.appendChild(dnsPrefetch);
+
+    const preconnect = document.createElement("link");
+    preconnect.rel = "preconnect";
+    preconnect.href = origin;
+    preconnect.crossOrigin = "anonymous";
+    preconnect.dataset.entryBoundaryPreconnect = "true";
+    document.head.appendChild(preconnect);
+  });
+}
+
 interface TerritoryEntryMapProps {
   city: Location | null;
   resolvedTerritory?: ResolvedTerritory | null;
@@ -81,10 +129,11 @@ export default function TerritoryEntryMap({
     if (shouldMountRuntime) return;
 
     preloadEntryMapStyle();
-    const runtimePromise = loadTerritoryEntryMapRuntime();
     const preloadResolved =
       resolvedTerritory ?? (city ? { kind: "location" as const, location: city } : null);
+    preconnectOfficialBoundarySources(preloadResolved);
 
+    const runtimePromise = loadTerritoryEntryMapRuntime();
     void runtimePromise.then((module) =>
       Promise.all([
         module.preloadTerritoryEntryMapEngine(),
