@@ -1,7 +1,6 @@
 import { lazy, Suspense, useEffect, useState } from "react";
 import { BrowserRouter, useLocation } from "react-router-dom";
 
-import { ErrorBoundary } from "@/app/components/ErrorBoundary";
 import RootRouteEntry from "@/app/routes/RootRouteEntry";
 import { scheduleBrowserIdleWork } from "@/shared/utils/browserIdle";
 
@@ -88,10 +87,8 @@ function RuntimeRouteTree() {
 
 export function AppRuntime() {
   return (
-    <ErrorBoundary>
-      <BrowserRouter>
-        <RuntimeRouteTree />
-      </BrowserRouter>
-    </ErrorBoundary>
+    <BrowserRouter>
+      <RuntimeRouteTree />
+    </BrowserRouter>
   );
 }
