@@ -39,6 +39,7 @@ describe("Google OAuth account/access contract", () => {
   it("sends OAuth through terms acceptance and preserves the safe return target", () => {
     const authService = readProjectFile("src/core/auth/services/AuthService.ts");
     const authFlow = readProjectFile("src/core/auth/constants/authFlow.ts");
+    const journey = readProjectFile("src/core/auth/utils/authJourney.ts");
     const login = readProjectFile("src/app/pages/LoginPage.tsx");
     const signup = readProjectFile(
       "src/app/features/onboarding/pages/CadastroPage.tsx",
@@ -56,14 +57,16 @@ describe("Google OAuth account/access contract", () => {
     const googleLoginHandler = login.slice(googleLoginStart, googleLoginEnd);
     expect(googleLoginStart).toBeGreaterThanOrEqual(0);
     expect(googleLoginEnd).toBeGreaterThan(googleLoginStart);
-    expect(googleLoginHandler).toContain("setPendingAuthReturn(redirectTo)");
-    expect(googleLoginHandler.indexOf("setPendingAuthReturn(redirectTo)")).toBeLessThan(
+    expect(googleLoginHandler).toContain("prepareGoogleLogin(redirectTo)");
+    expect(googleLoginHandler.indexOf("prepareGoogleLogin(redirectTo)")).toBeLessThan(
       googleLoginHandler.indexOf("await signInWithGoogle()"),
     );
-    expect(googleLoginHandler).toContain("clearPendingAuthReturn()");
+    expect(googleLoginHandler).toContain("cancelGoogleLogin()");
 
-    expect(signup).toContain("setPendingAuthReturn");
-    expect(signup).toContain("firstAccess");
+    expect(signup).toContain("prepareGoogleSignup(redirectTo)");
+    expect(signup).toContain("cancelGoogleSignup()");
+    expect(journey).toContain("setPendingSignupRedirect");
+    expect(journey).toContain("setPendingAuthReturn(AUTH_PATHS.firstAccess)");
     expect(terms).toContain("getPendingAuthReturn");
     expect(terms).toContain('resolveSafeInternalPath(getPendingAuthReturn(), "/")');
     expect(terms).toContain("recordConsent");
@@ -96,8 +99,8 @@ describe("Google OAuth account/access contract", () => {
     const callback = readProjectFile("src/core/auth/utils/authCallback.ts");
 
     expect(redirect).toContain("isExpiredPasswordRecoveryError");
-    expect(redirect).not.toContain("hashError?.error === 'access_denied'");
-    expect(callback).toContain('errorCode === "otp_expired"');
+    expect(redirect).not.toContain("access_denied");
+    expect(callback).toContain("AUTH_QUERY_VALUES.expiredOtp");
     expect(callback).toContain("isOAuthTermsCallbackError");
   });
 
