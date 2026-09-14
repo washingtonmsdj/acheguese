@@ -79,7 +79,6 @@ export function ProfileHeaderCompact(props: ProfileHeaderCompactProps) {
   const displayName =
     activeProfile?.display_name || profile?.display_name || "Minha conta";
   const avatarUrl = activeProfile?.avatar_url || profile?.avatar_url;
-  const bio = activeProfile?.bio || profile?.bio;
   const editorProfileId = activeProfile?.id ?? profile?.id;
   const profileCount = props.allProfiles?.length ?? (activeProfile ? 1 : 0);
   const completenessProfile: ProfileCompletenessRecord | null = activeProfile
@@ -109,24 +108,24 @@ export function ProfileHeaderCompact(props: ProfileHeaderCompactProps) {
 
   return (
     <section
-      className="rounded-territory-highlight border border-territory-border bg-territory-surface p-4 sm:p-6"
+      className="rounded-2xl border border-territory-border bg-territory-surface p-3 sm:p-5"
       data-account-identity
     >
-      <div className="flex items-start gap-4 sm:items-center">
+      <div className="flex items-center gap-3 sm:gap-4">
         <div className="relative shrink-0">
-          <Avatar className="h-20 w-20 border border-territory-border bg-territory-raised sm:h-24 sm:w-24">
+          <Avatar className="h-16 w-16 border border-territory-border bg-territory-raised sm:h-20 sm:w-20">
             <AvatarImage src={avatarUrl || undefined} alt="" />
-            <AvatarFallback className="bg-territory-raised text-xl font-semibold text-territory-ink sm:text-2xl">
+            <AvatarFallback className="bg-territory-raised text-lg font-semibold text-territory-ink sm:text-xl">
               {getInitials(displayName)}
             </AvatarFallback>
           </Avatar>
           <button
             type="button"
             onClick={() => fileRef.current?.click()}
-            className="absolute -bottom-1 -right-1 flex h-10 w-10 items-center justify-center rounded-full border-2 border-territory-surface bg-territory-brand text-white transition-colors hover:bg-territory-brand-strong"
+            className="absolute -bottom-1 -right-1 flex h-8 w-8 items-center justify-center rounded-full border-2 border-territory-surface bg-territory-brand text-white transition-colors hover:bg-territory-brand-strong focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-territory-brand"
             aria-label="Alterar foto de perfil"
           >
-            <Camera className="h-4 w-4" aria-hidden="true" />
+            <Camera className="h-3.5 w-3.5" aria-hidden="true" />
           </button>
           <input
             ref={fileRef}
@@ -139,37 +138,23 @@ export function ProfileHeaderCompact(props: ProfileHeaderCompactProps) {
         </div>
 
         <div className="min-w-0 flex-1">
-          <p className="text-[0.6875rem] font-bold uppercase tracking-[0.14em] text-territory-brand">
-            Identidade ativa
-          </p>
-          <div className="mt-1 flex flex-wrap items-center gap-2">
-            <h1 className="min-w-0 truncate font-heading text-2xl font-semibold text-territory-ink sm:text-3xl">
+          <div className="flex flex-wrap items-center gap-1.5">
+            <h2 className="min-w-0 truncate font-heading text-xl font-bold tracking-[-0.025em] text-territory-ink sm:text-2xl">
               {displayName}
-            </h1>
+            </h2>
             {props.isVerified ? (
               <CheckCircle2
-                className="h-5 w-5 shrink-0 text-territory-brand"
+                className="h-4.5 w-4.5 shrink-0 text-territory-brand"
                 aria-label="Perfil verificado"
               />
             ) : null}
           </div>
-          <div className="mt-2 flex flex-wrap items-center gap-x-3 gap-y-1 text-sm text-territory-muted">
-            {props.handle ? (
-              <span>@{props.handle}</span>
-            ) : (
-              <span>Sem nome público</span>
-            )}
+          <p className="mt-1 truncate text-sm text-territory-muted">{props.userEmail}</p>
+          <div className="mt-1 flex flex-wrap items-center gap-x-2 gap-y-1 text-xs text-territory-muted">
+            {props.handle ? <span>@{props.handle}</span> : <span>Sem nome público</span>}
+            <span aria-hidden="true">·</span>
             <span>{getProfileTypeLabel(activeProfile)}</span>
           </div>
-          {bio ? (
-            <p className="mt-3 line-clamp-2 max-w-2xl text-sm leading-6 text-territory-muted">
-              {bio}
-            </p>
-          ) : (
-            <p className="mt-3 text-sm text-territory-muted">
-              Complete sua apresentação para deixar sua identidade mais clara.
-            </p>
-          )}
         </div>
 
         <div className="hidden shrink-0 items-center gap-2 sm:flex">
@@ -191,21 +176,19 @@ export function ProfileHeaderCompact(props: ProfileHeaderCompactProps) {
         </div>
       </div>
 
-      <div className="mt-4 grid gap-2 border-t border-territory-border pt-4 text-sm sm:grid-cols-3">
+      <div className="mt-4 hidden gap-2 border-t border-territory-border pt-4 text-sm sm:grid sm:grid-cols-3">
         <div className="flex min-h-11 items-center gap-2 text-territory-muted">
-          <MapPin className="h-4 w-4 shrink-0 text-territory-brand" />
+          <MapPin className="h-4 w-4 shrink-0 text-territory-brand" aria-hidden="true" />
           <span className="truncate">
             {props.territoryLabel || "Território não definido"}
           </span>
         </div>
         <div className="flex min-h-11 items-center gap-2 text-territory-muted">
-          <Users className="h-4 w-4 shrink-0 text-territory-brand" />
-          <span>
-            {profileCount === 1 ? "1 perfil" : `${profileCount} perfis`}
-          </span>
+          <Users className="h-4 w-4 shrink-0 text-territory-brand" aria-hidden="true" />
+          <span>{profileCount === 1 ? "1 perfil" : `${profileCount} perfis`}</span>
         </div>
         <div className="flex min-h-11 items-center gap-2 text-territory-muted">
-          <Bell className="h-4 w-4 shrink-0 text-territory-brand" />
+          <Bell className="h-4 w-4 shrink-0 text-territory-brand" aria-hidden="true" />
           <span>
             {props.notifications.unread > 0
               ? `${props.notifications.unread} não lidas`
@@ -214,26 +197,8 @@ export function ProfileHeaderCompact(props: ProfileHeaderCompactProps) {
         </div>
       </div>
 
-      <div className="mt-3 flex gap-2 sm:hidden">
-        <Button type="button" className="min-h-11 flex-1" onClick={openEditor}>
-          <Pencil className="mr-2 h-4 w-4" />
-          Editar
-        </Button>
-        {props.canOpenPublicProfile ? (
-          <Button
-            type="button"
-            variant="outline"
-            className="min-h-11 flex-1 border-territory-border bg-territory-surface text-territory-ink"
-            onClick={() => navigate(buildPublicProfileUrl(props.handle))}
-          >
-            <Globe2 className="mr-2 h-4 w-4" />
-            Ver público
-          </Button>
-        ) : null}
-      </div>
-
       {completenessProfile ? (
-        <div className="mt-4 border-t border-territory-border pt-4">
+        <div className="mt-4 hidden border-t border-territory-border pt-4 md:block">
           <ProfileCompletenessWidget profile={completenessProfile} />
         </div>
       ) : null}
