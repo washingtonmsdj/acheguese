@@ -13,8 +13,12 @@ import {
 } from "@/core/routing/config/territorialRoutePatterns";
 import LaunchPausedPage from "@/app/pages/LaunchPausedPage";
 import RootRouteEntry from "@/app/routes/RootRouteEntry";
-import { AppLayoutRoutes } from "@/app/routes/sections/AppLayoutRoutes";
 
+const AppLayoutRoutes = lazy(() =>
+  import("@/app/routes/sections/AppLayoutRoutes").then((module) => ({
+    default: module.AppLayoutRoutes,
+  })),
+);
 const QrResolverPage = lazy(() =>
   import("@/core/qr/pages/QrResolverPage").then((module) => ({
     default: module.QrResolverPage,
@@ -114,6 +118,7 @@ export function AppRoutes() {
 
   return (
     <Routes>
+      <Route path="/" element={<RootRouteEntry />} />
       <Route path="/q/:token" element={<QrResolverPage />} />
       <Route path="/status" element={<StatusPage />} />
 
