@@ -358,15 +358,18 @@ class BoundaryServiceClass {
         this.getFallbackBoundaryFromMetadata(location);
       if (metadataFallbackBoundary) return metadataFallbackBoundary;
 
+      // Public fallbacks already carry an explicit official source reference.
+      // Prefer that municipal source before touching the canonical repository so
+      // public entry surfaces do not pay a database roundtrip before geometry.
+      const metadataSourceBoundary =
+        await this.getMetadataSourceBoundary(location);
+      if (metadataSourceBoundary) return metadataSourceBoundary;
+
       const canonicalLocation =
         await this.resolveCanonicalLocationForFallback(location);
       if (canonicalLocation) {
         return this.resolveBoundsForLocation(canonicalLocation);
       }
-
-      const metadataSourceBoundary =
-        await this.getMetadataSourceBoundary(location);
-      if (metadataSourceBoundary) return metadataSourceBoundary;
 
       return {
         rings: [],
