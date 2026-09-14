@@ -5,7 +5,10 @@ import {
   MapLibreAdapter,
   preloadPassiveMapLibreAdapterRuntime,
 } from "@/core/maps/components/v3/MapLibreAdapter";
-import { useTerritoryPolygon } from "@/core/maps/hooks/useTerritoryPolygon";
+import {
+  preloadTerritoryPolygons,
+  useTerritoryPolygon,
+} from "@/core/maps/hooks/useTerritoryPolygon";
 import { DEFAULT_TILE_STYLE, NEIGHBORHOOD_COLORS } from "@/core/maps/providers/MapProvider";
 import type { ResolvedTerritory } from "@/core/routing/hooks/useResolveTerritoryFromUrl";
 import { TerritoryEntryMapArrival } from "./TerritoryEntryMapArrival";
@@ -17,6 +20,12 @@ const BOUNDARY_TIMEOUT_MS = 8000;
 
 export function preloadTerritoryEntryMapEngine(): Promise<void> {
   return preloadPassiveMapLibreAdapterRuntime();
+}
+
+export function preloadTerritoryEntryBoundary(
+  resolved: ResolvedTerritory | null | undefined,
+): Promise<void> {
+  return preloadTerritoryPolygons(resolved);
 }
 
 export interface TerritoryEntryMapRuntimeProps {
