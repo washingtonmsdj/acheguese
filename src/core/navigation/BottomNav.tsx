@@ -6,14 +6,19 @@
  * atividade e identidade.
  */
 
-
+import { useSyncExternalStore } from "react";
 import { Link, useLocation as useRouterLocation } from "react-router-dom";
 import { usePublicBrowsingCity } from "@/core/location/hooks/usePublicBrowsingCity";
-import { useSessionContext } from "@/core/session";
 import {
   buildTerritoryNavigationModes,
   isTerritoryNavigationModeActive,
 } from "@/core/navigation/territoryNavigationModes";
+import { TERRITORY_CONFIG } from "@/core/routing/config/territory";
+import {
+  lastTerritoryStore,
+  type LastTerritory,
+} from "@/core/routing/stores/LastTerritoryStore";
+import { useSessionContext } from "@/core/session";
 import { cn } from "@/shared/utils/cn";
 
 interface BottomNavProps {
@@ -26,12 +31,19 @@ export function BottomNav({ prefetchRoute = noopPrefetch }: BottomNavProps) {
   const { pathname } = useRouterLocation();
   const { active } = usePublicBrowsingCity();
   const { user } = useSessionContext();
+  const lastTerritory = useSyncExternalStore<LastTerritory | null>(
+    (listener) => lastTerritoryStore.subscribe(listener),
+    () => lastTerritoryStore.get(),
+    () => null,
+  );
 
   if (pathname === "/") return null;
 
   const mainTabs = buildTerritoryNavigationModes({
     pathname,
     fallback: active,
+    fallbackBaseUrl:
+      lastTerritory?.baseUrl ?? TERRITORY_CONFIG.launch.community.path,
     authenticated: Boolean(user),
   });
 
