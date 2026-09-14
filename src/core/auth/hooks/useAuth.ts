@@ -33,6 +33,7 @@ interface UseAuthReturn {
   resetPasswordByIdentifier: (identifier: string) => Promise<void>;
   resendConfirmationEmail: (email: string) => Promise<void>;
   updatePassword: (newPassword: string) => Promise<void>;
+  updateEmail: (newEmail: string) => Promise<void>;
   refreshUser: () => Promise<void>;
 }
 
@@ -195,6 +196,19 @@ export function useAuth(): UseAuthReturn {
     }
   }, []);
 
+  const updateEmail = useCallback(async (newEmail: string) => {
+    try {
+      setLoading(true);
+      setError(null);
+      await AuthService.updateEmail(newEmail);
+    } catch (err) {
+      setError(err as AuthError);
+      throw err;
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
   const refreshUser = useCallback(async () => {
     try {
       setLoading(true);
@@ -223,6 +237,7 @@ export function useAuth(): UseAuthReturn {
     resetPasswordByIdentifier,
     resendConfirmationEmail,
     updatePassword,
+    updateEmail,
     refreshUser,
   };
 }
