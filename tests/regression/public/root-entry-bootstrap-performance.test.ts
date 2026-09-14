@@ -130,20 +130,20 @@ describe("anonymous root bootstrap performance", () => {
     expect(overlays).not.toContain("Sonner");
   });
 
-  it("discovers font and map hosts without render-blocking font helpers", () => {
+  it("keeps optional font networking behind the first-map priority window", () => {
     const html = read("index.html");
     const main = read("src/main.tsx");
 
     expect(html).toContain("data-public-font-stylesheet");
-    expect(html).toContain('rel="preload"');
-    expect(html).toContain('as="style"');
     expect(html).toContain("display=optional");
+    expect(html).not.toContain('fetchpriority="low"');
+    expect(html).not.toContain('rel="preconnect" href="https://fonts.googleapis.com"');
+    expect(html).not.toContain('rel="preconnect" href="https://fonts.gstatic.com"');
     expect(html).not.toContain("font-bootstrap.js");
-    expect(html).not.toContain(
-      '<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans',
-    );
-    expect(main).toContain('link[data-public-font-stylesheet]');
-    expect(main).toContain('fontStylesheet.rel = "stylesheet"');
+    expect(main).toContain('meta[data-public-font-stylesheet]');
+    expect(main).toContain('stylesheet.rel = "stylesheet"');
+    expect(main).toContain("scheduleAfterPublicRootMap(loadOptionalFontStylesheet");
+    expect(main).toContain("maxWaitMs: 2400");
     expect(fs.existsSync(path.join(ROOT, "public/font-bootstrap.js"))).toBe(false);
     expect(html).toContain('rel="preconnect" href="https://tiles.openfreemap.org" crossorigin');
     expect(html).toContain('rel="dns-prefetch" href="//tiles.openfreemap.org"');
