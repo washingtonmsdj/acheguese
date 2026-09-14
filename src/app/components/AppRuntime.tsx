@@ -2,6 +2,10 @@ import { lazy, Suspense, useEffect, useLayoutEffect, useState } from "react";
 
 import RootRouteEntry from "@/app/routes/RootRouteEntry";
 import { hasAuthCallbackMarker } from "@/core/auth/utils/authCallback";
+import {
+  applyAccessibilityPreferences,
+  readAccessibilityPreferences,
+} from "@/shared/accessibility/preferences";
 import { scheduleAfterPublicRootMap } from "@/shared/utils/publicRootReadiness";
 
 const RoutedAppRuntime = lazy(() =>
@@ -30,26 +34,10 @@ function LeanPublicRootRuntime() {
   const [shouldMountOverlays, setShouldMountOverlays] = useState(false);
 
   useLayoutEffect(() => {
-    try {
-      const body = document.body;
-      const highContrast =
-        localStorage.getItem("accessibility-high-contrast") === "true";
-      const fontSize = localStorage.getItem("accessibility-font-size");
-
-      body.classList.toggle("accessibility-high-contrast", highContrast);
-      body.classList.remove(
-        "accessibility-font-large",
-        "accessibility-font-extra-large",
-      );
-
-      if (fontSize === "large") {
-        body.classList.add("accessibility-font-large");
-      } else if (fontSize === "extra-large") {
-        body.classList.add("accessibility-font-extra-large");
-      }
-    } catch {
-      // Storage pode estar indisponivel; a raiz continua funcional sem preferencia.
-    }
+    applyAccessibilityPreferences(
+      document.body,
+      readAccessibilityPreferences(),
+    );
   }, []);
 
   useEffect(() => {
