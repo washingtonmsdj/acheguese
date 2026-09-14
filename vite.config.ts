@@ -167,6 +167,7 @@ export default defineConfig(({ command, mode }) => {
       target: "es2020",
       minify: "esbuild",
       cssCodeSplit: true,
+      manifest: shouldAnalyzeBundle,
       sourcemap: shouldUploadSourcemaps && !skipSourcemap,
       reportCompressedSize: !skipCompressedSize,
       chunkSizeWarningLimit: 1100,
