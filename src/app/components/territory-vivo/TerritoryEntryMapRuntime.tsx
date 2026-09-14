@@ -1,7 +1,10 @@
 import { useEffect, useMemo, useState } from "react";
 import { Map, MapPin, ShieldCheck } from "lucide-react";
 import { LocationType, type Location } from "@/core/location/types";
-import { MapLibreAdapter } from "@/core/maps/components/v3/LazyMapLibreAdapter";
+import {
+  MapLibreAdapter,
+  preloadMapLibreAdapterRuntime,
+} from "@/core/maps/components/v3/LazyMapLibreAdapter";
 import { useTerritoryPolygon } from "@/core/maps/hooks/useTerritoryPolygon";
 import { DEFAULT_TILE_STYLE, NEIGHBORHOOD_COLORS } from "@/core/maps/providers/MapProvider";
 import type { ResolvedTerritory } from "@/core/routing/hooks/useResolveTerritoryFromUrl";
@@ -11,6 +14,10 @@ const SALVADOR_VIEWPORT = { center: { latitude: -12.95, longitude: -38.48 }, zoo
 const ARRIVAL_CROSSFADE_MS = 360;
 const MAP_TIMEOUT_MS = 6000;
 const BOUNDARY_TIMEOUT_MS = 8000;
+
+export function preloadTerritoryEntryMapEngine(): Promise<void> {
+  return preloadMapLibreAdapterRuntime();
+}
 
 export interface TerritoryEntryMapRuntimeProps {
   city: Location | null;
