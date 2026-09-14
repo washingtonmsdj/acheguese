@@ -112,8 +112,10 @@ class MFAService {
   /**
    * Buscar status de MFA do usuário atual.
    *
-   * `mfaEnabled` e `mfaMethod` são derivados dos fatores verificados retornados
-   * pelo Supabase Auth. A tabela auxiliar fornece somente metadata de política.
+   * `mfaEnabled` e `mfaMethod` são derivados exclusivamente de fatores TOTP
+   * cujo status autoritativo no Supabase Auth é `verified`. `enroll()` cria um
+   * fator `unverified`, que não pode ser apresentado como proteção já ativa.
+   * A tabela auxiliar fornece somente metadata de política.
    */
   async getMFAStatus(): Promise<MFAStatus | null> {
     try {
@@ -133,9 +135,9 @@ class MFAService {
         return null;
       }
 
-      // Este serviço suporta TOTP. `listFactors().totp` representa os fatores
-      // TOTP habilitados/confirmados para a sessão do usuário.
-      const hasVerifiedTotp = Array.isArray(factorData.totp) && factorData.totp.length > 0;
+      const hasVerifiedTotp =
+        Array.isArray(factorData.totp) &&
+        factorData.totp.some((factor) => factor.status === 'verified');
 
       const { data: policyData, error: policyError } = await supabase
         .from('user_mfa_status')
@@ -235,7 +237,7 @@ class MFAService {
   }
 
   /**
-   * Desabilitar MFA.
+   * Desabilitar um fator MFA pelo ID autoritativo do Supabase Auth.
    */
   async disableMFA(factorId: string): Promise<boolean> {
     try {
@@ -257,7 +259,9 @@ class MFAService {
   }
 
   /**
-   * Listar fatores MFA TOTP do usuário no Supabase Auth.
+   * Listar fatores TOTP do usuário no Supabase Auth. A lista pode conter
+   * fatores `unverified`; consumidores devem observar `status` quando a
+   * diferença entre enrollment iniciado e MFA ativo for relevante.
    */
   async listMFAFactors() {
     try {
