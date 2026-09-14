@@ -4,10 +4,14 @@ import { MapLibreAdapter } from "@/core/maps/components/v3/MapLibreAdapter";
 import { useTerritoryPolygon } from "@/core/maps/hooks/useTerritoryPolygon";
 import { DEFAULT_TILE_STYLE, NEIGHBORHOOD_COLORS } from "@/core/maps/providers/MapProvider";
 import type { ResolvedTerritory } from "@/core/routing/hooks/useResolveTerritoryFromUrl";
+import { MAP_DEFAULT_COORDINATES } from "@/shared/config/mapDefaults";
 import { markPublicRootMapReady } from "@/shared/utils/publicRootReadiness";
 import { TerritoryEntryMapArrival } from "./TerritoryEntryMapArrival";
 
-const SALVADOR_VIEWPORT = { center: { latitude: -12.95, longitude: -38.48 }, zoom: 10.1 };
+const DEFAULT_ENTRY_VIEWPORT = {
+  center: MAP_DEFAULT_COORDINATES,
+  zoom: 10.1,
+};
 const ARRIVAL_CROSSFADE_MS = 160;
 const MAP_TIMEOUT_MS = 6000;
 const BOUNDARY_TIMEOUT_MS = 8000;
@@ -25,6 +29,17 @@ function readLocationCenter(location: Location | null | undefined) {
   }
 
   return { latitude, longitude };
+}
+
+function formatCityContext(city: Location | null): string | null {
+  if (!city) return null;
+  const stateCode = city.metadata?.state_code;
+  const normalizedStateCode =
+    typeof stateCode === "string" && stateCode.trim().length > 0
+      ? stateCode.trim().toUpperCase()
+      : null;
+
+  return [city.name, normalizedStateCode].filter(Boolean).join(" · ");
 }
 
 function resolveInitialViewport(
@@ -62,7 +77,7 @@ function resolveInitialViewport(
   }
 
   const cityCenter = readLocationCenter(city);
-  return cityCenter ? { center: cityCenter, zoom: 10.1 } : SALVADOR_VIEWPORT;
+  return cityCenter ? { center: cityCenter, zoom: 10.1 } : DEFAULT_ENTRY_VIEWPORT;
 }
 
 export interface TerritoryEntryMapRuntimeProps {
@@ -133,8 +148,9 @@ export default function TerritoryEntryMapRuntime({
     ? resolved.group.name
     : resolved?.kind === "location"
       ? resolved.location.name
-      : city?.name ?? "Salvador";
+      : city?.name ?? label ?? "Território";
   const territoryLabel = label ?? territoryName;
+  const cityContext = formatCityContext(city);
   const boundaryUnavailable =
     boundaryStarted &&
     resolved?.kind === "group" &&
@@ -234,13 +250,13 @@ export default function TerritoryEntryMapRuntime({
           <div className="w-full max-w-xs rounded-3xl border border-territory-border bg-territory-surface px-5 py-5 shadow-territory-highlight">
             <span className="mx-auto grid h-8 w-8 place-items-center rounded-full border border-territory-brand/25 bg-territory-brand/10 text-xs font-bold text-territory-brand" aria-hidden="true">A</span>
             <p className="mt-3 font-heading text-base font-bold text-territory-ink">A comunidade continua aqui.</p>
-            <p className="mt-1.5 text-sm leading-5 text-territory-muted-strong">O mapa não respondeu agora, mas você pode continuar entrando no Complexo normalmente.</p>
+            <p className="mt-1.5 text-sm leading-5 text-territory-muted-strong">O mapa não respondeu agora, mas você pode continuar entrando em {territoryLabel} normalmente.</p>
           </div>
         </div>
       ) : boundaryUnavailable ? (
         <div role="status" className="pointer-events-none absolute inset-x-3 bottom-3 z-10 rounded-2xl border border-territory-border bg-territory-surface/95 px-4 py-3 text-sm shadow-territory-highlight lg:inset-x-auto lg:bottom-6 lg:left-6 lg:max-w-md">
           <p className="font-semibold text-territory-ink">Limite territorial oficial indisponível agora.</p>
-          <p className="mt-1 leading-5 text-territory-muted-strong">Não exibimos contorno aproximado ou incompleto do Complexo.</p>
+          <p className="mt-1 leading-5 text-territory-muted-strong">Não exibimos contorno aproximado ou incompleto de {territoryLabel}.</p>
         </div>
       ) : boundaryPending ? (
         <div role="status" className="pointer-events-none absolute bottom-3 left-3 z-10 inline-flex max-w-[calc(100%-1.5rem)] items-center gap-2 rounded-full border border-territory-border bg-territory-surface/95 px-3 py-2 text-xs font-semibold text-territory-muted-strong shadow-sm lg:bottom-6 lg:left-6">
@@ -254,7 +270,10 @@ export default function TerritoryEntryMapRuntime({
       {!isCity && mapReady ? (
         <div className="entry-map-label" aria-hidden="true">
           <span className="grid h-5 w-5 place-items-center rounded-full border-2 border-current text-[0.55rem] font-black leading-none">•</span>
-          <span><strong>{territoryLabel}</strong><small>Salvador · BA</small></span>
+          <span>
+            <strong>{territoryLabel}</strong>
+            {cityContext ? <small>{cityContext}</small> : null}
+          </span>
         </div>
       ) : null}
       <span className="sr-only">Mapa territorial de {territoryName}</span>
