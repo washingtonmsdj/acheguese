@@ -69,6 +69,8 @@ export function useRobustGeolocation(options: UseRobustGeolocationOptions = {}) 
         const result = await GeolocationService.getCurrentLocation({
           useCache: requestOptions.useCache ?? useCache,
           timeout,
+          gpsMode: "precise",
+          allowIpFallback: false,
         });
 
         setState((prev) => ({
