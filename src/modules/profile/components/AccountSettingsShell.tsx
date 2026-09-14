@@ -127,6 +127,9 @@ export function AccountSettingsShell({
   const { activeProfile, loading: profilesLoading } = useMultiProfileContext();
   const activeProfileName = activeProfile?.display_name?.trim() || "Minha conta";
   const resolvedBackTo = backTo ?? resolveDefaultBackTarget(location.pathname, location.hash);
+  // The adaptive mobile nav remains mounted only on the /conta overview family.
+  // Sub-settings own the whole viewport, so they must not reserve a phantom nav gap.
+  const hasMobileAccountNav = location.pathname === ACCOUNT_PATHS.home;
 
   return (
     <div className="territory-vivo min-h-[100dvh] bg-territory-canvas text-territory-ink">
@@ -192,7 +195,7 @@ export function AccountSettingsShell({
             </Link>
           </header>
 
-          <div className="relative flex min-h-[calc(3.5rem+env(safe-area-inset-top))] items-end justify-center border-b border-territory-border bg-territory-surface px-4 pb-2 pt-[calc(env(safe-area-inset-top)+0.5rem)] lg:hidden">
+          <div className="sticky top-0 z-30 flex min-h-[calc(3.5rem+env(safe-area-inset-top))] items-end justify-center border-b border-territory-border bg-territory-surface/95 px-4 pb-2 pt-[calc(env(safe-area-inset-top)+0.5rem)] backdrop-blur lg:hidden">
             {showBack ? (
               <button
                 type="button"
@@ -213,7 +216,14 @@ export function AccountSettingsShell({
           </div>
 
           <main id="main-content" tabIndex={-1} className="focus:outline-none">
-            <div className="mx-auto w-full max-w-[1040px] px-4 pb-[calc(env(safe-area-inset-bottom)+6rem)] pt-5 sm:px-6 sm:pb-12 sm:pt-6 xl:px-8">
+            <div
+              className={cn(
+                "mx-auto w-full max-w-[1040px] px-4 pt-5 sm:px-6 sm:pb-12 sm:pt-6 xl:px-8",
+                hasMobileAccountNav
+                  ? "pb-[calc(env(safe-area-inset-bottom)+6rem)]"
+                  : "pb-[calc(env(safe-area-inset-bottom)+2rem)]",
+              )}
+            >
               <div className="mb-5 sm:mb-6">
                 <p className="text-[0.72rem] font-semibold text-territory-brand">{eyebrow}</p>
                 <h1 className="mt-1 font-heading text-[1.65rem] font-bold leading-tight tracking-[-0.035em] text-territory-ink sm:text-3xl">
