@@ -378,12 +378,16 @@ export function getTrustedClientIp(req: Request): string | null {
  * Identifier usa CF-Connecting-IP (Cloudflare) ou x-real-ip (Supabase/proxies
  * confiáveis) antes de x-forwarded-for, que pode ser forjado pelo cliente.
  * Combina IP + user-agent como fallback para reduzir colisões.
+ *
+ * Se o caller não informar o contrato completo de métodos, o 429 deriva o
+ * método real da requisição e adiciona OPTIONS. Endpoints multimétodo podem
+ * passar a lista completa explicitamente no quarto argumento.
  */
 export async function rateLimitMiddleware(
   req: Request,
   maxRequests = 100,
   windowMs = 60000,
-  methods = 'POST, OPTIONS',
+  methods?: string,
 ): Promise<Response | null> {
   // Preferência: CF-Connecting-IP > x-real-ip > primeiro IP de x-forwarded-for
   // x-forwarded-for pode conter múltiplos IPs (client, proxy1, proxy2...)
@@ -392,6 +396,7 @@ export async function rateLimitMiddleware(
   const ua = req.headers.get('user-agent') ?? 'unknown-ua';
   // Combinar IP + primeiros 32 chars do UA para reduzir colisões sem expor UA completo
   const identifier = `${ip}:${ua.slice(0, 32)}`;
+  const responseMethods = methods ?? `${req.method}, OPTIONS`;
 
   const { allowed, remaining, resetAt } = await checkRateLimit(identifier, maxRequests, windowMs);
 
@@ -405,7 +410,7 @@ export async function rateLimitMiddleware(
       {
         status: 429,
         headers: {
-          ...getAllSecurityHeaders(methods, req),
+          ...getAllSecurityHeaders(responseMethods, req),
           'Retry-After': String(retryAfter),
           'X-RateLimit-Limit': String(maxRequests),
           'X-RateLimit-Remaining': String(remaining),
