@@ -38,6 +38,16 @@ describe("secondary account settings shell contract", () => {
     expect(shell).toContain("backdrop-blur");
   });
 
+  it("names mobile back controls by their real parent destination", () => {
+    expect(shell).toContain("resolveBackLabel");
+    expect(shell).toContain('"Voltar para Dados de acesso"');
+    expect(shell).toContain('"Voltar para Segurança"');
+    expect(shell).toContain('"Voltar para Privacidade e dados"');
+    expect(shell).toContain('"Voltar para Preferências"');
+    expect(shell).toContain('"Voltar para Minha conta"');
+    expect(shell).toContain("aria-label={backLabel}");
+  });
+
   it("preserves real identity-management capabilities after the visual migration", () => {
     expect(profileSettings).toContain("<PrivacySettings profile={activeProfile}");
     expect(profileSettings).toContain("<ProfileLinksManager profileId={activeProfile.id}");
