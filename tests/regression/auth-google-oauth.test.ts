@@ -38,6 +38,7 @@ describe("Google OAuth account/access contract", () => {
 
   it("sends OAuth through terms acceptance and preserves the safe return target", () => {
     const authService = readProjectFile("src/core/auth/services/AuthService.ts");
+    const authFlow = readProjectFile("src/core/auth/constants/authFlow.ts");
     const login = readProjectFile("src/app/pages/LoginPage.tsx");
     const signup = readProjectFile(
       "src/app/features/onboarding/pages/CadastroPage.tsx",
@@ -48,7 +49,7 @@ describe("Google OAuth account/access contract", () => {
 
     expect(authService).toContain('provider: "google"');
     expect(authService).toContain("getTermsAcceptanceRedirectUrl");
-    expect(authService).toContain('/aceitar-termos');
+    expect(authFlow).toContain('termsAcceptance: "/aceitar-termos"');
 
     const googleLoginStart = login.indexOf("const handleGoogleLogin");
     const googleLoginEnd = login.indexOf("const handleForgotPassword");
@@ -61,7 +62,8 @@ describe("Google OAuth account/access contract", () => {
     );
     expect(googleLoginHandler).toContain("clearPendingAuthReturn()");
 
-    expect(signup).toContain('setPendingAuthReturn("/cadastro/primeiro-acesso")');
+    expect(signup).toContain("setPendingAuthReturn");
+    expect(signup).toContain("firstAccess");
     expect(terms).toContain("getPendingAuthReturn");
     expect(terms).toContain('resolveSafeInternalPath(getPendingAuthReturn(), "/")');
     expect(terms).toContain("recordConsent");
@@ -70,19 +72,33 @@ describe("Google OAuth account/access contract", () => {
   });
 
   it("turns a cancelled or failed OAuth callback into a recoverable state without reflecting provider text", () => {
+    const callback = readProjectFile("src/core/auth/utils/authCallback.ts");
     const terms = readProjectFile(
       "src/app/features/onboarding/pages/AceiteTermosPage.tsx",
     );
 
-    expect(terms).toContain("containsOAuthCallbackError");
-    expect(terms).toContain('searchParams.has("error")');
-    expect(terms).toContain('hashParams.has("error")');
+    expect(terms).toContain("isOAuthTermsCallbackError");
+    expect(callback).toContain("AUTH_PATHS.termsAcceptance");
+    expect(callback).toContain("AUTH_QUERY_KEYS.error");
+    expect(callback).toContain("AUTH_QUERY_KEYS.errorCode");
     expect(terms).toContain('"oauth-error"');
     expect(terms).toContain("Não foi possível concluir a entrada com Google");
     expect(terms).toContain("Seu destino foi preservado");
     expect(terms).toContain("Voltar e tentar novamente");
-    expect(terms).not.toContain('searchParams.get("error_description")');
-    expect(terms).not.toContain('hashParams.get("error_description")');
+    expect(callback).not.toContain("error_description");
+    expect(terms).not.toContain("error_description");
+  });
+
+  it("keeps OAuth errors separate from password recovery errors", () => {
+    const redirect = readProjectFile(
+      "src/core/auth/components/AuthHashRedirect.tsx",
+    );
+    const callback = readProjectFile("src/core/auth/utils/authCallback.ts");
+
+    expect(redirect).toContain("isExpiredPasswordRecoveryError");
+    expect(redirect).not.toContain("hashError?.error === 'access_denied'");
+    expect(callback).toContain('errorCode === "otp_expired"');
+    expect(callback).toContain("isOAuthTermsCallbackError");
   });
 
   it("keeps the necessary OAuth terms page inside the concept visual system", () => {
