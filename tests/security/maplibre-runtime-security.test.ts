@@ -23,8 +23,6 @@ const STATIC_MAPLIBRE_CSS_IMPORT = /import\s+["']maplibre-gl\/dist\/maplibre-gl\
 const ALLOWED_STATIC_RUNTIME_OWNERS = new Set([
   "src/core/maps/components/v3/MapLibreAdapterRuntime.tsx",
   "src/core/maps/config/maplibreWorkerRuntime.ts",
-  // Último consumidor launch-paused ainda pendente de migração para o loader canônico.
-  "src/modules/mobility/pages/BuscandoMotoristaPage.tsx",
 ]);
 
 const ALLOWED_STATIC_CSS_OWNER = "src/core/maps/runtime/maplibreRuntimeCss.ts";
@@ -37,6 +35,7 @@ const MIGRATED_CONSUMERS = [
   "src/core/guide/tourist-points/components/TouristPointsMap.tsx",
   "src/core/community-lost-found/components/LostFoundMiniMap.tsx",
   "src/core/mobility/components/RideTrackingMap.tsx",
+  "src/modules/mobility/pages/BuscandoMotoristaPage.tsx",
 ] as const;
 
 describe("MapLibre production security runtime", () => {
@@ -88,7 +87,7 @@ describe("MapLibre production security runtime", () => {
     }
   });
 
-  it("forbids new static MapLibre owners outside the controlled allowlist", () => {
+  it("forbids new static MapLibre owners outside the controlled core", () => {
     const violations = collectSourceFiles("src").filter((sourcePath) => {
       const source = readProjectFile(sourcePath);
       if (STATIC_MAPLIBRE_IMPORT.test(source)) {
