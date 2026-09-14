@@ -138,6 +138,7 @@ export function AccountSettingsShell({
   eyebrow = "Minha conta",
   showBack = true,
   backTo,
+  hideMobileHeading = false,
 }: {
   children: ReactNode;
   title: string;
@@ -149,6 +150,7 @@ export function AccountSettingsShell({
   eyebrow?: string;
   showBack?: boolean;
   backTo?: string;
+  hideMobileHeading?: boolean;
 }) {
   const location = useLocation();
   const navigate = useNavigate();
@@ -256,7 +258,7 @@ export function AccountSettingsShell({
                   : "pb-[calc(env(safe-area-inset-bottom)+2rem)]",
               )}
             >
-              <div className="mb-4 sm:mb-6">
+              <div className={cn("mb-4 sm:mb-6", hideMobileHeading && "hidden lg:block")}>
                 {showDedicatedMobileEyebrow ? (
                   <p className="mb-2 text-sm font-medium text-territory-ink lg:hidden">{eyebrow}</p>
                 ) : null}
