@@ -1,5 +1,5 @@
 import { useState, type ReactNode } from "react";
-import { Navigate } from "react-router-dom";
+import { Navigate, useLocation, useNavigate } from "react-router-dom";
 import { Helmet } from "react-helmet-async";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import {
@@ -10,9 +10,12 @@ import {
   Cookie,
   Download,
   FileText,
+  HelpCircle,
+  Info,
   Loader2,
   Mail,
   MapPin,
+  Settings2,
   Shield,
   Tag,
   Trash2,
@@ -33,6 +36,7 @@ import { Label } from "@/shared/components/ui/label";
 import { Switch } from "@/shared/components/ui/switch";
 import { Textarea } from "@/shared/components/ui/textarea";
 import { useToast } from "@/shared/hooks/use-toast";
+import { SUPPORT_PATH } from "@/shared/constants/legal";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -83,6 +87,7 @@ function ConsentRow({
   consent,
   disabled,
   onChange,
+  idPrefix,
 }: {
   type: string;
   label: string;
@@ -90,20 +95,23 @@ function ConsentRow({
   consent?: UserConsent;
   disabled: boolean;
   onChange: (checked: boolean) => void;
+  idPrefix: string;
 }) {
   const Icon = getConsentIcon(type);
   const isGranted = consent?.granted ?? false;
+  const id = `${idPrefix}-consent-${type}`;
+
   return (
     <div className="flex min-h-[66px] items-center gap-3 border-b border-territory-border py-3 last:border-b-0">
       <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-territory-brand/10 text-territory-brand">
         <Icon className="h-5 w-5" aria-hidden="true" />
       </span>
       <div className="min-w-0 flex-1">
-        <Label htmlFor={`consent-${type}`} className="text-sm font-semibold text-territory-ink">{label}</Label>
+        <Label htmlFor={id} className="text-sm font-semibold text-territory-ink">{label}</Label>
         <p className="mt-0.5 text-xs leading-4 text-territory-muted">{description}</p>
       </div>
       <Switch
-        id={`consent-${type}`}
+        id={id}
         checked={isGranted}
         onCheckedChange={onChange}
         disabled={disabled}
@@ -113,8 +121,22 @@ function ConsentRow({
   );
 }
 
+function ExportItem({ icon, title, description }: { icon: ReactNode; title: string; description: string }) {
+  return (
+    <div className="flex items-start gap-3 border-b border-territory-border py-4 last:border-b-0">
+      <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-territory-brand/10 text-territory-brand">{icon}</span>
+      <div>
+        <h2 className="text-sm font-semibold text-territory-ink">{title}</h2>
+        <p className="mt-1 text-xs leading-4 text-territory-muted">{description}</p>
+      </div>
+    </div>
+  );
+}
+
 export default function PrivacySettingsPage() {
   const appUrls = useAppUrls();
+  const location = useLocation();
+  const navigate = useNavigate();
   const { user } = useAuth();
   const { toast } = useToast();
   const queryClient = useQueryClient();
@@ -217,6 +239,68 @@ export default function PrivacySettingsPage() {
   ] as const;
 
   const scheduled = deletionStatus?.status === "scheduled";
+  const exportView = location.hash === "#exportar";
+
+  if (exportView) {
+    return (
+      <>
+        <Helmet><title>Exportar meus dados | Achegue-se</title></Helmet>
+        <AccountSettingsShell
+          title="Uma cópia dos seus dados"
+          description="Baixe os dados disponibilizados para a sua conta."
+        >
+          <Surface className="px-4 sm:px-5">
+            <ExportItem
+              icon={<FileText className="h-5 w-5" aria-hidden="true" />}
+              title="Dados da conta"
+              description="Informações básicas e dados disponíveis no arquivo de exportação."
+            />
+            <ExportItem
+              icon={<UsersRound className="h-5 w-5" aria-hidden="true" />}
+              title="Perfis e registros incluídos"
+              description="Conteúdos e configurações que o serviço de exportação disponibilizar para sua conta."
+            />
+            <ExportItem
+              icon={<Settings2 className="h-5 w-5" aria-hidden="true" />}
+              title="Preferências e consentimentos"
+              description="Escolhas e registros de privacidade disponíveis no escopo da exportação."
+            />
+          </Surface>
+
+          <div className="mt-4 flex items-start gap-3 rounded-2xl border border-blue-200 bg-blue-50 p-4 text-sm text-blue-900">
+            <Info className="mt-0.5 h-5 w-5 shrink-0" aria-hidden="true" />
+            <p>A exportação respeita permissões e retorna apenas os dados que o serviço autoritativo disponibiliza para a conta atual.</p>
+          </div>
+
+          <Button
+            type="button"
+            onClick={handleExportData}
+            disabled={isExporting}
+            className="mt-4 min-h-12 w-full bg-territory-sun text-territory-ink hover:bg-territory-sun/90"
+          >
+            {isExporting ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Download className="mr-2 h-4 w-4" />}
+            {isExporting ? "Preparando arquivo..." : "Exportar meus dados"}
+          </Button>
+
+          <p className="mt-3 text-center text-xs text-territory-muted">
+            Guarde o arquivo em um local seguro após o download.
+          </p>
+
+          <Surface className="mt-4 px-4 sm:px-5">
+            <button
+              type="button"
+              onClick={() => navigate(SUPPORT_PATH)}
+              className="flex min-h-14 w-full items-center gap-3 text-left text-sm font-semibold text-territory-ink focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-territory-brand"
+            >
+              <HelpCircle className="h-5 w-5 text-territory-brand" aria-hidden="true" />
+              <span className="flex-1">Preciso de ajuda</span>
+              <ChevronRight className="h-5 w-5 text-territory-muted" aria-hidden="true" />
+            </button>
+          </Surface>
+        </AccountSettingsShell>
+      </>
+    );
+  }
 
   return (
     <>
@@ -251,8 +335,8 @@ export default function PrivacySettingsPage() {
                 <XCircle className="mr-2 h-4 w-4" aria-hidden="true" />
                 Cancelar solicitação
               </Button>
-              <Button type="button" variant="link" className="mt-2 w-full text-territory-brand" onClick={handleExportData} disabled={isExporting}>
-                {isExporting ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Download className="mr-2 h-4 w-4" />}
+              <Button type="button" variant="link" className="mt-2 w-full text-territory-brand" onClick={() => navigate("/conta/privacidade#exportar")}>
+                <Download className="mr-2 h-4 w-4" />
                 Exportar meus dados
               </Button>
             </Surface>
@@ -268,6 +352,7 @@ export default function PrivacySettingsPage() {
                   consentRows.slice(0, 2).map(([type, label, description]) => (
                     <ConsentRow
                       key={type}
+                      idPrefix="summary"
                       type={type}
                       label={label}
                       description={description}
@@ -290,12 +375,12 @@ export default function PrivacySettingsPage() {
                   <Download className="mt-0.5 h-5 w-5 shrink-0 text-territory-brand" aria-hidden="true" />
                   <div className="min-w-0 flex-1">
                     <h2 className="font-heading text-base font-bold text-territory-ink">Exportar meus dados</h2>
-                    <p className="mt-1 text-sm leading-5 text-territory-muted">Baixe uma cópia dos dados disponibilizados para sua conta.</p>
+                    <p className="mt-1 text-sm leading-5 text-territory-muted">Veja o que será preparado antes de iniciar o download.</p>
                   </div>
                 </div>
-                <Button type="button" variant="outline" className="mt-4 min-h-11 w-full" onClick={handleExportData} disabled={isExporting}>
-                  {isExporting ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Download className="mr-2 h-4 w-4" />}
-                  {isExporting ? "Preparando arquivo..." : "Exportar"}
+                <Button type="button" variant="outline" className="mt-4 min-h-11 w-full" onClick={() => navigate("/conta/privacidade#exportar")}>
+                  <Download className="mr-2 h-4 w-4" />
+                  Abrir exportação
                 </Button>
               </Surface>
 
@@ -307,7 +392,7 @@ export default function PrivacySettingsPage() {
                     <p className="mt-1 text-sm leading-5 text-territory-muted">Defina o que aparece em cada identidade pelo gerenciamento de perfis.</p>
                   </div>
                 </div>
-                <Button type="button" variant="link" className="mt-2 px-0 text-territory-brand" onClick={() => window.location.assign("/conta?section=profiles")}>Abrir Meus perfis</Button>
+                <Button type="button" variant="link" className="mt-2 px-0 text-territory-brand" onClick={() => navigate("/conta?section=profiles")}>Abrir Meus perfis</Button>
               </Surface>
             </div>
           </div>
@@ -323,6 +408,7 @@ export default function PrivacySettingsPage() {
               consentRows.map(([type, label, description]) => (
                 <ConsentRow
                   key={type}
+                  idPrefix="details"
                   type={type}
                   label={label}
                   description={description}
@@ -362,7 +448,10 @@ export default function PrivacySettingsPage() {
                     <Label htmlFor="delete-reason">Motivo (opcional)</Label>
                     <Textarea id="delete-reason" value={deleteReason} onChange={(event) => setDeleteReason(event.target.value)} className="mt-2 min-h-[92px]" placeholder="Conte-nos, se quiser." />
                   </div>
-                  <Button type="button" variant="link" className="h-auto p-0 text-territory-brand" onClick={handleExportData} disabled={isExporting}>
+                  <Button type="button" variant="link" className="h-auto p-0 text-territory-brand" onClick={() => {
+                    setShowDeleteConfirm(false);
+                    navigate("/conta/privacidade#exportar");
+                  }}>
                     Exportar meus dados antes
                   </Button>
                   <label className="flex cursor-pointer items-start gap-2 text-sm text-territory-ink">
