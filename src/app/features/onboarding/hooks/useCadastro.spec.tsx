@@ -9,6 +9,8 @@ import { useCadastroForm } from "./useCadastro";
 const mocks = vi.hoisted(() => ({
   navigate: vi.fn(),
   toast: vi.fn(),
+  setEmail: vi.fn(),
+  setRedirect: vi.fn(),
 }));
 
 vi.mock("react-router-dom", () => ({
@@ -24,12 +26,24 @@ vi.mock("@/core/auth/utils/compromisedPassword", () => ({
 }));
 
 vi.mock("@/core/auth/utils/pendingSignup", () => ({
-  setPendingSignupEmail: vi.fn(),
+  setPendingSignupEmail: mocks.setEmail,
+  setPendingSignupRedirect: mocks.setRedirect,
 }));
 
 vi.mock("@/shared/hooks/use-toast", () => ({
   useToast: () => ({ toast: mocks.toast }),
 }));
+
+function fillAccount(
+  result: ReturnType<typeof renderHook<ReturnType<typeof useCadastroForm>, unknown>>["result"],
+) {
+  act(() => {
+    result.current.form.setValue("name", "Ana Souza");
+    result.current.form.setValue("username", "ana_souza");
+    result.current.form.setValue("email", "ana@example.com");
+    result.current.form.setValue("password", "SenhaSegura@2026");
+  });
+}
 
 describe("useCadastroForm", () => {
   beforeEach(() => {
@@ -42,66 +56,44 @@ describe("useCadastroForm", () => {
     vi.mocked(AuthService.signUp).mockResolvedValue(undefined);
   });
 
-  function fillAllFields(
-    result: ReturnType<
-      typeof renderHook<ReturnType<typeof useCadastroForm>, unknown>
-    >["result"],
-  ) {
-    const { form, selectState, selectCity, selectNeighborhood } = result.current;
-    act(() => {
-      form.setValue("name", "Ana Souza");
-      form.setValue("username", "ana_souza");
-      form.setValue("email", "ana@example.com");
-      form.setValue("password", "SenhaSegura@2026");
-      form.setValue("confirmPassword", "SenhaSegura@2026");
-      selectState("state-ba", "Bahia");
-      selectCity("city-salvador", "Salvador");
-      selectNeighborhood("district-pituba", "Pituba");
-    });
-  }
-
-  it("bloqueia avanço do step de confirmação sem aceite dos Termos", async () => {
+  it("não cria a conta sem aceite dos Termos", async () => {
     const { result } = renderHook(() => useCadastroForm());
-
-    let valid = true;
-    await act(async () => {
-      valid = await result.current.validateStep(2);
-    });
-    expect(valid).toBe(false);
-
-    act(() => {
-      result.current.form.setValue("termsAccepted", true as never, {
-        shouldValidate: true,
-      });
-    });
+    fillAccount(result);
 
     await act(async () => {
-      valid = await result.current.validateStep(2);
+      await result.current.submit();
     });
-    expect(valid).toBe(true);
+
+    expect(AuthService.signUp).not.toHaveBeenCalled();
+    expect(result.current.form.formState.errors.termsAccepted).toBeDefined();
   });
 
-  it("envia o aceite versionado dos Termos para o AuthService", async () => {
-    const { result } = renderHook(() => useCadastroForm());
-    fillAllFields(result);
+  it("cria somente o perfil pessoal inicial e preserva o destino seguro", async () => {
+    const { result } = renderHook(() => useCadastroForm("/mensagens/abc"));
+    fillAccount(result);
     act(() => {
-      result.current.form.setValue("termsAccepted", true as never, {
-        shouldValidate: true,
-      });
+      result.current.form.setValue("termsAccepted", true as never, { shouldValidate: true });
     });
 
     await act(async () => {
       await result.current.submit();
     });
 
-    expect(AuthService.signUp).toHaveBeenCalledWith(
-      expect.objectContaining({
-        email: "ana@example.com",
-        termsAcceptance: {
-          accepted: true,
-          version: TERMS_OF_SERVICE_VERSION,
-        },
-      }),
-    );
+    expect(AuthService.signUp).toHaveBeenCalledWith({
+      email: "ana@example.com",
+      password: "SenhaSegura@2026",
+      name: "Ana Souza",
+      display_name: "Ana Souza",
+      handle: "ana_souza",
+      termsAcceptance: {
+        accepted: true,
+        version: TERMS_OF_SERVICE_VERSION,
+      },
+    });
+    expect(mocks.setEmail).toHaveBeenCalledWith("ana@example.com");
+    expect(mocks.setRedirect).toHaveBeenCalledWith("/mensagens/abc");
+    expect(mocks.navigate).toHaveBeenCalledWith("/cadastro/confirmacao", {
+      state: { email: "ana@example.com", redirectTo: "/mensagens/abc" },
+    });
   });
 });
