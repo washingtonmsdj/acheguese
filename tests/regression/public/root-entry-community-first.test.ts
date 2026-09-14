@@ -93,6 +93,18 @@ describe("root community-first MVP entry", () => {
     expect(fs.statSync(asset).size).toBeLessThanOrEqual(160_000);
   });
 
+  it("owns mobile overflow in a bounded inner scroller without changing the desktop grid", () => {
+    const source = read("src/app/pages/TerritoryEntryPage.tsx");
+
+    expect(source).toContain("data-entry-mobile-scroll-owner");
+    expect(source).toContain("contents max-md:flex max-md:min-h-0 max-md:flex-1 max-md:flex-col");
+    expect(source).toContain("max-md:overflow-y-auto");
+    expect(source).toContain("max-md:overscroll-contain");
+    expect(source).toContain("max-md:pb-[calc(0.35rem+env(safe-area-inset-bottom))]");
+    expect(source).toContain("max-md:pt-[env(safe-area-inset-top)]");
+    expect(source).not.toContain("max-md:!overflow-y-auto");
+  });
+
   it("defers below-fold layout and paint without hiding content", () => {
     const source = read("src/app/pages/TerritoryEntryPage.tsx");
 
