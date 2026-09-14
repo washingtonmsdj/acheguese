@@ -69,6 +69,22 @@ describe("Google OAuth account/access contract", () => {
     expect(terms).toContain("Entrar com Google não pula esta etapa");
   });
 
+  it("turns a cancelled or failed OAuth callback into a recoverable state without reflecting provider text", () => {
+    const terms = readProjectFile(
+      "src/app/features/onboarding/pages/AceiteTermosPage.tsx",
+    );
+
+    expect(terms).toContain("containsOAuthCallbackError");
+    expect(terms).toContain('searchParams.has("error")');
+    expect(terms).toContain('hashParams.has("error")');
+    expect(terms).toContain('"oauth-error"');
+    expect(terms).toContain("Não foi possível concluir a entrada com Google");
+    expect(terms).toContain("Seu destino foi preservado");
+    expect(terms).toContain("Voltar e tentar novamente");
+    expect(terms).not.toContain('searchParams.get("error_description")');
+    expect(terms).not.toContain('hashParams.get("error_description")');
+  });
+
   it("keeps the necessary OAuth terms page inside the concept visual system", () => {
     const terms = readProjectFile(
       "src/app/features/onboarding/pages/AceiteTermosPage.tsx",
