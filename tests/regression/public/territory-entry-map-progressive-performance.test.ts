@@ -24,6 +24,17 @@ describe("territory entry progressive map performance", () => {
     expect(runtime).toContain('className="pointer-events-none h-full min-h-[12rem] w-full');
   });
 
+  it("starts on official territory centers instead of loading city-wide tiles first", () => {
+    const runtime = read("src/app/components/territory-vivo/TerritoryEntryMapRuntime.tsx");
+    expect(runtime).toContain("readLocationCenter");
+    expect(runtime).toContain("resolveInitialViewport");
+    expect(runtime).toContain("resolved.group.members");
+    expect(runtime).toContain("center_latitude");
+    expect(runtime).toContain("center_longitude");
+    expect(runtime).toContain("zoom: 13.1");
+    expect(runtime).toContain("initialViewport={initialViewport}");
+  });
+
   it("preconnects official boundary authorities from SSOT metadata", () => {
     const wrapper = read("src/app/components/territory-vivo/TerritoryEntryMap.tsx");
     expect(wrapper).toContain("preconnectOfficialBoundarySources");
@@ -69,12 +80,14 @@ describe("territory entry progressive map performance", () => {
     expect(passive).not.toContain("useMapClustering");
   });
 
-  it("uses a conservative render budget for passive maps", () => {
+  it("uses a conservative render and camera budget for passive maps", () => {
     const passive = read("src/core/maps/components/v3/MapLibrePassiveRuntime.tsx");
     expect(passive).toContain("PASSIVE_MAX_PIXEL_RATIO = 2");
+    expect(passive).toContain("PASSIVE_CAMERA_DURATION_MS = 180");
     expect(passive).toContain("fadeDuration: 0");
     expect(passive).toContain("pixelRatio: passivePixelRatio");
     expect(passive).toContain("renderWorldCopies: false");
     expect(passive).toContain("maxTileCacheZoomLevels: 1");
+    expect(passive).not.toContain("duration: 800");
   });
 });
