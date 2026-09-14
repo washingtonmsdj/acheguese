@@ -1,27 +1,14 @@
 import { lazy, Suspense } from "react";
 
 import { QueryClientProvider } from "@tanstack/react-query";
-import {
-  BrowserRouter,
-  Navigate,
-  Route,
-  Routes,
-  useLocation,
-} from "react-router-dom";
+import { BrowserRouter, useLocation } from "react-router-dom";
 import { HelmetProvider } from "react-helmet-async";
 
 import { ErrorBoundary } from "@/app/components/ErrorBoundary";
 import { SEO } from "@/app/components/SEO";
-import PreLaunchLandingPage from "@/app/pages/PreLaunchLandingPage";
 import { AppRoutes } from "@/app/routes/AppRoutes";
-import { AdminRoutes } from "@/app/routes/sections/AdminRoutes";
 import { queryClient } from "@/shared/utils/queryClient";
 import { FullScreenLoader } from "@/shared/components/loading/PageLoader";
-import { SessionProvider } from "@/core/session/providers/SessionProvider";
-import {
-  MultiProfileProvider,
-  ModuleContextSync,
-} from "@/core/profiles/contexts/multi-profile-runtime-context";
 import { AccessibilityProvider } from "@/shared/components/accessibility/AccessibilityProvider";
 import { SkipToContent } from "@/shared/components/accessibility/SkipToContent";
 
@@ -37,39 +24,35 @@ const AuthHashRedirect = lazy(() =>
   })),
 );
 
-const TerritoryModeInitializer = lazy(() =>
-  import("@/core/location/components/TerritoryModeInitializer").then(
-    (module) => ({
-      default: module.TerritoryModeInitializer,
-    }),
-  ),
+const SessionProfileRuntimeShell = lazy(() =>
+  import("@/app/components/SessionProfileRuntimeShell"),
 );
-
-const LoginPage = lazy(() => import("@/app/pages/LoginPage"));
-const ResetPasswordPage = lazy(() => import("@/app/pages/ResetPasswordPage"));
 
 const PRELAUNCH_LOCKDOWN_ENABLED =
   (import.meta.env.VITE_PRELAUNCH_LOCKDOWN ?? "false") === "true";
 
-function PreLaunchRoutes() {
-  return (
-    <Routes>
-      <Route path="/" element={<PreLaunchLandingPage />} />
-      <Route path="/login" element={<PreLaunchLoginRoute />} />
-      <Route path="/reset-password" element={<ResetPasswordPage />} />
-      <Route path="/admin/*" element={<AdminRoutes />} />
-      <Route path="*" element={<Navigate to="/" replace />} />
-    </Routes>
-  );
-}
+function RuntimeRouteTree() {
+  const location = useLocation();
+  const isLeanPublicRoot =
+    !PRELAUNCH_LOCKDOWN_ENABLED && location.pathname === "/";
 
-function PreLaunchLoginRoute() {
-  const { search } = useLocation();
-  const redirect = new URLSearchParams(search).get("redirect") ?? "";
-  return redirect.startsWith("/admin") ? (
-    <LoginPage />
-  ) : (
-    <Navigate to="/" replace />
+  return (
+    <>
+      <Suspense fallback={null}>
+        <AuthHashRedirect />
+        <GlobalOverlays />
+      </Suspense>
+
+      {isLeanPublicRoot ? (
+        <Suspense fallback={<FullScreenLoader />}>
+          <AppRoutes />
+        </Suspense>
+      ) : (
+        <Suspense fallback={<FullScreenLoader />}>
+          <SessionProfileRuntimeShell />
+        </Suspense>
+      )}
+    </>
   );
 }
 
@@ -80,28 +63,10 @@ export function AppRuntime() {
         <SEO />
         <QueryClientProvider client={queryClient}>
           <AccessibilityProvider>
-            <SessionProvider>
-              <MultiProfileProvider>
-                <SkipToContent />
-                <BrowserRouter>
-                  <Suspense fallback={null}>
-                    <AuthHashRedirect />
-                    {!PRELAUNCH_LOCKDOWN_ENABLED ? (
-                      <TerritoryModeInitializer />
-                    ) : null}
-                    <GlobalOverlays />
-                  </Suspense>
-                  <ModuleContextSync />
-                  <Suspense fallback={<FullScreenLoader />}>
-                    {PRELAUNCH_LOCKDOWN_ENABLED ? (
-                      <PreLaunchRoutes />
-                    ) : (
-                      <AppRoutes />
-                    )}
-                  </Suspense>
-                </BrowserRouter>
-              </MultiProfileProvider>
-            </SessionProvider>
+            <SkipToContent />
+            <BrowserRouter>
+              <RuntimeRouteTree />
+            </BrowserRouter>
           </AccessibilityProvider>
         </QueryClientProvider>
       </HelmetProvider>
