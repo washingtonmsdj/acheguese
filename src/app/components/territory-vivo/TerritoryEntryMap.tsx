@@ -58,6 +58,19 @@ function EntryMapArrivalSurface({
   );
 }
 
+function resolveTerritoryLabel(
+  resolvedTerritory: ResolvedTerritory,
+  city: Location | null,
+): string {
+  if (resolvedTerritory?.kind === "group") {
+    return resolvedTerritory.group.name;
+  }
+  if (resolvedTerritory?.kind === "location") {
+    return resolvedTerritory.location.name;
+  }
+  return city?.name ?? "Território";
+}
+
 export default function TerritoryEntryMap({
   city,
   resolvedTerritory = null,
@@ -65,7 +78,7 @@ export default function TerritoryEntryMap({
   isLoading,
   className = "",
 }: TerritoryEntryMapProps) {
-  const territoryLabel = label ?? "Complexo do Nordeste de Amaralina";
+  const territoryLabel = label ?? resolveTerritoryLabel(resolvedTerritory, city);
 
   return (
     <Suspense
