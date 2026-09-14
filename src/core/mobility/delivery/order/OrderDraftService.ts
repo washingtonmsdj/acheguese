@@ -23,6 +23,7 @@ function normalizeSnapshot(snapshot?: OrderItemSnapshot): OrderItemSnapshot {
       snapshot?.base_unit_price === undefined
         ? undefined
         : roundMoney(snapshot.base_unit_price, "snapshot.base_unit_price"),
+    image_url: snapshot?.image_url ?? null,
     variant: snapshot?.variant
       ? {
           variant_id: snapshot.variant.variant_id ?? null,

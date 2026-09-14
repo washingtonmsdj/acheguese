@@ -10,9 +10,12 @@ import {
   type OrderDeliveryTrackingSnapshot,
 } from "@/core/mobility/delivery/services/OrderDeliveryLinkService";
 import { isOpenRideStatus } from "@/core/mobility/core/RideLifecycleStatus";
+import type { RideRequest } from "@/core/mobility/types/types";
+
+export type OrderTrackingRide = OrderDeliveryTrackingSnapshot | RideRequest;
 
 export interface UseOrderTrackingResult {
-  rideRequest: OrderDeliveryTrackingSnapshot | null;
+  rideRequest: OrderTrackingRide | null;
   hasTracking: boolean;
   isActive: boolean;
   isLoading: boolean;
@@ -20,7 +23,11 @@ export interface UseOrderTrackingResult {
   refetch: () => Promise<unknown>;
 }
 
-export function useOrderTracking(orderId: string): UseOrderTrackingResult {
+export function useOrderTracking(
+  orderId: string,
+  options: { enabled?: boolean } = {},
+): UseOrderTrackingResult {
+  const enabled = options.enabled ?? true;
   const queryClient = useQueryClient();
   const queryKey = useMemo(() => ["order-tracking", orderId] as const, [orderId]);
   const invalidateTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -33,7 +40,7 @@ export function useOrderTracking(orderId: string): UseOrderTrackingResult {
   } = useQuery({
     queryKey,
     queryFn: () => OrderDeliveryLinkService.getRideRequestByOrderId(orderId),
-    enabled: Boolean(orderId),
+    enabled: Boolean(orderId) && enabled,
     staleTime: 10000,
     refetchInterval: (query) => {
       const data = query.state.data;
@@ -43,7 +50,7 @@ export function useOrderTracking(orderId: string): UseOrderTrackingResult {
   });
 
   useEffect(() => {
-    if (!orderId) return;
+    if (!orderId || !enabled) return;
 
     const channel = GastronomyOrderRealtimeService.subscribeOrderTracking(orderId, (payload) => {
       const newSourceId =
@@ -83,7 +90,7 @@ export function useOrderTracking(orderId: string): UseOrderTrackingResult {
       }
       void GastronomyOrderRealtimeService.removeChannel(channel);
     };
-  }, [orderId, queryClient, queryKey]);
+  }, [enabled, orderId, queryClient, queryKey]);
 
   const hasTracking = Boolean(rideRequest);
   const isActive = Boolean(rideRequest && isOpenRideStatus(rideRequest.status));

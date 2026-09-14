@@ -12,7 +12,7 @@ import { trackingService } from '@/core/tracking';
 import type { TrackingPosition } from '@/core/tracking';
 import { RideTrackingAccessService } from '@/core/mobility/services/RideTrackingAccessService';
 
-interface DriverLocationData {
+export interface DriverLocationData {
   latitude: number;
   longitude: number;
   heading: number;
@@ -44,12 +44,18 @@ function toDriverLocation(position: TrackingPosition): DriverLocationData {
 export function useDriverLocation(
   params:
     | string
-    | { driverProfileId: string; rideId?: string; enabled?: boolean },
+    | {
+        driverProfileId: string;
+        rideId?: string;
+        enabled?: boolean;
+        subscribe?: boolean;
+      },
 ) {
   const driverProfileId =
     typeof params === "string" ? params : params.driverProfileId;
   const rideId = typeof params === "string" ? undefined : params.rideId;
   const enabled = typeof params === "string" ? true : (params.enabled ?? true);
+  const subscribe = typeof params === "string" ? true : (params.subscribe ?? true);
 
   const [location, setLocation] = useState<DriverLocationData | null>(null);
   const [loading, setLoading] = useState(true);
@@ -113,6 +119,12 @@ export function useDriverLocation(
       // Postgres Realtime remains a second security layer: driver_locations RLS
       // filters every row delivered to this authenticated subscription. For a
       // passenger ride we only open it after the ride-scoped authorization above.
+      if (!subscribe) {
+        setLoading(false);
+        return;
+      }
+
+      // Subscrever a atualizações via TrackingService
       subscription = trackingService.subscribeToPosition(
         driverProfileId,
         (position: TrackingPosition) => {
@@ -140,7 +152,7 @@ export function useDriverLocation(
       active = false;
       subscription?.unsubscribe();
     };
-  }, [driverProfileId, enabled, rideId]);
+  }, [driverProfileId, enabled, rideId, subscribe]);
 
   const calculateETA = useCallback(
     async (destLat: number, destLng: number) => {

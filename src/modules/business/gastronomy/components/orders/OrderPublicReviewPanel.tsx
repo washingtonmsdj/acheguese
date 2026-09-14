@@ -10,6 +10,7 @@ import { toast } from "sonner";
 import { ReviewQueryService } from "@/core/business/services/gastronomy.review.queries";
 import { useSessionContext } from "@/core/session";
 import { Badge } from "@/shared/components/ui/badge";
+import { Button } from "@/shared/components/ui/button";
 import {
   Card,
   CardContent,
@@ -23,16 +24,23 @@ import type { OrderWithItems } from "../../services/OrderService";
 
 interface OrderPublicReviewPanelProps {
   order: OrderWithItems;
+  compact?: boolean;
+  preview?: boolean;
 }
 
 const REVIEWABLE_ORDER_STATUSES = new Set(["delivered", "completed"]);
 
-export function OrderPublicReviewPanel({ order }: OrderPublicReviewPanelProps) {
+export function OrderPublicReviewPanel({
+  order,
+  compact = false,
+  preview = false,
+}: OrderPublicReviewPanelProps) {
   const { user, activeProfile, profiles } = useSessionContext();
   const [canReview, setCanReview] = useState(false);
   const [isChecking, setIsChecking] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitted, setSubmitted] = useState(false);
+  const [isExpanded, setIsExpanded] = useState(false);
 
   const customerProfile = useMemo(
     () =>
@@ -92,7 +100,33 @@ export function OrderPublicReviewPanel({ order }: OrderPublicReviewPanelProps) {
     return null;
   }, [canReview, isChecking, isCustomerOrder, isReviewableStatus, submitted]);
 
-  if (!isCustomerOrder) return null;
+  const canShowCompactPreview = compact && preview;
+  if (!isCustomerOrder && !canShowCompactPreview) return null;
+
+  if (compact && (canReview || preview) && !submitted && !isExpanded) {
+    return (
+      <Card className="border-territory-border bg-territory-surface text-territory-ink">
+        <CardHeader className="pb-3 md:pb-2">
+          <CardTitle className="text-base md:text-sm">Como foi sua experiência com a loja?</CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-3 md:flex md:items-center md:gap-4 md:space-y-0 md:pb-3">
+          <div className="flex items-center justify-center gap-2 md:justify-start" aria-hidden="true">
+            {Array.from({ length: 5 }).map((_, index) => (
+              <Star key={index} className="h-7 w-7 text-territory-muted" />
+            ))}
+          </div>
+          <Button
+            type="button"
+            variant="outline"
+            className="min-h-11 w-full border-territory-brand bg-territory-surface text-territory-brand hover:bg-territory-raised hover:text-territory-brand md:min-h-9 md:w-auto md:min-w-28"
+            onClick={() => setIsExpanded(true)}
+          >
+            Avaliar a loja
+          </Button>
+        </CardContent>
+      </Card>
+    );
+  }
 
   const handleSubmit = async (data: {
     rating: number;

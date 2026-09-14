@@ -49,6 +49,8 @@ export interface Order {
   id: string;
   business_id: string;
   merchant_profile_id: string;
+  source_reference?: string | null;
+  source_metadata?: Record<string, unknown>;
   customer_id: string | null;
   courier_profile_id: string | null;
   delivery_area_id: string | null;
@@ -244,7 +246,7 @@ function mapOrderItem(item: OrderItemRecord): OrderItem & { addons: OrderItemAdd
     item_name: item.name,
     name: item.name,
     item_description: item.item_snapshot.description ?? null,
-    item_image_url: null,
+    item_image_url: item.item_snapshot.image_url ?? null,
     variation_id: item.item_snapshot.variant?.variant_id ?? null,
     variation_name: item.item_snapshot.variant?.name ?? null,
     quantity: item.quantity,
@@ -293,6 +295,8 @@ function mapOrder(order: OrderRecord): OrderWithItems {
     id: order.id,
     business_id: businessId,
     merchant_profile_id: order.merchant_profile_id,
+    source_reference: order.source_context.source_reference ?? null,
+    source_metadata: order.source_context.source_metadata ?? {},
     customer_id: order.customer_profile_id,
     courier_profile_id: order.courier_profile_id ?? null,
     delivery_area_id: null,

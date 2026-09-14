@@ -26,6 +26,7 @@ import { Button } from "@/shared/components/ui/button";
 import { Textarea } from "@/shared/components/ui/textarea";
 import { cn } from "@/shared/utils/cn";
 import { businessManagementRoutes } from "@/core/business/utils/businessManagementRoutes";
+import { DeliveryAreaService } from "@/core/business/services/GastronomyDeliveryAreaService";
 import { useSessionContext } from "@/core/session";
 import { useAppUrls } from "@/core/routing/hooks";
 import foodImage from "@/assets/gastronomy/cat-restaurantes.jpg";
@@ -44,7 +45,6 @@ import {
   formatDeliveryDestinationDisplayLabel,
   getEnabledFulfillmentModes,
   isCheckoutSubmitDisabled,
-  isPlatformCourierCheckoutAvailable,
   isPlatformCourierUnavailableForCheckout,
   isStructuredDeliveryDestinationReady,
   normalizeFulfillmentMode,
@@ -60,6 +60,7 @@ import type { Cart, CartItem } from "../types/menu";
 type FulfillmentMode = GastronomyFulfillmentMode;
 type DeliveryOption = "store" | "platform";
 type CheckoutStage = "address" | "delivery" | "review" | "fallback";
+type DeliveryEligibilityState = "unknown" | "eligible" | "ineligible";
 
 const currency = (value: number) =>
   new Intl.NumberFormat("pt-BR", {
@@ -548,7 +549,7 @@ function MobileAddressStage({
   return (
     <div className="space-y-3">
       <h1 className="font-heading text-[1.45rem] font-bold tracking-[-0.04em] text-territory-ink">
-        Onde vamos entregar?
+        {mode === "delivery" ? "Onde vamos entregar?" : "Como você quer receber?"}
       </h1>
       <div
         className={cn(
@@ -670,7 +671,6 @@ function MobileDeliveryStage({
   subtotal,
   deliveryFee,
   businessName,
-  platformUnavailable,
   onModeChange,
   onDeliveryOptionChange,
   onContinue,
@@ -682,7 +682,6 @@ function MobileDeliveryStage({
   subtotal: number;
   deliveryFee: number;
   businessName: string;
-  platformUnavailable: boolean;
   onModeChange: (mode: FulfillmentMode) => void;
   onDeliveryOptionChange: (option: DeliveryOption) => void;
   onContinue: () => void;
@@ -711,29 +710,6 @@ function MobileDeliveryStage({
           </span>
           <span className="mt-1 block pl-7 text-[0.6875rem] text-territory-muted">
             Seu pedido será entregue pela equipe do {businessName}.
-          </span>
-        </ChoiceButton>
-        <ChoiceButton
-          active={deliveryOption === "platform"}
-          activeClassName="border-territory-sun bg-territory-sun/10 text-territory-ink"
-          disabled={platformUnavailable}
-          onClick={() => onDeliveryOptionChange("platform")}
-        >
-          <span className="flex items-center gap-2 font-bold">
-            <Truck
-              className="h-5 w-5 text-territory-brand"
-              aria-hidden="true"
-            />
-            Motoboy Achegue-se <span className="ml-auto">{currency(7)}</span>
-          </span>
-          <span className="mt-1 block pl-7 text-[0.6875rem] text-territory-muted">
-            Endereço atendido pela plataforma
-          </span>
-          <span className="mt-1 block pl-7 text-[0.6875rem] text-territory-muted">
-            O entregador seria buscado após a confirmação da loja.
-          </span>
-          <span className="mt-2 ml-7 inline-flex rounded-full bg-territory-sun/35 px-1.5 py-0.5 text-[0.5625rem] font-bold text-territory-ink">
-            {platformUnavailable ? "Indisponível neste lançamento" : "Opção prevista"}
           </span>
         </ChoiceButton>
         {availableModes.includes("takeout") ? (
@@ -838,6 +814,8 @@ function MobileReviewStage({
   onConfirm: () => void;
 }) {
   const total = subtotal + deliveryFee;
+  const FulfillmentIcon =
+    mode === "delivery" ? Truck : mode === "takeout" ? ShoppingBag : Store;
   return (
     <div className="space-y-3">
       <h1 className="font-heading text-[1.45rem] font-bold tracking-[-0.04em] text-territory-ink">
@@ -850,19 +828,13 @@ function MobileReviewStage({
           onClick={onGoToDelivery}
           className="flex w-full items-start gap-3 rounded-lg border border-territory-border bg-territory-surface p-2.5 text-left focus-visible:outline-2 focus-visible:outline-offset-[-2px] focus-visible:outline-territory-brand"
         >
-          <Truck
+          <FulfillmentIcon
             className="mt-0.5 h-5 w-5 shrink-0 text-territory-brand"
             aria-hidden="true"
           />
           <span className="min-w-0 flex-1 text-xs">
             <strong className="block">
-              {deliveryOption === "platform"
-                ? "Motoboy Achegue-se"
-                : mode === "delivery"
-                  ? "Entrega da loja"
-                  : mode === "takeout"
-                    ? "Retirada na loja"
-                    : "Consumo no local"}
+              {deliveryLabel(mode, deliveryOption)}
             </strong>
             <span className="mt-0.5 block text-territory-muted">
               {recipientName || "Cliente"}
@@ -993,9 +965,7 @@ function MobileReviewStage({
         </div>
         <div className="mt-1 flex items-center justify-between gap-3">
           <span className="text-territory-muted">
-            {deliveryOption === "platform"
-              ? "Motoboy Achegue-se"
-              : "Entrega da loja"}
+            {deliveryLabel(mode, deliveryOption)}
           </span>
           <span>{currency(deliveryFee)}</span>
         </div>
@@ -1030,60 +1000,129 @@ function MobileFallbackStage({
   destination,
   subtotal,
   deliveryFee,
+  fallbackReason,
   items,
+  availableModes,
+  selectedMode,
   onBackToReview,
+  onSelectMode,
   onContinue,
+  onEditAddress,
+  onContactStore,
 }: {
   destination: ReturnType<typeof buildCheckoutDeliveryAddress>;
   subtotal: number;
   deliveryFee: number;
+  fallbackReason: "store" | "platform";
   items: CheckoutDisplayItem[];
+  availableModes: FulfillmentMode[];
+  selectedMode: FulfillmentMode;
   onBackToReview: () => void;
+  onSelectMode: (mode: FulfillmentMode) => void;
   onContinue: () => void;
+  onEditAddress?: () => void;
+  onContactStore: () => void;
 }) {
+  const selectableModes = availableModes;
+  const hasSelectableMode = selectableModes.length > 0;
+  const selectedDeliveryFee = selectedMode === "delivery" ? deliveryFee : 0;
+  const selectedModeLabel =
+    selectedMode === "delivery"
+      ? "Entrega da loja"
+      : selectedMode === "takeout"
+        ? "Retirada na loja"
+        : "Consumo no local";
+  const warning = (
+    <div className="rounded-lg bg-territory-warning/20 p-3 text-xs text-territory-ink">
+      <p className="flex items-center gap-2 font-bold">
+        <CircleAlert
+          className="h-5 w-5 shrink-0 text-territory-warning"
+          aria-hidden="true"
+        />
+        {fallbackReason === "store"
+          ? "A loja não atende este endereço"
+          : "A plataforma não atende este endereço"}
+      </p>
+      <p className="mt-1 pl-7 text-territory-muted">
+        {hasSelectableMode
+          ? fallbackReason === "store"
+            ? "Escolha retirada ou outra modalidade disponível para continuar."
+            : "Você pode escolher outra opção para continuar."
+          : "Nenhuma modalidade está disponível para este pedido."}
+      </p>
+    </div>
+  );
+
+  if (!hasSelectableMode) {
+    return (
+      <div className="space-y-3">
+        <h1 className="font-heading text-[1.45rem] font-bold tracking-[-0.04em] text-territory-ink">
+          Ajuste a entrega
+        </h1>
+        {warning}
+        {onEditAddress ? (
+          <button
+            type="button"
+            onClick={onEditAddress}
+            className="min-h-11 w-full rounded-lg bg-territory-sun px-4 py-3 text-sm font-bold text-territory-ink hover:bg-territory-sun/90 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-territory-brand"
+          >
+            Alterar endereço
+          </button>
+        ) : null}
+        <button
+          type="button"
+          onClick={onContactStore}
+          className="flex min-h-10 w-full items-center justify-center gap-2 rounded-lg border border-territory-brand px-4 py-2.5 text-xs font-bold text-territory-brand focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-territory-brand"
+        >
+          <MessageCircle className="h-4 w-4" aria-hidden="true" />
+          Falar com a loja
+        </button>
+        <button
+          type="button"
+          onClick={onBackToReview}
+          className="hidden w-full rounded-lg border border-territory-border px-4 py-3 text-sm font-bold text-territory-muted focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-territory-brand sm:block"
+        >
+          Voltar
+        </button>
+      </div>
+    );
+  }
+
   return (
     <div className="space-y-3">
       <h1 className="font-heading text-[1.45rem] font-bold tracking-[-0.04em] text-territory-ink">
         Ajuste a entrega
       </h1>
-      <div className="rounded-lg bg-territory-warning/20 p-3 text-xs text-territory-ink">
-        <p className="flex items-center gap-2 font-bold">
-          <CircleAlert
-            className="h-5 w-5 shrink-0 text-territory-warning"
-            aria-hidden="true"
-          />
-          A plataforma não atende este endereço
+      {warning}
+      <AddressCard destination={destination} compact onEdit={onEditAddress} />
+      <div className="space-y-2">
+        <p className="text-xs font-bold text-territory-ink">
+          Escolha uma opção disponível
         </p>
-        <p className="mt-1 pl-7 text-territory-muted">
-          Você pode escolher outra opção para continuar.
-        </p>
+        {selectableModes.map((availableMode) => {
+          const isDelivery = availableMode === "delivery";
+          return (
+            <ChoiceButton
+              key={availableMode}
+              active={selectedMode === availableMode}
+              onClick={() => onSelectMode(availableMode)}
+            >
+              <span className="flex items-center gap-2 font-bold">
+                {isDelivery ? (
+                  <Truck className="h-5 w-5 text-territory-brand" aria-hidden="true" />
+                ) : (
+                  <Store className="h-5 w-5 text-territory-brand" aria-hidden="true" />
+                )}
+                {isDelivery ? "Entrega da loja" : availableMode === "takeout" ? "Retirada na loja" : "Consumo no local"}
+                {isDelivery ? <span className="ml-auto">{currency(deliveryFee)}</span> : null}
+              </span>
+              <span className="mt-1 block pl-7 text-[0.6875rem] text-territory-muted">
+                {isDelivery ? "Equipe do estabelecimento" : "Sem taxa de entrega"}
+              </span>
+            </ChoiceButton>
+          );
+        })}
       </div>
-      <AddressCard destination={destination} compact />
-      <p className="text-xs font-bold text-territory-ink">
-        Escolha uma opção disponível
-      </p>
-      <ChoiceButton active onClick={onContinue}>
-        <span className="flex items-center gap-2 font-bold">
-          <Truck className="h-5 w-5 text-territory-brand" aria-hidden="true" />
-          Entrega da loja <span className="ml-auto">{currency(deliveryFee)}</span>
-        </span>
-        <span className="mt-1 block pl-7 text-[0.6875rem] text-territory-muted">
-          Equipe do estabelecimento
-        </span>
-      </ChoiceButton>
-      <button
-        type="button"
-        onClick={onContinue}
-        className="flex min-h-12 w-full items-center justify-between rounded-lg border border-territory-border bg-territory-surface px-3 text-left text-xs font-semibold text-territory-ink focus-visible:outline-2 focus-visible:outline-offset-[-2px] focus-visible:outline-territory-brand"
-      >
-        <span className="flex items-center gap-2">
-          <Store className="h-5 w-5 text-territory-brand" aria-hidden="true" />
-          Retirada na loja
-        </span>
-        <span className="text-[0.6875rem] font-normal text-territory-muted">
-          Sem taxa de entrega
-        </span>
-      </button>
       <div className="rounded-lg border border-territory-border bg-territory-surface p-3">
         <div className="flex items-center justify-between gap-3 text-xs font-bold">
           <span>Seu pedido · {items.reduce((total, item) => total + item.quantity, 0)} itens</span>
@@ -1099,20 +1138,40 @@ function MobileFallbackStage({
           <span>{currency(subtotal)}</span>
         </div>
         <div className="mt-1 flex items-center justify-between gap-3">
-          <span className="text-territory-muted">Entrega da loja</span>
-          <span>{currency(deliveryFee)}</span>
+          <span className="text-territory-muted">{selectedModeLabel}</span>
+          <span>{currency(selectedDeliveryFee)}</span>
         </div>
         <div className="mt-3 flex items-center justify-between gap-3 border-t border-territory-border pt-3 text-base font-bold">
           <span>Total</span>
-          <span>{currency(subtotal + deliveryFee)}</span>
+          <span>{currency(subtotal + selectedDeliveryFee)}</span>
         </div>
       </div>
+      <button
+        type="button"
+        onClick={onContinue}
+        className="hidden min-h-11 w-full items-center justify-center gap-2 rounded-lg bg-territory-sun px-4 py-3 text-sm font-bold text-territory-ink hover:bg-territory-sun/90 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-territory-brand lg:flex"
+      >
+        {selectedMode === "delivery"
+          ? "Continuar com entrega da loja"
+          : selectedMode === "takeout"
+            ? "Continuar com retirada na loja"
+            : "Continuar com consumo no local"}
+        <ChevronRight className="h-4 w-4" aria-hidden="true" />
+      </button>
       <button
         type="button"
         onClick={onBackToReview}
         className="hidden w-full rounded-lg border border-territory-brand px-4 py-3 text-sm font-bold text-territory-brand focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-territory-brand sm:block"
       >
         Voltar para revisão
+      </button>
+      <button
+        type="button"
+        onClick={onContactStore}
+        className="flex min-h-10 w-full items-center justify-center gap-2 rounded-lg border border-territory-brand px-4 py-2.5 text-xs font-bold text-territory-brand focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-territory-brand"
+      >
+        <MessageCircle className="h-4 w-4" aria-hidden="true" />
+        Falar com a loja
       </button>
     </div>
   );
@@ -1220,7 +1279,6 @@ function FulfillmentSection({
   availableModes,
   deliveryFee,
   businessName,
-  platformUnavailable,
   onModeChange,
   onDeliveryOptionChange,
 }: {
@@ -1229,7 +1287,6 @@ function FulfillmentSection({
   availableModes: FulfillmentMode[];
   deliveryFee: number;
   businessName: string;
-  platformUnavailable: boolean;
   onModeChange: (mode: FulfillmentMode) => void;
   onDeliveryOptionChange: (option: DeliveryOption) => void;
 }) {
@@ -1243,7 +1300,7 @@ function FulfillmentSection({
           id="checkout-fulfillment-title"
           className="font-heading text-base font-bold text-territory-ink"
         >
-          2. Escolha a entrega
+          2. {availableModes.includes("delivery") ? "Escolha a entrega" : "Escolha como receber"}
         </h2>
         <Clock3 className="h-5 w-5 text-territory-brand" aria-hidden="true" />
       </div>
@@ -1296,36 +1353,7 @@ function FulfillmentSection({
                 Seu pedido será entregue pela equipe do {businessName}.
               </span>
             </ChoiceButton>
-            <ChoiceButton
-              active={deliveryOption === "platform"}
-              disabled={platformUnavailable}
-              onClick={() => onDeliveryOptionChange("platform")}
-            >
-              <span className="flex items-center justify-between gap-2 font-semibold">
-                Motoboy Achegue-se{" "}
-                <span className="rounded-full bg-territory-sun/45 px-1.5 py-0.5 text-[0.5625rem]">
-                  {platformUnavailable
-                    ? "Indisponível neste lançamento"
-                    : "Opção prevista"}
-                </span>
-              </span>
-              <span className="mt-0.5 block text-[0.6875rem] text-territory-muted">
-                Endereço atendido pela plataforma · {currency(7)}
-              </span>
-              <span className="mt-1 block text-[0.6875rem] text-territory-muted">
-                A cobrança e a disponibilidade ainda dependem da operação.
-              </span>
-            </ChoiceButton>
           </div>
-          <p className="mt-3 flex items-start gap-1.5 text-[0.6875rem] leading-4 text-territory-muted">
-            <Info
-              className="mt-0.5 h-3.5 w-3.5 shrink-0 text-territory-brand"
-              aria-hidden="true"
-            />
-            A opção Achegue-se é uma previsão de operação futura; a entrega
-            própria da loja continua sendo a modalidade operacional deste
-            checkout.
-          </p>
         </>
       ) : (
         <p className="mt-3 text-xs text-territory-muted">
@@ -1643,16 +1671,20 @@ function OrderSummary({
 
 function MobileCheckoutFooter({
   stage,
+  mode,
   total,
   disabled,
+  fallbackLabel,
   onAddressContinue,
   onDeliveryContinue,
   onReviewConfirm,
   onFallbackContinue,
 }: {
   stage: CheckoutStage;
+  mode: FulfillmentMode;
   total: number;
   disabled?: boolean;
+  fallbackLabel?: string;
   onAddressContinue: () => void;
   onDeliveryContinue: () => void;
   onReviewConfirm: () => void;
@@ -1660,11 +1692,13 @@ function MobileCheckoutFooter({
 }) {
   const label =
     stage === "address"
-      ? "Ver opções de entrega"
+      ? mode === "delivery"
+        ? "Ver opções de entrega"
+        : "Continuar para pagamento"
       : stage === "delivery"
         ? "Continuar para pagamento"
         : stage === "fallback"
-          ? "Continuar com entrega da loja"
+          ? fallbackLabel ?? "Continuar com a opção escolhida"
           : `Confirmar pedido · ${currency(total)}`;
   const onClick =
     stage === "address"
@@ -1719,6 +1753,19 @@ export default function GastronomyCheckoutConceptSurface({
   const [expandedItems, setExpandedItems] = useState(false);
   const [addressMode, setAddressMode] = useState<"saved" | "other">("saved");
   const [stage, setStage] = useState<CheckoutStage>("address");
+  const [fallbackReason, setFallbackReason] = useState<"store" | "platform">(
+    "platform",
+  );
+  const [fallbackMode, setFallbackMode] = useState<FulfillmentMode>(
+    () => availableModes.includes("delivery") ? "delivery" : availableModes[0] ?? "takeout",
+  );
+  const [deliveryEligibility, setDeliveryEligibility] =
+    useState<DeliveryEligibilityState>("unknown");
+  const [deliveryFeeOverride, setDeliveryFeeOverride] = useState<number | null>(
+    null,
+  );
+  const [isCheckingDeliveryCoverage, setIsCheckingDeliveryCoverage] =
+    useState(false);
   const [streetNumber, setStreetNumber] = useState("");
   const [complement, setComplement] = useState("");
   const [referencePoint, setReferencePoint] = useState("");
@@ -1778,9 +1825,24 @@ export default function GastronomyCheckoutConceptSurface({
     effectiveDestination,
     streetNumber,
   );
-  const checkoutCart = useMemo(
+  const baseCheckoutCart = useMemo(
     () => applyFulfillmentToCart(cart, business, fulfillmentMode),
     [business, cart, fulfillmentMode],
+  );
+  const checkoutCart = useMemo(() => {
+    if (fulfillmentMode !== "delivery" || deliveryFeeOverride === null) {
+      return baseCheckoutCart;
+    }
+
+    return {
+      ...baseCheckoutCart,
+      delivery_fee: deliveryFeeOverride,
+      total: baseCheckoutCart.subtotal + deliveryFeeOverride,
+    };
+  }, [baseCheckoutCart, deliveryFeeOverride, fulfillmentMode]);
+  const fallbackCart = useMemo(
+    () => applyFulfillmentToCart(cart, business, fallbackMode),
+    [business, cart, fallbackMode],
   );
   const items = useMemo(() => toDisplayItems(checkoutCart), [checkoutCart]);
   const subtotal = checkoutCart.subtotal;
@@ -1790,15 +1852,38 @@ export default function GastronomyCheckoutConceptSurface({
     () => resolveCheckoutPaymentOptions(business, fulfillmentMode),
     [business, fulfillmentMode],
   );
-  const platformUnavailable = !isPlatformCourierCheckoutAvailable();
   const platformCourierUnavailable = isPlatformCourierUnavailableForCheckout(
     business,
     fulfillmentMode,
   );
+  const fallbackModes = useMemo(
+    () =>
+      deliveryEligibility === "ineligible" || fallbackReason === "platform"
+        ? availableModes.filter((mode) => mode !== "delivery")
+        : availableModes,
+    [availableModes, deliveryEligibility, fallbackReason],
+  );
+  const fallbackLabel =
+    fallbackMode === "delivery"
+      ? "Continuar com entrega da loja"
+      : fallbackMode === "takeout"
+        ? "Continuar com retirada na loja"
+        : "Continuar com consumo no local";
 
   useEffect(() => {
     setFulfillmentMode((current) => normalizeFulfillmentMode(business, current));
   }, [business]);
+
+  useEffect(() => {
+    setDeliveryEligibility("unknown");
+    setDeliveryFeeOverride(null);
+  }, [checkoutAddress, fulfillmentMode]);
+
+  useEffect(() => {
+    setFallbackMode((current) =>
+      availableModes.includes(current) ? current : availableModes[0] ?? "takeout",
+    );
+  }, [availableModes]);
 
   useEffect(() => {
     if (!paymentOptions.some((option) => option.value === paymentMethod)) {
@@ -1894,6 +1979,8 @@ export default function GastronomyCheckoutConceptSurface({
   const handleModeChange = (nextMode: FulfillmentMode) => {
     setFulfillmentMode(nextMode);
     setDeliveryOption("store");
+    setDeliveryEligibility("unknown");
+    setDeliveryFeeOverride(null);
     if (nextMode !== "delivery") setStage("review");
   };
   const handleAddressModeChange = (nextMode: "saved" | "other") => {
@@ -1905,7 +1992,7 @@ export default function GastronomyCheckoutConceptSurface({
       setShowDestinationEditor(true);
     }
   };
-  const continueFromAddress = () => {
+  const continueFromAddress = async () => {
     if (!hasCart) {
       toast.error("Adicione pelo menos um item antes de continuar.", {
         position: "top-center",
@@ -1919,7 +2006,72 @@ export default function GastronomyCheckoutConceptSurface({
       });
       return;
     }
-    setStage(fulfillmentMode === "delivery" ? "delivery" : "review");
+
+    if (fulfillmentMode !== "delivery") {
+      setStage("review");
+      return;
+    }
+
+    if (platformCourierUnavailable) {
+      setFallbackReason("platform");
+      setFallbackMode((current) => {
+        const nextMode = availableModes.find((mode) => mode !== "delivery");
+        return nextMode && current === "delivery" ? nextMode : current;
+      });
+      setStage("fallback");
+      return;
+    }
+
+    if (
+      deliveryEligibility === "unknown" &&
+      checkoutAddress?.neighborhood &&
+      checkoutAddress.city &&
+      checkoutAddress.state
+    ) {
+      setIsCheckingDeliveryCoverage(true);
+      try {
+        const eligibilityResult = await DeliveryAreaService.checkEligibility(
+          business.business_data_id,
+          checkoutAddress.neighborhood,
+          checkoutAddress.city,
+          checkoutAddress.state,
+          checkoutCart.total,
+        );
+
+        if (eligibilityResult.error || !eligibilityResult.data) {
+          toast.error(
+            eligibilityResult.error ||
+              "Não foi possível validar a área de entrega agora.",
+            { position: "top-center" },
+          );
+          return;
+        }
+
+        if (!eligibilityResult.data.is_eligible) {
+          setDeliveryEligibility("ineligible");
+          setFallbackReason("store");
+          setFallbackMode((current) => {
+            const nextMode = availableModes.find((mode) => mode !== "delivery");
+            return nextMode && current === "delivery" ? nextMode : current;
+          });
+          setStage("fallback");
+          return;
+        }
+
+        setDeliveryEligibility("eligible");
+        setDeliveryFeeOverride(eligibilityResult.data.delivery_fee);
+      } finally {
+        setIsCheckingDeliveryCoverage(false);
+      }
+    }
+
+    setStage("delivery");
+  };
+  const continueFromFallback = () => {
+    if (!fallbackModes.includes(fallbackMode)) return;
+    setFulfillmentMode(fallbackMode);
+    setDeliveryOption("store");
+    setStage("review");
   };
   const handleSubmit = async () => {
     if (isSubmitDisabled) return;
@@ -1945,10 +2097,29 @@ export default function GastronomyCheckoutConceptSurface({
       });
       navigate(businessManagementRoutes.gastronomyPedidoPublico(order.id));
     } catch (error) {
-      toast.error(
-        error instanceof Error ? error.message : "Falha ao concluir o pedido.",
-        { position: "top-center" },
-      );
+      const message =
+        error instanceof Error ? error.message : "Falha ao concluir o pedido.";
+      const normalizedMessage = message
+        .normalize("NFD")
+        .replace(/[\u0300-\u036f]/g, "")
+        .toLowerCase();
+
+      if (
+        requiresAddress &&
+        (normalizedMessage.includes("area de entrega") ||
+          normalizedMessage.includes("fora da area"))
+      ) {
+        setDeliveryEligibility("ineligible");
+        setFallbackReason("store");
+        setFallbackMode((current) => {
+          const nextMode = availableModes.find((mode) => mode !== "delivery");
+          return nextMode && current === "delivery" ? nextMode : current;
+        });
+        setStage("fallback");
+        return;
+      }
+
+      toast.error(message, { position: "top-center" });
     }
   };
   const returnToPrevious = () => {
@@ -2007,7 +2178,6 @@ export default function GastronomyCheckoutConceptSurface({
                 subtotal={subtotal}
                 deliveryFee={deliveryFee}
                 businessName={business.name}
-                platformUnavailable={platformUnavailable}
                 onModeChange={handleModeChange}
                 onDeliveryOptionChange={setDeliveryOption}
                 onContinue={() => setStage("review")}
@@ -2038,7 +2208,10 @@ export default function GastronomyCheckoutConceptSurface({
                 }
                 onGoToPayment={() => setPaymentExpanded((current) => !current)}
                 onEditItems={() => navigate("..")}
-                onOpenFallback={() => setStage("fallback")}
+                onOpenFallback={() => {
+                  setFallbackReason("platform");
+                  setStage("fallback");
+                }}
                 onToggleNotes={() => setNotesExpanded((current) => !current)}
                 onCashChangeForChange={setCashChangeFor}
                 onPaymentMethodChange={setPaymentMethod}
@@ -2050,13 +2223,16 @@ export default function GastronomyCheckoutConceptSurface({
               <MobileFallbackStage
                 destination={checkoutAddress}
                 subtotal={subtotal}
-                deliveryFee={checkoutCart.delivery_fee}
+                deliveryFee={fallbackCart.delivery_fee}
+                fallbackReason={fallbackReason}
                 items={items}
+                availableModes={fallbackModes}
+                selectedMode={fallbackMode}
                 onBackToReview={() => setStage("review")}
-                onContinue={() => {
-                  setDeliveryOption("store");
-                  setStage("review");
-                }}
+                onSelectMode={setFallbackMode}
+                onContinue={continueFromFallback}
+                onEditAddress={() => setShowDestinationEditor(true)}
+                onContactStore={() => navigate(appUrls.messages)}
               />
             ) : null}
           </div>
@@ -2098,14 +2274,23 @@ export default function GastronomyCheckoutConceptSurface({
             </p>
           </div>
           {stage === "fallback" ? (
-            <div className="mt-5 flex items-start gap-3 rounded-xl bg-territory-warning/20 p-4 text-sm">
-              <CircleAlert className="mt-0.5 h-5 w-5 shrink-0 text-territory-warning" aria-hidden="true" />
-              <span>
-                <strong className="block">A plataforma não atende este endereço</strong>
-                <span className="text-territory-muted">Escolha a entrega da loja ou retirada para continuar com os mesmos itens.</span>
-              </span>
+            <div className="mt-5 max-w-2xl">
+              <MobileFallbackStage
+                destination={checkoutAddress}
+                subtotal={subtotal}
+                deliveryFee={fallbackCart.delivery_fee}
+                fallbackReason={fallbackReason}
+                items={items}
+                availableModes={fallbackModes}
+                selectedMode={fallbackMode}
+                onBackToReview={() => setStage("review")}
+                onSelectMode={setFallbackMode}
+                onContinue={continueFromFallback}
+                onEditAddress={() => setShowDestinationEditor(true)}
+                onContactStore={() => navigate(appUrls.messages)}
+              />
             </div>
-          ) : null}
+          ) : (
           <div className="mt-5 grid gap-5 lg:grid-cols-[minmax(0,1fr)_22rem] lg:items-start">
             <div className="space-y-4 sm:space-y-5">
               <AddressSection
@@ -2126,7 +2311,6 @@ export default function GastronomyCheckoutConceptSurface({
                 availableModes={availableModes}
                 deliveryFee={deliveryFee}
                 businessName={business.name}
-                platformUnavailable={platformUnavailable}
                 onModeChange={handleModeChange}
                 onDeliveryOptionChange={setDeliveryOption}
               />
@@ -2164,10 +2348,14 @@ export default function GastronomyCheckoutConceptSurface({
               onAddMoreItems={() => navigate("..")}
               onRemoveItem={removeItem}
               onConfirm={handleSubmit}
-              onFallback={() => setStage("fallback")}
+              onFallback={() => {
+                setFallbackReason("platform");
+                setStage("fallback");
+              }}
               onContactStore={() => navigate(appUrls.messages)}
             />
           </div>
+          )}
           <p className="mt-6 text-center text-xs text-territory-muted">
             Pedido e pagamento serão registrados no fluxo oficial de Gastronomia.
           </p>
@@ -2175,15 +2363,20 @@ export default function GastronomyCheckoutConceptSurface({
       </main>
       <MobileCheckoutFooter
         stage={stage}
+        mode={fulfillmentMode}
         total={total}
-        disabled={stage === "review" ? isSubmitDisabled : !hasCart}
+        fallbackLabel={fallbackLabel}
+        disabled={
+          stage === "review"
+            ? isSubmitDisabled
+            : stage === "fallback"
+              ? !hasCart || fallbackModes.length === 0
+              : !hasCart || isCheckingDeliveryCoverage
+        }
         onAddressContinue={continueFromAddress}
         onDeliveryContinue={() => setStage("review")}
         onReviewConfirm={handleSubmit}
-        onFallbackContinue={() => {
-          setDeliveryOption("store");
-          setStage("review");
-        }}
+        onFallbackContinue={continueFromFallback}
       />
     </div>
   );

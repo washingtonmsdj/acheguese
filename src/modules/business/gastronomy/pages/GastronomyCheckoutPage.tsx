@@ -81,11 +81,7 @@ export default function GastronomyCheckoutPage() {
     );
   }
 
-  if (params.slug === "sabores-da-ana") {
-    return <GastronomyCheckoutConceptSurface business={business} />;
-  }
-
-  return <GastronomyCheckoutContent business={business} />;
+  return <GastronomyCheckoutConceptSurface business={business} />;
 }
 
 type GastronomyCheckoutContentProps = {

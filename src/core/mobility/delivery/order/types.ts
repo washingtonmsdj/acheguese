@@ -47,6 +47,7 @@ export interface OrderItemAddonSnapshot {
 
 export interface OrderItemSnapshot {
   base_unit_price?: number;
+  image_url?: string | null;
   variant?: OrderItemVariantSnapshot | null;
   addons?: OrderItemAddonSnapshot[];
   special_instructions?: string | null;

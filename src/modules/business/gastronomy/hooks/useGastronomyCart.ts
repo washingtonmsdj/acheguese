@@ -6,6 +6,7 @@ import type { Cart } from "../types/menu";
 import { GastronomyCartService } from "../cart/GastronomyCartService";
 import { useGastronomyCartStore } from "../cart/useGastronomyCartStore";
 import {
+  normalizeFulfillmentMode,
   resolveDefaultFulfillmentMode,
   resolveDeliveryFeeForFulfillment,
 } from "../checkout/checkoutRules";
@@ -32,7 +33,9 @@ export function useGastronomyCart(business?: GastronomyBusiness | null) {
   );
 
   const businessId = business?.business_data_id;
-  const fulfillmentMode = business ? resolveDefaultFulfillmentMode(business) : "delivery";
+  const fulfillmentMode = business
+    ? normalizeFulfillmentMode(business, cart?.fulfillment_mode)
+    : "delivery";
   const deliveryFee = business
     ? resolveDeliveryFeeForFulfillment(business, fulfillmentMode)
     : 0;

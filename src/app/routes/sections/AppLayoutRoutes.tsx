@@ -952,6 +952,26 @@ export function AppLayoutRoutes() {
           )}
           element={<P.OrderDetailsPage />}
         />
+        <Route
+          path="/gastronomia/pedidos/concept-mock-store"
+          element={<P.OrdersConceptMockPage />}
+        />
+        <Route
+          path="/gastronomia/pedidos/concept-mock-attendance"
+          element={<P.OrderServiceConceptMockPage />}
+        />
+        <Route
+          path="/gastronomia/pedidos/concept-mock-delivery"
+          element={<P.DeliveryOrderConceptMockPage />}
+        />
+          <Route
+            path="/gastronomia/pedidos/concept-mock-modalidades"
+            element={<P.DeliveryModesConceptMockPage />}
+          />
+          <Route
+            path="/gastronomia/pedidos/concept-mock-vinculado"
+            element={<P.LinkedStoreDeliveryConceptMockPage />}
+          />
 
         {/* Detalhe premium: /gastronomia-premium/:uf/:cidade/:bairro/:slug */}
         <Route

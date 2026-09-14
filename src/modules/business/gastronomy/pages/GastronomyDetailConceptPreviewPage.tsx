@@ -26,6 +26,9 @@ import { Button } from "@/shared/components/ui/button";
 import { Input } from "@/shared/components/ui/input";
 import { Textarea } from "@/shared/components/ui/textarea";
 import { cn } from "@/shared/utils/cn";
+import { useGastronomyCartStore } from "../cart";
+import type { GastronomyBusiness } from "@/core/business/types/gastronomy";
+import type { CartItem } from "../types/menu";
 import foodImage from "@/assets/gastronomy/cat-marmitas.jpg";
 import moquecaImage from "@/assets/gastronomy/cat-restaurantes.jpg";
 import vegetableImage from "@/assets/gastronomy/cat-acai.jpg";
@@ -56,6 +59,67 @@ type CartLine = ConceptMenuItem & {
 };
 
 const territoryHref = "/ba/salvador/pituba";
+
+const conceptBusiness: GastronomyBusiness = {
+  id: "concept-sabores-da-ana",
+  business_data_id: "concept-sabores-da-ana",
+  profile_id: "concept-ana-profile",
+  name: "Sabores da Ana",
+  description: "Comida caseira feita com cuidado.",
+  category: "restaurante",
+  subcategoria: "Comida regional",
+  location_id: "concept-santa-cruz",
+  business_address: "Rua Exemplo, 120",
+  business_city: "Salvador",
+  business_state: "BA",
+  business_zip: "41900-000",
+  tem_delivery: true,
+  aceita_cartao: true,
+  aceita_pix: true,
+  status: "active",
+  rating: 4.9,
+  total_reviews: 128,
+  total_products: 5,
+  is_premium: false,
+  is_verified: true,
+  can_post_vagas: false,
+  formas_pagamento: ["pix", "dinheiro"],
+  especialidades: ["Comida caseira"],
+  facilidades: [],
+  modos_atendimento: ["delivery", "takeout"],
+  created_at: "2026-01-01T00:00:00.000Z",
+  updated_at: "2026-01-01T00:00:00.000Z",
+  gastronomy_profile: {
+    id: "concept-sabores-da-ana-profile",
+    business_id: "concept-sabores-da-ana",
+    cuisine_type: "Comida caseira",
+    cuisine_subtypes: ["Comida regional"],
+    price_range: "$$",
+    delivery_enabled: true,
+    takeout_enabled: true,
+    dine_in_enabled: false,
+    delivery_fee: 5,
+    delivery_time_min: 35,
+    delivery_time_max: 50,
+    minimum_order: 0,
+    accepts_reservations: false,
+    has_parking: false,
+    has_wifi: false,
+    has_accessibility: false,
+    has_kids_area: false,
+    has_live_music: false,
+    status: "active",
+    metadata: {},
+    created_at: "2026-01-01T00:00:00.000Z",
+    updated_at: "2026-01-01T00:00:00.000Z",
+  },
+};
+
+const conceptFulfillmentModes: FulfillmentMode[] = [
+  conceptBusiness.gastronomy_profile.delivery_enabled ? "delivery" : null,
+  conceptBusiness.gastronomy_profile.takeout_enabled ? "pickup" : null,
+  conceptBusiness.gastronomy_profile.dine_in_enabled ? "dine-in" : null,
+].filter((mode): mode is FulfillmentMode => Boolean(mode));
 
 const menuItems: ConceptMenuItem[] = [
   {
@@ -264,12 +328,13 @@ function PublicTabs({ activeTab, onChange }: { activeTab: ConceptTab; onChange: 
   );
 }
 
-function FulfillmentBar({ mode, onChange }: { mode: FulfillmentMode; onChange: (mode: FulfillmentMode) => void }) {
-  const options: Array<{ value: FulfillmentMode; label: string; icon: typeof Truck }> = [
+function FulfillmentBar({ mode, onChange, availableModes }: { mode: FulfillmentMode; onChange: (mode: FulfillmentMode) => void; availableModes: FulfillmentMode[] }) {
+  const allOptions: Array<{ value: FulfillmentMode; label: string; icon: typeof Truck }> = [
     { value: "delivery", label: "Entrega", icon: Truck },
     { value: "pickup", label: "Retirada", icon: ShoppingBag },
     { value: "dine-in", label: "No local", icon: Store },
   ];
+  const options = allOptions.filter((option) => availableModes.includes(option.value));
   const modeDescription = mode === "delivery" ? "Entrega no seu endereço" : mode === "pickup" ? "Retirada no estabelecimento" : "Consumo no estabelecimento";
 
   return (
@@ -536,6 +601,8 @@ function CartDialog({ lines, onClose, onRemove, onContinue }: { lines: CartLine[
 
 export default function GastronomyDetailConceptPreviewPage() {
   const navigate = useNavigate();
+  const addCartItem = useGastronomyCartStore((state) => state.addCartItem);
+  const clearCart = useGastronomyCartStore((state) => state.clearCart);
   const [activeTab, setActiveTab] = useState<ConceptTab>("menu");
   const [activeCategory, setActiveCategory] = useState("Todas");
   const [query, setQuery] = useState("");
@@ -616,6 +683,42 @@ export default function GastronomyDetailConceptPreviewPage() {
     else setSelectedItemId((current) => current ?? "moqueca-de-peixe");
   };
 
+  const handleContinueToCheckout = () => {
+    const checkoutFulfillmentMode =
+      fulfillmentMode === "pickup"
+        ? "takeout"
+        : fulfillmentMode === "dine-in"
+          ? "dine_in"
+          : "delivery";
+    const checkoutDeliveryFee =
+      checkoutFulfillmentMode === "delivery"
+        ? conceptBusiness.gastronomy_profile.delivery_fee ?? 0
+        : 0;
+
+    clearCart();
+    cartLines.forEach((line, index) => {
+      const cartItem: CartItem = {
+        line_id: `concept-line-${line.id}-${index}`,
+        item_id: line.id,
+        name: line.name,
+        image_url: line.image,
+        base_price: line.price,
+        quantity: line.quantity,
+        addons: [],
+        special_instructions: line.notes?.trim() || undefined,
+        subtotal: line.price * line.quantity + (line.addonsTotal ?? 0),
+      };
+
+      addCartItem({
+        business_id: conceptBusiness.business_data_id,
+        delivery_fee: checkoutDeliveryFee,
+        fulfillment_mode: checkoutFulfillmentMode,
+        cart_item: cartItem,
+      });
+    });
+    navigate("checkout", { state: { business: conceptBusiness } });
+  };
+
   const hasPinnedDetails = viewMode === "list" && Boolean(selectedItem);
 
   return (
@@ -630,7 +733,11 @@ export default function GastronomyDetailConceptPreviewPage() {
 
       <BusinessIdentity saved={saved} onSave={() => setSaved((value) => !value)} onShare={handleShare} />
       <PublicTabs activeTab={activeTab} onChange={setActiveTab} />
-      <FulfillmentBar mode={fulfillmentMode} onChange={setFulfillmentMode} />
+      <FulfillmentBar
+        mode={fulfillmentMode}
+        onChange={setFulfillmentMode}
+        availableModes={conceptFulfillmentModes}
+      />
 
       <main className="w-full px-4 pb-28 pt-3 sm:px-6 sm:pt-3 lg:px-8 lg:pb-28">
         {activeTab === "menu" ? (
@@ -666,7 +773,7 @@ export default function GastronomyDetailConceptPreviewPage() {
 
       {viewMode === "grid" && gridDetailsOpen && selectedItem ? <div className="fixed inset-0 z-50 hidden items-center justify-center bg-black/35 p-4 lg:flex" role="presentation" onMouseDown={() => { setGridDetailsOpen(false); setSelectedItemId(null); }}><section className="max-h-[calc(100dvh-2rem)] w-full max-w-[30rem] overflow-y-auto rounded-2xl bg-territory-surface p-3 shadow-2xl" role="dialog" aria-modal="true" aria-label={`Personalizar ${selectedItem.name}`} onMouseDown={(event) => event.stopPropagation()}><div className="mb-2 flex items-center justify-between"><p className="text-sm font-bold text-territory-ink">Personalizar pedido</p><button type="button" aria-label="Fechar detalhes do item" onClick={() => { setGridDetailsOpen(false); setSelectedItemId(null); }} className="inline-flex h-9 w-9 items-center justify-center rounded-lg text-territory-ink hover:bg-territory-raised focus-visible:outline-2 focus-visible:outline-offset-[-2px] focus-visible:outline-territory-brand"><X className="h-5 w-5" aria-hidden="true" /></button></div><ItemCustomizer item={selectedItem} size={size} setSize={setSize} quantity={quantity} setQuantity={setQuantity} farofa={farofa} setFarofa={setFarofa} arroz={arroz} setArroz={setArroz} notes={notes} setNotes={setNotes} onAdd={() => { addSelectedItem(); setGridDetailsOpen(false); }} /></section></div> : null}
       {mobileCustomizerOpen && selectedItem ? <div className="fixed inset-0 z-50 flex items-end bg-black/35 lg:hidden" role="presentation" onMouseDown={() => setMobileCustomizerOpen(false)}><div className="max-h-[90dvh] w-full overflow-y-auto rounded-t-2xl bg-territory-surface p-3 pb-[calc(0.75rem+env(safe-area-inset-bottom))]" onMouseDown={(event) => event.stopPropagation()}><div className="mb-2 flex items-center justify-between"><p className="text-sm font-bold text-territory-ink">Personalizar pedido</p><button type="button" aria-label="Fechar personalização" onClick={() => setMobileCustomizerOpen(false)} className="inline-flex h-9 w-9 items-center justify-center rounded-lg text-territory-ink hover:bg-territory-raised focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-territory-brand"><X className="h-5 w-5" aria-hidden="true" /></button></div><ItemCustomizer item={selectedItem} size={size} setSize={setSize} quantity={quantity} setQuantity={setQuantity} farofa={farofa} setFarofa={setFarofa} arroz={arroz} setArroz={setArroz} notes={notes} setNotes={setNotes} onAdd={addSelectedItem} /></div></div> : null}
-      {cartOpen ? <CartDialog lines={cartLines} onClose={() => setCartOpen(false)} onRemove={handleRemoveLine} onContinue={() => navigate("checkout")} /> : null}
+      {cartOpen ? <CartDialog lines={cartLines} onClose={() => setCartOpen(false)} onRemove={handleRemoveLine} onContinue={handleContinueToCheckout} /> : null}
     </div>
   );
 }
