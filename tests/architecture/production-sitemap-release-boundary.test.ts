@@ -70,4 +70,17 @@ describe("production sitemap release boundary", () => {
     );
     expect(edgeSitemap).not.toContain("{ loc: '/mobilidade'");
   });
+
+  it("does not publish removed top-level community or cookie aliases", () => {
+    const edgeSitemap = read("supabase/functions/sitemap/index.ts");
+    const communityRoutesTest = read(
+      "src/app/routes/__tests__/communityRoutesCanonical.spec.ts",
+    );
+
+    expect(communityRoutesTest).toContain(
+      "expect(routesSource).not.toContain('path=\"/comunidade\"')",
+    );
+    expect(edgeSitemap).not.toContain("{ loc: '/comunidade'");
+    expect(edgeSitemap).not.toContain("{ loc: '/cookies'");
+  });
 });
