@@ -13,6 +13,7 @@ import { useAuthTurnstile } from "@/app/components/auth/useAuthTurnstile";
 import { useAuth } from "@/core/auth/hooks/useAuth";
 import { parseAuthIdentifier } from "@/core/auth/utils/authIdentifier";
 import { getAuthErrorMessage } from "@/core/auth/utils/authMessages";
+import { getAuthReturnContext } from "@/core/auth/utils/authReturnContext";
 import {
   clearPendingSignupContext,
   getPendingSignupRedirect,
@@ -62,6 +63,15 @@ export default function LoginPage() {
       "/",
     );
   }, [isEmailConfirmed, location.state, searchParams]);
+  const returnContext = useMemo(() => getAuthReturnContext(redirectTo), [redirectTo]);
+  const returnContextIcon =
+    returnContext.kind === "conversation"
+      ? "chat"
+      : returnContext.kind === "account"
+        ? "person"
+        : returnContext.kind === "community"
+          ? "users"
+          : "store";
 
   const {
     register,
@@ -157,6 +167,7 @@ export default function LoginPage() {
           name="description"
           content="Entre por e-mail ou @usuário e continue de onde parou no Achegue-se."
         />
+        <meta name="robots" content="noindex, nofollow" />
       </Helmet>
 
       <div className="min-h-[100dvh] bg-[#fffdfa] text-[#102f33] lg:bg-[radial-gradient(circle_at_16%_32%,rgba(216,234,224,.55),transparent_31%),radial-gradient(circle_at_70%_18%,rgba(255,236,185,.28),transparent_30%),#fffdfa]">
@@ -197,17 +208,17 @@ export default function LoginPage() {
               <h2 className="font-heading text-[24px] font-extrabold tracking-[-0.035em] text-[#102f33]">
                 Entre na sua conta
               </h2>
-              <p className="mt-1 text-sm text-[#607477]">Depois de entrar, você volta à conversa.</p>
+              <p className="mt-1 text-sm text-[#607477]">Depois de entrar, você volta ao que estava fazendo.</p>
             </div>
 
             {hasReturnContext ? (
               <div className="mt-4 flex min-h-[58px] items-center gap-3 rounded-xl bg-[#f3f1ea] px-3.5 py-2.5 lg:hidden">
                 <span className="flex h-9 w-9 items-center justify-center rounded-lg bg-[#e1ece9] text-[#0b5b59]">
-                  <AuthConceptIcon name="store" />
+                  <AuthConceptIcon name={returnContextIcon} />
                 </span>
                 <div className="min-w-0 flex-1">
                   <p className="text-[11px] text-[#607477]">Você voltará para</p>
-                  <p className="truncate text-[13px] font-bold text-[#18383c]">onde parou</p>
+                  <p className="truncate text-[13px] font-bold text-[#18383c]">{returnContext.label}</p>
                 </div>
                 <span aria-hidden="true" className="text-xl">›</span>
               </div>
