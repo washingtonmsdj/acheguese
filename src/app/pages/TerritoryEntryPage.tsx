@@ -9,7 +9,10 @@ import {
 } from "@/core/routing/utils/publicTerritoryFallbacks";
 import { lastTerritoryStore } from "@/core/routing/stores/LastTerritoryStore";
 import { PRIVACY_POLICY_PATH } from "@/shared/constants/legal";
-import { scheduleAfterPublicRootMap } from "@/shared/utils/publicRootReadiness";
+import {
+  PUBLIC_ROOT_MAP_TERMINAL_TIMEOUT_MS,
+  scheduleAfterPublicRootMap,
+} from "@/shared/utils/publicRootReadiness";
 
 const LAUNCH_STATE = TERRITORY_CONFIG.launch.state;
 const LAUNCH_CITY = TERRITORY_CONFIG.launch.city;
@@ -21,6 +24,7 @@ const LAUNCH_PLACE_LABEL = [
 ]
   .filter(Boolean)
   .join(" · ");
+const COMMUNITY_IMAGE_MAP_SETTLE_GRACE_MS = 500;
 
 /**
  * A entrada pública não depende do banco para descobrir o território inicial.
@@ -131,7 +135,9 @@ export default function TerritoryEntryPage() {
           }
         },
         {
-          maxWaitMs: 3000,
+          maxWaitMs:
+            PUBLIC_ROOT_MAP_TERMINAL_TIMEOUT_MS +
+            COMMUNITY_IMAGE_MAP_SETTLE_GRACE_MS,
           idleTimeoutMs: 1800,
           idleFallbackDelayMs: 600,
         },
