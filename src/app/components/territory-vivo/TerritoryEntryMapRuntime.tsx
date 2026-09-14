@@ -3,8 +3,8 @@ import { Map, MapPin, ShieldCheck } from "lucide-react";
 import { LocationType, type Location } from "@/core/location/types";
 import {
   MapLibreAdapter,
-  preloadMapLibreAdapterRuntime,
-} from "@/core/maps/components/v3/LazyMapLibreAdapter";
+  preloadPassiveMapLibreAdapterRuntime,
+} from "@/core/maps/components/v3/MapLibreAdapter";
 import { useTerritoryPolygon } from "@/core/maps/hooks/useTerritoryPolygon";
 import { DEFAULT_TILE_STYLE, NEIGHBORHOOD_COLORS } from "@/core/maps/providers/MapProvider";
 import type { ResolvedTerritory } from "@/core/routing/hooks/useResolveTerritoryFromUrl";
@@ -16,7 +16,7 @@ const MAP_TIMEOUT_MS = 6000;
 const BOUNDARY_TIMEOUT_MS = 8000;
 
 export function preloadTerritoryEntryMapEngine(): Promise<void> {
-  return preloadMapLibreAdapterRuntime();
+  return preloadPassiveMapLibreAdapterRuntime();
 }
 
 export interface TerritoryEntryMapRuntimeProps {
