@@ -108,21 +108,21 @@ export function ProfileHeaderCompact(props: ProfileHeaderCompactProps) {
 
   return (
     <section
-      className="rounded-2xl border border-territory-border bg-territory-surface p-3 sm:p-5"
+      className="rounded-xl border border-territory-border bg-territory-surface p-3 sm:rounded-2xl sm:p-5"
       data-account-identity
     >
       <div className="flex items-center gap-3 sm:gap-4">
         <div className="relative shrink-0">
-          <Avatar className="h-16 w-16 border border-territory-border bg-territory-raised sm:h-20 sm:w-20">
+          <Avatar className="h-14 w-14 border border-territory-border bg-territory-raised sm:h-20 sm:w-20">
             <AvatarImage src={avatarUrl || undefined} alt="" />
-            <AvatarFallback className="bg-territory-raised text-lg font-semibold text-territory-ink sm:text-xl">
+            <AvatarFallback className="bg-territory-raised text-base font-semibold text-territory-ink sm:text-xl">
               {getInitials(displayName)}
             </AvatarFallback>
           </Avatar>
           <button
             type="button"
             onClick={() => fileRef.current?.click()}
-            className="absolute -bottom-1 -right-1 flex h-8 w-8 items-center justify-center rounded-full border-2 border-territory-surface bg-territory-brand text-white transition-colors hover:bg-territory-brand-strong focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-territory-brand"
+            className="absolute -bottom-1 -right-1 hidden h-8 w-8 items-center justify-center rounded-full border-2 border-territory-surface bg-territory-brand text-white transition-colors hover:bg-territory-brand-strong focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-territory-brand sm:flex"
             aria-label="Alterar foto de perfil"
           >
             <Camera className="h-3.5 w-3.5" aria-hidden="true" />
@@ -139,17 +139,17 @@ export function ProfileHeaderCompact(props: ProfileHeaderCompactProps) {
 
         <div className="min-w-0 flex-1">
           <div className="flex flex-wrap items-center gap-1.5">
-            <h2 className="min-w-0 truncate font-heading text-xl font-bold tracking-[-0.025em] text-territory-ink sm:text-2xl">
+            <h2 className="min-w-0 truncate font-heading text-[1.1rem] font-bold tracking-[-0.025em] text-territory-ink sm:text-2xl">
               {displayName}
             </h2>
             {props.isVerified ? (
               <CheckCircle2
-                className="h-[18px] w-[18px] shrink-0 text-territory-brand"
+                className="h-4 w-4 shrink-0 text-territory-brand sm:h-[18px] sm:w-[18px]"
                 aria-label="Perfil verificado"
               />
             ) : null}
           </div>
-          <p className="mt-1 truncate text-sm text-territory-muted">{props.userEmail}</p>
+          <p className="mt-0.5 truncate text-[0.82rem] text-territory-muted sm:mt-1 sm:text-sm">{props.userEmail}</p>
           <div className="mt-1 hidden flex-wrap items-center gap-x-2 gap-y-1 text-xs text-territory-muted sm:flex">
             {props.handle ? <span>@{props.handle}</span> : <span>Sem nome público</span>}
             <span aria-hidden="true">·</span>
