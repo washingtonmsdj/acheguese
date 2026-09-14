@@ -5,19 +5,19 @@ import { Link, useNavigate } from "react-router-dom";
 import { AuthBrandHeader } from "@/app/components/auth/AuthBrandHeader";
 import { AuthConceptIcon } from "@/app/components/auth/AuthConceptIcon";
 import { AuthFooter } from "@/app/components/auth/AuthFooter";
+import { buildEmailConfirmationLoginPath } from "@/core/auth/constants/authFlow";
 import { useAuth } from "@/core/auth/hooks/useAuth";
-import { getAuthReturnContext } from "@/core/auth/utils/authReturnContext";
 import {
-  clearPendingSignupContext,
-  getPendingSignupRedirect,
-} from "@/core/auth/utils/pendingSignup";
+  completeFirstAccessJourney,
+  getSignupJourneyReturnTarget,
+} from "@/core/auth/utils/authJourney";
+import { getAuthReturnContext } from "@/core/auth/utils/authReturnContext";
 import { useLocationCascade } from "@/core/location/hooks/useLocationCascade";
 import { profileService } from "@/core/profiles/services/ProfileService";
 import type { ProfileRow } from "@/core/profiles/services/types";
 import { useIdentityAvailability } from "@/core/public-identity/hooks/useIdentityAvailability";
 import { SUPPORT_PATH } from "@/shared/constants/legal";
 import { useToast } from "@/shared/hooks/use-toast";
-import { resolveSafeInternalPath } from "@/shared/utils/safeRedirect";
 
 interface TerritoryOption {
   id: string;
@@ -118,10 +118,7 @@ export default function CadastroPrimeiroAcessoPage() {
   const [usernameDraft, setUsernameDraft] = useState("");
   const [savingUsername, setSavingUsername] = useState(false);
 
-  const redirectTo = useMemo(
-    () => resolveSafeInternalPath(getPendingSignupRedirect(), "/"),
-    [],
-  );
+  const redirectTo = useMemo(() => getSignupJourneyReturnTarget(), []);
   const returnContext = useMemo(() => getAuthReturnContext(redirectTo), [redirectTo]);
   const hasReturnContext = redirectTo !== "/";
   const isConversationReturn =
@@ -174,14 +171,14 @@ export default function CadastroPrimeiroAcessoPage() {
 
   useEffect(() => {
     if (!user) {
-      navigate("/login?confirmed=1", { replace: true });
+      navigate(buildEmailConfirmationLoginPath(), { replace: true });
       return;
     }
     void loadProfile();
   }, [loadProfile, navigate, user]);
 
   const leaveFirstAccess = (target: string) => {
-    clearPendingSignupContext();
+    completeFirstAccessJourney();
     navigate(target, { replace: true });
   };
 
@@ -495,14 +492,14 @@ export default function CadastroPrimeiroAcessoPage() {
               ) : (
                 <Link
                   to="/"
-                  onClick={() => clearPendingSignupContext()}
+                  onClick={() => completeFirstAccessJourney()}
                   className="mt-3 flex h-10 items-center justify-center rounded-[9px] bg-[#ffc91a] text-[12px] font-bold text-[#102f33] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#0b5b59]/35"
                 >
                   Explorar o Achegue-se
                 </Link>
               )}
 
-              <Link to="/conta" onClick={() => clearPendingSignupContext()} className="mt-3 flex min-h-11 items-center gap-3 rounded-xl bg-[#f3f1ea] px-3 text-[11px] font-medium text-[#315356] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#0b5b59]/35">
+              <Link to="/conta" onClick={() => completeFirstAccessJourney()} className="mt-3 flex min-h-11 items-center gap-3 rounded-xl bg-[#f3f1ea] px-3 text-[11px] font-medium text-[#315356] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#0b5b59]/35">
                 <AuthConceptIcon name="users" className="text-[#0b5b59]" />
                 Outros perfis ficam em Meus perfis.
               </Link>
