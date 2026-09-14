@@ -458,6 +458,12 @@ Deno.serve(async (req: Request) => {
     });
   } catch (error) {
     console.error('Sitemap generation error:', error);
-    return errorResponse('Failed to generate sitemap', 500, error);
+    return errorResponse(
+      'Failed to generate sitemap',
+      500,
+      error,
+      req,
+      'GET, OPTIONS',
+    );
   }
 });
