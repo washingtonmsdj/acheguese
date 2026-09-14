@@ -1,5 +1,6 @@
 import { lazy, Suspense, useEffect, useLayoutEffect, useState } from "react";
 
+import { PRELAUNCH_LOCKDOWN_ENABLED } from "@/app/config/launchScope";
 import RootRouteEntry from "@/app/routes/RootRouteEntry";
 import { hasAuthCallbackMarker } from "@/core/auth/utils/authCallback";
 import {
@@ -15,9 +16,6 @@ const RoutedAppRuntime = lazy(() =>
 const PublicRootOverlays = lazy(() =>
   import("@/app/components/PublicRootOverlays"),
 );
-
-const PRELAUNCH_LOCKDOWN_ENABLED =
-  (import.meta.env.VITE_PRELAUNCH_LOCKDOWN ?? "false") === "true";
 
 function shouldUseLeanPublicRoot(): boolean {
   if (PRELAUNCH_LOCKDOWN_ENABLED || window.location.pathname !== "/") {
