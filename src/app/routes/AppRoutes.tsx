@@ -40,6 +40,7 @@ const AceiteTermosPage = lazy(
   () => import("@/app/features/onboarding/pages/AceiteTermosPage"),
 );
 const AboutPage = lazy(() => import("@/app/pages/AboutPage"));
+const ComoFuncionaPage = lazy(() => import("@/app/pages/ComoFuncionaPage"));
 const ContactPage = lazy(() => import("@/app/pages/ContactPage"));
 const OnboardingPage = lazy(() => import("@/app/pages/OnboardingPage"));
 const ResetPasswordPage = lazy(() => import("@/app/pages/ResetPasswordPage"));
@@ -141,6 +142,7 @@ export function AppRoutes() {
         element={<CadastroConfirmacaoPage />}
       />
       <Route path="/aceitar-termos" element={<AceiteTermosPage />} />
+      <Route path="/como-funciona" element={<ComoFuncionaPage />} />
       <Route path="/sobre" element={<AboutPage />} />
       <Route path="/contato" element={<ContactPage />} />
       <Route path="/onboarding" element={<OnboardingPage />} />

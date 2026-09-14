@@ -236,6 +236,7 @@ function collectSitemapUrls(
   const staticPages = [
     { path: '/inicio', priority: 0.9, changefreq: 'weekly' as const },
     { path: '/ba/salvador', priority: 0.95, changefreq: 'daily' as const },
+    { path: '/como-funciona', priority: 0.7, changefreq: 'monthly' as const },
     { path: '/sobre', priority: 0.6, changefreq: 'monthly' as const },
     { path: '/contato', priority: 0.6, changefreq: 'monthly' as const },
     { path: '/termos', priority: 0.3, changefreq: 'monthly' as const },

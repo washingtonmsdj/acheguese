@@ -203,7 +203,7 @@ export default function TerritoryEntryPage() {
             achegue-se<span aria-hidden="true">.</span>
           </Link>
           <nav className="entry-desktop-nav" aria-label="Navegação pública">
-            <Link to="/sobre">Como funciona</Link>
+            <Link to="/como-funciona">Como funciona</Link>
             <span className="entry-nav-divider" aria-hidden="true" />
             <Link to="/login">Entrar</Link>
           </nav>
@@ -229,7 +229,7 @@ export default function TerritoryEntryPage() {
               className="entry-mobile-menu-popover"
               aria-label="Navegação pública móvel"
             >
-              <Link to="/sobre" onClick={() => setIsMobileMenuOpen(false)}>Como funciona</Link>
+              <Link to="/como-funciona" onClick={() => setIsMobileMenuOpen(false)}>Como funciona</Link>
               <Link to="/login" onClick={() => setIsMobileMenuOpen(false)}>Entrar</Link>
             </nav>
           ) : null}
@@ -294,7 +294,7 @@ export default function TerritoryEntryPage() {
 
       <footer className="entry-footer">
         <span>Começamos pelo Complexo. Aos poucos, o Achegue-se chega a novos lugares.</span>
-        <nav aria-label="Links institucionais"><Link to="/privacidade">Privacidade</Link><i aria-hidden="true" /><Link to="/sobre">Como funciona</Link></nav>
+        <nav aria-label="Links institucionais"><Link to="/privacidade">Privacidade</Link><i aria-hidden="true" /><Link to="/como-funciona">Como funciona</Link></nav>
       </footer>
     </div>
   );
