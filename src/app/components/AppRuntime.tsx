@@ -1,7 +1,7 @@
 import { lazy, Suspense, useEffect, useLayoutEffect, useState } from "react";
 
 import RootRouteEntry from "@/app/routes/RootRouteEntry";
-import { scheduleBrowserIdleWork } from "@/shared/utils/browserIdle";
+import { scheduleAfterPublicRootMap } from "@/shared/utils/publicRootReadiness";
 
 const RoutedAppRuntime = lazy(() =>
   import("@/app/components/RoutedAppRuntime"),
@@ -55,12 +55,16 @@ function LeanPublicRootRuntime() {
   }, []);
 
   useEffect(() => {
-    let cancelIdleWork: (() => void) | null = null;
+    let cancelReadinessWork: (() => void) | null = null;
 
     const scheduleOverlays = () => {
-      cancelIdleWork = scheduleBrowserIdleWork(
+      cancelReadinessWork = scheduleAfterPublicRootMap(
         () => setShouldMountOverlays(true),
-        { timeoutMs: 2500, fallbackDelayMs: 1200 },
+        {
+          maxWaitMs: 2600,
+          idleTimeoutMs: 2500,
+          idleFallbackDelayMs: 1200,
+        },
       );
     };
 
@@ -72,7 +76,7 @@ function LeanPublicRootRuntime() {
 
     return () => {
       window.removeEventListener("load", scheduleOverlays);
-      cancelIdleWork?.();
+      cancelReadinessWork?.();
     };
   }, []);
 
