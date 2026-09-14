@@ -52,7 +52,7 @@ test.describe("Conta e acesso — contrato visual responsivo do concept", () => 
     await expectNoGenericSvgInMain(page);
   });
 
-  test("desktop usa arte oficial à esquerda e card funcional à direita", async ({ page }) => {
+  test("desktop usa arte oficial grande à esquerda e card funcional à direita", async ({ page }) => {
     await page.setViewportSize(DESKTOP);
 
     const cases = [
@@ -61,24 +61,28 @@ test.describe("Conta e acesso — contrato visual responsivo do concept", () => 
         heading: /Seu lugar,\s*mais perto\./,
         asset: "/auth/login-hero.webp",
         cardHeading: "Entre na sua conta",
+        minHeroWidth: 520,
       },
       {
         path: "/cadastro",
         heading: /Comece\s*por você\./,
         asset: "/auth/signup-hero.webp",
         cardHeading: "Criar minha conta",
+        minHeroWidth: 500,
       },
       {
         path: "/cadastro/confirmacao",
         heading: /Só falta\s*confirmar\s*seu e-mail\./,
         asset: "/auth/confirm-hero.webp",
         cardHeading: "Confira sua caixa de entrada",
+        minHeroWidth: 520,
       },
       {
         path: "/reset-password?mode=request",
         heading: /Vamos ajudar\s*você a voltar\./,
         asset: "/auth/recovery-hero.webp",
         cardHeading: "E-mail cadastrado",
+        minHeroWidth: 540,
       },
     ] as const;
 
@@ -96,11 +100,16 @@ test.describe("Conta e acesso — contrato visual responsivo do concept", () => 
       await expect(sections).toHaveCount(2);
       const leftBox = await sections.nth(0).boundingBox();
       const rightBox = await sections.nth(1).boundingBox();
+      const heroBox = await hero.boundingBox();
       expect(leftBox).not.toBeNull();
       expect(rightBox).not.toBeNull();
+      expect(heroBox).not.toBeNull();
       expect(leftBox!.x).toBeLessThan(rightBox!.x);
       expect(rightBox!.width).toBeGreaterThanOrEqual(390);
       expect(rightBox!.width).toBeLessThanOrEqual(450);
+      expect(heroBox!.width).toBeGreaterThanOrEqual(current.minHeroWidth);
+      expect(heroBox!.width).toBeLessThanOrEqual(570);
+      expect(heroBox!.x + heroBox!.width).toBeLessThan(rightBox!.x);
 
       await expectNoHorizontalOverflow(page);
       await expectNoGenericSvgInMain(page);
