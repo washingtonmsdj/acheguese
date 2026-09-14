@@ -14,6 +14,8 @@ import { routingService } from '@/core/routing';
 import { cn } from '@/shared/utils/cn';
 import { DEFAULT_TILE_STYLE } from '@/core/maps/providers/MapProvider';
 import { loadMapLibreRuntime } from '@/core/maps/runtime/loadMapLibreRuntime';
+import { MOBILITY_MAP_VISUALS } from '@/core/mobility/constants/mapVisuals';
+import { createMobilityMapMarkerElement } from '@/core/mobility/utils/createMobilityMapMarkerElement';
 
 interface RideTrackingMapProps {
   driverProfileId: string;
@@ -68,7 +70,6 @@ export const RideTrackingMap = memo(function RideTrackingMap({
   const displayLocation = locationOverride ?? location;
   const displayIsConnected = Boolean(locationOverride) || isConnected;
 
-  // ── Carregar/atualizar rota real somente depois do MapLibre estar pronto ──
   useEffect(() => {
     const map = mapRef.current;
     if (
@@ -128,15 +129,14 @@ export const RideTrackingMap = memo(function RideTrackingMap({
             type: 'line',
             source: 'route-real',
             paint: {
-              'line-color': '#6366f1',
-              'line-width': 4,
-              'line-opacity': 0.7,
+              'line-color': MOBILITY_MAP_VISUALS.route.color,
+              'line-width': MOBILITY_MAP_VISUALS.route.width,
+              'line-opacity': MOBILITY_MAP_VISUALS.route.opacity,
             },
           }, 'driver-path-line');
         }
       } catch (error) {
         logger.error('[RideTrackingMap] Erro ao carregar rota real:', error);
-        // O tracking do motorista continua funcional mesmo se o roteamento falhar.
       }
     };
 
@@ -147,7 +147,6 @@ export const RideTrackingMap = memo(function RideTrackingMap({
     };
   }, [mapReady, originLat, originLon, destinationLat, destinationLon]);
 
-  // ── Inicialização ──────────────────────────────────────────────
   useEffect(() => {
     if (!containerRef.current || mapRef.current) return;
     let disposed = false;
@@ -208,18 +207,20 @@ export const RideTrackingMap = memo(function RideTrackingMap({
           id: 'driver-path-line',
           type: 'line',
           source: 'driver-path',
-          paint: { 'line-color': '#14b8a6', 'line-width': 4, 'line-opacity': 0.8 },
+          paint: {
+            'line-color': MOBILITY_MAP_VISUALS.markers.driver.color,
+            'line-width': MOBILITY_MAP_VISUALS.route.width,
+            'line-opacity': MOBILITY_MAP_VISUALS.route.opacity,
+          },
         });
 
         if (originLat != null && originLon != null) {
-          const el = document.createElement('div');
-          el.style.cssText = 'width:24px;height:24px;background:#34d399;border-radius:50%;border:3px solid white;box-shadow:0 2px 8px rgba(0,0,0,0.3);';
-          new maplibregl.Marker({ element: el }).setLngLat([originLon, originLat]).addTo(map);
+          const element = createMobilityMapMarkerElement('origin');
+          new maplibregl.Marker({ element }).setLngLat([originLon, originLat]).addTo(map);
         }
         if (destinationLat != null && destinationLon != null) {
-          const el = document.createElement('div');
-          el.style.cssText = 'width:24px;height:24px;background:#ef4444;border-radius:50%;border:3px solid white;box-shadow:0 2px 8px rgba(0,0,0,0.3);';
-          new maplibregl.Marker({ element: el }).setLngLat([destinationLon, destinationLat]).addTo(map);
+          const element = createMobilityMapMarkerElement('destination');
+          new maplibregl.Marker({ element }).setLngLat([destinationLon, destinationLat]).addTo(map);
         }
 
         if (
@@ -258,7 +259,6 @@ export const RideTrackingMap = memo(function RideTrackingMap({
     };
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
-  // ── Atualizar posição do motorista ─────────────────────────────
   useEffect(() => {
     const map = mapRef.current;
     const maplibregl = maplibreRuntimeRef.current;
@@ -269,14 +269,17 @@ export const RideTrackingMap = memo(function RideTrackingMap({
     if (driverMarkerRef.current) {
       driverMarkerRef.current.setLngLat(lngLat);
     } else {
-      const el = document.createElement('div');
-      el.style.cssText = 'width:32px;height:32px;background:#14b8a6;border-radius:50%;border:3px solid white;box-shadow:0 2px 8px rgba(0,0,0,0.3);display:flex;align-items:center;justify-content:center;';
+      const element = createMobilityMapMarkerElement('driver', 'driver');
+      element.style.display = 'flex';
+      element.style.alignItems = 'center';
+      element.style.justifyContent = 'center';
+
       const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
       svg.setAttribute('width', '16');
       svg.setAttribute('height', '16');
       svg.setAttribute('viewBox', '0 0 24 24');
       svg.setAttribute('fill', 'none');
-      svg.setAttribute('stroke', 'white');
+      svg.setAttribute('stroke', MOBILITY_MAP_VISUALS.markerBorder.color);
       svg.setAttribute('stroke-width', '2');
       svg.setAttribute('stroke-linecap', 'round');
       svg.setAttribute('stroke-linejoin', 'round');
@@ -293,8 +296,8 @@ export const RideTrackingMap = memo(function RideTrackingMap({
       path.setAttribute('d', 'M12 17.5V14l-3-3 4-3 2 3h2');
 
       svg.appendChild(path);
-      el.appendChild(svg);
-      driverMarkerRef.current = new maplibregl.Marker({ element: el }).setLngLat(lngLat).addTo(map);
+      element.appendChild(svg);
+      driverMarkerRef.current = new maplibregl.Marker({ element }).setLngLat(lngLat).addTo(map);
     }
 
     const driverPathSource = map.getSource('driver-path');
@@ -321,7 +324,6 @@ export const RideTrackingMap = memo(function RideTrackingMap({
     }
   }, [calculateETA, destinationLat, destinationLon, displayLocation, mapReady, originLat, originLon]);
 
-  // ── Estados de loading/error/sem localização ───────────────────
   if (loading && !displayLocation) {
     return (
       <Card className={cn('border', className)}>
@@ -370,7 +372,6 @@ export const RideTrackingMap = memo(function RideTrackingMap({
   return (
     <Card className={cn('border border-teal-500/30', compact && 'relative overflow-hidden', compactFill && 'flex min-h-0 flex-1 flex-col', className)}>
       <CardContent className={cn('p-0', compact && 'relative', compactFill && 'flex min-h-0 flex-1 flex-col')}>
-        {/* Header */}
         {!compact ? <div className="p-4 border-b border-white/10 bg-gradient-to-r from-teal-500/10 to-cyan-500/5">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2">
@@ -413,7 +414,6 @@ export const RideTrackingMap = memo(function RideTrackingMap({
           </div>
         ) : null}
 
-        {/* Mapa */}
         <div ref={containerRef} className={cn('w-full', compact ? (compactFill ? 'min-h-[18rem] flex-1' : 'h-56 sm:h-60') : 'h-64')} />
 
         {compact && mode === 'snapshot' && showSnapshotOverlay && displayLocation ? (
@@ -426,7 +426,6 @@ export const RideTrackingMap = memo(function RideTrackingMap({
           </div>
         ) : null}
 
-        {/* Badges de telemetria */}
         {!compact ? <div className="absolute bottom-12 left-4 flex gap-2 pointer-events-none">
           {displayLocation.speed != null && displayLocation.speed > 0 && (
             <Badge variant="outline" className="bg-black/80 text-white border-white/20">
@@ -440,7 +439,6 @@ export const RideTrackingMap = memo(function RideTrackingMap({
           )}
         </div> : null}
 
-        {/* Footer */}
         {!compact ? <div className="p-3 bg-white/5 border-t border-white/10 flex items-center justify-between text-xs">
           <span className="text-gray-400 font-mono">
             {mode === 'snapshot'
