@@ -250,6 +250,7 @@ function buildPayloads(
           source_url: source.serviceUrl,
           source_level: "municipal_neighborhood",
           source_object_id: objectId || null,
+          official: true,
           prefeitura_bairro: source.officeField ? asText(attributes[source.officeField]) || null : null,
           area_m2: source.areaField ? asNumber(attributes[source.areaField]) : null,
           perimeter_m: source.lengthField ? asNumber(attributes[source.lengthField]) : null,
