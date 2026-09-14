@@ -39,6 +39,20 @@ function readWebpDimensions(path: string): { width: number; height: number } {
 }
 
 describe("account and access concept contract", () => {
+  it("keeps the mobile viewport notch-safe without disabling zoom", () => {
+    const html = readProjectFile("index.html");
+    const header = readProjectFile("src/app/components/auth/AuthBrandHeader.tsx");
+    const footer = readProjectFile("src/app/components/auth/AuthFooter.tsx");
+
+    expect(html).toContain(
+      'content="width=device-width, initial-scale=1.0, viewport-fit=cover"',
+    );
+    expect(html).not.toMatch(/user-scalable\s*=\s*no/i);
+    expect(html).not.toMatch(/maximum-scale\s*=\s*1/i);
+    expect(header).toContain('env(safe-area-inset-top)');
+    expect(footer).toContain('env(safe-area-inset-bottom)');
+  });
+
   it("keeps initial signup account-first and territory optional", () => {
     const cadastro = readProjectFile(
       "src/app/features/onboarding/pages/CadastroPage.tsx",
@@ -182,6 +196,12 @@ describe("account and access concept contract", () => {
       );
       expect(source, `${path} must not embed svg markup`).not.toMatch(/<svg\b/i);
     }
+
+    const iconCss = readProjectFile(
+      "src/app/components/auth/auth-concept-icons.css",
+    );
+    expect(iconCss).toContain("conic-gradient");
+    expect(iconCss).not.toContain("content:'G'");
 
     const firstAccess = readProjectFile(
       "src/app/features/onboarding/pages/CadastroPrimeiroAcessoPage.tsx",
