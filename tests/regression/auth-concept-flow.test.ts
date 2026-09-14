@@ -136,6 +136,28 @@ describe("account and access concept contract", () => {
     expect(firstAccess).toContain("Tentar carregar novamente");
   });
 
+  it("lets OAuth users replace an automatically allocated username without weakening identity enforcement", () => {
+    const firstAccess = readProjectFile(
+      "src/app/features/onboarding/pages/CadastroPrimeiroAcessoPage.tsx",
+    );
+    const profileMutations = readProjectFile(
+      "src/core/profiles/services/profile.mutations.ts",
+    );
+
+    expect(firstAccess).toContain("GENERATED_USERNAME_SUFFIX");
+    expect(firstAccess).toContain("useIdentityAvailability");
+    expect(firstAccess).toContain("excludeEntityId: profile?.id");
+    expect(firstAccess).toContain("Escolher meu @usuário");
+    expect(firstAccess).toContain("await usernameAvailability.check(normalized)");
+    expect(firstAccess).toContain("profileService.updateProfile(profile.id, {");
+    expect(firstAccess).toContain("username: normalized");
+    expect(firstAccess).toContain("Nome de usuário atualizado");
+
+    expect(profileMutations).toContain("const { username, ...patch } = updates");
+    expect(profileMutations).toContain("username ?? null");
+    expect(profileMutations).toContain("ProfileRpcService.updateOwnedProfile");
+  });
+
   it("keeps confirmation recoverable when signup context is missing", () => {
     const confirmation = readProjectFile(
       "src/app/features/onboarding/pages/CadastroConfirmacaoPage.tsx",
