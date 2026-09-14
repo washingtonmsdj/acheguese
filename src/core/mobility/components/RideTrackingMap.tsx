@@ -4,8 +4,7 @@
  */
 import { logger } from '@/shared/utils/logger';
 import { memo, useEffect, useRef, useState } from 'react';
-import * as maplibregl from "maplibre-gl";
-import 'maplibre-gl/dist/maplibre-gl.css';
+import type { GeoJSONSource, Map as MapLibreMap, Marker as MapLibreMarker } from 'maplibre-gl';
 import { Card, CardContent } from '@/shared/components/ui/card';
 import { Badge } from '@/shared/components/ui/badge';
 import { Button } from '@/shared/components/ui/button';
@@ -14,6 +13,8 @@ import { useDriverLocation, type DriverLocationData } from '@/core/mobility/hook
 import { routingService } from '@/core/routing';
 import { cn } from '@/shared/utils/cn';
 import { DEFAULT_TILE_STYLE } from '@/core/maps/providers/MapProvider';
+import { loadMapLibreRuntime } from '@/core/maps/runtime/loadMapLibreRuntime';
+
 interface RideTrackingMapProps {
   driverProfileId: string;
   rideId?: string;
@@ -52,9 +53,10 @@ export const RideTrackingMap = memo(function RideTrackingMap({
   compactStatusLabel,
   showSnapshotOverlay = true,
 }: RideTrackingMapProps) {
-  const containerRef    = useRef<HTMLDivElement>(null);
-  const mapRef          = useRef<maplibregl.Map | null>(null);
-  const driverMarkerRef = useRef<maplibregl.Marker | null>(null);
+  const containerRef = useRef<HTMLDivElement>(null);
+  const mapRef = useRef<MapLibreMap | null>(null);
+  const driverMarkerRef = useRef<MapLibreMarker | null>(null);
+  const maplibreRuntimeRef = useRef<typeof import('maplibre-gl') | null>(null);
   const [mapReady, setMapReady] = useState(false);
 
   const { location, eta, loading, error, isConnected, calculateETA, refetch } = useDriverLocation({
@@ -100,7 +102,7 @@ export const RideTrackingMap = memo(function RideTrackingMap({
         const liveMap = mapRef.current;
 
         if (liveMap.getSource('route-real')) {
-          (liveMap.getSource('route-real') as maplibregl.GeoJSONSource).setData({
+          (liveMap.getSource('route-real') as GeoJSONSource).setData({
             type: 'Feature',
             geometry: {
               type: 'LineString',
@@ -148,85 +150,119 @@ export const RideTrackingMap = memo(function RideTrackingMap({
   // ── Inicialização ──────────────────────────────────────────────
   useEffect(() => {
     if (!containerRef.current || mapRef.current) return;
+    let disposed = false;
 
-    const centerLng = originLon ?? destinationLon ?? -38.476;
-    const centerLat = originLat ?? destinationLat ?? -12.975;
+    const initializeMap = async () => {
+      const maplibregl = await loadMapLibreRuntime();
+      if (disposed || !containerRef.current || mapRef.current) return;
 
-    const map = new maplibregl.Map({
-      container: containerRef.current,
-      style: DEFAULT_TILE_STYLE.styleUrl,
-      center: [centerLng, centerLat],
-      zoom: 14,
-      attributionControl: false,
-    });
+      maplibreRuntimeRef.current = maplibregl;
+      const centerLng = originLon ?? destinationLon ?? -38.476;
+      const centerLat = originLat ?? destinationLat ?? -12.975;
 
-    map.addControl(new maplibregl.AttributionControl({ compact: true }), 'bottom-left');
-    if (compact) {
-      map.addControl(new maplibregl.FullscreenControl(), 'top-right');
-    }
+      const map = new maplibregl.Map({
+        container: containerRef.current,
+        style: DEFAULT_TILE_STYLE.styleUrl,
+        center: [centerLng, centerLat],
+        zoom: 14,
+        attributionControl: false,
+      });
+      mapRef.current = map;
 
-    const updateDriverPath = () => {
-      const source = map.getSource('driver-path');
-      const activeLocation = locationOverride ?? location;
-      if (!source || !activeLocation) return;
+      map.addControl(new maplibregl.AttributionControl({ compact: true }), 'bottom-left');
+      if (compact) {
+        map.addControl(new maplibregl.FullscreenControl(), 'top-right');
+      }
 
-      const coordinates = [
-        originLat != null && originLon != null ? [originLon, originLat] : null,
-        [activeLocation.longitude, activeLocation.latitude],
-        destinationLat != null && destinationLon != null ? [destinationLon, destinationLat] : null,
-      ].filter((coordinate): coordinate is [number, number] => coordinate !== null);
+      const updateDriverPath = () => {
+        const source = map.getSource('driver-path');
+        const activeLocation = locationOverride ?? location;
+        if (!source || !activeLocation) return;
 
-      if (coordinates.length < 2) return;
-      (source as maplibregl.GeoJSONSource).setData({
-        type: 'Feature',
-        geometry: { type: 'LineString', coordinates },
-        properties: {},
+        const coordinates = [
+          originLat != null && originLon != null ? [originLon, originLat] : null,
+          [activeLocation.longitude, activeLocation.latitude],
+          destinationLat != null && destinationLon != null ? [destinationLon, destinationLat] : null,
+        ].filter((coordinate): coordinate is [number, number] => coordinate !== null);
+
+        if (coordinates.length < 2) return;
+        (source as GeoJSONSource).setData({
+          type: 'Feature',
+          geometry: { type: 'LineString', coordinates },
+          properties: {},
+        });
+      };
+
+      map.on('load', () => {
+        if (disposed) return;
+
+        map.addSource('driver-path', {
+          type: 'geojson',
+          data: {
+            type: 'Feature',
+            geometry: { type: 'LineString', coordinates: [] },
+            properties: {},
+          },
+        });
+        map.addLayer({
+          id: 'driver-path-line',
+          type: 'line',
+          source: 'driver-path',
+          paint: { 'line-color': '#14b8a6', 'line-width': 4, 'line-opacity': 0.8 },
+        });
+
+        if (originLat != null && originLon != null) {
+          const el = document.createElement('div');
+          el.style.cssText = 'width:24px;height:24px;background:#34d399;border-radius:50%;border:3px solid white;box-shadow:0 2px 8px rgba(0,0,0,0.3);';
+          new maplibregl.Marker({ element: el }).setLngLat([originLon, originLat]).addTo(map);
+        }
+        if (destinationLat != null && destinationLon != null) {
+          const el = document.createElement('div');
+          el.style.cssText = 'width:24px;height:24px;background:#ef4444;border-radius:50%;border:3px solid white;box-shadow:0 2px 8px rgba(0,0,0,0.3);';
+          new maplibregl.Marker({ element: el }).setLngLat([destinationLon, destinationLat]).addTo(map);
+        }
+
+        if (
+          originLat != null &&
+          originLon != null &&
+          destinationLat != null &&
+          destinationLon != null
+        ) {
+          map.fitBounds(
+            [
+              [Math.min(originLon, destinationLon), Math.min(originLat, destinationLat)],
+              [Math.max(originLon, destinationLon), Math.max(originLat, destinationLat)],
+            ],
+            { padding: 60 },
+          );
+        }
+
+        setMapReady(true);
+        updateDriverPath();
       });
     };
 
-    map.on('load', () => {
-      map.addSource('driver-path', { type: 'geojson', data: { type: 'Feature', geometry: { type: 'LineString', coordinates: [] }, properties: {} } });
-      map.addLayer({ id: 'driver-path-line', type: 'line', source: 'driver-path', paint: { 'line-color': '#14b8a6', 'line-width': 4, 'line-opacity': 0.8 } });
-
-      if (originLat != null && originLon != null) {
-        const el = document.createElement('div');
-        el.style.cssText = 'width:24px;height:24px;background:#34d399;border-radius:50%;border:3px solid white;box-shadow:0 2px 8px rgba(0,0,0,0.3);';
-        new maplibregl.Marker({ element: el }).setLngLat([originLon, originLat]).addTo(map);
+    void initializeMap().catch((error) => {
+      if (!disposed) {
+        logger.error('[RideTrackingMap] Falha ao inicializar MapLibre:', error);
       }
-      if (destinationLat != null && destinationLon != null) {
-        const el = document.createElement('div');
-        el.style.cssText = 'width:24px;height:24px;background:#ef4444;border-radius:50%;border:3px solid white;box-shadow:0 2px 8px rgba(0,0,0,0.3);';
-        new maplibregl.Marker({ element: el }).setLngLat([destinationLon, destinationLat]).addTo(map);
-      }
-
-      if (
-        originLat != null &&
-        originLon != null &&
-        destinationLat != null &&
-        destinationLon != null
-      ) {
-        map.fitBounds(
-          [[Math.min(originLon, destinationLon), Math.min(originLat, destinationLat)],
-           [Math.max(originLon, destinationLon), Math.max(originLat, destinationLat)]],
-          { padding: 60 }
-        );
-      }
-
-      setMapReady(true);
-      updateDriverPath();
     });
 
-    mapRef.current = map;
     return () => {
-      map.remove();
+      disposed = true;
+      driverMarkerRef.current?.remove();
+      driverMarkerRef.current = null;
+      mapRef.current?.remove();
       mapRef.current = null;
+      maplibreRuntimeRef.current = null;
     };
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   // ── Atualizar posição do motorista ─────────────────────────────
   useEffect(() => {
     const map = mapRef.current;
-    if (!map || !mapReady || !displayLocation) return;
+    const maplibregl = maplibreRuntimeRef.current;
+    if (!map || !maplibregl || !mapReady || !displayLocation) return;
 
     const lngLat: [number, number] = [displayLocation.longitude, displayLocation.latitude];
 
@@ -270,7 +306,7 @@ export const RideTrackingMap = memo(function RideTrackingMap({
       ].filter((coordinate): coordinate is [number, number] => coordinate !== null);
 
       if (coordinates.length >= 2) {
-        (driverPathSource as maplibregl.GeoJSONSource).setData({
+        (driverPathSource as GeoJSONSource).setData({
           type: 'Feature',
           geometry: { type: 'LineString', coordinates },
           properties: {},
@@ -411,8 +447,8 @@ export const RideTrackingMap = memo(function RideTrackingMap({
               ? 'Última posição identificada'
               : `${displayLocation.latitude.toFixed(6)}, ${displayLocation.longitude.toFixed(6)}`}
           </span>
-           <span className="text-gray-500">{new Date(displayLocation.timestamp).toLocaleTimeString('pt-BR')}</span>
-         </div> : null}
+          <span className="text-gray-500">{new Date(displayLocation.timestamp).toLocaleTimeString('pt-BR')}</span>
+        </div> : null}
       </CardContent>
     </Card>
   );
