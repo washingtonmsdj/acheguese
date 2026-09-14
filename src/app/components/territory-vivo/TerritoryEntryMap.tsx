@@ -2,6 +2,7 @@ import { lazy, Suspense, useEffect, useRef, useState } from "react";
 import type { RefObject } from "react";
 import type { Location } from "@/core/location/types";
 import type { ResolvedTerritory } from "@/core/routing/hooks/useResolveTerritoryFromUrl";
+import { DEFAULT_TILE_STYLE } from "@/shared/config/mapDefaults";
 import {
   TerritoryEntryMapArrival,
   type TerritoryEntryArrivalStage,
@@ -13,6 +14,19 @@ const loadTerritoryEntryMapRuntime = async () => {
   return module;
 };
 const LazyTerritoryEntryMapRuntime = lazy(loadTerritoryEntryMapRuntime);
+
+function preloadEntryMapStyle(): void {
+  if (typeof document === "undefined") return;
+  if (document.querySelector("link[data-entry-map-style-preload]")) return;
+
+  const link = document.createElement("link");
+  link.rel = "preload";
+  link.as = "fetch";
+  link.href = DEFAULT_TILE_STYLE.styleUrl;
+  link.crossOrigin = "anonymous";
+  link.dataset.entryMapStylePreload = "true";
+  document.head.appendChild(link);
+}
 
 interface TerritoryEntryMapProps {
   city: Location | null;
@@ -70,6 +84,7 @@ export default function TerritoryEntryMap({
   useEffect(() => {
     if (shouldMountRuntime) return;
 
+    preloadEntryMapStyle();
     void loadTerritoryEntryMapRuntime();
 
     const section = sectionRef.current;
