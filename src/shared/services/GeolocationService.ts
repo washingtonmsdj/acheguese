@@ -34,6 +34,8 @@ export interface GeolocationOptions {
   maxRetries?: number;
   onProgress?: (attempt: number, maxAttempts: number) => void;
   forcePrompt?: boolean;
+  allowIpFallback?: boolean;
+  gpsMode?: "adaptive" | "precise";
 }
 
 export interface GeolocationWatchOptions {
@@ -160,10 +162,7 @@ class GeolocationServiceClass {
         return null;
       }
 
-      return {
-        ...result,
-        source: "cache",
-      };
+      return { ...result, source: "cache" };
     } catch {
       return null;
     }
@@ -220,44 +219,37 @@ class GeolocationServiceClass {
       timeout = GEOLOCATION_RUNTIME.requestTimeoutMs,
       maxRetries = 3,
       onProgress,
+      gpsMode = "adaptive",
     } = options;
     const isMobile = this.isMobileDevice();
 
-    const attempts = isMobile
-      ? [
-          {
-            highAccuracy: false,
-            timeout: GEOLOCATION_RUNTIME.mobileFastTimeoutMs,
-            maxAge: GEOLOCATION_RUNTIME.mobileFastMaximumAgeMs,
-            label: "mobile-fast",
-          },
-          {
-            highAccuracy: true,
-            timeout,
-            maxAge: 0,
-            label: "mobile-precise",
-          },
-          {
-            highAccuracy: false,
-            timeout: timeout + GEOLOCATION_RUNTIME.fallbackTimeoutExtensionMs,
-            maxAge: 0,
-            label: "mobile-fallback",
-          },
-        ]
-      : [
-          {
-            highAccuracy: true,
-            timeout,
-            maxAge: 0,
-            label: "desktop-precise",
-          },
-          {
-            highAccuracy: false,
-            timeout: timeout + GEOLOCATION_RUNTIME.fallbackTimeoutExtensionMs,
-            maxAge: GEOLOCATION_RUNTIME.desktopFallbackMaximumAgeMs,
-            label: "desktop-fallback",
-          },
-        ];
+    const attempts = gpsMode === "precise"
+      ? [{ highAccuracy: true, timeout, maxAge: 0, label: "precise" }]
+      : isMobile
+        ? [
+            {
+              highAccuracy: false,
+              timeout: GEOLOCATION_RUNTIME.mobileFastTimeoutMs,
+              maxAge: GEOLOCATION_RUNTIME.mobileFastMaximumAgeMs,
+              label: "mobile-fast",
+            },
+            { highAccuracy: true, timeout, maxAge: 0, label: "mobile-precise" },
+            {
+              highAccuracy: false,
+              timeout: timeout + GEOLOCATION_RUNTIME.fallbackTimeoutExtensionMs,
+              maxAge: 0,
+              label: "mobile-fallback",
+            },
+          ]
+        : [
+            { highAccuracy: true, timeout, maxAge: 0, label: "desktop-precise" },
+            {
+              highAccuracy: false,
+              timeout: timeout + GEOLOCATION_RUNTIME.fallbackTimeoutExtensionMs,
+              maxAge: GEOLOCATION_RUNTIME.desktopFallbackMaximumAgeMs,
+              label: "desktop-fallback",
+            },
+          ];
 
     const attemptCount = Math.min(attempts.length, Math.max(0, maxRetries));
     for (let index = 0; index < attemptCount; index += 1) {
@@ -309,10 +301,7 @@ class GeolocationServiceClass {
       });
       if (!response.ok) throw new Error("IP geolocation failed");
 
-      const data = (await response.json()) as {
-        latitude?: unknown;
-        longitude?: unknown;
-      };
+      const data = (await response.json()) as { latitude?: unknown; longitude?: unknown };
       const latitude = Number(data.latitude);
       const longitude = Number(data.longitude);
       if (!hasValidCoordinates({ latitude, longitude })) {
@@ -350,7 +339,11 @@ class GeolocationServiceClass {
   }
 
   async getCurrentLocation(options: GeolocationOptions = {}): Promise<GeolocationResult> {
-    const { useCache = true, forcePrompt = false } = options;
+    const {
+      useCache = true,
+      forcePrompt = false,
+      allowIpFallback = true,
+    } = options;
 
     if (this.requestInFlight) {
       throw new Error("Location request already in progress");
@@ -390,10 +383,10 @@ class GeolocationServiceClass {
       } catch (error: unknown) {
         const code = getGeolocationErrorCode(error);
         if (code === "INSECURE_CONTEXT" || code === "PERMISSION_DENIED") throw error;
-        logger.warn("[GeolocationService] GPS failed; trying IP fallback", this.getErrorContext(error));
+        logger.warn("[GeolocationService] GPS failed", this.getErrorContext(error));
       }
 
-      if (!coords) {
+      if (!coords && allowIpFallback) {
         coords = await this.getLocationFromIP(this.abortController.signal);
         if (coords) source = "ip";
       }
