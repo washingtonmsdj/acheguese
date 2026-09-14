@@ -315,21 +315,6 @@ export function captureSentryMessage(
   }));
 }
 
-export function startSentryTransaction(name: string, op: string): unknown {
-  const config = getSentryConfig();
-  if (!config.enabled || !optionalTelemetryEnabled) return null;
-
-  void ensureSentryInitialized().then((Sentry) => {
-    if (!Sentry) return;
-    const sentryApi = Sentry as unknown as Record<string, unknown>;
-    const startTransaction = sentryApi["startTransaction"];
-    if (typeof startTransaction !== "function") return;
-    startTransaction({ name, op });
-  });
-
-  return null;
-}
-
 export function showSentryReportDialog(options?: SentryReportDialogOptions): void {
   const config = getSentryConfig();
   if (!config.enabled) return;
