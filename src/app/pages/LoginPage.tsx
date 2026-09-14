@@ -19,16 +19,15 @@ import {
 } from "@/core/auth/constants/authFlow";
 import { useAuth } from "@/core/auth/hooks/useAuth";
 import { parseAuthIdentifier } from "@/core/auth/utils/authIdentifier";
+import {
+  cancelGoogleLogin,
+  completeEmailConfirmationLoginJourney,
+  completeStandardLoginJourney,
+  prepareGoogleLogin,
+} from "@/core/auth/utils/authJourney";
 import { getAuthErrorMessage } from "@/core/auth/utils/authMessages";
 import { getAuthReturnContext } from "@/core/auth/utils/authReturnContext";
-import {
-  clearPendingAuthReturn,
-  setPendingAuthReturn,
-} from "@/core/auth/utils/pendingAuthReturn";
-import {
-  clearPendingSignupContext,
-  getPendingSignupRedirect,
-} from "@/core/auth/utils/pendingSignup";
+import { getPendingSignupRedirect } from "@/core/auth/utils/pendingSignup";
 import { InlineFieldError } from "@/shared/components/ui/InlineFieldError";
 import { Input } from "@/shared/components/ui/input";
 import { Label } from "@/shared/components/ui/label";
@@ -108,16 +107,13 @@ export default function LoginPage() {
   useEffect(() => {
     if (!user) return;
 
-    // Confirmação por e-mail ainda precisa do redirect de signup no primeiro
-    // acesso; qualquer contexto OAuth antigo, porém, já pode ser descartado.
     if (isEmailConfirmed) {
-      clearPendingAuthReturn();
+      completeEmailConfirmationLoginJourney();
       navigate(AUTH_PATHS.firstAccess, { replace: true });
       return;
     }
 
-    clearPendingAuthReturn();
-    clearPendingSignupContext();
+    completeStandardLoginJourney();
     navigate(redirectTo, { replace: true });
   }, [isEmailConfirmed, navigate, redirectTo, user]);
 
@@ -163,11 +159,11 @@ export default function LoginPage() {
 
   const handleGoogleLogin = async () => {
     setPendingAction("google");
-    setPendingAuthReturn(redirectTo);
+    prepareGoogleLogin(redirectTo);
     try {
       await signInWithGoogle();
     } catch (error) {
-      clearPendingAuthReturn();
+      cancelGoogleLogin();
       toast({
         title: "Google indisponível",
         description: getAuthErrorMessage(error),
