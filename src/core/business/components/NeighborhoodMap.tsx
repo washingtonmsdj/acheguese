@@ -1,7 +1,7 @@
 import { useMemo } from 'react';
 
 import { mapEntityProjection } from '@/core/maps';
-import { MapLibreAdapter } from '@/core/maps/components/v3/LazyMapLibreAdapter';
+import { MapLibreAdapter } from '@/core/maps/components/v3/MapLibreAdapter';
 import type { TerritoryPolygon } from '@/core/maps/hooks/useTerritoryPolygon';
 import { DEFAULT_TILE_STYLE, NEIGHBORHOOD_COLORS } from '@/core/maps/providers/MapProvider';
 import type { MapMarker } from '@/core/maps/types/core';
