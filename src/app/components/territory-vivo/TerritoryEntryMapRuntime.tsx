@@ -17,6 +17,59 @@ const ARRIVAL_CROSSFADE_MS = 160;
 const MAP_TIMEOUT_MS = 6000;
 const BOUNDARY_TIMEOUT_MS = 8000;
 
+function readLocationCenter(location: Location | null | undefined) {
+  const latitude = location?.metadata?.center_latitude;
+  const longitude = location?.metadata?.center_longitude;
+  if (
+    typeof latitude !== "number" ||
+    typeof longitude !== "number" ||
+    !Number.isFinite(latitude) ||
+    !Number.isFinite(longitude)
+  ) {
+    return null;
+  }
+
+  return { latitude, longitude };
+}
+
+function resolveInitialViewport(
+  resolved: ResolvedTerritory,
+  city: Location | null,
+) {
+  if (resolved?.kind === "group") {
+    const centers = resolved.group.members
+      .map((member) => readLocationCenter(member))
+      .filter((center): center is { latitude: number; longitude: number } => Boolean(center));
+
+    if (centers.length > 0) {
+      return {
+        center: {
+          latitude:
+            centers.reduce((total, center) => total + center.latitude, 0) /
+            centers.length,
+          longitude:
+            centers.reduce((total, center) => total + center.longitude, 0) /
+            centers.length,
+        },
+        zoom: 13.1,
+      };
+    }
+  }
+
+  if (resolved?.kind === "location") {
+    const center = readLocationCenter(resolved.location);
+    if (center) {
+      return {
+        center,
+        zoom: resolved.location.type === LocationType.CITY ? 10.1 : 13.4,
+      };
+    }
+  }
+
+  const cityCenter = readLocationCenter(city);
+  return cityCenter ? { center: cityCenter, zoom: 10.1 } : SALVADOR_VIEWPORT;
+}
+
 export function preloadTerritoryEntryMapEngine(): Promise<void> {
   return preloadPassiveMapLibreAdapterRuntime();
 }
@@ -51,6 +104,10 @@ export default function TerritoryEntryMapRuntime({
   const resolved = useMemo<ResolvedTerritory>(
     () => resolvedTerritory ?? (city ? { kind: "location", location: city } : null),
     [city, resolvedTerritory],
+  );
+  const initialViewport = useMemo(
+    () => resolveInitialViewport(resolved, city),
+    [city, resolved],
   );
   const { polygons, isLoading: isBoundaryLoading } = useTerritoryPolygon(resolved);
   const color = useMemo(() => {
@@ -124,7 +181,7 @@ export default function TerritoryEntryMapRuntime({
     >
       <MapLibreAdapter
         styleUrl={DEFAULT_TILE_STYLE.styleUrl}
-        initialViewport={SALVADOR_VIEWPORT}
+        initialViewport={initialViewport}
         territoryPolygons={entryPolygons}
         resolved={resolved}
         fitTerritoryBounds={entryPolygons.length > 0}
