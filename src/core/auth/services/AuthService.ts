@@ -57,7 +57,9 @@ export class AuthService {
   }
 
   static isGoogleAuthEnabled(): boolean {
-    return import.meta.env.VITE_AUTH_GOOGLE_ENABLED === "true";
+    // Google faz parte do fluxo oficial de conta/acesso. Ambientes que não têm
+    // o provider configurado precisam desabilitá-lo explicitamente com `false`.
+    return import.meta.env.VITE_AUTH_GOOGLE_ENABLED !== "false";
   }
 
   static isRecoveryRedirect(): boolean {
