@@ -16,7 +16,10 @@ vi.mock("@/shared/config/security.config", () => ({
   },
 }));
 
-function fillForm(contact = "ana@example.com") {
+function fillForm(
+  contact = "ana@example.com",
+  territorySlug = "santa-cruz",
+) {
   fireEvent.change(screen.getByLabelText("Nome"), {
     target: { value: "Ana Santos" },
   });
@@ -24,7 +27,7 @@ function fillForm(contact = "ana@example.com") {
     target: { value: contact },
   });
   fireEvent.change(screen.getByLabelText("Bairro"), {
-    target: { value: "Santa Cruz" },
+    target: { value: territorySlug },
   });
 }
 
@@ -57,6 +60,7 @@ describe("PreLaunchWaitlist", () => {
         expect.objectContaining({
           fullName: "Ana Santos",
           email: "ana@example.com",
+          communitySlug: "salvador",
           territoryPath: "/ba/salvador/santa-cruz",
           source: "prelaunch-home",
           role: "morador",
@@ -68,6 +72,45 @@ describe("PreLaunchWaitlist", () => {
       "Cadastro recebido",
     );
     expect(screen.getByLabelText("Nome")).toHaveValue("");
+  });
+
+  it("submits Chapada with its canonical geographic slug", async () => {
+    vi.mocked(registerCommunityInterest).mockResolvedValue({
+      status: "registered",
+    });
+    render(<PreLaunchWaitlist />);
+    fillForm("ana@example.com", "chapada-do-rio-vermelho");
+    fireEvent.submit(screen.getByRole("form", { name: "Lista de espera" }));
+
+    await waitFor(() =>
+      expect(registerCommunityInterest).toHaveBeenCalledWith(
+        expect.objectContaining({
+          territoryPath: "/ba/salvador/chapada-do-rio-vermelho",
+          message: expect.stringContaining("Bairro informado: Chapada"),
+        }),
+      ),
+    );
+  });
+
+  it("submits the launch group with the configured canonical group slug", async () => {
+    vi.mocked(registerCommunityInterest).mockResolvedValue({
+      status: "registered",
+    });
+    render(<PreLaunchWaitlist />);
+    fillForm("ana@example.com", "complexo-do-nordeste-de-amaralina");
+    fireEvent.submit(screen.getByRole("form", { name: "Lista de espera" }));
+
+    await waitFor(() =>
+      expect(registerCommunityInterest).toHaveBeenCalledWith(
+        expect.objectContaining({
+          territoryPath:
+            "/ba/salvador/complexo-do-nordeste-de-amaralina",
+          message: expect.stringContaining(
+            "Bairro informado: Complexo do Nordeste de Amaralina",
+          ),
+        }),
+      ),
+    );
   });
 
   it("keeps the WhatsApp contact contract and reports an existing registration", async () => {
