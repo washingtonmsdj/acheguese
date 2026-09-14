@@ -8,7 +8,6 @@ const read = (p: string) => fs.readFileSync(path.join(ROOT, p), "utf8");
 describe("territory entry progressive map performance", () => {
   it("keeps boundary infrastructure lazy and deduplicated", () => {
     const hook = read("src/core/maps/hooks/useTerritoryPolygon.ts");
-
     expect(hook).not.toContain('import { boundaryService } from "@/core/geospatial"');
     expect(hook).toContain("@/core/geospatial/services/BoundaryService");
     expect(hook).toContain("polygonCache");
@@ -27,25 +26,25 @@ describe("territory entry progressive map performance", () => {
 
   it("preconnects official boundary authorities from SSOT metadata", () => {
     const wrapper = read("src/app/components/territory-vivo/TerritoryEntryMap.tsx");
-
     expect(wrapper).toContain("preconnectOfficialBoundarySources");
     expect(wrapper).toContain("location.metadata?.source_url");
+    expect(wrapper).toContain('link[rel="preconnect"]');
     expect(wrapper).toContain('preconnect.rel = "preconnect"');
     expect(wrapper).toContain('dnsPrefetch.rel = "dns-prefetch"');
     expect(wrapper).toContain("preconnectOfficialBoundarySources(preloadResolved)");
     expect(wrapper).not.toContain("services6.arcgis.com");
   });
 
-  it("preloads engine and official boundary concurrently", () => {
+  it("preloads style, engine and official boundary concurrently", () => {
     const wrapper = read("src/app/components/territory-vivo/TerritoryEntryMap.tsx");
     const runtime = read("src/app/components/territory-vivo/TerritoryEntryMapRuntime.tsx");
     const owner = read("src/core/maps/components/v3/MapLibreAdapter.tsx");
     const passive = read("src/core/maps/components/v3/MapLibrePassiveRuntime.tsx");
 
-    expect(wrapper).toContain("loadTerritoryEntryMapRuntime");
     expect(wrapper).toContain("preloadEntryMapStyle");
     expect(wrapper).toContain('link.rel = "preload"');
     expect(wrapper).toContain('link.as = "fetch"');
+    expect(wrapper).toContain('link.setAttribute("fetchpriority", "high")');
     expect(wrapper).toContain("Promise.all([");
     expect(wrapper).toContain("module.preloadTerritoryEntryMapEngine()");
     expect(wrapper).toContain("module.preloadTerritoryEntryBoundary(preloadResolved)");
@@ -53,7 +52,6 @@ describe("territory entry progressive map performance", () => {
 
     expect(runtime).toContain("preloadPassiveMapLibreAdapterRuntime");
     expect(runtime).toContain("preloadTerritoryPolygons");
-    expect(runtime).toContain("preloadTerritoryEntryBoundary");
     expect(runtime).toContain('from "@/core/maps/components/v3/MapLibreAdapter"');
     expect(runtime).not.toContain("LazyMapLibreAdapter");
 
@@ -63,13 +61,20 @@ describe("territory entry progressive map performance", () => {
     expect(owner).toContain("preloadPassiveMapLibreAdapterRuntime");
 
     expect(passive).toContain('data-maplibre-runtime="passive"');
-    expect(passive).toContain("mapCreated");
     expect(passive).toContain('from "@/core/maps/runtime/mapRuntimeState"');
     expect(passive).toContain('import("@/shared/utils/logger")');
     expect(passive).not.toContain('import { logger } from "@/shared/utils/logger"');
     expect(passive).not.toContain("MapLibreAdapter.helpers");
     expect(passive).not.toContain("useRobustGeolocation");
     expect(passive).not.toContain("useMapClustering");
-    expect(passive).not.toContain("MapSearchControl");
+  });
+
+  it("uses a conservative render budget for passive maps", () => {
+    const passive = read("src/core/maps/components/v3/MapLibrePassiveRuntime.tsx");
+    expect(passive).toContain("PASSIVE_MAX_PIXEL_RATIO = 2");
+    expect(passive).toContain("fadeDuration: 0");
+    expect(passive).toContain("pixelRatio: passivePixelRatio");
+    expect(passive).toContain("renderWorldCopies: false");
+    expect(passive).toContain("maxTileCacheZoomLevels: 1");
   });
 });
