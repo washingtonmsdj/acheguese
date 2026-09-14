@@ -4,6 +4,7 @@ import { MapLibreAdapter } from "@/core/maps/components/v3/MapLibreAdapter";
 import { useTerritoryPolygon } from "@/core/maps/hooks/useTerritoryPolygon";
 import { DEFAULT_TILE_STYLE, NEIGHBORHOOD_COLORS } from "@/core/maps/providers/MapProvider";
 import type { ResolvedTerritory } from "@/core/routing/hooks/useResolveTerritoryFromUrl";
+import { markPublicRootMapReady } from "@/shared/utils/publicRootReadiness";
 import { TerritoryEntryMapArrival } from "./TerritoryEntryMapArrival";
 
 const SALVADOR_VIEWPORT = { center: { latitude: -12.95, longitude: -38.48 }, zoom: 10.1 };
@@ -178,6 +179,7 @@ export default function TerritoryEntryMapRuntime({
         hideNavigationControl
         interactive={false}
         onLoad={() => {
+          markPublicRootMapReady();
           setMapReady(true);
           setMapUnavailable(false);
         }}
