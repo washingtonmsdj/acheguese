@@ -4,30 +4,43 @@
  * React hook for the current user's push subscription and self-test flow.
  */
 
-import { useState, useEffect } from 'react';
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { useEffect, useMemo, useState } from 'react';
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { PushService, type StoredPushSubscription } from '../services/PushService';
 import { useToast } from '@/shared/hooks/use-toast';
+
+interface SubscriptionTarget {
+  id: string;
+  endpoint: string;
+}
 
 export function usePush(userId?: string) {
   const [isSupported, setIsSupported] = useState(false);
   const [hasPermission, setHasPermission] = useState(false);
-  const [isSubscribed, setIsSubscribed] = useState(false);
+  const [currentBrowserEndpoint, setCurrentBrowserEndpoint] = useState<string | null>(null);
   const queryClient = useQueryClient();
   const { toast } = useToast();
 
+  const refreshBrowserState = async () => {
+    const supported = PushService.isSupported();
+    setIsSupported(supported);
+
+    if (!supported) {
+      setHasPermission(false);
+      setCurrentBrowserEndpoint(null);
+      return;
+    }
+
+    const [permission, endpoint] = await Promise.all([
+      PushService.hasPermission(),
+      PushService.getCurrentBrowserSubscriptionEndpoint(),
+    ]);
+    setHasPermission(permission);
+    setCurrentBrowserEndpoint(endpoint);
+  };
+
   useEffect(() => {
-    const checkSupport = async () => {
-      const supported = PushService.isSupported();
-      setIsSupported(supported);
-
-      if (supported) {
-        const permission = await PushService.hasPermission();
-        setHasPermission(permission);
-      }
-    };
-
-    checkSupport();
+    void refreshBrowserState();
   }, []);
 
   const {
@@ -42,27 +55,34 @@ export function usePush(userId?: string) {
     staleTime: 1000 * 60 * 5,
   });
 
-  useEffect(() => {
-    setIsSubscribed(Boolean(subscriptions?.length));
-  }, [subscriptions]);
+  const activeSubscriptions = subscriptions || [];
+  const currentSubscription = useMemo(
+    () =>
+      currentBrowserEndpoint
+        ? activeSubscriptions.find((subscription) => subscription.endpoint === currentBrowserEndpoint) ?? null
+        : null,
+    [activeSubscriptions, currentBrowserEndpoint],
+  );
+  const isSubscribed = currentSubscription !== null;
 
   const subscribeMutation = useMutation({
     mutationFn: async () => {
       if (!userId) throw new Error('User ID is required');
       return PushService.subscribe(userId);
     },
-    onSuccess: (result) => {
+    onSuccess: async (result) => {
       if (result.success) {
-        setIsSubscribed(true);
-        setHasPermission(true);
-        queryClient.invalidateQueries({ queryKey: ['push-subscriptions', userId] });
+        await Promise.all([
+          queryClient.invalidateQueries({ queryKey: ['push-subscriptions', userId] }),
+          refreshBrowserState(),
+        ]);
         toast({
-          title: 'Notificações Ativadas',
-          description: 'Você receberá notificações push neste dispositivo.',
+          title: 'Notificações ativadas',
+          description: 'Este dispositivo foi registrado para receber notificações push.',
         });
       } else {
         toast({
-          title: 'Erro ao Ativar',
+          title: 'Erro ao ativar',
           description: result.error || 'Não foi possível ativar as notificações.',
           variant: 'destructive',
         });
@@ -78,19 +98,25 @@ export function usePush(userId?: string) {
   });
 
   const unsubscribeMutation = useMutation({
-    mutationFn: async (subscriptionId: string) => PushService.unsubscribe(subscriptionId),
-    onSuccess: (result) => {
+    mutationFn: async ({ id, endpoint }: SubscriptionTarget) =>
+      PushService.unsubscribe(id, endpoint),
+    onSuccess: async (result, target) => {
       if (result.success) {
-        setIsSubscribed(false);
-        queryClient.invalidateQueries({ queryKey: ['push-subscriptions', userId] });
+        await queryClient.invalidateQueries({ queryKey: ['push-subscriptions', userId] });
+        if (target.endpoint === currentBrowserEndpoint) {
+          await refreshBrowserState();
+        }
         toast({
-          title: 'Notificações Desativadas',
-          description: 'Você não receberá mais notificações push neste dispositivo.',
+          title: 'Dispositivo removido',
+          description:
+            target.endpoint === currentBrowserEndpoint
+              ? 'Este dispositivo não receberá mais notificações push.'
+              : 'O dispositivo selecionado não receberá mais notificações push.',
         });
       } else {
         toast({
-          title: 'Erro ao Desativar',
-          description: result.error || 'Não foi possível desativar as notificações.',
+          title: 'Erro ao desativar',
+          description: result.error || 'Não foi possível remover o dispositivo.',
           variant: 'destructive',
         });
       }
@@ -112,12 +138,12 @@ export function usePush(userId?: string) {
     onSuccess: (result) => {
       if (result.success) {
         toast({
-          title: 'Notificação Enviada',
+          title: 'Notificação enviada',
           description: 'Verifique se você recebeu a notificação de teste.',
         });
       } else {
         toast({
-          title: 'Erro ao Enviar',
+          title: 'Erro ao enviar',
           description: result.error || 'Não foi possível enviar a notificação de teste.',
           variant: 'destructive',
         });
@@ -136,16 +162,20 @@ export function usePush(userId?: string) {
     isSupported,
     hasPermission,
     isSubscribed,
-    subscriptions: subscriptions || [],
+    currentBrowserEndpoint,
+    currentSubscriptionId: currentSubscription?.id ?? null,
+    subscriptions: activeSubscriptions,
     isLoadingSubscriptions,
     isSubscribing: subscribeMutation.isPending,
     isUnsubscribing: unsubscribeMutation.isPending,
     isSendingTest: sendTestMutation.isPending,
     subscriptionsError,
     subscribe: () => subscribeMutation.mutate(),
-    unsubscribe: (subscriptionId: string) => unsubscribeMutation.mutate(subscriptionId),
+    unsubscribe: (subscriptionId: string, endpoint: string) =>
+      unsubscribeMutation.mutate({ id: subscriptionId, endpoint }),
     sendTest: () => sendTestMutation.mutate(),
     refetchSubscriptions,
+    refreshBrowserState,
     requestPermission: PushService.requestPermission,
   };
 }
