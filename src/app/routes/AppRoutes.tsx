@@ -6,6 +6,7 @@
 
 import { lazy } from "react";
 import { Navigate, Route, Routes } from "react-router-dom";
+import { AUTH_PATHS } from "@/core/auth/constants/authFlow";
 import { APP_MODULE_SLUGS, buildAppModulePath } from "@/shared/config/moduleSlugs";
 import {
   TERRITORIAL_ROUTE_PARAMS,
@@ -112,8 +113,8 @@ export function AppRoutes() {
     return (
       <Routes>
         <Route path="/" element={<RootRouteEntry />} />
-        <Route path="/login" element={<LoginPage />} />
-        <Route path="/reset-password" element={<ResetPasswordPage />} />
+        <Route path={AUTH_PATHS.login} element={<LoginPage />} />
+        <Route path={AUTH_PATHS.passwordReset} element={<ResetPasswordPage />} />
         <Route path="/admin/*" element={<AdminRoutes />} />
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
@@ -134,23 +135,23 @@ export function AppRoutes() {
       <Route path={EVENT_ROUTES.legacyDetail} element={eventsElement} />
 
       <Route path="/splash" element={<SplashPage />} />
-      <Route path="/login" element={<LoginPage />} />
-      <Route path="/cadastro" element={<CadastroPage />} />
-      <Route path="/cadastro/primeiro-acesso" element={<CadastroPrimeiroAcessoPage />} />
+      <Route path={AUTH_PATHS.login} element={<LoginPage />} />
+      <Route path={AUTH_PATHS.signup} element={<CadastroPage />} />
+      <Route path={AUTH_PATHS.firstAccess} element={<CadastroPrimeiroAcessoPage />} />
       <Route
         path="/indicar-comunidade"
         element={<CommunityIndicationPage />}
       />
       <Route
-        path="/cadastro/confirmacao"
+        path={AUTH_PATHS.signupConfirmation}
         element={<CadastroConfirmacaoPage />}
       />
-      <Route path="/aceitar-termos" element={<AceiteTermosPage />} />
+      <Route path={AUTH_PATHS.termsAcceptance} element={<AceiteTermosPage />} />
       <Route path="/como-funciona" element={<ComoFuncionaPage />} />
       <Route path="/sobre" element={<AboutPage />} />
       <Route path="/contato" element={<ContactPage />} />
       <Route path="/onboarding" element={<OnboardingPage />} />
-      <Route path="/reset-password" element={<ResetPasswordPage />} />
+      <Route path={AUTH_PATHS.passwordReset} element={<ResetPasswordPage />} />
       <Route
         path="/empresas/:id/catalogo"
         element={<EmpresaCatalogoPublicoPage />}
