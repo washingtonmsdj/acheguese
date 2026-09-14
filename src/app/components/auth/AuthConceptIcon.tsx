@@ -5,10 +5,21 @@ import "./auth-concept-icons.css";
 type AuthConceptIconName =
   | "back"
   | "eye"
+  | "eye-off"
   | "google"
   | "shield"
   | "store"
-  | "info";
+  | "info"
+  | "mail"
+  | "warning"
+  | "check"
+  | "clock"
+  | "help"
+  | "person"
+  | "chat"
+  | "pin"
+  | "users"
+  | "lightbulb";
 
 interface AuthConceptIconProps {
   name: AuthConceptIconName;
@@ -18,7 +29,7 @@ interface AuthConceptIconProps {
 
 /**
  * Ícones próprios do fluxo de autenticação.
- * São desenhados em CSS/HTML para não depender de SVG, icon fonts ou arte genérica.
+ * Desenhados em CSS/HTML: sem SVG, icon font ou pacote de ícones genérico.
  */
 export function AuthConceptIcon({ name, className = "", style }: AuthConceptIconProps) {
   return (
