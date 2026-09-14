@@ -2,13 +2,14 @@ import { Suspense, useEffect, useState } from "react";
 import { Navigate, NavLink, Outlet, useNavigate } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import { ArrowLeft, Menu, Shield, X } from "lucide-react";
-import { cn } from "@/shared/utils/cn";
-import { Button } from "@/shared/components/ui/button";
-import { useSessionContext } from "@/core/session";
-import { AuthService } from "@/core/auth/services/AuthService";
+import { RoleService } from "@/core/authorization/services/RoleService";
+import { buildLoginPath } from "@/core/auth/constants/authFlow";
 import { classifiedReportService } from "@/core/classifieds/services";
-import { logger } from "@/shared/utils/logger";
+import { useSessionContext } from "@/core/session";
 import { AdminPageLoader } from "@/shared/components/loading/PageLoader";
+import { Button } from "@/shared/components/ui/button";
+import { cn } from "@/shared/utils/cn";
+import { logger } from "@/shared/utils/logger";
 import {
   ADMIN_NAV_SECTIONS,
   type AdminNavBadge,
@@ -37,7 +38,7 @@ export default function AdminLayout() {
   const { data: pendingReportsCount = 0 } = useQuery({
     queryKey: ["admin-pending-reports-count"],
     queryFn: () => classifiedReportService.getPendingReportsCount(),
-    enabled: true,
+    enabled: adminBypassEnabled || isAdmin,
     refetchInterval: 30000,
   });
 
@@ -60,7 +61,7 @@ export default function AdminLayout() {
       }
 
       try {
-        const adminStatus = await AuthService.isAdmin(user.id);
+        const adminStatus = await RoleService.isAdmin(user.id);
         setIsAdmin(adminStatus);
       } catch (err) {
         logger.error(
@@ -89,12 +90,7 @@ export default function AdminLayout() {
   }
 
   if (!adminBypassEnabled && !user?.id) {
-    return (
-      <Navigate
-        to={`/login?redirect=${encodeURIComponent(window.location.pathname)}`}
-        replace
-      />
-    );
+    return <Navigate to={buildLoginPath(window.location.pathname)} replace />;
   }
 
   if (!adminBypassEnabled && !isAdmin) {
