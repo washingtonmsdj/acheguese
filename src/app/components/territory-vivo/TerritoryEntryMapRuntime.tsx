@@ -1,5 +1,4 @@
 import { useEffect, useMemo, useState } from "react";
-import { Map, MapPin, ShieldCheck } from "lucide-react";
 import { LocationType, type Location } from "@/core/location/types";
 import {
   MapLibreAdapter,
@@ -14,7 +13,7 @@ import type { ResolvedTerritory } from "@/core/routing/hooks/useResolveTerritory
 import { TerritoryEntryMapArrival } from "./TerritoryEntryMapArrival";
 
 const SALVADOR_VIEWPORT = { center: { latitude: -12.95, longitude: -38.48 }, zoom: 10.1 };
-const ARRIVAL_CROSSFADE_MS = 360;
+const ARRIVAL_CROSSFADE_MS = 160;
 const MAP_TIMEOUT_MS = 6000;
 const BOUNDARY_TIMEOUT_MS = 8000;
 
@@ -141,7 +140,7 @@ export default function TerritoryEntryMapRuntime({
           setMapReady(true);
           setMapUnavailable(false);
         }}
-        className={`pointer-events-none h-full min-h-[12rem] w-full transition-opacity duration-500 motion-reduce:transition-none md:min-h-[18rem] lg:min-h-[24rem] ${mapReady ? "opacity-100" : "opacity-0"}`}
+        className={`pointer-events-none h-full min-h-[12rem] w-full md:min-h-[18rem] lg:min-h-[24rem] ${mapReady ? "opacity-100" : "opacity-0"}`}
       />
 
       {showArrival && !mapUnavailable ? (
@@ -154,21 +153,21 @@ export default function TerritoryEntryMapRuntime({
       ) : null}
 
       {mapUnavailable ? (
-        <div role="status" className="pointer-events-none absolute inset-0 z-20 grid place-items-center bg-[hsl(var(--territory-canvas)/0.76)] p-4 text-center backdrop-blur-[3px]">
-          <div className="w-full max-w-xs rounded-3xl border border-territory-border bg-territory-surface/95 px-5 py-5 shadow-territory-highlight">
-            <Map className="mx-auto h-6 w-6 text-territory-brand" aria-hidden="true" />
+        <div role="status" className="pointer-events-none absolute inset-0 z-20 grid place-items-center bg-[hsl(var(--territory-canvas)/0.82)] p-4 text-center">
+          <div className="w-full max-w-xs rounded-3xl border border-territory-border bg-territory-surface px-5 py-5 shadow-territory-highlight">
+            <span className="mx-auto grid h-8 w-8 place-items-center rounded-full border border-territory-brand/25 bg-territory-brand/10 text-xs font-bold text-territory-brand" aria-hidden="true">A</span>
             <p className="mt-3 font-heading text-base font-bold text-territory-ink">A comunidade continua aqui.</p>
             <p className="mt-1.5 text-sm leading-5 text-territory-muted-strong">O mapa não respondeu agora, mas você pode continuar entrando no Complexo normalmente.</p>
           </div>
         </div>
       ) : boundaryUnavailable ? (
-        <div role="status" className="pointer-events-none absolute inset-x-3 bottom-3 z-10 rounded-2xl border border-territory-border bg-territory-surface/95 px-4 py-3 text-sm shadow-territory-highlight backdrop-blur-[2px] lg:inset-x-auto lg:bottom-6 lg:left-6 lg:max-w-md">
+        <div role="status" className="pointer-events-none absolute inset-x-3 bottom-3 z-10 rounded-2xl border border-territory-border bg-territory-surface/95 px-4 py-3 text-sm shadow-territory-highlight lg:inset-x-auto lg:bottom-6 lg:left-6 lg:max-w-md">
           <p className="font-semibold text-territory-ink">Limite territorial oficial indisponível agora.</p>
           <p className="mt-1 leading-5 text-territory-muted-strong">Não exibimos contorno aproximado ou incompleto do Complexo.</p>
         </div>
       ) : boundaryPending ? (
-        <div role="status" className="pointer-events-none absolute bottom-3 left-3 z-10 inline-flex max-w-[calc(100%-1.5rem)] items-center gap-2 rounded-full border border-territory-border bg-territory-surface/90 px-3 py-2 text-xs font-semibold text-territory-muted-strong shadow-sm backdrop-blur-[3px] lg:bottom-6 lg:left-6">
-          <ShieldCheck className="h-3.5 w-3.5 shrink-0 text-territory-brand" aria-hidden="true" />
+        <div role="status" className="pointer-events-none absolute bottom-3 left-3 z-10 inline-flex max-w-[calc(100%-1.5rem)] items-center gap-2 rounded-full border border-territory-border bg-territory-surface/95 px-3 py-2 text-xs font-semibold text-territory-muted-strong shadow-sm lg:bottom-6 lg:left-6">
+          <span className="h-2 w-2 shrink-0 rounded-full bg-territory-brand motion-safe:animate-pulse motion-reduce:animate-none" aria-hidden="true" />
           <span className="truncate">{boundarySlow ? "Mapa aberto. Limite oficial ainda carregando." : "Mapa pronto. Carregando limite oficial..."}</span>
         </div>
       ) : null}
@@ -177,11 +176,11 @@ export default function TerritoryEntryMapRuntime({
       <h2 id="territory-entry-map-title" className="sr-only">{isCity ? `${territoryLabel} disponível por inteiro` : `Perímetro de ${territoryLabel}`}</h2>
       {!isCity && mapReady ? (
         <div className="entry-map-label" aria-hidden="true">
-          <MapPin className="h-5 w-5" />
+          <span className="grid h-5 w-5 place-items-center rounded-full border-2 border-current text-[0.55rem] font-black leading-none">•</span>
           <span><strong>{territoryLabel}</strong><small>Salvador · BA</small></span>
         </div>
       ) : null}
-      <span className="sr-only"><Map aria-hidden="true" /> Mapa territorial de {territoryName}</span>
+      <span className="sr-only">Mapa territorial de {territoryName}</span>
     </section>
   );
 }
