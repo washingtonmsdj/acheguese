@@ -5,7 +5,6 @@ import { HelmetProvider } from "react-helmet-async";
 import { ErrorBoundary } from "@/app/components/ErrorBoundary";
 import { SEO } from "@/app/components/SEO";
 import { queryClient } from "@/shared/utils/queryClient";
-import { FullScreenLoader } from "@/shared/components/loading/PageLoader";
 import { AccessibilityProvider } from "@/shared/components/accessibility/AccessibilityProvider";
 import { SkipToContent } from "@/shared/components/accessibility/SkipToContent";
 import { scheduleBrowserIdleWork } from "@/shared/utils/browserIdle";
@@ -68,7 +67,7 @@ export default function FullAppRuntimeShell({
               <GlobalOverlays />
             </Suspense>
 
-            <Suspense fallback={<FullScreenLoader />}>
+            <Suspense fallback={null}>
               <SessionProfileRuntimeShell />
             </Suspense>
           </AccessibilityProvider>
