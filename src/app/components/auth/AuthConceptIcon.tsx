@@ -4,10 +4,12 @@ import "./auth-concept-icons.css";
 
 type AuthConceptIconName =
   | "back"
+  | "chevron-right"
   | "eye"
   | "eye-off"
   | "google"
   | "shield"
+  | "shield-filled"
   | "store"
   | "info"
   | "mail"
