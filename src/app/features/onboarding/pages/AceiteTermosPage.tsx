@@ -6,6 +6,7 @@ import { AuthBrandHeader } from "@/app/components/auth/AuthBrandHeader";
 import { AuthConceptIcon } from "@/app/components/auth/AuthConceptIcon";
 import { AuthFooter } from "@/app/components/auth/AuthFooter";
 import { useAuth } from "@/core/auth/hooks/useAuth";
+import { getAuthReturnContext } from "@/core/auth/utils/authReturnContext";
 import {
   clearPendingAuthReturn,
   getPendingAuthReturn,
@@ -35,6 +36,16 @@ export default function AceiteTermosPage() {
     () => resolveSafeInternalPath(getPendingAuthReturn(), "/"),
     [],
   );
+  const returnContext = useMemo(() => getAuthReturnContext(returnTo), [returnTo]);
+  const hasSpecificReturnContext = returnTo !== "/" && returnContext.kind !== "generic";
+  const returnContextIcon =
+    returnContext.kind === "conversation"
+      ? "chat"
+      : returnContext.kind === "account"
+        ? "person"
+        : returnContext.kind === "community"
+          ? "users"
+          : "store";
 
   useEffect(() => {
     if (!user) {
@@ -170,6 +181,18 @@ export default function AceiteTermosPage() {
               </p>
             </div>
 
+            {hasSpecificReturnContext ? (
+              <div className="mt-3 flex items-center gap-3 rounded-xl border border-[#d7e1de] bg-white px-3.5 py-3">
+                <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-[#e7f0ed] text-[#0b5b59]">
+                  <AuthConceptIcon name={returnContextIcon} />
+                </span>
+                <div className="min-w-0">
+                  <p className="text-[10.5px] text-[#607477]">Depois dos termos, você volta para</p>
+                  <p className="truncate text-[12.5px] font-bold text-[#18383c]">{returnContext.label}</p>
+                </div>
+              </div>
+            ) : null}
+
             {state === "checking" ? (
               <div role="status" className="flex min-h-[185px] items-center justify-center gap-3 py-10 text-[13px] text-[#607477]">
                 <span className="h-5 w-5 animate-spin rounded-full border-2 border-[#cbd5d3] border-t-[#0b5b59]" />
@@ -265,9 +288,11 @@ export default function AceiteTermosPage() {
                 <button
                   type="button"
                   onClick={continueSafely}
-                  className="h-11 w-full rounded-[9px] bg-[#0b5b59] text-[14px] font-bold text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#0b5b59]/40"
+                  className="h-11 w-full rounded-[9px] bg-[#0b5b59] px-3 text-[14px] font-bold text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#0b5b59]/40"
                 >
-                  Continuar para o Achegue-se
+                  {hasSpecificReturnContext
+                    ? `Continuar para ${returnContext.label}`
+                    : "Continuar para o Achegue-se"}
                 </button>
               </div>
             ) : null}
