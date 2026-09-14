@@ -41,9 +41,12 @@ describe("Território Vivo navigation SSOT", () => {
       expect(source).not.toContain('label: "Explorar"');
       expect(source).not.toContain('label: "Community"');
     }
-  });
-});
 
+    expect(adaptive).not.toContain('label: "Publicar"');
+    expect(adaptive).not.toContain('label: "Conversas"');
+    expect(adaptive).not.toContain("mobileItems");
+    expect(adaptive).toContain("navigationModes.map");
+  });
 
   it("does not recreate the retired app BottomNav wrapper", () => {
     expect(
@@ -64,7 +67,6 @@ describe("Território Vivo navigation SSOT", () => {
     expect(layout).not.toContain('./BottomNav');
   });
 
-
   it("keeps TerritoryTopbar under shared owner without app facade", () => {
     expect(
       fs.existsSync(
@@ -82,3 +84,4 @@ describe("Território Vivo navigation SSOT", () => {
       '@/shared/components/territory-vivo/TerritoryTopbar',
     );
   });
+});
