@@ -32,6 +32,7 @@ interface CachedTerritoryPolygons {
 }
 
 const POLYGON_CACHE_TTL_MS = 5 * 60 * 1000;
+const POLYGON_LOAD_TIMEOUT_MS = 12_000;
 const polygonCache = new Map<string, CachedTerritoryPolygons>();
 const polygonPromises = new Map<string, Promise<TerritoryPolygon[]>>();
 
@@ -64,6 +65,20 @@ function isCompleteBoundary(
   if (resolved.group.members.length === 0) return false;
   const names = new Set(polygons.map((polygon) => polygon.name));
   return resolved.group.members.every((member) => names.has(member.name));
+}
+
+function withPolygonLoadTimeout<T>(promise: Promise<T>): Promise<T> {
+  let timeoutId: ReturnType<typeof setTimeout> | null = null;
+  const timeout = new Promise<never>((_, reject) => {
+    timeoutId = setTimeout(
+      () => reject(new Error("territory_polygon_timeout")),
+      POLYGON_LOAD_TIMEOUT_MS,
+    );
+  });
+
+  return Promise.race([promise, timeout]).finally(() => {
+    if (timeoutId !== null) clearTimeout(timeoutId);
+  });
 }
 
 async function fetchOfficialSourcePolygons(
@@ -189,7 +204,7 @@ async function loadTerritoryPolygons(
   const pending = polygonPromises.get(territoryKey);
   if (pending) return pending;
 
-  const promise = fetchTerritoryPolygons(resolved)
+  const promise = withPolygonLoadTimeout(fetchTerritoryPolygons(resolved))
     .then((polygons) => {
       if (isCompleteBoundary(resolved, polygons)) {
         polygonCache.set(territoryKey, {
