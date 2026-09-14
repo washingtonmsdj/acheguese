@@ -20,6 +20,10 @@ import {
 import { InlineFieldError } from "@/shared/components/ui/InlineFieldError";
 import { Input } from "@/shared/components/ui/input";
 import { Label } from "@/shared/components/ui/label";
+import {
+  PRIVACY_POLICY_PATH,
+  TERMS_OF_SERVICE_PATH,
+} from "@/shared/constants/legal";
 import { useToast } from "@/shared/hooks/use-toast";
 import { resolveSafeInternalPath } from "@/shared/utils/safeRedirect";
 import { cn } from "@/shared/utils/cn";
@@ -155,7 +159,7 @@ export default function LoginPage() {
         />
       </Helmet>
 
-      <div className="min-h-[100dvh] bg-[#fffdfa] text-[#102f33]">
+      <div className="min-h-[100dvh] bg-[#fffdfa] text-[#102f33] lg:bg-[radial-gradient(circle_at_16%_32%,rgba(216,234,224,.55),transparent_31%),radial-gradient(circle_at_70%_18%,rgba(255,236,185,.28),transparent_30%),#fffdfa]">
         <AuthBrandHeader secondaryHref="/cadastro" secondaryLabel="Criar conta" />
 
         <main
@@ -174,12 +178,12 @@ export default function LoginPage() {
               <img
                 src="/auth/login-hero.webp"
                 alt="Ilustração de um território conectado pela comunidade"
-                className="mt-5 w-full max-w-[390px] rounded-[24px] object-cover"
+                className="mt-5 w-full max-w-[390px] object-cover"
               />
             </div>
           </section>
 
-          <section className="w-full lg:rounded-[18px] lg:bg-white lg:p-7 lg:shadow-[0_18px_55px_rgba(17,55,59,.08)]">
+          <section className="w-full lg:rounded-[10px] lg:bg-white lg:p-7 lg:shadow-[0_18px_55px_rgba(17,55,59,.08)]">
             <div className="lg:hidden">
               <h1 className="max-w-[280px] font-heading text-[31px] font-extrabold leading-[1.04] tracking-[-0.045em] text-[#0b3b3f]">
                 Bom ter você por aqui.
@@ -330,14 +334,23 @@ export default function LoginPage() {
             </Link>
 
             <div className="mt-4 flex items-start gap-3 text-[#35575a]">
-              <span className="mt-0.5 flex h-8 w-8 items-center justify-center rounded-lg bg-[#e6efed] text-[#0b5b59]">
+              <span className="mt-0.5 flex h-8 w-8 items-center justify-center rounded-lg bg-[#e6efed] text-[#0b5b59] lg:h-6 lg:w-6 lg:bg-transparent">
                 <AuthConceptIcon name="shield" />
               </span>
               <div>
-                <p className="text-[11px] font-semibold">Verificação de segurança</p>
-                <p className="text-[10.5px] leading-4 text-[#607477]">Seus dados são protegidos e criptografados.</p>
+                <p className="text-[11px] font-semibold lg:hidden">Verificação de segurança</p>
+                <p className="text-[10.5px] leading-4 text-[#607477]">
+                  <span className="lg:hidden">Seus dados são protegidos e criptografados.</span>
+                  <span className="hidden lg:inline">Verificação de segurança quando solicitada.</span>
+                </p>
               </div>
             </div>
+
+            <nav aria-label="Links legais" className="mt-3 hidden items-center justify-center gap-2 text-[11px] text-[#0b4e52] lg:flex">
+              <Link to={TERMS_OF_SERVICE_PATH} className="underline underline-offset-2">Termos</Link>
+              <span aria-hidden="true">·</span>
+              <Link to={PRIVACY_POLICY_PATH} className="underline underline-offset-2">Privacidade</Link>
+            </nav>
           </section>
         </main>
 
