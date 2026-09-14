@@ -25,6 +25,17 @@ describe("territory entry progressive map performance", () => {
     expect(runtime).toContain('className="pointer-events-none h-full min-h-[12rem] w-full');
   });
 
+  it("does not replay the arrival skeleton after a terminal timeout recovers late", () => {
+    const runtime = read("src/app/components/territory-vivo/TerritoryEntryMapRuntime.tsx");
+
+    expect(runtime).toContain("const mapTimedOutRef = useRef(false)");
+    expect(runtime).toContain("mapTimedOutRef.current = true");
+    expect(runtime).toContain("if (mapTimedOutRef.current) {");
+    expect(runtime).toContain("setShowArrival(false)");
+    expect(runtime).toContain("setArrivalLeaving(false)");
+    expect(runtime).toContain("const ARRIVAL_CROSSFADE_MS = 160");
+  });
+
   it("starts on official territory centers instead of loading city-wide tiles first", () => {
     const runtime = read("src/app/components/territory-vivo/TerritoryEntryMapRuntime.tsx");
     expect(runtime).toContain("readLocationCenter");
