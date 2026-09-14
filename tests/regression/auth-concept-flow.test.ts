@@ -50,6 +50,8 @@ describe("account and access concept contract", () => {
     expect(html).not.toMatch(/user-scalable\s*=\s*no/i);
     expect(html).not.toMatch(/maximum-scale\s*=\s*1/i);
     expect(header).toContain('env(safe-area-inset-top)');
+    expect(header).toContain('location.pathname === "/reset-password"');
+    expect(header).toContain(">Voltar</span>");
     expect(footer).toContain('env(safe-area-inset-bottom)');
   });
 
@@ -94,6 +96,7 @@ describe("account and access concept contract", () => {
 
   it("keeps recovery states implemented instead of decorative-only screens", () => {
     const recovery = readProjectFile("src/app/pages/ResetPasswordPage.tsx");
+    const passwordPolicy = readProjectFile("src/shared/validation/passwordPolicy.ts");
 
     for (const state of [
       '"request"',
@@ -111,6 +114,11 @@ describe("account and access concept contract", () => {
     expect(recovery).toContain("checkPasswordCompromise");
     expect(recovery).toContain("AuthService.onPasswordRecovery");
     expect(recovery).toContain("Este link não está");
+    expect(recovery).toContain("getPasswordConceptRequirementStatus");
+    expect(recovery).not.toContain("getPasswordRequirementStatus(newPassword)");
+    expect(passwordPolicy).toContain('label: "Maiúscula e minúscula"');
+    expect(passwordPolicy).toContain('label: "Número e símbolo"');
+    expect(passwordPolicy).toContain("getPasswordRequirementStatus(password)");
   });
 
   it("ships valid concept raster artwork with the approved crop dimensions", () => {
