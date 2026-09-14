@@ -14,7 +14,10 @@ export function AuthFooter() {
   if (pathname !== "/login") return null;
 
   return (
-    <footer className="bg-[#fffdfa] pb-5 pt-2 text-[#25484b] lg:hidden">
+    <footer
+      className="bg-[#fffdfa] pt-2 text-[#25484b] lg:hidden"
+      style={{ paddingBottom: "max(1.25rem, env(safe-area-inset-bottom))" }}
+    >
       <nav
         aria-label="Links legais"
         className="mx-auto flex w-full max-w-[430px] items-center justify-center gap-3 px-6 text-[11px]"
