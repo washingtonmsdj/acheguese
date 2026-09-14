@@ -9,7 +9,7 @@
 1. `docs/README.md` — índice documental canônico;
 2. `docs/03-architecture/CURRENT_RULES.md` — regras arquiteturais vigentes;
 3. `docs/08-roadmap/EXECUCAO_MAIN_ONLY.md` — plano operacional ativo;
-4. `docs/08-roadmap/checkpoints/2026-09-14-g179-root-launch-presentation-and-bootstrap-ssot.md` — checkpoint mais recente desta linha;
+4. `docs/08-roadmap/checkpoints/2026-09-14-g180-community-launch-projection-and-waitlist-territory-ssot.md` — checkpoint mais recente desta linha;
 5. `SECURITY.md` — segurança e gates de release.
 
 ## Regras que não podem ser perdidas
@@ -25,6 +25,8 @@
 - CEP/geocoding reconciliado pertence a `LocationGeocodingService`; UI não chama provider diretamente quando esse owner atende o contrato;
 - contexto de lançamento da `/` vem de `TERRITORY_CONFIG`/`LAUNCH_URLS`; a página não cria fallback paralelo de estado/cidade/slug/nome;
 - membros/bairros exibidos para o grupo de lançamento vêm do território resolvido; a `/` não mantém uma segunda lista local;
+- `communityLaunch.ts` só projeta o grupo/config territorial de lançamento; não mantém slugs próprios nem alias `chapada`;
+- waitlist envia slug/path territorial canônico da opção selecionada; label visual não é transformado em identidade por `slugify` no submit;
 - nome geográfico canônico não é encurtado para satisfazer concept; rótulo/artigo público explícito podem existir em metadata de apresentação;
 - `src/app/config/launchScope.ts` é o owner do rollout público e do `PRELAUNCH_LOCKDOWN_ENABLED`; consumidores não reinterpretam `VITE_PRELAUNCH_LOCKDOWN`;
 - preferências persistidas de acessibilidade pertencem a `src/shared/accessibility/preferences.ts`; bootstrap lean e Provider usam o mesmo owner sem duplicar chaves/parser/classes;
