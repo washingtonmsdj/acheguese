@@ -19,6 +19,15 @@ export {
   isValidRideStatus,
 } from "@/shared/types/mobility.constants";
 
+export {
+  MOBILITY_MAP_VISUALS,
+} from "./mapVisuals";
+
+export type {
+  MobilityMapMarkerKind,
+  MobilityMapMarkerSize,
+} from "./mapVisuals";
+
 export type {
   FilterType,
   PackageSize,
