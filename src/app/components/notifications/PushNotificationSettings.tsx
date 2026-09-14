@@ -23,12 +23,14 @@ export function PushNotificationSettings() {
     isSupportResolved,
     isSupported,
     hasPermission,
+    permission,
     isSubscribed,
     currentSubscriptionId,
     subscriptions,
     isLoadingSubscriptions,
     isSubscribing,
     isUnsubscribing,
+    unsubscribingSubscriptionId,
     isSendingTest,
     subscriptionsError,
     subscribe,
@@ -64,6 +66,15 @@ export function PushNotificationSettings() {
     );
   }
 
+  const permissionBlocked = permission === "denied";
+  const currentDeviceDescription = isSubscribed
+    ? "Este navegador está registrado para receber notificações push."
+    : hasPermission
+      ? "A permissão já foi concedida. Falta registrar este navegador para receber push."
+      : permissionBlocked
+        ? "As notificações estão bloqueadas nas permissões deste navegador."
+        : "Ao ativar, o navegador solicitará sua permissão para receber notificações.";
+
   return (
     <div className="space-y-4">
       <div className="flex flex-col gap-3 rounded-xl border border-territory-border bg-territory-raised p-3 sm:flex-row sm:items-center sm:justify-between">
@@ -76,16 +87,13 @@ export function PushNotificationSettings() {
             )}
           </span>
           <div className="min-w-0">
-            <p className="text-sm font-semibold text-territory-ink">
-              {isSubscribed ? "Ativado neste dispositivo" : "Neste dispositivo"}
-            </p>
-            <p className="mt-1 text-xs leading-4 text-territory-muted">
-              {isSubscribed
-                ? "O endpoint deste navegador está registrado para receber notificações push."
-                : hasPermission
-                  ? "A permissão existe, mas este navegador ainda não está registrado."
-                  : "A permissão do navegador é necessária para receber push."}
-            </p>
+            <div className="flex flex-wrap items-center gap-2">
+              <p className="text-sm font-semibold text-territory-ink">Este dispositivo</p>
+              <span className={`rounded-full px-2 py-0.5 text-[0.6875rem] font-semibold ${isSubscribed ? "bg-emerald-100 text-emerald-800" : permissionBlocked ? "bg-red-50 text-red-700" : "bg-territory-surface text-territory-muted"}`}>
+                {isSubscribed ? "Ativado" : permissionBlocked ? "Bloqueado" : hasPermission ? "Permitido" : "Não ativado"}
+              </span>
+            </div>
+            <p className="mt-1 text-xs leading-4 text-territory-muted">{currentDeviceDescription}</p>
           </div>
         </div>
 
@@ -107,21 +115,21 @@ export function PushNotificationSettings() {
               type="button"
               size="sm"
               onClick={subscribe}
-              disabled={isSubscribing}
+              disabled={isSubscribing || permissionBlocked}
               className="min-h-10 bg-territory-brand text-white hover:bg-territory-brand-strong"
             >
               {isSubscribing ? <Loader2 className="mr-1.5 h-4 w-4 animate-spin" aria-hidden="true" /> : null}
-              {isSubscribing ? "Ativando..." : "Ativar push"}
+              {isSubscribing ? "Ativando..." : permissionBlocked ? "Bloqueado" : "Ativar neste dispositivo"}
             </Button>
           )}
         </div>
       </div>
 
-      {!hasPermission && !isSubscribed ? (
+      {permissionBlocked && !isSubscribed ? (
         <Alert className="border-amber-200 bg-amber-50 text-amber-950">
           <AlertCircle className="h-4 w-4" />
           <AlertDescription className="text-xs leading-5">
-            Se o navegador estiver bloqueando notificações, revise a permissão deste site e tente ativar novamente.
+            Para ativar o push, altere a permissão de notificações deste site nas configurações do navegador e volte a esta tela.
           </AlertDescription>
         </Alert>
       ) : null}
@@ -150,6 +158,12 @@ export function PushNotificationSettings() {
         </div>
       ) : null}
 
+      {!isLoadingSubscriptions && !subscriptionsError && subscriptions.length === 0 ? (
+        <div className="rounded-xl border border-dashed border-territory-border bg-territory-surface px-4 py-3 text-xs leading-5 text-territory-muted">
+          Nenhum dispositivo está registrado para receber push nesta conta.
+        </div>
+      ) : null}
+
       {!isLoadingSubscriptions && !subscriptionsError && subscriptions.length > 0 ? (
         <div>
           <h3 className="text-xs font-semibold uppercase tracking-[0.12em] text-territory-muted">
@@ -158,6 +172,7 @@ export function PushNotificationSettings() {
           <div className="mt-2 divide-y divide-territory-border rounded-xl border border-territory-border bg-territory-surface">
             {subscriptions.map((sub) => {
               const isCurrent = sub.id === currentSubscriptionId;
+              const removingThis = isUnsubscribing && unsubscribingSubscriptionId === sub.id;
               return (
                 <div key={sub.id} className="flex min-h-14 items-center gap-3 px-3 py-2">
                   <Smartphone className="h-4 w-4 shrink-0 text-territory-brand" aria-hidden="true" />
@@ -185,7 +200,7 @@ export function PushNotificationSettings() {
                     className="h-10 w-10 shrink-0 text-territory-muted hover:text-destructive"
                     aria-label={`Remover ${sub.device_name || "dispositivo"}${isCurrent ? " atual" : ""}`}
                   >
-                    {isUnsubscribing ? (
+                    {removingThis ? (
                       <Loader2 className="h-4 w-4 animate-spin" aria-hidden="true" />
                     ) : (
                       <Trash2 className="h-4 w-4" aria-hidden="true" />
