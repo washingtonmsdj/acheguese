@@ -1,0 +1,1 @@
+Assets raster do fluxo de autenticação são derivados das pranchas de conceito aprovadas pelo produto.
