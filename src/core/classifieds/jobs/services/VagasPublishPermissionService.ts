@@ -1,8 +1,8 @@
-import { AuthService } from "@/core/auth/services/AuthService";
+import { RoleService } from "@/core/authorization/services/RoleService";
+import { profileService } from "@/core/profiles/services/ProfileService";
 import { ProfileMembersService } from "@/core/profiles/services/multi-profile/profileMembersService";
 import { supabase } from "@/integrations/supabase";
 import { logger } from "@/shared/utils/logger";
-import { profileService } from "@/core/profiles/services/ProfileService";
 
 export type VagaPublishDeniedReason =
   | "NOT_AUTHENTICATED"
@@ -27,7 +27,8 @@ export interface VagaPublishPermission {
 
 interface EvaluatePublishPermissionInput {
   userId: string | null | undefined;
-  activeProfileId: string | null | undefined;  activeLocationId?: string | null;
+  activeProfileId: string | null | undefined;
+  activeLocationId?: string | null;
 }
 
 const DENIED_MESSAGES: Record<VagaPublishDeniedReason, string> = {
@@ -48,28 +49,7 @@ const DENIED_MESSAGES: Record<VagaPublishDeniedReason, string> = {
 };
 
 function getDeniedMessageByReason(reason: VagaPublishDeniedReason): string {
-  switch (reason) {
-    case "NOT_AUTHENTICATED":
-      return DENIED_MESSAGES.NOT_AUTHENTICATED;
-    case "NO_ACTIVE_PROFILE":
-      return DENIED_MESSAGES.NO_ACTIVE_PROFILE;
-    case "NO_ACTIVE_LOCATION":
-      return DENIED_MESSAGES.NO_ACTIVE_LOCATION;
-    case "PROFILE_NOT_BUSINESS":
-      return DENIED_MESSAGES.PROFILE_NOT_BUSINESS;
-    case "INSUFFICIENT_PROFILE_ROLE":
-      return DENIED_MESSAGES.INSUFFICIENT_PROFILE_ROLE;
-    case "BUSINESS_NOT_FOUND":
-      return DENIED_MESSAGES.BUSINESS_NOT_FOUND;
-    case "BUSINESS_INACTIVE":
-      return DENIED_MESSAGES.BUSINESS_INACTIVE;
-    case "BUSINESS_POSTING_DISABLED":
-      return DENIED_MESSAGES.BUSINESS_POSTING_DISABLED;
-    case "UNKNOWN":
-      return DENIED_MESSAGES.UNKNOWN;
-    default:
-      return DENIED_MESSAGES.UNKNOWN;
-  }
+  return DENIED_MESSAGES[reason] ?? DENIED_MESSAGES.UNKNOWN;
 }
 
 export class VagasPublishPermissionService {
@@ -90,7 +70,7 @@ export class VagasPublishPermissionService {
 
     let isAdmin = false;
     try {
-      isAdmin = await AuthService.isAdmin(userId);
+      isAdmin = await RoleService.isAdmin(userId);
     } catch (error) {
       logger.warn("[VagasPublishPermissionService] Falha ao verificar admin", {
         userId,
@@ -106,7 +86,9 @@ export class VagasPublishPermissionService {
       const profileData = await profileService.getAccessibleProfileById(activeProfileId);
 
       if (!profileData) {
-        logger.error(`[VagasPublishPermissionService] Erro ao carregar profile`, { activeProfileId });
+        logger.error("[VagasPublishPermissionService] Erro ao carregar profile", {
+          activeProfileId,
+        });
         return this.denied("UNKNOWN", isAdmin);
       }
 
@@ -179,8 +161,6 @@ export class VagasPublishPermissionService {
         return this.denied("BUSINESS_POSTING_DISABLED", isAdmin);
       }
 
-      const businessName = businessDataTyped?.business_name ?? undefined;
-
       return {
         canPublish: true,
         isAdmin,
@@ -189,7 +169,7 @@ export class VagasPublishPermissionService {
           : "Permissão liberada para publicar vagas.",
         activeProfileId,
         businessId: businessDataTyped?.id ?? undefined,
-        businessName,
+        businessName: businessDataTyped?.business_name ?? undefined,
       };
     } catch (error) {
       logger.error("[VagasPublishPermissionService] Erro inesperado", error);
@@ -215,7 +195,3 @@ export class VagasPublishPermissionService {
 }
 
 export const vagasPublishPermissionService = VagasPublishPermissionService;
-
-
-
-
