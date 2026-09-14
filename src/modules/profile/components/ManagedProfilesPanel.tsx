@@ -331,7 +331,7 @@ export function ManagedProfilesPanel() {
 
         <div
           className="mt-4 flex gap-2 overflow-x-auto pb-1 scrollbar-hide"
-          role="tablist"
+          role="group"
           aria-label="Filtrar perfis por tipo"
         >
           {FILTERS.map((option) => {
@@ -340,8 +340,7 @@ export function ManagedProfilesPanel() {
               <button
                 key={option.value}
                 type="button"
-                role="tab"
-                aria-selected={selected}
+                aria-pressed={selected}
                 onClick={() => setFilter(option.value)}
                 className={cn(
                   "min-h-10 shrink-0 rounded-xl px-3 text-sm font-semibold transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-territory-brand",
