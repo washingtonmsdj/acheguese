@@ -2,7 +2,7 @@
 
 Data-base: 2026-09-14  
 Status: ATIVO / CANONICO  
-Versao documental: 5.3
+Versao documental: 5.4
 
 Este documento define regras arquiteturais globais. Contratos detalhados de domínio permanecem nos owners executáveis e nos documentos específicos listados em `docs/README.md`; este arquivo não deve duplicar implementação.
 
@@ -103,14 +103,15 @@ Os contratos detalhados vivem em `docs/07-modules/` e nos owners executáveis co
 - Maps/MapLibre runtime;
 - Geolocation/Location resolution;
 - Auth flow/callback classification;
-- Accessibility preferences.
+- Accessibility preferences;
+- Public launch rollout/prelaunch.
 
 ### 6.1 Maps / MapLibre runtime e boundaries
 
 - `src/core/maps/runtime/loadMapLibreRuntime.ts` é o owner canônico de engine, CSS e configuração de worker do MapLibre.
 - `src/core/maps/components/v3/MapLibreAdapter.tsx` é o owner público canônico para superfícies React que cabem no contrato do adapter; ele decide runtime passivo versus completo sem criar um segundo provider.
 - `src/shared/config/mapDefaults.ts` é o SSOT de URLs/configuração base de tiles **e dos fallbacks geográficos genéricos**; `src/core/maps/providers/MapProvider.ts` somente projeta esse contrato para o domínio de mapas.
-- services/hooks genéricos de mapa/boundary não embutem coordenadas de uma cidade específica como fallback universal. `BoundaryService` e `useNeighborhoodBounds` derivam seu centro fallback de `MAP_DEFAULT_COORDINATES`.
+- services/hooks genéricos de mapa/boundary não embutem coordenadas de uma cidade específica como fallback universal. `BoundaryService`, `useNeighborhoodBounds` e o runtime MapLibre passivo derivam seus fallbacks de `mapDefaults`.
 - `src/core/geospatial/data/officialFeatureServerBoundary.ts` é o owner único, no runtime web, para interpretar metadata oficial de FeatureServer e executar/deduplicar/cachear/cancelar as respectivas leituras HTTP. `BoundaryService` orquestra precedência de fontes e consome esse owner; não recria parser de `source_url`/`source_object_id`, cache paralelo nem `fetch()` próprio para a mesma fonte.
 - CSS do MapLibre entra pelo owner `src/core/maps/runtime/maplibreRuntimeCss.ts`; páginas e módulos não importam `maplibre-gl/dist/maplibre-gl.css` diretamente.
 - consumidores imperativos fora do núcleo podem importar **tipos** de `maplibre-gl`, mas carregam a engine por `loadMapLibreRuntime()`; não criam loader, worker config, preload de CSS ou provider paralelo.
@@ -150,12 +151,15 @@ Os contratos detalhados vivem em `docs/07-modules/` e nos owners executáveis co
 
 Regra: este documento não replica lifecycle, tabelas, RPCs ou allowlists desses contratos. Mudanças devem ocorrer no owner técnico e em seu teste/validator.
 
-## 7. Roteamento e território
+## 7. Roteamento, rollout e território
 
 - Território é contexto raiz da experiência pública/community-first.
 - entidade pública possui namespace canônico único; alias legado não cria segunda superfície oficial.
 - contexto `/comunidade/...` é explícito e não deve sequestrar automaticamente uma URL pública de entidade.
 - contexto de lançamento da `/` vem de `TERRITORY_CONFIG`/`LAUNCH_URLS`; a entrada não cria segundo owner local de estado, cidade, slug ou nome do território de launch.
+- `src/app/config/launchScope.ts` é o owner do rollout público por superfície e da interpretação de `VITE_PRELAUNCH_LOCKDOWN`; consumidores usam `PRELAUNCH_LOCKDOWN_ENABLED` e não reinterpretam a env.
+- `src/core/community/config/communityLaunch.ts` é somente projeção do rollout Community sobre o território/configuração de lançamento; não mantém lista própria de bairros, slug paralelo de grupo ou alias territorial escondido.
+- membros de grupo e slugs territoriais vêm do owner territorial. Rótulo público curto pode existir como metadata de apresentação sem alterar nome/slug geográfico canônico.
 - ações comunitárias mutáveis exigem autenticação/Profile e autorização territorial conforme o backend.
 - residência/endereço privado nunca é projetado para superfície pública apenas para resolver contexto.
 - rotas e telas públicas devem ser reconciliadas com `docs/SCREEN-MAP.md` e `docs/FEATURE-MAP.md`.
@@ -213,6 +217,7 @@ Mudanças de segurança/schema executam adicionalmente os gates indicados em `SE
 - não duplicar paths/query keys/classificação de callback de Auth em páginas/bootstrap quando `authFlow.ts`/`authCallback.ts` atendem o caso;
 - não tratar hash/âncora ordinária como retorno de autenticação apenas por ser não vazio;
 - não duplicar chaves/parser/aplicação de preferências de acessibilidade fora de `src/shared/accessibility/preferences.ts`;
+- não reinterpretar `VITE_PRELAUNCH_LOCKDOWN` fora de `launchScope.ts` nem recriar listas/slugs de rollout Community paralelos ao território resolvido;
 - não usar placeholder, `paused`, fallback vazio ou retorno antecipado como prova de módulo funcional;
 - não declarar `MVP READY` sem cumprir o DoD de `docs/08-roadmap/EXECUCAO_MAIN_ONLY.md`;
 - não reduzir gate de segurança/CI para obter status verde.
