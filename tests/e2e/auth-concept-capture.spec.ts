@@ -51,6 +51,9 @@ test.describe("Auth concept capture", () => {
     ).toBeVisible();
     await expect(
       page.getByRole("button", { name: "Continuar com Google" }),
+    ).toHaveCount(0);
+    await expect(
+      page.getByText("Você pode se cadastrar de qualquer lugar.", { exact: true }),
     ).toBeVisible();
     await capture(page, "mobile-signup.png");
 
