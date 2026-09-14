@@ -171,13 +171,13 @@ export function usePush(userId?: string) {
     onSuccess: (result) => {
       if (result.success) {
         toast({
-          title: 'Notificação enviada',
-          description: 'Verifique se você recebeu a notificação de teste.',
+          title: 'Notificação de teste enviada',
+          description: 'Confira os dispositivos registrados para esta conta.',
         });
       } else {
         toast({
           title: 'Não foi possível enviar o teste',
-          description: 'Confira a conexão e o registro deste dispositivo e tente novamente.',
+          description: 'Confira a conexão e os dispositivos registrados e tente novamente.',
           variant: 'destructive',
         });
       }
@@ -185,7 +185,7 @@ export function usePush(userId?: string) {
     onError: () => {
       toast({
         title: 'Não foi possível enviar o teste',
-        description: 'Confira a conexão e o registro deste dispositivo e tente novamente.',
+        description: 'Confira a conexão e os dispositivos registrados e tente novamente.',
         variant: 'destructive',
       });
     },
