@@ -38,6 +38,11 @@ const MOBILE_AUTH_ROUTES = [
     expectedUrlPattern: /\/conta\/seguranca#acesso$/i,
   },
   {
+    name: "conta alterar email de acesso",
+    path: "/conta/seguranca#email",
+    expectedUrlPattern: /\/conta\/seguranca#email$/i,
+  },
+  {
     name: "conta alterar senha",
     path: "/conta/seguranca#senha",
     expectedUrlPattern: /\/conta\/seguranca#senha$/i,
