@@ -39,7 +39,8 @@ describe("territory entry premium arrival loading", () => {
     expect(arrival).toContain("Sparkles");
     expect(arrival).toContain("Procurando sua comunidade");
     expect(arrival).toContain("Preparando a casa para você se achegar");
-    expect(arrival).toContain("Buscando o mapa oficial do Complexo");
+    expect(arrival).toContain("Buscando o limite oficial do Complexo");
+    expect(arrival).toContain("Tudo quase pronto para sua chegada");
     expect(arrival).toContain("Comunidade");
     expect(arrival).toContain("Mapa");
     expect(arrival).toContain("Limite oficial");
@@ -49,8 +50,15 @@ describe("territory entry premium arrival loading", () => {
     expect(arrival).not.toContain("fallback_boundary_rings");
   });
 
+  it("keeps the narrative continuous across wrapper, suspense and runtime mounts", () => {
+    expect(arrival).toContain("ARRIVAL_SESSION_STARTED_AT");
+    expect(arrival).toContain("getArrivalMessageIndex");
+    expect(arrival).toContain("ARRIVAL_CYCLE_MS");
+    expect(arrival).toContain("timeIntoCycle");
+    expect(arrival).toContain("firstDelay");
+  });
+
   it("rotates copy gently and respects reduced-motion preferences", () => {
-    expect(arrival).toContain("ARRIVAL_MESSAGES");
     expect(arrival).toContain("window.setInterval");
     expect(arrival).toContain("2100");
     expect(arrival).toContain("prefers-reduced-motion: reduce");
