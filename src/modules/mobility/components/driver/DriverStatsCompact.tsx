@@ -27,9 +27,7 @@ export function DriverStatsCompact({
       if (!activeProfile?.id || !activeProfile.userId) return null;
 
       const driverProfileId =
-        activeProfile.profileType === "driver"
-          ? activeProfile.id
-          : (await profileService.getProfileByType(activeProfile.userId, "driver"))?.id;
+        (await profileService.getProfileByType(activeProfile.userId, "driver"))?.id ?? null;
 
       if (!driverProfileId) return null;
 
@@ -97,9 +95,9 @@ export function DriverStatsCompact({
               {stats.cancellation_rate.toFixed(0)}%
             </span>
             {isCancellationGood ? (
-              <TrendingDown className="w-3 h-3 text-green-500" />
+              <TrendingUp className="w-3 h-3 text-green-500" />
             ) : (
-              <TrendingUp className="w-3 h-3 text-red-500" />
+              <TrendingDown className="w-3 h-3 text-red-500" />
             )}
           </div>
         </div>
@@ -108,12 +106,10 @@ export function DriverStatsCompact({
       <div className="h-8 w-px bg-border" />
 
       <div className="flex items-center gap-1.5">
-        <Star className="w-4 h-4 text-yellow-500 fill-yellow-500" />
+        <Star className="w-4 h-4 fill-current text-yellow-500" />
         <div className="flex flex-col">
           <span className="text-xs text-muted-foreground">Avaliação</span>
-          <span className="text-sm font-bold text-yellow-500">
-            {stats.rating.toFixed(1)}
-          </span>
+          <span className="text-sm font-bold">{stats.rating.toFixed(1)}</span>
         </div>
       </div>
     </div>
