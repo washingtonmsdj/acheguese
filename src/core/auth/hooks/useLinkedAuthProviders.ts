@@ -12,18 +12,19 @@ const EMPTY_PROVIDERS: LinkedAuthProviders = {
 };
 
 export function useLinkedAuthProviders() {
-  const [data, setData] = useState<LinkedAuthProviders>(EMPTY_PROVIDERS);
+  const [data, setData] = useState<LinkedAuthProviders | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
   const refresh = useCallback(async () => {
     setLoading(true);
     setError(null);
+    setData(null);
     try {
       setData(await AuthIdentityService.getLinkedProviders());
     } catch (cause) {
       logger.error("useLinkedAuthProviders.refresh", cause);
-      setData(EMPTY_PROVIDERS);
+      setData(null);
       setError("Não foi possível consultar os métodos de acesso vinculados.");
     } finally {
       setLoading(false);
@@ -34,10 +35,13 @@ export function useLinkedAuthProviders() {
     void refresh();
   }, [refresh]);
 
+  const resolvedData = data ?? EMPTY_PROVIDERS;
+
   return {
-    ...data,
+    ...resolvedData,
     loading,
     error,
+    isResolved: data !== null && error === null,
     refresh,
   };
 }
