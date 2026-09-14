@@ -4,7 +4,7 @@ Data: 2026-09-14
 
 ## Escopo
 
-Continuação da linha da entrada pública `/`, consolidando navegação institucional, responsividade do menu móvel, recuperação progressiva do mapa e projeção SEO/sitemap no source e no runtime Supabase sem reabrir bridges ou aliases antigos.
+Continuação da linha da entrada pública `/`, consolidando navegação institucional, responsividade do menu móvel, recuperação progressiva do mapa, caminho crítico de mídia/MapLibre e projeção SEO/sitemap no source e no runtime Supabase sem reabrir bridges ou aliases antigos.
 
 ## Implementado no source
 
@@ -16,6 +16,9 @@ Continuação da linha da entrada pública `/`, consolidando navegação institu
 - `TerritoryEntryMapRuntime.tsx` agora registra quando o fallback terminal de 6 s foi exibido. Se o MapLibre carregar depois desse timeout, a recuperação revela o canvas real diretamente e não revive o skeleton por mais um crossfade de 160 ms.
 - o carregamento normal, sem timeout, preserva o crossfade existente do arrival skeleton.
 - `territory-entry-map-progressive-performance.test.ts` protege a distinção entre carregamento normal e recuperação tardia.
+- `prewarmMapLibreWorkers()` continua exigindo a engine canônica, mas uma exceção apenas de `runtime.prewarm()` virou best-effort: ela não derruba a montagem e deixa o flag `workersPrewarmed=false` para retry futuro.
+- a foto decorativa `complexo-cultura.jpg` saiu do import estático de `TerritoryEntryPage.tsx`; o próprio módulo/asset agora é resolvido por `import()` somente depois da prioridade do mapa, em desktop. A imagem continua `lazy`, `async`, `fetchPriority="low"` e falha de import não quebra a entrada.
+- `root-entry-community-first.test.ts` proíbe o import estático dessa imagem e exige a resolução dinâmica pós-mapa.
 
 ### Sitemap de release
 
@@ -64,7 +67,8 @@ A releitura via API de gerenciamento do Supabase confirmou a versão 17, `ACTIVE
 - configuração local/política de `verify_jwt=false` para `sitemap`;
 - metadata remota da Edge Function depois do deploy (`ACTIVE`, v17, `verify_jwt=false`);
 - source remoto reconsultado depois do deploy, incluindo inventário estático e `errorResponse(..., req, "GET, OPTIONS")`;
-- preservação de commits concorrentes da linha de Conta/Auth/Notificações na `main`.
+- preservação de commits concorrentes da linha de Conta/Auth/Notificações na `main`;
+- no SHA `1a37170805925a1268f00a9ac4e4368df01ddc60`, o único status remoto observado foi Vercel `failure` apontando para `upgradeToPro=build-rate-limit`; isso é limitação do provider e não certifica nem reprova o source.
 
 ### Não certificado nesta sessão
 
@@ -79,6 +83,7 @@ Portanto, **deploy/config/source remoto estão verificados; resposta HTTP do end
 - `src/index.css` ainda contém duas gerações de regras da entrada e o bloco novo mobile mantém risco de clipping por `100dvh` + `overflow:hidden`; não foi criado override paralelo/`!important` para esconder o problema.
 - referências CSS antigas a `var(--territory-raised)` ainda aguardam limpeza source-aware; classes Tailwind `bg-territory-raised` continuam válidas porque mapeiam para `--territory-surface-raised`.
 - nomes `SALVADOR_COMMUNITY_LAUNCH_*` continuam em callers grandes; não foi criado alias genérico parcial apenas para reduzir ocorrências.
+- `rateLimitMiddleware` ainda usa métodos CORS padrão `POST, OPTIONS` em sua resposta 429; o sitemap GET está correto nos caminhos normal/erro, mas esse contrato compartilhado exige uma mudança global e testes dedicados antes de ser ampliado.
 
 ## Regra operacional após G183
 
@@ -87,4 +92,6 @@ Portanto, **deploy/config/source remoto estão verificados; resposta HTTP do end
 - erros de Edge Function que dependem de CORS por origem devem repassar o `Request` ao owner compartilhado, não recriar headers locais;
 - o sitemap de release continua sendo o artefato canônico servido no deploy frontend; a Edge Function é um endpoint complementar e deve permanecer coerente com rotas/rollout atuais;
 - mudanças remotas Supabase só contam como verificadas quando a configuração/source remoto forem relidos; smoke HTTP deve ser registrado separadamente quando houver conectividade;
-- recuperação tardia do mapa após fallback terminal não deve reapresentar skeleton de arrival já resolvido.
+- recuperação tardia do mapa após fallback terminal não deve reapresentar skeleton de arrival já resolvido;
+- prewarm de workers é otimização best-effort; falha do prewarm isolado não pode substituir a falha real de carregamento da engine;
+- mídia decorativa da seleção inicial deve permanecer fora do closure crítico quando não participa do primeiro frame útil.
