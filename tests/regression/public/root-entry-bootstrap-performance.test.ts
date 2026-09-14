@@ -24,12 +24,16 @@ describe("anonymous root bootstrap performance", () => {
     expect(source).toContain("if (!input.userId) return");
   });
 
-  it("reads consent identity from SessionState without loading auth actions", () => {
+  it("reads consent identity from SessionState without auth or query runtimes", () => {
     const banner = read("src/app/components/privacy/ConsentBanner.tsx");
     const selector = read("src/core/session/hooks/useSessionUserId.ts");
 
     expect(banner).toContain("useSessionUserId");
+    expect(banner).toContain("ConsentService.getExistingConsents");
+    expect(banner).toContain("ConsentService.saveConsentPreferences");
     expect(banner).not.toContain("useAuth");
+    expect(banner).not.toContain("@tanstack/react-query");
+    expect(banner).not.toContain("useToast");
     expect(selector).toContain("SessionState.subscribe");
     expect(selector).toContain("SessionState.getState().user?.id");
     expect(selector).not.toContain("AuthService");
@@ -68,7 +72,7 @@ describe("anonymous root bootstrap performance", () => {
     expect(runtime).toContain('body.classList.toggle("accessibility-high-contrast"');
   });
 
-  it("mounts only minimal public overlays after load and browser idle", () => {
+  it("mounts provider-free public overlays after load and browser idle", () => {
     const runtime = read("src/app/components/AppRuntime.tsx");
     const overlays = read("src/app/components/PublicRootOverlays.tsx");
 
@@ -78,20 +82,22 @@ describe("anonymous root bootstrap performance", () => {
     expect(runtime).toContain("timeoutMs: 2500");
     expect(runtime).toContain("fallbackDelayMs: 1200");
 
-    expect(overlays).toContain("QueryClientProvider");
     expect(overlays).toContain("<ConsentBanner />");
-    expect(overlays).toContain("<Toaster />");
+    expect(overlays).not.toContain("QueryClientProvider");
+    expect(overlays).not.toContain("queryClient");
+    expect(overlays).not.toContain("<Toaster />");
     expect(overlays).not.toContain("GlobalOverlays");
     expect(overlays).not.toContain("OfflineIndicator");
     expect(overlays).not.toContain("Sonner");
   });
 
-  it("discovers the font and map host before runtime work begins", () => {
+  it("discovers the font and map hosts before runtime work begins", () => {
     const html = read("index.html");
 
     expect(html).toContain('rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans');
     expect(html).toContain('rel="preconnect" href="https://tiles.openfreemap.org" crossorigin');
     expect(html).toContain('rel="dns-prefetch" href="//tiles.openfreemap.org"');
+    expect(html).toContain('rel="preconnect" href="https://services6.arcgis.com" crossorigin');
   });
 
   it("keeps router, query and state libraries in separate vendor chunks", () => {
