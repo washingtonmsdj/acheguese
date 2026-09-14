@@ -11,6 +11,7 @@ describe("Business and gastronomy canonical ownership", () => {
     for (const relativePath of [
       "src/modules/business/services/BusinessService.ts",
       "src/modules/business/gastronomy/services/GastronomyUrlService.ts",
+      "src/modules/business/gastronomy/services/OrderTrustService.ts",
     ]) {
       expect(fs.existsSync(path.join(ROOT, relativePath))).toBe(false);
     }
@@ -33,6 +34,17 @@ describe("Business and gastronomy canonical ownership", () => {
       "@/core/verticals/gastronomy/services/GastronomyUrlService",
     );
     expect(gastronomyBarrel).not.toContain("./GastronomyUrlService");
+    expect(gastronomyBarrel).not.toContain("OrderTrustService");
+  });
+
+  it("routes order feedback directly through the canonical trust owner", () => {
+    const feedbackPanel = read(
+      "src/modules/business/gastronomy/components/orders/OrderTrustFeedbackPanel.tsx",
+    );
+
+    expect(feedbackPanel).toContain("OperationalTrustCommandService");
+    expect(feedbackPanel).toContain("submitOrderFeedback(order.id, input)");
+    expect(feedbackPanel).not.toContain("OrderTrustService");
   });
 
   it("keeps canonical owners in core", () => {
