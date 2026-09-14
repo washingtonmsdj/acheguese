@@ -63,15 +63,17 @@ describe("account and access concept contract", () => {
     const cadastro = readProjectFile(
       "src/app/features/onboarding/pages/CadastroPage.tsx",
     );
+    const journey = readProjectFile("src/core/auth/utils/authJourney.ts");
     const authService = readProjectFile("src/core/auth/services/AuthService.ts");
 
     expect(productionEnv).toContain("VITE_AUTH_GOOGLE_ENABLED=true");
     expect(remoteEnv).toContain('VITE_AUTH_GOOGLE_ENABLED="true"');
     expect(login).toContain("Continuar com Google");
     expect(login).toContain("googleAuthAvailable");
-    expect(login).toContain("setPendingAuthReturn(redirectTo)");
+    expect(login).toContain("prepareGoogleLogin(redirectTo)");
     expect(cadastro).toContain("Continuar com Google");
-    expect(cadastro).toContain('setPendingAuthReturn("/cadastro/primeiro-acesso")');
+    expect(cadastro).toContain("prepareGoogleSignup(redirectTo)");
+    expect(journey).toContain("setPendingAuthReturn(AUTH_PATHS.firstAccess)");
     expect(authService).toContain('provider: "google"');
     expect(authService).toContain("getTermsAcceptanceRedirectUrl");
   });
@@ -86,6 +88,8 @@ describe("account and access concept contract", () => {
     const schema = readProjectFile(
       "src/app/features/onboarding/validation/registerInitial.schema.ts",
     );
+    const authTypes = readProjectFile("src/core/auth/services/types.ts");
+    const authService = readProjectFile("src/core/auth/services/AuthService.ts");
 
     expect(cadastro).toContain("Comece pelo seu perfil pessoal.");
     expect(cadastro).toContain("Depois, adicione perfis de negócio ou profissional.");
@@ -99,6 +103,12 @@ describe("account and access concept contract", () => {
     expect(cadastroHook).not.toContain("neighborhood_id:");
     expect(cadastroHook).not.toContain("state:");
     expect(cadastroHook).not.toContain("city:");
+    expect(cadastroHook).not.toContain("as unknown as true");
+    expect(authTypes).not.toContain("neighborhood_id");
+    expect(authTypes).not.toContain("display_name?:");
+    expect(authTypes).not.toContain("username?:");
+    expect(authService).not.toContain("data.neighborhood");
+    expect(authService).not.toContain("data.city");
   });
 
   it("persists the username chosen during email signup instead of discarding it in the auth trigger", () => {
@@ -123,7 +133,8 @@ describe("account and access concept contract", () => {
     );
 
     expect(login).toContain("if (isEmailConfirmed) {");
-    expect(login).toContain('navigate("/cadastro/primeiro-acesso", { replace: true });');
+    expect(login).toContain("completeEmailConfirmationLoginJourney()");
+    expect(login).toContain("navigate(AUTH_PATHS.firstAccess, { replace: true })");
     expect(login).not.toContain('isEmailConfirmed && redirectTo === "/"');
 
     expect(firstAccess).toContain("Sua conversa está esperando");
@@ -171,6 +182,8 @@ describe("account and access concept contract", () => {
 
   it("keeps recovery states implemented instead of decorative-only screens", () => {
     const recovery = readProjectFile("src/app/pages/ResetPasswordPage.tsx");
+    const callback = readProjectFile("src/core/auth/utils/authCallback.ts");
+    const authService = readProjectFile("src/core/auth/services/AuthService.ts");
     const passwordPolicy = readProjectFile("src/shared/validation/passwordPolicy.ts");
 
     for (const state of [
@@ -188,12 +201,43 @@ describe("account and access concept contract", () => {
     expect(recovery).toContain("updatePassword");
     expect(recovery).toContain("checkPasswordCompromise");
     expect(recovery).toContain("AuthService.onPasswordRecovery");
+    expect(recovery).toContain("hasPasswordRecoverySessionMarker");
+    expect(recovery).toContain("getAuthCallbackError");
     expect(recovery).toContain("Este link não está");
     expect(recovery).toContain("getPasswordConceptRequirementStatus");
     expect(recovery).not.toContain("getPasswordRequirementStatus(newPassword)");
+    expect(callback).toContain("AUTH_QUERY_VALUES.expiredOtp");
+    expect(authService).not.toContain("captureAuthHash");
+    expect(authService).not.toContain("getAuthHashError");
+    expect(authService).not.toContain("isRecoveryRedirect");
     expect(passwordPolicy).toContain('label: "Maiúscula e minúscula"');
     expect(passwordPolicy).toContain('label: "Número e símbolo"');
     expect(passwordPolicy).toContain("getPasswordRequirementStatus(password)");
+  });
+
+  it("owns auth routes, query flags, redirect URLs and transient context centrally", () => {
+    const flow = readProjectFile("src/core/auth/constants/authFlow.ts");
+    const storage = readProjectFile("src/core/auth/utils/authFlowStorage.ts");
+    const pendingReturn = readProjectFile("src/core/auth/utils/pendingAuthReturn.ts");
+    const pendingSignup = readProjectFile("src/core/auth/utils/pendingSignup.ts");
+    const authService = readProjectFile("src/core/auth/services/AuthService.ts");
+
+    for (const path of [
+      'login: "/login"',
+      'signup: "/cadastro"',
+      'signupConfirmation: "/cadastro/confirmacao"',
+      'firstAccess: "/cadastro/primeiro-acesso"',
+      'termsAcceptance: "/aceitar-termos"',
+      'passwordReset: "/reset-password"',
+    ]) {
+      expect(flow).toContain(path);
+    }
+    expect(storage).toContain("expiresAt");
+    expect(storage).toContain("Compatibilidade transitória");
+    expect(pendingReturn).toContain("resolveSafeInternalPath");
+    expect(pendingSignup).toContain("resolveSafeInternalPath");
+    expect(authService).toContain("buildPublicAbsoluteUrl");
+    expect(authService).not.toContain("window.location.origin");
   });
 
   it("ships valid concept raster artwork with the approved crop dimensions", () => {
