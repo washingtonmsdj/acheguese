@@ -95,4 +95,29 @@ describe("root community-first MVP entry", () => {
       'import { AppLayoutRoutes } from "@/app/routes/sections/AppLayoutRoutes"',
     );
   });
+
+  it("keeps the public root outside Supabase session and multi-profile initialization", () => {
+    const runtime = read("src/app/components/AppRuntime.tsx");
+    const shell = read("src/app/components/SessionProfileRuntimeShell.tsx");
+
+    expect(runtime).toContain('location.pathname === "/"');
+    expect(runtime).toContain("SessionProfileRuntimeShell");
+    expect(runtime).not.toContain(
+      'import { SessionProvider } from "@/core/session/providers/SessionProvider"',
+    );
+    expect(runtime).not.toContain("MultiProfileProvider,");
+
+    expect(shell).toContain("<SessionProvider>");
+    expect(shell).toContain("<MultiProfileProvider>");
+    expect(shell).toContain("<TerritoryModeInitializer />");
+    expect(shell).toContain("<ModuleContextSync />");
+  });
+
+  it("does not statically import MapLibre or its worker in the bootstrap entry", () => {
+    const source = read("src/main.tsx");
+
+    expect(source).not.toContain('from "maplibre-gl"');
+    expect(source).not.toContain('from "maplibre-gl/dist/maplibre-gl-worker');
+    expect(source).toContain('import("./core/maps/runtime/configureMapLibreWorker.ts")');
+  });
 });
