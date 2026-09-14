@@ -225,8 +225,6 @@ export const MapLibrePassiveRuntime = forwardRef<
       let south = Infinity;
       let east = -Infinity;
       let north = -Infinity;
-      const bounds = new (maplibreBoundsConstructor(map))();
-      let boundsPoints = 0;
 
       territoryPolygons.forEach((polygon, index) => {
         const ring = polygon.coordinates
@@ -280,8 +278,6 @@ export const MapLibrePassiveRuntime = forwardRef<
           south = Math.min(south, lat);
           east = Math.max(east, lng);
           north = Math.max(north, lat);
-          bounds.extend([lng, lat]);
-          boundsPoints += 1;
         });
       });
 
@@ -296,16 +292,28 @@ export const MapLibrePassiveRuntime = forwardRef<
         writeMapState(state);
       }
 
-      if (fitTerritoryBounds && boundsPoints >= 2) {
+      const hasValidBounds =
+        coordinateCount >= 3 &&
+        [west, south, east, north].every(Number.isFinite) &&
+        Math.abs(east - west) > 0.000001 &&
+        Math.abs(north - south) > 0.000001;
+
+      if (fitTerritoryBounds && hasValidBounds) {
         const territoryKey = `${polygonCount}:${west}:${south}:${east}:${north}`;
         if (fittedTerritoryKeyRef.current !== territoryKey) {
           fittedTerritoryKeyRef.current = territoryKey;
           try {
-            map.fitBounds(bounds, {
-              padding: territoryFitPadding ?? 32,
-              maxZoom: territoryFitMaxZoom,
-              duration: 800,
-            });
+            map.fitBounds(
+              [
+                [west, south],
+                [east, north],
+              ],
+              {
+                padding: territoryFitPadding ?? 32,
+                maxZoom: territoryFitMaxZoom,
+                duration: 800,
+              },
+            );
           } catch (error) {
             logger.debug("[MapLibrePassiveRuntime] Ignoring invalid territory bounds:", error);
           }
@@ -354,15 +362,3 @@ export const MapLibrePassiveRuntime = forwardRef<
     </div>
   );
 });
-
-/**
- * Reusa o construtor de bounds da instância sem importar MapLibre estaticamente.
- */
-function maplibreBoundsConstructor(map: MapLibreMap): new () => {
-  extend: (point: [number, number]) => unknown;
-} {
-  const existing = map.getBounds();
-  return existing.constructor as unknown as new () => {
-    extend: (point: [number, number]) => unknown;
-  };
-}
