@@ -1,4 +1,5 @@
 import { lazy, Suspense, useEffect, useRef, useState } from "react";
+import type { RefObject } from "react";
 import type { Location } from "@/core/location/types";
 import type { ResolvedTerritory } from "@/core/routing/hooks/useResolveTerritoryFromUrl";
 import { scheduleBrowserIdleWork } from "@/shared/utils/browserIdle";
@@ -22,7 +23,7 @@ function EntryMapPlaceholder({
 }: {
   className: string;
   isLoading: boolean;
-  sectionRef?: React.RefObject<HTMLElement | null>;
+  sectionRef?: RefObject<HTMLElement | null>;
 }) {
   return (
     <section
