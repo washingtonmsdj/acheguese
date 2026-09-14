@@ -2,15 +2,13 @@ import { lazy, Suspense, useEffect, useRef, useState } from "react";
 import type { RefObject } from "react";
 import type { Location } from "@/core/location/types";
 import type { ResolvedTerritory } from "@/core/routing/hooks/useResolveTerritoryFromUrl";
-import { scheduleBrowserIdleWork } from "@/shared/utils/browserIdle";
 import {
   TerritoryEntryMapArrival,
   type TerritoryEntryArrivalStage,
 } from "./TerritoryEntryMapArrival";
 
-const LazyTerritoryEntryMapRuntime = lazy(() =>
-  import("./TerritoryEntryMapRuntime"),
-);
+const loadTerritoryEntryMapRuntime = () => import("./TerritoryEntryMapRuntime");
+const LazyTerritoryEntryMapRuntime = lazy(loadTerritoryEntryMapRuntime);
 
 interface TerritoryEntryMapProps {
   city: Location | null;
@@ -66,38 +64,30 @@ export default function TerritoryEntryMap({
   const territoryLabel = label ?? "Complexo do Nordeste de Amaralina";
 
   useEffect(() => {
-    if (isLoading || shouldMountRuntime) return;
+    if (shouldMountRuntime) return;
 
     const section = sectionRef.current;
     if (!section || typeof IntersectionObserver === "undefined") {
-      return scheduleBrowserIdleWork(
-        () => setShouldMountRuntime(true),
-        { timeoutMs: 900, fallbackDelayMs: 180 },
-      );
+      void loadTerritoryEntryMapRuntime();
+      const timeoutId = window.setTimeout(() => setShouldMountRuntime(true), 32);
+      return () => window.clearTimeout(timeoutId);
     }
 
-    let cancelIdleMount: (() => void) | null = null;
     const observer = new IntersectionObserver(
       (entries) => {
         if (!entries.some((entry) => entry.isIntersecting)) return;
         observer.disconnect();
-
-        cancelIdleMount = scheduleBrowserIdleWork(
-          () => setShouldMountRuntime(true),
-          { timeoutMs: 900, fallbackDelayMs: 180 },
-        );
+        void loadTerritoryEntryMapRuntime();
+        setShouldMountRuntime(true);
       },
-      { rootMargin: "240px 0px", threshold: 0.01 },
+      { rootMargin: "720px 0px", threshold: 0.01 },
     );
 
     observer.observe(section);
-    return () => {
-      observer.disconnect();
-      cancelIdleMount?.();
-    };
-  }, [isLoading, shouldMountRuntime]);
+    return () => observer.disconnect();
+  }, [shouldMountRuntime]);
 
-  if (isLoading || !shouldMountRuntime) {
+  if (!shouldMountRuntime) {
     return (
       <EntryMapArrivalSurface
         className={className}
@@ -113,7 +103,7 @@ export default function TerritoryEntryMap({
       fallback={
         <EntryMapArrivalSurface
           className={className}
-          stage="map"
+          stage={isLoading ? "community" : "map"}
           label={territoryLabel}
         />
       }
@@ -122,7 +112,7 @@ export default function TerritoryEntryMap({
         city={city}
         resolvedTerritory={resolvedTerritory}
         label={territoryLabel}
-        isLoading={false}
+        isLoading={isLoading}
         className={className}
       />
     </Suspense>
