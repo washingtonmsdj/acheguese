@@ -10,7 +10,7 @@ import { profileService } from "@/core/profiles/services/ProfileService";
 const mocks = vi.hoisted(() => ({
   navigate: vi.fn(),
   refreshUser: vi.fn(),
-  clearPendingSignupContext: vi.fn(),
+  completeFirstAccessJourney: vi.fn(),
   usernameCheck: vi.fn(),
   usernameCheckDebounced: vi.fn(),
   usernameReset: vi.fn(),
@@ -37,9 +37,9 @@ vi.mock("@/core/auth/hooks/useAuth", () => ({
   }),
 }));
 
-vi.mock("@/core/auth/utils/pendingSignup", () => ({
-  getPendingSignupRedirect: () => "/mensagens/abc",
-  clearPendingSignupContext: mocks.clearPendingSignupContext,
+vi.mock("@/core/auth/utils/authJourney", () => ({
+  getSignupJourneyReturnTarget: () => "/mensagens/abc",
+  completeFirstAccessJourney: mocks.completeFirstAccessJourney,
 }));
 
 vi.mock("@/core/profiles/services/ProfileService", () => ({
@@ -113,7 +113,7 @@ describe("CadastroPrimeiroAcessoPage", () => {
     });
   });
 
-  it("preserva o retorno da conversa e permite adiar o perfil", async () => {
+  it("preserva o retorno da conversa e encerra a jornada ao adiar o perfil", async () => {
     const user = userEvent.setup();
     renderPage();
 
@@ -124,7 +124,7 @@ describe("CadastroPrimeiroAcessoPage", () => {
       screen.getByRole("button", { name: /Completar meu perfil depois/i }),
     );
 
-    expect(mocks.clearPendingSignupContext).toHaveBeenCalledTimes(1);
+    expect(mocks.completeFirstAccessJourney).toHaveBeenCalledTimes(1);
     expect(mocks.navigate).toHaveBeenCalledWith("/mensagens/abc", {
       replace: true,
     });
