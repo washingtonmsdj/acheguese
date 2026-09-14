@@ -19,7 +19,7 @@ The lean public root does not use that loader. The normal `/` path goes through 
 
 `TerritoryEntryMapRuntime.tsx` now ends the map region's `aria-busy` state when the basemap is genuinely usable or the terminal fallback becomes final. Official-boundary enrichment continues through its own `role="status"` messages instead of keeping the entire map region semantically busy after the user can already proceed.
 
-The visual treatment is unchanged by this accessibility correction.
+The visual treatment is unchanged by this accessibility correction. A final source pass restored the previously approved spacing on the post-map boundary messages after the structural prop cleanup, so the refactor does not carry an accidental visual delta.
 
 ## Skeleton contract cleanup
 
@@ -59,7 +59,8 @@ Stale assertions that required a local map timeout, hardcoded `Complexo` boundar
 - `0863a7a72aaa7a77d82d32653d6960fc16563b44` — drop dead root map loading prop from page;
 - `4205cb6aafdf1fd5ee3b43a6109ae8268234099c` — align progressive map gate with the single loading state;
 - `71de226e3d18bb574ee5586c7896ef884870a3ca` — ratchet skeleton to the real single loading state;
-- `308e4bad552942d073978f028557d8b1a46a2279` — retire fake root territory loading contract.
+- `308e4bad552942d073978f028557d8b1a46a2279` — retire fake root territory loading contract;
+- `1c92732e762baa8f5686e3b81f663e5fb8dae44d` — preserve the approved root boundary spacing after the refactor.
 
 ## Still open on `/`
 
@@ -71,4 +72,4 @@ This checkpoint intentionally does **not** add a second stylesheet, `!important`
 
 Source/caller census and direct `main` file reads were performed before the removals. Regression source files were added/updated, but no Vitest, typecheck, lint, production build, browser E2E, Lighthouse or screenshot comparison was executed in this conversation.
 
-At checkpoint time the repository HEAD had advanced concurrently to `ec3b830d745cd2fab68b1ad1509935907cd18029` with Account/Auth work. Its published combined status contains only the known Vercel `build-rate-limit` failure target. That is provider quota evidence, not a source build PASS or FAIL.
+At checkpoint time the repository HEAD had advanced concurrently with Account/Auth work. The published combined status observed on the contemporaneous main SHA contained only the known Vercel `build-rate-limit` failure target. That is provider quota evidence, not a source build PASS or FAIL.
