@@ -181,7 +181,7 @@ export default function CadastroPage() {
 
           <section className="w-full lg:rounded-[10px] lg:bg-white lg:p-7 lg:shadow-[0_18px_55px_rgba(17,55,59,.08)]">
             <div className="lg:hidden">
-              <h1 className="max-w-[330px] font-heading text-[31px] font-extrabold leading-[1.04] tracking-[-0.045em] text-[#0b3b3f]">
+              <h1 className="max-w-[284px] font-heading text-[31px] font-extrabold leading-[1.04] tracking-[-0.045em] text-[#0b3b3f]">
                 Comece pelo seu perfil pessoal.
               </h1>
               <p className="mt-1.5 max-w-[330px] text-[15px] leading-[21px] text-[#263f43]">
@@ -413,7 +413,10 @@ export default function CadastroPage() {
                   <summary className="flex min-h-11 cursor-pointer list-none items-center gap-3 px-3 py-2 text-[12px] font-medium focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#0b5b59]/35">
                     <AuthConceptIcon name="info" />
                     <span className="flex-1">Como usamos seus dados</span>
-                    <span aria-hidden="true" className="text-lg leading-none transition-transform group-open:rotate-90">›</span>
+                    <AuthConceptIcon
+                      name="chevron-right"
+                      className="h-4 w-4 transition-transform group-open:rotate-90"
+                    />
                   </summary>
                   <p className="px-3 pb-3 pl-11 text-[11px] leading-4 text-[#607477]">
                     Usamos os dados necessários para criar sua identidade, proteger o acesso e operar sua conta. Cidade e bairro podem ser informados depois.
