@@ -53,6 +53,16 @@ describe("anonymous root bootstrap performance", () => {
     expect(details).toContain('from "@/shared/components/ui/switch"');
   });
 
+  it("defers last-territory storage hydration until the store is consumed", () => {
+    const store = read("src/core/routing/stores/LastTerritoryStore.ts");
+
+    expect(store).toContain("private hydrated = false");
+    expect(store).toContain("private hydrate(): void");
+    expect(store).toContain("get(): LastTerritory | null {\n    this.hydrate();");
+    expect(store).toContain("subscribe(listener: () => void): () => void {\n    this.hydrate();");
+    expect(store).not.toContain("constructor()");
+  });
+
   it("renders the public root outside the full app provider tree", () => {
     const runtime = read("src/app/components/AppRuntime.tsx");
     const fullShell = read("src/app/components/FullAppRuntimeShell.tsx");
