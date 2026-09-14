@@ -6,6 +6,7 @@ import { AuthBrandHeader } from "@/app/components/auth/AuthBrandHeader";
 import { AuthConceptIcon } from "@/app/components/auth/AuthConceptIcon";
 import { AuthFooter } from "@/app/components/auth/AuthFooter";
 import { useAuth } from "@/core/auth/hooks/useAuth";
+import { getAuthReturnContext } from "@/core/auth/utils/authReturnContext";
 import {
   clearPendingSignupContext,
   getPendingSignupRedirect,
@@ -93,6 +94,33 @@ export default function CadastroPrimeiroAcessoPage() {
     () => resolveSafeInternalPath(getPendingSignupRedirect(), "/"),
     [],
   );
+  const returnContext = useMemo(() => getAuthReturnContext(redirectTo), [redirectTo]);
+  const hasReturnContext = redirectTo !== "/";
+  const isConversationReturn =
+    returnContext.kind === "business" || returnContext.kind === "conversation";
+  const returnCardTitle = isConversationReturn
+    ? "Sua conversa está esperando"
+    : `Continue para ${returnContext.label}`;
+  const returnCardDescription =
+    returnContext.kind === "business"
+      ? `Continue de onde parou com ${returnContext.label}.`
+      : returnContext.kind === "conversation"
+        ? "Continue de onde parou nas suas conversas."
+        : `Volte para ${returnContext.label} sem precisar completar seu perfil agora.`;
+  const returnButtonLabel = isConversationReturn
+    ? "Continuar para a conversa"
+    : `Continuar para ${returnContext.label}`;
+  const returnIcon =
+    returnContext.kind === "conversation"
+      ? "chat"
+      : returnContext.kind === "account"
+        ? "person"
+        : returnContext.kind === "community"
+          ? "users"
+          : returnContext.kind === "business"
+            ? "store"
+            : "chat";
+
   const { states, cities, neighborhoods, loadingStates, loadingCities, loadingNeighborhoods } =
     useLocationCascade(stateId || null, cityId || null);
 
@@ -258,23 +286,23 @@ export default function CadastroPrimeiroAcessoPage() {
                 </div>
               </section>
 
-              {redirectTo !== "/" ? (
+              {hasReturnContext ? (
                 <section className="mt-3 rounded-xl bg-[#eef8f2] p-3 lg:p-4">
                   <div className="flex items-start gap-3">
                     <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-[#dff3e8] text-[#0b5b59]">
-                      <AuthConceptIcon name="chat" />
+                      <AuthConceptIcon name={returnIcon} />
                     </span>
-                    <div>
-                      <p className="text-[12px] font-bold">Sua conversa está esperando</p>
-                      <p className="text-[11px] leading-4 text-[#4c6862]">Continue de onde parou sem precisar completar seu perfil agora.</p>
+                    <div className="min-w-0">
+                      <p className="text-[12px] font-bold">{returnCardTitle}</p>
+                      <p className="text-[11px] leading-4 text-[#4c6862]">{returnCardDescription}</p>
                     </div>
                   </div>
                   <button
                     type="button"
                     onClick={() => leaveFirstAccess(redirectTo)}
-                    className="mt-3 h-10 w-full rounded-[9px] bg-[#ffc91a] text-[13px] font-extrabold text-[#102f33] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#0b5b59]/40"
+                    className="mt-3 h-10 w-full rounded-[9px] bg-[#ffc91a] px-3 text-[13px] font-extrabold text-[#102f33] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#0b5b59]/40"
                   >
-                    Continuar para a conversa
+                    {returnButtonLabel}
                   </button>
                   <button
                     type="button"
