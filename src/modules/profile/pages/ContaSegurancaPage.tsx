@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, type ReactNode } from "react";
 import { Navigate, useLocation, useNavigate } from "react-router-dom";
 import { Helmet } from "react-helmet-async";
 import {
@@ -11,7 +11,9 @@ import {
   Loader2,
   Mail,
   Pencil,
+  RefreshCw,
   ShieldCheck,
+  ShieldOff,
   UserRound,
 } from "lucide-react";
 import { toast } from "sonner";
@@ -22,19 +24,31 @@ import { useMFA } from "@/core/auth/hooks/useMFA";
 import type { MFAEnrollmentData } from "@/core/auth/services/MFAService";
 import { getAuthErrorMessage } from "@/core/auth/utils/authMessages";
 import { useMultiProfileContext } from "@/core/profiles/contexts/multi-profile-runtime-context";
+import { ACCOUNT_PATHS } from "@/core/routing/config/account";
 import { useAppUrls } from "@/core/routing/hooks/useAppUrls";
 import { AccountSettingsShell } from "@/modules/profile/components/AccountSettingsShell";
 import { ChangePasswordForm } from "@/modules/profile/components/ChangePasswordForm";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/shared/components/ui/alert-dialog";
 import { Button } from "@/shared/components/ui/button";
 import { Input } from "@/shared/components/ui/input";
 import { Label } from "@/shared/components/ui/label";
 import { SUPPORT_PATH } from "@/shared/constants/legal";
 import {
   ForgotPasswordSchema,
-  type UpdatePasswordInput,
+  type ResetPasswordFormInput,
 } from "@/shared/validation/schemas/user.schema";
 
-function Surface({ children, className = "" }: { children: React.ReactNode; className?: string }) {
+function Surface({ children, className = "" }: { children: ReactNode; className?: string }) {
   return (
     <section className={`rounded-2xl border border-territory-border bg-territory-surface ${className}`}>
       {children}
@@ -49,11 +63,11 @@ function AccessRow({
   meta,
   action,
 }: {
-  icon: React.ReactNode;
+  icon: ReactNode;
   title: string;
   value: string;
-  meta?: React.ReactNode;
-  action?: React.ReactNode;
+  meta?: ReactNode;
+  action?: ReactNode;
 }) {
   return (
     <div className="flex min-h-[88px] items-start gap-3 border-b border-territory-border py-4 last:border-b-0">
@@ -65,14 +79,14 @@ function AccessRow({
           <h2 className="font-heading text-base font-bold text-territory-ink">{title}</h2>
           {meta}
         </div>
-        <p className="mt-1 break-all text-sm text-territory-muted">{value}</p>
+        <p className="mt-1 break-all text-sm leading-5 text-territory-muted">{value}</p>
         {action ? <div className="mt-2">{action}</div> : null}
       </div>
     </div>
   );
 }
 
-function StepNumber({ children }: { children: React.ReactNode }) {
+function StepNumber({ children }: { children: ReactNode }) {
   return (
     <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-territory-sun/35 text-sm font-bold text-territory-ink">
       {children}
@@ -122,29 +136,32 @@ export default function ContaSegurancaPage() {
     isMFAEnabled,
     loading: mfaLoading,
     error: mfaError,
+    loadStatus,
     startEnrollment,
     verifyAndEnable,
+    disable,
+    listFactors,
   } = useMFA();
+
   const [sendingReset, setSendingReset] = useState(false);
   const [resetSent, setResetSent] = useState(false);
   const [enrollment, setEnrollment] = useState<MFAEnrollmentData | null>(null);
   const [verificationCode, setVerificationCode] = useState("");
   const [verifying, setVerifying] = useState(false);
+  const [disablingMfa, setDisablingMfa] = useState(false);
   const [revokingSessions, setRevokingSessions] = useState(false);
   const [newEmail, setNewEmail] = useState("");
   const [emailError, setEmailError] = useState<string | null>(null);
   const [updatingEmail, setUpdatingEmail] = useState(false);
   const [emailRequestSent, setEmailRequestSent] = useState(false);
 
-  if (!user) {
-    return <Navigate to={appUrls.auth.login} replace />;
-  }
+  if (!user) return <Navigate to={appUrls.auth.login} replace />;
 
-  const handleChangePassword = async (data: UpdatePasswordInput) => {
+  const handleChangePassword = async (data: ResetPasswordFormInput) => {
     try {
       await updatePassword(data.newPassword);
       toast.success("Senha alterada com sucesso");
-      navigate("/conta/seguranca", { replace: true });
+      navigate(ACCOUNT_PATHS.security, { replace: true });
     } catch (error) {
       toast.error(getAuthErrorMessage(error, "Erro ao alterar senha"));
       throw error;
@@ -212,8 +229,32 @@ export default function ContaSegurancaPage() {
       setEnrollment(null);
       setVerificationCode("");
       toast.success("Autenticação em duas etapas ativada.");
-    } else {
-      toast.error("Código inválido. Confira o aplicativo autenticador.");
+      return;
+    }
+    toast.error("Código inválido. Confira o aplicativo autenticador.");
+  };
+
+  const handleDisableMfa = async () => {
+    setDisablingMfa(true);
+    try {
+      const factors = await listFactors();
+      if (factors.length === 0) {
+        await loadStatus();
+        toast.error("Nenhum fator ativo foi encontrado para remover.");
+        return;
+      }
+
+      for (const factor of factors) {
+        const disabled = await disable(factor.id);
+        if (!disabled) {
+          toast.error("Não foi possível remover todos os fatores de autenticação.");
+          return;
+        }
+      }
+
+      toast.success("Autenticação em duas etapas desativada.");
+    } finally {
+      setDisablingMfa(false);
     }
   };
 
@@ -291,16 +332,14 @@ export default function ContaSegurancaPage() {
                   onClick={handleUpdateEmail}
                   disabled={updatingEmail || !newEmail.trim()}
                 >
-                  {updatingEmail ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
+                  {updatingEmail ? <Loader2 className="mr-2 h-4 w-4 animate-spin" aria-hidden="true" /> : null}
                   {updatingEmail ? "Enviando..." : "Enviar confirmação"}
                 </Button>
               </div>
             )}
           </Surface>
 
-          <div className="mt-4">
-            <HelpRow onClick={() => navigate(SUPPORT_PATH)} />
-          </div>
+          <div className="mt-4"><HelpRow onClick={() => navigate(SUPPORT_PATH)} /></div>
         </AccountSettingsShell>
       </>
     );
@@ -315,7 +354,10 @@ export default function ContaSegurancaPage() {
           description="Escolha uma senha forte e exclusiva para a sua conta."
         >
           <Surface className="p-4 sm:p-5">
-            <ChangePasswordForm onSave={handleChangePassword} onCancel={() => navigate("/conta/seguranca")} />
+            <ChangePasswordForm
+              onSave={handleChangePassword}
+              onCancel={() => navigate(ACCOUNT_PATHS.security)}
+            />
           </Surface>
 
           <Surface className="mt-4 p-4 sm:p-5">
@@ -333,14 +375,12 @@ export default function ContaSegurancaPage() {
               onClick={handleResetPassword}
               disabled={resetSent || sendingReset}
             >
-              {sendingReset ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
+              {sendingReset ? <Loader2 className="mr-2 h-4 w-4 animate-spin" aria-hidden="true" /> : null}
               {resetSent ? "E-mail enviado" : "Enviar recuperação por e-mail"}
             </Button>
           </Surface>
 
-          <div className="mt-4">
-            <HelpRow onClick={() => navigate(SUPPORT_PATH)} />
-          </div>
+          <div className="mt-4"><HelpRow onClick={() => navigate(SUPPORT_PATH)} /></div>
         </AccountSettingsShell>
       </>
     );
@@ -371,9 +411,7 @@ export default function ContaSegurancaPage() {
 
     return (
       <>
-        <Helmet>
-          <title>Dados de acesso | Achegue-se</title>
-        </Helmet>
+        <Helmet><title>Dados de acesso | Achegue-se</title></Helmet>
         <AccountSettingsShell
           title="Dados de acesso"
           description="Revise como você entra e identifica sua conta."
@@ -383,78 +421,65 @@ export default function ContaSegurancaPage() {
               icon={<Mail className="h-5 w-5" aria-hidden="true" />}
               title="E-mail de acesso"
               value={user.email}
-              meta={
-                user.emailConfirmed ? (
-                  <span className="inline-flex items-center gap-1 rounded-full bg-emerald-100 px-2 py-1 text-xs font-semibold text-emerald-800">
-                    <CheckCircle2 className="h-3.5 w-3.5" aria-hidden="true" />
-                    Confirmado
-                  </span>
-                ) : (
-                  <span className="rounded-full bg-amber-100 px-2 py-1 text-xs font-semibold text-amber-800">
-                    Confirmação pendente
-                  </span>
-                )
-              }
-              action={
+              meta={user.emailConfirmed ? (
+                <span className="inline-flex items-center gap-1 rounded-full bg-emerald-100 px-2 py-1 text-xs font-semibold text-emerald-800">
+                  <CheckCircle2 className="h-3.5 w-3.5" aria-hidden="true" /> Confirmado
+                </span>
+              ) : (
+                <span className="rounded-full bg-amber-100 px-2 py-1 text-xs font-semibold text-amber-800">Confirmação pendente</span>
+              )}
+              action={(
                 <button
                   type="button"
                   className="min-h-9 text-sm font-semibold text-territory-brand underline-offset-4 hover:underline"
-                  onClick={() => navigate("/conta/seguranca#email")}
+                  onClick={() => navigate(ACCOUNT_PATHS.email)}
                 >
                   Alterar e-mail
                 </button>
-              }
+              )}
             />
             <AccessRow
               icon={<UserRound className="h-5 w-5" aria-hidden="true" />}
               title="Nome de usuário"
               value={handle}
-              action={
-                activeProfile?.id ? (
-                  <button
-                    type="button"
-                    className="min-h-9 text-sm font-semibold text-territory-brand underline-offset-4 hover:underline"
-                    onClick={() => navigate(appUrls.profile.edit(activeProfile.id))}
-                  >
-                    Editar perfil
-                  </button>
-                ) : null
-              }
+              action={activeProfile?.id ? (
+                <button
+                  type="button"
+                  className="min-h-9 text-sm font-semibold text-territory-brand underline-offset-4 hover:underline"
+                  onClick={() => navigate(appUrls.profile.edit(activeProfile.id))}
+                >
+                  Editar perfil
+                </button>
+              ) : null}
             />
             <AccessRow
               icon={<KeyRound className="h-5 w-5" aria-hidden="true" />}
               title="Senha"
-              value="Altere sua senha pela área segura da conta."
-              action={
+              value="Altere sua senha pela sessão autenticada ou use a recuperação por e-mail quando necessário."
+              action={(
                 <button
                   type="button"
                   className="min-h-9 text-sm font-semibold text-territory-brand underline-offset-4 hover:underline"
-                  onClick={() => navigate("/conta/seguranca#senha")}
+                  onClick={() => navigate(ACCOUNT_PATHS.password)}
                 >
                   Alterar senha
                 </button>
-              }
+              )}
             />
             <AccessRow
               icon={<Globe2 className="h-5 w-5" aria-hidden="true" />}
               title="Acesso com Google"
               value={googleDescription}
-              meta={
-                <span className={`rounded-full px-2 py-1 text-xs font-semibold ${googleStatusClass}`}>
-                  {googleStatusLabel}
-                </span>
-              }
-              action={
-                providersError ? (
-                  <button
-                    type="button"
-                    className="min-h-9 text-sm font-semibold text-territory-brand underline-offset-4 hover:underline"
-                    onClick={() => void refreshProviders()}
-                  >
-                    Tentar novamente
-                  </button>
-                ) : null
-              }
+              meta={<span className={`rounded-full px-2 py-1 text-xs font-semibold ${googleStatusClass}`}>{googleStatusLabel}</span>}
+              action={providersError ? (
+                <button
+                  type="button"
+                  className="min-h-9 text-sm font-semibold text-territory-brand underline-offset-4 hover:underline"
+                  onClick={() => void refreshProviders()}
+                >
+                  Tentar novamente
+                </button>
+              ) : null}
             />
           </Surface>
 
@@ -482,14 +507,8 @@ export default function ContaSegurancaPage() {
 
   return (
     <>
-      <Helmet>
-        <title>Senha e segurança | Achegue-se</title>
-      </Helmet>
-
-      <AccountSettingsShell
-        title="Senha e segurança"
-        description="Mantenha sua conta protegida."
-      >
+      <Helmet><title>Senha e segurança | Achegue-se</title></Helmet>
+      <AccountSettingsShell title="Senha e segurança" description="Mantenha sua conta protegida.">
         <div className="grid gap-4 lg:grid-cols-2">
           <Surface className="p-4 sm:p-5">
             <div className="flex items-start gap-3">
@@ -512,9 +531,16 @@ export default function ContaSegurancaPage() {
             </div>
 
             {mfaError ? (
-              <p className="mt-4 rounded-xl bg-red-50 px-3 py-2 text-sm text-red-700" role="alert">
-                Não foi possível consultar o estado da autenticação agora.
-              </p>
+              <div className="mt-4 rounded-xl bg-red-50 p-3 text-sm text-red-700" role="alert">
+                <p>Não foi possível consultar o estado da autenticação agora.</p>
+                <button
+                  type="button"
+                  onClick={() => void loadStatus()}
+                  className="mt-2 inline-flex min-h-9 items-center gap-2 font-semibold underline-offset-4 hover:underline"
+                >
+                  <RefreshCw className="h-4 w-4" aria-hidden="true" /> Tentar novamente
+                </button>
+              </div>
             ) : null}
 
             {!isMFAEnabled && !enrollment ? (
@@ -524,16 +550,48 @@ export default function ContaSegurancaPage() {
                 onClick={handleStartMfa}
                 disabled={mfaLoading}
               >
-                {mfaLoading ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
+                {mfaLoading ? <Loader2 className="mr-2 h-4 w-4 animate-spin" aria-hidden="true" /> : null}
                 Configurar autenticação
               </Button>
             ) : null}
 
             {isMFAEnabled ? (
-              <div className="mt-5 flex items-center gap-2 rounded-xl border border-emerald-200 bg-emerald-50 px-3 py-3 text-sm text-emerald-800">
-                <CheckCircle2 className="h-5 w-5 shrink-0" aria-hidden="true" />
-                Autenticação em duas etapas ativa nesta conta.
-              </div>
+              <>
+                <div className="mt-5 flex items-center gap-2 rounded-xl border border-emerald-200 bg-emerald-50 px-3 py-3 text-sm text-emerald-800">
+                  <CheckCircle2 className="h-5 w-5 shrink-0" aria-hidden="true" />
+                  Autenticação em duas etapas ativa nesta conta.
+                </div>
+                <AlertDialog>
+                  <AlertDialogTrigger asChild>
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      className="mt-2 min-h-10 w-full text-destructive hover:bg-destructive/5 hover:text-destructive"
+                      disabled={disablingMfa || mfaLoading}
+                    >
+                      <ShieldOff className="mr-2 h-4 w-4" aria-hidden="true" />
+                      Desativar autenticação em duas etapas
+                    </Button>
+                  </AlertDialogTrigger>
+                  <AlertDialogContent className="max-w-md rounded-2xl">
+                    <AlertDialogHeader>
+                      <AlertDialogTitle>Desativar proteção adicional?</AlertDialogTitle>
+                      <AlertDialogDescription>
+                        Todos os fatores TOTP cadastrados serão removidos. Novos acessos deixarão de exigir o código do aplicativo autenticador.
+                      </AlertDialogDescription>
+                    </AlertDialogHeader>
+                    <AlertDialogFooter>
+                      <AlertDialogCancel>Manter ativada</AlertDialogCancel>
+                      <AlertDialogAction
+                        onClick={() => void handleDisableMfa()}
+                        className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                      >
+                        Desativar
+                      </AlertDialogAction>
+                    </AlertDialogFooter>
+                  </AlertDialogContent>
+                </AlertDialog>
+              </>
             ) : null}
 
             {enrollment ? (
@@ -545,7 +603,6 @@ export default function ContaSegurancaPage() {
                     <p className="mt-1 text-sm text-territory-muted">Use um aplicativo compatível com códigos TOTP.</p>
                   </div>
                 </div>
-
                 <div className="flex items-start gap-3">
                   <StepNumber>2</StepNumber>
                   <div className="min-w-0 flex-1">
@@ -560,7 +617,6 @@ export default function ContaSegurancaPage() {
                     </details>
                   </div>
                 </div>
-
                 <div className="flex items-start gap-3">
                   <StepNumber>3</StepNumber>
                   <div className="min-w-0 flex-1">
@@ -577,14 +633,13 @@ export default function ContaSegurancaPage() {
                     />
                   </div>
                 </div>
-
                 <Button
                   type="button"
                   className="min-h-11 w-full bg-territory-sun text-territory-ink hover:bg-territory-sun/90"
                   onClick={handleVerifyMfa}
                   disabled={verificationCode.length !== 6 || verifying}
                 >
-                  {verifying ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
+                  {verifying ? <Loader2 className="mr-2 h-4 w-4 animate-spin" aria-hidden="true" /> : null}
                   Confirmar ativação
                 </Button>
                 <p className="text-center text-xs leading-4 text-territory-muted">
@@ -613,19 +668,17 @@ export default function ContaSegurancaPage() {
               onClick={handleSignOutOtherSessions}
               disabled={revokingSessions}
             >
-              {revokingSessions ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
+              {revokingSessions ? <Loader2 className="mr-2 h-4 w-4 animate-spin" aria-hidden="true" /> : null}
               {revokingSessions ? "Encerrando..." : "Sair dos outros dispositivos"}
             </Button>
-            <p className="mt-2 text-center text-xs text-territory-muted">
-              Sua sessão atual permanece conectada.
-            </p>
+            <p className="mt-2 text-center text-xs text-territory-muted">Sua sessão atual permanece conectada.</p>
           </Surface>
         </div>
 
         <Surface className="mt-4 px-4 sm:px-5">
           <button
             type="button"
-            onClick={() => navigate("/conta/seguranca#senha")}
+            onClick={() => navigate(ACCOUNT_PATHS.password)}
             className="group flex min-h-16 w-full items-center gap-3 text-left focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-territory-brand"
           >
             <KeyRound className="h-5 w-5 shrink-0 text-territory-brand" aria-hidden="true" />
@@ -637,9 +690,7 @@ export default function ContaSegurancaPage() {
           </button>
         </Surface>
 
-        <div className="mt-4">
-          <HelpRow onClick={() => navigate(SUPPORT_PATH)} />
-        </div>
+        <div className="mt-4"><HelpRow onClick={() => navigate(SUPPORT_PATH)} /></div>
       </AccountSettingsShell>
     </>
   );
