@@ -1,17 +1,24 @@
 import { render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
-import { MemoryRouter } from "react-router-dom";
 import { HelmetProvider } from "react-helmet-async";
+import { MemoryRouter } from "react-router-dom";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
-import CadastroPage from "./CadastroPage";
+import { AUTH_PATHS } from "@/core/auth/constants/authFlow";
 import { AuthService } from "@/core/auth/services/AuthService";
+import { prepareEmailSignupConfirmation } from "@/core/auth/utils/authJourney";
 import { checkPasswordCompromise } from "@/core/auth/utils/compromisedPassword";
+import { PublicIdentityService } from "@/core/public-identity/services/PublicIdentityService";
+import CadastroPage from "./CadastroPage";
 
 const mocks = vi.hoisted(() => ({
   navigate: vi.fn(),
-  setEmail: vi.fn(),
-  setRedirect: vi.fn(),
+  prepareEmailSignupConfirmation: vi.fn(),
+  prepareGoogleSignup: vi.fn(),
+  cancelGoogleSignup: vi.fn(),
+  completeStandardLoginJourney: vi.fn(),
+  checkDebounced: vi.fn(),
+  resetAvailability: vi.fn(),
 }));
 
 vi.mock("react-router-dom", async () => {
@@ -20,27 +27,47 @@ vi.mock("react-router-dom", async () => {
 });
 
 vi.mock("@/core/auth/hooks/useAuth", () => ({
-  useAuth: () => ({ user: null }),
+  useAuth: () => ({
+    user: null,
+    signInWithGoogle: vi.fn(),
+    googleAuthAvailable: false,
+  }),
 }));
 
 vi.mock("@/core/auth/services/AuthService", () => ({
   AuthService: { signUp: vi.fn() },
 }));
 
+vi.mock("@/core/auth/utils/authJourney", () => ({
+  prepareEmailSignupConfirmation: mocks.prepareEmailSignupConfirmation,
+  prepareGoogleSignup: mocks.prepareGoogleSignup,
+  cancelGoogleSignup: mocks.cancelGoogleSignup,
+  completeStandardLoginJourney: mocks.completeStandardLoginJourney,
+}));
+
 vi.mock("@/core/auth/utils/compromisedPassword", () => ({
   checkPasswordCompromise: vi.fn(),
 }));
 
-vi.mock("@/core/auth/utils/pendingSignup", () => ({
-  setPendingSignupEmail: mocks.setEmail,
-  setPendingSignupRedirect: mocks.setRedirect,
+vi.mock("@/core/public-identity/hooks/useIdentityAvailability", () => ({
+  useIdentityAvailability: () => ({
+    result: null,
+    isChecking: false,
+    check: vi.fn(),
+    checkDebounced: mocks.checkDebounced,
+    reset: mocks.resetAvailability,
+  }),
+}));
+
+vi.mock("@/core/public-identity/services/PublicIdentityService", () => ({
+  PublicIdentityService: { checkAvailability: vi.fn() },
 }));
 
 vi.mock("@/shared/hooks/use-toast", () => ({
   useToast: () => ({ toast: vi.fn() }),
 }));
 
-function renderPage(path = "/cadastro") {
+function renderPage(path = AUTH_PATHS.signup) {
   return render(
     <HelmetProvider>
       <MemoryRouter initialEntries={[path]}>
@@ -61,6 +88,10 @@ async function fillAccount(user: ReturnType<typeof userEvent.setup>) {
 describe("CadastroPage — conceito account-first", () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    vi.mocked(PublicIdentityService.checkAvailability).mockResolvedValue({
+      status: "available",
+      identifier: "ana_souza",
+    });
     vi.mocked(checkPasswordCompromise).mockResolvedValue({
       blocked: false,
       count: 0,
@@ -71,8 +102,12 @@ describe("CadastroPage — conceito account-first", () => {
 
   it("é uma única tela e não exige território nem confirmação de senha", () => {
     renderPage();
-    expect(screen.getByRole("heading", { name: /Comece pelo seu perfil pessoal/i })).toBeInTheDocument();
-    expect(screen.queryByRole("combobox", { name: /Estado|Cidade|Bairro/i })).not.toBeInTheDocument();
+    expect(
+      screen.getByRole("heading", { name: /Comece pelo seu perfil pessoal/i }),
+    ).toBeInTheDocument();
+    expect(
+      screen.queryByRole("combobox", { name: /Estado|Cidade|Bairro/i }),
+    ).not.toBeInTheDocument();
     expect(screen.queryByLabelText(/Confirmar senha/i)).not.toBeInTheDocument();
     expect(screen.getByRole("button", { name: /Criar minha conta/i })).toBeDisabled();
   });
@@ -83,14 +118,16 @@ describe("CadastroPage — conceito account-first", () => {
     await user.click(screen.getByLabelText(/Aceito os Termos/i));
     await user.click(screen.getByRole("button", { name: /Criar minha conta/i }));
 
-    expect(await screen.findByText(/Nome deve ter pelo menos 3 caracteres/i)).toBeInTheDocument();
+    expect(
+      await screen.findByText(/Nome deve ter pelo menos 3 caracteres/i),
+    ).toBeInTheDocument();
     expect(screen.getByText(/Deve começar com letra e ter 3-30/i)).toBeInTheDocument();
     expect(AuthService.signUp).not.toHaveBeenCalled();
   });
 
-  it("cria a conta sem inventar cidade ou bairro e preserva o retorno", async () => {
+  it("cria a conta sem inventar cidade ou bairro e preserva o retorno no owner de jornada", async () => {
     const user = userEvent.setup();
-    renderPage("/cadastro?redirect=%2Fmensagens%2Fabc");
+    renderPage(`${AUTH_PATHS.signup}?redirect=%2Fmensagens%2Fabc`);
     await fillAccount(user);
     await user.click(screen.getByLabelText(/Aceito os Termos/i));
     const submit = screen.getByRole("button", { name: /Criar minha conta/i });
@@ -108,18 +145,29 @@ describe("CadastroPage — conceito account-first", () => {
     expect(AuthService.signUp).toHaveBeenCalledWith(
       expect.not.objectContaining({ city: expect.anything() }),
     );
-    expect(mocks.setRedirect).toHaveBeenCalledWith("/mensagens/abc");
+    expect(prepareEmailSignupConfirmation).toHaveBeenCalledWith(
+      "ana@example.com",
+      "/mensagens/abc",
+    );
+    expect(mocks.navigate).toHaveBeenCalledWith(AUTH_PATHS.signupConfirmation, {
+      state: { email: "ana@example.com", redirectTo: "/mensagens/abc" },
+    });
   });
 
   it("exibe o erro do servidor sem avançar para falso sucesso", async () => {
     const user = userEvent.setup();
-    vi.mocked(AuthService.signUp).mockRejectedValueOnce(new Error("User already registered"));
+    vi.mocked(AuthService.signUp).mockRejectedValueOnce(
+      new Error("User already registered"),
+    );
     renderPage();
     await fillAccount(user);
     await user.click(screen.getByLabelText(/Aceito os Termos/i));
     await user.click(screen.getByRole("button", { name: /Criar minha conta/i }));
 
     expect(await screen.findByRole("alert")).toBeInTheDocument();
-    expect(mocks.navigate).not.toHaveBeenCalledWith("/cadastro/confirmacao", expect.anything());
+    expect(mocks.navigate).not.toHaveBeenCalledWith(
+      AUTH_PATHS.signupConfirmation,
+      expect.anything(),
+    );
   });
 });
