@@ -9,6 +9,7 @@ import {
 } from "lucide-react";
 
 import { ResidenceManager } from "@/core/residence/components/ResidenceManager";
+import { ACCOUNT_PATHS } from "@/core/routing/config/account";
 import { AccountSettingsShell } from "@/modules/profile/components/AccountSettingsShell";
 import { Button } from "@/shared/components/ui/button";
 
@@ -24,6 +25,7 @@ export default function ContaEnderecosPage() {
       <AccountSettingsShell
         title="Endereços e território"
         description="Gerencie sua residência privada e o contexto territorial mostrado no Achegue-se."
+        backTo={ACCOUNT_PATHS.preferences}
       >
         <section className="rounded-2xl border border-territory-border bg-territory-surface p-4 sm:p-5">
           <div className="flex items-start gap-3">
