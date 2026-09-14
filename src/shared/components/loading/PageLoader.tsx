@@ -13,12 +13,12 @@ interface PageLoaderProps {
 
 /**
  * PageLoader - Loading state customizado para páginas
- * 
+ *
  * @param message - Mensagem opcional de loading
  * @param fullScreen - Se true, ocupa tela inteira (default: false)
  */
-export function PageLoader({ 
-  message = "Carregando...", 
+export function PageLoader({
+  message = "Carregando...",
   fullScreen = false,
   recoveryAfterMs = null,
   recoveryTitle = "Está demorando mais que o normal",
@@ -42,7 +42,7 @@ export function PageLoader({
     };
   }, [recoveryAfterMs]);
 
-  const containerClass = fullScreen 
+  const containerClass = fullScreen
     ? "flex items-center justify-center min-h-screen"
     : "flex items-center justify-center min-h-[40vh]";
 
@@ -72,7 +72,7 @@ export function PageLoader({
 }
 
 /**
- * Variantes específicas para contextos diferentes
+ * Variantes específicas para contextos diferentes.
  */
 export const AdminPageLoader = () => (
   <PageLoader message="Organizando o painel..." />
@@ -80,14 +80,4 @@ export const AdminPageLoader = () => (
 
 export const ModulePageLoader = () => (
   <PageLoader message="Buscando as informações..." />
-);
-
-export const FullScreenLoader = () => (
-  <PageLoader
-    message="Preparando a casa para você se achegar..."
-    fullScreen
-    recoveryAfterMs={8000}
-    recoveryTitle="Demorando um pouco mais que o normal..."
-    recoveryDescription="Verifique sua conexão ou recarregue a página para tentar novamente."
-  />
 );
