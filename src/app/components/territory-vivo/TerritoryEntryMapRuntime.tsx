@@ -1,13 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { LocationType, type Location } from "@/core/location/types";
-import {
-  MapLibreAdapter,
-  preloadPassiveMapLibreAdapterRuntime,
-} from "@/core/maps/components/v3/MapLibreAdapter";
-import {
-  preloadTerritoryPolygons,
-  useTerritoryPolygon,
-} from "@/core/maps/hooks/useTerritoryPolygon";
+import { MapLibreAdapter } from "@/core/maps/components/v3/MapLibreAdapter";
+import { useTerritoryPolygon } from "@/core/maps/hooks/useTerritoryPolygon";
 import { DEFAULT_TILE_STYLE, NEIGHBORHOOD_COLORS } from "@/core/maps/providers/MapProvider";
 import type { ResolvedTerritory } from "@/core/routing/hooks/useResolveTerritoryFromUrl";
 import { TerritoryEntryMapArrival } from "./TerritoryEntryMapArrival";
@@ -68,16 +62,6 @@ function resolveInitialViewport(
 
   const cityCenter = readLocationCenter(city);
   return cityCenter ? { center: cityCenter, zoom: 10.1 } : SALVADOR_VIEWPORT;
-}
-
-export function preloadTerritoryEntryMapEngine(): Promise<void> {
-  return preloadPassiveMapLibreAdapterRuntime();
-}
-
-export function preloadTerritoryEntryBoundary(
-  resolved: ResolvedTerritory | null | undefined,
-): Promise<void> {
-  return preloadTerritoryPolygons(resolved);
 }
 
 export interface TerritoryEntryMapRuntimeProps {
