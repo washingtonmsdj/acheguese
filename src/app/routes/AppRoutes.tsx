@@ -11,9 +11,9 @@ import {
   TERRITORIAL_ROUTE_PARAMS,
   TERRITORIAL_ROUTE_STATIC_SEGMENTS,
 } from "@/core/routing/config/territorialRoutePatterns";
-import LaunchPausedPage from "@/app/pages/LaunchPausedPage";
-import RootRouteEntry from "@/app/routes/RootRouteEntry";
 
+const RootRouteEntry = lazy(() => import("@/app/routes/RootRouteEntry"));
+const LaunchPausedPage = lazy(() => import("@/app/pages/LaunchPausedPage"));
 const AppLayoutRoutes = lazy(() =>
   import("@/app/routes/sections/AppLayoutRoutes").then((module) => ({
     default: module.AppLayoutRoutes,
