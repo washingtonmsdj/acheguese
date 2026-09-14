@@ -25,10 +25,10 @@ import {
 } from "@/shared/components/ui/form";
 import { Input } from "@/shared/components/ui/input";
 import { Label } from "@/shared/components/ui/label";
+import { PRIVACY_POLICY_PATH } from "@/shared/constants/legal";
 import { useToast } from "@/shared/hooks/use-toast";
 import { resolveSafeInternalPath } from "@/shared/utils/safeRedirect";
 import { cn } from "@/shared/utils/cn";
-import { getPasswordRequirementStatus } from "@/shared/validation/passwordPolicy";
 
 type CadastroLocationState = { redirectTo?: unknown } | null;
 
@@ -48,10 +48,6 @@ export default function CadastroPage() {
   const turnstile = useAuthTurnstile();
   const password = form.watch("password") ?? "";
   const termsAccepted = form.watch("termsAccepted") === true;
-  const requirements = useMemo(
-    () => getPasswordRequirementStatus(password),
-    [password],
-  );
 
   useEffect(() => {
     if (user) navigate(redirectTo, { replace: true });
@@ -69,7 +65,7 @@ export default function CadastroPage() {
         />
       </Helmet>
 
-      <div className="min-h-[100dvh] bg-[#fffdfa] text-[#102f33]">
+      <div className="min-h-[100dvh] bg-[#fffdfa] text-[#102f33] lg:bg-[radial-gradient(circle_at_16%_32%,rgba(216,234,224,.55),transparent_31%),radial-gradient(circle_at_70%_18%,rgba(255,236,185,.28),transparent_30%),#fffdfa]">
         <AuthBrandHeader secondaryHref="/login" secondaryLabel="Entrar" />
 
         <main
@@ -88,15 +84,18 @@ export default function CadastroPage() {
               <img
                 src="/auth/signup-hero.webp"
                 alt="Ilustração de uma moradora usando o Achegue-se em seu território"
-                className="mt-5 w-full max-w-[390px] rounded-[24px] object-cover"
+                className="mt-5 w-full max-w-[390px] object-cover"
               />
-              <p className="mt-3 max-w-[360px] -rotate-1 font-heading text-base font-semibold italic text-[#17464a]">
-                Pode participar mesmo morando fora do Complexo.
-              </p>
+              <div className="mt-3 max-w-[360px] -rotate-1">
+                <p className="font-heading text-base font-semibold italic text-[#17464a]">
+                  Pode participar mesmo morando fora do Complexo.
+                </p>
+                <span aria-hidden="true" className="mt-1 block h-[3px] w-12 rotate-[-4deg] rounded-full bg-[#f3bd18]" />
+              </div>
             </div>
           </section>
 
-          <section className="w-full lg:rounded-[18px] lg:bg-white lg:p-7 lg:shadow-[0_18px_55px_rgba(17,55,59,.08)]">
+          <section className="w-full lg:rounded-[10px] lg:bg-white lg:p-7 lg:shadow-[0_18px_55px_rgba(17,55,59,.08)]">
             <div className="lg:hidden">
               <h1 className="max-w-[330px] font-heading text-[31px] font-extrabold leading-[1.04] tracking-[-0.045em] text-[#0b3b3f]">
                 Comece pelo seu perfil pessoal.
@@ -133,7 +132,10 @@ export default function CadastroPage() {
                   name="name"
                   render={({ field, fieldState }) => (
                     <FormItem className="space-y-1.5">
-                      <FormLabel className="text-[14px] font-semibold text-[#15383c]">Nome</FormLabel>
+                      <FormLabel className="text-[14px] font-semibold text-[#15383c]">
+                        <span className="lg:hidden">Nome</span>
+                        <span className="hidden lg:inline">Nome completo</span>
+                      </FormLabel>
                       <FormControl>
                         <Input
                           {...field}
@@ -180,7 +182,7 @@ export default function CadastroPage() {
                           />
                         </div>
                       </FormControl>
-                      <p className="text-[12px] leading-4 text-[#607477]">Seu identificador público.</p>
+                      <p className="text-[12px] leading-4 text-[#607477] lg:hidden">Seu identificador público.</p>
                       <FormMessage className="text-xs" />
                     </FormItem>
                   )}
@@ -230,7 +232,8 @@ export default function CadastroPage() {
                         />
                       </FormControl>
                       <p className="text-[11.5px] leading-4 text-[#607477]">
-                        {requirements.map((requirement) => requirement.label).join(" · ")}
+                        <span className="lg:hidden">12 ou mais caracteres, maiúscula, minúscula, número e símbolo.</span>
+                        <span className="hidden lg:inline">12+ caracteres, maiúscula, minúscula, número e símbolo.</span>
                       </p>
                       <FormMessage className="text-xs" />
                     </FormItem>
@@ -268,7 +271,7 @@ export default function CadastroPage() {
                   )}
                 />
 
-                <details className="group rounded-xl bg-[#f3f1ea] text-[#244448]">
+                <details className="group rounded-xl bg-[#f3f1ea] text-[#244448] lg:hidden">
                   <summary className="flex min-h-11 cursor-pointer list-none items-center gap-3 px-3 py-2 text-[12px] font-medium focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#0b5b59]/35">
                     <AuthConceptIcon name="info" />
                     <span className="flex-1">Como usamos seus dados</span>
@@ -278,6 +281,15 @@ export default function CadastroPage() {
                     Usamos os dados necessários para criar sua identidade, proteger o acesso e operar sua conta. Cidade e bairro podem ser informados depois.
                   </p>
                 </details>
+
+                <Link
+                  to={PRIVACY_POLICY_PATH}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="hidden min-h-8 items-center text-[12px] font-medium text-[#0b4e52] underline underline-offset-2 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#0b5b59]/35 lg:inline-flex"
+                >
+                  Como usamos seus dados
+                </Link>
 
                 {turnstile.enabled ? (
                   <AuthTurnstileGate
@@ -302,7 +314,7 @@ export default function CadastroPage() {
                   {loading ? "Criando conta…" : "Criar minha conta"}
                 </button>
 
-                <p className="text-center text-[11.5px] text-[#607477]">
+                <p className="text-center text-[11.5px] text-[#607477] lg:hidden">
                   Você pode se cadastrar de qualquer lugar.
                 </p>
               </form>
