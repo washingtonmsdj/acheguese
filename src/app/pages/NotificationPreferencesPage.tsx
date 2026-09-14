@@ -6,6 +6,7 @@ import {
   AlertCircle,
   Bell,
   ChevronDown,
+  ChevronRight,
   Clock3,
   Loader2,
   Mail,
@@ -185,6 +186,11 @@ export default function NotificationPreferencesPage() {
   const quietDaysInvalid = quietHoursActive && selectedQuietDays.length === 0;
   const quietHoursInvalid = quietHoursPairInvalid || quietDaysInvalid;
   const isDirty = data ? JSON.stringify(preferences) !== JSON.stringify(data) : false;
+  const quietHoursSummary = quietHoursPairInvalid
+    ? "Intervalo incompleto"
+    : quietHoursActive
+      ? `${preferences.quiet_hours_start} — ${preferences.quiet_hours_end}`
+      : "Definir horário";
 
   const toggleQuietDay = (day: number) => {
     const current = preferences.quiet_hours_days ?? ALL_QUIET_DAYS;
@@ -192,6 +198,81 @@ export default function NotificationPreferencesPage() {
       ? current.filter((value) => value !== day)
       : [...current, day].sort((a, b) => a - b);
     setPreferences({ ...preferences, quiet_hours_days: next });
+  };
+
+  const renderQuietHoursControls = (idPrefix: string) => {
+    const startId = `${idPrefix}-quiet-start`;
+    const endId = `${idPrefix}-quiet-end`;
+    const errorId = `${idPrefix}-quiet-hours-error`;
+
+    return (
+      <>
+        <div className="grid gap-3 sm:grid-cols-2">
+          <div>
+            <Label htmlFor={startId} className="text-xs font-semibold text-territory-muted">Início</Label>
+            <input
+              id={startId}
+              type="time"
+              aria-invalid={quietHoursPairInvalid}
+              aria-describedby={quietHoursPairInvalid ? errorId : undefined}
+              className="mt-1 h-11 w-full rounded-xl border border-territory-border bg-territory-surface px-3 text-sm text-territory-ink focus:border-territory-brand focus:outline-none focus:ring-2 focus:ring-territory-brand/15"
+              value={preferences.quiet_hours_start || ""}
+              onChange={(event) => setPreferences({ ...preferences, quiet_hours_start: event.target.value || null })}
+            />
+          </div>
+          <div>
+            <Label htmlFor={endId} className="text-xs font-semibold text-territory-muted">Fim</Label>
+            <input
+              id={endId}
+              type="time"
+              aria-invalid={quietHoursPairInvalid}
+              aria-describedby={quietHoursPairInvalid ? errorId : undefined}
+              className="mt-1 h-11 w-full rounded-xl border border-territory-border bg-territory-surface px-3 text-sm text-territory-ink focus:border-territory-brand focus:outline-none focus:ring-2 focus:ring-territory-brand/15"
+              value={preferences.quiet_hours_end || ""}
+              onChange={(event) => setPreferences({ ...preferences, quiet_hours_end: event.target.value || null })}
+            />
+          </div>
+        </div>
+
+        {quietHoursActive ? (
+          <fieldset className="mt-4">
+            <legend className="text-xs font-semibold text-territory-muted">Dias</legend>
+            <div className="mt-2 flex flex-wrap gap-2">
+              {QUIET_DAY_OPTIONS.map((day) => {
+                const selected = selectedQuietDays.includes(day.value);
+                return (
+                  <button
+                    key={day.value}
+                    type="button"
+                    aria-pressed={selected}
+                    aria-label={`${day.label}: ${selected ? "incluído" : "não incluído"} no horário de silêncio`}
+                    onClick={() => toggleQuietDay(day.value)}
+                    className={cn(
+                      "min-h-10 min-w-12 rounded-xl border px-3 text-xs font-semibold transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-territory-brand",
+                      selected
+                        ? "border-territory-brand bg-territory-brand text-white"
+                        : "border-territory-border bg-territory-surface text-territory-ink hover:border-territory-brand/50",
+                    )}
+                  >
+                    {day.short}
+                  </button>
+                );
+              })}
+            </div>
+          </fieldset>
+        ) : null}
+
+        {quietHoursPairInvalid ? (
+          <p id={errorId} className="mt-2 text-xs font-medium text-destructive" role="alert">
+            Informe início e fim do horário silencioso, ou deixe os dois campos vazios.
+          </p>
+        ) : quietDaysInvalid ? (
+          <p className="mt-2 text-xs font-medium text-destructive" role="alert">
+            Selecione pelo menos um dia para aplicar o horário de silêncio.
+          </p>
+        ) : null}
+      </>
+    );
   };
 
   return (
@@ -292,81 +373,35 @@ export default function NotificationPreferencesPage() {
           </Surface>
         </div>
 
-        <Surface className="mt-4 p-4 sm:p-5">
+        <div className="mt-4 lg:hidden">
+          <h2 className="mb-2 font-heading text-sm font-bold text-territory-ink">Horário de silêncio</h2>
+          <details
+            className="group rounded-2xl border border-territory-border bg-territory-surface"
+            open={quietHoursInvalid || undefined}
+          >
+            <summary className="flex min-h-12 cursor-pointer list-none items-center gap-3 px-4 py-3 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-territory-brand [&::-webkit-details-marker]:hidden">
+              <Clock3 className="h-5 w-5 shrink-0 text-territory-ink" aria-hidden="true" />
+              <span className={cn("min-w-0 flex-1 text-sm font-medium", quietHoursInvalid ? "text-destructive" : "text-territory-ink")}>{quietHoursSummary}</span>
+              <ChevronRight className="h-4 w-4 shrink-0 text-territory-muted transition-transform group-open:rotate-90" aria-hidden="true" />
+            </summary>
+            <div className="border-t border-territory-border px-4 pb-4 pt-3">
+              {renderQuietHoursControls("mobile")}
+            </div>
+          </details>
+          <p className="mt-1 px-1 text-xs text-territory-muted">Horário local do dispositivo.</p>
+        </div>
+
+        <Surface className="mt-4 hidden p-4 sm:p-5 lg:block">
           <div className="flex items-start gap-3">
-            <span className="flex h-10 w-10 shrink-0 items-center justify-center text-territory-ink lg:rounded-xl lg:bg-territory-brand/10 lg:text-territory-brand">
+            <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-territory-brand/10 text-territory-brand">
               <Clock3 className="h-5 w-5" aria-hidden="true" />
             </span>
             <div className="min-w-0 flex-1">
-              <h2 className="font-heading text-sm font-bold text-territory-ink lg:text-base">Horário de silêncio</h2>
+              <h2 className="font-heading text-base font-bold text-territory-ink">Horário de silêncio</h2>
               <p className="mt-0.5 text-xs text-territory-muted">Defina quando avisos não urgentes devem ficar em silêncio.</p>
             </div>
           </div>
-
-          <div className="mt-4 grid gap-3 sm:grid-cols-2">
-            <div>
-              <Label htmlFor="quiet-start" className="text-xs font-semibold text-territory-muted">Início</Label>
-              <input
-                id="quiet-start"
-                type="time"
-                aria-invalid={quietHoursPairInvalid}
-                aria-describedby={quietHoursPairInvalid ? "quiet-hours-error" : undefined}
-                className="mt-1 h-11 w-full rounded-xl border border-territory-border bg-territory-surface px-3 text-sm text-territory-ink focus:border-territory-brand focus:outline-none focus:ring-2 focus:ring-territory-brand/15"
-                value={preferences.quiet_hours_start || ""}
-                onChange={(event) => setPreferences({ ...preferences, quiet_hours_start: event.target.value || null })}
-              />
-            </div>
-            <div>
-              <Label htmlFor="quiet-end" className="text-xs font-semibold text-territory-muted">Fim</Label>
-              <input
-                id="quiet-end"
-                type="time"
-                aria-invalid={quietHoursPairInvalid}
-                aria-describedby={quietHoursPairInvalid ? "quiet-hours-error" : undefined}
-                className="mt-1 h-11 w-full rounded-xl border border-territory-border bg-territory-surface px-3 text-sm text-territory-ink focus:border-territory-brand focus:outline-none focus:ring-2 focus:ring-territory-brand/15"
-                value={preferences.quiet_hours_end || ""}
-                onChange={(event) => setPreferences({ ...preferences, quiet_hours_end: event.target.value || null })}
-              />
-            </div>
-          </div>
-
-          {quietHoursActive ? (
-            <fieldset className="mt-4">
-              <legend className="text-xs font-semibold text-territory-muted">Dias</legend>
-              <div className="mt-2 flex flex-wrap gap-2">
-                {QUIET_DAY_OPTIONS.map((day) => {
-                  const selected = selectedQuietDays.includes(day.value);
-                  return (
-                    <button
-                      key={day.value}
-                      type="button"
-                      aria-pressed={selected}
-                      aria-label={`${day.label}: ${selected ? "incluído" : "não incluído"} no horário de silêncio`}
-                      onClick={() => toggleQuietDay(day.value)}
-                      className={cn(
-                        "min-h-10 min-w-12 rounded-xl border px-3 text-xs font-semibold transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-territory-brand",
-                        selected
-                          ? "border-territory-brand bg-territory-brand text-white"
-                          : "border-territory-border bg-territory-surface text-territory-ink hover:border-territory-brand/50",
-                      )}
-                    >
-                      {day.short}
-                    </button>
-                  );
-                })}
-              </div>
-            </fieldset>
-          ) : null}
-
-          {quietHoursPairInvalid ? (
-            <p id="quiet-hours-error" className="mt-2 text-xs font-medium text-destructive" role="alert">
-              Informe início e fim do horário silencioso, ou deixe os dois campos vazios.
-            </p>
-          ) : quietDaysInvalid ? (
-            <p className="mt-2 text-xs font-medium text-destructive" role="alert">
-              Selecione pelo menos um dia para aplicar o horário de silêncio.
-            </p>
-          ) : null}
+          <div className="mt-4">{renderQuietHoursControls("desktop")}</div>
         </Surface>
 
         <details className="group mt-4 rounded-2xl border border-territory-border bg-territory-surface">
