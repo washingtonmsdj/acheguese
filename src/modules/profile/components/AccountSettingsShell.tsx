@@ -99,6 +99,14 @@ function resolveDefaultBackTarget(pathname: string, hash: string): string {
   return ACCOUNT_PATHS.home;
 }
 
+function resolveBackLabel(target: string): string {
+  if (target === ACCOUNT_PATHS.access) return "Voltar para Dados de acesso";
+  if (target === ACCOUNT_PATHS.security) return "Voltar para Segurança";
+  if (target === ACCOUNT_PATHS.privacy) return "Voltar para Privacidade e dados";
+  if (target === ACCOUNT_PATHS.preferences) return "Voltar para Preferências";
+  return "Voltar para Minha conta";
+}
+
 function getInitials(name?: string | null): string {
   if (!name) return "U";
   return name
@@ -130,6 +138,7 @@ export function AccountSettingsShell({
   const { activeProfile, loading: profilesLoading } = useMultiProfileContext();
   const activeProfileName = activeProfile?.display_name?.trim() || "Minha conta";
   const resolvedBackTo = backTo ?? resolveDefaultBackTarget(location.pathname, location.hash);
+  const backLabel = resolveBackLabel(resolvedBackTo);
   // The adaptive mobile nav remains mounted only on the /conta overview family.
   // Sub-settings own the whole viewport, so they must not reserve a phantom nav gap.
   const hasMobileAccountNav = location.pathname === ACCOUNT_PATHS.home;
@@ -202,7 +211,7 @@ export function AccountSettingsShell({
             {showBack ? (
               <button
                 type="button"
-                aria-label="Voltar"
+                aria-label={backLabel}
                 onClick={() => navigate(resolvedBackTo)}
                 className="absolute bottom-1 left-2 flex h-11 w-11 items-center justify-center rounded-full text-territory-ink hover:bg-territory-raised focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-territory-brand"
               >
