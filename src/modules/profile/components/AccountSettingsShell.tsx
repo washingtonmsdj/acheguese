@@ -12,7 +12,13 @@ import {
   UserRound,
 } from "lucide-react";
 
+import { useMultiProfileContext } from "@/core/profiles/contexts/multi-profile-runtime-context";
 import { ACCOUNT_PATHS } from "@/core/routing/config/account";
+import {
+  Avatar,
+  AvatarFallback,
+  AvatarImage,
+} from "@/shared/components/ui/avatar";
 import { cn } from "@/shared/utils/cn";
 
 const settingsItems = [
@@ -47,6 +53,17 @@ function isActive(
   return true;
 }
 
+function getInitials(name?: string | null): string {
+  if (!name) return "U";
+  return name
+    .split(/\s+/)
+    .filter(Boolean)
+    .map((part) => part[0])
+    .join("")
+    .slice(0, 2)
+    .toUpperCase();
+}
+
 export function AccountSettingsShell({
   children,
   title,
@@ -62,6 +79,8 @@ export function AccountSettingsShell({
 }) {
   const location = useLocation();
   const navigate = useNavigate();
+  const { activeProfile, loading: profilesLoading } = useMultiProfileContext();
+  const activeProfileName = activeProfile?.display_name?.trim() || "Minha conta";
 
   return (
     <div className="territory-vivo min-h-[100dvh] bg-territory-canvas text-territory-ink">
@@ -111,13 +130,17 @@ export function AccountSettingsShell({
         <div className="min-w-0 flex-1 bg-territory-canvas">
           <header className="hidden h-16 items-center justify-end border-b border-territory-border bg-territory-surface px-6 lg:sticky lg:top-0 lg:z-20 lg:flex xl:px-8">
             <Link
-              to={ACCOUNT_PATHS.home}
-              className="flex min-h-10 items-center gap-2 rounded-full px-2 text-sm font-semibold text-territory-ink hover:bg-territory-raised focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-territory-brand"
+              to={ACCOUNT_PATHS.profiles}
+              className="flex min-h-11 max-w-xs items-center gap-2 rounded-full px-2 text-sm font-semibold text-territory-ink hover:bg-territory-raised focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-territory-brand"
+              aria-label={`Abrir Meus perfis${activeProfile ? ` — perfil ativo ${activeProfileName}` : ""}`}
             >
-              <span className="flex h-8 w-8 items-center justify-center rounded-full bg-territory-brand/10 text-territory-brand">
-                <UserRound className="h-4 w-4" aria-hidden="true" />
-              </span>
-              Minha conta
+              <Avatar className="h-8 w-8 border border-territory-border bg-territory-raised">
+                <AvatarImage src={activeProfile?.avatar_url || undefined} alt="" />
+                <AvatarFallback className="bg-territory-brand/10 text-xs font-bold text-territory-brand">
+                  {profilesLoading ? "…" : getInitials(activeProfileName)}
+                </AvatarFallback>
+              </Avatar>
+              <span className="max-w-48 truncate">{profilesLoading ? "Carregando perfil..." : activeProfileName}</span>
             </Link>
           </header>
 
