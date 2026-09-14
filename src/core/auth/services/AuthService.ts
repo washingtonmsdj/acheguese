@@ -224,6 +224,16 @@ export class AuthService {
     });
   }
 
+  /**
+   * Revoga sessões diferentes da sessão atual. A sessão deste navegador é
+   * preservada pelo escopo `others`; em caso de falha, não alteramos storage
+   * local nem exibimos falso sucesso.
+   */
+  static async signOutOtherSessions(): Promise<void> {
+    const { error } = await supabase.auth.signOut({ scope: "others" });
+    if (error) throw error;
+  }
+
   static async resetPassword(email: string): Promise<void> {
     const { error } = await supabase.auth.resetPasswordForEmail(email, {
       redirectTo: AuthService.getPasswordResetRedirectUrl(),
