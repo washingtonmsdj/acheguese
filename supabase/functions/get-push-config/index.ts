@@ -36,7 +36,7 @@ serve(async (req: Request) => {
   const methodError = requireHttpMethod(req, ['GET', 'POST'], ALLOWED_METHODS);
   if (methodError) return methodError;
 
-  const rateLimitResponse = await rateLimitMiddleware(req, 100, 60_000);
+  const rateLimitResponse = await rateLimitMiddleware(req, 100, 60_000, ALLOWED_METHODS);
   if (rateLimitResponse) return rateLimitResponse;
 
   try {
