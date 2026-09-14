@@ -1,6 +1,6 @@
 import { AppRuntime } from "@/app/components/AppRuntime";
 import { BootstrapErrorBoundary } from "@/app/components/BootstrapErrorBoundary";
-import "@/styles/accessibility.css";
+import "@/styles/accessibility-core.css";
 
 const App = () => (
   <BootstrapErrorBoundary>
