@@ -67,28 +67,32 @@ function OverviewRow({
   title,
   description,
   onClick,
+  showDescriptionOnMobile = false,
 }: {
   icon: ReactNode;
   title: string;
   description?: string;
   onClick: () => void;
+  showDescriptionOnMobile?: boolean;
 }) {
   return (
     <button
       type="button"
       onClick={onClick}
-      className="group flex min-h-[66px] w-full items-center gap-3 border-b border-territory-border px-1 py-3 text-left last:border-b-0 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-territory-brand"
+      className="group flex min-h-[52px] w-full items-center gap-3 border-b border-territory-border px-1 py-2.5 text-left last:border-b-0 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-territory-brand sm:min-h-[62px] sm:py-3"
     >
-      <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-territory-brand/10 text-territory-brand">
+      <span className="flex h-7 w-7 shrink-0 items-center justify-center text-territory-ink">
         {icon}
       </span>
       <span className="min-w-0 flex-1">
-        <span className="block text-sm font-semibold text-territory-ink">{title}</span>
+        <span className="block text-[0.95rem] font-medium leading-5 text-territory-ink sm:text-sm sm:font-semibold">{title}</span>
         {description ? (
-          <span className="mt-0.5 block text-xs leading-4 text-territory-muted">{description}</span>
+          <span className={`${showDescriptionOnMobile ? "block" : "hidden sm:block"} mt-0.5 text-xs leading-4 text-territory-muted`}>
+            {description}
+          </span>
         ) : null}
       </span>
-      <ChevronRight className="h-5 w-5 shrink-0 text-territory-muted transition-transform group-hover:translate-x-0.5" aria-hidden="true" />
+      <ChevronRight className="h-[18px] w-[18px] shrink-0 text-territory-muted transition-transform group-hover:translate-x-0.5" aria-hidden="true" />
     </button>
   );
 }
@@ -161,7 +165,7 @@ export function ContaHubLayout({
               reputation={reputation}
               onAvatarChange={onAvatarChange}
             />
-            <p className="mt-3 px-1 text-sm leading-5 text-territory-muted">
+            <p className="mt-2.5 px-1 text-xs leading-4 text-territory-muted sm:mt-3 sm:text-sm sm:leading-5">
               Estas configurações valem para toda a sua conta.
             </p>
           </>
@@ -169,7 +173,7 @@ export function ContaHubLayout({
 
         {!profilesView ? (
           <>
-            <section className="mt-4 rounded-2xl border border-territory-border bg-territory-surface px-4 sm:px-5">
+            <section className="mt-4 rounded-xl border border-territory-border bg-territory-surface px-3 sm:rounded-2xl sm:px-5">
               <OverviewRow
                 icon={<KeyRound className="h-5 w-5" aria-hidden="true" />}
                 title="Dados de acesso"
@@ -200,30 +204,19 @@ export function ContaHubLayout({
                 description="Ajustes pessoais e vínculos da identidade."
                 onClick={() => navigate(ACCOUNT_PATHS.preferences)}
               />
-              <OverviewRow
-                icon={<Accessibility className="h-5 w-5" aria-hidden="true" />}
-                title="Acessibilidade"
-                description="Contraste, tamanho do texto e movimento reduzido."
-                onClick={() => navigate(ACCOUNT_PATHS.accessibility)}
-              />
             </section>
 
-            <section className="mt-4 rounded-2xl border border-territory-border bg-territory-surface px-4 sm:px-5">
-              <OverviewRow
-                icon={<MapPin className="h-5 w-5" aria-hidden="true" />}
-                title="Endereços e território"
-                description="Residência privada e contexto territorial."
-                onClick={() => navigate(ACCOUNT_PATHS.addresses)}
-              />
+            <section className="mt-4 rounded-xl border border-territory-border bg-territory-surface px-3 sm:rounded-2xl sm:px-5">
               <OverviewRow
                 icon={<UsersRound className="h-5 w-5" aria-hidden="true" />}
                 title="Meus perfis"
-                description="Identidades, equipes e visibilidade pública."
+                description="Identidades, equipes e visibilidade pública"
+                showDescriptionOnMobile
                 onClick={() => navigate(ACCOUNT_PATHS.profiles)}
               />
             </section>
 
-            <section className="mt-4 rounded-2xl border border-territory-border bg-territory-surface px-4 sm:px-5">
+            <section className="mt-4 rounded-xl border border-territory-border bg-territory-surface px-3 sm:rounded-2xl sm:px-5">
               <OverviewRow
                 icon={<CircleHelp className="h-5 w-5" aria-hidden="true" />}
                 title="Ajuda"
@@ -234,11 +227,32 @@ export function ContaHubLayout({
             <button
               type="button"
               onClick={() => void handleSignOut()}
-              className="mt-4 flex min-h-12 w-full items-center gap-3 rounded-2xl border border-red-200 bg-territory-surface px-4 text-left text-sm font-semibold text-red-700 hover:bg-red-50 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-red-600"
+              className="mt-4 flex min-h-12 w-full items-center gap-3 rounded-xl border border-red-300 bg-territory-surface px-4 text-left text-sm font-semibold text-red-700 hover:bg-red-50 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-red-600 sm:rounded-2xl"
             >
               <LogOut className="h-5 w-5" aria-hidden="true" />
               Sair da conta
             </button>
+
+            <details className="group mt-3 rounded-xl border border-transparent bg-transparent sm:mt-4">
+              <summary className="flex min-h-10 cursor-pointer list-none items-center justify-center gap-2 rounded-lg px-3 text-xs font-medium text-territory-muted hover:bg-territory-raised focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-territory-brand [&::-webkit-details-marker]:hidden">
+                Outras configurações
+                <ChevronDown className="h-4 w-4 transition-transform group-open:rotate-180" aria-hidden="true" />
+              </summary>
+              <div className="mt-2 rounded-xl border border-territory-border bg-territory-surface px-3 sm:px-5">
+                <OverviewRow
+                  icon={<MapPin className="h-5 w-5" aria-hidden="true" />}
+                  title="Endereços e território"
+                  description="Residência privada e contexto territorial."
+                  onClick={() => navigate(ACCOUNT_PATHS.addresses)}
+                />
+                <OverviewRow
+                  icon={<Accessibility className="h-5 w-5" aria-hidden="true" />}
+                  title="Acessibilidade"
+                  description="Contraste, tamanho do texto e movimento reduzido."
+                  onClick={() => navigate(ACCOUNT_PATHS.accessibility)}
+                />
+              </div>
+            </details>
           </>
         ) : (
           <div id="account-details" className="space-y-4">
