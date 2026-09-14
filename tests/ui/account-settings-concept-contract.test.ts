@@ -121,9 +121,10 @@ describe("account settings concept contract", () => {
     expect(managedProfiles).toContain("buildPublicProfileUrl(handle!)");
     expect(managedProfiles).toContain("profile.is_public === true");
     expect(managedProfiles).toContain('type="search"');
-    expect(managedProfiles).toContain('role="tablist"');
-    expect(managedProfiles).toContain('role="tab"');
-    expect(managedProfiles).toContain('aria-selected={selected}');
+    expect(managedProfiles).toContain('role="group"');
+    expect(managedProfiles).toContain('aria-pressed={selected}');
+    expect(managedProfiles).not.toContain('role="tablist"');
+    expect(managedProfiles).not.toContain('aria-selected={selected}');
     expect(managedProfiles).toContain("Limpar filtros");
     expect(managedProfiles).not.toContain("conceptManagedProfiles");
   });
