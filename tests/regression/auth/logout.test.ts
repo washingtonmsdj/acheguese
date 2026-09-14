@@ -2,6 +2,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 const mocks = vi.hoisted(() => ({
   signOut: vi.fn(),
+  updateUser: vi.fn(),
   storageGetItem: vi.fn(),
   storageRemoveItem: vi.fn(),
   loggerWarn: vi.fn(),
@@ -11,6 +12,7 @@ vi.mock("@/integrations/supabase", () => ({
   supabase: {
     auth: {
       signOut: mocks.signOut,
+      updateUser: mocks.updateUser,
     },
   },
 }));
@@ -101,6 +103,27 @@ describe("auth logout regression guard", () => {
     expect(mocks.signOut).toHaveBeenCalledWith({ scope: "others" });
     expect(mocks.storageRemoveItem).not.toHaveBeenCalled();
     expect(mocks.storageGetItem).not.toHaveBeenCalled();
+  });
+
+  it("requests email change through Supabase Auth without mutating session state locally", async () => {
+    mocks.updateUser.mockResolvedValue({ error: null });
+
+    await expect(AuthService.updateEmail("  novo@example.com  ")).resolves.toBeUndefined();
+
+    expect(mocks.updateUser).toHaveBeenCalledTimes(1);
+    expect(mocks.updateUser).toHaveBeenCalledWith(
+      { email: "novo@example.com" },
+      { emailRedirectTo: expect.any(String) },
+    );
+    expect(mocks.storageRemoveItem).not.toHaveBeenCalled();
+  });
+
+  it("does not report an email change when the auth provider rejects it", async () => {
+    mocks.updateUser.mockResolvedValue({ error: new Error("email change rejected") });
+
+    await expect(AuthService.updateEmail("novo@example.com")).rejects.toThrow(
+      "email change rejected",
+    );
   });
 
   it("clears the Achegue-se auth storage when Supabase returns a sign-out error", async () => {
