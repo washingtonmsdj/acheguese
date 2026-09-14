@@ -339,7 +339,8 @@ async function handleCancelAccountDeletion(
 
   // Preserve recovery compatibility with accounts touched by the historical
   // destructive handler. New requests use the DB authority, but cancellation
-  // must still clear legacy deletion metadata if it is present.
+  // must still clear only legacy deletion metadata if it is present. Email
+  // verification is an independent authentication fact and must not be changed.
   const { data: authData, error: authReadError } =
     await supabaseAdmin.auth.admin.getUserById(userId);
   if (authReadError || !authData.user) {
@@ -354,7 +355,6 @@ async function handleCancelAccountDeletion(
 
   const { error: authUpdateError } =
     await supabaseAdmin.auth.admin.updateUserById(userId, {
-      email_confirm: true,
       user_metadata: userMetadata,
     });
   if (authUpdateError) throw authUpdateError;
