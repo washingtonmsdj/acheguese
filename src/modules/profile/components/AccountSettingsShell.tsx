@@ -121,13 +121,13 @@ export function AccountSettingsShell({
             </Link>
           </header>
 
-          <div className="relative flex h-14 items-center justify-center border-b border-territory-border bg-territory-surface px-4 lg:hidden">
+          <div className="relative flex min-h-[calc(3.5rem+env(safe-area-inset-top))] items-end justify-center border-b border-territory-border bg-territory-surface px-4 pb-2 pt-[calc(env(safe-area-inset-top)+0.5rem)] lg:hidden">
             {showBack ? (
               <button
                 type="button"
                 aria-label="Voltar para Minha conta"
                 onClick={() => navigate(ACCOUNT_PATHS.home)}
-                className="absolute left-2 flex h-11 w-11 items-center justify-center rounded-full text-territory-ink hover:bg-territory-raised focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-territory-brand"
+                className="absolute bottom-1 left-2 flex h-11 w-11 items-center justify-center rounded-full text-territory-ink hover:bg-territory-raised focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-territory-brand"
               >
                 <ArrowLeft className="h-5 w-5" aria-hidden="true" />
               </button>
@@ -135,14 +135,14 @@ export function AccountSettingsShell({
             <Link
               to="/"
               aria-label="Achegue-se — início"
-              className="font-heading text-[1.35rem] font-bold tracking-[-0.06em] text-territory-brand"
+              className="flex min-h-11 items-center font-heading text-[1.35rem] font-bold tracking-[-0.06em] text-territory-brand"
             >
               achegue-se<span className="text-territory-sun">.</span>
             </Link>
           </div>
 
           <main id="main-content" tabIndex={-1} className="focus:outline-none">
-            <div className="mx-auto w-full max-w-[1040px] px-4 pb-24 pt-5 sm:px-6 sm:pb-12 sm:pt-6 xl:px-8">
+            <div className="mx-auto w-full max-w-[1040px] px-4 pb-[calc(env(safe-area-inset-bottom)+6rem)] pt-5 sm:px-6 sm:pb-12 sm:pt-6 xl:px-8">
               <div className="mb-5 sm:mb-6">
                 <p className="text-[0.72rem] font-semibold text-territory-brand">{eyebrow}</p>
                 <h1 className="mt-1 font-heading text-[1.65rem] font-bold leading-tight tracking-[-0.035em] text-territory-ink sm:text-3xl">
