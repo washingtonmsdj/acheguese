@@ -61,6 +61,7 @@ describe("root community-first MVP entry", () => {
 
   it("defers the low-priority community preview module and request behind the entry map", () => {
     const source = read("src/app/pages/TerritoryEntryPage.tsx");
+    const readiness = read("src/shared/utils/publicRootReadiness.ts");
     const asset = path.join(ROOT, "src/assets/complexo-cultura.jpg");
 
     expect(source).not.toContain(
@@ -71,7 +72,13 @@ describe("root community-first MVP entry", () => {
     expect(source).toContain("imageModulePromise ??=");
     expect(source).toContain('window.matchMedia("(min-width: 768px)")');
     expect(source).toContain("scheduleAfterPublicRootMap");
-    expect(source).toContain("maxWaitMs: 3000");
+    expect(readiness).toContain("PUBLIC_ROOT_MAP_TERMINAL_TIMEOUT_MS = 6000");
+    expect(source).toContain("PUBLIC_ROOT_MAP_TERMINAL_TIMEOUT_MS");
+    expect(source).toContain("COMMUNITY_IMAGE_MAP_SETTLE_GRACE_MS = 500");
+    expect(source).toContain(
+      "PUBLIC_ROOT_MAP_TERMINAL_TIMEOUT_MS +\n            COMMUNITY_IMAGE_MAP_SETTLE_GRACE_MS",
+    );
+    expect(source).not.toContain("maxWaitMs: 3000");
     expect(source).toContain("idleTimeoutMs: 1800");
     expect(source).toContain("idleFallbackDelayMs: 600");
     expect(source).not.toContain("requestIdleCallback");
