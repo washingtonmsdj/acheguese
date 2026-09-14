@@ -23,8 +23,7 @@ const STATIC_MAPLIBRE_CSS_IMPORT = /import\s+["']maplibre-gl\/dist\/maplibre-gl\
 const ALLOWED_STATIC_RUNTIME_OWNERS = new Set([
   "src/core/maps/components/v3/MapLibreAdapterRuntime.tsx",
   "src/core/maps/config/maplibreWorkerRuntime.ts",
-  // Mobilidade continua launch-paused; estes dois owners serão migrados antes da reabertura pública.
-  "src/core/mobility/components/RideTrackingMap.tsx",
+  // Último consumidor launch-paused ainda pendente de migração para o loader canônico.
   "src/modules/mobility/pages/BuscandoMotoristaPage.tsx",
 ]);
 
@@ -37,6 +36,7 @@ const MIGRATED_CONSUMERS = [
   "src/shared/components/standalone/StandaloneMap.tsx",
   "src/core/guide/tourist-points/components/TouristPointsMap.tsx",
   "src/core/community-lost-found/components/LostFoundMiniMap.tsx",
+  "src/core/mobility/components/RideTrackingMap.tsx",
 ] as const;
 
 describe("MapLibre production security runtime", () => {
@@ -58,8 +58,12 @@ describe("MapLibre production security runtime", () => {
     expect(main).not.toContain("setWorkerUrl");
     expect(loader).toContain('import("maplibre-gl")');
     expect(loader).toContain('import("../config/maplibreWorkerRuntime")');
-    expect(workerRuntime).toContain('import { setWorkerUrl } from "maplibre-gl"');
+    expect(loader).toContain("ensureMapLibreWorkerConfigured(runtime.setWorkerUrl)");
+    expect(loader).toContain("prewarmMapLibreWorkers");
+    expect(loader).toContain("runtime.prewarm()");
+    expect(workerRuntime).toContain("ensureMapLibreWorkerConfigured");
     expect(workerRuntime).toContain("setWorkerUrl(maplibreWorkerUrl)");
+    expect(workerRuntime).not.toContain('from "maplibre-gl"');
   });
 
   it("makes the public adapter path lazy while keeping the heavy implementation internal", () => {
@@ -80,14 +84,8 @@ describe("MapLibre production security runtime", () => {
       const source = readProjectFile(sourcePath);
       expect(source).not.toMatch(STATIC_MAPLIBRE_IMPORT);
       expect(source).not.toMatch(STATIC_MAPLIBRE_CSS_IMPORT);
+      expect(source).toContain("loadMapLibreRuntime");
     }
-
-    expect(readProjectFile("src/shared/components/maps/MiniMap.tsx")).toContain(
-      "loadMapLibreRuntime",
-    );
-    expect(readProjectFile("src/shared/components/LocationPickerSheet.tsx")).toContain(
-      "loadMapLibreRuntime",
-    );
   });
 
   it("forbids new static MapLibre owners outside the controlled allowlist", () => {
