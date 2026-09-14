@@ -8,6 +8,7 @@ import {
   NEIGHBORHOOD_COLORS,
 } from "@/core/maps/providers/MapProvider";
 import type { ResolvedTerritory } from "@/core/routing/hooks/useResolveTerritoryFromUrl";
+import { TerritoryEntryMapSkeleton } from "./TerritoryEntryMapSkeleton";
 
 const SALVADOR_VIEWPORT = {
   center: { latitude: -12.95, longitude: -38.48 },
@@ -20,41 +21,6 @@ export interface TerritoryEntryMapRuntimeProps {
   label?: string;
   isLoading: boolean;
   className?: string;
-}
-
-function RuntimeMapLoadingSurface({ label }: { label: string }) {
-  return (
-    <div
-      className="pointer-events-none absolute inset-0 z-10 overflow-hidden bg-territory-raised transition-opacity duration-300 motion-reduce:transition-none"
-      aria-hidden="true"
-    >
-      <div
-        className="absolute inset-0 bg-[linear-gradient(90deg,hsl(var(--territory-border)/0.2)_1px,transparent_1px),linear-gradient(hsl(var(--territory-border)/0.2)_1px,transparent_1px),radial-gradient(circle_at_62%_36%,hsl(var(--territory-brand)/0.14),transparent_30%),linear-gradient(145deg,hsl(var(--territory-raised)),hsl(var(--territory-surface)))]"
-        style={{
-          backgroundSize: "72px 72px, 72px 72px, 100% 100%, 100% 100%",
-        }}
-      />
-      <div className="absolute left-[14%] top-[18%] h-12 w-28 animate-pulse rounded-2xl bg-territory-surface/50 motion-reduce:animate-none" />
-      <div className="absolute right-[12%] top-[28%] h-16 w-36 animate-pulse rounded-2xl bg-territory-surface/40 [animation-delay:120ms] motion-reduce:animate-none" />
-      <div className="absolute bottom-[22%] left-[34%] h-14 w-32 animate-pulse rounded-2xl bg-territory-surface/50 [animation-delay:240ms] motion-reduce:animate-none" />
-      <div className="absolute inset-x-4 bottom-4 rounded-2xl border border-territory-border bg-territory-surface/95 px-4 py-3 shadow-territory-highlight backdrop-blur-sm">
-        <div className="flex items-center gap-3">
-          <span className="relative grid h-9 w-9 shrink-0 place-items-center rounded-full bg-territory-brand/10">
-            <span className="h-2.5 w-2.5 rounded-full bg-territory-brand" />
-            <span className="absolute h-7 w-7 animate-ping rounded-full border border-territory-brand/30 motion-reduce:animate-none" />
-          </span>
-          <span className="min-w-0">
-            <strong className="block truncate text-sm font-semibold text-territory-ink">
-              {label}
-            </strong>
-            <small className="mt-0.5 block text-xs text-territory-muted-strong">
-              Salvador · BA · Carregando mapa e limite territorial oficial
-            </small>
-          </span>
-        </div>
-      </div>
-    </div>
-  );
 }
 
 export default function TerritoryEntryMapRuntime({
@@ -150,7 +116,7 @@ export default function TerritoryEntryMapRuntime({
 
   return (
     <section
-      className={`territory-entry-map relative overflow-hidden bg-territory-raised ${className}`}
+      className={`territory-entry-map relative h-full min-h-full w-full overflow-hidden bg-territory-raised ${className}`}
       aria-labelledby="territory-entry-map-title"
       aria-busy={!mapPresented}
     >
@@ -172,23 +138,23 @@ export default function TerritoryEntryMapRuntime({
           setMapReady(true);
           setMapUnavailable(false);
         }}
-        className={`pointer-events-none h-full w-full transition-opacity duration-300 motion-reduce:transition-none ${
+        className={`pointer-events-none h-full min-h-full w-full transition-opacity duration-300 motion-reduce:transition-none ${
           mapPresented ? "opacity-100" : "opacity-0"
         }`}
       />
 
       {!mapPresented && !mapUnavailable ? (
-        <RuntimeMapLoadingSurface label={territoryLabel} />
+        <TerritoryEntryMapSkeleton label={territoryLabel} />
       ) : null}
 
       {mapUnavailable ? (
         <div
           role="status"
-          className="pointer-events-none absolute inset-0 z-20 grid place-items-center bg-[hsl(var(--territory-canvas)/0.72)] p-6 text-center backdrop-blur-[2px]"
+          className="pointer-events-none absolute inset-0 z-20 grid place-items-center bg-[hsl(var(--territory-canvas)/0.72)] p-4 text-center backdrop-blur-[2px] sm:p-6"
         >
-          <div className="max-w-xs rounded-2xl border border-territory-border bg-territory-surface/95 px-5 py-4 shadow-territory-highlight">
-            <Map className="mx-auto h-6 w-6 text-territory-brand" aria-hidden="true" />
-            <p className="mt-2 text-sm font-semibold text-territory-ink">
+          <div className="w-full max-w-xs rounded-2xl border border-territory-border bg-territory-surface/95 px-4 py-4 shadow-territory-highlight sm:px-5 lg:max-w-sm lg:rounded-3xl lg:px-6 lg:py-5">
+            <Map className="mx-auto h-6 w-6 text-territory-brand lg:h-7 lg:w-7" aria-hidden="true" />
+            <p className="mt-2 text-sm font-semibold text-territory-ink lg:text-base">
               O mapa não carregou agora.
             </p>
             <p className="mt-1 text-sm leading-5 text-territory-muted-strong">
@@ -199,7 +165,7 @@ export default function TerritoryEntryMapRuntime({
       ) : boundaryUnavailable ? (
         <div
           role="status"
-          className="pointer-events-none absolute inset-x-4 bottom-4 z-10 rounded-2xl border border-territory-border bg-territory-surface/95 px-4 py-3 text-sm shadow-territory-highlight backdrop-blur-[2px]"
+          className="pointer-events-none absolute inset-x-3 bottom-3 z-10 rounded-2xl border border-territory-border bg-territory-surface/95 px-4 py-3 text-sm shadow-territory-highlight backdrop-blur-[2px] sm:inset-x-4 sm:bottom-4 lg:inset-x-auto lg:bottom-6 lg:left-6 lg:max-w-md lg:rounded-3xl lg:px-5 lg:py-4"
         >
           <p className="font-semibold text-territory-ink">
             Limite territorial oficial indisponível agora.
