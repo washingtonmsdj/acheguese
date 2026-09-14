@@ -82,6 +82,10 @@ export function AppLayoutSidebar() {
     pathSegments[4] === "sabores-da-ana";
   const isGastronomyCheckoutConcept =
     isGastronomyMockRestaurantRoute && pathSegments[5] === "checkout";
+  const isGastronomyOrderTrackingRoute =
+    pathSegments[0] === MODULE_SLUGS.gastronomy &&
+    pathSegments[1] === "pedidos" &&
+    pathSegments.length === 3;
   const usesTerritoryVivoShell =
     isBarePublicTerritorialRoute ||
     isTerritoryVivoExploreRoute ||
@@ -100,7 +104,8 @@ export function AppLayoutSidebar() {
     isShortCommunityRoute ||
     isPublicBusinessLandingRoute ||
     isGastronomyConceptPreview ||
-    isGastronomyMockRestaurantRoute;
+    isGastronomyMockRestaurantRoute ||
+    isGastronomyOrderTrackingRoute;
 
   const isInternalGroupRoute =
     pathSegments[0] === "grupos" && pathSegments.length >= 2;
@@ -120,7 +125,8 @@ export function AppLayoutSidebar() {
     isShortCommunityRoute ||
     isPublicBusinessLandingRoute ||
     isGastronomyConceptPreview ||
-    isGastronomyMockRestaurantRoute;
+    isGastronomyMockRestaurantRoute ||
+    isGastronomyOrderTrackingRoute;
   const hideMobileBottomNav =
     pathname === "/" ||
     isInternalGroupRoute ||
@@ -130,6 +136,7 @@ export function AppLayoutSidebar() {
     isCommunityAliasPublicRoute ||
     isGastronomyConceptPreview ||
     isGastronomyMockRestaurantRoute ||
+    isGastronomyOrderTrackingRoute ||
     isGastronomyCheckoutConcept;
 
   const isMessagingRoute =

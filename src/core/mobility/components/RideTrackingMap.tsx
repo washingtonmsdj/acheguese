@@ -10,7 +10,7 @@ import { Card, CardContent } from '@/shared/components/ui/card';
 import { Badge } from '@/shared/components/ui/badge';
 import { Button } from '@/shared/components/ui/button';
 import { MapPin, Navigation, Clock, Loader2, RefreshCw } from 'lucide-react';
-import { useDriverLocation } from '@/core/mobility/hooks/useDriverLocation';
+import { useDriverLocation, type DriverLocationData } from '@/core/mobility/hooks/useDriverLocation';
 import { routingService } from '@/core/routing';
 import { cn } from '@/shared/utils/cn';
 import { DEFAULT_TILE_STYLE } from '@/core/maps/providers/MapProvider';
@@ -23,6 +23,12 @@ interface RideTrackingMapProps {
   originLon?: number;
   className?: string;
   showETA?: boolean;
+  compact?: boolean;
+  compactFill?: boolean;
+  mode?: 'live' | 'snapshot';
+  locationOverride?: DriverLocationData;
+  compactStatusLabel?: string;
+  showSnapshotOverlay?: boolean;
 }
 
 type EtaSummary = {
@@ -39,6 +45,12 @@ export const RideTrackingMap = memo(function RideTrackingMap({
   originLon,
   className,
   showETA = true,
+  compact = false,
+  compactFill = false,
+  mode = 'live',
+  locationOverride,
+  compactStatusLabel,
+  showSnapshotOverlay = true,
 }: RideTrackingMapProps) {
   const containerRef    = useRef<HTMLDivElement>(null);
   const mapRef          = useRef<maplibregl.Map | null>(null);
@@ -49,7 +61,10 @@ export const RideTrackingMap = memo(function RideTrackingMap({
     driverProfileId,
     rideId,
     enabled: true,
+    subscribe: mode === 'live',
   });
+  const displayLocation = locationOverride ?? location;
+  const displayIsConnected = Boolean(locationOverride) || isConnected;
 
   // ── Carregar rota real ─────────────────────────────────────────
   useEffect(() => {
@@ -133,6 +148,28 @@ export const RideTrackingMap = memo(function RideTrackingMap({
     });
 
     map.addControl(new maplibregl.AttributionControl({ compact: true }), 'bottom-left');
+    if (compact) {
+      map.addControl(new maplibregl.FullscreenControl(), 'top-right');
+    }
+
+    const updateDriverPath = () => {
+      const source = map.getSource('driver-path');
+      const activeLocation = locationOverride ?? location;
+      if (!source || !activeLocation) return;
+
+      const coordinates = [
+        originLat != null && originLon != null ? [originLon, originLat] : null,
+        [activeLocation.longitude, activeLocation.latitude],
+        destinationLat != null && destinationLon != null ? [destinationLon, destinationLat] : null,
+      ].filter((coordinate): coordinate is [number, number] => coordinate !== null);
+
+      if (coordinates.length < 2) return;
+      (source as maplibregl.GeoJSONSource).setData({
+        type: 'Feature',
+        geometry: { type: 'LineString', coordinates },
+        properties: {},
+      });
+    };
 
     map.on('load', () => {
       // Source de trajeto do motorista
@@ -159,6 +196,8 @@ export const RideTrackingMap = memo(function RideTrackingMap({
           { padding: 60 }
         );
       }
+
+      updateDriverPath();
     });
 
     mapRef.current = map;
@@ -168,9 +207,9 @@ export const RideTrackingMap = memo(function RideTrackingMap({
   // ── Atualizar posição do motorista ─────────────────────────────
   useEffect(() => {
     const map = mapRef.current;
-    if (!map || !location) return;
+    if (!map || !displayLocation) return;
 
-    const lngLat: [number, number] = [location.longitude, location.latitude];
+    const lngLat: [number, number] = [displayLocation.longitude, displayLocation.latitude];
 
     if (driverMarkerRef.current) {
       driverMarkerRef.current.setLngLat(lngLat);
@@ -182,23 +221,52 @@ export const RideTrackingMap = memo(function RideTrackingMap({
       svg.setAttribute('width', '16');
       svg.setAttribute('height', '16');
       svg.setAttribute('viewBox', '0 0 24 24');
-      svg.setAttribute('fill', 'white');
+      svg.setAttribute('fill', 'none');
+      svg.setAttribute('stroke', 'white');
+      svg.setAttribute('stroke-width', '2');
+      svg.setAttribute('stroke-linecap', 'round');
+      svg.setAttribute('stroke-linejoin', 'round');
+
+      for (const [cx, cy, r] of [[5.5, 17.5, 3.5], [18.5, 17.5, 3.5], [15, 5, 1]]) {
+        const circle = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
+        circle.setAttribute('cx', String(cx));
+        circle.setAttribute('cy', String(cy));
+        circle.setAttribute('r', String(r));
+        svg.appendChild(circle);
+      }
 
       const path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
-      path.setAttribute('d', 'M5 17H3v-5l2-5h14l2 5v5h-2m0 0a2 2 0 0 1-4 0m4 0H7m0 0a2 2 0 0 1-4 0');
+      path.setAttribute('d', 'M12 17.5V14l-3-3 4-3 2 3h2');
 
       svg.appendChild(path);
       el.appendChild(svg);
       driverMarkerRef.current = new maplibregl.Marker({ element: el }).setLngLat(lngLat).addTo(map);
     }
 
+    const driverPathSource = map.getSource('driver-path');
+    if (driverPathSource) {
+      const coordinates = [
+        originLat != null && originLon != null ? [originLon, originLat] : null,
+        [displayLocation.longitude, displayLocation.latitude],
+        destinationLat != null && destinationLon != null ? [destinationLon, destinationLat] : null,
+      ].filter((coordinate): coordinate is [number, number] => coordinate !== null);
+
+      if (coordinates.length >= 2) {
+        (driverPathSource as maplibregl.GeoJSONSource).setData({
+          type: 'Feature',
+          geometry: { type: 'LineString', coordinates },
+          properties: {},
+        });
+      }
+    }
+
     map.easeTo({ center: lngLat, duration: 500 });
 
     if (destinationLat && destinationLon) calculateETA(destinationLat, destinationLon);
-  }, [location, destinationLat, destinationLon, calculateETA]);
+  }, [calculateETA, destinationLat, destinationLon, displayLocation, originLat, originLon]);
 
   // ── Estados de loading/error/sem localização ───────────────────
-  if (loading && !location) {
+  if (loading && !displayLocation) {
     return (
       <Card className={cn('border', className)}>
         <CardContent className="flex items-center justify-center py-12">
@@ -227,7 +295,7 @@ export const RideTrackingMap = memo(function RideTrackingMap({
     );
   }
 
-  if (!location) {
+  if (!displayLocation) {
     return (
       <Card className={cn('border', className)}>
         <CardContent className="flex items-center justify-center py-12">
@@ -244,19 +312,23 @@ export const RideTrackingMap = memo(function RideTrackingMap({
   const etaObj: EtaSummary | null = typeof eta === 'object' && eta !== null ? (eta as EtaSummary) : null;
 
   return (
-    <Card className={cn('border border-teal-500/30', className)}>
-      <CardContent className="p-0">
+    <Card className={cn('border border-teal-500/30', compact && 'relative overflow-hidden', compactFill && 'flex min-h-0 flex-1 flex-col', className)}>
+      <CardContent className={cn('p-0', compact && 'relative', compactFill && 'flex min-h-0 flex-1 flex-col')}>
         {/* Header */}
-        <div className="p-4 border-b border-white/10 bg-gradient-to-r from-teal-500/10 to-cyan-500/5">
+        {!compact ? <div className="p-4 border-b border-white/10 bg-gradient-to-r from-teal-500/10 to-cyan-500/5">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2">
               <div className="relative">
                 <Navigation className="h-5 w-5 text-teal-400" />
-                {isConnected && <span className="absolute -top-1 -right-1 w-2 h-2 bg-green-400 rounded-full animate-pulse" />}
+                {isConnected && mode === 'live' && <span className="absolute -top-1 -right-1 w-2 h-2 bg-green-400 rounded-full animate-pulse" />}
               </div>
               <div>
-                <h3 className="text-sm font-semibold text-white">Rastreamento em Tempo Real</h3>
-                <p className="text-xs text-gray-400">{isConnected ? 'Conectado' : 'Atualizando...'}</p>
+                <h3 className="text-sm font-semibold text-white">
+                  {mode === 'snapshot' ? 'Última posição identificada' : 'Rastreamento em Tempo Real'}
+                </h3>
+                <p className="text-xs text-gray-400">
+                  {mode === 'snapshot' ? 'Atualização pausada' : isConnected ? 'Conectado' : 'Atualizando...'}
+                </p>
               </div>
             </div>
             {showETA && etaObj && (
@@ -269,30 +341,58 @@ export const RideTrackingMap = memo(function RideTrackingMap({
               </div>
             )}
           </div>
-        </div>
+        </div> : null}
+
+        {compact ? (
+          <div className="pointer-events-none absolute inset-x-0 top-0 z-10 flex items-start justify-between gap-2 p-3">
+            <Badge className="border-0 bg-white/95 text-territory-ink shadow-sm">
+              {compactStatusLabel ?? (mode === 'snapshot' ? 'Última posição' : displayIsConnected ? 'Atualizado agora' : 'Aguardando atualização')}
+            </Badge>
+            {showETA && etaObj ? (
+              <Badge className="border-0 bg-white/95 text-territory-ink shadow-sm">
+                <Clock className="mr-1 h-3.5 w-3.5" aria-hidden="true" />
+                {etaObj.eta_minutes ?? 0} min
+              </Badge>
+            ) : null}
+          </div>
+        ) : null}
 
         {/* Mapa */}
-        <div ref={containerRef} className="w-full h-64" />
+        <div ref={containerRef} className={cn('w-full', compact ? (compactFill ? 'min-h-[18rem] flex-1' : 'h-56 sm:h-60') : 'h-64')} />
+
+        {compact && mode === 'snapshot' && showSnapshotOverlay && displayLocation ? (
+          <div className="pointer-events-none absolute inset-0 flex items-center justify-center">
+            <div className="relative flex h-20 w-20 items-center justify-center rounded-full border border-dashed border-territory-brand/60 bg-territory-info/5">
+              <Badge className="border border-territory-brand/20 bg-white/95 text-[0.625rem] font-semibold text-territory-ink shadow-sm">
+                Última posição
+              </Badge>
+            </div>
+          </div>
+        ) : null}
 
         {/* Badges de telemetria */}
-        <div className="absolute bottom-12 left-4 flex gap-2 pointer-events-none">
-          {location.speed != null && location.speed > 0 && (
+        {!compact ? <div className="absolute bottom-12 left-4 flex gap-2 pointer-events-none">
+          {displayLocation.speed != null && displayLocation.speed > 0 && (
             <Badge variant="outline" className="bg-black/80 text-white border-white/20">
-              <Navigation className="h-3 w-3 mr-1" />{Math.round(location.speed)} km/h
+              <Navigation className="h-3 w-3 mr-1" />{Math.round(displayLocation.speed)} km/h
             </Badge>
           )}
-          {location.accuracy != null && (
+          {displayLocation.accuracy != null && (
             <Badge variant="outline" className="bg-black/80 text-white border-white/20">
-              ±{Math.round(location.accuracy)}m
+              ±{Math.round(displayLocation.accuracy)}m
             </Badge>
           )}
-        </div>
+        </div> : null}
 
         {/* Footer */}
-        <div className="p-3 bg-white/5 border-t border-white/10 flex items-center justify-between text-xs">
-          <span className="text-gray-400 font-mono">{location.latitude.toFixed(6)}, {location.longitude.toFixed(6)}</span>
-          <span className="text-gray-500">{new Date(location.timestamp).toLocaleTimeString('pt-BR')}</span>
-        </div>
+        {!compact ? <div className="p-3 bg-white/5 border-t border-white/10 flex items-center justify-between text-xs">
+          <span className="text-gray-400 font-mono">
+            {mode === 'snapshot'
+              ? 'Última posição identificada'
+              : `${displayLocation.latitude.toFixed(6)}, ${displayLocation.longitude.toFixed(6)}`}
+          </span>
+          <span className="text-gray-500">{new Date(displayLocation.timestamp).toLocaleTimeString('pt-BR')}</span>
+        </div> : null}
       </CardContent>
     </Card>
   );

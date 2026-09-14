@@ -5,12 +5,26 @@ import LaunchPausedPage from "@/app/pages/LaunchPausedPage";
 import * as P from "../centralLazyImports";
 
 export function CentralRoutes() {
-  const conceptBusinessPreview =
+  const conceptMock =
     import.meta.env.DEV &&
     typeof window !== "undefined" &&
     new URLSearchParams(window.location.search).get("concept-mock") === "1";
 
-  if (conceptBusinessPreview) {
+  if (
+    conceptMock &&
+    typeof window !== "undefined" &&
+    window.location.pathname.startsWith("/central/motoboy")
+  ) {
+    return (
+      <Routes>
+        <Route path="motoboy/cadastro/*" element={<P.CentralMotoboyCadastroConceptMockPage />} />
+        <Route path="motoboy/ganhos" element={<P.CentralMotoboyGanhosConceptMockPage />} />
+        <Route path="motoboy/*" element={<P.CentralMotoboyConceptMockPage />} />
+      </Routes>
+    );
+  }
+
+  if (conceptMock) {
     return (
       <Routes>
         <Route index element={<P.BusinessManagementConceptPreviewPage />} />

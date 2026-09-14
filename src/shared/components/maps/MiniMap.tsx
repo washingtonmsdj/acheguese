@@ -19,6 +19,10 @@ export interface MiniMapProps {
   height?: string;
   markerColor?: string;
   markerIcon?: string;
+  routeCoordinates?: Array<[number, number]>;
+  routeColor?: string;
+  routeStartColor?: string;
+  routeEndColor?: string;
   className?: string;
   showControls?: boolean;
   interactive?: boolean;
@@ -40,6 +44,10 @@ export function MiniMap({
   height = '280px',
   markerColor = '#10b981',
   markerIcon = '',
+  routeCoordinates,
+  routeColor = '#0f766e',
+  routeStartColor = '#fbbf24',
+  routeEndColor = '#064e3b',
   className = '',
   showControls = true,
   interactive = true,
@@ -160,8 +168,64 @@ export function MiniMap({
     marker.addTo(map);
     markerRef.current = marker;
 
+    const routeMarkers: maplibregl.Marker[] = [];
+    const addRouteMarkers = () => {
+      if (!routeCoordinates || routeCoordinates.length < 2) return;
+
+      const routeData: GeoJSON.Feature<GeoJSON.LineString> = {
+        type: 'Feature',
+        properties: {},
+        geometry: {
+          type: 'LineString',
+          coordinates: routeCoordinates,
+        },
+      };
+
+      map.addSource('mini-map-route', { type: 'geojson', data: routeData });
+      map.addLayer({
+        id: 'mini-map-route-casing',
+        type: 'line',
+        source: 'mini-map-route',
+        paint: { 'line-color': '#ffffff', 'line-width': 7, 'line-opacity': 0.9 },
+      });
+      map.addLayer({
+        id: 'mini-map-route-line',
+        type: 'line',
+        source: 'mini-map-route',
+        paint: { 'line-color': routeColor, 'line-width': 4, 'line-opacity': 0.95 },
+      });
+
+      const createEndpoint = (color: string) => {
+        const endpoint = document.createElement('div');
+        endpoint.style.cssText = [
+          'width: 24px',
+          'height: 24px',
+          `background: ${color}`,
+          'border: 3px solid white',
+          'border-radius: 999px',
+          'box-shadow: 0 2px 8px rgba(15, 23, 42, 0.25)',
+        ].join(';');
+        return endpoint;
+      };
+
+      const start = new maplibregl.Marker({ element: createEndpoint(routeStartColor) })
+        .setLngLat(routeCoordinates[0])
+        .addTo(map);
+      const end = new maplibregl.Marker({ element: createEndpoint(routeEndColor) })
+        .setLngLat(routeCoordinates[routeCoordinates.length - 1])
+        .addTo(map);
+      routeMarkers.push(start, end);
+
+      const bounds = new maplibregl.LngLatBounds(routeCoordinates[0], routeCoordinates[0]);
+      routeCoordinates.slice(1).forEach((coordinate) => bounds.extend(coordinate));
+      map.fitBounds(bounds, { padding: 32, maxZoom: 15 });
+    };
+
+    map.once('load', addRouteMarkers);
+
     // Cleanup
     return () => {
+      routeMarkers.forEach((routeMarker) => routeMarker.remove());
       if (markerRef.current) {
         markerRef.current.remove();
       }
@@ -171,7 +235,7 @@ export function MiniMap({
       mapRef.current = null;
       markerRef.current = null;
     };
-  }, [latitude, longitude, title, description, zoom, markerColor, markerIcon, showControls, interactive]);
+  }, [latitude, longitude, title, description, zoom, markerColor, markerIcon, routeCoordinates, routeColor, routeStartColor, routeEndColor, showControls, interactive]);
 
   return (
     <div 

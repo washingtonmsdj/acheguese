@@ -98,6 +98,15 @@ export const CentralProfissionalPage = lazy(() =>
 );
 export const CentralMotoristaPage = createLaunchPausedRoute("Mobilidade");
 export const CentralMotoboyPage = createLaunchPausedRoute("Mobilidade");
+export const CentralMotoboyConceptMockPage = lazy(() =>
+  import("@/modules/central/pages/CentralMotoboyConceptMockPage"),
+);
+export const CentralMotoboyCadastroConceptMockPage = lazy(() =>
+  import("@/modules/central/pages/CentralMotoboyCadastroConceptMockPage"),
+);
+export const CentralMotoboyGanhosConceptMockPage = lazy(() =>
+  import("@/modules/central/pages/CentralMotoboyGanhosConceptMockPage"),
+);
 export const CentralComunicacaoPage = createLaunchPausedRoute("Comunicacao");
 export const CentralMotoristaCadastroPage = createLaunchPausedRoute("Mobilidade");
 export const CentralMotoristaDisponibilidadePage = createLaunchPausedRoute("Mobilidade");

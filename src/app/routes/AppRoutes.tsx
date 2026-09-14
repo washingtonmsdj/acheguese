@@ -26,6 +26,9 @@ const LoginPage = lazy(() => import("@/app/pages/LoginPage"));
 const CadastroPage = lazy(
   () => import("@/app/features/onboarding/pages/CadastroPage"),
 );
+const CommunityIndicationPage = lazy(
+  () => import("@/app/pages/CommunityIndicationPage"),
+);
 const CadastroConfirmacaoPage = lazy(
   () => import("@/app/features/onboarding/pages/CadastroConfirmacaoPage"),
 );
@@ -124,6 +127,10 @@ export function AppRoutes() {
       <Route path="/splash" element={<SplashPage />} />
       <Route path="/login" element={<LoginPage />} />
       <Route path="/cadastro" element={<CadastroPage />} />
+      <Route
+        path="/indicar-comunidade"
+        element={<CommunityIndicationPage />}
+      />
       <Route
         path="/cadastro/confirmacao"
         element={<CadastroConfirmacaoPage />}

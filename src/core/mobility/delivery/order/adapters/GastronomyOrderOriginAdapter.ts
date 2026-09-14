@@ -28,6 +28,7 @@ interface GastronomyOrderBusiness {
 interface CartItem {
   item_id: string;
   name: string;
+  image_url?: string;
   base_price: number;
   quantity: number;
   variant?: {
@@ -144,6 +145,7 @@ export class GastronomyOrderOriginAdapter {
       notes: item.special_instructions,
       item_snapshot: {
         base_unit_price: item.base_price,
+        image_url: item.image_url ?? null,
         variant: item.variant
           ? {
               variant_id: item.variant.variant_id,

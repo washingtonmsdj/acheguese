@@ -11,7 +11,7 @@ import { useState, useEffect, useCallback } from "react";
 import { routingService } from '@/core/routing';
 import { trackingService } from '@/core/tracking';
 import type { TrackingPosition } from '@/core/tracking';
-interface DriverLocationData {
+export interface DriverLocationData {
   latitude: number;
   longitude: number;
   heading: number;
@@ -31,11 +31,17 @@ interface DriverEtaData {
 export function useDriverLocation(
   params:
     | string
-    | { driverProfileId: string; rideId?: string; enabled?: boolean },
+    | {
+        driverProfileId: string;
+        rideId?: string;
+        enabled?: boolean;
+        subscribe?: boolean;
+      },
 ) {
   const driverProfileId =
     typeof params === "string" ? params : params.driverProfileId;
   const enabled = typeof params === "string" ? true : (params.enabled ?? true);
+  const subscribe = typeof params === "string" ? true : (params.subscribe ?? true);
 
   const [location, setLocation] = useState<DriverLocationData | null>(null);
   const [loading, setLoading] = useState(true);
@@ -65,6 +71,8 @@ export function useDriverLocation(
       }
       setLoading(false);
 
+      if (!subscribe) return;
+
       // Subscrever a atualizações via TrackingService
       subscription = trackingService.subscribeToPosition(
         driverProfileId,
@@ -91,7 +99,7 @@ export function useDriverLocation(
         subscription.unsubscribe();
       }
     };
-  }, [driverProfileId, enabled]);
+  }, [driverProfileId, enabled, subscribe]);
 
   const calculateETA = useCallback(
     async (destLat: number, destLng: number) => {

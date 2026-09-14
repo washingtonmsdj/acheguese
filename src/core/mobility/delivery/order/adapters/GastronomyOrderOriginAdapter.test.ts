@@ -26,6 +26,7 @@ const baseCart = {
     {
       item_id: "item-1",
       name: "Prato feito",
+      image_url: "https://cdn.example.test/prato-feito.jpg",
       base_price: 25,
       quantity: 1,
       addons: [],
@@ -48,6 +49,9 @@ describe("GastronomyOrderOriginAdapter", () => {
     expect(order.source_context?.source_type).toBe("gastronomy");
     expect(order.source_context?.source_metadata?.fulfillment_mode).toBe("takeout");
     expect(order.financial.delivery_fee).toBe(0);
+    expect(order.items?.[0]?.item_snapshot?.image_url).toBe(
+      "https://cdn.example.test/prato-feito.jpg",
+    );
     expect(order.initial_financial_status).toBe(FINANCIAL_STATUS.PENDING_PAYMENT);
   });
 

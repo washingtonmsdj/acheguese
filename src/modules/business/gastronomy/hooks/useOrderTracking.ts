@@ -35,7 +35,11 @@ function isActiveTrackingStatus(status: string | null | undefined): boolean {
   );
 }
 
-export function useOrderTracking(orderId: string): UseOrderTrackingResult {
+export function useOrderTracking(
+  orderId: string,
+  options: { enabled?: boolean } = {},
+): UseOrderTrackingResult {
+  const enabled = options.enabled ?? true;
   const queryClient = useQueryClient();
   const queryKey = useMemo(() => ['order-tracking', orderId] as const, [orderId]);
   const invalidateTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -48,7 +52,7 @@ export function useOrderTracking(orderId: string): UseOrderTrackingResult {
   } = useQuery({
     queryKey,
     queryFn: () => OrderDeliveryLinkService.getRideRequestByOrderId(orderId),
-    enabled: !!orderId,
+    enabled: !!orderId && enabled,
     staleTime: 10000,
     refetchInterval: (query) => {
       const data = query.state.data;
@@ -59,7 +63,7 @@ export function useOrderTracking(orderId: string): UseOrderTrackingResult {
   });
 
   useEffect(() => {
-    if (!orderId) return;
+    if (!orderId || !enabled) return;
 
     const channel = GastronomyOrderRealtimeService.subscribeOrderTracking(orderId, (payload) => {
       const newSourceId =
@@ -99,7 +103,7 @@ export function useOrderTracking(orderId: string): UseOrderTrackingResult {
       }
       void GastronomyOrderRealtimeService.removeChannel(channel);
     };
-  }, [orderId, queryClient, queryKey]);
+  }, [enabled, orderId, queryClient, queryKey]);
 
   const hasTracking = !!rideRequest;
   const isActive = hasTracking && isActiveTrackingStatus(rideRequest.status);
