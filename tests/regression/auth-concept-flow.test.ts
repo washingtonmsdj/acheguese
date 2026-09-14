@@ -139,6 +139,9 @@ describe("account and access concept contract", () => {
     expect(login).toContain("navigate(AUTH_PATHS.firstAccess, { replace: true })");
     expect(login).not.toContain('isEmailConfirmed && redirectTo === "/"');
 
+    expect(firstAccess).toContain("getSignupJourneyReturnTarget");
+    expect(firstAccess).toContain("completeFirstAccessJourney");
+    expect(firstAccess).not.toContain("pendingSignup");
     expect(firstAccess).toContain("Sua conversa está esperando");
     expect(firstAccess).toContain("Continuar para a conversa");
     expect(firstAccess).toContain("Completar meu perfil depois");
@@ -224,12 +227,14 @@ describe("account and access concept contract", () => {
     const flow = readProjectFile("src/core/auth/constants/authFlow.ts");
     const storage = readProjectFile("src/core/auth/utils/authFlowStorage.ts");
     const journey = readProjectFile("src/core/auth/utils/authJourney.ts");
-    const pendingSignup = readProjectFile("src/core/auth/utils/pendingSignup.ts");
     const authService = readProjectFile("src/core/auth/services/AuthService.ts");
     const rootRoutes = readProjectFile("src/app/routes/AppRoutes.tsx");
     const login = readProjectFile("src/app/pages/LoginPage.tsx");
     const confirmation = readProjectFile(
       "src/app/features/onboarding/pages/CadastroConfirmacaoPage.tsx",
+    );
+    const firstAccess = readProjectFile(
+      "src/app/features/onboarding/pages/CadastroPrimeiroAcessoPage.tsx",
     );
     const terms = readProjectFile(
       "src/app/features/onboarding/pages/AceiteTermosPage.tsx",
@@ -248,18 +253,24 @@ describe("account and access concept contract", () => {
     expect(storage).toContain("expiresAt");
     expect(storage).toContain("Compatibilidade transitória");
     expect(storage).toContain("formato legado foi removida");
-    expect(pendingSignup).toContain("resolveSafeInternalPath");
     expect(journey).toContain("AUTH_FLOW_STORAGE_KEYS.pendingReturn");
+    expect(journey).toContain("AUTH_FLOW_STORAGE_KEYS.pendingSignupEmail");
+    expect(journey).toContain("AUTH_FLOW_STORAGE_KEYS.pendingSignupRedirect");
     expect(journey).toContain("prepareEmailSignupConfirmation");
     expect(journey).toContain("getSignupConfirmationContext");
+    expect(journey).toContain("getSignupJourneyReturnTarget");
     expect(journey).toContain("completeFirstAccessJourney");
     expect(journey).not.toContain("pendingAuthReturn");
+    expect(
+      existsSync(resolve(repoRoot, "src/core/auth/utils/pendingSignup.ts")),
+    ).toBe(false);
     expect(authService).toContain("buildPublicAbsoluteUrl");
     expect(authService).not.toContain("window.location.origin");
     expect(rootRoutes).toContain("AUTH_PATHS.login");
     expect(rootRoutes).toContain("AUTH_PATHS.signupConfirmation");
     expect(login).not.toContain("pendingSignup");
     expect(confirmation).not.toContain("pendingSignup");
+    expect(firstAccess).not.toContain("pendingSignup");
     expect(terms).not.toContain("pendingAuthReturn");
     expect(terms).not.toContain("pendingSignup");
   });
