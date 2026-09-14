@@ -25,7 +25,7 @@ describe("territory entry map arrival", () => {
     expect(wrapper).not.toContain("IntersectionObserver");
     expect(wrapper).not.toContain("rootMargin");
     expect(wrapper).not.toContain("scheduleBrowserIdleWork");
-    expect(wrapper).toContain("isLoading={isLoading}");
+    expect(wrapper).not.toContain("isLoading");
   });
 
   it("discovers style before render and starts official boundary only after map readiness", () => {
@@ -66,20 +66,19 @@ describe("territory entry map arrival", () => {
     expect(runtime).not.toContain("fallback_boundary_rings");
   });
 
-  it("keeps the skeleton limited to pre-map states and uses compositor-only shimmer", () => {
-    expect(arrival).toContain(
-      'export type TerritoryEntryArrivalStage = "community" | "map";',
-    );
-    expect(arrival).not.toContain('boundary: "Finalizando limite oficial"');
-    expect(wrapper).toContain('stage={isLoading ? "community" : "map"}');
-    expect(runtime).toContain('stage={isLoading ? "community" : "map"}');
+  it("keeps a single pre-map skeleton state with compositor-only shimmer", () => {
+    expect(arrival).toContain('const ARRIVAL_LABEL = "Abrindo mapa";');
+    expect(arrival).toContain('data-entry-arrival-stage="map"');
+    expect(arrival).not.toContain("TerritoryEntryArrivalStage");
+    expect(arrival).not.toContain("Preparando comunidade");
+    expect(arrival).not.toContain("Finalizando limite oficial");
+    expect(wrapper).not.toContain("stage=");
+    expect(runtime).not.toContain("stage=");
 
     expect(arrival).toContain("data-entry-skeleton");
     expect(arrival).toContain("data-entry-skeleton-grid");
     expect(arrival).toContain("data-entry-skeleton-card");
     expect(arrival).toContain("data-entry-skeleton-shimmer");
-    expect(arrival).toContain("Preparando comunidade");
-    expect(arrival).toContain("Abrindo mapa");
     expect(arrival).toContain("duration-150");
     expect(arrival).toContain("motion-safe:animate-entry-shimmer");
     expect(arrival).toContain("will-change-transform");
