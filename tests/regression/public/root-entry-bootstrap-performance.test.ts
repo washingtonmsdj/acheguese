@@ -74,7 +74,7 @@ describe("anonymous root bootstrap performance", () => {
     expect(runtime).toContain('import("@/app/components/PublicRootOverlays")');
     expect(runtime).toContain("<RootRouteEntry />");
     expect(runtime).toContain("shouldUseLeanPublicRoot");
-    expect(runtime).toContain("scheduleBrowserIdleWork");
+    expect(runtime).toContain("scheduleAfterPublicRootMap");
     expect(runtime).not.toContain('from "react-router-dom"');
     expect(runtime).not.toContain("BrowserRouter");
 
@@ -108,15 +108,17 @@ describe("anonymous root bootstrap performance", () => {
     expect(runtime).toContain('body.classList.toggle("accessibility-high-contrast"');
   });
 
-  it("mounts provider-free public overlays after load and browser idle", () => {
+  it("mounts provider-free public overlays after load and first-map readiness", () => {
     const runtime = read("src/app/components/AppRuntime.tsx");
     const overlays = read("src/app/components/PublicRootOverlays.tsx");
 
     expect(runtime).toContain("shouldMountOverlays");
     expect(runtime).toContain('document.readyState === "complete"');
     expect(runtime).toContain('window.addEventListener("load", scheduleOverlays');
-    expect(runtime).toContain("timeoutMs: 2500");
-    expect(runtime).toContain("fallbackDelayMs: 1200");
+    expect(runtime).toContain("scheduleAfterPublicRootMap");
+    expect(runtime).toContain("maxWaitMs: 2600");
+    expect(runtime).toContain("idleTimeoutMs: 2500");
+    expect(runtime).toContain("idleFallbackDelayMs: 1200");
 
     expect(overlays).toContain("<BrowserRouter>");
     expect(overlays).toContain("<ConsentBanner />");
@@ -157,7 +159,7 @@ describe("anonymous root bootstrap performance", () => {
     expect(vite).not.toContain('return "vendor-runtime"');
   });
 
-  it("keeps AdSense off HTML parsing and schedules the network request after load + idle", () => {
+  it("keeps AdSense off HTML parsing and behind first-map readiness on root", () => {
     const html = read("index.html");
     const main = read("src/main.tsx");
 
@@ -166,7 +168,24 @@ describe("anonymous root bootstrap performance", () => {
     expect(main).toContain("data-acheguese-adsense");
     expect(main).toContain("pagead2.googlesyndication.com/pagead/js/adsbygoogle.js");
     expect(main).toContain("ads.async = true");
-    expect(main).toContain("deferLoad(() => {");
+    expect(main).toContain("scheduleAfterPublicRootMap(loadAds");
+    expect(main).toContain("maxWaitMs: 3200");
+  });
+
+  it("keeps Web Vitals measurement lightweight and attaches Sentry later", () => {
+    const main = read("src/main.tsx");
+    const vitals = read("src/shared/utils/webVitals.ts");
+    const reporter = read("src/shared/utils/webVitalsSentryReporter.ts");
+
+    expect(vitals).toContain("setWebVitalsReporter");
+    expect(vitals).toContain("pendingReports");
+    expect(vitals).not.toContain("@/shared/config/sentry.config");
+    expect(vitals).not.toContain("@/shared/utils/logger");
+    expect(reporter).toContain("addSentryBreadcrumb");
+    expect(reporter).toContain("setWebVitalsReporter");
+    expect(main).toContain("initializeObservability");
+    expect(main).toContain("installWebVitalsSentryReporter");
+    expect(main).toContain("scheduleAfterPublicRootMap(initializeObservability");
   });
 
   it("does not run the obsolete service-worker bootstrap before React", () => {
@@ -193,7 +212,8 @@ describe("anonymous root bootstrap performance", () => {
 
     expect(fullShell).toContain("CapabilityPreviewService");
     expect(fullShell).toContain("setupDefaultProviders");
-    expect(fullShell).toContain('import("@/core/maps/config/maplibreWorkerRuntime")');
+    expect(fullShell).not.toContain("maplibreWorkerRuntime");
+    expect(fullShell).not.toContain("ensureMapLibreWorkerConfigured");
 
     expect(adapterOwner).toContain("canUsePassiveRuntime");
     expect(adapterOwner).toContain("LazyPassiveMapLibreRuntime");
