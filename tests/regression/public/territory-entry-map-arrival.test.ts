@@ -16,11 +16,20 @@ describe("territory entry map arrival", () => {
     expect(wrapper).toContain("isLoading={isLoading}");
   });
 
-  it("reveals the base map as soon as MapLibre is ready", () => {
+  it("preloads engine and official boundary in parallel", () => {
+    expect(wrapper).toContain("Promise.all([");
+    expect(wrapper).toContain("module.preloadTerritoryEntryMapEngine()");
+    expect(wrapper).toContain("module.preloadTerritoryEntryBoundary(preloadResolved)");
+    expect(wrapper).not.toContain("await module.preloadTerritoryEntryMapEngine()");
+  });
+
+  it("reveals the base map immediately when MapLibre is ready", () => {
     expect(runtime).toContain('mapReady ? "opacity-100" : "opacity-0"');
+    expect(runtime).not.toContain("duration-500");
     expect(runtime).not.toContain("const mapPresented = mapReady && !isBoundaryLoading");
     expect(runtime).not.toContain("setMapReady(false)");
     expect(runtime).toContain("MAP_TIMEOUT_MS = 6000");
+    expect(runtime).toContain("ARRIVAL_CROSSFADE_MS = 160");
   });
 
   it("loads the official boundary progressively without fake geometry", () => {
@@ -32,11 +41,16 @@ describe("territory entry map arrival", () => {
     expect(runtime).not.toContain("fallback_boundary_rings");
   });
 
-  it("keeps the premium arrival and crossfade", () => {
+  it("keeps the arrival placeholder premium but dependency-free", () => {
     expect(arrival).toContain("data-entry-arrival-loading");
-    expect(arrival).toContain("leaving?: boolean");
-    expect(runtime).toContain("ARRIVAL_CROSSFADE_MS = 360");
-    expect(runtime).toContain("setArrivalLeaving(true)");
+    expect(arrival).toContain("data-entry-arrival-signal");
+    expect(arrival).toContain("Preparando sua chegada");
+    expect(arrival).toContain("Abrindo o mapa do Complexo");
+    expect(arrival).not.toContain("lucide-react");
+    expect(arrival).not.toContain("setTimeout");
+    expect(arrival).not.toContain("Globe2");
+    expect(arrival).not.toContain("Sparkles");
+    expect(runtime).not.toContain("lucide-react");
     expect(wrapper).toContain("min-h-[12rem]");
     expect(runtime).toContain("lg:min-h-[24rem]");
   });
