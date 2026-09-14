@@ -33,13 +33,21 @@ import {
 import { Button } from "@/shared/components/ui/button";
 import { cn } from "@/shared/utils/cn";
 
-type ProfileFilter = "all" | "personal" | "business" | "professional";
+type ProfileFilter =
+  | "all"
+  | "personal"
+  | "business"
+  | "professional"
+  | "driver"
+  | "communication_channel";
 
 const FILTERS: ReadonlyArray<{ value: ProfileFilter; label: string }> = [
   { value: "all", label: "Todos" },
   { value: "personal", label: "Pessoal" },
   { value: "business", label: "Negócios" },
   { value: "professional", label: "Profissionais" },
+  { value: "driver", label: "Mobilidade" },
+  { value: "communication_channel", label: "Comunicação" },
 ];
 
 function normalizeSearch(value: string): string {
@@ -185,6 +193,7 @@ function ManagedProfileCard({
           className="min-h-10 border-territory-border bg-territory-surface text-territory-ink"
           onClick={() => navigate(buildProfileEditUrl(profile.id))}
           disabled={switching}
+          aria-label={`Editar ${displayName}`}
         >
           <Pencil className="mr-2 h-4 w-4" aria-hidden="true" />
           Editar
@@ -197,6 +206,7 @@ function ManagedProfileCard({
             className="min-h-10 text-territory-brand"
             onClick={() => navigate(buildPublicProfileUrl(handle!))}
             disabled={switching}
+            aria-label={`Ver perfil público de ${displayName}`}
           >
             <Eye className="mr-2 h-4 w-4" aria-hidden="true" />
             Ver público
@@ -348,7 +358,7 @@ export function ManagedProfilesPanel() {
       <div className="mt-4 flex items-start gap-3 rounded-2xl border border-territory-border bg-territory-brand/5 p-4 text-sm text-territory-muted">
         <ShieldCheck className="mt-0.5 h-5 w-5 shrink-0 text-territory-brand" aria-hidden="true" />
         <p>
-          Troca de identidade, edição e abertura pública continuam usando os owners canônicos de perfil e respeitam o estado real de cada identidade.
+          A troca de perfil, a edição e a visualização pública respeitam as permissões e o estado real de cada identidade.
         </p>
       </div>
     </section>
