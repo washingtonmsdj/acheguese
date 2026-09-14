@@ -4,7 +4,7 @@ import { Cookie, Shield, X } from "lucide-react";
 import { useLocation } from "react-router-dom";
 
 import { ConsentService } from "@/core/privacy/services/ConsentService";
-import { useAuth } from "@/core/auth/hooks/useAuth";
+import { useSessionUserId } from "@/core/session/hooks/useSessionUserId";
 import { Button } from "@/shared/components/ui/button";
 import {
   Dialog,
@@ -29,7 +29,7 @@ const PRELAUNCH_LOCKDOWN_ENABLED =
   (import.meta.env.VITE_PRELAUNCH_LOCKDOWN ?? "false") === "true";
 
 export function ConsentBanner() {
-  const { user } = useAuth();
+  const userId = useSessionUserId();
   const { pathname } = useLocation();
   const { toast } = useToast();
   const queryClient = useQueryClient();
@@ -43,8 +43,8 @@ export function ConsentBanner() {
   });
 
   const { data: existingConsents, isLoading } = useQuery({
-    queryKey: ["user-consents-check", user?.id],
-    queryFn: async () => ConsentService.getExistingConsents(user?.id),
+    queryKey: ["user-consents-check", userId],
+    queryFn: async () => ConsentService.getExistingConsents(userId ?? undefined),
     enabled: true,
   });
 
@@ -58,7 +58,7 @@ export function ConsentBanner() {
   const saveConsentsMutation = useMutation({
     mutationFn: async (consents: ConsentPreferences) => {
       await ConsentService.saveConsentPreferences({
-        userId: user?.id,
+        userId: userId ?? undefined,
         preferences: {
           analytics: consents.analytics,
           marketing: consents.marketing,
@@ -69,7 +69,7 @@ export function ConsentBanner() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({
-        queryKey: ["user-consents-check", user?.id],
+        queryKey: ["user-consents-check", userId],
       });
       setShowBanner(false);
       toast({
@@ -174,7 +174,6 @@ export function ConsentBanner() {
           data-consent-banner
           className={`fixed inset-x-3 ${mobileBannerBottomClass} z-50 mx-auto max-w-[calc(100vw-1.5rem)] rounded-2xl border border-border/70 bg-background/95 p-2 shadow-2xl backdrop-blur-xl md:left-auto md:right-4 md:mx-0 md:w-[40rem] md:max-w-[40rem] md:rounded-2xl md:p-3.5`}
         >
-          {/* Mobile compact */}
           <div className="flex items-center gap-2 md:hidden">
             <div className="shrink-0 rounded-full bg-primary/10 p-1.5">
               <Cookie className="h-3.5 w-3.5 text-primary" />
@@ -209,7 +208,6 @@ export function ConsentBanner() {
             </button>
           </div>
 
-          {/* Desktop / Tablet */}
           <div className="hidden md:flex md:flex-nowrap md:items-center md:gap-3">
             <div className="shrink-0 rounded-full bg-primary/10 p-2">
               <Cookie className="h-4 w-4 text-primary" />
@@ -219,8 +217,7 @@ export function ConsentBanner() {
                 Privacidade e Cookies
               </h3>
               <p className="mt-0.5 truncate text-xs leading-snug text-muted-foreground">
-                Utilizamos cookies e dados pessoais para melhorar sua
-                experiência.
+                Utilizamos cookies e dados pessoais para melhorar sua experiência.
               </p>
             </div>
             <div className="flex shrink-0 flex-nowrap items-center gap-2">
