@@ -134,7 +134,7 @@ export function useMFA() {
     } catch (err) {
       logger.error('useMFA.listFactors', err);
       setError('Não foi possível consultar os fatores de MFA');
-      return [];
+      return null;
     }
   };
 
