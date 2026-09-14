@@ -7,7 +7,7 @@
  */
 
 import { useState, useCallback, useRef } from 'react';
-import { GeolocationService } from '@/core/maps/services/GeolocationService';
+import { GeolocationService } from '@/shared/services/GeolocationService';
 import { locationGeocodingService } from '../services/LocationGeocodingService';
 
 interface GeoSuggestion {
