@@ -7,17 +7,25 @@ import {
   getAuthFlowSessionValue,
   setAuthFlowSessionValue,
 } from "@/core/auth/utils/authFlowStorage";
+import { resolveSafeInternalPath } from "@/shared/utils/safeRedirect";
 
 export function setPendingSignupEmail(email: string): void {
+  const normalizedEmail = email.trim().toLowerCase();
+  if (!normalizedEmail) {
+    clearPendingSignupEmail();
+    return;
+  }
+
   setAuthFlowSessionValue(
     AUTH_FLOW_STORAGE_KEYS.pendingSignupEmail,
-    email,
+    normalizedEmail,
     AUTH_FLOW_TTL_MS.pendingSignup,
   );
 }
 
 export function getPendingSignupEmail(): string | null {
-  return getAuthFlowSessionValue(AUTH_FLOW_STORAGE_KEYS.pendingSignupEmail);
+  const email = getAuthFlowSessionValue(AUTH_FLOW_STORAGE_KEYS.pendingSignupEmail);
+  return email?.trim().toLowerCase() || null;
 }
 
 export function clearPendingSignupEmail(): void {
@@ -25,20 +33,22 @@ export function clearPendingSignupEmail(): void {
 }
 
 /**
- * Guarda somente o destino interno já validado pelo chamador.
- * O valor vive em sessionStorage e expira para impedir que contexto antigo de
- * cadastro contamine uma nova jornada na mesma aba.
+ * O destino do cadastro é sempre sanitizado aqui. Isso mantém a regra de
+ * redirect em uma única fronteira e também protege valores legados já salvos.
  */
 export function setPendingSignupRedirect(path: string): void {
   setAuthFlowSessionValue(
     AUTH_FLOW_STORAGE_KEYS.pendingSignupRedirect,
-    path,
+    resolveSafeInternalPath(path, "/"),
     AUTH_FLOW_TTL_MS.pendingSignup,
   );
 }
 
 export function getPendingSignupRedirect(): string | null {
-  return getAuthFlowSessionValue(AUTH_FLOW_STORAGE_KEYS.pendingSignupRedirect);
+  const stored = getAuthFlowSessionValue(
+    AUTH_FLOW_STORAGE_KEYS.pendingSignupRedirect,
+  );
+  return stored ? resolveSafeInternalPath(stored, "/") : null;
 }
 
 export function clearPendingSignupRedirect(): void {
