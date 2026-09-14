@@ -99,12 +99,16 @@ export default function TerritoryEntryMapRuntime({
     enabled: boundaryStarted,
   });
   const color = useMemo(() => {
-    if (typeof document === "undefined") return NEIGHBORHOOD_COLORS[1];
+    // Reading computed CSS can force synchronous style calculation. The color
+    // is only needed by the boundary, so keep it out of the basemap path.
+    if (!boundaryStarted || typeof document === "undefined") {
+      return NEIGHBORHOOD_COLORS[1];
+    }
     const root = getComputedStyle(document.documentElement);
     const sun = root.getPropertyValue("--territory-sun").trim();
     const brand = root.getPropertyValue("--territory-brand").trim();
     return sun ? `hsl(${sun})` : brand ? `hsl(${brand})` : NEIGHBORHOOD_COLORS[1];
-  }, []);
+  }, [boundaryStarted]);
 
   const hasCompleteGroupBoundary = useMemo(() => {
     if (!resolved || resolved.kind !== "group") return true;
