@@ -141,6 +141,8 @@ export default function TerritoryEntryPage() {
               <img
                 src={communityThumbnail}
                 alt=""
+                width={1024}
+                height={768}
                 loading="lazy"
                 decoding="async"
                 fetchPriority="low"
