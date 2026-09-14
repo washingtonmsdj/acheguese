@@ -27,16 +27,19 @@ describe("account settings concept contract", () => {
     }
     expect(shell).toContain("achegue-se");
     expect(shell).toContain("showBack");
+    expect(shell).toContain('search: "?section=profiles"');
+    expect(shell).toContain('excludeSearch: "?section=profiles"');
   });
 
   it("keeps live overview aligned with the concept without dropping real features", () => {
-    expect(overview).toContain('title="Minha conta"');
+    expect(overview).toContain('profilesView ? "Meus perfis" : "Minha conta"');
     expect(overview).toContain("Dados de acesso");
     expect(overview).toContain("Senha e segurança");
     expect(overview).toContain("Privacidade e dados");
     expect(overview).toContain("Meus perfis");
     expect(overview).toContain("Sair da conta");
     expect(overview).toContain("{children}");
+    expect(overview).toContain('navigate("/conta?section=profiles")');
   });
 
   it("renders data access as an explicit state and keeps MFA connected to its canonical hook", () => {
