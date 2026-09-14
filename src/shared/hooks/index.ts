@@ -9,7 +9,6 @@ export {
 } from "./useAsyncError";
 export { useCache } from "./useCache";
 export { useErrorHandler } from "./useErrorHandler";
-export { useGeolocation } from "./useGeolocation";
 export { useRobustGeolocation } from "./useRobustGeolocation";
 export { useInfiniteScroll } from "./useInfiniteScroll";
 export { useLoadingState } from "./useLoadingState";
