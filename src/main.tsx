@@ -3,6 +3,7 @@ import { createRoot } from "react-dom/client";
 import App from "./App.tsx";
 import "./index.css";
 import { deferFrame, deferIdle, deferLoad } from "./shared/utils/deferredInit.ts";
+import { scheduleAfterPublicRootMap } from "./shared/utils/publicRootReadiness.ts";
 
 // In local development, remove any previously registered SW/caches that can
 // intercept Vite assets and break HMR/WebSocket.
@@ -39,8 +40,8 @@ deferFrame(() => {
   fontStylesheet.removeAttribute("fetchpriority");
 });
 
-// Keep measurements off the root's first paint. Other routes can start them
-// earlier because their runtime already carries a larger application shell.
+// Measurement stays lightweight and starts after the first paint/load. The
+// Sentry telemetry sink is attached later, after the public map has priority.
 const scheduleVitals = isPublicRootAtBoot ? deferLoad : deferFrame;
 scheduleVitals(() => {
   import("./shared/utils/webVitals.ts").then(({ initWebVitals }) => {
@@ -48,18 +49,31 @@ scheduleVitals(() => {
   });
 });
 
-// Error reporting is useful on every surface, but does not need to compete
-// with the community-first root for first paint, map startup or interaction.
-const scheduleSentry = isPublicRootAtBoot ? deferLoad : deferIdle;
-scheduleSentry(() => {
-  import("./shared/config/sentry.config.ts").then(({ initializeSentry }) => {
+const initializeObservability = () => {
+  void import("./shared/config/sentry.config.ts").then(async ({ initializeSentry }) => {
     initializeSentry();
+    const { installWebVitalsSentryReporter } = await import(
+      "./shared/utils/webVitalsSentryReporter.ts"
+    );
+    installWebVitalsSentryReporter();
   });
-});
+};
 
-// AdSense must not download or execute while the public entry and map are
-// competing for the network/main thread. deferLoad already means load + idle.
-deferLoad(() => {
+// Error reporting is useful on every surface, but on `/` it must not compete
+// with the first usable map. A safety timeout prevents indefinite deferral.
+if (isPublicRootAtBoot) {
+  deferLoad(() => {
+    scheduleAfterPublicRootMap(initializeObservability, {
+      maxWaitMs: 2800,
+      idleTimeoutMs: 2200,
+      idleFallbackDelayMs: 900,
+    });
+  });
+} else {
+  deferIdle(initializeObservability);
+}
+
+const loadAds = () => {
   const isLocalhost =
     window.location.hostname === "localhost" ||
     window.location.hostname === "127.0.0.1" ||
@@ -75,7 +89,21 @@ deferLoad(() => {
   ads.crossOrigin = "anonymous";
   ads.dataset.achegueseAdsense = "true";
   document.head.appendChild(ads);
-});
+};
+
+// Ads remain entirely outside HTML parsing and, on `/`, wait for the map or a
+// bounded timeout before consuming network/main-thread time.
+if (isPublicRootAtBoot) {
+  deferLoad(() => {
+    scheduleAfterPublicRootMap(loadAds, {
+      maxWaitMs: 3200,
+      idleTimeoutMs: 2600,
+      idleFallbackDelayMs: 1400,
+    });
+  });
+} else {
+  deferLoad(loadAds);
+}
 
 deferLoad(() => {
   if (import.meta.env.DEV && import.meta.env.VITE_DEBUG_BOOT === "true") {
