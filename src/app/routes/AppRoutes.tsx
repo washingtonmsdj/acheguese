@@ -7,14 +7,8 @@
 import { lazy } from "react";
 import { Navigate, Route, Routes } from "react-router-dom";
 import { AUTH_PATHS } from "@/core/auth/constants/authFlow";
-import { APP_MODULE_SLUGS, buildAppModulePath } from "@/shared/config/moduleSlugs";
-import {
-  TERRITORIAL_ROUTE_PARAMS,
-  TERRITORIAL_ROUTE_STATIC_SEGMENTS,
-} from "@/core/routing/config/territorialRoutePatterns";
 
 const RootRouteEntry = lazy(() => import("@/app/routes/RootRouteEntry"));
-const LaunchPausedPage = lazy(() => import("@/app/pages/LaunchPausedPage"));
 const AppLayoutRoutes = lazy(() =>
   import("@/app/routes/sections/AppLayoutRoutes").then((module) => ({
     default: module.AppLayoutRoutes,
@@ -82,33 +76,7 @@ const AdminRoutes = lazy(() =>
 const PRELAUNCH_LOCKDOWN_ENABLED =
   (import.meta.env.VITE_PRELAUNCH_LOCKDOWN ?? "false") === "true";
 
-const EVENT_ROUTES = {
-  home: buildAppModulePath(APP_MODULE_SLUGS.events),
-  favorites: buildAppModulePath(
-    APP_MODULE_SLUGS.events,
-    TERRITORIAL_ROUTE_STATIC_SEGMENTS.favorites,
-  ),
-  calendar: buildAppModulePath(
-    APP_MODULE_SLUGS.events,
-    TERRITORIAL_ROUTE_STATIC_SEGMENTS.calendar,
-  ),
-  map: buildAppModulePath(
-    APP_MODULE_SLUGS.events,
-    TERRITORIAL_ROUTE_STATIC_SEGMENTS.map,
-  ),
-  detail: buildAppModulePath(
-    APP_MODULE_SLUGS.events,
-    `${TERRITORIAL_ROUTE_STATIC_SEGMENTS.eventDetail}/${TERRITORIAL_ROUTE_PARAMS.eventId}`,
-  ),
-  legacyDetail: buildAppModulePath(
-    APP_MODULE_SLUGS.events,
-    TERRITORIAL_ROUTE_PARAMS.eventId,
-  ),
-} as const;
-
 export function AppRoutes() {
-  const eventsElement = <LaunchPausedPage moduleName="Eventos" />;
-
   if (PRELAUNCH_LOCKDOWN_ENABLED) {
     return (
       <Routes>
@@ -126,13 +94,6 @@ export function AppRoutes() {
       <Route path="/" element={<RootRouteEntry />} />
       <Route path="/q/:token" element={<QrResolverPage />} />
       <Route path="/status" element={<StatusPage />} />
-
-      <Route path={EVENT_ROUTES.home} element={eventsElement} />
-      <Route path={EVENT_ROUTES.favorites} element={eventsElement} />
-      <Route path={EVENT_ROUTES.calendar} element={eventsElement} />
-      <Route path={EVENT_ROUTES.map} element={eventsElement} />
-      <Route path={EVENT_ROUTES.detail} element={eventsElement} />
-      <Route path={EVENT_ROUTES.legacyDetail} element={eventsElement} />
 
       <Route path="/splash" element={<SplashPage />} />
       <Route path={AUTH_PATHS.login} element={<LoginPage />} />
