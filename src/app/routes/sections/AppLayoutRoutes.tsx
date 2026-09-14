@@ -9,7 +9,6 @@
 
 import type { ReactNode } from "react";
 import { Navigate, Routes, Route, useParams } from "react-router-dom";
-import RootRouteEntry from "@/app/routes/RootRouteEntry";
 import { AppLayoutSidebar } from "@/app/components/AppLayoutSidebar";
 import TerritoryHomePage from "@/app/pages/TerritoryHomePage";
 import { TerritorialIndexPage } from "@/core/routing/components/TerritorialIndexPage";
@@ -329,12 +328,6 @@ export function AppLayoutRoutes() {
         />
       ))}
 
-      {/* QR Code Resolver - DEVE VIR ANTES DE OUTRAS ROTAS */}
-      <Route path="/q/:token" element={<P.QrResolverPage />} />
-
-      {/* Status Page - Pagina publica de status do sistema */}
-      <Route path="/status" element={<P.StatusPage />} />
-
       {/* EVENTS - Sistema de Eventos */}
       <Route
         path={EVENT_ROUTES.home}
@@ -399,40 +392,7 @@ export function AppLayoutRoutes() {
         )}
       />
 
-      <Route path="/splash" element={<P.SplashPage />} />
-      <Route path="/login" element={<P.LoginPage />} />
-      <Route path="/cadastro" element={<P.CadastroPage />} />
-      <Route
-        path="/cadastro/confirmacao"
-        element={<P.CadastroConfirmacaoPage />}
-      />
-      <Route path="/sobre" element={<P.AboutPage />} />
-      <Route path="/contato" element={<P.ContactPage />} />
-      <Route path="/onboarding" element={<P.OnboardingPage />} />
-      <Route path="/reset-password" element={<P.ResetPasswordPage />} />
-      <Route
-        path="/empresas/:id/catalogo"
-        element={<P.EmpresaCatalogoPublicoPage />}
-      />
-      <Route path="/p/:slug/*" element={<P.PremiumBusinessSiteRoute />}>
-        <Route index element={<P.PremiumBusinessHomePage />} />
-        <Route path="cardapio" element={<P.PremiumBusinessMenuPage />} />
-        <Route
-          path="produto/:productSlug"
-          element={<P.PremiumBusinessProductPage />}
-        />
-        <Route path="carrinho" element={<P.PremiumBusinessCartPage />} />
-        <Route path="checkout" element={<P.PremiumBusinessCheckoutPage />} />
-      </Route>
-
       <Route element={<AppLayoutSidebar />}>
-        {/* Pagina inicial */}
-        {/*
-         * Opcao B: Home canonica em /:uf/:cidade da cidade de lancamento.
-         * "/" redireciona para a landing da cidade ativa (hoje: /ba/salvador),
-         * evitando conteudo duplicado e retrabalho quando novas cidades entrarem.
-         */}
-        <Route path="/" element={<RootRouteEntry />} />
         <Route path="/inicio" element={<P.NationalHubPage />} />
 
         {/* Rotas de Billing e Assinaturas */}
