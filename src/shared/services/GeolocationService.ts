@@ -9,7 +9,6 @@
  * - expor watch/clearWatch para consumidores de rastreamento.
  */
 import { GEOLOCATION_RUNTIME } from "@/shared/config/geolocation";
-import { TIMEOUTS } from "@/shared/constants";
 import { logger } from "@/shared/utils/logger";
 
 export interface GeolocationCoords {
@@ -133,7 +132,7 @@ class GeolocationServiceClass {
     };
   }
 
-  private getCachedLocation(): GeolocationResult | null {
+  getCachedLocation(): GeolocationResult | null {
     try {
       const cached = localStorage.getItem(GEOLOCATION_RUNTIME.cacheKey);
       if (!cached) return null;
@@ -228,7 +227,7 @@ class GeolocationServiceClass {
       ? [
           {
             highAccuracy: false,
-            timeout: Math.max(1_000, TIMEOUTS.USER_LOCATION - 2_000),
+            timeout: GEOLOCATION_RUNTIME.mobileFastTimeoutMs,
             maxAge: GEOLOCATION_RUNTIME.mobileFastMaximumAgeMs,
             label: "mobile-fast",
           },
@@ -240,7 +239,7 @@ class GeolocationServiceClass {
           },
           {
             highAccuracy: false,
-            timeout: timeout + 5_000,
+            timeout: timeout + GEOLOCATION_RUNTIME.fallbackTimeoutExtensionMs,
             maxAge: 0,
             label: "mobile-fallback",
           },
@@ -254,7 +253,7 @@ class GeolocationServiceClass {
           },
           {
             highAccuracy: false,
-            timeout: timeout + 5_000,
+            timeout: timeout + GEOLOCATION_RUNTIME.fallbackTimeoutExtensionMs,
             maxAge: GEOLOCATION_RUNTIME.desktopFallbackMaximumAgeMs,
             label: "desktop-fallback",
           },
@@ -265,12 +264,11 @@ class GeolocationServiceClass {
       const attempt = attempts[index];
       try {
         onProgress?.(index + 1, attemptCount);
-        const coords = await this.singleGPSAttempt(
+        return await this.singleGPSAttempt(
           attempt.highAccuracy,
           attempt.timeout,
           attempt.maxAge,
         );
-        return coords;
       } catch (error: unknown) {
         const context = this.getErrorContext(error);
         if (isGeolocationPermissionDeniedError(error)) {
@@ -307,7 +305,7 @@ class GeolocationServiceClass {
   private async getLocationFromIP(signal?: AbortSignal): Promise<GeolocationCoords | null> {
     try {
       const response = await fetch("https://ipapi.co/json/", {
-        signal: signal ?? AbortSignal.timeout(TIMEOUTS.IP_GEOLOCATION),
+        signal: signal ?? AbortSignal.timeout(GEOLOCATION_RUNTIME.ipFallbackTimeoutMs),
       });
       if (!response.ok) throw new Error("IP geolocation failed");
 
