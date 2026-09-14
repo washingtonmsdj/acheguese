@@ -20,11 +20,8 @@ function collectSourceFiles(directory: string): string[] {
 const STATIC_MAPLIBRE_IMPORT = /import\s+(?!type\b)[\s\S]*?from\s+["']maplibre-gl["']/;
 const STATIC_MAPLIBRE_CSS_IMPORT = /import\s+["']maplibre-gl\/dist\/maplibre-gl\.css["']/;
 
-const ALLOWED_STATIC_RUNTIME_OWNERS = new Set([
-  "src/core/maps/components/v3/MapLibreAdapterRuntime.tsx",
-  "src/core/maps/config/maplibreWorkerRuntime.ts",
-]);
-
+const ALLOWED_STATIC_RUNTIME_OWNER =
+  "src/core/maps/components/v3/MapLibreAdapterRuntime.tsx";
 const ALLOWED_STATIC_CSS_OWNER = "src/core/maps/runtime/maplibreRuntimeCss.ts";
 
 const MIGRATED_CONSUMERS = [
@@ -49,6 +46,7 @@ describe("MapLibre production security runtime", () => {
     const main = readProjectFile("src/main.tsx");
     const loader = readProjectFile("src/core/maps/runtime/loadMapLibreRuntime.ts");
     const workerRuntime = readProjectFile("src/core/maps/config/maplibreWorkerRuntime.ts");
+    const cssOwner = readProjectFile(ALLOWED_STATIC_CSS_OWNER);
 
     expect(packageJson.dependencies?.["maplibre-gl"]).toBe("6.4.1");
     expect(packageLock.packages?.["node_modules/maplibre-gl"]?.version).toBe("6.4.1");
@@ -57,23 +55,26 @@ describe("MapLibre production security runtime", () => {
     expect(main).not.toContain("setWorkerUrl");
     expect(loader).toContain('import("maplibre-gl")');
     expect(loader).toContain('import("../config/maplibreWorkerRuntime")');
+    expect(loader).toContain('import("./maplibreRuntimeCss")');
     expect(loader).toContain("ensureMapLibreWorkerConfigured(runtime.setWorkerUrl)");
     expect(loader).toContain("prewarmMapLibreWorkers");
     expect(loader).toContain("runtime.prewarm()");
     expect(workerRuntime).toContain("ensureMapLibreWorkerConfigured");
     expect(workerRuntime).toContain("setWorkerUrl(maplibreWorkerUrl)");
     expect(workerRuntime).not.toContain('from "maplibre-gl"');
+    expect(cssOwner).toContain('import "maplibre-gl/dist/maplibre-gl.css"');
   });
 
   it("makes the public adapter path lazy while keeping the heavy implementation internal", () => {
     const owner = readProjectFile("src/core/maps/components/v3/MapLibreAdapter.tsx");
-    const runtime = readProjectFile("src/core/maps/components/v3/MapLibreAdapterRuntime.tsx");
+    const runtime = readProjectFile(ALLOWED_STATIC_RUNTIME_OWNER);
     const compatibility = readProjectFile("src/core/maps/components/v3/LazyMapLibreAdapter.tsx");
 
     expect(owner).toContain("loadMapLibreRuntime");
     expect(owner).toContain('import("./MapLibreAdapterRuntime")');
     expect(owner).not.toContain('import * as maplibregl from "maplibre-gl"');
     expect(runtime).toContain('import * as maplibregl from "maplibre-gl"');
+    expect(runtime).not.toContain("maplibre-gl/dist/maplibre-gl.css");
     expect(runtime).toContain("setMissingStyleImageResolver");
     expect(compatibility).toContain('from "./MapLibreAdapter"');
   });
@@ -87,16 +88,26 @@ describe("MapLibre production security runtime", () => {
     }
   });
 
-  it("forbids new static MapLibre owners outside the controlled core", () => {
-    const violations = collectSourceFiles("src").filter((sourcePath) => {
+  it("forbids new static MapLibre engine or CSS owners outside the canonical core", () => {
+    const violations = collectSourceFiles("src").flatMap((sourcePath) => {
       const source = readProjectFile(sourcePath);
-      if (STATIC_MAPLIBRE_IMPORT.test(source)) {
-        return !ALLOWED_STATIC_RUNTIME_OWNERS.has(sourcePath);
+      const reasons: string[] = [];
+
+      if (
+        STATIC_MAPLIBRE_IMPORT.test(source) &&
+        sourcePath !== ALLOWED_STATIC_RUNTIME_OWNER
+      ) {
+        reasons.push(`${sourcePath}:runtime`);
       }
-      if (STATIC_MAPLIBRE_CSS_IMPORT.test(source)) {
-        return sourcePath !== ALLOWED_STATIC_CSS_OWNER && !ALLOWED_STATIC_RUNTIME_OWNERS.has(sourcePath);
+
+      if (
+        STATIC_MAPLIBRE_CSS_IMPORT.test(source) &&
+        sourcePath !== ALLOWED_STATIC_CSS_OWNER
+      ) {
+        reasons.push(`${sourcePath}:css`);
       }
-      return false;
+
+      return reasons;
     });
 
     expect(violations).toEqual([]);
