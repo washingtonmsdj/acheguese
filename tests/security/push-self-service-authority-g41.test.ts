@@ -7,6 +7,7 @@ const read = (path: string) => readFileSync(join(root, path), "utf8");
 
 const service = read("src/core/notifications/services/PushService.ts");
 const hook = read("src/core/notifications/hooks/usePush.ts");
+const settings = read("src/app/components/notifications/PushNotificationSettings.tsx");
 const edge = read("supabase/functions/send-push/index.ts");
 const config = read("supabase/config.toml");
 
@@ -54,7 +55,24 @@ describe("G41 push self-service authority", () => {
 
     expect(edgeMutation).toBeGreaterThanOrEqual(0);
     expect(browserCleanup).toBeGreaterThan(edgeMutation);
+    expect(unsubscribeBlock).toContain("browserSubscription.endpoint === subscriptionEndpoint");
     expect(unsubscribeBlock).toContain("Server disabled push but browser cleanup failed");
+  });
+
+  it("never treats another registered device as the current browser", () => {
+    expect(service).toContain("getCurrentBrowserSubscriptionEndpoint");
+    expect(hook).toContain("currentBrowserEndpoint");
+    expect(hook).toContain("subscription.endpoint === currentBrowserEndpoint");
+    expect(hook).toContain("const isSubscribed = currentSubscription !== null");
+    expect(settings).toContain("currentSubscriptionId");
+    expect(settings).toContain("sub.id === currentSubscriptionId");
+    expect(settings).toContain("unsubscribe(sub.id, sub.endpoint)");
+  });
+
+  it("does not render unsupported push before capability detection resolves", () => {
+    expect(hook).toContain("isSupportResolved");
+    expect(settings).toContain("if (!isSupportResolved)");
+    expect(settings).toContain("Verificando este dispositivo");
   });
 
   it("does not hide subscription read failures as an empty successful list", () => {
@@ -64,5 +82,7 @@ describe("G41 push self-service authority", () => {
 
     expect(subscriptionsBlock).toContain("throw error;");
     expect(subscriptionsBlock).not.toContain("return [];");
+    expect(settings).toContain("subscriptionsError");
+    expect(settings).toContain("refetchSubscriptions");
   });
 });
