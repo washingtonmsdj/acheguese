@@ -10,6 +10,7 @@ import {
   KeyRound,
   LockKeyhole,
   LogOut,
+  MapPin,
   Shield,
   SlidersHorizontal,
   UsersRound,
@@ -209,6 +210,12 @@ export function ContaHubLayout({
 
             <section className="mt-4 rounded-2xl border border-territory-border bg-territory-surface px-4 sm:px-5">
               <OverviewRow
+                icon={<MapPin className="h-5 w-5" aria-hidden="true" />}
+                title="Endereços e território"
+                description="Residência privada e contexto territorial."
+                onClick={() => navigate(ACCOUNT_PATHS.addresses)}
+              />
+              <OverviewRow
                 icon={<UsersRound className="h-5 w-5" aria-hidden="true" />}
                 title="Meus perfis"
                 description="Identidades, equipes e visibilidade pública."
@@ -239,12 +246,12 @@ export function ContaHubLayout({
 
             <details className="group rounded-2xl border border-territory-border bg-territory-surface">
               <summary className="flex min-h-12 cursor-pointer list-none items-center justify-between gap-3 rounded-2xl px-4 py-3 text-sm font-semibold text-territory-ink focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-territory-brand [&::-webkit-details-marker]:hidden">
-                Controles avançados e recursos operacionais
+                Recursos adicionais da conta
                 <ChevronDown className="h-4 w-4 shrink-0 text-territory-muted transition-transform group-open:rotate-180" aria-hidden="true" />
               </summary>
               <div className="border-t border-territory-border p-4 sm:p-5">
                 <p className="mb-4 text-sm leading-5 text-territory-muted">
-                  Estes recursos continuam disponíveis, mas ficam fora da lista principal para manter a gestão de perfis simples e fiel ao concept.
+                  Configurações menos frequentes continuam disponíveis aqui sem ocupar a lista principal de perfis.
                 </p>
                 <div className="space-y-4 sm:space-y-6">{children}</div>
               </div>
