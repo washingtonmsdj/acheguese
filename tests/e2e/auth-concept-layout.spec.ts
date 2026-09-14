@@ -57,25 +57,25 @@ test.describe("Conta e acesso — contrato visual responsivo do concept", () => 
     const cases = [
       {
         path: "/login",
-        heading: "Seu lugar, mais perto.",
+        heading: /Seu lugar,\s*mais perto\./,
         asset: "/auth/login-hero.webp",
         cardHeading: "Entre na sua conta",
       },
       {
         path: "/cadastro",
-        heading: "Comece por você.",
+        heading: /Comece\s*por você\./,
         asset: "/auth/signup-hero.webp",
         cardHeading: "Criar minha conta",
       },
       {
         path: "/cadastro/confirmacao",
-        heading: "Só falta confirmar seu e-mail.",
+        heading: /Só falta\s*confirmar\s*seu e-mail\./,
         asset: "/auth/confirm-hero.webp",
         cardHeading: "Confira sua caixa de entrada",
       },
       {
         path: "/reset-password?mode=request",
-        heading: "Vamos ajudar você a voltar.",
+        heading: /Vamos ajudar\s*você a voltar\./,
         asset: "/auth/recovery-hero.webp",
         cardHeading: "E-mail cadastrado",
       },
@@ -88,7 +88,7 @@ test.describe("Conta e acesso — contrato visual responsivo do concept", () => 
       await expect(main).toBeVisible();
       const hero = main.locator(`img[src="${current.asset}"]`);
       await expect(hero).toBeVisible();
-      await expect(page.getByText(current.heading, { exact: true })).toBeVisible();
+      await expect(page.getByRole("heading", { name: current.heading })).toBeVisible();
       await expect(page.getByText(current.cardHeading, { exact: true })).toBeVisible();
 
       const sections = main.locator(":scope > section");
