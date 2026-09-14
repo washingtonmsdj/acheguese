@@ -8,6 +8,7 @@ const main = read("src/main.tsx");
 const wrapper = read("src/app/components/territory-vivo/TerritoryEntryMap.tsx");
 const runtime = read("src/app/components/territory-vivo/TerritoryEntryMapRuntime.tsx");
 const arrival = read("src/app/components/territory-vivo/TerritoryEntryMapArrival.tsx");
+const readiness = read("src/shared/utils/publicRootReadiness.ts");
 const tailwind = read("tailwind.config.ts");
 
 describe("territory entry map arrival", () => {
@@ -50,7 +51,9 @@ describe("territory entry map arrival", () => {
     expect(runtime).not.toContain("duration-500");
     expect(runtime).not.toContain("const mapPresented = mapReady && !isBoundaryLoading");
     expect(runtime).not.toContain("setMapReady(false)");
-    expect(runtime).toContain("MAP_TIMEOUT_MS = 6000");
+    expect(runtime).toContain("PUBLIC_ROOT_MAP_TERMINAL_TIMEOUT_MS");
+    expect(readiness).toContain("PUBLIC_ROOT_MAP_TERMINAL_TIMEOUT_MS = 6000");
+    expect(runtime).not.toContain("const MAP_TIMEOUT_MS");
     expect(runtime).toContain("ARRIVAL_CROSSFADE_MS = 160");
   });
 
@@ -59,11 +62,18 @@ describe("territory entry map arrival", () => {
     expect(runtime).toContain("boundaryPending");
     expect(runtime).toContain("BOUNDARY_TIMEOUT_MS = 8000");
     expect(runtime).toContain("Mapa pronto. Carregando limite oficial");
-    expect(runtime).toContain("Não exibimos contorno aproximado ou incompleto do Complexo.");
+    expect(runtime).toContain("contorno aproximado ou incompleto de {territoryLabel}");
     expect(runtime).not.toContain("fallback_boundary_rings");
   });
 
-  it("uses an Instagram-like page-native skeleton with compositor-only shimmer", () => {
+  it("keeps the skeleton limited to pre-map states and uses compositor-only shimmer", () => {
+    expect(arrival).toContain(
+      'export type TerritoryEntryArrivalStage = "community" | "map";',
+    );
+    expect(arrival).not.toContain('boundary: "Finalizando limite oficial"');
+    expect(wrapper).toContain('stage={isLoading ? "community" : "map"}');
+    expect(runtime).toContain('stage={isLoading ? "community" : "map"}');
+
     expect(arrival).toContain("data-entry-skeleton");
     expect(arrival).toContain("data-entry-skeleton-grid");
     expect(arrival).toContain("data-entry-skeleton-card");
