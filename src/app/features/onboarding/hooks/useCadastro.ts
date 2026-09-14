@@ -11,6 +11,7 @@ import {
   setPendingSignupRedirect,
 } from "@/core/auth/utils/pendingSignup";
 import { TERMS_OF_SERVICE_VERSION } from "@/core/legal/termsOfService";
+import { PublicIdentityService } from "@/core/public-identity/services/PublicIdentityService";
 import { useToast } from "@/shared/hooks/use-toast";
 import { resolveSafeInternalPath } from "@/shared/utils/safeRedirect";
 import {
@@ -27,6 +28,23 @@ const defaultValues: CadastroFormValues = {
   password: "",
   termsAccepted: false as unknown as true,
 };
+
+function getUsernameAvailabilityMessage(
+  status: string,
+  message?: string,
+): string {
+  if (message) return message;
+  switch (status) {
+    case "taken":
+      return "Este nome de usuário já está em uso.";
+    case "reserved":
+      return "Este nome de usuário é reservado.";
+    case "invalid":
+      return "Escolha outro nome de usuário.";
+    default:
+      return "Este nome de usuário não está disponível.";
+  }
+}
 
 /**
  * SSOT do cadastro inicial.
@@ -54,6 +72,28 @@ export function useCadastroForm(requestedRedirect = "/") {
     form.clearErrors("root.serverError");
 
     try {
+      // A checagem visual do formulário melhora a UX, mas esta verificação
+      // canônica no submit protege qualquer outro consumidor deste hook.
+      const availability = await PublicIdentityService.checkAvailability({
+        identifier: values.username,
+        entityType: "profile",
+      });
+      if (availability.status !== "available") {
+        const message = getUsernameAvailabilityMessage(
+          availability.status,
+          availability.message,
+        );
+        form.setError("username", { type: "availability", message });
+        toast({
+          title: "Escolha outro nome de usuário",
+          description: availability.suggestion
+            ? `${message} Sugestão: @${availability.suggestion}`
+            : message,
+          variant: "destructive",
+        });
+        return;
+      }
+
       const compromise = await checkPasswordCompromise(values.password);
       if (compromise.blocked) {
         form.setError("password", {
