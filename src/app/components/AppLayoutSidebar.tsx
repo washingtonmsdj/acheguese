@@ -24,6 +24,14 @@ import {
   isCommunityRouteSuffixSegment,
 } from "@/core/routing/utils/territoryUrls";
 
+const ACCOUNT_SETTINGS_SHELL_PATHS = new Set([
+  "/conta",
+  "/conta/seguranca",
+  "/conta/notificacoes",
+  "/conta/privacidade",
+  "/conta/preferencias",
+]);
+
 export function AppLayoutSidebar() {
   const { pathname } = useLocation();
   useEffect(() => {
@@ -61,6 +69,7 @@ export function AppLayoutSidebar() {
         pathSegments.length <= 4));
   const isAccountRoute = pathSegments[0] === "conta";
   const isAccountOverview = pathname === "/conta";
+  const accountUsesSettingsShell = ACCOUNT_SETTINGS_SHELL_PATHS.has(pathname);
   const conceptAccountPreview =
     import.meta.env.DEV &&
     typeof window !== "undefined" &&
@@ -151,22 +160,23 @@ export function AppLayoutSidebar() {
     );
   }
 
-  // Superfícies Territory Vivo. A área /conta possui shell próprio no desktop;
-  // no mobile, apenas a visão geral conserva a navegação inferior global.
+  // Superfícies Territory Vivo. As rotas de configurações já migradas possuem
+  // shell próprio. Outras rotas /conta preservam a navegação global até sua
+  // migração para evitar regressões de viewport ou navegação.
   if (usesTerritoryVivoShell) {
     return (
       <>
         <div
           className={
-            isAccountRoute
+            accountUsesSettingsShell
               ? "territory-vivo w-full"
               : "territory-vivo w-full md:pl-[4.5rem] xl:pl-44"
           }
         >
           <div
-            id={isAccountRoute ? undefined : "main-content"}
+            id={accountUsesSettingsShell ? undefined : "main-content"}
             className="territory-vivo-safe-bottom min-h-[100dvh] min-w-0 max-md:h-[100dvh] max-md:overflow-y-auto max-md:scrollbar-hide"
-            tabIndex={isAccountRoute ? undefined : -1}
+            tabIndex={accountUsesSettingsShell ? undefined : -1}
           >
             <TerritoryMismatchBanner />
             <Outlet />
@@ -176,9 +186,9 @@ export function AppLayoutSidebar() {
           hideMobile={
             isProfessionalPublicRoute ||
             conceptAccountPreview ||
-            (isAccountRoute && !isAccountOverview)
+            (accountUsesSettingsShell && !isAccountOverview)
           }
-          hideDesktop={conceptAccountPreview || isAccountRoute}
+          hideDesktop={conceptAccountPreview || accountUsesSettingsShell}
         />
       </>
     );
