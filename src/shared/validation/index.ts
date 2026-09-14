@@ -15,11 +15,15 @@ export type { ValidationMessages } from "./messages/pt-BR";
 // Politica de senha
 export {
   PASSWORD_POLICY,
+  getPasswordConceptRequirementStatus,
   getPasswordRequirementStatus,
+  getPasswordRequirementsSummary,
   getPasswordStrength,
   isStrongPassword,
 } from "./passwordPolicy";
 export type {
+  PasswordConceptRequirementId,
+  PasswordConceptRequirementStatus,
   PasswordRequirementId,
   PasswordRequirementStatus,
 } from "./passwordPolicy";
