@@ -9,9 +9,12 @@ const runtime = read("src/app/components/territory-vivo/TerritoryEntryMapRuntime
 const arrival = read("src/app/components/territory-vivo/TerritoryEntryMapArrival.tsx");
 
 describe("territory entry map arrival", () => {
-  it("mounts map runtime immediately after the first skeleton paint", () => {
+  it("requests map runtime in the same render that shows the skeleton fallback", () => {
     expect(wrapper).toContain("loadTerritoryEntryMapRuntime");
-    expect(wrapper).toContain("setShouldMountRuntime(true)");
+    expect(wrapper).toContain("LazyTerritoryEntryMapRuntime");
+    expect(wrapper).toContain("<Suspense");
+    expect(wrapper).not.toContain("shouldMountRuntime");
+    expect(wrapper).not.toContain("setShouldMountRuntime");
     expect(wrapper).not.toContain("IntersectionObserver");
     expect(wrapper).not.toContain("rootMargin");
     expect(wrapper).not.toContain("scheduleBrowserIdleWork");
