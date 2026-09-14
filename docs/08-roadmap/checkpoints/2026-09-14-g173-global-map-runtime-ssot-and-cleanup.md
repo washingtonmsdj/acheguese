@@ -27,15 +27,26 @@ Foram removidos os ultimos imports diretos conhecidos em superficies de mobilida
 - `src/core/mobility/components/RideTrackingMap.tsx`;
 - `src/modules/mobility/pages/BuscandoMotoristaPage.tsx`.
 
-Ambos agora usam `loadMapLibreRuntime()`, portanto herdam o mesmo CSS, worker e futuras otimizacoes do runtime canônico.
+Ambos agora usam `loadMapLibreRuntime()`, portanto herdam o mesmo CSS, worker e futuras otimizacoes do runtime canonico.
 
 O import duplicado de `maplibre-gl/dist/maplibre-gl.css` tambem foi removido de `MapLibreAdapterRuntime.tsx`. O CSS passa a existir em um unico owner.
+
+O bridge legado `src/core/maps/components/v3/LazyMapLibreAdapter.tsx` foi censado antes da remocao. Seus callers reais foram migrados diretamente para `MapLibreAdapter.tsx`:
+
+- `src/core/nearby/components/NearbyMiniMap.tsx`;
+- `src/core/business/components/NeighborhoodMap.tsx`;
+- `src/app/components/territory-vivo/TerritoryMapPreview.tsx`;
+- `src/app/features/business-landing/sections/EmpresasHeroSection.tsx`;
+- barrel `src/core/maps/components/v3/index.ts`.
+
+Depois de zerar esses callers, o bridge foi deletado. Nao existe mais owner publico paralelo para o adapter.
 
 `tests/security/maplibre-runtime-security.test.ts` foi endurecido para:
 
 - permitir um unico owner estatico da engine completa dentro do core;
 - permitir um unico owner do CSS;
-- exigir o loader canônico nos consumidores migrados;
+- exigir o loader canonico nos consumidores imperativos migrados;
+- provar que o bridge `LazyMapLibreAdapter.tsx` nao existe;
 - impedir novas excecoes em paginas/modulos.
 
 ## SSOT visual de mapas da mobilidade
@@ -45,7 +56,7 @@ Foram eliminados valores semanticos duplicados entre tracking e busca de motoris
 Novos owners:
 
 - `src/core/mobility/constants/mapVisuals.ts` — cor/espessura/opacidade de rota e semantica visual de origem, destino e motorista;
-- `src/core/mobility/utils/createMobilityMapMarkerElement.ts` — criacao DOM canônica dos markers de mobilidade.
+- `src/core/mobility/utils/createMobilityMapMarkerElement.ts` — criacao DOM canonica dos markers de mobilidade.
 
 Os consumidores deixaram de manter localmente:
 
@@ -72,7 +83,8 @@ Devem permanecer nos owners canonicos e beneficiar qualquer pagina:
 - runtime passivo/completo pelo adapter canonico;
 - defaults/provider de tiles;
 - visual semantico reutilizavel da mobilidade;
-- ausencia de imports runtime/CSS paralelos.
+- ausencia de imports runtime/CSS paralelos;
+- ausencia de bridge `LazyMapLibreAdapter`.
 
 ### Exclusivas da entrada publica
 
@@ -97,7 +109,7 @@ Essas regras nao devem ser copiadas mecanicamente para todas as paginas. Se outr
 
 Nesta conversa nao houve runner capaz de executar Vitest/build no SHA final. O ambiente local disponivel nao conseguiu resolver `github.com` para clonar o repositorio. Portanto:
 
-- regressões foram atualizadas/criadas no source;
+- regressoes foram atualizadas/criadas no source;
 - nao ha declaracao de testes aprovados;
 - nao ha declaracao de build aprovado;
 - nao ha declaracao de deploy aprovado.
