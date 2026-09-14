@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, type ReactNode } from "react";
 import {
   Navigate,
   useLocation,
@@ -21,6 +21,7 @@ import {
   UserRound,
 } from "lucide-react";
 
+import { ACCOUNT_PATHS } from "@/core/routing/config/account";
 import { useAppUrls } from "@/core/routing/hooks/useAppUrls";
 import { AccountSettingsShell } from "@/modules/profile/components/AccountSettingsShell";
 import { useAccessibility } from "@/shared/components/accessibility/AccessibilityProvider";
@@ -77,10 +78,10 @@ function AccessibilityPreferenceRow({
   description,
   control,
 }: {
-  icon: React.ReactNode;
+  icon: ReactNode;
   title: string;
   description: string;
-  control: React.ReactNode;
+  control: ReactNode;
 }) {
   return (
     <div className="flex min-h-[78px] items-center gap-3 border-b border-territory-border py-3 last:border-b-0">
@@ -144,17 +145,17 @@ export default function ContaPreferenciasPage() {
   ) => {
     switch (hrefKey) {
       case "notifications":
-        return "/conta/notificacoes";
+        return ACCOUNT_PATHS.notifications;
       case "privacy":
-        return "/conta/privacidade";
+        return ACCOUNT_PATHS.privacy;
       case "links":
         return appUrls.profile.settings("links");
       case "identity":
         return appUrls.profile.settings("privacy");
       case "accessibility":
-        return "/conta/preferencias#acessibilidade";
+        return ACCOUNT_PATHS.accessibility;
       default:
-        return appUrls.profile.home;
+        return ACCOUNT_PATHS.home;
     }
   };
 
