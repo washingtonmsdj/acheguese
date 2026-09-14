@@ -161,6 +161,9 @@ export default function TerritoryEntryMapRuntime({
     mapReady &&
     !boundaryUnavailable &&
     (!boundaryStarted || isLoading || isBoundaryLoading);
+  const mapRegionBusy =
+    !mapUnavailable &&
+    (!mapReady || isLoading || !boundaryStarted || isBoundaryLoading);
 
   useEffect(() => {
     if (!mapReady) {
@@ -212,7 +215,7 @@ export default function TerritoryEntryMapRuntime({
     <section
       className={`territory-entry-map relative h-full min-h-[12rem] w-full overflow-hidden bg-territory-raised md:min-h-[18rem] lg:min-h-[24rem] ${className}`}
       aria-labelledby="territory-entry-map-title"
-      aria-busy={!mapReady || isLoading || !boundaryStarted || isBoundaryLoading}
+      aria-busy={mapRegionBusy}
     >
       <MapLibreAdapter
         styleUrl={DEFAULT_TILE_STYLE.styleUrl}
