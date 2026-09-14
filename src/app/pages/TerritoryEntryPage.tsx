@@ -1,6 +1,5 @@
 import { useEffect, useRef, useState } from "react";
 import TerritoryEntryMap from "@/app/components/territory-vivo/TerritoryEntryMap";
-import communityThumbnail from "@/assets/complexo-cultura.jpg";
 import { AUTH_PATHS } from "@/core/auth/constants/authFlow";
 import { LAUNCH_URLS, TERRITORY_CONFIG } from "@/core/routing/config/territory";
 import {
@@ -65,7 +64,7 @@ const launchCommunityOriginLabel =
 
 export default function TerritoryEntryPage() {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
-  const [shouldLoadCommunityImage, setShouldLoadCommunityImage] = useState(false);
+  const [communityImageSrc, setCommunityImageSrc] = useState<string | null>(null);
   const mobileMenuButtonRef = useRef<HTMLButtonElement | null>(null);
   const mobileMenuPopoverRef = useRef<HTMLElement | null>(null);
 
@@ -106,16 +105,30 @@ export default function TerritoryEntryPage() {
   useEffect(() => {
     const desktopMedia = window.matchMedia("(min-width: 768px)");
     let cancelScheduledImage: (() => void) | null = null;
+    let disposed = false;
+    let imageModulePromise: Promise<string | null> | null = null;
+
+    const loadCommunityImage = () => {
+      imageModulePromise ??= import("@/assets/complexo-cultura.jpg")
+        .then((module) => module.default)
+        .catch(() => null);
+      return imageModulePromise;
+    };
 
     const scheduleImage = () => {
-      if (!desktopMedia.matches || shouldLoadCommunityImage || cancelScheduledImage) {
+      if (!desktopMedia.matches || communityImageSrc || cancelScheduledImage) {
         return;
       }
 
       cancelScheduledImage = scheduleAfterPublicRootMap(
-        () => {
+        async () => {
           cancelScheduledImage = null;
-          if (desktopMedia.matches) setShouldLoadCommunityImage(true);
+          if (!desktopMedia.matches || disposed) return;
+
+          const imageSrc = await loadCommunityImage();
+          if (!disposed && desktopMedia.matches && imageSrc) {
+            setCommunityImageSrc(imageSrc);
+          }
         },
         {
           maxWaitMs: 3000,
@@ -140,10 +153,11 @@ export default function TerritoryEntryPage() {
     desktopMedia.addEventListener("change", handleMediaChange);
 
     return () => {
+      disposed = true;
       desktopMedia.removeEventListener("change", handleMediaChange);
       cancelScheduledImage?.();
     };
-  }, [shouldLoadCommunityImage]);
+  }, [communityImageSrc]);
 
   const rememberLaunchCommunity = () => {
     lastTerritoryStore.set({
@@ -240,7 +254,7 @@ export default function TerritoryEntryPage() {
           <section className="entry-selection" aria-labelledby="entry-community-title">
             <div className="entry-community-preview">
               <img
-                src={shouldLoadCommunityImage ? communityThumbnail : undefined}
+                src={communityImageSrc ?? undefined}
                 alt=""
                 width={1024}
                 height={768}
