@@ -1,3 +1,4 @@
+import { useSyncExternalStore } from "react";
 import { ArrowLeftRight, MapPin } from "lucide-react";
 import { Link, useLocation } from "react-router-dom";
 import { usePublicBrowsingCity } from "@/core/location/hooks/usePublicBrowsingCity";
@@ -6,6 +7,11 @@ import {
   isTerritoryNavigationModeActive,
   resolveTerritoryNavigationBase,
 } from "@/core/navigation/territoryNavigationModes";
+import { TERRITORY_CONFIG } from "@/core/routing/config/territory";
+import {
+  lastTerritoryStore,
+  type LastTerritory,
+} from "@/core/routing/stores/LastTerritoryStore";
 import { useSessionContext } from "@/core/session";
 import { cn } from "@/shared/utils/cn";
 
@@ -19,10 +25,22 @@ export function TerritoryAdaptiveNavigation({
   const { pathname } = useLocation();
   const { active } = usePublicBrowsingCity();
   const { user } = useSessionContext();
-  const territoryBase = resolveTerritoryNavigationBase(pathname, active);
+  const lastTerritory = useSyncExternalStore<LastTerritory | null>(
+    (listener) => lastTerritoryStore.subscribe(listener),
+    () => lastTerritoryStore.get(),
+    () => null,
+  );
+  const fallbackBaseUrl =
+    lastTerritory?.baseUrl ?? TERRITORY_CONFIG.launch.community.path;
+  const territoryBase = resolveTerritoryNavigationBase(
+    pathname,
+    active,
+    fallbackBaseUrl,
+  );
   const navigationModes = buildTerritoryNavigationModes({
     pathname,
     fallback: active,
+    fallbackBaseUrl,
     authenticated: Boolean(user),
   });
 
