@@ -39,10 +39,21 @@ describe("anonymous root bootstrap performance", () => {
     expect(runtime).not.toContain("AccessibilityProvider");
     expect(runtime).not.toContain('import { AppRoutes }');
     expect(runtime).not.toContain("FullScreenLoader");
+    expect(runtime).not.toContain('import { ErrorBoundary }');
 
     expect(fullShell).toContain("QueryClientProvider");
     expect(fullShell).toContain("HelmetProvider");
     expect(fullShell).toContain("AccessibilityProvider");
+    expect(fullShell).toContain("<ErrorBoundary>");
+  });
+
+  it("preserves saved accessibility preferences without loading the provider", () => {
+    const runtime = read("src/app/components/AppRuntime.tsx");
+
+    expect(runtime).toContain("useLayoutEffect");
+    expect(runtime).toContain('localStorage.getItem("accessibility-high-contrast")');
+    expect(runtime).toContain('localStorage.getItem("accessibility-font-size")');
+    expect(runtime).toContain('body.classList.toggle("accessibility-high-contrast"');
   });
 
   it("mounts only minimal public overlays after load and browser idle", () => {
@@ -69,6 +80,16 @@ describe("anonymous root bootstrap performance", () => {
     expect(html).toContain('rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans');
     expect(html).toContain('rel="preconnect" href="https://tiles.openfreemap.org" crossorigin');
     expect(html).toContain('rel="dns-prefetch" href="//tiles.openfreemap.org"');
+  });
+
+  it("keeps router, query and state libraries in separate vendor chunks", () => {
+    const vite = read("vite.config.ts");
+
+    expect(vite).toContain('return "vendor-router"');
+    expect(vite).toContain('return "vendor-query"');
+    expect(vite).toContain('return "vendor-state"');
+    expect(vite).toContain('return "vendor-ui-utils"');
+    expect(vite).not.toContain('return "vendor-runtime"');
   });
 
   it("keeps AdSense off load-critical work and schedules it on browser idle", () => {
