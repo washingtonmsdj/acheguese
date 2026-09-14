@@ -6,6 +6,11 @@
  */
 
 import { logger } from '@/shared/utils/logger';
+import {
+  PRIVACY_POLICY_PATH,
+  SUPPORT_PATH,
+  TERMS_OF_SERVICE_PATH,
+} from '@/shared/constants/legal';
 import { isLaunchSurfaceEnabled, type LaunchSurfaceKey } from '@/app/config/launchScope';
 import { territorialGroupService, type TerritorialGroupWithMembers } from '@/core/territorial';
 import {
@@ -238,9 +243,9 @@ function collectSitemapUrls(
     { path: '/ba/salvador', priority: 0.95, changefreq: 'daily' as const },
     { path: '/como-funciona', priority: 0.7, changefreq: 'monthly' as const },
     { path: '/sobre', priority: 0.6, changefreq: 'monthly' as const },
-    { path: '/contato', priority: 0.6, changefreq: 'monthly' as const },
-    { path: '/termos', priority: 0.3, changefreq: 'monthly' as const },
-    { path: '/privacidade', priority: 0.3, changefreq: 'monthly' as const },
+    { path: SUPPORT_PATH, priority: 0.6, changefreq: 'monthly' as const },
+    { path: TERMS_OF_SERVICE_PATH, priority: 0.3, changefreq: 'monthly' as const },
+    { path: PRIVACY_POLICY_PATH, priority: 0.3, changefreq: 'monthly' as const },
   ];
 
   staticPages.forEach((page) => {
