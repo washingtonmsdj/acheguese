@@ -172,17 +172,25 @@ describe("anonymous root bootstrap performance", () => {
     expect(vite).not.toContain('return "vendor-runtime"');
   });
 
-  it("keeps AdSense off HTML parsing and behind first-map readiness on root", () => {
+  it("keeps AdSense slot-driven and entirely off the public bootstrap", () => {
     const html = read("index.html");
     const main = read("src/main.tsx");
+    const adsense = read("src/shared/components/advertising/AdSense.tsx");
 
     expect(html).not.toContain("adsense-bootstrap.js");
     expect(fs.existsSync(path.join(ROOT, "public/adsense-bootstrap.js"))).toBe(false);
-    expect(main).toContain("data-acheguese-adsense");
-    expect(main).toContain("pagead2.googlesyndication.com/pagead/js/adsbygoogle.js");
-    expect(main).toContain("ads.async = true");
-    expect(main).toContain("scheduleAfterPublicRootMap(loadAds");
-    expect(main).toContain("maxWaitMs: 3200");
+    expect(main).not.toContain("adsbygoogle.js");
+    expect(main).not.toContain("data-acheguese-adsense");
+    expect(main).not.toContain("VITE_ADSENSE_CLIENT_ID");
+    expect(main).not.toMatch(/ca-pub-\d{6,}/);
+
+    expect(adsense).toContain("const adsenseScriptPromises = new Map<string, Promise<void>>();");
+    expect(adsense).toContain("client = import.meta.env.VITE_ADSENSE_CLIENT_ID");
+    expect(adsense).toContain('script.addEventListener("load", handleLoad, { once: true })');
+    expect(adsense).toContain("document.head.appendChild(script)");
+    expect(adsense).toContain("window.adsbygoogle.push({});");
+    expect(adsense).not.toContain("setTimeout(initAd, 100)");
+    expect(adsense).not.toMatch(/ca-pub-\d{6,}/);
   });
 
   it("keeps Web Vitals measurement lightweight and attaches Sentry later", () => {
