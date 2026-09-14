@@ -9,7 +9,7 @@
 1. `docs/README.md` — índice documental canônico;
 2. `docs/03-architecture/CURRENT_RULES.md` — regras arquiteturais vigentes;
 3. `docs/08-roadmap/EXECUCAO_MAIN_ONLY.md` — plano operacional ativo;
-4. `docs/08-roadmap/checkpoints/2026-09-14-g178-root-typography-and-launch-member-ssot.md` — checkpoint mais recente desta linha;
+4. `docs/08-roadmap/checkpoints/2026-09-14-g179-root-launch-presentation-and-bootstrap-ssot.md` — checkpoint mais recente desta linha;
 5. `SECURITY.md` — segurança e gates de release.
 
 ## Regras que não podem ser perdidas
@@ -25,7 +25,9 @@
 - CEP/geocoding reconciliado pertence a `LocationGeocodingService`; UI não chama provider diretamente quando esse owner atende o contrato;
 - contexto de lançamento da `/` vem de `TERRITORY_CONFIG`/`LAUNCH_URLS`; a página não cria fallback paralelo de estado/cidade/slug/nome;
 - membros/bairros exibidos para o grupo de lançamento vêm do território resolvido; a `/` não mantém uma segunda lista local;
-- nome geográfico canônico não é encurtado para satisfazer concept; rótulo público explícito pode existir em metadata de apresentação;
+- nome geográfico canônico não é encurtado para satisfazer concept; rótulo/artigo público explícito podem existir em metadata de apresentação;
+- `src/app/config/launchScope.ts` é o owner do rollout público e do `PRELAUNCH_LOCKDOWN_ENABLED`; consumidores não reinterpretam `VITE_PRELAUNCH_LOCKDOWN`;
+- preferências persistidas de acessibilidade pertencem a `src/shared/accessibility/preferences.ts`; bootstrap lean e Provider usam o mesmo owner sem duplicar chaves/parser/classes;
 - Plus Jakarta Sans é a família aprovada; `tailwind.config.ts` é o owner executável do stack e do `--font-heading`/`--font-sans`; peso 800 é permitido onde o concept versionado exige e deve ser carregado de forma real;
 - paths/query keys/classificação de callback de Auth vêm de `authFlow.ts`/`authCallback.ts`; âncora comum não é retorno OAuth;
 - fallback geográfico reutilizável vem de `mapDefaults`; não reintroduzir coordenadas locais quando o SSOT compartilhado atende o caso;
