@@ -79,7 +79,7 @@ export default function LoginPage() {
   useEffect(() => {
     if (!user) return;
 
-    if (isEmailConfirmed && redirectTo === "/") {
+    if (isEmailConfirmed) {
       navigate("/cadastro/primeiro-acesso", { replace: true });
       return;
     }
