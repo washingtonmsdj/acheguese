@@ -9,7 +9,7 @@
 1. `docs/README.md` — índice documental canônico;
 2. `docs/03-architecture/CURRENT_RULES.md` — regras arquiteturais vigentes;
 3. `docs/08-roadmap/EXECUCAO_MAIN_ONLY.md` — plano operacional ativo;
-4. `docs/08-roadmap/checkpoints/2026-09-14-g182-root-a11y-metadata-seo-and-mobile-navigation-hardening.md` — checkpoint mais recente desta linha;
+4. `docs/08-roadmap/checkpoints/2026-09-14-g182-root-a11y-metadata-navigation-seo-hardening.md` — checkpoint mais recente desta linha;
 5. `SECURITY.md` — segurança e gates de release.
 
 ## Regras que não podem ser perdidas
