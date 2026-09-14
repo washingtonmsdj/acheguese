@@ -164,9 +164,9 @@ export function AppLayoutSidebar() {
           }
         >
           <div
-            id="main-content"
+            id={isAccountRoute ? undefined : "main-content"}
             className="territory-vivo-safe-bottom min-h-[100dvh] min-w-0 max-md:h-[100dvh] max-md:overflow-y-auto max-md:scrollbar-hide"
-            tabIndex={-1}
+            tabIndex={isAccountRoute ? undefined : -1}
           >
             <TerritoryMismatchBanner />
             <Outlet />
