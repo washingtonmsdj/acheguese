@@ -73,7 +73,7 @@ describe("account and access concept contract", () => {
     expect(login).toContain("prepareGoogleLogin(redirectTo)");
     expect(cadastro).toContain("Continuar com Google");
     expect(cadastro).toContain("prepareGoogleSignup(redirectTo)");
-    expect(journey).toContain("setPendingAuthReturn(AUTH_PATHS.firstAccess)");
+    expect(journey).toContain("setPendingReturn(AUTH_PATHS.firstAccess)");
     expect(authService).toContain('provider: "google"');
     expect(authService).toContain("getTermsAcceptanceRedirectUrl");
   });
@@ -224,7 +224,6 @@ describe("account and access concept contract", () => {
     const flow = readProjectFile("src/core/auth/constants/authFlow.ts");
     const storage = readProjectFile("src/core/auth/utils/authFlowStorage.ts");
     const journey = readProjectFile("src/core/auth/utils/authJourney.ts");
-    const pendingReturn = readProjectFile("src/core/auth/utils/pendingAuthReturn.ts");
     const pendingSignup = readProjectFile("src/core/auth/utils/pendingSignup.ts");
     const authService = readProjectFile("src/core/auth/services/AuthService.ts");
     const rootRoutes = readProjectFile("src/app/routes/AppRoutes.tsx");
@@ -248,11 +247,13 @@ describe("account and access concept contract", () => {
     }
     expect(storage).toContain("expiresAt");
     expect(storage).toContain("Compatibilidade transitória");
-    expect(pendingReturn).toContain("resolveSafeInternalPath");
+    expect(storage).toContain("formato legado foi removida");
     expect(pendingSignup).toContain("resolveSafeInternalPath");
+    expect(journey).toContain("AUTH_FLOW_STORAGE_KEYS.pendingReturn");
     expect(journey).toContain("prepareEmailSignupConfirmation");
     expect(journey).toContain("getSignupConfirmationContext");
     expect(journey).toContain("completeFirstAccessJourney");
+    expect(journey).not.toContain("pendingAuthReturn");
     expect(authService).toContain("buildPublicAbsoluteUrl");
     expect(authService).not.toContain("window.location.origin");
     expect(rootRoutes).toContain("AUTH_PATHS.login");
