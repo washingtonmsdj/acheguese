@@ -9,7 +9,7 @@
 1. `docs/README.md` — índice documental canônico;
 2. `docs/03-architecture/CURRENT_RULES.md` — regras arquiteturais vigentes;
 3. `docs/08-roadmap/EXECUCAO_MAIN_ONLY.md` — plano operacional ativo;
-4. `docs/08-roadmap/checkpoints/2026-09-14-g188-root-loading-skeleton-and-map-readiness.md` — checkpoint mais recente desta linha;
+4. `docs/08-roadmap/checkpoints/2026-09-14-g189-generic-loading-interstitial-retirement.md` — checkpoint mais recente desta linha;
 5. `SECURITY.md` — segurança e gates de release.
 
 ## Regras que não podem ser perdidas
@@ -50,7 +50,8 @@
 - mídia decorativa de baixa prioridade da `/` não deve competir com mapa ainda dentro do orçamento terminal;
 - fonte opcional da `/` não volta para `@import` remoto no CSS crítico nem para plugin de build que esconda esse import;
 - timeout final de mapa precisa encerrar estado acessível de carregamento; fallback visual resolvido não permanece `aria-busy=true`;
-- o `FullScreenLoader` com “Preparando a casa para você se achegar...” pertence ao app roteado/completo; o caminho leve de `/` usa somente o skeleton `TerritoryEntryMapArrival` antes do basemap e status próprios após o mapa ficar utilizável;
+- o `FullScreenLoader` genérico com “Preparando a casa para você se achegar...” está aposentado; shells usam Suspense visualmente silencioso e rotas que precisam preservar espaço usam `PassivePageFallback` sem spinner, timer ou copy;
+- a `/` mantém apenas o skeleton `TerritoryEntryMapArrival` antes do basemap e status próprios após o mapa ficar utilizável;
 - regra exclusiva da `/` só permanece local quando depender de prioridade/UX específica da entrada pública;
 - erro de bootstrap pode carregar observabilidade somente no caminho de falha; Sentry não volta a ser import estático do bootstrap normal;
 - `rateLimitMiddleware` é o owner do CORS de respostas 429: por padrão deriva o método real + `OPTIONS`; endpoint multimétodo deve passar a lista completa explicitamente;
