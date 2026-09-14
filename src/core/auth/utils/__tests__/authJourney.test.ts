@@ -1,13 +1,24 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
-import { AUTH_FLOW_STORAGE_KEYS, AUTH_PATHS } from "@/core/auth/constants/authFlow";
+import {
+  AUTH_FLOW_STORAGE_KEYS,
+  AUTH_JOURNEY_INTENTS,
+  AUTH_PATHS,
+} from "@/core/auth/constants/authFlow";
 import {
   cancelGoogleLogin,
   cancelGoogleSignup,
   completeEmailConfirmationLoginJourney,
+  completeFirstAccessJourney,
   completeStandardLoginJourney,
+  getAuthJourneyReturnTarget,
+  getPendingAuthJourneyIntent,
+  getSignupConfirmationContext,
+  getSignupJourneyReturnTarget,
+  prepareEmailSignupConfirmation,
   prepareGoogleLogin,
   prepareGoogleSignup,
+  restartEmailSignupJourney,
 } from "@/core/auth/utils/authJourney";
 import { getPendingAuthReturn } from "@/core/auth/utils/pendingAuthReturn";
 import {
@@ -33,22 +44,53 @@ describe("authJourney", () => {
     prepareGoogleLogin("/mensagens/abc");
 
     expect(getPendingSignupEmail()).toBeNull();
-    expect(getPendingAuthReturn()).toBe("/mensagens/abc");
+    expect(getAuthJourneyReturnTarget()).toBe("/mensagens/abc");
+    expect(getPendingAuthJourneyIntent()).toBe(AUTH_JOURNEY_INTENTS.login);
 
     cancelGoogleLogin();
     expect(getPendingAuthReturn()).toBeNull();
+    expect(getPendingAuthJourneyIntent()).toBeNull();
   });
 
   it("keeps first access and original destination separate for Google signup", () => {
     prepareGoogleSignup("/mensagens/abc");
 
-    expect(getPendingAuthReturn()).toBe(AUTH_PATHS.firstAccess);
-    expect(getPendingSignupRedirect()).toBe("/mensagens/abc");
+    expect(getAuthJourneyReturnTarget()).toBe(AUTH_PATHS.firstAccess);
+    expect(getSignupJourneyReturnTarget()).toBe("/mensagens/abc");
     expect(getPendingSignupEmail()).toBeNull();
+    expect(getPendingAuthJourneyIntent()).toBe(AUTH_JOURNEY_INTENTS.signup);
 
     cancelGoogleSignup();
     expect(getPendingAuthReturn()).toBeNull();
     expect(getPendingSignupRedirect()).toBeNull();
+    expect(getPendingAuthJourneyIntent()).toBeNull();
+  });
+
+  it("owns email signup confirmation context and normalizes the pending email", () => {
+    prepareGoogleLogin("/conta");
+    prepareEmailSignupConfirmation("  ANA@EXAMPLE.COM  ", "/mensagens/abc");
+
+    expect(getSignupConfirmationContext()).toEqual({
+      email: "ana@example.com",
+      returnTo: "/mensagens/abc",
+    });
+    expect(getPendingAuthReturn()).toBeNull();
+    expect(getPendingAuthJourneyIntent()).toBeNull();
+  });
+
+  it("sanitizes unsafe signup return targets inside the journey owner", () => {
+    prepareEmailSignupConfirmation("ana@example.com", "https://evil.example/path");
+
+    expect(getSignupJourneyReturnTarget()).toBe("/");
+    expect(getSignupConfirmationContext().returnTo).toBe("/");
+  });
+
+  it("restarts email signup without losing the original safe destination", () => {
+    prepareEmailSignupConfirmation("ana@example.com", "/mensagens/abc");
+    restartEmailSignupJourney();
+
+    expect(getPendingSignupEmail()).toBeNull();
+    expect(getSignupJourneyReturnTarget()).toBe("/mensagens/abc");
   });
 
   it("cleans every transient auth context after normal login", () => {
@@ -57,16 +99,28 @@ describe("authJourney", () => {
 
     expect(getPendingAuthReturn()).toBeNull();
     expect(getPendingSignupRedirect()).toBeNull();
+    expect(getPendingAuthJourneyIntent()).toBeNull();
     expect(
       window.sessionStorage.getItem(AUTH_FLOW_STORAGE_KEYS.pendingSignupEmail),
     ).toBeNull();
   });
 
   it("preserves signup redirect after email confirmation until first access", () => {
-    prepareGoogleSignup("/mensagens/abc");
+    prepareEmailSignupConfirmation("ana@example.com", "/mensagens/abc");
     completeEmailConfirmationLoginJourney();
 
     expect(getPendingAuthReturn()).toBeNull();
-    expect(getPendingSignupRedirect()).toBe("/mensagens/abc");
+    expect(getSignupJourneyReturnTarget()).toBe("/mensagens/abc");
+    expect(getPendingSignupEmail()).toBe("ana@example.com");
+  });
+
+  it("cleans the complete signup context only when first access finishes", () => {
+    prepareEmailSignupConfirmation("ana@example.com", "/mensagens/abc");
+    completeFirstAccessJourney();
+
+    expect(getPendingAuthReturn()).toBeNull();
+    expect(getPendingAuthJourneyIntent()).toBeNull();
+    expect(getPendingSignupEmail()).toBeNull();
+    expect(getPendingSignupRedirect()).toBeNull();
   });
 });
