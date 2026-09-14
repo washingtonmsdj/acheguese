@@ -66,6 +66,11 @@ describe("account push and managed-profile quality contract", () => {
     expect(managedProfiles).not.toContain('role="tablist"');
   });
 
+  it("keeps personal public URLs from leaking into business or professional profiles", () => {
+    expect(managedProfiles).toContain('profile.profile_type === "personal" && profile.is_public === true && Boolean(handle)');
+    expect(managedProfiles).toContain("buildPublicProfileUrl(handle!)");
+  });
+
   it("keeps repeated profile actions distinguishable to assistive technology", () => {
     expect(managedProfiles).toContain('aria-label={`Editar ${displayName}`}');
     expect(managedProfiles).toContain('aria-label={`Ver perfil público de ${displayName}`}');
