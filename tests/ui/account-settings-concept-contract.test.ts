@@ -10,6 +10,7 @@ const overview = read("src/modules/profile/pages/ContaHubLayout.tsx");
 const security = read("src/modules/profile/pages/ContaSegurancaPage.tsx");
 const notifications = read("src/app/pages/NotificationPreferencesPage.tsx");
 const privacy = read("src/app/pages/PrivacySettingsPage.tsx");
+const push = read("src/app/components/notifications/PushNotificationSettings.tsx");
 const appLayout = read("src/app/components/AppLayoutSidebar.tsx");
 
 describe("account settings concept contract", () => {
@@ -61,9 +62,22 @@ describe("account settings concept contract", () => {
     expect(privacy).toContain("PrivacySettingsService.cancelAccountDeletion");
   });
 
-  it("prevents the global desktop navigation from stacking over the account shell", () => {
-    expect(appLayout).toContain('isAccountOverview = pathname === "/conta"');
-    expect(appLayout).toContain("conceptAccountPreview || isAccountRoute");
-    expect(appLayout).toContain("isAccountRoute && !isAccountOverview");
+  it("exposes concept export and device states without inventing data", () => {
+    expect(privacy).toContain('location.hash === "#exportar"');
+    expect(privacy).toContain('title="Uma cópia dos seus dados"');
+    expect(privacy).toContain('idPrefix="summary"');
+    expect(privacy).toContain('idPrefix="details"');
+    expect(push).toContain("usePush(user?.id)");
+    expect(push).toContain("isSupported");
+    expect(push).toContain("hasPermission");
+    expect(push).toContain("isSubscribed");
+  });
+
+  it("scopes exclusive shell ownership to migrated account routes", () => {
+    expect(appLayout).toContain("ACCOUNT_SETTINGS_SHELL_PATHS");
+    expect(appLayout).toContain("accountUsesSettingsShell");
+    expect(appLayout).toContain('id={accountUsesSettingsShell ? undefined : "main-content"}');
+    expect(appLayout).toContain("conceptAccountPreview || accountUsesSettingsShell");
+    expect(appLayout).toContain("accountUsesSettingsShell && !isAccountOverview");
   });
 });
