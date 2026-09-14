@@ -8,7 +8,12 @@
 import { useEffect, useRef } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 
-import { AUTH_PATHS } from "@/core/auth/constants/authFlow";
+import {
+  AUTH_PATHS,
+  AUTH_QUERY_KEYS,
+  AUTH_QUERY_VALUES,
+  buildExpiredPasswordResetPath,
+} from "@/core/auth/constants/authFlow";
 import {
   isExpiredPasswordRecoveryError,
   isPasswordRecoveryCallback,
@@ -25,14 +30,20 @@ export function AuthHashRedirect() {
 
     if (isExpiredPasswordRecoveryError(location.search, location.hash)) {
       handled.current = true;
-      navigate(`${AUTH_PATHS.passwordReset}?expired=1`, { replace: true });
+      navigate(buildExpiredPasswordResetPath(), { replace: true });
       return;
     }
 
     if (isPasswordRecoveryCallback(location.search, location.hash)) {
       handled.current = true;
+      const search = new URLSearchParams(location.search);
+      search.set(AUTH_QUERY_KEYS.mode, AUTH_QUERY_VALUES.recovery);
       navigate(
-        { pathname: AUTH_PATHS.passwordReset, search: location.search },
+        {
+          pathname: AUTH_PATHS.passwordReset,
+          search: `?${search.toString()}`,
+          hash: location.hash,
+        },
         { replace: true },
       );
     }
