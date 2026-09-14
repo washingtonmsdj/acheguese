@@ -30,6 +30,39 @@
     transform: rotate(-45deg);
   }
 
+  /* No Entrar mobile, o concept usa um escudo petróleo preenchido com check branco. */
+  main#main-content:has(#login-identifier)
+    span:has(> .auth-concept-icon--shield) {
+    width: 1.7rem !important;
+    height: 1.7rem !important;
+    background: transparent !important;
+  }
+
+  main#main-content:has(#login-identifier)
+    .auth-concept-icon--shield
+    .auth-concept-icon__a {
+    left: 0.14rem;
+    top: 0.03rem;
+    width: 0.98rem;
+    height: 1.12rem;
+    border: 0;
+    border-radius: 0;
+    background: currentColor;
+    clip-path: polygon(50% 0, 94% 17%, 88% 68%, 50% 100%, 12% 68%, 6% 17%);
+  }
+
+  main#main-content:has(#login-identifier)
+    .auth-concept-icon--shield
+    .auth-concept-icon__b {
+    left: 0.39rem;
+    top: 0.48rem;
+    z-index: 1;
+    width: 0.42rem;
+    height: 0.22rem;
+    border-left-color: #fff;
+    border-bottom-color: #fff;
+  }
+
   main#main-content:has(#cadastro-password) details > summary {
     list-style: none;
   }
