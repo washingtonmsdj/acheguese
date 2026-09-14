@@ -4,6 +4,7 @@ import communityThumbnail from "@/assets/complexo-cultura.jpg";
 import { AUTH_PATHS } from "@/core/auth/constants/authFlow";
 import { LAUNCH_URLS, TERRITORY_CONFIG } from "@/core/routing/config/territory";
 import {
+  getPublicTerritoryGroupPresentation,
   getPublicTerritoryLocationLabel,
   resolvePublicTerritoryFallback,
 } from "@/core/routing/utils/publicTerritoryFallbacks";
@@ -40,6 +41,26 @@ const launchCity =
   launchCityResolved?.kind === "location" ? launchCityResolved.location : null;
 const launchCommunityMembers =
   launchTerritory?.kind === "group" ? launchTerritory.group.members : [];
+const launchCommunityPresentation =
+  launchTerritory?.kind === "group"
+    ? getPublicTerritoryGroupPresentation(launchTerritory.group)
+    : { label: LAUNCH_COMMUNITY_NAME, article: null };
+const launchCommunityDefiniteLabel = [
+  launchCommunityPresentation.article,
+  launchCommunityPresentation.label,
+]
+  .filter(Boolean)
+  .join(" ");
+const launchCommunitySentenceLabel = launchCommunityDefiniteLabel.replace(
+  /^./,
+  (character) => character.toUpperCase(),
+);
+const launchCommunityOriginLabel =
+  launchCommunityPresentation.article === "o"
+    ? `pelo ${launchCommunityPresentation.label}`
+    : launchCommunityPresentation.article === "a"
+      ? `pela ${launchCommunityPresentation.label}`
+      : `por ${launchCommunityPresentation.label}`;
 
 export default function TerritoryEntryPage() {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
@@ -234,7 +255,7 @@ export default function TerritoryEntryPage() {
               className="entry-explore-link"
               onClick={rememberLaunchCommunity}
             >
-              Explorar o Complexo
+              Explorar {launchCommunityDefiniteLabel}
               <span aria-hidden="true" className="text-lg leading-none">→</span>
             </a>
             <p className="entry-no-account">Sem cadastro para explorar.</p>
@@ -270,7 +291,7 @@ export default function TerritoryEntryPage() {
             <div>
               <h2 id="entry-indication-title">Quer o Achegue-se na sua comunidade?</h2>
               <p>
-                O Complexo é só o começo. Conte de onde você é e ajude a orientar os próximos lugares.
+                {launchCommunitySentenceLabel} é só o começo. Conte de onde você é e ajude a orientar os próximos lugares.
               </p>
             </div>
           </div>
@@ -284,7 +305,9 @@ export default function TerritoryEntryPage() {
         className="entry-footer [content-visibility:auto] [contain-intrinsic-size:auto_4rem]"
         data-entry-deferred-paint
       >
-        <span>Começamos pelo Complexo. Aos poucos, o Achegue-se chega a novos lugares.</span>
+        <span>
+          Começamos {launchCommunityOriginLabel}. Aos poucos, o Achegue-se chega a novos lugares.
+        </span>
         <nav aria-label="Links institucionais">
           <a href="/privacidade">Privacidade</a>
           <i aria-hidden="true" />
