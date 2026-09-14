@@ -1,19 +1,5 @@
-import { lazy, Suspense } from "react";
-
+import { ConsentAwareVercelAnalytics } from "@/app/components/privacy/ConsentAwareVercelAnalytics";
 import { ConsentBannerContent } from "@/app/components/privacy/ConsentBannerContent";
-
-const shouldLoadVercelAnalytics =
-  import.meta.env.PROD &&
-  typeof window !== "undefined" &&
-  !["localhost", "127.0.0.1", "::1"].includes(window.location.hostname);
-
-const VercelAnalytics = shouldLoadVercelAnalytics
-  ? lazy(() =>
-      import("@vercel/analytics/react").then((module) => ({
-        default: module.Analytics,
-      })),
-    )
-  : null;
 
 /**
  * Overlays mínimos da raiz pública.
@@ -29,11 +15,7 @@ export default function PublicRootOverlays() {
   return (
     <>
       <ConsentBannerContent pathname={pathname} />
-      {VercelAnalytics ? (
-        <Suspense fallback={null}>
-          <VercelAnalytics />
-        </Suspense>
-      ) : null}
+      <ConsentAwareVercelAnalytics />
     </>
   );
 }
