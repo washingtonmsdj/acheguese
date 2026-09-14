@@ -1,6 +1,8 @@
 /**
  * Lazy imports organizados por dominio.
- * Centraliza imports das paginas para manter AppRoutes enxuto.
+ * Centraliza imports das paginas pertencentes ao AppLayoutRoutes.
+ * Rotas publicas sem layout pertencem diretamente a AppRoutes e nao devem
+ * ser redeclaradas neste barrel.
  */
 
 import { lazy } from "react";
@@ -101,7 +103,7 @@ export const TerritorialMapPage = lazy(() =>
 );
 
 // ============================================================
-// PAGINAS PUBLICAS (Landing Pages)
+// PAGINAS PUBLICAS PERTENCENTES AO APP LAYOUT
 // ============================================================
 export const NationalHubPage = lazy(
   () => import("@/app/pages/NationalHubPage"),
@@ -112,16 +114,11 @@ export const EmpresasLandingPage = lazy(
 export const CidadeLandingPage = lazy(
   () => import("@/app/pages/CidadeLandingPage"),
 );
-export const AboutPage = lazy(() => import("@/app/pages/AboutPage"));
-export const ContactPage = lazy(() => import("@/app/pages/ContactPage"));
-export const SplashPage = lazy(() => import("@/app/pages/SplashPage"));
-export const OnboardingPage = lazy(() => import("@/app/pages/OnboardingPage"));
 export const BuscaPage = lazy(() => import("@/app/pages/BuscaPage"));
 export const BuscarPage = lazy(() => import("@/app/pages/BuscarPage"));
 export const NearbyPage = lazy(() => import("@/app/pages/NearbyPage"));
 export { default as LaunchPausedPage } from "@/app/pages/LaunchPausedPage";
 export const NotFound = lazy(() => import("@/app/pages/NotFound"));
-export const StatusPage = lazy(() => import("@/app/pages/StatusPage"));
 export const VirtualTryOnPage = lazy(
   () => import("@/app/pages/VirtualTryOnPage"),
 );
@@ -144,20 +141,6 @@ export const BrasilShowcasePage = lazy(() =>
   import("@/core/routing/components/BrasilShowcasePage").then((m) => ({
     default: m.BrasilShowcasePage,
   })),
-);
-
-// ============================================================
-// AUTENTICACAO E ONBOARDING
-// ============================================================
-export const LoginPage = lazy(() => import("@/app/pages/LoginPage"));
-export const CadastroPage = lazy(
-  () => import("@/app/features/onboarding/pages/CadastroPage"),
-);
-export const CadastroConfirmacaoPage = lazy(
-  () => import("@/app/features/onboarding/pages/CadastroConfirmacaoPage"),
-);
-export const ResetPasswordPage = lazy(
-  () => import("@/app/pages/ResetPasswordPage"),
 );
 
 // ============================================================
@@ -250,32 +233,11 @@ export const BusinessSettingsPage = lazy(
 export const EmpresaDetailLandingPage = lazy(
   () => import("@/app/pages/EmpresaDetailLandingPage"),
 );
-export const EmpresaCatalogoPublicoPage = lazy(
-  () => import("@/modules/business/pages/EmpresaCatalogoPublicoPage"),
-);
 export const BusinessCanonicalRoute = lazy(
   () => import("@/core/routing/components/BusinessCanonicalRoute"),
 );
 export const BusinessRouteResolver = lazy(
   () => import("@/core/routing/components/BusinessRouteResolver"),
-);
-export const PremiumBusinessSiteRoute = lazy(
-  () => import("@/modules/business/premium/pages/PremiumBusinessSiteRoute"),
-);
-export const PremiumBusinessHomePage = lazy(
-  () => import("@/modules/business/premium/pages/PremiumBusinessHomePage"),
-);
-export const PremiumBusinessMenuPage = lazy(
-  () => import("@/modules/business/premium/pages/PremiumBusinessMenuPage"),
-);
-export const PremiumBusinessProductPage = lazy(
-  () => import("@/modules/business/premium/pages/PremiumBusinessProductPage"),
-);
-export const PremiumBusinessCartPage = lazy(
-  () => import("@/modules/business/premium/pages/PremiumBusinessCartPage"),
-);
-export const PremiumBusinessCheckoutPage = lazy(
-  () => import("@/modules/business/premium/pages/PremiumBusinessCheckoutPage"),
 );
 
 // ============================================================
@@ -522,15 +484,6 @@ export const MapaPage = lazy(() => import("@/core/maps/pages/MapaPageV4"));
 // ANALYTICS
 // ============================================================
 export const GeneralAnalyticsPage = createLaunchPausedRoute("Analytics");
-
-// ============================================================
-// QR CODE
-// ============================================================
-export const QrResolverPage = lazy(() =>
-  import("@/core/qr/pages/QrResolverPage").then((m) => ({
-    default: m.QrResolverPage,
-  })),
-);
 
 // ============================================================
 // LEGAL E CONFIGURACOES
