@@ -18,7 +18,7 @@ import { useMobilidade } from "@/modules/mobility/hooks/useMobilidade";
 import type { RideSearchStatus } from "@/modules/mobility/hooks/useRideSearch";
 import { mobilityService } from "@/core/mobility/services/MobilityService";
 import { mobilityRoutes } from "@/core/mobility/routes/mobilityRoutes";
-import { DEFAULT_TILE_STYLE } from "@/core/maps/providers/MapProvider";
+import { DEFAULT_CAMERA, DEFAULT_TILE_STYLE } from "@/core/maps/providers/MapProvider";
 import { loadMapLibreRuntime } from "@/core/maps/runtime/loadMapLibreRuntime";
 import {
   MOBILITY_MAP_VISUALS,
@@ -53,8 +53,8 @@ const RouteMap = memo(function RouteMap({
       const maplibregl = await loadMapLibreRuntime();
       if (disposed || !containerRef.current || mapRef.current) return;
 
-      const centerLng = originLng ?? destinationLng ?? -38.476;
-      const centerLat = originLat ?? destinationLat ?? -12.975;
+      const centerLng = originLng ?? destinationLng ?? DEFAULT_CAMERA.center[0];
+      const centerLat = originLat ?? destinationLat ?? DEFAULT_CAMERA.center[1];
 
       const map = new maplibregl.Map({
         container: containerRef.current,
