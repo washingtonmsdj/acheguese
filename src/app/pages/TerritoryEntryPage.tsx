@@ -208,6 +208,13 @@ export default function TerritoryEntryPage() {
               </a>
               <a
                 className="hover:bg-territory-raised"
+                href="/privacidade"
+                onClick={() => setIsMobileMenuOpen(false)}
+              >
+                Privacidade
+              </a>
+              <a
+                className="hover:bg-territory-raised"
                 href={AUTH_PATHS.login}
                 onClick={() => setIsMobileMenuOpen(false)}
               >
