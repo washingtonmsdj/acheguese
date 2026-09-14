@@ -1,22 +1,19 @@
 /**
  * StandaloneMap — Mapa de localização de empresa com rota do usuário.
- * 
- * ✅ SSOT COMPLETO:
- * - DEFAULT_TILE_STYLE: Estilo de mapa centralizado (MapProvider)
- * - useRobustGeolocation: Geolocalização centralizada
- * - MapLibre GL JS: Engine padrão
- * 
- * Nota: Não usa useMapInitialization pois precisa de configurações customizadas
- * (centro dinâmico, interações específicas). O SSOT está no MapProvider.
+ *
+ * SSOT:
+ * - DEFAULT_TILE_STYLE: estilo centralizado
+ * - useRobustGeolocation: geolocalização centralizada
+ * - loadMapLibreRuntime: engine/CSS/worker canônicos e lazy
  */
 
 import { useEffect, useRef, useState, useCallback, useMemo } from 'react';
-import * as maplibregl from "maplibre-gl";
-import 'maplibre-gl/dist/maplibre-gl.css';
+import type { GeoJSONSource, Map as MapLibreMap, Marker as MapLibreMarker } from "maplibre-gl";
 import { MapPin, Navigation, Loader2, Map as MapIcon } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/shared/components/ui/card';
 import { Button } from '@/shared/components/ui/button';
 import { useRobustGeolocation } from '@/shared/hooks';
+import { loadMapLibreRuntime } from '@/core/maps/runtime/loadMapLibreRuntime';
 import { DEFAULT_TILE_STYLE } from '@/shared/config/mapDefaults';
 import { buildGoogleMapsDirectionsUrl } from '@/shared/utils/contactLinks';
 import { openSafeExternalUrl } from '@/shared/utils/safeRedirect';
@@ -54,7 +51,6 @@ function haversineDistance(a: [number, number], b: [number, number]): string {
   return d < 1 ? `${Math.round(d * 1000)}m` : `${d.toFixed(1)}km`;
 }
 
-/** Extrai coordenadas do Business canônico */
 function getBusinessCoords(business: Business): [number, number] | null {
   const metadata = business.metadata;
   const isFiniteNumber = (value: unknown): value is number =>
@@ -75,20 +71,16 @@ function getBusinessCoords(business: Business): [number, number] | null {
         : metadata && typeof metadata === "object"
           ? (() => {
               const latitude = metadata.latitude ?? metadata.lat ?? metadata.canonical_lat;
-              const longitude =
-                metadata.longitude ?? metadata.lng ?? metadata.lon ?? metadata.canonical_lng;
-              if (isFiniteNumber(latitude) && isFiniteNumber(longitude)) {
-                return { latitude, longitude };
-              }
-              return null;
+              const longitude = metadata.longitude ?? metadata.lng ?? metadata.lon ?? metadata.canonical_lng;
+              return isFiniteNumber(latitude) && isFiniteNumber(longitude)
+                ? { latitude, longitude }
+                : null;
             })()
           : null;
 
-  if (coords) return [coords.latitude, coords.longitude];
-  return null;
+  return coords ? [coords.latitude, coords.longitude] : null;
 }
 
-/** Extrai endereço legível */
 function getAddressText(business: Business): string | null {
   const addr = business.address;
   if (!addr) return null;
@@ -98,17 +90,16 @@ function getAddressText(business: Business): string | null {
 
 export default function StandaloneMap({ business }: StandaloneMapProps) {
   const containerRef = useRef<HTMLDivElement>(null);
-  const mapRef = useRef<maplibregl.Map | null>(null);
-  const userMarkerRef = useRef<maplibregl.Marker | null>(null);
-  const businessMarkerRef = useRef<maplibregl.Marker | null>(null);
+  const mapRef = useRef<MapLibreMap | null>(null);
+  const userMarkerRef = useRef<MapLibreMarker | null>(null);
+  const businessMarkerRef = useRef<MapLibreMarker | null>(null);
   const [distance, setDistance] = useState<string | null>(null);
 
-  const businessPos = getBusinessCoords(business);
-  const addressText = getAddressText(business);
+  const businessPos = useMemo(() => getBusinessCoords(business), [business]);
+  const addressText = useMemo(() => getAddressText(business), [business]);
   const locationName = business.location?.name ?? null;
   const postalCode = business.address?.postal_code ?? null;
 
-  // URL do mapa completo com foco explícito no estabelecimento.
   const internalMapUrl = useMemo(() => {
     if (!businessPos) return null;
     const params = new URLSearchParams({
@@ -120,7 +111,6 @@ export default function StandaloneMap({ business }: StandaloneMapProps) {
     return `/mapa?${params.toString()}`;
   }, [businessPos, business.name]);
 
-  // ── Geolocalização robusta (SSOT) ──────────────────────────────
   const {
     coords: userCoords,
     loading: loadingLoc,
@@ -134,153 +124,156 @@ export default function StandaloneMap({ business }: StandaloneMapProps) {
   });
 
   const userPos = useMemo<[number, number] | null>(
-    () =>
-      userCoords
-        ? [userCoords.latitude, userCoords.longitude]
-        : null,
+    () => userCoords ? [userCoords.latitude, userCoords.longitude] : null,
     [userCoords],
   );
 
-  // ── Inicialização do mapa (SSOT: DEFAULT_TILE_STYLE) ──────────
   useEffect(() => {
     if (!containerRef.current || mapRef.current || !businessPos) return;
+    let disposed = false;
 
-    // ✅ SSOT: Usa DEFAULT_TILE_STYLE do MapProvider
-    const map = new maplibregl.Map({
-      container: containerRef.current,
-      style: DEFAULT_TILE_STYLE.styleUrl,
-      center: [businessPos[1], businessPos[0]], // [lng, lat]
-      zoom: 15,
-      attributionControl: false,
-      scrollZoom: true,
-      dragPan: true,
-      touchZoomRotate: true,
-    });
+    void (async () => {
+      const maplibregl = await loadMapLibreRuntime();
+      if (disposed || !containerRef.current || mapRef.current) return;
 
-    // Adicionar controles padrão
-    map.addControl(
-      new maplibregl.AttributionControl({ 
-        compact: true, 
-        customAttribution: DEFAULT_TILE_STYLE.attribution,
-      }), 
-      'bottom-left'
-    );
-    map.addControl(
-      new maplibregl.NavigationControl({ showCompass: false }), 
-      'top-right'
-    );
-
-    mapRef.current = map;
-
-    // Configurar mapa quando carregar
-    map.on('load', () => {
-      // Criar marcador do negócio
-      const el = document.createElement('div');
-      el.style.cssText = 'width:32px;height:32px;background:#ef4444;border-radius:50%;border:3px solid white;box-shadow:0 2px 8px rgba(0,0,0,0.3);display:flex;align-items:center;justify-content:center;';
-      // ✅ SEGURO - Usa DOM API ao invés de innerHTML
-      const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
-      svg.setAttribute('width', '16');
-      svg.setAttribute('height', '16');
-      svg.setAttribute('viewBox', '0 0 24 24');
-      svg.setAttribute('fill', 'white');
-      
-      const path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
-      path.setAttribute('d', 'M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z');
-      
-      const circle = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
-      circle.setAttribute('cx', '12');
-      circle.setAttribute('cy', '10');
-      circle.setAttribute('r', '3');
-      
-      svg.appendChild(path);
-      svg.appendChild(circle);
-      el.appendChild(svg);
-
-      const popupContent = document.createElement('div');
-      const title = document.createElement('p');
-      title.style.cssText = 'font-size:13px;font-weight:600';
-      title.textContent = business.name;
-      popupContent.appendChild(title);
-
-      if (addressText) {
-        const address = document.createElement('p');
-        address.style.cssText = 'font-size:11px;color:#6b7280';
-        address.textContent = addressText;
-        popupContent.appendChild(address);
-      }
-
-      businessMarkerRef.current = new maplibregl.Marker({ element: el })
-        .setLngLat([businessPos[1], businessPos[0]])
-        .setPopup(new maplibregl.Popup({ closeButton: false }).setDOMContent(popupContent))
-        .addTo(map);
-
-      // Adicionar source e layer para rota
-      map.addSource('route', {
-        type: 'geojson',
-        data: {
-          type: 'Feature',
-          geometry: { type: 'LineString', coordinates: [] },
-          properties: {},
-        },
+      const map = new maplibregl.Map({
+        container: containerRef.current,
+        style: DEFAULT_TILE_STYLE.styleUrl,
+        center: [businessPos[1], businessPos[0]],
+        zoom: 15,
+        attributionControl: false,
+        scrollZoom: true,
+        dragPan: true,
+        touchZoomRotate: true,
       });
 
-      map.addLayer({
-        id: 'route-line',
-        type: 'line',
-        source: 'route',
-        paint: {
-          'line-color': '#3b82f6',
-          'line-width': 3,
-          'line-opacity': 0.7,
-          'line-dasharray': [10, 10],
-        },
-      });
-    });
+      map.addControl(
+        new maplibregl.AttributionControl({
+          compact: true,
+          customAttribution: DEFAULT_TILE_STYLE.attribution,
+        }),
+        'bottom-left',
+      );
+      map.addControl(new maplibregl.NavigationControl({ showCompass: false }), 'top-right');
+      mapRef.current = map;
 
-    // Cleanup
+      map.on('load', () => {
+        if (disposed) return;
+        const el = document.createElement('div');
+        el.style.cssText = 'width:32px;height:32px;background:#ef4444;border-radius:50%;border:3px solid white;box-shadow:0 2px 8px rgba(0,0,0,0.3);display:flex;align-items:center;justify-content:center;';
+        const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+        svg.setAttribute('width', '16');
+        svg.setAttribute('height', '16');
+        svg.setAttribute('viewBox', '0 0 24 24');
+        svg.setAttribute('fill', 'white');
+
+        const path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+        path.setAttribute('d', 'M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z');
+        const circle = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
+        circle.setAttribute('cx', '12');
+        circle.setAttribute('cy', '10');
+        circle.setAttribute('r', '3');
+        svg.appendChild(path);
+        svg.appendChild(circle);
+        el.appendChild(svg);
+
+        const popupContent = document.createElement('div');
+        const title = document.createElement('p');
+        title.style.cssText = 'font-size:13px;font-weight:600';
+        title.textContent = business.name;
+        popupContent.appendChild(title);
+
+        if (addressText) {
+          const address = document.createElement('p');
+          address.style.cssText = 'font-size:11px;color:#6b7280';
+          address.textContent = addressText;
+          popupContent.appendChild(address);
+        }
+
+        businessMarkerRef.current = new maplibregl.Marker({ element: el })
+          .setLngLat([businessPos[1], businessPos[0]])
+          .setPopup(new maplibregl.Popup({ closeButton: false }).setDOMContent(popupContent))
+          .addTo(map);
+
+        map.addSource('route', {
+          type: 'geojson',
+          data: {
+            type: 'Feature',
+            geometry: { type: 'LineString', coordinates: [] },
+            properties: {},
+          },
+        });
+
+        map.addLayer({
+          id: 'route-line',
+          type: 'line',
+          source: 'route',
+          paint: {
+            'line-color': '#3b82f6',
+            'line-width': 3,
+            'line-opacity': 0.7,
+            'line-dasharray': [10, 10],
+          },
+        });
+      });
+    })();
+
     return () => {
-      if (businessMarkerRef.current) {
-        businessMarkerRef.current.remove();
-        businessMarkerRef.current = null;
-      }
-      if (userMarkerRef.current) {
-        userMarkerRef.current.remove();
-        userMarkerRef.current = null;
-      }
-      if (mapRef.current) {
-        mapRef.current.remove();
-        mapRef.current = null;
-      }
+      disposed = true;
+      businessMarkerRef.current?.remove();
+      userMarkerRef.current?.remove();
+      mapRef.current?.remove();
+      businessMarkerRef.current = null;
+      userMarkerRef.current = null;
+      mapRef.current = null;
     };
   }, [businessPos, business.name, addressText]);
 
-  // ── Atualizar rota quando usuário localizado ───────────────────
   useEffect(() => {
-    const map = mapRef.current;
-    if (!map || !userPos || !businessPos) return;
+    if (!userPos || !businessPos) return;
+    let disposed = false;
 
-    const userLngLat: [number, number] = [userPos[1], userPos[0]];
-    const bizLngLat:  [number, number] = [businessPos[1], businessPos[0]];
+    void (async () => {
+      const map = mapRef.current;
+      if (!map) return;
+      const maplibregl = await loadMapLibreRuntime();
+      if (disposed || map !== mapRef.current) return;
 
-    if (userMarkerRef.current) {
-      userMarkerRef.current.setLngLat(userLngLat);
-    } else {
-      const el = document.createElement('div');
-      el.style.cssText = 'width:24px;height:24px;background:#3b82f6;border-radius:50%;border:3px solid white;box-shadow:0 2px 8px rgba(0,0,0,0.3);display:flex;align-items:center;justify-content:center;';
-      const inner = document.createElement('div');
-      inner.style.cssText = 'width:8px;height:8px;background:white;border-radius:50%;';
-      el.appendChild(inner);
-      userMarkerRef.current = new maplibregl.Marker({ element: el }).setLngLat(userLngLat).addTo(map);
-    }
+      const userLngLat: [number, number] = [userPos[1], userPos[0]];
+      const bizLngLat: [number, number] = [businessPos[1], businessPos[0]];
 
-    const source = map.getSource('route') as maplibregl.GeoJSONSource | undefined;
-    source?.setData({ type: 'Feature', geometry: { type: 'LineString', coordinates: [userLngLat, bizLngLat] }, properties: {} });
+      if (userMarkerRef.current) {
+        userMarkerRef.current.setLngLat(userLngLat);
+      } else {
+        const el = document.createElement('div');
+        el.style.cssText = 'width:24px;height:24px;background:#3b82f6;border-radius:50%;border:3px solid white;box-shadow:0 2px 8px rgba(0,0,0,0.3);display:flex;align-items:center;justify-content:center;';
+        const inner = document.createElement('div');
+        inner.style.cssText = 'width:8px;height:8px;background:white;border-radius:50%;';
+        el.appendChild(inner);
+        userMarkerRef.current = new maplibregl.Marker({ element: el })
+          .setLngLat(userLngLat)
+          .addTo(map);
+      }
 
-    map.fitBounds(
-      [[Math.min(userLngLat[0], bizLngLat[0]), Math.min(userLngLat[1], bizLngLat[1])],
-       [Math.max(userLngLat[0], bizLngLat[0]), Math.max(userLngLat[1], bizLngLat[1])]],
-      { padding: 60, maxZoom: 15 }
-    );
+      const source = map.getSource('route') as GeoJSONSource | undefined;
+      source?.setData({
+        type: 'Feature',
+        geometry: { type: 'LineString', coordinates: [userLngLat, bizLngLat] },
+        properties: {},
+      });
+
+      map.fitBounds(
+        [
+          [Math.min(userLngLat[0], bizLngLat[0]), Math.min(userLngLat[1], bizLngLat[1])],
+          [Math.max(userLngLat[0], bizLngLat[0]), Math.max(userLngLat[1], bizLngLat[1])],
+        ],
+        { padding: 60, maxZoom: 15 },
+      );
+    })();
+
+    return () => {
+      disposed = true;
+    };
   }, [userPos, businessPos]);
 
   const openExternalRoute = useCallback(() => {
