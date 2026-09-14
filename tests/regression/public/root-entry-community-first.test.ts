@@ -76,6 +76,17 @@ describe("root community-first MVP entry", () => {
     expect(fs.statSync(asset).size).toBeLessThanOrEqual(160_000);
   });
 
+  it("defers below-fold layout and paint without hiding content", () => {
+    const source = read("src/app/pages/TerritoryEntryPage.tsx");
+
+    expect(source.match(/data-entry-deferred-paint/g)?.length).toBe(2);
+    expect(source).toContain("entry-indication [content-visibility:auto] [contain-intrinsic-size:auto_9rem]");
+    expect(source).toContain("entry-footer [content-visibility:auto] [contain-intrinsic-size:auto_4rem]");
+    expect(source).toContain("Quer o Achegue-se na sua comunidade?");
+    expect(source).toContain('href="/indicar-comunidade"');
+    expect(source).toContain('href="/privacidade"');
+  });
+
   it("renders the normal root outside routed/full app runtime", () => {
     const runtime = read("src/app/components/AppRuntime.tsx");
     expect(runtime).toContain('import RootRouteEntry from "@/app/routes/RootRouteEntry"');
