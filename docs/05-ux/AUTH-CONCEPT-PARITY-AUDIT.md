@@ -21,16 +21,18 @@ A superfície pública de conta/acesso já está consolidada no mesmo sistema vi
 
 | Item | Estado | Observação |
 | --- | --- | --- |
-| Header e safe-area | OK | Logo, voltar mobile, skip link e ações públicas desktop. |
+| Header e safe-area | OK por contrato | Logo central, voltar mobile e margens laterais respeitam `env(safe-area-inset-*)`. |
+| Título mobile | OK por contrato | Largura protegida para manter `Bom ter você` / `por aqui.` como na prancha de 390 px. |
 | E-mail ou `@usuário` | OK | Ambos usam autenticação real. |
 | Senha | OK | Mostrar/ocultar, Caps Lock, autocomplete e erro associado ao campo. |
 | Esqueci minha senha | OK | Reaproveita e-mail quando disponível e abre recuperação real. |
-| Retorno ao destino | OK | `redirect` é sanitizado e destinos conhecidos recebem nome amigável. |
+| Retorno ao destino | OK | `redirect` é sanitizado e destinos conhecidos recebem nome amigável. A regressão visual usa a conversa `Sabores da Ana`, como a composição aprovada. |
 | Google | OK frontend | `Continuar com Google` permanece no Login e usa Supabase OAuth real. |
 | Google + retorno | OK | Antes de abrir OAuth, Login grava o retorno seguro; após termos o usuário volta ao destino. |
 | Cancelamento/erro Google | OK | Callback com erro mostra estado recuperável próprio, preserva destino e não reflete `error_description` arbitrário da URL. |
 | Criar conta | OK | Preserva o retorno interno seguro. |
 | Explorar sem conta | OK | Mantido no mobile. |
+| Ícones/setas | OK por contrato | Setas mobile e escudo de segurança são desenho CSS próprio; o escudo do Login segue a versão petróleo preenchida com check branco da prancha. |
 | `noindex` | OK | Superfície transacional não concorre com páginas públicas. |
 
 ## Criar conta
@@ -39,6 +41,7 @@ A superfície pública de conta/acesso já está consolidada no mesmo sistema vi
 | --- | --- | --- |
 | Conta primeiro | OK | Nome, usuário, e-mail e senha; território fica para depois. |
 | Composição mobile | OK por contrato | Segue a prancha sem CTA Google, sem confirmação de senha e sem território. |
+| Título mobile | OK por contrato | Largura protegida para manter `Comece pelo seu` / `perfil pessoal.` no viewport aprovado. |
 | Google | OK desktop | OAuth continua disponível no card desktop, mas não é inserido na composição mobile aprovada. |
 | OAuth de cadastro | OK | Google segue para `/aceitar-termos` e depois `/cadastro/primeiro-acesso`; o destino original fica preservado separadamente. |
 | Disponibilidade do `@usuário` | OK | Feedback debounced + verificação autoritativa antes do signup. No estado neutro mobile, o helper é exatamente `Seu identificador público.`. |
@@ -119,7 +122,8 @@ A fronteira de Conta e acesso não deve voltar a conhecer chaves de `sessionStor
 - `authJourney.ts`: owner de retorno, intenção OAuth, confirmação de signup e encerramento de Primeiro acesso;
 - `AUTH_PATHS`: owner dos caminhos públicos de autenticação;
 - `AppRoutes.tsx`: owner das rotas públicas sem layout, incluindo Conta e acesso;
-- `AppLayoutRoutes.tsx`: não redeclara Login, Cadastro, Confirmação, Recuperação, Splash, Sobre, Contato, QR, Status ou o site premium público.
+- `AppLayoutRoutes.tsx`: não redeclara Login, Cadastro, Confirmação, Recuperação, Splash, Sobre, Contato, QR, Status ou o site premium público;
+- `lazyImports.ts`: não exporta novamente as páginas root-owned removidas da subárvore de AppLayout.
 
 O adaptador legado `pendingSignup.ts` foi removido depois que o Primeiro acesso passou a consumir `authJourney`.
 
@@ -129,10 +133,15 @@ A suíte E2E cobre as superfícies públicas principais nos limites:
 
 `320`, `360`, `390`, `430`, `767`, `768`, `1024` e `1440` px.
 
+A prancha principal mobile é certificada especificamente em **390×844**. Login e Cadastro possuem contrato adicional para permanecer integralmente dentro dessa altura no estado base do concept, sem criar uma segunda dobra vertical. Safe areas esquerda/direita e, no Cadastro, o home indicator inferior entram no cálculo visual.
+
 Os contratos verificam:
 
 - ausência de overflow horizontal;
 - composição mobile de uma coluna;
+- Login e Cadastro inteiros dentro de 390×844 no estado de referência;
+- retorno contextual visível no Login de referência;
+- quebras de título protegidas para a composição da prancha;
 - composição desktop em duas colunas quando prevista;
 - largura do card desktop;
 - presença e escala dos heroes oficiais;
@@ -166,6 +175,7 @@ No desktop os arquivos são ampliados responsivamente pelo `auth-concept-layout.
 - `src/app/features/onboarding/pages/CadastroPage.spec.tsx`
 - `src/app/features/onboarding/pages/CadastroPrimeiroAcessoPage.spec.tsx`
 - `tests/regression/auth-concept-flow.test.ts`
+- `tests/regression/auth-mobile-concept.test.ts`
 - `tests/regression/auth-route-ownership.test.ts`
 - `tests/regression/auth-return-context.test.ts`
 - `tests/regression/auth-google-oauth.test.ts`
@@ -181,7 +191,9 @@ No desktop os arquivos são ampliados responsivamente pelo `auth-concept-layout.
 
 Mobile e desktop geram imagens para Login, Cadastro, Confirmação, Recuperação, Termos sem sessão e cancelamento do Google.
 
-**Situação de CI em 2026-09-14:** o workflow `Auth Concept Regression` é criado corretamente, porém a execução observada (`run 91`) encerrou os dois jobs antes de qualquer step. A API registra `runner_id=0`, `runner_name` vazio e `steps=[]` para `auth contract` e `auth responsive layout, accessibility and captures`. Portanto essa falha não demonstra falha de teste: nenhum runner chegou a executar checkout/npm/test. O status Vercel também continua bloqueado por limite de builds. Reexecutar a certificação quando a infraestrutura voltar a alocar runner/build.
+**Situação de CI em 2026-09-14:** o workflow `Auth Concept Regression` continua sendo criado corretamente, porém a execução observada mais recente (`run 111`, commit `10316ac`) encerrou os dois jobs antes de qualquer step. A API registra `steps=[]` tanto para `auth contract` quanto para `auth responsive layout, accessibility and captures`. Portanto essa falha não demonstra falha de teste: nenhum runner chegou a executar checkout/npm/test. O status Vercel também continua bloqueado por limite de builds.
+
+A tentativa de inspeção remota do projeto Supabase `acheguese` também encerrou por timeout de conexão. A migration de username está presente no repositório, mas não deve ser declarada como aplicada ao banco remoto sem evidência.
 
 ## Próximos passos — ordem real
 
@@ -190,7 +202,7 @@ Mobile e desktop geram imagens para Login, Cadastro, Confirmação, Recuperaçã
 3. **P0 — comparar capturas renderizadas com as pranchas** em 390×844 e 1440×900; só então usar a palavra “fiel/pixel”.
 4. **P1 — teclado e foco:** validar Tab/Shift+Tab, Enter/Espaço, foco visível, checkbox de termos e retorno após erros em todas as telas.
 5. **P1 — autofill/password managers:** confirmar `username`, `email`, `current-password` e `new-password` nos principais navegadores.
-6. **P1 — eliminar lazy exports root-owned restantes** de `src/app/routes/lazyImports.ts` após confirmar que não há consumidores externos; a árvore de rotas já deixou de usá-los.
+6. **P1 — decidir o contrato de `@usuário` com ponto** de forma end-to-end antes de aproximar o exemplo `@ana.oliveira`; hoje UI, policy e banco permanecem coerentes com `_`.
 7. **P1 — cooldown orientado pelo servidor** quando a camada Auth expuser `Retry-After` de forma confiável.
 8. **P2 — pente fino visual:** medir offsets, baseline, espaçamento, raio, sombra e escala/crop individual dos heroes a partir das capturas reais.
 9. **P2 — assets 2×:** somente se a ampliação desktop mostrar suavização perceptível em telas densas.
