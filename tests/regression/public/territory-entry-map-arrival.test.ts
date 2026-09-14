@@ -26,17 +26,19 @@ describe("territory entry map arrival", () => {
     expect(wrapper).toContain("isLoading={isLoading}");
   });
 
-  it("discovers style before render and keeps official boundary post-paint", () => {
+  it("discovers style before render and starts official boundary only after map readiness", () => {
     expect(main).toContain("DEFAULT_TILE_STYLE");
     expect(main).toContain('mapStylePreload.setAttribute("fetchpriority", "high")');
     expect(main.indexOf("data-entry-map-style-preload")).toBeLessThan(
       main.indexOf("root.render(<App />)"),
     );
     expect(wrapper).not.toContain("preloadEntryMapStyle");
-    expect(wrapper).toContain("preloadEntryOfficialBoundary(preloadResolved)");
-    expect(wrapper).toContain("loadOfficialFeatureServerBoundaries");
-    expect(wrapper).not.toContain("preloadEntryMapEngine");
-    expect(wrapper).not.toContain("void loadTerritoryEntryMapRuntime()");
+    expect(wrapper).not.toContain("preloadEntryOfficialBoundary");
+    expect(wrapper).not.toContain("loadOfficialFeatureServerBoundaries");
+    expect(wrapper).not.toContain("preconnectOfficialBoundarySources");
+    expect(runtime).toContain("enabled: boundaryStarted");
+    expect(runtime).toContain("window.requestAnimationFrame(() => setBoundaryStarted(true))");
+    expect(runtime).toContain("markPublicRootMapReady();");
     expect(runtime).not.toContain("preloadTerritoryEntryMapEngine");
     expect(runtime).not.toContain("preloadTerritoryEntryBoundary");
   });
