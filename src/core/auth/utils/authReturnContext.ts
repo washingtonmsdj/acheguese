@@ -10,12 +10,23 @@ export interface AuthReturnContext {
   kind: AuthReturnContextKind;
 }
 
+const PORTUGUESE_CONNECTORS = new Set(["a", "as", "da", "das", "de", "do", "dos", "e", "em"]);
+
 function titleCaseSlug(slug: string): string {
-  return decodeURIComponent(slug)
+  const words = decodeURIComponent(slug)
     .replace(/[-_]+/g, " ")
     .replace(/\s+/g, " ")
     .trim()
-    .replace(/(^|\s)\p{L}/gu, (letter) => letter.toLocaleUpperCase("pt-BR"));
+    .toLocaleLowerCase("pt-BR")
+    .split(" ")
+    .filter(Boolean);
+
+  return words
+    .map((word, index) => {
+      if (index > 0 && PORTUGUESE_CONNECTORS.has(word)) return word;
+      return word.charAt(0).toLocaleUpperCase("pt-BR") + word.slice(1);
+    })
+    .join(" ");
 }
 
 /**
