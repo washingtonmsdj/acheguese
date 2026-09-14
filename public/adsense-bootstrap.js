@@ -19,9 +19,18 @@
     document.head.appendChild(ads);
   };
 
+  const scheduleAds = function () {
+    if ("requestIdleCallback" in window) {
+      window.requestIdleCallback(loadAds, { timeout: 2500 });
+      return;
+    }
+
+    window.setTimeout(loadAds, 1200);
+  };
+
   if (document.readyState === "complete") {
-    window.setTimeout(loadAds, 0);
+    scheduleAds();
   } else {
-    window.addEventListener("load", loadAds, { once: true });
+    window.addEventListener("load", scheduleAds, { once: true });
   }
 })();
