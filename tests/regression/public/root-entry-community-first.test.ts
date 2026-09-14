@@ -14,9 +14,13 @@ describe("root community-first MVP entry", () => {
     expect(source).not.toContain("useUserTerritory");
   });
 
-  it("keeps lockdown lazy", () => {
+  it("keeps lockdown lazy and delegated to launch scope", () => {
     const source = read("src/app/routes/RootRouteEntry.tsx");
-    expect(source).toContain("VITE_PRELAUNCH_LOCKDOWN");
+    expect(source).toContain(
+      'import { PRELAUNCH_LOCKDOWN_ENABLED } from "@/app/config/launchScope";',
+    );
+    expect(source).toContain("if (PRELAUNCH_LOCKDOWN_ENABLED)");
+    expect(source).not.toContain("VITE_PRELAUNCH_LOCKDOWN");
     expect(source).toContain('import("@/app/pages/PreLaunchLandingPage")');
   });
 
