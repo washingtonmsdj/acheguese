@@ -2,11 +2,11 @@
  * useGeolocation (mobility)
  *
  * Hook de geolocalização para o módulo de mobilidade.
- * Delega ao GeolocationService (SSOT).
+ * Delega ao GeolocationService compartilhado (SSOT).
  */
 
 import { useState, useCallback } from 'react';
-import { GeolocationService } from '@/core/maps/services/GeolocationService';
+import { GeolocationService } from '@/shared/services/GeolocationService';
 
 export interface GeolocationCoordinates {
   latitude: number;
@@ -18,7 +18,6 @@ function getErrorMessage(error: unknown): string {
   if (error instanceof Error && error.message) return error.message;
   return 'Erro ao obter localização';
 }
-
 
 export function useGeolocation() {
   const [coordinates, setCoordinates] = useState<GeolocationCoordinates | null>(null);
