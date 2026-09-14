@@ -34,8 +34,16 @@ describe("account MFA settings fail-closed contract", () => {
     expect(securityPage).toContain("Nenhuma alteração foi feita.");
     expect(securityPage).toContain("!isMFAStatusResolved ? (");
     expect(securityPage).toContain(
-      "Nenhuma nova configuração será criada enquanto a autoridade de fatores estiver indisponível.",
+      "Nenhuma nova configuração será criada enquanto o serviço de autenticação estiver indisponível.",
     );
     expect(securityPage).toContain("Confirmando o estado de segurança da conta...");
+  });
+
+  it("keeps implementation jargon out of the user-facing security surface", () => {
+    expect(securityPage).not.toContain("códigos TOTP");
+    expect(securityPage).not.toContain("fator TOTP");
+    expect(securityPage).not.toContain("autoridade de fatores");
+    expect(securityPage).toContain("aplicativo autenticador");
+    expect(securityPage).toContain("serviço de autenticação");
   });
 });
