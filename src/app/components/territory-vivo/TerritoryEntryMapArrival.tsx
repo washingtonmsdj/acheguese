@@ -114,7 +114,7 @@ export function TerritoryEntryMapArrival({
             </p>
           </div>
 
-          <div className="mt-2 flex max-w-full items-center gap-1 rounded-xl border border-territory-border bg-territory-surface/85 p-1 shadow-sm backdrop-blur-sm md:mt-3 md:gap-1.5 md:rounded-full md:p-1.5 lg:mt-5">
+          <div className="mt-2 flex max-w-full items-center gap-1 rounded-xl border border-territory-border bg-territory-surface/90 p-1 shadow-sm backdrop-blur-sm md:mt-3 md:gap-1.5 md:rounded-full md:p-1.5 lg:mt-5">
             {ARRIVAL_STAGES.map((stage, index) => {
               const Icon = stage.icon;
               const active = index <= activeStageIndex;
@@ -130,7 +130,7 @@ export function TerritoryEntryMapArrival({
                   }`}
                 >
                   <span
-                    className={`grid h-4.5 w-4.5 place-items-center rounded-full border md:h-5 md:w-5 lg:h-6 lg:w-6 ${
+                    className={`grid h-4 w-4 place-items-center rounded-full border md:h-5 md:w-5 lg:h-6 lg:w-6 ${
                       active
                         ? "border-territory-brand/30 bg-territory-surface"
                         : "border-territory-border bg-territory-raised"
@@ -149,7 +149,7 @@ export function TerritoryEntryMapArrival({
 
           <div className="mt-2 hidden items-center gap-2 text-[0.66rem] font-medium text-territory-muted md:flex lg:mt-4 lg:text-xs">
             <span className="relative flex h-2.5 w-2.5">
-              <span className="absolute inline-flex h-full w-full rounded-full bg-territory-brand/35 motion-safe:animate-ping motion-reduce:animate-none" />
+              <span className="absolute inline-flex h-full w-full rounded-full bg-territory-brand/30 motion-safe:animate-ping motion-reduce:animate-none" />
               <span className="relative inline-flex h-2.5 w-2.5 rounded-full bg-territory-brand" />
             </span>
             {statusText}
