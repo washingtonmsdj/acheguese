@@ -16,6 +16,7 @@ import type {
 
 const DEFAULT_CENTER: [number, number] = [-51.9253, -14.235];
 const DEFAULT_ZOOM = 13;
+const PASSIVE_MAX_PIXEL_RATIO = 2;
 
 function isFiniteCoordinate(latitude: unknown, longitude: unknown): boolean {
   return (
@@ -104,6 +105,10 @@ export const MapLibrePassiveRuntime = forwardRef<
         isFiniteCoordinate(requestedCenter.latitude, requestedCenter.longitude)
           ? [requestedCenter.longitude, requestedCenter.latitude]
           : DEFAULT_CENTER;
+      const passivePixelRatio = Math.min(
+        window.devicePixelRatio || 1,
+        PASSIVE_MAX_PIXEL_RATIO,
+      );
 
       const map = new maplibregl.Map({
         container: containerRef.current,
@@ -114,6 +119,10 @@ export const MapLibrePassiveRuntime = forwardRef<
         pitch: initialViewport?.pitch ?? 0,
         attributionControl: false,
         interactive: false,
+        fadeDuration: 0,
+        pixelRatio: passivePixelRatio,
+        renderWorldCopies: false,
+        maxTileCacheZoomLevels: 1,
       });
 
       if (attribution) {
