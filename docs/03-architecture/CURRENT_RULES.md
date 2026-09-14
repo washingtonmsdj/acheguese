@@ -1,8 +1,8 @@
 # Regras Vigentes do Sistema
 
-Data-base: 2026-08-26  
+Data-base: 2026-09-14  
 Status: ATIVO / CANONICO  
-Versao documental: 4.8
+Versao documental: 4.9
 
 Este documento define regras arquiteturais globais. Contratos detalhados de domínio permanecem nos owners executáveis e nos documentos específicos listados em `docs/README.md`; este arquivo não deve duplicar implementação.
 
@@ -99,7 +99,19 @@ Os contratos detalhados vivem em `docs/07-modules/` e nos owners executáveis co
 - Audit/Moderation;
 - Entity Private Data;
 - Gastronomy;
-- Coverage/Mobility.
+- Coverage/Mobility;
+- Maps/MapLibre runtime.
+
+### 6.1 Maps / MapLibre runtime
+
+- `src/core/maps/runtime/loadMapLibreRuntime.ts` é o owner canônico de engine, CSS e configuração de worker do MapLibre.
+- `src/core/maps/components/v3/MapLibreAdapter.tsx` é o owner público canônico para superfícies React que cabem no contrato do adapter; ele decide runtime passivo versus completo sem criar um segundo provider.
+- `src/shared/config/mapDefaults.ts` é o SSOT de URLs/configuração base de tiles; `src/core/maps/providers/MapProvider.ts` somente projeta esse contrato para o domínio de mapas.
+- CSS do MapLibre entra pelo owner `src/core/maps/runtime/maplibreRuntimeCss.ts`; páginas e módulos não importam `maplibre-gl/dist/maplibre-gl.css` diretamente.
+- consumidores imperativos fora do núcleo podem importar **tipos** de `maplibre-gl`, mas carregam a engine por `loadMapLibreRuntime()`; não criam loader, worker config, preload de CSS ou provider paralelo.
+- otimização reutilizável de mapa deve ser implementada no owner canônico para beneficiar todas as páginas. Agendamento específico da `/` pode continuar em `publicRootReadiness` somente quando a regra depende da prioridade exclusiva da entrada pública.
+- `prewarmMapLibreWorkers()` é opt-in para superfícies que montarão mapa imediatamente; não deve virar warmup global em rotas sem mapa.
+- regressões de arquitetura devem impedir novos imports runtime/CSS diretos fora do núcleo canônico.
 
 Regra: este documento não replica lifecycle, tabelas, RPCs ou allowlists desses contratos. Mudanças devem ocorrer no owner técnico e em seu teste/validator.
 
@@ -154,6 +166,8 @@ Mudanças de segurança/schema executam adicionalmente os gates indicados em `SE
 - não importar implementação interna entre módulos;
 - não colocar regra de negócio em page/hook por conveniência;
 - não criar rota pública concorrente para a mesma identidade;
+- não importar runtime ou CSS de MapLibre diretamente em páginas/módulos quando o loader/adapter canônico atende o caso;
+- não criar segundo worker configurator, segundo tile provider default ou warmup global paralelo;
 - não usar placeholder, `paused`, fallback vazio ou retorno antecipado como prova de módulo funcional;
 - não declarar `MVP READY` sem cumprir o DoD de `docs/08-roadmap/EXECUCAO_MAIN_ONLY.md`;
 - não reduzir gate de segurança/CI para obter status verde.
