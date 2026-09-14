@@ -29,12 +29,14 @@ const loadPassiveAdapterRuntime = async () => {
 const LazyFullMapLibreRuntime = lazy(loadFullAdapterRuntime);
 const LazyPassiveMapLibreRuntime = lazy(loadPassiveAdapterRuntime);
 
-/**
- * Aquece somente engine/CSS/worker. O runtime React correto continua sendo
- * escolhido pelas props quando o mapa realmente montar.
- */
+/** Aquece somente engine/CSS/worker. */
 export function preloadMapLibreAdapterRuntime(): Promise<void> {
   return preloadMapLibreRuntime();
+}
+
+/** Aquece engine + runtime React passivo sem baixar os recursos interativos. */
+export function preloadPassiveMapLibreAdapterRuntime(): Promise<void> {
+  return loadPassiveAdapterRuntime().then(() => undefined);
 }
 
 function canUsePassiveRuntime(props: MapLibreAdapterProps): boolean {
