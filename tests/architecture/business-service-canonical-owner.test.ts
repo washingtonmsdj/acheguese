@@ -6,13 +6,14 @@ const ROOT = process.cwd();
 const read = (relativePath: string) =>
   fs.readFileSync(path.join(ROOT, relativePath), "utf8");
 
-describe("BusinessService canonical ownership", () => {
-  it("keeps the duplicate module compatibility bridge retired", () => {
-    expect(
-      fs.existsSync(
-        path.join(ROOT, "src/modules/business/services/BusinessService.ts"),
-      ),
-    ).toBe(false);
+describe("Business and gastronomy canonical ownership", () => {
+  it("keeps duplicate module compatibility bridges retired", () => {
+    for (const relativePath of [
+      "src/modules/business/services/BusinessService.ts",
+      "src/modules/business/gastronomy/services/GastronomyUrlService.ts",
+    ]) {
+      expect(fs.existsSync(path.join(ROOT, relativePath))).toBe(false);
+    }
   });
 
   it("does not re-export BusinessService from module barrels", () => {
@@ -23,11 +24,23 @@ describe("BusinessService canonical ownership", () => {
     expect(serviceBarrel).not.toContain("BusinessService");
   });
 
-  it("keeps the canonical owner in core/business", () => {
-    expect(
-      fs.existsSync(
-        path.join(ROOT, "src/core/business/services/BusinessService.ts"),
-      ),
-    ).toBe(true);
+  it("points the gastronomy service barrel directly at its canonical URL owner", () => {
+    const gastronomyBarrel = read(
+      "src/modules/business/gastronomy/services/index.ts",
+    );
+
+    expect(gastronomyBarrel).toContain(
+      "@/core/verticals/gastronomy/services/GastronomyUrlService",
+    );
+    expect(gastronomyBarrel).not.toContain("./GastronomyUrlService");
+  });
+
+  it("keeps canonical owners in core", () => {
+    for (const relativePath of [
+      "src/core/business/services/BusinessService.ts",
+      "src/core/verticals/gastronomy/services/GastronomyUrlService.ts",
+    ]) {
+      expect(fs.existsSync(path.join(ROOT, relativePath))).toBe(true);
+    }
   });
 });
