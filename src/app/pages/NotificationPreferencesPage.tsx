@@ -112,7 +112,6 @@ export default function NotificationPreferencesPage() {
     data,
     isLoading,
     isError,
-    error: loadError,
     refetch,
   } = useQuery({
     queryKey: ["notification-preferences", user?.id],
@@ -131,8 +130,12 @@ export default function NotificationPreferencesPage() {
       queryClient.setQueryData(["notification-preferences", user?.id], saved);
       toast({ title: "Preferências salvas", description: "Suas preferências de notificação foram atualizadas." });
     },
-    onError: (error: Error) => {
-      toast({ title: "Erro ao salvar", description: error.message, variant: "destructive" });
+    onError: () => {
+      toast({
+        title: "Não foi possível salvar",
+        description: "Tente novamente. Nenhuma preferência será presumida como alterada.",
+        variant: "destructive",
+      });
     },
   });
 
@@ -144,12 +147,17 @@ export default function NotificationPreferencesPage() {
 
   if (isLoading) {
     return (
-      <div className="territory-vivo flex min-h-[70dvh] items-center justify-center bg-territory-canvas px-4">
-        <div className="text-center" role="status">
-          <Loader2 className="mx-auto h-8 w-8 animate-spin text-territory-brand" aria-hidden="true" />
-          <p className="mt-3 text-sm text-territory-muted">Carregando preferências...</p>
-        </div>
-      </div>
+      <AccountSettingsShell
+        title="Notificações"
+        description="Carregando suas preferências de aviso."
+      >
+        <Surface className="flex min-h-40 items-center justify-center p-5">
+          <div className="text-center" role="status">
+            <Loader2 className="mx-auto h-7 w-7 animate-spin text-territory-brand" aria-hidden="true" />
+            <p className="mt-3 text-sm text-territory-muted">Carregando preferências...</p>
+          </div>
+        </Surface>
+      </AccountSettingsShell>
     );
   }
 
@@ -159,7 +167,7 @@ export default function NotificationPreferencesPage() {
         <Surface className="p-5 text-center">
           <AlertCircle className="mx-auto h-8 w-8 text-destructive" aria-hidden="true" />
           <p className="mt-3 text-sm text-territory-muted">
-            {loadError instanceof Error ? loadError.message : "Tente novamente sem alterar nenhuma preferência."}
+            Tente novamente. Seus controles permanecerão indisponíveis até confirmarmos as preferências salvas.
           </p>
           <Button type="button" variant="outline" className="mt-4 min-h-11" onClick={() => void refetch()}>
             <RefreshCw className="mr-2 h-4 w-4" aria-hidden="true" />
@@ -213,8 +221,8 @@ export default function NotificationPreferencesPage() {
               <PreferenceRow
                 id="push"
                 icon={<MonitorSmartphone className="h-5 w-5" aria-hidden="true" />}
-                label="Canal push"
-                description="Permita avisos push nos dispositivos que você registrar."
+                label="Notificações push"
+                description="Receba avisos nos dispositivos que você registrar."
                 checked={preferences.push_enabled}
                 onCheckedChange={(checked) => setPreferences({ ...preferences, push_enabled: checked })}
               />
@@ -328,7 +336,7 @@ export default function NotificationPreferencesPage() {
               <Bell className="h-5 w-5 text-territory-brand" aria-hidden="true" />
               <div>
                 <h2 className="font-heading text-base font-bold text-territory-ink">Neste dispositivo</h2>
-                <p className="text-sm text-territory-muted">Permissão e registro reais do navegador atual.</p>
+                <p className="text-sm text-territory-muted">Ative, teste ou remova os avisos deste navegador.</p>
               </div>
             </div>
             <div className="mt-4"><PushNotificationSettings /></div>
@@ -339,7 +347,7 @@ export default function NotificationPreferencesPage() {
               <MessageCircleMore className="h-5 w-5 text-territory-brand" aria-hidden="true" />
               <div>
                 <h2 className="font-heading text-base font-bold text-territory-ink">Frequência</h2>
-                <p className="text-sm text-territory-muted">O recurso de resumos existente continua disponível.</p>
+                <p className="text-sm text-territory-muted">Escolha se prefere avisos na hora ou em resumos.</p>
               </div>
             </div>
             <Select
