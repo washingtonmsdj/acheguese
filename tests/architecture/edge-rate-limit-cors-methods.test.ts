@@ -49,4 +49,27 @@ describe("Edge rate-limit CORS method contracts", () => {
       "rateLimitMiddleware(req, 100, 60_000, ALLOWED_METHODS)",
     );
   });
+
+  it("keeps admin auth failures request-aware instead of falling back to POST CORS", () => {
+    const source = read("supabase/functions/_shared/adminAuth.ts");
+
+    expect(source).toContain('methods = `${req.method}, OPTIONS`');
+    expect(source).toContain(
+      "errorResponse('Missing or invalid authorization header', 401, undefined, req, methods)",
+    );
+    expect(source).toContain(
+      "errorResponse('Forbidden: Admin access required', 403, undefined, req, methods)",
+    );
+    expect(source).toContain("requireAdmin(req, methods)");
+  });
+
+  it("keeps the protected health check on canonical security and storage owners", () => {
+    const source = read("supabase/functions/health-check/index.ts");
+
+    expect(source).toContain('import { requireAdmin } from "../_shared/adminAuth.ts";');
+    expect(source).toContain("const auth = await requireAdmin(req)");
+    expect(source).toContain("supabase.storage.getBucket('media-assets')");
+    expect(source).not.toContain("Access-Control-Allow-Origin': '*'");
+    expect(source).not.toContain(".from('avatars')");
+  });
 });
