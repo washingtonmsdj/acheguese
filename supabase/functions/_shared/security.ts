@@ -383,6 +383,7 @@ export async function rateLimitMiddleware(
   req: Request,
   maxRequests = 100,
   windowMs = 60000,
+  methods = 'POST, OPTIONS',
 ): Promise<Response | null> {
   // Preferência: CF-Connecting-IP > x-real-ip > primeiro IP de x-forwarded-for
   // x-forwarded-for pode conter múltiplos IPs (client, proxy1, proxy2...)
@@ -404,7 +405,7 @@ export async function rateLimitMiddleware(
       {
         status: 429,
         headers: {
-          ...getAllSecurityHeaders('POST, OPTIONS', req),
+          ...getAllSecurityHeaders(methods, req),
           'Retry-After': String(retryAfter),
           'X-RateLimit-Limit': String(maxRequests),
           'X-RateLimit-Remaining': String(remaining),
