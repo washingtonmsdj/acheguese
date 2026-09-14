@@ -1,6 +1,6 @@
 import { Helmet } from "react-helmet-async";
 import type { ChangeEvent, ReactNode } from "react";
-import { useNavigate } from "react-router-dom";
+import { useLocation, useNavigate } from "react-router-dom";
 import {
   Bell,
   ChevronRight,
@@ -108,7 +108,9 @@ export function ContaHubLayout({
   pageDescription = "Identidade, território, preferências e segurança da sua conta.",
 }: ContaHubLayoutProps) {
   const navigate = useNavigate();
+  const location = useLocation();
   const { signOut } = useAuth();
+  const profilesView = new URLSearchParams(location.search).get("section") === "profiles";
 
   const handleSignOut = async () => {
     try {
@@ -122,15 +124,19 @@ export function ContaHubLayout({
   return (
     <>
       <Helmet>
-        <title>{pageTitle}</title>
+        <title>{profilesView ? "Meus perfis | Achegue-se" : pageTitle}</title>
         <meta name="description" content={pageDescription} />
       </Helmet>
 
       <AccountSettingsShell
-        title="Minha conta"
-        description="Estas configurações valem para toda a sua conta."
+        title={profilesView ? "Meus perfis" : "Minha conta"}
+        description={
+          profilesView
+            ? "Identidades, equipes e recursos vinculados à sua conta."
+            : "Estas configurações valem para toda a sua conta."
+        }
         eyebrow="Conta"
-        showBack={false}
+        showBack={profilesView}
       >
         <ProfileHeaderCompact
           activeProfile={personalProfile}
@@ -149,70 +155,81 @@ export function ContaHubLayout({
           onAvatarChange={onAvatarChange}
         />
 
-        <section className="mt-4 rounded-2xl border border-territory-border bg-territory-surface px-4 sm:px-5">
-          <OverviewRow
-            icon={<KeyRound className="h-5 w-5" aria-hidden="true" />}
-            title="Dados de acesso"
-            description="E-mail, nome de usuário e métodos de entrada."
-            onClick={() => navigate("/conta/seguranca#acesso")}
-          />
-          <OverviewRow
-            icon={<LockKeyhole className="h-5 w-5" aria-hidden="true" />}
-            title="Senha e segurança"
-            description="Senha, recuperação e autenticação em duas etapas."
-            onClick={() => navigate("/conta/seguranca")}
-          />
-          <OverviewRow
-            icon={<Bell className="h-5 w-5" aria-hidden="true" />}
-            title="Notificações"
-            description="Canais, tipos de aviso e horário de silêncio."
-            onClick={() => navigate("/conta/notificacoes")}
-          />
-          <OverviewRow
-            icon={<Shield className="h-5 w-5" aria-hidden="true" />}
-            title="Privacidade e dados"
-            description="Consentimentos, exportação e exclusão."
-            onClick={() => navigate("/conta/privacidade")}
-          />
-          <OverviewRow
-            icon={<SlidersHorizontal className="h-5 w-5" aria-hidden="true" />}
-            title="Preferências do aplicativo"
-            description="Ajustes pessoais e vínculos da identidade."
-            onClick={() => navigate("/conta/preferencias")}
-          />
-        </section>
+        {!profilesView ? (
+          <>
+            <section className="mt-4 rounded-2xl border border-territory-border bg-territory-surface px-4 sm:px-5">
+              <OverviewRow
+                icon={<KeyRound className="h-5 w-5" aria-hidden="true" />}
+                title="Dados de acesso"
+                description="E-mail, nome de usuário e métodos de entrada."
+                onClick={() => navigate("/conta/seguranca#acesso")}
+              />
+              <OverviewRow
+                icon={<LockKeyhole className="h-5 w-5" aria-hidden="true" />}
+                title="Senha e segurança"
+                description="Senha, recuperação e autenticação em duas etapas."
+                onClick={() => navigate("/conta/seguranca")}
+              />
+              <OverviewRow
+                icon={<Bell className="h-5 w-5" aria-hidden="true" />}
+                title="Notificações"
+                description="Canais, tipos de aviso e horário de silêncio."
+                onClick={() => navigate("/conta/notificacoes")}
+              />
+              <OverviewRow
+                icon={<Shield className="h-5 w-5" aria-hidden="true" />}
+                title="Privacidade e dados"
+                description="Consentimentos, exportação e exclusão."
+                onClick={() => navigate("/conta/privacidade")}
+              />
+              <OverviewRow
+                icon={<SlidersHorizontal className="h-5 w-5" aria-hidden="true" />}
+                title="Preferências do aplicativo"
+                description="Ajustes pessoais e vínculos da identidade."
+                onClick={() => navigate("/conta/preferencias")}
+              />
+            </section>
 
-        <section className="mt-4 rounded-2xl border border-territory-border bg-territory-surface px-4 sm:px-5">
-          <OverviewRow
-            icon={<UsersRound className="h-5 w-5" aria-hidden="true" />}
-            title="Meus perfis"
-            description="Identidades, equipes e visibilidade pública."
-            onClick={() => document.getElementById("account-details")?.scrollIntoView({ behavior: "smooth", block: "start" })}
-          />
-        </section>
+            <section className="mt-4 rounded-2xl border border-territory-border bg-territory-surface px-4 sm:px-5">
+              <OverviewRow
+                icon={<UsersRound className="h-5 w-5" aria-hidden="true" />}
+                title="Meus perfis"
+                description="Identidades, equipes e visibilidade pública."
+                onClick={() => navigate("/conta?section=profiles")}
+              />
+            </section>
 
-        <section className="mt-4 rounded-2xl border border-territory-border bg-territory-surface px-4 sm:px-5">
-          <OverviewRow
-            icon={<CircleHelp className="h-5 w-5" aria-hidden="true" />}
-            title="Ajuda"
-            onClick={() => navigate(SUPPORT_PATH)}
-          />
-        </section>
+            <section className="mt-4 rounded-2xl border border-territory-border bg-territory-surface px-4 sm:px-5">
+              <OverviewRow
+                icon={<CircleHelp className="h-5 w-5" aria-hidden="true" />}
+                title="Ajuda"
+                onClick={() => navigate(SUPPORT_PATH)}
+              />
+            </section>
 
-        <button
-          type="button"
-          onClick={() => void handleSignOut()}
-          className="mt-4 flex min-h-12 w-full items-center gap-3 rounded-2xl border border-red-200 bg-territory-surface px-4 text-left text-sm font-semibold text-red-700 hover:bg-red-50 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-red-600"
+            <button
+              type="button"
+              onClick={() => void handleSignOut()}
+              className="mt-4 flex min-h-12 w-full items-center gap-3 rounded-2xl border border-red-200 bg-territory-surface px-4 text-left text-sm font-semibold text-red-700 hover:bg-red-50 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-red-600"
+            >
+              <LogOut className="h-5 w-5" aria-hidden="true" />
+              Sair da conta
+            </button>
+          </>
+        ) : null}
+
+        <div
+          id="account-details"
+          className={`${profilesView ? "mt-4" : "mt-8 border-t border-territory-border pt-6"} [&>div>div:first-child>section:first-child]:hidden`}
         >
-          <LogOut className="h-5 w-5" aria-hidden="true" />
-          Sair da conta
-        </button>
-
-        <div id="account-details" className="mt-8 border-t border-territory-border pt-6">
           <div className="mb-4">
-            <h2 className="font-heading text-lg font-bold text-territory-ink">Perfis e recursos da conta</h2>
+            <h2 className="font-heading text-lg font-bold text-territory-ink">
+              {profilesView ? "Perfis disponíveis" : "Perfis e recursos da conta"}
+            </h2>
             <p className="mt-1 text-sm text-territory-muted">
-              Recursos já existentes continuam disponíveis abaixo do conjunto principal do concept.
+              {profilesView
+                ? "Troque de identidade e acesse recursos já existentes para seus perfis."
+                : "Recursos já existentes continuam disponíveis sem duplicar os controles principais acima."}
             </p>
           </div>
           <div className="space-y-4 sm:space-y-6">{children}</div>
