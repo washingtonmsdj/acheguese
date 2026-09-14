@@ -2,6 +2,7 @@ import { lazy, Suspense, useEffect } from "react";
 import { QueryClientProvider } from "@tanstack/react-query";
 import { HelmetProvider } from "react-helmet-async";
 
+import { ErrorBoundary } from "@/app/components/ErrorBoundary";
 import { SEO } from "@/app/components/SEO";
 import { queryClient } from "@/shared/utils/queryClient";
 import { FullScreenLoader } from "@/shared/components/loading/PageLoader";
@@ -60,22 +61,24 @@ export default function FullAppRuntimeShell({
   []);
 
   return (
-    <HelmetProvider>
-      <SEO />
-      <QueryClientProvider client={queryClient}>
-        <AccessibilityProvider>
-          <SkipToContent />
+    <ErrorBoundary>
+      <HelmetProvider>
+        <SEO />
+        <QueryClientProvider client={queryClient}>
+          <AccessibilityProvider>
+            <SkipToContent />
 
-          <Suspense fallback={null}>
-            {shouldCheckAuthRedirect ? <AuthHashRedirect /> : null}
-            <GlobalOverlays />
-          </Suspense>
+            <Suspense fallback={null}>
+              {shouldCheckAuthRedirect ? <AuthHashRedirect /> : null}
+              <GlobalOverlays />
+            </Suspense>
 
-          <Suspense fallback={<FullScreenLoader />}>
-            <SessionProfileRuntimeShell />
-          </Suspense>
-        </AccessibilityProvider>
-      </QueryClientProvider>
-    </HelmetProvider>
+            <Suspense fallback={<FullScreenLoader />}>
+              <SessionProfileRuntimeShell />
+            </Suspense>
+          </AccessibilityProvider>
+        </QueryClientProvider>
+      </HelmetProvider>
+    </ErrorBoundary>
   );
 }
