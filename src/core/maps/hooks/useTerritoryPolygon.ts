@@ -1,53 +1,33 @@
 /**
  * useTerritoryPolygon — Busca o polígono geográfico do território ativo.
  *
- * Usa GeocodingService (Nominatim via proxy Supabase) para obter o polígono
- * do bairro ou cidade resolvido pelo useTerritoryFilter.
- *
- * Retorna coordenadas no formato [lat, lng] (padrão interno do projeto).
- * O MapLibreAdapter converte para [lng, lat] ao renderizar.
- *
- * @module core/maps/hooks
+ * O serviço de boundary é carregado sob demanda para não bloquear o primeiro
+ * render de mapas que podem exibir o basemap antes da geometria oficial.
  */
 
 import { useState, useEffect } from "react";
-import { boundaryService } from "@/core/geospatial";
 import { NEIGHBORHOOD_COLORS } from "../providers/MapProvider";
 import type { ResolvedTerritory } from "@/core/routing/hooks/useResolveTerritoryFromUrl";
 
 export interface TerritoryPolygon {
-  /** Nome do território */
   name: string;
-  /** Coordenadas do polígono em [lat, lng] */
   coordinates: [number, number][];
-  /** Centro do polígono em [lat, lng] */
   center: [number, number];
-  /** Cor de destaque */
   color: string;
-  /** Opacidade do preenchimento da camada */
   fillOpacity?: number;
-  /** Largura da linha da camada */
   lineWidth?: number;
-  /** Opacidade da linha da camada */
   lineOpacity?: number;
 }
 
 interface UseTerritoryPolygonResult {
-  /** Polígonos do território ativo (um por bairro em grupos) */
   polygons: TerritoryPolygon[];
   isLoading: boolean;
 }
 
-/**
- * Extrai nome de bairro e cidade de um geographic_path.
- * Ex: /br/ba/salvador/nordeste-de-amaralina → { neighborhood: 'nordeste-de-amaralina', city: 'salvador', state: 'ba' }
- * Ex: /br/ba/salvador → { neighborhood: null, city: 'salvador', state: 'ba' }
- */
 function parseGeoPath(
   geoPath: string,
 ): { neighborhood: string | null; city: string; state: string } | null {
   const parts = geoPath.split("/").filter(Boolean);
-  // /br/state/city → 3 partes (cidade)
   if (parts.length === 3) {
     return {
       state: parts[1],
@@ -55,7 +35,6 @@ function parseGeoPath(
       neighborhood: null,
     };
   }
-  // /br/state/city/district → 4 partes (bairro)
   if (parts.length >= 4) {
     return {
       state: parts[1],
@@ -91,20 +70,20 @@ export function useTerritoryPolygon(
     let cancelled = false;
 
     const fetch = async () => {
-      // Não mantenha o contorno anterior enquanto o novo território resolve:
-      // isso evitaria rotular Salvador como se fosse o bairro selecionado.
       setPolygonState({ territoryKey: null, polygons: [] });
       setIsLoading(true);
 
       try {
-        if (resolved.kind === "location") {
-          const result = await boundaryService.getLocationBounds(
-            resolved.location,
-          );
+        const { boundaryService } = await import(
+          "@/core/geospatial/services/BoundaryService"
+        );
 
+        if (cancelled) return;
+
+        if (resolved.kind === "location") {
+          const result = await boundaryService.getLocationBounds(resolved.location);
           if (cancelled) return;
 
-          // Um TerritoryPolygon por anel — suporta Polygon e MultiPolygon corretamente
           setPolygonState({
             territoryKey,
             polygons: result.rings.map((ring, i) => ({
@@ -114,51 +93,48 @@ export function useTerritoryPolygon(
               color: NEIGHBORHOOD_COLORS[i % NEIGHBORHOOD_COLORS.length],
             })),
           });
-        } else if (resolved.kind === "group") {
-          // Grupo: buscar polígono de cada membro
-          const members = resolved.group.members;
-          const results = await Promise.all(
-            members.map((m) => {
-              const parsed = parseGeoPath(m.geographic_path);
-              if (!parsed) return Promise.resolve(null);
-              return boundaryService
-                .getLocationBounds(m)
-                .then((r) => ({ member: m, result: r }));
-            }),
-          );
+          return;
+        }
 
-          if (cancelled) return;
+        const results = await Promise.all(
+          resolved.group.members.map((member) => {
+            const parsed = parseGeoPath(member.geographic_path);
+            if (!parsed) return Promise.resolve(null);
+            return boundaryService
+              .getLocationBounds(member)
+              .then((result) => ({ member, result }));
+          }),
+        );
 
-          const built: TerritoryPolygon[] = [];
-          results.forEach((r, memberIdx) => {
-            if (!r || r.result.rings.length === 0) return;
-            const color =
-              NEIGHBORHOOD_COLORS[memberIdx % NEIGHBORHOOD_COLORS.length];
-            r.result.rings.forEach((ring) => {
-              built.push({
-                name: r.member.name,
-                coordinates: ring,
-                center: r.result.center,
-                color,
-              });
+        if (cancelled) return;
+
+        const built: TerritoryPolygon[] = [];
+        results.forEach((item, memberIndex) => {
+          if (!item || item.result.rings.length === 0) return;
+          const color = NEIGHBORHOOD_COLORS[memberIndex % NEIGHBORHOOD_COLORS.length];
+          item.result.rings.forEach((ring) => {
+            built.push({
+              name: item.member.name,
+              coordinates: ring,
+              center: item.result.center,
+              color,
             });
           });
-          setPolygonState({ territoryKey, polygons: built });
-        }
+        });
+        setPolygonState({ territoryKey, polygons: built });
       } finally {
         if (!cancelled) setIsLoading(false);
       }
     };
 
-    fetch();
+    void fetch();
     return () => {
       cancelled = true;
     };
   }, [options.enabled, resolved, territoryKey]);
 
   return {
-    polygons:
-      polygonState.territoryKey === territoryKey ? polygonState.polygons : [],
+    polygons: polygonState.territoryKey === territoryKey ? polygonState.polygons : [],
     isLoading,
   };
 }
