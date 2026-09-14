@@ -88,6 +88,7 @@ jobs:
           src/core/auth/utils/__tests__/authCallback.test.ts
           src/core/auth/utils/__tests__/authFlowStorage.test.ts
           src/core/auth/utils/__tests__/authJourney.test.ts
+          src/app/components/auth/AuthBrandHeader.spec.tsx
           src/app/features/onboarding/hooks/useCadastro.spec.tsx
           src/app/features/onboarding/pages/CadastroPage.spec.tsx
           src/app/features/onboarding/pages/CadastroPrimeiroAcessoPage.spec.tsx
