@@ -10,8 +10,7 @@ import { logger } from '@/shared/utils/logger';
 import { useCallback, useEffect, useRef, memo, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
-import * as maplibregl from "maplibre-gl";
-import "maplibre-gl/dist/maplibre-gl.css";
+import type { Map as MapLibreMap } from "maplibre-gl";
 import { motion } from "framer-motion";
 import { ArrowLeft, Navigation, X, Car } from "lucide-react";
 import { Button } from "@/shared/components/ui/button";
@@ -20,11 +19,13 @@ import type { RideSearchStatus } from "@/modules/mobility/hooks/useRideSearch";
 import { mobilityService } from "@/core/mobility/services/MobilityService";
 import { mobilityRoutes } from "@/core/mobility/routes/mobilityRoutes";
 import { DEFAULT_TILE_STYLE } from "@/core/maps/providers/MapProvider";
+import { loadMapLibreRuntime } from "@/core/maps/runtime/loadMapLibreRuntime";
 import { MOBILITY_QUERY_KEYS, TIMEOUTS } from "@/core/mobility/constants";
 import { BUSCANDO_MOTORISTA_PAGE_LABELS } from "@/core/mobility/constants/buscandoMotoristaPageLabels";
 import { PassengerSearchStatus } from "../components/PassengerSearchStatus";
 import { routingService } from "@/core/routing/instance";
 import { CancelRideConfirmDialog } from "../components/CancelRideConfirmDialog";
+
 // ── Mapa ──────────────────────────────────────────────────────────────────────
 
 const RouteMap = memo(function RouteMap({
@@ -39,134 +40,155 @@ const RouteMap = memo(function RouteMap({
   destinationLng?: number;
 }) {
   const containerRef = useRef<HTMLDivElement>(null);
-  const mapRef = useRef<maplibregl.Map | null>(null);
+  const mapRef = useRef<MapLibreMap | null>(null);
 
   useEffect(() => {
     if (!containerRef.current || mapRef.current) return;
+    let disposed = false;
 
-    const centerLng = originLng ?? destinationLng ?? -38.476;
-    const centerLat = originLat ?? destinationLat ?? -12.975;
+    const initializeMap = async () => {
+      const maplibregl = await loadMapLibreRuntime();
+      if (disposed || !containerRef.current || mapRef.current) return;
 
-    const map = new maplibregl.Map({
-      container: containerRef.current,
-      style: DEFAULT_TILE_STYLE.styleUrl,
-      center: [centerLng, centerLat],
-      zoom: 13,
-      attributionControl: false,
-      interactive: true,
-    });
+      const centerLng = originLng ?? destinationLng ?? -38.476;
+      const centerLat = originLat ?? destinationLat ?? -12.975;
 
-    map.addControl(
-      new maplibregl.AttributionControl({ compact: true }),
-      "bottom-left"
-    );
+      const map = new maplibregl.Map({
+        container: containerRef.current,
+        style: DEFAULT_TILE_STYLE.styleUrl,
+        center: [centerLng, centerLat],
+        zoom: 13,
+        attributionControl: false,
+        interactive: true,
+      });
+      mapRef.current = map;
 
-    map.on("load", () => {
-      // Marcador origem — círculo verde
-      if (originLat && originLng) {
-        const el = document.createElement("div");
-        el.style.cssText = `
-          width:18px;height:18px;
-          background:#22c55e;border-radius:50%;
-          border:3px solid white;
-          box-shadow:0 2px 8px rgba(0,0,0,.35);
-        `;
-        new maplibregl.Marker({ element: el })
-          .setLngLat([originLng, originLat])
-          .addTo(map);
-      }
+      map.addControl(
+        new maplibregl.AttributionControl({ compact: true }),
+        "bottom-left",
+      );
 
-      // Marcador destino — quadrado vermelho
-      if (destinationLat && destinationLng) {
-        const el = document.createElement("div");
-        el.style.cssText = `
-          width:18px;height:18px;
-          background:#ef4444;border-radius:4px;
-          border:3px solid white;
-          box-shadow:0 2px 8px rgba(0,0,0,.35);
-        `;
-        new maplibregl.Marker({ element: el })
-          .setLngLat([destinationLng, destinationLat])
-          .addTo(map);
-      }
+      map.on("load", () => {
+        if (disposed) return;
 
-      // ✅ GATE 1: Carregar rota real via OSRM
-      if (originLat && originLng && destinationLat && destinationLng) {
-        routingService
-          .calculateRoute({
-            origin: { latitude: originLat, longitude: originLng },
-            destination: { latitude: destinationLat, longitude: destinationLng },
-            options: { profile: 'car', alternatives: false },
-          })
-          .then((routeResponse) => {
-            if (!routeResponse.routes || routeResponse.routes.length === 0) {
-              logger.warn(BUSCANDO_MOTORISTA_PAGE_LABELS.LOG_NO_ROUTE);
-              return;
-            }
+        // Marcador origem — círculo verde
+        if (originLat != null && originLng != null) {
+          const el = document.createElement("div");
+          el.style.cssText = `
+            width:18px;height:18px;
+            background:#22c55e;border-radius:50%;
+            border:3px solid white;
+            box-shadow:0 2px 8px rgba(0,0,0,.35);
+          `;
+          new maplibregl.Marker({ element: el })
+            .setLngLat([originLng, originLat])
+            .addTo(map);
+        }
 
-            const route = routeResponse.routes[0];
-            const coordinates = route.geometry.map((coord) => [
-              coord.longitude,
-              coord.latitude,
-            ]);
+        // Marcador destino — quadrado vermelho
+        if (destinationLat != null && destinationLng != null) {
+          const el = document.createElement("div");
+          el.style.cssText = `
+            width:18px;height:18px;
+            background:#ef4444;border-radius:4px;
+            border:3px solid white;
+            box-shadow:0 2px 8px rgba(0,0,0,.35);
+          `;
+          new maplibregl.Marker({ element: el })
+            .setLngLat([destinationLng, destinationLat])
+            .addTo(map);
+        }
 
-            // Adicionar source e layer da rota real
-            map.addSource('route-real', {
-              type: 'geojson',
-              data: {
-                type: 'Feature',
-                geometry: {
-                  type: 'LineString',
-                  coordinates,
+        // GATE 1: Carregar rota real via OSRM
+        if (
+          originLat != null &&
+          originLng != null &&
+          destinationLat != null &&
+          destinationLng != null
+        ) {
+          routingService
+            .calculateRoute({
+              origin: { latitude: originLat, longitude: originLng },
+              destination: { latitude: destinationLat, longitude: destinationLng },
+              options: { profile: 'car', alternatives: false },
+            })
+            .then((routeResponse) => {
+              if (disposed || !routeResponse.routes || routeResponse.routes.length === 0) {
+                if (!disposed) logger.warn(BUSCANDO_MOTORISTA_PAGE_LABELS.LOG_NO_ROUTE);
+                return;
+              }
+
+              const route = routeResponse.routes[0];
+              const coordinates = route.geometry.map((coord) => [
+                coord.longitude,
+                coord.latitude,
+              ]);
+
+              map.addSource('route-real', {
+                type: 'geojson',
+                data: {
+                  type: 'Feature',
+                  geometry: {
+                    type: 'LineString',
+                    coordinates,
+                  },
+                  properties: {},
                 },
-                properties: {},
-              },
-            });
+              });
 
-            map.addLayer({
-              id: 'route-real-line',
-              type: 'line',
-              source: 'route-real',
-              paint: {
-                'line-color': '#6366f1',
-                'line-width': 4,
-                'line-opacity': 0.85,
-              },
-            });
+              map.addLayer({
+                id: 'route-real-line',
+                type: 'line',
+                source: 'route-real',
+                paint: {
+                  'line-color': '#6366f1',
+                  'line-width': 4,
+                  'line-opacity': 0.85,
+                },
+              });
 
-            // Ajustar bounds para mostrar rota completa
-            const bounds = new maplibregl.LngLatBounds();
-            coordinates.forEach((coord) => bounds.extend(coord as [number, number]));
-            map.fitBounds(bounds, {
-              padding: { top: 80, bottom: 80, left: 40, right: 40 },
-              duration: 1000,
-            });
+              const bounds = new maplibregl.LngLatBounds();
+              coordinates.forEach((coord) => bounds.extend(coord as [number, number]));
+              map.fitBounds(bounds, {
+                padding: { top: 80, bottom: 80, left: 40, right: 40 },
+                duration: 1000,
+              });
 
-            logger.debug(BUSCANDO_MOTORISTA_PAGE_LABELS.LOG_ROUTE_SUCCESS);
-          })
-          .catch((error) => {
-            logger.error(BUSCANDO_MOTORISTA_PAGE_LABELS.LOG_ROUTE_ERROR, error);
-            // Fallback: ajustar bounds manualmente se rota falhar
-            map.fitBounds(
-              [
+              logger.debug(BUSCANDO_MOTORISTA_PAGE_LABELS.LOG_ROUTE_SUCCESS);
+            })
+            .catch((error) => {
+              if (disposed) return;
+              logger.error(BUSCANDO_MOTORISTA_PAGE_LABELS.LOG_ROUTE_ERROR, error);
+              map.fitBounds(
                 [
-                  Math.min(originLng, destinationLng) - 0.015,
-                  Math.min(originLat, destinationLat) - 0.015,
+                  [
+                    Math.min(originLng, destinationLng) - 0.015,
+                    Math.min(originLat, destinationLat) - 0.015,
+                  ],
+                  [
+                    Math.max(originLng, destinationLng) + 0.015,
+                    Math.max(originLat, destinationLat) + 0.015,
+                  ],
                 ],
-                [
-                  Math.max(originLng, destinationLng) + 0.015,
-                  Math.max(originLat, destinationLat) + 0.015,
-                ],
-              ],
-              { padding: { top: 80, bottom: 80, left: 40, right: 40 }, duration: 1000 }
-            );
-          });
+                {
+                  padding: { top: 80, bottom: 80, left: 40, right: 40 },
+                  duration: 1000,
+                },
+              );
+            });
+        }
+      });
+    };
+
+    void initializeMap().catch((error) => {
+      if (!disposed) {
+        logger.error('[BuscandoMotoristaPage] Falha ao inicializar MapLibre:', error);
       }
     });
 
-    mapRef.current = map;
     return () => {
-      map.remove();
+      disposed = true;
+      mapRef.current?.remove();
       mapRef.current = null;
     };
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
