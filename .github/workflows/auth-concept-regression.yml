@@ -15,11 +15,14 @@ on:
       - "src/app/features/onboarding/pages/AceiteTermosPage.tsx"
       - "src/app/features/onboarding/hooks/useCadastro.ts"
       - "src/app/features/onboarding/validation/**"
+      - "src/app/routes/AppRoutes.tsx"
+      - "src/app/routes/sections/AppLayoutRoutes.tsx"
       - "src/core/auth/**"
       - "src/shared/components/ui/checkbox.tsx"
       - "public/auth/**"
       - "tests/e2e/auth-*.spec.ts"
       - "tests/regression/auth-concept-flow.test.ts"
+      - "tests/regression/auth-route-ownership.test.ts"
       - "tests/regression/auth-return-context.test.ts"
       - "tests/regression/auth-google-oauth.test.ts"
       - "playwright.config.ts"
@@ -39,11 +42,14 @@ on:
       - "src/app/features/onboarding/pages/AceiteTermosPage.tsx"
       - "src/app/features/onboarding/hooks/useCadastro.ts"
       - "src/app/features/onboarding/validation/**"
+      - "src/app/routes/AppRoutes.tsx"
+      - "src/app/routes/sections/AppLayoutRoutes.tsx"
       - "src/core/auth/**"
       - "src/shared/components/ui/checkbox.tsx"
       - "public/auth/**"
       - "tests/e2e/auth-*.spec.ts"
       - "tests/regression/auth-concept-flow.test.ts"
+      - "tests/regression/auth-route-ownership.test.ts"
       - "tests/regression/auth-return-context.test.ts"
       - "tests/regression/auth-google-oauth.test.ts"
       - "playwright.config.ts"
@@ -80,7 +86,11 @@ jobs:
           src/core/auth/utils/__tests__/authCallback.test.ts
           src/core/auth/utils/__tests__/authFlowStorage.test.ts
           src/core/auth/utils/__tests__/authJourney.test.ts
+          src/app/features/onboarding/hooks/useCadastro.spec.tsx
+          src/app/features/onboarding/pages/CadastroPage.spec.tsx
+          src/app/features/onboarding/pages/CadastroPrimeiroAcessoPage.spec.tsx
           tests/regression/auth-concept-flow.test.ts
+          tests/regression/auth-route-ownership.test.ts
           tests/regression/auth-return-context.test.ts
           tests/regression/auth-google-oauth.test.ts
 
