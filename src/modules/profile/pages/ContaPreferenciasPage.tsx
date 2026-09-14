@@ -13,6 +13,7 @@ import {
   ChevronRight,
   Eye,
   Link2,
+  MapPin,
   Move,
   RotateCcw,
   Shield,
@@ -43,6 +44,12 @@ const PREFERENCE_ROWS = [
     hrefKey: "privacy",
   },
   {
+    title: "Endereços e território",
+    description: "Residência privada e contexto territorial do seu perfil.",
+    icon: MapPin,
+    hrefKey: "addresses",
+  },
+  {
     title: "Vínculos e membros",
     description: "Relações da identidade ativa e acesso de equipes.",
     icon: Link2,
@@ -50,7 +57,7 @@ const PREFERENCE_ROWS = [
   },
   {
     title: "Identidade ativa",
-    description: "Visibilidade e configurações do perfil em contexto.",
+    description: "Visibilidade e configurações do perfil em uso.",
     icon: UserRound,
     hrefKey: "identity",
   },
@@ -148,6 +155,8 @@ export default function ContaPreferenciasPage() {
         return ACCOUNT_PATHS.notifications;
       case "privacy":
         return ACCOUNT_PATHS.privacy;
+      case "addresses":
+        return ACCOUNT_PATHS.addresses;
       case "links":
         return appUrls.profile.settings("links");
       case "identity":
@@ -173,7 +182,7 @@ export default function ContaPreferenciasPage() {
 
         <AccountSettingsShell
           title="Acessibilidade"
-          description="Ajuste a leitura sem criar uma configuração paralela ao restante do aplicativo."
+          description="Ajuste a leitura e o conforto visual do Achegue-se neste dispositivo."
         >
           <section className="rounded-2xl border border-territory-border bg-territory-surface px-4 sm:px-5">
             <AccessibilityPreferenceRow
@@ -200,7 +209,7 @@ export default function ContaPreferenciasPage() {
                 <div className="min-w-0 flex-1">
                   <p className="text-sm font-semibold text-territory-ink">Tamanho do texto</p>
                   <p className="mt-1 text-xs leading-4 text-territory-muted">
-                    A preferência é aplicada ao aplicativo neste dispositivo.
+                    Escolha um tamanho confortável para ler o aplicativo.
                   </p>
                 </div>
               </div>
@@ -234,7 +243,7 @@ export default function ContaPreferenciasPage() {
             <AccessibilityPreferenceRow
               icon={<Move className="h-5 w-5" aria-hidden="true" />}
               title="Movimento reduzido"
-              description="O Achegue-se respeita automaticamente a preferência de movimento configurada no sistema operacional ou navegador."
+              description="O Achegue-se acompanha automaticamente a preferência de movimento do sistema ou navegador."
               control={
                 <span
                   className={cn(
@@ -256,7 +265,7 @@ export default function ContaPreferenciasPage() {
 
           <section className="mt-4 rounded-2xl border border-territory-border bg-territory-raised p-4 sm:p-5">
             <p className="text-sm leading-5 text-territory-muted">
-              Contraste e tamanho do texto são preferências locais deste dispositivo. Nenhuma opção desta tela altera seus dados de perfil ou permissões da conta.
+              Contraste e tamanho do texto ficam salvos neste dispositivo. Essas opções não alteram seus dados de perfil nem as permissões da conta.
             </p>
             <button
               type="button"
@@ -281,7 +290,7 @@ export default function ContaPreferenciasPage() {
 
       <AccountSettingsShell
         title="Preferências do aplicativo"
-        description="Organize seus ajustes pessoais sem misturar identidade, privacidade e operação."
+        description="Encontre os ajustes da sua conta e abra cada área no lugar certo."
       >
         <section className="rounded-2xl border border-territory-border bg-territory-surface p-4 sm:p-5">
           <div className="flex items-start gap-3 border-b border-territory-border pb-4">
@@ -291,7 +300,7 @@ export default function ContaPreferenciasPage() {
             <div>
               <h2 className="font-heading text-base font-bold text-territory-ink">Ajustes pessoais</h2>
               <p className="mt-1 text-sm leading-5 text-territory-muted">
-                Cada item abre a superfície responsável por aquele dado ou comportamento.
+                Escolha uma área para revisar ou alterar suas preferências.
               </p>
             </div>
           </div>
@@ -321,7 +330,7 @@ export default function ContaPreferenciasPage() {
         </section>
 
         <section className="mt-4 rounded-2xl border border-territory-border bg-territory-raised p-4 text-sm leading-5 text-territory-muted sm:p-5">
-          Preferências de comunicação, privacidade e acessibilidade permanecem em seus próprios owners. Isso evita que um único controle altere dados, consentimentos ou comportamento visual sem contexto.
+          Cada ajuste continua em sua área responsável. Assim, uma mudança de aparência não altera sua privacidade, e uma mudança de perfil não interfere nas preferências do dispositivo.
         </section>
       </AccountSettingsShell>
     </>
