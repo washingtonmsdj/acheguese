@@ -152,9 +152,9 @@ describe("account settings concept contract", () => {
     expect(security).toContain("factors === null");
     expect(security).toContain("disable(factor.id)");
     expect(security).toContain("signOutOtherSessions");
-    expect(security).toContain("Este dispositivo");
-    expect(security).toContain("Sessão atual");
-    expect(security).toContain("A lista detalhada de outros dispositivos ainda não está disponível.");
+    expect(security).toContain("A lista de dispositivos não está disponível agora.");
+    expect(security).toContain("Este dispositivo permanece conectado quando a operação é concluída.");
+    expect(security).not.toContain("Sessão atual");
     expect(auth).toContain('signOut({ scope: "others" })');
     expect(auth).toContain("static async updateEmail");
     expect(identities).toContain("supabase.auth.getUser()");
