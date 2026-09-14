@@ -27,7 +27,7 @@ describe("root community-first MVP entry", () => {
     expect(source).toContain("return <PreLaunchLandingPage />");
   });
 
-  it("keeps map WebGL and boundary work off the initial path until near the viewport", () => {
+  it("keeps map WebGL and boundary work off the initial path until near the viewport and browser idle", () => {
     const source = read(
       "src/app/components/territory-vivo/TerritoryEntryMap.tsx",
     );
@@ -36,6 +36,16 @@ describe("root community-first MVP entry", () => {
     expect(source).toContain("IntersectionObserver");
     expect(source).toContain('rootMargin: "240px 0px"');
     expect(source).toContain("enabled: shouldMountMap");
+    expect(source).toContain("scheduleBrowserIdleWork");
+  });
+
+  it("defers territorial data resolution so the first paint stays independent of Supabase", () => {
+    const source = read("src/app/pages/TerritoryEntryPage.tsx");
+
+    expect(source).toContain("scheduleBrowserIdleWork");
+    expect(source).toContain(
+      "Promise.all([getLaunchCity(), getLaunchResolvedTerritory()])",
+    );
   });
 
   it("loads and decodes the large community preview image without blocking first render", () => {
@@ -43,6 +53,13 @@ describe("root community-first MVP entry", () => {
 
     expect(source).toContain('loading="lazy"');
     expect(source).toContain('decoding="async"');
+  });
+
+  it("keeps the launch preview asset inside a conservative entry-page budget", () => {
+    const assetPath = path.join(ROOT, "src/assets/hero-complexo-nordeste.jpg");
+    const bytes = fs.statSync(assetPath).size;
+
+    expect(bytes).toBeLessThanOrEqual(450_000);
   });
 
   it("renders the root entry without loading the full app route tree first", () => {
