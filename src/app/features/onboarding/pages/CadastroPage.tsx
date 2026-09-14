@@ -9,10 +9,18 @@ import { AuthTurnstileGate } from "@/app/components/auth/AuthTurnstileGate";
 import { PasswordInput } from "@/app/components/auth/PasswordInput";
 import { useAuthTurnstile } from "@/app/components/auth/useAuthTurnstile";
 import { useCadastroForm } from "@/app/features/onboarding/hooks/useCadastro";
+import {
+  AUTH_PATHS,
+  AUTH_QUERY_KEYS,
+  buildLoginPath,
+} from "@/core/auth/constants/authFlow";
 import { useAuth } from "@/core/auth/hooks/useAuth";
+import {
+  cancelGoogleSignup,
+  completeStandardLoginJourney,
+  prepareGoogleSignup,
+} from "@/core/auth/utils/authJourney";
 import { getAuthErrorMessage } from "@/core/auth/utils/authMessages";
-import { setPendingAuthReturn } from "@/core/auth/utils/pendingAuthReturn";
-import { setPendingSignupRedirect } from "@/core/auth/utils/pendingSignup";
 import {
   COMMUNITY_GUIDELINES_PATH,
   TERMS_OF_SERVICE_PATH,
@@ -64,7 +72,10 @@ export default function CadastroPage() {
 
   const redirectTo = useMemo(() => {
     const stateRedirect = (location.state as CadastroLocationState)?.redirectTo;
-    return resolveSafeInternalPath(stateRedirect ?? searchParams.get("redirect"), "/");
+    return resolveSafeInternalPath(
+      stateRedirect ?? searchParams.get(AUTH_QUERY_KEYS.redirect),
+      "/",
+    );
   }, [location.state, searchParams]);
 
   const { form, loading, submit } = useCadastroForm(redirectTo);
@@ -78,7 +89,9 @@ export default function CadastroPage() {
   const termsAccepted = form.watch("termsAccepted") === true;
 
   useEffect(() => {
-    if (user) navigate(redirectTo, { replace: true });
+    if (!user) return;
+    completeStandardLoginJourney();
+    navigate(redirectTo, { replace: true });
   }, [navigate, redirectTo, user]);
 
   const usernameBlocked =
@@ -103,21 +116,19 @@ export default function CadastroPage() {
       return;
     }
 
-    // A disponibilidade mostrada aqui é feedback rápido. A verificação
-    // autoritativa ocorre novamente no SSOT useCadastroForm antes do signup.
+    // Feedback visual e verificação autoritativa permanecem separados: o hook
+    // de cadastro consulta novamente o SSOT antes de criar a conta.
     void submit();
   };
 
   const handleGoogleSignup = async () => {
     if (!googleAuthAvailable || googleLoading) return;
     setGoogleLoading(true);
+    prepareGoogleSignup(redirectTo);
     try {
-      // OAuth pode criar a conta no primeiro uso. Depois do aceite legal,
-      // o novo usuário passa pelo mesmo primeiro acesso do cadastro por senha.
-      setPendingSignupRedirect(redirectTo);
-      setPendingAuthReturn("/cadastro/primeiro-acesso");
       await signInWithGoogle();
     } catch (error) {
+      cancelGoogleSignup();
       toast({
         title: "Não foi possível continuar com Google",
         description: getAuthErrorMessage(error),
@@ -139,7 +150,7 @@ export default function CadastroPage() {
       </Helmet>
 
       <div className="min-h-[100dvh] bg-[#fffdfa] text-[#102f33] lg:bg-[radial-gradient(circle_at_16%_32%,rgba(216,234,224,.55),transparent_31%),radial-gradient(circle_at_70%_18%,rgba(255,236,185,.28),transparent_30%),#fffdfa]">
-        <AuthBrandHeader secondaryHref="/login" secondaryLabel="Entrar" />
+        <AuthBrandHeader secondaryHref={AUTH_PATHS.login} secondaryLabel="Entrar" />
 
         <main
           id="main-content"
@@ -439,7 +450,7 @@ export default function CadastroPage() {
                   <span className="lg:hidden">Você pode se cadastrar de qualquer lugar. </span>
                   Já tem conta?{" "}
                   <Link
-                    to={redirectTo === "/" ? "/login" : `/login?redirect=${encodeURIComponent(redirectTo)}`}
+                    to={buildLoginPath(redirectTo)}
                     className="font-medium text-[#0b4e52] underline underline-offset-2"
                   >
                     Entrar
