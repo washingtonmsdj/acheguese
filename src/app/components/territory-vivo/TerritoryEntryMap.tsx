@@ -1,4 +1,4 @@
-import { lazy, Suspense, useEffect, useMemo, useState } from "react";
+import { lazy, Suspense, useEffect, useMemo, useRef, useState } from "react";
 import { Map, MapPin } from "lucide-react";
 import { LocationType, type Location } from "@/core/location/types";
 import { useTerritoryPolygon } from "@/core/maps/hooks/useTerritoryPolygon";
@@ -34,8 +34,10 @@ export default function TerritoryEntryMap({
   isLoading,
   className = "",
 }: TerritoryEntryMapProps) {
+  const sectionRef = useRef<HTMLElement | null>(null);
   const [mapReady, setMapReady] = useState(false);
   const [mapUnavailable, setMapUnavailable] = useState(false);
+  const [shouldMountMap, setShouldMountMap] = useState(false);
   const resolved = useMemo<ResolvedTerritory>(
     () =>
       resolvedTerritory ??
@@ -103,29 +105,63 @@ export default function TerritoryEntryMap({
     !hasCompleteGroupBoundary;
 
   useEffect(() => {
+    if (isLoading || shouldMountMap) return;
+
+    const section = sectionRef.current;
+    if (!section || typeof IntersectionObserver === "undefined") {
+      const timeoutId = window.setTimeout(() => setShouldMountMap(true), 0);
+      return () => window.clearTimeout(timeoutId);
+    }
+
+    let activationTimeoutId: number | null = null;
+    const observer = new IntersectionObserver(
+      (entries) => {
+        if (!entries.some((entry) => entry.isIntersecting)) return;
+        observer.disconnect();
+
+        // O mapa usa WebGL e e mais caro que o restante da entrada. Deixe o
+        // browser concluir o primeiro paint/interacao antes de inicializa-lo.
+        activationTimeoutId = window.setTimeout(() => {
+          setShouldMountMap(true);
+        }, 0);
+      },
+      { rootMargin: "240px 0px", threshold: 0.01 },
+    );
+
+    observer.observe(section);
+    return () => {
+      observer.disconnect();
+      if (activationTimeoutId !== null) {
+        window.clearTimeout(activationTimeoutId);
+      }
+    };
+  }, [isLoading, shouldMountMap]);
+
+  useEffect(() => {
     setMapReady(false);
     setMapUnavailable(false);
   }, [territoryKey, isLoading]);
 
   useEffect(() => {
-    if (isLoading || mapReady) return;
+    if (isLoading || !shouldMountMap || mapReady) return;
 
     const timeoutId = window.setTimeout(() => {
       setMapUnavailable(true);
     }, 8000);
 
     return () => window.clearTimeout(timeoutId);
-  }, [isLoading, mapReady]);
+  }, [isLoading, mapReady, shouldMountMap]);
 
   return (
     <section
+      ref={sectionRef}
       className={`territory-entry-map relative overflow-hidden bg-territory-raised ${className}`}
       aria-labelledby="territory-entry-map-title"
     >
-      {isLoading ? (
+      {isLoading || !shouldMountMap ? (
         <div
           className="absolute inset-0 animate-pulse bg-[radial-gradient(circle_at_62%_36%,hsl(var(--territory-brand)/0.18),transparent_28%),linear-gradient(145deg,hsl(var(--territory-raised)),hsl(var(--territory-surface)))]"
-          aria-label="Carregando mapa territorial"
+          aria-label={isLoading ? "Carregando mapa territorial" : "Preparando mapa territorial"}
         />
       ) : (
         <Suspense
