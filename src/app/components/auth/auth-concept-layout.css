@@ -1,0 +1,28 @@
+/* Shared layout rules owned by the approved account/access concept.
+   Keep presentation here instead of coupling editorial artwork sizing to icon styles. */
+
+@media (min-width: 1024px) {
+  img[src="/auth/login-hero.webp"] {
+    width: clamp(450px, 40vw, 540px) !important;
+    max-width: none !important;
+    height: auto !important;
+  }
+
+  img[src="/auth/signup-hero.webp"] {
+    width: clamp(440px, 39vw, 520px) !important;
+    max-width: none !important;
+    height: auto !important;
+  }
+
+  img[src="/auth/confirm-hero.webp"] {
+    width: clamp(450px, 40vw, 540px) !important;
+    max-width: none !important;
+    height: auto !important;
+  }
+
+  img[src="/auth/recovery-hero.webp"] {
+    width: clamp(470px, 42vw, 560px) !important;
+    max-width: none !important;
+    height: auto !important;
+  }
+}
