@@ -28,6 +28,15 @@ describe("secondary account settings shell contract", () => {
     expect(shell).toContain("return ACCOUNT_PATHS.preferences");
   });
 
+  it("uses the mobile viewport owned by each account shell without phantom navigation space", () => {
+    expect(shell).toContain("const hasMobileAccountNav = location.pathname === ACCOUNT_PATHS.home");
+    expect(shell).toContain('"pb-[calc(env(safe-area-inset-bottom)+6rem)]"');
+    expect(shell).toContain('"pb-[calc(env(safe-area-inset-bottom)+2rem)]"');
+    expect(shell).toContain("sticky top-0 z-30");
+    expect(shell).toContain("bg-territory-surface/95");
+    expect(shell).toContain("backdrop-blur");
+  });
+
   it("preserves real identity-management capabilities after the visual migration", () => {
     expect(profileSettings).toContain("<PrivacySettings profile={activeProfile}");
     expect(profileSettings).toContain("<ProfileLinksManager profileId={activeProfile.id}");
