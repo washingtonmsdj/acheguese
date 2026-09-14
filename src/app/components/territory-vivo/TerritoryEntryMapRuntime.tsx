@@ -140,7 +140,7 @@ export default function TerritoryEntryMapRuntime({
           setMapReady(true);
           setMapUnavailable(false);
         }}
-        className={`pointer-events-none h-full min-h-[12rem] w-full md:min-h-[18rem] lg:min-h-[24rem] ${mapReady ? "opacity-100" : "opacity-0"}`}
+        className="pointer-events-none h-full min-h-[12rem] w-full md:min-h-[18rem] lg:min-h-[24rem]"
       />
 
       {showArrival && !mapUnavailable ? (
