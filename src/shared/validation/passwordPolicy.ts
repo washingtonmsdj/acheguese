@@ -59,11 +59,14 @@ export function getPasswordRequirementStatus(
   ];
 }
 
-/**
- * Copy compacta usada nas telas do concept sem duplicar a política de senha.
- */
-export function getPasswordRequirementsSummary(): string {
-  return `${PASSWORD_POLICY.MIN_LENGTH} ou mais caracteres, maiúscula, minúscula, número e símbolo.`;
+/** Copy compacta do concept sem duplicar a política de senha. */
+export function getPasswordRequirementsSummary(
+  compactLength = false,
+): string {
+  const lengthCopy = compactLength
+    ? `${PASSWORD_POLICY.MIN_LENGTH}+ caracteres`
+    : `${PASSWORD_POLICY.MIN_LENGTH} ou mais caracteres`;
+  return `${lengthCopy}, maiúscula, minúscula, número e símbolo.`;
 }
 
 /**
