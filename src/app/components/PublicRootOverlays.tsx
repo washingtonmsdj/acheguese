@@ -1,9 +1,6 @@
 import { lazy, Suspense } from "react";
-import { QueryClientProvider } from "@tanstack/react-query";
 
 import { ConsentBanner } from "@/app/components/privacy/ConsentBanner";
-import { Toaster } from "@/shared/components/ui/toaster";
-import { queryClient } from "@/shared/utils/queryClient";
 
 const shouldLoadVercelAnalytics =
   import.meta.env.PROD &&
@@ -21,19 +18,18 @@ const VercelAnalytics = shouldLoadVercelAnalytics
 /**
  * Overlays mínimos da raiz pública.
  *
- * Mantém consentimento e feedback de toast, sem carregar Sonner nem UI offline
- * da aplicação completa. Analytics continua lazy e só entra após este chunk.
+ * O consentimento mantém estado próprio e Analytics continua lazy. QueryClient,
+ * toaster, Sonner e UI offline pertencem apenas ao runtime completo.
  */
 export default function PublicRootOverlays() {
   return (
-    <QueryClientProvider client={queryClient}>
-      <Toaster />
+    <>
       <ConsentBanner />
       {VercelAnalytics ? (
         <Suspense fallback={null}>
           <VercelAnalytics />
         </Suspense>
       ) : null}
-    </QueryClientProvider>
+    </>
   );
 }
