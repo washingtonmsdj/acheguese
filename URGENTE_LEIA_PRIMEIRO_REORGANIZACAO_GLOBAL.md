@@ -9,7 +9,7 @@
 1. `docs/README.md` — índice documental canônico;
 2. `docs/03-architecture/CURRENT_RULES.md` — regras arquiteturais vigentes;
 3. `docs/08-roadmap/EXECUCAO_MAIN_ONLY.md` — plano operacional ativo;
-4. `docs/08-roadmap/checkpoints/2026-09-14-g186-observability-consent-and-edge-security-closure.md` — checkpoint mais recente desta linha;
+4. `docs/08-roadmap/checkpoints/2026-09-14-g187-compatibility-bridge-retirement-and-budget.md` — checkpoint mais recente desta linha;
 5. `SECURITY.md` — segurança e gates de release.
 
 ## Regras que não podem ser perdidas
@@ -18,6 +18,7 @@
 - não remover feature válida porque está quebrada, incompleta, `launch-paused` ou com teste falhando;
 - remover somente legado/duplicação/bridge/owner substituído depois de censar callers, preservar capacidade e provar o substituto;
 - corrigir causa raiz; não recriar wrappers, aliases, writers paralelos, hardcodes ou paliativos apenas para fazer build/test passar;
+- `docs/03-architecture/COMPATIBILITY_BRIDGES.md` é o ledger dos facades ainda vivos; eles não podem ganhar callers novos e só podem ser aposentados migrando todos os consumidores atomicamente, sem alias substituto;
 - a `/` está feature-complete no source para o contrato MVP atual; não abrir nova funcionalidade nela sem regressão, mudança de concept/SSOT ou evidência de viewport/runtime;
 - otimização reutilizável de mapas pertence aos owners canônicos descritos em `CURRENT_RULES.md`; não copiar loaders/CSS/workers/providers por página;
 - análise de bundle da `/` deve preservar runtime completo de MapLibre, boundary oficial, app roteado e Sentry fora dos closures críticos definidos no relatório de build;
@@ -39,6 +40,7 @@
 - `@vercel/analytics/react` só pode ser importado pelo owner consent-aware e não monta antes de `analytics=true`;
 - tracing, Session Replay e reporter de Web Vitals do Sentry são telemetria opcional: acompanham `analytics=true`; error monitoring operacional permanece independente;
 - transições manuais de Session Replay devem passar pela fila serializada do owner Sentry; não iniciar Replay em paralelo com `stop()` pendente;
+- o shim legado `startSentryTransaction`/`startTransaction` permanece aposentado; novos spans não devem recriar essa API morta;
 - overlays tardios da `/` permanecem router-free; pathname é passado explicitamente quando a superfície não precisa de React Router;
 - Plus Jakarta Sans é a família aprovada; `tailwind.config.ts` é o owner executável do stack e do `--font-heading`/`--font-sans`; peso 800 é permitido onde o concept versionado exige e deve ser carregado de forma real;
 - paths/query keys/classificação de callback de Auth vêm de `authFlow.ts`/`authCallback.ts`; âncora comum não é retorno OAuth;
