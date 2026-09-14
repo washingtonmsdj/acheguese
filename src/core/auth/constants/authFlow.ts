@@ -17,6 +17,8 @@ export const AUTH_QUERY_KEYS = {
   email: "email",
   error: "error",
   errorCode: "error_code",
+  accessToken: "access_token",
+  refreshToken: "refresh_token",
 } as const;
 
 export const AUTH_FLOW_STORAGE_KEYS = {
