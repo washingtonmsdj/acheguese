@@ -30,6 +30,27 @@ describe("public root launch territory SSOT", () => {
     expect(entry).not.toContain("<em>Salvador · Bahia</em>");
   });
 
+  it("renders launch neighborhoods from the resolved territorial group", () => {
+    const entry = read("src/app/pages/TerritoryEntryPage.tsx");
+    const fallbacks = read("src/core/routing/utils/publicTerritoryFallbacks.ts");
+
+    expect(entry).toContain("const launchCommunityMembers =");
+    expect(entry).toContain('launchTerritory?.kind === "group"');
+    expect(entry).toContain("launchTerritory.group.members");
+    expect(entry).toContain("launchCommunityMembers.map((member) => (");
+    expect(entry).toContain("getPublicTerritoryLocationLabel(member)");
+
+    expect(entry).not.toContain("<span>Nordeste de Amaralina</span>");
+    expect(entry).not.toContain("<span>Santa Cruz</span>");
+    expect(entry).not.toContain("<span>Vale das Pedrinhas</span>");
+    expect(entry).not.toContain("<span>Chapada</span>");
+
+    expect(fallbacks).toContain('const PUBLIC_LABEL_KEY = "public_label";');
+    expect(fallbacks).toContain('name: "Chapada do Rio Vermelho"');
+    expect(fallbacks).toContain('publicLabel: "Chapada"');
+    expect(fallbacks).toContain("export function getPublicTerritoryLocationLabel");
+  });
+
   it("keeps the root map fallback on canonical map defaults", () => {
     const runtime = read(
       "src/app/components/territory-vivo/TerritoryEntryMapRuntime.tsx",
