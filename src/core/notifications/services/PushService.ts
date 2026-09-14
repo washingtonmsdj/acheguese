@@ -82,6 +82,23 @@ export class PushService {
     return Notification.permission === 'granted';
   }
 
+  /** Return the endpoint owned by this browser, never an endpoint from another device. */
+  static async getCurrentBrowserSubscriptionEndpoint(): Promise<string | null> {
+    if (!this.isSupported()) return null;
+
+    try {
+      const registration = await navigator.serviceWorker.getRegistration();
+      if (!registration) return null;
+      const subscription = await registration.pushManager.getSubscription();
+      return subscription?.endpoint ?? null;
+    } catch (error) {
+      logger.warn('Failed to resolve current browser push subscription:', {
+        message: errorMessage(error),
+      });
+      return null;
+    }
+  }
+
   /** Request permission for push notifications. */
   static async requestPermission(): Promise<boolean> {
     if (!this.isSupported()) {
@@ -189,11 +206,14 @@ export class PushService {
   }
 
   /**
-   * Disable delivery server-side first, then remove the local browser
-   * subscription as best effort. This avoids leaving a server-active endpoint
-   * when the Edge mutation fails.
+   * Disable one server-side subscription. Browser cleanup is performed only
+   * when the disabled record belongs to this exact browser endpoint; removing
+   * another device must never silently unsubscribe the current device.
    */
-  static async unsubscribe(subscriptionId: string): Promise<OperationResult> {
+  static async unsubscribe(
+    subscriptionId: string,
+    subscriptionEndpoint: string,
+  ): Promise<OperationResult> {
     try {
       const { data, error } = await supabase.functions.invoke('unsubscribe-push', {
         body: { subscriptionId },
@@ -212,11 +232,12 @@ export class PushService {
       if (this.isSupported()) {
         try {
           const registration = await navigator.serviceWorker.getRegistration();
-          if (registration) {
-            const browserSubscription = await registration.pushManager.getSubscription();
-            if (browserSubscription) {
-              await browserSubscription.unsubscribe();
-            }
+          const browserSubscription = await registration?.pushManager.getSubscription();
+          if (
+            browserSubscription &&
+            browserSubscription.endpoint === subscriptionEndpoint
+          ) {
+            await browserSubscription.unsubscribe();
           }
         } catch (browserError) {
           logger.warn('Server disabled push but browser cleanup failed:', {
