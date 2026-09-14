@@ -181,7 +181,13 @@ export default function TerritoryEntryPage() {
 
           <section className="entry-selection" aria-labelledby="entry-community-title">
             <Link to={LAUNCH_URLS.community} className="entry-community-preview" onClick={rememberComplex}>
-              <img src={communityThumbnail} alt="" loading="lazy" decoding="async" />
+              <img
+                src={communityThumbnail}
+                alt=""
+                loading="lazy"
+                decoding="async"
+                fetchPriority="low"
+              />
               <span>
                 <strong id="entry-community-title">{COMPLEX_TERRITORY_NAME}</strong>
                 <em>Salvador · Bahia</em>
