@@ -1,23 +1,23 @@
 import { forwardRef, lazy, Suspense } from "react";
+import { loadMapLibreRuntime } from "../../runtime/loadMapLibreRuntime";
 import type {
   MapLibreAdapterHandle,
   MapLibreAdapterProps,
 } from "./MapLibreAdapter";
 
-const loadMapLibreRuntime = async () => {
-  const [{ ensureMapLibreWorkerConfigured }, adapterModule] = await Promise.all([
-    import("../../config/maplibreWorkerRuntime"),
+const loadAdapterRuntime = async () => {
+  const [, adapterModule] = await Promise.all([
+    loadMapLibreRuntime(),
     import("./MapLibreAdapter"),
   ]);
 
-  ensureMapLibreWorkerConfigured();
   return { default: adapterModule.MapLibreAdapter };
 };
 
-const LazyMapLibreRuntime = lazy(loadMapLibreRuntime);
+const LazyMapLibreRuntime = lazy(loadAdapterRuntime);
 
 export function preloadMapLibreAdapterRuntime(): Promise<void> {
-  return loadMapLibreRuntime().then(() => undefined);
+  return loadAdapterRuntime().then(() => undefined);
 }
 
 /**
