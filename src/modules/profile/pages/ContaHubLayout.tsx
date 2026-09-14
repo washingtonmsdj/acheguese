@@ -2,7 +2,9 @@ import { Helmet } from "react-helmet-async";
 import type { ChangeEvent, ReactNode } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import {
+  Accessibility,
   Bell,
+  ChevronDown,
   ChevronRight,
   CircleHelp,
   KeyRound,
@@ -15,8 +17,9 @@ import {
 import { toast } from "sonner";
 
 import { useAuth } from "@/core/auth/hooks/useAuth";
-import { ProfileHeaderCompact } from "@/modules/profile/components/hub";
 import { AccountSettingsShell } from "@/modules/profile/components/AccountSettingsShell";
+import { ManagedProfilesPanel } from "@/modules/profile/components/ManagedProfilesPanel";
+import { ProfileHeaderCompact } from "@/modules/profile/components/hub";
 import type {
   MultiProfileRecord,
   Profile as RuntimeProfile,
@@ -132,28 +135,30 @@ export function ContaHubLayout({
         title={profilesView ? "Meus perfis" : "Minha conta"}
         description={
           profilesView
-            ? "Identidades, equipes e recursos vinculados à sua conta."
+            ? "Troque, edite e revise as identidades vinculadas à sua conta."
             : "Estas configurações valem para toda a sua conta."
         }
         eyebrow="Conta"
         showBack={profilesView}
       >
-        <ProfileHeaderCompact
-          activeProfile={personalProfile}
-          profile={profile}
-          allProfiles={allProfiles}
-          userEmail={userEmail}
-          accountSnapshot={accountSnapshot}
-          identity={identity}
-          context={context}
-          notifications={notifications}
-          isVerified={isVerified}
-          canOpenPublicProfile={canOpenPublicProfile}
-          handle={handle}
-          territoryLabel={territoryLabel}
-          reputation={reputation}
-          onAvatarChange={onAvatarChange}
-        />
+        {!profilesView ? (
+          <ProfileHeaderCompact
+            activeProfile={personalProfile}
+            profile={profile}
+            allProfiles={allProfiles}
+            userEmail={userEmail}
+            accountSnapshot={accountSnapshot}
+            identity={identity}
+            context={context}
+            notifications={notifications}
+            isVerified={isVerified}
+            canOpenPublicProfile={canOpenPublicProfile}
+            handle={handle}
+            territoryLabel={territoryLabel}
+            reputation={reputation}
+            onAvatarChange={onAvatarChange}
+          />
+        ) : null}
 
         {!profilesView ? (
           <>
@@ -188,6 +193,12 @@ export function ContaHubLayout({
                 description="Ajustes pessoais e vínculos da identidade."
                 onClick={() => navigate("/conta/preferencias")}
               />
+              <OverviewRow
+                icon={<Accessibility className="h-5 w-5" aria-hidden="true" />}
+                title="Acessibilidade"
+                description="Contraste, tamanho do texto e movimento reduzido."
+                onClick={() => navigate("/conta/preferencias#acessibilidade")}
+              />
             </section>
 
             <section className="mt-4 rounded-2xl border border-territory-border bg-territory-surface px-4 sm:px-5">
@@ -217,16 +228,21 @@ export function ContaHubLayout({
             </button>
           </>
         ) : (
-          <div id="account-details" className="mt-4">
-            <div className="mb-4">
-              <h2 className="font-heading text-lg font-bold text-territory-ink">
-                Perfis disponíveis
-              </h2>
-              <p className="mt-1 text-sm text-territory-muted">
-                Troque de identidade e acesse os recursos já existentes para seus perfis.
-              </p>
-            </div>
-            <div className="space-y-4 sm:space-y-6">{children}</div>
+          <div id="account-details" className="space-y-4">
+            <ManagedProfilesPanel />
+
+            <details className="group rounded-2xl border border-territory-border bg-territory-surface">
+              <summary className="flex min-h-12 cursor-pointer list-none items-center justify-between gap-3 rounded-2xl px-4 py-3 text-sm font-semibold text-territory-ink focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-territory-brand [&::-webkit-details-marker]:hidden">
+                Controles avançados e recursos operacionais
+                <ChevronDown className="h-4 w-4 shrink-0 text-territory-muted transition-transform group-open:rotate-180" aria-hidden="true" />
+              </summary>
+              <div className="border-t border-territory-border p-4 sm:p-5">
+                <p className="mb-4 text-sm leading-5 text-territory-muted">
+                  Estes recursos continuam disponíveis, mas ficam fora da lista principal para manter a gestão de perfis simples e fiel ao concept.
+                </p>
+                <div className="space-y-4 sm:space-y-6">{children}</div>
+              </div>
+            </details>
           </div>
         )}
       </AccountSettingsShell>
