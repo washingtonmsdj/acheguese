@@ -1,33 +1,50 @@
-import { Button } from "@/shared/components/ui/button";
-import { Alert, AlertDescription } from "@/shared/components/ui/alert";
-import { usePush } from "@/core/notifications/hooks/usePush";
-import { useAuth } from "@/core/auth/hooks/useAuth";
+import { formatDistanceToNow } from "date-fns";
 import {
   AlertCircle,
   BellOff,
   CheckCircle2,
+  Loader2,
   MonitorSmartphone,
+  RefreshCw,
   Send,
   Smartphone,
   Trash2,
 } from "lucide-react";
-import { formatDistanceToNow } from "date-fns";
+
+import { useAuth } from "@/core/auth/hooks/useAuth";
+import { usePush } from "@/core/notifications/hooks/usePush";
+import { Alert, AlertDescription } from "@/shared/components/ui/alert";
+import { Button } from "@/shared/components/ui/button";
 import { ptBR } from "@/shared/utils/dateLocale";
 
 export function PushNotificationSettings() {
   const { user } = useAuth();
   const {
+    isSupportResolved,
     isSupported,
     hasPermission,
     isSubscribed,
+    currentSubscriptionId,
     subscriptions,
+    isLoadingSubscriptions,
     isSubscribing,
     isUnsubscribing,
     isSendingTest,
+    subscriptionsError,
     subscribe,
     unsubscribe,
     sendTest,
+    refetchSubscriptions,
   } = usePush(user?.id);
+
+  if (!isSupportResolved) {
+    return (
+      <div className="flex min-h-24 items-center justify-center rounded-xl border border-territory-border bg-territory-raised p-4" role="status">
+        <Loader2 className="h-5 w-5 animate-spin text-territory-brand" aria-hidden="true" />
+        <span className="ml-2 text-sm text-territory-muted">Verificando este dispositivo...</span>
+      </div>
+    );
+  }
 
   if (!isSupported) {
     return (
@@ -64,9 +81,9 @@ export function PushNotificationSettings() {
             </p>
             <p className="mt-1 text-xs leading-4 text-territory-muted">
               {isSubscribed
-                ? "Este navegador está registrado para receber notificações push."
+                ? "O endpoint deste navegador está registrado para receber notificações push."
                 : hasPermission
-                  ? "A permissão existe; ative o registro para começar a receber push."
+                  ? "A permissão existe, mas este navegador ainda não está registrado."
                   : "A permissão do navegador é necessária para receber push."}
             </p>
           </div>
@@ -93,6 +110,7 @@ export function PushNotificationSettings() {
               disabled={isSubscribing}
               className="min-h-10 bg-territory-brand text-white hover:bg-territory-brand-strong"
             >
+              {isSubscribing ? <Loader2 className="mr-1.5 h-4 w-4 animate-spin" aria-hidden="true" /> : null}
               {isSubscribing ? "Ativando..." : "Ativar push"}
             </Button>
           )}
@@ -103,41 +121,79 @@ export function PushNotificationSettings() {
         <Alert className="border-amber-200 bg-amber-50 text-amber-950">
           <AlertCircle className="h-4 w-4" />
           <AlertDescription className="text-xs leading-5">
-            Se o navegador estiver bloqueando notificações, altere a permissão do site e tente novamente.
+            Se o navegador estiver bloqueando notificações, revise a permissão deste site e tente ativar novamente.
           </AlertDescription>
         </Alert>
       ) : null}
 
-      {subscriptions.length > 0 ? (
+      {subscriptionsError ? (
+        <Alert className="border-red-200 bg-red-50 text-red-900">
+          <AlertCircle className="h-4 w-4" />
+          <AlertDescription className="text-xs leading-5">
+            Não foi possível carregar os dispositivos registrados.
+            <button
+              type="button"
+              onClick={() => void refetchSubscriptions()}
+              className="ml-1 inline-flex min-h-8 items-center gap-1 font-semibold underline underline-offset-2"
+            >
+              <RefreshCw className="h-3.5 w-3.5" aria-hidden="true" />
+              Tentar novamente
+            </button>
+          </AlertDescription>
+        </Alert>
+      ) : null}
+
+      {isLoadingSubscriptions ? (
+        <div className="flex min-h-14 items-center justify-center rounded-xl border border-territory-border bg-territory-surface text-sm text-territory-muted" role="status">
+          <Loader2 className="mr-2 h-4 w-4 animate-spin text-territory-brand" aria-hidden="true" />
+          Carregando dispositivos...
+        </div>
+      ) : null}
+
+      {!isLoadingSubscriptions && !subscriptionsError && subscriptions.length > 0 ? (
         <div>
           <h3 className="text-xs font-semibold uppercase tracking-[0.12em] text-territory-muted">
             Dispositivos registrados
           </h3>
           <div className="mt-2 divide-y divide-territory-border rounded-xl border border-territory-border bg-territory-surface">
-            {subscriptions.map((sub) => (
-              <div key={sub.id} className="flex min-h-14 items-center gap-3 px-3 py-2">
-                <Smartphone className="h-4 w-4 shrink-0 text-territory-brand" aria-hidden="true" />
-                <div className="min-w-0 flex-1">
-                  <p className="truncate text-sm font-medium text-territory-ink">
-                    {sub.device_name || "Dispositivo sem nome"}
-                  </p>
-                  <p className="mt-0.5 text-xs text-territory-muted">
-                    Ativado {formatDistanceToNow(new Date(sub.created_at), { addSuffix: true, locale: ptBR })}
-                  </p>
+            {subscriptions.map((sub) => {
+              const isCurrent = sub.id === currentSubscriptionId;
+              return (
+                <div key={sub.id} className="flex min-h-14 items-center gap-3 px-3 py-2">
+                  <Smartphone className="h-4 w-4 shrink-0 text-territory-brand" aria-hidden="true" />
+                  <div className="min-w-0 flex-1">
+                    <div className="flex flex-wrap items-center gap-2">
+                      <p className="truncate text-sm font-medium text-territory-ink">
+                        {sub.device_name || "Dispositivo sem nome"}
+                      </p>
+                      {isCurrent ? (
+                        <span className="rounded-full bg-territory-brand/10 px-2 py-0.5 text-[0.6875rem] font-semibold text-territory-brand">
+                          Este dispositivo
+                        </span>
+                      ) : null}
+                    </div>
+                    <p className="mt-0.5 text-xs text-territory-muted">
+                      Ativado {formatDistanceToNow(new Date(sub.created_at), { addSuffix: true, locale: ptBR })}
+                    </p>
+                  </div>
+                  <Button
+                    type="button"
+                    onClick={() => unsubscribe(sub.id, sub.endpoint)}
+                    disabled={isUnsubscribing}
+                    variant="ghost"
+                    size="icon"
+                    className="h-10 w-10 shrink-0 text-territory-muted hover:text-destructive"
+                    aria-label={`Remover ${sub.device_name || "dispositivo"}${isCurrent ? " atual" : ""}`}
+                  >
+                    {isUnsubscribing ? (
+                      <Loader2 className="h-4 w-4 animate-spin" aria-hidden="true" />
+                    ) : (
+                      <Trash2 className="h-4 w-4" aria-hidden="true" />
+                    )}
+                  </Button>
                 </div>
-                <Button
-                  type="button"
-                  onClick={() => unsubscribe(sub.id)}
-                  disabled={isUnsubscribing}
-                  variant="ghost"
-                  size="icon"
-                  className="h-10 w-10 shrink-0 text-territory-muted hover:text-destructive"
-                  aria-label={`Remover ${sub.device_name || "dispositivo"}`}
-                >
-                  <Trash2 className="h-4 w-4" aria-hidden="true" />
-                </Button>
-              </div>
-            ))}
+              );
+            })}
           </div>
         </div>
       ) : null}
