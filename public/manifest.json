@@ -1,13 +1,13 @@
 {
   "name": "Achegue-se",
   "short_name": "Achegue-se",
-  "description": "Comunidade, negocios locais, servicos, gastronomia, mapa e perto de mim no mesmo territorio.",
+  "description": "Descubra negócios, serviços e histórias da sua comunidade. Seu lugar, mais perto.",
   "start_url": "/",
   "scope": "/",
   "display": "standalone",
   "orientation": "portrait-primary",
-  "background_color": "#ffffff",
-  "theme_color": "#0f766e",
+  "background_color": "#FAFBF7",
+  "theme_color": "#123E3D",
   "lang": "pt-BR",
   "categories": ["business", "food", "navigation", "social"],
   "icons": [
@@ -36,8 +36,8 @@
       "url": "/empresas"
     },
     {
-      "name": "Servicos",
-      "short_name": "Servicos",
+      "name": "Serviços",
+      "short_name": "Serviços",
       "url": "/servicos"
     }
   ]
