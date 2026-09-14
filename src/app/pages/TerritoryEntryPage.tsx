@@ -1,6 +1,6 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Link } from "react-router-dom";
-import { ArrowRight, Menu, Users } from "lucide-react";
+import { ArrowRight, Menu, Users, X } from "lucide-react";
 import TerritoryEntryMap from "@/app/components/territory-vivo/TerritoryEntryMap";
 import communityThumbnail from "@/assets/hero-complexo-nordeste.jpg";
 import { LAUNCH_URLS, TERRITORY_CONFIG } from "@/core/routing/config/territory";
@@ -124,6 +124,8 @@ export default function TerritoryEntryPage() {
   const [previewTerritory, setPreviewTerritory] = useState<ResolvedTerritory | null>(null);
   const [isMapLoading, setIsMapLoading] = useState(true);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const mobileMenuButtonRef = useRef<HTMLButtonElement | null>(null);
+  const mobileMenuPopoverRef = useRef<HTMLElement | null>(null);
 
   useEffect(() => {
     let cancelled = false;
@@ -151,15 +153,56 @@ export default function TerritoryEntryPage() {
     };
   }, []);
 
+  useEffect(() => {
+    if (!isMobileMenuOpen) return;
+
+    const firstLink = mobileMenuPopoverRef.current?.querySelector<HTMLElement>("a");
+    firstLink?.focus();
+
+    const closeAndRestoreFocus = () => {
+      setIsMobileMenuOpen(false);
+      window.requestAnimationFrame(() => mobileMenuButtonRef.current?.focus());
+    };
+
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.key === "Escape") closeAndRestoreFocus();
+    };
+
+    const handlePointerDown = (event: PointerEvent) => {
+      const target = event.target as Node;
+      if (
+        mobileMenuPopoverRef.current?.contains(target) ||
+        mobileMenuButtonRef.current?.contains(target)
+      ) {
+        return;
+      }
+      setIsMobileMenuOpen(false);
+    };
+
+    document.addEventListener("keydown", handleKeyDown);
+    document.addEventListener("pointerdown", handlePointerDown);
+    return () => {
+      document.removeEventListener("keydown", handleKeyDown);
+      document.removeEventListener("pointerdown", handlePointerDown);
+    };
+  }, [isMobileMenuOpen]);
+
   const rememberComplex = () => {
     lastTerritoryStore.set({ name: COMPLEX_TERRITORY_NAME, baseUrl: TERRITORY_CONFIG.launch.community.path });
   };
 
   return (
     <div className="territory-vivo territory-entry-page">
+      <a
+        href="#main-content"
+        className="sr-only focus:not-sr-only focus:absolute focus:left-4 focus:top-4 focus:z-[60] focus:rounded-lg focus:bg-territory-surface focus:px-3 focus:py-2 focus:text-sm focus:font-semibold focus:text-territory-ink focus:shadow-lg"
+      >
+        Pular para o conteúdo principal
+      </a>
+
       <header className="territory-entry-header">
         <div className="territory-entry-header-inner">
-          <Link to="/?trocar=territorio" className="entry-wordmark" aria-label="Achegue-se">
+          <Link to="/" className="entry-wordmark" aria-label="Achegue-se — início">
             achegue-se<span aria-hidden="true">.</span>
           </Link>
           <nav className="entry-desktop-nav" aria-label="Navegação pública">
@@ -167,28 +210,45 @@ export default function TerritoryEntryPage() {
             <span className="entry-nav-divider" aria-hidden="true" />
             <Link to="/login">Entrar</Link>
           </nav>
-          <button type="button" className="entry-mobile-menu" aria-label={isMobileMenuOpen ? "Fechar menu" : "Abrir menu"} aria-expanded={isMobileMenuOpen} onClick={() => setIsMobileMenuOpen((open) => !open)}>
-            <Menu className="h-6 w-6" aria-hidden="true" />
+          <button
+            ref={mobileMenuButtonRef}
+            type="button"
+            className="entry-mobile-menu"
+            aria-label={isMobileMenuOpen ? "Fechar menu" : "Abrir menu"}
+            aria-expanded={isMobileMenuOpen}
+            aria-controls="entry-mobile-menu-popover"
+            onClick={() => setIsMobileMenuOpen((open) => !open)}
+          >
+            {isMobileMenuOpen ? (
+              <X className="h-6 w-6" aria-hidden="true" />
+            ) : (
+              <Menu className="h-6 w-6" aria-hidden="true" />
+            )}
           </button>
           {isMobileMenuOpen ? (
-            <div className="entry-mobile-menu-popover">
+            <nav
+              ref={mobileMenuPopoverRef}
+              id="entry-mobile-menu-popover"
+              className="entry-mobile-menu-popover"
+              aria-label="Navegação pública móvel"
+            >
               <Link to="/sobre" onClick={() => setIsMobileMenuOpen(false)}>Como funciona</Link>
               <Link to="/login" onClick={() => setIsMobileMenuOpen(false)}>Entrar</Link>
-            </div>
+            </nav>
           ) : null}
         </div>
       </header>
 
-      <main className="territory-entry-main">
+      <main id="main-content" tabIndex={-1} className="territory-entry-main">
         <section className="entry-left" aria-labelledby="territory-entry-title">
           <div className="entry-hero">
             <p className="entry-eyebrow">Nossa primeira comunidade</p>
             <h1 id="territory-entry-title">Seu lugar, mais perto.</h1>
-            <p className="entry-hero-subtitle">Negócios, serviços e histórias do Complexo do Nordeste de Amaralina, em Salvador.</p>
+            <p className="entry-hero-subtitle">Descubra o que está perto: negócios, serviços e histórias do Complexo do Nordeste de Amaralina.</p>
           </div>
 
           <section className="entry-selection" aria-labelledby="entry-community-title">
-            <Link to={LAUNCH_URLS.community} className="entry-community-preview" onClick={rememberComplex}>
+            <div className="entry-community-preview">
               <img
                 src={communityThumbnail}
                 alt=""
@@ -200,7 +260,7 @@ export default function TerritoryEntryPage() {
                 <strong id="entry-community-title">{COMPLEX_TERRITORY_NAME}</strong>
                 <em>Salvador · Bahia</em>
               </span>
-            </Link>
+            </div>
             <div className="entry-neighborhoods" aria-label="Bairros do Complexo">
               <span>Nordeste de Amaralina</span><span>Santa Cruz</span><span>Vale das Pedrinhas</span><span>Chapada</span>
             </div>
@@ -226,7 +286,7 @@ export default function TerritoryEntryPage() {
             <Users className="entry-indication-icon" aria-hidden="true" />
             <div>
               <h2 id="entry-indication-title">Quer o Achegue-se na sua comunidade?</h2>
-              <p>Conte de onde você é e ajude a indicar os próximos lugares.</p>
+              <p>O Complexo é só o começo. Conte de onde você é e ajude a orientar os próximos lugares.</p>
             </div>
           </div>
           <Link className="entry-indication-button" to="/indicar-comunidade">Indicar minha comunidade</Link>
@@ -234,7 +294,7 @@ export default function TerritoryEntryPage() {
       </main>
 
       <footer className="entry-footer">
-        <span>Estamos começando pelo Complexo. A expansão será por etapas.</span>
+        <span>Começamos pelo Complexo. Aos poucos, o Achegue-se chega a novos lugares.</span>
         <nav aria-label="Links institucionais"><Link to="/privacidade">Privacidade</Link><i aria-hidden="true" /><Link to="/sobre">Como funciona</Link></nav>
       </footer>
     </div>
