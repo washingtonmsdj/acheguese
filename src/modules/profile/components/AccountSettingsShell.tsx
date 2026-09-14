@@ -1,6 +1,7 @@
 import type { ReactNode } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import {
+  Accessibility,
   ArrowLeft,
   Bell,
   ChevronDown,
@@ -20,7 +21,8 @@ const settingsItems = [
   { label: "Segurança", href: "/conta/seguranca", icon: LockKeyhole, exact: true, excludeHash: "#acesso" },
   { label: "Notificações", href: "/conta/notificacoes", icon: Bell, exact: true },
   { label: "Privacidade e dados", href: "/conta/privacidade", icon: Shield, exact: true },
-  { label: "Preferências", href: "/conta/preferencias", icon: SlidersHorizontal, exact: true },
+  { label: "Preferências", href: "/conta/preferencias", icon: SlidersHorizontal, exact: true, excludeHash: "#acessibilidade" },
+  { label: "Acessibilidade", href: "/conta/preferencias#acessibilidade", icon: Accessibility, hash: "#acessibilidade" },
   { label: "Meus perfis", href: "/conta?section=profiles", icon: UserRound, exact: true, search: "?section=profiles" },
 ] as const;
 
