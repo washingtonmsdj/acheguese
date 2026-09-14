@@ -1,14 +1,16 @@
 import { useEffect, useState, type ReactNode } from "react";
-import { Navigate } from "react-router-dom";
+import { Navigate, useLocation } from "react-router-dom";
 import { Helmet } from "react-helmet-async";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import {
+  AlertCircle,
   Bell,
   Clock3,
   Loader2,
   Mail,
   MessageCircleMore,
   MonitorSmartphone,
+  RefreshCw,
   Settings2,
   ShoppingCart,
   Smartphone,
@@ -56,7 +58,7 @@ function PreferenceRow({
 }) {
   return (
     <div className="flex min-h-[66px] items-center gap-3 border-b border-territory-border py-3 last:border-b-0">
-      <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-territory-brand/8 text-territory-brand">
+      <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-territory-brand/10 text-territory-brand">
         {icon}
       </span>
       <div className="min-w-0 flex-1">
@@ -85,13 +87,20 @@ function Surface({ children, className = "" }: { children: ReactNode; className?
 }
 
 export default function NotificationPreferencesPage() {
+  const location = useLocation();
   const appUrls = useAppUrls();
   const { user } = useAuth();
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const [preferences, setPreferences] = useState<NotificationPreferences>(DEFAULT_NOTIFICATION_PREFERENCES);
 
-  const { data, isLoading } = useQuery({
+  const {
+    data,
+    isLoading,
+    isError,
+    error: loadError,
+    refetch,
+  } = useQuery({
     queryKey: ["notification-preferences", user?.id],
     queryFn: async () => NotificationPreferencesService.get(),
     enabled: !!user,
@@ -103,8 +112,9 @@ export default function NotificationPreferencesPage() {
 
   const saveMutation = useMutation({
     mutationFn: async (prefs: NotificationPreferences) => NotificationPreferencesService.patchAll(prefs),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["notification-preferences"] });
+    onSuccess: (saved) => {
+      setPreferences(saved);
+      queryClient.setQueryData(["notification-preferences", user?.id], saved);
       toast({ title: "Preferências salvas", description: "Suas preferências de notificação foram atualizadas." });
     },
     onError: (error: Error) => {
@@ -112,15 +122,45 @@ export default function NotificationPreferencesPage() {
     },
   });
 
+  if (location.pathname === "/settings/notifications") {
+    return <Navigate to="/conta/notificacoes" replace />;
+  }
+
   if (!user) return <Navigate to={appUrls.auth.login} replace />;
 
   if (isLoading) {
     return (
       <div className="territory-vivo flex min-h-[70dvh] items-center justify-center bg-territory-canvas px-4">
-        <Loader2 className="h-8 w-8 animate-spin text-territory-brand" aria-label="Carregando preferências" />
+        <div className="text-center" role="status">
+          <Loader2 className="mx-auto h-8 w-8 animate-spin text-territory-brand" aria-hidden="true" />
+          <p className="mt-3 text-sm text-territory-muted">Carregando preferências...</p>
+        </div>
       </div>
     );
   }
+
+  if (isError) {
+    return (
+      <AccountSettingsShell
+        title="Notificações"
+        description="Não foi possível carregar suas preferências agora."
+      >
+        <Surface className="p-5 text-center">
+          <AlertCircle className="mx-auto h-8 w-8 text-destructive" aria-hidden="true" />
+          <p className="mt-3 text-sm text-territory-muted">
+            {loadError instanceof Error ? loadError.message : "Tente novamente sem alterar nenhuma preferência."}
+          </p>
+          <Button type="button" variant="outline" className="mt-4 min-h-11" onClick={() => void refetch()}>
+            <RefreshCw className="mr-2 h-4 w-4" aria-hidden="true" />
+            Tentar novamente
+          </Button>
+        </Surface>
+      </AccountSettingsShell>
+    );
+  }
+
+  const quietHoursInvalid = Boolean(preferences.quiet_hours_start) !== Boolean(preferences.quiet_hours_end);
+  const isDirty = data ? JSON.stringify(preferences) !== JSON.stringify(data) : false;
 
   return (
     <>
@@ -156,7 +196,7 @@ export default function NotificationPreferencesPage() {
                 id="push"
                 icon={<MonitorSmartphone className="h-5 w-5" aria-hidden="true" />}
                 label="Neste dispositivo"
-                description="Use notificações push quando o navegador permitir."
+                description="Permita push quando quiser receber avisos fora da tela atual."
                 checked={preferences.push_enabled}
                 onCheckedChange={(checked) => setPreferences({ ...preferences, push_enabled: checked })}
               />
@@ -204,44 +244,53 @@ export default function NotificationPreferencesPage() {
 
         <Surface className="mt-4 p-4 sm:p-5">
           <div className="grid gap-5 lg:grid-cols-[1fr_auto] lg:items-end">
-            <div className="grid gap-4 sm:grid-cols-[auto_1fr_1fr] sm:items-end">
-              <div className="flex items-center gap-3 sm:self-start sm:pt-7">
-                <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-territory-brand/8 text-territory-brand">
+            <div>
+              <div className="flex items-center gap-3">
+                <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-territory-brand/10 text-territory-brand">
                   <Clock3 className="h-5 w-5" aria-hidden="true" />
                 </span>
-                <div className="sm:hidden">
+                <div>
                   <h2 className="font-heading text-base font-bold text-territory-ink">Horário de silêncio</h2>
-                  <p className="text-xs text-territory-muted">Evite avisos em um intervalo definido.</p>
+                  <p className="text-xs text-territory-muted">Defina início e fim juntos para suspender avisos nesse intervalo.</p>
                 </div>
               </div>
-              <div>
-                <Label htmlFor="quiet-start" className="text-xs font-semibold text-territory-muted">Início</Label>
-                <input
-                  id="quiet-start"
-                  type="time"
-                  className="mt-1 h-11 w-full rounded-xl border border-territory-border bg-territory-surface px-3 text-sm text-territory-ink"
-                  value={preferences.quiet_hours_start || ""}
-                  onChange={(event) => setPreferences({ ...preferences, quiet_hours_start: event.target.value || null })}
-                />
+              <div className="mt-4 grid gap-3 sm:grid-cols-2">
+                <div>
+                  <Label htmlFor="quiet-start" className="text-xs font-semibold text-territory-muted">Início</Label>
+                  <input
+                    id="quiet-start"
+                    type="time"
+                    aria-invalid={quietHoursInvalid}
+                    className="mt-1 h-11 w-full rounded-xl border border-territory-border bg-territory-surface px-3 text-sm text-territory-ink"
+                    value={preferences.quiet_hours_start || ""}
+                    onChange={(event) => setPreferences({ ...preferences, quiet_hours_start: event.target.value || null })}
+                  />
+                </div>
+                <div>
+                  <Label htmlFor="quiet-end" className="text-xs font-semibold text-territory-muted">Fim</Label>
+                  <input
+                    id="quiet-end"
+                    type="time"
+                    aria-invalid={quietHoursInvalid}
+                    className="mt-1 h-11 w-full rounded-xl border border-territory-border bg-territory-surface px-3 text-sm text-territory-ink"
+                    value={preferences.quiet_hours_end || ""}
+                    onChange={(event) => setPreferences({ ...preferences, quiet_hours_end: event.target.value || null })}
+                  />
+                </div>
               </div>
-              <div>
-                <Label htmlFor="quiet-end" className="text-xs font-semibold text-territory-muted">Fim</Label>
-                <input
-                  id="quiet-end"
-                  type="time"
-                  className="mt-1 h-11 w-full rounded-xl border border-territory-border bg-territory-surface px-3 text-sm text-territory-ink"
-                  value={preferences.quiet_hours_end || ""}
-                  onChange={(event) => setPreferences({ ...preferences, quiet_hours_end: event.target.value || null })}
-                />
-              </div>
+              {quietHoursInvalid ? (
+                <p className="mt-2 text-xs font-medium text-destructive" role="alert">
+                  Informe início e fim do horário silencioso, ou deixe os dois campos vazios.
+                </p>
+              ) : null}
             </div>
             <Button
               onClick={() => saveMutation.mutate(preferences)}
-              disabled={saveMutation.isPending}
-              className="min-h-11 w-full bg-territory-sun text-territory-ink hover:bg-territory-sun/90 lg:w-auto lg:min-w-44"
+              disabled={saveMutation.isPending || quietHoursInvalid || !isDirty}
+              className="min-h-11 w-full bg-territory-sun text-territory-ink hover:bg-territory-sun/90 disabled:bg-territory-raised disabled:text-territory-muted lg:w-auto lg:min-w-44"
             >
               {saveMutation.isPending ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
-              Salvar preferências
+              {saveMutation.isPending ? "Salvando..." : isDirty ? "Salvar preferências" : "Preferências salvas"}
             </Button>
           </div>
         </Surface>
@@ -252,7 +301,7 @@ export default function NotificationPreferencesPage() {
               <Bell className="h-5 w-5 text-territory-brand" aria-hidden="true" />
               <div>
                 <h2 className="font-heading text-base font-bold text-territory-ink">Push no dispositivo</h2>
-                <p className="text-sm text-territory-muted">Permissão e registro do navegador atual.</p>
+                <p className="text-sm text-territory-muted">Permissão e registro reais do navegador atual.</p>
               </div>
             </div>
             <div className="mt-4">
@@ -265,7 +314,7 @@ export default function NotificationPreferencesPage() {
               <MessageCircleMore className="h-5 w-5 text-territory-brand" aria-hidden="true" />
               <div>
                 <h2 className="font-heading text-base font-bold text-territory-ink">Frequência</h2>
-                <p className="text-sm text-territory-muted">Mantenha o recurso atual de resumos além do concept.</p>
+                <p className="text-sm text-territory-muted">O recurso de resumos existente continua disponível.</p>
               </div>
             </div>
             <Select
