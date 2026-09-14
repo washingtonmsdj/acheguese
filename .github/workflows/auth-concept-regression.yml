@@ -79,6 +79,7 @@ jobs:
           npx vitest run
           src/core/auth/utils/__tests__/authCallback.test.ts
           src/core/auth/utils/__tests__/authFlowStorage.test.ts
+          src/core/auth/utils/__tests__/authJourney.test.ts
           tests/regression/auth-concept-flow.test.ts
           tests/regression/auth-return-context.test.ts
           tests/regression/auth-google-oauth.test.ts
