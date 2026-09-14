@@ -11,14 +11,11 @@ const workspace = read("src/core/profiles/hooks/useContaWorkspace.ts");
 const profileHub = read("src/core/profiles/hooks/useProfileHub.ts");
 const shell = read("src/modules/profile/components/AccountSettingsShell.tsx");
 const overview = read("src/modules/profile/pages/ContaHubLayout.tsx");
-const managedProfiles = read(
-  "src/modules/profile/components/ManagedProfilesPanel.tsx",
-);
+const managedProfiles = read("src/modules/profile/components/ManagedProfilesPanel.tsx");
 const security = read("src/modules/profile/pages/ContaSegurancaPage.tsx");
+const passwordForm = read("src/modules/profile/components/ChangePasswordForm.tsx");
 const preferences = read("src/modules/profile/pages/ContaPreferenciasPage.tsx");
-const accessibilityProvider = read(
-  "src/shared/components/accessibility/AccessibilityProvider.tsx",
-);
+const accessibilityProvider = read("src/shared/components/accessibility/AccessibilityProvider.tsx");
 const auth = read("src/core/auth/services/AuthService.ts");
 const identities = read("src/core/auth/services/AuthIdentityService.ts");
 const notifications = read("src/app/pages/NotificationPreferencesPage.tsx");
@@ -109,7 +106,7 @@ describe("account settings concept contract", () => {
     expect(managedProfiles).not.toContain("conceptManagedProfiles");
   });
 
-  it("renders access, email, password and MFA as explicit real states", () => {
+  it("renders access email password MFA and session revocation as real states", () => {
     expect(security).toContain('location.hash === "#acesso"');
     expect(security).toContain('location.hash === "#email"');
     expect(security).toContain('location.hash === "#senha"');
@@ -122,11 +119,21 @@ describe("account settings concept contract", () => {
     expect(security).toContain("useMFA()");
     expect(security).toContain("startEnrollment");
     expect(security).toContain("verifyAndEnable");
+    expect(security).toContain("listFactors");
+    expect(security).toContain("disable(factor.id)");
     expect(security).toContain("signOutOtherSessions");
     expect(auth).toContain('signOut({ scope: "others" })');
     expect(auth).toContain("static async updateEmail");
     expect(identities).toContain("supabase.auth.getUser()");
     expect(identities).toContain('providers.includes("google")');
+  });
+
+  it("does not ask for a current password that the authenticated update flow never verifies", () => {
+    expect(passwordForm).toContain("ResetPasswordFormSchema");
+    expect(passwordForm).toContain('autoComplete="new-password"');
+    expect(passwordForm).not.toContain('id="current-password"');
+    expect(passwordForm).not.toContain('autoComplete="current-password"');
+    expect(security).toContain("updatePassword(data.newPassword)");
   });
 
   it("keeps accessibility preferences on the canonical runtime owner", () => {
@@ -150,6 +157,16 @@ describe("account settings concept contract", () => {
     expect(privacy).toContain("PrivacySettingsService.cancelAccountDeletion");
   });
 
+  it("fails closed when consent or deletion authority cannot be loaded", () => {
+    expect(privacy).toContain("consentsError");
+    expect(privacy).toContain("deletionStatusLoading");
+    expect(privacy).toContain("deletionStatusError");
+    expect(privacy).toContain("Ações de exclusão ficam indisponíveis");
+    expect(privacy).toContain("Suas escolhas não serão presumidas como desativadas");
+    expect(privacy).toContain("!deletionStatusLoading && !deletionStatusError");
+    expect(privacy).toContain("event.preventDefault()");
+  });
+
   it("removes the duplicate legacy account-data dialog owner", () => {
     for (const legacySymbol of [
       "downloadDataOpen",
@@ -164,15 +181,9 @@ describe("account settings concept contract", () => {
       expect(profileHub).not.toContain(legacySymbol);
     }
 
-    expect(
-      existsSync(resolve(root, "src/modules/profile/components/DataManagementDialogs.tsx")),
-    ).toBe(false);
-    expect(
-      existsSync(resolve(root, "src/modules/profile/sections/SegurancaSection.tsx")),
-    ).toBe(false);
-    expect(
-      existsSync(resolve(root, "src/modules/profile/components/cards/SecurityActionCard.tsx")),
-    ).toBe(false);
+    expect(existsSync(resolve(root, "src/modules/profile/components/DataManagementDialogs.tsx"))).toBe(false);
+    expect(existsSync(resolve(root, "src/modules/profile/sections/SegurancaSection.tsx"))).toBe(false);
+    expect(existsSync(resolve(root, "src/modules/profile/components/cards/SecurityActionCard.tsx"))).toBe(false);
   });
 
   it("exposes concept export and device states without inventing data", () => {
