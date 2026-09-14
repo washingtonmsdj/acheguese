@@ -44,7 +44,9 @@ export default function TerritoryEntryMap({
       (city ? { kind: "location", location: city } : null),
     [city, resolvedTerritory],
   );
-  const { polygons, isLoading: isBoundaryLoading } = useTerritoryPolygon(resolved);
+  const { polygons, isLoading: isBoundaryLoading } = useTerritoryPolygon(resolved, {
+    enabled: shouldMountMap,
+  });
   const territoryMapColor = useMemo(() => {
     if (typeof document === "undefined") return NEIGHBORHOOD_COLORS[1];
 
@@ -99,6 +101,7 @@ export default function TerritoryEntryMap({
         ? `location:${resolved.location.id}`
         : "none";
   const boundaryUnavailable =
+    shouldMountMap &&
     resolved?.kind === "group" &&
     !isLoading &&
     !isBoundaryLoading &&
