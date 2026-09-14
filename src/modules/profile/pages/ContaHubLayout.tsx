@@ -17,6 +17,7 @@ import {
 import { toast } from "sonner";
 
 import { useAuth } from "@/core/auth/hooks/useAuth";
+import { ACCOUNT_PATHS } from "@/core/routing/config/account";
 import { AccountSettingsShell } from "@/modules/profile/components/AccountSettingsShell";
 import { ManagedProfilesPanel } from "@/modules/profile/components/ManagedProfilesPanel";
 import { ProfileHeaderCompact } from "@/modules/profile/components/hub";
@@ -167,37 +168,37 @@ export function ContaHubLayout({
                 icon={<KeyRound className="h-5 w-5" aria-hidden="true" />}
                 title="Dados de acesso"
                 description="E-mail, nome de usuário e métodos de entrada."
-                onClick={() => navigate("/conta/seguranca#acesso")}
+                onClick={() => navigate(ACCOUNT_PATHS.access)}
               />
               <OverviewRow
                 icon={<LockKeyhole className="h-5 w-5" aria-hidden="true" />}
                 title="Senha e segurança"
                 description="Senha, recuperação e autenticação em duas etapas."
-                onClick={() => navigate("/conta/seguranca")}
+                onClick={() => navigate(ACCOUNT_PATHS.security)}
               />
               <OverviewRow
                 icon={<Bell className="h-5 w-5" aria-hidden="true" />}
                 title="Notificações"
                 description="Canais, tipos de aviso e horário de silêncio."
-                onClick={() => navigate("/conta/notificacoes")}
+                onClick={() => navigate(ACCOUNT_PATHS.notifications)}
               />
               <OverviewRow
                 icon={<Shield className="h-5 w-5" aria-hidden="true" />}
                 title="Privacidade e dados"
                 description="Consentimentos, exportação e exclusão."
-                onClick={() => navigate("/conta/privacidade")}
+                onClick={() => navigate(ACCOUNT_PATHS.privacy)}
               />
               <OverviewRow
                 icon={<SlidersHorizontal className="h-5 w-5" aria-hidden="true" />}
                 title="Preferências do aplicativo"
                 description="Ajustes pessoais e vínculos da identidade."
-                onClick={() => navigate("/conta/preferencias")}
+                onClick={() => navigate(ACCOUNT_PATHS.preferences)}
               />
               <OverviewRow
                 icon={<Accessibility className="h-5 w-5" aria-hidden="true" />}
                 title="Acessibilidade"
                 description="Contraste, tamanho do texto e movimento reduzido."
-                onClick={() => navigate("/conta/preferencias#acessibilidade")}
+                onClick={() => navigate(ACCOUNT_PATHS.accessibility)}
               />
             </section>
 
@@ -206,7 +207,7 @@ export function ContaHubLayout({
                 icon={<UsersRound className="h-5 w-5" aria-hidden="true" />}
                 title="Meus perfis"
                 description="Identidades, equipes e visibilidade pública."
-                onClick={() => navigate("/conta?section=profiles")}
+                onClick={() => navigate(ACCOUNT_PATHS.profiles)}
               />
             </section>
 
