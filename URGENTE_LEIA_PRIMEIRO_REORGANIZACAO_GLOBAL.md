@@ -9,7 +9,7 @@
 1. `docs/README.md` — índice documental canônico;
 2. `docs/03-architecture/CURRENT_RULES.md` — regras arquiteturais vigentes;
 3. `docs/08-roadmap/EXECUCAO_MAIN_ONLY.md` — plano operacional ativo;
-4. `docs/08-roadmap/checkpoints/2026-09-14-g172-root-map-first-readiness.md` — checkpoint mais recente desta linha;
+4. `docs/08-roadmap/checkpoints/2026-09-14-g173-global-map-runtime-ssot-and-cleanup.md` — checkpoint mais recente desta linha;
 5. `SECURITY.md` — segurança e gates de release.
 
 ## Regras que não podem ser perdidas
@@ -18,6 +18,8 @@
 - não remover feature válida porque está quebrada, incompleta, `launch-paused` ou com teste falhando;
 - remover somente legado/duplicação/bridge/owner substituído depois de censar callers, preservar capacidade e provar o substituto;
 - corrigir causa raiz; não recriar wrappers, aliases, writers paralelos, hardcodes ou paliativos apenas para fazer build/test passar;
+- otimização reutilizável de mapas pertence aos owners canônicos descritos em `CURRENT_RULES.md`; não copiar loaders/CSS/workers/providers por página;
+- regra exclusiva da `/` só permanece local quando depender de prioridade/UX específica da entrada pública;
 - trabalhar na `main` sem force-push e preservar trabalhos concorrentes;
 - GitHub Actions com `steps=[]`/`runner_id=0` é falha de execução do provider, não certificação do source;
 - rate-limit Vercel não é build aprovado nem reprovado;
