@@ -4,11 +4,14 @@
  * Hook para gerenciar a posição GPS do usuário no módulo de empresas.
  * Usado para filtros "Perto de mim" e ordenação por distância.
  *
- * Delega ao GeolocationService (SSOT) — cache de 5 minutos incluso.
+ * Delega ao GeolocationService compartilhado (SSOT).
  */
 
 import { useState, useCallback, useEffect } from 'react';
-import { GeolocationService } from '@/core/maps/services/GeolocationService';
+import {
+  GeolocationService,
+  isGeolocationPermissionDeniedError,
+} from '@/shared/services/GeolocationService';
 
 export interface UserPosition {
   latitude: number;
@@ -53,12 +56,10 @@ export function useUserPosition(): UseUserPositionResult {
         accuracy: result.coords.accuracy,
         timestamp: result.coords.timestamp,
       });
-      setHasPermission(true);
-    } catch (err) {
-      const error = err as GeolocationPositionError;
-      const isDenied = error?.code === 1 || error?.message?.includes('negada');
-      setError(error?.message ?? 'Erro ao obter localização');
-      if (isDenied) setHasPermission(false);
+      if (result.source === 'gps') setHasPermission(true);
+    } catch (err: unknown) {
+      setError(err instanceof Error ? err.message : 'Erro ao obter localização');
+      if (isGeolocationPermissionDeniedError(err)) setHasPermission(false);
     } finally {
       setLoading(false);
     }
@@ -71,19 +72,17 @@ export function useUserPosition(): UseUserPositionResult {
     GeolocationService.clearCache();
   }, []);
 
-  // Carregar do cache ao montar (sem solicitar permissão)
+  // Carrega somente cache existente ao montar; não infere permissão atual do navegador.
   useEffect(() => {
     GeolocationService.getCurrentLocation({ useCache: true, maxRetries: 0 })
       .then((result) => {
-        if (result.source === 'cache') {
-          setPosition({
-            latitude: result.coords.latitude,
-            longitude: result.coords.longitude,
-            accuracy: result.coords.accuracy,
-            timestamp: result.coords.timestamp,
-          });
-          setHasPermission(true);
-        }
+        if (result.source !== 'cache') return;
+        setPosition({
+          latitude: result.coords.latitude,
+          longitude: result.coords.longitude,
+          accuracy: result.coords.accuracy,
+          timestamp: result.coords.timestamp,
+        });
       })
       .catch(() => {/* sem cache, sem problema */});
   }, []);
