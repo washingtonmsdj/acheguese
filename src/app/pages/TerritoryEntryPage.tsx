@@ -9,6 +9,7 @@ import {
   resolvePublicTerritoryFallback,
 } from "@/core/routing/utils/publicTerritoryFallbacks";
 import { lastTerritoryStore } from "@/core/routing/stores/LastTerritoryStore";
+import { PRIVACY_POLICY_PATH } from "@/shared/constants/legal";
 import { scheduleAfterPublicRootMap } from "@/shared/utils/publicRootReadiness";
 
 const LAUNCH_STATE = TERRITORY_CONFIG.launch.state;
@@ -208,7 +209,7 @@ export default function TerritoryEntryPage() {
               </a>
               <a
                 className="hover:bg-territory-raised"
-                href="/privacidade"
+                href={PRIVACY_POLICY_PATH}
                 onClick={() => setIsMobileMenuOpen(false)}
               >
                 Privacidade
@@ -316,7 +317,7 @@ export default function TerritoryEntryPage() {
           Começamos {launchCommunityOriginLabel}. Aos poucos, o Achegue-se chega a novos lugares.
         </span>
         <nav aria-label="Links institucionais">
-          <a href="/privacidade">Privacidade</a>
+          <a href={PRIVACY_POLICY_PATH}>Privacidade</a>
           <i aria-hidden="true" />
           <a href="/como-funciona">Como funciona</a>
         </nav>
