@@ -20,6 +20,9 @@ const STAGE_LABEL: Record<TerritoryEntryArrivalStage, string> = {
  * composição final com superfícies neutras, sem inventar ruas, fronteiras ou
  * geografia. É CSS-only, não controla MapLibre e deixa o canvas carregar por
  * baixo desde o primeiro frame disponível.
+ *
+ * O brilho usa uma faixa estreita movida por transform, evitando animar
+ * background-position sobre a área inteira enquanto o WebGL inicializa.
  */
 export function TerritoryEntryMapArrival({
   label,
@@ -79,7 +82,7 @@ export function TerritoryEntryMapArrival({
       </div>
 
       <span
-        className="animate-shimmer absolute inset-0 bg-[linear-gradient(100deg,transparent_20%,hsl(var(--territory-surface)/0.52)_48%,transparent_76%)] bg-[length:55rem_100%] opacity-70 motion-reduce:animate-none"
+        className="absolute inset-y-0 left-0 w-[32%] -translate-x-[150%] bg-[linear-gradient(100deg,transparent_0%,hsl(var(--territory-surface)/0.58)_50%,transparent_100%)] opacity-70 will-change-transform motion-safe:animate-entry-shimmer motion-reduce:hidden"
         aria-hidden="true"
         data-entry-skeleton-shimmer
       />
