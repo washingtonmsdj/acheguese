@@ -50,7 +50,7 @@ describe("account and access concept contract", () => {
     expect(html).not.toMatch(/user-scalable\s*=\s*no/i);
     expect(html).not.toMatch(/maximum-scale\s*=\s*1/i);
     expect(header).toContain('env(safe-area-inset-top)');
-    expect(header).toContain('location.pathname === "/reset-password"');
+    expect(header).toContain("location.pathname === AUTH_PATHS.passwordReset");
     expect(header).toContain(">Voltar</span>");
     expect(header).not.toContain("setPendingAuthReturn");
     expect(footer).toContain('env(safe-area-inset-bottom)');
@@ -97,6 +97,7 @@ describe("account and access concept contract", () => {
     expect(cadastro).toContain("Verificando disponibilidade");
     expect(cadastro).toContain("Nome de usuário disponível.");
     expect(cadastroHook).toContain("PublicIdentityService.checkAvailability");
+    expect(cadastroHook).toContain("prepareEmailSignupConfirmation");
     expect(schema).not.toContain("confirmPassword");
     expect(schema).not.toContain("neighborhood");
     expect(schema).not.toContain("city:");
@@ -104,6 +105,7 @@ describe("account and access concept contract", () => {
     expect(cadastroHook).not.toContain("state:");
     expect(cadastroHook).not.toContain("city:");
     expect(cadastroHook).not.toContain("as unknown as true");
+    expect(cadastroHook).not.toContain("pendingSignup");
     expect(authTypes).not.toContain("neighborhood_id");
     expect(authTypes).not.toContain("display_name?:");
     expect(authTypes).not.toContain("username?:");
@@ -174,6 +176,9 @@ describe("account and access concept contract", () => {
       "src/app/features/onboarding/pages/CadastroConfirmacaoPage.tsx",
     );
 
+    expect(confirmation).toContain("getSignupConfirmationContext");
+    expect(confirmation).toContain("restartEmailSignupJourney");
+    expect(confirmation).not.toContain("pendingSignup");
     expect(confirmation).toContain("Vamos localizar sua inscrição.");
     expect(confirmation).toContain("Voltar para criar conta");
     expect(confirmation).toContain("Já confirmei — entrar");
@@ -218,9 +223,18 @@ describe("account and access concept contract", () => {
   it("owns auth routes, query flags, redirect URLs and transient context centrally", () => {
     const flow = readProjectFile("src/core/auth/constants/authFlow.ts");
     const storage = readProjectFile("src/core/auth/utils/authFlowStorage.ts");
+    const journey = readProjectFile("src/core/auth/utils/authJourney.ts");
     const pendingReturn = readProjectFile("src/core/auth/utils/pendingAuthReturn.ts");
     const pendingSignup = readProjectFile("src/core/auth/utils/pendingSignup.ts");
     const authService = readProjectFile("src/core/auth/services/AuthService.ts");
+    const rootRoutes = readProjectFile("src/app/routes/AppRoutes.tsx");
+    const login = readProjectFile("src/app/pages/LoginPage.tsx");
+    const confirmation = readProjectFile(
+      "src/app/features/onboarding/pages/CadastroConfirmacaoPage.tsx",
+    );
+    const terms = readProjectFile(
+      "src/app/features/onboarding/pages/AceiteTermosPage.tsx",
+    );
 
     for (const path of [
       'login: "/login"',
@@ -236,8 +250,35 @@ describe("account and access concept contract", () => {
     expect(storage).toContain("Compatibilidade transitória");
     expect(pendingReturn).toContain("resolveSafeInternalPath");
     expect(pendingSignup).toContain("resolveSafeInternalPath");
+    expect(journey).toContain("prepareEmailSignupConfirmation");
+    expect(journey).toContain("getSignupConfirmationContext");
+    expect(journey).toContain("completeFirstAccessJourney");
     expect(authService).toContain("buildPublicAbsoluteUrl");
     expect(authService).not.toContain("window.location.origin");
+    expect(rootRoutes).toContain("AUTH_PATHS.login");
+    expect(rootRoutes).toContain("AUTH_PATHS.signupConfirmation");
+    expect(login).not.toContain("pendingSignup");
+    expect(confirmation).not.toContain("pendingSignup");
+    expect(terms).not.toContain("pendingAuthReturn");
+    expect(terms).not.toContain("pendingSignup");
+  });
+
+  it("keeps authorization outside the authentication facade", () => {
+    const authService = readProjectFile("src/core/auth/services/AuthService.ts");
+    const adminLayout = readProjectFile("src/modules/admin/pages/AdminLayout.tsx");
+    const vagasPermission = readProjectFile(
+      "src/core/classifieds/jobs/services/VagasPublishPermissionService.ts",
+    );
+
+    expect(authService).not.toContain("RoleService");
+    expect(authService).not.toContain("isAdmin(");
+    expect(authService).not.toContain("clearAdminCache");
+    expect(authService).not.toContain("getAdminUserId");
+    expect(adminLayout).toContain("RoleService.isAdmin(user.id)");
+    expect(adminLayout).toContain("enabled: adminBypassEnabled || isAdmin");
+    expect(adminLayout).toContain("buildLoginPath(window.location.pathname)");
+    expect(vagasPermission).toContain("RoleService.isAdmin(userId)");
+    expect(vagasPermission).not.toContain("AuthService");
   });
 
   it("ships valid concept raster artwork with the approved crop dimensions", () => {
@@ -278,9 +319,10 @@ describe("account and access concept contract", () => {
       const absolutePath = resolve(repoRoot, asset.path);
       expect(existsSync(absolutePath), `${asset.path} must exist`).toBe(true);
       const data = readFileSync(absolutePath);
-      expect(data.length, `${asset.path} must not be a truncated placeholder`).toBeGreaterThanOrEqual(
-        asset.minBytes,
-      );
+      expect(
+        data.length,
+        `${asset.path} must not be a truncated placeholder`,
+      ).toBeGreaterThanOrEqual(asset.minBytes);
       expect(readWebpDimensions(asset.path), `${asset.path} crop dimensions`).toEqual({
         width: asset.width,
         height: asset.height,
