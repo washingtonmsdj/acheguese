@@ -1,186 +1,179 @@
 # Conta e acesso — auditoria de paridade com o concept
 
-> SSOT visual: pranchas aprovadas de **Conta e acesso — Mobile**, **Recuperar acesso — Mobile** e **Conta e acesso — Desktop** fornecidas para esta implementação.
+> SSOT visual: pranchas aprovadas de **Conta e acesso — Mobile**, **Recuperar acesso — Mobile** e **Conta e acesso — Desktop**.
 >
-> Esta auditoria separa **paridade confirmável pelo código/asset** de **paridade pixel a pixel**. A segunda só pode ser declarada depois de comparar screenshots renderizados do app com as pranchas no mesmo viewport.
+> Regra: o concept define a linguagem visual, mas **não limita o produto**. OAuth, erros, segurança, acessibilidade, consentimento, estados sem sessão e retorno seguro continuam obrigatórios mesmo quando a prancha não os desenhou.
 
-## Critério
+## Estado executivo — 2026-09-14
 
-- **OK** — estrutura/copy/comportamento verificável corresponde ao concept.
-- **PARCIAL** — direção correta, mas ainda existe diferença visível, de copy ou de estado.
-- **FALHA** — divergência objetiva bloqueia a fidelidade.
-- Funcionalidade real e segurança vencem estados meramente demonstrativos da prancha. Não fingir sucesso, captcha, confirmação ou reenvio.
-- O concept não é um inventário completo do produto: estados de erro, OAuth, disponibilidade, segurança, SEO técnico e recuperação precisam existir mesmo quando não foram desenhados.
+A superfície pública de conta/acesso já está consolidada no mesmo sistema visual do concept para:
 
-## Mobile — Conta e acesso
+- `/login`;
+- `/cadastro`;
+- `/cadastro/confirmacao`;
+- `/cadastro/primeiro-acesso`;
+- `/reset-password` e seus estados;
+- `/aceitar-termos`, tela necessária ao OAuth e não desenhada na prancha original.
 
-### 01 · Entrar
+**Não declarar paridade pixel a pixel ainda.** O repositório já possui capturas automatizadas e contrato responsivo, mas a comparação visual lado a lado com as pranchas fonte ainda precisa ser concluída com o navegador executando normalmente.
 
-| Item | Estado | Pente fino |
+## Entrar
+
+| Item | Estado | Observação |
 | --- | --- | --- |
-| Logo central + voltar | OK | Cabeçalho mobile centralizado, botão voltar próprio e safe-area superior. |
-| Título e subtítulo | OK | `Bom ter você por aqui.` + `Entre para continuar sua conversa.` |
-| Retorno ao contexto | OK seguro | Destinos conhecidos agora recebem nome legível (`/p/sabores-da-ana` → `Sabores da Ana`, `/mensagens` → `Conversas`); rotas desconhecidas mantêm fallback neutro. |
-| E-mail ou @usuário | OK | Login aceita os dois tipos de identificador. |
-| Senha + mostrar/ocultar | OK | Controle acessível, Caps Lock detectado e sem SVG/Lucide. |
-| Esqueci minha senha | OK | Abre o fluxo de recuperação e reaproveita o e-mail quando possível. |
-| Google | OK no frontend | O CTA usa OAuth Supabase real. Produção e o template remoto agora habilitam `VITE_AUTH_GOOGLE_ENABLED=true`; o provider Google ainda precisa permanecer ativo no projeto Supabase remoto. |
-| Criar conta | OK | Preserva retorno interno seguro. |
-| Explorar sem conta | OK | Mantido no mobile público. |
-| Segurança | OK | Copy/hierarquia do concept. |
-| Termos · Privacidade · Ajuda | OK | Rodapé exclusivo do login mobile, como na prancha. |
-| Indexação | OK extra | Login usa `noindex, nofollow`; não deve competir com páginas públicas do produto em busca. |
+| Header e safe-area | OK | Logo, voltar mobile, skip link e ações públicas desktop. |
+| E-mail ou `@usuário` | OK | Ambos usam autenticação real. |
+| Senha | OK | Mostrar/ocultar, Caps Lock, autocomplete e erro associado ao campo. |
+| Esqueci minha senha | OK | Reaproveita e-mail quando disponível e abre recuperação real. |
+| Retorno ao destino | OK | `redirect` é sanitizado e destinos conhecidos recebem nome amigável. |
+| Google | OK frontend | `Continuar com Google` está visível por padrão e usa Supabase OAuth real. |
+| Google + retorno | OK | Antes de abrir OAuth, Login grava o retorno seguro; após termos o usuário volta ao destino. |
+| Cancelamento/erro Google | OK | Callback com erro mostra estado recuperável próprio, preserva destino e não reflete `error_description` arbitrário da URL. |
+| Criar conta | OK | Preserva o retorno interno seguro. |
+| Explorar sem conta | OK | Mantido no mobile. |
+| `noindex` | OK | Superfície transacional não concorre com páginas públicas. |
 
-### 02 · Criar conta
+## Criar conta
 
-| Item | Estado | Pente fino |
+| Item | Estado | Observação |
 | --- | --- | --- |
-| Cadastro em uma única tela | OK | Território e confirmação de senha não bloqueiam a criação inicial. |
-| Nome / usuário / e-mail / senha | OK | Estrutura igual ao concept. |
-| Disponibilidade do @usuário | OK extra | Verificação debounced mostra disponível/ocupado/reservado e sugestão; o submit repete a verificação no SSOT do hook antes do signup. |
-| `@ana.oliveira` demonstrativo | PARCIAL | O domínio real aceita letras minúsculas, números e `_`, mas não ponto. Como a prancha declara dados demonstrativos, não afrouxar apenas a UI sem decisão de produto e migração end-to-end. |
-| Google | OK no frontend | Cadastro também oferece `Continuar com Google`; após OAuth/aceite legal o novo usuário segue para Primeiro acesso e preserva o destino original. |
-| Política da senha | OK funcional | Regra central: 12+, maiúscula, minúscula, número e símbolo. |
-| Termos | OK | Obrigatórios e vinculados a páginas reais. OAuth usa a rota real de aceite antes de continuar. |
-| Como usamos seus dados | OK | Disclosure mobile preservado; desktop usa link compacto. |
-| CTA | OK | Estado desabilitado acompanha termos, disponibilidade conhecida e anti-bot real. |
-| Já tem conta? | OK extra | Link de retorno para Login preserva o destino seguro. |
-| Indexação | OK extra | Cadastro usa `noindex, nofollow`. |
+| Conta primeiro | OK | Nome, usuário, e-mail e senha; território fica para depois. |
+| Google | OK frontend | CTA aparece antes do formulário de e-mail. |
+| OAuth de cadastro | OK | Google segue para `/aceitar-termos` e depois `/cadastro/primeiro-acesso`; o destino original fica preservado separadamente. |
+| Disponibilidade do `@usuário` | OK | Feedback debounced + verificação autoritativa antes do signup. |
+| Username escolhido | OK no repositório | Migration atualizada protege o `handle` escolhido no trigger de criação do perfil. |
+| Senha | OK | Política canônica 12+, maiúscula/minúscula, número e símbolo. |
+| Termos | OK | Cadastro por e-mail exige aceite; Google passa pelo aceite versionado após OAuth. |
+| Anti-bot | OK quando configurado | Turnstile é gate real, não decoração. |
+| Ponto no username | DECISÃO DE PRODUTO | A prancha usa exemplo com ponto, mas o domínio atual aceita minúsculas, números e `_`. Não mudar só a UI. |
 
-### 03 · Confirmar e-mail
+## Confirmar e-mail
 
-| Item | Estado | Pente fino |
-| --- | --- | --- |
-| Envelope central | OK | `confirm-envelope.webp` usa o recorte 120×115 aprovado. |
-| Título / e-mail / 3 passos | OK | Estrutura e ordem do concept. |
-| Spam | OK | Aviso presente. |
-| Reenviar | OK funcional | Tem estado real de envio e cooldown após sucesso. |
-| E-mail errado | OK | Reinicia cadastro de forma segura; não altera identidade pendente silenciosamente. |
-| Contexto ausente | OK extra | Se sessionStorage/state não tiver o e-mail pendente, não mostra instrução falsa; oferece reiniciar cadastro, entrar ou pedir ajuda. |
-| Conta aguardando confirmação | OK | Estado explícito. |
-| Voltar / ajuda | OK | Ações reais. |
-| Indexação | OK extra | Confirmação usa `noindex, nofollow`. |
+- envelope mobile usa o asset aprovado `confirm-envelope.webp`;
+- instruções, spam, reenvio e cooldown são funcionais;
+- contexto ausente é recuperável e não inventa um e-mail;
+- usuário pode reiniciar cadastro ou entrar;
+- confirmação concluída sempre passa pelo Primeiro acesso antes do destino original.
 
-### 04 · Primeiro acesso
+## Primeiro acesso
 
-| Item | Estado | Pente fino |
-| --- | --- | --- |
-| Sucesso + perfil pessoal | OK | Implementado. |
-| Perfil ainda não disponível | OK extra | Estado recuperável com nova tentativa e Ajuda, importante logo após criação/OAuth. |
-| Retomar conversa | OK funcional | Preserva o retorno interno seguro. |
-| Nome da conversa/negócio | OK seguro | Destino conhecido usa o mesmo resolvedor seguro do Login; ex.: `Sabores da Ana`. |
-| Território opcional | OK | Estado → cidade → bairro depois da conta; não bloqueia cadastro. |
-| Privacidade territorial | OK | Visibilidade pública começa oculta. |
-| Agora não | OK | Usuário pode seguir sem território. |
-| Outros perfis | OK | Link para gestão de perfis. |
-| Desktop não desenhado | MELHORADO | Como não há prancha desktop de Primeiro acesso, foi criado layout responsivo coerente com o sistema de conta, sem inventar hero genérico. |
+A tela existe porque o produto precisa completar o fluxo real, embora não haja uma prancha desktop equivalente. Ela segue a mesma linguagem visual sem inventar hero genérico.
 
-## Mobile — Recuperar acesso
+- retorno original é preservado;
+- destino conhecido ganha nome amigável;
+- cidade e bairro são opcionais;
+- visibilidade territorial pública começa oculta;
+- perfil ainda indisponível possui retry e ajuda;
+- usuário pode continuar e completar depois.
 
-### 01 · Solicitar recuperação
+## Recuperar acesso
 
-| Item | Estado | Pente fino |
-| --- | --- | --- |
-| Voltar com texto | OK | Fluxo `/reset-password` mostra seta + `Voltar`, sem alterar login/cadastro/confirmar. |
-| Logo central | OK | O botão é absoluto e não desloca a marca. |
-| Título / subtítulo | OK | Composição correspondente. |
-| E-mail | OK | Recuperação é por e-mail mesmo para quem entra com @usuário. |
-| Segurança | OK | Gate real quando habilitado. |
-| CTA | OK | Só avança após resposta real do serviço. |
-| Mensagem neutra | OK | Não confirma existência de conta. |
-| Ajuda sem acesso ao e-mail | OK | Link real de suporte. |
+O fluxo cobre estados reais, não apenas a prancha:
 
-### 02 · Conferir e-mail
+1. solicitar recuperação;
+2. e-mail enviado;
+3. validar sessão/token de recuperação;
+4. cadastrar nova senha;
+5. sucesso;
+6. link expirado, inválido ou usado.
 
-Estrutura principal, e-mail informado, spam, reenvio, usar outro e-mail e voltar para entrar estão implementados. **OK funcional**.
+A UI mantém a composição do concept, mas conserva checagem de senha comprometida, Caps Lock, mensagens neutras e suporte.
 
-### 03 · Nova senha
+## Aceitar termos — tela necessária fora do concept
 
-| Item | Estado | Pente fino |
-| --- | --- | --- |
-| Dois campos + olho | OK | Correspondente. |
-| Checklist visual | OK | A UI agrupa a política canônica nas 3 linhas da prancha (`12+`, `maiúscula e minúscula`, `número e símbolo`) sem duplicar a validação. |
-| Senha comprometida | OK extra necessário | Checagem real permanece mesmo não aparecendo na prancha. |
-| Caps Lock | OK extra | `PasswordInput` compartilhado avisa Caps Lock quando o campo está em foco. |
-| CTA / termos | OK | Funcionais. |
-| Sucesso | OK funcional | Após salvar, troca para sucesso real; não simula dois estados ao mesmo tempo. |
+`/aceitar-termos` pertence oficialmente ao sistema de Conta e acesso.
 
-### 04 · Link expirado
+- registra consentimento versionado real;
+- Google não pula o aceite;
+- mostra para onde o usuário voltará quando o destino é reconhecido;
+- estado sem sessão oferece retorno seguro ao Login;
+- cancelamento/erro OAuth possui estado próprio;
+- texto do provider recebido por query/hash **não é refletido na página**;
+- mobile e desktop usam a mesma tipografia, cores, cards, ícones e ritmo visual do restante da família.
 
-**OK funcional**: erro explícito, e-mail, novo link, voltar para entrar e ajuda. O estado também cobre link inválido/usado.
+## Google OAuth — contrato atual
 
-## Desktop — Conta e acesso
+O botão não deve desaparecer por configuração padrão do repositório:
 
-### 01 · Entrar
+- `.env.example`: Google habilitado;
+- `.env.local.example`: Google habilitado;
+- `.env.production`: Google habilitado;
+- `AuthService.isGoogleAuthEnabled()`: habilitado salvo `VITE_AUTH_GOOGLE_ENABLED="false"` explícito;
+- provider usado pelo serviço: `google`;
+- redirect do OAuth: `/aceitar-termos`;
+- `supabase/config.toml` inclui redirects de produção, Vercel e desenvolvimento para `/aceitar-termos`.
 
-| Item | Estado | Pente fino |
-| --- | --- | --- |
-| Coluna editorial + card | OK estrutural | Grid e card correspondem ao concept. |
-| Arte da comunidade | MELHORADO | `login-hero.webp` mantém o crop 376×264, mas agora é renderizado com footprint responsivo de aproximadamente 450–540 px para ocupar a coluna como na prancha. |
-| Cabeçalho largo | MELHORADO | O desktop não limita o header ao mesmo `max-width` do conteúdo, mantendo logo à esquerda e ações à direita. |
-| Copy e formulário | OK | Título, subtítulo, campos, Google condicional, segurança e links legais. |
+**Ainda pendente fora do código:** confirmar no painel/configuração remota do Supabase que o provider Google, Client ID/secret e origens autorizadas continuam ativos. O conector disponível nesta auditoria expõe projeto/SQL, mas não expõe leitura da configuração de providers Auth; portanto não marcar isso como verificado sem evidência externa.
 
-### 02 · Criar conta
+## Responsividade protegida
 
-Estrutura de duas colunas, card, labels desktop e CTA estão presentes. A arte `signup-hero.webp` ocupa aproximadamente **440–520 px** no desktop. Google e verificação de disponibilidade do @usuário completam o fluxo real sem depender da prancha demonstrativa. **PARCIAL** somente porque a comparação pixel a pixel do render ainda não foi executada.
+A suíte E2E cobre as superfícies públicas principais nos limites:
 
-### 03 · Confirmar e-mail
+`320`, `360`, `390`, `430`, `767`, `768`, `1024` e `1440` px.
 
-Estrutura correta e hero no crop aprovado 355×188. O hero ocupa aproximadamente **450–540 px** no desktop; o envelope mobile permanece separado em 120×115. **PARCIAL** somente até screenshot real confirmar escala e offset.
+Os contratos verificam:
 
-### 04 · Recuperar acesso
+- ausência de overflow horizontal;
+- composição mobile de uma coluna;
+- composição desktop em duas colunas quando prevista;
+- largura do card desktop;
+- presença e escala dos heroes oficiais;
+- Google visível em Login/Cadastro;
+- ausência de SVG/Lucide genérico nas áreas controladas pelo concept;
+- `/aceitar-termos` integrado ao mesmo sistema;
+- recuperação de callback OAuth com erro.
 
-Estrutura de duas colunas e arte territorial 368×149 estão corretas no contrato. A arte ocupa aproximadamente **470–560 px**, condizente com a presença visual da prancha. **PARCIAL** até a comparação renderizada.
+## Assets protegidos
 
-## Assets — estado atual verificado
+| Asset | Crop aprovado |
+| --- | ---: |
+| `public/auth/login-hero.webp` | 376×264 |
+| `public/auth/signup-hero.webp` | 340×186 |
+| `public/auth/confirm-hero.webp` | 355×188 |
+| `public/auth/recovery-hero.webp` | 368×149 |
+| `public/auth/confirm-envelope.webp` | 120×115 |
 
-| Arquivo | Tamanho atual | Dimensão protegida | Estado |
-| --- | ---: | ---: | --- |
-| `login-hero.webp` | 10.528 B | 376×264 | OK de conteúdo/crop; render desktop ampliado. |
-| `signup-hero.webp` | 5.626 B | 340×186 | OK de conteúdo/crop; render desktop ampliado. |
-| `confirm-hero.webp` | 6.424 B | 355×188 | OK de conteúdo/crop; render desktop ampliado. |
-| `recovery-hero.webp` | 8.512 B | 368×149 | OK de conteúdo/crop; render desktop ampliado. |
-| `confirm-envelope.webp` | 2.230 B | 120×115 | OK; exclusivo da confirmação mobile. |
+No desktop os arquivos são ampliados responsivamente pelo `auth-concept-layout.css`; não substituir por arte genérica ou SVG.
 
-A suíte `tests/regression/auth-concept-flow.test.ts` valida RIFF/WEBP, integridade do tamanho, dimensões aprovadas, Google OAuth e referências das telas. `tests/regression/auth-return-context.test.ts` protege a transformação segura de destinos em nomes amigáveis.
+## QA automatizado
 
-## Pente fino de proporções já codificadas
+### Contratos
 
-| Elemento | Mobile atual | Desktop atual | Observação |
-| --- | --- | --- | --- |
-| Largura base | `max-w-[430px]` | `max-w-[1180px]` | Coerente com os dois concepts. |
-| Padding lateral principal | `24px` | `40px` | Próximo à prancha; confirmar por screenshot. |
-| Altura de input/CTA | `44px` | `44px` | Mantém ritmo consistente. |
-| CTA primário | amarelo `#ffc91a` | amarelo `#ffc91a` | Direção visual correta. |
-| Card desktop | `430px` | `430px` | Próximo à largura vista na prancha. |
-| Hero desktop | oculto | `440–560px` conforme a tela | Aumentado para eliminar o vazio excessivo da coluna editorial. |
-| Título mobile | ~`31px` | — | Próximo à hierarquia do concept. |
-| Título editorial desktop | — | `46px` | Próximo à prancha. |
-| Fundo | `#fffdfa` | marfim + radiais discretos | Correspondente à linguagem visual. |
-| Ícones auth | HTML/CSS próprios | HTML/CSS próprios | Sem SVG/Lucide nas superfícies controladas pelo concept. |
+- `tests/regression/auth-concept-flow.test.ts`
+- `tests/regression/auth-return-context.test.ts`
+- `tests/regression/auth-google-oauth.test.ts`
 
-## Funcionalidades necessárias que o concept não desenhou
+### Browser
 
-1. **OAuth + aceite legal real** — o Google redireciona para `/aceitar-termos`; não basta desenhar o botão.
-2. **Disponibilidade de @usuário** — feedback antecipado + verificação autoritativa antes do signup.
-3. **Senha comprometida e Caps Lock** — proteção e feedback operacional.
-4. **Estados sem contexto** — confirmação sem e-mail pendente e primeiro acesso sem profile carregado precisam ser recuperáveis.
-5. **Retorno seguro e amigável** — preservar caminho interno e exibir nomes reconhecíveis sem refletir texto arbitrário da URL.
-6. **Anti-bot e mensagens neutras** — login/cadastro/recuperação não devem simular captcha nem vazar existência de conta.
-7. **`noindex` nas superfícies de autenticação** — páginas transacionais não devem ser tratadas como landing pages públicas.
+- `tests/e2e/auth-concept-layout.spec.ts`
+- `tests/e2e/auth-concept-capture.spec.ts`
+- `tests/e2e/auth-oauth-recovery.spec.ts`
 
-## Pendências em ordem P0 → P2
+### Capturas previstas
 
-1. **P0 — Verificar provider Google remoto:** frontend de produção e `.env.remote.example` estão habilitados; confirmar no Supabase Auth que o provider Google, client ID/secret e URLs autorizadas estão ativos. O repositório já contém as redirects de `/aceitar-termos` em `supabase/config.toml`.
-2. **P0 — Captura real do navegador:** gerar 390×844 e 1440×900 e comparar lado a lado com as pranchas. Testes estruturais não substituem pixel diff.
-3. **P1 — Username realmente escolhido no trigger de signup:** auditar o `handle_new_user()` remoto antes de alterar banco; migrations antigas derivam username de nome/UUID e podem não respeitar `raw_user_meta_data.handle`. Só aplicar migração depois de confirmar a função efetiva no projeto remoto.
-4. **P1 — OAuth/Primeiro acesso:** se o username gerado automaticamente não for amigável, oferecer escolha do @usuário no Primeiro acesso sem obrigar território.
-5. **P1 — Username com ponto:** decidir se é requisito real ou apenas dado demonstrativo. Se virar requisito, alterar SSOT frontend + policy + Edge Function + RPC/migration + testes em uma única mudança.
-6. **P1 — Cooldown orientado pelo servidor:** substituir os 60s locais por `Retry-After` quando a camada de auth expuser esse dado de forma confiável.
-7. **P2 — Ajustes finos de spacing/crop:** depois da captura real, medir offsets, baseline, borda, raio, sombra e escala; reduzir/ampliar cada hero individualmente se necessário.
-8. **P2 — Qualidade raster:** se a ampliação revelar suavização perceptível em telas densas, substituir os crops por versões 2× derivadas da mesma arte do concept, sem trocar a direção visual.
-9. **P2 — `/aceitar-termos`:** trazer a tela auxiliar para a mesma linguagem desktop/mobile de Conta e acesso; funcionalmente ela já registra aceite versionado e preserva retorno, mas não existe prancha dedicada.
+Mobile e desktop geram imagens para Login, Cadastro, Confirmação, Recuperação, Termos sem sessão e cancelamento do Google.
 
-## Regra de aceite visual
+**Situação de CI em 2026-09-14:** o workflow `Auth Concept Regression` está sendo criado corretamente, porém os jobs encerram antes de qualquer step, com `runner_id=0` e lista de steps vazia. Portanto a falha atual do workflow não demonstra falha de teste; o código sequer começou a executar. O status Vercel também está bloqueado por limite de builds. Reexecutar a certificação quando a infraestrutura voltar a alocar runner/build.
 
-A tela só pode ser marcada como **fiel** após passar por captura real no viewport correspondente. A comparação deve verificar: posição do logo, margens externas, largura do card, baseline dos títulos, altura dos inputs e CTAs, espaçamento vertical, raio, bordas, sombras, escala/crop dos assets, safe-area e ausência de overflow. **Não declarar `≤1%` antes dessa etapa.**
+## Próximos passos — ordem real
+
+1. **P0 — destravar execução de CI/Vercel** e rodar os contratos + Playwright já configurados.
+2. **P0 — verificar provider Google remoto** no Supabase/Google Cloud e testar o round-trip real em produção.
+3. **P0 — comparar capturas renderizadas com as pranchas** em 390×844 e 1440×900; só então usar a palavra “fiel/pixel”.
+4. **P1 — teclado e foco:** validar Tab/Shift+Tab, Enter/Espaço, foco visível, checkbox de termos e retorno após erros em todas as telas.
+5. **P1 — autofill/password managers:** confirmar `username`, `email`, `current-password` e `new-password` nos principais navegadores.
+6. **P1 — limpar contextos pendentes após caminhos alternativos** para que tentativas OAuth interrompidas nunca deixem sessão de retorno obsoleta.
+7. **P1 — cooldown orientado pelo servidor** quando a camada Auth expuser `Retry-After` de forma confiável.
+8. **P2 — pente fino visual:** medir offsets, baseline, espaçamento, raio, sombra e escala/crop individual dos heroes a partir das capturas reais.
+9. **P2 — assets 2×:** somente se a ampliação desktop mostrar suavização perceptível em telas densas.
+
+## Regra de aceite
+
+Uma tela de Conta e acesso só pode ser marcada como **fiel** quando:
+
+- funcionalidade real não foi removida para imitar a prancha;
+- mobile e desktop não têm overflow/reflow quebrado;
+- navegação por teclado e zoom continuam utilizáveis;
+- Google e estados auxiliares permanecem acessíveis;
+- screenshots do app forem comparados com a prancha no mesmo viewport;
+- qualquer diferença intencional estiver documentada como necessidade funcional, não como desvio acidental.
