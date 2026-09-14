@@ -8,7 +8,7 @@ import {
   NEIGHBORHOOD_COLORS,
 } from "@/core/maps/providers/MapProvider";
 import type { ResolvedTerritory } from "@/core/routing/hooks/useResolveTerritoryFromUrl";
-import { TerritoryEntryMapSkeleton } from "./TerritoryEntryMapSkeleton";
+import { TerritoryEntryMapArrival } from "./TerritoryEntryMapArrival";
 
 const SALVADOR_VIEWPORT = {
   center: { latitude: -12.95, longitude: -38.48 },
@@ -144,7 +144,14 @@ export default function TerritoryEntryMapRuntime({
       />
 
       {!mapPresented && !mapUnavailable ? (
-        <TerritoryEntryMapSkeleton label={territoryLabel} />
+        <TerritoryEntryMapArrival
+          label={territoryLabel}
+          statusText={
+            isBoundaryLoading
+              ? "Buscando o limite territorial oficial"
+              : "Preparando o mapa para sua chegada"
+          }
+        />
       ) : null}
 
       {mapUnavailable ? (
