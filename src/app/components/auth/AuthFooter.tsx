@@ -1,5 +1,6 @@
 import { Link, useLocation } from "react-router-dom";
 
+import { AUTH_PATHS } from "@/core/auth/constants/authFlow";
 import {
   PRIVACY_POLICY_PATH,
   SUPPORT_PATH,
@@ -11,7 +12,7 @@ export function AuthFooter() {
 
   // No concept, os links legais ficam visíveis no rodapé apenas da tela
   // mobile de entrada. As demais telas têm suas próprias ações contextuais.
-  if (pathname !== "/login") return null;
+  if (pathname !== AUTH_PATHS.login) return null;
 
   return (
     <footer
