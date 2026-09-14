@@ -7,6 +7,7 @@ import {
   Home,
   KeyRound,
   LockKeyhole,
+  MapPin,
   Shield,
   SlidersHorizontal,
   UserRound,
@@ -42,6 +43,7 @@ const settingsItems: readonly SettingsNavItem[] = [
   { label: "Privacidade e dados", href: ACCOUNT_PATHS.privacy, icon: Shield, exact: true },
   { label: "Meus perfis", href: ACCOUNT_PATHS.profiles, icon: UserRound, exact: true, search: "?section=profiles" },
   { label: "Preferências", href: ACCOUNT_PATHS.preferences, icon: SlidersHorizontal, exact: true, excludeHashes: ["#acessibilidade"], dividerBefore: true },
+  { label: "Endereços e território", href: ACCOUNT_PATHS.addresses, icon: MapPin, exact: true },
   { label: "Acessibilidade", href: ACCOUNT_PATHS.accessibility, icon: Accessibility, hashes: ["#acessibilidade"] },
 ];
 
