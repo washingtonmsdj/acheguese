@@ -63,37 +63,6 @@ export class AuthService {
     return import.meta.env.VITE_AUTH_GOOGLE_ENABLED !== "false";
   }
 
-  static isRecoveryRedirect(): boolean {
-    const searchParams = new URLSearchParams(window.location.search);
-
-    return (
-      searchParams.get("mode") === "recovery" ||
-      searchParams.get("type") === "recovery" ||
-      (searchParams.get("code") !== null &&
-        searchParams.get("mode") === "recovery")
-    );
-  }
-
-  /**
-   * Captura os parâmetros do hash de auth do Supabase.
-   * Deve ser chamado o mais cedo possível — o SDK pode limpar o hash após processar.
-   */
-  static captureAuthHash(): URLSearchParams {
-    if (typeof window === "undefined") return new URLSearchParams();
-    return new URLSearchParams(window.location.hash.replace(/^#/, ""));
-  }
-
-  /** Detecta erro de auth no hash legado do Supabase. */
-  static getAuthHashError(): { error: string; errorCode: string } | null {
-    const params = AuthService.captureAuthHash();
-    const error = params.get("error");
-    const errorCode = params.get("error_code");
-    if (error || errorCode) {
-      return { error: error ?? "", errorCode: errorCode ?? "" };
-    }
-    return null;
-  }
-
   static onPasswordRecovery(callback: () => void): () => void {
     return SessionService.onAuthStateChange((event) => {
       if (event === "PASSWORD_RECOVERY") {
