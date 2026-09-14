@@ -2,7 +2,7 @@
 
 > SSOT visual: pranchas aprovadas de **Conta e acesso — Mobile**, **Recuperar acesso — Mobile** e **Conta e acesso — Desktop**.
 >
-> Regra: o concept define a linguagem visual, mas **não limita o produto**. OAuth, erros, segurança, acessibilidade, consentimento, estados sem sessão e retorno seguro continuam obrigatórios mesmo quando a prancha não os desenhou.
+> Regra: o concept define a linguagem visual e, no mobile, também define a composição principal. Funcionalidades necessárias que não aparecem na prancha podem existir em outro breakpoint ou etapa sem poluir a tela aprovada. Erros, segurança, acessibilidade, consentimento, estados sem sessão e retorno seguro continuam obrigatórios.
 
 ## Estado executivo — 2026-09-14
 
@@ -26,7 +26,7 @@ A superfície pública de conta/acesso já está consolidada no mesmo sistema vi
 | Senha | OK | Mostrar/ocultar, Caps Lock, autocomplete e erro associado ao campo. |
 | Esqueci minha senha | OK | Reaproveita e-mail quando disponível e abre recuperação real. |
 | Retorno ao destino | OK | `redirect` é sanitizado e destinos conhecidos recebem nome amigável. |
-| Google | OK frontend | `Continuar com Google` está visível por padrão e usa Supabase OAuth real. |
+| Google | OK frontend | `Continuar com Google` permanece no Login e usa Supabase OAuth real. |
 | Google + retorno | OK | Antes de abrir OAuth, Login grava o retorno seguro; após termos o usuário volta ao destino. |
 | Cancelamento/erro Google | OK | Callback com erro mostra estado recuperável próprio, preserva destino e não reflete `error_description` arbitrário da URL. |
 | Criar conta | OK | Preserva o retorno interno seguro. |
@@ -38,13 +38,15 @@ A superfície pública de conta/acesso já está consolidada no mesmo sistema vi
 | Item | Estado | Observação |
 | --- | --- | --- |
 | Conta primeiro | OK | Nome, usuário, e-mail e senha; território fica para depois. |
-| Google | OK frontend | CTA aparece antes do formulário de e-mail. |
+| Composição mobile | OK por contrato | Segue a prancha sem CTA Google, sem confirmação de senha e sem território. |
+| Google | OK desktop | OAuth continua disponível no card desktop, mas não é inserido na composição mobile aprovada. |
 | OAuth de cadastro | OK | Google segue para `/aceitar-termos` e depois `/cadastro/primeiro-acesso`; o destino original fica preservado separadamente. |
-| Disponibilidade do `@usuário` | OK | Feedback debounced + verificação autoritativa antes do signup. |
+| Disponibilidade do `@usuário` | OK | Feedback debounced + verificação autoritativa antes do signup. No estado neutro mobile, o helper é exatamente `Seu identificador público.`. |
 | Username escolhido | OK no repositório | Migration atualizada protege o `handle` escolhido no trigger de criação do perfil. |
 | Senha | OK | Política canônica 12+, maiúscula/minúscula, número e símbolo. |
 | Termos | OK | Cadastro por e-mail exige aceite; Google passa pelo aceite versionado após OAuth. |
 | Anti-bot | OK quando configurado | Turnstile é gate real, não decoração. |
+| Rodapé mobile | OK por contrato | Depois do CTA permanece apenas `Você pode se cadastrar de qualquer lugar.`; o link redundante de Login não é adicionado à prancha mobile. |
 | Ponto no username | DECISÃO DE PRODUTO | A prancha usa exemplo com ponto, mas o domínio atual aceita minúsculas, números e `_`. Não mudar só a UI. |
 
 ## Confirmar e-mail
@@ -57,14 +59,15 @@ A superfície pública de conta/acesso já está consolidada no mesmo sistema vi
 
 ## Primeiro acesso
 
-A tela existe porque o produto precisa completar o fluxo real, embora não haja uma prancha desktop equivalente. Ela segue a mesma linguagem visual sem inventar hero genérico.
+A tela existe porque o produto precisa completar o fluxo real. Ela segue a mesma linguagem visual sem inventar hero genérico.
 
-- retorno original é preservado;
+- retorno original é preservado pelo `authJourney`, owner do contexto transitório;
 - destino conhecido ganha nome amigável;
 - cidade e bairro são opcionais;
 - visibilidade territorial pública começa oculta;
 - perfil ainda indisponível possui retry e ajuda;
-- usuário pode continuar e completar depois.
+- usuário pode continuar e completar depois;
+- ao sair do Primeiro acesso, a jornada é finalizada pelo mesmo owner, sem acesso direto de página às chaves de storage.
 
 ## Recuperar acesso
 
@@ -93,8 +96,11 @@ A UI mantém a composição do concept, mas conserva checagem de senha compromet
 
 ## Google OAuth — contrato atual
 
-O botão não deve desaparecer por configuração padrão do repositório:
+Google continua sendo funcionalidade oficial sem alterar a prancha mobile de criação de conta:
 
+- Login mobile e desktop: CTA disponível;
+- Cadastro mobile: CTA não entra na composição aprovada;
+- Cadastro desktop: CTA disponível;
 - `.env.example`: Google habilitado;
 - `.env.local.example`: Google habilitado;
 - `.env.production`: Google habilitado;
@@ -103,7 +109,19 @@ O botão não deve desaparecer por configuração padrão do repositório:
 - redirect do OAuth: `/aceitar-termos`;
 - `supabase/config.toml` inclui redirects de produção, Vercel e desenvolvimento para `/aceitar-termos`.
 
-**Ainda pendente fora do código:** confirmar no painel/configuração remota do Supabase que o provider Google, Client ID/secret e origens autorizadas continuam ativos. O conector disponível nesta auditoria expõe projeto/SQL, mas não expõe leitura da configuração de providers Auth; portanto não marcar isso como verificado sem evidência externa.
+**Ainda pendente fora do código:** confirmar no painel/configuração remota do Supabase que o provider Google, Client ID/secret e origens autorizadas continuam ativos. O conector disponível nesta auditoria não expõe evidência suficiente da configuração remota do provider; portanto não marcar isso como verificado sem prova externa.
+
+## SSOT da jornada e das rotas
+
+A fronteira de Conta e acesso não deve voltar a conhecer chaves de `sessionStorage` diretamente.
+
+- `authFlowStorage.ts`: envelope versionado + TTL; valores legados/corrompidos são descartados;
+- `authJourney.ts`: owner de retorno, intenção OAuth, confirmação de signup e encerramento de Primeiro acesso;
+- `AUTH_PATHS`: owner dos caminhos públicos de autenticação;
+- `AppRoutes.tsx`: owner das rotas públicas sem layout, incluindo Conta e acesso;
+- `AppLayoutRoutes.tsx`: não redeclara Login, Cadastro, Confirmação, Recuperação, Splash, Sobre, Contato, QR, Status ou o site premium público.
+
+O adaptador legado `pendingSignup.ts` foi removido depois que o Primeiro acesso passou a consumir `authJourney`.
 
 ## Responsividade protegida
 
@@ -118,7 +136,10 @@ Os contratos verificam:
 - composição desktop em duas colunas quando prevista;
 - largura do card desktop;
 - presença e escala dos heroes oficiais;
-- Google visível em Login/Cadastro;
+- Google visível no Login;
+- Google ausente da composição mobile de Cadastro e presente no desktop;
+- texto neutro mobile `Seu identificador público.`;
+- texto final mobile `Você pode se cadastrar de qualquer lugar.`;
 - ausência de SVG/Lucide genérico nas áreas controladas pelo concept;
 - `/aceitar-termos` integrado ao mesmo sistema;
 - recuperação de callback OAuth com erro.
@@ -139,7 +160,13 @@ No desktop os arquivos são ampliados responsivamente pelo `auth-concept-layout.
 
 ### Contratos
 
+- `src/core/auth/utils/__tests__/authFlowStorage.test.ts`
+- `src/core/auth/utils/__tests__/authJourney.test.ts`
+- `src/app/features/onboarding/hooks/useCadastro.spec.tsx`
+- `src/app/features/onboarding/pages/CadastroPage.spec.tsx`
+- `src/app/features/onboarding/pages/CadastroPrimeiroAcessoPage.spec.tsx`
 - `tests/regression/auth-concept-flow.test.ts`
+- `tests/regression/auth-route-ownership.test.ts`
 - `tests/regression/auth-return-context.test.ts`
 - `tests/regression/auth-google-oauth.test.ts`
 
@@ -148,12 +175,13 @@ No desktop os arquivos são ampliados responsivamente pelo `auth-concept-layout.
 - `tests/e2e/auth-concept-layout.spec.ts`
 - `tests/e2e/auth-concept-capture.spec.ts`
 - `tests/e2e/auth-oauth-recovery.spec.ts`
+- `tests/e2e/auth-keyboard-accessibility.spec.ts`
 
 ### Capturas previstas
 
 Mobile e desktop geram imagens para Login, Cadastro, Confirmação, Recuperação, Termos sem sessão e cancelamento do Google.
 
-**Situação de CI em 2026-09-14:** o workflow `Auth Concept Regression` está sendo criado corretamente, porém os jobs encerram antes de qualquer step, com `runner_id=0` e lista de steps vazia. Portanto a falha atual do workflow não demonstra falha de teste; o código sequer começou a executar. O status Vercel também está bloqueado por limite de builds. Reexecutar a certificação quando a infraestrutura voltar a alocar runner/build.
+**Situação de CI em 2026-09-14:** o workflow `Auth Concept Regression` é criado corretamente, porém a execução observada (`run 91`) encerrou os dois jobs antes de qualquer step. A API registra `runner_id=0`, `runner_name` vazio e `steps=[]` para `auth contract` e `auth responsive layout, accessibility and captures`. Portanto essa falha não demonstra falha de teste: nenhum runner chegou a executar checkout/npm/test. O status Vercel também continua bloqueado por limite de builds. Reexecutar a certificação quando a infraestrutura voltar a alocar runner/build.
 
 ## Próximos passos — ordem real
 
@@ -162,7 +190,7 @@ Mobile e desktop geram imagens para Login, Cadastro, Confirmação, Recuperaçã
 3. **P0 — comparar capturas renderizadas com as pranchas** em 390×844 e 1440×900; só então usar a palavra “fiel/pixel”.
 4. **P1 — teclado e foco:** validar Tab/Shift+Tab, Enter/Espaço, foco visível, checkbox de termos e retorno após erros em todas as telas.
 5. **P1 — autofill/password managers:** confirmar `username`, `email`, `current-password` e `new-password` nos principais navegadores.
-6. **P1 — limpar contextos pendentes após caminhos alternativos** para que tentativas OAuth interrompidas nunca deixem sessão de retorno obsoleta.
+6. **P1 — eliminar lazy exports root-owned restantes** de `src/app/routes/lazyImports.ts` após confirmar que não há consumidores externos; a árvore de rotas já deixou de usá-los.
 7. **P1 — cooldown orientado pelo servidor** quando a camada Auth expuser `Retry-After` de forma confiável.
 8. **P2 — pente fino visual:** medir offsets, baseline, espaçamento, raio, sombra e escala/crop individual dos heroes a partir das capturas reais.
 9. **P2 — assets 2×:** somente se a ampliação desktop mostrar suavização perceptível em telas densas.
@@ -171,9 +199,9 @@ Mobile e desktop geram imagens para Login, Cadastro, Confirmação, Recuperaçã
 
 Uma tela de Conta e acesso só pode ser marcada como **fiel** quando:
 
-- funcionalidade real não foi removida para imitar a prancha;
+- funcionalidade real não foi removida para imitar a prancha; quando uma ação extra é necessária, ela não altera a composição mobile aprovada;
 - mobile e desktop não têm overflow/reflow quebrado;
 - navegação por teclado e zoom continuam utilizáveis;
-- Google e estados auxiliares permanecem acessíveis;
+- estados auxiliares permanecem acessíveis;
 - screenshots do app forem comparados com a prancha no mesmo viewport;
 - qualquer diferença intencional estiver documentada como necessidade funcional, não como desvio acidental.
