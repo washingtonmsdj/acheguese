@@ -46,14 +46,14 @@ export function TerritoryEntryMapArrival({
           <span className="col-span-1 row-span-2 rounded-2xl bg-territory-raised/90 md:rounded-3xl" />
           <span className="rounded-2xl bg-territory-raised/70 md:rounded-3xl" />
           <span className="rounded-2xl bg-territory-raised/80 md:row-span-2 md:rounded-3xl" />
-          <span className="hidden rounded-3xl bg-territory-raised/65 lg:block" />
+          <span className="hidden rounded-3xl bg-territory-raised/60 lg:block" />
           <span className="rounded-2xl bg-territory-raised/75 md:rounded-3xl" />
           <span className="rounded-2xl bg-territory-raised/60 md:rounded-3xl" />
           <span className="hidden rounded-3xl bg-territory-raised/75 lg:block" />
         </div>
       </div>
 
-      <div className="absolute left-4 top-4 z-10 flex items-center gap-2 rounded-full border border-territory-border/80 bg-territory-surface/92 px-3 py-2 shadow-sm md:left-5 md:top-5 lg:left-6 lg:top-6">
+      <div className="absolute left-4 top-4 z-10 flex items-center gap-2 rounded-full border border-territory-border/80 bg-territory-surface/90 px-3 py-2 shadow-sm md:left-5 md:top-5 lg:left-6 lg:top-6">
         <span className="h-2 w-2 rounded-full bg-territory-brand" />
         <span className="text-[0.62rem] font-bold uppercase tracking-[0.12em] text-territory-muted-strong md:text-[0.68rem]">
           {STAGE_LABEL[stage]}
@@ -61,7 +61,7 @@ export function TerritoryEntryMapArrival({
       </div>
 
       <div
-        className="absolute bottom-4 left-4 z-10 flex max-w-[calc(100%-2rem)] items-center gap-3 rounded-2xl border border-territory-border/80 bg-territory-surface/94 px-3 py-2.5 shadow-sm md:bottom-5 md:left-5 md:max-w-sm md:px-4 md:py-3 lg:bottom-6 lg:left-6"
+        className="absolute bottom-4 left-4 z-10 flex max-w-[calc(100%_-_2rem)] items-center gap-3 rounded-2xl border border-territory-border/80 bg-territory-surface/95 px-3 py-2.5 shadow-sm md:bottom-5 md:left-5 md:max-w-sm md:px-4 md:py-3 lg:bottom-6 lg:left-6"
         data-entry-skeleton-card
       >
         <span className="h-9 w-9 shrink-0 rounded-full bg-territory-raised md:h-10 md:w-10" />
