@@ -24,6 +24,7 @@ import type { ResolvedTerritory } from './useResolveTerritoryFromUrl';
 import { usePublicBrowsingCity } from '@/core/location/hooks/usePublicBrowsingCity';
 import { useActiveTerritory } from '@/core/location/hooks/useActiveTerritory';
 import { buildGroupBaseUrl, buildModuleTerritoryUrl, geoPathToPublicUrl, MODULE_SLUGS } from '@/core/routing/utils/territoryUrls';
+import { ACCOUNT_PATHS } from '@/core/routing/config/account';
 import { jobPublicRoutes } from '@/core/work-opportunities/routes/jobPublicRoutes';
 import { LAUNCH_URLS } from '@/core/routing/config/territory';
 import { classifiedUrlService, type ClassifiedUrlContext } from '@/core/classifieds/services';
@@ -68,11 +69,18 @@ export interface AppUrls {
   // Rotas globais - Perfil
   profile: {
     home: string;
+    profiles: string;
     businesses: string;
     billing: string;
     addresses: string;
     preferences: string;
+    accessibility: string;
     notifications: string;
+    privacy: string;
+    exportData: string;
+    access: string;
+    email: string;
+    password: string;
     mobilidade: {
       home: string;
       motorista: {
@@ -126,8 +134,6 @@ export function useAppUrls(routeResolved?: ResolvedTerritory | null): AppUrls {
   const { active } = usePublicBrowsingCity();
   const { activeLocation } = useActiveTerritory();
   const cityBase = `/${active.state}/${active.city}`;
-  const profilePreferencesUrl = '/conta/preferencias';
-  const profileNotificationsUrl = '/conta/notificacoes';
   const business = useBusinessUrls(routeResolved);
   const services = useServiceUrls(routeResolved);
   const classifiedsList = routeResolved
@@ -188,21 +194,28 @@ export function useAppUrls(routeResolved?: ResolvedTerritory | null): AppUrls {
     
     // Perfil
     profile: {
-      home: '/conta',
+      home: ACCOUNT_PATHS.home,
+      profiles: ACCOUNT_PATHS.profiles,
       businesses: businessManagementRoutes.list(),
-      billing: '/conta',
-      addresses: '/conta/enderecos',
-      preferences: profilePreferencesUrl,
-      notifications: profileNotificationsUrl,
+      billing: ACCOUNT_PATHS.home,
+      addresses: ACCOUNT_PATHS.addresses,
+      preferences: ACCOUNT_PATHS.preferences,
+      accessibility: ACCOUNT_PATHS.accessibility,
+      notifications: ACCOUNT_PATHS.notifications,
+      privacy: ACCOUNT_PATHS.privacy,
+      exportData: ACCOUNT_PATHS.exportData,
+      access: ACCOUNT_PATHS.access,
+      email: ACCOUNT_PATHS.email,
+      password: ACCOUNT_PATHS.password,
       mobilidade: {
         home: '/central',
         motorista: mobility.motorista,
         motoboy: mobility.motoboy,
       },
       public: (username: string) => buildPublicProfileUrl(username),
-      manage: '/conta',
+      manage: ACCOUNT_PATHS.home,
       edit: (profileId: string) => buildProfileEditUrl(profileId),
-      account: '/conta/seguranca',
+      account: ACCOUNT_PATHS.security,
       settings: (tab) => buildProfileSettingsUrl(tab),
     },
     
@@ -215,7 +228,7 @@ export function useAppUrls(routeResolved?: ResolvedTerritory | null): AppUrls {
     
     // Globais
     home: '/',
-    settings: profilePreferencesUrl,
+    settings: ACCOUNT_PATHS.preferences,
     messages: '/mensagens',
     chat: (conversationId: string) => `/chat/${conversationId}`,
     map: `/mapa${cityBase}`,
@@ -225,7 +238,7 @@ export function useAppUrls(routeResolved?: ResolvedTerritory | null): AppUrls {
     notifications: '/notificacoes',
     jobs: jobPublicRoutes.list({ state: active.state, city: active.city }),
     family: {
-      home: '/conta',
+      home: ACCOUNT_PATHS.home,
     },
   };
 }
