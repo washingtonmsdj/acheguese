@@ -1,7 +1,8 @@
 /**
- * Sections - Barrel export para todas as sections do ContaHub.
+ * Sections - Barrel export para sections legadas ainda mantidas.
  *
- * SSOT: ponto unico de exportacao.
+ * Segurança, privacidade e dados da conta já pertencem às superfícies
+ * canônicas em /conta e não são reexportados por este barrel.
  */
 
 export { ResumoSection } from "./ResumoSection";
@@ -12,7 +13,6 @@ export { DeliverySection } from "./DeliverySection";
 export { PlanosSection } from "./PlanosSection";
 export { NotificacoesSection } from "./NotificacoesSection";
 export { PreferenciasSection } from "./PreferenciasSection";
-export { SegurancaSection } from "./SegurancaSection";
 
 export type {
   ProfileSectionId,
@@ -25,5 +25,4 @@ export type {
   PlanosSectionProps,
   NotificacoesSectionProps,
   PreferenciasSectionProps,
-  SegurancaSectionProps,
 } from "./types";
