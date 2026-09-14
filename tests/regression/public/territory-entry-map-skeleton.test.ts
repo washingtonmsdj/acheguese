@@ -11,6 +11,10 @@ const runtime = fs.readFileSync(
   path.join(ROOT, "src/app/components/territory-vivo/TerritoryEntryMapRuntime.tsx"),
   "utf8",
 );
+const skeleton = fs.readFileSync(
+  path.join(ROOT, "src/app/components/territory-vivo/TerritoryEntryMapSkeleton.tsx"),
+  "utf8",
+);
 
 describe("territory entry map skeleton", () => {
   it("keeps the map area visibly occupied while the runtime is loading", () => {
@@ -19,10 +23,27 @@ describe("territory entry map skeleton", () => {
     expect(wrapper).toContain('aria-busy="true"');
     expect(wrapper).toContain("Carregando mapa e limite territorial oficial");
     expect(wrapper).toContain("Complexo do Nordeste de Amaralina");
+    expect(wrapper).toContain("<TerritoryEntryMapSkeleton");
+  });
+
+  it("uses one shared full-area skeleton before and during MapLibre startup", () => {
+    expect(wrapper).toContain("h-full min-h-full w-full");
+    expect(runtime).toContain("h-full min-h-full w-full");
+    expect(runtime).toContain("<TerritoryEntryMapSkeleton");
+    expect(skeleton).toContain("absolute inset-0");
+    expect(skeleton).toContain("data-entry-map-skeleton");
+  });
+
+  it("adapts the loading composition for both mobile and desktop map areas", () => {
+    expect(skeleton).toContain("inset-x-3 bottom-3");
+    expect(skeleton).toContain("lg:inset-x-auto");
+    expect(skeleton).toContain("lg:left-6");
+    expect(skeleton).toContain("lg:block");
+    expect(skeleton).toContain("xl:block");
+    expect(skeleton).toContain("lg:rounded-3xl");
   });
 
   it("keeps the loading surface until both MapLibre and boundary loading settle", () => {
-    expect(runtime).toContain("RuntimeMapLoadingSurface");
     expect(runtime).toContain("const mapPresented = mapReady && !isBoundaryLoading");
     expect(runtime).toContain("!mapPresented && !mapUnavailable");
     expect(runtime).toContain('aria-busy={!mapPresented}');
@@ -36,9 +57,9 @@ describe("territory entry map skeleton", () => {
     expect(runtime).toContain("8000");
   });
 
-  it("respects reduced motion and does not encode a fake territorial boundary", () => {
-    expect(wrapper).toContain("motion-reduce:animate-none");
-    expect(runtime).toContain("motion-reduce:animate-none");
+  it("respects reduced motion and never encodes a fake territorial boundary", () => {
+    expect(skeleton).toContain("motion-reduce:animate-none");
+    expect(skeleton).not.toContain("fallback_boundary_rings");
     expect(wrapper).not.toContain("fallback_boundary_rings");
     expect(runtime).not.toContain("fallback_boundary_rings");
   });
