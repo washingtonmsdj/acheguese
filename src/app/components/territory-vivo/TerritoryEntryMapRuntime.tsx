@@ -15,6 +15,8 @@ const SALVADOR_VIEWPORT = {
   zoom: 10.1,
 };
 
+const ARRIVAL_CROSSFADE_MS = 360;
+
 export interface TerritoryEntryMapRuntimeProps {
   city: Location | null;
   resolvedTerritory?: ResolvedTerritory | null;
@@ -32,6 +34,8 @@ export default function TerritoryEntryMapRuntime({
 }: TerritoryEntryMapRuntimeProps) {
   const [mapReady, setMapReady] = useState(false);
   const [mapUnavailable, setMapUnavailable] = useState(false);
+  const [showArrival, setShowArrival] = useState(true);
+  const [arrivalLeaving, setArrivalLeaving] = useState(false);
   const resolved = useMemo<ResolvedTerritory>(
     () =>
       resolvedTerritory ??
@@ -106,7 +110,31 @@ export default function TerritoryEntryMapRuntime({
   useEffect(() => {
     setMapReady(false);
     setMapUnavailable(false);
+    setShowArrival(true);
+    setArrivalLeaving(false);
   }, [territoryKey, isLoading]);
+
+  useEffect(() => {
+    if (mapUnavailable) {
+      setShowArrival(false);
+      setArrivalLeaving(false);
+      return;
+    }
+
+    if (!mapPresented) {
+      setShowArrival(true);
+      setArrivalLeaving(false);
+      return;
+    }
+
+    setShowArrival(true);
+    setArrivalLeaving(true);
+    const timeoutId = window.setTimeout(() => {
+      setShowArrival(false);
+    }, ARRIVAL_CROSSFADE_MS);
+
+    return () => window.clearTimeout(timeoutId);
+  }, [mapPresented, mapUnavailable]);
 
   useEffect(() => {
     if (isLoading || mapPresented) return;
@@ -142,31 +170,34 @@ export default function TerritoryEntryMapRuntime({
           setMapReady(true);
           setMapUnavailable(false);
         }}
-        className={`pointer-events-none h-full min-h-[12rem] w-full transition-opacity duration-300 motion-reduce:transition-none md:min-h-[18rem] lg:min-h-[24rem] ${
+        className={`pointer-events-none h-full min-h-[12rem] w-full transition-opacity duration-500 motion-reduce:transition-none md:min-h-[18rem] lg:min-h-[24rem] ${
           mapPresented ? "opacity-100" : "opacity-0"
         }`}
       />
 
-      {!mapPresented && !mapUnavailable ? (
+      {showArrival && !mapUnavailable ? (
         <TerritoryEntryMapArrival
           label={territoryLabel}
           stage={arrivalStage}
           statusText={arrivalStatusText}
+          leaving={arrivalLeaving}
         />
       ) : null}
 
       {mapUnavailable ? (
         <div
           role="status"
-          className="pointer-events-none absolute inset-0 z-20 grid place-items-center bg-[hsl(var(--territory-canvas)/0.72)] p-4 text-center backdrop-blur-[2px] sm:p-6"
+          className="pointer-events-none absolute inset-0 z-20 grid place-items-center bg-[hsl(var(--territory-canvas)/0.76)] p-4 text-center backdrop-blur-[3px] sm:p-6"
         >
-          <div className="w-full max-w-xs rounded-2xl border border-territory-border bg-territory-surface/95 px-4 py-4 shadow-territory-highlight sm:px-5 lg:max-w-sm lg:rounded-3xl lg:px-6 lg:py-5">
-            <Map className="mx-auto h-6 w-6 text-territory-brand lg:h-7 lg:w-7" aria-hidden="true" />
-            <p className="mt-2 text-sm font-semibold text-territory-ink lg:text-base">
-              O mapa não carregou agora.
+          <div className="w-full max-w-xs rounded-3xl border border-territory-border bg-territory-surface/95 px-5 py-5 shadow-territory-highlight sm:px-6 lg:max-w-sm lg:px-7 lg:py-6">
+            <div className="mx-auto grid h-11 w-11 place-items-center rounded-2xl border border-territory-border bg-territory-raised text-territory-brand shadow-sm lg:h-12 lg:w-12">
+              <Map className="h-5 w-5 lg:h-6 lg:w-6" aria-hidden="true" />
+            </div>
+            <p className="mt-3 font-heading text-base font-bold text-territory-ink lg:text-lg">
+              A comunidade continua aqui.
             </p>
-            <p className="mt-1 text-sm leading-5 text-territory-muted-strong">
-              A entrada no Complexo continua disponível nesta tela.
+            <p className="mx-auto mt-1.5 max-w-sm text-sm leading-5 text-territory-muted-strong">
+              O mapa não respondeu agora, mas você pode continuar entrando no Complexo normalmente.
             </p>
           </div>
         </div>
