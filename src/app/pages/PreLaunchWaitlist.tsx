@@ -1,10 +1,14 @@
 import { useMemo, useRef, useState, type FormEvent } from "react";
 import { AlertTriangle, CheckCircle2, Loader2 } from "lucide-react";
+import { SALVADOR_COMMUNITY_LAUNCH_CLUSTER } from "@/core/community/config/communityLaunch";
+import {
+  LAUNCH_CITY_PATH,
+  TERRITORY_CONFIG,
+} from "@/core/routing/config/territory";
 import {
   registerCommunityInterest,
   type CommunityInterestRole,
 } from "@/core/routing/services";
-import { SALVADOR_COMMUNITY_LAUNCH_CLUSTER } from "@/core/community/config/communityLaunch";
 import { COMMUNITY_INTEREST_ANTI_ABUSE_CONFIG } from "@/shared/config/security.config";
 import { TurnstileWidget } from "@/shared/components/security/TurnstileWidget";
 import { Button } from "@/shared/components/ui/button";
@@ -12,6 +16,7 @@ import { Input } from "@/shared/components/ui/input";
 import { Label } from "@/shared/components/ui/label";
 import { cn } from "@/shared/utils/cn";
 import { slugifyTerritory } from "@/shared/utils/slugify";
+
 const TURNSTILE_SITE_KEY = (
   import.meta.env.VITE_TURNSTILE_SITE_KEY ?? ""
 ).trim();
@@ -19,9 +24,12 @@ const TURNSTILE_REQUIRED =
   COMMUNITY_INTEREST_ANTI_ABUSE_CONFIG.turnstileRequiredInProduction &&
   import.meta.env.PROD;
 
-const BAIRROS = [
-  "Complexo Nordeste de Amaralina",
-  ...SALVADOR_COMMUNITY_LAUNCH_CLUSTER.map((territory) => territory.name),
+type TerritoryOption = {
+  label: string;
+  slug: string;
+};
+
+const OTHER_NEIGHBORHOODS = [
   "Pituba",
   "Barra",
   "Rio Vermelho",
@@ -33,6 +41,26 @@ const BAIRROS = [
   "Cajazeiras",
 ] as const;
 
+const launchGroupOption: TerritoryOption | null =
+  TERRITORY_CONFIG.launch.community.slug
+    ? {
+        label: TERRITORY_CONFIG.launch.community.name,
+        slug: TERRITORY_CONFIG.launch.community.slug,
+      }
+    : null;
+
+const TERRITORY_OPTIONS: readonly TerritoryOption[] = [
+  ...(launchGroupOption ? [launchGroupOption] : []),
+  ...SALVADOR_COMMUNITY_LAUNCH_CLUSTER.map(({ name, slug }) => ({
+    label: name,
+    slug,
+  })),
+  ...OTHER_NEIGHBORHOODS.map((label) => ({
+    label,
+    slug: slugifyTerritory(label),
+  })),
+];
+
 const ROLE_OPTIONS: { value: CommunityInterestRole; label: string }[] = [
   { value: "morador", label: "Sou morador" },
   { value: "comerciante", label: "Tenho negócio" },
@@ -43,7 +71,7 @@ const ROLE_OPTIONS: { value: CommunityInterestRole; label: string }[] = [
 type FormState = {
   name: string;
   contact: string;
-  bairro: string;
+  territorySlug: string;
   role: CommunityInterestRole;
 };
 
@@ -55,7 +83,7 @@ type SubmitState =
 const INITIAL_FORM: FormState = {
   name: "",
   contact: "",
-  bairro: "",
+  territorySlug: "",
   role: "morador",
 };
 
@@ -116,7 +144,7 @@ export default function PreLaunchWaitlist() {
     : !TURNSTILE_REQUIRED;
   const canSubmit =
     form.name.trim().length >= 2 &&
-    form.bairro.trim().length >= 2 &&
+    form.territorySlug.length > 0 &&
     Boolean(contact) &&
     !submitting;
 
@@ -146,7 +174,11 @@ export default function PreLaunchWaitlist() {
       return;
     }
 
-    if (!canSubmit || !contact) {
+    const selectedTerritory = TERRITORY_OPTIONS.find(
+      (option) => option.slug === form.territorySlug,
+    );
+
+    if (!canSubmit || !contact || !selectedTerritory) {
       setSubmitState({
         status: "error",
         message: "Informe nome, contato válido e bairro.",
@@ -168,18 +200,16 @@ export default function PreLaunchWaitlist() {
 
     setSubmitting(true);
     try {
-      const selectedBairro = form.bairro.trim();
-      const territorySlug = slugifyTerritory(selectedBairro);
       const message = [
-        `Bairro informado: ${selectedBairro}`,
+        `Bairro informado: ${selectedTerritory.label}`,
         `Tipo de contato: ${contact.contactMode === "email" ? "email" : "WhatsApp"}`,
         "Interesses: mobilidade local, gastronomia, feed do bairro, alertas, serviços e negócios locais.",
       ].join("\n");
 
       const result = await registerCommunityInterest({
         communityId: null,
-        communitySlug: "salvador",
-        territoryPath: `/ba/salvador/${territorySlug}`,
+        communitySlug: TERRITORY_CONFIG.launch.city || null,
+        territoryPath: `${LAUNCH_CITY_PATH}/${selectedTerritory.slug}`,
         fullName: form.name.trim(),
         email: contact.email,
         phone: contact.phone,
@@ -286,15 +316,15 @@ export default function PreLaunchWaitlist() {
           </Label>
           <select
             id="waitlist-bairro"
-            value={form.bairro}
-            onChange={(event) => update("bairro", event.target.value)}
+            value={form.territorySlug}
+            onChange={(event) => update("territorySlug", event.target.value)}
             className="prelaunch-field"
             required
           >
             <option value="">Selecione</option>
-            {BAIRROS.map((bairro) => (
-              <option key={bairro} value={bairro}>
-                {bairro}
+            {TERRITORY_OPTIONS.map((option) => (
+              <option key={option.slug} value={option.slug}>
+                {option.label}
               </option>
             ))}
           </select>
