@@ -1,6 +1,4 @@
-﻿import { logger } from "@/shared/utils/logger";
-
-/**
+﻿/**
  * 🚀 DEFERRED INITIALIZATION - Otimização de Performance
  *
  * Utilitários para inicialização não-bloqueante de serviços.
@@ -9,11 +7,19 @@
  * @version 1.0.0
  */
 
+function reportDeferredError(error: unknown): void {
+  void import("@/shared/utils/logger")
+    .then(({ logger }) => {
+      logger.error("[DeferredBatch] Error executing callback:", error);
+    })
+    .catch(() => undefined);
+}
+
 /**
  * Executa callback após o próximo frame (desbloqueia render)
  */
 export function deferFrame(callback: () => void): void {
-  if (typeof requestAnimationFrame !== 'undefined') {
+  if (typeof requestAnimationFrame !== "undefined") {
     requestAnimationFrame(() => {
       requestAnimationFrame(callback);
     });
@@ -27,7 +33,7 @@ export function deferFrame(callback: () => void): void {
  * Usa requestIdleCallback com fallback para setTimeout
  */
 export function deferIdle(callback: () => void, timeout = 2000): void {
-  if (typeof requestIdleCallback !== 'undefined') {
+  if (typeof requestIdleCallback !== "undefined") {
     requestIdleCallback(callback, { timeout });
   } else {
     deferFrame(callback);
@@ -38,10 +44,10 @@ export function deferIdle(callback: () => void, timeout = 2000): void {
  * Executa callback quando o documento estiver completamente carregado
  */
 export function deferLoad(callback: () => void): void {
-  if (document.readyState === 'complete') {
+  if (document.readyState === "complete") {
     deferIdle(callback);
   } else {
-    window.addEventListener('load', () => deferIdle(callback), { once: true });
+    window.addEventListener("load", () => deferIdle(callback), { once: true });
   }
 }
 
@@ -50,14 +56,14 @@ export function deferLoad(callback: () => void): void {
  * Usa Performance Observer para detectar FCP
  */
 export function deferAfterFCP(callback: () => void): void {
-  if (typeof PerformanceObserver === 'undefined') {
+  if (typeof PerformanceObserver === "undefined") {
     deferFrame(callback);
     return;
   }
 
   const observer = new PerformanceObserver((list) => {
     for (const entry of list.getEntries()) {
-      if (entry.name === 'first-contentful-paint') {
+      if (entry.name === "first-contentful-paint") {
         observer.disconnect();
         deferFrame(callback);
         return;
@@ -66,8 +72,8 @@ export function deferAfterFCP(callback: () => void): void {
   });
 
   try {
-    observer.observe({ entryTypes: ['paint'] });
-    
+    observer.observe({ entryTypes: ["paint"] });
+
     // Fallback: se FCP já aconteceu ou não detectar em 3s
     setTimeout(() => {
       observer.disconnect();
@@ -82,7 +88,7 @@ export function deferAfterFCP(callback: () => void): void {
  * Executa callback após LCP (Largest Contentful Paint)
  */
 export function deferAfterLCP(callback: () => void): void {
-  if (typeof PerformanceObserver === 'undefined') {
+  if (typeof PerformanceObserver === "undefined") {
     deferIdle(callback);
     return;
   }
@@ -96,8 +102,8 @@ export function deferAfterLCP(callback: () => void): void {
   });
 
   try {
-    observer.observe({ entryTypes: ['largest-contentful-paint'] });
-    
+    observer.observe({ entryTypes: ["largest-contentful-paint"] });
+
     // Fallback
     setTimeout(() => {
       observer.disconnect();
@@ -115,9 +121,9 @@ export function deferAfterLCP(callback: () => void): void {
 export class DeferredBatch {
   private callbacks: Array<() => void> = [];
   private scheduled = false;
-  private priority: 'frame' | 'idle' | 'load';
+  private priority: "frame" | "idle" | "load";
 
-  constructor(priority: 'frame' | 'idle' | 'load' = 'idle') {
+  constructor(priority: "frame" | "idle" | "load" = "idle") {
     this.priority = priority;
   }
 
@@ -134,24 +140,24 @@ export class DeferredBatch {
       this.scheduled = false;
       const callbacks = [...this.callbacks];
       this.callbacks = [];
-      
-      callbacks.forEach(cb => {
+
+      callbacks.forEach((cb) => {
         try {
           cb();
         } catch (error) {
-          logger.error('[DeferredBatch] Error executing callback:', error);
+          reportDeferredError(error);
         }
       });
     };
 
     switch (this.priority) {
-      case 'frame':
+      case "frame":
         deferFrame(executor);
         break;
-      case 'idle':
+      case "idle":
         deferIdle(executor);
         break;
-      case 'load':
+      case "load":
         deferLoad(executor);
         break;
     }
@@ -173,12 +179,12 @@ export function createLazyInitializer<T>(
     if (!instance) {
       instance = factory();
     }
-    
+
     if (!initialized && initializer && instance) {
       initialized = true;
       deferFrame(() => initializer(instance as T));
     }
-    
+
     return instance as T;
   };
 }
