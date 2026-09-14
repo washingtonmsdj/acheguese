@@ -7,18 +7,23 @@ import {
   getAuthFlowSessionValue,
   setAuthFlowSessionValue,
 } from "@/core/auth/utils/authFlowStorage";
+import { resolveSafeInternalPath } from "@/shared/utils/safeRedirect";
 
-/** O chamador deve fornecer somente um caminho interno já validado. */
+/**
+ * Persiste somente destinos internos seguros. A validação vive nesta fronteira
+ * para que nenhum chamador precise lembrar de repetir a regra de redirect.
+ */
 export function setPendingAuthReturn(path: string): void {
   setAuthFlowSessionValue(
     AUTH_FLOW_STORAGE_KEYS.pendingReturn,
-    path,
+    resolveSafeInternalPath(path, "/"),
     AUTH_FLOW_TTL_MS.pendingReturn,
   );
 }
 
 export function getPendingAuthReturn(): string | null {
-  return getAuthFlowSessionValue(AUTH_FLOW_STORAGE_KEYS.pendingReturn);
+  const stored = getAuthFlowSessionValue(AUTH_FLOW_STORAGE_KEYS.pendingReturn);
+  return stored ? resolveSafeInternalPath(stored, "/") : null;
 }
 
 export function clearPendingAuthReturn(): void {
