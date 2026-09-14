@@ -56,8 +56,6 @@ describe("useCadastroForm", () => {
     vi.mocked(PublicIdentityService.checkAvailability).mockResolvedValue({
       status: "available",
       identifier: "ana_souza",
-      suggestion: null,
-      message: undefined,
     });
     vi.mocked(checkPasswordCompromise).mockResolvedValue({
       blocked: false,
