@@ -21,7 +21,7 @@ const LazyMapLibreAdapter = lazy(() =>
 
 interface TerritoryEntryMapProps {
   city: Location | null;
-  territory?: Location | null;
+  resolvedTerritory?: ResolvedTerritory | null;
   label?: string;
   isLoading: boolean;
   className?: string;
@@ -29,18 +29,18 @@ interface TerritoryEntryMapProps {
 
 export default function TerritoryEntryMap({
   city,
-  territory = null,
+  resolvedTerritory = null,
   label,
   isLoading,
   className = "",
 }: TerritoryEntryMapProps) {
   const [mapReady, setMapReady] = useState(false);
   const [mapUnavailable, setMapUnavailable] = useState(false);
-  const activeTerritory = territory ?? city;
   const resolved = useMemo<ResolvedTerritory>(
     () =>
-      activeTerritory ? { kind: "location", location: activeTerritory } : null,
-    [activeTerritory],
+      resolvedTerritory ??
+      (city ? { kind: "location", location: city } : null),
+    [city, resolvedTerritory],
   );
   const { polygons } = useTerritoryPolygon(resolved);
   const territoryMapColor = useMemo(() => {
@@ -65,19 +65,33 @@ export default function TerritoryEntryMap({
       polygons.map((polygon) => ({
         ...polygon,
         color: territoryMapColor,
-        fillOpacity: 0.14,
-        lineWidth: 3,
+        fillOpacity: 0.12,
+        lineWidth: 4,
         lineOpacity: 1,
       })),
     [polygons, territoryMapColor],
   );
-  const isCity = !activeTerritory || activeTerritory.type === LocationType.CITY;
-  const territoryName = activeTerritory?.name ?? "Salvador";
+  const isCity =
+    !resolved ||
+    (resolved.kind === "location" && resolved.location.type === LocationType.CITY);
+  const territoryName =
+    resolved?.kind === "group"
+      ? resolved.group.name
+      : resolved?.kind === "location"
+        ? resolved.location.name
+        : city?.name ?? "Salvador";
   const territoryLabel = label ?? territoryName;
+  const territoryKey =
+    resolved?.kind === "group"
+      ? `group:${resolved.group.id}`
+      : resolved?.kind === "location"
+        ? `location:${resolved.location.id}`
+        : "none";
+
   useEffect(() => {
     setMapReady(false);
     setMapUnavailable(false);
-  }, [activeTerritory?.geographic_path, isLoading]);
+  }, [territoryKey, isLoading]);
 
   useEffect(() => {
     if (isLoading || mapReady) return;
@@ -111,8 +125,8 @@ export default function TerritoryEntryMap({
             territoryPolygons={entryPolygons}
             resolved={resolved}
             fitTerritoryBounds={entryPolygons.length > 0}
-            territoryFitPadding={12}
-            territoryFitMaxZoom={isCity ? 10.5 : 15}
+            territoryFitPadding={24}
+            territoryFitMaxZoom={isCity ? 10.5 : 14}
             markers={[]}
             userLocationMarker={{ enabled: false, autoAdd: false }}
             enableClustering={false}
@@ -139,7 +153,7 @@ export default function TerritoryEntryMap({
               O mapa não carregou agora.
             </p>
             <p className="mt-1 text-sm leading-5 text-territory-muted-strong">
-              A busca e a escolha do território continuam disponíveis nesta tela.
+              A entrada no Complexo continua disponível nesta tela.
             </p>
           </div>
         </div>
@@ -153,7 +167,7 @@ export default function TerritoryEntryMap({
       <h2 id="territory-entry-map-title" className="sr-only">
         {isCity
           ? `${territoryLabel} disponível por inteiro`
-          : `${territoryLabel} em destaque`}
+          : `Perímetro de ${territoryLabel}`}
       </h2>
 
       {!isCity ? (
@@ -166,7 +180,9 @@ export default function TerritoryEntryMap({
         </div>
       ) : null}
 
-      <span className="sr-only"><Map aria-hidden="true" /> Mapa territorial de {territoryName}</span>
+      <span className="sr-only">
+        <Map aria-hidden="true" /> Mapa territorial de {territoryName}
+      </span>
     </section>
   );
 }
