@@ -127,7 +127,8 @@ function ManagedProfileCard({
 }) {
   const navigate = useNavigate();
   const handle = profile.handle?.trim();
-  const canOpenPublicProfile = profile.is_public === true && Boolean(handle);
+  const canOpenPublicProfile =
+    profile.profile_type === "personal" && profile.is_public === true && Boolean(handle);
   const territory = [profile.neighborhood, profile.city]
     .filter(Boolean)
     .join(", ");
