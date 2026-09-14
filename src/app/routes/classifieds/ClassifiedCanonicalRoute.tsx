@@ -15,7 +15,7 @@ import { logger } from '@/shared/utils/logger';
 import { lazy, Suspense, useEffect, useState } from 'react';
 import { useParams } from 'react-router-dom';
 import { classifiedUrlService } from "@/core/classifieds/services";
-import { FullScreenLoader } from '@/shared/components/loading/PageLoader';
+import { PassivePageFallback } from '@/shared/components/loading/PassivePageFallback';
 
 const ClassificadoDetailPage = lazy(() => import('@/modules/classifieds/pages/ClassificadoDetailPage'));
 
@@ -73,7 +73,7 @@ export default function ClassifiedCanonicalRoute() {
   }, [uf, cidade, bairro, categoria, subcategoria, slug, publicId]);
 
   if (resolution.status === 'loading') {
-    return <FullScreenLoader />;
+    return <PassivePageFallback />;
   }
 
   if (resolution.status === 'not-found') {
@@ -95,7 +95,7 @@ export default function ClassifiedCanonicalRoute() {
 
   // Renderiza página de detalhe com ID resolvido
   return (
-    <Suspense fallback={<FullScreenLoader />}>
+    <Suspense fallback={<PassivePageFallback />}>
       <ClassificadoDetailPage classifiedId={resolution.classifiedId} />
     </Suspense>
   );
