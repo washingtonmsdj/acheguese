@@ -42,7 +42,7 @@ export default function TerritoryEntryMap({
       (city ? { kind: "location", location: city } : null),
     [city, resolvedTerritory],
   );
-  const { polygons } = useTerritoryPolygon(resolved);
+  const { polygons, isLoading: isBoundaryLoading } = useTerritoryPolygon(resolved);
   const territoryMapColor = useMemo(() => {
     if (typeof document === "undefined") return NEIGHBORHOOD_COLORS[1];
 
@@ -60,16 +60,25 @@ export default function TerritoryEntryMap({
         ? `hsl(${brandToken})`
         : NEIGHBORHOOD_COLORS[1];
   }, []);
+
+  const hasCompleteGroupBoundary = useMemo(() => {
+    if (!resolved || resolved.kind !== "group") return true;
+    if (resolved.group.members.length === 0) return false;
+
+    const renderedMembers = new Set(polygons.map((polygon) => polygon.name));
+    return resolved.group.members.every((member) => renderedMembers.has(member.name));
+  }, [polygons, resolved]);
+
   const entryPolygons = useMemo(
     () =>
-      polygons.map((polygon) => ({
+      (hasCompleteGroupBoundary ? polygons : []).map((polygon) => ({
         ...polygon,
         color: territoryMapColor,
         fillOpacity: 0.12,
         lineWidth: 4,
         lineOpacity: 1,
       })),
-    [polygons, territoryMapColor],
+    [hasCompleteGroupBoundary, polygons, territoryMapColor],
   );
   const isCity =
     !resolved ||
@@ -87,6 +96,11 @@ export default function TerritoryEntryMap({
       : resolved?.kind === "location"
         ? `location:${resolved.location.id}`
         : "none";
+  const boundaryUnavailable =
+    resolved?.kind === "group" &&
+    !isLoading &&
+    !isBoundaryLoading &&
+    !hasCompleteGroupBoundary;
 
   useEffect(() => {
     setMapReady(false);
@@ -156,6 +170,18 @@ export default function TerritoryEntryMap({
               A entrada no Complexo continua disponível nesta tela.
             </p>
           </div>
+        </div>
+      ) : boundaryUnavailable ? (
+        <div
+          role="status"
+          className="pointer-events-none absolute inset-x-4 bottom-4 z-10 rounded-2xl border border-territory-border bg-territory-surface/95 px-4 py-3 text-sm shadow-territory-highlight backdrop-blur-[2px]"
+        >
+          <p className="font-semibold text-territory-ink">
+            Limite territorial oficial indisponível agora.
+          </p>
+          <p className="mt-1 leading-5 text-territory-muted-strong">
+            Não exibimos contorno aproximado ou incompleto do Complexo.
+          </p>
         </div>
       ) : null}
 
