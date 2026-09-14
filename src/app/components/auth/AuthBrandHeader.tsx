@@ -29,7 +29,10 @@ export function AuthBrandHeader({ showBack = true }: AuthBrandHeaderProps) {
   }, [location.state, searchParams]);
 
   return (
-    <header className="bg-[#fffdfa] text-[#0b3b3f]">
+    <header
+      className="bg-[#fffdfa] text-[#0b3b3f]"
+      style={{ paddingTop: "env(safe-area-inset-top)" }}
+    >
       <a
         href="#main-content"
         className="sr-only focus:not-sr-only focus:absolute focus:left-4 focus:top-2 focus:z-30 focus:rounded-md focus:bg-[#0b3b3f] focus:px-3 focus:py-1.5 focus:text-sm focus:font-medium focus:text-white"
