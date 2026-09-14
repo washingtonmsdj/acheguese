@@ -85,10 +85,12 @@ export default function TerritoryEntryMap({
     const preloadResolved =
       resolvedTerritory ?? (city ? { kind: "location" as const, location: city } : null);
 
-    void runtimePromise.then(async (module) => {
-      await module.preloadTerritoryEntryMapEngine();
-      await module.preloadTerritoryEntryBoundary(preloadResolved);
-    });
+    void runtimePromise.then((module) =>
+      Promise.all([
+        module.preloadTerritoryEntryMapEngine(),
+        module.preloadTerritoryEntryBoundary(preloadResolved),
+      ]).then(() => undefined),
+    );
 
     const section = sectionRef.current;
     if (!section || typeof IntersectionObserver === "undefined") {
