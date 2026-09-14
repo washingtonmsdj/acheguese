@@ -116,6 +116,9 @@ describe("territory entry progressive map performance", () => {
     expect(loader).toContain("let workersPrewarmed = false");
     expect(loader).toContain("ensureMapLibreWorkerConfigured(runtime.setWorkerUrl)");
     expect(loader).toContain("runtime.prewarm()");
+    expect(loader).toContain("try {");
+    expect(loader).toContain("catch {");
+    expect(loader).toContain("Best-effort only");
     expect(loader.indexOf("ensureMapLibreWorkerConfigured(runtime.setWorkerUrl)")).toBeLessThan(
       loader.indexOf("runtime.prewarm()"),
     );
