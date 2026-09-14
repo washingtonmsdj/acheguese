@@ -63,9 +63,12 @@ describe("secondary account settings shell contract", () => {
   });
 
   it("uses the URL query as the identity-settings tab source of truth", () => {
-    expect(profileSettings).toContain('const requestedTab = normalizeTab(searchParams.get("tab"))');
+    expect(profileSettings).toContain('const rawTab = searchParams.get("tab")');
+    expect(profileSettings).toContain("const requestedTab = normalizeTab(rawTab)");
     expect(profileSettings).toContain("const activeTab = useMemo<ProfileSettingsTab>");
     expect(profileSettings).toContain('requestedTab === "members" && !canHaveMembers');
+    expect(profileSettings).toContain('rawTab !== null && rawTab !== "links" && rawTab !== "members"');
+    expect(profileSettings).toContain('rawTab === "members" && !canHaveMembers');
     expect(profileSettings).toContain('nextParams.delete("tab")');
     expect(profileSettings).not.toContain("setActiveTab");
     expect(profileSettings).not.toContain("useState<ProfileSettingsTab>");
