@@ -88,7 +88,9 @@ describe("root community-first MVP entry", () => {
     expect(source).toContain("entry-footer [content-visibility:auto] [contain-intrinsic-size:auto_4rem]");
     expect(source).toContain("Quer o Achegue-se na sua comunidade?");
     expect(source).toContain('href="/indicar-comunidade"');
-    expect(source).toContain('href="/privacidade"');
+    expect(source).toContain('import { PRIVACY_POLICY_PATH } from "@/shared/constants/legal";');
+    expect(source.match(/href=\{PRIVACY_POLICY_PATH\}/g)?.length ?? 0).toBeGreaterThanOrEqual(2);
+    expect(source).not.toContain('href="/privacidade"');
   });
 
   it("renders the normal root outside routed/full app runtime", () => {
@@ -116,6 +118,6 @@ describe("root community-first MVP entry", () => {
     expect(source).toContain('aria-label="Navegação pública móvel"');
     expect(source).toContain('event.key === "Escape"');
     expect(source).toContain('href="#main-content"');
-    expect(source.match(/href="\/privacidade"/g)?.length ?? 0).toBeGreaterThanOrEqual(2);
+    expect(source.match(/href=\{PRIVACY_POLICY_PATH\}/g)?.length ?? 0).toBeGreaterThanOrEqual(2);
   });
 });
