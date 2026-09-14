@@ -40,13 +40,16 @@ describe("root community-first MVP entry", () => {
     expect(source).not.toContain('import { territorialGroupService } from "@/core/territorial"');
   });
 
-  it("keeps the large preview image low priority and dimensioned", () => {
+  it("uses a lightweight low-priority community preview", () => {
     const source = read("src/app/pages/TerritoryEntryPage.tsx");
+    const asset = path.join(ROOT, "src/assets/complexo-cultura.jpg");
+
+    expect(source).toContain('import communityThumbnail from "@/assets/complexo-cultura.jpg"');
     expect(source).toContain('loading="lazy"');
     expect(source).toContain('decoding="async"');
     expect(source).toContain('fetchPriority="low"');
-    expect(source).toContain('width={1920}');
-    expect(source).toContain('height={1080}');
+    expect(source).not.toContain("hero-complexo-nordeste.jpg");
+    expect(fs.statSync(asset).size).toBeLessThanOrEqual(160_000);
   });
 
   it("renders the normal root outside the full app runtime", () => {
