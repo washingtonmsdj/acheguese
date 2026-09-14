@@ -7,6 +7,7 @@ import {
   ModuleContextSync,
 } from "@/core/profiles/contexts/multi-profile-runtime-context";
 import { TerritoryModeInitializer } from "@/core/location/components/TerritoryModeInitializer";
+import { PassivePageFallback } from "@/shared/components/loading/PassivePageFallback";
 
 /**
  * Runtime autenticado/contextual.
@@ -21,7 +22,7 @@ export default function SessionProfileRuntimeShell() {
       <MultiProfileProvider>
         <TerritoryModeInitializer />
         <ModuleContextSync />
-        <Suspense fallback={null}>
+        <Suspense fallback={<PassivePageFallback />}>
           <AppRoutes />
         </Suspense>
       </MultiProfileProvider>
