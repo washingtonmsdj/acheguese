@@ -76,7 +76,7 @@ const CONSENT_ROWS = [
   ["analytics", "Medição de uso", "Ajuda a melhorar a experiência."],
   ["marketing", "Ofertas e novidades", "Permite sugestões e comunicações promocionais."],
   ["cookies", "Cookies não essenciais", "Preferências e recursos que não são estritamente necessários."],
-  ["geolocation", "Localização neste dispositivo", "Uso da localização quando você autorizar."],
+  ["geolocation", "Uso da localização", "Autoriza o uso de localização quando o navegador também permitir."],
   ["notifications", "Notificações push", "Permissão de avisos no dispositivo."],
   ["data_processing", "Processamento de dados", "Consentimentos aplicáveis ao tratamento de dados."],
   ["third_party", "Compartilhamento com terceiros", "Compartilhamentos que dependem de consentimento."],
@@ -329,11 +329,11 @@ export default function PrivacySettingsPage() {
       const url = window.URL.createObjectURL(blob);
       const anchor = document.createElement("a");
       anchor.href = url;
-      anchor.download = `meus-dados-${user.id.slice(0, 8)}-${new Date().toISOString().split("T")[0]}.json`;
+      anchor.download = `meus-dados-${new Date().toISOString().split("T")[0]}.json`;
       document.body.appendChild(anchor);
       anchor.click();
-      window.URL.revokeObjectURL(url);
       document.body.removeChild(anchor);
+      window.setTimeout(() => window.URL.revokeObjectURL(url), 0);
       toast({ title: "Dados exportados", description: "Seus dados foram exportados com sucesso." });
     } catch {
       toast({ title: "Erro na exportação", description: "Não foi possível exportar seus dados.", variant: "destructive" });
@@ -353,8 +353,8 @@ export default function PrivacySettingsPage() {
       setDeleteReason("");
       setDeleteAcknowledged(false);
       setShowDeleteConfirm(false);
-    } catch (error: unknown) {
-      toast({ title: "Erro", description: (error instanceof Error ? error.message : null) || "Não foi possível solicitar a exclusão da conta.", variant: "destructive" });
+    } catch {
+      toast({ title: "Erro", description: "Não foi possível solicitar a exclusão da conta.", variant: "destructive" });
     } finally {
       setDeleting(false);
     }
@@ -400,7 +400,7 @@ export default function PrivacySettingsPage() {
           <p className="mt-3 text-center text-xs text-territory-muted">Guarde o arquivo em um local seguro.</p>
 
           {isExporting ? (
-            <Surface className="mt-4 p-4 sm:p-5" >
+            <Surface className="mt-4 p-4 sm:p-5">
               <h2 className="font-heading text-base font-bold text-territory-ink">Durante a exportação</h2>
               <div className="mt-4 text-center" role="status">
                 <Loader2 className="mx-auto h-8 w-8 animate-spin text-territory-sun" aria-hidden="true" />
@@ -520,7 +520,7 @@ export default function PrivacySettingsPage() {
                   {!consentsError ? (
                     <div className="mt-1 border-t border-territory-border">
                       <LinkRow icon={<Cookie className="h-5 w-5" aria-hidden="true" />} title="Cookies e permissões" onClick={() => document.getElementById("privacy-more")?.scrollIntoView({ behavior: "smooth" })} />
-                      <LinkRow icon={<MapPin className="h-5 w-5" aria-hidden="true" />} title="Localização neste dispositivo" description="Permissão gerenciada no navegador." onClick={() => document.getElementById("privacy-more")?.scrollIntoView({ behavior: "smooth" })} />
+                      <LinkRow icon={<MapPin className="h-5 w-5" aria-hidden="true" />} title="Uso da localização" description="A permissão do dispositivo continua sob controle do navegador." onClick={() => document.getElementById("privacy-more")?.scrollIntoView({ behavior: "smooth" })} />
                     </div>
                   ) : null}
                 </Surface>
@@ -552,14 +552,14 @@ export default function PrivacySettingsPage() {
 
             <Surface id="privacy-more" className="mt-4 p-4 sm:p-5">
               <h2 className="font-heading text-base font-bold text-territory-ink">Consentimentos e permissões</h2>
-              <p className="mt-1 text-sm text-territory-muted">Os controles existentes continuam disponíveis além do recorte principal do concept.</p>
+              <p className="mt-1 text-sm text-territory-muted">Revise permissões adicionais relacionadas aos dados da sua conta.</p>
               <div className="mt-2 grid gap-x-6 lg:grid-cols-2">
                 {consentsLoading ? (
                   <div className="col-span-full flex items-center justify-center py-8" role="status"><Loader2 className="h-6 w-6 animate-spin text-territory-brand" aria-hidden="true" /></div>
                 ) : consentsError ? (
-                  <div className="col-span-full"><QueryErrorState message="Não exibimos estados padrão quando a autoridade de consentimento está indisponível." onRetry={() => void refetchConsents()} /></div>
+                  <div className="col-span-full"><QueryErrorState message="Suas escolhas permanecem inalteradas até conseguirmos consultá-las novamente." onRetry={() => void refetchConsents()} /></div>
                 ) : (
-                  CONSENT_ROWS.map(([type, label, description]) => (
+                  CONSENT_ROWS.slice(2).map(([type, label, description]) => (
                     <ConsentRow key={type} idPrefix="details" type={type} label={label} description={description} consent={consents?.find((item) => item.consent_type === type)} disabled={updateConsentMutation.isPending} onChange={(checked) => updateConsentMutation.mutate({ consentType: type, granted: checked })} />
                   ))
                 )}
@@ -581,7 +581,7 @@ export default function PrivacySettingsPage() {
                   Solicitar exclusão da conta
                 </Button>
               </AlertDialogTrigger>
-              <AlertDialogContent className="max-w-[520px] rounded-2xl">
+              <AlertDialogContent className="max-h-[calc(100dvh-2rem)] max-w-[520px] overflow-y-auto rounded-2xl sm:max-h-none sm:overflow-visible">
                 <AlertDialogHeader>
                   <AlertDialogTitle className="font-heading text-xl">Solicitar exclusão da sua conta?</AlertDialogTitle>
                   <AlertDialogDescription>Confira o impacto antes de continuar. O prazo e as condições finais são definidos pelo serviço de exclusão quando a solicitação é registrada.</AlertDialogDescription>
