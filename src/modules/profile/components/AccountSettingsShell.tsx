@@ -4,7 +4,6 @@ import {
   Accessibility,
   ArrowLeft,
   Bell,
-  ChevronDown,
   Home,
   KeyRound,
   LockKeyhole,
@@ -13,17 +12,18 @@ import {
   UserRound,
 } from "lucide-react";
 
+import { ACCOUNT_PATHS } from "@/core/routing/config/account";
 import { cn } from "@/shared/utils/cn";
 
 const settingsItems = [
-  { label: "Visão geral", href: "/conta", icon: Home, exact: true, excludeSearch: "?section=profiles" },
-  { label: "Dados de acesso", href: "/conta/seguranca#acesso", icon: KeyRound, hash: "#acesso" },
-  { label: "Segurança", href: "/conta/seguranca", icon: LockKeyhole, exact: true, excludeHash: "#acesso" },
-  { label: "Notificações", href: "/conta/notificacoes", icon: Bell, exact: true },
-  { label: "Privacidade e dados", href: "/conta/privacidade", icon: Shield, exact: true },
-  { label: "Preferências", href: "/conta/preferencias", icon: SlidersHorizontal, exact: true, excludeHash: "#acessibilidade" },
-  { label: "Acessibilidade", href: "/conta/preferencias#acessibilidade", icon: Accessibility, hash: "#acessibilidade" },
-  { label: "Meus perfis", href: "/conta?section=profiles", icon: UserRound, exact: true, search: "?section=profiles" },
+  { label: "Visão geral", href: ACCOUNT_PATHS.home, icon: Home, exact: true, excludeSearch: "?section=profiles" },
+  { label: "Dados de acesso", href: ACCOUNT_PATHS.access, icon: KeyRound, hash: "#acesso" },
+  { label: "Segurança", href: ACCOUNT_PATHS.security, icon: LockKeyhole, exact: true, excludeHash: "#acesso" },
+  { label: "Notificações", href: ACCOUNT_PATHS.notifications, icon: Bell, exact: true },
+  { label: "Privacidade e dados", href: ACCOUNT_PATHS.privacy, icon: Shield, exact: true },
+  { label: "Preferências", href: ACCOUNT_PATHS.preferences, icon: SlidersHorizontal, exact: true, excludeHash: "#acessibilidade" },
+  { label: "Acessibilidade", href: ACCOUNT_PATHS.accessibility, icon: Accessibility, hash: "#acessibilidade" },
+  { label: "Meus perfis", href: ACCOUNT_PATHS.profiles, icon: UserRound, exact: true, search: "?section=profiles" },
 ] as const;
 
 function isActive(
@@ -110,17 +110,15 @@ export function AccountSettingsShell({
 
         <div className="min-w-0 flex-1 bg-territory-canvas">
           <header className="hidden h-16 items-center justify-end border-b border-territory-border bg-territory-surface px-6 lg:flex xl:px-8">
-            <button
-              type="button"
+            <Link
+              to={ACCOUNT_PATHS.home}
               className="flex min-h-10 items-center gap-2 rounded-full px-2 text-sm font-semibold text-territory-ink hover:bg-territory-raised focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-territory-brand"
-              onClick={() => navigate("/conta")}
             >
               <span className="flex h-8 w-8 items-center justify-center rounded-full bg-territory-brand/10 text-territory-brand">
                 <UserRound className="h-4 w-4" aria-hidden="true" />
               </span>
               Minha conta
-              <ChevronDown className="h-4 w-4" aria-hidden="true" />
-            </button>
+            </Link>
           </header>
 
           <div className="relative flex h-14 items-center justify-center border-b border-territory-border bg-territory-surface px-4 lg:hidden">
@@ -128,7 +126,7 @@ export function AccountSettingsShell({
               <button
                 type="button"
                 aria-label="Voltar para Minha conta"
-                onClick={() => navigate("/conta")}
+                onClick={() => navigate(ACCOUNT_PATHS.home)}
                 className="absolute left-2 flex h-11 w-11 items-center justify-center rounded-full text-territory-ink hover:bg-territory-raised focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-territory-brand"
               >
                 <ArrowLeft className="h-5 w-5" aria-hidden="true" />
