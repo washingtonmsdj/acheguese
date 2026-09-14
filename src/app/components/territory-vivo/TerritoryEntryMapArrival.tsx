@@ -15,7 +15,7 @@ interface TerritoryEntryMapArrivalProps {
 const ARRIVAL_MESSAGES = [
   "Procurando sua comunidade",
   "Preparando a casa para você se achegar",
-  "Buscando o mapa oficial do Complexo",
+  "Buscando o limite oficial do Complexo",
   "Tudo quase pronto para sua chegada",
 ] as const;
 
@@ -24,6 +24,14 @@ const ARRIVAL_STAGES = [
   { label: "Mapa", icon: MapPinned },
   { label: "Limite oficial", icon: ShieldCheck },
 ] as const;
+
+const ARRIVAL_CYCLE_MS = 2100;
+const ARRIVAL_SESSION_STARTED_AT = Date.now();
+
+function getArrivalMessageIndex(): number {
+  const elapsed = Math.max(0, Date.now() - ARRIVAL_SESSION_STARTED_AT);
+  return Math.floor(elapsed / ARRIVAL_CYCLE_MS) % ARRIVAL_MESSAGES.length;
+}
 
 /**
  * Experiencia de chegada da entrada territorial.
@@ -35,7 +43,7 @@ export function TerritoryEntryMapArrival({
   label,
   statusText = "Preparando mapa e limite territorial oficial",
 }: TerritoryEntryMapArrivalProps) {
-  const [messageIndex, setMessageIndex] = useState(0);
+  const [messageIndex, setMessageIndex] = useState(getArrivalMessageIndex);
   const [messageVisible, setMessageVisible] = useState(true);
 
   useEffect(() => {
@@ -43,16 +51,27 @@ export function TerritoryEntryMapArrival({
     if (window.matchMedia?.("(prefers-reduced-motion: reduce)").matches) return;
 
     let fadeTimeoutId: number | null = null;
-    const intervalId = window.setInterval(() => {
+    const syncMessage = () => {
       setMessageVisible(false);
       fadeTimeoutId = window.setTimeout(() => {
-        setMessageIndex((current) => (current + 1) % ARRIVAL_MESSAGES.length);
+        setMessageIndex(getArrivalMessageIndex());
         setMessageVisible(true);
       }, 180);
-    }, 2100);
+    };
+
+    const timeIntoCycle =
+      (Date.now() - ARRIVAL_SESSION_STARTED_AT) % ARRIVAL_CYCLE_MS;
+    const firstDelay = ARRIVAL_CYCLE_MS - timeIntoCycle;
+    let intervalId: number | null = null;
+
+    const firstTimeoutId = window.setTimeout(() => {
+      syncMessage();
+      intervalId = window.setInterval(syncMessage, ARRIVAL_CYCLE_MS);
+    }, firstDelay);
 
     return () => {
-      window.clearInterval(intervalId);
+      window.clearTimeout(firstTimeoutId);
+      if (intervalId !== null) window.clearInterval(intervalId);
       if (fadeTimeoutId !== null) window.clearTimeout(fadeTimeoutId);
     };
   }, []);
