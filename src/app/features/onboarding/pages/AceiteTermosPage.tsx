@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import { Helmet } from "react-helmet-async";
-import { Link, useNavigate } from "react-router-dom";
+import { Link, useLocation, useNavigate } from "react-router-dom";
 
 import { AuthBrandHeader } from "@/app/components/auth/AuthBrandHeader";
 import { AuthConceptIcon } from "@/app/components/auth/AuthConceptIcon";
@@ -23,10 +23,24 @@ import { Label } from "@/shared/components/ui/label";
 import { useToast } from "@/shared/hooks/use-toast";
 import { resolveSafeInternalPath } from "@/shared/utils/safeRedirect";
 
-type AcceptanceState = "checking" | "needs-acceptance" | "accepted" | "signed-out";
+type AcceptanceState =
+  | "checking"
+  | "needs-acceptance"
+  | "accepted"
+  | "signed-out"
+  | "oauth-error";
+
+function containsOAuthCallbackError(search: string, hash: string): boolean {
+  const searchParams = new URLSearchParams(search);
+  if (searchParams.has("error") || searchParams.has("error_code")) return true;
+
+  const hashParams = new URLSearchParams(hash.startsWith("#") ? hash.slice(1) : hash);
+  return hashParams.has("error") || hashParams.has("error_code");
+}
 
 export default function AceiteTermosPage() {
   const { user } = useAuth();
+  const location = useLocation();
   const navigate = useNavigate();
   const { toast } = useToast();
   const [state, setState] = useState<AcceptanceState>("checking");
@@ -38,6 +52,10 @@ export default function AceiteTermosPage() {
   );
   const returnContext = useMemo(() => getAuthReturnContext(returnTo), [returnTo]);
   const hasSpecificReturnContext = returnTo !== "/" && returnContext.kind !== "generic";
+  const oauthCallbackFailed = useMemo(
+    () => containsOAuthCallbackError(location.search, location.hash),
+    [location.hash, location.search],
+  );
   const returnContextIcon =
     returnContext.kind === "conversation"
       ? "chat"
@@ -46,10 +64,12 @@ export default function AceiteTermosPage() {
         : returnContext.kind === "community"
           ? "users"
           : "store";
+  const loginPath =
+    returnTo === "/" ? "/login" : `/login?redirect=${encodeURIComponent(returnTo)}`;
 
   useEffect(() => {
     if (!user) {
-      setState("signed-out");
+      setState(oauthCallbackFailed ? "oauth-error" : "signed-out");
       return;
     }
 
@@ -71,7 +91,7 @@ export default function AceiteTermosPage() {
     return () => {
       active = false;
     };
-  }, [user]);
+  }, [oauthCallbackFailed, user]);
 
   const handleAccept = async () => {
     if (!user || !accepted || submitting) return;
@@ -200,6 +220,25 @@ export default function AceiteTermosPage() {
               </div>
             ) : null}
 
+            {state === "oauth-error" ? (
+              <div className="mt-6 space-y-4">
+                <div role="alert" className="rounded-xl border border-[#ead8c7] bg-[#fff7ed] p-4">
+                  <p className="text-[13px] font-bold text-[#71401d]">
+                    Não foi possível concluir a entrada com Google
+                  </p>
+                  <p className="mt-1 text-[12px] leading-5 text-[#735a49]">
+                    O acesso foi cancelado ou interrompido antes de criar uma sessão. Seu destino foi preservado para você tentar novamente.
+                  </p>
+                </div>
+                <Link
+                  to={loginPath}
+                  className="flex h-11 w-full items-center justify-center rounded-[9px] bg-[#ffc91a] text-[14px] font-extrabold text-[#102f33] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#0b5b59]/40"
+                >
+                  Voltar e tentar novamente
+                </Link>
+              </div>
+            ) : null}
+
             {state === "signed-out" ? (
               <div className="mt-6 space-y-4">
                 <div className="rounded-xl border border-[#d6dedc] bg-[#f8f7f2] p-4">
@@ -209,7 +248,7 @@ export default function AceiteTermosPage() {
                   </p>
                 </div>
                 <Link
-                  to={returnTo === "/" ? "/login" : `/login?redirect=${encodeURIComponent(returnTo)}`}
+                  to={loginPath}
                   className="flex h-11 w-full items-center justify-center rounded-[9px] bg-[#ffc91a] text-[14px] font-extrabold text-[#102f33] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#0b5b59]/40"
                 >
                   Voltar para entrar
