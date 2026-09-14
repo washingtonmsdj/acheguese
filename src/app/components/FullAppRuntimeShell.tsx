@@ -7,6 +7,7 @@ import { SEO } from "@/app/components/SEO";
 import { queryClient } from "@/shared/utils/queryClient";
 import { AccessibilityProvider } from "@/shared/components/accessibility/AccessibilityProvider";
 import { SkipToContent } from "@/shared/components/accessibility/SkipToContent";
+import { PassivePageFallback } from "@/shared/components/loading/PassivePageFallback";
 import { scheduleBrowserIdleWork } from "@/shared/utils/browserIdle";
 import "@/styles/accessibility.css";
 
@@ -67,7 +68,7 @@ export default function FullAppRuntimeShell({
               <GlobalOverlays />
             </Suspense>
 
-            <Suspense fallback={null}>
+            <Suspense fallback={<PassivePageFallback />}>
               <SessionProfileRuntimeShell />
             </Suspense>
           </AccessibilityProvider>
