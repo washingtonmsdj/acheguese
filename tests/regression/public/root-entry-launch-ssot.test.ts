@@ -17,13 +17,17 @@ describe("public root launch territory SSOT", () => {
     expect(entry).toContain(
       "const LAUNCH_COMMUNITY_NAME = TERRITORY_CONFIG.launch.community.name;",
     );
+    expect(entry).toContain("TERRITORY_CONFIG.launch.name");
+    expect(entry).toContain("TERRITORY_CONFIG.launch.state.toUpperCase()");
     expect(entry).toContain("href={LAUNCH_URLS.community}");
     expect(entry).toContain("baseUrl: TERRITORY_CONFIG.launch.community.path");
+    expect(entry).toContain("<em>{LAUNCH_PLACE_LABEL}</em>");
 
     expect(entry).not.toContain('TERRITORY_CONFIG.launch.state || "ba"');
     expect(entry).not.toContain('TERRITORY_CONFIG.launch.city || "salvador"');
     expect(entry).not.toContain("COMPLEX_FALLBACK_SLUG");
     expect(entry).not.toContain('const COMPLEX_TERRITORY_NAME = "');
+    expect(entry).not.toContain("<em>Salvador · Bahia</em>");
   });
 
   it("keeps the root map fallback on canonical map defaults", () => {
@@ -50,5 +54,18 @@ describe("public root launch territory SSOT", () => {
     expect(runtime).toContain("entrando em {territoryLabel} normalmente");
     expect(runtime).toContain("contorno aproximado ou incompleto de {territoryLabel}");
     expect(runtime).not.toContain("<small>Salvador · BA</small>");
+  });
+
+  it("settles aria-busy when the map timeout fallback becomes final", () => {
+    const runtime = read(
+      "src/app/components/territory-vivo/TerritoryEntryMapRuntime.tsx",
+    );
+
+    expect(runtime).toContain("const mapRegionBusy =");
+    expect(runtime).toContain("!mapUnavailable &&");
+    expect(runtime).toContain("aria-busy={mapRegionBusy}");
+    expect(runtime).not.toContain(
+      "aria-busy={!mapReady || isLoading || !boundaryStarted || isBoundaryLoading}",
+    );
   });
 });
