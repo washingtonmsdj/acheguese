@@ -38,6 +38,14 @@ describe("responsive account concept contract", () => {
     expect(notifications).toContain('aria-pressed={selected}');
   });
 
+  it("keeps desktop channels and device state in one concept card while mobile stays segmented", () => {
+    expect(notifications).toContain("lg:block lg:rounded-2xl lg:border lg:border-territory-border lg:bg-territory-surface");
+    expect(notifications).toContain("lg:mt-2 lg:rounded-none lg:border-0 lg:border-t");
+    expect(notifications).toContain("Preferência de push da conta");
+    expect(notifications).toContain('id="push"');
+    expect(notifications).toContain("<PushNotificationSettings />");
+  });
+
   it("keeps quiet hours compact on mobile without dropping the full editor", () => {
     expect(notifications).toContain("const quietHoursSummary");
     expect(notifications).toContain('"Intervalo incompleto"');
@@ -49,6 +57,18 @@ describe("responsive account concept contract", () => {
     expect(notifications).toContain("Horário local do dispositivo.");
     expect(notifications).toContain('className="mt-4 lg:hidden"');
     expect(notifications).toContain('className="mt-4 hidden p-4 sm:p-5 lg:block"');
+  });
+
+  it("puts the approved mobile save action immediately after quiet hours while keeping frequency available", () => {
+    expect(notifications).toContain("const renderSaveButton");
+    expect(notifications).toContain("saveButtonLabel");
+    const mobileQuietHours = notifications.indexOf("Horário local do dispositivo.");
+    const firstSaveAction = notifications.indexOf("renderSaveButton(", mobileQuietHours);
+    const frequency = notifications.indexOf("Frequência dos avisos", mobileQuietHours);
+    expect(mobileQuietHours).toBeGreaterThan(-1);
+    expect(firstSaveAction).toBeGreaterThan(mobileQuietHours);
+    expect(frequency).toBeGreaterThan(firstSaveAction);
+    expect(notifications).toContain('className="hidden lg:block"');
   });
 
   it("gives the mobile and desktop quiet-hours editors unique form ids", () => {
