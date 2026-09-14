@@ -24,9 +24,6 @@ describe("Trust operational command boundary", () => {
   const commandService = readProjectFile(
     "src/core/trust/services/OperationalTrustCommandService.ts",
   );
-  const rideFeedbackGateway = readProjectFile(
-    "src/core/trust/services/RideTrustFeedbackRpcGateway.ts",
-  );
   const adminService = readProjectFile(
     "src/core/trust/services/TrustAdminService.ts",
   );
@@ -73,12 +70,13 @@ describe("Trust operational command boundary", () => {
     expect(rideFeedbackMigration).toContain(
       "p_subject_role NOT IN (\n    'counterparty', 'customer', 'merchant', 'driver', 'courier'",
     );
-    expect(commandService).toContain("submitRideTrustFeedbackRpc({");
-    expect(commandService).not.toContain(
-      'supabase.rpc(\n      "submit_ride_trust_feedback"',
+    expect(commandService).toContain("submit_ride_trust_feedback");
+    expect(commandService).toContain("p_subject_role: input.subjectRole");
+    expect(commandService).not.toContain("p_subject_profile_id: input.subjectProfileId");
+    expect(commandService).toContain(
+      "supabase as unknown as RideTrustFeedbackRpcClient",
     );
-    expect(rideFeedbackGateway).toContain("p_subject_role: RideTrustFeedbackRpcSubjectRole");
-    expect(rideFeedbackGateway).not.toContain("p_subject_profile_id");
+    expect(existsSync(resolve(repoRoot, "src/core/trust/services/RideTrustFeedbackRpcGateway.ts"))).toBe(false);
   });
 
   it("keeps Trust tables private and exposes only RPC boundaries", () => {
