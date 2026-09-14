@@ -18,6 +18,7 @@ type FallbackInput = {
 const FALLBACK_TIMESTAMP = "2026-01-01T00:00:00.000Z";
 const PUBLIC_FALLBACK_FLAG = "public_fallback";
 const PUBLIC_LABEL_KEY = "public_label";
+const PUBLIC_ARTICLE_KEY = "public_article";
 const GEO_SALVADOR_BOUNDARY_SOURCE =
   "https://services6.arcgis.com/GP5qdNaePRPh2SdT/arcgis/rest/services/bairros_app_dados_2010_e_2022/FeatureServer/0";
 
@@ -30,6 +31,16 @@ function normalizeSegment(value?: string | null): string {
     .replace(/[^a-z0-9-]+/g, "-")
     .replace(/-+/g, "-")
     .replace(/^-+|-+$/g, "");
+}
+
+function readPublicLabel(
+  name: string,
+  metadata: Record<string, unknown> | null | undefined,
+): string {
+  const publicLabel = metadata?.[PUBLIC_LABEL_KEY];
+  return typeof publicLabel === "string" && publicLabel.trim().length > 0
+    ? publicLabel.trim()
+    : name;
 }
 
 const salvadorLocation: Location = {
@@ -158,6 +169,8 @@ const complexoNordesteGroup: TerritorialGroupWithMembers = {
   anchor_city_id: salvadorLocation.id,
   status: TERRITORIAL_GROUP_STATUS.ACTIVE,
   metadata: {
+    [PUBLIC_LABEL_KEY]: "Complexo",
+    [PUBLIC_ARTICLE_KEY]: "o",
     [PUBLIC_FALLBACK_FLAG]: true,
   },
   members: [
@@ -171,10 +184,21 @@ const complexoNordesteGroup: TerritorialGroupWithMembers = {
 };
 
 export function getPublicTerritoryLocationLabel(location: Location): string {
-  const publicLabel = location.metadata?.[PUBLIC_LABEL_KEY];
-  return typeof publicLabel === "string" && publicLabel.trim().length > 0
-    ? publicLabel.trim()
-    : location.name;
+  return readPublicLabel(
+    location.name,
+    location.metadata as Record<string, unknown> | null | undefined,
+  );
+}
+
+export function getPublicTerritoryGroupPresentation(
+  group: TerritorialGroupWithMembers,
+): { label: string; article: "o" | "a" | null } {
+  const metadata = group.metadata as Record<string, unknown> | null | undefined;
+  const article = metadata?.[PUBLIC_ARTICLE_KEY];
+  return {
+    label: readPublicLabel(group.name, metadata),
+    article: article === "o" || article === "a" ? article : null,
+  };
 }
 
 export function isPublicTerritoryFallbackLocation(
