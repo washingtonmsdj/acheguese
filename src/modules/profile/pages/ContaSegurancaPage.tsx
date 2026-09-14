@@ -9,7 +9,6 @@ import {
   KeyRound,
   Laptop,
   Loader2,
-  LockKeyhole,
   Mail,
   Pencil,
   ShieldCheck,
@@ -77,6 +76,25 @@ function StepNumber({ children }: { children: React.ReactNode }) {
   );
 }
 
+function HelpRow({ onClick }: { onClick: () => void }) {
+  return (
+    <Surface className="px-4 sm:px-5">
+      <button
+        type="button"
+        onClick={onClick}
+        className="flex min-h-16 w-full items-center gap-3 text-left focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-territory-brand"
+      >
+        <CircleHelp className="h-5 w-5 shrink-0 text-territory-brand" aria-hidden="true" />
+        <span className="min-w-0 flex-1">
+          <span className="block text-sm font-semibold text-territory-ink">Preciso de ajuda</span>
+          <span className="mt-0.5 block text-xs text-territory-muted">Segurança e acesso à conta</span>
+        </span>
+        <ChevronRight className="h-5 w-5 text-territory-muted" aria-hidden="true" />
+      </button>
+    </Surface>
+  );
+}
+
 export default function ContaSegurancaPage() {
   const appUrls = useAppUrls();
   const location = useLocation();
@@ -111,6 +129,7 @@ export default function ContaSegurancaPage() {
     try {
       await updatePassword(data.newPassword);
       toast.success("Senha alterada com sucesso");
+      navigate("/conta/seguranca", { replace: true });
     } catch (error) {
       toast.error(getAuthErrorMessage(error, "Erro ao alterar senha"));
       throw error;
@@ -169,7 +188,48 @@ export default function ContaSegurancaPage() {
   };
 
   const accessView = location.hash === "#acesso";
+  const passwordView = location.hash === "#senha";
   const handle = activeProfile?.handle ? `@${activeProfile.handle}` : "Nome de usuário ainda não definido";
+
+  if (passwordView) {
+    return (
+      <>
+        <Helmet><title>Alterar senha | Achegue-se</title></Helmet>
+        <AccountSettingsShell
+          title="Alterar senha"
+          description="Escolha uma senha forte e exclusiva para a sua conta."
+        >
+          <Surface className="p-4 sm:p-5">
+            <ChangePasswordForm onSave={handleChangePassword} onCancel={() => navigate("/conta/seguranca")} />
+          </Surface>
+
+          <Surface className="mt-4 p-4 sm:p-5">
+            <div className="flex items-start gap-3">
+              <Mail className="mt-0.5 h-5 w-5 shrink-0 text-territory-brand" aria-hidden="true" />
+              <div className="min-w-0 flex-1">
+                <h2 className="font-heading text-base font-bold text-territory-ink">Recuperação por e-mail</h2>
+                <p className="mt-1 break-all text-sm text-territory-muted">{user.email}</p>
+              </div>
+            </div>
+            <Button
+              type="button"
+              variant="outline"
+              className="mt-4 min-h-11 w-full"
+              onClick={handleResetPassword}
+              disabled={resetSent || sendingReset}
+            >
+              {sendingReset ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
+              {resetSent ? "E-mail enviado" : "Enviar recuperação por e-mail"}
+            </Button>
+          </Surface>
+
+          <div className="mt-4">
+            <HelpRow onClick={() => navigate(SUPPORT_PATH)} />
+          </div>
+        </AccountSettingsShell>
+      </>
+    );
+  }
 
   if (accessView) {
     return (
@@ -233,7 +293,7 @@ export default function ContaSegurancaPage() {
                 <button
                   type="button"
                   className="min-h-9 text-sm font-semibold text-territory-brand underline-offset-4 hover:underline"
-                  onClick={() => navigate("/conta/seguranca")}
+                  onClick={() => navigate("/conta/seguranca#senha")}
                 >
                   Alterar senha
                 </button>
@@ -419,60 +479,24 @@ export default function ContaSegurancaPage() {
           </Surface>
         </div>
 
-        <div className="mt-4 grid gap-4 lg:grid-cols-2">
-          <Surface className="p-4 sm:p-5">
-            <div className="flex items-start gap-3">
-              <Mail className="mt-0.5 h-5 w-5 shrink-0 text-territory-brand" aria-hidden="true" />
-              <div className="min-w-0">
-                <h2 className="font-heading text-base font-bold text-territory-ink">E-mail de acesso</h2>
-                <p className="mt-1 break-all text-sm font-medium text-territory-ink">{user.email}</p>
-                <p className="mt-1 text-sm text-territory-muted">Usado para login e recuperação da conta.</p>
-              </div>
-            </div>
-            <Button type="button" variant="outline" className="mt-5 min-h-11 w-full" onClick={handleResetPassword} disabled={resetSent || sendingReset}>
-              {sendingReset ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
-              {resetSent ? "E-mail enviado" : "Enviar recuperação por e-mail"}
-            </Button>
-          </Surface>
-
-          <Surface className="p-4 sm:p-5">
-            <div className="mb-4 flex items-center gap-2">
-              <KeyRound className="h-5 w-5 text-territory-brand" aria-hidden="true" />
-              <div>
-                <h2 className="font-heading text-base font-bold text-territory-ink">Senha</h2>
-                <p className="text-sm text-territory-muted">Mantenha uma senha exclusiva e atualizada.</p>
-              </div>
-            </div>
-            <ChangePasswordForm onSave={handleChangePassword} onCancel={() => undefined} />
-          </Surface>
-        </div>
-
         <Surface className="mt-4 px-4 sm:px-5">
           <button
             type="button"
-            onClick={() => navigate(SUPPORT_PATH)}
-            className="flex min-h-16 w-full items-center gap-3 text-left focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-territory-brand"
+            onClick={() => navigate("/conta/seguranca#senha")}
+            className="group flex min-h-16 w-full items-center gap-3 text-left focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-territory-brand"
           >
-            <CircleHelp className="h-5 w-5 shrink-0 text-territory-brand" aria-hidden="true" />
+            <KeyRound className="h-5 w-5 shrink-0 text-territory-brand" aria-hidden="true" />
             <span className="min-w-0 flex-1">
-              <span className="block text-sm font-semibold text-territory-ink">Não reconhece um acesso?</span>
-              <span className="mt-0.5 block text-xs text-territory-muted">Preciso de ajuda</span>
+              <span className="block text-sm font-semibold text-territory-ink">Alterar senha</span>
+              <span className="mt-0.5 block text-xs text-territory-muted">Atualize sua senha ou acesse a recuperação por e-mail.</span>
             </span>
-            <ChevronRight className="h-5 w-5 text-territory-muted" aria-hidden="true" />
+            <ChevronRight className="h-5 w-5 text-territory-muted transition-transform group-hover:translate-x-0.5" aria-hidden="true" />
           </button>
         </Surface>
 
-        <Surface className="mt-4 p-4 sm:p-5">
-          <div className="flex items-start gap-3">
-            <LockKeyhole className="mt-0.5 h-5 w-5 shrink-0 text-territory-brand" aria-hidden="true" />
-            <div>
-              <h2 className="font-heading text-base font-bold text-territory-ink">Proteção da conta</h2>
-              <p className="mt-1 text-sm leading-5 text-territory-muted">
-                Senha, recuperação, sessões e autenticação em duas etapas usam os serviços canônicos de autenticação. Nenhuma credencial é armazenada nesta tela.
-              </p>
-            </div>
-          </div>
-        </Surface>
+        <div className="mt-4">
+          <HelpRow onClick={() => navigate(SUPPORT_PATH)} />
+        </div>
       </AccountSettingsShell>
     </>
   );
