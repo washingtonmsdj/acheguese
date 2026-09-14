@@ -1,13 +1,20 @@
 /* eslint-disable react-refresh/only-export-components */
 import React, { createContext, useContext, useEffect, useState } from "react";
+import {
+  applyAccessibilityPreferences,
+  persistAccessibilityFontSize,
+  persistAccessibilityHighContrast,
+  readAccessibilityPreferences,
+  type AccessibilityFontSize,
+} from "@/shared/accessibility/preferences";
 
 interface AccessibilityContextType {
   announceToScreenReader: (message: string) => void;
   focusElement: (elementId: string) => void;
   isHighContrast: boolean;
   toggleHighContrast: () => void;
-  fontSize: "normal" | "large" | "extra-large";
-  setFontSize: (size: "normal" | "large" | "extra-large") => void;
+  fontSize: AccessibilityFontSize;
+  setFontSize: (size: AccessibilityFontSize) => void;
 }
 
 const AccessibilityContext = createContext<
@@ -19,49 +26,19 @@ export function AccessibilityProvider({
 }: {
   children: React.ReactNode;
 }) {
-  const [isHighContrast, setIsHighContrast] = useState(false);
-  const [fontSize, setFontSize] = useState<"normal" | "large" | "extra-large">(
-    "normal",
+  const [initialPreferences] = useState(readAccessibilityPreferences);
+  const [isHighContrast, setIsHighContrast] = useState(
+    initialPreferences.isHighContrast,
+  );
+  const [fontSize, setFontSize] = useState<AccessibilityFontSize>(
+    initialPreferences.fontSize,
   );
 
-  // Load preferences from localStorage
   useEffect(() => {
-    const savedContrast = localStorage.getItem("accessibility-high-contrast");
-    const savedFontSize = localStorage.getItem("accessibility-font-size");
-
-    if (savedContrast === "true") {
-      setIsHighContrast(true);
-    }
-
-    if (
-      savedFontSize &&
-      ["normal", "large", "extra-large"].includes(savedFontSize)
-    ) {
-      setFontSize(savedFontSize as "normal" | "large" | "extra-large");
-    }
-  }, []);
-
-  // Apply accessibility classes to body
-  useEffect(() => {
-    const body = document.body;
-
-    // High contrast
-    if (isHighContrast) {
-      body.classList.add("accessibility-high-contrast");
-    } else {
-      body.classList.remove("accessibility-high-contrast");
-    }
-
-    // Font size
-    body.classList.remove(
-      "accessibility-font-large",
-      "accessibility-font-extra-large",
-    );
-    if (fontSize === "large") {
-      body.classList.add("accessibility-font-large");
-    } else if (fontSize === "extra-large") {
-      body.classList.add("accessibility-font-extra-large");
-    }
+    applyAccessibilityPreferences(document.body, {
+      isHighContrast,
+      fontSize,
+    });
   }, [isHighContrast, fontSize]);
 
   const announceToScreenReader = (message: string) => {
@@ -73,7 +50,6 @@ export function AccessibilityProvider({
 
     document.body.appendChild(announcement);
 
-    // Remove after announcement
     setTimeout(() => {
       document.body.removeChild(announcement);
     }, 1000);
@@ -90,15 +66,15 @@ export function AccessibilityProvider({
   const toggleHighContrast = () => {
     const newValue = !isHighContrast;
     setIsHighContrast(newValue);
-    localStorage.setItem("accessibility-high-contrast", newValue.toString());
+    persistAccessibilityHighContrast(newValue);
     announceToScreenReader(
       newValue ? "Alto contraste ativado" : "Alto contraste desativado",
     );
   };
 
-  const handleSetFontSize = (size: "normal" | "large" | "extra-large") => {
+  const handleSetFontSize = (size: AccessibilityFontSize) => {
     setFontSize(size);
-    localStorage.setItem("accessibility-font-size", size);
+    persistAccessibilityFontSize(size);
 
     const sizeLabel =
       size === "large"
