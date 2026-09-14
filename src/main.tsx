@@ -2,6 +2,7 @@ import React from "react";
 import { createRoot } from "react-dom/client";
 import App from "./App.tsx";
 import "./index.css";
+import { DEFAULT_TILE_STYLE } from "./shared/config/mapDefaults.ts";
 import { deferFrame, deferIdle, deferLoad } from "./shared/utils/deferredInit.ts";
 import { scheduleAfterPublicRootMap } from "./shared/utils/publicRootReadiness.ts";
 
@@ -21,11 +22,25 @@ if (import.meta.env.DEV && "serviceWorker" in navigator) {
   }
 }
 
+const isPublicRootAtBoot = window.location.pathname === "/";
+
+// The root map is a primary surface. Discover its small style document before
+// React renders so MapLibre can reuse the response immediately when the canvas
+// mounts. The URL remains owned by the canonical map defaults SSOT.
+if (isPublicRootAtBoot && !document.querySelector("link[data-entry-map-style-preload]")) {
+  const mapStylePreload = document.createElement("link");
+  mapStylePreload.rel = "preload";
+  mapStylePreload.as = "fetch";
+  mapStylePreload.href = DEFAULT_TILE_STYLE.styleUrl;
+  mapStylePreload.crossOrigin = "anonymous";
+  mapStylePreload.setAttribute("fetchpriority", "high");
+  mapStylePreload.dataset.entryMapStylePreload = "true";
+  document.head.appendChild(mapStylePreload);
+}
+
 // Critical path: render the app before starting non-critical services.
 const root = createRoot(document.getElementById("root")!);
 root.render(<App />);
-
-const isPublicRootAtBoot = window.location.pathname === "/";
 
 // The public font stylesheet is already being fetched as a low-priority preload.
 // Promote it only after the first paint without an extra bootstrap-script request.
