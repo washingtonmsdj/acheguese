@@ -6,6 +6,8 @@ import { setPendingAuthReturn } from "@/core/auth/utils/pendingAuthReturn";
 import { SUPPORT_PATH } from "@/shared/constants/legal";
 import { resolveSafeInternalPath } from "@/shared/utils/safeRedirect";
 
+import "./auth-concept-layout.css";
+
 interface AuthBrandHeaderProps {
   secondaryHref?: string;
   secondaryLabel?: string;
