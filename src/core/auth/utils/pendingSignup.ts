@@ -1,43 +1,48 @@
-const PENDING_SIGNUP_EMAIL_KEY = "auth.pending-signup-email";
-const PENDING_SIGNUP_REDIRECT_KEY = "auth.pending-signup-redirect";
-
-function canUseSessionStorage(): boolean {
-  return typeof window !== "undefined" && typeof window.sessionStorage !== "undefined";
-}
+import {
+  AUTH_FLOW_STORAGE_KEYS,
+  AUTH_FLOW_TTL_MS,
+} from "@/core/auth/constants/authFlow";
+import {
+  clearAuthFlowSessionValue,
+  getAuthFlowSessionValue,
+  setAuthFlowSessionValue,
+} from "@/core/auth/utils/authFlowStorage";
 
 export function setPendingSignupEmail(email: string): void {
-  if (!canUseSessionStorage()) return;
-  window.sessionStorage.setItem(PENDING_SIGNUP_EMAIL_KEY, email);
+  setAuthFlowSessionValue(
+    AUTH_FLOW_STORAGE_KEYS.pendingSignupEmail,
+    email,
+    AUTH_FLOW_TTL_MS.pendingSignup,
+  );
 }
 
 export function getPendingSignupEmail(): string | null {
-  if (!canUseSessionStorage()) return null;
-  return window.sessionStorage.getItem(PENDING_SIGNUP_EMAIL_KEY);
+  return getAuthFlowSessionValue(AUTH_FLOW_STORAGE_KEYS.pendingSignupEmail);
 }
 
 export function clearPendingSignupEmail(): void {
-  if (!canUseSessionStorage()) return;
-  window.sessionStorage.removeItem(PENDING_SIGNUP_EMAIL_KEY);
+  clearAuthFlowSessionValue(AUTH_FLOW_STORAGE_KEYS.pendingSignupEmail);
 }
 
 /**
  * Guarda somente o destino interno já validado pelo chamador.
- * O valor vive em sessionStorage para atravessar cadastro -> confirmação -> login
- * sem persistir credenciais ou dados sensíveis além da sessão do navegador.
+ * O valor vive em sessionStorage e expira para impedir que contexto antigo de
+ * cadastro contamine uma nova jornada na mesma aba.
  */
 export function setPendingSignupRedirect(path: string): void {
-  if (!canUseSessionStorage()) return;
-  window.sessionStorage.setItem(PENDING_SIGNUP_REDIRECT_KEY, path);
+  setAuthFlowSessionValue(
+    AUTH_FLOW_STORAGE_KEYS.pendingSignupRedirect,
+    path,
+    AUTH_FLOW_TTL_MS.pendingSignup,
+  );
 }
 
 export function getPendingSignupRedirect(): string | null {
-  if (!canUseSessionStorage()) return null;
-  return window.sessionStorage.getItem(PENDING_SIGNUP_REDIRECT_KEY);
+  return getAuthFlowSessionValue(AUTH_FLOW_STORAGE_KEYS.pendingSignupRedirect);
 }
 
 export function clearPendingSignupRedirect(): void {
-  if (!canUseSessionStorage()) return;
-  window.sessionStorage.removeItem(PENDING_SIGNUP_REDIRECT_KEY);
+  clearAuthFlowSessionValue(AUTH_FLOW_STORAGE_KEYS.pendingSignupRedirect);
 }
 
 export function clearPendingSignupContext(): void {
