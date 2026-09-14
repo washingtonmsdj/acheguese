@@ -1,8 +1,11 @@
 name: Auth Concept Regression
 
 on:
-  pull_request:
+  push:
+    branches: [main]
     paths:
+      - ".env.production"
+      - ".env.remote.example"
       - "src/app/components/auth/**"
       - "src/app/pages/LoginPage.tsx"
       - "src/app/pages/ResetPasswordPage.tsx"
@@ -14,6 +17,27 @@ on:
       - "public/auth/**"
       - "tests/e2e/auth-concept-layout.spec.ts"
       - "tests/regression/auth-concept-flow.test.ts"
+      - "tests/regression/auth-return-context.test.ts"
+      - "playwright.config.ts"
+      - "package.json"
+      - "package-lock.json"
+      - ".github/workflows/auth-concept-regression.yml"
+  pull_request:
+    paths:
+      - ".env.production"
+      - ".env.remote.example"
+      - "src/app/components/auth/**"
+      - "src/app/pages/LoginPage.tsx"
+      - "src/app/pages/ResetPasswordPage.tsx"
+      - "src/app/features/onboarding/pages/Cadastro*.tsx"
+      - "src/app/features/onboarding/hooks/useCadastro.ts"
+      - "src/app/features/onboarding/validation/**"
+      - "src/core/auth/**"
+      - "src/shared/components/ui/checkbox.tsx"
+      - "public/auth/**"
+      - "tests/e2e/auth-concept-layout.spec.ts"
+      - "tests/regression/auth-concept-flow.test.ts"
+      - "tests/regression/auth-return-context.test.ts"
       - "playwright.config.ts"
       - "package.json"
       - "package-lock.json"
@@ -43,7 +67,10 @@ jobs:
         run: npm ci
 
       - name: Run account/access contract
-        run: npx vitest run tests/regression/auth-concept-flow.test.ts
+        run: >-
+          npx vitest run
+          tests/regression/auth-concept-flow.test.ts
+          tests/regression/auth-return-context.test.ts
 
   responsive-layout:
     name: auth responsive layout
