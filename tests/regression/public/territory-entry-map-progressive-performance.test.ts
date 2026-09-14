@@ -17,11 +17,12 @@ describe("territory entry progressive map performance", () => {
     expect(hook).toContain("preloadTerritoryPolygons");
   });
 
-  it("does not reset MapLibre readiness when territory data arrives", () => {
+  it("never hides the passive map canvas while territory data arrives", () => {
     const runtime = read("src/app/components/territory-vivo/TerritoryEntryMapRuntime.tsx");
     expect(runtime).not.toContain("setMapReady(false)");
-    expect(runtime).toContain('mapReady ? "opacity-100" : "opacity-0"');
+    expect(runtime).not.toContain('mapReady ? "opacity-100" : "opacity-0"');
     expect(runtime).not.toContain("duration-500");
+    expect(runtime).toContain('className="pointer-events-none h-full min-h-[12rem] w-full');
   });
 
   it("preloads engine and official boundary concurrently", () => {
