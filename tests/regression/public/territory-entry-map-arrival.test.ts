@@ -17,7 +17,7 @@ const arrival = read(
 );
 
 describe("territory entry premium arrival loading", () => {
-  it("uses the arrival owner before and during the real map startup", () => {
+  it("uses one arrival owner before and during the real map startup", () => {
     expect(wrapper).toContain("TerritoryEntryMapArrival");
     expect(wrapper).toContain("EntryMapArrivalSurface");
     expect(runtime).toContain("TerritoryEntryMapArrival");
@@ -34,13 +34,25 @@ describe("territory entry premium arrival loading", () => {
     ).toBe(false);
   });
 
-  it("communicates a premium territorial arrival instead of fake map geometry", () => {
+  it("uses truthful stages instead of fake timed progress", () => {
+    expect(arrival).toContain('"community" | "map" | "boundary"');
+    expect(arrival).toContain("data-entry-arrival-stage={stage}");
+    expect(wrapper).toContain('stage={isLoading ? "community" : "map"}');
+    expect(wrapper).toContain('stage="map"');
+    expect(runtime).toContain('const arrivalStage = mapReady ? "boundary" : "map"');
+
+    expect(arrival).not.toContain("setInterval");
+    expect(arrival).not.toContain("ARRIVAL_CYCLE_MS");
+    expect(arrival).not.toContain("ARRIVAL_SESSION_STARTED_AT");
+  });
+
+  it("communicates arrival and place without simulating map geometry", () => {
     expect(arrival).toContain("Globe2");
     expect(arrival).toContain("Sparkles");
-    expect(arrival).toContain("Procurando sua comunidade");
+    expect(arrival).toContain("Encontrando sua comunidade");
     expect(arrival).toContain("Preparando a casa para você se achegar");
-    expect(arrival).toContain("Buscando o limite oficial do Complexo");
-    expect(arrival).toContain("Tudo quase pronto para sua chegada");
+    expect(arrival).toContain("Conectando você ao território");
+    expect(arrival).toContain("Seu território está quase pronto");
     expect(arrival).toContain("Comunidade");
     expect(arrival).toContain("Mapa");
     expect(arrival).toContain("Limite oficial");
@@ -50,29 +62,16 @@ describe("territory entry premium arrival loading", () => {
     expect(arrival).not.toContain("fallback_boundary_rings");
   });
 
-  it("keeps the narrative continuous across wrapper, suspense and runtime mounts", () => {
-    expect(arrival).toContain("ARRIVAL_SESSION_STARTED_AT");
-    expect(arrival).toContain("getArrivalMessageIndex");
-    expect(arrival).toContain("ARRIVAL_CYCLE_MS");
-    expect(arrival).toContain("timeIntoCycle");
-    expect(arrival).toContain("firstDelay");
-  });
-
-  it("rotates copy gently and respects reduced-motion preferences", () => {
-    expect(arrival).toContain("window.setInterval");
-    expect(arrival).toContain("2100");
-    expect(arrival).toContain("prefers-reduced-motion: reduce");
+  it("uses a premium desktop composition and a compact phone composition", () => {
+    expect(arrival).toContain("grid-cols-[3.25rem_minmax(0,1fr)]");
+    expect(arrival).toContain("md:grid-cols-[5.5rem_minmax(0,1fr)]");
+    expect(arrival).toContain("lg:grid-cols-[11rem_minmax(0,1fr)]");
+    expect(arrival).toContain("lg:h-40 lg:w-40");
+    expect(arrival).toContain("min-[360px]:block");
+    expect(arrival).toContain("motion-safe:animate-spin");
+    expect(arrival).toContain('animationDuration: "12s"');
+    expect(arrival).toContain('animationDuration: "18s"');
     expect(arrival).toContain("motion-reduce:animate-none");
-    expect(arrival).toContain("motion-reduce:transition-none");
-  });
-
-  it("stays compact on phones and expands only when the map area grows", () => {
-    expect(arrival).toContain("h-12 w-12");
-    expect(arrival).toContain("md:h-[4.5rem]");
-    expect(arrival).toContain("lg:h-24");
-    expect(arrival).toContain("hidden min-[360px]:inline");
-    expect(arrival).toContain("hidden items-center gap-2");
-    expect(arrival).toContain("md:flex");
 
     expect(wrapper).toContain("min-h-[12rem]");
     expect(wrapper).toContain("md:min-h-[18rem]");
@@ -80,6 +79,14 @@ describe("territory entry premium arrival loading", () => {
     expect(runtime).toContain("min-h-[12rem]");
     expect(runtime).toContain("md:min-h-[18rem]");
     expect(runtime).toContain("lg:min-h-[24rem]");
+  });
+
+  it("shows completed, current and upcoming stages without regression", () => {
+    expect(arrival).toContain("completed = index < activeStageIndex");
+    expect(arrival).toContain("current = index === activeStageIndex");
+    expect(arrival).toContain("<Check");
+    expect(arrival).toContain("data-entry-arrival-progress");
+    expect(arrival).toContain('completed ? "scale-x-100" : "scale-x-0"');
   });
 
   it("keeps loading bounded and only reveals the real map after boundary settling", () => {
