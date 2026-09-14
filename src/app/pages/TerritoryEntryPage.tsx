@@ -2,7 +2,7 @@ import { useEffect, useRef, useState } from "react";
 import { Link } from "react-router-dom";
 import { ArrowRight, Menu, Users, X } from "lucide-react";
 import TerritoryEntryMap from "@/app/components/territory-vivo/TerritoryEntryMap";
-import communityThumbnail from "@/assets/hero-complexo-nordeste.jpg";
+import communityThumbnail from "@/assets/complexo-cultura.jpg";
 import { LAUNCH_URLS, TERRITORY_CONFIG } from "@/core/routing/config/territory";
 import { LocationStatus, LocationType, type Location } from "@/core/location/types";
 import { lastTerritoryStore } from "@/core/routing/stores/LastTerritoryStore";
@@ -249,8 +249,6 @@ export default function TerritoryEntryPage() {
               <img
                 src={communityThumbnail}
                 alt=""
-                width={1920}
-                height={1080}
                 loading="lazy"
                 decoding="async"
                 fetchPriority="low"
