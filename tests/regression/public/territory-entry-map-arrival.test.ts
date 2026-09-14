@@ -21,7 +21,7 @@ describe("territory entry premium arrival loading", () => {
     expect(wrapper).toContain("TerritoryEntryMapArrival");
     expect(wrapper).toContain("EntryMapArrivalSurface");
     expect(runtime).toContain("TerritoryEntryMapArrival");
-    expect(runtime).toContain("!mapPresented && !mapUnavailable");
+    expect(runtime).toContain("showArrival && !mapUnavailable");
     expect(arrival).toContain("data-entry-arrival-loading");
 
     expect(
@@ -89,13 +89,32 @@ describe("territory entry premium arrival loading", () => {
     expect(arrival).toContain('completed ? "scale-x-100" : "scale-x-0"');
   });
 
+  it("crossfades into the ready map instead of cutting the arrival abruptly", () => {
+    expect(arrival).toContain("leaving?: boolean");
+    expect(arrival).toContain('leaving ? "opacity-0" : "opacity-100"');
+    expect(arrival).toContain("duration-500");
+    expect(arrival).toContain("data-entry-arrival-leaving");
+    expect(runtime).toContain("ARRIVAL_CROSSFADE_MS = 360");
+    expect(runtime).toContain("setArrivalLeaving(true)");
+    expect(runtime).toContain("setShowArrival(false)");
+    expect(runtime).toContain("leaving={arrivalLeaving}");
+    expect(runtime).toContain("duration-500");
+  });
+
+  it("keeps a premium non-blocking fallback when the map provider does not answer", () => {
+    expect(runtime).toContain("A comunidade continua aqui.");
+    expect(runtime).toContain(
+      "O mapa não respondeu agora, mas você pode continuar entrando no Complexo normalmente.",
+    );
+    expect(runtime).toContain("setMapUnavailable(true)");
+    expect(runtime).toContain("8000");
+  });
+
   it("keeps loading bounded and only reveals the real map after boundary settling", () => {
     expect(runtime).toContain(
       "const mapPresented = mapReady && !isBoundaryLoading",
     );
     expect(runtime).toContain('aria-busy={!mapPresented}');
     expect(runtime).toContain('mapPresented ? "opacity-100" : "opacity-0"');
-    expect(runtime).toContain("setMapUnavailable(true)");
-    expect(runtime).toContain("8000");
   });
 });
