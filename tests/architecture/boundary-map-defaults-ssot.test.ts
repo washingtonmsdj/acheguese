@@ -28,4 +28,16 @@ describe("boundary fallback map defaults SSOT", () => {
     expect(hook).toContain("MAP_DEFAULT_COORDINATES.longitude");
     expect(hook).not.toContain("[-12.975, -38.476]");
   });
+
+  it("keeps the passive MapLibre runtime on canonical center and zoom fallbacks", () => {
+    const runtime = read("src/core/maps/components/v3/MapLibrePassiveRuntime.tsx");
+
+    expect(runtime).toContain("MAP_DEFAULT_CENTER_LNGLAT");
+    expect(runtime).toContain("MAP_DEFAULT_ZOOM");
+    expect(runtime).toContain(": MAP_DEFAULT_CENTER_LNGLAT;");
+    expect(runtime).toContain("initialViewport?.zoom ?? MAP_DEFAULT_ZOOM");
+    expect(runtime).not.toContain("const DEFAULT_CENTER");
+    expect(runtime).not.toContain("const DEFAULT_ZOOM");
+    expect(runtime).not.toContain("[-51.9253, -14.235]");
+  });
 });
