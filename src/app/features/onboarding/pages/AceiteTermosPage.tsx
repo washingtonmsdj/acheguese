@@ -1,10 +1,15 @@
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { Helmet } from "react-helmet-async";
-import { CheckCircle2, FileText, Loader2, ShieldCheck } from "lucide-react";
 import { Link, useNavigate } from "react-router-dom";
 
 import { AuthBrandHeader } from "@/app/components/auth/AuthBrandHeader";
+import { AuthConceptIcon } from "@/app/components/auth/AuthConceptIcon";
+import { AuthFooter } from "@/app/components/auth/AuthFooter";
 import { useAuth } from "@/core/auth/hooks/useAuth";
+import {
+  clearPendingAuthReturn,
+  getPendingAuthReturn,
+} from "@/core/auth/utils/pendingAuthReturn";
 import {
   COMMUNITY_GUIDELINES_PATH,
   hasCurrentTermsAcceptance,
@@ -12,16 +17,12 @@ import {
   TERMS_OF_SERVICE_VERSION,
 } from "@/core/legal/termsOfService";
 import { PrivacySettingsService } from "@/core/privacy/services/PrivacySettingsService";
-import { Button } from "@/shared/components/ui/button";
 import { Checkbox } from "@/shared/components/ui/checkbox";
 import { Label } from "@/shared/components/ui/label";
 import { useToast } from "@/shared/hooks/use-toast";
+import { resolveSafeInternalPath } from "@/shared/utils/safeRedirect";
 
-type AcceptanceState =
-  | "checking"
-  | "needs-acceptance"
-  | "accepted"
-  | "signed-out";
+type AcceptanceState = "checking" | "needs-acceptance" | "accepted" | "signed-out";
 
 export default function AceiteTermosPage() {
   const { user } = useAuth();
@@ -30,6 +31,10 @@ export default function AceiteTermosPage() {
   const [state, setState] = useState<AcceptanceState>("checking");
   const [accepted, setAccepted] = useState(false);
   const [submitting, setSubmitting] = useState(false);
+  const returnTo = useMemo(
+    () => resolveSafeInternalPath(getPendingAuthReturn(), "/"),
+    [],
+  );
 
   useEffect(() => {
     if (!user) {
@@ -39,7 +44,6 @@ export default function AceiteTermosPage() {
 
     let active = true;
     setState("checking");
-
     void PrivacySettingsService.getUserConsents(user.id)
       .then((consents) => {
         if (!active) return;
@@ -59,8 +63,7 @@ export default function AceiteTermosPage() {
   }, [user]);
 
   const handleAccept = async () => {
-    if (!user || !accepted) return;
-
+    if (!user || !accepted || submitting) return;
     setSubmitting(true);
     try {
       await PrivacySettingsService.recordConsent({
@@ -83,7 +86,10 @@ export default function AceiteTermosPage() {
     }
   };
 
-  const canContinue = state === "accepted";
+  const continueSafely = () => {
+    clearPendingAuthReturn();
+    navigate(returnTo, { replace: true });
+  };
 
   return (
     <>
@@ -91,129 +97,80 @@ export default function AceiteTermosPage() {
         <title>Aceitar termos | Achegue-se</title>
         <meta name="robots" content="noindex, nofollow" />
       </Helmet>
-
-      <div className="min-h-screen bg-background">
+      <div className="min-h-[100dvh] bg-[#fffdfa] text-[#102f33]">
         <AuthBrandHeader secondaryHref="/login" secondaryLabel="Entrar" />
-        <main
-          id="main-content"
-          tabIndex={-1}
-          className="mx-auto flex w-full max-w-xl px-4 py-10 sm:py-16"
-        >
-          <section className="w-full rounded-2xl border border-border/70 bg-card p-5 shadow-sm sm:p-7">
+        <main id="main-content" tabIndex={-1} className="mx-auto w-full max-w-[430px] px-6 pb-6 pt-4 focus:outline-none">
+          <section className="rounded-2xl border border-[#d6dedc] bg-white p-5 shadow-[0_18px_55px_rgba(17,55,59,.06)]">
             <div className="flex items-start gap-3">
-              <div className="rounded-xl bg-primary/10 p-2.5 text-primary">
-                <FileText className="h-5 w-5" />
-              </div>
+              <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-[#e7f0ed] text-[#0b5b59]">
+                <AuthConceptIcon name="shield" />
+              </span>
               <div>
-                <p className="text-xs font-semibold uppercase tracking-[0.14em] text-primary">
-                  Conta e comunidade
-                </p>
-                <h1 className="mt-1 text-2xl font-semibold text-foreground">
-                  Aceite dos Termos de Uso
-                </h1>
-                <p className="mt-2 text-sm leading-6 text-muted-foreground">
-                  As Diretrizes da Comunidade fazem parte dos Termos de Uso e
-                  orientam a participação segura na plataforma.
+                <p className="text-[11px] font-bold uppercase tracking-[0.12em] text-[#0b5b59]">Conta e comunidade</p>
+                <h1 className="mt-1 font-heading text-[24px] font-extrabold tracking-[-0.035em]">Termos de Uso</h1>
+                <p className="mt-2 text-[13px] leading-5 text-[#526a6d]">
+                  As Diretrizes da Comunidade fazem parte dos Termos e orientam a participação segura no Achegue-se.
                 </p>
               </div>
             </div>
 
             {state === "checking" ? (
-              <div className="flex items-center gap-2 py-10 text-sm text-muted-foreground">
-                <Loader2 className="h-4 w-4 animate-spin" />
-                Verificando o aceite da sua conta...
+              <div role="status" className="flex items-center gap-3 py-10 text-[13px] text-[#607477]">
+                <span className="h-5 w-5 animate-spin rounded-full border-2 border-[#cbd5d3] border-t-[#0b5b59]" />
+                Verificando o aceite da sua conta…
               </div>
             ) : null}
 
             {state === "signed-out" ? (
-              <div className="mt-8 space-y-4">
-                <p className="text-sm leading-6 text-muted-foreground">
-                  Conclua sua autenticação para registrar o aceite dos Termos de
-                  Uso.
-                </p>
-                <Button asChild className="w-full">
-                  <Link to="/login">Ir para entrar</Link>
-                </Button>
+              <div className="mt-7 space-y-4">
+                <p className="text-[13px] leading-5 text-[#607477]">Conclua sua autenticação para registrar o aceite.</p>
+                <Link
+                  to={returnTo === "/" ? "/login" : `/login?redirect=${encodeURIComponent(returnTo)}`}
+                  className="flex h-11 w-full items-center justify-center rounded-[9px] bg-[#ffc91a] text-[14px] font-extrabold text-[#102f33]"
+                >
+                  Ir para entrar
+                </Link>
               </div>
             ) : null}
 
             {state === "needs-acceptance" ? (
-              <div className="mt-8 space-y-5">
-                <div className="rounded-xl border border-border/70 bg-muted/30 p-4">
+              <div className="mt-7 space-y-5">
+                <div className="rounded-xl bg-[#f3f1ea] p-4">
                   <div className="flex items-start gap-3">
-                    <Checkbox
-                      id="terms-acceptance"
-                      checked={accepted}
-                      onCheckedChange={(checked) =>
-                        setAccepted(checked === true)
-                      }
-                      className="mt-0.5"
-                    />
-                    <Label
-                      htmlFor="terms-acceptance"
-                      className="cursor-pointer text-sm leading-6 text-foreground"
-                    >
-                      Li e aceito os Termos de Uso, incluindo as Diretrizes da
-                      Comunidade.
+                    <Checkbox id="terms-acceptance" checked={accepted} onCheckedChange={(checked) => setAccepted(checked === true)} className="mt-0.5" />
+                    <Label htmlFor="terms-acceptance" className="cursor-pointer text-[13px] font-normal leading-5">
+                      Li e aceito os Termos de Uso, incluindo as Diretrizes da Comunidade.
                     </Label>
                   </div>
-                  <p className="mt-3 pl-7 text-xs leading-5 text-muted-foreground">
-                    Consulte os{" "}
-                    <Link
-                      to={TERMS_OF_SERVICE_PATH}
-                      target="_blank"
-                      rel="noreferrer"
-                      className="font-medium text-primary hover:underline"
-                    >
-                      Termos de Uso
-                    </Link>{" "}
-                    e as{" "}
-                    <Link
-                      to={COMMUNITY_GUIDELINES_PATH}
-                      target="_blank"
-                      rel="noreferrer"
-                      className="font-medium text-primary hover:underline"
-                    >
-                      Diretrizes da Comunidade
-                    </Link>
-                    .
+                  <p className="mt-3 pl-8 text-[11px] leading-4 text-[#607477]">
+                    Consulte os <Link to={TERMS_OF_SERVICE_PATH} target="_blank" rel="noreferrer" className="font-medium underline">Termos</Link> e as <Link to={COMMUNITY_GUIDELINES_PATH} target="_blank" rel="noreferrer" className="font-medium underline">Diretrizes da comunidade</Link>.
                   </p>
                 </div>
-                <Button
+                <button
                   type="button"
-                  className="w-full"
                   disabled={!accepted || submitting}
                   onClick={() => void handleAccept()}
+                  className="h-11 w-full rounded-[9px] bg-[#ffc91a] text-[14px] font-extrabold text-[#102f33] disabled:opacity-55"
                 >
-                  {submitting ? (
-                    <Loader2 className="h-4 w-4 animate-spin" />
-                  ) : null}
-                  Registrar aceite e continuar
-                </Button>
+                  {submitting ? "Registrando…" : "Registrar aceite e continuar"}
+                </button>
               </div>
             ) : null}
 
-            {canContinue ? (
-              <div className="mt-8 space-y-4">
-                <div className="flex items-start gap-3 rounded-xl border border-primary/20 bg-primary/5 p-4">
-                  <ShieldCheck className="mt-0.5 h-5 w-5 shrink-0 text-primary" />
-                  <p className="text-sm leading-6 text-foreground">
-                    O aceite da versão {TERMS_OF_SERVICE_VERSION} está
-                    registrado para sua conta.
-                  </p>
+            {state === "accepted" ? (
+              <div className="mt-7 space-y-4">
+                <div className="flex items-start gap-3 rounded-xl bg-[#eaf7ef] p-4 text-[#276a4d]">
+                  <AuthConceptIcon name="check" />
+                  <p className="text-[12px] leading-5">O aceite da versão {TERMS_OF_SERVICE_VERSION} está registrado.</p>
                 </div>
-                <Button
-                  type="button"
-                  className="w-full"
-                  onClick={() => navigate("/")}
-                >
-                  <CheckCircle2 className="h-4 w-4" />
+                <button type="button" onClick={continueSafely} className="h-11 w-full rounded-[9px] bg-[#0b5b59] text-[14px] font-bold text-white">
                   Continuar para o Achegue-se
-                </Button>
+                </button>
               </div>
             ) : null}
           </section>
         </main>
+        <AuthFooter />
       </div>
     </>
   );
