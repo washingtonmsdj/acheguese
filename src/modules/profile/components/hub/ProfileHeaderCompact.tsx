@@ -33,7 +33,7 @@ import type {
   AccountSnapshot,
   Context,
   Identity,
-} from "@/modules/profile/sections/types";
+} from "@/modules/profile/types/account";
 
 interface ProfileHeaderCompactProps {
   activeProfile: MultiProfileRecord | RuntimeProfile | null;
