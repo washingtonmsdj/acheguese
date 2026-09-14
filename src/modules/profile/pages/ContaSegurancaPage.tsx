@@ -95,7 +95,15 @@ function StepNumber({ children }: { children: ReactNode }) {
   );
 }
 
-function HelpRow({ onClick }: { onClick: () => void }) {
+function HelpRow({
+  onClick,
+  prompt = "Segurança e acesso à conta",
+  actionLabel = "Preciso de ajuda",
+}: {
+  onClick: () => void;
+  prompt?: string;
+  actionLabel?: string;
+}) {
   return (
     <Surface className="px-4 sm:px-5">
       <button
@@ -105,8 +113,8 @@ function HelpRow({ onClick }: { onClick: () => void }) {
       >
         <CircleHelp className="h-5 w-5 shrink-0 text-territory-brand" aria-hidden="true" />
         <span className="min-w-0 flex-1">
-          <span className="block text-sm font-semibold text-territory-ink">Preciso de ajuda</span>
-          <span className="mt-0.5 block text-xs text-territory-muted">Segurança e acesso à conta</span>
+          <span className="block text-sm font-semibold text-territory-ink">{prompt}</span>
+          <span className="mt-0.5 block text-sm font-medium text-territory-brand">{actionLabel}</span>
         </span>
         <ChevronRight className="h-5 w-5 text-territory-muted" aria-hidden="true" />
       </button>
@@ -408,16 +416,17 @@ export default function ContaSegurancaPage() {
         <AccountSettingsShell
           eyebrow="Configurar autenticação"
           title="Adicione uma camada de proteção"
-          description="Use um aplicativo autenticador para confirmar novos acessos."
+          mobileDescription=""
+          desktopDescription="Use um aplicativo autenticador para confirmar novos acessos."
         >
           {enrollment ? (
-            <Surface className="p-4 sm:p-5">
+            <section className="lg:rounded-2xl lg:border lg:border-territory-border lg:bg-territory-surface lg:p-5">
               <div className="space-y-5">
                 <div className="flex items-start gap-3">
                   <StepNumber>1</StepNumber>
                   <div>
                     <p className="font-semibold text-territory-ink">Abra seu aplicativo autenticador</p>
-                    <p className="mt-1 text-sm text-territory-muted">Use um aplicativo que gere códigos de segurança de 6 dígitos.</p>
+                    <p className="mt-1 text-sm text-territory-muted">Use um aplicativo autenticador compatível.</p>
                   </div>
                 </div>
 
@@ -425,13 +434,17 @@ export default function ContaSegurancaPage() {
                   <StepNumber>2</StepNumber>
                   <div className="min-w-0 flex-1">
                     <p className="font-semibold text-territory-ink">Escaneie o código</p>
-                    <div className="mt-3 flex justify-center rounded-2xl bg-white p-4">
-                      <img src={enrollment.qrCode} alt="QR code para configurar autenticação em duas etapas" className="h-44 w-44 sm:h-48 sm:w-48" />
+                    <div className="mx-auto mt-3 flex w-fit justify-center rounded-2xl bg-territory-raised p-3">
+                      <img src={enrollment.qrCode} alt="QR code para configurar autenticação em duas etapas" className="h-40 w-40 sm:h-44 sm:w-44" />
                     </div>
-                    <details className="mt-2 rounded-xl border border-territory-border bg-territory-raised px-3 py-2">
-                      <summary className="cursor-pointer text-sm font-semibold text-territory-brand">Não consigo escanear</summary>
-                      <p className="mt-2 text-xs text-territory-muted">Digite esta chave manualmente no autenticador:</p>
-                      <code className="mt-1 block break-all text-sm text-territory-ink">{enrollment.secret}</code>
+                    <details className="group mt-2 text-center">
+                      <summary className="inline-flex min-h-9 cursor-pointer list-none items-center text-sm font-medium text-territory-brand underline underline-offset-4 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-territory-brand [&::-webkit-details-marker]:hidden">
+                        Não consigo escanear
+                      </summary>
+                      <div className="mt-2 rounded-xl border border-territory-border bg-territory-raised p-3 text-left">
+                        <p className="text-xs text-territory-muted">Digite esta chave manualmente no autenticador:</p>
+                        <code className="mt-1 block break-all text-sm text-territory-ink">{enrollment.secret}</code>
+                      </div>
                     </details>
                   </div>
                 </div>
@@ -457,13 +470,13 @@ export default function ContaSegurancaPage() {
                   {verifying ? <Loader2 className="mr-2 h-4 w-4 animate-spin" aria-hidden="true" /> : null}
                   {verifying ? "Confirmando..." : "Confirmar ativação"}
                 </Button>
-                <Button type="button" variant="ghost" className="min-h-11 w-full text-territory-muted" onClick={() => void handleCancelMfaEnrollment()} disabled={verifying || cancellingEnrollment}>
+                <p className="text-center text-xs leading-4 text-territory-muted">A proteção só será ativada depois da confirmação do código.</p>
+                <Button type="button" variant="ghost" className="min-h-10 w-full text-xs text-territory-muted" onClick={() => void handleCancelMfaEnrollment()} disabled={verifying || cancellingEnrollment}>
                   {cancellingEnrollment ? <Loader2 className="mr-2 h-4 w-4 animate-spin" aria-hidden="true" /> : null}
                   {cancellingEnrollment ? "Cancelando..." : "Cancelar configuração"}
                 </Button>
-                <p className="text-center text-xs leading-4 text-territory-muted">A proteção só será ativada depois da confirmação do código.</p>
               </div>
-            </Surface>
+            </section>
           ) : mfaLoading ? (
             <Surface className="flex min-h-40 items-center justify-center p-5">
               <div className="text-center" role="status">
@@ -512,7 +525,9 @@ export default function ContaSegurancaPage() {
               </Button>
             </Surface>
           )}
-          <div className="mt-4"><HelpRow onClick={() => navigate(SUPPORT_PATH)} /></div>
+          <div className="mt-4">
+            <HelpRow onClick={() => navigate(SUPPORT_PATH)} prompt="Perdeu acesso ao autenticador?" />
+          </div>
         </AccountSettingsShell>
       </>
     );
@@ -637,11 +652,15 @@ export default function ContaSegurancaPage() {
   return (
     <>
       <Helmet><title>Senha e segurança | Achegue-se</title></Helmet>
-      <AccountSettingsShell title="Senha e segurança" description="Mantenha sua conta protegida.">
+      <AccountSettingsShell
+        title="Senha e segurança"
+        mobileDescription=""
+        desktopDescription="Mantenha sua conta protegida."
+      >
         <div className="grid gap-4 lg:grid-cols-2 lg:grid-rows-[auto_auto] lg:items-start">
           <Surface className="p-4 sm:p-5 lg:col-start-1 lg:row-start-1">
             <div className="flex items-start gap-3">
-              <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-territory-brand/10 text-territory-brand"><ShieldCheck className="h-5 w-5" aria-hidden="true" /></span>
+              <span className="flex h-9 w-9 shrink-0 items-center justify-center text-territory-ink lg:h-10 lg:w-10 lg:rounded-xl lg:bg-territory-brand/10 lg:text-territory-brand"><ShieldCheck className="h-5 w-5" aria-hidden="true" /></span>
               <div className="min-w-0 flex-1">
                 <div className="flex flex-wrap items-center gap-2">
                   <h2 className="font-heading text-base font-bold text-territory-ink">Autenticação em duas etapas</h2>
@@ -705,16 +724,17 @@ export default function ContaSegurancaPage() {
             </button>
           </Surface>
 
-          <Surface className="p-4 sm:p-5 lg:col-start-2 lg:row-span-2 lg:row-start-1">
-            <div className="flex items-start gap-3">
+          <section className="lg:col-start-2 lg:row-span-2 lg:row-start-1 lg:rounded-2xl lg:border lg:border-territory-border lg:bg-territory-surface lg:p-5">
+            <h2 className="mb-2 font-heading text-lg font-bold text-territory-ink lg:hidden">Acessos à conta</h2>
+            <div className="hidden items-start gap-3 lg:flex">
               <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-territory-brand/10 text-territory-brand"><Laptop className="h-5 w-5" aria-hidden="true" /></span>
               <div>
                 <h2 className="font-heading text-base font-bold text-territory-ink">Acessos à conta</h2>
-                <p className="mt-2 hidden text-sm leading-5 text-territory-muted lg:block">Encerre outras sessões sem desconectar o navegador que está usando agora.</p>
+                <p className="mt-2 text-sm leading-5 text-territory-muted">Encerre outras sessões sem desconectar o navegador que está usando agora.</p>
               </div>
             </div>
 
-            <div className="mt-4 flex items-center gap-3 rounded-xl border border-territory-border bg-territory-raised p-3 text-territory-muted">
+            <div className="flex items-center gap-3 rounded-xl border border-territory-border bg-territory-raised p-3 text-territory-muted lg:mt-4">
               <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-territory-surface text-territory-brand">
                 <Laptop className="h-4 w-4" aria-hidden="true" />
               </span>
@@ -726,10 +746,12 @@ export default function ContaSegurancaPage() {
               {revokingSessions ? "Encerrando..." : "Sair dos outros dispositivos"}
             </Button>
             <p className="mt-2 text-center text-xs text-territory-muted">Este dispositivo permanece conectado quando a operação é concluída.</p>
-          </Surface>
+          </section>
         </div>
 
-        <div className="mt-4"><HelpRow onClick={() => navigate(SUPPORT_PATH)} /></div>
+        <div className="mt-4">
+          <HelpRow onClick={() => navigate(SUPPORT_PATH)} prompt="Não reconhece um acesso?" />
+        </div>
       </AccountSettingsShell>
     </>
   );
