@@ -1,6 +1,7 @@
 import { scheduleBrowserIdleWork } from "./browserIdle";
 
 export const PUBLIC_ROOT_MAP_READY_EVENT = "acheguese:public-root-map-ready";
+export const PUBLIC_ROOT_MAP_TERMINAL_TIMEOUT_MS = 6000;
 
 let publicRootMapReady = false;
 
