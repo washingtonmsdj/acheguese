@@ -45,19 +45,21 @@ export function AccountSettingsShell({
   title,
   description,
   eyebrow = "Minha conta",
+  showBack = true,
 }: {
   children: ReactNode;
   title: string;
   description?: string;
   eyebrow?: string;
+  showBack?: boolean;
 }) {
   const location = useLocation();
   const navigate = useNavigate();
 
   return (
     <div className="territory-vivo min-h-[100dvh] bg-territory-canvas text-territory-ink">
-      <div className="mx-auto flex min-h-[100dvh] w-full max-w-[1440px]">
-        <aside className="hidden w-[252px] shrink-0 border-r border-territory-border bg-[hsl(var(--territory-brand))] px-3 py-5 text-white lg:block">
+      <div className="mx-auto flex min-h-[100dvh] w-full max-w-[1440px] bg-territory-surface lg:border-x lg:border-territory-border">
+        <aside className="hidden w-[252px] shrink-0 bg-[hsl(var(--territory-brand))] px-3 py-5 text-white lg:block">
           <Link
             to="/"
             className="mb-8 inline-flex px-3 font-heading text-[1.65rem] font-bold tracking-[-0.06em] text-white"
@@ -104,26 +106,36 @@ export function AccountSettingsShell({
             </button>
           </header>
 
+          <div className="relative flex h-14 items-center justify-center border-b border-territory-border bg-territory-surface px-4 lg:hidden">
+            {showBack ? (
+              <button
+                type="button"
+                aria-label="Voltar para Minha conta"
+                onClick={() => navigate("/conta")}
+                className="absolute left-2 flex h-11 w-11 items-center justify-center rounded-full text-territory-ink hover:bg-territory-raised focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-territory-brand"
+              >
+                <ArrowLeft className="h-5 w-5" aria-hidden="true" />
+              </button>
+            ) : null}
+            <Link
+              to="/"
+              aria-label="Achegue-se — início"
+              className="font-heading text-[1.35rem] font-bold tracking-[-0.06em] text-territory-brand"
+            >
+              achegue-se<span className="text-territory-sun">.</span>
+            </Link>
+          </div>
+
           <main id="main-content" tabIndex={-1} className="focus:outline-none">
-            <div className="mx-auto w-full max-w-[1040px] px-4 pb-24 pt-3 sm:px-6 sm:pb-12 sm:pt-5 xl:px-8">
-              <div className="mb-5 flex items-start gap-2 sm:mb-6 lg:block">
-                <button
-                  type="button"
-                  aria-label="Voltar para Minha conta"
-                  onClick={() => navigate("/conta")}
-                  className="mt-0.5 flex h-10 w-10 shrink-0 items-center justify-center rounded-full text-territory-ink hover:bg-territory-raised focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-territory-brand lg:hidden"
-                >
-                  <ArrowLeft className="h-5 w-5" aria-hidden="true" />
-                </button>
-                <div className="min-w-0 flex-1">
-                  <p className="text-[0.72rem] font-semibold text-territory-brand">{eyebrow}</p>
-                  <h1 className="mt-1 font-heading text-[1.65rem] font-bold leading-tight tracking-[-0.035em] text-territory-ink sm:text-3xl">
-                    {title}
-                  </h1>
-                  {description ? (
-                    <p className="mt-1 text-sm leading-5 text-territory-muted sm:text-[0.95rem]">{description}</p>
-                  ) : null}
-                </div>
+            <div className="mx-auto w-full max-w-[1040px] px-4 pb-24 pt-5 sm:px-6 sm:pb-12 sm:pt-6 xl:px-8">
+              <div className="mb-5 sm:mb-6">
+                <p className="text-[0.72rem] font-semibold text-territory-brand">{eyebrow}</p>
+                <h1 className="mt-1 font-heading text-[1.65rem] font-bold leading-tight tracking-[-0.035em] text-territory-ink sm:text-3xl">
+                  {title}
+                </h1>
+                {description ? (
+                  <p className="mt-1 text-sm leading-5 text-territory-muted sm:text-[0.95rem]">{description}</p>
+                ) : null}
               </div>
               {children}
             </div>
