@@ -1,9 +1,20 @@
-import { expect, test } from "@playwright/test";
+import { expect, test, type Page } from "@playwright/test";
 
 const MOBILE = { width: 390, height: 844 };
 const DESKTOP = { width: 1440, height: 900 };
+const AUTH_RETURN_PATH = "/mensagens/sabores-da-ana";
 
-async function expectNoHorizontalOverflow(page: import("@playwright/test").Page) {
+async function prepareAuthVisualState(page: Page) {
+  await page.addInitScript((returnPath) => {
+    try {
+      window.sessionStorage.setItem("auth.pending-signup-email", "ana@example.com");
+      window.sessionStorage.setItem("auth.pending-signup-redirect", returnPath);
+      window.sessionStorage.setItem("auth.pending-return-path", returnPath);
+    } catch {}
+  }, AUTH_RETURN_PATH);
+}
+
+async function expectNoHorizontalOverflow(page: Page) {
   const dimensions = await page.evaluate(() => ({
     scrollWidth: document.documentElement.scrollWidth,
     clientWidth: document.documentElement.clientWidth,
@@ -11,11 +22,13 @@ async function expectNoHorizontalOverflow(page: import("@playwright/test").Page)
   expect(dimensions.scrollWidth).toBeLessThanOrEqual(dimensions.clientWidth + 1);
 }
 
-async function expectNoGenericSvgInMain(page: import("@playwright/test").Page) {
+async function expectNoGenericSvgInMain(page: Page) {
   await expect(page.locator("main#main-content svg")).toHaveCount(0);
 }
 
 test.describe("Conta e acesso — contrato visual responsivo do concept", () => {
+  test.beforeEach(async ({ page }) => prepareAuthVisualState(page));
+
   test("mobile mantém a composição de uma coluna do concept", async ({ page }) => {
     await page.setViewportSize(MOBILE);
 
@@ -23,6 +36,7 @@ test.describe("Conta e acesso — contrato visual responsivo do concept", () => 
     await expect(page.getByRole("heading", { name: "Bom ter você por aqui." })).toBeVisible();
     await expect(page.locator('img[src="/auth/login-hero.webp"]')).toBeHidden();
     await expect(page.getByRole("button", { name: "Entrar" })).toBeVisible();
+    await expect(page.getByRole("button", { name: "Continuar com Google" })).toBeVisible();
     await expectNoHorizontalOverflow(page);
     await expectNoGenericSvgInMain(page);
 
@@ -32,6 +46,7 @@ test.describe("Conta e acesso — contrato visual responsivo do concept", () => 
     await expect(page.getByLabel("Nome de usuário")).toBeVisible();
     await expect(page.getByLabel("Confirmar senha")).toHaveCount(0);
     await expect(page.getByLabel("Estado")).toHaveCount(0);
+    await expect(page.getByRole("button", { name: "Continuar com Google" })).toBeVisible();
     await expectNoHorizontalOverflow(page);
     await expectNoGenericSvgInMain(page);
 
@@ -48,6 +63,16 @@ test.describe("Conta e acesso — contrato visual responsivo do concept", () => 
     await expect(page.locator('img[src="/auth/recovery-hero.webp"]')).toBeHidden();
     await expect(page.getByRole("button", { name: "Voltar" })).toContainText("Voltar");
     await expect(page.getByRole("button", { name: "Enviar link de recuperação" })).toBeVisible();
+    await expectNoHorizontalOverflow(page);
+    await expectNoGenericSvgInMain(page);
+
+    await page.goto("/aceitar-termos", { waitUntil: "domcontentloaded" });
+    await expect(page.getByRole("heading", { name: "Antes de continuar" })).toBeVisible();
+    await expect(page.getByText("Conversas", { exact: true })).toBeVisible();
+    await expect(page.getByRole("link", { name: "Voltar para entrar" })).toHaveAttribute(
+      "href",
+      "/login?redirect=%2Fmensagens%2Fsabores-da-ana",
+    );
     await expectNoHorizontalOverflow(page);
     await expectNoGenericSvgInMain(page);
   });
@@ -114,13 +139,35 @@ test.describe("Conta e acesso — contrato visual responsivo do concept", () => 
       await expectNoHorizontalOverflow(page);
       await expectNoGenericSvgInMain(page);
     }
+
+    await page.goto("/aceitar-termos", { waitUntil: "domcontentloaded" });
+    const termsMain = page.locator("main#main-content");
+    await expect(termsMain).toBeVisible();
+    await expect(termsMain.locator(":scope > section")).toHaveCount(2);
+    await expect(page.getByText("Entre sabendo como cuidamos desse espaço.", { exact: true })).toBeVisible();
+    await expect(page.getByRole("heading", { name: "Antes de continuar" })).toBeVisible();
+    await expect(page.getByText("Conversas", { exact: true })).toBeVisible();
+    await expectNoHorizontalOverflow(page);
+    await expectNoGenericSvgInMain(page);
   });
 
-  test("desktop e mobile não estouram o viewport nos limites próximos ao breakpoint", async ({ page }) => {
+  test("todas as superfícies públicas de conta não estouram o viewport nos principais limites", async ({ page }) => {
+    const paths = [
+      "/login",
+      "/cadastro",
+      "/cadastro/confirmacao",
+      "/reset-password?mode=request",
+      "/aceitar-termos",
+    ] as const;
+
     for (const width of [320, 360, 390, 430, 767, 768, 1024, 1440]) {
       await page.setViewportSize({ width, height: 900 });
-      await page.goto("/login", { waitUntil: "domcontentloaded" });
-      await expectNoHorizontalOverflow(page);
+      for (const path of paths) {
+        await page.goto(path, { waitUntil: "domcontentloaded" });
+        await expect(page.locator("main#main-content")).toBeVisible();
+        await expectNoHorizontalOverflow(page);
+        await expectNoGenericSvgInMain(page);
+      }
     }
   });
 });
