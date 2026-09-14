@@ -1,175 +1,121 @@
 import { useNavigate } from "react-router-dom";
 import { Helmet } from "react-helmet-async";
-import { ArrowLeft, Building2, Home, MapPin, ShieldCheck } from "lucide-react";
+import {
+  Building2,
+  ChevronRight,
+  Home,
+  MapPin,
+  ShieldCheck,
+} from "lucide-react";
 
 import { ResidenceManager } from "@/core/residence/components/ResidenceManager";
-import { useAppUrls } from "@/core/routing/hooks/useAppUrls";
+import { AccountSettingsShell } from "@/modules/profile/components/AccountSettingsShell";
 import { Button } from "@/shared/components/ui/button";
-import {
-  Card,
-  CardContent,
-  CardHeader,
-  CardTitle,
-} from "@/shared/components/ui/card";
 
 export default function ContaEnderecosPage() {
   const navigate = useNavigate();
-  const appUrls = useAppUrls();
 
   return (
     <>
       <Helmet>
-        <title>Meus endereços</title>
+        <title>Endereços e território | Achegue-se</title>
       </Helmet>
 
-      <div className="territory-vivo min-h-[100dvh] bg-territory-canvas text-territory-ink">
-        <main className="mx-auto w-full max-w-[1180px] px-3 pb-24 pt-4 sm:px-6 sm:pb-10 sm:pt-6 lg:px-8">
-          <div className="sticky top-0 z-20 -mx-3 mb-5 border-b border-territory-border bg-territory-canvas/95 px-3 py-3 backdrop-blur sm:static sm:mx-0 sm:mb-6 sm:border-0 sm:bg-transparent sm:px-0 sm:py-0">
-            <div className="flex items-start justify-between gap-3">
-              <div className="flex min-w-0 items-center gap-3">
+      <AccountSettingsShell
+        title="Endereços e território"
+        description="Gerencie sua residência privada e o contexto territorial mostrado no Achegue-se."
+      >
+        <section className="rounded-2xl border border-territory-border bg-territory-surface p-4 sm:p-5">
+          <div className="flex items-start gap-3">
+            <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-territory-brand/10 text-territory-brand">
+              <ShieldCheck className="h-5 w-5" aria-hidden="true" />
+            </span>
+            <div className="min-w-0 flex-1">
+              <p className="text-xs font-semibold text-territory-brand">Privacidade territorial</p>
+              <h2 className="mt-1 font-heading text-lg font-bold tracking-[-0.025em] text-territory-ink sm:text-xl">
+                Seu endereço detalhado permanece privado
+              </h2>
+              <p className="mt-2 max-w-2xl text-sm leading-5 text-territory-muted">
+                Rua, número, complemento e referências não aparecem no perfil público. Para outras pessoas, mostramos apenas o contexto territorial permitido, como cidade, bairro ou comunidade.
+              </p>
+            </div>
+          </div>
+
+          <div className="mt-4 grid gap-2 sm:grid-cols-2">
+            <div className="rounded-xl border border-territory-border bg-territory-raised p-3">
+              <div className="flex items-center gap-2 text-sm font-semibold text-territory-ink">
+                <Home className="h-4 w-4 text-territory-brand" aria-hidden="true" />
+                Residência privada
+              </div>
+              <p className="mt-1 text-xs leading-4 text-territory-muted">
+                Usada para confirmar seu território principal e recursos que dependem dessa relação.
+              </p>
+            </div>
+            <div className="rounded-xl border border-territory-border bg-territory-raised p-3">
+              <div className="flex items-center gap-2 text-sm font-semibold text-territory-ink">
+                <MapPin className="h-4 w-4 text-territory-brand" aria-hidden="true" />
+                Contexto público
+              </div>
+              <p className="mt-1 text-xs leading-4 text-territory-muted">
+                Exibe somente o nível territorial apropriado, sem revelar o endereço residencial.
+              </p>
+            </div>
+          </div>
+        </section>
+
+        <section className="mt-4 rounded-2xl border border-territory-border bg-territory-surface p-4 sm:p-5">
+          <div className="mb-4 flex items-start gap-3 border-b border-territory-border pb-4">
+            <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-territory-sun/30 text-territory-ink">
+              <MapPin className="h-5 w-5" aria-hidden="true" />
+            </span>
+            <div>
+              <h2 className="font-heading text-base font-bold text-territory-ink">Minha residência</h2>
+              <p className="mt-1 text-sm leading-5 text-territory-muted">
+                Adicione, confirme ou atualize os dados usados para o seu território pessoal.
+              </p>
+            </div>
+          </div>
+          <ResidenceManager />
+        </section>
+
+        <div className="mt-4 grid gap-4 lg:grid-cols-2">
+          <section className="rounded-2xl border border-territory-border bg-territory-surface p-4 sm:p-5">
+            <div className="flex items-start gap-3">
+              <Home className="mt-0.5 h-5 w-5 shrink-0 text-territory-brand" aria-hidden="true" />
+              <div>
+                <h2 className="font-heading text-base font-bold text-territory-ink">Como a residência é usada</h2>
+                <p className="mt-2 text-sm leading-5 text-territory-muted">
+                  Sua residência ajuda a confirmar o território principal. Publicações, grupos e outros recursos locais podem depender dessa verificação.
+                </p>
+                <p className="mt-2 text-sm leading-5 text-territory-muted">
+                  Ao mudar de endereço, atualize esta informação para que o contexto territorial continue correto.
+                </p>
+              </div>
+            </div>
+          </section>
+
+          <section className="rounded-2xl border border-territory-border bg-territory-surface p-4 sm:p-5">
+            <div className="flex items-start gap-3">
+              <Building2 className="mt-0.5 h-5 w-5 shrink-0 text-territory-brand" aria-hidden="true" />
+              <div className="min-w-0 flex-1">
+                <h2 className="font-heading text-base font-bold text-territory-ink">Cobertura profissional</h2>
+                <p className="mt-2 text-sm leading-5 text-territory-muted">
+                  Áreas de atuação de empresas e profissionais são configuradas separadamente. Elas não alteram sua residência pessoal.
+                </p>
                 <Button
-                  variant="ghost"
-                  size="icon"
-                  className="shrink-0 rounded-full"
-                  onClick={() => navigate(appUrls.profile.home)}
                   type="button"
+                  variant="outline"
+                  className="mt-4 min-h-11 w-full justify-between border-territory-border text-territory-ink"
+                  onClick={() => navigate("/central")}
                 >
-                  <ArrowLeft className="h-5 w-5" />
+                  Abrir Central profissional
+                  <ChevronRight className="h-4 w-4" aria-hidden="true" />
                 </Button>
-                <div className="min-w-0">
-                  <p className="text-xs font-semibold uppercase tracking-[0.16em] text-muted-foreground">
-                    Território e residência
-                  </p>
-                  <h1 className="truncate text-xl font-bold tracking-tight text-foreground sm:text-2xl">
-                    Meus endereços
-                  </h1>
-                  <p className="mt-1 text-xs text-muted-foreground sm:text-sm">
-                    Endereço privado, território pessoal e contexto público.
-                  </p>
-                </div>
-              </div>
-              <div className="hidden shrink-0 items-center gap-2 rounded-full border border-primary/20 bg-primary/10 px-3 py-1 text-xs font-medium text-primary sm:flex">
-                <ShieldCheck className="h-3.5 w-3.5" />
-                Privacidade ativa
               </div>
             </div>
-          </div>
-
-          <div className="grid gap-5 lg:grid-cols-[minmax(0,1fr)_300px]">
-            <div className="space-y-5">
-              <section className="rounded-territory-highlight border border-territory-border bg-territory-surface p-5 sm:p-6">
-                <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
-                  <div className="space-y-2">
-                    <p className="text-[0.72rem] font-semibold uppercase tracking-[0.18em] text-primary/90">
-                      Privacidade territorial
-                    </p>
-                    <h2 className="text-2xl font-semibold tracking-tight text-foreground">
-                      Seu endereço fica protegido
-                    </h2>
-                    <p className="max-w-2xl text-sm leading-6 text-muted-foreground">
-                      O perfil público mostra apenas contexto territorial, como
-                      cidade, bairro ou comunidade. Rua, número e complemento
-                      seguem privados.
-                    </p>
-                  </div>
-                  <div className="grid grid-cols-2 gap-2 sm:w-auto sm:grid-cols-1">
-                    <div className="rounded-2xl border border-border/60 bg-muted/20 px-3 py-2 text-xs">
-                      <p className="font-medium text-foreground">Residência</p>
-                      <p className="mt-1 text-muted-foreground">
-                        Base canonicamente privada
-                      </p>
-                    </div>
-                    <div className="rounded-2xl border border-border/60 bg-muted/20 px-3 py-2 text-xs">
-                      <p className="font-medium text-foreground">Território</p>
-                      <p className="mt-1 text-muted-foreground">
-                        Derivado para uso público
-                      </p>
-                    </div>
-                  </div>
-                </div>
-              </section>
-
-              <Card className="rounded-territory-highlight border-territory-brand/20 bg-territory-brand/5 shadow-none">
-                <CardHeader className="pb-3">
-                  <CardTitle className="flex items-center gap-2 text-sm">
-                    <MapPin className="h-4 w-4" />
-                    Como seu endereço aparece
-                  </CardTitle>
-                </CardHeader>
-                <CardContent className="space-y-3 text-sm leading-6 text-muted-foreground">
-                  <p>
-                    O perfil público exibe somente contexto territorial
-                    (bairro/comunidade), nunca rua, número, complemento ou
-                    referência detalhada.
-                  </p>
-                  <p>
-                    Se você atua profissionalmente, gerencie a cobertura
-                    operacional na{" "}
-                    <button
-                      type="button"
-                      className="font-medium text-primary underline underline-offset-2"
-                      onClick={() => navigate("/central")}
-                    >
-                      Central profissional
-                    </button>
-                    .
-                  </p>
-                </CardContent>
-              </Card>
-
-              <section className="rounded-territory-highlight border border-territory-border bg-territory-surface p-4 sm:p-6">
-                <ResidenceManager />
-              </section>
-            </div>
-
-            <aside className="space-y-4">
-              <Card className="rounded-territory-highlight border-territory-border bg-territory-surface shadow-none">
-                <CardHeader className="pb-3">
-                  <CardTitle className="flex items-center gap-2 text-sm">
-                    <Home className="h-4 w-4" />
-                    Regras de residência
-                  </CardTitle>
-                </CardHeader>
-                <CardContent className="space-y-3 text-sm text-muted-foreground">
-                  <div className="rounded-2xl border border-border/60 bg-muted/20 p-3">
-                    A residência confirma seu território principal de uso.
-                  </div>
-                  <div className="rounded-2xl border border-border/60 bg-muted/20 p-3">
-                    Publicação e grupos podem depender de verificação
-                    territorial.
-                  </div>
-                  <div className="rounded-2xl border border-border/60 bg-muted/20 p-3">
-                    Alterações devem refletir sua base real de moradia.
-                  </div>
-                </CardContent>
-              </Card>
-
-              <Card className="rounded-territory-highlight border-territory-border bg-territory-surface shadow-none">
-                <CardHeader className="pb-3">
-                  <CardTitle className="flex items-center gap-2 text-sm">
-                    <Building2 className="h-4 w-4" />
-                    Cobertura profissional
-                  </CardTitle>
-                </CardHeader>
-                <CardContent className="space-y-3 text-sm leading-6 text-muted-foreground">
-                  <p>
-                    Áreas de atuação de empresas e serviços ficam no módulo
-                    operacional, fora da residência pessoal.
-                  </p>
-                  <Button
-                    type="button"
-                    variant="outline"
-                    className="w-full justify-center"
-                    onClick={() => navigate("/central")}
-                  >
-                    Abrir /central
-                  </Button>
-                </CardContent>
-              </Card>
-            </aside>
-          </div>
-        </main>
-      </div>
+          </section>
+        </div>
+      </AccountSettingsShell>
     </>
   );
 }
