@@ -1,11 +1,11 @@
 /**
  * LocationPickerSheet — Sheet para seleção de localização no mapa.
- * Engine: MapLibre GL JS (via SSOT de mapa).
+ * Engine: MapLibre GL JS via runtime canônico lazy.
  */
 
 import { useState, useRef, useEffect, useCallback } from 'react';
-import * as maplibregl from "maplibre-gl";
-import 'maplibre-gl/dist/maplibre-gl.css';
+import type { Map as MapLibreMap, Marker as MapLibreMarker } from "maplibre-gl";
+import { loadMapLibreRuntime } from '@/core/maps/runtime/loadMapLibreRuntime';
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetDescription } from '@/shared/components/ui/sheet';
 import { Button } from '@/shared/components/ui/button';
 import { MapPin, Navigation, Check } from 'lucide-react';
@@ -21,8 +21,8 @@ interface LocationPickerSheetProps {
 
 export function LocationPickerSheet({ open, onOpenChange, onConfirm, initialLat, initialLng }: LocationPickerSheetProps) {
   const containerRef = useRef<HTMLDivElement>(null);
-  const mapRef       = useRef<maplibregl.Map | null>(null);
-  const markerRef    = useRef<maplibregl.Marker | null>(null);
+  const mapRef = useRef<MapLibreMap | null>(null);
+  const markerRef = useRef<MapLibreMarker | null>(null);
   const [position, setPosition] = useState<[number, number]>(
     initialLat && initialLng
       ? [initialLat, initialLng]
@@ -39,70 +39,82 @@ export function LocationPickerSheet({ open, onOpenChange, onConfirm, initialLat,
       return;
     }
 
-    const timer = setTimeout(() => {
-      if (!containerRef.current || mapRef.current) return;
+    let disposed = false;
+    const timer = window.setTimeout(() => {
+      void (async () => {
+        if (!containerRef.current || mapRef.current) return;
+        const maplibregl = await loadMapLibreRuntime();
+        if (disposed || !containerRef.current || mapRef.current) return;
 
-      const startLat = initialLat ?? MAP_DEFAULT_CENTER_LNGLAT[1];
-      const startLng = initialLng ?? MAP_DEFAULT_CENTER_LNGLAT[0];
+        const startLat = initialLat ?? MAP_DEFAULT_CENTER_LNGLAT[1];
+        const startLng = initialLng ?? MAP_DEFAULT_CENTER_LNGLAT[0];
 
-      const map = new maplibregl.Map({
-        container: containerRef.current,
-        style: DEFAULT_TILE_STYLE.styleUrl,
-        center: [startLng, startLat],
-        zoom: 16,
-        attributionControl: false,
-      });
-
-      map.addControl(new maplibregl.NavigationControl({ showCompass: false }), 'top-right');
-
-      map.on('load', () => {
-        const el = document.createElement('div');
-        el.style.cssText = [
-          'width:28px',
-          'height:28px',
-          'border-radius:9999px',
-          'background:#0f766e',
-          'border:3px solid #ffffff',
-          'box-shadow:0 10px 24px rgba(15,118,110,0.35)',
-          'cursor:grab',
-        ].join(';');
-        const marker = new maplibregl.Marker({ element: el, draggable: true, anchor: 'bottom' })
-          .setLngLat([startLng, startLat])
-          .addTo(map);
-
-        marker.on('dragend', () => {
-          const { lat, lng } = marker.getLngLat();
-          setPosition([lat, lng]);
+        const map = new maplibregl.Map({
+          container: containerRef.current,
+          style: DEFAULT_TILE_STYLE.styleUrl,
+          center: [startLng, startLat],
+          zoom: 16,
+          attributionControl: false,
         });
 
-        // Clicar no mapa move o marcador
-        map.on('click', (e) => {
-          marker.setLngLat(e.lngLat);
-          setPosition([e.lngLat.lat, e.lngLat.lng]);
+        map.addControl(new maplibregl.NavigationControl({ showCompass: false }), 'top-right');
+
+        map.on('load', () => {
+          if (disposed) return;
+          const el = document.createElement('div');
+          el.style.cssText = [
+            'width:28px',
+            'height:28px',
+            'border-radius:9999px',
+            'background:#0f766e',
+            'border:3px solid #ffffff',
+            'box-shadow:0 10px 24px rgba(15,118,110,0.35)',
+            'cursor:grab',
+          ].join(';');
+          const marker = new maplibregl.Marker({ element: el, draggable: true, anchor: 'bottom' })
+            .setLngLat([startLng, startLat])
+            .addTo(map);
+
+          marker.on('dragend', () => {
+            const { lat, lng } = marker.getLngLat();
+            setPosition([lat, lng]);
+          });
+
+          map.on('click', (event) => {
+            marker.setLngLat(event.lngLat);
+            setPosition([event.lngLat.lat, event.lngLat.lng]);
+          });
+
+          markerRef.current = marker;
+          setPosition([startLat, startLng]);
+          setReady(true);
         });
 
-        markerRef.current = marker;
-        setPosition([startLat, startLng]);
-        setReady(true);
-      });
-
-      mapRef.current = map;
+        mapRef.current = map;
+      })();
     }, 300);
 
-    return () => clearTimeout(timer);
+    return () => {
+      disposed = true;
+      window.clearTimeout(timer);
+      markerRef.current?.remove();
+      mapRef.current?.remove();
+      mapRef.current = null;
+      markerRef.current = null;
+    };
   }, [open, initialLat, initialLng]);
 
   const centerOnUser = useCallback(async () => {
     try {
-      const position = await new Promise<GeolocationPosition>((resolve, reject) => {
+      const userPosition = await new Promise<GeolocationPosition>((resolve, reject) => {
         navigator.geolocation.getCurrentPosition(resolve, reject, {
           enableHighAccuracy: true,
           timeout: 10000,
           maximumAge: 60000,
         });
       });
-      const lat = position.coords.latitude;
-      const lng = position.coords.longitude;
+      const lat = userPosition.coords.latitude;
+      const lng = userPosition.coords.longitude;
       mapRef.current?.flyTo({ center: [lng, lat], zoom: 17, duration: 800 });
       markerRef.current?.setLngLat([lng, lat]);
       setPosition([lat, lng]);
