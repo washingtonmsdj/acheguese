@@ -27,6 +27,24 @@
   }
 }
 
+/*
+ * Autofill do navegador não deve trocar o fundo branco, a cor do texto ou a
+ * leitura visual aprovada dos campos de Entrar/Criar conta.
+ */
+main#main-content:has(#login-identifier) input:-webkit-autofill,
+main#main-content:has(#cadastro-password) input:-webkit-autofill {
+  -webkit-text-fill-color: #173d41;
+  caret-color: #173d41;
+  box-shadow: 0 0 0 1000px #fff inset;
+  transition: background-color 9999s ease-out 0s;
+}
+
+main#main-content:has(#login-identifier) input:autofill,
+main#main-content:has(#cadastro-password) input:autofill {
+  background: #fff;
+  color: #173d41;
+}
+
 @media (min-width: 1024px) {
   img[src="/auth/login-hero.webp"] {
     width: clamp(450px, 40vw, 540px) !important;
