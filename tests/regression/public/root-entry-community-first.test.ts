@@ -113,11 +113,24 @@ describe("root community-first MVP entry", () => {
     expect(shell).toContain("<ModuleContextSync />");
   });
 
+  it("does not load auth redirect code on normal visits", () => {
+    const runtime = read("src/app/components/AppRuntime.tsx");
+
+    expect(runtime).toContain("shouldCheckAuthRedirect");
+    expect(runtime).toContain("location.hash.length > 1");
+    expect(runtime).toContain('searchParams.has("code")');
+    expect(runtime).toContain(
+      "shouldCheckAuthRedirect ? <AuthHashRedirect /> : null",
+    );
+  });
+
   it("does not statically import MapLibre or its worker in the bootstrap entry", () => {
     const source = read("src/main.tsx");
 
     expect(source).not.toContain('from "maplibre-gl"');
     expect(source).not.toContain('from "maplibre-gl/dist/maplibre-gl-worker');
-    expect(source).toContain('import("./core/maps/runtime/configureMapLibreWorker.ts")');
+    expect(source).toContain(
+      'import("@/core/maps/config/maplibreWorkerRuntime")',
+    );
   });
 });
