@@ -83,12 +83,14 @@ export function AccountSettingsShell({
   description,
   eyebrow = "Minha conta",
   showBack = true,
+  backTo = ACCOUNT_PATHS.home,
 }: {
   children: ReactNode;
   title: string;
   description?: string;
   eyebrow?: string;
   showBack?: boolean;
+  backTo?: string;
 }) {
   const location = useLocation();
   const navigate = useNavigate();
@@ -162,8 +164,8 @@ export function AccountSettingsShell({
             {showBack ? (
               <button
                 type="button"
-                aria-label="Voltar para Minha conta"
-                onClick={() => navigate(ACCOUNT_PATHS.home)}
+                aria-label="Voltar"
+                onClick={() => navigate(backTo)}
                 className="absolute bottom-1 left-2 flex h-11 w-11 items-center justify-center rounded-full text-territory-ink hover:bg-territory-raised focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-territory-brand"
               >
                 <ArrowLeft className="h-5 w-5" aria-hidden="true" />
