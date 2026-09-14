@@ -27,9 +27,9 @@ const settingsItems = [
   { label: "Segurança", href: ACCOUNT_PATHS.security, icon: LockKeyhole, exact: true, excludeHashes: ["#acesso", "#email"] },
   { label: "Notificações", href: ACCOUNT_PATHS.notifications, icon: Bell, exact: true },
   { label: "Privacidade e dados", href: ACCOUNT_PATHS.privacy, icon: Shield, exact: true },
-  { label: "Preferências", href: ACCOUNT_PATHS.preferences, icon: SlidersHorizontal, exact: true, excludeHashes: ["#acessibilidade"] },
-  { label: "Acessibilidade", href: ACCOUNT_PATHS.accessibility, icon: Accessibility, hashes: ["#acessibilidade"] },
   { label: "Meus perfis", href: ACCOUNT_PATHS.profiles, icon: UserRound, exact: true, search: "?section=profiles" },
+  { label: "Preferências", href: ACCOUNT_PATHS.preferences, icon: SlidersHorizontal, exact: true, excludeHashes: ["#acessibilidade"], dividerBefore: true },
+  { label: "Acessibilidade", href: ACCOUNT_PATHS.accessibility, icon: Accessibility, hashes: ["#acessibilidade"] },
 ] as const;
 
 function isActive(
@@ -94,7 +94,7 @@ export function AccountSettingsShell({
             achegue-se<span className="text-territory-sun">.</span>
           </Link>
           <nav aria-label="Configurações da conta" className="space-y-1">
-            {settingsItems.map(({ label, href, icon: Icon, exact, hashes, excludeHashes, search, excludeSearch }) => {
+            {settingsItems.map(({ label, href, icon: Icon, exact, hashes, excludeHashes, search, excludeSearch, dividerBefore }) => {
               const active = isActive(
                 location.pathname,
                 location.hash,
@@ -107,21 +107,22 @@ export function AccountSettingsShell({
                 excludeSearch,
               );
               return (
-                <Link
-                  key={label}
-                  to={href}
-                  aria-current={active ? "page" : undefined}
-                  className={cn(
-                    "relative flex min-h-12 items-center gap-3 rounded-lg px-3 text-sm font-medium text-white/90 transition-colors hover:bg-white/10 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-territory-sun",
-                    active && "bg-white/15 font-semibold text-white",
-                  )}
-                >
-                  {active ? (
-                    <span className="absolute inset-y-2 left-0 w-1 rounded-r-full bg-territory-sun" aria-hidden="true" />
-                  ) : null}
-                  <Icon className={cn("h-5 w-5 shrink-0", active && "text-territory-sun")} aria-hidden="true" />
-                  <span>{label}</span>
-                </Link>
+                <div key={label} className={dividerBefore ? "mt-3 border-t border-white/15 pt-3" : undefined}>
+                  <Link
+                    to={href}
+                    aria-current={active ? "page" : undefined}
+                    className={cn(
+                      "relative flex min-h-12 items-center gap-3 rounded-lg px-3 text-sm font-medium text-white/90 transition-colors hover:bg-white/10 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-territory-sun",
+                      active && "bg-white/15 font-semibold text-white",
+                    )}
+                  >
+                    {active ? (
+                      <span className="absolute inset-y-2 left-0 w-1 rounded-r-full bg-territory-sun" aria-hidden="true" />
+                    ) : null}
+                    <Icon className={cn("h-5 w-5 shrink-0", active && "text-territory-sun")} aria-hidden="true" />
+                    <span>{label}</span>
+                  </Link>
+                </div>
               );
             })}
           </nav>
