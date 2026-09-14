@@ -25,9 +25,11 @@ const adminAuth = readFileSync(
 );
 
 describe("MFA Auth authority G42", () => {
-  it("derives enabled MFA from Supabase Auth factors instead of the browser tracker", () => {
+  it("derives enabled MFA only from verified Supabase Auth factors", () => {
     expect(service).toContain("supabase.auth.mfa.listFactors()");
     expect(service).toContain("hasVerifiedTotp");
+    expect(service).toContain("factor.status === 'verified'");
+    expect(service).not.toContain("factorData.totp.length > 0");
     expect(service).not.toContain("mfaEnabled: data.mfa_enabled");
     expect(service).not.toContain("generateBackupCodes");
     expect(service).not.toContain("backupCodes:");
