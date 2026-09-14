@@ -113,7 +113,9 @@ describe("root community-first MVP entry", () => {
     expect(source).toContain('className="entry-explore-link"');
     expect(source).toContain('href={LAUNCH_URLS.community}');
     expect(source).toContain('aria-controls="entry-mobile-menu-popover"');
+    expect(source).toContain('aria-label="Navegação pública móvel"');
     expect(source).toContain('event.key === "Escape"');
     expect(source).toContain('href="#main-content"');
+    expect(source.match(/href="\/privacidade"/g)?.length ?? 0).toBeGreaterThanOrEqual(2);
   });
 });
