@@ -10,6 +10,7 @@ import { PasswordInput } from "@/app/components/auth/PasswordInput";
 import { useAuthTurnstile } from "@/app/components/auth/useAuthTurnstile";
 import { useCadastroForm } from "@/app/features/onboarding/hooks/useCadastro";
 import { useAuth } from "@/core/auth/hooks/useAuth";
+import { getAuthErrorMessage } from "@/core/auth/utils/authMessages";
 import { setPendingAuthReturn } from "@/core/auth/utils/pendingAuthReturn";
 import { setPendingSignupRedirect } from "@/core/auth/utils/pendingSignup";
 import {
@@ -32,7 +33,6 @@ import { PRIVACY_POLICY_PATH } from "@/shared/constants/legal";
 import { useToast } from "@/shared/hooks/use-toast";
 import { resolveSafeInternalPath } from "@/shared/utils/safeRedirect";
 import { cn } from "@/shared/utils/cn";
-import { getAuthErrorMessage } from "@/core/auth/utils/authMessages";
 import { getPasswordRequirementsSummary } from "@/shared/validation/passwordPolicy";
 
 type CadastroLocationState = { redirectTo?: unknown } | null;
@@ -86,9 +86,14 @@ export default function CadastroPage() {
     usernameAvailability.result.identifier === username &&
     usernameAvailability.result.status !== "available";
   const canSubmit =
-    !loading && !googleLoading && !usernameBlocked && termsAccepted && turnstile.isReady;
+    !loading &&
+    !googleLoading &&
+    !usernameAvailability.isChecking &&
+    !usernameBlocked &&
+    termsAccepted &&
+    turnstile.isReady;
 
-  const handleSubmit = async () => {
+  const handleEmailSignup = () => {
     if (!turnstile.isReady) {
       toast({
         title: "Verificação necessária",
@@ -98,22 +103,9 @@ export default function CadastroPage() {
       return;
     }
 
-    const currentUsername = form.getValues("username").trim();
-    if (currentUsername) {
-      const availability = await usernameAvailability.check(currentUsername);
-      if (availability && availability.status !== "available") {
-        form.setError("username", {
-          type: "availability",
-          message: getUsernameAvailabilityCopy(
-            availability.status,
-            availability.message,
-          ),
-        });
-        return;
-      }
-    }
-
-    await submit();
+    // A disponibilidade mostrada aqui é feedback rápido. A verificação
+    // autoritativa ocorre novamente no SSOT useCadastroForm antes do signup.
+    void submit();
   };
 
   const handleGoogleSignup = async () => {
@@ -143,6 +135,7 @@ export default function CadastroPage() {
           name="description"
           content="Crie primeiro seu perfil pessoal. Cidade e bairro podem ser informados depois."
         />
+        <meta name="robots" content="noindex, nofollow" />
       </Helmet>
 
       <div className="min-h-[100dvh] bg-[#fffdfa] text-[#102f33] lg:bg-[radial-gradient(circle_at_16%_32%,rgba(216,234,224,.55),transparent_31%),radial-gradient(circle_at_70%_18%,rgba(255,236,185,.28),transparent_30%),#fffdfa]">
@@ -215,7 +208,7 @@ export default function CadastroPage() {
                 aria-busy={loading || googleLoading}
                 onSubmit={(event) => {
                   event.preventDefault();
-                  void handleSubmit();
+                  handleEmailSignup();
                 }}
               >
                 <FormField
@@ -275,7 +268,9 @@ export default function CadastroPage() {
                             className={cn(
                               "h-11 rounded-lg border-[#b9c5c6] bg-white pl-8 pr-3 text-[16px] shadow-none",
                               fieldState.error && "border-destructive",
-                              usernameAvailability.result?.status === "available" && "border-[#4d9b78]",
+                              usernameAvailability.result?.identifier === username &&
+                                usernameAvailability.result.status === "available" &&
+                                "border-[#4d9b78]",
                             )}
                           />
                         </div>
