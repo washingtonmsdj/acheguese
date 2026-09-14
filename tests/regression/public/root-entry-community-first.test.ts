@@ -46,6 +46,16 @@ describe("root community-first MVP entry", () => {
     expect(source).toContain(
       "Promise.all([getLaunchCity(), getLaunchResolvedTerritory()])",
     );
+    expect(source).toContain(
+      'await import("@/core/location/repositories/createLocationRepository")',
+    );
+    expect(source).toContain('await import("@/core/territorial")');
+    expect(source).not.toContain(
+      'import { createLocationRepository } from "@/core/location/repositories/createLocationRepository"',
+    );
+    expect(source).not.toContain(
+      'import { territorialGroupService } from "@/core/territorial"',
+    );
   });
 
   it("loads and decodes the large community preview image without blocking first render", () => {
@@ -53,6 +63,7 @@ describe("root community-first MVP entry", () => {
 
     expect(source).toContain('loading="lazy"');
     expect(source).toContain('decoding="async"');
+    expect(source).toContain('fetchPriority="low"');
   });
 
   it("keeps the launch preview asset inside a conservative entry-page budget", () => {
