@@ -86,51 +86,72 @@ describe("root community-first MVP entry", () => {
     expect(bytes).toBeLessThanOrEqual(450_000);
   });
 
-  it("renders the root entry without loading the full app route tree first", () => {
-    const source = read("src/app/routes/AppRoutes.tsx");
+  it("renders the normal root directly without loading the full app route tree", () => {
+    const runtime = read("src/app/components/AppRuntime.tsx");
+    const routes = read("src/app/routes/AppRoutes.tsx");
 
-    expect(source).toContain('<Route path="/" element={<RootRouteEntry />} />');
-    expect(source).toContain('const AppLayoutRoutes = lazy(() =>');
-    expect(source).not.toContain(
-      'import { AppLayoutRoutes } from "@/app/routes/sections/AppLayoutRoutes"',
-    );
+    expect(runtime).toContain('import RootRouteEntry from "@/app/routes/RootRouteEntry"');
+    expect(runtime).toContain("<RootRouteEntry />");
+    expect(runtime).not.toContain('import { AppRoutes }');
+
+    expect(routes).toContain('const RootRouteEntry = lazy(() => import("@/app/routes/RootRouteEntry"))');
+    expect(routes).toContain('const LaunchPausedPage = lazy(() => import("@/app/pages/LaunchPausedPage"))');
+    expect(routes).toContain('const AppLayoutRoutes = lazy(() =>');
   });
 
   it("keeps the public root outside Supabase session and multi-profile initialization", () => {
     const runtime = read("src/app/components/AppRuntime.tsx");
-    const shell = read("src/app/components/SessionProfileRuntimeShell.tsx");
+    const fullShell = read("src/app/components/FullAppRuntimeShell.tsx");
+    const sessionShell = read("src/app/components/SessionProfileRuntimeShell.tsx");
 
     expect(runtime).toContain('location.pathname === "/"');
-    expect(runtime).toContain("SessionProfileRuntimeShell");
-    expect(runtime).not.toContain(
-      'import { SessionProvider } from "@/core/session/providers/SessionProvider"',
-    );
-    expect(runtime).not.toContain("MultiProfileProvider,");
+    expect(runtime).toContain('import("@/app/components/FullAppRuntimeShell")');
+    expect(runtime).not.toContain("SessionProvider");
+    expect(runtime).not.toContain("MultiProfileProvider");
 
-    expect(shell).toContain("<SessionProvider>");
-    expect(shell).toContain("<MultiProfileProvider>");
-    expect(shell).toContain("<TerritoryModeInitializer />");
-    expect(shell).toContain("<ModuleContextSync />");
+    expect(fullShell).toContain("SessionProfileRuntimeShell");
+    expect(sessionShell).toContain("<SessionProvider>");
+    expect(sessionShell).toContain("<MultiProfileProvider>");
+    expect(sessionShell).toContain("<TerritoryModeInitializer />");
+    expect(sessionShell).toContain("<ModuleContextSync />");
   });
 
-  it("does not load auth redirect code on normal visits", () => {
+  it("does not load auth redirect code on normal root visits", () => {
     const runtime = read("src/app/components/AppRuntime.tsx");
+    const fullShell = read("src/app/components/FullAppRuntimeShell.tsx");
 
     expect(runtime).toContain("shouldCheckAuthRedirect");
     expect(runtime).toContain("location.hash.length > 1");
     expect(runtime).toContain('searchParams.has("code")');
-    expect(runtime).toContain(
+    expect(runtime).toContain("!shouldCheckAuthRedirect");
+    expect(fullShell).toContain(
       "shouldCheckAuthRedirect ? <AuthHashRedirect /> : null",
     );
   });
 
-  it("does not statically import MapLibre or its worker in the bootstrap entry", () => {
-    const source = read("src/main.tsx");
+  it("does not statically import MapLibre or warm its worker in the bootstrap entry", () => {
+    const main = read("src/main.tsx");
+    const fullShell = read("src/app/components/FullAppRuntimeShell.tsx");
 
-    expect(source).not.toContain('from "maplibre-gl"');
-    expect(source).not.toContain('from "maplibre-gl/dist/maplibre-gl-worker');
-    expect(source).toContain(
+    expect(main).not.toContain('from "maplibre-gl"');
+    expect(main).not.toContain('from "maplibre-gl/dist/maplibre-gl-worker');
+    expect(main).not.toContain("maplibreWorkerRuntime");
+    expect(fullShell).toContain(
       'import("@/core/maps/config/maplibreWorkerRuntime")',
     );
+  });
+
+  it("keeps one primary exploration action and an accessible mobile menu", () => {
+    const source = read("src/app/pages/TerritoryEntryPage.tsx");
+
+    expect(source).toContain('className="entry-community-preview"');
+    expect(source).not.toContain('to={LAUNCH_URLS.community} className="entry-community-preview"');
+    expect(source).toContain('className="entry-explore-link"');
+    expect(source).toContain('aria-controls="entry-mobile-menu-popover"');
+    expect(source).toContain('event.key === "Escape"');
+    expect(source).toContain('document.addEventListener("pointerdown"');
+    expect(source).toContain("mobileMenuButtonRef.current?.focus()");
+    expect(source).toContain('href="#main-content"');
+    expect(source).toContain('id="main-content"');
   });
 });
