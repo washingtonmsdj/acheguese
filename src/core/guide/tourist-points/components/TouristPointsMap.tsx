@@ -1,15 +1,15 @@
 /**
  * TouristPointsMap — Mapa interativo de pontos turísticos.
- * Engine: MapLibre GL JS (via SSOT de mapa).
+ * Engine: MapLibre GL JS via runtime canônico lazy.
  */
 
 import { useEffect, useRef } from 'react';
-import * as maplibregl from "maplibre-gl";
-import 'maplibre-gl/dist/maplibre-gl.css';
+import type { Map as MapLibreMap, Marker as MapLibreMarker } from "maplibre-gl";
 import { MapPin } from 'lucide-react';
 import type { TouristPoint } from '../types';
 import { CATEGORY_LABELS, CATEGORY_MARKER_ABBR } from '../types';
 import { DEFAULT_TILE_STYLE } from '@/core/maps/providers/MapProvider';
+import { loadMapLibreRuntime } from '@/core/maps/runtime/loadMapLibreRuntime';
 import { resolveSafeImageUrl } from '@/shared/utils/urlSafety';
 
 interface TouristPointsMapProps {
@@ -97,7 +97,7 @@ function createPopupContent(
   }
 
   if (point.visiting_hours) {
-    appendText(details, 'mt-1 text-xs text-muted-foreground', `Horario: ${point.visiting_hours}`);
+    appendText(details, 'mt-1 text-xs text-muted-foreground', `Horário: ${point.visiting_hours}`);
   }
 
   return root;
@@ -105,69 +105,76 @@ function createPopupContent(
 
 export function TouristPointsMap({ points, selectedId, onSelect, className = '' }: TouristPointsMapProps) {
   const containerRef = useRef<HTMLDivElement>(null);
-  const mapRef       = useRef<maplibregl.Map | null>(null);
-  const markersRef   = useRef<Map<string, maplibregl.Marker>>(new Map());
+  const mapRef = useRef<MapLibreMap | null>(null);
+  const markersRef = useRef<Map<string, MapLibreMarker>>(new Map());
 
-  const withCoords = points.filter(p => p.latitude && p.longitude);
+  const withCoords = points.filter((point) => point.latitude && point.longitude);
 
   useEffect(() => {
     if (!containerRef.current || mapRef.current || withCoords.length === 0) return;
+    let disposed = false;
 
-    const map = new maplibregl.Map({
-      container: containerRef.current,
-      style: DEFAULT_TILE_STYLE.styleUrl,
-      center: [-38.5014, -12.9714],
-      zoom: 13,
-      attributionControl: false,
-    });
+    void (async () => {
+      const maplibregl = await loadMapLibreRuntime();
+      if (disposed || !containerRef.current || mapRef.current) return;
 
-    map.addControl(new maplibregl.AttributionControl({ compact: true }), 'bottom-left');
-    map.addControl(new maplibregl.NavigationControl({ showCompass: false }), 'top-right');
-
-    map.on('load', () => {
-      withCoords.forEach(point => {
-        const markerAbbr = CATEGORY_MARKER_ABBR[point.category] ?? '?';
-        const categoryLabel = CATEGORY_LABELS[point.category] ?? point.category;
-        const neighborhoodName = point.location?.name ?? point.neighborhood;
-
-        const el = createMarkerElement(markerAbbr, point.is_featured);
-
-        el.addEventListener('click', () => onSelect?.(point));
-
-        const popup = new maplibregl.Popup({ offset: 20, closeButton: false, maxWidth: '15rem' })
-          .setDOMContent(createPopupContent(point, markerAbbr, categoryLabel, neighborhoodName));
-
-        const marker = new maplibregl.Marker({ element: el, anchor: 'bottom' })
-          .setLngLat([point.longitude!, point.latitude!])
-          .setPopup(popup)
-          .addTo(map);
-
-        markersRef.current.set(point.id, marker);
+      const map = new maplibregl.Map({
+        container: containerRef.current,
+        style: DEFAULT_TILE_STYLE.styleUrl,
+        center: [-38.5014, -12.9714],
+        zoom: 13,
+        attributionControl: false,
       });
 
-      // Ajustar câmera para cobrir todos os pontos
-      if (withCoords.length === 1) {
-        map.flyTo({ center: [withCoords[0].longitude!, withCoords[0].latitude!], zoom: 15 });
-      } else {
-        const lngs = withCoords.map(p => p.longitude!);
-        const lats = withCoords.map(p => p.latitude!);
-        map.fitBounds(
-          [[Math.min(...lngs), Math.min(...lats)], [Math.max(...lngs), Math.max(...lats)]],
-          { padding: 40 }
-        );
-      }
-    });
+      map.addControl(new maplibregl.AttributionControl({ compact: true }), 'bottom-left');
+      map.addControl(new maplibregl.NavigationControl({ showCompass: false }), 'top-right');
 
-    mapRef.current = map;
+      map.on('load', () => {
+        if (disposed) return;
+        withCoords.forEach((point) => {
+          const markerAbbr = CATEGORY_MARKER_ABBR[point.category] ?? '?';
+          const categoryLabel = CATEGORY_LABELS[point.category] ?? point.category;
+          const neighborhoodName = point.location?.name ?? point.neighborhood;
+          const el = createMarkerElement(markerAbbr, point.is_featured);
+
+          el.addEventListener('click', () => onSelect?.(point));
+
+          const popup = new maplibregl.Popup({ offset: 20, closeButton: false, maxWidth: '15rem' })
+            .setDOMContent(createPopupContent(point, markerAbbr, categoryLabel, neighborhoodName));
+
+          const marker = new maplibregl.Marker({ element: el, anchor: 'bottom' })
+            .setLngLat([point.longitude!, point.latitude!])
+            .setPopup(popup)
+            .addTo(map);
+
+          markersRef.current.set(point.id, marker);
+        });
+
+        if (withCoords.length === 1) {
+          map.flyTo({ center: [withCoords[0].longitude!, withCoords[0].latitude!], zoom: 15 });
+        } else {
+          const lngs = withCoords.map((point) => point.longitude!);
+          const lats = withCoords.map((point) => point.latitude!);
+          map.fitBounds(
+            [[Math.min(...lngs), Math.min(...lats)], [Math.max(...lngs), Math.max(...lats)]],
+            { padding: 40 },
+          );
+        }
+      });
+
+      mapRef.current = map;
+    })();
+
     const markers = markersRef.current;
     return () => {
+      disposed = true;
+      markers.forEach((marker) => marker.remove());
       markers.clear();
-      map.remove();
+      mapRef.current?.remove();
       mapRef.current = null;
     };
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
-  // Abrir popup do ponto selecionado externamente
   useEffect(() => {
     if (!selectedId) return;
     markersRef.current.get(selectedId)?.togglePopup();
@@ -184,5 +191,3 @@ export function TouristPointsMap({ points, selectedId, onSelect, className = '' 
 
   return <div ref={containerRef} className={`rounded-2xl border border-border z-0 ${className}`} style={{ minHeight: '100%' }} />;
 }
-
-
