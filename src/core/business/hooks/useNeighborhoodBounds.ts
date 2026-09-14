@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from 'react';
 
 import { boundaryService } from '@/core/geospatial';
 import { NEIGHBORHOOD_COLORS } from '@/core/maps/providers/MapProvider';
+import { MAP_DEFAULT_COORDINATES } from '@/shared/config/mapDefaults';
 
 interface UseNeighborhoodBoundsOptions {
   neighborhood?: string;
@@ -28,6 +29,11 @@ interface UseNeighborhoodBoundsResult {
   error: Error | null;
 }
 
+const DEFAULT_BOUNDS_CENTER: [number, number] = [
+  MAP_DEFAULT_COORDINATES.latitude,
+  MAP_DEFAULT_COORDINATES.longitude,
+];
+
 export function useNeighborhoodBounds({
   neighborhood,
   city,
@@ -38,7 +44,7 @@ export function useNeighborhoodBounds({
 }: UseNeighborhoodBoundsOptions): UseNeighborhoodBoundsResult {
   const [bounds, setBounds] = useState<[number, number][] | null>(null);
   const [namedBounds, setNamedBounds] = useState<NamedBounds[]>([]);
-  const [center, setCenter] = useState<[number, number]>([-12.975, -38.476]);
+  const [center, setCenter] = useState<[number, number]>(DEFAULT_BOUNDS_CENTER);
   const [postalCodeBounds, setPostalCodeBounds] = useState<{ center: [number, number]; radius: number } | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<Error | null>(null);
