@@ -10,6 +10,13 @@ import { AuthFooter } from "@/app/components/auth/AuthFooter";
 import { AuthTurnstileGate } from "@/app/components/auth/AuthTurnstileGate";
 import { PasswordInput } from "@/app/components/auth/PasswordInput";
 import { useAuthTurnstile } from "@/app/components/auth/useAuthTurnstile";
+import {
+  AUTH_PATHS,
+  AUTH_QUERY_KEYS,
+  AUTH_QUERY_VALUES,
+  buildPasswordResetRequestPath,
+  buildSignupPath,
+} from "@/core/auth/constants/authFlow";
 import { useAuth } from "@/core/auth/hooks/useAuth";
 import { parseAuthIdentifier } from "@/core/auth/utils/authIdentifier";
 import { getAuthErrorMessage } from "@/core/auth/utils/authMessages";
@@ -55,13 +62,17 @@ export default function LoginPage() {
   const { toast } = useToast();
   const turnstile = useAuthTurnstile();
 
-  const isEmailConfirmed = searchParams.get("confirmed") === "1";
-  const isPasswordReset = searchParams.get("passwordReset") === "1";
+  const isEmailConfirmed =
+    searchParams.get(AUTH_QUERY_KEYS.confirmed) === AUTH_QUERY_VALUES.enabled;
+  const isPasswordReset =
+    searchParams.get(AUTH_QUERY_KEYS.passwordReset) === AUTH_QUERY_VALUES.enabled;
 
   const redirectTo = useMemo(() => {
     const stateRedirect = (location.state as LoginLocationState)?.redirectTo;
-    const queryRedirect = searchParams.get("redirect");
-    const pendingSignupRedirect = isEmailConfirmed ? getPendingSignupRedirect() : null;
+    const queryRedirect = searchParams.get(AUTH_QUERY_KEYS.redirect);
+    const pendingSignupRedirect = isEmailConfirmed
+      ? getPendingSignupRedirect()
+      : null;
     return resolveSafeInternalPath(
       stateRedirect ?? queryRedirect ?? pendingSignupRedirect,
       "/",
@@ -97,11 +108,15 @@ export default function LoginPage() {
   useEffect(() => {
     if (!user) return;
 
+    // Confirmação por e-mail ainda precisa do redirect de signup no primeiro
+    // acesso; qualquer contexto OAuth antigo, porém, já pode ser descartado.
     if (isEmailConfirmed) {
-      navigate("/cadastro/primeiro-acesso", { replace: true });
+      clearPendingAuthReturn();
+      navigate(AUTH_PATHS.firstAccess, { replace: true });
       return;
     }
 
+    clearPendingAuthReturn();
     clearPendingSignupContext();
     navigate(redirectTo, { replace: true });
   }, [isEmailConfirmed, navigate, redirectTo, user]);
@@ -133,8 +148,15 @@ export default function LoginPage() {
         "E-mail, usuário ou senha incorretos.",
       );
       setError("root.serverError", { type: "server", message });
-      setError("password", { type: "server", message: "Confira seus dados e tente novamente." });
-      toast({ title: "Não foi possível entrar", description: message, variant: "destructive" });
+      setError("password", {
+        type: "server",
+        message: "Confira seus dados e tente novamente.",
+      });
+      toast({
+        title: "Não foi possível entrar",
+        description: message,
+        variant: "destructive",
+      });
       setPendingAction(null);
     }
   };
@@ -156,10 +178,9 @@ export default function LoginPage() {
   };
 
   const handleForgotPassword = () => {
-    const email = parsedIdentifier?.kind === "email" ? parsedIdentifier.value : "";
-    const query = new URLSearchParams({ mode: "request" });
-    if (email) query.set("email", email);
-    navigate(`/reset-password?${query.toString()}`);
+    const email =
+      parsedIdentifier?.kind === "email" ? parsedIdentifier.value : null;
+    navigate(buildPasswordResetRequestPath(email));
   };
 
   const isBusy = pendingAction !== null;
@@ -177,7 +198,10 @@ export default function LoginPage() {
       </Helmet>
 
       <div className="min-h-[100dvh] bg-[#fffdfa] text-[#102f33] lg:bg-[radial-gradient(circle_at_16%_32%,rgba(216,234,224,.55),transparent_31%),radial-gradient(circle_at_70%_18%,rgba(255,236,185,.28),transparent_30%),#fffdfa]">
-        <AuthBrandHeader secondaryHref="/cadastro" secondaryLabel="Criar conta" />
+        <AuthBrandHeader
+          secondaryHref={AUTH_PATHS.signup}
+          secondaryLabel="Criar conta"
+        />
 
         <main
           id="main-content"
@@ -214,7 +238,9 @@ export default function LoginPage() {
               <h2 className="font-heading text-[24px] font-extrabold tracking-[-0.035em] text-[#102f33]">
                 Entre na sua conta
               </h2>
-              <p className="mt-1 text-sm text-[#607477]">Depois de entrar, você volta ao que estava fazendo.</p>
+              <p className="mt-1 text-sm text-[#607477]">
+                Depois de entrar, você volta ao que estava fazendo.
+              </p>
             </div>
 
             {hasReturnContext ? (
@@ -224,17 +250,24 @@ export default function LoginPage() {
                 </span>
                 <div className="min-w-0 flex-1">
                   <p className="text-[11px] text-[#607477]">Você voltará para</p>
-                  <p className="truncate text-[13px] font-bold text-[#18383c]">{returnContext.label}</p>
+                  <p className="truncate text-[13px] font-bold text-[#18383c]">
+                    {returnContext.label}
+                  </p>
                 </div>
                 <span aria-hidden="true" className="text-xl">›</span>
               </div>
             ) : null}
 
-            {(isEmailConfirmed || isPasswordReset) ? (
-              <div role="status" className="mt-4 flex items-start gap-3 rounded-xl bg-[#eaf7ef] px-3.5 py-3 text-[#155c43]">
+            {isEmailConfirmed || isPasswordReset ? (
+              <div
+                role="status"
+                className="mt-4 flex items-start gap-3 rounded-xl bg-[#eaf7ef] px-3.5 py-3 text-[#155c43]"
+              >
                 <AuthConceptIcon name="check" />
                 <p className="text-[12px] leading-4">
-                  <strong>{isEmailConfirmed ? "E-mail confirmado." : "Senha atualizada."}</strong>{" "}
+                  <strong>
+                    {isEmailConfirmed ? "E-mail confirmado." : "Senha atualizada."}
+                  </strong>{" "}
                   Entre para continuar.
                 </p>
               </div>
@@ -247,13 +280,19 @@ export default function LoginPage() {
               aria-busy={isBusy}
             >
               {serverError ? (
-                <div role="alert" className="rounded-lg border border-destructive/30 bg-destructive/10 p-3 text-sm text-destructive">
+                <div
+                  role="alert"
+                  className="rounded-lg border border-destructive/30 bg-destructive/10 p-3 text-sm text-destructive"
+                >
                   {serverError}
                 </div>
               ) : null}
 
               <div className="space-y-1.5">
-                <Label htmlFor="login-identifier" className="text-[14px] font-semibold text-[#15383c]">
+                <Label
+                  htmlFor="login-identifier"
+                  className="text-[14px] font-semibold text-[#15383c]"
+                >
                   E-mail ou @usuário
                 </Label>
                 <Input
@@ -267,24 +306,39 @@ export default function LoginPage() {
                     "h-11 rounded-lg border-[#b9c5c6] bg-white px-3 text-[16px] shadow-none",
                     errors.identifier && "border-destructive",
                   )}
-                  aria-describedby={errors.identifier ? "login-identifier-error" : undefined}
+                  aria-describedby={
+                    errors.identifier ? "login-identifier-error" : undefined
+                  }
                   {...register("identifier")}
                 />
-                <InlineFieldError id="login-identifier-error" message={errors.identifier?.message} />
+                <InlineFieldError
+                  id="login-identifier-error"
+                  message={errors.identifier?.message}
+                />
               </div>
 
               <div className="space-y-1.5">
-                <Label htmlFor="login-password" className="text-[14px] font-semibold text-[#15383c]">Senha</Label>
+                <Label
+                  htmlFor="login-password"
+                  className="text-[14px] font-semibold text-[#15383c]"
+                >
+                  Senha
+                </Label>
                 <PasswordInput
                   id="login-password"
                   autoComplete="current-password"
                   disabled={isBusy}
                   invalid={Boolean(errors.password)}
-                  aria-describedby={errors.password ? "login-password-error" : undefined}
+                  aria-describedby={
+                    errors.password ? "login-password-error" : undefined
+                  }
                   className="h-11 rounded-lg border-[#b9c5c6] bg-white text-[16px] shadow-none"
                   {...register("password")}
                 />
-                <InlineFieldError id="login-password-error" message={errors.password?.message} />
+                <InlineFieldError
+                  id="login-password-error"
+                  message={errors.password?.message}
+                />
                 <button
                   type="button"
                   onClick={handleForgotPassword}
@@ -326,7 +380,9 @@ export default function LoginPage() {
                   className="flex h-11 w-full items-center justify-center gap-3 rounded-[9px] border border-[#8da1a3] bg-white text-[14px] font-bold text-[#17363a] transition-colors hover:bg-[#f7f8f5] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#0b5b59]/35 disabled:opacity-55"
                 >
                   <AuthConceptIcon name="google" />
-                  {pendingAction === "google" ? "Abrindo Google…" : "Continuar com Google"}
+                  {pendingAction === "google"
+                    ? "Abrindo Google…"
+                    : "Continuar com Google"}
                 </button>
               </>
             ) : null}
@@ -334,7 +390,7 @@ export default function LoginPage() {
             <p className="mt-4 text-center text-[12px] text-[#244448]">
               Ainda não tem conta?{" "}
               <Link
-                to={redirectTo === "/" ? "/cadastro" : `/cadastro?redirect=${encodeURIComponent(redirectTo)}`}
+                to={buildSignupPath(redirectTo)}
                 className="font-medium underline underline-offset-2"
               >
                 Criar minha conta
@@ -355,18 +411,37 @@ export default function LoginPage() {
                 <AuthConceptIcon name="shield" />
               </span>
               <div>
-                <p className="text-[11px] font-semibold lg:hidden">Verificação de segurança</p>
+                <p className="text-[11px] font-semibold lg:hidden">
+                  Verificação de segurança
+                </p>
                 <p className="text-[10.5px] leading-4 text-[#607477]">
-                  <span className="lg:hidden">Seus dados são protegidos e criptografados.</span>
-                  <span className="hidden lg:inline">Verificação de segurança quando solicitada.</span>
+                  <span className="lg:hidden">
+                    Seus dados são protegidos e criptografados.
+                  </span>
+                  <span className="hidden lg:inline">
+                    Verificação de segurança quando solicitada.
+                  </span>
                 </p>
               </div>
             </div>
 
-            <nav aria-label="Links legais" className="mt-3 hidden items-center justify-center gap-2 text-[11px] text-[#0b4e52] lg:flex">
-              <Link to={TERMS_OF_SERVICE_PATH} className="underline underline-offset-2">Termos</Link>
+            <nav
+              aria-label="Links legais"
+              className="mt-3 hidden items-center justify-center gap-2 text-[11px] text-[#0b4e52] lg:flex"
+            >
+              <Link
+                to={TERMS_OF_SERVICE_PATH}
+                className="underline underline-offset-2"
+              >
+                Termos
+              </Link>
               <span aria-hidden="true">·</span>
-              <Link to={PRIVACY_POLICY_PATH} className="underline underline-offset-2">Privacidade</Link>
+              <Link
+                to={PRIVACY_POLICY_PATH}
+                className="underline underline-offset-2"
+              >
+                Privacidade
+              </Link>
             </nav>
           </section>
         </main>
