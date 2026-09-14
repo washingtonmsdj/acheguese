@@ -35,11 +35,16 @@ function RuntimeRouteTree() {
   const location = useLocation();
   const isLeanPublicRoot =
     !PRELAUNCH_LOCKDOWN_ENABLED && location.pathname === "/";
+  const searchParams = new URLSearchParams(location.search);
+  const shouldCheckAuthRedirect =
+    location.hash.length > 1 ||
+    searchParams.has("code") ||
+    searchParams.get("mode") === "recovery";
 
   return (
     <>
       <Suspense fallback={null}>
-        <AuthHashRedirect />
+        {shouldCheckAuthRedirect ? <AuthHashRedirect /> : null}
         <GlobalOverlays />
       </Suspense>
 
