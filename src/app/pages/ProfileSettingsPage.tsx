@@ -1,17 +1,18 @@
 import { useEffect, useMemo, useState } from "react";
 import { Helmet } from "react-helmet-async";
-import { ArrowLeft, Link2, Settings2, Shield, Users } from "lucide-react";
+import { Link2, Loader2, Settings2, Shield, Users } from "lucide-react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 
-import {
-  canProfileHaveMembers,
-  getProfileTypeLabel,
-} from "@/core/profiles/utils/profileDomainRules";
 import { PrivacySettings } from "@/core/profiles/components/PrivacySettings";
 import { ProfileLinksManager } from "@/core/profiles/components/ProfileLinksManager";
 import { ProfileMembersManagerImproved } from "@/core/profiles/components/ProfileMembersManagerImproved";
 import { useActiveProfile } from "@/core/profiles/hooks/useActiveProfile";
-import { useAppUrls } from "@/core/routing/hooks/useAppUrls";
+import {
+  canProfileHaveMembers,
+  getProfileTypeLabel,
+} from "@/core/profiles/utils/profileDomainRules";
+import { ACCOUNT_PATHS } from "@/core/routing/config/account";
+import { AccountSettingsShell } from "@/modules/profile/components/AccountSettingsShell";
 import { Badge } from "@/shared/components/ui/badge";
 import { Button } from "@/shared/components/ui/button";
 import {
@@ -36,7 +37,7 @@ const TAB_META: Record<
   },
   links: {
     eyebrow: "Vínculos da identidade",
-    title: "Gerencie conexões e relações operacionais",
+    title: "Gerencie conexões e relações",
     description:
       "Perfis relacionados, ligações da conta e contexto da identidade ativa.",
     icon: Link2,
@@ -60,7 +61,6 @@ function normalizeTab(value: string | null): ProfileSettingsTab {
 
 export default function ProfileSettingsPage() {
   const navigate = useNavigate();
-  const appUrls = useAppUrls();
   const { activeProfile, loading } = useActiveProfile();
   const [searchParams, setSearchParams] = useSearchParams();
   const [activeTab, setActiveTab] = useState<ProfileSettingsTab>(
@@ -99,27 +99,44 @@ export default function ProfileSettingsPage() {
 
   if (loading) {
     return (
-      <div className="flex min-h-[60vh] items-center justify-center">
-        <div className="h-8 w-8 animate-spin rounded-full border-2 border-primary border-t-transparent" />
-      </div>
+      <AccountSettingsShell
+        title="Configurações da identidade"
+        description="Privacidade, vínculos e permissões do perfil em uso."
+        backTo={ACCOUNT_PATHS.preferences}
+      >
+        <section className="flex min-h-40 items-center justify-center rounded-2xl border border-territory-border bg-territory-surface p-5">
+          <div className="text-center" role="status">
+            <Loader2 className="mx-auto h-7 w-7 animate-spin text-territory-brand" aria-hidden="true" />
+            <p className="mt-2 text-sm text-territory-muted">Carregando identidade...</p>
+          </div>
+        </section>
+      </AccountSettingsShell>
     );
   }
 
   if (!activeProfile) {
     return (
-      <div className="mx-auto flex min-h-[60vh] w-full max-w-xl flex-col items-center justify-center gap-3 px-4 text-center">
-        <p className="text-sm text-muted-foreground">
-          Nenhum perfil ativo encontrado.
-        </p>
-        <Button
-          variant="outline"
-          size="sm"
-          onClick={() => navigate(appUrls.profile.home)}
-          type="button"
-        >
-          Voltar para a conta
-        </Button>
-      </div>
+      <AccountSettingsShell
+        title="Configurações da identidade"
+        description="Privacidade, vínculos e permissões do perfil em uso."
+        backTo={ACCOUNT_PATHS.preferences}
+      >
+        <section className="rounded-2xl border border-territory-border bg-territory-surface p-5 text-center sm:p-6">
+          <Users className="mx-auto h-8 w-8 text-territory-brand" aria-hidden="true" />
+          <h2 className="mt-3 font-heading text-base font-bold text-territory-ink">Nenhum perfil ativo encontrado</h2>
+          <p className="mt-1 text-sm leading-5 text-territory-muted">
+            Escolha uma identidade antes de alterar privacidade, vínculos ou membros.
+          </p>
+          <Button
+            type="button"
+            variant="outline"
+            className="mt-4 min-h-11"
+            onClick={() => navigate(ACCOUNT_PATHS.profiles)}
+          >
+            Abrir Meus perfis
+          </Button>
+        </section>
+      </AccountSettingsShell>
     );
   }
 
@@ -129,164 +146,118 @@ export default function ProfileSettingsPage() {
   return (
     <>
       <Helmet>
-        <title>Configurações da identidade</title>
+        <title>Configurações da identidade | Achegue-se</title>
       </Helmet>
 
-      <div className="territory-vivo min-h-[100dvh] bg-territory-canvas text-territory-ink">
-        <main className="mx-auto w-full max-w-[1180px] px-3 pb-24 pt-4 sm:px-6 sm:pb-10 sm:pt-6 lg:px-8">
-          <div className="sticky top-0 z-20 -mx-3 mb-5 border-b border-territory-border bg-territory-canvas/95 px-3 py-3 backdrop-blur sm:static sm:mx-0 sm:mb-6 sm:border-0 sm:bg-transparent sm:px-0 sm:py-0">
-            <div className="flex items-start gap-3">
-              <Button
-                variant="ghost"
-                size="icon"
-                className="shrink-0 rounded-full"
-                onClick={() => navigate(appUrls.settings)}
-                type="button"
-              >
-                <ArrowLeft className="h-5 w-5" />
-              </Button>
+      <AccountSettingsShell
+        title="Configurações da identidade"
+        description="Privacidade, vínculos e permissões do perfil que está em uso."
+        backTo={ACCOUNT_PATHS.preferences}
+      >
+        <section className="rounded-2xl border border-territory-border bg-territory-surface p-4 sm:p-5">
+          <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+            <div className="flex min-w-0 items-start gap-3">
+              <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-territory-brand/10 text-territory-brand">
+                <CurrentIcon className="h-5 w-5" aria-hidden="true" />
+              </span>
               <div className="min-w-0">
-                <p className="text-xs font-semibold uppercase tracking-[0.16em] text-muted-foreground">
-                  Identidade ativa
+                <p className="text-xs font-semibold text-territory-brand">{currentMeta.eyebrow}</p>
+                <h2 className="mt-1 font-heading text-lg font-bold tracking-[-0.025em] text-territory-ink sm:text-xl">
+                  {currentMeta.title}
+                </h2>
+                <p className="mt-1 max-w-2xl text-sm leading-5 text-territory-muted">
+                  {currentMeta.description}
                 </p>
-                <h1 className="truncate text-xl font-bold tracking-tight text-foreground sm:text-2xl">
-                  Configurações da identidade
-                </h1>
-                <p className="mt-1 text-xs text-muted-foreground sm:text-sm">
-                  Privacidade, vínculos e permissões do perfil que está em uso.
-                </p>
+              </div>
+            </div>
+
+            <div className="rounded-xl border border-territory-border bg-territory-raised px-3 py-3 sm:min-w-[230px]">
+              <p className="truncate text-sm font-semibold text-territory-ink">
+                {activeProfile.display_name}
+              </p>
+              <div className="mt-2 flex flex-wrap gap-2">
+                <Badge variant="secondary">{getProfileTypeLabel(activeProfile)}</Badge>
+                <Badge variant="outline">
+                  {activeProfile.handle ? `@${activeProfile.handle}` : "Sem @ público"}
+                </Badge>
               </div>
             </div>
           </div>
+        </section>
 
-          <section className="rounded-territory-highlight border border-territory-border bg-territory-surface p-5 sm:p-6">
-            <div className="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
-              <div className="min-w-0 space-y-2">
-                <p className="text-[0.72rem] font-semibold uppercase tracking-[0.18em] text-primary/90">
-                  {currentMeta.eyebrow}
-                </p>
-                <h2 className="text-2xl font-semibold tracking-tight text-foreground sm:text-[2rem]">
-                  {currentMeta.title}
-                </h2>
-                <p className="max-w-2xl text-sm leading-6 text-muted-foreground sm:text-[0.95rem]">
-                  {currentMeta.description}
-                </p>
-                <div className="flex flex-wrap gap-2 pt-1">
-                  <Badge variant="secondary">
-                    {getProfileTypeLabel(activeProfile)}
-                  </Badge>
-                  <Badge variant="outline">@{activeProfile.handle}</Badge>
-                </div>
-              </div>
-
-              <div className="rounded-2xl border border-border/70 bg-background/70 p-4 sm:min-w-[280px]">
-                <div className="flex items-start gap-3">
-                  <div className="rounded-2xl bg-primary/10 p-2.5 text-primary">
-                    <CurrentIcon className="h-5 w-5" />
-                  </div>
-                  <div className="min-w-0">
-                    <p className="text-sm font-semibold text-foreground">
-                      {activeProfile.display_name}
-                    </p>
-                    <p className="mt-1 text-xs leading-5 text-muted-foreground">
-                      Ajustes aplicados à identidade atual. Preferências de
-                      conta ficam em{" "}
-                      <button
-                        type="button"
-                        className="font-medium text-primary underline-offset-4 hover:underline"
-                        onClick={() => navigate(appUrls.settings)}
-                      >
-                        /conta/preferencias
-                      </button>
-                      .
-                    </p>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </section>
-
-          <Tabs
-            value={activeTab}
-            onValueChange={handleTabChange}
-            className="mt-5"
-          >
-            <TabsList className="flex h-auto w-full gap-2 overflow-x-auto rounded-territory border border-territory-border bg-territory-surface p-2">
-              <TabsTrigger
-                value="privacy"
-                className="min-w-fit gap-2 rounded-2xl px-4 py-2.5"
-              >
-                <Shield className="h-4 w-4" />
-                Privacidade
-              </TabsTrigger>
-              <TabsTrigger
-                value="links"
-                className="min-w-fit gap-2 rounded-2xl px-4 py-2.5"
-              >
-                <Link2 className="h-4 w-4" />
-                Vinculos Vínculos
-              </TabsTrigger>
-              {canHaveMembers ? (
-                <TabsTrigger
-                  value="members"
-                  className="min-w-fit gap-2 rounded-2xl px-4 py-2.5"
-                >
-                  <Users className="h-4 w-4" />
-                  Membros
-                </TabsTrigger>
-              ) : null}
-            </TabsList>
-
-            <TabsContent value="privacy" className="mt-5">
-              <div className="rounded-territory-highlight border border-territory-border bg-territory-surface p-4 sm:p-6">
-                <PrivacySettings profile={activeProfile} onUpdate={() => {}} />
-              </div>
-            </TabsContent>
-
-            <TabsContent value="links" className="mt-5">
-              <div className="rounded-territory-highlight border border-territory-border bg-territory-surface p-4 sm:p-6">
-                <ProfileLinksManager profileId={activeProfile.id} />
-              </div>
-            </TabsContent>
-
+        <Tabs value={activeTab} onValueChange={handleTabChange} className="mt-4">
+          <TabsList className="flex h-auto w-full gap-2 overflow-x-auto rounded-2xl border border-territory-border bg-territory-surface p-2">
+            <TabsTrigger
+              value="privacy"
+              className="min-h-11 min-w-fit gap-2 rounded-xl px-4"
+            >
+              <Shield className="h-4 w-4" aria-hidden="true" />
+              Privacidade
+            </TabsTrigger>
+            <TabsTrigger
+              value="links"
+              className="min-h-11 min-w-fit gap-2 rounded-xl px-4"
+            >
+              <Link2 className="h-4 w-4" aria-hidden="true" />
+              Vínculos
+            </TabsTrigger>
             {canHaveMembers ? (
-              <TabsContent value="members" className="mt-5">
-                <div className="rounded-territory-highlight border border-territory-border bg-territory-surface p-4 sm:p-6">
-                  <ProfileMembersManagerImproved
-                    profileId={activeProfile.id}
-                    profileType={
-                      activeProfile.profile_type as "business" | "professional"
-                    }
-                  />
-                </div>
-              </TabsContent>
-            ) : null}
-          </Tabs>
-
-          <section className="mt-5 rounded-territory-highlight border border-territory-border bg-territory-raised p-4 sm:p-5">
-            <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-              <div>
-                <p className="text-sm font-semibold text-foreground">
-                  Voltar para ajustes da conta
-                </p>
-                <p className="text-sm leading-6 text-muted-foreground">
-                  Notificações, privacidade LGPD e configurações gerais ficam
-                  separadas da identidade.
-                </p>
-              </div>
-              <Button
-                variant="outline"
-                className="w-full justify-center sm:w-auto"
-                onClick={() => navigate(appUrls.settings)}
-                type="button"
+              <TabsTrigger
+                value="members"
+                className="min-h-11 min-w-fit gap-2 rounded-xl px-4"
               >
-                <Settings2 className="mr-2 h-4 w-4" />
-                Abrir preferências
-              </Button>
+                <Users className="h-4 w-4" aria-hidden="true" />
+                Membros
+              </TabsTrigger>
+            ) : null}
+          </TabsList>
+
+          <TabsContent value="privacy" className="mt-4">
+            <div className="rounded-2xl border border-territory-border bg-territory-surface p-4 sm:p-5">
+              <PrivacySettings profile={activeProfile} onUpdate={() => {}} />
             </div>
-          </section>
-        </main>
-      </div>
+          </TabsContent>
+
+          <TabsContent value="links" className="mt-4">
+            <div className="rounded-2xl border border-territory-border bg-territory-surface p-4 sm:p-5">
+              <ProfileLinksManager profileId={activeProfile.id} />
+            </div>
+          </TabsContent>
+
+          {canHaveMembers ? (
+            <TabsContent value="members" className="mt-4">
+              <div className="rounded-2xl border border-territory-border bg-territory-surface p-4 sm:p-5">
+                <ProfileMembersManagerImproved
+                  profileId={activeProfile.id}
+                  profileType={
+                    activeProfile.profile_type as "business" | "professional"
+                  }
+                />
+              </div>
+            </TabsContent>
+          ) : null}
+        </Tabs>
+
+        <section className="mt-4 rounded-2xl border border-territory-border bg-territory-raised p-4 sm:p-5">
+          <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+            <div>
+              <p className="text-sm font-semibold text-territory-ink">Ajustes gerais da conta</p>
+              <p className="mt-1 text-sm leading-5 text-territory-muted">
+                Notificações, privacidade de dados e acessibilidade ficam nas preferências gerais da conta.
+              </p>
+            </div>
+            <Button
+              type="button"
+              variant="outline"
+              className="min-h-11 w-full justify-center sm:w-auto"
+              onClick={() => navigate(ACCOUNT_PATHS.preferences)}
+            >
+              <Settings2 className="mr-2 h-4 w-4" aria-hidden="true" />
+              Abrir preferências
+            </Button>
+          </div>
+        </section>
+      </AccountSettingsShell>
     </>
   );
 }
