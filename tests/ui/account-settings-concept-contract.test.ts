@@ -8,6 +8,10 @@ const read = (path: string) => readFileSync(resolve(root, path), "utf8");
 const shell = read("src/modules/profile/components/AccountSettingsShell.tsx");
 const overview = read("src/modules/profile/pages/ContaHubLayout.tsx");
 const security = read("src/modules/profile/pages/ContaSegurancaPage.tsx");
+const preferences = read("src/modules/profile/pages/ContaPreferenciasPage.tsx");
+const accessibilityProvider = read(
+  "src/shared/components/accessibility/AccessibilityProvider.tsx",
+);
 const auth = read("src/core/auth/services/AuthService.ts");
 const identities = read("src/core/auth/services/AuthIdentityService.ts");
 const notifications = read("src/app/pages/NotificationPreferencesPage.tsx");
@@ -24,6 +28,7 @@ describe("account settings concept contract", () => {
       "Notificações",
       "Privacidade e dados",
       "Preferências",
+      "Acessibilidade",
       "Meus perfis",
     ]) {
       expect(shell).toContain(label);
@@ -32,6 +37,8 @@ describe("account settings concept contract", () => {
     expect(shell).toContain("showBack");
     expect(shell).toContain('search: "?section=profiles"');
     expect(shell).toContain('excludeSearch: "?section=profiles"');
+    expect(shell).toContain('hash: "#acessibilidade"');
+    expect(shell).toContain('excludeHash: "#acessibilidade"');
   });
 
   it("keeps live overview aligned with the concept without dropping real features", () => {
@@ -63,6 +70,18 @@ describe("account settings concept contract", () => {
     expect(auth).toContain("static async updateEmail");
     expect(identities).toContain("supabase.auth.getUser()");
     expect(identities).toContain('providers.includes("google")');
+  });
+
+  it("keeps accessibility preferences on the canonical runtime owner", () => {
+    expect(preferences).toContain('location.hash === "#acessibilidade"');
+    expect(preferences).toContain("useAccessibility()");
+    expect(preferences).toContain("isHighContrast");
+    expect(preferences).toContain("setFontSize");
+    expect(preferences).toContain('window.matchMedia("(prefers-reduced-motion: reduce)")');
+    expect(preferences).not.toContain("localStorage");
+    expect(accessibilityProvider).toContain("persistAccessibilityHighContrast");
+    expect(accessibilityProvider).toContain("persistAccessibilityFontSize");
+    expect(accessibilityProvider).toContain("applyAccessibilityPreferences");
   });
 
   it("preserves canonical notification and privacy service writes", () => {
