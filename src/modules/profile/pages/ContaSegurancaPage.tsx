@@ -28,7 +28,10 @@ import { Button } from "@/shared/components/ui/button";
 import { Input } from "@/shared/components/ui/input";
 import { Label } from "@/shared/components/ui/label";
 import { SUPPORT_PATH } from "@/shared/constants/legal";
-import type { UpdatePasswordInput } from "@/shared/validation/schemas/user.schema";
+import {
+  ForgotPasswordSchema,
+  type UpdatePasswordInput,
+} from "@/shared/validation/schemas/user.schema";
 
 function Surface({ children, className = "" }: { children: React.ReactNode; className?: string }) {
   return (
@@ -103,6 +106,7 @@ export default function ContaSegurancaPage() {
   const {
     user,
     updatePassword,
+    updateEmail,
     resetPassword,
     googleAuthAvailable,
     signOutOtherSessions,
@@ -120,6 +124,10 @@ export default function ContaSegurancaPage() {
   const [verificationCode, setVerificationCode] = useState("");
   const [verifying, setVerifying] = useState(false);
   const [revokingSessions, setRevokingSessions] = useState(false);
+  const [newEmail, setNewEmail] = useState("");
+  const [emailError, setEmailError] = useState<string | null>(null);
+  const [updatingEmail, setUpdatingEmail] = useState(false);
+  const [emailRequestSent, setEmailRequestSent] = useState(false);
 
   if (!user) {
     return <Navigate to={appUrls.auth.login} replace />;
@@ -146,6 +154,35 @@ export default function ContaSegurancaPage() {
       toast.error(getAuthErrorMessage(error, "Erro ao enviar e-mail"));
     } finally {
       setSendingReset(false);
+    }
+  };
+
+  const handleUpdateEmail = async () => {
+    const candidate = newEmail.trim();
+    const parsed = ForgotPasswordSchema.shape.email.safeParse(candidate);
+    if (!parsed.success) {
+      setEmailError(parsed.error.issues[0]?.message ?? "Informe um e-mail válido.");
+      return;
+    }
+    if (candidate.toLocaleLowerCase() === user.email.toLocaleLowerCase()) {
+      setEmailError("Informe um e-mail diferente do atual.");
+      return;
+    }
+
+    setUpdatingEmail(true);
+    setEmailError(null);
+    try {
+      await updateEmail(candidate);
+      setEmailRequestSent(true);
+      toast.success("Alteração de e-mail solicitada", {
+        description: "Conclua as confirmações enviadas pelo serviço de autenticação.",
+      });
+    } catch (error) {
+      const message = getAuthErrorMessage(error, "Não foi possível solicitar a troca de e-mail");
+      setEmailError(message);
+      toast.error(message);
+    } finally {
+      setUpdatingEmail(false);
     }
   };
 
@@ -188,8 +225,79 @@ export default function ContaSegurancaPage() {
   };
 
   const accessView = location.hash === "#acesso";
+  const emailView = location.hash === "#email";
   const passwordView = location.hash === "#senha";
   const handle = activeProfile?.handle ? `@${activeProfile.handle}` : "Nome de usuário ainda não definido";
+
+  if (emailView) {
+    return (
+      <>
+        <Helmet><title>Alterar e-mail | Achegue-se</title></Helmet>
+        <AccountSettingsShell
+          title="Alterar e-mail de acesso"
+          description="O novo endereço precisa ser confirmado antes de substituir o e-mail atual."
+        >
+          <Surface className="p-4 sm:p-5">
+            <div className="flex items-start gap-3">
+              <Mail className="mt-0.5 h-5 w-5 shrink-0 text-territory-brand" aria-hidden="true" />
+              <div className="min-w-0 flex-1">
+                <h2 className="font-heading text-base font-bold text-territory-ink">E-mail atual</h2>
+                <p className="mt-1 break-all text-sm text-territory-muted">{user.email}</p>
+              </div>
+            </div>
+
+            {emailRequestSent ? (
+              <div className="mt-4 rounded-xl border border-emerald-200 bg-emerald-50 p-4 text-sm text-emerald-800" role="status">
+                <div className="flex items-center gap-2 font-semibold">
+                  <CheckCircle2 className="h-5 w-5" aria-hidden="true" />
+                  Solicitação enviada
+                </div>
+                <p className="mt-2 leading-5">
+                  A conta continuará mostrando o e-mail atual até que o provedor de autenticação confirme a alteração.
+                </p>
+              </div>
+            ) : (
+              <div className="mt-5">
+                <Label htmlFor="new-email">Novo e-mail</Label>
+                <Input
+                  id="new-email"
+                  type="email"
+                  autoComplete="email"
+                  value={newEmail}
+                  onChange={(event) => {
+                    setNewEmail(event.target.value);
+                    setEmailError(null);
+                  }}
+                  aria-invalid={Boolean(emailError)}
+                  aria-describedby={emailError ? "new-email-error" : undefined}
+                  className="mt-2 h-12"
+                  placeholder="voce@exemplo.com"
+                />
+                {emailError ? (
+                  <p id="new-email-error" className="mt-2 text-sm font-medium text-destructive" role="alert">
+                    {emailError}
+                  </p>
+                ) : null}
+                <Button
+                  type="button"
+                  className="mt-4 min-h-11 w-full bg-territory-sun text-territory-ink hover:bg-territory-sun/90"
+                  onClick={handleUpdateEmail}
+                  disabled={updatingEmail || !newEmail.trim()}
+                >
+                  {updatingEmail ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
+                  {updatingEmail ? "Enviando..." : "Enviar confirmação"}
+                </Button>
+              </div>
+            )}
+          </Surface>
+
+          <div className="mt-4">
+            <HelpRow onClick={() => navigate(SUPPORT_PATH)} />
+          </div>
+        </AccountSettingsShell>
+      </>
+    );
+  }
 
   if (passwordView) {
     return (
@@ -261,11 +369,10 @@ export default function ContaSegurancaPage() {
               action={
                 <button
                   type="button"
-                  className="min-h-9 text-sm font-semibold text-territory-brand underline-offset-4 hover:underline disabled:text-territory-muted"
-                  onClick={handleResetPassword}
-                  disabled={sendingReset || resetSent}
+                  className="min-h-9 text-sm font-semibold text-territory-brand underline-offset-4 hover:underline"
+                  onClick={() => navigate("/conta/seguranca#email")}
                 >
-                  {sendingReset ? "Enviando..." : resetSent ? "Recuperação enviada" : "Enviar recuperação por e-mail"}
+                  Alterar e-mail
                 </button>
               }
             />
