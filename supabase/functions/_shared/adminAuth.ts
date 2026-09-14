@@ -55,8 +55,14 @@ function resolveAdminRole(roles: unknown): AdminRole | null {
 /**
  * Valida se o request vem de admin/super_admin e, quando a politica de MFA se
  * aplica, exige enrollment concluido + AAL2 no JWT atual.
+ *
+ * O contrato CORS de erro acompanha o método real por padrão. Callers que
+ * aceitam múltiplos métodos podem repassar a lista completa explicitamente.
  */
-export async function requireAdmin(req: Request): Promise<AdminAuthResult | Response> {
+export async function requireAdmin(
+  req: Request,
+  methods = `${req.method}, OPTIONS`,
+): Promise<AdminAuthResult | Response> {
   const auditInfo = getAdminAuditInfo(req);
 
   try {
@@ -70,7 +76,7 @@ export async function requireAdmin(req: Request): Promise<AdminAuthResult | Resp
         details: { reason: 'missing_auth_header' },
         ...auditInfo,
       });
-      return errorResponse('Missing or invalid authorization header', 401);
+      return errorResponse('Missing or invalid authorization header', 401, undefined, req, methods);
     }
 
     const token = authHeader.slice(7);
@@ -87,7 +93,7 @@ export async function requireAdmin(req: Request): Promise<AdminAuthResult | Resp
         details: { reason: 'invalid_token', error: authError?.message },
         ...auditInfo,
       });
-      return errorResponse('Invalid or expired token', 401);
+      return errorResponse('Invalid or expired token', 401, undefined, req, methods);
     }
 
     const { data: roles, error: rolesError } = await supabase.rpc('get_user_roles', {
@@ -95,7 +101,7 @@ export async function requireAdmin(req: Request): Promise<AdminAuthResult | Resp
     });
 
     if (rolesError) {
-      return errorResponse('Failed to verify permissions', 500);
+      return errorResponse('Failed to verify permissions', 500, rolesError, req, methods);
     }
 
     const adminRole = resolveAdminRole(roles);
@@ -109,7 +115,7 @@ export async function requireAdmin(req: Request): Promise<AdminAuthResult | Resp
         details: { reason: 'insufficient_role' },
         ...auditInfo,
       });
-      return errorResponse('Forbidden: Admin access required', 403);
+      return errorResponse('Forbidden: Admin access required', 403, undefined, req, methods);
     }
 
     const mfaPolicy = await evaluateUserMfaPolicy(supabase, user.id, token);
@@ -130,9 +136,9 @@ export async function requireAdmin(req: Request): Promise<AdminAuthResult | Resp
       });
 
       if (mfaPolicy.reason === 'enrollment_required') {
-        return errorResponse('MFA enrollment required', 403);
+        return errorResponse('MFA enrollment required', 403, undefined, req, methods);
       }
-      return errorResponse('MFA verification required', 403);
+      return errorResponse('MFA verification required', 403, undefined, req, methods);
     }
 
     auditLog({
@@ -164,17 +170,20 @@ export async function requireAdmin(req: Request): Promise<AdminAuthResult | Resp
       details: { error: message },
       ...auditInfo,
     });
-    return errorResponse('Authentication failed', 500);
+    return errorResponse('Authentication failed', 500, err, req, methods);
   }
 }
 
 /** Variante que exige especificamente super_admin. */
-export async function requireSuperAdmin(req: Request): Promise<AdminAuthResult | Response> {
-  const result = await requireAdmin(req);
+export async function requireSuperAdmin(
+  req: Request,
+  methods = `${req.method}, OPTIONS`,
+): Promise<AdminAuthResult | Response> {
+  const result = await requireAdmin(req, methods);
   if (result instanceof Response) return result;
 
   if (result.role !== 'super_admin') {
-    return errorResponse('Forbidden: Super admin access required', 403);
+    return errorResponse('Forbidden: Super admin access required', 403, undefined, req, methods);
   }
 
   return result;
