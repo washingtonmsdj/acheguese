@@ -20,6 +20,15 @@ describe("account push and managed-profile quality contract", () => {
     expect(pushSettings).toContain("As notificações estão bloqueadas nas permissões deste navegador");
   });
 
+  it("lets denied browser permission override a stale server-side subscription", () => {
+    expect(pushSettings).toContain("const deliveryReady = isSubscribed && !permissionBlocked");
+    expect(pushSettings).toContain("const currentDeviceDescription = permissionBlocked");
+    expect(pushSettings).toContain("const currentDeviceLabel = permissionBlocked");
+    expect(pushSettings).toContain("{permissionBlocked ? (");
+    expect(pushSettings).toContain("{deliveryReady ? (");
+    expect(pushSettings).not.toContain("permissionBlocked && !isSubscribed");
+  });
+
   it("does not expose raw push errors and refreshes permission after failed activation", () => {
     expect(pushHook).toContain("await refreshBrowserState();");
     expect(pushHook).not.toContain("description: String(error)");
