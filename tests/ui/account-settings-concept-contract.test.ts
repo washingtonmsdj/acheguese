@@ -260,7 +260,8 @@ describe("account settings concept contract", () => {
     expect(privacy).toContain('location.hash === "#exportar"');
     expect(privacy).toContain('title="Uma cópia dos seus dados"');
     expect(privacy).toContain('idPrefix="summary"');
-    expect(privacy).toContain('idPrefix="details"');
+    expect(privacy).toContain('idPrefix="mobile-details"');
+    expect(privacy).toContain('idPrefix="desktop-details"');
     expect(push).toContain("usePush(user?.id)");
     expect(push).toContain("isSupported");
     expect(push).toContain("hasPermission");
