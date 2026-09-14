@@ -23,6 +23,7 @@ const STATIC_MAPLIBRE_CSS_IMPORT = /import\s+["']maplibre-gl\/dist\/maplibre-gl\
 const ALLOWED_STATIC_RUNTIME_OWNER =
   "src/core/maps/components/v3/MapLibreAdapterRuntime.tsx";
 const ALLOWED_STATIC_CSS_OWNER = "src/core/maps/runtime/maplibreRuntimeCss.ts";
+const LEGACY_ADAPTER_BRIDGE = "src/core/maps/components/v3/LazyMapLibreAdapter.tsx";
 
 const MIGRATED_CONSUMERS = [
   "src/shared/components/maps/MiniMap.tsx",
@@ -65,10 +66,10 @@ describe("MapLibre production security runtime", () => {
     expect(cssOwner).toContain('import "maplibre-gl/dist/maplibre-gl.css"');
   });
 
-  it("makes the public adapter path lazy while keeping the heavy implementation internal", () => {
+  it("keeps one public adapter owner and removes the legacy lazy bridge", () => {
     const owner = readProjectFile("src/core/maps/components/v3/MapLibreAdapter.tsx");
     const runtime = readProjectFile(ALLOWED_STATIC_RUNTIME_OWNER);
-    const compatibility = readProjectFile("src/core/maps/components/v3/LazyMapLibreAdapter.tsx");
+    const barrel = readProjectFile("src/core/maps/components/v3/index.ts");
 
     expect(owner).toContain("loadMapLibreRuntime");
     expect(owner).toContain('import("./MapLibreAdapterRuntime")');
@@ -76,10 +77,12 @@ describe("MapLibre production security runtime", () => {
     expect(runtime).toContain('import * as maplibregl from "maplibre-gl"');
     expect(runtime).not.toContain("maplibre-gl/dist/maplibre-gl.css");
     expect(runtime).toContain("setMissingStyleImageResolver");
-    expect(compatibility).toContain('from "./MapLibreAdapter"');
+    expect(barrel).toContain("from './MapLibreAdapter'");
+    expect(barrel).not.toContain("LazyMapLibreAdapter");
+    expect(fs.existsSync(path.resolve(ROOT, LEGACY_ADAPTER_BRIDGE))).toBe(false);
   });
 
-  it("keeps migrated consumers behind the canonical runtime loader", () => {
+  it("keeps migrated imperative consumers behind the canonical runtime loader", () => {
     for (const sourcePath of MIGRATED_CONSUMERS) {
       const source = readProjectFile(sourcePath);
       expect(source).not.toMatch(STATIC_MAPLIBRE_IMPORT);
