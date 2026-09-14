@@ -46,22 +46,42 @@ function preconnectOfficialBoundarySources(
     }
   });
 
-  const existingPreconnects = Array.from(
-    document.head.querySelectorAll<HTMLLinkElement>(
-      "link[data-entry-boundary-preconnect]",
-    ),
+  const existingPreconnectOrigins = new Set(
+    Array.from(
+      document.head.querySelectorAll<HTMLLinkElement>('link[rel="preconnect"]'),
+    ).flatMap((link) => {
+      try {
+        return [new URL(link.href).origin];
+      } catch {
+        return [];
+      }
+    }),
+  );
+  const existingDnsHosts = new Set(
+    Array.from(
+      document.head.querySelectorAll<HTMLLinkElement>('link[rel="dns-prefetch"]'),
+    ).flatMap((link) => {
+      try {
+        return [new URL(link.href, window.location.href).host];
+      } catch {
+        return [];
+      }
+    }),
   );
 
   origins.forEach((origin) => {
-    if (existingPreconnects.some((link) => link.href === `${origin}/`)) return;
-
     const source = new URL(origin);
 
-    const dnsPrefetch = document.createElement("link");
-    dnsPrefetch.rel = "dns-prefetch";
-    dnsPrefetch.href = `//${source.host}`;
-    dnsPrefetch.dataset.entryBoundaryDnsPrefetch = "true";
-    document.head.appendChild(dnsPrefetch);
+    if (!existingDnsHosts.has(source.host)) {
+      const dnsPrefetch = document.createElement("link");
+      dnsPrefetch.rel = "dns-prefetch";
+      dnsPrefetch.href = `//${source.host}`;
+      dnsPrefetch.dataset.entryBoundaryDnsPrefetch = "true";
+      document.head.appendChild(dnsPrefetch);
+      existingDnsHosts.add(source.host);
+    }
+
+    if (existingPreconnectOrigins.has(origin)) return;
 
     const preconnect = document.createElement("link");
     preconnect.rel = "preconnect";
@@ -69,6 +89,7 @@ function preconnectOfficialBoundarySources(
     preconnect.crossOrigin = "anonymous";
     preconnect.dataset.entryBoundaryPreconnect = "true";
     document.head.appendChild(preconnect);
+    existingPreconnectOrigins.add(origin);
   });
 }
 
