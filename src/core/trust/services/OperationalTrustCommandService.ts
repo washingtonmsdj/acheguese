@@ -1,8 +1,46 @@
 import { supabase } from "@/integrations/supabase";
-import {
-  submitRideTrustFeedbackRpc,
-  type RideTrustFeedbackRpcSubjectRole,
-} from "./RideTrustFeedbackRpcGateway";
+
+export type RideTrustFeedbackSubjectRole =
+  | "counterparty"
+  | "customer"
+  | "merchant"
+  | "driver"
+  | "courier";
+
+type RideTrustFeedbackRpcArgs = {
+  p_ride_id: string;
+  p_subject_role: RideTrustFeedbackSubjectRole;
+  p_rating: number;
+  p_reason_code: string;
+  p_description: string | null;
+};
+
+type RideTrustFeedbackRpcError = {
+  message?: string | null;
+  code?: string | null;
+  details?: string | null;
+  hint?: string | null;
+} | null;
+
+type RideTrustFeedbackRpcClient = {
+  rpc(
+    functionName: "submit_ride_trust_feedback",
+    args: RideTrustFeedbackRpcArgs,
+  ): PromiseLike<{
+    data: unknown;
+    error: RideTrustFeedbackRpcError;
+  }>;
+};
+
+/**
+ * Narrow integration typing for the G73 ride-feedback RPC.
+ *
+ * The generated Supabase types are provider-gated and still expose the
+ * retired subject Profile UUID argument. Keep the semantic-role contract
+ * local to the canonical command owner until official generation converges;
+ * never edit the generated types or reintroduce the retired argument.
+ */
+const rideTrustFeedbackRpcClient = supabase as unknown as RideTrustFeedbackRpcClient;
 
 export interface OperationalTrustFeedbackInput {
   subjectProfileId: string;
@@ -10,8 +48,6 @@ export interface OperationalTrustFeedbackInput {
   reasonCode: string;
   description?: string | null;
 }
-
-export type RideTrustFeedbackSubjectRole = RideTrustFeedbackRpcSubjectRole;
 
 export interface OperationalRideTrustFeedbackInput {
   subjectRole: RideTrustFeedbackSubjectRole;
@@ -85,13 +121,16 @@ export class OperationalTrustCommandService {
     rideId: string,
     input: OperationalRideTrustFeedbackInput,
   ): Promise<TrustCommandResult> {
-    const { data, error } = await submitRideTrustFeedbackRpc({
-      p_ride_id: rideId,
-      p_subject_role: input.subjectRole,
-      p_rating: input.rating,
-      p_reason_code: input.reasonCode,
-      p_description: input.description?.trim() || null,
-    });
+    const { data, error } = await rideTrustFeedbackRpcClient.rpc(
+      "submit_ride_trust_feedback",
+      {
+        p_ride_id: rideId,
+        p_subject_role: input.subjectRole,
+        p_rating: input.rating,
+        p_reason_code: input.reasonCode,
+        p_description: input.description?.trim() || null,
+      },
+    );
     if (error) throw error;
     return normalizeCommandResult(data);
   }
