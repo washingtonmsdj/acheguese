@@ -2,6 +2,8 @@ import { lazy, Suspense, useEffect, useState } from "react";
 import { Cookie, Shield, X } from "lucide-react";
 import { useLocation } from "react-router-dom";
 
+import { PRELAUNCH_LOCKDOWN_ENABLED } from "@/app/config/launchScope";
+import { AUTH_PATHS } from "@/core/auth/constants/authFlow";
 import { ConsentService } from "@/core/privacy/services/ConsentService";
 import { useSessionUserId } from "@/core/session/hooks/useSessionUserId";
 import { Button } from "@/shared/components/ui/button";
@@ -14,9 +16,6 @@ type ExistingConsent = {
   consent_type: string;
   granted: boolean;
 };
-
-const PRELAUNCH_LOCKDOWN_ENABLED =
-  (import.meta.env.VITE_PRELAUNCH_LOCKDOWN ?? "false") === "true";
 
 export function ConsentBanner() {
   const userId = useSessionUserId();
@@ -102,12 +101,12 @@ export function ConsentBanner() {
   };
 
   const isAuthSurface =
-    pathname === "/login" ||
-    pathname === "/cadastro" ||
-    pathname === "/cadastro/confirmacao" ||
-    pathname === "/aceitar-termos" ||
+    pathname === AUTH_PATHS.login ||
+    pathname === AUTH_PATHS.signup ||
+    pathname === AUTH_PATHS.signupConfirmation ||
+    pathname === AUTH_PATHS.termsAcceptance ||
     pathname === "/onboarding" ||
-    pathname === "/reset-password";
+    pathname === AUTH_PATHS.passwordReset;
   const mobileBannerBottomClass =
     isAuthSurface || pathname === "/"
       ? "bottom-[calc(env(safe-area-inset-bottom)+0.75rem)]"
