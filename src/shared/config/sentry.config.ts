@@ -11,10 +11,23 @@ export interface SentryConfig {
 
 type SentryModule = typeof import("@sentry/react");
 type SentryReportDialogOptions = Record<string, unknown>;
+type OptionalReplayMode = "session" | "buffer" | "off";
+type ReplayController = {
+  start: () => void | Promise<void>;
+  startBuffering: () => void | Promise<void>;
+  stop: () => void | Promise<void>;
+};
+
+type SentryModuleWithReplay = SentryModule & {
+  getReplay?: () => ReplayController | undefined;
+};
 
 let sentryModulePromise: Promise<SentryModule> | null = null;
 let sentryInitPromise: Promise<SentryModule | null> | null = null;
 let sentryInitialized = false;
+let optionalTelemetryEnabled = false;
+let optionalReplayMode: OptionalReplayMode | null = null;
+let optionalReplayRecording = false;
 
 function loadSentryModule(): Promise<SentryModule> {
   sentryModulePromise ??= import("@sentry/react");
@@ -40,6 +53,49 @@ function logSentryDebug(message: string, error?: unknown): void {
   console.debug(message);
 }
 
+function chooseOptionalReplayMode(config: SentryConfig): OptionalReplayMode {
+  if (Math.random() < config.replaysSessionSampleRate) return "session";
+  if (Math.random() < config.replaysOnErrorSampleRate) return "buffer";
+  return "off";
+}
+
+function syncOptionalReplay(
+  Sentry: SentryModule,
+  config: SentryConfig,
+): void {
+  const replay = (Sentry as SentryModuleWithReplay).getReplay?.();
+  if (!replay) return;
+
+  if (!optionalTelemetryEnabled) {
+    if (!optionalReplayRecording) return;
+    optionalReplayRecording = false;
+    void Promise.resolve(replay.stop()).catch((error: unknown) => {
+      logSentryDebug("Erro ao interromper Session Replay:", error);
+    });
+    return;
+  }
+
+  if (optionalReplayRecording) return;
+
+  optionalReplayMode ??= chooseOptionalReplayMode(config);
+  if (optionalReplayMode === "off") return;
+
+  try {
+    const startResult =
+      optionalReplayMode === "session"
+        ? replay.start()
+        : replay.startBuffering();
+    optionalReplayRecording = true;
+    void Promise.resolve(startResult).catch((error: unknown) => {
+      optionalReplayRecording = false;
+      logSentryDebug("Erro ao iniciar Session Replay:", error);
+    });
+  } catch (error) {
+    optionalReplayRecording = false;
+    logSentryDebug("Erro ao iniciar Session Replay:", error);
+  }
+}
+
 function ensureSentryInitialized(): Promise<SentryModule | null> {
   const config = getSentryConfig();
 
@@ -50,7 +106,10 @@ function ensureSentryInitialized(): Promise<SentryModule | null> {
 
   sentryInitPromise ??= loadSentryModule()
     .then((Sentry) => {
-      if (sentryInitialized) return Sentry;
+      if (sentryInitialized) {
+        syncOptionalReplay(Sentry, config);
+        return Sentry;
+      }
 
       Sentry.init({
         dsn: config.dsn,
@@ -62,9 +121,15 @@ function ensureSentryInitialized(): Promise<SentryModule | null> {
             blockAllMedia: true,
           }),
         ],
-        tracesSampleRate: config.tracesSampleRate,
-        replaysSessionSampleRate: config.replaysSessionSampleRate,
-        replaysOnErrorSampleRate: config.replaysOnErrorSampleRate,
+        // Error monitoring stays available independently. Performance spans are
+        // sampled only while the product-level analytics permission is active.
+        tracesSampler: () =>
+          optionalTelemetryEnabled ? config.tracesSampleRate : 0,
+        // Replay is manually controlled below so it never records before opt-in.
+        // The configured product rates are applied when choosing session versus
+        // error-buffer mode after analytics consent is granted.
+        replaysSessionSampleRate: 0,
+        replaysOnErrorSampleRate: 0,
         beforeSend(event, hint) {
           if (config.environment === "development") {
             if (debugSentryEnabled()) {
@@ -103,6 +168,7 @@ function ensureSentryInitialized(): Promise<SentryModule | null> {
       });
 
       sentryInitialized = true;
+      syncOptionalReplay(Sentry, config);
       logSentryDebug("Sentry inicializado com sucesso");
       return Sentry;
     })
@@ -133,6 +199,22 @@ export function getSentryConfig(): SentryConfig {
     replaysSessionSampleRate: 0.1,
     replaysOnErrorSampleRate: 1.0,
   };
+}
+
+/**
+ * Controls only optional performance/replay telemetry. Error reporting remains
+ * governed by getSentryConfig().enabled and is intentionally independent.
+ */
+export function setSentryOptionalTelemetryEnabled(enabled: boolean): void {
+  optionalTelemetryEnabled = enabled;
+
+  if (!sentryInitialized || !sentryModulePromise) return;
+
+  void sentryModulePromise
+    .then((Sentry) => syncOptionalReplay(Sentry, getSentryConfig()))
+    .catch((error: unknown) => {
+      logSentryDebug("Erro ao sincronizar telemetria opcional do Sentry:", error);
+    });
 }
 
 export function initializeSentry(): void {
@@ -215,7 +297,7 @@ export function captureSentryMessage(
 
 export function startSentryTransaction(name: string, op: string): unknown {
   const config = getSentryConfig();
-  if (!config.enabled) return null;
+  if (!config.enabled || !optionalTelemetryEnabled) return null;
 
   void ensureSentryInitialized().then((Sentry) => {
     if (!Sentry) return;
