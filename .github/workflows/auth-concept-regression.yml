@@ -18,9 +18,7 @@ on:
       - "src/core/auth/**"
       - "src/shared/components/ui/checkbox.tsx"
       - "public/auth/**"
-      - "tests/e2e/auth-concept-layout.spec.ts"
-      - "tests/e2e/auth-concept-capture.spec.ts"
-      - "tests/e2e/auth-oauth-recovery.spec.ts"
+      - "tests/e2e/auth-*.spec.ts"
       - "tests/regression/auth-concept-flow.test.ts"
       - "tests/regression/auth-return-context.test.ts"
       - "tests/regression/auth-google-oauth.test.ts"
@@ -44,9 +42,7 @@ on:
       - "src/core/auth/**"
       - "src/shared/components/ui/checkbox.tsx"
       - "public/auth/**"
-      - "tests/e2e/auth-concept-layout.spec.ts"
-      - "tests/e2e/auth-concept-capture.spec.ts"
-      - "tests/e2e/auth-oauth-recovery.spec.ts"
+      - "tests/e2e/auth-*.spec.ts"
       - "tests/regression/auth-concept-flow.test.ts"
       - "tests/regression/auth-return-context.test.ts"
       - "tests/regression/auth-google-oauth.test.ts"
@@ -86,7 +82,7 @@ jobs:
           tests/regression/auth-google-oauth.test.ts
 
   responsive-layout:
-    name: auth responsive layout and captures
+    name: auth responsive layout, accessibility and captures
     runs-on: ubuntu-latest
     timeout-minutes: 20
     steps:
@@ -105,7 +101,7 @@ jobs:
       - name: Install Chromium
         run: npx playwright install --with-deps chromium
 
-      - name: Run mobile and desktop auth regression and capture
+      - name: Run auth browser regression and captures
         env:
           CI: "true"
           VITE_AUTH_GOOGLE_ENABLED: "true"
@@ -114,6 +110,7 @@ jobs:
           tests/e2e/auth-concept-layout.spec.ts
           tests/e2e/auth-concept-capture.spec.ts
           tests/e2e/auth-oauth-recovery.spec.ts
+          tests/e2e/auth-keyboard-accessibility.spec.ts
           --project=chromium
 
       - name: Upload account/access screenshots
