@@ -26,4 +26,22 @@ describe("root community-first MVP entry", () => {
     expect(source).toContain("VITE_PRELAUNCH_LOCKDOWN");
     expect(source).toContain("return <PreLaunchLandingPage />");
   });
+
+  it("keeps map WebGL and boundary work off the initial path until near the viewport", () => {
+    const source = read(
+      "src/app/components/territory-vivo/TerritoryEntryMap.tsx",
+    );
+
+    expect(source).toContain("lazy(() =>");
+    expect(source).toContain("IntersectionObserver");
+    expect(source).toContain('rootMargin: "240px 0px"');
+    expect(source).toContain("enabled: shouldMountMap");
+  });
+
+  it("loads and decodes the large community preview image without blocking first render", () => {
+    const source = read("src/app/pages/TerritoryEntryPage.tsx");
+
+    expect(source).toContain('loading="lazy"');
+    expect(source).toContain('decoding="async"');
+  });
 });
