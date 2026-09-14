@@ -137,28 +137,33 @@ export function ContaHubLayout({
         description={
           profilesView
             ? "Troque, edite e revise as identidades vinculadas à sua conta."
-            : "Estas configurações valem para toda a sua conta."
+            : undefined
         }
         eyebrow="Conta"
         showBack={profilesView}
       >
         {!profilesView ? (
-          <ProfileHeaderCompact
-            activeProfile={personalProfile}
-            profile={profile}
-            allProfiles={allProfiles}
-            userEmail={userEmail}
-            accountSnapshot={accountSnapshot}
-            identity={identity}
-            context={context}
-            notifications={notifications}
-            isVerified={isVerified}
-            canOpenPublicProfile={canOpenPublicProfile}
-            handle={handle}
-            territoryLabel={territoryLabel}
-            reputation={reputation}
-            onAvatarChange={onAvatarChange}
-          />
+          <>
+            <ProfileHeaderCompact
+              activeProfile={personalProfile}
+              profile={profile}
+              allProfiles={allProfiles}
+              userEmail={userEmail}
+              accountSnapshot={accountSnapshot}
+              identity={identity}
+              context={context}
+              notifications={notifications}
+              isVerified={isVerified}
+              canOpenPublicProfile={canOpenPublicProfile}
+              handle={handle}
+              territoryLabel={territoryLabel}
+              reputation={reputation}
+              onAvatarChange={onAvatarChange}
+            />
+            <p className="mt-3 px-1 text-sm leading-5 text-territory-muted">
+              Estas configurações valem para toda a sua conta.
+            </p>
+          </>
         ) : null}
 
         {!profilesView ? (
