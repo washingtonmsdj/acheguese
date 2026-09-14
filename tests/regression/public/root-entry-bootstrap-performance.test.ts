@@ -24,6 +24,18 @@ describe("anonymous root bootstrap performance", () => {
     expect(source).toContain("if (!input.userId) return");
   });
 
+  it("reads consent identity from SessionState without loading auth actions", () => {
+    const banner = read("src/app/components/privacy/ConsentBanner.tsx");
+    const selector = read("src/core/session/hooks/useSessionUserId.ts");
+
+    expect(banner).toContain("useSessionUserId");
+    expect(banner).not.toContain("useAuth");
+    expect(selector).toContain("SessionState.subscribe");
+    expect(selector).toContain("SessionState.getState().user?.id");
+    expect(selector).not.toContain("AuthService");
+    expect(selector).not.toContain("SessionService");
+  });
+
   it("renders the public root outside the full app provider tree", () => {
     const runtime = read("src/app/components/AppRuntime.tsx");
     const fullShell = read("src/app/components/FullAppRuntimeShell.tsx");
@@ -117,12 +129,10 @@ describe("anonymous root bootstrap performance", () => {
   it("keeps MapLibre and full-route services out of the public bootstrap", () => {
     const main = read("src/main.tsx");
     const fullShell = read("src/app/components/FullAppRuntimeShell.tsx");
-    const lazyAdapter = read(
-      "src/core/maps/components/v3/LazyMapLibreAdapter.tsx",
-    );
-    const workerRuntime = read(
-      "src/core/maps/config/maplibreWorkerRuntime.ts",
-    );
+    const adapterOwner = read("src/core/maps/components/v3/MapLibreAdapter.tsx");
+    const passiveRuntime = read("src/core/maps/components/v3/MapLibrePassiveRuntime.tsx");
+    const runtimeLoader = read("src/core/maps/runtime/loadMapLibreRuntime.ts");
+    const workerRuntime = read("src/core/maps/config/maplibreWorkerRuntime.ts");
 
     expect(main).not.toContain('from "maplibre-gl"');
     expect(main).not.toContain("CapabilityPreviewService");
@@ -132,8 +142,15 @@ describe("anonymous root bootstrap performance", () => {
     expect(fullShell).toContain("CapabilityPreviewService");
     expect(fullShell).toContain("setupDefaultProviders");
     expect(fullShell).toContain('import("@/core/maps/config/maplibreWorkerRuntime")');
-    expect(lazyAdapter).toContain('import("../../config/maplibreWorkerRuntime")');
-    expect(lazyAdapter).toContain('import("./MapLibreAdapter")');
+
+    expect(adapterOwner).toContain("canUsePassiveRuntime");
+    expect(adapterOwner).toContain("LazyPassiveMapLibreRuntime");
+    expect(adapterOwner).toContain('import("./MapLibrePassiveRuntime")');
+    expect(adapterOwner).toContain('import("./MapLibreAdapterRuntime")');
+    expect(passiveRuntime).not.toContain("useRobustGeolocation");
+    expect(passiveRuntime).not.toContain("useMapClustering");
+    expect(runtimeLoader).toContain('import("maplibre-gl")');
+    expect(runtimeLoader).toContain("ensureMapLibreWorkerConfigured");
     expect(workerRuntime).toContain('from "maplibre-gl"');
     expect(workerRuntime).toContain("workerConfigured");
   });
