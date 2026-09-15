@@ -10,7 +10,7 @@ import { useLocation } from 'react-router-dom';
 import { logger } from '@/shared/utils/logger';
 import { MultiProfileRuntimeService } from '../services/multi-profile/runtimeProfileService';
 import { SessionService } from '@/core/session/services/SessionService';
-import { SessionState } from '@/core/session/state/SessionState';
+import { useSessionContext } from '@/core/session/hooks/useSessionContext';
 import { ACTIVE_PROFILE_STORAGE_KEY } from '../constants/activeProfileStorage';
 import { mobilityRoutes } from '@/core/mobility/routes/mobilityRoutes';
 import type { Profile, ProfileType } from '../services/multi-profile/types';
@@ -21,6 +21,33 @@ import {
 
 function getErrorMessage(error: unknown, fallback: string): string {
   return error instanceof Error ? error.message : fallback;
+}
+
+function readStoredActiveProfileId(): string | null {
+  if (typeof window === 'undefined') return null;
+  try {
+    return window.localStorage.getItem(ACTIVE_PROFILE_STORAGE_KEY);
+  } catch {
+    return null;
+  }
+}
+
+function writeStoredActiveProfileId(profileId: string): void {
+  if (typeof window === 'undefined') return;
+  try {
+    window.localStorage.setItem(ACTIVE_PROFILE_STORAGE_KEY, profileId);
+  } catch {
+    // Storage can be unavailable in restricted browsing contexts.
+  }
+}
+
+function clearStoredActiveProfileId(): void {
+  if (typeof window === 'undefined') return;
+  try {
+    window.localStorage.removeItem(ACTIVE_PROFILE_STORAGE_KEY);
+  } catch {
+    // Storage can be unavailable in restricted browsing contexts.
+  }
 }
 
 const MODULE_ROUTES: Record<string, ProfileType> = {
@@ -37,58 +64,65 @@ const MODULE_ROUTES: Record<string, ProfileType> = {
 };
 
 export function MultiProfileProvider({ children }: { children: ReactNode }) {
+  const { user: sessionUser, isLoading: sessionLoading } = useSessionContext();
   const [activeProfile, setActiveProfile] = useState<Profile | null>(null);
   const [contextualProfile, setContextualProfile] = useState<Profile | null>(null);
   const [allProfiles, setAllProfiles] = useState<Profile[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const allProfilesRef = useRef<Profile[]>([]);
+  const loadedUserIdRef = useRef<string | null>(null);
+  const requestVersionRef = useRef(0);
 
-  const loadProfiles = useCallback(async () => {
+  const loadProfilesForUser = useCallback(async (userId: string) => {
+    const requestVersion = ++requestVersionRef.current;
     setLoading(true);
     setError(null);
-    try {
-      await SessionService.initializeSession();
-      const currentUser = SessionState.getState().user;
-      if (!currentUser?.id) {
-        setAllProfiles([]);
-        allProfilesRef.current = [];
-        setActiveProfile(null);
-        localStorage.removeItem(ACTIVE_PROFILE_STORAGE_KEY);
-        return;
-      }
 
-      const profiles = await MultiProfileRuntimeService.getMyProfiles(currentUser.id);
+    try {
+      const profiles = await MultiProfileRuntimeService.getMyProfiles(userId);
+      if (requestVersion !== requestVersionRef.current) return;
+
       setAllProfiles(profiles);
       allProfilesRef.current = profiles;
 
       if (profiles.length === 0) {
         setActiveProfile(null);
-        localStorage.removeItem(ACTIVE_PROFILE_STORAGE_KEY);
+        clearStoredActiveProfileId();
         return;
       }
 
-      const savedId = localStorage.getItem(ACTIVE_PROFILE_STORAGE_KEY);
-      let active = profiles.find(p => p.id === savedId);
+      const savedId = readStoredActiveProfileId();
+      let active = profiles.find((profile) => profile.id === savedId);
       if (!active) {
-        active = profiles.find(p => p.profile_type === 'personal') || profiles[0];
-        if (active) localStorage.setItem(ACTIVE_PROFILE_STORAGE_KEY, active.id);
+        active = profiles.find((profile) => profile.profile_type === 'personal') || profiles[0];
+        if (active) writeStoredActiveProfileId(active.id);
       }
       setActiveProfile(active || null);
     } catch (error: unknown) {
-      setError(getErrorMessage(error, 'Failed to load profiles'));
+      if (requestVersion === requestVersionRef.current) {
+        setError(getErrorMessage(error, 'Failed to load profiles'));
+      }
     } finally {
-      setLoading(false);
+      if (requestVersion === requestVersionRef.current) {
+        setLoading(false);
+      }
     }
   }, []);
 
+  const refetch = useCallback(async (): Promise<void> => {
+    const userId = sessionUser?.id;
+    if (!userId) return;
+    await loadProfilesForUser(userId);
+  }, [loadProfilesForUser, sessionUser?.id]);
+
   const switchProfile = useCallback(async (profileId: string): Promise<boolean> => {
-    const profile = allProfiles.find(p => p.id === profileId);
+    const profile = allProfiles.find((candidate) => candidate.id === profileId);
     if (!profile) { setError('Profile not found'); return false; }
     try {
       await SessionService.switchProfile(profileId);
       setActiveProfile(profile);
-      localStorage.setItem(ACTIVE_PROFILE_STORAGE_KEY, profileId);
+      writeStoredActiveProfileId(profileId);
       return true;
     } catch (error: unknown) {
       logger.error('Error switching runtime profile:', error);
@@ -102,14 +136,40 @@ export function MultiProfileProvider({ children }: { children: ReactNode }) {
       setContextualProfile(null);
       return;
     }
-    const ofType = allProfilesRef.current.filter(p => p.profile_type === type);
+    const ofType = allProfilesRef.current.filter((profile) => profile.profile_type === type);
     // Se encontrou profile do tipo exato, usa ele
     // Se não encontrou (ex: admin sem profile de motorista), usa o activeProfile como fallback
     const resolved = ofType.length >= 1 ? ofType[0] : (allProfilesRef.current[0] ?? null);
     setContextualProfile(resolved);
   }, []);
 
-  useEffect(() => { loadProfiles(); }, [loadProfiles]);
+  useEffect(() => {
+    const userId = sessionUser?.id ?? null;
+
+    // SessionService publica o usuário antes de concluir a hidratação completa
+    // dos perfis da sessão. Começar a projeção multi-profile neste ponto evita
+    // um waterfall serial sem iniciar uma segunda sessão/auth request.
+    if (userId) {
+      if (loadedUserIdRef.current === userId) return;
+      loadedUserIdRef.current = userId;
+      void loadProfilesForUser(userId);
+      return;
+    }
+
+    // Enquanto a sessão ainda não decidiu se existe usuário, mantenha o estado
+    // de carregamento sem limpar um perfil válido por um frame intermediário.
+    if (sessionLoading) return;
+
+    loadedUserIdRef.current = null;
+    requestVersionRef.current += 1;
+    setAllProfiles([]);
+    allProfilesRef.current = [];
+    setActiveProfile(null);
+    setContextualProfile(null);
+    setError(null);
+    setLoading(false);
+    clearStoredActiveProfileId();
+  }, [loadProfilesForUser, sessionLoading, sessionUser?.id]);
 
   return (
     <MultiProfileContext.Provider value={{
@@ -121,7 +181,7 @@ export function MultiProfileProvider({ children }: { children: ReactNode }) {
       error,
       switchProfile,
       setModuleContext,
-      refetch: loadProfiles,
+      refetch,
     }}>
       {children}
     </MultiProfileContext.Provider>
