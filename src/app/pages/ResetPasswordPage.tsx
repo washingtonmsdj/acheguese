@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { Helmet } from "react-helmet-async";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
@@ -68,6 +68,8 @@ export default function ResetPasswordPage() {
   const { toast } = useToast();
   const { resetPasswordByIdentifier } = useAuth();
   const requestTurnstile = useAuthTurnstile();
+  const recoveryRequestInFlight = useRef(false);
+  const passwordSaveInFlight = useRef(false);
 
   const initialMode = searchParams.get(AUTH_QUERY_KEYS.mode);
   const initialEmail = searchParams.get(AUTH_QUERY_KEYS.email) ?? "";
@@ -133,8 +135,9 @@ export default function ResetPasswordPage() {
       return;
     }
 
+    if (recoveryRequestInFlight.current) return;
     const remainingMs = getPasswordRecoveryResendRemainingMs(normalizedEmail);
-    if (sending || remainingMs > 0) {
+    if (remainingMs > 0) {
       setResendCooldown(Math.ceil(remainingMs / 1000));
       return;
     }
@@ -147,6 +150,7 @@ export default function ResetPasswordPage() {
       return;
     }
 
+    recoveryRequestInFlight.current = true;
     setSending(true);
     try {
       await resetPasswordByIdentifier(
@@ -174,12 +178,14 @@ export default function ResetPasswordPage() {
       });
     } finally {
       requestTurnstile.reset();
+      recoveryRequestInFlight.current = false;
       setSending(false);
     }
   };
 
   const saveNewPassword = form.handleSubmit(async (data) => {
-    if (view !== "reset") return;
+    if (view !== "reset" || passwordSaveInFlight.current) return;
+    passwordSaveInFlight.current = true;
     try {
       const compromise = await checkPasswordCompromise(data.newPassword);
       if (compromise.blocked) {
@@ -197,6 +203,8 @@ export default function ResetPasswordPage() {
         description: getAuthErrorMessage(error),
         variant: "destructive",
       });
+    } finally {
+      passwordSaveInFlight.current = false;
     }
   });
 
