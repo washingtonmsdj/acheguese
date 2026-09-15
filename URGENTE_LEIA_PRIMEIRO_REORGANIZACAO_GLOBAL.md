@@ -9,7 +9,7 @@
 1. `docs/README.md` — índice documental canônico;
 2. `docs/03-architecture/CURRENT_RULES.md` — regras arquiteturais vigentes;
 3. `docs/08-roadmap/EXECUCAO_MAIN_ONLY.md` — plano operacional ativo;
-4. `docs/08-roadmap/checkpoints/2026-09-15-g194-csp-ssot-first-paint-reconciliation.md` — checkpoint mais recente desta linha;
+4. `docs/08-roadmap/checkpoints/2026-09-15-g195-profile-runtime-ownership-and-failure-semantics.md` — checkpoint mais recente desta linha;
 5. `SECURITY.md` — segurança e gates de release.
 
 ## Regras que não podem ser perdidas
@@ -54,6 +54,10 @@
 - `RoutedAppRuntime` continua sendo o split que mantém sessão/perfis fora da `/`; `FullAppRuntimeShell` não deve recriar um segundo lazy universal para `SessionProfileRuntimeShell`;
 - `MultiProfileProvider` hidrata a projeção multi-profile a partir do `user` publicado pelo `SessionProvider`; não deve voltar a serializar o refresh aguardando `SessionService.initializeSession()` nem ler `SessionState` diretamente;
 - leituras concorrentes de perfis privados pelo `MultiProfileRuntimeService` compartilham somente a Promise em voo por usuário; não transformar esse owner em cache persistente/TTL de perfis;
+- falha de leitura privada de perfis ou vínculos não pode ser convertida em `[]` quando `[]` significa um vazio válido; o boundary consumidor deve receber erro e decidir o estado de UI;
+- `useActiveProfile` e `useProfiles` permanecem aposentados; identidade/lista multi-profile em superfícies sob `MultiProfileProvider` vem de `useMultiProfileContext`;
+- hooks que só precisam do id da sessão devem preferir `useSessionUserId`; `useAuth` fica para consumidores que realmente usam o contrato/comandos de autenticação;
+- reordenação de vínculos precisa inspecionar `result.error` de cada atualização Supabase antes de retornar sucesso;
 - o primeiro paint usa `class="light"` como padrão e `/theme-init.js` same-origin no `<head>` para aplicar o tema persistido antes do React; a CSP implantada deve permanecer literalmente sincronizada com `SECURITY_HEADERS`, sem hash ad hoc nem `'unsafe-inline'`;
 - a `/` mantém apenas o skeleton `TerritoryEntryMapArrival` antes do basemap e status próprios após o mapa ficar utilizável;
 - regra exclusiva da `/` só permanece local quando depender de prioridade/UX específica da entrada pública;
