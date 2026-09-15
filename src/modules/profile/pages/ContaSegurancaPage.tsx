@@ -122,6 +122,12 @@ function HelpRow({
   );
 }
 
+function getAuthErrorCode(error: unknown): string | null {
+  if (!error || typeof error !== "object" || !("code" in error)) return null;
+  const code = (error as { code?: unknown }).code;
+  return typeof code === "string" ? code : null;
+}
+
 export default function ContaSegurancaPage() {
   const appUrls = useAppUrls();
   const location = useLocation();
@@ -129,6 +135,7 @@ export default function ContaSegurancaPage() {
   const { activeProfile } = useMultiProfileContext();
   const {
     user,
+    requestPasswordReauthentication,
     updatePassword,
     updateEmail,
     resetPassword,
@@ -136,6 +143,7 @@ export default function ContaSegurancaPage() {
     signOutOtherSessions,
   } = useAuth();
   const {
+    hasPassword,
     hasGoogle: googleLinked,
     loading: providersLoading,
     error: providersError,
@@ -156,6 +164,10 @@ export default function ContaSegurancaPage() {
 
   const [sendingReset, setSendingReset] = useState(false);
   const [resetSent, setResetSent] = useState(false);
+  const [passwordReauthRequired, setPasswordReauthRequired] = useState(false);
+  const [passwordNonce, setPasswordNonce] = useState("");
+  const [passwordReauthError, setPasswordReauthError] = useState<string | null>(null);
+  const [requestingPasswordReauth, setRequestingPasswordReauth] = useState(false);
   const [enrollment, setEnrollment] = useState<MFAEnrollmentData | null>(null);
   const [verificationCode, setVerificationCode] = useState("");
   const [verifying, setVerifying] = useState(false);
@@ -169,12 +181,65 @@ export default function ContaSegurancaPage() {
 
   if (!user) return <Navigate to={appUrls.auth.login} replace />;
 
-  const handleChangePassword = async (data: ResetPasswordFormInput) => {
+  const requestPasswordReauthCode = async () => {
+    setRequestingPasswordReauth(true);
+    setPasswordReauthError(null);
     try {
-      await updatePassword(data.newPassword);
-      toast.success("Senha alterada com sucesso");
+      await requestPasswordReauthentication();
+      setPasswordReauthRequired(true);
+      setPasswordNonce("");
+      toast.success("Código de confirmação enviado", {
+        description: `Enviamos um código para ${user.email}.`,
+      });
+      return true;
+    } catch (error) {
+      const message = getAuthErrorMessage(
+        error,
+        "Não foi possível enviar o código de confirmação.",
+      );
+      setPasswordReauthError(message);
+      toast.error(message);
+      return false;
+    } finally {
+      setRequestingPasswordReauth(false);
+    }
+  };
+
+  const handleChangePassword = async (data: ResetPasswordFormInput) => {
+    if (passwordReauthRequired && passwordNonce.trim().length !== 6) {
+      setPasswordReauthError("Digite o código de 6 dígitos enviado para o seu e-mail.");
+      throw new Error("Código de confirmação obrigatório.");
+    }
+
+    try {
+      await updatePassword(
+        data.newPassword,
+        passwordReauthRequired ? passwordNonce.trim() : undefined,
+      );
+      setPasswordReauthRequired(false);
+      setPasswordNonce("");
+      setPasswordReauthError(null);
+      await refreshProviders();
+      toast.success(hasPassword ? "Senha alterada com sucesso" : "Senha criada com sucesso");
       navigate(ACCOUNT_PATHS.security, { replace: true });
     } catch (error) {
+      const code = getAuthErrorCode(error);
+      if (code === "reauthentication_needed") {
+        const sent = await requestPasswordReauthCode();
+        if (sent) {
+          setPasswordReauthError(
+            "Digite o código de 6 dígitos para confirmar a alteração da senha.",
+          );
+        }
+        throw error;
+      }
+      if (code === "reauthentication_not_valid") {
+        setPasswordReauthRequired(true);
+        setPasswordReauthError("Código inválido ou expirado. Confira e tente novamente.");
+        toast.error("Código de confirmação inválido");
+        throw error;
+      }
+
       toast.error(getAuthErrorMessage(error, "Erro ao alterar senha"));
       throw error;
     }
@@ -314,6 +379,11 @@ export default function ContaSegurancaPage() {
   const passwordView = location.hash === "#senha";
   const mfaView = location.hash === "#mfa";
   const handle = activeProfile?.handle ? `@${activeProfile.handle}` : "Nome de usuário ainda não definido";
+  const passwordActionLabel = providersResolved
+    ? hasPassword
+      ? "Alterar senha"
+      : "Criar senha"
+    : "Gerenciar senha";
 
   if (emailView) {
     return (
@@ -385,9 +455,68 @@ export default function ContaSegurancaPage() {
   if (passwordView) {
     return (
       <>
-        <Helmet><title>Alterar senha | Achegue-se</title></Helmet>
-        <AccountSettingsShell title="Alterar senha" description="Escolha uma senha forte e exclusiva para a sua conta.">
-          <Surface className="p-4 sm:p-5">
+        <Helmet><title>{passwordActionLabel} | Achegue-se</title></Helmet>
+        <AccountSettingsShell
+          title={passwordActionLabel}
+          description={
+            providersResolved && !hasPassword
+              ? "Crie uma senha forte para adicionar uma alternativa ao acesso com Google."
+              : "Escolha uma senha forte e exclusiva para a sua conta."
+          }
+        >
+          {passwordReauthRequired ? (
+            <Surface className="p-4 sm:p-5">
+              <div className="flex items-start gap-3">
+                <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-territory-brand/10 text-territory-brand">
+                  <LockKeyhole className="h-5 w-5" aria-hidden="true" />
+                </span>
+                <div className="min-w-0 flex-1">
+                  <h2 className="font-heading text-base font-bold text-territory-ink">Confirme que é você</h2>
+                  <p className="mt-1 text-sm leading-5 text-territory-muted">
+                    Por segurança, enviamos um código de 6 dígitos para <span className="font-medium text-territory-ink">{user.email}</span>. Sua nova senha continua preenchida abaixo.
+                  </p>
+                </div>
+              </div>
+
+              <div className="mt-4">
+                <Label htmlFor="password-reauth-code" className="font-semibold text-territory-ink">
+                  Código de confirmação
+                </Label>
+                <Input
+                  id="password-reauth-code"
+                  inputMode="numeric"
+                  autoComplete="one-time-code"
+                  maxLength={6}
+                  value={passwordNonce}
+                  onChange={(event) => {
+                    setPasswordNonce(event.target.value.replace(/\D/g, "").slice(0, 6));
+                    setPasswordReauthError(null);
+                  }}
+                  aria-invalid={Boolean(passwordReauthError)}
+                  aria-describedby={passwordReauthError ? "password-reauth-error" : undefined}
+                  placeholder="000000"
+                  className="mt-2 h-12 text-lg tracking-[0.28em]"
+                />
+                {passwordReauthError ? (
+                  <p id="password-reauth-error" className="mt-2 text-sm font-medium text-destructive" role="alert">
+                    {passwordReauthError}
+                  </p>
+                ) : null}
+                <Button
+                  type="button"
+                  variant="outline"
+                  className="mt-3 min-h-10 w-full"
+                  onClick={() => void requestPasswordReauthCode()}
+                  disabled={requestingPasswordReauth}
+                >
+                  {requestingPasswordReauth ? <Loader2 className="mr-2 h-4 w-4 animate-spin" aria-hidden="true" /> : null}
+                  {requestingPasswordReauth ? "Enviando..." : "Enviar novo código"}
+                </Button>
+              </div>
+            </Surface>
+          ) : null}
+
+          <Surface className={`${passwordReauthRequired ? "mt-4 " : ""}p-4 sm:p-5`}>
             <ChangePasswordForm onSave={handleChangePassword} onCancel={() => navigate(ACCOUNT_PATHS.security)} />
           </Surface>
           <Surface className="mt-4 p-4 sm:p-5">
@@ -605,9 +734,18 @@ export default function ContaSegurancaPage() {
               <AccessRow
                 icon={<KeyRound className="h-5 w-5" aria-hidden="true" />}
                 title="Senha"
+                value={
+                  providersLoading
+                    ? "Consultando se esta conta já possui senha..."
+                    : providersResolved
+                      ? hasPassword
+                        ? "Esta conta possui acesso por senha."
+                        : "Nenhuma senha foi criada para esta conta."
+                      : "Não foi possível confirmar agora se esta conta possui senha."
+                }
                 action={(
                   <button type="button" className="inline-flex min-h-9 items-center gap-1 text-sm font-semibold text-territory-brand underline-offset-4 hover:underline" onClick={() => navigate(ACCOUNT_PATHS.password)}>
-                    Alterar senha <ChevronRight className="h-4 w-4" aria-hidden="true" />
+                    {passwordActionLabel} <ChevronRight className="h-4 w-4" aria-hidden="true" />
                   </button>
                 )}
               />
@@ -718,8 +856,12 @@ export default function ContaSegurancaPage() {
               <button type="button" onClick={() => navigate(ACCOUNT_PATHS.password)} className="group flex min-h-16 w-full items-center gap-3 text-left focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-territory-brand">
                 <KeyRound className="h-5 w-5 shrink-0 text-territory-brand" aria-hidden="true" />
                 <span className="min-w-0 flex-1">
-                  <span className="block text-sm font-semibold text-territory-ink">Alterar senha</span>
-                  <span className="mt-0.5 hidden text-xs text-territory-muted lg:block">Atualize sua senha ou acesse a recuperação por e-mail.</span>
+                  <span className="block text-sm font-semibold text-territory-ink">{passwordActionLabel}</span>
+                  <span className="mt-0.5 hidden text-xs text-territory-muted lg:block">
+                    {providersResolved && !hasPassword
+                      ? "Adicione uma senha como alternativa ao acesso social."
+                      : "Atualize sua senha ou acesse a recuperação por e-mail."}
+                  </span>
                 </span>
                 <ChevronRight className="h-5 w-5 text-territory-muted transition-transform group-hover:translate-x-0.5" aria-hidden="true" />
               </button>
