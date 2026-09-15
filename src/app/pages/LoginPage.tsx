@@ -29,8 +29,12 @@ import {
   completeStandardLoginJourney,
   getSignupJourneyReturnTarget,
   prepareGoogleLogin,
+  prepareUnconfirmedEmailLogin,
 } from "@/core/auth/utils/authJourney";
-import { getAuthErrorMessage } from "@/core/auth/utils/authMessages";
+import {
+  getAuthErrorMessage,
+  isEmailNotConfirmedError,
+} from "@/core/auth/utils/authMessages";
 import { getAuthReturnContext } from "@/core/auth/utils/authReturnContext";
 import { InlineFieldError } from "@/shared/components/ui/InlineFieldError";
 import { Input } from "@/shared/components/ui/input";
@@ -213,6 +217,16 @@ export default function LoginPage() {
       }
     } catch (error) {
       turnstile.reset();
+
+      if (parsed.kind === "email" && isEmailNotConfirmedError(error)) {
+        prepareUnconfirmedEmailLogin(parsed.value, redirectTo);
+        setPendingAction(null);
+        navigate(AUTH_PATHS.signupConfirmation, {
+          state: { email: parsed.value, redirectTo },
+        });
+        return;
+      }
+
       const message = getAuthErrorMessage(
         error,
         "E-mail, usuário ou senha incorretos.",
