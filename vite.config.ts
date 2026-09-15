@@ -100,7 +100,8 @@ export default defineConfig(({ command, mode }) => {
   return {
     server: {
       host: process.env.VITE_DEV_HOST || "127.0.0.1",
-      port: 8080,
+      port: 5175,
+      strictPort: true,
       proxy: {
         "/api": {
           target: process.env.VITE_API_PROXY_TARGET || "http://localhost:3000",
@@ -193,7 +194,8 @@ export default defineConfig(({ command, mode }) => {
     },
 
     preview: {
-      port: 8080,
+      port: 5175,
+      strictPort: true,
       host: process.env.VITE_PREVIEW_HOST || "127.0.0.1",
     },
   };
