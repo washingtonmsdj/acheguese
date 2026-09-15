@@ -119,6 +119,23 @@ describe("G4 Auth/session SSOT ownership", () => {
     );
   });
 
+  it("keeps CacheManager as an invalidation bus instead of a second SessionData store", () => {
+    const cacheManager = read("src/core/session/cache/CacheManager.ts");
+    const cacheConfig = read("src/core/session/cache/CacheConfig.ts");
+
+    expect(cacheManager).toContain("registerInvalidationCallback");
+    expect(cacheManager).toContain("notifyInvalidation");
+    expect(cacheManager).toContain('CacheManager.notifyInvalidation("session")');
+    expect(cacheManager).toContain('CacheManager.notifyInvalidation("all")');
+    expect(cacheManager).not.toContain("SessionData");
+    expect(cacheManager).not.toContain("sessionCache");
+    expect(cacheManager).not.toContain("getSession()");
+    expect(cacheManager).not.toContain("setSession(");
+    expect(cacheManager).not.toContain("getMetrics()");
+    expect(cacheConfig).not.toContain("session: { ttl:");
+    expect(cacheConfig).toContain("authorization: { ttl: number }");
+  });
+
   it("uses a strict private-profile reader for canonical session hydration", () => {
     const sessionService = read("src/core/session/services/SessionService.ts");
     const strictReader = read(
