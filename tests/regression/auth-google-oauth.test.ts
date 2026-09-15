@@ -106,7 +106,7 @@ describe("Google OAuth account/access contract", () => {
     expect(terms).not.toContain("Tudo certo com os termos.");
   });
 
-  it("waits for an unsettled PKCE callback even when another session already exists", () => {
+  it("waits for the OAuth session even when PKCE has already disappeared from the live URL", () => {
     const callback = readProjectFile("src/core/auth/utils/authCallback.ts");
     const terms = readProjectFile(
       "src/app/features/onboarding/pages/AceiteTermosPage.tsx",
@@ -125,23 +125,25 @@ describe("Google OAuth account/access contract", () => {
       "const hasPendingPkceCode = hasPendingPkceCodeInUrl(liveSearch);",
     );
     expect(terms).not.toContain("new URLSearchParams(liveSearch).has(");
-    expect(terms).toContain("sessionLoading ||\n      hasPendingPkceCode ||");
-    expect(terms).toContain("(!user && authCallbackPending)");
-    expect(terms).not.toContain(
-      "if (sessionLoading || (!user && authCallbackPending))",
-    );
+    expect(terms).toContain("const hasPendingOAuthJourney = journeyIntent !== null;");
+    expect(terms).toContain("const oauthSessionSettling =");
+    expect(terms).toContain("const oauthSettlementPending =");
+    expect(terms).toContain("hasPendingPkceCode ||");
+    expect(terms).toContain("(!user && authCallbackPending) ||");
+    expect(terms).toContain("oauthSessionSettling;");
+    expect(terms).toContain("if (sessionLoading || oauthSettlementPending) {");
 
-    const pendingCodeGuard = terms.indexOf("hasPendingPkceCode ||");
-    const signedOutGuard = terms.indexOf("if (!user)", pendingCodeGuard + 1);
-    expect(pendingCodeGuard).toBeGreaterThanOrEqual(0);
-    expect(signedOutGuard).toBeGreaterThan(pendingCodeGuard);
-    expect(terms.slice(pendingCodeGuard, signedOutGuard)).toContain(
+    const pendingGuard = terms.indexOf("if (sessionLoading || oauthSettlementPending)");
+    const signedOutGuard = terms.indexOf("if (!user)", pendingGuard + 1);
+    expect(pendingGuard).toBeGreaterThanOrEqual(0);
+    expect(signedOutGuard).toBeGreaterThan(pendingGuard);
+    expect(terms.slice(pendingGuard, signedOutGuard)).toContain(
       'setState("checking")',
     );
     expect(terms).not.toContain('const { user } = useAuth()');
   });
 
-  it("bounds a PKCE callback marker that never produces a session", () => {
+  it("uses journey intent only as a bounded wait signal, never as authentication proof", () => {
     const terms = readProjectFile(
       "src/app/features/onboarding/pages/AceiteTermosPage.tsx",
     );
@@ -150,10 +152,14 @@ describe("Google OAuth account/access contract", () => {
     );
 
     expect(securityConfig).toContain("authUrlCleanupDelayMs: 5 * 1000");
+    expect(terms).toContain("hasPendingOAuthJourney");
+    expect(terms).toContain("oauthSettlementPending");
     expect(terms).toContain("AUTH_BROWSER_STORAGE_CONFIG.authUrlCleanupDelayMs");
     expect(terms).toContain("const timeout = window.setTimeout(() => {");
     expect(terms).toContain('setState("oauth-error")');
     expect(terms).toContain("return () => window.clearTimeout(timeout);");
+    expect(terms).toContain("if (!user) {");
+    expect(terms).toContain('setState("signed-out")');
   });
 
   it("leaves auth return URL cleanup to the Supabase callback exchange", () => {
