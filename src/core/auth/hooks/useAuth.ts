@@ -1,10 +1,9 @@
 /**
  * useAuth — SSOT hook
  *
- * Reads directly from SessionState (SSOT). No onAuthStateChange listener.
- * No local state. Re-renders whenever SessionState notifies.
- *
- * Consumers that only need `user` (id, email) continue to work unchanged.
+ * Reads the authenticated user directly from SessionState (SSOT). It never
+ * creates a second auth-state listener or a parallel session owner. Local state
+ * here is limited to action feedback (`loading` / `error`).
  */
 import { useState, useEffect, useCallback, useRef } from "react";
 import { SessionService } from "@/core/session/services/SessionService";
@@ -50,7 +49,9 @@ export function useAuth(): UseAuthReturn {
   const [sessionData, setSessionData] = useState(() => SessionState.getState());
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<AuthError | null>(null);
+  const mountedRef = useRef(true);
   const activeOperationsRef = useRef(0);
+  const latestOperationIdRef = useRef(0);
   const signOutOthersInFlightRef = useRef<Promise<void> | null>(null);
   const passwordReauthInFlightRef = useRef<Promise<void> | null>(null);
   const emailUpdateInFlightRef = useRef<{
@@ -58,22 +59,45 @@ export function useAuth(): UseAuthReturn {
     promise: Promise<void>;
   } | null>(null);
 
-  const beginAuthOperation = useCallback(() => {
+  const beginAuthOperation = useCallback((): number => {
+    const operationId = latestOperationIdRef.current + 1;
+    latestOperationIdRef.current = operationId;
     activeOperationsRef.current += 1;
-    if (activeOperationsRef.current === 1) setLoading(true);
+
+    if (mountedRef.current) {
+      if (activeOperationsRef.current === 1) setLoading(true);
+      setError(null);
+    }
+
+    return operationId;
   }, []);
 
   const endAuthOperation = useCallback(() => {
     activeOperationsRef.current = Math.max(0, activeOperationsRef.current - 1);
-    if (activeOperationsRef.current === 0) setLoading(false);
+    if (mountedRef.current && activeOperationsRef.current === 0) {
+      setLoading(false);
+    }
+  }, []);
+
+  const publishAuthError = useCallback((operationId: number, err: unknown) => {
+    if (
+      mountedRef.current &&
+      operationId === latestOperationIdRef.current
+    ) {
+      setError(err as AuthError);
+    }
   }, []);
 
   useEffect(() => {
+    mountedRef.current = true;
     // Subscribe to SessionState changes only - session observer is managed by SessionService
     const unsubscribe = SessionState.subscribe(() => {
-      setSessionData(SessionState.getState());
+      if (mountedRef.current) setSessionData(SessionState.getState());
     });
-    return unsubscribe;
+    return () => {
+      mountedRef.current = false;
+      unsubscribe();
+    };
   }, []);
 
   // Map SessionState.user to AuthUser shape for consumers that read user_metadata.
@@ -92,55 +116,51 @@ export function useAuth(): UseAuthReturn {
     : null;
 
   const signUp = useCallback(async (data: SignUpData) => {
-    beginAuthOperation();
+    const operationId = beginAuthOperation();
     try {
-      setError(null);
       await AuthService.signUp(data);
     } catch (err) {
-      setError(err as AuthError);
+      publishAuthError(operationId, err);
       throw err;
     } finally {
       endAuthOperation();
     }
-  }, [beginAuthOperation, endAuthOperation]);
+  }, [beginAuthOperation, endAuthOperation, publishAuthError]);
 
   const signIn = useCallback(async (data: SignInData) => {
-    beginAuthOperation();
+    const operationId = beginAuthOperation();
     try {
-      setError(null);
       await AuthService.signIn(data);
     } catch (err) {
-      setError(err as AuthError);
+      publishAuthError(operationId, err);
       throw err;
     } finally {
       endAuthOperation();
     }
-  }, [beginAuthOperation, endAuthOperation]);
+  }, [beginAuthOperation, endAuthOperation, publishAuthError]);
 
   const signOut = useCallback(async () => {
-    beginAuthOperation();
+    const operationId = beginAuthOperation();
     try {
-      setError(null);
       await AuthService.signOut();
     } catch (err) {
-      setError(err as AuthError);
+      publishAuthError(operationId, err);
       throw err;
     } finally {
       endAuthOperation();
     }
-  }, [beginAuthOperation, endAuthOperation]);
+  }, [beginAuthOperation, endAuthOperation, publishAuthError]);
 
   const signOutOtherSessions = useCallback(async () => {
     const activeRevocation = signOutOthersInFlightRef.current;
     if (activeRevocation) return activeRevocation;
 
     const operation = (async () => {
-      beginAuthOperation();
+      const operationId = beginAuthOperation();
       try {
-        setError(null);
         await AuthService.signOutOtherSessions();
       } catch (err) {
-        setError(err as AuthError);
+        publishAuthError(operationId, err);
         throw err;
       } finally {
         endAuthOperation();
@@ -155,78 +175,73 @@ export function useAuth(): UseAuthReturn {
         signOutOthersInFlightRef.current = null;
       }
     }
-  }, [beginAuthOperation, endAuthOperation]);
+  }, [beginAuthOperation, endAuthOperation, publishAuthError]);
 
   const resetPassword = useCallback(async (email: string, captchaToken?: string) => {
-    beginAuthOperation();
+    const operationId = beginAuthOperation();
     try {
-      setError(null);
       await AuthService.resetPassword(email, captchaToken);
     } catch (err) {
-      setError(err as AuthError);
+      publishAuthError(operationId, err);
       throw err;
     } finally {
       endAuthOperation();
     }
-  }, [beginAuthOperation, endAuthOperation]);
+  }, [beginAuthOperation, endAuthOperation, publishAuthError]);
 
   const signInWithUsername = useCallback(async (data: SignInWithUsernameData) => {
-    beginAuthOperation();
+    const operationId = beginAuthOperation();
     try {
-      setError(null);
       await AuthService.signInWithUsername(data);
     } catch (err) {
-      setError(err as AuthError);
+      publishAuthError(operationId, err);
       throw err;
     } finally {
       endAuthOperation();
     }
-  }, [beginAuthOperation, endAuthOperation]);
+  }, [beginAuthOperation, endAuthOperation, publishAuthError]);
 
   const signInWithGoogle = useCallback(async () => {
-    beginAuthOperation();
+    const operationId = beginAuthOperation();
     try {
-      setError(null);
       await AuthBackendAvailability.assertReadyForExternalOAuth();
       await AuthService.signInWithGoogle();
     } catch (err) {
-      setError(err as AuthError);
+      publishAuthError(operationId, err);
       throw err;
     } finally {
       endAuthOperation();
     }
-  }, [beginAuthOperation, endAuthOperation]);
+  }, [beginAuthOperation, endAuthOperation, publishAuthError]);
 
   const resetPasswordByIdentifier = useCallback(
     async (identifier: string, captchaToken?: string) => {
-      beginAuthOperation();
+      const operationId = beginAuthOperation();
       try {
-        setError(null);
         await AuthService.resetPasswordByIdentifier(identifier, captchaToken);
       } catch (err) {
-        setError(err as AuthError);
+        publishAuthError(operationId, err);
         throw err;
       } finally {
         endAuthOperation();
       }
     },
-    [beginAuthOperation, endAuthOperation],
+    [beginAuthOperation, endAuthOperation, publishAuthError],
   );
 
   const resendConfirmationEmail = useCallback(
     async (email: string, captchaToken?: string) => {
-      beginAuthOperation();
+      const operationId = beginAuthOperation();
       try {
-        setError(null);
         await AuthService.resendConfirmationEmail(email, captchaToken);
       } catch (err) {
-        setError(err as AuthError);
+        publishAuthError(operationId, err);
         throw err;
       } finally {
         endAuthOperation();
       }
     },
-    [beginAuthOperation, endAuthOperation],
+    [beginAuthOperation, endAuthOperation, publishAuthError],
   );
 
   const requestPasswordReauthentication = useCallback(async () => {
@@ -234,12 +249,11 @@ export function useAuth(): UseAuthReturn {
     if (activeRequest) return activeRequest;
 
     const operation = (async () => {
-      beginAuthOperation();
+      const operationId = beginAuthOperation();
       try {
-        setError(null);
         await AuthService.requestPasswordReauthentication();
       } catch (err) {
-        setError(err as AuthError);
+        publishAuthError(operationId, err);
         throw err;
       } finally {
         endAuthOperation();
@@ -254,20 +268,19 @@ export function useAuth(): UseAuthReturn {
         passwordReauthInFlightRef.current = null;
       }
     }
-  }, [beginAuthOperation, endAuthOperation]);
+  }, [beginAuthOperation, endAuthOperation, publishAuthError]);
 
   const updatePassword = useCallback(async (newPassword: string, nonce?: string) => {
-    beginAuthOperation();
+    const operationId = beginAuthOperation();
     try {
-      setError(null);
       await AuthService.updatePassword(newPassword, nonce);
     } catch (err) {
-      setError(err as AuthError);
+      publishAuthError(operationId, err);
       throw err;
     } finally {
       endAuthOperation();
     }
-  }, [beginAuthOperation, endAuthOperation]);
+  }, [beginAuthOperation, endAuthOperation, publishAuthError]);
 
   const updateEmail = useCallback(async (newEmail: string) => {
     const normalizedEmail = newEmail.trim().toLowerCase();
@@ -280,12 +293,11 @@ export function useAuth(): UseAuthReturn {
     }
 
     const operation = (async () => {
-      beginAuthOperation();
+      const operationId = beginAuthOperation();
       try {
-        setError(null);
         await AuthService.updateEmail(newEmail);
       } catch (err) {
-        setError(err as AuthError);
+        publishAuthError(operationId, err);
         throw err;
       } finally {
         endAuthOperation();
@@ -304,21 +316,20 @@ export function useAuth(): UseAuthReturn {
         emailUpdateInFlightRef.current = null;
       }
     }
-  }, [beginAuthOperation, endAuthOperation]);
+  }, [beginAuthOperation, endAuthOperation, publishAuthError]);
 
   const refreshUser = useCallback(async () => {
-    beginAuthOperation();
+    const operationId = beginAuthOperation();
     try {
-      setError(null);
       // SessionService.refreshSession() will update SessionState,
       // which will trigger our subscriber above.
       await SessionService.refreshSession();
     } catch (err) {
-      setError(err as AuthError);
+      publishAuthError(operationId, err);
     } finally {
       endAuthOperation();
     }
-  }, [beginAuthOperation, endAuthOperation]);
+  }, [beginAuthOperation, endAuthOperation, publishAuthError]);
 
   return {
     user,
