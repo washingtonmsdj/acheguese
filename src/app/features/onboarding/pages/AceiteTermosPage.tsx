@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { Helmet } from "react-helmet-async";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 
@@ -54,6 +54,7 @@ export default function AceiteTermosPage() {
   const [accepted, setAccepted] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [hasPriorTermsAcceptance, setHasPriorTermsAcceptance] = useState(false);
+  const acceptanceInFlight = useRef(false);
 
   const returnTo = useMemo(() => getAuthJourneyReturnTarget(), []);
   const journeyIntent = useMemo(() => getPendingAuthJourneyIntent(), []);
@@ -182,7 +183,8 @@ export default function AceiteTermosPage() {
   ]);
 
   const handleAccept = async () => {
-    if (!user || !accepted || submitting) return;
+    if (!user || !accepted || acceptanceInFlight.current) return;
+    acceptanceInFlight.current = true;
     setSubmitting(true);
     try {
       await PrivacySettingsService.recordConsent({
@@ -212,6 +214,7 @@ export default function AceiteTermosPage() {
         variant: "destructive",
       });
     } finally {
+      acceptanceInFlight.current = false;
       setSubmitting(false);
     }
   };
