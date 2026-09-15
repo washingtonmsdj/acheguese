@@ -72,18 +72,32 @@ export function MultiProfileProvider({ children }: { children: ReactNode }) {
   const [error, setError] = useState<string | null>(null);
   const allProfilesRef = useRef<Profile[]>([]);
   const loadedUserIdRef = useRef<string | null>(null);
+  const projectedUserIdRef = useRef<string | null>(null);
   const requestVersionRef = useRef(0);
 
   const loadProfilesForUser = useCallback(async (userId: string) => {
+    const projectedUserId = projectedUserIdRef.current;
     loadedUserIdRef.current = userId;
     const requestVersion = ++requestVersionRef.current;
     setLoading(true);
     setError(null);
 
+    // A troca de conta precisa remover a projeção privada anterior antes de
+    // iniciar a leitura da nova conta. Em retry do mesmo usuário, preservamos
+    // a lista já conhecida para não transformar erro transitório em vazio.
+    if (projectedUserId !== null && projectedUserId !== userId) {
+      projectedUserIdRef.current = null;
+      setAllProfiles([]);
+      allProfilesRef.current = [];
+      setActiveProfile(null);
+      setContextualProfile(null);
+    }
+
     try {
       const profiles = await MultiProfileRuntimeService.getMyProfiles(userId);
       if (requestVersion !== requestVersionRef.current) return;
 
+      projectedUserIdRef.current = userId;
       setAllProfiles(profiles);
       allProfilesRef.current = profiles;
 
@@ -164,6 +178,7 @@ export function MultiProfileProvider({ children }: { children: ReactNode }) {
     if (sessionLoading) return;
 
     loadedUserIdRef.current = null;
+    projectedUserIdRef.current = null;
     requestVersionRef.current += 1;
     setAllProfiles([]);
     allProfilesRef.current = [];
