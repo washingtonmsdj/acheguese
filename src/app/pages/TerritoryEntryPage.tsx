@@ -269,16 +269,18 @@ export default function TerritoryEntryPage() {
 
             <section className="entry-selection" aria-labelledby="entry-community-title">
               <div className="entry-community-preview">
-                <img
-                  src={communityImageSrc ?? undefined}
-                  alt=""
-                  width={1024}
-                  height={768}
-                  loading="lazy"
-                  decoding="async"
-                  fetchPriority="low"
-                  className="bg-territory-raised"
-                />
+                <div className="hidden w-full md:block" aria-hidden="true">
+                  <img
+                    src={communityImageSrc ?? undefined}
+                    alt=""
+                    width={1024}
+                    height={768}
+                    loading="lazy"
+                    decoding="async"
+                    fetchPriority="low"
+                    className="bg-territory-raised"
+                  />
+                </div>
                 <span>
                   <strong id="entry-community-title">{LAUNCH_COMMUNITY_NAME}</strong>
                   <em>{LAUNCH_PLACE_LABEL}</em>
