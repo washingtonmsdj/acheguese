@@ -7,6 +7,10 @@ const hook = readFileSync(
   join(root, "src/core/auth/hooks/useMFA.ts"),
   "utf8",
 );
+const service = readFileSync(
+  join(root, "src/core/auth/services/MFAService.ts"),
+  "utf8",
+);
 const securityPage = readFileSync(
   join(root, "src/modules/profile/pages/ContaSegurancaPage.tsx"),
   "utf8",
@@ -37,6 +41,50 @@ describe("account MFA settings fail-closed contract", () => {
       "Nenhuma nova configuração será criada enquanto o serviço de autenticação estiver indisponível.",
     );
     expect(securityPage).toContain("Confirmando o estado de segurança da conta...");
+  });
+
+  it("drops the local enrollment secret and verification code when leaving the MFA view", () => {
+    expect(securityPage).toContain("const mfaFlowRequestIdRef = useRef(0);");
+    expect(securityPage).toContain('if (location.hash === "#mfa") return;');
+    expect(securityPage).toContain("mfaFlowRequestIdRef.current += 1;");
+    expect(securityPage).toContain("setEnrollment(null);");
+    expect(securityPage).toContain('setVerificationCode("");');
+    expect(securityPage).toContain("setVerifying(false);");
+    expect(securityPage).toContain("setCancellingEnrollment(false);");
+  });
+
+  it("invalidates MFA async generations on unmount and before stale navigation or toasts", () => {
+    expect(securityPage).toContain("mountedRef.current = false;");
+    expect(securityPage).toContain("mfaFlowRequestIdRef.current += 1;");
+    expect(securityPage).toContain(
+      "requestId !== mfaFlowRequestIdRef.current ||",
+    );
+    expect(securityPage).toContain('!isCurrentSecurityView("#mfa")');
+
+    const start = securityPage.indexOf("const handleStartMfa = async");
+    const awaitEnrollment = securityPage.indexOf("await startEnrollment();", start);
+    const startGuard = securityPage.indexOf(
+      "requestId !== mfaFlowRequestIdRef.current ||",
+      awaitEnrollment,
+    );
+    const startNavigate = securityPage.indexOf(
+      "navigate(ACCOUNT_PATHS.mfa)",
+      startGuard,
+    );
+    expect(start).toBeGreaterThanOrEqual(0);
+    expect(awaitEnrollment).toBeGreaterThan(start);
+    expect(startGuard).toBeGreaterThan(awaitEnrollment);
+    expect(startNavigate).toBeGreaterThan(startGuard);
+  });
+
+  it("cleans abandoned unverified factors before creating the next enrollment", () => {
+    expect(service).toContain("const abandonedFactors = totpFactors.filter(");
+    expect(service).toContain("factor.status !== 'verified'");
+    expect(service).toContain("await supabase.auth.mfa.unenroll({");
+    expect(service).toContain("factorId: factor.id");
+    expect(service.indexOf("abandonedFactors")).toBeLessThan(
+      service.indexOf("supabase.auth.mfa.enroll({"),
+    );
   });
 
   it("keeps implementation jargon out of the user-facing security surface", () => {
