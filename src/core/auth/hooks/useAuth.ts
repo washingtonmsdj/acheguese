@@ -29,8 +29,11 @@ interface UseAuthReturn {
   signInWithGoogle: () => Promise<void>;
   signOut: () => Promise<void>;
   signOutOtherSessions: () => Promise<void>;
-  resetPassword: (email: string) => Promise<void>;
-  resetPasswordByIdentifier: (identifier: string) => Promise<void>;
+  resetPassword: (email: string, captchaToken?: string) => Promise<void>;
+  resetPasswordByIdentifier: (
+    identifier: string,
+    captchaToken?: string,
+  ) => Promise<void>;
   resendConfirmationEmail: (email: string) => Promise<void>;
   requestPasswordReauthentication: () => Promise<void>;
   updatePassword: (newPassword: string, nonce?: string) => Promise<void>;
@@ -119,11 +122,11 @@ export function useAuth(): UseAuthReturn {
     }
   }, []);
 
-  const resetPassword = useCallback(async (email: string) => {
+  const resetPassword = useCallback(async (email: string, captchaToken?: string) => {
     try {
       setLoading(true);
       setError(null);
-      await AuthService.resetPassword(email);
+      await AuthService.resetPassword(email, captchaToken);
     } catch (err) {
       setError(err as AuthError);
       throw err;
@@ -158,18 +161,21 @@ export function useAuth(): UseAuthReturn {
     }
   }, []);
 
-  const resetPasswordByIdentifier = useCallback(async (identifier: string) => {
-    try {
-      setLoading(true);
-      setError(null);
-      await AuthService.resetPasswordByIdentifier(identifier);
-    } catch (err) {
-      setError(err as AuthError);
-      throw err;
-    } finally {
-      setLoading(false);
-    }
-  }, []);
+  const resetPasswordByIdentifier = useCallback(
+    async (identifier: string, captchaToken?: string) => {
+      try {
+        setLoading(true);
+        setError(null);
+        await AuthService.resetPasswordByIdentifier(identifier, captchaToken);
+      } catch (err) {
+        setError(err as AuthError);
+        throw err;
+      } finally {
+        setLoading(false);
+      }
+    },
+    [],
+  );
 
   const resendConfirmationEmail = useCallback(async (email: string) => {
     try {
