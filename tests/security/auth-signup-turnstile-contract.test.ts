@@ -15,9 +15,24 @@ describe("signup Turnstile contract", () => {
     expect(signupPage).toContain("const turnstile = useAuthTurnstile();");
     expect(signupPage).toContain("if (!turnstile.isReady)");
     expect(signupPage).toContain(
-      "void submit(turnstile.token ?? undefined, turnstile.reset);",
+      "await submit(turnstile.token ?? undefined, turnstile.reset);",
     );
     expect(authTypes).toContain("captchaToken?: string;");
+  });
+
+  it("serializes both the signup command and competing email/Google UI actions", () => {
+    expect(signupHook).toContain("const submitInFlightRef = useRef(false);");
+    expect(signupHook).toContain("if (submitInFlightRef.current) return;");
+    expect(signupHook).toContain("submitInFlightRef.current = true;");
+    expect(signupHook).toContain("submitInFlightRef.current = false;");
+
+    expect(signupPage).toContain("const authActionInFlightRef = useRef(false);");
+    expect(signupPage).toContain(
+      "if (sessionLoading || user || authActionInFlightRef.current) return;",
+    );
+    expect(signupPage).toContain("googleLoading ||\n      authActionInFlightRef.current");
+    expect(signupPage).toContain("authActionInFlightRef.current = true;");
+    expect(signupPage).toContain("authActionInFlightRef.current = false;");
   });
 
   it("forwards the token through the signup hook into Supabase Auth", () => {
