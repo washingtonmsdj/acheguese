@@ -78,6 +78,34 @@ describe("Google OAuth account/access contract", () => {
     expect(terms).toContain("Entrar com Google não pula esta etapa");
   });
 
+  it("continues immediately when current terms are already accepted or a new acceptance succeeds", () => {
+    const terms = readProjectFile(
+      "src/app/features/onboarding/pages/AceiteTermosPage.tsx",
+    );
+
+    const existingAcceptance = terms.indexOf(
+      "consents.some((consent) => hasCurrentTermsAcceptance(consent))",
+    );
+    const recordConsent = terms.indexOf("await PrivacySettingsService.recordConsent");
+
+    expect(existingAcceptance).toBeGreaterThanOrEqual(0);
+    expect(recordConsent).toBeGreaterThanOrEqual(0);
+    expect(terms.slice(existingAcceptance, existingAcceptance + 260)).toContain(
+      "completeTermsJourney()",
+    );
+    expect(terms.slice(existingAcceptance, existingAcceptance + 320)).toContain(
+      "navigate(returnTo, { replace: true })",
+    );
+    expect(terms.slice(recordConsent, recordConsent + 520)).toContain(
+      "completeTermsJourney()",
+    );
+    expect(terms.slice(recordConsent, recordConsent + 560)).toContain(
+      "navigate(returnTo, { replace: true })",
+    );
+    expect(terms).not.toContain('state === "accepted"');
+    expect(terms).not.toContain("Tudo certo com os termos.");
+  });
+
   it("keeps localhost:5175 as the deterministic local OAuth origin", () => {
     const origin = readProjectFile("src/shared/config/publicAppOrigin.ts");
     const viteConfig = readProjectFile("vite.config.ts");
