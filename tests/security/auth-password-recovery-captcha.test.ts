@@ -8,6 +8,9 @@ const read = (path: string) => readFileSync(resolve(root, path), "utf8");
 const authService = read("src/core/auth/services/AuthService.ts");
 const authHook = read("src/core/auth/hooks/useAuth.ts");
 const recoveryPage = read("src/app/pages/ResetPasswordPage.tsx");
+const accountSecurityPage = read(
+  "src/modules/profile/pages/ContaSegurancaPage.tsx",
+);
 
 describe("password recovery CAPTCHA propagation", () => {
   it("keeps recovery CAPTCHA support in the canonical Auth owner", () => {
@@ -43,5 +46,18 @@ describe("password recovery CAPTCHA propagation", () => {
     expect(recoveryPage.slice(finallyIndex, finallyIndex + 140)).toContain(
       "requestTurnstile.reset()",
     );
+  });
+
+  it("routes authenticated account recovery through the canonical CAPTCHA flow", () => {
+    expect(accountSecurityPage).toContain("buildPasswordResetRequestPath");
+    expect(accountSecurityPage).toContain(
+      "navigate(buildPasswordResetRequestPath(user.email))",
+    );
+    expect(accountSecurityPage).toContain(
+      "Continuar para recuperação por e-mail",
+    );
+    expect(accountSecurityPage).not.toContain("resetPassword(user.email)");
+    expect(accountSecurityPage).not.toContain("sendingReset");
+    expect(accountSecurityPage).not.toContain("resetSent");
   });
 });
