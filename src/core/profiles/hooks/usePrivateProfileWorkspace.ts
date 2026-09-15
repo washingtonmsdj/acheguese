@@ -1,5 +1,5 @@
 import { useQuery } from "@tanstack/react-query";
-import { useAuth } from "@/core/auth";
+import { useSessionUserId } from "@/core/session/hooks/useSessionUserId";
 import { profileService } from "@/core/profiles/services";
 import type { ProfilePrivateWorkspace } from "@/core/profiles/services";
 
@@ -52,18 +52,18 @@ const EMPTY_WORKSPACE: ProfilePrivateWorkspace = {
 };
 
 export function usePrivateProfileWorkspace() {
-  const { user } = useAuth();
+  const userId = useSessionUserId();
 
   const query = useQuery({
-    queryKey: ["profile", "private-workspace", user?.id],
+    queryKey: ["profile", "private-workspace", userId],
     queryFn: async () => {
-      if (!user?.id) {
+      if (!userId) {
         return EMPTY_WORKSPACE;
       }
 
-      return profileService.getPrivateWorkspace(user.id);
+      return profileService.getPrivateWorkspace(userId);
     },
-    enabled: Boolean(user?.id),
+    enabled: Boolean(userId),
     staleTime: 30 * 1000,
   });
 
