@@ -302,20 +302,14 @@ export function completeExistingGoogleSignupJourney(): void {
 }
 
 /**
- * Confirmação de cadastro encerra estado do e-mail, mas preserva o destino do
- * cadastro para a etapa canônica de primeiro acesso.
+ * Uma conta sem e-mail confirmado ainda não concluiu o acesso inicial. Depois
+ * da confirmação, a etapa canônica continua sendo primeiro acesso; limpamos o
+ * estado específico do e-mail, mas preservamos o destino para essa etapa.
  */
-export function completeEmailSignupConfirmationJourney(): void {
+export function completeEmailConfirmationJourney(): void {
   clearPendingReturn();
   clearPendingAuthJourneyIntent();
   clearPendingEmailConfirmationState();
-}
-
-/** Confirmação de uma conta já existente retorna ao destino e encerra o fluxo. */
-export function completeEmailLoginConfirmationJourney(): void {
-  clearPendingReturn();
-  clearPendingAuthJourneyIntent();
-  clearPendingSignupContext();
 }
 
 /** Primeiro acesso é o último owner do contexto transitório de cadastro. */
