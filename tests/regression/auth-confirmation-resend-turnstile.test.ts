@@ -38,7 +38,7 @@ describe("signup confirmation resend Turnstile contract", () => {
       "const journeyContext = useMemo(() => getSignupConfirmationContext(), []);",
     );
     expect(confirmationPage).toContain(
-      "const hasCanonicalJourneyContext = journeyContext.email !== null;",
+      "const hasCanonicalJourneyContext =\n    journeyContext.email !== null || journeyContext.intent !== null;",
     );
     expect(confirmationPage).toContain(
       "journeyContext.email ?? state?.email?.trim().toLowerCase() ?? null",
