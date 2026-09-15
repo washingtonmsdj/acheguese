@@ -269,9 +269,21 @@ export class AuthService {
     if (error) throw error;
   }
 
-  static async updatePassword(newPassword: string): Promise<void> {
+  /**
+   * Sends the Supabase reauthentication nonce required by the project's
+   * `secure_password_change` policy. The nonce itself is never persisted by
+   * the application and must be supplied back by the user for the update.
+   */
+  static async requestPasswordReauthentication(): Promise<void> {
+    const { error } = await supabase.auth.reauthenticate();
+    if (error) throw error;
+  }
+
+  static async updatePassword(newPassword: string, nonce?: string): Promise<void> {
+    const normalizedNonce = nonce?.trim();
     const { error } = await supabase.auth.updateUser({
       password: newPassword,
+      ...(normalizedNonce ? { nonce: normalizedNonce } : {}),
     });
     if (error) throw error;
   }
