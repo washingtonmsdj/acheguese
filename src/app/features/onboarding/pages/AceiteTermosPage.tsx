@@ -34,6 +34,7 @@ import { PrivacySettingsService } from "@/core/privacy/services/PrivacySettingsS
 import { useSessionContext } from "@/core/session/hooks/useSessionContext";
 import { Checkbox } from "@/shared/components/ui/checkbox";
 import { Label } from "@/shared/components/ui/label";
+import { AUTH_BROWSER_STORAGE_CONFIG } from "@/shared/config/security.config";
 import { useToast } from "@/shared/hooks/use-toast";
 
 type AcceptanceState =
@@ -88,6 +89,23 @@ export default function AceiteTermosPage() {
     journeyIntent === AUTH_JOURNEY_INTENTS.signup
       ? buildSignupPath(signupOriginalReturn)
       : loginPath;
+
+  useEffect(() => {
+    if (
+      oauthCallbackFailed ||
+      sessionLoading ||
+      user ||
+      !authCallbackPending
+    ) {
+      return;
+    }
+
+    const timeout = window.setTimeout(() => {
+      setState("oauth-error");
+    }, AUTH_BROWSER_STORAGE_CONFIG.authUrlCleanupDelayMs);
+
+    return () => window.clearTimeout(timeout);
+  }, [authCallbackPending, oauthCallbackFailed, sessionLoading, user]);
 
   useEffect(() => {
     if (oauthCallbackFailed) {
