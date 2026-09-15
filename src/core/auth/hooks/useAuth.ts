@@ -6,7 +6,7 @@
  *
  * Consumers that only need `user` (id, email) continue to work unchanged.
  */
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import { SessionService } from "@/core/session/services/SessionService";
 import { SessionState } from "@/core/session/state/SessionState";
 import { AuthBackendAvailability } from "@/core/auth/services/AuthBackendAvailability";
@@ -50,6 +50,10 @@ export function useAuth(): UseAuthReturn {
   const [sessionData, setSessionData] = useState(() => SessionState.getState());
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<AuthError | null>(null);
+  const emailUpdateInFlightRef = useRef<{
+    email: string;
+    promise: Promise<void>;
+  } | null>(null);
 
   useEffect(() => {
     // Subscribe to SessionState changes only - session observer is managed by SessionService
@@ -225,15 +229,39 @@ export function useAuth(): UseAuthReturn {
   }, []);
 
   const updateEmail = useCallback(async (newEmail: string) => {
+    const normalizedEmail = newEmail.trim().toLowerCase();
+    const activeUpdate = emailUpdateInFlightRef.current;
+    if (activeUpdate) {
+      if (activeUpdate.email === normalizedEmail) {
+        return activeUpdate.promise;
+      }
+      throw new Error("Já existe uma alteração de e-mail em andamento.");
+    }
+
+    const operation = (async () => {
+      try {
+        setLoading(true);
+        setError(null);
+        await AuthService.updateEmail(newEmail);
+      } catch (err) {
+        setError(err as AuthError);
+        throw err;
+      } finally {
+        setLoading(false);
+      }
+    })();
+
+    emailUpdateInFlightRef.current = {
+      email: normalizedEmail,
+      promise: operation,
+    };
+
     try {
-      setLoading(true);
-      setError(null);
-      await AuthService.updateEmail(newEmail);
-    } catch (err) {
-      setError(err as AuthError);
-      throw err;
+      await operation;
     } finally {
-      setLoading(false);
+      if (emailUpdateInFlightRef.current?.promise === operation) {
+        emailUpdateInFlightRef.current = null;
+      }
     }
   }, []);
 
