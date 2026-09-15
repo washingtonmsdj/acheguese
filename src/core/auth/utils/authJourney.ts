@@ -74,25 +74,21 @@ function getPendingSignupRedirect(): string | null {
   return getAuthFlowSessionValue(AUTH_FLOW_STORAGE_KEYS.pendingSignupRedirect);
 }
 
-function clearPendingSignupRedirect(): void {
-  clearAuthFlowSessionValue(AUTH_FLOW_STORAGE_KEYS.pendingSignupRedirect);
-}
-
-function clearPendingSignupConfirmationSentAt(): void {
+function clearPendingSignupConfirmationCooldown(): void {
   clearAuthFlowSessionValue(
-    AUTH_FLOW_STORAGE_KEYS.pendingSignupConfirmationSentAt,
+    AUTH_FLOW_STORAGE_KEYS.pendingSignupConfirmationCooldownUntil,
   );
 }
 
-function getPendingSignupConfirmationSentAt(): number | null {
+function getPendingSignupConfirmationCooldownUntil(): number | null {
   const stored = getAuthFlowSessionValue(
-    AUTH_FLOW_STORAGE_KEYS.pendingSignupConfirmationSentAt,
+    AUTH_FLOW_STORAGE_KEYS.pendingSignupConfirmationCooldownUntil,
   );
   if (!stored) return null;
 
   const value = Number(stored);
   if (!Number.isFinite(value) || value <= 0) {
-    clearPendingSignupConfirmationSentAt();
+    clearPendingSignupConfirmationCooldown();
     return null;
   }
   return value;
@@ -101,7 +97,7 @@ function getPendingSignupConfirmationSentAt(): number | null {
 function clearPendingSignupContext(): void {
   clearPendingSignupEmail();
   clearPendingSignupRedirect();
-  clearPendingSignupConfirmationSentAt();
+  clearPendingSignupConfirmationCooldown();
 }
 
 export function getPendingAuthJourneyIntent(): AuthJourneyIntent | null {
@@ -135,30 +131,30 @@ export function getSignupConfirmationContext(): SignupConfirmationContext {
   };
 }
 
-/** Registra apenas o instante do envio confirmado; nunca conteúdo do e-mail. */
-export function markSignupConfirmationEmailSent(sentAt = Date.now()): void {
+/**
+ * Inicia a janela local de bloqueio que espelha o limite do Auth para reenvio.
+ * É usada após envio aceito e também quando o servidor responde rate-limit.
+ */
+export function startSignupConfirmationResendCooldown(now = Date.now()): void {
   setAuthFlowSessionValue(
-    AUTH_FLOW_STORAGE_KEYS.pendingSignupConfirmationSentAt,
-    String(sentAt),
+    AUTH_FLOW_STORAGE_KEYS.pendingSignupConfirmationCooldownUntil,
+    String(now + AUTH_SIGNUP_CONFIRMATION_RESEND_COOLDOWN_MS),
     AUTH_FLOW_TTL_MS.pendingSignup,
   );
 }
 
 /**
- * Tempo restante do bloqueio de reenvio derivado do último envio confirmado.
- * Recarregar a página não reinicia nem remove a espera. Mudanças regressivas no
- * relógio do sistema nunca podem ampliar o bloqueio para além do cooldown.
+ * Tempo restante do bloqueio de reenvio. O deadline persiste durante reloads;
+ * mudanças regressivas no relógio nunca ampliam a espera além do cooldown.
  */
 export function getSignupConfirmationResendRemainingMs(
   now = Date.now(),
 ): number {
-  const sentAt = getPendingSignupConfirmationSentAt();
-  if (sentAt === null) return 0;
-  const remaining =
-    AUTH_SIGNUP_CONFIRMATION_RESEND_COOLDOWN_MS - (now - sentAt);
+  const cooldownUntil = getPendingSignupConfirmationCooldownUntil();
+  if (cooldownUntil === null) return 0;
   return Math.min(
     AUTH_SIGNUP_CONFIRMATION_RESEND_COOLDOWN_MS,
-    Math.max(0, remaining),
+    Math.max(0, cooldownUntil - now),
   );
 }
 
@@ -175,7 +171,7 @@ export function prepareEmailSignupConfirmation(
   clearPendingAuthJourneyIntent();
   setPendingSignupEmail(email);
   setPendingSignupRedirect(returnTo);
-  markSignupConfirmationEmailSent();
+  startSignupConfirmationResendCooldown();
 }
 
 /**
@@ -187,14 +183,14 @@ export function prepareAuthenticatedEmailSignup(returnTo: string): void {
   clearPendingReturn();
   clearPendingAuthJourneyIntent();
   clearPendingSignupEmail();
-  clearPendingSignupConfirmationSentAt();
+  clearPendingSignupConfirmationCooldown();
   setPendingSignupRedirect(returnTo);
 }
 
 /** Reinicia somente a etapa de dados da conta, preservando o destino original. */
 export function restartEmailSignupJourney(): void {
   clearPendingSignupEmail();
-  clearPendingSignupConfirmationSentAt();
+  clearPendingSignupConfirmationCooldown();
   clearPendingReturn();
   clearPendingAuthJourneyIntent();
 }
@@ -218,7 +214,7 @@ export function cancelGoogleLogin(): void {
  */
 export function prepareGoogleSignup(returnTo: string): void {
   clearPendingSignupEmail();
-  clearPendingSignupConfirmationSentAt();
+  clearPendingSignupConfirmationCooldown();
   setPendingAuthJourneyIntent(AUTH_JOURNEY_INTENTS.signup);
   setPendingSignupRedirect(returnTo);
   setPendingReturn(AUTH_PATHS.firstAccess);
