@@ -78,8 +78,11 @@ describe("Google OAuth account/access contract", () => {
     expect(terms).toContain("Entrar com Google não pula esta etapa");
   });
 
-  it("keeps the browser loopback origin authoritative for OAuth on localhost:5175", () => {
+  it("keeps localhost:5175 as the deterministic local OAuth origin", () => {
     const origin = readProjectFile("src/shared/config/publicAppOrigin.ts");
+    const viteConfig = readProjectFile("vite.config.ts");
+    const env = readProjectFile(".env");
+    const envLocalExample = readProjectFile(".env.local.example");
     const envProduction = readProjectFile(".env.production");
     const supabaseConfig = readProjectFile("supabase/config.toml");
 
@@ -87,6 +90,13 @@ describe("Google OAuth account/access contract", () => {
     expect(origin).toContain("window.location?.origin");
     expect(origin).toContain('hostname === "localhost"');
     expect(origin).toContain('hostname === "127.0.0.1"');
+    expect((viteConfig.match(/port: 5175/g) ?? []).length).toBe(2);
+    expect((viteConfig.match(/strictPort: true/g) ?? []).length).toBe(2);
+    expect(env).toContain('VITE_PUBLIC_SITE_URL="http://localhost:5175"');
+    expect(env).toContain('BASE_URL="http://localhost:5175"');
+    expect(envLocalExample).toContain(
+      'VITE_PUBLIC_SITE_URL="http://localhost:5175"',
+    );
     expect(envProduction).toContain(
       "VITE_PUBLIC_SITE_URL=https://acheguese.com.br",
     );
