@@ -12,12 +12,21 @@ const authHook = read("src/core/auth/hooks/useAuth.ts");
 const messages = read("src/core/auth/utils/authMessages.ts");
 
 describe("Google OAuth backend readiness", () => {
-  it("probes the canonical Supabase Auth health endpoint with a bounded wait", () => {
-    expect(availability).toContain("/auth/v1/health");
-    expect(availability).toContain("AUTH_HEALTH_TIMEOUT_MS = 4_000");
+  it("probes public Auth settings with a bounded wait before leaving the app", () => {
+    expect(availability).toContain("/auth/v1/settings");
+    expect(availability).not.toContain("/auth/v1/health");
+    expect(availability).toContain("AUTH_READINESS_TIMEOUT_MS = 4_000");
     expect(availability).toContain("AbortController");
     expect(availability).toContain("PUBLIC_SUPABASE_CONFIG.publishableKey");
     expect(availability).toContain('cache: "no-store"');
+  });
+
+  it("requires the remote Google provider to be enabled, not merely a healthy Auth service", () => {
+    expect(availability).toContain("settings.external?.google !== true");
+    expect(availability).toContain(
+      "Entrar com Google está temporariamente indisponível. Use e-mail ou tente novamente em instantes.",
+    );
+    expect(availability).toContain("await response.json()");
   });
 
   it("checks readiness before starting the external Google OAuth redirect", () => {
@@ -38,12 +47,13 @@ describe("Google OAuth backend readiness", () => {
     ).toBeLessThan(googleFlow.indexOf("await AuthService.signInWithGoogle();"));
   });
 
-  it("normalizes gateway and network failures instead of exposing raw provider text", () => {
+  it("normalizes gateway, malformed settings and network failures without exposing raw provider text", () => {
+    expect(availability).toContain(
+      "O serviço de acesso está temporariamente indisponível. Tente novamente em instantes.",
+    );
+    expect(availability).toContain("if (!response.ok)");
     expect(messages).toContain("/gateway timeout/i");
     expect(messages).toContain("/connection timeout/i");
     expect(messages).toContain("/failed to fetch/i");
-    expect(messages).toContain(
-      "O serviço de acesso está temporariamente indisponível. Tente novamente em instantes.",
-    );
   });
 });
