@@ -28,11 +28,16 @@ describe("territory entry map arrival", () => {
     expect(wrapper).not.toContain("isLoading");
   });
 
-  it("keeps the pre-map status stable across the lazy runtime handoff", () => {
+  it("keeps one canonical pre-map status across the lazy runtime handoff", () => {
     const statusText = "Conectando o mapa para sua chegada";
 
-    expect(wrapper).toContain(statusText);
-    expect(runtime).toContain(statusText);
+    expect(arrival).toContain("export const TERRITORY_ENTRY_MAP_ARRIVAL_STATUS");
+    expect((arrival.match(new RegExp(statusText, "g")) ?? []).length).toBe(1);
+    expect(arrival).toContain("statusText = TERRITORY_ENTRY_MAP_ARRIVAL_STATUS");
+    expect(wrapper).toContain("TERRITORY_ENTRY_MAP_ARRIVAL_STATUS");
+    expect(runtime).toContain("TERRITORY_ENTRY_MAP_ARRIVAL_STATUS");
+    expect(wrapper).not.toContain(statusText);
+    expect(runtime).not.toContain(statusText);
     expect(wrapper).not.toContain("Preparando o mapa oficial do território");
   });
 
