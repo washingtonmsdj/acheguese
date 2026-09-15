@@ -12,6 +12,8 @@ export function useMFA() {
   const [requirement, setRequirement] = useState<MFARequirement | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const mountedRef = useRef(true);
+  const loadStatusRequestIdRef = useRef(0);
   const startEnrollmentInFlightRef = useRef<Promise<MFAEnrollmentData | null> | null>(null);
   const verifyAndEnableInFlightRef = useRef<{
     key: string;
@@ -23,33 +25,61 @@ export function useMFA() {
   } | null>(null);
 
   const loadStatus = async () => {
-    try {
+    const requestId = loadStatusRequestIdRef.current + 1;
+    loadStatusRequestIdRef.current = requestId;
+
+    if (mountedRef.current) {
       setLoading(true);
       setError(null);
       // Nunca preservar uma decisão anterior durante nova consulta. `null`
       // significa desconhecido, não "desativado" nem "dispensado".
       setStatus(null);
       setRequirement(null);
+    }
 
+    try {
       const [statusData, requirementData] = await Promise.all([
         mfaService.getMFAStatus(),
         mfaService.checkMFARequired(),
       ]);
 
+      if (
+        !mountedRef.current ||
+        requestId !== loadStatusRequestIdRef.current
+      ) {
+        return;
+      }
+
       setStatus(statusData);
       setRequirement(requirementData);
     } catch (err) {
       logger.error('useMFA.loadStatus', err);
+      if (
+        !mountedRef.current ||
+        requestId !== loadStatusRequestIdRef.current
+      ) {
+        return;
+      }
       setStatus(null);
       setRequirement(null);
       setError('Erro ao carregar status de MFA');
     } finally {
-      setLoading(false);
+      if (
+        mountedRef.current &&
+        requestId === loadStatusRequestIdRef.current
+      ) {
+        setLoading(false);
+      }
     }
   };
 
   useEffect(() => {
+    mountedRef.current = true;
     void loadStatus();
+    return () => {
+      mountedRef.current = false;
+      loadStatusRequestIdRef.current += 1;
+    };
   }, []);
 
   const startEnrollment = async (): Promise<MFAEnrollmentData | null> => {
@@ -68,7 +98,7 @@ export function useMFA() {
           throw new Error('Status de MFA indisponível');
         }
         if (currentStatus.mfaEnabled) {
-          setStatus(currentStatus);
+          if (mountedRef.current) setStatus(currentStatus);
           throw new Error('MFA já está ativado');
         }
 
@@ -79,10 +109,12 @@ export function useMFA() {
         return enrollmentData;
       } catch (err) {
         logger.error('useMFA.startEnrollment', err);
-        setError('Não foi possível confirmar o estado da conta para iniciar a configuração de MFA');
+        if (mountedRef.current) {
+          setError('Não foi possível confirmar o estado da conta para iniciar a configuração de MFA');
+        }
         return null;
       } finally {
-        setLoading(false);
+        if (mountedRef.current) setLoading(false);
       }
     })();
 
@@ -106,8 +138,10 @@ export function useMFA() {
 
     const operation = (async () => {
       try {
-        setLoading(true);
-        setError(null);
+        if (mountedRef.current) {
+          setLoading(true);
+          setError(null);
+        }
 
         const success = await mfaService.verifyAndEnableMFA(factorId, code);
         if (!success) throw new Error('Código inválido');
@@ -116,10 +150,10 @@ export function useMFA() {
         return true;
       } catch (err) {
         logger.error('useMFA.verifyAndEnable', err);
-        setError('Código inválido. Tente novamente.');
+        if (mountedRef.current) setError('Código inválido. Tente novamente.');
         return false;
       } finally {
-        setLoading(false);
+        if (mountedRef.current) setLoading(false);
       }
     })();
 
@@ -142,8 +176,10 @@ export function useMFA() {
 
     const operation = (async () => {
       try {
-        setLoading(true);
-        setError(null);
+        if (mountedRef.current) {
+          setLoading(true);
+          setError(null);
+        }
 
         const success = await mfaService.disableMFA(factorId);
         if (!success) throw new Error('Falha ao desabilitar MFA');
@@ -152,10 +188,10 @@ export function useMFA() {
         return true;
       } catch (err) {
         logger.error('useMFA.disable', err);
-        setError('Erro ao desabilitar MFA');
+        if (mountedRef.current) setError('Erro ao desabilitar MFA');
         return false;
       } finally {
-        setLoading(false);
+        if (mountedRef.current) setLoading(false);
       }
     })();
 
@@ -171,18 +207,20 @@ export function useMFA() {
 
   const verifyCode = async (factorId: string, code: string) => {
     try {
-      setLoading(true);
-      setError(null);
+      if (mountedRef.current) {
+        setLoading(true);
+        setError(null);
+      }
 
       const success = await mfaService.verifyMFACode(factorId, code);
       if (!success) throw new Error('Código inválido');
       return true;
     } catch (err) {
       logger.error('useMFA.verifyCode', err);
-      setError('Código inválido. Tente novamente.');
+      if (mountedRef.current) setError('Código inválido. Tente novamente.');
       return false;
     } finally {
-      setLoading(false);
+      if (mountedRef.current) setLoading(false);
     }
   };
 
@@ -191,7 +229,9 @@ export function useMFA() {
       return await mfaService.listMFAFactors();
     } catch (err) {
       logger.error('useMFA.listFactors', err);
-      setError('Não foi possível consultar os fatores de MFA');
+      if (mountedRef.current) {
+        setError('Não foi possível consultar os fatores de MFA');
+      }
       return null;
     }
   };
