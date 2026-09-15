@@ -29,6 +29,19 @@ describe("login Turnstile contract", () => {
     expect(service).toContain("...(captchaToken ? { captchaToken } : {})");
   });
 
+  it("lets the canonical auth-state observer own username-login hydration", () => {
+    const usernameHandler = service.indexOf("static async signInWithUsername(");
+    const nextHandler = service.indexOf("static async signInWithGoogle()", usernameHandler);
+
+    expect(usernameHandler).toBeGreaterThanOrEqual(0);
+    expect(nextHandler).toBeGreaterThan(usernameHandler);
+
+    const usernameFlow = service.slice(usernameHandler, nextHandler);
+    expect(usernameFlow).toContain("await supabase.auth.setSession({");
+    expect(usernameFlow).toContain("if (error) throw error;");
+    expect(usernameFlow).not.toContain("SessionService.refreshSession()");
+  });
+
   it("hands an unconfirmed email login to the confirmation journey without inventing a resend", () => {
     expect(messages).toContain("export function isEmailNotConfirmedError");
     expect(messages).toContain("email[_\\s-]*not[_\\s-]*confirmed");
