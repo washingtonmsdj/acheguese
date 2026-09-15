@@ -205,25 +205,6 @@ export function useMFA() {
     }
   };
 
-  const verifyCode = async (factorId: string, code: string) => {
-    try {
-      if (mountedRef.current) {
-        setLoading(true);
-        setError(null);
-      }
-
-      const success = await mfaService.verifyMFACode(factorId, code);
-      if (!success) throw new Error('Código inválido');
-      return true;
-    } catch (err) {
-      logger.error('useMFA.verifyCode', err);
-      if (mountedRef.current) setError('Código inválido. Tente novamente.');
-      return false;
-    } finally {
-      if (mountedRef.current) setLoading(false);
-    }
-  };
-
   const listFactors = async () => {
     try {
       return await mfaService.listMFAFactors();
@@ -248,7 +229,6 @@ export function useMFA() {
     startEnrollment,
     verifyAndEnable,
     disable,
-    verifyCode,
     listFactors,
     isMFAEnabled: status?.mfaEnabled ?? false,
     isMFAStatusResolved,
