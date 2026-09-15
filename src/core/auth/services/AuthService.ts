@@ -354,25 +354,41 @@ export class AuthService {
     if (error) throw error;
   }
 
+  /**
+   * Ordinary authenticated-account password mutation. Reauthentication policy
+   * is enforced by Supabase and the caller can provide the nonce when required.
+   * Recovery flows must use updateRecoveredPassword() instead.
+   */
   static async updatePassword(newPassword: string, nonce?: string): Promise<void> {
-    // Capture recovery authority before the password mutation. Depending on
-    // Supabase session policy, updateUser may invalidate or rotate the current
-    // recovery session, so checking only after the mutation is not reliable.
-    const isRecoverySession =
-      await AuthRecoveryAuthority.isCurrentSessionRecovery();
     const normalizedNonce = nonce?.trim();
     const { error } = await supabase.auth.updateUser({
       password: newPassword,
       ...(normalizedNonce ? { nonce: normalizedNonce } : {}),
     });
     if (error) throw error;
+  }
+
+  /**
+   * Password mutation for the public recovery flow. URL/query markers are not
+   * authority: the current verified JWT must still advertise AMR=recovery at
+   * mutation time. A successful recovery is always followed by local sign-out.
+   */
+  static async updateRecoveredPassword(newPassword: string): Promise<void> {
+    const isRecoverySession =
+      await AuthRecoveryAuthority.isCurrentSessionRecovery();
+    if (!isRecoverySession) {
+      throw new AuthError(
+        "Este link de recuperação não é mais válido. Solicite um novo link.",
+        "RECOVERY_SESSION_REQUIRED",
+        401,
+      );
+    }
+
+    const { error } = await supabase.auth.updateUser({ password: newPassword });
+    if (error) throw error;
 
     // Recovery is a temporary authentication path, not a durable app login.
-    // Force a deterministic return to signed-out state after the new password
-    // is accepted; ordinary account password changes preserve their session.
-    if (isRecoverySession) {
-      await AuthService.signOut();
-    }
+    await AuthService.signOut();
   }
 
   /**

@@ -22,18 +22,11 @@ describe("password recovery callback settlement", () => {
     );
     expect(callback).toContain("isPasswordRecoveryRouteIntent(search, hash)");
 
-    expect(recovery).toContain("const liveSearch = window.location.search;");
-    expect(recovery).toContain("const liveHash = window.location.hash;");
-    expect(recovery).toContain(
-      "hasPendingPkceCode as hasPendingPkceCodeInUrl",
-    );
-    expect(recovery).toContain(
-      "const hasPendingPkceCode = hasPendingPkceCodeInUrl(liveSearch);",
-    );
-    expect(recovery).toContain(
-      "if (user && hasRecoveryMarker && !hasPendingPkceCode)",
-    );
-    expect(recovery).not.toContain("if (user && hasRecoveryMarker) {");
+    expect(recovery).toContain("AuthService.onPasswordRecovery");
+    expect(recovery).toContain("AuthService.updateRecoveredPassword");
+    expect(recovery).not.toContain("hasPasswordRecoverySessionMarker");
+    expect(recovery).not.toContain("hasPendingPkceCode");
+    expect(recovery).not.toContain("hasRecoveryMarker");
   });
 
   it("replays a missed PKCE recovery event only from verified AMR claims", () => {

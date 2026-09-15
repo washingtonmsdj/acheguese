@@ -23,11 +23,7 @@ import {
 } from "@/core/auth/constants/authFlow";
 import { useAuth } from "@/core/auth/hooks/useAuth";
 import { AuthService } from "@/core/auth/services/AuthService";
-import {
-  getAuthCallbackError,
-  hasPasswordRecoverySessionMarker,
-  hasPendingPkceCode as hasPendingPkceCodeInUrl,
-} from "@/core/auth/utils/authCallback";
+import { getAuthCallbackError } from "@/core/auth/utils/authCallback";
 import { getAuthErrorMessage } from "@/core/auth/utils/authMessages";
 import { checkPasswordCompromise } from "@/core/auth/utils/compromisedPassword";
 import { AUTH_BROWSER_STORAGE_CONFIG } from "@/shared/config/security.config";
@@ -61,7 +57,7 @@ export default function ResetPasswordPage() {
   const location = useLocation();
   const [searchParams] = useSearchParams();
   const { toast } = useToast();
-  const { user, updatePassword, resetPasswordByIdentifier } = useAuth();
+  const { resetPasswordByIdentifier } = useAuth();
   const requestTurnstile = useAuthTurnstile();
 
   const initialMode = searchParams.get(AUTH_QUERY_KEYS.mode);
@@ -105,23 +101,9 @@ export default function ResetPasswordPage() {
       return;
     }
 
-    // Supabase limpa `code` diretamente via history.replaceState depois da
-    // troca PKCE. O snapshot do React Router pode permanecer com a query
-    // anterior, então usamos a URL real do navegador para distinguir callback
-    // concluído de um código ainda pendente/inválido.
-    const liveSearch = window.location.search;
-    const liveHash = window.location.hash;
-    const hasRecoveryMarker = hasPasswordRecoverySessionMarker(
-      liveSearch,
-      liveHash,
-    );
-    const hasPendingPkceCode = hasPendingPkceCodeInUrl(liveSearch);
-
-    if (user && hasRecoveryMarker && !hasPendingPkceCode) {
-      setView("reset");
-      return;
-    }
-
+    // PASSWORD_RECOVERY + replay de claims verificados são a única autoridade
+    // para liberar a mutação. Query, hash, user persistido e tokens presentes
+    // na URL jamais promovem a tela para "reset" por conta própria.
     const unsubscribe = AuthService.onPasswordRecovery(() => setView("reset"));
     const timeout = window.setTimeout(() => {
       setView((current) => (current === "checking" ? "invalid" : current));
@@ -131,7 +113,7 @@ export default function ResetPasswordPage() {
       window.clearTimeout(timeout);
       unsubscribe();
     };
-  }, [location.hash, location.search, user, view]);
+  }, [location.hash, location.search, view]);
 
   const sendRecovery = async (nextView: "sent" = "sent") => {
     const normalizedEmail = email.trim().toLowerCase();
@@ -184,7 +166,7 @@ export default function ResetPasswordPage() {
         });
         return;
       }
-      await updatePassword(data.newPassword);
+      await AuthService.updateRecoveredPassword(data.newPassword);
       setView("success");
     } catch (error) {
       toast({

@@ -208,15 +208,18 @@ describe("account and access concept contract", () => {
     }
 
     expect(recovery).toContain("resetPasswordByIdentifier");
-    expect(recovery).toContain("updatePassword");
+    expect(recovery).toContain("AuthService.updateRecoveredPassword");
     expect(recovery).toContain("checkPasswordCompromise");
     expect(recovery).toContain("AuthService.onPasswordRecovery");
-    expect(recovery).toContain("hasPasswordRecoverySessionMarker");
+    expect(recovery).not.toContain("hasPasswordRecoverySessionMarker");
+    expect(recovery).not.toContain("hasPendingPkceCode");
     expect(recovery).toContain("getAuthCallbackError");
     expect(recovery).toContain("Este link não está");
     expect(recovery).toContain("getPasswordConceptRequirementStatus");
     expect(recovery).not.toContain("getPasswordRequirementStatus(newPassword)");
     expect(callback).toContain("AUTH_QUERY_VALUES.expiredOtp");
+    expect(callback).toContain("isPasswordRecoveryRouteIntent");
+    expect(authService).toContain("RECOVERY_SESSION_REQUIRED");
     expect(authService).not.toContain("captureAuthHash");
     expect(authService).not.toContain("getAuthHashError");
     expect(authService).not.toContain("isRecoveryRedirect");

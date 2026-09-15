@@ -9,37 +9,62 @@ const authService = read("src/core/auth/services/AuthService.ts");
 const recoveryPage = read("src/app/pages/ResetPasswordPage.tsx");
 
 describe("password recovery session disposal", () => {
-  it("captures verified recovery authority before mutating the password", () => {
-    const handler = authService.indexOf(
+  it("keeps recovery password mutation separate from ordinary account changes", () => {
+    const ordinary = authService.indexOf(
       "static async updatePassword(newPassword: string, nonce?: string): Promise<void>",
+    );
+    const recovery = authService.indexOf(
+      "static async updateRecoveredPassword(newPassword: string): Promise<void>",
+    );
+
+    expect(ordinary).toBeGreaterThanOrEqual(0);
+    expect(recovery).toBeGreaterThan(ordinary);
+    expect(
+      authService.slice(ordinary, recovery),
+    ).not.toContain("AuthRecoveryAuthority.isCurrentSessionRecovery()");
+  });
+
+  it("requires verified recovery authority before mutating the password", () => {
+    const handler = authService.indexOf(
+      "static async updateRecoveredPassword(newPassword: string): Promise<void>",
     );
     const authority = authService.indexOf(
       "await AuthRecoveryAuthority.isCurrentSessionRecovery();",
       handler,
     );
-    const update = authService.indexOf("await supabase.auth.updateUser({", authority);
+    const failClosed = authService.indexOf(
+      '"RECOVERY_SESSION_REQUIRED"',
+      authority,
+    );
+    const update = authService.indexOf("await supabase.auth.updateUser({", failClosed);
 
     expect(handler).toBeGreaterThanOrEqual(0);
     expect(authority).toBeGreaterThan(handler);
-    expect(update).toBeGreaterThan(authority);
+    expect(failClosed).toBeGreaterThan(authority);
+    expect(update).toBeGreaterThan(failClosed);
   });
 
-  it("signs out only after a successful password mutation from a recovery session", () => {
+  it("signs out only after a successful verified recovery mutation", () => {
     const handler = authService.indexOf(
-      "static async updatePassword(newPassword: string, nonce?: string): Promise<void>",
+      "static async updateRecoveredPassword(newPassword: string): Promise<void>",
     );
     const update = authService.indexOf("await supabase.auth.updateUser({", handler);
     const errorGuard = authService.indexOf("if (error) throw error;", update);
-    const recoveryGuard = authService.indexOf(
-      "if (isRecoverySession) {",
-      errorGuard,
-    );
-    const signOut = authService.indexOf("await AuthService.signOut();", recoveryGuard);
+    const signOut = authService.indexOf("await AuthService.signOut();", errorGuard);
 
     expect(update).toBeGreaterThan(handler);
     expect(errorGuard).toBeGreaterThan(update);
-    expect(recoveryGuard).toBeGreaterThan(errorGuard);
-    expect(signOut).toBeGreaterThan(recoveryGuard);
+    expect(signOut).toBeGreaterThan(errorGuard);
+  });
+
+  it("never promotes the recovery page from URL tokens or a preexisting user", () => {
+    expect(recoveryPage).toContain(
+      'AuthService.onPasswordRecovery(() => setView("reset"))',
+    );
+    expect(recoveryPage).toContain("AuthService.updateRecoveredPassword");
+    expect(recoveryPage).not.toContain("hasPasswordRecoverySessionMarker");
+    expect(recoveryPage).not.toContain("hasPendingPkceCode");
+    expect(recoveryPage).not.toContain("if (user && hasRecoveryMarker");
   });
 
   it("keeps the recovery success surface explicitly returning to login", () => {
