@@ -106,6 +106,24 @@ describe("Google OAuth account/access contract", () => {
     expect(terms).not.toContain("Tudo certo com os termos.");
   });
 
+  it("waits for the canonical session bootstrap before declaring the OAuth callback signed out", () => {
+    const terms = readProjectFile(
+      "src/app/features/onboarding/pages/AceiteTermosPage.tsx",
+    );
+
+    expect(terms).toContain("useSessionContext");
+    expect(terms).toContain("isLoading: sessionLoading");
+
+    const loadingGuard = terms.indexOf("if (sessionLoading)");
+    const signedOutGuard = terms.indexOf("if (!user)");
+    expect(loadingGuard).toBeGreaterThanOrEqual(0);
+    expect(signedOutGuard).toBeGreaterThan(loadingGuard);
+    expect(terms.slice(loadingGuard, signedOutGuard)).toContain(
+      'setState("checking")',
+    );
+    expect(terms).not.toContain('const { user } = useAuth()');
+  });
+
   it("keeps localhost:5175 as the deterministic local OAuth origin", () => {
     const origin = readProjectFile("src/shared/config/publicAppOrigin.ts");
     const viteConfig = readProjectFile("vite.config.ts");
