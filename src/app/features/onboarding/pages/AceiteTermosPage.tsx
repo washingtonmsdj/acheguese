@@ -8,12 +8,12 @@ import { AuthFooter } from "@/app/components/auth/AuthFooter";
 import {
   AUTH_JOURNEY_INTENTS,
   AUTH_PATHS,
-  AUTH_QUERY_KEYS,
   buildLoginPath,
   buildSignupPath,
 } from "@/core/auth/constants/authFlow";
 import {
   hasAuthCallbackMarker,
+  hasPendingPkceCode as hasPendingPkceCodeInUrl,
   isOAuthTermsCallbackError,
 } from "@/core/auth/utils/authCallback";
 import {
@@ -81,9 +81,7 @@ export default function AceiteTermosPage() {
     typeof window !== "undefined" ? window.location.hash : location.hash;
   const authCallbackPending =
     !oauthCallbackFailed && hasAuthCallbackMarker(liveSearch, liveHash);
-  const hasPendingPkceCode = new URLSearchParams(liveSearch).has(
-    AUTH_QUERY_KEYS.code,
-  );
+  const hasPendingPkceCode = hasPendingPkceCodeInUrl(liveSearch);
   const returnContextIcon =
     returnContext.kind === "conversation"
       ? "chat"
