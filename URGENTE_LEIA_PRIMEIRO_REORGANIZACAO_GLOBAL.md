@@ -9,7 +9,7 @@
 1. `docs/README.md` — índice documental canônico;
 2. `docs/03-architecture/CURRENT_RULES.md` — regras arquiteturais vigentes;
 3. `docs/08-roadmap/EXECUCAO_MAIN_ONLY.md` — plano operacional ativo;
-4. `docs/08-roadmap/checkpoints/2026-09-14-g190-refresh-first-paint-and-csp-safe-theme-bootstrap.md` — checkpoint mais recente desta linha;
+4. `docs/08-roadmap/checkpoints/2026-09-14-g191-routed-refresh-latency-and-profile-read-dedup.md` — checkpoint mais recente desta linha;
 5. `SECURITY.md` — segurança e gates de release.
 
 ## Regras que não podem ser perdidas
@@ -50,7 +50,9 @@
 - mídia decorativa de baixa prioridade da `/` não deve competir com mapa ainda dentro do orçamento terminal;
 - fonte opcional da `/` não volta para `@import` remoto no CSS crítico nem para plugin de build que esconda esse import;
 - timeout final de mapa precisa encerrar estado acessível de carregamento; fallback visual resolvido não permanece `aria-busy=true`;
-- o `FullScreenLoader` genérico com “Preparando a casa para você se achegar...” está aposentado; Suspense que possui a página usa `PassivePageFallback` sem spinner, timer ou copy; `fallback={null}` fica restrito a overlays/modais/analytics sobre uma página já visível;
+- o `FullScreenLoader` genérico com “Preparando a casa para você se achegar...” está aposentado; o bootstrap roteado e os chunks de página usam `PassivePageFallback` sem spinner, timer ou copy; `fallback={null}` fica restrito a overlays/modais/analytics sobre uma página já visível;
+- `RoutedAppRuntime` continua sendo o split que mantém sessão/perfis fora da `/`; `FullAppRuntimeShell` não deve recriar um segundo lazy universal para `SessionProfileRuntimeShell`;
+- leituras concorrentes de perfis privados pelo `MultiProfileRuntimeService` compartilham somente a Promise em voo por usuário; não transformar esse owner em cache persistente/TTL de perfis;
 - o primeiro paint usa `class="light"` como padrão e `/theme-init.js` same-origin no `<head>` para aplicar o tema persistido antes do React; não reintroduzir bootstrap inline nem relaxar `script-src` com `'unsafe-inline'`;
 - a `/` mantém apenas o skeleton `TerritoryEntryMapArrival` antes do basemap e status próprios após o mapa ficar utilizável;
 - regra exclusiva da `/` só permanece local quando depender de prioridade/UX específica da entrada pública;
