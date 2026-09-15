@@ -104,7 +104,56 @@ describe("G4 Auth/session SSOT ownership", () => {
       "SessionService.loadPromise === loadPromise",
     );
     expect(sessionService).toContain(
-      "if (!forceFresh && current.user?.id === session.user.id) return;",
+      "const loadPromise = SessionService.doLoad(session)",
+    );
+  });
+
+  it("keeps session hydration fresh-only instead of reviving the retired session cache read", () => {
+    const sessionService = read("src/core/session/services/SessionService.ts");
+
+    expect(sessionService).not.toContain("forceFresh");
+    expect(sessionService).not.toContain("CacheManager.getSession()");
+    expect(sessionService).not.toContain("CacheManager.setSession(");
+    expect(sessionService).toContain(
+      "private static async loadFromSession(session: Session): Promise<void>",
+    );
+  });
+
+  it("uses a strict private-profile reader for canonical session hydration", () => {
+    const sessionService = read("src/core/session/services/SessionService.ts");
+    const strictReader = read(
+      "src/core/profiles/services/SessionProfileReader.ts",
+    );
+
+    expect(sessionService).toContain(
+      '"@/core/profiles/services/SessionProfileReader"',
+    );
+    expect(sessionService).toContain(
+      "await SessionProfileReader.getProfilesByUserId(userId);",
+    );
+    expect(sessionService).toContain("throw error;");
+    expect(strictReader).toContain(
+      "ProfileRpcService.getAccessibleProfiles<ProfileRow[]>",
+    );
+    expect(strictReader).toContain("targetUserId: userId");
+    expect(strictReader).not.toContain("catch (");
+    expect(strictReader).not.toContain("return []");
+  });
+
+  it("preserves a same-user profile projection while a fresh refresh is pending", () => {
+    const sessionService = read("src/core/session/services/SessionService.ts");
+
+    expect(sessionService).toContain(
+      "const previousState = SessionState.getState();",
+    );
+    expect(sessionService).toContain(
+      "const preserveExistingProjection = previousState.user?.id === user.id;",
+    );
+    expect(sessionService).toContain(
+      "activeProfile: preserveExistingProjection ? previousState.activeProfile : null",
+    );
+    expect(sessionService).toContain(
+      "profiles: preserveExistingProjection ? previousState.profiles : []",
     );
   });
 
@@ -141,5 +190,30 @@ describe("G4 Auth/session SSOT ownership", () => {
     expect(rpc).toBeGreaterThan(firstOwnership);
     expect(secondOwnership).toBeGreaterThan(rpc);
     expect(localWrite).toBeGreaterThan(secondOwnership);
+  });
+
+  it("does not turn confirmed profile switches into false failures when only refresh fails", () => {
+    const sessionService = read("src/core/session/services/SessionService.ts");
+    const handler = sessionService.indexOf(
+      "private static async performProfileSwitch(",
+    );
+    const switchRpc = sessionService.indexOf(
+      "await SessionRpcService.switchActiveProfile(profileId);",
+      handler,
+    );
+    const refreshTry = sessionService.indexOf("try {", switchRpc);
+    const refresh = sessionService.indexOf(
+      "await SessionService.loadFromSession(session);",
+      refreshTry,
+    );
+    const deferredWarning = sessionService.indexOf(
+      "SessionService profile refresh deferred after successful switch",
+      refresh,
+    );
+
+    expect(switchRpc).toBeGreaterThan(handler);
+    expect(refreshTry).toBeGreaterThan(switchRpc);
+    expect(refresh).toBeGreaterThan(refreshTry);
+    expect(deferredWarning).toBeGreaterThan(refresh);
   });
 });
