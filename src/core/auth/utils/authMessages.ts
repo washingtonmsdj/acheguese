@@ -37,6 +37,12 @@ export function isAuthRateLimitError(error: unknown): boolean {
   );
 }
 
+export function isEmailNotConfirmedError(error: unknown): boolean {
+  const { message, code } = getAuthErrorDetails(error);
+  const signal = `${code} ${message}`;
+  return /email[_\s-]*not[_\s-]*confirmed/i.test(signal);
+}
+
 export function getAuthErrorMessage(
   error: unknown,
   fallback = "Não foi possível concluir a operação. Tente novamente.",
@@ -69,7 +75,7 @@ export function getAuthErrorMessage(
     return "E-mail, usuário ou senha incorretos.";
   }
 
-  if (/email not confirmed/i.test(errorMessage)) {
+  if (isEmailNotConfirmedError(error)) {
     return "Confirme seu e-mail antes de entrar. Verifique sua caixa de entrada.";
   }
 
