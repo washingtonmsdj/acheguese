@@ -45,6 +45,29 @@ export function hasPendingPkceCode(search: string): boolean {
   return parseParams(search).has(AUTH_QUERY_KEYS.code);
 }
 
+/**
+ * Troca de autenticação ainda representada na URL. Além do `code` PKCE,
+ * reconhece retornos implícitos com access/refresh token para manter callbacks
+ * compatíveis com links emitidos por versões anteriores do cliente Supabase.
+ * A regra não pressupõe que uma sessão já persistida pertença ao callback atual.
+ */
+export function hasPendingAuthCallbackExchange(
+  search: string,
+  hash: string,
+): boolean {
+  const searchParams = parseParams(search);
+  const hashParams = parseParams(hash);
+
+  return (
+    searchParams.has(AUTH_QUERY_KEYS.code) ||
+    hashParams.has(AUTH_QUERY_KEYS.code) ||
+    searchParams.has(AUTH_QUERY_KEYS.accessToken) ||
+    searchParams.has(AUTH_QUERY_KEYS.refreshToken) ||
+    hashParams.has(AUTH_QUERY_KEYS.accessToken) ||
+    hashParams.has(AUTH_QUERY_KEYS.refreshToken)
+  );
+}
+
 export function isPasswordRecoveryCallback(
   search: string,
   hash: string,
@@ -80,16 +103,9 @@ export function hasPasswordRecoverySessionMarker(
  * completo nem ser interpretadas como callback de OAuth/recovery.
  */
 export function hasAuthCallbackMarker(search: string, hash: string): boolean {
-  const searchParams = parseParams(search);
-  const hashParams = parseParams(hash);
-
   return (
-    hasPendingPkceCode(search) ||
+    hasPendingAuthCallbackExchange(search, hash) ||
     isPasswordRecoveryCallback(search, hash) ||
-    searchParams.has(AUTH_QUERY_KEYS.accessToken) ||
-    searchParams.has(AUTH_QUERY_KEYS.refreshToken) ||
-    hashParams.has(AUTH_QUERY_KEYS.accessToken) ||
-    hashParams.has(AUTH_QUERY_KEYS.refreshToken) ||
     getAuthCallbackError(search, hash) !== null
   );
 }
