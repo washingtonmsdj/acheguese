@@ -29,26 +29,35 @@ describe("account password reauthentication", () => {
 
   it("discards nonce state and invalidates late reauthentication requests when leaving the password view", () => {
     expect(securityPage).toContain("const passwordReauthRequestIdRef = useRef(0);");
-    expect(securityPage).toContain("const currentLocationHashRef = useRef(location.hash);");
     expect(securityPage).toContain('if (location.hash === "#senha") return;');
     expect(securityPage).toContain("passwordReauthRequestIdRef.current += 1;");
     expect(securityPage).toContain('setPasswordNonce("");');
     expect(securityPage).toContain("setPasswordReauthRequired(false);");
     expect(securityPage).toContain("setPasswordReauthError(null);");
+    expect(securityPage).toContain('!isCurrentSecurityView("#senha")');
+  });
+
+  it("invalidates the password request generation when the whole security page unmounts", () => {
+    expect(securityPage).toContain("const mountedRef = useRef(true);");
+    expect(securityPage).toContain("mountedRef.current = false;");
+    expect(securityPage).toContain("passwordReauthRequestIdRef.current += 1;");
     expect(securityPage).toContain(
-      'requestId !== passwordReauthRequestIdRef.current ||\n        currentLocationHashRef.current !== "#senha"',
+      "currentLocationPathRef.current === ACCOUNT_PATHS.security",
+    );
+    expect(securityPage).toContain(
+      "const isCurrentSecurityView = (hash: string) =>",
     );
   });
 
   it("suppresses late password mutation UI effects after the user leaves the password view", () => {
     const updateCall = securityPage.indexOf("await updatePassword(");
     const firstRouteGuard = securityPage.indexOf(
-      'if (currentLocationHashRef.current !== "#senha") return;',
+      'if (!isCurrentSecurityView("#senha")) return;',
       updateCall,
     );
     const successToast = securityPage.indexOf("toast.success(hasPassword", updateCall);
     const catchRouteGuard = securityPage.indexOf(
-      'if (currentLocationHashRef.current !== "#senha") throw error;',
+      'if (!isCurrentSecurityView("#senha")) throw error;',
       updateCall,
     );
 
