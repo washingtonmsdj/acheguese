@@ -59,4 +59,24 @@ test.describe("Google OAuth — recuperação de callback", () => {
     await expect(page.getByText("Conversas", { exact: true })).toBeVisible();
     await expectNoHorizontalOverflow(page);
   });
+
+  test("código PKCE órfão não é apagado nem deixa a tela presa em verificação", async ({ page }) => {
+    await page.setViewportSize({ width: 390, height: 844 });
+    await page.goto("/aceitar-termos?code=orphaned-google-code", {
+      waitUntil: "domcontentloaded",
+    });
+
+    await expect(page.getByRole("status")).toContainText(
+      "Verificando o aceite da sua conta",
+    );
+    await expect(page.getByRole("alert")).toContainText(
+      "Não foi possível concluir a entrada com Google",
+      { timeout: 8_000 },
+    );
+    await expect(page).toHaveURL(/code=orphaned-google-code/);
+    await expect(
+      page.getByRole("link", { name: "Voltar e tentar novamente" }),
+    ).toHaveAttribute("href", "/login?redirect=%2Fmensagens%2Fsabores-da-ana");
+    await expectNoHorizontalOverflow(page);
+  });
 });
