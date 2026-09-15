@@ -106,6 +106,34 @@ describe("Google OAuth account/access contract", () => {
     expect(terms).not.toContain("Tudo certo com os termos.");
   });
 
+  it("serializes terms acceptance before React submitting state can settle", () => {
+    const terms = readProjectFile(
+      "src/app/features/onboarding/pages/AceiteTermosPage.tsx",
+    );
+
+    const acceptHandler = terms.indexOf("const handleAccept = async () => {");
+    const consentWrite = terms.indexOf(
+      "await PrivacySettingsService.recordConsent({",
+      acceptHandler,
+    );
+    const release = terms.indexOf(
+      "acceptanceInFlight.current = false;",
+      consentWrite,
+    );
+
+    expect(terms).toContain("const acceptanceInFlight = useRef(false);");
+    expect(terms).toContain(
+      "if (!user || !accepted || acceptanceInFlight.current) return;",
+    );
+    expect(terms).toContain("acceptanceInFlight.current = true;");
+    expect(acceptHandler).toBeGreaterThanOrEqual(0);
+    expect(consentWrite).toBeGreaterThan(acceptHandler);
+    expect(release).toBeGreaterThan(consentWrite);
+    expect(terms.slice(acceptHandler, consentWrite)).toContain(
+      "acceptanceInFlight.current = true;",
+    );
+  });
+
   it("waits for the OAuth session even when PKCE has already disappeared from the live URL", () => {
     const callback = readProjectFile("src/core/auth/utils/authCallback.ts");
     const terms = readProjectFile(
