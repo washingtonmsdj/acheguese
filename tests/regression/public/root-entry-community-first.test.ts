@@ -84,6 +84,9 @@ describe("root community-first MVP entry", () => {
     expect(source).toContain("idleFallbackDelayMs: 600");
     expect(source).not.toContain("requestIdleCallback");
     expect(source).not.toContain('window.addEventListener("load", scheduleAfterLoad');
+    expect(source).toContain(
+      '<div className="hidden w-full md:block" aria-hidden="true">',
+    );
     expect(source).toContain("src={communityImageSrc ?? undefined}");
     expect(source).toContain("if (!disposed && desktopMedia.matches && imageSrc)");
     expect(source).toContain('width={1024}');
