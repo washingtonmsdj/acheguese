@@ -1,40 +1,62 @@
 import { PUBLIC_SUPABASE_CONFIG } from "@/shared/config/publicSupabase";
 
-const AUTH_HEALTH_TIMEOUT_MS = 4_000;
+const AUTH_READINESS_TIMEOUT_MS = 4_000;
 const AUTH_TEMPORARILY_UNAVAILABLE_MESSAGE =
   "O serviço de acesso está temporariamente indisponível. Tente novamente em instantes.";
+const GOOGLE_AUTH_UNAVAILABLE_MESSAGE =
+  "Entrar com Google está temporariamente indisponível. Use e-mail ou tente novamente em instantes.";
+
+type AuthSettings = {
+  external?: Record<string, boolean | undefined>;
+};
+
+async function fetchAuthSettings(signal: AbortSignal): Promise<AuthSettings> {
+  let response: Response;
+
+  try {
+    response = await fetch(`${PUBLIC_SUPABASE_CONFIG.url}/auth/v1/settings`, {
+      method: "GET",
+      headers: {
+        apikey: PUBLIC_SUPABASE_CONFIG.publishableKey,
+      },
+      cache: "no-store",
+      signal,
+    });
+  } catch {
+    throw new Error(AUTH_TEMPORARILY_UNAVAILABLE_MESSAGE);
+  }
+
+  if (!response.ok) {
+    throw new Error(AUTH_TEMPORARILY_UNAVAILABLE_MESSAGE);
+  }
+
+  try {
+    return (await response.json()) as AuthSettings;
+  } catch {
+    throw new Error(AUTH_TEMPORARILY_UNAVAILABLE_MESSAGE);
+  }
+}
 
 /**
- * Lightweight browser-side readiness probe for flows that navigate away from
- * the app. Once OAuth leaves Achegue-se, gateway failures are rendered by the
- * provider/Supabase origin and cannot be recovered by our React error boundary.
+ * Browser-side readiness probe for flows that navigate away from the app.
+ * The public Auth settings endpoint is stronger than a health-only probe: a
+ * healthy GoTrue instance can still have Google disabled or misconfigured.
+ * Supabase documents `external.google === true` as the provider readiness
+ * signal exposed by `/auth/v1/settings`.
  */
 export class AuthBackendAvailability {
   static async assertReadyForExternalOAuth(): Promise<void> {
     const controller = new AbortController();
     const timeout = globalThis.setTimeout(
       () => controller.abort(),
-      AUTH_HEALTH_TIMEOUT_MS,
+      AUTH_READINESS_TIMEOUT_MS,
     );
 
     try {
-      const response = await fetch(
-        `${PUBLIC_SUPABASE_CONFIG.url}/auth/v1/health`,
-        {
-          method: "GET",
-          headers: {
-            apikey: PUBLIC_SUPABASE_CONFIG.publishableKey,
-          },
-          cache: "no-store",
-          signal: controller.signal,
-        },
-      );
-
-      if (!response.ok) {
-        throw new Error(`Auth health check failed with ${response.status}`);
+      const settings = await fetchAuthSettings(controller.signal);
+      if (settings.external?.google !== true) {
+        throw new Error(GOOGLE_AUTH_UNAVAILABLE_MESSAGE);
       }
-    } catch {
-      throw new Error(AUTH_TEMPORARILY_UNAVAILABLE_MESSAGE);
     } finally {
       globalThis.clearTimeout(timeout);
     }
