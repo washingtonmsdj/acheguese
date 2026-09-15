@@ -175,6 +175,22 @@ export function prepareEmailSignupConfirmation(
 }
 
 /**
+ * Login válido bloqueado apenas por e-mail ainda não confirmado. Preservamos o
+ * e-mail e o destino para a tela de confirmação, mas não iniciamos cooldown:
+ * nenhuma nova mensagem foi enviada por esta tentativa de login.
+ */
+export function prepareUnconfirmedEmailLogin(
+  email: string,
+  returnTo: string,
+): void {
+  clearPendingReturn();
+  clearPendingAuthJourneyIntent();
+  clearPendingSignupConfirmationCooldown();
+  setPendingSignupEmail(email);
+  setPendingSignupRedirect(returnTo);
+}
+
+/**
  * Alguns ambientes podem devolver uma sessão já no signup. Nesse caso não há
  * etapa de confirmação a preservar: mantemos apenas o destino do primeiro
  * acesso e removemos qualquer contexto de confirmação antigo.
