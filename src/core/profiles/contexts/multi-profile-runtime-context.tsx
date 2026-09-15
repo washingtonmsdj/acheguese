@@ -164,15 +164,17 @@ export function MultiProfileProvider({ children }: { children: ReactNode }) {
 
   const switchProfile = useCallback(async (profileId: string): Promise<boolean> => {
     const ownerUserId = sessionUser?.id ?? null;
+    if (!ownerUserId || sessionUserIdRef.current !== ownerUserId) {
+      return false;
+    }
+
     const ownerVersion = sessionOwnerVersionRef.current;
     const profile = allProfiles.find(
       (candidate) =>
-        candidate.id === profileId &&
-        ownerUserId !== null &&
-        candidate.user_id === ownerUserId,
+        candidate.id === profileId && candidate.user_id === ownerUserId,
     );
 
-    if (!profile || !ownerUserId) {
+    if (!profile) {
       if (mountedRef.current) setError('Profile not found');
       return false;
     }
