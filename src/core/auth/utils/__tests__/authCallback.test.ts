@@ -4,7 +4,6 @@ import { AUTH_PATHS } from "@/core/auth/constants/authFlow";
 import {
   getAuthCallbackError,
   hasAuthCallbackMarker,
-  hasPasswordRecoverySessionMarker,
   hasPendingAuthCallbackExchange,
   hasPendingPkceCode,
   isExpiredPasswordRecoveryError,
@@ -78,7 +77,7 @@ describe("authCallback", () => {
     expect(hasPendingAuthCallbackExchange("", "#main-content")).toBe(false);
   });
 
-  it("separates recovery route intent from real callback evidence and session authority", () => {
+  it("separates recovery route intent from real callback evidence", () => {
     expect(isPasswordRecoveryRouteIntent("?mode=recovery", "")).toBe(true);
     expect(isPasswordRecoveryRouteIntent("", "#type=recovery")).toBe(true);
     expect(isPasswordRecoveryRouteIntent("?mode=request", "")).toBe(false);
@@ -94,27 +93,6 @@ describe("authCallback", () => {
       ),
     ).toBe(true);
     expect(isPasswordRecoveryCallback("", "#type=recovery")).toBe(true);
-
-    expect(hasPasswordRecoverySessionMarker("?mode=recovery", "")).toBe(false);
-    expect(hasPasswordRecoverySessionMarker("?code=abc", "")).toBe(false);
-    expect(
-      hasPasswordRecoverySessionMarker(
-        "",
-        "#access_token=access&refresh_token=refresh&type=recovery",
-      ),
-    ).toBe(true);
-    expect(
-      hasPasswordRecoverySessionMarker(
-        "",
-        "#access_token=access&refresh_token=refresh&type=signup",
-      ),
-    ).toBe(false);
-    expect(
-      hasPasswordRecoverySessionMarker("", "#access_token=access&type=recovery"),
-    ).toBe(false);
-    expect(
-      hasPasswordRecoverySessionMarker("", "#refresh_token=refresh&type=recovery"),
-    ).toBe(false);
   });
 
   it("classifies only real auth callback markers, not ordinary anchors or route intent", () => {

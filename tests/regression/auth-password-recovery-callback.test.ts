@@ -16,11 +16,8 @@ describe("password recovery callback settlement", () => {
     expect(callback).toContain("if (!hasRecoveryMode) return false;");
     expect(callback).toContain("hasPendingAuthCallbackExchange(search, hash)");
     expect(callback).toContain("getAuthCallbackError(search, hash) !== null");
-    expect(callback).toContain("const hasCompleteImplicitSession =");
-    expect(callback).toContain(
-      "return hasExplicitRecoveryType && hasCompleteImplicitSession;",
-    );
     expect(callback).toContain("isPasswordRecoveryRouteIntent(search, hash)");
+    expect(callback).not.toContain("hasPasswordRecoverySessionMarker");
 
     expect(recovery).toContain("AuthService.onPasswordRecovery");
     expect(recovery).toContain("AuthService.updateRecoveredPassword");

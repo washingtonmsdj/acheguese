@@ -120,32 +120,6 @@ export function isPasswordRecoveryCallback(
 }
 
 /**
- * Compatibilidade exclusiva com callbacks implícitos legados de recuperação.
- *
- * `mode=recovery` é apenas intenção de rota e nunca prova autoridade. PKCE é
- * autorizado pelos claims AMR verificados no AuthRecoveryAuthority; aqui só
- * aceitamos o formato legado que traz explicitamente `type=recovery` junto do
- * par completo de tokens da sessão na própria resposta do Auth.
- */
-export function hasPasswordRecoverySessionMarker(
-  search: string,
-  hash: string,
-): boolean {
-  const searchParams = parseParams(search);
-  const hashParams = parseParams(hash);
-  const hasExplicitRecoveryType =
-    searchParams.get(AUTH_QUERY_KEYS.type) === AUTH_QUERY_VALUES.recovery ||
-    hashParams.get(AUTH_QUERY_KEYS.type) === AUTH_QUERY_VALUES.recovery;
-  const hasCompleteImplicitSession =
-    (searchParams.has(AUTH_QUERY_KEYS.accessToken) &&
-      searchParams.has(AUTH_QUERY_KEYS.refreshToken)) ||
-    (hashParams.has(AUTH_QUERY_KEYS.accessToken) &&
-      hashParams.has(AUTH_QUERY_KEYS.refreshToken));
-
-  return hasExplicitRecoveryType && hasCompleteImplicitSession;
-}
-
-/**
  * Classifica somente marcadores reais de retorno de autenticação.
  * Âncoras comuns da página (ex.: #main-content) e flags de intenção de rota
  * (ex.: `mode=recovery` isolado) não devem forçar o runtime completo.
