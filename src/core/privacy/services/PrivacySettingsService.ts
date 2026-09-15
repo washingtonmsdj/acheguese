@@ -92,6 +92,13 @@ export class PrivacySettingsService {
   } | null = null;
   private static accountDeletionMutationInFlight: AccountDeletionMutation | null = null;
 
+  private static assertCurrentSessionAccessToken(accessToken: string): void {
+    const currentAccessToken = SessionService.getAccessToken();
+    if (!accessToken || !currentAccessToken || currentAccessToken !== accessToken) {
+      throw new Error("Sessao alterada. Tente novamente.");
+    }
+  }
+
   static async getUserConsents(userId: string): Promise<UserConsentRecord[]> {
     const { data, error } = await this.db
       .from("user_consents")
@@ -211,7 +218,7 @@ export class PrivacySettingsService {
   }
 
   static async exportUserData(accessToken: string): Promise<Blob> {
-    if (!accessToken) throw new Error("Sessao nao encontrada");
+    this.assertCurrentSessionAccessToken(accessToken);
 
     const activeExport = this.exportInFlight;
     if (activeExport) {
@@ -252,7 +259,7 @@ export class PrivacySettingsService {
     accessToken: string;
     reason: string;
   }): Promise<{ days_until_purge: number }> {
-    if (!input.accessToken) throw new Error("Sessao nao encontrada");
+    this.assertCurrentSessionAccessToken(input.accessToken);
 
     const reason = input.reason.trim();
     const activeMutation = this.accountDeletionMutationInFlight;
