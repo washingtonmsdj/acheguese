@@ -19,6 +19,7 @@ import {
 import {
   cancelGoogleLogin,
   cancelGoogleSignup,
+  completeExistingGoogleSignupJourney,
   completeTermsJourney,
   getAuthJourneyReturnTarget,
   getPendingAuthJourneyIntent,
@@ -134,6 +135,11 @@ export default function AceiteTermosPage() {
       .then((consents) => {
         if (!active) return;
         if (consents.some((consent) => hasCurrentTermsAcceptance(consent))) {
+          if (journeyIntent === AUTH_JOURNEY_INTENTS.signup) {
+            completeExistingGoogleSignupJourney();
+            navigate(signupOriginalReturn, { replace: true });
+            return;
+          }
           completeTermsJourney();
           navigate(returnTo, { replace: true });
           return;
@@ -150,10 +156,12 @@ export default function AceiteTermosPage() {
   }, [
     authCallbackPending,
     hasPendingPkceCode,
+    journeyIntent,
     navigate,
     oauthCallbackFailed,
     returnTo,
     sessionLoading,
+    signupOriginalReturn,
     user,
   ]);
 
