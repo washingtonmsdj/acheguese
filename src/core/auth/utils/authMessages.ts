@@ -12,6 +12,19 @@ export function getAuthErrorMessage(
       : fallback;
 
   if (
+    /gateway timeout/i.test(errorMessage) ||
+    /connection timeout/i.test(errorMessage) ||
+    /timed out/i.test(errorMessage) ||
+    /timeout/i.test(errorMessage) ||
+    /failed to fetch/i.test(errorMessage) ||
+    /networkerror/i.test(errorMessage) ||
+    /network request failed/i.test(errorMessage) ||
+    /load failed/i.test(errorMessage)
+  ) {
+    return "O serviço de acesso está temporariamente indisponível. Tente novamente em instantes.";
+  }
+
+  if (
     /invalid login credentials/i.test(errorMessage) ||
     /user not found/i.test(errorMessage) ||
     /invalid email/i.test(errorMessage)
