@@ -82,6 +82,18 @@ describe("account email change callback ownership", () => {
     expect(callbackPage).not.toContain("completeEmailConfirmationLoginJourney");
   });
 
+  it("keeps a cleaned callback in checking state while canonical session state settles", () => {
+    expect(callbackPage).toContain("const callbackSettlementPending =");
+    expect(callbackPage).toContain(
+      "(pendingAuthExchange || (!user && !exchangeObservedSettled));",
+    );
+    expect(callbackPage).toContain("sessionLoading || callbackSettlementPending");
+    expect(callbackPage).toContain("(!pendingAuthExchange && user)");
+    expect(callbackPage).toContain(
+      "A evidência do\n  // callback nunca substitui `user`",
+    );
+  });
+
   it("versions the callback in every tracked Supabase redirect origin", () => {
     expect(supabaseConfig).toContain("double_confirm_changes = true");
     for (const redirect of [
