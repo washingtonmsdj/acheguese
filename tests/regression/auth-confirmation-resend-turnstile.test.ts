@@ -5,6 +5,8 @@ import { describe, expect, it } from "vitest";
 const root = process.cwd();
 const read = (path: string) => readFileSync(resolve(root, path), "utf8");
 
+const authFlow = read("src/core/auth/constants/authFlow.ts");
+const authJourney = read("src/core/auth/utils/authJourney.ts");
 const authService = read("src/core/auth/services/AuthService.ts");
 const authHook = read("src/core/auth/hooks/useAuth.ts");
 const confirmationPage = read(
@@ -39,6 +41,41 @@ describe("signup confirmation resend Turnstile contract", () => {
       "const resendDisabled = isResending || cooldown > 0 || !turnstile.isReady;",
     );
     expect(confirmationPage).toContain('<AuthTurnstileGate\n                    action="signup"');
+  });
+
+  it("keeps resend timing in the Auth journey instead of disposable page state", () => {
+    expect(authFlow).toContain(
+      'pendingSignupConfirmationSentAt: "auth.pending-signup-confirmation-sent-at"',
+    );
+    expect(authFlow).toContain(
+      "AUTH_SIGNUP_CONFIRMATION_RESEND_COOLDOWN_MS = 60 * 1000",
+    );
+    expect(authJourney).toContain(
+      "export function getSignupConfirmationResendRemainingMs",
+    );
+    expect(authJourney).toContain("markSignupConfirmationEmailSent();");
+    expect(confirmationPage).toContain(
+      "const [cooldown, setCooldown] = useState(getResendCooldownSeconds);",
+    );
+    expect(confirmationPage).toContain(
+      "const syncCooldown = () => setCooldown(getResendCooldownSeconds());",
+    );
+    expect(confirmationPage).not.toContain("RESEND_COOLDOWN_SECONDS");
+  });
+
+  it("moves the cooldown forward only after a confirmed resend", () => {
+    const resendCall = confirmationPage.indexOf(
+      "await resendConfirmationEmail(email, turnstile.token ?? undefined);",
+    );
+    const markSent = confirmationPage.indexOf(
+      "markSignupConfirmationEmailSent();",
+      resendCall,
+    );
+    const catchBlock = confirmationPage.indexOf("} catch (error) {", resendCall);
+
+    expect(resendCall).toBeGreaterThanOrEqual(0);
+    expect(markSent).toBeGreaterThan(resendCall);
+    expect(catchBlock).toBeGreaterThan(markSent);
   });
 
   it("sends the solved token and invalidates it after every consumed resend attempt", () => {
