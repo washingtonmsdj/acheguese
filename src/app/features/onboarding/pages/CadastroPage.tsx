@@ -26,6 +26,7 @@ import {
   TERMS_OF_SERVICE_PATH,
 } from "@/core/legal/termsOfService";
 import { useIdentityAvailability } from "@/core/public-identity/hooks/useIdentityAvailability";
+import { useSessionContext } from "@/core/session/hooks/useSessionContext";
 import { Checkbox } from "@/shared/components/ui/checkbox";
 import {
   Form,
@@ -63,7 +64,8 @@ function getUsernameAvailabilityCopy(status?: string, fallback?: string) {
 }
 
 export default function CadastroPage() {
-  const { user, signInWithGoogle, googleAuthAvailable } = useAuth();
+  const { signInWithGoogle, googleAuthAvailable } = useAuth();
+  const { user, isLoading: sessionLoading } = useSessionContext();
   const navigate = useNavigate();
   const location = useLocation();
   const [searchParams] = useSearchParams();
@@ -89,24 +91,25 @@ export default function CadastroPage() {
   const termsAccepted = form.watch("termsAccepted") === true;
 
   useEffect(() => {
-    if (!user) return;
+    if (sessionLoading || !user) return;
     completeStandardLoginJourney();
     navigate(redirectTo, { replace: true });
-  }, [navigate, redirectTo, user]);
+  }, [navigate, redirectTo, sessionLoading, user]);
 
+  const authBusy = sessionLoading || user !== null || loading || googleLoading;
   const usernameBlocked =
     usernameAvailability.result !== null &&
     usernameAvailability.result.identifier === username &&
     usernameAvailability.result.status !== "available";
   const canSubmit =
-    !loading &&
-    !googleLoading &&
+    !authBusy &&
     !usernameAvailability.isChecking &&
     !usernameBlocked &&
     termsAccepted &&
     turnstile.isReady;
 
   const handleEmailSignup = () => {
+    if (sessionLoading || user) return;
     if (!turnstile.isReady) {
       toast({
         title: "Verificação necessária",
@@ -122,7 +125,14 @@ export default function CadastroPage() {
   };
 
   const handleGoogleSignup = async () => {
-    if (!googleAuthAvailable || googleLoading) return;
+    if (
+      sessionLoading ||
+      user ||
+      !googleAuthAvailable ||
+      googleLoading
+    ) {
+      return;
+    }
     setGoogleLoading(true);
     prepareGoogleSignup(redirectTo);
     try {
@@ -198,7 +208,7 @@ export default function CadastroPage() {
                 <button
                   type="button"
                   onClick={() => void handleGoogleSignup()}
-                  disabled={loading || googleLoading}
+                  disabled={authBusy}
                   className="mt-4 flex h-11 w-full items-center justify-center gap-3 rounded-[9px] border border-[#8da1a3] bg-white text-[14px] font-bold text-[#17363a] transition-colors hover:bg-[#f7f8f5] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#0b5b59]/35 disabled:opacity-55"
                 >
                   <AuthConceptIcon name="google" />
@@ -219,7 +229,7 @@ export default function CadastroPage() {
                   googleAuthAvailable && "lg:mt-0",
                 )}
                 noValidate
-                aria-busy={loading || googleLoading}
+                aria-busy={authBusy}
                 onSubmit={(event) => {
                   event.preventDefault();
                   handleEmailSignup();
@@ -238,7 +248,7 @@ export default function CadastroPage() {
                         <Input
                           {...field}
                           autoComplete="name"
-                          disabled={loading || googleLoading}
+                          disabled={authBusy}
                           className={cn(
                             "h-11 rounded-lg border-[#b9c5c6] bg-white px-3 text-[16px] shadow-none",
                             fieldState.error && "border-destructive",
@@ -264,7 +274,7 @@ export default function CadastroPage() {
                             autoComplete="username"
                             autoCapitalize="none"
                             spellCheck={false}
-                            disabled={loading || googleLoading}
+                            disabled={authBusy}
                             aria-describedby="cadastro-username-status"
                             onChange={(event) => {
                               const normalized = event.target.value
@@ -339,7 +349,7 @@ export default function CadastroPage() {
                           autoComplete="email"
                           autoCapitalize="none"
                           spellCheck={false}
-                          disabled={loading || googleLoading}
+                          disabled={authBusy}
                           className={cn(
                             "h-11 rounded-lg border-[#b9c5c6] bg-white px-3 text-[16px] shadow-none",
                             fieldState.error && "border-destructive",
@@ -362,7 +372,7 @@ export default function CadastroPage() {
                           {...field}
                           id="cadastro-password"
                           autoComplete="new-password"
-                          disabled={loading || googleLoading}
+                          disabled={authBusy}
                           invalid={Boolean(fieldState.error)}
                           strengthValue={password}
                           showStrength={false}
@@ -389,7 +399,7 @@ export default function CadastroPage() {
                             id="cadastro-terms-acceptance"
                             checked={field.value === true}
                             onCheckedChange={(checked) => field.onChange(checked === true)}
-                            disabled={loading || googleLoading}
+                            disabled={authBusy}
                             aria-invalid={Boolean(fieldState.error)}
                             className="mt-0.5 h-5 w-5 rounded-[3px] border-[#31575a]"
                           />

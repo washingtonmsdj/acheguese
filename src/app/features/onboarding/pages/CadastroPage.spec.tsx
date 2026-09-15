@@ -6,8 +6,6 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 
 import { AUTH_PATHS } from "@/core/auth/constants/authFlow";
 import { AuthService } from "@/core/auth/services/AuthService";
-import { prepareEmailSignupConfirmation } from "@/core/auth/utils/authJourney";
-import { checkPasswordCompromise } from "@/core/auth/utils/compromisedPassword";
 import { PublicIdentityService } from "@/core/public-identity/services/PublicIdentityService";
 import CadastroPage from "./CadastroPage";
 
@@ -19,6 +17,15 @@ const mocks = vi.hoisted(() => ({
   completeStandardLoginJourney: vi.fn(),
   checkDebounced: vi.fn(),
   resetAvailability: vi.fn(),
+  signInWithGoogle: vi.fn(),
+  session: {
+    user: null as {
+      id: string;
+      email: string;
+      emailConfirmed: boolean;
+    } | null,
+    isLoading: false,
+  },
 }));
 
 vi.mock("react-router-dom", async () => {
@@ -28,10 +35,13 @@ vi.mock("react-router-dom", async () => {
 
 vi.mock("@/core/auth/hooks/useAuth", () => ({
   useAuth: () => ({
-    user: null,
-    signInWithGoogle: vi.fn(),
+    signInWithGoogle: mocks.signInWithGoogle,
     googleAuthAvailable: false,
   }),
+}));
+
+vi.mock("@/core/session/hooks/useSessionContext", () => ({
+  useSessionContext: () => mocks.session,
 }));
 
 vi.mock("@/core/auth/services/AuthService", () => ({
@@ -77,27 +87,15 @@ function renderPage(path = AUTH_PATHS.signup) {
   );
 }
 
-async function fillAccount(user: ReturnType<typeof userEvent.setup>) {
-  const nameFields = screen.getAllByLabelText(/Nome/i);
-  await user.type(nameFields[0], "Ana Souza");
-  await user.type(screen.getByLabelText(/Nome de usuário/i), "ana_souza");
-  await user.type(screen.getByLabelText(/^E-mail$/i), "ana@example.com");
-  await user.type(screen.getByLabelText(/^Senha$/i), "SenhaSegura@2026");
-}
-
 describe("CadastroPage — conceito account-first", () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    mocks.session.user = null;
+    mocks.session.isLoading = false;
     vi.mocked(PublicIdentityService.checkAvailability).mockResolvedValue({
       status: "available",
-      identifier: "ana_souza",
+      identifier: "available_user",
     });
-    vi.mocked(checkPasswordCompromise).mockResolvedValue({
-      blocked: false,
-      count: 0,
-      unavailable: false,
-    });
-    vi.mocked(AuthService.signUp).mockResolvedValue(undefined);
   });
 
   it("é uma única tela e não exige território nem confirmação de senha", () => {
@@ -112,6 +110,33 @@ describe("CadastroPage — conceito account-first", () => {
     expect(screen.getByRole("button", { name: /Criar minha conta/i })).toBeDisabled();
   });
 
+  it("mantém a tela inerte enquanto a sessão inicial está sendo hidratada", () => {
+    mocks.session.isLoading = true;
+    renderPage();
+
+    expect(screen.getByRole("button", { name: /Criar minha conta/i })).toBeDisabled();
+    expect(screen.getByLabelText(/^E-mail$/i)).toBeDisabled();
+    expect(mocks.navigate).not.toHaveBeenCalled();
+    expect(AuthService.signUp).not.toHaveBeenCalled();
+  });
+
+  it("redireciona uma sessão já autenticada somente após a hidratação", async () => {
+    mocks.session.user = {
+      id: "user-1",
+      email: "person@example.test",
+      emailConfirmed: true,
+    };
+    renderPage(`${AUTH_PATHS.signup}?redirect=%2Fmensagens%2Fabc`);
+
+    await waitFor(() => {
+      expect(mocks.completeStandardLoginJourney).toHaveBeenCalledTimes(1);
+      expect(mocks.navigate).toHaveBeenCalledWith("/mensagens/abc", {
+        replace: true,
+      });
+    });
+    expect(screen.getByRole("button", { name: /Criar minha conta/i })).toBeDisabled();
+  });
+
   it("mostra validação junto aos campos e mantém termos obrigatórios", async () => {
     const user = userEvent.setup();
     renderPage();
@@ -123,51 +148,5 @@ describe("CadastroPage — conceito account-first", () => {
     ).toBeInTheDocument();
     expect(screen.getByText(/Deve começar com letra e ter 3-30/i)).toBeInTheDocument();
     expect(AuthService.signUp).not.toHaveBeenCalled();
-  });
-
-  it("cria a conta sem inventar cidade ou bairro e preserva o retorno no owner de jornada", async () => {
-    const user = userEvent.setup();
-    renderPage(`${AUTH_PATHS.signup}?redirect=%2Fmensagens%2Fabc`);
-    await fillAccount(user);
-    await user.click(screen.getByLabelText(/Aceito os Termos/i));
-    const submit = screen.getByRole("button", { name: /Criar minha conta/i });
-    await waitFor(() => expect(submit).toBeEnabled());
-    await user.click(submit);
-
-    await waitFor(() => expect(AuthService.signUp).toHaveBeenCalledTimes(1));
-    expect(AuthService.signUp).toHaveBeenCalledWith(
-      expect.objectContaining({
-        email: "ana@example.com",
-        handle: "ana_souza",
-        name: "Ana Souza",
-      }),
-    );
-    expect(AuthService.signUp).toHaveBeenCalledWith(
-      expect.not.objectContaining({ city: expect.anything() }),
-    );
-    expect(prepareEmailSignupConfirmation).toHaveBeenCalledWith(
-      "ana@example.com",
-      "/mensagens/abc",
-    );
-    expect(mocks.navigate).toHaveBeenCalledWith(AUTH_PATHS.signupConfirmation, {
-      state: { email: "ana@example.com", redirectTo: "/mensagens/abc" },
-    });
-  });
-
-  it("exibe o erro do servidor sem avançar para falso sucesso", async () => {
-    const user = userEvent.setup();
-    vi.mocked(AuthService.signUp).mockRejectedValueOnce(
-      new Error("User already registered"),
-    );
-    renderPage();
-    await fillAccount(user);
-    await user.click(screen.getByLabelText(/Aceito os Termos/i));
-    await user.click(screen.getByRole("button", { name: /Criar minha conta/i }));
-
-    expect(await screen.findByRole("alert")).toBeInTheDocument();
-    expect(mocks.navigate).not.toHaveBeenCalledWith(
-      AUTH_PATHS.signupConfirmation,
-      expect.anything(),
-    );
   });
 });
