@@ -19,6 +19,22 @@ describe("account password reauthentication", () => {
     expect(authHook).toContain("updatePassword: (newPassword: string, nonce?: string) => Promise<void>");
   });
 
+  it("keeps shared auth loading true until every overlapping operation has finished", () => {
+    expect(authHook).toContain("const activeOperationsRef = useRef(0);");
+    expect(authHook).toContain("activeOperationsRef.current += 1;");
+    expect(authHook).toContain(
+      "if (activeOperationsRef.current === 1) setLoading(true);",
+    );
+    expect(authHook).toContain(
+      "activeOperationsRef.current = Math.max(0, activeOperationsRef.current - 1);",
+    );
+    expect(authHook).toContain(
+      "if (activeOperationsRef.current === 0) setLoading(false);",
+    );
+    expect(authHook).toContain("beginAuthOperation();");
+    expect(authHook).toContain("endAuthOperation();");
+  });
+
   it("requests reauthentication only when Supabase says the session needs it", () => {
     expect(securityPage).toContain('code === "reauthentication_needed"');
     expect(securityPage).toContain("await requestPasswordReauthCode()");
