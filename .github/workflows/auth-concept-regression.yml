@@ -42,6 +42,7 @@ on:
       - "tests/security/auth-login-turnstile-contract.test.ts"
       - "tests/security/auth-password-capability-authority.test.ts"
       - "tests/security/auth-password-recovery-captcha.test.ts"
+      - "tests/security/auth-password-recovery-session-disposal.test.ts"
       - "tests/security/auth-signup-turnstile-contract.test.ts"
       - "tests/security/mfa-account-settings-fail-closed.test.ts"
       - "playwright.config.ts"
@@ -88,6 +89,7 @@ on:
       - "tests/security/auth-login-turnstile-contract.test.ts"
       - "tests/security/auth-password-capability-authority.test.ts"
       - "tests/security/auth-password-recovery-captcha.test.ts"
+      - "tests/security/auth-password-recovery-session-disposal.test.ts"
       - "tests/security/auth-signup-turnstile-contract.test.ts"
       - "tests/security/mfa-account-settings-fail-closed.test.ts"
       - "playwright.config.ts"
@@ -145,6 +147,7 @@ jobs:
           tests/security/auth-login-turnstile-contract.test.ts
           tests/security/auth-password-capability-authority.test.ts
           tests/security/auth-password-recovery-captcha.test.ts
+          tests/security/auth-password-recovery-session-disposal.test.ts
           tests/security/auth-signup-turnstile-contract.test.ts
           tests/security/mfa-account-settings-fail-closed.test.ts
 
