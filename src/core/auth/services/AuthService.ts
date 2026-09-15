@@ -121,9 +121,11 @@ export class AuthService {
   }
 
   static async signIn(data: import("./types").SignInData): Promise<void> {
+    const captchaToken = data.captchaToken?.trim();
     const { error } = await supabase.auth.signInWithPassword({
       email: data.email,
       password: data.password,
+      ...(captchaToken ? { options: { captchaToken } } : {}),
     });
 
     if (error) {
@@ -146,13 +148,18 @@ export class AuthService {
       throw new Error("E-mail, usuário ou senha incorretos.");
     }
 
+    const captchaToken = data.captchaToken?.trim();
     const response = await fetch(buildSupabaseFunctionUrl("auth-username-login"), {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
         apikey: PUBLIC_SUPABASE_CONFIG.publishableKey,
       },
-      body: JSON.stringify({ username, password: data.password }),
+      body: JSON.stringify({
+        username,
+        password: data.password,
+        ...(captchaToken ? { captchaToken } : {}),
+      }),
     });
 
     const payload = await AuthService.readAuthFunctionResponse(response);
