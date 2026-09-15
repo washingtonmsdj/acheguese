@@ -25,6 +25,13 @@ describe("username login enumeration resistance", () => {
     expect(source).toContain("resolvedEmail ?? INVALID_USERNAME_AUTH_EMAIL");
   });
 
+  it("forwards a bounded optional captcha token to Supabase Auth", () => {
+    expect(source).toContain("MAX_CAPTCHA_TOKEN_LENGTH = 2048");
+    expect(source).toContain("readCaptchaToken(validation.data!)");
+    expect(source).toContain("...(captchaToken ? { options: { captchaToken } } : {})");
+    expect(source).toContain("maxBytes: 4096");
+  });
+
   it("keeps the external failure response generic", () => {
     expect(source).toContain(
       'const INVALID_LOGIN_MESSAGE = "Invalid login credentials";',
