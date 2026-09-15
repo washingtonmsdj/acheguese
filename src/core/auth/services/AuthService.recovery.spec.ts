@@ -73,6 +73,27 @@ describe("AuthService recovery password authority", () => {
     expect(signOut).toHaveBeenCalledTimes(1);
   });
 
+  it("reports partial success when password changed but temporary session disposal fails", async () => {
+    mocks.isCurrentSessionRecovery.mockResolvedValue(true);
+    mocks.updateUser.mockResolvedValue({ error: null });
+    const signOut = vi
+      .spyOn(AuthService, "signOut")
+      .mockRejectedValue(new Error("local cleanup failed"));
+
+    await expect(
+      AuthService.updateRecoveredPassword("NovaSenha@2026"),
+    ).rejects.toMatchObject({
+      code: "RECOVERY_SESSION_DISPOSAL_FAILED",
+      statusCode: 500,
+    });
+
+    expect(mocks.updateUser).toHaveBeenCalledTimes(1);
+    expect(mocks.updateUser).toHaveBeenCalledWith({
+      password: "NovaSenha@2026",
+    });
+    expect(signOut).toHaveBeenCalledTimes(1);
+  });
+
   it("does not sign out or fake success when the recovery mutation fails", async () => {
     mocks.isCurrentSessionRecovery.mockResolvedValue(true);
     mocks.updateUser.mockResolvedValue({
