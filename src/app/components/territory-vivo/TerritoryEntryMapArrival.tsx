@@ -5,6 +5,8 @@ interface TerritoryEntryMapArrivalProps {
 }
 
 const ARRIVAL_LABEL = "Abrindo mapa";
+export const TERRITORY_ENTRY_MAP_ARRIVAL_STATUS =
+  "Conectando o mapa para sua chegada";
 
 /**
  * Skeleton visual da entrada territorial.
@@ -19,7 +21,7 @@ const ARRIVAL_LABEL = "Abrindo mapa";
  */
 export function TerritoryEntryMapArrival({
   label,
-  statusText = "Carregando mapa territorial",
+  statusText = TERRITORY_ENTRY_MAP_ARRIVAL_STATUS,
   leaving = false,
 }: TerritoryEntryMapArrivalProps) {
   return (
