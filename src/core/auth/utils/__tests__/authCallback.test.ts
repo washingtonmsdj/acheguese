@@ -77,20 +77,30 @@ describe("authCallback", () => {
     expect(hasPendingAuthCallbackExchange("", "#main-content")).toBe(false);
   });
 
-  it("recognizes recovery markers and reuses the canonical pending exchange owner", () => {
+  it("separates recovery routing intent from recovery-session authority", () => {
     expect(isPasswordRecoveryCallback("?mode=recovery", "")).toBe(true);
     expect(isPasswordRecoveryCallback("", "#type=recovery")).toBe(true);
-    expect(hasPasswordRecoverySessionMarker("?code=abc", "")).toBe(true);
+
+    expect(hasPasswordRecoverySessionMarker("?mode=recovery", "")).toBe(false);
+    expect(hasPasswordRecoverySessionMarker("?code=abc", "")).toBe(false);
     expect(
-      hasPasswordRecoverySessionMarker("", "#access_token=token&type=recovery"),
+      hasPasswordRecoverySessionMarker(
+        "",
+        "#access_token=access&refresh_token=refresh&type=recovery",
+      ),
     ).toBe(true);
     expect(
-      hasPasswordRecoverySessionMarker("?refresh_token=refresh", ""),
-    ).toBe(true);
+      hasPasswordRecoverySessionMarker(
+        "",
+        "#access_token=access&refresh_token=refresh&type=signup",
+      ),
+    ).toBe(false);
     expect(
-      hasPasswordRecoverySessionMarker("?access_token=access", ""),
-    ).toBe(true);
-    expect(hasPasswordRecoverySessionMarker("?mode=request", "")).toBe(false);
+      hasPasswordRecoverySessionMarker("", "#access_token=access&type=recovery"),
+    ).toBe(false);
+    expect(
+      hasPasswordRecoverySessionMarker("", "#refresh_token=refresh&type=recovery"),
+    ).toBe(false);
   });
 
   it("classifies only real auth callback markers, not ordinary page anchors", () => {
