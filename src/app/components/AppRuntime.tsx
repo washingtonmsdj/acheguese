@@ -7,6 +7,7 @@ import {
   applyAccessibilityPreferences,
   readAccessibilityPreferences,
 } from "@/shared/accessibility/preferences";
+import { PassivePageFallback } from "@/shared/components/loading/PassivePageFallback";
 import { scheduleAfterPublicRootMap } from "@/shared/utils/publicRootReadiness";
 
 const RoutedAppRuntime = lazy(() =>
@@ -76,23 +77,13 @@ function LeanPublicRootRuntime() {
   );
 }
 
-function RuntimeLoadingFallback() {
-  return (
-    <div
-      className="min-h-screen bg-background"
-      role="status"
-      aria-label="Carregando aplicação"
-    />
-  );
-}
-
 export function AppRuntime() {
   if (shouldUseLeanPublicRoot()) {
     return <LeanPublicRootRuntime />;
   }
 
   return (
-    <Suspense fallback={<RuntimeLoadingFallback />}>
+    <Suspense fallback={<PassivePageFallback />}>
       <RoutedAppRuntime />
     </Suspense>
   );
