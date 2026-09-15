@@ -25,6 +25,7 @@ export default function EmailChangeConfirmationPage() {
   const location = useLocation();
   const { user, isLoading: sessionLoading } = useSessionContext();
   const [timedOut, setTimedOut] = useState(false);
+  const [exchangeObservedSettled, setExchangeObservedSettled] = useState(false);
 
   const routeParams = new URLSearchParams(location.search);
   const hasEmailChangeMarker =
@@ -32,35 +33,53 @@ export default function EmailChangeConfirmationPage() {
   const callbackFailed =
     hasEmailChangeMarker &&
     getAuthCallbackError(location.search, location.hash) !== null;
+  // A flag `emailChange=1` identifica a superfície, mas não prova que o Auth
+  // realmente devolveu um callback. Mantemos a evidência do snapshot do Router
+  // porque o SDK pode limpar code/tokens da URL real via history.replaceState.
+  const hasCallbackExchangeEvidence =
+    hasEmailChangeMarker &&
+    hasPendingAuthCallbackExchange(location.search, location.hash);
   const liveSearch =
     typeof window !== "undefined" ? window.location.search : location.search;
   const liveHash =
     typeof window !== "undefined" ? window.location.hash : location.hash;
   const pendingAuthExchange =
-    hasEmailChangeMarker &&
+    hasCallbackExchangeEvidence &&
     hasPendingAuthCallbackExchange(liveSearch, liveHash);
 
   useEffect(() => {
-    if (!hasEmailChangeMarker || callbackFailed || !pendingAuthExchange) return;
+    if (
+      !hasCallbackExchangeEvidence ||
+      callbackFailed ||
+      !pendingAuthExchange
+    ) {
+      return;
+    }
 
     const timeout = window.setTimeout(() => {
-      if (
-        hasPendingAuthCallbackExchange(
-          window.location.search,
-          window.location.hash,
-        )
-      ) {
+      const stillPending = hasPendingAuthCallbackExchange(
+        window.location.search,
+        window.location.hash,
+      );
+      if (stillPending) {
         setTimedOut(true);
+        return;
       }
+      // Garante rerender mesmo quando o SDK limpou a URL sem navegação do
+      // React Router e o evento de sessão não alterou a identidade atual.
+      setExchangeObservedSettled(true);
     }, AUTH_BROWSER_STORAGE_CONFIG.authUrlCleanupDelayMs);
 
     return () => window.clearTimeout(timeout);
-  }, [callbackFailed, hasEmailChangeMarker, pendingAuthExchange]);
+  }, [callbackFailed, hasCallbackExchangeEvidence, pendingAuthExchange]);
 
   const state: EmailChangeReturnState =
-    !hasEmailChangeMarker || callbackFailed || timedOut
+    !hasEmailChangeMarker ||
+    !hasCallbackExchangeEvidence ||
+    callbackFailed ||
+    timedOut
       ? "invalid"
-      : sessionLoading || pendingAuthExchange
+      : sessionLoading || (pendingAuthExchange && !exchangeObservedSettled)
         ? "checking"
         : "ready";
   const accountAccessTarget = user

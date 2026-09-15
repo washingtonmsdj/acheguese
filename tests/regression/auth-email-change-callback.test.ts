@@ -49,6 +49,19 @@ describe("account email change callback ownership", () => {
     ).toBe(2);
   });
 
+  it("requires real callback evidence instead of trusting emailChange=1", () => {
+    expect(callbackPage).toContain("hasCallbackExchangeEvidence");
+    expect(callbackPage).toContain(
+      "hasPendingAuthCallbackExchange(location.search, location.hash)",
+    );
+    expect(callbackPage).toContain(
+      "!hasCallbackExchangeEvidence ||",
+    );
+    expect(callbackPage).toContain(
+      "const pendingAuthExchange =\n    hasCallbackExchangeEvidence &&",
+    );
+  });
+
   it("waits for every auth exchange format and never enters signup first access", () => {
     expect(callbackPage).toContain("getAuthCallbackError");
     expect(callbackPage).toContain("hasPendingAuthCallbackExchange");
@@ -60,6 +73,7 @@ describe("account email change callback ownership", () => {
     expect(callbackPage).toContain(
       "AUTH_BROWSER_STORAGE_CONFIG.authUrlCleanupDelayMs",
     );
+    expect(callbackPage).toContain("setExchangeObservedSettled(true)");
     expect(callbackPage).toContain('type EmailChangeReturnState = "checking" | "ready" | "invalid"');
     expect(callbackPage).toContain("buildLoginPath(ACCOUNT_PATHS.access)");
     expect(callbackPage).toContain("ACCOUNT_PATHS.access");
@@ -68,7 +82,7 @@ describe("account email change callback ownership", () => {
     expect(callbackPage).not.toContain("completeEmailConfirmationLoginJourney");
   });
 
-  it("versions the new callback in every tracked Supabase redirect origin", () => {
+  it("versions the callback in every tracked Supabase redirect origin", () => {
     expect(supabaseConfig).toContain("double_confirm_changes = true");
     for (const redirect of [
       "https://acheguese.com.br/conta/confirmar-email?emailChange=1",
