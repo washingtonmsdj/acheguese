@@ -90,6 +90,7 @@ export function isExpiredPasswordRecoveryError(
   hash: string,
 ): boolean {
   return (
+    isPasswordRecoveryCallback(search, hash) &&
     getAuthCallbackError(search, hash)?.errorCode === AUTH_QUERY_VALUES.expiredOtp
   );
 }
