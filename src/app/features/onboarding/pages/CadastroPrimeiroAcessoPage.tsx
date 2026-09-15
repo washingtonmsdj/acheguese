@@ -19,6 +19,7 @@ import { useLocationCascade } from "@/core/location/hooks/useLocationCascade";
 import { profileService } from "@/core/profiles/services/ProfileService";
 import type { ProfileRow } from "@/core/profiles/services/types";
 import { useIdentityAvailability } from "@/core/public-identity/hooks/useIdentityAvailability";
+import { normalizePublicUsernameDraft } from "@/core/public-identity/utils/usernameDraft";
 import { useSessionContext } from "@/core/session/hooks/useSessionContext";
 import { SUPPORT_PATH } from "@/shared/constants/legal";
 import { useToast } from "@/shared/hooks/use-toast";
@@ -39,14 +40,6 @@ interface ConceptSelectProps {
 }
 
 const GENERATED_USERNAME_SUFFIX = /_[0-9a-f]{8}$/i;
-
-function normalizeUsernameDraft(value: string): string {
-  return value
-    .replace(/^@+/, "")
-    .replace(/[^a-z0-9_]/gi, "")
-    .toLowerCase()
-    .slice(0, 30);
-}
 
 function getUsernameAvailabilityCopy(status?: string, fallback?: string): string {
   if (fallback) return fallback;
@@ -239,7 +232,7 @@ export default function CadastroPrimeiroAcessoPage() {
 
   const beginUsernameEdit = () => {
     if (!profile) return;
-    setUsernameDraft(normalizeUsernameDraft(profile.username ?? ""));
+    setUsernameDraft(normalizePublicUsernameDraft(profile.username ?? ""));
     usernameAvailability.reset();
     setEditingUsername(true);
   };
@@ -252,7 +245,7 @@ export default function CadastroPrimeiroAcessoPage() {
 
   const saveUsername = async () => {
     if (!profile || savingUsername) return;
-    const normalized = normalizeUsernameDraft(usernameDraft);
+    const normalized = normalizePublicUsernameDraft(usernameDraft);
     if (normalized.length < 3) {
       toast({
         title: "Escolha um @usuário válido",
@@ -349,7 +342,7 @@ export default function CadastroPrimeiroAcessoPage() {
   }
 
   const displayName = profile.display_name || profile.name || user?.email?.split("@")[0] || "você";
-  const usernameValue = normalizeUsernameDraft(profile.username ?? "");
+  const usernameValue = normalizePublicUsernameDraft(profile.username ?? "");
   const username = usernameValue ? `@${usernameValue}` : null;
   const shouldOfferUsernameChoice =
     !usernameValue || GENERATED_USERNAME_SUFFIX.test(usernameValue);
@@ -429,7 +422,9 @@ export default function CadastroPrimeiroAcessoPage() {
                         disabled={savingUsername}
                         aria-describedby="first-access-username-status"
                         onChange={(event) => {
-                          const normalized = normalizeUsernameDraft(event.target.value);
+                          const normalized = normalizePublicUsernameDraft(
+                            event.target.value,
+                          );
                           setUsernameDraft(normalized);
                           if (normalized.length >= 3) {
                             usernameAvailability.checkDebounced(normalized);
