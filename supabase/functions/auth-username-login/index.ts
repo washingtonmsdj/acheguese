@@ -29,6 +29,7 @@ import {
 
 const ALLOWED_METHODS = "POST, OPTIONS";
 const INVALID_LOGIN_MESSAGE = "Invalid login credentials";
+const INVALID_USERNAME_AUTH_EMAIL = "username-login-sentinel@invalid.example";
 
 interface SessionPayload {
   access_token: string;
@@ -120,28 +121,30 @@ serve(async (req: Request) => {
     const { data: email, error: emailLookupError } =
       await supabaseAdmin.rpc("get_email_by_username", { p_username: username });
 
-    if (emailLookupError || typeof email !== "string" || !email) {
-      auditLog({
-        timestamp: new Date().toISOString(),
-        action: "auth_username_login",
-        resource: "auth-username-login",
-        status: "failure",
-        details: { reason: "identifier_not_found" },
-        ...auditInfo,
-      });
-      return returnInvalidLogin(req);
-    }
+    const resolvedEmail =
+      !emailLookupError && typeof email === "string" && email.length > 0
+        ? email
+        : null;
 
+    // Sempre percorre a verificação de senha depois do lookup. Sem isso, um
+    // username inexistente terminaria sensivelmente mais cedo que um username
+    // real com senha incorreta, criando um sinal de enumeração por tempo mesmo
+    // com a mesma resposta HTTP genérica.
     const { data: signInData, error: signInError } =
-      await authClient.auth.signInWithPassword({ email, password });
+      await authClient.auth.signInWithPassword({
+        email: resolvedEmail ?? INVALID_USERNAME_AUTH_EMAIL,
+        password,
+      });
 
-    if (signInError || !signInData.session) {
+    if (!resolvedEmail || signInError || !signInData.session) {
       auditLog({
         timestamp: new Date().toISOString(),
         action: "auth_username_login",
         resource: "auth-username-login",
         status: "failure",
-        details: { reason: "invalid_credentials" },
+        details: {
+          reason: resolvedEmail ? "invalid_credentials" : "identifier_not_found",
+        },
         ...auditInfo,
       });
       return returnInvalidLogin(req);
