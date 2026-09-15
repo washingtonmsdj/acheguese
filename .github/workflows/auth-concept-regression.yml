@@ -23,6 +23,7 @@ on:
       - "src/core/auth/**"
       - "src/core/session/services/SessionService.ts"
       - "src/core/session/services/SessionService.test.ts"
+      - "src/core/session/services/SessionService.refresh-race.spec.ts"
       - "src/core/session/providers/SessionProvider.tsx"
       - "src/core/session/cache/CacheManager.ts"
       - "src/core/session/cache/CacheConfig.ts"
@@ -83,6 +84,7 @@ on:
       - "src/core/auth/**"
       - "src/core/session/services/SessionService.ts"
       - "src/core/session/services/SessionService.test.ts"
+      - "src/core/session/services/SessionService.refresh-race.spec.ts"
       - "src/core/session/providers/SessionProvider.tsx"
       - "src/core/session/cache/CacheManager.ts"
       - "src/core/session/cache/CacheConfig.ts"
@@ -157,6 +159,7 @@ jobs:
           src/core/auth/utils/__tests__/authJourney.test.ts
           src/core/auth/utils/__tests__/authPasswordRecoveryCooldown.test.ts
           src/core/session/services/SessionService.test.ts
+          src/core/session/services/SessionService.refresh-race.spec.ts
           src/shared/config/publicAppOrigin.test.ts
           src/app/components/auth/AuthBrandHeader.spec.tsx
           src/app/features/onboarding/hooks/useCadastro.spec.tsx
