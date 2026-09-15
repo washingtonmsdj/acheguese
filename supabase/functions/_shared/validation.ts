@@ -518,11 +518,13 @@ export const deleteAccountSchema: Schema<DeleteAccountBody> = {
 export interface AuthUsernameLoginBody {
   username: string;
   password: string;
+  captchaToken?: string;
 }
 
 export const authUsernameLoginSchema: Schema<AuthUsernameLoginBody> = {
   username: { required: true, validator: v.username() },
   password: { required: true, validator: v.string(1, 512) },
+  captchaToken: { required: false, validator: v.string(1, 2048) },
 };
 
 /** Schema para tracking publico de visualizacoes nao criticas */
