@@ -106,7 +106,7 @@ describe("Google OAuth account/access contract", () => {
     expect(terms).not.toContain("Tudo certo com os termos.");
   });
 
-  it("waits for session bootstrap and a pending PKCE callback before declaring signed out", () => {
+  it("waits for an unsettled PKCE callback even when another session already exists", () => {
     const terms = readProjectFile(
       "src/app/features/onboarding/pages/AceiteTermosPage.tsx",
     );
@@ -114,18 +114,21 @@ describe("Google OAuth account/access contract", () => {
     expect(terms).toContain("useSessionContext");
     expect(terms).toContain("isLoading: sessionLoading");
     expect(terms).toContain("hasAuthCallbackMarker");
-    expect(terms).toContain("authCallbackPending");
-    expect(terms).toContain(
+    expect(terms).toContain("window.location.search");
+    expect(terms).toContain("window.location.hash");
+    expect(terms).toContain("AUTH_QUERY_KEYS.code");
+    expect(terms).toContain("hasPendingPkceCode");
+    expect(terms).toContain("sessionLoading ||\n      hasPendingPkceCode ||");
+    expect(terms).toContain("(!user && authCallbackPending)");
+    expect(terms).not.toContain(
       "if (sessionLoading || (!user && authCallbackPending))",
     );
 
-    const loadingGuard = terms.indexOf(
-      "if (sessionLoading || (!user && authCallbackPending))",
-    );
-    const signedOutGuard = terms.indexOf("if (!user)", loadingGuard + 1);
-    expect(loadingGuard).toBeGreaterThanOrEqual(0);
-    expect(signedOutGuard).toBeGreaterThan(loadingGuard);
-    expect(terms.slice(loadingGuard, signedOutGuard)).toContain(
+    const pendingCodeGuard = terms.indexOf("hasPendingPkceCode ||");
+    const signedOutGuard = terms.indexOf("if (!user)", pendingCodeGuard + 1);
+    expect(pendingCodeGuard).toBeGreaterThanOrEqual(0);
+    expect(signedOutGuard).toBeGreaterThan(pendingCodeGuard);
+    expect(terms.slice(pendingCodeGuard, signedOutGuard)).toContain(
       'setState("checking")',
     );
     expect(terms).not.toContain('const { user } = useAuth()');
