@@ -9,6 +9,7 @@
 import { useState, useEffect, useCallback } from "react";
 import { SessionService } from "@/core/session/services/SessionService";
 import { SessionState } from "@/core/session/state/SessionState";
+import { AuthBackendAvailability } from "@/core/auth/services/AuthBackendAvailability";
 import { AuthService } from "@/core/auth/services/AuthService";
 import type {
   AuthUser,
@@ -155,6 +156,7 @@ export function useAuth(): UseAuthReturn {
     try {
       setLoading(true);
       setError(null);
+      await AuthBackendAvailability.assertReadyForExternalOAuth();
       await AuthService.signInWithGoogle();
     } catch (err) {
       setError(err as AuthError);
