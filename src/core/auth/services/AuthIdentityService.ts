@@ -6,15 +6,29 @@ export interface LinkedAuthProviders {
   hasGoogle: boolean;
 }
 
+function readMetadataProviders(appMetadata: Record<string, unknown>): string[] {
+  const providers = appMetadata.providers;
+  const primaryProvider = appMetadata.provider;
+  const values = [
+    ...(Array.isArray(providers) ? providers : []),
+    ...(typeof primaryProvider === "string" ? [primaryProvider] : []),
+  ];
+
+  return values.filter(
+    (provider): provider is string =>
+      typeof provider === "string" && provider.trim().length > 0,
+  );
+}
+
 /**
- * Read-only authority for identities linked to the authenticated Supabase user.
- * Provider availability and provider linkage are intentionally separate facts.
+ * Read-only authority for authentication methods linked to the authenticated
+ * Supabase user. Provider availability and provider linkage are intentionally
+ * separate facts.
  *
- * The `email` identity lets account settings distinguish an existing
- * email/password access method from an OAuth-only account, so the UI can say
- * "Alterar senha" or "Criar senha" truthfully. Password-change verification
- * itself belongs to AuthService/Supabase Auth and uses the project's canonical
- * reauthentication policy; this service never validates credentials.
+ * Supabase exposes providers both through user identities and auth-owned
+ * app_metadata. Reading both keeps the account UI truthful immediately after an
+ * OAuth account gains email/password login via updateUser({ password }).
+ * Password verification itself remains owned by AuthService/Supabase Auth.
  */
 export class AuthIdentityService {
   static async getLinkedProviders(): Promise<LinkedAuthProviders> {
@@ -24,13 +38,11 @@ export class AuthIdentityService {
       throw new Error("Authenticated user unavailable while reading linked providers");
     }
 
-    const providers = Array.from(
-      new Set(
-        (data.user.identities ?? [])
-          .map((identity) => identity.provider)
-          .filter((provider): provider is string => Boolean(provider)),
-      ),
-    );
+    const identityProviders = (data.user.identities ?? [])
+      .map((identity) => identity.provider)
+      .filter((provider): provider is string => Boolean(provider));
+    const metadataProviders = readMetadataProviders(data.user.app_metadata ?? {});
+    const providers = Array.from(new Set([...identityProviders, ...metadataProviders]));
 
     return {
       providers,
