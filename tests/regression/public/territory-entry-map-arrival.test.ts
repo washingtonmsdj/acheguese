@@ -28,6 +28,14 @@ describe("territory entry map arrival", () => {
     expect(wrapper).not.toContain("isLoading");
   });
 
+  it("keeps the pre-map status stable across the lazy runtime handoff", () => {
+    const statusText = "Conectando o mapa para sua chegada";
+
+    expect(wrapper).toContain(statusText);
+    expect(runtime).toContain(statusText);
+    expect(wrapper).not.toContain("Preparando o mapa oficial do território");
+  });
+
   it("discovers style before render and starts official boundary only after map readiness", () => {
     expect(main).toContain("DEFAULT_TILE_STYLE");
     expect(main).toContain('mapStylePreload.setAttribute("fetchpriority", "high")');
