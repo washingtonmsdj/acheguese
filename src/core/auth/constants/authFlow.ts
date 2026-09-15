@@ -44,6 +44,7 @@ export const AUTH_FLOW_STORAGE_KEYS = {
   pendingIntent: "auth.pending-intent",
   pendingSignupEmail: "auth.pending-signup-email",
   pendingSignupRedirect: "auth.pending-signup-redirect",
+  pendingSignupConfirmationSentAt: "auth.pending-signup-confirmation-sent-at",
 } as const;
 
 export const AUTH_FLOW_TTL_MS = {
@@ -51,6 +52,8 @@ export const AUTH_FLOW_TTL_MS = {
   pendingIntent: 2 * 60 * 60 * 1000,
   pendingSignup: 24 * 60 * 60 * 1000,
 } as const;
+
+export const AUTH_SIGNUP_CONFIRMATION_RESEND_COOLDOWN_MS = 60 * 1000;
 
 export function buildAuthPathWithRedirect(
   basePath: string,
