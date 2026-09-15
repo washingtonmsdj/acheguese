@@ -113,7 +113,6 @@ export class SessionService {
   private static initPromise: Promise<void> = new Promise(
     (resolve) => { SessionService.initResolve = resolve; }
   );
-  private static initFallbackStarted = false;
   private static authEventQueue: Promise<void> = Promise.resolve();
 
   // ── cancelPendingLoads ─────────────────────────────────────────────────────
@@ -143,7 +142,6 @@ export class SessionService {
   }
 
   private static resetInitPromise(): void {
-    SessionService.initFallbackStarted = false;
     SessionService.initError = null;
     SessionService.initPromise = new Promise((resolve) => {
       SessionService.initResolve = resolve;
@@ -292,34 +290,10 @@ export class SessionService {
       }
     });
 
-    // Armazena subscription para cleanup futuro se necessário
+    // A subscription do Supabase é a autoridade de bootstrap. O provider tem
+    // um timeout visual próprio, mas o promise canônico permanece pendente para
+    // que um INITIAL_SESSION tardio ainda consiga publicar sucesso ou erro real.
     SessionService.authSubscription = subscription;
-
-    if (typeof window !== "undefined") {
-      window.setTimeout(() => {
-        if (SessionService.initResolve) {
-          void SessionService.ensureInitialSessionFallback();
-        }
-      }, 2500);
-    } else {
-      void SessionService.ensureInitialSessionFallback();
-    }
-  }
-
-  private static async ensureInitialSessionFallback(): Promise<void> {
-    if (SessionService.initFallbackStarted) return;
-    SessionService.initFallbackStarted = true;
-
-    try {
-      // Evita lock contention no bootstrap: não chamar getSession aqui.
-      // O caminho canônico é o evento INITIAL_SESSION do onAuthStateChange.
-      // Este fallback existe apenas para não bloquear a UI em casos extremos.
-      SessionService.debug("[SessionService] init fallback: resolving without getSession");
-    } catch (error) {
-      SessionService.debug("[SessionService] getSession fallback threw", error);
-    } finally {
-      SessionService.resolveInit();
-    }
   }
 
   // ── loadFromSession ────────────────────────────────────────────────────────
