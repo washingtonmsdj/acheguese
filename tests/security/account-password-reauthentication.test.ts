@@ -60,6 +60,42 @@ describe("account password reauthentication", () => {
     expect(release).toBeGreaterThan(register);
   });
 
+  it("deduplicates simultaneous revocation of other sessions", () => {
+    const handler = authHook.indexOf(
+      "const signOutOtherSessions = useCallback(async () => {",
+    );
+    const activeRead = authHook.indexOf(
+      "const activeRevocation = signOutOthersInFlightRef.current;",
+      handler,
+    );
+    const reuse = authHook.indexOf(
+      "if (activeRevocation) return activeRevocation;",
+      activeRead,
+    );
+    const revoke = authHook.indexOf(
+      "await AuthService.signOutOtherSessions();",
+      reuse,
+    );
+    const register = authHook.indexOf(
+      "signOutOthersInFlightRef.current = operation;",
+      revoke,
+    );
+    const release = authHook.indexOf(
+      "signOutOthersInFlightRef.current = null;",
+      register,
+    );
+
+    expect(authHook).toContain(
+      "const signOutOthersInFlightRef = useRef<Promise<void> | null>(null);",
+    );
+    expect(handler).toBeGreaterThanOrEqual(0);
+    expect(activeRead).toBeGreaterThan(handler);
+    expect(reuse).toBeGreaterThan(activeRead);
+    expect(revoke).toBeGreaterThan(reuse);
+    expect(register).toBeGreaterThan(revoke);
+    expect(release).toBeGreaterThan(register);
+  });
+
   it("discards nonce state and invalidates late reauthentication requests when leaving the password view", () => {
     expect(securityPage).toContain("const passwordReauthRequestIdRef = useRef(0);");
     expect(securityPage).toContain('if (location.hash === "#senha") return;');
