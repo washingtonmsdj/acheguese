@@ -302,9 +302,9 @@ export function completeExistingGoogleSignupJourney(): void {
 }
 
 /**
- * Uma conta sem e-mail confirmado ainda não concluiu o acesso inicial. Depois
- * da confirmação, a etapa canônica continua sendo primeiro acesso; limpamos o
- * estado específico do e-mail, mas preservamos o destino para essa etapa.
+ * A confirmação por e-mail encerra o estado sensível da confirmação, mas mantém
+ * o destino original até o primeiro acesso. Isso vale tanto para cadastro novo
+ * quanto para uma conta ainda não confirmada descoberta durante o login.
  */
 export function completeEmailConfirmationJourney(): void {
   clearPendingReturn();

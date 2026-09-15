@@ -135,7 +135,7 @@ describe("account and access concept contract", () => {
     );
 
     expect(login).toContain("if (isEmailConfirmed) {");
-    expect(login).toContain("completeEmailConfirmationLoginJourney()");
+    expect(login).toContain("completeEmailConfirmationJourney()");
     expect(login).toContain("navigate(AUTH_PATHS.firstAccess, { replace: true })");
     expect(login).not.toContain('isEmailConfirmed && redirectTo === "/"');
 
@@ -181,6 +181,8 @@ describe("account and access concept contract", () => {
 
     expect(confirmation).toContain("getSignupConfirmationContext");
     expect(confirmation).toContain("restartEmailSignupJourney");
+    expect(confirmation).toContain("AUTH_EMAIL_CONFIRMATION_INTENTS.login");
+    expect(confirmation).toContain("cancelUnconfirmedEmailLoginJourney");
     expect(confirmation).not.toContain("pendingSignup");
     expect(confirmation).toContain("Vamos localizar sua inscrição.");
     expect(confirmation).toContain("Voltar para criar conta");
@@ -256,9 +258,12 @@ describe("account and access concept contract", () => {
     expect(journey).toContain("AUTH_FLOW_STORAGE_KEYS.pendingReturn");
     expect(journey).toContain("AUTH_FLOW_STORAGE_KEYS.pendingSignupEmail");
     expect(journey).toContain("AUTH_FLOW_STORAGE_KEYS.pendingSignupRedirect");
+    expect(journey).toContain("AUTH_FLOW_STORAGE_KEYS.pendingEmailConfirmationIntent");
     expect(journey).toContain("prepareEmailSignupConfirmation");
+    expect(journey).toContain("prepareUnconfirmedEmailLogin");
     expect(journey).toContain("getSignupConfirmationContext");
     expect(journey).toContain("getSignupJourneyReturnTarget");
+    expect(journey).toContain("completeEmailConfirmationJourney");
     expect(journey).toContain("completeFirstAccessJourney");
     expect(journey).not.toContain("pendingAuthReturn");
     expect(

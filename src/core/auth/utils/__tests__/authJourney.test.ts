@@ -1,6 +1,7 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 import {
+  AUTH_EMAIL_CONFIRMATION_INTENTS,
   AUTH_FLOW_STORAGE_KEYS,
   AUTH_JOURNEY_INTENTS,
   AUTH_PATHS,
@@ -10,7 +11,8 @@ import { getAuthFlowSessionValue } from "@/core/auth/utils/authFlowStorage";
 import {
   cancelGoogleLogin,
   cancelGoogleSignup,
-  completeEmailConfirmationLoginJourney,
+  cancelUnconfirmedEmailLoginJourney,
+  completeEmailConfirmationJourney,
   completeExistingGoogleSignupJourney,
   completeFirstAccessJourney,
   completeStandardLoginJourney,
@@ -50,6 +52,7 @@ describe("authJourney", () => {
 
     expect(getStored(AUTH_FLOW_STORAGE_KEYS.pendingSignupEmail)).toBeNull();
     expect(getStored(AUTH_FLOW_STORAGE_KEYS.pendingSignupRedirect)).toBeNull();
+    expect(getStored(AUTH_FLOW_STORAGE_KEYS.pendingEmailConfirmationIntent)).toBeNull();
     expect(
       getStored(AUTH_FLOW_STORAGE_KEYS.pendingSignupConfirmationCooldownUntil),
     ).toBeNull();
@@ -85,6 +88,7 @@ describe("authJourney", () => {
     expect(getStored(AUTH_FLOW_STORAGE_KEYS.pendingReturn)).toBeNull();
     expect(getStored(AUTH_FLOW_STORAGE_KEYS.pendingSignupRedirect)).toBeNull();
     expect(getStored(AUTH_FLOW_STORAGE_KEYS.pendingSignupEmail)).toBeNull();
+    expect(getStored(AUTH_FLOW_STORAGE_KEYS.pendingEmailConfirmationIntent)).toBeNull();
     expect(
       getStored(AUTH_FLOW_STORAGE_KEYS.pendingSignupConfirmationCooldownUntil),
     ).toBeNull();
@@ -98,6 +102,7 @@ describe("authJourney", () => {
     expect(getSignupConfirmationContext()).toEqual({
       email: "ana@example.com",
       returnTo: "/mensagens/abc",
+      intent: AUTH_EMAIL_CONFIRMATION_INTENTS.signup,
     });
     expect(getStored(AUTH_FLOW_STORAGE_KEYS.pendingReturn)).toBeNull();
     expect(getPendingAuthJourneyIntent()).toBeNull();
@@ -110,6 +115,7 @@ describe("authJourney", () => {
     expect(getSignupConfirmationContext()).toEqual({
       email: "ana@example.com",
       returnTo: "/mensagens/abc",
+      intent: AUTH_EMAIL_CONFIRMATION_INTENTS.login,
     });
     expect(getSignupConfirmationResendRemainingMs()).toBe(0);
     expect(
@@ -119,12 +125,25 @@ describe("authJourney", () => {
     expect(getPendingAuthJourneyIntent()).toBeNull();
   });
 
+  it("cancels login-origin confirmation without turning it into signup", () => {
+    prepareUnconfirmedEmailLogin("ana@example.com", "/mensagens/abc");
+    cancelUnconfirmedEmailLoginJourney();
+
+    expect(getSignupConfirmationContext()).toEqual({
+      email: null,
+      returnTo: "/",
+      intent: null,
+    });
+    expect(getStored(AUTH_FLOW_STORAGE_KEYS.pendingSignupRedirect)).toBeNull();
+  });
+
   it("owns immediate authenticated signup without fake confirmation state", () => {
     prepareEmailSignupConfirmation("old@example.com", "/conta");
     prepareAuthenticatedEmailSignup("/mensagens/abc");
 
     expect(getSignupJourneyReturnTarget()).toBe("/mensagens/abc");
     expect(getStored(AUTH_FLOW_STORAGE_KEYS.pendingSignupEmail)).toBeNull();
+    expect(getStored(AUTH_FLOW_STORAGE_KEYS.pendingEmailConfirmationIntent)).toBeNull();
     expect(
       getStored(AUTH_FLOW_STORAGE_KEYS.pendingSignupConfirmationCooldownUntil),
     ).toBeNull();
@@ -185,6 +204,7 @@ describe("authJourney", () => {
     restartEmailSignupJourney();
 
     expect(getStored(AUTH_FLOW_STORAGE_KEYS.pendingSignupEmail)).toBeNull();
+    expect(getStored(AUTH_FLOW_STORAGE_KEYS.pendingEmailConfirmationIntent)).toBeNull();
     expect(
       getStored(AUTH_FLOW_STORAGE_KEYS.pendingSignupConfirmationCooldownUntil),
     ).toBeNull();
@@ -200,20 +220,23 @@ describe("authJourney", () => {
     expect(getStored(AUTH_FLOW_STORAGE_KEYS.pendingSignupRedirect)).toBeNull();
     expect(getPendingAuthJourneyIntent()).toBeNull();
     expect(getStored(AUTH_FLOW_STORAGE_KEYS.pendingSignupEmail)).toBeNull();
+    expect(getStored(AUTH_FLOW_STORAGE_KEYS.pendingEmailConfirmationIntent)).toBeNull();
     expect(
       getStored(AUTH_FLOW_STORAGE_KEYS.pendingSignupConfirmationCooldownUntil),
     ).toBeNull();
   });
 
-  it("preserves signup redirect after email confirmation until first access", () => {
+  it("cleans email confirmation state but preserves signup redirect until first access", () => {
     prepareEmailSignupConfirmation("ana@example.com", "/mensagens/abc");
-    completeEmailConfirmationLoginJourney();
+    completeEmailConfirmationJourney();
 
     expect(getStored(AUTH_FLOW_STORAGE_KEYS.pendingReturn)).toBeNull();
     expect(getSignupJourneyReturnTarget()).toBe("/mensagens/abc");
-    expect(getStored(AUTH_FLOW_STORAGE_KEYS.pendingSignupEmail)).toBe(
-      "ana@example.com",
-    );
+    expect(getStored(AUTH_FLOW_STORAGE_KEYS.pendingSignupEmail)).toBeNull();
+    expect(getStored(AUTH_FLOW_STORAGE_KEYS.pendingEmailConfirmationIntent)).toBeNull();
+    expect(
+      getStored(AUTH_FLOW_STORAGE_KEYS.pendingSignupConfirmationCooldownUntil),
+    ).toBeNull();
   });
 
   it("cleans the complete signup context only when first access finishes", () => {
@@ -224,6 +247,7 @@ describe("authJourney", () => {
     expect(getPendingAuthJourneyIntent()).toBeNull();
     expect(getStored(AUTH_FLOW_STORAGE_KEYS.pendingSignupEmail)).toBeNull();
     expect(getStored(AUTH_FLOW_STORAGE_KEYS.pendingSignupRedirect)).toBeNull();
+    expect(getStored(AUTH_FLOW_STORAGE_KEYS.pendingEmailConfirmationIntent)).toBeNull();
     expect(
       getStored(AUTH_FLOW_STORAGE_KEYS.pendingSignupConfirmationCooldownUntil),
     ).toBeNull();

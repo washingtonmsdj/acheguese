@@ -33,7 +33,7 @@ describe("email confirmation callback contract", () => {
       confirmedBranch,
     );
     const completion = login.indexOf(
-      "completeEmailConfirmationLoginJourney()",
+      "completeEmailConfirmationJourney()",
       confirmedBranch,
     );
 
@@ -68,6 +68,8 @@ describe("email confirmation callback contract", () => {
     expect(login).toContain("Confirmando seu e-mail…");
     expect(login).toContain("showEmailConfirmed");
     expect(confirmation).toContain("getSignupConfirmationContext");
+    expect(confirmation).toContain("AUTH_EMAIL_CONFIRMATION_INTENTS.login");
+    expect(confirmation).toContain("cancelUnconfirmedEmailLoginJourney");
     expect(confirmation).toContain("Reenviar e-mail");
     expect(confirmation).toContain("Voltar para criar conta");
   });
