@@ -177,6 +177,7 @@ export default function ContaSegurancaPage() {
   const [updatingEmail, setUpdatingEmail] = useState(false);
   const [emailRequestSent, setEmailRequestSent] = useState(false);
   const passwordReauthRequestIdRef = useRef(0);
+  const emailUpdateRequestIdRef = useRef(0);
   const currentLocationHashRef = useRef(location.hash);
   currentLocationHashRef.current = location.hash;
 
@@ -188,6 +189,16 @@ export default function ContaSegurancaPage() {
     setPasswordNonce("");
     setPasswordReauthError(null);
     setRequestingPasswordReauth(false);
+  }, [location.hash]);
+
+  useEffect(() => {
+    if (location.hash === "#email") return;
+
+    emailUpdateRequestIdRef.current += 1;
+    setNewEmail("");
+    setEmailError(null);
+    setUpdatingEmail(false);
+    setEmailRequestSent(false);
   }, [location.hash]);
 
   if (!user) return <Navigate to={appUrls.auth.login} replace />;
@@ -294,20 +305,36 @@ export default function ContaSegurancaPage() {
       return;
     }
 
+    const requestId = emailUpdateRequestIdRef.current + 1;
+    emailUpdateRequestIdRef.current = requestId;
     setUpdatingEmail(true);
     setEmailError(null);
     try {
       await updateEmail(candidate);
+      if (
+        requestId !== emailUpdateRequestIdRef.current ||
+        currentLocationHashRef.current !== "#email"
+      ) {
+        return;
+      }
       setEmailRequestSent(true);
       toast.success("Alteração de e-mail solicitada", {
         description: "Conclua as confirmações enviadas pelo serviço de autenticação.",
       });
     } catch (error) {
+      if (
+        requestId !== emailUpdateRequestIdRef.current ||
+        currentLocationHashRef.current !== "#email"
+      ) {
+        return;
+      }
       const message = getAuthErrorMessage(error, "Não foi possível solicitar a troca de e-mail");
       setEmailError(message);
       toast.error(message);
     } finally {
-      setUpdatingEmail(false);
+      if (requestId === emailUpdateRequestIdRef.current) {
+        setUpdatingEmail(false);
+      }
     }
   };
 
