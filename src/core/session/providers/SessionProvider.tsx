@@ -117,8 +117,9 @@ export function SessionProvider({ children }: { children: React.ReactNode }) {
       }
       clearTimeout(timeout);
       setSessionData(SessionState.getState());
+      setError(null);
       finishBootstrap();
-    }).catch(() => {
+    }).catch((cause: unknown) => {
       if (
         !mountedRef.current ||
         bootstrapVersion !== bootstrapVersionRef.current
@@ -126,6 +127,11 @@ export function SessionProvider({ children }: { children: React.ReactNode }) {
         return;
       }
       clearTimeout(timeout);
+      // A identidade já pode ter sido publicada antes de a leitura privada de
+      // perfis falhar. Mantemos essa identidade, mas expomos o bootstrap
+      // degradado em vez de fabricar uma sessão vazia como sucesso.
+      setSessionData(SessionState.getState());
+      setError(cause instanceof Error ? cause : new Error(String(cause)));
       finishBootstrap();
     });
 
