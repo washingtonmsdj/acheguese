@@ -295,7 +295,6 @@ export default function TerritoryEntryMapRuntime({
           </span>
         </div>
       ) : null}
-      <span className="sr-only">Mapa territorial de {territoryName}</span>
     </section>
   );
 }
