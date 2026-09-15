@@ -16,6 +16,7 @@ import { useLocationCascade } from "@/core/location/hooks/useLocationCascade";
 import { profileService } from "@/core/profiles/services/ProfileService";
 import type { ProfileRow } from "@/core/profiles/services/types";
 import { useIdentityAvailability } from "@/core/public-identity/hooks/useIdentityAvailability";
+import { useSessionContext } from "@/core/session/hooks/useSessionContext";
 import { SUPPORT_PATH } from "@/shared/constants/legal";
 import { useToast } from "@/shared/hooks/use-toast";
 
@@ -102,7 +103,8 @@ function ConceptSelect({
 }
 
 export default function CadastroPrimeiroAcessoPage() {
-  const { user, refreshUser } = useAuth();
+  const { refreshUser } = useAuth();
+  const { user, isLoading: sessionLoading } = useSessionContext();
   const navigate = useNavigate();
   const { toast } = useToast();
   const [profile, setProfile] = useState<ProfileRow | null>(null);
@@ -170,12 +172,13 @@ export default function CadastroPrimeiroAcessoPage() {
   }, [user]);
 
   useEffect(() => {
+    if (sessionLoading) return;
     if (!user) {
       navigate(buildEmailConfirmationLoginPath(), { replace: true });
       return;
     }
     void loadProfile();
-  }, [loadProfile, navigate, user]);
+  }, [loadProfile, navigate, sessionLoading, user]);
 
   const leaveFirstAccess = (target: string) => {
     completeFirstAccessJourney();
@@ -282,7 +285,7 @@ export default function CadastroPrimeiroAcessoPage() {
     }
   };
 
-  if (loadingProfile) {
+  if (sessionLoading || loadingProfile) {
     return (
       <div className="flex min-h-[100dvh] items-center justify-center bg-[#fffdfa] text-[#486367]">
         <div role="status" className="flex items-center gap-3 text-sm">

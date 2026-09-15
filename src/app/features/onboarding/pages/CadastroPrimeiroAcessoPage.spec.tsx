@@ -7,6 +7,12 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 import CadastroPrimeiroAcessoPage from "./CadastroPrimeiroAcessoPage";
 import { profileService } from "@/core/profiles/services/ProfileService";
 
+const AUTH_USER = {
+  id: "user-1",
+  email: "ana@example.com",
+  emailConfirmed: true,
+};
+
 const mocks = vi.hoisted(() => ({
   navigate: vi.fn(),
   refreshUser: vi.fn(),
@@ -14,6 +20,10 @@ const mocks = vi.hoisted(() => ({
   usernameCheck: vi.fn(),
   usernameCheckDebounced: vi.fn(),
   usernameReset: vi.fn(),
+  session: {
+    user: null as typeof AUTH_USER | null,
+    isLoading: false,
+  },
 }));
 
 vi.mock("react-router-dom", async () => {
@@ -28,13 +38,12 @@ vi.mock("react-router-dom", async () => {
 
 vi.mock("@/core/auth/hooks/useAuth", () => ({
   useAuth: () => ({
-    user: {
-      id: "user-1",
-      email: "ana@example.com",
-      emailConfirmed: true,
-    },
     refreshUser: mocks.refreshUser,
   }),
+}));
+
+vi.mock("@/core/session/hooks/useSessionContext", () => ({
+  useSessionContext: () => mocks.session,
 }));
 
 vi.mock("@/core/auth/utils/authJourney", () => ({
@@ -102,6 +111,8 @@ function renderPage() {
 describe("CadastroPrimeiroAcessoPage", () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    mocks.session.user = AUTH_USER;
+    mocks.session.isLoading = false;
     vi.mocked(profileService.getRequiredActiveProfile).mockResolvedValue(
       PROFILE as never,
     );
@@ -111,6 +122,31 @@ describe("CadastroPrimeiroAcessoPage", () => {
       identifier: "ana_oliveira",
       status: "available",
     });
+  });
+
+  it("aguarda a hidratação da sessão sem expulsar o usuário do primeiro acesso", () => {
+    mocks.session.user = null;
+    mocks.session.isLoading = true;
+
+    renderPage();
+
+    expect(screen.getByRole("status")).toHaveTextContent("Preparando sua conta");
+    expect(mocks.navigate).not.toHaveBeenCalled();
+    expect(profileService.getRequiredActiveProfile).not.toHaveBeenCalled();
+  });
+
+  it("redireciona ao fluxo de confirmação somente depois de concluir a hidratação sem usuário", async () => {
+    mocks.session.user = null;
+    mocks.session.isLoading = false;
+
+    renderPage();
+
+    await waitFor(() => {
+      expect(mocks.navigate).toHaveBeenCalledWith("/login?confirmed=1", {
+        replace: true,
+      });
+    });
+    expect(profileService.getRequiredActiveProfile).not.toHaveBeenCalled();
   });
 
   it("preserva o retorno da conversa e encerra a jornada ao adiar o perfil", async () => {
