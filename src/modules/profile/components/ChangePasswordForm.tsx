@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useMemo, useRef, useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import {
@@ -35,6 +35,7 @@ export function ChangePasswordForm({
   onCancel,
 }: ChangePasswordFormProps) {
   const [showPassword, setShowPassword] = useState(false);
+  const saveInFlight = useRef(false);
 
   const {
     register,
@@ -58,11 +59,15 @@ export function ChangePasswordForm({
     newPasswordValue === confirmPasswordValue && confirmPasswordValue.length > 0;
 
   const onValid = async (data: ResetPasswordFormInput) => {
+    if (saveInFlight.current) return;
+    saveInFlight.current = true;
     try {
       await onSave(data);
       reset();
     } catch {
       // A página proprietária do fluxo apresenta o erro ao usuário.
+    } finally {
+      saveInFlight.current = false;
     }
   };
 
