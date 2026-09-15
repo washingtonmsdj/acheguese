@@ -13,7 +13,7 @@ import {
 } from "@/core/auth/constants/authFlow";
 import {
   getAuthCallbackError,
-  hasPendingPkceCode,
+  hasPendingAuthCallbackExchange,
 } from "@/core/auth/utils/authCallback";
 import { ACCOUNT_PATHS } from "@/core/routing/config/account";
 import { useSessionContext } from "@/core/session/hooks/useSessionContext";
@@ -34,25 +34,33 @@ export default function EmailChangeConfirmationPage() {
     getAuthCallbackError(location.search, location.hash) !== null;
   const liveSearch =
     typeof window !== "undefined" ? window.location.search : location.search;
-  const pendingPkceCode =
-    hasEmailChangeMarker && hasPendingPkceCode(liveSearch);
+  const liveHash =
+    typeof window !== "undefined" ? window.location.hash : location.hash;
+  const pendingAuthExchange =
+    hasEmailChangeMarker &&
+    hasPendingAuthCallbackExchange(liveSearch, liveHash);
 
   useEffect(() => {
-    if (!hasEmailChangeMarker || callbackFailed || !pendingPkceCode) return;
+    if (!hasEmailChangeMarker || callbackFailed || !pendingAuthExchange) return;
 
     const timeout = window.setTimeout(() => {
-      if (hasPendingPkceCode(window.location.search)) {
+      if (
+        hasPendingAuthCallbackExchange(
+          window.location.search,
+          window.location.hash,
+        )
+      ) {
         setTimedOut(true);
       }
     }, AUTH_BROWSER_STORAGE_CONFIG.authUrlCleanupDelayMs);
 
     return () => window.clearTimeout(timeout);
-  }, [callbackFailed, hasEmailChangeMarker, pendingPkceCode]);
+  }, [callbackFailed, hasEmailChangeMarker, pendingAuthExchange]);
 
   const state: EmailChangeReturnState =
     !hasEmailChangeMarker || callbackFailed || timedOut
       ? "invalid"
-      : sessionLoading || pendingPkceCode
+      : sessionLoading || pendingAuthExchange
         ? "checking"
         : "ready";
   const accountAccessTarget = user
