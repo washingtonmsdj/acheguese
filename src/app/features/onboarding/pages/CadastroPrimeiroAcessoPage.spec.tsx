@@ -1,10 +1,11 @@
-import { render, screen, waitFor } from "@testing-library/react";
+import { act, render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { MemoryRouter } from "react-router-dom";
 import { HelmetProvider } from "react-helmet-async";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 import CadastroPrimeiroAcessoPage from "./CadastroPrimeiroAcessoPage";
+import { AUTH_FIRST_ACCESS_SESSION_SETTLE_MS } from "@/core/auth/constants/authFlow";
 import { profileService } from "@/core/profiles/services/ProfileService";
 
 const AUTH_USER = {
@@ -135,18 +136,33 @@ describe("CadastroPrimeiroAcessoPage", () => {
     expect(profileService.getRequiredActiveProfile).not.toHaveBeenCalled();
   });
 
-  it("redireciona ao fluxo de confirmação somente depois de concluir a hidratação sem usuário", async () => {
-    mocks.session.user = null;
-    mocks.session.isLoading = false;
+  it("dá uma janela para a sessão recém-criada assentar antes de voltar à confirmação", async () => {
+    vi.useFakeTimers();
+    try {
+      mocks.session.user = null;
+      mocks.session.isLoading = false;
 
-    renderPage();
+      renderPage();
 
-    await waitFor(() => {
+      expect(screen.getByRole("status")).toHaveTextContent("Preparando sua conta");
+      expect(mocks.navigate).not.toHaveBeenCalled();
+      expect(profileService.getRequiredActiveProfile).not.toHaveBeenCalled();
+
+      await act(async () => {
+        vi.advanceTimersByTime(AUTH_FIRST_ACCESS_SESSION_SETTLE_MS - 1);
+      });
+      expect(mocks.navigate).not.toHaveBeenCalled();
+
+      await act(async () => {
+        vi.advanceTimersByTime(1);
+      });
       expect(mocks.navigate).toHaveBeenCalledWith("/login?confirmed=1", {
         replace: true,
       });
-    });
-    expect(profileService.getRequiredActiveProfile).not.toHaveBeenCalled();
+      expect(profileService.getRequiredActiveProfile).not.toHaveBeenCalled();
+    } finally {
+      vi.useRealTimers();
+    }
   });
 
   it("preserva o retorno da conversa e encerra a jornada ao adiar o perfil", async () => {
