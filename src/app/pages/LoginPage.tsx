@@ -84,6 +84,13 @@ export default function LoginPage() {
       typeof window !== "undefined" ? window.location.search : location.search,
       typeof window !== "undefined" ? window.location.hash : location.hash,
     );
+  const emailConfirmationSettling =
+    isEmailConfirmed &&
+    !sessionLoading &&
+    user === null &&
+    !emailConfirmationCallbackFailed;
+  const showEmailConfirmationProgress =
+    emailConfirmationExchangePending || emailConfirmationSettling;
   const showEmailConfirmed =
     isEmailConfirmed &&
     !sessionLoading &&
@@ -137,23 +144,22 @@ export default function LoginPage() {
       return;
     }
 
-    if (emailConfirmationExchangePending) {
-      const timeout = window.setTimeout(() => {
-        const stillPending = hasPendingAuthCallbackExchange(
-          window.location.search,
-          window.location.hash,
-        );
-        if (stillPending || !user) {
-          navigate(AUTH_PATHS.signupConfirmation, { replace: true });
-        }
-      }, AUTH_BROWSER_STORAGE_CONFIG.authUrlCleanupDelayMs);
+    if (user && !emailConfirmationExchangePending) return;
 
-      return () => window.clearTimeout(timeout);
-    }
+    // Supabase may consume `code` from the live URL before SessionService has
+    // published the resulting user. Give the callback a bounded settlement
+    // window instead of treating a temporarily-null SessionState as failure.
+    const timeout = window.setTimeout(() => {
+      const stillPending = hasPendingAuthCallbackExchange(
+        window.location.search,
+        window.location.hash,
+      );
+      if (stillPending || !user) {
+        navigate(AUTH_PATHS.signupConfirmation, { replace: true });
+      }
+    }, AUTH_BROWSER_STORAGE_CONFIG.authUrlCleanupDelayMs);
 
-    if (!user) {
-      navigate(AUTH_PATHS.signupConfirmation, { replace: true });
-    }
+    return () => window.clearTimeout(timeout);
   }, [
     emailConfirmationCallbackFailed,
     emailConfirmationExchangePending,
@@ -277,7 +283,11 @@ export default function LoginPage() {
     navigate(buildPasswordResetRequestPath(email));
   };
 
-  const isBusy = sessionLoading || user !== null || pendingAction !== null;
+  const isBusy =
+    sessionLoading ||
+    user !== null ||
+    pendingAction !== null ||
+    emailConfirmationSettling;
   const hasReturnContext = redirectTo !== "/";
 
   return (
@@ -352,7 +362,7 @@ export default function LoginPage() {
               </div>
             ) : null}
 
-            {emailConfirmationExchangePending ? (
+            {showEmailConfirmationProgress ? (
               <div
                 role="status"
                 className="mt-4 flex items-start gap-3 rounded-xl bg-[#f3f1ea] px-3.5 py-3 text-[#35575a]"
