@@ -26,6 +26,16 @@ describe("runtime profile read deduplication", () => {
     expect(source).toContain("targetUserId: userId");
   });
 
+  it("does not collapse broker failures into a valid empty profile list", () => {
+    const source = read(
+      "src/core/profiles/services/multi-profile/runtimeProfileService.ts",
+    );
+
+    expect(source).not.toContain("logger.error");
+    expect(source).not.toContain(".catch((error)");
+    expect(source).not.toContain("Error fetching runtime profiles");
+  });
+
   it("does not turn the in-flight owner into a stale result cache", () => {
     const source = read(
       "src/core/profiles/services/multi-profile/runtimeProfileService.ts",
