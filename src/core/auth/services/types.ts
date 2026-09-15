@@ -20,6 +20,8 @@ export interface SignUpData {
   /** Identificador público desejado para o perfil pessoal criado no signup. */
   handle?: string;
   termsAcceptance: TermsAcceptance;
+  /** Token anti-bot emitido pelo Turnstile quando o gate está habilitado. */
+  captchaToken?: string;
 }
 
 export interface SignInData {
