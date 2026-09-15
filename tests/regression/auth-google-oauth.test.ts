@@ -78,12 +78,18 @@ describe("Google OAuth account/access contract", () => {
     expect(terms).toContain("Entrar com Google não pula esta etapa");
   });
 
-  it("does not let a stale local port change the OAuth callback origin", () => {
+  it("keeps the browser loopback origin authoritative for OAuth on localhost:5175", () => {
     const origin = readProjectFile("src/shared/config/publicAppOrigin.ts");
+    const envProduction = readProjectFile(".env.production");
     const supabaseConfig = readProjectFile("supabase/config.toml");
 
     expect(origin).toContain("import.meta.env.DEV");
     expect(origin).toContain("window.location?.origin");
+    expect(origin).toContain('hostname === "localhost"');
+    expect(origin).toContain('hostname === "127.0.0.1"');
+    expect(envProduction).toContain(
+      "VITE_PUBLIC_SITE_URL=https://acheguese.com.br",
+    );
     expect(supabaseConfig).toContain("http://localhost:5175/aceitar-termos");
     expect(supabaseConfig).toContain("http://127.0.0.1:5175/aceitar-termos");
   });
