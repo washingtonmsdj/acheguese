@@ -88,7 +88,6 @@ const SKIP_DIRS = new Set(['node_modules', '.git', 'dist']);
 const SKIP_FILE_PATTERNS = [/\.generated\.tsx?$/];
 
 const REGRESSION_WHITELIST = new Set([
-  'src/core/profiles/hooks/useActiveProfile.ts',
   'src/core/profiles/hooks/useProfiles.ts',
   'src/core/profiles/hooks/useProfileMembers.ts',
   'src/core/profiles/hooks/useProfileLinks.ts',
@@ -98,7 +97,6 @@ const REGRESSION_WHITELIST = new Set([
   'src/core/profiles/components/PrivacySettings.tsx',
   'src/core/profiles/components/ProfileLinksManager.tsx',
   'src/core/profiles/components/ProfileMembersManager.tsx',
-  'src/app/pages/ProfileSettingsPage.tsx',
   'src/app/pages/PublicProfilePage.tsx',
 ]);
 
