@@ -65,6 +65,25 @@ describe("signup confirmation resend Turnstile contract", () => {
     expect(confirmationPage).toContain('<AuthTurnstileGate\n                    action="signup"');
   });
 
+  it("serializes resend attempts before React busy state can settle", () => {
+    const resendCall = confirmationPage.indexOf(
+      "await resendConfirmationEmail(email, turnstile.token ?? undefined);",
+    );
+    const lock = confirmationPage.indexOf("resendInFlight.current = true;");
+    const release = confirmationPage.indexOf(
+      "resendInFlight.current = false;",
+      resendCall,
+    );
+
+    expect(confirmationPage).toContain("const resendInFlight = useRef(false);");
+    expect(confirmationPage).toContain(
+      "if (cooldown > 0 || resendInFlight.current) return;",
+    );
+    expect(lock).toBeGreaterThanOrEqual(0);
+    expect(resendCall).toBeGreaterThan(lock);
+    expect(release).toBeGreaterThan(resendCall);
+  });
+
   it("keeps resend timing in the Auth journey instead of disposable page state", () => {
     expect(authFlow).toContain(
       'pendingSignupConfirmationCooldownUntil:\n    "auth.pending-signup-confirmation-cooldown-until"',
