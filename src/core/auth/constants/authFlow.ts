@@ -55,15 +55,20 @@ export const AUTH_FLOW_STORAGE_KEYS = {
   pendingEmailConfirmationIntent: "auth.pending-email-confirmation-intent",
   pendingSignupConfirmationCooldownUntil:
     "auth.pending-signup-confirmation-cooldown-until",
+  passwordRecoveryResendEmail: "auth.password-recovery-resend-email",
+  passwordRecoveryResendCooldownUntil:
+    "auth.password-recovery-resend-cooldown-until",
 } as const;
 
 export const AUTH_FLOW_TTL_MS = {
   pendingReturn: 2 * 60 * 60 * 1000,
   pendingIntent: 2 * 60 * 60 * 1000,
   pendingSignup: 24 * 60 * 60 * 1000,
+  passwordRecovery: 2 * 60 * 60 * 1000,
 } as const;
 
 export const AUTH_SIGNUP_CONFIRMATION_RESEND_COOLDOWN_MS = 60 * 1000;
+export const AUTH_PASSWORD_RECOVERY_RESEND_COOLDOWN_MS = 60 * 1000;
 
 export function buildAuthPathWithRedirect(
   basePath: string,

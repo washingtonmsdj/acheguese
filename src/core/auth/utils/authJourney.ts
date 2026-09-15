@@ -3,6 +3,7 @@ import {
   AUTH_FLOW_STORAGE_KEYS,
   AUTH_FLOW_TTL_MS,
   AUTH_JOURNEY_INTENTS,
+  AUTH_PASSWORD_RECOVERY_RESEND_COOLDOWN_MS,
   AUTH_PATHS,
   AUTH_SIGNUP_CONFIRMATION_RESEND_COOLDOWN_MS,
   type AuthEmailConfirmationIntent,
@@ -123,6 +124,27 @@ function getPendingSignupConfirmationCooldownUntil(): number | null {
   return value;
 }
 
+function clearPasswordRecoveryResendCooldown(): void {
+  clearAuthFlowSessionValue(AUTH_FLOW_STORAGE_KEYS.passwordRecoveryResendEmail);
+  clearAuthFlowSessionValue(
+    AUTH_FLOW_STORAGE_KEYS.passwordRecoveryResendCooldownUntil,
+  );
+}
+
+function getPasswordRecoveryResendCooldownUntil(): number | null {
+  const stored = getAuthFlowSessionValue(
+    AUTH_FLOW_STORAGE_KEYS.passwordRecoveryResendCooldownUntil,
+  );
+  if (!stored) return null;
+
+  const value = Number(stored);
+  if (!Number.isFinite(value) || value <= 0) {
+    clearPasswordRecoveryResendCooldown();
+    return null;
+  }
+  return value;
+}
+
 function clearPendingEmailConfirmationState(): void {
   clearPendingSignupEmail();
   clearPendingEmailConfirmationIntent();
@@ -189,6 +211,55 @@ export function getSignupConfirmationResendRemainingMs(
   if (cooldownUntil === null) return 0;
   return Math.min(
     AUTH_SIGNUP_CONFIRMATION_RESEND_COOLDOWN_MS,
+    Math.max(0, cooldownUntil - now),
+  );
+}
+
+/**
+ * Persiste o cooldown da recuperação para o e-mail efetivamente enviado. Isso
+ * evita reload como bypass visual sem bloquear a correção para outro endereço.
+ * O servidor continua sendo a autoridade do rate limit.
+ */
+export function startPasswordRecoveryResendCooldown(
+  email: string,
+  now = Date.now(),
+): void {
+  const normalizedEmail = normalizeEmail(email);
+  if (!normalizedEmail) return;
+
+  setAuthFlowSessionValue(
+    AUTH_FLOW_STORAGE_KEYS.passwordRecoveryResendEmail,
+    normalizedEmail,
+    AUTH_FLOW_TTL_MS.passwordRecovery,
+  );
+  setAuthFlowSessionValue(
+    AUTH_FLOW_STORAGE_KEYS.passwordRecoveryResendCooldownUntil,
+    String(now + AUTH_PASSWORD_RECOVERY_RESEND_COOLDOWN_MS),
+    AUTH_FLOW_TTL_MS.passwordRecovery,
+  );
+}
+
+/**
+ * Retorna cooldown somente quando o e-mail atual é o mesmo da tentativa que o
+ * iniciou. Regressão de relógio nunca amplia a janela além do limite canônico.
+ */
+export function getPasswordRecoveryResendRemainingMs(
+  email: string,
+  now = Date.now(),
+): number {
+  const normalizedEmail = normalizeEmail(email);
+  if (!normalizedEmail) return 0;
+
+  const storedEmail = getAuthFlowSessionValue(
+    AUTH_FLOW_STORAGE_KEYS.passwordRecoveryResendEmail,
+  );
+  if (!storedEmail || normalizeEmail(storedEmail) !== normalizedEmail) return 0;
+
+  const cooldownUntil = getPasswordRecoveryResendCooldownUntil();
+  if (cooldownUntil === null) return 0;
+
+  return Math.min(
+    AUTH_PASSWORD_RECOVERY_RESEND_COOLDOWN_MS,
     Math.max(0, cooldownUntil - now),
   );
 }

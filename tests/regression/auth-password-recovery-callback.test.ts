@@ -59,4 +59,20 @@ describe("password recovery callback settlement", () => {
       'setView((current) => (current === "checking" ? "invalid" : current))',
     );
   });
+
+  it("persists resend cooldown per recovery email and mirrors server rate limits", () => {
+    const flow = read("src/core/auth/constants/authFlow.ts");
+    const journey = read("src/core/auth/utils/authJourney.ts");
+    const recovery = read("src/app/pages/ResetPasswordPage.tsx");
+
+    expect(flow).toContain("AUTH_PASSWORD_RECOVERY_RESEND_COOLDOWN_MS");
+    expect(flow).toContain("passwordRecoveryResendEmail");
+    expect(flow).toContain("passwordRecoveryResendCooldownUntil");
+    expect(journey).toContain("startPasswordRecoveryResendCooldown");
+    expect(journey).toContain("getPasswordRecoveryResendRemainingMs");
+    expect(recovery).toContain("getRecoveryCooldownSeconds");
+    expect(recovery).toContain("startPasswordRecoveryResendCooldown(normalizedEmail)");
+    expect(recovery).toContain("isAuthRateLimitError(error)");
+    expect(recovery).not.toContain("const RESEND_SECONDS = 60");
+  });
 });

@@ -24,7 +24,14 @@ import {
 import { useAuth } from "@/core/auth/hooks/useAuth";
 import { AuthService } from "@/core/auth/services/AuthService";
 import { getAuthCallbackError } from "@/core/auth/utils/authCallback";
-import { getAuthErrorMessage } from "@/core/auth/utils/authMessages";
+import {
+  getPasswordRecoveryResendRemainingMs,
+  startPasswordRecoveryResendCooldown,
+} from "@/core/auth/utils/authJourney";
+import {
+  getAuthErrorMessage,
+  isAuthRateLimitError,
+} from "@/core/auth/utils/authMessages";
 import { checkPasswordCompromise } from "@/core/auth/utils/compromisedPassword";
 import { AUTH_BROWSER_STORAGE_CONFIG } from "@/shared/config/security.config";
 import {
@@ -50,7 +57,9 @@ type RecoveryView =
   | "success"
   | "invalid";
 
-const RESEND_SECONDS = 60;
+function getRecoveryCooldownSeconds(email: string): number {
+  return Math.ceil(getPasswordRecoveryResendRemainingMs(email) / 1000);
+}
 
 export default function ResetPasswordPage() {
   const navigate = useNavigate();
@@ -73,7 +82,9 @@ export default function ResetPasswordPage() {
     return "request";
   });
   const [sending, setSending] = useState(false);
-  const [resendCooldown, setResendCooldown] = useState(0);
+  const [resendCooldown, setResendCooldown] = useState(() =>
+    getRecoveryCooldownSeconds(initialEmail),
+  );
 
   const form = useForm<ResetPasswordFormInput>({
     resolver: zodResolver(ResetPasswordFormSchema),
@@ -86,12 +97,12 @@ export default function ResetPasswordPage() {
   );
 
   useEffect(() => {
-    if (resendCooldown <= 0) return;
-    const timer = window.setInterval(() => {
-      setResendCooldown((current) => Math.max(0, current - 1));
-    }, 1000);
+    const syncCooldown = () =>
+      setResendCooldown(getRecoveryCooldownSeconds(email));
+    syncCooldown();
+    const timer = window.setInterval(syncCooldown, 1000);
     return () => window.clearInterval(timer);
-  }, [resendCooldown]);
+  }, [email]);
 
   useEffect(() => {
     if (view !== "checking") return;
@@ -121,7 +132,12 @@ export default function ResetPasswordPage() {
       toast({ title: "Informe um e-mail válido", variant: "destructive" });
       return;
     }
-    if (sending || resendCooldown > 0) return;
+
+    const remainingMs = getPasswordRecoveryResendRemainingMs(normalizedEmail);
+    if (sending || remainingMs > 0) {
+      setResendCooldown(Math.ceil(remainingMs / 1000));
+      return;
+    }
     if (!requestTurnstile.isReady) {
       toast({
         title: "Verificação necessária",
@@ -139,8 +155,15 @@ export default function ResetPasswordPage() {
       );
       setEmail(normalizedEmail);
       setView(nextView);
-      setResendCooldown(RESEND_SECONDS);
+      startPasswordRecoveryResendCooldown(normalizedEmail);
+      setResendCooldown(getRecoveryCooldownSeconds(normalizedEmail));
     } catch (error) {
+      if (isAuthRateLimitError(error)) {
+        // O Auth é autoritativo. Espelhamos a janela apenas para evitar cliques
+        // repetidos e reload como bypass visual enquanto o servidor limita.
+        startPasswordRecoveryResendCooldown(normalizedEmail);
+        setResendCooldown(getRecoveryCooldownSeconds(normalizedEmail));
+      }
       toast({
         title: "Não foi possível enviar agora",
         description: getAuthErrorMessage(
@@ -297,10 +320,18 @@ export default function ResetPasswordPage() {
                 <button
                   type="button"
                   onClick={() => void sendRecovery()}
-                  disabled={sending || !requestTurnstile.isReady}
+                  disabled={
+                    sending ||
+                    resendCooldown > 0 ||
+                    !requestTurnstile.isReady
+                  }
                   className="mt-5 flex h-11 w-full items-center justify-center rounded-[9px] bg-[#ffc91a] text-[14px] font-extrabold text-[#102f33] hover:bg-[#f7bf00] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#0b5b59]/40 disabled:opacity-55"
                 >
-                  {sending ? "Enviando…" : "Enviar link de recuperação"}
+                  {sending
+                    ? "Enviando…"
+                    : resendCooldown > 0
+                      ? `Aguarde ${resendCooldown}s`
+                      : "Enviar link de recuperação"}
                 </button>
 
                 <p className="mt-4 hidden text-center text-[11px] leading-4 text-[#607477] lg:block">
@@ -626,10 +657,18 @@ export default function ResetPasswordPage() {
                 <button
                   type="button"
                   onClick={() => void sendRecovery()}
-                  disabled={sending || !requestTurnstile.isReady}
+                  disabled={
+                    sending ||
+                    resendCooldown > 0 ||
+                    !requestTurnstile.isReady
+                  }
                   className="mt-4 h-11 w-full rounded-[9px] bg-[#ffc91a] text-[14px] font-extrabold text-[#102f33] hover:bg-[#f7bf00] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#0b5b59]/40 disabled:opacity-55"
                 >
-                  {sending ? "Enviando…" : "Enviar novo link"}
+                  {sending
+                    ? "Enviando…"
+                    : resendCooldown > 0
+                      ? `Aguarde ${resendCooldown}s`
+                      : "Enviar novo link"}
                 </button>
                 <button
                   type="button"
