@@ -70,12 +70,26 @@ export function MultiProfileProvider({ children }: { children: ReactNode }) {
   const [allProfiles, setAllProfiles] = useState<Profile[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const mountedRef = useRef(true);
   const allProfilesRef = useRef<Profile[]>([]);
   const loadedUserIdRef = useRef<string | null>(null);
   const projectedUserIdRef = useRef<string | null>(null);
+  const sessionUserIdRef = useRef<string | null>(sessionUser?.id ?? null);
+  const sessionOwnerVersionRef = useRef(0);
   const requestVersionRef = useRef(0);
 
+  useEffect(() => {
+    mountedRef.current = true;
+    return () => {
+      mountedRef.current = false;
+      sessionOwnerVersionRef.current += 1;
+      requestVersionRef.current += 1;
+    };
+  }, []);
+
   const loadProfilesForUser = useCallback(async (userId: string) => {
+    if (!mountedRef.current) return;
+
     const projectedUserId = projectedUserIdRef.current;
     loadedUserIdRef.current = userId;
     const requestVersion = ++requestVersionRef.current;
@@ -95,7 +109,13 @@ export function MultiProfileProvider({ children }: { children: ReactNode }) {
 
     try {
       const profiles = await MultiProfileRuntimeService.getMyProfiles(userId);
-      if (requestVersion !== requestVersionRef.current) return;
+      if (
+        !mountedRef.current ||
+        requestVersion !== requestVersionRef.current ||
+        sessionUserIdRef.current !== userId
+      ) {
+        return;
+      }
 
       projectedUserIdRef.current = userId;
       setAllProfiles(profiles);
@@ -115,14 +135,22 @@ export function MultiProfileProvider({ children }: { children: ReactNode }) {
       }
       setActiveProfile(active || null);
     } catch (error: unknown) {
-      if (requestVersion === requestVersionRef.current) {
+      if (
+        mountedRef.current &&
+        requestVersion === requestVersionRef.current &&
+        sessionUserIdRef.current === userId
+      ) {
         if (loadedUserIdRef.current === userId) {
           loadedUserIdRef.current = null;
         }
         setError(getErrorMessage(error, 'Failed to load profiles'));
       }
     } finally {
-      if (requestVersion === requestVersionRef.current) {
+      if (
+        mountedRef.current &&
+        requestVersion === requestVersionRef.current &&
+        sessionUserIdRef.current === userId
+      ) {
         setLoading(false);
       }
     }
@@ -135,19 +163,50 @@ export function MultiProfileProvider({ children }: { children: ReactNode }) {
   }, [loadProfilesForUser, sessionUser?.id]);
 
   const switchProfile = useCallback(async (profileId: string): Promise<boolean> => {
-    const profile = allProfiles.find((candidate) => candidate.id === profileId);
-    if (!profile) { setError('Profile not found'); return false; }
+    const ownerUserId = sessionUser?.id ?? null;
+    const ownerVersion = sessionOwnerVersionRef.current;
+    const profile = allProfiles.find(
+      (candidate) =>
+        candidate.id === profileId &&
+        ownerUserId !== null &&
+        candidate.user_id === ownerUserId,
+    );
+
+    if (!profile || !ownerUserId) {
+      if (mountedRef.current) setError('Profile not found');
+      return false;
+    }
+
+    if (mountedRef.current) setError(null);
+
     try {
       await SessionService.switchProfile(profileId);
+      if (
+        !mountedRef.current ||
+        ownerVersion !== sessionOwnerVersionRef.current ||
+        sessionUserIdRef.current !== ownerUserId
+      ) {
+        return false;
+      }
+
+      // SessionService owns persistence; this provider only updates its rich
+      // snake_case projection after the same session still owns the result.
       setActiveProfile(profile);
-      writeStoredActiveProfileId(profileId);
       return true;
     } catch (error: unknown) {
+      if (
+        !mountedRef.current ||
+        ownerVersion !== sessionOwnerVersionRef.current ||
+        sessionUserIdRef.current !== ownerUserId
+      ) {
+        return false;
+      }
+
       logger.error('Error switching runtime profile:', error);
       setError(getErrorMessage(error, 'Failed to switch profile'));
       return false;
     }
-  }, [allProfiles]);
+  }, [allProfiles, sessionUser?.id]);
 
   const setModuleContext = useCallback((type: ProfileType | null) => {
     if (!type) {
@@ -163,6 +222,10 @@ export function MultiProfileProvider({ children }: { children: ReactNode }) {
 
   useEffect(() => {
     const userId = sessionUser?.id ?? null;
+    if (sessionUserIdRef.current !== userId) {
+      sessionUserIdRef.current = userId;
+      sessionOwnerVersionRef.current += 1;
+    }
 
     // SessionService publica o usuário antes de concluir a hidratação completa
     // dos perfis da sessão. Começar a projeção multi-profile neste ponto evita
