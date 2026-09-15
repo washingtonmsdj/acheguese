@@ -1,14 +1,14 @@
 import { BrowserRouter, useLocation } from "react-router-dom";
 
 import FullAppRuntimeShell from "@/app/components/FullAppRuntimeShell";
+import { hasAuthCallbackMarker } from "@/core/auth/utils/authCallback";
 
 function RoutedAppRuntimeContent() {
   const location = useLocation();
-  const searchParams = new URLSearchParams(location.search);
-  const shouldCheckAuthRedirect =
-    location.hash.length > 1 ||
-    searchParams.has("code") ||
-    searchParams.get("mode") === "recovery";
+  const shouldCheckAuthRedirect = hasAuthCallbackMarker(
+    location.search,
+    location.hash,
+  );
 
   return (
     <FullAppRuntimeShell shouldCheckAuthRedirect={shouldCheckAuthRedirect} />
