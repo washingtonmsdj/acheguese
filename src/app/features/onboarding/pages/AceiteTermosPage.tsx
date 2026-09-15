@@ -84,6 +84,16 @@ export default function AceiteTermosPage() {
   const authCallbackPending =
     !oauthCallbackFailed && hasAuthCallbackMarker(liveSearch, liveHash);
   const hasPendingPkceCode = hasPendingPkceCodeInUrl(liveSearch);
+  const hasPendingOAuthJourney = journeyIntent !== null;
+  const oauthSessionSettling =
+    !oauthCallbackFailed &&
+    !sessionLoading &&
+    !user &&
+    hasPendingOAuthJourney;
+  const oauthSettlementPending =
+    hasPendingPkceCode ||
+    (!user && authCallbackPending) ||
+    oauthSessionSettling;
   const returnContextIcon =
     returnContext.kind === "conversation"
       ? "chat"
@@ -99,16 +109,20 @@ export default function AceiteTermosPage() {
       : loginPath;
 
   useEffect(() => {
-    if (oauthCallbackFailed || sessionLoading || !hasPendingPkceCode) {
+    if (oauthCallbackFailed || sessionLoading || !oauthSettlementPending) {
       return;
     }
 
+    // `code` can disappear via history.replaceState before SessionState receives
+    // the new user. The persisted journey intent is not authentication proof; it
+    // only keeps this surface waiting for the canonical auth-state event for a
+    // bounded period before exposing a recoverable OAuth error.
     const timeout = window.setTimeout(() => {
       setState("oauth-error");
     }, AUTH_BROWSER_STORAGE_CONFIG.authUrlCleanupDelayMs);
 
     return () => window.clearTimeout(timeout);
-  }, [hasPendingPkceCode, oauthCallbackFailed, sessionLoading]);
+  }, [oauthCallbackFailed, oauthSettlementPending, sessionLoading]);
 
   useEffect(() => {
     if (oauthCallbackFailed) {
@@ -116,11 +130,7 @@ export default function AceiteTermosPage() {
       return;
     }
 
-    if (
-      sessionLoading ||
-      hasPendingPkceCode ||
-      (!user && authCallbackPending)
-    ) {
+    if (sessionLoading || oauthSettlementPending) {
       setState("checking");
       return;
     }
@@ -161,11 +171,10 @@ export default function AceiteTermosPage() {
       active = false;
     };
   }, [
-    authCallbackPending,
-    hasPendingPkceCode,
     journeyIntent,
     navigate,
     oauthCallbackFailed,
+    oauthSettlementPending,
     returnTo,
     sessionLoading,
     signupOriginalReturn,
