@@ -390,7 +390,24 @@ export class AuthService {
     if (error) throw error;
 
     // Recovery is a temporary authentication path, not a durable app login.
-    await AuthService.signOut();
+    try {
+      await AuthService.signOut();
+    } catch (signOutError) {
+      logger.error(
+        "AuthService.updateRecoveredPassword recovery session disposal failed after password update",
+        {
+          error:
+            signOutError instanceof Error
+              ? signOutError.message
+              : String(signOutError),
+        },
+      );
+      throw new AuthError(
+        "Sua senha foi atualizada, mas não conseguimos encerrar a sessão temporária com segurança.",
+        "RECOVERY_SESSION_DISPOSAL_FAILED",
+        500,
+      );
+    }
   }
 
   /**
