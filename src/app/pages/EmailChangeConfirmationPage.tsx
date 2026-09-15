@@ -46,12 +46,22 @@ export default function EmailChangeConfirmationPage() {
   const pendingAuthExchange =
     hasCallbackExchangeEvidence &&
     hasPendingAuthCallbackExchange(liveSearch, liveHash);
+  // Se o SDK já limpou a URL antes do primeiro render, ainda damos uma janela
+  // limitada para o SessionState publicar a sessão existente. A evidência do
+  // callback nunca substitui `user`; ela apenas impede um falso signed-out.
+  const callbackSettlementPending =
+    hasCallbackExchangeEvidence &&
+    !callbackFailed &&
+    !timedOut &&
+    (pendingAuthExchange || (!user && !exchangeObservedSettled));
 
   useEffect(() => {
     if (
       !hasCallbackExchangeEvidence ||
       callbackFailed ||
-      !pendingAuthExchange
+      exchangeObservedSettled ||
+      timedOut ||
+      (!pendingAuthExchange && user)
     ) {
       return;
     }
@@ -71,7 +81,14 @@ export default function EmailChangeConfirmationPage() {
     }, AUTH_BROWSER_STORAGE_CONFIG.authUrlCleanupDelayMs);
 
     return () => window.clearTimeout(timeout);
-  }, [callbackFailed, hasCallbackExchangeEvidence, pendingAuthExchange]);
+  }, [
+    callbackFailed,
+    exchangeObservedSettled,
+    hasCallbackExchangeEvidence,
+    pendingAuthExchange,
+    timedOut,
+    user,
+  ]);
 
   const state: EmailChangeReturnState =
     !hasEmailChangeMarker ||
@@ -79,7 +96,7 @@ export default function EmailChangeConfirmationPage() {
     callbackFailed ||
     timedOut
       ? "invalid"
-      : sessionLoading || (pendingAuthExchange && !exchangeObservedSettled)
+      : sessionLoading || callbackSettlementPending
         ? "checking"
         : "ready";
   const accountAccessTarget = user
