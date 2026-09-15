@@ -109,6 +109,7 @@ export class SessionService {
 
   // initPromise resolve após o INITIAL_SESSION ser processado
   private static initResolve: (() => void) | null = null;
+  private static initError: Error | null = null;
   private static initPromise: Promise<void> = new Promise(
     (resolve) => { SessionService.initResolve = resolve; }
   );
@@ -143,6 +144,7 @@ export class SessionService {
 
   private static resetInitPromise(): void {
     SessionService.initFallbackStarted = false;
+    SessionService.initError = null;
     SessionService.initPromise = new Promise((resolve) => {
       SessionService.initResolve = resolve;
     });
@@ -214,6 +216,7 @@ export class SessionService {
       if (event === "SIGNED_OUT") {
         SessionService.cancelPendingLoads();
         SessionService.currentSessionPromise = null;
+        SessionService.initError = null;
         SessionService.clearStoredActiveProfileId();
         SessionState.clear();
         CacheManager.clearAll();
@@ -246,17 +249,33 @@ export class SessionService {
                       eventVersion !== SessionService.authEventVersion ||
                       !SessionService.ownsSession(session)
                     ) {
-                      if (isInitEvent) SessionService.resolveInit();
                       resolve();
                       return;
                     }
 
                     SessionService.loadFromSession(session)
                       .then(() => {
-                        if (isInitEvent) SessionService.resolveInit();
+                        if (
+                          isInitEvent &&
+                          eventVersion === SessionService.authEventVersion &&
+                          SessionService.ownsSession(session)
+                        ) {
+                          SessionService.initError = null;
+                          SessionService.resolveInit();
+                        }
                       })
-                      .catch(() => {
-                        if (isInitEvent) SessionService.resolveInit();
+                      .catch((error: unknown) => {
+                        if (
+                          isInitEvent &&
+                          eventVersion === SessionService.authEventVersion &&
+                          SessionService.ownsSession(session)
+                        ) {
+                          SessionService.initError =
+                            error instanceof Error
+                              ? error
+                              : new Error(String(error));
+                          SessionService.resolveInit();
+                        }
                       })
                       .finally(resolve);
                   }, 0);
@@ -264,8 +283,9 @@ export class SessionService {
             );
         } else {
           SessionState.setState({ user: null, activeProfile: null, profiles: [] });
-          // INITIAL_SESSION sem sessão = não logado, libera o init
+          // INITIAL_SESSION sem sessão = não logado, libera o init.
           if (isInitEvent) {
+            SessionService.initError = null;
             SessionService.resolveInit();
           }
         }
@@ -535,14 +555,17 @@ export class SessionService {
 
   // ── initializeSession ──────────────────────────────────────────────────────
   /**
-   * Aguarda o INITIAL_SESSION ser processado.
-   * Chamado pelo SessionProvider — não faz chamadas de rede.
+   * Aguarda o INITIAL_SESSION ser processado. Falha de hidratação da sessão
+   * inicial é preservada para que o provider possa expor estado degradado.
    */
   static async initializeSession(): Promise<void> {
     if (!SessionService.initialized) {
       SessionService.initialize();
     }
     await SessionService.initPromise;
+    if (SessionService.initError) {
+      throw SessionService.initError;
+    }
   }
 
   // ── refreshSession ─────────────────────────────────────────────────────────
