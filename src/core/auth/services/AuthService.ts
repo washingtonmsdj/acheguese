@@ -245,14 +245,19 @@ export class AuthService {
     if (error) throw error;
   }
 
-  static async resetPassword(email: string): Promise<void> {
+  static async resetPassword(email: string, captchaToken?: string): Promise<void> {
+    const normalizedCaptchaToken = captchaToken?.trim();
     const { error } = await supabase.auth.resetPasswordForEmail(email, {
       redirectTo: AuthService.getPasswordResetRedirectUrl(),
+      ...(normalizedCaptchaToken ? { captchaToken: normalizedCaptchaToken } : {}),
     });
     if (error) throw error;
   }
 
-  static async resetPasswordByIdentifier(identifier: string): Promise<void> {
+  static async resetPasswordByIdentifier(
+    identifier: string,
+    captchaToken?: string,
+  ): Promise<void> {
     const parsedIdentifier = parseAuthIdentifier(identifier);
 
     if (!parsedIdentifier) {
@@ -260,7 +265,7 @@ export class AuthService {
     }
 
     if (parsedIdentifier.kind === "email") {
-      await AuthService.resetPassword(parsedIdentifier.value);
+      await AuthService.resetPassword(parsedIdentifier.value, captchaToken);
       return;
     }
 
