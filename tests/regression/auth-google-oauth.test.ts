@@ -106,6 +106,30 @@ describe("Google OAuth account/access contract", () => {
     expect(terms).not.toContain("Tudo certo com os termos.");
   });
 
+  it("fails closed when existing terms history cannot be read", () => {
+    const terms = readProjectFile(
+      "src/app/features/onboarding/pages/AceiteTermosPage.tsx",
+    );
+    const consentRead = terms.indexOf(
+      "void PrivacySettingsService.getUserConsents(user.id)",
+    );
+    const catchBlock = terms.indexOf(".catch(() => {", consentRead);
+    const retryState = terms.indexOf('state === "consent-error"');
+
+    expect(terms).toContain('| "consent-error";');
+    expect(consentRead).toBeGreaterThanOrEqual(0);
+    expect(catchBlock).toBeGreaterThan(consentRead);
+    expect(terms.slice(catchBlock, catchBlock + 120)).toContain(
+      'setState("consent-error")',
+    );
+    expect(terms.slice(catchBlock, catchBlock + 120)).not.toContain(
+      'setState("needs-acceptance")',
+    );
+    expect(retryState).toBeGreaterThan(catchBlock);
+    expect(terms).toContain("setConsentCheckAttempt((attempt) => attempt + 1)");
+    expect(terms).toContain("Tentar verificar novamente");
+  });
+
   it("serializes terms acceptance before React submitting state can settle", () => {
     const terms = readProjectFile(
       "src/app/features/onboarding/pages/AceiteTermosPage.tsx",
