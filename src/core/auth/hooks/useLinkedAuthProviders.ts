@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 
 import {
   AuthIdentityService,
@@ -16,24 +16,55 @@ export function useLinkedAuthProviders() {
   const [data, setData] = useState<LinkedAuthProviders | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const mountedRef = useRef(true);
+  const refreshRequestIdRef = useRef(0);
 
   const refresh = useCallback(async () => {
-    setLoading(true);
-    setError(null);
-    setData(null);
+    const requestId = refreshRequestIdRef.current + 1;
+    refreshRequestIdRef.current = requestId;
+
+    if (mountedRef.current) {
+      setLoading(true);
+      setError(null);
+      setData(null);
+    }
+
     try {
-      setData(await AuthIdentityService.getLinkedProviders());
+      const nextData = await AuthIdentityService.getLinkedProviders();
+      if (
+        !mountedRef.current ||
+        requestId !== refreshRequestIdRef.current
+      ) {
+        return;
+      }
+      setData(nextData);
     } catch (cause) {
       logger.error("useLinkedAuthProviders.refresh", cause);
+      if (
+        !mountedRef.current ||
+        requestId !== refreshRequestIdRef.current
+      ) {
+        return;
+      }
       setData(null);
       setError("Não foi possível consultar os métodos de acesso vinculados.");
     } finally {
-      setLoading(false);
+      if (
+        mountedRef.current &&
+        requestId === refreshRequestIdRef.current
+      ) {
+        setLoading(false);
+      }
     }
   }, []);
 
   useEffect(() => {
+    mountedRef.current = true;
     void refresh();
+    return () => {
+      mountedRef.current = false;
+      refreshRequestIdRef.current += 1;
+    };
   }, [refresh]);
 
   const resolvedData = data ?? EMPTY_PROVIDERS;
