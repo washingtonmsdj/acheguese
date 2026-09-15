@@ -50,6 +50,7 @@ export function useAuth(): UseAuthReturn {
   const [sessionData, setSessionData] = useState(() => SessionState.getState());
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<AuthError | null>(null);
+  const signOutOthersInFlightRef = useRef<Promise<void> | null>(null);
   const passwordReauthInFlightRef = useRef<Promise<void> | null>(null);
   const emailUpdateInFlightRef = useRef<{
     email: string;
@@ -119,15 +120,29 @@ export function useAuth(): UseAuthReturn {
   }, []);
 
   const signOutOtherSessions = useCallback(async () => {
+    const activeRevocation = signOutOthersInFlightRef.current;
+    if (activeRevocation) return activeRevocation;
+
+    const operation = (async () => {
+      try {
+        setLoading(true);
+        setError(null);
+        await AuthService.signOutOtherSessions();
+      } catch (err) {
+        setError(err as AuthError);
+        throw err;
+      } finally {
+        setLoading(false);
+      }
+    })();
+
+    signOutOthersInFlightRef.current = operation;
     try {
-      setLoading(true);
-      setError(null);
-      await AuthService.signOutOtherSessions();
-    } catch (err) {
-      setError(err as AuthError);
-      throw err;
+      await operation;
     } finally {
-      setLoading(false);
+      if (signOutOthersInFlightRef.current === operation) {
+        signOutOthersInFlightRef.current = null;
+      }
     }
   }, []);
 
