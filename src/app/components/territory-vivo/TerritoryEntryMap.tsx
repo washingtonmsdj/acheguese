@@ -1,7 +1,10 @@
 import { lazy, Suspense } from "react";
 import type { Location } from "@/core/location/types";
 import type { ResolvedTerritory } from "@/core/routing/hooks/useResolveTerritoryFromUrl";
-import { TerritoryEntryMapArrival } from "./TerritoryEntryMapArrival";
+import {
+  TERRITORY_ENTRY_MAP_ARRIVAL_STATUS,
+  TerritoryEntryMapArrival,
+} from "./TerritoryEntryMapArrival";
 
 const loadTerritoryEntryMapRuntime = async () => {
   const [runtimeModule] = await Promise.all([
@@ -30,19 +33,17 @@ function EntryMapArrivalSurface({
   className: string;
   label: string;
 }) {
-  const statusText = "Conectando o mapa para sua chegada";
-
   return (
     <section
       className={`territory-entry-map relative h-full min-h-[12rem] w-full overflow-hidden bg-territory-raised md:min-h-[18rem] lg:min-h-[24rem] ${className}`}
       role="status"
       aria-live="polite"
       aria-busy="true"
-      aria-label={`${statusText} de ${label}`}
+      aria-label={`${TERRITORY_ENTRY_MAP_ARRIVAL_STATUS} de ${label}`}
     >
       <TerritoryEntryMapArrival
         label={label}
-        statusText={statusText}
+        statusText={TERRITORY_ENTRY_MAP_ARRIVAL_STATUS}
       />
     </section>
   );
