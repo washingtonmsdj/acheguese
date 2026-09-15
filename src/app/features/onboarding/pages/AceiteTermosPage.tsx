@@ -36,7 +36,6 @@ import { useToast } from "@/shared/hooks/use-toast";
 type AcceptanceState =
   | "checking"
   | "needs-acceptance"
-  | "accepted"
   | "signed-out"
   | "oauth-error";
 
@@ -92,11 +91,12 @@ export default function AceiteTermosPage() {
     void PrivacySettingsService.getUserConsents(user.id)
       .then((consents) => {
         if (!active) return;
-        setState(
-          consents.some((consent) => hasCurrentTermsAcceptance(consent))
-            ? "accepted"
-            : "needs-acceptance",
-        );
+        if (consents.some((consent) => hasCurrentTermsAcceptance(consent))) {
+          completeTermsJourney();
+          navigate(returnTo, { replace: true });
+          return;
+        }
+        setState("needs-acceptance");
       })
       .catch(() => {
         if (active) setState("needs-acceptance");
@@ -105,7 +105,7 @@ export default function AceiteTermosPage() {
     return () => {
       active = false;
     };
-  }, [oauthCallbackFailed, user]);
+  }, [navigate, oauthCallbackFailed, returnTo, user]);
 
   const handleAccept = async () => {
     if (!user || !accepted || submitting) return;
@@ -118,8 +118,9 @@ export default function AceiteTermosPage() {
         userAgent: navigator.userAgent,
         termsVersion: TERMS_OF_SERVICE_VERSION,
       });
-      setState("accepted");
       toast({ title: "Aceite registrado" });
+      completeTermsJourney();
+      navigate(returnTo, { replace: true });
     } catch {
       toast({
         title: "Não foi possível registrar o aceite",
@@ -129,11 +130,6 @@ export default function AceiteTermosPage() {
     } finally {
       setSubmitting(false);
     }
-  };
-
-  const continueSafely = () => {
-    completeTermsJourney();
-    navigate(returnTo, { replace: true });
   };
 
   const clearFailedOAuthJourney = () => {
@@ -352,35 +348,6 @@ export default function AceiteTermosPage() {
                 <p className="text-center text-[10.5px] leading-4 text-[#607477]">
                   Versão dos termos: {TERMS_OF_SERVICE_VERSION}
                 </p>
-              </div>
-            ) : null}
-
-            {state === "accepted" ? (
-              <div className="mt-6 space-y-4">
-                <div
-                  role="status"
-                  className="flex items-start gap-3 rounded-xl bg-[#eaf7ef] p-4 text-[#276a4d]"
-                >
-                  <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-[#d4efdf]">
-                    <AuthConceptIcon name="check" />
-                  </span>
-                  <div>
-                    <p className="text-[13px] font-bold">Tudo certo com os termos.</p>
-                    <p className="mt-0.5 text-[11.5px] leading-5">
-                      O aceite da versão {TERMS_OF_SERVICE_VERSION} está registrado
-                      na sua conta.
-                    </p>
-                  </div>
-                </div>
-                <button
-                  type="button"
-                  onClick={continueSafely}
-                  className="h-11 w-full rounded-[9px] bg-[#0b5b59] px-3 text-[14px] font-bold text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#0b5b59]/40"
-                >
-                  {hasSpecificReturnContext
-                    ? `Continuar para ${returnContext.label}`
-                    : "Continuar para o Achegue-se"}
-                </button>
               </div>
             ) : null}
           </section>
