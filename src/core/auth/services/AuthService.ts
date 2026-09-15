@@ -120,7 +120,9 @@ export class AuthService {
     };
   }
 
-  static async signUp(data: import("./types").SignUpData): Promise<void> {
+  static async signUp(
+    data: import("./types").SignUpData,
+  ): Promise<import("./types").SignUpResult> {
     if (!isCurrentTermsAcceptance(data.termsAcceptance)) {
       throw new AuthError(
         "O aceite da versão atual dos Termos de Uso é obrigatório.",
@@ -129,7 +131,7 @@ export class AuthService {
     }
 
     const captchaToken = data.captchaToken?.trim();
-    const { error } = await supabase.auth.signUp({
+    const { data: authData, error } = await supabase.auth.signUp({
       email: data.email,
       password: data.password,
       options: {
@@ -145,6 +147,16 @@ export class AuthService {
       },
     });
     if (error) throw error;
+
+    const requiresEmailConfirmation = authData?.session == null;
+    if (!requiresEmailConfirmation) {
+      // A UI do primeiro acesso lê exclusivamente o SSOT de sessão. Garanta
+      // que uma sessão devolvida no próprio signup esteja publicada antes da
+      // navegação, sem depender da ordem assíncrona do listener do SDK.
+      await SessionService.refreshSession();
+    }
+
+    return { requiresEmailConfirmation };
   }
 
   static async signIn(data: import("./types").SignInData): Promise<void> {
