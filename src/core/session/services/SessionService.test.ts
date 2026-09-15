@@ -12,7 +12,7 @@ const {
   functionsInvokeMock,
   rpcMock,
   fromMock,
-  profileServiceGetProfilesByUserIdMock,
+  sessionProfileReaderGetProfilesByUserIdMock,
 } = vi.hoisted(() => ({
   authGetSessionMock: vi.fn(),
   authGetUserMock: vi.fn(),
@@ -23,7 +23,7 @@ const {
   functionsInvokeMock: vi.fn(),
   rpcMock: vi.fn(),
   fromMock: vi.fn(),
-  profileServiceGetProfilesByUserIdMock: vi.fn(),
+  sessionProfileReaderGetProfilesByUserIdMock: vi.fn(),
 }));
 
 vi.mock("@/integrations/supabase", () => ({
@@ -42,11 +42,45 @@ vi.mock("@/integrations/supabase", () => ({
   },
 }));
 
-vi.mock("@/core/profiles/services/ProfileService", () => ({
-  profileService: {
-    getProfilesByUserId: profileServiceGetProfilesByUserIdMock,
+vi.mock("@/core/profiles/services/SessionProfileReader", () => ({
+  SessionProfileReader: {
+    getProfilesByUserId: sessionProfileReaderGetProfilesByUserIdMock,
   },
 }));
+
+const createSessionProfile = (
+  id: string,
+  profileType: "personal" | "business" = "personal",
+) => ({
+  id,
+  userId: "user-123",
+  name: profileType === "personal" ? "Pessoa" : "Empresa",
+  displayName: profileType === "personal" ? "Pessoa" : "Empresa",
+  username: null,
+  avatarUrl: null,
+  bio: null,
+  profileType,
+  city: null,
+  neighborhood: null,
+  state: null,
+  street: null,
+  phone: null,
+  whatsapp: null,
+  locationId: null,
+  isActive: true,
+  verified: false,
+  createdAt: "2026-01-01T00:00:00.000Z",
+});
+
+const createAuthSession = () => ({
+  access_token: "token-user-123",
+  user: {
+    id: "user-123",
+    email: "test@example.com",
+    email_confirmed_at: "2026-01-01T00:00:00.000Z",
+    created_at: "2025-01-01T00:00:00.000Z",
+  },
+});
 
 describe("SessionService", () => {
   beforeEach(() => {
@@ -60,7 +94,7 @@ describe("SessionService", () => {
     functionsInvokeMock.mockReset();
     rpcMock.mockReset();
     fromMock.mockReset();
-    profileServiceGetProfilesByUserIdMock.mockReset();
+    sessionProfileReaderGetProfilesByUserIdMock.mockReset();
   });
 
   afterEach(() => {
@@ -79,14 +113,7 @@ describe("SessionService", () => {
   it("retorna user mapeado em getCurrentUser quando ha sessao", async () => {
     authGetSessionMock.mockResolvedValue({
       data: {
-        session: {
-          user: {
-            id: "user-123",
-            email: "test@example.com",
-            email_confirmed_at: "2026-01-01T00:00:00.000Z",
-            created_at: "2025-01-01T00:00:00.000Z",
-          },
-        },
+        session: createAuthSession(),
       },
       error: null,
     });
@@ -99,7 +126,7 @@ describe("SessionService", () => {
     expect(user?.emailConfirmed).toBe(true);
   });
 
-  it("carrega perfis via getUserProfiles com mapeamento canonico", async () => {
+  it("carrega perfis via reader estrito com mapeamento canonico", async () => {
     const dbRows = [
       {
         id: "profile-1",
@@ -122,7 +149,7 @@ describe("SessionService", () => {
       },
     ];
 
-    profileServiceGetProfilesByUserIdMock.mockResolvedValue([
+    sessionProfileReaderGetProfilesByUserIdMock.mockResolvedValue([
       ...dbRows,
       {
         ...dbRows[0],
@@ -133,24 +160,92 @@ describe("SessionService", () => {
 
     const profiles = await SessionService.getUserProfiles("user-123");
 
-    expect(profileServiceGetProfilesByUserIdMock).toHaveBeenCalledWith("user-123");
+    expect(sessionProfileReaderGetProfilesByUserIdMock).toHaveBeenCalledWith(
+      "user-123",
+    );
     expect(profiles).toHaveLength(1);
     expect(profiles[0].userId).toBe("user-123");
     expect(profiles[0].profileType).toBe("personal");
     expect(profiles[0].locationId).toBe("loc-1");
   });
 
+  it("propaga indisponibilidade do broker em vez de fabricar lista vazia", async () => {
+    sessionProfileReaderGetProfilesByUserIdMock.mockRejectedValue(
+      new Error("profile broker unavailable"),
+    );
+
+    await expect(SessionService.getUserProfiles("user-123")).rejects.toThrow(
+      "profile broker unavailable",
+    );
+  });
+
+  it("preserva a projecao conhecida quando refresh do mesmo usuario falha", async () => {
+    const session = createAuthSession();
+    const profile = createSessionProfile("profile-1");
+
+    SessionState.setState({
+      user: {
+        id: "user-123",
+        email: "test@example.com",
+        emailConfirmed: true,
+        createdAt: "2025-01-01T00:00:00.000Z",
+      },
+      activeProfile: profile,
+      profiles: [profile],
+    });
+    authGetSessionMock.mockResolvedValue({ data: { session }, error: null });
+    functionsInvokeMock.mockImplementation(
+      async (_fn: string, options: { body?: { action?: string } }) => {
+        if (options.body?.action === "getActiveProfile") {
+          return {
+            data: {
+              data: {
+                profile: {
+                  id: "profile-1",
+                  user_id: "user-123",
+                  name: "Pessoa",
+                  display_name: "Pessoa",
+                  username: null,
+                  avatar_url: null,
+                  bio: null,
+                  profile_type: "personal",
+                  city: null,
+                  neighborhood: null,
+                  state: null,
+                  street: null,
+                  telefone: null,
+                  whatsapp: null,
+                  location_id: null,
+                  is_active: true,
+                  verified: false,
+                  created_at: "2026-01-01T00:00:00.000Z",
+                },
+              },
+            },
+            error: null,
+          };
+        }
+        return { data: null, error: null };
+      },
+    );
+    sessionProfileReaderGetProfilesByUserIdMock.mockRejectedValue(
+      new Error("profile broker unavailable"),
+    );
+
+    await expect(SessionService.refreshSession()).rejects.toThrow(
+      "profile broker unavailable",
+    );
+
+    expect(SessionState.getState().activeProfile?.id).toBe("profile-1");
+    expect(SessionState.getState().profiles.map((item) => item.id)).toEqual([
+      "profile-1",
+    ]);
+  });
+
   it("switchProfile usa RPC canonica e atualiza estado da sessao", async () => {
     authGetSessionMock.mockResolvedValue({
       data: {
-        session: {
-          user: {
-            id: "user-123",
-            email: "test@example.com",
-            email_confirmed_at: "2026-01-01T00:00:00.000Z",
-            created_at: "2025-01-01T00:00:00.000Z",
-          },
-        },
+        session: createAuthSession(),
       },
       error: null,
     });
@@ -191,26 +286,26 @@ describe("SessionService", () => {
       return { data: null, error: null };
     });
 
-    profileServiceGetProfilesByUserIdMock.mockResolvedValue([
-        {
-          id: "profile-2",
-          user_id: "user-123",
-          name: "Empresa",
-          display_name: null,
-          username: null,
-          avatar_url: null,
-          bio: null,
-          profile_type: "business",
-          city: null,
-          neighborhood: null,
-          state: null,
-          telefone: null,
-          whatsapp: null,
-          location_id: null,
-          is_active: true,
-          verified: false,
-          created_at: "2026-01-01T00:00:00.000Z",
-        },
+    sessionProfileReaderGetProfilesByUserIdMock.mockResolvedValue([
+      {
+        id: "profile-2",
+        user_id: "user-123",
+        name: "Empresa",
+        display_name: null,
+        username: null,
+        avatar_url: null,
+        bio: null,
+        profile_type: "business",
+        city: null,
+        neighborhood: null,
+        state: null,
+        telefone: null,
+        whatsapp: null,
+        location_id: null,
+        is_active: true,
+        verified: false,
+        created_at: "2026-01-01T00:00:00.000Z",
+      },
     ]);
 
     await SessionService.switchProfile("profile-2");
@@ -228,14 +323,7 @@ describe("SessionService", () => {
   it("mantem perfil selecionado localmente quando get_active_profile retorna outro perfil ativo legado", async () => {
     authGetSessionMock.mockResolvedValue({
       data: {
-        session: {
-          user: {
-            id: "user-123",
-            email: "test@example.com",
-            email_confirmed_at: "2026-01-01T00:00:00.000Z",
-            created_at: "2025-01-01T00:00:00.000Z",
-          },
-        },
+        session: createAuthSession(),
       },
       error: null,
     });
@@ -277,7 +365,7 @@ describe("SessionService", () => {
       return { data: null, error: null };
     });
 
-    profileServiceGetProfilesByUserIdMock.mockResolvedValue([
+    sessionProfileReaderGetProfilesByUserIdMock.mockResolvedValue([
       {
         id: "profile-1",
         user_id: "user-123",
@@ -326,18 +414,73 @@ describe("SessionService", () => {
     expect(SessionState.getState().activeProfile?.profileType).toBe("business");
   });
 
+  it("nao transforma switch confirmado em falso erro quando apenas a reidratacao falha", async () => {
+    const session = createAuthSession();
+    const personal = createSessionProfile("profile-1", "personal");
+    const business = createSessionProfile("profile-2", "business");
+
+    SessionState.setState({
+      user: {
+        id: "user-123",
+        email: "test@example.com",
+        emailConfirmed: true,
+        createdAt: "2025-01-01T00:00:00.000Z",
+      },
+      activeProfile: personal,
+      profiles: [personal, business],
+    });
+    authGetSessionMock.mockResolvedValue({ data: { session }, error: null });
+    functionsInvokeMock.mockImplementation(
+      async (_fn: string, options: { body?: { action?: string } }) => {
+        if (options.body?.action === "switchActiveProfile") {
+          return { data: { data: { ok: true } }, error: null };
+        }
+        if (options.body?.action === "getActiveProfile") {
+          return {
+            data: {
+              data: {
+                profile: {
+                  id: "profile-2",
+                  user_id: "user-123",
+                  name: "Empresa",
+                  display_name: "Empresa",
+                  username: null,
+                  avatar_url: null,
+                  bio: null,
+                  profile_type: "business",
+                  city: null,
+                  neighborhood: null,
+                  state: null,
+                  street: null,
+                  telefone: null,
+                  whatsapp: null,
+                  location_id: null,
+                  is_active: true,
+                  verified: false,
+                  created_at: "2026-01-01T00:00:00.000Z",
+                },
+              },
+            },
+            error: null,
+          };
+        }
+        return { data: null, error: null };
+      },
+    );
+    sessionProfileReaderGetProfilesByUserIdMock.mockRejectedValue(
+      new Error("profile broker unavailable"),
+    );
+
+    await expect(SessionService.switchProfile("profile-2")).resolves.toBeUndefined();
+
+    expect(SessionState.getState().activeProfile?.id).toBe("profile-2");
+    expect(window.localStorage.getItem(ACTIVE_PROFILE_STORAGE_KEY)).toBe("profile-2");
+  });
+
   it("descarta sucesso tardio de switch quando a sessao perde ownership", async () => {
     authGetSessionMock.mockResolvedValue({
       data: {
-        session: {
-          access_token: "token-user-123",
-          user: {
-            id: "user-123",
-            email: "test@example.com",
-            email_confirmed_at: "2026-01-01T00:00:00.000Z",
-            created_at: "2025-01-01T00:00:00.000Z",
-          },
-        },
+        session: createAuthSession(),
       },
       error: null,
     });
