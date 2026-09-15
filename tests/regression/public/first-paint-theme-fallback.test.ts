@@ -50,23 +50,23 @@ describe("refresh first paint", () => {
     expect(themeHook).not.toContain('localStorage.setItem("acheguese-theme"');
   });
 
-  it("renders a passive surface while routed chunks load instead of exposing the raw page background", () => {
+  it("renders one passive page surface through every routed bootstrap layer", () => {
+    const appRuntime = read("src/app/components/AppRuntime.tsx");
     const fullShell = read("src/app/components/FullAppRuntimeShell.tsx");
     const sessionShell = read("src/app/components/SessionProfileRuntimeShell.tsx");
     const passive = read("src/shared/components/loading/PassivePageFallback.tsx");
+    const passiveImport =
+      'import { PassivePageFallback } from "@/shared/components/loading/PassivePageFallback";';
+    const passiveSuspense = "<Suspense fallback={<PassivePageFallback />}>";
 
-    expect(fullShell).toContain(
-      'import { PassivePageFallback } from "@/shared/components/loading/PassivePageFallback";',
-    );
-    expect(fullShell).toContain(
-      "<Suspense fallback={<PassivePageFallback />}>",
-    );
-    expect(sessionShell).toContain(
-      'import { PassivePageFallback } from "@/shared/components/loading/PassivePageFallback";',
-    );
-    expect(sessionShell).toContain(
-      "<Suspense fallback={<PassivePageFallback />}>",
-    );
+    expect(appRuntime).toContain(passiveImport);
+    expect(appRuntime).toContain(passiveSuspense);
+    expect(appRuntime).not.toContain("RuntimeLoadingFallback");
+
+    expect(fullShell).toContain(passiveImport);
+    expect(fullShell).toContain(passiveSuspense);
+    expect(sessionShell).toContain(passiveImport);
+    expect(sessionShell).toContain(passiveSuspense);
 
     expect(passive).toContain("min-h-screen bg-background");
     expect(passive).not.toContain("Loader2");
