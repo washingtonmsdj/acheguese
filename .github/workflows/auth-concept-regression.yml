@@ -24,6 +24,8 @@ on:
       - "src/modules/profile/pages/ContaSegurancaPage.tsx"
       - "src/modules/profile/components/ChangePasswordForm.tsx"
       - "src/shared/components/ui/checkbox.tsx"
+      - "src/shared/config/publicAppOrigin.ts"
+      - "src/shared/config/publicAppOrigin.test.ts"
       - "public/auth/**"
       - "tests/architecture/auth-session-authority.test.ts"
       - "tests/e2e/auth-*.spec.ts"
@@ -72,6 +74,8 @@ on:
       - "src/modules/profile/pages/ContaSegurancaPage.tsx"
       - "src/modules/profile/components/ChangePasswordForm.tsx"
       - "src/shared/components/ui/checkbox.tsx"
+      - "src/shared/config/publicAppOrigin.ts"
+      - "src/shared/config/publicAppOrigin.test.ts"
       - "public/auth/**"
       - "tests/architecture/auth-session-authority.test.ts"
       - "tests/e2e/auth-*.spec.ts"
@@ -132,6 +136,7 @@ jobs:
           src/core/auth/utils/__tests__/authFlowStorage.test.ts
           src/core/auth/utils/__tests__/authJourney.test.ts
           src/core/auth/utils/__tests__/authPasswordRecoveryCooldown.test.ts
+          src/shared/config/publicAppOrigin.test.ts
           src/app/components/auth/AuthBrandHeader.spec.tsx
           src/app/features/onboarding/hooks/useCadastro.spec.tsx
           src/app/features/onboarding/pages/CadastroPage.spec.tsx
