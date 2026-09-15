@@ -8,12 +8,14 @@ import { AuthFooter } from "@/app/components/auth/AuthFooter";
 import { AuthTurnstileGate } from "@/app/components/auth/AuthTurnstileGate";
 import { useAuthTurnstile } from "@/app/components/auth/useAuthTurnstile";
 import {
+  AUTH_EMAIL_CONFIRMATION_INTENTS,
   AUTH_PATHS,
   buildLoginPath,
   buildSignupPath,
 } from "@/core/auth/constants/authFlow";
 import { useAuth } from "@/core/auth/hooks/useAuth";
 import {
+  cancelUnconfirmedEmailLoginJourney,
   getSignupConfirmationContext,
   getSignupConfirmationResendRemainingMs,
   restartEmailSignupJourney,
@@ -52,6 +54,9 @@ export default function CadastroConfirmacaoPage() {
     () => resolveSafeInternalPath(state?.redirectTo ?? journeyContext.returnTo, "/"),
     [journeyContext.returnTo, state?.redirectTo],
   );
+  const startedFromLogin =
+    journeyContext.intent === AUTH_EMAIL_CONFIRMATION_INTENTS.login;
+  const backToLogin = buildLoginPath(redirectTo);
 
   useEffect(() => {
     const syncCooldown = () => setCooldown(getResendCooldownSeconds());
@@ -99,13 +104,18 @@ export default function CadastroConfirmacaoPage() {
     }
   };
 
-  const restartSignup = () => {
+  const handleChangeEmail = () => {
+    if (startedFromLogin) {
+      cancelUnconfirmedEmailLoginJourney();
+      navigate(backToLogin, { replace: true });
+      return;
+    }
+
     restartEmailSignupJourney();
     navigate(buildSignupPath(redirectTo), { replace: true });
   };
 
   const resendDisabled = isResending || cooldown > 0 || !turnstile.isReady;
-  const backToLogin = buildLoginPath(redirectTo);
 
   return (
     <>
@@ -146,14 +156,16 @@ export default function CadastroConfirmacaoPage() {
                 Vamos localizar sua inscrição.
               </h1>
               <p className="mx-auto mt-2 max-w-[330px] text-[13px] leading-5 text-[#526a6d]">
-                O e-mail pendente não está disponível neste navegador. Reinicie o cadastro para informar o endereço correto, ou entre se você já confirmou a conta.
+                {startedFromLogin
+                  ? "O e-mail pendente não está disponível neste navegador. Volte para entrar e informe o endereço novamente."
+                  : "O e-mail pendente não está disponível neste navegador. Reinicie o cadastro para informar o endereço correto, ou entre se você já confirmou a conta."}
               </p>
               <button
                 type="button"
-                onClick={restartSignup}
+                onClick={handleChangeEmail}
                 className="mt-6 h-11 w-full rounded-[9px] bg-[#ffc91a] text-[14px] font-extrabold text-[#102f33] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#0b5b59]/40"
               >
-                Voltar para criar conta
+                {startedFromLogin ? "Voltar para entrar" : "Voltar para criar conta"}
               </button>
               <button
                 type="button"
@@ -233,10 +245,10 @@ export default function CadastroConfirmacaoPage() {
 
               <button
                 type="button"
-                onClick={restartSignup}
+                onClick={handleChangeEmail}
                 className="mx-auto mt-2 block min-h-10 rounded px-2 text-[12px] font-medium text-[#0b4e52] underline underline-offset-2 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#0b5b59]/35 lg:mx-auto"
               >
-                Informei o e-mail errado
+                {startedFromLogin ? "Usar outro e-mail" : "Informei o e-mail errado"}
               </button>
 
               <p className="mt-1 hidden text-center text-[11px] text-[#607477] lg:block">
