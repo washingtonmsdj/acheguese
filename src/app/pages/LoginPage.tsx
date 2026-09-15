@@ -193,6 +193,7 @@ export default function LoginPage() {
   ]);
 
   const onValid = async (data: LoginIdentifierInput) => {
+    if (sessionLoading || user) return;
     const parsed = parseAuthIdentifier(data.identifier);
     if (!parsed) return;
     if (!turnstile.isReady) {
@@ -253,6 +254,7 @@ export default function LoginPage() {
   };
 
   const handleGoogleLogin = async () => {
+    if (sessionLoading || user) return;
     setPendingAction("google");
     prepareGoogleLogin(redirectTo);
     try {
@@ -269,12 +271,13 @@ export default function LoginPage() {
   };
 
   const handleForgotPassword = () => {
+    if (sessionLoading || user) return;
     const email =
       parsedIdentifier?.kind === "email" ? parsedIdentifier.value : null;
     navigate(buildPasswordResetRequestPath(email));
   };
 
-  const isBusy = pendingAction !== null;
+  const isBusy = sessionLoading || user !== null || pendingAction !== null;
   const hasReturnContext = redirectTo !== "/";
 
   return (
@@ -448,7 +451,8 @@ export default function LoginPage() {
                 <button
                   type="button"
                   onClick={handleForgotPassword}
-                  className="ml-auto block min-h-8 rounded px-1 text-[12px] font-medium text-[#0b4e52] underline underline-offset-2 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#0b5b59]/35"
+                  disabled={isBusy}
+                  className="ml-auto block min-h-8 rounded px-1 text-[12px] font-medium text-[#0b4e52] underline underline-offset-2 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#0b5b59]/35 disabled:cursor-not-allowed disabled:opacity-55"
                 >
                   Esqueci minha senha
                 </button>

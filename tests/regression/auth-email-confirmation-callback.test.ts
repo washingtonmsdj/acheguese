@@ -41,6 +41,17 @@ describe("email confirmation callback contract", () => {
     );
   });
 
+  it("keeps login actions inert while session ownership is unresolved", () => {
+    const login = readProjectFile("src/app/pages/LoginPage.tsx");
+
+    expect(login).toContain(
+      "const isBusy = sessionLoading || user !== null || pendingAction !== null;",
+    );
+    expect((login.match(/if \(sessionLoading \|\| user\) return;/g) ?? []).length).toBeGreaterThanOrEqual(2);
+    expect(login).toContain("disabled={isBusy}");
+    expect(login).toContain("disabled={isBusy || !turnstile.isReady}");
+  });
+
   it("never treats an existing session as proof while any email confirmation exchange is pending", () => {
     const login = readProjectFile("src/app/pages/LoginPage.tsx");
 
