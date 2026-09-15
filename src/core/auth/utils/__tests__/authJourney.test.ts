@@ -11,6 +11,7 @@ import {
   cancelGoogleLogin,
   cancelGoogleSignup,
   completeEmailConfirmationLoginJourney,
+  completeExistingGoogleSignupJourney,
   completeFirstAccessJourney,
   completeStandardLoginJourney,
   getAuthJourneyReturnTarget,
@@ -70,6 +71,22 @@ describe("authJourney", () => {
     cancelGoogleSignup();
     expect(getStored(AUTH_FLOW_STORAGE_KEYS.pendingReturn)).toBeNull();
     expect(getStored(AUTH_FLOW_STORAGE_KEYS.pendingSignupRedirect)).toBeNull();
+    expect(getPendingAuthJourneyIntent()).toBeNull();
+  });
+
+  it("cleans signup-only context when Google signup authenticates an existing account", () => {
+    prepareGoogleSignup("/mensagens/abc");
+    const originalReturn = getSignupJourneyReturnTarget();
+
+    completeExistingGoogleSignupJourney();
+
+    expect(originalReturn).toBe("/mensagens/abc");
+    expect(getStored(AUTH_FLOW_STORAGE_KEYS.pendingReturn)).toBeNull();
+    expect(getStored(AUTH_FLOW_STORAGE_KEYS.pendingSignupRedirect)).toBeNull();
+    expect(getStored(AUTH_FLOW_STORAGE_KEYS.pendingSignupEmail)).toBeNull();
+    expect(
+      getStored(AUTH_FLOW_STORAGE_KEYS.pendingSignupConfirmationCooldownUntil),
+    ).toBeNull();
     expect(getPendingAuthJourneyIntent()).toBeNull();
   });
 
