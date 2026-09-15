@@ -23,6 +23,7 @@ import {
   prepareEmailSignupConfirmation,
   prepareGoogleLogin,
   prepareGoogleSignup,
+  prepareUnconfirmedEmailLogin,
   restartEmailSignupJourney,
   startSignupConfirmationResendCooldown,
 } from "@/core/auth/utils/authJourney";
@@ -98,6 +99,22 @@ describe("authJourney", () => {
       email: "ana@example.com",
       returnTo: "/mensagens/abc",
     });
+    expect(getStored(AUTH_FLOW_STORAGE_KEYS.pendingReturn)).toBeNull();
+    expect(getPendingAuthJourneyIntent()).toBeNull();
+  });
+
+  it("prepares an unconfirmed email login without faking a resend cooldown", () => {
+    prepareEmailSignupConfirmation("old@example.com", "/conta");
+    prepareUnconfirmedEmailLogin("  ANA@EXAMPLE.COM  ", "/mensagens/abc");
+
+    expect(getSignupConfirmationContext()).toEqual({
+      email: "ana@example.com",
+      returnTo: "/mensagens/abc",
+    });
+    expect(getSignupConfirmationResendRemainingMs()).toBe(0);
+    expect(
+      getStored(AUTH_FLOW_STORAGE_KEYS.pendingSignupConfirmationCooldownUntil),
+    ).toBeNull();
     expect(getStored(AUTH_FLOW_STORAGE_KEYS.pendingReturn)).toBeNull();
     expect(getPendingAuthJourneyIntent()).toBeNull();
   });
