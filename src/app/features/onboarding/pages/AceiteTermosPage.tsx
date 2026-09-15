@@ -8,6 +8,7 @@ import { AuthFooter } from "@/app/components/auth/AuthFooter";
 import {
   AUTH_JOURNEY_INTENTS,
   AUTH_PATHS,
+  AUTH_QUERY_KEYS,
   buildLoginPath,
   buildSignupPath,
 } from "@/core/auth/constants/authFlow";
@@ -70,11 +71,18 @@ export default function AceiteTermosPage() {
       ),
     [location.hash, location.pathname, location.search],
   );
-  const authCallbackPending = useMemo(
-    () =>
-      !oauthCallbackFailed &&
-      hasAuthCallbackMarker(location.search, location.hash),
-    [location.hash, location.search, oauthCallbackFailed],
+  // Supabase conclui PKCE com history.replaceState. O snapshot do Router pode
+  // continuar com `?code=...`, então a URL real é o contrato para decidir se
+  // o callback atual ainda está pendente. Isso impede que uma sessão antiga já
+  // persistida seja confundida com sucesso do novo login Google.
+  const liveSearch =
+    typeof window !== "undefined" ? window.location.search : location.search;
+  const liveHash =
+    typeof window !== "undefined" ? window.location.hash : location.hash;
+  const authCallbackPending =
+    !oauthCallbackFailed && hasAuthCallbackMarker(liveSearch, liveHash);
+  const hasPendingPkceCode = new URLSearchParams(liveSearch).has(
+    AUTH_QUERY_KEYS.code,
   );
   const returnContextIcon =
     returnContext.kind === "conversation"
@@ -91,12 +99,7 @@ export default function AceiteTermosPage() {
       : loginPath;
 
   useEffect(() => {
-    if (
-      oauthCallbackFailed ||
-      sessionLoading ||
-      user ||
-      !authCallbackPending
-    ) {
+    if (oauthCallbackFailed || sessionLoading || !hasPendingPkceCode) {
       return;
     }
 
@@ -105,7 +108,7 @@ export default function AceiteTermosPage() {
     }, AUTH_BROWSER_STORAGE_CONFIG.authUrlCleanupDelayMs);
 
     return () => window.clearTimeout(timeout);
-  }, [authCallbackPending, oauthCallbackFailed, sessionLoading, user]);
+  }, [hasPendingPkceCode, oauthCallbackFailed, sessionLoading]);
 
   useEffect(() => {
     if (oauthCallbackFailed) {
@@ -113,7 +116,11 @@ export default function AceiteTermosPage() {
       return;
     }
 
-    if (sessionLoading || (!user && authCallbackPending)) {
+    if (
+      sessionLoading ||
+      hasPendingPkceCode ||
+      (!user && authCallbackPending)
+    ) {
       setState("checking");
       return;
     }
@@ -144,6 +151,7 @@ export default function AceiteTermosPage() {
     };
   }, [
     authCallbackPending,
+    hasPendingPkceCode,
     navigate,
     oauthCallbackFailed,
     returnTo,
