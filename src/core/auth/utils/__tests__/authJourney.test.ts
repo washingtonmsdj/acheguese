@@ -18,12 +18,12 @@ import {
   getSignupConfirmationContext,
   getSignupConfirmationResendRemainingMs,
   getSignupJourneyReturnTarget,
-  markSignupConfirmationEmailSent,
   prepareAuthenticatedEmailSignup,
   prepareEmailSignupConfirmation,
   prepareGoogleLogin,
   prepareGoogleSignup,
   restartEmailSignupJourney,
+  startSignupConfirmationResendCooldown,
 } from "@/core/auth/utils/authJourney";
 
 function getStored(key: string): string | null {
@@ -49,7 +49,7 @@ describe("authJourney", () => {
     expect(getStored(AUTH_FLOW_STORAGE_KEYS.pendingSignupEmail)).toBeNull();
     expect(getStored(AUTH_FLOW_STORAGE_KEYS.pendingSignupRedirect)).toBeNull();
     expect(
-      getStored(AUTH_FLOW_STORAGE_KEYS.pendingSignupConfirmationSentAt),
+      getStored(AUTH_FLOW_STORAGE_KEYS.pendingSignupConfirmationCooldownUntil),
     ).toBeNull();
     expect(getAuthJourneyReturnTarget()).toBe("/mensagens/abc");
     expect(getPendingAuthJourneyIntent()).toBe(AUTH_JOURNEY_INTENTS.login);
@@ -92,7 +92,7 @@ describe("authJourney", () => {
     expect(getSignupJourneyReturnTarget()).toBe("/mensagens/abc");
     expect(getStored(AUTH_FLOW_STORAGE_KEYS.pendingSignupEmail)).toBeNull();
     expect(
-      getStored(AUTH_FLOW_STORAGE_KEYS.pendingSignupConfirmationSentAt),
+      getStored(AUTH_FLOW_STORAGE_KEYS.pendingSignupConfirmationCooldownUntil),
     ).toBeNull();
     expect(getStored(AUTH_FLOW_STORAGE_KEYS.pendingReturn)).toBeNull();
     expect(getPendingAuthJourneyIntent()).toBeNull();
@@ -128,12 +128,12 @@ describe("authJourney", () => {
     );
   });
 
-  it("restarts the cooldown only after a confirmed resend", () => {
+  it("can renew the cooldown when the server still rejects a resend", () => {
     prepareEmailSignupConfirmation("ana@example.com", "/mensagens/abc");
     vi.advanceTimersByTime(AUTH_SIGNUP_CONFIRMATION_RESEND_COOLDOWN_MS);
     expect(getSignupConfirmationResendRemainingMs()).toBe(0);
 
-    markSignupConfirmationEmailSent();
+    startSignupConfirmationResendCooldown();
     expect(getSignupConfirmationResendRemainingMs()).toBe(
       AUTH_SIGNUP_CONFIRMATION_RESEND_COOLDOWN_MS,
     );
@@ -152,7 +152,7 @@ describe("authJourney", () => {
 
     expect(getStored(AUTH_FLOW_STORAGE_KEYS.pendingSignupEmail)).toBeNull();
     expect(
-      getStored(AUTH_FLOW_STORAGE_KEYS.pendingSignupConfirmationSentAt),
+      getStored(AUTH_FLOW_STORAGE_KEYS.pendingSignupConfirmationCooldownUntil),
     ).toBeNull();
     expect(getSignupConfirmationResendRemainingMs()).toBe(0);
     expect(getSignupJourneyReturnTarget()).toBe("/mensagens/abc");
@@ -167,7 +167,7 @@ describe("authJourney", () => {
     expect(getPendingAuthJourneyIntent()).toBeNull();
     expect(getStored(AUTH_FLOW_STORAGE_KEYS.pendingSignupEmail)).toBeNull();
     expect(
-      getStored(AUTH_FLOW_STORAGE_KEYS.pendingSignupConfirmationSentAt),
+      getStored(AUTH_FLOW_STORAGE_KEYS.pendingSignupConfirmationCooldownUntil),
     ).toBeNull();
   });
 
@@ -191,7 +191,7 @@ describe("authJourney", () => {
     expect(getStored(AUTH_FLOW_STORAGE_KEYS.pendingSignupEmail)).toBeNull();
     expect(getStored(AUTH_FLOW_STORAGE_KEYS.pendingSignupRedirect)).toBeNull();
     expect(
-      getStored(AUTH_FLOW_STORAGE_KEYS.pendingSignupConfirmationSentAt),
+      getStored(AUTH_FLOW_STORAGE_KEYS.pendingSignupConfirmationCooldownUntil),
     ).toBeNull();
   });
 });
