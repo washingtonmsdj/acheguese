@@ -27,6 +27,7 @@ import {
 } from "@/shared/config/publicSupabase";
 import { logger } from "@/shared/utils/logger";
 import { AuthRecoveryAuthority } from "./AuthRecoveryAuthority";
+import { GoogleIdentityService } from "./GoogleIdentityService";
 import { AuthError } from "./types";
 
 interface UsernameLoginResponse {
@@ -257,6 +258,43 @@ export class AuthService {
     if (!AuthService.isGoogleAuthEnabled()) {
       throw new Error("Login com Google não está disponível neste ambiente.");
     }
+
+    let identityCredential: Awaited<
+      ReturnType<typeof GoogleIdentityService.requestCredential>
+    > = null;
+
+    if (GoogleIdentityService.getClientId()) {
+      try {
+        identityCredential = await GoogleIdentityService.requestCredential();
+      } catch (identityError) {
+        // GIS is an experience optimization, not a second auth authority. If
+        // the browser blocks it, preserve the proven Supabase OAuth path.
+        logger.warn("Google Identity Services unavailable; using OAuth fallback", {
+          error:
+            identityError instanceof Error
+              ? identityError.message
+              : String(identityError),
+        });
+      }
+    }
+
+    if (identityCredential) {
+      const { error } = await supabase.auth.signInWithIdToken({
+        provider: "google",
+        token: identityCredential.token,
+        nonce: identityCredential.nonce,
+      });
+      if (error) throw error;
+
+      // Keep the existing Google journey contract: after Google establishes a
+      // Supabase session, terms/onboarding owns the next route. A hard replace
+      // also prevents LoginPage/CadastroPage effects from skipping that gate.
+      if (typeof window !== "undefined") {
+        window.location.replace(AuthService.getTermsAcceptanceRedirectUrl());
+      }
+      return;
+    }
+
     const { error } = await supabase.auth.signInWithOAuth({
       provider: "google",
       options: {
