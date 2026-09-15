@@ -64,90 +64,92 @@ export function useCadastroForm(requestedRedirect = "/") {
 
   const redirectTo = resolveSafeInternalPath(requestedRedirect, "/");
 
-  const submit = form.handleSubmit(async (values) => {
-    if (loading) return;
-    setLoading(true);
-    form.clearErrors("root.serverError");
+  const submit = (captchaToken?: string) =>
+    form.handleSubmit(async (values) => {
+      if (loading) return;
+      setLoading(true);
+      form.clearErrors("root.serverError");
 
-    try {
-      // A checagem visual melhora a UX; esta checagem autoritativa no submit
-      // protege qualquer consumidor futuro deste hook.
-      const availability = await PublicIdentityService.checkAvailability({
-        identifier: values.username,
-        entityType: "profile",
-      });
-      if (availability.status !== "available") {
-        const message = getUsernameAvailabilityMessage(
-          availability.status,
-          availability.message,
-        );
-        form.setError("username", { type: "availability", message });
+      try {
+        // A checagem visual melhora a UX; esta checagem autoritativa no submit
+        // protege qualquer consumidor futuro deste hook.
+        const availability = await PublicIdentityService.checkAvailability({
+          identifier: values.username,
+          entityType: "profile",
+        });
+        if (availability.status !== "available") {
+          const message = getUsernameAvailabilityMessage(
+            availability.status,
+            availability.message,
+          );
+          form.setError("username", { type: "availability", message });
+          toast({
+            title: "Escolha outro nome de usuário",
+            description: availability.suggestion
+              ? `${message} Sugestão: @${availability.suggestion}`
+              : message,
+            variant: "destructive",
+          });
+          return;
+        }
+
+        const compromise = await checkPasswordCompromise(values.password);
+        if (compromise.blocked) {
+          form.setError("password", {
+            type: "compromised",
+            message: compromise.message,
+          });
+          toast({
+            title: "Escolha outra senha",
+            description: compromise.message,
+            variant: "destructive",
+          });
+          return;
+        }
+
+        await AuthService.signUp({
+          email: values.email,
+          password: values.password,
+          name: values.name,
+          handle: values.username,
+          termsAcceptance: {
+            accepted: values.termsAccepted,
+            version: TERMS_OF_SERVICE_VERSION,
+          },
+          captchaToken,
+        });
+
+        prepareEmailSignupConfirmation(values.email, redirectTo);
+        navigate(AUTH_PATHS.signupConfirmation, {
+          state: { email: values.email, redirectTo },
+        });
+      } catch (error: unknown) {
+        const message = getAuthErrorMessage(error, "Tente novamente.");
+        const raw =
+          error && typeof error === "object" && "message" in error
+            ? String((error as { message?: unknown }).message ?? "")
+            : "";
+
+        if (/already registered|already exists|já cadastrado/i.test(raw)) {
+          form.setError("email", { type: "server", message });
+        } else if (/username|handle|nome de usu[aá]rio/i.test(raw)) {
+          form.setError("username", { type: "server", message });
+        } else if (/password|senha/i.test(raw)) {
+          form.setError("password", { type: "server", message });
+        } else if (/email|e-?mail/i.test(raw)) {
+          form.setError("email", { type: "server", message });
+        }
+
+        form.setError("root.serverError", { type: "server", message });
         toast({
-          title: "Escolha outro nome de usuário",
-          description: availability.suggestion
-            ? `${message} Sugestão: @${availability.suggestion}`
-            : message,
+          title: "Não foi possível criar a conta",
+          description: message,
           variant: "destructive",
         });
-        return;
+      } finally {
+        setLoading(false);
       }
-
-      const compromise = await checkPasswordCompromise(values.password);
-      if (compromise.blocked) {
-        form.setError("password", {
-          type: "compromised",
-          message: compromise.message,
-        });
-        toast({
-          title: "Escolha outra senha",
-          description: compromise.message,
-          variant: "destructive",
-        });
-        return;
-      }
-
-      await AuthService.signUp({
-        email: values.email,
-        password: values.password,
-        name: values.name,
-        handle: values.username,
-        termsAcceptance: {
-          accepted: values.termsAccepted,
-          version: TERMS_OF_SERVICE_VERSION,
-        },
-      });
-
-      prepareEmailSignupConfirmation(values.email, redirectTo);
-      navigate(AUTH_PATHS.signupConfirmation, {
-        state: { email: values.email, redirectTo },
-      });
-    } catch (error: unknown) {
-      const message = getAuthErrorMessage(error, "Tente novamente.");
-      const raw =
-        error && typeof error === "object" && "message" in error
-          ? String((error as { message?: unknown }).message ?? "")
-          : "";
-
-      if (/already registered|already exists|já cadastrado/i.test(raw)) {
-        form.setError("email", { type: "server", message });
-      } else if (/username|handle|nome de usu[aá]rio/i.test(raw)) {
-        form.setError("username", { type: "server", message });
-      } else if (/password|senha/i.test(raw)) {
-        form.setError("password", { type: "server", message });
-      } else if (/email|e-?mail/i.test(raw)) {
-        form.setError("email", { type: "server", message });
-      }
-
-      form.setError("root.serverError", { type: "server", message });
-      toast({
-        title: "Não foi possível criar a conta",
-        description: message,
-        variant: "destructive",
-      });
-    } finally {
-      setLoading(false);
-    }
-  });
+    })();
 
   return { form, loading, submit };
 }
