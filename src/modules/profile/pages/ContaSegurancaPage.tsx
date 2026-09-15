@@ -176,10 +176,24 @@ export default function ContaSegurancaPage() {
   const [emailError, setEmailError] = useState<string | null>(null);
   const [updatingEmail, setUpdatingEmail] = useState(false);
   const [emailRequestSent, setEmailRequestSent] = useState(false);
+  const mountedRef = useRef(true);
   const passwordReauthRequestIdRef = useRef(0);
   const emailUpdateRequestIdRef = useRef(0);
+  const mfaFlowRequestIdRef = useRef(0);
+  const currentLocationPathRef = useRef(location.pathname);
   const currentLocationHashRef = useRef(location.hash);
+  currentLocationPathRef.current = location.pathname;
   currentLocationHashRef.current = location.hash;
+
+  useEffect(() => {
+    mountedRef.current = true;
+    return () => {
+      mountedRef.current = false;
+      passwordReauthRequestIdRef.current += 1;
+      emailUpdateRequestIdRef.current += 1;
+      mfaFlowRequestIdRef.current += 1;
+    };
+  }, []);
 
   useEffect(() => {
     if (location.hash === "#senha") return;
@@ -201,7 +215,22 @@ export default function ContaSegurancaPage() {
     setEmailRequestSent(false);
   }, [location.hash]);
 
+  useEffect(() => {
+    if (location.hash === "#mfa") return;
+
+    mfaFlowRequestIdRef.current += 1;
+    setEnrollment(null);
+    setVerificationCode("");
+    setVerifying(false);
+    setCancellingEnrollment(false);
+  }, [location.hash]);
+
   if (!user) return <Navigate to={appUrls.auth.login} replace />;
+
+  const isCurrentSecurityView = (hash: string) =>
+    mountedRef.current &&
+    currentLocationPathRef.current === ACCOUNT_PATHS.security &&
+    currentLocationHashRef.current === hash;
 
   const requestPasswordReauthCode = async () => {
     const requestId = passwordReauthRequestIdRef.current + 1;
@@ -212,7 +241,7 @@ export default function ContaSegurancaPage() {
       await requestPasswordReauthentication();
       if (
         requestId !== passwordReauthRequestIdRef.current ||
-        currentLocationHashRef.current !== "#senha"
+        !isCurrentSecurityView("#senha")
       ) {
         return false;
       }
@@ -225,7 +254,7 @@ export default function ContaSegurancaPage() {
     } catch (error) {
       if (
         requestId !== passwordReauthRequestIdRef.current ||
-        currentLocationHashRef.current !== "#senha"
+        !isCurrentSecurityView("#senha")
       ) {
         return false;
       }
@@ -237,7 +266,10 @@ export default function ContaSegurancaPage() {
       toast.error(message);
       return false;
     } finally {
-      if (requestId === passwordReauthRequestIdRef.current) {
+      if (
+        requestId === passwordReauthRequestIdRef.current &&
+        isCurrentSecurityView("#senha")
+      ) {
         setRequestingPasswordReauth(false);
       }
     }
@@ -254,18 +286,18 @@ export default function ContaSegurancaPage() {
         data.newPassword,
         passwordReauthRequired ? passwordNonce.trim() : undefined,
       );
-      if (currentLocationHashRef.current !== "#senha") return;
+      if (!isCurrentSecurityView("#senha")) return;
 
       setPasswordReauthRequired(false);
       setPasswordNonce("");
       setPasswordReauthError(null);
       await refreshProviders();
-      if (currentLocationHashRef.current !== "#senha") return;
+      if (!isCurrentSecurityView("#senha")) return;
 
       toast.success(hasPassword ? "Senha alterada com sucesso" : "Senha criada com sucesso");
       navigate(ACCOUNT_PATHS.security, { replace: true });
     } catch (error) {
-      if (currentLocationHashRef.current !== "#senha") throw error;
+      if (!isCurrentSecurityView("#senha")) throw error;
 
       const code = getAuthErrorCode(error);
       if (code === "reauthentication_needed") {
@@ -313,7 +345,7 @@ export default function ContaSegurancaPage() {
       await updateEmail(candidate);
       if (
         requestId !== emailUpdateRequestIdRef.current ||
-        currentLocationHashRef.current !== "#email"
+        !isCurrentSecurityView("#email")
       ) {
         return;
       }
@@ -324,7 +356,7 @@ export default function ContaSegurancaPage() {
     } catch (error) {
       if (
         requestId !== emailUpdateRequestIdRef.current ||
-        currentLocationHashRef.current !== "#email"
+        !isCurrentSecurityView("#email")
       ) {
         return;
       }
@@ -332,14 +364,28 @@ export default function ContaSegurancaPage() {
       setEmailError(message);
       toast.error(message);
     } finally {
-      if (requestId === emailUpdateRequestIdRef.current) {
+      if (
+        requestId === emailUpdateRequestIdRef.current &&
+        isCurrentSecurityView("#email")
+      ) {
         setUpdatingEmail(false);
       }
     }
   };
 
   const handleStartMfa = async (openDedicatedFlow = false) => {
+    const requestId = mfaFlowRequestIdRef.current + 1;
+    mfaFlowRequestIdRef.current = requestId;
+    const originHash = currentLocationHashRef.current;
     const next = await startEnrollment();
+    if (
+      requestId !== mfaFlowRequestIdRef.current ||
+      !mountedRef.current ||
+      currentLocationPathRef.current !== ACCOUNT_PATHS.security ||
+      currentLocationHashRef.current !== originHash
+    ) {
+      return;
+    }
     if (!next) {
       toast.error("Não foi possível iniciar a autenticação em duas etapas.");
       return;
@@ -351,8 +397,16 @@ export default function ContaSegurancaPage() {
 
   const handleVerifyMfa = async () => {
     if (!enrollment || verificationCode.trim().length !== 6) return;
+    const requestId = mfaFlowRequestIdRef.current + 1;
+    mfaFlowRequestIdRef.current = requestId;
     setVerifying(true);
     const ok = await verifyAndEnable(enrollment.factorId, verificationCode.trim());
+    if (
+      requestId !== mfaFlowRequestIdRef.current ||
+      !isCurrentSecurityView("#mfa")
+    ) {
+      return;
+    }
     setVerifying(false);
     if (ok) {
       setEnrollment(null);
@@ -370,8 +424,16 @@ export default function ContaSegurancaPage() {
       return;
     }
 
+    const requestId = mfaFlowRequestIdRef.current + 1;
+    mfaFlowRequestIdRef.current = requestId;
     setCancellingEnrollment(true);
     const removed = await disable(enrollment.factorId);
+    if (
+      requestId !== mfaFlowRequestIdRef.current ||
+      !isCurrentSecurityView("#mfa")
+    ) {
+      return;
+    }
     setCancellingEnrollment(false);
     if (!removed) {
       toast.error("Não foi possível cancelar a configuração com segurança.");
@@ -388,26 +450,34 @@ export default function ContaSegurancaPage() {
     try {
       const factors = await listFactors();
       if (factors === null) {
-        toast.error("Não foi possível confirmar os métodos cadastrados. Nenhuma alteração foi feita.");
+        if (mountedRef.current) {
+          toast.error("Não foi possível confirmar os métodos cadastrados. Nenhuma alteração foi feita.");
+        }
         return;
       }
       if (factors.length === 0) {
         await loadStatus();
-        toast.error("Nenhum método de autenticação em duas etapas foi encontrado para remover.");
+        if (mountedRef.current) {
+          toast.error("Nenhum método de autenticação em duas etapas foi encontrado para remover.");
+        }
         return;
       }
 
       for (const factor of factors) {
         const disabled = await disable(factor.id);
         if (!disabled) {
-          toast.error("Não foi possível remover todos os métodos de autenticação em duas etapas.");
+          if (mountedRef.current) {
+            toast.error("Não foi possível remover todos os métodos de autenticação em duas etapas.");
+          }
           return;
         }
       }
 
-      toast.success("Autenticação em duas etapas desativada.");
+      if (mountedRef.current) {
+        toast.success("Autenticação em duas etapas desativada.");
+      }
     } finally {
-      setDisablingMfa(false);
+      if (mountedRef.current) setDisablingMfa(false);
     }
   };
 
@@ -415,13 +485,15 @@ export default function ContaSegurancaPage() {
     setRevokingSessions(true);
     try {
       await signOutOtherSessions();
+      if (!mountedRef.current) return;
       toast.success("Outras sessões encerradas", {
         description: "Este dispositivo continua conectado.",
       });
     } catch (error) {
+      if (!mountedRef.current) return;
       toast.error(getAuthErrorMessage(error, "Não foi possível encerrar as outras sessões"));
     } finally {
-      setRevokingSessions(false);
+      if (mountedRef.current) setRevokingSessions(false);
     }
   };
 
