@@ -31,7 +31,8 @@ describe("multi-profile session hydration", () => {
     expect(source).toContain("const requestVersionRef = useRef(0);");
     expect(source).toContain("loadedUserIdRef.current = userId;");
     expect(source).toContain("const requestVersion = ++requestVersionRef.current;");
-    expect(source).toContain("if (requestVersion !== requestVersionRef.current) return;");
+    expect(source).toContain("requestVersion !== requestVersionRef.current");
+    expect(source).toContain("sessionUserIdRef.current !== userId");
     expect(source).toContain("if (loadedUserIdRef.current === userId) {");
     expect(source).toContain("loadedUserIdRef.current = null;");
     expect(source).toContain("requestVersionRef.current += 1;");
@@ -83,6 +84,77 @@ describe("multi-profile session hydration", () => {
     expect(clearProfiles).toBeGreaterThan(crossAccountGuard);
     expect(fetchProfiles).toBeGreaterThan(clearProfiles);
     expect(source).not.toContain("if (loadedUserIdRef.current === userId) {\n      setAllProfiles([]);");
+  });
+
+  it("publishes profile-switch UI only while the same session user owns the operation", () => {
+    const source = read(
+      "src/core/profiles/contexts/multi-profile-runtime-context.tsx",
+    );
+    const switchStart = source.indexOf(
+      "const switchProfile = useCallback(async (profileId: string): Promise<boolean> => {",
+    );
+    const ownerRead = source.indexOf(
+      "const ownerUserId = sessionUser?.id ?? null;",
+      switchStart,
+    );
+    const unsettledGuard = source.indexOf(
+      "sessionUserIdRef.current !== ownerUserId",
+      ownerRead,
+    );
+    const profileOwnership = source.indexOf(
+      "candidate.user_id === ownerUserId",
+      unsettledGuard,
+    );
+    const serviceCall = source.indexOf(
+      "await SessionService.switchProfile(profileId);",
+      profileOwnership,
+    );
+    const staleGuard = source.indexOf(
+      "ownerVersion !== sessionOwnerVersionRef.current",
+      serviceCall,
+    );
+    const publishActive = source.indexOf("setActiveProfile(profile);", staleGuard);
+
+    expect(source).toContain(
+      "const sessionUserIdRef = useRef<string | null>(sessionUser?.id ?? null);",
+    );
+    expect(source).toContain("const sessionOwnerVersionRef = useRef(0);");
+    expect(source).toContain("sessionOwnerVersionRef.current += 1;");
+    expect(switchStart).toBeGreaterThanOrEqual(0);
+    expect(ownerRead).toBeGreaterThan(switchStart);
+    expect(unsettledGuard).toBeGreaterThan(ownerRead);
+    expect(profileOwnership).toBeGreaterThan(unsettledGuard);
+    expect(serviceCall).toBeGreaterThan(profileOwnership);
+    expect(staleGuard).toBeGreaterThan(serviceCall);
+    expect(publishActive).toBeGreaterThan(staleGuard);
+  });
+
+  it("leaves switch persistence to SessionService instead of writing it twice", () => {
+    const source = read(
+      "src/core/profiles/contexts/multi-profile-runtime-context.tsx",
+    );
+    const switchStart = source.indexOf(
+      "const switchProfile = useCallback(async (profileId: string): Promise<boolean> => {",
+    );
+    const switchEnd = source.indexOf(
+      "const setModuleContext = useCallback",
+      switchStart,
+    );
+    const switchBlock = source.slice(switchStart, switchEnd);
+
+    expect(switchBlock).toContain("await SessionService.switchProfile(profileId);");
+    expect(switchBlock).not.toContain("writeStoredActiveProfileId(profileId)");
+  });
+
+  it("invalidates profile async work on provider unmount", () => {
+    const source = read(
+      "src/core/profiles/contexts/multi-profile-runtime-context.tsx",
+    );
+
+    expect(source).toContain("const mountedRef = useRef(true);");
+    expect(source).toContain("mountedRef.current = false;");
+    expect(source).toContain("sessionOwnerVersionRef.current += 1;");
+    expect(source).toContain("requestVersionRef.current += 1;");
   });
 
   it("keeps profile persistence resilient without creating another storage key", () => {
