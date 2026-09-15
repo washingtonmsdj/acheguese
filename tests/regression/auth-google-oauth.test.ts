@@ -131,6 +131,21 @@ describe("Google OAuth account/access contract", () => {
     expect(terms).not.toContain('const { user } = useAuth()');
   });
 
+  it("bounds a PKCE callback marker that never produces a session", () => {
+    const terms = readProjectFile(
+      "src/app/features/onboarding/pages/AceiteTermosPage.tsx",
+    );
+    const securityConfig = readProjectFile(
+      "src/shared/config/security.config.ts",
+    );
+
+    expect(securityConfig).toContain("authUrlCleanupDelayMs: 5 * 1000");
+    expect(terms).toContain("AUTH_BROWSER_STORAGE_CONFIG.authUrlCleanupDelayMs");
+    expect(terms).toContain("const timeout = window.setTimeout(() => {");
+    expect(terms).toContain('setState("oauth-error")');
+    expect(terms).toContain("return () => window.clearTimeout(timeout);");
+  });
+
   it("preserves the PKCE code when session initialization does not complete successfully", () => {
     const client = readProjectFile("src/integrations/supabase/supabase.ts");
 
