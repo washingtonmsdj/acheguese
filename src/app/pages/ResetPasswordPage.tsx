@@ -26,6 +26,7 @@ import { AuthService } from "@/core/auth/services/AuthService";
 import {
   getAuthCallbackError,
   hasPasswordRecoverySessionMarker,
+  hasPendingPkceCode as hasPendingPkceCodeInUrl,
 } from "@/core/auth/utils/authCallback";
 import { getAuthErrorMessage } from "@/core/auth/utils/authMessages";
 import { checkPasswordCompromise } from "@/core/auth/utils/compromisedPassword";
@@ -114,9 +115,7 @@ export default function ResetPasswordPage() {
       liveSearch,
       liveHash,
     );
-    const hasPendingPkceCode = new URLSearchParams(liveSearch).has(
-      AUTH_QUERY_KEYS.code,
-    );
+    const hasPendingPkceCode = hasPendingPkceCodeInUrl(liveSearch);
 
     if (user && hasRecoveryMarker && !hasPendingPkceCode) {
       setView("reset");
