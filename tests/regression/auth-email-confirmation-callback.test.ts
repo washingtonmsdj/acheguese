@@ -24,6 +24,23 @@ describe("email confirmation callback contract", () => {
     );
   });
 
+  it("uses hydrated session state as confirmation proof instead of trusting the query flag", () => {
+    const login = readProjectFile("src/app/pages/LoginPage.tsx");
+
+    expect(login).toContain(
+      'import { useSessionContext } from "@/core/session/hooks/useSessionContext";',
+    );
+    expect(login).toContain(
+      "const { user, isLoading: sessionLoading } = useSessionContext();",
+    );
+    expect(login).toContain("!sessionLoading &&\n    user !== null &&");
+    expect(login).toContain("if (!isEmailConfirmed || sessionLoading) return;");
+    expect(login).toContain("if (!user) {");
+    expect(login).toContain(
+      "navigate(AUTH_PATHS.signupConfirmation, { replace: true });",
+    );
+  });
+
   it("never treats an existing session as proof while any email confirmation exchange is pending", () => {
     const login = readProjectFile("src/app/pages/LoginPage.tsx");
 
@@ -52,9 +69,11 @@ describe("email confirmation callback contract", () => {
     expect(callback).toContain("hashParams.has(AUTH_QUERY_KEYS.refreshToken)");
     expect(login).toContain("emailConfirmationExchangePending");
     expect(login).toContain("Confirmando seu e-mail…");
+    expect(login).toContain("const stillPending = hasPendingAuthCallbackExchange(");
+    expect(login).toContain("if (stillPending || !user) {");
   });
 
-  it("returns failed or orphaned confirmation callbacks to the recoverable confirmation surface", () => {
+  it("returns failed, orphaned or forged confirmation callbacks to the recoverable confirmation surface", () => {
     const login = readProjectFile("src/app/pages/LoginPage.tsx");
     const confirmation = readProjectFile(
       "src/app/features/onboarding/pages/CadastroConfirmacaoPage.tsx",
@@ -67,6 +86,7 @@ describe("email confirmation callback contract", () => {
     expect(login).toContain("AUTH_BROWSER_STORAGE_CONFIG.authUrlCleanupDelayMs");
     expect(login).toContain("Confirmando seu e-mail…");
     expect(login).toContain("showEmailConfirmed");
+    expect(login).toContain('"Continuando para seu primeiro acesso."');
     expect(confirmation).toContain("getSignupConfirmationContext");
     expect(confirmation).toContain("AUTH_EMAIL_CONFIRMATION_INTENTS.login");
     expect(confirmation).toContain("cancelUnconfirmedEmailLoginJourney");

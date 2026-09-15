@@ -36,6 +36,7 @@ import {
   isEmailNotConfirmedError,
 } from "@/core/auth/utils/authMessages";
 import { getAuthReturnContext } from "@/core/auth/utils/authReturnContext";
+import { useSessionContext } from "@/core/session/hooks/useSessionContext";
 import { InlineFieldError } from "@/shared/components/ui/InlineFieldError";
 import { Input } from "@/shared/components/ui/input";
 import { Label } from "@/shared/components/ui/label";
@@ -57,12 +58,12 @@ type LoginLocationState = { redirectTo?: unknown } | null;
 
 export default function LoginPage() {
   const {
-    user,
     signIn,
     signInWithUsername,
     signInWithGoogle,
     googleAuthAvailable,
   } = useAuth();
+  const { user, isLoading: sessionLoading } = useSessionContext();
   const [pendingAction, setPendingAction] = useState<PendingAction>(null);
   const [searchParams] = useSearchParams();
   const location = useLocation();
@@ -85,6 +86,8 @@ export default function LoginPage() {
     );
   const showEmailConfirmed =
     isEmailConfirmed &&
+    !sessionLoading &&
+    user !== null &&
     !emailConfirmationCallbackFailed &&
     !emailConfirmationExchangePending;
 
@@ -127,38 +130,41 @@ export default function LoginPage() {
     .root?.serverError?.message;
 
   useEffect(() => {
-    if (!isEmailConfirmed) return;
+    if (!isEmailConfirmed || sessionLoading) return;
 
     if (emailConfirmationCallbackFailed) {
       navigate(AUTH_PATHS.signupConfirmation, { replace: true });
       return;
     }
 
-    if (
-      !hasPendingAuthCallbackExchange(
-        window.location.search,
-        window.location.hash,
-      )
-    ) {
-      return;
-    }
-
-    const timeout = window.setTimeout(() => {
-      if (
-        hasPendingAuthCallbackExchange(
+    if (emailConfirmationExchangePending) {
+      const timeout = window.setTimeout(() => {
+        const stillPending = hasPendingAuthCallbackExchange(
           window.location.search,
           window.location.hash,
-        )
-      ) {
-        navigate(AUTH_PATHS.signupConfirmation, { replace: true });
-      }
-    }, AUTH_BROWSER_STORAGE_CONFIG.authUrlCleanupDelayMs);
+        );
+        if (stillPending || !user) {
+          navigate(AUTH_PATHS.signupConfirmation, { replace: true });
+        }
+      }, AUTH_BROWSER_STORAGE_CONFIG.authUrlCleanupDelayMs);
 
-    return () => window.clearTimeout(timeout);
-  }, [emailConfirmationCallbackFailed, isEmailConfirmed, navigate]);
+      return () => window.clearTimeout(timeout);
+    }
+
+    if (!user) {
+      navigate(AUTH_PATHS.signupConfirmation, { replace: true });
+    }
+  }, [
+    emailConfirmationCallbackFailed,
+    emailConfirmationExchangePending,
+    isEmailConfirmed,
+    navigate,
+    sessionLoading,
+    user,
+  ]);
 
   useEffect(() => {
-    if (!user) return;
+    if (sessionLoading || !user) return;
 
     if (isEmailConfirmed) {
       if (
@@ -182,6 +188,7 @@ export default function LoginPage() {
     isEmailConfirmed,
     navigate,
     redirectTo,
+    sessionLoading,
     user,
   ]);
 
@@ -365,7 +372,9 @@ export default function LoginPage() {
                   <strong>
                     {showEmailConfirmed ? "E-mail confirmado." : "Senha atualizada."}
                   </strong>{" "}
-                  Entre para continuar.
+                  {showEmailConfirmed
+                    ? "Continuando para seu primeiro acesso."
+                    : "Entre para continuar."}
                 </p>
               </div>
             ) : null}
