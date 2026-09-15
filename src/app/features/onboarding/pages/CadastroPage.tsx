@@ -118,7 +118,7 @@ export default function CadastroPage() {
 
     // Feedback visual e verificação autoritativa permanecem separados: o hook
     // de cadastro consulta novamente o SSOT antes de criar a conta.
-    void submit();
+    void submit(turnstile.token ?? undefined, turnstile.reset);
   };
 
   const handleGoogleSignup = async () => {
