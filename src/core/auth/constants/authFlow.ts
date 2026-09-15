@@ -39,11 +39,20 @@ export const AUTH_JOURNEY_INTENTS = {
 export type AuthJourneyIntent =
   (typeof AUTH_JOURNEY_INTENTS)[keyof typeof AUTH_JOURNEY_INTENTS];
 
+export const AUTH_EMAIL_CONFIRMATION_INTENTS = {
+  login: "login",
+  signup: "signup",
+} as const;
+
+export type AuthEmailConfirmationIntent =
+  (typeof AUTH_EMAIL_CONFIRMATION_INTENTS)[keyof typeof AUTH_EMAIL_CONFIRMATION_INTENTS];
+
 export const AUTH_FLOW_STORAGE_KEYS = {
   pendingReturn: "auth.pending-return-path",
   pendingIntent: "auth.pending-intent",
   pendingSignupEmail: "auth.pending-signup-email",
   pendingSignupRedirect: "auth.pending-signup-redirect",
+  pendingEmailConfirmationIntent: "auth.pending-email-confirmation-intent",
   pendingSignupConfirmationCooldownUntil:
     "auth.pending-signup-confirmation-cooldown-until",
 } as const;
