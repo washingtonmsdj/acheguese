@@ -107,4 +107,39 @@ describe("G4 Auth/session SSOT ownership", () => {
       "if (!forceFresh && current.user?.id === session.user.id) return;",
     );
   });
+
+  it("serializes profile switches and revalidates the owning session around the RPC", () => {
+    const sessionService = read("src/core/session/services/SessionService.ts");
+    const handler = sessionService.indexOf(
+      "private static async performProfileSwitch(",
+    );
+    const firstOwnership = sessionService.indexOf(
+      "SessionService.assertSessionOwnership(session, eventVersion);",
+      handler,
+    );
+    const rpc = sessionService.indexOf(
+      "await SessionRpcService.switchActiveProfile(profileId);",
+      firstOwnership,
+    );
+    const secondOwnership = sessionService.indexOf(
+      "SessionService.assertSessionOwnership(session, eventVersion);",
+      firstOwnership + 1,
+    );
+    const localWrite = sessionService.indexOf(
+      "SessionService.setStoredActiveProfileId(profileId);",
+      secondOwnership,
+    );
+
+    expect(sessionService).toContain(
+      "private static profileSwitchQueue: Promise<void> = Promise.resolve();",
+    );
+    expect(sessionService).toContain(
+      "const eventVersion = SessionService.authEventVersion;",
+    );
+    expect(sessionService).toContain("SessionService.profileSwitchQueue");
+    expect(firstOwnership).toBeGreaterThan(handler);
+    expect(rpc).toBeGreaterThan(firstOwnership);
+    expect(secondOwnership).toBeGreaterThan(rpc);
+    expect(localWrite).toBeGreaterThan(secondOwnership);
+  });
 });
