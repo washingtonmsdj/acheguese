@@ -1,6 +1,8 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
-const getClaims = vi.fn();
+const { getClaims } = vi.hoisted(() => ({
+  getClaims: vi.fn(),
+}));
 
 vi.mock("@/integrations/supabase", () => ({
   supabase: {
