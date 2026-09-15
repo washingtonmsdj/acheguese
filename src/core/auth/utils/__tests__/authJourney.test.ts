@@ -19,6 +19,7 @@ import {
   getSignupConfirmationResendRemainingMs,
   getSignupJourneyReturnTarget,
   markSignupConfirmationEmailSent,
+  prepareAuthenticatedEmailSignup,
   prepareEmailSignupConfirmation,
   prepareGoogleLogin,
   prepareGoogleSignup,
@@ -84,6 +85,24 @@ describe("authJourney", () => {
     expect(getPendingAuthJourneyIntent()).toBeNull();
   });
 
+  it("owns immediate authenticated signup without fake confirmation state", () => {
+    prepareEmailSignupConfirmation("old@example.com", "/conta");
+    prepareAuthenticatedEmailSignup("/mensagens/abc");
+
+    expect(getSignupJourneyReturnTarget()).toBe("/mensagens/abc");
+    expect(getStored(AUTH_FLOW_STORAGE_KEYS.pendingSignupEmail)).toBeNull();
+    expect(
+      getStored(AUTH_FLOW_STORAGE_KEYS.pendingSignupConfirmationSentAt),
+    ).toBeNull();
+    expect(getStored(AUTH_FLOW_STORAGE_KEYS.pendingReturn)).toBeNull();
+    expect(getPendingAuthJourneyIntent()).toBeNull();
+  });
+
+  it("sanitizes the return target for immediate authenticated signup", () => {
+    prepareAuthenticatedEmailSignup("https://evil.example/path");
+    expect(getSignupJourneyReturnTarget()).toBe("/");
+  });
+
   it("persists resend cooldown from the first confirmed signup email", () => {
     prepareEmailSignupConfirmation("ana@example.com", "/mensagens/abc");
 
@@ -98,6 +117,15 @@ describe("authJourney", () => {
 
     vi.advanceTimersByTime(AUTH_SIGNUP_CONFIRMATION_RESEND_COOLDOWN_MS);
     expect(getSignupConfirmationResendRemainingMs()).toBe(0);
+  });
+
+  it("never extends resend cooldown beyond the configured limit after clock rollback", () => {
+    prepareEmailSignupConfirmation("ana@example.com", "/mensagens/abc");
+    vi.setSystemTime(new Date("2026-09-14T17:50:00.000Z"));
+
+    expect(getSignupConfirmationResendRemainingMs()).toBe(
+      AUTH_SIGNUP_CONFIRMATION_RESEND_COOLDOWN_MS,
+    );
   });
 
   it("restarts the cooldown only after a confirmed resend", () => {
