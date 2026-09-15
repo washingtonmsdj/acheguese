@@ -75,6 +75,7 @@ export function MultiProfileProvider({ children }: { children: ReactNode }) {
   const requestVersionRef = useRef(0);
 
   const loadProfilesForUser = useCallback(async (userId: string) => {
+    loadedUserIdRef.current = userId;
     const requestVersion = ++requestVersionRef.current;
     setLoading(true);
     setError(null);
@@ -101,6 +102,9 @@ export function MultiProfileProvider({ children }: { children: ReactNode }) {
       setActiveProfile(active || null);
     } catch (error: unknown) {
       if (requestVersion === requestVersionRef.current) {
+        if (loadedUserIdRef.current === userId) {
+          loadedUserIdRef.current = null;
+        }
         setError(getErrorMessage(error, 'Failed to load profiles'));
       }
     } finally {
@@ -151,7 +155,6 @@ export function MultiProfileProvider({ children }: { children: ReactNode }) {
     // um waterfall serial sem iniciar uma segunda sessão/auth request.
     if (userId) {
       if (loadedUserIdRef.current === userId) return;
-      loadedUserIdRef.current = userId;
       void loadProfilesForUser(userId);
       return;
     }
