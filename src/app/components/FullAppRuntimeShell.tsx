@@ -3,11 +3,11 @@ import { QueryClientProvider } from "@tanstack/react-query";
 import { HelmetProvider } from "react-helmet-async";
 
 import { ErrorBoundary } from "@/app/components/ErrorBoundary";
+import SessionProfileRuntimeShell from "@/app/components/SessionProfileRuntimeShell";
 import { SEO } from "@/app/components/SEO";
 import { queryClient } from "@/shared/utils/queryClient";
 import { AccessibilityProvider } from "@/shared/components/accessibility/AccessibilityProvider";
 import { SkipToContent } from "@/shared/components/accessibility/SkipToContent";
-import { PassivePageFallback } from "@/shared/components/loading/PassivePageFallback";
 import { scheduleBrowserIdleWork } from "@/shared/utils/browserIdle";
 import "@/styles/accessibility.css";
 
@@ -23,10 +23,6 @@ const AuthHashRedirect = lazy(() =>
   })),
 );
 
-const SessionProfileRuntimeShell = lazy(() =>
-  import("@/app/components/SessionProfileRuntimeShell"),
-);
-
 interface FullAppRuntimeShellProps {
   shouldCheckAuthRedirect: boolean;
 }
@@ -35,7 +31,9 @@ interface FullAppRuntimeShellProps {
  * Runtime completo das rotas contextuais/autenticadas.
  *
  * Mantem React Query, Helmet, acessibilidade, overlays, sessao e perfis fora
- * do bundle critico da raiz publica `/`.
+ * do bundle critico da raiz publica `/`. Como este shell so entra pelo
+ * RoutedAppRuntime (que ja e lazy), sessao/perfis nao precisam de um segundo
+ * lazy boundary interno que criaria outro degrau no refresh roteado.
  */
 export default function FullAppRuntimeShell({
   shouldCheckAuthRedirect,
@@ -68,9 +66,7 @@ export default function FullAppRuntimeShell({
               <GlobalOverlays />
             </Suspense>
 
-            <Suspense fallback={<PassivePageFallback />}>
-              <SessionProfileRuntimeShell />
-            </Suspense>
+            <SessionProfileRuntimeShell />
           </AccessibilityProvider>
         </QueryClientProvider>
       </HelmetProvider>
