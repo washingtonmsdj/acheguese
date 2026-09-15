@@ -11,7 +11,6 @@ import {
   buildLoginPath,
   buildSignupPath,
 } from "@/core/auth/constants/authFlow";
-import { useAuth } from "@/core/auth/hooks/useAuth";
 import { isOAuthTermsCallbackError } from "@/core/auth/utils/authCallback";
 import {
   cancelGoogleLogin,
@@ -29,6 +28,7 @@ import {
   TERMS_OF_SERVICE_VERSION,
 } from "@/core/legal/termsOfService";
 import { PrivacySettingsService } from "@/core/privacy/services/PrivacySettingsService";
+import { useSessionContext } from "@/core/session/hooks/useSessionContext";
 import { Checkbox } from "@/shared/components/ui/checkbox";
 import { Label } from "@/shared/components/ui/label";
 import { useToast } from "@/shared/hooks/use-toast";
@@ -40,7 +40,7 @@ type AcceptanceState =
   | "oauth-error";
 
 export default function AceiteTermosPage() {
-  const { user } = useAuth();
+  const { user, isLoading: sessionLoading } = useSessionContext();
   const location = useLocation();
   const navigate = useNavigate();
   const { toast } = useToast();
@@ -81,8 +81,18 @@ export default function AceiteTermosPage() {
       : loginPath;
 
   useEffect(() => {
+    if (oauthCallbackFailed) {
+      setState("oauth-error");
+      return;
+    }
+
+    if (sessionLoading) {
+      setState("checking");
+      return;
+    }
+
     if (!user) {
-      setState(oauthCallbackFailed ? "oauth-error" : "signed-out");
+      setState("signed-out");
       return;
     }
 
@@ -105,7 +115,7 @@ export default function AceiteTermosPage() {
     return () => {
       active = false;
     };
-  }, [navigate, oauthCallbackFailed, returnTo, user]);
+  }, [navigate, oauthCallbackFailed, returnTo, sessionLoading, user]);
 
   const handleAccept = async () => {
     if (!user || !accepted || submitting) return;
