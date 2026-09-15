@@ -72,4 +72,39 @@ describe("G4 Auth/session SSOT ownership", () => {
     expect(useAuth).toContain("@/core/session/");
     expect(useAuth).not.toContain("onAuthStateChange(");
   });
+
+  it("invalidates queued auth work before stale sessions can republish after sign-out", () => {
+    const sessionService = read("src/core/session/services/SessionService.ts");
+
+    expect(sessionService).toContain("private static authEventVersion = 0;");
+    expect(sessionService).toContain(
+      "const eventVersion = ++SessionService.authEventVersion;",
+    );
+    expect(sessionService).toContain(
+      "eventVersion !== SessionService.authEventVersion",
+    );
+    expect(sessionService).toContain("!SessionService.ownsSession(session)");
+    expect(sessionService).toContain("SessionService.cancelPendingLoads();");
+    expect(sessionService).toContain("SessionState.clear();");
+  });
+
+  it("prevents stale getSession and load promises from stealing newer ownership", () => {
+    const sessionService = read("src/core/session/services/SessionService.ts");
+
+    expect(sessionService).toContain(
+      "const requestVersion = SessionService.authEventVersion;",
+    );
+    expect(sessionService).toContain(
+      "requestVersion !== SessionService.authEventVersion",
+    );
+    expect(sessionService).toContain(
+      "SessionService.currentSessionPromise === sessionPromise",
+    );
+    expect(sessionService).toContain(
+      "SessionService.loadPromise === loadPromise",
+    );
+    expect(sessionService).toContain(
+      "if (!forceFresh && current.user?.id === session.user.id) return;",
+    );
+  });
 });
