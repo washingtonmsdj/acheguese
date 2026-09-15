@@ -209,7 +209,7 @@ export function ChangePasswordForm({
           className="min-h-11 w-full bg-territory-sun text-territory-ink hover:bg-territory-sun/90 sm:min-w-40 sm:w-auto"
         >
           {isSubmitting ? <Loader2 className="mr-2 h-4 w-4 animate-spin" aria-hidden="true" /> : null}
-          {isSubmitting ? "Alterando..." : "Alterar senha"}
+          {isSubmitting ? "Salvando..." : "Salvar nova senha"}
         </Button>
       </div>
     </form>
