@@ -23,7 +23,7 @@ interface ProfileLinksManagerProps {
 export function ProfileLinksManager({ profileId }: ProfileLinksManagerProps) {
   const { toast } = useToast();
   const { confirm, ConfirmDialog } = useConfirmActionDialog();
-  const { links, loading, createLink, updateLink, deleteLink, reorderLinks } = useProfileLinks(profileId);
+  const { links, loading, error, createLink, updateLink, deleteLink, refetch } = useProfileLinks(profileId);
   const { allProfiles: profiles } = useMultiProfileContext();
   
   const [showCreate, setShowCreate] = useState(false);
@@ -132,8 +132,34 @@ export function ProfileLinksManager({ profileId }: ProfileLinksManagerProps) {
     return <div className="text-center py-4">Carregando vínculos...</div>;
   }
 
+  if (error && links.length === 0) {
+    return (
+      <div className="rounded-xl border border-destructive/30 bg-destructive/5 p-4" role="alert">
+        <p className="font-medium text-foreground">Não foi possível carregar os vínculos.</p>
+        <p className="mt-1 text-sm text-muted-foreground">
+          Seus vínculos não foram alterados. Tente carregar novamente.
+        </p>
+        <Button
+          type="button"
+          variant="outline"
+          size="sm"
+          className="mt-3"
+          onClick={() => void refetch()}
+        >
+          Tentar novamente
+        </Button>
+      </div>
+    );
+  }
+
   return (
     <div className="space-y-6">
+      {error ? (
+        <div className="rounded-xl border border-destructive/30 bg-destructive/5 p-3 text-sm text-foreground" role="status">
+          Não foi possível atualizar os vínculos agora. A última lista carregada continua visível.
+        </div>
+      ) : null}
+
       <div className="flex items-center justify-between">
         <div>
           <h3 className="text-lg font-semibold">Vínculos entre Perfis</h3>
