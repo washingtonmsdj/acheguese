@@ -50,7 +50,7 @@ describe("refresh first paint", () => {
     expect(themeHook).not.toContain('localStorage.setItem("acheguese-theme"');
   });
 
-  it("renders one passive page surface through every routed bootstrap layer", () => {
+  it("keeps the routed first paint passive without a redundant shell loading step", () => {
     const appRuntime = read("src/app/components/AppRuntime.tsx");
     const fullShell = read("src/app/components/FullAppRuntimeShell.tsx");
     const sessionShell = read("src/app/components/SessionProfileRuntimeShell.tsx");
@@ -63,8 +63,15 @@ describe("refresh first paint", () => {
     expect(appRuntime).toContain(passiveSuspense);
     expect(appRuntime).not.toContain("RuntimeLoadingFallback");
 
-    expect(fullShell).toContain(passiveImport);
-    expect(fullShell).toContain(passiveSuspense);
+    expect(fullShell).toContain(
+      'import SessionProfileRuntimeShell from "@/app/components/SessionProfileRuntimeShell";',
+    );
+    expect(fullShell).toContain("<SessionProfileRuntimeShell />");
+    expect(fullShell).not.toContain(passiveImport);
+    expect(fullShell).not.toContain(
+      'import("@/app/components/SessionProfileRuntimeShell")',
+    );
+
     expect(sessionShell).toContain(passiveImport);
     expect(sessionShell).toContain(passiveSuspense);
 
