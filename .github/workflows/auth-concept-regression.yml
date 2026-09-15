@@ -9,6 +9,7 @@ on:
       - ".env.example"
       - ".env.local.example"
       - "supabase/config.toml"
+      - "supabase/migrations/20260915123000_add_current_user_password_authority.sql"
       - "src/app/components/auth/**"
       - "src/app/pages/LoginPage.tsx"
       - "src/app/pages/EmailChangeConfirmationPage.tsx"
@@ -37,6 +38,7 @@ on:
       - "tests/regression/auth-redirect-allowlist.test.ts"
       - "tests/security/account-email-change-state-disposal.test.ts"
       - "tests/security/account-password-reauthentication.test.ts"
+      - "tests/security/auth-password-capability-authority.test.ts"
       - "tests/security/mfa-account-settings-fail-closed.test.ts"
       - "playwright.config.ts"
       - "package.json"
@@ -49,6 +51,7 @@ on:
       - ".env.example"
       - ".env.local.example"
       - "supabase/config.toml"
+      - "supabase/migrations/20260915123000_add_current_user_password_authority.sql"
       - "src/app/components/auth/**"
       - "src/app/pages/LoginPage.tsx"
       - "src/app/pages/EmailChangeConfirmationPage.tsx"
@@ -77,6 +80,7 @@ on:
       - "tests/regression/auth-redirect-allowlist.test.ts"
       - "tests/security/account-email-change-state-disposal.test.ts"
       - "tests/security/account-password-reauthentication.test.ts"
+      - "tests/security/auth-password-capability-authority.test.ts"
       - "tests/security/mfa-account-settings-fail-closed.test.ts"
       - "playwright.config.ts"
       - "package.json"
@@ -128,6 +132,7 @@ jobs:
           tests/regression/auth-redirect-allowlist.test.ts
           tests/security/account-email-change-state-disposal.test.ts
           tests/security/account-password-reauthentication.test.ts
+          tests/security/auth-password-capability-authority.test.ts
           tests/security/mfa-account-settings-fail-closed.test.ts
 
   responsive-layout:
