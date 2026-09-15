@@ -31,7 +31,7 @@ describe("retired generic full-screen loader", () => {
     expect(offenders).toEqual([]);
   });
 
-  it("keeps app-shell suspense fallbacks visually silent", () => {
+  it("keeps route-level suspense visually silent without exposing a blank page", () => {
     const fullShell = fs.readFileSync(
       path.join(SRC, "app/components/FullAppRuntimeShell.tsx"),
       "utf8",
@@ -41,8 +41,16 @@ describe("retired generic full-screen loader", () => {
       "utf8",
     );
 
-    expect(fullShell).toContain("<Suspense fallback={null}>");
-    expect(sessionShell).toContain("<Suspense fallback={null}>");
+    expect(fullShell).toContain(
+      'import { PassivePageFallback } from "@/shared/components/loading/PassivePageFallback";',
+    );
+    expect(sessionShell).toContain(
+      'import { PassivePageFallback } from "@/shared/components/loading/PassivePageFallback";',
+    );
+    expect(fullShell).toContain("<Suspense fallback={<PassivePageFallback />}>");
+    expect(sessionShell).toContain("<Suspense fallback={<PassivePageFallback />}>");
+    expect(fullShell).not.toContain("FullScreenLoader");
+    expect(sessionShell).not.toContain("FullScreenLoader");
     expect(fullShell).not.toContain("PageLoader");
     expect(sessionShell).not.toContain("PageLoader");
   });
@@ -54,6 +62,7 @@ describe("retired generic full-screen loader", () => {
     );
 
     expect(passive).toContain("data-passive-page-fallback");
+    expect(passive).toContain("bg-background");
     expect(passive).not.toContain("lucide-react");
     expect(passive).not.toContain("setTimeout");
     expect(passive).not.toContain("animate-");
