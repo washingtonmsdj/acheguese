@@ -5,6 +5,7 @@ import {
   getAuthCallbackError,
   hasAuthCallbackMarker,
   hasPasswordRecoverySessionMarker,
+  hasPendingAuthCallbackExchange,
   hasPendingPkceCode,
   isExpiredPasswordRecoveryError,
   isOAuthTermsCallbackError,
@@ -58,6 +59,22 @@ describe("authCallback", () => {
     expect(hasPendingPkceCode("?mode=recovery&code=abc")).toBe(true);
     expect(hasPendingPkceCode("?confirmed=1")).toBe(false);
     expect(hasPendingPkceCode("")).toBe(false);
+  });
+
+  it("recognizes pending PKCE and legacy implicit-session exchanges", () => {
+    expect(hasPendingAuthCallbackExchange("?code=abc", "")).toBe(true);
+    expect(hasPendingAuthCallbackExchange("", "#code=abc")).toBe(true);
+    expect(
+      hasPendingAuthCallbackExchange(
+        "",
+        "#access_token=access&refresh_token=refresh&type=signup",
+      ),
+    ).toBe(true);
+    expect(
+      hasPendingAuthCallbackExchange("?access_token=access", ""),
+    ).toBe(true);
+    expect(hasPendingAuthCallbackExchange("?confirmed=1", "")).toBe(false);
+    expect(hasPendingAuthCallbackExchange("", "#main-content")).toBe(false);
   });
 
   it("recognizes recovery markers in query or hash", () => {
