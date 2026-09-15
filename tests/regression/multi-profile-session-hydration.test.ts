@@ -39,6 +39,52 @@ describe("multi-profile session hydration", () => {
     expect(source).toContain("if (sessionLoading) return;");
   });
 
+  it("clears the previous account projection before loading a different session user", () => {
+    const source = read(
+      "src/core/profiles/contexts/multi-profile-runtime-context.tsx",
+    );
+
+    expect(source).toContain(
+      "const projectedUserIdRef = useRef<string | null>(null);",
+    );
+    expect(source).toContain(
+      "const projectedUserId = projectedUserIdRef.current;",
+    );
+    expect(source).toContain(
+      "if (projectedUserId !== null && projectedUserId !== userId) {",
+    );
+    expect(source).toContain("projectedUserIdRef.current = null;");
+    expect(source).toContain("setAllProfiles([]);");
+    expect(source).toContain("allProfilesRef.current = [];");
+    expect(source).toContain("setActiveProfile(null);");
+    expect(source).toContain("setContextualProfile(null);");
+    expect(source).toContain("projectedUserIdRef.current = userId;");
+  });
+
+  it("does not erase the existing projection merely because the same user retries", () => {
+    const source = read(
+      "src/core/profiles/contexts/multi-profile-runtime-context.tsx",
+    );
+    const loadStart = source.indexOf(
+      "const loadProfilesForUser = useCallback(async (userId: string) => {",
+    );
+    const crossAccountGuard = source.indexOf(
+      "if (projectedUserId !== null && projectedUserId !== userId) {",
+      loadStart,
+    );
+    const clearProfiles = source.indexOf("setAllProfiles([]);", crossAccountGuard);
+    const fetchProfiles = source.indexOf(
+      "await MultiProfileRuntimeService.getMyProfiles(userId);",
+      clearProfiles,
+    );
+
+    expect(loadStart).toBeGreaterThanOrEqual(0);
+    expect(crossAccountGuard).toBeGreaterThan(loadStart);
+    expect(clearProfiles).toBeGreaterThan(crossAccountGuard);
+    expect(fetchProfiles).toBeGreaterThan(clearProfiles);
+    expect(source).not.toContain("if (loadedUserIdRef.current === userId) {\n      setAllProfiles([]);");
+  });
+
   it("keeps profile persistence resilient without creating another storage key", () => {
     const source = read(
       "src/core/profiles/contexts/multi-profile-runtime-context.tsx",
