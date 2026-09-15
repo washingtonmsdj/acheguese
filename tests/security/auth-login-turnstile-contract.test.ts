@@ -12,6 +12,9 @@ const journey = read("src/core/auth/utils/authJourney.ts");
 const messages = read("src/core/auth/utils/authMessages.ts");
 const usernameBroker = read("supabase/functions/auth-username-login/index.ts");
 const edgeValidation = read("supabase/functions/_shared/validation.ts");
+const usernameRpcHardening = read(
+  "supabase/migrations/20260707103853_harden_username_auth_rpc_surface.sql",
+);
 
 describe("login Turnstile contract", () => {
   it("passes the verified token from the login UI to both password-login paths", () => {
@@ -40,6 +43,24 @@ describe("login Turnstile contract", () => {
     expect(usernameFlow).toContain("await supabase.auth.setSession({");
     expect(usernameFlow).toContain("if (error) throw error;");
     expect(usernameFlow).not.toContain("SessionService.refreshSession()");
+  });
+
+  it("keeps username-to-email lookup behind the service-role boundary", () => {
+    expect(usernameBroker).toContain(
+      'await supabaseAdmin.rpc("get_email_by_username"',
+    );
+    expect(usernameRpcHardening).toContain(
+      "REVOKE ALL ON FUNCTION %I.%I(%s) FROM PUBLIC",
+    );
+    expect(usernameRpcHardening).toContain(
+      "REVOKE ALL ON FUNCTION %I.%I(%s) FROM anon",
+    );
+    expect(usernameRpcHardening).toContain(
+      "REVOKE ALL ON FUNCTION %I.%I(%s) FROM authenticated",
+    );
+    expect(usernameRpcHardening).toContain(
+      "GRANT EXECUTE ON FUNCTION %I.%I(%s) TO service_role",
+    );
   });
 
   it("hands an unconfirmed email login to the confirmation journey without inventing a resend", () => {
