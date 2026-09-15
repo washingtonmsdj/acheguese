@@ -59,5 +59,11 @@ describe("password recovery CAPTCHA propagation", () => {
     expect(accountSecurityPage).not.toContain("resetPassword(user.email)");
     expect(accountSecurityPage).not.toContain("sendingReset");
     expect(accountSecurityPage).not.toContain("resetSent");
+
+    expect(recoveryPage).toContain(
+      "const initialEmail = searchParams.get(AUTH_QUERY_KEYS.email) ?? \"\";",
+    );
+    expect(recoveryPage).toContain("const [email, setEmail] = useState(initialEmail);");
+    expect(recoveryPage).toContain("if (!requestTurnstile.isReady)");
   });
 });
