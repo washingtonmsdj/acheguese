@@ -25,7 +25,7 @@ import {
 import { parseAuthIdentifier } from "@/core/auth/utils/authIdentifier";
 import {
   cancelGoogleLogin,
-  completeEmailConfirmationLoginJourney,
+  completeEmailConfirmationJourney,
   completeStandardLoginJourney,
   getSignupJourneyReturnTarget,
   prepareGoogleLogin,
@@ -170,7 +170,7 @@ export default function LoginPage() {
       ) {
         return;
       }
-      completeEmailConfirmationLoginJourney();
+      completeEmailConfirmationJourney();
       navigate(AUTH_PATHS.firstAccess, { replace: true });
       return;
     }
