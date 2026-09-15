@@ -145,7 +145,7 @@ export default function CadastroConfirmacaoPage() {
           className="mx-auto w-full max-w-[430px] px-6 pb-5 pt-3 focus:outline-none lg:grid lg:max-w-[1180px] lg:grid-cols-[minmax(0,1fr)_430px] lg:items-center lg:gap-16 lg:px-10 lg:pb-10 lg:pt-8"
         >
           <section className="hidden lg:block" aria-label="Confirmação de e-mail">
-            <h1 className="font-heading text-[46px] font-extrabold leading-[.94] tracking-[-0.05em]">
+            <h1 className="font-heading text-[46px] font-extrabold leading-[.94] tracking-[-0.05em] text-[#0b3b3f]">
               Só falta<br />confirmar<br />seu e-mail.
             </h1>
             <img
