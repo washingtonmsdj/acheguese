@@ -275,37 +275,6 @@ class MFAService {
 
     return data.totp || [];
   }
-
-  async verifyMFACode(factorId: string, code: string): Promise<boolean> {
-    try {
-      const { data, error } = await supabase.auth.mfa.challenge({ factorId });
-
-      if (error || !data?.id) {
-        logger.error(
-          'MFAService.verifyMFACode - challenge',
-          error ?? new Error('Missing challenge id'),
-        );
-        return false;
-      }
-
-      const { error: verifyError } = await supabase.auth.mfa.verify({
-        factorId,
-        challengeId: data.id,
-        code,
-      });
-
-      if (verifyError) {
-        logger.error('MFAService.verifyMFACode - verify', verifyError);
-        return false;
-      }
-
-      await this.reconcilePolicyTracker();
-      return true;
-    } catch (error) {
-      logger.error('MFAService.verifyMFACode', error);
-      return false;
-    }
-  }
 }
 
 export const mfaService = new MFAService();
