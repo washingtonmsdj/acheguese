@@ -126,6 +126,7 @@ jobs:
         run: >-
           npx vitest run
           src/core/auth/services/AuthRecoveryAuthority.test.ts
+          src/core/auth/services/AuthService.termsAcceptance.spec.ts
           src/core/auth/utils/__tests__/authCallback.test.ts
           src/core/auth/utils/__tests__/authFlowStorage.test.ts
           src/core/auth/utils/__tests__/authJourney.test.ts
