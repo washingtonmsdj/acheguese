@@ -35,6 +35,16 @@ export function getAuthCallbackError(
   return error || errorCode ? { error, errorCode } : null;
 }
 
+/**
+ * Código de autorização PKCE que ainda não foi consumido pelo cliente Supabase.
+ * O SDK remove `code` da URL somente depois de uma troca concluída, então este
+ * marcador também impede que uma sessão preexistente seja confundida com o
+ * resultado do callback atual.
+ */
+export function hasPendingPkceCode(search: string): boolean {
+  return parseParams(search).has(AUTH_QUERY_KEYS.code);
+}
+
 export function isPasswordRecoveryCallback(
   search: string,
   hash: string,
@@ -55,12 +65,11 @@ export function hasPasswordRecoverySessionMarker(
   search: string,
   hash: string,
 ): boolean {
-  const searchParams = parseParams(search);
   const hashParams = parseParams(hash);
 
   return (
     isPasswordRecoveryCallback(search, hash) ||
-    searchParams.has(AUTH_QUERY_KEYS.code) ||
+    hasPendingPkceCode(search) ||
     hashParams.has(AUTH_QUERY_KEYS.accessToken)
   );
 }
@@ -75,7 +84,7 @@ export function hasAuthCallbackMarker(search: string, hash: string): boolean {
   const hashParams = parseParams(hash);
 
   return (
-    searchParams.has(AUTH_QUERY_KEYS.code) ||
+    hasPendingPkceCode(search) ||
     isPasswordRecoveryCallback(search, hash) ||
     searchParams.has(AUTH_QUERY_KEYS.accessToken) ||
     searchParams.has(AUTH_QUERY_KEYS.refreshToken) ||
