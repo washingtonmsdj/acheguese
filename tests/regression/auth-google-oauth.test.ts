@@ -162,7 +162,7 @@ describe("Google OAuth account/access contract", () => {
     expect(client).not.toContain(".getSession()");
   });
 
-  it("keeps localhost:5175 as the deterministic local OAuth origin", () => {
+  it("keeps localhost:5175 as the only browser-authoritative local OAuth origin", () => {
     const origin = readProjectFile("src/shared/config/publicAppOrigin.ts");
     const viteConfig = readProjectFile("vite.config.ts");
     const env = readProjectFile(".env");
@@ -170,10 +170,13 @@ describe("Google OAuth account/access contract", () => {
     const envProduction = readProjectFile(".env.production");
     const supabaseConfig = readProjectFile("supabase/config.toml");
 
-    expect(origin).toContain("import.meta.env.DEV");
-    expect(origin).toContain("window.location?.origin");
-    expect(origin).toContain('hostname === "localhost"');
-    expect(origin).toContain('hostname === "127.0.0.1"');
+    expect(origin).toContain('const LOCAL_AUTH_PORT = "5175"');
+    expect(origin).toContain('url.hostname === "localhost"');
+    expect(origin).toContain('url.hostname === "127.0.0.1"');
+    expect(origin).toContain('url.protocol === "http:"');
+    expect(origin).toContain("url.port === LOCAL_AUTH_PORT");
+    expect(origin).not.toContain("import.meta.env.DEV");
+    expect(origin).not.toContain('hostname === "[::1]"');
     expect((viteConfig.match(/port: 5175/g) ?? []).length).toBe(2);
     expect((viteConfig.match(/strictPort: true/g) ?? []).length).toBe(2);
     expect(env).toContain('VITE_PUBLIC_SITE_URL="http://localhost:5175"');
