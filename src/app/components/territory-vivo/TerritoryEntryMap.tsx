@@ -30,7 +30,7 @@ function EntryMapArrivalSurface({
   className: string;
   label: string;
 }) {
-  const statusText = "Preparando o mapa oficial do território";
+  const statusText = "Conectando o mapa para sua chegada";
 
   return (
     <section
