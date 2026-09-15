@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useMutation, useQuery } from '@tanstack/react-query';
-import { useAuth } from '@/core/auth/hooks/useAuth';
+import { useSessionUserId } from '@/core/session/hooks/useSessionUserId';
 import { useMultiProfileContext } from '@/core/profiles/contexts/multi-profile-runtime-context';
 import { MultiProfileService } from '@/core/profiles/services/multi-profile';
 import type {
@@ -20,7 +20,7 @@ export type ProfileEditorViewState =
   | 'ready';
 
 export function useProfileEditor(profileId?: string) {
-  const { user } = useAuth();
+  const userId = useSessionUserId();
   const { allProfiles, refetch: refetchProfiles } = useMultiProfileContext();
   const hydratedKeyRef = useRef<string | null>(null);
 
@@ -36,16 +36,16 @@ export function useProfileEditor(profileId?: string) {
       'profile',
       'editor',
       profileId,
-      user?.id,
+      userId,
       allProfiles.map((profile) => profile.id).join(','),
     ],
     queryFn: async () =>
       MultiProfileService.loadProfileEditor({
         profileId: profileId!,
-        userId: user!.id,
+        userId: userId!,
         availableProfiles: allProfiles,
       }),
-    enabled: Boolean(profileId && user?.id),
+    enabled: Boolean(profileId && userId),
     refetchOnWindowFocus: false,
   });
 
@@ -90,7 +90,7 @@ export function useProfileEditor(profileId?: string) {
   });
 
   const state = useMemo<ProfileEditorViewState>(() => {
-    if (!profileId || !user?.id) {
+    if (!profileId || !userId) {
       return 'denied';
     }
 
@@ -115,7 +115,7 @@ export function useProfileEditor(profileId?: string) {
     }
 
     return 'ready';
-  }, [editorQuery.data, editorQuery.isError, editorQuery.isLoading, profileId, user?.id]);
+  }, [editorQuery.data, editorQuery.isError, editorQuery.isLoading, profileId, userId]);
 
   const setBaseField = useCallback(
     <K extends keyof UpdateProfileInput>(field: K, value: UpdateProfileInput[K]) => {
@@ -160,4 +160,3 @@ export function useProfileEditor(profileId?: string) {
     refetch: editorQuery.refetch,
   };
 }
-
