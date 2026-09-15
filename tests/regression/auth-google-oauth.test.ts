@@ -146,16 +146,17 @@ describe("Google OAuth account/access contract", () => {
     expect(terms).toContain("return () => window.clearTimeout(timeout);");
   });
 
-  it("preserves the PKCE code when session initialization does not complete successfully", () => {
+  it("leaves auth return URL cleanup to the Supabase callback exchange", () => {
     const client = readProjectFile("src/integrations/supabase/supabase.ts");
+    const packageLock = readProjectFile("package-lock.json");
 
     expect(client).toContain("detectSessionInUrl: true");
     expect(client).toContain('flowType: "pkce"');
-    expect(client).toContain(".then(({ data, error }) => {");
-    expect(client).toContain("if (!error && data.session)");
-    expect(client).toContain("cleanAuthReturnUrl();");
-    expect(client).not.toContain("getSession().finally");
-    expect(client).not.toMatch(/\.finally\(\(\) => \{\s*cleanAuthReturnUrl\(\)/);
+    expect(packageLock).toContain('"node_modules/@supabase/supabase-js"');
+    expect(packageLock).toContain('"version": "2.99.3"');
+    expect(client).not.toContain("hasAuthReturnParams");
+    expect(client).not.toContain("cleanAuthReturnUrl");
+    expect(client).not.toContain(".getSession()");
   });
 
   it("keeps localhost:5175 as the deterministic local OAuth origin", () => {
