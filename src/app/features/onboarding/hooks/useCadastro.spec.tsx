@@ -1,4 +1,4 @@
-import { act, renderHook } from "@testing-library/react";
+import { act, renderHook, waitFor } from "@testing-library/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 import { AUTH_PATHS } from "@/core/auth/constants/authFlow";
@@ -94,6 +94,40 @@ describe("useCadastroForm", () => {
     expect(prepareEmailSignupConfirmation).not.toHaveBeenCalled();
     expect(prepareAuthenticatedEmailSignup).not.toHaveBeenCalled();
     expect(result.current.form.formState.errors.termsAccepted).toBeDefined();
+  });
+
+  it("serializa submits concorrentes antes de consumir o mesmo desafio Auth", async () => {
+    let resolveSignup!: (value: { requiresEmailConfirmation: boolean }) => void;
+    vi.mocked(AuthService.signUp).mockImplementationOnce(
+      () =>
+        new Promise((resolve) => {
+          resolveSignup = resolve;
+        }),
+    );
+    const onCaptchaConsumed = vi.fn();
+    const { result } = renderHook(() => useCadastroForm("/mensagens/abc"));
+    fillAccount(result);
+    acceptTerms(result);
+
+    const firstSubmit = result.current.submit("captcha-once", onCaptchaConsumed);
+    const secondSubmit = result.current.submit("captcha-once", onCaptchaConsumed);
+
+    await waitFor(() => {
+      expect(AuthService.signUp).toHaveBeenCalledTimes(1);
+    });
+
+    expect(PublicIdentityService.checkAvailability).toHaveBeenCalledTimes(1);
+    expect(checkPasswordCompromise).toHaveBeenCalledTimes(1);
+
+    await act(async () => {
+      resolveSignup({ requiresEmailConfirmation: true });
+      await Promise.all([firstSubmit, secondSubmit]);
+    });
+
+    expect(AuthService.signUp).toHaveBeenCalledTimes(1);
+    expect(onCaptchaConsumed).toHaveBeenCalledTimes(1);
+    expect(prepareEmailSignupConfirmation).toHaveBeenCalledTimes(1);
+    expect(mocks.navigate).toHaveBeenCalledTimes(1);
   });
 
   it("envia para confirmação somente quando o Auth informa que ela é necessária", async () => {
