@@ -24,7 +24,7 @@ describe("email confirmation callback contract", () => {
     );
   });
 
-  it("uses hydrated session state as confirmation proof instead of trusting the query flag", () => {
+  it("uses hydrated session state as confirmation proof without racing the consumed callback URL", () => {
     const login = readProjectFile("src/app/pages/LoginPage.tsx");
 
     expect(login).toContain(
@@ -34,19 +34,22 @@ describe("email confirmation callback contract", () => {
       "const { user, isLoading: sessionLoading } = useSessionContext();",
     );
     expect(login).toContain("!sessionLoading &&\n    user !== null &&");
+    expect(login).toContain("const emailConfirmationSettling =");
+    expect(login).toContain("user === null &&");
+    expect(login).toContain("const showEmailConfirmationProgress =");
     expect(login).toContain("if (!isEmailConfirmed || sessionLoading) return;");
-    expect(login).toContain("if (!user) {");
+    expect(login).toContain("if (user && !emailConfirmationExchangePending) return;");
+    expect(login).toContain("AUTH_BROWSER_STORAGE_CONFIG.authUrlCleanupDelayMs");
     expect(login).toContain(
       "navigate(AUTH_PATHS.signupConfirmation, { replace: true });",
     );
   });
 
-  it("keeps login actions inert while session ownership is unresolved", () => {
+  it("keeps login actions inert while session ownership or confirmation settlement is unresolved", () => {
     const login = readProjectFile("src/app/pages/LoginPage.tsx");
 
-    expect(login).toContain(
-      "const isBusy = sessionLoading || user !== null || pendingAction !== null;",
-    );
+    expect(login).toContain("const isBusy =");
+    expect(login).toContain("pendingAction !== null ||\n    emailConfirmationSettling;");
     expect((login.match(/if \(sessionLoading \|\| user\) return;/g) ?? []).length).toBeGreaterThanOrEqual(2);
     expect(login).toContain("disabled={isBusy}");
     expect(login).toContain("disabled={isBusy || !turnstile.isReady}");
@@ -79,6 +82,7 @@ describe("email confirmation callback contract", () => {
     expect(callback).toContain("hashParams.has(AUTH_QUERY_KEYS.accessToken)");
     expect(callback).toContain("hashParams.has(AUTH_QUERY_KEYS.refreshToken)");
     expect(login).toContain("emailConfirmationExchangePending");
+    expect(login).toContain("showEmailConfirmationProgress");
     expect(login).toContain("Confirmando seu e-mail…");
     expect(login).toContain("const stillPending = hasPendingAuthCallbackExchange(");
     expect(login).toContain("if (stillPending || !user) {");
