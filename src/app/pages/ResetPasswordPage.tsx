@@ -143,11 +143,13 @@ export default function ResetPasswordPage() {
 
     setSending(true);
     try {
-      await resetPasswordByIdentifier(normalizedEmail);
+      await resetPasswordByIdentifier(
+        normalizedEmail,
+        requestTurnstile.token ?? undefined,
+      );
       setEmail(normalizedEmail);
       setView(nextView);
       setResendCooldown(RESEND_SECONDS);
-      requestTurnstile.reset();
     } catch (error) {
       toast({
         title: "Não foi possível enviar agora",
@@ -158,6 +160,7 @@ export default function ResetPasswordPage() {
         variant: "destructive",
       });
     } finally {
+      requestTurnstile.reset();
       setSending(false);
     }
   };
