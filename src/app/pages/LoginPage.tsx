@@ -131,14 +131,24 @@ export default function LoginPage() {
 
     clearErrors("root.serverError");
     setPendingAction("login");
+    const captchaToken = turnstile.token ?? undefined;
 
     try {
       if (parsed.kind === "username") {
-        await signInWithUsername({ username: parsed.value, password: data.password });
+        await signInWithUsername({
+          username: parsed.value,
+          password: data.password,
+          captchaToken,
+        });
       } else {
-        await signIn({ email: parsed.value, password: data.password });
+        await signIn({
+          email: parsed.value,
+          password: data.password,
+          captchaToken,
+        });
       }
     } catch (error) {
+      turnstile.reset();
       const message = getAuthErrorMessage(
         error,
         "E-mail, usuário ou senha incorretos.",
