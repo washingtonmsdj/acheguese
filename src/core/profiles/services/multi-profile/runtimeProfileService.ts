@@ -3,17 +3,29 @@ import { ProfileRpcService } from "../ProfileRpcService";
 
 import type { Profile } from "./types";
 
-export const MultiProfileRuntimeService = {
-  async getMyProfiles(userId: string): Promise<Profile[]> {
-    if (!userId) return [];
+const inFlightProfileReads = new Map<string, Promise<Profile[]>>();
 
-    try {
-      return await ProfileRpcService.getAccessibleProfiles<Profile[]>({
-        targetUserId: userId,
+export const MultiProfileRuntimeService = {
+  getMyProfiles(userId: string): Promise<Profile[]> {
+    if (!userId) return Promise.resolve([]);
+
+    const existingRequest = inFlightProfileReads.get(userId);
+    if (existingRequest) return existingRequest;
+
+    const request = ProfileRpcService.getAccessibleProfiles<Profile[]>({
+      targetUserId: userId,
+    })
+      .catch((error) => {
+        logger.error("Error fetching runtime profiles:", error);
+        return [];
+      })
+      .finally(() => {
+        if (inFlightProfileReads.get(userId) === request) {
+          inFlightProfileReads.delete(userId);
+        }
       });
-    } catch (error) {
-      logger.error("Error fetching runtime profiles:", error);
-      return [];
-    }
+
+    inFlightProfileReads.set(userId, request);
+    return request;
   },
 };
