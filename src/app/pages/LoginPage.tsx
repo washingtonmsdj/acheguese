@@ -18,6 +18,10 @@ import {
   buildSignupPath,
 } from "@/core/auth/constants/authFlow";
 import { useAuth } from "@/core/auth/hooks/useAuth";
+import {
+  getAuthCallbackError,
+  hasPendingPkceCode,
+} from "@/core/auth/utils/authCallback";
 import { parseAuthIdentifier } from "@/core/auth/utils/authIdentifier";
 import {
   cancelGoogleLogin,
@@ -31,6 +35,7 @@ import { getAuthReturnContext } from "@/core/auth/utils/authReturnContext";
 import { InlineFieldError } from "@/shared/components/ui/InlineFieldError";
 import { Input } from "@/shared/components/ui/input";
 import { Label } from "@/shared/components/ui/label";
+import { AUTH_BROWSER_STORAGE_CONFIG } from "@/shared/config/security.config";
 import {
   PRIVACY_POLICY_PATH,
   TERMS_OF_SERVICE_PATH,
@@ -65,6 +70,15 @@ export default function LoginPage() {
     searchParams.get(AUTH_QUERY_KEYS.confirmed) === AUTH_QUERY_VALUES.enabled;
   const isPasswordReset =
     searchParams.get(AUTH_QUERY_KEYS.passwordReset) === AUTH_QUERY_VALUES.enabled;
+  const emailConfirmationCallbackFailed =
+    isEmailConfirmed &&
+    getAuthCallbackError(location.search, location.hash) !== null;
+  const emailConfirmationCodePending =
+    isEmailConfirmed && hasPendingPkceCode(window.location.search);
+  const showEmailConfirmed =
+    isEmailConfirmed &&
+    !emailConfirmationCallbackFailed &&
+    !emailConfirmationCodePending;
 
   const redirectTo = useMemo(() => {
     const stateRedirect = (location.state as LoginLocationState)?.redirectTo;
@@ -105,9 +119,34 @@ export default function LoginPage() {
     .root?.serverError?.message;
 
   useEffect(() => {
+    if (!isEmailConfirmed) return;
+
+    if (emailConfirmationCallbackFailed) {
+      navigate(AUTH_PATHS.signupConfirmation, { replace: true });
+      return;
+    }
+
+    if (!hasPendingPkceCode(window.location.search)) return;
+
+    const timeout = window.setTimeout(() => {
+      if (hasPendingPkceCode(window.location.search)) {
+        navigate(AUTH_PATHS.signupConfirmation, { replace: true });
+      }
+    }, AUTH_BROWSER_STORAGE_CONFIG.authUrlCleanupDelayMs);
+
+    return () => window.clearTimeout(timeout);
+  }, [emailConfirmationCallbackFailed, isEmailConfirmed, navigate]);
+
+  useEffect(() => {
     if (!user) return;
 
     if (isEmailConfirmed) {
+      if (
+        emailConfirmationCallbackFailed ||
+        hasPendingPkceCode(window.location.search)
+      ) {
+        return;
+      }
       completeEmailConfirmationLoginJourney();
       navigate(AUTH_PATHS.firstAccess, { replace: true });
       return;
@@ -115,7 +154,13 @@ export default function LoginPage() {
 
     completeStandardLoginJourney();
     navigate(redirectTo, { replace: true });
-  }, [isEmailConfirmed, navigate, redirectTo, user]);
+  }, [
+    emailConfirmationCallbackFailed,
+    isEmailConfirmed,
+    navigate,
+    redirectTo,
+    user,
+  ]);
 
   const onValid = async (data: LoginIdentifierInput) => {
     const parsed = parseAuthIdentifier(data.identifier);
@@ -264,7 +309,20 @@ export default function LoginPage() {
               </div>
             ) : null}
 
-            {isEmailConfirmed || isPasswordReset ? (
+            {emailConfirmationCodePending ? (
+              <div
+                role="status"
+                className="mt-4 flex items-start gap-3 rounded-xl bg-[#f3f1ea] px-3.5 py-3 text-[#35575a]"
+              >
+                <span className="mt-0.5 h-4 w-4 animate-spin rounded-full border-2 border-[#bdcac8] border-t-[#0b5b59]" />
+                <p className="text-[12px] leading-4">
+                  <strong>Confirmando seu e-mail…</strong>{" "}
+                  Aguarde enquanto validamos o link.
+                </p>
+              </div>
+            ) : null}
+
+            {showEmailConfirmed || isPasswordReset ? (
               <div
                 role="status"
                 className="mt-4 flex items-start gap-3 rounded-xl bg-[#eaf7ef] px-3.5 py-3 text-[#155c43]"
@@ -272,7 +330,7 @@ export default function LoginPage() {
                 <AuthConceptIcon name="check" />
                 <p className="text-[12px] leading-4">
                   <strong>
-                    {isEmailConfirmed ? "E-mail confirmado." : "Senha atualizada."}
+                    {showEmailConfirmed ? "E-mail confirmado." : "Senha atualizada."}
                   </strong>{" "}
                   Entre para continuar.
                 </p>
