@@ -7,6 +7,7 @@ const read = (path: string) => readFileSync(resolve(root, path), "utf8");
 
 const authFlow = read("src/core/auth/constants/authFlow.ts");
 const authJourney = read("src/core/auth/utils/authJourney.ts");
+const authMessages = read("src/core/auth/utils/authMessages.ts");
 const authService = read("src/core/auth/services/AuthService.ts");
 const authHook = read("src/core/auth/hooks/useAuth.ts");
 const confirmationPage = read(
@@ -45,7 +46,7 @@ describe("signup confirmation resend Turnstile contract", () => {
 
   it("keeps resend timing in the Auth journey instead of disposable page state", () => {
     expect(authFlow).toContain(
-      'pendingSignupConfirmationSentAt: "auth.pending-signup-confirmation-sent-at"',
+      'pendingSignupConfirmationCooldownUntil:\n    "auth.pending-signup-confirmation-cooldown-until"',
     );
     expect(authFlow).toContain(
       "AUTH_SIGNUP_CONFIRMATION_RESEND_COOLDOWN_MS = 60 * 1000",
@@ -53,7 +54,9 @@ describe("signup confirmation resend Turnstile contract", () => {
     expect(authJourney).toContain(
       "export function getSignupConfirmationResendRemainingMs",
     );
-    expect(authJourney).toContain("markSignupConfirmationEmailSent();");
+    expect(authJourney).toContain(
+      "export function startSignupConfirmationResendCooldown",
+    );
     expect(confirmationPage).toContain(
       "const [cooldown, setCooldown] = useState(getResendCooldownSeconds);",
     );
@@ -67,15 +70,34 @@ describe("signup confirmation resend Turnstile contract", () => {
     const resendCall = confirmationPage.indexOf(
       "await resendConfirmationEmail(email, turnstile.token ?? undefined);",
     );
-    const markSent = confirmationPage.indexOf(
-      "markSignupConfirmationEmailSent();",
+    const startCooldown = confirmationPage.indexOf(
+      "startSignupConfirmationResendCooldown();",
       resendCall,
     );
     const catchBlock = confirmationPage.indexOf("} catch (error) {", resendCall);
 
     expect(resendCall).toBeGreaterThanOrEqual(0);
-    expect(markSent).toBeGreaterThan(resendCall);
-    expect(catchBlock).toBeGreaterThan(markSent);
+    expect(startCooldown).toBeGreaterThan(resendCall);
+    expect(catchBlock).toBeGreaterThan(startCooldown);
+  });
+
+  it("honors a server rate limit by renewing the local blocking window", () => {
+    expect(authMessages).toContain("export function isAuthRateLimitError");
+    expect(authMessages).toContain("status === 429");
+    expect(authMessages).toContain("over[_\\s-]*email[_\\s-]*send");
+    expect(confirmationPage).toContain("if (isAuthRateLimitError(error)) {");
+
+    const catchBlock = confirmationPage.indexOf("} catch (error) {");
+    const rateLimitGuard = confirmationPage.indexOf(
+      "if (isAuthRateLimitError(error)) {",
+      catchBlock,
+    );
+    const retryCooldown = confirmationPage.indexOf(
+      "startSignupConfirmationResendCooldown();",
+      rateLimitGuard,
+    );
+    expect(rateLimitGuard).toBeGreaterThan(catchBlock);
+    expect(retryCooldown).toBeGreaterThan(rateLimitGuard);
   });
 
   it("sends the solved token and invalidates it after every consumed resend attempt", () => {
