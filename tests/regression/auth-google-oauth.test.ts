@@ -107,6 +107,7 @@ describe("Google OAuth account/access contract", () => {
   });
 
   it("waits for an unsettled PKCE callback even when another session already exists", () => {
+    const callback = readProjectFile("src/core/auth/utils/authCallback.ts");
     const terms = readProjectFile(
       "src/app/features/onboarding/pages/AceiteTermosPage.tsx",
     );
@@ -116,8 +117,14 @@ describe("Google OAuth account/access contract", () => {
     expect(terms).toContain("hasAuthCallbackMarker");
     expect(terms).toContain("window.location.search");
     expect(terms).toContain("window.location.hash");
-    expect(terms).toContain("AUTH_QUERY_KEYS.code");
-    expect(terms).toContain("hasPendingPkceCode");
+    expect(callback).toContain("export function hasPendingPkceCode");
+    expect(terms).toContain(
+      "hasPendingPkceCode as hasPendingPkceCodeInUrl",
+    );
+    expect(terms).toContain(
+      "const hasPendingPkceCode = hasPendingPkceCodeInUrl(liveSearch);",
+    );
+    expect(terms).not.toContain("new URLSearchParams(liveSearch).has(");
     expect(terms).toContain("sessionLoading ||\n      hasPendingPkceCode ||");
     expect(terms).toContain("(!user && authCallbackPending)");
     expect(terms).not.toContain(
