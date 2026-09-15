@@ -27,6 +27,37 @@ describe("account password reauthentication", () => {
     expect(securityPage).toContain('autoComplete="one-time-code"');
   });
 
+  it("discards nonce state and invalidates late reauthentication requests when leaving the password view", () => {
+    expect(securityPage).toContain("const passwordReauthRequestIdRef = useRef(0);");
+    expect(securityPage).toContain("const currentLocationHashRef = useRef(location.hash);");
+    expect(securityPage).toContain('if (location.hash === "#senha") return;');
+    expect(securityPage).toContain("passwordReauthRequestIdRef.current += 1;");
+    expect(securityPage).toContain('setPasswordNonce("");');
+    expect(securityPage).toContain("setPasswordReauthRequired(false);");
+    expect(securityPage).toContain("setPasswordReauthError(null);");
+    expect(securityPage).toContain(
+      'requestId !== passwordReauthRequestIdRef.current ||\n        currentLocationHashRef.current !== "#senha"',
+    );
+  });
+
+  it("suppresses late password mutation UI effects after the user leaves the password view", () => {
+    const updateCall = securityPage.indexOf("await updatePassword(");
+    const firstRouteGuard = securityPage.indexOf(
+      'if (currentLocationHashRef.current !== "#senha") return;',
+      updateCall,
+    );
+    const successToast = securityPage.indexOf("toast.success(hasPassword", updateCall);
+    const catchRouteGuard = securityPage.indexOf(
+      'if (currentLocationHashRef.current !== "#senha") throw error;',
+      updateCall,
+    );
+
+    expect(updateCall).toBeGreaterThanOrEqual(0);
+    expect(firstRouteGuard).toBeGreaterThan(updateCall);
+    expect(successToast).toBeGreaterThan(firstRouteGuard);
+    expect(catchRouteGuard).toBeGreaterThan(successToast);
+  });
+
   it("distinguishes an existing password method from an OAuth-only account", () => {
     expect(identityService).toContain("readMetadataProviders");
     expect(identityService).toContain("data.user.app_metadata ?? {}");
