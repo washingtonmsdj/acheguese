@@ -11,6 +11,7 @@ on:
       - "supabase/config.toml"
       - "src/app/components/auth/**"
       - "src/app/pages/LoginPage.tsx"
+      - "src/app/pages/EmailChangeConfirmationPage.tsx"
       - "src/app/pages/ResetPasswordPage.tsx"
       - "src/app/features/onboarding/pages/Cadastro*.tsx"
       - "src/app/features/onboarding/pages/AceiteTermosPage.tsx"
@@ -24,6 +25,7 @@ on:
       - "tests/e2e/auth-*.spec.ts"
       - "tests/regression/auth-concept-flow.test.ts"
       - "tests/regression/auth-confirmation-resend-turnstile.test.ts"
+      - "tests/regression/auth-email-change-callback.test.ts"
       - "tests/regression/auth-email-confirmation-callback.test.ts"
       - "tests/regression/auth-mobile-concept.test.ts"
       - "tests/regression/auth-route-ownership.test.ts"
@@ -44,6 +46,7 @@ on:
       - "supabase/config.toml"
       - "src/app/components/auth/**"
       - "src/app/pages/LoginPage.tsx"
+      - "src/app/pages/EmailChangeConfirmationPage.tsx"
       - "src/app/pages/ResetPasswordPage.tsx"
       - "src/app/features/onboarding/pages/Cadastro*.tsx"
       - "src/app/features/onboarding/pages/AceiteTermosPage.tsx"
@@ -57,6 +60,7 @@ on:
       - "tests/e2e/auth-*.spec.ts"
       - "tests/regression/auth-concept-flow.test.ts"
       - "tests/regression/auth-confirmation-resend-turnstile.test.ts"
+      - "tests/regression/auth-email-change-callback.test.ts"
       - "tests/regression/auth-email-confirmation-callback.test.ts"
       - "tests/regression/auth-mobile-concept.test.ts"
       - "tests/regression/auth-route-ownership.test.ts"
@@ -104,6 +108,7 @@ jobs:
           src/app/features/onboarding/pages/CadastroPrimeiroAcessoPage.spec.tsx
           tests/regression/auth-concept-flow.test.ts
           tests/regression/auth-confirmation-resend-turnstile.test.ts
+          tests/regression/auth-email-change-callback.test.ts
           tests/regression/auth-email-confirmation-callback.test.ts
           tests/regression/auth-mobile-concept.test.ts
           tests/regression/auth-route-ownership.test.ts

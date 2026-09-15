@@ -5,12 +5,14 @@ export const AUTH_PATHS = {
   firstAccess: "/cadastro/primeiro-acesso",
   termsAcceptance: "/aceitar-termos",
   passwordReset: "/reset-password",
+  emailChangeConfirmation: "/conta/confirmar-email",
 } as const;
 
 export const AUTH_QUERY_KEYS = {
   redirect: "redirect",
   confirmed: "confirmed",
   passwordReset: "passwordReset",
+  emailChange: "emailChange",
   mode: "mode",
   type: "type",
   code: "code",
@@ -94,6 +96,13 @@ export function buildEmailConfirmationLoginPath(): string {
     [AUTH_QUERY_KEYS.confirmed]: AUTH_QUERY_VALUES.enabled,
   });
   return `${AUTH_PATHS.login}?${query.toString()}`;
+}
+
+export function buildEmailChangeConfirmationPath(): string {
+  const query = new URLSearchParams({
+    [AUTH_QUERY_KEYS.emailChange]: AUTH_QUERY_VALUES.enabled,
+  });
+  return `${AUTH_PATHS.emailChangeConfirmation}?${query.toString()}`;
 }
 
 export function buildPasswordResetSuccessLoginPath(): string {

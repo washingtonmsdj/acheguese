@@ -8,6 +8,7 @@
 
 import {
   AUTH_PATHS,
+  buildEmailChangeConfirmationPath,
   buildEmailConfirmationLoginPath,
   buildPasswordRecoveryPath,
 } from "@/core/auth/constants/authFlow";
@@ -44,6 +45,10 @@ type SignOutAttemptResult =
 export class AuthService {
   static getEmailConfirmationRedirectUrl(): string {
     return buildPublicAbsoluteUrl(buildEmailConfirmationLoginPath());
+  }
+
+  static getEmailChangeConfirmationRedirectUrl(): string {
+    return buildPublicAbsoluteUrl(buildEmailChangeConfirmationPath());
   }
 
   static getPasswordResetRedirectUrl(): string {
@@ -320,7 +325,7 @@ export class AuthService {
 
     const { error } = await supabase.auth.updateUser(
       { email },
-      { emailRedirectTo: AuthService.getEmailConfirmationRedirectUrl() },
+      { emailRedirectTo: AuthService.getEmailChangeConfirmationRedirectUrl() },
     );
     if (error) throw error;
   }

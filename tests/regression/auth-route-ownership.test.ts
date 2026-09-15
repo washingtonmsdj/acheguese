@@ -20,6 +20,7 @@ describe("auth/public route ownership", () => {
       "AUTH_PATHS.firstAccess",
       "AUTH_PATHS.termsAcceptance",
       "AUTH_PATHS.passwordReset",
+      "AUTH_PATHS.emailChangeConfirmation",
     ]) {
       expect(root).toContain(authPath);
     }
@@ -29,6 +30,7 @@ describe("auth/public route ownership", () => {
       'path="/cadastro"',
       'path="/cadastro/confirmacao"',
       'path="/reset-password"',
+      'path="/conta/confirmar-email"',
       'path="/splash"',
       'path="/sobre"',
       'path="/contato"',
@@ -51,6 +53,7 @@ describe("auth/public route ownership", () => {
 
     for (const rootOwnedExport of [
       "LoginPage",
+      "EmailChangeConfirmationPage",
       "CadastroPage",
       "CadastroConfirmacaoPage",
       "ResetPasswordPage",

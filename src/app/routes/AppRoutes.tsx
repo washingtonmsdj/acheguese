@@ -23,6 +23,9 @@ const QrResolverPage = lazy(() =>
 const StatusPage = lazy(() => import("@/app/pages/StatusPage"));
 const SplashPage = lazy(() => import("@/app/pages/SplashPage"));
 const LoginPage = lazy(() => import("@/app/pages/LoginPage"));
+const EmailChangeConfirmationPage = lazy(
+  () => import("@/app/pages/EmailChangeConfirmationPage"),
+);
 const CadastroPage = lazy(
   () => import("@/app/features/onboarding/pages/CadastroPage"),
 );
@@ -81,6 +84,10 @@ export function AppRoutes() {
       <Routes>
         <Route path="/" element={<RootRouteEntry />} />
         <Route path={AUTH_PATHS.login} element={<LoginPage />} />
+        <Route
+          path={AUTH_PATHS.emailChangeConfirmation}
+          element={<EmailChangeConfirmationPage />}
+        />
         <Route path={AUTH_PATHS.passwordReset} element={<ResetPasswordPage />} />
         <Route path="/admin/*" element={<AdminRoutes />} />
         <Route path="*" element={<Navigate to="/" replace />} />
@@ -96,6 +103,10 @@ export function AppRoutes() {
 
       <Route path="/splash" element={<SplashPage />} />
       <Route path={AUTH_PATHS.login} element={<LoginPage />} />
+      <Route
+        path={AUTH_PATHS.emailChangeConfirmation}
+        element={<EmailChangeConfirmationPage />}
+      />
       <Route path={AUTH_PATHS.signup} element={<CadastroPage />} />
       <Route path={AUTH_PATHS.firstAccess} element={<CadastroPrimeiroAcessoPage />} />
       <Route
