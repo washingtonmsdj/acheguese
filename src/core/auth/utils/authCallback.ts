@@ -88,12 +88,9 @@ export function hasPasswordRecoverySessionMarker(
   search: string,
   hash: string,
 ): boolean {
-  const hashParams = parseParams(hash);
-
   return (
     isPasswordRecoveryCallback(search, hash) ||
-    hasPendingPkceCode(search) ||
-    hashParams.has(AUTH_QUERY_KEYS.accessToken)
+    hasPendingAuthCallbackExchange(search, hash)
   );
 }
 
