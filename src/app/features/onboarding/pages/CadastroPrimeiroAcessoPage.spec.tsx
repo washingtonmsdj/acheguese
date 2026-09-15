@@ -99,6 +99,14 @@ const PROFILE = {
   updated_at: "2026-09-14T00:00:00Z",
 };
 
+function createDeferred<T>() {
+  let resolve!: (value: T | PromiseLike<T>) => void;
+  const promise = new Promise<T>((resolver) => {
+    resolve = resolver;
+  });
+  return { promise, resolve };
+}
+
 function renderPage() {
   return render(
     <HelmetProvider>
@@ -234,6 +242,45 @@ describe("CadastroPrimeiroAcessoPage", () => {
     ).not.toBeInTheDocument();
   });
 
+  it("serializa cliques concorrentes ao salvar @usuário", async () => {
+    const user = userEvent.setup();
+    const generatedProfile = {
+      ...PROFILE,
+      username: "ana_1a2b3c4d",
+    };
+    const availability = createDeferred<{
+      identifier: string;
+      status: "taken";
+    }>();
+    vi.mocked(profileService.getRequiredActiveProfile).mockResolvedValue(
+      generatedProfile as never,
+    );
+    mocks.usernameCheck.mockReturnValueOnce(availability.promise);
+
+    renderPage();
+    await screen.findByText("@ana_1a2b3c4d");
+    await user.click(
+      screen.getByRole("button", { name: /Escolher meu @usuário/i }),
+    );
+    const usernameInput = screen.getByLabelText("Seu @usuário");
+    await user.clear(usernameInput);
+    await user.type(usernameInput, "Ana_Oliveira");
+
+    const saveButton = screen.getByRole("button", { name: /Salvar @usuário/i });
+    act(() => {
+      saveButton.click();
+      saveButton.click();
+    });
+
+    expect(mocks.usernameCheck).toHaveBeenCalledTimes(1);
+    expect(profileService.updateProfile).not.toHaveBeenCalled();
+
+    await act(async () => {
+      availability.resolve({ identifier: "ana_oliveira", status: "taken" });
+      await availability.promise;
+    });
+  });
+
   it("não oferece troca obrigatória quando o @usuário já é amigável", async () => {
     renderPage();
 
@@ -273,5 +320,38 @@ describe("CadastroPrimeiroAcessoPage", () => {
     expect(
       await screen.findByText(/Cidade e bairro salvos/i),
     ).toBeInTheDocument();
+  });
+
+  it("serializa cliques concorrentes ao salvar território", async () => {
+    const user = userEvent.setup();
+    const update = createDeferred<typeof PROFILE>();
+    vi.mocked(profileService.updateProfile).mockReturnValueOnce(
+      update.promise as never,
+    );
+    renderPage();
+
+    await screen.findByText(/Tudo pronto, Ana/i);
+    await user.click(
+      screen.getByRole("button", { name: /Informar cidade e bairro/i }),
+    );
+    await user.selectOptions(screen.getByLabelText("Estado"), "state-ba");
+    await user.selectOptions(screen.getByLabelText("Cidade"), "city-salvador");
+    await user.selectOptions(screen.getByLabelText("Bairro"), "district-pituba");
+
+    const saveButton = screen.getByRole("button", {
+      name: /Salvar cidade e bairro/i,
+    });
+    act(() => {
+      saveButton.click();
+      saveButton.click();
+    });
+
+    expect(profileService.updateProfile).toHaveBeenCalledTimes(1);
+
+    await act(async () => {
+      update.resolve(PROFILE);
+      await update.promise;
+    });
+    await waitFor(() => expect(mocks.refreshUser).toHaveBeenCalledTimes(1));
   });
 });
