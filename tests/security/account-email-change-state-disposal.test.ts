@@ -7,6 +7,10 @@ const securityPage = readFileSync(
   resolve(root, "src/modules/profile/pages/ContaSegurancaPage.tsx"),
   "utf8",
 );
+const authHook = readFileSync(
+  resolve(root, "src/core/auth/hooks/useAuth.ts"),
+  "utf8",
+);
 
 describe("account email change state disposal", () => {
   it("clears local email-change state when leaving the dedicated hash view", () => {
@@ -28,6 +32,49 @@ describe("account email change state disposal", () => {
     );
     expect(securityPage).toContain(
       "const isCurrentSecurityView = (hash: string) =>",
+    );
+  });
+
+  it("deduplicates an identical concurrent email mutation before it reaches AuthService", () => {
+    const handler = authHook.indexOf("const updateEmail = useCallback(async (newEmail: string) => {");
+    const activeRead = authHook.indexOf(
+      "const activeUpdate = emailUpdateInFlightRef.current;",
+      handler,
+    );
+    const sameEmailGuard = authHook.indexOf(
+      "if (activeUpdate.email === normalizedEmail)",
+      activeRead,
+    );
+    const sharedPromise = authHook.indexOf(
+      "return activeUpdate.promise;",
+      sameEmailGuard,
+    );
+    const mutation = authHook.indexOf(
+      "await AuthService.updateEmail(newEmail);",
+      sharedPromise,
+    );
+    const register = authHook.indexOf(
+      "emailUpdateInFlightRef.current = {",
+      mutation,
+    );
+    const release = authHook.indexOf(
+      "emailUpdateInFlightRef.current = null;",
+      register,
+    );
+
+    expect(authHook).toContain("const emailUpdateInFlightRef = useRef<{");
+    expect(handler).toBeGreaterThanOrEqual(0);
+    expect(activeRead).toBeGreaterThan(handler);
+    expect(sameEmailGuard).toBeGreaterThan(activeRead);
+    expect(sharedPromise).toBeGreaterThan(sameEmailGuard);
+    expect(mutation).toBeGreaterThan(sharedPromise);
+    expect(register).toBeGreaterThan(mutation);
+    expect(release).toBeGreaterThan(register);
+  });
+
+  it("fails closed when a different email is requested during an active mutation", () => {
+    expect(authHook).toContain(
+      'throw new Error("Já existe uma alteração de e-mail em andamento.");',
     );
   });
 
