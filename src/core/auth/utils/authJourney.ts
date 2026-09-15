@@ -146,16 +146,19 @@ export function markSignupConfirmationEmailSent(sentAt = Date.now()): void {
 
 /**
  * Tempo restante do bloqueio de reenvio derivado do último envio confirmado.
- * Recarregar a página não reinicia nem remove a espera.
+ * Recarregar a página não reinicia nem remove a espera. Mudanças regressivas no
+ * relógio do sistema nunca podem ampliar o bloqueio para além do cooldown.
  */
 export function getSignupConfirmationResendRemainingMs(
   now = Date.now(),
 ): number {
   const sentAt = getPendingSignupConfirmationSentAt();
   if (sentAt === null) return 0;
-  return Math.max(
-    0,
-    AUTH_SIGNUP_CONFIRMATION_RESEND_COOLDOWN_MS - (now - sentAt),
+  const remaining =
+    AUTH_SIGNUP_CONFIRMATION_RESEND_COOLDOWN_MS - (now - sentAt);
+  return Math.min(
+    AUTH_SIGNUP_CONFIRMATION_RESEND_COOLDOWN_MS,
+    Math.max(0, remaining),
   );
 }
 
@@ -173,6 +176,19 @@ export function prepareEmailSignupConfirmation(
   setPendingSignupEmail(email);
   setPendingSignupRedirect(returnTo);
   markSignupConfirmationEmailSent();
+}
+
+/**
+ * Alguns ambientes podem devolver uma sessão já no signup. Nesse caso não há
+ * etapa de confirmação a preservar: mantemos apenas o destino do primeiro
+ * acesso e removemos qualquer contexto de confirmação antigo.
+ */
+export function prepareAuthenticatedEmailSignup(returnTo: string): void {
+  clearPendingReturn();
+  clearPendingAuthJourneyIntent();
+  clearPendingSignupEmail();
+  clearPendingSignupConfirmationSentAt();
+  setPendingSignupRedirect(returnTo);
 }
 
 /** Reinicia somente a etapa de dados da conta, preservando o destino original. */
