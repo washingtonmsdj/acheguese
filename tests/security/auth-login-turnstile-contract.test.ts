@@ -8,6 +8,8 @@ const read = (path: string) => readFileSync(resolve(root, path), "utf8");
 const login = read("src/app/pages/LoginPage.tsx");
 const service = read("src/core/auth/services/AuthService.ts");
 const types = read("src/core/auth/services/types.ts");
+const journey = read("src/core/auth/utils/authJourney.ts");
+const messages = read("src/core/auth/utils/authMessages.ts");
 const usernameBroker = read("supabase/functions/auth-username-login/index.ts");
 const edgeValidation = read("supabase/functions/_shared/validation.ts");
 
@@ -25,6 +27,43 @@ describe("login Turnstile contract", () => {
     expect(service).toContain("const captchaToken = data.captchaToken?.trim();");
     expect(service).toContain("...(captchaToken ? { options: { captchaToken } } : {})");
     expect(service).toContain("...(captchaToken ? { captchaToken } : {})");
+  });
+
+  it("hands an unconfirmed email login to the confirmation journey without inventing a resend", () => {
+    expect(messages).toContain("export function isEmailNotConfirmedError");
+    expect(messages).toContain("email[_\\s-]*not[_\\s-]*confirmed");
+    expect(journey).toContain("export function prepareUnconfirmedEmailLogin");
+    expect(journey).toContain("clearPendingSignupConfirmationCooldown();");
+
+    const catchBlock = login.indexOf("} catch (error) {");
+    const unconfirmedGuard = login.indexOf(
+      'parsed.kind === "email" && isEmailNotConfirmedError(error)',
+      catchBlock,
+    );
+    const prepareJourney = login.indexOf(
+      "prepareUnconfirmedEmailLogin(parsed.value, redirectTo);",
+      unconfirmedGuard,
+    );
+    const confirmationNavigation = login.indexOf(
+      "navigate(AUTH_PATHS.signupConfirmation",
+      prepareJourney,
+    );
+
+    expect(unconfirmedGuard).toBeGreaterThan(catchBlock);
+    expect(prepareJourney).toBeGreaterThan(unconfirmedGuard);
+    expect(confirmationNavigation).toBeGreaterThan(prepareJourney);
+    expect(login.slice(unconfirmedGuard, confirmationNavigation)).not.toContain(
+      "prepareEmailSignupConfirmation",
+    );
+  });
+
+  it("does not expose a username-derived email when confirmation is still pending", () => {
+    const unconfirmedGuard = login.indexOf(
+      'parsed.kind === "email" && isEmailNotConfirmedError(error)',
+    );
+    expect(unconfirmedGuard).toBeGreaterThanOrEqual(0);
+    expect(login).not.toContain("prepareUnconfirmedEmailLogin(data.identifier");
+    expect(login).not.toContain("prepareUnconfirmedEmailLogin(parsedIdentifier");
   });
 
   it("validates the username broker captcha in the shared Edge Function schema", () => {
