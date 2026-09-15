@@ -33,6 +33,19 @@ describe("linked auth provider authority", () => {
     expect(hook).not.toContain("setData(EMPTY_PROVIDERS);");
   });
 
+  it("publishes only the newest linked-provider refresh and invalidates reads on unmount", () => {
+    expect(hook).toContain("const mountedRef = useRef(true);");
+    expect(hook).toContain("const refreshRequestIdRef = useRef(0);");
+    expect(hook).toContain(
+      "const requestId = refreshRequestIdRef.current + 1;",
+    );
+    expect(hook).toContain("refreshRequestIdRef.current = requestId;");
+    expect(hook).toContain("requestId !== refreshRequestIdRef.current");
+    expect(hook).toContain("mountedRef.current = false;");
+    expect(hook).toContain("refreshRequestIdRef.current += 1;");
+    expect(hook).toContain("requestId === refreshRequestIdRef.current");
+  });
+
   it("does not present an unresolved Google linkage as available or disconnected", () => {
     expect(securityPage).toContain("isResolved: providersResolved");
     expect(securityPage).toContain(
