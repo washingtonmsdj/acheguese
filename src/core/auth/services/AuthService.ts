@@ -13,6 +13,7 @@ import {
 } from "@/core/auth/constants/authFlow";
 import { parseAuthIdentifier } from "@/core/auth/utils/authIdentifier";
 import { isCurrentTermsAcceptance } from "@/core/legal/termsOfService";
+import { recoverForcedLocalSignOut } from "@/core/session/services/SessionSignOutRecovery";
 import { SessionService } from "@/core/session/services/SessionService";
 import { supabase } from "@/integrations/supabase";
 import { createBrowserAuthStorage } from "@/integrations/supabase/cookieStorage";
@@ -219,6 +220,7 @@ export class AuthService {
     if (result.kind === "completed" && !result.error) return;
 
     await AuthService.clearLocalAuthStorage();
+    recoverForcedLocalSignOut();
     logger.warn("AuthService.signOut recovered with local auth cleanup", {
       reason: result.kind,
     });
