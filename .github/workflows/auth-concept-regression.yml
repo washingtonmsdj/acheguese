@@ -53,6 +53,7 @@ on:
       - "tests/regression/multi-profile-session-hydration.test.ts"
       - "tests/security/account-email-change-state-disposal.test.ts"
       - "tests/security/account-password-reauthentication.test.ts"
+      - "tests/security/auth-google-id-token-contract.test.ts"
       - "tests/security/auth-google-oauth-readiness.test.ts"
       - "tests/security/auth-login-turnstile-contract.test.ts"
       - "tests/security/auth-password-capability-authority.test.ts"
@@ -115,6 +116,7 @@ on:
       - "tests/regression/multi-profile-session-hydration.test.ts"
       - "tests/security/account-email-change-state-disposal.test.ts"
       - "tests/security/account-password-reauthentication.test.ts"
+      - "tests/security/auth-google-id-token-contract.test.ts"
       - "tests/security/auth-google-oauth-readiness.test.ts"
       - "tests/security/auth-login-turnstile-contract.test.ts"
       - "tests/security/auth-password-capability-authority.test.ts"
@@ -184,6 +186,7 @@ jobs:
           tests/regression/multi-profile-session-hydration.test.ts
           tests/security/account-email-change-state-disposal.test.ts
           tests/security/account-password-reauthentication.test.ts
+          tests/security/auth-google-id-token-contract.test.ts
           tests/security/auth-google-oauth-readiness.test.ts
           tests/security/auth-login-turnstile-contract.test.ts
           tests/security/auth-password-capability-authority.test.ts
