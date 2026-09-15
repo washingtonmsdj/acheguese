@@ -5,7 +5,10 @@ import { zodResolver } from "@hookform/resolvers/zod";
 
 import { AUTH_PATHS } from "@/core/auth/constants/authFlow";
 import { AuthService } from "@/core/auth/services/AuthService";
-import { prepareEmailSignupConfirmation } from "@/core/auth/utils/authJourney";
+import {
+  prepareAuthenticatedEmailSignup,
+  prepareEmailSignupConfirmation,
+} from "@/core/auth/utils/authJourney";
 import { getAuthErrorMessage } from "@/core/auth/utils/authMessages";
 import { checkPasswordCompromise } from "@/core/auth/utils/compromisedPassword";
 import { TERMS_OF_SERVICE_VERSION } from "@/core/legal/termsOfService";
@@ -107,28 +110,36 @@ export function useCadastroForm(requestedRedirect = "/") {
           return;
         }
 
-        try {
-          await AuthService.signUp({
-            email: values.email,
-            password: values.password,
-            name: values.name,
-            handle: values.username,
-            termsAcceptance: {
-              accepted: values.termsAccepted,
-              version: TERMS_OF_SERVICE_VERSION,
-            },
-            captchaToken,
+        const signupResult = await (async () => {
+          try {
+            return await AuthService.signUp({
+              email: values.email,
+              password: values.password,
+              name: values.name,
+              handle: values.username,
+              termsAcceptance: {
+                accepted: values.termsAccepted,
+                version: TERMS_OF_SERVICE_VERSION,
+              },
+              captchaToken,
+            });
+          } finally {
+            // Turnstile tokens are single-use. Reset only after the Auth request
+            // actually consumed the token; local validation errors keep it valid.
+            onCaptchaConsumed?.();
+          }
+        })();
+
+        if (signupResult.requiresEmailConfirmation) {
+          prepareEmailSignupConfirmation(values.email, redirectTo);
+          navigate(AUTH_PATHS.signupConfirmation, {
+            state: { email: values.email, redirectTo },
           });
-        } finally {
-          // Turnstile tokens are single-use. Reset only after the Auth request
-          // actually consumed the token; local validation errors keep it valid.
-          onCaptchaConsumed?.();
+          return;
         }
 
-        prepareEmailSignupConfirmation(values.email, redirectTo);
-        navigate(AUTH_PATHS.signupConfirmation, {
-          state: { email: values.email, redirectTo },
-        });
+        prepareAuthenticatedEmailSignup(redirectTo);
+        navigate(AUTH_PATHS.firstAccess, { replace: true });
       } catch (error: unknown) {
         const message = getAuthErrorMessage(error, "Tente novamente.");
         const raw =
