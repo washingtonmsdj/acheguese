@@ -52,6 +52,7 @@ export class SessionService {
   private static currentSession: Session | null = null;
   private static currentSessionPromise: Promise<Session | null> | null = null;
   private static authEventVersion = 0;
+  private static profileSwitchQueue: Promise<void> = Promise.resolve();
 
   private static getStoredActiveProfileId(): string | null {
     if (typeof window === "undefined") return null;
@@ -128,6 +129,18 @@ export class SessionService {
     );
   }
 
+  private static assertSessionOwnership(
+    session: Session,
+    eventVersion: number,
+  ): void {
+    if (
+      eventVersion !== SessionService.authEventVersion ||
+      !SessionService.ownsSession(session)
+    ) {
+      throw new Error("A sessão mudou durante a operação. Tente novamente.");
+    }
+  }
+
   private static resetInitPromise(): void {
     SessionService.initFallbackStarted = false;
     SessionService.initPromise = new Promise((resolve) => {
@@ -153,6 +166,7 @@ export class SessionService {
     SessionService.authEventVersion++;
     SessionService.cancelPendingLoads();
     SessionService.authEventQueue = Promise.resolve();
+    SessionService.profileSwitchQueue = Promise.resolve();
     SessionService.currentSession = null;
     SessionService.currentSessionPromise = null;
     SessionService.initialized = false;
@@ -414,7 +428,7 @@ export class SessionService {
   // ── getCurrentUser ─────────────────────────────────────────────────────────
   /**
    * Lê o usuário da sessão local (localStorage).
-   * Usado por switchProfile e AuthService. Não bloqueia.
+   * Usado por AuthService e leitores de identidade autenticada. Não bloqueia.
    */
   static async getCurrentUser(): Promise<User | null> {
     try {
@@ -464,17 +478,39 @@ export class SessionService {
   }
 
   // ── switchProfile ──────────────────────────────────────────────────────────
-  static async switchProfile(profileId: string): Promise<void> {
-    const user = await SessionService.getCurrentUser();
-    if (!user) throw new Error("Not authenticated");
+  private static async performProfileSwitch(
+    profileId: string,
+    session: Session,
+    eventVersion: number,
+  ): Promise<void> {
+    SessionService.assertSessionOwnership(session, eventVersion);
 
     const switched = await SessionRpcService.switchActiveProfile(profileId);
     if (!switched) throw new Error("Nao foi possivel alternar o perfil ativo");
 
+    // O RPC pode terminar depois de logout, token refresh ou troca de conta.
+    // Nunca publicar estado local de uma operação cuja sessão deixou de ser dona.
+    SessionService.assertSessionOwnership(session, eventVersion);
+
     SessionService.setStoredActiveProfileId(profileId);
     CacheManager.invalidateSession();
+    await SessionService.loadFromSession(session, true);
+  }
+
+  static async switchProfile(profileId: string): Promise<void> {
     const session = await SessionService.getCurrentSession();
-    if (session) await SessionService.loadFromSession(session, true);
+    if (!session) throw new Error("Not authenticated");
+
+    const eventVersion = SessionService.authEventVersion;
+    const operation = SessionService.profileSwitchQueue
+      .catch(() => undefined)
+      .then(() =>
+        SessionService.performProfileSwitch(profileId, session, eventVersion),
+      );
+
+    // Mantém a fila utilizável mesmo quando o chamador recebe uma rejeição.
+    SessionService.profileSwitchQueue = operation.catch(() => undefined);
+    return operation;
   }
 
   // ── initializeSession ──────────────────────────────────────────────────────
