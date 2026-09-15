@@ -6,12 +6,17 @@ import { describe, expect, it } from "vitest";
 const ROOT = process.cwd();
 const SRC = path.join(ROOT, "src");
 const SOURCE_FILE_RE = /\.(?:ts|tsx)$/;
-const DIRECT_AUTH_READ_RE = /supabase\.auth\.(getSession|getUser|onAuthStateChange)\s*\(/g;
+const DIRECT_AUTH_READ_RE =
+  /supabase\.auth\.(getSession|getUser|getClaims|onAuthStateChange)\s*\(/g;
 
 const ALLOWED_DIRECT_AUTH_READS = new Map<string, readonly string[]>([
   [
     "src/core/session/services/SessionService.ts",
     ["getSession", "onAuthStateChange"],
+  ],
+  [
+    "src/core/auth/services/AuthRecoveryAuthority.ts",
+    ["getClaims"],
   ],
   [
     "src/integrations/supabase/supabase.ts",
@@ -86,5 +91,17 @@ describe("G4 Auth/session authority", () => {
     expect(sessionSecurity).toContain("SessionService.getAccessToken()");
     expect(sessionSecurity).not.toContain("supabase.auth.getUser(");
     expect(sessionSecurity).not.toContain("supabase.auth.getSession(");
+  });
+
+  it("keeps verified recovery claims isolated from generic session reads", () => {
+    const authority = fs.readFileSync(
+      path.join(ROOT, "src/core/auth/services/AuthRecoveryAuthority.ts"),
+      "utf8",
+    );
+
+    expect(authority).toContain("supabase.auth.getClaims()");
+    expect(authority).toContain('Reflect.get(entry, "method") === "recovery"');
+    expect(authority).not.toContain("supabase.auth.getSession(");
+    expect(authority).not.toContain("supabase.auth.getUser(");
   });
 });
