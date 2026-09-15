@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { Helmet } from "react-helmet-async";
 import { Link, useLocation, useNavigate, useSearchParams } from "react-router-dom";
 
@@ -71,6 +71,7 @@ export default function CadastroPage() {
   const [searchParams] = useSearchParams();
   const { toast } = useToast();
   const [googleLoading, setGoogleLoading] = useState(false);
+  const authActionInFlightRef = useRef(false);
 
   const redirectTo = useMemo(() => {
     const stateRedirect = (location.state as CadastroLocationState)?.redirectTo;
@@ -108,8 +109,8 @@ export default function CadastroPage() {
     termsAccepted &&
     turnstile.isReady;
 
-  const handleEmailSignup = () => {
-    if (sessionLoading || user) return;
+  const handleEmailSignup = async () => {
+    if (sessionLoading || user || authActionInFlightRef.current) return;
     if (!turnstile.isReady) {
       toast({
         title: "Verificação necessária",
@@ -119,9 +120,14 @@ export default function CadastroPage() {
       return;
     }
 
-    // Feedback visual e verificação autoritativa permanecem separados: o hook
-    // de cadastro consulta novamente o SSOT antes de criar a conta.
-    void submit(turnstile.token ?? undefined, turnstile.reset);
+    authActionInFlightRef.current = true;
+    try {
+      // Feedback visual e verificação autoritativa permanecem separados: o hook
+      // de cadastro consulta novamente o SSOT antes de criar a conta.
+      await submit(turnstile.token ?? undefined, turnstile.reset);
+    } finally {
+      authActionInFlightRef.current = false;
+    }
   };
 
   const handleGoogleSignup = async () => {
@@ -129,15 +135,18 @@ export default function CadastroPage() {
       sessionLoading ||
       user ||
       !googleAuthAvailable ||
-      googleLoading
+      googleLoading ||
+      authActionInFlightRef.current
     ) {
       return;
     }
+    authActionInFlightRef.current = true;
     setGoogleLoading(true);
     prepareGoogleSignup(redirectTo);
     try {
       await signInWithGoogle();
     } catch (error) {
+      authActionInFlightRef.current = false;
       cancelGoogleSignup();
       toast({
         title: "Não foi possível continuar com Google",
@@ -232,7 +241,7 @@ export default function CadastroPage() {
                 aria-busy={authBusy}
                 onSubmit={(event) => {
                   event.preventDefault();
-                  handleEmailSignup();
+                  void handleEmailSignup();
                 }}
               >
                 <FormField
