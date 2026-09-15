@@ -7,12 +7,19 @@ const read = (path: string) => readFileSync(resolve(root, path), "utf8");
 
 describe("password recovery callback settlement", () => {
   it("does not treat an existing session as proof while a PKCE code is still pending", () => {
+    const callback = read("src/core/auth/utils/authCallback.ts");
     const recovery = read("src/app/pages/ResetPasswordPage.tsx");
 
+    expect(callback).toContain("export function hasPendingPkceCode");
     expect(recovery).toContain("const liveSearch = window.location.search;");
     expect(recovery).toContain("const liveHash = window.location.hash;");
-    expect(recovery).toContain("new URLSearchParams(liveSearch).has(");
-    expect(recovery).toContain("AUTH_QUERY_KEYS.code");
+    expect(recovery).toContain(
+      "hasPendingPkceCode as hasPendingPkceCodeInUrl",
+    );
+    expect(recovery).toContain(
+      "const hasPendingPkceCode = hasPendingPkceCodeInUrl(liveSearch);",
+    );
+    expect(recovery).not.toContain("new URLSearchParams(liveSearch).has(");
     expect(recovery).toContain(
       "if (user && hasRecoveryMarker && !hasPendingPkceCode)",
     );
