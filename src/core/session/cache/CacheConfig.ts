@@ -1,23 +1,19 @@
 interface CacheConfigShape {
-  session: { ttl: number };
   authorization: { ttl: number };
 }
 
-/** Production: session 5 min, authorization 2 min */
+/** Production: authorization previews cache for 2 min */
 export const CacheConfig: CacheConfigShape = {
-  session: { ttl: 300_000 },
   authorization: { ttl: 120_000 },
 };
 
-/** Development: session 1 min, authorization 30 s */
+/** Development: authorization previews cache for 30 s */
 export const DevCacheConfig: CacheConfigShape = {
-  session: { ttl: 60_000 },
   authorization: { ttl: 30_000 },
 };
 
-/** Test: session 1 s, authorization 500 ms */
+/** Test: authorization previews cache for 500 ms */
 export const TestCacheConfig: CacheConfigShape = {
-  session: { ttl: 1_000 },
   authorization: { ttl: 500 },
 };
 
