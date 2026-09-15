@@ -362,8 +362,17 @@ export class SessionService {
       createdAt: u.created_at,
     };
 
-    // Publica o user imediatamente — UI pode renderizar enquanto perfis carregam
-    SessionState.setState({ user, activeProfile: null, profiles: [] });
+    const previousState = SessionState.getState();
+    const preserveExistingProjection = previousState.user?.id === user.id;
+
+    // Publica a identidade imediatamente, mas um refresh do mesmo usuário não
+    // apaga perfis válidos antes da leitura fresca concluir. Uma falha de rede
+    // permanece falha de refresh, não um falso estado "sem perfis".
+    SessionState.setState({
+      user,
+      activeProfile: preserveExistingProjection ? previousState.activeProfile : null,
+      profiles: preserveExistingProjection ? previousState.profiles : [],
+    });
 
     SessionService.debug(`[SessionService] doLoad: fetching profiles user=${user.id}`);
 
@@ -461,19 +470,22 @@ export class SessionService {
 
   // ── getUserProfiles ────────────────────────────────────────────────────────
   /**
-   * ✅ SSOT: Usa ProfileService
+   * Leitura estrita para hidratação de sessão. Diferente de queries genéricas
+   * legadas, indisponibilidade do broker não equivale a uma lista vazia.
    */
   static async getUserProfiles(userId: string): Promise<Profile[]> {
     try {
-      const { profileService } = await import("@/core/profiles/services/ProfileService");
-      const profiles = await profileService.getProfilesByUserId(userId);
+      const { SessionProfileReader } = await import(
+        "@/core/profiles/services/SessionProfileReader"
+      );
+      const profiles = await SessionProfileReader.getProfilesByUserId(userId);
 
       return profiles
         .filter((row) => row.is_active)
         .map((row) => SessionService.mapProfileFromDb(row as unknown as DbProfileRow));
     } catch (error) {
       logger.error('SessionService.getUserProfiles failed:', error);
-      return [];
+      throw error;
     }
   }
 
@@ -492,9 +504,30 @@ export class SessionService {
     // Nunca publicar estado local de uma operação cuja sessão deixou de ser dona.
     SessionService.assertSessionOwnership(session, eventVersion);
 
+    const currentState = SessionState.getState();
+    const knownTargetProfile =
+      currentState.user?.id === session.user.id
+        ? currentState.profiles.find((profile) => profile.id === profileId) ?? null
+        : null;
+
     SessionService.setStoredActiveProfileId(profileId);
     CacheManager.invalidateSession();
-    await SessionService.loadFromSession(session, true);
+
+    if (knownTargetProfile) {
+      SessionState.setState({ activeProfile: knownTargetProfile });
+    }
+
+    // O switch já foi confirmado pelo RPC. Falha de reidratação posterior não
+    // deve transformar sucesso autoritativo em falso erro; preservamos a melhor
+    // projeção conhecida e um refresh futuro reconcilia os dados completos.
+    try {
+      await SessionService.loadFromSession(session, true);
+    } catch (error) {
+      logger.warn("SessionService profile refresh deferred after successful switch", {
+        error: error instanceof Error ? error.message : String(error),
+        profileId,
+      });
+    }
   }
 
   static async switchProfile(profileId: string): Promise<void> {
