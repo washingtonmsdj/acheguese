@@ -16,10 +16,13 @@ import { useAuth } from "@/core/auth/hooks/useAuth";
 import {
   getSignupConfirmationContext,
   getSignupConfirmationResendRemainingMs,
-  markSignupConfirmationEmailSent,
   restartEmailSignupJourney,
+  startSignupConfirmationResendCooldown,
 } from "@/core/auth/utils/authJourney";
-import { getAuthErrorMessage } from "@/core/auth/utils/authMessages";
+import {
+  getAuthErrorMessage,
+  isAuthRateLimitError,
+} from "@/core/auth/utils/authMessages";
 import { SUPPORT_PATH } from "@/shared/constants/legal";
 import { useToast } from "@/shared/hooks/use-toast";
 import { resolveSafeInternalPath } from "@/shared/utils/safeRedirect";
@@ -72,13 +75,19 @@ export default function CadastroConfirmacaoPage() {
     setIsResending(true);
     try {
       await resendConfirmationEmail(email, turnstile.token ?? undefined);
-      markSignupConfirmationEmailSent();
+      startSignupConfirmationResendCooldown();
       setCooldown(getResendCooldownSeconds());
       toast({
         title: "E-mail reenviado",
         description: "Confira sua caixa de entrada e também a pasta de spam.",
       });
     } catch (error) {
+      if (isAuthRateLimitError(error)) {
+        // O servidor é autoritativo. Se ele ainda estiver limitando o e-mail,
+        // preserve uma nova janela local para impedir tentativas em sequência.
+        startSignupConfirmationResendCooldown();
+        setCooldown(getResendCooldownSeconds());
+      }
       toast({
         title: "Não foi possível reenviar agora",
         description: getAuthErrorMessage(error),
