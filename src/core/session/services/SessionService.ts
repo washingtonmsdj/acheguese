@@ -251,7 +251,7 @@ export class SessionService {
                       return;
                     }
 
-                    SessionService.loadFromSession(session, true)
+                    SessionService.loadFromSession(session)
                       .then(() => {
                         if (isInitEvent) SessionService.resolveInit();
                       })
@@ -304,34 +304,22 @@ export class SessionService {
 
   // ── loadFromSession ────────────────────────────────────────────────────────
   /**
-   * Carrega perfis a partir de uma sessão já conhecida.
-   * O user vem direto da sessão — sem chamada de rede para auth.
-   *
-   * forceFresh=true: ignora cache e busca do banco.
-   * forceFresh=false: usa cache se disponível.
-   *
-   * Se já há um load em andamento, aguarda ele terminar antes de iniciar
-   * um novo (evita race conditions sem descartar loads necessários).
+   * Carrega uma projeção fresca a partir de uma sessão já conhecida.
+   * O user vem direto da sessão; perfis privados sempre são relidos do owner.
    */
-  private static async loadFromSession(
-    session: Session,
-    forceFresh: boolean = false,
-  ): Promise<void> {
+  private static async loadFromSession(session: Session): Promise<void> {
     if (!SessionService.ownsSession(session)) return;
 
-    // Se já há um load em andamento, aguarda o resultado antes de decidir se
-    // precisa de uma nova leitura. Eventos Auth usam forceFresh=true para que
-    // USER_UPDATED/TOKEN_REFRESHED não herdem dados antigos do mesmo usuário.
+    // Um load já em andamento termina primeiro; o evento mais novo ainda faz a
+    // própria leitura fresca depois, sem reutilizar uma projeção cacheada.
     if (SessionService.loadPromise) {
       await SessionService.loadPromise;
       if (!SessionService.ownsSession(session)) return;
-      const current = SessionState.getState();
-      if (!forceFresh && current.user?.id === session.user.id) return;
     }
 
     if (!SessionService.ownsSession(session)) return;
 
-    const loadPromise = SessionService.doLoad(session, forceFresh)
+    const loadPromise = SessionService.doLoad(session)
       .finally(() => {
         if (SessionService.loadPromise === loadPromise) {
           SessionService.loadPromise = null;
@@ -342,17 +330,8 @@ export class SessionService {
     return loadPromise;
   }
 
-  private static async doLoad(session: Session, forceFresh: boolean): Promise<void> {
+  private static async doLoad(session: Session): Promise<void> {
     const version = ++SessionService.loadVersion;
-
-    if (!forceFresh) {
-      const cached = CacheManager.getSession();
-      if (cached) {
-        SessionState.setState(cached);
-        return;
-      }
-    }
-
     const u = session.user;
 
     const user: User = {
@@ -392,7 +371,6 @@ export class SessionService {
     const resolvedActiveProfile = SessionService.resolveActiveProfile(activeProfile, profiles);
     const sessionData: SessionData = { user, activeProfile: resolvedActiveProfile, profiles };
     SessionState.setState(sessionData);
-    CacheManager.setSession(sessionData);
     SessionService.debug(
       `[SessionService] doLoad: done user=${user.id} profiles=${profiles.length}`,
     );
@@ -521,7 +499,7 @@ export class SessionService {
     // deve transformar sucesso autoritativo em falso erro; preservamos a melhor
     // projeção conhecida e um refresh futuro reconcilia os dados completos.
     try {
-      await SessionService.loadFromSession(session, true);
+      await SessionService.loadFromSession(session);
     } catch (error) {
       logger.warn("SessionService profile refresh deferred after successful switch", {
         error: error instanceof Error ? error.message : String(error),
@@ -562,7 +540,7 @@ export class SessionService {
   static async refreshSession(): Promise<void> {
     CacheManager.invalidateSession();
     const session = await SessionService.getCurrentSession();
-    if (session) await SessionService.loadFromSession(session, true);
+    if (session) await SessionService.loadFromSession(session);
   }
 
   static getAccessToken(): string | null {
@@ -572,7 +550,7 @@ export class SessionService {
   // ── mapProfileFromDb ───────────────────────────────────────────────────────
   /**
    * Mapeia dados do banco para o tipo Profile do domínio
-   * @param dbProfile - Dados brutos do banco (RPC ou query)
+   * @param dbProfile - Dados brutos do banco para o tipo Profile
    * @returns Profile tipado para uso no domínio
    */
   private static mapProfileFromDb(dbProfile: DbProfileRow | SessionRpcProfileRow): Profile {
