@@ -30,6 +30,7 @@ import {
 const ALLOWED_METHODS = "POST, OPTIONS";
 const INVALID_LOGIN_MESSAGE = "Invalid login credentials";
 const INVALID_USERNAME_AUTH_EMAIL = "username-login-sentinel@invalid.example";
+const MAX_CAPTCHA_TOKEN_LENGTH = 2048;
 
 interface SessionPayload {
   access_token: string;
@@ -45,6 +46,15 @@ function responseHeaders(req: Request): Record<string, string> {
 
 function normalizeIdentifier(username: string): string {
   return username.trim().replace(/^@/, "").toLowerCase();
+}
+
+function readCaptchaToken(body: AuthUsernameLoginBody): string | undefined {
+  const value = (body as AuthUsernameLoginBody & { captchaToken?: unknown })
+    .captchaToken;
+  if (typeof value !== "string") return undefined;
+  const normalized = value.trim();
+  if (!normalized || normalized.length > MAX_CAPTCHA_TOKEN_LENGTH) return undefined;
+  return normalized;
 }
 
 function returnInvalidLogin(req: Request): Response {
@@ -83,7 +93,7 @@ serve(async (req: Request) => {
 
   try {
     const rawBody = await readJsonBody<AuthUsernameLoginBody>(req, {
-      maxBytes: 2048,
+      maxBytes: 4096,
       methods: ALLOWED_METHODS,
     });
     if (!rawBody.ok) return rawBody.response;
@@ -107,6 +117,7 @@ serve(async (req: Request) => {
     }
 
     const { username, password } = validation.data!;
+    const captchaToken = readCaptchaToken(validation.data!);
     const supabaseUrl = getRequiredEnv("SUPABASE_URL");
     const supabaseAnonKey = getRequiredEnv("SUPABASE_ANON_KEY");
     const supabaseServiceKey = getRequiredEnv("SUPABASE_SERVICE_ROLE_KEY");
@@ -134,6 +145,7 @@ serve(async (req: Request) => {
       await authClient.auth.signInWithPassword({
         email: resolvedEmail ?? INVALID_USERNAME_AUTH_EMAIL,
         password,
+        ...(captchaToken ? { options: { captchaToken } } : {}),
       });
 
     if (!resolvedEmail || signInError || !signInData.session) {
