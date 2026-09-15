@@ -36,6 +36,13 @@ describe("territory entry map arrival", () => {
     expect(wrapper).not.toContain("Preparando o mapa oficial do território");
   });
 
+  it("keeps one accessible name for the non-interactive map region", () => {
+    expect(runtime).toContain('aria-labelledby="territory-entry-map-title"');
+    expect(runtime).toContain('id="territory-entry-map-title"');
+    expect(runtime).toContain('className="sr-only"');
+    expect(runtime).not.toContain("Mapa territorial de {territoryName}");
+  });
+
   it("discovers style before render and starts official boundary only after map readiness", () => {
     expect(main).toContain("DEFAULT_TILE_STYLE");
     expect(main).toContain('mapStylePreload.setAttribute("fetchpriority", "high")');
