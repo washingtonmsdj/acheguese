@@ -43,6 +43,30 @@ describe("account MFA settings fail-closed contract", () => {
     expect(securityPage).toContain("Confirmando o estado de segurança da conta...");
   });
 
+  it("serializes enrollment, verification and disable mutations before React loading state settles", () => {
+    expect(hook).toContain(
+      "const startEnrollmentInFlightRef = useRef<Promise<MFAEnrollmentData | null> | null>(null);",
+    );
+    expect(hook).toContain("if (activeEnrollment) return activeEnrollment;");
+    expect(hook).toContain("startEnrollmentInFlightRef.current = operation;");
+
+    expect(hook).toContain("const verifyAndEnableInFlightRef = useRef<{");
+    expect(hook).toContain(
+      "if (activeVerification.key === key) return activeVerification.promise;",
+    );
+    expect(hook).toContain(
+      "verifyAndEnableInFlightRef.current = { key, promise: operation };",
+    );
+
+    expect(hook).toContain("const disableInFlightRef = useRef<{");
+    expect(hook).toContain(
+      "if (activeDisable.factorId === factorId) return activeDisable.promise;",
+    );
+    expect(hook).toContain(
+      "disableInFlightRef.current = { factorId, promise: operation };",
+    );
+  });
+
   it("drops the local enrollment secret and verification code when leaving the MFA view", () => {
     expect(securityPage).toContain("const mfaFlowRequestIdRef = useRef(0);");
     expect(securityPage).toContain('if (location.hash === "#mfa") return;');
