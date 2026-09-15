@@ -9,6 +9,7 @@ const authService = read("src/core/auth/services/AuthService.ts");
 const authHook = read("src/core/auth/hooks/useAuth.ts");
 const identityService = read("src/core/auth/services/AuthIdentityService.ts");
 const securityPage = read("src/modules/profile/pages/ContaSegurancaPage.tsx");
+const passwordForm = read("src/modules/profile/components/ChangePasswordForm.tsx");
 
 describe("account password reauthentication", () => {
   it("keeps the Supabase nonce flow in the canonical auth owner", () => {
@@ -26,9 +27,17 @@ describe("account password reauthentication", () => {
     expect(securityPage).toContain('autoComplete="one-time-code"');
   });
 
-  it("distinguishes an existing password identity from an OAuth-only account", () => {
+  it("distinguishes an existing password method from an OAuth-only account", () => {
+    expect(identityService).toContain("readMetadataProviders");
+    expect(identityService).toContain("data.user.app_metadata ?? {}");
     expect(identityService).toContain('hasPassword: providers.includes("email")');
     expect(securityPage).toContain("hasPassword ? \"Alterar senha\" : \"Criar senha\"");
     expect(securityPage).toContain("Nenhuma senha foi criada para esta conta.");
+  });
+
+  it("keeps the password form wording valid for both creation and replacement", () => {
+    expect(passwordForm).toContain("Defina uma nova senha");
+    expect(passwordForm).toContain("Salvar nova senha");
+    expect(passwordForm).not.toContain('"Alterar senha"');
   });
 });
