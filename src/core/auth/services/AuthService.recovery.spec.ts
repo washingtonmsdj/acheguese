@@ -3,6 +3,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 const mocks = vi.hoisted(() => ({
   updateUser: vi.fn(),
   isCurrentSessionRecovery: vi.fn(),
+  checkPasswordCompromise: vi.fn(),
 }));
 
 vi.mock("@/integrations/supabase", () => ({
@@ -19,6 +20,10 @@ vi.mock("@/core/auth/services/AuthRecoveryAuthority", () => ({
   },
 }));
 
+vi.mock("@/core/auth/utils/compromisedPassword", () => ({
+  checkPasswordCompromise: mocks.checkPasswordCompromise,
+}));
+
 vi.mock("@/shared/config/publicSupabase", () => ({
   PUBLIC_SUPABASE_CONFIG: {
     url: "https://recovery-contract.invalid",
@@ -33,6 +38,11 @@ import { AuthService } from "./AuthService";
 describe("AuthService recovery password authority", () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    mocks.checkPasswordCompromise.mockResolvedValue({
+      blocked: false,
+      count: 0,
+      unavailable: false,
+    });
   });
 
   afterEach(() => {
@@ -110,7 +120,7 @@ describe("AuthService recovery password authority", () => {
     expect(signOut).not.toHaveBeenCalled();
   });
 
-  it("keeps ordinary account password changes independent from recovery authority", async () => {
+  it("checks leaked-password authority before an ordinary account password mutation", async () => {
     mocks.updateUser.mockResolvedValue({ error: null });
     const signOut = vi
       .spyOn(AuthService, "signOut")
@@ -120,11 +130,35 @@ describe("AuthService recovery password authority", () => {
       AuthService.updatePassword("NovaSenha@2026", "123456"),
     ).resolves.toBeUndefined();
 
+    expect(mocks.checkPasswordCompromise).toHaveBeenCalledTimes(1);
+    expect(mocks.checkPasswordCompromise).toHaveBeenCalledWith("NovaSenha@2026");
     expect(mocks.isCurrentSessionRecovery).not.toHaveBeenCalled();
     expect(mocks.updateUser).toHaveBeenCalledWith({
       password: "NovaSenha@2026",
       nonce: "123456",
     });
     expect(signOut).not.toHaveBeenCalled();
+  });
+
+  it("blocks a compromised account password before Supabase mutation", async () => {
+    mocks.checkPasswordCompromise.mockResolvedValue({
+      blocked: true,
+      count: 42,
+      unavailable: false,
+      message: "Senha encontrada em vazamentos.",
+    });
+
+    await expect(
+      AuthService.updatePassword("SenhaVazada@2026"),
+    ).rejects.toMatchObject({
+      code: "PASSWORD_COMPROMISED",
+      statusCode: 400,
+      message: "Senha encontrada em vazamentos.",
+    });
+
+    expect(mocks.checkPasswordCompromise).toHaveBeenCalledWith(
+      "SenhaVazada@2026",
+    );
+    expect(mocks.updateUser).not.toHaveBeenCalled();
   });
 });
