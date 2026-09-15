@@ -72,4 +72,61 @@ describe("LGPD pending deletion client boundary", () => {
       expect(protectedRoute).toContain(`"${status}"`);
     }
   });
+
+  it("serializes account-deletion mutations by session and intent", () => {
+    expect(privacySettingsService).toContain(
+      "private static accountDeletionMutationInFlight: AccountDeletionMutation | null = null;",
+    );
+    expect(privacySettingsService).toContain(
+      'activeMutation.kind === "request"',
+    );
+    expect(privacySettingsService).toContain(
+      "activeMutation.accessToken === input.accessToken",
+    );
+    expect(privacySettingsService).toContain(
+      "activeMutation.reason === reason",
+    );
+    expect(privacySettingsService).toContain(
+      'activeMutation.kind === "cancel"',
+    );
+    expect(privacySettingsService).toContain(
+      "activeMutation.accessToken === accessToken",
+    );
+    expect(privacySettingsService).toContain(
+      'throw new Error("Ja existe uma operacao de exclusao em andamento")',
+    );
+    expect(privacySettingsService).toContain(
+      "if (currentMutation?.promise === operation)",
+    );
+  });
+
+  it("deduplicates exports only inside the same authenticated session", () => {
+    expect(privacySettingsService).toContain(
+      "private static exportInFlight:",
+    );
+    expect(privacySettingsService).toContain(
+      "if (activeExport.accessToken === accessToken)",
+    );
+    expect(privacySettingsService).toContain("return activeExport.promise;");
+    expect(privacySettingsService).toContain(
+      'throw new Error("Ja existe uma exportacao de outra sessao em andamento")',
+    );
+    expect(privacySettingsService).toContain(
+      "if (this.exportInFlight?.promise === operation)",
+    );
+  });
+
+  it("normalizes the deletion reason before deduplicating and forwarding it", () => {
+    const normalization = privacySettingsService.indexOf(
+      "const reason = input.reason.trim();",
+    );
+    const mutation = privacySettingsService.indexOf(
+      "PrivacyRpcService.requestAccountDeletion({",
+      normalization,
+    );
+
+    expect(normalization).toBeGreaterThanOrEqual(0);
+    expect(mutation).toBeGreaterThan(normalization);
+    expect(privacySettingsService).toContain("reason,");
+  });
 });
