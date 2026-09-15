@@ -43,7 +43,8 @@ type AcceptanceState =
   | "checking"
   | "needs-acceptance"
   | "signed-out"
-  | "oauth-error";
+  | "oauth-error"
+  | "consent-error";
 
 export default function AceiteTermosPage() {
   const { user, isLoading: sessionLoading } = useSessionContext();
@@ -54,6 +55,7 @@ export default function AceiteTermosPage() {
   const [accepted, setAccepted] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [hasPriorTermsAcceptance, setHasPriorTermsAcceptance] = useState(false);
+  const [consentCheckAttempt, setConsentCheckAttempt] = useState(0);
   const acceptanceInFlight = useRef(false);
 
   const returnTo = useMemo(() => getAuthJourneyReturnTarget(), []);
@@ -165,13 +167,14 @@ export default function AceiteTermosPage() {
         setState("needs-acceptance");
       })
       .catch(() => {
-        if (active) setState("needs-acceptance");
+        if (active) setState("consent-error");
       });
 
     return () => {
       active = false;
     };
   }, [
+    consentCheckAttempt,
     journeyIntent,
     navigate,
     oauthCallbackFailed,
@@ -379,6 +382,32 @@ export default function AceiteTermosPage() {
                 >
                   Voltar para entrar
                 </Link>
+              </div>
+            ) : null}
+
+            {state === "consent-error" ? (
+              <div className="mt-6 space-y-4">
+                <div
+                  role="alert"
+                  className="rounded-xl border border-[#ead8c7] bg-[#fff7ed] p-4"
+                >
+                  <p className="text-[13px] font-bold text-[#71401d]">
+                    Não foi possível verificar seus termos
+                  </p>
+                  <p className="mt-1 text-[12px] leading-5 text-[#735a49]">
+                    Não vamos assumir se esta conta já aceitou uma versão anterior. Tente carregar novamente antes de continuar.
+                  </p>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setState("checking");
+                    setConsentCheckAttempt((attempt) => attempt + 1);
+                  }}
+                  className="h-11 w-full rounded-[9px] bg-[#ffc91a] text-[14px] font-extrabold text-[#102f33] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#0b5b59]/40"
+                >
+                  Tentar verificar novamente
+                </button>
               </div>
             ) : null}
 
