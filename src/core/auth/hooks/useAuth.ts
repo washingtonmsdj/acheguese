@@ -50,6 +50,7 @@ export function useAuth(): UseAuthReturn {
   const [sessionData, setSessionData] = useState(() => SessionState.getState());
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<AuthError | null>(null);
+  const passwordReauthInFlightRef = useRef<Promise<void> | null>(null);
   const emailUpdateInFlightRef = useRef<{
     email: string;
     promise: Promise<void>;
@@ -203,15 +204,29 @@ export function useAuth(): UseAuthReturn {
   );
 
   const requestPasswordReauthentication = useCallback(async () => {
+    const activeRequest = passwordReauthInFlightRef.current;
+    if (activeRequest) return activeRequest;
+
+    const operation = (async () => {
+      try {
+        setLoading(true);
+        setError(null);
+        await AuthService.requestPasswordReauthentication();
+      } catch (err) {
+        setError(err as AuthError);
+        throw err;
+      } finally {
+        setLoading(false);
+      }
+    })();
+
+    passwordReauthInFlightRef.current = operation;
     try {
-      setLoading(true);
-      setError(null);
-      await AuthService.requestPasswordReauthentication();
-    } catch (err) {
-      setError(err as AuthError);
-      throw err;
+      await operation;
     } finally {
-      setLoading(false);
+      if (passwordReauthInFlightRef.current === operation) {
+        passwordReauthInFlightRef.current = null;
+      }
     }
   }, []);
 
