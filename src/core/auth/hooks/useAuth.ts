@@ -32,7 +32,8 @@ interface UseAuthReturn {
   resetPassword: (email: string) => Promise<void>;
   resetPasswordByIdentifier: (identifier: string) => Promise<void>;
   resendConfirmationEmail: (email: string) => Promise<void>;
-  updatePassword: (newPassword: string) => Promise<void>;
+  requestPasswordReauthentication: () => Promise<void>;
+  updatePassword: (newPassword: string, nonce?: string) => Promise<void>;
   updateEmail: (newEmail: string) => Promise<void>;
   refreshUser: () => Promise<void>;
 }
@@ -183,11 +184,24 @@ export function useAuth(): UseAuthReturn {
     }
   }, []);
 
-  const updatePassword = useCallback(async (newPassword: string) => {
+  const requestPasswordReauthentication = useCallback(async () => {
     try {
       setLoading(true);
       setError(null);
-      await AuthService.updatePassword(newPassword);
+      await AuthService.requestPasswordReauthentication();
+    } catch (err) {
+      setError(err as AuthError);
+      throw err;
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  const updatePassword = useCallback(async (newPassword: string, nonce?: string) => {
+    try {
+      setLoading(true);
+      setError(null);
+      await AuthService.updatePassword(newPassword, nonce);
     } catch (err) {
       setError(err as AuthError);
       throw err;
@@ -236,6 +250,7 @@ export function useAuth(): UseAuthReturn {
     resetPassword,
     resetPasswordByIdentifier,
     resendConfirmationEmail,
+    requestPasswordReauthentication,
     updatePassword,
     updateEmail,
     refreshUser,
