@@ -71,8 +71,26 @@ interface PrivacySettingsDbClient {
   };
 }
 
+type AccountDeletionMutation =
+  | {
+      kind: "request";
+      accessToken: string;
+      reason: string;
+      promise: Promise<{ days_until_purge: number }>;
+    }
+  | {
+      kind: "cancel";
+      accessToken: string;
+      promise: Promise<void>;
+    };
+
 export class PrivacySettingsService {
   private static readonly db = supabase as unknown as PrivacySettingsDbClient;
+  private static exportInFlight: {
+    accessToken: string;
+    promise: Promise<Blob>;
+  } | null = null;
+  private static accountDeletionMutationInFlight: AccountDeletionMutation | null = null;
 
   static async getUserConsents(userId: string): Promise<UserConsentRecord[]> {
     const { data, error } = await this.db
@@ -149,9 +167,40 @@ export class PrivacySettingsService {
   }
 
   static async cancelAccountDeletion(): Promise<void> {
-    const cancelled = await PrivacyRpcService.cancelAccountDeletion();
-    if (!cancelled) {
-      throw new Error("Nenhuma exclusao agendada pode ser cancelada");
+    const accessToken = SessionService.getAccessToken();
+    if (!accessToken) throw new Error("Sessao nao encontrada");
+
+    const activeMutation = this.accountDeletionMutationInFlight;
+    if (activeMutation) {
+      if (
+        activeMutation.kind === "cancel" &&
+        activeMutation.accessToken === accessToken
+      ) {
+        return activeMutation.promise;
+      }
+      throw new Error("Ja existe uma operacao de exclusao em andamento");
+    }
+
+    const operation = (async () => {
+      const cancelled = await PrivacyRpcService.cancelAccountDeletion();
+      if (!cancelled) {
+        throw new Error("Nenhuma exclusao agendada pode ser cancelada");
+      }
+    })();
+
+    this.accountDeletionMutationInFlight = {
+      kind: "cancel",
+      accessToken,
+      promise: operation,
+    };
+
+    try {
+      await operation;
+    } finally {
+      const currentMutation = this.accountDeletionMutationInFlight;
+      if (currentMutation?.promise === operation) {
+        this.accountDeletionMutationInFlight = null;
+      }
     }
   }
 
@@ -162,19 +211,41 @@ export class PrivacySettingsService {
   }
 
   static async exportUserData(accessToken: string): Promise<Blob> {
-    const response = await fetch(buildSupabaseFunctionUrl("user-export-data"), {
-      method: "POST",
-      headers: {
-        Authorization: `Bearer ${accessToken}`,
-        "Content-Type": "application/json",
-      },
-    });
+    if (!accessToken) throw new Error("Sessao nao encontrada");
 
-    if (!response.ok) {
-      throw new Error("Falha na exportacao");
+    const activeExport = this.exportInFlight;
+    if (activeExport) {
+      if (activeExport.accessToken === accessToken) {
+        return activeExport.promise;
+      }
+      throw new Error("Ja existe uma exportacao de outra sessao em andamento");
     }
 
-    return response.blob();
+    const operation = (async () => {
+      const response = await fetch(buildSupabaseFunctionUrl("user-export-data"), {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${accessToken}`,
+          "Content-Type": "application/json",
+        },
+      });
+
+      if (!response.ok) {
+        throw new Error("Falha na exportacao");
+      }
+
+      return response.blob();
+    })();
+
+    this.exportInFlight = { accessToken, promise: operation };
+
+    try {
+      return await operation;
+    } finally {
+      if (this.exportInFlight?.promise === operation) {
+        this.exportInFlight = null;
+      }
+    }
   }
 
   static async requestAccountDeletion(input: {
@@ -183,11 +254,42 @@ export class PrivacySettingsService {
   }): Promise<{ days_until_purge: number }> {
     if (!input.accessToken) throw new Error("Sessao nao encontrada");
 
-    const result = await PrivacyRpcService.requestAccountDeletion({
-      reason: input.reason,
-      exportRequested: false,
-    });
+    const reason = input.reason.trim();
+    const activeMutation = this.accountDeletionMutationInFlight;
+    if (activeMutation) {
+      if (
+        activeMutation.kind === "request" &&
+        activeMutation.accessToken === input.accessToken &&
+        activeMutation.reason === reason
+      ) {
+        return activeMutation.promise;
+      }
+      throw new Error("Ja existe uma operacao de exclusao em andamento");
+    }
 
-    return { days_until_purge: result.daysUntilPurge };
+    const operation = (async () => {
+      const result = await PrivacyRpcService.requestAccountDeletion({
+        reason,
+        exportRequested: false,
+      });
+
+      return { days_until_purge: result.daysUntilPurge };
+    })();
+
+    this.accountDeletionMutationInFlight = {
+      kind: "request",
+      accessToken: input.accessToken,
+      reason,
+      promise: operation,
+    };
+
+    try {
+      return await operation;
+    } finally {
+      const currentMutation = this.accountDeletionMutationInFlight;
+      if (currentMutation?.promise === operation) {
+        this.accountDeletionMutationInFlight = null;
+      }
+    }
   }
 }
