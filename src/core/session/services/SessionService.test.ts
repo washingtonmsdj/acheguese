@@ -325,4 +325,59 @@ describe("SessionService", () => {
     expect(SessionState.getState().activeProfile?.id).toBe("profile-2");
     expect(SessionState.getState().activeProfile?.profileType).toBe("business");
   });
+
+  it("descarta sucesso tardio de switch quando a sessao perde ownership", async () => {
+    authGetSessionMock.mockResolvedValue({
+      data: {
+        session: {
+          access_token: "token-user-123",
+          user: {
+            id: "user-123",
+            email: "test@example.com",
+            email_confirmed_at: "2026-01-01T00:00:00.000Z",
+            created_at: "2025-01-01T00:00:00.000Z",
+          },
+        },
+      },
+      error: null,
+    });
+
+    let resolveSwitch!: (value: {
+      data: { data: { ok: boolean } };
+      error: null;
+    }) => void;
+    const pendingSwitch = new Promise<{
+      data: { data: { ok: boolean } };
+      error: null;
+    }>((resolve) => {
+      resolveSwitch = resolve;
+    });
+
+    functionsInvokeMock.mockImplementation(
+      (_fn: string, options: { body?: { action?: string } }) => {
+        if (options.body?.action === "switchActiveProfile") {
+          return pendingSwitch;
+        }
+        return Promise.resolve({ data: null, error: null });
+      },
+    );
+
+    const switchPromise = SessionService.switchProfile("profile-2");
+    await vi.waitFor(() => {
+      expect(functionsInvokeMock).toHaveBeenCalledWith("session-rpc", {
+        body: {
+          action: "switchActiveProfile",
+          params: { profileId: "profile-2" },
+        },
+      });
+    });
+
+    SessionService.cleanup();
+    resolveSwitch({ data: { data: { ok: true } }, error: null });
+
+    await expect(switchPromise).rejects.toThrow(
+      "A sessão mudou durante a operação. Tente novamente.",
+    );
+    expect(window.localStorage.getItem(ACTIVE_PROFILE_STORAGE_KEY)).toBeNull();
+  });
 });
