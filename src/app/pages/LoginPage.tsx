@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Helmet } from "react-helmet-async";
@@ -65,6 +65,7 @@ export default function LoginPage() {
   } = useAuth();
   const { user, isLoading: sessionLoading } = useSessionContext();
   const [pendingAction, setPendingAction] = useState<PendingAction>(null);
+  const authActionInFlightRef = useRef(false);
   const [searchParams] = useSearchParams();
   const location = useLocation();
   const navigate = useNavigate();
@@ -199,7 +200,7 @@ export default function LoginPage() {
   ]);
 
   const onValid = async (data: LoginIdentifierInput) => {
-    if (sessionLoading || user) return;
+    if (sessionLoading || user || authActionInFlightRef.current) return;
     const parsed = parseAuthIdentifier(data.identifier);
     if (!parsed) return;
     if (!turnstile.isReady) {
@@ -211,6 +212,7 @@ export default function LoginPage() {
       return;
     }
 
+    authActionInFlightRef.current = true;
     clearErrors("root.serverError");
     setPendingAction("login");
     const captchaToken = turnstile.token ?? undefined;
@@ -230,6 +232,7 @@ export default function LoginPage() {
         });
       }
     } catch (error) {
+      authActionInFlightRef.current = false;
       turnstile.reset();
 
       if (parsed.kind === "email" && isEmailNotConfirmedError(error)) {
@@ -260,12 +263,21 @@ export default function LoginPage() {
   };
 
   const handleGoogleLogin = async () => {
-    if (sessionLoading || user) return;
+    if (
+      sessionLoading ||
+      user ||
+      !googleAuthAvailable ||
+      authActionInFlightRef.current
+    ) {
+      return;
+    }
+    authActionInFlightRef.current = true;
     setPendingAction("google");
     prepareGoogleLogin(redirectTo);
     try {
       await signInWithGoogle();
     } catch (error) {
+      authActionInFlightRef.current = false;
       cancelGoogleLogin();
       toast({
         title: "Google indisponível",
@@ -277,7 +289,7 @@ export default function LoginPage() {
   };
 
   const handleForgotPassword = () => {
-    if (sessionLoading || user) return;
+    if (sessionLoading || user || authActionInFlightRef.current) return;
     const email =
       parsedIdentifier?.kind === "email" ? parsedIdentifier.value : null;
     navigate(buildPasswordResetRequestPath(email));
