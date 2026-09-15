@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Helmet } from "react-helmet-async";
 import { Link, useNavigate } from "react-router-dom";
 
@@ -115,6 +115,8 @@ export default function CadastroPrimeiroAcessoPage() {
   const [editingUsername, setEditingUsername] = useState(false);
   const [usernameDraft, setUsernameDraft] = useState("");
   const [savingUsername, setSavingUsername] = useState(false);
+  const territorySaveInFlight = useRef(false);
+  const usernameSaveInFlight = useRef(false);
 
   const redirectTo = useMemo(() => getSignupJourneyReturnTarget(), []);
   const returnContext = useMemo(() => getAuthReturnContext(redirectTo), [redirectTo]);
@@ -191,6 +193,7 @@ export default function CadastroPrimeiroAcessoPage() {
   };
 
   const saveTerritory = async () => {
+    if (territorySaveInFlight.current) return;
     if (!profile || !stateId || !cityId || !neighborhoodId) {
       toast({
         title: "Escolha estado, cidade e bairro",
@@ -204,6 +207,7 @@ export default function CadastroPrimeiroAcessoPage() {
     const neighborhood = neighborhoods.find((item) => item.id === neighborhoodId);
     if (!state || !city || !neighborhood) return;
 
+    territorySaveInFlight.current = true;
     setSaving(true);
     try {
       const updated = await profileService.updateProfile(profile.id, {
@@ -226,6 +230,7 @@ export default function CadastroPrimeiroAcessoPage() {
         variant: "destructive",
       });
     } finally {
+      territorySaveInFlight.current = false;
       setSaving(false);
     }
   };
@@ -244,7 +249,7 @@ export default function CadastroPrimeiroAcessoPage() {
   };
 
   const saveUsername = async () => {
-    if (!profile || savingUsername) return;
+    if (!profile || usernameSaveInFlight.current) return;
     const normalized = normalizePublicUsernameDraft(usernameDraft);
     if (normalized.length < 3) {
       toast({
@@ -255,6 +260,7 @@ export default function CadastroPrimeiroAcessoPage() {
       return;
     }
 
+    usernameSaveInFlight.current = true;
     setSavingUsername(true);
     try {
       const availability = await usernameAvailability.check(normalized);
@@ -286,6 +292,7 @@ export default function CadastroPrimeiroAcessoPage() {
         variant: "destructive",
       });
     } finally {
+      usernameSaveInFlight.current = false;
       setSavingUsername(false);
     }
   };
