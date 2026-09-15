@@ -33,6 +33,27 @@ describe("signup confirmation resend Turnstile contract", () => {
     );
   });
 
+  it("prefers canonical journey context over stale router state", () => {
+    expect(confirmationPage).toContain(
+      "const journeyContext = useMemo(() => getSignupConfirmationContext(), []);",
+    );
+    expect(confirmationPage).toContain(
+      "const hasCanonicalJourneyContext = journeyContext.email !== null;",
+    );
+    expect(confirmationPage).toContain(
+      "journeyContext.email ?? state?.email?.trim().toLowerCase() ?? null",
+    );
+    expect(confirmationPage).toContain(
+      "hasCanonicalJourneyContext\n          ? journeyContext.returnTo\n          : state?.redirectTo ?? journeyContext.returnTo",
+    );
+    expect(confirmationPage).not.toContain(
+      "state?.email?.trim().toLowerCase() || journeyContext.email",
+    );
+    expect(confirmationPage).not.toContain(
+      "state?.redirectTo ?? journeyContext.returnTo, \"/\"",
+    );
+  });
+
   it("does not unlock resend without a solved Turnstile challenge", () => {
     expect(confirmationPage).toContain("if (!turnstile.isReady) {");
     expect(confirmationPage).toContain(
