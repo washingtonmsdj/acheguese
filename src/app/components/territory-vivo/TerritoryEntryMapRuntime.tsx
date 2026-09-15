@@ -9,7 +9,10 @@ import {
   markPublicRootMapReady,
   PUBLIC_ROOT_MAP_TERMINAL_TIMEOUT_MS,
 } from "@/shared/utils/publicRootReadiness";
-import { TerritoryEntryMapArrival } from "./TerritoryEntryMapArrival";
+import {
+  TERRITORY_ENTRY_MAP_ARRIVAL_STATUS,
+  TerritoryEntryMapArrival,
+} from "./TerritoryEntryMapArrival";
 
 const DEFAULT_ENTRY_VIEWPORT = {
   center: MAP_DEFAULT_COORDINATES,
@@ -254,7 +257,7 @@ export default function TerritoryEntryMapRuntime({
       {showArrival && !mapUnavailable ? (
         <TerritoryEntryMapArrival
           label={territoryLabel}
-          statusText="Conectando o mapa para sua chegada"
+          statusText={TERRITORY_ENTRY_MAP_ARRIVAL_STATUS}
           leaving={arrivalLeaving}
         />
       ) : null}
