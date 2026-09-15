@@ -29,10 +29,24 @@ describe("account password reauthentication", () => {
       "activeOperationsRef.current = Math.max(0, activeOperationsRef.current - 1);",
     );
     expect(authHook).toContain(
-      "if (activeOperationsRef.current === 0) setLoading(false);",
+      "activeOperationsRef.current === 0",
     );
     expect(authHook).toContain("beginAuthOperation();");
     expect(authHook).toContain("endAuthOperation();");
+  });
+
+  it("lets only the newest auth action publish shared error state", () => {
+    expect(authHook).toContain("const mountedRef = useRef(true);");
+    expect(authHook).toContain("const latestOperationIdRef = useRef(0);");
+    expect(authHook).toContain(
+      "const operationId = latestOperationIdRef.current + 1;",
+    );
+    expect(authHook).toContain("latestOperationIdRef.current = operationId;");
+    expect(authHook).toContain(
+      "operationId === latestOperationIdRef.current",
+    );
+    expect(authHook).toContain("publishAuthError(operationId, err);");
+    expect(authHook).toContain("mountedRef.current = false;");
   });
 
   it("requests reauthentication only when Supabase says the session needs it", () => {
