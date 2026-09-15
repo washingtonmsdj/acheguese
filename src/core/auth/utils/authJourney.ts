@@ -1,9 +1,11 @@
 import {
+  AUTH_EMAIL_CONFIRMATION_INTENTS,
   AUTH_FLOW_STORAGE_KEYS,
   AUTH_FLOW_TTL_MS,
   AUTH_JOURNEY_INTENTS,
   AUTH_PATHS,
   AUTH_SIGNUP_CONFIRMATION_RESEND_COOLDOWN_MS,
+  type AuthEmailConfirmationIntent,
   type AuthJourneyIntent,
 } from "@/core/auth/constants/authFlow";
 import {
@@ -16,6 +18,7 @@ import { resolveSafeInternalPath } from "@/shared/utils/safeRedirect";
 export interface SignupConfirmationContext {
   email: string | null;
   returnTo: string;
+  intent: AuthEmailConfirmationIntent | null;
 }
 
 function normalizeEmail(email: string): string {
@@ -74,6 +77,32 @@ function getPendingSignupRedirect(): string | null {
   return getAuthFlowSessionValue(AUTH_FLOW_STORAGE_KEYS.pendingSignupRedirect);
 }
 
+function setPendingEmailConfirmationIntent(
+  intent: AuthEmailConfirmationIntent,
+): void {
+  setAuthFlowSessionValue(
+    AUTH_FLOW_STORAGE_KEYS.pendingEmailConfirmationIntent,
+    intent,
+    AUTH_FLOW_TTL_MS.pendingSignup,
+  );
+}
+
+export function getPendingEmailConfirmationIntent(): AuthEmailConfirmationIntent | null {
+  const value = getAuthFlowSessionValue(
+    AUTH_FLOW_STORAGE_KEYS.pendingEmailConfirmationIntent,
+  );
+  return value === AUTH_EMAIL_CONFIRMATION_INTENTS.login ||
+    value === AUTH_EMAIL_CONFIRMATION_INTENTS.signup
+    ? value
+    : null;
+}
+
+function clearPendingEmailConfirmationIntent(): void {
+  clearAuthFlowSessionValue(
+    AUTH_FLOW_STORAGE_KEYS.pendingEmailConfirmationIntent,
+  );
+}
+
 function clearPendingSignupConfirmationCooldown(): void {
   clearAuthFlowSessionValue(
     AUTH_FLOW_STORAGE_KEYS.pendingSignupConfirmationCooldownUntil,
@@ -94,10 +123,15 @@ function getPendingSignupConfirmationCooldownUntil(): number | null {
   return value;
 }
 
-function clearPendingSignupContext(): void {
+function clearPendingEmailConfirmationState(): void {
   clearPendingSignupEmail();
-  clearPendingSignupRedirect();
+  clearPendingEmailConfirmationIntent();
   clearPendingSignupConfirmationCooldown();
+}
+
+function clearPendingSignupContext(): void {
+  clearPendingEmailConfirmationState();
+  clearPendingSignupRedirect();
 }
 
 export function getPendingAuthJourneyIntent(): AuthJourneyIntent | null {
@@ -128,6 +162,7 @@ export function getSignupConfirmationContext(): SignupConfirmationContext {
   return {
     email: pendingEmail ? normalizeEmail(pendingEmail) : null,
     returnTo: getSignupJourneyReturnTarget(),
+    intent: getPendingEmailConfirmationIntent(),
   };
 }
 
@@ -171,6 +206,7 @@ export function prepareEmailSignupConfirmation(
   clearPendingAuthJourneyIntent();
   setPendingSignupEmail(email);
   setPendingSignupRedirect(returnTo);
+  setPendingEmailConfirmationIntent(AUTH_EMAIL_CONFIRMATION_INTENTS.signup);
   startSignupConfirmationResendCooldown();
 }
 
@@ -188,6 +224,7 @@ export function prepareUnconfirmedEmailLogin(
   clearPendingSignupConfirmationCooldown();
   setPendingSignupEmail(email);
   setPendingSignupRedirect(returnTo);
+  setPendingEmailConfirmationIntent(AUTH_EMAIL_CONFIRMATION_INTENTS.login);
 }
 
 /**
@@ -198,17 +235,22 @@ export function prepareUnconfirmedEmailLogin(
 export function prepareAuthenticatedEmailSignup(returnTo: string): void {
   clearPendingReturn();
   clearPendingAuthJourneyIntent();
-  clearPendingSignupEmail();
-  clearPendingSignupConfirmationCooldown();
+  clearPendingEmailConfirmationState();
   setPendingSignupRedirect(returnTo);
 }
 
 /** Reinicia somente a etapa de dados da conta, preservando o destino original. */
 export function restartEmailSignupJourney(): void {
-  clearPendingSignupEmail();
-  clearPendingSignupConfirmationCooldown();
+  clearPendingEmailConfirmationState();
   clearPendingReturn();
   clearPendingAuthJourneyIntent();
+}
+
+/** Cancela a confirmação originada em login sem transformar o fluxo em cadastro. */
+export function cancelUnconfirmedEmailLoginJourney(): void {
+  clearPendingReturn();
+  clearPendingAuthJourneyIntent();
+  clearPendingSignupContext();
 }
 
 /** Prepara uma tentativa de login Google sem carregar contexto de cadastro antigo. */
@@ -229,8 +271,7 @@ export function cancelGoogleLogin(): void {
  * - primeiro acesso -> destino original do usuário.
  */
 export function prepareGoogleSignup(returnTo: string): void {
-  clearPendingSignupEmail();
-  clearPendingSignupConfirmationCooldown();
+  clearPendingSignupContext();
   setPendingAuthJourneyIntent(AUTH_JOURNEY_INTENTS.signup);
   setPendingSignupRedirect(returnTo);
   setPendingReturn(AUTH_PATHS.firstAccess);
@@ -260,10 +301,21 @@ export function completeExistingGoogleSignupJourney(): void {
   clearPendingSignupContext();
 }
 
-/** Confirmação por e-mail ainda precisa do redirect de signup no primeiro acesso. */
-export function completeEmailConfirmationLoginJourney(): void {
+/**
+ * Confirmação de cadastro encerra estado do e-mail, mas preserva o destino do
+ * cadastro para a etapa canônica de primeiro acesso.
+ */
+export function completeEmailSignupConfirmationJourney(): void {
   clearPendingReturn();
   clearPendingAuthJourneyIntent();
+  clearPendingEmailConfirmationState();
+}
+
+/** Confirmação de uma conta já existente retorna ao destino e encerra o fluxo. */
+export function completeEmailLoginConfirmationJourney(): void {
+  clearPendingReturn();
+  clearPendingAuthJourneyIntent();
+  clearPendingSignupContext();
 }
 
 /** Primeiro acesso é o último owner do contexto transitório de cadastro. */
