@@ -233,7 +233,9 @@ export class AuthService {
     });
 
     if (error) throw error;
-    await SessionService.refreshSession();
+    // setSession emits the canonical auth-state event. SessionService owns the
+    // resulting SessionState/profile hydration; a second explicit refresh here
+    // could turn a valid authentication into a false login failure.
   }
 
   static async signInWithGoogle(): Promise<void> {
