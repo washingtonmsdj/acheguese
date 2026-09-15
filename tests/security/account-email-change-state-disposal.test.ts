@@ -19,6 +19,18 @@ describe("account email change state disposal", () => {
     expect(securityPage).toContain("setEmailRequestSent(false);");
   });
 
+  it("invalidates email requests when the security page unmounts", () => {
+    expect(securityPage).toContain("const mountedRef = useRef(true);");
+    expect(securityPage).toContain("mountedRef.current = false;");
+    expect(securityPage).toContain("emailUpdateRequestIdRef.current += 1;");
+    expect(securityPage).toContain(
+      "currentLocationPathRef.current === ACCOUNT_PATHS.security",
+    );
+    expect(securityPage).toContain(
+      "const isCurrentSecurityView = (hash: string) =>",
+    );
+  });
+
   it("invalidates an in-flight request before it can publish stale success or error UI", () => {
     const handler = securityPage.indexOf("const handleUpdateEmail = async () => {");
     const requestId = securityPage.indexOf(
@@ -27,7 +39,7 @@ describe("account email change state disposal", () => {
     );
     const updateCall = securityPage.indexOf("await updateEmail(candidate);", requestId);
     const staleGuard = securityPage.indexOf(
-      'requestId !== emailUpdateRequestIdRef.current ||\n        currentLocationHashRef.current !== "#email"',
+      '!isCurrentSecurityView("#email")',
       updateCall,
     );
     const successState = securityPage.indexOf("setEmailRequestSent(true);", updateCall);
@@ -37,7 +49,7 @@ describe("account email change state disposal", () => {
     );
     const catchBlock = securityPage.indexOf("} catch (error) {", successToast);
     const catchGuard = securityPage.indexOf(
-      'requestId !== emailUpdateRequestIdRef.current ||\n        currentLocationHashRef.current !== "#email"',
+      '!isCurrentSecurityView("#email")',
       catchBlock,
     );
     const errorState = securityPage.indexOf("setEmailError(message);", catchGuard);
@@ -52,20 +64,25 @@ describe("account email change state disposal", () => {
     expect(errorState).toBeGreaterThan(catchGuard);
   });
 
-  it("only clears the loading flag for the request generation that is still current", () => {
+  it("only clears the loading flag while the same email view still owns the request", () => {
     const handler = securityPage.indexOf("const handleUpdateEmail = async () => {");
     const finallyBlock = securityPage.indexOf("} finally {", handler);
     const generationGuard = securityPage.indexOf(
-      "if (requestId === emailUpdateRequestIdRef.current) {",
+      "requestId === emailUpdateRequestIdRef.current &&",
       finallyBlock,
+    );
+    const routeGuard = securityPage.indexOf(
+      'isCurrentSecurityView("#email")',
+      generationGuard,
     );
     const clearLoading = securityPage.indexOf(
       "setUpdatingEmail(false);",
-      generationGuard,
+      routeGuard,
     );
 
     expect(finallyBlock).toBeGreaterThan(handler);
     expect(generationGuard).toBeGreaterThan(finallyBlock);
-    expect(clearLoading).toBeGreaterThan(generationGuard);
+    expect(routeGuard).toBeGreaterThan(generationGuard);
+    expect(clearLoading).toBeGreaterThan(routeGuard);
   });
 });
