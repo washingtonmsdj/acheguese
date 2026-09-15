@@ -37,6 +37,11 @@ interface UsernameLoginResponse {
 }
 
 const SIGN_OUT_TIMEOUT_MS = 8_000;
+const GOOGLE_IDENTITY_SCOPES = [
+  "openid",
+  "https://www.googleapis.com/auth/userinfo.email",
+  "https://www.googleapis.com/auth/userinfo.profile",
+].join(" ");
 
 type SignOutAttemptResult =
   | { kind: "completed"; error: unknown | null }
@@ -239,6 +244,9 @@ export class AuthService {
       provider: "google",
       options: {
         redirectTo: AuthService.getTermsAcceptanceRedirectUrl(),
+        // Explicitly request only the identity data required by Achegue-se.
+        // Some Google Workspace tenants require the email scope explicitly.
+        scopes: GOOGLE_IDENTITY_SCOPES,
       },
     });
     if (error) throw error;
