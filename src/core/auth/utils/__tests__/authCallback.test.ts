@@ -24,16 +24,28 @@ describe("authCallback", () => {
     ).toBe(false);
   });
 
-  it("recognizes only the password recovery expiry code as expired recovery", () => {
+  it("recognizes otp_expired only when the callback is password recovery", () => {
     expect(
       isExpiredPasswordRecoveryError(
-        "",
+        "?mode=recovery",
         "#error=access_denied&error_code=otp_expired",
       ),
     ).toBe(true);
     expect(
       isExpiredPasswordRecoveryError(
+        "?confirmed=1",
+        "#error=access_denied&error_code=otp_expired",
+      ),
+    ).toBe(false);
+    expect(
+      isExpiredPasswordRecoveryError(
         "",
+        "#error=access_denied&error_code=otp_expired",
+      ),
+    ).toBe(false);
+    expect(
+      isExpiredPasswordRecoveryError(
+        "?mode=recovery",
         "#error=server_error&error_code=provider_failure",
       ),
     ).toBe(false);
