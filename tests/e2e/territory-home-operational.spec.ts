@@ -148,10 +148,14 @@ test.describe("Home territorial pública e determinística", () => {
     await expect(page).toHaveURL(/\/ba\/salvador\/pituba$/);
     await page.getByRole("link", { name: /Trocar território/i }).click();
     await expect(page).toHaveURL(/\/\?trocar=territorio$/);
-    await page
-      .getByRole("button", { name: /Explorar Salvador inteira/i })
-      .click();
-    await expect(page).toHaveURL(/\/ba\/salvador$/);
+    await expect(
+      page.getByRole("heading", { name: "Seu lugar, mais perto." }),
+    ).toBeVisible({ timeout: 30_000 });
+    await expect(
+      page.getByRole("link", {
+        name: /Explorar o Complexo do Nordeste de Amaralina/i,
+      }),
+    ).toBeVisible();
     health.assertHealthy();
   });
 
@@ -254,14 +258,14 @@ test.describe("Home territorial pública e determinística", () => {
   });
 });
 
-test.describe("Entrada territorial responsiva", () => {
+test.describe("Entrada pública de lançamento responsiva", () => {
   test.describe.configure({ timeout: 120_000 });
 
   test.beforeEach(async ({ page }) => {
     await installTerritoryHomeFixtures(page);
   });
 
-  test("resolve busca pública e adapta o mapa de 320 a desktop", async ({
+  test("/?trocar=territorio preserva a entrada community-first de 320 a desktop", async ({
     page,
   }) => {
     const health = observeBrowserHealth(page);
@@ -269,78 +273,45 @@ test.describe("Entrada territorial responsiva", () => {
     await gotoApp(page, "/?trocar=territorio");
 
     await expect(
-      page.getByRole("heading", {
-        name: "Salvador disponível por inteiro",
-      }),
+      page.getByRole("heading", { name: "Seu lugar, mais perto." }),
     ).toBeVisible({ timeout: 30_000 });
     await expect(
+      page.getByRole("link", {
+        name: /Explorar o Complexo do Nordeste de Amaralina/i,
+      }),
+    ).toHaveAttribute(
+      "href",
+      "/comunidade/complexo-do-nordeste-de-amaralina",
+    );
+    await expect(
+      page.getByRole("combobox", { name: "Buscar cidade ou bairro" }),
+    ).toHaveCount(0);
+    await expect(
       page.getByRole("button", { name: "Usar minha localização" }),
-    ).toBeVisible();
-    await expect
-      .poll(
-        () =>
-          page.evaluate(() => window.__mapState?.territoryPolygonCount ?? 0),
-        { timeout: 30_000 },
-      )
-      .toBeGreaterThan(0);
-    await expect
-      .poll(() => page.evaluate(() => window.__mapState?.zoom ?? 0), {
-        timeout: 30_000,
-      })
-      .toBeGreaterThan(7);
-    const cityZoom = await page.evaluate(() => window.__mapState?.zoom ?? 0);
+    ).toHaveCount(0);
     await expectNoHorizontalOverflow(page);
 
-    const search = page.getByRole("combobox", {
-      name: "Buscar cidade ou bairro",
-    });
-    await search.fill("Pitu");
-    await expect(
-      page.getByRole("option", { name: /Pituba, Salvador/ }),
-    ).toBeVisible();
-    await page.getByRole("option", { name: /Pituba, Salvador/ }).click();
-    await expect(page).toHaveURL(/\/?\?trocar=territorio$/);
-    await expect(
-      page.getByRole("heading", { name: "Pituba em destaque" }),
-    ).toBeVisible();
-    await expect(
-      page.getByRole("link", { name: "Abrir mapa de Pituba" }),
-    ).toHaveAttribute("href", "/mapa/ba/salvador/pituba");
-    await expect
-      .poll(() => page.evaluate(() => window.__mapState?.territoryBounds), {
-        timeout: 30_000,
-      })
-      .toEqual({
-        west: -38.47,
-        south: -13.01,
-        east: -38.44,
-        north: -12.98,
-      });
-    await expect
-      .poll(() => page.evaluate(() => window.__mapState?.zoom ?? 0), {
-        timeout: 30_000,
-      })
-      .toBeGreaterThan(cityZoom + 2);
-    await page.getByRole("button", { name: "Confirmar território" }).click();
-    await expect(page).toHaveURL(/\/ba\/salvador\/pituba$/);
+    const communityPreview = page.locator(".entry-community-preview");
+    const deferredDesktopImage = communityPreview.locator(":scope > div");
+    await expect(deferredDesktopImage).toBeHidden();
 
-    await gotoApp(page, "/?trocar=territorio");
     await page.setViewportSize({ width: 820, height: 1000 });
-    await expectNoHorizontalOverflow(page);
+    await expect(deferredDesktopImage).toBeVisible();
     await expect(
-      page.getByRole("heading", { name: "Por onde vamos começar?" }),
+      page.getByRole("heading", { name: "Seu lugar, mais perto." }),
     ).toBeVisible();
+    await expectNoHorizontalOverflow(page);
 
     await page.setViewportSize({ width: 1440, height: 1000 });
+    await expect(page.getByRole("link", { name: "Entrar" })).toBeVisible();
+    await expect(
+      page.getByText("Sem cadastro para explorar."),
+    ).toBeVisible();
     await expectNoHorizontalOverflow(page);
-    const layout = await page
-      .getByTestId("territory-entry-layout")
-      .evaluate((element) => getComputedStyle(element).gridTemplateColumns);
-    expect(layout.split(" ").length).toBeGreaterThanOrEqual(2);
     health.assertHealthy();
   });
 
-  test("explica localização negada, território indisponível e retorno recente", async ({
+  test("território salvo e geolocalização não desviam a raiz de lançamento", async ({
     page,
   }) => {
     await page.addInitScript(() => {
@@ -354,18 +325,8 @@ test.describe("Entrada territorial responsiva", () => {
       Object.defineProperty(navigator, "geolocation", {
         configurable: true,
         value: {
-          getCurrentPosition: (
-            _success: PositionCallback,
-            error: PositionErrorCallback,
-          ) => {
-            const deniedError: GeolocationPositionError = {
-              code: 1,
-              message: "Permission denied",
-              PERMISSION_DENIED: 1,
-              POSITION_UNAVAILABLE: 2,
-              TIMEOUT: 3,
-            };
-            error(deniedError);
+          getCurrentPosition: () => {
+            throw new Error("A raiz de lançamento não deve consultar geolocalização");
           },
         },
       });
@@ -373,20 +334,18 @@ test.describe("Entrada territorial responsiva", () => {
     await page.setViewportSize({ width: 390, height: 844 });
     await gotoApp(page, "/?trocar=territorio");
 
-    await expect(page.getByText("Seu último território")).toBeVisible();
-    await page.getByRole("button", { name: "Usar minha localização" }).click();
-    await expect(page.getByRole("alert")).toContainText(
-      "A localização foi bloqueada",
-    );
-
-    const search = page.getByRole("combobox", {
-      name: "Buscar cidade ou bairro",
-    });
-    await search.fill("Recife");
-    await page.getByRole("button", { name: "Confirmar território" }).click();
-    await expect(page.getByRole("alert")).toContainText(
-      "ainda não está disponível",
-    );
+    await expect(
+      page.getByRole("heading", { name: "Seu lugar, mais perto." }),
+    ).toBeVisible({ timeout: 30_000 });
+    await expect(page.getByText("Seu último território")).toHaveCount(0);
+    await expect(
+      page.getByRole("button", { name: "Usar minha localização" }),
+    ).toHaveCount(0);
+    await expect(
+      page.getByRole("link", {
+        name: /Explorar o Complexo do Nordeste de Amaralina/i,
+      }),
+    ).toBeVisible();
     await expectNoHorizontalOverflow(page);
   });
 });
