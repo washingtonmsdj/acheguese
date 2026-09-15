@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { Helmet } from "react-helmet-async";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 
@@ -15,6 +15,8 @@ import {
 import { useAuth } from "@/core/auth/hooks/useAuth";
 import {
   getSignupConfirmationContext,
+  getSignupConfirmationResendRemainingMs,
+  markSignupConfirmationEmailSent,
   restartEmailSignupJourney,
 } from "@/core/auth/utils/authJourney";
 import { getAuthErrorMessage } from "@/core/auth/utils/authMessages";
@@ -22,8 +24,11 @@ import { SUPPORT_PATH } from "@/shared/constants/legal";
 import { useToast } from "@/shared/hooks/use-toast";
 import { resolveSafeInternalPath } from "@/shared/utils/safeRedirect";
 
-const RESEND_COOLDOWN_SECONDS = 60;
 type ConfirmationState = { email?: string; redirectTo?: unknown } | null;
+
+function getResendCooldownSeconds(): number {
+  return Math.ceil(getSignupConfirmationResendRemainingMs() / 1000);
+}
 
 export default function CadastroConfirmacaoPage() {
   const navigate = useNavigate();
@@ -32,8 +37,7 @@ export default function CadastroConfirmacaoPage() {
   const { toast } = useToast();
   const turnstile = useAuthTurnstile();
   const [isResending, setIsResending] = useState(false);
-  const [cooldown, setCooldown] = useState(0);
-  const intervalRef = useRef<number | null>(null);
+  const [cooldown, setCooldown] = useState(getResendCooldownSeconds);
 
   const state = location.state as ConfirmationState;
   const journeyContext = useMemo(() => getSignupConfirmationContext(), []);
@@ -47,20 +51,11 @@ export default function CadastroConfirmacaoPage() {
   );
 
   useEffect(() => {
-    if (cooldown <= 0) {
-      if (intervalRef.current) {
-        window.clearInterval(intervalRef.current);
-        intervalRef.current = null;
-      }
-      return;
-    }
-    intervalRef.current = window.setInterval(() => {
-      setCooldown((current) => Math.max(0, current - 1));
-    }, 1000);
-    return () => {
-      if (intervalRef.current) window.clearInterval(intervalRef.current);
-    };
-  }, [cooldown]);
+    const syncCooldown = () => setCooldown(getResendCooldownSeconds());
+    syncCooldown();
+    const interval = window.setInterval(syncCooldown, 1000);
+    return () => window.clearInterval(interval);
+  }, []);
 
   const handleResend = async () => {
     if (!email) return;
@@ -77,7 +72,8 @@ export default function CadastroConfirmacaoPage() {
     setIsResending(true);
     try {
       await resendConfirmationEmail(email, turnstile.token ?? undefined);
-      setCooldown(RESEND_COOLDOWN_SECONDS);
+      markSignupConfirmationEmailSent();
+      setCooldown(getResendCooldownSeconds());
       toast({
         title: "E-mail reenviado",
         description: "Confira sua caixa de entrada e também a pasta de spam.",
