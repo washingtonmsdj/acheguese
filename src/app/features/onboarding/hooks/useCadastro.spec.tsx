@@ -3,7 +3,10 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 
 import { AUTH_PATHS } from "@/core/auth/constants/authFlow";
 import { AuthService } from "@/core/auth/services/AuthService";
-import { prepareEmailSignupConfirmation } from "@/core/auth/utils/authJourney";
+import {
+  prepareAuthenticatedEmailSignup,
+  prepareEmailSignupConfirmation,
+} from "@/core/auth/utils/authJourney";
 import { checkPasswordCompromise } from "@/core/auth/utils/compromisedPassword";
 import { TERMS_OF_SERVICE_VERSION } from "@/core/legal/termsOfService";
 import { PublicIdentityService } from "@/core/public-identity/services/PublicIdentityService";
@@ -12,6 +15,7 @@ import { useCadastroForm } from "./useCadastro";
 const mocks = vi.hoisted(() => ({
   navigate: vi.fn(),
   toast: vi.fn(),
+  prepareAuthenticatedEmailSignup: vi.fn(),
   prepareEmailSignupConfirmation: vi.fn(),
 }));
 
@@ -24,6 +28,7 @@ vi.mock("@/core/auth/services/AuthService", () => ({
 }));
 
 vi.mock("@/core/auth/utils/authJourney", () => ({
+  prepareAuthenticatedEmailSignup: mocks.prepareAuthenticatedEmailSignup,
   prepareEmailSignupConfirmation: mocks.prepareEmailSignupConfirmation,
 }));
 
@@ -50,6 +55,16 @@ function fillAccount(
   });
 }
 
+function acceptTerms(
+  result: ReturnType<typeof renderHook<ReturnType<typeof useCadastroForm>, unknown>>["result"],
+) {
+  act(() => {
+    result.current.form.setValue("termsAccepted", true, {
+      shouldValidate: true,
+    });
+  });
+}
+
 describe("useCadastroForm", () => {
   beforeEach(() => {
     vi.clearAllMocks();
@@ -62,7 +77,9 @@ describe("useCadastroForm", () => {
       count: 0,
       unavailable: false,
     });
-    vi.mocked(AuthService.signUp).mockResolvedValue(undefined);
+    vi.mocked(AuthService.signUp).mockResolvedValue({
+      requiresEmailConfirmation: true,
+    });
   });
 
   it("não cria a conta sem aceite dos Termos", async () => {
@@ -75,17 +92,14 @@ describe("useCadastroForm", () => {
 
     expect(AuthService.signUp).not.toHaveBeenCalled();
     expect(prepareEmailSignupConfirmation).not.toHaveBeenCalled();
+    expect(prepareAuthenticatedEmailSignup).not.toHaveBeenCalled();
     expect(result.current.form.formState.errors.termsAccepted).toBeDefined();
   });
 
-  it("cria somente a conta/perfil pessoal inicial e delega o contexto transitório ao owner de jornada", async () => {
+  it("envia para confirmação somente quando o Auth informa que ela é necessária", async () => {
     const { result } = renderHook(() => useCadastroForm("/mensagens/abc"));
     fillAccount(result);
-    act(() => {
-      result.current.form.setValue("termsAccepted", true, {
-        shouldValidate: true,
-      });
-    });
+    acceptTerms(result);
 
     await act(async () => {
       await result.current.submit();
@@ -109,8 +123,30 @@ describe("useCadastroForm", () => {
       "ana@example.com",
       "/mensagens/abc",
     );
+    expect(prepareAuthenticatedEmailSignup).not.toHaveBeenCalled();
     expect(mocks.navigate).toHaveBeenCalledWith(AUTH_PATHS.signupConfirmation, {
       state: { email: "ana@example.com", redirectTo: "/mensagens/abc" },
+    });
+  });
+
+  it("segue direto ao primeiro acesso quando o signup já devolve uma sessão", async () => {
+    vi.mocked(AuthService.signUp).mockResolvedValueOnce({
+      requiresEmailConfirmation: false,
+    });
+    const { result } = renderHook(() => useCadastroForm("/mensagens/abc"));
+    fillAccount(result);
+    acceptTerms(result);
+
+    await act(async () => {
+      await result.current.submit();
+    });
+
+    expect(prepareEmailSignupConfirmation).not.toHaveBeenCalled();
+    expect(prepareAuthenticatedEmailSignup).toHaveBeenCalledWith(
+      "/mensagens/abc",
+    );
+    expect(mocks.navigate).toHaveBeenCalledWith(AUTH_PATHS.firstAccess, {
+      replace: true,
     });
   });
 });
