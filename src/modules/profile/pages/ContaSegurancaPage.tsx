@@ -1,4 +1,4 @@
-import { useState, type ReactNode } from "react";
+import { useEffect, useRef, useState, type ReactNode } from "react";
 import { Navigate, useLocation, useNavigate } from "react-router-dom";
 import { Helmet } from "react-helmet-async";
 import {
@@ -176,14 +176,35 @@ export default function ContaSegurancaPage() {
   const [emailError, setEmailError] = useState<string | null>(null);
   const [updatingEmail, setUpdatingEmail] = useState(false);
   const [emailRequestSent, setEmailRequestSent] = useState(false);
+  const passwordReauthRequestIdRef = useRef(0);
+  const currentLocationHashRef = useRef(location.hash);
+  currentLocationHashRef.current = location.hash;
+
+  useEffect(() => {
+    if (location.hash === "#senha") return;
+
+    passwordReauthRequestIdRef.current += 1;
+    setPasswordReauthRequired(false);
+    setPasswordNonce("");
+    setPasswordReauthError(null);
+    setRequestingPasswordReauth(false);
+  }, [location.hash]);
 
   if (!user) return <Navigate to={appUrls.auth.login} replace />;
 
   const requestPasswordReauthCode = async () => {
+    const requestId = passwordReauthRequestIdRef.current + 1;
+    passwordReauthRequestIdRef.current = requestId;
     setRequestingPasswordReauth(true);
     setPasswordReauthError(null);
     try {
       await requestPasswordReauthentication();
+      if (
+        requestId !== passwordReauthRequestIdRef.current ||
+        currentLocationHashRef.current !== "#senha"
+      ) {
+        return false;
+      }
       setPasswordReauthRequired(true);
       setPasswordNonce("");
       toast.success("Código de confirmação enviado", {
@@ -191,6 +212,12 @@ export default function ContaSegurancaPage() {
       });
       return true;
     } catch (error) {
+      if (
+        requestId !== passwordReauthRequestIdRef.current ||
+        currentLocationHashRef.current !== "#senha"
+      ) {
+        return false;
+      }
       const message = getAuthErrorMessage(
         error,
         "Não foi possível enviar o código de confirmação.",
@@ -199,7 +226,9 @@ export default function ContaSegurancaPage() {
       toast.error(message);
       return false;
     } finally {
-      setRequestingPasswordReauth(false);
+      if (requestId === passwordReauthRequestIdRef.current) {
+        setRequestingPasswordReauth(false);
+      }
     }
   };
 
@@ -214,13 +243,19 @@ export default function ContaSegurancaPage() {
         data.newPassword,
         passwordReauthRequired ? passwordNonce.trim() : undefined,
       );
+      if (currentLocationHashRef.current !== "#senha") return;
+
       setPasswordReauthRequired(false);
       setPasswordNonce("");
       setPasswordReauthError(null);
       await refreshProviders();
+      if (currentLocationHashRef.current !== "#senha") return;
+
       toast.success(hasPassword ? "Senha alterada com sucesso" : "Senha criada com sucesso");
       navigate(ACCOUNT_PATHS.security, { replace: true });
     } catch (error) {
+      if (currentLocationHashRef.current !== "#senha") throw error;
+
       const code = getAuthErrorCode(error);
       if (code === "reauthentication_needed") {
         const sent = await requestPasswordReauthCode();
