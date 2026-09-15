@@ -51,6 +51,7 @@ export class SessionService {
   private static authSubscription: { unsubscribe: () => void } | null = null;
   private static currentSession: Session | null = null;
   private static currentSessionPromise: Promise<Session | null> | null = null;
+  private static authEventVersion = 0;
 
   private static getStoredActiveProfileId(): string | null {
     if (typeof window === "undefined") return null;
@@ -118,6 +119,15 @@ export class SessionService {
     SessionService.loadVersion++;
   }
 
+  private static ownsSession(session: Session): boolean {
+    const current = SessionService.currentSession;
+    return Boolean(
+      current &&
+        current.user.id === session.user.id &&
+        current.access_token === session.access_token,
+    );
+  }
+
   private static resetInitPromise(): void {
     SessionService.initFallbackStarted = false;
     SessionService.initPromise = new Promise((resolve) => {
@@ -140,6 +150,9 @@ export class SessionService {
       SessionService.authSubscription.unsubscribe();
       SessionService.authSubscription = null;
     }
+    SessionService.authEventVersion++;
+    SessionService.cancelPendingLoads();
+    SessionService.authEventQueue = Promise.resolve();
     SessionService.currentSession = null;
     SessionService.currentSessionPromise = null;
     SessionService.initialized = false;
@@ -177,6 +190,7 @@ export class SessionService {
 
     // Armazena a subscription para cleanup
     const { data: { subscription } } = supabase.auth.onAuthStateChange((event: AuthChangeEvent, session: Session | null) => {
+      const eventVersion = ++SessionService.authEventVersion;
       SessionService.currentSession = session;
       SessionService.debug(
         `[SessionService] onAuthStateChange: ${event}`,
@@ -201,6 +215,10 @@ export class SessionService {
         event === "TOKEN_REFRESHED" ||
         event === "USER_UPDATED"
       ) {
+        // Um evento Auth mais novo invalida tanto resultados de perfil em voo
+        // quanto tarefas de sessão ainda enfileiradas por um evento anterior.
+        SessionService.cancelPendingLoads();
+
         if (session) {
           // Nunca executar carga de sessão dentro do callback do Supabase.
           // Encadeamos em fila assíncrona para sair do ciclo do lock interno do GoTrue.
@@ -210,6 +228,15 @@ export class SessionService {
               () =>
                 new Promise<void>((resolve) => {
                   window.setTimeout(() => {
+                    if (
+                      eventVersion !== SessionService.authEventVersion ||
+                      !SessionService.ownsSession(session)
+                    ) {
+                      if (isInitEvent) SessionService.resolveInit();
+                      resolve();
+                      return;
+                    }
+
                     SessionService.loadFromSession(session, true)
                       .then(() => {
                         if (isInitEvent) SessionService.resolveInit();
@@ -276,18 +303,29 @@ export class SessionService {
     session: Session,
     forceFresh: boolean = false,
   ): Promise<void> {
-    // Se já há um load em andamento para o mesmo usuário, apenas aguarda o resultado
-    // sem disparar um novo load (evita double-fetch no padrão TOKEN_REFRESHED + INITIAL_SESSION)
+    if (!SessionService.ownsSession(session)) return;
+
+    // Se já há um load em andamento, aguarda o resultado antes de decidir se
+    // precisa de uma nova leitura. Eventos Auth usam forceFresh=true para que
+    // USER_UPDATED/TOKEN_REFRESHED não herdem dados antigos do mesmo usuário.
     if (SessionService.loadPromise) {
       await SessionService.loadPromise;
+      if (!SessionService.ownsSession(session)) return;
       const current = SessionState.getState();
-      if (current.user?.id === session.user.id) return;
+      if (!forceFresh && current.user?.id === session.user.id) return;
     }
 
-    SessionService.loadPromise = SessionService.doLoad(session, forceFresh)
-      .finally(() => { SessionService.loadPromise = null; });
+    if (!SessionService.ownsSession(session)) return;
 
-    return SessionService.loadPromise;
+    const loadPromise = SessionService.doLoad(session, forceFresh)
+      .finally(() => {
+        if (SessionService.loadPromise === loadPromise) {
+          SessionService.loadPromise = null;
+        }
+      });
+    SessionService.loadPromise = loadPromise;
+
+    return loadPromise;
   }
 
   private static async doLoad(session: Session, forceFresh: boolean): Promise<void> {
@@ -320,8 +358,8 @@ export class SessionService {
       SessionService.getUserProfiles(user.id),
     ]);
 
-    // Descarta resultado se um load mais recente foi iniciado
-    if (version !== SessionService.loadVersion) {
+    // Descarta resultado se um load mais recente foi iniciado ou invalidado.
+    if (version !== SessionService.loadVersion || !SessionService.ownsSession(session)) {
       SessionService.debug(
         `[SessionService] doLoad: discarding stale result (version ${version})`,
       );
@@ -341,9 +379,13 @@ export class SessionService {
     if (SessionService.currentSession) return SessionService.currentSession;
     if (SessionService.currentSessionPromise) return SessionService.currentSessionPromise;
 
-    SessionService.currentSessionPromise = (async () => {
+    const requestVersion = SessionService.authEventVersion;
+    const sessionPromise = (async () => {
       try {
         const { data } = await supabase.auth.getSession();
+        if (requestVersion !== SessionService.authEventVersion) {
+          return SessionService.currentSession;
+        }
         SessionService.currentSession = data.session ?? null;
         return SessionService.currentSession;
       } catch (error) {
@@ -358,11 +400,14 @@ export class SessionService {
         throw error;
       }
     })();
+    SessionService.currentSessionPromise = sessionPromise;
 
     try {
-      return await SessionService.currentSessionPromise;
+      return await sessionPromise;
     } finally {
-      SessionService.currentSessionPromise = null;
+      if (SessionService.currentSessionPromise === sessionPromise) {
+        SessionService.currentSessionPromise = null;
+      }
     }
   }
 
