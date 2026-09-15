@@ -38,7 +38,10 @@ on:
       - "tests/regression/auth-redirect-allowlist.test.ts"
       - "tests/security/account-email-change-state-disposal.test.ts"
       - "tests/security/account-password-reauthentication.test.ts"
+      - "tests/security/auth-login-turnstile-contract.test.ts"
       - "tests/security/auth-password-capability-authority.test.ts"
+      - "tests/security/auth-password-recovery-captcha.test.ts"
+      - "tests/security/auth-signup-turnstile-contract.test.ts"
       - "tests/security/mfa-account-settings-fail-closed.test.ts"
       - "playwright.config.ts"
       - "package.json"
@@ -80,7 +83,10 @@ on:
       - "tests/regression/auth-redirect-allowlist.test.ts"
       - "tests/security/account-email-change-state-disposal.test.ts"
       - "tests/security/account-password-reauthentication.test.ts"
+      - "tests/security/auth-login-turnstile-contract.test.ts"
       - "tests/security/auth-password-capability-authority.test.ts"
+      - "tests/security/auth-password-recovery-captcha.test.ts"
+      - "tests/security/auth-signup-turnstile-contract.test.ts"
       - "tests/security/mfa-account-settings-fail-closed.test.ts"
       - "playwright.config.ts"
       - "package.json"
@@ -132,7 +138,10 @@ jobs:
           tests/regression/auth-redirect-allowlist.test.ts
           tests/security/account-email-change-state-disposal.test.ts
           tests/security/account-password-reauthentication.test.ts
+          tests/security/auth-login-turnstile-contract.test.ts
           tests/security/auth-password-capability-authority.test.ts
+          tests/security/auth-password-recovery-captcha.test.ts
+          tests/security/auth-signup-turnstile-contract.test.ts
           tests/security/mfa-account-settings-fail-closed.test.ts
 
   responsive-layout:
