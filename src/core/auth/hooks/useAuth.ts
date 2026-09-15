@@ -34,7 +34,10 @@ interface UseAuthReturn {
     identifier: string,
     captchaToken?: string,
   ) => Promise<void>;
-  resendConfirmationEmail: (email: string) => Promise<void>;
+  resendConfirmationEmail: (
+    email: string,
+    captchaToken?: string,
+  ) => Promise<void>;
   requestPasswordReauthentication: () => Promise<void>;
   updatePassword: (newPassword: string, nonce?: string) => Promise<void>;
   updateEmail: (newEmail: string) => Promise<void>;
@@ -177,18 +180,21 @@ export function useAuth(): UseAuthReturn {
     [],
   );
 
-  const resendConfirmationEmail = useCallback(async (email: string) => {
-    try {
-      setLoading(true);
-      setError(null);
-      await AuthService.resendConfirmationEmail(email);
-    } catch (err) {
-      setError(err as AuthError);
-      throw err;
-    } finally {
-      setLoading(false);
-    }
-  }, []);
+  const resendConfirmationEmail = useCallback(
+    async (email: string, captchaToken?: string) => {
+      try {
+        setLoading(true);
+        setError(null);
+        await AuthService.resendConfirmationEmail(email, captchaToken);
+      } catch (err) {
+        setError(err as AuthError);
+        throw err;
+      } finally {
+        setLoading(false);
+      }
+    },
+    [],
+  );
 
   const requestPasswordReauthentication = useCallback(async () => {
     try {

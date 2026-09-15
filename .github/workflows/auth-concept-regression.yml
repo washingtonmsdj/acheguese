@@ -23,6 +23,7 @@ on:
       - "public/auth/**"
       - "tests/e2e/auth-*.spec.ts"
       - "tests/regression/auth-concept-flow.test.ts"
+      - "tests/regression/auth-confirmation-resend-turnstile.test.ts"
       - "tests/regression/auth-email-confirmation-callback.test.ts"
       - "tests/regression/auth-mobile-concept.test.ts"
       - "tests/regression/auth-route-ownership.test.ts"
@@ -55,6 +56,7 @@ on:
       - "public/auth/**"
       - "tests/e2e/auth-*.spec.ts"
       - "tests/regression/auth-concept-flow.test.ts"
+      - "tests/regression/auth-confirmation-resend-turnstile.test.ts"
       - "tests/regression/auth-email-confirmation-callback.test.ts"
       - "tests/regression/auth-mobile-concept.test.ts"
       - "tests/regression/auth-route-ownership.test.ts"
@@ -101,6 +103,7 @@ jobs:
           src/app/features/onboarding/pages/CadastroPage.spec.tsx
           src/app/features/onboarding/pages/CadastroPrimeiroAcessoPage.spec.tsx
           tests/regression/auth-concept-flow.test.ts
+          tests/regression/auth-confirmation-resend-turnstile.test.ts
           tests/regression/auth-email-confirmation-callback.test.ts
           tests/regression/auth-mobile-concept.test.ts
           tests/regression/auth-route-ownership.test.ts

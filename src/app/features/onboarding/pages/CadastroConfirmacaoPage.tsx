@@ -76,9 +76,8 @@ export default function CadastroConfirmacaoPage() {
 
     setIsResending(true);
     try {
-      await resendConfirmationEmail(email);
+      await resendConfirmationEmail(email, turnstile.token ?? undefined);
       setCooldown(RESEND_COOLDOWN_SECONDS);
-      turnstile.reset();
       toast({
         title: "E-mail reenviado",
         description: "Confira sua caixa de entrada e também a pasta de spam.",
@@ -90,6 +89,7 @@ export default function CadastroConfirmacaoPage() {
         variant: "destructive",
       });
     } finally {
+      turnstile.reset();
       setIsResending(false);
     }
   };

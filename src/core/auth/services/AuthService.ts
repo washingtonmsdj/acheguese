@@ -272,12 +272,19 @@ export class AuthService {
     throw new Error("Para recuperar senha, informe o e-mail cadastrado.");
   }
 
-  static async resendConfirmationEmail(email: string): Promise<void> {
+  static async resendConfirmationEmail(
+    email: string,
+    captchaToken?: string,
+  ): Promise<void> {
+    const normalizedCaptchaToken = captchaToken?.trim();
     const { error } = await supabase.auth.resend({
       type: "signup",
       email,
       options: {
         emailRedirectTo: AuthService.getEmailConfirmationRedirectUrl(),
+        ...(normalizedCaptchaToken
+          ? { captchaToken: normalizedCaptchaToken }
+          : {}),
       },
     });
     if (error) throw error;
