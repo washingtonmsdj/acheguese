@@ -47,7 +47,8 @@ export default function CadastroConfirmacaoPage() {
 
   const state = location.state as ConfirmationState;
   const journeyContext = useMemo(() => getSignupConfirmationContext(), []);
-  const hasCanonicalJourneyContext = journeyContext.email !== null;
+  const hasCanonicalJourneyContext =
+    journeyContext.email !== null || journeyContext.intent !== null;
   const email = useMemo(
     () =>
       journeyContext.email ?? state?.email?.trim().toLowerCase() ?? null,
