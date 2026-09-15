@@ -1,4 +1,4 @@
-﻿/**
+/**
  * Cliente Supabase - Configuracao Principal
  *
  * Este arquivo configura o cliente Supabase usando APENAS variaveis de ambiente.
@@ -75,7 +75,19 @@ export const supabase = createClient<Database>(
 );
 
 if (hasAuthReturnParams()) {
-  void supabase.auth.getSession().finally(() => {
-    cleanAuthReturnUrl();
-  });
+  // Com detectSessionInUrl=true, o próprio supabase-js troca o auth code PKCE.
+  // getSession apenas aguarda essa inicialização para limpar a URL depois que
+  // uma sessão realmente existe. Em erro/lock transitório preservamos `code`,
+  // evitando destruir um callback que ainda pode ser concluído ou repetido.
+  void supabase.auth
+    .getSession()
+    .then(({ data, error }) => {
+      if (!error && data.session) {
+        cleanAuthReturnUrl();
+      }
+    })
+    .catch(() => {
+      // O SessionService continua sendo o owner da recuperação de lock/sessão.
+      // Não remova o auth code em uma falha transitória.
+    });
 }
