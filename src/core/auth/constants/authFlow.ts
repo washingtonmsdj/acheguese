@@ -44,7 +44,8 @@ export const AUTH_FLOW_STORAGE_KEYS = {
   pendingIntent: "auth.pending-intent",
   pendingSignupEmail: "auth.pending-signup-email",
   pendingSignupRedirect: "auth.pending-signup-redirect",
-  pendingSignupConfirmationSentAt: "auth.pending-signup-confirmation-sent-at",
+  pendingSignupConfirmationCooldownUntil:
+    "auth.pending-signup-confirmation-cooldown-until",
 } as const;
 
 export const AUTH_FLOW_TTL_MS = {
