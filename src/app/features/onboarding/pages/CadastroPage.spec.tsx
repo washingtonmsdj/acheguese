@@ -110,6 +110,17 @@ describe("CadastroPage — conceito account-first", () => {
     expect(screen.getByRole("button", { name: /Criar minha conta/i })).toBeDisabled();
   });
 
+  it("normaliza maiúsculas do @usuário sem apagar caracteres válidos", async () => {
+    const user = userEvent.setup();
+    renderPage();
+
+    const usernameInput = screen.getByLabelText(/Nome de usuário/i);
+    await user.type(usernameInput, "Ana_Silva");
+
+    expect(usernameInput).toHaveValue("ana_silva");
+    expect(mocks.checkDebounced).toHaveBeenLastCalledWith("ana_silva");
+  });
+
   it("mantém a tela inerte enquanto a sessão inicial está sendo hidratada", () => {
     mocks.session.isLoading = true;
     renderPage();
