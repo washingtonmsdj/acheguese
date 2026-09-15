@@ -27,6 +27,7 @@ describe("AuthService.signUp terms acceptance", () => {
   beforeEach(() => {
     vi.clearAllMocks();
     mocks.signUp.mockResolvedValue({ data: { session: null }, error: null });
+    mocks.refreshSession.mockResolvedValue(undefined);
   });
 
   it("rejects a signup without the current Terms acceptance before calling Supabase", async () => {
@@ -98,5 +99,25 @@ describe("AuthService.signUp terms acceptance", () => {
 
     expect(mocks.refreshSession).toHaveBeenCalledTimes(1);
     expect(result).toEqual({ requiresEmailConfirmation: false });
+  });
+
+  it("does not turn a created account into a false signup failure when profile refresh is delayed", async () => {
+    mocks.signUp.mockResolvedValueOnce({
+      data: { session: { access_token: "token" } },
+      error: null,
+    });
+    mocks.refreshSession.mockRejectedValueOnce(new Error("profile not ready"));
+
+    await expect(
+      AuthService.signUp({
+        email: "ana@example.com",
+        password: "SenhaSegura@2026",
+        name: "Ana Souza",
+        termsAcceptance: {
+          accepted: true,
+          version: TERMS_OF_SERVICE_VERSION,
+        },
+      }),
+    ).resolves.toEqual({ requiresEmailConfirmation: false });
   });
 });
