@@ -1,5 +1,5 @@
 import { logger } from '@/shared/utils/logger';
-import React, { useState, useEffect } from "react";
+import React, { useCallback, useEffect, useRef, useState } from "react";
 import { SessionState } from "../state/SessionState";
 import { SessionService } from "../services/SessionService";
 import { SessionReactContext } from "./SessionReactContext";
@@ -14,8 +14,9 @@ const AUTH_INIT_TIMEOUT_MS = 7000;
  *  2. Subscribes to SessionState changes so the provider re-renders on updates.
  *  3. Calls SessionService.initializeSession() to load the initial session.
  *
- * Exposes async handlers (switchProfile, refreshSession) that manage
- * isLoading and error state.
+ * Exposes async handlers (switchProfile, refreshSession) without creating a
+ * second session owner. Busy/error state is scoped to the latest live provider
+ * generation while SessionState remains the authenticated-data SSOT.
  *
  * Does NOT export useSessionContext — that lives in hooks/useSessionContext.ts.
  */
@@ -23,70 +24,146 @@ export function SessionProvider({ children }: { children: React.ReactNode }) {
   const [sessionData, setSessionData] = useState(() => SessionState.getState());
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<Error | null>(null);
+  const mountedRef = useRef(true);
+  const bootstrapLoadingRef = useRef(true);
+  const bootstrapVersionRef = useRef(0);
+  const nextOperationIdRef = useRef(0);
+  const latestOperationIdRef = useRef(0);
+  const activeOperationIdsRef = useRef<Set<number>>(new Set());
+
+  const syncLoading = useCallback(() => {
+    if (!mountedRef.current) return;
+    setIsLoading(
+      bootstrapLoadingRef.current || activeOperationIdsRef.current.size > 0,
+    );
+  }, []);
+
+  const beginOperation = useCallback((): number => {
+    const operationId = nextOperationIdRef.current + 1;
+    nextOperationIdRef.current = operationId;
+    latestOperationIdRef.current = operationId;
+    activeOperationIdsRef.current.add(operationId);
+
+    if (mountedRef.current) setError(null);
+    syncLoading();
+    return operationId;
+  }, [syncLoading]);
+
+  const endOperation = useCallback((operationId: number) => {
+    activeOperationIdsRef.current.delete(operationId);
+    syncLoading();
+  }, [syncLoading]);
+
+  const publishOperationError = useCallback((operationId: number, cause: unknown) => {
+    if (
+      !mountedRef.current ||
+      operationId !== latestOperationIdRef.current
+    ) {
+      return;
+    }
+    setError(cause instanceof Error ? cause : new Error(String(cause)));
+  }, []);
 
   useEffect(() => {
-    // Subscreve ANTES de inicializar para não perder nenhum evento
+    mountedRef.current = true;
+    bootstrapLoadingRef.current = true;
+    const bootstrapVersion = bootstrapVersionRef.current + 1;
+    bootstrapVersionRef.current = bootstrapVersion;
+    syncLoading();
+
+    // Subscreve ANTES de inicializar para não perder nenhum evento.
     const unsubscribe = SessionState.subscribe(() => {
-      setSessionData(SessionState.getState());
+      if (
+        mountedRef.current &&
+        bootstrapVersion === bootstrapVersionRef.current
+      ) {
+        setSessionData(SessionState.getState());
+      }
     });
 
-    // Registra onAuthStateChange — isso dispara INITIAL_SESSION/SIGNED_IN automaticamente
-    // O SessionService atualiza o SessionState via subscribe acima
+    // Registra onAuthStateChange — isso dispara INITIAL_SESSION/SIGNED_IN automaticamente.
     SessionService.initialize();
 
-    // Aguarda o primeiro evento de auth para liberar o isLoading.
-    // Em dev, o Supabase pode levar alguns segundos para recuperar um lock
-    // de sessao; abaixo disso a UI gera falso positivo de timeout.
+    // Aguarda o primeiro evento de auth para liberar apenas o bootstrap. Ações
+    // de sessão ainda em andamento continuam mantendo `isLoading=true`.
+    const finishBootstrap = () => {
+      if (
+        !mountedRef.current ||
+        bootstrapVersion !== bootstrapVersionRef.current
+      ) {
+        return;
+      }
+      bootstrapLoadingRef.current = false;
+      syncLoading();
+    };
+
     const timeout = setTimeout(() => {
+      if (
+        !mountedRef.current ||
+        bootstrapVersion !== bootstrapVersionRef.current
+      ) {
+        return;
+      }
       logger.warn(" SessionProvider: auth init timeout — liberando UI");
-      setIsLoading(false);
+      finishBootstrap();
     }, AUTH_INIT_TIMEOUT_MS);
 
     SessionService.initializeSession().then(() => {
+      if (
+        !mountedRef.current ||
+        bootstrapVersion !== bootstrapVersionRef.current
+      ) {
+        return;
+      }
       clearTimeout(timeout);
       setSessionData(SessionState.getState());
-      setIsLoading(false);
+      finishBootstrap();
     }).catch(() => {
+      if (
+        !mountedRef.current ||
+        bootstrapVersion !== bootstrapVersionRef.current
+      ) {
+        return;
+      }
       clearTimeout(timeout);
-      setIsLoading(false);
+      finishBootstrap();
     });
 
     return () => {
       clearTimeout(timeout);
       unsubscribe();
+      mountedRef.current = false;
+      bootstrapVersionRef.current += 1;
+      bootstrapLoadingRef.current = false;
+      activeOperationIdsRef.current.clear();
       // Nao chamamos SessionService.cleanup aqui para evitar teardown/re-init
       // agressivo em React StrictMode (dev), que pode gerar disputa de lock
       // no Supabase auth bootstrap.
     };
-  }, []);
+  }, [syncLoading]);
 
-  // 6.6 / 6.7 switchProfile handler with isLoading + error management
-  const switchProfile = async (profileId: string): Promise<void> => {
+  const switchProfile = useCallback(async (profileId: string): Promise<void> => {
+    const operationId = beginOperation();
     try {
-      setIsLoading(true);
-      setError(null);
       await SessionService.switchProfile(profileId);
-    } catch (err) {
-      const error = err instanceof Error ? err : new Error(String(err));
-      setError(error);
-      throw error;
+    } catch (cause) {
+      publishOperationError(operationId, cause);
+      throw cause instanceof Error ? cause : new Error(String(cause));
     } finally {
-      setIsLoading(false);
+      endOperation(operationId);
     }
-  };
+  }, [beginOperation, endOperation, publishOperationError]);
 
-  // 6.6 / 6.7 refreshSession handler with isLoading + error management
-  const refreshSession = async (): Promise<void> => {
+  const refreshSession = useCallback(async (): Promise<void> => {
+    const operationId = beginOperation();
     try {
-      setIsLoading(true);
-      setError(null);
       await SessionService.refreshSession();
-    } catch (err) {
-      setError(err instanceof Error ? err : new Error(String(err)));
+    } catch (cause) {
+      publishOperationError(operationId, cause);
     } finally {
-      setIsLoading(false);
+      endOperation(operationId);
     }
-  };
+  }, [beginOperation, endOperation, publishOperationError]);
 
   const value: SessionContext = {
     user: sessionData.user,
