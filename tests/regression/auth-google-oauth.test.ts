@@ -106,22 +106,41 @@ describe("Google OAuth account/access contract", () => {
     expect(terms).not.toContain("Tudo certo com os termos.");
   });
 
-  it("waits for the canonical session bootstrap before declaring the OAuth callback signed out", () => {
+  it("waits for session bootstrap and a pending PKCE callback before declaring signed out", () => {
     const terms = readProjectFile(
       "src/app/features/onboarding/pages/AceiteTermosPage.tsx",
     );
 
     expect(terms).toContain("useSessionContext");
     expect(terms).toContain("isLoading: sessionLoading");
+    expect(terms).toContain("hasAuthCallbackMarker");
+    expect(terms).toContain("authCallbackPending");
+    expect(terms).toContain(
+      "if (sessionLoading || (!user && authCallbackPending))",
+    );
 
-    const loadingGuard = terms.indexOf("if (sessionLoading)");
-    const signedOutGuard = terms.indexOf("if (!user)");
+    const loadingGuard = terms.indexOf(
+      "if (sessionLoading || (!user && authCallbackPending))",
+    );
+    const signedOutGuard = terms.indexOf("if (!user)", loadingGuard + 1);
     expect(loadingGuard).toBeGreaterThanOrEqual(0);
     expect(signedOutGuard).toBeGreaterThan(loadingGuard);
     expect(terms.slice(loadingGuard, signedOutGuard)).toContain(
       'setState("checking")',
     );
     expect(terms).not.toContain('const { user } = useAuth()');
+  });
+
+  it("preserves the PKCE code when session initialization does not complete successfully", () => {
+    const client = readProjectFile("src/integrations/supabase/supabase.ts");
+
+    expect(client).toContain("detectSessionInUrl: true");
+    expect(client).toContain('flowType: "pkce"');
+    expect(client).toContain(".then(({ data, error }) => {");
+    expect(client).toContain("if (!error && data.session)");
+    expect(client).toContain("cleanAuthReturnUrl();");
+    expect(client).not.toContain("getSession().finally");
+    expect(client).not.toMatch(/\.finally\(\(\) => \{\s*cleanAuthReturnUrl\(\)/);
   });
 
   it("keeps localhost:5175 as the deterministic local OAuth origin", () => {
