@@ -22,15 +22,18 @@ describe("multi-profile session hydration", () => {
     expect(source).not.toContain("@/core/session/state/SessionState");
   });
 
-  it("discards stale profile reads when the session user changes or signs out", () => {
+  it("discards stale profile reads and releases failed bootstrap attempts for retry", () => {
     const source = read(
       "src/core/profiles/contexts/multi-profile-runtime-context.tsx",
     );
 
     expect(source).toContain("const loadedUserIdRef = useRef<string | null>(null);");
     expect(source).toContain("const requestVersionRef = useRef(0);");
+    expect(source).toContain("loadedUserIdRef.current = userId;");
     expect(source).toContain("const requestVersion = ++requestVersionRef.current;");
     expect(source).toContain("if (requestVersion !== requestVersionRef.current) return;");
+    expect(source).toContain("if (loadedUserIdRef.current === userId) {");
+    expect(source).toContain("loadedUserIdRef.current = null;");
     expect(source).toContain("requestVersionRef.current += 1;");
     expect(source).toContain("setContextualProfile(null);");
     expect(source).toContain("if (sessionLoading) return;");
