@@ -67,6 +67,23 @@ describe("account password reauthentication", () => {
     expect(catchRouteGuard).toBeGreaterThan(successToast);
   });
 
+  it("serializes password form submissions before React Hook Form busy state settles", () => {
+    const handler = passwordForm.indexOf(
+      "const onValid = async (data: ResetPasswordFormInput) => {",
+    );
+    const lockGuard = passwordForm.indexOf("if (saveInFlight.current) return;", handler);
+    const acquire = passwordForm.indexOf("saveInFlight.current = true;", lockGuard);
+    const save = passwordForm.indexOf("await onSave(data);", acquire);
+    const release = passwordForm.indexOf("saveInFlight.current = false;", save);
+
+    expect(passwordForm).toContain("const saveInFlight = useRef(false);");
+    expect(handler).toBeGreaterThanOrEqual(0);
+    expect(lockGuard).toBeGreaterThan(handler);
+    expect(acquire).toBeGreaterThan(lockGuard);
+    expect(save).toBeGreaterThan(acquire);
+    expect(release).toBeGreaterThan(save);
+  });
+
   it("distinguishes an existing password method from an OAuth-only account", () => {
     expect(identityService).toContain("readMetadataProviders");
     expect(identityService).toContain("data.user.app_metadata ?? {}");
