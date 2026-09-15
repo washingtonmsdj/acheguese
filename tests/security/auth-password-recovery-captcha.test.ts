@@ -43,9 +43,63 @@ describe("password recovery CAPTCHA propagation", () => {
 
     const finallyIndex = recoveryPage.indexOf("} finally {");
     expect(finallyIndex).toBeGreaterThanOrEqual(0);
-    expect(recoveryPage.slice(finallyIndex, finallyIndex + 140)).toContain(
+    expect(recoveryPage.slice(finallyIndex, finallyIndex + 220)).toContain(
       "requestTurnstile.reset()",
     );
+  });
+
+  it("serializes recovery-link requests before React busy state can settle", () => {
+    const sendHandler = recoveryPage.indexOf("const sendRecovery = async");
+    const authRequest = recoveryPage.indexOf(
+      "await resetPasswordByIdentifier(",
+      sendHandler,
+    );
+    const release = recoveryPage.indexOf(
+      "recoveryRequestInFlight.current = false;",
+      authRequest,
+    );
+
+    expect(recoveryPage).toContain(
+      "const recoveryRequestInFlight = useRef(false);",
+    );
+    expect(recoveryPage).toContain(
+      "if (recoveryRequestInFlight.current) return;",
+    );
+    expect(recoveryPage).toContain("recoveryRequestInFlight.current = true;");
+    expect(sendHandler).toBeGreaterThanOrEqual(0);
+    expect(authRequest).toBeGreaterThan(sendHandler);
+    expect(release).toBeGreaterThan(authRequest);
+    expect(recoveryPage.slice(sendHandler, authRequest)).toContain(
+      "recoveryRequestInFlight.current = true;",
+    );
+  });
+
+  it("serializes recovered-password mutation before compromise/Auth checks can duplicate", () => {
+    const saveHandler = recoveryPage.indexOf(
+      "const saveNewPassword = form.handleSubmit(async (data) => {",
+    );
+    const compromiseCheck = recoveryPage.indexOf(
+      "await checkPasswordCompromise(data.newPassword)",
+      saveHandler,
+    );
+    const passwordMutation = recoveryPage.indexOf(
+      "await AuthService.updateRecoveredPassword(data.newPassword);",
+      compromiseCheck,
+    );
+    const release = recoveryPage.indexOf(
+      "passwordSaveInFlight.current = false;",
+      passwordMutation,
+    );
+
+    expect(recoveryPage).toContain("const passwordSaveInFlight = useRef(false);");
+    expect(recoveryPage).toContain(
+      'if (view !== "reset" || passwordSaveInFlight.current) return;',
+    );
+    expect(recoveryPage).toContain("passwordSaveInFlight.current = true;");
+    expect(saveHandler).toBeGreaterThanOrEqual(0);
+    expect(compromiseCheck).toBeGreaterThan(saveHandler);
+    expect(passwordMutation).toBeGreaterThan(compromiseCheck);
+    expect(release).toBeGreaterThan(passwordMutation);
   });
 
   it("routes authenticated account recovery through the canonical CAPTCHA flow", () => {
