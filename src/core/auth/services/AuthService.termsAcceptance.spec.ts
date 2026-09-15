@@ -4,6 +4,7 @@ import { TERMS_OF_SERVICE_VERSION } from "@/core/legal/termsOfService";
 
 const mocks = vi.hoisted(() => ({
   signUp: vi.fn(),
+  refreshSession: vi.fn(),
 }));
 
 vi.mock("@/integrations/supabase", () => ({
@@ -14,12 +15,18 @@ vi.mock("@/integrations/supabase", () => ({
   },
 }));
 
+vi.mock("@/core/session/services/SessionService", () => ({
+  SessionService: {
+    refreshSession: mocks.refreshSession,
+  },
+}));
+
 import { AuthService } from "./AuthService";
 
 describe("AuthService.signUp terms acceptance", () => {
   beforeEach(() => {
     vi.clearAllMocks();
-    mocks.signUp.mockResolvedValue({ error: null });
+    mocks.signUp.mockResolvedValue({ data: { session: null }, error: null });
   });
 
   it("rejects a signup without the current Terms acceptance before calling Supabase", async () => {
@@ -56,5 +63,40 @@ describe("AuthService.signUp terms acceptance", () => {
         }),
       }),
     );
+  });
+
+  it("reports confirmation as required when signup returns no session", async () => {
+    const result = await AuthService.signUp({
+      email: "ana@example.com",
+      password: "SenhaSegura@2026",
+      name: "Ana Souza",
+      termsAcceptance: {
+        accepted: true,
+        version: TERMS_OF_SERVICE_VERSION,
+      },
+    });
+
+    expect(result).toEqual({ requiresEmailConfirmation: true });
+    expect(mocks.refreshSession).not.toHaveBeenCalled();
+  });
+
+  it("publishes an immediate signup session before reporting first-access readiness", async () => {
+    mocks.signUp.mockResolvedValueOnce({
+      data: { session: { access_token: "token" } },
+      error: null,
+    });
+
+    const result = await AuthService.signUp({
+      email: "ana@example.com",
+      password: "SenhaSegura@2026",
+      name: "Ana Souza",
+      termsAcceptance: {
+        accepted: true,
+        version: TERMS_OF_SERVICE_VERSION,
+      },
+    });
+
+    expect(mocks.refreshSession).toHaveBeenCalledTimes(1);
+    expect(result).toEqual({ requiresEmailConfirmation: false });
   });
 });
