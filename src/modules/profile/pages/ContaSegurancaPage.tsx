@@ -18,6 +18,7 @@ import {
 } from "lucide-react";
 import { toast } from "sonner";
 
+import { buildPasswordResetRequestPath } from "@/core/auth/constants/authFlow";
 import { useAuth } from "@/core/auth/hooks/useAuth";
 import { useLinkedAuthProviders } from "@/core/auth/hooks/useLinkedAuthProviders";
 import { useMFA } from "@/core/auth/hooks/useMFA";
@@ -138,7 +139,6 @@ export default function ContaSegurancaPage() {
     requestPasswordReauthentication,
     updatePassword,
     updateEmail,
-    resetPassword,
     googleAuthAvailable,
     signOutOtherSessions,
   } = useAuth();
@@ -162,8 +162,6 @@ export default function ContaSegurancaPage() {
     listFactors,
   } = useMFA();
 
-  const [sendingReset, setSendingReset] = useState(false);
-  const [resetSent, setResetSent] = useState(false);
   const [passwordReauthRequired, setPasswordReauthRequired] = useState(false);
   const [passwordNonce, setPasswordNonce] = useState("");
   const [passwordReauthError, setPasswordReauthError] = useState<string | null>(null);
@@ -245,17 +243,8 @@ export default function ContaSegurancaPage() {
     }
   };
 
-  const handleResetPassword = async () => {
-    setSendingReset(true);
-    try {
-      await resetPassword(user.email);
-      setResetSent(true);
-      toast.success("E-mail de redefinição enviado");
-    } catch (error) {
-      toast.error(getAuthErrorMessage(error, "Erro ao enviar e-mail"));
-    } finally {
-      setSendingReset(false);
-    }
+  const handleResetPassword = () => {
+    navigate(buildPasswordResetRequestPath(user.email));
   };
 
   const handleUpdateEmail = async () => {
@@ -527,9 +516,8 @@ export default function ContaSegurancaPage() {
                 <p className="mt-1 break-all text-sm text-territory-muted">{user.email}</p>
               </div>
             </div>
-            <Button type="button" variant="outline" className="mt-4 min-h-11 w-full" onClick={handleResetPassword} disabled={resetSent || sendingReset}>
-              {sendingReset ? <Loader2 className="mr-2 h-4 w-4 animate-spin" aria-hidden="true" /> : null}
-              {resetSent ? "E-mail enviado" : "Enviar recuperação por e-mail"}
+            <Button type="button" variant="outline" className="mt-4 min-h-11 w-full" onClick={handleResetPassword}>
+              Continuar para recuperação por e-mail
             </Button>
           </Surface>
           <div className="mt-4"><HelpRow onClick={() => navigate(SUPPORT_PATH)} /></div>
