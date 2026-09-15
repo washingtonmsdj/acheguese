@@ -1,4 +1,3 @@
-import crypto from "node:crypto";
 import fs from "node:fs";
 import path from "node:path";
 import { describe, expect, it } from "vitest";
@@ -8,8 +7,9 @@ const read = (relativePath: string) =>
   fs.readFileSync(path.join(ROOT, relativePath), "utf8");
 
 describe("refresh first paint", () => {
-  it("applies the persisted theme before React through a CSP-hashed inline bootstrap", () => {
+  it("applies the persisted theme before React through the CSP-aligned same-origin bootstrap", () => {
     const html = read("index.html");
+    const themeInit = read("public/theme-init.js");
     const themeHook = read("src/shared/hooks/useTheme.ts");
     const vercelConfig = JSON.parse(read("vercel.json")) as {
       headers?: Array<{
@@ -24,34 +24,27 @@ describe("refresh first paint", () => {
         ?.split(";")
         .map((directive) => directive.trim())
         .find((directive) => directive.startsWith("script-src ")) ?? "";
-    const themeBootstrapMatch = html.match(
-      /<script data-theme-bootstrap>([\s\S]*?)<\/script>/,
-    );
-    const themeBootstrap = themeBootstrapMatch?.[1] ?? "";
-    const bootstrapHash = crypto
-      .createHash("sha256")
-      .update(themeBootstrap, "utf8")
-      .digest("base64");
 
     expect(html).toContain(
       '<html lang="pt-BR" class="light" data-theme-storage-key="acheguese-theme">',
     );
-    expect(themeBootstrap).not.toBe("");
+    expect(html).toContain(
+      '<script src="/theme-init.js" data-theme-bootstrap></script>',
+    );
     expect(html.indexOf("data-theme-bootstrap")).toBeLessThan(
       html.indexOf('<script type="module" src="/src/main.tsx"></script>'),
     );
-    expect(html).not.toContain('src="/theme-init.js"');
-    expect(fs.existsSync(path.join(ROOT, "public/theme-init.js"))).toBe(false);
+    expect(html).not.toMatch(/<script data-theme-bootstrap>[\s\S]*?<\/script>/);
+    expect(fs.existsSync(path.join(ROOT, "public/theme-init.js"))).toBe(true);
 
-    expect(themeBootstrap).toContain("document.documentElement");
-    expect(themeBootstrap).toContain("dataset.themeStorageKey");
-    expect(themeBootstrap).toContain("localStorage.getItem(t)");
-    expect(themeBootstrap).toContain('classList.toggle("dark",s)');
-    expect(themeBootstrap).toContain('classList.toggle("light",!s)');
+    expect(themeInit).toContain("root.dataset.themeStorageKey");
+    expect(themeInit).toContain("window.localStorage.getItem(storageKey)");
+    expect(themeInit).toContain('root.classList.toggle("dark", isDark)');
+    expect(themeInit).toContain('root.classList.toggle("light", !isDark)');
 
     expect(scriptSrc).toContain("'self'");
-    expect(scriptSrc).toContain(`'sha256-${bootstrapHash}'`);
     expect(scriptSrc).not.toContain("'unsafe-inline'");
+    expect(scriptSrc).not.toMatch(/'sha256-[A-Za-z0-9+/]+=*'/);
 
     expect(themeHook).toContain("document.documentElement.dataset.themeStorageKey");
     expect(themeHook).toContain("useLayoutEffect");
