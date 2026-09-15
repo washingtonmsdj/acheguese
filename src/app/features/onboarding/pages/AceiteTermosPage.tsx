@@ -53,6 +53,7 @@ export default function AceiteTermosPage() {
   const [state, setState] = useState<AcceptanceState>("checking");
   const [accepted, setAccepted] = useState(false);
   const [submitting, setSubmitting] = useState(false);
+  const [hasPriorTermsAcceptance, setHasPriorTermsAcceptance] = useState(false);
 
   const returnTo = useMemo(() => getAuthJourneyReturnTarget(), []);
   const journeyIntent = useMemo(() => getPendingAuthJourneyIntent(), []);
@@ -134,6 +135,12 @@ export default function AceiteTermosPage() {
     void PrivacySettingsService.getUserConsents(user.id)
       .then((consents) => {
         if (!active) return;
+        const hadAcceptedTermsBefore = consents.some(
+          (consent) =>
+            consent.consent_type === "terms_of_service" && consent.granted,
+        );
+        setHasPriorTermsAcceptance(hadAcceptedTermsBefore);
+
         if (consents.some((consent) => hasCurrentTermsAcceptance(consent))) {
           if (journeyIntent === AUTH_JOURNEY_INTENTS.signup) {
             completeExistingGoogleSignupJourney();
@@ -177,6 +184,16 @@ export default function AceiteTermosPage() {
         termsVersion: TERMS_OF_SERVICE_VERSION,
       });
       toast({ title: "Aceite registrado" });
+
+      if (
+        journeyIntent === AUTH_JOURNEY_INTENTS.signup &&
+        hasPriorTermsAcceptance
+      ) {
+        completeExistingGoogleSignupJourney();
+        navigate(signupOriginalReturn, { replace: true });
+        return;
+      }
+
       completeTermsJourney();
       navigate(returnTo, { replace: true });
     } catch {
