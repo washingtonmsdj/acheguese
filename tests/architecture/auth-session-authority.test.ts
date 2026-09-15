@@ -24,6 +24,14 @@ const ALLOWED_DIRECT_AUTH_READS = new Map<string, readonly string[]>([
   ],
 ]);
 
+const HYDRATION_GATED_AUTH_SURFACES = [
+  "src/app/pages/LoginPage.tsx",
+  "src/app/pages/EmailChangeConfirmationPage.tsx",
+  "src/app/features/onboarding/pages/CadastroPage.tsx",
+  "src/app/features/onboarding/pages/CadastroPrimeiroAcessoPage.tsx",
+  "src/app/features/onboarding/pages/AceiteTermosPage.tsx",
+] as const;
+
 function normalize(filePath: string): string {
   return filePath.replace(/\\/g, "/");
 }
@@ -69,6 +77,46 @@ describe("G4 Auth/session authority", () => {
         expect(source).toContain(`supabase.auth.${method}(`);
       }
     }
+  });
+
+  it("keeps public auth decision surfaces on the hydrated session owner", () => {
+    for (const relativePath of HYDRATION_GATED_AUTH_SURFACES) {
+      const source = fs.readFileSync(path.join(ROOT, relativePath), "utf8");
+
+      expect(source, `${relativePath} must use the session owner`).toContain(
+        'from "@/core/session/hooks/useSessionContext"',
+      );
+      expect(source, `${relativePath} must read session hydration state`).toContain(
+        "isLoading: sessionLoading",
+      );
+    }
+  });
+
+  it("keeps entry actions gated until session hydration settles", () => {
+    const login = fs.readFileSync(
+      path.join(ROOT, "src/app/pages/LoginPage.tsx"),
+      "utf8",
+    );
+    const signup = fs.readFileSync(
+      path.join(ROOT, "src/app/features/onboarding/pages/CadastroPage.tsx"),
+      "utf8",
+    );
+    const firstAccess = fs.readFileSync(
+      path.join(
+        ROOT,
+        "src/app/features/onboarding/pages/CadastroPrimeiroAcessoPage.tsx",
+      ),
+      "utf8",
+    );
+
+    expect(login).toContain(
+      "const isBusy = sessionLoading || user !== null || pendingAction !== null;",
+    );
+    expect(signup).toContain(
+      "const authBusy = sessionLoading || user !== null || loading || googleLoading;",
+    );
+    expect(firstAccess).toContain("if (sessionLoading) return;");
+    expect(firstAccess).toContain("if (sessionLoading || loadingProfile)");
   });
 
   it("keeps privacy access-token reads delegated to the session owner", () => {
