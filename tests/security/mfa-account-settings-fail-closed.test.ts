@@ -67,6 +67,23 @@ describe("account MFA settings fail-closed contract", () => {
     );
   });
 
+  it("publishes only the latest MFA status refresh and invalidates reads on unmount", () => {
+    expect(hook).toContain("const mountedRef = useRef(true);");
+    expect(hook).toContain("const loadStatusRequestIdRef = useRef(0);");
+    expect(hook).toContain(
+      "const requestId = loadStatusRequestIdRef.current + 1;",
+    );
+    expect(hook).toContain("loadStatusRequestIdRef.current = requestId;");
+    expect(hook).toContain(
+      "requestId !== loadStatusRequestIdRef.current",
+    );
+    expect(hook).toContain("mountedRef.current = false;");
+    expect(hook).toContain("loadStatusRequestIdRef.current += 1;");
+    expect(hook).toContain(
+      "requestId === loadStatusRequestIdRef.current",
+    );
+  });
+
   it("drops the local enrollment secret and verification code when leaving the MFA view", () => {
     expect(securityPage).toContain("const mfaFlowRequestIdRef = useRef(0);");
     expect(securityPage).toContain('if (location.hash === "#mfa") return;');
