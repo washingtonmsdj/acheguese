@@ -43,6 +43,10 @@ export function isEmailNotConfirmedError(error: unknown): boolean {
   return /email[_\s-]*not[_\s-]*confirmed/i.test(signal);
 }
 
+export function isRecoverySessionDisposalError(error: unknown): boolean {
+  return getAuthErrorDetails(error).code === "RECOVERY_SESSION_DISPOSAL_FAILED";
+}
+
 export function getAuthErrorMessage(
   error: unknown,
   fallback = "Não foi possível concluir a operação. Tente novamente.",
