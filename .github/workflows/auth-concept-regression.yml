@@ -8,6 +8,7 @@ on:
       - ".env.remote.example"
       - ".env.example"
       - ".env.local.example"
+      - "supabase/config.toml"
       - "src/app/components/auth/**"
       - "src/app/pages/LoginPage.tsx"
       - "src/app/pages/ResetPasswordPage.tsx"
@@ -26,6 +27,7 @@ on:
       - "tests/regression/auth-route-ownership.test.ts"
       - "tests/regression/auth-return-context.test.ts"
       - "tests/regression/auth-google-oauth.test.ts"
+      - "tests/regression/auth-redirect-allowlist.test.ts"
       - "playwright.config.ts"
       - "package.json"
       - "package-lock.json"
@@ -36,6 +38,7 @@ on:
       - ".env.remote.example"
       - ".env.example"
       - ".env.local.example"
+      - "supabase/config.toml"
       - "src/app/components/auth/**"
       - "src/app/pages/LoginPage.tsx"
       - "src/app/pages/ResetPasswordPage.tsx"
@@ -54,6 +57,7 @@ on:
       - "tests/regression/auth-route-ownership.test.ts"
       - "tests/regression/auth-return-context.test.ts"
       - "tests/regression/auth-google-oauth.test.ts"
+      - "tests/regression/auth-redirect-allowlist.test.ts"
       - "playwright.config.ts"
       - "package.json"
       - "package-lock.json"
@@ -97,6 +101,7 @@ jobs:
           tests/regression/auth-route-ownership.test.ts
           tests/regression/auth-return-context.test.ts
           tests/regression/auth-google-oauth.test.ts
+          tests/regression/auth-redirect-allowlist.test.ts
 
   responsive-layout:
     name: auth responsive layout, accessibility and captures
