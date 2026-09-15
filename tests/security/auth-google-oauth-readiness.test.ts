@@ -17,6 +17,7 @@ const read = (path: string) => readFileSync(resolve(root, path), "utf8");
 const availability = read(
   "src/core/auth/services/AuthBackendAvailability.ts",
 );
+const authService = read("src/core/auth/services/AuthService.ts");
 const authHook = read("src/core/auth/hooks/useAuth.ts");
 const messages = read("src/core/auth/utils/authMessages.ts");
 
@@ -142,6 +143,19 @@ describe("Google OAuth backend readiness", () => {
         "await AuthBackendAvailability.assertReadyForExternalOAuth();",
       ),
     ).toBeLessThan(googleFlow.indexOf("await AuthService.signInWithGoogle();"));
+  });
+
+  it("requests only the identity scopes required for Google login, including explicit Workspace email access", () => {
+    expect(authService).toContain('"openid"');
+    expect(authService).toContain(
+      '"https://www.googleapis.com/auth/userinfo.email"',
+    );
+    expect(authService).toContain(
+      '"https://www.googleapis.com/auth/userinfo.profile"',
+    );
+    expect(authService).toContain("scopes: GOOGLE_IDENTITY_SCOPES");
+    expect(authService).not.toContain("access_type: \"offline\"");
+    expect(authService).not.toContain("prompt: \"consent\"");
   });
 
   it("normalizes gateway, malformed settings and network failures without exposing raw provider text", () => {
