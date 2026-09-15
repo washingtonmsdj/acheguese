@@ -310,10 +310,19 @@ export class SessionService {
   private static async loadFromSession(session: Session): Promise<void> {
     if (!SessionService.ownsSession(session)) return;
 
-    // Um load já em andamento termina primeiro; o evento mais novo ainda faz a
-    // própria leitura fresca depois, sem reutilizar uma projeção cacheada.
-    if (SessionService.loadPromise) {
-      await SessionService.loadPromise;
+    // Aguardar uma leitura anterior não transfere seu resultado/erro para esta
+    // operação. Se ela falhar, a operação mais nova ainda tenta sua leitura
+    // fresca, desde que a mesma sessão continue sendo dona.
+    const activeLoad = SessionService.loadPromise;
+    if (activeLoad) {
+      try {
+        await activeLoad;
+      } catch (error) {
+        SessionService.debug(
+          "[SessionService] prior load failed; continuing with fresh load",
+          error,
+        );
+      }
       if (!SessionService.ownsSession(session)) return;
     }
 
