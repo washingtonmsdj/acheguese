@@ -13,23 +13,20 @@ const errorMessage = (error: unknown, fallback: string): string =>
 
 export class ProfileLinksService {
   /**
-   * Listar links de um perfil (via RLS)
+   * Listar links privados de um perfil (via RLS).
+   *
+   * Falhas são propagadas: [] significa uma leitura válida sem vínculos.
    */
   static async getProfileLinks(profileId: string): Promise<ProfileLink[]> {
-    try {
-      const { data, error } = await supabase
-        .from('profile_links')
-        .select('*')
-        .eq('from_profile_id', profileId)
-        .order('display_order', { ascending: true });
+    const { data, error } = await supabase
+      .from('profile_links')
+      .select('*')
+      .eq('from_profile_id', profileId)
+      .order('display_order', { ascending: true });
 
-      if (error) throw error;
+    if (error) throw error;
 
-      return (data || []) as ProfileLink[];
-    } catch (error: unknown) {
-      logger.error('Error fetching profile links:', error);
-      return [];
-    }
+    return (data || []) as ProfileLink[];
   }
 
   /**
@@ -151,7 +148,9 @@ export class ProfileLinksService {
           .eq('id', link.id)
       );
 
-      await Promise.all(updates);
+      const results = await Promise.all(updates);
+      const failed = results.find((result) => result.error);
+      if (failed?.error) throw failed.error;
 
       return { success: true };
     } catch (error: unknown) {
