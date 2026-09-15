@@ -13,6 +13,7 @@ import {
   buildPasswordRecoveryPath,
 } from "@/core/auth/constants/authFlow";
 import { parseAuthIdentifier } from "@/core/auth/utils/authIdentifier";
+import { checkPasswordCompromise } from "@/core/auth/utils/compromisedPassword";
 import { isCurrentTermsAcceptance } from "@/core/legal/termsOfService";
 import { recoverForcedLocalSignOut } from "@/core/session/services/SessionSignOutRecovery";
 import { SessionService } from "@/core/session/services/SessionService";
@@ -100,6 +101,20 @@ export class AuthService {
 
   private static normalizeUsername(username: string): string {
     return username.replace(/^@/, "").toLowerCase().trim();
+  }
+
+  private static async assertPasswordNotCompromised(
+    password: string,
+  ): Promise<void> {
+    const compromise = await checkPasswordCompromise(password);
+    if (!compromise.blocked) return;
+
+    throw new AuthError(
+      compromise.message ??
+        "Esta senha aparece em vazamentos de dados conhecidos. Escolha uma senha diferente.",
+      "PASSWORD_COMPROMISED",
+      400,
+    );
   }
 
   private static async readAuthFunctionResponse(
@@ -362,6 +377,8 @@ export class AuthService {
    * Recovery flows must use updateRecoveredPassword() instead.
    */
   static async updatePassword(newPassword: string, nonce?: string): Promise<void> {
+    await AuthService.assertPasswordNotCompromised(newPassword);
+
     const normalizedNonce = nonce?.trim();
     const { error } = await supabase.auth.updateUser({
       password: newPassword,
