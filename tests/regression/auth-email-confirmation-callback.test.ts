@@ -9,24 +9,27 @@ function readProjectFile(path: string): string {
 }
 
 describe("email confirmation callback contract", () => {
-  it("keeps pending PKCE code detection in the auth callback SSOT", () => {
+  it("keeps pending auth exchange detection in the auth callback SSOT", () => {
     const callback = readProjectFile("src/core/auth/utils/authCallback.ts");
     const login = readProjectFile("src/app/pages/LoginPage.tsx");
 
     expect(callback).toContain("export function hasPendingPkceCode");
-    expect(callback).toContain("parseParams(search).has(AUTH_QUERY_KEYS.code)");
-    expect(login).toContain("hasPendingPkceCode");
+    expect(callback).toContain("export function hasPendingAuthCallbackExchange");
+    expect(callback).toContain("hashParams.has(AUTH_QUERY_KEYS.accessToken)");
+    expect(callback).toContain("hashParams.has(AUTH_QUERY_KEYS.refreshToken)");
+    expect(login).toContain("hasPendingAuthCallbackExchange");
+    expect(login).not.toContain("hasPendingPkceCode");
     expect(login).not.toContain(
       "new URLSearchParams(window.location.search).has(AUTH_QUERY_KEYS.code)",
     );
   });
 
-  it("never treats an existing session as proof while an email confirmation code is pending", () => {
+  it("never treats an existing session as proof while any email confirmation exchange is pending", () => {
     const login = readProjectFile("src/app/pages/LoginPage.tsx");
 
     const confirmedBranch = login.indexOf("if (isEmailConfirmed) {");
     const pendingGuard = login.indexOf(
-      "hasPendingPkceCode(window.location.search)",
+      "hasPendingAuthCallbackExchange(\n          window.location.search,\n          window.location.hash,",
       confirmedBranch,
     );
     const completion = login.indexOf(
@@ -38,6 +41,17 @@ describe("email confirmation callback contract", () => {
     expect(pendingGuard).toBeGreaterThan(confirmedBranch);
     expect(completion).toBeGreaterThan(pendingGuard);
     expect(login.slice(confirmedBranch, completion)).toContain("return;");
+  });
+
+  it("keeps both PKCE and legacy implicit resend callbacks behind the pending barrier", () => {
+    const callback = readProjectFile("src/core/auth/utils/authCallback.ts");
+    const login = readProjectFile("src/app/pages/LoginPage.tsx");
+
+    expect(callback).toContain("searchParams.has(AUTH_QUERY_KEYS.code)");
+    expect(callback).toContain("hashParams.has(AUTH_QUERY_KEYS.accessToken)");
+    expect(callback).toContain("hashParams.has(AUTH_QUERY_KEYS.refreshToken)");
+    expect(login).toContain("emailConfirmationExchangePending");
+    expect(login).toContain("Confirmando seu e-mail…");
   });
 
   it("returns failed or orphaned confirmation callbacks to the recoverable confirmation surface", () => {
