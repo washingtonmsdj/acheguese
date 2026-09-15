@@ -6,7 +6,7 @@ import { useNavigate, useSearchParams } from "react-router-dom";
 import { PrivacySettings } from "@/core/profiles/components/PrivacySettings";
 import { ProfileLinksManager } from "@/core/profiles/components/ProfileLinksManager";
 import { ProfileMembersManagerImproved } from "@/core/profiles/components/ProfileMembersManagerImproved";
-import { useActiveProfile } from "@/core/profiles/hooks/useActiveProfile";
+import { useMultiProfileContext } from "@/core/profiles/contexts/multi-profile-runtime-context";
 import {
   canProfileHaveMembers,
   getProfileTypeLabel,
@@ -61,7 +61,7 @@ function normalizeTab(value: string | null): ProfileSettingsTab {
 
 export default function ProfileSettingsPage() {
   const navigate = useNavigate();
-  const { activeProfile, loading } = useActiveProfile();
+  const { activeProfile, loading } = useMultiProfileContext();
   const [searchParams, setSearchParams] = useSearchParams();
   const canHaveMembers = canProfileHaveMembers(activeProfile);
   const rawTab = searchParams.get("tab");
