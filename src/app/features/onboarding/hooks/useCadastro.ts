@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -57,6 +57,7 @@ export function useCadastroForm(requestedRedirect = "/") {
   const navigate = useNavigate();
   const { toast } = useToast();
   const [loading, setLoading] = useState(false);
+  const submitInFlightRef = useRef(false);
 
   const form = useForm<CadastroFormValues>({
     resolver: zodResolver(RegisterInitialSchema),
@@ -69,7 +70,11 @@ export function useCadastroForm(requestedRedirect = "/") {
 
   const submit = (captchaToken?: string, onCaptchaConsumed?: () => void) =>
     form.handleSubmit(async (values) => {
-      if (loading) return;
+      // React state disables the UI after render, but it is not a synchronous
+      // mutex. Guard the command itself so two submits in the same tick cannot
+      // run availability/password checks and create two Auth requests.
+      if (submitInFlightRef.current) return;
+      submitInFlightRef.current = true;
       setLoading(true);
       form.clearErrors("root.serverError");
 
@@ -164,6 +169,7 @@ export function useCadastroForm(requestedRedirect = "/") {
           variant: "destructive",
         });
       } finally {
+        submitInFlightRef.current = false;
         setLoading(false);
       }
     })();
