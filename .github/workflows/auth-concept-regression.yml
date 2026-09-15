@@ -137,6 +137,7 @@ jobs:
           npx playwright test
           tests/e2e/auth-concept-layout.spec.ts
           tests/e2e/auth-concept-capture.spec.ts
+          tests/e2e/auth-email-confirmation.spec.ts
           tests/e2e/auth-oauth-recovery.spec.ts
           tests/e2e/auth-keyboard-accessibility.spec.ts
           --project=chromium
