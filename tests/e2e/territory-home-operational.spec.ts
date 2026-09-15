@@ -55,29 +55,36 @@ test.describe("Home territorial pública e determinística", () => {
     await installTerritoryHomeFixtures(page);
   });
 
-  test("visitante entra por / e explora um bairro sem cadastro", async ({
+  test("visitante entra pela raiz enxuta e encontra a comunidade de lançamento sem cadastro", async ({
     page,
   }) => {
     const health = observeBrowserHealth(page);
 
     await gotoApp(page, "/");
     await expect(
-      page.getByRole("heading", {
-        name: /Encontre o que importa perto de você/i,
-      }),
+      page.getByRole("heading", { name: "Seu lugar, mais perto." }),
     ).toBeVisible({ timeout: 30_000 });
-    await expect(page.getByRole("link", { name: "Entrar" })).toBeVisible();
 
-    await page.getByRole("button", { name: "Pituba" }).click();
-    await expect(page).toHaveURL(/\/ba\/salvador\/pituba$/);
-    await expect(
-      page.getByRole("heading", { name: "Na sua comunidade" }),
-    ).toBeVisible({
-      timeout: 30_000,
+    const communityPreview = page.locator(".entry-community-preview");
+    const deferredDesktopImage = communityPreview.locator(":scope > div");
+    await expect(deferredDesktopImage).toBeHidden();
+    await expect(communityPreview.locator("img")).toBeHidden();
+
+    const exploreCommunity = page.getByRole("link", {
+      name: /Explorar o Complexo do Nordeste de Amaralina/i,
     });
-    await expect(page.getByText("Oficina Horizonte")).toBeVisible({
-      timeout: 30_000,
-    });
+    await expect(exploreCommunity).toHaveAttribute(
+      "href",
+      "/comunidade/complexo-do-nordeste-de-amaralina",
+    );
+    await expect(page.getByText("Sem cadastro para explorar.")).toBeVisible();
+
+    await page.getByRole("button", { name: "Abrir menu" }).click();
+    await expect(page.getByRole("link", { name: "Entrar" })).toBeVisible();
+    await expectNoHorizontalOverflow(page);
+
+    await page.setViewportSize({ width: 820, height: 1000 });
+    await expect(deferredDesktopImage).toBeVisible();
     await expectNoHorizontalOverflow(page);
     health.assertHealthy();
   });
