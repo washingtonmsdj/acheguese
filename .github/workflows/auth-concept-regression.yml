@@ -25,6 +25,7 @@ on:
       - "src/modules/profile/components/ChangePasswordForm.tsx"
       - "src/shared/components/ui/checkbox.tsx"
       - "public/auth/**"
+      - "tests/architecture/auth-session-authority.test.ts"
       - "tests/e2e/auth-*.spec.ts"
       - "tests/regression/auth-concept-flow.test.ts"
       - "tests/regression/auth-confirmation-resend-turnstile.test.ts"
@@ -70,6 +71,7 @@ on:
       - "src/modules/profile/components/ChangePasswordForm.tsx"
       - "src/shared/components/ui/checkbox.tsx"
       - "public/auth/**"
+      - "tests/architecture/auth-session-authority.test.ts"
       - "tests/e2e/auth-*.spec.ts"
       - "tests/regression/auth-concept-flow.test.ts"
       - "tests/regression/auth-confirmation-resend-turnstile.test.ts"
@@ -119,6 +121,7 @@ jobs:
       - name: Run account/access contract
         run: >-
           npx vitest run
+          src/core/auth/services/AuthRecoveryAuthority.test.ts
           src/core/auth/utils/__tests__/authCallback.test.ts
           src/core/auth/utils/__tests__/authFlowStorage.test.ts
           src/core/auth/utils/__tests__/authJourney.test.ts
@@ -126,6 +129,7 @@ jobs:
           src/app/features/onboarding/hooks/useCadastro.spec.tsx
           src/app/features/onboarding/pages/CadastroPage.spec.tsx
           src/app/features/onboarding/pages/CadastroPrimeiroAcessoPage.spec.tsx
+          tests/architecture/auth-session-authority.test.ts
           tests/regression/auth-concept-flow.test.ts
           tests/regression/auth-confirmation-resend-turnstile.test.ts
           tests/regression/auth-email-change-callback.test.ts
