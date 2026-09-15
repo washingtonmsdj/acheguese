@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { Helmet } from "react-helmet-async";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 
@@ -43,6 +43,7 @@ export default function CadastroConfirmacaoPage() {
   const turnstile = useAuthTurnstile();
   const [isResending, setIsResending] = useState(false);
   const [cooldown, setCooldown] = useState(getResendCooldownSeconds);
+  const resendInFlight = useRef(false);
 
   const state = location.state as ConfirmationState;
   const journeyContext = useMemo(() => getSignupConfirmationContext(), []);
@@ -75,7 +76,7 @@ export default function CadastroConfirmacaoPage() {
 
   const handleResend = async () => {
     if (!email) return;
-    if (cooldown > 0 || isResending) return;
+    if (cooldown > 0 || resendInFlight.current) return;
     if (!turnstile.isReady) {
       toast({
         title: "Verificação necessária",
@@ -85,6 +86,7 @@ export default function CadastroConfirmacaoPage() {
       return;
     }
 
+    resendInFlight.current = true;
     setIsResending(true);
     try {
       await resendConfirmationEmail(email, turnstile.token ?? undefined);
@@ -108,6 +110,7 @@ export default function CadastroConfirmacaoPage() {
       });
     } finally {
       turnstile.reset();
+      resendInFlight.current = false;
       setIsResending(false);
     }
   };
