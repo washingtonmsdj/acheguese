@@ -1,4 +1,3 @@
-import { logger } from "@/shared/utils/logger";
 import { ProfileRpcService } from "../ProfileRpcService";
 
 import type { Profile } from "./types";
@@ -14,16 +13,11 @@ export const MultiProfileRuntimeService = {
 
     const request = ProfileRpcService.getAccessibleProfiles<Profile[]>({
       targetUserId: userId,
-    })
-      .catch((error) => {
-        logger.error("Error fetching runtime profiles:", error);
-        return [];
-      })
-      .finally(() => {
-        if (inFlightProfileReads.get(userId) === request) {
-          inFlightProfileReads.delete(userId);
-        }
-      });
+    }).finally(() => {
+      if (inFlightProfileReads.get(userId) === request) {
+        inFlightProfileReads.delete(userId);
+      }
+    });
 
     inFlightProfileReads.set(userId, request);
     return request;
