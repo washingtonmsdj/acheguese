@@ -25,11 +25,15 @@ export interface SignUpData {
 export interface SignInData {
   email: string;
   password: string;
+  /** Token anti-bot emitido pelo Turnstile quando o gate está habilitado. */
+  captchaToken?: string;
 }
 
 export interface SignInWithUsernameData {
   username: string;
   password: string;
+  /** Token anti-bot repassado ao broker público de login por @usuário. */
+  captchaToken?: string;
 }
 
 export class AuthError extends Error {
