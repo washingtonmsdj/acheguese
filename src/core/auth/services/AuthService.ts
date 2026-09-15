@@ -103,6 +103,7 @@ export class AuthService {
       );
     }
 
+    const captchaToken = data.captchaToken?.trim();
     const { error } = await supabase.auth.signUp({
       email: data.email,
       password: data.password,
@@ -115,6 +116,7 @@ export class AuthService {
           terms_version: data.termsAcceptance.version,
         },
         emailRedirectTo: AuthService.getEmailConfirmationRedirectUrl(),
+        ...(captchaToken ? { captchaToken } : {}),
       },
     });
     if (error) throw error;
