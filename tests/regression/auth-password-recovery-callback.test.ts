@@ -75,4 +75,14 @@ describe("password recovery callback settlement", () => {
     expect(recovery).toContain("isAuthRateLimitError(error)");
     expect(recovery).not.toContain("const RESEND_SECONDS = 60");
   });
+
+  it("shows legal links without creating implicit consent during password reset", () => {
+    const recovery = read("src/app/pages/ResetPasswordPage.tsx");
+
+    expect(recovery).toContain('aria-label="Links legais"');
+    expect(recovery).toContain("TERMS_OF_SERVICE_PATH");
+    expect(recovery).toContain("PRIVACY_POLICY_PATH");
+    expect(recovery).not.toContain("Ao continuar, você concorda");
+    expect(recovery).not.toContain("Li e aceito");
+  });
 });
