@@ -49,16 +49,21 @@ describe("account email change callback ownership", () => {
     ).toBe(2);
   });
 
-  it("waits for PKCE settlement and never enters the signup first-access journey", () => {
+  it("waits for every auth exchange format and never enters signup first access", () => {
     expect(callbackPage).toContain("getAuthCallbackError");
-    expect(callbackPage).toContain("hasPendingPkceCode");
+    expect(callbackPage).toContain("hasPendingAuthCallbackExchange");
     expect(callbackPage).toContain("window.location.search");
+    expect(callbackPage).toContain("window.location.hash");
+    expect(callbackPage).toContain(
+      "hasPendingAuthCallbackExchange(liveSearch, liveHash)",
+    );
     expect(callbackPage).toContain(
       "AUTH_BROWSER_STORAGE_CONFIG.authUrlCleanupDelayMs",
     );
     expect(callbackPage).toContain('type EmailChangeReturnState = "checking" | "ready" | "invalid"');
     expect(callbackPage).toContain("buildLoginPath(ACCOUNT_PATHS.access)");
     expect(callbackPage).toContain("ACCOUNT_PATHS.access");
+    expect(callbackPage).not.toContain("hasPendingPkceCode");
     expect(callbackPage).not.toContain("AUTH_PATHS.firstAccess");
     expect(callbackPage).not.toContain("completeEmailConfirmationLoginJourney");
   });
