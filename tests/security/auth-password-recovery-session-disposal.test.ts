@@ -6,6 +6,7 @@ const root = process.cwd();
 const read = (path: string) => readFileSync(resolve(root, path), "utf8");
 
 const authService = read("src/core/auth/services/AuthService.ts");
+const authMessages = read("src/core/auth/utils/authMessages.ts");
 const recoveryPage = read("src/app/pages/ResetPasswordPage.tsx");
 
 describe("password recovery session disposal", () => {
@@ -55,6 +56,43 @@ describe("password recovery session disposal", () => {
     expect(update).toBeGreaterThan(handler);
     expect(errorGuard).toBeGreaterThan(update);
     expect(signOut).toBeGreaterThan(errorGuard);
+  });
+
+  it("distinguishes a changed password from a failed temporary-session disposal", () => {
+    const handler = authService.indexOf(
+      "static async updateRecoveredPassword(newPassword: string): Promise<void>",
+    );
+    const update = authService.indexOf("await supabase.auth.updateUser({", handler);
+    const disposalError = authService.indexOf(
+      '"RECOVERY_SESSION_DISPOSAL_FAILED"',
+      update,
+    );
+
+    expect(disposalError).toBeGreaterThan(update);
+    expect(authMessages).toContain(
+      'code === "RECOVERY_SESSION_DISPOSAL_FAILED"',
+    );
+    expect(recoveryPage).toContain("isRecoverySessionDisposalError(error)");
+    expect(recoveryPage).toContain('setView("dispose-error")');
+    expect(recoveryPage).toContain('view === "dispose-error"');
+    expect(recoveryPage).toContain("Sua nova senha já foi salva.");
+  });
+
+  it("retries only temporary-session disposal and never repeats the password mutation", () => {
+    const retryHandler = recoveryPage.indexOf(
+      "const retryRecoverySessionDisposal = async () => {",
+    );
+    const retryEnd = recoveryPage.indexOf("const title =", retryHandler);
+    const retryFlow = recoveryPage.slice(retryHandler, retryEnd);
+
+    expect(retryHandler).toBeGreaterThanOrEqual(0);
+    expect(retryEnd).toBeGreaterThan(retryHandler);
+    expect(retryFlow).toContain("await AuthService.signOut();");
+    expect(retryFlow).toContain('setView("success")');
+    expect(retryFlow).not.toContain("updateRecoveredPassword");
+    expect(retryFlow).not.toContain("updateUser");
+    expect(retryFlow).toContain("recoverySessionDisposalInFlight.current");
+    expect(recoveryPage).toContain("Tentar encerrar sessão");
   });
 
   it("never promotes the recovery page from URL tokens or a preexisting user", () => {
