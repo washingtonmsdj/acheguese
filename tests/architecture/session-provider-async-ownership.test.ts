@@ -7,6 +7,10 @@ const provider = readFileSync(
   resolve(root, "src/core/session/providers/SessionProvider.tsx"),
   "utf8",
 );
+const service = readFileSync(
+  resolve(root, "src/core/session/services/SessionService.ts"),
+  "utf8",
+);
 
 describe("session provider async ownership", () => {
   it("keeps bootstrap loading separate from overlapping session operations", () => {
@@ -61,6 +65,17 @@ describe("session provider async ownership", () => {
     expect(snapshot).toBeGreaterThan(catchBlock);
     expect(publishError).toBeGreaterThan(snapshot);
     expect(finish).toBeGreaterThan(publishError);
+  });
+
+  it("keeps UI timeout in the provider without resolving canonical session authority early", () => {
+    expect(provider).toContain("const AUTH_INIT_TIMEOUT_MS = 7000;");
+    expect(provider).toContain("const timeout = setTimeout(() => {");
+    expect(provider).toContain("finishBootstrap();");
+    expect(service).toContain("await SessionService.initPromise;");
+    expect(service).toContain("if (SessionService.initError) {");
+    expect(service).not.toContain("initFallbackStarted");
+    expect(service).not.toContain("ensureInitialSessionFallback");
+    expect(service).not.toContain("2500");
   });
 
   it("routes switch and refresh through the same operation owner", () => {
