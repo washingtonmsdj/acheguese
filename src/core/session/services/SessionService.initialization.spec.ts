@@ -1,18 +1,24 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
-let authListener:
-  | ((event: string, session: typeof session | null) => void)
-  | null = null;
+const mocks = vi.hoisted(() => {
+  let authListener: ((event: string, session: unknown) => void) | null = null;
 
-const mocks = vi.hoisted(() => ({
-  onAuthStateChange: vi.fn((listener: (event: string, session: unknown) => void) => {
-    authListener = listener as typeof authListener;
-    return { data: { subscription: { unsubscribe: vi.fn() } } };
-  }),
-  getSession: vi.fn(),
-  getActiveProfile: vi.fn(),
-  getProfilesByUserId: vi.fn(),
-}));
+  return {
+    onAuthStateChange: vi.fn(
+      (listener: (event: string, session: unknown) => void) => {
+        authListener = listener;
+        return { data: { subscription: { unsubscribe: vi.fn() } } };
+      },
+    ),
+    getAuthListener: () => authListener,
+    resetAuthListener: () => {
+      authListener = null;
+    },
+    getSession: vi.fn(),
+    getActiveProfile: vi.fn(),
+    getProfilesByUserId: vi.fn(),
+  };
+});
 
 vi.mock("@/integrations/supabase", () => ({
   supabase: {
@@ -74,7 +80,7 @@ describe("SessionService initial hydration contract", () => {
   beforeEach(() => {
     SessionService.cleanup();
     SessionState.clear();
-    authListener = null;
+    mocks.resetAuthListener();
     vi.clearAllMocks();
     mocks.getSession.mockResolvedValue({ data: { session }, error: null });
     mocks.getActiveProfile.mockResolvedValue(activeProfileRow);
@@ -86,6 +92,7 @@ describe("SessionService initial hydration contract", () => {
     );
 
     SessionService.initialize();
+    const authListener = mocks.getAuthListener();
     expect(authListener).not.toBeNull();
 
     const initialization = SessionService.initializeSession();
