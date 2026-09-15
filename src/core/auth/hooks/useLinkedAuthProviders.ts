@@ -8,6 +8,7 @@ import { logger } from "@/shared/utils/logger";
 
 const EMPTY_PROVIDERS: LinkedAuthProviders = {
   providers: [],
+  hasPassword: false,
   hasGoogle: false,
 };
 
