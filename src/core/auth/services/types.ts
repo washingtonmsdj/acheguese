@@ -24,6 +24,15 @@ export interface SignUpData {
   captchaToken?: string;
 }
 
+/**
+ * Resultado mínimo necessário para a UI decidir a próxima etapa sem inferir a
+ * política do ambiente. Supabase devolve `session = null` quando confirmação
+ * de e-mail é obrigatória e uma sessão quando a conta já pode prosseguir.
+ */
+export interface SignUpResult {
+  requiresEmailConfirmation: boolean;
+}
+
 export interface SignInData {
   email: string;
   password: string;
