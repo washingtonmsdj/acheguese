@@ -26,6 +26,7 @@ import {
   TERMS_OF_SERVICE_PATH,
 } from "@/core/legal/termsOfService";
 import { useIdentityAvailability } from "@/core/public-identity/hooks/useIdentityAvailability";
+import { normalizePublicUsernameDraft } from "@/core/public-identity/utils/usernameDraft";
 import { useSessionContext } from "@/core/session/hooks/useSessionContext";
 import { Checkbox } from "@/shared/components/ui/checkbox";
 import {
@@ -286,10 +287,9 @@ export default function CadastroPage() {
                             disabled={authBusy}
                             aria-describedby="cadastro-username-status"
                             onChange={(event) => {
-                              const normalized = event.target.value
-                                .replace(/^@/, "")
-                                .replace(/[^a-z0-9_]/g, "")
-                                .toLowerCase();
+                              const normalized = normalizePublicUsernameDraft(
+                                event.target.value,
+                              );
                               field.onChange(normalized);
                               form.clearErrors("username");
                               if (normalized.length >= 3) {
