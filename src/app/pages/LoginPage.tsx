@@ -20,7 +20,7 @@ import {
 import { useAuth } from "@/core/auth/hooks/useAuth";
 import {
   getAuthCallbackError,
-  hasPendingPkceCode,
+  hasPendingAuthCallbackExchange,
 } from "@/core/auth/utils/authCallback";
 import { parseAuthIdentifier } from "@/core/auth/utils/authIdentifier";
 import {
@@ -73,12 +73,16 @@ export default function LoginPage() {
   const emailConfirmationCallbackFailed =
     isEmailConfirmed &&
     getAuthCallbackError(location.search, location.hash) !== null;
-  const emailConfirmationCodePending =
-    isEmailConfirmed && hasPendingPkceCode(window.location.search);
+  const emailConfirmationExchangePending =
+    isEmailConfirmed &&
+    hasPendingAuthCallbackExchange(
+      typeof window !== "undefined" ? window.location.search : location.search,
+      typeof window !== "undefined" ? window.location.hash : location.hash,
+    );
   const showEmailConfirmed =
     isEmailConfirmed &&
     !emailConfirmationCallbackFailed &&
-    !emailConfirmationCodePending;
+    !emailConfirmationExchangePending;
 
   const redirectTo = useMemo(() => {
     const stateRedirect = (location.state as LoginLocationState)?.redirectTo;
@@ -126,10 +130,22 @@ export default function LoginPage() {
       return;
     }
 
-    if (!hasPendingPkceCode(window.location.search)) return;
+    if (
+      !hasPendingAuthCallbackExchange(
+        window.location.search,
+        window.location.hash,
+      )
+    ) {
+      return;
+    }
 
     const timeout = window.setTimeout(() => {
-      if (hasPendingPkceCode(window.location.search)) {
+      if (
+        hasPendingAuthCallbackExchange(
+          window.location.search,
+          window.location.hash,
+        )
+      ) {
         navigate(AUTH_PATHS.signupConfirmation, { replace: true });
       }
     }, AUTH_BROWSER_STORAGE_CONFIG.authUrlCleanupDelayMs);
@@ -143,7 +159,10 @@ export default function LoginPage() {
     if (isEmailConfirmed) {
       if (
         emailConfirmationCallbackFailed ||
-        hasPendingPkceCode(window.location.search)
+        hasPendingAuthCallbackExchange(
+          window.location.search,
+          window.location.hash,
+        )
       ) {
         return;
       }
@@ -309,7 +328,7 @@ export default function LoginPage() {
               </div>
             ) : null}
 
-            {emailConfirmationCodePending ? (
+            {emailConfirmationExchangePending ? (
               <div
                 role="status"
                 className="mt-4 flex items-start gap-3 rounded-xl bg-[#f3f1ea] px-3.5 py-3 text-[#35575a]"
