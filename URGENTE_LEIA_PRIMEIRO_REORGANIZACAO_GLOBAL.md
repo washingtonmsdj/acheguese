@@ -9,7 +9,7 @@
 1. `docs/README.md` — índice documental canônico;
 2. `docs/03-architecture/CURRENT_RULES.md` — regras arquiteturais vigentes;
 3. `docs/08-roadmap/EXECUCAO_MAIN_ONLY.md` — plano operacional ativo;
-4. `docs/08-roadmap/checkpoints/2026-09-14-g193-zero-round-trip-theme-bootstrap.md` — checkpoint mais recente desta linha;
+4. `docs/08-roadmap/checkpoints/2026-09-15-g194-csp-ssot-first-paint-reconciliation.md` — checkpoint mais recente desta linha;
 5. `SECURITY.md` — segurança e gates de release.
 
 ## Regras que não podem ser perdidas
@@ -54,7 +54,7 @@
 - `RoutedAppRuntime` continua sendo o split que mantém sessão/perfis fora da `/`; `FullAppRuntimeShell` não deve recriar um segundo lazy universal para `SessionProfileRuntimeShell`;
 - `MultiProfileProvider` hidrata a projeção multi-profile a partir do `user` publicado pelo `SessionProvider`; não deve voltar a serializar o refresh aguardando `SessionService.initializeSession()` nem ler `SessionState` diretamente;
 - leituras concorrentes de perfis privados pelo `MultiProfileRuntimeService` compartilham somente a Promise em voo por usuário; não transformar esse owner em cache persistente/TTL de perfis;
-- o primeiro paint usa `class="light"` como padrão e um bootstrap inline mínimo antes do React; a CSP deve autorizar somente o hash SHA-256 exato desse script, nunca `'unsafe-inline'`, e qualquer mudança no bootstrap exige atualizar o hash correspondente;
+- o primeiro paint usa `class="light"` como padrão e `/theme-init.js` same-origin no `<head>` para aplicar o tema persistido antes do React; a CSP implantada deve permanecer literalmente sincronizada com `SECURITY_HEADERS`, sem hash ad hoc nem `'unsafe-inline'`;
 - a `/` mantém apenas o skeleton `TerritoryEntryMapArrival` antes do basemap e status próprios após o mapa ficar utilizável;
 - regra exclusiva da `/` só permanece local quando depender de prioridade/UX específica da entrada pública;
 - erro de bootstrap pode carregar observabilidade somente no caminho de falha; Sentry não volta a ser import estático do bootstrap normal;
