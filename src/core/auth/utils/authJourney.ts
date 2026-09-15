@@ -233,6 +233,17 @@ export function completeStandardLoginJourney(): void {
   clearPendingSignupContext();
 }
 
+/**
+ * O botão de cadastro Google também pode autenticar uma conta já existente.
+ * Se essa conta já possui o aceite legal atual, não existe primeiro acesso a
+ * concluir: limpamos todo o contexto transitório e retornamos ao destino real.
+ */
+export function completeExistingGoogleSignupJourney(): void {
+  clearPendingReturn();
+  clearPendingAuthJourneyIntent();
+  clearPendingSignupContext();
+}
+
 /** Confirmação por e-mail ainda precisa do redirect de signup no primeiro acesso. */
 export function completeEmailConfirmationLoginJourney(): void {
   clearPendingReturn();
