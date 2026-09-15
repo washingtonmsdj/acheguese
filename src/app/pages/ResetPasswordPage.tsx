@@ -31,6 +31,7 @@ import {
 import {
   getAuthErrorMessage,
   isAuthRateLimitError,
+  isRecoverySessionDisposalError,
 } from "@/core/auth/utils/authMessages";
 import { checkPasswordCompromise } from "@/core/auth/utils/compromisedPassword";
 import { AUTH_BROWSER_STORAGE_CONFIG } from "@/shared/config/security.config";
@@ -54,6 +55,7 @@ type RecoveryView =
   | "sent"
   | "checking"
   | "reset"
+  | "dispose-error"
   | "success"
   | "invalid";
 
@@ -70,6 +72,7 @@ export default function ResetPasswordPage() {
   const requestTurnstile = useAuthTurnstile();
   const recoveryRequestInFlight = useRef(false);
   const passwordSaveInFlight = useRef(false);
+  const recoverySessionDisposalInFlight = useRef(false);
 
   const initialMode = searchParams.get(AUTH_QUERY_KEYS.mode);
   const initialEmail = searchParams.get(AUTH_QUERY_KEYS.email) ?? "";
@@ -84,6 +87,7 @@ export default function ResetPasswordPage() {
     return "request";
   });
   const [sending, setSending] = useState(false);
+  const [disposingRecoverySession, setDisposingRecoverySession] = useState(false);
   const [resendCooldown, setResendCooldown] = useState(() =>
     getRecoveryCooldownSeconds(initialEmail),
   );
@@ -198,6 +202,10 @@ export default function ResetPasswordPage() {
       await AuthService.updateRecoveredPassword(data.newPassword);
       setView("success");
     } catch (error) {
+      if (isRecoverySessionDisposalError(error)) {
+        setView("dispose-error");
+        return;
+      }
       toast({
         title: "Não foi possível salvar a nova senha",
         description: getAuthErrorMessage(error),
@@ -208,6 +216,26 @@ export default function ResetPasswordPage() {
     }
   });
 
+  const retryRecoverySessionDisposal = async () => {
+    if (recoverySessionDisposalInFlight.current) return;
+    recoverySessionDisposalInFlight.current = true;
+    setDisposingRecoverySession(true);
+    try {
+      await AuthService.signOut();
+      setView("success");
+    } catch {
+      toast({
+        title: "Ainda não foi possível encerrar a sessão temporária",
+        description:
+          "Não repita a troca de senha. Tente encerrar a sessão novamente antes de entrar com a nova senha.",
+        variant: "destructive",
+      });
+    } finally {
+      recoverySessionDisposalInFlight.current = false;
+      setDisposingRecoverySession(false);
+    }
+  };
+
   const title =
     view === "request"
       ? "Recuperar acesso"
@@ -215,11 +243,13 @@ export default function ResetPasswordPage() {
         ? "Confira seu e-mail"
         : view === "reset"
           ? "Nova senha"
-          : view === "success"
-            ? "Senha atualizada"
-            : view === "invalid"
-              ? "Link expirado"
-              : "Validando link";
+          : view === "dispose-error"
+            ? "Finalizar recuperação"
+            : view === "success"
+              ? "Senha atualizada"
+              : view === "invalid"
+                ? "Link expirado"
+                : "Validando link";
 
   const requestGate = requestTurnstile.enabled ? (
     <AuthTurnstileGate
@@ -597,6 +627,42 @@ export default function ResetPasswordPage() {
                   </Link>
                 </nav>
               </form>
+            ) : null}
+
+            {view === "dispose-error" ? (
+              <div className="rounded-xl border border-[#ead8c7] bg-[#fff7ed] p-5">
+                <div className="flex items-start gap-4">
+                  <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-[#fde9e7] text-[#b83b33]">
+                    <AuthConceptIcon name="warning" />
+                  </span>
+                  <div>
+                    <p className="text-[11px] text-[#735a49]">Senha atualizada</p>
+                    <h1 className="mt-1 font-heading text-[18px] font-extrabold text-[#71401d]">
+                      Falta encerrar a sessão temporária.
+                    </h1>
+                    <p className="mt-2 text-[12px] leading-5 text-[#735a49]">
+                      Sua nova senha já foi salva. Por segurança, não repita a troca de senha: tente apenas encerrar esta sessão de recuperação.
+                    </p>
+                  </div>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => void retryRecoverySessionDisposal()}
+                  disabled={disposingRecoverySession}
+                  className="mt-4 h-11 w-full rounded-[9px] bg-[#ffc91a] text-[14px] font-extrabold text-[#102f33] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#0b5b59]/40 disabled:opacity-55"
+                >
+                  {disposingRecoverySession
+                    ? "Encerrando sessão…"
+                    : "Tentar encerrar sessão"}
+                </button>
+                <Link
+                  to={SUPPORT_PATH}
+                  className="mx-auto mt-3 flex min-h-9 w-fit items-center gap-2 rounded px-2 text-[11px] text-[#0b4e52] underline underline-offset-2 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#0b5b59]/35"
+                >
+                  <AuthConceptIcon name="help" />
+                  Preciso de ajuda
+                </Link>
+              </div>
             ) : null}
 
             {view === "success" ? (
