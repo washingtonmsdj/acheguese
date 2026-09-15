@@ -22,20 +22,6 @@ const DEBUG_BOOT =
   (viteEnv?.DEV ?? nodeEnv?.NODE_ENV !== "production") &&
   (viteEnv?.VITE_DEBUG_BOOT === "true" || nodeEnv?.VITE_DEBUG_BOOT === "true");
 
-function hasAuthReturnParams(): boolean {
-  if (typeof window === "undefined") return false;
-  const url = new URL(window.location.href);
-  return url.hash.includes("access_token") || url.searchParams.has("code");
-}
-
-function cleanAuthReturnUrl(): void {
-  if (typeof window === "undefined") return;
-  const cleanUrl = new URL(window.location.href);
-  cleanUrl.hash = "";
-  cleanUrl.searchParams.delete("code");
-  window.history.replaceState({}, document.title, `${cleanUrl.pathname}${cleanUrl.search}`);
-}
-
 // Log de inicializacao (apenas em desenvolvimento)
 if (DEBUG_BOOT) {
   console.debug("[Supabase] initialized", {
@@ -68,26 +54,11 @@ export const supabase = createClient<Database>(
       storageKey: AUTH_STORAGE_KEY,
       persistSession: true,
       autoRefreshToken: true,
+      // O cliente Auth é o owner do callback: com PKCE ele troca o `code` e
+      // remove o parâmetro apenas depois de uma troca bem-sucedida. Não use
+      // uma sessão já persistida como sinal de sucesso do callback atual.
       detectSessionInUrl: true,
       flowType: "pkce",
     },
   },
 );
-
-if (hasAuthReturnParams()) {
-  // Com detectSessionInUrl=true, o próprio supabase-js troca o auth code PKCE.
-  // getSession apenas aguarda essa inicialização para limpar a URL depois que
-  // uma sessão realmente existe. Em erro/lock transitório preservamos `code`,
-  // evitando destruir um callback que ainda pode ser concluído ou repetido.
-  void supabase.auth
-    .getSession()
-    .then(({ data, error }) => {
-      if (!error && data.session) {
-        cleanAuthReturnUrl();
-      }
-    })
-    .catch(() => {
-      // O SessionService continua sendo o owner da recuperação de lock/sessão.
-      // Não remova o auth code em uma falha transitória.
-    });
-}
