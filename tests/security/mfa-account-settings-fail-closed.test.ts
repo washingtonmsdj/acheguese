@@ -67,6 +67,13 @@ describe("account MFA settings fail-closed contract", () => {
     );
   });
 
+  it("keeps one canonical MFA challenge verification path", () => {
+    expect(hook).toContain("verifyAndEnable");
+    expect(service).toContain("verifyAndEnableMFA");
+    expect(hook).not.toContain("verifyCode");
+    expect(service).not.toContain("verifyMFACode");
+  });
+
   it("publishes only the latest MFA status refresh and invalidates reads on unmount", () => {
     expect(hook).toContain("const mountedRef = useRef(true);");
     expect(hook).toContain("const loadStatusRequestIdRef = useRef(0);");
