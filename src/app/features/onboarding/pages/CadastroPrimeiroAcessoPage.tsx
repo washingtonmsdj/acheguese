@@ -5,7 +5,10 @@ import { Link, useNavigate } from "react-router-dom";
 import { AuthBrandHeader } from "@/app/components/auth/AuthBrandHeader";
 import { AuthConceptIcon } from "@/app/components/auth/AuthConceptIcon";
 import { AuthFooter } from "@/app/components/auth/AuthFooter";
-import { buildEmailConfirmationLoginPath } from "@/core/auth/constants/authFlow";
+import {
+  AUTH_FIRST_ACCESS_SESSION_SETTLE_MS,
+  buildEmailConfirmationLoginPath,
+} from "@/core/auth/constants/authFlow";
 import { useAuth } from "@/core/auth/hooks/useAuth";
 import {
   completeFirstAccessJourney,
@@ -173,11 +176,20 @@ export default function CadastroPrimeiroAcessoPage() {
 
   useEffect(() => {
     if (sessionLoading) return;
-    if (!user) {
-      navigate(buildEmailConfirmationLoginPath(), { replace: true });
+    if (user) {
+      void loadProfile();
       return;
     }
-    void loadProfile();
+
+    // Signup can already have a valid Supabase session while the canonical
+    // auth-state observer is still publishing it to SessionState. Keep the
+    // existing preparation UI during that bounded window instead of sending a
+    // successfully authenticated account back to confirmation by mistake.
+    const timeout = window.setTimeout(() => {
+      navigate(buildEmailConfirmationLoginPath(), { replace: true });
+    }, AUTH_FIRST_ACCESS_SESSION_SETTLE_MS);
+
+    return () => window.clearTimeout(timeout);
   }, [loadProfile, navigate, sessionLoading, user]);
 
   const leaveFirstAccess = (target: string) => {
