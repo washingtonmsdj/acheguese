@@ -77,12 +77,18 @@ describe("authCallback", () => {
     expect(hasPendingAuthCallbackExchange("", "#main-content")).toBe(false);
   });
 
-  it("recognizes recovery markers in query or hash", () => {
+  it("recognizes recovery markers and reuses the canonical pending exchange owner", () => {
     expect(isPasswordRecoveryCallback("?mode=recovery", "")).toBe(true);
     expect(isPasswordRecoveryCallback("", "#type=recovery")).toBe(true);
     expect(hasPasswordRecoverySessionMarker("?code=abc", "")).toBe(true);
     expect(
       hasPasswordRecoverySessionMarker("", "#access_token=token&type=recovery"),
+    ).toBe(true);
+    expect(
+      hasPasswordRecoverySessionMarker("?refresh_token=refresh", ""),
+    ).toBe(true);
+    expect(
+      hasPasswordRecoverySessionMarker("?access_token=access", ""),
     ).toBe(true);
     expect(hasPasswordRecoverySessionMarker("?mode=request", "")).toBe(false);
   });
