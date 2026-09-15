@@ -78,6 +78,16 @@ describe("Google OAuth account/access contract", () => {
     expect(terms).toContain("Entrar com Google não pula esta etapa");
   });
 
+  it("does not let a stale local port change the OAuth callback origin", () => {
+    const origin = readProjectFile("src/shared/config/publicAppOrigin.ts");
+    const supabaseConfig = readProjectFile("supabase/config.toml");
+
+    expect(origin).toContain("import.meta.env.DEV");
+    expect(origin).toContain("window.location?.origin");
+    expect(supabaseConfig).toContain("http://localhost:5175/aceitar-termos");
+    expect(supabaseConfig).toContain("http://127.0.0.1:5175/aceitar-termos");
+  });
+
   it("turns a cancelled or failed OAuth callback into a recoverable state without reflecting provider text", () => {
     const callback = readProjectFile("src/core/auth/utils/authCallback.ts");
     const terms = readProjectFile(

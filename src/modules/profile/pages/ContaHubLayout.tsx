@@ -144,8 +144,7 @@ export function ContaHubLayout({
             ? "Troque, edite e revise as identidades vinculadas à sua conta."
             : undefined
         }
-        eyebrow="Conta"
-        showBack={profilesView}
+        showBack
       >
         {!profilesView ? (
           <>

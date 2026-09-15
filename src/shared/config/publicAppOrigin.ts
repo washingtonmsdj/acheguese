@@ -7,6 +7,17 @@ function getConfiguredPublicOrigin(): string {
 }
 
 export function getPublicAppOrigin(): string {
+  // In development, the browser origin is authoritative. This keeps OAuth,
+  // password recovery and local absolute URLs on the port that is actually
+  // serving the app, even when the shared .env still carries another port.
+  if (
+    import.meta.env.DEV &&
+    typeof window !== "undefined" &&
+    window.location?.origin
+  ) {
+    return normalizeOrigin(window.location.origin);
+  }
+
   const envOrigin = getConfiguredPublicOrigin();
   if (envOrigin) {
     return normalizeOrigin(envOrigin);

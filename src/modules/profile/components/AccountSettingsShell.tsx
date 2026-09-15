@@ -90,6 +90,9 @@ function isActive(
 }
 
 function resolveDefaultBackTarget(pathname: string, hash: string): string {
+  if (pathname === ACCOUNT_PATHS.home) {
+    return "/";
+  }
   if (pathname === ACCOUNT_PATHS.security && hash === "#email") {
     return ACCOUNT_PATHS.access;
   }

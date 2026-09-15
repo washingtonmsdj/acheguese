@@ -658,7 +658,8 @@ export default function ContaSegurancaPage() {
         desktopDescription="Mantenha sua conta protegida."
       >
         <div className="grid gap-4 lg:grid-cols-2 lg:grid-rows-[auto_auto] lg:items-start">
-          <Surface className="p-4 sm:p-5 lg:col-start-1 lg:row-start-1">
+          <div className="lg:col-start-1 lg:row-span-2 lg:row-start-1 lg:rounded-2xl lg:border lg:border-territory-border lg:bg-territory-surface lg:p-5">
+            <Surface className="p-4 sm:p-5 lg:rounded-none lg:border-0 lg:bg-transparent lg:p-0">
             <div className="flex items-start gap-3">
               <span className="flex h-9 w-9 shrink-0 items-center justify-center text-territory-ink lg:h-10 lg:w-10 lg:rounded-xl lg:bg-territory-brand/10 lg:text-territory-brand"><ShieldCheck className="h-5 w-5" aria-hidden="true" /></span>
               <div className="min-w-0 flex-1">
@@ -711,18 +712,19 @@ export default function ContaSegurancaPage() {
                 </AlertDialog>
               </>
             ) : null}
-          </Surface>
+            </Surface>
 
-          <Surface className="px-4 sm:px-5 lg:col-start-1 lg:row-start-2">
-            <button type="button" onClick={() => navigate(ACCOUNT_PATHS.password)} className="group flex min-h-16 w-full items-center gap-3 text-left focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-territory-brand">
-              <KeyRound className="h-5 w-5 shrink-0 text-territory-brand" aria-hidden="true" />
-              <span className="min-w-0 flex-1">
-                <span className="block text-sm font-semibold text-territory-ink">Alterar senha</span>
-                <span className="mt-0.5 hidden text-xs text-territory-muted lg:block">Atualize sua senha ou acesse a recuperação por e-mail.</span>
-              </span>
-              <ChevronRight className="h-5 w-5 text-territory-muted transition-transform group-hover:translate-x-0.5" aria-hidden="true" />
-            </button>
-          </Surface>
+            <Surface className="mt-4 px-4 sm:px-5 lg:mt-5 lg:rounded-none lg:border-x-0 lg:border-b-0 lg:border-t lg:bg-transparent lg:p-0 lg:pt-5">
+              <button type="button" onClick={() => navigate(ACCOUNT_PATHS.password)} className="group flex min-h-16 w-full items-center gap-3 text-left focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-territory-brand">
+                <KeyRound className="h-5 w-5 shrink-0 text-territory-brand" aria-hidden="true" />
+                <span className="min-w-0 flex-1">
+                  <span className="block text-sm font-semibold text-territory-ink">Alterar senha</span>
+                  <span className="mt-0.5 hidden text-xs text-territory-muted lg:block">Atualize sua senha ou acesse a recuperação por e-mail.</span>
+                </span>
+                <ChevronRight className="h-5 w-5 text-territory-muted transition-transform group-hover:translate-x-0.5" aria-hidden="true" />
+              </button>
+            </Surface>
+          </div>
 
           <section className="lg:col-start-2 lg:row-span-2 lg:row-start-1 lg:rounded-2xl lg:border lg:border-territory-border lg:bg-territory-surface lg:p-5">
             <h2 className="mb-2 font-heading text-lg font-bold text-territory-ink lg:hidden">Acessos à conta</h2>
