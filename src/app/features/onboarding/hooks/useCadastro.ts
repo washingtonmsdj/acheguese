@@ -64,7 +64,7 @@ export function useCadastroForm(requestedRedirect = "/") {
 
   const redirectTo = resolveSafeInternalPath(requestedRedirect, "/");
 
-  const submit = (captchaToken?: string) =>
+  const submit = (captchaToken?: string, onCaptchaConsumed?: () => void) =>
     form.handleSubmit(async (values) => {
       if (loading) return;
       setLoading(true);
@@ -107,17 +107,23 @@ export function useCadastroForm(requestedRedirect = "/") {
           return;
         }
 
-        await AuthService.signUp({
-          email: values.email,
-          password: values.password,
-          name: values.name,
-          handle: values.username,
-          termsAcceptance: {
-            accepted: values.termsAccepted,
-            version: TERMS_OF_SERVICE_VERSION,
-          },
-          captchaToken,
-        });
+        try {
+          await AuthService.signUp({
+            email: values.email,
+            password: values.password,
+            name: values.name,
+            handle: values.username,
+            termsAcceptance: {
+              accepted: values.termsAccepted,
+              version: TERMS_OF_SERVICE_VERSION,
+            },
+            captchaToken,
+          });
+        } finally {
+          // Turnstile tokens are single-use. Reset only after the Auth request
+          // actually consumed the token; local validation errors keep it valid.
+          onCaptchaConsumed?.();
+        }
 
         prepareEmailSignupConfirmation(values.email, redirectTo);
         navigate(AUTH_PATHS.signupConfirmation, {
