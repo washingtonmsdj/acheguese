@@ -206,7 +206,7 @@ export default function CadastroConfirmacaoPage() {
                 <span className="hidden lg:inline">Confira sua caixa de entrada</span>
               </h1>
               <p className="mt-2 text-[14px] leading-5 text-[#3c575a]">
-                Enviamos um link para{" "}
+                {startedFromLogin ? "Sua conta ainda aguarda confirmação em " : "Enviamos um link para "}
                 <span className="font-bold text-[#173a3e]">{email}</span>.
               </p>
 
