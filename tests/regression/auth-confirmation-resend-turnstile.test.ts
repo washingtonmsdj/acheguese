@@ -54,6 +54,15 @@ describe("signup confirmation resend Turnstile contract", () => {
     );
   });
 
+  it("does not claim a new email was sent when confirmation came from login", () => {
+    expect(confirmationPage).toContain(
+      'startedFromLogin ? "Sua conta ainda aguarda confirmação em " : "Enviamos um link para "',
+    );
+    expect(confirmationPage).toContain(
+      "journeyContext.intent === AUTH_EMAIL_CONFIRMATION_INTENTS.login",
+    );
+  });
+
   it("does not unlock resend without a solved Turnstile challenge", () => {
     expect(confirmationPage).toContain("if (!turnstile.isReady) {");
     expect(confirmationPage).toContain(
