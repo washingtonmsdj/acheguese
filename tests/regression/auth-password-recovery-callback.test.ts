@@ -6,16 +6,22 @@ const root = process.cwd();
 const read = (path: string) => readFileSync(resolve(root, path), "utf8");
 
 describe("password recovery callback settlement", () => {
-  it("does not treat route intent or a generic PKCE callback as recovery authority", () => {
+  it("keeps route intent separate from callback evidence and recovery authority", () => {
     const callback = read("src/core/auth/utils/authCallback.ts");
     const recovery = read("src/app/pages/ResetPasswordPage.tsx");
 
-    expect(callback).toContain("export function hasPendingPkceCode");
-    expect(callback).toContain("const hasExplicitRecoveryType =");
+    expect(callback).toContain("export function isPasswordRecoveryRouteIntent");
+    expect(callback).toContain("export function isPasswordRecoveryCallback");
+    expect(callback).toContain("if (hasExplicitRecoveryType) return true;");
+    expect(callback).toContain("if (!hasRecoveryMode) return false;");
+    expect(callback).toContain("hasPendingAuthCallbackExchange(search, hash)");
+    expect(callback).toContain("getAuthCallbackError(search, hash) !== null");
     expect(callback).toContain("const hasCompleteImplicitSession =");
     expect(callback).toContain(
       "return hasExplicitRecoveryType && hasCompleteImplicitSession;",
     );
+    expect(callback).toContain("isPasswordRecoveryRouteIntent(search, hash)");
+
     expect(recovery).toContain("const liveSearch = window.location.search;");
     expect(recovery).toContain("const liveHash = window.location.hash;");
     expect(recovery).toContain(

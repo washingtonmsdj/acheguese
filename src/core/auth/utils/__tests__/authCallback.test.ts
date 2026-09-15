@@ -10,6 +10,7 @@ import {
   isExpiredPasswordRecoveryError,
   isOAuthTermsCallbackError,
   isPasswordRecoveryCallback,
+  isPasswordRecoveryRouteIntent,
 } from "@/core/auth/utils/authCallback";
 
 describe("authCallback", () => {
@@ -26,7 +27,7 @@ describe("authCallback", () => {
     ).toBe(false);
   });
 
-  it("recognizes otp_expired only when the callback is password recovery", () => {
+  it("recognizes otp_expired only when the navigation belongs to password recovery", () => {
     expect(
       isExpiredPasswordRecoveryError(
         "?mode=recovery",
@@ -77,8 +78,21 @@ describe("authCallback", () => {
     expect(hasPendingAuthCallbackExchange("", "#main-content")).toBe(false);
   });
 
-  it("separates recovery routing intent from recovery-session authority", () => {
-    expect(isPasswordRecoveryCallback("?mode=recovery", "")).toBe(true);
+  it("separates recovery route intent from real callback evidence and session authority", () => {
+    expect(isPasswordRecoveryRouteIntent("?mode=recovery", "")).toBe(true);
+    expect(isPasswordRecoveryRouteIntent("", "#type=recovery")).toBe(true);
+    expect(isPasswordRecoveryRouteIntent("?mode=request", "")).toBe(false);
+
+    expect(isPasswordRecoveryCallback("?mode=recovery", "")).toBe(false);
+    expect(
+      isPasswordRecoveryCallback("?mode=recovery&code=abc", ""),
+    ).toBe(true);
+    expect(
+      isPasswordRecoveryCallback(
+        "?mode=recovery",
+        "#error=access_denied&error_code=otp_expired",
+      ),
+    ).toBe(true);
     expect(isPasswordRecoveryCallback("", "#type=recovery")).toBe(true);
 
     expect(hasPasswordRecoverySessionMarker("?mode=recovery", "")).toBe(false);
@@ -103,11 +117,12 @@ describe("authCallback", () => {
     ).toBe(false);
   });
 
-  it("classifies only real auth callback markers, not ordinary page anchors", () => {
+  it("classifies only real auth callback markers, not ordinary anchors or route intent", () => {
     expect(hasAuthCallbackMarker("", "#main-content")).toBe(false);
     expect(hasAuthCallbackMarker("", "#entry-community-title")).toBe(false);
+    expect(hasAuthCallbackMarker("?mode=recovery", "")).toBe(false);
     expect(hasAuthCallbackMarker("?code=abc", "")).toBe(true);
-    expect(hasAuthCallbackMarker("?mode=recovery", "")).toBe(true);
+    expect(hasAuthCallbackMarker("?mode=recovery&code=abc", "")).toBe(true);
     expect(hasAuthCallbackMarker("", "#type=recovery")).toBe(true);
     expect(hasAuthCallbackMarker("", "#access_token=token")).toBe(true);
     expect(hasAuthCallbackMarker("", "#refresh_token=token")).toBe(true);

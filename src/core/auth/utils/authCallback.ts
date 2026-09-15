@@ -68,20 +68,55 @@ export function hasPendingAuthCallbackExchange(
   );
 }
 
+/**
+ * Contexto de navegação da tela de recuperação. `mode=recovery` é gerado pelo
+ * próprio app no redirectTo e, isoladamente, não prova que o navegador acabou
+ * de retornar do Supabase Auth. `type=recovery` também participa deste contexto,
+ * mas é emitido pelo provider nos callbacks implícitos legados.
+ */
+export function isPasswordRecoveryRouteIntent(
+  search: string,
+  hash: string,
+): boolean {
+  const searchParams = parseParams(search);
+  const hashParams = parseParams(hash);
+
+  return [
+    searchParams.get(AUTH_QUERY_KEYS.mode),
+    searchParams.get(AUTH_QUERY_KEYS.type),
+    hashParams.get(AUTH_QUERY_KEYS.mode),
+    hashParams.get(AUTH_QUERY_KEYS.type),
+  ].some((value) => value === AUTH_QUERY_VALUES.recovery);
+}
+
+/**
+ * Evidência de que a navegação atual é um callback de recuperação.
+ *
+ * `mode=recovery` sozinho é apenas intenção de rota. Ele só se torna callback
+ * quando existe uma troca Auth (`code`/tokens) ou um erro retornado pelo Auth.
+ * `type=recovery` é aceito como marcador explícito dos callbacks implícitos
+ * legados, mas não concede autoridade para redefinir senha por si só.
+ */
 export function isPasswordRecoveryCallback(
   search: string,
   hash: string,
 ): boolean {
   const searchParams = parseParams(search);
   const hashParams = parseParams(hash);
-  const values = [
-    searchParams.get(AUTH_QUERY_KEYS.mode),
-    searchParams.get(AUTH_QUERY_KEYS.type),
-    hashParams.get(AUTH_QUERY_KEYS.mode),
-    hashParams.get(AUTH_QUERY_KEYS.type),
-  ];
+  const hasExplicitRecoveryType =
+    searchParams.get(AUTH_QUERY_KEYS.type) === AUTH_QUERY_VALUES.recovery ||
+    hashParams.get(AUTH_QUERY_KEYS.type) === AUTH_QUERY_VALUES.recovery;
+  const hasRecoveryMode =
+    searchParams.get(AUTH_QUERY_KEYS.mode) === AUTH_QUERY_VALUES.recovery ||
+    hashParams.get(AUTH_QUERY_KEYS.mode) === AUTH_QUERY_VALUES.recovery;
 
-  return values.some((value) => value === AUTH_QUERY_VALUES.recovery);
+  if (hasExplicitRecoveryType) return true;
+  if (!hasRecoveryMode) return false;
+
+  return (
+    hasPendingAuthCallbackExchange(search, hash) ||
+    getAuthCallbackError(search, hash) !== null
+  );
 }
 
 /**
@@ -112,8 +147,8 @@ export function hasPasswordRecoverySessionMarker(
 
 /**
  * Classifica somente marcadores reais de retorno de autenticação.
- * Âncoras comuns da página (ex.: #main-content) não devem forçar o runtime
- * completo nem ser interpretadas como callback de OAuth/recovery.
+ * Âncoras comuns da página (ex.: #main-content) e flags de intenção de rota
+ * (ex.: `mode=recovery` isolado) não devem forçar o runtime completo.
  */
 export function hasAuthCallbackMarker(search: string, hash: string): boolean {
   return (
@@ -128,7 +163,7 @@ export function isExpiredPasswordRecoveryError(
   hash: string,
 ): boolean {
   return (
-    isPasswordRecoveryCallback(search, hash) &&
+    isPasswordRecoveryRouteIntent(search, hash) &&
     getAuthCallbackError(search, hash)?.errorCode === AUTH_QUERY_VALUES.expiredOtp
   );
 }
