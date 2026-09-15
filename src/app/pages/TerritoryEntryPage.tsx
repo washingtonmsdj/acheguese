@@ -205,7 +205,6 @@ export default function TerritoryEntryPage() {
             aria-label={isMobileMenuOpen ? "Fechar menu" : "Abrir menu"}
             aria-expanded={isMobileMenuOpen}
             aria-controls="entry-mobile-menu-popover"
-            aria-haspopup="true"
             onClick={() => setIsMobileMenuOpen((open) => !open)}
           >
             <span aria-hidden="true" className="relative block h-5 w-5">
