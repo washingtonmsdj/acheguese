@@ -116,6 +116,24 @@ describe("LGPD pending deletion client boundary", () => {
     );
   });
 
+  it("binds export and deletion requests to the still-current session token", () => {
+    expect(privacySettingsService).toContain(
+      "private static assertCurrentSessionAccessToken(accessToken: string): void",
+    );
+    expect(privacySettingsService).toContain(
+      "const currentAccessToken = SessionService.getAccessToken();",
+    );
+    expect(privacySettingsService).toContain(
+      "currentAccessToken !== accessToken",
+    );
+    expect(privacySettingsService).toContain(
+      "this.assertCurrentSessionAccessToken(accessToken);",
+    );
+    expect(privacySettingsService).toContain(
+      "this.assertCurrentSessionAccessToken(input.accessToken);",
+    );
+  });
+
   it("normalizes the deletion reason before deduplicating and forwarding it", () => {
     const normalization = privacySettingsService.indexOf(
       "const reason = input.reason.trim();",
