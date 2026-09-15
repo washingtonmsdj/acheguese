@@ -43,6 +43,26 @@ describe("session provider async ownership", () => {
     expect(provider).toContain("activeOperationIdsRef.current.clear();");
   });
 
+  it("preserves known session identity while exposing initial hydration failure", () => {
+    const initialization = provider.indexOf("SessionService.initializeSession()");
+    const catchBlock = provider.indexOf(".catch((cause: unknown) => {", initialization);
+    const snapshot = provider.indexOf(
+      "setSessionData(SessionState.getState());",
+      catchBlock,
+    );
+    const publishError = provider.indexOf(
+      "setError(cause instanceof Error ? cause : new Error(String(cause)));",
+      snapshot,
+    );
+    const finish = provider.indexOf("finishBootstrap();", publishError);
+
+    expect(initialization).toBeGreaterThanOrEqual(0);
+    expect(catchBlock).toBeGreaterThan(initialization);
+    expect(snapshot).toBeGreaterThan(catchBlock);
+    expect(publishError).toBeGreaterThan(snapshot);
+    expect(finish).toBeGreaterThan(publishError);
+  });
+
   it("routes switch and refresh through the same operation owner", () => {
     expect(provider).toContain("const operationId = beginOperation();");
     expect(provider).toContain("await SessionService.switchProfile(profileId);");
