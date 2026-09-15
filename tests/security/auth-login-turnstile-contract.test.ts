@@ -25,6 +25,22 @@ describe("login Turnstile contract", () => {
     expect(login).toContain("turnstile.reset();");
   });
 
+  it("serializes email, username, Google and recovery navigation actions", () => {
+    expect(login).toContain("const authActionInFlightRef = useRef(false);");
+    expect(login).toContain(
+      "if (sessionLoading || user || authActionInFlightRef.current) return;",
+    );
+    expect(login).toContain("!googleAuthAvailable ||\n      authActionInFlightRef.current");
+    expect(login).toContain("authActionInFlightRef.current = true;");
+    expect(login).toContain("authActionInFlightRef.current = false;");
+
+    const forgotPassword = login.indexOf("const handleForgotPassword");
+    expect(forgotPassword).toBeGreaterThanOrEqual(0);
+    expect(login.slice(forgotPassword, forgotPassword + 220)).toContain(
+      "authActionInFlightRef.current",
+    );
+  });
+
   it("keeps captcha optional when the gate is disabled while forwarding it when present", () => {
     expect(types).toContain("captchaToken?: string;");
     expect(service).toContain("const captchaToken = data.captchaToken?.trim();");
