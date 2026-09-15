@@ -21,6 +21,7 @@ on:
       - "src/app/routes/AppRoutes.tsx"
       - "src/app/routes/sections/AppLayoutRoutes.tsx"
       - "src/core/auth/**"
+      - "src/core/session/services/SessionService.ts"
       - "src/modules/profile/pages/ContaSegurancaPage.tsx"
       - "src/modules/profile/components/ChangePasswordForm.tsx"
       - "src/shared/components/ui/checkbox.tsx"
@@ -28,6 +29,7 @@ on:
       - "src/shared/config/publicAppOrigin.test.ts"
       - "public/auth/**"
       - "tests/architecture/auth-session-authority.test.ts"
+      - "tests/architecture/session-ssot-ownership.test.ts"
       - "tests/e2e/auth-*.spec.ts"
       - "tests/regression/auth-concept-flow.test.ts"
       - "tests/regression/auth-confirmation-resend-turnstile.test.ts"
@@ -71,6 +73,7 @@ on:
       - "src/app/routes/AppRoutes.tsx"
       - "src/app/routes/sections/AppLayoutRoutes.tsx"
       - "src/core/auth/**"
+      - "src/core/session/services/SessionService.ts"
       - "src/modules/profile/pages/ContaSegurancaPage.tsx"
       - "src/modules/profile/components/ChangePasswordForm.tsx"
       - "src/shared/components/ui/checkbox.tsx"
@@ -78,6 +81,7 @@ on:
       - "src/shared/config/publicAppOrigin.test.ts"
       - "public/auth/**"
       - "tests/architecture/auth-session-authority.test.ts"
+      - "tests/architecture/session-ssot-ownership.test.ts"
       - "tests/e2e/auth-*.spec.ts"
       - "tests/regression/auth-concept-flow.test.ts"
       - "tests/regression/auth-confirmation-resend-turnstile.test.ts"
@@ -142,6 +146,7 @@ jobs:
           src/app/features/onboarding/pages/CadastroPage.spec.tsx
           src/app/features/onboarding/pages/CadastroPrimeiroAcessoPage.spec.tsx
           tests/architecture/auth-session-authority.test.ts
+          tests/architecture/session-ssot-ownership.test.ts
           tests/regression/auth-concept-flow.test.ts
           tests/regression/auth-confirmation-resend-turnstile.test.ts
           tests/regression/auth-email-change-callback.test.ts
