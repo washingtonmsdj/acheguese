@@ -11,7 +11,10 @@ import {
   buildLoginPath,
   buildSignupPath,
 } from "@/core/auth/constants/authFlow";
-import { isOAuthTermsCallbackError } from "@/core/auth/utils/authCallback";
+import {
+  hasAuthCallbackMarker,
+  isOAuthTermsCallbackError,
+} from "@/core/auth/utils/authCallback";
 import {
   cancelGoogleLogin,
   cancelGoogleSignup,
@@ -66,6 +69,12 @@ export default function AceiteTermosPage() {
       ),
     [location.hash, location.pathname, location.search],
   );
+  const authCallbackPending = useMemo(
+    () =>
+      !oauthCallbackFailed &&
+      hasAuthCallbackMarker(location.search, location.hash),
+    [location.hash, location.search, oauthCallbackFailed],
+  );
   const returnContextIcon =
     returnContext.kind === "conversation"
       ? "chat"
@@ -86,7 +95,7 @@ export default function AceiteTermosPage() {
       return;
     }
 
-    if (sessionLoading) {
+    if (sessionLoading || (!user && authCallbackPending)) {
       setState("checking");
       return;
     }
@@ -115,7 +124,14 @@ export default function AceiteTermosPage() {
     return () => {
       active = false;
     };
-  }, [navigate, oauthCallbackFailed, returnTo, sessionLoading, user]);
+  }, [
+    authCallbackPending,
+    navigate,
+    oauthCallbackFailed,
+    returnTo,
+    sessionLoading,
+    user,
+  ]);
 
   const handleAccept = async () => {
     if (!user || !accepted || submitting) return;
