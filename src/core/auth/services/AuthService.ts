@@ -150,10 +150,19 @@ export class AuthService {
 
     const requiresEmailConfirmation = authData?.session == null;
     if (!requiresEmailConfirmation) {
-      // A UI do primeiro acesso lê exclusivamente o SSOT de sessão. Garanta
-      // que uma sessão devolvida no próprio signup esteja publicada antes da
-      // navegação, sem depender da ordem assíncrona do listener do SDK.
-      await SessionService.refreshSession();
+      // A conta já existe e a sessão já foi emitida. A sincronização de perfil
+      // é best-effort: o primeiro acesso tem recuperação própria para perfil
+      // ainda em criação e jamais deve transformar signup concluído em falso erro.
+      try {
+        await SessionService.refreshSession();
+      } catch (refreshError) {
+        logger.warn("AuthService.signUp session refresh deferred to first access", {
+          error:
+            refreshError instanceof Error
+              ? refreshError.message
+              : String(refreshError),
+        });
+      }
     }
 
     return { requiresEmailConfirmation };
