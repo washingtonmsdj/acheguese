@@ -69,6 +69,7 @@ export const AUTH_FLOW_TTL_MS = {
 
 export const AUTH_SIGNUP_CONFIRMATION_RESEND_COOLDOWN_MS = 60 * 1000;
 export const AUTH_PASSWORD_RECOVERY_RESEND_COOLDOWN_MS = 60 * 1000;
+export const AUTH_FIRST_ACCESS_SESSION_SETTLE_MS = 3 * 1000;
 
 export function buildAuthPathWithRedirect(
   basePath: string,
