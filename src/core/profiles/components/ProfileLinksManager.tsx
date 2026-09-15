@@ -5,8 +5,8 @@
  */
 
 import { useState } from 'react';
+import { useMultiProfileContext } from '../contexts/multi-profile-runtime-context';
 import { useProfileLinks } from '../hooks/useProfileLinks';
-import { useProfiles } from '../hooks/useProfiles';
 import type { LinkType } from '../services/multi-profile/types';
 import { Button } from '@/shared/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/shared/components/ui/select';
@@ -24,7 +24,7 @@ export function ProfileLinksManager({ profileId }: ProfileLinksManagerProps) {
   const { toast } = useToast();
   const { confirm, ConfirmDialog } = useConfirmActionDialog();
   const { links, loading, createLink, updateLink, deleteLink, reorderLinks } = useProfileLinks(profileId);
-  const { profiles } = useProfiles();
+  const { allProfiles: profiles } = useMultiProfileContext();
   
   const [showCreate, setShowCreate] = useState(false);
   const [newLink, setNewLink] = useState({
