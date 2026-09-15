@@ -104,12 +104,21 @@ export default function ResetPasswordPage() {
       return;
     }
 
+    // Supabase limpa `code` diretamente via history.replaceState depois da
+    // troca PKCE. O snapshot do React Router pode permanecer com a query
+    // anterior, então usamos a URL real do navegador para distinguir callback
+    // concluído de um código ainda pendente/ inválido.
+    const liveSearch = window.location.search;
+    const liveHash = window.location.hash;
     const hasRecoveryMarker = hasPasswordRecoverySessionMarker(
-      location.search,
-      location.hash,
+      liveSearch,
+      liveHash,
+    );
+    const hasPendingPkceCode = new URLSearchParams(liveSearch).has(
+      AUTH_QUERY_KEYS.code,
     );
 
-    if (user && hasRecoveryMarker) {
+    if (user && hasRecoveryMarker && !hasPendingPkceCode) {
       setView("reset");
       return;
     }
@@ -326,10 +335,7 @@ export default function ResetPasswordPage() {
                 </button>
 
                 <div className="mt-6 flex items-start gap-3 rounded-xl bg-[#eef2f2] px-4 py-3 lg:hidden">
-                  <AuthConceptIcon
-                    name="help"
-                    className="text-[#0b5b59]"
-                  />
+                  <AuthConceptIcon name="help" className="text-[#0b5b59]" />
                   <p className="text-[11px] leading-5 text-[#445f62]">
                     Não consegue acessar esse e-mail?<br />
                     <Link
@@ -452,10 +458,7 @@ export default function ResetPasswordPage() {
                   Escolha uma nova senha
                 </h1>
                 <div className="mt-3 space-y-1.5">
-                  <Label
-                    htmlFor="new-password"
-                    className="text-[13px] font-semibold"
-                  >
+                  <Label htmlFor="new-password" className="text-[13px] font-semibold">
                     Nova senha
                   </Label>
                   <PasswordInput
@@ -526,10 +529,7 @@ export default function ResetPasswordPage() {
                 </ul>
 
                 <div className="mt-4 flex items-start gap-3 rounded-xl bg-[#eef2f3] px-4 py-3 text-[11px] leading-4 text-[#526a6d]">
-                  <AuthConceptIcon
-                    name="lightbulb"
-                    className="text-[#174d55]"
-                  />
+                  <AuthConceptIcon name="lightbulb" className="text-[#174d55]" />
                   <span>
                     Use uma senha que você não utiliza em outros serviços.
                   </span>
@@ -615,10 +615,7 @@ export default function ResetPasswordPage() {
                 </p>
 
                 <div className="mt-6 space-y-1.5 text-left">
-                  <Label
-                    htmlFor="expired-email"
-                    className="text-[13px] font-semibold"
-                  >
+                  <Label htmlFor="expired-email" className="text-[13px] font-semibold">
                     E-mail
                   </Label>
                   <Input
