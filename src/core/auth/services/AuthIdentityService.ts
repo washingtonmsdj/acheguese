@@ -10,10 +10,11 @@ export interface LinkedAuthProviders {
  * Read-only authority for identities linked to the authenticated Supabase user.
  * Provider availability and provider linkage are intentionally separate facts.
  *
- * The `email` identity is also the authority used by account settings to decide
- * whether changing an existing password must verify the current password. OAuth
- * accounts without an email/password identity may create a password without
- * pretending that a current password exists.
+ * The `email` identity lets account settings distinguish an existing
+ * email/password access method from an OAuth-only account, so the UI can say
+ * "Alterar senha" or "Criar senha" truthfully. Password-change verification
+ * itself belongs to AuthService/Supabase Auth and uses the project's canonical
+ * reauthentication policy; this service never validates credentials.
  */
 export class AuthIdentityService {
   static async getLinkedProviders(): Promise<LinkedAuthProviders> {
