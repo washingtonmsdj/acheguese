@@ -6,16 +6,28 @@ function getConfiguredPublicOrigin(): string {
   return import.meta.env.VITE_PUBLIC_SITE_URL || "";
 }
 
+function isLoopbackOrigin(origin: string): boolean {
+  try {
+    const hostname = new URL(origin).hostname;
+    return hostname === "localhost" || hostname === "127.0.0.1" || hostname === "[::1]";
+  } catch {
+    return false;
+  }
+}
+
+function getBrowserOrigin(): string {
+  if (typeof window === "undefined" || !window.location?.origin) return "";
+  return normalizeOrigin(window.location.origin);
+}
+
 export function getPublicAppOrigin(): string {
-  // In development, the browser origin is authoritative. This keeps OAuth,
-  // password recovery and local absolute URLs on the port that is actually
-  // serving the app, even when the shared .env still carries another port.
-  if (
-    import.meta.env.DEV &&
-    typeof window !== "undefined" &&
-    window.location?.origin
-  ) {
-    return normalizeOrigin(window.location.origin);
+  const browserOrigin = getBrowserOrigin();
+
+  // O origin realmente aberto no navegador é autoritativo em desenvolvimento e
+  // em loopback. Isso mantém OAuth, recuperação e confirmações na porta local
+  // ativa (incluindo localhost:5175), mesmo em preview de um build de produção.
+  if (browserOrigin && (import.meta.env.DEV || isLoopbackOrigin(browserOrigin))) {
+    return browserOrigin;
   }
 
   const envOrigin = getConfiguredPublicOrigin();
@@ -23,11 +35,7 @@ export function getPublicAppOrigin(): string {
     return normalizeOrigin(envOrigin);
   }
 
-  if (typeof window !== "undefined" && window.location?.origin) {
-    return normalizeOrigin(window.location.origin);
-  }
-
-  return "";
+  return browserOrigin;
 }
 
 export function buildPublicAbsoluteUrl(path: string): string {
