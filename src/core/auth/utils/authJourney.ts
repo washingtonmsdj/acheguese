@@ -3,6 +3,7 @@ import {
   AUTH_FLOW_TTL_MS,
   AUTH_JOURNEY_INTENTS,
   AUTH_PATHS,
+  AUTH_SIGNUP_CONFIRMATION_RESEND_COOLDOWN_MS,
   type AuthJourneyIntent,
 } from "@/core/auth/constants/authFlow";
 import {
@@ -77,9 +78,30 @@ function clearPendingSignupRedirect(): void {
   clearAuthFlowSessionValue(AUTH_FLOW_STORAGE_KEYS.pendingSignupRedirect);
 }
 
+function clearPendingSignupConfirmationSentAt(): void {
+  clearAuthFlowSessionValue(
+    AUTH_FLOW_STORAGE_KEYS.pendingSignupConfirmationSentAt,
+  );
+}
+
+function getPendingSignupConfirmationSentAt(): number | null {
+  const stored = getAuthFlowSessionValue(
+    AUTH_FLOW_STORAGE_KEYS.pendingSignupConfirmationSentAt,
+  );
+  if (!stored) return null;
+
+  const value = Number(stored);
+  if (!Number.isFinite(value) || value <= 0) {
+    clearPendingSignupConfirmationSentAt();
+    return null;
+  }
+  return value;
+}
+
 function clearPendingSignupContext(): void {
   clearPendingSignupEmail();
   clearPendingSignupRedirect();
+  clearPendingSignupConfirmationSentAt();
 }
 
 export function getPendingAuthJourneyIntent(): AuthJourneyIntent | null {
@@ -113,6 +135,30 @@ export function getSignupConfirmationContext(): SignupConfirmationContext {
   };
 }
 
+/** Registra apenas o instante do envio confirmado; nunca conteúdo do e-mail. */
+export function markSignupConfirmationEmailSent(sentAt = Date.now()): void {
+  setAuthFlowSessionValue(
+    AUTH_FLOW_STORAGE_KEYS.pendingSignupConfirmationSentAt,
+    String(sentAt),
+    AUTH_FLOW_TTL_MS.pendingSignup,
+  );
+}
+
+/**
+ * Tempo restante do bloqueio de reenvio derivado do último envio confirmado.
+ * Recarregar a página não reinicia nem remove a espera.
+ */
+export function getSignupConfirmationResendRemainingMs(
+  now = Date.now(),
+): number {
+  const sentAt = getPendingSignupConfirmationSentAt();
+  if (sentAt === null) return 0;
+  return Math.max(
+    0,
+    AUTH_SIGNUP_CONFIRMATION_RESEND_COOLDOWN_MS - (now - sentAt),
+  );
+}
+
 /**
  * Cadastro por e-mail concluído no backend: persiste apenas o contexto efêmero
  * necessário para confirmação e primeiro acesso. Credenciais nunca passam por
@@ -126,11 +172,13 @@ export function prepareEmailSignupConfirmation(
   clearPendingAuthJourneyIntent();
   setPendingSignupEmail(email);
   setPendingSignupRedirect(returnTo);
+  markSignupConfirmationEmailSent();
 }
 
 /** Reinicia somente a etapa de dados da conta, preservando o destino original. */
 export function restartEmailSignupJourney(): void {
   clearPendingSignupEmail();
+  clearPendingSignupConfirmationSentAt();
   clearPendingReturn();
   clearPendingAuthJourneyIntent();
 }
@@ -154,6 +202,7 @@ export function cancelGoogleLogin(): void {
  */
 export function prepareGoogleSignup(returnTo: string): void {
   clearPendingSignupEmail();
+  clearPendingSignupConfirmationSentAt();
   setPendingAuthJourneyIntent(AUTH_JOURNEY_INTENTS.signup);
   setPendingSignupRedirect(returnTo);
   setPendingReturn(AUTH_PATHS.firstAccess);
