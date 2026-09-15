@@ -574,27 +574,28 @@ export default function ResetPasswordPage() {
                     : "Salvar nova senha"}
                 </button>
 
-                <div className="mt-4 text-center text-[10.5px] leading-4 text-[#607477]">
+                <nav
+                  aria-label="Links legais"
+                  className="mt-4 text-center text-[10.5px] leading-4 text-[#607477]"
+                >
                   <span
                     aria-hidden="true"
                     className="mx-auto mb-3 block h-px w-8 bg-[#cbd3d2]"
                   />
-                  Ao continuar, você concorda com nossos{" "}
                   <Link
                     to={TERMS_OF_SERVICE_PATH}
                     className="underline underline-offset-2"
                   >
                     Termos de Uso
-                  </Link>{" "}
-                  e{" "}
+                  </Link>
+                  <span aria-hidden="true"> · </span>
                   <Link
                     to={PRIVACY_POLICY_PATH}
                     className="underline underline-offset-2"
                   >
                     Política de Privacidade
                   </Link>
-                  .
-                </div>
+                </nav>
               </form>
             ) : null}
 
