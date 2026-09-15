@@ -27,6 +27,39 @@ describe("account password reauthentication", () => {
     expect(securityPage).toContain('autoComplete="one-time-code"');
   });
 
+  it("deduplicates simultaneous reauthentication-code requests", () => {
+    const handler = authHook.indexOf(
+      "const requestPasswordReauthentication = useCallback(async () => {",
+    );
+    const activeRead = authHook.indexOf(
+      "const activeRequest = passwordReauthInFlightRef.current;",
+      handler,
+    );
+    const reuse = authHook.indexOf("if (activeRequest) return activeRequest;", activeRead);
+    const request = authHook.indexOf(
+      "await AuthService.requestPasswordReauthentication();",
+      reuse,
+    );
+    const register = authHook.indexOf(
+      "passwordReauthInFlightRef.current = operation;",
+      request,
+    );
+    const release = authHook.indexOf(
+      "passwordReauthInFlightRef.current = null;",
+      register,
+    );
+
+    expect(authHook).toContain(
+      "const passwordReauthInFlightRef = useRef<Promise<void> | null>(null);",
+    );
+    expect(handler).toBeGreaterThanOrEqual(0);
+    expect(activeRead).toBeGreaterThan(handler);
+    expect(reuse).toBeGreaterThan(activeRead);
+    expect(request).toBeGreaterThan(reuse);
+    expect(register).toBeGreaterThan(request);
+    expect(release).toBeGreaterThan(register);
+  });
+
   it("discards nonce state and invalidates late reauthentication requests when leaving the password view", () => {
     expect(securityPage).toContain("const passwordReauthRequestIdRef = useRef(0);");
     expect(securityPage).toContain('if (location.hash === "#senha") return;');
