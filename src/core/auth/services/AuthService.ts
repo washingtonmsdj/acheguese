@@ -25,6 +25,7 @@ import {
   PUBLIC_SUPABASE_CONFIG,
 } from "@/shared/config/publicSupabase";
 import { logger } from "@/shared/utils/logger";
+import { AuthRecoveryAuthority } from "./AuthRecoveryAuthority";
 import { AuthError } from "./types";
 
 interface UsernameLoginResponse {
@@ -66,11 +67,30 @@ export class AuthService {
   }
 
   static onPasswordRecovery(callback: () => void): () => void {
-    return SessionService.onAuthStateChange((event) => {
+    let active = true;
+    let delivered = false;
+    const deliver = () => {
+      if (!active || delivered) return;
+      delivered = true;
+      callback();
+    };
+
+    // Subscribe before replaying the current verified claims so a recovery
+    // event that lands between those two operations cannot be lost.
+    const unsubscribe = SessionService.onAuthStateChange((event) => {
       if (event === "PASSWORD_RECOVERY") {
-        callback();
+        deliver();
       }
     });
+
+    void AuthRecoveryAuthority.isCurrentSessionRecovery().then((isRecovery) => {
+      if (isRecovery) deliver();
+    });
+
+    return () => {
+      active = false;
+      unsubscribe();
+    };
   }
 
   private static normalizeUsername(username: string): string {
