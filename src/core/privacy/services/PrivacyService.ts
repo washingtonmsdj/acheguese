@@ -8,6 +8,7 @@
  */
 
 import { DPO_REQUEST_STATUS } from "@/core/privacy/constants/dpoRequestStatus";
+import { assertPrivacyDataExportEnabled } from "@/core/privacy/config/privacyRollout";
 import {
   resolveSupabaseFunctionErrorMessage,
   supabase,
@@ -122,6 +123,7 @@ export class PrivacyService {
    * Exports all personal data for the authenticated user.
    */
   static async exportUserData(): Promise<ExportDataResponse> {
+    assertPrivacyDataExportEnabled();
     const { data, error } = await supabase.functions.invoke("user-export-data");
 
     if (error) {
