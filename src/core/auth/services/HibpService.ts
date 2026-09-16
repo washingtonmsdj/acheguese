@@ -49,6 +49,7 @@ export interface HibpCheckResult {
 
 export class HibpService {
   private static readonly API_URL = "https://api.pwnedpasswords.com/range/";
+  private static readonly REQUEST_TIMEOUT_MS = 4_000;
 
   /**
    * Verifica se a senha aparece em vazamentos conhecidos.
@@ -65,10 +66,16 @@ export class HibpService {
     let hash = await sha1(password);
     const prefix = hash.slice(0, 5);
     const suffix = hash.slice(5);
+    const controller = new AbortController();
+    const timeout = globalThis.setTimeout(
+      () => controller.abort(),
+      this.REQUEST_TIMEOUT_MS,
+    );
 
     try {
       const response = await fetch(`${this.API_URL}${prefix}`, {
         headers: { "Add-Padding": "true" },
+        signal: controller.signal,
       });
 
       if (!response.ok) {
@@ -76,18 +83,20 @@ export class HibpService {
       }
 
       const text = await response.text();
-      const lines = text.split("\r\n");
+      const lines = text.split(/\r?\n/);
 
       for (const line of lines) {
         const [hashSuffix, countStr] = line.split(":");
-        if (hashSuffix === suffix) {
-          const count = parseInt(countStr, 10);
-          return { isPwned: true, count };
-        }
+        if (hashSuffix !== suffix) continue;
+
+        const count = Number.parseInt(countStr ?? "", 10);
+        if (!Number.isFinite(count) || count < 1) continue;
+        return { isPwned: true, count };
       }
 
       return { isPwned: false, count: 0 };
     } finally {
+      globalThis.clearTimeout(timeout);
       // Descarta a referência ao hash completo (best-effort).
       hash = "";
     }
