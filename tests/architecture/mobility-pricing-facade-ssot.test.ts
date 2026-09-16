@@ -5,6 +5,34 @@ import { describe, expect, it } from "vitest";
 const root = resolve(__dirname, "../..");
 const read = (path: string) => readFileSync(resolve(root, path), "utf8");
 
+function exportedFunctionNames(source: string): Set<string> {
+  return new Set(
+    Array.from(source.matchAll(/export\s+function\s+([A-Za-z_$][\w$]*)/g), (match) => match[1]),
+  );
+}
+
+function mobilityHelperReexports(source: string): string[] {
+  const block = source.match(
+    /export\s*\{([\s\S]*?)\}\s*from\s*["']\.\/mobility\.helpers["'];?/m,
+  );
+
+  if (!block?.[1]) return [];
+
+  return block[1]
+    .split(",")
+    .map((entry) => entry.trim())
+    .filter(Boolean)
+    .map((entry) => entry.replace(/^type\s+/, "").split(/\s+as\s+/)[0]?.trim())
+    .filter((entry): entry is string => Boolean(entry));
+}
+
+function mobilityHelperBindings(source: string): string[] {
+  return Array.from(
+    source.matchAll(/MobilityHelpers\.([A-Za-z_$][\w$]*)/g),
+    (match) => match[1],
+  );
+}
+
 describe("Mobility pricing facade SSOT", () => {
   it("does not re-export the removed hardcoded fare helper", () => {
     const facade = read("src/core/mobility/services/MobilityService.ts");
@@ -12,6 +40,25 @@ describe("Mobility pricing facade SSOT", () => {
 
     expect(helpers).not.toContain("calculateEstimatedFare");
     expect(facade).not.toContain("calculateEstimatedFare");
+  });
+
+  it("keeps every mobility helper re-export and facade binding backed by a real helper export", () => {
+    const facade = read("src/core/mobility/services/MobilityService.ts");
+    const helpers = read("src/core/mobility/services/mobility.helpers.ts");
+    const availableHelpers = exportedFunctionNames(helpers);
+    const referencedHelpers = new Set([
+      ...mobilityHelperReexports(facade),
+      ...mobilityHelperBindings(facade),
+    ]);
+
+    expect(availableHelpers.size).toBeGreaterThan(0);
+    expect(referencedHelpers.size).toBeGreaterThan(0);
+
+    const missingHelpers = Array.from(referencedHelpers).filter(
+      (name) => !availableHelpers.has(name),
+    );
+
+    expect(missingHelpers).toEqual([]);
   });
 
   it("keeps fare estimation owned by PricingService", () => {
