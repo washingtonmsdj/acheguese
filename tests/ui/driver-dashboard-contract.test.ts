@@ -38,6 +38,9 @@ const geolocationButton = read(
 const mobilityChatList = read(
   "src/modules/mobility/components/chat/MobilityChatList.tsx",
 );
+const rideReadQueries = read(
+  "src/core/mobility/services/mobility.ride-read-queries.ts",
+);
 
 const migratedDriverVisualFiles = [
   "src/modules/mobility/pages/MotoristaPage.tsx",
@@ -114,26 +117,39 @@ describe("driver dashboard contract", () => {
     expect(rideTrackingMap).not.toContain("'Conectado'");
     expect(rideTrackingMap).toContain("displayHasLiveUpdate");
     expect(rideTrackingMap).toContain("mapInitializationError");
+    expect(rideTrackingMap).toContain("initialLoadCompleted");
+    expect(rideTrackingMap).toContain("resetMapRuntime(false)");
   });
 
   it("derives active ride and mobility chat status from the canonical lifecycle", () => {
     expect(activeRideWidget).toContain("RIDE_STATUS_LABELS");
     expect(activeRideWidget).toContain("RIDE_STATUS.DRIVER_ACCEPTED");
     expect(activeRideWidget).toContain("RIDE_STATUS.IN_DELIVERY");
+    expect(activeRideWidget).toContain("ACTIVE_EXECUTION_STATUSES");
     expect(activeRideWidget).not.toContain('accepted: {');
 
     expect(mobilityChatList).toContain("RIDE_STATUS_LABELS");
     expect(mobilityChatList).toContain("RIDE_STATUS.PICKUP_CONFIRMED");
     expect(mobilityChatList).toContain("RIDE_STATUS.IN_DELIVERY");
     expect(mobilityChatList).toContain("CLOSED_RIDE_STATUSES");
+    expect(mobilityChatList).toContain("CHAT_FILTERS");
+    expect(mobilityChatList).toContain("type ChatFilter");
     expect(mobilityChatList).toContain("loadError");
     expect(mobilityChatList).toContain("appUrls.messages");
   });
 
-  it("keeps geolocation UI free of hardcoded dispatch promises", () => {
+  it("preserves mobility conversation read failures instead of converting them to empty data", () => {
+    expect(rideReadQueries).toContain(
+      'logger.error("MobilityQueries.getMobilityConversations", { error });\n    throw error;',
+    );
+  });
+
+  it("keeps geolocation UI free of hardcoded dispatch and feedback timing promises", () => {
     expect(geolocationButton).toContain("regras operacionais vigentes");
+    expect(geolocationButton).toContain("TIMEOUTS.ANIMATION_DELAY_VERY_LONG");
     expect(geolocationButton).not.toContain("5km");
     expect(geolocationButton).not.toContain("Match Inteligente");
+    expect(geolocationButton).not.toContain("}, 3000)");
   });
 
   it("never presents a weekly earnings read failure as zero earnings", () => {
