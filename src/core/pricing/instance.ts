@@ -4,10 +4,11 @@
  * Instância canônica do PricingService.
  * Use esta instância em toda a aplicação.
  *
- * Runtime policy: persisted pricing rules are authoritative. PricingService still
- * contains historical fallback definitions for compatibility/tests, but the
- * application singleton must never turn those hardcoded values into an official
- * customer price. If the database rule is unavailable, pricing fails closed.
+ * Production policy:
+ * - persisted pricing rules are authoritative;
+ * - historical fallback rules are never customer pricing;
+ * - provisional/unapproved rules may be exercised in development, but production
+ *   refuses to turn them into a customer-facing price.
  */
 
 import { PricingService } from './services/PricingService';
@@ -15,10 +16,20 @@ import type { PricingMode, PricingRule } from './types';
 
 const rawPricingService = PricingService.getInstance();
 
+function isCommerciallyApproved(rule: PricingRule): boolean {
+  return rule.metadata?.commercial_status === 'approved';
+}
+
 function assertCanonicalRule(rule: PricingRule, mode: PricingMode): PricingRule {
   if (rule.id.startsWith('fallback-')) {
     throw new Error(
       `Canonical pricing rule unavailable for mode: ${mode}. Refusing hardcoded fallback pricing.`,
+    );
+  }
+
+  if (import.meta.env.PROD && !isCommerciallyApproved(rule)) {
+    throw new Error(
+      `Pricing rule for mode ${mode} is not commercially approved for production.`,
     );
   }
 
