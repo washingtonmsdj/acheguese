@@ -5,6 +5,9 @@ import { describe, expect, it } from "vitest";
 const ROOT = process.cwd();
 const read = (path: string) => readFileSync(join(ROOT, path), "utf8");
 
+const intakeMigration = read(
+  "supabase/migrations/20260916101000_create_privacy_subject_request_broker.sql",
+);
 const migration = read(
   "supabase/migrations/20260916103200_add_admin_privacy_request_authority.sql",
 );
@@ -13,6 +16,15 @@ const piiMinimizationMigration = read(
 );
 const historyMigration = read(
   "supabase/migrations/20260916114500_add_privacy_request_event_history.sql",
+);
+const denyDirectMigration = read(
+  "supabase/migrations/20260916115500_explicitly_deny_direct_privacy_ledger_access.sql",
+);
+const actorIndexMigration = read(
+  "supabase/migrations/20260916120500_index_privacy_request_event_actor.sql",
+);
+const runtimeGrantsMigration = read(
+  "supabase/migrations/20260916121200_tighten_privacy_subject_request_runtime_grants.sql",
 );
 const broker = read("supabase/functions/admin-privacy-rpc/index.ts");
 const config = read("supabase/config.toml");
@@ -94,17 +106,60 @@ describe("admin privacy request authority", () => {
     expect(page).toContain("detail.history.map");
   });
 
+  it("makes direct ledger and history access explicitly fail closed", () => {
+    expect(denyDirectMigration).toContain(
+      "CREATE POLICY privacy_subject_requests_deny_direct",
+    );
+    expect(denyDirectMigration).toContain(
+      "CREATE POLICY privacy_subject_request_events_deny_direct",
+    );
+    expect(denyDirectMigration).toContain("FOR ALL");
+    expect(denyDirectMigration).toContain("TO PUBLIC");
+    expect(denyDirectMigration.match(/USING \(false\)/g)?.length).toBe(2);
+    expect(denyDirectMigration.match(/WITH CHECK \(false\)/g)?.length).toBe(2);
+  });
+
   it("reduces direct service-role ledger authority to public intake insert only", () => {
-    expect(historyMigration).toContain(
-      "REVOKE SELECT, UPDATE, DELETE ON TABLE public.privacy_subject_requests",
+    expect(runtimeGrantsMigration).toContain(
+      "REVOKE ALL ON TABLE public.privacy_subject_requests",
     );
-    expect(historyMigration).toContain(
-      "GRANT INSERT ON TABLE public.privacy_subject_requests TO service_role",
+    expect(runtimeGrantsMigration).toContain(
+      "FROM PUBLIC, anon, authenticated, service_role",
     );
+    expect(runtimeGrantsMigration).toContain(
+      "GRANT INSERT ON TABLE public.privacy_subject_requests",
+    );
+    expect(runtimeGrantsMigration).not.toContain("GRANT SELECT");
+    expect(runtimeGrantsMigration).not.toContain("GRANT UPDATE");
+    expect(runtimeGrantsMigration).not.toContain("GRANT DELETE");
+    expect(runtimeGrantsMigration).not.toContain("GRANT TRUNCATE");
+    expect(runtimeGrantsMigration).not.toContain("GRANT TRIGGER");
+    expect(runtimeGrantsMigration).not.toContain("GRANT REFERENCES");
     expect(historyMigration).toContain(
       "REVOKE ALL ON TABLE public.privacy_subject_request_events",
     );
     expect(historyMigration).toContain("FROM PUBLIC, anon, authenticated, service_role");
+  });
+
+  it("keeps every DPO foreign key covered by a leading index in source", () => {
+    expect(intakeMigration).toContain(
+      "privacy_subject_requests_user_submitted_idx",
+    );
+    expect(intakeMigration).toContain(
+      "ON public.privacy_subject_requests(user_id, submitted_at DESC)",
+    );
+    expect(historyMigration).toContain(
+      "privacy_subject_request_events_request_time_idx",
+    );
+    expect(historyMigration).toContain(
+      "ON public.privacy_subject_request_events(request_id, occurred_at ASC, id ASC)",
+    );
+    expect(actorIndexMigration).toContain(
+      "privacy_subject_request_events_actor_user_idx",
+    );
+    expect(actorIndexMigration).toContain(
+      "ON public.privacy_subject_request_events(actor_user_id)",
+    );
   });
 
   it("requires JWT, admin authorization and MFA-aware admin helper", () => {
