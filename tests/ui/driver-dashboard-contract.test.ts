@@ -23,12 +23,31 @@ const weeklyEarnings = read(
 const deliveryActions = read(
   "src/core/mobility/components/driver/MotoboyDeliveryActions.tsx",
 );
+const activeRideWidget = read(
+  "src/modules/mobility/components/ActiveRideWidget.tsx",
+);
+const driverLocationHook = read(
+  "src/core/mobility/hooks/useDriverLocation.ts",
+);
+const rideTrackingMap = read(
+  "src/core/mobility/components/RideTrackingMap.tsx",
+);
+const geolocationButton = read(
+  "src/modules/mobility/components/GeolocationButton.tsx",
+);
+const mobilityChatList = read(
+  "src/modules/mobility/components/chat/MobilityChatList.tsx",
+);
 
 const migratedDriverVisualFiles = [
   "src/modules/mobility/pages/MotoristaPage.tsx",
   "src/modules/mobility/pages/MotoboyPage.tsx",
+  "src/modules/mobility/components/ActiveRideWidget.tsx",
+  "src/modules/mobility/components/BoardingPointsPanel.tsx",
   "src/modules/mobility/components/DriverOfferCard.tsx",
+  "src/modules/mobility/components/GeolocationButton.tsx",
   "src/modules/mobility/components/NeighborRankingPanel.tsx",
+  "src/modules/mobility/components/chat/MobilityChatList.tsx",
   "src/modules/mobility/components/driver/CancelRideDialog.tsx",
   "src/modules/mobility/components/driver/CompleteRideDialog.tsx",
   "src/modules/mobility/components/driver/DriverQuickActions.tsx",
@@ -36,6 +55,8 @@ const migratedDriverVisualFiles = [
   "src/modules/mobility/components/driver/DriverStatsPanel.tsx",
   "src/modules/mobility/components/driver/DriverSubscriptionCard.tsx",
   "src/modules/mobility/components/driver/RatePassengerDialog.tsx",
+  "src/modules/mobility/components/passenger/ride-card/DriverInfo.tsx",
+  "src/core/mobility/components/RideTrackingMap.tsx",
   "src/core/mobility/components/driver/DriverEarningsCard.tsx",
   "src/core/mobility/components/driver/DriverNotifications.tsx",
   "src/core/mobility/components/driver/DriverSettingsPanel.tsx",
@@ -81,14 +102,38 @@ describe("driver dashboard contract", () => {
     expect(settingsPanel).not.toContain('id: "sound"');
   });
 
-  it("does not invent a realtime connection state", () => {
+  it("does not invent realtime connection state in notification or ride tracking UI", () => {
     expect(realtimeStatus).not.toContain("setIsConnected(true)");
     expect(realtimeStatus).not.toContain("Simular conexão realtime");
     expect(realtimeStatus).not.toContain('"Conectado"');
     expect(realtimeStatus).toContain("loading, error");
-    expect(realtimeStatus).toContain(
-      "Novas notificações aparecem aqui assim que forem recebidas.",
-    );
+
+    expect(driverLocationHook).not.toContain("setIsConnected(true)");
+    expect(driverLocationHook).toContain("hasLiveUpdate");
+    expect(driverLocationHook).toContain("setHasLiveUpdate(true)");
+    expect(rideTrackingMap).not.toContain("'Conectado'");
+    expect(rideTrackingMap).toContain("displayHasLiveUpdate");
+    expect(rideTrackingMap).toContain("mapInitializationError");
+  });
+
+  it("derives active ride and mobility chat status from the canonical lifecycle", () => {
+    expect(activeRideWidget).toContain("RIDE_STATUS_LABELS");
+    expect(activeRideWidget).toContain("RIDE_STATUS.DRIVER_ACCEPTED");
+    expect(activeRideWidget).toContain("RIDE_STATUS.IN_DELIVERY");
+    expect(activeRideWidget).not.toContain('accepted: {');
+
+    expect(mobilityChatList).toContain("RIDE_STATUS_LABELS");
+    expect(mobilityChatList).toContain("RIDE_STATUS.PICKUP_CONFIRMED");
+    expect(mobilityChatList).toContain("RIDE_STATUS.IN_DELIVERY");
+    expect(mobilityChatList).toContain("CLOSED_RIDE_STATUSES");
+    expect(mobilityChatList).toContain("loadError");
+    expect(mobilityChatList).toContain("appUrls.messages");
+  });
+
+  it("keeps geolocation UI free of hardcoded dispatch promises", () => {
+    expect(geolocationButton).toContain("regras operacionais vigentes");
+    expect(geolocationButton).not.toContain("5km");
+    expect(geolocationButton).not.toContain("Match Inteligente");
   });
 
   it("never presents a weekly earnings read failure as zero earnings", () => {
@@ -106,7 +151,7 @@ describe("driver dashboard contract", () => {
     expect(deliveryActions).toContain("await onFailDelivery(");
   });
 
-  it("keeps migrated driver surfaces on semantic/category tokens", () => {
+  it("keeps migrated mobility surfaces on semantic/category tokens", () => {
     for (const relative of migratedDriverVisualFiles) {
       const source = read(relative);
       expect(source, relative).not.toMatch(/#[0-9a-fA-F]{3,8}\b|\brgba?\s*\(/);
