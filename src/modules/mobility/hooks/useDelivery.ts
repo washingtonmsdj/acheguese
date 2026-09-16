@@ -18,7 +18,7 @@ import {
 } from "@/core/mobility/services/mobility.queries";
 import { RideOperationalService } from "@/core/mobility/core/RideOperationalService";
 import { isOpenRideStatus } from "@/core/mobility/core/RideLifecycleStatus";
-import { pricingService } from "@/core/pricing/services/PricingService";
+import { pricingService } from "@/core/pricing/instance";
 import { logger } from "@/shared/utils/logger";
 import { useRideRealtime } from "./useRideRealtime";
 import { buildFailedDeliveryMetadata } from "@/modules/mobility/utils/failedDelivery";
@@ -148,16 +148,26 @@ export function useDelivery(sourceType: SourceType, sourceId?: string) {
           return { success: false, error: profileError };
         }
 
-        let suggestedPrice: number | undefined;
+        let suggestedPrice: number;
         try {
           const estimate = await pricingService.calculateEstimate({
             mode: "motoboy",
             origin: { latitude: data.originLat, longitude: data.originLng },
             destination: { latitude: data.destinationLat, longitude: data.destinationLng },
           });
+
+          if (!Number.isFinite(estimate.estimatedPrice) || estimate.estimatedPrice <= 0) {
+            throw new Error("Canonical pricing returned an invalid delivery price");
+          }
+
           suggestedPrice = estimate.estimatedPrice;
         } catch (pricingError) {
-          logger.warn("useDelivery.createDelivery - pricing fallback", pricingError);
+          logger.error(
+            "useDelivery.createDelivery - canonical pricing unavailable",
+            pricingError as Error,
+          );
+          toast.error("Nao foi possivel calcular o preco oficial da entrega. Tente novamente.");
+          throw new Error("Official delivery pricing unavailable");
         }
 
         const result = await RideOperationalService.createDelivery({
