@@ -7,6 +7,7 @@
 import { lazy } from "react";
 import { Navigate, Route, Routes } from "react-router-dom";
 import { PRELAUNCH_LOCKDOWN_ENABLED } from "@/app/config/launchScope";
+import { AuthEntrySessionGate } from "@/app/routes/AuthEntrySessionGate";
 import { AUTH_PATHS } from "@/core/auth/constants/authFlow";
 
 const RootRouteEntry = lazy(() => import("@/app/routes/RootRouteEntry"));
@@ -78,12 +79,20 @@ const AdminRoutes = lazy(() =>
   })),
 );
 
+function LoginRoute() {
+  return (
+    <AuthEntrySessionGate>
+      <LoginPage />
+    </AuthEntrySessionGate>
+  );
+}
+
 export function AppRoutes() {
   if (PRELAUNCH_LOCKDOWN_ENABLED) {
     return (
       <Routes>
         <Route path="/" element={<RootRouteEntry />} />
-        <Route path={AUTH_PATHS.login} element={<LoginPage />} />
+        <Route path={AUTH_PATHS.login} element={<LoginRoute />} />
         <Route
           path={AUTH_PATHS.emailChangeConfirmation}
           element={<EmailChangeConfirmationPage />}
@@ -102,7 +111,7 @@ export function AppRoutes() {
       <Route path="/status" element={<StatusPage />} />
 
       <Route path="/splash" element={<SplashPage />} />
-      <Route path={AUTH_PATHS.login} element={<LoginPage />} />
+      <Route path={AUTH_PATHS.login} element={<LoginRoute />} />
       <Route
         path={AUTH_PATHS.emailChangeConfirmation}
         element={<EmailChangeConfirmationPage />}
