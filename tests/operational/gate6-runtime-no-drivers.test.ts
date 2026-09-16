@@ -29,6 +29,10 @@ import {
   safeCleanupVerifications,
 } from '../helpers/test-cleanup-helpers';
 import { createOperationalAdminClient, describeOperational } from '../helpers/operational-env';
+import {
+  cleanupMobilityRideQuoteFixtures,
+  createMobilityRideQuoteFixture,
+} from '../helpers/mobility-price-quote-fixtures';
 
 // Carregar fixtures
 const fixturesPath = join(__dirname, '../fixtures/gate6-fixtures.json');
@@ -47,6 +51,7 @@ describeOperational('Gate 6 - Bloco B: Runtime Real SEM Motoristas', {
     fixtures.drivers.driverC.id,
   ];
   const createdRideIds: string[] = [];
+  const pricingRuleIds: string[] = [];
   
   // Coordenadas
   const pickupLat = fixtures.coords.pickup.lat;
@@ -60,9 +65,26 @@ describeOperational('Gate 6 - Bloco B: Runtime Real SEM Motoristas', {
   const pickupLocationId = fixtures.locationIds.primary;
   const dropoffLocationId = fixtures.locationIds.primary;
 
+  async function issueRideQuote(): Promise<string> {
+    const fixture = await createMobilityRideQuoteFixture(supabaseAdmin, {
+      passengerProfileId: passengerId,
+      pickupAddressId,
+      dropoffAddressId,
+      pickupLocationId,
+      dropoffLocationId,
+      originLat: pickupLat,
+      originLng: pickupLng,
+      destinationLat: dropoffLat,
+      destinationLng: dropoffLng,
+    });
+    pricingRuleIds.push(fixture.ruleId);
+    return fixture.quoteId;
+  }
+
   beforeEach(async () => {
     supabaseAdmin = createOperationalAdminClient();
     createdRideIds.length = 0;
+    pricingRuleIds.length = 0;
 
     // Resetar flags de PIN antes do cleanup de dados
     await supabaseAdmin
@@ -134,6 +156,7 @@ describeOperational('Gate 6 - Bloco B: Runtime Real SEM Motoristas', {
       await safeCleanupVerifications(createdRideIds);
     }
 
+    await cleanupMobilityRideQuoteFixtures(supabaseAdmin, pricingRuleIds);
     await cleanupMultipleDrivers(allDriverIds);
     await signOut();
   }, 30000);
@@ -156,6 +179,7 @@ describeOperational('Gate 6 - Bloco B: Runtime Real SEM Motoristas', {
     // ============================================
     
     await authenticateAsProfile(passengerId);
+    const priceQuoteId = await issueRideQuote();
     
     const createResult = await RideOperationalService.createRide({
       passengerProfileId: passengerId,
@@ -168,7 +192,7 @@ describeOperational('Gate 6 - Bloco B: Runtime Real SEM Motoristas', {
       destinationLat: dropoffLat,
       destinationLng: dropoffLng,
       mode: 'ride',
-      suggestedPrice: 15.00,
+      priceQuoteId,
     });
     
     expect(createResult.success).toBe(true);
@@ -268,6 +292,7 @@ describeOperational('Gate 6 - Bloco B: Runtime Real SEM Motoristas', {
     await authenticateAsProfile(passengerId);
     
     for (let i = 0; i < 3; i++) {
+      const priceQuoteId = await issueRideQuote();
       const createResult = await RideOperationalService.createRide({
         passengerProfileId: passengerId,
         pickupAddressId,
@@ -279,7 +304,7 @@ describeOperational('Gate 6 - Bloco B: Runtime Real SEM Motoristas', {
         destinationLat: dropoffLat,
         destinationLng: dropoffLng,
         mode: 'ride',
-        suggestedPrice: 15.00 + i,
+        priceQuoteId,
       });
       
       expect(createResult.success).toBe(true);
