@@ -1,32 +1,61 @@
 import {
-  TrendingUp,
+  Activity,
   AlertCircle,
   Award,
-  Activity,
+  BarChart3,
   Calendar,
   CheckCircle2,
-  BarChart3,
+  TrendingUp,
 } from "lucide-react";
+import type { UserReport } from "@/core/admin/services/AdminUserDetailService";
+import type {
+  AdminUserDetail,
+  DriverDetail,
+} from "@/modules/admin/hooks/useAdminUserDetail";
+import { Badge } from "@/shared/components/ui/badge";
 import {
   Card,
   CardContent,
   CardHeader,
   CardTitle,
 } from "@/shared/components/ui/card";
-import { Badge } from "@/shared/components/ui/badge";
 import { Progress } from "@/shared/components/ui/progress";
 import { cn } from "@/shared/utils/cn";
-import type {
-  AdminUserDetail,
-  DriverDetail,
-} from "@/modules/admin/hooks/useAdminUserDetail";
-import type { UserReport } from "@/core/admin/services/AdminUserDetailService";
 
 interface AnalyticsTabProps {
   user: AdminUserDetail;
   driverData: DriverDetail | null;
   reportsReceived: UserReport[];
   reportsMade: UserReport[];
+}
+
+type RiskTone = "destructive" | "warning" | "success";
+
+const RISK_TONE_CLASSES: Record<
+  RiskTone,
+  { badge: string; surface: string; copy: string }
+> = {
+  destructive: {
+    badge: "border-destructive/30 bg-destructive/10 text-destructive",
+    surface: "border-destructive/30 bg-destructive/10",
+    copy: "text-destructive",
+  },
+  warning: {
+    badge: "border-warning/30 bg-warning/10 text-warning",
+    surface: "border-warning/30 bg-warning/10",
+    copy: "text-warning",
+  },
+  success: {
+    badge: "border-success/30 bg-success/10 text-success",
+    surface: "border-success/30 bg-success/10",
+    copy: "text-success",
+  },
+};
+
+function getRiskLevel(score: number): { label: string; tone: RiskTone } {
+  if (score >= 70) return { label: "Alto", tone: "destructive" };
+  if (score >= 40) return { label: "Médio", tone: "warning" };
+  return { label: "Baixo", tone: "success" };
 }
 
 export function AnalyticsTab({
@@ -43,285 +72,282 @@ export function AnalyticsTab({
     : 0;
 
   const reportsReceivedCritical = reportsReceived.filter(
-    (r) => r.severity === "critical",
+    (report) => report.severity === "critical",
   ).length;
   const reportsReceivedHigh = reportsReceived.filter(
-    (r) => r.severity === "high",
+    (report) => report.severity === "high",
   ).length;
 
   let riskScore = 0;
-  if (reportsReceived.length > 0)
+  if (reportsReceived.length > 0) {
     riskScore += Math.min(reportsReceived.length * 15, 40);
+  }
   if (reportsReceivedCritical > 0) riskScore += 30;
   if (reportsReceivedHigh > 0) riskScore += 20;
   if (user?.suspended) riskScore += 20;
   riskScore = Math.min(riskScore, 100);
 
-  const getRiskLevel = (score: number) => {
-    if (score >= 70)
-      return {
-        label: "Alto",
-        color: "text-red-400",
-        bg: "bg-red-500/20",
-        border: "border-red-500/30",
-      };
-    if (score >= 40)
-      return {
-        label: "Médio",
-        color: "text-yellow-400",
-        bg: "bg-yellow-500/20",
-        border: "border-yellow-500/30",
-      };
-    return {
-      label: "Baixo",
-      color: "text-green-400",
-      bg: "bg-green-500/20",
-      border: "border-green-500/30",
-    };
-  };
-
   const riskLevel = getRiskLevel(riskScore);
+  const riskTone = RISK_TONE_CLASSES[riskLevel.tone];
   const driverCancellationCount = driverData?.total_rides_cancelled ?? 0;
   const driverAcceptanceRate = driverData?.acceptance_rate ?? null;
 
-  const patterns = [];
+  const patterns: Array<{
+    icon: typeof AlertCircle;
+    text: string;
+    tone: "destructive" | "warning";
+  }> = [];
+
   if (reportsReceived.length >= 2) {
     patterns.push({
       icon: AlertCircle,
       text: `${reportsReceived.length} reports recebidos`,
-      severity: "warning",
+      tone: "warning",
     });
   }
   if (reportsReceivedCritical > 0) {
     patterns.push({
       icon: AlertCircle,
       text: `${reportsReceivedCritical} reports críticos`,
-      severity: "critical",
+      tone: "destructive",
     });
   }
   if (driverData && driverCancellationCount > 5) {
     patterns.push({
       icon: AlertCircle,
       text: `${driverCancellationCount} corridas canceladas`,
-      severity: "warning",
+      tone: "warning",
     });
   }
   if (user?.suspended) {
     patterns.push({
       icon: AlertCircle,
       text: "Atualmente suspenso",
-      severity: "critical",
+      tone: "destructive",
     });
   }
 
   return (
     <div className="space-y-4">
-      <Card className="bg-[#1E2529] border-white/10">
+      <Card className="border-border bg-card text-card-foreground">
         <CardHeader>
-          <CardTitle className="text-sm flex items-center gap-2">
-            <TrendingUp className="h-4 w-4" />
-            Score de Risco
+          <CardTitle className="flex items-center gap-2 text-sm">
+            <TrendingUp className="h-4 w-4" aria-hidden="true" />
+            Score de risco
           </CardTitle>
         </CardHeader>
         <CardContent className="space-y-4">
-          <div className="flex items-center justify-between">
+          <div className="flex items-center justify-between gap-4">
             <div>
-              <p className="text-3xl font-bold text-white">{riskScore}</p>
-              <p className="text-xs text-gray-400">de 100</p>
+              <p className="text-3xl font-bold text-foreground">{riskScore}</p>
+              <p className="text-xs text-muted-foreground">de 100</p>
             </div>
-            <Badge
-              className={cn(
-                "text-sm",
-                riskLevel.bg,
-                riskLevel.color,
-                riskLevel.border,
-              )}
-            >
+            <Badge className={cn("border text-sm", riskTone.badge)}>
               Risco {riskLevel.label}
             </Badge>
           </div>
           <Progress value={riskScore} className="h-2" />
-          <p className="text-xs text-gray-400">
-            Baseado em reports, suspensões e comportamento
+          <p className="text-xs text-muted-foreground">
+            Baseado em reports, suspensões e comportamento.
           </p>
         </CardContent>
       </Card>
 
-      {patterns.length > 0 && (
-        <Card className="bg-[#1E2529] border-white/10">
+      {patterns.length > 0 ? (
+        <Card className="border-border bg-card text-card-foreground">
           <CardHeader>
-            <CardTitle className="text-sm flex items-center gap-2">
-              <AlertCircle className="h-4 w-4" />
-              Padrões Identificados
+            <CardTitle className="flex items-center gap-2 text-sm">
+              <AlertCircle className="h-4 w-4" aria-hidden="true" />
+              Padrões identificados
             </CardTitle>
           </CardHeader>
           <CardContent className="space-y-2">
-            {patterns.map((pattern, index) => {
+            {patterns.map((pattern) => {
               const Icon = pattern.icon;
+              const tone = RISK_TONE_CLASSES[pattern.tone];
               return (
                 <div
-                  key={index}
-                  className={cn(
-                    "flex items-center gap-2 p-2 rounded",
-                    pattern.severity === "critical"
-                      ? "bg-red-500/10"
-                      : "bg-yellow-500/10",
-                  )}
+                  key={pattern.text}
+                  className={cn("flex items-center gap-2 rounded border p-2", tone.surface)}
                 >
-                  <Icon
-                    className={cn(
-                      "h-4 w-4",
-                      pattern.severity === "critical"
-                        ? "text-red-400"
-                        : "text-yellow-400",
-                    )}
-                  />
-                  <span className="text-sm text-white">{pattern.text}</span>
+                  <Icon className={cn("h-4 w-4", tone.copy)} aria-hidden="true" />
+                  <span className="text-sm text-foreground">{pattern.text}</span>
                 </div>
               );
             })}
           </CardContent>
         </Card>
-      )}
+      ) : null}
 
-      <Card className="bg-[#1E2529] border-white/10">
+      <Card className="border-border bg-card text-card-foreground">
         <CardHeader>
-          <CardTitle className="text-sm flex items-center gap-2">
-            <Activity className="h-4 w-4" />
-            Estatísticas Gerais
+          <CardTitle className="flex items-center gap-2 text-sm">
+            <Activity className="h-4 w-4" aria-hidden="true" />
+            Estatísticas gerais
           </CardTitle>
         </CardHeader>
         <CardContent>
           <div className="grid grid-cols-2 gap-3">
-            <div className="p-3 bg-[#0A0F14] rounded-lg">
-              <p className="text-xs text-gray-400">Idade da Conta</p>
-              <p className="text-lg font-bold text-white">{accountAge} dias</p>
-            </div>
-            <div className="p-3 bg-[#0A0F14] rounded-lg">
-              <p className="text-xs text-gray-400">Reputação</p>
-              <p className="text-lg font-bold text-blue-400">
-                {user?.reputation || 0}
-              </p>
-            </div>
-            <div className="p-3 bg-[#0A0F14] rounded-lg">
-              <p className="text-xs text-gray-400">Reports Recebidos</p>
-              <p className="text-lg font-bold text-red-400">
-                {reportsReceived.length}
-              </p>
-            </div>
-            <div className="p-3 bg-[#0A0F14] rounded-lg">
-              <p className="text-xs text-gray-400">Reports Feitos</p>
-              <p className="text-lg font-bold text-blue-400">
-                {reportsMade.length}
-              </p>
-            </div>
+            <MetricCard label="Idade da conta" value={`${accountAge} dias`} />
+            <MetricCard
+              label="Reputação"
+              value={String(user?.reputation || 0)}
+              tone="info"
+            />
+            <MetricCard
+              label="Reports recebidos"
+              value={String(reportsReceived.length)}
+              tone="destructive"
+            />
+            <MetricCard
+              label="Reports feitos"
+              value={String(reportsMade.length)}
+              tone="info"
+            />
           </div>
         </CardContent>
       </Card>
 
-      {driverData && (
-        <Card className="bg-[#1E2529] border-white/10">
+      {driverData ? (
+        <Card className="border-border bg-card text-card-foreground">
           <CardHeader>
-            <CardTitle className="text-sm flex items-center gap-2">
-              <Award className="h-4 w-4" />
-              Histórico como Motorista
+            <CardTitle className="flex items-center gap-2 text-sm">
+              <Award className="h-4 w-4" aria-hidden="true" />
+              Histórico como motorista
             </CardTitle>
           </CardHeader>
           <CardContent>
             <div className="space-y-3">
               <div>
-                <div className="flex justify-between text-xs mb-1">
-                  <span className="text-gray-400">Taxa de Aceitação</span>
-                  <span className="text-white">
+                <div className="mb-1 flex justify-between text-xs">
+                  <span className="text-muted-foreground">Taxa de aceitação</span>
+                  <span className="text-foreground">
                     {driverAcceptanceRate === null ? "N/A" : `${driverAcceptanceRate}%`}
                   </span>
                 </div>
                 <Progress value={driverAcceptanceRate ?? 0} className="h-2" />
               </div>
 
-              <div className="grid grid-cols-3 gap-2 mt-3">
-                <div className="p-2 bg-[#0A0F14] rounded text-center">
-                  <p className="text-xs text-gray-400">Registradas</p>
-                  <p className="text-sm font-bold text-white">
-                    {driverData.total_rides ?? 0}
-                  </p>
-                </div>
-                <div className="p-2 bg-[#0A0F14] rounded text-center">
-                  <p className="text-xs text-gray-400">Concluídas</p>
-                  <p className="text-sm font-bold text-green-400">
-                    {driverData.total_rides_completed ?? 0}
-                  </p>
-                </div>
-                <div className="p-2 bg-[#0A0F14] rounded text-center">
-                  <p className="text-xs text-gray-400">Canceladas</p>
-                  <p className="text-sm font-bold text-red-400">
-                    {driverCancellationCount}
-                  </p>
-                </div>
+              <div className="mt-3 grid grid-cols-3 gap-2">
+                <MetricCard
+                  compact
+                  label="Registradas"
+                  value={String(driverData.total_rides ?? 0)}
+                />
+                <MetricCard
+                  compact
+                  label="Concluídas"
+                  value={String(driverData.total_rides_completed ?? 0)}
+                  tone="success"
+                />
+                <MetricCard
+                  compact
+                  label="Canceladas"
+                  value={String(driverCancellationCount)}
+                  tone="destructive"
+                />
               </div>
             </div>
           </CardContent>
         </Card>
-      )}
+      ) : null}
 
-      <Card className="bg-[#1E2529] border-white/10">
+      <Card className="border-border bg-card text-card-foreground">
         <CardHeader>
-          <CardTitle className="text-sm flex items-center gap-2">
-            <Calendar className="h-4 w-4" />
+          <CardTitle className="flex items-center gap-2 text-sm">
+            <Calendar className="h-4 w-4" aria-hidden="true" />
             Recomendações
           </CardTitle>
         </CardHeader>
         <CardContent className="space-y-2">
-          {riskScore >= 70 && (
-            <div className="p-3 bg-red-500/10 border border-red-500/30 rounded text-xs">
-              <p className="flex items-center gap-1.5 font-semibold text-red-400 mb-1">
-                <AlertCircle className="h-3.5 w-3.5" aria-hidden="true" />
-                Ação urgente
-              </p>
-              <p className="text-red-200">
-                Usuário de alto risco. Considere suspensão ou monitoramento
-                intensivo.
-              </p>
-            </div>
-          )}
+          {riskScore >= 70 ? (
+            <Recommendation
+              tone="destructive"
+              icon={AlertCircle}
+              title="Ação urgente"
+              description="Usuário de alto risco. Considere suspensão ou monitoramento intensivo."
+            />
+          ) : null}
 
-          {reportsReceived.length >= 2 && (
-            <div className="p-3 bg-yellow-500/10 border border-yellow-500/30 rounded text-xs">
-              <p className="flex items-center gap-1.5 font-semibold text-yellow-400 mb-1">
-                <AlertCircle className="h-3.5 w-3.5" aria-hidden="true" />
-                Atenção
-              </p>
-              <p className="text-yellow-200">
-                Múltiplos reports recebidos. Investigar padrão de comportamento.
-              </p>
-            </div>
-          )}
+          {reportsReceived.length >= 2 ? (
+            <Recommendation
+              tone="warning"
+              icon={AlertCircle}
+              title="Atenção"
+              description="Múltiplos reports recebidos. Investigue o padrão de comportamento."
+            />
+          ) : null}
 
-          {driverData && driverAcceptanceRate !== null && driverAcceptanceRate < 50 && (
-            <div className="p-3 bg-yellow-500/10 border border-yellow-500/30 rounded text-xs">
-              <p className="font-semibold text-yellow-400 mb-1">
-                <BarChart3 className="mr-1.5 inline h-3.5 w-3.5" aria-hidden="true" />
-                Performance
-              </p>
-              <p className="text-yellow-200">
-                Taxa de aceitação baixa. Revisar o histórico operacional antes de qualquer ação.
-              </p>
-            </div>
-          )}
+          {driverData && driverAcceptanceRate !== null && driverAcceptanceRate < 50 ? (
+            <Recommendation
+              tone="warning"
+              icon={BarChart3}
+              title="Performance"
+              description="Taxa de aceitação baixa. Revise o histórico operacional antes de qualquer ação."
+            />
+          ) : null}
 
-          {riskScore < 40 && reportsReceived.length === 0 && (
-            <div className="p-3 bg-green-500/10 border border-green-500/30 rounded text-xs">
-              <p className="font-semibold text-green-400 mb-1">
-                <CheckCircle2 className="mr-1.5 inline h-3.5 w-3.5" aria-hidden="true" />
-                Usuário confiável
-              </p>
-              <p className="text-green-200">
-                Sem histórico de problemas. Usuário em boa situação.
-              </p>
-            </div>
-          )}
+          {riskScore < 40 && reportsReceived.length === 0 ? (
+            <Recommendation
+              tone="success"
+              icon={CheckCircle2}
+              title="Usuário confiável"
+              description="Sem histórico de problemas. Usuário em boa situação."
+            />
+          ) : null}
         </CardContent>
       </Card>
+    </div>
+  );
+}
+
+function MetricCard({
+  label,
+  value,
+  tone = "default",
+  compact = false,
+}: {
+  label: string;
+  value: string;
+  tone?: "default" | "info" | "success" | "destructive";
+  compact?: boolean;
+}) {
+  const toneClass = {
+    default: "text-foreground",
+    info: "text-info",
+    success: "text-success",
+    destructive: "text-destructive",
+  }[tone];
+
+  return (
+    <div className={cn("rounded-lg bg-muted/60", compact ? "p-2 text-center" : "p-3")}>
+      <p className="text-xs text-muted-foreground">{label}</p>
+      <p className={cn(compact ? "text-sm font-bold" : "text-lg font-bold", toneClass)}>
+        {value}
+      </p>
+    </div>
+  );
+}
+
+function Recommendation({
+  tone,
+  icon: Icon,
+  title,
+  description,
+}: {
+  tone: RiskTone;
+  icon: typeof AlertCircle;
+  title: string;
+  description: string;
+}) {
+  const classes = RISK_TONE_CLASSES[tone];
+  return (
+    <div className={cn("rounded border p-3 text-xs", classes.surface)}>
+      <p className={cn("mb-1 flex items-center gap-1.5 font-semibold", classes.copy)}>
+        <Icon className="h-3.5 w-3.5" aria-hidden="true" />
+        {title}
+      </p>
+      <p className="text-foreground/85">{description}</p>
     </div>
   );
 }
