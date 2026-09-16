@@ -6,13 +6,24 @@ on:
     paths:
       - ".github/workflows/supabase-auth-email-config.yml"
   workflow_dispatch:
+    inputs:
+      apply:
+        description: "Apply sender/template only after Resend shows acheguese.com.br as verified"
+        required: true
+        default: false
+        type: boolean
+      confirmation:
+        description: "For apply=true, type RESEND_DOMAIN_VERIFIED"
+        required: false
+        default: ""
+        type: string
 
 permissions:
   contents: read
 
 concurrency:
   group: supabase-auth-email-config-production
-  cancel-in-progress: false
+  cancel-in-progress: true
 
 env:
   SUPABASE_PROJECT_REF: "xhdowzacfujckjelqhtd"
@@ -20,10 +31,30 @@ env:
   AUTH_EMAIL_FROM: "no-reply@acheguese.com.br"
   AUTH_EMAIL_SENDER_NAME: "Achegue-se"
   AUTH_CONFIRMATION_SUBJECT: "Confirme seu e-mail | Achegue-se"
+  RESEND_DKIM_HOST: "resend._domainkey.acheguese.com.br"
+  RESEND_DKIM_VALUE: "p=MIGfMA0GCSqGSIb3DQEBAQUAA4GNADCBiQKBgQC4mtqARneEhlohpBsGCFUVzrzXw7bbvsW9EedxSm8LZ9Twk9NPL8HxUvoqSgwKK/HhDDMmI4KHLx3T70T80oG9JL/JZb6myuLpM4dz0XyXLf7w3DgochLSqn6cp+MlXiplWr3L0m/CHRWNRJd1Bdo+nV9/h7u5W+1oBl8ropoqOQIDAQAB"
+  RESEND_SPF_HOST: "send.acheguese.com.br"
+  RESEND_SPF_VALUE: "v=spf1 include:amazonses.com ~all"
+  RESEND_MX_VALUE: "feedback-smtp.sa-east-1.amazonses.com"
 
 jobs:
+  push-safety-check:
+    name: Workflow safety check
+    if: ${{ github.event_name == 'push' }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 2
+    steps:
+      - name: Confirm push cannot mutate production Auth
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "$GITHUB_REPOSITORY" = "washingtonmsdj/acheguese"
+          test "$GITHUB_REF" = "refs/heads/main"
+          echo "Push-triggered execution is intentionally non-mutating."
+
   configure-auth-email:
     name: Configure production auth email identity
+    if: ${{ github.event_name == 'workflow_dispatch' && inputs.apply == true }}
     runs-on:
       - self-hosted
       - windows
@@ -33,9 +64,10 @@ jobs:
     timeout-minutes: 10
     env:
       SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
+      CONFIRMATION: ${{ inputs.confirmation }}
 
     steps:
-      - name: Validate production target and credential presence
+      - name: Validate immutable production target and explicit authorization
         shell: powershell
         run: |
           $ErrorActionPreference = "Stop"
@@ -45,13 +77,49 @@ jobs:
           if ($env:GITHUB_REF -ne "refs/heads/main") {
             throw "Only refs/heads/main is authorized. Received: $env:GITHUB_REF"
           }
+          if ($env:CONFIRMATION -ne "RESEND_DOMAIN_VERIFIED") {
+            throw "Apply mode requires exact confirmation RESEND_DOMAIN_VERIFIED."
+          }
           if ([string]::IsNullOrWhiteSpace($env:SUPABASE_ACCESS_TOKEN)) {
             throw "GitHub Actions secret SUPABASE_ACCESS_TOKEN is missing."
           }
           if ($env:SUPABASE_PROJECT_REF -ne "xhdowzacfujckjelqhtd") {
             throw "Unexpected Supabase project ref."
           }
-          Write-Host "Production target and credential presence validated."
+          Write-Host "Production target, credential presence and explicit authorization validated."
+
+      - name: Prove Resend DNS prerequisites are publicly resolvable
+        shell: powershell
+        run: |
+          $ErrorActionPreference = "Stop"
+
+          $dkimRecords = @(Resolve-DnsName -Name $env:RESEND_DKIM_HOST -Type TXT -ErrorAction Stop)
+          $dkimValues = @($dkimRecords | ForEach-Object {
+            if ($_.Strings) { ($_.Strings -join "") }
+          })
+          if ($env:RESEND_DKIM_VALUE -notin $dkimValues) {
+            throw "Expected Resend DKIM record is not publicly resolvable."
+          }
+
+          $spfRecords = @(Resolve-DnsName -Name $env:RESEND_SPF_HOST -Type TXT -ErrorAction Stop)
+          $spfValues = @($spfRecords | ForEach-Object {
+            if ($_.Strings) { ($_.Strings -join "") }
+          })
+          if ($env:RESEND_SPF_VALUE -notin $spfValues) {
+            throw "Expected Resend SPF TXT record is not publicly resolvable."
+          }
+
+          $mxRecords = @(Resolve-DnsName -Name $env:RESEND_SPF_HOST -Type MX -ErrorAction Stop)
+          $expectedMx = $env:RESEND_MX_VALUE.TrimEnd('.').ToLowerInvariant()
+          $matchingMx = @($mxRecords | Where-Object {
+            ([string]$_.NameExchange).TrimEnd('.').ToLowerInvariant() -eq $expectedMx -and
+            [int]$_.Preference -eq 10
+          })
+          if ($matchingMx.Count -eq 0) {
+            throw "Expected Resend MX record with priority 10 is not publicly resolvable."
+          }
+
+          Write-Host "DKIM, SPF and MX prerequisites are publicly resolvable."
 
       - name: Inspect current Auth SMTP transport without exposing secrets
         id: before
@@ -136,6 +204,7 @@ jobs:
             "- Sender: $env:AUTH_EMAIL_FROM",
             "- Sender name: $env:AUTH_EMAIL_SENDER_NAME",
             "- Confirmation subject: $env:AUTH_CONFIRMATION_SUBJECT",
-            "- SMTP host/user/password are read-only and are not written or printed by this workflow.",
-            "- Resend domain verification remains an independent DNS prerequisite."
+            "- Required authorization: RESEND_DOMAIN_VERIFIED",
+            "- DNS gate: exact DKIM + SPF + MX priority 10",
+            "- SMTP host/user/password are read-only and are not written or printed by this workflow."
           ) | Add-Content -Path $env:GITHUB_STEP_SUMMARY -Encoding UTF8
