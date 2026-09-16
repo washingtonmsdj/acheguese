@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { Eye, Search, Shield, ToggleRight, Trash2 } from "lucide-react";
+import { Eye, Search, ToggleRight, Trash2 } from "lucide-react";
+import { AdminAccessDenied } from "@/modules/admin/components/AdminAccessDenied";
 import { useAdminGuard } from "@/modules/admin/hooks/useAdminGuard";
 import { adminCouponsService } from "@/core/admin";
 import type { CouponData } from "@/core/admin";
@@ -93,17 +94,7 @@ export default function AdminCupons() {
   });
 
   if (!isChecking && !canModerate) {
-    return (
-      <div className="flex min-h-screen items-center justify-center bg-background p-4 text-foreground">
-        <div className="text-center">
-          <Shield className="mx-auto mb-4 h-16 w-16 text-destructive" aria-hidden="true" />
-          <h1 className="mb-2 text-2xl font-bold text-foreground">Acesso negado</h1>
-          <p className="text-muted-foreground">
-            Apenas administradores podem acessar esta página.
-          </p>
-        </div>
-      </div>
-    );
+    return <AdminAccessDenied />;
   }
 
   const handleToggleActive = (coupon: CouponData) => {
@@ -141,21 +132,33 @@ export default function AdminCupons() {
             <div className="flex flex-wrap gap-4">
               <div className="min-w-[200px] flex-1">
                 <div className="relative">
-                  <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" aria-hidden="true" />
+                  <Search
+                    className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground"
+                    aria-hidden="true"
+                  />
                   <Input
                     placeholder="Buscar cupons..."
                     value={search}
-                    onChange={(event) => setSearch(event.target.value)}
+                    onChange={(event) => {
+                      setSearch(event.target.value);
+                      setPage(1);
+                    }}
                     className="border-input bg-background pl-10 text-foreground"
                   />
                 </div>
               </div>
-              <Select value={statusFilter} onValueChange={setStatusFilter}>
+              <Select
+                value={statusFilter || "all"}
+                onValueChange={(value) => {
+                  setStatusFilter(value === "all" ? "" : value);
+                  setPage(1);
+                }}
+              >
                 <SelectTrigger className="w-[180px] border-input bg-background text-foreground">
                   <SelectValue placeholder="Status" />
                 </SelectTrigger>
                 <SelectContent className="border-border bg-popover text-popover-foreground">
-                  <SelectItem value="">Todos os status</SelectItem>
+                  <SelectItem value="all">Todos os status</SelectItem>
                   <SelectItem value="active">Ativo</SelectItem>
                   <SelectItem value="inactive">Inativo</SelectItem>
                 </SelectContent>
@@ -320,10 +323,22 @@ export default function AdminCupons() {
               <div className="space-y-4">
                 <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
                   <CouponDetail label="Código" value={selectedCoupon.codigo} />
-                  <CouponDetail label="Empresa" value={selectedCoupon.business_name || "-"} />
-                  <CouponDetail label="Desconto" value={String(selectedCoupon.desconto)} />
-                  <CouponDetail label="Tipo" value={selectedCoupon.tipo_desconto || "-"} />
-                  <CouponDetail label="Validade" value={formatDate(selectedCoupon.validade)} />
+                  <CouponDetail
+                    label="Empresa"
+                    value={selectedCoupon.business_name || "-"}
+                  />
+                  <CouponDetail
+                    label="Desconto"
+                    value={String(selectedCoupon.desconto)}
+                  />
+                  <CouponDetail
+                    label="Tipo"
+                    value={selectedCoupon.tipo_desconto || "-"}
+                  />
+                  <CouponDetail
+                    label="Validade"
+                    value={formatDate(selectedCoupon.validade)}
+                  />
                   <CouponDetail
                     label="Usos"
                     value={`${selectedCoupon.usos_count || 0}${selectedCoupon.max_usos ? ` / ${selectedCoupon.max_usos}` : ""}`}
@@ -370,7 +385,11 @@ function CouponDetail({
   return (
     <div>
       <p className="text-sm font-medium text-muted-foreground">{label}</p>
-      <p className={multiline ? "whitespace-pre-wrap text-foreground" : "text-foreground"}>
+      <p
+        className={
+          multiline ? "whitespace-pre-wrap text-foreground" : "text-foreground"
+        }
+      >
         {value}
       </p>
     </div>
