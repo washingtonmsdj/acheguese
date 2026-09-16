@@ -71,7 +71,7 @@ function ConceptSelect({
 }: ConceptSelectProps) {
   return (
     <div>
-      <label className="mb-1 block text-[11px] font-semibold" htmlFor={id}>
+      <label className="mb-1 block text-[11px] font-semibold text-foreground" htmlFor={id}>
         {label}
       </label>
       <div className="relative">
@@ -80,7 +80,7 @@ function ConceptSelect({
           value={value}
           disabled={disabled}
           onChange={(event) => onChange(event.target.value)}
-          className="h-10 w-full appearance-none rounded-md border border-[#b9c5c6] bg-white px-3 pr-10 text-[13px] text-[#173d41] shadow-none outline-none transition-colors focus:border-[#0b5b59] focus:ring-2 focus:ring-[#0b5b59]/20 disabled:cursor-not-allowed disabled:bg-[#f2f3f0] disabled:text-[#819092]"
+          className="h-10 w-full appearance-none rounded-md border border-input bg-card px-3 pr-10 text-[13px] text-foreground shadow-none outline-none transition-colors focus:border-ring focus:ring-2 focus:ring-ring/20 disabled:cursor-not-allowed disabled:bg-muted disabled:text-muted-foreground"
         >
           <option value="">{placeholder}</option>
           {options.map((item) => (
@@ -91,7 +91,7 @@ function ConceptSelect({
         </select>
         <span
           aria-hidden="true"
-          className="pointer-events-none absolute right-4 top-1/2 h-2 w-2 -translate-y-[65%] rotate-45 border-b-2 border-r-2 border-[#446063]"
+          className="pointer-events-none absolute right-4 top-1/2 h-2 w-2 -translate-y-[65%] rotate-45 border-b-2 border-r-2 border-muted-foreground"
         />
       </div>
     </div>
@@ -299,9 +299,9 @@ export default function CadastroPrimeiroAcessoPage() {
 
   if (sessionLoading || loadingProfile) {
     return (
-      <div className="flex min-h-[100dvh] items-center justify-center bg-[#fffdfa] text-[#486367]">
+      <div className="flex min-h-[100dvh] items-center justify-center bg-background text-muted-foreground">
         <div role="status" className="flex items-center gap-3 text-sm">
-          <span className="h-5 w-5 animate-spin rounded-full border-2 border-[#cbd5d3] border-t-[#0b5b59] motion-reduce:animate-none" />
+          <span className="h-5 w-5 animate-spin rounded-full border-2 border-border border-t-primary motion-reduce:animate-none" />
           Preparando sua conta…
         </div>
       </div>
@@ -315,27 +315,27 @@ export default function CadastroPrimeiroAcessoPage() {
           <title>Preparar perfil | Achegue-se</title>
           <meta name="robots" content="noindex, nofollow" />
         </Helmet>
-        <div className="min-h-[100dvh] bg-[#fffdfa] text-[#102f33]">
+        <div className="auth-concept-canvas min-h-[100dvh]">
           <AuthBrandHeader showBack={false} />
           <main id="main-content" tabIndex={-1} className="mx-auto w-full max-w-[430px] px-6 pb-8 pt-6 focus:outline-none">
-            <section className="rounded-2xl border border-[#d8dfdd] bg-white p-5 shadow-[0_18px_55px_rgba(17,55,59,.06)]">
-              <span className="flex h-11 w-11 items-center justify-center rounded-xl bg-[#f6f2e7] text-[#b27b00]">
+            <section className="rounded-2xl border border-border bg-card p-5 shadow-md">
+              <span className="flex h-11 w-11 items-center justify-center rounded-xl bg-warning/10 text-warning">
                 <AuthConceptIcon name="info" />
               </span>
-              <h1 className="mt-4 font-heading text-[25px] font-extrabold tracking-[-0.035em]">Seu acesso foi confirmado.</h1>
-              <p className="mt-2 text-[13px] leading-5 text-[#607477]">
+              <h1 className="mt-4 font-heading text-[25px] font-extrabold tracking-[-0.035em] text-foreground">Seu acesso foi confirmado.</h1>
+              <p className="mt-2 text-[13px] leading-5 text-muted-foreground">
                 Ainda não conseguimos carregar seu perfil pessoal. Isso pode acontecer por alguns segundos logo após a criação da conta.
               </p>
               <button
                 type="button"
                 onClick={() => void loadProfile()}
-                className="mt-5 h-11 w-full rounded-[9px] bg-[#ffc91a] text-[14px] font-extrabold text-[#102f33] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#0b5b59]/40"
+                className="mt-5 h-11 w-full rounded-lg bg-primary text-[14px] font-extrabold text-primary-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/40"
               >
                 Tentar carregar novamente
               </button>
               <Link
                 to={SUPPORT_PATH}
-                className="mx-auto mt-3 flex min-h-10 w-fit items-center gap-2 rounded px-2 text-[12px] text-[#0b4e52] underline underline-offset-2 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#0b5b59]/35"
+                className="mx-auto mt-3 flex min-h-10 w-fit items-center gap-2 rounded px-2 text-[12px] text-primary underline underline-offset-2 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/35"
               >
                 <AuthConceptIcon name="help" />
                 Preciso de ajuda
@@ -366,7 +366,7 @@ export default function CadastroPrimeiroAcessoPage() {
         />
         <meta name="robots" content="noindex, nofollow" />
       </Helmet>
-      <div className="min-h-[100dvh] bg-[#fffdfa] text-[#102f33] lg:bg-[radial-gradient(circle_at_18%_28%,rgba(216,234,224,.45),transparent_30%),#fffdfa]">
+      <div className="auth-concept-canvas min-h-[100dvh]">
         <AuthBrandHeader showBack={false} />
         <main
           id="main-content"
@@ -374,38 +374,38 @@ export default function CadastroPrimeiroAcessoPage() {
           className="mx-auto w-full max-w-[430px] px-6 pb-7 pt-2 focus:outline-none lg:max-w-[760px] lg:pt-7"
         >
           <div className="text-center">
-            <span className="mx-auto flex h-14 w-14 items-center justify-center rounded-full bg-[#dff5e8] text-[#0b5b59]">
+            <span className="mx-auto flex h-14 w-14 items-center justify-center rounded-full bg-success/10 text-success">
               <span style={{ transform: "scale(1.35)" }}><AuthConceptIcon name="check" /></span>
             </span>
-            <h1 className="mt-3 font-heading text-[28px] font-extrabold leading-tight tracking-[-0.04em] text-[#0b3b3f] lg:text-[34px]">
+            <h1 className="mt-3 font-heading text-[28px] font-extrabold leading-tight tracking-[-0.04em] text-primary lg:text-[34px]">
               Tudo pronto, {displayName.split(" ")[0]}.
             </h1>
-            <p className="mt-1 text-[13px] text-[#405b5e]">Sua conta foi criada com sucesso.</p>
+            <p className="mt-1 text-[13px] text-muted-foreground">Sua conta foi criada com sucesso.</p>
           </div>
 
           <div className="lg:mt-6 lg:grid lg:grid-cols-[0.9fr_1.1fr] lg:gap-4">
             <div>
-              <section className="mt-4 rounded-xl border border-[#d5dcda] bg-white p-3 lg:mt-0 lg:p-4">
+              <section className="mt-4 rounded-xl border border-border bg-card p-3 lg:mt-0 lg:p-4">
                 <div className="flex items-center gap-3">
-                  <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-[#e8eeec] text-[#0b5b59]">
+                  <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-primary/10 text-primary">
                     <AuthConceptIcon name="person" />
                   </span>
                   <div className="min-w-0 flex-1">
-                    <p className="truncate text-[13px] font-bold">{displayName}</p>
-                    {username ? <p className="truncate text-[11px] text-[#607477]">{username}</p> : null}
-                    <p className="text-[11px] text-[#607477]">Perfil pessoal</p>
+                    <p className="truncate text-[13px] font-bold text-foreground">{displayName}</p>
+                    {username ? <p className="truncate text-[11px] text-muted-foreground">{username}</p> : null}
+                    <p className="text-[11px] text-muted-foreground">Perfil pessoal</p>
                   </div>
                 </div>
 
                 {shouldOfferUsernameChoice && !editingUsername ? (
-                  <div className="mt-3 rounded-lg bg-[#f6f4ed] px-3 py-2.5">
-                    <p className="text-[10.5px] leading-4 text-[#607477]">
+                  <div className="mt-3 rounded-lg bg-muted px-3 py-2.5">
+                    <p className="text-[10.5px] leading-4 text-muted-foreground">
                       O identificador atual foi criado automaticamente. Você pode escolher um @usuário mais fácil de lembrar agora.
                     </p>
                     <button
                       type="button"
                       onClick={beginUsernameEdit}
-                      className="mt-1 min-h-8 rounded px-1 text-[11.5px] font-bold text-[#0b4e52] underline underline-offset-2 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#0b5b59]/35"
+                      className="mt-1 min-h-8 rounded px-1 text-[11.5px] font-bold text-primary underline underline-offset-2 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/35"
                     >
                       Escolher meu @usuário
                     </button>
@@ -413,12 +413,12 @@ export default function CadastroPrimeiroAcessoPage() {
                 ) : null}
 
                 {editingUsername ? (
-                  <div className="mt-3 rounded-lg border border-[#d7e1de] bg-[#fbfcf9] p-3">
-                    <label htmlFor="first-access-username" className="text-[11px] font-bold text-[#173d41]">
+                  <div className="mt-3 rounded-lg border border-border bg-background p-3">
+                    <label htmlFor="first-access-username" className="text-[11px] font-bold text-foreground">
                       Seu @usuário
                     </label>
                     <div className="relative mt-1">
-                      <span className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-[14px] text-[#315356]">@</span>
+                      <span className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-[14px] text-muted-foreground">@</span>
                       <input
                         id="first-access-username"
                         value={usernameDraft}
@@ -439,23 +439,23 @@ export default function CadastroPrimeiroAcessoPage() {
                             usernameAvailability.reset();
                           }
                         }}
-                        className="h-10 w-full rounded-md border border-[#b9c5c6] bg-white pl-8 pr-3 text-[14px] text-[#173d41] outline-none transition-colors focus:border-[#0b5b59] focus:ring-2 focus:ring-[#0b5b59]/20 disabled:bg-[#f2f3f0]"
+                        className="h-10 w-full rounded-md border border-input bg-card pl-8 pr-3 text-[14px] text-foreground outline-none transition-colors focus:border-ring focus:ring-2 focus:ring-ring/20 disabled:bg-muted"
                       />
                     </div>
                     <div id="first-access-username-status" aria-live="polite" className="mt-1 min-h-4 text-[10.5px] leading-4">
                       {usernameAvailability.isChecking ? (
-                        <span className="text-[#607477]">Verificando disponibilidade…</span>
+                        <span className="text-muted-foreground">Verificando disponibilidade…</span>
                       ) : availabilityMatchesDraft && usernameAvailability.result?.status === "available" ? (
-                        <span className="font-medium text-[#287255]">Nome de usuário disponível.</span>
+                        <span className="font-medium text-success">Nome de usuário disponível.</span>
                       ) : availabilityMatchesDraft && usernameAvailability.result?.status !== "available" ? (
-                        <span className="text-[#a83f37]">
+                        <span className="text-destructive">
                           {getUsernameAvailabilityCopy(
                             usernameAvailability.result?.status,
                             usernameAvailability.result?.message,
                           )}
                         </span>
                       ) : (
-                        <span className="text-[#607477]">Use letras, números e _.</span>
+                        <span className="text-muted-foreground">Use letras, números e _.</span>
                       )}
                     </div>
                     <div className="mt-2 flex gap-2">
@@ -463,7 +463,7 @@ export default function CadastroPrimeiroAcessoPage() {
                         type="button"
                         onClick={() => void saveUsername()}
                         disabled={savingUsername || usernameAvailability.isChecking || usernameDraft.length < 3}
-                        className="h-9 flex-1 rounded-[8px] bg-[#0b5b59] px-3 text-[11px] font-bold text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#0b5b59]/35 disabled:opacity-55"
+                        className="h-9 flex-1 rounded-lg bg-primary px-3 text-[11px] font-bold text-primary-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/35 disabled:opacity-55"
                       >
                         {savingUsername ? "Salvando…" : "Salvar @usuário"}
                       </button>
@@ -471,7 +471,7 @@ export default function CadastroPrimeiroAcessoPage() {
                         type="button"
                         onClick={cancelUsernameEdit}
                         disabled={savingUsername}
-                        className="h-9 rounded-[8px] border border-[#9babad] bg-white px-3 text-[11px] font-bold text-[#315356] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#0b5b59]/35 disabled:opacity-55"
+                        className="h-9 rounded-lg border border-border bg-card px-3 text-[11px] font-bold text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/35 disabled:opacity-55"
                       >
                         Agora não
                       </button>
@@ -481,27 +481,27 @@ export default function CadastroPrimeiroAcessoPage() {
               </section>
 
               {hasReturnContext ? (
-                <section className="mt-3 rounded-xl bg-[#eef8f2] p-3 lg:p-4">
+                <section className="mt-3 rounded-xl bg-success/10 p-3 lg:p-4">
                   <div className="flex items-start gap-3">
-                    <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-[#dff3e8] text-[#0b5b59]">
+                    <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-success/10 text-success">
                       <AuthConceptIcon name={returnIcon} />
                     </span>
                     <div className="min-w-0">
-                      <p className="text-[12px] font-bold">{returnCardTitle}</p>
-                      <p className="text-[11px] leading-4 text-[#4c6862]">{returnCardDescription}</p>
+                      <p className="text-[12px] font-bold text-foreground">{returnCardTitle}</p>
+                      <p className="text-[11px] leading-4 text-muted-foreground">{returnCardDescription}</p>
                     </div>
                   </div>
                   <button
                     type="button"
                     onClick={() => leaveFirstAccess(redirectTo)}
-                    className="mt-3 h-10 w-full rounded-[9px] bg-[#ffc91a] px-3 text-[13px] font-extrabold text-[#102f33] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#0b5b59]/40"
+                    className="mt-3 h-10 w-full rounded-lg bg-primary px-3 text-[13px] font-extrabold text-primary-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/40"
                   >
                     {returnButtonLabel}
                   </button>
                   <button
                     type="button"
                     onClick={() => leaveFirstAccess(redirectTo)}
-                    className="mx-auto mt-1 block min-h-9 rounded px-2 text-[11px] underline underline-offset-2 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#0b5b59]/35"
+                    className="mx-auto mt-1 block min-h-9 rounded px-2 text-[11px] text-primary underline underline-offset-2 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/35"
                   >
                     Completar meu perfil depois
                   </button>
@@ -510,33 +510,33 @@ export default function CadastroPrimeiroAcessoPage() {
                 <Link
                   to="/"
                   onClick={() => completeFirstAccessJourney()}
-                  className="mt-3 flex h-10 items-center justify-center rounded-[9px] bg-[#ffc91a] text-[12px] font-bold text-[#102f33] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#0b5b59]/35"
+                  className="mt-3 flex h-10 items-center justify-center rounded-lg bg-primary text-[12px] font-bold text-primary-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/35"
                 >
                   Explorar o Achegue-se
                 </Link>
               )}
 
-              <Link to="/conta" onClick={() => completeFirstAccessJourney()} className="mt-3 flex min-h-11 items-center gap-3 rounded-xl bg-[#f3f1ea] px-3 text-[11px] font-medium text-[#315356] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#0b5b59]/35">
-                <AuthConceptIcon name="users" className="text-[#0b5b59]" />
+              <Link to="/conta" onClick={() => completeFirstAccessJourney()} className="mt-3 flex min-h-11 items-center gap-3 rounded-xl bg-muted px-3 text-[11px] font-medium text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/35">
+                <AuthConceptIcon name="users" className="text-primary" />
                 Outros perfis ficam em Meus perfis.
               </Link>
             </div>
 
-            <section className="mt-3 rounded-xl border border-[#d5dcda] bg-white p-3 lg:mt-0 lg:p-4">
+            <section className="mt-3 rounded-xl border border-border bg-card p-3 lg:mt-0 lg:p-4">
               <div className="flex items-start gap-3">
-                <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-[#e8eeec] text-[#0b5b59]">
+                <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-primary/10 text-primary">
                   <AuthConceptIcon name="pin" />
                 </span>
                 <div className="flex-1">
-                  <p className="text-[12px] font-bold">Seu vínculo com o território</p>
-                  <p className="mt-0.5 text-[11px] leading-4 text-[#607477]">
+                  <p className="text-[12px] font-bold text-foreground">Seu vínculo com o território</p>
+                  <p className="mt-0.5 text-[11px] leading-4 text-muted-foreground">
                     Conte pra gente sua cidade e bairro para ver conteúdos mais relevantes.
                   </p>
                 </div>
               </div>
 
               {territorySaved ? (
-                <div role="status" className="mt-3 rounded-lg bg-[#eaf7ef] px-3 py-2 text-[11px] font-medium text-[#276a4d]">
+                <div role="status" className="mt-3 rounded-lg bg-success/10 px-3 py-2 text-[11px] font-medium text-success">
                   Cidade e bairro salvos. A localização pública continua oculta por padrão.
                 </div>
               ) : null}
@@ -577,21 +577,21 @@ export default function CadastroPrimeiroAcessoPage() {
                     disabled={!cityId || loadingNeighborhoods || saving}
                     onChange={setNeighborhoodId}
                   />
-                  <button type="button" onClick={() => void saveTerritory()} disabled={saving || !neighborhoodId} className="h-10 w-full rounded-[9px] bg-[#0b5b59] text-[12px] font-bold text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#0b5b59]/35 disabled:opacity-55">
+                  <button type="button" onClick={() => void saveTerritory()} disabled={saving || !neighborhoodId} className="h-10 w-full rounded-lg bg-primary text-[12px] font-bold text-primary-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/35 disabled:opacity-55">
                     {saving ? "Salvando…" : "Salvar cidade e bairro"}
                   </button>
                 </div>
               ) : (
                 <div className="mt-3 space-y-2">
-                  <button type="button" onClick={() => setShowTerritoryForm(true)} className="h-10 w-full rounded-[9px] border border-[#31575a] bg-white text-[12px] font-bold text-[#173d41] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#0b5b59]/35">
+                  <button type="button" onClick={() => setShowTerritoryForm(true)} className="h-10 w-full rounded-lg border border-border bg-card text-[12px] font-bold text-foreground transition-colors hover:bg-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/35">
                     Informar cidade e bairro
                   </button>
-                  <button type="button" onClick={() => leaveFirstAccess(redirectTo)} className="h-10 w-full rounded-[9px] border border-[#31575a] bg-white text-[12px] font-bold text-[#173d41] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#0b5b59]/35">
+                  <button type="button" onClick={() => leaveFirstAccess(redirectTo)} className="h-10 w-full rounded-lg border border-border bg-card text-[12px] font-bold text-foreground transition-colors hover:bg-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/35">
                     Agora não
                   </button>
                 </div>
               )}
-              <p className="mt-2 text-[10.5px] leading-4 text-[#607477]">Você pode explorar o Achegue-se mesmo morando em outro lugar.</p>
+              <p className="mt-2 text-[10.5px] leading-4 text-muted-foreground">Você pode explorar o Achegue-se mesmo morando em outro lugar.</p>
             </section>
           </div>
         </main>
