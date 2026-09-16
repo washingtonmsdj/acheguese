@@ -37,6 +37,20 @@ export function isAuthRateLimitError(error: unknown): boolean {
   );
 }
 
+/**
+ * Identifies failures where the Auth gateway/service did not complete the
+ * request. These errors are operational and must not be presented as bad
+ * credentials.
+ */
+export function isAuthServiceUnavailableError(error: unknown): boolean {
+  const { message, status } = getAuthErrorDetails(error);
+  if (status !== null && (status === 408 || status >= 500)) return true;
+
+  return /gateway timeout|connection timeout|timed out|timeout|failed to fetch|networkerror|network request failed|load failed/i.test(
+    message,
+  );
+}
+
 export function isEmailNotConfirmedError(error: unknown): boolean {
   const { message, code } = getAuthErrorDetails(error);
   const signal = `${code} ${message}`;
@@ -59,14 +73,8 @@ export function getAuthErrorMessage(
   const errorMessage = rawMessage || fallback;
 
   if (
-    /gateway timeout/i.test(errorMessage) ||
-    /connection timeout/i.test(errorMessage) ||
-    /timed out/i.test(errorMessage) ||
-    /timeout/i.test(errorMessage) ||
-    /failed to fetch/i.test(errorMessage) ||
-    /networkerror/i.test(errorMessage) ||
-    /network request failed/i.test(errorMessage) ||
-    /load failed/i.test(errorMessage)
+    isAuthServiceUnavailableError(error) ||
+    /^\s*(?:\{\}|\[object Object\]|error:\s*\{\})\s*$/i.test(errorMessage)
   ) {
     return "O serviço de acesso está temporariamente indisponível. Tente novamente em instantes.";
   }

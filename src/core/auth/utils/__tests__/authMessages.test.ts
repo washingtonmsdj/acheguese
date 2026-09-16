@@ -20,6 +20,14 @@ describe("getAuthErrorMessage", () => {
     );
   });
 
+  it("maps Auth gateway failures to an operational message", () => {
+    const expected =
+      "O serviço de acesso está temporariamente indisponível. Tente novamente em instantes.";
+
+    expect(getAuthErrorMessage({ status: 504, message: "{}" })).toBe(expected);
+    expect(getAuthErrorMessage({ status: 503 })).toBe(expected);
+  });
+
   it("maps confirmation and rate-limit auth failures to friendly guidance", () => {
     expect(getAuthErrorMessage({ message: "email not confirmed" })).toBe(
       "Confirme seu e-mail antes de entrar. Verifique sua caixa de entrada.",

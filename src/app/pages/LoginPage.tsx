@@ -33,6 +33,7 @@ import {
 } from "@/core/auth/utils/authJourney";
 import {
   getAuthErrorMessage,
+  isAuthServiceUnavailableError,
   isEmailNotConfirmedError,
 } from "@/core/auth/utils/authMessages";
 import { getAuthReturnContext } from "@/core/auth/utils/authReturnContext";
@@ -249,10 +250,12 @@ export default function LoginPage() {
         "E-mail, usuário ou senha incorretos.",
       );
       setError("root.serverError", { type: "server", message });
-      setError("password", {
-        type: "server",
-        message: "Confira seus dados e tente novamente.",
-      });
+      if (!isAuthServiceUnavailableError(error)) {
+        setError("password", {
+          type: "server",
+          message: "Confira seus dados e tente novamente.",
+        });
+      }
       toast({
         title: "Não foi possível entrar",
         description: message,
