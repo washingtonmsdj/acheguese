@@ -57,11 +57,13 @@ Essa exclusão é intencional e fail-closed: pedidos públicos podem ter `user_i
 
 ## Deploy exact-main
 
-O workflow `.github/workflows/supabase-admin-privacy-rpc-deploy.yml` faz checkout isolado do SHA exato, fixa a Supabase CLI, valida `verify_jwt=true`, os contratos admin/MFA/auditoria e os hashes do bundle antes do deploy.
+O workflow `.github/workflows/supabase-admin-privacy-rpc-deploy.yml` faz checkout isolado do SHA exato, fixa a Supabase CLI, valida `verify_jwt=true`, os contratos admin/MFA/auditoria, exige o fallback de paginação e registra os hashes do bundle antes do deploy.
 
-A execução `35091238772` continua `queued`. A leitura do runtime remoto confirmou que `admin-privacy-rpc` está em versão 3 e ainda não contém a correção de paginação já presente na `main`: quando `items.length === 0 && page > 1`, o source atual faz um probe com `p_limit: 1` e `p_offset: 0` para preservar `total_count`; a versão remota não faz esse probe.
+A leitura do runtime remoto confirmou que `admin-privacy-rpc` está em versão 3 e ainda não contém a correção de paginação já presente na `main`: quando `items.length === 0 && page > 1`, o source atual faz um probe com `p_limit: 1` e `p_offset: 0` para preservar `total_count`; a versão remota não faz esse probe.
 
-Portanto existe drift confirmado entre Git e runtime. A função não deve ser considerada sincronizada com `main` até o workflow exact-main concluir com sucesso. O deploy manual pelo conector não deve substituir essa autoridade apenas para contornar indisponibilidade do runner.
+A execução antiga `35091238772` foi cancelada automaticamente pela política `cancel-in-progress` após o workflow ganhar o ratchet específico de paginação. A execução corrente é `35094442109` e continuava `queued` na última checagem.
+
+Portanto existe drift confirmado entre Git e runtime. A função não deve ser considerada sincronizada com `main` até a execução corrente — ou outra execução exact-main posterior equivalente — concluir com sucesso. O deploy manual pelo conector não deve substituir essa autoridade apenas para contornar indisponibilidade do runner.
 
 ## Escopo preservado
 
