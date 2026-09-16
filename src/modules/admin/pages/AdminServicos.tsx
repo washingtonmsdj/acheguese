@@ -5,29 +5,27 @@ import {
   PauseCircle,
   PlayCircle,
   Search,
-  Shield,
   Star,
   Trash2,
 } from "lucide-react";
 import { formatDistanceToNow } from "date-fns";
-import { useToast } from "@/shared/hooks/use-toast";
-import { ptBR } from "@/shared/utils/dateLocale";
-import { Button } from "@/shared/components/ui/button";
-import { Input } from "@/shared/components/ui/input";
+import { adminCommunityService } from "@/core/admin/services/AdminCommunityService";
+import { ProfessionalService } from "@/core/professional/services/ProfessionalService";
+import type {
+  Professional,
+  ProfessionalStatus,
+} from "@/core/professional/types";
+import { profileService } from "@/core/profiles/services/ProfileService";
+import { ReviewsService } from "@/core/reviews/services/ReviewsService";
+import { AdminAccessDenied } from "@/modules/admin/components/AdminAccessDenied";
+import { useAdminGuard } from "@/modules/admin/hooks/useAdminGuard";
 import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/shared/components/ui/select";
+  Avatar,
+  AvatarFallback,
+  AvatarImage,
+} from "@/shared/components/ui/avatar";
 import { Badge } from "@/shared/components/ui/badge";
-import {
-  Tabs,
-  TabsContent,
-  TabsList,
-  TabsTrigger,
-} from "@/shared/components/ui/tabs";
+import { Button } from "@/shared/components/ui/button";
 import {
   Dialog,
   DialogContent,
@@ -36,20 +34,22 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/shared/components/ui/dialog";
+import { Input } from "@/shared/components/ui/input";
 import {
-  Avatar,
-  AvatarFallback,
-  AvatarImage,
-} from "@/shared/components/ui/avatar";
-import { adminCommunityService } from "@/core/admin/services/AdminCommunityService";
-import { profileService } from "@/core/profiles/services/ProfileService";
-import { ProfessionalService } from "@/core/professional/services/ProfessionalService";
-import type {
-  Professional,
-  ProfessionalStatus,
-} from "@/core/professional/types";
-import { ReviewsService } from "@/core/reviews/services/ReviewsService";
-import { useAdminGuard } from "@/modules/admin/hooks/useAdminGuard";
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/shared/components/ui/select";
+import {
+  Tabs,
+  TabsContent,
+  TabsList,
+  TabsTrigger,
+} from "@/shared/components/ui/tabs";
+import { useToast } from "@/shared/hooks/use-toast";
+import { ptBR } from "@/shared/utils/dateLocale";
 
 interface Review {
   id: string;
@@ -99,7 +99,9 @@ export default function AdminServicos() {
         return;
       }
 
-      const reviewerIds = [...new Set(revs.map((review) => review.reviewer_profile_id))];
+      const reviewerIds = [
+        ...new Set(revs.map((review) => review.reviewer_profile_id)),
+      ];
       const professionalProfileIds = [
         ...new Set(revs.map((review) => review.reviewed_profile_id)),
       ];
@@ -122,10 +124,10 @@ export default function AdminServicos() {
         ]),
       );
       const professionalMap = new Map(
-        professionalData.map((professional: ProfessionalSimple) => [
-          professional.id,
-          professional,
-        ] as const),
+        professionalData.map(
+          (professional: ProfessionalSimple) =>
+            [professional.id, professional] as const,
+        ),
       );
 
       setReviews(
@@ -161,17 +163,7 @@ export default function AdminServicos() {
   }, [canModerate, isChecking]);
 
   if (!isChecking && !canModerate) {
-    return (
-      <div className="flex min-h-screen items-center justify-center bg-[#0A0F14] p-4">
-        <div className="text-center">
-          <Shield className="mx-auto mb-4 h-16 w-16 text-red-400" />
-          <h1 className="mb-2 text-2xl font-bold text-white">Acesso Negado</h1>
-          <p className="text-gray-400">
-            Apenas administradores podem acessar esta página.
-          </p>
-        </div>
-      </div>
-    );
+    return <AdminAccessDenied />;
   }
 
   const updateAvailability = async (
@@ -259,7 +251,7 @@ export default function AdminServicos() {
   });
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-4 text-foreground">
       <div>
         <h1 className="font-display text-2xl font-bold">Serviços</h1>
         <p className="text-muted-foreground">
@@ -274,9 +266,12 @@ export default function AdminServicos() {
         </TabsList>
 
         <TabsContent value="professionals" className="space-y-4">
-          <div className="flex gap-2">
+          <div className="flex flex-col gap-2 sm:flex-row">
             <div className="relative flex-1">
-              <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+              <Search
+                className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground"
+                aria-hidden="true"
+              />
               <Input
                 placeholder="Buscar profissional, categoria ou bairro..."
                 value={search}
@@ -286,10 +281,12 @@ export default function AdminServicos() {
             </div>
             <Select
               value={filterStatus}
-              onValueChange={(value) => setFilterStatus(value as AvailabilityFilter)}
+              onValueChange={(value) =>
+                setFilterStatus(value as AvailabilityFilter)
+              }
             >
-              <SelectTrigger className="w-40">
-                <Filter className="mr-1 h-4 w-4" />
+              <SelectTrigger className="w-full sm:w-40">
+                <Filter className="mr-1 h-4 w-4" aria-hidden="true" />
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
@@ -300,8 +297,8 @@ export default function AdminServicos() {
             </Select>
           </div>
 
-          <div className="overflow-hidden rounded-lg border">
-            <table className="w-full text-sm">
+          <div className="overflow-x-auto rounded-lg border border-border">
+            <table className="min-w-[760px] w-full text-sm">
               <thead className="bg-muted/50">
                 <tr>
                   <th className="p-3 text-left">Profissional</th>
@@ -315,25 +312,33 @@ export default function AdminServicos() {
               <tbody>
                 {loading ? (
                   <tr>
-                    <td colSpan={6} className="p-4 text-center text-muted-foreground">
+                    <td
+                      colSpan={6}
+                      className="p-4 text-center text-muted-foreground"
+                    >
                       Carregando serviços...
                     </td>
                   </tr>
                 ) : filteredProfessionals.length === 0 ? (
                   <tr>
-                    <td colSpan={6} className="p-4 text-center text-muted-foreground">
+                    <td
+                      colSpan={6}
+                      className="p-4 text-center text-muted-foreground"
+                    >
                       Nenhum resultado
                     </td>
                   </tr>
                 ) : (
                   filteredProfessionals.map((professional) => (
-                    <tr key={professional.id} className="border-t">
+                    <tr key={professional.id} className="border-t border-border">
                       <td className="p-3">
                         <div className="flex items-center gap-2">
                           <Avatar className="h-8 w-8">
                             <AvatarImage src={professional.logo_url} />
                             <AvatarFallback>
-                              {(professional.name || "P").charAt(0).toLocaleUpperCase("pt-BR")}
+                              {(professional.name || "P")
+                                .charAt(0)
+                                .toLocaleUpperCase("pt-BR")}
                             </AvatarFallback>
                           </Avatar>
                           <div className="min-w-0">
@@ -341,22 +346,42 @@ export default function AdminServicos() {
                               {professional.name || "Nome não informado"}
                             </span>
                             {professional.is_verified ? (
-                              <span className="text-xs text-muted-foreground">Verificado</span>
+                              <span className="text-xs text-muted-foreground">
+                                Verificado
+                              </span>
                             ) : null}
                           </div>
                         </div>
                       </td>
-                      <td className="p-3">{professional.category || "N/A"}</td>
-                      <td className="p-3">{professional.neighborhood || "N/A"}</td>
+                      <td className="p-3">
+                        {professional.category || "N/A"}
+                      </td>
+                      <td className="p-3">
+                        {professional.neighborhood || "N/A"}
+                      </td>
                       <td className="p-3 text-center">
                         <span className="flex items-center justify-center gap-0.5">
-                          <Star className="h-3 w-3 fill-warning text-warning" />
-                          {Number(professional.rating ?? 0).toFixed(1)} ({professional.total_reviews ?? 0})
+                          <Star
+                            className="h-3 w-3 fill-warning text-warning"
+                            aria-hidden="true"
+                          />
+                          {Number(professional.rating ?? 0).toFixed(1)} ({
+                            professional.total_reviews ?? 0
+                          })
                         </span>
                       </td>
                       <td className="p-3 text-center">
                         <Badge
-                          variant={professional.status === "active" ? "default" : "secondary"}
+                          variant={
+                            professional.status === "active"
+                              ? "default"
+                              : "secondary"
+                          }
+                          className={
+                            professional.status === "active"
+                              ? "bg-success text-success-foreground hover:bg-success/90"
+                              : undefined
+                          }
                         >
                           {availabilityLabel(professional.status)}
                         </Badge>
@@ -370,7 +395,7 @@ export default function AdminServicos() {
                             onClick={() => setSelectedPro(professional)}
                             aria-label={`Ver ${professional.name}`}
                           >
-                            <Eye className="h-4 w-4" />
+                            <Eye className="h-4 w-4" aria-hidden="true" />
                           </Button>
                           {professional.status === "active" ? (
                             <Button
@@ -378,41 +403,48 @@ export default function AdminServicos() {
                               variant="ghost"
                               disabled={actionLoading}
                               onClick={() =>
-                                void updateAvailability(professional.id, "inactive")
+                                void updateAvailability(
+                                  professional.id,
+                                  "inactive",
+                                )
                               }
                               aria-label={`Pausar ${professional.name}`}
                             >
-                              <PauseCircle className="h-4 w-4" />
+                              <PauseCircle
+                                className="h-4 w-4 text-warning"
+                                aria-hidden="true"
+                              />
                             </Button>
                           ) : (
                             <Button
                               size="icon"
                               variant="ghost"
-                              className="text-success"
+                              className="text-success hover:text-success"
                               disabled={actionLoading}
                               onClick={() =>
                                 void updateAvailability(professional.id, "active")
                               }
                               aria-label={`Ativar ${professional.name}`}
                             >
-                              <PlayCircle className="h-4 w-4" />
+                              <PlayCircle className="h-4 w-4" aria-hidden="true" />
                             </Button>
                           )}
                           <Button
                             size="icon"
                             variant="ghost"
-                            className="text-destructive"
+                            className="text-destructive hover:text-destructive"
                             disabled={actionLoading}
                             onClick={() => {
                               setDeleteTarget({
                                 type: "professional",
-                                id: professional.profile_id || professional.id,
+                                id:
+                                  professional.profile_id || professional.id,
                               });
                               setShowDeleteDialog(true);
                             }}
                             aria-label={`Remover ${professional.name}`}
                           >
-                            <Trash2 className="h-4 w-4" />
+                            <Trash2 className="h-4 w-4" aria-hidden="true" />
                           </Button>
                         </div>
                       </td>
@@ -425,8 +457,8 @@ export default function AdminServicos() {
         </TabsContent>
 
         <TabsContent value="reviews" className="space-y-4">
-          <div className="overflow-hidden rounded-lg border">
-            <table className="w-full text-sm">
+          <div className="overflow-x-auto rounded-lg border border-border">
+            <table className="min-w-[760px] w-full text-sm">
               <thead className="bg-muted/50">
                 <tr>
                   <th className="p-3 text-left">Avaliador</th>
@@ -440,21 +472,34 @@ export default function AdminServicos() {
               <tbody>
                 {reviews.length === 0 ? (
                   <tr>
-                    <td colSpan={6} className="p-4 text-center text-muted-foreground">
+                    <td
+                      colSpan={6}
+                      className="p-4 text-center text-muted-foreground"
+                    >
                       Nenhuma avaliação
                     </td>
                   </tr>
                 ) : (
                   reviews.map((review) => (
-                    <tr key={review.id} className="border-t">
-                      <td className="p-3">{review.reviewer?.name || "Anônimo"}</td>
-                      <td className="p-3">{review.professional?.name || "-"}</td>
+                    <tr key={review.id} className="border-t border-border">
+                      <td className="p-3">
+                        {review.reviewer?.name || "Anônimo"}
+                      </td>
+                      <td className="p-3">
+                        {review.professional?.name || "-"}
+                      </td>
                       <td className="p-3 text-center">
                         <span className="flex items-center justify-center gap-0.5">
-                          {review.rating} <Star className="h-3 w-3 fill-warning text-warning" />
+                          {review.rating}{" "}
+                          <Star
+                            className="h-3 w-3 fill-warning text-warning"
+                            aria-hidden="true"
+                          />
                         </span>
                       </td>
-                      <td className="max-w-xs truncate p-3">{review.comment || "-"}</td>
+                      <td className="max-w-xs truncate p-3">
+                        {review.comment || "-"}
+                      </td>
                       <td className="p-3 text-muted-foreground">
                         {formatDistanceToNow(new Date(review.created_at), {
                           addSuffix: true,
@@ -465,15 +510,18 @@ export default function AdminServicos() {
                         <Button
                           size="icon"
                           variant="ghost"
-                          className="text-destructive"
+                          className="text-destructive hover:text-destructive"
                           disabled={actionLoading}
                           onClick={() => {
-                            setDeleteTarget({ type: "review", id: review.id });
+                            setDeleteTarget({
+                              type: "review",
+                              id: review.id,
+                            });
                             setShowDeleteDialog(true);
                           }}
                           aria-label="Remover avaliação"
                         >
-                          <Trash2 className="h-4 w-4" />
+                          <Trash2 className="h-4 w-4" aria-hidden="true" />
                         </Button>
                       </td>
                     </tr>
@@ -485,10 +533,15 @@ export default function AdminServicos() {
         </TabsContent>
       </Tabs>
 
-      <Dialog open={Boolean(selectedPro)} onOpenChange={() => setSelectedPro(null)}>
+      <Dialog
+        open={Boolean(selectedPro)}
+        onOpenChange={(open) => {
+          if (!open) setSelectedPro(null);
+        }}
+      >
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>Detalhes do Profissional</DialogTitle>
+            <DialogTitle>Detalhes do profissional</DialogTitle>
             <DialogDescription>
               Dados públicos e estado operacional do perfil profissional.
             </DialogDescription>
@@ -499,17 +552,21 @@ export default function AdminServicos() {
                 <Avatar className="h-16 w-16">
                   <AvatarImage src={selectedPro.logo_url} />
                   <AvatarFallback>
-                    {(selectedPro.name || "P").charAt(0).toLocaleUpperCase("pt-BR")}
+                    {(selectedPro.name || "P")
+                      .charAt(0)
+                      .toLocaleUpperCase("pt-BR")}
                   </AvatarFallback>
                 </Avatar>
                 <div>
-                  <p className="font-bold">{selectedPro.name || "Nome não informado"}</p>
+                  <p className="font-bold">
+                    {selectedPro.name || "Nome não informado"}
+                  </p>
                   <p className="text-sm text-muted-foreground">
                     {selectedPro.category || "N/A"}
                   </p>
                 </div>
               </div>
-              <div className="grid grid-cols-2 gap-2 text-sm">
+              <div className="grid grid-cols-1 gap-2 text-sm sm:grid-cols-2">
                 <div>
                   <span className="text-muted-foreground">Bairro:</span>{" "}
                   {selectedPro.neighborhood || "N/A"}
@@ -520,10 +577,14 @@ export default function AdminServicos() {
                 </div>
                 <div>
                   <span className="text-muted-foreground">Avaliação:</span>{" "}
-                  {Number(selectedPro.rating ?? 0).toFixed(1)} ({selectedPro.total_reviews ?? 0})
+                  {Number(selectedPro.rating ?? 0).toFixed(1)} ({
+                    selectedPro.total_reviews ?? 0
+                  })
                 </div>
                 <div>
-                  <span className="text-muted-foreground">Disponibilidade:</span>{" "}
+                  <span className="text-muted-foreground">
+                    Disponibilidade:
+                  </span>{" "}
                   {availabilityLabel(selectedPro.status)}
                 </div>
               </div>
@@ -532,7 +593,13 @@ export default function AdminServicos() {
         </DialogContent>
       </Dialog>
 
-      <Dialog open={showDeleteDialog} onOpenChange={setShowDeleteDialog}>
+      <Dialog
+        open={showDeleteDialog}
+        onOpenChange={(open) => {
+          setShowDeleteDialog(open);
+          if (!open) setDeleteTarget(null);
+        }}
+      >
         <DialogContent>
           <DialogHeader>
             <DialogTitle>Confirmar exclusão</DialogTitle>
@@ -544,7 +611,10 @@ export default function AdminServicos() {
             <Button
               variant="outline"
               disabled={actionLoading}
-              onClick={() => setShowDeleteDialog(false)}
+              onClick={() => {
+                setShowDeleteDialog(false);
+                setDeleteTarget(null);
+              }}
             >
               Cancelar
             </Button>
@@ -553,7 +623,7 @@ export default function AdminServicos() {
               disabled={actionLoading}
               onClick={() => void confirmDelete()}
             >
-              Excluir
+              {actionLoading ? "Excluindo..." : "Excluir"}
             </Button>
           </DialogFooter>
         </DialogContent>
