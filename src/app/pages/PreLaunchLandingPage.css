@@ -1,13 +1,18 @@
-/* The public launch identity is scoped so operational modules keep their theme. */
+/* Public launch surface consumes the same visual SSOT as the operational app. */
 .prelaunch-home {
-  --home-ink: #142947;
-  --home-blue: #153fce;
-  --home-yellow: #f7d447;
-  --home-muted: #546176;
-  --home-line: #dfe4eb;
-  background: #fff;
+  --home-ink: hsl(var(--brand-text));
+  --home-blue: hsl(var(--brand-petroleum));
+  --home-yellow: hsl(var(--brand-solar));
+  --home-muted: hsl(var(--brand-text-secondary-strong));
+  --home-line: hsl(var(--territory-border));
+  --home-surface: hsl(var(--brand-surface));
+  --home-card: hsl(var(--territory-surface));
+  --home-raised: hsl(var(--territory-surface-raised));
+  --home-on-image: hsl(var(--territory-on-image));
+  --home-brand-hover: hsl(var(--territory-brand-strong));
+  background: var(--home-surface);
   color: var(--home-ink);
-  font-family: "Manrope", Arial, sans-serif;
+  font-family: var(--font-sans);
   font-size: 1rem;
   line-height: 1.65;
   overflow: clip;
@@ -22,12 +27,12 @@
     .prelaunch-photo-title p,
     .prelaunch-join-signature
   ) {
-  font-family: "Bricolage Grotesque", "Arial Black", sans-serif;
-  font-weight: 600;
+  font-family: var(--font-heading);
+  font-weight: 700;
   letter-spacing: -0.045em;
 }
 .prelaunch-home :is(a, button, summary, input, select):focus-visible {
-  outline: 3px solid var(--home-blue);
+  outline: 3px solid hsl(var(--semantic-focus));
   outline-offset: 5px;
 }
 .prelaunch-home :is(a, button) {
@@ -43,7 +48,7 @@
   scroll-margin-top: 2rem;
 }
 .prelaunch-home ::selection {
-  background: var(--home-yellow);
+  background: hsl(var(--semantic-selection));
   color: var(--home-ink);
 }
 .prelaunch-container {
@@ -54,7 +59,8 @@
   position: fixed;
   top: -100px;
   left: 20px;
-  background: #fff;
+  background: var(--home-card);
+  color: var(--home-ink);
   padding: 16px;
   z-index: 100;
 }
@@ -68,8 +74,8 @@
   justify-content: center;
   gap: 10px;
   padding: 8px 24px;
-  background: var(--home-ink);
-  color: #fff;
+  background: var(--home-blue);
+  color: var(--home-on-image);
   font-size: 0.75rem;
 }
 .prelaunch-announcement a {
@@ -96,7 +102,7 @@
 .prelaunch-brand {
   display: inline-flex;
   align-items: center;
-  color: var(--home-ink);
+  color: var(--home-blue);
   font-size: 1.95rem;
   line-height: 1;
   white-space: nowrap;
@@ -108,7 +114,7 @@
   width: 37px;
   margin-right: 9px;
   background: var(--home-blue);
-  color: #fff;
+  color: var(--home-on-image);
   border-radius: 11px 11px 11px 3px;
 }
 .prelaunch-brand-icon svg {
@@ -120,7 +126,7 @@
   font-weight: 400;
 }
 .prelaunch-brand-dot {
-  color: var(--home-blue);
+  color: var(--home-yellow);
 }
 .prelaunch-header nav {
   display: flex;
@@ -142,7 +148,7 @@
   min-height: 56px;
   padding: 14px 23px;
   background: var(--home-blue);
-  color: #fff;
+  color: var(--home-on-image);
   border: 1px solid transparent;
   border-radius: 6px;
   font-weight: 700;
@@ -153,7 +159,7 @@
     transform 0.2s;
 }
 .prelaunch-home .prelaunch-button:hover {
-  background: #102f9b;
+  background: var(--home-brand-hover);
   transform: translateY(-2px);
 }
 .prelaunch-home .prelaunch-button-small {
@@ -165,7 +171,7 @@
   gap: 17px;
 }
 .prelaunch-home .prelaunch-button-small:hover {
-  background: #edf2ff;
+  background: var(--home-raised);
 }
 .prelaunch-hero {
   display: grid;
@@ -187,7 +193,7 @@
   width: 7px;
   height: 7px;
   border-radius: 50%;
-  background: var(--home-blue);
+  background: var(--home-yellow);
   flex-shrink: 0;
 }
 .prelaunch-home h1 {
@@ -223,6 +229,7 @@
   padding-block: 12px;
   font-size: 0.875rem;
   font-weight: 700;
+  color: var(--home-blue);
 }
 .prelaunch-text-link:hover {
   text-decoration: underline !important;
@@ -255,7 +262,7 @@
   position: relative;
   height: 556px;
   border-radius: 9px 9px 75px 9px;
-  background: var(--home-ink);
+  background: var(--home-blue);
   isolation: isolate;
 }
 .prelaunch-hero-visual::after {
@@ -263,7 +270,12 @@
   position: absolute;
   inset: 0;
   border-radius: inherit;
-  background: linear-gradient(180deg, #14294745, transparent 35%, #091a31b8);
+  background: linear-gradient(
+    180deg,
+    hsl(var(--territory-image-overlay) / 0.27),
+    transparent 35%,
+    hsl(var(--territory-image-overlay) / 0.72)
+  );
   z-index: -1;
 }
 .prelaunch-hero-image {
@@ -281,7 +293,7 @@
   display: flex;
   justify-content: space-between;
   align-items: center;
-  color: white;
+  color: var(--home-on-image);
 }
 .prelaunch-photo-top > span {
   display: flex;
@@ -291,15 +303,15 @@
   font-weight: 800;
   letter-spacing: 0.09em;
   padding: 8px 11px;
-  border: 1px solid #ffffff60;
+  border: 1px solid hsl(var(--territory-on-image) / 0.38);
   border-radius: 4px;
-  background: #14294755;
+  background: hsl(var(--territory-image-overlay) / 0.34);
 }
 .prelaunch-photo-title {
   position: absolute;
   left: 32px;
   bottom: 61px;
-  color: #fff;
+  color: var(--home-on-image);
 }
 .prelaunch-photo-title > span {
   font-size: 0.8rem;
@@ -314,7 +326,7 @@
   bottom: 29px;
   left: 32px;
   font-size: 0.75rem;
-  color: #e4e8ef;
+  color: hsl(var(--territory-on-image) / 0.86);
 }
 .prelaunch-photo-note {
   position: absolute;
@@ -324,10 +336,11 @@
   gap: 12px;
   align-items: center;
   background: var(--home-yellow);
+  color: var(--home-ink);
   padding: 17px 22px;
   border-radius: 5px;
   transform: rotate(-4deg);
-  box-shadow: 0 8px 25px #14294715;
+  box-shadow: var(--shadow-md);
 }
 .prelaunch-photo-note span {
   font-size: 0.75rem;
@@ -339,7 +352,7 @@
 }
 .prelaunch-connections {
   border-block: 1px solid var(--home-line);
-  background: #fafbfd;
+  background: var(--home-raised);
 }
 .prelaunch-connections > div {
   display: flex;
@@ -391,16 +404,16 @@
 .prelaunch-product {
   padding: 26px 23px 30px;
   border-radius: 7px;
-  background: #edf2ff;
+  background: hsl(var(--category-discussion) / 0.09);
 }
 .prelaunch-product-commerce {
-  background: #fff6d7;
+  background: hsl(var(--category-gastronomy) / 0.11);
 }
 .prelaunch-product-mobility {
-  background: #edf5f0;
+  background: hsl(var(--category-mobility) / 0.09);
 }
 .prelaunch-product-opportunities {
-  background: #f1effb;
+  background: hsl(var(--category-poll) / 0.09);
 }
 .prelaunch-product-top {
   display: flex;
@@ -441,7 +454,7 @@
   margin-top: 2px;
 }
 .prelaunch-territory {
-  background: #f5f7fb;
+  background: var(--home-raised);
   padding-block: 85px;
 }
 .prelaunch-territory-layout {
@@ -460,11 +473,11 @@
   margin-top: 22px;
 }
 .prelaunch-territory-card {
-  border: 1px solid #d6dfea;
+  border: 1px solid var(--home-line);
   border-radius: 8px;
   padding: 29px 32px;
-  background: #fff;
-  box-shadow: 9px 9px 0 #e5ebf5;
+  background: var(--home-card);
+  box-shadow: 9px 9px 0 hsl(var(--territory-border) / 0.55);
 }
 .prelaunch-territory-card-top {
   display: flex;
@@ -480,8 +493,8 @@
   align-items: center;
 }
 .prelaunch-pilot {
-  background: #edf2ff;
-  color: #153fce;
+  background: hsl(var(--brand-petroleum) / 0.1);
+  color: var(--home-blue);
   border-radius: 3px;
   padding: 6px 8px;
   font-size: 0.75rem;
@@ -512,12 +525,12 @@
 .prelaunch-territory-card li > span {
   height: 6px;
   width: 6px;
-  background: var(--home-blue);
+  background: var(--home-yellow);
   border-radius: 50%;
 }
 .prelaunch-territory-card li svg {
   margin-left: auto;
-  color: #7b89a0;
+  color: var(--home-muted);
 }
 .prelaunch-expansion {
   border-top: 1px solid var(--home-line);
@@ -529,7 +542,7 @@
 .prelaunch-expansion-line {
   width: 30px;
   height: 2px;
-  background: var(--home-blue);
+  background: var(--home-yellow);
   flex-shrink: 0;
 }
 .prelaunch-expansion p {
@@ -568,11 +581,12 @@
   border-radius: 4px;
   transform: rotate(4deg);
   background: var(--home-yellow);
+  color: var(--home-ink);
   font-size: 0.75rem;
   font-weight: 700;
 }
 .prelaunch-local-stamp strong {
-  font-family: "Bricolage Grotesque", sans-serif;
+  font-family: var(--font-heading);
   font-size: 1.5rem;
 }
 .prelaunch-local > div > p:not(.prelaunch-eyebrow) {
@@ -585,7 +599,7 @@
 .prelaunch-join {
   padding-block: 85px;
   background: var(--home-blue);
-  color: #fff;
+  color: var(--home-on-image);
 }
 .prelaunch-join-layout {
   display: grid;
@@ -604,7 +618,7 @@
   color: var(--home-yellow);
 }
 .prelaunch-join-copy > p:not(.prelaunch-eyebrow) {
-  color: #e1e9ff;
+  color: hsl(var(--territory-on-image) / 0.86);
   max-width: 425px;
   margin-top: 24px;
 }
@@ -628,11 +642,11 @@
   margin-top: 40px;
   font-size: 1.55rem;
   line-height: 1.2;
-  color: #b6caff;
+  color: hsl(var(--territory-on-image) / 0.7);
 }
 .prelaunch-form-card {
   color: var(--home-ink);
-  background: #fff;
+  background: var(--home-card);
   border-radius: 8px;
   padding: 32px;
 }
@@ -663,22 +677,22 @@
   font-weight: 700;
 }
 .prelaunch-home .prelaunch-field {
-  border: 1px solid #cbd3df;
+  border: 1px solid var(--home-line);
   border-radius: 5px;
   height: 49px;
   min-width: 0;
   width: 100%;
-  background: #fff;
+  background: var(--home-card);
   color: var(--home-ink);
   padding: 10px 12px;
   font: inherit;
   box-shadow: none;
 }
 .prelaunch-home .prelaunch-field::placeholder {
-  color: #6a7586;
+  color: hsl(var(--brand-text-secondary));
 }
 .prelaunch-home .prelaunch-field:focus {
-  border-color: var(--home-blue);
+  border-color: hsl(var(--semantic-focus));
 }
 .prelaunch-field-row {
   display: grid;
@@ -696,16 +710,16 @@
   padding: 12px;
   border-radius: 5px;
   background: var(--home-blue);
-  color: #fff;
+  color: var(--home-on-image);
   font-size: 0.95rem;
   font-weight: 700;
 }
 .prelaunch-home .prelaunch-submit:hover {
-  background: #102f9b;
+  background: var(--home-brand-hover);
 }
 .prelaunch-home .prelaunch-submit:disabled {
-  background: #e3e8f0;
-  color: #566276;
+  background: hsl(var(--semantic-disabled));
+  color: hsl(var(--semantic-disabled-foreground));
   opacity: 1;
 }
 .prelaunch-form-card .prelaunch-privacy {
@@ -751,7 +765,7 @@
   font-size: 0.95rem;
 }
 .prelaunch-footer {
-  background: #f5f7fb;
+  background: var(--home-raised);
   border-top: 1px solid var(--home-line);
   padding-top: 43px;
 }
@@ -1018,7 +1032,7 @@
   }
   .prelaunch-territory-card {
     padding: 23px 20px;
-    box-shadow: 5px 5px 0 #e5ebf5;
+    box-shadow: 5px 5px 0 hsl(var(--territory-border) / 0.55);
   }
   .prelaunch-territory-card-top {
     flex-wrap: wrap;
