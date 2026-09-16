@@ -15,8 +15,6 @@ import type {
 } from "./RideOperationalTypes";
 import {
   ensureMotoboyCanOperate,
-  ensureProfileCanRequest,
-  hasValidRouteCoordinates,
   validateFailedDeliveryResolution,
   validateFailedDeliverySnapshot,
 } from "./RideOperationalGuards";
@@ -63,26 +61,6 @@ export async function createDeliveryOperation(
   transitionTo: TransitionFn,
 ): Promise<TransitionResult> {
   try {
-    if (
-      !input.pickupAddressId?.trim() ||
-      !input.dropoffAddressId?.trim() ||
-      !input.pickupLocationId?.trim() ||
-      !input.dropoffLocationId?.trim()
-    ) {
-      return {
-        success: false,
-        error:
-          "Endereco de coleta e entrega sao obrigatorios e precisam estar reconciliados com territorios validos.",
-      };
-    }
-
-    const requesterBlock = await ensureProfileCanRequest(input.passengerProfileId);
-    if (requesterBlock) return requesterBlock;
-
-    if (!hasValidRouteCoordinates(input)) {
-      return { success: false, error: "Coordenadas sao obrigatorias para calculo de preco." };
-    }
-
     if (!input.recipientName?.trim()) {
       return { success: false, error: "Nome do destinatario e obrigatorio." };
     }
