@@ -320,14 +320,45 @@ export async function getDriverCompleteProfile(profileId: string): Promise<{
   }
 }
 
-export async function getPassengerRating(profileId: string): Promise<number> {
+async function resolvePassengerRatingProfileId(userOrProfileId: string): Promise<string | null> {
+  const directProfile = await profileService.getProfileById(userOrProfileId).catch(() => null);
+  if (directProfile?.id) return directProfile.id;
+
+  const personalProfile = await profileService
+    .getProfileByType(userOrProfileId, "personal")
+    .catch(() => null);
+  if (personalProfile?.id) return personalProfile.id;
+
+  const activeProfile = await profileService.getActiveProfile(userOrProfileId).catch(() => null);
+  return activeProfile?.id ?? null;
+}
+
+/**
+ * Passenger reputation read.
+ *
+ * The UI historically passed an auth user id while the rating RPC expects a
+ * profile id. Resolve either form here so callers cannot silently query the
+ * wrong identity. A profile with no ratings is represented as 0, never as a
+ * fabricated perfect 5.0 score.
+ */
+export async function getPassengerRating(userOrProfileId: string): Promise<number> {
   try {
+    const profileId = await resolvePassengerRatingProfileId(userOrProfileId);
+    if (!profileId) {
+      logger.warn("MobilityQueries.getPassengerRating - profile not found", {
+        userOrProfileId,
+      });
+      return 0;
+    }
+
     const summary = await RideRatingService.getSummary(profileId);
     return summary.totalRatings > 0
       ? Number(summary.averageRating.toFixed(1))
-      : 5.0;
+      : 0;
   } catch (error) {
-    logger.error("MobilityQueries.getPassengerRating", error as Error, { profileId });
-    return 5.0;
+    logger.error("MobilityQueries.getPassengerRating", error as Error, {
+      userOrProfileId,
+    });
+    return 0;
   }
 }
