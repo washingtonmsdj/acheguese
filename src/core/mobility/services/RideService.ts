@@ -16,8 +16,8 @@ export class RideService {
     return getRidesByPassenger(passengerId);
   }
 
-  async getActiveRide(userId: string): Promise<RideRequest | null> {
-    return getActiveRide(userId);
+  async getActiveRide(userProfileId: string): Promise<RideRequest | null> {
+    return getActiveRide(userProfileId);
   }
 }
 
