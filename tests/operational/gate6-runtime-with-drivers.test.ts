@@ -29,7 +29,15 @@ import {
   setupDriverAvailable,
   cleanupMultipleDrivers,
 } from '../helpers/gate6-setup-helpers';
+import {
+  safeCleanupRides,
+  safeCleanupVerifications,
+} from '../helpers/test-cleanup-helpers';
 import { createOperationalAdminClient, describeOperational } from '../helpers/operational-env';
+import {
+  cleanupMobilityRideQuoteFixtures,
+  createMobilityRideQuoteFixture,
+} from '../helpers/mobility-price-quote-fixtures';
 
 // Carregar fixtures
 const fixturesPath = join(__dirname, '../fixtures/gate6-fixtures.json');
@@ -43,6 +51,8 @@ describeOperational('Gate 6 - Bloco A: Runtime Real COM Motoristas', {
   // IDs de teste
   const passengerId = fixtures.passengers.passengerA.id;
   const driverId = fixtures.drivers.driverA.id;
+  const createdRideIds: string[] = [];
+  const pricingRuleIds: string[] = [];
   
   // Coordenadas
   const pickupLat = fixtures.coords.pickup.lat;
@@ -58,14 +68,47 @@ describeOperational('Gate 6 - Bloco A: Runtime Real COM Motoristas', {
   const pickupLocationId = fixtures.locationIds.primary;
   const dropoffLocationId = fixtures.locationIds.primary;
 
+  async function issueRideQuote(): Promise<string> {
+    const fixture = await createMobilityRideQuoteFixture(supabaseAdmin, {
+      passengerProfileId: passengerId,
+      pickupAddressId,
+      dropoffAddressId,
+      pickupLocationId,
+      dropoffLocationId,
+      originLat: pickupLat,
+      originLng: pickupLng,
+      destinationLat: dropoffLat,
+      destinationLng: dropoffLng,
+    });
+    pricingRuleIds.push(fixture.ruleId);
+    return fixture.quoteId;
+  }
+
   beforeEach(async () => {
     supabaseAdmin = createOperationalAdminClient();
+    createdRideIds.length = 0;
+    pricingRuleIds.length = 0;
+
     // Limpar dados de teste
     await supabaseAdmin.from('driver_availability').delete().eq('profile_id', driverId);
-    await supabaseAdmin.from('ride_requests').delete().eq('passenger_profile_id', passengerId);
+
+    const { data: staleRides } = await supabaseAdmin
+      .from('ride_requests')
+      .select('id')
+      .eq('passenger_profile_id', passengerId);
+    const staleRideIds = (staleRides ?? []).map((ride) => ride.id);
+    if (staleRideIds.length > 0) {
+      await safeCleanupRides(staleRideIds, 20000);
+      await safeCleanupVerifications(staleRideIds);
+    }
   });
   
   afterEach(async () => {
+    if (createdRideIds.length > 0) {
+      await safeCleanupRides(createdRideIds, 20000);
+      await safeCleanupVerifications(createdRideIds);
+    }
+    await cleanupMobilityRideQuoteFixtures(supabaseAdmin, pricingRuleIds);
     await cleanupMultipleDrivers([driverId]);
     await signOut();
   });
@@ -88,6 +131,7 @@ describeOperational('Gate 6 - Bloco A: Runtime Real COM Motoristas', {
     // ============================================
     
     await authenticateAsProfile(passengerId);
+    const priceQuoteId = await issueRideQuote();
     
     const createResult = await RideOperationalService.createRide({
       passengerProfileId: passengerId,
@@ -100,13 +144,14 @@ describeOperational('Gate 6 - Bloco A: Runtime Real COM Motoristas', {
       destinationLat: dropoffLat,
       destinationLng: dropoffLng,
       mode: 'ride',
-      suggestedPrice: 15.00,
+      priceQuoteId,
     });
     
     expect(createResult.success).toBe(true);
     expect(createResult.rideId).toBeDefined();
     
     const rideId = createResult.rideId!;
+    createdRideIds.push(rideId);
     console.log('✅ Corrida criada:', rideId);
     
     // ============================================
@@ -228,7 +273,7 @@ describeOperational('Gate 6 - Bloco A: Runtime Real COM Motoristas', {
     // ETAPA 6: Completar corrida
     // ============================================
     
-    const completeResult = await RideOperationalService.completeRide(rideId, driverId, 18.50);
+    const completeResult = await RideOperationalService.completeRide(rideId, driverId);
     expect(completeResult.success).toBe(true);
     
     const completedResult = await waitForRideStatus(rideId, [RIDE_STATUS.COMPLETED], 5000);
@@ -285,6 +330,7 @@ describeOperational('Gate 6 - Bloco A: Runtime Real COM Motoristas', {
     
     // Criar corrida
     await authenticateAsProfile(passengerId);
+    const priceQuoteId = await issueRideQuote();
     const createResult = await RideOperationalService.createRide({
       passengerProfileId: passengerId,
       pickupAddressId,
@@ -296,10 +342,12 @@ describeOperational('Gate 6 - Bloco A: Runtime Real COM Motoristas', {
       destinationLat: dropoffLat,
       destinationLng: dropoffLng,
       mode: 'ride',
-      suggestedPrice: 15.00,
+      priceQuoteId,
     });
     
+    expect(createResult.success).toBe(true);
     const rideId = createResult.rideId!;
+    createdRideIds.push(rideId);
     
     // Aguardar auto-dispatch
     await waitForRideStatus(rideId, [RIDE_STATUS.DRIVER_ASSIGNED], 10000);
