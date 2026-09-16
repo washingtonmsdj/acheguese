@@ -62,6 +62,35 @@ describe("AuthService recovery password authority", () => {
       statusCode: 401,
     });
 
+    expect(mocks.checkPasswordCompromise).not.toHaveBeenCalled();
+    expect(mocks.updateUser).not.toHaveBeenCalled();
+    expect(signOut).not.toHaveBeenCalled();
+  });
+
+  it("blocks a compromised recovered password after recovery authority and before mutation", async () => {
+    mocks.isCurrentSessionRecovery.mockResolvedValue(true);
+    mocks.checkPasswordCompromise.mockResolvedValue({
+      blocked: true,
+      count: 91,
+      unavailable: false,
+      message: "Senha encontrada em vazamentos.",
+    });
+    const signOut = vi
+      .spyOn(AuthService, "signOut")
+      .mockResolvedValue(undefined);
+
+    await expect(
+      AuthService.updateRecoveredPassword("SenhaVazada@2026"),
+    ).rejects.toMatchObject({
+      code: "PASSWORD_COMPROMISED",
+      statusCode: 400,
+      message: "Senha encontrada em vazamentos.",
+    });
+
+    expect(mocks.isCurrentSessionRecovery).toHaveBeenCalledTimes(1);
+    expect(mocks.checkPasswordCompromise).toHaveBeenCalledWith(
+      "SenhaVazada@2026",
+    );
     expect(mocks.updateUser).not.toHaveBeenCalled();
     expect(signOut).not.toHaveBeenCalled();
   });
@@ -77,6 +106,7 @@ describe("AuthService recovery password authority", () => {
       AuthService.updateRecoveredPassword("NovaSenha@2026"),
     ).resolves.toBeUndefined();
 
+    expect(mocks.checkPasswordCompromise).toHaveBeenCalledWith("NovaSenha@2026");
     expect(mocks.updateUser).toHaveBeenCalledWith({
       password: "NovaSenha@2026",
     });
