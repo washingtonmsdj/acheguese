@@ -1,0 +1,187 @@
+name: Supabase Auth URL Config
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - ".github/workflows/supabase-auth-url-config.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: supabase-auth-url-config-production
+  cancel-in-progress: false
+
+env:
+  SUPABASE_PROJECT_REF: "xhdowzacfujckjelqhtd"
+  AUTH_CONFIG_URL: "https://api.supabase.com/v1/projects/xhdowzacfujckjelqhtd/config/auth"
+  CANONICAL_SITE_URL: "https://acheguese.com.br"
+
+jobs:
+  configure-auth-urls:
+    name: Align production Auth URL configuration
+    runs-on:
+      - self-hosted
+      - windows
+      - x64
+      - acheguese-heavy-windows
+      - remote-only
+    timeout-minutes: 10
+    env:
+      SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
+
+    steps:
+      - name: Validate immutable production target
+        shell: powershell
+        run: |
+          $ErrorActionPreference = "Stop"
+          if ($env:GITHUB_REPOSITORY -ne "washingtonmsdj/acheguese") {
+            throw "Unexpected repository: $env:GITHUB_REPOSITORY"
+          }
+          if ($env:GITHUB_REF -ne "refs/heads/main") {
+            throw "Only refs/heads/main is authorized. Received: $env:GITHUB_REF"
+          }
+          if ($env:SUPABASE_PROJECT_REF -ne "xhdowzacfujckjelqhtd") {
+            throw "Unexpected Supabase project ref."
+          }
+          if ([string]::IsNullOrWhiteSpace($env:SUPABASE_ACCESS_TOKEN)) {
+            throw "GitHub Actions secret SUPABASE_ACCESS_TOKEN is missing."
+          }
+
+      - name: Read, validate and merge existing Auth URL configuration
+        id: desired
+        shell: powershell
+        run: |
+          $ErrorActionPreference = "Stop"
+          $headers = @{
+            Authorization = "Bearer $env:SUPABASE_ACCESS_TOKEN"
+            Accept = "application/json"
+          }
+          $config = Invoke-RestMethod -Uri $env:AUTH_CONFIG_URL -Headers $headers -Method Get
+
+          $currentSiteUrl = ([string]$config.site_url).Trim().TrimEnd('/')
+          $allowedCurrentSiteUrls = @(
+            "https://acheguese.com.br",
+            "https://www.acheguese.com.br"
+          )
+          if ($currentSiteUrl -notin $allowedCurrentSiteUrls) {
+            throw "Unexpected current Auth Site URL. Refusing automatic rewrite: $currentSiteUrl"
+          }
+
+          $allowListRaw = [string]$config.uri_allow_list
+          $existing = @()
+          if (-not [string]::IsNullOrWhiteSpace($allowListRaw)) {
+            $existing = @(
+              $allowListRaw.Split(',') |
+                ForEach-Object { $_.Trim() } |
+                Where-Object { -not [string]::IsNullOrWhiteSpace($_) }
+            )
+          }
+
+          $required = @(
+            "https://acheguese.com.br/login?confirmed=1",
+            "https://acheguese.com.br/reset-password?mode=recovery",
+            "https://acheguese.com.br/conta/confirmar-email?emailChange=1",
+            "https://acheguese.com.br/aceitar-termos",
+            "http://localhost:5175/login?confirmed=1",
+            "http://localhost:5175/reset-password?mode=recovery",
+            "http://localhost:5175/conta/confirmar-email?emailChange=1",
+            "http://localhost:5175/aceitar-termos"
+          )
+
+          # Changing Site URL from www to the canonical apex must not silently
+          # remove the old trusted host's redirect behavior. Preserve it as an
+          # explicit compatibility origin while all app-generated callbacks use
+          # the canonical apex.
+          $compatibility = @()
+          if ($currentSiteUrl -eq "https://www.acheguese.com.br") {
+            $compatibility = @("https://www.acheguese.com.br/**")
+          }
+
+          $merged = New-Object System.Collections.Generic.List[string]
+          $seen = New-Object 'System.Collections.Generic.HashSet[string]' ([System.StringComparer]::OrdinalIgnoreCase)
+          foreach ($entry in @($existing + $required + $compatibility)) {
+            if ($seen.Add($entry)) {
+              $merged.Add($entry)
+            }
+          }
+
+          $desiredAllowList = $merged -join ','
+          Add-Content -Path $env:GITHUB_OUTPUT -Value "current_site_url=$currentSiteUrl" -Encoding UTF8
+          Add-Content -Path $env:GITHUB_OUTPUT -Value "allow_list=$desiredAllowList" -Encoding UTF8
+
+          Write-Host "Current Site URL: $currentSiteUrl"
+          Write-Host "Canonical Site URL: $env:CANONICAL_SITE_URL"
+          Write-Host "Existing allow-list entries: $($existing.Count)"
+          Write-Host "Merged allow-list entries: $($merged.Count)"
+
+      - name: Apply canonical Site URL and merged redirect allow list
+        shell: powershell
+        env:
+          DESIRED_ALLOW_LIST: ${{ steps.desired.outputs.allow_list }}
+        run: |
+          $ErrorActionPreference = "Stop"
+          $headers = @{
+            Authorization = "Bearer $env:SUPABASE_ACCESS_TOKEN"
+            Accept = "application/json"
+          }
+          $payload = [ordered]@{
+            site_url = $env:CANONICAL_SITE_URL
+            uri_allow_list = $env:DESIRED_ALLOW_LIST
+          } | ConvertTo-Json -Compress
+
+          Invoke-RestMethod `
+            -Uri $env:AUTH_CONFIG_URL `
+            -Headers $headers `
+            -Method Patch `
+            -ContentType "application/json" `
+            -Body $payload | Out-Null
+
+          Write-Host "Supabase Auth URL configuration patch accepted."
+
+      - name: Verify canonical Site URL and required callbacks
+        shell: powershell
+        run: |
+          $ErrorActionPreference = "Stop"
+          $headers = @{
+            Authorization = "Bearer $env:SUPABASE_ACCESS_TOKEN"
+            Accept = "application/json"
+          }
+          $actual = Invoke-RestMethod -Uri $env:AUTH_CONFIG_URL -Headers $headers -Method Get
+          $actualSiteUrl = ([string]$actual.site_url).Trim().TrimEnd('/')
+          if ($actualSiteUrl -ne $env:CANONICAL_SITE_URL) {
+            throw "Auth Site URL verification failed. Expected=$env:CANONICAL_SITE_URL Actual=$actualSiteUrl"
+          }
+
+          $actualEntries = @(
+            ([string]$actual.uri_allow_list).Split(',') |
+              ForEach-Object { $_.Trim() } |
+              Where-Object { -not [string]::IsNullOrWhiteSpace($_) }
+          )
+          $required = @(
+            "https://acheguese.com.br/login?confirmed=1",
+            "https://acheguese.com.br/reset-password?mode=recovery",
+            "https://acheguese.com.br/conta/confirmar-email?emailChange=1",
+            "https://acheguese.com.br/aceitar-termos",
+            "http://localhost:5175/login?confirmed=1",
+            "http://localhost:5175/reset-password?mode=recovery",
+            "http://localhost:5175/conta/confirmar-email?emailChange=1",
+            "http://localhost:5175/aceitar-termos"
+          )
+          $missing = @($required | Where-Object { $_ -notin $actualEntries })
+          if ($missing.Count -gt 0) {
+            throw "Required Auth redirect URLs missing after patch: $($missing -join ', ')"
+          }
+
+          Write-Host "Canonical Site URL and all required Auth redirect URLs verified."
+          @(
+            "## Supabase Auth URL configuration",
+            "- Project ref: $env:SUPABASE_PROJECT_REF",
+            "- Site URL: $actualSiteUrl",
+            "- Required production callbacks: verified",
+            "- localhost:5175 callbacks: verified",
+            "- Existing allow-list entries were preserved and deduplicated.",
+            "- No SMTP/provider secrets were read or written by this workflow."
+          ) | Add-Content -Path $env:GITHUB_STEP_SUMMARY -Encoding UTF8
