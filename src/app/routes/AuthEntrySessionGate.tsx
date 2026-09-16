@@ -7,7 +7,10 @@ import {
   AUTH_QUERY_VALUES,
 } from "@/core/auth/constants/authFlow";
 import { hasPendingAuthCallbackExchange } from "@/core/auth/utils/authCallback";
-import { prepareAuthenticatedLoginTermsCheck } from "@/core/auth/utils/authJourney";
+import {
+  getPendingAuthJourneyIntent,
+  prepareAuthenticatedLoginTermsCheck,
+} from "@/core/auth/utils/authJourney";
 import { useSessionContext } from "@/core/session/hooks/useSessionContext";
 import { PassivePageFallback } from "@/shared/components/loading/PassivePageFallback";
 import { resolveSafeInternalPath } from "@/shared/utils/safeRedirect";
@@ -54,7 +57,12 @@ export function AuthEntrySessionGate({ children }: AuthEntrySessionGateProps) {
   useEffect(() => {
     if (isLoading || !user || ownsSpecialAuthReturn) return;
 
-    prepareAuthenticatedLoginTermsCheck(redirectTo);
+    // If OAuth/signup already owns a live journey, keep its intent and return
+    // target intact. Otherwise this is a direct authenticated visit to /login
+    // and we create the minimal login -> terms journey now.
+    if (getPendingAuthJourneyIntent() === null) {
+      prepareAuthenticatedLoginTermsCheck(redirectTo);
+    }
     navigate(AUTH_PATHS.termsAcceptance, { replace: true });
   }, [isLoading, navigate, ownsSpecialAuthReturn, redirectTo, user]);
 
