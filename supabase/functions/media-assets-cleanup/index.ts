@@ -81,15 +81,21 @@ serve(async (req) => {
       }
     }
 
-    await auditLog({
-      timestamp: new Date().toISOString(),
-      action: "media_asset_orphans_deleted",
-      resource: "media-assets-cleanup",
-      status: "success",
-      details: { batches, deleted },
-      ip: getAuditIp(req),
-      userAgent: req.headers.get("user-agent") ?? "unknown",
-    });
+    // No-op maintenance runs are intentionally not persisted to function_audit.
+    // The scheduler already records run status in pg_cron; function_audit is
+    // reserved for cleanup runs that actually mutate storage state.
+    if (deleted > 0) {
+      auditLog({
+        timestamp: new Date().toISOString(),
+        action: "media_asset_orphans_deleted",
+        resource: "media-assets-cleanup",
+        status: "success",
+        details: { batches, deleted },
+        ip: getAuditIp(req),
+        userAgent: req.headers.get("user-agent") ?? "unknown",
+      });
+    }
+
     return jsonResponse(
       { batches, deleted },
       200,
