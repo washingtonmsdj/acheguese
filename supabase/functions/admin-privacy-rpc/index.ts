@@ -1,207 +1,278 @@
--- Admin authority for the canonical LGPD/data-subject request ledger.
--- Browser roles never execute these functions directly. The admin Edge broker
--- validates JWT, admin role and MFA, then calls these service-role-only RPCs.
+import { getSupabaseAdminClient, requireAdmin } from "../_shared/adminAuth.ts";
+import {
+  isValidUUID,
+  jsonResponse,
+  rateLimitMiddleware,
+  readJsonBody,
+  requireHttpMethod,
+} from "../_shared/security.ts";
 
-CREATE OR REPLACE FUNCTION public.admin_list_privacy_subject_requests(
-  p_actor_user_id uuid,
-  p_status text DEFAULT NULL,
-  p_request_type text DEFAULT NULL,
-  p_limit integer DEFAULT 25,
-  p_offset integer DEFAULT 0
-)
-RETURNS TABLE (
-  id uuid,
-  requester_name text,
-  requester_email text,
-  request_type text,
-  status text,
-  submitted_at timestamptz,
-  updated_at timestamptz,
-  resolved_at timestamptz,
-  linked_user boolean,
-  total_count bigint
-)
-LANGUAGE plpgsql
-SECURITY DEFINER
-SET search_path = ''
-AS $function$
-BEGIN
-  IF p_actor_user_id IS NULL
-     OR NOT COALESCE(private.is_admin(p_actor_user_id), false) THEN
-    RAISE EXCEPTION 'privacy_admin_required' USING ERRCODE = '42501';
-  END IF;
+const ALLOWED_METHODS = "POST, OPTIONS";
+const MAX_BODY_BYTES = 8_192;
+const PAGE_SIZE_DEFAULT = 25;
+const PAGE_SIZE_MAX = 100;
 
-  IF p_limit < 1 OR p_limit > 100 OR p_offset < 0 THEN
-    RAISE EXCEPTION 'privacy_admin_invalid_pagination' USING ERRCODE = '22023';
-  END IF;
+const ACTIONS = {
+  listRequests: true,
+  getRequest: true,
+  transitionRequest: true,
+} as const;
 
-  IF p_status IS NOT NULL AND p_status NOT IN (
-    'received', 'in_review', 'waiting_for_requester',
-    'completed', 'denied', 'cancelled'
-  ) THEN
-    RAISE EXCEPTION 'privacy_admin_invalid_status' USING ERRCODE = '22023';
-  END IF;
+type Action = keyof typeof ACTIONS;
+type Params = Record<string, unknown>;
 
-  IF p_request_type IS NOT NULL AND p_request_type NOT IN (
-    'access', 'correction', 'anonymization', 'portability', 'deletion',
-    'information', 'consent_revocation', 'automated_decision',
-    'violation_report', 'other'
-  ) THEN
-    RAISE EXCEPTION 'privacy_admin_invalid_request_type' USING ERRCODE = '22023';
-  END IF;
+type RequestStatus =
+  | "received"
+  | "in_review"
+  | "waiting_for_requester"
+  | "completed"
+  | "denied"
+  | "cancelled";
 
-  RETURN QUERY
-  SELECT
-    request.id,
-    request.requester_name,
-    request.requester_email,
-    request.request_type,
-    request.status,
-    request.submitted_at,
-    request.updated_at,
-    request.resolved_at,
-    request.user_id IS NOT NULL AS linked_user,
-    count(*) OVER() AS total_count
-  FROM public.privacy_subject_requests request
-  WHERE (p_status IS NULL OR request.status = p_status)
-    AND (p_request_type IS NULL OR request.request_type = p_request_type)
-  ORDER BY request.submitted_at DESC, request.id DESC
-  LIMIT p_limit
-  OFFSET p_offset;
-END;
-$function$;
+type RequestType =
+  | "access"
+  | "correction"
+  | "anonymization"
+  | "portability"
+  | "deletion"
+  | "information"
+  | "consent_revocation"
+  | "automated_decision"
+  | "violation_report"
+  | "other";
 
-CREATE OR REPLACE FUNCTION public.admin_get_privacy_subject_request(
-  p_actor_user_id uuid,
-  p_request_id uuid
-)
-RETURNS jsonb
-LANGUAGE plpgsql
-SECURITY DEFINER
-SET search_path = ''
-AS $function$
-DECLARE
-  v_result jsonb;
-BEGIN
-  IF p_actor_user_id IS NULL
-     OR NOT COALESCE(private.is_admin(p_actor_user_id), false) THEN
-    RAISE EXCEPTION 'privacy_admin_required' USING ERRCODE = '42501';
-  END IF;
+const STATUSES = new Set<RequestStatus>([
+  "received",
+  "in_review",
+  "waiting_for_requester",
+  "completed",
+  "denied",
+  "cancelled",
+]);
 
-  SELECT jsonb_build_object(
-    'id', request.id,
-    'user_id', request.user_id,
-    'requester_name', request.requester_name,
-    'requester_email', request.requester_email,
-    'request_type', request.request_type,
-    'subject', request.subject,
-    'message', request.message,
-    'status', request.status,
-    'submitted_at', request.submitted_at,
-    'updated_at', request.updated_at,
-    'resolved_at', request.resolved_at
-  )
-  INTO v_result
-  FROM public.privacy_subject_requests request
-  WHERE request.id = p_request_id;
+const TYPES = new Set<RequestType>([
+  "access",
+  "correction",
+  "anonymization",
+  "portability",
+  "deletion",
+  "information",
+  "consent_revocation",
+  "automated_decision",
+  "violation_report",
+  "other",
+]);
 
-  IF v_result IS NULL THEN
-    RAISE EXCEPTION 'privacy_request_not_found' USING ERRCODE = 'P0002';
-  END IF;
+const NEXT_STATUSES = new Set<RequestStatus>([
+  "in_review",
+  "waiting_for_requester",
+  "completed",
+  "denied",
+  "cancelled",
+]);
 
-  RETURN v_result;
-END;
-$function$;
+class AdminPrivacyHttpError extends Error {
+  readonly status: number;
+  readonly clientCode: string;
 
-CREATE OR REPLACE FUNCTION public.admin_transition_privacy_subject_request(
-  p_actor_user_id uuid,
-  p_request_id uuid,
-  p_next_status text
-)
-RETURNS jsonb
-LANGUAGE plpgsql
-SECURITY DEFINER
-SET search_path = ''
-AS $function$
-DECLARE
-  v_current_status text;
-  v_resolved_at timestamptz;
-  v_result jsonb;
-BEGIN
-  IF p_actor_user_id IS NULL
-     OR NOT COALESCE(private.is_admin(p_actor_user_id), false) THEN
-    RAISE EXCEPTION 'privacy_admin_required' USING ERRCODE = '42501';
-  END IF;
+  constructor(clientCode: string, status: number) {
+    super(clientCode);
+    this.name = "AdminPrivacyHttpError";
+    this.status = status;
+    this.clientCode = clientCode;
+  }
+}
 
-  IF p_next_status NOT IN (
-    'in_review', 'waiting_for_requester', 'completed', 'denied', 'cancelled'
-  ) THEN
-    RAISE EXCEPTION 'privacy_admin_invalid_status' USING ERRCODE = '22023';
-  END IF;
+function optionalEnum<T extends string>(
+  value: unknown,
+  allowed: ReadonlySet<T>,
+  field: string,
+): T | null {
+  if (value === undefined || value === null || value === "") return null;
+  if (typeof value !== "string" || !allowed.has(value as T)) {
+    throw new AdminPrivacyHttpError(`invalid_${field}`, 400);
+  }
+  return value as T;
+}
 
-  SELECT request.status
-  INTO v_current_status
-  FROM public.privacy_subject_requests request
-  WHERE request.id = p_request_id
-  FOR UPDATE;
+function boundedInteger(
+  value: unknown,
+  fallback: number,
+  minimum: number,
+  maximum: number,
+  field: string,
+): number {
+  if (value === undefined || value === null) return fallback;
+  if (!Number.isInteger(value) || Number(value) < minimum || Number(value) > maximum) {
+    throw new AdminPrivacyHttpError(`invalid_${field}`, 400);
+  }
+  return Number(value);
+}
 
-  IF v_current_status IS NULL THEN
-    RAISE EXCEPTION 'privacy_request_not_found' USING ERRCODE = 'P0002';
-  END IF;
+function requireRequestId(value: unknown): string {
+  if (!isValidUUID(value)) throw new AdminPrivacyHttpError("invalid_request_id", 400);
+  return value as string;
+}
 
-  IF NOT (
-    (v_current_status = 'received' AND p_next_status IN ('in_review', 'cancelled'))
-    OR
-    (v_current_status = 'in_review' AND p_next_status IN (
-      'waiting_for_requester', 'completed', 'denied', 'cancelled'
-    ))
-    OR
-    (v_current_status = 'waiting_for_requester' AND p_next_status IN (
-      'in_review', 'completed', 'denied', 'cancelled'
-    ))
-  ) THEN
-    RAISE EXCEPTION 'privacy_admin_invalid_transition:%->%',
-      v_current_status, p_next_status USING ERRCODE = '22023';
-  END IF;
+function mapRpcError(error: { message?: string; code?: string }): never {
+  const message = error.message ?? "";
+  if (message.includes("privacy_request_not_found")) {
+    throw new AdminPrivacyHttpError("request_not_found", 404);
+  }
+  if (
+    message.includes("privacy_admin_invalid_transition") ||
+    message.includes("privacy_admin_invalid_status") ||
+    message.includes("privacy_admin_invalid_request_type") ||
+    message.includes("privacy_admin_invalid_pagination")
+  ) {
+    throw new AdminPrivacyHttpError("invalid_request", 400);
+  }
+  if (message.includes("privacy_admin_required") || error.code === "42501") {
+    throw new AdminPrivacyHttpError("forbidden", 403);
+  }
+  throw new Error("PRIVACY_ADMIN_RPC_FAILED");
+}
 
-  v_resolved_at := CASE
-    WHEN p_next_status IN ('completed', 'denied', 'cancelled') THEN now()
-    ELSE NULL
-  END;
+function totalFromRows(rows: unknown[]): number {
+  if (rows.length === 0 || !rows[0] || typeof rows[0] !== "object") return 0;
+  const value = Reflect.get(rows[0] as object, "total_count");
+  if (typeof value === "number" && Number.isSafeInteger(value) && value >= 0) return value;
+  if (typeof value === "string" && /^\d+$/.test(value)) {
+    const parsed = Number(value);
+    return Number.isSafeInteger(parsed) ? parsed : 0;
+  }
+  return 0;
+}
 
-  UPDATE public.privacy_subject_requests request
-  SET status = p_next_status,
-      resolved_at = v_resolved_at
-  WHERE request.id = p_request_id
-  RETURNING jsonb_build_object(
-    'id', request.id,
-    'status', request.status,
-    'updated_at', request.updated_at,
-    'resolved_at', request.resolved_at
-  )
-  INTO v_result;
+Deno.serve(async (req: Request) => {
+  if (req.method === "OPTIONS") {
+    return new Response(null, { status: 204 });
+  }
 
-  RETURN v_result;
-END;
-$function$;
+  const methodError = requireHttpMethod(req, ["POST"], ALLOWED_METHODS);
+  if (methodError) return methodError;
 
-REVOKE ALL ON FUNCTION public.admin_list_privacy_subject_requests(uuid, text, text, integer, integer)
-  FROM PUBLIC, anon, authenticated;
-REVOKE ALL ON FUNCTION public.admin_get_privacy_subject_request(uuid, uuid)
-  FROM PUBLIC, anon, authenticated;
-REVOKE ALL ON FUNCTION public.admin_transition_privacy_subject_request(uuid, uuid, text)
-  FROM PUBLIC, anon, authenticated;
+  const rateLimitResponse = await rateLimitMiddleware(req, 120, 60_000, ALLOWED_METHODS);
+  if (rateLimitResponse) return rateLimitResponse;
 
-GRANT EXECUTE ON FUNCTION public.admin_list_privacy_subject_requests(uuid, text, text, integer, integer)
-  TO service_role;
-GRANT EXECUTE ON FUNCTION public.admin_get_privacy_subject_request(uuid, uuid)
-  TO service_role;
-GRANT EXECUTE ON FUNCTION public.admin_transition_privacy_subject_request(uuid, uuid, text)
-  TO service_role;
+  const auth = await requireAdmin(req, ALLOWED_METHODS);
+  if (auth instanceof Response) return auth;
 
-COMMENT ON FUNCTION public.admin_list_privacy_subject_requests(uuid, text, text, integer, integer) IS
-  'Service-role-only bounded admin list for LGPD requests. Message bodies are intentionally omitted.';
-COMMENT ON FUNCTION public.admin_get_privacy_subject_request(uuid, uuid) IS
-  'Service-role-only admin detail read for one LGPD request.';
-COMMENT ON FUNCTION public.admin_transition_privacy_subject_request(uuid, uuid, text) IS
-  'Atomic service-role-only status transition for one LGPD request.';
+  const body = await readJsonBody<{ action?: unknown; params?: unknown }>(req, {
+    maxBytes: MAX_BODY_BYTES,
+    methods: ALLOWED_METHODS,
+  });
+  if (!body.ok) return body.response;
+
+  const action = body.data.action;
+  if (typeof action !== "string" || !(action in ACTIONS)) {
+    return jsonResponse({ error: "invalid_action" }, 400, ALLOWED_METHODS, req);
+  }
+
+  const params: Params =
+    body.data.params && typeof body.data.params === "object" && !Array.isArray(body.data.params)
+      ? (body.data.params as Params)
+      : {};
+
+  const admin = getSupabaseAdminClient();
+
+  try {
+    let data: unknown;
+
+    switch (action as Action) {
+      case "listRequests": {
+        const status = optionalEnum(params.status, STATUSES, "status");
+        const requestType = optionalEnum(params.requestType, TYPES, "request_type");
+        const page = boundedInteger(params.page, 1, 1, 100_000, "page");
+        const pageSize = boundedInteger(
+          params.pageSize,
+          PAGE_SIZE_DEFAULT,
+          1,
+          PAGE_SIZE_MAX,
+          "page_size",
+        );
+        const offset = (page - 1) * pageSize;
+
+        const { data: rows, error } = await admin.rpc(
+          "admin_list_privacy_subject_requests",
+          {
+            p_actor_user_id: auth.userId,
+            p_status: status,
+            p_request_type: requestType,
+            p_limit: pageSize,
+            p_offset: offset,
+          },
+        );
+        if (error) mapRpcError(error);
+
+        const items = Array.isArray(rows) ? rows : [];
+        data = {
+          items: items.map((row) => {
+            if (!row || typeof row !== "object") return row;
+            const { total_count: _totalCount, ...safeRow } = row as Record<string, unknown>;
+            return safeRow;
+          }),
+          total: totalFromRows(items),
+          page,
+          pageSize,
+        };
+        break;
+      }
+
+      case "getRequest": {
+        const requestId = requireRequestId(params.requestId);
+        const { data: row, error } = await admin.rpc(
+          "admin_get_privacy_subject_request",
+          {
+            p_actor_user_id: auth.userId,
+            p_request_id: requestId,
+          },
+        );
+        if (error) mapRpcError(error);
+        data = row;
+        break;
+      }
+
+      case "transitionRequest": {
+        const requestId = requireRequestId(params.requestId);
+        const nextStatus = optionalEnum(
+          params.nextStatus,
+          NEXT_STATUSES,
+          "next_status",
+        );
+        if (!nextStatus) {
+          throw new AdminPrivacyHttpError("invalid_status", 400);
+        }
+
+        const { data: row, error } = await admin.rpc(
+          "admin_transition_privacy_subject_request",
+          {
+            p_actor_user_id: auth.userId,
+            p_request_id: requestId,
+            p_next_status: nextStatus,
+          },
+        );
+        if (error) mapRpcError(error);
+        data = row;
+        break;
+      }
+    }
+
+    return jsonResponse({ data }, 200, ALLOWED_METHODS, req);
+  } catch (error) {
+    if (error instanceof AdminPrivacyHttpError) {
+      return jsonResponse(
+        { error: error.clientCode },
+        error.status,
+        ALLOWED_METHODS,
+        req,
+      );
+    }
+
+    console.error("[admin-privacy-rpc] operation failed", {
+      action,
+      reason: "privacy_admin_operation_failed",
+    });
+    return jsonResponse({ error: "internal_server_error" }, 500, ALLOWED_METHODS, req);
+  }
+});
