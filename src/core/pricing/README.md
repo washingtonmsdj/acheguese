@@ -1,112 +1,60 @@
-# Core Pricing
+# Core Pricing — contrato canônico
 
-SSOT (Single Source of Truth) para precificação e estimativas.
+> Estado auditado em 2026-09-16. Para mobilidade, preço de produção é autoridade do servidor e da quote single-use; cálculo monetário local no browser não é contrato comercial.
 
-## Responsabilidades
+## Ownership
 
-- Calcular estimativas de preço
-- Gerenciar regras de precificação por modalidade
-- Aplicar multiplicadores (horário de pico, customizados)
-- Gerar detalhamento de preço
-- Suportar múltiplos modos (ride, delivery, mototaxi, motoboy)
+- Regras persistidas: `pricing_rules` e tabelas relacionadas.
+- Entrada canônica da aplicação: `src/core/pricing/instance.ts`.
+- Emissão de preço de mobilidade: `MobilityPriceQuoteService` → RPC/Edge server-owned → `mobility_price_quotes`.
+- Criação de corrida/entrega recebe `priceQuoteId`; não recebe tarifa, coordenadas ou identidade do passageiro como autoridade monetária.
+- Administração de regras usa a instância canônica e os comandos privilegiados do `admin-pricing-rpc`.
+
+## Estado comercial
+
+Os valores atuais de `pricing_rules` são provisórios/fictícios de desenvolvimento. Eles não representam a política comercial aprovada do Achegue-se.
+
+Em produção, uma regra de mobilidade só pode ser tratada como comercialmente utilizável quando o contrato canônico a reconhecer explicitamente como aprovada. Falha de regra, quote ou routing deve falhar fechada; nunca inventar tarifa de contingência.
+
+## API de aplicação
+
+Use a instância canônica quando um fluxo administrativo ou de leitura realmente precisar trabalhar com regras:
+
+```ts
+import { pricingService } from '@/core/pricing/instance';
+
+const rules = await pricingService.listRules(true);
+```
+
+Para solicitar corrida ou motoboy, não use `calculateEstimate`, `calculateQuickEstimate` nem fórmula local. Emita uma quote pelo owner de mobilidade/pricing e passe apenas seu ID ao comando de criação.
+
+Os antigos hooks `usePriceEstimate` e `useQuickPriceEstimate` foram aposentados por não terem callers de runtime e por representarem uma fronteira errada para preço contratual de mobilidade.
 
 ## Estrutura
 
-```
+```text
 pricing/
-├── types/           # Tipos canônicos
-│   └── index.ts     # PricingMode, PriceEstimate, PricingRule, etc.
-├── services/        # Lógica de negócio
-│   └── PricingService.ts
-├── hooks/           # Hooks React
-│   ├── usePriceEstimate.ts
-│   └── usePricingRules.ts
-├── instance.ts      # Singleton instance
-└── index.ts         # Barrel exports
+├── instance.ts                      # entrada canônica da aplicação
+├── services/
+│   ├── MobilityPriceQuoteService.ts # emissão/consumo da quote server-owned
+│   └── PricingService.ts            # implementação interna em transição
+├── hooks/
+│   └── index.ts                     # sem hooks de tarifa client-side
+├── types/
+└── index.ts
 ```
 
-## Uso
+## Invariantes
 
-### Estimativa de Preço
+- Browser não é autoridade de tarifa final.
+- Não criar fallback monetário hardcoded.
+- Não criar janelas/multiplicadores comerciais locais.
+- Não usar velocidade média inventada para formar preço contratual.
+- Não importar `PricingService.ts` diretamente fora de `instance.ts`.
+- Não exportar singleton cru pelo barrel `services`.
+- Distância/tempo de rota, quando necessários à quote, vêm do boundary de routing/server, não de aproximação comercial no componente.
+- Valores e políticas comerciais precisam de aprovação explícita antes do lançamento.
 
-```typescript
-import { usePriceEstimate } from '@/core/pricing';
+## Dívida ainda aberta
 
-function RouteEstimator() {
-  const { data: estimate, isLoading } = usePriceEstimate({
-    mode: 'ride',
-    origin: { latitude: -12.975, longitude: -38.476 },
-    destination: { latitude: -12.980, longitude: -38.480 },
-    options: {
-      includeBreakdown: true,
-      applyPeakHours: true,
-    },
-  });
-  
-  // estimate.estimatedPrice
-  // estimate.breakdown
-  // estimate.metadata
-}
-```
-
-### Estimativa Rápida
-
-```typescript
-import { useQuickPriceEstimate } from '@/core/pricing';
-
-function QuickEstimate({ distanceKm, durationMinutes }) {
-  const { data: price } = useQuickPriceEstimate(
-    'ride',
-    distanceKm,
-    durationMinutes
-  );
-  
-  return <span>R$ {price?.toFixed(2)}</span>;
-}
-```
-
-### Service Direto
-
-```typescript
-import { pricingService } from '@/core/pricing';
-
-// Calcular estimativa
-const estimate = await pricingService.calculateEstimate({
-  mode: 'ride',
-  origin: { latitude, longitude },
-  destination: { latitude, longitude },
-  options: { includeBreakdown: true },
-});
-
-// Estimativa rápida
-const price = await pricingService.calculateQuickEstimate(
-  'ride',
-  distanceKm,
-  durationMinutes
-);
-
-// Obter regra
-const rule = await pricingService.getRule('ride');
-
-// Atualizar regra
-await pricingService.updateRule('ride', {
-  baseFare: 6.0,
-  pricePerKm: 3.0,
-});
-```
-
-## Regras
-
-- Separação clara: `core/routing` fornece distância/tempo, `core/pricing` calcula preço
-- Suporte a múltiplos modos (ride, delivery, mototaxi, motoboy)
-- Multiplicadores de horário de pico configuráveis
-- Preparado para pricing dinâmico futuro (não implementado)
-
-## Integração com Mobility
-
-O módulo `modules/mobility` deve consumir `core/pricing` para:
-- Estimativas de preço de corridas
-- Cálculo de valor final
-- Exibição de detalhamento
-
-Regras de corrida (aceite, cancelamento, estados) permanecem em `modules/mobility`.
+`PricingService.ts` ainda contém implementação histórica de fallback, pico e estimativa de duração. Ela não deve ganhar novos callers. A remoção física desse código continua obrigatória antes de declarar pricing/mobilidade prontos para lançamento.
