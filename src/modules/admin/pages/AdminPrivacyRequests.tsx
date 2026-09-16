@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { Eye, LockKeyhole, ShieldCheck } from "lucide-react";
+import { Eye, History, LockKeyhole, ShieldCheck } from "lucide-react";
 import { toast } from "sonner";
 
 import {
@@ -421,6 +421,41 @@ function RequestDetail({ detail }: { detail: AdminPrivacyRequestDetail }) {
         <p className="mb-1 text-xs font-medium text-muted-foreground">Mensagem</p>
         <div className="max-h-72 overflow-y-auto whitespace-pre-wrap rounded-lg border p-3 leading-relaxed">
           {detail.message}
+        </div>
+      </div>
+
+      <div>
+        <p className="mb-2 flex items-center gap-1.5 text-xs font-medium text-muted-foreground">
+          <History className="h-3.5 w-3.5" />
+          Histórico do pedido
+        </p>
+        <div className="space-y-2 rounded-lg border p-3">
+          {detail.history.length > 0 ? (
+            detail.history.map((event, index) => {
+              const description =
+                event.event_type === "submitted"
+                  ? "Pedido recebido"
+                  : event.event_type === "backfilled_snapshot"
+                    ? `Estado incorporado ao histórico: ${STATUS_LABELS[event.to_status]}`
+                    : `${event.from_status ? STATUS_LABELS[event.from_status] : "Estado anterior"} → ${STATUS_LABELS[event.to_status]}`;
+
+              return (
+                <div
+                  key={`${event.occurred_at}-${index}`}
+                  className="flex items-start justify-between gap-3 rounded-md bg-muted/30 px-3 py-2"
+                >
+                  <span className="font-medium">{description}</span>
+                  <span className="shrink-0 text-xs text-muted-foreground">
+                    {formatDate(event.occurred_at)}
+                  </span>
+                </div>
+              );
+            })
+          ) : (
+            <p className="text-xs text-muted-foreground">
+              Nenhum evento de histórico disponível para este pedido.
+            </p>
+          )}
         </div>
       </div>
 
