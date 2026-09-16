@@ -237,6 +237,7 @@ export interface DispatchGlobalConfig {
     enabled: boolean;
     offerTimeoutSeconds: number;
     maxRetryAttempts: number;
+    maxOffersPerDriver: number;
     searchRadiusKm: number;
     requiresVerification: boolean;
     requiresSubscription: boolean;
@@ -245,12 +246,17 @@ export interface DispatchGlobalConfig {
     enabled: boolean;
     maxOffersPerDriver: number;
     offerExpirationMinutes: number;
+    maxRetryAttempts: number;
     searchRadiusKm: number;
     requiresVerification: boolean;
     requiresSubscription: boolean;
   };
   reservationBoard: {
     enabled: boolean;
+    offerTimeoutSeconds: number;
+    maxRetryAttempts: number;
+    maxOffersPerDriver: number;
+    searchRadiusKm: number;
     minAdvanceHours: number;
     maxAdvanceDays: number;
     requiresVerification: boolean;
