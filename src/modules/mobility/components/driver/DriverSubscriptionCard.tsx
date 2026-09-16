@@ -1,9 +1,6 @@
 import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { Crown, Loader2, Shield } from "lucide-react";
-import { Button } from "@/shared/components/ui/button";
-import { Badge } from "@/shared/components/ui/badge";
-import { cn } from "@/shared/utils/cn";
+import { AlertTriangle, Crown, Loader2, Shield } from "lucide-react";
 import { toast } from "sonner";
 import { useAuth } from "@/core/auth/hooks/useAuth";
 import { BillingService } from "@/core/billing/services/BillingService";
@@ -11,8 +8,12 @@ import {
   CatalogService,
   type CatalogItem,
 } from "@/core/billing/services/CatalogService";
-import { buildPublicAbsoluteUrl } from "@/shared/config/publicAppOrigin";
+import { TIMEOUTS } from "@/core/mobility/constants";
 import { mobilityRoutes } from "@/core/mobility/routes/mobilityRoutes";
+import { Button } from "@/shared/components/ui/button";
+import { Badge } from "@/shared/components/ui/badge";
+import { buildPublicAbsoluteUrl } from "@/shared/config/publicAppOrigin";
+import { cn } from "@/shared/utils/cn";
 import { formatBrl } from "@/shared/utils/currency";
 
 export type DriverSubscriptionService = "motorista" | "motoboy";
@@ -75,7 +76,7 @@ export function DriverSubscriptionCard({
       );
     },
     enabled: Boolean(user?.id),
-    staleTime: 5 * 60 * 1000,
+    staleTime: TIMEOUTS.CACHE_STALE_TIME_VERY_LONG,
   });
 
   const handlePlanChange = async (planCode: string) => {
@@ -95,7 +96,7 @@ export function DriverSubscriptionCard({
       toast.error(
         error instanceof Error
           ? error.message
-          : "Nao foi possivel iniciar o checkout da assinatura.",
+          : "Não foi possível iniciar o checkout da assinatura.",
       );
     } finally {
       setCheckoutPlanCode(null);
@@ -105,12 +106,14 @@ export function DriverSubscriptionCard({
   const handleManageSubscription = async () => {
     setOpeningPortal(true);
     try {
-      await BillingService.redirectToPortal(buildPublicAbsoluteUrl(config.returnPath));
+      await BillingService.redirectToPortal(
+        buildPublicAbsoluteUrl(config.returnPath),
+      );
     } catch (error) {
       toast.error(
         error instanceof Error
           ? error.message
-          : "Nao foi possivel abrir o portal de cobranca.",
+          : "Não foi possível abrir o portal de cobrança.",
       );
     } finally {
       setOpeningPortal(false);
@@ -119,9 +122,38 @@ export function DriverSubscriptionCard({
 
   if (plansQuery.isLoading) {
     return (
-      <div className="flex items-center justify-center rounded-xl border border-border p-6 text-sm text-muted-foreground">
-        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+      <div className="flex items-center justify-center rounded-xl border p-6 text-sm text-muted-foreground">
+        <Loader2 className="mr-2 h-4 w-4 animate-spin" aria-hidden="true" />
         Carregando planos publicados...
+      </div>
+    );
+  }
+
+  if (plansQuery.isError) {
+    return (
+      <div className="space-y-3 rounded-xl border border-destructive/25 bg-destructive/5 p-4">
+        <div className="flex items-start gap-2">
+          <AlertTriangle
+            className="mt-0.5 h-4 w-4 shrink-0 text-destructive"
+            aria-hidden="true"
+          />
+          <div>
+            <p className="text-sm font-semibold text-foreground">
+              Não foi possível carregar os planos
+            </p>
+            <p className="mt-1 text-xs text-muted-foreground">
+              O catálogo de assinaturas está indisponível no momento.
+            </p>
+          </div>
+        </div>
+        <Button
+          type="button"
+          variant="outline"
+          size="sm"
+          onClick={() => void plansQuery.refetch()}
+        >
+          Tentar novamente
+        </Button>
       </div>
     );
   }
@@ -137,27 +169,28 @@ export function DriverSubscriptionCard({
             const Icon = featured ? Crown : Shield;
 
             return (
-              <div
+              <article
                 key={plan.id}
                 className={cn(
                   "relative flex flex-col rounded-xl border p-3",
                   featured
-                    ? "border-amber-500/30 bg-amber-500/5"
+                    ? "border-warning/30 bg-warning/5"
                     : "border-border bg-card",
                 )}
               >
-                {featured && (
-                  <Badge className="absolute -top-2 right-2 bg-amber-500 text-[0.55rem] text-white">
+                {featured ? (
+                  <Badge className="absolute -top-2 right-2 bg-warning text-[0.6rem] text-warning-foreground">
                     Destaque
                   </Badge>
-                )}
+                ) : null}
 
                 <div className="mb-2 flex items-center gap-2">
                   <Icon
                     className={cn(
                       "h-4 w-4",
-                      featured ? "text-amber-500" : "text-primary",
+                      featured ? "text-warning" : "text-primary",
                     )}
+                    aria-hidden="true"
                   />
                   <div className="min-w-0">
                     <h3 className="truncate text-sm font-semibold text-foreground">
@@ -169,11 +202,11 @@ export function DriverSubscriptionCard({
                   </div>
                 </div>
 
-                {plan.description && (
+                {plan.description ? (
                   <p className="mb-2 text-xs text-muted-foreground">
                     {plan.description}
                   </p>
-                )}
+                ) : null}
 
                 <ul className="mb-3 flex-1 space-y-1">
                   {plan.features.map((feature) => (
@@ -184,30 +217,31 @@ export function DriverSubscriptionCard({
                 </ul>
 
                 <Button
-                  onClick={() => handlePlanChange(plan.item_code)}
+                  type="button"
+                  onClick={() => void handlePlanChange(plan.item_code)}
                   disabled={checkoutPlanCode !== null || openingPortal}
                   className="w-full"
                   variant={featured ? "default" : "outline"}
                 >
-                  {checkoutPlanCode === plan.item_code && (
-                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                  )}
+                  {checkoutPlanCode === plan.item_code ? (
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" aria-hidden="true" />
+                  ) : null}
                   Escolher plano
                 </Button>
-              </div>
+              </article>
             );
           })}
         </div>
       ) : (
-        <div className="rounded-xl border border-border bg-muted/30 p-4 text-sm text-muted-foreground">
+        <div className="rounded-xl border bg-muted/30 p-4 text-sm text-muted-foreground">
           Nenhum plano publicado para esta modalidade no momento.
         </div>
       )}
 
-      <div className="rounded-xl border border-border bg-card p-3">
+      <div className="rounded-xl border bg-card p-3">
         <p className="text-xs text-muted-foreground">
-          Esta tela mostra o catalogo publicado. O plano atual nao e inferido no cliente
-          enquanto nao houver um snapshot de assinatura com escopo worker.
+          Esta tela mostra o catálogo publicado. O plano atual não é inferido no
+          cliente enquanto não houver um snapshot de assinatura com escopo worker.
         </p>
         <Button
           type="button"
@@ -215,10 +249,12 @@ export function DriverSubscriptionCard({
           size="sm"
           className="mt-2"
           disabled={openingPortal || checkoutPlanCode !== null}
-          onClick={handleManageSubscription}
+          onClick={() => void handleManageSubscription()}
         >
-          {openingPortal && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-          Gerenciar cobranca
+          {openingPortal ? (
+            <Loader2 className="mr-2 h-4 w-4 animate-spin" aria-hidden="true" />
+          ) : null}
+          Gerenciar cobrança
         </Button>
       </div>
     </div>
