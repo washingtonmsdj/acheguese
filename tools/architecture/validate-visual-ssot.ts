@@ -47,6 +47,7 @@ const MIGRATED_RUNTIME_FILES = [
   'src/modules/admin/pages/AdminEventos.tsx',
   'src/modules/admin/pages/AdminMensagens.tsx',
   'src/modules/admin/pages/AdminModeracao.tsx',
+  'src/modules/admin/pages/AdminOperacoes.tsx',
   'src/modules/admin/pages/AdminRealtimeDashboard.tsx',
   'src/styles/theme.ts',
 ] as const;
