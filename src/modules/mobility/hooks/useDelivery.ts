@@ -50,6 +50,8 @@ export interface CreateDeliveryData {
   authorizationSourceId?: string;
   paymentMethod?: string;
   observation?: string;
+  origin?: string;
+  destination?: string;
 }
 
 export interface DeliveryProof {
@@ -86,8 +88,6 @@ export function useDelivery(sourceType: SourceType, sourceId?: string) {
     staleTime: TIMEOUTS.CACHE_STALE_TIME_MEDIUM,
   });
 
-  // Acompanhamento realtime é restrito à entrega ativa. Não reutilizamos Auth
-  // User UUID como se fosse passenger_profile_id.
   useRideRealtime({
     rideId: activeDelivery?.id,
     userType: "passenger",
@@ -168,10 +168,19 @@ export function useDelivery(sourceType: SourceType, sourceId?: string) {
         }
 
         const result = await RideOperationalService.createDelivery({
-          passengerProfileId: passengerProfile.id,
-          ...data,
           priceQuoteId: quote.quote_id,
-          requestingUserId: user.id,
+          origin: data.origin,
+          destination: data.destination,
+          sourceType: data.sourceType,
+          sourceId: data.sourceId,
+          authorizationSourceId: data.authorizationSourceId,
+          recipientName: data.recipientName,
+          recipientPhone: data.recipientPhone,
+          deliveryNotes: data.deliveryNotes,
+          packageDescription: data.packageDescription,
+          packageSize: data.packageSize,
+          paymentMethod: data.paymentMethod,
+          observation: data.observation,
         });
 
         if (result.success) {
