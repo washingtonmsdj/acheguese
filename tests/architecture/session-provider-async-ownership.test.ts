@@ -42,9 +42,11 @@ describe("session provider async ownership", () => {
     expect(provider).toContain(
       "bootstrapVersion !== bootstrapVersionRef.current",
     );
+    expect(provider).toContain("const activeOperationIds = activeOperationIdsRef.current;");
     expect(provider).toContain("mountedRef.current = false;");
     expect(provider).toContain("bootstrapVersionRef.current += 1;");
-    expect(provider).toContain("activeOperationIdsRef.current.clear();");
+    expect(provider).toContain("activeOperationIds.clear();");
+    expect(provider).not.toContain("activeOperationIdsRef.current.clear();");
   });
 
   it("preserves known session identity while exposing initial hydration failure", () => {
