@@ -65,6 +65,7 @@ export function SessionProvider({ children }: { children: React.ReactNode }) {
   }, []);
 
   useEffect(() => {
+    const activeOperationIds = activeOperationIdsRef.current;
     mountedRef.current = true;
     bootstrapLoadingRef.current = true;
     const bootstrapVersion = bootstrapVersionRef.current + 1;
@@ -141,7 +142,7 @@ export function SessionProvider({ children }: { children: React.ReactNode }) {
       mountedRef.current = false;
       bootstrapVersionRef.current += 1;
       bootstrapLoadingRef.current = false;
-      activeOperationIdsRef.current.clear();
+      activeOperationIds.clear();
       // Nao chamamos SessionService.cleanup aqui para evitar teardown/re-init
       // agressivo em React StrictMode (dev), que pode gerar disputa de lock
       // no Supabase auth bootstrap.
