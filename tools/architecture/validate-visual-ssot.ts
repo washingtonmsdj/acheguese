@@ -33,9 +33,12 @@ const MIGRATED_RUNTIME_FILES = [
   'src/modules/mobility/components/MobilidadeLeftSidebar.tsx',
   'src/modules/mobility/components/MobilidadeRightSidebar.tsx',
   'src/modules/admin/components/AdminAccessDenied.tsx',
+  'src/modules/admin/components/user-detail/ActivityTab.tsx',
+  'src/modules/admin/components/user-detail/HistoryTab.tsx',
   'src/modules/admin/pages/AdminLayout.tsx',
   'src/modules/admin/pages/AdminCupons.tsx',
   'src/modules/admin/pages/AdminEventos.tsx',
+  'src/modules/admin/pages/AdminModeracao.tsx',
   'src/styles/theme.ts',
 ] as const;
 
