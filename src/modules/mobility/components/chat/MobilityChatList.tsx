@@ -55,6 +55,14 @@ interface MobilityChatListProps {
 
 const EMPTY_CHATS: RideChatPreview[] = [];
 
+const CHAT_FILTERS = [
+  { key: FILTER_TYPES.ALL, label: "Todas" },
+  { key: FILTER_TYPES.ACTIVE, label: "Ativas" },
+  { key: FILTER_TYPES.COMPLETED, label: "Finalizadas" },
+] as const;
+
+type ChatFilter = (typeof CHAT_FILTERS)[number]["key"];
+
 const ACTIVE_RIDE_STATUSES = new Set<string>([
   RIDE_STATUS.PENDING,
   RIDE_STATUS.REQUESTED,
@@ -115,9 +123,7 @@ export function MobilityChatList({ role }: MobilityChatListProps) {
   const appUrls = useAppUrls();
   const { activeProfile } = useSessionContext();
   const [search, setSearch] = useState("");
-  const [filter, setFilter] = useState<"all" | "active" | "completed">(
-    FILTER_TYPES.ALL,
-  );
+  const [filter, setFilter] = useState<ChatFilter>(FILTER_TYPES.ALL);
   const [loading, setLoading] = useState(true);
   const [loadError, setLoadError] = useState<string | null>(null);
   const [reloadKey, setReloadKey] = useState(0);
@@ -180,7 +186,10 @@ export function MobilityChatList({ role }: MobilityChatListProps) {
 
         if (active) setConversations(mapped);
       } catch (conversationError) {
-        logger.error("[MobilityChatList] Erro ao carregar conversas:", conversationError);
+        logger.error(
+          "[MobilityChatList] Erro ao carregar conversas:",
+          conversationError,
+        );
         if (active) {
           setLoadError("Não foi possível carregar as conversas de Mobilidade.");
         }
@@ -279,11 +288,7 @@ export function MobilityChatList({ role }: MobilityChatListProps) {
         </div>
 
         <div className="mt-3 flex items-center gap-2 overflow-x-auto pb-1">
-          {[
-            { key: FILTER_TYPES.ALL, label: "Todas" },
-            { key: FILTER_TYPES.ACTIVE, label: "Ativas" },
-            { key: FILTER_TYPES.COMPLETED, label: "Finalizadas" },
-          ].map((item) => (
+          {CHAT_FILTERS.map((item) => (
             <button
               key={item.key}
               type="button"
@@ -331,7 +336,9 @@ export function MobilityChatList({ role }: MobilityChatListProps) {
             </div>
           ) : loadError ? (
             <div className="rounded-2xl border border-destructive/30 bg-destructive/5 p-5 text-center">
-              <p className="text-sm font-semibold text-foreground">Conversas indisponíveis</p>
+              <p className="text-sm font-semibold text-foreground">
+                Conversas indisponíveis
+              </p>
               <p className="mt-1 text-xs text-muted-foreground">{loadError}</p>
               <Button
                 type="button"
@@ -450,11 +457,19 @@ export function MobilityChatList({ role }: MobilityChatListProps) {
                         </div>
 
                         <div className="mb-1 flex items-center gap-1 text-muted-foreground">
-                          <MapPin className="h-2.5 w-2.5 shrink-0" aria-hidden="true" />
+                          <MapPin
+                            className="h-2.5 w-2.5 shrink-0"
+                            aria-hidden="true"
+                          />
                           <p className="flex min-w-0 items-center gap-1 truncate text-[10px]">
                             <span className="truncate">{chat.ride_origin}</span>
-                            <ArrowRight className="h-2.5 w-2.5 shrink-0" aria-hidden="true" />
-                            <span className="truncate">{chat.ride_destination}</span>
+                            <ArrowRight
+                              className="h-2.5 w-2.5 shrink-0"
+                              aria-hidden="true"
+                            />
+                            <span className="truncate">
+                              {chat.ride_destination}
+                            </span>
                           </p>
                         </div>
 
