@@ -202,7 +202,7 @@ export class SessionService {
     SessionService.resetInitPromise();
     SessionService.initialized = true;
 
-    // Armazena a subscription para cleanup
+    // Armazena a subscription do Supabase para cleanup.
     const { data: { subscription } } = supabase.auth.onAuthStateChange((event: AuthChangeEvent, session: Session | null) => {
       const eventVersion = ++SessionService.authEventVersion;
       SessionService.currentSession = session;
@@ -413,6 +413,17 @@ export class SessionService {
         SessionService.currentSessionPromise = null;
       }
     }
+  }
+
+  /**
+   * Retorna o usuário autenticado validado pelo servidor de Auth.
+   * Leitores que dependem de claims/identidades do GoTrue devem passar por
+   * este owner em vez de acessar supabase.auth diretamente.
+   */
+  static async getVerifiedAuthUser(): Promise<Session["user"] | null> {
+    const { data, error } = await supabase.auth.getUser();
+    if (error) throw error;
+    return data.user ?? null;
   }
 
   // ── getCurrentUser ─────────────────────────────────────────────────────────
