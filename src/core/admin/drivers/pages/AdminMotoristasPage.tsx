@@ -1,32 +1,37 @@
 /**
- * AdminMotoristasPage (REFATORADO)
+ * AdminMotoristasPage
  *
- * Pagina de Gestao de Motoristas.
- * Moderacao e presenca operacional sao authorities diferentes: o Admin pode
- * suspender/reativar/moderar, mas nao pode forjar o estado online do motorista.
+ * Página de gestão de motoristas.
+ * Moderação e presença operacional são authorities diferentes: o Admin pode
+ * suspender/reativar/moderar, mas não pode forjar o estado online do motorista.
  */
 
 import { useState } from "react";
-import { Shield, Loader2 } from "lucide-react";
+import { Loader2, Shield } from "lucide-react";
 import { useAdminGuard } from "@/core/admin/hooks/useAdminGuard";
 import { RIDE_STATUS } from "@/shared/types/constants";
-import type { FilterStatus, DriverRequest, ConfirmDialogState } from "../sections/types";
-import { AdminMotoristasLayout } from "./AdminMotoristasLayout";
 import {
-  AdminMotoristasHeaderSection,
-  AdminMotoristasStatsSection,
-  AdminMotoristasFiltersSection,
-  AdminMotoristasListSection,
-  AdminMotoristasEmptySection,
-  AdminMotoristasTabsSection,
-} from "../sections";
-import {
-  DriverReviewDialog,
   ConfirmationDialog,
+  DriverReviewDialog,
   SuspensionHistoryDialog,
 } from "../components/dialogs";
 import { useDriverManagement } from "../hooks";
+import {
+  AdminMotoristasEmptySection,
+  AdminMotoristasFiltersSection,
+  AdminMotoristasHeaderSection,
+  AdminMotoristasListSection,
+  AdminMotoristasStatsSection,
+  AdminMotoristasTabsSection,
+} from "../sections";
+import type {
+  ConfirmDialogState,
+  DriverRequest,
+  FilterStatus,
+  SuspensionHistoryEntry,
+} from "../sections/types";
 import { calculateDriverStats, filterDrivers } from "../utils";
+import { AdminMotoristasLayout } from "./AdminMotoristasLayout";
 
 export default function AdminMotoristasPage() {
   const { canModerate, isChecking } = useAdminGuard();
@@ -44,7 +49,9 @@ export default function AdminMotoristasPage() {
     action: () => {},
     variant: "default",
   });
-  const [suspensionHistory, setSuspensionHistory] = useState<any[]>([]);
+  const [suspensionHistory, setSuspensionHistory] = useState<
+    SuspensionHistoryEntry[]
+  >([]);
   const [historyOpen, setHistoryOpen] = useState(false);
   const [historyLoading, setHistoryLoading] = useState(false);
 
@@ -64,6 +71,7 @@ export default function AdminMotoristasPage() {
 
   const handleReviewDriver = (driver: DriverRequest) => {
     setSelectedDriver(driver);
+    setRejectionReason("");
     setReviewOpen(true);
   };
 
@@ -80,18 +88,28 @@ export default function AdminMotoristasPage() {
     setRejectionReason("");
   };
 
+  const executeSuspend = async (driver: DriverRequest) => {
+    await handleSuspend(
+      driver,
+      rejectionReason.trim() || "Suspenso pelo administrador",
+    );
+    setConfirmDialog((current) => ({ ...current, open: false }));
+  };
+
   const handleSuspendDriver = (driver: DriverRequest) => {
     setConfirmDialog({
       open: true,
       title: "Suspender motorista",
-      description: `Tem certeza que deseja suspender ${driver.name ?? "este motorista"}? Esta acao bloqueia a elegibilidade operacional; a presenca online continua sendo estado fisico do proprio motorista.`,
+      description: `Tem certeza que deseja suspender ${
+        driver.name ?? "este motorista"
+      }? Esta ação bloqueia a elegibilidade operacional; a presença online continua sendo estado físico do próprio motorista.`,
       variant: "destructive",
-      action: () => executeSuspend(driver),
+      action: () => void executeSuspend(driver),
     });
   };
 
-  const executeSuspend = async (driver: DriverRequest) => {
-    await handleSuspend(driver, rejectionReason || "Suspenso pelo administrador");
+  const executeReactivate = async (driver: DriverRequest) => {
+    await handleReactivate(driver);
     setConfirmDialog((current) => ({ ...current, open: false }));
   };
 
@@ -99,15 +117,12 @@ export default function AdminMotoristasPage() {
     setConfirmDialog({
       open: true,
       title: "Reativar motorista",
-      description: `Tem certeza que deseja reativar ${driver.name ?? "este motorista"}? A reativacao remove a suspensao, mas o motorista precisa entrar online por conta propria para receber ofertas.`,
+      description: `Tem certeza que deseja reativar ${
+        driver.name ?? "este motorista"
+      }? A reativação remove a suspensão, mas o motorista precisa entrar online por conta própria para receber ofertas.`,
       variant: "default",
-      action: () => executeReactivate(driver),
+      action: () => void executeReactivate(driver),
     });
-  };
-
-  const executeReactivate = async (driver: DriverRequest) => {
-    await handleReactivate(driver);
-    setConfirmDialog((current) => ({ ...current, open: false }));
   };
 
   const handleViewHistory = async (driverProfileId: string) => {
@@ -125,17 +140,20 @@ export default function AdminMotoristasPage() {
     onReview: handleReviewDriver,
     onSuspend: handleSuspendDriver,
     onReactivate: handleReactivateDriver,
-    onViewHistory: handleViewHistory,
+    onViewHistory: (driverProfileId: string) => void handleViewHistory(driverProfileId),
   };
 
   if (!isChecking && !canModerate) {
     return (
-      <div className="min-h-screen bg-[#0A0F14] flex items-center justify-center p-4">
-        <div className="text-center">
-          <Shield className="h-16 w-16 text-red-400 mx-auto mb-4" />
-          <h1 className="text-2xl font-bold text-white mb-2">Acesso Negado</h1>
-          <p className="text-gray-400">
-            Apenas administradores podem acessar esta pagina.
+      <div className="flex min-h-screen items-center justify-center bg-background p-4 text-foreground">
+        <div className="max-w-sm text-center">
+          <Shield
+            className="mx-auto mb-4 h-16 w-16 text-destructive"
+            aria-hidden="true"
+          />
+          <h1 className="mb-2 text-2xl font-bold">Acesso negado</h1>
+          <p className="text-muted-foreground">
+            Apenas administradores podem acessar esta página.
           </p>
         </div>
       </div>
@@ -144,8 +162,12 @@ export default function AdminMotoristasPage() {
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center py-20">
-        <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
+      <div className="flex items-center justify-center py-20" role="status">
+        <Loader2
+          className="h-6 w-6 animate-spin text-muted-foreground"
+          aria-hidden="true"
+        />
+        <span className="sr-only">Carregando gestão de motoristas</span>
       </div>
     );
   }
@@ -180,18 +202,26 @@ export default function AdminMotoristasPage() {
 
       <DriverReviewDialog
         open={reviewOpen}
-        onOpenChange={setReviewOpen}
+        onOpenChange={(open) => {
+          setReviewOpen(open);
+          if (!open) {
+            setSelectedDriver(null);
+            setRejectionReason("");
+          }
+        }}
         driver={selectedDriver}
         rejectionReason={rejectionReason}
         onRejectionReasonChange={setRejectionReason}
-        onApprove={handleApproveDriver}
-        onReject={handleRejectDriver}
+        onApprove={() => void handleApproveDriver()}
+        onReject={() => void handleRejectDriver()}
         processing={processing}
       />
 
       <ConfirmationDialog
         open={confirmDialog.open}
-        onOpenChange={(open) => setConfirmDialog((current) => ({ ...current, open }))}
+        onOpenChange={(open) =>
+          setConfirmDialog((current) => ({ ...current, open }))
+        }
         title={confirmDialog.title}
         description={confirmDialog.description}
         onConfirm={confirmDialog.action}
