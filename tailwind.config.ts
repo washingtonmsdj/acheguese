@@ -34,10 +34,7 @@ export default {
           "var(--type-caption)",
           { lineHeight: "var(--type-caption-leading)" },
         ],
-        "type-micro": [
-          "var(--type-micro)",
-          { lineHeight: "1rem" },
-        ],
+        "type-micro": ["var(--type-micro)", { lineHeight: "1rem" }],
         "type-section": [
           "var(--type-section)",
           { lineHeight: "var(--type-section-leading)" },
@@ -57,6 +54,24 @@ export default {
         ring: "hsl(var(--ring))",
         background: "hsl(var(--background))",
         foreground: "hsl(var(--foreground))",
+        brand: {
+          petroleum: "hsl(var(--brand-petroleum))",
+          solar: "hsl(var(--brand-solar))",
+          surface: "hsl(var(--brand-surface))",
+          text: "hsl(var(--brand-text))",
+          "text-secondary": "hsl(var(--brand-text-secondary))",
+          "text-secondary-strong": "hsl(var(--brand-text-secondary-strong))",
+        },
+        semantic: {
+          error: "hsl(var(--semantic-error))",
+          success: "hsl(var(--semantic-success))",
+          warning: "hsl(var(--semantic-warning))",
+          info: "hsl(var(--semantic-info))",
+          focus: "hsl(var(--semantic-focus))",
+          selection: "hsl(var(--semantic-selection))",
+          disabled: "hsl(var(--semantic-disabled))",
+          "disabled-foreground": "hsl(var(--semantic-disabled-foreground))",
+        },
         primary: {
           DEFAULT: "hsl(var(--primary))",
           foreground: "hsl(var(--primary-foreground))",
@@ -128,8 +143,7 @@ export default {
           info: "hsl(var(--territory-info))",
           selection: "hsl(var(--territory-selection))",
           disabled: "hsl(var(--territory-disabled))",
-          "disabled-foreground":
-            "hsl(var(--territory-disabled-foreground))",
+          "disabled-foreground": "hsl(var(--territory-disabled-foreground))",
         },
         category: {
           alert: {
