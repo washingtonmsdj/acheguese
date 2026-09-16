@@ -4,6 +4,7 @@ import { useAuth } from "@/core/auth";
 import { profileService } from "@/core/profiles/services/ProfileService";
 import { RidePassengerService, RideRatingService, RideReportsService } from "@/core/mobility/services";
 import type { ReportSeverity, ReportType } from "@/core/mobility/services/RideReportsService";
+import { MobilityPriceQuoteService } from "@/core/pricing/services/MobilityPriceQuoteService";
 import { toast } from "sonner";
 import { getUserRides, getRideById, getPassengerRating } from "@/core/mobility/services/mobility.queries";
 import type { RideRequest } from "@/core/mobility/types/types";
@@ -22,7 +23,6 @@ export interface CreateRideRequestData {
   origin: string;
   destination: string;
   departure_time: string;
-  suggested_price?: number;
   type: "viagem" | "entrega" | "agendada" | "carona_compartilhada";
   payment_method: string;
   observation?: string;
@@ -40,10 +40,6 @@ export interface CreateRideRequestData {
 
 interface UseMobilidadeOptions {
   realtimeEnabled?: boolean;
-}
-
-function isValidCoordinate(value: number): boolean {
-  return Number.isFinite(value);
 }
 
 const REPORT_TYPES: readonly ReportType[] = [
@@ -155,6 +151,13 @@ export function useMobilidade(options: UseMobilidadeOptions = {}) {
         throw new Error("User not authenticated");
       }
 
+      // Motoboy has a dedicated owner (useDelivery/createDelivery). Keeping an
+      // "entrega" branch here would create a second lifecycle/pricing path.
+      if (rideData.type === "entrega") {
+        toast.error("Entregas devem ser solicitadas pelo fluxo Motoboy.");
+        throw new Error("Legacy delivery-through-ride path is not supported");
+      }
+
       const passengerProfile =
         (await profileService.getProfileByType(user.id, "personal")) ||
         (await profileService.getActiveProfile(user.id));
@@ -165,36 +168,24 @@ export function useMobilidade(options: UseMobilidadeOptions = {}) {
         throw new Error("Profile not found");
       }
 
-      let suggestedPrice = rideData.suggested_price;
-      if (
-        !isValidCoordinate(rideData.origin_lat) ||
-        !isValidCoordinate(rideData.origin_lng) ||
-        !isValidCoordinate(rideData.destination_lat) ||
-        !isValidCoordinate(rideData.destination_lng)
-      ) {
-        toast.error("Coordenadas sao obrigatorias para calculo de preco. Selecione enderecos validos no mapa.");
-        throw new Error("Coordinates required for official pricing calculation");
-      }
-
+      let quote;
       try {
-        const { pricingService } = await import("@/core/pricing/instance");
-        const priceEstimate = await pricingService.calculateEstimate({
-          mode: rideData.type === "entrega" ? "delivery" : "ride",
-          origin: { latitude: rideData.origin_lat, longitude: rideData.origin_lng },
-          destination: { latitude: rideData.destination_lat, longitude: rideData.destination_lng },
-          options: { applyPeakHours: true, includeBreakdown: false },
+        quote = await MobilityPriceQuoteService.issue({
+          passengerProfileId: passengerProfile.id,
+          mode: "ride",
+          pickupAddressId: rideData.pickup_address_id,
+          dropoffAddressId: rideData.dropoff_address_id,
         });
-        suggestedPrice = priceEstimate.estimatedPrice;
       } catch (pricingError) {
-        logger.error("useMobilidade.createRide - OFFICIAL pricing failed", pricingError as Error);
-        toast.error("Erro no calculo de preco. Tente novamente ou contate o suporte.");
-        throw new Error("Official pricing calculation failed");
+        logger.error(
+          "useMobilidade.createRide - server-owned pricing unavailable",
+          pricingError as Error,
+        );
+        toast.error(
+          "A precificacao comercial da corrida ainda nao esta disponivel.",
+        );
+        throw new Error("Server-owned mobility pricing unavailable");
       }
-
-      const normalizedSuggestedPrice =
-        typeof suggestedPrice === "number" && Number.isFinite(suggestedPrice)
-          ? suggestedPrice
-          : undefined;
 
       const result = await RideOperationalService.createRide({
         passengerProfileId: passengerProfile.id,
@@ -208,8 +199,11 @@ export function useMobilidade(options: UseMobilidadeOptions = {}) {
         originLng: rideData.origin_lng,
         destinationLat: rideData.destination_lat,
         destinationLng: rideData.destination_lng,
-        mode: rideData.type === "entrega" ? "delivery" : "ride",
-        suggestedPrice: normalizedSuggestedPrice,
+        mode: "ride",
+        // Transitional broker contract. The database no longer trusts this
+        // number: it must match an unused server-owned quote and persists the
+        // quote amount/route rather than browser-supplied pricing/coordinates.
+        suggestedPrice: quote.amount,
         observation: rideData.observation,
         availableSeats: rideData.available_seats,
         paymentMethod: rideData.payment_method,
@@ -226,15 +220,10 @@ export function useMobilidade(options: UseMobilidadeOptions = {}) {
       queryClient.invalidateQueries({ queryKey: MOBILITY_QUERY_KEYS.rides(user.id) });
       queryClient.invalidateQueries({ queryKey: MOBILITY_QUERY_KEYS.activeRide(user.id) });
 
-      if (normalizedSuggestedPrice !== undefined) {
-        toast.success(`Corrida solicitada! Preco oficial: ${formatBrl(normalizedSuggestedPrice)}`);
-      } else {
-        toast.success("Corrida solicitada!");
-      }
+      toast.success(`Corrida solicitada! Cotacao: ${formatBrl(quote.amount)}`);
       return data;
     } catch (error) {
       logger.error("useMobilidade.createRide", error as Error);
-      toast.error("Erro ao criar corrida");
       throw error;
     }
   }, [user, queryClient]);
