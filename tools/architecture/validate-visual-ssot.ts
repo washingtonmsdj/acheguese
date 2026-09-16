@@ -19,6 +19,13 @@ const MIGRATED_RUNTIME_FILES = [
   'src/app/components/auth/auth-concept-layout.css',
   'src/app/pages/LoginPage.tsx',
   'src/app/pages/EmailChangeConfirmationPage.tsx',
+  'src/app/pages/ResetPasswordPage.tsx',
+  'src/app/features/onboarding/pages/CadastroPage.tsx',
+  'src/app/features/onboarding/pages/CadastroConfirmacaoPage.tsx',
+  'src/app/features/onboarding/pages/CadastroPrimeiroAcessoPage.tsx',
+  'src/app/features/onboarding/pages/AceiteTermosPage.tsx',
+  'src/app/pages/PreLaunchLandingPage.tsx',
+  'src/app/pages/PreLaunchLandingPage.css',
   'src/styles/theme.ts',
 ] as const;
 
@@ -176,7 +183,7 @@ function main(): void {
   }
 
   console.log(
-    'Visual identity SSOT valid: canonical brand primitives and typography are owned by src/index.css, Tailwind/theme consume them, migrated auth surfaces use semantic tokens, and email projections stay synchronized with the brand palette.',
+    'Visual identity SSOT valid: canonical brand primitives and typography are owned by src/index.css, Tailwind/theme consume them, migrated auth and public launch surfaces use semantic tokens, and email projections stay synchronized with the brand palette.',
   );
 }
 
