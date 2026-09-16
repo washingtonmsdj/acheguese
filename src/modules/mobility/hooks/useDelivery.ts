@@ -170,9 +170,7 @@ export function useDelivery(sourceType: SourceType, sourceId?: string) {
         const result = await RideOperationalService.createDelivery({
           passengerProfileId: passengerProfile.id,
           ...data,
-          // Transitional broker field. Postgres accepts it only when it matches
-          // an unused server-owned quote and persists the quote-owned value/route.
-          suggestedPrice: quote.amount,
+          priceQuoteId: quote.quote_id,
           requestingUserId: user.id,
         });
 
