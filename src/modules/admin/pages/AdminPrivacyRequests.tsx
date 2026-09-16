@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { Eye, LockKeyhole, ShieldCheck } from "lucide-react";
 import { toast } from "sonner";
@@ -90,6 +90,10 @@ function formatDate(value: string | null): string {
   });
 }
 
+function protocolLabel(requestId: string): string {
+  return `#${requestId.slice(0, 8).toUpperCase()}`;
+}
+
 function nextStatuses(
   status: PrivacyRequestStatus,
 ): Exclude<PrivacyRequestStatus, "received">[] {
@@ -143,9 +147,22 @@ export default function AdminPrivacyRequests() {
   const detail = detailQuery.data ?? null;
   const availableTransitions = detail ? nextStatuses(detail.status) : [];
 
+  useEffect(() => {
+    if (!listQuery.isFetching && page > totalPages) {
+      setPage(totalPages);
+    }
+  }, [listQuery.isFetching, page, totalPages]);
+
   const closeDetail = () => {
+    const requestId = selectedId;
     setSelectedId(null);
     setNextStatus("");
+    if (requestId) {
+      queryClient.removeQueries({
+        queryKey: ["admin-privacy-request", requestId],
+        exact: true,
+      });
+    }
   };
 
   const openDetail = (requestId: string) => {
@@ -180,13 +197,13 @@ export default function AdminPrivacyRequests() {
     <div className="space-y-6">
       <AdminPageHeader
         title="Privacidade e LGPD"
-        description="Fila protegida de solicitações de titulares. O conteúdo completo só é carregado ao abrir um pedido específico."
+        description="Fila protegida de solicitações de titulares. Identificadores e conteúdo completo só são carregados ao abrir um pedido específico."
         icon={ShieldCheck}
       />
 
       <AdminSectionCard
         title="Solicitações de titulares"
-        description="Filtre por situação ou direito exercido. O navegador não possui acesso direto ao ledger de privacidade."
+        description="Filtre por situação ou direito exercido. A listagem usa apenas metadados de triagem e o navegador não possui acesso direto ao ledger de privacidade."
         icon={LockKeyhole}
         actions={
           <div className="flex flex-wrap gap-2">
@@ -253,7 +270,7 @@ export default function AdminPrivacyRequests() {
             <Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead>Titular</TableHead>
+                  <TableHead>Protocolo</TableHead>
                   <TableHead>Direito solicitado</TableHead>
                   <TableHead>Situação</TableHead>
                   <TableHead>Recebido em</TableHead>
@@ -264,11 +281,8 @@ export default function AdminPrivacyRequests() {
               <TableBody>
                 {items.map((item) => (
                   <TableRow key={item.id}>
-                    <TableCell>
-                      <div className="font-medium">{item.requester_name}</div>
-                      <div className="text-xs text-muted-foreground">
-                        {item.requester_email}
-                      </div>
+                    <TableCell className="font-mono text-xs font-semibold">
+                      {protocolLabel(item.id)}
                     </TableCell>
                     <TableCell>{TYPE_LABELS[item.request_type]}</TableCell>
                     <TableCell>
@@ -311,7 +325,7 @@ export default function AdminPrivacyRequests() {
           <DialogHeader>
             <DialogTitle>Solicitação de privacidade</DialogTitle>
             <DialogDescription>
-              Dados sensíveis deste pedido são exibidos somente nesta análise individual.
+              Dados sensíveis deste pedido são exibidos somente nesta análise individual e removidos do cache ao fechar.
             </DialogDescription>
           </DialogHeader>
 
