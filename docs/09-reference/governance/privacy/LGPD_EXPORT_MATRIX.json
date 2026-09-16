@@ -535,14 +535,15 @@
     {
       "section": "dpo_requests",
       "sources": [
-        "public.privacy_subject_requests"
+        "public.privacy_subject_requests",
+        "public.privacy_subject_request_events"
       ],
       "scope": "excluded",
       "include": [],
       "exclude": [
         "all"
       ],
-      "notes": "Excluded from self-service export until an explicit query includes only rows bound to the authenticated subject by validated user_id. Public requests with user_id=NULL must never be correlated by requester_email; those remain available through the controlled DPO case workflow."
+      "notes": "Excluded from self-service export until an explicit query includes only rows bound to the authenticated subject by validated user_id. Public requests with user_id=NULL must never be correlated by requester_email; those remain available through the controlled DPO case workflow. Lifecycle events are internal case-governance records and remain excluded with the parent ledger."
     },
     {
       "section": "internal_logs",
