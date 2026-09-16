@@ -110,11 +110,7 @@ export function useDriverLocation(
         if (!active) return;
       }
 
-      if (initialPosition) {
-        setLocation(toDriverLocation(initialPosition));
-      } else {
-        setLocation(null);
-      }
+      setLocation(initialPosition ? toDriverLocation(initialPosition) : null);
 
       // Postgres Realtime remains a second security layer: driver_locations RLS
       // filters every row delivered to this authenticated subscription. For a
@@ -190,33 +186,38 @@ export function useDriverLocation(
   const refetch = useCallback(async () => {
     setError(null);
 
-    if (rideId) {
-      const access = await RideTrackingAccessService.getDriverPositionForRide(rideId);
-      if (
-        !access.success ||
-        !access.data ||
-        !access.data.trackingAllowed ||
-        access.data.driverProfileId !== driverProfileId
-      ) {
-        setLocation(null);
-        setHasLiveUpdate(false);
-        if (!access.success) {
-          setError("Não foi possível autorizar o rastreamento desta corrida.");
+    try {
+      if (rideId) {
+        const access = await RideTrackingAccessService.getDriverPositionForRide(rideId);
+        if (
+          !access.success ||
+          !access.data ||
+          !access.data.trackingAllowed ||
+          access.data.driverProfileId !== driverProfileId
+        ) {
+          setLocation(null);
+          setHasLiveUpdate(false);
+          if (!access.success) {
+            setError("Não foi possível autorizar o rastreamento desta corrida.");
+          }
+          return;
         }
+
+        setLocation(
+          access.data.position ? toDriverLocation(access.data.position) : null,
+        );
         return;
       }
 
-      setLocation(
-        access.data.position ? toDriverLocation(access.data.position) : null,
+      const position = await trackingService.getCurrentPosition(
+        driverProfileId,
+        'driver',
       );
-      return;
+      setLocation(position ? toDriverLocation(position) : null);
+    } catch (refreshError) {
+      logger.error('[useDriverLocation] Tracking refresh failed', refreshError);
+      setError("Não foi possível atualizar a localização agora.");
     }
-
-    const position = await trackingService.getCurrentPosition(
-      driverProfileId,
-      'driver',
-    );
-    setLocation(position ? toDriverLocation(position) : null);
   }, [driverProfileId, rideId]);
 
   return {
