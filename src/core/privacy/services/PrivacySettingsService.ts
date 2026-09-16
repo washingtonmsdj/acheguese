@@ -84,6 +84,10 @@ type AccountDeletionMutation =
       promise: Promise<void>;
     };
 
+const CONSENT_READ_TIMEOUT_MS = 6_000;
+const CONSENT_READ_TIMEOUT_MESSAGE =
+  "A verificação dos seus termos demorou mais que o esperado. Tente novamente.";
+
 export class PrivacySettingsService {
   private static readonly db = supabase as unknown as PrivacySettingsDbClient;
   private static exportInFlight: {
@@ -99,13 +103,31 @@ export class PrivacySettingsService {
     }
   }
 
+  private static async withConsentReadTimeout<T>(operation: Promise<T>): Promise<T> {
+    let timeoutHandle: ReturnType<typeof setTimeout> | undefined;
+    const timeout = new Promise<never>((_, reject) => {
+      timeoutHandle = setTimeout(() => {
+        reject(new Error(CONSENT_READ_TIMEOUT_MESSAGE));
+      }, CONSENT_READ_TIMEOUT_MS);
+    });
+
+    try {
+      return await Promise.race([operation, timeout]);
+    } finally {
+      if (timeoutHandle !== undefined) clearTimeout(timeoutHandle);
+    }
+  }
+
   static async getUserConsents(userId: string): Promise<UserConsentRecord[]> {
-    const { data, error } = await this.db
-      .from("user_consents")
-      .select("*")
-      .eq("user_id", userId)
-      .is("revoked_at", null)
-      .order("consent_type", { ascending: true });
+    const result = await this.withConsentReadTimeout(
+      this.db
+        .from("user_consents")
+        .select("*")
+        .eq("user_id", userId)
+        .is("revoked_at", null)
+        .order("consent_type", { ascending: true }),
+    );
+    const { data, error } = result;
 
     if (error) throw error;
     return (data ?? []).map((row) => ({
@@ -119,13 +141,16 @@ export class PrivacySettingsService {
   }
 
   static async getConsentHistory(userId: string): Promise<ConsentHistoryRecord[]> {
-    const { data, error } = await this.db
-      .from("user_consents")
-      .select(
-        "id,consent_type,granted,granted_at,revoked_at,revoke_reason,terms_version,privacy_policy_version,created_at",
-      )
-      .eq("user_id", userId)
-      .order("created_at", { ascending: false });
+    const result = await this.withConsentReadTimeout(
+      this.db
+        .from("user_consents")
+        .select(
+          "id,consent_type,granted,granted_at,revoked_at,revoke_reason,terms_version,privacy_policy_version,created_at",
+        )
+        .eq("user_id", userId)
+        .order("created_at", { ascending: false }),
+    );
+    const { data, error } = result;
 
     if (error) throw error;
 
