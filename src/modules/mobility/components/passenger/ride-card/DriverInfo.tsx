@@ -1,7 +1,11 @@
 import { MessageCircle, Navigation, Phone, Star } from "lucide-react";
 
 import type { RideRequest } from "@/core/mobility/types";
-import { Avatar, AvatarFallback } from "@/shared/components/ui/avatar";
+import {
+  Avatar,
+  AvatarFallback,
+  AvatarImage,
+} from "@/shared/components/ui/avatar";
 import { Button } from "@/shared/components/ui/button";
 import { buildTelUrl, openContactUrl } from "@/shared/utils/contactLinks";
 import { EmergencyButton } from "../../EmergencyButton";
@@ -12,9 +16,10 @@ interface DriverInfoProps {
     name: string;
     vehicle_model: string;
     vehicle_plate: string;
-    rating: number;
-    total_rides: number;
-    phone?: string;
+    avatar_url?: string | null;
+    rating?: number | null;
+    total_rides?: number | null;
+    phone?: string | null;
   };
   ride: RideRequest;
   shouldShowMapOption: boolean;
@@ -31,7 +36,12 @@ export const DriverInfo = ({
   onContact,
   onToggleMap,
 }: DriverInfoProps) => {
-  const safeRating = Number.isFinite(driver.rating) ? driver.rating : 0;
+  const hasRating =
+    typeof driver.rating === "number" && Number.isFinite(driver.rating);
+  const hasRideCount =
+    typeof driver.total_rides === "number" &&
+    Number.isFinite(driver.total_rides) &&
+    driver.total_rides >= 0;
   const phoneUrl = buildTelUrl(driver.phone);
 
   const handlePhone = () => {
@@ -47,6 +57,10 @@ export const DriverInfo = ({
 
       <div className="flex items-center gap-3">
         <Avatar className="h-10 w-10 border-2 border-category-mobility/30">
+          <AvatarImage
+            src={driver.avatar_url ?? undefined}
+            alt={`Foto de ${driver.name}`}
+          />
           <AvatarFallback className="bg-category-mobility/12 text-xs font-bold text-category-mobility">
             {(driver.name || "?").charAt(0)}
           </AvatarFallback>
@@ -60,18 +74,22 @@ export const DriverInfo = ({
             <span aria-hidden="true">•</span>
             <span className="font-mono">{driver.vehicle_plate}</span>
           </div>
-          <div className="mt-0.5 flex items-center gap-1">
-            <Star
-              className="h-3 w-3 fill-warning text-warning"
-              aria-hidden="true"
-            />
-            <span className="text-xs font-semibold text-warning">
-              {safeRating.toFixed(1)}
-            </span>
-            <span className="text-[0.6rem] text-muted-foreground">
-              ({driver.total_rides} corridas)
-            </span>
-          </div>
+          {hasRating ? (
+            <div className="mt-0.5 flex items-center gap-1">
+              <Star
+                className="h-3 w-3 fill-warning text-warning"
+                aria-hidden="true"
+              />
+              <span className="text-xs font-semibold text-warning">
+                {driver.rating!.toFixed(1)}
+              </span>
+              {hasRideCount ? (
+                <span className="text-[0.6rem] text-muted-foreground">
+                  ({driver.total_rides} corridas)
+                </span>
+              ) : null}
+            </div>
+          ) : null}
         </div>
       </div>
 
