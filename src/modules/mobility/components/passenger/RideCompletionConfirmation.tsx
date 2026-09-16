@@ -84,7 +84,7 @@ export function RideCompletionConfirmation({
     setSubmitting(true);
     try {
       const result = await onConfirm(ride.id);
-      if (result && result.success === false) return;
+      if (!result || result.success !== true) return;
       closeAfterSuccess();
     } finally {
       setSubmitting(false);
@@ -98,7 +98,7 @@ export function RideCompletionConfirmation({
     setSubmitting(true);
     try {
       const result = await onReportProblem(ride.id, problem);
-      if (result && result.success === false) return;
+      if (!result || result.success !== true) return;
       closeAfterSuccess();
     } finally {
       setSubmitting(false);
