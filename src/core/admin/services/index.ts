@@ -51,6 +51,16 @@ export type {
   AdminCommunityInterestStats,
   UpdateRegistrationInput,
 } from "./AdminCommunityInterestService";
+export { adminPrivacyRequestsService } from "./AdminPrivacyRequestsService";
+export type {
+  AdminPrivacyRequestDetail,
+  AdminPrivacyRequestListInput,
+  AdminPrivacyRequestListResult,
+  AdminPrivacyRequestSummary,
+  AdminPrivacyTransitionResult,
+  PrivacyRequestStatus,
+  PrivacyRequestType,
+} from "./AdminPrivacyRequestsService";
 export { adminCouponsService } from "./AdminCouponsService";
 export type { CouponData } from "./AdminCouponsService";
 export { adminEventsService } from "./AdminEventsService";
