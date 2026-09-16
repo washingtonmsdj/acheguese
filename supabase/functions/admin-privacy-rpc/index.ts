@@ -201,27 +201,46 @@ Deno.serve(async (req: Request) => {
           "page_size",
         );
         const offset = (page - 1) * pageSize;
+        const rpcParams = {
+          p_actor_user_id: auth.userId,
+          p_status: status,
+          p_request_type: requestType,
+          p_limit: pageSize,
+          p_offset: offset,
+        };
 
         const { data: rows, error } = await admin.rpc(
           "admin_list_privacy_subject_requests",
-          {
-            p_actor_user_id: auth.userId,
-            p_status: status,
-            p_request_type: requestType,
-            p_limit: pageSize,
-            p_offset: offset,
-          },
+          rpcParams,
         );
         if (error) mapRpcError(error);
 
         const items = Array.isArray(rows) ? rows : [];
+        let total = totalFromRows(items);
+
+        // count(*) OVER() cannot carry a total when OFFSET lands beyond the
+        // final row. Probe the first matching row only to preserve the real
+        // total; no request body or direct identifier is returned by this RPC.
+        if (items.length === 0 && page > 1) {
+          const { data: probeRows, error: probeError } = await admin.rpc(
+            "admin_list_privacy_subject_requests",
+            {
+              ...rpcParams,
+              p_limit: 1,
+              p_offset: 0,
+            },
+          );
+          if (probeError) mapRpcError(probeError);
+          total = totalFromRows(Array.isArray(probeRows) ? probeRows : []);
+        }
+
         data = {
           items: items.map((row) => {
             if (!row || typeof row !== "object") return row;
             const { total_count: _totalCount, ...safeRow } = row as Record<string, unknown>;
             return safeRow;
           }),
-          total: totalFromRows(items),
+          total,
           page,
           pageSize,
         };
