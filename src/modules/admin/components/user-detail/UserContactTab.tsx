@@ -1,4 +1,5 @@
-import { Mail, Phone, MessageCircle, Copy, ExternalLink } from "lucide-react";
+import { Copy, ExternalLink, Mail, MessageCircle, Phone } from "lucide-react";
+import type { AdminUserDetail } from "@/modules/admin/hooks/useAdminUserDetail";
 import { Button } from "@/shared/components/ui/button";
 import {
   Card,
@@ -6,19 +7,26 @@ import {
   CardHeader,
   CardTitle,
 } from "@/shared/components/ui/card";
-import { toast } from "sonner";
-import type { AdminUserDetail } from "@/modules/admin/hooks/useAdminUserDetail";
-import { buildMailtoUrl, buildWhatsAppUrl, openContactUrl } from "@/shared/utils/contactLinks";
+import {
+  buildMailtoUrl,
+  buildWhatsAppUrl,
+  openContactUrl,
+} from "@/shared/utils/contactLinks";
 import { openSafeExternalUrl } from "@/shared/utils/safeRedirect";
+import { toast } from "sonner";
 
 interface UserContactTabProps {
   user: AdminUserDetail;
 }
 
 export function UserContactTab({ user }: UserContactTabProps) {
-  const copyToClipboard = (text: string, label: string) => {
-    navigator.clipboard.writeText(text);
-    toast.success(`${label} copiado!`);
+  const copyToClipboard = async (text: string, label: string) => {
+    try {
+      await navigator.clipboard.writeText(text);
+      toast.success(`${label} copiado!`);
+    } catch {
+      toast.error(`Não foi possível copiar ${label.toLowerCase()}.`);
+    }
   };
 
   const openWhatsApp = () => {
@@ -36,79 +44,90 @@ export function UserContactTab({ user }: UserContactTabProps) {
 
   return (
     <div className="space-y-4">
-      <Card className="bg-[#1E2529] border-white/10">
+      <Card className="border-border bg-card text-card-foreground">
         <CardHeader>
-          <CardTitle className="text-sm">Informações de Contato</CardTitle>
+          <CardTitle className="text-sm">Informações de contato</CardTitle>
         </CardHeader>
         <CardContent className="space-y-4">
-          {/* Email */}
-          <div className="flex items-center justify-between p-3 bg-[#0A0F14] rounded-lg">
-            <div className="flex items-center gap-3">
-              <Mail className="h-5 w-5 text-blue-400" />
-              <div>
-                <p className="text-xs text-gray-400">Email</p>
-                <p className="text-sm text-white">
-                  {user.email || "Não informado"}
-                </p>
-              </div>
-            </div>
-            {user.email && (
-              <div className="flex gap-2">
+          <ContactRow
+            icon={Mail}
+            iconClassName="text-info"
+            label="E-mail"
+            value={user.email || "Não informado"}
+            actions={
+              user.email ? (
+                <div className="flex gap-2">
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    onClick={() => void copyToClipboard(user.email, "E-mail")}
+                    aria-label="Copiar e-mail"
+                  >
+                    <Copy className="h-3 w-3" aria-hidden="true" />
+                  </Button>
+                  <Button size="sm" onClick={sendEmail}>
+                    <ExternalLink className="mr-1 h-3 w-3" aria-hidden="true" />
+                    Enviar
+                  </Button>
+                </div>
+              ) : null
+            }
+          />
+
+          <ContactRow
+            icon={Phone}
+            iconClassName="text-success"
+            label="Telefone"
+            value={user.phone || "Não informado"}
+            actions={
+              user.phone ? (
                 <Button
                   size="sm"
                   variant="outline"
-                  onClick={() => copyToClipboard(user.email, "Email")}
-                  className="border-white/10"
+                  onClick={() => void copyToClipboard(user.phone, "Telefone")}
+                  aria-label="Copiar telefone"
                 >
-                  <Copy className="h-3 w-3" />
+                  <Copy className="h-3 w-3" aria-hidden="true" />
                 </Button>
-                <Button
-                  size="sm"
-                  onClick={sendEmail}
-                  className="bg-blue-500 hover:bg-blue-600"
-                >
-                  <ExternalLink className="h-3 w-3 mr-1" />
-                  Enviar
-                </Button>
-              </div>
-            )}
-          </div>
+              ) : null
+            }
+          />
 
-          {/* Telefone */}
-          <div className="flex items-center justify-between p-3 bg-[#0A0F14] rounded-lg">
-            <div className="flex items-center gap-3">
-              <Phone className="h-5 w-5 text-green-400" />
-              <div>
-                <p className="text-xs text-gray-400">Telefone</p>
-                <p className="text-sm text-white">
-                  {user.phone || "Não informado"}
-                </p>
-              </div>
-            </div>
-            {user.phone && (
-              <Button
-                size="sm"
-                variant="outline"
-                onClick={() => copyToClipboard(user.phone, "Telefone")}
-                className="border-white/10"
-              >
-                <Copy className="h-3 w-3" />
-              </Button>
-            )}
-          </div>
-
-          {/* WhatsApp */}
-          {user.phone && (
-            <Button
-              onClick={openWhatsApp}
-              className="w-full bg-green-600 hover:bg-green-700"
-            >
-              <MessageCircle className="h-4 w-4 mr-2" />
+          {user.phone ? (
+            <Button onClick={openWhatsApp} className="w-full">
+              <MessageCircle className="mr-2 h-4 w-4" aria-hidden="true" />
               Abrir WhatsApp
             </Button>
-          )}
+          ) : null}
         </CardContent>
       </Card>
+    </div>
+  );
+}
+
+function ContactRow({
+  icon: Icon,
+  iconClassName,
+  label,
+  value,
+  actions,
+}: {
+  icon: typeof Mail;
+  iconClassName: string;
+  label: string;
+  value: string;
+  actions?: React.ReactNode;
+}) {
+  return (
+    <div className="flex flex-wrap items-center justify-between gap-3 rounded-lg border border-border bg-muted/50 p-3">
+      <div className="flex min-w-0 items-center gap-3">
+        <Icon className={`h-5 w-5 shrink-0 ${iconClassName}`} aria-hidden="true" />
+        <div className="min-w-0">
+          <p className="text-xs text-muted-foreground">{label}</p>
+          <p className="break-all text-sm text-foreground">{value}</p>
+        </div>
+      </div>
+      {actions}
     </div>
   );
 }
