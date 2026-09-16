@@ -1,0 +1,86 @@
+name: Supabase Auth URL Audit
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - ".github/workflows/supabase-auth-url-audit.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: supabase-auth-url-audit-production
+  cancel-in-progress: true
+
+env:
+  SUPABASE_PROJECT_REF: "xhdowzacfujckjelqhtd"
+  AUTH_CONFIG_URL: "https://api.supabase.com/v1/projects/xhdowzacfujckjelqhtd/config/auth"
+
+jobs:
+  audit-auth-urls:
+    name: Read production Auth URL configuration
+    runs-on:
+      - self-hosted
+      - windows
+      - x64
+      - acheguese-heavy-windows
+      - remote-only
+    timeout-minutes: 10
+    env:
+      SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
+
+    steps:
+      - name: Validate immutable production target
+        shell: powershell
+        run: |
+          $ErrorActionPreference = "Stop"
+          if ($env:GITHUB_REPOSITORY -ne "washingtonmsdj/acheguese") {
+            throw "Unexpected repository: $env:GITHUB_REPOSITORY"
+          }
+          if ($env:GITHUB_REF -ne "refs/heads/main") {
+            throw "Only refs/heads/main is authorized. Received: $env:GITHUB_REF"
+          }
+          if ($env:SUPABASE_PROJECT_REF -ne "xhdowzacfujckjelqhtd") {
+            throw "Unexpected Supabase project ref."
+          }
+          if ([string]::IsNullOrWhiteSpace($env:SUPABASE_ACCESS_TOKEN)) {
+            throw "GitHub Actions secret SUPABASE_ACCESS_TOKEN is missing."
+          }
+
+      - name: Read non-secret Auth URL configuration
+        shell: powershell
+        run: |
+          $ErrorActionPreference = "Stop"
+          $headers = @{
+            Authorization = "Bearer $env:SUPABASE_ACCESS_TOKEN"
+            Accept = "application/json"
+          }
+          $config = Invoke-RestMethod -Uri $env:AUTH_CONFIG_URL -Headers $headers -Method Get
+
+          $siteUrl = [string]$config.site_url
+          $allowListRaw = $config.uri_allow_list
+          if ($allowListRaw -is [System.Array]) {
+            $allowList = @($allowListRaw | ForEach-Object { [string]$_ })
+          } elseif ([string]::IsNullOrWhiteSpace([string]$allowListRaw)) {
+            $allowList = @()
+          } else {
+            $allowList = @(([string]$allowListRaw).Split(',') | ForEach-Object { $_.Trim() } | Where-Object { $_ })
+          }
+
+          Write-Host "SITE_URL=$siteUrl"
+          Write-Host "URI_ALLOW_LIST_COUNT=$($allowList.Count)"
+          foreach ($entry in $allowList) {
+            Write-Host "URI_ALLOW_LIST=$entry"
+          }
+
+          @(
+            "## Supabase Auth URL audit",
+            "- Project ref: $env:SUPABASE_PROJECT_REF",
+            "- Site URL: $siteUrl",
+            "- Redirect allow-list entries: $($allowList.Count)",
+            "",
+            "### Allow list",
+            $(if ($allowList.Count -eq 0) { "- _empty_" } else { ($allowList | ForEach-Object { "- ``$_``" }) -join "`n" })
+          ) | Add-Content -Path $env:GITHUB_STEP_SUMMARY -Encoding UTF8
