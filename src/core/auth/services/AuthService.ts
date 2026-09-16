@@ -151,6 +151,11 @@ export class AuthService {
       );
     }
 
+    // Supabase leaked-password protection is a paid-plan capability. Keep this
+    // enforcement at the canonical AuthService boundary so signup cannot bypass
+    // the same compromised-password rule used by later password mutations.
+    await AuthService.assertPasswordNotCompromised(data.password);
+
     const captchaToken = data.captchaToken?.trim();
     const { data: authData, error } = await supabase.auth.signUp({
       email: data.email,
@@ -440,6 +445,11 @@ export class AuthService {
         401,
       );
     }
+
+    // Recovery is a privileged password mutation too. Verify authority first,
+    // then enforce the canonical compromised-password rule before Supabase can
+    // persist the replacement password.
+    await AuthService.assertPasswordNotCompromised(newPassword);
 
     const { error } = await supabase.auth.updateUser({ password: newPassword });
     if (error) throw error;
