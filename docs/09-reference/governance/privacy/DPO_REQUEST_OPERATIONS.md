@@ -27,7 +27,7 @@ A fila operacional está em `/admin/privacidade`, dentro da seção **Moderaçã
 
 A grade mostra apenas protocolo reduzido, direito exercido, situação, data e indicação de conta vinculada. Nome, e-mail, assunto e mensagem só são requisitados quando um administrador abre uma solicitação individual para análise.
 
-A paginação preserva o total real mesmo quando um `OFFSET` cai além da última linha: nesse caso o broker consulta apenas a primeira linha de metadados para recuperar `total_count`, sem reintroduzir identificadores diretos na lista.
+A paginação da `main` preserva o total real mesmo quando um `OFFSET` cai além da última linha: nesse caso o broker consulta apenas a primeira linha de metadados para recuperar `total_count`, sem reintroduzir identificadores diretos na lista.
 
 ## Estados
 
@@ -72,15 +72,15 @@ Em 2026-09-16:
 - o contrato remoto de `admin_list_privacy_subject_requests` foi reduzido e não contém `requester_name`, `requester_email`, `subject` ou `message`;
 - todos os FKs das duas tabelas DPO estão cobertos por índice líder;
 - o ledger e o histórico estavam ambos com `0` linhas na última verificação remota;
-- `admin-privacy-rpc` está implantada com `verify_jwt=true`.
+- `admin-privacy-rpc` está implantada com `verify_jwt=true`, porém o runtime ainda está na versão 3 antiga.
 
-Essas verificações comprovam schema, grants e estado remoto. Um fluxo HTTP autenticado completo pelo painel continua sendo uma validação E2E separada, não inferida apenas pelo estado `ACTIVE` da função.
+A leitura direta do bundle remoto confirmou drift concreto: a versão 3 não contém o fallback de paginação presente na `main` (`if (items.length === 0 && page > 1)` com probe `p_limit: 1` / `p_offset: 0`). Portanto o runtime remoto não está sincronizado com o source atual mesmo que a função esteja `ACTIVE`.
 
 ## Deploy da Edge Function
 
-O repositório possui `.github/workflows/supabase-admin-privacy-rpc-deploy.yml`, com deploy `main`-only a partir de checkout isolado no SHA exato, Supabase CLI fixada, verificação de `verify_jwt=true`, contratos de admin/MFA/auditoria e hashes do bundle. O workflow self-hosted é a autoridade pretendida para eliminar drift entre o source do Git e o runtime remoto.
+O repositório possui `.github/workflows/supabase-admin-privacy-rpc-deploy.yml`, com deploy `main`-only a partir de checkout isolado no SHA exato, Supabase CLI fixada, verificação de `verify_jwt=true`, contratos de admin/MFA/auditoria e hashes do bundle. O workflow self-hosted é a autoridade definida para eliminar drift entre o source do Git e o runtime remoto.
 
-A execução `35091238772` ainda estava `queued` na última checagem; portanto o deploy exact-main não deve ser considerado concluído até o runner executar esse job com sucesso.
+A execução `35091238772` ainda estava `queued` na última checagem. Esse job precisa concluir com sucesso antes de declarar `admin-privacy-rpc` sincronizada com a `main`. Não deve ser feito deploy manual paralelo apenas para contornar indisponibilidade do runner.
 
 ## Escopo preservado
 
