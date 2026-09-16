@@ -24,6 +24,9 @@ const driverHook = readProjectFile(
 const motoboyHook = readProjectFile(
   "src/modules/mobility/hooks/useMotoboyPage.ts",
 );
+const mobilityRpcService = readProjectFile(
+  "src/core/mobility/services/MobilityRpcService.ts",
+);
 
 describe("G70 atomic terminal delivery", () => {
   it("keeps the public delivery RPC contract single and wraps the prior authority", () => {
@@ -95,9 +98,17 @@ describe("G70 atomic terminal delivery", () => {
 
     for (const hook of [driverHook, motoboyHook]) {
       expect(hook).toContain("pin?: string");
-      expect(hook).toContain("proof,\n        finalPrice,\n        pin,");
+      expect(hook).toContain("proof,\n        pin,");
+      expect(hook).not.toContain("finalPrice");
       expect(hook).toContain("Promise<boolean>");
     }
+  });
+
+  it("keeps monetary authority outside browser delivery completion", () => {
+    expect(deliveryUi).not.toContain("finalPrice");
+    expect(deliveryActions).not.toContain("finalPrice");
+    expect(operationalService).not.toContain("finalPrice");
+    expect(mobilityRpcService).not.toContain("finalPrice");
   });
 
   it("keeps boarding and delivery verification reads fail-closed", () => {
