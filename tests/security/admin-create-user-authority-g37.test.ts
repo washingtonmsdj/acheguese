@@ -40,6 +40,34 @@ describe("G37 admin user creation authority", () => {
     expect(profileOwner).toContain("GRANT EXECUTE ON FUNCTION public.profile_rpc_update_owned_profile");
   });
 
+  it("checks compromised passwords server-side before privileged auth creation", () => {
+    const adminCreateUser = read("supabase/functions/admin-create-user/index.ts");
+    const passwordCheck = read(
+      "supabase/functions/_shared/compromisedPassword.ts",
+    );
+
+    const compromiseCheck = adminCreateUser.indexOf(
+      "await checkCompromisedPassword(password)",
+    );
+    const authCreation = adminCreateUser.indexOf(
+      "supabaseAdmin.auth.admin.createUser",
+    );
+
+    expect(compromiseCheck).toBeGreaterThan(-1);
+    expect(authCreation).toBeGreaterThan(compromiseCheck);
+    expect(adminCreateUser).toContain("PASSWORD_COMPROMISED");
+    expect(adminCreateUser).toContain("PASSWORD_CHECK_UNAVAILABLE");
+    expect(adminCreateUser).toContain("admin_create_user_compromised_password_blocked");
+    expect(adminCreateUser).toContain("admin_create_user_password_check_unavailable");
+
+    expect(passwordCheck).toContain("https://api.pwnedpasswords.com/range/");
+    expect(passwordCheck).toContain("hash.slice(0, 5)");
+    expect(passwordCheck).toContain("hash.slice(5)");
+    expect(passwordCheck).toContain("'Add-Padding': 'true'");
+    expect(passwordCheck).toContain("AbortController");
+    expect(passwordCheck).toContain("HIBP_TIMEOUT_MS");
+  });
+
   it("keeps rollback anchored on auth.users cascade ownership", () => {
     const adminCreateUser = read("supabase/functions/admin-create-user/index.ts");
     const foundation = read(
