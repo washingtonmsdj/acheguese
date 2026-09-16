@@ -2,8 +2,8 @@
  * Global design-system facade.
  *
  * Runtime styles must consume CSS variables from src/index.css and semantic
- * Tailwind classes. Raw color, spacing, radius, shadow, or transition values
- * belong in global tokens, not in components or module-specific files.
+ * Tailwind classes. Raw color, spacing, radius, shadow, typography, or
+ * transition values belong in global tokens, not in components/modules.
  */
 
 export const THEME = {
@@ -14,6 +14,11 @@ export const THEME = {
     text: "hsl(var(--brand-text))",
     textSecondary: "hsl(var(--brand-text-secondary))",
     textSecondaryStrong: "hsl(var(--brand-text-secondary-strong))",
+  },
+
+  typography: {
+    sans: "var(--font-sans)",
+    heading: "var(--font-heading)",
   },
 
   background: {
@@ -45,11 +50,15 @@ export const THEME = {
   },
 
   status: {
-    success: "hsl(var(--semantic-success))",
-    warning: "hsl(var(--semantic-warning))",
-    error: "hsl(var(--semantic-error))",
-    info: "hsl(var(--semantic-info))",
-    focus: "hsl(var(--semantic-focus))",
+    success: "hsl(var(--success))",
+    successForeground: "hsl(var(--success-foreground))",
+    warning: "hsl(var(--warning))",
+    warningForeground: "hsl(var(--warning-foreground))",
+    error: "hsl(var(--destructive))",
+    errorForeground: "hsl(var(--destructive-foreground))",
+    info: "hsl(var(--info))",
+    infoForeground: "hsl(var(--info-foreground))",
+    focus: "hsl(var(--ring))",
     selection: "hsl(var(--semantic-selection))",
     disabled: "hsl(var(--semantic-disabled))",
     disabledForeground: "hsl(var(--semantic-disabled-foreground))",
@@ -133,10 +142,10 @@ export const TAILWIND_CLASSES = {
   btnGhost:
     "text-muted-foreground rounded-md transition-colors hover:bg-accent hover:text-accent-foreground",
 
-  heading: "text-foreground font-bold",
-  subheading: "text-secondary-foreground font-semibold",
-  body: "text-muted-foreground",
-  muted: "text-muted-foreground",
+  heading: "font-heading text-foreground font-bold",
+  subheading: "font-heading text-secondary-foreground font-semibold",
+  body: "font-sans text-muted-foreground",
+  muted: "font-sans text-muted-foreground",
 
   input:
     "bg-background border border-input text-foreground placeholder:text-muted-foreground rounded-md focus:border-ring focus:ring-2 focus:ring-ring/20",
