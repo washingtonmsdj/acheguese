@@ -23,10 +23,14 @@ const fadeUp = {
 
 export default function HistoricoPage() {
   const navigate = useNavigate();
-  const { myRides, passengerRating = 5.0 } = useMobilidade();
+  const { myRides, passengerRating = 0 } = useMobilidade();
 
   const completedRides = myRides.filter((r) => r.status === "completed");
   const totalRides = myRides.length;
+  const passengerRatingLabel =
+    Number.isFinite(passengerRating) && passengerRating > 0
+      ? passengerRating.toFixed(1)
+      : "Sem avaliações";
 
   const stats = [
     {
@@ -45,7 +49,7 @@ export default function HistoricoPage() {
     },
     {
       icon: Star,
-      value: passengerRating.toFixed(1),
+      value: passengerRatingLabel,
       label: "Sua Avaliação",
       color: "text-warning",
       bg: "bg-warning/10",
