@@ -5,7 +5,13 @@
 ALTER TABLE public.driver_data
   ALTER COLUMN rating DROP DEFAULT;
 
-UPDATE public.driver_data
+-- Clean only rows that still satisfy the driver_data ownership invariant.
+-- A legacy non-driver row exists in production and is audited separately rather
+-- than bypassing the validation trigger or mutating unrelated profile data here.
+UPDATE public.driver_data AS dd
 SET rating = NULL
-WHERE total_rides = 0
-  AND rating = 5.0;
+FROM public.profiles AS p
+WHERE p.id = dd.profile_id
+  AND p.profile_type = 'driver'
+  AND dd.total_rides = 0
+  AND dd.rating = 5.0;
