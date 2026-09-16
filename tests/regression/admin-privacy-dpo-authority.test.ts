@@ -69,6 +69,15 @@ describe("admin privacy request authority", () => {
     expect(broker).toContain("admin_transition_privacy_subject_request");
   });
 
+  it("audits admin reads and transitions without logging DPO message content", () => {
+    expect(broker).toContain("auditLog({");
+    expect(broker).toContain('resource: "admin-privacy-rpc"');
+    expect(broker).toContain("`admin_privacy_${safeAction}`");
+    expect(broker).toContain("getAuditInfo(req)");
+    expect(broker).not.toContain("details: { message");
+    expect(broker).not.toContain("details: { requester");
+  });
+
   it("never bypasses the RPC authority with direct table access", () => {
     expect(broker).not.toContain('.from("privacy_subject_requests")');
     expect(broker).not.toContain("requester_email:");
