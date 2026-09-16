@@ -109,10 +109,6 @@ export default function PreLaunchLandingPage() {
           content="Uma plataforma para conectar pessoas, negócios e oportunidades do bairro. O Achegue-se começa pelo Complexo do Nordeste de Amaralina, em Salvador. Entre na lista de espera."
         />
         <meta name="robots" content="noindex, nofollow" />
-        <link
-          rel="stylesheet"
-          href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,400;12..96,500;12..96,600;12..96,700;12..96,800&family=Manrope:wght@400;500;600;700;800&display=swap"
-        />
       </Helmet>
       <a className="prelaunch-skip" href="#main-content">
         Ir para o conteúdo
