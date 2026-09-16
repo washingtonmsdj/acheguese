@@ -1,9 +1,9 @@
 import React, { useState } from "react";
 import { Badge } from "@/shared/components/ui/badge";
 import { Button } from "@/shared/components/ui/button";
-import { Edit, Power, PowerOff, Trash2 } from "lucide-react";
+import { Edit, Power, PowerOff } from "lucide-react";
 import { PricingRuleDialog } from "./PricingRuleDialog";
-import { pricingService } from "@/core/pricing/services/PricingService";
+import { pricingService } from "@/core/pricing/instance";
 import { PricingError } from "@/core/pricing/types";
 import { useSessionContext } from "@/core/session/hooks/useSessionContext";
 import { logger } from "@/shared/utils/logger";
@@ -15,6 +15,12 @@ interface PricingRulesListProps {
   rules: PricingRule[];
   loading: boolean;
   onRefetch: () => void;
+}
+
+function commercialStatusLabel(rule: PricingRule): string {
+  return rule.metadata?.commercial_status === "approved"
+    ? "Aprovada para produção"
+    : "Provisória";
 }
 
 export function PricingRulesList({
@@ -38,20 +44,19 @@ export function PricingRulesList({
       await pricingService.updateRule(
         rule.id,
         { isActive: !rule.isActive },
-        userId
+        userId,
       );
       toast.success(
-        rule.isActive ? "Regra desativada" : "Regra ativada"
+        rule.isActive ? "Regra desativada" : "Regra ativada",
       );
       onRefetch();
     } catch (err: unknown) {
       const errorMessage = err instanceof Error ? err.message : String(err);
       logger.error("Error toggling rule:", errorMessage);
 
-      // Detectar conflito via tipo de erro
       if (err instanceof PricingError && err.isConflict()) {
         toast.error("Conflito: já existe regra ativa para este modo");
-      } else if (errorMessage.includes('Conflito') || errorMessage.includes('conflito')) {
+      } else if (errorMessage.includes("Conflito") || errorMessage.includes("conflito")) {
         toast.error("Não é possível desativar a única regra ativa desta modalidade");
       } else if (
         typeof err === "object" &&
@@ -71,7 +76,7 @@ export function PricingRulesList({
   if (loading) {
     return (
       <div className="flex items-center justify-center py-12">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary" />
       </div>
     );
   }
@@ -84,7 +89,6 @@ export function PricingRulesList({
     );
   }
 
-  // Agrupar por modo
   const rulesByMode = rules.reduce((acc, rule) => {
     if (!acc[rule.mode]) acc[rule.mode] = [];
     acc[rule.mode].push(rule);
@@ -102,8 +106,7 @@ export function PricingRulesList({
                 {mode === "delivery" && "Entrega"}
                 {mode === "mototaxi" && "Mototáxi"}
                 {mode === "motoboy" && "Motoboy"}
-                {!["ride", "delivery", "mototaxi", "motoboy"].includes(mode) &&
-                  mode}
+                {!["ride", "delivery", "mototaxi", "motoboy"].includes(mode) && mode}
               </h3>
             </div>
             <div className="divide-y">
@@ -113,14 +116,21 @@ export function PricingRulesList({
                   className="p-4 flex items-center justify-between hover:bg-muted/50 transition-colors"
                 >
                   <div className="flex-1 space-y-2">
-                    <div className="flex items-center gap-2">
+                    <div className="flex items-center gap-2 flex-wrap">
                       <span className="font-medium text-foreground">
                         {rule.name}
                       </span>
-                      <Badge
-                        variant={rule.isActive ? "default" : "secondary"}
-                      >
+                      <Badge variant={rule.isActive ? "default" : "secondary"}>
                         {rule.isActive ? "Ativa" : "Inativa"}
+                      </Badge>
+                      <Badge
+                        variant={
+                          rule.metadata?.commercial_status === "approved"
+                            ? "default"
+                            : "outline"
+                        }
+                      >
+                        {commercialStatusLabel(rule)}
                       </Badge>
                       {rule.peakHourMultipliers &&
                         Object.keys(rule.peakHourMultipliers).length > 0 && (
@@ -129,31 +139,22 @@ export function PricingRulesList({
                             multiplicadores
                           </Badge>
                         )}
-                      {rule.additionalFees &&
-                        rule.additionalFees.length > 0 && (
-                          <Badge variant="outline">
-                            {rule.additionalFees.length} taxas
-                          </Badge>
-                        )}
+                      {rule.additionalFees && rule.additionalFees.length > 0 && (
+                        <Badge variant="outline">
+                          {rule.additionalFees.length} taxas
+                        </Badge>
+                      )}
                     </div>
                     <div className="text-sm text-muted-foreground space-y-1">
-                      <div className="flex gap-4">
+                      <div className="flex gap-4 flex-wrap">
                         <span>Base: {formatBrl(rule.baseFare)}</span>
-                        <span>
-                          Por km: {formatBrl(rule.pricePerKm)}
-                        </span>
-                        <span>
-                          Por min: {formatBrl(rule.pricePerMinute)}
-                        </span>
+                        <span>Por km: {formatBrl(rule.pricePerKm)}</span>
+                        <span>Por min: {formatBrl(rule.pricePerMinute)}</span>
                       </div>
-                      <div className="flex gap-4">
-                        <span>
-                          Mínimo: {formatBrl(rule.minimumFare)}
-                        </span>
+                      <div className="flex gap-4 flex-wrap">
+                        <span>Mínimo: {formatBrl(rule.minimumFare)}</span>
                         {rule.maximumFare && (
-                          <span>
-                            Máximo: {formatBrl(rule.maximumFare)}
-                          </span>
+                          <span>Máximo: {formatBrl(rule.maximumFare)}</span>
                         )}
                       </div>
                     </div>
@@ -186,7 +187,6 @@ export function PricingRulesList({
         ))}
       </div>
 
-      {/* Edit Dialog */}
       {editingRule && (
         <PricingRuleDialog
           open={!!editingRule}
