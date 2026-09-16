@@ -33,7 +33,8 @@ describe("G137 static ride reader retirement", () => {
     expect(rideService).toContain("getRidesByPassenger,");
     expect(rideService).toContain("getActiveRide,");
     expect(rideService).toContain("return getRidesByPassenger(passengerId)");
-    expect(rideService).toContain("return getActiveRide(userId)");
+    expect(rideService).toContain("getActiveRide(userProfileId)");
+    expect(rideService).not.toContain("getActiveRide(userId)");
   });
 
   it("does not restore duplicate passenger or active ride readers in the facade", () => {
