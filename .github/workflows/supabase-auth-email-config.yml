@@ -1,0 +1,144 @@
+name: Supabase Auth Email Config
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - ".github/workflows/supabase-auth-email-config.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: supabase-auth-email-config-production
+  cancel-in-progress: false
+
+env:
+  SUPABASE_PROJECT_REF: "xhdowzacfujckjelqhtd"
+  AUTH_CONFIG_URL: "https://api.supabase.com/v1/projects/xhdowzacfujckjelqhtd/config/auth"
+  AUTH_EMAIL_FROM: "no-reply@acheguese.com.br"
+  AUTH_EMAIL_SENDER_NAME: "Achegue-se"
+  AUTH_CONFIRMATION_SUBJECT: "Confirme seu e-mail | Achegue-se"
+
+jobs:
+  configure-auth-email:
+    name: Configure production auth email identity
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    env:
+      SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
+
+    steps:
+      - name: Validate production target and credential presence
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "$GITHUB_REPOSITORY" = "washingtonmsdj/acheguese"
+          test "$GITHUB_REF" = "refs/heads/main"
+          test -n "${SUPABASE_ACCESS_TOKEN:-}"
+          test "$SUPABASE_PROJECT_REF" = "xhdowzacfujckjelqhtd"
+
+      - name: Inspect current Auth SMTP transport without exposing secrets
+        id: before
+        shell: bash
+        run: |
+          set -euo pipefail
+          response_file="$(mktemp)"
+          trap 'rm -f "$response_file"' EXIT
+
+          curl --fail-with-body --silent --show-error \
+            -H "Authorization: Bearer $SUPABASE_ACCESS_TOKEN" \
+            -H "Accept: application/json" \
+            "$AUTH_CONFIG_URL" > "$response_file"
+
+          smtp_host="$(jq -r '.smtp_host // empty' "$response_file")"
+          external_email_enabled="$(jq -r '.external_email_enabled // false' "$response_file")"
+          current_sender="$(jq -r '.smtp_admin_email // empty' "$response_file")"
+
+          if [ -z "$smtp_host" ]; then
+            echo "Custom SMTP is not configured on the production Auth project." >&2
+            exit 1
+          fi
+
+          if [ "$external_email_enabled" != "true" ]; then
+            echo "Email/password Auth is not enabled on the production project." >&2
+            exit 1
+          fi
+
+          case "${smtp_host,,}" in
+            *resend*) ;;
+            *)
+              echo "Production SMTP host is not Resend; refusing to rewrite sender identity." >&2
+              exit 1
+              ;;
+          esac
+
+          echo "smtp_transport=resend" >> "$GITHUB_OUTPUT"
+          if [ "$current_sender" = "$AUTH_EMAIL_FROM" ]; then
+            echo "sender_already_current=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "sender_already_current=false" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Apply Achegue-se sender identity and confirmation template
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          payload="$(jq -n \
+            --arg sender "$AUTH_EMAIL_FROM" \
+            --arg sender_name "$AUTH_EMAIL_SENDER_NAME" \
+            --arg subject "$AUTH_CONFIRMATION_SUBJECT" \
+            '{
+              smtp_admin_email: $sender,
+              smtp_sender_name: $sender_name,
+              mailer_subjects_confirmation: $subject,
+              mailer_templates_confirmation_content: "<h2>Confirme seu e-mail</h2><p>Para concluir seu cadastro no Achegue-se, confirme seu endereço de e-mail.</p><p><a href=\"{{ .ConfirmationURL }}\">Confirmar meu e-mail</a></p><p>Se você não criou esta conta, pode ignorar esta mensagem.</p>"
+            }')"
+
+          curl --fail-with-body --silent --show-error \
+            -X PATCH \
+            -H "Authorization: Bearer $SUPABASE_ACCESS_TOKEN" \
+            -H "Content-Type: application/json" \
+            --data "$payload" \
+            "$AUTH_CONFIG_URL" > /dev/null
+
+      - name: Verify applied Auth email identity
+        shell: bash
+        run: |
+          set -euo pipefail
+          response_file="$(mktemp)"
+          trap 'rm -f "$response_file"' EXIT
+
+          curl --fail-with-body --silent --show-error \
+            -H "Authorization: Bearer $SUPABASE_ACCESS_TOKEN" \
+            -H "Accept: application/json" \
+            "$AUTH_CONFIG_URL" > "$response_file"
+
+          actual_sender="$(jq -r '.smtp_admin_email // empty' "$response_file")"
+          actual_name="$(jq -r '.smtp_sender_name // empty' "$response_file")"
+          actual_subject="$(jq -r '.mailer_subjects_confirmation // empty' "$response_file")"
+
+          test "$actual_sender" = "$AUTH_EMAIL_FROM"
+          test "$actual_name" = "$AUTH_EMAIL_SENDER_NAME"
+          test "$actual_subject" = "$AUTH_CONFIRMATION_SUBJECT"
+
+          echo "Auth email sender and confirmation template verified on the production project."
+
+      - name: Record non-secret summary
+        if: always()
+        shell: bash
+        run: |
+          {
+            echo "## Supabase Auth email configuration"
+            echo "- Repository: washingtonmsdj/acheguese"
+            echo "- Branch: main"
+            echo "- Project ref: $SUPABASE_PROJECT_REF"
+            echo "- SMTP transport expected: Resend"
+            echo "- Sender: $AUTH_EMAIL_FROM"
+            echo "- Sender name: $AUTH_EMAIL_SENDER_NAME"
+            echo "- Confirmation subject: $AUTH_CONFIRMATION_SUBJECT"
+            echo "- SMTP host/user/password are read-only and are not written or printed by this workflow."
+            echo "- Resend domain verification remains an independent DNS prerequisite."
+          } >> "$GITHUB_STEP_SUMMARY"
