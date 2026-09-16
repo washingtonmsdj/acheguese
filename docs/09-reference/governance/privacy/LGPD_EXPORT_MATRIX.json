@@ -90,6 +90,26 @@
       "notes": "Include the subject's own profile identity, contact, visibility and reputation fields with explicit selects."
     },
     {
+      "section": "profile_identity_history",
+      "sources": [
+        "public.profile_username_history",
+        "public.profile_slug_history"
+      ],
+      "scope": "rows-linked-to-profile-ids-owned-by-subject",
+      "include": [
+        "old_username",
+        "new_username",
+        "old_slug",
+        "new_slug",
+        "changed_at"
+      ],
+      "exclude": [
+        "changed_by",
+        "reason"
+      ],
+      "notes": "Export only the subject-visible identity transition history. Administrative actor identifiers and internal change reasons remain excluded."
+    },
+    {
       "section": "profile_memberships",
       "sources": [
         "public.profile_members",
@@ -179,6 +199,28 @@
       "notes": "Ownership and export are profile-based on canonical business_data; legacy businesses table is retired."
     },
     {
+      "section": "business_claim_requests",
+      "sources": [
+        "public.business_claims"
+      ],
+      "scope": "rows-where-claimer_id-is-subject",
+      "include": [
+        "business_id",
+        "status",
+        "notes",
+        "created_at",
+        "updated_at",
+        "reviewed_at"
+      ],
+      "exclude": [
+        "claimer_id",
+        "documents",
+        "reviewed_by",
+        "review_notes"
+      ],
+      "notes": "Export the subject's own ownership-claim state and submitted notes without document payloads, reviewer identity or internal review notes."
+    },
+    {
       "section": "professional_profiles",
       "sources": [
         "public.professional_data",
@@ -218,6 +260,7 @@
         "public.community_questions",
         "public.question_answers",
         "public.classifieds",
+        "public.classified_comments",
         "public.events",
         "public.vagas",
         "public.work_opportunities",
@@ -254,16 +297,20 @@
         "public.community_memberships",
         "public.group_members_new",
         "public.community_poll_votes",
-        "public.community_issue_supports"
+        "public.community_issue_supports",
+        "public.classified_likes",
+        "public.question_answer_likes",
+        "public.event_participants"
       ],
       "scope": "rows-linked-to-subject-user-or-profile-ids",
       "includePolicy": "subject-membership-and-action-fields",
       "exclude": [
         "invited_by_profile_id",
         "approved_by_profile_id",
-        "metadata"
+        "metadata",
+        "event_participants.checkin_code"
       ],
-      "notes": "Include the subject's membership/action state only."
+      "notes": "Include only the subject's own membership, participation and engagement state. Event check-in credentials are operational secrets and remain excluded."
     },
     {
       "section": "favorites_and_saved_items",
