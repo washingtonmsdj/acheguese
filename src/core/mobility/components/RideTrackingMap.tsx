@@ -184,6 +184,24 @@ export const RideTrackingMap = memo(function RideTrackingMap({
     let disposed = false;
     setMapInitializationError(false);
 
+    const resetMapRuntime = () => {
+      driverMarkerRef.current?.remove();
+      driverMarkerRef.current = null;
+      mapRef.current?.remove();
+      mapRef.current = null;
+      maplibreRuntimeRef.current = null;
+      setMapReady(false);
+    };
+
+    const failMapInitialization = (initializationError: unknown) => {
+      logger.error(
+        '[RideTrackingMap] Falha ao inicializar MapLibre:',
+        initializationError,
+      );
+      resetMapRuntime();
+      if (!disposed) setMapInitializationError(true);
+    };
+
     const initializeMap = async () => {
       const maplibregl = await loadMapLibreRuntime();
       if (disposed || !containerRef.current || mapRef.current) return;
@@ -236,85 +254,81 @@ export const RideTrackingMap = memo(function RideTrackingMap({
         });
       };
 
+      map.on('error', (event) => {
+        if (disposed || mapReady) return;
+        failMapInitialization(event.error ?? new Error('MapLibre runtime error'));
+      });
+
       map.on('load', () => {
         if (disposed) return;
 
-        map.addSource('driver-path', {
-          type: 'geojson',
-          data: {
-            type: 'Feature',
-            geometry: { type: 'LineString', coordinates: [] },
-            properties: {},
-          },
-        });
-        map.addLayer({
-          id: 'driver-path-line',
-          type: 'line',
-          source: 'driver-path',
-          paint: {
-            'line-color': MOBILITY_MAP_VISUALS.markers.driver.color,
-            'line-width': MOBILITY_MAP_VISUALS.route.width,
-            'line-opacity': MOBILITY_MAP_VISUALS.route.opacity,
-          },
-        });
+        try {
+          map.addSource('driver-path', {
+            type: 'geojson',
+            data: {
+              type: 'Feature',
+              geometry: { type: 'LineString', coordinates: [] },
+              properties: {},
+            },
+          });
+          map.addLayer({
+            id: 'driver-path-line',
+            type: 'line',
+            source: 'driver-path',
+            paint: {
+              'line-color': MOBILITY_MAP_VISUALS.markers.driver.color,
+              'line-width': MOBILITY_MAP_VISUALS.route.width,
+              'line-opacity': MOBILITY_MAP_VISUALS.route.opacity,
+            },
+          });
 
-        if (originLat != null && originLon != null) {
-          const element = createMobilityMapMarkerElement('origin');
-          new maplibregl.Marker({ element })
-            .setLngLat([originLon, originLat])
-            .addTo(map);
-        }
-        if (destinationLat != null && destinationLon != null) {
-          const element = createMobilityMapMarkerElement('destination');
-          new maplibregl.Marker({ element })
-            .setLngLat([destinationLon, destinationLat])
-            .addTo(map);
-        }
+          if (originLat != null && originLon != null) {
+            const element = createMobilityMapMarkerElement('origin');
+            new maplibregl.Marker({ element })
+              .setLngLat([originLon, originLat])
+              .addTo(map);
+          }
+          if (destinationLat != null && destinationLon != null) {
+            const element = createMobilityMapMarkerElement('destination');
+            new maplibregl.Marker({ element })
+              .setLngLat([destinationLon, destinationLat])
+              .addTo(map);
+          }
 
-        if (
-          originLat != null &&
-          originLon != null &&
-          destinationLat != null &&
-          destinationLon != null
-        ) {
-          map.fitBounds(
-            [
+          if (
+            originLat != null &&
+            originLon != null &&
+            destinationLat != null &&
+            destinationLon != null
+          ) {
+            map.fitBounds(
               [
-                Math.min(originLon, destinationLon),
-                Math.min(originLat, destinationLat),
+                [
+                  Math.min(originLon, destinationLon),
+                  Math.min(originLat, destinationLat),
+                ],
+                [
+                  Math.max(originLon, destinationLon),
+                  Math.max(originLat, destinationLat),
+                ],
               ],
-              [
-                Math.max(originLon, destinationLon),
-                Math.max(originLat, destinationLat),
-              ],
-            ],
-            { padding: 60 },
-          );
-        }
+              { padding: 60 },
+            );
+          }
 
-        setMapReady(true);
-        updateDriverPath();
+          setMapReady(true);
+          updateDriverPath();
+        } catch (loadError) {
+          failMapInitialization(loadError);
+        }
       });
     };
 
-    void initializeMap().catch((initializationError) => {
-      if (!disposed) {
-        logger.error(
-          '[RideTrackingMap] Falha ao inicializar MapLibre:',
-          initializationError,
-        );
-        setMapInitializationError(true);
-        setMapReady(false);
-      }
-    });
+    void initializeMap().catch(failMapInitialization);
 
     return () => {
       disposed = true;
-      driverMarkerRef.current?.remove();
-      driverMarkerRef.current = null;
-      mapRef.current?.remove();
-      mapRef.current = null;
-      maplibreRuntimeRef.current = null;
+      resetMapRuntime();
     };
   }, [mapRetryKey]); // initialization inputs are intentionally captured per map instance
 
