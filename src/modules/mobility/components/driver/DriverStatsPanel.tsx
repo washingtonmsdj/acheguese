@@ -1,14 +1,13 @@
-import React from "react";
 import {
   Car,
   CheckCircle2,
-  XCircle,
+  Clock,
   Star,
   TrendingUp,
-  Clock,
+  XCircle,
 } from "lucide-react";
-import { cn } from "@/shared/utils/cn";
 import type { DriverStats } from "@/core/mobility/types";
+import { cn } from "@/shared/utils/cn";
 
 interface DriverStatsPanelProps {
   stats: DriverStats;
@@ -17,66 +16,68 @@ interface DriverStatsPanelProps {
 export function DriverStatsPanel({ stats }: DriverStatsPanelProps) {
   const items = [
     {
-      label: "Corridas Totais",
+      label: "Corridas totais",
       value: stats.totalRides.toString(),
       icon: Car,
-      color: "text-teal-400",
-      bg: "bg-teal-500/10",
+      color: "text-primary",
+      bg: "bg-primary/10",
     },
     {
       label: "Concluídas",
       value: stats.completedRides.toString(),
       icon: CheckCircle2,
-      color: "text-emerald-400",
-      bg: "bg-emerald-500/10",
+      color: "text-success",
+      bg: "bg-success/10",
     },
     {
       label: "Canceladas",
       value: stats.cancelledRides.toString(),
       icon: XCircle,
-      color: "text-red-400",
-      bg: "bg-red-500/10",
+      color: "text-destructive",
+      bg: "bg-destructive/10",
     },
     {
       label: "Avaliação",
       value: stats.avgRating.toFixed(1),
       icon: Star,
-      color: "text-yellow-400",
-      bg: "bg-yellow-500/10",
+      color: "text-warning",
+      bg: "bg-warning/10",
     },
     {
-      label: "Taxa Aceitação",
+      label: "Taxa de aceitação",
       value: `${stats.acceptanceRate}%`,
       icon: TrendingUp,
-      color: "text-cyan-400",
-      bg: "bg-cyan-500/10",
+      color: "text-info",
+      bg: "bg-info/10",
     },
     {
-      label: "Horas Hoje",
+      label: "Horas hoje",
       value: `${stats.onlineHoursToday}h`,
       icon: Clock,
-      color: "text-purple-400",
-      bg: "bg-purple-500/10",
+      color: "text-category-poll",
+      bg: "bg-category-poll/10",
     },
   ];
 
   return (
-    <div className="grid grid-cols-3 md:grid-cols-6 gap-2">
+    <div className="grid grid-cols-2 gap-2 sm:grid-cols-3 md:grid-cols-6">
       {items.map((item) => (
         <div
           key={item.label}
-          className="rounded-2xl border border-white/10 bg-[#1E2529] p-3 text-center"
+          className="rounded-2xl border border-border bg-card p-3 text-center text-card-foreground"
         >
           <div
             className={cn(
-              "w-8 h-8 rounded-xl flex items-center justify-center mx-auto mb-2",
+              "mx-auto mb-2 flex h-8 w-8 items-center justify-center rounded-xl",
               item.bg,
             )}
           >
-            <item.icon className={cn("h-4 w-4", item.color)} />
+            <item.icon className={cn("h-4 w-4", item.color)} aria-hidden="true" />
           </div>
           <p className={cn("text-base font-bold", item.color)}>{item.value}</p>
-          <p className="text-[0.55rem] text-gray-500 mt-0.5">{item.label}</p>
+          <p className="mt-0.5 text-[0.55rem] text-muted-foreground">
+            {item.label}
+          </p>
         </div>
       ))}
     </div>
