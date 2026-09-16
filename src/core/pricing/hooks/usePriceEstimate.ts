@@ -8,7 +8,7 @@
  */
 
 import { useQuery } from '@tanstack/react-query';
-import { pricingService } from '../services/PricingService';
+import { pricingService } from '../instance';
 import type { PriceEstimateRequest, PricingMode } from '../types';
 
 export function usePriceEstimate(
