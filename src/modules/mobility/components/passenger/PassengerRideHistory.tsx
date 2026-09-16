@@ -1,53 +1,117 @@
-import React, { useState, useMemo } from "react";
+import { useMemo, useState } from "react";
 import {
+  ArrowRight,
+  Calendar,
   Car,
-  Package,
-  CheckCircle2,
-  XCircle,
   Clock,
   DollarSign,
-  Star,
   Filter,
-  Calendar,
+  Package,
   Search,
-  ArrowRight,
+  Star,
 } from "lucide-react";
-import { Button } from "@/shared/components/ui/button";
+
+import { isCancelledRideStatus } from "@/core/mobility/core/RideLifecycleStatus";
+import type { RideRequest } from "@/core/mobility/types";
 import { Badge } from "@/shared/components/ui/badge";
+import { Button } from "@/shared/components/ui/button";
 import { Input } from "@/shared/components/ui/input";
+import { getPaymentMethodLabel, RIDE_STATUS } from "@/shared/types/constants";
 import { cn } from "@/shared/utils/cn";
 import { formatBrl, formatBrlNoCents } from "@/shared/utils/currency";
-import type { RideRequest } from "@/core/mobility/types";
-import { RIDE_STATUS, PAYMENT_METHOD } from "@/shared/types/constants";
+import { StatusBadge } from "../StatusBadge";
 
 type PassengerRide = RideRequest & {
-  driver?: { name?: string; vehicle_plate?: string } | null;
+  driver?: { name?: string | null; vehicle_plate?: string | null } | null;
   rating?: number | { rating?: number; comment?: string } | null;
-  departure_time?: string;
+  departure_time?: string | null;
   cancellation_reason?: string | null;
 };
+
 interface PassengerRideHistoryProps {
   completedRides: PassengerRide[];
   cancelledRides: PassengerRide[];
   onRate: (ride: PassengerRide) => void;
 }
 
-function getPassengerRideRatingMeta(rating: unknown) {
-  if (typeof rating === "number") {
-    return { numericRating: rating, commentRating: undefined };
+type RideTypeFilter = "all" | "viagem" | "entrega";
+type RideStatusFilter = "all" | "completed" | "cancelled";
+
+function getPassengerRideRatingMeta(rating: unknown): {
+  numericRating: number | null;
+  commentRating?: string;
+} {
+  if (typeof rating === "number" && Number.isFinite(rating)) {
+    return { numericRating: rating };
   }
 
   if (rating && typeof rating === "object") {
     const typedRating = rating as { rating?: unknown; comment?: unknown };
     return {
       numericRating:
-        typeof typedRating.rating === "number" ? typedRating.rating : 0,
+        typeof typedRating.rating === "number" &&
+        Number.isFinite(typedRating.rating)
+          ? typedRating.rating
+          : null,
       commentRating:
-        typeof typedRating.comment === "string" ? typedRating.comment : undefined,
+        typeof typedRating.comment === "string" && typedRating.comment.trim()
+          ? typedRating.comment.trim()
+          : undefined,
     };
   }
 
-  return { numericRating: 0, commentRating: undefined };
+  return { numericRating: null };
+}
+
+function isDeliveryRide(ride: PassengerRide): boolean {
+  return (
+    ride.type === "entrega" ||
+    ride.type === "delivery" ||
+    ride.ride_mode === "motoboy"
+  );
+}
+
+function matchesRideType(
+  ride: PassengerRide,
+  filter: RideTypeFilter,
+): boolean {
+  if (filter === "all") return true;
+  return filter === "entrega" ? isDeliveryRide(ride) : !isDeliveryRide(ride);
+}
+
+function getRidePrice(ride: PassengerRide): number | null {
+  return ride.final_price ?? ride.suggested_price ?? null;
+}
+
+function getRideEventTimestamp(ride: PassengerRide): string {
+  if (ride.status === RIDE_STATUS.COMPLETED && ride.completed_at) {
+    return ride.completed_at;
+  }
+  if (isCancelledRideStatus(ride.status) && ride.cancelled_at) {
+    return ride.cancelled_at;
+  }
+  return ride.updated_at;
+}
+
+function formatDate(value: string): string {
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return "Data indisponível";
+
+  return date.toLocaleDateString("pt-BR", {
+    day: "2-digit",
+    month: "short",
+    year: "numeric",
+  });
+}
+
+function formatTime(value: string): string | null {
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return null;
+
+  return date.toLocaleTimeString("pt-BR", {
+    hour: "2-digit",
+    minute: "2-digit",
+  });
 }
 
 export function PassengerRideHistory({
@@ -55,12 +119,8 @@ export function PassengerRideHistory({
   cancelledRides,
   onRate,
 }: PassengerRideHistoryProps) {
-  const [filterType, setFilterType] = useState<"all" | "viagem" | "entrega">(
-    "all",
-  );
-  const [filterStatus, setFilterStatus] = useState<
-    "all" | "completed" | "cancelled"
-  >("all");
+  const [filterType, setFilterType] = useState<RideTypeFilter>("all");
+  const [filterStatus, setFilterStatus] = useState<RideStatusFilter>("all");
   const [filterPriceMin, setFilterPriceMin] = useState("");
   const [filterPriceMax, setFilterPriceMax] = useState("");
   const [filterDateStart, setFilterDateStart] = useState("");
@@ -71,44 +131,62 @@ export function PassengerRideHistory({
   const allRides = useMemo<PassengerRide[]>(() => {
     return [...completedRides, ...cancelledRides].sort(
       (a, b) =>
-        new Date(b.updated_at).getTime() - new Date(a.updated_at).getTime(),
+        new Date(getRideEventTimestamp(b)).getTime() -
+        new Date(getRideEventTimestamp(a)).getTime(),
     );
   }, [completedRides, cancelledRides]);
 
   const filteredRides = useMemo(() => {
+    const normalizedSearch = searchQuery.trim().toLowerCase();
+    const minPrice = filterPriceMin ? Number(filterPriceMin) : null;
+    const maxPrice = filterPriceMax ? Number(filterPriceMax) : null;
+    const startDate = filterDateStart ? new Date(`${filterDateStart}T00:00:00`) : null;
+    const endDate = filterDateEnd ? new Date(`${filterDateEnd}T23:59:59`) : null;
+
     return allRides.filter((ride) => {
-      // Filtro de tipo
-      if (filterType !== "all" && ride.type !== filterType) return false;
+      if (!matchesRideType(ride, filterType)) return false;
 
-      // Filtro de status
       if (
-        filterStatus === RIDE_STATUS.COMPLETED &&
+        filterStatus === "completed" &&
         ride.status !== RIDE_STATUS.COMPLETED
-      )
+      ) {
         return false;
+      }
       if (
-        filterStatus === RIDE_STATUS.CANCELLED &&
-        ride.status !== RIDE_STATUS.CANCELLED
-      )
+        filterStatus === "cancelled" &&
+        !isCancelledRideStatus(ride.status)
+      ) {
         return false;
+      }
 
-      // Filtro de preço
-      const price = ride.final_price || ride.suggested_price;
-      if (filterPriceMin && price < parseFloat(filterPriceMin)) return false;
-      if (filterPriceMax && price > parseFloat(filterPriceMax)) return false;
+      const price = getRidePrice(ride);
+      if (minPrice != null && Number.isFinite(minPrice)) {
+        if (price == null || price < minPrice) return false;
+      }
+      if (maxPrice != null && Number.isFinite(maxPrice)) {
+        if (price == null || price > maxPrice) return false;
+      }
 
-      // Filtro de data
-      const rideDate = new Date(ride.updated_at);
-      if (filterDateStart && rideDate < new Date(filterDateStart)) return false;
-      if (filterDateEnd && rideDate > new Date(filterDateEnd + "T23:59:59"))
-        return false;
+      const rideDate = new Date(getRideEventTimestamp(ride));
+      if (!Number.isNaN(rideDate.getTime())) {
+        if (startDate && rideDate < startDate) return false;
+        if (endDate && rideDate > endDate) return false;
+      }
 
-      // Busca por texto
-      if (searchQuery) {
-        const query = searchQuery.toLowerCase();
-        const matchOrigin = (ride.origin ?? "").toLowerCase().includes(query);
-        const matchDestination = (ride.destination ?? "").toLowerCase().includes(query);
-        const matchDriver = (ride.driver?.name ?? "").toLowerCase().includes(query);
+      if (normalizedSearch) {
+        const matchOrigin = (ride.origin ?? ride.origin_address ?? "")
+          .toLowerCase()
+          .includes(normalizedSearch);
+        const matchDestination = (
+          ride.destination ??
+          ride.destination_address ??
+          ""
+        )
+          .toLowerCase()
+          .includes(normalizedSearch);
+        const matchDriver = (ride.driver?.name ?? "")
+          .toLowerCase()
+          .includes(normalizedSearch);
         if (!matchOrigin && !matchDestination && !matchDriver) return false;
       }
 
@@ -116,45 +194,33 @@ export function PassengerRideHistory({
     });
   }, [
     allRides,
-    filterType,
-    filterStatus,
-    filterPriceMin,
-    filterPriceMax,
-    filterDateStart,
     filterDateEnd,
+    filterDateStart,
+    filterPriceMax,
+    filterPriceMin,
+    filterStatus,
+    filterType,
     searchQuery,
   ]);
 
   const stats = useMemo(() => {
     const completed = filteredRides.filter(
-      (r) => r.status === RIDE_STATUS.COMPLETED,
+      (ride) => ride.status === RIDE_STATUS.COMPLETED,
     );
-      const totalSpent = completed.reduce(
-      (sum, r) => sum + (r.final_price || r.suggested_price || 0),
-      0,
-    );
+    const totalSpent = completed.reduce((sum, ride) => {
+      const price = getRidePrice(ride);
+      return price == null ? sum : sum + price;
+    }, 0);
+
     return {
       total: filteredRides.length,
       completed: completed.length,
-      cancelled: filteredRides.filter((r) => r.status === RIDE_STATUS.CANCELLED)
-        .length,
+      cancelled: filteredRides.filter((ride) =>
+        isCancelledRideStatus(ride.status),
+      ).length,
       totalSpent,
     };
   }, [filteredRides]);
-
-  const formatDate = (iso: string) => {
-    const d = new Date(iso);
-    return d.toLocaleDateString("pt-BR", {
-      day: "2-digit",
-      month: "short",
-      year: "numeric",
-    });
-  };
-  const formatTime = (iso: string) =>
-    new Date(iso).toLocaleTimeString("pt-BR", {
-      hour: "2-digit",
-      minute: "2-digit",
-    });
 
   const clearFilters = () => {
     setFilterType("all");
@@ -166,24 +232,28 @@ export function PassengerRideHistory({
     setSearchQuery("");
   };
 
-  const hasActiveFilters =
+  const hasActiveFilters = Boolean(
     filterType !== "all" ||
-    filterStatus !== "all" ||
-    filterPriceMin ||
-    filterPriceMax ||
-    filterDateStart ||
-    filterDateEnd ||
-    searchQuery;
+      filterStatus !== "all" ||
+      filterPriceMin ||
+      filterPriceMax ||
+      filterDateStart ||
+      filterDateEnd ||
+      searchQuery,
+  );
 
   if (allRides.length === 0) {
     return (
-      <div className="text-center py-16">
-        <Clock className="h-10 w-10 text-gray-600 mx-auto mb-3" />
-        <h3 className="text-sm font-semibold text-white mb-1">
+      <div className="py-16 text-center">
+        <Clock
+          className="mx-auto mb-3 h-10 w-10 text-muted-foreground"
+          aria-hidden="true"
+        />
+        <h3 className="mb-1 text-sm font-semibold text-foreground">
           Nenhum histórico
         </h3>
-        <p className="text-xs text-gray-500">
-          Suas viagens concluídas aparecerão aqui
+        <p className="text-xs text-muted-foreground">
+          Suas operações concluídas ou canceladas aparecerão aqui.
         </p>
       </div>
     );
@@ -191,203 +261,218 @@ export function PassengerRideHistory({
 
   return (
     <div className="space-y-4">
-      {/* Stats Summary */}
-      <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
-        <div className="bg-card border-border rounded-xl p-3 text-center">
+      <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
+        <div className="rounded-xl border border-border bg-card p-3 text-center">
           <p className="text-lg font-bold text-foreground">{stats.total}</p>
-          <p className="text-[0.6rem] text-muted-foreground uppercase">Total</p>
+          <p className="text-[0.6rem] uppercase text-muted-foreground">Total</p>
         </div>
-        <div className="bg-card border-border rounded-xl p-3 text-center">
+        <div className="rounded-xl border border-border bg-card p-3 text-center">
           <p className="text-lg font-bold text-success">{stats.completed}</p>
-          <p className="text-[0.6rem] text-muted-foreground uppercase">
+          <p className="text-[0.6rem] uppercase text-muted-foreground">
             Concluídas
           </p>
         </div>
-        <div className="bg-card border-border rounded-xl p-3 text-center">
+        <div className="rounded-xl border border-border bg-card p-3 text-center">
           <p className="text-lg font-bold text-destructive">
             {stats.cancelled}
           </p>
-          <p className="text-[0.6rem] text-muted-foreground uppercase">
+          <p className="text-[0.6rem] uppercase text-muted-foreground">
             Canceladas
           </p>
         </div>
-        <div className="bg-card border-border rounded-xl p-3 text-center">
+        <div className="rounded-xl border border-border bg-card p-3 text-center">
           <p className="text-lg font-bold text-success">
             {formatBrlNoCents(stats.totalSpent)}
           </p>
-          <p className="text-[0.6rem] text-muted-foreground uppercase">Gasto</p>
+          <p className="text-[0.6rem] uppercase text-muted-foreground">
+            Gasto registrado
+          </p>
         </div>
       </div>
 
-      {/* Search and Filter Toggle */}
       <div className="flex gap-2">
         <div className="relative flex-1">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+          <Search
+            className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground"
+            aria-hidden="true"
+          />
           <Input
             placeholder="Buscar por origem, destino ou motorista..."
             value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            className="pl-9 bg-card border-border text-foreground"
+            onChange={(event) => setSearchQuery(event.target.value)}
+            className="border-border bg-card pl-9 text-foreground"
           />
         </div>
         <Button
-          onClick={() => setShowFilters(!showFilters)}
+          type="button"
+          onClick={() => setShowFilters((current) => !current)}
           variant="outline"
+          aria-expanded={showFilters}
           className={cn(
             "border-border",
             hasActiveFilters && "border-primary text-primary",
           )}
         >
-          <Filter className="h-4 w-4 mr-2" />
+          <Filter className="mr-2 h-4 w-4" aria-hidden="true" />
           Filtros
-          {hasActiveFilters && (
-            <Badge className="ml-2 bg-primary/20 text-primary text-[0.6rem] px-1.5 h-4 rounded-full">
+          {hasActiveFilters ? (
+            <Badge className="ml-2 h-4 rounded-full bg-primary/20 px-1.5 text-[0.6rem] text-primary">
               ativo
             </Badge>
-          )}
+          ) : null}
         </Button>
       </div>
 
-      {/* Filters Panel */}
-      {showFilters && (
-        <div className="bg-card border-border rounded-xl p-4 space-y-4">
-          {/* Type and Status Filters */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+      {showFilters ? (
+        <div className="space-y-4 rounded-xl border border-border bg-card p-4">
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
             <div className="space-y-2">
-              <label className="text-xs text-muted-foreground font-semibold">
+              <span className="text-xs font-semibold text-muted-foreground">
                 Tipo
-              </label>
-              <div className="flex gap-2">
+              </span>
+              <div className="flex gap-2" role="group" aria-label="Filtrar por tipo">
                 {[
                   { value: "all" as const, label: "Todos" },
                   { value: "viagem" as const, label: "Viagem" },
                   { value: "entrega" as const, label: "Entrega" },
-                ].map((opt) => (
+                ].map((option) => (
                   <button
-                    key={opt.value}
-                    onClick={() => setFilterType(opt.value)}
+                    key={option.value}
+                    type="button"
+                    aria-pressed={filterType === option.value}
+                    onClick={() => setFilterType(option.value)}
                     className={cn(
-                      "flex-1 px-3 py-2 rounded-lg text-xs font-semibold transition-all",
-                      filterType === opt.value
-                        ? "bg-primary/15 text-primary border border-primary/30"
-                        : "bg-secondary/50 text-muted-foreground border border-border hover:bg-secondary",
+                      "flex-1 rounded-lg border px-3 py-2 text-xs font-semibold transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring",
+                      filterType === option.value
+                        ? "border-primary/30 bg-primary/15 text-primary"
+                        : "border-border bg-secondary/50 text-muted-foreground hover:bg-secondary",
                     )}
                   >
-                    {opt.label}
+                    {option.label}
                   </button>
                 ))}
               </div>
             </div>
 
             <div className="space-y-2">
-              <label className="text-xs text-muted-foreground font-semibold">
+              <span className="text-xs font-semibold text-muted-foreground">
                 Status
-              </label>
-              <div className="flex gap-2">
+              </span>
+              <div className="flex gap-2" role="group" aria-label="Filtrar por status">
                 {[
                   { value: "all" as const, label: "Todos" },
                   { value: "completed" as const, label: "Concluídas" },
                   { value: "cancelled" as const, label: "Canceladas" },
-                ].map((opt) => (
+                ].map((option) => (
                   <button
-                    key={opt.value}
-                    onClick={() => setFilterStatus(opt.value)}
+                    key={option.value}
+                    type="button"
+                    aria-pressed={filterStatus === option.value}
+                    onClick={() => setFilterStatus(option.value)}
                     className={cn(
-                      "flex-1 px-3 py-2 rounded-lg text-xs font-semibold transition-all",
-                      filterStatus === opt.value
-                        ? "bg-primary/15 text-primary border border-primary/30"
-                        : "bg-secondary/50 text-muted-foreground border border-border hover:bg-secondary",
+                      "flex-1 rounded-lg border px-3 py-2 text-xs font-semibold transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring",
+                      filterStatus === option.value
+                        ? "border-primary/30 bg-primary/15 text-primary"
+                        : "border-border bg-secondary/50 text-muted-foreground hover:bg-secondary",
                     )}
                   >
-                    {opt.label}
+                    {option.label}
                   </button>
                 ))}
               </div>
             </div>
           </div>
 
-          {/* Price Range */}
           <div className="space-y-2">
-            <label className="text-xs text-muted-foreground font-semibold">
-              Faixa de Preço
+            <label
+              htmlFor="passenger-history-price-min"
+              className="text-xs font-semibold text-muted-foreground"
+            >
+              Faixa de preço
             </label>
             <div className="grid grid-cols-2 gap-2">
               <Input
+                id="passenger-history-price-min"
                 type="number"
+                min="0"
+                step="0.01"
                 placeholder="Mínimo"
                 value={filterPriceMin}
-                onChange={(e) => setFilterPriceMin(e.target.value)}
-                className="bg-secondary/50 border-border text-foreground"
+                onChange={(event) => setFilterPriceMin(event.target.value)}
+                className="border-border bg-secondary/50 text-foreground"
               />
               <Input
+                aria-label="Preço máximo"
                 type="number"
+                min="0"
+                step="0.01"
                 placeholder="Máximo"
                 value={filterPriceMax}
-                onChange={(e) => setFilterPriceMax(e.target.value)}
-                className="bg-secondary/50 border-border text-foreground"
+                onChange={(event) => setFilterPriceMax(event.target.value)}
+                className="border-border bg-secondary/50 text-foreground"
               />
             </div>
           </div>
 
-          {/* Date Range */}
           <div className="space-y-2">
-            <label className="text-xs text-muted-foreground font-semibold flex items-center gap-1">
-              <Calendar className="h-3 w-3" />
+            <span className="flex items-center gap-1 text-xs font-semibold text-muted-foreground">
+              <Calendar className="h-3 w-3" aria-hidden="true" />
               Período
-            </label>
+            </span>
             <div className="grid grid-cols-2 gap-2">
               <Input
+                aria-label="Data inicial"
                 type="date"
                 value={filterDateStart}
-                onChange={(e) => setFilterDateStart(e.target.value)}
-                className="bg-secondary/50 border-border text-foreground"
+                onChange={(event) => setFilterDateStart(event.target.value)}
+                className="border-border bg-secondary/50 text-foreground"
               />
               <Input
+                aria-label="Data final"
                 type="date"
                 value={filterDateEnd}
-                onChange={(e) => setFilterDateEnd(e.target.value)}
-                className="bg-secondary/50 border-border text-foreground"
+                onChange={(event) => setFilterDateEnd(event.target.value)}
+                className="border-border bg-secondary/50 text-foreground"
               />
             </div>
           </div>
 
-          {/* Clear Filters */}
-          {hasActiveFilters && (
+          {hasActiveFilters ? (
             <Button
+              type="button"
               onClick={clearFilters}
               variant="outline"
-              className="w-full border-border text-muted-foreground hover:text-foreground"
+              className="w-full"
               size="sm"
             >
-              Limpar Filtros
+              Limpar filtros
             </Button>
-          )}
+          ) : null}
         </div>
-      )}
+      ) : null}
 
-      {/* Results Count */}
       <div className="flex items-center justify-between text-xs text-muted-foreground">
         <span>
           {filteredRides.length}{" "}
-          {filteredRides.length === 1 ? "viagem" : "viagens"} encontrada
-          {filteredRides.length !== 1 ? "s" : ""}
+          {filteredRides.length === 1 ? "operação encontrada" : "operações encontradas"}
         </span>
-        {hasActiveFilters && (
-          <span className="text-primary">Filtros ativos</span>
-        )}
+        {hasActiveFilters ? <span className="text-primary">Filtros ativos</span> : null}
       </div>
 
-      {/* Rides List */}
       {filteredRides.length === 0 ? (
-        <div className="text-center py-12">
-          <Filter className="h-8 w-8 text-muted-foreground mx-auto mb-2" />
+        <div className="py-12 text-center">
+          <Filter
+            className="mx-auto mb-2 h-8 w-8 text-muted-foreground"
+            aria-hidden="true"
+          />
           <p className="text-sm text-muted-foreground">
-            Nenhuma viagem encontrada com esses filtros
+            Nenhuma operação encontrada com esses filtros.
           </p>
           <Button
+            type="button"
             onClick={clearFilters}
             variant="link"
-            className="text-primary mt-2"
+            className="mt-2 text-primary"
             size="sm"
           >
             Limpar filtros
@@ -397,140 +482,138 @@ export function PassengerRideHistory({
         <div className="space-y-3">
           {filteredRides.map((ride) => {
             const isCompleted = ride.status === RIDE_STATUS.COMPLETED;
-            const isCancelled = ride.status === RIDE_STATUS.CANCELLED;
-            const needsRating = isCompleted && !ride.rating;
+            const isCancelled = isCancelledRideStatus(ride.status);
+            const isDelivery = isDeliveryRide(ride);
+            const needsRating = isCompleted && ride.rating == null;
+            const ridePrice = getRidePrice(ride);
+            const eventTimestamp = getRideEventTimestamp(ride);
+            const eventTime = formatTime(eventTimestamp);
+            const ratingMeta = getPassengerRideRatingMeta(ride.rating);
+            const driverName = ride.driver?.name?.trim() || null;
+            const vehiclePlate = ride.driver?.vehicle_plate?.trim() || null;
 
             return (
               <div
                 key={ride.id}
                 className={cn(
-                  "rounded-2xl border p-4 transition-all",
-                  "bg-card",
-                  isCancelled
-                    ? "border-destructive/10 opacity-70"
-                    : "border-border",
+                  "rounded-2xl border bg-card p-4",
+                  isCancelled ? "border-destructive/20" : "border-border",
                 )}
               >
-                <div className="flex items-center justify-between mb-3">
-                  <div className="flex items-center gap-2">
+                <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
+                  <div className="flex flex-wrap items-center gap-2">
                     <Badge
+                      variant="outline"
                       className={cn(
-                        "text-[0.6rem] font-semibold px-2 py-0.5 rounded-full",
-                        ride.type === "entrega"
-                          ? "bg-warning/20 text-warning"
-                          : "bg-primary/20 text-primary",
+                        "rounded-full px-2 py-0.5 text-[0.6rem] font-semibold",
+                        isDelivery
+                          ? "border-warning/30 bg-warning/10 text-warning"
+                          : "border-category-mobility/30 bg-category-mobility/10 text-category-mobility",
                       )}
                     >
-                      {ride.type === "entrega" ? (
-                        <Package className="h-3 w-3 mr-1" />
+                      {isDelivery ? (
+                        <Package className="mr-1 h-3 w-3" aria-hidden="true" />
                       ) : (
-                        <Car className="h-3 w-3 mr-1" />
+                        <Car className="mr-1 h-3 w-3" aria-hidden="true" />
                       )}
-                      {ride.type === "entrega" ? "Entrega" : "Viagem"}
+                      {isDelivery ? "Entrega" : "Viagem"}
                     </Badge>
-                    {isCompleted && (
-                      <Badge className="bg-success/20 text-success text-[0.6rem] px-2 rounded-full">
-                        <CheckCircle2 className="h-3 w-3 mr-1" /> Concluída
-                      </Badge>
-                    )}
-                    {isCancelled && (
-                      <Badge className="bg-destructive/20 text-destructive text-[0.6rem] px-2 rounded-full">
-                        <XCircle className="h-3 w-3 mr-1" /> Cancelada
-                      </Badge>
-                    )}
+                    <StatusBadge status={ride.status} size="sm" />
                   </div>
                   <span className="text-[0.6rem] text-muted-foreground">
-                    {formatDate(ride.updated_at)}
+                    {formatDate(eventTimestamp)}
                   </span>
                 </div>
 
-                <div className="flex items-center gap-2 text-xs text-muted-foreground mb-2">
-                  <span className="text-foreground font-medium">
-                    {ride.origin}
+                <div className="mb-2 flex items-center gap-2 text-xs text-muted-foreground">
+                  <span className="min-w-0 truncate font-medium text-foreground">
+                    {ride.origin || ride.origin_address || "Origem não informada"}
                   </span>
-                  <ArrowRight className="h-3 w-3" aria-hidden="true" />
-                  <span className="text-foreground font-medium">
-                    {ride.destination}
+                  <ArrowRight className="h-3 w-3 shrink-0" aria-hidden="true" />
+                  <span className="min-w-0 truncate font-medium text-foreground">
+                    {ride.destination ||
+                      ride.destination_address ||
+                      "Destino não informado"}
                   </span>
                 </div>
 
-                <div className="flex items-center gap-4 text-xs text-muted-foreground">
-                  <div className="flex items-center gap-1">
-                    <Clock className="h-3 w-3" />
-                    {formatTime(ride.departure_time || ride.updated_at)}
-                  </div>
-                  <div className="flex items-center gap-1">
-                    <DollarSign className="h-3 w-3" />
-                    <span className="text-success font-bold">
-                      {formatBrl(ride.final_price || ride.suggested_price || 0)}
-                    </span>
-                  </div>
-                  {ride.payment_method && (
-                    <span>
-                      {ride.payment_method === PAYMENT_METHOD.PIX
-                        ? "💳 Pix"
-                        : "💵 Dinheiro"}
-                    </span>
-                  )}
-                </div>
-
-                {ride.driver && ride.driver.name && ride.driver.vehicle_plate && (
-                  <div className="mt-3 flex items-center gap-2 text-xs text-muted-foreground">
-                    <div className="w-6 h-6 rounded-full bg-gradient-to-br from-primary to-accent flex items-center justify-center text-primary-foreground text-[0.55rem] font-bold">
-                      {ride.driver.name.charAt(0).toUpperCase()}
+                <div className="flex flex-wrap items-center gap-4 text-xs text-muted-foreground">
+                  {eventTime ? (
+                    <div className="flex items-center gap-1">
+                      <Clock className="h-3 w-3" aria-hidden="true" />
+                      {eventTime}
                     </div>
-                    <span className="text-foreground">{ride.driver.name}</span>
-                    <span>•</span>
-                    <span className="font-mono">
-                      {ride.driver.vehicle_plate}
-                    </span>
-                  </div>
-                )}
-
-                {ride.rating && (
-                  <div className="mt-2 flex items-center gap-1">
-                    {(() => {
-                      const { numericRating, commentRating } =
-                        getPassengerRideRatingMeta(ride.rating);
-                      return (
-                        <>
-                    {Array.from({ length: 5 }).map((_, i) => (
-                      <Star
-                        key={i}
-                        className={cn(
-                          "h-3 w-3",
-                          i < numericRating
-                            ? "text-warning fill-warning"
-                            : "text-muted",
-                        )}
-                      />
-                    ))}
-                    {commentRating && (
-                      <span className="text-[0.6rem] text-muted-foreground ml-1 italic">
-                        "{commentRating}"
+                  ) : null}
+                  {ridePrice != null ? (
+                    <div className="flex items-center gap-1">
+                      <DollarSign className="h-3 w-3" aria-hidden="true" />
+                      <span className="font-bold text-success">
+                        {formatBrl(ridePrice)}
                       </span>
-                    )}
-                        </>
-                      );
-                    })()}
+                    </div>
+                  ) : null}
+                  {ride.payment_method ? (
+                    <span>{getPaymentMethodLabel(ride.payment_method)}</span>
+                  ) : null}
+                </div>
+
+                {driverName || vehiclePlate ? (
+                  <div className="mt-3 flex items-center gap-2 text-xs text-muted-foreground">
+                    <div className="flex h-6 w-6 items-center justify-center rounded-full bg-category-mobility/15 text-[0.55rem] font-bold text-category-mobility">
+                      {(driverName || "M").charAt(0).toUpperCase()}
+                    </div>
+                    {driverName ? (
+                      <span className="text-foreground">{driverName}</span>
+                    ) : null}
+                    {driverName && vehiclePlate ? <span aria-hidden="true">•</span> : null}
+                    {vehiclePlate ? (
+                      <span className="font-mono">{vehiclePlate}</span>
+                    ) : null}
                   </div>
-                )}
+                ) : null}
 
-                {isCancelled && ride.cancellation_reason && (
-                  <p className="mt-2 text-[0.65rem] text-destructive/70 italic">
-                    Motivo: {ride.cancellation_reason}
+                {ratingMeta.numericRating != null || ratingMeta.commentRating ? (
+                  <div className="mt-2 flex flex-wrap items-center gap-1">
+                    {ratingMeta.numericRating != null
+                      ? Array.from({ length: 5 }).map((_, index) => (
+                          <Star
+                            key={index}
+                            className={cn(
+                              "h-3 w-3",
+                              index < Math.round(ratingMeta.numericRating!)
+                                ? "fill-warning text-warning"
+                                : "text-muted-foreground/30",
+                            )}
+                            aria-hidden="true"
+                          />
+                        ))
+                      : null}
+                    {ratingMeta.commentRating ? (
+                      <span className="ml-1 text-[0.6rem] italic text-muted-foreground">
+                        “{ratingMeta.commentRating}”
+                      </span>
+                    ) : null}
+                  </div>
+                ) : null}
+
+                {isCancelled && ride.cancellation_reason?.trim() ? (
+                  <p className="mt-2 text-[0.65rem] italic text-destructive/80">
+                    Motivo: {ride.cancellation_reason.trim()}
                   </p>
-                )}
+                ) : null}
 
-                {needsRating && (
+                {needsRating ? (
                   <Button
+                    type="button"
                     onClick={() => onRate(ride)}
                     size="sm"
-                    className="mt-3 bg-warning/20 text-warning hover:bg-warning/30 rounded-xl text-xs h-8 w-full"
+                    variant="outline"
+                    className="mt-3 h-8 w-full rounded-xl border-warning/30 text-xs text-warning hover:bg-warning/10 hover:text-warning"
                   >
-                    <Star className="h-3 w-3 mr-1.5" /> Avaliar Motorista
+                    <Star className="mr-1.5 h-3 w-3" aria-hidden="true" />
+                    Avaliar motorista
                   </Button>
-                )}
+                ) : null}
               </div>
             );
           })}
