@@ -1,9 +1,16 @@
 import { useEffect, useState } from "react";
-import { KeyRound, Loader2, RefreshCw, ShieldCheck } from "lucide-react";
-import { Button } from "@/shared/components/ui/button";
+import {
+  AlertTriangle,
+  KeyRound,
+  Loader2,
+  RefreshCw,
+  ShieldCheck,
+} from "lucide-react";
+import { toast } from "sonner";
+
 import { OperationalVerificationService } from "@/core/mobility/services/OperationalVerificationService";
 import type { VerificationStatusSummary } from "@/core/mobility/types/OperationalVerification";
-import { toast } from "sonner";
+import { Button } from "@/shared/components/ui/button";
 
 interface OperationalPinCardProps {
   rideId: string;
@@ -30,34 +37,88 @@ export function OperationalPinCard({
   const [expiresAt, setExpiresAt] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [isIssuing, setIsIssuing] = useState(false);
+  const [loadError, setLoadError] = useState<string | null>(null);
+  const [reloadKey, setReloadKey] = useState(0);
 
   useEffect(() => {
     let active = true;
 
     void (async () => {
       setIsLoading(true);
-      const next = await OperationalVerificationService.getVerificationStatusSummary(rideId);
+      setLoadError(null);
+
+      const result =
+        await OperationalVerificationService.getVerificationStatusSummaryResult(
+          rideId,
+        );
       if (!active) return;
-      setSummary(next);
+
+      if (!result.success) {
+        setSummary(null);
+        setLoadError(
+          result.error || "Não foi possível confirmar a verificação desta corrida.",
+        );
+        setIsLoading(false);
+        return;
+      }
+
+      setSummary(result.data ?? null);
       setIsLoading(false);
     })();
 
     return () => {
       active = false;
     };
-  }, [rideId, rideStatus]);
+  }, [reloadKey, rideId, rideStatus]);
 
   useEffect(() => {
     setPin(null);
     setExpiresAt(null);
   }, [rideId]);
 
-  if (isLoading || !summary?.isRequired) return null;
+  if (isLoading) return null;
+
+  if (loadError) {
+    return (
+      <div className="mb-4 rounded-xl border border-destructive/30 bg-destructive/5 p-4">
+        <div className="flex items-start gap-3">
+          <AlertTriangle
+            className="mt-0.5 h-5 w-5 shrink-0 text-destructive"
+            aria-hidden="true"
+          />
+          <div className="min-w-0 flex-1">
+            <p className="text-sm font-semibold text-foreground">
+              Verificação de segurança indisponível
+            </p>
+            <p className="mt-1 text-xs leading-relaxed text-muted-foreground">
+              Não foi possível confirmar se esta corrida exige PIN. Atualize o
+              status antes de prosseguir com qualquer confirmação operacional.
+            </p>
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              className="mt-3"
+              onClick={() => setReloadKey((current) => current + 1)}
+            >
+              <RefreshCw className="mr-2 h-3.5 w-3.5" aria-hidden="true" />
+              Tentar novamente
+            </Button>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  if (!summary?.isRequired) return null;
 
   if (summary.verified) {
     return (
-      <div className="mb-4 flex items-start gap-3 rounded-xl border border-emerald-500/20 bg-emerald-500/10 p-4">
-        <ShieldCheck className="mt-0.5 h-5 w-5 shrink-0 text-emerald-500" />
+      <div className="mb-4 flex items-start gap-3 rounded-xl border border-success/20 bg-success/10 p-4">
+        <ShieldCheck
+          className="mt-0.5 h-5 w-5 shrink-0 text-success"
+          aria-hidden="true"
+        />
         <div>
           <p className="text-sm font-semibold text-foreground">PIN confirmado</p>
           <p className="mt-1 text-xs text-muted-foreground">
@@ -71,7 +132,8 @@ export function OperationalPinCard({
   const issuePin = async () => {
     setIsIssuing(true);
     try {
-      const result = await OperationalVerificationService.refreshRequesterPIN(rideId);
+      const result =
+        await OperationalVerificationService.refreshRequesterPIN(rideId);
       if (!result.success || !result.data) {
         const tooFrequent = result.error?.includes("pin_refresh_too_frequent");
         toast.error(
@@ -96,7 +158,7 @@ export function OperationalPinCard({
     <div className="mb-4 rounded-xl border border-primary/20 bg-primary/5 p-4">
       <div className="flex items-start gap-3">
         <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-primary/10">
-          <KeyRound className="h-4 w-4 text-primary" />
+          <KeyRound className="h-4 w-4 text-primary" aria-hidden="true" />
         </div>
 
         <div className="min-w-0 flex-1">
@@ -114,11 +176,11 @@ export function OperationalPinCard({
               >
                 {pin}
               </div>
-              {expiryLabel && (
+              {expiryLabel ? (
                 <p className="mt-1 text-[11px] text-muted-foreground">
                   Válido até {expiryLabel}. Gerar outro código invalida o anterior.
                 </p>
-              )}
+              ) : null}
             </div>
           ) : (
             <p className="mt-3 text-xs font-medium text-foreground">
@@ -132,12 +194,13 @@ export function OperationalPinCard({
             size="sm"
             className="mt-3"
             disabled={isIssuing}
-            onClick={issuePin}
+            aria-busy={isIssuing}
+            onClick={() => void issuePin()}
           >
             {isIssuing ? (
-              <Loader2 className="mr-2 h-3.5 w-3.5 animate-spin" />
+              <Loader2 className="mr-2 h-3.5 w-3.5 animate-spin" aria-hidden="true" />
             ) : (
-              <RefreshCw className="mr-2 h-3.5 w-3.5" />
+              <RefreshCw className="mr-2 h-3.5 w-3.5" aria-hidden="true" />
             )}
             {pin ? "Gerar novo PIN" : "Gerar PIN"}
           </Button>
