@@ -1,6 +1,5 @@
 import { useQuery } from "@tanstack/react-query";
-import { getUserRides } from "@/core/mobility/services/mobility.queries";
-import { isOpenRideStatus } from "@/core/mobility/core/RideLifecycleStatus";
+import { getActiveRide } from "@/core/mobility/services/mobility.queries";
 import { useAuth } from "@/core/auth";
 import { MOBILITY_QUERY_KEYS } from "@/core/mobility/constants";
 import type { RideRequest } from "../types/types";
@@ -12,8 +11,8 @@ export function useActiveRide() {
     queryKey: MOBILITY_QUERY_KEYS.activeRide(user?.id || ""),
     queryFn: async () => {
       if (!user) return null;
-      const rides = await getUserRides(user.id);
-      return rides.find((ride) => isOpenRideStatus(ride.status)) ?? null;
+      const activeProfileId = user.id;
+      return getActiveRide(activeProfileId);
     },
     enabled: !!user,
   });
