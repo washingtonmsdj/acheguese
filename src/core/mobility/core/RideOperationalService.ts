@@ -457,14 +457,12 @@ export class RideOperationalService {
       code?: string;
       observation?: string;
     },
-    finalPrice?: number,
     pin?: string,
   ): Promise<TransitionResult> {
     const result = await confirmDeliveryOperation(
       rideId,
       driverProfileId,
       proof,
-      finalPrice,
       pin,
     );
 
