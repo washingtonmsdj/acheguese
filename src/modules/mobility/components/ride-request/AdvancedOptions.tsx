@@ -1,9 +1,9 @@
 /**
  * AdvancedOptions Component (AAA)
- * 
- * Accordion com opções avançadas do formulário de corrida.
- * Mantém foco principal em origem/destino, escondendo opções secundárias.
- * 
+ *
+ * Opções secundárias do formulário de corrida de passageiro.
+ * Preço não é editável no browser: a cotação comercial pertence ao backend.
+ *
  * @module mobility/components/ride-request/AdvancedOptions
  */
 
@@ -11,7 +11,6 @@ import React, { memo, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   ChevronDown,
-  DollarSign,
   CreditCard,
   Banknote,
   Clock,
@@ -19,71 +18,31 @@ import {
   MessageSquare,
 } from 'lucide-react';
 import { cn } from '@/shared/utils/cn';
-import { formatBrl } from '@/shared/utils/currency';
 import { Input } from '@/shared/components/ui/input';
 import { Label } from '@/shared/components/ui/label';
 import { Textarea } from '@/shared/components/ui/textarea';
 import type { PaymentMethod, RideType } from '@/core/mobility/types';
 import { PAYMENT_METHOD } from '@/shared/types/constants';
 
+type PassengerRideType = Exclude<RideType, 'entrega'>;
+
 export interface AdvancedOptionsProps {
-  /** Tipo de corrida (afeta campos exibidos) */
-  rideType: RideType;
-  
-  /** Valor sugerido */
-  suggestedPrice: string;
-  onSuggestedPriceChange: (price: string) => void;
-  
-  /** Método de pagamento */
+  rideType: PassengerRideType;
   paymentMethod: PaymentMethod;
   onPaymentMethodChange: (method: PaymentMethod) => void;
-  
-  /** Observação */
   observation: string;
   onObservationChange: (obs: string) => void;
-  
-  /** Horário de partida (apenas agendada) */
   departureTime?: string;
   onDepartureTimeChange?: (time: string) => void;
-  
-  /** Número de vagas (apenas compartilhada) */
   seats?: number;
   onSeatsChange?: (seats: number) => void;
-  
-  /** Preço estimado (para exibir como referência) */
-  estimatedPrice?: number;
-  
-  /** Classe CSS adicional */
   className?: string;
-  
-  /** Desabilitado */
   disabled?: boolean;
-  
-  /** Inicialmente expandido */
   defaultExpanded?: boolean;
 }
 
-/**
- * Accordion com opções avançadas do formulário
- * 
- * @example
- * ```tsx
- * <AdvancedOptions
- *   rideType="viagem"
- *   suggestedPrice={suggestedPrice}
- *   onSuggestedPriceChange={setSuggestedPrice}
- *   paymentMethod={paymentMethod}
- *   onPaymentMethodChange={setPaymentMethod}
- *   observation={observation}
- *   onObservationChange={setObservation}
- *   estimatedPrice={15.50}
- * />
- * ```
- */
 export const AdvancedOptions = memo<AdvancedOptionsProps>(function AdvancedOptions({
   rideType,
-  suggestedPrice,
-  onSuggestedPriceChange,
   paymentMethod,
   onPaymentMethodChange,
   observation,
@@ -92,7 +51,6 @@ export const AdvancedOptions = memo<AdvancedOptionsProps>(function AdvancedOptio
   onDepartureTimeChange,
   seats,
   onSeatsChange,
-  estimatedPrice,
   className,
   disabled = false,
   defaultExpanded = false,
@@ -113,13 +71,11 @@ export const AdvancedOptions = memo<AdvancedOptionsProps>(function AdvancedOptio
     [toggleExpanded]
   );
 
-  const isDelivery = rideType === 'entrega';
   const isScheduled = rideType === 'agendada';
   const isShared = rideType === 'carona_compartilhada';
 
   return (
     <div className={cn('space-y-2', className)}>
-      {/* Accordion Header */}
       <motion.button
         type="button"
         onClick={toggleExpanded}
@@ -137,16 +93,9 @@ export const AdvancedOptions = memo<AdvancedOptionsProps>(function AdvancedOptio
         whileHover={!disabled ? { scale: 1.01 } : undefined}
         whileTap={!disabled ? { scale: 0.99 } : undefined}
       >
-        <div className="flex items-center gap-2">
-          <span className="text-sm font-medium text-foreground">
-            ⚙️ Opções avançadas
-          </span>
-          {!isExpanded && estimatedPrice && (
-            <span className="text-xs text-muted-foreground">
-              • {formatBrl(estimatedPrice)}
-            </span>
-          )}
-        </div>
+        <span className="text-sm font-medium text-foreground">
+          ⚙️ Opções avançadas
+        </span>
         <motion.div
           animate={{ rotate: isExpanded ? 180 : 0 }}
           transition={{ duration: 0.2 }}
@@ -155,7 +104,6 @@ export const AdvancedOptions = memo<AdvancedOptionsProps>(function AdvancedOptio
         </motion.div>
       </motion.button>
 
-      {/* Accordion Content */}
       <AnimatePresence initial={false}>
         {isExpanded && (
           <motion.div
@@ -167,7 +115,6 @@ export const AdvancedOptions = memo<AdvancedOptionsProps>(function AdvancedOptio
             className="overflow-hidden"
           >
             <div className="space-y-4 pt-2">
-              {/* Horário (apenas agendada) */}
               {isScheduled && onDepartureTimeChange && (
                 <div className="space-y-1.5">
                   <Label className="text-xs text-muted-foreground flex items-center gap-1">
@@ -185,7 +132,6 @@ export const AdvancedOptions = memo<AdvancedOptionsProps>(function AdvancedOptio
                 </div>
               )}
 
-              {/* Vagas (apenas compartilhada) */}
               {isShared && onSeatsChange && (
                 <div className="space-y-1.5">
                   <Label className="text-xs text-muted-foreground flex items-center gap-1">
@@ -204,30 +150,6 @@ export const AdvancedOptions = memo<AdvancedOptionsProps>(function AdvancedOptio
                 </div>
               )}
 
-              {/* Valor Sugerido */}
-              <div className="space-y-1.5">
-                <Label className="text-xs text-muted-foreground flex items-center gap-1">
-                  <DollarSign className="h-3 w-3" />
-                  Valor sugerido
-                  {estimatedPrice && (
-                    <span className="text-success ml-1">
-                      (calculado: {formatBrl(estimatedPrice)})
-                    </span>
-                  )}
-                </Label>
-                <Input
-                  type="number"
-                  min="1"
-                  step="0.5"
-                  value={suggestedPrice}
-                  onChange={(e) => onSuggestedPriceChange(e.target.value)}
-                  placeholder="R$ 0,00 (opcional)"
-                  className="bg-secondary/50 border-border text-foreground"
-                  disabled={disabled}
-                />
-              </div>
-
-              {/* Forma de Pagamento */}
               <div className="space-y-1.5">
                 <Label className="text-xs text-muted-foreground">
                   Forma de pagamento
@@ -272,24 +194,18 @@ export const AdvancedOptions = memo<AdvancedOptionsProps>(function AdvancedOptio
                 </div>
               </div>
 
-              {/* Observação */}
               <div className="space-y-1.5">
                 <Label className="text-xs text-muted-foreground flex items-center gap-1">
                   <MessageSquare className="h-3 w-3" />
-                  {isDelivery ? 'Descrição do objeto (obrigatório)' : 'Observação (opcional)'}
+                  Observação (opcional)
                 </Label>
                 <Textarea
                   value={observation}
                   onChange={(e) => onObservationChange(e.target.value)}
-                  placeholder={
-                    isDelivery
-                      ? 'Ex: remédio, documento, bolsa'
-                      : 'Alguma informação adicional...'
-                  }
+                  placeholder="Alguma informação adicional..."
                   className="bg-secondary/50 border-border text-foreground resize-none h-16"
                   maxLength={200}
                   disabled={disabled}
-                  required={isDelivery}
                 />
                 <p className="text-xs text-muted-foreground text-right">
                   {observation.length}/200
