@@ -24,6 +24,9 @@ const exportMatrix = JSON.parse(
   }>;
 };
 
+const section = (name: string) =>
+  exportMatrix.sections.find((candidate) => candidate.section === name);
+
 describe("privacy data export rollout boundary", () => {
   it("keeps the uncertified export fail closed in source and production defaults", () => {
     expect(exportFunction).toContain(
@@ -39,9 +42,7 @@ describe("privacy data export rollout boundary", () => {
   });
 
   it("classifies DPO case data but keeps the public-capable ledger and history out of self-service export", () => {
-    const dpoSection = exportMatrix.sections.find(
-      (section) => section.section === "dpo_requests",
-    );
+    const dpoSection = section("dpo_requests");
 
     expect(dpoSection).toBeDefined();
     expect(dpoSection?.sources).toEqual([
@@ -59,6 +60,63 @@ describe("privacy data export rollout boundary", () => {
     expect(exportFunction).not.toContain('.from("privacy_subject_requests")');
     expect(exportFunction).not.toContain('.from("privacy_subject_request_events")');
     expect(exportFunction).not.toContain("requester_email");
+  });
+
+  it("classifies confirmed subject-data sources discovered during completeness audit", () => {
+    expect(section("profile_identity_history")?.sources).toEqual([
+      "public.profile_username_history",
+      "public.profile_slug_history",
+    ]);
+    expect(section("profile_identity_history")?.exclude).toEqual([
+      "changed_by",
+      "reason",
+    ]);
+
+    expect(section("business_claim_requests")?.sources).toEqual([
+      "public.business_claims",
+    ]);
+    expect(section("business_claim_requests")?.scope).toBe(
+      "rows-where-claimer_id-is-subject",
+    );
+    expect(section("business_claim_requests")?.exclude).toEqual([
+      "claimer_id",
+      "documents",
+      "reviewed_by",
+      "review_notes",
+    ]);
+
+    const authoredSources = section("authored_content")?.sources ?? [];
+    expect(authoredSources).toContain("public.classified_comments");
+
+    const actionSources = section("community_membership_and_actions")?.sources ?? [];
+    expect(actionSources).toEqual(
+      expect.arrayContaining([
+        "public.classified_likes",
+        "public.question_answer_likes",
+        "public.event_participants",
+      ]),
+    );
+    expect(section("community_membership_and_actions")?.exclude).toContain(
+      "event_participants.checkin_code",
+    );
+  });
+
+  it("does not mistake matrix classification for implementation completeness", () => {
+    for (const source of [
+      "profile_username_history",
+      "profile_slug_history",
+      "business_claims",
+      "classified_comments",
+      "classified_likes",
+      "question_answer_likes",
+      "event_participants",
+    ]) {
+      expect(exportFunction).not.toContain(`.from("${source}")`);
+    }
+
+    expect(exportFunction).toContain(
+      "const LGPD_EXPORT_MATRIX_IMPLEMENTATION_COMPLETE = false;",
+    );
   });
 
   it("blocks both browser export entrypoints before any network request", () => {
