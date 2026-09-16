@@ -1,70 +1,83 @@
 # DESIGN-TOKENS.md — SSOT Visual do Achegue-se
 
 Documento oficial dos tokens visuais do produto. Toda decisão de cor, tipografia,
-espaçamento, raio, sombra e ícone consulta este arquivo. Componentes NÃO podem
-introduzir valores fora deste sistema.
+espaçamento, raio, sombra e ícone consulta este arquivo. Componentes não devem
+introduzir valores concorrentes ao sistema.
 
-Status: fundação **Território Vivo** implementada na Home territorial e em
-Explorar na Fase 4.2. Os tokens legados continuam válidos para superfícies ainda
-não migradas; novas superfícies territoriais usam a extensão semântica abaixo,
-sem criar um segundo tema independente.
+Status: a identidade **Achegue-se / Território Vivo** está consolidada em uma
+única origem executável. Autenticação, onboarding, e-mails e pré-lançamento já
+foram migrados. Domínios operacionais antigos ainda são migrados de forma
+progressiva para preservar cores funcionais de mapas, métricas e estados.
 
 ---
 
 ## 1. Fontes da verdade
 
-| Camada                         | Arquivo                                                      | Papel                                                           |
-| ------------------------------ | ------------------------------------------------------------ | --------------------------------------------------------------- |
-| Tokens raiz (CSS vars)         | `src/index.css`                                              | Definição HSL de todos os tokens (dark + light).                |
-| Tailwind (classes utilitárias) | `tailwind.config.ts`                                         | Mapeia tokens e o stack tipográfico canônico para classes/utilitários. |
-| Fachada tipada                 | `src/styles/theme.ts`                                        | `THEME`, `INLINE_STYLES`, `TAILWIND_CLASSES`.                   |
-| Categorias semânticas          | `src/shared/design-system/contentCategories.ts`              | `getCategoryTokens(type)` — SSOT de cor por tipo de conteúdo.   |
-| Empty state SSOT               | `src/shared/components/EmptyState.tsx`                       | Estado vazio contextual em todas as telas.                      |
-| Primitives territoriais        | `src/app/components/territory-vivo/` + `src/shared/components/territory-vivo/` | Superfície, busca, estado e navegação em app; topbar reutilizável em shared. |
-| Header territorial atual       | `src/shared/components/territory-vivo/TerritoryTopbar.tsx`   | Contexto e troca de território na Home/Explorar.                |
-| Header social legado           | `src/core/community/components/feed/TerritoryFeedHeader.tsx` | Cabeçalho do Feed até sua migração visual posterior.            |
+| Camada | Arquivo | Papel |
+| --- | --- | --- |
+| Primitivos e tokens globais | `src/index.css` | **Owner executável** de marca, tipografia, semântica, temas e aliases territoriais. |
+| Tailwind | `tailwind.config.ts` | Consome CSS vars; não redefine fonte nem paleta. |
+| Fachada tipada | `src/styles/theme.ts` | `THEME`, `INLINE_STYLES`, `TAILWIND_CLASSES`, sempre sobre CSS vars. |
+| Categorias semânticas | `src/shared/design-system/contentCategories.ts` | `getCategoryTokens(type)` — SSOT de cor por tipo de conteúdo. |
+| Alto contraste | `src/styles/accessibility-core.css` | Overrides semânticos do modo de alto contraste. |
+| Bootstrap da fonte | `index.html` | Carrega Plus Jakarta Sans 400/500/600/700/800 sem criar tokens. |
+| Gate visual | `tools/architecture/validate-visual-ssot.ts` | Bloqueia regressões nas superfícies já migradas e na projeção de e-mail. |
+| Empty state SSOT | `src/shared/components/EmptyState.tsx` | Estado vazio contextual em telas legadas. |
+| Primitives territoriais | `src/app/components/territory-vivo/` + `src/shared/components/territory-vivo/` | Superfícies territoriais reutilizáveis. |
 
-> Regra: NENHUM componente usa `#hex`, `rgb()`, ou classes arbitrárias
-> `bg-[#...]`. Sempre via token ou classe utilitária Tailwind semântica.
+> Regra: componentes já migrados não usam `#hex`, `rgb()` ou classes arbitrárias
+> de cor. Use token/classe semântica. Exceções são projeções de e-mail, estilos de
+> mapa/dados ou superfícies ainda em migração; toda exceção precisa ter função
+> explícita e não pode virar uma segunda paleta de marca.
 
 ---
 
-## 2. Paleta neutra (base do sistema)
+## 2. Primitivos de marca
 
-| Token                | Uso                     | Dark                 | Light         |
-| -------------------- | ----------------------- | -------------------- | ------------- |
-| `--background`       | Fundo geral da tela     | `200 20% 9%`         | `0 0% 100%`   |
-| `--foreground`       | Texto principal         | `0 0% 98%`           | `0 0% 5%`     |
-| `--card`             | Superfície de card      | `202 15% 14%`        | `0 0% 100%`   |
-| `--muted`            | Fundos discretos        | `202 15% 14%`        | `0 0% 96%`    |
-| `--muted-foreground` | Texto secundário        | `0 0% 60%`           | `0 0% 45%`    |
-| `--border`           | Bordas                  | `0 0% 20%`           | `0 0% 90%`    |
-| `--primary`          | Cor da marca (accent 1) | `171 77% 56%` (teal) | `171 77% 40%` |
-| `--accent`           | Accent complementar     | `188 78% 47%`        | `188 78% 40%` |
+Os HEX são a referência humana. Os HSL abaixo são a representação executável
+**exata** em `src/index.css`.
 
-Status: `--success` (verde), `--warning` (âmbar), `--destructive` (vermelho),
-`--info` (azul). Reservados exclusivamente para feedback funcional.
+| Token | Uso | HEX | HSL canônico |
+| --- | --- | --- | --- |
+| `--brand-petroleum` | Marca e ações principais | `#123E3D` | `178.636 55% 15.686%` |
+| `--brand-solar` | Destaque pontual | `#F3CB4C` | `45.629 87.435% 62.549%` |
+| `--brand-surface` | Marfim / fundo claro | `#FAFBF7` | `75 33.333% 97.647%` |
+| `--brand-text` | Texto principal | `#203534` | `177.143 24.706% 16.667%` |
+| `--brand-text-secondary` | Texto secundário | `#61736C` | `156.667 8.491% 41.569%` |
+
+No tema claro, os tokens semânticos (`--background`, `--foreground`, `--primary`,
+`--accent`, `--card` etc.) apontam para esses primitivos conforme o papel. O tema
+escuro preserva valores próprios de contraste; não é uma aplicação cega dos HEX
+claros.
+
+Estados funcionais (`--semantic-success`, `--semantic-warning`,
+`--semantic-error`, `--semantic-info`, `--semantic-focus`, seleção e disabled)
+são independentes da marca.
 
 ### Extensão semântica Território Vivo
 
-Esses tokens são aliases de intenção dentro do mesmo `:root`/`.light`; não são
-um tema concorrente. Eles permitem migrar superfícies por etapas sem alterar
-Community, Feed, Perfil e módulos ainda fora do escopo.
+Esses tokens são aliases de intenção dentro da mesma SSOT; não são um tema
+concorrente.
 
-| Token                                            | Papel                                              |
-| ------------------------------------------------ | -------------------------------------------------- |
-| `--territory-canvas`                             | Plano de fundo natural da experiência territorial. |
-| `--territory-surface`                            | Navegação, campos e agrupamentos primários.        |
-| `--territory-surface-raised`                     | Contraste discreto para itens e estados.           |
-| `--territory-ink`                                | Texto principal.                                   |
-| `--territory-muted`                              | Texto secundário com contraste acessível.          |
-| `--territory-brand` / `--territory-brand-strong` | Identidade e ação primária.                        |
-| `--territory-warm` / `--territory-sun`           | Sinalização editorial semântica.                   |
-| `--territory-border`                             | Separação de baixa ênfase.                         |
-| `--territory-focus`                              | Foco visível por teclado.                          |
+| Token | Papel |
+| --- | --- |
+| `--territory-canvas` | Plano de fundo natural da experiência territorial. |
+| `--territory-surface` | Navegação, campos e agrupamentos primários. |
+| `--territory-surface-raised` | Contraste discreto para itens e estados. |
+| `--territory-raised` | Alias de compatibilidade para `--territory-surface-raised`. |
+| `--territory-ink` | Texto principal. |
+| `--territory-muted` | Texto secundário. |
+| `--territory-muted-strong` | Texto secundário mais forte. |
+| `--territory-brand` / `--territory-brand-strong` | Identidade e ação. |
+| `--territory-warm` / `--territory-sun` | Sinalização editorial. |
+| `--territory-border` | Separação de baixa ênfase. |
+| `--territory-focus` | Foco visível por teclado. |
+| `--territory-error/success/warning/info` | Estados funcionais territoriais. |
+| `--territory-selection` | Seleção de texto/estado. |
+| `--territory-disabled*` | Estados desabilitados. |
 
-No Tailwind, esses valores são expostos sob `territory-*`. Verde identifica
-contexto, seleção e ação; não colore indiscriminadamente todo o conteúdo.
+No Tailwind, esses valores são expostos sob `territory-*`. A marca organiza
+identidade e ações; ela não substitui as cores semânticas de conteúdo ou dados.
 
 ---
 
@@ -74,85 +87,75 @@ Cada tipo de conteúdo tem uma cor própria, padronizada em todo o produto.
 Definidas em `src/index.css` como `--category-<name>` e expostas via Tailwind
 como `bg-category-<name>`, `text-category-<name>`, etc.
 
-| Categoria    | Chave            | Token CSS                   | Uso principal                                     |
-| ------------ | ---------------- | --------------------------- | ------------------------------------------------- |
-| Alerta       | `alert`          | `--category-alert`          | Segurança, urgência (crime, incêndio, alagamento) |
-| Evento       | `event`          | `--category-event`          | Encontros, festas, agenda                         |
-| Gastronomia  | `gastronomy`     | `--category-gastronomy`     | Restaurantes, bares, delivery                     |
-| Mobilidade   | `mobility`       | `--category-mobility`       | Trânsito, transporte, via bloqueada               |
-| Discussão    | `discussion`     | `--category-discussion`     | Conversas do bairro                               |
-| Empresa      | `business`       | `--category-business`       | Comércio local, prestadores                       |
-| Zeladoria    | `civic`          | `--category-civic`          | Buraco, iluminação, lixo, reporte cívico          |
-| Favor        | `help`           | `--category-help`           | Empréstimo, ajuda mútua                           |
-| Classificado | `classified`     | `--category-classified`     | Anúncios de venda                                 |
-| Recomendação | `recommendation` | `--category-recommendation` | Indicações positivas                              |
-| Pergunta     | `question`       | `--category-question`       | Dúvidas                                           |
-| Enquete      | `poll`           | `--category-poll`           | Votações                                          |
-| Achados      | `found`          | `--category-found`          | Achados & perdidos                                |
-| Desapego     | `giveaway`       | `--category-giveaway`       | Doações                                           |
-| Neutro       | `neutral`        | `--category-neutral`        | Post genérico sem categoria                       |
+| Categoria | Chave | Token CSS | Uso principal |
+| --- | --- | --- | --- |
+| Alerta | `alert` | `--category-alert` | Segurança, urgência |
+| Evento | `event` | `--category-event` | Eventos e agenda |
+| Gastronomia | `gastronomy` | `--category-gastronomy` | Restaurantes, bares, delivery |
+| Mobilidade | `mobility` | `--category-mobility` | Trânsito e transporte |
+| Discussão | `discussion` | `--category-discussion` | Conversas do bairro |
+| Empresa | `business` | `--category-business` | Comércio local e prestadores |
+| Zeladoria | `civic` | `--category-civic` | Relato cívico |
+| Favor | `help` | `--category-help` | Ajuda mútua |
+| Classificado | `classified` | `--category-classified` | Anúncios de venda |
+| Recomendação | `recommendation` | `--category-recommendation` | Indicações positivas |
+| Pergunta | `question` | `--category-question` | Dúvidas |
+| Enquete | `poll` | `--category-poll` | Votações |
+| Achados | `found` | `--category-found` | Achados e perdidos |
+| Desapego | `giveaway` | `--category-giveaway` | Doações |
+| Neutro | `neutral` | `--category-neutral` | Post sem categoria específica |
 
 ### Uso obrigatório
 
 ```tsx
 import { getCategoryTokens } from "@/shared/design-system/contentCategories";
 
-const tokens = getCategoryTokens(post.type); // aceita "alerta", "alert", "civic_report"...
+const tokens = getCategoryTokens(post.type);
 <span className={tokens.badge}>{tokens.label}</span>
 <div className={tokens.chip}>Chip suave</div>
 <article className={`border-l-4 ${tokens.border}`}>...</article>
 ```
 
-Aliases de compatibilidade cobertos pelo `resolveCategoryKey`:
-
-- PostType (`alerta`, `discussao`, `civic_report`, `ride_share`, …)
-- AlertType (`crime`, `flood`, `road_closure`, …)
-- Verticals (`empresa`, `profissional`, `gastronomia`, `mobilidade`)
-
-Cores decorativas hardcoded (`bg-red-100`, `text-orange-600`, `#3B82F6`) em
-constantes legadas (`alertTypes.ts`, `postTypeConfig.ts`, `businessConstants.ts`,
-`mapUtils.ts`) devem migrar progressivamente para `getCategoryTokens`. Enquanto
-não migram, ficam bloqueadas de expansão — nada novo pode nascer com cor solta.
+Aliases de compatibilidade cobertos pelo `resolveCategoryKey` incluem PostType,
+AlertType e verticais como empresa, profissional, gastronomia e mobilidade.
+Valores decorativos antigos devem migrar progressivamente para categorias ou
+tokens operacionais explícitos; nada novo nasce com uma cor solta sem função.
 
 ---
 
 ## 4. Tipografia
 
-A identidade visual aprovada em `ACHEGUE-SE-VISUAL-IDENTITY.md` migrou o produto
-para uma única família: **Plus Jakarta Sans**. O runtime atual (`tailwind.config.ts`,
-`src/index.css` e o bootstrap opcional de fonte) segue esse contrato. A referência
-anterior a `DM Sans` + `Space Grotesk` está substituída e não deve ser reintroduzida.
+A única família aprovada é **Plus Jakarta Sans**.
 
-| Papel                          | Fonte               | Peso permitido |
-| ------------------------------ | ------------------- | -------------- |
-| Headings (h1–h6)               | `Plus Jakarta Sans` | 600, 700       |
-| Display / wordmark do concept  | `Plus Jakarta Sans` | 800            |
-| Corpo / UI                     | `Plus Jakarta Sans` | 400, 500, 600  |
+| Papel | Fonte | Peso permitido |
+| --- | --- | --- |
+| Corpo / formulários / navegação | `Plus Jakarta Sans` | 400, 500, 600 |
+| Headings | `Plus Jakarta Sans` | 600, 700 |
+| Display / wordmark do concept | `Plus Jakarta Sans` | 800 |
 
 Regras:
 
-- `tailwind.config.ts` é o owner do stack tipográfico executável: `font-sans`,
-  `font-display` e `font-heading` apontam para a mesma família;
-- o mesmo owner emite `--font-heading`/`--font-sans` para CSS territorial que não
-  passa por classes Tailwind, evitando fallback acidental para `ui-sans-serif`;
-- 400 é padrão de corpo; 500–600 para controles/ênfase; 700 para títulos; 800 é
-  reservado a display/wordmark quando o concept aprovado realmente o utiliza;
-- o bootstrap de fonte precisa solicitar todo peso efetivamente usado acima da dobra;
-  não depender de peso sintético do navegador para reproduzir o concept;
-- não introduzir uma segunda família na mesma superfície sem decisão de design
-  versionada e atualização deste SSOT;
-- a fonte web é opcional no bootstrap público: a ausência/atraso de rede usa o
-  fallback `sans-serif` sem bloquear o primeiro mapa.
+- `src/index.css` é o owner: `--font-sans` contém o stack completo e
+  `--font-heading` aponta para esse mesmo stack;
+- `tailwind.config.ts` apenas consome `var(--font-sans)` e
+  `var(--font-heading)` em `font-sans`, `font-display` e `font-heading`;
+- 400 é padrão de corpo; 500–600 para controles/ênfase; 700 para títulos;
+  800 reservado a display/wordmark quando o concept aprovado realmente o utiliza;
+- `index.html` solicita os pesos 400, 500, 600, 700 e 800;
+- não introduzir uma segunda família sem decisão de design versionada e
+  atualização deste SSOT;
+- o fallback global é `Arial, Helvetica, sans-serif` e continua funcional se a
+  fonte web não estiver disponível.
 
-Escala tipográfica canônica (Tailwind default):
+Escala tipográfica canônica:
 
-| Uso                 | Classe                                | Tamanho    |
-| ------------------- | ------------------------------------- | ---------- |
-| Título de tela      | `text-2xl md:text-3xl font-semibold`  | 24 / 30 px |
-| Subtítulo de seção  | `text-base font-semibold`             | 16 px      |
-| Corpo               | `text-sm`                             | 14 px      |
-| Meta / captions     | `text-xs text-muted-foreground`       | 12 px      |
-| Eyebrow (uppercase) | `text-[11px] uppercase tracking-wide` | 11 px      |
+| Uso | Classe | Tamanho |
+| --- | --- | --- |
+| Título de tela | `text-2xl md:text-3xl font-semibold` | 24 / 30 px |
+| Subtítulo de seção | `text-base font-semibold` | 16 px |
+| Corpo | `text-sm` | 14 px |
+| Meta / captions | `text-xs text-muted-foreground` | 12 px |
+| Eyebrow | `text-[11px] uppercase tracking-wide` | 11 px |
 
 ---
 
@@ -160,14 +163,14 @@ Escala tipográfica canônica (Tailwind default):
 
 Tokens em `src/index.css`:
 
-| Token         | Valor           | Uso                        |
-| ------------- | --------------- | -------------------------- |
-| `--space-xs`  | `0.25rem` (4px) | Ajustes finos, ícone↔texto |
-| `--space-sm`  | `0.5rem` (8px)  | Gap entre chips            |
-| `--space-md`  | `1rem` (16px)   | Padding padrão de card     |
-| `--space-lg`  | `1.5rem` (24px) | Gap entre blocos           |
-| `--space-xl`  | `2rem` (32px)   | Gap entre seções mobile    |
-| `--space-2xl` | `3rem` (48px)   | Gap entre seções desktop   |
+| Token | Valor | Uso |
+| --- | --- | --- |
+| `--space-xs` | `0.25rem` | Ajustes finos, ícone↔texto |
+| `--space-sm` | `0.5rem` | Gap entre chips |
+| `--space-md` | `1rem` | Padding padrão de card |
+| `--space-lg` | `1.5rem` | Gap entre blocos |
+| `--space-xl` | `2rem` | Gap entre seções mobile |
+| `--space-2xl` | `3rem` | Gap entre seções desktop |
 
 Regra: espaçamento vertical entre seções `space-y-8` mobile, `space-y-12`
 desktop. Padding de card padrão `p-4 md:p-6`.
@@ -176,84 +179,68 @@ desktop. Padding de card padrão `p-4 md:p-6`.
 
 ## 6. Raios
 
-| Token           | Valor                       | Uso                     |
-| --------------- | --------------------------- | ----------------------- |
-| `--radius-sm`   | `calc(var(--radius) - 4px)` | Inputs, chips discretos |
-| `--radius-md`   | `calc(var(--radius) - 2px)` | Botões                  |
-| `--radius-lg`   | `var(--radius)` (0.75rem)   | Cards padrão            |
-| `--radius-xl`   | `calc(var(--radius) + 4px)` | Cards de destaque       |
-| `--radius-full` | `9999px`                    | Avatares, chips, tags   |
+| Token | Valor | Uso |
+| --- | --- | --- |
+| `--radius-sm` | `calc(var(--radius) - 4px)` | Inputs, chips discretos |
+| `--radius-md` | `calc(var(--radius) - 2px)` | Botões |
+| `--radius-lg` | `var(--radius)` | Cards padrão |
+| `--radius-xl` | `calc(var(--radius) + 4px)` | Cards de destaque |
+| `--radius-full` | `9999px` | Avatares, chips, tags |
 
-A fundação territorial expõe também `rounded-territory` (14 px) e
-`rounded-territory-highlight` (18 px). São os dois níveis de raio da Home e de
-Explorar; valores arbitrários continuam proibidos.
-
-Regra visual: **`rounded-2xl` em cards, `rounded-full` em chips.** Nada de raios
-soltos como `rounded-[10px]`.
+A fundação territorial expõe também `rounded-territory` e
+`rounded-territory-highlight`. Valores arbitrários devem desaparecer conforme a
+superfície é migrada, sem substituição global cega.
 
 ---
 
 ## 7. Sombras
 
-| Token                            | Uso                                                          |
-| -------------------------------- | ------------------------------------------------------------ |
-| `--shadow-sm`                    | Cards de destaque (opcional).                                |
-| `--shadow-md`                    | Popovers.                                                    |
-| `--shadow-lg`                    | Modais, drawers.                                             |
-| `--shadow-xl`                    | Overlays de tela cheia.                                      |
-| `--shadow-accent`                | Botão premium / CTA principal (usar com moderação).          |
-| `--shadow-glow-primary(-strong)` | Estados de destaque animados.                                |
-| `shadow-territory-highlight`     | Elevação mínima para busca e superfície editorial destacada. |
+| Token | Uso |
+| --- | --- |
+| `--shadow-sm` | Destaque leve. |
+| `--shadow-md` | Popovers. |
+| `--shadow-lg` | Modais/drawers. |
+| `--shadow-xl` | Overlays. |
+| `--shadow-accent` | CTA de destaque com moderação. |
+| `--shadow-glow-primary(-strong)` | Destaques animados. |
+| `shadow-territory-highlight` | Elevação territorial discreta. |
 
-Padrão default: `shadow-none`. Só usar sombra em elemento que precisa saltar da
-superfície (modal, toast, card de destaque no bloco "Hoje").
+Padrão default: `shadow-none`. Sombra existe quando comunica elevação real.
 
 ---
 
 ## 8. Ícones
 
-- Biblioteca única: `lucide-react`.
-- Estilo: **outline** (padrão do Lucide).
-- Tamanho canônico: `h-5 w-5` (20px) inline / `h-6 w-6` (24px) em ações
-  primárias.
-- `strokeWidth` consistente: `1.75` (padrão) ou `2` (ênfase).
-- Cor: sempre via `text-*` semântico (`text-muted-foreground`,
-  `text-category-alert`, …), nunca hex.
+- Biblioteca padrão: `lucide-react` para ícones de interface.
+- Estilo: outline.
+- Tamanho canônico: `h-5 w-5` inline / `h-6 w-6` em ações primárias.
+- Cor via token semântico, nunca uma cor de marca duplicada localmente.
+- Assets ilustrativos e marcas oficiais são exceções ao contrato de ícones de UI.
 
 ---
 
-## 9. CTA única por tela
+## 9. CTA primária
 
-Regra UX: **cada tela tem exatamente uma CTA primária visível.** Demais ações
-são secundárias (`variant="outline"`) ou terciárias (`variant="ghost"`,
-ícone-only).
-
-Padrões:
-
-- Feed: FAB "Publicar no bairro" (`BottomNav` central).
-- PostPage: "Comentar" como CTA primário; reagir/salvar/compartilhar como ícones.
-- Empresas: busca dominante no header; "Cadastrar meu negócio" só em rodapé.
-- Explorar: busca dominante; filtros colapsados por padrão.
+Cada superfície deve ter hierarquia clara de ação. A CTA primária usa o token de
+ação apropriado ao tema; Solar é destaque, não substituto universal para toda ação.
+Ações secundárias/terciárias devem manter hierarquia e foco acessível.
 
 ---
 
 ## 10. Empty states
 
-Superfícies legadas usam `<EmptyState />` de
-`src/shared/components/EmptyState.tsx`. Home e Explorar usam
-`<TerritoryState />`, da mesma família visual territorial, para combinar estado,
-contexto e próximo passo sem card dentro de card.
+Superfícies legadas usam `<EmptyState />`. Superfícies Território Vivo usam
+`<TerritoryState />` quando aplicável. Estado vazio deve explicar contexto,
+próximo passo e nunca inventar dados.
 
-Regra: título direto no território + descrição com próximo passo + CTA opcional.
+Microcopy padrão:
 
-Microcopy padrão (`docs/ux/UX-IMPROVEMENTS.md`):
-
-| Local            | Copy                                                                 |
-| ---------------- | -------------------------------------------------------------------- |
-| Feed vazio       | "Ainda sem publicações em <bairro>. Seja o primeiro a compartilhar." |
-| Busca vazia      | "Não encontramos isso em <bairro>. Tente ampliar para <cidade>."     |
-| Erro geo         | "Não consegui pegar sua localização. Escolher cidade manualmente."   |
-| Loader bootstrap | "Preparando seu território..."                                       |
+| Local | Copy |
+| --- | --- |
+| Feed vazio | "Ainda sem publicações em <bairro>. Seja o primeiro a compartilhar." |
+| Busca vazia | "Não encontramos isso em <bairro>. Tente ampliar para <cidade>." |
+| Erro geo | "Não consegui pegar sua localização. Escolher cidade manualmente." |
+| Loader bootstrap | "Preparando seu território..." |
 
 ---
 
@@ -261,17 +248,18 @@ Microcopy padrão (`docs/ux/UX-IMPROVEMENTS.md`):
 
 Ao criar/alterar qualquer componente:
 
-- [ ] Nenhum `#hex`, `rgb()` ou `bg-[#...]` no arquivo.
-- [ ] Cores de conteúdo passam por `getCategoryTokens`.
-- [ ] Textos usam `text-foreground` / `text-muted-foreground` / `text-category-*`.
-- [ ] Superfícies territoriais usam `TerritorySurface`/`territory-*`; telas ainda não migradas mantêm os tokens globais.
-- [ ] Chips usam `rounded-full`.
-- [ ] Uma única CTA primária visível por tela.
-- [ ] Empty state via `<TerritoryState />` na experiência territorial ou `<EmptyState />` no legado, sempre com próximo passo.
-- [ ] Header do território presente no topo (`TerritoryTopbar` na Home/Explorar ou equivalente no domínio).
+- [ ] Nenhuma nova cor literal para papel já coberto por token.
+- [ ] Cores de conteúdo passam por `getCategoryTokens` quando representam categoria.
+- [ ] Cores de mapa/gráfico/dado permanecem funcionais e recebem token próprio quando reutilizadas.
+- [ ] Textos usam tokens semânticos adequados ao tema.
+- [ ] Superfícies territoriais usam `TerritorySurface`/`territory-*` quando compatível.
+- [ ] Foco visível usa o contrato semântico.
+- [ ] Uma hierarquia clara de CTA por tela.
+- [ ] Empty state possui contexto e próximo passo.
 - [ ] Tipografia usa Plus Jakarta Sans via `font-sans`/`font-heading`/tokens; nenhuma segunda família sem decisão versionada.
 - [ ] Máx. 3 níveis de peso tipográfico por tela; 800 só para display/wordmark aprovado pelo concept, nunca por conveniência.
-- [ ] Ícones Lucide outline, tamanho 20 ou 24, cor semântica.
+- [ ] Superfície migrada adicionada a `validate-visual-ssot.ts`.
+- [ ] Claro, escuro e alto contraste revisados antes de declarar a migração encerrada.
 
-Descumprimento bloqueia review. Este documento é atualizado sempre que um novo
-token entra no sistema.
+Descumprimento bloqueia review. Este documento deve acompanhar qualquer mudança
+no contrato visual executável.
