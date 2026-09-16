@@ -1,6 +1,7 @@
 import { lazy, Suspense, useState } from "react";
-import { BarChart3, Loader2, Shield } from "lucide-react";
+import { BarChart3, Loader2 } from "lucide-react";
 
+import { AdminAccessDenied } from "@/modules/admin/components/AdminAccessDenied";
 import { useAdminGuard } from "@/modules/admin/hooks/useAdminGuard";
 import { cn } from "@/shared/utils/cn";
 import { AdminMobilityRates } from "./mobility-analytics/AdminMobilityRates";
@@ -23,19 +24,19 @@ const AdminMobilitySidebar = lazy(() =>
 
 function AdminMobilityChartsFallback() {
   return (
-    <div className="space-y-6 lg:col-span-2">
-      <div className="h-[340px] animate-pulse rounded-lg border bg-card" />
-      <div className="h-[300px] animate-pulse rounded-lg border bg-card" />
+    <div className="space-y-6 lg:col-span-2" role="status" aria-label="Carregando gráficos">
+      <div className="h-[340px] animate-pulse rounded-lg border border-border bg-card" />
+      <div className="h-[300px] animate-pulse rounded-lg border border-border bg-card" />
     </div>
   );
 }
 
 function AdminMobilitySidebarFallback() {
   return (
-    <div className="space-y-6">
-      <div className="h-[292px] animate-pulse rounded-lg border bg-card" />
-      <div className="h-[220px] animate-pulse rounded-lg border bg-card" />
-      <div className="h-[160px] animate-pulse rounded-lg border bg-card" />
+    <div className="space-y-6" role="status" aria-label="Carregando indicadores">
+      <div className="h-[292px] animate-pulse rounded-lg border border-border bg-card" />
+      <div className="h-[220px] animate-pulse rounded-lg border border-border bg-card" />
+      <div className="h-[160px] animate-pulse rounded-lg border border-border bg-card" />
     </div>
   );
 }
@@ -49,23 +50,14 @@ export default function AdminAnalyticsMobilidade() {
   );
 
   if (!isChecking && !canModerate) {
-    return (
-      <div className="flex min-h-screen items-center justify-center bg-[#0A0F14] p-4">
-        <div className="text-center">
-          <Shield className="mx-auto mb-4 h-16 w-16 text-red-400" />
-          <h1 className="mb-2 text-2xl font-bold text-white">Acesso Negado</h1>
-          <p className="text-gray-400">
-            Apenas administradores podem acessar esta página.
-          </p>
-        </div>
-      </div>
-    );
+    return <AdminAccessDenied />;
   }
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center py-20">
-        <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
+      <div className="flex items-center justify-center py-20" role="status">
+        <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" aria-hidden="true" />
+        <span className="sr-only">Carregando analytics de mobilidade</span>
       </div>
     );
   }
@@ -83,24 +75,29 @@ export default function AdminAnalyticsMobilidade() {
   ].filter((item) => item.value > 0);
 
   return (
-    <div className="space-y-6">
-      <div className="flex items-center justify-between">
+    <div className="space-y-6 text-foreground">
+      <div className="flex flex-col justify-between gap-3 sm:flex-row sm:items-center">
         <div>
           <h1 className="mb-0.5 flex items-center gap-2 font-display text-2xl font-bold">
-            <BarChart3 className="h-6 w-6 text-primary" />
+            <BarChart3 className="h-6 w-6 text-primary" aria-hidden="true" />
             Analytics Mobilidade
           </h1>
           <p className="text-sm text-muted-foreground">
-            Lifecycle de corridas, valor concluído e verificação de motoristas
+            Lifecycle de corridas, valor concluído e verificação de motoristas.
           </p>
         </div>
-        <div className="flex gap-1 rounded-lg bg-muted p-0.5">
+        <div
+          className="flex w-fit gap-1 rounded-lg bg-muted p-0.5"
+          aria-label="Período dos analytics"
+        >
           {PERIOD_OPTIONS.map((option) => (
             <button
               key={option}
+              type="button"
               onClick={() => setDays(option)}
+              aria-pressed={days === option}
               className={cn(
-                "rounded-md px-3 py-1.5 text-xs font-medium transition-colors",
+                "rounded-md px-3 py-1.5 text-xs font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2",
                 days === option
                   ? "bg-card text-foreground shadow-sm"
                   : "text-muted-foreground hover:text-foreground",
