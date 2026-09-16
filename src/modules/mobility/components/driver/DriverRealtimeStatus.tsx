@@ -53,7 +53,11 @@ export function DriverRealtimeStatus() {
                 {statusLabel}
               </Badge>
             </div>
-            <p className={`mt-0.5 text-xs ${error ? "text-destructive" : "text-muted-foreground"}`}>
+            <p
+              className={`mt-0.5 text-xs ${
+                error ? "text-destructive" : "text-muted-foreground"
+              }`}
+            >
               {error
                 ? "Não foi possível sincronizar as notificações agora."
                 : lastUpdate
@@ -92,7 +96,7 @@ export function DriverRealtimeStatus() {
       {!error && !loading ? (
         <div className="mt-3 border-t pt-3">
           <p className="text-[0.7rem] text-muted-foreground">
-            O canal realtime está habilitado pelo sistema; este painel não inventa um estado de conexão quando o transporte não o expõe.
+            Novas notificações aparecem aqui assim que forem recebidas.
           </p>
         </div>
       ) : null}
