@@ -1,11 +1,14 @@
 # E-mail de autenticação em produção
 
-Este documento é a referência operacional para o e-mail enviado pelo Supabase Auth no Achegue-se. Ele cobre a fronteira entre URL Configuration, DNS, Resend, Supabase Auth e a aplicação. Segredos reais nunca pertencem ao repositório.
+Este documento é a referência operacional para o e-mail enviado pelo Supabase Auth no Achegue-se. Ele cobre a fronteira entre URL Configuration, DNS, Resend, Supabase Auth, identidade visual e a aplicação. Segredos reais nunca pertencem ao repositório.
 
 ## Owners
 
 - `supabase/config.toml`: autoridade executável de `site_url` e `additional_redirect_urls` do Auth.
 - `.github/workflows/supabase-auth-url-config.yml`: sincroniza a autoridade versionada de URLs com o projeto Supabase hospedado.
+- `supabase/templates/confirmation.html`: SSOT versionado do conteúdo e da apresentação do e-mail de confirmação de cadastro.
+- `src/index.css`: SSOT dos primitivos/tokens visuais do produto; templates de e-mail mantêm uma projeção literal compatível porque clientes de e-mail não consomem CSS variables da aplicação.
+- `src/core/notifications/services/EmailService.ts`: shell visual compartilhado para os e-mails transacionais enviados pelas Edge Functions, usando a mesma projeção de marca do Auth.
 - DNS do domínio `acheguese.com.br`: prova de domínio e de envio.
 - Resend: provedor SMTP e autoridade sobre a verificação do domínio.
 - Supabase Auth: gera e envia os e-mails de confirmação, recuperação e demais fluxos de autenticação usando o SMTP configurado.
@@ -13,6 +16,22 @@ Este documento é a referência operacional para o e-mail enviado pelo Supabase 
 - Frontend: apenas inicia o fluxo e apresenta estado/erros; não possui credencial de e-mail nem implementa SMTP.
 
 As Edge Functions que enviam outros e-mails continuam seguindo `EDGE_FUNCTION_SECRETS.md`. Não misturar o runtime de Edge Functions com o SMTP interno do Supabase Auth.
+
+## Identidade visual dos e-mails
+
+A família visual acompanha o produto, sem transformar mensagens de autenticação em material de marketing:
+
+- fonte preferencial: `Plus Jakarta Sans`, com fallbacks `Arial`, `Helvetica`, `sans-serif`;
+- Petróleo `#123E3D`: marca e ação principal;
+- Solar `#F3CB4C`: destaque curto;
+- Marfim `#FAFBF7`: fundo externo;
+- Texto `#203534`;
+- Texto secundário `#61736C`;
+- cards/superfícies principais: branco.
+
+O HTML de e-mail precisa continuar autocontido, com tabelas e estilos inline. Não importar CSS do aplicativo, não depender de Tailwind e não usar CSS variables, porque esses recursos não são uma autoridade transportável para Gmail/Outlook. A projeção literal de cores deve permanecer sincronizada com os primitivos canônicos e é coberta pelo validador `tools/architecture/validate-visual-ssot.ts`.
+
+O e-mail de autenticação deve permanecer curto e transacional: uma ação principal, sem promoções, sem múltiplas CTAs concorrentes e sem personalização baseada em dados não sanitizados do usuário.
 
 ## Dois gates independentes
 
@@ -50,11 +69,13 @@ Mesmo com o frontend de produção solicitando `https://acheguese.com.br/login?c
 ## Identidade canônica de e-mail
 
 - domínio de envio: `acheguese.com.br`;
+- status observado no Resend em 2026-09-16: `verified`, envio habilitado, região `sa-east-1`;
 - remetente de Auth desejado: `no-reply@acheguese.com.br`;
 - nome: `Achegue-se`;
-- assunto de confirmação: `Confirme seu e-mail | Achegue-se`.
+- assunto de confirmação: `Confirme seu e-mail | Achegue-se`;
+- template versionado: `supabase/templates/confirmation.html`.
 
-A identidade só pode ser aplicada depois que o Resend marcar o domínio como `verified`.
+O status `verified` do domínio libera o gate do Resend, mas **não prova por si só** que o template versionado já foi aplicado no projeto Supabase hospedado. A aplicação continua sendo uma operação explícita do workflow abaixo.
 
 ## Pré-requisitos DNS do Resend
 
@@ -76,10 +97,12 @@ Para aplicar:
 2. executar o workflow na branch `main`;
 3. marcar `apply=true`;
 4. informar exatamente `RESEND_DOMAIN_VERIFIED` no campo de confirmação;
-5. o runner comprova DKIM, SPF e MX publicamente antes de qualquer PATCH;
-6. o runner lê a configuração atual do Supabase e exige que o transporte SMTP já seja Resend;
-7. somente então altera remetente, nome e template de confirmação;
-8. ao final, relê a configuração e prova que os valores esperados foram persistidos.
+5. o runner faz checkout do SHA exato e valida `supabase/templates/confirmation.html`;
+6. o template precisa conter `{{ .ConfirmationURL }}`, não pode hardcodar `localhost`/`127.0.0.1` e não pode conter conteúdo executável;
+7. o runner comprova DKIM, SPF e MX publicamente antes de qualquer PATCH;
+8. o runner lê a configuração atual do Supabase e exige que o transporte SMTP já seja Resend;
+9. somente então altera remetente, nome, assunto e o conteúdo do template;
+10. ao final, relê a configuração e prova igualdade exata do template persistido com o arquivo versionado.
 
 O workflow usa `SUPABASE_ACCESS_TOKEN` apenas como secret do GitHub Actions. Ele não imprime SMTP host/user/password nem grava credenciais no repositório.
 
@@ -87,15 +110,16 @@ O workflow usa `SUPABASE_ACCESS_TOKEN` apenas como secret do GitHub Actions. Ele
 
 Qualquer uma destas condições deve bloquear a alteração de identidade SMTP:
 
-- domínio ainda não verificado no Resend;
+- domínio não verificado no Resend;
 - confirmação manual ausente/incorreta;
+- template versionado ausente, inválido ou contendo URL local hardcoded;
 - DNS esperado não resolvendo;
 - projeto Supabase diferente do ref canônico;
 - `SUPABASE_ACCESS_TOKEN` ausente;
 - SMTP atual não sendo Resend;
 - falha na verificação pós-PATCH.
 
-Não trocar para `no-reply@acheguese.com.br` apenas para "testar" enquanto o domínio estiver pendente. Isso pode fazer o Supabase gerar e-mail corretamente, mas o Resend rejeitar a entrega.
+Não trocar para uma identidade de produção apenas para "testar" sem as provas do gate. Não mascarar erro SMTP no frontend e não desativar confirmação de e-mail para contornar falhas de entrega.
 
 ## Teste de ponta a ponta após a liberação
 
@@ -106,13 +130,14 @@ Depois da URL Configuration sincronizada, do domínio verificado e do workflow d
 3. confirmar que a UI mostra um único owner visual para eventual erro, sem mensagem duplicada;
 4. inspecionar o request de envio e confirmar que `redirect_to` é `https://acheguese.com.br/login?confirmed=1`;
 5. confirmar que o e-mail chega com remetente `Achegue-se <no-reply@acheguese.com.br>` e assunto em português;
-6. clicar em `Confirmar meu e-mail`;
-7. confirmar a sessão/jornada de primeiro acesso prevista pelo Auth SSOT;
-8. sair e entrar novamente;
-9. confirmar que a Home reflete o usuário autenticado e não apresenta a CTA pública `Entrar` como estado principal;
-10. inspecionar os logs do Resend para provar aceitação/entrega e ausência de `403` de domínio/test mode.
+6. verificar visualmente Petróleo/Solar/Marfim, Plus Jakarta Sans quando disponível e fallback legível quando não disponível;
+7. clicar em `Confirmar meu e-mail`;
+8. confirmar a sessão/jornada de primeiro acesso prevista pelo Auth SSOT;
+9. sair e entrar novamente;
+10. confirmar que a Home reflete o usuário autenticado e não apresenta a CTA pública `Entrar` como estado principal;
+11. inspecionar os logs do Resend para provar aceitação/entrega e ausência de `403` de domínio/test mode.
 
-Não considerar a integração concluída apenas porque o cadastro criou uma linha em `auth.users`; a entrega, o callback correto e a confirmação real do e-mail fazem parte do critério de aceite.
+Não considerar a integração concluída apenas porque o cadastro criou uma linha em `auth.users`; a entrega, o callback correto, a confirmação real do e-mail e a renderização aceitável nos clientes principais fazem parte do critério de aceite.
 
 ## Diagnóstico de `403` do Resend
 
