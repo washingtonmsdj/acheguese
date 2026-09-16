@@ -16,7 +16,7 @@ describe("territory entry map arrival", () => {
     expect(wrapper).toContain("loadTerritoryEntryMapRuntime");
     expect(wrapper).toContain("Promise.all([");
     expect(wrapper).toContain('import("./TerritoryEntryMapRuntime")');
-    expect(wrapper).toContain('import("@/core/maps/components/v3/MapLibreAdapter")');
+    expect(wrapper).toContain('import("@/core/maps/components/v3/MapLibreAdapterPreload")');
     expect(wrapper).toContain("preloadPassiveMapLibreAdapterRuntime");
     expect(wrapper).toContain("LazyTerritoryEntryMapRuntime");
     expect(wrapper).toContain("<Suspense");
