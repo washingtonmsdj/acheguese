@@ -79,7 +79,7 @@ export async function getMobilityConversations(): Promise<MobilityConversationSu
     return data ?? [];
   } catch (error) {
     logger.error("MobilityQueries.getMobilityConversations", { error });
-    return [];
+    throw error;
   }
 }
 
