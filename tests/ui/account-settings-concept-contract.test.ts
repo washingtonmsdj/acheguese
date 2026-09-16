@@ -157,7 +157,8 @@ describe("account settings concept contract", () => {
     expect(security).not.toContain("Sessão atual");
     expect(auth).toContain('signOut({ scope: "others" })');
     expect(auth).toContain("static async updateEmail");
-    expect(identities).toContain("supabase.auth.getUser()");
+    expect(identities).toContain("SessionService.getVerifiedAuthUser()");
+    expect(identities).not.toContain("supabase.auth.");
     expect(identities).toContain('providers.includes("google")');
   });
 
