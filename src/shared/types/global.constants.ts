@@ -58,6 +58,32 @@ export const PAYMENT_METHOD = {
 export type PaymentMethod =
   (typeof PAYMENT_METHOD)[keyof typeof PAYMENT_METHOD];
 
+export const PAYMENT_METHOD_LABELS: Record<PaymentMethod, string> = {
+  [PAYMENT_METHOD.PIX]: "Pix",
+  [PAYMENT_METHOD.DINHEIRO]: "Dinheiro",
+  [PAYMENT_METHOD.CARTAO]: "Cartão",
+  [PAYMENT_METHOD.CREDITO]: "Crédito",
+  [PAYMENT_METHOD.DEBITO]: "Débito",
+};
+
+const PAYMENT_METHOD_COMPATIBILITY_LABELS: Readonly<Record<string, string>> = {
+  cash: PAYMENT_METHOD_LABELS[PAYMENT_METHOD.DINHEIRO],
+  card_on_delivery: "Cartão na entrega",
+  payment_link: "Link de pagamento",
+  link: "Link de pagamento",
+};
+
+export function getPaymentMethodLabel(method: string): string {
+  const normalized = method.trim().toLowerCase();
+  if (!normalized) return method;
+
+  if (isValidPaymentMethod(normalized)) {
+    return PAYMENT_METHOD_LABELS[normalized];
+  }
+
+  return PAYMENT_METHOD_COMPATIBILITY_LABELS[normalized] ?? method;
+}
+
 // ============================================
 // NOTIFICATION TYPE
 // ============================================
