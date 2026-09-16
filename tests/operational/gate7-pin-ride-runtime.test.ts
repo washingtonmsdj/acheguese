@@ -32,6 +32,10 @@ import {
   safeCleanupVerifications,
 } from '../helpers/test-cleanup-helpers';
 import { createOperationalAdminClient, describeOperational } from '../helpers/operational-env';
+import {
+  cleanupMobilityRideQuoteFixtures,
+  createMobilityRideQuoteFixture,
+} from '../helpers/mobility-price-quote-fixtures';
 
 // Carregar fixtures
 const fixturesPath = join(__dirname, '../fixtures/gate6-fixtures.json');
@@ -47,6 +51,7 @@ describeOperational('Gate 7 - PIN Verification: Corrida', {
   const passengerId = fixtures.passengers.passengerA.id;
   const driverId = fixtures.drivers.driverA.id;
   const createdRideIds: string[] = [];
+  const pricingRuleIds: string[] = [];
   
   // Coordenadas
   const pickupLat = fixtures.coords.pickup.lat;
@@ -62,9 +67,39 @@ describeOperational('Gate 7 - PIN Verification: Corrida', {
   const pickupLocationId = fixtures.locationIds.primary;
   const dropoffLocationId = fixtures.locationIds.primary;
 
+  async function createTestRide() {
+    const fixture = await createMobilityRideQuoteFixture(supabaseAdmin, {
+      passengerProfileId: passengerId,
+      pickupAddressId,
+      dropoffAddressId,
+      pickupLocationId,
+      dropoffLocationId,
+      originLat: pickupLat,
+      originLng: pickupLng,
+      destinationLat: dropoffLat,
+      destinationLng: dropoffLng,
+    });
+    pricingRuleIds.push(fixture.ruleId);
+
+    return RideOperationalService.createRide({
+      passengerProfileId: passengerId,
+      pickupAddressId,
+      dropoffAddressId,
+      pickupLocationId,
+      dropoffLocationId,
+      originLat: pickupLat,
+      originLng: pickupLng,
+      destinationLat: dropoffLat,
+      destinationLng: dropoffLng,
+      mode: 'ride',
+      priceQuoteId: fixture.quoteId,
+    });
+  }
+
   beforeEach(async () => {
     supabaseAdmin = createOperationalAdminClient();
     createdRideIds.length = 0;
+    pricingRuleIds.length = 0;
 
     // ISOLAMENTO CRÍTICO: Resetar configurações de PIN PRIMEIRO
     await supabaseAdmin
@@ -111,7 +146,8 @@ describeOperational('Gate 7 - PIN Verification: Corrida', {
       await safeCleanupRides(createdRideIds, 20000);
       await safeCleanupVerifications(createdRideIds);
     }
-    
+
+    await cleanupMobilityRideQuoteFixtures(supabaseAdmin, pricingRuleIds);
     await cleanupMultipleDrivers([driverId]);
     await signOut();
   }, 30000);
@@ -138,20 +174,7 @@ describeOperational('Gate 7 - PIN Verification: Corrida', {
     // ============================================
     
     await authenticateAsProfile(passengerId);
-    
-    const createResult = await RideOperationalService.createRide({
-      passengerProfileId: passengerId,
-      pickupAddressId,
-      dropoffAddressId,
-      pickupLocationId,
-      dropoffLocationId,
-      originLat: pickupLat,
-      originLng: pickupLng,
-      destinationLat: dropoffLat,
-      destinationLng: dropoffLng,
-      mode: 'ride',
-      suggestedPrice: 15.00,
-    });
+    const createResult = await createTestRide();
     
     expect(createResult.success).toBe(true);
     const rideId = createResult.rideId!;
@@ -251,20 +274,7 @@ describeOperational('Gate 7 - PIN Verification: Corrida', {
     // ============================================
     
     await authenticateAsProfile(passengerId);
-    
-    const createResult = await RideOperationalService.createRide({
-      passengerProfileId: passengerId,
-      pickupAddressId,
-      dropoffAddressId,
-      pickupLocationId,
-      dropoffLocationId,
-      originLat: pickupLat,
-      originLng: pickupLng,
-      destinationLat: dropoffLat,
-      destinationLng: dropoffLng,
-      mode: 'ride',
-      suggestedPrice: 15.00,
-    });
+    const createResult = await createTestRide();
     
     expect(createResult.success).toBe(true);
     const rideId = createResult.rideId!;
@@ -381,20 +391,7 @@ describeOperational('Gate 7 - PIN Verification: Corrida', {
     // ============================================
     
     await authenticateAsProfile(passengerId);
-    
-    const createResult = await RideOperationalService.createRide({
-      passengerProfileId: passengerId,
-      pickupAddressId,
-      dropoffAddressId,
-      pickupLocationId,
-      dropoffLocationId,
-      originLat: pickupLat,
-      originLng: pickupLng,
-      destinationLat: dropoffLat,
-      destinationLng: dropoffLng,
-      mode: 'ride',
-      suggestedPrice: 15.00,
-    });
+    const createResult = await createTestRide();
     
     expect(createResult.success).toBe(true);
     const rideId = createResult.rideId!;
@@ -421,7 +418,7 @@ describeOperational('Gate 7 - PIN Verification: Corrida', {
     
     const pinResult = await OperationalVerificationService.refreshRequesterPIN(rideId);
     expect(pinResult.success).toBe(true);
-    expect(pinResult.data?.pin).toMatch(/^\\d{4}$/);
+    expect(pinResult.data?.pin).toMatch(/^\d{4}$/);
     const testPIN = pinResult.data!.pin;
     
     console.log('✅ PIN emitido pelo fluxo oficial para o solicitante');
@@ -519,20 +516,7 @@ describeOperational('Gate 7 - PIN Verification: Corrida', {
     // ============================================
     
     await authenticateAsProfile(passengerId);
-    
-    const createResult = await RideOperationalService.createRide({
-      passengerProfileId: passengerId,
-      pickupAddressId,
-      dropoffAddressId,
-      pickupLocationId,
-      dropoffLocationId,
-      originLat: pickupLat,
-      originLng: pickupLng,
-      destinationLat: dropoffLat,
-      destinationLng: dropoffLng,
-      mode: 'ride',
-      suggestedPrice: 15.00,
-    });
+    const createResult = await createTestRide();
     
     expect(createResult.success).toBe(true);
     const rideId = createResult.rideId!;
@@ -624,5 +608,3 @@ describeOperational('Gate 7 - PIN Verification: Corrida', {
       .eq('id', passengerId);
   });
 });
-
-
