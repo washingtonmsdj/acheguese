@@ -1,1 +1,1 @@
-export { PricingService, pricingService } from './PricingService';
+export { PricingService } from './PricingService';
