@@ -12,12 +12,11 @@ permissions:
 
 concurrency:
   group: supabase-auth-url-config-production
-  cancel-in-progress: false
+  cancel-in-progress: true
 
 env:
   SUPABASE_PROJECT_REF: "xhdowzacfujckjelqhtd"
   AUTH_CONFIG_URL: "https://api.supabase.com/v1/projects/xhdowzacfujckjelqhtd/config/auth"
-  CANONICAL_SITE_URL: "https://acheguese.com.br"
 
 jobs:
   configure-auth-urls:
@@ -50,76 +49,137 @@ jobs:
             throw "GitHub Actions secret SUPABASE_ACCESS_TOKEN is missing."
           }
 
-      - name: Read, validate and merge existing Auth URL configuration
+      - name: Checkout canonical Supabase config at exact SHA
+        uses: actions/checkout@v6
+        with:
+          repository: washingtonmsdj/acheguese
+          ref: ${{ github.sha }}
+          fetch-depth: 1
+          persist-credentials: false
+          clean: false
+          path: auth-url-gate
+          sparse-checkout: |
+            supabase
+          sparse-checkout-cone-mode: true
+
+      - name: Assert checkout provenance
+        shell: powershell
+        working-directory: auth-url-gate
+        run: |
+          $ErrorActionPreference = "Stop"
+          $actual = (git rev-parse HEAD).Trim().ToLowerInvariant()
+          $expected = ([string]$env:GITHUB_SHA).Trim().ToLowerInvariant()
+          if ($actual -ne $expected) {
+            throw "Checkout provenance mismatch. expected=$expected actual=$actual"
+          }
+
+      - name: Read URL authority from supabase/config.toml
         id: desired
         shell: powershell
+        working-directory: auth-url-gate
+        run: |
+          $ErrorActionPreference = "Stop"
+          $configPath = "supabase/config.toml"
+          $source = Get-Content $configPath -Raw
+
+          $siteMatch = [regex]::Match($source, '(?m)^site_url\s*=\s*"([^"]+)"\s*$')
+          if (-not $siteMatch.Success) {
+            throw "Canonical [auth] site_url was not found in supabase/config.toml."
+          }
+          $desiredSiteUrl = $siteMatch.Groups[1].Value.Trim().TrimEnd('/')
+          if ($desiredSiteUrl -ne "https://acheguese.com.br") {
+            throw "Unexpected canonical site_url in supabase/config.toml: $desiredSiteUrl"
+          }
+
+          $redirectMatch = [regex]::Match($source, '(?m)^additional_redirect_urls\s*=\s*(\[[^\r\n]+\])\s*$')
+          if (-not $redirectMatch.Success) {
+            throw "Canonical [auth] additional_redirect_urls was not found in supabase/config.toml."
+          }
+          $desiredEntries = @($redirectMatch.Groups[1].Value | ConvertFrom-Json)
+          if ($desiredEntries.Count -eq 0) {
+            throw "Canonical Auth redirect list cannot be empty."
+          }
+
+          $requiredEntries = @(
+            "https://acheguese.com.br/aceitar-termos",
+            "https://acheguese.com.br/login?confirmed=1",
+            "https://acheguese.com.br/conta/confirmar-email?emailChange=1",
+            "https://acheguese.com.br/reset-password?mode=recovery",
+            "https://acheguese.vercel.app/aceitar-termos",
+            "https://acheguese.vercel.app/login?confirmed=1",
+            "https://acheguese.vercel.app/conta/confirmar-email?emailChange=1",
+            "https://acheguese.vercel.app/reset-password?mode=recovery",
+            "http://localhost:5175/aceitar-termos",
+            "http://localhost:5175/login?confirmed=1",
+            "http://localhost:5175/conta/confirmar-email?emailChange=1",
+            "http://localhost:5175/reset-password?mode=recovery",
+            "http://127.0.0.1:5175/aceitar-termos",
+            "http://127.0.0.1:5175/login?confirmed=1",
+            "http://127.0.0.1:5175/conta/confirmar-email?emailChange=1",
+            "http://127.0.0.1:5175/reset-password?mode=recovery"
+          )
+          $missingFromSource = @($requiredEntries | Where-Object { $_ -notin $desiredEntries })
+          if ($missingFromSource.Count -gt 0) {
+            throw "supabase/config.toml is missing required Auth callbacks: $($missingFromSource -join ', ')"
+          }
+
+          $deduped = @($desiredEntries | Select-Object -Unique)
+          if ($deduped.Count -ne $desiredEntries.Count) {
+            throw "supabase/config.toml contains duplicate Auth redirect URLs."
+          }
+
+          $desiredAllowList = $desiredEntries -join ','
+          Add-Content -Path $env:GITHUB_OUTPUT -Value "site_url=$desiredSiteUrl" -Encoding UTF8
+          Add-Content -Path $env:GITHUB_OUTPUT -Value "allow_list=$desiredAllowList" -Encoding UTF8
+          Add-Content -Path $env:GITHUB_OUTPUT -Value "redirect_count=$($desiredEntries.Count)" -Encoding UTF8
+          Write-Host "Canonical Site URL: $desiredSiteUrl"
+          Write-Host "Canonical redirect entries: $($desiredEntries.Count)"
+
+      - name: Inspect current remote Auth URL configuration
+        id: before
+        shell: powershell
+        env:
+          DESIRED_SITE_URL: ${{ steps.desired.outputs.site_url }}
+          DESIRED_ALLOW_LIST: ${{ steps.desired.outputs.allow_list }}
         run: |
           $ErrorActionPreference = "Stop"
           $headers = @{
             Authorization = "Bearer $env:SUPABASE_ACCESS_TOKEN"
             Accept = "application/json"
           }
-          $config = Invoke-RestMethod -Uri $env:AUTH_CONFIG_URL -Headers $headers -Method Get
-
-          $currentSiteUrl = ([string]$config.site_url).Trim().TrimEnd('/')
-          $allowedCurrentSiteUrls = @(
+          $current = Invoke-RestMethod -Uri $env:AUTH_CONFIG_URL -Headers $headers -Method Get
+          $currentSiteUrl = ([string]$current.site_url).Trim().TrimEnd('/')
+          $allowedCurrentSites = @(
             "https://acheguese.com.br",
             "https://www.acheguese.com.br"
           )
-          if ($currentSiteUrl -notin $allowedCurrentSiteUrls) {
-            throw "Unexpected current Auth Site URL. Refusing automatic rewrite: $currentSiteUrl"
+          if ($currentSiteUrl -notin $allowedCurrentSites) {
+            throw "Unexpected current Auth Site URL. Refusing rewrite: $currentSiteUrl"
           }
 
-          $allowListRaw = [string]$config.uri_allow_list
-          $existing = @()
-          if (-not [string]::IsNullOrWhiteSpace($allowListRaw)) {
-            $existing = @(
-              $allowListRaw.Split(',') |
-                ForEach-Object { $_.Trim() } |
-                Where-Object { -not [string]::IsNullOrWhiteSpace($_) }
-            )
+          $currentEntries = @()
+          $currentRaw = [string]$current.uri_allow_list
+          if (-not [string]::IsNullOrWhiteSpace($currentRaw)) {
+            $currentEntries = @($currentRaw.Split(',') | ForEach-Object { $_.Trim() } | Where-Object { $_ })
+          }
+          $desiredEntries = @($env:DESIRED_ALLOW_LIST.Split(',') | ForEach-Object { $_.Trim() } | Where-Object { $_ })
+          $missing = @($desiredEntries | Where-Object { $_ -notin $currentEntries })
+          $extras = @($currentEntries | Where-Object { $_ -notin $desiredEntries })
+
+          Write-Host "Remote Site URL before: $currentSiteUrl"
+          Write-Host "Remote redirect entries before: $($currentEntries.Count)"
+          Write-Host "Canonical entries missing remotely: $($missing.Count)"
+          Write-Host "Remote entries outside canonical config: $($extras.Count)"
+
+          if ($extras.Count -gt 0) {
+            Write-Host "Remote-only redirects will be removed to restore supabase/config.toml authority:"
+            $extras | ForEach-Object { Write-Host "REMOTE_ONLY_REDIRECT=$_" }
           }
 
-          $required = @(
-            "https://acheguese.com.br/login?confirmed=1",
-            "https://acheguese.com.br/reset-password?mode=recovery",
-            "https://acheguese.com.br/conta/confirmar-email?emailChange=1",
-            "https://acheguese.com.br/aceitar-termos",
-            "http://localhost:5175/login?confirmed=1",
-            "http://localhost:5175/reset-password?mode=recovery",
-            "http://localhost:5175/conta/confirmar-email?emailChange=1",
-            "http://localhost:5175/aceitar-termos"
-          )
-
-          # Changing Site URL from www to the canonical apex must not silently
-          # remove the old trusted host's redirect behavior. Preserve it as an
-          # explicit compatibility origin while all app-generated callbacks use
-          # the canonical apex.
-          $compatibility = @()
-          if ($currentSiteUrl -eq "https://www.acheguese.com.br") {
-            $compatibility = @("https://www.acheguese.com.br/**")
-          }
-
-          $merged = New-Object System.Collections.Generic.List[string]
-          $seen = New-Object 'System.Collections.Generic.HashSet[string]' ([System.StringComparer]::OrdinalIgnoreCase)
-          foreach ($entry in @($existing + $required + $compatibility)) {
-            if ($seen.Add($entry)) {
-              $merged.Add($entry)
-            }
-          }
-
-          $desiredAllowList = $merged -join ','
-          Add-Content -Path $env:GITHUB_OUTPUT -Value "current_site_url=$currentSiteUrl" -Encoding UTF8
-          Add-Content -Path $env:GITHUB_OUTPUT -Value "allow_list=$desiredAllowList" -Encoding UTF8
-
-          Write-Host "Current Site URL: $currentSiteUrl"
-          Write-Host "Canonical Site URL: $env:CANONICAL_SITE_URL"
-          Write-Host "Existing allow-list entries: $($existing.Count)"
-          Write-Host "Merged allow-list entries: $($merged.Count)"
-
-      - name: Apply canonical Site URL and merged redirect allow list
+      - name: Apply canonical Auth URL configuration
         shell: powershell
         env:
+          DESIRED_SITE_URL: ${{ steps.desired.outputs.site_url }}
           DESIRED_ALLOW_LIST: ${{ steps.desired.outputs.allow_list }}
         run: |
           $ErrorActionPreference = "Stop"
@@ -128,7 +188,7 @@ jobs:
             Accept = "application/json"
           }
           $payload = [ordered]@{
-            site_url = $env:CANONICAL_SITE_URL
+            site_url = $env:DESIRED_SITE_URL
             uri_allow_list = $env:DESIRED_ALLOW_LIST
           } | ConvertTo-Json -Compress
 
@@ -141,8 +201,12 @@ jobs:
 
           Write-Host "Supabase Auth URL configuration patch accepted."
 
-      - name: Verify canonical Site URL and required callbacks
+      - name: Verify remote config equals canonical SSOT
         shell: powershell
+        env:
+          DESIRED_SITE_URL: ${{ steps.desired.outputs.site_url }}
+          DESIRED_ALLOW_LIST: ${{ steps.desired.outputs.allow_list }}
+          DESIRED_REDIRECT_COUNT: ${{ steps.desired.outputs.redirect_count }}
         run: |
           $ErrorActionPreference = "Stop"
           $headers = @{
@@ -151,37 +215,29 @@ jobs:
           }
           $actual = Invoke-RestMethod -Uri $env:AUTH_CONFIG_URL -Headers $headers -Method Get
           $actualSiteUrl = ([string]$actual.site_url).Trim().TrimEnd('/')
-          if ($actualSiteUrl -ne $env:CANONICAL_SITE_URL) {
-            throw "Auth Site URL verification failed. Expected=$env:CANONICAL_SITE_URL Actual=$actualSiteUrl"
+          if ($actualSiteUrl -ne $env:DESIRED_SITE_URL) {
+            throw "Auth Site URL verification failed. Expected=$env:DESIRED_SITE_URL Actual=$actualSiteUrl"
           }
 
-          $actualEntries = @(
-            ([string]$actual.uri_allow_list).Split(',') |
-              ForEach-Object { $_.Trim() } |
-              Where-Object { -not [string]::IsNullOrWhiteSpace($_) }
-          )
-          $required = @(
-            "https://acheguese.com.br/login?confirmed=1",
-            "https://acheguese.com.br/reset-password?mode=recovery",
-            "https://acheguese.com.br/conta/confirmar-email?emailChange=1",
-            "https://acheguese.com.br/aceitar-termos",
-            "http://localhost:5175/login?confirmed=1",
-            "http://localhost:5175/reset-password?mode=recovery",
-            "http://localhost:5175/conta/confirmar-email?emailChange=1",
-            "http://localhost:5175/aceitar-termos"
-          )
-          $missing = @($required | Where-Object { $_ -notin $actualEntries })
-          if ($missing.Count -gt 0) {
-            throw "Required Auth redirect URLs missing after patch: $($missing -join ', ')"
+          $actualEntries = @(([string]$actual.uri_allow_list).Split(',') | ForEach-Object { $_.Trim() } | Where-Object { $_ })
+          $desiredEntries = @($env:DESIRED_ALLOW_LIST.Split(',') | ForEach-Object { $_.Trim() } | Where-Object { $_ })
+          $missing = @($desiredEntries | Where-Object { $_ -notin $actualEntries })
+          $extras = @($actualEntries | Where-Object { $_ -notin $desiredEntries })
+          if ($missing.Count -gt 0 -or $extras.Count -gt 0 -or $actualEntries.Count -ne $desiredEntries.Count) {
+            throw "Remote Auth redirect list does not equal canonical supabase/config.toml. Missing=$($missing -join ';') Extras=$($extras -join ';')"
           }
 
-          Write-Host "Canonical Site URL and all required Auth redirect URLs verified."
+          Write-Host "Remote Auth URL configuration equals supabase/config.toml."
           @(
             "## Supabase Auth URL configuration",
             "- Project ref: $env:SUPABASE_PROJECT_REF",
             "- Site URL: $actualSiteUrl",
-            "- Required production callbacks: verified",
+            "- Redirect entries: $($actualEntries.Count)",
+            "- Authority: supabase/config.toml",
+            "- Production callbacks: verified",
+            "- acheguese.vercel.app callbacks: verified",
             "- localhost:5175 callbacks: verified",
-            "- Existing allow-list entries were preserved and deduplicated.",
+            "- 127.0.0.1:5175 callbacks: verified",
+            "- Remote-only redirect drift: removed",
             "- No SMTP/provider secrets were read or written by this workflow."
           ) | Add-Content -Path $env:GITHUB_STEP_SUMMARY -Encoding UTF8
