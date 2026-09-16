@@ -1,4 +1,6 @@
-import { useState, forwardRef } from "react";
+import { forwardRef, useState } from "react";
+import { AlertTriangle, Loader2 } from "lucide-react";
+import { Button } from "@/shared/components/ui/button";
 import {
   Dialog,
   DialogContent,
@@ -7,11 +9,9 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/shared/components/ui/dialog";
-import { Button } from "@/shared/components/ui/button";
 import { Label } from "@/shared/components/ui/label";
-import { Textarea } from "@/shared/components/ui/textarea";
 import { RadioGroup, RadioGroupItem } from "@/shared/components/ui/radio-group";
-import { AlertTriangle, Loader2 } from "lucide-react";
+import { Textarea } from "@/shared/components/ui/textarea";
 
 interface CancelRideDialogProps {
   open: boolean;
@@ -30,9 +30,15 @@ type CancellationReasonOption = {
 const DRIVER_CANCEL_REASONS: readonly CancellationReasonOption[] = [
   { code: "passenger_no_show", label: "Passageiro não apareceu" },
   { code: "passenger_requested", label: "Passageiro solicitou o cancelamento" },
-  { code: "passenger_or_identity_mismatch", label: "Pessoa/identidade não corresponde ao esperado" },
+  {
+    code: "passenger_or_identity_mismatch",
+    label: "Pessoa/identidade não corresponde ao esperado",
+  },
   { code: "unsafe_pickup", label: "Local de embarque sem condições seguras" },
-  { code: "capacity_or_restraint_safety", label: "Lotação ou equipamento de segurança inadequado" },
+  {
+    code: "capacity_or_restraint_safety",
+    label: "Lotação ou equipamento de segurança inadequado",
+  },
   { code: "vehicle_issue", label: "Problema no veículo" },
   { code: "destination_issue", label: "Problema com o destino informado" },
   { code: "weather_safety", label: "Condições climáticas sem segurança" },
@@ -43,8 +49,14 @@ const PASSENGER_CANCEL_REASONS: readonly CancellationReasonOption[] = [
   { code: "plans_changed", label: "Mudança de planos" },
   { code: "other_transport", label: "Encontrei outro transporte" },
   { code: "driver_delay", label: "Motorista demorou muito" },
-  { code: "driver_or_vehicle_mismatch", label: "Motorista ou veículo não corresponde ao informado" },
-  { code: "unsafe_pickup_or_approach", label: "Situação de segurança no embarque/aproximação" },
+  {
+    code: "driver_or_vehicle_mismatch",
+    label: "Motorista ou veículo não corresponde ao informado",
+  },
+  {
+    code: "unsafe_pickup_or_approach",
+    label: "Situação de segurança no embarque/aproximação",
+  },
   { code: "destination_issue", label: "Problema com o destino informado" },
   { code: "price_concern", label: "Valor não atende ao esperado" },
   { code: "other", label: "Outro motivo", requiresDetail: true },
@@ -76,21 +88,26 @@ export const CancelRideDialog = forwardRef<
     (reason) => reason.code === selectedReasonCode,
   );
 
+  const resetForm = () => {
+    setSelectedReasonCode("");
+    setCustomReason("");
+  };
+
+  const handleOpenChange = (nextOpen: boolean) => {
+    if (loading) return;
+    onOpenChange(nextOpen);
+    if (!nextOpen) resetForm();
+  };
+
   const handleConfirm = async () => {
     if (!selectedReason) return;
     if (selectedReason.requiresDetail && !customReason.trim()) return;
 
-    const finalReason = serializeCancellationReason(
-      selectedReason,
-      customReason,
-    );
-
     setLoading(true);
     try {
-      await onConfirm(finalReason);
+      await onConfirm(serializeCancellationReason(selectedReason, customReason));
       onOpenChange(false);
-      setSelectedReasonCode("");
-      setCustomReason("");
+      resetForm();
     } finally {
       setLoading(false);
     }
@@ -102,12 +119,12 @@ export const CancelRideDialog = forwardRef<
   );
 
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
+    <Dialog open={open} onOpenChange={handleOpenChange}>
       <DialogContent ref={ref} className="sm:max-w-md">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
-            <AlertTriangle className="h-5 w-5 text-yellow-500" />
-            Cancelar Corrida
+            <AlertTriangle className="h-5 w-5 text-warning" aria-hidden="true" />
+            Cancelar corrida
           </DialogTitle>
           <DialogDescription>
             Informe o motivo real do cancelamento. O registro fica associado à
@@ -124,10 +141,13 @@ export const CancelRideDialog = forwardRef<
             >
               {reasons.map((reason) => (
                 <div key={reason.code} className="flex items-center space-x-2">
-                  <RadioGroupItem value={reason.code} id={`cancel-${reason.code}`} />
+                  <RadioGroupItem
+                    value={reason.code}
+                    id={`cancel-${reason.code}`}
+                  />
                   <Label
                     htmlFor={`cancel-${reason.code}`}
-                    className="text-sm font-normal cursor-pointer"
+                    className="cursor-pointer text-sm font-normal"
                   >
                     {reason.label}
                   </Label>
@@ -136,7 +156,7 @@ export const CancelRideDialog = forwardRef<
             </RadioGroup>
           </div>
 
-          {selectedReason?.requiresDetail && (
+          {selectedReason?.requiresDetail ? (
             <div className="space-y-2">
               <Label htmlFor="custom-reason">Descreva o motivo</Label>
               <Textarea
@@ -151,14 +171,14 @@ export const CancelRideDialog = forwardRef<
                 {customReason.length}/200 caracteres
               </p>
             </div>
-          )}
+          ) : null}
         </div>
 
         <DialogFooter className="gap-2 sm:gap-0">
           <Button
             type="button"
             variant="outline"
-            onClick={() => onOpenChange(false)}
+            onClick={() => handleOpenChange(false)}
             disabled={loading}
           >
             Voltar
@@ -166,11 +186,13 @@ export const CancelRideDialog = forwardRef<
           <Button
             type="button"
             variant="destructive"
-            onClick={handleConfirm}
+            onClick={() => void handleConfirm()}
             disabled={!isValid || loading}
           >
-            {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-            Confirmar Cancelamento
+            {loading ? (
+              <Loader2 className="mr-2 h-4 w-4 animate-spin" aria-hidden="true" />
+            ) : null}
+            Confirmar cancelamento
           </Button>
         </DialogFooter>
       </DialogContent>
