@@ -86,8 +86,13 @@ export async function createDeliveryOperation(
       return { success: false, error: "Nome do destinatario e obrigatorio." };
     }
 
-    if (input.suggestedPrice && input.suggestedPrice < 5.0) {
-      return { success: false, error: "Preco minimo e R$ 5,00." };
+    // Commercial fare thresholds belong exclusively to Pricing/backend policy.
+    // This orchestration layer must not invent or duplicate provisional values.
+    if (
+      input.suggestedPrice !== undefined &&
+      (!Number.isFinite(input.suggestedPrice) || input.suggestedPrice <= 0)
+    ) {
+      return { success: false, error: "Preco sugerido invalido." };
     }
 
     const creation = await MobilityRpcService.createDelivery(input);
