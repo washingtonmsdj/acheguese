@@ -16,7 +16,6 @@ import { MobilityRpcService } from "../services/MobilityRpcService";
 import { RideOperationalContextReadService } from "../services/RideOperationalContextReadService";
 import type { FailedDeliveryMetadata, FailedDeliveryResolutionUpdate } from "../types/FailedDeliveryMetadata";
 import { OperationalVerificationService } from "../services/OperationalVerificationService";
-import { mobilityRolloutService } from "../services/MobilityRolloutService";
 import { OrderDeliveryLinkService } from "@/core/mobility/delivery/services/OrderDeliveryLinkService";
 import type {
   CancelInput,
@@ -39,18 +38,11 @@ import {
   type DeliveryTransitionCommand,
 } from "./RideDeliveryOperationalActions";
 export type { CreateDeliveryInput, CreateRideInput } from "./RideOperationalTypes";
-// ============================================
-// RIDE OPERATIONAL SERVICE
-// ============================================
 
 export class RideOperationalService {
-  /**
-   * Cria nova corrida no estado inicial
-   */
+  /** Cria nova corrida no estado inicial. */
   static async createRide(input: CreateRideInput): Promise<TransitionResult> {
     try {
-      const initialState = RIDE_STATE.REQUESTED;
-
       const requesterBlock = await ensureProfileCanRequest(input.passengerProfileId);
       if (requesterBlock) return requesterBlock;
 
@@ -70,19 +62,14 @@ export class RideOperationalService {
       if (!hasValidRouteCoordinates(input)) {
         return {
           success: false,
-          error: 'Coordenadas so obrigatrias para calculo de preco oficial. Selecione enderecos validos no mapa.',
+          error: "Coordenadas sao obrigatorias para reconciliar a solicitacao com a cotacao oficial.",
         };
       }
 
-      // Commercial fare thresholds belong exclusively to Pricing/backend policy.
-      // This orchestration layer only rejects structurally invalid numeric input.
-      if (
-        input.suggestedPrice !== undefined &&
-        (!Number.isFinite(input.suggestedPrice) || input.suggestedPrice <= 0)
-      ) {
+      if (!input.priceQuoteId?.trim()) {
         return {
           success: false,
-          error: 'Preco sugerido invalido.',
+          error: "Cotacao comercial server-owned e obrigatoria para solicitar corrida.",
         };
       }
 
@@ -94,24 +81,22 @@ export class RideOperationalService {
       }
 
       const ride = { id: creation.ride_id };
-      logger.info('RideOperationalService.createRide - success', { rideId: ride.id });
+      logger.info("RideOperationalService.createRide - success", { rideId: ride.id });
 
-      await this.transitionTo(ride.id, RIDE_STATE.SEARCHING_DRIVER, 'system');
+      await this.transitionTo(ride.id, RIDE_STATE.SEARCHING_DRIVER, "system");
 
-      logger.info('RideOperationalService.createRide - Auto-dispatch edge function will be triggered', {
+      logger.info("RideOperationalService.createRide - Auto-dispatch edge function will be triggered", {
         rideId: ride.id,
       });
 
       return { success: true, rideId: ride.id, newState: RIDE_STATE.SEARCHING_DRIVER };
     } catch (error) {
-      logger.error('RideOperationalService.createRide', error as Error);
+      logger.error("RideOperationalService.createRide", error as Error);
       return { success: false, error: (error as Error).message };
     }
   }
 
-  /**
-   * Transiciona corrida para novo estado.
-   */
+  /** Transiciona corrida para novo estado. */
   static async transitionTo(
     rideId: string,
     toState: RideState,
@@ -121,9 +106,9 @@ export class RideOperationalService {
     deliveryCommand?: DeliveryTransitionCommand,
   ): Promise<TransitionResult> {
     try {
-      logger.info('RideOperationalService.transitionTo - BEFORE lifecycle read', {
-        method: 'transitionTo',
-        step: 'fetch_current_state',
+      logger.info("RideOperationalService.transitionTo - BEFORE lifecycle read", {
+        method: "transitionTo",
+        step: "fetch_current_state",
         rideId,
         toState,
         actor,
@@ -131,9 +116,9 @@ export class RideOperationalService {
 
       const ride = await RideOperationalContextReadService.getLifecycle(rideId);
 
-      logger.info('RideOperationalService.transitionTo - AFTER lifecycle read', {
-        method: 'transitionTo',
-        step: 'fetch_current_state',
+      logger.info("RideOperationalService.transitionTo - AFTER lifecycle read", {
+        method: "transitionTo",
+        step: "fetch_current_state",
         rideId,
         toState,
         actor,
@@ -145,7 +130,7 @@ export class RideOperationalService {
       if (!ride) {
         return {
           success: false,
-          error: 'Ride not found',
+          error: "Ride not found",
         };
       }
 
@@ -162,7 +147,7 @@ export class RideOperationalService {
         }
 
         const verification = verificationResult.data ?? null;
-        if (verification?.is_required && verification.status !== 'verified') {
+        if (verification?.is_required && verification.status !== "verified") {
           if (pin) {
             const verifyResult = await OperationalVerificationService.verifyPIN({
               rideId,
@@ -172,13 +157,13 @@ export class RideOperationalService {
             if (!verifyResult.success || !verifyResult.data?.verified) {
               return {
                 success: false,
-                error: verifyResult.data?.message || verifyResult.error || 'Invalid PIN',
+                error: verifyResult.data?.message || verifyResult.error || "Invalid PIN",
               };
             }
           } else {
             return {
               success: false,
-              error: 'PIN verification required before boarding',
+              error: "PIN verification required before boarding",
             };
           }
         }
@@ -220,7 +205,7 @@ export class RideOperationalService {
           });
 
       if (!transition.updated) {
-        throw new Error('Ride state transition was not applied');
+        throw new Error("Ride state transition was not applied");
       }
       if (transition.to_state !== toState) {
         throw new Error(
@@ -254,7 +239,7 @@ export class RideOperationalService {
         hint: providerError?.hint,
       };
 
-      logger.error('RideOperationalService.transitionTo', error as Error, {
+      logger.error("RideOperationalService.transitionTo", error as Error, {
         rideId,
         toState,
         errorDetails,
@@ -262,31 +247,29 @@ export class RideOperationalService {
 
       return {
         success: false,
-        error: (error as Error).message || 'Unknown error during transition',
+        error: (error as Error).message || "Unknown error during transition",
       };
     }
   }
 
-  /**
-   * Cancela corrida
-   */
+  /** Cancela corrida. */
   static async cancelRide(input: CancelInput): Promise<TransitionResult> {
     try {
-      logger.info('RideOperationalService.cancelRide - iniciando', input);
+      logger.info("RideOperationalService.cancelRide - iniciando", input);
 
       const ride = await RideOperationalContextReadService.getLifecycle(input.rideId);
 
       if (!ride) {
-        logger.warn('RideOperationalService.cancelRide - ride not found', { rideId: input.rideId });
+        logger.warn("RideOperationalService.cancelRide - ride not found", { rideId: input.rideId });
         return {
           success: false,
-          error: 'Ride not found',
+          error: "Ride not found",
         };
       }
 
       const currentState = ride.status as RideState;
 
-      logger.info('RideOperationalService.cancelRide - estado atual', {
+      logger.info("RideOperationalService.cancelRide - estado atual", {
         rideId: input.rideId,
         currentState,
         cancelledBy: input.cancelledBy,
@@ -296,7 +279,7 @@ export class RideOperationalService {
       });
 
       const requestedCancelledState =
-        input.cancelledBy === 'passenger'
+        input.cancelledBy === "passenger"
           ? RIDE_STATE.CANCELLED_BY_PASSENGER
           : RIDE_STATE.CANCELLED_BY_DRIVER;
 
@@ -305,7 +288,7 @@ export class RideOperationalService {
         currentState === RIDE_STATE.CANCELLED_BY_DRIVER
       ) {
         if (currentState !== requestedCancelledState) {
-          logger.warn('Ride already cancelled by another actor', {
+          logger.warn("Ride already cancelled by another actor", {
             rideId: input.rideId,
             currentState,
             cancelledBy: input.cancelledBy,
@@ -334,39 +317,39 @@ export class RideOperationalService {
         };
       }
 
-      if (input.cancelledBy === 'passenger') {
+      if (input.cancelledBy === "passenger") {
         if (ride.passenger_profile_id !== input.profileId) {
           return {
             success: false,
-            error: 'Only passenger can cancel',
+            error: "Only passenger can cancel",
           };
         }
 
         if (!RideStateMachine.canPassengerCancel(currentState)) {
           return {
             success: false,
-            error: 'Passenger cannot cancel at this stage',
+            error: "Passenger cannot cancel at this stage",
           };
         }
-      } else if (input.cancelledBy === 'driver') {
+      } else if (input.cancelledBy === "driver") {
         if (ride.driver_profile_id !== input.profileId) {
           return {
             success: false,
-            error: 'Only assigned driver can cancel',
+            error: "Only assigned driver can cancel",
           };
         }
         if (!RideStateMachine.canDriverCancel(currentState)) {
           return {
             success: false,
-            error: 'Driver cannot cancel at this stage',
+            error: "Driver cannot cancel at this stage",
           };
         }
       }
 
-      if (input.cancelledBy === 'driver' && currentState === RIDE_STATE.IN_DELIVERY) {
+      if (input.cancelledBy === "driver" && currentState === RIDE_STATE.IN_DELIVERY) {
         return {
           success: false,
-          error: 'Cannot cancel during delivery. Use failDelivery() instead to register operational failure.',
+          error: "Cannot cancel during delivery. Use failDelivery() instead to register operational failure.",
         };
       }
 
@@ -374,10 +357,10 @@ export class RideOperationalService {
         input.rideId,
         requestedCancelledState,
         input.profileId,
-        input.reason || 'Cancelled',
+        input.reason || "Cancelled",
       );
     } catch (error) {
-      logger.error('RideOperationalService.cancelRide', error as Error, input);
+      logger.error("RideOperationalService.cancelRide", error as Error, input);
       return {
         success: false,
         error: (error as Error).message,
@@ -385,9 +368,7 @@ export class RideOperationalService {
     }
   }
 
-  /**
-   * Completa corrida
-   */
+  /** Completa corrida. */
   static async completeRide(
     rideId: string,
     driverProfileId: string,
@@ -399,7 +380,7 @@ export class RideOperationalService {
       if (!ride) {
         return {
           success: false,
-          error: 'Ride not found',
+          error: "Ride not found",
         };
       }
 
@@ -415,7 +396,7 @@ export class RideOperationalService {
       if (ride.driver_profile_id !== driverProfileId) {
         return {
           success: false,
-          error: 'Only assigned driver can complete ride',
+          error: "Only assigned driver can complete ride",
         };
       }
 
@@ -423,10 +404,10 @@ export class RideOperationalService {
         rideId,
         RIDE_STATE.COMPLETED,
         driverProfileId,
-        'Ride completed successfully',
+        "Ride completed successfully",
       );
     } catch (error) {
-      logger.error('RideOperationalService.completeRide', error as Error, { rideId });
+      logger.error("RideOperationalService.completeRide", error as Error, { rideId });
       return {
         success: false,
         error: (error as Error).message,
@@ -434,9 +415,7 @@ export class RideOperationalService {
     }
   }
 
-  /**
-   * Motorista aceita corrida
-   */
+  /** Motorista aceita corrida. */
   static async acceptRide(
     rideId: string,
     driverProfileId: string,
@@ -459,10 +438,6 @@ export class RideOperationalService {
       error: result.error,
     };
   }
-
-  // ============================================
-  // MOTOBOY - Operacoes de entrega
-  // ============================================
 
   static async createDelivery(input: CreateDeliveryInput): Promise<TransitionResult> {
     return createDeliveryOperation(input, (rideId, toState, actorProfileId, reason) =>
