@@ -35,14 +35,26 @@ describe("pricing instance SSOT", () => {
     expect(violations).toEqual([]);
   });
 
-  it("exports the application singleton only from the canonical instance", () => {
+  it("keeps the raw pricing implementation out of public barrels", () => {
     const servicesBarrel = read("src/core/pricing/services/index.ts");
     const pricingBarrel = read("src/core/pricing/index.ts");
     const instance = read("src/core/pricing/instance.ts");
 
-    expect(servicesBarrel).toBe("export { PricingService } from './PricingService';");
+    expect(servicesBarrel).not.toContain("PricingService");
     expect(servicesBarrel).not.toContain("pricingService");
     expect(pricingBarrel).toContain("export { pricingService } from './instance';");
     expect(instance).toContain("export const pricingService = new Proxy");
+  });
+
+  it("does not expose retired client-side mobility fare hooks", () => {
+    const hooksBarrel = read("src/core/pricing/hooks/index.ts");
+    const retiredHook = path.resolve(
+      PROJECT_ROOT,
+      "src/core/pricing/hooks/usePriceEstimate.ts",
+    );
+
+    expect(fs.existsSync(retiredHook)).toBe(false);
+    expect(hooksBarrel).not.toContain("usePriceEstimate");
+    expect(hooksBarrel).not.toContain("useQuickPriceEstimate");
   });
 });
