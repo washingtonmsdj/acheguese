@@ -5,7 +5,6 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import {
-  isDriverOwnedOpenRideStatus,
   isOpenRideStatus,
   isPreAcceptRideStatus,
 } from "@/core/mobility/core/RideLifecycleStatus";
@@ -33,13 +32,11 @@ import {
   Zap,
 } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
-import { toast } from "sonner";
 import { CreateDeliveryModal } from "../components/CreateDeliveryModal";
 import { CreateRideModal } from "../components/CreateRideModal";
 import { EmergencyButton } from "../components/EmergencyButton";
 import { ErrorBoundary, ErrorState } from "../components/ErrorBoundary";
 import { RideHistoryUnified } from "../components/RideHistoryUnified";
-import { RideTrackingMap } from "../components/RideTrackingMap";
 import { CancelRideDialog } from "../components/driver/CancelRideDialog";
 import { ActiveRideCard } from "../components/passenger/ActiveRideCard";
 import { RateDriverModal } from "../components/passenger/RateDriverModal";
@@ -96,7 +93,7 @@ export default function PassageiroPage() {
   const completedRides = myRides.filter(
     (ride) => ride.status === RIDE_STATUS.COMPLETED,
   );
-  const needsRating = completedRides.filter((ride) => !ride.rating);
+  const needsRating = completedRides.filter((ride) => ride.rating == null);
   const needsConfirmation = completedRides.filter(
     (ride) => !ride.passenger_confirmed,
   );
@@ -414,9 +411,6 @@ export default function PassageiroPage() {
                 ) : (
                   activeRides.map((ride) => {
                     const isPreAccept = isPreAcceptRideStatus(ride.status);
-                    const canTrackDriver =
-                      Boolean(ride.driver_profile_id) &&
-                      isDriverOwnedOpenRideStatus(ride.status);
 
                     return (
                       <motion.div
@@ -464,26 +458,7 @@ export default function PassageiroPage() {
                               );
                               if (activeRide) handleOpenCancelDialog(activeRide);
                             }}
-                            onContact={() =>
-                              toast.info(
-                                PASSENGER_PAGE_LABELS.TOAST_OPENING_CHAT,
-                              )
-                            }
                           />
-                        )}
-
-                        {canTrackDriver && ride.driver_profile_id && (
-                          <div className="rounded-2xl overflow-hidden border border-border">
-                            <RideTrackingMap
-                              driverProfileId={ride.driver_profile_id}
-                              rideId={ride.id}
-                              destinationLat={ride.destination_lat}
-                              destinationLon={ride.destination_lng}
-                              originLat={ride.origin_lat}
-                              originLon={ride.origin_lng}
-                              showETA
-                            />
-                          </div>
                         )}
                       </motion.div>
                     );
@@ -562,12 +537,10 @@ export default function PassageiroPage() {
           open={Boolean(confirmationRide)}
           onOpenChange={(open) => !open && setConfirmationRide(null)}
           ride={confirmationRide}
-          onConfirm={async (rideId: string) => {
-            await confirmRideCompletion(rideId);
-          }}
-          onReportProblem={async (rideId: string, problem: string) => {
-            await reportRideProblem(rideId, problem);
-          }}
+          onConfirm={(rideId: string) => confirmRideCompletion(rideId)}
+          onReportProblem={(rideId: string, problem: string) =>
+            reportRideProblem(rideId, problem)
+          }
         />
         <CancelRideDialog
           open={cancelDialogOpen}
