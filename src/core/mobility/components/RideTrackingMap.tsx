@@ -131,10 +131,7 @@ export const RideTrackingMap = memo(function RideTrackingMap({
         if (liveMap.getSource('route-real')) {
           (liveMap.getSource('route-real') as GeoJSONSource).setData({
             type: 'Feature',
-            geometry: {
-              type: 'LineString',
-              coordinates,
-            },
+            geometry: { type: 'LineString', coordinates },
             properties: {},
           });
         } else {
@@ -142,14 +139,10 @@ export const RideTrackingMap = memo(function RideTrackingMap({
             type: 'geojson',
             data: {
               type: 'Feature',
-              geometry: {
-                type: 'LineString',
-                coordinates,
-              },
+              geometry: { type: 'LineString', coordinates },
               properties: {},
             },
           });
-
           liveMap.addLayer(
             {
               id: 'route-real-line',
@@ -165,15 +158,11 @@ export const RideTrackingMap = memo(function RideTrackingMap({
           );
         }
       } catch (routeError) {
-        logger.error(
-          '[RideTrackingMap] Erro ao carregar rota real:',
-          routeError,
-        );
+        logger.error('[RideTrackingMap] Erro ao carregar rota real:', routeError);
       }
     };
 
     void loadRoute();
-
     return () => {
       cancelled = true;
     };
@@ -182,24 +171,26 @@ export const RideTrackingMap = memo(function RideTrackingMap({
   useEffect(() => {
     if (!containerRef.current || mapRef.current) return;
     let disposed = false;
+    let initialLoadCompleted = false;
     setMapInitializationError(false);
 
-    const resetMapRuntime = () => {
+    const resetMapRuntime = (updateReadyState = true) => {
       driverMarkerRef.current?.remove();
       driverMarkerRef.current = null;
       mapRef.current?.remove();
       mapRef.current = null;
       maplibreRuntimeRef.current = null;
-      setMapReady(false);
+      if (updateReadyState) setMapReady(false);
     };
 
     const failMapInitialization = (initializationError: unknown) => {
+      if (disposed) return;
       logger.error(
         '[RideTrackingMap] Falha ao inicializar MapLibre:',
         initializationError,
       );
       resetMapRuntime();
-      if (!disposed) setMapInitializationError(true);
+      setMapInitializationError(true);
     };
 
     const initializeMap = async () => {
@@ -207,10 +198,8 @@ export const RideTrackingMap = memo(function RideTrackingMap({
       if (disposed || !containerRef.current || mapRef.current) return;
 
       maplibreRuntimeRef.current = maplibregl;
-      const centerLng =
-        originLon ?? destinationLon ?? DEFAULT_CAMERA.center[0];
-      const centerLat =
-        originLat ?? destinationLat ?? DEFAULT_CAMERA.center[1];
+      const centerLng = originLon ?? destinationLon ?? DEFAULT_CAMERA.center[0];
+      const centerLat = originLat ?? destinationLat ?? DEFAULT_CAMERA.center[1];
 
       const map = new maplibregl.Map({
         container: containerRef.current,
@@ -225,19 +214,14 @@ export const RideTrackingMap = memo(function RideTrackingMap({
         new maplibregl.AttributionControl({ compact: true }),
         'bottom-left',
       );
-      if (compact) {
-        map.addControl(new maplibregl.FullscreenControl(), 'top-right');
-      }
+      if (compact) map.addControl(new maplibregl.FullscreenControl(), 'top-right');
 
       const updateDriverPath = () => {
         const source = map.getSource('driver-path');
         const activeLocation = locationOverride ?? location;
         if (!source || !activeLocation) return;
-
         const coordinates = [
-          originLat != null && originLon != null
-            ? [originLon, originLat]
-            : null,
+          originLat != null && originLon != null ? [originLon, originLat] : null,
           [activeLocation.longitude, activeLocation.latitude],
           destinationLat != null && destinationLon != null
             ? [destinationLon, destinationLat]
@@ -245,7 +229,6 @@ export const RideTrackingMap = memo(function RideTrackingMap({
         ].filter(
           (coordinate): coordinate is [number, number] => coordinate !== null,
         );
-
         if (coordinates.length < 2) return;
         (source as GeoJSONSource).setData({
           type: 'Feature',
@@ -255,13 +238,12 @@ export const RideTrackingMap = memo(function RideTrackingMap({
       };
 
       map.on('error', (event) => {
-        if (disposed || mapReady) return;
+        if (disposed || initialLoadCompleted) return;
         failMapInitialization(event.error ?? new Error('MapLibre runtime error'));
       });
 
       map.on('load', () => {
         if (disposed) return;
-
         try {
           map.addSource('driver-path', {
             type: 'geojson',
@@ -316,6 +298,7 @@ export const RideTrackingMap = memo(function RideTrackingMap({
             );
           }
 
+          initialLoadCompleted = true;
           setMapReady(true);
           updateDriverPath();
         } catch (loadError) {
@@ -328,7 +311,7 @@ export const RideTrackingMap = memo(function RideTrackingMap({
 
     return () => {
       disposed = true;
-      resetMapRuntime();
+      resetMapRuntime(false);
     };
   }, [mapRetryKey]); // initialization inputs are intentionally captured per map instance
 
@@ -350,10 +333,7 @@ export const RideTrackingMap = memo(function RideTrackingMap({
       element.style.alignItems = 'center';
       element.style.justifyContent = 'center';
 
-      const svg = document.createElementNS(
-        'http://www.w3.org/2000/svg',
-        'svg',
-      );
+      const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
       svg.setAttribute('width', '16');
       svg.setAttribute('height', '16');
       svg.setAttribute('viewBox', '0 0 24 24');
@@ -378,12 +358,8 @@ export const RideTrackingMap = memo(function RideTrackingMap({
         svg.appendChild(circle);
       }
 
-      const path = document.createElementNS(
-        'http://www.w3.org/2000/svg',
-        'path',
-      );
+      const path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
       path.setAttribute('d', 'M12 17.5V14l-3-3 4-3 2 3h2');
-
       svg.appendChild(path);
       element.appendChild(svg);
       driverMarkerRef.current = new maplibregl.Marker({ element })
@@ -394,9 +370,7 @@ export const RideTrackingMap = memo(function RideTrackingMap({
     const driverPathSource = map.getSource('driver-path');
     if (driverPathSource) {
       const coordinates = [
-        originLat != null && originLon != null
-          ? [originLon, originLat]
-          : null,
+        originLat != null && originLon != null ? [originLon, originLat] : null,
         [displayLocation.longitude, displayLocation.latitude],
         destinationLat != null && destinationLon != null
           ? [destinationLon, destinationLat]
@@ -404,7 +378,6 @@ export const RideTrackingMap = memo(function RideTrackingMap({
       ].filter(
         (coordinate): coordinate is [number, number] => coordinate !== null,
       );
-
       if (coordinates.length >= 2) {
         (driverPathSource as GeoJSONSource).setData({
           type: 'Feature',
@@ -415,7 +388,6 @@ export const RideTrackingMap = memo(function RideTrackingMap({
     }
 
     map.easeTo({ center: lngLat, duration: 500 });
-
     if (destinationLat != null && destinationLon != null) {
       void calculateETA(destinationLat, destinationLon);
     }
@@ -438,9 +410,7 @@ export const RideTrackingMap = memo(function RideTrackingMap({
               className="h-8 w-8 animate-spin text-category-mobility"
               aria-hidden="true"
             />
-            <p className="text-sm text-muted-foreground">
-              Carregando localização...
-            </p>
+            <p className="text-sm text-muted-foreground">Carregando localização...</p>
           </div>
         </CardContent>
       </Card>
@@ -452,13 +422,8 @@ export const RideTrackingMap = memo(function RideTrackingMap({
       <Card className={cn('border border-destructive/30', className)}>
         <CardContent className="flex items-center justify-center py-12">
           <div className="flex flex-col items-center gap-3 text-center">
-            <MapPin
-              className="h-8 w-8 text-destructive"
-              aria-hidden="true"
-            />
-            <p className="text-sm text-destructive">
-              Erro ao carregar localização
-            </p>
+            <MapPin className="h-8 w-8 text-destructive" aria-hidden="true" />
+            <p className="text-sm text-destructive">Erro ao carregar localização</p>
             <Button size="sm" variant="outline" onClick={() => void refetch()}>
               <RefreshCw className="mr-2 h-4 w-4" aria-hidden="true" />
               Tentar novamente
@@ -474,13 +439,8 @@ export const RideTrackingMap = memo(function RideTrackingMap({
       <Card className={cn('border', className)}>
         <CardContent className="flex items-center justify-center py-12">
           <div className="flex flex-col items-center gap-3 text-center">
-            <MapPin
-              className="h-8 w-8 text-muted-foreground"
-              aria-hidden="true"
-            />
-            <p className="text-sm text-muted-foreground">
-              Localização não disponível
-            </p>
+            <MapPin className="h-8 w-8 text-muted-foreground" aria-hidden="true" />
+            <p className="text-sm text-muted-foreground">Localização não disponível</p>
             <p className="text-xs text-muted-foreground">
               O motorista ainda não compartilhou sua localização.
             </p>
@@ -495,10 +455,7 @@ export const RideTrackingMap = memo(function RideTrackingMap({
       <Card className={cn('border border-destructive/30', className)}>
         <CardContent className="flex items-center justify-center py-12">
           <div className="flex max-w-sm flex-col items-center gap-3 text-center">
-            <MapPin
-              className="h-8 w-8 text-destructive"
-              aria-hidden="true"
-            />
+            <MapPin className="h-8 w-8 text-destructive" aria-hidden="true" />
             <div>
               <p className="text-sm font-semibold text-foreground">
                 Não foi possível carregar o mapa
@@ -523,7 +480,6 @@ export const RideTrackingMap = memo(function RideTrackingMap({
 
   const etaObj: EtaSummary | null =
     typeof eta === 'object' && eta !== null ? (eta as EtaSummary) : null;
-
   const liveStatusLabel =
     mode === 'snapshot'
       ? 'Atualização pausada'
@@ -569,9 +525,7 @@ export const RideTrackingMap = memo(function RideTrackingMap({
                       ? 'Última posição identificada'
                       : 'Rastreamento em tempo real'}
                   </h3>
-                  <p className="text-xs text-muted-foreground">
-                    {liveStatusLabel}
-                  </p>
+                  <p className="text-xs text-muted-foreground">{liveStatusLabel}</p>
                 </div>
               </div>
 
@@ -626,10 +580,7 @@ export const RideTrackingMap = memo(function RideTrackingMap({
           )}
         />
 
-        {compact &&
-        mode === 'snapshot' &&
-        showSnapshotOverlay &&
-        displayLocation ? (
+        {compact && mode === 'snapshot' && showSnapshotOverlay && displayLocation ? (
           <div className="pointer-events-none absolute inset-0 flex items-center justify-center">
             <div className="relative flex h-20 w-20 items-center justify-center rounded-full border border-dashed border-territory-brand/60 bg-territory-info/5">
               <Badge className="border border-territory-brand/20 bg-background/95 text-[0.625rem] font-semibold text-territory-ink shadow-sm">
