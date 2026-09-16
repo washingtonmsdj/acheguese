@@ -1,5 +1,6 @@
 import { getSupabaseAdminClient, requireAdmin } from "../_shared/adminAuth.ts";
 import {
+  getCorsHeaders,
   isValidUUID,
   jsonResponse,
   rateLimitMiddleware,
@@ -146,7 +147,10 @@ function totalFromRows(rows: unknown[]): number {
 
 Deno.serve(async (req: Request) => {
   if (req.method === "OPTIONS") {
-    return new Response(null, { status: 204 });
+    return new Response(null, {
+      status: 204,
+      headers: getCorsHeaders(ALLOWED_METHODS, req),
+    });
   }
 
   const methodError = requireHttpMethod(req, ["POST"], ALLOWED_METHODS);
