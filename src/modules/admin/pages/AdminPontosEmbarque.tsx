@@ -1,48 +1,46 @@
-import React, { useCallback, useState, useEffect } from "react";
+import type { FormEvent, ReactNode } from "react";
+import { useCallback, useEffect, useState } from "react";
+import {
+  Accessibility,
+  Armchair,
+  Building2,
+  Bus,
+  Church,
+  Edit,
+  Eye,
+  EyeOff,
+  Home,
+  Landmark,
+  Lightbulb,
+  MapPin,
+  MoreHorizontal,
+  Plus,
+  School,
+  Square,
+  Trash2,
+} from "lucide-react";
+import { toast } from "sonner";
 import { adminPickupPointsService } from "@/core/admin/services/AdminPickupPointsService";
 import type { PickupPoint } from "@/core/admin/services/AdminPickupPointsService";
-import { Button } from "@/shared/components/ui/button";
-import { Input } from "@/shared/components/ui/input";
-import { Label } from "@/shared/components/ui/label";
-import { Textarea } from "@/shared/components/ui/textarea";
-import { Switch } from "@/shared/components/ui/switch";
+import { useLocationContext } from "@/core/location";
+import { AdminAccessDenied } from "@/modules/admin/components/AdminAccessDenied";
+import { PICKUP_POINTS_DEFAULTS } from "@/modules/admin/config/pickupPoints.config";
+import { useAdminGuard } from "@/modules/admin/hooks/useAdminGuard";
 import { Badge } from "@/shared/components/ui/badge";
+import { Button } from "@/shared/components/ui/button";
 import {
   Dialog,
   DialogContent,
+  DialogDescription,
   DialogHeader,
   DialogTitle,
-  DialogDescription,
 } from "@/shared/components/ui/dialog";
-import {
-  MapPin,
-  Plus,
-  Edit,
-  Trash2,
-  Eye,
-  EyeOff,
-  Navigation,
-  School,
-  Church,
-  Building2,
-  Square,
-  Bus,
-  Landmark,
-  MoreHorizontal,
-  Check,
-  X,
-  Accessibility,
-  Lightbulb,
-  Armchair,
-  Home,
-  Shield,
-} from "lucide-react";
-import { cn } from "@/shared/utils/cn";
-import { toast } from "sonner";
+import { Input } from "@/shared/components/ui/input";
+import { Label } from "@/shared/components/ui/label";
+import { Switch } from "@/shared/components/ui/switch";
+import { Textarea } from "@/shared/components/ui/textarea";
 import { useConfirmActionDialog } from "@/shared/hooks/useConfirmActionDialog";
-import { useAdminGuard } from "@/modules/admin/hooks/useAdminGuard";
-import { useLocationContext } from "@/core/location";
-import { PICKUP_POINTS_DEFAULTS } from "@/modules/admin/config/pickupPoints.config";
+import { cn } from "@/shared/utils/cn";
 
 type PickupPointFormData = {
   name: string;
@@ -59,6 +57,12 @@ type PickupPointFormData = {
   accessibility: boolean;
   active: boolean;
   notes: string;
+};
+
+type PickupPointTypeInfo = {
+  icon: ReactNode;
+  label: string;
+  color: string;
 };
 
 function createEmptyFormData(territoryName = ""): PickupPointFormData {
@@ -80,44 +84,41 @@ function createEmptyFormData(territoryName = ""): PickupPointFormData {
   };
 }
 
-const typeConfig: Record<
-  string,
-  { icon: React.ReactNode; label: string; color: string }
-> = {
+const typeConfig: Record<string, PickupPointTypeInfo> = {
   bus_stop: {
-    icon: <Bus className="h-4 w-4" />,
-    label: "Ponto de Ônibus",
-    color: "text-blue-400 bg-blue-500/10",
+    icon: <Bus className="h-4 w-4" aria-hidden="true" />,
+    label: "Ponto de ônibus",
+    color: "bg-info/10 text-info",
   },
   landmark: {
-    icon: <Landmark className="h-4 w-4" />,
-    label: "Ponto de Referência",
-    color: "text-purple-400 bg-purple-500/10",
+    icon: <Landmark className="h-4 w-4" aria-hidden="true" />,
+    label: "Ponto de referência",
+    color: "bg-primary/10 text-primary",
   },
   square: {
-    icon: <Square className="h-4 w-4" />,
+    icon: <Square className="h-4 w-4" aria-hidden="true" />,
     label: "Praça",
-    color: "text-green-400 bg-green-500/10",
+    color: "bg-success/10 text-success",
   },
   school: {
-    icon: <School className="h-4 w-4" />,
+    icon: <School className="h-4 w-4" aria-hidden="true" />,
     label: "Escola",
-    color: "text-yellow-400 bg-yellow-500/10",
+    color: "bg-warning/10 text-warning",
   },
   church: {
-    icon: <Church className="h-4 w-4" />,
+    icon: <Church className="h-4 w-4" aria-hidden="true" />,
     label: "Igreja",
-    color: "text-pink-400 bg-pink-500/10",
+    color: "bg-accent text-accent-foreground",
   },
   commercial: {
-    icon: <Building2 className="h-4 w-4" />,
+    icon: <Building2 className="h-4 w-4" aria-hidden="true" />,
     label: "Comercial",
-    color: "text-orange-400 bg-orange-500/10",
+    color: "bg-category-business/10 text-category-business",
   },
   other: {
-    icon: <MoreHorizontal className="h-4 w-4" />,
+    icon: <MoreHorizontal className="h-4 w-4" aria-hidden="true" />,
     label: "Outro",
-    color: "text-gray-400 bg-gray-500/10",
+    color: "bg-muted text-muted-foreground",
   },
 };
 
@@ -131,7 +132,9 @@ export default function AdminPontosEmbarque() {
   const [loading, setLoading] = useState(true);
   const [showModal, setShowModal] = useState(false);
   const [editingPoint, setEditingPoint] = useState<PickupPoint | null>(null);
-  const [formData, setFormData] = useState<PickupPointFormData>(() => createEmptyFormData());
+  const [formData, setFormData] = useState<PickupPointFormData>(() =>
+    createEmptyFormData(),
+  );
 
   const fetchPoints = useCallback(async () => {
     setLoading(true);
@@ -140,7 +143,8 @@ export default function AdminPontosEmbarque() {
       setPoints(data);
     } catch (error: unknown) {
       toast.error("Erro ao carregar pontos", {
-        description: error instanceof Error ? error.message : "Falha ao carregar pontos",
+        description:
+          error instanceof Error ? error.message : "Falha ao carregar pontos",
       });
     } finally {
       setLoading(false);
@@ -149,33 +153,35 @@ export default function AdminPontosEmbarque() {
 
   useEffect(() => {
     if (!isChecking && canModerate) {
-      fetchPoints();
+      void fetchPoints();
     }
   }, [canModerate, fetchPoints, isChecking]);
 
   useEffect(() => {
     if (!editingPoint) {
-      setFormData((current) => ({ ...current, neighborhood: activeLocationName }));
+      setFormData((current) => ({
+        ...current,
+        neighborhood: activeLocationName,
+      }));
     }
   }, [activeLocationName, editingPoint]);
 
-  // Validação de admin
   if (!isChecking && !canModerate) {
-    return (
-      <div className="min-h-screen bg-[#0A0F14] flex items-center justify-center p-4">
-        <div className="text-center">
-          <Shield className="h-16 w-16 text-red-400 mx-auto mb-4" />
-          <h1 className="text-2xl font-bold text-white mb-2">Acesso Negado</h1>
-          <p className="text-gray-400">
-            Apenas administradores podem acessar esta página.
-          </p>
-        </div>
-      </div>
-    );
+    return <AdminAccessDenied />;
   }
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
+  const resetForm = () => {
+    setFormData(createEmptyFormData(activeLocationName));
+  };
+
+  const closeModal = () => {
+    setShowModal(false);
+    setEditingPoint(null);
+    resetForm();
+  };
+
+  const handleSubmit = async (event: FormEvent) => {
+    event.preventDefault();
 
     if (!activeLocationId) {
       toast.error("Selecione um território antes de cadastrar pontos de embarque.");
@@ -189,23 +195,19 @@ export default function AdminPontosEmbarque() {
       };
 
       if (editingPoint) {
-        await adminPickupPointsService.updatePickupPoint(
-          editingPoint.id,
-          payload,
-        );
+        await adminPickupPointsService.updatePickupPoint(editingPoint.id, payload);
         toast.success("Ponto atualizado com sucesso!");
       } else {
         await adminPickupPointsService.createPickupPoint(payload);
         toast.success("Ponto criado com sucesso!");
       }
 
-      setShowModal(false);
-      setEditingPoint(null);
-      resetForm();
-      fetchPoints();
+      closeModal();
+      await fetchPoints();
     } catch (error: unknown) {
       toast.error("Erro ao salvar ponto", {
-        description: error instanceof Error ? error.message : "Falha ao salvar ponto",
+        description:
+          error instanceof Error ? error.message : "Falha ao salvar ponto",
       });
     }
   };
@@ -234,7 +236,8 @@ export default function AdminPontosEmbarque() {
   const handleDelete = async (id: string) => {
     const confirmed = await confirm({
       title: "Excluir ponto de embarque",
-      description: "Este ponto sera removido da operacao de embarque do territorio selecionado.",
+      description:
+        "Este ponto será removido da operação de embarque do território selecionado.",
       confirmLabel: "Excluir",
       variant: "destructive",
     });
@@ -243,10 +246,11 @@ export default function AdminPontosEmbarque() {
     try {
       await adminPickupPointsService.deletePickupPoint(id);
       toast.success("Ponto excluído com sucesso!");
-      fetchPoints();
+      await fetchPoints();
     } catch (error: unknown) {
       toast.error("Erro ao excluir ponto", {
-        description: error instanceof Error ? error.message : "Falha ao excluir ponto",
+        description:
+          error instanceof Error ? error.message : "Falha ao excluir ponto",
       });
     }
   };
@@ -258,16 +262,13 @@ export default function AdminPontosEmbarque() {
         !point.active,
       );
       toast.success(point.active ? "Ponto desativado" : "Ponto ativado");
-      fetchPoints();
+      await fetchPoints();
     } catch (error: unknown) {
       toast.error("Erro ao atualizar status", {
-        description: error instanceof Error ? error.message : "Falha ao atualizar status",
+        description:
+          error instanceof Error ? error.message : "Falha ao atualizar status",
       });
     }
-  };
-
-  const resetForm = () => {
-    setFormData(createEmptyFormData(activeLocationName));
   };
 
   const openCreateModal = () => {
@@ -277,438 +278,472 @@ export default function AdminPontosEmbarque() {
   };
 
   if (loading) {
-    return <div className="p-6 text-center text-gray-400">Carregando...</div>;
+    return (
+      <div className="p-6 text-center text-muted-foreground" role="status">
+        Carregando...
+      </div>
+    );
   }
 
+  const activeCount = points.filter((point) => point.active).length;
+  const accessibleCount = points.filter((point) => point.accessibility).length;
+  const shelterCount = points.filter((point) => point.has_shelter).length;
+
   return (
-    <div className="p-6 max-w-7xl mx-auto">
-      {/* Header */}
-      <div className="flex items-center justify-between mb-6">
+    <div className="mx-auto max-w-7xl p-4 text-foreground md:p-6">
+      <div className="mb-6 flex flex-col justify-between gap-4 sm:flex-row sm:items-center">
         <div>
-          <h1 className="text-2xl font-bold text-white flex items-center gap-2">
-            <MapPin className="h-6 w-6 text-teal-400" />
-            Pontos de Embarque
+          <h1 className="flex items-center gap-2 text-2xl font-bold">
+            <MapPin className="h-6 w-6 text-primary" aria-hidden="true" />
+            Pontos de embarque
           </h1>
-          <p className="text-sm text-gray-400 mt-1">
-            Gerencie os pontos de embarque do território selecionado
+          <p className="mt-1 text-sm text-muted-foreground">
+            Gerencie os pontos de embarque do território selecionado.
           </p>
         </div>
-        <Button
-          onClick={openCreateModal}
-          className="bg-teal-500 hover:bg-teal-600 text-white"
-        >
-          <Plus className="h-4 w-4 mr-2" />
-          Novo Ponto
+        <Button onClick={openCreateModal} disabled={!activeLocationId}>
+          <Plus className="mr-2 h-4 w-4" aria-hidden="true" />
+          Novo ponto
         </Button>
       </div>
 
-      {/* Stats */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
-        <div className="rounded-xl border border-white/10 bg-[#1E2529] p-4">
-          <div className="flex items-center gap-2 mb-2">
-            <MapPin className="h-4 w-4 text-teal-400" />
-            <span className="text-xs text-gray-400">Total</span>
-          </div>
-          <p className="text-2xl font-bold text-white">{points.length}</p>
-        </div>
-        <div className="rounded-xl border border-white/10 bg-[#1E2529] p-4">
-          <div className="flex items-center gap-2 mb-2">
-            <Eye className="h-4 w-4 text-emerald-400" />
-            <span className="text-xs text-gray-400">Ativos</span>
-          </div>
-          <p className="text-2xl font-bold text-emerald-400">
-            {points.filter((p) => p.active).length}
-          </p>
-        </div>
-        <div className="rounded-xl border border-white/10 bg-[#1E2529] p-4">
-          <div className="flex items-center gap-2 mb-2">
-            <Accessibility className="h-4 w-4 text-blue-400" />
-            <span className="text-xs text-gray-400">Acessíveis</span>
-          </div>
-          <p className="text-2xl font-bold text-blue-400">
-            {points.filter((p) => p.accessibility).length}
-          </p>
-        </div>
-        <div className="rounded-xl border border-white/10 bg-[#1E2529] p-4">
-          <div className="flex items-center gap-2 mb-2">
-            <Home className="h-4 w-4 text-purple-400" />
-            <span className="text-xs text-gray-400">Com Abrigo</span>
-          </div>
-          <p className="text-2xl font-bold text-purple-400">
-            {points.filter((p) => p.has_shelter).length}
-          </p>
-        </div>
+      <div className="mb-6 grid grid-cols-2 gap-3 lg:grid-cols-4">
+        <StatCard
+          icon={MapPin}
+          iconClassName="text-primary"
+          label="Total"
+          value={points.length}
+        />
+        <StatCard
+          icon={Eye}
+          iconClassName="text-success"
+          label="Ativos"
+          value={activeCount}
+          valueClassName="text-success"
+        />
+        <StatCard
+          icon={Accessibility}
+          iconClassName="text-info"
+          label="Acessíveis"
+          value={accessibleCount}
+          valueClassName="text-info"
+        />
+        <StatCard
+          icon={Home}
+          iconClassName="text-warning"
+          label="Com abrigo"
+          value={shelterCount}
+          valueClassName="text-warning"
+        />
       </div>
 
-      {/* Points List */}
       {points.length === 0 ? (
-        <div className="rounded-xl border border-white/10 bg-[#1E2529] p-12 text-center">
-          <MapPin className="h-12 w-12 text-gray-600 mx-auto mb-4" />
-          <p className="text-gray-400 mb-2">Nenhum ponto de embarque cadastrado</p>
-          <p className="text-sm text-gray-500">
+        <div className="rounded-xl border border-border bg-card p-8 text-center text-card-foreground md:p-12">
+          <MapPin
+            className="mx-auto mb-4 h-12 w-12 text-muted-foreground/60"
+            aria-hidden="true"
+          />
+          <p className="mb-2 text-muted-foreground">
+            Nenhum ponto de embarque cadastrado
+          </p>
+          <p className="text-sm text-muted-foreground">
             Selecione um território e cadastre o primeiro ponto operacional.
           </p>
         </div>
       ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+        <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
           {points.map((point) => {
-          const typeInfo = typeConfig[point.type] || typeConfig.other;
+            const typeInfo = typeConfig[point.type] || typeConfig.other;
 
-          return (
-            <div
-              key={point.id}
-              className={cn(
-                "rounded-xl border bg-[#1E2529] p-4 transition-all",
-                point.active ? "border-white/10" : "border-white/5 opacity-60",
-              )}
-            >
-              {/* Header */}
-              <div className="flex items-start justify-between mb-3">
-                <div className="flex items-center gap-2">
-                  <div className={cn("p-2 rounded-lg", typeInfo.color)}>
-                    {typeInfo.icon}
+            return (
+              <article
+                key={point.id}
+                className={cn(
+                  "rounded-xl border border-border bg-card p-4 text-card-foreground transition-opacity",
+                  !point.active && "opacity-65",
+                )}
+              >
+                <div className="mb-3 flex items-start justify-between gap-3">
+                  <div className="flex min-w-0 items-center gap-2">
+                    <div className={cn("rounded-lg p-2", typeInfo.color)}>
+                      {typeInfo.icon}
+                    </div>
+                    <div className="min-w-0">
+                      <h3 className="truncate text-sm font-bold text-foreground">
+                        {point.name}
+                      </h3>
+                      <p className="text-xs text-muted-foreground">{typeInfo.label}</p>
+                    </div>
                   </div>
-                  <div>
-                    <h3 className="text-sm font-bold text-white">
-                      {point.name}
-                    </h3>
-                    <p className="text-xs text-gray-500">{typeInfo.label}</p>
-                  </div>
+                  <Badge
+                    variant="outline"
+                    className={
+                      point.active
+                        ? "border-success/30 bg-success/10 text-success"
+                        : "border-border bg-muted text-muted-foreground"
+                    }
+                  >
+                    {point.active ? "Ativo" : "Inativo"}
+                  </Badge>
                 </div>
-                <Badge
-                  className={cn(
-                    "text-xs",
-                    point.active
-                      ? "bg-emerald-500/20 text-emerald-400"
-                      : "bg-gray-500/20 text-gray-400",
-                  )}
-                >
-                  {point.active ? "Ativo" : "Inativo"}
-                </Badge>
-              </div>
 
-              {/* Address */}
-              <p className="text-xs text-gray-400 mb-3">{point.address}</p>
+                <p className="mb-3 text-xs text-muted-foreground">{point.address}</p>
 
-              {/* Features */}
-              <div className="flex flex-wrap gap-1.5 mb-3">
-                {point.has_shelter && (
-                  <Badge className="bg-purple-500/10 text-purple-400 text-xs">
-                    <Home className="h-3 w-3 mr-1" /> Abrigo
-                  </Badge>
-                )}
-                {point.has_bench && (
-                  <Badge className="bg-blue-500/10 text-blue-400 text-xs">
-                    <Armchair className="h-3 w-3 mr-1" /> Banco
-                  </Badge>
-                )}
-                {point.has_lighting && (
-                  <Badge className="bg-yellow-500/10 text-yellow-400 text-xs">
-                    <Lightbulb className="h-3 w-3 mr-1" /> Luz
-                  </Badge>
-                )}
-                {point.accessibility && (
-                  <Badge className="bg-emerald-500/10 text-emerald-400 text-xs">
-                    <Accessibility className="h-3 w-3 mr-1" /> Acessível
-                  </Badge>
-                )}
-              </div>
+                <div className="mb-3 flex flex-wrap gap-1.5">
+                  {point.has_shelter ? (
+                    <FeatureBadge icon={Home} label="Abrigo" className="text-warning" />
+                  ) : null}
+                  {point.has_bench ? (
+                    <FeatureBadge icon={Armchair} label="Banco" className="text-info" />
+                  ) : null}
+                  {point.has_lighting ? (
+                    <FeatureBadge
+                      icon={Lightbulb}
+                      label="Luz"
+                      className="text-warning"
+                    />
+                  ) : null}
+                  {point.accessibility ? (
+                    <FeatureBadge
+                      icon={Accessibility}
+                      label="Acessível"
+                      className="text-success"
+                    />
+                  ) : null}
+                </div>
 
-              {/* Info */}
-              <div className="flex items-center gap-3 text-xs text-gray-500 mb-3">
-                <span>Cap: {point.capacity}</span>
-                <span>•</span>
-                <span>
-                  {point.latitude.toFixed(6)}, {point.longitude.toFixed(6)}
-                </span>
-              </div>
+                <div className="mb-3 flex flex-wrap items-center gap-2 text-xs text-muted-foreground">
+                  <span>Cap: {point.capacity}</span>
+                  <span aria-hidden="true">•</span>
+                  <span className="font-mono">
+                    {point.latitude.toFixed(6)}, {point.longitude.toFixed(6)}
+                  </span>
+                </div>
 
-              {/* Actions */}
-              <div className="flex gap-2">
-                <Button
-                  size="sm"
-                  variant="outline"
-                  onClick={() => handleEdit(point)}
-                  className="flex-1 h-8 text-xs"
-                >
-                  <Edit className="h-3 w-3 mr-1" />
-                  Editar
-                </Button>
-                <Button
-                  size="sm"
-                  variant="outline"
-                  onClick={() => toggleActive(point)}
-                  className="h-8 px-3"
-                >
-                  {point.active ? (
-                    <EyeOff className="h-3 w-3" />
-                  ) : (
-                    <Eye className="h-3 w-3" />
-                  )}
-                </Button>
-                <Button
-                  size="sm"
-                  variant="outline"
-                  onClick={() => handleDelete(point.id)}
-                  className="h-8 px-3 text-red-400 hover:text-red-300"
-                >
-                  <Trash2 className="h-3 w-3" />
-                </Button>
-              </div>
-            </div>
-          );
-        })}
+                <div className="flex gap-2">
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    onClick={() => handleEdit(point)}
+                    className="h-8 flex-1 text-xs"
+                  >
+                    <Edit className="mr-1 h-3 w-3" aria-hidden="true" />
+                    Editar
+                  </Button>
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    onClick={() => void toggleActive(point)}
+                    className="h-8 px-3"
+                    aria-label={point.active ? "Desativar ponto" : "Ativar ponto"}
+                  >
+                    {point.active ? (
+                      <EyeOff className="h-3 w-3" aria-hidden="true" />
+                    ) : (
+                      <Eye className="h-3 w-3" aria-hidden="true" />
+                    )}
+                  </Button>
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    onClick={() => void handleDelete(point.id)}
+                    className="h-8 px-3 text-destructive hover:bg-destructive/10 hover:text-destructive"
+                    aria-label={`Excluir ${point.name}`}
+                  >
+                    <Trash2 className="h-3 w-3" aria-hidden="true" />
+                  </Button>
+                </div>
+              </article>
+            );
+          })}
         </div>
       )}
 
-      {/* Create/Edit Modal */}
-      <Dialog open={showModal} onOpenChange={setShowModal}>
-        <DialogContent className="bg-[#1E2529] border-white/10 text-white max-w-2xl max-h-[90vh] overflow-y-auto">
+      <Dialog
+        open={showModal}
+        onOpenChange={(open) => {
+          if (open) setShowModal(true);
+          else closeModal();
+        }}
+      >
+        <DialogContent className="max-h-[90dvh] max-w-2xl overflow-y-auto border-border bg-popover text-popover-foreground">
           <DialogHeader>
-            <DialogTitle className="text-lg font-bold flex items-center gap-2">
-              <MapPin className="h-5 w-5 text-teal-400" />
-              {editingPoint ? "Editar Ponto" : "Novo Ponto"}
+            <DialogTitle className="flex items-center gap-2 text-lg font-bold">
+              <MapPin className="h-5 w-5 text-primary" aria-hidden="true" />
+              {editingPoint ? "Editar ponto" : "Novo ponto"}
             </DialogTitle>
+            <DialogDescription>
+              {editingPoint
+                ? "Atualize os dados operacionais do ponto de embarque."
+                : "Cadastre um ponto de embarque no território ativo."}
+            </DialogDescription>
           </DialogHeader>
-          <DialogDescription className="sr-only">
-            Gerenciar pontos de embarque
-          </DialogDescription>
 
           <form onSubmit={handleSubmit} className="space-y-4">
-            {/* Nome */}
-            <div>
-              <Label className="text-xs text-gray-400">Nome do Ponto *</Label>
+            <Field label="Nome do ponto *">
               <Input
                 value={formData.name}
-                onChange={(e) =>
-                  setFormData({ ...formData, name: e.target.value })
+                onChange={(event) =>
+                  setFormData({ ...formData, name: event.target.value })
                 }
                 placeholder="Ex: Ponto da Praça"
-                className="bg-white/5 border-white/10"
                 required
               />
-            </div>
+            </Field>
 
-            {/* Descrição */}
-            <div>
-              <Label className="text-xs text-gray-400">Descrição</Label>
+            <Field label="Descrição">
               <Textarea
                 value={formData.description}
-                onChange={(e) =>
-                  setFormData({ ...formData, description: e.target.value })
+                onChange={(event) =>
+                  setFormData({ ...formData, description: event.target.value })
                 }
                 placeholder="Descrição opcional do ponto"
-                className="bg-white/5 border-white/10 min-h-[60px]"
+                className="min-h-[60px]"
               />
-            </div>
+            </Field>
 
-            {/* Endereço */}
-            <div>
-              <Label className="text-xs text-gray-400">Endereço *</Label>
+            <Field label="Endereço *">
               <Input
                 value={formData.address}
-                onChange={(e) =>
-                  setFormData({ ...formData, address: e.target.value })
+                onChange={(event) =>
+                  setFormData({ ...formData, address: event.target.value })
                 }
                 placeholder="Rua, número"
-                className="bg-white/5 border-white/10"
                 required
               />
-            </div>
+            </Field>
 
-            {/* Bairro */}
-            <div>
-              <Label className="text-xs text-gray-400">Território *</Label>
+            <Field label="Território *">
               <Input
                 value={formData.neighborhood}
                 placeholder="Selecione um território no contexto do admin"
-                className="bg-white/5 border-white/10"
                 disabled
                 required
               />
-            </div>
+            </Field>
 
-            {/* Coordenadas */}
-            <div className="grid grid-cols-2 gap-3">
-              <div>
-                <Label className="text-xs text-gray-400">Latitude *</Label>
+            <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+              <Field label="Latitude *">
                 <Input
                   type="number"
                   step="0.000001"
                   value={formData.latitude}
-                  onChange={(e) =>
+                  onChange={(event) =>
                     setFormData({
                       ...formData,
-                      latitude: parseFloat(e.target.value),
+                      latitude: Number.parseFloat(event.target.value),
                     })
                   }
-                  className="bg-white/5 border-white/10"
                   required
                 />
-              </div>
-              <div>
-                <Label className="text-xs text-gray-400">Longitude *</Label>
+              </Field>
+              <Field label="Longitude *">
                 <Input
                   type="number"
                   step="0.000001"
                   value={formData.longitude}
-                  onChange={(e) =>
+                  onChange={(event) =>
                     setFormData({
                       ...formData,
-                      longitude: parseFloat(e.target.value),
+                      longitude: Number.parseFloat(event.target.value),
                     })
                   }
-                  className="bg-white/5 border-white/10"
                   required
                 />
-              </div>
+              </Field>
             </div>
 
-            {/* Tipo */}
             <div>
-              <Label className="text-xs text-gray-400 mb-2 block">Tipo *</Label>
-              <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
-                {Object.entries(typeConfig).map(([key, cfg]) => (
+              <Label className="mb-2 block text-xs text-muted-foreground">
+                Tipo *
+              </Label>
+              <div className="grid grid-cols-2 gap-2 sm:grid-cols-3 md:grid-cols-4">
+                {Object.entries(typeConfig).map(([key, config]) => (
                   <button
                     key={key}
                     type="button"
                     onClick={() => setFormData({ ...formData, type: key })}
+                    aria-pressed={formData.type === key}
                     className={cn(
-                      "flex items-center gap-2 p-2 rounded-lg border-2 text-xs transition-all",
+                      "flex items-center gap-2 rounded-lg border p-2 text-left text-xs transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring",
                       formData.type === key
-                        ? `${cfg.color} border-opacity-60`
-                        : "border-white/10 text-gray-400 hover:bg-white/5",
+                        ? `${config.color} border-ring/40`
+                        : "border-border text-muted-foreground hover:bg-muted",
                     )}
                   >
-                    {cfg.icon}
-                    {cfg.label}
+                    {config.icon}
+                    {config.label}
                   </button>
                 ))}
               </div>
             </div>
 
-            {/* Capacidade */}
-            <div>
-              <Label className="text-xs text-gray-400">Capacidade *</Label>
+            <Field label="Capacidade *">
               <Input
                 type="number"
                 min="1"
                 value={formData.capacity}
-                onChange={(e) =>
+                onChange={(event) =>
                   setFormData({
                     ...formData,
-                    capacity: parseInt(e.target.value),
+                    capacity: Number.parseInt(event.target.value, 10),
                   })
                 }
-                className="bg-white/5 border-white/10"
                 required
               />
-            </div>
+            </Field>
 
-            {/* Features */}
             <div className="space-y-3">
-              <Label className="text-xs text-gray-400">Características</Label>
-
-              <div className="flex items-center justify-between p-3 rounded-lg bg-white/5">
-                <div className="flex items-center gap-2">
-                  <Home className="h-4 w-4 text-purple-400" />
-                  <span className="text-sm">Possui abrigo/cobertura</span>
-                </div>
-                <Switch
-                  checked={formData.has_shelter}
-                  onCheckedChange={(checked) =>
-                    setFormData({ ...formData, has_shelter: checked })
-                  }
-                />
-              </div>
-
-              <div className="flex items-center justify-between p-3 rounded-lg bg-white/5">
-                <div className="flex items-center gap-2">
-                  <Armchair className="h-4 w-4 text-blue-400" />
-                  <span className="text-sm">Possui banco</span>
-                </div>
-                <Switch
-                  checked={formData.has_bench}
-                  onCheckedChange={(checked) =>
-                    setFormData({ ...formData, has_bench: checked })
-                  }
-                />
-              </div>
-
-              <div className="flex items-center justify-between p-3 rounded-lg bg-white/5">
-                <div className="flex items-center gap-2">
-                  <Lightbulb className="h-4 w-4 text-yellow-400" />
-                  <span className="text-sm">Possui iluminação</span>
-                </div>
-                <Switch
-                  checked={formData.has_lighting}
-                  onCheckedChange={(checked) =>
-                    setFormData({ ...formData, has_lighting: checked })
-                  }
-                />
-              </div>
-
-              <div className="flex items-center justify-between p-3 rounded-lg bg-white/5">
-                <div className="flex items-center gap-2">
-                  <Accessibility className="h-4 w-4 text-emerald-400" />
-                  <span className="text-sm">Acessível para cadeirantes</span>
-                </div>
-                <Switch
-                  checked={formData.accessibility}
-                  onCheckedChange={(checked) =>
-                    setFormData({ ...formData, accessibility: checked })
-                  }
-                />
-              </div>
-
-              <div className="flex items-center justify-between p-3 rounded-lg bg-white/5">
-                <div className="flex items-center gap-2">
-                  <Eye className="h-4 w-4 text-teal-400" />
-                  <span className="text-sm">Ponto ativo</span>
-                </div>
-                <Switch
-                  checked={formData.active}
-                  onCheckedChange={(checked) =>
-                    setFormData({ ...formData, active: checked })
-                  }
-                />
-              </div>
-            </div>
-
-            {/* Notas */}
-            <div>
-              <Label className="text-xs text-gray-400">Notas Internas</Label>
-              <Textarea
-                value={formData.notes}
-                onChange={(e) =>
-                  setFormData({ ...formData, notes: e.target.value })
+              <Label className="text-xs text-muted-foreground">Características</Label>
+              <FeatureSwitch
+                icon={Home}
+                iconClassName="text-warning"
+                label="Possui abrigo/cobertura"
+                checked={formData.has_shelter}
+                onCheckedChange={(checked) =>
+                  setFormData({ ...formData, has_shelter: checked })
                 }
-                placeholder="Observações internas (não visível para usuários)"
-                className="bg-white/5 border-white/10 min-h-[60px]"
+              />
+              <FeatureSwitch
+                icon={Armchair}
+                iconClassName="text-info"
+                label="Possui banco"
+                checked={formData.has_bench}
+                onCheckedChange={(checked) =>
+                  setFormData({ ...formData, has_bench: checked })
+                }
+              />
+              <FeatureSwitch
+                icon={Lightbulb}
+                iconClassName="text-warning"
+                label="Possui iluminação"
+                checked={formData.has_lighting}
+                onCheckedChange={(checked) =>
+                  setFormData({ ...formData, has_lighting: checked })
+                }
+              />
+              <FeatureSwitch
+                icon={Accessibility}
+                iconClassName="text-success"
+                label="Acessível para cadeirantes"
+                checked={formData.accessibility}
+                onCheckedChange={(checked) =>
+                  setFormData({ ...formData, accessibility: checked })
+                }
+              />
+              <FeatureSwitch
+                icon={Eye}
+                iconClassName="text-primary"
+                label="Ponto ativo"
+                checked={formData.active}
+                onCheckedChange={(checked) =>
+                  setFormData({ ...formData, active: checked })
+                }
               />
             </div>
 
-            {/* Actions */}
-            <div className="flex gap-3 pt-4">
+            <Field label="Notas internas">
+              <Textarea
+                value={formData.notes}
+                onChange={(event) =>
+                  setFormData({ ...formData, notes: event.target.value })
+                }
+                placeholder="Observações internas (não visível para usuários)"
+                className="min-h-[60px]"
+              />
+            </Field>
+
+            <div className="flex flex-col-reverse gap-3 pt-4 sm:flex-row">
               <Button
                 type="button"
                 variant="outline"
-                onClick={() => setShowModal(false)}
+                onClick={closeModal}
                 className="flex-1"
               >
                 Cancelar
               </Button>
-              <Button
-                type="submit"
-                className="flex-1 bg-teal-500 hover:bg-teal-600"
-              >
-                {editingPoint ? "Atualizar" : "Criar"} Ponto
+              <Button type="submit" className="flex-1">
+                {editingPoint ? "Atualizar" : "Criar"} ponto
               </Button>
             </div>
           </form>
         </DialogContent>
       </Dialog>
       <ConfirmDialog />
+    </div>
+  );
+}
+
+function StatCard({
+  icon: Icon,
+  iconClassName,
+  label,
+  value,
+  valueClassName = "text-foreground",
+}: {
+  icon: typeof MapPin;
+  iconClassName: string;
+  label: string;
+  value: number;
+  valueClassName?: string;
+}) {
+  return (
+    <div className="rounded-xl border border-border bg-card p-4 text-card-foreground">
+      <div className="mb-2 flex items-center gap-2">
+        <Icon className={cn("h-4 w-4", iconClassName)} aria-hidden="true" />
+        <span className="text-xs text-muted-foreground">{label}</span>
+      </div>
+      <p className={cn("text-2xl font-bold", valueClassName)}>{value}</p>
+    </div>
+  );
+}
+
+function FeatureBadge({
+  icon: Icon,
+  label,
+  className,
+}: {
+  icon: typeof Home;
+  label: string;
+  className: string;
+}) {
+  return (
+    <Badge variant="outline" className={cn("text-xs", className)}>
+      <Icon className="mr-1 h-3 w-3" aria-hidden="true" />
+      {label}
+    </Badge>
+  );
+}
+
+function Field({ label, children }: { label: string; children: ReactNode }) {
+  return (
+    <div>
+      <Label className="text-xs text-muted-foreground">{label}</Label>
+      {children}
+    </div>
+  );
+}
+
+function FeatureSwitch({
+  icon: Icon,
+  iconClassName,
+  label,
+  checked,
+  onCheckedChange,
+}: {
+  icon: typeof Home;
+  iconClassName: string;
+  label: string;
+  checked: boolean;
+  onCheckedChange: (checked: boolean) => void;
+}) {
+  return (
+    <div className="flex items-center justify-between gap-3 rounded-lg bg-muted/50 p-3">
+      <div className="flex items-center gap-2">
+        <Icon className={cn("h-4 w-4", iconClassName)} aria-hidden="true" />
+        <span className="text-sm">{label}</span>
+      </div>
+      <Switch checked={checked} onCheckedChange={onCheckedChange} />
     </div>
   );
 }
