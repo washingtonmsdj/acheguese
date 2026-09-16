@@ -260,15 +260,21 @@ serve(async (req: Request) => {
       safeAction,
       params,
     );
-    auditLog({
-      timestamp: new Date().toISOString(),
-      userId: auth.userId,
-      action: `session_rpc_${safeAction}`,
-      resource: "session-rpc",
-      status: "success",
-      details: { action: safeAction },
-      ...auditInfo(req),
-    });
+
+    // getActiveProfile is a high-frequency read, not a security mutation.
+    // Persisting every successful read to function_audit created pure WAL/IO
+    // amplification. Mutations and MFA/session-sensitive actions stay audited.
+    if (safeAction !== "getActiveProfile") {
+      auditLog({
+        timestamp: new Date().toISOString(),
+        userId: auth.userId,
+        action: `session_rpc_${safeAction}`,
+        resource: "session-rpc",
+        status: "success",
+        details: { action: safeAction },
+        ...auditInfo(req),
+      });
+    }
 
     return jsonResponse({ data }, 200, ALLOWED_METHODS, req);
   } catch (error: unknown) {
