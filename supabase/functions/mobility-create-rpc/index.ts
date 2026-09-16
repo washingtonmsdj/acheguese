@@ -51,14 +51,7 @@ type QuoteRow = {
   id: string;
   passenger_profile_id: string;
   mode: "ride" | "motoboy";
-  pickup_address_id: string;
-  dropoff_address_id: string;
   pickup_location_id: string;
-  dropoff_location_id: string;
-  origin_lat: number;
-  origin_lng: number;
-  destination_lat: number;
-  destination_lng: number;
   expires_at: string;
   consumed_at: string | null;
   consumed_by_ride_id: string | null;
@@ -139,7 +132,7 @@ async function loadQuote(quoteId: string): Promise<QuoteRow> {
   const { data, error } = await supabaseAdmin
     .from("mobility_price_quotes")
     .select(
-      "id, passenger_profile_id, mode, pickup_address_id, dropoff_address_id, pickup_location_id, dropoff_location_id, origin_lat, origin_lng, destination_lat, destination_lng, expires_at, consumed_at, consumed_by_ride_id",
+      "id, passenger_profile_id, mode, pickup_location_id, expires_at, consumed_at, consumed_by_ride_id",
     )
     .eq("id", quoteId)
     .maybeSingle();
@@ -183,20 +176,11 @@ async function createRide(
   );
 
   const { data, error } = await supabaseAdmin.rpc(
-    "mobility_create_ride_from_quote_atomic",
+    "mobility_create_ride_atomic",
     {
       p_quote_id: quote.id,
-      p_passenger_profile_id: quote.passenger_profile_id,
-      p_pickup_address_id: quote.pickup_address_id,
-      p_dropoff_address_id: quote.dropoff_address_id,
-      p_pickup_location_id: quote.pickup_location_id,
-      p_dropoff_location_id: quote.dropoff_location_id,
       p_origin: optionalTrimmedString(params.origin, "origin", 500),
       p_destination: optionalTrimmedString(params.destination, "destination", 500),
-      p_origin_lat: quote.origin_lat,
-      p_origin_lng: quote.origin_lng,
-      p_destination_lat: quote.destination_lat,
-      p_destination_lng: quote.destination_lng,
       p_available_seats:
         optionalInteger(params.availableSeats, "availableSeats", 1, 8) ?? 1,
       p_observation: optionalTrimmedString(params.observation, "observation", 1000),
@@ -268,14 +252,9 @@ async function createDelivery(
   }
 
   const { data, error } = await supabaseAdmin.rpc(
-    "mobility_create_delivery_from_quote_atomic",
+    "mobility_create_delivery_atomic",
     {
       p_quote_id: quote.id,
-      p_passenger_profile_id: quote.passenger_profile_id,
-      p_pickup_address_id: quote.pickup_address_id,
-      p_dropoff_address_id: quote.dropoff_address_id,
-      p_pickup_location_id: quote.pickup_location_id,
-      p_dropoff_location_id: quote.dropoff_location_id,
       p_source_type: sourceType,
       p_source_id: sourceId,
       p_recipient_name: requireTrimmedString(
@@ -301,10 +280,6 @@ async function createDelivery(
       p_package_size: packageSize,
       p_origin: optionalTrimmedString(params.origin, "origin", 500),
       p_destination: optionalTrimmedString(params.destination, "destination", 500),
-      p_origin_lat: quote.origin_lat,
-      p_origin_lng: quote.origin_lng,
-      p_destination_lat: quote.destination_lat,
-      p_destination_lng: quote.destination_lng,
       p_observation: optionalTrimmedString(params.observation, "observation", 1000),
       p_payment_method: optionalTrimmedString(
         params.paymentMethod,
