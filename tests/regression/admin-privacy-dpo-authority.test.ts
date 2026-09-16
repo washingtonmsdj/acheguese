@@ -13,6 +13,11 @@ const config = read("supabase/config.toml");
 const authPolicy = read(
   "docs/09-reference/governance/security/EDGE_FUNCTION_AUTH_POLICY.json",
 );
+const service = read("src/core/admin/services/AdminPrivacyRequestsService.ts");
+const page = read("src/modules/admin/pages/AdminPrivacyRequests.tsx");
+const lazyImports = read("src/app/routes/adminLazyImports.ts");
+const routes = read("src/app/routes/sections/AdminRoutes.tsx");
+const navigation = read("src/modules/admin/config/adminNavigation.config.ts");
 
 describe("admin privacy request authority", () => {
   it("keeps all privileged database functions service-role only", () => {
@@ -58,6 +63,7 @@ describe("admin privacy request authority", () => {
     expect(config).toMatch(/\[functions\.admin-privacy-rpc\]\s*verify_jwt = true/);
     expect(authPolicy).toContain('"admin-privacy-rpc"');
     expect(broker).toContain("requireAdmin(req, ALLOWED_METHODS)");
+    expect(broker).toContain("getCorsHeaders(ALLOWED_METHODS, req)");
     expect(broker).toContain("admin_list_privacy_subject_requests");
     expect(broker).toContain("admin_get_privacy_subject_request");
     expect(broker).toContain("admin_transition_privacy_subject_request");
@@ -67,5 +73,35 @@ describe("admin privacy request authority", () => {
     expect(broker).not.toContain('.from("privacy_subject_requests")');
     expect(broker).not.toContain("requester_email:");
     expect(broker).not.toContain("message:");
+    expect(service).toContain("invokeSupabaseBroker");
+    expect(service).toContain('ADMIN_PRIVACY_RPC_FUNCTION = "admin-privacy-rpc"');
+    expect(service).not.toContain("privacy_subject_requests");
+    expect(page).not.toContain("privacy_subject_requests");
+  });
+
+  it("loads sensitive content only through the individual detail action", () => {
+    expect(page).toContain("adminPrivacyRequestsService.listRequests(filters)");
+    expect(page).toContain("adminPrivacyRequestsService.getRequest(selectedId!)");
+    expect(page).toContain("enabled: Boolean(selectedId)");
+    expect(page).toContain("Dados sensíveis deste pedido");
+  });
+
+  it("keeps the DPO inbox out of bulk-export flows", () => {
+    expect(page).not.toContain("Exportar tudo");
+    expect(page).not.toContain("downloadCsv");
+    expect(page).not.toContain("text/csv");
+    expect(service).not.toContain("exportAll");
+  });
+
+  it("registers the queue in lazy routing and canonical admin navigation", () => {
+    expect(lazyImports).toContain(
+      'import("@/modules/admin/pages/AdminPrivacyRequests")',
+    );
+    expect(routes).toContain(
+      'path="privacidade" element={<P.AdminPrivacyRequests />}',
+    );
+    expect(navigation).toContain('to: "/admin/privacidade"');
+    expect(navigation).toContain('label: "Privacidade e LGPD"');
+    expect(navigation).toContain('section: "moderacao"');
   });
 });
