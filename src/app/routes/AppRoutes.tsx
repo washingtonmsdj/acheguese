@@ -97,6 +97,7 @@ export function AppRoutes() {
           path={AUTH_PATHS.emailChangeConfirmation}
           element={<EmailChangeConfirmationPage />}
         />
+        <Route path={AUTH_PATHS.termsAcceptance} element={<AceiteTermosPage />} />
         <Route path={AUTH_PATHS.passwordReset} element={<ResetPasswordPage />} />
         <Route path="/admin/*" element={<AdminRoutes />} />
         <Route path="*" element={<Navigate to="/" replace />} />
