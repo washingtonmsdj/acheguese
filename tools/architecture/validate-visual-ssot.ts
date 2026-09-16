@@ -32,6 +32,10 @@ const MIGRATED_RUNTIME_FILES = [
   'src/modules/mobility/components/chat/ChatWindow.tsx',
   'src/modules/mobility/components/MobilidadeLeftSidebar.tsx',
   'src/modules/mobility/components/MobilidadeRightSidebar.tsx',
+  'src/modules/admin/components/AdminAccessDenied.tsx',
+  'src/modules/admin/pages/AdminLayout.tsx',
+  'src/modules/admin/pages/AdminCupons.tsx',
+  'src/modules/admin/pages/AdminEventos.tsx',
   'src/styles/theme.ts',
 ] as const;
 
@@ -258,7 +262,7 @@ function main(): void {
   }
 
   console.log(
-    'Visual identity SSOT valid: canonical brand primitives and typography are owned by src/index.css, theme bootstrap and high-contrast contracts are protected, migrated auth, community and mobility surfaces use semantic tokens and loaded font weights, and email projections stay synchronized with the brand palette.',
+    'Visual identity SSOT valid: canonical brand primitives and typography are owned by src/index.css, theme bootstrap and high-contrast contracts are protected, migrated auth, community, mobility and admin surfaces use semantic tokens and loaded font weights, and email projections stay synchronized with the brand palette.',
   );
 }
 
