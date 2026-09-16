@@ -2,7 +2,7 @@
 
 **Data:** 2026-09-16  
 **Linha:** `main`  
-**Status:** source endurecido; rollout público continua pausado
+**Status:** source endurecido; migration GPS aplicada; probe negativo executado; rollout público continua pausado
 
 ## Objetivo desta fase
 
@@ -41,7 +41,7 @@ Criação pertence exclusivamente a `mobility-create-rpc`. O teste `tests/archit
 
 ## Preço terminal
 
-A conclusão de corrida/entrega deixou de aceitar preço de UI/motorista como autoridade. O banco deriva o valor terminal do estado monetário persistido pela quote/corrida. O parâmetro SQL `p_final_price` permanece apenas como compatibilidade de assinatura e não é mais enviado pelo broker operacional; sua remoção física depende do retorno do canal PostgreSQL administrativo.
+A conclusão de corrida/entrega deixou de aceitar preço de UI/motorista como autoridade. O banco deriva o valor terminal do estado monetário persistido pela quote/corrida. O parâmetro SQL `p_final_price` permanece apenas como compatibilidade de assinatura e não é mais enviado pelo broker operacional; sua remoção física ainda precisa de reconciliação específica antes do cutover.
 
 ## Minimização de PII e leituras
 
@@ -61,17 +61,35 @@ Regressões novas/atualizadas:
 
 ## GPS
 
-`20260916133000_minimize_idle_driver_gps.sql` está versionada para:
+`20260916133000_minimize_idle_driver_gps.sql` foi aplicada no projeto Supabase canônico nesta retomada via migration administrada.
 
-- limpar `driver_availability.current_lat/current_lng` quando o motorista fica offline/indisponível sem corrida ativa;
-- remover snapshot de `driver_locations` nessa condição;
-- recusar novo GPS preciso quando o motorista não está disponível para dispatch e não possui corrida ativa.
+O contrato ativo agora:
 
-**Ainda não aplicada em produção:** a conexão administrativa PostgreSQL continua encerrando por `Connection terminated due to connection timeout`, inclusive em consultas mínimas. Não tratar source versionado como schema aplicado.
+- limpa `driver_availability.current_lat/current_lng/last_location_update` quando o motorista fica offline/indisponível sem corrida ativa;
+- remove snapshot de `driver_locations` nessa condição;
+- recusa novo GPS preciso quando o motorista não está disponível para dispatch e não possui corrida ativa;
+- funções trigger privadas permanecem sem EXECUTE para `PUBLIC`, `anon` e `authenticated`.
+
+Verificação pós-DDL:
+
+- migration registrada no histórico remoto como `minimize_idle_driver_gps`;
+- triggers canônicos presentes em `driver_availability` e `driver_locations`;
+- `idle_availability_with_gps = 0`;
+- `idle_driver_location_snapshots = 0`.
+
+Observação: o registro remoto recebeu versão administrada própria ao aplicar a migration pelo conector; a migration source versionada continua sendo `20260916133000_minimize_idle_driver_gps.sql` no Git.
 
 ## Autorização negativa
 
-Existe probe rollback-only para provar que um terceiro usuário não consegue operar PIN, trust feedback ou denúncia sobre corrida alheia. A execução real permanece pendente pelo mesmo timeout PostgreSQL. Inspeção estrutural não substitui esse teste negativo.
+O probe versionado `tests/security/mobility-participant-authorization-remote-probe.sql` foi executado no projeto canônico em transação rollback-only.
+
+Ele comprovou, usando usuário autenticado não participante, que:
+
+- `refresh_operational_pin_for_requester` rejeita terceiro usuário;
+- `submit_ride_trust_feedback` rejeita terceiro usuário;
+- `create_ride_report` rejeita terceiro usuário.
+
+A execução concluiu sem exceção não tratada e terminou em `ROLLBACK`, sem preservar os dados sintéticos criados para o teste.
 
 ## Safety / SOS
 
@@ -80,14 +98,20 @@ Permanece válido o checkpoint `2026-09-16-mobility-safety-production-drift-repa
 ## Bloqueadores atuais de lançamento
 
 1. definir e aprovar a política comercial real por modalidade;
-2. remover `p_final_price` da assinatura SQL quando o canal PostgreSQL administrativo voltar;
-3. aplicar/verificar a migration de minimização de GPS quando o Postgres administrativo voltar;
-4. executar o probe negativo IDOR/BOLA rollback-only;
-5. regenerar tipos Supabase a partir do schema real depois das migrations;
-6. executar typecheck, lint, testes de Mobilidade/Pricing, build e E2E no mesmo SHA;
-7. provar concorrência/idempotência em dupla aceitação, cancelamento simultâneo, retry/reconnect, quote duplicada e confirmação duplicada;
-8. obter pipeline/deploy verde. Rate-limit externo da Vercel não é certificação positiva nem falha de source.
+2. remover `p_final_price` da assinatura SQL somente após reconciliação/cutover seguro do contrato;
+3. regenerar tipos Supabase a partir do schema real depois das migrations;
+4. executar typecheck, lint, testes de Mobilidade/Pricing, build e E2E no mesmo SHA;
+5. provar concorrência/idempotência em dupla aceitação, cancelamento simultâneo, retry/reconnect, quote duplicada e confirmação duplicada;
+6. obter pipeline/deploy verde. O status Vercel atual falha por `build-rate-limit`, que é blocker externo e não prova erro de source;
+7. manter `main` protegida por ruleset/required checks quando a capacidade administrativa estiver disponível.
+
+## Fechado nesta retomada
+
+- [x] canal PostgreSQL administrativo acessível novamente;
+- [x] migration de minimização de GPS aplicada e verificada;
+- [x] probe negativo IDOR/BOLA de PIN/trust/report executado rollback-only;
+- [x] zero snapshots de GPS ocioso encontrados após a migration.
 
 ## Regra de lançamento
 
-`PUBLIC_LAUNCH_SURFACES.mobility` permanece `false`. Nenhuma feature nova deve contornar os owners acima para “fazer funcionar”. Primeiro fecham-se os blockers de autoridade, privacidade, concorrência, migrations e gates; depois entram implementações adicionais.
+`PUBLIC_LAUNCH_SURFACES.mobility` permanece `false`. Nenhuma feature nova deve contornar os owners acima para “fazer funcionar”. Primeiro fecham-se os blockers de política comercial, concorrência, tipos e gates same-SHA; depois entram implementações adicionais.
