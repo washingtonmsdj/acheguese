@@ -7,6 +7,7 @@ import type {
   CreateDeliveryInput,
   CreateRideInput,
 } from "../core/RideOperationalTypes";
+import { MobilityCreationService } from "./MobilityCreationService";
 import type {
   FailedDeliveryMetadata,
   FailedDeliveryResolutionUpdate,
@@ -15,8 +16,6 @@ import type {
 type MobilityRpcAction =
   | "createDriverProfile"
   | "ensureAdminDriverProfile"
-  | "createRide"
-  | "createDelivery"
   | "acceptRide"
   | "adminRedispatch"
   | "confirmPassengerCompletion"
@@ -166,63 +165,29 @@ export class MobilityRpcService {
     return this.invoke("ensureAdminDriverProfile");
   }
 
+  /**
+   * Creation no longer belongs to the generic mobility broker. Keep these
+   * facades temporarily so the operational orchestrator can migrate without
+   * duplicating lifecycle code; authority is MobilityCreationService.
+   */
   static async createRide(input: CreateRideInput): Promise<{
     success: boolean;
     ride_id?: string;
     status?: string;
+    quote_id?: string;
     reason?: string;
   }> {
-    return this.invoke("createRide", {
-      passengerProfileId: input.passengerProfileId,
-      pickupAddressId: input.pickupAddressId,
-      dropoffAddressId: input.dropoffAddressId,
-      pickupLocationId: input.pickupLocationId,
-      dropoffLocationId: input.dropoffLocationId,
-      origin: input.origin ?? null,
-      destination: input.destination ?? null,
-      originLat: input.originLat,
-      originLng: input.originLng,
-      destinationLat: input.destinationLat,
-      destinationLng: input.destinationLng,
-      suggestedPrice: input.suggestedPrice ?? null,
-      availableSeats: input.availableSeats ?? 1,
-      observation: input.observation ?? null,
-      paymentMethod: input.paymentMethod ?? null,
-      departureTime: input.departureTime ?? null,
-    });
+    return MobilityCreationService.createRide(input);
   }
 
   static async createDelivery(input: CreateDeliveryInput): Promise<{
     success: boolean;
     ride_id?: string;
     status?: string;
+    quote_id?: string;
     reason?: string;
   }> {
-    return this.invoke("createDelivery", {
-      passengerProfileId: input.passengerProfileId,
-      pickupAddressId: input.pickupAddressId,
-      dropoffAddressId: input.dropoffAddressId,
-      pickupLocationId: input.pickupLocationId,
-      dropoffLocationId: input.dropoffLocationId,
-      origin: input.origin ?? null,
-      destination: input.destination ?? null,
-      originLat: input.originLat,
-      originLng: input.originLng,
-      destinationLat: input.destinationLat,
-      destinationLng: input.destinationLng,
-      suggestedPrice: input.suggestedPrice ?? null,
-      observation: input.observation ?? null,
-      paymentMethod: input.paymentMethod ?? null,
-      departureTime: input.departureTime ?? null,
-      sourceType: input.sourceType,
-      sourceId: input.sourceId ?? null,
-      authorizationSourceId: input.authorizationSourceId ?? input.sourceId ?? null,
-      recipientName: input.recipientName,
-      recipientPhone: input.recipientPhone ?? null,
-      deliveryNotes: input.deliveryNotes ?? null,
-      packageDescription: input.packageDescription ?? null,
-      packageSize: input.packageSize ?? "small",
-    });
+    return MobilityCreationService.createDelivery(input);
   }
 
   static async transitionRideState(input: {
