@@ -78,9 +78,9 @@ A leitura direta do bundle remoto confirmou drift concreto: a versão 3 não con
 
 ## Deploy da Edge Function
 
-O repositório possui `.github/workflows/supabase-admin-privacy-rpc-deploy.yml`, com deploy `main`-only a partir de checkout isolado no SHA exato, Supabase CLI fixada, verificação de `verify_jwt=true`, contratos de admin/MFA/auditoria e hashes do bundle. O workflow self-hosted é a autoridade definida para eliminar drift entre o source do Git e o runtime remoto.
+O repositório possui `.github/workflows/supabase-admin-privacy-rpc-deploy.yml`, com deploy `main`-only a partir de checkout isolado no SHA exato, Supabase CLI fixada, verificação de `verify_jwt=true`, contratos de admin/MFA/auditoria, presença obrigatória do fallback de paginação e hashes do bundle. O workflow self-hosted é a autoridade definida para eliminar drift entre o source do Git e o runtime remoto.
 
-A execução `35091238772` ainda estava `queued` na última checagem. Esse job precisa concluir com sucesso antes de declarar `admin-privacy-rpc` sincronizada com a `main`. Não deve ser feito deploy manual paralelo apenas para contornar indisponibilidade do runner.
+A execução antiga `35091238772` foi cancelada pela política de concorrência depois que o ratchet do workflow foi atualizado. A execução corrente é `35094442109` e continuava `queued` na última checagem. Esse job precisa concluir com sucesso antes de declarar `admin-privacy-rpc` sincronizada com a `main`. Não deve ser feito deploy manual paralelo apenas para contornar indisponibilidade do runner.
 
 ## Escopo preservado
 
