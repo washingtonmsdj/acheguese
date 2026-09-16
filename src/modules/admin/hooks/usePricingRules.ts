@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from "react";
-import { pricingService } from "@/core/pricing/services/PricingService";
+import { pricingService } from "@/core/pricing/instance";
 import type { PricingRule } from "@/core/pricing/types";
 import { logger } from "@/shared/utils/logger";
 
