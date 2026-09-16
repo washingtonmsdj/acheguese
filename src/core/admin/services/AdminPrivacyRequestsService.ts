@@ -26,8 +26,6 @@ export type PrivacyRequestType =
 
 export interface AdminPrivacyRequestSummary {
   id: string;
-  requester_name: string;
-  requester_email: string;
   request_type: PrivacyRequestType;
   status: PrivacyRequestStatus;
   submitted_at: string;
