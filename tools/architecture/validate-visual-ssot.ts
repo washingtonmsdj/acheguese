@@ -38,6 +38,8 @@ const MIGRATED_RUNTIME_FILES = [
   'src/modules/admin/components/user-detail/DriverDataTab.tsx',
   'src/modules/admin/components/user-detail/HistoryTab.tsx',
   'src/modules/admin/components/user-detail/ReportsTab.tsx',
+  'src/modules/admin/components/user-detail/SuspendUserDialog.tsx',
+  'src/modules/admin/components/user-detail/UserActionsCard.tsx',
   'src/modules/admin/components/user-detail/UserContactTab.tsx',
   'src/modules/admin/pages/AdminLayout.tsx',
   'src/modules/admin/pages/AdminCupons.tsx',
@@ -47,7 +49,7 @@ const MIGRATED_RUNTIME_FILES = [
   'src/styles/theme.ts',
 ] as const;
 
-const LEGACY_FONT_RE = /(?:DM Sans|Space Grotesk|Manrope|Bricolage Grotesque)/;
+const LEGACY_FONT_RE = /(?:DM Sans|Space Grotesk|Manrope|Bricolage Grotesk)/;
 const RAW_RUNTIME_COLOR_RE = /(?:#[0-9a-fA-F]{3,8}\b|\brgba?\s*\()/;
 const CSS_FONT_WEIGHT_RE = /font-weight\s*:\s*(\d{3})\b/g;
 const ARBITRARY_TAILWIND_WEIGHT_RE = /font-\[(\d{3})\]/g;
