@@ -27,20 +27,29 @@
 
 - O fluxo principal de criação exige coordenadas válidas antes da precificação.
 - `useMobilidade` chama o `pricingService.calculateEstimate(...)` e aborta a criação se a precificação oficial falhar.
+- O singleton canônico `src/core/pricing/instance.ts` rejeita regras históricas `fallback-*`; indisponibilidade do catálogo oficial não pode virar preço hardcoded no runtime.
+- `useDelivery` (motoboy) também falha fechado: não cria mais entrega com `suggestedPrice` ausente quando Pricing falha.
+- O hook genérico de estimativa usa a mesma instância canônica de Pricing.
+- O calculador legado local `baseFare + pricePerKm` foi removido de `mobility.helpers.ts`.
+- A leitura de reputação do passageiro resolve corretamente Auth User ID versus Profile ID antes de consultar ratings.
+- Passageiro sem avaliações ou com rating indisponível não recebe mais nota perfeita inventada `5.0`; a camada de leitura retorna estado numérico neutro (`0`) até a UI concluir a apresentação explícita `sem avaliações`.
 - Criação/transição operacional usa `RideOperationalService`/RPC em vez de gravar a tabela de corrida diretamente pela UI.
 - Confirmação de entrega usa comando especializado no backend e valida estado retornado.
 - Entrega exige vínculo de endereço/território e validações operacionais de motoboy.
 - Todas as tabelas de mobilidade inspecionadas em `public` estão com RLS habilitado.
+- `get_operational_verification_status` e `verify_operational_pin` verificam sessão/profile e participação/atribuição no banco.
+- `get_shared_ride_safety_data` expõe somente share ativo, não expirado, com token válido e corrida ainda aberta.
 
 ### Bloqueadores antes de declarar pronto para lançamento
 
-- [ ] Remover a regra duplicada/hardcoded de preço mínimo (`R$ 5,00`) do código de aplicação e reconciliar o mínimo com o SSOT de Pricing + validação autoritativa do backend.
-- [ ] Parar de representar passageiro sem avaliações (ou consulta indisponível) como nota `5.0`; usar estado explícito `sem avaliações`/indisponível.
-- [ ] Revisar grants e corpos das funções `SECURITY DEFINER` de mobilidade sinalizadas pelo Supabase Security Advisor, especialmente rating, safety share, PIN/verificação, chat e mutações de driver.
+- [ ] Remover a regra duplicada/hardcoded de preço mínimo (`R$ 5,00`) do código operacional e das funções SQL `mobility_create_*_atomic`, reconciliando o mínimo com `pricing_rules.minimum_fare` de forma autoritativa.
+- [ ] Ajustar a apresentação visual de reputação para mostrar explicitamente `Sem avaliações` em vez de `0.0`, sem voltar a inventar `5.0`.
+- [ ] Revisar grants e corpos das demais funções `SECURITY DEFINER` de mobilidade sinalizadas pelo Supabase Security Advisor, especialmente chat, safety, ratings e mutações de driver ainda não inspecionadas individualmente.
 - [ ] Confirmar que `ride_state_audit` e `emergency_delivery_log` sem policies de browser são intencionalmente default-deny e possuem somente caminhos privilegiados necessários.
 - [ ] Executar gates de typecheck, lint, testes de mobilidade, build e regressão E2E dos fluxos passageiro/motorista/motoboy após as correções.
 - [ ] Validar concorrência/idempotência: dupla aceitação, cancelamento simultâneo, retry de RPC, reconnect realtime e confirmação duplicada.
 - [ ] Validar autorização negativa: usuário A não pode ler/mutar corrida, chat, PIN, localização ou evidência do usuário B fora dos contratos públicos deliberados.
+- [ ] Obter pipeline de deploy verde; o status Vercel atual está bloqueado externamente por build-rate-limit.
 
 ## Hardcodes permitidos vs. proibidos
 
