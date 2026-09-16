@@ -22,6 +22,8 @@ import {
 
 export type CadastroFormValues = RegisterInitialInput;
 
+type CadastroServerErrorField = "email" | "username" | "password";
+
 const defaultValues: CadastroFormValues = {
   name: "",
   username: "",
@@ -45,6 +47,22 @@ function getUsernameAvailabilityMessage(
     default:
       return "Este nome de usuário não está disponível.";
   }
+}
+
+function resolveCadastroServerErrorField(raw: string): CadastroServerErrorField | null {
+  if (/already registered|already exists|já cadastrado/i.test(raw)) {
+    return "email";
+  }
+  if (/username|handle|nome de usu[aá]rio/i.test(raw)) {
+    return "username";
+  }
+  if (/password|senha/i.test(raw)) {
+    return "password";
+  }
+  if (/email|e-?mail/i.test(raw)) {
+    return "email";
+  }
+  return null;
 }
 
 /**
@@ -154,23 +172,21 @@ export function useCadastroForm(requestedRedirect = "/") {
           error && typeof error === "object" && "message" in error
             ? String((error as { message?: unknown }).message ?? "")
             : "";
+        const field = resolveCadastroServerErrorField(raw);
 
-        if (/already registered|already exists|já cadastrado/i.test(raw)) {
-          form.setError("email", { type: "server", message });
-        } else if (/username|handle|nome de usu[aá]rio/i.test(raw)) {
-          form.setError("username", { type: "server", message });
-        } else if (/password|senha/i.test(raw)) {
-          form.setError("password", { type: "server", message });
-        } else if (/email|e-?mail/i.test(raw)) {
-          form.setError("email", { type: "server", message });
+        // Uma falha deve ter um único owner visual. Erros que pertencem a um
+        // campo ficam junto ao campo; a faixa geral é reservada a falhas sem
+        // destino específico. Isso evita repetir a mesma mensagem no formulário.
+        if (field) {
+          form.setError(field, { type: "server", message });
+        } else {
+          form.setError("root.serverError", { type: "server", message });
+          toast({
+            title: "Não foi possível criar a conta",
+            description: message,
+            variant: "destructive",
+          });
         }
-
-        form.setError("root.serverError", { type: "server", message });
-        toast({
-          title: "Não foi possível criar a conta",
-          description: message,
-          variant: "destructive",
-        });
       } finally {
         submitInFlightRef.current = false;
         setLoading(false);
