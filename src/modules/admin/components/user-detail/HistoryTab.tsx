@@ -41,7 +41,7 @@ export function HistoryTab({ suspensionHistory, user }: HistoryTabProps) {
     {
       type: "created",
       icon: CheckCircle,
-      tone: "info",
+      tone: "info" as const,
       title: "Conta criada",
       description: "Usuário se registrou na plataforma",
       timestamp: user?.created_at,
