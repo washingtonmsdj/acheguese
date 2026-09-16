@@ -5,9 +5,11 @@ espaçamento, raio, sombra e ícone consulta este arquivo. Componentes não deve
 introduzir valores concorrentes ao sistema.
 
 Status: a identidade **Achegue-se / Território Vivo** está consolidada em uma
-única origem executável. Autenticação, onboarding, e-mails e pré-lançamento já
-foram migrados. Domínios operacionais antigos ainda são migrados de forma
-progressiva para preservar cores funcionais de mapas, métricas e estados.
+única origem executável. Autenticação, onboarding, e-mails, pré-lançamento,
+superfícies selecionadas de comunidade e mobilidade e uma parte ampla do Admin
+já foram migrados e protegidos pelo gate visual. Domínios ainda não listados no
+gate continuam em migração progressiva para preservar cores funcionais de mapas,
+métricas, categorias e estados em vez de aplicar substituições cegas.
 
 ---
 
@@ -29,6 +31,24 @@ progressiva para preservar cores funcionais de mapas, métricas e estados.
 > de cor. Use token/classe semântica. Exceções são projeções de e-mail, estilos de
 > mapa/dados ou superfícies ainda em migração; toda exceção precisa ter função
 > explícita e não pode virar uma segunda paleta de marca.
+
+### Onde editar
+
+- Para mudar **cor/fonte global**, edite o primitivo correspondente em
+  `src/index.css`. Não replique o valor em Tailwind, componentes ou páginas.
+- Para disponibilizar um token em classes utilitárias, faça
+  `tailwind.config.ts` consumir a CSS var existente; Tailwind não é owner do
+  valor.
+- Para uso programático, exponha o token por `src/styles/theme.ts`; não coloque
+  HEX/HSL como segunda definição.
+- Para uma cor que represente **categoria de conteúdo**, use
+  `contentCategories.ts`/`--category-*`.
+- Para mapa, gráfico ou outro dado operacional cuja cor carregue significado,
+  mantenha esse significado e crie/reutilize um token de função quando houver
+  repetição. Não transforme tudo em Petróleo/Solar.
+- HTML de e-mail não recebe as CSS vars do app. Nesses arquivos, os HEX de marca
+  são uma **projeção deliberada da SSOT** e o gate verifica que essa projeção não
+  divergiu.
 
 ---
 
@@ -263,3 +283,28 @@ Ao criar/alterar qualquer componente:
 
 Descumprimento bloqueia review. Este documento deve acompanhar qualquer mudança
 no contrato visual executável.
+
+---
+
+## 12. Cobertura de migração
+
+A lista **executável e atual** de superfícies protegidas fica em
+`MIGRATED_RUNTIME_FILES`, dentro de `tools/architecture/validate-visual-ssot.ts`.
+Esse array é a autoridade para dizer que uma superfície já não pode voltar a
+receber HEX/RGB ou famílias tipográficas legadas.
+
+Na cobertura atual estão, entre outras:
+
+- autenticação e onboarding;
+- pré-lançamento;
+- confirmação de e-mail e projeções de e-mail transacional;
+- comentários e grupos da comunidade já migrados;
+- chat e sidebars de mobilidade já migrados;
+- shell do Admin, cupons, eventos, mensagens, moderação, operações,
+  analytics/realtime de mobilidade, reivindicações, serviços e pontos de embarque;
+- gestão de motoristas e as abas de detalhe administrativo já migradas.
+
+Não interprete esta lista como declaração de que **todo o produto** terminou a
+migração. Uma página/componente só entra nesse conjunto depois que seus usos de
+cor e tipografia são revisados por função. Mapas, gráficos, categorias e estados
+operacionais podem manter cores distintas quando elas carregam significado.
