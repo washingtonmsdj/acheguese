@@ -1,20 +1,30 @@
-import React from "react";
-import { BarChart3, Globe, Image, Loader2, Lock, MessageSquare, Mic, ShieldCheck, UserCog } from "lucide-react";
+import {
+  BarChart3,
+  Globe,
+  Image,
+  Loader2,
+  Lock,
+  MessageSquare,
+  Mic,
+  ShieldCheck,
+  UserCog,
+} from "lucide-react";
+import { Button } from "@/shared/components/ui/button";
 import {
   Dialog,
   DialogContent,
+  DialogDescription,
   DialogHeader,
   DialogTitle,
-  DialogDescription,
 } from "@/shared/components/ui/dialog";
 import { Input } from "@/shared/components/ui/input";
 import { Textarea } from "@/shared/components/ui/textarea";
-import { Button } from "@/shared/components/ui/button";
 import {
   DEFAULT_GROUP_RULES,
   GROUP_CATEGORIES,
   GROUP_GOVERNANCE_PRESETS,
 } from "@/shared/constants/groupTaxonomy";
+import { cn } from "@/shared/utils/cn";
 
 interface NewGroupData {
   name: string;
@@ -38,6 +48,33 @@ interface CreateGroupDialogProps {
   onSubmit: () => void;
 }
 
+const CAPABILITIES = [
+  {
+    icon: MessageSquare,
+    title: "Bate-papo",
+    description: "Mensagens em tempo real para membros.",
+    iconClassName: "text-primary",
+  },
+  {
+    icon: Image,
+    title: "Imagens",
+    description: "Mídia com download manual por padrão.",
+    iconClassName: "text-info",
+  },
+  {
+    icon: Mic,
+    title: "Áudio",
+    description: "Base pronta para mensagens de voz.",
+    iconClassName: "text-success",
+  },
+  {
+    icon: BarChart3,
+    title: "Enquetes",
+    description: "Base pronta para votações do grupo.",
+    iconClassName: "text-category-poll",
+  },
+] as const;
+
 export function CreateGroupDialog({
   open,
   onOpenChange,
@@ -55,23 +92,28 @@ export function CreateGroupDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-h-[92vh] max-w-2xl overflow-y-auto border-white/10 bg-[#1E2529] text-white">
+      <DialogContent className="max-h-[92dvh] max-w-2xl overflow-y-auto border-border bg-popover text-popover-foreground">
         <DialogHeader>
           <DialogTitle>Criar grupo</DialogTitle>
-          <DialogDescription className="text-gray-400">
-            Defina o tema, regras e nivel de acesso desde o inicio.
+          <DialogDescription className="text-muted-foreground">
+            Defina o tema, regras e nível de acesso desde o início.
           </DialogDescription>
         </DialogHeader>
 
         <div className="space-y-5 pt-2">
           <div className="grid gap-4 md:grid-cols-[minmax(0,1fr)_15rem]">
             <div>
-              <label className="mb-1 block text-sm text-gray-400">Nome do grupo *</label>
+              <label
+                htmlFor="new-group-name"
+                className="mb-1 block text-sm text-muted-foreground"
+              >
+                Nome do grupo *
+              </label>
               <Input
+                id="new-group-name"
                 value={newGroup.name}
-                onChange={(e) => onUpdateGroup({ name: e.target.value })}
+                onChange={(event) => onUpdateGroup({ name: event.target.value })}
                 placeholder="Ex: Avisos da Santa Cruz"
-                className="border-white/10 bg-white/5 text-white"
                 maxLength={60}
               />
             </div>
@@ -79,24 +121,38 @@ export function CreateGroupDialog({
             <button
               type="button"
               onClick={() => onUpdateGroup({ is_private: !newGroup.is_private })}
-              className={`flex min-h-11 items-center justify-center gap-2 rounded-xl border px-3 py-2 text-sm transition-colors ${
+              aria-pressed={newGroup.is_private}
+              className={cn(
+                "flex min-h-11 items-center justify-center gap-2 rounded-xl border px-3 py-2 text-sm transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring",
                 newGroup.is_private
-                  ? "border-yellow-400/50 bg-yellow-400/10 text-yellow-300"
-                  : "border-white/10 bg-white/5 text-gray-300"
-              }`}
+                  ? "border-warning/40 bg-warning/10 text-warning"
+                  : "border-border bg-muted/50 text-muted-foreground hover:text-foreground",
+              )}
             >
-              {newGroup.is_private ? <Lock className="h-4 w-4" /> : <Globe className="h-4 w-4" />}
-              {newGroup.is_private ? "Restrito" : "Publico"}
+              {newGroup.is_private ? (
+                <Lock className="h-4 w-4" aria-hidden="true" />
+              ) : (
+                <Globe className="h-4 w-4" aria-hidden="true" />
+              )}
+              {newGroup.is_private ? "Restrito" : "Público"}
             </button>
           </div>
 
           <div>
-            <label className="mb-1 block text-sm text-gray-400">Descricao</label>
+            <label
+              htmlFor="new-group-description"
+              className="mb-1 block text-sm text-muted-foreground"
+            >
+              Descrição
+            </label>
             <Textarea
+              id="new-group-description"
               value={newGroup.description}
-              onChange={(e) => onUpdateGroup({ description: e.target.value })}
-              placeholder="Para quem e esse grupo? Que tipo de conversa deve ficar aqui?"
-              className="resize-none border-white/10 bg-white/5 text-white"
+              onChange={(event) =>
+                onUpdateGroup({ description: event.target.value })
+              }
+              placeholder="Para quem é esse grupo? Que tipo de conversa deve ficar aqui?"
+              className="resize-none"
               rows={3}
               maxLength={300}
             />
@@ -104,113 +160,140 @@ export function CreateGroupDialog({
 
           <div>
             <div className="mb-2 flex items-center justify-between gap-2">
-              <label className="block text-sm text-gray-400">Categoria</label>
-              <span className="text-xs text-gray-500">Catalogo escalavel</span>
+              <span className="block text-sm text-muted-foreground">Categoria</span>
+              <span className="text-xs text-muted-foreground">Catálogo escalável</span>
             </div>
             <div className="grid max-h-64 grid-cols-2 gap-2 overflow-y-auto pr-1 sm:grid-cols-3">
-              {GROUP_CATEGORIES.map((cat) => (
-                <button
-                  type="button"
-                  key={cat.id}
-                  onClick={() => onUpdateGroup({ category: cat.id })}
-                  className={`flex min-w-0 items-start gap-2 rounded-xl border p-3 text-left transition-colors ${
-                    (newGroup.category || "geral") === cat.id
-                      ? "border-teal-400 bg-teal-400/10 text-teal-100"
-                      : "border-white/10 bg-white/[0.03] text-gray-300 hover:border-white/20"
-                  }`}
-                >
-                  <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-white/10 text-xs font-bold">
-                    {cat.token}
-                  </span>
-                  <span className="min-w-0">
-                    <span className="block truncate text-sm font-semibold">{cat.label}</span>
-                    <span className="line-clamp-2 text-xs text-gray-500">{cat.description}</span>
-                  </span>
-                </button>
-              ))}
+              {GROUP_CATEGORIES.map((category) => {
+                const selected = (newGroup.category || "geral") === category.id;
+                return (
+                  <button
+                    type="button"
+                    key={category.id}
+                    onClick={() => onUpdateGroup({ category: category.id })}
+                    aria-pressed={selected}
+                    className={cn(
+                      "flex min-w-0 items-start gap-2 rounded-xl border p-3 text-left transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring",
+                      selected
+                        ? "border-primary/40 bg-primary/10 text-primary"
+                        : "border-border bg-muted/30 text-foreground hover:bg-muted/60",
+                    )}
+                  >
+                    <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-background text-xs font-bold text-foreground">
+                      {category.token}
+                    </span>
+                    <span className="min-w-0">
+                      <span className="block truncate text-sm font-semibold">
+                        {category.label}
+                      </span>
+                      <span className="line-clamp-2 text-xs text-muted-foreground">
+                        {category.description}
+                      </span>
+                    </span>
+                  </button>
+                );
+              })}
             </div>
           </div>
 
           <div>
-            <label className="mb-2 block text-sm text-gray-400">Governanca</label>
+            <span className="mb-2 block text-sm text-muted-foreground">
+              Governança
+            </span>
             <div className="grid gap-2 sm:grid-cols-2">
-              {GROUP_GOVERNANCE_PRESETS.map((preset) => (
-                <button
-                  type="button"
-                  key={preset.id}
-                  onClick={() =>
-                    onUpdateGroup({
-                      join_policy: preset.joinPolicy,
-                      posting_policy: preset.postingPolicy,
-                      is_private: preset.joinPolicy !== "open",
-                    })
-                  }
-                  className={`rounded-xl border p-3 text-left transition-colors ${
-                    activePreset.id === preset.id
-                      ? "border-teal-400 bg-teal-400/10"
-                      : "border-white/10 bg-white/[0.03] hover:border-white/20"
-                  }`}
-                >
-                  <span className="block text-sm font-semibold text-white">{preset.label}</span>
-                  <span className="mt-1 block text-xs leading-relaxed text-gray-500">{preset.description}</span>
-                </button>
-              ))}
+              {GROUP_GOVERNANCE_PRESETS.map((preset) => {
+                const selected = activePreset.id === preset.id;
+                return (
+                  <button
+                    type="button"
+                    key={preset.id}
+                    onClick={() =>
+                      onUpdateGroup({
+                        join_policy: preset.joinPolicy,
+                        posting_policy: preset.postingPolicy,
+                        is_private: preset.joinPolicy !== "open",
+                      })
+                    }
+                    aria-pressed={selected}
+                    className={cn(
+                      "rounded-xl border p-3 text-left transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring",
+                      selected
+                        ? "border-primary/40 bg-primary/10"
+                        : "border-border bg-muted/30 hover:bg-muted/60",
+                    )}
+                  >
+                    <span className="block text-sm font-semibold text-foreground">
+                      {preset.label}
+                    </span>
+                    <span className="mt-1 block text-xs leading-relaxed text-muted-foreground">
+                      {preset.description}
+                    </span>
+                  </button>
+                );
+              })}
             </div>
           </div>
 
-          <div className="grid gap-3 sm:grid-cols-4">
-            <div className="rounded-xl border border-white/10 bg-white/[0.03] p-3">
-              <MessageSquare className="mb-2 h-4 w-4 text-teal-300" />
-              <p className="text-sm font-semibold">Bate-papo</p>
-              <p className="mt-1 text-xs text-gray-500">Mensagens em tempo real para membros.</p>
-            </div>
-            <div className="rounded-xl border border-white/10 bg-white/[0.03] p-3">
-              <Image className="mb-2 h-4 w-4 text-cyan-300" />
-              <p className="text-sm font-semibold">Imagens</p>
-              <p className="mt-1 text-xs text-gray-500">Midia com download manual por padrao.</p>
-            </div>
-            <div className="rounded-xl border border-white/10 bg-white/[0.03] p-3">
-              <Mic className="mb-2 h-4 w-4 text-emerald-300" />
-              <p className="text-sm font-semibold">Audio</p>
-              <p className="mt-1 text-xs text-gray-500">Base pronta para mensagens de voz.</p>
-            </div>
-            <div className="rounded-xl border border-white/10 bg-white/[0.03] p-3">
-              <BarChart3 className="mb-2 h-4 w-4 text-violet-300" />
-              <p className="text-sm font-semibold">Enquetes</p>
-              <p className="mt-1 text-xs text-gray-500">Base pronta para votacoes do grupo.</p>
-            </div>
+          <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+            {CAPABILITIES.map((item) => (
+              <div
+                key={item.title}
+                className="rounded-xl border border-border bg-muted/30 p-3"
+              >
+                <item.icon
+                  className={cn("mb-2 h-4 w-4", item.iconClassName)}
+                  aria-hidden="true"
+                />
+                <p className="text-sm font-semibold text-foreground">{item.title}</p>
+                <p className="mt-1 text-xs text-muted-foreground">
+                  {item.description}
+                </p>
+              </div>
+            ))}
           </div>
 
-          <div className="rounded-xl border border-white/10 bg-white/[0.03] p-3">
+          <div className="rounded-xl border border-border bg-muted/30 p-3">
             <div className="flex items-start gap-3">
-              <UserCog className="mt-0.5 h-4 w-4 shrink-0 text-teal-300" />
+              <UserCog
+                className="mt-0.5 h-4 w-4 shrink-0 text-primary"
+                aria-hidden="true"
+              />
               <div>
-                <p className="text-sm font-semibold">Admins do grupo</p>
-                <p className="mt-1 text-xs leading-relaxed text-gray-500">
-                  Depois de criado, admins podem promover membros para admin/moderador pela aba de membros, como em grupos de WhatsApp.
+                <p className="text-sm font-semibold text-foreground">
+                  Admins do grupo
+                </p>
+                <p className="mt-1 text-xs leading-relaxed text-muted-foreground">
+                  Depois de criado, admins podem promover membros para admin/moderador
+                  pela aba de membros, como em grupos de WhatsApp.
                 </p>
               </div>
             </div>
           </div>
 
           <div>
-            <label className="mb-1 flex items-center gap-2 text-sm text-gray-400">
-              <ShieldCheck className="h-4 w-4" />
+            <label
+              htmlFor="new-group-rules"
+              className="mb-1 flex items-center gap-2 text-sm text-muted-foreground"
+            >
+              <ShieldCheck className="h-4 w-4" aria-hidden="true" />
               Regras do grupo
             </label>
             <Textarea
+              id="new-group-rules"
               value={newGroup.rules || DEFAULT_GROUP_RULES.join("\n")}
-              onChange={(e) => onUpdateGroup({ rules: e.target.value })}
-              className="min-h-32 resize-none border-white/10 bg-white/5 text-sm text-white"
+              onChange={(event) => onUpdateGroup({ rules: event.target.value })}
+              className="min-h-32 resize-none text-sm"
             />
           </div>
 
           <Button
             onClick={onSubmit}
             disabled={creating || !newGroup.name.trim()}
-            className="w-full bg-teal-500 text-white hover:bg-teal-600"
+            className="w-full"
           >
-            {creating ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
+            {creating ? (
+              <Loader2 className="mr-2 h-4 w-4 animate-spin" aria-hidden="true" />
+            ) : null}
             Criar grupo
           </Button>
         </div>
