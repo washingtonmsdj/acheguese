@@ -181,19 +181,9 @@ export function useMobilidade(options: UseMobilidadeOptions = {}) {
       }
 
       const result = await RideOperationalService.createRide({
-        passengerProfileId: passengerProfile.id,
-        pickupAddressId: rideData.pickup_address_id,
-        dropoffAddressId: rideData.dropoff_address_id,
-        pickupLocationId: rideData.pickup_location_id,
-        dropoffLocationId: rideData.dropoff_location_id,
+        priceQuoteId: quote.quote_id,
         origin: rideData.origin,
         destination: rideData.destination,
-        originLat: rideData.origin_lat,
-        originLng: rideData.origin_lng,
-        destinationLat: rideData.destination_lat,
-        destinationLng: rideData.destination_lng,
-        mode: "ride",
-        priceQuoteId: quote.quote_id,
         observation: rideData.observation,
         availableSeats: rideData.available_seats,
         paymentMethod: rideData.payment_method,
