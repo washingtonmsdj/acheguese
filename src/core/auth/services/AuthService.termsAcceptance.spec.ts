@@ -5,6 +5,7 @@ import { TERMS_OF_SERVICE_VERSION } from "@/core/legal/termsOfService";
 const mocks = vi.hoisted(() => ({
   signUp: vi.fn(),
   refreshSession: vi.fn(),
+  checkPasswordCompromise: vi.fn(),
 }));
 
 vi.mock("@/integrations/supabase", () => ({
@@ -21,6 +22,10 @@ vi.mock("@/core/session/services/SessionService", () => ({
   },
 }));
 
+vi.mock("@/core/auth/utils/compromisedPassword", () => ({
+  checkPasswordCompromise: mocks.checkPasswordCompromise,
+}));
+
 import { AuthService } from "./AuthService";
 
 describe("AuthService.signUp terms acceptance", () => {
@@ -28,6 +33,11 @@ describe("AuthService.signUp terms acceptance", () => {
     vi.clearAllMocks();
     mocks.signUp.mockResolvedValue({ data: { session: null }, error: null });
     mocks.refreshSession.mockResolvedValue(undefined);
+    mocks.checkPasswordCompromise.mockResolvedValue({
+      blocked: false,
+      count: 0,
+      unavailable: false,
+    });
   });
 
   it("rejects a signup without the current Terms acceptance before calling Supabase", async () => {
@@ -40,10 +50,41 @@ describe("AuthService.signUp terms acceptance", () => {
       }),
     ).rejects.toMatchObject({ code: "TERMS_ACCEPTANCE_REQUIRED" });
 
+    expect(mocks.checkPasswordCompromise).not.toHaveBeenCalled();
     expect(mocks.signUp).not.toHaveBeenCalled();
   });
 
-  it("sends the accepted current version as signup metadata", async () => {
+  it("blocks a compromised password before creating the account", async () => {
+    mocks.checkPasswordCompromise.mockResolvedValue({
+      blocked: true,
+      count: 77,
+      unavailable: false,
+      message: "Senha encontrada em vazamentos.",
+    });
+
+    await expect(
+      AuthService.signUp({
+        email: "ana@example.com",
+        password: "SenhaVazada@2026",
+        name: "Ana Souza",
+        termsAcceptance: {
+          accepted: true,
+          version: TERMS_OF_SERVICE_VERSION,
+        },
+      }),
+    ).rejects.toMatchObject({
+      code: "PASSWORD_COMPROMISED",
+      statusCode: 400,
+      message: "Senha encontrada em vazamentos.",
+    });
+
+    expect(mocks.checkPasswordCompromise).toHaveBeenCalledWith(
+      "SenhaVazada@2026",
+    );
+    expect(mocks.signUp).not.toHaveBeenCalled();
+  });
+
+  it("checks password compromise before sending accepted signup metadata", async () => {
     await AuthService.signUp({
       email: "ana@example.com",
       password: "SenhaSegura@2026",
@@ -54,6 +95,10 @@ describe("AuthService.signUp terms acceptance", () => {
       },
     });
 
+    expect(mocks.checkPasswordCompromise).toHaveBeenCalledTimes(1);
+    expect(mocks.checkPasswordCompromise).toHaveBeenCalledWith(
+      "SenhaSegura@2026",
+    );
     expect(mocks.signUp).toHaveBeenCalledWith(
       expect.objectContaining({
         options: expect.objectContaining({
