@@ -1,5 +1,7 @@
 import { getSupabaseAdminClient, requireAdmin } from "../_shared/adminAuth.ts";
 import {
+  auditLog,
+  getAuditInfo,
   getCorsHeaders,
   isValidUUID,
   jsonResponse,
@@ -173,17 +175,20 @@ Deno.serve(async (req: Request) => {
     return jsonResponse({ error: "invalid_action" }, 400, ALLOWED_METHODS, req);
   }
 
+  const safeAction = action as Action;
   const params: Params =
     body.data.params && typeof body.data.params === "object" && !Array.isArray(body.data.params)
       ? (body.data.params as Params)
       : {};
 
   const admin = getSupabaseAdminClient();
+  let auditedRequestId: string | undefined;
+  let auditedNextStatus: RequestStatus | undefined;
 
   try {
     let data: unknown;
 
-    switch (action as Action) {
+    switch (safeAction) {
       case "listRequests": {
         const status = optionalEnum(params.status, STATUSES, "status");
         const requestType = optionalEnum(params.requestType, TYPES, "request_type");
@@ -225,6 +230,7 @@ Deno.serve(async (req: Request) => {
 
       case "getRequest": {
         const requestId = requireRequestId(params.requestId);
+        auditedRequestId = requestId;
         const { data: row, error } = await admin.rpc(
           "admin_get_privacy_subject_request",
           {
@@ -247,6 +253,8 @@ Deno.serve(async (req: Request) => {
         if (!nextStatus) {
           throw new AdminPrivacyHttpError("invalid_status", 400);
         }
+        auditedRequestId = requestId;
+        auditedNextStatus = nextStatus;
 
         const { data: row, error } = await admin.rpc(
           "admin_transition_privacy_subject_request",
@@ -262,8 +270,42 @@ Deno.serve(async (req: Request) => {
       }
     }
 
+    auditLog({
+      timestamp: new Date().toISOString(),
+      userId: auth.userId,
+      action: `admin_privacy_${safeAction}`,
+      resource: "admin-privacy-rpc",
+      status: "success",
+      details: {
+        action: safeAction,
+        ...(auditedRequestId ? { requestId: auditedRequestId } : {}),
+        ...(auditedNextStatus ? { nextStatus: auditedNextStatus } : {}),
+      },
+      ...getAuditInfo(req),
+    });
+
     return jsonResponse({ data }, 200, ALLOWED_METHODS, req);
   } catch (error) {
+    const clientCode =
+      error instanceof AdminPrivacyHttpError
+        ? error.clientCode
+        : "privacy_admin_operation_failed";
+
+    auditLog({
+      timestamp: new Date().toISOString(),
+      userId: auth.userId,
+      action: `admin_privacy_${safeAction}`,
+      resource: "admin-privacy-rpc",
+      status: "failure",
+      details: {
+        action: safeAction,
+        reason: clientCode,
+        ...(auditedRequestId ? { requestId: auditedRequestId } : {}),
+        ...(auditedNextStatus ? { nextStatus: auditedNextStatus } : {}),
+      },
+      ...getAuditInfo(req),
+    });
+
     if (error instanceof AdminPrivacyHttpError) {
       return jsonResponse(
         { error: error.clientCode },
@@ -274,7 +316,7 @@ Deno.serve(async (req: Request) => {
     }
 
     console.error("[admin-privacy-rpc] operation failed", {
-      action,
+      action: safeAction,
       reason: "privacy_admin_operation_failed",
     });
     return jsonResponse({ error: "internal_server_error" }, 500, ALLOWED_METHODS, req);
