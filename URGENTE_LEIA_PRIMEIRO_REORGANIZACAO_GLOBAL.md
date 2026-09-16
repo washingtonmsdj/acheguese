@@ -9,7 +9,7 @@
 1. `docs/README.md` — índice documental canônico;
 2. `docs/03-architecture/CURRENT_RULES.md` — regras arquiteturais vigentes;
 3. `docs/08-roadmap/EXECUCAO_MAIN_ONLY.md` — plano operacional ativo;
-4. `docs/08-roadmap/checkpoints/2026-09-16-mobility-security-structure-pricing-trust.md` — checkpoint mais recente desta linha;
+4. `docs/08-roadmap/checkpoints/2026-09-16-mobility-safety-production-drift-repair.md` — checkpoint mais recente desta linha;
 5. `SECURITY.md` — segurança e gates de release.
 
 ## Regras que não podem ser perdidas
@@ -72,7 +72,9 @@
 - tipos Supabase gerados devem vir do schema real; não editar `types.generated.ts` manualmente para esconder drift;
 - Mobilidade permanece `PUBLIC_LAUNCH_SURFACES.mobility=false` até E2E + security + build + deploy do mesmo SHA;
 - preço de Mobilidade não pode ser autoridade do browser: antes do launch, criação deve usar quote/versionamento server-owned e nenhuma regra `provisional` pode virar preço de produção;
-- cancelamento é evento de segurança/suporte: corrida cancelada e motivo conhecido permanecem auditáveis; nunca apagar ou inventar contexto para “limpar” histórico.
+- cancelamento é evento de segurança/suporte: corrida cancelada e motivo conhecido permanecem auditáveis; nunca apagar ou inventar contexto para “limpar” histórico;
+- `send-emergency-email` usa autenticação dual no próprio handler: JWT válido para chamadas de usuário ou `CRON_SECRET` para o dispatcher autônomo; `verify_jwt=false` no gateway é obrigatório para permitir o cron e nunca autoriza caminho anônimo até side effects;
+- entrega externa de SOS pertence ao outbox durável G72–G80; browser, Edge ou suporte não devem voltar a escrever `emergency_delivery_log` diretamente nem reconstruir payload de retry a partir de dados mutáveis.
 
 ## Política deste arquivo
 
