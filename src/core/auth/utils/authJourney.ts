@@ -78,6 +78,10 @@ function getPendingSignupRedirect(): string | null {
   return getAuthFlowSessionValue(AUTH_FLOW_STORAGE_KEYS.pendingSignupRedirect);
 }
 
+function clearPendingSignupRedirect(): void {
+  clearAuthFlowSessionValue(AUTH_FLOW_STORAGE_KEYS.pendingSignupRedirect);
+}
+
 function setPendingEmailConfirmationIntent(
   intent: AuthEmailConfirmationIntent,
 ): void {
