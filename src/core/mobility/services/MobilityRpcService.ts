@@ -192,7 +192,6 @@ export class MobilityRpcService {
       code?: string;
       observation?: string;
     };
-    finalPrice?: number;
     failedDeliveryMetadata?: FailedDeliveryMetadata;
   }): Promise<{
     updated: boolean;
@@ -207,7 +206,6 @@ export class MobilityRpcService {
       actorProfileId: input.actorProfileId,
       reason: input.reason ?? "",
       proofOfDelivery: input.proofOfDelivery ?? null,
-      finalPrice: input.finalPrice ?? null,
       failedDeliveryMetadata: input.failedDeliveryMetadata ?? null,
     });
   }
