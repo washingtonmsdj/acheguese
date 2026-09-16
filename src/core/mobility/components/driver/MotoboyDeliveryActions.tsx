@@ -57,7 +57,6 @@ interface MotoboyDeliveryActionsProps {
     rideId: string,
     driverProfileId: string,
     proof: DeliveryProof,
-    finalPrice?: number,
     pin?: string,
   ) => Promise<boolean>;
   onFailDelivery: (
@@ -197,7 +196,6 @@ export function MotoboyDeliveryActions({
         ride.id,
         driverProfileId,
         proof,
-        undefined,
         verificationState.status === "required" ? deliveryPin : undefined,
       );
 
