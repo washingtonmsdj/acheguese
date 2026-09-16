@@ -47,12 +47,13 @@ describe("G138 canonical ride read projection", () => {
 
   it("returns typed passenger and active rides without facade casts", () => {
     expect(rideService).toContain("return getRidesByPassenger(passengerId)");
-    expect(rideService).toContain("return getActiveRide(userId)");
+    expect(rideService).toContain("return getActiveRide(userProfileId)");
+    expect(rideService).not.toContain("return getActiveRide(userId)");
     expect(rideService).not.toContain(
       "getRidesByPassenger(passengerId);\n    return rides as RideRequest[]",
     );
     expect(rideService).not.toContain(
-      "getActiveRide(userId);\n    return (ride as RideRequest",
+      "getActiveRide(userProfileId);\n    return (ride as RideRequest",
     );
   });
 
