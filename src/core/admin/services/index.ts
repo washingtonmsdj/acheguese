@@ -54,10 +54,12 @@ export type {
 export { adminPrivacyRequestsService } from "./AdminPrivacyRequestsService";
 export type {
   AdminPrivacyRequestDetail,
+  AdminPrivacyRequestHistoryEvent,
   AdminPrivacyRequestListInput,
   AdminPrivacyRequestListResult,
   AdminPrivacyRequestSummary,
   AdminPrivacyTransitionResult,
+  PrivacyRequestEventType,
   PrivacyRequestStatus,
   PrivacyRequestType,
 } from "./AdminPrivacyRequestsService";
