@@ -57,6 +57,14 @@ const INFO_STATUSES = new Set<string>([
   RIDE_STATUS.DRIVER_ARRIVED,
 ]);
 
+const ACTIVE_EXECUTION_STATUSES = new Set<string>([
+  RIDE_STATUS.PASSENGER_BOARDED,
+  RIDE_STATUS.PASSENGER_ON_BOARD,
+  RIDE_STATUS.IN_PROGRESS,
+  RIDE_STATUS.PICKUP_CONFIRMED,
+  RIDE_STATUS.IN_DELIVERY,
+]);
+
 function getStatusClasses(status: string): string {
   if (SUCCESS_STATUSES.has(status)) {
     return "border-success/30 bg-success/10 text-success";
@@ -70,7 +78,10 @@ function getStatusClasses(status: string): string {
   if (INFO_STATUSES.has(status)) {
     return "border-info/30 bg-info/10 text-info";
   }
-  return "border-category-mobility/30 bg-category-mobility/10 text-category-mobility";
+  if (ACTIVE_EXECUTION_STATUSES.has(status)) {
+    return "border-category-mobility/30 bg-category-mobility/10 text-category-mobility";
+  }
+  return "border-border bg-muted/50 text-muted-foreground";
 }
 
 function getStatusLabel(status: string): string {
