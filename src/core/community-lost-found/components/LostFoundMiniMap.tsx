@@ -28,6 +28,8 @@ export function LostFoundMiniMap({
   const containerRef = useRef<HTMLDivElement>(null);
   const mapRef = useRef<MapLibreMap | null>(null);
   const markerRef = useRef<MapLibreMarker | null>(null);
+  const coordinatesRef = useRef({ latitude, longitude });
+  coordinatesRef.current = { latitude, longitude };
 
   useEffect(() => {
     let disposed = false;
@@ -37,10 +39,11 @@ export function LostFoundMiniMap({
       const maplibregl = await loadMapLibreRuntime();
       if (disposed || !containerRef.current || mapRef.current) return;
 
+      const initialCoordinates = coordinatesRef.current;
       const map = new maplibregl.Map({
         container: containerRef.current,
         style: DEFAULT_TILE_STYLE.styleUrl,
-        center: [longitude, latitude],
+        center: [initialCoordinates.longitude, initialCoordinates.latitude],
         zoom: 16,
         attributionControl: false,
         scrollZoom: false,
@@ -55,6 +58,7 @@ export function LostFoundMiniMap({
         if (disposed) return;
         const color = tipo === "perdido" ? "#EF4444" : "#10B981";
         const markerAbbr = tipo === "perdido" ? "P" : "E";
+        const markerCoordinates = coordinatesRef.current;
 
         const el = document.createElement("div");
         el.style.cssText = `width:36px;height:36px;background:${color};border-radius:50% 50% 50% 0;transform:rotate(-45deg);border:3px solid white;box-shadow:0 2px 8px rgba(0,0,0,0.3);display:flex;align-items:center;justify-content:center;`;
@@ -64,7 +68,7 @@ export function LostFoundMiniMap({
         el.appendChild(inner);
 
         markerRef.current = new maplibregl.Marker({ element: el, anchor: "bottom" })
-          .setLngLat([longitude, latitude])
+          .setLngLat([markerCoordinates.longitude, markerCoordinates.latitude])
           .setPopup(
             new maplibregl.Popup({ closeButton: false }).setDOMContent(
               createMapPopupContent({
