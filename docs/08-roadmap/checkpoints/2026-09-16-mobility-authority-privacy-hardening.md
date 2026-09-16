@@ -37,11 +37,11 @@ O source atual de `supabase/functions/mobility-rpc/index.ts` deixou de possuir:
 
 Criação pertence exclusivamente a `mobility-create-rpc`. O teste `tests/architecture/mobility-rpc-boundary.test.ts` trava essa separação.
 
-**Drift ainda aberto:** o bundle de produção inspecionado continua `mobility-rpc` v28 e ainda contém o caminho legado. O source limpo só conta como produção depois de deploy e releitura do bundle.
+**Cutover de produção concluído:** `mobility-rpc` está **v32 ACTIVE**, com `verify_jwt=true`. O bundle implantado foi relido depois do deploy e confirma ausência das actions/handlers de criação e de `finalPrice`, preservando MFA administrativo, dispatch, transições, presença/localização e o rate limit compartilhado fail-closed.
 
 ## Preço terminal
 
-A conclusão de corrida/entrega deixou de aceitar preço de UI/motorista como autoridade. O banco deriva o valor terminal do estado monetário persistido pela quote/corrida. O parâmetro SQL `p_final_price` permanece apenas como compatibilidade enquanto o broker limpo não for promovido e a assinatura puder ser reduzida com segurança.
+A conclusão de corrida/entrega deixou de aceitar preço de UI/motorista como autoridade. O banco deriva o valor terminal do estado monetário persistido pela quote/corrida. O parâmetro SQL `p_final_price` permanece apenas como compatibilidade de assinatura e não é mais enviado pelo broker operacional; sua remoção física depende do retorno do canal PostgreSQL administrativo.
 
 ## Minimização de PII e leituras
 
@@ -80,14 +80,13 @@ Permanece válido o checkpoint `2026-09-16-mobility-safety-production-drift-repa
 ## Bloqueadores atuais de lançamento
 
 1. definir e aprovar a política comercial real por modalidade;
-2. promover o `mobility-rpc` limpo e reler o bundle implantado;
-3. remover `p_final_price` da assinatura SQL após esse cutover;
-4. aplicar/verificar a migration de minimização de GPS quando o Postgres administrativo voltar;
-5. executar o probe negativo IDOR/BOLA rollback-only;
-6. regenerar tipos Supabase a partir do schema real depois das migrations;
-7. executar typecheck, lint, testes de Mobilidade/Pricing, build e E2E no mesmo SHA;
-8. provar concorrência/idempotência em dupla aceitação, cancelamento simultâneo, retry/reconnect, quote duplicada e confirmação duplicada;
-9. obter pipeline/deploy verde. Rate-limit externo da Vercel não é certificação positiva nem falha de source.
+2. remover `p_final_price` da assinatura SQL quando o canal PostgreSQL administrativo voltar;
+3. aplicar/verificar a migration de minimização de GPS quando o Postgres administrativo voltar;
+4. executar o probe negativo IDOR/BOLA rollback-only;
+5. regenerar tipos Supabase a partir do schema real depois das migrations;
+6. executar typecheck, lint, testes de Mobilidade/Pricing, build e E2E no mesmo SHA;
+7. provar concorrência/idempotência em dupla aceitação, cancelamento simultâneo, retry/reconnect, quote duplicada e confirmação duplicada;
+8. obter pipeline/deploy verde. Rate-limit externo da Vercel não é certificação positiva nem falha de source.
 
 ## Regra de lançamento
 
