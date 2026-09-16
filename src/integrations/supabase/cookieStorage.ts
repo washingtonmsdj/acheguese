@@ -13,6 +13,7 @@ import type { SupportedStorage } from "@supabase/supabase-js";
 import {
   AUTH_BROWSER_STORAGE_CONFIG,
   AUTH_COOKIE_PREFIX,
+  AUTH_STORAGE_KEY,
   SECURE_COOKIE_CONFIG,
 } from "@/shared/config/security.config";
 
@@ -251,6 +252,15 @@ export class BrowserCookieStorage implements SupportedStorage {
     }
   }
 
+  /**
+   * Reaplica a política atual a um valor já persistido. Isso permite migrar
+   * o verificador PKCE criado por uma versão anterior que usava SameSite=Strict.
+   */
+  rewriteItem(key: string): void {
+    const value = this.getItem(key);
+    if (value !== null) this.setItem(key, value);
+  }
+
   private getCookieName(key: string): string {
     return `${this.prefix}-${key}`;
   }
@@ -262,6 +272,7 @@ export class StrictBrowserAuthStorage implements SupportedStorage {
   constructor(cookieStorage = new BrowserCookieStorage()) {
     this.cookieStorage = cookieStorage;
     clearLegacyLocalAuthStorage();
+    this.cookieStorage.rewriteItem(`${AUTH_STORAGE_KEY}-code-verifier`);
 
     devDebug("[AuthStorage] Initialized cookie-only Supabase auth storage", {
       cookiesAvailable: CookieManager.isEnabled(),
