@@ -37,14 +37,29 @@
   --secondary-foreground: 0 0% 100%;
   --muted: 0 0% 20%;
   --muted-foreground: 0 0% 80%;
-  --accent: 0 0% 20%;
-  --accent-foreground: 0 0% 100%;
-  --destructive: 0 84% 60%;
+  --accent: 48 100% 50%;
+  --accent-foreground: 0 0% 0%;
+  --destructive: 0 100% 40%;
   --destructive-foreground: 0 0% 100%;
-  --border: 0 0% 40%;
+  --success: 140 100% 25%;
+  --success-foreground: 0 0% 100%;
+  --warning: 35 100% 30%;
+  --warning-foreground: 0 0% 100%;
+  --info: 210 100% 35%;
+  --info-foreground: 0 0% 100%;
+  --border: 0 0% 55%;
   --input: 0 0% 20%;
-  --ring: 0 0% 100%;
+  --ring: 48 100% 50%;
   --radius: 0.5rem;
+
+  --sidebar-background: 0 0% 0%;
+  --sidebar-foreground: 0 0% 100%;
+  --sidebar-primary: 0 0% 100%;
+  --sidebar-primary-foreground: 0 0% 0%;
+  --sidebar-accent: 0 0% 20%;
+  --sidebar-accent-foreground: 0 0% 100%;
+  --sidebar-border: 0 0% 55%;
+  --sidebar-ring: 48 100% 50%;
 
   /* Territory surfaces have their own semantic palette. Keep it complete here
    * so enabling high contrast also affects the community-first root and every
@@ -54,6 +69,7 @@
   --territory-canvas: 0 0% 100%;
   --territory-surface: 0 0% 100%;
   --territory-surface-raised: 0 0% 94%;
+  --territory-raised: var(--territory-surface-raised);
   --territory-ink: 0 0% 0%;
   --territory-muted: 0 0% 20%;
   --territory-muted-strong: 0 0% 10%;
@@ -85,13 +101,18 @@
   border: 2px solid hsl(var(--border)) !important;
 }
 
-.accessibility-high-contrast button:focus,
-.accessibility-high-contrast input:focus,
-.accessibility-high-contrast select:focus,
-.accessibility-high-contrast textarea:focus,
-.accessibility-high-contrast a:focus {
+.accessibility-high-contrast button:focus-visible,
+.accessibility-high-contrast input:focus-visible,
+.accessibility-high-contrast select:focus-visible,
+.accessibility-high-contrast textarea:focus-visible,
+.accessibility-high-contrast a:focus-visible {
   outline: 3px solid hsl(var(--ring)) !important;
   outline-offset: 2px !important;
+}
+
+.accessibility-high-contrast ::selection {
+  background: hsl(var(--territory-selection));
+  color: hsl(var(--territory-ink));
 }
 
 /*
@@ -107,16 +128,16 @@
   font-size: 136% !important;
 }
 
-*:focus {
+*:focus-visible {
   outline: 2px solid hsl(var(--ring));
   outline-offset: 2px;
 }
 
-button:focus,
-input:focus,
-select:focus,
-textarea:focus,
-a:focus {
+button:focus-visible,
+input:focus-visible,
+select:focus-visible,
+textarea:focus-visible,
+a:focus-visible {
   outline: 3px solid hsl(var(--ring));
   outline-offset: 2px;
 }
@@ -154,6 +175,7 @@ input[type="reset"] {
   transition: top 0.3s;
 }
 
-.skip-link:focus {
+.skip-link:focus,
+.skip-link:focus-visible {
   top: 0;
 }
