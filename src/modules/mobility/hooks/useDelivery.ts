@@ -11,6 +11,7 @@ import { useState, useCallback } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useAuth } from "@/core/auth";
 import { profileService } from "@/core/profiles/services/ProfileService";
+import { MobilityPriceQuoteService } from "@/core/pricing/services/MobilityPriceQuoteService";
 import { toast } from "sonner";
 import {
   getRideById,
@@ -18,7 +19,6 @@ import {
 } from "@/core/mobility/services/mobility.queries";
 import { RideOperationalService } from "@/core/mobility/core/RideOperationalService";
 import { isOpenRideStatus } from "@/core/mobility/core/RideLifecycleStatus";
-import { pricingService } from "@/core/pricing/instance";
 import { logger } from "@/shared/utils/logger";
 import { useRideRealtime } from "./useRideRealtime";
 import { buildFailedDeliveryMetadata } from "@/modules/mobility/utils/failedDelivery";
@@ -148,32 +148,31 @@ export function useDelivery(sourceType: SourceType, sourceId?: string) {
           return { success: false, error: profileError };
         }
 
-        let suggestedPrice: number;
+        let quote;
         try {
-          const estimate = await pricingService.calculateEstimate({
+          quote = await MobilityPriceQuoteService.issue({
+            passengerProfileId: passengerProfile.id,
             mode: "motoboy",
-            origin: { latitude: data.originLat, longitude: data.originLng },
-            destination: { latitude: data.destinationLat, longitude: data.destinationLng },
+            pickupAddressId: data.pickupAddressId,
+            dropoffAddressId: data.dropoffAddressId,
           });
-
-          if (!Number.isFinite(estimate.estimatedPrice) || estimate.estimatedPrice <= 0) {
-            throw new Error("Canonical pricing returned an invalid delivery price");
-          }
-
-          suggestedPrice = estimate.estimatedPrice;
         } catch (pricingError) {
           logger.error(
-            "useDelivery.createDelivery - canonical pricing unavailable",
+            "useDelivery.createDelivery - server-owned pricing unavailable",
             pricingError as Error,
           );
-          toast.error("Nao foi possivel calcular o preco oficial da entrega. Tente novamente.");
-          throw new Error("Official delivery pricing unavailable");
+          const pricingMessage =
+            "A precificacao comercial da entrega ainda nao esta disponivel.";
+          toast.error(pricingMessage);
+          return { success: false, error: pricingMessage };
         }
 
         const result = await RideOperationalService.createDelivery({
           passengerProfileId: passengerProfile.id,
           ...data,
-          suggestedPrice,
+          // Transitional broker field. Postgres accepts it only when it matches
+          // an unused server-owned quote and persists the quote-owned value/route.
+          suggestedPrice: quote.amount,
           requestingUserId: user.id,
         });
 
