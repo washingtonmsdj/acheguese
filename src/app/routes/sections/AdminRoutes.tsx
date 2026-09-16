@@ -25,6 +25,7 @@ export function AdminRoutes() {
       <Route path="realtime-dashboard" element={<P.AdminRealtimeDashboard />} />
       <Route path="moderacao" element={<P.AdminModeracao />} />
       <Route path="qualidade-dados" element={<P.AdminDataQuality />} />
+      <Route path="privacidade" element={<P.AdminPrivacyRequests />} />
       <Route path="alertas" element={<P.AdminCommunityAlerts />} />
       <Route path="community-alerts" element={<P.AdminCommunityAlerts />} />
       <Route path="community-issues" element={<P.AdminCommunityIssues />} />
