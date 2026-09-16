@@ -76,6 +76,13 @@ const FAIL_REASON_OPTIONS: Array<{ value: string; label: string }> = [
   { value: "other", label: "Outro motivo" },
 ];
 
+const DELIVERY_PII_VISIBLE_STATUSES = new Set<string>([
+  RIDE_STATUS.DRIVER_ACCEPTED,
+  RIDE_STATUS.DRIVER_ARRIVING,
+  RIDE_STATUS.PICKUP_CONFIRMED,
+  RIDE_STATUS.IN_DELIVERY,
+]);
+
 type VerificationUiState =
   | { status: "idle" | "loading" | "not_required" | "verified" }
   | { status: "required"; attemptsRemaining?: number }
@@ -151,7 +158,12 @@ export function MotoboyDeliveryActions({
     void refreshVerificationState();
   }, [refreshVerificationState]);
 
-  if (ride.ride_mode !== "motoboy") return null;
+  if (
+    ride.ride_mode !== "motoboy" ||
+    !DELIVERY_PII_VISIBLE_STATUSES.has(ride.status)
+  ) {
+    return null;
+  }
 
   const handleProofDialogChange = (open: boolean) => {
     if (isLoading) return;
