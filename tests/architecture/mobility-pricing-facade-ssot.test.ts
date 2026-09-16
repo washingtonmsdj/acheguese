@@ -7,7 +7,10 @@ const read = (path: string) => readFileSync(resolve(root, path), "utf8");
 
 function exportedFunctionNames(source: string): Set<string> {
   return new Set(
-    Array.from(source.matchAll(/export\s+function\s+([A-Za-z_$][\w$]*)/g), (match) => match[1]),
+    Array.from(
+      source.matchAll(/export\s+function\s+([A-Za-z_$][\w$]*)/g),
+      (match) => match[1],
+    ),
   );
 }
 
@@ -61,12 +64,23 @@ describe("Mobility pricing facade SSOT", () => {
     expect(missingHelpers).toEqual([]);
   });
 
-  it("keeps fare estimation owned by PricingService", () => {
-    const pricing = read("src/core/pricing/services/PricingService.ts");
+  it("keeps transactional mobility pricing owned by the server quote broker", () => {
+    const pricingRepository = read(
+      "src/core/pricing/services/PricingService.ts",
+    );
+    const quoteService = read(
+      "src/core/pricing/services/MobilityPriceQuoteService.ts",
+    );
+    const quoteBroker = read("supabase/functions/mobility-pricing-rpc/index.ts");
     const helpers = read("src/core/mobility/services/mobility.helpers.ts");
 
-    expect(pricing).toContain("async calculateEstimate(");
-    expect(pricing).toContain("async calculateQuickEstimate(");
+    expect(pricingRepository).not.toContain("calculateEstimate(");
+    expect(pricingRepository).not.toContain("calculateQuickEstimate(");
+    expect(pricingRepository).not.toContain("getFallbackRule");
+    expect(pricingRepository).not.toContain("AVERAGE_SPEED_KMH");
+    expect(quoteService).toContain('const FUNCTION_NAME = "mobility-pricing-rpc"');
+    expect(quoteService).toContain('action: "quote"');
+    expect(quoteBroker).toContain("mobility_price_quotes");
     expect(helpers).not.toMatch(/baseFare\s*[=:+]/);
     expect(helpers).not.toMatch(/pricePerKm\s*[=:+]/);
     expect(helpers).not.toMatch(/perKmRate\s*[=:+]/);
