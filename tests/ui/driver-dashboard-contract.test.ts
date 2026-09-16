@@ -17,17 +17,30 @@ const settingsPanel = read(
 const realtimeStatus = read(
   "src/modules/mobility/components/driver/DriverRealtimeStatus.tsx",
 );
+const weeklyEarnings = read(
+  "src/core/mobility/components/driver/WeeklyEarningsChart.tsx",
+);
+const deliveryActions = read(
+  "src/core/mobility/components/driver/MotoboyDeliveryActions.tsx",
+);
 
 const migratedDriverVisualFiles = [
   "src/modules/mobility/pages/MotoristaPage.tsx",
   "src/modules/mobility/pages/MotoboyPage.tsx",
-  "src/modules/mobility/components/driver/DriverQuickActions.tsx",
+  "src/modules/mobility/components/DriverOfferCard.tsx",
+  "src/modules/mobility/components/NeighborRankingPanel.tsx",
+  "src/modules/mobility/components/driver/CancelRideDialog.tsx",
   "src/modules/mobility/components/driver/CompleteRideDialog.tsx",
+  "src/modules/mobility/components/driver/DriverQuickActions.tsx",
   "src/modules/mobility/components/driver/DriverRealtimeStatus.tsx",
   "src/modules/mobility/components/driver/DriverStatsPanel.tsx",
+  "src/modules/mobility/components/driver/DriverSubscriptionCard.tsx",
+  "src/modules/mobility/components/driver/RatePassengerDialog.tsx",
   "src/core/mobility/components/driver/DriverEarningsCard.tsx",
   "src/core/mobility/components/driver/DriverNotifications.tsx",
   "src/core/mobility/components/driver/DriverSettingsPanel.tsx",
+  "src/core/mobility/components/driver/MotoboyDeliveryActions.tsx",
+  "src/core/mobility/components/driver/WeeklyEarningsChart.tsx",
 ] as const;
 
 const legacyPaletteClass =
@@ -76,6 +89,21 @@ describe("driver dashboard contract", () => {
     expect(realtimeStatus).toContain(
       "Novas notificações aparecem aqui assim que forem recebidas.",
     );
+  });
+
+  it("never presents a weekly earnings read failure as zero earnings", () => {
+    expect(weeklyEarnings).toContain("setError(true)");
+    expect(weeklyEarnings).toContain("Ganhos semanais indisponíveis");
+    expect(weeklyEarnings).toContain("Nenhum valor foi assumido como zero");
+  });
+
+  it("keeps delivery verification and failure forms server-command driven", () => {
+    expect(deliveryActions).toContain(
+      "OperationalVerificationService.getVerificationStatusSummaryResult",
+    );
+    expect(deliveryActions).toContain("OperationalVerificationService.isValidPINFormat");
+    expect(deliveryActions).toContain("await onConfirmDelivery(");
+    expect(deliveryActions).toContain("await onFailDelivery(");
   });
 
   it("keeps migrated driver surfaces on semantic/category tokens", () => {
