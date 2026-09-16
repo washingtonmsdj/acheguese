@@ -1,5 +1,5 @@
-import React, { useState } from "react";
-import { Car, Filter, History, Power, Crown, Shield, Plus } from "lucide-react";
+import React from "react";
+import { Car, Crown, Filter, History, Plus, Power, Shield } from "lucide-react";
 import { Button } from "@/shared/components/ui/button";
 import { Badge } from "@/shared/components/ui/badge";
 import { Switch } from "@/shared/components/ui/switch";
@@ -46,123 +46,124 @@ export function MobilidadeLeftSidebar({
   ];
 
   return (
-    <div className="space-y-3 w-full">
-      {/* Action buttons */}
+    <div className="w-full space-y-3 text-territory-ink">
       <Button
         onClick={onOpenCreateRide}
-        className="w-full bg-gradient-to-r from-teal-500 to-cyan-500 hover:from-teal-400 hover:to-cyan-400 text-white font-semibold rounded-xl h-10 shadow-lg shadow-teal-500/20"
+        className="h-10 w-full rounded-xl bg-territory-brand font-semibold text-[hsl(var(--territory-on-image))] shadow-sm hover:bg-territory-brand-strong"
       >
-        <Plus className="h-4 w-4 mr-2" />
-        Solicitar Viagem
+        <Plus className="mr-2 h-4 w-4" aria-hidden="true" />
+        Solicitar viagem
       </Button>
 
-      {/* Driver status */}
       {isDriver ? (
-        <div className="rounded-2xl border border-white/10 bg-[#1E2529] p-3">
-          <div className="flex items-center justify-between mb-2">
+        <div className="rounded-2xl border border-territory-border bg-territory-surface p-3">
+          <div className="mb-2 flex items-center justify-between">
             <div className="flex items-center gap-2">
               <Power
                 className={cn(
                   "h-4 w-4",
-                  isDriverOnline ? "text-emerald-400" : "text-gray-500",
+                  isDriverOnline ? "text-success" : "text-territory-muted",
                 )}
+                aria-hidden="true"
               />
-              <span className="text-xs font-semibold text-white">
-                Status Motorista
+              <span className="text-xs font-semibold text-territory-ink">
+                Status do motorista
               </span>
             </div>
             <Switch
               checked={isDriverOnline}
               onCheckedChange={onToggleOnline}
-              className="data-[state=checked]:bg-emerald-500"
+              className="data-[state=checked]:bg-success"
+              aria-label={isDriverOnline ? "Ficar offline" : "Ficar online"}
             />
           </div>
           <div
             className={cn(
-              "flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-xs font-medium",
+              "flex items-center gap-1.5 rounded-lg px-2.5 py-1.5 text-xs font-medium",
               isDriverOnline
-                ? "bg-emerald-500/10 text-emerald-400"
-                : "bg-white/5 text-gray-500",
+                ? "bg-success/10 text-success"
+                : "bg-territory-raised text-territory-muted",
             )}
           >
             <div
               className={cn(
-                "w-2 h-2 rounded-full",
-                isDriverOnline ? "bg-emerald-400 animate-pulse" : "bg-gray-600",
+                "h-2 w-2 rounded-full",
+                isDriverOnline
+                  ? "animate-pulse bg-success motion-reduce:animate-none"
+                  : "bg-territory-disabled",
               )}
+              aria-hidden="true"
             />
-            {isDriverOnline ? "Online - Recebendo pedidos" : "Offline"}
+            {isDriverOnline ? "Online — recebendo pedidos" : "Offline"}
           </div>
 
-          {/* Plan badge */}
-          <div className="mt-2 flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg bg-amber-500/10 border border-amber-500/20">
-            <Crown className="h-3 w-3 text-amber-400" />
-            <span className="text-[0.65rem] text-amber-400 font-medium">
+          <div className="mt-2 flex items-center gap-1.5 rounded-lg border border-territory-warning/20 bg-territory-warning/10 px-2.5 py-1.5">
+            <Crown className="h-3 w-3 text-territory-warning" aria-hidden="true" />
+            <span className="text-[0.65rem] font-medium text-territory-warning">
               Plano Padrão
             </span>
           </div>
         </div>
       ) : (
-        <div className="rounded-2xl border border-white/10 bg-[#1E2529] p-3">
-          <div className="flex items-center gap-2 mb-2">
-            <Shield className="h-4 w-4 text-teal-400" />
-            <span className="text-xs font-semibold text-white">
-              Seja Motorista
+        <div className="rounded-2xl border border-territory-border bg-territory-surface p-3">
+          <div className="mb-2 flex items-center gap-2">
+            <Shield className="h-4 w-4 text-territory-brand" aria-hidden="true" />
+            <span className="text-xs font-semibold text-territory-ink">
+              Seja motorista
             </span>
           </div>
-          <p className="text-[0.65rem] text-gray-400 mb-3">
+          <p className="mb-3 text-[0.65rem] text-territory-muted">
             Cadastre-se como motorista e ganhe dinheiro levando vizinhos.
           </p>
           <Button
             onClick={onOpenDriverRegistration}
             variant="outline"
             size="sm"
-            className="w-full border-teal-400/30 text-teal-400 hover:bg-teal-400/10 rounded-xl text-xs"
+            className="w-full rounded-xl border-territory-brand/30 text-xs text-territory-brand hover:bg-territory-brand/10"
           >
-            Cadastrar como Motorista
+            Cadastrar como motorista
           </Button>
         </div>
       )}
 
-      {/* Filters */}
-      <div className="rounded-2xl border border-white/10 bg-[#1E2529] p-3">
-        <div className="flex items-center gap-2 mb-2">
-          <Filter className="h-3.5 w-3.5 text-gray-400" />
-          <span className="text-xs font-semibold text-white">Filtros</span>
+      <div className="rounded-2xl border border-territory-border bg-territory-surface p-3">
+        <div className="mb-2 flex items-center gap-2">
+          <Filter className="h-3.5 w-3.5 text-territory-muted" aria-hidden="true" />
+          <span className="text-xs font-semibold text-territory-ink">Filtros</span>
         </div>
         <div className="space-y-1.5">
-          {typeOptions.map((opt) => (
+          {typeOptions.map((option) => (
             <button
-              key={opt.value}
-              onClick={() => onFiltersChange({ ...filters, type: opt.value })}
+              type="button"
+              key={option.value}
+              onClick={() => onFiltersChange({ ...filters, type: option.value })}
               className={cn(
-                "w-full flex items-center gap-2 px-3 py-2 rounded-xl text-xs font-medium transition-all",
-                filters.type === opt.value
-                  ? "bg-teal-400/10 text-teal-400 border border-teal-400/20"
-                  : "text-gray-400 hover:bg-white/5 border border-transparent",
+                "flex w-full items-center gap-2 rounded-xl border px-3 py-2 text-xs font-medium transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-territory-focus",
+                filters.type === option.value
+                  ? "border-territory-brand/20 bg-territory-brand/10 text-territory-brand"
+                  : "border-transparent text-territory-muted hover:bg-territory-raised hover:text-territory-ink",
               )}
             >
-              {opt.icon}
-              {opt.label}
+              {option.icon}
+              {option.label}
             </button>
           ))}
         </div>
       </div>
 
-      {/* My rides */}
-      <div className="rounded-2xl border border-white/10 bg-[#1E2529] p-3">
-        <div className="flex items-center justify-between mb-1">
+      <div className="rounded-2xl border border-territory-border bg-territory-surface p-3">
+        <div className="mb-1 flex items-center justify-between">
           <div className="flex items-center gap-2">
-            <History className="h-3.5 w-3.5 text-gray-400" />
-            <span className="text-xs font-semibold text-white">
-              Minhas Viagens
+            <History className="h-3.5 w-3.5 text-territory-muted" aria-hidden="true" />
+            <span className="text-xs font-semibold text-territory-ink">
+              Minhas viagens
             </span>
           </div>
-          <Badge className="bg-white/10 text-gray-400 text-[0.6rem] px-1.5 rounded-full">
+          <Badge className="rounded-full bg-territory-raised px-1.5 text-[0.6rem] text-territory-muted hover:bg-territory-raised">
             {myRidesCount}
           </Badge>
         </div>
-        <p className="text-[0.6rem] text-gray-500">
+        <p className="text-[0.6rem] text-territory-muted">
           Veja seu histórico de viagens e entregas.
         </p>
       </div>
