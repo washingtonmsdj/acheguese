@@ -1,25 +1,29 @@
-import React, { useMemo, useState } from "react";
+import type { KeyboardEvent, ReactNode } from "react";
+import { useMemo, useState } from "react";
+import { useQuery } from "@tanstack/react-query";
 import {
-  MapPin,
-  Plus,
-  Store,
-  Trees,
-  ShoppingCart,
-  GraduationCap,
+  CheckCircle2,
   Church,
   Coffee,
+  GraduationCap,
+  Loader2,
+  MapPin,
   Navigation,
-  CheckCircle2,
+  Plus,
+  ShoppingCart,
+  Store,
+  Trees,
 } from "lucide-react";
-import { useQuery } from "@tanstack/react-query";
-import { Button } from "@/shared/components/ui/button";
-import { Badge } from "@/shared/components/ui/badge";
-import { cn } from "@/shared/utils/cn";
-import { toast } from "sonner";
+import { TIMEOUTS } from "@/core/mobility/constants";
 import {
   BoardingPointService,
   type BoardingPointSummary,
 } from "@/core/mobility/services";
+import { Badge } from "@/shared/components/ui/badge";
+import { Button } from "@/shared/components/ui/button";
+import { Input } from "@/shared/components/ui/input";
+import { cn } from "@/shared/utils/cn";
+import { toast } from "sonner";
 
 export interface BoardingPoint {
   id: string;
@@ -40,48 +44,48 @@ export interface BoardingPoint {
 
 const typeConfig: Record<
   BoardingPoint["type"],
-  { icon: React.ReactNode; color: string; bg: string; label: string }
+  { icon: ReactNode; color: string; bg: string; label: string }
 > = {
   mercado: {
-    icon: <ShoppingCart className="h-4 w-4" />,
-    color: "text-emerald-400",
-    bg: "bg-emerald-500/10",
+    icon: <ShoppingCart className="h-4 w-4" aria-hidden="true" />,
+    color: "text-category-business",
+    bg: "bg-category-business/12",
     label: "Mercado",
   },
   praca: {
-    icon: <Trees className="h-4 w-4" />,
-    color: "text-green-400",
-    bg: "bg-green-500/10",
-    label: "Praca",
+    icon: <Trees className="h-4 w-4" aria-hidden="true" />,
+    color: "text-category-civic",
+    bg: "bg-category-civic/12",
+    label: "Praça",
   },
   padaria: {
-    icon: <Coffee className="h-4 w-4" />,
-    color: "text-amber-400",
-    bg: "bg-amber-500/10",
+    icon: <Coffee className="h-4 w-4" aria-hidden="true" />,
+    color: "text-category-gastronomy",
+    bg: "bg-category-gastronomy/12",
     label: "Padaria",
   },
   escola: {
-    icon: <GraduationCap className="h-4 w-4" />,
-    color: "text-blue-400",
-    bg: "bg-blue-500/10",
+    icon: <GraduationCap className="h-4 w-4" aria-hidden="true" />,
+    color: "text-info",
+    bg: "bg-info/10",
     label: "Escola",
   },
   igreja: {
-    icon: <Church className="h-4 w-4" />,
-    color: "text-purple-400",
-    bg: "bg-purple-500/10",
+    icon: <Church className="h-4 w-4" aria-hidden="true" />,
+    color: "text-category-discussion",
+    bg: "bg-category-discussion/12",
     label: "Igreja",
   },
   cafe: {
-    icon: <Coffee className="h-4 w-4" />,
-    color: "text-orange-400",
-    bg: "bg-orange-500/10",
-    label: "Cafe",
+    icon: <Coffee className="h-4 w-4" aria-hidden="true" />,
+    color: "text-category-gastronomy",
+    bg: "bg-category-gastronomy/12",
+    label: "Café",
   },
   outro: {
-    icon: <Store className="h-4 w-4" />,
-    color: "text-teal-400",
-    bg: "bg-teal-500/10",
+    icon: <Store className="h-4 w-4" aria-hidden="true" />,
+    color: "text-primary",
+    bg: "bg-primary/10",
     label: "Outro",
   },
 };
@@ -106,7 +110,7 @@ function mapSummaryToBoardingPoint(point: BoardingPointSummary): BoardingPoint {
 }
 
 export function BoardingPointsPanel({
-  selectable,
+  selectable = false,
   selectedId,
   onSelect,
 }: BoardingPointsPanelProps) {
@@ -114,22 +118,23 @@ export function BoardingPointsPanel({
   const [showSuggestForm, setShowSuggestForm] = useState(false);
   const [suggestName, setSuggestName] = useState("");
   const [suggestAddress, setSuggestAddress] = useState("");
+  const [submittingSuggestion, setSubmittingSuggestion] = useState(false);
 
-  const { data: pointsData = [] } = useQuery({
+  const pointsQuery = useQuery({
     queryKey: ["mobility", "boarding-points"],
     queryFn: () => BoardingPointService.listRecentFrequentPoints(20),
-    staleTime: 5 * 60 * 1000,
+    staleTime: TIMEOUTS.CACHE_STALE_TIME_VERY_LONG,
   });
 
   const points = useMemo(
-    () => pointsData.map(mapSummaryToBoardingPoint),
-    [pointsData],
+    () => (pointsQuery.data ?? []).map(mapSummaryToBoardingPoint),
+    [pointsQuery.data],
   );
 
   const filters: { value: FilterType; label: string }[] = [
     { value: "todos", label: "Todos" },
     { value: "padaria", label: "Padarias" },
-    { value: "praca", label: "Pracas" },
+    { value: "praca", label: "Praças" },
     { value: "mercado", label: "Mercados" },
     { value: "escola", label: "Escolas" },
     { value: "igreja", label: "Igrejas" },
@@ -139,176 +144,254 @@ export function BoardingPointsPanel({
     filter === "todos" ? points : points.filter((point) => point.type === filter);
 
   const handleSuggest = async () => {
-    if (!suggestName || !suggestAddress) {
-      return;
-    }
+    const name = suggestName.trim();
+    const address = suggestAddress.trim();
+    if (!name || !address || submittingSuggestion) return;
 
-    const result = await BoardingPointService.submitSuggestion({
-      name: suggestName,
-      address: suggestAddress,
-    });
+    setSubmittingSuggestion(true);
+    try {
+      const result = await BoardingPointService.submitSuggestion({ name, address });
 
-    if (result.accepted) {
-      toast.success("Sugestao enviada para analise.");
+      if (!result.accepted) {
+        toast.info("Sugestões de novos pontos estão indisponíveis no momento.");
+        return;
+      }
+
+      toast.success("Sugestão enviada para análise.");
       setSuggestName("");
       setSuggestAddress("");
       setShowSuggestForm(false);
-      return;
+    } catch {
+      toast.error("Não foi possível enviar a sugestão agora.");
+    } finally {
+      setSubmittingSuggestion(false);
     }
+  };
 
-    toast.info("Sugestoes de novos pontos estao indisponiveis no momento.");
+  const selectPoint = (point: BoardingPoint) => {
+    if (selectable) onSelect?.(point);
+  };
+
+  const handlePointKeyDown = (
+    event: KeyboardEvent<HTMLDivElement>,
+    point: BoardingPoint,
+  ) => {
+    if (!selectable || (event.key !== "Enter" && event.key !== " ")) return;
+    event.preventDefault();
+    selectPoint(point);
   };
 
   return (
-    <div className="space-y-4">
-      <div className="flex items-center justify-between">
+    <section className="space-y-4" aria-label="Pontos de embarque">
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
         <div>
-          <h3 className="text-sm font-bold text-white">Pontos de embarque</h3>
-          <p className="text-xs text-gray-500 mt-0.5">
-            Locais recorrentes nas corridas recentes para facilitar o encontro com o motorista
+          <h3 className="text-sm font-bold text-foreground">Pontos de embarque</h3>
+          <p className="mt-0.5 text-xs text-muted-foreground">
+            Locais recorrentes nas corridas recentes para facilitar o encontro com o motorista.
           </p>
         </div>
-        {!selectable && (
+        {!selectable ? (
           <Button
+            type="button"
             size="sm"
             variant="outline"
             onClick={() => setShowSuggestForm((value) => !value)}
-            className="border-white/10 text-gray-400 hover:text-white hover:bg-white/5 rounded-xl text-xs h-8"
+            aria-expanded={showSuggestForm}
           >
-            <Plus className="h-3 w-3 mr-1" /> Sugerir ponto
+            <Plus className="mr-1 h-3.5 w-3.5" aria-hidden="true" />
+            Sugerir ponto
           </Button>
-        )}
+        ) : null}
       </div>
 
-      {showSuggestForm && (
-        <div className="p-4 rounded-2xl border border-teal-500/20 bg-teal-500/5 space-y-3">
-          <p className="text-xs font-semibold text-teal-400">Sugerir novo ponto</p>
-          <input
+      {showSuggestForm ? (
+        <div className="space-y-3 rounded-2xl border border-primary/20 bg-primary/5 p-4">
+          <p className="text-xs font-semibold text-primary">Sugerir novo ponto</p>
+          <Input
             value={suggestName}
             onChange={(event) => setSuggestName(event.target.value)}
             placeholder="Nome do ponto"
-            className="w-full bg-white/5 border border-white/10 rounded-xl px-3 py-2 text-xs text-white placeholder:text-gray-500 outline-none focus:border-teal-500/50"
+            maxLength={80}
           />
-          <input
+          <Input
             value={suggestAddress}
             onChange={(event) => setSuggestAddress(event.target.value)}
-            placeholder="Endereco ou referencia"
-            className="w-full bg-white/5 border border-white/10 rounded-xl px-3 py-2 text-xs text-white placeholder:text-gray-500 outline-none focus:border-teal-500/50"
+            placeholder="Endereço ou referência"
+            maxLength={180}
           />
-          <div className="flex gap-2">
+          <div className="flex flex-col gap-2 sm:flex-row">
             <Button
+              type="button"
               size="sm"
-              onClick={handleSuggest}
-              className="bg-teal-500/20 text-teal-400 hover:bg-teal-500/30 rounded-xl text-xs h-8 flex-1"
+              onClick={() => void handleSuggest()}
+              disabled={
+                submittingSuggestion ||
+                !suggestName.trim() ||
+                !suggestAddress.trim()
+              }
+              className="flex-1"
             >
-              Enviar sugestao
+              {submittingSuggestion ? (
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" aria-hidden="true" />
+              ) : null}
+              Enviar sugestão
             </Button>
             <Button
+              type="button"
               size="sm"
-              variant="ghost"
+              variant="outline"
               onClick={() => setShowSuggestForm(false)}
-              className="text-gray-400 rounded-xl text-xs h-8"
+              disabled={submittingSuggestion}
+              className="flex-1"
             >
               Cancelar
             </Button>
           </div>
         </div>
-      )}
+      ) : null}
 
-      <div className="flex gap-2 overflow-x-auto pb-1 scrollbar-none">
+      <div className="flex gap-2 overflow-x-auto pb-1">
         {filters.map((item) => (
           <button
             key={item.value}
+            type="button"
             onClick={() => setFilter(item.value)}
             className={cn(
-              "flex-shrink-0 px-3 py-1.5 rounded-full text-xs font-medium transition-all border",
+              "shrink-0 rounded-full border px-3 py-1.5 text-xs font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring",
               filter === item.value
-                ? "bg-teal-500/20 border-teal-500/30 text-teal-400"
-                : "bg-white/5 border-white/10 text-gray-400 hover:text-white",
+                ? "border-primary/30 bg-primary/10 text-primary"
+                : "border-border bg-card text-muted-foreground hover:bg-muted/50 hover:text-foreground",
             )}
+            aria-pressed={filter === item.value}
           >
             {item.label}
           </button>
         ))}
       </div>
 
-      <div className="space-y-2">
-        {filtered.map((point) => {
-          const config = typeConfig[point.type];
-          const isSelected = selectedId === point.id;
+      {pointsQuery.isLoading ? (
+        <div className="flex items-center justify-center gap-2 rounded-xl border p-6 text-sm text-muted-foreground">
+          <Loader2 className="h-4 w-4 animate-spin" aria-hidden="true" />
+          Carregando pontos...
+        </div>
+      ) : pointsQuery.isError ? (
+        <div className="space-y-3 rounded-xl border border-destructive/25 bg-destructive/5 p-4">
+          <p className="text-sm font-semibold text-foreground">
+            Não foi possível carregar os pontos de embarque
+          </p>
+          <Button
+            type="button"
+            variant="outline"
+            size="sm"
+            onClick={() => void pointsQuery.refetch()}
+          >
+            Tentar novamente
+          </Button>
+        </div>
+      ) : filtered.length === 0 ? (
+        <div className="rounded-xl border border-dashed bg-muted/20 p-6 text-center">
+          <MapPin
+            className="mx-auto mb-2 h-8 w-8 text-muted-foreground/50"
+            aria-hidden="true"
+          />
+          <p className="text-sm font-medium text-foreground">
+            Nenhum ponto nesta categoria
+          </p>
+          <p className="mt-1 text-xs text-muted-foreground">
+            Tente outro filtro ou sugira um novo ponto.
+          </p>
+        </div>
+      ) : (
+        <div className="space-y-2">
+          {filtered.map((point) => {
+            const config = typeConfig[point.type];
+            const isSelected = selectedId === point.id;
 
-          return (
-            <div
-              key={point.id}
-              onClick={() => selectable && onSelect?.(point)}
-              className={cn(
-                "relative rounded-2xl border p-4 transition-all",
-                selectable && "cursor-pointer",
-                isSelected
-                  ? "border-teal-500/50 bg-teal-500/10"
-                  : "border-white/10 bg-[#1E2529] hover:border-white/20",
-              )}
-            >
-              <div className="flex items-start gap-3">
-                <div
-                  className={cn(
-                    "w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0",
-                    config.bg,
-                  )}
-                >
-                  <span className={config.color}>{config.icon}</span>
-                </div>
-
-                <div className="flex-1 min-w-0">
-                  <div className="flex items-center gap-2 flex-wrap">
-                    <p className="text-sm font-semibold text-white truncate">{point.name}</p>
-                    <Badge
-                      className={cn(
-                        "text-[0.55rem] px-1.5 h-4 border border-transparent",
-                        config.bg,
-                        config.color,
-                      )}
-                    >
-                      {config.label}
-                    </Badge>
-                  </div>
-                  <p className="text-xs text-gray-500 mt-0.5">{point.description}</p>
-
-                  <div className="flex items-center gap-3 mt-2">
-                    <span className="flex items-center gap-1 text-xs text-gray-400">
-                      <MapPin className="h-3 w-3 text-teal-400" />
-                      {point.address}
-                    </span>
-                    {point.distance && (
-                      <span className="flex items-center gap-1 text-xs text-teal-400 font-medium">
-                        <Navigation className="h-3 w-3" />
-                        {point.distance}
-                      </span>
-                    )}
-                  </div>
-
-                  <div className="flex items-center gap-3 mt-1.5">
-                    <span className="text-xs text-gray-500">
-                      {point.rides_count} ocorrencias na amostra recente
-                    </span>
-                  </div>
-                </div>
-
-                {selectable && (
+            return (
+              <div
+                key={point.id}
+                onClick={() => selectPoint(point)}
+                onKeyDown={(event) => handlePointKeyDown(event, point)}
+                role={selectable ? "button" : undefined}
+                tabIndex={selectable ? 0 : undefined}
+                aria-pressed={selectable ? isSelected : undefined}
+                className={cn(
+                  "relative rounded-2xl border bg-card p-4 text-card-foreground transition-colors",
+                  selectable &&
+                    "cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring",
+                  isSelected
+                    ? "border-primary/50 bg-primary/5"
+                    : "border-border hover:border-primary/25",
+                )}
+              >
+                <div className="flex items-start gap-3">
                   <div
                     className={cn(
-                      "w-5 h-5 rounded-full border-2 flex-shrink-0 flex items-center justify-center transition-all mt-0.5",
-                      isSelected ? "border-teal-400 bg-teal-400" : "border-white/20",
+                      "flex h-10 w-10 shrink-0 items-center justify-center rounded-xl",
+                      config.bg,
+                      config.color,
                     )}
                   >
-                    {isSelected && <CheckCircle2 className="h-3 w-3 text-white" />}
+                    {config.icon}
                   </div>
-                )}
+
+                  <div className="min-w-0 flex-1">
+                    <div className="flex flex-wrap items-center gap-2">
+                      <p className="truncate text-sm font-semibold text-foreground">
+                        {point.name}
+                      </p>
+                      <Badge
+                        className={cn(
+                          "h-4 border border-transparent px-1.5 text-[0.6rem]",
+                          config.bg,
+                          config.color,
+                        )}
+                      >
+                        {config.label}
+                      </Badge>
+                    </div>
+                    <p className="mt-0.5 text-xs text-muted-foreground">
+                      {point.description}
+                    </p>
+
+                    <div className="mt-2 flex flex-wrap items-center gap-3">
+                      <span className="flex items-center gap-1 text-xs text-muted-foreground">
+                        <MapPin className="h-3 w-3 text-primary" aria-hidden="true" />
+                        {point.address}
+                      </span>
+                      {point.distance ? (
+                        <span className="flex items-center gap-1 text-xs font-medium text-primary">
+                          <Navigation className="h-3 w-3" aria-hidden="true" />
+                          {point.distance}
+                        </span>
+                      ) : null}
+                    </div>
+
+                    <p className="mt-1.5 text-xs text-muted-foreground">
+                      {point.rides_count} ocorrências na amostra recente
+                    </p>
+                  </div>
+
+                  {selectable ? (
+                    <div
+                      className={cn(
+                        "mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded-full border-2 transition-colors",
+                        isSelected
+                          ? "border-primary bg-primary text-primary-foreground"
+                          : "border-border",
+                      )}
+                    >
+                      {isSelected ? (
+                        <CheckCircle2 className="h-3 w-3" aria-hidden="true" />
+                      ) : null}
+                    </div>
+                  ) : null}
+                </div>
               </div>
-            </div>
-          );
-        })}
-      </div>
-    </div>
+            );
+          })}
+        </div>
+      )}
+    </section>
   );
 }
