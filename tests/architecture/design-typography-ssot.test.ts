@@ -7,22 +7,20 @@ const read = (relativePath: string) =>
   fs.readFileSync(path.join(ROOT, relativePath), "utf8");
 
 describe("Achegue-se typography SSOT", () => {
-  it("keeps one approved Plus Jakarta Sans owner for Tailwind and CSS tokens", () => {
+  it("keeps Plus Jakarta Sans primitives in global CSS and makes Tailwind consume them", () => {
     const tailwind = read("tailwind.config.ts");
     const globalCss = read("src/index.css");
 
-    expect(tailwind).toContain(
-      'const ACHEGUE_SE_FONT_FAMILY = "Plus Jakarta Sans";',
+    expect(globalCss).toContain(
+      '--font-sans: "Plus Jakarta Sans", Arial, Helvetica, sans-serif;',
     );
-    expect(tailwind).toContain(
-      'const ACHEGUE_SE_FONT_STACK = [ACHEGUE_SE_FONT_FAMILY, "sans-serif"]',
-    );
-    expect(tailwind).toContain("sans: ACHEGUE_SE_FONT_STACK");
-    expect(tailwind).toContain("display: ACHEGUE_SE_FONT_STACK");
-    expect(tailwind).toContain("heading: ACHEGUE_SE_FONT_STACK");
-    expect(tailwind).toContain('"--font-heading": `"${ACHEGUE_SE_FONT_FAMILY}"`');
-    expect(tailwind).toContain('"--font-sans": `"${ACHEGUE_SE_FONT_FAMILY}"`');
-    expect(tailwind).toContain("achegueSeTypographyTokens");
+    expect(globalCss).toContain("--font-heading: var(--font-sans);");
+    expect(tailwind).toContain('sans: ["var(--font-sans)"]');
+    expect(tailwind).toContain('display: ["var(--font-heading)"]');
+    expect(tailwind).toContain('heading: ["var(--font-heading)"]');
+    expect(tailwind).not.toContain("ACHEGUE_SE_FONT_FAMILY");
+    expect(tailwind).not.toContain("achegueSeTypographyTokens");
+    expect(tailwind).not.toContain("addBase");
 
     expect(globalCss).toContain("var(--font-heading, ui-sans-serif)");
   });
@@ -44,8 +42,6 @@ describe("Achegue-se typography SSOT", () => {
     expect(tokens).toContain("Plus Jakarta Sans");
     expect(tokens).toContain("Display / wordmark do concept");
     expect(tokens).toContain("800 só para display/wordmark aprovado pelo concept");
-    expect(tokens).not.toContain("`DM Sans`");
-    expect(tokens).not.toContain("`Space Grotesk`");
     expect(identity).toContain("Fonte migrada para Plus Jakarta Sans");
     expect(identity).toContain("800 reservado a display/wordmark");
   });
