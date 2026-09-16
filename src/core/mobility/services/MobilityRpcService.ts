@@ -4,11 +4,6 @@ import {
 } from "@/core/infrastructure/edge-functions/edgeFunctionBroker";
 import type { DispatchStrategy } from "../types/dispatch.types";
 import type {
-  CreateDeliveryInput,
-  CreateRideInput,
-} from "../core/RideOperationalTypes";
-import { MobilityCreationService } from "./MobilityCreationService";
-import type {
   FailedDeliveryMetadata,
   FailedDeliveryResolutionUpdate,
 } from "../types/FailedDeliveryMetadata";
@@ -163,31 +158,6 @@ export class MobilityRpcService {
     error?: string;
   }> {
     return this.invoke("ensureAdminDriverProfile");
-  }
-
-  /**
-   * Creation no longer belongs to the generic mobility broker. Keep these
-   * facades temporarily so the operational orchestrator can migrate without
-   * duplicating lifecycle code; authority is MobilityCreationService.
-   */
-  static async createRide(input: CreateRideInput): Promise<{
-    success: boolean;
-    ride_id?: string;
-    status?: string;
-    quote_id?: string;
-    reason?: string;
-  }> {
-    return MobilityCreationService.createRide(input);
-  }
-
-  static async createDelivery(input: CreateDeliveryInput): Promise<{
-    success: boolean;
-    ride_id?: string;
-    status?: string;
-    quote_id?: string;
-    reason?: string;
-  }> {
-    return MobilityCreationService.createDelivery(input);
   }
 
   static async transitionRideState(input: {
