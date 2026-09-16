@@ -38,4 +38,22 @@ describe("mobility production build boundaries", () => {
     expect(history).toContain('tone: "success" as const');
     expect(history).toContain('tone: "destructive" as const');
   });
+
+  it("keeps delivery completion price server-owned after the compatibility cutover", () => {
+    const migration = read(
+      "supabase/migrations/20260916233125_remove_mobility_delivery_final_price_compat.sql",
+    );
+    const broker = read("supabase/functions/mobility-rpc/index.ts");
+
+    expect(migration).toContain(
+      "uuid, text, text, text, text, jsonb, jsonb",
+    );
+    expect(migration).toContain(
+      "DROP FUNCTION public.mobility_transition_delivery_state_atomic(\n  uuid, text, text, text, text, jsonb, numeric, jsonb\n);",
+    );
+    expect(migration).not.toContain("p_final_price numeric");
+    expect(broker).not.toContain("p_final_price");
+    expect(broker).not.toContain("params.finalPrice");
+    expect(broker).not.toContain("params.final_price");
+  });
 });
