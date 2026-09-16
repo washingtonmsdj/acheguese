@@ -27,6 +27,7 @@ env:
   AUTH_EMAIL_FROM: "no-reply@acheguese.com.br"
   AUTH_EMAIL_SENDER_NAME: "Achegue-se"
   AUTH_CONFIRMATION_SUBJECT: "Confirme seu e-mail | Achegue-se"
+  AUTH_CONFIRMATION_TEMPLATE_PATH: "supabase/templates/confirmation.html"
   RESEND_DKIM_HOST: "resend._domainkey.acheguese.com.br"
   RESEND_DKIM_VALUE: "p=MIGfMA0GCSqGSIb3DQEBAQUAA4GNADCBiQKBgQC4mtqARneEhlohpBsGCFUVzrzXw7bbvsW9EedxSm8LZ9Twk9NPL8HxUvoqSgwKK/HhDDMmI4KHLx3T70T80oG9JL/JZb6myuLpM4dz0XyXLf7w3DgochLSqn6cp+MlXiplWr3L0m/CHRWNRJd1Bdo+nV9/h7u5W+1oBl8ropoqOQIDAQAB"
   RESEND_SPF_HOST: "send.acheguese.com.br"
@@ -69,6 +70,39 @@ jobs:
             throw "Unexpected Supabase project ref."
           }
           Write-Host "Production target, credential presence and explicit authorization validated."
+
+      - name: Checkout exact workflow SHA
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.sha }}
+          persist-credentials: false
+
+      - name: Validate versioned confirmation template
+        shell: powershell
+        run: |
+          $ErrorActionPreference = "Stop"
+          if (-not (Test-Path -LiteralPath $env:AUTH_CONFIRMATION_TEMPLATE_PATH)) {
+            throw "Versioned confirmation template was not found."
+          }
+
+          $template = Get-Content -LiteralPath $env:AUTH_CONFIRMATION_TEMPLATE_PATH -Raw -Encoding UTF8
+          if ([string]::IsNullOrWhiteSpace($template)) {
+            throw "Versioned confirmation template is empty."
+          }
+          if ($template -notmatch [regex]::Escape('{{ .ConfirmationURL }}')) {
+            throw "Confirmation template must contain {{ .ConfirmationURL }}."
+          }
+          if ($template -notmatch 'Confirme seu e-mail') {
+            throw "Confirmation template must preserve the canonical Portuguese CTA/title."
+          }
+          if ($template -match 'localhost|127\.0\.0\.1') {
+            throw "Production confirmation template must not hardcode local URLs."
+          }
+          if ($template -match '<script\b|javascript:') {
+            throw "Confirmation template contains forbidden executable content."
+          }
+
+          Write-Host "Versioned confirmation template validated."
 
       - name: Prove Resend DNS prerequisites are publicly resolvable
         shell: powershell
@@ -135,11 +169,12 @@ jobs:
             Authorization = "Bearer $env:SUPABASE_ACCESS_TOKEN"
             Accept = "application/json"
           }
+          $template = Get-Content -LiteralPath $env:AUTH_CONFIRMATION_TEMPLATE_PATH -Raw -Encoding UTF8
           $payload = [ordered]@{
             smtp_admin_email = $env:AUTH_EMAIL_FROM
             smtp_sender_name = $env:AUTH_EMAIL_SENDER_NAME
             mailer_subjects_confirmation = $env:AUTH_CONFIRMATION_SUBJECT
-            mailer_templates_confirmation_content = '<h2>Confirme seu e-mail</h2><p>Para concluir seu cadastro no Achegue-se, confirme seu endereço de e-mail.</p><p><a href="{{ .ConfirmationURL }}">Confirmar meu e-mail</a></p><p>Se você não criou esta conta, pode ignorar esta mensagem.</p>'
+            mailer_templates_confirmation_content = $template
           } | ConvertTo-Json -Compress
 
           Invoke-RestMethod `
@@ -149,9 +184,9 @@ jobs:
             -ContentType "application/json" `
             -Body $payload | Out-Null
 
-          Write-Host "Auth email identity patch accepted by Supabase."
+          Write-Host "Auth email identity and versioned confirmation template patch accepted by Supabase."
 
-      - name: Verify applied Auth email identity
+      - name: Verify applied Auth email identity and exact template
         shell: powershell
         run: |
           $ErrorActionPreference = "Stop"
@@ -159,6 +194,7 @@ jobs:
             Authorization = "Bearer $env:SUPABASE_ACCESS_TOKEN"
             Accept = "application/json"
           }
+          $expectedTemplate = Get-Content -LiteralPath $env:AUTH_CONFIRMATION_TEMPLATE_PATH -Raw -Encoding UTF8
           $actual = Invoke-RestMethod -Uri $env:AUTH_CONFIG_URL -Headers $headers -Method Get
 
           if ([string]$actual.smtp_admin_email -ne $env:AUTH_EMAIL_FROM) {
@@ -170,8 +206,11 @@ jobs:
           if ([string]$actual.mailer_subjects_confirmation -ne $env:AUTH_CONFIRMATION_SUBJECT) {
             throw "Confirmation subject verification failed."
           }
+          if ([string]$actual.mailer_templates_confirmation_content -ne $expectedTemplate) {
+            throw "Confirmation template verification failed."
+          }
 
-          Write-Host "Auth email sender and confirmation template verified on the production project."
+          Write-Host "Auth email sender, subject and exact confirmation template verified on the production project."
 
       - name: Record non-secret summary
         if: always()
@@ -186,6 +225,7 @@ jobs:
             "- Sender: $env:AUTH_EMAIL_FROM",
             "- Sender name: $env:AUTH_EMAIL_SENDER_NAME",
             "- Confirmation subject: $env:AUTH_CONFIRMATION_SUBJECT",
+            "- Template SSOT: $env:AUTH_CONFIRMATION_TEMPLATE_PATH",
             "- Required authorization: RESEND_DOMAIN_VERIFIED",
             "- DNS gate: exact DKIM + SPF + MX priority 10",
             "- SMTP host/user/password are read-only and are not written or printed by this workflow."
