@@ -4,6 +4,8 @@
  * Regras SSOT:
  * - Enderecos precisam ser reconciliados com location_id valido.
  * - Sem location_id reconciliado nao envia solicitacao.
+ * - Preco comercial nao e calculado nem editado neste modal; a quote oficial
+ *   e emitida pelo servidor no submit.
  */
 
 import React, { useCallback, useEffect, useMemo, useState } from "react";
@@ -32,9 +34,7 @@ import {
   RefreshCw,
 } from "lucide-react";
 import { cn } from "@/shared/utils/cn";
-import { formatBrl } from "@/shared/utils/currency";
 import { toast } from "sonner";
-import { usePriceEstimate } from "@/core/pricing/hooks/usePriceEstimate";
 import { AddressService } from "@/core/address/services/AddressService";
 import { geocodingService } from "@/core/maps/services/MapGeocodingAdapter";
 import { logger } from "@/shared/utils/logger";
@@ -113,27 +113,17 @@ export function CreateDeliveryModal({
 }: CreateDeliveryModalProps) {
   const addressService = useMemo(() => new AddressService(), []);
   const { activeLocation } = useLocationContext();
-
   const { createDelivery: fallbackCreateDelivery, isSubmitting: fallbackSubmitting } = useDelivery(
     sourceType,
     sourceId,
   );
 
   const modalOpen = Boolean(open);
-
-  const closeModal = useCallback(() => {
-    if (onOpenChange) onOpenChange(false);
-  }, [onOpenChange]);
-
+  const closeModal = useCallback(() => onOpenChange?.(false), [onOpenChange]);
   const setModalOpen = useCallback(
-    (nextOpen: boolean) => {
-      if (onOpenChange) {
-        onOpenChange(nextOpen);
-      }
-    },
+    (nextOpen: boolean) => onOpenChange?.(nextOpen),
     [onOpenChange],
   );
-
   const submitDelivery = onSubmit ?? fallbackCreateDelivery;
 
   const [recipientName, setRecipientName] = useState("");
@@ -152,17 +142,32 @@ export function CreateDeliveryModal({
   const [resolvedPickup, setResolvedPickup] = useState<PickupPoint | null>(null);
 
   const effectivePickup = defaultPickup ?? resolvedPickup;
-  const canEstimate = !!effectivePickup && !!dropoffCoords;
-  const { data: priceEstimate } = usePriceEstimate(
-    canEstimate
-      ? {
-          mode: "motoboy",
-          origin: { latitude: effectivePickup.lat, longitude: effectivePickup.lng },
-          destination: dropoffCoords!,
-          options: { includeBreakdown: false },
-        }
-      : null,
-  );
+
+  const resolvePassengerPickup = useCallback(async (): Promise<PickupPoint | null> => {
+    const geolocation = await GeolocationService.getCurrentLocation({
+      useCache: false,
+      forcePrompt: true,
+      allowIpFallback: false,
+      gpsMode: "precise",
+      timeout: GEOLOCATION_RUNTIME.requestTimeoutMs,
+      maxRetries: 1,
+    });
+
+    const lat = geolocation.coords.latitude;
+    const lng = geolocation.coords.longitude;
+    const reverse = await geocodingService.reverseGeocode(lat, lng);
+    if (!reverse) return null;
+
+    const locationId = geocodingService.extractLocationInfo(reverse).locationId;
+    if (!locationId) return null;
+
+    return {
+      locationId,
+      lat,
+      lng,
+      label: geocodingService.formatCompactAddress(reverse),
+    };
+  }, []);
 
   const resolvePickupPoint = useCallback(async () => {
     if (defaultPickup) {
@@ -173,6 +178,17 @@ export function CreateDeliveryModal({
     setResolvingPickup(true);
 
     try {
+      if (sourceType === "passenger" && !sourceId) {
+        const passengerPickup = await resolvePassengerPickup();
+        setResolvedPickup(passengerPickup);
+        if (!passengerPickup) {
+          toast.error(
+            "Nao foi possivel reconciliar sua localizacao atual com um territorio atendido.",
+          );
+        }
+        return;
+      }
+
       let locationId: string | null = activeLocation?.id ?? null;
       let pickupLabel = businessName?.trim() || "";
 
@@ -182,16 +198,25 @@ export function CreateDeliveryModal({
         if (sourceProfile) {
           locationId = sourceProfile.location_id ?? locationId;
           if (!pickupLabel) {
-            const parts = [sourceProfile.name, sourceProfile.neighborhood, sourceProfile.city].filter(Boolean);
-            pickupLabel = parts.join(" - ");
+            pickupLabel = [
+              sourceProfile.name,
+              sourceProfile.neighborhood,
+              sourceProfile.city,
+            ]
+              .filter(Boolean)
+              .join(" - ");
           }
         } else {
           const sourceBusiness = await MotoboySourceResolverService.getBusinessDataFromSource(sourceId);
           if (sourceBusiness) {
             locationId = sourceBusiness.location_id ?? locationId;
             if (!pickupLabel) {
-              const parts = [sourceBusiness.business_name, sourceBusiness.business_city].filter(Boolean);
-              pickupLabel = parts.join(" - ");
+              pickupLabel = [
+                sourceBusiness.business_name,
+                sourceBusiness.business_city,
+              ]
+                .filter(Boolean)
+                .join(" - ");
             }
           }
         }
@@ -203,18 +228,21 @@ export function CreateDeliveryModal({
       }
 
       const locationData = await MotoboySourceResolverService.getLocationSummaryById(locationId);
-
       let lat: number | null = null;
       let lng: number | null = null;
 
       if (locationData?.metadata) {
-        const extracted = extractCoordsFromMetadata(locationData.metadata as Record<string, unknown>);
+        const extracted = extractCoordsFromMetadata(
+          locationData.metadata as Record<string, unknown>,
+        );
         lat = extracted.lat;
         lng = extracted.lng;
       }
 
       if ((lat === null || lng === null) && activeLocation?.id === locationId) {
-        const extractedActive = extractCoordsFromMetadata((activeLocation.metadata || {}) as Record<string, unknown>);
+        const extractedActive = extractCoordsFromMetadata(
+          (activeLocation.metadata || {}) as Record<string, unknown>,
+        );
         lat = extractedActive.lat;
         lng = extractedActive.lng;
       }
@@ -247,7 +275,14 @@ export function CreateDeliveryModal({
     } finally {
       setResolvingPickup(false);
     }
-  }, [activeLocation, businessName, defaultPickup, sourceId]);
+  }, [
+    activeLocation,
+    businessName,
+    defaultPickup,
+    resolvePassengerPickup,
+    sourceId,
+    sourceType,
+  ]);
 
   useEffect(() => {
     if (!modalOpen) return;
@@ -274,15 +309,14 @@ export function CreateDeliveryModal({
       setDropoffText(bestMatch.displayName);
       setDropoffCoords({ latitude: bestMatch.latitude, longitude: bestMatch.longitude });
 
-      const info = geocodingService.extractLocationInfo(bestMatch);
-      const locationId = info.locationId ?? "";
+      const locationId = geocodingService.extractLocationInfo(bestMatch).locationId ?? "";
       setDropoffLocationId(locationId);
 
       if (!locationId) {
         toast.error("Endereco fora da cobertura territorial atendida.");
       }
-    } catch (err) {
-      logger.warn("CreateDeliveryModal.resolveDropoffByText", err);
+    } catch (error) {
+      logger.warn("CreateDeliveryModal.resolveDropoffByText", error);
       toast.error("Falha ao validar endereco de entrega.");
     } finally {
       setGeocodingDropoff(false);
@@ -313,9 +347,7 @@ export function CreateDeliveryModal({
       }
 
       setDropoffText(geocodingService.formatCompactAddress(result));
-
-      const info = geocodingService.extractLocationInfo(result);
-      const locationId = info.locationId ?? "";
+      const locationId = geocodingService.extractLocationInfo(result).locationId ?? "";
       setDropoffLocationId(locationId);
 
       if (!locationId) {
@@ -330,24 +362,36 @@ export function CreateDeliveryModal({
     }
   };
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
+  const resetForm = useCallback(() => {
+    setRecipientName("");
+    setRecipientPhone("");
+    setDropoffText("");
+    setDropoffCoords(null);
+    setDropoffLocationId("");
+    setPackageSize("small");
+    setPackageDescription("");
+    setDeliveryNotes("");
+    setPaymentMethod("pix");
+    if (!defaultPickup) setResolvedPickup(null);
+  }, [defaultPickup]);
+
+  const handleSubmit = async (event: React.FormEvent) => {
+    event.preventDefault();
 
     if (!effectivePickup) {
-      toast.error("Nao foi possivel resolver o endereco de coleta. Verifique o perfil e o territorio ativo.");
+      toast.error(
+        "Nao foi possivel resolver o endereco de coleta. Verifique o perfil e o territorio ativo.",
+      );
       return;
     }
-
     if (!recipientName.trim()) {
       toast.error("Nome do destinatario e obrigatorio.");
       return;
     }
-
     if (!dropoffCoords) {
       toast.error("Geocodifique o endereco de entrega antes de continuar.");
       return;
     }
-
     if (!dropoffLocationId) {
       toast.error("Esse endereco ainda nao foi reconciliado com o territorio atendido.");
       return;
@@ -364,7 +408,7 @@ export function CreateDeliveryModal({
           address_type: "approximate",
           latitude: effectivePickup.lat,
           longitude: effectivePickup.lng,
-          geocoding_source: "manual",
+          geocoding_source: sourceType === "passenger" ? "gps" : "manual",
         });
         pickupAddressId = pickupAddr.id;
       }
@@ -387,6 +431,8 @@ export function CreateDeliveryModal({
         originLng: effectivePickup.lng,
         destinationLat: dropoffCoords.latitude,
         destinationLng: dropoffCoords.longitude,
+        origin: effectivePickup.label,
+        destination: dropoffText.trim() || undefined,
         recipientName: recipientName.trim(),
         recipientPhone: recipientPhone.trim() || undefined,
         packageSize,
@@ -402,28 +448,20 @@ export function CreateDeliveryModal({
         setModalOpen(false);
         resetForm();
       }
-    } catch (err: unknown) {
-      logger.error("CreateDeliveryModal.handleSubmit", err);
-      toast.error(err instanceof Error ? err.message : "Erro ao solicitar entrega.");
+    } catch (error) {
+      logger.error("CreateDeliveryModal.handleSubmit", error);
+      toast.error(error instanceof Error ? error.message : "Erro ao solicitar entrega.");
     } finally {
       setSubmitting(false);
     }
   };
 
-  const resetForm = () => {
-    setRecipientName("");
-    setRecipientPhone("");
-    setDropoffText("");
-    setDropoffCoords(null);
-    setDropoffLocationId("");
-    setPackageSize("small");
-    setPackageDescription("");
-    setDeliveryNotes("");
-    setPaymentMethod("pix");
-  };
-
   const busy = isSubmitting || fallbackSubmitting || submitting || resolvingPickup;
-  const isValid = !!effectivePickup && recipientName.trim().length > 0 && !!dropoffCoords && !!dropoffLocationId;
+  const isValid =
+    !!effectivePickup &&
+    recipientName.trim().length > 0 &&
+    !!dropoffCoords &&
+    !!dropoffLocationId;
 
   return (
     <Dialog open={modalOpen} onOpenChange={setModalOpen}>
@@ -434,7 +472,7 @@ export function CreateDeliveryModal({
             Solicitar Motoboy
           </DialogTitle>
           <DialogDescription>
-            O motoboy mais proximo sera acionado automaticamente.
+            O motoboy mais proximo sera acionado automaticamente apos a cotacao oficial do servidor.
           </DialogDescription>
         </DialogHeader>
 
@@ -483,7 +521,7 @@ export function CreateDeliveryModal({
               <Input
                 id="recipientName"
                 value={recipientName}
-                onChange={(e) => setRecipientName(e.target.value)}
+                onChange={(event) => setRecipientName(event.target.value)}
                 placeholder="Nome de quem vai receber"
                 required
               />
@@ -495,7 +533,7 @@ export function CreateDeliveryModal({
               <Input
                 id="recipientPhone"
                 value={recipientPhone}
-                onChange={(e) => setRecipientPhone(e.target.value)}
+                onChange={(event) => setRecipientPhone(event.target.value)}
                 placeholder="(00) 00000-0000"
                 type="tel"
               />
@@ -510,8 +548,8 @@ export function CreateDeliveryModal({
             <div className="relative">
               <Input
                 value={dropoffText}
-                onChange={(e) => {
-                  setDropoffText(e.target.value);
+                onChange={(event) => {
+                  setDropoffText(event.target.value);
                   setDropoffCoords(null);
                   setDropoffLocationId("");
                 }}
@@ -543,6 +581,7 @@ export function CreateDeliveryModal({
                       setDropoffLocationId("");
                     }}
                     className="text-muted-foreground hover:text-foreground"
+                    aria-label="Limpar endereco de entrega"
                   >
                     <X className="h-3.5 w-3.5" />
                   </button>
@@ -560,7 +599,11 @@ export function CreateDeliveryModal({
               </div>
             </div>
             {dropoffText && !dropoffCoords && !geocodingDropoff && (
-              <button type="button" onClick={() => void resolveDropoffByText(dropoffText)} className="text-xs text-primary underline">
+              <button
+                type="button"
+                onClick={() => void resolveDropoffByText(dropoffText)}
+                className="text-xs text-primary underline"
+              >
                 Buscar endereco
               </button>
             )}
@@ -571,26 +614,26 @@ export function CreateDeliveryModal({
               <Package className="h-4 w-4" /> Pacote
             </h3>
             <div className="grid grid-cols-3 gap-2">
-              {packageSizeOptions.map((opt) => (
+              {packageSizeOptions.map((option) => (
                 <button
-                  key={opt.value}
+                  key={option.value}
                   type="button"
-                  onClick={() => setPackageSize(opt.value)}
+                  onClick={() => setPackageSize(option.value)}
                   className={cn(
                     "p-3 rounded-xl border text-left transition-all",
-                    packageSize === opt.value
+                    packageSize === option.value
                       ? "border-primary bg-primary/10 text-primary"
                       : "border-border bg-card text-muted-foreground hover:border-primary/50",
                   )}
                 >
-                  <p className="text-xs font-semibold">{opt.label}</p>
-                  <p className="text-[0.6rem] opacity-70 mt-0.5">{opt.desc}</p>
+                  <p className="text-xs font-semibold">{option.label}</p>
+                  <p className="text-[0.6rem] opacity-70 mt-0.5">{option.desc}</p>
                 </button>
               ))}
             </div>
             <Input
               value={packageDescription}
-              onChange={(e) => setPackageDescription(e.target.value)}
+              onChange={(event) => setPackageDescription(event.target.value)}
               placeholder="Descricao: pizza, remedio, documento..."
             />
           </div>
@@ -602,7 +645,7 @@ export function CreateDeliveryModal({
             <Textarea
               id="deliveryNotes"
               value={deliveryNotes}
-              onChange={(e) => setDeliveryNotes(e.target.value)}
+              onChange={(event) => setDeliveryNotes(event.target.value)}
               placeholder="Portao azul, deixar com porteiro, ligar antes..."
               rows={2}
             />
@@ -638,16 +681,18 @@ export function CreateDeliveryModal({
             </div>
           </div>
 
-          {priceEstimate && (
-            <div className="p-3 rounded-xl bg-primary/5 border border-primary/20">
-              <p className="text-xs text-muted-foreground">Estimativa</p>
-              <p className="text-lg font-bold text-primary">{formatBrl(priceEstimate.estimatedPrice)}</p>
-              <p className="text-xs text-muted-foreground">Valor final pode variar</p>
-            </div>
-          )}
+          <div className="p-3 rounded-xl bg-primary/5 border border-primary/20 text-xs text-muted-foreground">
+            O valor nao e definido neste formulario. A cotacao comercial oficial e calculada e validada pelo servidor no momento da solicitacao.
+          </div>
 
           <div className="flex gap-3 pt-1">
-            <Button type="button" variant="outline" className="flex-1" onClick={closeModal} disabled={busy}>
+            <Button
+              type="button"
+              variant="outline"
+              className="flex-1"
+              onClick={closeModal}
+              disabled={busy}
+            >
               Cancelar
             </Button>
             <Button type="submit" className="flex-1" disabled={!isValid || busy}>
