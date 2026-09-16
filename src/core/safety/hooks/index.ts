@@ -6,3 +6,4 @@ export * from './useSafetyIncidents';
 export * from './useEmergencyAlerts';
 export * from './useSafetyEvidence';
 export * from './useEmergencyContacts';
+export * from './useRideShare';
