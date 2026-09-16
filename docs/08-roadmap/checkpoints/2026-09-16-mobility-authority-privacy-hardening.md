@@ -2,7 +2,7 @@
 
 **Data:** 2026-09-16  
 **Linha:** `main`  
-**Status:** source endurecido; migration GPS aplicada; probe negativo executado; rollout público continua pausado
+**Status:** source endurecido; GPS, autorização negativa e preço terminal reconciliados; rollout público continua pausado
 
 ## Objetivo desta fase
 
@@ -10,7 +10,7 @@ Fechar dívida estrutural antes de adicionar novas features de Mobilidade: preç
 
 ## Autoridade de criação e preço
 
-O contrato canônico agora é:
+O contrato canônico é:
 
 `UI/hook -> MobilityPriceQuoteService -> mobility-pricing-rpc -> mobility_price_quotes -> MobilityCreationService -> mobility-create-rpc -> RPC atômico por quote_id`
 
@@ -21,97 +21,89 @@ Invariantes:
 - `mobility_create_ride_atomic` e `mobility_create_delivery_atomic` usam `p_quote_id` como autoridade;
 - regras atuais permanecem `commercial_status=provisional`; nenhuma tarifa fictícia é política comercial aprovada;
 - sem regra aprovada, produção deve falhar fechado;
-- `PricingService` não possui mais motor local de tarifa, fallback monetário, velocidade média fictícia ou janela/multiplicador de pico hardcoded;
+- `PricingService` não possui motor local de tarifa/fallback monetário;
 - hooks locais de estimativa foram aposentados e o raw `PricingService` não é API pública.
 
 ## Broker operacional
 
-O source atual de `supabase/functions/mobility-rpc/index.ts` deixou de possuir:
+`supabase/functions/mobility-rpc/index.ts` não possui criação paralela nem autoridade de preço final. Criação pertence a `mobility-create-rpc`; `tests/architecture/mobility-rpc-boundary.test.ts` trava essa separação.
 
-- actions `createRide` / `createDelivery`;
-- `handleCreateRide` / `handleCreateDelivery`;
-- `rideCreationRpcParams`;
-- piso comercial local de R$ 5;
-- parsing/serialização de `finalPrice`;
-- chamadas aos RPCs de criação.
-
-Criação pertence exclusivamente a `mobility-create-rpc`. O teste `tests/architecture/mobility-rpc-boundary.test.ts` trava essa separação.
-
-**Cutover de produção concluído:** `mobility-rpc` está **v32 ACTIVE**, com `verify_jwt=true`. O bundle implantado foi relido depois do deploy e confirma ausência das actions/handlers de criação e de `finalPrice`, preservando MFA administrativo, dispatch, transições, presença/localização e o rate limit compartilhado fail-closed.
+**Cutover de produção já concluído:** `mobility-rpc` v32 ACTIVE, `verify_jwt=true`, sem paths legados de criação/`finalPrice`.
 
 ## Preço terminal
 
-A conclusão de corrida/entrega deixou de aceitar preço de UI/motorista como autoridade. O banco deriva o valor terminal do estado monetário persistido pela quote/corrida. O parâmetro SQL `p_final_price` permanece apenas como compatibilidade de assinatura e não é mais enviado pelo broker operacional; sua remoção física ainda precisa de reconciliação específica antes do cutover.
+A conclusão de corrida/entrega não aceita preço de UI/motorista como autoridade. O banco deriva o valor terminal do estado persistido pela quote/corrida.
+
+Nesta retomada, a compatibilidade pública `p_final_price` foi removida:
+
+- o broker atual já chamava `mobility_transition_delivery_state_atomic` por argumentos nomeados sem `p_final_price`;
+- não havia rotina PostgreSQL dependente do wrapper público;
+- a assinatura antiga `(uuid,text,text,text,text,jsonb,numeric,jsonb)` foi removida;
+- a assinatura atual `(uuid,text,text,text,text,jsonb,jsonb)` permanece `SECURITY DEFINER`, com EXECUTE somente para `service_role`;
+- a implementação base privada continua recebendo `NULL::numeric`, preservando a autoridade monetária server-owned;
+- migration remota e Git usam `20260916233125_remove_mobility_delivery_final_price_compat`;
+- `tests/architecture/mobility-build-contract.test.ts` impede reintrodução do parâmetro no boundary/broker.
 
 ## Minimização de PII e leituras
 
-- `RideRequestReadModel` continua bounded e não inclui `recipient_phone`, `recipient_name`, `delivery_notes`, `proof_of_delivery`, `failed_delivery_metadata` ou `package_description`.
-- histórico terminal do motorista usa `DriverRideHistoryReadService`, com precisão `region_label` e sem contato do passageiro/destinatário.
-- `useActiveRide` não carrega mais todo o histórico para descobrir uma corrida aberta: resolve o perfil ativo e usa `getActiveRide(profileId)`.
-- `useMobilidade` não executa `setState` dentro do `queryFn`; a reconciliação do active ride ocorre em `useEffect` a partir do resultado cacheado.
-- o diagnóstico de schema do Motoboy usa `HEAD` ao selecionar colunas sensíveis, validando capacidade sem materializar uma linha real com telefone/notas/prova de entrega.
-- `MotoboyDeliveryActions` só pode renderizar PII entre `driver_accepted` e `in_delivery`; pré-aceite e estado terminal falham fechado na própria boundary do componente.
-- `RideService.getActiveRide` nomeia e encaminha explicitamente `userProfileId`, evitando confusão Auth User ID x Profile ID.
-
-Regressões novas/atualizadas:
-
-- `ActiveRideOpenProjectionG140.test.ts`;
-- `MotoboyRuntimePiiBoundaryG141.test.ts`;
-- G137/G138 alinhados à identidade por Profile ID.
+- `RideRequestReadModel` não inclui PII sensível de entrega;
+- histórico terminal usa read model redigido;
+- `useActiveRide` consulta somente estados abertos por Profile ID;
+- `useMobilidade` mantém queryFn sem `setState`;
+- diagnóstico Motoboy usa `HEAD` para validar schema sem materializar PII;
+- `MotoboyDeliveryActions` só renderiza PII durante necessidade operacional ativa.
 
 ## GPS
 
-`20260916133000_minimize_idle_driver_gps.sql` foi aplicada no projeto Supabase canônico nesta retomada via migration administrada.
+`20260916133000_minimize_idle_driver_gps.sql` foi aplicada no Supabase canônico.
 
-O contrato ativo agora:
+Contrato ativo:
 
-- limpa `driver_availability.current_lat/current_lng/last_location_update` quando o motorista fica offline/indisponível sem corrida ativa;
+- limpa GPS de `driver_availability` quando motorista fica ocioso/indisponível sem corrida;
 - remove snapshot de `driver_locations` nessa condição;
-- recusa novo GPS preciso quando o motorista não está disponível para dispatch e não possui corrida ativa;
-- funções trigger privadas permanecem sem EXECUTE para `PUBLIC`, `anon` e `authenticated`.
+- rejeita novo GPS preciso fora de `available || active_ride`;
+- triggers privadas não possuem EXECUTE para `PUBLIC`, `anon` ou `authenticated`.
 
 Verificação pós-DDL:
 
-- migration registrada no histórico remoto como `minimize_idle_driver_gps`;
-- triggers canônicos presentes em `driver_availability` e `driver_locations`;
+- migration registrada remotamente como `minimize_idle_driver_gps`;
+- triggers canônicos presentes;
 - `idle_availability_with_gps = 0`;
 - `idle_driver_location_snapshots = 0`.
 
-Observação: o registro remoto recebeu versão administrada própria ao aplicar a migration pelo conector; a migration source versionada continua sendo `20260916133000_minimize_idle_driver_gps.sql` no Git.
-
 ## Autorização negativa
 
-O probe versionado `tests/security/mobility-participant-authorization-remote-probe.sql` foi executado no projeto canônico em transação rollback-only.
+`tests/security/mobility-participant-authorization-remote-probe.sql` foi executado no projeto canônico em transação rollback-only.
 
-Ele comprovou, usando usuário autenticado não participante, que:
+Terceiro usuário autenticado foi bloqueado ao tentar:
 
-- `refresh_operational_pin_for_requester` rejeita terceiro usuário;
-- `submit_ride_trust_feedback` rejeita terceiro usuário;
-- `create_ride_report` rejeita terceiro usuário.
+- `refresh_operational_pin_for_requester`;
+- `submit_ride_trust_feedback`;
+- `create_ride_report`.
 
-A execução concluiu sem exceção não tratada e terminou em `ROLLBACK`, sem preservar os dados sintéticos criados para o teste.
+Nenhum dado sintético do probe foi preservado.
 
 ## Safety / SOS
 
-Permanece válido o checkpoint `2026-09-16-mobility-safety-production-drift-repair.md`: outbox G71-G80 e `send-emergency-email` v33 foram reconciliados anteriormente, com autenticação dual no handler e dispatcher durável.
+Permanece válido `2026-09-16-mobility-safety-production-drift-repair.md`: outbox G71-G80 e `send-emergency-email` v33 já haviam sido reconciliados.
 
 ## Bloqueadores atuais de lançamento
 
 1. definir e aprovar a política comercial real por modalidade;
-2. remover `p_final_price` da assinatura SQL somente após reconciliação/cutover seguro do contrato;
-3. regenerar tipos Supabase a partir do schema real depois das migrations;
+2. regenerar tipos Supabase a partir do schema real, sem edição manual;
+3. provar concorrência/idempotência em dupla aceitação, cancelamento simultâneo, retry/reconnect, quote duplicada e confirmação duplicada;
 4. executar typecheck, lint, testes de Mobilidade/Pricing, build e E2E no mesmo SHA;
-5. provar concorrência/idempotência em dupla aceitação, cancelamento simultâneo, retry/reconnect, quote duplicada e confirmação duplicada;
-6. obter pipeline/deploy verde. O status Vercel atual falha por `build-rate-limit`, que é blocker externo e não prova erro de source;
-7. manter `main` protegida por ruleset/required checks quando a capacidade administrativa estiver disponível.
+5. obter pipeline/deploy verde; o status Vercel segue bloqueado por `build-rate-limit`, o que não é certificação positiva nem falha de source;
+6. proteger `main` por ruleset/required checks quando houver capacidade administrativa.
 
 ## Fechado nesta retomada
 
-- [x] canal PostgreSQL administrativo acessível novamente;
-- [x] migration de minimização de GPS aplicada e verificada;
-- [x] probe negativo IDOR/BOLA de PIN/trust/report executado rollback-only;
-- [x] zero snapshots de GPS ocioso encontrados após a migration.
+- [x] canal PostgreSQL administrativo acessível;
+- [x] minimização de GPS aplicada e verificada;
+- [x] probe negativo IDOR/BOLA PIN/trust/report executado rollback-only;
+- [x] zero snapshots de GPS ocioso após a migration;
+- [x] `p_final_price` removido do wrapper público com cutover versionado e ratchet de arquitetura.
 
 ## Regra de lançamento
 
-`PUBLIC_LAUNCH_SURFACES.mobility` permanece `false`. Nenhuma feature nova deve contornar os owners acima para “fazer funcionar”. Primeiro fecham-se os blockers de política comercial, concorrência, tipos e gates same-SHA; depois entram implementações adicionais.
+`PUBLIC_LAUNCH_SURFACES.mobility` permanece `false`. Nenhuma feature nova deve contornar os owners acima. Primeiro fecham-se política comercial, concorrência, tipos e gates same-SHA; depois entram novas implementações.
