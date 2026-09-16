@@ -31,6 +31,9 @@ const MIGRATED_RUNTIME_FILES = [
 
 const LEGACY_FONT_RE = /(?:DM Sans|Space Grotesk|Manrope|Bricolage Grotesque)/;
 const RAW_RUNTIME_COLOR_RE = /(?:#[0-9a-fA-F]{3,8}\b|\brgba?\s*\()/;
+const CSS_FONT_WEIGHT_RE = /font-weight\s*:\s*(\d{3})\b/g;
+const ARBITRARY_TAILWIND_WEIGHT_RE = /font-\[(\d{3})\]/g;
+const APPROVED_FONT_WEIGHTS = new Set(['400', '500', '600', '700', '800']);
 
 const EMAIL_BRAND_HEX = new Set([
   '#123E3D',
@@ -65,6 +68,24 @@ function requireIncludes(
   for (const token of expected) {
     if (!content.includes(token)) {
       violations.push(`${relative}: canonical visual SSOT token missing: ${token}`);
+    }
+  }
+}
+
+function validateApprovedFontWeights(
+  relative: string,
+  content: string,
+  violations: string[],
+): void {
+  for (const regex of [CSS_FONT_WEIGHT_RE, ARBITRARY_TAILWIND_WEIGHT_RE]) {
+    regex.lastIndex = 0;
+    for (const match of content.matchAll(regex)) {
+      const weight = match[1];
+      if (!APPROVED_FONT_WEIGHTS.has(weight)) {
+        violations.push(
+          `${relative}: unsupported font weight ${weight}; approved loaded weights are 400, 500, 600, 700 and 800.`,
+        );
+      }
     }
   }
 }
@@ -107,6 +128,8 @@ function main(): void {
     'index.html',
     indexHtml,
     [
+      'class="light" data-theme-storage-key="acheguese-theme"',
+      '<script src="/theme-init.js" data-theme-bootstrap></script>',
       'family=Plus+Jakarta+Sans:wght@400;500;600;700;800',
       '<meta name="theme-color" content="#123E3D"',
     ],
@@ -115,6 +138,51 @@ function main(): void {
   if (LEGACY_FONT_RE.test(indexHtml)) {
     violations.push('index.html: legacy font family found in the global font loader.');
   }
+
+  const themeBootstrap = readRequired('public/theme-init.js', violations);
+  requireIncludes(
+    'public/theme-init.js',
+    themeBootstrap,
+    [
+      'root.dataset.themeStorageKey',
+      'window.localStorage.getItem(storageKey)',
+      'root.classList.toggle("dark", isDark)',
+      'root.classList.toggle("light", !isDark)',
+    ],
+    violations,
+  );
+
+  const themeHook = readRequired('src/shared/hooks/useTheme.ts', violations);
+  requireIncludes(
+    'src/shared/hooks/useTheme.ts',
+    themeHook,
+    [
+      'document.documentElement.dataset.themeStorageKey',
+      'useLayoutEffect',
+      'root.classList.toggle("light", theme === "light")',
+      'root.classList.toggle("dark", theme === "dark")',
+    ],
+    violations,
+  );
+
+  const accessibility = readRequired('src/styles/accessibility-core.css', violations);
+  requireIncludes(
+    'src/styles/accessibility-core.css',
+    accessibility,
+    [
+      '.accessibility-high-contrast',
+      '--success:',
+      '--warning:',
+      '--info:',
+      '--ring:',
+      '--territory-raised: var(--territory-surface-raised);',
+      '--territory-selection:',
+      ':focus-visible',
+      '.accessibility-font-large',
+      '.accessibility-font-extra-large',
+    ],
+    violations,
+  );
 
   for (const relative of MIGRATED_RUNTIME_FILES) {
     const content = readRequired(relative, violations);
@@ -126,6 +194,7 @@ function main(): void {
     if (LEGACY_FONT_RE.test(content)) {
       violations.push(`${relative}: legacy font found after Plus Jakarta Sans migration.`);
     }
+    validateApprovedFontWeights(relative, content, violations);
   }
 
   const authEmail = readRequired('supabase/templates/confirmation.html', violations);
@@ -183,7 +252,7 @@ function main(): void {
   }
 
   console.log(
-    'Visual identity SSOT valid: canonical brand primitives and typography are owned by src/index.css, Tailwind/theme consume them, migrated auth and public launch surfaces use semantic tokens, and email projections stay synchronized with the brand palette.',
+    'Visual identity SSOT valid: canonical brand primitives and typography are owned by src/index.css, theme bootstrap and high-contrast contracts are protected, migrated runtime surfaces use semantic tokens and loaded font weights, and email projections stay synchronized with the brand palette.',
   );
 }
 
