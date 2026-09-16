@@ -83,7 +83,7 @@ export function usePush(userId?: string) {
     staleTime: 1000 * 60 * 5,
   });
 
-  const activeSubscriptions = subscriptions || [];
+  const activeSubscriptions = useMemo(() => subscriptions ?? [], [subscriptions]);
   const currentSubscription = useMemo(
     () =>
       currentBrowserEndpoint
