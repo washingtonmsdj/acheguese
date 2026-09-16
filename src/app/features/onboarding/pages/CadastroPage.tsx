@@ -169,7 +169,7 @@ export default function CadastroPage() {
         <meta name="robots" content="noindex, nofollow" />
       </Helmet>
 
-      <div className="min-h-[100dvh] bg-[#fffdfa] text-[#102f33] lg:bg-[radial-gradient(circle_at_16%_32%,rgba(216,234,224,.55),transparent_31%),radial-gradient(circle_at_70%_18%,rgba(255,236,185,.28),transparent_30%),#fffdfa]">
+      <div className="auth-concept-canvas min-h-[100dvh]">
         <AuthBrandHeader secondaryHref={AUTH_PATHS.login} secondaryLabel="Entrar" />
 
         <main
@@ -179,10 +179,10 @@ export default function CadastroPage() {
         >
           <section className="hidden lg:block" aria-label="Sobre o cadastro">
             <div className="max-w-[430px]">
-              <h1 className="font-heading text-[46px] font-extrabold leading-[.94] tracking-[-0.05em] text-[#0b3b3f]">
+              <h1 className="font-heading text-[46px] font-extrabold leading-[.94] tracking-[-0.05em] text-primary">
                 Comece<br />por você.
               </h1>
-              <p className="mt-4 max-w-[360px] text-[17px] leading-6 text-[#244448]">
+              <p className="mt-4 max-w-[360px] text-[17px] leading-6 text-foreground">
                 Seu perfil pessoal é o primeiro. Outros perfis podem ser criados depois.
               </p>
               <img
@@ -191,25 +191,25 @@ export default function CadastroPage() {
                 className="mt-5 w-full max-w-[390px] object-cover"
               />
               <div className="mt-3 max-w-[360px] -rotate-1">
-                <p className="font-heading text-base font-semibold italic text-[#17464a]">
+                <p className="font-heading text-base font-semibold italic text-primary">
                   Pode participar mesmo morando fora do Complexo.
                 </p>
-                <span aria-hidden="true" className="mt-1 block h-[3px] w-12 rotate-[-4deg] rounded-full bg-[#f3bd18]" />
+                <span aria-hidden="true" className="mt-1 block h-[3px] w-12 rotate-[-4deg] rounded-full bg-accent" />
               </div>
             </div>
           </section>
 
-          <section className="w-full lg:rounded-[10px] lg:bg-white lg:p-7 lg:shadow-[0_18px_55px_rgba(17,55,59,.08)]">
+          <section className="w-full lg:rounded-xl lg:border lg:border-border lg:bg-card lg:p-7 lg:shadow-md">
             <div className="lg:hidden">
-              <h1 className="max-w-[284px] font-heading text-[31px] font-extrabold leading-[1.04] tracking-[-0.045em] text-[#0b3b3f]">
+              <h1 className="max-w-[284px] font-heading text-[31px] font-extrabold leading-[1.04] tracking-[-0.045em] text-primary">
                 Comece pelo seu perfil pessoal.
               </h1>
-              <p className="mt-1.5 max-w-[330px] text-[15px] leading-[21px] text-[#263f43]">
+              <p className="mt-1.5 max-w-[330px] text-[15px] leading-[21px] text-foreground">
                 Depois, adicione perfis de negócio ou profissional.
               </p>
             </div>
 
-            <h2 className="hidden font-heading text-[24px] font-extrabold tracking-[-0.035em] text-[#102f33] lg:block">
+            <h2 className="hidden font-heading text-[24px] font-extrabold tracking-[-0.035em] text-foreground lg:block">
               Criar minha conta
             </h2>
 
@@ -219,15 +219,15 @@ export default function CadastroPage() {
                   type="button"
                   onClick={() => void handleGoogleSignup()}
                   disabled={authBusy}
-                  className="mt-4 flex h-11 w-full items-center justify-center gap-3 rounded-[9px] border border-[#8da1a3] bg-white text-[14px] font-bold text-[#17363a] transition-colors hover:bg-[#f7f8f5] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#0b5b59]/35 disabled:opacity-55"
+                  className="mt-4 flex h-11 w-full items-center justify-center gap-3 rounded-lg border border-border bg-card text-[14px] font-bold text-foreground transition-colors hover:bg-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/35 disabled:opacity-55"
                 >
                   <AuthConceptIcon name="google" />
                   {googleLoading ? "Abrindo Google…" : "Continuar com Google"}
                 </button>
-                <div className="my-4 flex items-center gap-3 text-[12px] text-[#607477]">
-                  <span className="h-px flex-1 bg-[#c7d0d0]" />
+                <div className="my-4 flex items-center gap-3 text-[12px] text-muted-foreground">
+                  <span className="h-px flex-1 bg-border" />
                   <span>ou crie com e-mail</span>
-                  <span className="h-px flex-1 bg-[#c7d0d0]" />
+                  <span className="h-px flex-1 bg-border" />
                 </div>
               </div>
             ) : null}
@@ -250,7 +250,7 @@ export default function CadastroPage() {
                   name="name"
                   render={({ field, fieldState }) => (
                     <FormItem className="space-y-1.5">
-                      <FormLabel className="text-[14px] font-semibold text-[#15383c]">
+                      <FormLabel className="text-[14px] font-semibold text-foreground">
                         <span className="lg:hidden">Nome</span>
                         <span className="hidden lg:inline">Nome completo</span>
                       </FormLabel>
@@ -260,7 +260,7 @@ export default function CadastroPage() {
                           autoComplete="name"
                           disabled={authBusy}
                           className={cn(
-                            "h-11 rounded-lg border-[#b9c5c6] bg-white px-3 text-[16px] shadow-none",
+                            "h-11 rounded-lg border-input bg-card px-3 text-[16px] shadow-none",
                             fieldState.error && "border-destructive",
                           )}
                         />
@@ -275,10 +275,10 @@ export default function CadastroPage() {
                   name="username"
                   render={({ field, fieldState }) => (
                     <FormItem className="space-y-1.5">
-                      <FormLabel className="text-[14px] font-semibold text-[#15383c]">Nome de usuário</FormLabel>
+                      <FormLabel className="text-[14px] font-semibold text-foreground">Nome de usuário</FormLabel>
                       <FormControl>
                         <div className="relative">
-                          <span className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-[16px] text-[#223f43]">@</span>
+                          <span className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-[16px] text-muted-foreground">@</span>
                           <Input
                             {...field}
                             autoComplete="username"
@@ -299,22 +299,22 @@ export default function CadastroPage() {
                               }
                             }}
                             className={cn(
-                              "h-11 rounded-lg border-[#b9c5c6] bg-white pl-8 pr-3 text-[16px] shadow-none",
+                              "h-11 rounded-lg border-input bg-card pl-8 pr-3 text-[16px] shadow-none",
                               fieldState.error && "border-destructive",
                               usernameAvailability.result?.identifier === username &&
                                 usernameAvailability.result.status === "available" &&
-                                "border-[#4d9b78]",
+                                "border-success",
                             )}
                           />
                         </div>
                       </FormControl>
                       <div id="cadastro-username-status" aria-live="polite" className="min-h-4 text-[11.5px] leading-4">
                         {usernameAvailability.isChecking ? (
-                          <span className="text-[#607477]">Verificando disponibilidade…</span>
+                          <span className="text-muted-foreground">Verificando disponibilidade…</span>
                         ) : usernameAvailability.result?.identifier === username && usernameAvailability.result.status === "available" ? (
-                          <span className="font-medium text-[#287255]">Nome de usuário disponível.</span>
+                          <span className="font-medium text-success">Nome de usuário disponível.</span>
                         ) : usernameAvailability.result?.identifier === username && usernameAvailability.result.status !== "available" ? (
-                          <span className="text-[#a83f37]">
+                          <span className="text-destructive">
                             {getUsernameAvailabilityCopy(
                               usernameAvailability.result.status,
                               usernameAvailability.result.message,
@@ -334,7 +334,7 @@ export default function CadastroPage() {
                             ) : null}
                           </span>
                         ) : (
-                          <span className="text-[#607477]">
+                          <span className="text-muted-foreground">
                             <span className="lg:hidden">Seu identificador público.</span>
                             <span className="hidden lg:inline">Seu identificador público. Use letras, números e _.</span>
                           </span>
@@ -350,7 +350,7 @@ export default function CadastroPage() {
                   name="email"
                   render={({ field, fieldState }) => (
                     <FormItem className="space-y-1.5">
-                      <FormLabel className="text-[14px] font-semibold text-[#15383c]">E-mail</FormLabel>
+                      <FormLabel className="text-[14px] font-semibold text-foreground">E-mail</FormLabel>
                       <FormControl>
                         <Input
                           {...field}
@@ -360,7 +360,7 @@ export default function CadastroPage() {
                           spellCheck={false}
                           disabled={authBusy}
                           className={cn(
-                            "h-11 rounded-lg border-[#b9c5c6] bg-white px-3 text-[16px] shadow-none",
+                            "h-11 rounded-lg border-input bg-card px-3 text-[16px] shadow-none",
                             fieldState.error && "border-destructive",
                           )}
                         />
@@ -375,7 +375,7 @@ export default function CadastroPage() {
                   name="password"
                   render={({ field, fieldState }) => (
                     <FormItem className="space-y-1.5">
-                      <FormLabel className="text-[14px] font-semibold text-[#15383c]">Senha</FormLabel>
+                      <FormLabel className="text-[14px] font-semibold text-foreground">Senha</FormLabel>
                       <FormControl>
                         <PasswordInput
                           {...field}
@@ -385,10 +385,10 @@ export default function CadastroPage() {
                           invalid={Boolean(fieldState.error)}
                           strengthValue={password}
                           showStrength={false}
-                          className="h-11 rounded-lg border-[#b9c5c6] bg-white text-[16px] shadow-none"
+                          className="h-11 rounded-lg border-input bg-card text-[16px] shadow-none"
                         />
                       </FormControl>
-                      <p className="text-[11.5px] leading-4 text-[#607477]">
+                      <p className="text-[11.5px] leading-4 text-muted-foreground">
                         <span className="lg:hidden">{MOBILE_PASSWORD_HINT}</span>
                         <span className="hidden lg:inline">{DESKTOP_PASSWORD_HINT}</span>
                       </p>
@@ -410,17 +410,17 @@ export default function CadastroPage() {
                             onCheckedChange={(checked) => field.onChange(checked === true)}
                             disabled={authBusy}
                             aria-invalid={Boolean(fieldState.error)}
-                            className="mt-0.5 h-5 w-5 rounded-[3px] border-[#31575a]"
+                            className="mt-0.5 h-5 w-5 rounded-[3px] border-primary"
                           />
                         </FormControl>
                         <Label
                           htmlFor="cadastro-terms-acceptance"
-                          className="cursor-pointer text-[13px] font-normal leading-[18px] text-[#244448]"
+                          className="cursor-pointer text-[13px] font-normal leading-[18px] text-foreground"
                         >
                           Aceito os{" "}
-                          <Link className="underline underline-offset-2" to={TERMS_OF_SERVICE_PATH} target="_blank" rel="noreferrer">Termos</Link>{" "}
+                          <Link className="text-primary underline underline-offset-2" to={TERMS_OF_SERVICE_PATH} target="_blank" rel="noreferrer">Termos</Link>{" "}
                           e as{" "}
-                          <Link className="underline underline-offset-2" to={COMMUNITY_GUIDELINES_PATH} target="_blank" rel="noreferrer">Diretrizes da comunidade</Link>.
+                          <Link className="text-primary underline underline-offset-2" to={COMMUNITY_GUIDELINES_PATH} target="_blank" rel="noreferrer">Diretrizes da comunidade</Link>.
                         </Label>
                       </div>
                       <FormMessage className="pl-8 text-xs" />
@@ -428,8 +428,8 @@ export default function CadastroPage() {
                   )}
                 />
 
-                <details className="group rounded-xl bg-[#f3f1ea] text-[#244448] lg:hidden">
-                  <summary className="flex min-h-11 cursor-pointer list-none items-center gap-3 px-3 py-2 text-[12px] font-medium focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#0b5b59]/35">
+                <details className="group rounded-xl bg-muted text-foreground lg:hidden">
+                  <summary className="flex min-h-11 cursor-pointer list-none items-center gap-3 px-3 py-2 text-[12px] font-medium focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/35">
                     <AuthConceptIcon name="info" />
                     <span className="flex-1">Como usamos seus dados</span>
                     <AuthConceptIcon
@@ -437,7 +437,7 @@ export default function CadastroPage() {
                       className="h-4 w-4 transition-transform group-open:rotate-90"
                     />
                   </summary>
-                  <p className="px-3 pb-3 pl-11 text-[11px] leading-4 text-[#607477]">
+                  <p className="px-3 pb-3 pl-11 text-[11px] leading-4 text-muted-foreground">
                     Usamos os dados necessários para criar sua identidade, proteger o acesso e operar sua conta. Cidade e bairro podem ser informados depois.
                   </p>
                 </details>
@@ -446,7 +446,7 @@ export default function CadastroPage() {
                   to={PRIVACY_POLICY_PATH}
                   target="_blank"
                   rel="noreferrer"
-                  className="hidden min-h-8 items-center text-[12px] font-medium text-[#0b4e52] underline underline-offset-2 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#0b5b59]/35 lg:inline-flex"
+                  className="hidden min-h-8 items-center text-[12px] font-medium text-primary underline underline-offset-2 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/35 lg:inline-flex"
                 >
                   Como usamos seus dados
                 </Link>
@@ -469,18 +469,18 @@ export default function CadastroPage() {
                 <button
                   type="submit"
                   disabled={!canSubmit}
-                  className="mt-1 flex h-11 w-full items-center justify-center rounded-[9px] bg-[#ffc91a] px-4 text-[15px] font-extrabold text-[#102f33] shadow-[0_3px_10px_rgba(226,171,0,.16)] transition-colors hover:bg-[#f7bf00] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#0b5b59]/40 disabled:cursor-not-allowed disabled:opacity-55"
+                  className="mt-1 flex h-11 w-full items-center justify-center rounded-lg bg-primary px-4 text-[15px] font-extrabold text-primary-foreground shadow-sm transition-colors hover:bg-primary/90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/40 disabled:cursor-not-allowed disabled:opacity-55"
                 >
                   {loading ? "Criando conta…" : "Criar minha conta"}
                 </button>
 
-                <p className="text-center text-[11.5px] text-[#607477]">
+                <p className="text-center text-[11.5px] text-muted-foreground">
                   <span className="lg:hidden">Você pode se cadastrar de qualquer lugar.</span>
                   <span className="hidden lg:inline">
                     Já tem conta?{" "}
                     <Link
                       to={buildLoginPath(redirectTo)}
-                      className="font-medium text-[#0b4e52] underline underline-offset-2"
+                      className="font-medium text-primary underline underline-offset-2"
                     >
                       Entrar
                     </Link>
