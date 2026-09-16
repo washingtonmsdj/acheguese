@@ -1,17 +1,17 @@
-import React, { useState } from "react";
+import { useEffect, useState } from "react";
 import {
+  AlertTriangle,
   Bell,
   Car,
-  DollarSign,
-  Star,
-  Shield,
-  AlertTriangle,
   CheckCircle2,
-  Clock,
+  DollarSign,
+  Loader2,
+  Star,
   X,
-  Package,
 } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
+import { useUnifiedNotifications } from "@/core/notifications/useUnifiedNotifications";
+import type { Notification } from "@/core/notifications/services/NotificationService";
 import { Badge } from "@/shared/components/ui/badge";
 import { Button } from "@/shared/components/ui/button";
 import {
@@ -21,10 +21,8 @@ import {
   DialogTitle,
 } from "@/shared/components/ui/dialog";
 import { cn } from "@/shared/utils/cn";
-import { useUnifiedNotifications } from '@/core/notifications/useUnifiedNotifications';
-import type { Notification } from '@/core/notifications/services/NotificationService';
-import { formatDistanceToNow } from "date-fns";
 import { ptBR } from "@/shared/utils/dateLocale";
+import { formatDistanceToNow } from "date-fns";
 
 const typeConfig: Record<
   string,
@@ -32,233 +30,272 @@ const typeConfig: Record<
 > = {
   ride_request: {
     icon: Car,
-    color: "text-teal-400",
-    bg: "bg-teal-500/10",
-    border: "border-teal-500/20",
+    color: "text-category-mobility",
+    bg: "bg-category-mobility/12",
+    border: "border-category-mobility/30",
   },
   ride_accepted: {
     icon: CheckCircle2,
-    color: "text-emerald-400",
-    bg: "bg-emerald-500/10",
-    border: "border-emerald-500/20",
+    color: "text-success",
+    bg: "bg-success/10",
+    border: "border-success/25",
   },
   ride_started: {
     icon: Car,
-    color: "text-cyan-400",
-    bg: "bg-cyan-500/10",
-    border: "border-cyan-500/20",
+    color: "text-info",
+    bg: "bg-info/10",
+    border: "border-info/25",
   },
   ride_completed: {
     icon: CheckCircle2,
-    color: "text-emerald-400",
-    bg: "bg-emerald-500/10",
-    border: "border-emerald-500/20",
+    color: "text-success",
+    bg: "bg-success/10",
+    border: "border-success/25",
   },
   ride_cancelled: {
     icon: X,
-    color: "text-red-400",
-    bg: "bg-red-500/10",
-    border: "border-red-500/20",
+    color: "text-destructive",
+    bg: "bg-destructive/10",
+    border: "border-destructive/25",
   },
   payment_received: {
     icon: DollarSign,
-    color: "text-emerald-400",
-    bg: "bg-emerald-500/10",
-    border: "border-emerald-500/20",
+    color: "text-success",
+    bg: "bg-success/10",
+    border: "border-success/25",
   },
   new_rating: {
     icon: Star,
-    color: "text-yellow-400",
-    bg: "bg-yellow-500/10",
-    border: "border-yellow-500/20",
+    color: "text-warning",
+    bg: "bg-warning/10",
+    border: "border-warning/25",
   },
   system_alert: {
     icon: AlertTriangle,
-    color: "text-amber-400",
-    bg: "bg-amber-500/10",
-    border: "border-amber-500/20",
+    color: "text-warning",
+    bg: "bg-warning/10",
+    border: "border-warning/25",
   },
   default: {
     icon: Bell,
-    color: "text-gray-400",
-    bg: "bg-gray-500/10",
-    border: "border-gray-500/20",
+    color: "text-muted-foreground",
+    bg: "bg-muted",
+    border: "border-border",
   },
 };
+
+const ITEMS_PER_PAGE = 5;
 
 export function DriverNotifications() {
   const {
     notifications,
     unreadCount,
+    loading,
+    error,
     markAsRead,
     markAllAsRead,
     deleteNotification,
+    refresh,
   } = useUnifiedNotifications({
     enableRealtime: true,
     enableToast: false,
   });
   const [selectedNotif, setSelectedNotif] = useState<Notification | null>(null);
   const [currentPage, setCurrentPage] = useState(1);
-  const itemsPerPage = 5;
 
-  const totalPages = Math.ceil(notifications.length / itemsPerPage);
-  const startIndex = (currentPage - 1) * itemsPerPage;
-  const endIndex = startIndex + itemsPerPage;
-  const currentNotifications = notifications.slice(startIndex, endIndex);
+  const totalPages = Math.max(1, Math.ceil(notifications.length / ITEMS_PER_PAGE));
+  const startIndex = (currentPage - 1) * ITEMS_PER_PAGE;
+  const currentNotifications = notifications.slice(
+    startIndex,
+    startIndex + ITEMS_PER_PAGE,
+  );
 
-  const handleNotificationClick = (notif: Notification) => {
-    if (!notif.read) {
-      markAsRead(notif.id);
+  useEffect(() => {
+    setCurrentPage((page) => Math.min(page, totalPages));
+  }, [totalPages]);
+
+  const handleNotificationClick = (notification: Notification) => {
+    if (!notification.read) {
+      void markAsRead(notification.id);
     }
-    setSelectedNotif(notif);
+    setSelectedNotif(notification);
   };
 
   return (
     <>
-      <div className="rounded-xl border border-white/10 bg-[#1E2529] overflow-hidden">
-        {unreadCount > 0 && (
-          <div className="flex items-center justify-end p-1.5 border-b border-white/5">
+      <section className="overflow-hidden rounded-xl border bg-card text-card-foreground">
+        {unreadCount > 0 ? (
+          <div className="flex items-center justify-between gap-3 border-b px-3 py-2">
+            <Badge variant="secondary">{unreadCount} não lida{unreadCount === 1 ? "" : "s"}</Badge>
             <Button
               variant="ghost"
               size="sm"
-              onClick={markAllAsRead}
-              className="text-xs text-gray-400 hover:text-white h-6"
+              onClick={() => void markAllAsRead()}
+              className="h-7 text-xs"
             >
-              Marcar lidas
+              Marcar todas como lidas
             </Button>
           </div>
-        )}
+        ) : null}
 
-        <div className="divide-y divide-white/5">
-          {notifications.length === 0 ? (
-            <div className="p-6 text-center">
-              <Bell className="h-10 w-10 text-gray-600 mx-auto mb-2" />
-              <p className="text-xs text-gray-400">Nenhuma notificação</p>
+        {loading ? (
+          <div className="flex items-center justify-center gap-2 p-8 text-sm text-muted-foreground">
+            <Loader2 className="h-4 w-4 animate-spin" aria-hidden="true" />
+            Carregando notificações...
+          </div>
+        ) : error ? (
+          <div className="space-y-3 p-6 text-center">
+            <AlertTriangle className="mx-auto h-8 w-8 text-destructive" aria-hidden="true" />
+            <div>
+              <p className="text-sm font-semibold text-foreground">Falha ao carregar notificações</p>
+              <p className="mt-1 text-xs text-muted-foreground">
+                Tente sincronizar novamente.
+              </p>
             </div>
-          ) : (
-            <>
-              {currentNotifications.map((notif) => {
-                const config = typeConfig[notif.type] || typeConfig.default;
-                const Icon = config.icon;
-                const timeAgo = formatDistanceToNow(
-                  new Date(notif.created_at),
-                  {
-                    addSuffix: true,
-                    locale: ptBR,
-                  },
-                );
+            <Button type="button" variant="outline" size="sm" onClick={refresh}>
+              Tentar novamente
+            </Button>
+          </div>
+        ) : notifications.length === 0 ? (
+          <div className="p-8 text-center">
+            <Bell className="mx-auto mb-2 h-9 w-9 text-muted-foreground/50" aria-hidden="true" />
+            <p className="text-sm font-medium text-foreground">Nenhuma notificação</p>
+            <p className="mt-1 text-xs text-muted-foreground">
+              Novos avisos operacionais aparecerão aqui.
+            </p>
+          </div>
+        ) : (
+          <div className="divide-y">
+            {currentNotifications.map((notification) => {
+              const config = typeConfig[notification.type] || typeConfig.default;
+              const Icon = config.icon;
+              const timeAgo = formatDistanceToNow(new Date(notification.created_at), {
+                addSuffix: true,
+                locale: ptBR,
+              });
 
-                return (
-                  <div
-                    key={notif.id}
-                    className={cn(
-                      "p-1.5 hover:bg-white/5 transition-colors cursor-pointer",
-                      !notif.read && "bg-teal-500/5",
-                    )}
-                    onClick={() => handleNotificationClick(notif)}
+              return (
+                <div
+                  key={notification.id}
+                  className={cn(
+                    "flex items-center gap-2 px-3 py-2 transition-colors hover:bg-muted/40",
+                    !notification.read && "bg-primary/5",
+                  )}
+                >
+                  <button
+                    type="button"
+                    className="flex min-w-0 flex-1 items-center gap-2 text-left focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-card"
+                    onClick={() => handleNotificationClick(notification)}
+                    aria-label={`Abrir notificação: ${notification.title}`}
                   >
-                    <div className="flex items-center gap-1.5">
-                      <div
+                    <span
+                      className={cn(
+                        "flex h-8 w-8 shrink-0 items-center justify-center rounded-lg border",
+                        config.bg,
+                        config.border,
+                      )}
+                    >
+                      <Icon className={cn("h-4 w-4", config.color)} aria-hidden="true" />
+                    </span>
+                    <span className="min-w-0 flex-1">
+                      <span
                         className={cn(
-                          "rounded-md p-1 flex-shrink-0",
-                          config.bg,
+                          "block truncate text-xs",
+                          notification.read
+                            ? "font-medium text-muted-foreground"
+                            : "font-semibold text-foreground",
                         )}
                       >
-                        <Icon className={cn("h-3 w-3", config.color)} />
-                      </div>
-                      <div className="flex-1 min-w-0 flex items-center gap-1.5">
-                        <span
-                          className={cn(
-                            "text-xs font-semibold truncate",
-                            notif.read ? "text-gray-300" : "text-white",
-                          )}
-                        >
-                          {notif.title}
-                        </span>
-                        <span className="text-[0.6rem] text-gray-500 flex-shrink-0">
-                          {timeAgo}
-                        </span>
-                        {!notif.read && (
-                          <span className="h-1.5 w-1.5 rounded-full bg-teal-400 flex-shrink-0" />
-                        )}
-                      </div>
-                      <button
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          deleteNotification(notif.id);
-                        }}
-                        className="text-gray-500 hover:text-white transition-colors flex-shrink-0"
-                      >
-                        <X className="h-2.5 w-2.5" />
-                      </button>
-                    </div>
-                  </div>
-                );
-              })}
+                        {notification.title}
+                      </span>
+                      <span className="block text-[0.65rem] text-muted-foreground">{timeAgo}</span>
+                    </span>
+                    {!notification.read ? (
+                      <span className="h-2 w-2 shrink-0 rounded-full bg-primary" aria-label="Não lida" />
+                    ) : null}
+                  </button>
 
-              {/* Paginação */}
-              {totalPages > 1 && (
-                <div className="flex items-center justify-between p-1.5 border-t border-white/5">
                   <Button
+                    type="button"
                     variant="ghost"
-                    size="sm"
-                    onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
-                    disabled={currentPage === 1}
-                    className="h-6 text-xs"
+                    size="icon"
+                    className="h-8 w-8 shrink-0 text-muted-foreground hover:text-destructive"
+                    onClick={() => void deleteNotification(notification.id)}
+                    aria-label={`Excluir notificação: ${notification.title}`}
                   >
-                    Anterior
-                  </Button>
-                  <span className="text-xs text-gray-400">
-                    {currentPage} de {totalPages}
-                  </span>
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    onClick={() =>
-                      setCurrentPage((p) => Math.min(totalPages, p + 1))
-                    }
-                    disabled={currentPage === totalPages}
-                    className="h-6 text-xs"
-                  >
-                    Próxima
+                    <X className="h-3.5 w-3.5" aria-hidden="true" />
                   </Button>
                 </div>
-              )}
-            </>
-          )}
-        </div>
-      </div>
+              );
+            })}
 
-      {/* Modal de Detalhes */}
+            {totalPages > 1 ? (
+              <div className="flex items-center justify-between px-3 py-2">
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => setCurrentPage((page) => Math.max(1, page - 1))}
+                  disabled={currentPage === 1}
+                  className="h-7 text-xs"
+                >
+                  Anterior
+                </Button>
+                <span className="text-xs text-muted-foreground">
+                  {currentPage} de {totalPages}
+                </span>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() =>
+                    setCurrentPage((page) => Math.min(totalPages, page + 1))
+                  }
+                  disabled={currentPage === totalPages}
+                  className="h-7 text-xs"
+                >
+                  Próxima
+                </Button>
+              </div>
+            ) : null}
+          </div>
+        )}
+      </section>
+
       <Dialog
-        open={!!selectedNotif}
-        onOpenChange={() => setSelectedNotif(null)}
+        open={Boolean(selectedNotif)}
+        onOpenChange={(open) => {
+          if (!open) setSelectedNotif(null);
+        }}
       >
         <DialogContent className="max-w-md">
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2">
-              {selectedNotif &&
-                (() => {
-                  const config =
-                    typeConfig[selectedNotif.type] || typeConfig.default;
-                  const Icon = config.icon;
-                  return (
-                    <>
-                      <div className={cn("rounded-md p-1.5", config.bg)}>
-                        <Icon className={cn("h-3.5 w-3.5", config.color)} />
-                      </div>
-                      <span className="text-sm">{selectedNotif.title}</span>
-                    </>
-                  );
-                })()}
+              {selectedNotif
+                ? (() => {
+                    const config =
+                      typeConfig[selectedNotif.type] || typeConfig.default;
+                    const Icon = config.icon;
+                    return (
+                      <>
+                        <span
+                          className={cn(
+                            "flex h-8 w-8 items-center justify-center rounded-lg border",
+                            config.bg,
+                            config.border,
+                          )}
+                        >
+                          <Icon className={cn("h-4 w-4", config.color)} aria-hidden="true" />
+                        </span>
+                        <span className="text-sm">{selectedNotif.title}</span>
+                      </>
+                    );
+                  })()
+                : null}
             </DialogTitle>
           </DialogHeader>
-          {selectedNotif && (
-            <div className="space-y-2">
-              <p className="text-xs text-muted-foreground">
-                {selectedNotif.message}
-              </p>
-              <div className="flex items-center justify-between text-xs text-muted-foreground pt-2 border-t">
+          {selectedNotif ? (
+            <div className="space-y-3">
+              <p className="text-sm text-muted-foreground">{selectedNotif.message}</p>
+              <div className="flex items-center justify-between gap-3 border-t pt-3 text-xs text-muted-foreground">
                 <span>
                   {formatDistanceToNow(new Date(selectedNotif.created_at), {
                     addSuffix: true,
@@ -269,16 +306,16 @@ export function DriverNotifications() {
                   variant="ghost"
                   size="sm"
                   onClick={() => {
-                    deleteNotification(selectedNotif.id);
+                    void deleteNotification(selectedNotif.id);
                     setSelectedNotif(null);
                   }}
-                  className="h-6 text-xs"
+                  className="h-7 text-xs text-destructive hover:text-destructive"
                 >
                   Excluir
                 </Button>
               </div>
             </div>
-          )}
+          ) : null}
         </DialogContent>
       </Dialog>
     </>
