@@ -2,24 +2,48 @@
 
 ## Fonte de verdade
 
-Os tokens vivem em `src/index.css` e são expostos ao Tailwind em `tailwind.config.ts`. A fachada TypeScript em `src/styles/theme.ts` referencia as mesmas variáveis CSS. Componentes territoriais continuam usando classes semânticas `territory-*`; não foi criado um tema paralelo para a entrada pública.
+A autoridade executável da identidade visual é `src/index.css`. Esse arquivo possui os primitivos de marca, a família tipográfica, tokens semânticos, aliases territoriais, estados e temas. `tailwind.config.ts` apenas expõe essas variáveis em classes utilitárias; `src/styles/theme.ts` apenas fornece uma fachada TypeScript sobre a mesma origem. Não deve existir uma segunda paleta ou uma segunda declaração de fonte em componentes, páginas ou configuração do Tailwind.
 
-A entrada pública segue a composição do conceito: mapa como tela dominante, cabeçalho claro, painel flutuante com busca, localização, território recomendado e CTA solar. No mobile, o mapa ocupa a primeira área e o painel se transforma em uma superfície inferior; no desktop, o painel fica sobre o mapa à esquerda. O conteúdo real do produto substitui textos, imagem e geografia ilustrativos do conceito.
-
-A Home territorial (`/:estado/:cidade/:território`) usa o segundo padrão do conceito: cabeçalho petróleo com busca contextual, sidebar responsiva, categorias em ícones circulares, conteúdo real de Community, oportunidades, agenda e mapa. No mobile, a sidebar vira uma navegação inferior de cinco ações, com publicação solar central e acesso à conta; a ordem do DOM acompanha a ordem visual dos blocos. Módulos desabilitados pelo rollout continuam fora da interface e os estados vazios explicam a ausência de dados sem inventar conteúdo.
+A fonte única do produto é **Plus Jakarta Sans**, incluindo títulos, corpo, formulários, navegação e marca textual. O bootstrap em `index.html` solicita os pesos 400, 500, 600, 700 e 800. O stack canônico é `--font-sans`; `--font-heading` é um alias do mesmo stack. Peso 800 fica reservado a display/wordmark ou hierarquias explicitamente aprovadas no concept.
 
 ## Tokens de marca
 
-| Uso | Token | Valor |
-| --- | --- | --- |
-| Ações principais e identidade | `--brand-petroleum` | `#123E3D` |
-| Destaque pontual / CTA de exploração | `--brand-solar` | `#F3CB4C` |
-| Superfície clara | `--brand-surface` | `#FAFBF7` |
-| Texto principal | `--brand-text` | `#203534` |
-| Texto secundário | `--brand-text-secondary` | `#61736C` |
-| Texto secundário compacto | `--brand-text-secondary-strong` | `#52665F` |
+Os HEX abaixo são a referência humana da marca e os HSL são a representação executável correspondente em `src/index.css`.
 
-Estados semânticos não reutilizam o solar: erro (`--semantic-error`), sucesso (`--semantic-success`), aviso (`--semantic-warning`), informação (`--semantic-info`), foco (`--semantic-focus`), seleção (`--semantic-selection`) e desabilitado (`--semantic-disabled` / `--semantic-disabled-foreground`).
+| Uso | Token | HEX | HSL canônico |
+| --- | --- | --- | --- |
+| Ações principais e identidade | `--brand-petroleum` | `#123E3D` | `178.636 55% 15.686%` |
+| Destaque pontual | `--brand-solar` | `#F3CB4C` | `45.629 87.435% 62.549%` |
+| Fundo claro | `--brand-surface` | `#FAFBF7` | `75 33.333% 97.647%` |
+| Texto principal | `--brand-text` | `#203534` | `177.143 24.706% 16.667%` |
+| Texto secundário | `--brand-text-secondary` | `#61736C` | `156.667 8.491% 41.569%` |
+| Texto secundário compacto | `--brand-text-secondary-strong` | variante de contraste | semântico em `src/index.css` |
+
+Em superfícies claras, `--primary`, `--accent`, `--background`, `--foreground`, `--card` e seus aliases consomem os primitivos acima conforme sua função. Alterar uma referência de marca deve ser feito em `src/index.css`, nunca página por página.
+
+## Estados, categorias e cores operacionais
+
+Marca não substitui semântica. Erro (`--semantic-error`), sucesso (`--semantic-success`), aviso (`--semantic-warning`), informação (`--semantic-info`), foco (`--semantic-focus`), seleção e estados desabilitados têm tokens próprios. Categorias de conteúdo usam `--category-*` e o helper `src/shared/design-system/contentCategories.ts`.
+
+Mapas, gráficos e interfaces operacionais podem preservar cores necessárias à leitura dos dados. Nesses casos, a cor deve expressar uma função real e permanecer separada da paleta de marca. Não se deve transformar toda cor funcional em Petróleo ou Solar. O mapa mantém seu estilo cartográfico; a identidade controla moldura, texto, navegação, foco e ações quando aplicável.
+
+## Temas
+
+- Claro: a identidade de marca é aplicada diretamente às superfícies e aliases semânticos.
+- Escuro: mantém contraste e legibilidade próprios; não deve ser uma simples inversão ou aplicação cega do Petróleo sobre fundo escuro.
+- Alto contraste: `src/styles/accessibility-core.css` sobrescreve os tokens necessários e deve continuar cobrindo componentes genéricos, territoriais e elementos renderizados em portais.
+
+`--territory-*` é uma camada de aliases de intenção dentro da mesma SSOT, não um tema concorrente. `--territory-raised` é compatibilidade semântica para `--territory-surface-raised` e existe na origem global para que consumidores antigos não apontem para variável inexistente.
+
+## E-mails
+
+Clientes de e-mail não carregam a CSS da aplicação. Por isso `supabase/templates/confirmation.html` e o shell de `src/core/notifications/services/EmailService.ts` usam uma projeção literal e restrita dos mesmos HEX de marca, com Plus Jakarta Sans como primeira opção e fallbacks seguros. Essa projeção não autoriza criar uma segunda paleta. Mudanças de marca exigem atualizar a origem e sua projeção de e-mail no mesmo corte.
+
+## Validação automática
+
+`tools/architecture/validate-visual-ssot.ts` protege os primitivos canônicos, o ownership tipográfico, superfícies já migradas e a projeção dos e-mails. `npm run validate:visual:ssot` executa essa regra e `npm run validate:ssot` a inclui junto às demais validações de SSOT.
+
+A migração é incremental e proporcional: superfícies já declaradas no validador não podem receber novamente HEX/RGB arbitrário ou famílias antigas; domínios ainda não migrados são auditados e convertidos conforme sua função para evitar substituição global cega.
 
 ## Validação de acessibilidade
 
@@ -29,24 +53,21 @@ Estados semânticos não reutilizam o solar: erro (`--semantic-error`), sucesso 
 - `#123E3D` sobre `#FAFBF7`: contraste aproximado 11,34:1.
 - `#203534` sobre `#F3CB4C`: contraste aproximado 8,31:1.
 - `#203534` sobre `#FAFBF7`: contraste aproximado 12,47:1.
-- `#61736C` sobre `#FAFBF7`: contraste aproximado 4,84:1; atende AA para texto normal e AAA para texto grande, mas não AAA para texto normal. Textos compactos essenciais devem usar `--brand-text-secondary-strong` (aprox. 5,90:1) ou `--brand-text`; para AAA em texto normal, usar `--brand-text`.
+- `#61736C` sobre `#FAFBF7`: contraste aproximado 4,84:1; atende AA para texto normal e AAA para texto grande, mas não AAA para texto normal. Textos compactos essenciais devem usar `--brand-text-secondary-strong` ou `--brand-text` quando o contraste real exigir.
 
 Ainda é necessário verificar com leitor de tela, zoom real a 200%, teclado virtual e combinações de navegador/OS antes de declarar conformidade WCAG AAA completa. Testes automáticos não são suficientes para essa declaração.
 
-## Resiliência do mapa e evidências executadas
+## Estado de migração
 
-- A entrada pública mantém a busca e a seleção de cidade/bairro independentes do mapa.
-- O `MapLibreAdapter` preserva o provider e os polígonos existentes; a entrada exibe uma mensagem acessível quando o estilo falha ou não responde em até 8 segundos, sem substituir nem desativar o mapa quando ele carrega.
-- Preview local em viewport estreito: fonte Plus Jakarta Sans aplicada, categorias sem corte visual, navegação inferior com áreas de toque e canvas MapLibre carregado na Home territorial.
-- A composição desktop foi validada por typecheck/build e pelas regras responsivas do shell (`md`/`xl`); a captura automatizada em 1440px permanece pendente porque o runtime Chromium do Playwright não está instalado nesta sessão.
-- Fluxo público verificado no navegador: seleção de `Pituba` levou a `/ba/salvador/pituba`, mantendo busca, mapa, módulos públicos e acesso à conta.
-- O endpoint externo de tiles não pôde ser consultado pelo terminal restrito desta sessão; isso limita a validação de disponibilidade do provider fora do navegador. A sessão de preview, porém, confirmou o canvas do mapa carregado. Não há declaração de disponibilidade operacional do provider.
+Já consomem o contrato consolidado: shell de autenticação, login, cadastro, confirmação de cadastro, primeiro acesso, aceite de termos, recuperação de senha, confirmação de troca de e-mail, página pública de pré-lançamento e e-mails transacionais. A página de pré-lançamento preserva diferenças editoriais usando tokens de categoria, sem reintroduzir Manrope/Bricolage.
 
-## Exceções preservadas
+A página operacional de cidade/comunidade ainda possui uma paleta escura funcional própria. Sua tipografia e papéis de marca devem migrar sem destruir a semântica de mapa, métricas, alertas, categorias e estados. Esse domínio não deve ser marcado como totalmente migrado enquanto os valores funcionais não estiverem classificados em tokens explícitos.
 
-- Cores de categorias de conteúdo, estados de dados e integrações cartográficas continuam separadas dos tokens de marca.
-- O mapa mantém seu estilo/cores de dados próprios; a identidade só controla moldura, sobreposições e ações.
-- O asset oficial colorido do ícone continua disponível para áreas que ainda o consomem; a entrada pública usa o monograma `a` da referência para não misturar a linguagem visual legada com a nova marca.
-- O balão de conversa do concept foi ligado à rota real `/mensagens` quando há sessão; visitantes seguem para o login. O acesso a notificações, conta, Community e publicação permanece nos destinos existentes.
-- A prévia preenchida do segundo concept pode ser aberta localmente com `?concept-mock=1`. Ela usa imagens e textos demonstrativos apenas em desenvolvimento, não grava dados e não altera rollout, permissões ou estados vazios reais.
-- O modo escuro e superfícies legadas seguem disponíveis quando explicitamente escolhidos; o padrão de produto passa a ser claro para a entrada pública e superfícies territoriais.
+## Regra para novas alterações
+
+1. Defina ou altere o valor em `src/index.css` quando ele for global.
+2. Consuma via Tailwind, `THEME` ou variável CSS semântica; não repita o valor literal.
+3. Use `--category-*` para categorias e tokens operacionais próprios para mapas/dados.
+4. Não carregue outra família tipográfica em uma página.
+5. Ao migrar uma superfície, adicione-a ao gate visual para impedir regressão.
+6. Não declare AAA apenas porque as cores principais passam em contraste; valide a combinação real e a interação completa.
