@@ -4,28 +4,22 @@
 
 import type { RideState } from "./RideStateMachine";
 
+/**
+ * Browser creation payload intentionally excludes passenger/profile, canonical
+ * address/location ids, coordinates and price. Those facts belong to the
+ * server-owned, single-use mobility quote referenced by priceQuoteId.
+ */
 export interface CreateRideInput {
-  passengerProfileId: string;
-  pickupAddressId: string;
-  dropoffAddressId: string;
-  pickupLocationId: string;
-  dropoffLocationId: string;
+  priceQuoteId: string;
   origin?: string;
   destination?: string;
-  originLat: number;
-  originLng: number;
-  destinationLat: number;
-  destinationLng: number;
-  mode?: "ride" | "delivery";
-  /** Server-owned, single-use commercial quote required for creation. */
-  priceQuoteId: string;
   observation?: string;
   availableSeats?: number;
   paymentMethod?: string;
   departureTime?: string;
 }
 
-export interface CreateDeliveryInput extends Omit<CreateRideInput, "mode"> {
+export interface CreateDeliveryInput extends CreateRideInput {
   sourceType: "passenger" | "business" | "gastronomy" | "service";
   sourceId?: string;
   authorizationSourceId?: string;
@@ -34,8 +28,6 @@ export interface CreateDeliveryInput extends Omit<CreateRideInput, "mode"> {
   deliveryNotes?: string;
   packageDescription?: string;
   packageSize?: "small" | "medium" | "large";
-  requestingUserId?: string;
-  planTier?: string;
 }
 
 export interface TransitionResult {
