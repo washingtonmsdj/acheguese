@@ -16,11 +16,11 @@
  *
  * Padrão: Banco → Service → Hook → Component
  */
-import { logger } from '@/shared/utils/logger';
 import { supabase } from '@/integrations/supabase';
 import { trackError } from '@/shared/utils/errorTracking';
-import { SafetyEmergencyContactsService } from './SafetyEmergencyContactsService';
-import { SafetyRideShareService } from './SafetyRideShareService';
+import { logger } from '@/shared/utils/logger';
+import { SAFETY_EVIDENCE_UPLOAD_POLICY } from '../config/evidencePolicy';
+import { SAFETY_RIDE_SHARE_POLICY } from '../config/rideSharePolicy';
 import type {
   EmergencyAlert,
   CreateEmergencyAlertInput,
@@ -40,6 +40,8 @@ import type {
   SafetyResult,
   SafetyFilter,
 } from '../types';
+import { SafetyEmergencyContactsService } from './SafetyEmergencyContactsService';
+import { SafetyRideShareService } from './SafetyRideShareService';
 
 type EmergencyAlertRow = {
   id: string;
@@ -108,8 +110,8 @@ export class SafetyService {
     this.config = {
       enableAutoMonitoring: true,
       emergencyContactsEnabled: true,
-      shareExpirationHours: 24,
-      maxEvidenceFileSize: 10 * 1024 * 1024,
+      shareExpirationHours: SAFETY_RIDE_SHARE_POLICY.defaultExpirationHours,
+      maxEvidenceFileSize: SAFETY_EVIDENCE_UPLOAD_POLICY.maxFileSizeBytes,
     };
     this.rideShareService = new SafetyRideShareService({
       getShareExpirationHours: () => this.config.shareExpirationHours,
