@@ -85,6 +85,30 @@ describe("privacy data export rollout boundary", () => {
       "review_notes",
     ]);
 
+    expect(section("role_history")?.sources).toEqual(["public.role_history"]);
+    expect(section("role_history")?.include).toEqual([
+      "role",
+      "action",
+      "performed_at",
+    ]);
+    expect(section("role_history")?.exclude).toEqual([
+      "user_id",
+      "performed_by",
+      "reason",
+      "metadata",
+    ]);
+
+    expect(section("business_recommendations")?.sources).toEqual([
+      "public.user_recommended_businesses",
+    ]);
+    expect(section("business_recommendations")?.scope).toBe(
+      "rows-where-user_id-is-subject",
+    );
+    expect(section("business_recommendations")?.exclude).toEqual([
+      "user_id",
+      "metadata",
+    ]);
+
     const authoredSources = section("authored_content")?.sources ?? [];
     expect(authoredSources).toContain("public.classified_comments");
 
@@ -110,6 +134,8 @@ describe("privacy data export rollout boundary", () => {
       "classified_likes",
       "question_answer_likes",
       "event_participants",
+      "role_history",
+      "user_recommended_businesses",
     ]) {
       expect(exportFunction).not.toContain(`.from("${source}")`);
     }
