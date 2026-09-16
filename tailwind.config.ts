@@ -1,18 +1,5 @@
 import type { Config } from "tailwindcss";
-import plugin from "tailwindcss/plugin";
 import tailwindcssAnimate from "tailwindcss-animate";
-
-const ACHEGUE_SE_FONT_FAMILY = "Plus Jakarta Sans";
-const ACHEGUE_SE_FONT_STACK = [ACHEGUE_SE_FONT_FAMILY, "sans-serif"];
-
-const achegueSeTypographyTokens = plugin(({ addBase }) => {
-  addBase({
-    ":root": {
-      "--font-heading": `"${ACHEGUE_SE_FONT_FAMILY}"`,
-      "--font-sans": `"${ACHEGUE_SE_FONT_FAMILY}"`,
-    },
-  });
-});
 
 export default {
   darkMode: ["class"],
@@ -30,9 +17,9 @@ export default {
         "4xl": "2400px",
       },
       fontFamily: {
-        sans: ACHEGUE_SE_FONT_STACK,
-        display: ACHEGUE_SE_FONT_STACK,
-        heading: ACHEGUE_SE_FONT_STACK,
+        sans: ["var(--font-sans)"],
+        display: ["var(--font-heading)"],
+        heading: ["var(--font-heading)"],
       },
       fontSize: {
         "type-body": [
@@ -248,5 +235,5 @@ export default {
       },
     },
   },
-  plugins: [achegueSeTypographyTokens, tailwindcssAnimate],
+  plugins: [tailwindcssAnimate],
 } as Config;
