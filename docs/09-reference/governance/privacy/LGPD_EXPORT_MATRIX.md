@@ -81,6 +81,12 @@ Exportar metadata funcional do arquivo (tipo, tamanho, dimensões, estado e data
 
 Nome, telefone e email pertencem a terceiros. O export do titular pode informar que existe um contato, relacionamento e estado, mas não deve replicar os dados pessoais do terceiro.
 
+### Pedidos DPO/LGPD
+
+`public.privacy_subject_requests` está **classificada, mas excluída do export self-service nesta versão**. O ledger aceita pedidos públicos sem sessão, portanto `user_id` pode ser `NULL`; `requester_email` nunca pode ser usado para inferir que um pedido público pertence ao usuário autenticado.
+
+Uma futura inclusão só pode usar uma query explícita limitada a `user_id = authenticated_subject_id`, com campos deliberadamente aprovados e testes próprios. Pedidos públicos não vinculados continuam acessíveis pelo fluxo controlado do DPO, e não por correlação automática no exportador.
+
 ### Push e sessões
 
 `push_subscriptions.endpoint`, `p256dh`, `auth` e quaisquer tokens são secrets. Nunca exportar. `public.user_sessions` também fica fora: não é a autoridade real de sessão e contém campos sensíveis de rede/token.
