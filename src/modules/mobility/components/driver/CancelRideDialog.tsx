@@ -21,60 +21,85 @@ interface CancelRideDialogProps {
   isDriver?: boolean;
 }
 
-const DRIVER_CANCEL_REASONS = [
-  "Passageiro não apareceu",
-  "Destino incorreto",
-  "Problema no carro",
-  "Passageiro solicitou cancelamento",
-  "Distancia muito longa",
-  "Condições climáticas ruins",
-  "Outro motivo",
+type CancellationReasonOption = {
+  code: string;
+  label: string;
+  requiresDetail?: boolean;
+};
+
+const DRIVER_CANCEL_REASONS: readonly CancellationReasonOption[] = [
+  { code: "passenger_no_show", label: "Passageiro não apareceu" },
+  { code: "passenger_requested", label: "Passageiro solicitou o cancelamento" },
+  { code: "passenger_or_identity_mismatch", label: "Pessoa/identidade não corresponde ao esperado" },
+  { code: "unsafe_pickup", label: "Local de embarque sem condições seguras" },
+  { code: "capacity_or_restraint_safety", label: "Lotação ou equipamento de segurança inadequado" },
+  { code: "vehicle_issue", label: "Problema no veículo" },
+  { code: "destination_issue", label: "Problema com o destino informado" },
+  { code: "weather_safety", label: "Condições climáticas sem segurança" },
+  { code: "other", label: "Outro motivo", requiresDetail: true },
 ];
 
-const PASSENGER_CANCEL_REASONS = [
-  "Mudança de planos",
-  "Encontrei outro transporte",
-  "Motorista demorou muito",
-  "Preço muito alto",
-  "Destino incorreto",
-  "Outro motivo",
+const PASSENGER_CANCEL_REASONS: readonly CancellationReasonOption[] = [
+  { code: "plans_changed", label: "Mudança de planos" },
+  { code: "other_transport", label: "Encontrei outro transporte" },
+  { code: "driver_delay", label: "Motorista demorou muito" },
+  { code: "driver_or_vehicle_mismatch", label: "Motorista ou veículo não corresponde ao informado" },
+  { code: "unsafe_pickup_or_approach", label: "Situação de segurança no embarque/aproximação" },
+  { code: "destination_issue", label: "Problema com o destino informado" },
+  { code: "price_concern", label: "Valor não atende ao esperado" },
+  { code: "other", label: "Outro motivo", requiresDetail: true },
 ];
+
+function serializeCancellationReason(
+  option: CancellationReasonOption,
+  detail: string,
+): string {
+  const normalizedDetail = detail.trim().replace(/\s+/g, " ");
+  return option.requiresDetail
+    ? `[${option.code}] ${normalizedDetail}`
+    : `[${option.code}] ${option.label}`;
+}
 
 export const CancelRideDialog = forwardRef<
   HTMLDivElement,
   CancelRideDialogProps
 >(function CancelRideDialog(
-  { open, onOpenChange, onConfirm, rideId, isDriver = false },
+  { open, onOpenChange, onConfirm, isDriver = false },
   ref,
 ) {
-  const [selectedReason, setSelectedReason] = useState("");
+  const [selectedReasonCode, setSelectedReasonCode] = useState("");
   const [customReason, setCustomReason] = useState("");
   const [loading, setLoading] = useState(false);
 
   const reasons = isDriver ? DRIVER_CANCEL_REASONS : PASSENGER_CANCEL_REASONS;
+  const selectedReason = reasons.find(
+    (reason) => reason.code === selectedReasonCode,
+  );
 
   const handleConfirm = async () => {
-    const finalReason =
-      selectedReason === "Outro motivo" ? customReason : selectedReason;
+    if (!selectedReason) return;
+    if (selectedReason.requiresDetail && !customReason.trim()) return;
 
-    if (!finalReason.trim()) {
-      return;
-    }
+    const finalReason = serializeCancellationReason(
+      selectedReason,
+      customReason,
+    );
 
     setLoading(true);
     try {
       await onConfirm(finalReason);
       onOpenChange(false);
-      setSelectedReason("");
+      setSelectedReasonCode("");
       setCustomReason("");
     } finally {
       setLoading(false);
     }
   };
 
-  const isValid =
+  const isValid = Boolean(
     selectedReason &&
-    (selectedReason !== "Outro motivo" || customReason.trim());
+      (!selectedReason.requiresDetail || customReason.trim()),
+  );
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -85,8 +110,8 @@ export const CancelRideDialog = forwardRef<
             Cancelar Corrida
           </DialogTitle>
           <DialogDescription>
-            Por favor, informe o motivo do cancelamento. Isso nos ajuda a
-            melhorar o serviço.
+            Informe o motivo real do cancelamento. O registro fica associado à
+            corrida para segurança, suporte e auditoria.
           </DialogDescription>
         </DialogHeader>
 
@@ -94,31 +119,31 @@ export const CancelRideDialog = forwardRef<
           <div className="space-y-3">
             <Label>Motivo do cancelamento</Label>
             <RadioGroup
-              value={selectedReason}
-              onValueChange={setSelectedReason}
+              value={selectedReasonCode}
+              onValueChange={setSelectedReasonCode}
             >
               {reasons.map((reason) => (
-                <div key={reason} className="flex items-center space-x-2">
-                  <RadioGroupItem value={reason} id={reason} />
+                <div key={reason.code} className="flex items-center space-x-2">
+                  <RadioGroupItem value={reason.code} id={`cancel-${reason.code}`} />
                   <Label
-                    htmlFor={reason}
+                    htmlFor={`cancel-${reason.code}`}
                     className="text-sm font-normal cursor-pointer"
                   >
-                    {reason}
+                    {reason.label}
                   </Label>
                 </div>
               ))}
             </RadioGroup>
           </div>
 
-          {selectedReason === "Outro motivo" && (
+          {selectedReason?.requiresDetail && (
             <div className="space-y-2">
               <Label htmlFor="custom-reason">Descreva o motivo</Label>
               <Textarea
                 id="custom-reason"
-                placeholder="Digite o motivo do cancelamento..."
+                placeholder="Descreva objetivamente o que aconteceu..."
                 value={customReason}
-                onChange={(e) => setCustomReason(e.target.value)}
+                onChange={(event) => setCustomReason(event.target.value)}
                 rows={3}
                 maxLength={200}
               />
