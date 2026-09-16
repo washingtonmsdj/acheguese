@@ -1,6 +1,27 @@
 /* Shared layout rules owned by the approved account/access concept.
    Keep presentation here instead of coupling editorial artwork sizing to icon styles. */
 
+.auth-concept-canvas {
+  background-color: hsl(var(--background));
+  color: hsl(var(--foreground));
+}
+
+@media (min-width: 1024px) {
+  .auth-concept-canvas {
+    background-image:
+      radial-gradient(
+        circle at 16% 32%,
+        hsl(var(--primary) / 0.1),
+        transparent 31%
+      ),
+      radial-gradient(
+        circle at 70% 18%,
+        hsl(var(--accent) / 0.13),
+        transparent 30%
+      );
+  }
+}
+
 @media (max-width: 1023px) {
   main#main-content:has(#login-identifier),
   main#main-content:has(#cadastro-password) {
@@ -28,21 +49,22 @@
 }
 
 /*
- * Autofill do navegador não deve trocar o fundo branco, a cor do texto ou a
- * leitura visual aprovada dos campos de Entrar/Criar conta.
+ * Autofill do navegador não deve trocar o fundo, a cor do texto ou a leitura
+ * visual aprovada dos campos de Entrar/Criar conta. Os valores vêm dos mesmos
+ * tokens semânticos consumidos pelos inputs normais, inclusive em dark mode.
  */
 main#main-content:has(#login-identifier) input:-webkit-autofill,
 main#main-content:has(#cadastro-password) input:-webkit-autofill {
-  -webkit-text-fill-color: #173d41;
-  caret-color: #173d41;
-  box-shadow: 0 0 0 1000px #fff inset;
+  -webkit-text-fill-color: hsl(var(--foreground));
+  caret-color: hsl(var(--primary));
+  box-shadow: 0 0 0 1000px hsl(var(--card)) inset;
   transition: background-color 9999s ease-out 0s;
 }
 
 main#main-content:has(#login-identifier) input:autofill,
 main#main-content:has(#cadastro-password) input:autofill {
-  background: #fff;
-  color: #173d41;
+  background: hsl(var(--card));
+  color: hsl(var(--foreground));
 }
 
 @media (min-width: 1024px) {
