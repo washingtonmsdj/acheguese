@@ -86,13 +86,11 @@ export async function createDeliveryOperation(
       return { success: false, error: "Nome do destinatario e obrigatorio." };
     }
 
-    // Commercial fare thresholds belong exclusively to Pricing/backend policy.
-    // This orchestration layer must not invent or duplicate provisional values.
-    if (
-      input.suggestedPrice !== undefined &&
-      (!Number.isFinite(input.suggestedPrice) || input.suggestedPrice <= 0)
-    ) {
-      return { success: false, error: "Preco sugerido invalido." };
+    if (!input.priceQuoteId?.trim()) {
+      return {
+        success: false,
+        error: "Cotacao comercial server-owned e obrigatoria para solicitar entrega.",
+      };
     }
 
     const creation = await MobilityRpcService.createDelivery(input);
