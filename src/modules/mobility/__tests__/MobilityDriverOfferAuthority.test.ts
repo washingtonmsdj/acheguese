@@ -66,5 +66,20 @@ describe("Mobility driver offer authority", () => {
     expect((dispatchConfig.match(/showFullDetails: false/g) ?? []).length)
       .toBeGreaterThanOrEqual(3);
     expect(dispatchConfig).not.toContain("showFullDetails: true");
+    expect(dispatchConfig).toContain(
+      "maxRetryAttempts: DISPATCH_GLOBAL_CONFIG.openBoard.maxRetryAttempts",
+    );
+    expect(dispatchConfig).toContain(
+      "offerTimeoutSeconds: DISPATCH_GLOBAL_CONFIG.reservationBoard.offerTimeoutSeconds",
+    );
+    expect(dispatchConfig).toContain(
+      "maxRetryAttempts: DISPATCH_GLOBAL_CONFIG.reservationBoard.maxRetryAttempts",
+    );
+    expect(dispatchConfig).toContain(
+      "searchRadiusKm: DISPATCH_GLOBAL_CONFIG.reservationBoard.searchRadiusKm",
+    );
+    expect(dispatchConfig).toContain(
+      "return DISPATCH_GLOBAL_CONFIG.reservationBoard.maxOffersPerDriver",
+    );
   });
 });
