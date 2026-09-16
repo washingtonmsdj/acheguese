@@ -41,13 +41,23 @@ Exportar apenas estado do próprio usuário: identificador, email, telefone, con
 
 `profiles`, `personal_social_profiles`, `profile_members`, `user_active_profiles`, `user_roles`, `user_residences` e preferências entram apenas quando ligados ao `user_id` do titular ou a perfis que pertencem ao titular. IDs de admins/inviters/reviewers devem ser removidos.
 
+`profile_username_history` e `profile_slug_history` também estão classificados como dados do próprio titular quando o `profile_id` pertence a ele. O payload pode incluir somente o valor anterior, o novo valor e `changed_at`; `changed_by` e `reason` permanecem fora porque podem identificar atores administrativos ou carregar justificativa interna.
+
 ### Negócios, profissionais e motoristas
 
 O modelo atual é profile-based. A exportação não pode usar os contratos legados `businesses.owner_id`, `professional_data.user_id`, `driver_profiles.user_id` como fonte de ownership genérica. A seleção deve partir dos `profile.id` pertencentes ao titular e dos campos `owner_user_id` onde existirem explicitamente. Para profissionais, cobertura territorial deve vir exclusivamente de `public.service_areas` ligada por `entity_type='service_provider'` e `entity_id=professional_data.id`; os campos `professional_data.service_areas` e `service_radius_km` são legado e não entram no novo payload.
 
+`business_claims` foi classificada separadamente como solicitação do titular: somente linhas em que `claimer_id` é o usuário autenticado. Podem entrar negócio alvo, status, notas submetidas pelo próprio titular e datas. `documents`, `reviewed_by` e `review_notes` não entram no self-service por conterem evidência sensível ou informação interna de revisão.
+
 ### Conteúdo
 
-Exportar apenas conteúdo criado pelo titular: posts, comments, community posts/questions/answers, classificados, eventos, vagas, oportunidades e publicações de comunicação. Campos de moderação e `removed_by` ficam de fora.
+Exportar apenas conteúdo criado pelo titular: posts, comments, community posts/questions/answers, classificados, **classified comments**, eventos, vagas, oportunidades e publicações de comunicação. Campos de moderação e `removed_by` ficam de fora.
+
+### Participação e ações
+
+A matriz também classifica ações próprias que não são conteúdo autoral: `classified_likes`, `question_answer_likes` e `event_participants`, além das relações comunitárias já mapeadas. Somente a linha pertencente ao usuário/perfil do titular pode entrar.
+
+Credenciais operacionais não fazem parte da portabilidade. Em especial, `event_participants.checkin_code` permanece excluído mesmo quando a participação pertence ao titular.
 
 ### Mensagens
 
@@ -83,9 +93,9 @@ Nome, telefone e email pertencem a terceiros. O export do titular pode informar 
 
 ### Pedidos DPO/LGPD
 
-`public.privacy_subject_requests` está **classificada, mas excluída do export self-service nesta versão**. O ledger aceita pedidos públicos sem sessão, portanto `user_id` pode ser `NULL`; `requester_email` nunca pode ser usado para inferir que um pedido público pertence ao usuário autenticado.
+`public.privacy_subject_requests` e `public.privacy_subject_request_events` estão **classificadas, mas excluídas do export self-service nesta versão**. O ledger aceita pedidos públicos sem sessão, portanto `user_id` pode ser `NULL`; `requester_email` nunca pode ser usado para inferir que um pedido público pertence ao usuário autenticado.
 
-Uma futura inclusão só pode usar uma query explícita limitada a `user_id = authenticated_subject_id`, com campos deliberadamente aprovados e testes próprios. Pedidos públicos não vinculados continuam acessíveis pelo fluxo controlado do DPO, e não por correlação automática no exportador.
+Uma futura inclusão só pode usar uma query explícita limitada a `user_id = authenticated_subject_id`, com campos deliberadamente aprovados e testes próprios. Pedidos públicos não vinculados continuam acessíveis pelo fluxo controlado do DPO, e não por correlação automática no exportador. O histórico de ciclo do caso permanece interno enquanto esse contrato não for desenhado separadamente.
 
 ### Push e sessões
 
@@ -94,6 +104,20 @@ Uma futura inclusão só pode usar uma query explícita limitada a `user_id = au
 ### Logs internos
 
 `application_logs`, `function_audit`, audit logs privados, rate-limit tables e equivalentes não entram em bloco. Fatos que dizem respeito ao titular devem ser expostos por seções resumidas e deliberadas, nunca por dump de log.
+
+## Fontes classificadas mas ainda não implementadas no handler
+
+A auditoria de completude de 2026-09-16 confirmou fontes pessoais ativas que agora já constam da matriz, mas **ainda não têm query no `user-export-data`**:
+
+- `public.profile_username_history`;
+- `public.profile_slug_history`;
+- `public.business_claims`;
+- `public.classified_comments`;
+- `public.classified_likes`;
+- `public.question_answer_likes`;
+- `public.event_participants`.
+
+Essa lista é deliberadamente um bloqueio de rollout, não autorização de deploy. Enquanto qualquer fonte aprovada da matriz não estiver implementada com ownership e whitelist explícitos, `LGPD_EXPORT_MATRIX_IMPLEMENTATION_COMPLETE` deve permanecer `false`.
 
 ## Campos legados proibidos no novo handler
 
