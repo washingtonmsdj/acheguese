@@ -30,7 +30,9 @@ export type RideRequestReadRow = Pick<
   | "cancelled_at"
   | "created_at"
   | "updated_at"
->;
+> & {
+  cancellation_reason: string | null;
+};
 
 export const RIDE_REQUEST_READ_SELECT = [
   "id",
@@ -57,15 +59,19 @@ export const RIDE_REQUEST_READ_SELECT = [
   "completed_at",
   "passenger_confirmed_at",
   "cancelled_at",
+  "cancellation_reason",
   "created_at",
   "updated_at",
 ].join(", ");
 
 /**
  * Converts the bounded database projection into the public/runtime RideRequest
- * contract. The cast is intentionally isolated at this adapter boundary: the
- * canonical adapter only reads fields guaranteed by RIDE_REQUEST_READ_SELECT.
+ * contract. Cancellation context is added at this bounded read boundary while
+ * generated database types catch up with the schema migration.
  */
 export function toRideRequestReadModel(row: RideRequestReadRow): RideRequest {
-  return toRideRequestContract(row as Tables<"ride_requests">);
+  return {
+    ...toRideRequestContract(row as Tables<"ride_requests">),
+    cancellation_reason: row.cancellation_reason,
+  };
 }
