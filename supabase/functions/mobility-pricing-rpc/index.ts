@@ -35,6 +35,16 @@ type QuoteParams = {
   mode: "ride" | "motoboy";
   pickupAddressId: string;
   dropoffAddressId: string;
+};
+
+type CanonicalAddressRow = {
+  id: string;
+  location_id: string;
+  latitude: number | string | null;
+  longitude: number | string | null;
+};
+
+type CanonicalRoute = {
   pickupLocationId: string;
   dropoffLocationId: string;
   originLat: number;
@@ -60,18 +70,6 @@ function requireUuid(value: unknown, field: string): string {
   return value;
 }
 
-function requireCoordinate(
-  value: unknown,
-  field: string,
-  min: number,
-  max: number,
-): number {
-  if (typeof value !== "number" || !Number.isFinite(value) || value < min || value > max) {
-    throw new Error(`Invalid ${field}`);
-  }
-  return value;
-}
-
 function parseQuoteParams(params: Record<string, unknown>): QuoteParams {
   const mode = typeof params.mode === "string" ? params.mode : "";
   if (!MODES.has(mode)) throw new Error("Invalid mode");
@@ -81,13 +79,20 @@ function parseQuoteParams(params: Record<string, unknown>): QuoteParams {
     mode: mode as QuoteParams["mode"],
     pickupAddressId: requireUuid(params.pickupAddressId, "pickupAddressId"),
     dropoffAddressId: requireUuid(params.dropoffAddressId, "dropoffAddressId"),
-    pickupLocationId: requireUuid(params.pickupLocationId, "pickupLocationId"),
-    dropoffLocationId: requireUuid(params.dropoffLocationId, "dropoffLocationId"),
-    originLat: requireCoordinate(params.originLat, "originLat", -90, 90),
-    originLng: requireCoordinate(params.originLng, "originLng", -180, 180),
-    destinationLat: requireCoordinate(params.destinationLat, "destinationLat", -90, 90),
-    destinationLng: requireCoordinate(params.destinationLng, "destinationLng", -180, 180),
   };
+}
+
+function normalizeCanonicalCoordinate(
+  value: number | string | null,
+  field: string,
+  min: number,
+  max: number,
+): number {
+  const parsed = typeof value === "number" ? value : Number(value);
+  if (!Number.isFinite(parsed) || parsed < min || parsed > max) {
+    throw new Error(`Canonical address is missing valid ${field}`);
+  }
+  return parsed;
 }
 
 function commercialRoutingBaseUrl(): string {
@@ -125,6 +130,34 @@ async function requireOwnedProfile(userId: string, profileId: string): Promise<v
   if (!data) throw new Error("Passenger profile is not owned by authenticated user");
 }
 
+async function loadCanonicalRoute(params: QuoteParams): Promise<CanonicalRoute> {
+  const { data, error } = await supabaseAdmin
+    .from("addresses")
+    .select("id, location_id, latitude, longitude")
+    .in("id", [params.pickupAddressId, params.dropoffAddressId]);
+
+  if (error) throw error;
+  const rows = (data ?? []) as CanonicalAddressRow[];
+  const pickup = rows.find((row) => row.id === params.pickupAddressId) ?? null;
+  const dropoff = rows.find((row) => row.id === params.dropoffAddressId) ?? null;
+
+  if (!pickup || !dropoff) {
+    throw new Error("Canonical pickup or dropoff address was not found");
+  }
+  if (!pickup.location_id || !dropoff.location_id) {
+    throw new Error("Canonical address is not linked to a territory");
+  }
+
+  return {
+    pickupLocationId: pickup.location_id,
+    dropoffLocationId: dropoff.location_id,
+    originLat: normalizeCanonicalCoordinate(pickup.latitude, "pickup latitude", -90, 90),
+    originLng: normalizeCanonicalCoordinate(pickup.longitude, "pickup longitude", -180, 180),
+    destinationLat: normalizeCanonicalCoordinate(dropoff.latitude, "dropoff latitude", -90, 90),
+    destinationLng: normalizeCanonicalCoordinate(dropoff.longitude, "dropoff longitude", -180, 180),
+  };
+}
+
 async function requireEffectiveMobilityRollout(locationId: string): Promise<void> {
   let currentLocationId: string | null = locationId;
 
@@ -151,7 +184,9 @@ async function requireEffectiveMobilityRollout(locationId: string): Promise<void
 
       if (rolloutError) throw rolloutError;
       if (rollout) {
-        if (rollout.status !== "active") throw new Error("Mobility rollout is disabled for this location");
+        if (rollout.status !== "active") {
+          throw new Error("Mobility rollout is disabled for this location");
+        }
         return;
       }
     }
@@ -190,11 +225,11 @@ function requireRoutingProfile(rule: PricingRuleRow): string {
 }
 
 async function calculateAuthoritativeRoute(
-  params: QuoteParams,
+  route: CanonicalRoute,
   routingProfile: string,
 ): Promise<{ distanceMeters: number; durationSeconds: number }> {
   const baseUrl = commercialRoutingBaseUrl();
-  const coordinates = `${params.originLng},${params.originLat};${params.destinationLng},${params.destinationLat}`;
+  const coordinates = `${route.originLng},${route.originLat};${route.destinationLng},${route.destinationLat}`;
   const url = `${baseUrl}/route/v1/${encodeURIComponent(routingProfile)}/${coordinates}?overview=false&steps=false`;
   const controller = new AbortController();
   const timeout = setTimeout(() => controller.abort(), ROUTING_TIMEOUT_MS);
@@ -204,18 +239,24 @@ async function calculateAuthoritativeRoute(
       signal: controller.signal,
       headers: { "User-Agent": "Achegue-se-Mobility-Pricing/1.0" },
     });
-    if (!response.ok) throw new Error(`Commercial routing returned HTTP ${response.status}`);
+    if (!response.ok) {
+      throw new Error(`Commercial routing returned HTTP ${response.status}`);
+    }
 
     const payload = (await response.json()) as OsrmResponse;
-    const route = payload.code === "Ok" && Array.isArray(payload.routes)
+    const routeResult = payload.code === "Ok" && Array.isArray(payload.routes)
       ? payload.routes[0]
       : undefined;
-    const distanceMeters = Math.round(Number(route?.distance));
-    const durationSeconds = Math.round(Number(route?.duration));
+    const distanceMeters = Math.round(Number(routeResult?.distance));
+    const durationSeconds = Math.round(Number(routeResult?.duration));
 
     if (
-      !Number.isFinite(distanceMeters) || distanceMeters <= 0 || distanceMeters > 2_000_000 ||
-      !Number.isFinite(durationSeconds) || durationSeconds <= 0 || durationSeconds > 172_800
+      !Number.isFinite(distanceMeters) ||
+      distanceMeters <= 0 ||
+      distanceMeters > 2_000_000 ||
+      !Number.isFinite(durationSeconds) ||
+      durationSeconds <= 0 ||
+      durationSeconds > 172_800
     ) {
       throw new Error("Commercial routing returned invalid route metrics");
     }
@@ -229,31 +270,35 @@ async function calculateAuthoritativeRoute(
 async function issueQuote(userId: string, rawParams: Record<string, unknown>) {
   const params = parseQuoteParams(rawParams);
   await requireOwnedProfile(userId, params.passengerProfileId);
-  await requireEffectiveMobilityRollout(params.pickupLocationId);
+
+  const canonicalRoute = await loadCanonicalRoute(params);
+  await requireEffectiveMobilityRollout(canonicalRoute.pickupLocationId);
 
   const rule = await loadApprovedPricingRule(params.mode);
   const routingProfile = requireRoutingProfile(rule);
-  const route = await calculateAuthoritativeRoute(params, routingProfile);
+  const routeMetrics = await calculateAuthoritativeRoute(canonicalRoute, routingProfile);
 
   const { data, error } = await supabaseAdmin.rpc("mobility_issue_price_quote", {
     p_passenger_profile_id: params.passengerProfileId,
     p_mode: params.mode,
     p_pickup_address_id: params.pickupAddressId,
     p_dropoff_address_id: params.dropoffAddressId,
-    p_pickup_location_id: params.pickupLocationId,
-    p_dropoff_location_id: params.dropoffLocationId,
-    p_origin_lat: params.originLat,
-    p_origin_lng: params.originLng,
-    p_destination_lat: params.destinationLat,
-    p_destination_lng: params.destinationLng,
-    p_distance_meters: route.distanceMeters,
-    p_duration_seconds: route.durationSeconds,
+    p_pickup_location_id: canonicalRoute.pickupLocationId,
+    p_dropoff_location_id: canonicalRoute.dropoffLocationId,
+    p_origin_lat: canonicalRoute.originLat,
+    p_origin_lng: canonicalRoute.originLng,
+    p_destination_lat: canonicalRoute.destinationLat,
+    p_destination_lng: canonicalRoute.destinationLng,
+    p_distance_meters: routeMetrics.distanceMeters,
+    p_duration_seconds: routeMetrics.durationSeconds,
     p_routing_provider: "osrm",
     p_routing_profile: routingProfile,
   });
 
   if (error) throw error;
-  if (!data || typeof data !== "object") throw new Error("Quote issuer returned no data");
+  if (!data || typeof data !== "object") {
+    throw new Error("Quote issuer returned no data");
+  }
   return data;
 }
 
@@ -276,7 +321,12 @@ Deno.serve(async (req: Request): Promise<Response> => {
   const methodError = requireHttpMethod(req, ["POST"], ALLOWED_METHODS);
   if (methodError) return methodError;
 
-  const perimeterLimit = await rateLimitMiddleware(req, 60, 60_000, ALLOWED_METHODS);
+  const perimeterLimit = await rateLimitMiddleware(
+    req,
+    60,
+    60_000,
+    ALLOWED_METHODS,
+  );
   if (perimeterLimit) return perimeterLimit;
 
   const auth = await requireAuthenticatedUser(req, supabaseAdmin);
@@ -296,17 +346,24 @@ Deno.serve(async (req: Request): Promise<Response> => {
     const data = await issueQuote(auth.user.id, body.data.params ?? {});
     return respond({ data });
   } catch (error) {
-    const message = error instanceof Error ? error.message : "Mobility pricing unavailable";
+    const message = error instanceof Error
+      ? error.message
+      : "Mobility pricing unavailable";
     const unavailable =
       message.includes("not approved") ||
       message.includes("not configured") ||
       message.includes("Public OSRM demo") ||
       message.includes("routing_profile") ||
+      message.includes("Canonical address") ||
       message.includes("unsupported by quote engine");
 
     console.error("[mobility-pricing-rpc] quote failed", { message });
     return respond(
-      { error: unavailable ? "Commercial mobility pricing is not available" : "Unable to issue mobility quote" },
+      {
+        error: unavailable
+          ? "Commercial mobility pricing is not available"
+          : "Unable to issue mobility quote",
+      },
       unavailable ? 503 : 400,
     );
   }
