@@ -7,7 +7,7 @@ import {
   DialogTitle,
 } from "@/shared/components/ui/dialog";
 import { Button } from "@/shared/components/ui/button";
-import { CheckCircle2 } from "lucide-react";
+import { CheckCircle2, Info } from "lucide-react";
 import { formatBrl } from "@/shared/utils/currency";
 
 interface RideLike {
@@ -47,61 +47,60 @@ export function CompleteRideDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-md bg-[#1E2529] border-white/10">
+      <DialogContent className="sm:max-w-md">
         <DialogHeader>
-          <DialogTitle className="text-white flex items-center gap-2">
-            <CheckCircle2 className="h-5 w-5 text-emerald-400" />
-            Finalizar Corrida
+          <DialogTitle className="flex items-center gap-2">
+            <CheckCircle2 className="h-5 w-5 text-success" aria-hidden="true" />
+            Finalizar corrida
           </DialogTitle>
-          <DialogDescription className="text-gray-400">
-            Confirme a conclusao da corrida. O valor e controlado pelo contrato de pricing do servidor.
+          <DialogDescription>
+            Confirme a conclusão da corrida. O valor é controlado pelo contrato de pricing do servidor.
           </DialogDescription>
         </DialogHeader>
 
         <div className="space-y-4 py-4">
-          <div className="rounded-lg bg-white/5 p-3 space-y-2">
-            <div className="flex justify-between text-sm">
-              <span className="text-gray-400">Origem:</span>
-              <span className="text-white font-medium">{ride?.origin}</span>
-            </div>
-            <div className="flex justify-between text-sm">
-              <span className="text-gray-400">Destino:</span>
-              <span className="text-white font-medium">
-                {ride?.destination}
+          <div className="space-y-2 rounded-lg border bg-muted/40 p-3">
+            <div className="flex items-start justify-between gap-4 text-sm">
+              <span className="text-muted-foreground">Origem</span>
+              <span className="text-right font-medium text-foreground">
+                {ride?.origin || "Não informada"}
               </span>
             </div>
-            <div className="flex justify-between text-sm">
-              <span className="text-gray-400">Valor registrado:</span>
-              <span className="text-emerald-400 font-bold">
-                {agreedPriceLabel}
+            <div className="flex items-start justify-between gap-4 text-sm">
+              <span className="text-muted-foreground">Destino</span>
+              <span className="text-right font-medium text-foreground">
+                {ride?.destination || "Não informado"}
               </span>
+            </div>
+            <div className="flex items-center justify-between gap-4 text-sm">
+              <span className="text-muted-foreground">Valor registrado</span>
+              <span className="font-bold text-success">{agreedPriceLabel}</span>
             </div>
           </div>
 
-          <div className="rounded-lg bg-blue-500/10 border border-blue-500/20 p-3">
-            <p className="text-xs text-blue-300">
-              <strong>Contrato de Pricing:</strong> o motorista nao altera o valor ao finalizar a corrida. Ajustes comerciais precisam passar pelo owner server-side apropriado.
+          <div className="flex gap-2 rounded-lg border border-info/25 bg-info/10 p-3 text-info">
+            <Info className="mt-0.5 h-4 w-4 shrink-0" aria-hidden="true" />
+            <p className="text-xs leading-relaxed">
+              <strong>Contrato de pricing:</strong> o motorista não altera o valor ao finalizar a corrida. Ajustes comerciais passam pelo owner server-side apropriado.
             </p>
           </div>
         </div>
 
-        <DialogFooter className="gap-2">
+        <DialogFooter className="gap-2 sm:gap-2">
           <Button
             type="button"
             variant="outline"
             onClick={() => onOpenChange(false)}
             disabled={loading}
-            className="border-white/10 text-gray-300 hover:bg-white/5"
           >
             Cancelar
           </Button>
           <Button
             type="button"
-            onClick={handleComplete}
-            disabled={loading}
-            className="bg-gradient-to-r from-emerald-500 to-green-500 hover:from-emerald-400 hover:to-green-400 text-white"
+            onClick={() => void handleComplete()}
+            disabled={loading || !ride}
           >
-            {loading ? "Finalizando..." : "Finalizar Corrida"}
+            {loading ? "Finalizando..." : "Finalizar corrida"}
           </Button>
         </DialogFooter>
       </DialogContent>
