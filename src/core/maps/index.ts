@@ -15,10 +15,14 @@ export type * from './types';
 // SERVICES
 // ============================================
 export { mapEntityProjection } from './services/MapEntityProjectionService';
-export { GeolocationService } from './services/GeolocationService';
+export { GeolocationService } from '@/shared/services/GeolocationService';
 export { clusteringService } from './services/ClusteringService';
 export { GeocodingService, geocodingService } from './services/MapGeocodingAdapter';
-export type { GeolocationCoords, GeolocationResult, GeolocationOptions } from './services/GeolocationService';
+export type {
+  GeolocationCoords,
+  GeolocationResult,
+  GeolocationOptions,
+} from '@/shared/services/GeolocationService';
 export type { ClusterPoint, ClusterOptions } from './services/ClusteringService';
 
 // ============================================
