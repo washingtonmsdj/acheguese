@@ -1,15 +1,14 @@
-import { Suspense } from "react";
+import { lazy, Suspense } from "react";
 import { useLocation } from "react-router-dom";
 
 import { AppRoutes } from "@/app/routes/AppRoutes";
 import { AUTH_PATHS } from "@/core/auth/constants/authFlow";
 import { SessionProvider } from "@/core/session/providers/SessionProvider";
-import {
-  MultiProfileProvider,
-  ModuleContextSync,
-} from "@/core/profiles/contexts/multi-profile-runtime-context";
-import { TerritoryModeInitializer } from "@/core/location/components/TerritoryModeInitializer";
 import { PassivePageFallback } from "@/shared/components/loading/PassivePageFallback";
+
+const ContextualProfileTerritoryRuntime = lazy(
+  () => import("@/app/components/ContextualProfileTerritoryRuntime"),
+);
 
 const AUTH_SESSION_ONLY_PATHS = new Set<string>([
   AUTH_PATHS.login,
@@ -29,16 +28,16 @@ function RoutedPageContent() {
 }
 
 /**
- * Runtime autenticado/contextual.
+ * Runtime de sessao das rotas contextuais e de autenticacao.
  *
- * A entrada publica `/` nao precisa inicializar Supabase Auth, perfis ou modo
- * territorial. Rotas publicas de autenticacao precisam apenas da sessao: elas
- * nao devem importar/hidratar multi-profile, residencia ou territorio antes do
- * usuario entrar. Rotas contextuais continuam recebendo o runtime completo.
+ * A raiz publica `/` continua isolada antes deste shell. Dentro do runtime
+ * roteado, as superficies de autenticacao carregam somente SessionProvider +
+ * pagina: perfil, residencia e territorio vivem em um chunk lazy separado que
+ * so e solicitado pelas rotas contextuais.
  *
- * `firstAccess` permanece no runtime completo porque o onboarding posterior a
- * autenticacao pode depender de perfil/territorio. O SessionProvider fica fora
- * da bifurcacao para nao reinicializar a sessao durante a navegacao auth -> app.
+ * `firstAccess` permanece no runtime contextual porque o onboarding posterior
+ * a autenticacao pode depender de perfil/territorio. SessionProvider fica fora
+ * da bifurcacao para a navegacao auth -> app nao reinicializar a sessao.
  */
 export default function SessionProfileRuntimeShell() {
   const { pathname } = useLocation();
@@ -49,11 +48,11 @@ export default function SessionProfileRuntimeShell() {
       {sessionOnlyRoute ? (
         <RoutedPageContent />
       ) : (
-        <MultiProfileProvider>
-          <TerritoryModeInitializer />
-          <ModuleContextSync />
-          <RoutedPageContent />
-        </MultiProfileProvider>
+        <Suspense fallback={<PassivePageFallback />}>
+          <ContextualProfileTerritoryRuntime>
+            <RoutedPageContent />
+          </ContextualProfileTerritoryRuntime>
+        </Suspense>
       )}
     </SessionProvider>
   );
