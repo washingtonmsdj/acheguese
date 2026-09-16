@@ -1,3 +1,4 @@
+import type { ReactNode } from "react";
 import { Copy, ExternalLink, Mail, MessageCircle, Phone } from "lucide-react";
 import type { AdminUserDetail } from "@/modules/admin/hooks/useAdminUserDetail";
 import { Button } from "@/shared/components/ui/button";
@@ -116,7 +117,7 @@ function ContactRow({
   iconClassName: string;
   label: string;
   value: string;
-  actions?: React.ReactNode;
+  actions?: ReactNode;
 }) {
   return (
     <div className="flex flex-wrap items-center justify-between gap-3 rounded-lg border border-border bg-muted/50 p-3">
