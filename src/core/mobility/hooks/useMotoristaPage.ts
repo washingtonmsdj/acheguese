@@ -188,7 +188,6 @@ export function useMotoristaPage() {
     rideId: string,
     driverProfileId: string,
     proof: DeliveryProof,
-    finalPrice?: number,
     pin?: string,
   ): Promise<boolean> => {
     if (!driverProfileId) {
@@ -202,7 +201,6 @@ export function useMotoristaPage() {
         rideId,
         driverProfileId,
         proof,
-        finalPrice,
         pin,
       );
       if (!result.success) {
