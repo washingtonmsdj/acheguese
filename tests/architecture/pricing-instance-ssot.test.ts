@@ -42,6 +42,8 @@ describe("pricing instance SSOT", () => {
 
     expect(servicesBarrel).not.toContain("PricingService");
     expect(servicesBarrel).not.toContain("pricingService");
+    expect(pricingBarrel).not.toContain("export * from './services'");
+    expect(pricingBarrel).not.toContain("export * from './hooks'");
     expect(pricingBarrel).toContain("export { pricingService } from './instance';");
     expect(instance).toContain("export const pricingService = new Proxy");
   });
@@ -56,5 +58,21 @@ describe("pricing instance SSOT", () => {
     expect(fs.existsSync(retiredHook)).toBe(false);
     expect(hooksBarrel).not.toContain("usePriceEstimate");
     expect(hooksBarrel).not.toContain("useQuickPriceEstimate");
+  });
+
+  it("keeps historical local fare estimators isolated from application runtime", () => {
+    const pricingImplementation = path.resolve(
+      PROJECT_ROOT,
+      "src/core/pricing/services/PricingService.ts",
+    );
+    const violations = collectRuntimeFiles(SRC_ROOT)
+      .filter((file) => file !== pricingImplementation)
+      .filter((file) => {
+        const source = fs.readFileSync(file, "utf8");
+        return /\.calculate(?:Quick)?Estimate\s*\(/.test(source);
+      })
+      .map((file) => path.relative(PROJECT_ROOT, file));
+
+    expect(violations).toEqual([]);
   });
 });
