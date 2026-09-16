@@ -16,7 +16,7 @@ import {
   SelectValue,
 } from "@/shared/components/ui/select";
 import { Switch } from "@/shared/components/ui/switch";
-import { pricingService } from "@/core/pricing/services/PricingService";
+import { pricingService } from "@/core/pricing/instance";
 import { PricingError } from "@/core/pricing/types";
 import { useSessionContext } from "@/core/session/hooks/useSessionContext";
 import { logger } from "@/shared/utils/logger";
@@ -60,8 +60,8 @@ export function PricingRuleDialog({
     setIsActive(rule.isActive);
   }, [rule]);
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
+  const handleSubmit = async (event: React.FormEvent) => {
+    event.preventDefault();
 
     const userId = activeProfile?.id ?? user?.id ?? null;
     if (!userId) {
@@ -71,6 +71,7 @@ export function PricingRuleDialog({
 
     setLoading(true);
     try {
+      const metadata = rule?.metadata ?? { commercial_status: "provisional" };
       const data = {
         mode: mode as PricingRule["mode"],
         name,
@@ -80,6 +81,7 @@ export function PricingRuleDialog({
         minimumFare: parseFloat(minimumFare),
         maximumFare: maximumFare ? parseFloat(maximumFare) : undefined,
         isActive,
+        metadata,
       };
 
       if (rule) {
@@ -87,7 +89,7 @@ export function PricingRuleDialog({
         toast.success("Regra atualizada com sucesso");
       } else {
         await pricingService.createRule(data, userId);
-        toast.success("Regra criada com sucesso");
+        toast.success("Regra provisória criada com sucesso");
       }
 
       onSuccess();
@@ -122,6 +124,13 @@ export function PricingRuleDialog({
         </DialogHeader>
 
         <form onSubmit={handleSubmit} className="space-y-4">
+          <div className="p-3 rounded-lg bg-muted/50 border border-border">
+            <p className="text-xs text-muted-foreground">
+              Valores continuam provisórios enquanto a política comercial não for aprovada.
+              Criar ou ativar uma regra não a aprova automaticamente para produção.
+            </p>
+          </div>
+
           <div className="space-y-2">
             <Label>Modalidade</Label>
             <Select value={mode} onValueChange={(value) => setMode(value as typeof mode)} disabled={!!rule}>
@@ -141,7 +150,7 @@ export function PricingRuleDialog({
             <Label>Nome da Regra</Label>
             <Input
               value={name}
-              onChange={(e) => setName(e.target.value)}
+              onChange={(event) => setName(event.target.value)}
               placeholder="Ex: Corrida Padrao"
               required
             />
@@ -149,27 +158,27 @@ export function PricingRuleDialog({
 
           <div className="space-y-2">
             <Label>Tarifa Base (R$)</Label>
-            <Input type="number" step="0.01" min="0" value={baseFare} onChange={(e) => setBaseFare(e.target.value)} required />
+            <Input type="number" step="0.01" min="0" value={baseFare} onChange={(event) => setBaseFare(event.target.value)} required />
           </div>
 
           <div className="space-y-2">
             <Label>Preco por Km (R$)</Label>
-            <Input type="number" step="0.01" min="0" value={pricePerKm} onChange={(e) => setPricePerKm(e.target.value)} required />
+            <Input type="number" step="0.01" min="0" value={pricePerKm} onChange={(event) => setPricePerKm(event.target.value)} required />
           </div>
 
           <div className="space-y-2">
             <Label>Preco por Minuto (R$)</Label>
-            <Input type="number" step="0.01" min="0" value={pricePerMinute} onChange={(e) => setPricePerMinute(e.target.value)} required />
+            <Input type="number" step="0.01" min="0" value={pricePerMinute} onChange={(event) => setPricePerMinute(event.target.value)} required />
           </div>
 
           <div className="space-y-2">
             <Label>Valor Minimo (R$)</Label>
-            <Input type="number" step="0.01" min="0" value={minimumFare} onChange={(e) => setMinimumFare(e.target.value)} required />
+            <Input type="number" step="0.01" min="0" value={minimumFare} onChange={(event) => setMinimumFare(event.target.value)} required />
           </div>
 
           <div className="space-y-2">
             <Label>Valor Maximo (R$) - Opcional</Label>
-            <Input type="number" step="0.01" min="0" value={maximumFare} onChange={(e) => setMaximumFare(e.target.value)} />
+            <Input type="number" step="0.01" min="0" value={maximumFare} onChange={(event) => setMaximumFare(event.target.value)} />
           </div>
 
           <div className="flex items-center justify-between">
@@ -180,7 +189,7 @@ export function PricingRuleDialog({
           {isActive && (
             <div className="p-3 rounded-lg bg-warning/10 border border-warning/20">
               <p className="text-xs text-warning">
-                Apenas uma regra pode estar ativa por modalidade.
+                Apenas uma regra pode estar ativa por modalidade. Ativa não significa aprovada para produção.
               </p>
             </div>
           )}
@@ -198,4 +207,3 @@ export function PricingRuleDialog({
     </Dialog>
   );
 }
-
