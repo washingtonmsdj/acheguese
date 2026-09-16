@@ -110,7 +110,15 @@ describe("privacy data export rollout boundary", () => {
     ]);
 
     const authoredSources = section("authored_content")?.sources ?? [];
-    expect(authoredSources).toContain("public.classified_comments");
+    expect(authoredSources).toEqual(
+      expect.arrayContaining([
+        "public.classified_comments",
+        "public.event_reviews",
+      ]),
+    );
+    expect(section("authored_content")?.exclude).toContain(
+      "event_reviews.reviewer_profile_id",
+    );
 
     const actionSources = section("community_membership_and_actions")?.sources ?? [];
     expect(actionSources).toEqual(
@@ -118,10 +126,19 @@ describe("privacy data export rollout boundary", () => {
         "public.classified_likes",
         "public.question_answer_likes",
         "public.event_participants",
+        "public.event_review_helpfulness",
+        "public.event_reminders",
       ]),
     );
-    expect(section("community_membership_and_actions")?.exclude).toContain(
-      "event_participants.checkin_code",
+    expect(section("community_membership_and_actions")?.exclude).toEqual(
+      expect.arrayContaining([
+        "event_participants.checkin_code",
+        "event_review_helpfulness.profile_id",
+        "event_reminders.profile_id",
+      ]),
+    );
+    expect(section("community_membership_and_actions")?.notes).toContain(
+      "current UI no longer advertises reminders",
     );
   });
 
@@ -134,6 +151,9 @@ describe("privacy data export rollout boundary", () => {
       "classified_likes",
       "question_answer_likes",
       "event_participants",
+      "event_reviews",
+      "event_review_helpfulness",
+      "event_reminders",
       "role_history",
       "user_recommended_businesses",
     ]) {
