@@ -29,6 +29,7 @@
 10. Sem avaliações significa sem nota; nunca nota perfeita inventada.
 11. Cancelamento precisa preservar ator, timestamp e motivo conhecido sem inventar histórico ausente.
 12. Conclusão de corrida/entrega não aceita preço informado pelo motorista/browser.
+13. PII de entrega só pode aparecer enquanto houver necessidade operacional ativa e não pertence ao histórico terminal genérico.
 
 ## Estado já endurecido
 
@@ -47,12 +48,12 @@
 
 ### Broker operacional
 
-- No source atual de `supabase/functions/mobility-rpc/index.ts`, `createRide/createDelivery`, `handleCreateRide`, `handleCreateDelivery`, `rideCreationRpcParams`, piso local de R$ 5 e parsing/serialização de `finalPrice` foram removidos.
+- `createRide/createDelivery`, `handleCreateRide`, `handleCreateDelivery`, `rideCreationRpcParams`, piso local de R$ 5 e parsing/serialização de `finalPrice` foram removidos de `supabase/functions/mobility-rpc/index.ts`.
 - `tests/architecture/mobility-rpc-boundary.test.ts` trava criação exclusivamente em `mobility-create-rpc` e proíbe `finalPrice` no broker operacional.
-- **Produção ainda está na Edge Function `mobility-rpc` v28**, que foi inspecionada antes deste corte e ainda contém o legado. O source limpo não conta como produção até o bundle ser promovido e relido.
-- O parâmetro SQL `p_final_price` continua apenas por compatibilidade até o broker limpo estar implantado; o backend atual ignora autoridade de preço vinda do cliente e deriva o terminal do estado monetário persistido.
+- **Produção está em `mobility-rpc` v32 ACTIVE, com `verify_jwt=true`.** O bundle implantado foi relido após o cutover e confirma ausência dos caminhos legados de criação/`finalPrice`, preservando MFA administrativo, dispatch, transições, presença/localização e rate-limit compartilhado fail-closed.
+- O parâmetro SQL `p_final_price` continua somente como compatibilidade de assinatura enquanto o canal PostgreSQL administrativo está indisponível; o broker não o envia e o backend não aceita preço terminal do cliente como autoridade.
 
-### Reputação, histórico e segurança
+### Reputação, histórico, PII e segurança
 
 - Passageiro sem avaliações aparece como `Sem avaliações`; defaults artificiais `5.0` foram removidos.
 - `driver_data.rating` e `driver_profiles.rating` não nascem mais com nota perfeita artificial.
@@ -62,6 +63,12 @@
 - PIN/refresh, chat, rating, trust feedback, ride report e funções safety inspecionadas fazem checagens internas de sessão, ownership/participação/admin e limites de payload.
 - `get_shared_ride_safety_data` só retorna share ativo, não expirado e corrida não-terminal; terminal revoga share.
 - Histórico terminal do motorista usa read model redigido (`DriverRideHistoryReadService`) em vez de carregar PII completa da corrida.
+- `RideRequestReadModel` comum não inclui telefone/nome de destinatário, notas, prova de entrega, metadata de falha ou descrição do pacote.
+- `useActiveRide` resolve o Profile ID ativo e consulta somente estados abertos, sem carregar histórico terminal para achar a corrida atual.
+- `useMobilidade` mantém seu `queryFn` sem `setState`; a reconciliação de `activeRide` ocorre em `useEffect`.
+- O diagnóstico de schema Motoboy usa `HEAD` para validar colunas sensíveis sem materializar PII real.
+- `MotoboyDeliveryActions` só renderiza PII entre `driver_accepted` e `in_delivery`; pré-aceite e estados terminais retornam `null`.
+- G137/G138/G140/G141 travam identidade por Profile ID, read projection bounded, consulta aberta e janela operacional de PII.
 
 ### GPS e minimização
 
@@ -72,12 +79,10 @@
 ## Bloqueadores antes de launch-ready
 
 - [ ] **Definir e aprovar a política comercial real por modalidade.** Até lá, pricing live continua fail-closed.
-- [ ] Promover o `mobility-rpc` limpo para produção e reler o bundle para provar ausência de `createRide/createDelivery/finalPrice`.
-- [ ] Depois do deploy limpo, remover da assinatura SQL o parâmetro de compatibilidade `p_final_price`.
+- [ ] Remover da assinatura SQL o parâmetro de compatibilidade `p_final_price` quando o canal PostgreSQL administrativo voltar.
 - [ ] Aplicar/verificar `20260916133000_minimize_idle_driver_gps.sql` assim que a conexão PostgreSQL administrativa voltar.
 - [ ] Executar o probe negativo rollback-only entre usuários distintos para PIN/trust/report; ele está versionado, mas a execução foi interrompida pelo mesmo timeout do Postgres.
 - [ ] Regenerar tipos Supabase a partir do schema real; não editar generated types manualmente.
-- [ ] Concluir revisão de retenção de telefone/endereço/provas de entrega em estados terminais.
 - [ ] Executar typecheck, lint, testes de mobilidade/pricing, build e E2E no mesmo SHA.
 - [ ] Provar concorrência/idempotência: dupla aceitação, cancelamento simultâneo, retry de RPC, reconnect realtime, quote duplicada e confirmação duplicada.
 - [ ] Obter pipeline de deploy verde. O status Vercel atual falha por `build-rate-limit`, que é blocker externo e não prova erro de source.
