@@ -13,6 +13,7 @@ import { logger } from "@/shared/utils/logger";
 import { RIDE_STATE, RideStateMachine, type RideState } from "./RideStateMachine";
 import { RideDispatchService } from "./RideDispatchService";
 import { MobilityRpcService } from "../services/MobilityRpcService";
+import { MobilityCreationService } from "../services/MobilityCreationService";
 import { RideOperationalContextReadService } from "../services/RideOperationalContextReadService";
 import type { FailedDeliveryMetadata, FailedDeliveryResolutionUpdate } from "../types/FailedDeliveryMetadata";
 import { OperationalVerificationService } from "../services/OperationalVerificationService";
@@ -73,7 +74,7 @@ export class RideOperationalService {
         };
       }
 
-      const creation = await MobilityRpcService.createRide(input);
+      const creation = await MobilityCreationService.createRide(input);
       if (creation.success !== true || !creation.ride_id) {
         throw new Error(
           `Ride creation was not applied${creation.reason ? `: ${creation.reason}` : ""}`,
