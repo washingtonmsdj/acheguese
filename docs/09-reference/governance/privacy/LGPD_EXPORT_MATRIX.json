@@ -533,6 +533,18 @@
       "notes": "Push credentials are secrets and must never be exported."
     },
     {
+      "section": "dpo_requests",
+      "sources": [
+        "public.privacy_subject_requests"
+      ],
+      "scope": "excluded",
+      "include": [],
+      "exclude": [
+        "all"
+      ],
+      "notes": "Excluded from self-service export until an explicit query includes only rows bound to the authenticated subject by validated user_id. Public requests with user_id=NULL must never be correlated by requester_email; those remain available through the controlled DPO case workflow."
+    },
+    {
       "section": "internal_logs",
       "sources": [
         "public.application_logs",
