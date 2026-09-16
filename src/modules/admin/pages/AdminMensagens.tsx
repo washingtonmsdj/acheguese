@@ -1,30 +1,13 @@
-import React, { useState } from "react";
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { ShieldAlert, Shield, Search, CircleStop, Eye, MessageSquare, User } from "lucide-react";
-import { useAdminGuard } from "@/modules/admin/hooks/useAdminGuard";
+import { useState } from "react";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { CircleStop, Eye, MessageSquare, Search, ShieldAlert } from "lucide-react";
 import { adminMessagingService } from "@/core/admin";
 import type { AdminConversationData } from "@/core/admin";
+import { AdminAccessDenied } from "@/modules/admin/components/AdminAccessDenied";
+import { useAdminGuard } from "@/modules/admin/hooks/useAdminGuard";
+import { Badge } from "@/shared/components/ui/badge";
 import { Button } from "@/shared/components/ui/button";
-import { Input } from "@/shared/components/ui/input";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/shared/components/ui/table";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/shared/components/ui/select";
-import {
-  Card,
-  CardContent,
-} from "@/shared/components/ui/card";
+import { Card, CardContent } from "@/shared/components/ui/card";
 import {
   Dialog,
   DialogContent,
@@ -33,26 +16,50 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/shared/components/ui/dialog";
-import { Badge } from "@/shared/components/ui/badge";
+import { Input } from "@/shared/components/ui/input";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/shared/components/ui/select";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/shared/components/ui/table";
 import { Textarea } from "@/shared/components/ui/textarea";
 import { toast } from "@/shared/components/ui/use-toast";
 import { useConfirmActionDialog } from "@/shared/hooks/useConfirmActionDialog";
 
-const STATUS_OPTIONS = ["active", "blocked"];
+const STATUS_OPTIONS = ["active", "blocked"] as const;
+const ALL_STATUSES = "all";
+
+function statusLabel(status: string): string {
+  if (status === "active") return "Ativa";
+  if (status === "blocked") return "Bloqueada";
+  if (status === "closed") return "Encerrada";
+  return status;
+}
 
 export default function AdminMensagens() {
   const { canModerate, isChecking } = useAdminGuard();
   const queryClient = useQueryClient();
   const { confirm, ConfirmDialog } = useConfirmActionDialog();
-  
+
   const [page, setPage] = useState(1);
   const [search, setSearch] = useState("");
-  const [statusFilter, setStatusFilter] = useState<string>("");
-  const [selectedConversation, setSelectedConversation] = useState<AdminConversationData | null>(null);
-  const [conversationToBlock, setConversationToBlock] = useState<AdminConversationData | null>(null);
+  const [statusFilter, setStatusFilter] = useState(ALL_STATUSES);
+  const [selectedConversation, setSelectedConversation] =
+    useState<AdminConversationData | null>(null);
+  const [conversationToBlock, setConversationToBlock] =
+    useState<AdminConversationData | null>(null);
   const [blockReason, setBlockReason] = useState("");
 
-  // Busca conversas usando AdminMessagingService
   const { data: conversationsData, isLoading, error } = useQuery({
     queryKey: ["admin-conversations", page, search, statusFilter],
     queryFn: () =>
@@ -60,11 +67,10 @@ export default function AdminMensagens() {
         page,
         limit: 20,
         search: search || undefined,
-        status: statusFilter || undefined,
+        status: statusFilter === ALL_STATUSES ? undefined : statusFilter,
       }),
   });
 
-  // Block conversation
   const blockMutation = useMutation({
     mutationFn: ({ id, reason }: { id: string; reason: string }) =>
       adminMessagingService.blockConversation(id, reason),
@@ -74,32 +80,36 @@ export default function AdminMensagens() {
       setConversationToBlock(null);
       setBlockReason("");
     },
-    onError: (error: unknown) => {
+    onError: (mutationError: unknown) => {
       toast({
         title: "Erro ao bloquear conversa",
-        description: error instanceof Error ? error.message : "Falha ao bloquear conversa",
+        description:
+          mutationError instanceof Error
+            ? mutationError.message
+            : "Falha ao bloquear conversa",
         variant: "destructive",
       });
     },
   });
 
-  // Unblock conversation
   const unblockMutation = useMutation({
     mutationFn: (id: string) => adminMessagingService.unblockConversation(id),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["admin-conversations"] });
       toast({ title: "Conversa desbloqueada com sucesso" });
     },
-    onError: (error: unknown) => {
+    onError: (mutationError: unknown) => {
       toast({
         title: "Erro ao desbloquear conversa",
-        description: error instanceof Error ? error.message : "Falha ao desbloquear conversa",
+        description:
+          mutationError instanceof Error
+            ? mutationError.message
+            : "Falha ao desbloquear conversa",
         variant: "destructive",
       });
     },
   });
 
-  // Close without destroying the moderation and audit trail.
   const closeMutation = useMutation({
     mutationFn: (id: string) => adminMessagingService.closeConversation(id),
     onSuccess: () => {
@@ -107,34 +117,26 @@ export default function AdminMensagens() {
       toast({ title: "Conversa encerrada com sucesso" });
       setSelectedConversation(null);
     },
-    onError: (error: unknown) => {
+    onError: (mutationError: unknown) => {
       toast({
         title: "Erro ao encerrar conversa",
-        description: error instanceof Error ? error.message : "Falha ao encerrar conversa",
+        description:
+          mutationError instanceof Error
+            ? mutationError.message
+            : "Falha ao encerrar conversa",
         variant: "destructive",
       });
     },
   });
 
-  // Validação de admin
   if (!isChecking && !canModerate) {
-    return (
-      <div className="min-h-screen bg-[#0A0F14] flex items-center justify-center p-4">
-        <div className="text-center">
-          <Shield className="h-16 w-16 text-red-400 mx-auto mb-4" />
-          <h1 className="text-2xl font-bold text-white mb-2">Acesso Negado</h1>
-          <p className="text-gray-400">
-            Apenas administradores podem acessar esta página.
-          </p>
-        </div>
-      </div>
-    );
+    return <AdminAccessDenied />;
   }
 
   const handleClose = async (conversation: AdminConversationData) => {
     const confirmed = await confirm({
       title: "Encerrar conversa",
-      description: `A conversa ${conversation.id} sera encerrada e preservada para auditoria.`,
+      description: `A conversa ${conversation.id} será encerrada e preservada para auditoria.`,
       confirmLabel: "Encerrar",
       variant: "destructive",
     });
@@ -146,7 +148,7 @@ export default function AdminMensagens() {
     const reason = blockReason.trim();
     if (!conversationToBlock || !reason) {
       toast({
-        title: "Motivo obrigatorio",
+        title: "Motivo obrigatório",
         description: "Informe o motivo antes de bloquear a conversa.",
         variant: "destructive",
       });
@@ -156,44 +158,54 @@ export default function AdminMensagens() {
     blockMutation.mutate({ id: conversationToBlock.id, reason });
   };
 
-  const formatDate = (dateString: string) => {
-    return new Date(dateString).toLocaleDateString('pt-BR');
-  };
+  const formatDate = (dateString: string) =>
+    new Date(dateString).toLocaleDateString("pt-BR");
 
   return (
-    <div className="min-h-screen bg-[#0A0F14] p-6">
-      <div className="max-w-7xl mx-auto">
+    <div className="min-h-screen bg-background p-4 text-foreground md:p-6">
+      <div className="mx-auto max-w-7xl">
         <div className="mb-8">
-          <h1 className="text-3xl font-bold text-white mb-2">Conversas</h1>
-          <p className="text-gray-400">
-            Modere conversas entre compradores e vendedores
+          <h1 className="mb-2 text-3xl font-bold text-foreground">Conversas</h1>
+          <p className="text-muted-foreground">
+            Modere conversas entre compradores e vendedores.
           </p>
         </div>
 
-        {/* Filters */}
-        <Card className="bg-[#121922] border-gray-800 mb-6">
+        <Card className="mb-6 border-border bg-card text-card-foreground">
           <CardContent className="p-4">
             <div className="flex flex-wrap gap-4">
-              <div className="flex-1 min-w-[200px]">
+              <div className="min-w-[200px] flex-1">
                 <div className="relative">
-                  <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
+                  <Search
+                    className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground"
+                    aria-hidden="true"
+                  />
                   <Input
                     placeholder="Buscar conversas..."
                     value={search}
-                    onChange={(e) => setSearch(e.target.value)}
-                    className="pl-10 bg-[#0A0F14] border-gray-700 text-white"
+                    onChange={(event) => {
+                      setSearch(event.target.value);
+                      setPage(1);
+                    }}
+                    className="border-input bg-background pl-10 text-foreground"
                   />
                 </div>
               </div>
-              <Select value={statusFilter} onValueChange={setStatusFilter}>
-                <SelectTrigger className="w-[180px] bg-[#0A0F14] border-gray-700 text-white">
+              <Select
+                value={statusFilter}
+                onValueChange={(value) => {
+                  setStatusFilter(value);
+                  setPage(1);
+                }}
+              >
+                <SelectTrigger className="w-[180px] border-input bg-background text-foreground">
                   <SelectValue placeholder="Status" />
                 </SelectTrigger>
-                <SelectContent className="bg-[#121922] border-gray-700">
-                  <SelectItem value="">Todos os status</SelectItem>
+                <SelectContent className="border-border bg-popover text-popover-foreground">
+                  <SelectItem value={ALL_STATUSES}>Todos os status</SelectItem>
                   {STATUS_OPTIONS.map((status) => (
                     <SelectItem key={status} value={status}>
-                      {status}
+                      {statusLabel(status)}
                     </SelectItem>
                   ))}
                 </SelectContent>
@@ -202,87 +214,81 @@ export default function AdminMensagens() {
           </CardContent>
         </Card>
 
-        {/* Table */}
-        <Card className="bg-[#121922] border-gray-800">
+        <Card className="border-border bg-card text-card-foreground">
           <CardContent className="p-0">
             {isLoading ? (
-              <div className="p-8 text-center text-gray-400">Carregando...</div>
+              <div className="p-8 text-center text-muted-foreground" role="status">
+                Carregando...
+              </div>
             ) : error ? (
-              <div className="p-8 text-center text-red-400">
+              <div className="p-8 text-center text-destructive" role="alert">
                 Erro ao carregar conversas
               </div>
             ) : !conversationsData?.data || conversationsData.data.length === 0 ? (
-              <div className="p-8 text-center text-gray-400">
+              <div className="p-8 text-center text-muted-foreground">
                 Nenhuma conversa encontrada
               </div>
             ) : (
               <>
                 <Table>
                   <TableHeader>
-                    <TableRow className="border-gray-700">
-                      <TableHead className="text-gray-300">ID</TableHead>
-                      <TableHead className="text-gray-300">Comprador</TableHead>
-                      <TableHead className="text-gray-300">Vendedor</TableHead>
-                      <TableHead className="text-gray-300">Classificado</TableHead>
-                      <TableHead className="text-gray-300">Mensagens</TableHead>
-                      <TableHead className="text-gray-300">Status</TableHead>
-                      <TableHead className="text-gray-300">Criado em</TableHead>
-                      <TableHead className="text-gray-300">Ações</TableHead>
+                    <TableRow className="border-border">
+                      <TableHead className="text-muted-foreground">ID</TableHead>
+                      <TableHead className="text-muted-foreground">Comprador</TableHead>
+                      <TableHead className="text-muted-foreground">Vendedor</TableHead>
+                      <TableHead className="text-muted-foreground">Classificado</TableHead>
+                      <TableHead className="text-muted-foreground">Mensagens</TableHead>
+                      <TableHead className="text-muted-foreground">Status</TableHead>
+                      <TableHead className="text-muted-foreground">Criado em</TableHead>
+                      <TableHead className="text-muted-foreground">Ações</TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
                     {conversationsData.data.map((conversation) => (
-                      <TableRow key={conversation.id} className="border-gray-700">
-                        <TableCell className="text-white font-medium">
+                      <TableRow key={conversation.id} className="border-border">
+                        <TableCell className="font-medium text-foreground">
                           {conversation.id.slice(0, 8)}...
                         </TableCell>
-                        <TableCell className="text-gray-300">
-                          <div className="flex items-center gap-2">
-                            {conversation.buyer_avatar && (
-                              <img
-                                src={conversation.buyer_avatar}
-                                alt=""
-                                className="w-6 h-6 rounded-full object-cover"
-                              />
-                            )}
-                            {conversation.buyer_name || "-"}
-                          </div>
+                        <TableCell className="text-muted-foreground">
+                          <ParticipantCell
+                            avatar={conversation.buyer_avatar}
+                            name={conversation.buyer_name}
+                          />
                         </TableCell>
-                        <TableCell className="text-gray-300">
-                          <div className="flex items-center gap-2">
-                            {conversation.seller_avatar && (
-                              <img
-                                src={conversation.seller_avatar}
-                                alt=""
-                                className="w-6 h-6 rounded-full object-cover"
-                              />
-                            )}
-                            {conversation.seller_name || "-"}
-                          </div>
+                        <TableCell className="text-muted-foreground">
+                          <ParticipantCell
+                            avatar={conversation.seller_avatar}
+                            name={conversation.seller_name}
+                          />
                         </TableCell>
-                        <TableCell className="text-gray-300">
+                        <TableCell className="text-muted-foreground">
                           {conversation.classified_title || "-"}
                         </TableCell>
-                        <TableCell className="text-gray-300">
+                        <TableCell className="text-muted-foreground">
                           <div className="flex items-center gap-1">
-                            <MessageSquare className="h-4 w-4" />
+                            <MessageSquare className="h-4 w-4" aria-hidden="true" />
                             {conversation.message_count || 0}
                           </div>
                         </TableCell>
                         <TableCell>
                           <Badge
                             variant={
-                              conversation.status === "active"
-                                ? "default"
-                                : conversation.status === "blocked"
+                              conversation.status === "blocked"
                                 ? "destructive"
-                                : "secondary"
+                                : conversation.status === "active"
+                                  ? "default"
+                                  : "secondary"
+                            }
+                            className={
+                              conversation.status === "active"
+                                ? "bg-success text-success-foreground hover:bg-success/90"
+                                : undefined
                             }
                           >
-                            {conversation.status}
+                            {statusLabel(conversation.status)}
                           </Badge>
                         </TableCell>
-                        <TableCell className="text-gray-300">
+                        <TableCell className="text-muted-foreground">
                           {formatDate(conversation.created_at)}
                         </TableCell>
                         <TableCell>
@@ -291,8 +297,9 @@ export default function AdminMensagens() {
                               size="sm"
                               variant="ghost"
                               onClick={() => setSelectedConversation(conversation)}
+                              aria-label={`Ver conversa ${conversation.id}`}
                             >
-                              <Eye className="h-4 w-4" />
+                              <Eye className="h-4 w-4" aria-hidden="true" />
                             </Button>
                             {conversation.status === "active" ? (
                               <Button
@@ -300,26 +307,38 @@ export default function AdminMensagens() {
                                 variant="ghost"
                                 onClick={() => setConversationToBlock(conversation)}
                                 disabled={blockMutation.isPending}
+                                aria-label={`Bloquear conversa ${conversation.id}`}
                               >
-                                <ShieldAlert className="h-4 w-4 text-red-400" />
+                                <ShieldAlert
+                                  className="h-4 w-4 text-destructive"
+                                  aria-hidden="true"
+                                />
                               </Button>
-                            ) : conversation.status === "blocked" && (
+                            ) : conversation.status === "blocked" ? (
                               <Button
                                 size="sm"
                                 variant="ghost"
                                 onClick={() => unblockMutation.mutate(conversation.id)}
                                 disabled={unblockMutation.isPending}
+                                aria-label={`Desbloquear conversa ${conversation.id}`}
                               >
-                                <ShieldAlert className="h-4 w-4 text-green-400" />
+                                <ShieldAlert
+                                  className="h-4 w-4 text-success"
+                                  aria-hidden="true"
+                                />
                               </Button>
-                            )}
+                            ) : null}
                             <Button
                               size="sm"
                               variant="ghost"
-                              onClick={() => handleClose(conversation)}
+                              onClick={() => void handleClose(conversation)}
                               disabled={closeMutation.isPending}
+                              aria-label={`Encerrar conversa ${conversation.id}`}
                             >
-                              <CircleStop className="h-4 w-4 text-red-400" />
+                              <CircleStop
+                                className="h-4 w-4 text-destructive"
+                                aria-hidden="true"
+                              />
                             </Button>
                           </div>
                         </TableCell>
@@ -328,27 +347,29 @@ export default function AdminMensagens() {
                   </TableBody>
                 </Table>
 
-                {/* Pagination */}
-                <div className="p-4 flex items-center justify-between border-t border-gray-700">
-                  <div className="text-sm text-gray-400">
-                    Página {conversationsData.page} de {conversationsData.totalPages} • Total: {conversationsData.total}
+                <div className="flex items-center justify-between border-t border-border p-4">
+                  <div className="text-sm text-muted-foreground">
+                    Página {conversationsData.page} de {conversationsData.totalPages} • Total:{" "}
+                    {conversationsData.total}
                   </div>
                   <div className="flex gap-2">
                     <Button
                       size="sm"
                       variant="outline"
-                      onClick={() => setPage((p) => Math.max(1, p - 1))}
+                      onClick={() => setPage((currentPage) => Math.max(1, currentPage - 1))}
                       disabled={page === 1}
-                      className="border-gray-700 text-white"
                     >
                       Anterior
                     </Button>
                     <Button
                       size="sm"
                       variant="outline"
-                      onClick={() => setPage((p) => Math.min(conversationsData.totalPages, p + 1))}
+                      onClick={() =>
+                        setPage((currentPage) =>
+                          Math.min(conversationsData.totalPages, currentPage + 1),
+                        )
+                      }
                       disabled={page === conversationsData.totalPages}
-                      className="border-gray-700 text-white"
                     >
                       Próxima
                     </Button>
@@ -359,65 +380,67 @@ export default function AdminMensagens() {
           </CardContent>
         </Card>
 
-        {/* Detail Dialog */}
-        <Dialog open={!!selectedConversation} onOpenChange={() => setSelectedConversation(null)}>
-          <DialogContent className="bg-[#121922] border-gray-800 text-white max-w-2xl">
+        <Dialog
+          open={Boolean(selectedConversation)}
+          onOpenChange={(open) => {
+            if (!open) setSelectedConversation(null);
+          }}
+        >
+          <DialogContent className="max-w-2xl border-border bg-popover text-popover-foreground">
             <DialogHeader>
-              <DialogTitle>Detalhes da Conversa</DialogTitle>
-              <DialogDescription className="text-gray-400">
+              <DialogTitle>Detalhes da conversa</DialogTitle>
+              <DialogDescription className="text-muted-foreground">
                 Informações completas da conversa
               </DialogDescription>
             </DialogHeader>
-            {selectedConversation && (
+            {selectedConversation ? (
               <div className="space-y-4">
-                <div className="grid grid-cols-2 gap-4">
-                  <div>
-                    <label className="text-sm font-medium text-gray-300">ID</label>
-                    <p className="text-white font-mono">{selectedConversation.id}</p>
-                  </div>
-                  <div>
-                    <label className="text-sm font-medium text-gray-300">Status</label>
-                    <p className="text-white">{selectedConversation.status}</p>
-                  </div>
-                  <div>
-                    <label className="text-sm font-medium text-gray-300">Comprador</label>
-                    <p className="text-white">{selectedConversation.buyer_name || "-"}</p>
-                  </div>
-                  <div>
-                    <label className="text-sm font-medium text-gray-300">Vendedor</label>
-                    <p className="text-white">{selectedConversation.seller_name || "-"}</p>
-                  </div>
-                  <div>
-                    <label className="text-sm font-medium text-gray-300">Classificado</label>
-                    <p className="text-white">{selectedConversation.classified_title || "-"}</p>
-                  </div>
-                  <div>
-                    <label className="text-sm font-medium text-gray-300">Mensagens</label>
-                    <p className="text-white">{selectedConversation.message_count || 0}</p>
-                  </div>
-                  <div>
-                    <label className="text-sm font-medium text-gray-300">Criado em</label>
-                    <p className="text-white">{formatDate(selectedConversation.created_at)}</p>
-                  </div>
-                  {selectedConversation.blocked_by && (
-                    <div>
-                      <label className="text-sm font-medium text-gray-300">Bloqueado por</label>
-                      <p className="text-white">{selectedConversation.blocked_by}</p>
-                    </div>
-                  )}
+                <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                  <ConversationDetail label="ID" value={selectedConversation.id} mono />
+                  <ConversationDetail
+                    label="Status"
+                    value={statusLabel(selectedConversation.status)}
+                  />
+                  <ConversationDetail
+                    label="Comprador"
+                    value={selectedConversation.buyer_name || "-"}
+                  />
+                  <ConversationDetail
+                    label="Vendedor"
+                    value={selectedConversation.seller_name || "-"}
+                  />
+                  <ConversationDetail
+                    label="Classificado"
+                    value={selectedConversation.classified_title || "-"}
+                  />
+                  <ConversationDetail
+                    label="Mensagens"
+                    value={String(selectedConversation.message_count || 0)}
+                  />
+                  <ConversationDetail
+                    label="Criado em"
+                    value={formatDate(selectedConversation.created_at)}
+                  />
+                  {selectedConversation.blocked_by ? (
+                    <ConversationDetail
+                      label="Bloqueado por"
+                      value={selectedConversation.blocked_by}
+                    />
+                  ) : null}
                 </div>
-                {selectedConversation.block_reason && (
-                  <div>
-                    <label className="text-sm font-medium text-gray-300">Motivo do Bloqueio</label>
-                    <p className="text-white">{selectedConversation.block_reason}</p>
-                  </div>
-                )}
+                {selectedConversation.block_reason ? (
+                  <ConversationDetail
+                    label="Motivo do bloqueio"
+                    value={selectedConversation.block_reason}
+                  />
+                ) : null}
               </div>
-            )}
+            ) : null}
           </DialogContent>
         </Dialog>
+
         <Dialog
-          open={!!conversationToBlock}
+          open={Boolean(conversationToBlock)}
           onOpenChange={(open) => {
             if (!open) {
               setConversationToBlock(null);
@@ -425,10 +448,10 @@ export default function AdminMensagens() {
             }
           }}
         >
-          <DialogContent className="bg-[#121922] border-gray-800 text-white">
+          <DialogContent className="border-border bg-popover text-popover-foreground">
             <DialogHeader>
               <DialogTitle>Bloquear conversa</DialogTitle>
-              <DialogDescription className="text-gray-400">
+              <DialogDescription className="text-muted-foreground">
                 Registre o motivo administrativo para auditoria.
               </DialogDescription>
             </DialogHeader>
@@ -436,7 +459,7 @@ export default function AdminMensagens() {
               value={blockReason}
               onChange={(event) => setBlockReason(event.target.value)}
               placeholder="Descreva o motivo do bloqueio..."
-              className="min-h-[120px] bg-[#0A0F14] border-gray-700 text-white"
+              className="min-h-[120px] border-input bg-background text-foreground"
             />
             <DialogFooter>
               <Button
@@ -445,11 +468,14 @@ export default function AdminMensagens() {
                   setConversationToBlock(null);
                   setBlockReason("");
                 }}
-                className="border-gray-700 text-white"
               >
                 Cancelar
               </Button>
-              <Button onClick={handleConfirmBlock} disabled={blockMutation.isPending}>
+              <Button
+                variant="destructive"
+                onClick={handleConfirmBlock}
+                disabled={blockMutation.isPending}
+              >
                 {blockMutation.isPending ? "Bloqueando..." : "Bloquear"}
               </Button>
             </DialogFooter>
@@ -457,6 +483,36 @@ export default function AdminMensagens() {
         </Dialog>
         <ConfirmDialog />
       </div>
+    </div>
+  );
+}
+
+function ParticipantCell({ avatar, name }: { avatar?: string | null; name?: string | null }) {
+  return (
+    <div className="flex items-center gap-2">
+      {avatar ? (
+        <img src={avatar} alt="" className="h-6 w-6 rounded-full object-cover" />
+      ) : null}
+      {name || "-"}
+    </div>
+  );
+}
+
+function ConversationDetail({
+  label,
+  value,
+  mono = false,
+}: {
+  label: string;
+  value: string;
+  mono?: boolean;
+}) {
+  return (
+    <div>
+      <p className="text-sm font-medium text-muted-foreground">{label}</p>
+      <p className={mono ? "break-all font-mono text-foreground" : "text-foreground"}>
+        {value}
+      </p>
     </div>
   );
 }
