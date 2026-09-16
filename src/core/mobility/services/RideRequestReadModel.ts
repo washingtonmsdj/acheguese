@@ -66,12 +66,14 @@ export const RIDE_REQUEST_READ_SELECT = [
 
 /**
  * Converts the bounded database projection into the public/runtime RideRequest
- * contract. Cancellation context is added at this bounded read boundary while
- * generated database types catch up with the schema migration.
+ * contract. The canonical adapter currently declares the full generated row,
+ * although this projection contains every field that adapter actually reads.
+ * Keep the unavoidable widening explicit at this single read boundary instead
+ * of fabricating unselected database fields.
  */
 export function toRideRequestReadModel(row: RideRequestReadRow): RideRequest {
   return {
-    ...toRideRequestContract(row as Tables<"ride_requests">),
+    ...toRideRequestContract(row as unknown as Tables<"ride_requests">),
     cancellation_reason: row.cancellation_reason,
   };
 }
