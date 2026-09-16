@@ -1,9 +1,5 @@
 import { forwardRef, lazy, Suspense } from "react";
-import {
-  loadMapLibreRuntime,
-  preloadMapLibreRuntime,
-  prewarmMapLibreWorkers,
-} from "../../runtime/loadMapLibreRuntime";
+import { loadMapLibreRuntime } from "../../runtime/loadMapLibreRuntime";
 import type {
   MapLibreAdapterHandle,
   MapLibreAdapterProps,
@@ -29,22 +25,6 @@ const loadPassiveAdapterRuntime = async () => {
 
 const LazyFullMapLibreRuntime = lazy(loadFullAdapterRuntime);
 const LazyPassiveMapLibreRuntime = lazy(loadPassiveAdapterRuntime);
-
-/** Aquece somente engine/CSS/worker. */
-export function preloadMapLibreAdapterRuntime(): Promise<void> {
-  return preloadMapLibreRuntime();
-}
-
-/**
- * Aquece engine + runtime React passivo + pool de workers. O prewarm é opt-in
- * e usado quando o mapa será montado imediatamente, como na entrada pública.
- */
-export function preloadPassiveMapLibreAdapterRuntime(): Promise<void> {
-  return Promise.all([
-    loadPassiveAdapterRuntime(),
-    prewarmMapLibreWorkers(),
-  ]).then(() => undefined);
-}
 
 function canUsePassiveRuntime(props: MapLibreAdapterProps): boolean {
   return (
