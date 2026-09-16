@@ -1,34 +1,37 @@
-import React, { useState, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
-import { useSessionContext } from "@/core/session";
-import { ChatWindow } from "./ChatWindow";
+import { AnimatePresence, motion } from "framer-motion";
 import {
-  MessageCircle,
-  Search,
-  Car,
-  MapPin,
-  Clock,
-  Phone,
-  ChevronRight,
   ArrowRight,
-  Star,
+  Car,
+  ChevronRight,
+  MessageCircle,
+  MapPin,
   Package,
-  CheckCircle2,
-  User,
+  Phone,
+  RefreshCw,
+  Search,
 } from "lucide-react";
-import { Input } from "@/shared/components/ui/input";
+import { useEffect, useMemo, useState } from "react";
+import { useNavigate } from "react-router-dom";
+
+import {
+  FILTER_TYPES,
+  RIDE_STATUS,
+  RIDE_STATUS_LABELS,
+} from "@/core/mobility/constants";
+import type { MobilityConversationSummary } from "@/core/mobility/services/mobility.ride-read-queries";
+import { getMobilityConversations } from "@/core/mobility/services/mobility.queries";
+import { profileService } from "@/core/profiles/services/ProfileService";
+import { useAppUrls } from "@/core/routing/hooks/useAppUrls";
+import { useSessionContext } from "@/core/session";
 import { Badge } from "@/shared/components/ui/badge";
 import { Button } from "@/shared/components/ui/button";
+import { Input } from "@/shared/components/ui/input";
 import { Skeleton } from "@/shared/components/ui/skeleton";
+import { USER_ROLE } from "@/shared/types/constants";
 import { cn } from "@/shared/utils/cn";
 import { formatBrl } from "@/shared/utils/currency";
-import { motion, AnimatePresence } from "framer-motion";
-import { RIDE_STATUS, USER_ROLE } from "@/shared/types/constants";
-import { FILTER_TYPES } from "@/core/mobility/constants";
 import { logger } from "@/shared/utils/logger";
-import { profileService } from "@/core/profiles/services/ProfileService";
-import { getMobilityConversations } from "@/core/mobility/services/mobility.queries";
-import type { MobilityConversationSummary } from "@/core/mobility/services/mobility.ride-read-queries";
+import { ChatWindow } from "./ChatWindow";
 
 interface RideChatPreview {
   id: string;
@@ -52,48 +55,93 @@ interface MobilityChatListProps {
 
 const EMPTY_CHATS: RideChatPreview[] = [];
 
-const statusConfig: Record<
-  string,
-  { label: string; color: string; bg: string }
-> = {
-  pending: {
-    label: "Aguardando",
-    color: "text-amber-400",
-    bg: "bg-amber-500/10",
-  },
-  accepted: { label: "Aceita", color: "text-cyan-400", bg: "bg-cyan-500/10" },
-  in_progress: {
-    label: "Em andamento",
-    color: "text-emerald-400",
-    bg: "bg-emerald-500/10",
-  },
-  completed: { label: "Finalizada", color: "text-gray-400", bg: "bg-white/5" },
-  cancelled: { label: "Cancelada", color: "text-red-400", bg: "bg-red-500/10" },
-};
+const ACTIVE_RIDE_STATUSES = new Set<string>([
+  RIDE_STATUS.PENDING,
+  RIDE_STATUS.REQUESTED,
+  RIDE_STATUS.SEARCHING_DRIVER,
+  RIDE_STATUS.DRIVER_ASSIGNED,
+  RIDE_STATUS.DRIVER_ACCEPTED,
+  RIDE_STATUS.DRIVER_ARRIVING,
+  RIDE_STATUS.DRIVER_ON_THE_WAY,
+  RIDE_STATUS.DRIVER_ARRIVED,
+  RIDE_STATUS.PASSENGER_BOARDED,
+  RIDE_STATUS.PASSENGER_ON_BOARD,
+  RIDE_STATUS.IN_PROGRESS,
+  RIDE_STATUS.PICKUP_CONFIRMED,
+  RIDE_STATUS.IN_DELIVERY,
+]);
+
+const CLOSED_RIDE_STATUSES = new Set<string>([
+  RIDE_STATUS.COMPLETED,
+  RIDE_STATUS.DELIVERED,
+  RIDE_STATUS.CANCELLED,
+  RIDE_STATUS.CANCELLED_BY_DRIVER,
+  RIDE_STATUS.CANCELLED_BY_PASSENGER,
+  RIDE_STATUS.EXPIRED,
+  RIDE_STATUS.FAILED,
+  RIDE_STATUS.FAILED_DELIVERY,
+]);
+
+function getStatusClasses(status: string): string {
+  if (status === RIDE_STATUS.COMPLETED || status === RIDE_STATUS.DELIVERED) {
+    return "bg-success/10 text-success";
+  }
+  if (
+    status === RIDE_STATUS.CANCELLED ||
+    status === RIDE_STATUS.CANCELLED_BY_DRIVER ||
+    status === RIDE_STATUS.CANCELLED_BY_PASSENGER ||
+    status === RIDE_STATUS.FAILED ||
+    status === RIDE_STATUS.FAILED_DELIVERY
+  ) {
+    return "bg-destructive/10 text-destructive";
+  }
+  if (
+    status === RIDE_STATUS.PENDING ||
+    status === RIDE_STATUS.REQUESTED ||
+    status === RIDE_STATUS.SEARCHING_DRIVER ||
+    status === RIDE_STATUS.EXPIRED
+  ) {
+    return "bg-warning/10 text-warning";
+  }
+  return "bg-category-mobility/10 text-category-mobility";
+}
+
+function getStatusLabel(status: string): string {
+  return RIDE_STATUS_LABELS[status] ?? "Status atualizado";
+}
 
 export function MobilityChatList({ role }: MobilityChatListProps) {
   const navigate = useNavigate();
+  const appUrls = useAppUrls();
   const { activeProfile } = useSessionContext();
   const [search, setSearch] = useState("");
-  const [filter, setFilter] = useState<"all" | "active" | "completed">(FILTER_TYPES.ALL);
+  const [filter, setFilter] = useState<"all" | "active" | "completed">(
+    FILTER_TYPES.ALL,
+  );
   const [loading, setLoading] = useState(true);
+  const [loadError, setLoadError] = useState<string | null>(null);
+  const [reloadKey, setReloadKey] = useState(0);
   const [conversations, setConversations] = useState<RideChatPreview[]>([]);
   const [selectedRideId, setSelectedRideId] = useState<string | null>(null);
 
-  // Buscar conversas reais do banco
   useEffect(() => {
-    if (!activeProfile) return;
+    if (!activeProfile) {
+      setConversations(EMPTY_CHATS);
+      setLoadError(null);
+      setLoading(false);
+      return;
+    }
+
+    let active = true;
 
     const loadConversations = async () => {
       try {
         setLoading(true);
+        setLoadError(null);
 
-        const summaries = (await getMobilityConversations()) as MobilityConversationSummary[];
-
-        if (summaries.length === 0) {
-          setConversations(EMPTY_CHATS);
-          return;
-        }
+        const summaries =
+          (await getMobilityConversations()) as MobilityConversationSummary[];
+        if (!active) return;
 
         const roleScoped = summaries.filter((conversation) =>
           role === USER_ROLE.DRIVER
@@ -125,330 +173,351 @@ export function MobilityChatList({ role }: MobilityChatListProps) {
                 conversation.last_message_at || conversation.updated_at,
               unread_count: Number(conversation.unread_count) || 0,
               ride_price:
-                conversation.final_price || conversation.suggested_price || 0,
+                conversation.final_price ?? conversation.suggested_price ?? 0,
             };
           }),
         );
 
-        setConversations(mapped);
-      } catch (error) {
-        logger.error("Erro:", error);
-        setConversations(EMPTY_CHATS);
+        if (active) setConversations(mapped);
+      } catch (conversationError) {
+        logger.error("[MobilityChatList] Erro ao carregar conversas:", conversationError);
+        if (active) {
+          setLoadError("Não foi possível carregar as conversas de Mobilidade.");
+        }
       } finally {
-        setLoading(false);
+        if (active) setLoading(false);
       }
     };
 
-    loadConversations();
-  }, [activeProfile, role]);
+    void loadConversations();
 
-  const filtered = conversations.filter((chat) => {
-    const matchSearch =
-      !search ||
-      chat.other_user_name.toLowerCase().includes(search.toLowerCase()) ||
-      chat.ride_origin.toLowerCase().includes(search.toLowerCase()) ||
-      chat.ride_destination.toLowerCase().includes(search.toLowerCase());
+    return () => {
+      active = false;
+    };
+  }, [activeProfile, reloadKey, role]);
 
-    const matchFilter =
-      (filter === FILTER_TYPES.ALL ||
-      (filter === FILTER_TYPES.ACTIVE &&
-        ([RIDE_STATUS.PENDING, RIDE_STATUS.DRIVER_ACCEPTED, RIDE_STATUS.IN_PROGRESS] as string[]).includes(
-          chat.ride_status,
-        )) ||
-      (filter === FILTER_TYPES.COMPLETED &&
-        ([RIDE_STATUS.COMPLETED, RIDE_STATUS.CANCELLED] as string[]).includes(chat.ride_status)));
+  const filtered = useMemo(
+    () =>
+      conversations.filter((chat) => {
+        const normalizedSearch = search.trim().toLowerCase();
+        const matchSearch =
+          !normalizedSearch ||
+          chat.other_user_name.toLowerCase().includes(normalizedSearch) ||
+          chat.ride_origin.toLowerCase().includes(normalizedSearch) ||
+          chat.ride_destination.toLowerCase().includes(normalizedSearch);
 
-    return matchSearch && matchFilter;
-  });
+        const matchFilter =
+          filter === FILTER_TYPES.ALL ||
+          (filter === FILTER_TYPES.ACTIVE &&
+            ACTIVE_RIDE_STATUSES.has(chat.ride_status)) ||
+          (filter === FILTER_TYPES.COMPLETED &&
+            CLOSED_RIDE_STATUSES.has(chat.ride_status));
 
-  const totalUnread = conversations.reduce((sum, c) => sum + c.unread_count, 0);
+        return matchSearch && matchFilter;
+      }),
+    [conversations, filter, search],
+  );
 
-  const handleOpenChat = (chat: RideChatPreview) => {
-    setSelectedRideId(chat.ride_id);
-  };
+  const totalUnread = conversations.reduce(
+    (sum, conversation) => sum + conversation.unread_count,
+    0,
+  );
+
+  const selectedConversation = useMemo(
+    () =>
+      conversations.find(
+        (conversation) => conversation.ride_id === selectedRideId,
+      ) ?? null,
+    [conversations, selectedRideId],
+  );
 
   return (
     <div className="space-y-4">
-      {/* Se há conversa selecionada, mostrar ChatWindow */}
-      {selectedRideId && (
-        <div className="fixed inset-0 z-50 bg-[#12181B] md:relative md:inset-auto md:rounded-2xl md:border md:border-white/10 md:overflow-hidden">
+      {selectedRideId && selectedConversation ? (
+        <div className="fixed inset-0 z-50 bg-background md:relative md:inset-auto md:overflow-hidden md:rounded-2xl md:border md:border-border">
           <ChatWindow
             rideId={selectedRideId}
-            otherUserName={
-              conversations.find((c) => c.ride_id === selectedRideId)
-                ?.other_user_name || "Usuário"
-            }
-            otherUserAvatar={
-              conversations.find((c) => c.ride_id === selectedRideId)
-                ?.other_user_avatar
-            }
+            otherUserName={selectedConversation.other_user_name}
+            otherUserAvatar={selectedConversation.other_user_avatar}
             rideInfo={{
-              origin:
-                conversations.find((c) => c.ride_id === selectedRideId)?.ride_origin ||
-                "",
-              destination:
-                conversations.find((c) => c.ride_id === selectedRideId)
-                  ?.ride_destination || "",
-              status:
-                conversations.find((c) => c.ride_id === selectedRideId)?.ride_status ||
-                "",
+              origin: selectedConversation.ride_origin,
+              destination: selectedConversation.ride_destination,
+              status: selectedConversation.ride_status,
             }}
             onBack={() => setSelectedRideId(null)}
           />
         </div>
-      )}
+      ) : null}
 
-      {/* Lista de conversas (ocultar quando chat aberto no mobile) */}
       <div className={cn(selectedRideId && "hidden md:block")}>
-        {/* Header with unread badge */}
-        <div className="flex items-center justify-between">
+        <div className="flex flex-wrap items-center justify-between gap-2">
           <div className="flex items-center gap-2">
-            <MessageCircle className="h-5 w-5 text-teal-400" />
-            <h3 className="text-sm font-bold text-white">
+            <MessageCircle
+              className="h-5 w-5 text-category-mobility"
+              aria-hidden="true"
+            />
+            <h3 className="text-sm font-bold text-foreground">
               {role === USER_ROLE.DRIVER
-                ? "Chat com Passageiros"
-                : "Chat com Motoristas"}
+                ? "Chat com passageiros"
+                : "Chat com motoristas"}
             </h3>
-            {totalUnread > 0 && (
-              <Badge className="bg-teal-500/30 text-teal-400 text-[0.6rem] px-1.5 h-5 rounded-full animate-pulse">
+            {totalUnread > 0 ? (
+              <Badge className="h-5 rounded-full bg-category-mobility/15 px-1.5 text-[0.6rem] text-category-mobility">
                 {totalUnread} nova{totalUnread > 1 ? "s" : ""}
               </Badge>
-            )}
+            ) : null}
           </div>
           <Button
             variant="ghost"
             size="sm"
-            onClick={() => navigate("/mensagens")}
-            className="text-gray-400 hover:text-white text-xs h-8"
+            onClick={() => navigate(appUrls.messages)}
+            className="h-8 text-xs text-muted-foreground"
           >
             Ver todas
-            <ChevronRight className="h-3.5 w-3.5 ml-1" />
+            <ChevronRight className="ml-1 h-3.5 w-3.5" aria-hidden="true" />
           </Button>
         </div>
 
-        {/* Filters */}
-        <div className="flex items-center gap-2">
+        <div className="mt-3 flex items-center gap-2 overflow-x-auto pb-1">
           {[
             { key: FILTER_TYPES.ALL, label: "Todas" },
             { key: FILTER_TYPES.ACTIVE, label: "Ativas" },
             { key: FILTER_TYPES.COMPLETED, label: "Finalizadas" },
-          ].map((f) => (
+          ].map((item) => (
             <button
-              key={f.key}
-              onClick={() => setFilter(f.key)}
+              key={item.key}
+              type="button"
+              aria-pressed={filter === item.key}
+              onClick={() => setFilter(item.key)}
               className={cn(
-                "px-3 py-1.5 rounded-xl text-xs font-semibold transition-all",
-                filter === f.key
-                  ? "bg-teal-500/20 text-teal-400 border border-teal-500/30"
-                  : "bg-white/5 text-gray-400 border border-white/5 hover:bg-white/10",
+                "shrink-0 rounded-xl border px-3 py-1.5 text-xs font-semibold transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring",
+                filter === item.key
+                  ? "border-category-mobility/30 bg-category-mobility/10 text-category-mobility"
+                  : "border-border bg-background text-muted-foreground hover:bg-muted/50 hover:text-foreground",
               )}
             >
-              {f.label}
+              {item.label}
             </button>
           ))}
         </div>
 
-        {/* Search */}
-        {conversations.length > 3 && (
-          <div className="relative">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-500" />
+        {conversations.length > 3 ? (
+          <div className="relative mt-3">
+            <Search
+              className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground"
+              aria-hidden="true"
+            />
             <Input
               placeholder="Buscar por nome ou endereço..."
               value={search}
-              onChange={(e) => setSearch(e.target.value)}
-              className="pl-9 h-10 text-sm rounded-xl bg-white/5 border-white/10 text-white placeholder:text-gray-500"
+              onChange={(event) => setSearch(event.target.value)}
+              className="h-10 rounded-xl pl-9 text-sm"
             />
           </div>
-        )}
+        ) : null}
 
-        {/* Chat list */}
-        {loading ? (
-          <div className="space-y-3">
-            {Array.from({ length: 3 }).map((_, i) => (
-              <div key={i} className="flex items-center gap-3 p-3">
-                <Skeleton className="h-12 w-12 rounded-xl bg-white/5" />
-                <div className="flex-1 space-y-2">
-                  <Skeleton className="h-4 w-32 bg-white/5" />
-                  <Skeleton className="h-3 w-48 bg-white/5" />
+        <div className="mt-3">
+          {loading ? (
+            <div className="space-y-3" aria-label="Carregando conversas">
+              {Array.from({ length: 3 }).map((_, index) => (
+                <div key={index} className="flex items-center gap-3 p-3">
+                  <Skeleton className="h-12 w-12 rounded-xl" />
+                  <div className="flex-1 space-y-2">
+                    <Skeleton className="h-4 w-32" />
+                    <Skeleton className="h-3 w-48" />
+                  </div>
                 </div>
-              </div>
-            ))}
-          </div>
-        ) : filtered.length === 0 ? (
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            className="flex flex-col items-center justify-center py-12 text-center"
-          >
-            <div className="w-16 h-16 rounded-2xl bg-white/5 flex items-center justify-center mb-4">
-              <MessageCircle className="h-8 w-8 text-gray-600" />
+              ))}
             </div>
-            <p className="text-sm font-bold text-white">Nenhuma conversa</p>
-            <p className="text-xs text-gray-500 mt-1 max-w-[220px]">
-              {role === USER_ROLE.DRIVER
-                ? "Suas conversas com passageiros aparecerão aqui quando aceitar corridas"
-                : "Suas conversas com motoristas aparecerão aqui quando solicitar viagens"}
-            </p>
-          </motion.div>
-        ) : (
-          <AnimatePresence>
-            <div className="space-y-2">
-              {filtered.map((chat, i) => {
-                const status =
-                  statusConfig[chat.ride_status] || statusConfig.pending;
-                const isActive = ([
-                  RIDE_STATUS.PENDING,
-                  RIDE_STATUS.DRIVER_ACCEPTED,
-                  RIDE_STATUS.IN_PROGRESS,
-                ] as string[]).includes(chat.ride_status);
+          ) : loadError ? (
+            <div className="rounded-2xl border border-destructive/30 bg-destructive/5 p-5 text-center">
+              <p className="text-sm font-semibold text-foreground">Conversas indisponíveis</p>
+              <p className="mt-1 text-xs text-muted-foreground">{loadError}</p>
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                className="mt-3"
+                onClick={() => setReloadKey((current) => current + 1)}
+              >
+                <RefreshCw className="mr-2 h-4 w-4" aria-hidden="true" />
+                Tentar novamente
+              </Button>
+            </div>
+          ) : filtered.length === 0 ? (
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              className="flex flex-col items-center justify-center py-12 text-center"
+            >
+              <div className="mb-4 flex h-16 w-16 items-center justify-center rounded-2xl bg-muted/50">
+                <MessageCircle
+                  className="h-8 w-8 text-muted-foreground"
+                  aria-hidden="true"
+                />
+              </div>
+              <p className="text-sm font-bold text-foreground">Nenhuma conversa</p>
+              <p className="mt-1 max-w-[220px] text-xs text-muted-foreground">
+                {role === USER_ROLE.DRIVER
+                  ? "Suas conversas com passageiros aparecerão aqui quando houver uma corrida vinculada."
+                  : "Suas conversas com motoristas aparecerão aqui quando houver uma viagem vinculada."}
+              </p>
+            </motion.div>
+          ) : (
+            <AnimatePresence>
+              <div className="space-y-2">
+                {filtered.map((chat, index) => {
+                  const isActive = ACTIVE_RIDE_STATUSES.has(chat.ride_status);
+                  const statusClasses = getStatusClasses(chat.ride_status);
 
-                return (
-                  <motion.div
-                    key={chat.id}
-                    initial={{ opacity: 0, x: -10 }}
-                    animate={{ opacity: 1, x: 0 }}
-                    transition={{ delay: i * 0.04 }}
-                    onClick={() => handleOpenChat(chat)}
-                    className={cn(
-                      "flex items-start gap-3 p-3 rounded-2xl cursor-pointer transition-all border",
-                      isActive
-                        ? "bg-white/[0.03] border-white/10 hover:bg-white/[0.06]"
-                        : "bg-white/[0.01] border-white/5 hover:bg-white/[0.04]",
-                      chat.unread_count > 0 &&
-                        "border-teal-500/20 bg-teal-500/[0.03]",
-                    )}
-                  >
-                    {/* Avatar */}
-                    <div className="relative shrink-0">
-                      <div
-                        className={cn(
-                          "w-12 h-12 rounded-xl flex items-center justify-center text-white text-sm font-bold",
-                          isActive
-                            ? "bg-gradient-to-br from-teal-500 to-cyan-500"
-                            : "bg-white/10",
-                        )}
-                      >
-                        {chat.other_user_avatar ? (
-                          <img
-                            src={chat.other_user_avatar}
-                            alt=""
-                            className="h-full w-full object-cover rounded-xl"
-                          />
-                        ) : (
-                          (chat.other_user_name ?? '?').charAt(0)
-                        )}
-                      </div>
-                      {/* Type badge */}
-                      <div
-                        className={cn(
-                          "absolute -bottom-1 -right-1 w-5 h-5 rounded-full flex items-center justify-center border-2 border-[#12181B]",
-                          chat.ride_type === "viagem"
-                            ? "bg-teal-500"
-                            : "bg-amber-500",
-                        )}
-                      >
-                        {chat.ride_type === "viagem" ? (
-                          <Car className="h-2.5 w-2.5 text-white" />
-                        ) : (
-                          <Package className="h-2.5 w-2.5 text-white" />
-                        )}
-                      </div>
-                      {/* Online indicator for active */}
-                      {chat.ride_status === RIDE_STATUS.IN_PROGRESS && (
-                        <div className="absolute -top-0.5 -right-0.5 w-3 h-3 rounded-full bg-emerald-400 border-2 border-[#12181B] animate-pulse" />
+                  return (
+                    <motion.div
+                      key={chat.id}
+                      role="button"
+                      tabIndex={0}
+                      aria-label={`Abrir conversa com ${chat.other_user_name}`}
+                      initial={{ opacity: 0, x: -10 }}
+                      animate={{ opacity: 1, x: 0 }}
+                      transition={{ delay: index * 0.04 }}
+                      onClick={() => setSelectedRideId(chat.ride_id)}
+                      onKeyDown={(event) => {
+                        if (event.key !== "Enter" && event.key !== " ") return;
+                        event.preventDefault();
+                        setSelectedRideId(chat.ride_id);
+                      }}
+                      className={cn(
+                        "flex cursor-pointer items-start gap-3 rounded-2xl border p-3 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring",
+                        isActive
+                          ? "border-category-mobility/20 bg-category-mobility/5 hover:bg-category-mobility/10"
+                          : "border-border bg-card hover:bg-muted/30",
+                        chat.unread_count > 0 && "border-category-mobility/30",
                       )}
-                    </div>
-
-                    {/* Content */}
-                    <div className="flex-1 min-w-0">
-                      <div className="flex items-center justify-between gap-2 mb-0.5">
-                        <p
+                    >
+                      <div className="relative shrink-0">
+                        <div
                           className={cn(
-                            "text-sm truncate",
-                            chat.unread_count > 0
-                              ? "font-bold text-white"
-                              : "font-medium text-gray-200",
+                            "flex h-12 w-12 items-center justify-center overflow-hidden rounded-xl text-sm font-bold",
+                            isActive
+                              ? "bg-category-mobility/15 text-category-mobility"
+                              : "bg-muted text-muted-foreground",
                           )}
                         >
-                          {chat.other_user_name}
-                        </p>
-                        <span className="text-[10px] text-gray-500 shrink-0">
-                          {getTimeLabel(chat.last_message_at)}
-                        </span>
-                      </div>
-
-                      {/* Route info */}
-                      <div className="flex items-center gap-1 mb-1">
-                        <MapPin className="h-2.5 w-2.5 text-gray-500 shrink-0" />
-                        <p className="flex items-center gap-1 text-[10px] text-gray-500 truncate">
-                          <span className="truncate">{chat.ride_origin}</span>
-                          <ArrowRight className="h-2.5 w-2.5 shrink-0" aria-hidden="true" />
-                          <span className="truncate">{chat.ride_destination}</span>
-                        </p>
-                      </div>
-
-                      {/* Last message + unread */}
-                      <div className="flex items-center justify-between gap-2">
-                        <p
-                          className={cn(
-                            "text-xs truncate",
-                            chat.unread_count > 0
-                              ? "text-gray-200 font-medium"
-                              : "text-gray-500",
-                          )}
-                        >
-                          {chat.last_message}
-                        </p>
-                        <div className="flex items-center gap-1.5 shrink-0">
-                          {chat.unread_count > 0 && (
-                            <span className="h-5 min-w-[20px] px-1.5 rounded-full bg-teal-500 text-white text-[10px] font-bold flex items-center justify-center">
-                              {chat.unread_count}
-                            </span>
+                          {chat.other_user_avatar ? (
+                            <img
+                              src={chat.other_user_avatar}
+                              alt={`Foto de ${chat.other_user_name}`}
+                              className="h-full w-full rounded-xl object-cover"
+                            />
+                          ) : (
+                            (chat.other_user_name || "?").charAt(0)
                           )}
                         </div>
+                        <div
+                          className={cn(
+                            "absolute -bottom-1 -right-1 flex h-5 w-5 items-center justify-center rounded-full border-2 border-background text-primary-foreground",
+                            chat.ride_type === "viagem"
+                              ? "bg-category-mobility"
+                              : "bg-warning",
+                          )}
+                        >
+                          {chat.ride_type === "viagem" ? (
+                            <Car className="h-2.5 w-2.5" aria-hidden="true" />
+                          ) : (
+                            <Package className="h-2.5 w-2.5" aria-hidden="true" />
+                          )}
+                        </div>
+                        {chat.ride_status === RIDE_STATUS.IN_PROGRESS ? (
+                          <div
+                            className="absolute -right-0.5 -top-0.5 h-3 w-3 animate-pulse rounded-full border-2 border-background bg-success"
+                            aria-hidden="true"
+                          />
+                        ) : null}
                       </div>
-                    </div>
 
-                    {/* Right side — status + price */}
-                    <div className="flex flex-col items-end gap-1.5 shrink-0">
-                      <Badge
-                        className={cn(
-                          "text-[9px] px-1.5 py-0.5 rounded-lg border-0",
-                          status.bg,
-                          status.color,
-                        )}
-                      >
-                        {status.label}
-                      </Badge>
-                      <span className="text-[11px] font-semibold text-emerald-400">
-                        {formatBrl(chat.ride_price)}
-                      </span>
-                    </div>
-                  </motion.div>
-                );
-              })}
-            </div>
-          </AnimatePresence>
-        )}
+                      <div className="min-w-0 flex-1">
+                        <div className="mb-0.5 flex items-center justify-between gap-2">
+                          <p
+                            className={cn(
+                              "truncate text-sm text-foreground",
+                              chat.unread_count > 0 ? "font-bold" : "font-medium",
+                            )}
+                          >
+                            {chat.other_user_name}
+                          </p>
+                          <span className="shrink-0 text-[10px] text-muted-foreground">
+                            {getTimeLabel(chat.last_message_at)}
+                          </span>
+                        </div>
 
-        {/* Quick action */}
-        {filtered.some((c) => c.ride_status === RIDE_STATUS.IN_PROGRESS) && (
-          <div className="rounded-2xl border border-teal-500/20 bg-teal-500/5 p-3 flex items-center gap-3">
-            <div className="w-9 h-9 rounded-xl bg-teal-500/20 flex items-center justify-center shrink-0">
-              <Phone className="h-4 w-4 text-teal-400" />
+                        <div className="mb-1 flex items-center gap-1 text-muted-foreground">
+                          <MapPin className="h-2.5 w-2.5 shrink-0" aria-hidden="true" />
+                          <p className="flex min-w-0 items-center gap-1 truncate text-[10px]">
+                            <span className="truncate">{chat.ride_origin}</span>
+                            <ArrowRight className="h-2.5 w-2.5 shrink-0" aria-hidden="true" />
+                            <span className="truncate">{chat.ride_destination}</span>
+                          </p>
+                        </div>
+
+                        <div className="flex items-center justify-between gap-2">
+                          <p
+                            className={cn(
+                              "truncate text-xs",
+                              chat.unread_count > 0
+                                ? "font-medium text-foreground"
+                                : "text-muted-foreground",
+                            )}
+                          >
+                            {chat.last_message}
+                          </p>
+                          {chat.unread_count > 0 ? (
+                            <span className="flex h-5 min-w-[20px] shrink-0 items-center justify-center rounded-full bg-category-mobility px-1.5 text-[10px] font-bold text-category-mobility-foreground">
+                              {chat.unread_count}
+                            </span>
+                          ) : null}
+                        </div>
+                      </div>
+
+                      <div className="flex shrink-0 flex-col items-end gap-1.5">
+                        <Badge
+                          className={cn(
+                            "rounded-lg border-0 px-1.5 py-0.5 text-[9px]",
+                            statusClasses,
+                          )}
+                        >
+                          {getStatusLabel(chat.ride_status)}
+                        </Badge>
+                        <span className="text-[11px] font-semibold text-success">
+                          {formatBrl(chat.ride_price)}
+                        </span>
+                      </div>
+                    </motion.div>
+                  );
+                })}
+              </div>
+            </AnimatePresence>
+          )}
+        </div>
+
+        {filtered.some((chat) => chat.ride_status === RIDE_STATUS.IN_PROGRESS) ? (
+          <div className="mt-3 flex items-center gap-3 rounded-2xl border border-category-mobility/20 bg-category-mobility/5 p-3">
+            <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-category-mobility/15">
+              <Phone
+                className="h-4 w-4 text-category-mobility"
+                aria-hidden="true"
+              />
             </div>
-            <div className="flex-1 min-w-0">
-              <p className="text-xs font-semibold text-teal-400">
+            <div className="min-w-0 flex-1">
+              <p className="text-xs font-semibold text-category-mobility">
                 Corrida em andamento
               </p>
-              <p className="text-[10px] text-gray-400">
+              <p className="text-[10px] text-muted-foreground">
                 {role === USER_ROLE.DRIVER
-                  ? "Comunique-se com seu passageiro em tempo real"
-                  : "Acompanhe e converse com seu motorista"}
+                  ? "Use a conversa vinculada para falar com o passageiro."
+                  : "Use a conversa vinculada para falar com o motorista."}
               </p>
             </div>
           </div>
-        )}
+        ) : null}
       </div>
     </div>
   );
@@ -456,8 +525,10 @@ export function MobilityChatList({ role }: MobilityChatListProps) {
 
 function getTimeLabel(dateStr: string): string {
   const date = new Date(dateStr);
+  if (Number.isNaN(date.getTime())) return "";
+
   const now = new Date();
-  const diffMs = now.getTime() - date.getTime();
+  const diffMs = Math.max(0, now.getTime() - date.getTime());
   const diffMin = Math.floor(diffMs / 60000);
   if (diffMin < 1) return "Agora";
   if (diffMin < 60) return `${diffMin}min`;
