@@ -8,13 +8,21 @@
  * - persisted pricing rules are authoritative;
  * - historical fallback rules are never customer pricing;
  * - provisional/unapproved rules may be exercised in development, but production
- *   refuses to turn them into a customer-facing price.
+ *   refuses to turn them into a customer-facing price;
+ * - local hardcoded peak-hour windows/multipliers are disabled. Peak pricing may
+ *   only return after schedule + multiplier evaluation is owned by the canonical
+ *   persisted/server-side pricing contract.
  */
 
 import { PricingService } from './services/PricingService';
 import type { PricingMode, PricingRule } from './types';
 
 const rawPricingService = PricingService.getInstance();
+
+// PricingService still contains historical local peak-hour logic. Do not let the
+// canonical runtime apply it while commercial policy is provisional. This is a
+// fail-closed compatibility setting, not a second pricing owner.
+rawPricingService.configure({ enablePeakHours: false });
 
 function isCommerciallyApproved(rule: PricingRule): boolean {
   return rule.metadata?.commercial_status === 'approved';
