@@ -7,6 +7,10 @@ const service = readFileSync(
   join(root, "src/core/auth/services/AuthIdentityService.ts"),
   "utf8",
 );
+const sessionService = readFileSync(
+  join(root, "src/core/session/services/SessionService.ts"),
+  "utf8",
+);
 const hook = readFileSync(
   join(root, "src/core/auth/hooks/useLinkedAuthProviders.ts"),
   "utf8",
@@ -17,13 +21,16 @@ const securityPage = readFileSync(
 );
 
 describe("linked auth provider authority", () => {
-  it("requires an authenticated authority before interpreting linked identities", () => {
-    expect(service).toContain("supabase.auth.getUser()");
-    expect(service).toContain("if (!data.user)");
+  it("requires a server-verified session authority before interpreting linked identities", () => {
+    expect(service).toContain("SessionService.getVerifiedAuthUser()");
+    expect(service).toContain("if (!user)");
     expect(service).toContain(
       'throw new Error("Authenticated user unavailable while reading linked providers")',
     );
-    expect(service).toContain("data.user.identities");
+    expect(service).toContain("user.identities");
+    expect(service).not.toContain("supabase.auth.");
+    expect(sessionService).toContain("static async getVerifiedAuthUser");
+    expect(sessionService).toContain("supabase.auth.getUser()");
   });
 
   it("keeps provider linkage unresolved while loading or after an authority failure", () => {
