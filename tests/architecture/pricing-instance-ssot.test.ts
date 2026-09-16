@@ -60,13 +60,19 @@ describe("pricing instance SSOT", () => {
     expect(hooksBarrel).not.toContain("useQuickPriceEstimate");
   });
 
-  it("keeps historical local fare estimators isolated from application runtime", () => {
-    const pricingImplementation = path.resolve(
-      PROJECT_ROOT,
-      "src/core/pricing/services/PricingService.ts",
-    );
+  it("physically removes the historical local fare engine", () => {
+    const pricing = read("src/core/pricing/services/PricingService.ts");
+
+    expect(pricing).not.toContain("calculateEstimate(");
+    expect(pricing).not.toContain("calculateQuickEstimate(");
+    expect(pricing).not.toContain("getFallbackRule");
+    expect(pricing).not.toContain("AVERAGE_SPEED_KMH");
+    expect(pricing).not.toMatch(/fallback-(?:ride|delivery|mototaxi|motoboy|custom)/);
+    expect(pricing).not.toMatch(/hour\s*>=\s*(?:7|17|22)/);
+  });
+
+  it("keeps application runtime free of local fare calculation calls", () => {
     const violations = collectRuntimeFiles(SRC_ROOT)
-      .filter((file) => file !== pricingImplementation)
       .filter((file) => {
         const source = fs.readFileSync(file, "utf8");
         return /\.calculate(?:Quick)?Estimate\s*\(/.test(source);
