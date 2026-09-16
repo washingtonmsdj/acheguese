@@ -46,7 +46,6 @@ export {
 
 export {
   isRideActive,
-  calculateEstimatedFare,
   calculateDistanceKm,
   formatDuration,
   formatPrice,
@@ -145,7 +144,6 @@ export class MobilityFacade {
   static updateDriverOnlineStatus = MobilityMutations.updateDriverOnlineStatus;
   static checkSuspensionExpiry = MobilityMutations.checkSuspensionExpiry;
   static isRideActive = MobilityHelpers.isRideActive;
-  static calculateEstimatedFare = MobilityHelpers.calculateEstimatedFare;
   static calculateDistanceKm = MobilityHelpers.calculateDistanceKm;
   static formatDuration = MobilityHelpers.formatDuration;
   static formatPrice = MobilityHelpers.formatPrice;
