@@ -144,6 +144,7 @@ export function isTransientSitemapSourceError(error: unknown): boolean {
     message.includes('bad gateway') ||
     message.includes('too many requests') ||
     message.includes('request timeout') ||
+    message.includes('statement timeout') ||
     message.includes('origin is unreachable') ||
     message.includes('web server is down') ||
     message.includes('fetch failed') ||
