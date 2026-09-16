@@ -1,39 +1,39 @@
 /**
- * MotoboyDeliveryActions - acoes do motoboy durante a entrega.
+ * Ações do motoboy durante uma entrega já aceita.
  *
- * Exibido no dashboard do motorista quando ride_mode = 'motoboy'.
- * Controla confirmar coleta, iniciar entrega, confirmar entrega e registrar falha.
+ * As transições e a verificação operacional permanecem server-owned. Este
+ * componente apenas coleta prova, PIN e motivo de falha e aciona os commands.
  */
 
 import { useCallback, useEffect, useState } from "react";
+import {
+  CheckCircle2,
+  Hash,
+  Loader2,
+  MapPin,
+  Package,
+  Phone,
+  RotateCcw,
+  ShieldAlert,
+  ShieldCheck,
+  Truck,
+  User,
+  XCircle,
+} from "lucide-react";
+import { RIDE_STATUS } from "@/core/mobility/constants";
+import type { DeliveryProof } from "@/core/mobility/delivery/proof-of-delivery/types";
+import { OperationalVerificationService } from "@/core/mobility/services/OperationalVerificationService";
 import { Button } from "@/shared/components/ui/button";
-import { Textarea } from "@/shared/components/ui/textarea";
-import { Input } from "@/shared/components/ui/input";
-import { Label } from "@/shared/components/ui/label";
 import {
   Dialog,
   DialogContent,
   DialogHeader,
   DialogTitle,
 } from "@/shared/components/ui/dialog";
+import { Input } from "@/shared/components/ui/input";
+import { Label } from "@/shared/components/ui/label";
 import { RadioGroup, RadioGroupItem } from "@/shared/components/ui/radio-group";
-import {
-  Package,
-  CheckCircle2,
-  Truck,
-  XCircle,
-  Hash,
-  MapPin,
-  User,
-  Phone,
-  Loader2,
-  ShieldCheck,
-  ShieldAlert,
-  RotateCcw,
-} from "lucide-react";
-import { RIDE_STATUS } from "@/core/mobility/constants";
-import type { DeliveryProof } from "@/core/mobility/delivery/proof-of-delivery/types";
-import { OperationalVerificationService } from "@/core/mobility/services/OperationalVerificationService";
+import { Textarea } from "@/shared/components/ui/textarea";
 import { buildTelUrl } from "@/shared/utils/contactLinks";
 
 interface MotoboyDeliveryActionsProps {
@@ -67,12 +67,12 @@ interface MotoboyDeliveryActionsProps {
 }
 
 const FAIL_REASON_OPTIONS: Array<{ value: string; label: string }> = [
-  { value: "recipient_unavailable", label: "Destinatario ausente" },
-  { value: "address_not_found", label: "Endereco nao encontrado" },
-  { value: "address_inaccessible", label: "Endereco inacessivel" },
+  { value: "recipient_unavailable", label: "Destinatário ausente" },
+  { value: "address_not_found", label: "Endereço não encontrado" },
+  { value: "address_inaccessible", label: "Endereço inacessível" },
   { value: "package_damaged", label: "Pacote danificado" },
-  { value: "safety_issue", label: "Risco de seguranca" },
-  { value: "vehicle_issue", label: "Problema no veiculo" },
+  { value: "safety_issue", label: "Risco de segurança" },
+  { value: "vehicle_issue", label: "Problema no veículo" },
   { value: "other", label: "Outro motivo" },
 ];
 
@@ -130,7 +130,7 @@ export function MotoboyDeliveryActions({
         status: "error",
         message:
           result.error ||
-          "Nao foi possivel validar o protocolo de seguranca da entrega.",
+          "Não foi possível validar o protocolo de segurança da entrega.",
       });
       return;
     }
@@ -165,17 +165,31 @@ export function MotoboyDeliveryActions({
     return null;
   }
 
+  const resetProofForm = () => {
+    setProofReference("");
+    setProofObservation("");
+    setDeliveryPin("");
+  };
+
+  const resetFailForm = () => {
+    setFailReasonCode("");
+    setFailReasonNotes("");
+  };
+
   const handleProofDialogChange = (open: boolean) => {
     if (isLoading) return;
     setProofDialogOpen(open);
     if (open) {
       void refreshVerificationState();
+    } else {
+      resetProofForm();
     }
   };
 
   const handleFailDialogChange = (open: boolean) => {
     if (isLoading) return;
     setFailDialogOpen(open);
+    if (!open) resetFailForm();
   };
 
   const runAction = async (action: () => Promise<void>) => {
@@ -217,141 +231,157 @@ export function MotoboyDeliveryActions({
       }
 
       setProofDialogOpen(false);
-      setProofReference("");
-      setProofObservation("");
-      setDeliveryPin("");
+      resetProofForm();
     } finally {
       setIsLoading(false);
     }
   };
 
   const handleFailDelivery = async () => {
-    const reason = failReasonCode === "other" ? failReasonNotes.trim() : failReasonCode;
+    const reason =
+      failReasonCode === "other" ? failReasonNotes.trim() : failReasonCode;
     if (!reason.trim()) return;
 
     await runAction(async () => {
       await onFailDelivery(ride.id, driverProfileId, reason);
       setFailDialogOpen(false);
-      setFailReasonCode("");
-      setFailReasonNotes("");
+      resetFailForm();
     });
   };
 
   return (
     <div className="space-y-4">
-      <div className="p-4 rounded-xl bg-card border border-border space-y-3">
-        <div className="flex items-center gap-2 text-sm font-semibold text-foreground">
-          <Package className="h-4 w-4 text-primary" />
-          Entrega Motoboy
+      <section className="space-y-3 rounded-xl border bg-card p-4 text-card-foreground">
+        <div className="flex items-center gap-2 text-sm font-semibold">
+          <Package className="h-4 w-4 text-category-mobility" aria-hidden="true" />
+          Entrega motoboy
         </div>
 
-        {ride.recipient_name && (
+        {ride.recipient_name ? (
           <div className="flex items-center gap-2 text-sm">
-            <User className="h-4 w-4 text-muted-foreground" />
-            <span className="text-muted-foreground">Destinatario:</span>
+            <User className="h-4 w-4 text-muted-foreground" aria-hidden="true" />
+            <span className="text-muted-foreground">Destinatário:</span>
             <span className="font-medium">{ride.recipient_name}</span>
           </div>
-        )}
+        ) : null}
 
-        {ride.recipient_phone && (
+        {ride.recipient_phone ? (
           <div className="flex items-center gap-2 text-sm">
-            <Phone className="h-4 w-4 text-muted-foreground" />
+            <Phone className="h-4 w-4 text-muted-foreground" aria-hidden="true" />
             <a
               href={buildTelUrl(ride.recipient_phone) ?? undefined}
-              className="text-primary font-medium"
+              className="font-medium text-primary underline-offset-4 hover:underline"
             >
               {ride.recipient_phone}
             </a>
           </div>
-        )}
+        ) : null}
 
-        {ride.package_description && (
+        {ride.package_description ? (
           <div className="flex items-start gap-2 text-sm">
-            <Package className="h-4 w-4 text-muted-foreground mt-0.5" />
+            <Package
+              className="mt-0.5 h-4 w-4 text-muted-foreground"
+              aria-hidden="true"
+            />
             <span className="text-muted-foreground">Pacote:</span>
             <span>{ride.package_description}</span>
           </div>
-        )}
+        ) : null}
 
-        {ride.delivery_notes && (
-          <div className="p-2 rounded-lg bg-yellow-500/10 border border-yellow-500/20 text-sm text-yellow-700 dark:text-yellow-400">
+        {ride.delivery_notes ? (
+          <div className="rounded-lg border border-warning/25 bg-warning/10 p-2 text-sm text-warning">
             {ride.delivery_notes}
           </div>
-        )}
+        ) : null}
 
-        {ride.destination && (
+        {ride.destination ? (
           <div className="flex items-start gap-2 text-sm">
-            <MapPin className="h-4 w-4 text-red-500 mt-0.5" />
+            <MapPin
+              className="mt-0.5 h-4 w-4 text-destructive"
+              aria-hidden="true"
+            />
             <span>{ride.destination}</span>
           </div>
-        )}
-      </div>
+        ) : null}
+      </section>
 
-      {ride.status === RIDE_STATUS.DRIVER_ACCEPTED && (
+      {ride.status === RIDE_STATUS.DRIVER_ACCEPTED ? (
         <Button
+          type="button"
           className="w-full"
-          onClick={() => runAction(() => onGoToPickup(ride.id, driverProfileId))}
+          onClick={() =>
+            void runAction(() => onGoToPickup(ride.id, driverProfileId))
+          }
           disabled={isLoading}
         >
-          <Truck className="h-4 w-4 mr-2" />
+          <Truck className="mr-2 h-4 w-4" aria-hidden="true" />
           Ir para coleta
         </Button>
-      )}
+      ) : null}
 
-      {ride.status === RIDE_STATUS.DRIVER_ARRIVING && (
+      {ride.status === RIDE_STATUS.DRIVER_ARRIVING ? (
         <Button
+          type="button"
           className="w-full"
-          onClick={() => runAction(() => onConfirmPickup(ride.id, driverProfileId))}
+          onClick={() =>
+            void runAction(() => onConfirmPickup(ride.id, driverProfileId))
+          }
           disabled={isLoading}
         >
-          <CheckCircle2 className="h-4 w-4 mr-2" />
+          <CheckCircle2 className="mr-2 h-4 w-4" aria-hidden="true" />
           Confirmar coleta
         </Button>
-      )}
+      ) : null}
 
-      {ride.status === RIDE_STATUS.PICKUP_CONFIRMED && (
+      {ride.status === RIDE_STATUS.PICKUP_CONFIRMED ? (
         <div className="flex flex-col gap-3 sm:flex-row">
           <Button
+            type="button"
             className="flex-1"
-            onClick={() => runAction(() => onStartDelivery(ride.id, driverProfileId))}
+            onClick={() =>
+              void runAction(() => onStartDelivery(ride.id, driverProfileId))
+            }
             disabled={isLoading}
           >
-            <Truck className="h-4 w-4 mr-2" />
+            <Truck className="mr-2 h-4 w-4" aria-hidden="true" />
             Iniciar entrega
           </Button>
           <Button
+            type="button"
             variant="destructive"
             className="flex-1"
             onClick={() => setFailDialogOpen(true)}
             disabled={isLoading}
           >
-            <XCircle className="h-4 w-4 mr-2" />
+            <XCircle className="mr-2 h-4 w-4" aria-hidden="true" />
             Registrar falha
           </Button>
         </div>
-      )}
+      ) : null}
 
-      {ride.status === RIDE_STATUS.IN_DELIVERY && (
+      {ride.status === RIDE_STATUS.IN_DELIVERY ? (
         <div className="flex flex-col gap-3 sm:flex-row">
           <Button
+            type="button"
             className="flex-1"
             onClick={() => handleProofDialogChange(true)}
             disabled={isLoading}
           >
-            <CheckCircle2 className="h-4 w-4 mr-2" />
+            <CheckCircle2 className="mr-2 h-4 w-4" aria-hidden="true" />
             Entregue
           </Button>
           <Button
+            type="button"
             variant="destructive"
             className="flex-1"
             onClick={() => setFailDialogOpen(true)}
             disabled={isLoading}
           >
-            <XCircle className="h-4 w-4 mr-2" />
+            <XCircle className="mr-2 h-4 w-4" aria-hidden="true" />
             Registrar falha
           </Button>
         </div>
-      )}
+      ) : null}
 
       <Dialog open={proofDialogOpen} onOpenChange={handleProofDialogChange}>
         <DialogContent>
@@ -359,19 +389,20 @@ export function MotoboyDeliveryActions({
             <DialogTitle>Confirmar entrega</DialogTitle>
           </DialogHeader>
           <div className="space-y-4 pt-2">
-            {verificationState.status === "loading" && (
-              <div className="flex items-center gap-2 rounded-lg border border-border bg-muted/40 p-3 text-sm text-muted-foreground">
-                <Loader2 className="h-4 w-4 animate-spin" />
-                Validando protocolo de seguranca...
+            {verificationState.status === "loading" ? (
+              <div className="flex items-center gap-2 rounded-lg border bg-muted/40 p-3 text-sm text-muted-foreground">
+                <Loader2 className="h-4 w-4 animate-spin" aria-hidden="true" />
+                Validando protocolo de segurança...
               </div>
-            )}
+            ) : null}
 
-            {verificationState.status === "error" && (
-              <div className="rounded-lg border border-destructive/30 bg-destructive/10 p-3 space-y-2">
+            {verificationState.status === "error" ? (
+              <div className="space-y-2 rounded-lg border border-destructive/30 bg-destructive/10 p-3">
                 <div className="flex items-start gap-2 text-sm text-destructive">
-                  <ShieldAlert className="h-4 w-4 mt-0.5" />
+                  <ShieldAlert className="mt-0.5 h-4 w-4" aria-hidden="true" />
                   <span>
-                    Nao e seguro concluir a entrega enquanto o protocolo de verificacao estiver indisponivel.
+                    Não é seguro concluir a entrega enquanto o protocolo de
+                    verificação estiver indisponível.
                   </span>
                 </div>
                 <Button
@@ -381,17 +412,17 @@ export function MotoboyDeliveryActions({
                   onClick={() => void refreshVerificationState()}
                   disabled={isLoading}
                 >
-                  <RotateCcw className="h-4 w-4 mr-2" />
+                  <RotateCcw className="mr-2 h-4 w-4" aria-hidden="true" />
                   Tentar novamente
                 </Button>
               </div>
-            )}
+            ) : null}
 
-            {verificationState.status === "required" && (
-              <div className="rounded-lg border border-primary/20 bg-primary/5 p-3 space-y-2">
+            {verificationState.status === "required" ? (
+              <div className="space-y-2 rounded-lg border border-info/25 bg-info/10 p-3">
                 <Label htmlFor="deliveryPin" className="flex items-center gap-2">
-                  <ShieldCheck className="h-4 w-4" />
-                  PIN operacional de 4 digitos
+                  <ShieldCheck className="h-4 w-4 text-info" aria-hidden="true" />
+                  PIN operacional de 4 dígitos
                 </Label>
                 <Input
                   id="deliveryPin"
@@ -407,25 +438,26 @@ export function MotoboyDeliveryActions({
                   placeholder="0000"
                 />
                 <p className="text-xs text-muted-foreground">
-                  Use somente o PIN operacional exibido ao solicitante. Ele e validado no servidor e controla tentativas.
+                  Use somente o PIN operacional exibido ao solicitante. Ele é
+                  validado no servidor e controla tentativas.
                   {verificationState.attemptsRemaining !== undefined
                     ? ` Tentativas restantes: ${verificationState.attemptsRemaining}.`
                     : ""}
                 </p>
               </div>
-            )}
+            ) : null}
 
-            {verificationState.status === "verified" && (
-              <div className="flex items-center gap-2 rounded-lg border border-primary/20 bg-primary/5 p-3 text-sm">
-                <ShieldCheck className="h-4 w-4 text-primary" />
-                PIN operacional ja validado para esta entrega.
+            {verificationState.status === "verified" ? (
+              <div className="flex items-center gap-2 rounded-lg border border-success/25 bg-success/10 p-3 text-sm text-success">
+                <ShieldCheck className="h-4 w-4" aria-hidden="true" />
+                PIN operacional já validado para esta entrega.
               </div>
-            )}
+            ) : null}
 
             <div>
               <Label htmlFor="proofReference" className="flex items-center gap-2">
-                <Hash className="h-4 w-4" />
-                Referencia do comprovante (opcional)
+                <Hash className="h-4 w-4" aria-hidden="true" />
+                Referência do comprovante (opcional)
               </Label>
               <Input
                 id="proofReference"
@@ -434,39 +466,44 @@ export function MotoboyDeliveryActions({
                 placeholder="Ex: protocolo, recibo ou identificador externo"
                 maxLength={128}
               />
-              <p className="text-xs text-muted-foreground mt-1">
-                Esta referencia faz parte da prova de entrega e nao substitui o PIN operacional.
+              <p className="mt-1 text-xs text-muted-foreground">
+                Esta referência faz parte da prova de entrega e não substitui o
+                PIN operacional.
               </p>
             </div>
+
             <div>
               <Label htmlFor="proofObs">
-                Observacao <span className="text-destructive">*</span>
+                Observação <span className="text-destructive">*</span>
               </Label>
               <Textarea
                 id="proofObs"
                 value={proofObservation}
                 onChange={(event) => setProofObservation(event.target.value)}
-                placeholder="Ex: Entregue pessoalmente, deixei com porteiro, destinatario assinou..."
+                placeholder="Ex: Entregue pessoalmente, deixei com porteiro, destinatário assinou..."
                 rows={3}
                 maxLength={1000}
                 required
               />
-              <p className="text-xs text-muted-foreground mt-1">
+              <p className="mt-1 text-xs text-muted-foreground">
                 Descreva como a entrega foi realizada. Isso fica registrado como prova.
               </p>
             </div>
+
             <div className="flex flex-col gap-3 sm:flex-row">
               <Button
+                type="button"
                 variant="outline"
                 className="flex-1"
-                onClick={() => setProofDialogOpen(false)}
+                onClick={() => handleProofDialogChange(false)}
                 disabled={isLoading}
               >
                 Cancelar
               </Button>
               <Button
+                type="button"
                 className="flex-1"
-                onClick={handleConfirmDelivery}
+                onClick={() => void handleConfirmDelivery()}
                 disabled={
                   isLoading ||
                   !proofObservation.trim() ||
@@ -474,7 +511,7 @@ export function MotoboyDeliveryActions({
                 }
               >
                 {isLoading ? (
-                  <Loader2 className="h-4 w-4 animate-spin" />
+                  <Loader2 className="h-4 w-4 animate-spin" aria-hidden="true" />
                 ) : (
                   "Confirmar entrega"
                 )}
@@ -491,26 +528,34 @@ export function MotoboyDeliveryActions({
           </DialogHeader>
           <div className="space-y-4 pt-2">
             <p className="text-sm text-muted-foreground">
-              Apos a coleta, o pacote permanece sob sua custodia ate a resolucao operacional da falha.
+              Após a coleta, o pacote permanece sob sua custódia até a resolução
+              operacional da falha.
             </p>
             <div>
               <Label>Motivo da falha *</Label>
               <RadioGroup
                 value={failReasonCode}
                 onValueChange={setFailReasonCode}
-                className="space-y-2 mt-2"
+                className="mt-2 space-y-2"
               >
                 {FAIL_REASON_OPTIONS.map((option) => (
                   <div key={option.value} className="flex items-center space-x-2">
-                    <RadioGroupItem value={option.value} id={`fail-${option.value}`} />
-                    <Label htmlFor={`fail-${option.value}`} className="text-sm font-normal">
+                    <RadioGroupItem
+                      value={option.value}
+                      id={`fail-${option.value}`}
+                    />
+                    <Label
+                      htmlFor={`fail-${option.value}`}
+                      className="text-sm font-normal"
+                    >
                       {option.label}
                     </Label>
                   </div>
                 ))}
               </RadioGroup>
             </div>
-            {failReasonCode === "other" && (
+
+            {failReasonCode === "other" ? (
               <div>
                 <Label htmlFor="failReasonNotes">Descreva o motivo *</Label>
                 <Textarea
@@ -522,20 +567,23 @@ export function MotoboyDeliveryActions({
                   required
                 />
               </div>
-            )}
+            ) : null}
+
             <div className="flex flex-col gap-3 sm:flex-row">
               <Button
+                type="button"
                 variant="outline"
                 className="flex-1"
-                onClick={() => setFailDialogOpen(false)}
+                onClick={() => handleFailDialogChange(false)}
                 disabled={isLoading}
               >
                 Voltar
               </Button>
               <Button
+                type="button"
                 variant="destructive"
                 className="flex-1"
-                onClick={handleFailDelivery}
+                onClick={() => void handleFailDelivery()}
                 disabled={
                   isLoading ||
                   !failReasonCode ||
