@@ -126,7 +126,7 @@ describe("generateSitemap", () => {
     expect(SITEMAP_URL_CHUNK_SIZE).toBeGreaterThan(0);
   });
 
-  it("classifica somente falhas transitorias de rede/upstream como fallback permitido", () => {
+  it("classifica somente falhas transitorias de rede/upstream/banco como fallback permitido", () => {
     expect(
       isTransientSitemapSourceError(
         new Error("supabase.co | 522: Connection timed out"),
@@ -134,6 +134,12 @@ describe("generateSitemap", () => {
     ).toBe(true);
     expect(isTransientSitemapSourceError(new Error("fetch failed"))).toBe(true);
     expect(isTransientSitemapSourceError({ message: "HTTP 503 upstream" })).toBe(true);
+    expect(
+      isTransientSitemapSourceError({
+        code: "57014",
+        message: "canceling statement due to statement timeout",
+      }),
+    ).toBe(true);
 
     expect(
       isTransientSitemapSourceError(new Error("column geographic_path does not exist")),
