@@ -37,12 +37,7 @@ jobs:
   configure-auth-email:
     name: Configure production auth email identity
     if: ${{ inputs.apply == true }}
-    runs-on:
-      - self-hosted
-      - windows
-      - x64
-      - acheguese-heavy-windows
-      - remote-only
+    runs-on: windows-latest
     timeout-minutes: 10
     env:
       SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
