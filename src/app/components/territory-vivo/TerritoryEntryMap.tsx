@@ -9,7 +9,7 @@ import {
 const loadTerritoryEntryMapRuntime = async () => {
   const [runtimeModule] = await Promise.all([
     import("./TerritoryEntryMapRuntime"),
-    import("@/core/maps/components/v3/MapLibreAdapter").then(
+    import("@/core/maps/components/v3/MapLibreAdapterPreload").then(
       ({ preloadPassiveMapLibreAdapterRuntime }) =>
         preloadPassiveMapLibreAdapterRuntime(),
     ),
