@@ -65,26 +65,31 @@ describe("ride_requests browser write authority", () => {
     expect(staticService).not.toMatch(/static\s+async\s+updateRide\s*\(/);
   });
 
-  it("keeps database INSERT authority server-owned", () => {
-    const creationMigration = read(
-      "supabase/migrations/20260909140626_add_atomic_mobility_creation_commands_g6.sql",
+  it("keeps database INSERT authority quote-owned and server-only", () => {
+    const quoteMigration = read(
+      "supabase/migrations/20260916113000_require_explicit_mobility_quote_id.sql",
     );
     const revokeMigration = read(
       "supabase/migrations/20260909141356_revoke_browser_ride_request_insert_g6.sql",
     );
-    const broker = read("supabase/functions/mobility-rpc/index.ts");
+    const creationBroker = read("supabase/functions/mobility-create-rpc/index.ts");
+    const creationService = read(
+      "src/core/mobility/services/MobilityCreationService.ts",
+    );
     const rpcService = read(
       "src/core/mobility/services/MobilityRpcService.ts",
     );
 
-    expect(creationMigration).toContain(
-      "CREATE OR REPLACE FUNCTION public.mobility_create_ride_atomic",
+    expect(quoteMigration).toContain(
+      "CREATE FUNCTION public.mobility_create_ride_atomic(\n  p_quote_id uuid",
     );
-    expect(creationMigration).toContain(
-      "CREATE OR REPLACE FUNCTION public.mobility_create_delivery_atomic",
+    expect(quoteMigration).toContain(
+      "CREATE FUNCTION public.mobility_create_delivery_atomic(\n  p_quote_id uuid",
     );
-    expect(creationMigration).toContain("INSERT INTO public.ride_state_audit");
-    expect(creationMigration).toContain("TO service_role");
+    expect(quoteMigration).toContain("v_quote.amount");
+    expect(quoteMigration).toContain("pricing_quote_id");
+    expect(quoteMigration).toContain("TO service_role");
+    expect(quoteMigration).not.toContain("p_suggested_price");
 
     expect(revokeMigration).toContain(
       "REVOKE INSERT ON TABLE public.ride_requests FROM PUBLIC, anon, authenticated",
@@ -93,16 +98,17 @@ describe("ride_requests browser write authority", () => {
       'DROP POLICY IF EXISTS "Passengers create rides" ON public.ride_requests',
     );
 
-    expect(broker).toContain("createRide: true");
-    expect(broker).toContain("createDelivery: true");
-    expect(broker).toContain("requireEffectiveMobilityRollout");
-    expect(broker).toContain("broker_user_can_manage_profile");
-    expect(broker).toContain("requireBusinessDeliveryEntitlement");
-    expect(broker).toContain('"mobility_create_ride_atomic"');
-    expect(broker).toContain('"mobility_create_delivery_atomic"');
+    expect(creationBroker).toContain('type MobilityCreateAction = "createRide" | "createDelivery"');
+    expect(creationBroker).toContain("await loadQuote(requireUuid(params.quoteId, \"quoteId\"))");
+    expect(creationBroker).toContain("p_quote_id: quote.id");
+    expect(creationBroker).toContain("requireEffectiveMobilityRollout");
+    expect(creationBroker).toContain("requireDeliveryCreationAuthority");
+    expect(creationBroker).not.toContain("suggestedPrice");
 
-    expect(rpcService).toContain('this.invoke("createRide"');
-    expect(rpcService).toContain('this.invoke("createDelivery"');
+    expect(creationService).toContain('const FUNCTION_NAME = "mobility-create-rpc"');
+    expect(creationService).toContain("quoteId: input.priceQuoteId");
+    expect(rpcService).not.toContain('this.invoke("createRide"');
+    expect(rpcService).not.toContain('this.invoke("createDelivery"');
   });
 
   it("keeps database UPDATE authority server-owned", () => {
