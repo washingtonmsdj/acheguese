@@ -63,5 +63,8 @@ describe("Mobility driver offer authority", () => {
 
     expect((dispatchConfig.match(/requiresSubscription: true/g) ?? []).length)
       .toBeGreaterThanOrEqual(3);
+    expect((dispatchConfig.match(/showFullDetails: false/g) ?? []).length)
+      .toBeGreaterThanOrEqual(3);
+    expect(dispatchConfig).not.toContain("showFullDetails: true");
   });
 });
