@@ -24,121 +24,118 @@ env:
 jobs:
   configure-auth-email:
     name: Configure production auth email identity
-    runs-on: ubuntu-latest
+    runs-on:
+      - self-hosted
+      - windows
+      - x64
+      - acheguese-heavy-windows
+      - remote-only
     timeout-minutes: 10
     env:
       SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
 
     steps:
       - name: Validate production target and credential presence
-        shell: bash
+        shell: powershell
         run: |
-          set -euo pipefail
-          test "$GITHUB_REPOSITORY" = "washingtonmsdj/acheguese"
-          test "$GITHUB_REF" = "refs/heads/main"
-          test -n "${SUPABASE_ACCESS_TOKEN:-}"
-          test "$SUPABASE_PROJECT_REF" = "xhdowzacfujckjelqhtd"
+          $ErrorActionPreference = "Stop"
+          if ($env:GITHUB_REPOSITORY -ne "washingtonmsdj/acheguese") {
+            throw "Unexpected repository: $env:GITHUB_REPOSITORY"
+          }
+          if ($env:GITHUB_REF -ne "refs/heads/main") {
+            throw "Only refs/heads/main is authorized. Received: $env:GITHUB_REF"
+          }
+          if ([string]::IsNullOrWhiteSpace($env:SUPABASE_ACCESS_TOKEN)) {
+            throw "GitHub Actions secret SUPABASE_ACCESS_TOKEN is missing."
+          }
+          if ($env:SUPABASE_PROJECT_REF -ne "xhdowzacfujckjelqhtd") {
+            throw "Unexpected Supabase project ref."
+          }
+          Write-Host "Production target and credential presence validated."
 
       - name: Inspect current Auth SMTP transport without exposing secrets
         id: before
-        shell: bash
+        shell: powershell
         run: |
-          set -euo pipefail
-          response_file="$(mktemp)"
-          trap 'rm -f "$response_file"' EXIT
+          $ErrorActionPreference = "Stop"
+          $headers = @{
+            Authorization = "Bearer $env:SUPABASE_ACCESS_TOKEN"
+            Accept = "application/json"
+          }
+          $current = Invoke-RestMethod -Uri $env:AUTH_CONFIG_URL -Headers $headers -Method Get
+          $smtpHost = [string]$current.smtp_host
+          $currentSender = [string]$current.smtp_admin_email
 
-          curl --fail-with-body --silent --show-error \
-            -H "Authorization: Bearer $SUPABASE_ACCESS_TOKEN" \
-            -H "Accept: application/json" \
-            "$AUTH_CONFIG_URL" > "$response_file"
+          if ([string]::IsNullOrWhiteSpace($smtpHost)) {
+            throw "Custom SMTP is not configured on the production Auth project."
+          }
+          if (-not $smtpHost.ToLowerInvariant().Contains("resend")) {
+            throw "Production SMTP host is not Resend; refusing to rewrite sender identity."
+          }
 
-          smtp_host="$(jq -r '.smtp_host // empty' "$response_file")"
-          external_email_enabled="$(jq -r '.external_email_enabled // false' "$response_file")"
-          current_sender="$(jq -r '.smtp_admin_email // empty' "$response_file")"
-
-          if [ -z "$smtp_host" ]; then
-            echo "Custom SMTP is not configured on the production Auth project." >&2
-            exit 1
-          fi
-
-          if [ "$external_email_enabled" != "true" ]; then
-            echo "Email/password Auth is not enabled on the production project." >&2
-            exit 1
-          fi
-
-          case "${smtp_host,,}" in
-            *resend*) ;;
-            *)
-              echo "Production SMTP host is not Resend; refusing to rewrite sender identity." >&2
-              exit 1
-              ;;
-          esac
-
-          echo "smtp_transport=resend" >> "$GITHUB_OUTPUT"
-          if [ "$current_sender" = "$AUTH_EMAIL_FROM" ]; then
-            echo "sender_already_current=true" >> "$GITHUB_OUTPUT"
-          else
-            echo "sender_already_current=false" >> "$GITHUB_OUTPUT"
-          fi
+          Add-Content -Path $env:GITHUB_OUTPUT -Value "smtp_transport=resend" -Encoding UTF8
+          Add-Content -Path $env:GITHUB_OUTPUT -Value "sender_already_current=$($currentSender -eq $env:AUTH_EMAIL_FROM)" -Encoding UTF8
+          Write-Host "Resend SMTP transport confirmed. No SMTP secret was printed."
 
       - name: Apply Achegue-se sender identity and confirmation template
-        shell: bash
+        shell: powershell
         run: |
-          set -euo pipefail
+          $ErrorActionPreference = "Stop"
+          $headers = @{
+            Authorization = "Bearer $env:SUPABASE_ACCESS_TOKEN"
+            Accept = "application/json"
+          }
+          $payload = [ordered]@{
+            smtp_admin_email = $env:AUTH_EMAIL_FROM
+            smtp_sender_name = $env:AUTH_EMAIL_SENDER_NAME
+            mailer_subjects_confirmation = $env:AUTH_CONFIRMATION_SUBJECT
+            mailer_templates_confirmation_content = '<h2>Confirme seu e-mail</h2><p>Para concluir seu cadastro no Achegue-se, confirme seu endereço de e-mail.</p><p><a href="{{ .ConfirmationURL }}">Confirmar meu e-mail</a></p><p>Se você não criou esta conta, pode ignorar esta mensagem.</p>'
+          } | ConvertTo-Json -Compress
 
-          payload="$(jq -n \
-            --arg sender "$AUTH_EMAIL_FROM" \
-            --arg sender_name "$AUTH_EMAIL_SENDER_NAME" \
-            --arg subject "$AUTH_CONFIRMATION_SUBJECT" \
-            '{
-              smtp_admin_email: $sender,
-              smtp_sender_name: $sender_name,
-              mailer_subjects_confirmation: $subject,
-              mailer_templates_confirmation_content: "<h2>Confirme seu e-mail</h2><p>Para concluir seu cadastro no Achegue-se, confirme seu endereço de e-mail.</p><p><a href=\"{{ .ConfirmationURL }}\">Confirmar meu e-mail</a></p><p>Se você não criou esta conta, pode ignorar esta mensagem.</p>"
-            }')"
+          Invoke-RestMethod `
+            -Uri $env:AUTH_CONFIG_URL `
+            -Headers $headers `
+            -Method Patch `
+            -ContentType "application/json" `
+            -Body $payload | Out-Null
 
-          curl --fail-with-body --silent --show-error \
-            -X PATCH \
-            -H "Authorization: Bearer $SUPABASE_ACCESS_TOKEN" \
-            -H "Content-Type: application/json" \
-            --data "$payload" \
-            "$AUTH_CONFIG_URL" > /dev/null
+          Write-Host "Auth email identity patch accepted by Supabase."
 
       - name: Verify applied Auth email identity
-        shell: bash
+        shell: powershell
         run: |
-          set -euo pipefail
-          response_file="$(mktemp)"
-          trap 'rm -f "$response_file"' EXIT
+          $ErrorActionPreference = "Stop"
+          $headers = @{
+            Authorization = "Bearer $env:SUPABASE_ACCESS_TOKEN"
+            Accept = "application/json"
+          }
+          $actual = Invoke-RestMethod -Uri $env:AUTH_CONFIG_URL -Headers $headers -Method Get
 
-          curl --fail-with-body --silent --show-error \
-            -H "Authorization: Bearer $SUPABASE_ACCESS_TOKEN" \
-            -H "Accept: application/json" \
-            "$AUTH_CONFIG_URL" > "$response_file"
+          if ([string]$actual.smtp_admin_email -ne $env:AUTH_EMAIL_FROM) {
+            throw "Auth sender verification failed."
+          }
+          if ([string]$actual.smtp_sender_name -ne $env:AUTH_EMAIL_SENDER_NAME) {
+            throw "Auth sender name verification failed."
+          }
+          if ([string]$actual.mailer_subjects_confirmation -ne $env:AUTH_CONFIRMATION_SUBJECT) {
+            throw "Confirmation subject verification failed."
+          }
 
-          actual_sender="$(jq -r '.smtp_admin_email // empty' "$response_file")"
-          actual_name="$(jq -r '.smtp_sender_name // empty' "$response_file")"
-          actual_subject="$(jq -r '.mailer_subjects_confirmation // empty' "$response_file")"
-
-          test "$actual_sender" = "$AUTH_EMAIL_FROM"
-          test "$actual_name" = "$AUTH_EMAIL_SENDER_NAME"
-          test "$actual_subject" = "$AUTH_CONFIRMATION_SUBJECT"
-
-          echo "Auth email sender and confirmation template verified on the production project."
+          Write-Host "Auth email sender and confirmation template verified on the production project."
 
       - name: Record non-secret summary
         if: always()
-        shell: bash
+        shell: powershell
         run: |
-          {
-            echo "## Supabase Auth email configuration"
-            echo "- Repository: washingtonmsdj/acheguese"
-            echo "- Branch: main"
-            echo "- Project ref: $SUPABASE_PROJECT_REF"
-            echo "- SMTP transport expected: Resend"
-            echo "- Sender: $AUTH_EMAIL_FROM"
-            echo "- Sender name: $AUTH_EMAIL_SENDER_NAME"
-            echo "- Confirmation subject: $AUTH_CONFIRMATION_SUBJECT"
-            echo "- SMTP host/user/password are read-only and are not written or printed by this workflow."
-            echo "- Resend domain verification remains an independent DNS prerequisite."
-          } >> "$GITHUB_STEP_SUMMARY"
+          @(
+            "## Supabase Auth email configuration",
+            "- Repository: washingtonmsdj/acheguese",
+            "- Branch: main",
+            "- Project ref: $env:SUPABASE_PROJECT_REF",
+            "- SMTP transport expected: Resend",
+            "- Sender: $env:AUTH_EMAIL_FROM",
+            "- Sender name: $env:AUTH_EMAIL_SENDER_NAME",
+            "- Confirmation subject: $env:AUTH_CONFIRMATION_SUBJECT",
+            "- SMTP host/user/password are read-only and are not written or printed by this workflow.",
+            "- Resend domain verification remains an independent DNS prerequisite."
+          ) | Add-Content -Path $env:GITHUB_STEP_SUMMARY -Encoding UTF8
