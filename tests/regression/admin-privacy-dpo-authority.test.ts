@@ -8,6 +8,9 @@ const read = (path: string) => readFileSync(join(ROOT, path), "utf8");
 const migration = read(
   "supabase/migrations/20260916103200_add_admin_privacy_request_authority.sql",
 );
+const piiMinimizationMigration = read(
+  "supabase/migrations/20260916113200_minimize_admin_privacy_queue_pii.sql",
+);
 const broker = read("supabase/functions/admin-privacy-rpc/index.ts");
 const config = read("supabase/config.toml");
 const authPolicy = read(
@@ -31,21 +34,35 @@ describe("admin privacy request authority", () => {
     expect(migration).toContain("FROM PUBLIC, anon, authenticated");
     expect(migration).toContain("TO service_role");
     expect(migration).toContain("private.is_admin(p_actor_user_id)");
+    expect(piiMinimizationMigration).toContain("FROM PUBLIC, anon, authenticated");
+    expect(piiMinimizationMigration).toContain("TO service_role");
+    expect(piiMinimizationMigration).toContain("private.is_admin(p_actor_user_id)");
   });
 
-  it("does not expose the message body in bounded list responses", () => {
-    const listStart = migration.indexOf(
-      "CREATE OR REPLACE FUNCTION public.admin_list_privacy_subject_requests",
-    );
-    const detailStart = migration.indexOf(
-      "CREATE OR REPLACE FUNCTION public.admin_get_privacy_subject_request",
-    );
-    const listBlock = migration.slice(listStart, detailStart);
+  it("keeps the bounded queue free of direct identifiers and request bodies", () => {
+    expect(piiMinimizationMigration).toContain("p_limit < 1 OR p_limit > 100");
+    expect(piiMinimizationMigration).toContain("count(*) OVER() AS total_count");
+    expect(piiMinimizationMigration).not.toContain("request.requester_name");
+    expect(piiMinimizationMigration).not.toContain("request.requester_email");
+    expect(piiMinimizationMigration).not.toContain("request.subject");
+    expect(piiMinimizationMigration).not.toContain("request.message");
 
-    expect(listBlock).toContain("p_limit < 1 OR p_limit > 100");
-    expect(listBlock).toContain("count(*) OVER() AS total_count");
-    expect(listBlock).not.toContain("request.message");
-    expect(listBlock).not.toContain("request.subject");
+    const summaryStart = service.indexOf("export interface AdminPrivacyRequestSummary");
+    const detailStart = service.indexOf("export interface AdminPrivacyRequestDetail");
+    const summaryContract = service.slice(summaryStart, detailStart);
+    expect(summaryContract).not.toContain("requester_name");
+    expect(summaryContract).not.toContain("requester_email");
+    expect(page).not.toContain("item.requester_name");
+    expect(page).not.toContain("item.requester_email");
+    expect(page).toContain("protocolLabel(item.id)");
+  });
+
+  it("preserves pagination totals even when the requested page is empty", () => {
+    expect(broker).toContain("if (items.length === 0 && page > 1)");
+    expect(broker).toContain("p_limit: 1");
+    expect(broker).toContain("p_offset: 0");
+    expect(page).toContain("if (!listQuery.isFetching && page > totalPages)");
+    expect(page).toContain("setPage(totalPages)");
   });
 
   it("enforces the request lifecycle atomically", () => {
@@ -93,6 +110,9 @@ describe("admin privacy request authority", () => {
     expect(page).toContain("adminPrivacyRequestsService.getRequest(selectedId!)");
     expect(page).toContain("enabled: Boolean(selectedId)");
     expect(page).toContain("Dados sensíveis deste pedido");
+    expect(page).toContain("queryClient.removeQueries({");
+    expect(page).toContain('queryKey: ["admin-privacy-request", requestId]');
+    expect(page).toContain("exact: true");
   });
 
   it("keeps the DPO inbox out of bulk-export flows", () => {
