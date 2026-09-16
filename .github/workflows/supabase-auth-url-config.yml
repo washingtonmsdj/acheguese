@@ -172,8 +172,9 @@ jobs:
           Write-Host "Remote entries outside canonical config: $($extras.Count)"
 
           if ($extras.Count -gt 0) {
-            Write-Host "Remote-only redirects will be removed to restore supabase/config.toml authority:"
+            Write-Host "Unknown remote-only redirects require review before any write:"
             $extras | ForEach-Object { Write-Host "REMOTE_ONLY_REDIRECT=$_" }
+            throw "Remote Auth URL configuration has entries outside supabase/config.toml; refusing destructive cleanup."
           }
 
       - name: Apply canonical Auth URL configuration
@@ -238,6 +239,6 @@ jobs:
             "- acheguese.vercel.app callbacks: verified",
             "- localhost:5175 callbacks: verified",
             "- 127.0.0.1:5175 callbacks: verified",
-            "- Remote-only redirect drift: removed",
+            "- Remote-only redirect drift: none",
             "- No SMTP/provider secrets were read or written by this workflow."
           ) | Add-Content -Path $env:GITHUB_STEP_SUMMARY -Encoding UTF8
