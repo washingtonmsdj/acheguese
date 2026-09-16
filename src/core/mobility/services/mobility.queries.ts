@@ -359,6 +359,8 @@ export async function getDriverStatsDetailed(driverProfileId: string): Promise<u
 export async function getMotoboyRuntimeDatabaseChecks(): Promise<MotoboyRuntimeDatabaseChecks> {
   const details: string[] = [];
 
+  // This is a capability/schema probe only. HEAD validates the selected columns
+  // without materializing recipient contact, delivery notes or proof payloads.
   const rideColumnsResult = await supabaseClient
     .from("ride_requests")
     .select(
@@ -378,6 +380,7 @@ export async function getMotoboyRuntimeDatabaseChecks(): Promise<MotoboyRuntimeD
         "failed_delivery_at",
         "failed_delivery_reason",
       ].join(", "),
+      { head: true },
     )
     .limit(1);
 
