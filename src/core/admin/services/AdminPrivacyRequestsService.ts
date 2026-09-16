@@ -24,6 +24,11 @@ export type PrivacyRequestType =
   | "violation_report"
   | "other";
 
+export type PrivacyRequestEventType =
+  | "submitted"
+  | "status_changed"
+  | "backfilled_snapshot";
+
 export interface AdminPrivacyRequestSummary {
   id: string;
   request_type: PrivacyRequestType;
@@ -32,6 +37,13 @@ export interface AdminPrivacyRequestSummary {
   updated_at: string;
   resolved_at: string | null;
   linked_user: boolean;
+}
+
+export interface AdminPrivacyRequestHistoryEvent {
+  event_type: PrivacyRequestEventType;
+  from_status: PrivacyRequestStatus | null;
+  to_status: PrivacyRequestStatus;
+  occurred_at: string;
 }
 
 export interface AdminPrivacyRequestDetail {
@@ -46,6 +58,7 @@ export interface AdminPrivacyRequestDetail {
   submitted_at: string;
   updated_at: string;
   resolved_at: string | null;
+  history: AdminPrivacyRequestHistoryEvent[];
 }
 
 export interface AdminPrivacyRequestListInput {
