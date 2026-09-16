@@ -72,7 +72,7 @@ export default function PassageiroPage() {
     reportRideProblem,
     error,
     refetch,
-    passengerRating = 5.0,
+    passengerRating = 0,
   } = useMobilidade({ realtimeEnabled: true });
   const [isCreateOpen, setIsCreateOpen] = useState(false);
   const [createModalInitialType, setCreateModalInitialType] = useState<
@@ -299,7 +299,10 @@ export default function PassageiroPage() {
               },
               {
                 icon: Star,
-                value: stats.avgRating.toFixed(1),
+                value:
+                  stats.avgRating > 0
+                    ? stats.avgRating.toFixed(1)
+                    : "Sem avaliações",
                 label: PASSENGER_PAGE_LABELS.STAT_RATING_LABEL,
                 color: "text-warning",
                 bg: "bg-warning/10",
