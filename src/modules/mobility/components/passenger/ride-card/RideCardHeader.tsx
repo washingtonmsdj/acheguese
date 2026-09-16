@@ -11,20 +11,21 @@ interface RideCardHeaderProps {
 
 export const RideCardHeader = ({ status, isEntrega }: RideCardHeaderProps) => {
   return (
-    <div className="mb-4 flex items-center justify-between">
+    <div className="mb-4 flex items-center justify-between gap-2">
       <StatusBadge status={status} size="md" />
       <Badge
+        variant="outline"
         className={cn(
           "rounded-full px-2 text-[0.6rem]",
           isEntrega
-            ? "bg-amber-500/20 text-amber-400"
-            : "bg-teal-400/20 text-teal-400",
+            ? "border-warning/30 bg-warning/10 text-warning"
+            : "border-category-mobility/30 bg-category-mobility/10 text-category-mobility",
         )}
       >
         {isEntrega ? (
-          <Package className="mr-1 h-3 w-3" />
+          <Package className="mr-1 h-3 w-3" aria-hidden="true" />
         ) : (
-          <Car className="mr-1 h-3 w-3" />
+          <Car className="mr-1 h-3 w-3" aria-hidden="true" />
         )}
         {isEntrega ? "Entrega" : "Viagem"}
       </Badge>
