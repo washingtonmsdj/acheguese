@@ -147,7 +147,10 @@ jobs:
             'admin_list_privacy_subject_requests',
             'admin_get_privacy_subject_request',
             'admin_transition_privacy_subject_request',
-            'p_actor_user_id: auth.userId'
+            'p_actor_user_id: auth.userId',
+            'if (items.length === 0 && page > 1)',
+            'p_limit: 1',
+            'p_offset: 0'
           )
           foreach ($marker in $requiredEntryMarkers) {
             if (-not $entry.Contains($marker)) {
@@ -172,7 +175,7 @@ jobs:
             }
           }
 
-          Write-Host "Admin privacy JWT, admin, MFA, RPC and audit contracts confirmed."
+          Write-Host "Admin privacy JWT, admin, MFA, RPC, pagination and audit contracts confirmed."
 
       - name: Record exact source bundle hashes
         shell: powershell
@@ -239,5 +242,6 @@ jobs:
             "- Project ref: $env:SUPABASE_PROJECT_REF",
             "- Supabase CLI: $env:SUPABASE_CLI_VERSION",
             "- verify_jwt must remain true.",
+            "- Pagination total probe contract must remain present.",
             "- Deployment source is the isolated exact-SHA checkout, never a reconstructed bundle."
           ) | Add-Content -Path $env:GITHUB_STEP_SUMMARY -Encoding UTF8
