@@ -1,0 +1,243 @@
+name: Supabase Admin Privacy RPC Deploy
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "supabase/functions/admin-privacy-rpc/**"
+      - "supabase/functions/_shared/adminAuth.ts"
+      - "supabase/functions/_shared/mfaPolicy.ts"
+      - "supabase/functions/_shared/security.ts"
+      - "supabase/config.toml"
+      - ".github/workflows/supabase-admin-privacy-rpc-deploy.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: supabase-admin-privacy-rpc-production
+  cancel-in-progress: true
+
+env:
+  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: "true"
+  SUPABASE_CLI_VERSION: "2.115.0"
+  SUPABASE_PROJECT_REF: "xhdowzacfujckjelqhtd"
+
+jobs:
+  deploy-admin-privacy-rpc:
+    name: Exact-main admin-privacy-rpc deploy
+    runs-on:
+      - self-hosted
+      - windows
+      - x64
+      - acheguese-heavy-windows
+      - remote-only
+    timeout-minutes: 20
+    env:
+      SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
+
+    steps:
+      - name: Validate immutable main target
+        id: target
+        shell: powershell
+        env:
+          EVENT_REF: ${{ github.ref }}
+          EVENT_SHA: ${{ github.sha }}
+        run: |
+          $ErrorActionPreference = "Stop"
+
+          if ($env:GITHUB_REPOSITORY -ne "washingtonmsdj/acheguese") {
+            throw "Unexpected repository: $env:GITHUB_REPOSITORY"
+          }
+          if ($env:EVENT_REF -ne "refs/heads/main") {
+            throw "Only refs/heads/main is authorized. Received $env:EVENT_REF"
+          }
+          if ($env:GITHUB_EVENT_NAME -ne "push" -and $env:GITHUB_EVENT_NAME -ne "workflow_dispatch") {
+            throw "Unsupported event: $env:GITHUB_EVENT_NAME"
+          }
+
+          $targetSha = ([string]$env:EVENT_SHA).Trim().ToLowerInvariant()
+          if ($targetSha -notmatch '^[0-9a-f]{40}$') {
+            throw "Target SHA must be exactly 40 hex characters."
+          }
+
+          Add-Content -Path $env:GITHUB_OUTPUT -Value "sha=$targetSha" -Encoding UTF8
+          Write-Host "Exact main SHA accepted: $targetSha"
+
+      - name: Checkout isolated Supabase source at exact SHA
+        uses: actions/checkout@v6
+        with:
+          repository: washingtonmsdj/acheguese
+          ref: ${{ steps.target.outputs.sha }}
+          fetch-depth: 1
+          persist-credentials: false
+          clean: false
+          path: privacy-edge-gate
+          sparse-checkout: |
+            supabase
+          sparse-checkout-cone-mode: true
+
+      - name: Assert checkout provenance
+        shell: powershell
+        working-directory: privacy-edge-gate
+        env:
+          EXPECTED_SHA: ${{ steps.target.outputs.sha }}
+        run: |
+          $ErrorActionPreference = "Stop"
+          $actual = (git rev-parse HEAD).Trim().ToLowerInvariant()
+          if ($actual -ne $env:EXPECTED_SHA) {
+            throw "Checkout provenance mismatch. expected=$env:EXPECTED_SHA actual=$actual"
+          }
+          if (git status --porcelain) {
+            throw "Isolated worktree must be clean before production Edge deploy."
+          }
+          Write-Host "Exact checkout provenance confirmed: $actual"
+
+      - name: Validate Supabase credential
+        shell: powershell
+        run: |
+          $ErrorActionPreference = "Stop"
+          if ([string]::IsNullOrWhiteSpace($env:SUPABASE_ACCESS_TOKEN)) {
+            throw "GitHub Actions secret SUPABASE_ACCESS_TOKEN is missing."
+          }
+          Write-Host "Supabase access credential is present."
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v6
+        with:
+          node-version: "24"
+
+      - name: Pin Supabase CLI
+        shell: powershell
+        working-directory: privacy-edge-gate
+        run: |
+          $ErrorActionPreference = "Stop"
+          $version = (& npx --yes "supabase@$env:SUPABASE_CLI_VERSION" --version).Trim()
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          if ($version -ne $env:SUPABASE_CLI_VERSION) {
+            throw "Unexpected Supabase CLI version: $version"
+          }
+          Write-Host "Supabase CLI pinned: $version"
+
+      - name: Validate admin privacy source contracts
+        shell: powershell
+        working-directory: privacy-edge-gate
+        run: |
+          $ErrorActionPreference = "Stop"
+
+          $config = Get-Content "supabase/config.toml" -Raw
+          $entry = Get-Content "supabase/functions/admin-privacy-rpc/index.ts" -Raw
+          $adminAuth = Get-Content "supabase/functions/_shared/adminAuth.ts" -Raw
+          $mfa = Get-Content "supabase/functions/_shared/mfaPolicy.ts" -Raw
+
+          $section = [regex]::Match(
+            $config,
+            '(?ms)^\[functions\.admin-privacy-rpc\]\s*(.*?)(?=^\[|\z)'
+          )
+          if (-not $section.Success -or $section.Groups[1].Value -notmatch '(?m)^verify_jwt\s*=\s*true\s*$') {
+            throw "admin-privacy-rpc must remain verify_jwt=true in supabase/config.toml."
+          }
+
+          $requiredEntryMarkers = @(
+            'requireAdmin(req, ALLOWED_METHODS)',
+            'getCorsHeaders(ALLOWED_METHODS, req)',
+            'auditLog({',
+            'resource: "admin-privacy-rpc"',
+            'admin_list_privacy_subject_requests',
+            'admin_get_privacy_subject_request',
+            'admin_transition_privacy_subject_request',
+            'p_actor_user_id: auth.userId'
+          )
+          foreach ($marker in $requiredEntryMarkers) {
+            if (-not $entry.Contains($marker)) {
+              throw "admin-privacy-rpc source contract missing: $marker"
+            }
+          }
+          if ($entry.Contains('.from("privacy_subject_requests")')) {
+            throw "admin-privacy-rpc must not bypass the service-role-only privacy RPC authority."
+          }
+
+          if (-not $adminAuth.Contains('evaluateUserMfaPolicy')) {
+            throw "Canonical admin auth helper must retain MFA policy enforcement."
+          }
+          $requiredMfaMarkers = @(
+            'auth.admin.mfa.listFactors',
+            'getAuthenticatorAssuranceLevel(token)',
+            'currentLevel !== "aal2"'
+          )
+          foreach ($marker in $requiredMfaMarkers) {
+            if (-not $mfa.Contains($marker)) {
+              throw "Canonical MFA policy contract missing: $marker"
+            }
+          }
+
+          Write-Host "Admin privacy JWT, admin, MFA, RPC and audit contracts confirmed."
+
+      - name: Record exact source bundle hashes
+        shell: powershell
+        working-directory: privacy-edge-gate
+        run: |
+          $ErrorActionPreference = "Stop"
+          $files = @(
+            "supabase/functions/admin-privacy-rpc/index.ts",
+            "supabase/functions/_shared/adminAuth.ts",
+            "supabase/functions/_shared/mfaPolicy.ts",
+            "supabase/functions/_shared/security.ts"
+          )
+
+          foreach ($file in $files) {
+            if (-not (Test-Path $file)) {
+              throw "Required Edge source missing: $file"
+            }
+            $hash = (Get-FileHash -Algorithm SHA256 $file).Hash.ToLowerInvariant()
+            Write-Host "BUNDLE_SHA256 $file $hash"
+            Add-Content -Path $env:GITHUB_STEP_SUMMARY -Value "- ``$file`` — ``$hash``" -Encoding UTF8
+          }
+
+      - name: Deploy admin-privacy-rpc from exact checkout
+        shell: powershell
+        working-directory: privacy-edge-gate
+        run: |
+          $ErrorActionPreference = "Stop"
+          & npx --yes "supabase@$env:SUPABASE_CLI_VERSION" functions deploy admin-privacy-rpc --project-ref $env:SUPABASE_PROJECT_REF --use-api
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+
+      - name: Verify remote function inventory
+        shell: powershell
+        working-directory: privacy-edge-gate
+        run: |
+          $ErrorActionPreference = "Stop"
+          $raw = (& npx --yes "supabase@$env:SUPABASE_CLI_VERSION" functions list --project-ref $env:SUPABASE_PROJECT_REF --output json)
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          $functions = $raw | ConvertFrom-Json
+          $privacy = @($functions | Where-Object { $_.slug -eq "admin-privacy-rpc" -or $_.name -eq "admin-privacy-rpc" })
+          if ($privacy.Count -ne 1) {
+            throw "Expected exactly one remote admin-privacy-rpc entry; found $($privacy.Count)."
+          }
+          if ($privacy[0].verify_jwt -ne $true) {
+            throw "Remote admin-privacy-rpc verify_jwt is not true."
+          }
+          if ($privacy[0].status -and $privacy[0].status -ne "ACTIVE") {
+            throw "Remote admin-privacy-rpc is not ACTIVE: $($privacy[0].status)"
+          }
+          Write-Host "REMOTE_ADMIN_PRIVACY_RPC version=$($privacy[0].version) status=$($privacy[0].status) verify_jwt=$($privacy[0].verify_jwt)"
+          Add-Content -Path $env:GITHUB_STEP_SUMMARY -Value "- Remote admin-privacy-rpc version: ``$($privacy[0].version)``" -Encoding UTF8
+          Add-Content -Path $env:GITHUB_STEP_SUMMARY -Value "- Remote verify_jwt: ``$($privacy[0].verify_jwt)``" -Encoding UTF8
+
+      - name: Record deployment provenance
+        if: always()
+        shell: powershell
+        env:
+          TARGET_SHA: ${{ steps.target.outputs.sha }}
+        run: |
+          @(
+            "## Supabase admin-privacy-rpc exact-source gate",
+            "- Repository: washingtonmsdj/acheguese",
+            "- Target SHA: $env:TARGET_SHA",
+            "- Branch authority: main only",
+            "- Project ref: $env:SUPABASE_PROJECT_REF",
+            "- Supabase CLI: $env:SUPABASE_CLI_VERSION",
+            "- verify_jwt must remain true.",
+            "- Deployment source is the isolated exact-SHA checkout, never a reconstructed bundle."
+          ) | Add-Content -Path $env:GITHUB_STEP_SUMMARY -Encoding UTF8
