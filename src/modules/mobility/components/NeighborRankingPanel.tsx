@@ -1,4 +1,4 @@
-import React from "react";
+import type { ReactNode } from "react";
 import { Award, Crown, Medal, Trophy, Zap } from "lucide-react";
 import { cn } from "@/shared/utils/cn";
 import { getRecordValue } from "@/shared/utils/recordLookup";
@@ -9,7 +9,7 @@ const rankConfig: Record<
   NeighborRank,
   {
     label: string;
-    icon: React.ReactNode;
+    icon: ReactNode;
     color: string;
     bg: string;
     border: string;
@@ -19,7 +19,7 @@ const rankConfig: Record<
 > = {
   bronze: {
     label: "Vizinho Bronze",
-    icon: <Medal className="h-3.5 w-3.5" />,
+    icon: <Medal className="h-3.5 w-3.5" aria-hidden="true" />,
     color: "text-warning",
     bg: "bg-warning/10",
     border: "border-warning/30",
@@ -28,7 +28,7 @@ const rankConfig: Record<
   },
   prata: {
     label: "Vizinho Prata",
-    icon: <Award className="h-3.5 w-3.5" />,
+    icon: <Award className="h-3.5 w-3.5" aria-hidden="true" />,
     color: "text-muted-foreground",
     bg: "bg-muted",
     border: "border-border",
@@ -37,7 +37,7 @@ const rankConfig: Record<
   },
   ouro: {
     label: "Vizinho Ouro",
-    icon: <Crown className="h-3.5 w-3.5" />,
+    icon: <Crown className="h-3.5 w-3.5" aria-hidden="true" />,
     color: "text-warning",
     bg: "bg-warning/10",
     border: "border-warning/30",
@@ -46,7 +46,7 @@ const rankConfig: Record<
   },
   elite: {
     label: "Vizinho Elite",
-    icon: <Zap className="h-3.5 w-3.5" />,
+    icon: <Zap className="h-3.5 w-3.5" aria-hidden="true" />,
     color: "text-primary",
     bg: "bg-primary/10",
     border: "border-primary/30",
@@ -84,63 +84,71 @@ export function RankBadge({
 export function NeighborRankingPanel() {
   return (
     <div className="space-y-4">
-      <div className="rounded-2xl border border-white/10 bg-[#1E2529] p-4">
+      <section className="rounded-2xl border bg-card p-4 text-card-foreground">
         <div className="mb-3 flex items-center gap-2">
-          <Trophy className="h-4 w-4 text-yellow-400" />
-          <h3 className="text-sm font-bold text-white">Niveis de Ranking</h3>
+          <Trophy className="h-4 w-4 text-warning" aria-hidden="true" />
+          <h3 className="text-sm font-bold">Níveis de ranking</h3>
         </div>
         <div className="grid grid-cols-2 gap-2">
-          {(Object.entries(rankConfig) as [NeighborRank, (typeof rankConfig)[NeighborRank]][]).map(
-            ([key, cfg]) => (
-              <div key={key} className={cn("rounded-xl border p-2.5", cfg.bg, cfg.border)}>
-                <div className={cn("mb-1 flex items-center gap-1.5", cfg.color)}>
-                  {cfg.icon}
-                  <span className="text-xs font-bold">{cfg.label}</span>
-                </div>
-                <p className="text-[0.6rem] text-gray-500">
-                  {cfg.max === Infinity
-                    ? `${cfg.min.toLocaleString()}+ pts`
-                    : `${cfg.min.toLocaleString()} - ${cfg.max.toLocaleString()} pts`}
-                </p>
+          {(
+            Object.entries(rankConfig) as [
+              NeighborRank,
+              (typeof rankConfig)[NeighborRank],
+            ][]
+          ).map(([key, cfg]) => (
+            <div
+              key={key}
+              className={cn("rounded-xl border p-2.5", cfg.bg, cfg.border)}
+            >
+              <div className={cn("mb-1 flex items-center gap-1.5", cfg.color)}>
+                {cfg.icon}
+                <span className="text-xs font-bold">{cfg.label}</span>
               </div>
-            ),
-          )}
+              <p className="text-[0.65rem] text-muted-foreground">
+                {cfg.max === Infinity
+                  ? `${cfg.min.toLocaleString("pt-BR")}+ pts`
+                  : `${cfg.min.toLocaleString("pt-BR")} – ${cfg.max.toLocaleString("pt-BR")} pts`}
+              </p>
+            </div>
+          ))}
         </div>
-        <div className="mt-3 rounded-xl border border-white/5 bg-white/5 p-2.5">
-          <p className="text-[0.6rem] text-gray-400">
-            <span className="font-semibold text-teal-400">Como ganhar pontos:</span>{" "}
-            avaliacoes positivas, viagens concluidas e atividade consistente na plataforma.
+        <div className="mt-3 rounded-xl border bg-muted/40 p-2.5">
+          <p className="text-xs text-muted-foreground">
+            <span className="font-semibold text-primary">Como ganhar pontos:</span>{" "}
+            avaliações positivas, viagens concluídas e atividade consistente na plataforma.
           </p>
         </div>
-      </div>
+      </section>
 
-      <div className="rounded-2xl border border-white/10 bg-[#1E2529] p-4">
+      <section className="rounded-2xl border bg-card p-4 text-card-foreground">
         <div className="mb-3 flex items-center gap-2">
-          <Trophy className="h-4 w-4 text-yellow-400" />
-          <h3 className="text-sm font-bold text-white">Top Vizinhos</h3>
+          <Trophy className="h-4 w-4 text-warning" aria-hidden="true" />
+          <h3 className="text-sm font-bold">Top vizinhos</h3>
         </div>
-        <div className="rounded-xl border border-dashed border-white/10 bg-white/[0.02] p-4 text-center">
-          <p className="text-xs font-semibold text-white">Ranking ainda sem dados suficientes</p>
-          <p className="mt-1 text-[0.65rem] text-gray-500">
-            O ranking sera exibido quando houver dados reais de corridas e reputacao.
+        <div className="rounded-xl border border-dashed bg-muted/20 p-4 text-center">
+          <p className="text-xs font-semibold text-foreground">
+            Ranking ainda sem dados suficientes
+          </p>
+          <p className="mt-1 text-[0.7rem] text-muted-foreground">
+            O ranking será exibido quando houver dados reais de corridas e reputação.
           </p>
         </div>
-      </div>
+      </section>
 
-      <div className="rounded-2xl border border-teal-400/20 bg-gradient-to-br from-teal-500/10 to-cyan-500/5 p-4">
+      <section className="rounded-2xl border border-primary/20 bg-primary/5 p-4">
         <div className="flex items-center gap-3">
-          <div className="flex h-12 w-12 flex-shrink-0 items-center justify-center rounded-2xl border border-teal-500/30 bg-teal-500/20">
-            <Crown className="h-6 w-6 text-yellow-400" />
+          <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl border border-primary/25 bg-primary/10">
+            <Crown className="h-6 w-6 text-warning" aria-hidden="true" />
           </div>
-          <div className="flex-1">
-            <p className="mb-0.5 text-xs text-gray-400">Seu ranking atual</p>
-            <p className="text-sm font-bold text-white">Sem classificacao ainda</p>
-            <p className="mt-0.5 text-[0.6rem] text-teal-300">
-              Complete corridas e receba avaliacoes para formar seu ranking.
+          <div className="min-w-0 flex-1">
+            <p className="mb-0.5 text-xs text-muted-foreground">Seu ranking atual</p>
+            <p className="text-sm font-bold text-foreground">Sem classificação ainda</p>
+            <p className="mt-0.5 text-xs text-muted-foreground">
+              Complete corridas e receba avaliações para formar seu ranking.
             </p>
           </div>
         </div>
-      </div>
+      </section>
     </div>
   );
 }
