@@ -23,6 +23,12 @@ export interface CreateRideInput {
    * rejects a missing quote before any remote mutation.
    */
   priceQuoteId?: string;
+  /**
+   * Retained only so the old orchestration guard remains type-safe during the
+   * cutover. Callers cannot provide a numeric fare anymore and the creation
+   * broker has no fare parameter.
+   */
+  suggestedPrice?: never;
   observation?: string;
   availableSeats?: number;
   paymentMethod?: string;
