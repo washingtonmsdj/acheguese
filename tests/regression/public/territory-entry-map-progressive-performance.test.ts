@@ -80,6 +80,7 @@ describe("territory entry progressive map performance", () => {
     const wrapper = read("src/app/components/territory-vivo/TerritoryEntryMap.tsx");
     const runtime = read("src/app/components/territory-vivo/TerritoryEntryMapRuntime.tsx");
     const owner = read("src/core/maps/components/v3/MapLibreAdapter.tsx");
+    const preloader = read("src/core/maps/components/v3/MapLibreAdapterPreload.ts");
     const loader = read("src/core/maps/runtime/loadMapLibreRuntime.ts");
     const passive = read("src/core/maps/components/v3/MapLibrePassiveRuntime.tsx");
 
@@ -103,7 +104,7 @@ describe("territory entry progressive map performance", () => {
     expect(wrapper).toContain("const loadTerritoryEntryMapRuntime = async () =>");
     expect(wrapper).toContain("const [runtimeModule] = await Promise.all([");
     expect(wrapper).toContain('import("./TerritoryEntryMapRuntime")');
-    expect(wrapper).toContain('import("@/core/maps/components/v3/MapLibreAdapter")');
+    expect(wrapper).toContain('import("@/core/maps/components/v3/MapLibreAdapterPreload")');
     expect(wrapper).toContain("preloadPassiveMapLibreAdapterRuntime");
     expect(wrapper).not.toContain("preloadEntryMapEngine");
     expect(wrapper).not.toContain("void loadTerritoryEntryMapRuntime()");
@@ -116,8 +117,13 @@ describe("territory entry progressive map performance", () => {
     expect(owner).toContain("canUsePassiveRuntime");
     expect(owner).toContain('import("./MapLibrePassiveRuntime")');
     expect(owner).toContain('import("./MapLibreAdapterRuntime")');
-    expect(owner).toContain("preloadPassiveMapLibreAdapterRuntime");
-    expect(owner).toContain("prewarmMapLibreWorkers");
+    expect(owner).not.toContain("preloadPassiveMapLibreAdapterRuntime");
+    expect(owner).not.toContain("prewarmMapLibreWorkers");
+
+    expect(preloader).toContain("preloadMapLibreAdapterRuntime");
+    expect(preloader).toContain("preloadPassiveMapLibreAdapterRuntime");
+    expect(preloader).toContain('import("./MapLibrePassiveRuntime")');
+    expect(preloader).toContain("prewarmMapLibreWorkers");
     expect(loader).toContain("let workersPrewarmed = false");
     expect(loader).toContain("ensureMapLibreWorkerConfigured(runtime.setWorkerUrl)");
     expect(loader).toContain("runtime.prewarm()");
