@@ -19,8 +19,10 @@ Nao existe uma segunda bottom nav em `app/components/navigation`. A barra mobile
 
 ## Tipografia e responsividade
 
-- Interface e navegacao usam `DM Sans` (`font-sans`).
-- Marca e titulos usam `Space Grotesk` (`font-display`).
+- Interface, navegacao, marca e titulos usam a familia canonica `Plus Jakarta Sans`.
+- `src/index.css` possui o stack tipografico; `tailwind.config.ts` apenas o consome por `font-sans`, `font-heading` e `font-display`.
+- Pesos 400, 500, 600 e 700 cobrem corpo, controles e titulos; 800 fica reservado a hierarquias de display/wordmark aprovadas pelo concept.
+- Nenhum componente de navegacao deve carregar ou declarar uma segunda familia de fonte.
 - A bottom nav aparece abaixo de `md` e garante uma linha estavel de 64 px, acrescida da safe area do dispositivo.
 - Links completos do header viram menu recolhivel no mobile; a bottom nav permanece como navegacao primaria.
 - Na Comunidade, `Feed`, `Empresas` e `Servicos` sao os destinos primarios; `Secoes` concentra os modulos secundarios. Grupos e Discussoes sao descobertos dentro do Feed. A bottom nav nunca aponta para rotas internas da comunidade.
