@@ -14,10 +14,6 @@ export function isRideActive(status: string): boolean {
   return isOpenRideStatus(status);
 }
 
-export function calculateEstimatedFare(distanceKm: number, baseFare = 5.0, perKmRate = 2.5): number {
-  return baseFare + distanceKm * perKmRate;
-}
-
 export function calculateDistanceKm(lat1: number, lng1: number, lat2: number, lng2: number): number {
   const R = 6371;
   const dLat = ((lat2 - lat1) * Math.PI) / 180;
@@ -46,7 +42,7 @@ export function generateShareToken(): string {
 }
 
 export function isValidCoordinate(lat: number, lng: number): boolean {
-  return typeof lat === "number" && typeof lng === "number" && !Number.isNaN(lat) && !Number.isNaN(lng) && lat >= -90 && lat <= 90 && lng >= -180 && lng <= 180;
+  return typeof lat === "number" && typeof lng === "number" && !Number.isNaN(lat) && lat >= -90 && lat <= 90 && lng >= -180 && lng <= 180;
 }
 
 export function getInitials(name: string): string {
