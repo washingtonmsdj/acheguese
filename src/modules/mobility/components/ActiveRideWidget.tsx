@@ -1,24 +1,26 @@
 /**
- * Widget de Corrida Ativa
- * Mostra a corrida em andamento do usuario com informacoes resumidas
+ * Widget de corrida ativa.
+ * Exibe o resumo operacional usando o lifecycle e os tokens canônicos de Mobilidade.
  */
 
-import { memo } from "react";
+import { memo, type KeyboardEvent } from "react";
 import { useNavigate } from "react-router-dom";
-import { Car, MapPin, Clock, User, ArrowRight, Star } from "lucide-react";
-import { Card, CardContent } from "@/shared/components/ui/card";
-import { Button } from "@/shared/components/ui/button";
+import { ArrowRight, Car, MapPin, Star } from "lucide-react";
+import { motion } from "framer-motion";
+
+import { RIDE_STATUS, RIDE_STATUS_LABELS } from "@/core/mobility/constants";
+import { mobilityRoutes } from "@/core/mobility/routes/mobilityRoutes";
+import type { RideRequest } from "@/core/mobility/types/types";
 import {
   Avatar,
   AvatarFallback,
   AvatarImage,
 } from "@/shared/components/ui/avatar";
 import { Badge } from "@/shared/components/ui/badge";
-import { motion } from "framer-motion";
+import { Button } from "@/shared/components/ui/button";
+import { Card, CardContent } from "@/shared/components/ui/card";
 import { cn } from "@/shared/utils/cn";
 import { formatBrl } from "@/shared/utils/currency";
-import type { RideRequest } from "@/core/mobility/types/types";
-import { mobilityRoutes } from "@/core/mobility/routes/mobilityRoutes";
 
 interface ActiveRideWidgetProps {
   ride: RideRequest;
@@ -27,36 +29,53 @@ interface ActiveRideWidgetProps {
   className?: string;
 }
 
-const STATUS_CONFIG = {
-  pending: {
-    label: "Aguardando",
-    color: "bg-yellow-500/20 text-yellow-400 border-yellow-500/30",
-  },
-  accepted: {
-    label: "Aceita",
-    color: "bg-blue-500/20 text-blue-400 border-blue-500/30",
-  },
-  driver_on_the_way: {
-    label: "A caminho",
-    color: "bg-purple-500/20 text-purple-400 border-purple-500/30",
-  },
-  driver_arrived: {
-    label: "Motorista chegou",
-    color: "bg-cyan-500/20 text-cyan-400 border-cyan-500/30",
-  },
-  in_progress: {
-    label: "Em andamento",
-    color: "bg-teal-500/20 text-teal-400 border-teal-500/30",
-  },
-  completed: {
-    label: "Concluida",
-    color: "bg-green-500/20 text-green-400 border-green-500/30",
-  },
-  cancelled: {
-    label: "Cancelada",
-    color: "bg-red-500/20 text-red-400 border-red-500/30",
-  },
-} as const;
+const SUCCESS_STATUSES = new Set<string>([
+  RIDE_STATUS.COMPLETED,
+  RIDE_STATUS.DELIVERED,
+]);
+
+const DESTRUCTIVE_STATUSES = new Set<string>([
+  RIDE_STATUS.CANCELLED,
+  RIDE_STATUS.CANCELLED_BY_DRIVER,
+  RIDE_STATUS.CANCELLED_BY_PASSENGER,
+  RIDE_STATUS.FAILED,
+  RIDE_STATUS.FAILED_DELIVERY,
+]);
+
+const WARNING_STATUSES = new Set<string>([
+  RIDE_STATUS.PENDING,
+  RIDE_STATUS.REQUESTED,
+  RIDE_STATUS.SEARCHING_DRIVER,
+  RIDE_STATUS.EXPIRED,
+]);
+
+const INFO_STATUSES = new Set<string>([
+  RIDE_STATUS.DRIVER_ASSIGNED,
+  RIDE_STATUS.DRIVER_ACCEPTED,
+  RIDE_STATUS.DRIVER_ARRIVING,
+  RIDE_STATUS.DRIVER_ON_THE_WAY,
+  RIDE_STATUS.DRIVER_ARRIVED,
+]);
+
+function getStatusClasses(status: string): string {
+  if (SUCCESS_STATUSES.has(status)) {
+    return "border-success/30 bg-success/10 text-success";
+  }
+  if (DESTRUCTIVE_STATUSES.has(status)) {
+    return "border-destructive/30 bg-destructive/10 text-destructive";
+  }
+  if (WARNING_STATUSES.has(status)) {
+    return "border-warning/30 bg-warning/10 text-warning";
+  }
+  if (INFO_STATUSES.has(status)) {
+    return "border-info/30 bg-info/10 text-info";
+  }
+  return "border-category-mobility/30 bg-category-mobility/10 text-category-mobility";
+}
+
+function getStatusLabel(status: string): string {
+  return RIDE_STATUS_LABELS[status] ?? "Status em atualização";
+}
 
 export const ActiveRideWidget = memo(
   ({
@@ -66,19 +85,28 @@ export const ActiveRideWidget = memo(
     className,
   }: ActiveRideWidgetProps) => {
     const navigate = useNavigate();
-
-    const statusConfig = STATUS_CONFIG[ride.status] || STATUS_CONFIG.pending;
+    const statusLabel = getStatusLabel(ride.status);
+    const statusClasses = getStatusClasses(ride.status);
     const otherPerson = isDriver ? ride.passenger : ride.driver;
     const otherPersonName = isDriver
       ? ride.passenger?.name || "Passageiro"
       : ride.driver?.name || "Motorista";
+    const destination =
+      ride.destination_details || ride.destination || ride.destination_address;
+    const origin = ride.origin_details || ride.origin || ride.origin_address;
 
     const handleClick = () => {
-      if (isDriver) {
-        navigate(mobilityRoutes.motorista.home);
-      } else {
-        navigate(mobilityRoutes.passageiro.home);
-      }
+      navigate(
+        isDriver
+          ? mobilityRoutes.motorista.home
+          : mobilityRoutes.passageiro.home,
+      );
+    };
+
+    const handleCompactKeyDown = (event: KeyboardEvent<HTMLDivElement>) => {
+      if (event.key !== "Enter" && event.key !== " ") return;
+      event.preventDefault();
+      handleClick();
     };
 
     if (compact) {
@@ -89,35 +117,40 @@ export const ActiveRideWidget = memo(
           className={cn("w-full", className)}
         >
           <Card
-            className="border-teal-500/30 bg-gradient-to-br from-teal-500/10 to-cyan-500/5 hover:from-teal-500/15 hover:to-cyan-500/10 transition-all cursor-pointer"
+            role="button"
+            tabIndex={0}
+            aria-label={`Abrir detalhes da corrida: ${statusLabel}`}
+            className="cursor-pointer border-category-mobility/30 bg-category-mobility/5 transition-colors hover:bg-category-mobility/10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
             onClick={handleClick}
+            onKeyDown={handleCompactKeyDown}
           >
             <CardContent className="p-4">
               <div className="flex items-center gap-3">
-                <div className="flex-shrink-0">
-                  <div className="w-12 h-12 rounded-full bg-teal-500/20 flex items-center justify-center">
-                    <Car className="w-6 h-6 text-teal-400" />
-                  </div>
+                <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-category-mobility/12 text-category-mobility">
+                  <Car className="h-6 w-6" aria-hidden="true" />
                 </div>
 
-                <div className="flex-1 min-w-0">
-                  <div className="flex items-center gap-2 mb-1">
+                <div className="min-w-0 flex-1">
+                  <div className="mb-1 flex items-center gap-2">
                     <Badge
                       variant="outline"
-                      className={cn("text-xs", statusConfig.color)}
+                      className={cn("text-xs", statusClasses)}
                     >
-                      {statusConfig.label}
+                      {statusLabel}
                     </Badge>
                   </div>
-                  <p className="text-sm font-medium text-white truncate">
-                    {ride.destination_details || ride.destination}
+                  <p className="truncate text-sm font-medium text-foreground">
+                    {destination}
                   </p>
-                  <p className="text-xs text-gray-400 truncate">
+                  <p className="truncate text-xs text-muted-foreground">
                     {isDriver ? "Passageiro" : "Motorista"}: {otherPersonName}
                   </p>
                 </div>
 
-                <ArrowRight className="w-5 h-5 text-gray-400 flex-shrink-0" />
+                <ArrowRight
+                  className="h-5 w-5 shrink-0 text-muted-foreground"
+                  aria-hidden="true"
+                />
               </div>
             </CardContent>
           </Card>
@@ -131,110 +164,101 @@ export const ActiveRideWidget = memo(
         animate={{ opacity: 1, y: 0 }}
         className={cn("w-full", className)}
       >
-        <Card className="border-teal-500/30 bg-gradient-to-br from-teal-500/10 to-cyan-500/5">
+        <Card className="border-category-mobility/30 bg-category-mobility/5">
           <CardContent className="p-6">
-            {/* Header */}
-            <div className="flex items-center justify-between mb-4">
+            <div className="mb-4 flex items-center justify-between">
               <div className="flex items-center gap-2">
-                <div className="w-10 h-10 rounded-full bg-teal-500/20 flex items-center justify-center">
-                  <Car className="w-5 h-5 text-teal-400" />
+                <div className="flex h-10 w-10 items-center justify-center rounded-full bg-category-mobility/12 text-category-mobility">
+                  <Car className="h-5 w-5" aria-hidden="true" />
                 </div>
                 <div>
-                  <h3 className="text-sm font-semibold text-white">
-                    {isDriver ? "Corrida em Andamento" : "Sua Viagem"}
+                  <h3 className="text-sm font-semibold text-foreground">
+                    {isDriver ? "Corrida em andamento" : "Sua viagem"}
                   </h3>
                   <Badge
                     variant="outline"
-                    className={cn("text-xs mt-1", statusConfig.color)}
+                    className={cn("mt-1 text-xs", statusClasses)}
                   >
-                    {statusConfig.label}
+                    {statusLabel}
                   </Badge>
                 </div>
               </div>
             </div>
 
-            {/* Rotas */}
-            <div className="space-y-3 mb-4">
+            <div className="mb-4 space-y-3">
               <div className="flex items-start gap-3">
-                <div className="flex-shrink-0 w-8 h-8 rounded-full bg-blue-500/20 flex items-center justify-center">
-                  <MapPin className="w-4 h-4 text-blue-400" />
+                <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-info/10 text-info">
+                  <MapPin className="h-4 w-4" aria-hidden="true" />
                 </div>
-                <div className="flex-1 min-w-0">
-                  <p className="text-xs text-gray-400 mb-0.5">Origem</p>
-                  <p className="text-sm text-white truncate">
-                    {ride.origin_details || ride.origin}
-                  </p>
+                <div className="min-w-0 flex-1">
+                  <p className="mb-0.5 text-xs text-muted-foreground">Origem</p>
+                  <p className="truncate text-sm text-foreground">{origin}</p>
                 </div>
               </div>
 
               <div className="flex items-start gap-3">
-                <div className="flex-shrink-0 w-8 h-8 rounded-full bg-teal-500/20 flex items-center justify-center">
-                  <MapPin className="w-4 h-4 text-teal-400" />
+                <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-category-mobility/12 text-category-mobility">
+                  <MapPin className="h-4 w-4" aria-hidden="true" />
                 </div>
-                <div className="flex-1 min-w-0">
-                  <p className="text-xs text-gray-400 mb-0.5">Destino</p>
-                  <p className="text-sm text-white truncate">
-                    {ride.destination_details || ride.destination}
-                  </p>
+                <div className="min-w-0 flex-1">
+                  <p className="mb-0.5 text-xs text-muted-foreground">Destino</p>
+                  <p className="truncate text-sm text-foreground">{destination}</p>
                 </div>
               </div>
             </div>
 
-            {/* Informacoes da outra pessoa */}
-            {otherPerson && (
-              <div className="flex items-center gap-3 p-3 rounded-lg bg-white/5 mb-4">
-                <Avatar className="h-10 w-10 border-2 border-teal-400/30">
+            {otherPerson ? (
+              <div className="mb-4 flex items-center gap-3 rounded-lg border border-border bg-muted/30 p-3">
+                <Avatar className="h-10 w-10 border-2 border-category-mobility/30">
                   <AvatarImage
                     src={
                       isDriver
-                        ? ride.passenger?.avatar_url
-                        : ride.driver?.profile?.avatar_url
+                        ? ride.passenger?.avatar_url ?? undefined
+                        : ride.driver?.profile?.avatar_url ?? undefined
                     }
                     alt={otherPersonName}
                   />
-                  <AvatarFallback className="bg-gradient-to-br from-teal-400 to-cyan-400 text-white text-xs">
-                    {(otherPersonName ?? '?').charAt(0)}
+                  <AvatarFallback className="bg-category-mobility/12 text-xs font-semibold text-category-mobility">
+                    {otherPersonName.charAt(0)}
                   </AvatarFallback>
                 </Avatar>
-                <div className="flex-1 min-w-0">
-                  <p className="text-sm font-medium text-white truncate">
+                <div className="min-w-0 flex-1">
+                  <p className="truncate text-sm font-medium text-foreground">
                     {otherPersonName}
                   </p>
-                  <p className="text-xs text-gray-400">
+                  <p className="text-xs text-muted-foreground">
                     {isDriver ? "Passageiro" : "Motorista"}
-                    {!isDriver &&
-                      ride.driver?.vehicle_model &&
-                      ` - ${ride.driver.vehicle_model}`}
+                    {!isDriver && ride.driver?.vehicle_model
+                      ? ` · ${ride.driver.vehicle_model}`
+                      : ""}
                   </p>
                 </div>
-                {!isDriver && ride.driver?.rating && (
-                  <div className="flex items-center gap-1 text-yellow-400">
+                {!isDriver && typeof ride.driver?.rating === "number" ? (
+                  <div className="flex items-center gap-1 text-warning">
                     <span className="text-sm font-medium">
                       {ride.driver.rating.toFixed(1)}
                     </span>
-                    <Star className="h-3 w-3 fill-current" aria-hidden="true" />
+                    <Star
+                      className="h-3 w-3 fill-warning"
+                      aria-hidden="true"
+                    />
                   </div>
-                )}
+                ) : null}
               </div>
-            )}
+            ) : null}
 
-            {/* Preco */}
-            {ride.final_price && (
-              <div className="flex items-center justify-between p-3 rounded-lg bg-white/5 mb-4">
-                <span className="text-sm text-gray-400">Valor</span>
-                <span className="text-lg font-bold text-teal-400">
+            {ride.final_price != null ? (
+              <div className="mb-4 flex items-center justify-between rounded-lg border border-border bg-muted/30 p-3">
+                <span className="text-sm text-muted-foreground">Valor</span>
+                <span className="text-lg font-bold text-success">
                   {formatBrl(ride.final_price)}
                 </span>
               </div>
-            )}
+            ) : null}
 
-            {/* Botao de acao */}
-            <Button
-              onClick={handleClick}
-              className="w-full bg-gradient-to-r from-teal-500 to-cyan-500 hover:from-teal-600 hover:to-cyan-600"
-            >
-              Ver Detalhes
-              <ArrowRight className="w-4 h-4 ml-2" />
+            <Button onClick={handleClick} className="w-full">
+              Ver detalhes
+              <ArrowRight className="ml-2 h-4 w-4" aria-hidden="true" />
             </Button>
           </CardContent>
         </Card>
