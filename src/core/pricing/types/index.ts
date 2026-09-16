@@ -5,27 +5,13 @@
  * Única fonte de verdade para pricing no sistema.
  */
 
-// ============================================
-// PRICING MODE
-// ============================================
+export type PricingMode =
+  | 'ride'
+  | 'delivery'
+  | 'mototaxi'
+  | 'motoboy'
+  | 'custom';
 
-/**
- * Modo de precificação
- */
-export type PricingMode = 
-  | 'ride'        // Corrida de passageiro
-  | 'delivery'    // Entrega
-  | 'mototaxi'    // Mototáxi
-  | 'motoboy'     // Motoboy
-  | 'custom';     // Customizado
-
-// ============================================
-// PRICING CONTEXT
-// ============================================
-
-/**
- * Contexto para cálculo de preço
- */
 export interface PricingContext {
   mode: PricingMode;
   distanceKm: number;
@@ -42,13 +28,6 @@ export interface PricingContext {
   metadata?: Record<string, unknown>;
 }
 
-// ============================================
-// PRICE ESTIMATE
-// ============================================
-
-/**
- * Request para estimativa de preço
- */
 export interface PriceEstimateRequest {
   mode: PricingMode;
   origin: {
@@ -67,9 +46,6 @@ export interface PriceEstimateRequest {
   };
 }
 
-/**
- * Response de estimativa de preço
- */
 export interface PriceEstimateResponse {
   estimatedPrice: number;
   minimumPrice: number;
@@ -84,13 +60,6 @@ export interface PriceEstimateResponse {
   };
 }
 
-// ============================================
-// PRICING BREAKDOWN
-// ============================================
-
-/**
- * Detalhamento de preço
- */
 export interface PricingBreakdown {
   baseFare: number;
   distanceFare: number;
@@ -102,22 +71,12 @@ export interface PricingBreakdown {
   items: PricingBreakdownItem[];
 }
 
-/**
- * Item do detalhamento
- */
 export interface PricingBreakdownItem {
   label: string;
   value: number;
   type: 'base' | 'distance' | 'time' | 'fee' | 'multiplier';
 }
 
-// ============================================
-// ADDITIONAL FEES
-// ============================================
-
-/**
- * Taxa adicional
- */
 export interface AdditionalFee {
   id: string;
   label: string;
@@ -126,13 +85,6 @@ export interface AdditionalFee {
   reason?: string;
 }
 
-// ============================================
-// PRICING RULE
-// ============================================
-
-/**
- * Regra de precificação
- */
 export interface PricingRule {
   id: string;
   mode: PricingMode;
@@ -143,9 +95,9 @@ export interface PricingRule {
   minimumFare: number;
   maximumFare?: number;
   peakHourMultipliers?: {
-    morning?: number;    // 7h-9h
-    afternoon?: number;  // 17h-19h
-    night?: number;      // 22h-2h
+    morning?: number;
+    afternoon?: number;
+    night?: number;
   };
   additionalFees?: AdditionalFee[];
   isActive: boolean;
@@ -154,40 +106,14 @@ export interface PricingRule {
   metadata?: Record<string, unknown>;
 }
 
-// ============================================
-// PRICING PROVIDER
-// ============================================
-
-/**
- * Contrato para providers de pricing
- */
 export interface PricingProvider {
   readonly id: string;
   readonly supportedModes: PricingMode[];
-  
-  /**
-   * Calcula estimativa de preço
-   */
   calculateEstimate(request: PriceEstimateRequest): Promise<PriceEstimateResponse>;
-  
-  /**
-   * Obtém regra de precificação para um modo
-   */
   getRule(mode: PricingMode): Promise<PricingRule | null>;
-  
-  /**
-   * Valida se provider está disponível
-   */
   isAvailable(): boolean;
 }
 
-// ============================================
-// SERVICE TYPES
-// ============================================
-
-/**
- * Configuração do PricingService
- */
 export interface PricingServiceConfig {
   defaultMode: PricingMode;
   currency: string;
@@ -197,9 +123,6 @@ export interface PricingServiceConfig {
   cacheTtlSeconds: number;
 }
 
-/**
- * Resultado de operação de pricing
- */
 export interface PricingResult<T> {
   success: boolean;
   data?: T;
@@ -207,31 +130,13 @@ export interface PricingResult<T> {
 }
 
 /**
- * Constantes de pricing
+ * Non-commercial pricing constants only.
+ * Monetary values and commercial multipliers belong to persisted pricing rules.
  */
 export const PRICING_CONSTANTS = {
   DEFAULT_CURRENCY: 'BRL',
-  DEFAULT_BASE_FARE: 5.0,
-  DEFAULT_PRICE_PER_KM: 2.5,
-  DEFAULT_PRICE_PER_MINUTE: 0.5,
-  DEFAULT_MINIMUM_FARE: 8.0,
-  DEFAULT_AVERAGE_SPEED_KMH: 40,
-  
-  PEAK_HOUR_MULTIPLIERS: {
-    MORNING: 1.3,    // 7h-9h
-    AFTERNOON: 1.5,  // 17h-19h
-    NIGHT: 1.2,      // 22h-2h
-    WEEKEND: 1.0,    // Fim de semana
-  },
 } as const;
 
-// ============================================
-// ERRORS
-// ============================================
-
-/**
- * Tipos de erro de pricing
- */
 export enum PricingErrorType {
   CONFLICT = 'PRICING_CONFLICT',
   NOT_FOUND = 'PRICING_NOT_FOUND',
@@ -239,9 +144,6 @@ export enum PricingErrorType {
   UNKNOWN = 'PRICING_UNKNOWN',
 }
 
-/**
- * Erro customizado de pricing
- */
 export class PricingError extends Error {
   constructor(
     public type: PricingErrorType,
