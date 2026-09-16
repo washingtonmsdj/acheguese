@@ -1,15 +1,15 @@
 import { useState } from "react";
 import {
-  Shield,
+  AlertTriangle,
   Ban,
   CheckCircle,
-  Mail,
   Eye,
-  ExternalLink,
+  Mail,
   MessageCircle,
-  FileText,
-  AlertTriangle,
+  Shield,
 } from "lucide-react";
+import { AdminUserService } from "@/core/admin/services/AdminUserService";
+import { buildPublicProfileUrl } from "@/core/profiles/utils/publicProfileUrl";
 import { Button } from "@/shared/components/ui/button";
 import {
   Card,
@@ -17,13 +17,18 @@ import {
   CardHeader,
   CardTitle,
 } from "@/shared/components/ui/card";
-import { SuspendUserDialog } from "./SuspendUserDialog";
-import { toast } from "sonner";
+import {
+  buildMailtoUrl,
+  buildWhatsAppUrl,
+  openContactUrl,
+} from "@/shared/utils/contactLinks";
 import { logger } from "@/shared/utils/logger";
-import { AdminUserService } from "@/core/admin/services/AdminUserService";
-import { buildPublicProfileUrl } from "@/core/profiles/utils/publicProfileUrl";
-import { buildMailtoUrl, buildWhatsAppUrl, openContactUrl } from "@/shared/utils/contactLinks";
-import { openSafeExternalUrl, openSafeUrlInNewTab } from "@/shared/utils/safeRedirect";
+import {
+  openSafeExternalUrl,
+  openSafeUrlInNewTab,
+} from "@/shared/utils/safeRedirect";
+import { toast } from "sonner";
+import { SuspendUserDialog } from "./SuspendUserDialog";
 
 interface UserActionsCardProps {
   user: {
@@ -47,9 +52,8 @@ export function UserActionsCard({ user, onUpdate }: UserActionsCardProps) {
     setLoading(true);
     try {
       await AdminUserService.verifyUser(user.id);
-
       logger.info("Usuário verificado", { userId: user.id });
-      toast.success(`${user.name} foi verificado!`);
+      toast.success(`${user.name || "Usuário"} foi verificado!`);
       onUpdate();
     } catch (error) {
       logger.error("Erro ao verificar usuário:", error);
@@ -63,7 +67,6 @@ export function UserActionsCard({ user, onUpdate }: UserActionsCardProps) {
     setLoading(true);
     try {
       await AdminUserService.unsuspendProfile(user.id);
-
       logger.info("Suspensão removida", { userId: user.id });
       toast.success("Suspensão removida com sucesso!");
       onUpdate();
@@ -78,7 +81,7 @@ export function UserActionsCard({ user, onUpdate }: UserActionsCardProps) {
   const openPublicProfile = () => {
     const username = user.username?.trim();
     if (!username) {
-      toast.error("Usuario sem username publico");
+      toast.error("Usuário sem username público");
       return;
     }
 
@@ -102,114 +105,103 @@ export function UserActionsCard({ user, onUpdate }: UserActionsCardProps) {
 
   return (
     <>
-      <Card className="bg-[#1E2529] border-white/10">
+      <Card className="border-border bg-card text-card-foreground">
         <CardHeader>
-          <CardTitle className="text-sm">Ações Rápidas</CardTitle>
+          <CardTitle className="text-sm">Ações rápidas</CardTitle>
         </CardHeader>
         <CardContent className="space-y-2">
-          {/* Verificação */}
-          {!user.verified && (
+          {!user.verified ? (
             <Button
               size="sm"
-              className="w-full bg-green-600 hover:bg-green-700"
-              onClick={handleVerify}
+              className="w-full"
+              onClick={() => void handleVerify()}
               disabled={loading}
             >
-              <Shield className="h-4 w-4 mr-2" />
+              <Shield className="mr-2 h-4 w-4" aria-hidden="true" />
               Verificar perfil
             </Button>
-          )}
+          ) : null}
 
-          {/* Suspensão */}
           {user.suspended ? (
             <Button
               size="sm"
               variant="outline"
-              className="w-full border-green-500/30 text-green-400 hover:bg-green-500/10"
-              onClick={handleUnsuspend}
+              className="w-full border-success/30 text-success hover:bg-success/10 hover:text-success"
+              onClick={() => void handleUnsuspend()}
               disabled={loading}
             >
-              <CheckCircle className="h-4 w-4 mr-2" />
-              Remover Suspensão
+              <CheckCircle className="mr-2 h-4 w-4" aria-hidden="true" />
+              Remover suspensão
             </Button>
           ) : (
             <Button
               size="sm"
               variant="outline"
-              className="w-full border-red-500/30 text-red-400 hover:bg-red-500/10"
+              className="w-full border-destructive/30 text-destructive hover:bg-destructive/10 hover:text-destructive"
               onClick={() => setSuspendDialogOpen(true)}
             >
-              <Ban className="h-4 w-4 mr-2" />
-              Suspender Usuário
+              <Ban className="mr-2 h-4 w-4" aria-hidden="true" />
+              Suspender usuário
             </Button>
           )}
 
-          {/* Divider */}
-          <div className="border-t border-white/10 my-3" />
+          <div className="my-3 border-t border-border" />
 
-          {/* Comunicação */}
-          {user.email && (
-            <Button
-              size="sm"
-              variant="outline"
-              className="w-full border-white/10"
-              onClick={sendEmail}
-            >
-              <Mail className="h-4 w-4 mr-2" />
-              Enviar Email
+          {user.email ? (
+            <Button size="sm" variant="outline" className="w-full" onClick={sendEmail}>
+              <Mail className="mr-2 h-4 w-4" aria-hidden="true" />
+              Enviar e-mail
             </Button>
-          )}
+          ) : null}
 
-          {user.phone && (
+          {user.phone ? (
             <Button
               size="sm"
               variant="outline"
-              className="w-full border-white/10"
+              className="w-full"
               onClick={openWhatsApp}
             >
-              <MessageCircle className="h-4 w-4 mr-2" />
+              <MessageCircle className="mr-2 h-4 w-4" aria-hidden="true" />
               Abrir WhatsApp
             </Button>
-          )}
+          ) : null}
 
-          {/* Divider */}
-          <div className="border-t border-white/10 my-3" />
+          <div className="my-3 border-t border-border" />
 
-          {/* Visualização */}
           <Button
             size="sm"
             variant="outline"
-            className="w-full border-white/10"
+            className="w-full"
             onClick={openPublicProfile}
           >
-            <Eye className="h-4 w-4 mr-2" />
-            Ver Perfil Público
+            <Eye className="mr-2 h-4 w-4" aria-hidden="true" />
+            Ver perfil público
           </Button>
 
-          {/* Aviso se suspenso */}
-          {user.suspended && (
-            <div className="flex gap-2 p-2 bg-red-500/10 border border-red-500/30 rounded text-xs text-red-200 mt-3">
-              <AlertTriangle className="h-4 w-4 shrink-0" />
+          {user.suspended ? (
+            <div className="mt-3 flex gap-2 rounded border border-destructive/30 bg-destructive/10 p-2 text-xs text-foreground/85">
+              <AlertTriangle
+                className="h-4 w-4 shrink-0 text-destructive"
+                aria-hidden="true"
+              />
               <div>
-                <p className="font-semibold">Usuário Suspenso</p>
-                {user.suspended_until && (
-                  <p className="text-red-300/80">
-                    Até:{" "}
-                    {new Date(user.suspended_until).toLocaleDateString("pt-BR")}
+                <p className="font-semibold text-destructive">Usuário suspenso</p>
+                {user.suspended_until ? (
+                  <p className="text-muted-foreground">
+                    Até: {new Date(user.suspended_until).toLocaleDateString("pt-BR")}
                   </p>
-                )}
+                ) : null}
               </div>
             </div>
-          )}
+          ) : null}
         </CardContent>
       </Card>
 
-      {/* Dialog de Suspensão */}
       <SuspendUserDialog
         open={suspendDialogOpen}
         onOpenChange={setSuspendDialogOpen}
         userId={user.id}
-        userName={user.name}
+        userName={user.name || "Usuário"}
         onSuccess={onUpdate}
       />
     </>
