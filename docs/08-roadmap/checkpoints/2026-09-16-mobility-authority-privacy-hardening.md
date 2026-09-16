@@ -2,7 +2,7 @@
 
 **Data:** 2026-09-16  
 **Linha:** `main`  
-**Status:** source endurecido; GPS, autorização negativa e preço terminal reconciliados; rollout público continua pausado
+**Status:** source endurecido; GPS, autorização negativa, preço terminal e replay de aceite reconciliados; rollout público continua pausado
 
 ## Objetivo desta fase
 
@@ -44,6 +44,17 @@ Nesta retomada, a compatibilidade pública `p_final_price` foi removida:
 - migration remota e Git usam `20260916233125_remove_mobility_delivery_final_price_compat`;
 - `tests/architecture/mobility-build-contract.test.ts` impede reintrodução do parâmetro no boundary/broker.
 
+## Tipos Supabase
+
+Existe drift confirmado entre o schema remoto e `src/integrations/supabase/types.generated.ts`:
+
+- o RPC vivo `mobility_transition_delivery_state_atomic` possui 7 argumentos e não expõe `p_final_price`;
+- o arquivo gerado ainda contém `p_final_price?: number` nessa assinatura;
+- o artefato gerado não deve ser editado manualmente;
+- a correção deve ocorrer pelo workflow canônico `Supabase Types Sync`/`supabase gen types`, seguida de typecheck e novo deploy no mesmo SHA.
+
+Enquanto esse sync não for executado, o gate de tipos permanece aberto.
+
 ## Minimização de PII e leituras
 
 - `RideRequestReadModel` não inclui PII sensível de entrega;
@@ -83,17 +94,37 @@ Terceiro usuário autenticado foi bloqueado ao tentar:
 
 Nenhum dado sintético do probe foi preservado.
 
+## Replay/idempotência de aceite
+
+Foi executado no Supabase canônico um probe rollback-only de retry sequencial do aceite de corrida. O probe está versionado em `tests/security/mobility-accept-replay-remote-probe.sql`.
+
+Evidência obtida:
+
+- a primeira chamada de `mobility_accept_ride_atomic` concluiu o aceite;
+- a segunda chamada com a mesma corrida/motorista foi rejeitada;
+- existiu exatamente um `ride_state_audit` com `to_state='driver_accepted'`;
+- `driver_availability.active_ride_id` apontou somente para a corrida sintética aceita;
+- a transação foi revertida integralmente.
+
+O fixture respeitou `check_available_requirements` e a minimização de GPS ativa; nenhuma constraint ou trigger foi desabilitada.
+
+**Escopo da prova:** retry/replay sequencial. Ainda não equivale a prova real de duas sessões concorrentes.
+
 ## Safety / SOS
 
 Permanece válido `2026-09-16-mobility-safety-production-drift-repair.md`: outbox G71-G80 e `send-emergency-email` v33 já haviam sido reconciliados.
+
+## Estado de build/deploy
+
+O SHA `a30b7c7ba9a403ff7c9a6c4e1308754a4d9bbd4f` foi confirmado com status Vercel `success` antes da inclusão deste probe. Qualquer commit posterior precisa repetir o gate same-SHA; um deploy verde anterior não certifica automaticamente o novo SHA.
 
 ## Bloqueadores atuais de lançamento
 
 1. definir e aprovar a política comercial real por modalidade;
 2. regenerar tipos Supabase a partir do schema real, sem edição manual;
-3. provar concorrência/idempotência em dupla aceitação, cancelamento simultâneo, retry/reconnect, quote duplicada e confirmação duplicada;
+3. concluir concorrência/idempotência além do replay já provado: dupla aceitação em sessões independentes, cancelamento simultâneo, quote duplicada e confirmação duplicada;
 4. executar typecheck, lint, testes de Mobilidade/Pricing, build e E2E no mesmo SHA;
-5. obter pipeline/deploy verde; o status Vercel segue bloqueado por `build-rate-limit`, o que não é certificação positiva nem falha de source;
+5. obter pipeline/deploy verde para o SHA final de estabilização;
 6. proteger `main` por ruleset/required checks quando houver capacidade administrativa.
 
 ## Fechado nesta retomada
@@ -102,7 +133,9 @@ Permanece válido `2026-09-16-mobility-safety-production-drift-repair.md`: outbo
 - [x] minimização de GPS aplicada e verificada;
 - [x] probe negativo IDOR/BOLA PIN/trust/report executado rollback-only;
 - [x] zero snapshots de GPS ocioso após a migration;
-- [x] `p_final_price` removido do wrapper público com cutover versionado e ratchet de arquitetura.
+- [x] `p_final_price` removido do wrapper público com cutover versionado e ratchet de arquitetura;
+- [x] drift de tipos identificado objetivamente (`p_final_price` ainda presente no arquivo gerado);
+- [x] replay sequencial de `mobility_accept_ride_atomic` provado rollback-only sem duplicar audit/estado.
 
 ## Regra de lançamento
 
