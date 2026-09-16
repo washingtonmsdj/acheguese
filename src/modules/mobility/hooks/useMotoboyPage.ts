@@ -111,7 +111,6 @@ export function useMotoboyPage() {
     rideId: string,
     driverProfileId: string,
     proof: DeliveryProof,
-    finalPrice?: number,
     pin?: string,
   ): Promise<boolean> => {
     if (!driverProfileId) {
@@ -125,7 +124,6 @@ export function useMotoboyPage() {
         rideId,
         driverProfileId,
         proof,
-        finalPrice,
         pin,
       );
 
