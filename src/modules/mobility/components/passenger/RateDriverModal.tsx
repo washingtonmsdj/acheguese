@@ -56,7 +56,7 @@ export function RateDriverModal({
     setSubmitting(true);
     try {
       const result = await onRate(ride.id, rating, comment.trim());
-      if (result && result.success === false) return;
+      if (!result || result.success !== true) return;
       onClose();
     } finally {
       setSubmitting(false);
