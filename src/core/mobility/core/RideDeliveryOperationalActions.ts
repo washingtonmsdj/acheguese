@@ -152,7 +152,6 @@ export async function confirmDeliveryOperation(
     code?: string;
     observation?: string;
   },
-  finalPrice: number | undefined,
   pin: string | undefined,
 ): Promise<TransitionResult> {
   try {
@@ -200,7 +199,6 @@ export async function confirmDeliveryOperation(
       actorProfileId: driverProfileId,
       reason: "Delivery confirmed and completed",
       proofOfDelivery: proof,
-      finalPrice,
     });
 
     if (!transition.updated) {
