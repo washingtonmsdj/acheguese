@@ -125,11 +125,11 @@
     },
     {
       "section": "authored_content",
-      "sources": ["public.posts", "public.comments", "public.community_posts", "public.community_questions", "public.question_answers", "public.classifieds", "public.classified_comments", "public.events", "public.vagas", "public.work_opportunities", "public.communication_publications"],
+      "sources": ["public.posts", "public.comments", "public.community_posts", "public.community_questions", "public.question_answers", "public.classifieds", "public.classified_comments", "public.events", "public.event_reviews", "public.vagas", "public.work_opportunities", "public.communication_publications"],
       "scope": "rows-authored-or-owned-by-subject-profile-ids",
       "includePolicy": "content-and-public-status-fields",
-      "exclude": ["removed_by", "reviewer identifiers", "internal moderation notes"],
-      "notes": "Export the subject's authored rows, not content authored by other participants."
+      "exclude": ["removed_by", "reviewer identifiers", "internal moderation notes", "event_reviews.reviewer_profile_id"],
+      "notes": "Export the subject's authored rows, including their own event reviews, not content authored by other participants."
     },
     {
       "section": "messages_sent",
@@ -141,11 +141,11 @@
     },
     {
       "section": "community_membership_and_actions",
-      "sources": ["public.community_memberships", "public.group_members_new", "public.community_poll_votes", "public.community_issue_supports", "public.classified_likes", "public.question_answer_likes", "public.event_participants"],
+      "sources": ["public.community_memberships", "public.group_members_new", "public.community_poll_votes", "public.community_issue_supports", "public.classified_likes", "public.question_answer_likes", "public.event_participants", "public.event_review_helpfulness", "public.event_reminders"],
       "scope": "rows-linked-to-subject-user-or-profile-ids",
       "includePolicy": "subject-membership-and-action-fields",
-      "exclude": ["invited_by_profile_id", "approved_by_profile_id", "metadata", "event_participants.checkin_code"],
-      "notes": "Include only the subject's own membership, participation and engagement state. Event check-in credentials are operational secrets and remain excluded."
+      "exclude": ["invited_by_profile_id", "approved_by_profile_id", "metadata", "event_participants.checkin_code", "event_review_helpfulness.profile_id", "event_reminders.profile_id"],
+      "notes": "Include only the subject's own membership, participation and engagement state. Event check-in credentials are operational secrets. event_reminders is retained subject data even though the current UI no longer advertises reminders without a delivery authority."
     },
     {
       "section": "favorites_and_saved_items",
