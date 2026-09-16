@@ -6,11 +6,13 @@
  *
  * Padrão: Banco → Service → Hook → Component
  */
-import { logger } from '@/shared/utils/logger';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { safetyService } from '../services/SafetyService';
 import { toast } from 'sonner';
-import type { CreateRideShareInput, SharedRideData } from '../types';
+
+import { logger } from '@/shared/utils/logger';
+import { SAFETY_RIDE_SHARE_POLICY } from '../config/rideSharePolicy';
+import { safetyService } from '../services/SafetyService';
+import type { CreateRideShareInput } from '../types';
 
 export function useRideShare() {
   const queryClient = useQueryClient();
@@ -54,6 +56,6 @@ export function useSharedRideData(shareToken: string | null | undefined) {
     queryKey: ['shared-ride', shareToken],
     queryFn: () => safetyService.getSharedRideData(shareToken!),
     enabled: !!shareToken,
-    refetchInterval: 10000, // Atualiza a cada 10s para tracking em tempo real
+    refetchInterval: SAFETY_RIDE_SHARE_POLICY.refreshIntervalMs,
   });
 }
