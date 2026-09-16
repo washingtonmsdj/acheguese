@@ -32,6 +32,7 @@ const MIGRATED_RUNTIME_FILES = [
   'src/modules/mobility/components/chat/ChatWindow.tsx',
   'src/modules/mobility/components/MobilidadeLeftSidebar.tsx',
   'src/modules/mobility/components/MobilidadeRightSidebar.tsx',
+  'src/core/admin/drivers/pages/AdminMotoristasPage.tsx',
   'src/modules/admin/components/AdminAccessDenied.tsx',
   'src/modules/admin/components/user-detail/ActivityTab.tsx',
   'src/modules/admin/components/user-detail/AnalyticsTab.tsx',
@@ -48,7 +49,10 @@ const MIGRATED_RUNTIME_FILES = [
   'src/modules/admin/pages/AdminMensagens.tsx',
   'src/modules/admin/pages/AdminModeracao.tsx',
   'src/modules/admin/pages/AdminOperacoes.tsx',
+  'src/modules/admin/pages/AdminPontosEmbarque.tsx',
   'src/modules/admin/pages/AdminRealtimeDashboard.tsx',
+  'src/modules/admin/pages/AdminReivindicacoes.tsx',
+  'src/modules/admin/pages/AdminServicos.tsx',
   'src/styles/theme.ts',
 ] as const;
 
