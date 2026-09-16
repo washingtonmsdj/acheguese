@@ -1,15 +1,15 @@
-import { AlertTriangle, Flag, CheckCircle, XCircle } from "lucide-react";
+import { AlertTriangle, CheckCircle, Flag, XCircle } from "lucide-react";
+import type { UserReport } from "@/core/admin/services/AdminUserDetailService";
+import { Badge } from "@/shared/components/ui/badge";
 import {
   Card,
   CardContent,
   CardHeader,
   CardTitle,
 } from "@/shared/components/ui/card";
-import { Badge } from "@/shared/components/ui/badge";
-import { formatDistanceToNow } from "date-fns";
 import { ptBR } from "@/shared/utils/dateLocale";
 import { cn } from "@/shared/utils/cn";
-import type { UserReport } from "@/core/admin/services/AdminUserDetailService";
+import { formatDistanceToNow } from "date-fns";
 
 interface ReportsTabProps {
   reportsReceived: UserReport[];
@@ -19,209 +19,139 @@ interface ReportsTabProps {
 const SEVERITY_CONFIG = {
   low: {
     label: "Baixa",
-    color: "bg-gray-500/20 text-gray-400 border-gray-500/30",
+    color: "border-border bg-muted text-muted-foreground",
   },
   medium: {
     label: "Média",
-    color: "bg-yellow-500/20 text-yellow-400 border-yellow-500/30",
+    color: "border-warning/30 bg-warning/10 text-warning",
   },
   high: {
     label: "Alta",
-    color: "bg-orange-500/20 text-orange-400 border-orange-500/30",
+    color: "border-warning/50 bg-warning/15 text-warning",
   },
   critical: {
     label: "Crítica",
-    color: "bg-red-500/20 text-red-400 border-red-500/30",
+    color: "border-destructive/30 bg-destructive/10 text-destructive",
   },
 } as const;
 
 const STATUS_CONFIG = {
-  pending: { label: "Pendente", icon: AlertTriangle, color: "text-yellow-400" },
-  investigating: { label: "Investigando", icon: Flag, color: "text-blue-400" },
-  resolved: { label: "Resolvido", icon: CheckCircle, color: "text-green-400" },
-  dismissed: { label: "Arquivado", icon: XCircle, color: "text-gray-400" },
+  pending: { label: "Pendente", icon: AlertTriangle, color: "text-warning" },
+  investigating: { label: "Investigando", icon: Flag, color: "text-info" },
+  resolved: { label: "Resolvido", icon: CheckCircle, color: "text-success" },
+  dismissed: { label: "Arquivado", icon: XCircle, color: "text-muted-foreground" },
 } as const;
 
 export function ReportsTab({ reportsReceived, reportsMade }: ReportsTabProps) {
   return (
     <div className="space-y-4">
-      {/* Reports Recebidos */}
-      <Card className="bg-[#1E2529] border-white/10">
-        <CardHeader>
-          <CardTitle className="text-sm flex items-center justify-between">
-            <span className="flex items-center gap-2">
-              <AlertTriangle className="h-4 w-4 text-red-400" />
-              Reports Recebidos
-            </span>
-            <Badge className="bg-red-500/20 text-red-400 border-red-500/30">
-              {reportsReceived.length}
-            </Badge>
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
-          {reportsReceived.length === 0 ? (
-            <p className="text-center text-gray-400 py-4 text-sm">
-              Nenhum report recebido
-            </p>
-          ) : (
-            <div className="space-y-2">
-              {reportsReceived.map((report) => {
-                const StatusIcon =
-                  STATUS_CONFIG[report.status as keyof typeof STATUS_CONFIG]
-                    ?.icon || Flag;
-                return (
-                  <div
-                    key={report.id}
-                    className="p-3 bg-[#0A0F14] rounded-lg border border-white/5 hover:border-white/10 transition-colors"
-                  >
-                    <div className="flex items-start justify-between mb-2">
-                      <div className="flex-1">
-                        <p className="text-sm font-semibold text-white">
-                          {report.title}
-                        </p>
-                        <p className="text-xs text-gray-400">
-                          Por {report.reporter_name} •{" "}
-                          {formatDistanceToNow(new Date(report.created_at), {
-                            addSuffix: true,
-                            locale: ptBR,
-                          })}
-                        </p>
-                      </div>
-                      <Badge
-                        className={cn(
-                          "text-xs",
-                          SEVERITY_CONFIG[
-                            report.severity as keyof typeof SEVERITY_CONFIG
-                          ]?.color,
-                        )}
-                      >
-                        {
-                          SEVERITY_CONFIG[
-                            report.severity as keyof typeof SEVERITY_CONFIG
-                          ]?.label
-                        }
-                      </Badge>
-                    </div>
-                    <p className="text-xs text-gray-300 mb-2 line-clamp-2">
-                      {report.description}
-                    </p>
-                    <div className="flex items-center gap-2">
-                      <StatusIcon
-                        className={cn(
-                          "h-3 w-3",
-                          STATUS_CONFIG[
-                            report.status as keyof typeof STATUS_CONFIG
-                          ]?.color,
-                        )}
-                      />
-                      <span
-                        className={cn(
-                          "text-xs",
-                          STATUS_CONFIG[
-                            report.status as keyof typeof STATUS_CONFIG
-                          ]?.color,
-                        )}
-                      >
-                        {
-                          STATUS_CONFIG[
-                            report.status as keyof typeof STATUS_CONFIG
-                          ]?.label
-                        }
-                      </span>
-                    </div>
-                  </div>
-                );
-              })}
-            </div>
-          )}
-        </CardContent>
-      </Card>
+      <ReportSection
+        title="Reports recebidos"
+        icon={AlertTriangle}
+        iconClassName="text-destructive"
+        count={reportsReceived.length}
+        countClassName="border-destructive/30 bg-destructive/10 text-destructive"
+        reports={reportsReceived}
+        emptyMessage="Nenhum report recebido"
+        showReporter
+      />
 
-      {/* Reports Feitos */}
-      <Card className="bg-[#1E2529] border-white/10">
-        <CardHeader>
-          <CardTitle className="text-sm flex items-center justify-between">
-            <span className="flex items-center gap-2">
-              <Flag className="h-4 w-4 text-blue-400" />
-              Reports Feitos
-            </span>
-            <Badge className="bg-blue-500/20 text-blue-400 border-blue-500/30">
-              {reportsMade.length}
-            </Badge>
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
-          {reportsMade.length === 0 ? (
-            <p className="text-center text-gray-400 py-4 text-sm">
-              Nenhum report feito
-            </p>
-          ) : (
-            <div className="space-y-2">
-              {reportsMade.map((report) => {
-                const StatusIcon =
-                  STATUS_CONFIG[report.status as keyof typeof STATUS_CONFIG]
-                    ?.icon || Flag;
-                return (
-                  <div
-                    key={report.id}
-                    className="p-3 bg-[#0A0F14] rounded-lg border border-white/5"
-                  >
-                    <div className="flex items-start justify-between mb-2">
-                      <p className="text-sm font-semibold text-white flex-1">
-                        {report.title}
-                      </p>
-                      <Badge
-                        className={cn(
-                          "text-xs",
-                          SEVERITY_CONFIG[
-                            report.severity as keyof typeof SEVERITY_CONFIG
-                          ]?.color,
-                        )}
-                      >
-                        {
-                          SEVERITY_CONFIG[
-                            report.severity as keyof typeof SEVERITY_CONFIG
-                          ]?.label
-                        }
-                      </Badge>
-                    </div>
-                    <p className="text-xs text-gray-400 mb-2">
-                      {formatDistanceToNow(new Date(report.created_at), {
-                        addSuffix: true,
-                        locale: ptBR,
-                      })}
-                    </p>
-                    <div className="flex items-center gap-2">
-                      <StatusIcon
-                        className={cn(
-                          "h-3 w-3",
-                          STATUS_CONFIG[
-                            report.status as keyof typeof STATUS_CONFIG
-                          ]?.color,
-                        )}
-                      />
-                      <span
-                        className={cn(
-                          "text-xs",
-                          STATUS_CONFIG[
-                            report.status as keyof typeof STATUS_CONFIG
-                          ]?.color,
-                        )}
-                      >
-                        {
-                          STATUS_CONFIG[
-                            report.status as keyof typeof STATUS_CONFIG
-                          ]?.label
-                        }
-                      </span>
-                    </div>
-                  </div>
-                );
-              })}
-            </div>
-          )}
-        </CardContent>
-      </Card>
+      <ReportSection
+        title="Reports feitos"
+        icon={Flag}
+        iconClassName="text-info"
+        count={reportsMade.length}
+        countClassName="border-info/30 bg-info/10 text-info"
+        reports={reportsMade}
+        emptyMessage="Nenhum report feito"
+      />
     </div>
+  );
+}
+
+function ReportSection({
+  title,
+  icon: Icon,
+  iconClassName,
+  count,
+  countClassName,
+  reports,
+  emptyMessage,
+  showReporter = false,
+}: {
+  title: string;
+  icon: typeof Flag;
+  iconClassName: string;
+  count: number;
+  countClassName: string;
+  reports: UserReport[];
+  emptyMessage: string;
+  showReporter?: boolean;
+}) {
+  return (
+    <Card className="border-border bg-card text-card-foreground">
+      <CardHeader>
+        <CardTitle className="flex items-center justify-between text-sm">
+          <span className="flex items-center gap-2">
+            <Icon className={cn("h-4 w-4", iconClassName)} aria-hidden="true" />
+            {title}
+          </span>
+          <Badge className={cn("border", countClassName)}>{count}</Badge>
+        </CardTitle>
+      </CardHeader>
+      <CardContent>
+        {reports.length === 0 ? (
+          <p className="py-4 text-center text-sm text-muted-foreground">
+            {emptyMessage}
+          </p>
+        ) : (
+          <div className="space-y-2">
+            {reports.map((report) => (
+              <ReportItem key={report.id} report={report} showReporter={showReporter} />
+            ))}
+          </div>
+        )}
+      </CardContent>
+    </Card>
+  );
+}
+
+function ReportItem({ report, showReporter }: { report: UserReport; showReporter: boolean }) {
+  const severity =
+    SEVERITY_CONFIG[report.severity as keyof typeof SEVERITY_CONFIG] ??
+    SEVERITY_CONFIG.low;
+  const status =
+    STATUS_CONFIG[report.status as keyof typeof STATUS_CONFIG] ?? STATUS_CONFIG.dismissed;
+  const StatusIcon = status.icon;
+
+  return (
+    <article className="rounded-lg border border-border bg-muted/40 p-3 transition-colors hover:border-ring/40">
+      <div className="mb-2 flex items-start justify-between gap-3">
+        <div className="min-w-0 flex-1">
+          <p className="text-sm font-semibold text-foreground">{report.title}</p>
+          <p className="text-xs text-muted-foreground">
+            {showReporter && report.reporter_name ? `Por ${report.reporter_name} • ` : null}
+            {formatDistanceToNow(new Date(report.created_at), {
+              addSuffix: true,
+              locale: ptBR,
+            })}
+          </p>
+        </div>
+        <Badge className={cn("shrink-0 border text-xs", severity.color)}>
+          {severity.label}
+        </Badge>
+      </div>
+
+      {report.description ? (
+        <p className="mb-2 line-clamp-2 text-xs text-foreground/80">
+          {report.description}
+        </p>
+      ) : null}
+
+      <div className="flex items-center gap-2">
+        <StatusIcon className={cn("h-3 w-3", status.color)} aria-hidden="true" />
+        <span className={cn("text-xs", status.color)}>{status.label}</span>
+      </div>
+    </article>
   );
 }
