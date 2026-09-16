@@ -9,7 +9,7 @@
 
 import { useState, useCallback, useEffect } from 'react';
 import { useRobustGeolocation } from '@/shared/hooks';
-import { GeolocationService } from '../services/GeolocationService';
+import { GeolocationService } from '@/shared/services/GeolocationService';
 import type { Coordinates } from '../types/core';
 
 export type LocationStatus = 'idle' | 'loading' | 'success' | 'error' | 'denied' | 'ip-fallback';
