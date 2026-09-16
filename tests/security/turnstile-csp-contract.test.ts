@@ -14,6 +14,7 @@ import {
 
 const root = process.cwd();
 const turnstileOrigin = SECURITY_DOMAINS.CLOUDFLARE_TURNSTILE.url;
+const hibpOrigin = SECURITY_DOMAINS.HIBP_PASSWORDS.url;
 const canonicalWidgetSource = `
   import { TURNSTILE_CLIENT_CONFIG } from "@/shared/config/security.config";
   const scriptUrl = TURNSTILE_CLIENT_CONFIG.scriptUrl;
@@ -160,5 +161,8 @@ describe("Cloudflare Turnstile CSP contract", () => {
     expect(directives.get("frame-ancestors")).toEqual(["'none'"]);
     expect(directives.get("object-src")).toEqual(["'none'"]);
     expect(directives.get("connect-src")).not.toContain(turnstileOrigin);
+    expect(directives.get("connect-src")).toContain(hibpOrigin);
+    expect(directives.get("script-src")).not.toContain(hibpOrigin);
+    expect(directives.get("frame-src")).not.toContain(hibpOrigin);
   });
 });
