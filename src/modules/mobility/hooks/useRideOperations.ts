@@ -91,14 +91,12 @@ export function useRideOperations() {
   const completeRide = async (
     rideId: string,
     driverProfileId: string,
-    finalPrice?: number
   ) => {
     setLoading(true);
     try {
       const result = await RideOperationalService.completeRide(
         rideId,
         driverProfileId,
-        finalPrice
       );
       
       if (!result.success) {
