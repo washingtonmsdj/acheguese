@@ -1,10 +1,6 @@
 name: Supabase Auth Email Config
 
 on:
-  push:
-    branches: [main]
-    paths:
-      - ".github/workflows/supabase-auth-email-config.yml"
   workflow_dispatch:
     inputs:
       apply:
@@ -38,23 +34,9 @@ env:
   RESEND_MX_VALUE: "feedback-smtp.sa-east-1.amazonses.com"
 
 jobs:
-  push-safety-check:
-    name: Workflow safety check
-    if: ${{ github.event_name == 'push' }}
-    runs-on: ubuntu-latest
-    timeout-minutes: 2
-    steps:
-      - name: Confirm push cannot mutate production Auth
-        shell: bash
-        run: |
-          set -euo pipefail
-          test "$GITHUB_REPOSITORY" = "washingtonmsdj/acheguese"
-          test "$GITHUB_REF" = "refs/heads/main"
-          echo "Push-triggered execution is intentionally non-mutating."
-
   configure-auth-email:
     name: Configure production auth email identity
-    if: ${{ github.event_name == 'workflow_dispatch' && inputs.apply == true }}
+    if: ${{ inputs.apply == true }}
     runs-on:
       - self-hosted
       - windows
