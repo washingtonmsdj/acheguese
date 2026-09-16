@@ -227,8 +227,8 @@ export default function CadastroConfirmacaoPage() {
               <div className="mt-6 flex items-start gap-3 rounded-xl bg-warning/10 px-4 py-3 text-left leading-[18px] lg:hidden">
                 <span className="mt-0.5 text-warning"><AuthConceptIcon name="info" /></span>
                 <div>
-                  <p className="text-[12px] font-bold leading-[18px] text-foreground">Não encontrou?</p>
-                  <p className="text-[11.5px] leading-[18px] text-muted-foreground">Confira a pasta de spam.</p>
+                  <p className="mb-0 text-[12px] font-bold leading-[18px] text-foreground">Não encontrou?</p>
+                  <p className="mb-0 text-[11.5px] leading-[18px] text-muted-foreground">Confira a pasta de spam.</p>
                 </div>
               </div>
 
@@ -268,7 +268,7 @@ export default function CadastroConfirmacaoPage() {
               <div className="my-5 h-px bg-border" />
               <div className="flex items-start gap-3 text-left text-muted-foreground lg:hidden">
                 <AuthConceptIcon name="clock" className="mt-0.5 text-primary" />
-                <p className="text-[11px] leading-4">Sua conta ainda aguarda confirmação.</p>
+                <p className="mb-0 text-[11px] leading-4">Sua conta ainda aguarda confirmação.</p>
               </div>
               <div className="my-5 h-px bg-border lg:hidden" />
 
