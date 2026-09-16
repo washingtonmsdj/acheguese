@@ -313,7 +313,7 @@ export default function LoginPage() {
         <meta name="robots" content="noindex, nofollow" />
       </Helmet>
 
-      <div className="min-h-[100dvh] bg-[#fffdfa] text-[#102f33] lg:bg-[radial-gradient(circle_at_16%_32%,rgba(216,234,224,.55),transparent_31%),radial-gradient(circle_at_70%_18%,rgba(255,236,185,.28),transparent_30%),#fffdfa]">
+      <div className="auth-concept-canvas min-h-[100dvh]">
         <AuthBrandHeader
           secondaryHref={AUTH_PATHS.signup}
           secondaryLabel="Criar conta"
@@ -326,10 +326,10 @@ export default function LoginPage() {
         >
           <section className="hidden lg:block" aria-label="Sobre sua conta">
             <div className="max-w-[430px]">
-              <h1 className="font-heading text-[46px] font-extrabold leading-[.94] tracking-[-0.05em] text-[#0b3b3f]">
+              <h1 className="font-heading text-[46px] font-extrabold leading-[.94] tracking-[-0.05em] text-primary">
                 Seu lugar,<br />mais perto.
               </h1>
-              <p className="mt-4 max-w-[340px] text-[17px] leading-6 text-[#244448]">
+              <p className="mt-4 max-w-[340px] text-[17px] leading-6 text-foreground">
                 Uma conta para participar e gerenciar seus perfis.
               </p>
               <img
@@ -340,33 +340,33 @@ export default function LoginPage() {
             </div>
           </section>
 
-          <section className="w-full lg:rounded-[10px] lg:bg-white lg:p-7 lg:shadow-[0_18px_55px_rgba(17,55,59,.08)]">
+          <section className="w-full lg:rounded-xl lg:border lg:border-border lg:bg-card lg:p-7 lg:shadow-md">
             <div className="lg:hidden">
-              <h1 className="max-w-[245px] font-heading text-[31px] font-extrabold leading-[1.04] tracking-[-0.045em] text-[#0b3b3f]">
+              <h1 className="max-w-[245px] font-heading text-[31px] font-extrabold leading-[1.04] tracking-[-0.045em] text-primary">
                 Bom ter você por aqui.
               </h1>
-              <p className="mt-1.5 text-[15px] leading-[21px] text-[#263f43]">
+              <p className="mt-1.5 text-[15px] leading-[21px] text-foreground">
                 Entre para continuar sua conversa.
               </p>
             </div>
 
             <div className="hidden lg:block">
-              <h2 className="font-heading text-[24px] font-extrabold tracking-[-0.035em] text-[#102f33]">
+              <h2 className="font-heading text-[24px] font-extrabold tracking-[-0.035em] text-foreground">
                 Entre na sua conta
               </h2>
-              <p className="mt-1 text-sm text-[#607477]">
+              <p className="mt-1 text-sm text-muted-foreground">
                 Depois de entrar, você volta ao que estava fazendo.
               </p>
             </div>
 
             {hasReturnContext ? (
-              <div className="mt-4 flex min-h-[58px] items-center gap-3 rounded-xl bg-[#f3f1ea] px-3.5 py-2.5 lg:hidden">
-                <span className="flex h-9 w-9 items-center justify-center rounded-lg bg-[#e1ece9] text-[#0b5b59]">
+              <div className="mt-4 flex min-h-[58px] items-center gap-3 rounded-xl bg-muted px-3.5 py-2.5 lg:hidden">
+                <span className="flex h-9 w-9 items-center justify-center rounded-lg bg-primary/10 text-primary">
                   <AuthConceptIcon name={returnContextIcon} />
                 </span>
                 <div className="min-w-0 flex-1">
-                  <p className="text-[11px] text-[#607477]">Você voltará para</p>
-                  <p className="truncate text-[13px] font-bold text-[#18383c]">
+                  <p className="text-[11px] text-muted-foreground">Você voltará para</p>
+                  <p className="truncate text-[13px] font-bold text-foreground">
                     {returnContext.label}
                   </p>
                 </div>
@@ -377,9 +377,9 @@ export default function LoginPage() {
             {showEmailConfirmationProgress ? (
               <div
                 role="status"
-                className="mt-4 flex items-start gap-3 rounded-xl bg-[#f3f1ea] px-3.5 py-3 text-[#35575a]"
+                className="mt-4 flex items-start gap-3 rounded-xl bg-muted px-3.5 py-3 text-muted-foreground"
               >
-                <span className="mt-0.5 h-4 w-4 animate-spin rounded-full border-2 border-[#bdcac8] border-t-[#0b5b59]" />
+                <span className="mt-0.5 h-4 w-4 animate-spin rounded-full border-2 border-border border-t-primary" />
                 <p className="text-[12px] leading-4">
                   <strong>Confirmando seu e-mail…</strong>{" "}
                   Aguarde enquanto validamos o link.
@@ -390,7 +390,7 @@ export default function LoginPage() {
             {showEmailConfirmed || isPasswordReset ? (
               <div
                 role="status"
-                className="mt-4 flex items-start gap-3 rounded-xl bg-[#eaf7ef] px-3.5 py-3 text-[#155c43]"
+                className="mt-4 flex items-start gap-3 rounded-xl bg-success/10 px-3.5 py-3 text-success"
               >
                 <AuthConceptIcon name="check" />
                 <p className="text-[12px] leading-4">
@@ -422,7 +422,7 @@ export default function LoginPage() {
               <div className="space-y-1.5">
                 <Label
                   htmlFor="login-identifier"
-                  className="text-[14px] font-semibold text-[#15383c]"
+                  className="text-[14px] font-semibold text-foreground"
                 >
                   E-mail ou @usuário
                 </Label>
@@ -434,7 +434,7 @@ export default function LoginPage() {
                   spellCheck={false}
                   disabled={isBusy}
                   className={cn(
-                    "h-11 rounded-lg border-[#b9c5c6] bg-white px-3 text-[16px] shadow-none",
+                    "h-11 rounded-lg border-input bg-card px-3 text-[16px] shadow-none",
                     errors.identifier && "border-destructive",
                   )}
                   aria-describedby={
@@ -451,7 +451,7 @@ export default function LoginPage() {
               <div className="space-y-1.5">
                 <Label
                   htmlFor="login-password"
-                  className="text-[14px] font-semibold text-[#15383c]"
+                  className="text-[14px] font-semibold text-foreground"
                 >
                   Senha
                 </Label>
@@ -463,7 +463,7 @@ export default function LoginPage() {
                   aria-describedby={
                     errors.password ? "login-password-error" : undefined
                   }
-                  className="h-11 rounded-lg border-[#b9c5c6] bg-white text-[16px] shadow-none"
+                  className="h-11 rounded-lg border-input bg-card text-[16px] shadow-none"
                   {...register("password")}
                 />
                 <InlineFieldError
@@ -474,7 +474,7 @@ export default function LoginPage() {
                   type="button"
                   onClick={handleForgotPassword}
                   disabled={isBusy}
-                  className="ml-auto block min-h-8 rounded px-1 text-[12px] font-medium text-[#0b4e52] underline underline-offset-2 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#0b5b59]/35 disabled:cursor-not-allowed disabled:opacity-55"
+                  className="ml-auto block min-h-8 rounded px-1 text-[12px] font-medium text-primary underline underline-offset-2 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/35 disabled:cursor-not-allowed disabled:opacity-55"
                 >
                   Esqueci minha senha
                 </button>
@@ -492,7 +492,7 @@ export default function LoginPage() {
               <button
                 type="submit"
                 disabled={isBusy || !turnstile.isReady}
-                className="flex h-11 w-full items-center justify-center rounded-[9px] bg-[#ffc91a] px-4 text-[15px] font-extrabold text-[#102f33] shadow-[0_3px_10px_rgba(226,171,0,.16)] transition-colors hover:bg-[#f7bf00] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#0b5b59]/40 disabled:cursor-not-allowed disabled:opacity-55"
+                className="flex h-11 w-full items-center justify-center rounded-lg bg-primary px-4 text-[15px] font-extrabold text-primary-foreground shadow-sm transition-colors hover:bg-primary/90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/40 disabled:cursor-not-allowed disabled:opacity-55"
               >
                 {pendingAction === "login" ? "Entrando…" : "Entrar"}
               </button>
@@ -500,16 +500,16 @@ export default function LoginPage() {
 
             {googleAuthAvailable ? (
               <>
-                <div className="my-4 flex items-center gap-3 text-[12px] text-[#607477]">
-                  <span className="h-px flex-1 bg-[#c7d0d0]" />
+                <div className="my-4 flex items-center gap-3 text-[12px] text-muted-foreground">
+                  <span className="h-px flex-1 bg-border" />
                   <span>ou</span>
-                  <span className="h-px flex-1 bg-[#c7d0d0]" />
+                  <span className="h-px flex-1 bg-border" />
                 </div>
                 <button
                   type="button"
                   onClick={handleGoogleLogin}
                   disabled={isBusy}
-                  className="flex h-11 w-full items-center justify-center gap-3 rounded-[9px] border border-[#8da1a3] bg-white text-[14px] font-bold text-[#17363a] transition-colors hover:bg-[#f7f8f5] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#0b5b59]/35 disabled:opacity-55"
+                  className="flex h-11 w-full items-center justify-center gap-3 rounded-lg border border-border bg-card text-[14px] font-bold text-foreground transition-colors hover:bg-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/35 disabled:opacity-55"
                 >
                   <AuthConceptIcon name="google" />
                   {pendingAction === "google"
@@ -519,34 +519,34 @@ export default function LoginPage() {
               </>
             ) : null}
 
-            <p className="mt-4 text-center text-[12px] text-[#244448]">
+            <p className="mt-4 text-center text-[12px] text-foreground">
               Ainda não tem conta?{" "}
               <Link
                 to={buildSignupPath(redirectTo)}
-                className="font-medium underline underline-offset-2"
+                className="font-medium text-primary underline underline-offset-2"
               >
                 Criar minha conta
               </Link>
             </p>
 
-            <div className="my-4 h-px bg-[#d4d8d5] lg:hidden" />
+            <div className="my-4 h-px bg-border lg:hidden" />
             <Link
               to="/"
-              className="flex min-h-10 items-center justify-between rounded-lg px-1 text-[13px] font-medium text-[#0b4e52] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#0b5b59]/35 lg:hidden"
+              className="flex min-h-10 items-center justify-between rounded-lg px-1 text-[13px] font-medium text-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/35 lg:hidden"
             >
               <span>Continuar explorando sem conta</span>
               <AuthConceptIcon name="chevron-right" className="h-4 w-4" />
             </Link>
 
-            <div className="mt-4 flex items-start gap-3 text-[#35575a]">
-              <span className="mt-0.5 flex h-7 w-7 items-center justify-center text-[#0b5b59] lg:h-6 lg:w-6">
+            <div className="mt-4 flex items-start gap-3 text-muted-foreground">
+              <span className="mt-0.5 flex h-7 w-7 items-center justify-center text-primary lg:h-6 lg:w-6">
                 <AuthConceptIcon name="shield-filled" />
               </span>
               <div>
-                <p className="text-[11px] font-semibold lg:hidden">
+                <p className="text-[11px] font-semibold text-foreground lg:hidden">
                   Verificação de segurança
                 </p>
-                <p className="text-[10.5px] leading-4 text-[#607477]">
+                <p className="text-[10.5px] leading-4 text-muted-foreground">
                   <span className="lg:hidden">
                     Seus dados são protegidos e criptografados.
                   </span>
@@ -559,7 +559,7 @@ export default function LoginPage() {
 
             <nav
               aria-label="Links legais"
-              className="mt-3 hidden items-center justify-center gap-2 text-[11px] text-[#0b4e52] lg:flex"
+              className="mt-3 hidden items-center justify-center gap-2 text-[11px] text-primary lg:flex"
             >
               <Link
                 to={TERMS_OF_SERVICE_PATH}
