@@ -18,7 +18,7 @@ import { RideRoute } from "./ride-card/RideRoute";
 interface ActiveRideCardProps {
   ride: RideRequest;
   onCancel: (id: string) => void;
-  onContact: () => void;
+  onContact?: () => void;
 }
 
 export function ActiveRideCard({
@@ -43,7 +43,7 @@ export function ActiveRideCard({
 
   const handleContact = () => {
     navigate(appUrls.messages);
-    onContact();
+    onContact?.();
   };
 
   return (
@@ -79,7 +79,7 @@ export function ActiveRideCard({
 
       <RideInfo
         departureTime={ride.departure_time}
-        price={ride.suggested_price}
+        price={ride.final_price ?? ride.suggested_price}
         paymentMethod={ride.payment_method}
         observation={ride.observation}
       />
