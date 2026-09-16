@@ -321,7 +321,10 @@ export default function PrivacySettingsPage() {
 
   if (!user) return <Navigate to={appUrls.auth.login} replace />;
 
+  const exportAvailable = PrivacySettingsService.isUserDataExportAvailable();
+
   const handleExportData = async () => {
+    if (!exportAvailable || isExporting) return;
     setIsExporting(true);
     try {
       const accessToken = await PrivacySettingsService.getAccessToken();
@@ -388,16 +391,23 @@ export default function PrivacySettingsPage() {
             <ExportItem icon={<Settings2 className="h-5 w-5" aria-hidden="true" />} title="Preferências e consentimentos" description="Suas escolhas e configurações de privacidade disponíveis." />
           </Surface>
 
-          <div className="mt-4 flex items-start gap-3 rounded-2xl border border-blue-200 bg-blue-50 p-4 text-sm text-blue-900">
-            <Info className="mt-0.5 h-5 w-5 shrink-0" aria-hidden="true" />
-            <p>A exportação respeita as permissões e o escopo dos dados disponíveis.</p>
-          </div>
+          {exportAvailable ? (
+            <div className="mt-4 flex items-start gap-3 rounded-2xl border border-blue-200 bg-blue-50 p-4 text-sm text-blue-900">
+              <Info className="mt-0.5 h-5 w-5 shrink-0" aria-hidden="true" />
+              <p>A exportação respeita as permissões e o escopo dos dados disponíveis.</p>
+            </div>
+          ) : (
+            <div className="mt-4 flex items-start gap-3 rounded-2xl border border-amber-200 bg-amber-50 p-4 text-sm text-amber-950" role="status">
+              <Info className="mt-0.5 h-5 w-5 shrink-0" aria-hidden="true" />
+              <p>A exportação automática está temporariamente indisponível enquanto concluímos a certificação de segurança e completude. Você ainda pode solicitar seus dados pelo canal de proteção de dados.</p>
+            </div>
+          )}
 
-          <Button type="button" onClick={handleExportData} disabled={isExporting} className="mt-4 min-h-12 w-full bg-territory-sun text-territory-ink hover:bg-territory-sun/90">
+          <Button type="button" onClick={handleExportData} disabled={isExporting || !exportAvailable} className="mt-4 min-h-12 w-full bg-territory-sun text-territory-ink hover:bg-territory-sun/90">
             {isExporting ? <Loader2 className="mr-2 h-4 w-4 animate-spin" aria-hidden="true" /> : <Download className="mr-2 h-4 w-4" aria-hidden="true" />}
-            {isExporting ? "Preparando arquivo..." : "Exportar meus dados"}
+            {isExporting ? "Preparando arquivo..." : exportAvailable ? "Exportar meus dados" : "Exportação temporariamente indisponível"}
           </Button>
-          <p className="mt-3 text-center text-xs text-territory-muted">Guarde o arquivo em um local seguro.</p>
+          <p className="mt-3 text-center text-xs text-territory-muted">{exportAvailable ? "Guarde o arquivo em um local seguro." : "A ativação depende da certificação e do serviço de exportação."}</p>
 
           {isExporting ? (
             <Surface className="mt-4 p-4 sm:p-5">
@@ -411,6 +421,9 @@ export default function PrivacySettingsPage() {
           ) : null}
 
           <Surface className="mt-4 px-4 sm:px-5">
+            {!exportAvailable ? (
+              <LinkRow icon={<MessageCircleMore className="h-5 w-5" aria-hidden="true" />} title="Solicitar meus dados à proteção de dados" description="Use este canal enquanto a exportação automática não estiver disponível." onClick={() => navigate(DATA_PROTECTION_CONTACT_PATH)} />
+            ) : null}
             <LinkRow icon={<HelpCircle className="h-5 w-5" aria-hidden="true" />} title="Preciso de ajuda" onClick={() => navigate(SUPPORT_PATH)} />
           </Surface>
         </AccountSettingsShell>
