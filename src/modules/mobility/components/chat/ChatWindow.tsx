@@ -1,4 +1,4 @@
-import React, { useState, useRef, useEffect } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import { useMobilidadeChat } from "@/modules/mobility/hooks/useMobilidadeChat";
 import { useSessionContext } from "@/core/session";
 import { Button } from "@/shared/components/ui/button";
@@ -10,10 +10,10 @@ import {
   AvatarFallback,
   AvatarImage,
 } from "@/shared/components/ui/avatar";
-import { Send, ArrowLeft, MoreVertical, Phone, MapPin } from "lucide-react";
+import { ArrowLeft, MapPin, MoreVertical, Phone, Send } from "lucide-react";
 import { cn } from "@/shared/utils/cn";
 import { RIDE_STATUS } from "@/shared/types/constants";
-import { motion, AnimatePresence } from "framer-motion";
+import { AnimatePresence, motion } from "framer-motion";
 import { formatDistanceToNow } from "date-fns";
 import { ptBR } from "@/shared/utils/dateLocale";
 
@@ -48,19 +48,16 @@ export function ChatWindow({
   const scrollRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
 
-  // Auto-scroll para última mensagem
   useEffect(() => {
     if (scrollRef.current) {
       scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
     }
   }, [messages]);
 
-  // Marcar todas como lidas ao abrir
   useEffect(() => {
     markAllAsRead();
   }, [markAllAsRead]);
 
-  // Enviar mensagem
   const handleSend = async () => {
     if (!inputText.trim() || sending) return;
 
@@ -68,120 +65,132 @@ export function ChatWindow({
       await sendMessage(inputText);
       setInputText("");
       inputRef.current?.focus();
-    } catch (error) {
-      // Erro já tratado no hook
+    } catch {
+      // O hook mantém a autoridade sobre o feedback de erro de envio.
     }
   };
 
-  // Enter para enviar
-  const handleKeyDown = (e: React.KeyboardEvent) => {
-    if (e.key === "Enter" && !e.shiftKey) {
-      e.preventDefault();
-      handleSend();
+  const handleKeyDown = (event: React.KeyboardEvent) => {
+    if (event.key === "Enter" && !event.shiftKey) {
+      event.preventDefault();
+      void handleSend();
     }
   };
+
+  const avatarFallback = (sizeClass: string) => (
+    <AvatarFallback
+      className={cn(
+        "bg-territory-brand font-semibold text-[hsl(var(--territory-on-image))]",
+        sizeClass,
+      )}
+    >
+      {(otherUserName ?? "?").charAt(0)}
+    </AvatarFallback>
+  );
 
   return (
-    <div className="flex flex-col h-full bg-[#12181B]">
-      {/* Header */}
-      <div className="flex items-center justify-between px-4 py-3 border-b border-white/10 bg-[#1E2529]">
-        <div className="flex items-center gap-3">
-          {onBack && (
+    <div className="flex h-full flex-col bg-territory-canvas text-territory-ink">
+      <div className="flex items-center justify-between border-b border-territory-border bg-territory-surface px-4 py-3">
+        <div className="flex min-w-0 items-center gap-3">
+          {onBack ? (
             <button
+              type="button"
               onClick={onBack}
-              className="p-2 rounded-xl hover:bg-white/5 text-gray-400 hover:text-white transition-colors"
+              className="rounded-xl p-2 text-territory-muted transition-colors hover:bg-territory-raised hover:text-territory-ink focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-territory-focus"
+              aria-label="Voltar"
             >
-              <ArrowLeft className="h-5 w-5" />
+              <ArrowLeft className="h-5 w-5" aria-hidden="true" />
             </button>
-          )}
+          ) : null}
 
-          <Avatar className="h-10 w-10">
-            <AvatarImage src={otherUserAvatar} />
-            <AvatarFallback className="bg-gradient-to-br from-teal-500 to-cyan-500 text-white">
-              {(otherUserName ?? '?').charAt(0)}
-            </AvatarFallback>
+          <Avatar className="h-10 w-10 shrink-0">
+            <AvatarImage src={otherUserAvatar} alt="" />
+            {avatarFallback("text-sm")}
           </Avatar>
 
-          <div>
-            <p className="text-sm font-semibold text-white">{otherUserName}</p>
-            {rideInfo && (
-              <p className="text-xs text-gray-400">
+          <div className="min-w-0">
+            <p className="truncate text-sm font-semibold text-territory-ink">
+              {otherUserName}
+            </p>
+            {rideInfo ? (
+              <p className="text-xs text-territory-muted">
                 {rideInfo.status === RIDE_STATUS.IN_PROGRESS
                   ? "Em viagem"
                   : "Viagem aceita"}
               </p>
-            )}
+            ) : null}
           </div>
         </div>
 
-        <div className="flex items-center gap-2">
-          {onCall && (
+        <div className="flex items-center gap-1">
+          {onCall ? (
             <Button
               size="sm"
               variant="ghost"
               onClick={onCall}
-              className="h-9 w-9 p-0 text-gray-400 hover:text-white"
+              className="h-9 w-9 p-0 text-territory-muted hover:bg-territory-raised hover:text-territory-ink"
+              aria-label="Ligar"
             >
-              <Phone className="h-4 w-4" />
+              <Phone className="h-4 w-4" aria-hidden="true" />
             </Button>
-          )}
-          {onViewLocation && (
+          ) : null}
+          {onViewLocation ? (
             <Button
               size="sm"
               variant="ghost"
               onClick={onViewLocation}
-              className="h-9 w-9 p-0 text-gray-400 hover:text-white"
+              className="h-9 w-9 p-0 text-territory-muted hover:bg-territory-raised hover:text-territory-ink"
+              aria-label="Ver localização"
             >
-              <MapPin className="h-4 w-4" />
+              <MapPin className="h-4 w-4" aria-hidden="true" />
             </Button>
-          )}
+          ) : null}
           <Button
             size="sm"
             variant="ghost"
-            className="h-9 w-9 p-0 text-gray-400 hover:text-white"
+            className="h-9 w-9 p-0 text-territory-muted hover:bg-territory-raised hover:text-territory-ink"
+            aria-label="Mais opções"
           >
-            <MoreVertical className="h-4 w-4" />
+            <MoreVertical className="h-4 w-4" aria-hidden="true" />
           </Button>
         </div>
       </div>
 
-      {/* Ride Info */}
-      {rideInfo && (
-        <div className="px-4 py-3 bg-teal-500/10 border-b border-teal-500/20">
-          <div className="flex items-center gap-2 text-xs text-gray-300">
-            <MapPin className="h-3 w-3 text-teal-400" />
+      {rideInfo ? (
+        <div className="border-b border-territory-info/20 bg-territory-info/10 px-4 py-3">
+          <div className="flex min-w-0 items-center gap-2 text-xs text-territory-muted-strong">
+            <MapPin className="h-3 w-3 shrink-0 text-territory-info" aria-hidden="true" />
             <span className="truncate">{rideInfo.origin}</span>
-            <span className="text-gray-600">para</span>
+            <span className="shrink-0 text-territory-muted">para</span>
             <span className="truncate">{rideInfo.destination}</span>
           </div>
         </div>
-      )}
+      ) : null}
 
-      {/* Messages */}
       <ScrollArea className="flex-1 px-4 py-4" ref={scrollRef}>
         {loading ? (
-          <div className="space-y-4">
-            {Array.from({ length: 3 }).map((_, i) => (
+          <div className="space-y-4" role="status" aria-label="Carregando mensagens">
+            {Array.from({ length: 3 }).map((_, index) => (
               <div
-                key={i}
+                key={index}
                 className={cn(
                   "flex gap-2",
-                  i % 2 === 0 ? "justify-end" : "justify-start",
+                  index % 2 === 0 ? "justify-end" : "justify-start",
                 )}
               >
-                <Skeleton className="h-16 w-64 rounded-2xl bg-white/5" />
+                <Skeleton className="h-16 w-64 rounded-2xl bg-territory-raised" />
               </div>
             ))}
           </div>
         ) : messages.length === 0 ? (
-          <div className="flex flex-col items-center justify-center h-full text-center py-12">
-            <div className="w-16 h-16 rounded-2xl bg-white/5 flex items-center justify-center mb-4">
-              <Send className="h-8 w-8 text-gray-600" />
+          <div className="flex h-full flex-col items-center justify-center py-12 text-center">
+            <div className="mb-4 flex h-16 w-16 items-center justify-center rounded-2xl bg-territory-raised">
+              <Send className="h-8 w-8 text-territory-muted" aria-hidden="true" />
             </div>
-            <p className="text-sm font-semibold text-white mb-1">
+            <p className="mb-1 text-sm font-semibold text-territory-ink">
               Nenhuma mensagem ainda
             </p>
-            <p className="text-xs text-gray-500">
+            <p className="text-xs text-territory-muted">
               Envie a primeira mensagem para iniciar a conversa
             </p>
           </div>
@@ -209,15 +218,13 @@ export function ChatWindow({
                       isOwn ? "justify-end" : "justify-start",
                     )}
                   >
-                    {!isOwn && showAvatar && (
-                      <Avatar className="h-8 w-8 mt-auto">
-                        <AvatarImage src={otherUserAvatar} />
-                        <AvatarFallback className="bg-gradient-to-br from-teal-500 to-cyan-500 text-white text-xs">
-                          {(otherUserName ?? '?').charAt(0)}
-                        </AvatarFallback>
+                    {!isOwn && showAvatar ? (
+                      <Avatar className="mt-auto h-8 w-8">
+                        <AvatarImage src={otherUserAvatar} alt="" />
+                        {avatarFallback("text-xs")}
                       </Avatar>
-                    )}
-                    {!isOwn && !showAvatar && <div className="w-8" />}
+                    ) : null}
+                    {!isOwn && !showAvatar ? <div className="w-8" /> : null}
 
                     <div
                       className={cn(
@@ -227,23 +234,23 @@ export function ChatWindow({
                     >
                       <div
                         className={cn(
-                          "px-4 py-2 rounded-2xl max-w-[280px] break-words",
+                          "max-w-[280px] break-words rounded-2xl px-4 py-2",
                           isOwn
-                            ? "bg-gradient-to-r from-teal-500 to-cyan-500 text-white"
-                            : "bg-white/10 text-gray-100",
+                            ? "bg-territory-brand text-[hsl(var(--territory-on-image))]"
+                            : "border border-territory-border bg-territory-surface text-territory-ink",
                         )}
                       >
                         <p className="text-sm">{message.message}</p>
                       </div>
-                      {showTime && (
-                        <span className="text-[10px] text-gray-500 mt-1 px-1">
+                      {showTime ? (
+                        <span className="mt-1 px-1 text-[10px] text-territory-muted">
                           {formatDistanceToNow(new Date(message.created_at), {
                             addSuffix: true,
                             locale: ptBR,
                           })}
                           {isOwn && message.read_at ? " • Lida" : null}
                         </span>
-                      )}
+                      ) : null}
                     </div>
                   </motion.div>
                 );
@@ -253,24 +260,24 @@ export function ChatWindow({
         )}
       </ScrollArea>
 
-      {/* Input */}
-      <div className="px-4 py-3 border-t border-white/10 bg-[#1E2529]">
+      <div className="border-t border-territory-border bg-territory-surface px-4 py-3">
         <div className="flex items-center gap-2">
           <Input
             ref={inputRef}
             value={inputText}
-            onChange={(e) => setInputText(e.target.value)}
+            onChange={(event) => setInputText(event.target.value)}
             onKeyDown={handleKeyDown}
             placeholder="Digite sua mensagem..."
             disabled={sending}
-            className="flex-1 bg-white/5 border-white/10 text-white placeholder:text-gray-500 rounded-2xl h-11"
+            className="h-11 flex-1 rounded-2xl border-territory-border bg-territory-canvas text-territory-ink placeholder:text-territory-muted focus-visible:ring-territory-focus"
           />
           <Button
-            onClick={handleSend}
+            onClick={() => void handleSend()}
             disabled={!inputText.trim() || sending}
-            className="h-11 w-11 p-0 rounded-2xl bg-gradient-to-r from-teal-500 to-cyan-500 hover:from-teal-400 hover:to-cyan-400"
+            className="h-11 w-11 rounded-2xl bg-territory-brand p-0 text-[hsl(var(--territory-on-image))] hover:bg-territory-brand-strong"
+            aria-label="Enviar mensagem"
           >
-            <Send className="h-4 w-4" />
+            <Send className="h-4 w-4" aria-hidden="true" />
           </Button>
         </div>
       </div>
