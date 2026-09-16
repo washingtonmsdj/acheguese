@@ -1,17 +1,10 @@
 /**
- * Core Pricing - Barrel Export
+ * Core Pricing - public application surface.
  *
- * SSOT para precificação e estimativas.
+ * Mobility commercial pricing is server-owned. Application callers may use
+ * canonical types and the guarded instance; raw implementation/services and
+ * retired client-side fare hooks are intentionally not re-exported here.
  */
 
-// Types
 export * from './types';
-
-// Services
-export * from './services';
-
-// Hooks
-export * from './hooks';
-
-// Instance
 export { pricingService } from './instance';
