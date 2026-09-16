@@ -88,6 +88,24 @@ function getVendorChunk(id: string): string | undefined {
   return undefined;
 }
 
+function getAppChunk(id: string): string | undefined {
+  if (id.includes("node_modules")) return undefined;
+
+  const normalizedId = id.replaceAll("\\", "/");
+  if (normalizedId.includes("/src/core/auth/")) {
+    return "app-auth-runtime";
+  }
+  if (normalizedId.includes("/src/core/session/")) {
+    return "app-session-runtime";
+  }
+
+  return undefined;
+}
+
+function getManualChunk(id: string): string | undefined {
+  return getAppChunk(id) ?? getVendorChunk(id);
+}
+
 export default defineConfig(({ command, mode }) => {
   const shouldUploadSourcemaps =
     mode === "production" && Boolean(process.env.SENTRY_AUTH_TOKEN);
@@ -174,7 +192,7 @@ export default defineConfig(({ command, mode }) => {
       chunkSizeWarningLimit: 1100,
       rollupOptions: {
         output: {
-          manualChunks: (id) => getVendorChunk(id),
+          manualChunks: (id) => getManualChunk(id),
           hoistTransitiveImports: false,
           chunkFileNames: "assets/[name]-[hash].js",
           entryFileNames: "assets/[name]-[hash].js",
