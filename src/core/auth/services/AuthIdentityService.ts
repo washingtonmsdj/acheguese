@@ -1,4 +1,4 @@
-import { supabase } from "@/integrations/supabase";
+import { SessionService } from "@/core/session/services/SessionService";
 
 export interface LinkedAuthProviders {
   providers: readonly string[];
@@ -32,16 +32,15 @@ function readMetadataProviders(appMetadata: Record<string, unknown>): string[] {
  */
 export class AuthIdentityService {
   static async getLinkedProviders(): Promise<LinkedAuthProviders> {
-    const { data, error } = await supabase.auth.getUser();
-    if (error) throw error;
-    if (!data.user) {
+    const user = await SessionService.getVerifiedAuthUser();
+    if (!user) {
       throw new Error("Authenticated user unavailable while reading linked providers");
     }
 
-    const identityProviders = (data.user.identities ?? [])
+    const identityProviders = (user.identities ?? [])
       .map((identity) => identity.provider)
       .filter((provider): provider is string => Boolean(provider));
-    const metadataProviders = readMetadataProviders(data.user.app_metadata ?? {});
+    const metadataProviders = readMetadataProviders(user.app_metadata ?? {});
     const providers = Array.from(new Set([...identityProviders, ...metadataProviders]));
 
     return {
