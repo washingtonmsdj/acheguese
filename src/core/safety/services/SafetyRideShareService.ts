@@ -2,6 +2,7 @@ import { isDriverOwnedOpenRideStatus } from "@/core/mobility/core/RideLifecycleS
 import { supabase } from "@/integrations/supabase";
 import type { Database } from "@/integrations/supabase";
 import { logger } from "@/shared/utils/logger";
+import { SAFETY_RIDE_SHARE_POLICY } from "../config/rideSharePolicy";
 import type {
   CreateRideShareInput,
   RideShare,
@@ -65,11 +66,13 @@ export class SafetyRideShareService {
         input.expiresInHours ?? this.deps.getShareExpirationHours();
 
       if (
-        !Number.isInteger(expirationHours)
-        || expirationHours < 1
-        || expirationHours > 168
+        !Number.isInteger(expirationHours) ||
+        expirationHours < SAFETY_RIDE_SHARE_POLICY.minExpirationHours ||
+        expirationHours > SAFETY_RIDE_SHARE_POLICY.maxExpirationHours
       ) {
-        throw new Error("A validade do compartilhamento deve ficar entre 1 e 168 horas.");
+        throw new Error(
+          `A validade do compartilhamento deve ficar entre ${SAFETY_RIDE_SHARE_POLICY.minExpirationHours} e ${SAFETY_RIDE_SHARE_POLICY.maxExpirationHours} horas.`,
+        );
       }
 
       if (input.rideId == null || input.createdBy == null) {
@@ -94,17 +97,17 @@ export class SafetyRideShareService {
       logger.error("[SafetyRideShareService] Error creating ride share:", error);
       return {
         success: false,
-        error: error instanceof Error ? error.message : "Erro ao criar compartilhamento",
+        error:
+          error instanceof Error ? error.message : "Erro ao criar compartilhamento",
       };
     }
   }
 
   async getSharedRideData(shareToken: string): Promise<SharedRideData | null> {
     try {
-      const { data: rows, error } = await safetyRideShareDb.rpc<SharedRideRpcRow[]>(
-        "get_shared_ride_safety_data",
-        { p_share_token: shareToken },
-      );
+      const { data: rows, error } = await safetyRideShareDb.rpc<
+        SharedRideRpcRow[]
+      >("get_shared_ride_safety_data", { p_share_token: shareToken });
 
       if (error) throw error;
       const data = rows?.[0];
@@ -167,7 +170,8 @@ export class SafetyRideShareService {
       logger.error("[SafetyRideShareService] Error revoking ride share:", error);
       return {
         success: false,
-        error: error instanceof Error ? error.message : "Erro ao revogar compartilhamento",
+        error:
+          error instanceof Error ? error.message : "Erro ao revogar compartilhamento",
       };
     }
   }
