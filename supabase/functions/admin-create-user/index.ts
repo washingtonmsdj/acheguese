@@ -22,6 +22,7 @@ import {
   requireHttpMethod,
 } from '../_shared/security.ts';
 import { requireSuperAdmin } from '../_shared/adminAuth.ts';
+import { checkCompromisedPassword } from '../_shared/compromisedPassword.ts';
 import {
   validateBody,
   createUserSchema,
@@ -45,6 +46,18 @@ type ProfileCommandResult = {
 function conflictResponse(message: string, req: Request): Response {
   return new Response(JSON.stringify({ error: message }), {
     status: 409,
+    headers: getAllSecurityHeaders(ALLOWED_METHODS, req),
+  });
+}
+
+function passwordPolicyResponse(
+  message: string,
+  code: 'PASSWORD_COMPROMISED' | 'PASSWORD_CHECK_UNAVAILABLE',
+  status: 400 | 503,
+  req: Request,
+): Response {
+  return new Response(JSON.stringify({ error: message, code }), {
+    status,
     headers: getAllSecurityHeaders(ALLOWED_METHODS, req),
   });
 }
@@ -111,6 +124,55 @@ serve(async (req: Request) => {
   });
 
   try {
+    // The hosted project cannot enable Supabase leaked-password protection on
+    // the current plan. Enforce the same rule at this privileged server-owned
+    // creation boundary instead of trusting an admin UI preflight.
+    let compromisedPassword;
+    try {
+      compromisedPassword = await checkCompromisedPassword(password);
+    } catch (passwordCheckError) {
+      auditLog({
+        timestamp: new Date().toISOString(),
+        userId: requesterId,
+        action: 'admin_create_user_password_check_unavailable',
+        resource: 'users',
+        status: 'failure',
+        details: {
+          error:
+            passwordCheckError instanceof Error
+              ? passwordCheckError.message
+              : 'Unknown password safety check error',
+        },
+        ...getAuditInfo(req),
+      });
+
+      return passwordPolicyResponse(
+        'Password safety verification is temporarily unavailable',
+        'PASSWORD_CHECK_UNAVAILABLE',
+        503,
+        req,
+      );
+    }
+
+    if (compromisedPassword.compromised) {
+      auditLog({
+        timestamp: new Date().toISOString(),
+        userId: requesterId,
+        action: 'admin_create_user_compromised_password_blocked',
+        resource: 'users',
+        status: 'failure',
+        details: { breachCount: compromisedPassword.count },
+        ...getAuditInfo(req),
+      });
+
+      return passwordPolicyResponse(
+        'This password appears in known data breaches. Choose a different password.',
+        'PASSWORD_COMPROMISED',
+        400,
+        req,
+      );
+    }
+
     // Auth é a autoridade atômica para unicidade de e-mail; não enumeramos usuários.
     const { data: userData, error: userError } = await supabaseAdmin.auth.admin.createUser({
       email,
