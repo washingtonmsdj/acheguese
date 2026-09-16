@@ -5,8 +5,9 @@
 ## SSOT e fronteiras
 
 - O ciclo de vida operacional de corridas e entregas pertence a `src/core/mobility/core/**` e aos comandos server-owned expostos pelos serviços RPC.
+- **Criação de corrida/entrega pertence a `MobilityCreationService` → `mobility-create-rpc` → quote server-owned single-use.** `MobilityRpcService` não é owner de criação.
 - Pedido + entrega comercial usa `src/core/mobility/delivery/services/OrderDeliverySSOTService.ts` como SSOT de aplicação, com `DeliveryRpcService` na fronteira de mutação remota.
-- Precificação pertence a `src/core/pricing/**`. Código de mobilidade não deve possuir tabela paralela, fórmula local ou fallback monetário inventado.
+- Precificação pertence a `src/core/pricing/**` e à emissão server-owned de `mobility_price_quotes`. Código de mobilidade não deve possuir tabela paralela, fórmula local ou fallback monetário inventado.
 - **Os valores atuais de `pricing_rules` são provisórios/fictícios de desenvolvimento e ainda NÃO representam a política comercial aprovada do Achegue-se.**
 - Geolocalização pertence ao SSOT compartilhado de geolocalização; mobilidade deve consumir o serviço, não criar ownership paralelo de GPS/cache/permissões.
 - UI e hooks podem orquestrar estado de apresentação, mas não são autoridade para transições, autorização, preço final ou custódia de entrega.
@@ -14,9 +15,9 @@
 ## Regras obrigatórias
 
 1. Nenhuma transição crítica deve depender somente de validação do browser.
-2. Browser não é autoridade de preço. O contrato final de criação deve usar quote/versionamento server-owned.
+2. Browser não é autoridade de preço. Criação usa quote/versionamento server-owned e single-use.
 3. Nenhum preço pode ser calculado por fórmula comercial hardcoded como autoridade de produção.
-4. Falha no Pricing Service deve falhar fechada; não inventar tarifa de contingência.
+4. Falha no Pricing/Quote Service deve falhar fechada; não inventar tarifa de contingência.
 5. Valores provisórios de desenvolvimento nunca devem ser tratados como política comercial aprovada ou usados para declarar o módulo pronto para lançamento.
 6. IDs de usuário e IDs de profile não são intercambiáveis.
 7. Operações de motorista/motoboy devem validar atribuição e capacidade no backend.
@@ -26,20 +27,26 @@
 11. Reputação deve vir de avaliações reais. Estado sem avaliações é `NULL`/sem nota, nunca uma nota perfeita inventada.
 12. Cancelamentos são eventos de suporte/segurança: corrida, ator, timestamp e motivo conhecido devem permanecer auditáveis; ausência histórica não pode ser preenchida com motivo inventado.
 13. Dados de localização devem obedecer minimização: coletar/streamar somente o necessário ao estado operacional e encerrar exposição no estado terminal.
+14. **Conclusão de corrida/entrega não aceita preço informado pelo motorista/browser.** O valor terminal deve ser derivado do estado monetário server-owned persistido.
 
 ## Estado verificado nesta auditoria
 
 ### Correto / já endurecido
 
-- O fluxo principal de criação exige coordenadas válidas antes da precificação.
-- `useMobilidade` chama a instância canônica de Pricing e aborta a criação se a precificação falhar.
+- Criação de corrida e motoboy usa `mobility-create-rpc` separado do broker operacional genérico.
+- `CreateRideInput` não recebe passenger/profile, IDs territoriais, coordenadas ou preço como autoridade de criação; o contrato sensível é o `priceQuoteId` server-owned.
+- `mobility_create_ride_atomic` e `mobility_create_delivery_atomic` em produção possuem somente as assinaturas canônicas baseadas em `p_quote_id`; as antigas assinaturas com preço/rota vindos do browser foram removidas.
+- A quote carrega passageiro, endereços, territórios, coordenadas, regra/versão e valor; criação persiste esses fatos a partir da quote bloqueada e consome a quote uma única vez.
+- `useMobilidade` e `useDelivery` emitem a quote pelo owner de pricing antes de solicitar criação; falha de pricing/quote aborta o fluxo.
 - `src/core/pricing/instance.ts` rejeita regras históricas `fallback-*` e, em build de produção, rejeita regras sem `metadata.commercial_status = approved`.
 - Todas as regras existentes no ambiente auditado estão explicitamente marcadas `commercial_status=provisional`.
 - Multiplicadores de pico hardcoded do `PricingService` estão desabilitados na instância canônica até existir avaliação server-owned/persistida da política.
-- `useDelivery` (motoboy) falha fechado: não cria entrega sem preço calculado pelo caminho de Pricing.
-- O hook genérico de estimativa usa a mesma instância canônica.
 - O calculador legado local `baseFare + pricePerKm` foi removido de `mobility.helpers.ts`.
-- Pisos comerciais locais `R$ 5` foram removidos de `RideOperationalService`, `RideDeliveryOperationalActions` e das funções SQL atômicas de criação.
+- Pisos comerciais locais `R$ 5` foram removidos dos owners operacionais e das funções SQL canônicas de criação. O literal remanescente no handler de criação legado de `mobility-rpc` não alcança mais uma assinatura SQL compatível e deve ser removido fisicamente antes do lançamento.
+- `CreateRideModal` não permite preço manual nem usa estimativa monetária local como autoridade; entrega foi separada para `CreateDeliveryModal`.
+- `CreateDeliveryModal` também não apresenta estimativa provisória como preço contratual e, para passageiro, resolve coleta por GPS/reverse geocode reconciliado em vez de usar centro territorial como origem.
+- `MobilityRpcService` não expõe mais `createRide/createDelivery`; criação pertence exclusivamente a `MobilityCreationService`.
+- Gates operacionais 6 e 7 foram migrados para quotes técnicas single-use isoladas, sem transformar preço de fixture em política comercial.
 - A leitura de reputação do passageiro resolve corretamente Auth User ID versus Profile ID antes de consultar ratings.
 - Passageiro sem avaliações ou com rating indisponível não recebe mais nota perfeita inventada `5.0`; Histórico e Passageiro apresentam `Sem avaliações`.
 - `driver_data.rating` não possui mais default `5.0`; novos motoristas começam sem nota. Registros sem corridas foram normalizados para `NULL`.
@@ -51,7 +58,10 @@
 - `ride_requests.cancellation_reason` foi restaurado como snapshot de suporte e é preenchido pela transição atômica; `ride_state_audit` continua sendo a trilha imutável.
 - No backfill auditado havia 6 corridas canceladas: 5 possuíam motivo recuperável do audit e 1 permaneceu sem motivo porque não havia evidência histórica para reconstrução.
 - `CancelRideDialog` usa códigos estáveis de motivo e inclui categorias explícitas de segurança para passageiro/motorista, preservando texto legível junto do código.
-- Confirmação de entrega usa comando especializado no backend e valida estado retornado.
+- Conclusão de entrega usa o wrapper G70 transacional: registra `delivered` e fecha `completed` dentro do mesmo comando server-side.
+- O wrapper G70 é executável por `service_role`, não por `anon`/`authenticated`.
+- `finalPrice` foi removido de `CompleteRideDialog`, `useRideOperations`, `useDelivery`, `useMotoristaPage`, `useMotoboyPage`, `MotoboyDeliveryActions`, `RideOperationalService`, `RideDeliveryOperationalActions` e `MobilityRpcService`.
+- O parâmetro SQL legado `p_final_price` permanece apenas como compatibilidade temporária; o wrapper G70 passa `NULL::numeric` ao base e garante `final_price = COALESCE(final_price, suggested_price)` a partir do valor persistido. Valor enviado por cliente não possui autoridade.
 - Entrega exige vínculo de endereço/território e validações operacionais de motoboy.
 - Todas as tabelas de mobilidade inspecionadas em `public` estão com RLS habilitado.
 - `get_operational_verification_status` e `verify_operational_pin` verificam sessão/profile e participação/atribuição no banco.
@@ -64,11 +74,12 @@
 
 ### Bloqueadores antes de declarar pronto para lançamento
 
-- [ ] **P0 pricing server-owned:** `supabase/functions/mobility-rpc/index.ts` ainda recebe `suggestedPrice` do browser e `rideCreationRpcParams(...)` ainda contém mínimo literal `5`. Não trocar por outro hardcode: substituir por quote server-owned/versionada e idempotente.
-- [ ] Definir e aprovar a política comercial real de preços por modalidade. Até isso acontecer, `pricing_rules` continua apenas ambiente de desenvolvimento/prova.
+- [ ] **Definir e aprovar a política comercial real de preços por modalidade.** Até isso acontecer, `pricing_rules` continua apenas ambiente de desenvolvimento/prova e emissão comercial live deve permanecer fail-closed.
+- [ ] **Remover fisicamente de `supabase/functions/mobility-rpc/index.ts` os handlers/actions legados `createRide/createDelivery` e o parsing de `finalPrice`.** Hoje criação legada já não consegue mutar o banco porque não existe assinatura SQL antiga compatível, mas código morto exposto não deve permanecer no artefato de lançamento.
+- [ ] Depois do deploy do broker limpo, remover da assinatura SQL o parâmetro de compatibilidade `p_final_price`; não existe caller canônico que precise dele.
 - [ ] Aposentar fisicamente os fallbacks monetários, janelas de pico e estimativa de duração fictícia ainda existentes dentro de `PricingService` depois de migrar todos os callers/testes para o owner final.
 - [ ] Remover o export/singleton cru de `PricingService` depois que nenhum consumidor restante depender dele; runtime deve ter uma entrada canônica.
-- [ ] Regenerar tipos Supabase a partir do schema real depois da restauração de `ride_requests.cancellation_reason`; não editar generated types manualmente.
+- [ ] Regenerar tipos Supabase a partir do schema real depois das mudanças recentes de `ride_requests`/pricing; não editar generated types manualmente.
 - [ ] Confirmar que `ride_state_audit` e `emergency_delivery_log` sem policies de browser são intencionalmente default-deny e possuem somente caminhos privilegiados necessários.
 - [ ] Revisar minimização/retention de GPS, telefone e endereço em estados terminais e compartilhamentos de corrida.
 - [ ] Concluir auditoria das funções `SECURITY DEFINER` restantes e autorização negativa entre usuários distintos.
@@ -88,4 +99,4 @@ São proibidos como autoridade de runtime: tarifa base, preço/km, preço mínim
 
 ## Critério de lançamento
 
-Não declarar mobilidade pronta apenas porque a UI funciona. `PUBLIC_LAUNCH_SURFACES.mobility` permanece `false`. O módulo só passa para `launch-ready` quando os blockers acima estiverem fechados, a política real de preços estiver definida/aprovada, quote for server-owned e os gates automatizados tiverem sido executados contra o mesmo SHA que será publicado.
+Não declarar mobilidade pronta apenas porque a UI funciona. `PUBLIC_LAUNCH_SURFACES.mobility` permanece `false`. O módulo só passa para `launch-ready` quando os blockers acima estiverem fechados, a política real de preços estiver definida/aprovada e os gates automatizados tiverem sido executados contra o mesmo SHA que será publicado.
