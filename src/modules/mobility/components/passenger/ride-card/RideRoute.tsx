@@ -1,30 +1,32 @@
-import React from "react";
-
 interface RideRouteProps {
-  origin: string;
-  destination: string;
+  origin?: string | null;
+  destination?: string | null;
 }
 
 export const RideRoute = ({ origin, destination }: RideRouteProps) => {
   return (
-    <div className="flex items-start gap-3 mb-4">
-      <div className="mt-1 flex flex-col items-center">
-        <div className="w-3 h-3 rounded-full bg-teal-400 border-2 border-teal-400/30" />
-        <div className="w-0.5 h-8 bg-gradient-to-b from-teal-400/50 to-amber-400/50" />
-        <div className="w-3 h-3 rounded-full bg-amber-400 border-2 border-amber-400/30" />
+    <div className="mb-4 flex items-start gap-3">
+      <div className="mt-1 flex flex-col items-center" aria-hidden="true">
+        <div className="h-3 w-3 rounded-full border-2 border-category-mobility/30 bg-category-mobility" />
+        <div className="h-8 w-0.5 bg-gradient-to-b from-category-mobility/50 to-warning/50" />
+        <div className="h-3 w-3 rounded-full border-2 border-warning/30 bg-warning" />
       </div>
-      <div className="flex-1 space-y-3">
+      <div className="min-w-0 flex-1 space-y-3">
         <div>
-          <p className="text-[0.65rem] text-gray-500 uppercase tracking-wider">
+          <p className="text-[0.65rem] uppercase tracking-wider text-muted-foreground">
             Origem
           </p>
-          <p className="text-sm text-white font-medium">{origin}</p>
+          <p className="break-words text-sm font-medium text-foreground">
+            {origin || "Origem não informada"}
+          </p>
         </div>
         <div>
-          <p className="text-[0.65rem] text-gray-500 uppercase tracking-wider">
+          <p className="text-[0.65rem] uppercase tracking-wider text-muted-foreground">
             Destino
           </p>
-          <p className="text-sm text-white font-medium">{destination}</p>
+          <p className="break-words text-sm font-medium text-foreground">
+            {destination || "Destino não informado"}
+          </p>
         </div>
       </div>
     </div>
