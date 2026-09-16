@@ -64,10 +64,13 @@
 - O parâmetro SQL legado `p_final_price` permanece apenas como compatibilidade temporária; o wrapper G70 passa `NULL::numeric` ao base e garante `final_price = COALESCE(final_price, suggested_price)` a partir do valor persistido. Valor enviado por cliente não possui autoridade.
 - Entrega exige vínculo de endereço/território e validações operacionais de motoboy.
 - Todas as tabelas de mobilidade inspecionadas em `public` estão com RLS habilitado.
-- `get_operational_verification_status` e `verify_operational_pin` verificam sessão/profile e participação/atribuição no banco.
+- `ride_state_audit` e `emergency_delivery_log` estão explicitamente default-deny: RLS ligado, zero policies e zero DML de `anon`/`authenticated`. A migration `20260916120500_lock_mobility_audit_default_deny.sql` e o spec `supabase/tests/mobility_audit_default_deny_spec.sql` travam esse contrato; comandos de entrega emergencial auditados permanecem `service_role`-only.
+- `get_operational_verification_status`, `verify_operational_pin` e `refresh_operational_pin_for_requester` verificam sessão/profile e participação/atribuição; refresh do PIN exige o próprio solicitante da corrida ainda ativa, com limitação de frequência.
 - `ensure_ride_chat`, `send_ride_chat_message` e `mark_ride_chat_messages_read` exigem profile ativo e participação concreta na corrida; chat só é gravável nos estados operacionais permitidos.
 - `get_shared_ride_safety_data` expõe somente share ativo, não expirado, com token válido e corrida ainda aberta.
 - `submit_ride_rating` exige ator participante e corrida concluída/entregue, valida escala/comentário e aplica rate limit.
+- `submit_ride_trust_feedback` limita ator/alvo às relações reais da corrida (passageiro↔motorista/motoboy e, quando aplicável, motoboy→merchant), com enumeração de motivos e rate limit server-side.
+- `create_ride_report` passa pelo trigger `trg_guard_ride_report_write`, que recalcula o profile ativo, exige participante da corrida ou admin, redefine `reporter_type`, limita frequência e bloqueia denúncia pendente duplicada; o payload do browser não é autoridade de identidade.
 - `ensure_owned_driver_data`/`update_owned_driver_data` validam ownership; self-service usa whitelist e mudança de identidade/veículo revoga verificação até nova análise.
 - Funções safety inspecionadas (`create_*`, share, evidence, revoke e status) fazem checagens internas de sessão/ator/participação/admin e limites de payload; evidência valida ainda ownership do objeto, tamanho e MIME.
 - Hook duplicado morto de gerenciamento de regras em `src/core/pricing/hooks/usePricingRules.ts` foi removido após censo sem callers de runtime; admin está convergindo para `src/core/pricing/instance.ts`.
@@ -80,9 +83,8 @@
 - [ ] Aposentar fisicamente os fallbacks monetários, janelas de pico e estimativa de duração fictícia ainda existentes dentro de `PricingService` depois de migrar todos os callers/testes para o owner final.
 - [ ] Remover o export/singleton cru de `PricingService` depois que nenhum consumidor restante depender dele; runtime deve ter uma entrada canônica.
 - [ ] Regenerar tipos Supabase a partir do schema real depois das mudanças recentes de `ride_requests`/pricing; não editar generated types manualmente.
-- [ ] Confirmar que `ride_state_audit` e `emergency_delivery_log` sem policies de browser são intencionalmente default-deny e possuem somente caminhos privilegiados necessários.
 - [ ] Revisar minimização/retention de GPS, telefone e endereço em estados terminais e compartilhamentos de corrida.
-- [ ] Concluir auditoria das funções `SECURITY DEFINER` restantes e autorização negativa entre usuários distintos.
+- [ ] Executar autorização negativa entre usuários distintos para funções sensíveis de mobilidade/safety, além dos checks estáticos já auditados.
 - [ ] Executar gates de typecheck, lint, testes de mobilidade/pricing, build e regressão E2E dos fluxos passageiro/motorista/motoboy no mesmo SHA.
 - [ ] Validar concorrência/idempotência: dupla aceitação, cancelamento simultâneo, retry de RPC, reconnect realtime, quote duplicada e confirmação duplicada.
 - [ ] Obter pipeline de deploy verde; rate-limit do Vercel é blocker externo e não conta como certificação de source.
