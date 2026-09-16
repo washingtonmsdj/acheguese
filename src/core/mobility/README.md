@@ -6,28 +6,30 @@
 
 - O ciclo de vida operacional de corridas e entregas pertence a `src/core/mobility/core/**` e aos comandos server-owned expostos pelos serviços RPC.
 - Pedido + entrega comercial usa `src/core/mobility/delivery/services/OrderDeliverySSOTService.ts` como SSOT de aplicação, com `DeliveryRpcService` na fronteira de mutação remota.
-- Precificação oficial pertence a `src/core/pricing/**`. Código de mobilidade não deve possuir tabela paralela, fórmula local ou fallback monetário inventado.
+- Precificação pertence a `src/core/pricing/**`. Código de mobilidade não deve possuir tabela paralela, fórmula local ou fallback monetário inventado.
+- **Os valores atuais de `pricing_rules` são provisórios/fictícios de desenvolvimento e ainda NÃO representam a política comercial aprovada do Achegue-se.**
 - Geolocalização pertence ao SSOT compartilhado de geolocalização; mobilidade deve consumir o serviço, não criar ownership paralelo de GPS/cache/permissões.
 - UI e hooks podem orquestrar estado de apresentação, mas não são autoridade para transições, autorização, preço final ou custódia de entrega.
 
 ## Regras obrigatórias
 
 1. Nenhuma transição crítica deve depender somente de validação do browser.
-2. Nenhum preço oficial pode ser calculado por fórmula hardcoded no cliente.
+2. Nenhum preço pode ser calculado por fórmula comercial hardcoded no cliente.
 3. Falha no Pricing Service deve falhar fechada; não inventar tarifa de contingência.
-4. IDs de usuário e IDs de profile não são intercambiáveis.
-5. Operações de motorista/motoboy devem validar atribuição e capacidade no backend.
-6. Tracking/realtime deve ser escopado à corrida concreta; não abrir streams amplos por `user_id` quando o contrato exige `ride_id`.
-7. Dados de auditoria podem permanecer sem policy de browser quando isso for intencional (RLS default-deny); acesso deve ocorrer apenas pelo caminho privilegiado explicitamente autorizado.
-8. Funções `SECURITY DEFINER` só podem permanecer expostas quando o corpo valida ator/ownership ou quando o endpoint é deliberadamente público e limitado por um token seguro. Um grant não substitui autorização interna.
+4. Valores provisórios de desenvolvimento nunca devem ser tratados como política comercial aprovada ou usados para declarar o módulo pronto para lançamento.
+5. IDs de usuário e IDs de profile não são intercambiáveis.
+6. Operações de motorista/motoboy devem validar atribuição e capacidade no backend.
+7. Tracking/realtime deve ser escopado à corrida concreta; não abrir streams amplos por `user_id` quando o contrato exige `ride_id`.
+8. Dados de auditoria podem permanecer sem policy de browser quando isso for intencional (RLS default-deny); acesso deve ocorrer apenas pelo caminho privilegiado explicitamente autorizado.
+9. Funções `SECURITY DEFINER` só podem permanecer expostas quando o corpo valida ator/ownership ou quando o endpoint é deliberadamente público e limitado por um token seguro. Um grant não substitui autorização interna.
 
 ## Estado verificado nesta auditoria
 
 ### Correto / já endurecido
 
 - O fluxo principal de criação exige coordenadas válidas antes da precificação.
-- `useMobilidade` chama o `pricingService.calculateEstimate(...)` e aborta a criação se a precificação oficial falhar.
-- O singleton canônico `src/core/pricing/instance.ts` rejeita regras históricas `fallback-*`; indisponibilidade do catálogo oficial não pode virar preço hardcoded no runtime.
+- `useMobilidade` chama o `pricingService.calculateEstimate(...)` e aborta a criação se a precificação falhar.
+- O singleton canônico `src/core/pricing/instance.ts` rejeita regras históricas `fallback-*`; indisponibilidade do catálogo não pode virar preço hardcoded no runtime.
 - `useDelivery` (motoboy) também falha fechado: não cria mais entrega com `suggestedPrice` ausente quando Pricing falha.
 - O hook genérico de estimativa usa a mesma instância canônica de Pricing.
 - O calculador legado local `baseFare + pricePerKm` foi removido de `mobility.helpers.ts`.
@@ -42,7 +44,9 @@
 
 ### Bloqueadores antes de declarar pronto para lançamento
 
-- [ ] Remover a regra duplicada/hardcoded de preço mínimo (`R$ 5,00`) do código operacional e das funções SQL `mobility_create_*_atomic`, reconciliando o mínimo com `pricing_rules.minimum_fare` de forma autoritativa.
+- [ ] Definir e aprovar a política comercial real de preços por modalidade. Até isso acontecer, todos os valores existentes em `pricing_rules` devem ser tratados como placeholders de desenvolvimento.
+- [ ] Remover validações comerciais duplicadas/hardcoded (como o mínimo `5`) das funções `mobility_create_*_atomic`; quando os preços reais forem definidos, a autoridade deve ser o SSOT de Pricing, não constantes paralelas.
+- [ ] Introduzir um estado explícito de prontidão comercial da precificação (ex.: metadata/config de aprovação) para impedir que valores provisórios sejam confundidos com preços de produção.
 - [ ] Ajustar a apresentação visual de reputação para mostrar explicitamente `Sem avaliações` em vez de `0.0`, sem voltar a inventar `5.0`.
 - [ ] Revisar grants e corpos das demais funções `SECURITY DEFINER` de mobilidade sinalizadas pelo Supabase Security Advisor, especialmente chat, safety, ratings e mutações de driver ainda não inspecionadas individualmente.
 - [ ] Confirmar que `ride_state_audit` e `emergency_delivery_log` sem policies de browser são intencionalmente default-deny e possuem somente caminhos privilegiados necessários.
@@ -55,8 +59,8 @@
 
 Constantes matemáticas ou de apresentação estáveis (por exemplo raio médio da Terra para Haversine ou labels de status) não são regras comerciais e podem existir localmente.
 
-São proibidos no runtime de mobilidade: tarifa base, preço/km, preço mínimo, raio comercial, comissão, timeout comercial, política de cancelamento, expansão territorial ou qualquer regra de negócio que já possua SSOT/configuração/backend autoritativo.
+São proibidos no runtime de mobilidade: tarifa base, preço/km, preço mínimo, raio comercial, comissão, timeout comercial, política de cancelamento, expansão territorial ou qualquer regra de negócio que deva ser configurável/administrável pelo SSOT.
 
 ## Critério de lançamento
 
-Não declarar mobilidade pronta apenas porque a UI funciona. O módulo só passa para `launch-ready` quando os itens acima estiverem fechados e os gates automatizados tiverem sido executados contra o mesmo SHA que será publicado.
+Não declarar mobilidade pronta apenas porque a UI funciona. O módulo só passa para `launch-ready` quando os itens acima estiverem fechados, **a política real de preços estiver definida/aprovada** e os gates automatizados tiverem sido executados contra o mesmo SHA que será publicado.
