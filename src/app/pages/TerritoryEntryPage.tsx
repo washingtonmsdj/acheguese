@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import TerritoryEntryMap from "@/app/components/territory-vivo/TerritoryEntryMap";
-import { AUTH_PATHS } from "@/core/auth/constants/authFlow";
+import { AUTH_PATHS, buildLoginPath } from "@/core/auth/constants/authFlow";
 import { LAUNCH_URLS, TERRITORY_CONFIG } from "@/core/routing/config/territory";
 import {
   getPublicTerritoryGroupPresentation,
@@ -25,6 +25,7 @@ const LAUNCH_PLACE_LABEL = [
   .filter(Boolean)
   .join(" · ");
 const COMMUNITY_IMAGE_MAP_SETTLE_GRACE_MS = 500;
+const ACCOUNT_PATH = "/conta";
 
 /**
  * A entrada pública não depende do banco para descobrir o território inicial.
@@ -75,8 +76,45 @@ const launchCommunityOriginLabel =
 export default function TerritoryEntryPage() {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [communityImageSrc, setCommunityImageSrc] = useState<string | null>(null);
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
   const mobileMenuButtonRef = useRef<HTMLButtonElement | null>(null);
   const mobileMenuPopoverRef = useRef<HTMLElement | null>(null);
+
+  useEffect(() => {
+    let disposed = false;
+    let authRevision = 0;
+    let unsubscribe = () => undefined;
+
+    // A home usa um runtime público leve e não monta SessionProvider. Carregamos
+    // o SSOT de sessão sob demanda para refletir login sem duplicar autoridade.
+    void import("@/core/session/services/SessionService").then(
+      ({ SessionService }) => {
+        if (disposed) return;
+
+        unsubscribe = SessionService.onAuthStateChange((_event, session) => {
+          authRevision += 1;
+          if (!disposed) {
+            setIsAuthenticated(Boolean(session?.user));
+          }
+        });
+
+        const readRevision = authRevision;
+        void SessionService.getCurrentUser().then((user) => {
+          if (!disposed && authRevision === readRevision) {
+            setIsAuthenticated(Boolean(user));
+          }
+        });
+      },
+      () => {
+        // A home continua pública mesmo se a leitura local da sessão falhar.
+      },
+    );
+
+    return () => {
+      disposed = true;
+      unsubscribe();
+    };
+  }, []);
 
   useEffect(() => {
     if (!isMobileMenuOpen) return;
@@ -178,6 +216,17 @@ export default function TerritoryEntryPage() {
     });
   };
 
+  const accountHref = isAuthenticated
+    ? buildLoginPath(ACCOUNT_PATH)
+    : AUTH_PATHS.login;
+  const accountLabel = isAuthenticated ? "Minha conta" : "Entrar";
+  const primaryAccountHref = isAuthenticated
+    ? accountHref
+    : AUTH_PATHS.signup;
+  const primaryAccountLabel = isAuthenticated
+    ? "Minha conta"
+    : "Criar minha conta";
+
   return (
     <div className="territory-vivo territory-entry-page">
       <a href="#main-content" className="skip-link">
@@ -194,8 +243,8 @@ export default function TerritoryEntryPage() {
               Como funciona
             </a>
             <span className="entry-nav-divider" aria-hidden="true" />
-            <a className="hover:bg-territory-raised" href={AUTH_PATHS.login}>
-              Entrar
+            <a className="hover:bg-territory-raised" href={accountHref}>
+              {accountLabel}
             </a>
           </nav>
           <button
@@ -243,10 +292,10 @@ export default function TerritoryEntryPage() {
               </a>
               <a
                 className="hover:bg-territory-raised"
-                href={AUTH_PATHS.login}
+                href={accountHref}
                 onClick={() => setIsMobileMenuOpen(false)}
               >
-                Entrar
+                {accountLabel}
               </a>
             </nav>
           ) : null}
@@ -299,9 +348,11 @@ export default function TerritoryEntryPage() {
                 Explorar {launchCommunityDefiniteLabel}
                 <span aria-hidden="true" className="text-lg leading-none">→</span>
               </a>
-              <p className="entry-no-account">Sem cadastro para explorar.</p>
-              <a className="entry-account-link" href={AUTH_PATHS.signup}>
-                Criar minha conta
+              <p className="entry-no-account">
+                {isAuthenticated ? "Sua conta está conectada." : "Sem cadastro para explorar."}
+              </p>
+              <a className="entry-account-link" href={primaryAccountHref}>
+                {primaryAccountLabel}
               </a>
               <p className="entry-residence-note">
                 Você pode conhecer a comunidade mesmo morando em outro lugar.
