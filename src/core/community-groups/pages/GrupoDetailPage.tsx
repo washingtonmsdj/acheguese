@@ -13,6 +13,7 @@ import { ArrowLeft, Copy, Info, Loader2, Lock, MessageCircle, UserMinus, UserPlu
 import { GrupoDetailChat } from "./GrupoDetailChat";
 import { GrupoDetailInfoPanel } from "./GrupoDetailInfoPanel";
 import { GrupoDetailMembersPanel } from "./GrupoDetailMembersPanel";
+
 export default function GrupoDetailPage() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
@@ -72,7 +73,7 @@ export default function GrupoDetailPage() {
 
   const handleJoin = async () => {
     if (!communityAccess.can.join_group) {
-      toast.info("Entrar em grupos exige participacao ativa nesta comunidade.");
+      toast.info("Entrar em grupos exige participação ativa nesta comunidade.");
       return;
     }
 
@@ -105,7 +106,7 @@ export default function GrupoDetailPage() {
   ) => {
     if (!id) return;
     if (!canModerate) {
-      toast.info("Apenas moderadores do grupo podem alterar funcoes.");
+      toast.info("Apenas moderadores do grupo podem alterar funções.");
       return;
     }
 
@@ -116,15 +117,15 @@ export default function GrupoDetailPage() {
 
   if (communityAccess.isLoading || loading) {
     return (
-      <div className="min-h-screen bg-[#12181B] flex items-center justify-center">
-        <Loader2 className="w-8 h-8 animate-spin text-teal-400" />
+      <div className="flex min-h-screen items-center justify-center bg-territory-canvas text-territory-ink">
+        <Loader2 className="h-8 w-8 animate-spin text-territory-brand motion-reduce:animate-none" aria-label="Carregando grupo" />
       </div>
     );
   }
 
   if (!communityAccess.can.join_group) {
     return (
-      <div className="min-h-screen bg-[#12181B] text-white">
+      <div className="min-h-screen bg-territory-canvas text-territory-ink">
         <CommunityPortalGate
           resolved={territorialContext.resolved}
           activeMemberIds={territorialContext.activeMemberIds}
@@ -136,15 +137,15 @@ export default function GrupoDetailPage() {
 
   if (!group) {
     return (
-      <div className="min-h-screen bg-[#12181B] flex flex-col items-center justify-center gap-4">
-        <Users className="w-16 h-16 text-gray-600" />
-        <h2 className="text-lg font-semibold text-white">
+      <div className="flex min-h-screen flex-col items-center justify-center gap-4 bg-territory-canvas px-6 text-center text-territory-ink">
+        <Users className="h-16 w-16 text-territory-muted" aria-hidden="true" />
+        <h2 className="text-lg font-semibold text-territory-ink">
           Grupo não encontrado
         </h2>
         <Button
           onClick={() => navigate(appUrls.community.groups)} // SSOT
           variant="outline"
-          className="border-teal-400/30 text-teal-400"
+          className="border-territory-brand/35 text-territory-brand hover:bg-territory-raised"
         >
           Ver todos os grupos
         </Button>
@@ -153,27 +154,28 @@ export default function GrupoDetailPage() {
   }
 
   return (
-    <div className="bg-[#12181B] flex h-full min-h-0 min-w-0 flex-col overflow-x-hidden pb-[env(safe-area-inset-bottom)]">
-      {/* Header */}
-      <div className="sticky top-0 z-50 bg-[#1E2529]/95 backdrop-blur-lg border-b border-white/10">
-        <div className="h-14 px-2.5 sm:px-4 flex items-center gap-2 sm:gap-3 max-w-3xl mx-auto min-w-0">
+    <div className="flex h-full min-h-0 min-w-0 flex-col overflow-x-hidden bg-territory-canvas pb-[env(safe-area-inset-bottom)] text-territory-ink">
+      <div className="sticky top-0 z-50 border-b border-territory-border bg-territory-surface/95 backdrop-blur-lg">
+        <div className="mx-auto flex h-14 min-w-0 max-w-3xl items-center gap-2 px-2.5 sm:gap-3 sm:px-4">
           <button
+            type="button"
             onClick={() => navigate(appUrls.community.groups)} // SSOT
-            className="text-gray-400 hover:text-white"
+            className="rounded-lg p-1 text-territory-muted transition-colors hover:bg-territory-raised hover:text-territory-ink focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-territory-focus"
+            aria-label="Voltar para grupos"
           >
-            <ArrowLeft className="h-5 w-5" />
+            <ArrowLeft className="h-5 w-5" aria-hidden="true" />
           </button>
 
-          <div className="flex-1 min-w-0">
+          <div className="min-w-0 flex-1">
             <div className="flex items-center gap-2">
-              <h1 className="text-sm font-bold text-white truncate">
+              <h1 className="truncate text-sm font-bold text-territory-ink">
                 {group.name}
               </h1>
               {group.is_private && (
-                <Lock className="w-3 h-3 text-yellow-400 flex-shrink-0" />
+                <Lock className="h-3 w-3 flex-shrink-0 text-territory-warning" aria-label="Grupo privado" />
               )}
             </div>
-            <p className="text-[10px] text-gray-400">
+            <p className="text-[10px] text-territory-muted">
               {members.length} membros
             </p>
           </div>
@@ -183,17 +185,17 @@ export default function GrupoDetailPage() {
               size="sm"
               variant="ghost"
               onClick={handleLeave}
-              className="text-red-400 hover:text-red-300 hover:bg-red-400/10 text-[11px] px-2 sm:text-xs sm:px-3"
+              className="px-2 text-[11px] text-destructive hover:bg-destructive/10 hover:text-destructive sm:px-3 sm:text-xs"
             >
-              <UserMinus className="w-3.5 h-3.5 mr-1" /> Sair
+              <UserMinus className="mr-1 h-3.5 w-3.5" aria-hidden="true" /> Sair
             </Button>
           ) : (
             <Button
               size="sm"
               onClick={handleJoin}
-              className="bg-teal-500 hover:bg-teal-600 text-white text-[11px] px-2 gap-1 sm:text-xs sm:px-3"
+              className="gap-1 bg-territory-brand px-2 text-[11px] text-[hsl(var(--territory-on-image))] hover:bg-territory-brand-strong sm:px-3 sm:text-xs"
             >
-              <UserPlus className="w-3.5 h-3.5" /> Entrar
+              <UserPlus className="h-3.5 w-3.5" aria-hidden="true" /> Entrar
             </Button>
           )}
 
@@ -201,14 +203,14 @@ export default function GrupoDetailPage() {
             size="sm"
             variant="ghost"
             onClick={handleCopyShareLink}
-            className="hidden text-gray-400 hover:bg-white/5 hover:text-white sm:inline-flex"
+            className="hidden text-territory-muted hover:bg-territory-raised hover:text-territory-ink sm:inline-flex"
+            aria-label="Compartilhar grupo"
           >
-            <Copy className="h-3.5 w-3.5" />
+            <Copy className="h-3.5 w-3.5" aria-hidden="true" />
           </Button>
         </div>
 
-        {/* Tabs */}
-        <div className="grid grid-cols-3 border-t border-white/5 max-w-3xl mx-auto">
+        <div className="mx-auto grid max-w-3xl grid-cols-3 border-t border-territory-border/70">
           {(
             [
               { key: "chat", label: "Chat", icon: MessageCircle },
@@ -221,25 +223,25 @@ export default function GrupoDetailPage() {
             ] as const
           ).map((t) => (
             <button
+              type="button"
               key={t.key}
               onClick={() => setActiveTab(t.key)}
-              className={`min-w-0 flex items-center justify-center gap-1 py-3 px-0.5 text-[10px] sm:text-xs font-medium border-b-2 transition-colors ${
+              className={`flex min-w-0 items-center justify-center gap-1 border-b-2 px-0.5 py-3 text-[10px] font-medium transition-colors focus-visible:outline-2 focus-visible:outline-offset-[-2px] focus-visible:outline-territory-focus sm:text-xs ${
                 activeTab === t.key
-                  ? "border-teal-400 text-teal-400"
-                  : "border-transparent text-gray-400 hover:text-white"
+                  ? "border-territory-brand text-territory-brand"
+                  : "border-transparent text-territory-muted hover:bg-territory-raised hover:text-territory-ink"
               }`}
             >
-              <t.icon className="w-3.5 h-3.5" />
+              <t.icon className="h-3.5 w-3.5" aria-hidden="true" />
               <span className="truncate">{t.label}</span>
             </button>
           ))}
         </div>
       </div>
 
-      {/* Content */}
-      <div className="flex-1 max-w-3xl mx-auto w-full min-h-0 flex flex-col overflow-hidden">
+      <div className="mx-auto flex min-h-0 w-full max-w-3xl flex-1 flex-col overflow-hidden">
         {activeTab === "chat" && (
-          <div className="flex-1 min-h-0">
+          <div className="min-h-0 flex-1">
             <GrupoDetailChat
               groupId={id!}
               isMember={isMember}
