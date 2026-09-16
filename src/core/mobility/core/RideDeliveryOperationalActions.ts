@@ -1,6 +1,7 @@
 import { logger } from "@/shared/utils/logger";
 import { RIDE_STATE, type RideState } from "./RideStateMachine";
 import { MobilityRpcService } from "../services/MobilityRpcService";
+import { MobilityCreationService } from "../services/MobilityCreationService";
 import { RideOperationalContextReadService } from "../services/RideOperationalContextReadService";
 import type {
   FailedDeliveryMetadata,
@@ -93,7 +94,7 @@ export async function createDeliveryOperation(
       };
     }
 
-    const creation = await MobilityRpcService.createDelivery(input);
+    const creation = await MobilityCreationService.createDelivery(input);
     if (creation.success !== true || !creation.ride_id) {
       throw new Error(
         `Delivery creation was not applied${creation.reason ? `: ${creation.reason}` : ""}`,
