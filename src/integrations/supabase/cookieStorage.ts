@@ -4,7 +4,8 @@
  * This module intentionally does not claim HttpOnly protection. A Vite SPA can
  * only write browser-readable cookies; true HttpOnly auth requires a server-side
  * auth boundary. Within the SPA constraint, auth persistence is cookie-only,
- * SameSite=Strict, Secure on HTTPS, chunked for Supabase payload size, and never
+ * SameSite=Lax (required for top-level Supabase email/OAuth callbacks), Secure
+ * on HTTPS, chunked for Supabase payload size, and never
  * falls back to localStorage.
  */
 import type { SupportedStorage } from "@supabase/supabase-js";

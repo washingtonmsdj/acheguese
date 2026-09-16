@@ -8,12 +8,14 @@ import { AuthTurnstileGate } from "@/app/components/auth/AuthTurnstileGate";
 import { useAuthTurnstile } from "@/app/components/auth/useAuthTurnstile";
 import {
   AUTH_EMAIL_CONFIRMATION_INTENTS,
+  AUTH_PATHS,
   buildLoginPath,
   buildSignupPath,
 } from "@/core/auth/constants/authFlow";
 import { useAuth } from "@/core/auth/hooks/useAuth";
 import {
   cancelUnconfirmedEmailLoginJourney,
+  completeEmailConfirmationJourney,
   getSignupConfirmationContext,
   getSignupConfirmationResendRemainingMs,
   restartEmailSignupJourney,
@@ -23,6 +25,8 @@ import {
   getAuthErrorMessage,
   isAuthRateLimitError,
 } from "@/core/auth/utils/authMessages";
+import { hasPendingAuthCallbackExchange } from "@/core/auth/utils/authCallback";
+import { useSessionContext } from "@/core/session/hooks/useSessionContext";
 import { SUPPORT_PATH } from "@/shared/constants/legal";
 import { useToast } from "@/shared/hooks/use-toast";
 import { resolveSafeInternalPath } from "@/shared/utils/safeRedirect";
@@ -37,6 +41,7 @@ export default function CadastroConfirmacaoPage() {
   const navigate = useNavigate();
   const location = useLocation();
   const { resendConfirmationEmail } = useAuth();
+  const { user, isLoading: sessionLoading } = useSessionContext();
   const { toast } = useToast();
   const turnstile = useAuthTurnstile();
   const [isResending, setIsResending] = useState(false);
@@ -65,6 +70,29 @@ export default function CadastroConfirmacaoPage() {
   const startedFromLogin =
     journeyContext.intent === AUTH_EMAIL_CONFIRMATION_INTENTS.login;
   const backToLogin = buildLoginPath(redirectTo);
+  const callbackExchangePending = hasPendingAuthCallbackExchange(
+    location.search,
+    location.hash,
+  );
+
+  // A confirmation link can be opened from an e-mail client without the
+  // original React Router state or sessionStorage context. If Supabase has
+  // already established the confirmed session, the callback is authoritative:
+  // continue the normal first-access journey instead of showing the misleading
+  // "Vamos localizar sua inscrição" fallback.
+  useEffect(() => {
+    if (sessionLoading || !user || !user.emailConfirmed) return;
+    if (email && !callbackExchangePending) return;
+
+    completeEmailConfirmationJourney();
+    navigate(AUTH_PATHS.firstAccess, { replace: true });
+  }, [
+    callbackExchangePending,
+    email,
+    navigate,
+    sessionLoading,
+    user,
+  ]);
 
   useEffect(() => {
     const syncCooldown = () => setCooldown(getResendCooldownSeconds());

@@ -397,7 +397,10 @@ export const BLOCKED_IMAGE_EXTENSIONS = ['.svg', '.xml', '.html', '.htm'] as con
 
 export const SECURE_COOKIE_CONFIG = {
   path: '/',
-  sameSite: 'strict' as const,
+  // Auth callbacks are top-level navigations from Supabase, Google, or an
+  // email client. Strict would drop the PKCE verifier on that cross-site
+  // navigation and make a valid confirmation link look unauthenticated.
+  sameSite: 'lax' as const,
   secure: true,
   maxAge: 60 * 60 * 24 * 7,
   httpOnly: false,
