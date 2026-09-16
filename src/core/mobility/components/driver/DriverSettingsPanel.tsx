@@ -1,123 +1,187 @@
-import React, { useState } from "react";
+import { useEffect, useState } from "react";
+import { Bell, Loader2, Settings, ShieldCheck, Smartphone } from "lucide-react";
+import { useNavigate } from "react-router-dom";
 import {
-  Settings,
-  Bell,
-  Shield,
-  Car,
-  Volume2,
-  Moon,
-  Globe,
-} from "lucide-react";
+  NotificationPreferencesService,
+  type NotificationPreferences,
+} from "@/core/notifications/services/NotificationPreferencesService";
+import { ACCOUNT_PATHS } from "@/core/routing/config/account";
+import { Button } from "@/shared/components/ui/button";
 import { Switch } from "@/shared/components/ui/switch";
-import { cn } from "@/shared/utils/cn";
 import { toast } from "sonner";
 
-interface SettingItem {
-  id: string;
-  icon: React.ElementType;
+type PersistedChannel = "push_enabled" | "inapp_enabled";
+
+const CHANNELS: ReadonlyArray<{
+  id: PersistedChannel;
+  icon: typeof Bell;
   label: string;
   description: string;
-  color: string;
-  defaultValue: boolean;
-}
-
-const settings: SettingItem[] = [
+}> = [
   {
-    id: "notifications",
+    id: "inapp_enabled",
     icon: Bell,
-    label: "Notificações de pedidos",
-    description: "Receba alertas quando novos pedidos surgirem",
-    color: "text-teal-400",
-    defaultValue: true,
+    label: "Avisos dentro do Achegue-se",
+    description: "Mostra notificações operacionais na central e no aplicativo.",
   },
   {
-    id: "sound",
-    icon: Volume2,
-    label: "Som de novos pedidos",
-    description: "Toque sonoro ao receber pedido",
-    color: "text-cyan-400",
-    defaultValue: true,
-  },
-  {
-    id: "entregas",
-    icon: Car,
-    label: "Aceitar entregas",
-    description: "Receber pedidos de entrega além de viagens",
-    color: "text-amber-400",
-    defaultValue: true,
-  },
-  {
-    id: "night_mode",
-    icon: Moon,
-    label: "Modo noturno automático",
-    description: "Ajustar interface em horários noturnos",
-    color: "text-purple-400",
-    defaultValue: false,
-  },
-  {
-    id: "safe_mode",
-    icon: Shield,
-    label: "Modo seguro",
-    description: "Confirmar identidade do passageiro",
-    color: "text-red-400",
-    defaultValue: false,
+    id: "push_enabled",
+    icon: Smartphone,
+    label: "Notificações push",
+    description: "Permite alertas push quando o canal estiver disponível no dispositivo.",
   },
 ];
 
 export function DriverSettingsPanel() {
-  const [values, setValues] = useState<Map<string, boolean>>(
-    () => new Map(settings.map((setting) => [setting.id, setting.defaultValue])),
-  );
+  const navigate = useNavigate();
+  const [preferences, setPreferences] = useState<NotificationPreferences | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [saving, setSaving] = useState<PersistedChannel | null>(null);
+  const [loadError, setLoadError] = useState(false);
 
-  const toggle = (id: string) => {
-    setValues((prev) => {
-      const next = new Map(prev);
-      const nextValue = !(next.get(id) ?? false);
-      next.set(id, nextValue);
-      toast.success(
-        `${nextValue ? "Ativado" : "Desativado"}: ${settings.find((s) => s.id === id)?.label}`,
-      );
-      return next;
-    });
+  const loadPreferences = async () => {
+    setLoading(true);
+    setLoadError(false);
+    try {
+      setPreferences(await NotificationPreferencesService.get());
+    } catch {
+      setLoadError(true);
+      toast.error("Não foi possível carregar suas preferências de notificação.");
+    } finally {
+      setLoading(false);
+    }
   };
 
-  return (
-    <div className="rounded-xl border border-white/10 bg-[#1E2529] overflow-hidden">
-      <div className="flex items-center gap-2 p-2 border-b border-white/5">
-        <Settings className="h-3 w-3 text-teal-400" />
-        <h3 className="text-xs font-bold text-white">Configurações</h3>
+  useEffect(() => {
+    let active = true;
+
+    void NotificationPreferencesService.get()
+      .then((next) => {
+        if (active) setPreferences(next);
+      })
+      .catch(() => {
+        if (active) setLoadError(true);
+      })
+      .finally(() => {
+        if (active) setLoading(false);
+      });
+
+    return () => {
+      active = false;
+    };
+  }, []);
+
+  const updateChannel = async (field: PersistedChannel, checked: boolean) => {
+    if (!preferences || saving) return;
+
+    setSaving(field);
+    try {
+      const next = await NotificationPreferencesService.patchChannels(
+        field === "push_enabled"
+          ? { push_enabled: checked }
+          : { inapp_enabled: checked },
+      );
+      setPreferences(next);
+      toast.success(checked ? "Preferência ativada." : "Preferência desativada.");
+    } catch {
+      toast.error("Não foi possível salvar essa preferência.");
+    } finally {
+      setSaving(null);
+    }
+  };
+
+  if (loading) {
+    return (
+      <div className="flex min-h-28 items-center justify-center rounded-xl border bg-card">
+        <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" aria-hidden="true" />
+        <span className="sr-only">Carregando preferências</span>
       </div>
-      <div className="divide-y divide-white/5">
-        {settings.map((s) => (
-          <div
-            key={s.id}
-            className="flex items-center justify-between p-2 hover:bg-white/[0.02] transition-colors"
-          >
-            <div className="flex items-center gap-1.5">
-              <div
-                className={cn(
-                  "w-6 h-6 rounded-lg flex items-center justify-center bg-white/5",
-                )}
-              >
-                <s.icon className={cn("h-2.5 w-2.5", s.color)} />
+    );
+  }
+
+  if (loadError || !preferences) {
+    return (
+      <div className="space-y-3 rounded-xl border border-destructive/25 bg-destructive/5 p-4">
+        <p className="text-sm font-semibold text-foreground">
+          Preferências indisponíveis
+        </p>
+        <p className="text-xs text-muted-foreground">
+          Não foi possível consultar a configuração persistida desta conta.
+        </p>
+        <Button type="button" variant="outline" size="sm" onClick={() => void loadPreferences()}>
+          Tentar novamente
+        </Button>
+      </div>
+    );
+  }
+
+  return (
+    <section className="overflow-hidden rounded-xl border bg-card text-card-foreground">
+      <div className="flex items-center gap-2 border-b p-3">
+        <Settings className="h-4 w-4 text-primary" aria-hidden="true" />
+        <div>
+          <h3 className="text-sm font-bold">Preferências do motorista</h3>
+          <p className="text-xs text-muted-foreground">
+            Alterações abaixo são salvas na sua conta.
+          </p>
+        </div>
+      </div>
+
+      <div className="divide-y">
+        {CHANNELS.map((channel) => {
+          const Icon = channel.icon;
+          const checked = preferences[channel.id];
+          const isSaving = saving === channel.id;
+
+          return (
+            <div
+              key={channel.id}
+              className="flex items-center justify-between gap-4 p-3 transition-colors hover:bg-muted/30"
+            >
+              <div className="flex min-w-0 items-start gap-3">
+                <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-primary/10 text-primary">
+                  <Icon className="h-4 w-4" aria-hidden="true" />
+                </div>
+                <div className="min-w-0">
+                  <p className="text-sm font-semibold text-foreground">{channel.label}</p>
+                  <p className="text-xs leading-relaxed text-muted-foreground">
+                    {channel.description}
+                  </p>
+                </div>
               </div>
-              <div>
-                <p className="text-[0.6rem] font-semibold text-white">
-                  {s.label}
-                </p>
-                <p className="text-[0.5rem] text-gray-500 leading-tight">
-                  {s.description}
-                </p>
+              <div className="flex shrink-0 items-center gap-2">
+                {isSaving ? (
+                  <Loader2 className="h-4 w-4 animate-spin text-muted-foreground" aria-hidden="true" />
+                ) : null}
+                <Switch
+                  checked={checked}
+                  onCheckedChange={(next) => void updateChannel(channel.id, next)}
+                  disabled={Boolean(saving)}
+                  aria-label={`${checked ? "Desativar" : "Ativar"} ${channel.label}`}
+                />
               </div>
             </div>
-            <Switch
-              checked={values.get(s.id) ?? false}
-              onCheckedChange={() => toggle(s.id)}
-              className="data-[state=checked]:bg-teal-500 scale-70"
-            />
-          </div>
-        ))}
+          );
+        })}
       </div>
-    </div>
+
+      <div className="space-y-3 border-t bg-muted/20 p-3">
+        <div className="flex items-start gap-2 text-xs text-muted-foreground">
+          <ShieldCheck className="mt-0.5 h-4 w-4 shrink-0 text-success" aria-hidden="true" />
+          <p>
+            Alertas transacionais e de segurança continuam obrigatórios. Modos operacionais de corrida e entrega são capabilities verificadas no servidor e não são alterados por um switch local.
+          </p>
+        </div>
+        <Button
+          type="button"
+          variant="outline"
+          size="sm"
+          className="w-full"
+          onClick={() => navigate(ACCOUNT_PATHS.notifications)}
+        >
+          Abrir todas as preferências de notificação
+        </Button>
+      </div>
+    </section>
   );
 }
