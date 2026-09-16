@@ -118,9 +118,9 @@ test.describe("Mobile core public layout", () => {
 
     expect(layout.overflow).toBe(0);
     expect(layout.brandWhiteSpace).toBe("nowrap");
-    expect(layout.brandFont).toContain("Space Grotesk");
-    expect(layout.headerFont).toContain("DM Sans");
-    expect(layout.bottomFont).toContain("DM Sans");
+    expect(layout.brandFont).toContain("Plus Jakarta Sans");
+    expect(layout.headerFont).toContain("Plus Jakarta Sans");
+    expect(layout.bottomFont).toContain("Plus Jakarta Sans");
 
     await menuTrigger.click();
     const mobileMenu = page.getByRole("navigation", {
