@@ -1,6 +1,5 @@
 /**
  * Dashboard em Tempo Real para Administradores
- * Segue o padrão de layout e cores do sistema admin
  */
 
 import {
@@ -14,7 +13,6 @@ import {
   MapPin,
   Navigation,
   RefreshCw,
-  Shield,
   Star,
   TrendingUp,
   Users,
@@ -23,6 +21,7 @@ import {
 } from "lucide-react";
 
 import { useRealtimeMetrics } from "@/core/admin/hooks/useRealtimeMetrics";
+import { AdminAccessDenied } from "@/modules/admin/components/AdminAccessDenied";
 import { useAdminGuard } from "@/modules/admin/hooks/useAdminGuard";
 import { StatusBadge } from "@/modules/mobility/components/StatusBadge";
 import { Avatar, AvatarFallback, AvatarImage } from "@/shared/components/ui/avatar";
@@ -32,55 +31,53 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/shared/components/ui
 import { cn } from "@/shared/utils/cn";
 import { formatBrl } from "@/shared/utils/currency";
 
-const StatusIndicator = ({
+const SYSTEM_HEALTH = {
+  healthy: {
+    dot: "bg-success",
+    text: "Sistema saudável",
+    icon: CheckCircle,
+    iconClass: "text-success",
+  },
+  warning: {
+    dot: "bg-warning",
+    text: "Atenção necessária",
+    icon: AlertTriangle,
+    iconClass: "text-warning",
+  },
+  critical: {
+    dot: "bg-destructive",
+    text: "Situação crítica",
+    icon: AlertTriangle,
+    iconClass: "text-destructive",
+  },
+} as const;
+
+function StatusIndicator({
   status,
 }: {
   status: "healthy" | "warning" | "critical";
-}) => {
-  const config = {
-    healthy: {
-      color: "bg-emerald-500",
-      text: "Sistema Saudável",
-      icon: CheckCircle,
-    },
-    warning: {
-      color: "bg-amber-500",
-      text: "Atenção Necessária",
-      icon: AlertTriangle,
-    },
-    critical: {
-      color: "bg-red-500",
-      text: "Situação Crítica",
-      icon: AlertTriangle,
-    },
-  };
-
-  const currentConfig =
-    status === "healthy"
-      ? config.healthy
-      : status === "warning"
-        ? config.warning
-        : config.critical;
-  const { color, text, icon: Icon } = currentConfig;
+}) {
+  const config = SYSTEM_HEALTH[status];
+  const Icon = config.icon;
 
   return (
     <div className="flex items-center gap-2">
-      <div className={cn("h-2 w-2 animate-pulse rounded-full", color)} />
-      <Icon className="h-4 w-4 text-muted-foreground" />
-      <span className="text-sm font-medium">{text}</span>
+      <div className={cn("h-2 w-2 animate-pulse rounded-full", config.dot)} />
+      <Icon className={cn("h-4 w-4", config.iconClass)} aria-hidden="true" />
+      <span className="text-sm font-medium text-foreground">{config.text}</span>
     </div>
   );
-};
+}
 
 const formatCurrency = formatBrl;
 
-const formatTime = (dateString: string) => {
+function formatTime(dateString: string) {
   const date = new Date(dateString);
   return date.toLocaleTimeString("pt-BR", {
     hour: "2-digit",
     minute: "2-digit",
   });
-};
+}
 
 export default function AdminRealtimeDashboard() {
   const { canModerate, isChecking } = useAdminGuard();
@@ -95,23 +92,14 @@ export default function AdminRealtimeDashboard() {
   } = useRealtimeMetrics();
 
   if (!isChecking && !canModerate) {
-    return (
-      <div className="flex min-h-screen items-center justify-center bg-[#0A0F14] p-4">
-        <div className="text-center">
-          <Shield className="mx-auto mb-4 h-16 w-16 text-red-400" />
-          <h1 className="mb-2 text-2xl font-bold text-white">Acesso Negado</h1>
-          <p className="text-gray-400">
-            Apenas administradores podem acessar esta página.
-          </p>
-        </div>
-      </div>
-    );
+    return <AdminAccessDenied />;
   }
 
   if (loading && !metrics) {
     return (
-      <div className="flex items-center justify-center py-20">
-        <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
+      <div className="flex items-center justify-center py-20" role="status">
+        <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" aria-hidden="true" />
+        <span className="sr-only">Carregando dashboard em tempo real</span>
       </div>
     );
   }
@@ -119,14 +107,14 @@ export default function AdminRealtimeDashboard() {
   if (error) {
     return (
       <div className="flex flex-col items-center justify-center space-y-4 py-20">
-        <AlertTriangle className="h-12 w-12 text-red-500" />
+        <AlertTriangle className="h-12 w-12 text-destructive" aria-hidden="true" />
         <div className="text-center">
           <h3 className="text-lg font-semibold text-foreground">Erro ao carregar métricas</h3>
           <p className="text-muted-foreground">{error.message}</p>
         </div>
         <Button onClick={refetch} variant="outline">
-          <RefreshCw className="mr-2 h-4 w-4" />
-          Tentar Novamente
+          <RefreshCw className="mr-2 h-4 w-4" aria-hidden="true" />
+          Tentar novamente
         </Button>
       </div>
     );
@@ -135,127 +123,100 @@ export default function AdminRealtimeDashboard() {
   if (!metrics) return null;
 
   return (
-    <div className="space-y-6">
-      <div className="flex items-center justify-between">
+    <div className="space-y-6 text-foreground">
+      <div className="flex flex-col justify-between gap-4 xl:flex-row xl:items-center">
         <div>
           <h1 className="mb-0.5 flex items-center gap-2 font-display text-2xl font-bold">
-            <Activity className="h-6 w-6 text-primary" />
-            Dashboard Tempo Real
+            <Activity className="h-6 w-6 text-primary" aria-hidden="true" />
+            Dashboard em tempo real
           </h1>
           <p className="text-sm text-muted-foreground">
-            Monitoramento ao vivo do sistema de mobilidade
+            Monitoramento ao vivo do sistema de mobilidade.
           </p>
         </div>
-        <div className="flex items-center gap-3">
+        <div className="flex flex-wrap items-center gap-3">
           <div className="flex items-center gap-2 rounded-lg bg-muted px-3 py-1.5">
             {isConnected ? (
               <>
-                <div className="h-2 w-2 animate-pulse rounded-full bg-emerald-500" />
-                <Wifi className="h-3 w-3 text-emerald-600" />
-                <span className="text-xs font-medium text-emerald-700">Conectado</span>
+                <div className="h-2 w-2 animate-pulse rounded-full bg-success" />
+                <Wifi className="h-3 w-3 text-success" aria-hidden="true" />
+                <span className="text-xs font-medium text-success">Conectado</span>
               </>
             ) : (
               <>
-                <div className="h-2 w-2 animate-pulse rounded-full bg-amber-500" />
-                <WifiOff className="h-3 w-3 text-amber-600" />
-                <span className="text-xs font-medium text-amber-700">Reconectando...</span>
+                <div className="h-2 w-2 animate-pulse rounded-full bg-warning" />
+                <WifiOff className="h-3 w-3 text-warning" aria-hidden="true" />
+                <span className="text-xs font-medium text-warning">Reconectando...</span>
               </>
             )}
           </div>
           <StatusIndicator status={metrics.systemHealth} />
-          <Button onClick={refetch} variant="outline" size="sm">
-            <RefreshCw className="h-4 w-4" />
+          <Button
+            onClick={refetch}
+            variant="outline"
+            size="sm"
+            aria-label="Atualizar métricas"
+          >
+            <RefreshCw className="h-4 w-4" aria-hidden="true" />
           </Button>
         </div>
       </div>
 
       <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
-        <Card className="border">
-          <CardContent className="p-4">
-            <div className="mb-3 flex items-center justify-between">
-              <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-emerald-500/10 text-emerald-600">
-                <Users className="h-5 w-5" />
-              </div>
-            </div>
-            <p className="text-2xl font-bold">{metrics.driversOnline}</p>
-            <span className="text-xs text-muted-foreground">Motoristas Online</span>
-            <p className="mt-1 text-xs text-muted-foreground">
-              de {metrics.driversTotal} total
-            </p>
-          </CardContent>
-        </Card>
-
-        <Card className="border">
-          <CardContent className="p-4">
-            <div className="mb-3 flex items-center justify-between">
-              <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-sky-500/10 text-sky-600">
-                <Car className="h-5 w-5" />
-              </div>
-            </div>
-            <p className="text-2xl font-bold">{metrics.ridesActive}</p>
-            <span className="text-xs text-muted-foreground">Corridas Ativas</span>
-            <p className="mt-1 text-xs text-muted-foreground">
-              {metrics.ridesPending} aguardando motorista
-            </p>
-          </CardContent>
-        </Card>
-
-        <Card className="border">
-          <CardContent className="p-4">
-            <div className="mb-3 flex items-center justify-between">
-              <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-violet-500/10 text-violet-600">
-                <DollarSign className="h-5 w-5" />
-              </div>
-            </div>
-            <p className="text-2xl font-bold">
-              {formatCurrency(metrics.completedValueToday)}
-            </p>
-            <span className="text-xs text-muted-foreground">Valor Concluído Hoje</span>
-            <p className="mt-1 text-xs text-muted-foreground">
-              {metrics.ridesToday} corridas criadas hoje
-            </p>
-          </CardContent>
-        </Card>
-
-        <Card className="border">
-          <CardContent className="p-4">
-            <div className="mb-3 flex items-center justify-between">
-              <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-amber-500/10 text-amber-600">
-                <TrendingUp className="h-5 w-5" />
-              </div>
-            </div>
-            <p className="text-2xl font-bold">{metrics.completionRate}%</p>
-            <span className="text-xs text-muted-foreground">Taxa de Conclusão</span>
-            <p className="mt-1 text-xs text-muted-foreground">
-              Nota {metrics.avgRating} · resposta{" "}
-              {metrics.avgResponseTime === null
-                ? "sem amostra"
-                : `${metrics.avgResponseTime}min`}
-            </p>
-          </CardContent>
-        </Card>
+        <MetricCard
+          icon={Users}
+          iconClassName="bg-success/10 text-success"
+          value={metrics.driversOnline}
+          label="Motoristas online"
+          detail={`de ${metrics.driversTotal} total`}
+        />
+        <MetricCard
+          icon={Car}
+          iconClassName="bg-info/10 text-info"
+          value={metrics.ridesActive}
+          label="Corridas ativas"
+          detail={`${metrics.ridesPending} aguardando motorista`}
+        />
+        <MetricCard
+          icon={DollarSign}
+          iconClassName="bg-primary/10 text-primary"
+          value={formatCurrency(metrics.completedValueToday)}
+          label="Valor concluído hoje"
+          detail={`${metrics.ridesToday} corridas criadas hoje`}
+        />
+        <MetricCard
+          icon={TrendingUp}
+          iconClassName="bg-warning/10 text-warning"
+          value={`${metrics.completionRate}%`}
+          label="Taxa de conclusão"
+          detail={`Nota ${metrics.avgRating} · resposta ${
+            metrics.avgResponseTime === null
+              ? "sem amostra"
+              : `${metrics.avgResponseTime}min`
+          }`}
+        />
       </div>
 
       <div className="grid gap-6 lg:grid-cols-3">
         <div className="lg:col-span-2">
-          <Card>
+          <Card className="border-border bg-card text-card-foreground">
             <CardHeader className="pb-3">
               <CardTitle className="flex items-center gap-2 text-base">
-                <Navigation className="h-4 w-4 text-sky-500" />
-                Corridas Ativas ({metrics.ridesActive})
+                <Navigation className="h-4 w-4 text-info" aria-hidden="true" />
+                Corridas ativas ({metrics.ridesActive})
               </CardTitle>
             </CardHeader>
             <CardContent className="max-h-96 space-y-3 overflow-y-auto">
               {activeRides.length === 0 ? (
                 <div className="py-8 text-center text-muted-foreground">
-                  <Car className="mx-auto mb-2 h-8 w-8 opacity-50" />
+                  <Car className="mx-auto mb-2 h-8 w-8 opacity-50" aria-hidden="true" />
                   <p className="text-sm">Nenhuma corrida ativa no momento</p>
                 </div>
               ) : (
                 activeRides.map((ride) => (
                   <div
                     key={ride.id}
-                    className="flex items-start gap-3 rounded-lg border bg-card/50 p-3"
+                    className="flex items-start gap-3 rounded-lg border border-border bg-muted/30 p-3"
                   >
                     <div className="min-w-0 flex-1">
                       <div className="mb-1 flex items-center gap-2">
@@ -272,18 +233,18 @@ export default function AdminRealtimeDashboard() {
                         </div>
                         <div className="text-xs text-muted-foreground">
                           <div className="flex items-center gap-1">
-                            <MapPin className="h-3 w-3" />
+                            <MapPin className="h-3 w-3" aria-hidden="true" />
                             <span className="truncate">{ride.origin}</span>
                           </div>
                           <div className="mt-0.5 flex items-center gap-1">
-                            <Navigation className="h-3 w-3" />
+                            <Navigation className="h-3 w-3" aria-hidden="true" />
                             <span className="truncate">{ride.destination}</span>
                           </div>
                         </div>
                       </div>
                     </div>
                     <div className="text-right">
-                      <p className="text-sm font-bold text-emerald-600">
+                      <p className="text-sm font-bold text-success">
                         {formatCurrency(ride.current_price)}
                       </p>
                     </div>
@@ -295,24 +256,24 @@ export default function AdminRealtimeDashboard() {
         </div>
 
         <div className="space-y-6">
-          <Card>
+          <Card className="border-border bg-card text-card-foreground">
             <CardHeader className="pb-3">
               <CardTitle className="flex items-center gap-2 text-base">
-                <Users className="h-4 w-4 text-emerald-500" />
-                Motoristas Online ({metrics.driversOnline})
+                <Users className="h-4 w-4 text-success" aria-hidden="true" />
+                Motoristas online ({metrics.driversOnline})
               </CardTitle>
             </CardHeader>
             <CardContent className="max-h-96 space-y-3 overflow-y-auto">
               {onlineDrivers.length === 0 ? (
                 <div className="py-8 text-center text-muted-foreground">
-                  <Users className="mx-auto mb-2 h-8 w-8 opacity-50" />
+                  <Users className="mx-auto mb-2 h-8 w-8 opacity-50" aria-hidden="true" />
                   <p className="text-sm">Nenhum motorista online</p>
                 </div>
               ) : (
                 onlineDrivers.map((driver) => (
                   <div
                     key={driver.id}
-                    className="flex items-center gap-3 rounded-lg border bg-card/50 p-3"
+                    className="flex items-center gap-3 rounded-lg border border-border bg-muted/30 p-3"
                   >
                     <Avatar className="h-10 w-10">
                       <AvatarImage src={driver.avatar_url} />
@@ -327,12 +288,12 @@ export default function AdminRealtimeDashboard() {
                         <div
                           className={cn(
                             "h-2 w-2 rounded-full",
-                            driver.is_available ? "bg-emerald-500" : "bg-amber-500",
+                            driver.is_available ? "bg-success" : "bg-warning",
                           )}
                         />
                       </div>
 
-                      <div className="flex items-center gap-3 text-xs text-muted-foreground">
+                      <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-muted-foreground">
                         <span className="inline-flex items-center gap-1">
                           <Star className="h-3 w-3" aria-hidden="true" />
                           {driver.rating.toFixed(1)}
@@ -352,13 +313,12 @@ export default function AdminRealtimeDashboard() {
 
                     <div className="text-right">
                       <Badge
-                        variant="secondary"
-                        className={cn(
-                          "text-xs",
+                        variant="outline"
+                        className={
                           driver.is_available
-                            ? "bg-emerald-500/10 text-emerald-600"
-                            : "bg-amber-500/10 text-amber-600",
-                        )}
+                            ? "border-success/30 bg-success/10 text-success"
+                            : "border-warning/30 bg-warning/10 text-warning"
+                        }
                       >
                         {driver.is_available ? "Disponível" : "Ocupado"}
                       </Badge>
@@ -374,45 +334,37 @@ export default function AdminRealtimeDashboard() {
             </CardContent>
           </Card>
 
-          <Card>
+          <Card className="border-border bg-card text-card-foreground">
             <CardHeader className="pb-3">
               <CardTitle className="flex items-center gap-2 text-base">
-                <DollarSign className="h-4 w-4 text-violet-500" />
-                Valores de Corridas Concluídas
+                <DollarSign className="h-4 w-4 text-primary" aria-hidden="true" />
+                Valores de corridas concluídas
               </CardTitle>
             </CardHeader>
             <CardContent className="space-y-3">
-              <div className="flex items-center justify-between rounded-lg bg-muted/50 p-3">
-                <div className="flex items-center gap-2">
-                  <Clock className="h-4 w-4 text-emerald-500" />
-                  <span className="text-sm font-medium">Hoje</span>
-                </div>
-                <span className="text-sm font-bold text-emerald-600">
-                  {formatCurrency(metrics.completedValueToday)}
-                </span>
-              </div>
+              <ValueRow
+                icon={Clock}
+                iconClassName="text-success"
+                label="Hoje"
+                value={formatCurrency(metrics.completedValueToday)}
+                valueClassName="text-success"
+              />
+              <ValueRow
+                icon={TrendingUp}
+                iconClassName="text-info"
+                label="Últimos 7 dias"
+                value={formatCurrency(metrics.completedValueWeek)}
+                valueClassName="text-info"
+              />
+              <ValueRow
+                icon={Activity}
+                iconClassName="text-primary"
+                label="Últimos 30 dias"
+                value={formatCurrency(metrics.completedValueMonth)}
+                valueClassName="text-primary"
+              />
 
-              <div className="flex items-center justify-between rounded-lg bg-muted/50 p-3">
-                <div className="flex items-center gap-2">
-                  <TrendingUp className="h-4 w-4 text-sky-500" />
-                  <span className="text-sm font-medium">Últimos 7 dias</span>
-                </div>
-                <span className="text-sm font-bold text-sky-600">
-                  {formatCurrency(metrics.completedValueWeek)}
-                </span>
-              </div>
-
-              <div className="flex items-center justify-between rounded-lg bg-muted/50 p-3">
-                <div className="flex items-center gap-2">
-                  <Activity className="h-4 w-4 text-violet-500" />
-                  <span className="text-sm font-medium">Últimos 30 dias</span>
-                </div>
-                <span className="text-sm font-bold text-violet-600">
-                  {formatCurrency(metrics.completedValueMonth)}
-                </span>
-              </div>
-
-              <div className="border-t pt-3 text-center">
+              <div className="border-t border-border pt-3 text-center">
                 <p className="text-xs text-muted-foreground">
                   Valores concluídos; não representam receita líquida da plataforma.
                 </p>
@@ -424,6 +376,59 @@ export default function AdminRealtimeDashboard() {
           </Card>
         </div>
       </div>
+    </div>
+  );
+}
+
+function MetricCard({
+  icon: Icon,
+  iconClassName,
+  value,
+  label,
+  detail,
+}: {
+  icon: typeof Users;
+  iconClassName: string;
+  value: string | number;
+  label: string;
+  detail: string;
+}) {
+  return (
+    <Card className="border-border bg-card text-card-foreground">
+      <CardContent className="p-4">
+        <div className="mb-3 flex items-center justify-between">
+          <div className={cn("flex h-10 w-10 items-center justify-center rounded-xl", iconClassName)}>
+            <Icon className="h-5 w-5" aria-hidden="true" />
+          </div>
+        </div>
+        <p className="text-2xl font-bold text-foreground">{value}</p>
+        <span className="text-xs text-muted-foreground">{label}</span>
+        <p className="mt-1 text-xs text-muted-foreground">{detail}</p>
+      </CardContent>
+    </Card>
+  );
+}
+
+function ValueRow({
+  icon: Icon,
+  iconClassName,
+  label,
+  value,
+  valueClassName,
+}: {
+  icon: typeof Clock;
+  iconClassName: string;
+  label: string;
+  value: string;
+  valueClassName: string;
+}) {
+  return (
+    <div className="flex items-center justify-between rounded-lg bg-muted/50 p-3">
+      <div className="flex items-center gap-2">
+        <Icon className={cn("h-4 w-4", iconClassName)} aria-hidden="true" />
+        <span className="text-sm font-medium">{label}</span>
+      </div>
+      <span className={cn("text-sm font-bold", valueClassName)}>{value}</span>
     </div>
   );
 }
