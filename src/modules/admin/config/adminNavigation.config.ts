@@ -13,6 +13,7 @@ import {
   Flag,
   Image,
   LayoutDashboard,
+  LockKeyhole,
   MailCheck,
   Map,
   MapPin,
@@ -169,6 +170,13 @@ export const ADMIN_NAV_SECTIONS: readonly AdminNavSection[] = [
         to: "/admin/qualidade-dados",
         icon: Database,
         label: "Qualidade de Dados",
+        section: "moderacao",
+      },
+      {
+        id: "privacidade",
+        to: "/admin/privacidade",
+        icon: LockKeyhole,
+        label: "Privacidade e LGPD",
         section: "moderacao",
       },
       {
