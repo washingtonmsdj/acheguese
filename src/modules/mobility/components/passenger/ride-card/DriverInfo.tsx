@@ -1,11 +1,11 @@
-import React from "react";
-import { Button } from "@/shared/components/ui/button";
-import { Avatar, AvatarFallback } from "@/shared/components/ui/avatar";
-import { MessageCircle, Phone, Star, Navigation } from "lucide-react";
-import { ShareRideButton } from "../../ShareRideButton";
-import { EmergencyButton } from "../../EmergencyButton";
+import { MessageCircle, Navigation, Phone, Star } from "lucide-react";
+
 import type { RideRequest } from "@/core/mobility/types";
+import { Avatar, AvatarFallback } from "@/shared/components/ui/avatar";
+import { Button } from "@/shared/components/ui/button";
 import { buildTelUrl, openContactUrl } from "@/shared/utils/contactLinks";
+import { EmergencyButton } from "../../EmergencyButton";
+import { ShareRideButton } from "../../ShareRideButton";
 
 interface DriverInfoProps {
   driver: {
@@ -31,74 +31,91 @@ export const DriverInfo = ({
   onContact,
   onToggleMap,
 }: DriverInfoProps) => {
+  const safeRating = Number.isFinite(driver.rating) ? driver.rating : 0;
+  const phoneUrl = buildTelUrl(driver.phone);
+
+  const handlePhone = () => {
+    if (openContactUrl(phoneUrl)) return;
+    onContact();
+  };
+
   return (
-    <div className="mb-4 p-3 rounded-xl bg-teal-500/5 border border-teal-500/20">
-      <p className="text-[0.65rem] text-gray-500 uppercase tracking-wider mb-2">
+    <div className="mb-4 rounded-xl border border-category-mobility/20 bg-category-mobility/5 p-3">
+      <p className="mb-2 text-[0.65rem] uppercase tracking-wider text-muted-foreground">
         Motorista
       </p>
+
       <div className="flex items-center gap-3">
-        <Avatar className="h-10 w-10 border-2 border-teal-400/30">
-          <AvatarFallback className="bg-gradient-to-br from-teal-400 to-cyan-400 text-white text-xs font-bold">
-            {(driver?.name ?? '?').charAt(0)}
+        <Avatar className="h-10 w-10 border-2 border-category-mobility/30">
+          <AvatarFallback className="bg-category-mobility/12 text-xs font-bold text-category-mobility">
+            {(driver.name || "?").charAt(0)}
           </AvatarFallback>
         </Avatar>
-        <div className="flex-1">
-          <p className="text-sm font-semibold text-white">{driver.name}</p>
-          <div className="flex items-center gap-2 text-xs text-gray-400">
+        <div className="min-w-0 flex-1">
+          <p className="truncate text-sm font-semibold text-foreground">
+            {driver.name}
+          </p>
+          <div className="flex flex-wrap items-center gap-2 text-xs text-muted-foreground">
             <span>{driver.vehicle_model}</span>
-            <span>•</span>
+            <span aria-hidden="true">•</span>
             <span className="font-mono">{driver.vehicle_plate}</span>
           </div>
-          <div className="flex items-center gap-1 mt-0.5">
-            <Star className="h-3 w-3 text-yellow-400 fill-yellow-400" />
-            <span className="text-xs text-yellow-400 font-semibold">
-              {driver.rating.toFixed(1)}
+          <div className="mt-0.5 flex items-center gap-1">
+            <Star
+              className="h-3 w-3 fill-warning text-warning"
+              aria-hidden="true"
+            />
+            <span className="text-xs font-semibold text-warning">
+              {safeRating.toFixed(1)}
             </span>
-            <span className="text-[0.6rem] text-gray-500">
+            <span className="text-[0.6rem] text-muted-foreground">
               ({driver.total_rides} corridas)
             </span>
           </div>
         </div>
       </div>
-      <div className="grid grid-cols-2 gap-2 mt-3">
+
+      <div className="mt-3 grid grid-cols-2 gap-2">
         <Button
+          type="button"
           onClick={onContact}
           size="sm"
-          className="bg-teal-500/20 text-teal-400 hover:bg-teal-500/30 rounded-xl text-xs h-9"
+          variant="secondary"
+          className="h-9 rounded-xl text-xs"
         >
-          <MessageCircle className="h-3.5 w-3.5 mr-1.5" /> Mensagem
+          <MessageCircle className="mr-1.5 h-3.5 w-3.5" aria-hidden="true" />
+          Mensagem
         </Button>
         <Button
-          onClick={() => {
-            const url = buildTelUrl(driver.phone);
-            if (openContactUrl(url)) {
-              return;
-            } else {
-              onContact();
-            }
-          }}
+          type="button"
+          onClick={handlePhone}
           size="sm"
-          className="bg-emerald-500/20 text-emerald-400 hover:bg-emerald-500/30 rounded-xl text-xs h-9"
+          variant="outline"
+          className="h-9 rounded-xl text-xs"
         >
-          <Phone className="h-3.5 w-3.5 mr-1.5" /> Ligar
+          <Phone className="mr-1.5 h-3.5 w-3.5" aria-hidden="true" />
+          {phoneUrl ? "Ligar" : "Contato"}
         </Button>
       </div>
 
-      <div className="grid grid-cols-2 gap-2 mt-2">
+      <div className="mt-2 grid grid-cols-2 gap-2">
         <ShareRideButton ride={ride} variant="compact" />
         <EmergencyButton ride={ride} variant="compact" />
       </div>
 
-      {shouldShowMapOption && (
+      {shouldShowMapOption ? (
         <Button
+          type="button"
           onClick={onToggleMap}
           size="sm"
-          className="w-full mt-2 bg-blue-500/20 text-blue-400 hover:bg-blue-500/30 rounded-xl text-xs h-9"
+          variant="outline"
+          aria-pressed={showMap}
+          className="mt-2 h-9 w-full rounded-xl border-category-mobility/30 text-xs text-category-mobility hover:bg-category-mobility/10 hover:text-category-mobility"
         >
-          <Navigation className="h-3.5 w-3.5 mr-1.5" />
-          {showMap ? "Ocultar" : "Ver"} Localização em Tempo Real
+          <Navigation className="mr-1.5 h-3.5 w-3.5" aria-hidden="true" />
+          {showMap ? "Ocultar localização" : "Ver localização"}
         </Button>
-      )}
+      ) : null}
     </div>
   );
 };
