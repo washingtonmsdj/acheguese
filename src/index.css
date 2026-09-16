@@ -5,12 +5,14 @@
 @layer base {
   :root {
     /* Achegue-se visual identity — the only source of truth for brand tokens. */
-    --brand-petroleum: 178 55% 16%; /* #123E3D */
-    --brand-solar: 46 87% 62%; /* #F3CB4C */
-    --brand-surface: 72 20% 97.5%; /* #FAFBF7 */
-    --brand-text: 172 26% 17%; /* #203534 */
-    --brand-text-secondary: 154 15% 42%; /* #61736C; AAA for large text */
+    --brand-petroleum: 178.636 55% 15.686%; /* #123E3D */
+    --brand-solar: 45.629 87.435% 62.549%; /* #F3CB4C */
+    --brand-surface: 75 33.333% 97.647%; /* #FAFBF7 */
+    --brand-text: 177.143 24.706% 16.667%; /* #203534 */
+    --brand-text-secondary: 156.667 8.491% 41.569%; /* #61736C */
     --brand-text-secondary-strong: 155 14% 34%; /* stronger compact copy */
+    --font-sans: "Plus Jakarta Sans", Arial, Helvetica, sans-serif;
+    --font-heading: var(--font-sans);
     --semantic-error: 4 71% 42%;
     --semantic-success: 157 67% 31%;
     --semantic-warning: 39 100% 26%;
@@ -102,6 +104,7 @@
     --territory-canvas: var(--brand-surface);
     --territory-surface: 0 0% 100%;
     --territory-surface-raised: 80 20% 98%;
+    --territory-raised: var(--territory-surface-raised);
     --territory-ink: var(--brand-text);
     --territory-muted: var(--brand-text-secondary);
     --territory-muted-strong: var(--brand-text-secondary-strong);
@@ -198,6 +201,7 @@
     --territory-canvas: var(--brand-surface);
     --territory-surface: 0 0% 100%;
     --territory-surface-raised: 80 20% 98%;
+    --territory-raised: var(--territory-surface-raised);
     --territory-ink: var(--brand-text);
     --territory-muted: var(--brand-text-secondary);
     --territory-muted-strong: var(--brand-text-secondary-strong);
@@ -261,7 +265,7 @@
   }
   body {
     @apply bg-background text-foreground font-sans;
-    font-family: "Plus Jakarta Sans", sans-serif;
+    font-family: var(--font-sans);
     overflow-x: hidden;
     max-width: 100vw;
   }
@@ -271,7 +275,7 @@
   h4,
   h5,
   h6 {
-    font-family: "Plus Jakarta Sans", sans-serif;
+    font-family: var(--font-heading);
   }
 }
 
