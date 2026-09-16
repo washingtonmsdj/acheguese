@@ -4,12 +4,10 @@ import { Link, useLocation, useNavigate } from "react-router-dom";
 
 import { AuthBrandHeader } from "@/app/components/auth/AuthBrandHeader";
 import { AuthConceptIcon } from "@/app/components/auth/AuthConceptIcon";
-import { AuthFooter } from "@/app/components/auth/AuthFooter";
 import { AuthTurnstileGate } from "@/app/components/auth/AuthTurnstileGate";
 import { useAuthTurnstile } from "@/app/components/auth/useAuthTurnstile";
 import {
   AUTH_EMAIL_CONFIRMATION_INTENTS,
-  AUTH_PATHS,
   buildLoginPath,
   buildSignupPath,
 } from "@/core/auth/constants/authFlow";
@@ -141,7 +139,7 @@ export default function CadastroConfirmacaoPage() {
       </Helmet>
 
       <div className="auth-concept-canvas min-h-[100dvh]">
-        <AuthBrandHeader secondaryHref={AUTH_PATHS.login} secondaryLabel="Entrar" />
+        <AuthBrandHeader />
 
         <main
           id="main-content"
@@ -226,11 +224,11 @@ export default function CadastroConfirmacaoPage() {
                 </li>
               </ol>
 
-              <div className="mt-6 flex items-start gap-3 rounded-xl bg-warning/10 px-4 py-3 text-left lg:hidden">
+              <div className="mt-6 flex items-start gap-3 rounded-xl bg-warning/10 px-4 py-3 text-left leading-[18px] lg:hidden">
                 <span className="mt-0.5 text-warning"><AuthConceptIcon name="info" /></span>
                 <div>
-                  <p className="text-[12px] font-bold text-foreground">Não encontrou?</p>
-                  <p className="text-[11.5px] text-muted-foreground">Confira a pasta de spam.</p>
+                  <p className="text-[12px] font-bold leading-[18px] text-foreground">Não encontrou?</p>
+                  <p className="text-[11.5px] leading-[18px] text-muted-foreground">Confira a pasta de spam.</p>
                 </div>
               </div>
 
@@ -274,33 +272,22 @@ export default function CadastroConfirmacaoPage() {
               </div>
               <div className="my-5 h-px bg-border lg:hidden" />
 
-              <div className="space-y-1 text-left lg:hidden">
-                <button
-                  type="button"
-                  onClick={() => navigate(backToLogin)}
-                  className="flex min-h-10 items-center gap-3 rounded px-1 text-[13px] text-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/35"
-                >
-                  <AuthConceptIcon name="back" />
-                  Voltar para entrar
-                </button>
+              <div className="flex justify-center lg:hidden">
                 <Link
                   to={SUPPORT_PATH}
-                  className="flex min-h-10 items-center gap-3 rounded px-1 text-[13px] text-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/35"
+                  className="flex min-h-10 items-center gap-3 rounded px-2 text-[13px] text-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/35"
                 >
                   <AuthConceptIcon name="help" />
                   Preciso de ajuda
                 </Link>
               </div>
 
-              <nav aria-label="Ações de confirmação" className="hidden items-center justify-center gap-2 text-[11px] text-primary lg:flex">
-                <button type="button" onClick={() => navigate(backToLogin)} className="underline underline-offset-2">Voltar para entrar</button>
-                <span aria-hidden="true">·</span>
+              <nav aria-label="Ações de confirmação" className="hidden items-center justify-center text-[11px] text-primary lg:flex">
                 <Link to={SUPPORT_PATH} className="underline underline-offset-2">Ajuda</Link>
               </nav>
             </section>
           )}
         </main>
-        <AuthFooter />
       </div>
     </>
   );
