@@ -23,6 +23,7 @@ const DISPATCH_GLOBAL_CONFIG: DispatchGlobalConfig = {
     enabled: true,
     offerTimeoutSeconds: 30,        // 30s por motorista
     maxRetryAttempts: 5,             // Máximo 5 motoristas
+    maxOffersPerDriver: 1,           // Apenas 1 oferta exclusiva por vez
     searchRadiusKm: 10,              // Raio de 10km
     requiresVerification: true,      // Motorista verificado obrigatório
     requiresSubscription: true,      // Autoridade operacional exige assinatura ativa (modelo freemium)
@@ -33,6 +34,7 @@ const DISPATCH_GLOBAL_CONFIG: DispatchGlobalConfig = {
     enabled: true,
     maxOffersPerDriver: 10,          // Máximo 10 ofertas por motorista
     offerExpirationMinutes: 30,      // Ofertas expiram em 30min
+    maxRetryAttempts: 999,            // Teto operacional da lista aberta
     searchRadiusKm: 15,              // Raio maior para entregas
     requiresVerification: true,      // Motorista verificado obrigatório
     requiresSubscription: true,      // Autoridade operacional exige assinatura ativa
@@ -41,10 +43,14 @@ const DISPATCH_GLOBAL_CONFIG: DispatchGlobalConfig = {
   // Reservation Board (Corridas agendadas)
   reservationBoard: {
     enabled: true,
-    minAdvanceHours: 2,              // Mínimo 2h de antecedência
-    maxAdvanceDays: 7,               // Máximo 7 dias de antecedência
-    requiresVerification: true,      // Motorista verificado obrigatório
-    requiresSubscription: true,      // Autoridade operacional exige assinatura ativa
+    offerTimeoutSeconds: 24 * 60 * 60, // Janela operacional de 24h
+    maxRetryAttempts: 999,               // Teto operacional da reserva
+    maxOffersPerDriver: 999,             // Teto operacional de ofertas agendadas
+    searchRadiusKm: 50,                  // Raio maior para agendadas
+    minAdvanceHours: 2,                  // Mínimo 2h de antecedência
+    maxAdvanceDays: 7,                   // Máximo 7 dias de antecedência
+    requiresVerification: true,          // Motorista verificado obrigatório
+    requiresSubscription: true,          // Autoridade operacional exige assinatura ativa
   },
   
   // Scoring (para ordenação de motoristas)
@@ -110,7 +116,7 @@ export class MobilityDispatchConfigService {
         return {
           strategy: 'open_board',
           offerTimeoutSeconds: DISPATCH_GLOBAL_CONFIG.openBoard.offerExpirationMinutes * 60,
-          maxRetryAttempts: 999,         // Sem limite (lista aberta)
+          maxRetryAttempts: DISPATCH_GLOBAL_CONFIG.openBoard.maxRetryAttempts,
           searchRadiusKm: DISPATCH_GLOBAL_CONFIG.openBoard.searchRadiusKm,
           requiresVerification: DISPATCH_GLOBAL_CONFIG.openBoard.requiresVerification,
           requiresSubscription: DISPATCH_GLOBAL_CONFIG.openBoard.requiresSubscription,
@@ -121,9 +127,9 @@ export class MobilityDispatchConfigService {
       case 'reservation_board':
         return {
           strategy: 'reservation_board',
-          offerTimeoutSeconds: 24 * 60 * 60, // 24h (agendamento)
-          maxRetryAttempts: 999,         // Sem limite (reserva)
-          searchRadiusKm: 50,            // Raio maior para agendadas
+          offerTimeoutSeconds: DISPATCH_GLOBAL_CONFIG.reservationBoard.offerTimeoutSeconds,
+          maxRetryAttempts: DISPATCH_GLOBAL_CONFIG.reservationBoard.maxRetryAttempts,
+          searchRadiusKm: DISPATCH_GLOBAL_CONFIG.reservationBoard.searchRadiusKm,
           requiresVerification: DISPATCH_GLOBAL_CONFIG.reservationBoard.requiresVerification,
           requiresSubscription: DISPATCH_GLOBAL_CONFIG.reservationBoard.requiresSubscription,
           allowsConcurrentOffers: true,  // Múltiplos motoristas podem ver
@@ -254,13 +260,13 @@ export class MobilityDispatchConfigService {
   static getMaxOffersPerDriver(strategy: DispatchStrategy): number {
     switch (strategy) {
       case 'exclusive_offer':
-        return 1; // Apenas 1 oferta por vez
+        return DISPATCH_GLOBAL_CONFIG.exclusiveOffer.maxOffersPerDriver;
       case 'open_board':
         return DISPATCH_GLOBAL_CONFIG.openBoard.maxOffersPerDriver;
       case 'reservation_board':
-        return 999; // Sem limite para agendadas
+        return DISPATCH_GLOBAL_CONFIG.reservationBoard.maxOffersPerDriver;
       default:
-        return 1;
+        return DISPATCH_GLOBAL_CONFIG.exclusiveOffer.maxOffersPerDriver;
     }
   }
   
