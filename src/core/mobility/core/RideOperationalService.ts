@@ -26,10 +26,6 @@ import type {
   TransitionResult,
 } from "./RideOperationalTypes";
 import {
-  ensureProfileCanRequest,
-  hasValidRouteCoordinates,
-} from "./RideOperationalGuards";
-import {
   confirmDeliveryOperation,
   confirmPickupOperation,
   createDeliveryOperation,
@@ -44,29 +40,6 @@ export class RideOperationalService {
   /** Cria nova corrida no estado inicial. */
   static async createRide(input: CreateRideInput): Promise<TransitionResult> {
     try {
-      const requesterBlock = await ensureProfileCanRequest(input.passengerProfileId);
-      if (requesterBlock) return requesterBlock;
-
-      if (
-        !input.pickupAddressId?.trim() ||
-        !input.dropoffAddressId?.trim() ||
-        !input.pickupLocationId?.trim() ||
-        !input.dropoffLocationId?.trim()
-      ) {
-        return {
-          success: false,
-          error:
-            "Endereco de origem e destino sao obrigatorios e precisam estar reconciliados com territorios validos.",
-        };
-      }
-
-      if (!hasValidRouteCoordinates(input)) {
-        return {
-          success: false,
-          error: "Coordenadas sao obrigatorias para reconciliar a solicitacao com a cotacao oficial.",
-        };
-      }
-
       if (!input.priceQuoteId?.trim()) {
         return {
           success: false,
@@ -373,7 +346,6 @@ export class RideOperationalService {
   static async completeRide(
     rideId: string,
     driverProfileId: string,
-    _finalPrice?: number,
   ): Promise<TransitionResult> {
     try {
       const ride = await RideOperationalContextReadService.getLifecycle(rideId);
