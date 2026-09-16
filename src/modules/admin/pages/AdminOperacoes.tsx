@@ -21,58 +21,73 @@ import {
   AdminStatsGrid,
   AdminTable,
 } from "@/core/admin/components";
-import { Badge } from "@/shared/components/ui/badge";
-import { Button } from "@/shared/components/ui/button";
-import { Label } from "@/shared/components/ui/label";
-import { Switch } from "@/shared/components/ui/switch";
-import { TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/shared/components/ui/table";
-import { useToast } from "@/shared/hooks/use-toast";
-import { useAdminGuard } from "@/modules/admin/hooks/useAdminGuard";
 import { useLocationContext } from "@/core/location";
 import { mobilityRolloutService } from "@/core/mobility/services/runtime";
 import { RolloutSource, RolloutStatus } from "@/core/rollout/types";
+import { AdminAccessDenied } from "@/modules/admin/components/AdminAccessDenied";
+import { useAdminGuard } from "@/modules/admin/hooks/useAdminGuard";
 import {
   operationalDiagnosticsService,
   type OperationalTable,
   type OperationalTableResult,
 } from "@/modules/admin/services";
+import { Badge } from "@/shared/components/ui/badge";
+import { Button } from "@/shared/components/ui/button";
+import { Label } from "@/shared/components/ui/label";
+import { Switch } from "@/shared/components/ui/switch";
+import {
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/shared/components/ui/table";
+import { useToast } from "@/shared/hooks/use-toast";
 import { logger } from "@/shared/utils/logger";
 
 const RUNTIME_CHECK_TABLES: OperationalTable[] = [
-  { table: "module_rollouts", label: "Rollout de modulos", required: true },
+  { table: "module_rollouts", label: "Rollout de módulos", required: true },
   { table: "locations", label: "Hierarquia territorial", required: true },
   { table: "driver_profiles", label: "Cadastros de motoristas", required: true },
   { table: "driver_data", label: "Status operacional de motoristas", required: true },
   { table: "ride_requests", label: "Corridas e entregas", required: true },
   { table: "ride_reports", label: "Reports de corrida", required: true },
-  { table: "driver_moderation_events", label: "Historico de moderacao de motoristas", required: true },
+  {
+    table: "driver_moderation_events",
+    label: "Histórico de moderação de motoristas",
+    required: true,
+  },
   { table: "pickup_points", label: "Pontos de embarque", required: false },
   { table: "pricing_rules", label: "Regras de pricing", required: false },
 ];
 
 const QUICK_TOOLS = [
-  { label: "Gestao de Motoristas", to: "/admin/motoristas" },
-  { label: "Operacoes Motoboy", to: "/admin/motoboy-operacoes" },
+  { label: "Gestão de Motoristas", to: "/admin/motoristas" },
+  { label: "Operações Motoboy", to: "/admin/motoboy-operacoes" },
   { label: "Identidade", to: "/admin/identidade" },
   { label: "Mapa", to: "/admin/mapa" },
   { label: "Pricing", to: "/admin/pricing" },
-  { label: "Territorios", to: "/admin/territory-management" },
+  { label: "Territórios", to: "/admin/territory-management" },
   { label: "Locations", to: "/admin/locations" },
-  { label: "Notificacoes", to: "/admin/notifications" },
-  { label: "Verificacoes", to: "/admin/verificacoes" },
-  { label: "Roles e Permissoes", to: "/admin/roles" },
+  { label: "Notificações", to: "/admin/notifications" },
+  { label: "Verificações", to: "/admin/verificacoes" },
+  { label: "Roles e Permissões", to: "/admin/roles" },
 ];
 
 function describeRolloutSource(source: RolloutSource | null): string {
   if (source === RolloutSource.LOCAL) return "local";
   if (source === RolloutSource.INHERITED) return "herdado";
-  if (source === RolloutSource.DEFAULT) return "padrao";
+  if (source === RolloutSource.DEFAULT) return "padrão";
   return "indefinido";
 }
 
 function tableStateBadge(item: OperationalTableResult) {
   if (item.state === "ok") {
-    return <Badge className="bg-emerald-600 hover:bg-emerald-600">Disponivel</Badge>;
+    return (
+      <Badge className="bg-success text-success-foreground hover:bg-success/90">
+        Disponível
+      </Badge>
+    );
   }
 
   if (item.state === "missing") {
@@ -83,7 +98,7 @@ function tableStateBadge(item: OperationalTableResult) {
     return <Badge variant="destructive">Erro</Badge>;
   }
 
-  return <Badge variant="outline">Nao provisionada</Badge>;
+  return <Badge variant="outline">Não provisionada</Badge>;
 }
 
 export default function AdminOperacoes() {
@@ -142,14 +157,18 @@ export default function AdminOperacoes() {
       const checks = await operationalDiagnosticsService.checkTables(
         RUNTIME_CHECK_TABLES,
       );
-
       setTableResults(checks);
     } catch (error) {
-      logger.error("AdminOperacoes: erro ao validar tabelas operacionais", error as Error);
-      setDiagnosticsError("Nao foi possivel consolidar o diagnostico das tabelas operacionais.");
+      logger.error(
+        "AdminOperacoes: erro ao validar tabelas operacionais",
+        error as Error,
+      );
+      setDiagnosticsError(
+        "Não foi possível consolidar o diagnóstico das tabelas operacionais.",
+      );
       toast({
-        title: "Falha no diagnostico",
-        description: "Nao foi possivel verificar as tabelas operacionais.",
+        title: "Falha no diagnóstico",
+        description: "Não foi possível verificar as tabelas operacionais.",
         variant: "destructive",
       });
     } finally {
@@ -163,8 +182,13 @@ export default function AdminOperacoes() {
     try {
       await Promise.all([loadMobilityState(), checkOperationalTables()]);
     } catch (error) {
-      logger.error("AdminOperacoes: erro ao recarregar superficie operacional", error as Error);
-      setPageError("Nao foi possivel recarregar os controles operacionais desta superficie.");
+      logger.error(
+        "AdminOperacoes: erro ao recarregar superfície operacional",
+        error as Error,
+      );
+      setPageError(
+        "Não foi possível recarregar os controles operacionais desta superfície.",
+      );
       toast({
         title: "Falha ao atualizar",
         description: "Revise a conectividade e tente atualizar novamente.",
@@ -184,8 +208,8 @@ export default function AdminOperacoes() {
   const saveMobilityControls = async () => {
     if (!activeLocationId) {
       toast({
-        title: "Localizacao obrigatoria",
-        description: "Selecione uma localizacao ativa para salvar os controles.",
+        title: "Localização obrigatória",
+        description: "Selecione uma localização ativa para salvar os controles.",
         variant: "destructive",
       });
       return;
@@ -193,19 +217,28 @@ export default function AdminOperacoes() {
 
     setIsSaving(true);
     try {
-      await mobilityRolloutService.setMobilityEnabled(activeLocationId, moduleEnabled);
-      await mobilityRolloutService.setMotoboyEnabled(activeLocationId, motoboyEnabled);
+      await mobilityRolloutService.setMobilityEnabled(
+        activeLocationId,
+        moduleEnabled,
+      );
+      await mobilityRolloutService.setMotoboyEnabled(
+        activeLocationId,
+        motoboyEnabled,
+      );
       await loadMobilityState();
 
       toast({
-        title: "Operacao salva",
+        title: "Operação salva",
         description: "Controles de mobilidade atualizados com sucesso.",
       });
     } catch (error) {
-      logger.error("AdminOperacoes: erro ao salvar controles de mobilidade", error as Error);
+      logger.error(
+        "AdminOperacoes: erro ao salvar controles de mobilidade",
+        error as Error,
+      );
       toast({
         title: "Falha ao salvar",
-        description: "Nao foi possivel persistir os controles de mobilidade.",
+        description: "Não foi possível persistir os controles de mobilidade.",
         variant: "destructive",
       });
     } finally {
@@ -214,37 +247,37 @@ export default function AdminOperacoes() {
   };
 
   if (!isChecking && !canModerate) {
-    return (
-      <div className="min-h-screen bg-[#0A0F14] flex items-center justify-center p-4">
-        <div className="text-center">
-          <Shield className="mx-auto mb-4 h-16 w-16 text-red-400" />
-          <h1 className="mb-2 text-2xl font-bold text-white">Acesso Negado</h1>
-          <p className="text-gray-400">Apenas administradores podem acessar esta pagina.</p>
-        </div>
-      </div>
-    );
+    return <AdminAccessDenied />;
   }
 
   if (isLoading) {
     return (
-      <div className="flex items-center justify-center py-20">
-        <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
+      <div className="flex items-center justify-center py-20" role="status">
+        <Loader2
+          className="h-6 w-6 animate-spin text-muted-foreground"
+          aria-hidden="true"
+        />
+        <span className="sr-only">Carregando operações administrativas</span>
       </div>
     );
   }
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 text-foreground">
       <AdminPageHeader
-        title="Operacoes do Sistema"
-        description="Controles administrativos criticos, rollout de mobilidade e diagnostico de prontidao operacional."
+        title="Operações do Sistema"
+        description="Controles administrativos críticos, rollout de mobilidade e diagnóstico de prontidão operacional."
         icon={Settings2}
         actions={
-          <Button variant="outline" onClick={refreshAll} disabled={tableCheckRunning || isSaving}>
+          <Button
+            variant="outline"
+            onClick={() => void refreshAll()}
+            disabled={tableCheckRunning || isSaving}
+          >
             {tableCheckRunning ? (
-              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+              <Loader2 className="mr-2 h-4 w-4 animate-spin" aria-hidden="true" />
             ) : (
-              <RefreshCw className="mr-2 h-4 w-4" />
+              <RefreshCw className="mr-2 h-4 w-4" aria-hidden="true" />
             )}
             Atualizar
           </Button>
@@ -261,82 +294,75 @@ export default function AdminOperacoes() {
         <AdminStatsCard
           title="Modo motoboy"
           value={motoboyEnabled ? "Ativo" : "Desligado"}
-          subtitle={activeLocation?.name ?? "Nenhuma localizacao ativa"}
+          subtitle={activeLocation?.name ?? "Nenhuma localização ativa"}
           icon={Settings2}
-          iconColor="text-sky-600"
+          iconColor="text-info"
         />
         <AdminStatsCard
-          title="Tabelas obrigatorias"
+          title="Tabelas obrigatórias"
           value={`${requiredTables.filter((item) => item.state === "ok").length}/${requiredTables.length || 0}`}
-          subtitle={`${missingRequiredTables.length} pendencia(s) critica(s)`}
+          subtitle={`${missingRequiredTables.length} pendência(s) crítica(s)`}
           icon={Database}
-          iconColor={missingRequiredTables.length ? "text-red-600" : "text-emerald-600"}
+          iconColor={
+            missingRequiredTables.length ? "text-destructive" : "text-success"
+          }
         />
         <AdminStatsCard
           title="Ferramentas operacionais"
           value={QUICK_TOOLS.length}
-          subtitle={`${optionalTables.length} tabela(s) opcional(is) no diagnostico`}
+          subtitle={`${optionalTables.length} tabela(s) opcional(is) no diagnóstico`}
           icon={Shield}
-          iconColor="text-violet-600"
+          iconColor="text-primary"
         />
       </AdminStatsGrid>
 
       {pageError ? (
         <AdminErrorState
-          title="Falha ao atualizar operacoes do sistema"
+          title="Falha ao atualizar operações do sistema"
           description={pageError}
-          onRetry={() => {
-            void refreshAll();
-          }}
+          onRetry={() => void refreshAll()}
         />
       ) : null}
 
       <div className="grid gap-4 xl:grid-cols-[minmax(0,2fr),minmax(320px,1fr)]">
         <div className="space-y-4">
           <AdminSectionCard
-            title="Mobilidade por localizacao"
+            title="Mobilidade por localização"
             description="Controle oficial do rollout mobility e do modo motoboy no admin."
             icon={Car}
-            actions={<Badge variant="outline">{activeLocation?.name ?? "Nenhuma localizacao ativa"}</Badge>}
+            actions={
+              <Badge variant="outline">
+                {activeLocation?.name ?? "Nenhuma localização ativa"}
+              </Badge>
+            }
           >
             <div className="space-y-4">
-              <div className="flex items-center justify-between gap-4 rounded-lg border p-4">
-                <div>
-                  <Label htmlFor="mobility-module-enabled" className="font-semibold">
-                    Modulo de mobilidade habilitado
-                  </Label>
-                  <p className="mt-1 text-xs text-muted-foreground">
-                    Fonte atual do rollout: {describeRolloutSource(source)}.
-                  </p>
-                </div>
-                <Switch
-                  id="mobility-module-enabled"
-                  checked={moduleEnabled}
-                  onCheckedChange={setModuleEnabled}
-                  disabled={!activeLocationId || isSaving}
-                />
-              </div>
+              <ControlRow
+                id="mobility-module-enabled"
+                title="Módulo de mobilidade habilitado"
+                description={`Fonte atual do rollout: ${describeRolloutSource(source)}.`}
+                checked={moduleEnabled}
+                onCheckedChange={setModuleEnabled}
+                disabled={!activeLocationId || isSaving}
+              />
 
-              <div className="flex items-center justify-between gap-4 rounded-lg border p-4">
-                <div>
-                  <Label htmlFor="motoboy-mode-enabled" className="font-semibold">
-                    Modo motoboy habilitado
-                  </Label>
-                  <p className="mt-1 text-xs text-muted-foreground">
-                    Quando desligado, novas solicitacoes de entrega por motoboy ficam bloqueadas.
-                  </p>
-                </div>
-                <Switch
-                  id="motoboy-mode-enabled"
-                  checked={motoboyEnabled}
-                  onCheckedChange={setMotoboyEnabled}
-                  disabled={!activeLocationId || isSaving}
-                />
-              </div>
+              <ControlRow
+                id="motoboy-mode-enabled"
+                title="Modo motoboy habilitado"
+                description="Quando desligado, novas solicitações de entrega por motoboy ficam bloqueadas."
+                checked={motoboyEnabled}
+                onCheckedChange={setMotoboyEnabled}
+                disabled={!activeLocationId || isSaving}
+              />
 
               <div className="flex justify-end">
-                <Button onClick={saveMobilityControls} disabled={!activeLocationId || isSaving}>
-                  {isSaving ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
+                <Button
+                  onClick={() => void saveMobilityControls()}
+                  disabled={!activeLocationId || isSaving}
+                >
+                  {isSaving ? (
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" aria-hidden="true" />
+                  ) : null}
                   Salvar controles
                 </Button>
               </div>
@@ -344,33 +370,29 @@ export default function AdminOperacoes() {
           </AdminSectionCard>
 
           <AdminSectionCard
-            title="Diagnostico de tabelas operacionais"
-            description="Visao objetiva do que esta pronto no banco para administracao do sistema."
+            title="Diagnóstico de tabelas operacionais"
+            description="Visão objetiva do que está pronto no banco para administração do sistema."
             icon={Database}
           >
             {diagnosticsError && !tableResults.length ? (
               <AdminErrorState
-                title="Falha ao carregar diagnostico operacional"
+                title="Falha ao carregar diagnóstico operacional"
                 description={diagnosticsError}
-                onRetry={() => {
-                  void checkOperationalTables();
-                }}
+                onRetry={() => void checkOperationalTables()}
               />
             ) : (
               <AdminDataState
                 loading={tableCheckRunning && !tableResults.length}
                 isEmpty={!tableCheckRunning && !tableResults.length}
-                emptyTitle="Sem diagnostico operacional"
-                emptyDescription="Nao foi possivel consolidar as tabelas operacionais deste ambiente."
+                emptyTitle="Sem diagnóstico operacional"
+                emptyDescription="Não foi possível consolidar as tabelas operacionais deste ambiente."
               >
                 <div className="space-y-3">
                   {diagnosticsError ? (
                     <AdminErrorState
-                      title="Diagnostico parcialmente indisponivel"
+                      title="Diagnóstico parcialmente indisponível"
                       description={diagnosticsError}
-                      onRetry={() => {
-                        void checkOperationalTables();
-                      }}
+                      onRetry={() => void checkOperationalTables()}
                     />
                   ) : null}
 
@@ -398,11 +420,9 @@ export default function AdminOperacoes() {
                             {item.detail ?? "Sem detalhes"}
                           </TableCell>
                           <TableCell>
-                            {item.required ? (
-                              <Badge variant="secondary">Obrigatoria</Badge>
-                            ) : (
-                              <Badge variant="outline">Opcional</Badge>
-                            )}
+                            <Badge variant={item.required ? "secondary" : "outline"}>
+                              {item.required ? "Obrigatória" : "Opcional"}
+                            </Badge>
                           </TableCell>
                           <TableCell>{tableStateBadge(item)}</TableCell>
                         </TableRow>
@@ -411,19 +431,17 @@ export default function AdminOperacoes() {
                   </AdminTable>
 
                   {missingRequiredTables.length > 0 ? (
-                    <div className="flex gap-2 rounded-lg border border-red-500/30 bg-red-500/5 p-3 text-sm text-red-700 dark:text-red-300">
-                      <AlertCircle className="mt-0.5 h-4 w-4 shrink-0" />
-                      <p>
-                        Existem tabelas obrigatorias ausentes ou com erro. Corrija o schema antes de considerar o admin operacional em 100%.
-                      </p>
-                    </div>
+                    <OperationalNotice
+                      tone="destructive"
+                      icon={AlertCircle}
+                      text="Existem tabelas obrigatórias ausentes ou com erro. Corrija o schema antes de considerar o admin operacional em 100%."
+                    />
                   ) : (
-                    <div className="flex gap-2 rounded-lg border border-emerald-500/30 bg-emerald-500/5 p-3 text-sm text-emerald-700 dark:text-emerald-300">
-                      <CheckCircle2 className="mt-0.5 h-4 w-4 shrink-0" />
-                      <p>
-                        Infraestrutura minima de operacao administrativa validada para as tabelas obrigatorias.
-                      </p>
-                    </div>
+                    <OperationalNotice
+                      tone="success"
+                      icon={CheckCircle2}
+                      text="Infraestrutura mínima de operação administrativa validada para as tabelas obrigatórias."
+                    />
                   )}
                 </div>
               </AdminDataState>
@@ -434,15 +452,20 @@ export default function AdminOperacoes() {
         <div className="space-y-4">
           <AdminSectionCard
             title="Ferramentas administrativas"
-            description="Acesso rapido para operacao diaria do sistema."
+            description="Acesso rápido para operação diária do sistema."
             icon={Settings2}
           >
             <div className="grid grid-cols-1 gap-3 md:grid-cols-2 xl:grid-cols-1">
               {QUICK_TOOLS.map((tool) => (
-                <Button key={tool.to} variant="outline" className="justify-between" asChild>
+                <Button
+                  key={tool.to}
+                  variant="outline"
+                  className="justify-between"
+                  asChild
+                >
                   <Link to={tool.to}>
                     <span>{tool.label}</span>
-                    <ArrowRight className="h-4 w-4" />
+                    <ArrowRight className="h-4 w-4" aria-hidden="true" />
                   </Link>
                 </Button>
               ))}
@@ -451,22 +474,83 @@ export default function AdminOperacoes() {
 
           <AdminSectionCard
             title="Leitura objetiva"
-            description="Resumo do estado operacional atual e do que ainda bloqueia prontidao plena."
+            description="Resumo do estado operacional atual e do que ainda bloqueia prontidão plena."
             icon={Shield}
             contentClassName="space-y-2 text-sm text-muted-foreground"
           >
             <p>
-              Esta superficie concentra controles criticos de rollout e diagnostico de schema sem acessar tabelas sensiveis diretamente da page.
+              Esta superfície concentra controles críticos de rollout e diagnóstico de
+              schema sem acessar tabelas sensíveis diretamente da página.
             </p>
             <p>
-              Ownership canonico: o admin central governa rollout/moderacao/politicas globais; dashboards de negocio e mobilidade permanecem responsaveis por operacao do proprio perfil e execucao diaria.
+              O admin central governa rollout, moderação e políticas globais; dashboards
+              de negócio e mobilidade permanecem responsáveis pela operação do próprio
+              perfil e execução diária.
             </p>
             <p>
-              Prontidao total depende de zerar tabelas obrigatorias ausentes ou com erro e consolidar a leitura operacional hoje ainda vinculada a `operationalDiagnosticsService` dentro de `core/admin`.
+              Prontidão total depende de zerar tabelas obrigatórias ausentes ou com erro e
+              consolidar a leitura operacional hoje vinculada a
+              `operationalDiagnosticsService` dentro de `core/admin`.
             </p>
           </AdminSectionCard>
         </div>
       </div>
+    </div>
+  );
+}
+
+function ControlRow({
+  id,
+  title,
+  description,
+  checked,
+  onCheckedChange,
+  disabled,
+}: {
+  id: string;
+  title: string;
+  description: string;
+  checked: boolean;
+  onCheckedChange: (checked: boolean) => void;
+  disabled: boolean;
+}) {
+  return (
+    <div className="flex items-center justify-between gap-4 rounded-lg border border-border p-4">
+      <div>
+        <Label htmlFor={id} className="font-semibold">
+          {title}
+        </Label>
+        <p className="mt-1 text-xs text-muted-foreground">{description}</p>
+      </div>
+      <Switch
+        id={id}
+        checked={checked}
+        onCheckedChange={onCheckedChange}
+        disabled={disabled}
+      />
+    </div>
+  );
+}
+
+function OperationalNotice({
+  tone,
+  icon: Icon,
+  text,
+}: {
+  tone: "destructive" | "success";
+  icon: typeof AlertCircle;
+  text: string;
+}) {
+  return (
+    <div
+      className={
+        tone === "destructive"
+          ? "flex gap-2 rounded-lg border border-destructive/30 bg-destructive/10 p-3 text-sm text-destructive"
+          : "flex gap-2 rounded-lg border border-success/30 bg-success/10 p-3 text-sm text-success"
+      }
+    >
+      <Icon className="mt-0.5 h-4 w-4 shrink-0" aria-hidden="true" />
+      <p>{text}</p>
     </div>
   );
 }
