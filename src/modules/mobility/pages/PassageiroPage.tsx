@@ -34,6 +34,7 @@ import {
 } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
 import { toast } from "sonner";
+import { CreateDeliveryModal } from "../components/CreateDeliveryModal";
 import { CreateRideModal } from "../components/CreateRideModal";
 import { EmergencyButton } from "../components/EmergencyButton";
 import { ErrorBoundary, ErrorState } from "../components/ErrorBoundary";
@@ -75,9 +76,7 @@ export default function PassageiroPage() {
     passengerRating = 0,
   } = useMobilidade({ realtimeEnabled: true });
   const [isCreateOpen, setIsCreateOpen] = useState(false);
-  const [createModalInitialType, setCreateModalInitialType] = useState<
-    "viagem" | "entrega"
-  >("viagem");
+  const [isDeliveryCreateOpen, setIsDeliveryCreateOpen] = useState(false);
   const [ratingRide, setRatingRide] = useState<RideRequest | null>(null);
   const [confirmationRide, setConfirmationRide] = useState<RideRequest | null>(
     null,
@@ -211,10 +210,7 @@ export default function PassageiroPage() {
               </div>
             </div>
             <Button
-              onClick={() => {
-                setCreateModalInitialType("viagem");
-                setIsCreateOpen(true);
-              }}
+              onClick={() => setIsCreateOpen(true)}
               size="sm"
               className="bg-gradient-to-r from-primary to-accent text-primary-foreground rounded-xl text-xs h-9 px-4 font-bold shadow-lg shadow-primary/25 hover:shadow-xl hover:shadow-primary/30 transition-all"
             >
@@ -235,10 +231,7 @@ export default function PassageiroPage() {
             className="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-5"
           >
             <button
-              onClick={() => {
-                setCreateModalInitialType("viagem");
-                setIsCreateOpen(true);
-              }}
+              onClick={() => setIsCreateOpen(true)}
               className="relative overflow-hidden rounded-2xl p-4 text-left bg-gradient-to-br from-primary/15 to-primary/5 border border-primary/20 hover:border-primary/40 transition-all group active:scale-[0.98]"
               aria-label={PASSENGER_PAGE_LABELS.ACTION_REQUEST_RIDE_ARIA}
             >
@@ -256,10 +249,7 @@ export default function PassageiroPage() {
               </div>
             </button>
             <button
-              onClick={() => {
-                setCreateModalInitialType("entrega");
-                setIsCreateOpen(true);
-              }}
+              onClick={() => setIsDeliveryCreateOpen(true)}
               className="relative overflow-hidden rounded-2xl p-4 text-left bg-gradient-to-br from-accent/15 to-accent/5 border border-accent/20 hover:border-accent/40 transition-all group active:scale-[0.98]"
               aria-label={PASSENGER_PAGE_LABELS.ACTION_SEND_DELIVERY_ARIA}
             >
@@ -414,10 +404,7 @@ export default function PassageiroPage() {
                       {PASSENGER_PAGE_LABELS.ACTIVE_EMPTY_SUBTITLE}
                     </p>
                     <Button
-                      onClick={() => {
-                        setCreateModalInitialType("viagem");
-                        setIsCreateOpen(true);
-                      }}
+                      onClick={() => setIsCreateOpen(true)}
                       className="bg-gradient-to-r from-primary to-accent text-primary-foreground rounded-xl font-bold shadow-lg shadow-primary/20"
                     >
                       <Zap className="h-4 w-4 mr-2" />
@@ -542,10 +529,7 @@ export default function PassageiroPage() {
             className="fixed bottom-20 right-4 z-40"
           >
             <Button
-              onClick={() => {
-                setCreateModalInitialType("viagem");
-                setIsCreateOpen(true);
-              }}
+              onClick={() => setIsCreateOpen(true)}
               className="w-14 h-14 rounded-2xl bg-gradient-to-br from-primary to-accent text-primary-foreground shadow-2xl shadow-primary/30 hover:shadow-primary/50 transition-all"
               size="icon"
             >
@@ -557,13 +541,17 @@ export default function PassageiroPage() {
         <CreateRideModal
           open={isCreateOpen}
           onOpenChange={setIsCreateOpen}
-          initialType={createModalInitialType}
           onSubmit={async (data) => {
             const ride = (await createRide(data)) as { id?: string } | null;
             if (ride?.id) {
               navigate(mobilityUrls.passageiro.buscando(ride.id));
             }
           }}
+        />
+        <CreateDeliveryModal
+          open={isDeliveryCreateOpen}
+          onOpenChange={setIsDeliveryCreateOpen}
+          sourceType="passenger"
         />
         <RateDriverModal
           ride={ratingRide}
