@@ -7,6 +7,10 @@ const shell = readFileSync(
   resolve(root, "src/app/components/SessionProfileRuntimeShell.tsx"),
   "utf8",
 );
+const contextualRuntime = readFileSync(
+  resolve(root, "src/app/components/ContextualProfileTerritoryRuntime.tsx"),
+  "utf8",
+);
 
 describe("auth route runtime isolation", () => {
   it("keeps public auth routes on session-only runtime", () => {
@@ -23,13 +27,19 @@ describe("auth route runtime isolation", () => {
 
     expect(shell).toContain("AUTH_SESSION_ONLY_PATHS.has(pathname)");
     expect(shell).toContain("sessionOnlyRoute ? (");
+    expect(shell).not.toMatch(/AUTH_SESSION_ONLY_PATHS[\s\S]*AUTH_PATHS\.firstAccess/);
   });
 
-  it("does not strip profile and territory owners from authenticated contextual routes", () => {
-    expect(shell).not.toMatch(/AUTH_SESSION_ONLY_PATHS[\s\S]*AUTH_PATHS\.firstAccess/);
-    expect(shell).toContain("<MultiProfileProvider>");
-    expect(shell).toContain("<TerritoryModeInitializer />");
-    expect(shell).toContain("<ModuleContextSync />");
+  it("keeps profile and territory code out of the static auth-route dependency graph", () => {
+    expect(shell).toContain(
+      'import("@/app/components/ContextualProfileTerritoryRuntime")',
+    );
+    expect(shell).not.toContain('from "@/core/profiles/');
+    expect(shell).not.toContain('from "@/core/location/');
+
+    expect(contextualRuntime).toContain("<MultiProfileProvider>");
+    expect(contextualRuntime).toContain("<TerritoryModeInitializer />");
+    expect(contextualRuntime).toContain("<ModuleContextSync />");
   });
 
   it("keeps SessionProvider above the route split so auth-to-app navigation does not restart session ownership", () => {
