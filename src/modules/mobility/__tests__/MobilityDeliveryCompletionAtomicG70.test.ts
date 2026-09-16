@@ -9,6 +9,9 @@ function readProjectFile(relativePath: string): string {
 const migration = readProjectFile(
   "supabase/migrations/20260911222000_complete_delivery_in_single_transaction_g70.sql",
 );
+const serverOwnedPriceMigration = readProjectFile(
+  "supabase/migrations/20260916084500_restore_atomic_delivery_completion_with_server_owned_price.sql",
+);
 const deliveryActions = readProjectFile(
   "src/core/mobility/core/RideDeliveryOperationalActions.ts",
 );
@@ -55,6 +58,22 @@ describe("G70 atomic terminal delivery", () => {
     expect(migration).toContain("service_role is required");
     expect(migration).toContain("FROM PUBLIC, anon, authenticated");
     expect(migration).toContain("TO service_role");
+  });
+
+  it("keeps final delivery price server-owned while preserving the G70 wrapper", () => {
+    expect(serverOwnedPriceMigration).toContain(
+      "private.mobility_transition_delivery_state_atomic_base_g70(",
+    );
+    expect(serverOwnedPriceMigration).toContain("NULL::numeric");
+    expect(serverOwnedPriceMigration).toContain(
+      "final_price = COALESCE(request.final_price, request.suggested_price)",
+    );
+    expect(serverOwnedPriceMigration).toContain(
+      "public.mobility_transition_ride_state_atomic(",
+    );
+    expect(serverOwnedPriceMigration).toContain("'to_state', 'completed'");
+    expect(serverOwnedPriceMigration).toContain("FROM PUBLIC, anon, authenticated");
+    expect(serverOwnedPriceMigration).toContain("TO service_role");
   });
 
   it("removes browser-orchestrated delivered then completed sequencing", () => {
