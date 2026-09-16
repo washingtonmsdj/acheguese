@@ -20,8 +20,10 @@ import {
   TooltipTrigger,
 } from '@/shared/components/ui/tooltip';
 
+type PassengerRideType = Exclude<RideType, 'entrega'>;
+
 export interface RideTypeOption {
-  value: RideType;
+  value: PassengerRideType;
   label: string;
   icon: React.ReactNode;
   description: string;
@@ -53,19 +55,12 @@ const rideTypeOptions: RideTypeOption[] = [
 ];
 
 export interface RideTypeSelectorProps {
-  /** Tipo selecionado */
-  value: RideType;
-  /** Callback quando tipo muda */
-  onChange: (type: RideType) => void;
-  /** Classe CSS adicional */
+  value: PassengerRideType;
+  onChange: (type: PassengerRideType) => void;
   className?: string;
-  /** Desabilitado */
   disabled?: boolean;
 }
 
-/**
- * Seletor de tipo de corrida em formato de tabs compactas.
- */
 export const RideTypeSelector = memo<RideTypeSelectorProps>(function RideTypeSelector({
   value,
   onChange,
@@ -73,7 +68,7 @@ export const RideTypeSelector = memo<RideTypeSelectorProps>(function RideTypeSel
   disabled = false,
 }) {
   const handleSelect = useCallback(
-    (type: RideType) => {
+    (type: PassengerRideType) => {
       if (!disabled) {
         onChange(type);
       }
@@ -82,7 +77,7 @@ export const RideTypeSelector = memo<RideTypeSelectorProps>(function RideTypeSel
   );
 
   const handleKeyDown = useCallback(
-    (e: React.KeyboardEvent, type: RideType) => {
+    (e: React.KeyboardEvent, type: PassengerRideType) => {
       if (e.key === 'Enter' || e.key === ' ') {
         e.preventDefault();
         handleSelect(type);
