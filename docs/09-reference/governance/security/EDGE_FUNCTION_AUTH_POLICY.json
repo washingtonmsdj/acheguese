@@ -168,35 +168,19 @@
       "kind": "public-registration-broker",
       "risk": "Critical",
       "label": "public authoritative Community Interest service_role broker",
-      "requiredPatterns": [
-        "rateLimitMiddleware\\s*\\(",
-        "verifyTurnstileToken\\s*\\(",
-        "getSupabaseAdminClient\\s*\\(",
-        "community_interest_registrations"
-      ]
+      "requiredPatterns": ["rateLimitMiddleware\\s*\\(", "verifyTurnstileToken\\s*\\(", "getSupabaseAdminClient\\s*\\(", "community_interest_registrations"]
     },
     "create-professional-lead": {
       "kind": "public-registration-broker",
       "risk": "Critical",
       "label": "public authoritative Professional lead service_role broker",
-      "requiredPatterns": [
-        "rateLimitMiddleware\\s*\\(",
-        "verifyTurnstileToken\\s*\\(",
-        "getSupabaseAdminClient\\s*\\(",
-        "get_active_profile",
-        "professional_leads"
-      ]
+      "requiredPatterns": ["rateLimitMiddleware\\s*\\(", "verifyTurnstileToken\\s*\\(", "getSupabaseAdminClient\\s*\\(", "get_active_profile", "professional_leads"]
     },
     "submit-dpo-request": {
       "kind": "public-registration-broker",
       "risk": "Critical",
       "label": "public LGPD data-subject request service_role broker",
-      "requiredPatterns": [
-        "rateLimitMiddleware\\s*\\(",
-        "verifyTurnstileToken\\s*\\(",
-        "getSupabaseAdminClient\\s*\\(",
-        "privacy_subject_requests"
-      ]
+      "requiredPatterns": ["rateLimitMiddleware\\s*\\(", "verifyTurnstileToken\\s*\\(", "getSupabaseAdminClient\\s*\\(", "privacy_subject_requests"]
     },
     "admin-business-rpc": {
       "kind": "admin-broker",
@@ -245,6 +229,17 @@
       "risk": "Critical",
       "label": "admin pricing RPC broker",
       "requiredPatterns": ["require(?:Admin|SuperAdmin)\\s*\\("]
+    },
+    "admin-privacy-rpc": {
+      "kind": "admin-broker",
+      "risk": "Critical",
+      "label": "admin LGPD request triage broker",
+      "requiredPatterns": [
+        "require(?:Admin|SuperAdmin)\\s*\\(",
+        "admin_list_privacy_subject_requests",
+        "admin_get_privacy_subject_request",
+        "admin_transition_privacy_subject_request"
+      ]
     },
     "admin-professional-rpc": {
       "kind": "admin-broker",
@@ -316,11 +311,7 @@
       "kind": "signed-webhook",
       "risk": "Critical",
       "label": "Resend emergency delivery signed webhook service_role broker",
-      "requiredPatterns": [
-        "webhookVerifier\\.verify\\s*\\(",
-        "RESEND_WEBHOOK_SECRET",
-        "apply_emergency_delivery_provider_event"
-      ]
+      "requiredPatterns": ["webhookVerifier\\.verify\\s*\\(", "RESEND_WEBHOOK_SECRET", "apply_emergency_delivery_provider_event"]
     },
     "business-reviews-rpc": {
       "kind": "authenticated-broker",
@@ -344,11 +335,7 @@
       "kind": "authenticated-broker",
       "risk": "Critical",
       "label": "authenticated entity contact RPC broker",
-      "requiredPatterns": [
-        "auth\\.getUser\\s*\\(",
-        "contact_rpc_get_visible_channels",
-        "contact_rpc_patch_owned_channels"
-      ]
+      "requiredPatterns": ["auth\\.getUser\\s*\\(", "contact_rpc_get_visible_channels", "contact_rpc_patch_owned_channels"]
     },
     "delivery-rpc": {
       "kind": "authenticated-broker",
@@ -414,11 +401,7 @@
       "kind": "authenticated-broker",
       "risk": "Critical",
       "label": "authenticated private professional credentials broker",
-      "requiredPatterns": [
-        "auth\\.getUser\\s*\\(",
-        "professional_credentials_rpc_get_owned",
-        "professional_credentials_rpc_patch_owned"
-      ]
+      "requiredPatterns": ["auth\\.getUser\\s*\\(", "professional_credentials_rpc_get_owned", "professional_credentials_rpc_patch_owned"]
     },
     "profile-rpc": {
       "kind": "authenticated-broker",
@@ -442,11 +425,7 @@
       "kind": "notification-broker",
       "risk": "Critical",
       "label": "canonical user-or-cron emergency email broker",
-      "requiredPatterns": [
-        "requireAuthenticatedUser\\s*\\(",
-        "requireCronSecret\\s*\\(",
-        "x-cron-secret"
-      ]
+      "requiredPatterns": ["requireAuthenticatedUser\\s*\\(", "requireCronSecret\\s*\\(", "x-cron-secret"]
     },
     "send-push": {
       "kind": "notification-broker",
@@ -476,11 +455,7 @@
       "kind": "admin-broker",
       "risk": "Critical",
       "label": "admin transactional territorial group lifecycle broker",
-      "requiredPatterns": [
-        "require(?:Admin|SuperAdmin)\\s*\\(",
-        "territorial_admin_save_group",
-        "territorial_admin_set_group_status"
-      ]
+      "requiredPatterns": ["require(?:Admin|SuperAdmin)\\s*\\(", "territorial_admin_save_group", "territorial_admin_set_group_status"]
     },
     "territorial-update-group-visibility": {
       "kind": "admin-broker",
@@ -534,22 +509,13 @@
       "kind": "public-registration-broker",
       "risk": "Critical",
       "label": "public Education lead intake service_role broker",
-      "requiredPatterns": [
-        "rateLimitMiddleware\\s*\\(",
-        "requireLeadEligibleProfile\\s*\\(",
-        "education_leads",
-        "public_directory_form"
-      ]
+      "requiredPatterns": ["rateLimitMiddleware\\s*\\(", "requireLeadEligibleProfile\\s*\\(", "education_leads", "public_directory_form"]
     },
     "business-network-rpc": {
       "kind": "authenticated-broker",
       "risk": "Critical",
       "label": "authenticated transactional Business network broker",
-      "requiredPatterns": [
-        "auth\\.getUser\\s*\\(",
-        "requireOperationalAccount\\s*\\(",
-        "business_network_rpc_"
-      ]
+      "requiredPatterns": ["auth\\.getUser\\s*\\(", "requireOperationalAccount\\s*\\(", "business_network_rpc_"]
     }
   },
   "jwtRequiredNamePatterns": [
