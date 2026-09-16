@@ -1,4 +1,4 @@
-import { useState, useCallback } from "react";
+import { useState, useCallback, useEffect } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useAuth } from "@/core/auth";
 import { profileService } from "@/core/profiles/services/ProfileService";
@@ -85,14 +85,15 @@ export function useMobilidade(options: UseMobilidadeOptions = {}) {
     queryKey: MOBILITY_QUERY_KEYS.rides(user?.id),
     queryFn: async (): Promise<RideRequest[]> => {
       if (!user) return [];
-      const data = ((await getUserRides(user.id)) || []) as RideRequest[];
-      const active = data.find((ride) => isOpenRideStatus(ride.status)) ?? null;
-      setActiveRide(active);
-      return data;
+      return ((await getUserRides(user.id)) || []) as RideRequest[];
     },
     enabled: Boolean(user),
     staleTime: TIMEOUTS.CACHE_STALE_TIME_MEDIUM,
   });
+
+  useEffect(() => {
+    setActiveRide(rides.find((ride) => isOpenRideStatus(ride.status)) ?? null);
+  }, [rides]);
 
   useRideRealtime({
     rideId: activeRide?.id,
