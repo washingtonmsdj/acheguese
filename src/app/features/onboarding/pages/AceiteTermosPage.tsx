@@ -241,7 +241,7 @@ export default function AceiteTermosPage() {
         <meta name="robots" content="noindex, nofollow" />
       </Helmet>
 
-      <div className="min-h-[100dvh] bg-[#fffdfa] text-[#102f33] lg:bg-[radial-gradient(circle_at_16%_32%,rgba(216,234,224,.55),transparent_31%),radial-gradient(circle_at_70%_18%,rgba(255,236,185,.28),transparent_30%),#fffdfa]">
+      <div className="auth-concept-canvas min-h-[100dvh]">
         <AuthBrandHeader
           secondaryHref={AUTH_PATHS.login}
           secondaryLabel="Entrar"
@@ -254,33 +254,33 @@ export default function AceiteTermosPage() {
         >
           <section className="hidden lg:block" aria-label="Participação e confiança">
             <div className="max-w-[510px]">
-              <p className="text-[12px] font-bold uppercase tracking-[0.17em] text-[#0b5b59]">
+              <p className="text-[12px] font-bold uppercase tracking-[0.17em] text-primary">
                 Conta e comunidade
               </p>
-              <h1 className="mt-3 max-w-[470px] font-heading text-[46px] font-extrabold leading-[.95] tracking-[-0.05em] text-[#0b3b3f]">
+              <h1 className="mt-3 max-w-[470px] font-heading text-[46px] font-extrabold leading-[.95] tracking-[-0.05em] text-primary">
                 Entre sabendo<br />como cuidamos<br />desse espaço.
               </h1>
-              <p className="mt-5 max-w-[430px] text-[17px] leading-6 text-[#244448]">
+              <p className="mt-5 max-w-[430px] text-[17px] leading-6 text-foreground">
                 O Achegue-se conecta pessoas, perfis e territórios. Por isso,
                 participação e privacidade precisam começar com regras claras.
               </p>
 
               <div className="mt-8 grid max-w-[500px] gap-3 sm:grid-cols-2">
-                <div className="rounded-2xl border border-[#d6dedc] bg-white/75 p-4">
-                  <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-[#e7f0ed] text-[#0b5b59]">
+                <div className="rounded-2xl border border-border bg-card/75 p-4">
+                  <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-primary/10 text-primary">
                     <AuthConceptIcon name="shield" />
                   </span>
-                  <p className="mt-3 text-[13px] font-bold">Regras transparentes</p>
-                  <p className="mt-1 text-[12px] leading-5 text-[#607477]">
+                  <p className="mt-3 text-[13px] font-bold text-foreground">Regras transparentes</p>
+                  <p className="mt-1 text-[12px] leading-5 text-muted-foreground">
                     Termos e diretrizes ficam disponíveis antes do aceite.
                   </p>
                 </div>
-                <div className="rounded-2xl border border-[#d6dedc] bg-white/75 p-4">
-                  <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-[#eef4ef] text-[#0b5b59]">
+                <div className="rounded-2xl border border-border bg-card/75 p-4">
+                  <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-primary/10 text-primary">
                     <AuthConceptIcon name="users" />
                   </span>
-                  <p className="mt-3 text-[13px] font-bold">Convivência responsável</p>
-                  <p className="mt-1 text-[12px] leading-5 text-[#607477]">
+                  <p className="mt-3 text-[13px] font-bold text-foreground">Convivência responsável</p>
+                  <p className="mt-1 text-[12px] leading-5 text-muted-foreground">
                     As Diretrizes da Comunidade fazem parte da experiência real
                     do produto.
                   </p>
@@ -289,27 +289,27 @@ export default function AceiteTermosPage() {
             </div>
           </section>
 
-          <section className="w-full lg:rounded-[10px] lg:bg-white lg:p-7 lg:shadow-[0_18px_55px_rgba(17,55,59,.08)]">
+          <section className="w-full lg:rounded-xl lg:border lg:border-border lg:bg-card lg:p-7 lg:shadow-md">
             <div className="flex items-start gap-3 lg:block">
-              <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-[#e7f0ed] text-[#0b5b59] lg:hidden">
+              <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-primary/10 text-primary lg:hidden">
                 <AuthConceptIcon name="shield" />
               </span>
               <div>
-                <p className="text-[11px] font-bold uppercase tracking-[0.12em] text-[#0b5b59] lg:hidden">
+                <p className="text-[11px] font-bold uppercase tracking-[0.12em] text-primary lg:hidden">
                   Conta e comunidade
                 </p>
-                <h1 className="mt-1 font-heading text-[27px] font-extrabold leading-tight tracking-[-0.04em] lg:mt-0 lg:text-[24px]">
+                <h1 className="mt-1 font-heading text-[27px] font-extrabold leading-tight tracking-[-0.04em] text-foreground lg:mt-0 lg:text-[24px]">
                   Antes de continuar
                 </h1>
-                <p className="mt-2 text-[13px] leading-5 text-[#526a6d]">
+                <p className="mt-2 text-[13px] leading-5 text-muted-foreground">
                   Revise os Termos de Uso e as Diretrizes da Comunidade para
                   concluir seu acesso.
                 </p>
               </div>
             </div>
 
-            <div className="mt-5 flex items-start gap-3 rounded-xl bg-[#eef4f2] px-4 py-3 text-[#405f62]">
-              <AuthConceptIcon name="info" className="mt-0.5 text-[#0b5b59]" />
+            <div className="mt-5 flex items-start gap-3 rounded-xl bg-muted px-4 py-3 text-muted-foreground">
+              <AuthConceptIcon name="info" className="mt-0.5 text-primary" />
               <p className="text-[11.5px] leading-5">
                 Entrar com Google não pula esta etapa. O aceite é registrado na
                 sua conta e pode ser consultado depois.
@@ -317,15 +317,15 @@ export default function AceiteTermosPage() {
             </div>
 
             {hasSpecificReturnContext ? (
-              <div className="mt-3 flex items-center gap-3 rounded-xl border border-[#d7e1de] bg-white px-3.5 py-3">
-                <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-[#e7f0ed] text-[#0b5b59]">
+              <div className="mt-3 flex items-center gap-3 rounded-xl border border-border bg-card px-3.5 py-3">
+                <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-primary/10 text-primary">
                   <AuthConceptIcon name={returnContextIcon} />
                 </span>
                 <div className="min-w-0">
-                  <p className="text-[10.5px] text-[#607477]">
+                  <p className="text-[10.5px] text-muted-foreground">
                     Depois dos termos, você volta para
                   </p>
-                  <p className="truncate text-[12.5px] font-bold text-[#18383c]">
+                  <p className="truncate text-[12.5px] font-bold text-foreground">
                     {returnContext.label}
                   </p>
                 </div>
@@ -335,9 +335,9 @@ export default function AceiteTermosPage() {
             {state === "checking" ? (
               <div
                 role="status"
-                className="flex min-h-[185px] items-center justify-center gap-3 py-10 text-[13px] text-[#607477]"
+                className="flex min-h-[185px] items-center justify-center gap-3 py-10 text-[13px] text-muted-foreground"
               >
-                <span className="h-5 w-5 animate-spin rounded-full border-2 border-[#cbd5d3] border-t-[#0b5b59]" />
+                <span className="h-5 w-5 animate-spin rounded-full border-2 border-border border-t-primary" />
                 Verificando o aceite da sua conta…
               </div>
             ) : null}
@@ -346,12 +346,12 @@ export default function AceiteTermosPage() {
               <div className="mt-6 space-y-4">
                 <div
                   role="alert"
-                  className="rounded-xl border border-[#ead8c7] bg-[#fff7ed] p-4"
+                  className="rounded-xl border border-warning/30 bg-warning/10 p-4"
                 >
-                  <p className="text-[13px] font-bold text-[#71401d]">
+                  <p className="text-[13px] font-bold text-foreground">
                     Não foi possível concluir a entrada com Google
                   </p>
-                  <p className="mt-1 text-[12px] leading-5 text-[#735a49]">
+                  <p className="mt-1 text-[12px] leading-5 text-muted-foreground">
                     O acesso foi cancelado ou interrompido antes de criar uma
                     sessão. Seu destino foi preservado para você tentar novamente.
                   </p>
@@ -359,7 +359,7 @@ export default function AceiteTermosPage() {
                 <Link
                   to={oauthRetryPath}
                   onClick={clearFailedOAuthJourney}
-                  className="flex h-11 w-full items-center justify-center rounded-[9px] bg-[#ffc91a] text-[14px] font-extrabold text-[#102f33] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#0b5b59]/40"
+                  className="flex h-11 w-full items-center justify-center rounded-lg bg-primary text-[14px] font-extrabold text-primary-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/40"
                 >
                   {journeyIntent === AUTH_JOURNEY_INTENTS.signup
                     ? "Voltar para criar conta"
@@ -370,15 +370,15 @@ export default function AceiteTermosPage() {
 
             {state === "signed-out" ? (
               <div className="mt-6 space-y-4">
-                <div className="rounded-xl border border-[#d6dedc] bg-[#f8f7f2] p-4">
-                  <p className="text-[13px] font-bold">Sua sessão não está disponível</p>
-                  <p className="mt-1 text-[12px] leading-5 text-[#607477]">
+                <div className="rounded-xl border border-border bg-muted p-4">
+                  <p className="text-[13px] font-bold text-foreground">Sua sessão não está disponível</p>
+                  <p className="mt-1 text-[12px] leading-5 text-muted-foreground">
                     Entre novamente para que o aceite seja associado à conta correta.
                   </p>
                 </div>
                 <Link
                   to={loginPath}
-                  className="flex h-11 w-full items-center justify-center rounded-[9px] bg-[#ffc91a] text-[14px] font-extrabold text-[#102f33] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#0b5b59]/40"
+                  className="flex h-11 w-full items-center justify-center rounded-lg bg-primary text-[14px] font-extrabold text-primary-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/40"
                 >
                   Voltar para entrar
                 </Link>
@@ -389,12 +389,12 @@ export default function AceiteTermosPage() {
               <div className="mt-6 space-y-4">
                 <div
                   role="alert"
-                  className="rounded-xl border border-[#ead8c7] bg-[#fff7ed] p-4"
+                  className="rounded-xl border border-warning/30 bg-warning/10 p-4"
                 >
-                  <p className="text-[13px] font-bold text-[#71401d]">
+                  <p className="text-[13px] font-bold text-foreground">
                     Não foi possível verificar seus termos
                   </p>
-                  <p className="mt-1 text-[12px] leading-5 text-[#735a49]">
+                  <p className="mt-1 text-[12px] leading-5 text-muted-foreground">
                     Não vamos assumir se esta conta já aceitou uma versão anterior. Tente carregar novamente antes de continuar.
                   </p>
                 </div>
@@ -404,7 +404,7 @@ export default function AceiteTermosPage() {
                     setState("checking");
                     setConsentCheckAttempt((attempt) => attempt + 1);
                   }}
-                  className="h-11 w-full rounded-[9px] bg-[#ffc91a] text-[14px] font-extrabold text-[#102f33] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#0b5b59]/40"
+                  className="h-11 w-full rounded-lg bg-primary text-[14px] font-extrabold text-primary-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/40"
                 >
                   Tentar verificar novamente
                 </button>
@@ -413,30 +413,30 @@ export default function AceiteTermosPage() {
 
             {state === "needs-acceptance" ? (
               <div className="mt-6 space-y-4">
-                <div className="rounded-xl border border-[#d6dedc] bg-[#f8f7f2] p-4">
+                <div className="rounded-xl border border-border bg-muted p-4">
                   <div className="flex items-start gap-3">
                     <Checkbox
                       id="terms-acceptance"
                       checked={accepted}
                       onCheckedChange={(checked) => setAccepted(checked === true)}
                       disabled={submitting}
-                      className="mt-0.5 h-5 w-5 rounded-[3px] border-[#31575a]"
+                      className="mt-0.5 h-5 w-5 rounded-[3px] border-primary"
                     />
                     <Label
                       htmlFor="terms-acceptance"
-                      className="cursor-pointer text-[13px] font-normal leading-5"
+                      className="cursor-pointer text-[13px] font-normal leading-5 text-foreground"
                     >
                       Li e aceito os Termos de Uso, incluindo as Diretrizes da
                       Comunidade.
                     </Label>
                   </div>
-                  <p className="mt-3 pl-8 text-[11px] leading-4 text-[#607477]">
+                  <p className="mt-3 pl-8 text-[11px] leading-4 text-muted-foreground">
                     Abra os{" "}
                     <Link
                       to={TERMS_OF_SERVICE_PATH}
                       target="_blank"
                       rel="noreferrer"
-                      className="font-medium text-[#0b4e52] underline underline-offset-2"
+                      className="font-medium text-primary underline underline-offset-2"
                     >
                       Termos
                     </Link>{" "}
@@ -445,7 +445,7 @@ export default function AceiteTermosPage() {
                       to={COMMUNITY_GUIDELINES_PATH}
                       target="_blank"
                       rel="noreferrer"
-                      className="font-medium text-[#0b4e52] underline underline-offset-2"
+                      className="font-medium text-primary underline underline-offset-2"
                     >
                       Diretrizes da comunidade
                     </Link>{" "}
@@ -457,11 +457,11 @@ export default function AceiteTermosPage() {
                   type="button"
                   disabled={!accepted || submitting}
                   onClick={() => void handleAccept()}
-                  className="h-11 w-full rounded-[9px] bg-[#ffc91a] text-[14px] font-extrabold text-[#102f33] shadow-[0_3px_10px_rgba(226,171,0,.16)] transition-colors hover:bg-[#f7bf00] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#0b5b59]/40 disabled:cursor-not-allowed disabled:opacity-55"
+                  className="h-11 w-full rounded-lg bg-primary text-[14px] font-extrabold text-primary-foreground transition-colors hover:bg-primary/90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/40 disabled:cursor-not-allowed disabled:opacity-55"
                 >
                   {submitting ? "Registrando…" : "Aceitar e continuar"}
                 </button>
-                <p className="text-center text-[10.5px] leading-4 text-[#607477]">
+                <p className="text-center text-[10.5px] leading-4 text-muted-foreground">
                   Versão dos termos: {TERMS_OF_SERVICE_VERSION}
                 </p>
               </div>
