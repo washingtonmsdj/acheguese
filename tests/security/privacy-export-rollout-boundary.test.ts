@@ -8,6 +8,7 @@ const read = (path: string) => readFileSync(resolve(root, path), "utf8");
 const rollout = read("src/core/privacy/config/privacyRollout.ts");
 const settingsService = read("src/core/privacy/services/PrivacySettingsService.ts");
 const privacyService = read("src/core/privacy/services/PrivacyService.ts");
+const privacyPage = read("src/app/pages/PrivacySettingsPage.tsx");
 const exportFunction = read("supabase/functions/user-export-data/index.ts");
 const productionEnv = read(".env.production");
 
@@ -44,5 +45,16 @@ describe("privacy data export rollout boundary", () => {
   it("exposes availability from the same rollout authority", () => {
     expect(settingsService).toContain("static isUserDataExportAvailable(): boolean");
     expect(settingsService).toContain("return isPrivacyDataExportEnabled();");
+  });
+
+  it("makes the unavailable rollout explicit in the account privacy UI", () => {
+    expect(privacyPage).toContain(
+      "const exportAvailable = PrivacySettingsService.isUserDataExportAvailable();",
+    );
+    expect(privacyPage).toContain("if (!exportAvailable || isExporting) return;");
+    expect(privacyPage).toContain("disabled={isExporting || !exportAvailable}");
+    expect(privacyPage).toContain("Exportação temporariamente indisponível");
+    expect(privacyPage).toContain("Solicitar meus dados à proteção de dados");
+    expect(privacyPage).toContain("navigate(DATA_PROTECTION_CONTACT_PATH)");
   });
 });
