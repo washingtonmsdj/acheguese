@@ -1,5 +1,6 @@
-import { supabase } from "@/integrations/supabase";
+import { assertPrivacyDataExportEnabled, isPrivacyDataExportEnabled } from "@/core/privacy/config/privacyRollout";
 import { SessionService } from "@/core/session/services/SessionService";
+import { supabase } from "@/integrations/supabase";
 import { buildSupabaseFunctionUrl } from "@/shared/config/publicSupabase";
 import { PrivacyRpcService } from "./PrivacyRpcService";
 
@@ -116,6 +117,10 @@ export class PrivacySettingsService {
     } finally {
       if (timeoutHandle !== undefined) clearTimeout(timeoutHandle);
     }
+  }
+
+  static isUserDataExportAvailable(): boolean {
+    return isPrivacyDataExportEnabled();
   }
 
   static async getUserConsents(userId: string): Promise<UserConsentRecord[]> {
@@ -243,6 +248,7 @@ export class PrivacySettingsService {
   }
 
   static async exportUserData(accessToken: string): Promise<Blob> {
+    assertPrivacyDataExportEnabled();
     this.assertCurrentSessionAccessToken(accessToken);
 
     const activeExport = this.exportInFlight;
