@@ -1,15 +1,16 @@
 /**
  * RideTypeSelector Component (AAA)
- * 
- * Seletor compacto de tipo de corrida em formato de tabs horizontais.
- * Reduz de ~120px (grid 2x2) para ~48px (tabs 1 linha).
- * 
+ *
+ * Seletor compacto de modalidades exclusivas do fluxo de corrida.
+ * Entregas pertencem ao fluxo canônico Motoboy (useDelivery/createDelivery)
+ * e não podem reabrir um segundo lifecycle/pricing path nesta superfície.
+ *
  * @module mobility/components/ride-request/RideTypeSelector
  */
 
 import React, { memo, useCallback } from 'react';
 import { motion } from 'framer-motion';
-import { Car, Package, Calendar, Users } from 'lucide-react';
+import { Car, Calendar, Users } from 'lucide-react';
 import { cn } from '@/shared/utils/cn';
 import type { RideType } from '@/core/mobility/types';
 import {
@@ -34,13 +35,6 @@ const rideTypeOptions: RideTypeOption[] = [
     icon: <Car className="h-4 w-4" />,
     description: 'Corrida rápida para você',
     color: 'primary',
-  },
-  {
-    value: 'entrega',
-    label: 'Entrega',
-    icon: <Package className="h-4 w-4" />,
-    description: 'Enviar objetos, documentos ou compras',
-    color: 'warning',
   },
   {
     value: 'agendada',
@@ -70,15 +64,7 @@ export interface RideTypeSelectorProps {
 }
 
 /**
- * Seletor de tipo de corrida em formato de tabs compactas
- * 
- * @example
- * ```tsx
- * <RideTypeSelector
- *   value={type}
- *   onChange={setType}
- * />
- * ```
+ * Seletor de tipo de corrida em formato de tabs compactas.
  */
 export const RideTypeSelector = memo<RideTypeSelectorProps>(function RideTypeSelector({
   value,
@@ -131,7 +117,6 @@ export const RideTypeSelector = memo<RideTypeSelectorProps>(function RideTypeSel
                       ? cn(
                           'border-current shadow-sm',
                           option.color === 'primary' && 'bg-primary/10 text-primary border-primary',
-                          option.color === 'warning' && 'bg-warning/10 text-warning border-warning',
                           option.color === 'accent' && 'bg-accent/10 text-accent border-accent',
                           option.color === 'secondary' && 'bg-secondary/10 text-secondary-foreground border-secondary',
                         )
@@ -144,20 +129,15 @@ export const RideTypeSelector = memo<RideTypeSelectorProps>(function RideTypeSel
                   whileHover={!disabled ? { scale: 1.02 } : undefined}
                   whileTap={!disabled ? { scale: 0.98 } : undefined}
                 >
-                  {/* Icon */}
                   <span className="flex-shrink-0">{option.icon}</span>
-
-                  {/* Label */}
                   <span className="whitespace-nowrap">{option.label}</span>
 
-                  {/* Selection Indicator */}
                   {isSelected && (
                     <motion.div
                       layoutId="ride-type-indicator"
                       className={cn(
                         'absolute inset-0 rounded-xl -z-10',
                         option.color === 'primary' && 'bg-primary/5',
-                        option.color === 'warning' && 'bg-warning/5',
                         option.color === 'accent' && 'bg-accent/5',
                         option.color === 'secondary' && 'bg-secondary/5',
                       )}
