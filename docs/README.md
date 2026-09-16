@@ -81,6 +81,7 @@ Alguns caminhos antigos ainda existem fora das pastas numeradas por compatibilid
 - [Migrations pendentes](./09-reference/migrations-pending/README.md)
 - [Edge Function secrets](./09-reference/EDGE_FUNCTION_SECRETS.md)
 - [Supabase secrets](./09-reference/SUPABASE_SECRETS.md)
+- [E-mail de autenticação em produção](./09-reference/AUTH_EMAIL_PRODUCTION.md)
 
 ### Design e UX
 
