@@ -83,8 +83,12 @@ export default function AdminLayout() {
 
   if (!adminBypassEnabled && (sessionLoading || checking)) {
     return (
-      <div className="min-h-screen bg-[#0A0F14] flex items-center justify-center">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary" />
+      <div className="flex min-h-screen items-center justify-center bg-background text-foreground">
+        <div
+          className="h-12 w-12 animate-spin rounded-full border-2 border-muted border-t-primary motion-reduce:animate-none"
+          role="status"
+          aria-label="Verificando acesso administrativo"
+        />
       </div>
     );
   }
@@ -95,24 +99,21 @@ export default function AdminLayout() {
 
   if (!adminBypassEnabled && !isAdmin) {
     return (
-      <div className="min-h-screen bg-[#0A0F14] flex items-center justify-center p-4">
-        <div className="text-center space-y-4">
-          <div className="rounded-full bg-red-500/10 p-5 w-fit mx-auto">
-            <Shield className="h-12 w-12 text-red-400" />
+      <div className="flex min-h-screen items-center justify-center bg-background p-4 text-foreground">
+        <div className="space-y-4 text-center">
+          <div className="mx-auto w-fit rounded-full bg-destructive/10 p-5">
+            <Shield className="h-12 w-12 text-destructive" aria-hidden="true" />
           </div>
           <div>
-            <h1 className="text-xl font-bold text-white mb-1">Acesso Restrito</h1>
-            <p className="text-gray-400 text-sm max-w-xs mx-auto">
-              Sua conta nao tem permissao de administrador.
+            <h1 className="mb-1 text-xl font-bold text-foreground">Acesso restrito</h1>
+            <p className="mx-auto max-w-xs text-sm text-muted-foreground">
+              Sua conta não tem permissão de administrador.
             </p>
           </div>
-          <button
-            onClick={() => navigate("/")}
-            className="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-white/10 hover:bg-white/20 text-white text-sm transition-colors"
-          >
-            <ArrowLeft className="h-4 w-4" />
+          <Button variant="outline" onClick={() => navigate("/")} className="gap-2">
+            <ArrowLeft className="h-4 w-4" aria-hidden="true" />
             Voltar ao app
-          </button>
+          </Button>
         </div>
       </div>
     );
@@ -120,13 +121,13 @@ export default function AdminLayout() {
 
   const sidebarContent = (
     <>
-      <div className="px-4 py-4 border-b">
+      <div className="border-b border-border px-4 py-4">
         <div className="flex items-center gap-2">
-          <div className="h-8 w-8 rounded-lg bg-primary flex items-center justify-center">
-            <span className="text-primary-foreground font-bold text-sm">A</span>
+          <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary">
+            <span className="text-sm font-bold text-primary-foreground">A</span>
           </div>
           <div>
-            <h1 className="text-sm font-bold font-display leading-none">
+            <h1 className="font-display text-sm font-bold leading-none text-foreground">
               Admin Panel
             </h1>
             <p className="text-[10px] text-muted-foreground">
@@ -136,11 +137,11 @@ export default function AdminLayout() {
         </div>
       </div>
 
-      <nav className="flex-1 p-2 overflow-y-auto">
+      <nav className="flex-1 overflow-y-auto p-2" aria-label="Administração">
         {ADMIN_NAV_SECTIONS.map((section) => (
           <div key={section.id} className="mb-3">
             {section.label ? (
-              <p className="text-[10px] font-bold text-muted-foreground/60 uppercase tracking-wider px-3 pt-3 pb-1.5">
+              <p className="px-3 pb-1.5 pt-3 text-[10px] font-bold uppercase tracking-wider text-muted-foreground/70">
                 {section.label}
               </p>
             ) : null}
@@ -159,17 +160,17 @@ export default function AdminLayout() {
                     onClick={() => setMobileOpen(false)}
                     className={({ isActive }) =>
                       cn(
-                        "flex items-center gap-2.5 px-3 py-2 rounded-lg text-sm font-medium transition-colors relative",
+                        "relative flex items-center gap-2.5 rounded-lg px-3 py-2 text-sm font-medium transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring",
                         isActive
                           ? "bg-primary text-primary-foreground shadow-sm"
                           : "text-muted-foreground hover:bg-muted hover:text-foreground",
                       )
                     }
                   >
-                    <item.icon className="h-4 w-4 shrink-0" />
+                    <item.icon className="h-4 w-4 shrink-0" aria-hidden="true" />
                     <span className="flex-1">{item.label}</span>
                     {badgeLabel ? (
-                      <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-emerald-500/20 text-emerald-400 font-bold border border-emerald-500/30">
+                      <span className="rounded-full border border-success/30 bg-success/10 px-1.5 py-0.5 text-[10px] font-bold text-success">
                         {badgeLabel}
                       </span>
                     ) : null}
@@ -181,12 +182,13 @@ export default function AdminLayout() {
         ))}
       </nav>
 
-      <div className="p-2 border-t">
+      <div className="border-t border-border p-2">
         <button
+          type="button"
           onClick={() => navigate("/")}
-          className="flex items-center gap-2 px-3 py-2 rounded-lg text-sm text-muted-foreground hover:bg-muted hover:text-foreground w-full transition-colors"
+          className="flex w-full items-center gap-2 rounded-lg px-3 py-2 text-sm text-muted-foreground transition-colors hover:bg-muted hover:text-foreground focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
         >
-          <ArrowLeft className="h-4 w-4" />
+          <ArrowLeft className="h-4 w-4" aria-hidden="true" />
           Voltar ao app
         </button>
       </div>
@@ -194,42 +196,47 @@ export default function AdminLayout() {
   );
 
   return (
-    <div className="min-h-screen flex bg-muted/30">
-      <aside className="hidden md:flex w-60 bg-card border-r flex-col shrink-0 sticky top-0 h-screen">
+    <div className="flex min-h-screen bg-background text-foreground">
+      <aside className="sticky top-0 hidden h-screen w-60 shrink-0 flex-col border-r border-border bg-card md:flex">
         {sidebarContent}
       </aside>
 
       {mobileOpen ? (
         <div className="fixed inset-0 z-50 md:hidden">
-          <div
-            className="absolute inset-0 bg-black/50"
+          <button
+            type="button"
+            className="absolute inset-0 bg-foreground/30"
             onClick={() => setMobileOpen(false)}
+            aria-label="Fechar menu administrativo"
           />
-          <aside className="relative w-64 bg-card h-full flex flex-col shadow-xl">
+          <aside className="relative flex h-full w-64 flex-col bg-card shadow-xl">
             <button
+              type="button"
               onClick={() => setMobileOpen(false)}
-              className="absolute top-3 right-3 p-1"
+              className="absolute right-3 top-3 rounded-md p-1 text-muted-foreground hover:bg-muted hover:text-foreground"
+              aria-label="Fechar menu"
             >
-              <X className="h-5 w-5 text-muted-foreground" />
+              <X className="h-5 w-5" aria-hidden="true" />
             </button>
             {sidebarContent}
           </aside>
         </div>
       ) : null}
 
-      <main className="flex-1 overflow-auto min-w-0">
-        <div className="md:hidden sticky top-0 z-40 bg-card border-b px-4 py-3 flex items-center gap-3">
+      <main className="min-w-0 flex-1 overflow-auto">
+        <div className="sticky top-0 z-40 flex items-center gap-3 border-b border-border bg-card px-4 py-3 md:hidden">
           <Button
             variant="ghost"
             size="icon"
             className="h-8 w-8"
             onClick={() => setMobileOpen(true)}
+            aria-label="Abrir menu administrativo"
           >
-            <Menu className="h-5 w-5" />
+            <Menu className="h-5 w-5" aria-hidden="true" />
           </Button>
-          <span className="font-bold text-sm font-display">Admin Panel</span>
+          <span className="font-display text-sm font-bold">Admin Panel</span>
         </div>
-        <div className="p-4 md:p-6 max-w-7xl">
+        <div className="max-w-7xl p-4 md:p-6">
           <Suspense fallback={<AdminPageLoader />}>
             <Outlet />
           </Suspense>
