@@ -74,10 +74,15 @@ export class RideOperationalService {
         };
       }
 
-      if (input.suggestedPrice && input.suggestedPrice < 5.00) {
+      // Commercial fare thresholds belong exclusively to Pricing/backend policy.
+      // This orchestration layer only rejects structurally invalid numeric input.
+      if (
+        input.suggestedPrice !== undefined &&
+        (!Number.isFinite(input.suggestedPrice) || input.suggestedPrice <= 0)
+      ) {
         return {
           success: false,
-          error: 'Preo minimo  R$ 5,00 conforme regras de pricing.',
+          error: 'Preco sugerido invalido.',
         };
       }
 
