@@ -11,6 +11,9 @@ const migration = read(
 const piiMinimizationMigration = read(
   "supabase/migrations/20260916113200_minimize_admin_privacy_queue_pii.sql",
 );
+const historyMigration = read(
+  "supabase/migrations/20260916114500_add_privacy_request_event_history.sql",
+);
 const broker = read("supabase/functions/admin-privacy-rpc/index.ts");
 const config = read("supabase/config.toml");
 const authPolicy = read(
@@ -48,8 +51,8 @@ describe("admin privacy request authority", () => {
     expect(piiMinimizationMigration).not.toContain("request.message");
 
     const summaryStart = service.indexOf("export interface AdminPrivacyRequestSummary");
-    const detailStart = service.indexOf("export interface AdminPrivacyRequestDetail");
-    const summaryContract = service.slice(summaryStart, detailStart);
+    const historyStart = service.indexOf("export interface AdminPrivacyRequestHistoryEvent");
+    const summaryContract = service.slice(summaryStart, historyStart);
     expect(summaryContract).not.toContain("requester_name");
     expect(summaryContract).not.toContain("requester_email");
     expect(page).not.toContain("item.requester_name");
@@ -66,14 +69,42 @@ describe("admin privacy request authority", () => {
   });
 
   it("enforces the request lifecycle atomically", () => {
-    expect(migration).toContain("FOR UPDATE");
-    expect(migration).toContain(
+    expect(historyMigration).toContain("FOR UPDATE");
+    expect(historyMigration).toContain(
       "v_current_status = 'received' AND p_next_status IN ('in_review', 'cancelled')",
     );
-    expect(migration).toContain("v_current_status = 'in_review'");
-    expect(migration).toContain("v_current_status = 'waiting_for_requester'");
-    expect(migration).not.toContain("v_current_status = 'completed' AND");
-    expect(migration).not.toContain("v_current_status = 'denied' AND");
+    expect(historyMigration).toContain("v_current_status = 'in_review'");
+    expect(historyMigration).toContain("v_current_status = 'waiting_for_requester'");
+    expect(historyMigration).not.toContain("v_current_status = 'completed' AND");
+    expect(historyMigration).not.toContain("v_current_status = 'denied' AND");
+  });
+
+  it("persists DPO lifecycle history in the same database authority", () => {
+    expect(historyMigration).toContain("CREATE TABLE IF NOT EXISTS public.privacy_subject_request_events");
+    expect(historyMigration).toContain("ENABLE ROW LEVEL SECURITY");
+    expect(historyMigration).toContain("FORCE ROW LEVEL SECURITY");
+    expect(historyMigration).toContain("privacy_subject_request_submission_event");
+    expect(historyMigration).toContain("'status_changed'");
+    expect(historyMigration).toContain("p_actor_user_id");
+    expect(historyMigration).toContain("'history', COALESCE((");
+    expect(historyMigration).not.toContain("'actor_user_id', event.actor_user_id");
+    expect(service).toContain("AdminPrivacyRequestHistoryEvent");
+    expect(service).toContain("history: AdminPrivacyRequestHistoryEvent[]");
+    expect(page).toContain("Histórico do pedido");
+    expect(page).toContain("detail.history.map");
+  });
+
+  it("reduces direct service-role ledger authority to public intake insert only", () => {
+    expect(historyMigration).toContain(
+      "REVOKE SELECT, UPDATE, DELETE ON TABLE public.privacy_subject_requests",
+    );
+    expect(historyMigration).toContain(
+      "GRANT INSERT ON TABLE public.privacy_subject_requests TO service_role",
+    );
+    expect(historyMigration).toContain(
+      "REVOKE ALL ON TABLE public.privacy_subject_request_events",
+    );
+    expect(historyMigration).toContain("FROM PUBLIC, anon, authenticated, service_role");
   });
 
   it("requires JWT, admin authorization and MFA-aware admin helper", () => {
