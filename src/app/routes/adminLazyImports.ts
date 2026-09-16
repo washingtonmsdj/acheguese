@@ -39,6 +39,9 @@ export const AdminRealtimeDashboard = lazy(() =>
 );
 export const AdminModeracao = lazy(() => import("@/modules/admin/pages/AdminModeracao"));
 export const AdminDataQuality = lazy(() => import("@/modules/admin/pages/AdminDataQuality"));
+export const AdminPrivacyRequests = lazy(() =>
+  import("@/modules/admin/pages/AdminPrivacyRequests"),
+);
 export const AdminAnalytics = createLaunchPausedRoute("Analytics");
 export const AdminCupons = createLaunchPausedRoute("Cupons");
 export const AdminPromocoes = createLaunchPausedRoute("Promocoes");
