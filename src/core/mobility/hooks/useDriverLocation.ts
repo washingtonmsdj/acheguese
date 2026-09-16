@@ -61,12 +61,12 @@ export function useDriverLocation(
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [eta, setEta] = useState<DriverEtaData | null>(null);
-  const [isConnected, setIsConnected] = useState(false);
+  const [hasLiveUpdate, setHasLiveUpdate] = useState(false);
 
   useEffect(() => {
     if (!driverProfileId || !enabled) {
       setLoading(false);
-      setIsConnected(false);
+      setHasLiveUpdate(false);
       return;
     }
 
@@ -76,7 +76,7 @@ export function useDriverLocation(
     const init = async () => {
       setLoading(true);
       setError(null);
-      setIsConnected(false);
+      setHasLiveUpdate(false);
 
       let initialPosition: TrackingPosition | null = null;
 
@@ -124,18 +124,20 @@ export function useDriverLocation(
         return;
       }
 
-      // Subscrever a atualizações via TrackingService
+      // TrackingService currently exposes event delivery, not transport health.
+      // Therefore live state becomes true only after a realtime position is
+      // actually received. Creating a subscription alone must not imply a
+      // successful connection.
       subscription = trackingService.subscribeToPosition(
         driverProfileId,
         (position: TrackingPosition) => {
           if (!active) return;
           setLocation(toDriverLocation(position));
-          setIsConnected(true);
+          setHasLiveUpdate(true);
         },
         'driver',
       );
 
-      setIsConnected(true);
       setLoading(false);
     };
 
@@ -144,7 +146,7 @@ export function useDriverLocation(
       logger.error('[useDriverLocation] Tracking initialization failed', initError);
       setLocation(null);
       setError("Não foi possível iniciar o rastreamento desta corrida.");
-      setIsConnected(false);
+      setHasLiveUpdate(false);
       setLoading(false);
     });
 
@@ -197,7 +199,7 @@ export function useDriverLocation(
         access.data.driverProfileId !== driverProfileId
       ) {
         setLocation(null);
-        setIsConnected(false);
+        setHasLiveUpdate(false);
         if (!access.success) {
           setError("Não foi possível autorizar o rastreamento desta corrida.");
         }
@@ -217,5 +219,13 @@ export function useDriverLocation(
     setLocation(position ? toDriverLocation(position) : null);
   }, [driverProfileId, rideId]);
 
-  return { location, loading, error, eta, isConnected, calculateETA, refetch };
+  return {
+    location,
+    loading,
+    error,
+    eta,
+    hasLiveUpdate,
+    calculateETA,
+    refetch,
+  };
 }
