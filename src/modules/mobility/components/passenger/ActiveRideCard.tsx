@@ -1,8 +1,10 @@
 import { useState } from "react";
 import { ChevronDown, ChevronUp, XCircle } from "lucide-react";
+import { useNavigate } from "react-router-dom";
 
 import { getPassengerRideViewAvailability } from "@/core/mobility/core/PassengerRideViewPolicy";
 import type { RideRequest } from "@/core/mobility/types";
+import { useAppUrls } from "@/core/routing/hooks/useAppUrls";
 import { Button } from "@/shared/components/ui/button";
 import { cn } from "@/shared/utils/cn";
 import { RideTrackingMap } from "../RideTrackingMap";
@@ -24,6 +26,8 @@ export function ActiveRideCard({
   onCancel,
   onContact,
 }: ActiveRideCardProps) {
+  const navigate = useNavigate();
+  const appUrls = useAppUrls();
   const [showTimeline, setShowTimeline] = useState(false);
   const [showMap, setShowMap] = useState(false);
   const isEntrega = ride.type === "entrega" || ride.type === "delivery";
@@ -36,6 +40,11 @@ export function ActiveRideCard({
   const showDriverInfo = Boolean(ride.driver && viewPolicy.showDriverInfo);
   const canCancel = viewPolicy.canCancel;
   const timelineId = `ride-timeline-${ride.id}`;
+
+  const handleContact = () => {
+    navigate(appUrls.messages);
+    onContact();
+  };
 
   return (
     <div className={cn("rounded-2xl border border-border bg-card p-5")}>
@@ -90,7 +99,7 @@ export function ActiveRideCard({
           ride={ride}
           shouldShowMapOption={shouldShowMapOption}
           showMap={showMap}
-          onContact={onContact}
+          onContact={handleContact}
           onToggleMap={() => setShowMap((current) => !current)}
         />
       ) : null}
