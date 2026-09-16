@@ -1,6 +1,7 @@
 import React from "react";
 import { AlertCircle, CheckCircle2, Loader2, MapPin } from "lucide-react";
 
+import { TIMEOUTS } from "@/core/mobility/constants";
 import {
   useGeolocation,
   type GeolocationCoordinates,
@@ -62,7 +63,7 @@ export function GeolocationButton({
       resetTimerRef.current = setTimeout(() => {
         setCaptured(false);
         resetTimerRef.current = null;
-      }, 3000);
+      }, TIMEOUTS.ANIMATION_DELAY_VERY_LONG);
     }
   };
 
