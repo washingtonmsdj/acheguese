@@ -6,7 +6,7 @@ import type { AppRole } from "../types/roles.types";
 
 const cacheConfig = getCacheConfig();
 const ROLE_STALE_TIME = cacheConfig.authorization.ttl;
-const ROLE_GC_TIME = cacheConfig.session.ttl;
+const ROLE_GC_TIME = cacheConfig.authorization.ttl;
 
 function useCurrentUserId(): string | undefined {
   return useSessionContext().user?.id;
