@@ -328,11 +328,20 @@ export function cancelUnconfirmedEmailLoginJourney(): void {
   clearPendingSignupContext();
 }
 
-/** Prepara uma tentativa de login Google sem carregar contexto de cadastro antigo. */
-export function prepareGoogleLogin(returnTo: string): void {
+/**
+ * Prepara o gate legal para qualquer sessão já autenticada que volte a uma
+ * superfície de login. O destino permanece seguro e a tela de termos decide,
+ * de forma autoritativa, se há aceite vigente antes de continuar.
+ */
+export function prepareAuthenticatedLoginTermsCheck(returnTo: string): void {
   clearPendingSignupContext();
   setPendingAuthJourneyIntent(AUTH_JOURNEY_INTENTS.login);
   setPendingReturn(returnTo);
+}
+
+/** Prepara uma tentativa de login Google sem carregar contexto de cadastro antigo. */
+export function prepareGoogleLogin(returnTo: string): void {
+  prepareAuthenticatedLoginTermsCheck(returnTo);
 }
 
 export function cancelGoogleLogin(): void {
