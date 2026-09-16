@@ -23,7 +23,7 @@ export interface CreateRideRequestData {
   origin: string;
   destination: string;
   departure_time: string;
-  type: "viagem" | "entrega" | "agendada" | "carona_compartilhada";
+  type: "viagem" | "agendada" | "carona_compartilhada";
   payment_method: string;
   observation?: string;
   available_seats?: number;
@@ -151,13 +151,6 @@ export function useMobilidade(options: UseMobilidadeOptions = {}) {
         throw new Error("User not authenticated");
       }
 
-      // Motoboy has a dedicated owner (useDelivery/createDelivery). Keeping an
-      // "entrega" branch here would create a second lifecycle/pricing path.
-      if (rideData.type === "entrega") {
-        toast.error("Entregas devem ser solicitadas pelo fluxo Motoboy.");
-        throw new Error("Legacy delivery-through-ride path is not supported");
-      }
-
       const passengerProfile =
         (await profileService.getProfileByType(user.id, "personal")) ||
         (await profileService.getActiveProfile(user.id));
@@ -200,10 +193,7 @@ export function useMobilidade(options: UseMobilidadeOptions = {}) {
         destinationLat: rideData.destination_lat,
         destinationLng: rideData.destination_lng,
         mode: "ride",
-        // Transitional broker contract. The database no longer trusts this
-        // number: it must match an unused server-owned quote and persists the
-        // quote amount/route rather than browser-supplied pricing/coordinates.
-        suggestedPrice: quote.amount,
+        priceQuoteId: quote.quote_id,
         observation: rideData.observation,
         availableSeats: rideData.available_seats,
         paymentMethod: rideData.payment_method,
