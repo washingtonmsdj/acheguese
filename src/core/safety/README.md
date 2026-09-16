@@ -10,6 +10,9 @@ compartilhamento seguro de viagens.
   email.
 - `SafetyRideShareService.ts`: criacao, leitura publica por token e revogacao
   de compartilhamentos.
+- `config/rideSharePolicy.ts`: owner da politica de validade e refresh do
+  compartilhamento publico.
+- `config/evidencePolicy.ts`: owner dos limites e tipos aceitos para evidencias.
 - `send-emergency-email`: broker canonico user-or-cron de envio/recovery do
   outbox.
 - `resend-emergency-webhook`: ingestao assinada dos eventos do provedor.
@@ -21,6 +24,32 @@ compartilhamento seguro de viagens.
 O manifesto executavel em
 `docs/architecture/core-platform-ownership.json` bloqueia novos acessos fora
 desses owners.
+
+## Configuracao canonica
+
+As politicas de runtime nao devem ser repetidas em componentes, hooks ou
+services consumidores.
+
+### Compartilhamento de corrida
+
+`SAFETY_RIDE_SHARE_POLICY`, em `config/rideSharePolicy.ts`, e o owner de:
+
+- `defaultExpirationHours`: validade padrao quando o caller nao solicita outra;
+- `minExpirationHours` e `maxExpirationHours`: limites aceitos pelo service;
+- `refreshIntervalMs`: frequencia de atualizacao da leitura publica por token.
+
+O componente de Mobility nao envia uma validade fixa. Ele solicita a criacao
+via `useRideShare()`, e `SafetyRideShareService` aplica a politica. A UI exibe a
+expiracao realmente retornada pelo servidor, em vez de assumir 24 horas.
+
+### Evidencias
+
+`SAFETY_EVIDENCE_UPLOAD_POLICY`, em `config/evidencePolicy.ts`, e o owner de:
+
+- tamanho maximo em bytes e label correspondente;
+- MIME types permitidos.
+
+`SafetyService` consome esse owner e nao repete o limite de arquivo.
 
 ## Persistencia canonica
 
@@ -58,6 +87,20 @@ O schema reproduzivel e as politicas estao em migrations versionadas em
   `RESEND_WEBHOOK_SECRET` antes de qualquer mutacao.
 - Toda mutacao de webhook e feita por RPC executavel apenas por `service_role`.
 - O canal externo ativo e email; `phone` continua opcional e nao implica SMS.
+
+### Verdade apresentada pela UI
+
+A criacao de um alerta SOS comprova que o alerta principal foi registrado. A
+notificacao de contatos externos segue lifecycle proprio e pode falhar ou ficar
+pendente sem invalidar o alerta principal. Portanto componentes nao devem dizer
+que contatos "foram notificados" apenas porque `createEmergencyAlert` retornou
+sucesso.
+
+Da mesma forma, um link publico de corrida nao deve prometer localizacao
+continua em todos os estados. `SafetyRideShareService` so expoe identidade do
+motorista, veiculo e coordenadas quando o lifecycle canonico autoriza esses
+dados. A UI deve descrever o link como acompanhamento seguro da corrida e
+refletir apenas os dados realmente retornados.
 
 ## Entrega externa de emergencia
 
@@ -162,6 +205,11 @@ Resend -> webhook Svix -> RPC service_role -> outbox
 Mobility consome `core/safety` para alertas, incidentes e compartilhamento. Os
 estados operacionais de corrida permanecem no owner de Mobility. Mobility nao
 possui writer paralelo de `emergency_alerts`.
+
+Componentes de Mobility devem usar os hooks publicos de Safety quando eles
+existirem (`useRideShare`, `useEmergencyAlerts`) em vez de acessar services
+diretamente. Politicas de validade, refresh, evidencia ou entrega externa nao
+pertencem ao frontend de Mobility.
 
 ## Pendencia explicita
 
