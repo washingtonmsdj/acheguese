@@ -43,6 +43,7 @@ const MIGRATED_RUNTIME_FILES = [
   'src/modules/mobility/components/driver/DriverStatsPanel.tsx',
   'src/modules/mobility/components/MobilidadeLeftSidebar.tsx',
   'src/modules/mobility/components/MobilidadeRightSidebar.tsx',
+  'src/modules/mobility/pages/MotoboyPage.tsx',
   'src/modules/mobility/pages/MotoristaPage.tsx',
   'src/core/admin/drivers/pages/AdminMotoristasPage.tsx',
   'src/modules/admin/components/AdminAccessDenied.tsx',
