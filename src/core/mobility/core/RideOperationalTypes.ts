@@ -17,7 +17,12 @@ export interface CreateRideInput {
   destinationLat: number;
   destinationLng: number;
   mode?: "ride" | "delivery";
-  suggestedPrice?: number;
+  /**
+   * Server-owned, single-use commercial quote. Optional only for source-level
+   * compatibility while older tests/callers are migrated; runtime creation
+   * rejects a missing quote before any remote mutation.
+   */
+  priceQuoteId?: string;
   observation?: string;
   availableSeats?: number;
   paymentMethod?: string;
