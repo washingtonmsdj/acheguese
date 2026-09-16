@@ -115,7 +115,7 @@ export class MobilityDispatchConfigService {
           requiresVerification: DISPATCH_GLOBAL_CONFIG.openBoard.requiresVerification,
           requiresSubscription: DISPATCH_GLOBAL_CONFIG.openBoard.requiresSubscription,
           allowsConcurrentOffers: true,  // Múltiplos motoristas veem
-          showFullDetails: true,         // Mostra tudo antes do aceite
+          showFullDetails: false,        // Pré-aceite expõe somente rota coarse/DTO seguro do broker
         };
       
       case 'reservation_board':
@@ -127,7 +127,7 @@ export class MobilityDispatchConfigService {
           requiresVerification: DISPATCH_GLOBAL_CONFIG.reservationBoard.requiresVerification,
           requiresSubscription: DISPATCH_GLOBAL_CONFIG.reservationBoard.requiresSubscription,
           allowsConcurrentOffers: true,  // Múltiplos motoristas podem ver
-          showFullDetails: true,         // Mostra tudo (agendamento permite)
+          showFullDetails: false,        // Agendamento não relaxa privacidade pré-aceite
         };
       
       default:
