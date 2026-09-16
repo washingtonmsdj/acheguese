@@ -273,8 +273,8 @@ export function useDelivery(sourceType: SourceType, sourceId?: string) {
   );
 
   const confirmDelivery = useCallback(
-    async (rideId: string, driverProfileId: string, proof: DeliveryProof, finalPrice?: number) => {
-      const result = await RideOperationalService.confirmDelivery(rideId, driverProfileId, proof, finalPrice);
+    async (rideId: string, driverProfileId: string, proof: DeliveryProof) => {
+      const result = await RideOperationalService.confirmDelivery(rideId, driverProfileId, proof);
       if (result.success) {
         toast.success("Entrega confirmada!");
         setActiveDelivery(null);
