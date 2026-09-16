@@ -13,7 +13,7 @@ import {
   VALID_FAILURE_REASONS,
   VALID_ITEM_DESTINATIONS,
 } from "../types/FailedDeliveryMetadata";
-import type { CreateRideInput, TransitionResult } from "./RideOperationalTypes";
+import type { TransitionResult } from "./RideOperationalTypes";
 
 const FAILED_DELIVERY_SERVER_OWNED_FIELDS = new Set([
   "next_ride_id",
@@ -42,6 +42,13 @@ const FAILED_DELIVERY_SERVER_OWNED_FIELDS = new Set([
   "courier_settlement_allocation_required",
   "custody_handoff_history",
 ]);
+
+type RouteCoordinates = {
+  originLat: number;
+  originLng: number;
+  destinationLat: number;
+  destinationLng: number;
+};
 
 export function isProfileSuspended(profile: Record<string, unknown> | null): boolean {
   const suspended = Boolean(profile?.is_suspended ?? profile?.suspended ?? false);
@@ -82,7 +89,7 @@ export function isValidLongitude(value: number): boolean {
   return Number.isFinite(value) && value >= -180 && value <= 180;
 }
 
-export function hasValidRouteCoordinates(input: Pick<CreateRideInput, "originLat" | "originLng" | "destinationLat" | "destinationLng">): boolean {
+export function hasValidRouteCoordinates(input: RouteCoordinates): boolean {
   return (
     isValidLatitude(input.originLat) &&
     isValidLongitude(input.originLng) &&
