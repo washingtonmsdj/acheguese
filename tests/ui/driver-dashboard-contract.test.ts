@@ -9,6 +9,8 @@ function read(relative: string): string {
 }
 
 const motoristaPage = read("src/modules/mobility/pages/MotoristaPage.tsx");
+const motoboyPage = read("src/modules/mobility/pages/MotoboyPage.tsx");
+const motoboyHook = read("src/modules/mobility/hooks/useMotoboyPage.ts");
 const settingsPanel = read(
   "src/core/mobility/components/driver/DriverSettingsPanel.tsx",
 );
@@ -18,6 +20,7 @@ const realtimeStatus = read(
 
 const migratedDriverVisualFiles = [
   "src/modules/mobility/pages/MotoristaPage.tsx",
+  "src/modules/mobility/pages/MotoboyPage.tsx",
   "src/modules/mobility/components/driver/DriverQuickActions.tsx",
   "src/modules/mobility/components/driver/CompleteRideDialog.tsx",
   "src/modules/mobility/components/driver/DriverRealtimeStatus.tsx",
@@ -41,6 +44,19 @@ describe("driver dashboard contract", () => {
     expect(motoristaPage).toContain("<DriverSettingsPanel />");
   });
 
+  it("starts Motoboy on a valid delivery tab and keeps every panel scoped", () => {
+    for (const tab of ["entregas", "ganhos", "planos", "alertas", "config"]) {
+      expect(motoboyPage).toContain(`<TabsContent value="${tab}"`);
+    }
+
+    expect(motoboyHook).toContain(
+      'baseHook.activeTab === "corridas" ? "entregas" : baseHook.activeTab',
+    );
+    expect(motoboyPage).toContain("ACCOUNT_PATHS.home");
+    expect(motoboyPage).not.toContain('navigate("/conta")');
+    expect(motoboyPage).toContain('<DriverSubscriptionCard service="motoboy" />');
+  });
+
   it("persists driver notification preferences through the canonical server-owned owner", () => {
     expect(settingsPanel).toContain("NotificationPreferencesService.get()");
     expect(settingsPanel).toContain("NotificationPreferencesService.patchChannels");
@@ -57,6 +73,9 @@ describe("driver dashboard contract", () => {
     expect(realtimeStatus).not.toContain("Simular conexão realtime");
     expect(realtimeStatus).not.toContain('"Conectado"');
     expect(realtimeStatus).toContain("loading, error");
+    expect(realtimeStatus).toContain(
+      "Novas notificações aparecem aqui assim que forem recebidas.",
+    );
   });
 
   it("keeps migrated driver surfaces on semantic/category tokens", () => {
