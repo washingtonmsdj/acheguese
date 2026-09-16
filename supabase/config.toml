@@ -210,6 +210,12 @@ verify_jwt = true
 [functions.mobility-rpc]
 verify_jwt = true
 
+[functions.mobility-pricing-rpc]
+verify_jwt = true
+
+[functions.mobility-create-rpc]
+verify_jwt = true
+
 [functions.nominatim-proxy]
 verify_jwt = false
 
