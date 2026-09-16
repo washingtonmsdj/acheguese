@@ -151,6 +151,7 @@ class AdminEventsServiceClass {
     limit?: number;
     search?: string;
     status?: string;
+    category?: string;
   }): Promise<EventsListResult> {
     try {
       const page = options.page || 1;
@@ -172,6 +173,10 @@ class AdminEventsServiceClass {
 
       if (options.status) {
         query = query.eq("status", options.status);
+      }
+
+      if (options.category) {
+        query = query.eq("category", options.category);
       }
 
       if (options.search) {
