@@ -56,6 +56,19 @@
         "professional_leads"
       ]
     },
+    "submit-dpo-request": {
+      "kind": "public-registration-broker",
+      "label": "public LGPD data-subject request intake broker",
+      "requiredPatterns": [
+        "requireHttpMethod\\s*\\(",
+        "rateLimitMiddleware\\s*\\(",
+        "readJsonBody<unknown>\\s*\\(",
+        "getRequiredEnv\\s*\\(\\s*[\"']TURNSTILE_SECRET_KEY[\"']\\s*\\)",
+        "verifyTurnstileToken\\s*\\(",
+        "executeDpoRequestIntake\\s*\\(",
+        "getSupabaseAdminClient\\s*\\("
+      ]
+    },
     "auto-dispatch-ride": {
       "kind": "cron-secret",
       "label": "cron ride dispatch worker",
@@ -172,6 +185,17 @@
         "getSupabaseAdminClient\\s*\\(",
         "get_active_profile",
         "professional_leads"
+      ]
+    },
+    "submit-dpo-request": {
+      "kind": "public-registration-broker",
+      "risk": "Critical",
+      "label": "public LGPD data-subject request service_role broker",
+      "requiredPatterns": [
+        "rateLimitMiddleware\\s*\\(",
+        "verifyTurnstileToken\\s*\\(",
+        "getSupabaseAdminClient\\s*\\(",
+        "privacy_subject_requests"
       ]
     },
     "admin-business-rpc": {

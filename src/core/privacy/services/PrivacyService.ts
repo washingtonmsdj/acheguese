@@ -2,12 +2,10 @@
  * Privacy service SSOT for privacy and LGPD operations.
  *
  * Centralizes DPO requests, user data export and account deletion flows.
- * Sensitive operations such as export and delete run through edge functions.
- * DPO request registration uses the Supabase client directly because it stores
- * authenticated user data protected by RLS.
+ * Sensitive operations run through Edge Functions/RPC brokers; browser code
+ * never writes privacy ledgers directly.
  */
 
-import { DPO_REQUEST_STATUS } from "@/core/privacy/constants/dpoRequestStatus";
 import { assertPrivacyDataExportEnabled } from "@/core/privacy/config/privacyRollout";
 import {
   resolveSupabaseFunctionErrorMessage,
@@ -15,8 +13,6 @@ import {
 } from "@/integrations/supabase";
 import { logger } from "@/shared/utils/logger";
 import { PrivacyRpcService } from "./PrivacyRpcService";
-
-// Types
 
 export type DPORequestType =
   | "access"
@@ -31,12 +27,13 @@ export type DPORequestType =
   | "other";
 
 export interface CreateDPORequestParams {
-  userId: string | undefined;
   requesterName: string;
   requesterEmail: string;
   subject: string;
   requestType: DPORequestType;
   message: string;
+  honeypot: string;
+  turnstileToken: string | null;
 }
 
 export interface ExportDataResponse {
@@ -60,16 +57,6 @@ export interface DeleteAccountResponse {
   recoveryPossibleUntil: string;
 }
 
-interface InsertResult {
-  error: { message: string } | null;
-}
-
-interface PrivacyDbClient {
-  from: (table: string) => {
-    insert: (payload: Record<string, unknown>) => Promise<InsertResult>;
-  };
-}
-
 function isRecord(value: unknown): value is Record<string, unknown> {
   return Boolean(value) && typeof value === "object" && !Array.isArray(value);
 }
@@ -89,39 +76,51 @@ function exportSizeBytes(payload: Record<string, unknown>): number {
   return new TextEncoder().encode(serialized).length;
 }
 
-// Service
-
 export class PrivacyService {
-  private static readonly db = supabase as unknown as PrivacyDbClient;
-
   /**
-   * Registers a DPO request and persists it in `dpo_requests`.
+   * Registers a data-subject/DPO request through the public anti-abuse broker.
+   * The broker derives authenticated identity server-side when a real session
+   * exists and never trusts a user id supplied by browser code.
    */
   static async createDPORequest(params: CreateDPORequestParams): Promise<void> {
-    const { error: dbError } = await this.db.from("dpo_requests").insert({
-      user_id: params.userId ?? null,
-      requester_name: params.requesterName,
-      requester_email: params.requesterEmail,
-      subject: params.subject,
-      request_type: params.requestType,
-      message: params.message,
-      status: DPO_REQUEST_STATUS.PENDING,
+    const { data, error } = await supabase.functions.invoke("submit-dpo-request", {
+      body: {
+        requesterName: params.requesterName,
+        requesterEmail: params.requesterEmail,
+        requestType: params.requestType,
+        subject: params.subject,
+        message: params.message,
+        honeypot: params.honeypot,
+        turnstileToken: params.turnstileToken,
+      },
     });
 
-    if (dbError) {
-      logger.error("[PrivacyService] Error registering DPO request", dbError);
-      throw new Error(dbError.message);
+    if (error) {
+      const message =
+        (await resolveSupabaseFunctionErrorMessage(error)) ??
+        "Não foi possível registrar sua solicitação de privacidade.";
+      logger.error("[PrivacyService] Error registering DPO request", { message });
+      throw new Error(message);
     }
 
-    logger.info("[PrivacyService] Solicitacao DPO registrada", {
+    if (!isRecord(data) || typeof data.status !== "string") {
+      throw new Error("Resposta inválida do canal de privacidade.");
+    }
+
+    if (data.status === "turnstile_failed") {
+      throw new Error("Não foi possível validar a proteção anti-spam. Tente novamente.");
+    }
+
+    if (data.status !== "registered") {
+      throw new Error("Não foi possível registrar sua solicitação de privacidade.");
+    }
+
+    logger.info("[PrivacyService] Solicitação DPO registrada", {
       requestType: params.requestType,
-      hasUserId: Boolean(params.userId),
     });
   }
 
-  /**
-   * Exports all personal data for the authenticated user.
-   */
+  /** Exports all personal data for the authenticated user. */
   static async exportUserData(): Promise<ExportDataResponse> {
     assertPrivacyDataExportEnabled();
     const { data, error } = await supabase.functions.invoke("user-export-data");
@@ -130,9 +129,7 @@ export class PrivacyService {
       const message =
         (await resolveSupabaseFunctionErrorMessage(error)) ??
         "Failed to export user data";
-      logger.error("[PrivacyService] Error exporting user data", {
-        message,
-      });
+      logger.error("[PrivacyService] Error exporting user data", { message });
       throw new Error(message);
     }
 

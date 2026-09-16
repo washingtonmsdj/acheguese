@@ -1,3 +1,4 @@
+import { useState } from "react";
 import { Controller, useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useMutation } from "@tanstack/react-query";
@@ -17,10 +18,9 @@ import {
 import { Link, useNavigate } from "react-router-dom";
 
 import { useAuth } from "@/core/auth/hooks/useAuth";
+import { DPO_REQUEST_ANTI_ABUSE_CONFIG } from "@/core/privacy/config/dpoAntiAbuse";
 import { PrivacyService } from "@/core/privacy";
-import { useToast } from "@/shared/hooks/use-toast";
-import { getDpoEmail } from "@/shared/config/privacyContacts";
-import { DPOContactSchema, type DPOContactInput } from "@/shared/validation/schemas/dpo.schema";
+import { TurnstileWidget } from "@/shared/components/security/TurnstileWidget";
 import { InlineFieldError } from "@/shared/components/ui/InlineFieldError";
 import { Button } from "@/shared/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/shared/components/ui/card";
@@ -34,7 +34,14 @@ import {
   SelectValue,
 } from "@/shared/components/ui/select";
 import { Textarea } from "@/shared/components/ui/textarea";
+import { getDpoEmail } from "@/shared/config/privacyContacts";
+import { useToast } from "@/shared/hooks/use-toast";
 import { buildMailtoUrl } from "@/shared/utils/contactLinks";
+import { DPOContactSchema, type DPOContactInput } from "@/shared/validation/schemas/dpo.schema";
+
+const TURNSTILE_SITE_KEY = (import.meta.env.VITE_TURNSTILE_SITE_KEY ?? "").trim();
+const TURNSTILE_REQUIRED =
+  DPO_REQUEST_ANTI_ABUSE_CONFIG.turnstileRequiredInProduction && import.meta.env.PROD;
 
 const REQUEST_TYPE_OPTIONS = [
   {
@@ -109,6 +116,14 @@ export default function DPOContactPage() {
   const { user } = useAuth();
   const { toast } = useToast();
   const dpoEmail = getDpoEmail();
+  const [honeypot, setHoneypot] = useState("");
+  const [turnstileToken, setTurnstileToken] = useState<string | null>(null);
+  const [turnstileError, setTurnstileError] = useState<string | null>(null);
+  const [turnstileGeneration, setTurnstileGeneration] = useState(0);
+  const turnstileEnabled = TURNSTILE_SITE_KEY.length > 0;
+  const turnstileSatisfied = turnstileEnabled
+    ? Boolean(turnstileToken)
+    : !TURNSTILE_REQUIRED;
 
   const userMetadata = user?.user_metadata;
   const fullName =
@@ -136,21 +151,29 @@ export default function DPOContactPage() {
     },
   });
 
+  const resetTurnstile = () => {
+    setTurnstileToken(null);
+    setTurnstileError(null);
+    setTurnstileGeneration((current) => current + 1);
+  };
+
   const contactMutation = useMutation({
     mutationFn: async (data: DPOContactInput) => {
       await PrivacyService.createDPORequest({
-        userId: user?.id,
         requesterName: data.name,
         requesterEmail: data.email,
         subject: data.subject,
         requestType: data.requestType,
         message: data.message,
+        honeypot,
+        turnstileToken,
       });
     },
     onSuccess: () => {
       toast({
         title: "Solicitação enviada",
-        description: "Recebemos sua mensagem. O time de privacidade responderá em até 15 dias úteis.",
+        description:
+          "Recebemos sua solicitação. Ela será analisada conforme o direito exercido e os prazos aplicáveis da LGPD.",
       });
 
       reset({
@@ -160,8 +183,11 @@ export default function DPOContactPage() {
         requestType: undefined,
         message: "",
       });
+      setHoneypot("");
+      resetTurnstile();
     },
     onError: () => {
+      if (turnstileToken) resetTurnstile();
       const fallbackMessage = dpoEmail
         ? `Tente novamente ou envie diretamente para ${dpoEmail}.`
         : "Tente novamente pelo formulário mais tarde.";
@@ -175,6 +201,17 @@ export default function DPOContactPage() {
   });
 
   const onValid = (data: DPOContactInput) => {
+    if (TURNSTILE_REQUIRED && !turnstileEnabled) {
+      setTurnstileError(
+        "Canal temporariamente indisponível: proteção anti-spam não configurada.",
+      );
+      return;
+    }
+    if (turnstileEnabled && !turnstileToken) {
+      setTurnstileError("Confirme a verificação anti-spam antes de enviar.");
+      return;
+    }
+    setTurnstileError(null);
     contactMutation.mutate(data);
   };
 
@@ -231,8 +268,10 @@ export default function DPOContactPage() {
 
             <div className="mt-5 grid gap-3 sm:grid-cols-3">
               <div className="rounded-2xl border border-border/60 bg-background/60 p-4">
-                <p className="text-sm font-semibold text-foreground">Prazo inicial</p>
-                <p className="mt-1 text-sm text-muted-foreground">Até 15 dias úteis para resposta conforme LGPD.</p>
+                <p className="text-sm font-semibold text-foreground">Prazo aplicável</p>
+                <p className="mt-1 text-sm text-muted-foreground">
+                  O prazo varia conforme o direito exercido; confirmação e acesso possuem regras próprias na LGPD.
+                </p>
               </div>
               <div className="rounded-2xl border border-border/60 bg-background/60 p-4">
                 <p className="text-sm font-semibold text-foreground">Canal formal</p>
@@ -255,6 +294,21 @@ export default function DPOContactPage() {
               </CardHeader>
               <CardContent>
                 <form onSubmit={handleSubmit(onValid)} className="space-y-6">
+                  <div
+                    className="absolute left-[-10000px] top-auto h-px w-px overflow-hidden"
+                    aria-hidden="true"
+                  >
+                    <Label htmlFor="dpo-website">Website</Label>
+                    <Input
+                      id="dpo-website"
+                      name="website"
+                      value={honeypot}
+                      onChange={(event) => setHoneypot(event.target.value)}
+                      tabIndex={-1}
+                      autoComplete="off"
+                    />
+                  </div>
+
                   <div className="grid gap-4 sm:grid-cols-2">
                     <div className="space-y-2">
                       <Label htmlFor="name">Nome completo</Label>
@@ -319,13 +373,46 @@ export default function DPOContactPage() {
                     <div className="flex items-start gap-3">
                       <Clock className="mt-0.5 h-4 w-4 shrink-0 text-muted-foreground" />
                       <p className="text-sm leading-6 text-muted-foreground">
-                        Pedidos de titular seguem o fluxo regulatório da plataforma. Em casos complexos,
-                        o prazo pode exigir complementação ou tratamento adicional com aviso ao solicitante.
+                        Pedidos de titular são analisados conforme o direito exercido. Para confirmação
+                        de existência e acesso, a LGPD prevê resposta simplificada imediata ou declaração
+                        completa em até 15 dias, conforme o caso.
                       </p>
                     </div>
                   </div>
 
-                  <Button type="submit" className="w-full justify-center" disabled={contactMutation.isPending}>
+                  {turnstileEnabled ? (
+                    <div className="space-y-2">
+                      <TurnstileWidget
+                        key={turnstileGeneration}
+                        siteKey={TURNSTILE_SITE_KEY}
+                        action={DPO_REQUEST_ANTI_ABUSE_CONFIG.turnstileAction}
+                        onVerify={(token) => {
+                          setTurnstileToken(token);
+                          setTurnstileError(null);
+                        }}
+                        onExpire={() => setTurnstileToken(null)}
+                        onError={() => {
+                          setTurnstileToken(null);
+                          setTurnstileError("Não foi possível carregar a verificação anti-spam.");
+                        }}
+                      />
+                      {turnstileError ? (
+                        <p className="text-sm text-destructive" role="alert">
+                          {turnstileError}
+                        </p>
+                      ) : null}
+                    </div>
+                  ) : TURNSTILE_REQUIRED ? (
+                    <p className="text-sm text-destructive" role="alert">
+                      Canal temporariamente indisponível: proteção anti-spam não configurada.
+                    </p>
+                  ) : null}
+
+                  <Button
+                    type="submit"
+                    className="w-full justify-center"
+                    disabled={contactMutation.isPending || !turnstileSatisfied}
+                  >
                     {contactMutation.isPending ? (
                       <>
                         <Loader2 className="mr-2 h-4 w-4 animate-spin" />
@@ -368,7 +455,10 @@ export default function DPOContactPage() {
                     <Clock className="mt-0.5 h-4 w-4 shrink-0 text-muted-foreground" />
                     <div>
                       <p className="font-semibold text-foreground">Prazo de resposta</p>
-                      <p className="text-muted-foreground">Até 15 dias úteis, conforme LGPD.</p>
+                      <p className="text-muted-foreground">
+                        Depende do direito exercido. Para confirmação ou acesso, a declaração completa pode
+                        ser fornecida em até 15 dias.
+                      </p>
                     </div>
                   </div>
                   <div className="flex items-start gap-3">
@@ -430,7 +520,7 @@ export default function DPOContactPage() {
                 <CardContent>
                   <div className="flex items-start gap-3">
                     <FileText className="mt-0.5 h-4 w-4 shrink-0 text-muted-foreground" />
-                      <p className="text-sm leading-6 text-muted-foreground">
+                    <p className="text-sm leading-6 text-muted-foreground">
                       Este canal apoia pedidos ligados aos arts. 18, 19 e 41 da LGPD, incluindo acesso,
                       correção, exclusão, compartilhamento, consentimento e contato com o encarregado.
                     </p>
