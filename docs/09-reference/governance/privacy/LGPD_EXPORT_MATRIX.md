@@ -55,13 +55,15 @@ O modelo atual é profile-based. A exportação não pode usar os contratos lega
 
 ### Conteúdo
 
-Exportar apenas conteúdo criado pelo titular: posts, comments, community posts/questions/answers, classificados, **classified comments**, eventos, vagas, oportunidades e publicações de comunicação. Campos de moderação e `removed_by` ficam de fora.
+Exportar apenas conteúdo criado pelo titular: posts, comments, community posts/questions/answers, classificados, **classified comments**, eventos, **event reviews**, vagas, oportunidades e publicações de comunicação. Campos de moderação e `removed_by` ficam de fora. Para avaliações de eventos, `reviewer_profile_id` não precisa ser serializado no payload porque a query já deve estar limitada a perfis pertencentes ao titular.
 
 ### Participação e ações
 
-A matriz também classifica ações próprias que não são conteúdo autoral: `classified_likes`, `question_answer_likes` e `event_participants`, além das relações comunitárias já mapeadas. Somente a linha pertencente ao usuário/perfil do titular pode entrar.
+A matriz também classifica ações próprias que não são conteúdo autoral: `classified_likes`, `question_answer_likes`, `event_participants`, `event_review_helpfulness` e `event_reminders`, além das relações comunitárias já mapeadas. Somente a linha pertencente ao usuário/perfil do titular pode entrar.
 
-Credenciais operacionais não fazem parte da portabilidade. Em especial, `event_participants.checkin_code` permanece excluído mesmo quando a participação pertence ao titular.
+Credenciais operacionais não fazem parte da portabilidade. Em especial, `event_participants.checkin_code` permanece excluído mesmo quando a participação pertence ao titular. IDs de perfil em `event_review_helpfulness` e `event_reminders` também não precisam ser replicados depois que ownership estiver comprovado pela query.
+
+`event_reminders` é um caso de **dado legado ainda persistido**: a arquitetura atual deliberadamente não anuncia lembretes sem uma autoridade de entrega, mas a tabela não foi removida. Enquanto o schema puder reter essas linhas, elas permanecem classificadas como dado do titular; se uma migration futura eliminar a tabela e sua retenção, a matriz deve ser atualizada junto.
 
 ### Mensagens
 
@@ -111,7 +113,7 @@ Uma futura inclusão só pode usar uma query explícita limitada a `user_id = au
 
 ## Fontes classificadas mas ainda não implementadas no handler
 
-A auditoria de completude de 2026-09-16 confirmou fontes pessoais ativas que agora já constam da matriz, mas **ainda não têm query no `user-export-data`**:
+A auditoria de completude de 2026-09-16 confirmou fontes pessoais ativas ou ainda retidas que agora já constam da matriz, mas **ainda não têm query no `user-export-data`**:
 
 - `public.profile_username_history`;
 - `public.profile_slug_history`;
@@ -120,12 +122,13 @@ A auditoria de completude de 2026-09-16 confirmou fontes pessoais ativas que ago
 - `public.classified_likes`;
 - `public.question_answer_likes`;
 - `public.event_participants`;
+- `public.event_reviews`;
+- `public.event_review_helpfulness`;
+- `public.event_reminders`;
 - `public.role_history`;
 - `public.user_recommended_businesses`.
 
 Essa lista é deliberadamente um bloqueio de rollout, não autorização de deploy. Enquanto qualquer fonte aprovada da matriz não estiver implementada com ownership e whitelist explícitos, `LGPD_EXPORT_MATRIX_IMPLEMENTATION_COMPLETE` deve permanecer `false`.
-
-`event_reminders` permanece em investigação separada: a tabela existe historicamente, mas a arquitetura atual removeu sua manipulação do serviço canônico de eventos. Ela não será classificada como fonte ativa nem ignorada como legado até a autoridade/retention atual ser confirmada.
 
 ## Campos legados proibidos no novo handler
 
