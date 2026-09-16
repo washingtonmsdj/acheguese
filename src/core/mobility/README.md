@@ -22,6 +22,7 @@
 7. Tracking/realtime deve ser escopado à corrida concreta; não abrir streams amplos por `user_id` quando o contrato exige `ride_id`.
 8. Dados de auditoria podem permanecer sem policy de browser quando isso for intencional (RLS default-deny); acesso deve ocorrer apenas pelo caminho privilegiado explicitamente autorizado.
 9. Funções `SECURITY DEFINER` só podem permanecer expostas quando o corpo valida ator/ownership ou quando o endpoint é deliberadamente público e limitado por um token seguro. Um grant não substitui autorização interna.
+10. Reputação deve vir de avaliações reais. Estado sem avaliações é `NULL`/sem nota, nunca uma nota perfeita inventada.
 
 ## Estado verificado nesta auditoria
 
@@ -33,27 +34,32 @@
 - `useDelivery` (motoboy) também falha fechado: não cria mais entrega com `suggestedPrice` ausente quando Pricing falha.
 - O hook genérico de estimativa usa a mesma instância canônica de Pricing.
 - O calculador legado local `baseFare + pricePerKm` foi removido de `mobility.helpers.ts`.
+- `RideOperationalService` e `RideDeliveryOperationalActions` não possuem mais piso comercial `R$ 5`; só rejeitam preço estruturalmente inválido (`<= 0`/não finito).
+- As funções server-owned `mobility_create_ride_atomic` e `mobility_create_delivery_atomic` também não possuem mais piso comercial fictício; continuam restritas a `service_role`/postgres e validam apenas preço positivo enquanto a política real não foi aprovada.
 - A leitura de reputação do passageiro resolve corretamente Auth User ID versus Profile ID antes de consultar ratings.
-- Passageiro sem avaliações ou com rating indisponível não recebe mais nota perfeita inventada `5.0`; a camada de leitura retorna estado numérico neutro (`0`) até a UI concluir a apresentação explícita `sem avaliações`.
+- Passageiro sem avaliações ou com rating indisponível não recebe mais nota perfeita inventada `5.0`; a camada de leitura retorna estado neutro e a página de Histórico apresenta `Sem avaliações`.
+- `driver_data.rating` não possui mais default `5.0`; novos motoristas começam sem nota. Os registros de motoristas sem corridas existentes foram normalizados para `NULL`.
+- Foi removido um `driver_data` legado ligado a profile `business` somente após confirmar ausência de corrida, disponibilidade, localização e oferta; o banco voltou a ter zero extensões `driver_data` em profiles não-driver.
 - Criação/transição operacional usa `RideOperationalService`/RPC em vez de gravar a tabela de corrida diretamente pela UI.
 - Confirmação de entrega usa comando especializado no backend e valida estado retornado.
 - Entrega exige vínculo de endereço/território e validações operacionais de motoboy.
 - Todas as tabelas de mobilidade inspecionadas em `public` estão com RLS habilitado.
 - `get_operational_verification_status` e `verify_operational_pin` verificam sessão/profile e participação/atribuição no banco.
+- `ensure_ride_chat`, `send_ride_chat_message` e `mark_ride_chat_messages_read` exigem profile ativo e participação concreta na corrida; chat só é gravável nos estados operacionais permitidos.
 - `get_shared_ride_safety_data` expõe somente share ativo, não expirado, com token válido e corrida ainda aberta.
 
 ### Bloqueadores antes de declarar pronto para lançamento
 
 - [ ] Definir e aprovar a política comercial real de preços por modalidade. Até isso acontecer, todos os valores existentes em `pricing_rules` devem ser tratados como placeholders de desenvolvimento.
-- [ ] Remover validações comerciais duplicadas/hardcoded (como o mínimo `5`) das funções `mobility_create_*_atomic`; quando os preços reais forem definidos, a autoridade deve ser o SSOT de Pricing, não constantes paralelas.
 - [ ] Introduzir um estado explícito de prontidão comercial da precificação (ex.: metadata/config de aprovação) para impedir que valores provisórios sejam confundidos com preços de produção.
-- [ ] Ajustar a apresentação visual de reputação para mostrar explicitamente `Sem avaliações` em vez de `0.0`, sem voltar a inventar `5.0`.
-- [ ] Revisar grants e corpos das demais funções `SECURITY DEFINER` de mobilidade sinalizadas pelo Supabase Security Advisor, especialmente chat, safety, ratings e mutações de driver ainda não inspecionadas individualmente.
+- [ ] Ajustar as demais superfícies de reputação (especialmente `PassageiroPage` e defaults residuais no hook) para mostrar explicitamente `Sem avaliações`, sem `5.0` ou `0.0` fictícios.
+- [ ] Revisar `driver_profiles.rating DEFAULT 5.0`: a tabela está sem registros no ambiente auditado, mas o contrato legado ainda permite reputação inicial fictícia se voltar a ser usado.
+- [ ] Revisar grants e corpos das demais funções `SECURITY DEFINER` de mobilidade sinalizadas pelo Supabase Security Advisor, especialmente safety, ratings e mutações de driver ainda não inspecionadas individualmente.
 - [ ] Confirmar que `ride_state_audit` e `emergency_delivery_log` sem policies de browser são intencionalmente default-deny e possuem somente caminhos privilegiados necessários.
 - [ ] Executar gates de typecheck, lint, testes de mobilidade, build e regressão E2E dos fluxos passageiro/motorista/motoboy após as correções.
 - [ ] Validar concorrência/idempotência: dupla aceitação, cancelamento simultâneo, retry de RPC, reconnect realtime e confirmação duplicada.
 - [ ] Validar autorização negativa: usuário A não pode ler/mutar corrida, chat, PIN, localização ou evidência do usuário B fora dos contratos públicos deliberados.
-- [ ] Obter pipeline de deploy verde; o status Vercel atual está bloqueado externamente por build-rate-limit.
+- [ ] Obter pipeline de deploy verde; o status Vercel observado nesta auditoria está bloqueado externamente por build-rate-limit.
 
 ## Hardcodes permitidos vs. proibidos
 
