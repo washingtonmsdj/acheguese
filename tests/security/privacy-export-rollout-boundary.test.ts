@@ -11,6 +11,18 @@ const privacyService = read("src/core/privacy/services/PrivacyService.ts");
 const privacyPage = read("src/app/pages/PrivacySettingsPage.tsx");
 const exportFunction = read("supabase/functions/user-export-data/index.ts");
 const productionEnv = read(".env.production");
+const exportMatrix = JSON.parse(
+  read("docs/09-reference/governance/privacy/LGPD_EXPORT_MATRIX.json"),
+) as {
+  sections: Array<{
+    section: string;
+    sources: string[];
+    scope: string;
+    include?: string[];
+    exclude?: string[];
+    notes?: string;
+  }>;
+};
 
 describe("privacy data export rollout boundary", () => {
   it("keeps the uncertified export fail closed in source and production defaults", () => {
@@ -24,6 +36,24 @@ describe("privacy data export rollout boundary", () => {
       'import.meta.env.VITE_FEATURE_PRIVACY_DATA_EXPORT === "true"',
     );
     expect(productionEnv).toMatch(/^VITE_FEATURE_PRIVACY_DATA_EXPORT=false$/m);
+  });
+
+  it("classifies DPO requests but keeps the public-capable ledger out of self-service export", () => {
+    const dpoSection = exportMatrix.sections.find(
+      (section) => section.section === "dpo_requests",
+    );
+
+    expect(dpoSection).toBeDefined();
+    expect(dpoSection?.sources).toEqual(["public.privacy_subject_requests"]);
+    expect(dpoSection?.scope).toBe("excluded");
+    expect(dpoSection?.include ?? []).toEqual([]);
+    expect(dpoSection?.exclude).toEqual(["all"]);
+    expect(dpoSection?.notes).toContain("validated user_id");
+    expect(dpoSection?.notes).toContain("user_id=NULL");
+    expect(dpoSection?.notes).toContain("never be correlated by requester_email");
+
+    expect(exportFunction).not.toContain('.from("privacy_subject_requests")');
+    expect(exportFunction).not.toContain("requester_email");
   });
 
   it("blocks both browser export entrypoints before any network request", () => {
