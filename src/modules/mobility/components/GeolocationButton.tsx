@@ -1,11 +1,12 @@
 import React from "react";
-import { Button } from "@/shared/components/ui/button";
-import { MapPin, Loader2, AlertCircle, CheckCircle2 } from "lucide-react";
-import { cn } from "@/shared/utils/cn";
+import { AlertCircle, CheckCircle2, Loader2, MapPin } from "lucide-react";
+
 import {
   useGeolocation,
   type GeolocationCoordinates,
 } from "@/modules/mobility/hooks/useGeolocation";
+import { Button } from "@/shared/components/ui/button";
+import { cn } from "@/shared/utils/cn";
 
 interface GeolocationButtonProps {
   onLocationCaptured: (coords: GeolocationCoordinates) => void;
@@ -16,14 +17,8 @@ interface GeolocationButtonProps {
 }
 
 /**
- * Botão profissional para captura de geolocalização
- *
- * Features:
- * - Captura GPS com alta precisão
- * - Estados visuais (loading, success, error)
- * - Feedback de erro amigável
- * - Exibição opcional de coordenadas
- * - Retry automático em caso de erro
+ * Captura de geolocalização para fluxos de Mobilidade.
+ * A política de match/dispatch permanece server-owned e não é inferida aqui.
  */
 export function GeolocationButton({
   onLocationCaptured,
@@ -41,28 +36,45 @@ export function GeolocationButton({
     clearError,
   } = useGeolocation();
   const [captured, setCaptured] = React.useState(false);
+  const resetTimerRef = React.useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  React.useEffect(
+    () => () => {
+      if (resetTimerRef.current) clearTimeout(resetTimerRef.current);
+    },
+    [],
+  );
 
   const handleCapture = async () => {
     clearError();
     setCaptured(false);
+
+    if (resetTimerRef.current) {
+      clearTimeout(resetTimerRef.current);
+      resetTimerRef.current = null;
+    }
 
     const coords = await requestLocation();
 
     if (coords) {
       setCaptured(true);
       onLocationCaptured(coords);
-
-      // Reset captured state após 3 segundos
-      setTimeout(() => setCaptured(false), 3000);
+      resetTimerRef.current = setTimeout(() => {
+        setCaptured(false);
+        resetTimerRef.current = null;
+      }, 3000);
     }
   };
 
   if (!supported) {
     return (
-      <div className="flex items-center gap-2 p-3 rounded-xl bg-red-500/10 border border-red-500/20">
-        <AlertCircle className="h-4 w-4 text-red-400 flex-shrink-0" />
-        <p className="text-xs text-red-300">
-          Geolocalização não suportada pelo navegador
+      <div className="flex items-center gap-2 rounded-xl border border-destructive/20 bg-destructive/10 p-3">
+        <AlertCircle
+          className="h-4 w-4 shrink-0 text-destructive"
+          aria-hidden="true"
+        />
+        <p className="text-xs text-destructive">
+          Geolocalização não suportada pelo navegador.
         </p>
       </div>
     );
@@ -74,75 +86,78 @@ export function GeolocationButton({
         type="button"
         variant={variant}
         size={size}
-        onClick={handleCapture}
+        onClick={() => void handleCapture()}
         disabled={loading}
+        aria-busy={loading}
         className={cn(
-          "relative transition-all",
-          captured && "border-emerald-400 bg-emerald-400/10 text-emerald-400",
-          error && "border-red-400/40 bg-red-400/10 text-red-400",
+          "relative transition-colors",
+          captured && "border-success/40 bg-success/10 text-success",
+          error && "border-destructive/40 bg-destructive/10 text-destructive",
           className,
         )}
       >
         {loading ? (
           <>
-            <Loader2 className="h-4 w-4 animate-spin" />
+            <Loader2 className="h-4 w-4 animate-spin" aria-hidden="true" />
             <span className="ml-2">Obtendo localização...</span>
           </>
         ) : captured ? (
           <>
-            <CheckCircle2 className="h-4 w-4" />
-            <span className="ml-2">Localização capturada!</span>
+            <CheckCircle2 className="h-4 w-4" aria-hidden="true" />
+            <span className="ml-2">Localização capturada</span>
           </>
         ) : error ? (
           <>
-            <AlertCircle className="h-4 w-4" />
+            <AlertCircle className="h-4 w-4" aria-hidden="true" />
             <span className="ml-2">Tentar novamente</span>
           </>
         ) : (
           <>
-            <MapPin className="h-4 w-4" />
+            <MapPin className="h-4 w-4" aria-hidden="true" />
             <span className="ml-2">Usar minha localização</span>
           </>
         )}
       </Button>
 
-      {/* Exibir coordenadas capturadas */}
-      {showCoordinates && coordinates && captured && (
-        <div className="p-2 rounded-lg bg-emerald-500/10 border border-emerald-500/20">
-          <p className="text-[0.65rem] text-emerald-300 font-mono">
-            {coordinates.latitude.toFixed(6)},{" "}
-            {coordinates.longitude.toFixed(6)}
+      {showCoordinates && coordinates && captured ? (
+        <div className="rounded-lg border border-success/20 bg-success/10 p-2">
+          <p className="font-mono text-[0.65rem] text-success">
+            {coordinates.latitude.toFixed(6)}, {coordinates.longitude.toFixed(6)}
           </p>
-          <p className="text-[0.6rem] text-emerald-400/60 mt-0.5">
-            Precisão: ±{Math.round(coordinates.accuracy)}m
+          <p className="mt-0.5 text-[0.6rem] text-muted-foreground">
+            Precisão: ±{Math.round(coordinates.accuracy)} m
           </p>
         </div>
-      )}
+      ) : null}
 
-      {/* Exibir erro */}
-      {error && (
-        <div className="p-2.5 rounded-lg bg-red-500/10 border border-red-500/20">
+      {error ? (
+        <div className="rounded-lg border border-destructive/20 bg-destructive/10 p-2.5">
           <div className="flex items-start gap-2">
-            <AlertCircle className="h-3.5 w-3.5 text-red-400 flex-shrink-0 mt-0.5" />
-            <p className="text-[0.65rem] text-red-300 leading-relaxed">
+            <AlertCircle
+              className="mt-0.5 h-3.5 w-3.5 shrink-0 text-destructive"
+              aria-hidden="true"
+            />
+            <p className="text-[0.65rem] leading-relaxed text-destructive">
               {error.message}
             </p>
           </div>
         </div>
-      )}
+      ) : null}
 
-      {/* Info sobre o sistema de match */}
-      {captured && !error && (
-        <div className="p-2.5 rounded-lg bg-teal-500/10 border border-teal-500/20">
+      {captured && !error ? (
+        <div className="rounded-lg border border-category-mobility/20 bg-category-mobility/10 p-2.5">
           <div className="flex items-start gap-2">
-            <MapPin className="h-3.5 w-3.5 text-teal-400 flex-shrink-0 mt-0.5" />
-            <p className="text-[0.65rem] text-teal-300 leading-relaxed">
-              Sistema de Match Inteligente ativado! Motoristas próximos (até
-              5km) receberão sua solicitação com prioridade.
+            <MapPin
+              className="mt-0.5 h-3.5 w-3.5 shrink-0 text-category-mobility"
+              aria-hidden="true"
+            />
+            <p className="text-[0.65rem] leading-relaxed text-muted-foreground">
+              Localização atualizada. O sistema de Mobilidade usará as regras
+              operacionais vigentes para buscar ofertas e motoristas elegíveis.
             </p>
           </div>
         </div>
-      )}
+      ) : null}
     </div>
   );
 }
