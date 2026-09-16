@@ -1,3 +1,4 @@
+import { useState } from "react";
 import {
   BarChart3,
   Copy,
@@ -8,22 +9,21 @@ import {
   MessageCircle,
   Mic,
   ShieldCheck,
-  Users,
   UserCog,
+  Users,
   type LucideIcon,
 } from "lucide-react";
-import {
-  DEFAULT_GROUP_RULES,
-  GROUP_CAPABILITY_LABELS,
-  getGroupCategory,
-} from "@/shared/constants/groupTaxonomy";
 import {
   useGroupMessageReports,
   useUpdateGroupMessageReportStatus,
 } from "@/core/community-groups/hooks/useGroupQueries";
 import type { GroupMessageReportStatus } from "@/core/community-groups/types";
-import { useState } from "react";
-import { getRequiredRecordValue } from "@/shared/utils/recordLookup";
+import {
+  DEFAULT_GROUP_RULES,
+  GROUP_CAPABILITY_LABELS,
+  getGroupCategory,
+} from "@/shared/constants/groupTaxonomy";
+import { cn } from "@/shared/utils/cn";
 
 interface GroupInfoPanelGroup {
   name: string;
@@ -66,6 +66,27 @@ interface GroupMessageReportItem {
 }
 
 type CapabilityItem = { label: string; icon: LucideIcon };
+type ReportFilter =
+  | "all"
+  | "pending"
+  | "reviewing"
+  | "resolved"
+  | "dismissed";
+
+const REPORT_FILTERS: Array<{ key: ReportFilter; label: string }> = [
+  { key: "pending", label: "Pendentes" },
+  { key: "reviewing", label: "Em análise" },
+  { key: "resolved", label: "Resolvidas" },
+  { key: "dismissed", label: "Dispensadas" },
+  { key: "all", label: "Todas" },
+];
+
+const REPORT_STATUS_LABELS: Record<string, string> = {
+  pending: "Pendente",
+  reviewing: "Em análise",
+  resolved: "Resolvida",
+  dismissed: "Dispensada",
+};
 
 export function GrupoDetailInfoPanel({
   groupId,
@@ -80,38 +101,42 @@ export function GrupoDetailInfoPanel({
   canModerate: boolean;
   onCopyShareLink: () => void;
 }) {
-  const [reportFilter, setReportFilter] = useState<
-    "all" | "pending" | "reviewing" | "resolved" | "dismissed"
-  >("pending");
+  const [reportFilter, setReportFilter] = useState<ReportFilter>("pending");
   const [selectedReportId, setSelectedReportId] = useState<string | null>(null);
   const categoryInfo = getGroupCategory(group.category || "geral");
   const { data: messageReports = [] } = useGroupMessageReports(groupId, canModerate);
   const updateReportStatusMutation = useUpdateGroupMessageReportStatus();
-  const pendingReportsCount = messageReports.filter((report) => report.status === "pending").length;
-  const filteredReports = (messageReports as GroupMessageReportItem[]).filter((report) =>
+  const typedReports = messageReports as GroupMessageReportItem[];
+  const pendingReportsCount = typedReports.filter(
+    (report) => report.status === "pending",
+  ).length;
+  const filteredReports = typedReports.filter((report) =>
     reportFilter === "all" ? true : report.status === reportFilter,
   );
-  const selectedReport = filteredReports.find((report) => report.id === selectedReportId) || null;
+  const selectedReport =
+    filteredReports.find((report) => report.id === selectedReportId) || null;
   const ruleLines = (group.rules || DEFAULT_GROUP_RULES.join("\n"))
     .split("\n")
     .map((rule) => rule.trim())
     .filter(Boolean);
+
   const capabilities = {
-    text: true,
     images: group.media_policy !== "text_only" && group.capabilities?.images !== false,
     audio: group.capabilities?.audio !== false,
     polls: group.capabilities?.polls !== false,
     chat: group.capabilities?.chat !== false,
-    reactions: group.capabilities?.reactions !== false,
     reports: group.capabilities?.reports !== false,
-    share_link: group.capabilities?.share_link !== false,
   };
+
   const capabilityItems = ([
     capabilities.chat && { label: GROUP_CAPABILITY_LABELS.chat, icon: MessageCircle },
     capabilities.images && { label: GROUP_CAPABILITY_LABELS.images, icon: Image },
     capabilities.audio && { label: GROUP_CAPABILITY_LABELS.audio, icon: Mic },
     capabilities.polls && { label: GROUP_CAPABILITY_LABELS.polls, icon: BarChart3 },
-    capabilities.reports && { label: GROUP_CAPABILITY_LABELS.reports, icon: ShieldCheck },
+    capabilities.reports && {
+      label: GROUP_CAPABILITY_LABELS.reports,
+      icon: ShieldCheck,
+    },
   ] as Array<CapabilityItem | false>).filter(
     (item): item is CapabilityItem => Boolean(item),
   );
@@ -125,28 +150,30 @@ export function GrupoDetailInfoPanel({
   };
 
   return (
-    <div className="px-4 py-6 space-y-6">
+    <div className="space-y-6 px-4 py-6 text-foreground">
       <div className="text-center">
-        <div className="w-20 h-20 rounded-2xl bg-gradient-to-br from-teal-400/20 to-cyan-400/10 flex items-center justify-center text-4xl mx-auto mb-4 border-2 border-teal-400/20">
+        <div className="mx-auto mb-4 flex h-20 w-20 items-center justify-center overflow-hidden rounded-2xl border-2 border-primary/20 bg-primary/10">
           {group.avatar_url ? (
             <img
               src={group.avatar_url}
               alt={`Avatar do grupo ${group.name}`}
-              className="w-full h-full rounded-2xl object-cover"
+              className="h-full w-full object-cover"
             />
           ) : (
-            <Users className="h-10 w-10 text-teal-200" aria-hidden="true" />
+            <Users className="h-10 w-10 text-primary" aria-hidden="true" />
           )}
         </div>
-        <h2 className="text-xl font-bold text-white mb-1">{group.name}</h2>
-        <p className="text-sm text-gray-400">{group.description || "Sem descrição"}</p>
+        <h2 className="mb-1 text-xl font-bold text-foreground">{group.name}</h2>
+        <p className="text-sm text-muted-foreground">
+          {group.description || "Sem descrição"}
+        </p>
         <div className="mt-3 flex flex-wrap justify-center gap-2">
           {capabilityItems.map((item) => (
             <span
               key={item.label}
-              className="inline-flex items-center gap-1 rounded-full bg-white/5 px-2.5 py-1 text-xs text-gray-300"
+              className="inline-flex items-center gap-1 rounded-full bg-muted px-2.5 py-1 text-xs text-muted-foreground"
             >
-              <item.icon className="h-3 w-3 text-teal-300" />
+              <item.icon className="h-3 w-3 text-primary" aria-hidden="true" />
               {item.label}
             </span>
           ))}
@@ -154,24 +181,18 @@ export function GrupoDetailInfoPanel({
       </div>
 
       <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
-        <div className="bg-white/5 rounded-xl p-4 text-center">
-          <p className="text-2xl font-bold text-teal-400">{membersCount}</p>
-          <p className="text-xs text-gray-400">Membros</p>
-        </div>
-        <div className="bg-white/5 rounded-xl p-4 text-center">
-          <p className="text-2xl font-bold text-cyan-400">{group.posts_count || 0}</p>
-          <p className="text-xs text-gray-400">Posts</p>
-        </div>
+        <Metric value={membersCount} label="Membros" />
+        <Metric value={group.posts_count || 0} label="Posts" tone="info" />
       </div>
 
       <div className="space-y-3">
         <InfoRow label="Categoria" value={categoryInfo.label} />
-        <div className="flex items-center justify-between py-2">
-          <span className="text-sm text-gray-400">Visibilidade</span>
-          <span className="text-sm text-white flex items-center gap-1">
+        <div className="flex items-center justify-between gap-3 py-2">
+          <span className="text-sm text-muted-foreground">Visibilidade</span>
+          <span className="flex items-center gap-1 text-sm text-foreground">
             {group.is_private ? (
               <>
-                <Lock className="w-3 h-3" /> Privado
+                <Lock className="h-3 w-3" aria-hidden="true" /> Privado
               </>
             ) : (
               "Público"
@@ -201,9 +222,11 @@ export function GrupoDetailInfoPanel({
           compact
         />
         <div className="flex items-center justify-between gap-3 py-2">
-          <span className="text-sm text-gray-400">Membros</span>
-          <span className="min-w-0 flex items-center gap-1 text-right text-xs sm:text-sm text-white">
-            {group.member_visibility === "hidden" ? <EyeOff className="h-3 w-3" /> : null}
+          <span className="text-sm text-muted-foreground">Membros</span>
+          <span className="flex min-w-0 items-center gap-1 text-right text-xs text-foreground sm:text-sm">
+            {group.member_visibility === "hidden" ? (
+              <EyeOff className="h-3 w-3" aria-hidden="true" />
+            ) : null}
             {group.member_visibility === "public"
               ? "Lista pública"
               : group.member_visibility === "members"
@@ -213,34 +236,43 @@ export function GrupoDetailInfoPanel({
                   : "Mostra apenas quantidade"}
           </span>
         </div>
+
         <button
           type="button"
           onClick={onCopyShareLink}
-          className="mt-2 flex w-full items-center justify-center gap-2 rounded-xl border border-teal-400/30 bg-teal-400/10 px-3 py-2 text-sm font-semibold text-teal-200"
+          className="mt-2 flex w-full items-center justify-center gap-2 rounded-xl border border-primary/30 bg-primary/10 px-3 py-2 text-sm font-semibold text-primary transition-colors hover:bg-primary/15 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
         >
-          <Copy className="h-4 w-4" />
+          <Copy className="h-4 w-4" aria-hidden="true" />
           Copiar link de compartilhamento
         </button>
-        <div className="mt-2 flex items-center justify-between gap-3 rounded-xl border border-white/10 bg-white/[0.03] px-3 py-2">
-          <span className="flex items-center gap-2 text-sm text-gray-400">
-            <UserCog className="h-4 w-4 text-teal-300" />
+
+        <div className="mt-2 flex items-center justify-between gap-3 rounded-xl border border-border bg-muted/40 px-3 py-2">
+          <span className="flex items-center gap-2 text-sm text-muted-foreground">
+            <UserCog className="h-4 w-4 text-primary" aria-hidden="true" />
             Admins
           </span>
-          <span className="text-right text-sm text-white">Promovidos na aba membros</span>
+          <span className="text-right text-sm text-foreground">
+            Promovidos na aba membros
+          </span>
         </div>
+
         {canModerate ? (
           <ModerationReports
-            messageReports={messageReports as GroupMessageReportItem[]}
+            messageReports={typedReports}
             filteredReports={filteredReports}
             pendingReportsCount={pendingReportsCount}
             reportFilter={reportFilter}
             selectedReport={selectedReport}
             selectedReportId={selectedReportId}
-            onFilterChange={setReportFilter}
+            onFilterChange={(value) => {
+              setReportFilter(value);
+              setSelectedReportId(null);
+            }}
             onSelectReport={setSelectedReportId}
             onUpdateReportStatus={handleUpdateReportStatus}
           />
         ) : null}
+
         <InfoRow label="Criado por" value={group.creator?.name || "Desconhecido"} />
         <InfoRow
           label="Criado em"
@@ -248,15 +280,18 @@ export function GrupoDetailInfoPanel({
         />
       </div>
 
-      <div className="rounded-2xl border border-white/10 bg-white/[0.03] p-4">
+      <div className="rounded-2xl border border-border bg-muted/30 p-4">
         <div className="mb-3 flex items-center gap-2">
-          <ShieldCheck className="h-4 w-4 text-teal-300" />
-          <h3 className="text-sm font-semibold text-white">Regras e moderação</h3>
+          <ShieldCheck className="h-4 w-4 text-primary" aria-hidden="true" />
+          <h3 className="text-sm font-semibold text-foreground">Regras e moderação</h3>
         </div>
         <ol className="space-y-2">
           {ruleLines.map((rule, index) => (
-            <li key={`${rule}-${index}`} className="flex gap-2 text-sm leading-relaxed text-gray-300">
-              <span className="mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-white/5 text-[11px] text-teal-300">
+            <li
+              key={`${rule}-${index}`}
+              className="flex gap-2 text-sm leading-relaxed text-foreground/85"
+            >
+              <span className="mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-primary/10 text-[11px] text-primary">
                 {index + 1}
               </span>
               <span>{rule}</span>
@@ -264,6 +299,25 @@ export function GrupoDetailInfoPanel({
           ))}
         </ol>
       </div>
+    </div>
+  );
+}
+
+function Metric({
+  value,
+  label,
+  tone = "primary",
+}: {
+  value: number;
+  label: string;
+  tone?: "primary" | "info";
+}) {
+  return (
+    <div className="rounded-xl bg-muted/50 p-4 text-center">
+      <p className={cn("text-2xl font-bold", tone === "info" ? "text-info" : "text-primary")}>
+        {value}
+      </p>
+      <p className="text-xs text-muted-foreground">{label}</p>
     </div>
   );
 }
@@ -278,9 +332,14 @@ function InfoRow({
   compact?: boolean;
 }) {
   return (
-    <div className={`flex items-center justify-between ${compact ? "gap-3" : ""} py-2`}>
-      <span className="text-sm text-gray-400">{label}</span>
-      <span className={`${compact ? "min-w-0 text-right text-xs sm:text-sm" : "text-sm"} text-white`}>
+    <div className={cn("flex items-center justify-between py-2", compact && "gap-3")}>
+      <span className="text-sm text-muted-foreground">{label}</span>
+      <span
+        className={cn(
+          "text-foreground",
+          compact ? "min-w-0 text-right text-xs sm:text-sm" : "text-sm",
+        )}
+      >
         {value}
       </span>
     </div>
@@ -301,10 +360,10 @@ function ModerationReports({
   messageReports: GroupMessageReportItem[];
   filteredReports: GroupMessageReportItem[];
   pendingReportsCount: number;
-  reportFilter: "all" | "pending" | "reviewing" | "resolved" | "dismissed";
+  reportFilter: ReportFilter;
   selectedReport: GroupMessageReportItem | null;
   selectedReportId: string | null;
-  onFilterChange: (value: "all" | "pending" | "reviewing" | "resolved" | "dismissed") => void;
+  onFilterChange: (value: ReportFilter) => void;
   onSelectReport: (value: string) => void;
   onUpdateReportStatus: (
     reportId: string,
@@ -313,78 +372,92 @@ function ModerationReports({
 }) {
   return (
     <>
-      <div className="flex items-center justify-between gap-3 rounded-xl border border-amber-400/20 bg-amber-400/5 px-3 py-2">
-        <span className="flex items-center gap-2 text-sm text-amber-200">
-          <ShieldCheck className="h-4 w-4" />
+      <div className="flex items-center justify-between gap-3 rounded-xl border border-warning/30 bg-warning/10 px-3 py-2">
+        <span className="flex items-center gap-2 text-sm text-warning">
+          <ShieldCheck className="h-4 w-4" aria-hidden="true" />
           Fila de moderação
         </span>
-        <span className="text-right text-sm text-amber-100">
+        <span className="text-right text-sm text-warning">
           {pendingReportsCount} denúncia(s) pendente(s)
         </span>
       </div>
-      <div className="rounded-xl border border-white/10 bg-white/[0.03] p-3">
+
+      <div className="rounded-xl border border-border bg-muted/30 p-3">
         <div className="mb-2 flex items-center justify-between gap-2">
-          <p className="text-sm font-semibold text-white">Denúncias recentes</p>
-          <span className="text-xs text-gray-400">{messageReports.length} no total</span>
+          <p className="text-sm font-semibold text-foreground">Denúncias recentes</p>
+          <span className="text-xs text-muted-foreground">
+            {messageReports.length} no total
+          </span>
         </div>
+
         <div className="mb-3 flex items-center gap-1 overflow-x-auto pb-1 [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
-          {[
-            { key: "pending", label: "Pendentes" },
-            { key: "reviewing", label: "Em análise" },
-            { key: "resolved", label: "Resolvidas" },
-            { key: "dismissed", label: "Dispensadas" },
-            { key: "all", label: "Todas" },
-          ].map((filter) => (
+          {REPORT_FILTERS.map((filter) => (
             <button
               key={filter.key}
               type="button"
-              onClick={() => onFilterChange(filter.key as typeof reportFilter)}
-              className={`shrink-0 rounded-full border px-2.5 py-1 text-[10px] ${
+              onClick={() => onFilterChange(filter.key)}
+              aria-pressed={reportFilter === filter.key}
+              className={cn(
+                "shrink-0 rounded-full border px-2.5 py-1 text-[10px] transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring",
                 reportFilter === filter.key
-                  ? "border-teal-400/40 bg-teal-400/10 text-teal-200"
-                  : "border-white/10 bg-white/5 text-gray-300"
-              }`}
+                  ? "border-primary/40 bg-primary/10 text-primary"
+                  : "border-border bg-background text-muted-foreground hover:text-foreground",
+              )}
             >
               {filter.label}
             </button>
           ))}
         </div>
+
         <div className="space-y-2">
           {filteredReports.slice(0, 8).map((report) => (
             <div
               key={report.id}
-              className={`rounded-lg border bg-black/10 p-2 ${
-                selectedReportId === report.id ? "border-teal-400/40" : "border-white/10"
-              }`}
+              className={cn(
+                "rounded-lg border bg-background p-2",
+                selectedReportId === report.id ? "border-primary/40" : "border-border",
+              )}
             >
               <div className="flex items-center justify-between gap-2">
-                <p className="truncate text-xs text-gray-200">{report.reason}</p>
-                <span className="shrink-0 text-[10px] uppercase text-amber-200">{report.status}</span>
+                <p className="truncate text-xs text-foreground">{report.reason}</p>
+                <span className="shrink-0 text-[10px] uppercase text-warning">
+                  {REPORT_STATUS_LABELS[report.status] || report.status}
+                </span>
               </div>
-              <p className="mt-1 text-[10px] text-gray-500">
+              <p className="mt-1 text-[10px] text-muted-foreground">
                 {new Date(report.created_at).toLocaleString("pt-BR")}
               </p>
               <button
                 type="button"
                 onClick={() => onSelectReport(report.id)}
-                className="mt-1 text-[10px] text-teal-300 hover:text-teal-200"
+                className="mt-1 text-[10px] text-primary hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
               >
                 Ver detalhe
               </button>
               <div className="mt-2 flex flex-wrap gap-1">
-                <ReportAction label="Em análise" onClick={() => onUpdateReportStatus(report.id, "reviewing")} />
-                <ReportAction label="Resolver" tone="success" onClick={() => onUpdateReportStatus(report.id, "resolved")} />
-                <ReportAction label="Dispensar" tone="muted" onClick={() => onUpdateReportStatus(report.id, "dismissed")} />
+                <ReportAction
+                  label="Em análise"
+                  onClick={() => onUpdateReportStatus(report.id, "reviewing")}
+                />
+                <ReportAction
+                  label="Resolver"
+                  tone="success"
+                  onClick={() => onUpdateReportStatus(report.id, "resolved")}
+                />
+                <ReportAction
+                  label="Dispensar"
+                  tone="muted"
+                  onClick={() => onUpdateReportStatus(report.id, "dismissed")}
+                />
               </div>
             </div>
           ))}
           {filteredReports.length === 0 ? (
-            <p className="text-xs text-gray-500">Sem denúncias no momento.</p>
+            <p className="text-xs text-muted-foreground">Sem denúncias no momento.</p>
           ) : null}
         </div>
-        {selectedReport ? (
-          <ReportDetail report={selectedReport} />
-        ) : null}
+
+        {selectedReport ? <ReportDetail report={selectedReport} /> : null}
       </div>
     </>
   );
@@ -399,18 +472,21 @@ function ReportAction({
   tone?: "default" | "success" | "muted";
   onClick: () => void;
 }) {
-  const classes = {
-    default: "border-white/10 bg-white/5 text-gray-200",
-    success: "border-emerald-400/30 bg-emerald-400/10 text-emerald-200",
-    muted: "border-slate-400/30 bg-slate-400/10 text-slate-200",
-  };
-  const className = getRequiredRecordValue(classes, tone, classes.default);
+  const className =
+    tone === "success"
+      ? "border-success/30 bg-success/10 text-success"
+      : tone === "muted"
+        ? "border-border bg-muted text-muted-foreground"
+        : "border-border bg-background text-foreground";
 
   return (
     <button
       type="button"
       onClick={onClick}
-      className={`rounded-full border px-2 py-0.5 text-[10px] ${className}`}
+      className={cn(
+        "rounded-full border px-2 py-0.5 text-[10px] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring",
+        className,
+      )}
     >
       {label}
     </button>
@@ -419,39 +495,56 @@ function ReportAction({
 
 function ReportDetail({ report }: { report: GroupMessageReportItem }) {
   return (
-    <div className="mt-3 rounded-lg border border-white/10 bg-black/20 p-3">
-      <div className="mb-1 flex items-center gap-2 text-xs text-gray-300">
-        <Filter className="h-3.5 w-3.5 text-teal-300" />
+    <div className="mt-3 rounded-lg border border-border bg-background p-3">
+      <div className="mb-1 flex items-center gap-2 text-xs text-muted-foreground">
+        <Filter className="h-3.5 w-3.5 text-primary" aria-hidden="true" />
         Detalhe da denúncia
       </div>
-      <p className="text-xs text-white">{report.reason}</p>
-      <p className="mt-1 text-[11px] text-gray-400">ID da mensagem: {report.message_id}</p>
-      <p className="text-[11px] text-gray-500">
+      <p className="text-xs text-foreground">{report.reason}</p>
+      <p className="mt-1 text-[11px] text-muted-foreground">
+        ID da mensagem: {report.message_id}
+      </p>
+      <p className="text-[11px] text-muted-foreground">
         Criada em {new Date(report.created_at).toLocaleString("pt-BR")}
       </p>
       {report.details ? (
-        <p className="mt-1 text-[11px] text-gray-300">Detalhes: {report.details}</p>
+        <p className="mt-1 text-[11px] text-foreground/85">
+          Detalhes: {report.details}
+        </p>
       ) : null}
+
       {report.message ? (
-        <div className="mt-2 rounded-md border border-white/10 bg-white/5 p-2">
-          <p className="text-[10px] uppercase text-gray-400">Mensagem original</p>
-          <p className="mt-1 text-xs text-white">{report.message.content || "(sem texto)"}</p>
-          <p className="mt-1 text-[11px] text-gray-400">
+        <div className="mt-2 rounded-md border border-border bg-muted/40 p-2">
+          <p className="text-[10px] uppercase text-muted-foreground">
+            Mensagem original
+          </p>
+          <p className="mt-1 text-xs text-foreground">
+            {report.message.content || "(sem texto)"}
+          </p>
+          <p className="mt-1 text-[11px] text-muted-foreground">
             Autor: {report.message.profile?.name || "Usuário"}
           </p>
-          <p className="text-[11px] text-gray-500">
+          <p className="text-[11px] text-muted-foreground">
             Tipo: {report.message.message_type || "text"}
           </p>
         </div>
       ) : null}
+
       <div className="mt-2">
-        <p className="text-[10px] uppercase text-gray-400">Histórico de moderação</p>
+        <p className="text-[10px] uppercase text-muted-foreground">
+          Histórico de moderação
+        </p>
         <div className="mt-1 space-y-1">
           {(report.moderation_history || []).length === 0 ? (
-            <p className="text-[11px] text-gray-500">Sem ações registradas.</p>
+            <p className="text-[11px] text-muted-foreground">
+              Sem ações registradas.
+            </p>
           ) : (
-            (report.moderation_history || []).map((event, idx) => (
-              <p key={`${event.at}-${idx}`} className="text-[11px] text-gray-300">
+            (report.moderation_history || []).map((event, index) => (
+              <p
+                key={`${event.at}-${index}`}
+                className="text-[11px] text-foreground/80"
+              >
                 {new Date(event.at).toLocaleString("pt-BR")} - {event.status}
               </p>
             ))
