@@ -123,7 +123,10 @@ export function useCadastroForm(requestedRedirect = "/") {
               name: values.name,
               handle: values.username,
               termsAcceptance: {
-                accepted: values.termsAccepted,
+                // Reaching handleSubmit means RegisterInitialSchema already
+                // proved the required checkbox. Preserve the stricter domain
+                // contract (`accepted: true`) instead of widening it to boolean.
+                accepted: true,
                 version: TERMS_OF_SERVICE_VERSION,
               },
               captchaToken,
