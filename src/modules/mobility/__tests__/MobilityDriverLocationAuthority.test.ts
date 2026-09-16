@@ -54,4 +54,25 @@ describe("Mobility driver location authority", () => {
       /driver_locations['"]\)[\s\S]{0,180}\.(?:insert|update|upsert|delete)\(/,
     );
   });
+
+  it("retains exact GPS only while operationally required", () => {
+    const minimization = readProjectFile(
+      "supabase/migrations/20260916133000_minimize_idle_driver_gps.sql",
+    );
+
+    expect(minimization).toContain(
+      "private.guard_driver_location_operational_need()",
+    );
+    expect(minimization).toContain("availability.is_online IS TRUE");
+    expect(minimization).toContain("availability.is_available IS TRUE");
+    expect(minimization).toContain("availability.active_ride_id IS NOT NULL");
+    expect(minimization).toContain("NEW.current_lat := NULL");
+    expect(minimization).toContain("NEW.current_lng := NULL");
+    expect(minimization).toContain("NEW.last_location_update := NULL");
+    expect(minimization).toContain("DELETE FROM public.driver_locations location");
+    expect(minimization).toContain("driver_location_not_operationally_required");
+    expect(minimization).toContain(
+      "trg_purge_idle_driver_location_snapshot",
+    );
+  });
 });
