@@ -1,16 +1,17 @@
-import React, { useState } from "react";
-import { XCircle, ChevronDown, ChevronUp } from "lucide-react";
+import { useState } from "react";
+import { ChevronDown, ChevronUp, XCircle } from "lucide-react";
+
+import { getPassengerRideViewAvailability } from "@/core/mobility/core/PassengerRideViewPolicy";
+import type { RideRequest } from "@/core/mobility/types";
 import { Button } from "@/shared/components/ui/button";
 import { cn } from "@/shared/utils/cn";
-import type { RideRequest } from "@/core/mobility/types";
-import { StatusTimeline } from "../StatusTimeline";
 import { RideTrackingMap } from "../RideTrackingMap";
-import { RideCardHeader } from "./ride-card/RideCardHeader";
-import { RideRoute } from "./ride-card/RideRoute";
-import { RideInfo } from "./ride-card/RideInfo";
-import { DriverInfo } from "./ride-card/DriverInfo";
+import { StatusTimeline } from "../StatusTimeline";
 import { OperationalPinCard } from "./OperationalPinCard";
-import { getPassengerRideViewAvailability } from "@/core/mobility/core/PassengerRideViewPolicy";
+import { DriverInfo } from "./ride-card/DriverInfo";
+import { RideCardHeader } from "./ride-card/RideCardHeader";
+import { RideInfo } from "./ride-card/RideInfo";
+import { RideRoute } from "./ride-card/RideRoute";
 
 interface ActiveRideCardProps {
   ride: RideRequest;
@@ -27,36 +28,43 @@ export function ActiveRideCard({
   const [showMap, setShowMap] = useState(false);
   const isEntrega = ride.type === "entrega" || ride.type === "delivery";
   const viewPolicy = getPassengerRideViewAvailability(ride.status);
+  const driverProfileId = ride.driver?.id || ride.driver_profile_id || null;
 
-  const shouldShowMapOption = Boolean(ride.driver && viewPolicy.showLiveMap);
+  const shouldShowMapOption = Boolean(
+    driverProfileId && viewPolicy.showLiveMap,
+  );
   const showDriverInfo = Boolean(ride.driver && viewPolicy.showDriverInfo);
   const canCancel = viewPolicy.canCancel;
+  const timelineId = `ride-timeline-${ride.id}`;
 
   return (
-    <div
-      className={cn(
-        "rounded-2xl border p-5 transition-all bg-card border-border",
-      )}
-    >
+    <div className={cn("rounded-2xl border border-border bg-card p-5")}>
       <RideCardHeader status={ride.status} isEntrega={isEntrega} />
 
-      <button
-        onClick={() => setShowTimeline(!showTimeline)}
-        className="w-full flex items-center justify-between px-3 py-2 rounded-xl bg-white/5 hover:bg-white/10 transition-colors mb-4"
+      <Button
+        type="button"
+        variant="ghost"
+        aria-expanded={showTimeline}
+        aria-controls={timelineId}
+        onClick={() => setShowTimeline((current) => !current)}
+        className="mb-4 h-auto w-full justify-between rounded-xl bg-muted/40 px-3 py-2 text-xs text-muted-foreground hover:bg-muted/70 hover:text-foreground"
       >
-        <span className="text-xs text-gray-400">Ver progresso da viagem</span>
+        <span>Ver progresso da viagem</span>
         {showTimeline ? (
-          <ChevronUp className="h-4 w-4 text-gray-400" />
+          <ChevronUp className="h-4 w-4" aria-hidden="true" />
         ) : (
-          <ChevronDown className="h-4 w-4 text-gray-400" />
+          <ChevronDown className="h-4 w-4" aria-hidden="true" />
         )}
-      </button>
+      </Button>
 
-      {showTimeline && (
-        <div className="mb-4 p-4 rounded-xl bg-white/5 border border-white/10">
+      {showTimeline ? (
+        <div
+          id={timelineId}
+          className="mb-4 rounded-xl border border-border bg-muted/30 p-4"
+        >
           <StatusTimeline ride={ride} />
         </div>
-      )}
+      ) : null}
 
       <RideRoute origin={ride.origin} destination={ride.destination} />
 
@@ -69,27 +77,28 @@ export function ActiveRideCard({
 
       <OperationalPinCard rideId={ride.id} rideStatus={ride.status} />
 
-      {showDriverInfo && ride.driver && (
+      {showDriverInfo && ride.driver ? (
         <DriverInfo
           driver={{
             name: ride.driver.name || "Motorista",
             vehicle_model: ride.driver.vehicle_model || "Veículo",
             vehicle_plate: ride.driver.vehicle_plate || "N/A",
-            rating: ride.driver.rating || 0,
-            total_rides: 0,
+            avatar_url: ride.driver.profile?.avatar_url ?? null,
+            rating: ride.driver.rating ?? null,
+            phone: ride.driver.phone ?? null,
           }}
           ride={ride}
           shouldShowMapOption={shouldShowMapOption}
           showMap={showMap}
           onContact={onContact}
-          onToggleMap={() => setShowMap(!showMap)}
+          onToggleMap={() => setShowMap((current) => !current)}
         />
-      )}
+      ) : null}
 
-      {showMap && shouldShowMapOption && (
-        <div className="mb-4 h-80 rounded-xl overflow-hidden border border-white/10">
+      {showMap && shouldShowMapOption && driverProfileId ? (
+        <div className="mb-4 h-80 overflow-hidden rounded-xl border border-border">
           <RideTrackingMap
-            driverProfileId={ride.driver?.id || ""}
+            driverProfileId={driverProfileId}
             rideId={ride.id}
             originLat={ride.origin_lat}
             originLon={ride.origin_lng}
@@ -98,17 +107,19 @@ export function ActiveRideCard({
             showETA
           />
         </div>
-      )}
+      ) : null}
 
-      {canCancel && (
+      {canCancel ? (
         <Button
+          type="button"
           onClick={() => onCancel(ride.id)}
           variant="outline"
-          className="w-full border-red-500/30 text-red-400 hover:bg-red-500/10 rounded-xl text-xs h-9"
+          className="h-9 w-full rounded-xl border-destructive/30 text-xs text-destructive hover:bg-destructive/10 hover:text-destructive"
         >
-          <XCircle className="h-3.5 w-3.5 mr-1.5" /> Cancelar Pedido
+          <XCircle className="mr-1.5 h-3.5 w-3.5" aria-hidden="true" />
+          {isEntrega ? "Cancelar entrega" : "Cancelar corrida"}
         </Button>
-      )}
+      ) : null}
     </div>
   );
 }
