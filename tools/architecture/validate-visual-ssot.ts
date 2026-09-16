@@ -26,6 +26,12 @@ const MIGRATED_RUNTIME_FILES = [
   'src/app/features/onboarding/pages/AceiteTermosPage.tsx',
   'src/app/pages/PreLaunchLandingPage.tsx',
   'src/app/pages/PreLaunchLandingPage.css',
+  'src/core/community-feed/components/CommentsModal.tsx',
+  'src/shared/components/grupos/GruposHeader.tsx',
+  'src/core/community-groups/pages/GrupoDetailPage.tsx',
+  'src/modules/mobility/components/chat/ChatWindow.tsx',
+  'src/modules/mobility/components/MobilidadeLeftSidebar.tsx',
+  'src/modules/mobility/components/MobilidadeRightSidebar.tsx',
   'src/styles/theme.ts',
 ] as const;
 
@@ -252,7 +258,7 @@ function main(): void {
   }
 
   console.log(
-    'Visual identity SSOT valid: canonical brand primitives and typography are owned by src/index.css, theme bootstrap and high-contrast contracts are protected, migrated runtime surfaces use semantic tokens and loaded font weights, and email projections stay synchronized with the brand palette.',
+    'Visual identity SSOT valid: canonical brand primitives and typography are owned by src/index.css, theme bootstrap and high-contrast contracts are protected, migrated auth, community and mobility surfaces use semantic tokens and loaded font weights, and email projections stay synchronized with the brand palette.',
   );
 }
 
