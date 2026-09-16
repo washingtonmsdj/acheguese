@@ -379,6 +379,28 @@
       "label": "authenticated mobility RPC broker",
       "requiredPatterns": ["auth\\.getUser\\s*\\("]
     },
+    "mobility-create-rpc": {
+      "kind": "authenticated-broker",
+      "risk": "Critical",
+      "label": "authenticated authoritative mobility creation service_role broker",
+      "requiredPatterns": [
+        "requireAuthenticatedUser\\s*\\(",
+        "rateLimitMiddleware\\s*\\(",
+        "mobility_create_ride_atomic",
+        "mobility_create_delivery_atomic"
+      ]
+    },
+    "mobility-pricing-rpc": {
+      "kind": "authenticated-broker",
+      "risk": "Critical",
+      "label": "authenticated authoritative mobility pricing service_role broker",
+      "requiredPatterns": [
+        "requireAuthenticatedUser\\s*\\(",
+        "rateLimitMiddleware\\s*\\(",
+        "mobility_issue_price_quote",
+        "MOBILITY_ROUTING_BASE_URL"
+      ]
+    },
     "privacy-rpc": {
       "kind": "authenticated-broker",
       "risk": "Critical",
