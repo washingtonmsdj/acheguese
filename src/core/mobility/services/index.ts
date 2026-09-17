@@ -16,7 +16,6 @@ export {
   getDriverData,
   getDriverStatsDetailed,
   getDriverDataIdByProfileId,
-  getDriverDataByProfileIds,
   getMobilityStats,
 } from "@/core/mobility/services/mobility.queries";
 

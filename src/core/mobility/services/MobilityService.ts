@@ -27,7 +27,6 @@ export {
   getRideAvailableSeats,
   getDriverProfiles,
   getDriverDataIdByProfileId,
-  getDriverDataByProfileIds,
   getTopDrivers,
   getDriverEarnings,
   getCompletedRidePaymentsByDriver,
@@ -128,7 +127,6 @@ export class MobilityFacade {
   static getRideDispatchData = MobilityQueries.getRideDispatchData;
   static getDriverProfiles = MobilityQueries.getDriverProfiles;
   static getDriverDataIdByProfileId = MobilityQueries.getDriverDataIdByProfileId;
-  static getDriverDataByProfileIds = MobilityQueries.getDriverDataByProfileIds;
   static getTopDrivers = MobilityQueries.getTopDrivers;
   static getMobilityStats = MobilityQueries.getMobilityStats;
   static getDriverEarnings = MobilityQueries.getDriverEarnings;

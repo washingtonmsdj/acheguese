@@ -29,10 +29,11 @@ describe("G147/G151 retired static mobility compatibility service", () => {
     expect(runtimeEntrypoint).not.toContain("MobilityService.impl");
   });
 
-  it("keeps functional/dedicated owners for active capabilities", () => {
+  it("keeps active dedicated readers and retires the service-only summary RPC caller", () => {
     expect(functionalQueries).toContain("export async function getActiveRideByDriverProfile(");
     expect(functionalQueries).toContain("export async function getRideDispatchData(");
-    expect(driverQueries).toContain("export async function getDriverDataByProfileIds(");
+    expect(driverQueries).not.toContain("get_driver_dispatch_summaries");
+    expect(driverQueries).not.toContain("export async function getDriverDataByProfileIds(");
     expect(driverQueries).toContain("export async function getMobilityStats(");
     expect(driverQueries).toContain("export async function getCompletedRidePaymentsByDriver(");
     expect(driverQueries).toContain("export async function getPassengerRating(");

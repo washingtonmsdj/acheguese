@@ -47,7 +47,7 @@ describe("G90 driver runtime identity boundary", () => {
       "can_do_delivery",
       "can_do_rides",
     ]) {
-      expect(projection).toContain(`\"${requiredField}\"`);
+      expect(projection).toContain(`"${requiredField}"`);
     }
 
     for (const presenceField of [
@@ -61,7 +61,7 @@ describe("G90 driver runtime identity boundary", () => {
       "active_ride_id",
       "active_ride_mode",
     ]) {
-      expect(projection).not.toContain(`\"${presenceField}\"`);
+      expect(projection).not.toContain(`"${presenceField}"`);
     }
   });
 

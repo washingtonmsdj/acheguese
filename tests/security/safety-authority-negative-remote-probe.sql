@@ -1,5 +1,6 @@
--- Rollback-only remote probe: authenticated callers cannot attach Safety evidence to another reporter's incident,
--- mutate another profile's alert, or perform admin-only incident transitions.
+-- Rollback-only remote probe: authenticated callers cannot spoof incident reporters,
+-- attach Safety evidence to another reporter's incident, mutate another profile's alert,
+-- or perform admin-only incident transitions.
 
 BEGIN;
 
@@ -72,6 +73,7 @@ BEGIN
 
   PERFORM set_config('app.safety_probe.actor_user_id', v_actor_user_id::text, true);
   PERFORM set_config('app.safety_probe.actor_profile_id', v_actor_profile_id::text, true);
+  PERFORM set_config('app.safety_probe.foreign_profile_id', v_foreign_profile_id::text, true);
   PERFORM set_config('app.safety_probe.incident_id', v_incident_id::text, true);
   PERFORM set_config('app.safety_probe.alert_id', v_alert_id::text, true);
 END;
@@ -92,10 +94,26 @@ SELECT set_config(
 DO $negative_authorization$
 DECLARE
   v_actor_profile uuid := current_setting('app.safety_probe.actor_profile_id')::uuid;
+  v_foreign_profile uuid := current_setting('app.safety_probe.foreign_profile_id')::uuid;
   v_incident uuid := current_setting('app.safety_probe.incident_id')::uuid;
   v_alert uuid := current_setting('app.safety_probe.alert_id')::uuid;
   v_blocked integer := 0;
 BEGIN
+  BEGIN
+    PERFORM public.create_safety_incident(
+      v_foreign_profile,
+      NULL,
+      'other',
+      'medium',
+      'Security probe reporter spoof attempt',
+      NULL,
+      NULL
+    );
+    RAISE EXCEPTION 'foreign_profile_safety_incident_creation_allowed';
+  EXCEPTION WHEN insufficient_privilege THEN
+    v_blocked := v_blocked + 1;
+  END;
+
   BEGIN
     PERFORM public.register_safety_evidence(
       v_incident,
@@ -131,8 +149,8 @@ BEGIN
     v_blocked := v_blocked + 1;
   END;
 
-  IF v_blocked <> 3 THEN
-    RAISE EXCEPTION 'expected 3 safety denials, got %', v_blocked;
+  IF v_blocked <> 4 THEN
+    RAISE EXCEPTION 'expected 4 safety denials, got %', v_blocked;
   END IF;
 END;
 $negative_authorization$;
@@ -143,6 +161,6 @@ ROLLBACK;
 SELECT jsonb_build_object(
   'probe', 'safety_authority_negative',
   'passed', true,
-  'blocked_rpc_count', 3,
+  'blocked_rpc_count', 4,
   'rolled_back', true
 ) AS result;

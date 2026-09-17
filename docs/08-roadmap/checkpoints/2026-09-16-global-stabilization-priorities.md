@@ -22,11 +22,36 @@ Base técnica reconciliada imediatamente antes desta atualização: `6c5fd41eccd
 
 Critério continua: execução real de typecheck/lint/security/test/build/deploy no mesmo SHA candidato, sem bypass.
 
+Revalidação remota em 2026-09-17:
+
+- PR #117 está aberto no SHA `4f41fb17f9a7c0b9d41662f630312e97cd34d3a2`, baseado no HEAD atual da `main` `70bea7259572c2032371fe21fea5785f5191cdef`;
+- os runs `Security Check` #35227877275, `SSOT Enforcement` #35227877133, `Security Scan` #35227877140 e `SSOT Territorial Tests` #35227877162 terminaram `failure`, com `steps=null`; portanto os comandos não iniciaram;
+- `Heavy PR Certification (Auto)` #35227877336 continua `pending`, com o job aguardando runner;
+- o status `Vercel` do mesmo SHA está `failure`; o comentário do deploy informa limite diário do plano (`api-deployments-free-per-day`, mais de 100 deploys), sem build/deploy certificável;
+- o sync canônico de tipos #207 (run `35168708525`) continua `queued`; #208 (run `35178338822`) foi cancelado após 40m37s, também sem steps;
+- não foi demonstrada a causa exata dos jobs sem steps nem a disponibilidade do runner dedicado.
+
+Verificação local deste checkout em 2026-09-17:
+
+- `npm run typecheck:ci` passou com recompilação forçada;
+- `npm run lint` passou sem erros (dois avisos já existentes);
+- `npm run build` passou após execução autorizada fora do sandbox: Vite transformou 6.089 módulos e produziu o bundle local; isso não comprova deployment;
+- `npm run security:validate` passou, com aviso de `.env.local` ausente;
+- `npm run validate:migrations` passou após reconciliar colisões locais e classificações explícitas;
+- `npm run build` produziu o bundle local com 6.089 módulos; não é deployment nem prova same-SHA remota;
+- testes focados de Safety/Mobility passaram **14/14**; lint Maps passou e seus testes passaram **4/4** usando configuração de teste isolada, pois a configuração padrão tentou ler `../../..` fora do limite do sandbox;
+- novos testes focados do validador de migrations passaram **2/2**, e os testes de leitura Mobility/contrato passaram **12/12**;
+- o caller sem uso de `get_driver_dispatch_summaries` foi removido; o RPC remoto só concede EXECUTE a `service_role` e o scan do código de browser agora retorna zero callers entre 197 nomes privilegiados;
+- a comparação detalhada do ledger remoto encontrou 32 reconciliações de arquivo cujo SQL é idêntico ao registrado, sete migrations com conteúdo local diferente do aplicado, 29 migrations locais sem identidade remota e 10 registros remotos sem arquivo local. Não aplicar nem renomear os conflitos até reconciliar o provenance de cada statement.
+- esses resultados locais ainda não certificam SHA remoto. O follow-up será anexado ao PR #117 sem merge; o novo SHA candidato precisa executar novamente os gates hospedados e obter deployment próprio.
+
 ### Proteção de `main`
 
 Estado: **ABERTO**.
 
-`main` continua `protected=false`, sem required status checks. Issue relacionado: #28. A capacidade de escrita de branch protection/ruleset não está disponível no conector atual; não declarar fechado até verificação remota.
+Estado: **ABERTO / não verificável nesta sessão**. A última observação registrada mostrou `protected=false`, sem required status checks. A consulta atual da API de branch protection retornou `403 Resource not accessible by integration`; por isso não confirma o estado presente nem permite aplicar a configuração. Issue relacionado: #28.
+
+Antes de exigir PR para todos os pushes, reconciliar a regra com o workflow canônico `Supabase Types Sync`, que grava somente `types.generated.ts` diretamente em `main` usando `GITHUB_TOKEN`. A regra precisa preservar essa publicação restrita ou o workflow deve passar por PR; não presumir bypass administrativo do bot.
 
 ## P1 — Mobilidade
 
@@ -70,7 +95,7 @@ Dos 9 warnings, 3 são `st_estimatedextent` do PostGIS. Os 6 RPCs próprios revi
 
 ### Revisão `authenticated SECURITY DEFINER`
 
-A triagem de maior risco já possui **50 fronteiras sensíveis com evidência negativa/de isolamento no Supabase real**, em transações rollback-only:
+A triagem de maior risco já possui **53 fronteiras sensíveis com evidência negativa/de isolamento no Supabase real**, em transações rollback-only:
 
 - 6 RPCs administrativos de mutação/ação;
 - 7 leituras administrativas: métricas/SLO, fila de correção, audit social, moderação federada e listas Trust;
@@ -79,9 +104,14 @@ A triagem de maior risco já possui **50 fronteiras sensíveis com evidência ne
 - 6 fronteiras de participante em corrida: chat ensure/send/read, ride share, verification status e PIN;
 - 9 fronteiras Community Direct / emergency contacts;
 - 6 fronteiras Classifieds messaging: inbox de perfil alheio, send/read/block/report conversation/report message por outsider;
-- 3 fronteiras Safety: evidence em incidente alheio, mutação de alerta alheio e transição de incidente por não-admin;
+- 4 fronteiras Safety: criação de incidente com `reported_by` forjado, evidence em incidente alheio, mutação de alerta alheio e transição de incidente por não-admin;
 - 2 fronteiras current-user preferences/favorites: favorite alheio bloqueado e preferência de outro usuário preservada;
 - 2 fronteiras de Community poll: voto e autoria de post com Profile alheio.
+- 2 fronteiras de reações em grupo: leitura de contagem e tentativa de curtir mensagem privada por não-membro.
+
+Probe remoto rollback-only ampliado em `tests/security/safety-authority-negative-remote-probe.sql`: `create_safety_incident` bloqueou o `reported_by` de outro Profile; o Supabase retornou 4/4 negações e `rolled_back=true`.
+
+Probe remoto rollback-only em `tests/security/community-group-reaction-membership-remote-probe.sql` confirmou que membro enxerga a própria reação e a contagem, enquanto perfil externo recebe zero linhas e não consegue curtir; fixture sintética removida com `rolled_back=true`.
 
 Probes versionados incluem:
 
@@ -95,6 +125,7 @@ Probes versionados incluem:
 - `tests/security/safety-authority-negative-remote-probe.sql`;
 - `tests/security/current-user-preferences-isolation-remote-probe.sql`;
 - `tests/security/community-poll-profile-spoof-negative-remote-probe.sql`.
+- `tests/security/community-group-reaction-membership-remote-probe.sql`.
 
 A revisão não fecha automaticamente os 85 warnings. Grupos residuais seguem classificados por autoridade real antes de qualquer revoke/grant em massa.
 

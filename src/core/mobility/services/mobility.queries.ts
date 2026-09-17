@@ -31,7 +31,6 @@ export {
 export {
   getCompletedRidePaymentsByDriver,
   getDriverCompleteProfile,
-  getDriverDataByProfileIds,
   getDriverEarnings,
   getDriverOfferCapabilities,
   getDriverProfiles,

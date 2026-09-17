@@ -349,6 +349,7 @@ BEGIN
 END;
 $function$;
 
+-- security-authority: public-rpc public.list_public_education_profiles
 REVOKE ALL ON FUNCTION public.list_public_education_profiles(
   text, text, text, text, text[], text[], text[], text[], boolean, text, integer, integer, uuid[]
 ) FROM PUBLIC;
@@ -445,6 +446,7 @@ BEGIN
 END;
 $function$;
 
+-- security-authority: public-rpc public.list_public_education_districts
 REVOKE ALL ON FUNCTION public.list_public_education_districts(text, text, uuid[])
 FROM PUBLIC;
 GRANT EXECUTE ON FUNCTION public.list_public_education_districts(text, text, uuid[])
