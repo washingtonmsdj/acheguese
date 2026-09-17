@@ -1,6 +1,6 @@
 # Status atual do Achegue-se
 
-Atualizado em: 2026-09-17 16:19 UTC
+Atualizado em: 2026-09-17 16:45 UTC
 
 ## Autoridade deste documento
 
@@ -23,25 +23,23 @@ A regra continua sendo fail-closed: nenhum status verde inferido, merge, commit,
 
 ### GitHub Actions hosted
 
-O SHA de código avaliado neste snapshot é `c46e61eba0a0b5d132c64fe51f1589c208810458`. Esta atualização acrescenta somente documentação operacional; os gates ainda precisam concluir no HEAD documental para certificar o candidato final. Nele, `Security Check` #35245264321, `SSOT Enforcement` #35245264352, `Security Scan` #35245264362, `SSOT Territorial Tests` #35245264317 e `Auth Concept Regression` #35245264418 terminaram com falha; os jobs retornaram `steps=null`, sem execução de etapas.
-
-Esses resultados não comprovam regressão do código nem aprovação. A causa administrativa/infra continua sem diagnóstico confirmado; o mesmo diagnóstico deve ser refeito no HEAD documental. O problema segue rastreado na issue #17.
+No HEAD do PR #117 `395f95c3eff40221f301e637dfd92aeb5d42341f`, cinco workflows terminaram em falha pré-step: `Security Check` #35246133959, `SSOT Enforcement` #35246133895, `Security Scan` #35246134014, `SSOT Territorial Tests` #35246134081 e `Auth Concept Regression` #35246133941. Todos reportaram `runner_id=0` e `steps=[]`; nenhum comando foi executado. Esses resultados não provam regressão nem aprovação do código. A causa do provisionamento não foi identificada; o bloqueio está rastreado na issue #17.
 
 ### Heavy PR Certification
 
-O run `Heavy PR Certification (Auto)` #35245264495 do PR #117 está `pending`, com job `queued` e sem steps. Ainda não existe certificação pesada do SHA.
+O run `Heavy PR Certification (Auto)` #35246134155 do PR #117 continua `queued`, sem steps. Ainda não existe certificação pesada do SHA.
 
-O sync canônico de tipos #207 (run `35168708525`) continua `queued`; #208 (run `35178338822`) foi cancelado após 40m37s, sem steps.
+O runner self-hosted `acheguese-windows-heavy-01` está `offline`, sem serviço ou processo runner neste host. O sync canônico de tipos #207 (run `35168708525`) segue `queued` desde 04:09 UTC; #208 (run `35178338822`) foi cancelado após 40m37s, sem steps.
 
 ### Proteção da `main`
 
-A última observação registrada mostrou `protected=false`, sem required status checks. A consulta atual da API de branch protection retornou `403 Resource not accessible by integration`; ela não confirma o estado presente nem permite aplicar a configuração. A correção administrativa continua rastreada na issue #28.
+A API administrativa confirmou proteção parcial: `protected=true`, `enforce_admins=true`, force-push/deleção bloqueados e resolução de conversas exigida. `required_pull_request_reviews`, `required_status_checks` e `restrictions` são `null`; pushes diretos comuns continuam permitidos. PR/checks não foram ativados porque `Supabase Types Sync` ainda grava diretamente em `main`, e o CI não inicia jobs (#17, #28).
 
 ### Vercel
 
 Release exige deployment `READY` para exatamente o mesmo SHA certificado. `build-rate-limit`, cancelamento, `Ignored Build Step`, `pending` ou sucesso de um SHA anterior não contam.
 
-O preview `dpl_3yFoVfGodyEfdQz7p5nCRawPumbc` está `READY` e o status GitHub `Vercel=success` no SHA de código `c46e61eba0a0b5d132c64fe51f1589c208810458`. É preview de PR; promoção de produção e smoke final permanecem pendentes.
+O HEAD atual `395f95c3eff40221f301e637dfd92aeb5d42341f` foi bloqueado por `Deployment rate limited — retry in 24 hours`; não há deployment `READY` neste SHA. O preview `dpl_3yFoVfGodyEfdQz7p5nCRawPumbc` e `Vercel=success` pertencem ao SHA anterior `c46e61eba0a0b5d132c64fe51f1589c208810458`. Promoção de produção e smoke final permanecem pendentes.
 
 ## P1 — Mobilidade
 

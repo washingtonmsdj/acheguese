@@ -214,7 +214,7 @@ Essa política substitui a antiga ideia de escolher um repositório e abandonar 
 
 - `main` é a única linha ativa escolhida para esta estabilização.
 - **93 branches existem no snapshot atual:** `main` + **92 refs históricas** pendentes de classificação segura (#84). A contagem foi revalidada diretamente: a página 93 existe e a página 94 está vazia com `per_page=1`.
-- `main` permanece sem proteção/ruleset autoritativo no último snapshot confirmado (#28).
+- `main` recebeu proteção parcial em 2026-09-17: `protected=true`, `enforce_admins=true`, force-push/deleção bloqueados e resolução de conversas exigida; PR/checks/restrição de push continuam pendentes por causa do writer direto `Supabase Types Sync` (#28).
 - os workflows SSOT foram alinhados com `push` na `main`; alterações em tooling canônico sob `tools/**` e nos arquivos de configuração relevantes devem disparar os gates correspondentes.
 - o root legado `scripts/**` está aposentado; workflows/package scripts não devem depender de wrappers recriados nesse caminho.
 - a camada GitHub Actions apresentou nesta estabilização falhas pre-step com `steps=[]`/runner não provisionado; nenhum check desse tipo pode ser tratado como prova verde até executar comandos reais (#17).
@@ -241,9 +241,14 @@ Essa política substitui a antiga ideia de escolher um repositório e abandonar 
 
 ### Proteção da `main` (#28)
 
-- [ ] bloquear force-push e deleção;
-- [ ] restringir autoridade de push durante o fluxo temporário `main`-only;
-- [ ] não configurar required checks falsos enquanto a infraestrutura de CI não executar de verdade.
+Estado remoto confirmado em 2026-09-17: `protected=true`, `enforce_admins=true`, `allow_force_pushes=false`, `allow_deletions=false` e `required_conversation_resolution=true`.
+
+- [x] bloquear force-push e deleção;
+- [x] exigir resolução de conversas;
+- [ ] exigir PR e restringir autoridade de push;
+- [ ] configurar required checks após os workflows iniciarem de verdade;
+- [x] não exigir checks sem execução real; registrar o blocker de runner (#17).
+- [ ] reconciliar o writer direto `Supabase Types Sync` com proteção por PR sem presumir bypass do bot.
 
 ## P1 — segurança e privacidade
 

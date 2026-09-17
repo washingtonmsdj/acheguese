@@ -6,7 +6,7 @@
 
 ## Estado atual resumido
 
-- a última observação de proteção mostrou `protected=false`, mas a consulta atual da API retornou `403 Resource not accessible by integration`; o estado presente da `main` não pôde ser confirmado nem alterado nesta sessão (issue #28);
+- `main` tem proteção parcial aplicada em 2026-09-17: `protected=true`, admins sujeitos às regras, force-push e deleção bloqueados e resolução de conversas exigida. PR obrigatório, required checks e restrição de push seguem pendentes até migrar o writer direto `Supabase Types Sync` (issue #28);
 - houve build/deploy real `READY` no mesmo SHA em `a30b7c7...`, mas commits posteriores não herdam essa certificação; qualquer HEAD final precisa repetir o gate real;
 - Mobility continua pública **desabilitada** e já possui GPS minimizado, autorização negativa, preço terminal server-owned, replays sequenciais e contrato estrutural de atomicidade provados;
 - a prova runtime de concorrência em duas sessões independentes continua aberta;
@@ -23,7 +23,7 @@
 
 1. obter execução real de typecheck/lint/security/test/build/deploy no SHA candidato final;
 2. exigir Vercel `READY` no mesmo SHA; `Ignored Build Step`, `pending`, rate-limit, commit ou merge não são aprovação;
-3. ativar proteção/ruleset da `main` com PR obrigatório, sem force-push/deleção e required check executável.
+3. completar a proteção/ruleset da `main`: PR obrigatório e checks executáveis depois de reconciliar `Supabase Types Sync`, preservando force-push/deleção bloqueados e resolução de conversas exigida.
 
 ### P1 — Mobilidade
 

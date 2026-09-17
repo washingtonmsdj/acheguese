@@ -1,6 +1,6 @@
 # Checkpoint — prioridades globais de estabilização
 
-**Atualizado:** 2026-09-17  
+**Atualizado:** 2026-09-17 16:45 UTC  
 **Linha:** `main`  
 **Status:** P0/P1 em execução; release authority do HEAD atual ainda aberto; Mobilidade, segurança e LGPD avançaram com provas remotas fail-closed
 
@@ -23,14 +23,15 @@ Base técnica reconciliada imediatamente antes desta atualização: `6c5fd41eccd
 
 Critério continua: execução real de typecheck/lint/security/test/build/deploy no mesmo SHA candidato, sem bypass.
 
-Snapshot remoto do SHA de código `c46e61eba0a0b5d132c64fe51f1589c208810458`, observado antes desta atualização documental em 2026-09-17 às 16:19 UTC:
+Snapshot remoto do PR #117 no HEAD documental `395f95c3eff40221f301e637dfd92aeb5d42341f`, observado em 2026-09-17 às 16:40 UTC:
 
-- PR #117 está aberto, baseado no HEAD da `main` `70bea7259572c2032371fe21fea5785f5191cdef`, com 13 commits à frente e zero atrás;
-- os runs `Security Check` #35245264321, `SSOT Enforcement` #35245264352, `Security Scan` #35245264362, `SSOT Territorial Tests` #35245264317 e `Auth Concept Regression` #35245264418 terminaram `failure`, com `steps=null`; os comandos não iniciaram;
-- `Heavy PR Certification (Auto)` #35245264495 continua pendente, com job `queued` e sem steps;
-- o preview Vercel `dpl_3yFoVfGodyEfdQz7p5nCRawPumbc` está `READY` no mesmo SHA e o status GitHub é `success`; produção e smoke permanecem pendentes;
-- o sync canônico de tipos #207 (run `35168708525`) continua `queued`; #208 (run `35178338822`) está `cancelled` após 40m37s, também sem steps;
-- não foi demonstrada a causa exata dos jobs sem steps nem a disponibilidade do runner dedicado.
+- PR #117 está aberto, baseado na `main` `70bea7259572c2032371fe21fea5785f5191cdef`, com 14 commits à frente e zero atrás;
+- `Security Check` #35246133959, `SSOT Enforcement` #35246133895, `Security Scan` #35246134014, `SSOT Territorial Tests` #35246134081 e `Auth Concept Regression` #35246133941 terminaram em falha pré-step: `runner_id=0`, `steps=[]`; nenhum comando foi executado;
+- `Heavy PR Certification (Auto)` #35246134155 continua `queued`, sem steps;
+- o único runner cadastrado, `acheguese-windows-heavy-01`, está `offline`; nenhum serviço/processo runner existe neste host. A causa de provisionamento dos jobs `ubuntu-latest` não foi identificada;
+- o sync canônico de tipos #207 (run `35168708525`) continua `queued` desde 04:09 UTC; #208 (run `35178338822`) está `cancelled` após 40m37s, sem steps;
+- Vercel bloqueou o HEAD `395f95c` por `Deployment rate limited — retry in 24 hours`; o preview `dpl_3yFoVfGodyEfdQz7p5nCRawPumbc` está `READY` somente no SHA anterior `c46e61eba0a0b5d132c64fe51f1589c208810458`, sem produção ou smoke final;
+- a causa exata dos jobs sem steps e a causa comercial do rate limit continuam sem diagnóstico confirmado.
 
 Verificação local deste checkout em 2026-09-17:
 
@@ -48,7 +49,7 @@ Verificação local deste checkout em 2026-09-17:
 
 ### Proteção de `main`
 
-Estado: **ABERTO / não verificável nesta sessão**. A última observação registrada mostrou `protected=false`, sem required status checks. A consulta atual da API de branch protection retornou `403 Resource not accessible by integration`; por isso não confirma o estado presente nem permite aplicar a configuração. Issue relacionado: #28.
+Estado: **PARCIAL / #28 continua aberto**. A API administrativa confirmou `protected=true`, `enforce_admins=true`, force-push/deleção bloqueados e resolução de conversas obrigatória. `required_pull_request_reviews`, `required_status_checks` e `restrictions` permanecem `null`, então push direto comum ainda é permitido. PR e Vercel não foram exigidos porque `Supabase Types Sync` grava diretamente em `main`; o runner dedicado está offline.
 
 Antes de exigir PR para todos os pushes, reconciliar a regra com o workflow canônico `Supabase Types Sync`, que grava somente `types.generated.ts` diretamente em `main` usando `GITHUB_TOKEN`. A regra precisa preservar essa publicação restrita ou o workflow deve passar por PR; não presumir bypass administrativo do bot.
 
