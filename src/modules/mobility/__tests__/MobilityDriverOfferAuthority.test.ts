@@ -24,6 +24,9 @@ describe("Mobility driver offer authority", () => {
     const dispatchConfig = readProjectFile(
       "src/core/mobility/services/MobilityDispatchConfigService.ts",
     );
+    const dispatchPolicy = readProjectFile(
+      "src/shared/contracts/mobilityDispatchPolicy.ts",
+    );
 
     expect(migration).toContain("private.mobility_operational_city_id");
     expect(migration).toContain("public.mobility_list_driver_offers");
@@ -61,7 +64,11 @@ describe("Mobility driver offer authority", () => {
     expect(queries).not.toContain("getReservationOfferRides");
     expect(queries).not.toContain("getExclusiveOfferRideForDriver");
 
-    expect((dispatchConfig.match(/requiresSubscription: true/g) ?? []).length)
+    expect(dispatchConfig).toContain("MOBILITY_DISPATCH_POLICY");
+    expect((dispatchPolicy.match(/requiresSubscription: true/g) ?? []).length)
       .toBeGreaterThanOrEqual(3);
+    expect((dispatchConfig.match(/showFullDetails: false/g) ?? []).length)
+      .toBeGreaterThanOrEqual(3);
+    expect(dispatchConfig).not.toContain("showFullDetails: true");
   });
 });
