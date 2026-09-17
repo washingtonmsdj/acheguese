@@ -2,7 +2,7 @@
 
 **Data:** 2026-09-16  
 **Linha:** `main`  
-**Status:** source endurecido; GPS, autorização negativa, preço terminal e replay de aceite reconciliados; rollout público continua pausado
+**Status:** source endurecido; GPS, autorização negativa, preço terminal, replay de aceite e replay de quote reconciliados; rollout público continua pausado
 
 ## Objetivo desta fase
 
@@ -20,6 +20,7 @@ Invariantes:
 - quote é server-owned, expira, é vinculada ao passageiro/modalidade/endereços/regra-versão e é single-use;
 - `mobility_create_ride_atomic` e `mobility_create_delivery_atomic` usam `p_quote_id` como autoridade;
 - regras atuais permanecem `commercial_status=provisional`; nenhuma tarifa fictícia é política comercial aprovada;
+- verificação remota em 2026-09-16 confirmou `0` regras ativas/aprovadas tanto para `ride` quanto para `motoboy`;
 - sem regra aprovada, produção deve falhar fechado;
 - `PricingService` não possui motor local de tarifa/fallback monetário;
 - hooks locais de estimativa foram aposentados e o raw `PricingService` não é API pública.
@@ -51,7 +52,8 @@ Existe drift confirmado entre o schema remoto e `src/integrations/supabase/types
 - o RPC vivo `mobility_transition_delivery_state_atomic` possui 7 argumentos e não expõe `p_final_price`;
 - o arquivo gerado ainda contém `p_final_price?: number` nessa assinatura;
 - o artefato gerado não deve ser editado manualmente;
-- a correção deve ocorrer pelo workflow canônico `Supabase Types Sync`/`supabase gen types`, seguida de typecheck e novo deploy no mesmo SHA.
+- a correção deve ocorrer pelo workflow canônico `Supabase Types Sync`/`supabase gen types`, seguida de typecheck e novo deploy no mesmo SHA;
+- o workflow foi disparado pelo SHA `4a9bba6ff6cf9f592065b78034fcf74a06ae9bb4`, mas permanece `queued` porque depende do runner self-hosted Windows com labels `acheguese-heavy-windows` e `remote-only`.
 
 Enquanto esse sync não for executado, o gate de tipos permanece aberto.
 
@@ -110,21 +112,45 @@ O fixture respeitou `check_available_requirements` e a minimização de GPS ativ
 
 **Escopo da prova:** retry/replay sequencial. Ainda não equivale a prova real de duas sessões concorrentes.
 
+## Replay/idempotência de quote
+
+Foi executado no Supabase canônico um segundo probe rollback-only para o contrato single-use de `quote_id`.
+
+O ambiente real continua sem política comercial aprovada. Para exercitar apenas a invariável técnica sem persistir política fictícia, o probe:
+
+- seleciona a regra `ride` já ativa e sem peak/additional fees;
+- muda somente `commercial_status` para `approved` dentro da própria transação;
+- não desabilita trigger, constraint, RLS ou função de validação;
+- cria uma quote sintética e chama `mobility_create_ride_atomic` duas vezes com a mesma `quote_id`;
+- reverte integralmente ao final.
+
+Evidência obtida:
+
+- a primeira criação foi concluída;
+- a segunda criação com a mesma quote foi rejeitada com SQLSTATE `23505`;
+- existiu exatamente uma `ride_requests` com a `pricing_quote_id` sintética;
+- existiu exatamente um audit inicial `requested` para a corrida criada;
+- `mobility_price_quotes.consumed_by_ride_id` apontou somente para a primeira corrida.
+
+O probe está versionado em `tests/security/mobility-quote-replay-remote-probe.sql`.
+
+**Escopo da prova:** consumo duplicado sequencial da quote. Ainda não substitui corrida concorrente em duas sessões independentes.
+
 ## Safety / SOS
 
 Permanece válido `2026-09-16-mobility-safety-production-drift-repair.md`: outbox G71-G80 e `send-emergency-email` v33 já haviam sido reconciliados.
 
 ## Estado de build/deploy
 
-O SHA `a30b7c7ba9a403ff7c9a6c4e1308754a4d9bbd4f` foi confirmado com status Vercel `success` antes da inclusão deste probe. Qualquer commit posterior precisa repetir o gate same-SHA; um deploy verde anterior não certifica automaticamente o novo SHA.
+O SHA `a30b7c7ba9a403ff7c9a6c4e1308754a4d9bbd4f` foi confirmado com status Vercel `success` antes da inclusão dos probes posteriores. O SHA `4a9bba6ff6cf9f592065b78034fcf74a06ae9bb4` recebeu status Vercel `success` apenas por `Canceled by Ignored Build Step`, portanto isso não conta como build/deploy positivo do código. Qualquer commit posterior precisa repetir o gate same-SHA com execução real.
 
 ## Bloqueadores atuais de lançamento
 
 1. definir e aprovar a política comercial real por modalidade;
-2. regenerar tipos Supabase a partir do schema real, sem edição manual;
-3. concluir concorrência/idempotência além do replay já provado: dupla aceitação em sessões independentes, cancelamento simultâneo, quote duplicada e confirmação duplicada;
+2. regenerar tipos Supabase a partir do schema real, sem edição manual; o workflow está aguardando o runner self-hosted;
+3. concluir concorrência/idempotência além dos replays já provados: dupla aceitação em sessões independentes, cancelamento simultâneo, confirmação duplicada e concorrência real de consumo de quote;
 4. executar typecheck, lint, testes de Mobilidade/Pricing, build e E2E no mesmo SHA;
-5. obter pipeline/deploy verde para o SHA final de estabilização;
+5. obter pipeline/deploy verde por execução real para o SHA final de estabilização;
 6. proteger `main` por ruleset/required checks quando houver capacidade administrativa.
 
 ## Fechado nesta retomada
@@ -135,7 +161,8 @@ O SHA `a30b7c7ba9a403ff7c9a6c4e1308754a4d9bbd4f` foi confirmado com status Verce
 - [x] zero snapshots de GPS ocioso após a migration;
 - [x] `p_final_price` removido do wrapper público com cutover versionado e ratchet de arquitetura;
 - [x] drift de tipos identificado objetivamente (`p_final_price` ainda presente no arquivo gerado);
-- [x] replay sequencial de `mobility_accept_ride_atomic` provado rollback-only sem duplicar audit/estado.
+- [x] replay sequencial de `mobility_accept_ride_atomic` provado rollback-only sem duplicar audit/estado;
+- [x] replay sequencial de consumo de `quote_id` provado rollback-only sem criar corrida/audit duplicado.
 
 ## Regra de lançamento
 
