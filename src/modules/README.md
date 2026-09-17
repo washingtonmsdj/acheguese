@@ -17,6 +17,7 @@
 - `community-lost-found`
 - `community-recommendations`
 - `guide`
+- `messaging`
 - `mobility`
 - `professionals`
 - `profile`
@@ -61,6 +62,7 @@ They live in `src/app/features` (for example: onboarding, dashboard, landings).
 - Modules can import from `shared`, `core`, and `integrations` through approved boundaries.
 - Cross-module implementation imports are not allowed.
 - Shared contracts and canonical services must come from `core`.
+- Cross-domain inbox UI belongs to `messaging`; thread contracts and persistence owners remain in `src/core/messaging`.
 - `src/core` must not import or reexport `src/modules`. When a module UI/hook is
   needed by more than one bounded context, promote the reusable contract to
   `core` and migrate every consumer before removing the old module path.

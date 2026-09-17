@@ -3,7 +3,7 @@
 > AVISO DE SUBSTITUICAO DOCUMENTAL
 >
 > Status: SUBSTITUIDO.
-> Documento canonico atual: `docs/DOCUMENTATION-INDEX.md`.
+> Documento canonico atual: `docs/README.md`.
 > Este arquivo fica preservado apenas como historico e nao deve ser usado como fonte normativa.
 
 ## Uso

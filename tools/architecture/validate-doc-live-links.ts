@@ -4,6 +4,11 @@ import { dirname, resolve } from "node:path";
 // Após Sprint DOCS.1, a porta de entrada única é docs/README.md.
 // Ele é o SSOT documental e o único doc validado por completude de links.
 const LIVE_DOCS = ["docs/README.md"] as const;
+const RETIRED_DOCUMENTATION_ENTRY_PATHS = [
+  "docs/DOCUMENTATION-INDEX.md",
+  "docs/INDEX_CANONICO.md",
+  "docs/03-architecture/CANONICAL_MAP.md",
+] as const;
 
 function extractRelativeLinks(markdown: string): string[] {
   const matches = [...markdown.matchAll(/\[[^\]]+\]\((\.[^)]+)\)/g)];
@@ -27,6 +32,11 @@ function validateFile(filePath: string): string[] {
 
 function main(): void {
   const missingLinks: string[] = [];
+  for (const file of RETIRED_DOCUMENTATION_ENTRY_PATHS) {
+    if (existsSync(file)) {
+      missingLinks.push("entrada documental duplicada: " + file);
+    }
+  }
 
   for (const file of LIVE_DOCS) {
     if (!existsSync(file)) {

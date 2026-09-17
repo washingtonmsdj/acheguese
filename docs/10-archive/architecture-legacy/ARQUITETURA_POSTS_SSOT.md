@@ -3,7 +3,7 @@
 > AVISO DE SUBSTITUICAO DOCUMENTAL
 >
 > Status: SUBSTITUIDO.
-> Documento canonico atual: `docs/feed/FEED-FREEZE.md`.
+> Contrato atual de Posts: `docs/07-modules/POSTS_FEED_SSOT.md`. O Feed Freeze permanece como registro das invariantes históricas.
 > Este arquivo fica preservado apenas como historico e nao deve ser usado como fonte normativa para a superficie publica do Feed.
 **Posts Sociais | Status**: ✅ Concluído estruturalmente
 **Polls | Status**: ✅ Vinculadas a `posts.id`

@@ -5,7 +5,7 @@ import path from "path";
 
 const ROOT = process.cwd();
 const MODULES_README_PATH = "src/modules/README.md";
-const DOCUMENTATION_INDEX_PATH = "docs/DOCUMENTATION-INDEX.md";
+const DOCUMENTATION_ENTRY_PATH = "docs/README.md";
 const PROJECT_MILESTONE_PATH = "docs/architecture/PROJECT-MILESTONE-1.md";
 const CORE_LAYER_SSOT_PATH = "docs/03-architecture/CORE_LAYER_SSOT.md";
 const COMMUNITY_FIRST_ARCHITECTURE_DOC_PATH =
@@ -39,6 +39,7 @@ const CANONICAL_MODULES = [
   "community-recommendations",
   "communication-territorial",
   "guide",
+  "messaging",
   "mobility",
   "professionals",
   "profile",
@@ -201,7 +202,7 @@ const COMMUNITY_MODULE_EMPTY_FACADE_IMPORTS = [
   "@/modules/community-lost-found/pages/AchadoPerdidoDetailPage",
 ] as const;
 const ACTIVE_COMMUNITY_DOCS_WITHOUT_LEGACY_AGGREGATOR = [
-  DOCUMENTATION_INDEX_PATH,
+  DOCUMENTATION_ENTRY_PATH,
   CORE_LAYER_SSOT_PATH,
   PROJECT_MILESTONE_PATH,
 ] as const;
@@ -213,14 +214,14 @@ const ACTIVE_COMMUNITY_DOC_FORBIDDEN_MARKERS = [
   "migrar para `src/modules/community`",
   "-> `src/modules/community`",
 ] as const;
-const DOCUMENTATION_INDEX_REQUIRED_MARKERS = [
-  "Status: CANONICO",
-  "docs/03-architecture/COMMUNITY_FIRST_ARCHITECTURE_SSOT.md",
-  "docs/03-architecture/CORE_LAYER_SSOT.md",
-  "docs/architecture/PROJECT-MILESTONE-1.md",
-  "docs/01-product/STATUS.md | Product | SUBSTITUIDO",
-  "docs/03-architecture/CANONICAL_MAP.md | Architecture | SUBSTITUIDO",
-  "docs/10-archive/**",
+const DOCUMENTATION_ENTRY_REQUIRED_MARKERS = [
+  "Porta de entrada única.",
+  "./03-architecture/COMMUNITY_FIRST_ARCHITECTURE_SSOT.md",
+  "./03-architecture/CORE_LAYER_SSOT.md",
+  "./architecture/PROJECT-MILESTONE-1.md",
+  "10-archive/root-legacy/STATUS-TOMBSTONE.md",
+  "./07-modules/POSTS_FEED_SSOT.md",
+  "10-archive/",
 ] as const;
 const COMMUNITY_FIRST_PLAN_STATUS_REQUIRED_MARKERS = [
   "Status: concluido em 2026-07-09",
@@ -541,18 +542,18 @@ function main() {
     }
   }
 
-  const documentationIndex = readText(DOCUMENTATION_INDEX_PATH);
-  if (!documentationIndex) {
-    violations.push(`Indice canonico ausente: ${DOCUMENTATION_INDEX_PATH}`);
+  const documentationEntry = readText(DOCUMENTATION_ENTRY_PATH);
+  if (!documentationEntry) {
+    violations.push(`Entrada documental ausente: ${DOCUMENTATION_ENTRY_PATH}`);
   } else {
-    const normalizedDocumentationIndex = documentationIndex.replace(
+    const normalizedDocumentationEntry = documentationEntry.replace(
       /[\t ]+/g,
       " ",
     );
-    for (const marker of DOCUMENTATION_INDEX_REQUIRED_MARKERS) {
-      if (!normalizedDocumentationIndex.includes(marker)) {
+    for (const marker of DOCUMENTATION_ENTRY_REQUIRED_MARKERS) {
+      if (!normalizedDocumentationEntry.includes(marker)) {
         violations.push(
-          `${DOCUMENTATION_INDEX_PATH} fora de sincronia com a taxonomia documental vigente; falta marcador "${marker}".`,
+          `${DOCUMENTATION_ENTRY_PATH} fora de sincronia com a taxonomia documental vigente; falta marcador "${marker}".`,
         );
       }
     }

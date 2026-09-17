@@ -73,6 +73,9 @@ describe("vertical taxonomy documentation SSOT", () => {
     expect(rootReadme).not.toContain("docs/INDEX_CANONICO.md");
     expect(security).toContain("docs/README.md");
     expect(security).not.toContain("docs/INDEX_CANONICO.md");
+    expect(fs.existsSync(path.join(ROOT, "docs/DOCUMENTATION-INDEX.md"))).toBe(false);
+    expect(fs.existsSync(path.join(ROOT, "docs/INDEX_CANONICO.md"))).toBe(false);
+    expect(fs.existsSync(path.join(ROOT, "docs/03-architecture/CANONICAL_MAP.md"))).toBe(false);
     expect(docsReadme).toMatch(/Porta de entrada (?:única|unica)/i);
     expect(docsReadme).toContain("EXECUCAO_MAIN_ONLY.md");
   });

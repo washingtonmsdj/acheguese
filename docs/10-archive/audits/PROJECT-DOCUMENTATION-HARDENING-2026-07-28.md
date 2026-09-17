@@ -1,5 +1,7 @@
 # PROJECT-DOCUMENTATION-HARDENING.md
 
+> Relatório arquivado em 2026-09-17. Consulte `docs/README.md` para as fontes normativas atuais.
+
 Data: 2026-07-28
 
 Status: CONCLUIDO

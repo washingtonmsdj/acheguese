@@ -136,7 +136,7 @@ describe("global repository reorganization contract", () => {
     expect(fs.existsSync(entrypointPath)).toBe(true);
 
     const content = fs.readFileSync(entrypointPath, "utf8");
-    expect(content).toContain("SUBSTITUÍDO COMO AUTORIDADE");
+    expect(content).toContain("PONTEIRO DE COMPATIBILIDADE, NÃO SSOT.");
     expect(content).toContain("docs/README.md");
     expect(content).toContain("docs/08-roadmap/EXECUCAO_MAIN_ONLY.md");
     expect(content).not.toContain("ARQUIVO PERMANENTE DA RAIZ");

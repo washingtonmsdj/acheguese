@@ -50,10 +50,10 @@ export const DOMAIN_REGISTRY: DomainRegistryEntry[] = [
       "src/core/landing",
     ],
     docsPaths: [
-      "docs/ARCHITECTURE.md",
-      "docs/CANONICAL_MAP.md",
-      "docs/GEOGRAPHIC_FOUNDATION.md",
-      "docs/TERRITORIAL_FOUNDATION.md",
+      "docs/03-architecture/ARCHITECTURE.md",
+      "docs/README.md",
+      "docs/02-domain/GEOGRAPHIC_FOUNDATION.md",
+      "docs/02-domain/TERRITORY-DOMAIN.md",
       "src/core/routing/README.md",
       "src/core/location/README.md",
       "src/core/location/docs/LOCATION_ARCHITECTURE.md",
@@ -767,7 +767,7 @@ export const CRITICAL_SHARED_COMPONENTS = [
 ];
 
 export const DOC_OBSERVATIONS = [
-  "docs/README.md, docs/INDEX_CANONICO.md e docs/CANONICAL_MAP.md devem permanecer sincronizados como entrada documental.",
+  "docs/README.md e a entrada documental unica; mantenha os SSOTs listados nela sincronizados com os owners executaveis.",
   "docs/CURRENT_RULES.md e o contrato vigente para fronteiras, SSOT e schema.",
   "Documentacao de dominio continua misturada entre docs/, src/*/README.md e src/*/docs/, sem indice unico por dominio.",
   "Documentacao historica deve permanecer explicitamente sob docs/10-archive e nunca ser tratada como contrato executavel atual.",

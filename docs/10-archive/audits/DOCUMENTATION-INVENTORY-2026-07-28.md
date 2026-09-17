@@ -1,4 +1,6 @@
-# DOCUMENTATION-INDEX.md
+# Inventário documental — fotografia de 2026-07-28
+
+> Estado histórico. O índice ativo passou a ser `docs/README.md` em 2026-09-17.
 
 Data: 2026-07-28
 

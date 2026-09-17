@@ -3,7 +3,7 @@
 **Sprint:** TERRITORY.DATA-QUALITY.V2
 **Status:** padrão oficial de governança de qualidade territorial
 **Escopo:** domínio Territory e readiness territorial-operacional
-**Base:** `TERRITORY-DATA-QUALITY.md`, `TERRITORY-DATA-QUALITY-REVIEW.md`, `TERRITORY-GOVERNANCE.md`
+**Base:** `docs/10-archive/audits/TERRITORY-DATA-QUALITY-2026-07.md`, `docs/10-archive/audits/TERRITORY-DATA-QUALITY-REVIEW-2026-07.md`, `TERRITORY-GOVERNANCE.md`
 **Regra:** este documento é especificação de governança. Não implementa código, banco, migrations, contratos ou arquitetura.
 
 ## 1. Decisão central
@@ -673,8 +673,8 @@ Toda auditoria deve produzir uma linha por entidade auditada.
 
 Esta V2 substitui como referência de governança:
 
-- `docs/domain/TERRITORY-DATA-QUALITY.md`;
-- a decisão final de `docs/domain/TERRITORY-DATA-QUALITY-REVIEW.md`.
+- `docs/10-archive/audits/TERRITORY-DATA-QUALITY-2026-07.md`;
+- a decisão final preservada em `docs/10-archive/audits/TERRITORY-DATA-QUALITY-REVIEW-2026-07.md`.
 
 O review permanece como histórico e justificativa técnica da mudança. A V1 permanece como histórico, mas não deve ser usada como padrão de decisão.
 

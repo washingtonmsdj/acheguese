@@ -32,7 +32,7 @@ O último build de produção que chegou ao TypeScript mostrou erros reais de in
 - `tools/architecture/check-ssot-compliance.ts` deixou de aceitar `MobilityService.impl.ts` como owner válido e passou a proteger também `ride_requests`;
 - o hook Husky de SSOT aponta para o registry canônico atual, não para documentação antiga;
 - `docs/architecture/SSOT_REGISTRY.md` e `tools/architecture/architecture-registry.ts` foram reconciliados com os owners reais em `src/core/mobility`;
-- `docs/01-product/STATUS.md` foi reduzido a tombstone curto; o antigo snapshot substituído não participa mais da autoridade operacional e seu histórico permanece no Git/arquivo histórico;
+- O tombstone `docs/10-archive/root-legacy/STATUS-TOMBSTONE.md` foi retirado da árvore ativa; o snapshot antigo permanece recuperável pelo histórico Git;
 - Vercel ignore, testes de release, scanners de segurança, policy de `service_role` e workflow SSOT deixaram de classificar/consultar `.kiro` como artefato ativo;
 - a árvore histórica `.kiro` foi desligada de runtime/release/security e removida fisicamente de `main`; referências históricas em `docs/10-archive` e entradas necessárias de `.gitleaksignore` permanecem apenas como evidência histórica.
 

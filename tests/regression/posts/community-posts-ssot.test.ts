@@ -96,7 +96,7 @@ describe("posts vs community_posts SSOT", () => {
     );
 
     const postsArchitecture = readProjectFile(
-      "docs/07-modules/ARQUITETURA_POSTS_SSOT.md",
+      "docs/03-architecture/COMMUNITY_FIRST_ARCHITECTURE_SSOT.md",
     );
     expect(postsArchitecture).toMatch(/community_questions/);
     expect(postsArchitecture).toMatch(/question_answers/);

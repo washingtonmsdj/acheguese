@@ -1,6 +1,6 @@
 # Achegue-se — Documentação (SSOT)
 
-> **Porta de entrada única.** Este índice define quais documentos são autoridades vivas. Conteúdo fora daqui pode ser referência histórica, mas não substitui o SSOT atual.
+> **Porta de entrada única.** Este README é o índice oficial: apenas os SSOTs e referências listados abaixo têm autoridade normativa. Registros e snapshots encerrados permanecem em `10-archive/` para consulta histórica.
 
 ## Visão do produto
 
@@ -53,7 +53,7 @@ Alguns caminhos antigos ainda existem fora das pastas numeradas por compatibilid
 - [Feature map](./FEATURE-MAP.md)
 - [Screen map](./SCREEN-MAP.md)
 
-`01-product/STATUS.md` está marcado como **SUBSTITUÍDO** e permanece apenas por histórico/compatibilidade; não é autoridade de status.
+O tombstone de status foi arquivado em `10-archive/root-legacy/STATUS-TOMBSTONE.md`; use as fontes oficiais listadas acima.
 
 ### Domínio
 
@@ -69,7 +69,7 @@ Alguns caminhos antigos ainda existem fora das pastas numeradas por compatibilid
 - [Arquitetura global](./03-architecture/ARCHITECTURE.md)
 - [Community-first architecture SSOT](./03-architecture/COMMUNITY_FIRST_ARCHITECTURE_SSOT.md)
 - [Core Platform architecture SSOT](./03-architecture/CORE_PLATFORM_ARCHITECTURE_SSOT.md)
-- [Canonical map / ownership](./03-architecture/CANONICAL_MAP.md)
+- [Core layer ownership](./03-architecture/CORE_LAYER_SSOT.md)
 
 ### Segurança e governance
 
@@ -114,12 +114,12 @@ Alguns caminhos antigos ainda existem fora das pastas numeradas por compatibilid
 
 ## Arquivo histórico
 
-Tudo em [`10-archive/`](./10-archive/) foi consolidado, superado ou é snapshot. Se conflitar com uma fonte viva acima, **a fonte viva vence**.
+Tudo em [`10-archive/`](./10-archive/) é histórico e não normativo. O inventário e os relatórios encerrados da consolidação de 2026-07-28 foram arquivados em [`10-archive/audits/`](./10-archive/audits/); eles preservam o retrato daquela data, não o estado atual.
 
 ## Regras documentais
 
 1. Não criar documento novo sem verificar se já existe owner equivalente.
-2. Uma única fonte de verdade por assunto; este índice registra a autoridade.
+2. Uma única fonte de verdade por assunto; este README registra as autoridades vivas.
 3. A raiz do repositório mantém apenas `README.md` e `SECURITY.md`.
 4. Toda funcionalidade de usuário deve estar no `FEATURE-MAP.md`.
 5. Toda rota deve estar no `SCREEN-MAP.md`.
