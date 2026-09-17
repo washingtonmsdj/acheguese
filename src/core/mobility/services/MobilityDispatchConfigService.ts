@@ -5,6 +5,7 @@
  * Centraliza todas as regras de negócio e configurações
  */
 import { logger } from '@/shared/utils/logger';
+import { MOBILITY_DISPATCH_POLICY } from '@/shared/contracts/mobilityDispatchPolicy';
 import type {
   DispatchStrategy,
   DispatchContext,
@@ -14,54 +15,10 @@ import type {
 import { RIDE_MODE, SOURCE_TYPE } from '../constants';
 
 // ============================================
-// CONFIGURAÇÃO GLOBAL (SSOT)
+// CONFIGURAÇÃO GLOBAL (SSOT compartilhado app + Edge)
 // ============================================
 
-const DISPATCH_GLOBAL_CONFIG: DispatchGlobalConfig = {
-  // Exclusive Offer (Corrida imediata de passageiro)
-  exclusiveOffer: {
-    enabled: true,
-    offerTimeoutSeconds: 30,        // 30s por motorista
-    maxRetryAttempts: 5,             // Máximo 5 motoristas
-    maxOffersPerDriver: 1,           // Apenas 1 oferta exclusiva por vez
-    searchRadiusKm: 10,              // Raio de 10km
-    requiresVerification: true,      // Motorista verificado obrigatório
-    requiresSubscription: true,      // Autoridade operacional exige assinatura ativa (modelo freemium)
-  },
-  
-  // Open Board (Entrega/motoboy)
-  openBoard: {
-    enabled: true,
-    maxOffersPerDriver: 10,          // Máximo 10 ofertas por motorista
-    offerExpirationMinutes: 30,      // Ofertas expiram em 30min
-    maxRetryAttempts: 999,            // Teto operacional da lista aberta
-    searchRadiusKm: 15,              // Raio maior para entregas
-    requiresVerification: true,      // Motorista verificado obrigatório
-    requiresSubscription: true,      // Autoridade operacional exige assinatura ativa
-  },
-  
-  // Reservation Board (Corridas agendadas)
-  reservationBoard: {
-    enabled: true,
-    offerTimeoutSeconds: 24 * 60 * 60, // Janela operacional de 24h
-    maxRetryAttempts: 999,               // Teto operacional da reserva
-    maxOffersPerDriver: 999,             // Teto operacional de ofertas agendadas
-    searchRadiusKm: 50,                  // Raio maior para agendadas
-    minAdvanceHours: 2,                  // Mínimo 2h de antecedência
-    maxAdvanceDays: 7,                   // Máximo 7 dias de antecedência
-    requiresVerification: true,          // Motorista verificado obrigatório
-    requiresSubscription: true,          // Autoridade operacional exige assinatura ativa
-  },
-  
-  // Scoring (para ordenação de motoristas)
-  scoring: {
-    distanceWeight: 0.40,            // 40% - proximidade
-    ratingWeight: 0.25,              // 25% - avaliação
-    acceptanceRateWeight: 0.15,      // 15% - taxa de aceitação
-    totalRidesWeight: 0.10,          // 10% - experiência
-    responseTimeWeight: 0.10,        // 10% - tempo de resposta
-  },
-};
+const DISPATCH_GLOBAL_CONFIG: DispatchGlobalConfig = MOBILITY_DISPATCH_POLICY;
 
 // ============================================
 // MOBILITY DISPATCH CONFIG SERVICE
