@@ -1,135 +1,142 @@
 # Checkpoint — prioridades globais de estabilização
 
-**Data:** 2026-09-16  
+**Atualizado:** 2026-09-17  
 **Linha:** `main`  
-**Status:** execução P0/P1 ativa; blockers de banco de Mobilidade reduzidos; build/deploy same-SHA ainda não certificado
+**Status:** P0/P1 em execução; release authority do HEAD atual ainda aberto; Mobilidade, segurança e LGPD avançaram com provas remotas fail-closed
 
-## Por que este checkpoint existe
+## Autoridade
 
-A auditoria global mostrou que o projeto não precisa abrir uma nova fase de arquitetura nem criar outro plano paralelo. A necessidade imediata é fechar ciclos de release, segurança e certificação funcional já definidos no SSOT operacional.
+Este checkpoint complementa `../EXECUCAO_MAIN_ONLY.md`; não o substitui. O arquivo raiz `URGENTE_LEIA_PRIMEIRO_REORGANIZACAO_GLOBAL.md` permanece apenas ponteiro de compatibilidade.
 
-Este checkpoint complementa `../EXECUCAO_MAIN_ONLY.md` e substitui, para a ordem imediata de execução, leituras antigas do arquivo raiz `URGENTE_LEIA_PRIMEIRO_REORGANIZACAO_GLOBAL.md`.
-
-## Evidência reconciliada
-
-### GitHub / `main`
-
-No início desta retomada, o HEAD técnico era `905583fb1143aef30617655e985a57d086278bce`.
-
-Estado observado:
-
-- branch `main` com `protected=false` e required status checks desativados;
-- aquele HEAD estava 12 commits à frente do último SHA que efetivamente entrou no build Vercel (`d97c9960a07e5093e34ba109164b1185692f6e89`);
-- as três regressões TypeScript desse deployment já estavam corrigidas no source: bounded widening de `RideRequestReadModel`, literal `HistoryTone` e export canônico de `useRideShare`;
-- `tests/architecture/mobility-build-contract.test.ts` trava esses contratos e agora também trava a remoção de `p_final_price` do boundary terminal de entrega.
-
-### Vercel
-
-O último deployment que executou o build e falhou foi `d97c996`.
-
-Para o HEAD auditado, o status GitHub `Vercel` apontava para `upgradeToPro=build-rate-limit`. Portanto:
-
-- os três erros antigos não representam o source atual;
-- o source atual ainda não pode ser declarado verde enquanto o pipeline não executar;
-- rate-limit externo é `BLOCKED_BY_PROVIDER`, não aprovação nem reprovação do build.
-
-### Mobilidade — avanços desta retomada
-
-O canal PostgreSQL administrativo voltou a responder e permitiu fechar três blockers concretos:
-
-1. `minimize_idle_driver_gps` aplicada no Supabase canônico e verificada;
-   - triggers de minimização/guard/purge ativos;
-   - zero `driver_availability` ociosos retendo GPS;
-   - zero snapshots ociosos em `driver_locations`.
-2. `tests/security/mobility-participant-authorization-remote-probe.sql` executado em transação rollback-only;
-   - terceiro usuário autenticado não consegue refresh de PIN;
-   - não consegue enviar trust feedback sobre corrida alheia;
-   - não consegue criar denúncia sobre corrida alheia.
-3. compatibilidade SQL `p_final_price` removida do wrapper público `mobility_transition_delivery_state_atomic`;
-   - assinatura antiga de 8 parâmetros removida;
-   - assinatura atual de 7 parâmetros preserva `service_role` como único executor externo;
-   - broker atual usa argumentos nomeados e não envia preço terminal;
-   - migration remota registrada como `20260916233125_remove_mobility_delivery_final_price_compat` e versionada com o mesmo número no Git.
-
-O rollout público continua pausado.
+Base técnica reconciliada imediatamente antes desta atualização: `0ee9b0b314ca3bcd45733b8b68f55afba89ec52e`.
 
 ## P0 — release authority
 
-### P0.1 — pipeline/build same-SHA
+### Same-SHA build/deploy
 
-Estado: **BLOCKED_BY_PROVIDER** enquanto o limite externo impedir a execução.
+- `a30b7c7ba9a403ff7c9a6c4e1308754a4d9bbd4f` teve deployment Vercel real `READY` e status `success` no mesmo SHA.
+- commits posteriores não herdam essa certificação;
+- deployments posteriores de mudanças apenas de docs/probes chegaram a ser cancelados por `Ignored Build Step`, o que **não** conta como build positivo;
+- para a base `0ee9b0b3...`, o check Vercel estava `pending` no momento desta atualização.
 
-Critério de aceite:
+Critério continua: execução real de typecheck/lint/security/test/build/deploy no mesmo SHA candidato, sem bypass.
 
-- pipeline de produção executado de verdade sobre o SHA candidato;
-- typecheck/lint/security/build sem bypass;
-- deployment Vercel `READY`;
-- SHA do deployment igual ao SHA certificado;
-- qualquer erro novo corrigido na causa raiz, sem aliases, disables ou relaxamento de gate.
-
-### P0.2 — proteção da `main`
+### Proteção de `main`
 
 Estado: **ABERTO**.
 
-Mínimo:
-
-- PR obrigatório;
-- bloquear force-push;
-- bloquear deleção;
-- resolução de conversas;
-- required check executável;
-- bypass administrativo apenas para incidente documentado.
-
-Relacionado: issue #28.
+`main` continua `protected=false`, sem required status checks. Issue relacionado: #28. A capacidade de escrita de branch protection/ruleset não está disponível no conector atual; não declarar fechado até verificação remota.
 
 ## P1 — Mobilidade
 
-Fechado nesta retomada:
+### Fechado com evidência remota
 
-- [x] canal PostgreSQL administrativo recuperado;
-- [x] migration de minimização de GPS aplicada/verificada;
-- [x] negative probe PIN/trust/report executado rollback-only;
-- [x] parâmetro público de compatibilidade `p_final_price` removido com cutover versionado.
+- minimização de GPS ocioso aplicada; zero GPS/snapshot ocioso remanescente na verificação;
+- probe negativo de participante bloqueou terceiro usuário em PIN/trust/report, rollback-only;
+- compatibilidade pública `p_final_price` removida; preço terminal continua server-owned;
+- replays sequenciais rollback-only provados para:
+  - aceite duplicado;
+  - consumo duplicado da mesma `quote_id`;
+  - conclusão terminal duplicada;
+- SQLSTATE de stale/replay normalizado para não induzir retry automático indevido;
+- contrato vivo de atomicidade validado por probe read-only:
+  - aceite trava `ride_request` e `driver_availability`;
+  - quote é travada por `FOR UPDATE` e consumida condicionalmente;
+  - transição de estado usa `FOR UPDATE` + `expected_from_state`;
+  - unicidade de `pricing_quote_id`/consumo permanece presente.
 
-Restante antes de launch-ready:
+`tests/security/mobility-concurrency-contract-remote-probe.sql` registra explicitamente que isso **não é** prova runtime em duas sessões independentes.
 
-1. definir/aprovar política comercial real por modalidade;
-2. regenerar tipos Supabase a partir do schema real, sem edição manual;
-3. provar concorrência/idempotência em dupla aceitação, cancelamento simultâneo, retries/reconnect, quote duplicada e confirmação duplicada;
-4. rodar testes de arquitetura/segurança/Mobilidade, E2E operacional e smoke responsivo;
-5. obter build/deploy do mesmo SHA;
-6. manter `PUBLIC_LAUNCH_SURFACES.mobility=false` até todos os gates.
+### Aberto antes de launch-ready
+
+1. política comercial real aprovada para `ride` e `motoboy`;
+2. regeneração de `src/integrations/supabase/types.generated.ts` pelo fluxo canônico; há drift confirmado e o runner do sync continua sendo bloqueio de infraestrutura;
+3. prova real em sessões independentes para dupla aceitação/cancelamento/quote/confirmação concorrentes;
+4. suite same-SHA completa + E2E/smoke;
+5. `PUBLIC_LAUNCH_SURFACES.mobility=false` até fechar todos os gates.
 
 ## P1 — segurança transversal
 
-Prioridades:
+Advisor de segurança atualizado em 2026-09-17:
 
-1. inventário/allowlist das funções `SECURITY DEFINER` executáveis por `anon` e `authenticated`;
-2. negative probes por recurso/ator para comandos sensíveis;
-3. Leaked Password Protection;
-4. menor privilégio em RLS/grants/extensões/PostGIS;
-5. normalização de policies permissivas duplicadas nas relações sensíveis.
+- 1 `ERROR`: `public.spatial_ref_sys` sem RLS, relação do PostGIS;
+- 4 extensões em `public`: `unaccent`, `pg_trgm`, `citext`, `postgis`;
+- 9 funções `SECURITY DEFINER` executáveis por `anon`;
+- 85 executáveis por `authenticated`;
+- Leaked Password Protection continua desabilitado.
 
-Nenhuma contagem de advisor deve ser tratada como vulnerabilidade automática nem ignorada sem classificação.
+Essas contagens são inventário, não classificação automática de vulnerabilidade.
+
+### Revisão `anon SECURITY DEFINER`
+
+Dos 9 warnings, 3 são `st_estimatedextent` do PostGIS. Os 6 RPCs próprios revisados possuem finalidade pública/anon explícita e filtros de autoridade/visibilidade: poll publicado, reputação profissional pública, resumo de rating autorizado, share de corrida por token ativo, projeção territorial pública e analytics.
+
+`track_analytics_event` recebeu probe negativo rollback-only no Supabase real:
+
+- spoof de outro `user_id` por caller autenticado foi bloqueado;
+- `order_completed` por caller não-`service_role` foi bloqueado;
+- nenhum fixture persistiu;
+- probe versionado em `tests/security/analytics-anon-authority-remote-probe.sql`.
+
+### RLS default-deny de Mobilidade
+
+`mobility_price_quotes` e `ride_state_audit` têm RLS ligado, nenhuma policy e nenhum grant para `anon`/`authenticated`; apenas `postgres`/`service_role`. O finding `RLS enabled no policy` nesses dois casos é deny-by-default intencional.
 
 ## P1 — LGPD / privacidade
 
 Relacionado: issue #68.
 
-Não fazer rollout das implementações antigas de exclusão/exportação como atalho.
+### Autoridade reversível reconciliada
 
-Critérios:
+A migration canônica aplicada é `20260826015916_reconcile_account_deletion_authority_live_drift`:
 
-- SSOT único para pedido/estado de exclusão;
-- purge idempotente e observável com scheduler/worker real;
-- revogação de sessão pela autoridade do Supabase Auth;
-- exportação reescrita contra o schema atual;
-- prova de cobertura/completude;
-- probes positivos/negativos antes de exposição certificada.
+- `public.account_deletion_requests` existe;
+- `get_account_deletion_status_for_user`, `request_account_deletion_for_user` e `cancel_account_deletion_for_user` existem;
+- browser roles não têm autoridade direta;
+- a migration declara explicitamente que não implementa purge destrutivo nem apaga `auth.users`.
+
+As migrations históricas `20260821...` não devem ser reaplicadas como atalho.
+
+### Purge destrutivo — gate novo
+
+Não existe cron/worker de purge atualmente.
+
+Levantamento read-only do schema vivo encontrou **28 FKs bloqueantes** (`NO ACTION`/`RESTRICT`) que exigem decisão explícita antes de excluir fisicamente `auth.users`/`profiles`:
+
+- 20 apontam para `auth.users`;
+- 8 apontam para `profiles`;
+- 25 usam colunas anuláveis;
+- 3 são não anuláveis + `RESTRICT`:
+  - `communication_publications_author_profile_id_fkey`;
+  - `community_user_moderation_actions_actor_profile_id_fkey`;
+  - `trust_admin_actions_applied_by_profile_id_fkey`.
+
+Foi criado `docs/09-reference/governance/privacy/LGPD_PURGE_MATRIX.json` com default `block`, `implementationComplete=false` e as 28 referências como `unclassified`.
+
+O preflight `tools/security/supabase-lgpd-edge-rollout-preflight.mjs` agora só pode liberar `user-delete-account` quando:
+
+- não houver marcadores stale;
+- existir `const LGPD_PURGE_IMPLEMENTATION_COMPLETE = true;` no handler;
+- a matriz estiver estruturalmente válida;
+- `implementationComplete=true`;
+- houver zero referências `unclassified`.
+
+Regressão: `tests/security/lgpd-purge-readiness-gate.test.ts`.
+
+Nenhuma política de retenção foi inventada e nenhum delete destrutivo/DDL foi executado nesta etapa.
+
+### Restante LGPD
+
+1. classificar as 28 referências com política aprovada de retenção/anonymização/set-null/delete/block;
+2. desenhar worker de purge idempotente e observável somente após essa classificação;
+3. revogar sessões pela autoridade real do Supabase Auth;
+4. manter `user-delete-account` legado bloqueado;
+5. concluir/certificar `user-export-data` contra `LGPD_EXPORT_MATRIX`, que permanece fail-closed;
+6. executar probes não-prod + same-SHA antes de rollout.
 
 ## P2 — certificação funcional
 
-Seguir issue #50 na ordem:
+Seguir issue #50:
 
 1. Mobilidade/Central motorista-motoboy;
 2. Central + Business/Gastronomia + Professionals;
@@ -137,20 +144,18 @@ Seguir issue #50 na ordem:
 4. Classifieds/Messaging/Work Opportunities/Profile/trust;
 5. Admin/Comunicação Territorial/Guide/AI/auxiliares.
 
-Um domínio só fecha quando arquitetura + autorização + banco + runtime + fluxo real + E2E concordarem. Placeholder, fallback, `launch-paused`, tela vazia ou early-return de teste não são prova.
+Domínio só fecha quando arquitetura + autorização + banco + runtime + fluxo real + E2E concordarem. Placeholder, fallback, launch-paused, tela vazia ou early-return não contam.
 
-## P3 — performance e UX
+## P3 — performance/UX
 
-Somente após estabilização funcional:
-
-- priorizar FKs sem índice com base em queries/tabelas quentes;
-- não remover índice marcado `unused` sem janela de observação;
-- medir custo de RLS antes/depois;
-- bundle/code splitting;
-- CSS/visual SSOT;
-- acessibilidade/responsividade;
-- limpeza de bridges e documentação temporária.
+Somente após estabilização funcional: priorizar índices/FKs por tráfego real, revisar RLS redundante com medição, bundle/CSS/visual SSOT, acessibilidade/responsividade e limpeza de bridges/documentação temporária.
 
 ## Próxima ação executável
 
-Enquanto Vercel estiver bloqueado por provider, continuar apenas tarefas que não falsifiquem a certificação do release. Em Mobilidade, a próxima frente é **concorrência/idempotência + reconciliação dos tipos gerados**. Em paralelo, permanece P0 a proteção administrativa da `main` quando a capacidade estiver disponível.
+Sem inventar política comercial ou retenção, as frentes executáveis são:
+
+1. acompanhar/fechar o sync canônico de tipos quando o runner estiver disponível;
+2. obter prova de concorrência real em sessões independentes quando houver mecanismo seguro de múltiplas sessões;
+3. classificar advisor `authenticated SECURITY DEFINER` por risco/autoridade, adicionando negative probes nos comandos sensíveis;
+4. continuar a matriz LGPD apenas com decisões de retenção explicitamente aprovadas;
+5. repetir build/deploy real no SHA final após qualquer alteração de source.
