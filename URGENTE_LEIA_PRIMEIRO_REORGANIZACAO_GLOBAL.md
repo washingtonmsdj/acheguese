@@ -2,81 +2,72 @@
 
 > **STATUS: PONTEIRO DE COMPATIBILIDADE, NÃO SSOT.**
 >
-> Este arquivo preserva o nome histórico usado por workflows/agentes antigos. A autoridade operacional continua em `docs/08-roadmap/EXECUCAO_MAIN_ONLY.md`; detalhes desta retomada estão em `docs/08-roadmap/checkpoints/2026-09-16-global-stabilization-priorities.md`.
+> Este arquivo preserva o nome histórico usado por workflows/agentes antigos. A autoridade operacional continua em `docs/08-roadmap/EXECUCAO_MAIN_ONLY.md`; o estado detalhado e verificável desta retomada está em `docs/08-roadmap/checkpoints/2026-09-16-global-stabilization-priorities.md`.
 
-## Estado reconciliado em 2026-09-16
+## Estado atual resumido
 
-- `main` atual desta atualização: `8a7b92484784a4e3880e1a77ddace0f4d24a0948`;
 - `main` continua **sem proteção** (`protected=false`, sem required checks);
-- as três regressões TypeScript do último build executado já estão corrigidas no source e possuem ratchet de arquitetura;
-- Vercel ainda não forneceu prova de build/deploy verde do SHA atual porque o status está bloqueado por **build rate limit do provider**;
-- o canal PostgreSQL administrativo voltou;
-- a minimização de GPS de motorista foi aplicada e verificada, sem snapshots ociosos remanescentes;
-- o probe negativo rollback-only de Mobilidade comprovou bloqueio de terceiro usuário em PIN/trust/report;
-- a compatibilidade pública `p_final_price` foi removida do wrapper terminal de entrega, mantendo preço server-owned e EXECUTE apenas para `service_role`;
-- Mobilidade permanece `PUBLIC_LAUNCH_SURFACES.mobility=false` até certificação same-SHA.
+- houve build/deploy real `READY` no mesmo SHA em `a30b7c7...`, mas commits posteriores não herdam essa certificação; qualquer HEAD final precisa repetir o gate real;
+- Mobility continua pública **desabilitada** e já possui GPS minimizado, autorização negativa, preço terminal server-owned, replays sequenciais e contrato estrutural de atomicidade provados;
+- a prova runtime de concorrência em duas sessões independentes continua aberta;
+- drift de `types.generated.ts` continua aberto e deve ser corrigido somente pelo fluxo canônico de geração;
+- advisor de segurança foi atualizado; warnings `SECURITY DEFINER` estão sendo classificados, não tratados por contagem bruta;
+- probe negativo de analytics comprovou bloqueio de spoof de `user_id` e de evento operacional sem `service_role`;
+- LGPD account-deletion reversível está reconciliado pela migration `20260826015916_reconcile_account_deletion_authority_live_drift`;
+- purge destrutivo **não existe** ainda e agora possui gate fail-closed: `LGPD_PURGE_MATRIX.json` registra 28 FKs bloqueantes, sendo 25 anuláveis e 3 obrigatórias/RESTRICT, todas ainda sem decisão de retenção;
+- `user-delete-account` legado permanece bloqueado; nenhuma política comercial ou de retenção será inventada para obter verde.
 
 ## Ordem urgente correta
 
-### P0 — fechar release authority
+### P0 — release authority
 
-1. obter execução real do pipeline/build do HEAD candidato quando o provider permitir;
-2. corrigir qualquer erro novo de source sem reduzir gates;
-3. exigir deployment `READY` do mesmo SHA;
-4. ativar proteção/ruleset da `main` com PR obrigatório, sem force-push/deleção e required check executável;
-5. não considerar rate-limit, commit ou merge como certificação positiva.
+1. obter execução real de typecheck/lint/security/test/build/deploy no SHA candidato final;
+2. exigir Vercel `READY` no mesmo SHA; `Ignored Build Step`, `pending`, rate-limit, commit ou merge não são aprovação;
+3. ativar proteção/ruleset da `main` com PR obrigatório, sem force-push/deleção e required check executável.
 
-### P1 — concluir Mobilidade antes de feature nova
-
-Fechado nesta retomada:
-
-- [x] migration de minimização de GPS aplicada/verificada;
-- [x] probe negativo PIN/trust/report executado rollback-only;
-- [x] compatibilidade `p_final_price` removida com migration versionada e ratchet de arquitetura.
+### P1 — Mobilidade
 
 Restante:
 
-1. definir/aprovar política comercial real por modalidade;
-2. regenerar tipos a partir do schema real, sem edição manual;
-3. provar concorrência/idempotência: dupla aceitação, cancelamento simultâneo, retries/reconnect, quote duplicada e confirmação duplicada;
-4. rodar typecheck/lint/testes/E2E/build/deploy no mesmo SHA;
-5. somente depois avaliar habilitação pública.
+1. aprovar política comercial real por modalidade;
+2. regenerar tipos Supabase pelo fluxo canônico;
+3. provar concorrência real em sessões independentes;
+4. executar E2E/smoke + same-SHA completo;
+5. manter `PUBLIC_LAUNCH_SURFACES.mobility=false` até todos os gates.
 
 ### P1 — segurança transversal
 
-1. inventariar e justificar `SECURITY DEFINER` executável por `anon`/`authenticated`;
-2. ativar Leaked Password Protection;
-3. tratar RLS/grants/PostGIS com menor privilégio e testes negativos;
-4. normalizar policies permissivas duplicadas primeiro nas relações sensíveis.
+1. classificar `SECURITY DEFINER` por autoridade real e adicionar negative probes onde necessário;
+2. ativar Leaked Password Protection quando houver capacidade de gestão Auth;
+3. tratar RLS/grants/extensões/PostGIS por menor privilégio, sem mudanças em massa por advisor;
+4. priorizar relações sensíveis antes de normalizar policies permissivas.
 
 ### P1 — LGPD/privacidade
 
-1. não implantar as funções antigas de exclusão/exportação por atalho;
-2. consolidar autoridade única de account deletion;
-3. implementar purge idempotente/observável;
-4. revogar sessões pela autoridade real do Supabase Auth;
-5. provar completude da exportação contra o schema atual.
+1. classificar explicitamente as 28 FKs de `LGPD_PURGE_MATRIX.json`;
+2. só depois implementar worker/scheduler de purge idempotente e observável;
+3. revogar sessões pela autoridade do Supabase Auth;
+4. manter `user-delete-account` legado bloqueado;
+5. certificar exportação contra `LGPD_EXPORT_MATRIX` antes de rollout.
 
-### P2 — certificação funcional por domínio
+### P2 — certificação funcional
 
-Seguir o programa #50: Mobilidade/Central -> Business/Gastronomia/Professionals -> Comunidade -> Marketplace/Identidade -> Admin e superfícies auxiliares. Placeholder, `launch-paused`, fallback ou E2E que retorna cedo não contam como certificação.
+Seguir issue #50: Mobilidade/Central -> Business/Gastronomia/Professionals -> Comunidade -> Marketplace/Identidade -> Admin e superfícies auxiliares. Placeholder, `launch-paused`, fallback ou E2E que retorna cedo não contam.
 
 ### P3 — performance/UX/limpeza
 
-Só depois de contratos funcionais estáveis: índices/FKs com telemetria real, RLS redundante, bundle/CSS, visual SSOT, acessibilidade, responsividade e redução de documentação/bridges temporários.
+Só depois de contratos funcionais estáveis: índices/FKs com telemetria real, RLS redundante, bundle/CSS, visual SSOT, acessibilidade, responsividade e redução de bridges/documentação temporária.
 
 ## Regras invioláveis
 
-- projeto real + runtime + schema + testes prevalecem sobre checkpoint antigo;
-- não remover feature válida para fazer build passar;
-- não reduzir gate para obter verde;
+- runtime + schema + testes prevalecem sobre checkpoint antigo;
+- não remover feature válida ou reduzir gate para fazer build passar;
 - não editar tipos Supabase gerados para esconder drift;
-- não introduzir writer/browser authority paralela;
+- não introduzir autoridade paralela no browser;
 - mudança persistente de schema exige migration versionada;
-- mudança de contrato deve reconciliar schema + types + service + UI + testes;
 - segurança sensível exige teste negativo;
 - `READY` prova deploy, não certifica sozinho o fluxo funcional;
-- não voltar a acumular histórico detalhado neste arquivo: usar checkpoints do roadmap.
+- detalhes pertencem aos checkpoints do roadmap, não a este ponteiro.
 
 ## Leia nesta ordem
 
