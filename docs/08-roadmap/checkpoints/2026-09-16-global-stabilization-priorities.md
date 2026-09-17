@@ -8,7 +8,7 @@
 
 Este checkpoint complementa `../EXECUCAO_MAIN_ONLY.md`; não o substitui. O arquivo raiz `URGENTE_LEIA_PRIMEIRO_REORGANIZACAO_GLOBAL.md` permanece apenas ponteiro de compatibilidade.
 
-Base técnica reconciliada imediatamente antes desta atualização: `1a28e4806e0fcf67c743e5934587b792e86ce9e9`.
+Base técnica reconciliada imediatamente antes desta atualização: `9dc2d3fd7e69e12fa63e260cef5c2c2de664935c`.
 
 ## P0 — release authority
 
@@ -70,19 +70,21 @@ Dos 9 warnings, 3 são `st_estimatedextent` do PostGIS. Os 6 RPCs próprios revi
 
 ### Revisão `authenticated SECURITY DEFINER`
 
-A triagem de maior risco já possui **21 bloqueios negativos executados no Supabase real**, todos rollback-only:
+A triagem de maior risco já possui **30 bloqueios negativos executados no Supabase real**, todos rollback-only:
 
 - 6 RPCs administrativos: trust actions/review, review aggregates admin, driver moderation, classified moderation e community-direct moderation;
 - 5 fronteiras de identidade/recurso: cross-user notification, Safety/profile spoof, verification de perfil alheio, listagem de membros de perfil alheio e coverage de classified alheio;
 - 4 fronteiras reviewer/voter: create/update-delete review e helpfulness em nome de perfil alheio;
-- 6 fronteiras de participante em corrida: chat ensure/send/read, ride share, verification status e PIN.
+- 6 fronteiras de participante em corrida: chat ensure/send/read, ride share, verification status e PIN;
+- 9 fronteiras Community Direct / emergency contacts usando `p_profile_id` ou contato alheio: create/list/send/read/block/report de thread, create contact e patch de contato.
 
 Probes versionados:
 
 - `tests/security/authenticated-admin-rpc-negative-remote-probe.sql`;
 - `tests/security/authenticated-identity-spoof-negative-remote-probe.sql`;
 - `tests/security/review-identity-spoof-negative-remote-probe.sql`;
-- `tests/security/ride-chat-share-participant-negative-remote-probe.sql`.
+- `tests/security/ride-chat-share-participant-negative-remote-probe.sql`;
+- `tests/security/community-profile-spoof-negative-remote-probe.sql`.
 
 A revisão não fecha automaticamente os 85 warnings; os grupos restantes continuam sendo classificados por autoridade real antes de qualquer revoke/grant em massa.
 
