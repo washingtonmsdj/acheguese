@@ -14,6 +14,10 @@ const DISPATCH_POLICY = readFileSync(
   resolve(process.cwd(), 'src/shared/contracts/mobilityDispatchPolicy.ts'),
   'utf8',
 );
+const LEGACY_MOBILITY_CONSTANTS = readFileSync(
+  resolve(process.cwd(), 'src/shared/types/mobility.constants.ts'),
+  'utf8',
+);
 
 describe('mobility dispatch policy integrity', () => {
   it('uses the same runtime-neutral policy in app and Edge', () => {
@@ -47,5 +51,12 @@ describe('mobility dispatch policy integrity', () => {
     expect(AUTO_DISPATCH).not.toContain('if (!pickupLat || !pickupLng)');
     expect(AUTO_DISPATCH).not.toContain('driver.current_lat || 0');
     expect(AUTO_DISPATCH).not.toContain('driver.current_lng || 0');
+  });
+
+  it('does not reintroduce retired dispatch policy literals in legacy mobility constants', () => {
+    expect(LEGACY_MOBILITY_CONSTANTS).not.toContain('OFFER_TIMEOUT_SECONDS');
+    expect(LEGACY_MOBILITY_CONSTANTS).not.toContain('TOTAL_TIMEOUT_MINUTES');
+    expect(LEGACY_MOBILITY_CONSTANTS).not.toContain('MAX_RETRY_ATTEMPTS');
+    expect(LEGACY_MOBILITY_CONSTANTS).not.toContain('SEARCH_RADIUS_KM');
   });
 });
