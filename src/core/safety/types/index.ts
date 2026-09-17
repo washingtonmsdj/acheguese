@@ -262,6 +262,7 @@ export type SafetyAuditAction =
   | 'alert_created'      // Alerta criado
   | 'alert_acknowledged' // Alerta reconhecido
   | 'alert_resolved'     // Alerta resolvido
+  | 'alert_false_alarm'  // Alerta marcado como falso alarme
   | 'incident_reported'  // Incidente reportado
   | 'incident_status_updated' // Status do incidente alterado
   | 'evidence_uploaded'  // Evidência enviada
