@@ -2,6 +2,8 @@
 -- Creates one synthetic motoboy delivery already in_delivery, confirms it once,
 -- retries the same terminal command, verifies that completion effects are not
 -- duplicated, and rolls everything back.
+-- The replay rejection must use P0001 rather than 40001 so the Data API/client
+-- does not treat stale-state rejection as a transient serialization failure.
 -- This is a sequential retry/replay proof. It is not a two-session concurrency proof.
 
 BEGIN;
@@ -21,6 +23,7 @@ DECLARE
   v_ride_id uuid;
   v_first jsonb;
   v_second_sqlstate text;
+  v_second_succeeded boolean := false;
   v_status text;
   v_final_price numeric;
   v_delivered_audit_count integer;
@@ -96,13 +99,17 @@ BEGIN
       pg_catalog.jsonb_build_object('code', 'probe-code'),
       NULL
     );
-    RAISE EXCEPTION 'mobility_terminal_replay_probe_second_confirm_unexpected_success';
+    v_second_succeeded := true;
   EXCEPTION
-    WHEN serialization_failure THEN
+    WHEN OTHERS THEN
       GET STACKED DIAGNOSTICS v_second_sqlstate = RETURNED_SQLSTATE;
   END;
 
-  IF v_second_sqlstate IS DISTINCT FROM '40001' THEN
+  IF v_second_succeeded THEN
+    RAISE EXCEPTION 'mobility_terminal_replay_probe_second_confirm_unexpected_success';
+  END IF;
+
+  IF v_second_sqlstate IS DISTINCT FROM 'P0001' THEN
     RAISE EXCEPTION 'mobility_terminal_replay_probe_wrong_second_sqlstate=%', v_second_sqlstate;
   END IF;
 
@@ -150,5 +157,6 @@ ROLLBACK;
 SELECT jsonb_build_object(
   'probe', 'mobility_terminal_replay',
   'passed', true,
-  'rolled_back', true
+  'rolled_back', true,
+  'expected_sqlstate', 'P0001'
 ) AS result;
