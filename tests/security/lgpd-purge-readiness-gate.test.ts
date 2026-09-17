@@ -19,12 +19,15 @@ const purgeMatrix = JSON.parse(
     blockingReferenceCount: number;
     authUsersBlockingReferenceCount: number;
     profilesBlockingReferenceCount: number;
+    nullableBlockingReferenceCount: number;
+    requiredBlockingReferenceCount: number;
   };
   blockingReferences: Array<{
     constraint: string;
     source: string;
     target: string;
     deleteAction: string;
+    nullable: boolean;
     decision: string;
   }>;
 };
@@ -54,6 +57,8 @@ describe('LGPD destructive purge readiness gate', () => {
       blockingReferenceCount: 28,
       authUsersBlockingReferenceCount: 20,
       profilesBlockingReferenceCount: 8,
+      nullableBlockingReferenceCount: 25,
+      requiredBlockingReferenceCount: 3,
     });
     expect(purgeMatrix.blockingReferences).toHaveLength(28);
     expect(
@@ -64,6 +69,22 @@ describe('LGPD destructive purge readiness gate', () => {
         (entry) => entry.decision === 'unclassified',
       ),
     ).toBe(true);
+  });
+
+  it('records the three non-null RESTRICT references that cannot be solved by SET NULL', () => {
+    const required = purgeMatrix.blockingReferences
+      .filter((entry) => entry.nullable === false)
+      .map((entry) => entry.constraint)
+      .sort();
+
+    expect(required).toEqual([
+      'communication_publications_author_profile_id_fkey',
+      'community_user_moderation_actions_actor_profile_id_fkey',
+      'trust_admin_actions_applied_by_profile_id_fkey',
+    ]);
+    expect(
+      purgeMatrix.blockingReferences.filter((entry) => entry.nullable === true),
+    ).toHaveLength(25);
   });
 
   it('requires the purge matrix and an explicit implementation certification before delete rollout', () => {
