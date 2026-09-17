@@ -3,6 +3,7 @@
 
 import { serve } from 'https://deno.land/std@0.168.0/http/server.ts';
 import { createClient, type SupabaseClient } from 'https://esm.sh/@supabase/supabase-js@2';
+import { MOBILITY_DISPATCH_POLICY } from '../../../src/shared/contracts/mobilityDispatchPolicy.ts';
 import {
   getAllSecurityHeaders,
   isOriginAllowed,
@@ -17,14 +18,7 @@ import { validateBody, dispatchRideSchema, type DispatchRideBody } from '../_sha
 const SUPABASE_URL = Deno.env.get('SUPABASE_URL')!;
 const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
 const ALLOWED_METHODS = 'POST, OPTIONS';
-
-// Configurações
-const CONFIG = {
-  OFFER_TIMEOUT_SECONDS: 30,
-  MAX_RETRY_ATTEMPTS: 5,
-  TOTAL_TIMEOUT_MINUTES: 10,
-  SEARCH_RADIUS_KM: 10,
-};
+const AUTO_DISPATCH_POLICY = MOBILITY_DISPATCH_POLICY.exclusiveOffer;
 
 interface DriverEligibility {
   profileId: string;
@@ -51,6 +45,11 @@ interface DriverAvailabilityRow {
   driver_data?: DriverCapabilityRow | DriverCapabilityRow[] | null;
 }
 
+type LocatedDriverAvailabilityRow = DriverAvailabilityRow & {
+  current_lat: number;
+  current_lng: number;
+};
+
 interface ActiveRideDriverRow {
   driver_profile_id: string | null;
 }
@@ -65,6 +64,21 @@ interface AtomicDispatchResult {
 function getDriverRating(profileData: DriverAvailabilityRow['profiles']): number {
   const profile = Array.isArray(profileData) ? profileData[0] : profileData;
   return typeof profile?.rating === 'number' ? profile.rating : 0;
+}
+
+function hasFiniteCoordinates(latitude: unknown, longitude: unknown): latitude is number {
+  return (
+    typeof latitude === 'number' &&
+    Number.isFinite(latitude) &&
+    typeof longitude === 'number' &&
+    Number.isFinite(longitude)
+  );
+}
+
+function hasFiniteDriverCoordinates(
+  driver: DriverAvailabilityRow,
+): driver is LocatedDriverAvailabilityRow {
+  return hasFiniteCoordinates(driver.current_lat, driver.current_lng);
 }
 
 function dispatchJson(req: Request, body: unknown, status = 200): Response {
@@ -114,7 +128,6 @@ serve(async (req: Request) => {
 
     const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
 
-    // Buscar dados da corrida
     const { data: ride, error: rideError } = await supabase
       .from('ride_requests')
       .select(`
@@ -133,39 +146,35 @@ serve(async (req: Request) => {
       return dispatchJson(req, { error: 'Ride not found' }, 404);
     }
 
-    // Validar estado
     if (ride.status !== 'searching_driver') {
       console.log(`[AutoDispatch] Invalid state: ${ride.status}`);
       return dispatchJson(req, { error: `Invalid state: ${ride.status}` }, 400);
     }
 
-    // Verificar timeout total
     const createdAt = new Date(ride.created_at);
     const now = new Date();
     const minutesElapsed = (now.getTime() - createdAt.getTime()) / (1000 * 60);
     
-    if (minutesElapsed > CONFIG.TOTAL_TIMEOUT_MINUTES) {
+    if (minutesElapsed > AUTO_DISPATCH_POLICY.totalTimeoutMinutes) {
       await expireRide(supabase, rideId, 'Total timeout exceeded');
       return dispatchJson(req, { success: false, reason: 'expired' });
     }
 
-    // Buscar coordenadas - addresses é um array, pegar o primeiro elemento
     const addressData = Array.isArray(ride.addresses) ? ride.addresses[0] : ride.addresses;
     const pickupLat = addressData?.latitude;
     const pickupLng = addressData?.longitude;
 
-    if (!pickupLat || !pickupLng) {
-      console.error('[AutoDispatch] Missing coordinates');
+    if (!hasFiniteCoordinates(pickupLat, pickupLng)) {
+      console.error('[AutoDispatch] Missing or invalid pickup coordinates');
       return dispatchJson(req, { error: 'Missing pickup coordinates' }, 400);
     }
 
-    // Buscar motoristas elegíveis
     const eligibleDrivers = await findEligibleDrivers(
       supabase,
       rideId,
       pickupLat,
       pickupLng,
-      ride.ride_mode || 'ride' // Passar ride_mode para filtrar motoristas
+      ride.ride_mode || 'ride'
     );
 
     if (eligibleDrivers.length === 0) {
@@ -175,8 +184,7 @@ serve(async (req: Request) => {
 
     console.log(`[AutoDispatch] Found ${eligibleDrivers.length} eligible drivers`);
 
-    // Tentar oferecer para motoristas sequencialmente
-    const maxAttempts = Math.min(eligibleDrivers.length, CONFIG.MAX_RETRY_ATTEMPTS);
+    const maxAttempts = Math.min(eligibleDrivers.length, AUTO_DISPATCH_POLICY.maxRetryAttempts);
     
     for (const [index, driver] of eligibleDrivers.slice(0, maxAttempts).entries()) {
       const attemptNumber = index + 1;
@@ -184,12 +192,9 @@ serve(async (req: Request) => {
       console.log(`[AutoDispatch] Attempt ${attemptNumber}: offering to ${driver.profileId}`);
 
       const timeoutAt = new Date(
-        Date.now() + CONFIG.OFFER_TIMEOUT_SECONDS * 1000,
+        Date.now() + AUTO_DISPATCH_POLICY.offerTimeoutSeconds * 1000,
       ).toISOString();
 
-      // Assignment + dispatch audit + state audit pertencem ao mesmo command
-      // server-side. Se outro dispatch reservar o motorista primeiro, este
-      // candidato falha fechado e o loop tenta o próximo.
       const assignment = await offerDriverAtomic(
         supabase,
         rideId,
@@ -205,17 +210,14 @@ serve(async (req: Request) => {
         continue;
       }
 
-      // Aguardar aceite ou timeout
       const accepted = await waitForAcceptance(
         supabase,
         rideId,
         driver.profileId,
-        CONFIG.OFFER_TIMEOUT_SECONDS
+        AUTO_DISPATCH_POLICY.offerTimeoutSeconds
       );
 
       if (accepted) {
-        // O accept_ride_atomic já fecha offer + availability + estado + audit
-        // na mesma transação.
         console.log(`[AutoDispatch] Driver ${driver.profileId} accepted`);
 
         return dispatchJson(
@@ -229,9 +231,6 @@ serve(async (req: Request) => {
         );
       }
 
-      // Timeout: somente libera a oferta se ela ainda pertencer a este
-      // motorista e continuar em driver_assigned. Nunca sobrescreve um aceite
-      // ou cancelamento concorrente.
       const timeoutResult = await timeoutDriverOfferAtomic(
         supabase,
         rideId,
@@ -251,7 +250,6 @@ serve(async (req: Request) => {
       console.log(`[AutoDispatch] Driver ${driver.profileId} timeout, trying next`);
     }
 
-    // Nenhum motorista aceitou
     await expireRide(supabase, rideId, 'No driver accepted after all attempts');
     
     return dispatchJson(
@@ -269,10 +267,6 @@ serve(async (req: Request) => {
   }
 });
 
-// ============================================
-// HELPER FUNCTIONS
-// ============================================
-
 async function findEligibleDrivers(
   supabase: SupabaseClient,
   rideId: string,
@@ -280,8 +274,6 @@ async function findEligibleDrivers(
   originLng: number,
   rideMode: string = 'ride'
 ): Promise<DriverEligibility[]> {
-  // Buscar motoristas online e disponíveis
-  // Se ride_mode = 'motoboy', filtrar apenas motoristas com can_do_delivery = true
   let query = supabase
     .from('driver_availability')
     .select(`
@@ -301,8 +293,6 @@ async function findEligibleDrivers(
     .eq('driver_data.is_verified', true)
     .eq('driver_data.subscription_active', true);
   
-  // Pré-filtro para evitar candidatos inviáveis. A autorização definitiva
-  // continua no command atômico, sob lock.
   if (rideMode === 'motoboy') {
     query = query.eq('driver_data.can_do_delivery', true);
   } else {
@@ -316,7 +306,6 @@ async function findEligibleDrivers(
     return [];
   }
 
-  // Verificar motoristas com corrida ativa
   const driverRows = drivers as DriverAvailabilityRow[];
   const profileIds = driverRows.map((driver) => driver.profile_id);
   const { data: activeRides } = await supabase
@@ -344,15 +333,15 @@ async function findEligibleDrivers(
       .filter((profileId): profileId is string => typeof profileId === 'string' && profileId.length > 0),
   );
 
-  // Calcular distância e filtrar
   const eligible: DriverEligibility[] = driverRows
     .filter((driver) => !busyDrivers.has(driver.profile_id))
+    .filter(hasFiniteDriverCoordinates)
     .map((driver) => {
       const distance = calculateDistance(
         originLat,
         originLng,
-        driver.current_lat || 0,
-        driver.current_lng || 0
+        driver.current_lat,
+        driver.current_lng
       );
 
       return {
@@ -361,7 +350,7 @@ async function findEligibleDrivers(
         rating: getDriverRating(driver.profiles),
       };
     })
-    .filter((d: DriverEligibility) => d.distance <= CONFIG.SEARCH_RADIUS_KM)
+    .filter((d: DriverEligibility) => d.distance <= AUTO_DISPATCH_POLICY.searchRadiusKm)
     .sort((a: DriverEligibility, b: DriverEligibility) => a.distance - b.distance);
 
   return eligible;
@@ -470,7 +459,7 @@ function calculateDistance(
   lat2: number,
   lon2: number
 ): number {
-  const R = 6371; // Raio da Terra em km
+  const R = 6371;
   const dLat = toRad(lat2 - lat1);
   const dLon = toRad(lon2 - lon1);
   const a =
@@ -486,4 +475,3 @@ function calculateDistance(
 function toRad(degrees: number): number {
   return degrees * (Math.PI / 180);
 }
-
