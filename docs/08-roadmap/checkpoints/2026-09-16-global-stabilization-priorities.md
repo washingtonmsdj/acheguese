@@ -8,7 +8,7 @@
 
 Este checkpoint complementa `../EXECUCAO_MAIN_ONLY.md`; não o substitui. O arquivo raiz `URGENTE_LEIA_PRIMEIRO_REORGANIZACAO_GLOBAL.md` permanece apenas ponteiro de compatibilidade.
 
-Base técnica reconciliada imediatamente antes desta atualização: `9dc2d3fd7e69e12fa63e260cef5c2c2de664935c`.
+Base técnica reconciliada imediatamente antes desta atualização: `6c5fd41eccd6faf88af0353e9d8bb87925a81595`.
 
 ## P0 — release authority
 
@@ -17,8 +17,8 @@ Base técnica reconciliada imediatamente antes desta atualização: `9dc2d3fd7e6
 - `a30b7c7ba9a403ff7c9a6c4e1308754a4d9bbd4f` teve deployment Vercel real `READY` e status `success` no mesmo SHA;
 - `305fe19c7f90a621c5a1f0e462b3fc230dc8e586` também teve deployment de produção real `READY` (`dpl_52T9AAZeRoae94x8DLAJksiW7zir`) e status GitHub `Vercel=success` no mesmo SHA;
 - commits posteriores não herdam essa certificação;
-- deployments cancelados por `Ignored Build Step` não contam como build positivo;
-- o HEAD atual é posterior a `305fe19c...`, portanto continua exigindo validação própria.
+- `279cbd74c590c4d2b555a3a00d643b3fc9bcaa9b` mostrou `Vercel=success` no GitHub, mas o deployment correspondente foi `CANCELED` por `Ignored Build Step`; esse status não conta como build positivo;
+- o HEAD atual é posterior ao último SHA com build real `READY`, portanto continua exigindo validação própria.
 
 Critério continua: execução real de typecheck/lint/security/test/build/deploy no mesmo SHA candidato, sem bypass.
 
@@ -70,23 +70,35 @@ Dos 9 warnings, 3 são `st_estimatedextent` do PostGIS. Os 6 RPCs próprios revi
 
 ### Revisão `authenticated SECURITY DEFINER`
 
-A triagem de maior risco já possui **30 bloqueios negativos executados no Supabase real**, todos rollback-only:
+A triagem de maior risco já possui **50 fronteiras sensíveis com evidência negativa/de isolamento no Supabase real**, em transações rollback-only:
 
-- 6 RPCs administrativos: trust actions/review, review aggregates admin, driver moderation, classified moderation e community-direct moderation;
-- 5 fronteiras de identidade/recurso: cross-user notification, Safety/profile spoof, verification de perfil alheio, listagem de membros de perfil alheio e coverage de classified alheio;
-- 4 fronteiras reviewer/voter: create/update-delete review e helpfulness em nome de perfil alheio;
+- 6 RPCs administrativos de mutação/ação;
+- 7 leituras administrativas: métricas/SLO, fila de correção, audit social, moderação federada e listas Trust;
+- 5 fronteiras de identidade/recurso: cross-user notification, Safety/profile spoof, verification de perfil alheio, membros de perfil alheio e coverage alheia;
+- 4 fronteiras reviewer/voter de reviews/helpfulness;
 - 6 fronteiras de participante em corrida: chat ensure/send/read, ride share, verification status e PIN;
-- 9 fronteiras Community Direct / emergency contacts usando `p_profile_id` ou contato alheio: create/list/send/read/block/report de thread, create contact e patch de contato.
+- 9 fronteiras Community Direct / emergency contacts;
+- 6 fronteiras Classifieds messaging: inbox de perfil alheio, send/read/block/report conversation/report message por outsider;
+- 3 fronteiras Safety: evidence em incidente alheio, mutação de alerta alheio e transição de incidente por não-admin;
+- 2 fronteiras current-user preferences/favorites: favorite alheio bloqueado e preferência de outro usuário preservada;
+- 2 fronteiras de Community poll: voto e autoria de post com Profile alheio.
 
-Probes versionados:
+Probes versionados incluem:
 
 - `tests/security/authenticated-admin-rpc-negative-remote-probe.sql`;
+- `tests/security/authenticated-admin-read-negative-remote-probe.sql`;
 - `tests/security/authenticated-identity-spoof-negative-remote-probe.sql`;
 - `tests/security/review-identity-spoof-negative-remote-probe.sql`;
 - `tests/security/ride-chat-share-participant-negative-remote-probe.sql`;
-- `tests/security/community-profile-spoof-negative-remote-probe.sql`.
+- `tests/security/community-profile-spoof-negative-remote-probe.sql`;
+- `tests/security/classified-messaging-participant-negative-remote-probe.sql`;
+- `tests/security/safety-authority-negative-remote-probe.sql`;
+- `tests/security/current-user-preferences-isolation-remote-probe.sql`;
+- `tests/security/community-poll-profile-spoof-negative-remote-probe.sql`.
 
-A revisão não fecha automaticamente os 85 warnings; os grupos restantes continuam sendo classificados por autoridade real antes de qualquer revoke/grant em massa.
+A revisão não fecha automaticamente os 85 warnings. Grupos residuais seguem classificados por autoridade real antes de qualquer revoke/grant em massa.
+
+`submit_work_opportunity_feedback` foi revisado especificamente: a UI o apresenta como **retorno rápido da comunidade** sobre utilidade da oportunidade, não review bilateral de contratação. O contrato server-side de permitir perfil ativo não autor em oportunidade não cancelada é coerente com essa semântica; não foi endurecido artificialmente.
 
 ### RLS default-deny de Mobilidade
 
@@ -157,6 +169,6 @@ Sem inventar política comercial ou retenção, as frentes executáveis são:
 
 1. acompanhar/fechar o sync canônico de tipos quando o runner estiver disponível;
 2. obter prova de concorrência real em sessões independentes quando houver mecanismo seguro de múltiplas sessões;
-3. continuar a classificação `authenticated SECURITY DEFINER` por risco/autoridade e negative probes;
+3. concluir classificação dos `authenticated SECURITY DEFINER` residuais por risco/autoridade e negative probes onde houver boundary sensível;
 4. continuar a matriz LGPD apenas com decisões de retenção explicitamente aprovadas;
 5. repetir build/deploy real no SHA final após alterações de source/probes.
