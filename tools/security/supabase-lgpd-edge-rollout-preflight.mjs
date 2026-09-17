@@ -12,11 +12,20 @@ const EXPORT_MATRIX_PATH = join(
   'privacy',
   'LGPD_EXPORT_MATRIX.json',
 );
+const PURGE_MATRIX_PATH = join(
+  process.cwd(),
+  'docs',
+  '09-reference',
+  'governance',
+  'privacy',
+  'LGPD_PURGE_MATRIX.json',
+);
 const EXPORT_MATRIX_SCHEMA_VERSION = 'lgpd-export-matrix/v1';
+const PURGE_MATRIX_SCHEMA_VERSION = 'lgpd-purge-matrix/v1';
 
 const BLOCKED_FUNCTIONS = Object.freeze({
   'user-delete-account': Object.freeze({
-    reason: 'account deletion handler still depends on removed/legacy schema and non-authoritative session tracking',
+    reason: 'account deletion handler still depends on removed/legacy schema or purge retention has not been certified',
     markers: Object.freeze([
       ".from('user_deletion_schedule')",
       ".eq('owner_id', userId)",
@@ -27,8 +36,11 @@ const BLOCKED_FUNCTIONS = Object.freeze({
       'is_valid: false',
       "revoke_reason: 'Account deletion'",
     ]),
-    requiredMarkers: Object.freeze([]),
+    requiredMarkers: Object.freeze([
+      'const LGPD_PURGE_IMPLEMENTATION_COMPLETE = true;',
+    ]),
     requiresExportMatrix: false,
+    requiresPurgeMatrix: true,
   }),
   'user-export-data': Object.freeze({
     reason: 'LGPD export handler still has stale/unsafe export behavior or has not certified the canonical export matrix',
@@ -49,14 +61,15 @@ const BLOCKED_FUNCTIONS = Object.freeze({
       'const LGPD_EXPORT_MATRIX_IMPLEMENTATION_COMPLETE = true;',
     ]),
     requiresExportMatrix: true,
+    requiresPurgeMatrix: false,
   }),
 });
 
 function usage() {
   return [
     'Uso:',
-    '  node scripts/security/supabase-lgpd-edge-rollout-preflight.mjs --function user-delete-account',
-    '  node scripts/security/supabase-lgpd-edge-rollout-preflight.mjs --function user-export-data --json',
+    '  node tools/security/supabase-lgpd-edge-rollout-preflight.mjs --function user-delete-account',
+    '  node tools/security/supabase-lgpd-edge-rollout-preflight.mjs --function user-export-data --json',
     '',
     'Este preflight existe para impedir rollout acidental dos handlers LGPD stale ou incompletos.',
     `Autoridade do bloqueio: ${ISSUE_URL}`,
@@ -126,6 +139,53 @@ function inspectExportMatrix() {
   }
 }
 
+function inspectPurgeMatrix() {
+  if (!existsSync(PURGE_MATRIX_PATH)) {
+    return {
+      ready: false,
+      reason: 'matriz canonica de purge ausente',
+      unresolvedReferences: null,
+    };
+  }
+
+  try {
+    const matrix = JSON.parse(readFileSync(PURGE_MATRIX_PATH, 'utf8'));
+    const references = Array.isArray(matrix?.blockingReferences)
+      ? matrix.blockingReferences
+      : [];
+    const unresolvedReferences = references.filter(
+      (reference) => reference?.decision === 'unclassified',
+    ).length;
+    const structurallyValid =
+      matrix?.schemaVersion === PURGE_MATRIX_SCHEMA_VERSION &&
+      matrix?.rules?.default === 'block' &&
+      matrix?.rules?.unclassifiedReference === 'block' &&
+      matrix?.rules?.authUserDeleteRequiresZeroUnclassifiedReferences === true &&
+      matrix?.rules?.profileDeleteRequiresZeroUnclassifiedReferences === true &&
+      references.length > 0;
+    const ready =
+      structurallyValid &&
+      matrix?.implementationComplete === true &&
+      unresolvedReferences === 0;
+
+    return {
+      ready,
+      reason: ready
+        ? null
+        : structurallyValid
+          ? 'matriz canonica de purge ainda possui referencias sem decisao ou implementationComplete=false'
+          : 'matriz canonica de purge invalida ou enfraquecida',
+      unresolvedReferences,
+    };
+  } catch {
+    return {
+      ready: false,
+      reason: 'matriz canonica de purge contem JSON invalido',
+      unresolvedReferences: null,
+    };
+  }
+}
+
 function inspectFunction(functionName) {
   const policy = BLOCKED_FUNCTIONS[functionName];
   const path = join(process.cwd(), 'supabase', 'functions', functionName, 'index.ts');
@@ -138,6 +198,8 @@ function inspectFunction(functionName) {
       staleMarkers: [],
       missingMarkers: [...policy.requiredMarkers],
       exportMatrixReady: policy.requiresExportMatrix ? false : null,
+      purgeMatrixReady: policy.requiresPurgeMatrix ? false : null,
+      unresolvedPurgeReferences: policy.requiresPurgeMatrix ? null : undefined,
     };
   }
 
@@ -147,18 +209,29 @@ function inspectFunction(functionName) {
   const exportMatrix = policy.requiresExportMatrix
     ? inspectExportMatrix()
     : { ready: true, reason: null };
-  const ready = staleMarkers.length === 0 && missingMarkers.length === 0 && exportMatrix.ready;
+  const purgeMatrix = policy.requiresPurgeMatrix
+    ? inspectPurgeMatrix()
+    : { ready: true, reason: null, unresolvedReferences: null };
+  const ready =
+    staleMarkers.length === 0 &&
+    missingMarkers.length === 0 &&
+    exportMatrix.ready &&
+    purgeMatrix.ready;
 
   return {
     function: functionName,
     ready,
     reason: ready
       ? null
-      : exportMatrix.reason ?? policy.reason,
+      : purgeMatrix.reason ?? exportMatrix.reason ?? policy.reason,
     issue: ISSUE_URL,
     staleMarkers,
     missingMarkers,
     exportMatrixReady: policy.requiresExportMatrix ? exportMatrix.ready : null,
+    purgeMatrixReady: policy.requiresPurgeMatrix ? purgeMatrix.ready : null,
+    unresolvedPurgeReferences: policy.requiresPurgeMatrix
+      ? purgeMatrix.unresolvedReferences
+      : null,
   };
 }
 
@@ -184,6 +257,12 @@ function printStatus(status, json) {
   }
   if (status.exportMatrixReady === false) {
     console.error('Matriz de exportacao: INVALIDA/AUSENTE');
+  }
+  if (status.purgeMatrixReady === false) {
+    console.error('Matriz de purge: INCOMPLETA/INVALIDA');
+    if (status.unresolvedPurgeReferences !== null) {
+      console.error(`Referencias de purge sem decisao: ${status.unresolvedPurgeReferences}`);
+    }
   }
 }
 
