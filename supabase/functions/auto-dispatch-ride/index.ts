@@ -3,6 +3,7 @@
 
 import { serve } from 'https://deno.land/std@0.168.0/http/server.ts';
 import { createClient, type SupabaseClient } from 'https://esm.sh/@supabase/supabase-js@2';
+import { MOBILITY_DISPATCH_POLICY } from '../../../src/shared/contracts/mobilityDispatchPolicy.ts';
 import {
   getAllSecurityHeaders,
   isOriginAllowed,
@@ -17,14 +18,7 @@ import { validateBody, dispatchRideSchema, type DispatchRideBody } from '../_sha
 const SUPABASE_URL = Deno.env.get('SUPABASE_URL')!;
 const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
 const ALLOWED_METHODS = 'POST, OPTIONS';
-
-// Configurações
-const CONFIG = {
-  OFFER_TIMEOUT_SECONDS: 30,
-  MAX_RETRY_ATTEMPTS: 5,
-  TOTAL_TIMEOUT_MINUTES: 10,
-  SEARCH_RADIUS_KM: 10,
-};
+const AUTO_DISPATCH_POLICY = MOBILITY_DISPATCH_POLICY.exclusiveOffer;
 
 interface DriverEligibility {
   profileId: string;
@@ -164,7 +158,7 @@ serve(async (req: Request) => {
     const now = new Date();
     const minutesElapsed = (now.getTime() - createdAt.getTime()) / (1000 * 60);
     
-    if (minutesElapsed > CONFIG.TOTAL_TIMEOUT_MINUTES) {
+    if (minutesElapsed > AUTO_DISPATCH_POLICY.totalTimeoutMinutes) {
       await expireRide(supabase, rideId, 'Total timeout exceeded');
       return dispatchJson(req, { success: false, reason: 'expired' });
     }
@@ -196,7 +190,7 @@ serve(async (req: Request) => {
     console.log(`[AutoDispatch] Found ${eligibleDrivers.length} eligible drivers`);
 
     // Tentar oferecer para motoristas sequencialmente
-    const maxAttempts = Math.min(eligibleDrivers.length, CONFIG.MAX_RETRY_ATTEMPTS);
+    const maxAttempts = Math.min(eligibleDrivers.length, AUTO_DISPATCH_POLICY.maxRetryAttempts);
     
     for (const [index, driver] of eligibleDrivers.slice(0, maxAttempts).entries()) {
       const attemptNumber = index + 1;
@@ -204,7 +198,7 @@ serve(async (req: Request) => {
       console.log(`[AutoDispatch] Attempt ${attemptNumber}: offering to ${driver.profileId}`);
 
       const timeoutAt = new Date(
-        Date.now() + CONFIG.OFFER_TIMEOUT_SECONDS * 1000,
+        Date.now() + AUTO_DISPATCH_POLICY.offerTimeoutSeconds * 1000,
       ).toISOString();
 
       // Assignment + dispatch audit + state audit pertencem ao mesmo command
@@ -230,7 +224,7 @@ serve(async (req: Request) => {
         supabase,
         rideId,
         driver.profileId,
-        CONFIG.OFFER_TIMEOUT_SECONDS
+        AUTO_DISPATCH_POLICY.offerTimeoutSeconds
       );
 
       if (accepted) {
@@ -383,7 +377,7 @@ async function findEligibleDrivers(
         rating: getDriverRating(driver.profiles),
       };
     })
-    .filter((d: DriverEligibility) => d.distance <= CONFIG.SEARCH_RADIUS_KM)
+    .filter((d: DriverEligibility) => d.distance <= AUTO_DISPATCH_POLICY.searchRadiusKm)
     .sort((a: DriverEligibility, b: DriverEligibility) => a.distance - b.distance);
 
   return eligible;
