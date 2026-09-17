@@ -151,9 +151,7 @@ export const TIMEOUTS = {
   CACHE_STALE_TIME_LONG: 2 * 60 * 1000,   // 2min - estatísticas
   CACHE_STALE_TIME_VERY_LONG: 5 * 60 * 1000, // 5min - dados estáticos
   
-  // Dispatch & Offers
-  OFFER_TIMEOUT_SECONDS: 30,               // 30s - timeout por motorista
-  TOTAL_TIMEOUT_MINUTES: 10,               // 10min - timeout total da corrida
+  // Request lifecycle
   REQUEST_EXPIRATION_MINUTES: 15,          // 15min - expiração de request
   
   // UI Animations
@@ -255,10 +253,6 @@ export const BUSINESS_RULES = {
   // Vehicle
   MIN_VEHICLE_YEAR: 2000,                  // Ano mínimo do veículo
   MAX_VEHICLE_YEAR: 2026,                  // Ano máximo do veículo
-  
-  // Dispatch
-  MAX_RETRY_ATTEMPTS: 5,                   // Máximo de motoristas para tentar
-  SEARCH_RADIUS_KM: 10,                    // Raio de busca em km
   
   // Points & Gamification
   MIN_POINTS_FOR_STAR: 1000,               // Pontos mínimos para estrela
