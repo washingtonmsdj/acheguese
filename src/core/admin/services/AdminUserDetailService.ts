@@ -1,6 +1,8 @@
 import { supabase } from "@/integrations/supabase";
 import { logger } from "@/shared/utils/logger";
 import { profileService } from "@/core/profiles/services/ProfileService";
+import { AdminDriverDetailReadService } from "@/core/admin/services/AdminDriverDetailReadService";
+import { DriverModerationEventsService } from "@/core/mobility/services/runtime";
 import {
   ADMIN_USER_REPORT_STATUS,
   type AdminUserReportStatus,
@@ -68,6 +70,19 @@ function toUserReport(row: RideReportRow, namesByProfileId: Map<string, string>)
 }
 
 export class AdminUserDetailService {
+  static async loadDriverDetail(profileId: string, profileType: string | null | undefined) {
+    if (profileType !== "driver") return null;
+    return AdminDriverDetailReadService.get(profileId);
+  }
+
+  static async loadDriverModerationEvents(
+    profileId: string,
+    profileType: string | null | undefined,
+  ) {
+    if (profileType !== "driver") return [];
+    return DriverModerationEventsService.listByDriverProfile(profileId);
+  }
+
   static async loadRideReports(userId: string): Promise<{
     reportsMade: UserReport[];
     reportsReceived: UserReport[];

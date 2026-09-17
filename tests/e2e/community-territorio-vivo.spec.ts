@@ -120,6 +120,9 @@ test.describe("Community Território Vivo", () => {
       await page.setViewportSize(viewport);
       await expectCommunityState(page, ROUTES.active, "active");
       await expect(
+        page.locator('[data-responsive-page-frame="wide"]'),
+      ).toBeVisible();
+      await expect(
         page.locator(`[data-territory-navigation="${viewport.mode}"]`),
       ).toBeVisible();
       await expect(
@@ -127,7 +130,7 @@ test.describe("Community Território Vivo", () => {
           .locator(
             `[data-territory-navigation="${viewport.mode}"] a[aria-current="page"]`,
           )
-          .filter({ hasText: "Community" }),
+          .filter({ hasText: "Comunidade" }),
       ).toHaveAttribute("aria-current", "page");
     }
   });

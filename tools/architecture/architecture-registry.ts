@@ -516,13 +516,13 @@ export const DOMAIN_REGISTRY: DomainRegistryEntry[] = [
     label: "community-events",
     sourceRoots: [
       "src/modules/community-events",
-      "src/core/verticals/events",
+      "src/core/community-events",
     ],
     docsPaths: ["src/modules/community-events/README.md"],
     ssotPaths: [
-      "src/core/verticals/events/services/EventReadService.ts",
-      "src/core/verticals/events/services/EventMutationService.ts",
-      "src/core/verticals/events/services/EventRuntimeService.ts",
+      "src/core/community-events/services/EventReadService.ts",
+      "src/core/community-events/services/EventMutationService.ts",
+      "src/core/community-events/services/EventRuntimeService.ts",
     ],
     routePrefixes: ["/eventos/:state/:city", "/eventos/:id"],
     adminRoutePrefixes: ["/admin/eventos"],
@@ -534,11 +534,11 @@ export const DOMAIN_REGISTRY: DomainRegistryEntry[] = [
     ],
     canonicalTypeBasenames: ["types.ts"],
     adminSummary:
-      "Parcial. Admin eventos consome core/admin e core/verticals/events.",
+      "Parcial. Admin eventos consome core/admin e core/community-events.",
     docsSummary:
-      "Boundary transversal criado; runtime canonico vive no vertical de eventos.",
+      "Owner reutilizavel e runtime canonico vivem em core/community-events.",
     ssotSummary:
-      "Eventos comunitarios devem consumir core/verticals/events e location_id, sem depender do agregador community.",
+      "Eventos comunitarios devem consumir core/community-events e location_id, sem depender do agregador community.",
   },
   {
     id: "community-recommendations",

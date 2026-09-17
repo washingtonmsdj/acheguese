@@ -30,5 +30,5 @@ export { TouristPointService } from './services/TouristPointService';
 // Hooks
 export { useTouristPoints, useTouristPointsCount } from './hooks/useTouristPoints';
 export { useTouristPoint } from './hooks/useTouristPoint';
-export { useGuideUrls, TOURIST_POINTS_SLUG } from './hooks/useGuideUrls';
+
 export { useHasTouristPoints } from './hooks/useHasTouristPoints';

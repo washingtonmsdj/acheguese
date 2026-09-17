@@ -38,6 +38,7 @@ import {
   TerritorySurface,
   TerritoryTopbar,
 } from "@/app/components/territory-vivo";
+import { ResponsivePageFrame } from "@/shared/components/layout/ResponsivePageFrame";
 import {
   isSalvadorCommunityLaunchTerritory,
 } from "@/core/community/config/communityLaunch";
@@ -850,8 +851,10 @@ export default function TerritoryHomePage() {
         profileAvatarUrl={activeProfile?.avatarUrl}
       />
 
-      <main
-        className="mx-auto w-full max-w-[76rem] px-4 pb-24 pt-3 sm:px-6 sm:pt-4 md:pt-8 lg:px-8 lg:pb-10"
+      <ResponsivePageFrame
+        as="main"
+        width="wide"
+        className="pb-24 pt-3 sm:pt-4 md:pt-8 lg:pb-10"
         data-concept-mock={conceptMockEnabled ? "true" : undefined}
       >
         <div className="xl:grid xl:grid-cols-[minmax(0,1fr)_minmax(18rem,20rem)] xl:items-start xl:gap-8">
@@ -1401,7 +1404,7 @@ export default function TerritoryHomePage() {
             fictício.
           </div>
         ) : null}
-      </main>
+      </ResponsivePageFrame>
     </div>
   );
 }

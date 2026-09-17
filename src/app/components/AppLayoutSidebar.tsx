@@ -11,10 +11,10 @@
 
 import { useEffect } from "react";
 import { Outlet, useLocation } from "react-router-dom";
-import { SidebarProvider } from "@/shared/components/ui/sidebar";
 import { AppSidebar } from "./navigation/AppSidebar";
 import { AppTopbar } from "./navigation/AppTopbar";
 import { BottomNav } from "@/core/navigation/BottomNav";
+import { ResponsiveWorkspaceShell } from "@/core/navigation/ResponsiveWorkspaceShell";
 import { TerritoryAdaptiveNavigation } from "./territory-vivo";
 import { TerritoryMismatchBanner } from "@/core/location/components/TerritoryMismatchBanner";
 import { prefetchRouteByHref, scheduleIdleRouteWarmup } from "@/app/routes/prefetch";
@@ -226,25 +226,15 @@ export function AppLayoutSidebar() {
   }
 
   return (
-    <SidebarProvider>
-      <div className="min-h-screen flex w-full bg-background">
-        {/* Sidebar unificada com tudo */}
-        <AppSidebar />
-
-        {/* Conteúdo principal com topbar */}
-        <div className="flex-1 flex flex-col min-w-0 w-full">
-          <AppTopbar />
-          <main
-            id="main-content"
-            className="flex-1 p-4 md:p-6 pb-20 md:pb-6 w-full overflow-y-auto"
-            tabIndex={-1}
-          >
-            <TerritoryMismatchBanner />
-            <Outlet />
-          </main>
-        </div>
-      </div>
-      {!hideMobileBottomNav ? <BottomNav prefetchRoute={prefetchRouteByHref} /> : null}
-    </SidebarProvider>
+    <ResponsiveWorkspaceShell
+      navigation={<AppSidebar />}
+      header={<AppTopbar />}
+      mainId="main-content"
+      mainClassName="p-4 md:p-6 pb-20 md:pb-6 overflow-y-auto"
+      prefetchRoute={prefetchRouteByHref}
+    >
+      <TerritoryMismatchBanner />
+      <Outlet />
+    </ResponsiveWorkspaceShell>
   );
 }

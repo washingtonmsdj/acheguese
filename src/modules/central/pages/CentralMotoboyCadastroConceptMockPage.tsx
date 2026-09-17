@@ -41,7 +41,7 @@ import {
   parseDriverRegistrationForm,
   validateDriverRegistrationInput,
   type DriverRegistrationFormValues,
-} from "@/modules/mobility/utils/driverRegistration";
+} from "@/core/mobility/registration/driverRegistration";
 import { Button } from "@/shared/components/ui/button";
 import { cn } from "@/shared/utils/cn";
 

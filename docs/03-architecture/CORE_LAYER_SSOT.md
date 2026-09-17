@@ -1,4 +1,4 @@
-﻿# CORE Layer SSOT (Arquitetura Oficial)
+# CORE Layer SSOT (Arquitetura Oficial)
 
 Data: 2026-07-09
 Escopo: `src/core`
@@ -38,7 +38,7 @@ Escopo: `src/core`
 | comments | core transversal legítimo | manter em `src/core/comments` |
 | community | bounded context legado interno | manter apenas contratos legados internos; novas superficies usam `src/core/community-*` e `src/modules/community-*`, nunca `src/modules/community` |
 | coverage | core transversal legítimo | manter em `src/core/coverage` |
-| events | domínio de produto | eventos publicos canonicos vivem em `src/core/verticals/events`; o modulo comunitario fica em `src/modules/community-events` |
+| events | domínio de produto | contratos e serviços reutilizáveis vivem em `src/core/community-events`; UI e aplicação ficam em `src/modules/community-events` |
 | family | core transversal legítimo | manter em `src/core/family` |
 | favorites | core transversal legítimo | manter em `src/core/favorites` |
 | feed | core transversal legítimo | manter em `src/core/feed` |
@@ -97,7 +97,8 @@ Escopo: `src/core`
   - `src/core/services` -> `src/modules/professionals/services`
   - `src/core/vagas` -> `src/modules/classifieds/jobs`
   - `src/core/classifieds` -> `src/modules/classifieds`
-  - `src/core/events` legado substituido por `src/core/verticals/events` e
+  - `src/core/events` e `src/core/verticals/events` sao namespaces legados
+    substituidos pelo owner `src/core/community-events` e pela UI em
     `src/modules/community-events`
   - `src/core/gastronomy` legado removido; Gastronomy de produto/UI permanece
     em `src/modules/business/gastronomy` e persistencia/contratos reutilizaveis

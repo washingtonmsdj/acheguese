@@ -26,13 +26,9 @@ function filesContaining(pattern: string): string[] {
 }
 
 describe("remaining compatibility facade caller budget", () => {
-  it("does not grow the Guide URL compatibility facade", () => {
-    expect(filesContaining("hooks/useGuideUrls")).toEqual([
-      "src/modules/guide/components/GuideSidebarItem.tsx",
-      "src/modules/guide/index.ts",
-      "src/modules/guide/pages/TouristPointDetailPage.tsx",
-      "src/modules/guide/pages/TouristPointsPage.tsx",
-    ]);
+  it("retires the Guide URL compatibility facade after direct migration", () => {
+    expect(filesContaining("useGuideUrls")).toEqual([]);
+    expect(fs.existsSync(path.join(SRC, "modules/guide/hooks/useGuideUrls.ts"))).toBe(false);
   });
 
   it("does not add external callers to the multi-profile Business facade", () => {

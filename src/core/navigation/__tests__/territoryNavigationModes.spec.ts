@@ -24,6 +24,9 @@ describe("territoryNavigationModes", () => {
     expect(modes.find((mode) => mode.id === "explore")?.href).toBe(
       `/busca${COMPLEX_BASE}`,
     );
+    expect(modes.find((mode) => mode.id === "community")?.label).toBe(
+      "Comunidade",
+    );
   });
 
   it("keeps the current URL territory ahead of remembered fallback", () => {

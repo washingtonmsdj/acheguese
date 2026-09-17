@@ -2,6 +2,7 @@
 
 import fs from "fs";
 import path from "path";
+import { findBusinessRuleConditions } from "./business-rule-ui-classifier";
 import { fileURLToPath } from "url";
 import {
   DOMAIN_REGISTRY,
@@ -33,8 +34,6 @@ const NOTIFICATIONS_DOMAIN_BOUNDARY_RE =
   /\.(from\(["'](?:notifications|user_notification_settings)["']\)|rpc\(["'](?:create_notification|get_unread_count|mark_notification_as_read|mark_all_notifications_as_read|cleanup_old_notifications)["'])/;
 const FAMILY_DOMAIN_BOUNDARY_RE =
   /\.from\(\s*(?:FAMILY_TABLES\.(?:connections|locations|locationSharingSettings|geofences|alerts)|["'](?:family_connections|family_locations|family_location_sharing_settings|family_geofences|family_location_alerts)["'])\s*\)/;
-const BUSINESS_RULE_RE =
-  /(if\s*\(|\?\s*)(?=.*\b(profile|activeProfile|user|account|business|driver|subscription|verification)\b)(?=.*\b(verified|is_verified|is_suspended|plan|role|profile_type|status|type)\b)/;
 const SERVICE_FILE_RE = /(?:^|\/)([^/]+Service(?:\.impl)?\.ts)$/i;
 const NOTIFICATION_DB_ALLOWED_FILES = new Set([
   "src/core/notifications/services/NotificationService.ts",
@@ -297,18 +296,13 @@ export function collectViolations(): Violation[] {
       normalize(relativeFile).includes("/hooks/") ||
       normalize(relativeFile).includes("/pages/")
     ) {
-      const lines = scanContent.split("\n");
-      lines.forEach((rawLine) => {
-        const line = stripInlineComment(rawLine).trim();
-        if (!line) return;
-        if (BUSINESS_RULE_RE.test(line)) {
-          violations.push({
-            kind: "business-logic-in-ui",
-            file: relativeFile,
-            message: `Regra de negocio inline em hook/page: "${line.slice(0, 120)}".`,
-          });
-        }
-      });
+      for (const condition of findBusinessRuleConditions(content, relativeFile)) {
+        violations.push({
+          kind: "business-logic-in-ui",
+          file: relativeFile,
+          message: "Regra de negocio inline em hook/page: \"" + condition.slice(0, 120) + "\".",
+        });
+      }
     }
   }
 

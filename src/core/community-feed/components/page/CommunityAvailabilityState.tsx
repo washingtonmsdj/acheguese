@@ -10,6 +10,7 @@ import {
   TerritorySectionHeading,
   TerritorySurface,
 } from "@/shared/components/territory-vivo/TerritorySurface";
+import { ResponsivePageFrame } from "@/shared/components/layout/ResponsivePageFrame";
 import type { TerritorialCommunityProfile } from "@/core/community-experience/types";
 import type { CommunitySurfaceState } from "@/core/community-experience/policies/CommunitySurfacePolicy";
 
@@ -36,8 +37,10 @@ export function CommunityAvailabilityState({
 }: CommunityAvailabilityStateProps) {
   if (state === "loading") {
     return (
-      <main
-        className="mx-auto w-full max-w-[76rem] px-4 py-6 sm:px-6 sm:py-8 lg:px-8"
+      <ResponsivePageFrame
+        as="main"
+        width="wide"
+        className="py-6 sm:py-8"
         data-community-state="loading"
         aria-busy="true"
       >
@@ -48,7 +51,7 @@ export function CommunityAvailabilityState({
         <span className="sr-only">
           Confirmando disponibilidade da Community…
         </span>
-      </main>
+      </ResponsivePageFrame>
     );
   }
 
@@ -68,8 +71,10 @@ export function CommunityAvailabilityState({
       : "Não vamos criar um Feed vazio nem uma identidade artificial. Você ainda pode explorar serviços, comércio, oportunidades e informações reais deste território.";
 
   return (
-    <main
-      className="mx-auto w-full max-w-[76rem] px-4 py-6 sm:px-6 sm:py-8 lg:px-8"
+    <ResponsivePageFrame
+      as="main"
+      width="wide"
+      className="py-6 sm:py-8"
       data-community-state={state}
     >
       <section className="grid gap-5 lg:grid-cols-[minmax(0,1fr)_20rem] lg:gap-6">
@@ -149,6 +154,6 @@ export function CommunityAvailabilityState({
           </Link>
         </TerritorySurface>
       </section>
-    </main>
+    </ResponsivePageFrame>
   );
 }

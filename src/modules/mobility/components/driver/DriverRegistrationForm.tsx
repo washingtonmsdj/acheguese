@@ -12,7 +12,7 @@ import {
   type DriverRegistrationDefaults,
   type DriverRegistrationInput,
   type DriverRegistrationFormValues,
-} from "@/modules/mobility/utils/driverRegistration";
+} from "@/core/mobility/registration/driverRegistration";
 import { getRecordValue } from "@/shared/utils/recordLookup";
 
 interface DriverRegistrationFormProps {

@@ -26,7 +26,7 @@ These are the currently proven live facades. They are not new extension points.
 
 | Compatibility surface | Canonical owner | Current caller evidence | Removal gate |
 | --- | --- | --- | --- |
-| `src/modules/guide/hooks/useGuideUrls.ts` | `src/core/guide/tourist-points/routes/useTouristPointPublicUrls.ts` | `GuideSidebarItem`, `TouristPointsPage`, `TouristPointDetailPage` | migrate all three callers directly, update `src/modules/guide/index.ts`, delete facade in one batch |
+
 | `src/core/profiles/services/multi-profile/businessService.ts` | `src/core/business/services/business.profile-extension.ts` | multi-profile editor service and `profileDomainRules` | migrate all editor callers without changing the editor response contract, then remove barrel export/file |
 | `MobilityRuntimeService.getRideWithAddresses()` | `src/core/mobility/services/mobility.ride-read-queries.ts` | `BuscandoMotoristaPage` | migrate the page to the bounded read owner, remove runtime method/import, preserve G140 projection tests |
 
@@ -74,7 +74,7 @@ Historical Community and Events path/service bridges remain retired. Canonical r
 
 ### Guide / Tourist Points
 
-The old `src/core/verticals/guide/**` namespace is retired. Public tourist-point route ownership is canonical in `src/core/guide/tourist-points/routes`. One module alias facade, `src/modules/guide/hooks/useGuideUrls.ts`, still has three runtime callers and is therefore explicitly listed as live debt above.
+The old `src/core/verticals/guide/**` namespace and the `src/modules/guide/hooks/useGuideUrls.ts` alias have been retired. `TouristPointsPage`, `TouristPointDetailPage`, and `GuideSidebarItem` now import the public hook and URL builder directly from `src/core/guide/tourist-points/routes/useTouristPointPublicUrls.ts`.
 
 ### Profiles
 

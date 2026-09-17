@@ -93,6 +93,7 @@ import { getPublicPostPreview } from "@/core/posts/utils/publicPostContent";
 import { sharePost } from "@/core/posts/utils/postShare";
 import { eventRuntimeService, type PublicEvent } from "@/core/community-events";
 import { Button } from "@/shared/components/ui/button";
+import { ResponsivePageFrame } from "@/shared/components/layout/ResponsivePageFrame";
 import { SafeImage } from "@/shared/components/security/SafeImage";
 import { cn } from "@/shared/utils/cn";
 import { formatBrlNoCents } from "@/shared/utils/currency";
@@ -1449,8 +1450,9 @@ export function CommunityOverviewSurface({
   );
 
   return (
-    <div
-      className="mx-auto w-full max-w-[76rem] min-w-0 px-4 py-5 text-territory-ink sm:px-6 sm:py-7 lg:px-8"
+    <ResponsivePageFrame
+      width="wide"
+      className="py-5 text-territory-ink sm:py-7"
       data-community-overview="community-first"
       data-community-state="active"
       data-visual-mock={
@@ -2186,6 +2188,6 @@ export function CommunityOverviewSurface({
           </div>
         ) : null}
       </main>
-    </div>
+    </ResponsivePageFrame>
   );
 }

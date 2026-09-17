@@ -17,8 +17,10 @@
 import { useEffect, useMemo } from 'react';
 import { useMultiProfileContext } from '../contexts/multi-profile-runtime-context';
 import type { Profile, ProfileType } from '../services/multi-profile/types';
+import { resolveModuleProfileSelection } from '../services/multi-profile/moduleProfileSelection';
+import type { ModuleProfileState } from '../services/multi-profile/moduleProfileSelection';
 
-export type ModuleProfileState = 'loading' | 'resolved' | 'select' | 'missing';
+export type { ModuleProfileState } from '../services/multi-profile/moduleProfileSelection';
 
 export interface UseModuleProfileResult {
   profile: Profile | null;
@@ -37,24 +39,11 @@ export function useModuleProfile(type: ProfileType): UseModuleProfileResult {
     return () => setModuleContext(null);
   }, [type, setModuleContext]);
 
-  const profiles = useMemo(
-    () => allProfiles.filter(p => p.profile_type === type),
-    [allProfiles, type],
+  const selection = useMemo(
+    () => resolveModuleProfileSelection({ allProfiles, contextualProfile, loading, type }),
+    [allProfiles, contextualProfile, loading, type],
   );
 
-  const state: ModuleProfileState = useMemo(() => {
-    if (loading) return 'loading';
-    if (profiles.length === 0) return 'missing';
-    if (profiles.length === 1) return 'resolved';
-    // 2+ perfis: se já há um contextual do tipo certo, está resolvido
-    if (contextualProfile?.profile_type === type) return 'resolved';
-    return 'select';
-  }, [loading, profiles, contextualProfile, type]);
-
-  const profile = state === 'resolved'
-    ? (contextualProfile?.profile_type === type ? contextualProfile : profiles[0])
-    : null;
-
-  return { profile, profiles, state, selectProfile: switchProfile };
+  return { ...selection, selectProfile: switchProfile };
 }
 

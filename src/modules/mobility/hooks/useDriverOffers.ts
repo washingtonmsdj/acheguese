@@ -8,6 +8,7 @@ import { logger } from '@/shared/utils/logger';
 import { useEffect, useState, useCallback } from 'react';
 import { RideOperationalService } from '@/core/mobility/core/RideOperationalService';
 import { MobilityOfferService } from '@/core/mobility/services/MobilityOfferService';
+import { resolveDriverOfferRealtimeAction } from '@/core/mobility/core/driverOfferRealtimePolicy';
 import { useRideRealtime } from './useRideRealtime';
 
 interface RideOffer {
@@ -75,13 +76,13 @@ export function useDriverOffers(options: UseDriverOffersOptions) {
     userId: driverProfileId,
     enabled: enabled && !!driverProfileId,
     onEvent: (event) => {
-      if (event.type === 'driver_assigned' && event.driverProfileId === driverProfileId) {
-        void loadOffer(event.rideId);
-      } else if (event.type === 'expired' || event.type === 'cancelled') {
-        if (currentOffer?.rideId === event.rideId) {
-          setCurrentOffer(null);
-        }
-      }
+      const action = resolveDriverOfferRealtimeAction(
+        event,
+        driverProfileId,
+        currentOffer?.rideId,
+      );
+      if (action.kind === 'load') void loadOffer(action.rideId);
+      if (action.kind === 'clear') setCurrentOffer(null);
     },
   });
 

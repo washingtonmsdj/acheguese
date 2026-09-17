@@ -16,6 +16,7 @@ import { useSessionContext } from "@/core/session";
 import { useProfileHub } from "@/core/profiles/hooks/useProfileHub";
 import { businessManagementRoutes } from "@/core/business/utils/businessManagementRoutes";
 import { centralRoutes } from "@/modules/central/routes/centralRoutes";
+import { ResponsivePageFrame } from "@/shared/components/layout/ResponsivePageFrame";
 
 export default function CentralHubPage() {
   const navigate = useNavigate();
@@ -38,7 +39,7 @@ export default function CentralHubPage() {
   );
 
   return (
-    <div className="container mx-auto max-w-6xl space-y-6 px-4 py-8">
+    <ResponsivePageFrame width="standard" className="space-y-6 py-8">
       <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
         <div className="space-y-2">
           <h1 className="text-3xl font-bold tracking-tight">Central</h1>
@@ -195,6 +196,6 @@ export default function CentralHubPage() {
           </div>
         </section>
       ) : null}
-    </div>
+    </ResponsivePageFrame>
   );
 }

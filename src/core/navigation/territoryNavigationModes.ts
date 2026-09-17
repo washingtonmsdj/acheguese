@@ -105,7 +105,7 @@ export function buildTerritoryNavigationModes({
     {
       id: "community",
       href: buildCommunityTerritoryUrl(territoryBase),
-      label: "Community",
+      label: "Comunidade",
       description: "Participação no território",
       icon: Users,
     },

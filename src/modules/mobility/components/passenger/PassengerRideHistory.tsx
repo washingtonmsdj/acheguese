@@ -19,7 +19,7 @@ import { Input } from "@/shared/components/ui/input";
 import { getPaymentMethodLabel, RIDE_STATUS } from "@/shared/types/constants";
 import { cn } from "@/shared/utils/cn";
 import { formatBrl, formatBrlNoCents } from "@/shared/utils/currency";
-import { StatusBadge } from "../StatusBadge";
+import { StatusBadge } from "@/core/mobility/components/StatusBadge";
 
 type PassengerRide = RideRequest & {
   driver?: { name?: string | null; vehicle_plate?: string | null } | null;

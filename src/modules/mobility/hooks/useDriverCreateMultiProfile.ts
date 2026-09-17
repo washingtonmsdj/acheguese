@@ -5,7 +5,7 @@ import { MOBILITY_QUERY_KEYS } from "@/core/mobility/constants";
 import {
   buildDriverProfileCreatePayload,
   type DriverRegistrationInput,
-} from "@/modules/mobility/utils/driverRegistration";
+} from "@/core/mobility/registration/driverRegistration";
 
 type CreateDriverInput = DriverRegistrationInput;
 

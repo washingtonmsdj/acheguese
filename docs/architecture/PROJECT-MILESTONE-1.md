@@ -114,7 +114,7 @@ Os demais dominios possuem SSOTs tecnicos, documentos de modulo ou contratos par
 | Campo | Estado |
 | --- | --- |
 | Governanca | Parcial por contrato citado em Community First. Ainda nao ha `EVENTS-GOVERNANCE.md`. |
-| SSOT | `events`, `src/core/verticals/events`, `EventReadService`, `EventRuntimeService`, `EventMutationService` e RPCs atomicas de participacao/check-in. |
+| SSOT | `events`, `src/core/community-events`, `EventReadService`, `EventRuntimeService`, `EventMutationService` e RPCs atomicas de participacao/check-in. |
 | Roadmap | Nao ha roadmap oficial consolidado de Events neste marco. |
 | Milestone | Sem milestone proprio. |
 | Freeze | Nao congelado. |

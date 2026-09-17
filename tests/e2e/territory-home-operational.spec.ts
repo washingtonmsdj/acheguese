@@ -71,7 +71,7 @@ test.describe("Home territorial pública e determinística", () => {
     await expect(communityPreview.locator("img")).toBeHidden();
 
     const exploreCommunity = page.getByRole("link", {
-      name: /Explorar o Complexo do Nordeste de Amaralina/i,
+      name: "Explorar o Complexo",
     });
     await expect(exploreCommunity).toHaveAttribute(
       "href",
@@ -99,7 +99,10 @@ test.describe("Home territorial pública e determinística", () => {
       page.getByRole("heading", { name: "Panorama de Salvador" }),
     ).toBeVisible({ timeout: 30_000 });
     await expect(
-      page.getByText(/visão ampla da cidade/i).first(),
+      page.locator('main[data-responsive-page-frame="wide"]'),
+    ).toBeVisible();
+    await expect(
+      page.getByText(/Uma leitura ampla do que está válido nos territórios da cidade/i),
     ).toBeVisible();
     await expect(page.getByText("Oficina Horizonte")).toBeVisible();
 
@@ -124,7 +127,9 @@ test.describe("Home territorial pública e determinística", () => {
       "pouca atividade recente",
     );
     await expect(
-      page.getByRole("link", { name: /Ver Salvador inteira/i }),
+      page
+        .getByTestId("territory-home-empty")
+        .getByRole("link", { name: /Ver Salvador inteira/i }),
     ).toHaveAttribute("href", "/ba/salvador");
     await expect(page.getByText("Oficina Horizonte")).toHaveCount(0);
     health.assertHealthy();
@@ -141,10 +146,10 @@ test.describe("Home territorial pública e determinística", () => {
       .press("Enter");
     await expect(page).toHaveURL(/\/busca\/ba\/salvador\/pituba$/);
     await expect(
-      page.getByRole("searchbox", { name: "Buscar em Pituba" }),
+      page.getByRole("heading", { name: "Explorar", exact: true }),
     ).toBeVisible({ timeout: 30_000 });
 
-    await page.getByRole("link", { name: "Início", exact: true }).click();
+    await page.getByRole("link", { name: "Hoje", exact: true }).click();
     await expect(page).toHaveURL(/\/ba\/salvador\/pituba$/);
     await page.getByRole("link", { name: /Trocar território/i }).click();
     await expect(page).toHaveURL(/\/\?trocar=territorio$/);
@@ -153,7 +158,7 @@ test.describe("Home territorial pública e determinística", () => {
     ).toBeVisible({ timeout: 30_000 });
     await expect(
       page.getByRole("link", {
-        name: /Explorar o Complexo do Nordeste de Amaralina/i,
+        name: "Explorar o Complexo",
       }),
     ).toBeVisible();
     health.assertHealthy();
@@ -167,13 +172,19 @@ test.describe("Home territorial pública e determinística", () => {
       page.getByRole("heading", { name: "Na sua comunidade" }),
     ).toBeVisible();
     await expect(
-      page.getByText("Community ainda não liberada em Pituba."),
+      page.getByText("Ainda há pouca atividade recente registrada por aqui."),
     ).toBeVisible({ timeout: 30_000 });
     await expect(
-      page.getByRole("link", { name: "Início", exact: true }),
+      page.getByRole("link", { name: "Hoje", exact: true }),
     ).toHaveAttribute("aria-current", "page");
 
-    for (const label of ["Comunidade", "Publicar", "Conversas", "Conta"]) {
+    for (const label of [
+      "Hoje",
+      "Explorar",
+      "Comunidade",
+      "Atividade",
+      "Entrar",
+    ]) {
       await expect(
         page.locator(`[data-bottom-nav-item="${label.toLowerCase()}"]`),
       ).toBeVisible();
@@ -250,9 +261,12 @@ test.describe("Home territorial pública e determinística", () => {
     ).toBeVisible();
     await expectNoHorizontalOverflow(page);
 
-    await page.getByRole("link", { name: "Explorar", exact: true }).click();
+    await page
+      .locator('[data-territory-navigation="desktop"]')
+      .getByRole("link", { name: "Explorar", exact: true })
+      .click();
     await expect(
-      page.getByRole("link", { name: "Abrir mapa completo de Pituba" }),
+      page.getByRole("heading", { name: "Explorar", exact: true }),
     ).toBeVisible({ timeout: 30_000 });
     await expectNoHorizontalOverflow(page);
   });
@@ -277,7 +291,7 @@ test.describe("Entrada pública de lançamento responsiva", () => {
     ).toBeVisible({ timeout: 30_000 });
     await expect(
       page.getByRole("link", {
-        name: /Explorar o Complexo do Nordeste de Amaralina/i,
+        name: "Explorar o Complexo",
       }),
     ).toHaveAttribute(
       "href",
@@ -343,7 +357,7 @@ test.describe("Entrada pública de lançamento responsiva", () => {
     ).toHaveCount(0);
     await expect(
       page.getByRole("link", {
-        name: /Explorar o Complexo do Nordeste de Amaralina/i,
+        name: "Explorar o Complexo",
       }),
     ).toBeVisible();
     await expectNoHorizontalOverflow(page);

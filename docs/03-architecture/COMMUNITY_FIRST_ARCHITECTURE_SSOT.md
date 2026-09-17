@@ -164,7 +164,7 @@ mais comunidades sem copiar seus dados mestres:
   `src/modules/professionals/services`
 - Classificados: `classifieds`, `src/core/classifieds`,
   `src/modules/classifieds`
-- Eventos: `events`, `src/core/verticals/events` para leitura publica,
+- Eventos: `events`, `src/core/community-events` para leitura publica,
   runtime, escrita, participacao e check-in canonicos via `EventReadService`,
   `EventRuntimeService` e `EventMutationService`; join, leave e check-in usam
   `event-rpc` com RPCs atomicas dedicadas. Os helpers antigos de contador
