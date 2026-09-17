@@ -18,17 +18,18 @@ Base técnica reconciliada imediatamente antes desta atualização: `6c5fd41eccd
 - `305fe19c7f90a621c5a1f0e462b3fc230dc8e586` também teve deployment de produção real `READY` (`dpl_52T9AAZeRoae94x8DLAJksiW7zir`) e status GitHub `Vercel=success` no mesmo SHA;
 - commits posteriores não herdam essa certificação;
 - `279cbd74c590c4d2b555a3a00d643b3fc9bcaa9b` mostrou `Vercel=success` no GitHub, mas o deployment correspondente foi `CANCELED` por `Ignored Build Step`; esse status não conta como build positivo;
+- o SHA `c46e61eba0a0b5d132c64fe51f1589c208810458` recebeu preview Vercel `READY` (`dpl_3yFoVfGodyEfdQz7p5nCRawPumbc`) e `Vercel=success` no mesmo SHA; é preview da branch, sem promoção de produção ou smoke final;
 - o HEAD atual é posterior ao último SHA com build real `READY`, portanto continua exigindo validação própria.
 
 Critério continua: execução real de typecheck/lint/security/test/build/deploy no mesmo SHA candidato, sem bypass.
 
-Snapshot remoto observado antes desta atualização documental em 2026-09-17:
+Snapshot remoto do SHA de código `c46e61eba0a0b5d132c64fe51f1589c208810458`, observado antes desta atualização documental em 2026-09-17 às 16:19 UTC:
 
-- PR #117 está aberto no SHA final `bc2747022a7d714df7335c8c9514250f1d710349`, baseado no HEAD da `main` `70bea7259572c2032371fe21fea5785f5191cdef`, com 11 commits à frente e zero atrás;
-- os runs `Security Check` #35242804648, `SSOT Enforcement` #35242804586, `Security Scan` #35242804570, `SSOT Territorial Tests` #35242804585 e `Auth Concept Regression` #35242804656 terminaram `failure`, com `steps=null`; os comandos não iniciaram;
-- `Heavy PR Certification (Auto)` #35242804590 continua `queued`, sem steps;
-- o status `Vercel` do SHA final está `failure`; o limite diário do plano (`api-deployments-free-per-day`) impede novo build/deploy;
-- o sync canônico de tipos #207 (run `35168708525`) continua `queued`; #208 (run `35178338822`) foi cancelado após 40m37s, também sem steps;
+- PR #117 está aberto, baseado no HEAD da `main` `70bea7259572c2032371fe21fea5785f5191cdef`, com 13 commits à frente e zero atrás;
+- os runs `Security Check` #35245264321, `SSOT Enforcement` #35245264352, `Security Scan` #35245264362, `SSOT Territorial Tests` #35245264317 e `Auth Concept Regression` #35245264418 terminaram `failure`, com `steps=null`; os comandos não iniciaram;
+- `Heavy PR Certification (Auto)` #35245264495 continua pendente, com job `queued` e sem steps;
+- o preview Vercel `dpl_3yFoVfGodyEfdQz7p5nCRawPumbc` está `READY` no mesmo SHA e o status GitHub é `success`; produção e smoke permanecem pendentes;
+- o sync canônico de tipos #207 (run `35168708525`) continua `queued`; #208 (run `35178338822`) está `cancelled` após 40m37s, também sem steps;
 - não foi demonstrada a causa exata dos jobs sem steps nem a disponibilidade do runner dedicado.
 
 Verificação local deste checkout em 2026-09-17:
@@ -38,12 +39,12 @@ Verificação local deste checkout em 2026-09-17:
 - `npm run build` passou após execução autorizada fora do sandbox: Vite transformou 6.089 módulos e produziu o bundle local; isso não comprova deployment;
 - `npm run security:validate` passou, com aviso de `.env.local` ausente;
 - `npm run validate:migrations` passou após reconciliar colisões locais e classificações explícitas;
-- a revalidação final de `npm run validate:docs-structure` não carregou o validador: Node 24.19.0 retornou `uv_os_get_passwd ENOMEM`; `git diff --check` passou;
+- as duas últimas tentativas de `npm run validate:docs-structure` não carregaram o validador: Node 24.19.0 e Node 26.7.0 retornaram `uv_os_get_passwd ENOMEM`; a tentativa via WSL foi bloqueada pelo serviço com `E_ACCESSDENIED`; `git diff --check` passou;
 - testes focados de Safety/Mobility passaram **14/14**; lint Maps passou e seus testes passaram **4/4** usando configuração de teste isolada, pois a configuração padrão tentou ler `../../..` fora do limite do sandbox;
 - novos testes focados do validador de migrations passaram **2/2**, e os testes de leitura Mobility/contrato passaram **12/12**;
 - o caller sem uso de `get_driver_dispatch_summaries` foi removido; o RPC remoto só concede EXECUTE a `service_role` e o scan do código de browser agora retorna zero callers entre 197 nomes privilegiados;
 - a comparação detalhada do ledger remoto encontrou 32 reconciliações de arquivo cujo SQL é idêntico ao registrado, sete migrations com conteúdo local diferente do aplicado, 29 migrations locais sem identidade remota e 10 registros remotos sem arquivo local. Não aplicar nem renomear os conflitos até reconciliar o provenance de cada statement.
-- esses resultados locais ainda não certificam SHA remoto. O follow-up de código está no PR #117, commit `bc2747022a7d714df7335c8c9514250f1d710349`, sem merge; no SHA observado os workflows terminaram sem steps e Vercel permanece no limite diário. Esta atualização documental não altera o código; os gates ainda precisam concluir no HEAD que a contém.
+- esses resultados locais ainda não certificam SHA remoto. O follow-up de código está no PR #117, commit `c46e61eba0a0b5d132c64fe51f1589c208810458`, sem merge; no SHA observado os workflows terminaram sem steps, enquanto o preview Vercel foi `READY`. Esta atualização documental não altera o código; a certificação hosted e o smoke de produção continuam pendentes no HEAD que a contém.
 
 ### Proteção de `main`
 
@@ -208,4 +209,3 @@ Sem inventar política comercial ou retenção, as frentes executáveis são:
 3. concluir classificação dos `authenticated SECURITY DEFINER` residuais por risco/autoridade e negative probes onde houver boundary sensível;
 4. continuar a matriz LGPD apenas com decisões de retenção explicitamente aprovadas;
 5. repetir build/deploy real no SHA final após alterações de source/probes.
-

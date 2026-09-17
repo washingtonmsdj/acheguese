@@ -1,6 +1,6 @@
 # Status atual do Achegue-se
 
-Atualizado em: 2026-09-17 16:05 UTC
+Atualizado em: 2026-09-17 16:19 UTC
 
 ## Autoridade deste documento
 
@@ -23,13 +23,15 @@ A regra continua sendo fail-closed: nenhum status verde inferido, merge, commit,
 
 ### GitHub Actions hosted
 
-O SHA de código avaliado neste snapshot é `bc2747022a7d714df7335c8c9514250f1d710349`. Esta atualização acrescenta somente documentação operacional; os gates ainda precisam concluir no HEAD documental para certificar o candidato final. Nele, `Security Check` #35242804648, `SSOT Enforcement` #35242804586, `Security Scan` #35242804570, `SSOT Territorial Tests` #35242804585 e `Auth Concept Regression` #35242804656 terminaram com falha; os jobs retornaram `steps=null`, sem execução de etapas.
+O SHA de código avaliado neste snapshot é `c46e61eba0a0b5d132c64fe51f1589c208810458`. Esta atualização acrescenta somente documentação operacional; os gates ainda precisam concluir no HEAD documental para certificar o candidato final. Nele, `Security Check` #35245264321, `SSOT Enforcement` #35245264352, `Security Scan` #35245264362, `SSOT Territorial Tests` #35245264317 e `Auth Concept Regression` #35245264418 terminaram com falha; os jobs retornaram `steps=null`, sem execução de etapas.
 
 Esses resultados não comprovam regressão do código nem aprovação. A causa administrativa/infra continua sem diagnóstico confirmado; o mesmo diagnóstico deve ser refeito no HEAD documental. O problema segue rastreado na issue #17.
 
 ### Heavy PR Certification
 
-O run `Heavy PR Certification (Auto)` #35242804590 do PR #117 continua `queued`, sem steps. Ainda não existe certificação pesada do SHA.
+O run `Heavy PR Certification (Auto)` #35245264495 do PR #117 está `pending`, com job `queued` e sem steps. Ainda não existe certificação pesada do SHA.
+
+O sync canônico de tipos #207 (run `35168708525`) continua `queued`; #208 (run `35178338822`) foi cancelado após 40m37s, sem steps.
 
 ### Proteção da `main`
 
@@ -38,6 +40,8 @@ A última observação registrada mostrou `protected=false`, sem required status
 ### Vercel
 
 Release exige deployment `READY` para exatamente o mesmo SHA certificado. `build-rate-limit`, cancelamento, `Ignored Build Step`, `pending` ou sucesso de um SHA anterior não contam.
+
+O preview `dpl_3yFoVfGodyEfdQz7p5nCRawPumbc` está `READY` e o status GitHub `Vercel=success` no SHA de código `c46e61eba0a0b5d132c64fe51f1589c208810458`. É preview de PR; promoção de produção e smoke final permanecem pendentes.
 
 ## P1 — Mobilidade
 
@@ -84,7 +88,7 @@ O projeto Supabase `xhdowzacfujckjelqhtd` foi reconsultado às 15:57 UTC e está
 - 4 extensões no schema `public`: `unaccent`, `pg_trgm`, `citext` e `postgis`.
 - 9 funções `SECURITY DEFINER` executáveis por `anon`; 85 por `authenticated`; a proteção contra senhas vazadas permanece desabilitada.
 - Das 9 funções anon, 6 são APIs próprias com contrato público validado (poll visível, reputação pública, agregado de rating, share por token, projeção territorial consentida e ingestão analítica); as outras 3 são overloads de `st_estimatedextent` do PostGIS.
-- As 82 funções próprias expostas a `authenticated` têm `search_path` fixado. As únicas 3 funções expostas sem essa configuração são as funções C `st_estimatedextent` da extensão PostGIS. Não foi feito revoke em massa nem alteração de schema.
+- As 82 funções próprias expostas a `authenticated` têm `search_path` fixado. As únicas 3 funções expostas sem essa configuração são as funções C `st_estimatedextent` da extensão PostGIS. O probe rollback-only de Safety passou 5/5, incluindo negação de spoof de Profile na criação de alerta, e terminou com `rolled_back=true`. Não foi feito revoke em massa nem alteração de schema.
 
 Continuam exigindo decisão/evidência antes de release:
 
