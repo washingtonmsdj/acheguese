@@ -8,16 +8,17 @@
 
 Este checkpoint complementa `../EXECUCAO_MAIN_ONLY.md`; não o substitui. O arquivo raiz `URGENTE_LEIA_PRIMEIRO_REORGANIZACAO_GLOBAL.md` permanece apenas ponteiro de compatibilidade.
 
-Base técnica reconciliada imediatamente antes desta atualização: `0ee9b0b314ca3bcd45733b8b68f55afba89ec52e`.
+Base técnica reconciliada imediatamente antes desta atualização: `1a28e4806e0fcf67c743e5934587b792e86ce9e9`.
 
 ## P0 — release authority
 
 ### Same-SHA build/deploy
 
-- `a30b7c7ba9a403ff7c9a6c4e1308754a4d9bbd4f` teve deployment Vercel real `READY` e status `success` no mesmo SHA.
+- `a30b7c7ba9a403ff7c9a6c4e1308754a4d9bbd4f` teve deployment Vercel real `READY` e status `success` no mesmo SHA;
+- `305fe19c7f90a621c5a1f0e462b3fc230dc8e586` também teve deployment de produção real `READY` (`dpl_52T9AAZeRoae94x8DLAJksiW7zir`) e status GitHub `Vercel=success` no mesmo SHA;
 - commits posteriores não herdam essa certificação;
-- deployments posteriores de mudanças apenas de docs/probes chegaram a ser cancelados por `Ignored Build Step`, o que **não** conta como build positivo;
-- para a base `0ee9b0b3...`, o check Vercel estava `pending` no momento desta atualização.
+- deployments cancelados por `Ignored Build Step` não contam como build positivo;
+- o HEAD atual é posterior a `305fe19c...`, portanto continua exigindo validação própria.
 
 Critério continua: execução real de typecheck/lint/security/test/build/deploy no mesmo SHA candidato, sem bypass.
 
@@ -34,18 +35,12 @@ Estado: **ABERTO**.
 - minimização de GPS ocioso aplicada; zero GPS/snapshot ocioso remanescente na verificação;
 - probe negativo de participante bloqueou terceiro usuário em PIN/trust/report, rollback-only;
 - compatibilidade pública `p_final_price` removida; preço terminal continua server-owned;
-- replays sequenciais rollback-only provados para:
-  - aceite duplicado;
-  - consumo duplicado da mesma `quote_id`;
-  - conclusão terminal duplicada;
+- replays sequenciais rollback-only provados para aceite duplicado, consumo duplicado da mesma `quote_id` e conclusão terminal duplicada;
 - SQLSTATE de stale/replay normalizado para não induzir retry automático indevido;
-- contrato vivo de atomicidade validado por probe read-only:
-  - aceite trava `ride_request` e `driver_availability`;
-  - quote é travada por `FOR UPDATE` e consumida condicionalmente;
-  - transição de estado usa `FOR UPDATE` + `expected_from_state`;
-  - unicidade de `pricing_quote_id`/consumo permanece presente.
+- contrato vivo de atomicidade validado por probe read-only: locks de `ride_request`/`driver_availability`, quote com `FOR UPDATE` + consumo condicional, transição com `expected_from_state` e unicidade de `pricing_quote_id`/consumo;
+- probe adicional de participante em corrida sintética bloqueou terceiro usuário em `ensure_ride_chat`, `send_ride_chat_message`, `mark_ride_chat_messages_read`, `create_safety_ride_share`, `get_operational_verification_status` e `verify_operational_pin`; rollback-only.
 
-`tests/security/mobility-concurrency-contract-remote-probe.sql` registra explicitamente que isso **não é** prova runtime em duas sessões independentes.
+`tests/security/mobility-concurrency-contract-remote-probe.sql` registra explicitamente que a prova estrutural **não é** prova runtime em duas sessões independentes.
 
 ### Aberto antes de launch-ready
 
@@ -71,12 +66,25 @@ Essas contagens são inventário, não classificação automática de vulnerabil
 
 Dos 9 warnings, 3 são `st_estimatedextent` do PostGIS. Os 6 RPCs próprios revisados possuem finalidade pública/anon explícita e filtros de autoridade/visibilidade: poll publicado, reputação profissional pública, resumo de rating autorizado, share de corrida por token ativo, projeção territorial pública e analytics.
 
-`track_analytics_event` recebeu probe negativo rollback-only no Supabase real:
+`track_analytics_event` recebeu probe negativo rollback-only no Supabase real: spoof de outro `user_id` e `order_completed` por caller não-`service_role` foram bloqueados. Probe versionado em `tests/security/analytics-anon-authority-remote-probe.sql`.
 
-- spoof de outro `user_id` por caller autenticado foi bloqueado;
-- `order_completed` por caller não-`service_role` foi bloqueado;
-- nenhum fixture persistiu;
-- probe versionado em `tests/security/analytics-anon-authority-remote-probe.sql`.
+### Revisão `authenticated SECURITY DEFINER`
+
+A triagem de maior risco já possui **21 bloqueios negativos executados no Supabase real**, todos rollback-only:
+
+- 6 RPCs administrativos: trust actions/review, review aggregates admin, driver moderation, classified moderation e community-direct moderation;
+- 5 fronteiras de identidade/recurso: cross-user notification, Safety/profile spoof, verification de perfil alheio, listagem de membros de perfil alheio e coverage de classified alheio;
+- 4 fronteiras reviewer/voter: create/update-delete review e helpfulness em nome de perfil alheio;
+- 6 fronteiras de participante em corrida: chat ensure/send/read, ride share, verification status e PIN.
+
+Probes versionados:
+
+- `tests/security/authenticated-admin-rpc-negative-remote-probe.sql`;
+- `tests/security/authenticated-identity-spoof-negative-remote-probe.sql`;
+- `tests/security/review-identity-spoof-negative-remote-probe.sql`;
+- `tests/security/ride-chat-share-participant-negative-remote-probe.sql`.
+
+A revisão não fecha automaticamente os 85 warnings; os grupos restantes continuam sendo classificados por autoridade real antes de qualquer revoke/grant em massa.
 
 ### RLS default-deny de Mobilidade
 
@@ -97,29 +105,20 @@ A migration canônica aplicada é `20260826015916_reconcile_account_deletion_aut
 
 As migrations históricas `20260821...` não devem ser reaplicadas como atalho.
 
-### Purge destrutivo — gate novo
+### Purge destrutivo — gate fail-closed
 
 Não existe cron/worker de purge atualmente.
 
-Levantamento read-only do schema vivo encontrou **28 FKs bloqueantes** (`NO ACTION`/`RESTRICT`) que exigem decisão explícita antes de excluir fisicamente `auth.users`/`profiles`:
+Levantamento read-only do schema vivo encontrou **28 FKs bloqueantes** (`NO ACTION`/`RESTRICT`) antes de excluir fisicamente `auth.users`/`profiles`:
 
 - 20 apontam para `auth.users`;
 - 8 apontam para `profiles`;
 - 25 usam colunas anuláveis;
-- 3 são não anuláveis + `RESTRICT`:
-  - `communication_publications_author_profile_id_fkey`;
-  - `community_user_moderation_actions_actor_profile_id_fkey`;
-  - `trust_admin_actions_applied_by_profile_id_fkey`.
+- 3 são não anuláveis + `RESTRICT`: `communication_publications_author_profile_id_fkey`, `community_user_moderation_actions_actor_profile_id_fkey` e `trust_admin_actions_applied_by_profile_id_fkey`.
 
-Foi criado `docs/09-reference/governance/privacy/LGPD_PURGE_MATRIX.json` com default `block`, `implementationComplete=false` e as 28 referências como `unclassified`.
+`docs/09-reference/governance/privacy/LGPD_PURGE_MATRIX.json` mantém default `block`, `implementationComplete=false` e as 28 referências como `unclassified`.
 
-O preflight `tools/security/supabase-lgpd-edge-rollout-preflight.mjs` agora só pode liberar `user-delete-account` quando:
-
-- não houver marcadores stale;
-- existir `const LGPD_PURGE_IMPLEMENTATION_COMPLETE = true;` no handler;
-- a matriz estiver estruturalmente válida;
-- `implementationComplete=true`;
-- houver zero referências `unclassified`.
+O preflight `tools/security/supabase-lgpd-edge-rollout-preflight.mjs` só pode liberar `user-delete-account` quando não houver marcadores stale, existir `LGPD_PURGE_IMPLEMENTATION_COMPLETE=true`, a matriz estiver válida, `implementationComplete=true` e houver zero referências `unclassified`.
 
 Regressão: `tests/security/lgpd-purge-readiness-gate.test.ts`.
 
@@ -156,6 +155,6 @@ Sem inventar política comercial ou retenção, as frentes executáveis são:
 
 1. acompanhar/fechar o sync canônico de tipos quando o runner estiver disponível;
 2. obter prova de concorrência real em sessões independentes quando houver mecanismo seguro de múltiplas sessões;
-3. classificar advisor `authenticated SECURITY DEFINER` por risco/autoridade, adicionando negative probes nos comandos sensíveis;
+3. continuar a classificação `authenticated SECURITY DEFINER` por risco/autoridade e negative probes;
 4. continuar a matriz LGPD apenas com decisões de retenção explicitamente aprovadas;
-5. repetir build/deploy real no SHA final após qualquer alteração de source.
+5. repetir build/deploy real no SHA final após alterações de source/probes.
