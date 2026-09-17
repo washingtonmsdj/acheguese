@@ -51,6 +51,11 @@ interface DriverAvailabilityRow {
   driver_data?: DriverCapabilityRow | DriverCapabilityRow[] | null;
 }
 
+type LocatedDriverAvailabilityRow = DriverAvailabilityRow & {
+  current_lat: number;
+  current_lng: number;
+};
+
 interface ActiveRideDriverRow {
   driver_profile_id: string | null;
 }
@@ -65,6 +70,21 @@ interface AtomicDispatchResult {
 function getDriverRating(profileData: DriverAvailabilityRow['profiles']): number {
   const profile = Array.isArray(profileData) ? profileData[0] : profileData;
   return typeof profile?.rating === 'number' ? profile.rating : 0;
+}
+
+function hasFiniteCoordinates(latitude: unknown, longitude: unknown): latitude is number {
+  return (
+    typeof latitude === 'number' &&
+    Number.isFinite(latitude) &&
+    typeof longitude === 'number' &&
+    Number.isFinite(longitude)
+  );
+}
+
+function hasFiniteDriverCoordinates(
+  driver: DriverAvailabilityRow,
+): driver is LocatedDriverAvailabilityRow {
+  return hasFiniteCoordinates(driver.current_lat, driver.current_lng);
 }
 
 function dispatchJson(req: Request, body: unknown, status = 200): Response {
@@ -154,8 +174,8 @@ serve(async (req: Request) => {
     const pickupLat = addressData?.latitude;
     const pickupLng = addressData?.longitude;
 
-    if (!pickupLat || !pickupLng) {
-      console.error('[AutoDispatch] Missing coordinates');
+    if (!hasFiniteCoordinates(pickupLat, pickupLng)) {
+      console.error('[AutoDispatch] Missing or invalid pickup coordinates');
       return dispatchJson(req, { error: 'Missing pickup coordinates' }, 400);
     }
 
@@ -344,15 +364,17 @@ async function findEligibleDrivers(
       .filter((profileId): profileId is string => typeof profileId === 'string' && profileId.length > 0),
   );
 
-  // Calcular distância e filtrar
+  // Calcular distância e filtrar. Coordenadas ausentes/NaN/Infinity são
+  // descartadas; coordenada 0 é válida e não pode virar falsy.
   const eligible: DriverEligibility[] = driverRows
     .filter((driver) => !busyDrivers.has(driver.profile_id))
+    .filter(hasFiniteDriverCoordinates)
     .map((driver) => {
       const distance = calculateDistance(
         originLat,
         originLng,
-        driver.current_lat || 0,
-        driver.current_lng || 0
+        driver.current_lat,
+        driver.current_lng
       );
 
       return {
@@ -486,4 +508,3 @@ function calculateDistance(
 function toRad(degrees: number): number {
   return degrees * (Math.PI / 180);
 }
-
