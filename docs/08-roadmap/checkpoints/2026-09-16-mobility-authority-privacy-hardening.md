@@ -2,7 +2,7 @@
 
 **Data:** 2026-09-16  
 **Linha:** `main`  
-**Status:** source endurecido; GPS, autorização negativa, preço terminal, replay de aceite e replay de quote reconciliados; rollout público continua pausado
+**Status:** source endurecido; GPS, autorização negativa, preço terminal, replays de aceite/quote/conclusão e semântica não-retry reconciliados; rollout público continua pausado
 
 ## Objetivo desta fase
 
@@ -45,6 +45,27 @@ Nesta retomada, a compatibilidade pública `p_final_price` foi removida:
 - migration remota e Git usam `20260916233125_remove_mobility_delivery_final_price_compat`;
 - `tests/architecture/mobility-build-contract.test.ts` impede reintrodução do parâmetro no boundary/broker.
 
+## Semântica de erro e retry dos RPCs
+
+Foi identificado que cinco funções vivas de Mobilidade usavam SQLSTATE customizado `40001` para rejeições de stale state, replay ou consumo de quote. Esses casos não são uma instrução para repetir automaticamente o mesmo comando: o caller precisa reconciliar estado/quote antes de decidir uma nova ação.
+
+A migration `20260917004538_normalize_mobility_rpc_non_retry_errors.sql` foi aplicada no Supabase canônico e versionada no Git. Ela preserva corpos e mensagens das funções e troca somente `ERRCODE = '40001'` por `ERRCODE = 'P0001'` nas rotinas vivas:
+
+- `public.mobility_create_ride_atomic`;
+- `public.mobility_create_delivery_atomic`;
+- `public.mobility_transition_ride_state_atomic`;
+- `public.mobility_transition_delivery_state_atomic`;
+- `private.mobility_transition_delivery_state_atomic_base_g70`.
+
+Verificação pós-DDL:
+
+- migration remota registrada como `20260917004538_normalize_mobility_rpc_non_retry_errors`;
+- as cinco funções-alvo possuem `has_40001=false` e `has_P0001=true` no `pg_proc` vivo;
+- o replay terminal foi repetido no Supabase real e a segunda confirmação foi rejeitada com `P0001`;
+- permaneceu exatamente um audit `delivered`, um audit `completed`, estado final `completed` e preço final server-owned;
+- o probe terminou em `ROLLBACK` e nenhum fixture foi persistido;
+- `tests/security/mobility-terminal-replay-remote-probe.sql` exige explicitamente `P0001`, impedindo regressão silenciosa para `40001` nesse boundary.
+
 ## Tipos Supabase
 
 Existe drift confirmado entre o schema remoto e `src/integrations/supabase/types.generated.ts`:
@@ -53,7 +74,7 @@ Existe drift confirmado entre o schema remoto e `src/integrations/supabase/types
 - o arquivo gerado ainda contém `p_final_price?: number` nessa assinatura;
 - o artefato gerado não deve ser editado manualmente;
 - a correção deve ocorrer pelo workflow canônico `Supabase Types Sync`/`supabase gen types`, seguida de typecheck e novo deploy no mesmo SHA;
-- o workflow foi disparado pelo SHA `4a9bba6ff6cf9f592065b78034fcf74a06ae9bb4`, mas permanece `queued` porque depende do runner self-hosted Windows com labels `acheguese-heavy-windows` e `remote-only`.
+- o workflow foi disparado pelo SHA `4a9bba6ff6cf9f592065b78034fcf74a06ae9bb4`, mas permanece dependente do runner self-hosted Windows com labels `acheguese-heavy-windows` e `remote-only`.
 
 Enquanto esse sync não for executado, o gate de tipos permanece aberto.
 
@@ -136,6 +157,20 @@ O probe está versionado em `tests/security/mobility-quote-replay-remote-probe.s
 
 **Escopo da prova:** consumo duplicado sequencial da quote. Ainda não substitui corrida concorrente em duas sessões independentes.
 
+## Replay/idempotência de conclusão terminal
+
+`tests/security/mobility-terminal-replay-remote-probe.sql` foi executado novamente após o hardening de SQLSTATE.
+
+Evidência obtida:
+
+- a primeira confirmação `in_delivery -> delivered -> completed` foi concluída atomicamente;
+- o retry do mesmo comando foi rejeitado com `P0001`;
+- não houve segundo audit `delivered` nem segundo audit `completed`;
+- o preço final permaneceu derivado do estado server-owned;
+- a transação foi revertida integralmente.
+
+**Escopo da prova:** retry/replay sequencial da confirmação terminal. Ainda não equivale a duas confirmações simultâneas em sessões independentes.
+
 ## Safety / SOS
 
 Permanece válido `2026-09-16-mobility-safety-production-drift-repair.md`: outbox G71-G80 e `send-emergency-email` v33 já haviam sido reconciliados.
@@ -147,8 +182,8 @@ O SHA `a30b7c7ba9a403ff7c9a6c4e1308754a4d9bbd4f` foi confirmado com status Verce
 ## Bloqueadores atuais de lançamento
 
 1. definir e aprovar a política comercial real por modalidade;
-2. regenerar tipos Supabase a partir do schema real, sem edição manual; o workflow está aguardando o runner self-hosted;
-3. concluir concorrência/idempotência além dos replays já provados: dupla aceitação em sessões independentes, cancelamento simultâneo, confirmação duplicada e concorrência real de consumo de quote;
+2. regenerar tipos Supabase a partir do schema real, sem edição manual; o workflow depende do runner self-hosted;
+3. concluir concorrência real em sessões independentes: dupla aceitação, cancelamento simultâneo, confirmação terminal simultânea e consumo simultâneo da mesma quote;
 4. executar typecheck, lint, testes de Mobilidade/Pricing, build e E2E no mesmo SHA;
 5. obter pipeline/deploy verde por execução real para o SHA final de estabilização;
 6. proteger `main` por ruleset/required checks quando houver capacidade administrativa.
@@ -162,7 +197,9 @@ O SHA `a30b7c7ba9a403ff7c9a6c4e1308754a4d9bbd4f` foi confirmado com status Verce
 - [x] `p_final_price` removido do wrapper público com cutover versionado e ratchet de arquitetura;
 - [x] drift de tipos identificado objetivamente (`p_final_price` ainda presente no arquivo gerado);
 - [x] replay sequencial de `mobility_accept_ride_atomic` provado rollback-only sem duplicar audit/estado;
-- [x] replay sequencial de consumo de `quote_id` provado rollback-only sem criar corrida/audit duplicado.
+- [x] replay sequencial de consumo de `quote_id` provado rollback-only sem criar corrida/audit duplicado;
+- [x] replay sequencial de conclusão terminal provado rollback-only sem duplicar efeitos;
+- [x] SQLSTATE customizado `40001` removido das cinco funções vivas de Mobilidade que não devem induzir retry automático.
 
 ## Regra de lançamento
 
