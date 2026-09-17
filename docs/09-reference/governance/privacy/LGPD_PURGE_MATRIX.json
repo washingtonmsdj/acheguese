@@ -1,0 +1,54 @@
+{
+  "schemaVersion": "lgpd-purge-matrix/v1",
+  "observedAt": "2026-09-17",
+  "source": "live-schema:xhdowzacfujckjelqhtd",
+  "implementationComplete": false,
+  "rules": {
+    "default": "block",
+    "unclassifiedReference": "block",
+    "authUserDeleteRequiresZeroUnclassifiedReferences": true,
+    "profileDeleteRequiresZeroUnclassifiedReferences": true,
+    "allowedDecisions": [
+      "set-null-before-delete",
+      "delete-dependent-row",
+      "retain-with-surrogate-subject",
+      "anonymize-before-delete",
+      "block-purge"
+    ]
+  },
+  "snapshot": {
+    "blockingReferenceCount": 28,
+    "authUsersBlockingReferenceCount": 20,
+    "profilesBlockingReferenceCount": 8
+  },
+  "blockingReferences": [
+    {"constraint":"admin_users_granted_by_fkey","source":"public.admin_users","target":"auth.users","deleteAction":"NO ACTION","decision":"unclassified"},
+    {"constraint":"commercial_catalog_version_created_by_fkey","source":"public.commercial_catalog_version","target":"auth.users","deleteAction":"NO ACTION","decision":"unclassified"},
+    {"constraint":"education_lead_events_actor_user_id_fkey","source":"public.education_lead_events","target":"auth.users","deleteAction":"NO ACTION","decision":"unclassified"},
+    {"constraint":"education_leads_owner_user_id_fkey","source":"public.education_leads","target":"auth.users","deleteAction":"NO ACTION","decision":"unclassified"},
+    {"constraint":"location_versions_created_by_fkey","source":"public.location_versions","target":"auth.users","deleteAction":"NO ACTION","decision":"unclassified"},
+    {"constraint":"module_rollouts_created_by_fkey","source":"public.module_rollouts","target":"auth.users","deleteAction":"NO ACTION","decision":"unclassified"},
+    {"constraint":"module_rollouts_updated_by_fkey","source":"public.module_rollouts","target":"auth.users","deleteAction":"NO ACTION","decision":"unclassified"},
+    {"constraint":"neighborhood_boundaries_created_by_fkey","source":"public.neighborhood_boundaries","target":"auth.users","deleteAction":"NO ACTION","decision":"unclassified"},
+    {"constraint":"pii_access_log_accessed_by_fkey","source":"public.pii_access_log","target":"auth.users","deleteAction":"NO ACTION","decision":"unclassified"},
+    {"constraint":"pii_access_log_approved_by_fkey","source":"public.pii_access_log","target":"auth.users","deleteAction":"NO ACTION","decision":"unclassified"},
+    {"constraint":"profile_audit_log_performed_by_fkey","source":"public.profile_audit_log","target":"auth.users","deleteAction":"NO ACTION","decision":"unclassified"},
+    {"constraint":"profile_members_invited_by_fkey","source":"public.profile_members","target":"auth.users","deleteAction":"NO ACTION","decision":"unclassified"},
+    {"constraint":"session_anomalies_resolved_by_fkey","source":"public.session_anomalies","target":"auth.users","deleteAction":"NO ACTION","decision":"unclassified"},
+    {"constraint":"site_settings_updated_by_fkey","source":"public.site_settings","target":"auth.users","deleteAction":"NO ACTION","decision":"unclassified"},
+    {"constraint":"territory_change_events_processed_by_fkey","source":"public.territory_change_events","target":"auth.users","deleteAction":"NO ACTION","decision":"unclassified"},
+    {"constraint":"tourist_points_updated_by_fkey","source":"public.tourist_points","target":"auth.users","deleteAction":"NO ACTION","decision":"unclassified"},
+    {"constraint":"user_consents_granted_by_fkey","source":"public.user_consents","target":"auth.users","deleteAction":"NO ACTION","decision":"unclassified"},
+    {"constraint":"user_consents_revoked_by_fkey","source":"public.user_consents","target":"auth.users","deleteAction":"NO ACTION","decision":"unclassified"},
+    {"constraint":"user_mfa_status_exemption_granted_by_fkey","source":"public.user_mfa_status","target":"auth.users","deleteAction":"NO ACTION","decision":"unclassified"},
+    {"constraint":"user_sessions_revoked_by_fkey","source":"public.user_sessions","target":"auth.users","deleteAction":"NO ACTION","decision":"unclassified"},
+    {"constraint":"comments_business_id_fkey","source":"public.comments","target":"public.profiles","deleteAction":"NO ACTION","decision":"unclassified"},
+    {"constraint":"comments_professional_id_fkey","source":"public.comments","target":"public.profiles","deleteAction":"NO ACTION","decision":"unclassified"},
+    {"constraint":"communication_publications_author_profile_id_fkey","source":"public.communication_publications","target":"public.profiles","deleteAction":"RESTRICT","decision":"unclassified"},
+    {"constraint":"community_user_moderation_actions_actor_profile_id_fkey","source":"public.community_user_moderation_actions","target":"public.profiles","deleteAction":"RESTRICT","decision":"unclassified"},
+    {"constraint":"issue_blocked_terms_created_by_fkey","source":"public.issue_blocked_terms","target":"public.profiles","deleteAction":"NO ACTION","decision":"unclassified"},
+    {"constraint":"operational_verifications_verified_by_fkey","source":"public.operational_verifications","target":"public.profiles","deleteAction":"NO ACTION","decision":"unclassified"},
+    {"constraint":"trust_admin_actions_applied_by_profile_id_fkey","source":"public.trust_admin_actions","target":"public.profiles","deleteAction":"RESTRICT","decision":"unclassified"},
+    {"constraint":"vagas_owner_profile_id_fkey","source":"public.vagas","target":"public.profiles","deleteAction":"NO ACTION","decision":"unclassified"}
+  ]
+}
