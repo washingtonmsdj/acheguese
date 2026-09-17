@@ -7,7 +7,12 @@ const AUTO_DISPATCH = readFileSync(
   'utf8',
 );
 
-describe('mobility auto-dispatch coordinate integrity', () => {
+const SHARED_MOBILITY_CONSTANTS = readFileSync(
+  resolve(process.cwd(), 'src/shared/types/mobility.constants.ts'),
+  'utf8',
+);
+
+describe('mobility auto-dispatch integrity', () => {
   it('accepts numeric zero coordinates instead of treating them as missing', () => {
     expect(AUTO_DISPATCH).toContain('hasFiniteCoordinates(pickupLat, pickupLng)');
     expect(AUTO_DISPATCH).not.toContain('if (!pickupLat || !pickupLng)');
@@ -17,5 +22,12 @@ describe('mobility auto-dispatch coordinate integrity', () => {
     expect(AUTO_DISPATCH).toContain('.filter(hasFiniteDriverCoordinates)');
     expect(AUTO_DISPATCH).not.toContain('driver.current_lat || 0');
     expect(AUTO_DISPATCH).not.toContain('driver.current_lng || 0');
+  });
+
+  it('does not reintroduce retired dispatch policy constants into shared types', () => {
+    expect(SHARED_MOBILITY_CONSTANTS).not.toContain('OFFER_TIMEOUT_SECONDS');
+    expect(SHARED_MOBILITY_CONSTANTS).not.toContain('TOTAL_TIMEOUT_MINUTES');
+    expect(SHARED_MOBILITY_CONSTANTS).not.toContain('MAX_RETRY_ATTEMPTS');
+    expect(SHARED_MOBILITY_CONSTANTS).not.toContain('SEARCH_RADIUS_KM');
   });
 });
