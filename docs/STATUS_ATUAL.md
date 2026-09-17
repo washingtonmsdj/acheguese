@@ -1,6 +1,6 @@
 # Status atual do Achegue-se
 
-Atualizado em: 2026-09-17
+Atualizado em: 2026-09-17 16:05 UTC
 
 ## Autoridade deste documento
 
@@ -23,24 +23,17 @@ A regra continua sendo fail-closed: nenhum status verde inferido, merge, commit,
 
 ### GitHub Actions hosted
 
-Os workflows hosted continuam bloqueando a certificação porque falham antes da execução dos steps. No SHA corrente do PR #117, o `Security Check` voltou a encerrar `Lint and Type Check`, `Run Tests`, `Maps Architecture Enforcement` e `Validate No Hardcoded Credentials` com `steps=[]`.
+O SHA de código avaliado neste snapshot é `bc2747022a7d714df7335c8c9514250f1d710349`. Esta atualização acrescenta somente documentação operacional; os gates ainda precisam concluir no HEAD documental para certificar o candidato final. Nele, `Security Check` #35242804648, `SSOT Enforcement` #35242804586, `Security Scan` #35242804570, `SSOT Territorial Tests` #35242804585 e `Auth Concept Regression` #35242804656 terminaram com falha; os jobs retornaram `steps=null`, sem execução de etapas.
 
-Consequências:
-
-- esses vermelhos não provam regressão do código;
-- também não provam aprovação;
-- lint, typecheck, testes e scanners só contam quando os comandos realmente executarem;
-- a causa administrativa/infra exata continua não demonstrada e não deve ser inventada.
-
-O diagnóstico permanece rastreado na issue #17.
+Esses resultados não comprovam regressão do código nem aprovação. A causa administrativa/infra continua sem diagnóstico confirmado; o mesmo diagnóstico deve ser refeito no HEAD documental. O problema segue rastreado na issue #17.
 
 ### Heavy PR Certification
 
-O `Heavy PR Certification (Auto)` do PR #117 está enfileirado aguardando o runner self-hosted dedicado. Enquanto o job não executar steps e concluir, não existe certificação pesada do SHA.
+O run `Heavy PR Certification (Auto)` #35242804590 do PR #117 continua `queued`, sem steps. Ainda não existe certificação pesada do SHA.
 
 ### Proteção da `main`
 
-A última consulta registrada da `main` mostrou proteção desabilitada. A correção administrativa continua rastreada na issue #28. Não declarar esse item concluído sem reconsultar a API/ruleset e obter `protected=true` ou proteção equivalente efetiva.
+A última observação registrada mostrou `protected=false`, sem required status checks. A consulta atual da API de branch protection retornou `403 Resource not accessible by integration`; ela não confirma o estado presente nem permite aplicar a configuração. A correção administrativa continua rastreada na issue #28.
 
 ### Vercel
 
@@ -82,15 +75,21 @@ Não alterar política de dispatch por inferência. Em particular, mudanças de 
 
 ## Segurança e Supabase
 
-A última evidência remota registrada nos checkpoints de 2026-09-16 descreveu o projeto Supabase como saudável e `mobility-rpc` ativo com JWT, enquanto `auto-dispatch-ride` e `process-timeouts` usam a fronteira de `CRON_SECRET` conforme a política versionada.
+O projeto Supabase `xhdowzacfujckjelqhtd` foi reconsultado às 15:57 UTC e está `ACTIVE_HEALTHY`, em PostgreSQL `17.6.1.084`.
 
-Essa evidência é histórica recente, mas não deve ser apresentada como revalidação remota de 2026-09-17 sem nova consulta ao provider.
+### Revalidação do Security Advisor — 2026-09-17 15:54 UTC
 
-Continuam exigindo decisão/evidência fresca antes de release:
+- 1 `ERROR`: `public.spatial_ref_sys` sem RLS; a tabela pertence ao PostGIS e concede `SELECT` a `PUBLIC`. Contém metadados de sistemas de coordenadas; o finding permanece aberto para correção compatível com a extensão.
+- 19 `INFO`: RLS ligado sem policy (14 tabelas públicas e 5 privadas). Consulta de privilégios confirmou que nenhuma delas concede `SELECT`, `INSERT`, `UPDATE` ou `DELETE` a `anon`/`authenticated`; o acesso restrito é deny-by-default.
+- 4 extensões no schema `public`: `unaccent`, `pg_trgm`, `citext` e `postgis`.
+- 9 funções `SECURITY DEFINER` executáveis por `anon`; 85 por `authenticated`; a proteção contra senhas vazadas permanece desabilitada.
+- Das 9 funções anon, 6 são APIs próprias com contrato público validado (poll visível, reputação pública, agregado de rating, share por token, projeção territorial consentida e ingestão analítica); as outras 3 são overloads de `st_estimatedextent` do PostGIS.
+- As 82 funções próprias expostas a `authenticated` têm `search_path` fixado. As únicas 3 funções expostas sem essa configuração são as funções C `st_estimatedextent` da extensão PostGIS. Não foi feito revoke em massa nem alteração de schema.
+
+Continuam exigindo decisão/evidência antes de release:
 
 - exceções de HIBP/PostGIS/Poll cuja validade registrada expirou;
 - recovery snapshot vencido;
-- residuais do Security Advisor classificados pela Security Authority;
 - qualquer drift entre migrations/schema remoto e contratos gerados.
 
 Exceção expirada não deve ser renovada apenas para obter verde.

@@ -22,12 +22,12 @@ Base técnica reconciliada imediatamente antes desta atualização: `6c5fd41eccd
 
 Critério continua: execução real de typecheck/lint/security/test/build/deploy no mesmo SHA candidato, sem bypass.
 
-Revalidação remota em 2026-09-17:
+Snapshot remoto observado antes desta atualização documental em 2026-09-17:
 
-- PR #117 está aberto no SHA `4f41fb17f9a7c0b9d41662f630312e97cd34d3a2`, baseado no HEAD atual da `main` `70bea7259572c2032371fe21fea5785f5191cdef`;
-- os runs `Security Check` #35227877275, `SSOT Enforcement` #35227877133, `Security Scan` #35227877140 e `SSOT Territorial Tests` #35227877162 terminaram `failure`, com `steps=null`; portanto os comandos não iniciaram;
-- `Heavy PR Certification (Auto)` #35227877336 continua `pending`, com o job aguardando runner;
-- o status `Vercel` do mesmo SHA está `failure`; o comentário do deploy informa limite diário do plano (`api-deployments-free-per-day`, mais de 100 deploys), sem build/deploy certificável;
+- PR #117 está aberto no SHA final `bc2747022a7d714df7335c8c9514250f1d710349`, baseado no HEAD da `main` `70bea7259572c2032371fe21fea5785f5191cdef`, com 11 commits à frente e zero atrás;
+- os runs `Security Check` #35242804648, `SSOT Enforcement` #35242804586, `Security Scan` #35242804570, `SSOT Territorial Tests` #35242804585 e `Auth Concept Regression` #35242804656 terminaram `failure`, com `steps=null`; os comandos não iniciaram;
+- `Heavy PR Certification (Auto)` #35242804590 continua `queued`, sem steps;
+- o status `Vercel` do SHA final está `failure`; o limite diário do plano (`api-deployments-free-per-day`) impede novo build/deploy;
 - o sync canônico de tipos #207 (run `35168708525`) continua `queued`; #208 (run `35178338822`) foi cancelado após 40m37s, também sem steps;
 - não foi demonstrada a causa exata dos jobs sem steps nem a disponibilidade do runner dedicado.
 
@@ -38,16 +38,14 @@ Verificação local deste checkout em 2026-09-17:
 - `npm run build` passou após execução autorizada fora do sandbox: Vite transformou 6.089 módulos e produziu o bundle local; isso não comprova deployment;
 - `npm run security:validate` passou, com aviso de `.env.local` ausente;
 - `npm run validate:migrations` passou após reconciliar colisões locais e classificações explícitas;
-- `npm run build` produziu o bundle local com 6.089 módulos; não é deployment nem prova same-SHA remota;
+- a revalidação final de `npm run validate:docs-structure` não carregou o validador: Node 24.19.0 retornou `uv_os_get_passwd ENOMEM`; `git diff --check` passou;
 - testes focados de Safety/Mobility passaram **14/14**; lint Maps passou e seus testes passaram **4/4** usando configuração de teste isolada, pois a configuração padrão tentou ler `../../..` fora do limite do sandbox;
 - novos testes focados do validador de migrations passaram **2/2**, e os testes de leitura Mobility/contrato passaram **12/12**;
 - o caller sem uso de `get_driver_dispatch_summaries` foi removido; o RPC remoto só concede EXECUTE a `service_role` e o scan do código de browser agora retorna zero callers entre 197 nomes privilegiados;
 - a comparação detalhada do ledger remoto encontrou 32 reconciliações de arquivo cujo SQL é idêntico ao registrado, sete migrations com conteúdo local diferente do aplicado, 29 migrations locais sem identidade remota e 10 registros remotos sem arquivo local. Não aplicar nem renomear os conflitos até reconciliar o provenance de cada statement.
-- esses resultados locais ainda não certificam SHA remoto. O follow-up será anexado ao PR #117 sem merge; o novo SHA candidato precisa executar novamente os gates hospedados e obter deployment próprio.
+- esses resultados locais ainda não certificam SHA remoto. O follow-up de código está no PR #117, commit `bc2747022a7d714df7335c8c9514250f1d710349`, sem merge; no SHA observado os workflows terminaram sem steps e Vercel permanece no limite diário. Esta atualização documental não altera o código; os gates ainda precisam concluir no HEAD que a contém.
 
 ### Proteção de `main`
-
-Estado: **ABERTO**.
 
 Estado: **ABERTO / não verificável nesta sessão**. A última observação registrada mostrou `protected=false`, sem required status checks. A consulta atual da API de branch protection retornou `403 Resource not accessible by integration`; por isso não confirma o estado presente nem permite aplicar a configuração. Issue relacionado: #28.
 
@@ -77,15 +75,20 @@ Antes de exigir PR para todos os pushes, reconciliar a regra com o workflow can�
 
 ## P1 — segurança transversal
 
-Advisor de segurança atualizado em 2026-09-17:
+Supabase `xhdowzacfujckjelqhtd` está `ACTIVE_HEALTHY`, Postgres `17.6.1.084`, conferido às 15:57 UTC. Advisor de segurança atualizado às 15:54 UTC:
 
 - 1 `ERROR`: `public.spatial_ref_sys` sem RLS, relação do PostGIS;
+- 19 `INFO`: RLS ligado sem policy (14 tabelas em `public`, 5 em `private`);
 - 4 extensões em `public`: `unaccent`, `pg_trgm`, `citext`, `postgis`;
 - 9 funções `SECURITY DEFINER` executáveis por `anon`;
 - 85 executáveis por `authenticated`;
 - Leaked Password Protection continua desabilitado.
 
 Essas contagens são inventário, não classificação automática de vulnerabilidade.
+
+Consulta read-only ao catálogo em 2026-09-17 confirmou 301 funções `SECURITY DEFINER` em `public`: 85 executáveis por `authenticated`, 9 por `anon` e 274 por `service_role`. As 9 chamadas anon incluem 6 endpoints próprios com contrato público explícito (poll visível, reputação pública, resumo agregado de rating, share por token ativo, projeção territorial consentida e ingestão analítica validada) e as 3 assinaturas `st_estimatedextent` da extensão PostGIS.
+
+As 82 funções próprias executáveis por `authenticated` (6 também expostas a `anon` e 76 somente a `authenticated`) têm `search_path` fixado. As únicas 3 funções expostas sem `search_path` são as versões C, pertencentes à extensão PostGIS, de `st_estimatedextent`; não foram alteradas. O catálogo encontrou 17 funções próprias sem comentário SQL; suas definições usam wrappers com delegação a helpers privados ou comandos com verificação de ator/admin. Comentário ausente, isoladamente, não foi tratado como vulnerabilidade.
 
 ### Revisão `anon SECURITY DEFINER`
 
@@ -131,9 +134,11 @@ A revisão não fecha automaticamente os 85 warnings. Grupos residuais seguem cl
 
 `submit_work_opportunity_feedback` foi revisado especificamente: a UI o apresenta como **retorno rápido da comunidade** sobre utilidade da oportunidade, não review bilateral de contratação. O contrato server-side de permitir perfil ativo não autor em oportunidade não cancelada é coerente com essa semântica; não foi endurecido artificialmente.
 
-### RLS default-deny de Mobilidade
+### RLS default-deny e PostGIS
 
-`mobility_price_quotes` e `ride_state_audit` têm RLS ligado, nenhuma policy e nenhum grant para `anon`/`authenticated`; apenas `postgres`/`service_role`. O finding `RLS enabled no policy` nesses dois casos é deny-by-default intencional.
+As 19 tabelas com RLS ligado e sem policy não concedem `SELECT`, `INSERT`, `UPDATE` ou `DELETE` a `anon`/`authenticated`. As 14 tabelas em `public` concedem acesso de tabela somente a `service_role`; em `private`, `community_direct_message_audit_log` e `notification_outbox` também são service-only, enquanto as três tabelas `alpha_access_*` permanecem acessíveis apenas ao owner. O finding `RLS enabled no policy` é deny-by-default nesses casos. `mobility_price_quotes` e `ride_state_audit` estão entre as 14 tabelas públicas.
+
+`public.spatial_ref_sys` é diferente: pertence ao PostGIS, está sem RLS e concede `SELECT` a `PUBLIC`, portanto aparece como `ERROR`. Seus registros são metadados estáticos de sistemas de coordenadas; o finding permanece aberto para uma correção compatível com a extensão, sem alteração de grants/schema nesta execução.
 
 ## P1 — LGPD / privacidade
 
@@ -203,3 +208,4 @@ Sem inventar política comercial ou retenção, as frentes executáveis são:
 3. concluir classificação dos `authenticated SECURITY DEFINER` residuais por risco/autoridade e negative probes onde houver boundary sensível;
 4. continuar a matriz LGPD apenas com decisões de retenção explicitamente aprovadas;
 5. repetir build/deploy real no SHA final após alterações de source/probes.
+

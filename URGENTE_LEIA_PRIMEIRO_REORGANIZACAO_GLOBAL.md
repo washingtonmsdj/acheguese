@@ -6,12 +6,12 @@
 
 ## Estado atual resumido
 
-- `main` continua **sem proteção** (`protected=false`, sem required checks);
+- a última observação de proteção mostrou `protected=false`, mas a consulta atual da API retornou `403 Resource not accessible by integration`; o estado presente da `main` não pôde ser confirmado nem alterado nesta sessão (issue #28);
 - houve build/deploy real `READY` no mesmo SHA em `a30b7c7...`, mas commits posteriores não herdam essa certificação; qualquer HEAD final precisa repetir o gate real;
 - Mobility continua pública **desabilitada** e já possui GPS minimizado, autorização negativa, preço terminal server-owned, replays sequenciais e contrato estrutural de atomicidade provados;
 - a prova runtime de concorrência em duas sessões independentes continua aberta;
 - drift de `types.generated.ts` continua aberto e deve ser corrigido somente pelo fluxo canônico de geração;
-- advisor de segurança foi atualizado; warnings `SECURITY DEFINER` estão sendo classificados, não tratados por contagem bruta;
+- Security Advisor revalidado em 2026-09-17: 1 erro de RLS no catálogo do PostGIS, 19 tabelas RLS sem policy confirmadas como deny-by-default e 9/85 RPCs `SECURITY DEFINER` expostas a `anon`/`authenticated`; a triagem é por autoridade e contrato, sem revoke em massa;
 - probe negativo de analytics comprovou bloqueio de spoof de `user_id` e de evento operacional sem `service_role`;
 - LGPD account-deletion reversível está reconciliado pela migration `20260826015916_reconcile_account_deletion_authority_live_drift`;
 - purge destrutivo **não existe** ainda e agora possui gate fail-closed: `LGPD_PURGE_MATRIX.json` registra 28 FKs bloqueantes, sendo 25 anuláveis e 3 obrigatórias/RESTRICT, todas ainda sem decisão de retenção;
@@ -77,3 +77,4 @@ Só depois de contratos funcionais estáveis: índices/FKs com telemetria real, 
 4. `docs/08-roadmap/checkpoints/2026-09-16-global-stabilization-priorities.md`;
 5. `docs/08-roadmap/checkpoints/2026-09-16-mobility-authority-privacy-hardening.md`;
 6. `SECURITY.md`.
+
