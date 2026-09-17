@@ -1,5 +1,5 @@
--- Rollback-only remote probe: authenticated callers cannot spoof incident reporters,
--- attach Safety evidence to another reporter's incident, mutate another profile's alert,
+-- Rollback-only remote probe: authenticated callers cannot spoof Safety authors,
+-- attach evidence to another reporter's incident, mutate another profile's alert,
 -- or perform admin-only incident transitions.
 
 BEGIN;
@@ -100,6 +100,22 @@ DECLARE
   v_blocked integer := 0;
 BEGIN
   BEGIN
+    PERFORM public.create_safety_emergency_alert(
+      v_foreign_profile,
+      NULL,
+      'manual',
+      'Security probe alert actor spoof attempt',
+      NULL,
+      NULL,
+      NULL,
+      '{}'::jsonb
+    );
+    RAISE EXCEPTION 'foreign_profile_safety_alert_creation_allowed';
+  EXCEPTION WHEN insufficient_privilege THEN
+    v_blocked := v_blocked + 1;
+  END;
+
+  BEGIN
     PERFORM public.create_safety_incident(
       v_foreign_profile,
       NULL,
@@ -149,8 +165,8 @@ BEGIN
     v_blocked := v_blocked + 1;
   END;
 
-  IF v_blocked <> 4 THEN
-    RAISE EXCEPTION 'expected 4 safety denials, got %', v_blocked;
+  IF v_blocked <> 5 THEN
+    RAISE EXCEPTION 'expected 5 safety denials, got %', v_blocked;
   END IF;
 END;
 $negative_authorization$;
@@ -161,6 +177,7 @@ ROLLBACK;
 SELECT jsonb_build_object(
   'probe', 'safety_authority_negative',
   'passed', true,
-  'blocked_rpc_count', 4,
+  'blocked_rpc_count', 5,
   'rolled_back', true
 ) AS result;
+

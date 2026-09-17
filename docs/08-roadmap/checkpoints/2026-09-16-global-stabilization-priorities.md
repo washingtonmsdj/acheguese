@@ -98,7 +98,7 @@ Dos 9 warnings, 3 são `st_estimatedextent` do PostGIS. Os 6 RPCs próprios revi
 
 ### Revisão `authenticated SECURITY DEFINER`
 
-A triagem de maior risco já possui **53 fronteiras sensíveis com evidência negativa/de isolamento no Supabase real**, em transações rollback-only:
+A triagem de maior risco já possui **54 fronteiras sensíveis com evidência negativa/de isolamento no Supabase real**, em transações rollback-only:
 
 - 6 RPCs administrativos de mutação/ação;
 - 7 leituras administrativas: métricas/SLO, fila de correção, audit social, moderação federada e listas Trust;
@@ -107,12 +107,12 @@ A triagem de maior risco já possui **53 fronteiras sensíveis com evidência ne
 - 6 fronteiras de participante em corrida: chat ensure/send/read, ride share, verification status e PIN;
 - 9 fronteiras Community Direct / emergency contacts;
 - 6 fronteiras Classifieds messaging: inbox de perfil alheio, send/read/block/report conversation/report message por outsider;
-- 4 fronteiras Safety: criação de incidente com `reported_by` forjado, evidence em incidente alheio, mutação de alerta alheio e transição de incidente por não-admin;
+- 5 fronteiras Safety: spoof na criação de alerta e incidente, evidence em incidente alheio, mutação de alerta alheio e transição de incidente por não-admin;
 - 2 fronteiras current-user preferences/favorites: favorite alheio bloqueado e preferência de outro usuário preservada;
 - 2 fronteiras de Community poll: voto e autoria de post com Profile alheio.
 - 2 fronteiras de reações em grupo: leitura de contagem e tentativa de curtir mensagem privada por não-membro.
 
-Probe remoto rollback-only ampliado em `tests/security/safety-authority-negative-remote-probe.sql`: `create_safety_incident` bloqueou o `reported_by` de outro Profile; o Supabase retornou 4/4 negações e `rolled_back=true`.
+Probe remoto rollback-only ampliado em `tests/security/safety-authority-negative-remote-probe.sql`: `create_safety_emergency_alert` e `create_safety_incident` bloquearam Profile alheio; o Supabase retornou 5/5 negações e `rolled_back=true`.
 
 Probe remoto rollback-only em `tests/security/community-group-reaction-membership-remote-probe.sql` confirmou que membro enxerga a própria reação e a contagem, enquanto perfil externo recebe zero linhas e não consegue curtir; fixture sintética removida com `rolled_back=true`.
 
