@@ -213,7 +213,7 @@ Essa política substitui a antiga ideia de escolher um repositório e abandonar 
 ## Baseline GitHub confirmado
 
 - `main` é a única linha ativa escolhida para esta estabilização.
-- **93 branches existem no snapshot atual:** `main` + **92 refs históricas** pendentes de classificação segura (#84). A contagem foi revalidada diretamente: a página 93 existe e a página 94 está vazia com `per_page=1`.
+- Snapshot remoto de 2026-09-17 antes da limpeza: 125 branches (`main` + 124 refs históricas). Foram removidas 85 refs com head ancestral da `main` ou head exato de PR mesclado, com SHA relido e ausência verificada. Restam 40 branches: `main`, 38 refs históricas pendentes de proveniência e a branch ativa do PR #117 (#84).
 - `main` recebeu proteção parcial em 2026-09-17: `protected=true`, `enforce_admins=true`, force-push/deleção bloqueados e resolução de conversas exigida; PR/checks/restrição de push continuam pendentes por causa do writer direto `Supabase Types Sync` (#28).
 - os workflows SSOT foram alinhados com `push` na `main`; alterações em tooling canônico sob `tools/**` e nos arquivos de configuração relevantes devem disparar os gates correspondentes.
 - o root legado `scripts/**` está aposentado; workflows/package scripts não devem depender de wrappers recriados nesse caminho.
@@ -349,8 +349,9 @@ Para cada módulo exigir: entrypoint canônico, banco/RPC atual, autorização p
 ## P2 — higiene E2E e branches
 
 - [x] provenance explícita das fixtures `business_data` (`source=e2e`, `source_kind=technical_fixture`) centralizada nos clients operacionais e protegida por regression guard (#83, concluído no nível de código);
-- [ ] classificar as **92 refs históricas** e reconstruir na `main` qualquer delta útil antes de removê-las (#84);
-- [ ] não fazer merge/delete em massa: cada ref histórica precisa de classificação de provenance e utilidade antes da decisão.
+- [x] classificar e remover 85 refs comprovadamente ancestrais da `main` ou heads exatos de PRs mesclados (#84);
+- [ ] classificar as 38 refs históricas restantes e reconstruir na `main` qualquer delta útil antes de removê-las;
+- [x] não fazer merge/delete em massa: cada ref removida teve SHA verificado individualmente antes da exclusão.
 
 ## Definition of Done — MVP
 

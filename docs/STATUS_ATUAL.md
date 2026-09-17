@@ -1,6 +1,6 @@
 # Status atual do Achegue-se
 
-Atualizado em: 2026-09-17 16:45 UTC
+Atualizado em: 2026-09-17 17:09 UTC
 
 ## Autoridade deste documento
 
@@ -23,13 +23,13 @@ A regra continua sendo fail-closed: nenhum status verde inferido, merge, commit,
 
 ### GitHub Actions hosted
 
-No HEAD do PR #117 `395f95c3eff40221f301e637dfd92aeb5d42341f`, cinco workflows terminaram em falha pré-step: `Security Check` #35246133959, `SSOT Enforcement` #35246133895, `Security Scan` #35246134014, `SSOT Territorial Tests` #35246134081 e `Auth Concept Regression` #35246133941. Todos reportaram `runner_id=0` e `steps=[]`; nenhum comando foi executado. Esses resultados não provam regressão nem aprovação do código. A causa do provisionamento não foi identificada; o bloqueio está rastreado na issue #17.
+No HEAD do PR #117 `44018f25f91dff2f8036ee6d3e6e67c17912b6e0`, cinco workflows terminaram em falha pré-step: `Security Check` #35248764768, `SSOT Enforcement` #35248764937, `Security Scan` #35248764987, `SSOT Territorial Tests` #35248764805 e `Auth Concept Regression` #35248764795. Todos os jobs encerrados reportaram `steps=[]`; nenhum comando foi executado. O resultado não prova falha do código nem aprovação. A causa do provisionamento segue sem confirmação (#17).
 
 ### Heavy PR Certification
 
-O run `Heavy PR Certification (Auto)` #35246134155 do PR #117 continua `queued`, sem steps. Ainda não existe certificação pesada do SHA.
+`Heavy PR Certification (Auto)` #35248764830 do PR #117 continua `queued`, sem steps. Ainda não existe certificação pesada do SHA.
 
-O runner self-hosted `acheguese-windows-heavy-01` está `offline`, sem serviço ou processo runner neste host. O sync canônico de tipos #207 (run `35168708525`) segue `queued` desde 04:09 UTC; #208 (run `35178338822`) foi cancelado após 40m37s, sem steps.
+O runner self-hosted `acheguese-windows-heavy-01` permanece `offline`, sem processo/serviço neste host. O sync canônico de tipos #207 (run `35168708525`) segue `queued` desde 04:09 UTC; #208 (run `35178338822`) foi cancelado após 40m37s, sem steps.
 
 ### Proteção da `main`
 
@@ -39,7 +39,7 @@ A API administrativa confirmou proteção parcial: `protected=true`, `enforce_ad
 
 Release exige deployment `READY` para exatamente o mesmo SHA certificado. `build-rate-limit`, cancelamento, `Ignored Build Step`, `pending` ou sucesso de um SHA anterior não contam.
 
-O HEAD atual `395f95c3eff40221f301e637dfd92aeb5d42341f` foi bloqueado por `Deployment rate limited — retry in 24 hours`; não há deployment `READY` neste SHA. O preview `dpl_3yFoVfGodyEfdQz7p5nCRawPumbc` e `Vercel=success` pertencem ao SHA anterior `c46e61eba0a0b5d132c64fe51f1589c208810458`. Promoção de produção e smoke final permanecem pendentes.
+O HEAD atual `44018f25f91dff2f8036ee6d3e6e67c17912b6e0` tem status `Vercel=failure` por `Deployment rate limited — retry in 24 hours`; não há deployment `READY` neste SHA. O preview `dpl_3yFoVfGodyEfdQz7p5nCRawPumbc` e `Vercel=success` pertencem ao SHA anterior `c46e61eba0a0b5d132c64fe51f1589c208810458`. Promoção de produção e smoke final permanecem pendentes.
 
 ## P1 — Mobilidade
 

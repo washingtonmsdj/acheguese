@@ -1,6 +1,6 @@
 # Checkpoint — prioridades globais de estabilização
 
-**Atualizado:** 2026-09-17 16:45 UTC  
+**Atualizado:** 2026-09-17 17:09 UTC  
 **Linha:** `main`  
 **Status:** P0/P1 em execução; release authority do HEAD atual ainda aberto; Mobilidade, segurança e LGPD avançaram com provas remotas fail-closed
 
@@ -23,15 +23,15 @@ Base técnica reconciliada imediatamente antes desta atualização: `6c5fd41eccd
 
 Critério continua: execução real de typecheck/lint/security/test/build/deploy no mesmo SHA candidato, sem bypass.
 
-Snapshot remoto do PR #117 no HEAD documental `395f95c3eff40221f301e637dfd92aeb5d42341f`, observado em 2026-09-17 às 16:40 UTC:
+Snapshot remoto do PR #117 no HEAD documental `44018f25f91dff2f8036ee6d3e6e67c17912b6e0`, observado em 2026-09-17 às 17:09 UTC:
 
-- PR #117 está aberto, baseado na `main` `70bea7259572c2032371fe21fea5785f5191cdef`, com 14 commits à frente e zero atrás;
-- `Security Check` #35246133959, `SSOT Enforcement` #35246133895, `Security Scan` #35246134014, `SSOT Territorial Tests` #35246134081 e `Auth Concept Regression` #35246133941 terminaram em falha pré-step: `runner_id=0`, `steps=[]`; nenhum comando foi executado;
-- `Heavy PR Certification (Auto)` #35246134155 continua `queued`, sem steps;
-- o único runner cadastrado, `acheguese-windows-heavy-01`, está `offline`; nenhum serviço/processo runner existe neste host. A causa de provisionamento dos jobs `ubuntu-latest` não foi identificada;
-- o sync canônico de tipos #207 (run `35168708525`) continua `queued` desde 04:09 UTC; #208 (run `35178338822`) está `cancelled` após 40m37s, sem steps;
-- Vercel bloqueou o HEAD `395f95c` por `Deployment rate limited — retry in 24 hours`; o preview `dpl_3yFoVfGodyEfdQz7p5nCRawPumbc` está `READY` somente no SHA anterior `c46e61eba0a0b5d132c64fe51f1589c208810458`, sem produção ou smoke final;
-- a causa exata dos jobs sem steps e a causa comercial do rate limit continuam sem diagnóstico confirmado.
+- PR #117 está aberto, baseado na `main` `70bea7259572c2032371fe21fea5785f5191cdef`, com 15 commits à frente e zero atrás;
+- `Security Check` #35248764768, `SSOT Enforcement` #35248764937, `Security Scan` #35248764987, `SSOT Territorial Tests` #35248764805 e `Auth Concept Regression` #35248764795 terminaram em falha pré-step. Os jobs reportaram `steps=[]`; nenhum comando foi executado;
+- `Heavy PR Certification (Auto)` #35248764830 continua `queued`, sem steps;
+- o runner self-hosted `acheguese-windows-heavy-01` está `offline`; não há serviço/processo runner neste host. A origem dos jobs `ubuntu-latest` sem runner e a limitação de billing não foram confirmadas;
+- o sync canônico de tipos #207 (run `35168708525`) continua `queued`; #208 (run `35178338822`) está `cancelled` após 40m37s, sem steps;
+- o status `Vercel` do SHA `44018f25f91dff2f8036ee6d3e6e67c17912b6e0` é `failure`: `Deployment rate limited — retry in 24 hours`. O único preview `READY` continua sendo `dpl_3yFoVfGodyEfdQz7p5nCRawPumbc`, no SHA anterior `c46e61eba0a0b5d132c64fe51f1589c208810458`, sem produção/smoke;
+- a limpeza da issue #84 removeu 85 refs comprovadas após validação por SHA. Restam 40 branches: `main`, 38 refs históricas pendentes de proveniência e a branch ativa do PR #117.
 
 Verificação local deste checkout em 2026-09-17:
 
