@@ -1,4 +1,5 @@
 import { render, screen } from "@testing-library/react";
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { MemoryRouter, Route, Routes } from "react-router-dom";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
@@ -42,6 +43,10 @@ vi.mock("@/core/community-experience/access", async () => {
     useCommunityAccess: mocks.useCommunityAccess,
   };
 });
+
+vi.mock("@/core/community-experience/access/useCommunityAccess", () => ({
+  useCommunityAccess: mocks.useCommunityAccess,
+}));
 
 vi.mock("@/core/routing/hooks", () => ({
   useAppUrls: () => ({
@@ -128,12 +133,21 @@ function accessDecision(canCreatePost: boolean): UseCommunityAccessResult {
 }
 
 function renderPage() {
+  const queryClient = new QueryClient({
+    defaultOptions: {
+      queries: { retry: false },
+      mutations: { retry: false },
+    },
+  });
+
   return render(
-    <MemoryRouter initialEntries={["/novo-post"]}>
-      <Routes>
-        <Route path="/novo-post" element={<NovoPostPage />} />
-      </Routes>
-    </MemoryRouter>,
+    <QueryClientProvider client={queryClient}>
+      <MemoryRouter initialEntries={["/novo-post"]}>
+        <Routes>
+          <Route path="/novo-post" element={<NovoPostPage />} />
+        </Routes>
+      </MemoryRouter>
+    </QueryClientProvider>,
   );
 }
 

@@ -31,10 +31,14 @@ const DIRECT_DB_RE =
   /(\bsupabase\s*\.\s*(from|rpc|channel|functions|auth|storage|removeChannel)\s*\(|from\s+["']@\/integrations\/supabase(?:\/client)?["'])/;
 const DEPRECATED_COMMUNITY_IMPORT_RE =
   /(?:from\s+["']|import\(\s*["'])@\/modules\/community(?:\/|["'])/;
-const CORE_COMMUNITY_BARREL_IMPORT_RE =
-  /(?:from\s+["']|import\(\s*["'])@\/core\/community["']/;
-const CORE_COMMUNITY_LEGACY_IMPORT_RE =
-  /(?:from\s+["']|import\(\s*["'])@\/core\/community\//;
+const CORE_COMMUNITY_BARREL_STATIC_IMPORT_RE =
+  /from\s+["']@\/core\/community["']/;
+const CORE_COMMUNITY_BARREL_DYNAMIC_IMPORT_RE =
+  /import\(\s*["']@\/core\/community["']/;
+const CORE_COMMUNITY_LEGACY_STATIC_IMPORT_RE =
+  /from\s+["']@\/core\/community\//;
+const CORE_COMMUNITY_LEGACY_DYNAMIC_IMPORT_RE =
+  /import\(\s*["']@\/core\/community\//;
 const CANONICAL_COMMUNITY_LAUNCH_IMPORT_RE =
   /(?:from\s+["']|import\(\s*["'])@\/core\/community\/config\/communityLaunch["']/;
 
@@ -61,15 +65,57 @@ function walk(dir: string): string[] {
   return files;
 }
 
-function hasDisallowedCoreCommunityImport(content: string): boolean {
-  if (!CORE_COMMUNITY_LEGACY_IMPORT_RE.test(content)) return false;
+/**
+ * Return only top-level static import/export declarations.
+ *
+ * Architecture tests intentionally contain forbidden import paths as string
+ * literals in assertions. Scanning the whole file therefore reports those
+ * assertions as production imports. Keeping statement extraction here lets the
+ * boundary check continue to inspect real declarations without weakening the
+ * rule for application code.
+ */
+function collectStaticImportStatements(content: string): string[] {
+  const statements: string[] = [];
+  const lines = content.split(/\r?\n/);
+  let current = "";
+  let collecting = false;
 
-  const withoutCanonicalLaunchContract = content.replace(
+  for (const line of lines) {
+    if (!collecting && /^\s*(?:import|export)\b/.test(line)) {
+      collecting = true;
+      current = line;
+    } else if (collecting) {
+      current += `\n${line}`;
+    }
+
+    if (collecting && /;\s*$/.test(line)) {
+      statements.push(current);
+      current = "";
+      collecting = false;
+    }
+  }
+
+  return statements;
+}
+
+function hasDisallowedCoreCommunityImport(content: string): boolean {
+  const staticImports = collectStaticImportStatements(content).join("\n");
+  if (
+    !CORE_COMMUNITY_LEGACY_STATIC_IMPORT_RE.test(staticImports) &&
+    !CORE_COMMUNITY_LEGACY_DYNAMIC_IMPORT_RE.test(content)
+  ) {
+    return false;
+  }
+
+  const withoutCanonicalLaunchContract = staticImports.replace(
     /(?:from\s+["']|import\(\s*["'])@\/core\/community\/config\/communityLaunch["']/g,
     "",
   );
 
-  return CORE_COMMUNITY_LEGACY_IMPORT_RE.test(withoutCanonicalLaunchContract);
+  return (
+    CORE_COMMUNITY_LEGACY_STATIC_IMPORT_RE.test(withoutCanonicalLaunchContract) ||
+    CORE_COMMUNITY_LEGACY_DYNAMIC_IMPORT_RE.test(content)
+  );
 }
 
 function validateModuleCompatibleRoot(
@@ -141,7 +187,11 @@ function main() {
         );
       }
 
-      if (CORE_COMMUNITY_BARREL_IMPORT_RE.test(content)) {
+      const staticImports = collectStaticImportStatements(content).join("\n");
+      if (
+        CORE_COMMUNITY_BARREL_STATIC_IMPORT_RE.test(staticImports) ||
+        CORE_COMMUNITY_BARREL_DYNAMIC_IMPORT_RE.test(content)
+      ) {
         violations.push(
           `${relative}: import do barrel @/core/community proibido. Use subdominio explicito em core/* ou modulo transversal.`,
         );

@@ -166,7 +166,7 @@
     "arquivo": "06-feed-comunidade/pranchas/002-feed-comunidade.png",
     "origem": ".codex/generated_images/01a08607-a8d7-7ed0-9d31-72a4198da92f/exec-d1b4215a-d9c4-4118-a1c8-352b7475cc31.png",
     "sha256": "5310ab7afeff7aa8963618b5db0a10a3dd3a2c17d50fdc88c26613e6408b8b0b",
-    "classificacao": "Referência para revisão",
+    "classificacao": "Histórico superado pela prancha 115; não implementar",
     "implementacao": "não auditada pelo catálogo"
   },
   {
@@ -1078,5 +1078,95 @@
     "sha256": "9efbd69198f8febe7f87fa5066176be30c38974588a12d37c02e83c54d984495",
     "classificacao": "Referência proposta em 17/09/2026",
     "implementacao": "Conceito; consultar README"
+  },
+  {
+    "id": 109,
+    "pagina": "36-classificados",
+    "titulo": "classificados-mobile",
+    "arquivo": "36-classificados/pranchas/109-classificados-mobile.png",
+    "origem": "C:\\Users\\TONECOS\\.codex\\generated_images\\01a08607-a8d7-7ed0-9d31-72a4198da92f\\exec-683063bd-02c3-4c5d-b5e8-7334b654cb5b.png",
+    "sha256": "c4cda2714de65758e40480821932c38fb312f9eca7648173d7694f722750eb24",
+    "classificacao": "Referência proposta em 18/09/2026",
+    "implementacao": "Conceito; consultar README"
+  },
+  {
+    "id": 110,
+    "pagina": "36-classificados",
+    "titulo": "classificados-desktop",
+    "arquivo": "36-classificados/pranchas/110-classificados-desktop.png",
+    "origem": "C:\\Users\\TONECOS\\.codex\\generated_images\\01a08607-a8d7-7ed0-9d31-72a4198da92f\\exec-6905345f-02fc-41a9-9839-96d931e13ce5.png",
+    "sha256": "b7304cfcfbc5b5734978552620b6e9ed62055a3f91f4af931cd45d5045eea63e",
+    "classificacao": "Referência proposta em 18/09/2026",
+    "implementacao": "Conceito; consultar README"
+  },
+  {
+    "id": 111,
+    "pagina": "37-meus-anuncios",
+    "titulo": "meus-anuncios-mobile",
+    "arquivo": "37-meus-anuncios/pranchas/111-meus-anuncios-mobile.png",
+    "origem": "C:\\Users\\TONECOS\\.codex\\generated_images\\01a08607-a8d7-7ed0-9d31-72a4198da92f\\exec-e35f573b-0f73-4328-9592-4f62a34937db.png",
+    "sha256": "9e7931df95545f3b37668f0d4449f761fd950889f4a83442493057f40ca1e0f9",
+    "classificacao": "Referência proposta em 18/09/2026",
+    "implementacao": "Conceito; consultar README"
+  },
+  {
+    "id": 112,
+    "pagina": "37-meus-anuncios",
+    "titulo": "meus-anuncios-desktop",
+    "arquivo": "37-meus-anuncios/pranchas/112-meus-anuncios-desktop.png",
+    "origem": "C:\\Users\\TONECOS\\.codex\\generated_images\\01a08607-a8d7-7ed0-9d31-72a4198da92f\\exec-92bf8583-adc3-40f2-8355-1217411d24bf.png",
+    "sha256": "bf70ffaf3728c8f0b90fa526cda2d59c85fbad92593c08c83f7a4084a1f2603f",
+    "classificacao": "Referência proposta em 18/09/2026",
+    "implementacao": "Conceito; consultar README"
+  },
+  {
+    "id": 113,
+    "pagina": "38-perfil-anunciante",
+    "titulo": "perfil-anunciante-mobile",
+    "arquivo": "38-perfil-anunciante/pranchas/113-perfil-anunciante-mobile.png",
+    "origem": "C:\\Users\\TONECOS\\.codex\\generated_images\\01a08607-a8d7-7ed0-9d31-72a4198da92f\\exec-304e639f-ce1f-4e96-98a0-04a7dba2add9.png",
+    "sha256": "f6b478f029c96eeea4e35facfa2b9e7cf018bbf269f60208fbac870cff9c760f",
+    "classificacao": "Referência proposta em 18/09/2026",
+    "implementacao": "Conceito; consultar README"
+  },
+  {
+    "id": 114,
+    "pagina": "38-perfil-anunciante",
+    "titulo": "perfil-anunciante-desktop",
+    "arquivo": "38-perfil-anunciante/pranchas/114-perfil-anunciante-desktop.png",
+    "origem": "C:\\Users\\TONECOS\\.codex\\generated_images\\01a08607-a8d7-7ed0-9d31-72a4198da92f\\exec-47f05ab1-8f9d-4064-be74-e12971e4e727.png",
+    "sha256": "25b797c419891d9bd52af44d29ea078118f3e014ed9b120ec0aef73ee4347733",
+    "classificacao": "Referência proposta em 18/09/2026",
+    "implementacao": "Conceito; consultar README"
+  },
+  {
+    "id": 115,
+    "pagina": "06-feed-comunidade",
+    "titulo": "feed-comunidade-atualizado",
+    "arquivo": "06-feed-comunidade/pranchas/115-feed-comunidade-atualizado.png",
+    "origem": "C:\\Users\\TONECOS\\.codex\\generated_images\\01a08607-a8d7-7ed0-9d31-72a4198da92f\\exec-c13becd8-df46-4c8c-b718-e751da01c31c.png",
+    "sha256": "1b570b5808484a3fb13d658f3e88709808ba09c711492a2c9fb19a97b29d51a0",
+    "classificacao": "Histórico superado pela referência 116 e complemento 117",
+    "implementacao": "Consultar ATUALIZACAO.md"
+  },
+  {
+    "id": 116,
+    "pagina": "06-feed-comunidade",
+    "titulo": "comunidade-feed-principal",
+    "arquivo": "06-feed-comunidade/pranchas/116-comunidade-feed-principal.png",
+    "origem": "C:\\Users\\TONECOS\\.codex\\generated_images\\01a08607-a8d7-7ed0-9d31-72a4198da92f\\exec-6a0f6b06-68b2-4b19-935d-84b53b4e9b3d.png",
+    "sha256": "1888c0c6710e8754e88088fc5cb3917fd65a781c335916c116c674d9a53d19ef",
+    "classificacao": "Referência atualizada",
+    "implementacao": "Consultar ATUALIZACAO.md"
+  },
+  {
+    "id": 117,
+    "pagina": "06-feed-comunidade",
+    "titulo": "comunidade-avisos-participacao",
+    "arquivo": "06-feed-comunidade/pranchas/117-comunidade-avisos-participacao.png",
+    "origem": "C:\\Users\\TONECOS\\.codex\\generated_images\\01a08607-a8d7-7ed0-9d31-72a4198da92f\\exec-0cd3945e-0a7d-44cb-a7d7-a98508abdbb5.png",
+    "sha256": "eaaeba727592b61d7c5258c1814db3514820c4a3cd9af8a86c235d5d0823e8a8",
+    "classificacao": "Referência atualizada",
+    "implementacao": "Consultar ATUALIZACAO.md"
   }
 ]

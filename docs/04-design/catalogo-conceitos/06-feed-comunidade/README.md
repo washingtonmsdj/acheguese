@@ -1,12 +1,26 @@
 # Feed da comunidade
 
+## Referências principais: 116 e 117
+
+- [Feed mobile e desktop](pranchas/116-comunidade-feed-principal.png)
+- [Avisos e estados de participação](pranchas/117-comunidade-avisos-participacao.png)
+
+As versões 002 e 115 são históricas. Consultar ATUALIZACAO.md.
+
+## Referência anterior
+
+- [115 — Mobile e desktop](pranchas/115-feed-comunidade-atualizado.png)
+- [Funcionamento e correções](ATUALIZACAO.md)
+
+A prancha 002 é histórico superado. Não aplicar sua identidade visual.
+
 ## Escopo
 
 Feed, filtros, grupos e agenda. Referência visual inicial, deve ser conciliada com publicação consolidada e política de vínculos; não autoriza escrita irrestrita.
 
 ## Referências visuais
 
-- [002-feed-comunidade](pranchas/002-feed-comunidade.png) — Referência para revisão.
+- [002-feed-comunidade](pranchas/002-feed-comunidade.png) — Histórico superado; não implementar.
 
 ## Conferência no projeto
 

@@ -19,7 +19,7 @@ Abra index.html para navegar visualmente. Consulte manifest.json para origem, no
 | [03-expansao-territorial](03-expansao-territorial/README.md) | Expansão e interesse em outras comunidades | 1 / 1 |
 | [04-como-funciona](04-como-funciona/README.md) | Como funciona | 2 / 0 |
 | [05-home-comunidade](05-home-comunidade/README.md) | Início da comunidade | 3 / 3 |
-| [06-feed-comunidade](06-feed-comunidade/README.md) | Feed da comunidade | 1 / 0 |
+| [06-feed-comunidade](06-feed-comunidade/README.md) | Feed da comunidade | 2 / 2 |
 | [07-explorar](07-explorar/README.md) | Explorar e encontrar | 1 / 0 |
 | [08-perfil-profissional](08-perfil-profissional/README.md) | Perfil público profissional | 1 / 0 |
 | [09-conversas](09-conversas/README.md) | Conversas por perfil | 1 / 2 |
@@ -49,5 +49,8 @@ Abra index.html para navegar visualmente. Consulte manifest.json para origem, no
 | [33-agenda-eventos](33-agenda-eventos/README.md) | Agenda e eventos | 2 / 1 |
 | [34-organizar-eventos](34-organizar-eventos/README.md) | Criar e gerenciar eventos | 2 / 0 |
 | [35-inscricao-checkin](35-inscricao-checkin/README.md) | Inscrição, credencial e entrada | 2 / 1 |
+| [36-classificados](36-classificados/README.md) | Classificados da comunidade | 2 / 0 |
+| [37-meus-anuncios](37-meus-anuncios/README.md) | Criar e gerenciar meus anúncios | 2 / 0 |
+| [38-perfil-anunciante](38-perfil-anunciante/README.md) | Perfil público do anunciante | 2 / 0 |
 
-Total: **108 imagens**, 35 pastas de páginas/fluxos. Originais preservados; cópias verificadas por SHA-256.
+Total: **117 imagens**, 38 pastas de páginas/fluxos. Originais preservados; cópias verificadas por SHA-256.

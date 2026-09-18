@@ -2,7 +2,7 @@ import { describe, expect, it } from "vitest";
 import {
   resolveCommunityFeedChannelFromTab,
   resolveCommunityFeedQueryTabFromChannel,
-} from "../utils/communityFeedTab";
+} from "@/core/community-feed/utils/communityFeedTab";
 
 describe("community navigation SSOT", () => {
   it("maps launch-enabled public tabs to canonical feed channels", () => {
