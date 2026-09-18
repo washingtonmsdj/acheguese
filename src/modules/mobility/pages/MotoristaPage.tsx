@@ -32,7 +32,7 @@ import {
 import { cn } from "@/shared/utils/cn";
 import { useMotoristaPage } from "@/modules/mobility/hooks/useMotoristaPage";
 import { useMobilityUrls } from "@/modules/mobility/hooks/useMobilityUrls";
-import { ErrorBoundary, ErrorState } from "../components/ErrorBoundary";
+import { ErrorBoundary } from "@/shared/components/errors/ErrorBoundary";\nimport { ErrorState } from "../components/ErrorState";
 import { DriverOfferCard } from "../components";
 import { CancelRideDialog } from "../components/driver/CancelRideDialog";
 import { CompleteRideDialog } from "../components/driver/CompleteRideDialog";
