@@ -1,20 +1,23 @@
 import { useQuery } from "@tanstack/react-query";
-import { isTerritoryFilterReady, territoryFilterKey } from "@/core/location/hooks/useTerritoryFilter";
+import {
+  isTerritoryFilterReady,
+  territoryFilterKey,
+} from "@/core/location/hooks/useTerritoryFilter";
 import type { TerritoryFilter } from "@/core/location/types";
 
 import { profileService } from "@/core/profiles/services/ProfileService";
 import { postService } from "@/core/posts/services";
-import type { CommunityPost } from "@/core/posts/types/Post";
+import type { CommunityPostView } from "@/core/posts/views/CommunityPostView";
 
 interface CommunityPostRecord {
   id: string;
   author_profile_id: string;
-  type: string;
+  type: CommunityPostView["type"];
   content: string;
   images?: string[];
   tags?: string[];
   location_id?: string;
-  location?: CommunityPost["location"];
+  location?: CommunityPostView["location"];
   created_at: string;
   likes_count: number;
   comments_count: number;
@@ -34,7 +37,7 @@ export function usePostById(
 ) {
   return useQuery({
     queryKey: ["community-post", territoryFilterKey(territoryFilter), postId],
-    queryFn: async () => {
+    queryFn: async (): Promise<CommunityPostView | null> => {
       if (!postId || !isTerritoryFilterReady(territoryFilter)) return null;
 
       const activeProfile = await profileService.getActiveProfile();
@@ -63,7 +66,7 @@ export function usePostById(
           };
 
       const pollData = await postService.getPollByPostId(post.id);
-      const enrichedPoll: CommunityPost["poll"] = pollData
+      const enrichedPoll: CommunityPostView["poll"] = pollData
         ? {
             ...pollData,
             user_voted: pollData.user_voted,
@@ -71,13 +74,11 @@ export function usePostById(
           }
         : undefined;
 
-      const communityPost: CommunityPost = {
+      return {
         id: post.id,
         author_profile_id: post.author_profile_id,
         author_name: authorProfile?.displayName || "Usuario",
         author_avatar: authorProfile?.avatarUrl,
-        author_reputation: 0,
-        is_verified_resident: authorProfile?.verified || false,
         type: post.type,
         content: post.content,
         images: post.images || [],
@@ -95,8 +96,6 @@ export function usePostById(
         is_edited: post.is_edited || false,
         poll: enrichedPoll,
       };
-
-      return communityPost;
     },
     enabled: Boolean(postId) && isTerritoryFilterReady(territoryFilter),
   });
