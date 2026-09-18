@@ -39,12 +39,17 @@ describe('module rollout browser projection', () => {
     expect(projection).not.toContain('updated_by');
   });
 
-  it('applies the same projection to reads and mutation return rows', () => {
+  it('keeps public reads direct while routing mutations through the admin broker', () => {
     expect(
       repositorySource.match(/\.select\(PUBLIC_ROLLOUT_COLUMNS/g)?.length ?? 0,
-    ).toBeGreaterThanOrEqual(5);
+    ).toBe(4);
     expect(repositorySource).toContain(
       '.select(PUBLIC_ROLLOUT_COLUMNS, { count: "exact" })',
     );
+    expect(repositorySource).toContain('"admin-rollout-rpc"');
+    expect(repositorySource).toContain('action: "upsertRollout"');
+    expect(repositorySource).toContain('action: "deleteRollout"');
+    expect(repositorySource).not.toContain('.upsert(');
+    expect(repositorySource).not.toContain('.delete()');
   });
 });
