@@ -1,15 +1,8 @@
 /**
  * Residence Service
  *
- * Handles user residence management
- * Moved from UI component to follow architecture rules
- * 
- * MODELO CANÔNICO (ETAPA 12 - FINAL):
- * - address_id: FK para addresses (SSOT de endereços) — OBRIGATÓRIO
- * - location_id: FK para locations (território oficial) — OBRIGATÓRIO
- * 
- * CAMPOS LEGADOS REMOVIDOS NA ETAPA 12:
- * - street, number, complement, neighborhood, city, state, postal_code
+ * Owner do vínculo entre usuário, Address e Location canônicos.
+ * address_id e location_id são obrigatórios no contrato persistido.
  */
 
 import { supabase } from "@/integrations/supabase";
@@ -48,7 +41,6 @@ export interface UserResidence {
   id: string;
   user_id: string;
   
-  // Modelo canônico (ETAPA 12: obrigatórios)
   address_id: string;
   location_id: string;
   
@@ -69,7 +61,6 @@ export interface UserResidenceWithRelations extends UserResidence {
 export interface CreateResidenceData {
   user_id: string;
   
-  // Modelo canônico (ETAPA 12: obrigatórios)
   address_id: string;
   location_id: string;
   
@@ -159,7 +150,6 @@ class ResidenceService {
   /**
    * Buscar residências com relações (address, location)
    * 
-   * ETAPA 12: Sempre carrega relações canônicas (obrigatórias)
    */
   async getUserResidencesWithRelations(userId: string): Promise<UserResidenceWithRelations[]> {
     try {
@@ -191,7 +181,6 @@ class ResidenceService {
 
   /**
    * Obter endereço formatado (apenas canônico)
-   * ETAPA 12: Sem fallback legado
    */
   getFormattedAddress(residence: UserResidenceWithRelations): string {
     const addr = residence.address;
@@ -207,7 +196,6 @@ class ResidenceService {
 
   /**
    * Obter coordenadas (apenas canônico)
-   * ETAPA 12: Sem fallback legado
    */
   getCoordinates(residence: UserResidenceWithRelations): { latitude: number; longitude: number } | null {
     const addr = residence.address;
@@ -222,7 +210,6 @@ class ResidenceService {
 
   /**
    * Obter território (apenas canônico)
-   * ETAPA 12: Sempre presente
    */
   getTerritory(residence: UserResidence): string {
     return residence.location_id;
@@ -230,7 +217,6 @@ class ResidenceService {
 
   /**
    * Obter nome do território (apenas canônico)
-   * ETAPA 12: Sem fallback legado
    */
   getTerritoryName(residence: UserResidenceWithRelations): string {
     return residence.location.name;
@@ -239,13 +225,12 @@ class ResidenceService {
   /**
    * Criar nova residência
    * 
-   * ETAPA 12: Apenas modelo canônico (address_id + location_id obrigatórios)
    */
   async createResidence(data: CreateResidenceData): Promise<UserResidence> {
     try {
       // Validar campos obrigatórios
       if (!data.address_id || !data.location_id) {
-        throw new Error('address_id e location_id são obrigatórios após ETAPA 12');
+        throw new Error('address_id e location_id são obrigatórios');
       }
 
       const payload: CreateResidenceInsert = {
@@ -280,7 +265,6 @@ class ResidenceService {
   /**
    * Atualizar residência
    * 
-   * ETAPA 12: Apenas modelo canônico (sem campos legados)
    */
   async updateResidence(
     id: string,
