@@ -5,7 +5,7 @@
  * - BusinessSubscriptionService: leitura/gateway de assinatura de empresa.
  * - services/SubscriptionService: leitura/capabilities da assinatura do usuario.
  * - BillingService: checkout/portal Stripe.
- * - CatalogService/BillingPlanService: oferta publicada.
+ * - CatalogService: oferta, preço e projeção pública de planos.
  */
 
 // Types
@@ -20,6 +20,7 @@ export * from './BusinessSubscriptionService';
 
 // Services
 export * from './services/BillingService';
+export * from './services/CatalogService';
 export * from './services/BillingOfferService';
 
 // Hooks
