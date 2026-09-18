@@ -33,10 +33,17 @@ Este checkpoint registra o trabalho local preparado para o PR e os gates que ain
 - `validate:security-authority` e `validate:free-release-governance` falham porque as exceções HIBP e PostGIS venceram em 2026-09-10 e o snapshot manual de recuperação venceu em 2026-08-15. A policy exige evidência atual e proíbe renovação automática; este checkpoint não cria evidência nem aprova risco.
 - As policies pendentes para fechar INSERT anônimo direto nas tabelas de intake continuam sem aplicação; faltam a prova remota de grants/schema e a validação de cutover. Nenhuma migration foi aplicada.
 - A API GitHub revelou secrets E2E e de bypass no escopo do repositório, enquanto Preview/Production não têm secrets de ambiente configurados. As mudanças fecham os caminhos conhecidos, mas a fronteira sistêmica só fecha depois de migrar/rotacionar essas credenciais para um ambiente com branch policy restrita a `main` e remover os secrets do repositório. Os valores não são recuperáveis pela API; nenhum secret foi lido, apagado ou rotacionado.
-- Os checks GitHub do SHA anterior falharam antes de alocar runners por bloqueio de orçamento de Actions. A Vercel reportou limite de deploys por 24 horas. A certificação hospedada e um deploy `READY` do novo SHA ainda precisam de nova execução após a liberação dos provedores.
+- Na atualização de 2026-09-18, o HEAD remoto `3f1612287a36d4e56e3f7d06607b5340e36d872e` teve checks GitHub encerrados antes de qualquer step: a anotação da API diz `The job was not started because an Actions budget is preventing further use.`; os jobs têm `steps=[]`, inclusive `security-scan`, E2E fixture-backed e SSOT. Portanto, são gates bloqueados por orçamento, não resultados de teste do código. O E2E autenticado foi `SKIPPED` pela nova fronteira de confiança. `Heavy PR gates for exact head SHA` continua `QUEUED` e o contexto Vercel continua `PENDING`; não há certificação hospedada nem deploy `READY` deste SHA.
 
 ## Estado operacional
 
 - `PUBLIC_LAUNCH_SURFACES.mobility` permanece `false`; este trabalho não certifica nem habilita Mobilidade.
 - Não houve merge, aplicação de migration, deploy de Edge Function ou deploy de produção.
 - O plano segue ativo. O próximo avanço depende de credencial Supabase com leitura de secrets, snapshot de recuperação atual e aprovação do owner para resolver as exceções expiradas, configuração protegida dos secrets GitHub, e novas execuções hospedadas no mesmo SHA.
+
+## Atualização remota 2026-09-18
+
+- PR #117 permanece aberto no branch `audit/mobility-launch-hardening-main-2026-09-17`, HEAD `3f1612287a36d4e56e3f7d06607b5340e36d872e`.
+- A API GitHub confirmou que os checks `security-scan`, SSOT, E2E fixture-backed, lockfile, lint/typecheck e visual regression foram bloqueados antes de iniciar por orçamento do Actions. Nenhum step desses checks executou.
+- A certificação pesada segue `QUEUED`; Vercel segue `PENDING`. O estado positivo de `Vercel Preview Comments` só confirma o comentário, não um deploy.
+- Próxima verificação: após a liberação do orçamento do Actions e do limite da Vercel, iniciar novamente os gates para o SHA que estiver no HEAD e obter deploy `READY`; não interpretar o `SKIPPED` autenticado nem os checks sem runner como aprovação.
