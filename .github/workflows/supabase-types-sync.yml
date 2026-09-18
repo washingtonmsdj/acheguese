@@ -123,12 +123,40 @@ jobs:
       - name: Publish generated types through pull request
         shell: powershell
         env:
-          GH_TOKEN: ${{ github.token }}
+          GITHUB_API_TOKEN: ${{ github.token }}
         run: |
           $ErrorActionPreference = "Stop"
           $typesTempPath = Join-Path $env:RUNNER_TEMP "acheguese-supabase-types.generated.ts"
           if (-not (Test-Path -LiteralPath $typesTempPath)) {
             throw "Generated Supabase types artifact is missing from RUNNER_TEMP."
+          }
+
+          function Invoke-GitHubApi {
+            param(
+              [Parameter(Mandatory = $true)][string]$Method,
+              [Parameter(Mandatory = $true)][string]$Path,
+              [object]$Body = $null
+            )
+
+            $headers = @{
+              Authorization = "Bearer $env:GITHUB_API_TOKEN"
+              Accept = "application/vnd.github+json"
+              "X-GitHub-Api-Version" = "2022-11-28"
+            }
+            $uri = "https://api.github.com/repos/$($env:GITHUB_REPOSITORY)$Path"
+
+            if ($null -eq $Body) {
+              return Invoke-RestMethod -Method $Method -Uri $uri -Headers $headers
+            }
+
+            $json = $Body | ConvertTo-Json -Depth 8 -Compress
+            return Invoke-RestMethod -Method $Method -Uri $uri -Headers $headers -ContentType "application/json" -Body $json
+          }
+
+          function Get-OpenSyncPullRequest {
+            $head = [System.Uri]::EscapeDataString("$($env:GITHUB_REPOSITORY_OWNER):$($env:SYNC_BRANCH)")
+            $pulls = @(Invoke-GitHubApi -Method "GET" -Path "/pulls?state=open&base=main&head=$head")
+            return $pulls | Select-Object -First 1
           }
 
           $null = git fetch --no-tags --depth=1 origin "main:refs/remotes/origin/main"
@@ -151,6 +179,15 @@ jobs:
           if ($LASTEXITCODE -ne 0) { throw "Failed to inspect generated type drift." }
           if ($changes.Count -eq 0) {
             Write-Host "Canonical Supabase types are already synchronized."
+            $existingPr = Get-OpenSyncPullRequest
+            if ($null -ne $existingPr) {
+              $null = Invoke-GitHubApi -Method "PATCH" -Path "/pulls/$($existingPr.number)" -Body @{ state = "closed" }
+              Write-Host "Closed stale Supabase types PR #$($existingPr.number)."
+            }
+            if ($syncBranchExists) {
+              git push origin --delete $env:SYNC_BRANCH
+              if ($LASTEXITCODE -ne 0) { throw "Failed to delete stale automation branch." }
+            }
             exit 0
           }
 
@@ -176,19 +213,22 @@ jobs:
           $headSha = (git rev-parse HEAD).Trim()
           if ($headSha -notmatch "^[0-9a-f]{40}$") { throw "Invalid generated head SHA." }
 
-          $prNumber = (gh pr list --head $env:SYNC_BRANCH --base main --state open --json number --jq '.[0].number').Trim()
-          if ([string]::IsNullOrWhiteSpace($prNumber)) {
-            gh pr create --base main --head $env:SYNC_BRANCH --title "chore(supabase): sync generated types" --body "Automated canonical type regeneration from the live Supabase schema. Only src/integrations/supabase/types.generated.ts may change. This automation never writes directly to main; merge remains subject to normal PR/release gates."
-            if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          $existingPr = Get-OpenSyncPullRequest
+          if ($null -eq $existingPr) {
+            $pr = Invoke-GitHubApi -Method "POST" -Path "/pulls" -Body @{
+              base = "main"
+              head = $env:SYNC_BRANCH
+              title = "chore(supabase): sync generated types"
+              body = "Automated canonical type regeneration from the live Supabase schema. Only src/integrations/supabase/types.generated.ts may change. This automation never writes directly to main; merge remains subject to normal PR/release gates."
+            }
+            Write-Host "Created Supabase types PR #$($pr.number)."
           } else {
-            Write-Host "Updated existing Supabase types PR #$prNumber through branch synchronization."
+            Write-Host "Updated existing Supabase types PR #$($existingPr.number) through branch synchronization."
           }
 
           foreach ($workflow in @("security-check.yml", "security-scan.yml", "ssot-enforcement.yml", "ssot-tests.yml")) {
-            gh workflow run $workflow --ref $env:SYNC_BRANCH
-            if ($LASTEXITCODE -ne 0) {
-              throw "Failed to dispatch $workflow for $headSha."
-            }
+            $null = Invoke-GitHubApi -Method "POST" -Path "/actions/workflows/$workflow/dispatches" -Body @{ ref = $env:SYNC_BRANCH }
+            Write-Host "Dispatched $workflow for $headSha."
           }
 
           Write-Host "Generated types published for review at exact SHA $headSha."
