@@ -167,9 +167,9 @@ Levantamento read-only do schema vivo encontrou **28 FKs bloqueantes** (`NO ACTI
 - 25 usam colunas anuláveis;
 - 3 são não anuláveis + `RESTRICT`: `communication_publications_author_profile_id_fkey`, `community_user_moderation_actions_actor_profile_id_fkey` e `trust_admin_actions_applied_by_profile_id_fkey`.
 
-`docs/09-reference/governance/privacy/LGPD_PURGE_MATRIX.json` mantém default `block`, `implementationComplete=false` e as 28 referências como `unclassified`.
+`docs/09-reference/governance/privacy/LGPD_PURGE_MATRIX.json` mantém default `block` e `implementationComplete=false`, mas a classificação das 28 referências foi reconciliada com `LGPD_PURGE_POLICY.json`: 20 `set-null-before-delete`, 2 `anonymize-before-delete` e 6 `block-purge`; não restam referências `unclassified`.
 
-O preflight `tools/security/supabase-lgpd-edge-rollout-preflight.mjs` só pode liberar `user-delete-account` quando não houver marcadores stale, existir `LGPD_PURGE_IMPLEMENTATION_COMPLETE=true`, a matriz estiver válida, `implementationComplete=true` e houver zero referências `unclassified`.
+O preflight `tools/security/supabase-lgpd-edge-rollout-preflight.mjs` só pode liberar `user-delete-account` quando não houver marcadores stale, existir `LGPD_PURGE_IMPLEMENTATION_COMPLETE=true`, a matriz estiver válida, `implementationComplete=true`, houver zero referências `unclassified` **e zero referências `block-purge`**.
 
 Regressão: `tests/security/lgpd-purge-readiness-gate.test.ts`.
 
@@ -177,8 +177,8 @@ Nenhuma política de retenção foi inventada e nenhum delete destrutivo/DDL foi
 
 ### Restante LGPD
 
-1. classificar as 28 referências com política aprovada de retenção/anonymização/set-null/delete/block;
-2. desenhar worker de purge idempotente e observável somente após essa classificação;
+1. resolver as 6 referências `block-purge` e os itens ainda abertos de `LGPD_PURGE_POLICY.json` (fanout CASCADE, drift de `classified_reports`, identificadores sem FK, Storage e retenção pós-conclusão);
+2. desenhar worker de purge idempotente e observável somente após essas resoluções;
 3. revogar sessões pela autoridade real do Supabase Auth;
 4. manter `user-delete-account` legado bloqueado;
 5. concluir/certificar `user-export-data` contra `LGPD_EXPORT_MATRIX`, que permanece fail-closed;
