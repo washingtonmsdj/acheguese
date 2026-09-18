@@ -1,5 +1,5 @@
 import { ExternalLink, MapPin, Navigation } from 'lucide-react';
-import { getCoordinates } from '@/core/business/services/business.helpers';
+import { getPhysicalBusinessCoordinates } from '@/core/business/utils/physicalBusinessCoordinates';
 import { LazyMiniMap } from '@/shared/components/maps/LazyMiniMap';
 import type { AddressCardProps } from '../../sections/types';
 
@@ -15,7 +15,7 @@ export function AddressCard({
     (typeof business.address === 'object' && business.address?.postal_code
       ? `CEP ${business.address.postal_code}`
       : null);
-  const coordinates = getCoordinates(business);
+  const coordinates = getPhysicalBusinessCoordinates(business);
 
   return (
     <div className="rounded-[24px] border border-white/10 bg-white/[0.03] p-3.5 sm:p-3.5 xl:p-[0.8125rem] [@media(max-height:1100px)]:rounded-[22px] [@media(max-height:1100px)]:sm:p-2.5 [@media(max-height:860px)]:rounded-[22px] [@media(max-height:860px)]:sm:p-2.5">
