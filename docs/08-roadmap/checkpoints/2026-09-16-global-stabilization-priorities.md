@@ -230,7 +230,7 @@ As 38 refs históricas têm proveniência incompleta: 22 são heads exatos de PR
 
 ### Main após reconciliação do ledger — 2026-09-18T11:11Z
 
-- `origin/main` está no SHA `7fd8aa36ac68a5d717b843bf82ccb441a33cc02b`. O commit renomeia 32 arquivos locais para as identidades de versão/nome confirmadas pelo ledger Supabase remoto; 31 pares preservam o SQL byte-a-byte e o par de rating acrescenta somente a anotação `security-authority`. Nenhuma migration foi aplicada remotamente.
+- O baseline de código em `main` é `7fd8aa36ac68a5d717b843bf82ccb441a33cc02b`; commits documentais posteriores apenas registram o estado. Esse commit renomeia 32 arquivos locais para as identidades de versão/nome confirmadas pelo ledger Supabase remoto; 31 pares preservam o SQL byte-a-byte e o par de rating acrescenta somente a anotação `security-authority`. Nenhuma migration foi aplicada remotamente.
 - `npm run validate:migrations` passou depois da reconciliação. O teste `security-authority-migrations` permaneceu em 72/73 por exigir evidência externa para as seis exceções vencidas já registradas.
 - O deploy Vercel `dpl_96d4hJHaqcx7b9ehRCw5GofYe819` chegou a `READY` para exatamente esse SHA, com aliases de produção; o status GitHub `Vercel` é `success` e `https://acheguese.com.br` respondeu HTTP 200. O build remoto passou audit (0 vulnerabilidades), SSOT/arquitetura/sitemap, typecheck, lint com os dois avisos conhecidos e Vite.
 - Os demais jobs GitHub desse SHA falharam antes de executar etapas (`steps=[]`); `Regenerate canonical database types` segue `queued`. O gate de CI hospedado e a geração canônica continuam bloqueados por infraestrutura.
