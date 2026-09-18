@@ -9,8 +9,7 @@ export interface PhysicalBusinessCoordinates {
  * Coordenadas físicas de uma empresa existem somente quando o Address
  * canônico possui latitude e longitude válidas.
  *
- * Centro de Location, metadata e colunas históricas da empresa não são
- * substitutos de endereço físico.
+ * Nenhuma outra fonte substitui um endereço físico geocodificado.
  */
 export function getPhysicalBusinessCoordinates(
   business: Pick<Business, "address">,
