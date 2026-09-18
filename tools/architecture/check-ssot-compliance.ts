@@ -48,7 +48,6 @@ const TABLE_SSOTS: Record<string, string[]> = {
   ],
   ride_requests: [
     'RideService.ts',
-    'RideCanonicalAdapter.ts',
     'mobility.ride-read-queries.ts',
   ],
   posts: ['PostService.ts', 'PostRepository'],
