@@ -29,7 +29,7 @@ describe('repository root artifact governance', () => {
     expect(mapsScript).toContain('playwright.config.ts');
   });
 
-  it('keeps canonical Supabase type sync coupled to schema authority changes', () => {
+  it('keeps canonical Supabase type sync coupled to schema authority changes and PR-only publication', () => {
     const workflow = readFileSync('.github/workflows/supabase-types-sync.yml', 'utf8');
     const generator = readFileSync('tools/supabase/generate-supabase-types.ts', 'utf8');
 
@@ -37,21 +37,31 @@ describe('repository root artifact governance', () => {
     expect(workflow).toContain('- "supabase/config.toml"');
     expect(workflow).toContain('- "tools/supabase/generate-supabase-types.ts"');
     expect(workflow).toContain('TYPES_PATH: "src/integrations/supabase/types.generated.ts"');
+    expect(workflow).toContain('SYNC_BRANCH: "automation/supabase-types-sync"');
     expect(workflow).toContain('npm run generate:types');
     expect(workflow).toContain('SUPABASE_DB_PASSWORD');
     expect(workflow).toContain('SUPABASE_POOLER_HOST');
+    expect(workflow).toContain('pull-requests: write');
     expect(workflow).toContain('cancel-in-progress: true');
     expect(workflow).toContain('ref: main');
     expect(workflow).toContain('RUNNER_TEMP');
     expect(workflow).toContain(
       'git fetch --no-tags --depth=1 origin "main:refs/remotes/origin/main"',
     );
-    expect(workflow).toContain('git checkout -B main refs/remotes/origin/main');
-    expect(workflow).toContain('refreshing once before a final push');
+    expect(workflow).toContain(
+      'git checkout -B $env:SYNC_BRANCH refs/remotes/origin/main',
+    );
+    expect(workflow).toContain(
+      'git push --force origin "HEAD:refs/heads/$env:SYNC_BRANCH"',
+    );
+    expect(workflow).toContain('github.rest.pulls.create');
+    expect(workflow).toContain('github.rest.pulls.update');
+    expect(workflow).toContain('base: "main"');
     expect(workflow).toContain('- acheguese-heavy-windows');
     expect(workflow).toContain('- remote-only');
     expect(workflow).not.toContain('ubuntu-latest');
     expect(workflow).not.toContain('ref: ${{ github.sha }}');
+    expect(workflow).not.toContain('git push origin HEAD:main');
     expect(workflow).not.toContain('src/integrations/supabase/types.ts');
     expect(workflow).not.toContain('src/shared/types/database.types.ts');
 
