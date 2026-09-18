@@ -1,13 +1,8 @@
 /**
- * PROFILE SERVICE - FASE 3
- * Service layer SSOT para operações de perfil
- * Fonte: ARQUITETURA_MULTI_PERFIL_DEFINITIVA.md v3.0
- * 
- * REGRAS:
- * - Zero acesso direto ao Supabase fora deste service
- * - Todas as operações passam por RPCs ou views públicas
- * - Authenticated usa RLS via queries diretas
- * - Anon usa apenas views públicas
+ * Multi-profile editor/application service.
+ *
+ * Owns profile-editor orchestration while delegating domain persistence to the
+ * canonical Profile, Business, Professional and Driver owners.
  */
 import { logger } from '@/shared/utils/logger';
 import { selectLooseRows } from '@/integrations/supabase';
