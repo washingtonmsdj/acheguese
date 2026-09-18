@@ -83,6 +83,22 @@ describe("business premium link authority", () => {
       ) {
         regressions.push(`${name}: table-wide browser grant`);
       }
+
+      if (
+        /GRANT\s+INSERT\s*\([^)]*\b(?:id|created_at|updated_at)\b[^)]*\)\s+ON\s+(?:TABLE\s+)?public\.business_premium_links\s+TO\s+[^;]*\bauthenticated\b/i.test(
+          sql,
+        )
+      ) {
+        regressions.push(`${name}: server-owned insert column`);
+      }
+
+      if (
+        /GRANT\s+UPDATE\s*\([^)]*\b(?:id|business_id|created_at|updated_at)\b[^)]*\)\s+ON\s+(?:TABLE\s+)?public\.business_premium_links\s+TO\s+[^;]*\bauthenticated\b/i.test(
+          sql,
+        )
+      ) {
+        regressions.push(`${name}: server-owned update column`);
+      }
     }
 
     expect(regressions).toEqual([]);
