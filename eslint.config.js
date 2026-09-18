@@ -19,9 +19,6 @@ export default tseslint.config(
       "test-results/**",
       "templates/**",
       ".archive/**", // ✅ Arquivos legados arquivados
-      "src/components/AppointmentIndicator.tsx",
-      "src/hooks/mapa/useMapaPage.ts",
-      "src/hooks/queries/useGroupQueries.ts",
       "src/shared/types/*.generated.ts",
       "src/integrations/supabase/types.generated.ts", // ✅ Arquivo gerado automaticamente
       // Scripts de migração e setup (acesso direto ao Supabase necessário)
@@ -112,12 +109,6 @@ export default tseslint.config(
     files: ["api/_shared/supabaseAdmin.ts"],
     rules: {
       "no-restricted-imports": "off",
-    },
-  },
-  {
-    files: ["api/_shared/profileAdminRepository.ts"],
-    rules: {
-      "ssot/no-direct-profile-access": "off",
     },
   },
   // ─── BLINDAGEM MAPS ───────────────────────────────────────────────────────
@@ -230,7 +221,7 @@ export default tseslint.config(
     },
   },
 
-  // Exceções temporárias formais v3.0 (3 módulos com acesso direto autorizado)
+  // Exceções formais v3.0: módulos ainda autorizados a acesso direto.
   {
     files: [
       "src/modules/community-alerts/**/*.{ts,tsx}",
@@ -337,27 +328,12 @@ export default tseslint.config(
       "@typescript-eslint/ban-ts-comment": "off",
     },
   },
-  // Mutations legadas ainda em migração tipada. Mantidas sob controle até remoção do @ts-nocheck.
-  {
-    files: [
-      "src/core/professional/services/professional.mutations.ts",
-      "src/core/profiles/services/profile.mutations.ts",
-      "src/core/reviews/services/reviews.mutations.ts",
-      "src/modules/gastronomy/components/GastronomyOwnerDashboard.tsx",
-      "src/app/pages/EmpresaDetailLandingPage.tsx",
-    ],
-    rules: {
-      "@typescript-eslint/ban-ts-comment": "off",
-    },
-  },
   // Providers de maps dependem de contratos canonicos de core, nao de implementacoes de negocio.
   {
     files: [
-      "src/integrations/maps/providers/MockRoutingProvider.ts",
       "src/integrations/maps/providers/NominatimGeocodingProvider.ts",
       "src/integrations/maps/providers/OSMTileProvider.ts",
       "src/integrations/maps/providers/OSRMProvider.ts",
-      "src/integrations/maps/services/GeospatialServiceMock.ts",
     ],
     rules: {
       "no-restricted-imports": "off",
@@ -379,7 +355,6 @@ export default tseslint.config(
     files: [
       "src/core/business/services/business.admin.ts",
       "src/core/business/services/business-analytics.service.ts",
-      "src/core/business/services/business.legacy.ts",
       "src/core/business/services/business.mutations.ts",
       "src/core/business/services/business.queries.ts",
       "src/core/business/BusinessHoursService.ts", // Service de horários com acesso direto necessário
@@ -433,10 +408,6 @@ export default tseslint.config(
     rules: { "ssot/no-direct-classified-access": "off" },
   },
   {
-    files: ["src/core/profiles/services/ProfileMobilityAdapter.ts"],
-    rules: { "ssot/no-direct-profile-access": "off" },
-  },
-  {
     files: ["src/core/admin/services/AdminCommunityService.ts"],
     rules: { "ssot/no-direct-mobility-access": "off" },
   },
@@ -453,15 +424,13 @@ export default tseslint.config(
   {
     files: [
       "src/core/community-groups/services/CommunityGroupsService.ts",
-      "src/core/community/services/CommunityGamificationService.ts",
     ],
     rules: { "ssot/no-direct-community-access": "off" },
   },
-  // AdminUserService e os serviços Admin listados são owners canônicos de persistência administrativa.
+  // Serviços Admin abaixo são owners canônicos das persistências que acessam.
   {
     files: [
       "src/core/admin/services/AdminUserService.ts",
-      "src/core/admin/AdminService.ts", // Service admin legado com acesso direto necessário
       "src/core/admin/services/AdminEventsService.ts", // Admin service com acesso direto necessário
       "src/core/admin/services/AdminMessagingService.ts", // Admin service com acesso direto necessário
     ],
@@ -474,14 +443,6 @@ export default tseslint.config(
   {
     files: ["src/core/public-identity/adapters/ProfileIdentityAdapter.ts"],
     rules: { "ssot/no-direct-profile-access": "off" },
-  },
-  // migrateRideRequestsToCanonical é script de migração one-shot — acesso direto necessário.
-  {
-    files: ["src/core/ride/migrations/migrateRideRequestsToCanonical.ts"],
-    rules: {
-      "ssot/no-direct-profile-access": "off",
-      "ssot/no-direct-mobility-access": "off",
-    },
   },
 
   // ─── EXCEÇÕES SESSION CONTEXT — TESTES ───────────────────────────────────
@@ -505,28 +466,6 @@ export default tseslint.config(
       "src/test/**/*.tsx",
     ],
     rules: { "session-context/no-ambiguous-identifiers": "warn" },
-  },
-  {
-    files: ["src/core/session/__tests__/integration/session-flow.test.ts"],
-    rules: { "session-context/no-direct-supabase-auth": "off" },
-  },
-  {
-    files: ["src/core/auth/services/__tests__/AuthService.test.ts"],
-    rules: {
-      "no-restricted-imports": "off",
-      "session-context/no-direct-supabase-auth": "off",
-    },
-  },
-  {
-    files: ["src/core/auth/services/__tests__/AuthService.integration.test.ts"],
-    rules: { "ssot/no-direct-profile-access": "off" },
-  },
-  {
-    files: ["src/core/profiles/services/__tests__/ProfileService.test.ts"],
-    rules: {
-      "session-context/no-direct-supabase-auth": "off",
-      "no-restricted-imports": "off",
-    },
   },
   {
     files: ["src/test/property/**/*.ts", "src/test/property/**/*.tsx"],
@@ -578,72 +517,18 @@ export default tseslint.config(
   // Exceção: arquivos multi-profile canônicos podem usar useActiveProfile
   {
     files: [
-      "src/core/profiles/hooks/useActiveProfile.ts",
-      "src/core/profiles/hooks/useProfiles.ts",
       "src/core/profiles/hooks/useProfileMembers.ts",
       "src/core/profiles/hooks/useProfileLinks.ts",
-      "src/core/profiles/contexts/MultiProfileContext.tsx",
       "src/core/profiles/components/**/*.tsx",
       "src/app/pages/ProfileSettingsPage.tsx",
-      "src/app/pages/PublicProfilePage.tsx",
     ],
     rules: { "no-restricted-imports": "off" },
   },
-
-  // AuthContext.tsx foi deletado — regression guard já bloqueia reimportações.
-  // Exceção removida: arquivo não existe mais.
 
   // ─── DÍVIDA TÉCNICA CONTROLADA ───────────────────────────────────────────
 
   // MobilityAdminQueryService é o SSOT para consultas admin de mobility.
   // Reconhecido pelo plugin via additionalServices — sem exceção formal necessária.
 
-  // ─── DÍVIDA TÉCNICA MAPS — CÓDIGO LEGADO ─────────────────────────────────
-  //
-  // Estes arquivos existiam antes da Etapa 2 e contêm @ts-nocheck para silenciar
-  // erros de TypeScript em código não migrado. São dívida técnica conhecida.
-  // Serão corrigidos durante o saneamento do módulo maps (Meta B).
-  //
-  // NÃO adicionar novos arquivos aqui sem aprovação explícita.
-  // Cada arquivo removido desta lista = progresso no saneamento.
-  {
-    files: [
-      // Componentes legados
-      "src/core/maps/components/MapAdvancedFilters.tsx",
-      "src/core/maps/components/MapContainer.tsx",
-      "src/core/maps/components/MapControls.tsx",
-      "src/core/maps/components/MapLeftSidebar.tsx",
-      "src/core/maps/components/PremiumMarkerIcon.tsx",
-      "src/core/maps/components/SavedLocationsPanel.tsx",
-      "src/core/maps/components/SearchResults.tsx",
-      "src/core/maps/components/ViewOnMapButton.tsx",
-      "src/core/maps/components/v2/ItemDetails.tsx",
-      "src/core/maps/components/v2/LayersSheet.tsx",
-      "src/core/maps/components/v2/MapControls.tsx",
-      "src/core/maps/components/v2/MapHeader.tsx",
-      "src/core/maps/components/v2/MapSearch.tsx",
-      // Hooks legados
-      "src/core/maps/hooks/useMapBadges.ts",
-      "src/core/maps/hooks/useMapFilters.ts",
-      "src/core/maps/hooks/useMapRoutes.ts",
-      "src/core/maps/hooks/useMapSavedLocations.ts",
-      "src/core/maps/hooks/useMapStats.ts",
-      "src/core/maps/hooks/useMapVisitHistory.ts",
-      "src/core/maps/hooks/useMapaPage.ts",
-      "src/core/maps/hooks/useRouteReservations.ts",
-      "src/core/maps/hooks/useRouteSearch.ts",
-      // Pages legadas
-      "src/core/maps/pages/MapaPage.tsx",
-      // Services legados
-      "src/core/maps/services/MapsService.ts",
-      "src/core/maps/services/mapService.ts",
-      // Integrations legadas
-      "src/integrations/maps/services/GeospatialServiceMock.ts",
-    ],
-    rules: {
-      "@typescript-eslint/ban-ts-comment": "off",
-      "no-irregular-whitespace": "off",
-      "react-hooks/exhaustive-deps": "off",
-    },
-  },
 );
+
