@@ -1,25 +1,16 @@
 import { Bookmark } from "lucide-react";
 import { PostCardSkeleton } from "@/core/community-feed/components/PostCardSkeleton";
 import { ProfilePostCard } from "./ProfilePostCard";
-import type { CommunityPost } from "@/core/posts/types";
 import { usePostActions } from "@/core/posts/hooks";
 import { InfiniteScrollTrigger } from "@/shared/components/ui";
 import { EmptyStateProfile } from "./EmptyStateProfile";
 import { useSavedPosts } from "../hooks/useSavedPosts";
-import type { ProfileFeedPost } from "../types/profileFeed";
 
 interface SavedPostsGridProps {
   userId: string;
   currentProfileId?: string;
   onPostClick?: (postId: string) => void;
   onCommentClick?: (postId: string) => void;
-}
-
-function toCommunityPost(post: ProfileFeedPost): CommunityPost {
-  return {
-    ...post,
-    type: post.type === "achados_e_perdidos" ? "achados" : post.type,
-  };
 }
 
 export function SavedPostsGrid({
@@ -71,7 +62,7 @@ export function SavedPostsGrid({
       {posts.map((post) => (
         <ProfilePostCard
           key={post.id}
-          post={toCommunityPost(post)}
+          post={post}
           currentUserId={currentProfileId}
           onLike={likePost}
           onComment={onCommentClick ?? (() => undefined)}
