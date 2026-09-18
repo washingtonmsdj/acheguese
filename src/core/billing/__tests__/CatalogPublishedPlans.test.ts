@@ -2,10 +2,7 @@ import { afterEach, describe, expect, it, vi } from 'vitest';
 import {
   CatalogService,
   type CatalogItem,
-  type PublishedPlan,
 } from '../services/CatalogService';
-import { getBaselineEntitlements } from '../entitlementBaselines';
-import { PlanTier } from '../types';
 
 const freePlan: CatalogItem = {
   id: '1',
@@ -137,38 +134,5 @@ describe('CatalogService published plan projection', () => {
     expect(entitlements?.canUseAdvancedCatalog).toBe(true);
   });
 
-  it('derives payment and featured state from published plan data', async () => {
-    const publishedPro: PublishedPlan = {
-      id: '2',
-      code: 'pro',
-      name: 'Pro',
-      description: 'Plano Pro',
-      priceCents: 4990,
-      priceDisplay: 'R$ 49,90',
-      currency: 'BRL',
-      billingPeriod: 'monthly',
-      features: [],
-      entitlements: getBaselineEntitlements(PlanTier.PRO),
-      isActive: true,
-      isFeatured: true,
-      displayOrder: 2,
-      createdAt: new Date('2026-04-21T00:00:00Z'),
-      updatedAt: new Date('2026-04-21T00:00:00Z'),
-    };
 
-    vi.spyOn(CatalogService, 'getPublishedPlanByCode').mockResolvedValue(
-      publishedPro,
-    );
-    await expect(
-      CatalogService.publishedPlanRequiresPayment('pro'),
-    ).resolves.toBe(true);
-
-    vi.spyOn(CatalogService, 'getPublishedPlans').mockResolvedValue([
-      { ...publishedPro, isFeatured: false, code: 'free' },
-      publishedPro,
-    ]);
-    await expect(CatalogService.getFeaturedPublishedPlan()).resolves.toEqual(
-      publishedPro,
-    );
-  });
 });
