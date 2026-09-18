@@ -58,6 +58,62 @@ type PostalCodeHistoryInsert = TablesInsert<'postal_code_history'>;
 
 const governanceDb = supabase as unknown as GovernanceDbClient;
 
+const LOCATION_VERSION_PUBLIC_COLUMNS = [
+  'id',
+  'location_id',
+  'version_number',
+  'name',
+  'full_name',
+  'slug',
+  'geographic_path',
+  'change_type',
+  'change_reason',
+  'official_source',
+  'official_document_url',
+  'valid_from',
+  'valid_until',
+  'created_at',
+].join(',');
+
+const TERRITORY_CHANGE_EVENT_PUBLIC_COLUMNS = [
+  'id',
+  'location_id',
+  'event_type',
+  'old_value',
+  'new_value',
+  'official_source',
+  'official_document_url',
+  'effective_date',
+  'processed_at',
+  'created_at',
+  'metadata',
+].join(',');
+
+const POSTAL_CODE_HISTORY_PUBLIC_COLUMNS = [
+  'id',
+  'location_id',
+  'postal_code',
+  'street',
+  'valid_from',
+  'valid_until',
+  'source',
+  'created_at',
+].join(',');
+
+function toLocationVersion(row: LocationVersionRow): LocationVersion {
+  return {
+    ...row,
+    created_by: row.created_by ?? null,
+  } as LocationVersion;
+}
+
+function toTerritoryChangeEvent(row: TerritoryChangeEventRow): TerritoryChangeEvent {
+  return {
+    ...row,
+    processed_by: row.processed_by ?? null,
+  } as TerritoryChangeEvent;
+}
+
 function toJsonMetadata(value: Record<string, unknown>): Json {
   return value as Json;
 }
@@ -98,17 +154,17 @@ export class GovernanceRepositorySupabase implements IGovernanceRepository {
     const { data: version, error } = await this.db
       .from<LocationVersionRow>('location_versions')
       .insert(payload)
-      .select()
+      .select(LOCATION_VERSION_PUBLIC_COLUMNS)
       .single();
 
     if (error) throw error;
-    return version as LocationVersion;
+    return toLocationVersion(version as LocationVersionRow);
   }
 
   async getActiveVersionForLocation(locationId: string): Promise<LocationVersion | null> {
     const { data, error } = await this.db
       .from<LocationVersionRow>('location_versions')
-      .select('*')
+      .select(LOCATION_VERSION_PUBLIC_COLUMNS)
       .eq('location_id', locationId)
       .or('valid_until.is.null,valid_until.gt.' + new Date().toISOString())
       .order('version_number', { ascending: false })
@@ -116,7 +172,7 @@ export class GovernanceRepositorySupabase implements IGovernanceRepository {
       .maybeSingle();
 
     if (error) throw error;
-    return (data as LocationVersion | null) ?? null;
+    return data ? toLocationVersion(data as LocationVersionRow) : null;
   }
 
   async listVersionsForLocation(locationId: string): Promise<LocationVersion[]> {
@@ -127,7 +183,7 @@ export class GovernanceRepositorySupabase implements IGovernanceRepository {
       .order('version_number', { ascending: false });
 
     if (error) throw error;
-    return (data as LocationVersion[]) ?? [];
+    return (data ?? []).map((row) => toLocationVersion(row as LocationVersionRow));
   }
 
   // ============================================
@@ -196,22 +252,24 @@ export class GovernanceRepositorySupabase implements IGovernanceRepository {
         official_source: data.official_source,
         old_value: data.old_value,
       } satisfies TerritoryChangeEventInsert)
-      .select()
+      .select(TERRITORY_CHANGE_EVENT_PUBLIC_COLUMNS)
       .single();
 
     if (error) throw error;
-    return event as TerritoryChangeEvent;
+    return toTerritoryChangeEvent(event as TerritoryChangeEventRow);
   }
 
   async listEventsForLocation(locationId: string): Promise<TerritoryChangeEvent[]> {
     const { data, error } = await this.db
       .from<TerritoryChangeEventRow>('territory_change_events')
-      .select('*')
+      .select(TERRITORY_CHANGE_EVENT_PUBLIC_COLUMNS)
       .eq('location_id', locationId)
       .order('effective_date', { ascending: false });
 
     if (error) throw error;
-    return (data as TerritoryChangeEvent[]) ?? [];
+    return (data ?? []).map((row) =>
+      toTerritoryChangeEvent(row as TerritoryChangeEventRow),
+    );
   }
 
   // ============================================
@@ -229,7 +287,7 @@ export class GovernanceRepositorySupabase implements IGovernanceRepository {
         valid_from: data.valid_from,
         valid_until: data.valid_until,
       } satisfies PostalCodeHistoryInsert)
-      .select()
+      .select(POSTAL_CODE_HISTORY_PUBLIC_COLUMNS)
       .single();
 
     if (error) throw error;
@@ -239,7 +297,7 @@ export class GovernanceRepositorySupabase implements IGovernanceRepository {
   async listPostalCodeHistoryForLocation(locationId: string): Promise<PostalCodeHistory[]> {
     const { data, error } = await this.db
       .from<PostalCodeHistoryRow>('postal_code_history')
-      .select('*')
+      .select(POSTAL_CODE_HISTORY_PUBLIC_COLUMNS)
       .eq('location_id', locationId)
       .order('valid_from', { ascending: false });
 
