@@ -103,7 +103,7 @@ describe("G5 governance history authority", () => {
       for (const table of TABLES) {
         if (
           new RegExp(
-            String.raw`GRANT\\s+(?:SELECT|INSERT|ALL(?:\\s+PRIVILEGES)?)\\s+ON\\s+(?:TABLE\\s+)?public\\.${table}\\s+TO\\s+[^;]*(?:\\banon\\b|\\bauthenticated\\b|\\bPUBLIC\\b)`,
+            String.raw`GRANT\s+(?:SELECT|INSERT|ALL(?:\s+PRIVILEGES)?)\s+ON\s+(?:TABLE\s+)?public\.${table}\s+TO\s+[^;]*(?:\banon\b|\bauthenticated\b|\bPUBLIC\b)`,
             "i",
           ).test(sql)
         ) {
