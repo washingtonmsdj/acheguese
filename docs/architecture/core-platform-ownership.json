@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "updatedAt": "2026-09-12",
+  "updatedAt": "2026-09-18",
   "architecture": "docs/03-architecture/CORE_PLATFORM_ARCHITECTURE_SSOT.md",
   "plan": "docs/08-roadmap/CORE_PLATFORM_CONSOLIDATION_PLAN.md",
   "sourceRoots": ["src", "api", "supabase/functions"],
@@ -95,8 +95,7 @@
     },
     {
       "name": "notifications",
-      "status": "migration",
-      "finding": "CP-001",
+      "status": "canonical",
       "currentOwner": "src/core/notifications/services/NotificationService.ts",
       "targetOwner": "src/core/notifications",
       "allowedReaders": [
@@ -109,7 +108,6 @@
     {
       "name": "notification_outbox",
       "status": "canonical",
-      "finding": "CP-001",
       "currentOwner": "private.notification_outbox-and-domain-database-producers",
       "targetOwner": "private.notification_outbox-and-domain-database-producers",
       "allowedReaders": [],
