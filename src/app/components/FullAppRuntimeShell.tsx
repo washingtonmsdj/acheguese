@@ -9,7 +9,6 @@ import { queryClient } from "@/shared/utils/queryClient";
 import { AccessibilityProvider } from "@/shared/components/accessibility/AccessibilityProvider";
 import { SkipToContent } from "@/shared/components/accessibility/SkipToContent";
 import { scheduleBrowserIdleWork } from "@/shared/utils/browserIdle";
-import "@/styles/accessibility.css";
 
 const GlobalOverlays = lazy(() =>
   import("@/app/components/GlobalOverlays").then((module) => ({

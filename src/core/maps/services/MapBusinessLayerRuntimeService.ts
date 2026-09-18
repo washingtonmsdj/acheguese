@@ -1,6 +1,7 @@
 import { applyTerritoryFilter } from "@/core/location";
 import type { TerritoryFilter } from "@/core/location/types";
 import { supabase } from "@/integrations/supabase";
+import { MAP_QUERY_LIMITS } from "@/shared/config/mapQueryLimits";
 import { logger } from "@/shared/utils/logger";
 import type { BoundingBox } from "../types/core";
 
@@ -26,9 +27,6 @@ type MapBusinessDbClient = {
 };
 
 const mapBusinessDb = supabase as unknown as MapBusinessDbClient;
-
-const DEFAULT_BUSINESS_MAP_LIMIT = 100;
-const MAX_BUSINESS_MAP_LIMIT = 200;
 
 export interface BusinessMapEntity {
   id: string;
@@ -75,8 +73,8 @@ function validateBounds(bounds: BoundingBox): void {
 }
 
 function normalizeLimit(value: number | undefined): number {
-  if (!Number.isFinite(value) || value == null) return DEFAULT_BUSINESS_MAP_LIMIT;
-  return Math.max(1, Math.min(MAX_BUSINESS_MAP_LIMIT, Math.trunc(value)));
+  if (!Number.isFinite(value) || value == null) return MAP_QUERY_LIMITS.DEFAULT;
+  return Math.max(1, Math.min(MAP_QUERY_LIMITS.MAX, Math.trunc(value)));
 }
 
 function firstLocation(

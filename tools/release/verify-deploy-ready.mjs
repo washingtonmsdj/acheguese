@@ -20,13 +20,16 @@ const REQUIRED_PUBLIC_ASSETS = [
   'public/og-image.png',
 ];
 
-const REQUIRED_ENV_VARS = [
+const REQUIRED_VERCEL_BUILD_ENV_VARS = [
   'VITE_SUPABASE_URL',
   'VITE_SUPABASE_PUBLISHABLE_KEY',
+];
+
+const REQUIRED_VERCEL_PRODUCTION_ENV_VARS = [
   'VITE_TURNSTILE_SITE_KEY',
-  'VITE_PUBLIC_SITE_URL',
-  'VITE_CONTACT_EMAIL',
-  'VITE_DPO_EMAIL',
+];
+
+const SUPABASE_EDGE_RUNTIME_VARS = [
   'BASE_URL',
   'SUPABASE_URL',
   'SUPABASE_ANON_KEY',
@@ -72,6 +75,9 @@ const REQUIRED_ENV_GROUPS = [
 ];
 
 const OPTIONAL_ENV_VARS = [
+  'VITE_PUBLIC_SITE_URL',
+  'VITE_CONTACT_EMAIL',
+  'VITE_DPO_EMAIL',
   'VITE_SENTRY_DSN',
   'VITE_FEATURE_COMMUNITY_ALERTS',
   'VITE_FEATURE_AI_VIRTUAL_TRYON',
@@ -115,6 +121,7 @@ const REQUIRED_SCRIPTS = [
   'validate:security-authority',
   'security:validate',
   'security:config:validate',
+  'security:edge-secrets:preflight',
 ];
 const FORBIDDEN_BILLING_ARTIFACTS = [
   'supabase/functions/stripe-webhook/index.ts',
@@ -245,9 +252,9 @@ console.log();
 console.log('vercel.json');
 try {
   const vercelConfig = readJson('vercel.json');
-  vercelConfig.buildCommand === 'npm run build:vercel'
+  vercelConfig.buildCommand === 'node tools/release/run-vercel-production-build.mjs'
     ? ok(`build command: ${vercelConfig.buildCommand}`)
-    : fail('buildCommand deve executar npm run build:vercel');
+    : fail('buildCommand deve executar node tools/release/run-vercel-production-build.mjs');
   vercelConfig.outputDirectory ? ok(`output directory: ${vercelConfig.outputDirectory}`) : fail('outputDirectory nao definido');
   Array.isArray(vercelConfig.rewrites) && vercelConfig.rewrites.length > 0 ? ok('rewrites configurados para SPA') : fail('rewrites nao configurados');
   Array.isArray(vercelConfig.headers) && vercelConfig.headers.length > 0 ? ok('headers configurados') : fail('headers nao configurados');
@@ -260,12 +267,12 @@ try {
 }
 console.log();
 
-console.log('Variaveis de ambiente para configurar na Vercel');
+console.log('Variaveis obrigatorias no ambiente de build da Vercel');
 console.log('  Obrigatorias:');
-for (const envVar of REQUIRED_ENV_VARS) {
+for (const envVar of REQUIRED_VERCEL_BUILD_ENV_VARS) {
   const value = process.env[envVar];
   if (!value) {
-    console.log(`    - ${envVar}`);
+    fail(`${envVar} ausente no ambiente de build da Vercel`);
     continue;
   }
 
@@ -275,26 +282,38 @@ for (const envVar of REQUIRED_ENV_VARS) {
     ok(`${envVar} configurada`);
   }
 }
+console.log('  Obrigatorias somente em build de producao:');
+for (const envVar of REQUIRED_VERCEL_PRODUCTION_ENV_VARS) {
+  const value = process.env[envVar];
+  if (!value) {
+    if (process.env.VERCEL_ENV === 'production') {
+      fail(`${envVar} ausente no build de producao`);
+    } else {
+      console.log(`    - ${envVar} (validada quando VERCEL_ENV=production)`);
+    }
+    continue;
+  }
+
+  if (/your[-_]|placeholder|example|_here$/i.test(value)) {
+    fail(`${envVar} contem placeholder`);
+  } else {
+    ok(`${envVar} configurada`);
+  }
+}
 console.log('  Grupos obrigatorios:');
 for (const group of REQUIRED_ENV_GROUPS) {
   if (group.featureFlagEnv && !isEnabledEnvironmentFlag(group.featureFlagEnv)) {
-    ok(`${group.name} nao exigido porque ${group.featureFlagEnv} nao esta ativo`);
+    ok(`${group.name} nao exigido neste build porque ${group.featureFlagEnv} nao esta ativo`);
     continue;
   }
 
-  const values = group.vars.map((envVar) => process.env[envVar]?.trim() ?? '');
-  const hasGlobal = Boolean(values[0]);
-  const hasAllSpecific = values.slice(1).every(Boolean);
-
-  if (!hasGlobal && !hasAllSpecific) {
-    fail(`${group.name}: ${group.message}`);
-    continue;
-  }
-
-  ok(`${group.name} configurado`);
+  warn(`${group.name} exigido no Supabase Edge; confirme a configuracao remota (${group.message})`);
 }
 console.log('  Opcionais recomendadas:');
 for (const envVar of OPTIONAL_ENV_VARS) console.log(`    - ${envVar}`);
+console.log('Variaveis usadas pelas Supabase Edge Functions');
+console.log('  Configure no ambiente de runtime do Supabase; a existencia remota ainda precisa ser conferida:');
+for (const envVar of SUPABASE_EDGE_RUNTIME_VARS) console.log(`    - ${envVar}`);
 console.log('  Secrets obrigatorios no Supabase Edge (validacao remota pendente):');
 for (const envVar of REQUIRED_SUPABASE_EDGE_SECRETS) console.log(`    - ${envVar}`);
 console.log();
@@ -337,6 +356,7 @@ console.log('Supabase remoto');
 runNpmScript('validate:migrations');
 runNpmScript('validate:migrations:provenance');
 runNpmScript('validate:migrations:remote');
+runNpmScript('security:edge-secrets:preflight');
 console.log();
 
 console.log('Security Authority');

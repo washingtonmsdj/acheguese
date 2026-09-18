@@ -58,7 +58,7 @@ import {
 type TerritorySelectOption = Pick<LocationOption, "id" | "name" | "type">;
 
 const LazyLocationPickerSheet = lazy(() =>
-  import("@/shared/components/LocationPickerSheet").then((module) => ({
+  import("@/core/maps/components/LocationPickerSheet").then((module) => ({
     default: module.LocationPickerSheet,
   })),
 );

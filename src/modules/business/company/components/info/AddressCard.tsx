@@ -1,6 +1,6 @@
 import { ExternalLink, MapPin, Navigation } from 'lucide-react';
 import { getCoordinates } from '@/core/business/services/business.helpers';
-import { LazyMiniMap } from '@/shared/components/maps/LazyMiniMap';
+import { LazyMiniMap } from '@/core/maps/components/LazyMiniMap';
 import type { AddressCardProps } from '../../sections/types';
 
 export function AddressCard({

@@ -1,28 +1,16 @@
 import { supabase } from "@/integrations/supabase";
 import { logger } from "@/shared/utils/logger";
+import {
+  BUSINESS_PROFILE_REPORT_REASONS,
+  type BusinessProfileReportReason,
+  type BusinessProfileReportRecord,
+} from "../types/businessProfileReport";
 
-export const BUSINESS_PROFILE_REPORT_REASONS = [
-  "fraud",
-  "impersonation",
-  "misleading",
-  "harmful",
-  "privacy_or_safety",
-  "duplicate",
-  "closed_or_not_here",
-  "policy_violation",
-  "other",
-] as const;
-
-export type BusinessProfileReportReason =
-  (typeof BUSINESS_PROFILE_REPORT_REASONS)[number];
-
-export interface BusinessProfileReportRecord {
-  id: string;
-  business_id: string;
-  reason: BusinessProfileReportReason;
-  status: "pending" | "under_review" | "resolved" | "dismissed";
-  created_at: string;
-}
+export {
+  BUSINESS_PROFILE_REPORT_REASONS,
+  type BusinessProfileReportReason,
+  type BusinessProfileReportRecord,
+} from "../types/businessProfileReport";
 
 export const BusinessProfileReportService = {
   async report(input: {

@@ -12,7 +12,7 @@ import {
 import { getAuthErrorMessage } from "@/core/auth/utils/authMessages";
 import { checkPasswordCompromise } from "@/core/auth/utils/compromisedPassword";
 import { TERMS_OF_SERVICE_VERSION } from "@/core/legal/termsOfService";
-import { PublicIdentityService } from "@/core/public-identity/services/PublicIdentityService";
+import { PublicIdentityService } from "@/core/public-identity";
 import { useToast } from "@/shared/hooks/use-toast";
 import { resolveSafeInternalPath } from "@/shared/utils/safeRedirect";
 import {

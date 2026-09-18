@@ -42,7 +42,7 @@ import {
   X,
 } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
-import { MiniMap } from "@/shared/components/maps/MiniMap";
+import { MiniMap } from "@/core/maps/components/MiniMap";
 import { Button } from "@/shared/components/ui/button";
 import { cn } from "@/shared/utils/cn";
 import foodImage from "@/assets/gastronomy/cat-marmitas.jpg";

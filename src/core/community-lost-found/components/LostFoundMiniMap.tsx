@@ -8,7 +8,7 @@ import type { Map as MapLibreMap, Marker as MapLibreMarker } from "maplibre-gl";
 import { MapPin } from "lucide-react";
 import { DEFAULT_TILE_STYLE } from "@/core/maps/providers/MapProvider";
 import { loadMapLibreRuntime } from "@/core/maps/runtime/loadMapLibreRuntime";
-import { createMapPopupContent } from "@/shared/components/maps/mapPopupContent";
+import { createMapPopupContent } from "@/core/maps/components/mapPopupContent";
 
 interface LostFoundMiniMapProps {
   latitude: number;

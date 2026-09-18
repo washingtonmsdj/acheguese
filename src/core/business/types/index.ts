@@ -10,6 +10,13 @@ export type {
   BusinessRole,
 } from "./Business";
 
+export {
+  BUSINESS_PROFILE_REPORT_REASONS,
+  type BusinessProfileReportReason,
+  type BusinessProfileReportRecord,
+  type BusinessProfileReportStatus,
+} from "./businessProfileReport";
+
 // ============================================
 // INPUT TYPES
 // ============================================

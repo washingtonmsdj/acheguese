@@ -30,6 +30,7 @@ const TERRITORY_AI = join(
   "territory-ai-content",
   "index.ts",
 );
+const DEPLOY_VERIFIER = join(ROOT, "tools", "release", "verify-deploy-ready.mjs");
 const CRON_FUNCTIONS = [
   "media-assets-cleanup",
   "send-emergency-email",
@@ -47,11 +48,10 @@ describe("Supabase Edge secrets preflight", () => {
   it("delegates secret listing to the official CLI and never calls the raw secrets API", () => {
     const source = readFileSync(PREFLIGHT, "utf8");
 
-    expect(source).toContain("execFileSync(");
-    expect(source).toContain("'supabase'");
+    expect(source).toContain("runSupabaseCli(");
+    expect(source).toContain("../supabase/supabase-cli-runner.mjs");
     expect(source).toContain("['secrets', 'list', '--project-ref', projectRef, '--output', 'json']");
     expect(source).toContain("SUPABASE_ACCESS_TOKEN: accessToken");
-    expect(source).toContain("stdio: ['ignore', 'pipe', 'pipe']");
     expect(source).toContain("NAME + DIGEST");
     expect(source).not.toContain("api.supabase.com");
     expect(source).not.toMatch(/\bfetch\s*\(/);
@@ -59,6 +59,33 @@ describe("Supabase Edge secrets preflight", () => {
     expect(source).not.toContain("error.stdout");
     expect(source).not.toContain("error.stderr");
     expect(source).not.toContain("shell:");
+  });
+
+  it("covers public Turnstile intake functions and is part of the deploy gate", () => {
+    const source = readFileSync(PREFLIGHT, "utf8");
+    const verifier = readFileSync(DEPLOY_VERIFIER, "utf8");
+    const packageJson = JSON.parse(readFileSync(join(ROOT, "package.json"), "utf8"));
+
+    for (const slug of [
+      "register-community-interest",
+      "create-professional-lead",
+      "submit-dpo-request",
+    ]) {
+      const block = source.match(
+        new RegExp(`'${slug}': Object\\.freeze\\(\\[([\\s\\S]*?)\\]\\)`),
+      )?.[1] ?? "";
+      expect(block).toContain("'ALLOWED_ORIGINS'");
+      expect(block).toContain("'TURNSTILE_SECRET_KEY'");
+    }
+
+    expect(packageJson.scripts["security:edge-secrets:preflight"]).toBe(
+      "node tools/security/supabase-edge-secrets-preflight.mjs",
+    );
+    expect(verifier).toContain("'security:edge-secrets:preflight'");
+    expect(verifier).toContain("runNpmScript('security:edge-secrets:preflight')");
+    expect(verifier).toContain("const REQUIRED_VERCEL_BUILD_ENV_VARS = [");
+    expect(verifier).toContain("'VITE_SUPABASE_PUBLISHABLE_KEY'");
+    expect(verifier).toContain("fail(`${envVar} ausente no ambiente de build da Vercel`)");
   });
 
   it("keeps public VAPID configuration optional while requiring origin policy", () => {

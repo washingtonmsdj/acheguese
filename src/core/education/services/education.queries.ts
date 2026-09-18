@@ -8,7 +8,7 @@
  */
 
 import { supabase } from '@/integrations/supabase';
-import type { Database } from '@/integrations/supabase/types.generated';
+import type { Database } from '@/integrations/supabase';
 import { logger } from '@/shared/utils/logger';
 import { getRecordValue } from '@/shared/utils/recordLookup';
 import type {

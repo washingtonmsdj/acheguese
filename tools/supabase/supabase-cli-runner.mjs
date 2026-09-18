@@ -8,7 +8,7 @@ export const SUPABASE_CLI_ENTRYPOINT =
 
 export function createSupabaseCliInvocation(
   args,
-  { cwd = process.cwd() } = {},
+  { cwd = process.cwd(), env } = {},
 ) {
   if (!Array.isArray(args) || args.some((arg) => typeof arg !== "string")) {
     throw new TypeError("Supabase CLI args must be an array of strings.");
@@ -21,6 +21,7 @@ export function createSupabaseCliInvocation(
       cwd,
       encoding: "utf8",
       shell: false,
+      ...(env ? { env } : {}),
     },
   };
 }

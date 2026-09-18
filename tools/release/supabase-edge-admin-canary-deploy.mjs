@@ -193,6 +193,54 @@ function runGit(args) {
   }
 }
 
+function verifyCanonicalMainAncestry(headSha) {
+  const originUrl = runGit(['remote', 'get-url', 'origin'])
+    .replace(/\.git$/i, '')
+    .toLowerCase();
+  const canonicalOriginUrls = new Set([
+    'https://github.com/washingtonmsdj/acheguese',
+    'git@github.com:washingtonmsdj/acheguese',
+    'ssh://git@github.com/washingtonmsdj/acheguese',
+  ]);
+  if (!canonicalOriginUrls.has(originUrl)) {
+    throw new Error(
+      `Deploy recusado: origin nao e o repositorio canonico washingtonmsdj/acheguese (${originUrl}).`,
+    );
+  }
+
+  try {
+    execFileSync('git', ['fetch', '--quiet', '--no-tags', 'origin', 'main'], {
+      cwd: process.cwd(),
+      encoding: 'utf8',
+      stdio: ['ignore', 'pipe', 'pipe'],
+    });
+  } catch {
+    throw new Error('Deploy recusado: nao foi possivel atualizar origin/main.');
+  }
+
+  const mainSha = runGit(['rev-parse', 'FETCH_HEAD']).toLowerCase();
+  try {
+    execFileSync(
+      'git',
+      ['merge-base', '--is-ancestor', headSha, mainSha],
+      {
+        cwd: process.cwd(),
+        encoding: 'utf8',
+        stdio: ['ignore', 'pipe', 'pipe'],
+      },
+    );
+  } catch (error) {
+    if (error?.status === 1) {
+      throw new Error(
+        `Deploy recusado: SHA ${headSha} nao pertence ao historico da main canonica (${mainSha}).`,
+      );
+    }
+    throw new Error('Deploy recusado: nao foi possivel provar a ancestralidade da main.');
+  }
+
+  return mainSha;
+}
+
 function inspectGit(expectedSha, apply) {
   const headSha = runGit(['rev-parse', 'HEAD']).toLowerCase();
   const branch = runGit(['branch', '--show-current']);
@@ -211,11 +259,21 @@ function inspectGit(expectedSha, apply) {
     throw new Error('--expected-sha e obrigatorio com --apply.');
   }
 
-  if (apply && branch && branch !== 'main') {
-    throw new Error(`Deploy recusado a partir da branch ${branch}; use main ou checkout detached do SHA autorizado.`);
+  let canonicalMainSha;
+  if (apply) {
+    if (branch !== 'main') {
+      throw new Error(
+        `Deploy recusado a partir da branch ${branch || '(detached)'}; use main com SHA presente em origin/main.`,
+      );
+    }
+    canonicalMainSha = verifyCanonicalMainAncestry(headSha);
   }
 
-  return { headSha, branch: branch || '(detached)' };
+  return {
+    headSha,
+    branch: branch || '(detached)',
+    canonicalMainSha,
+  };
 }
 
 function assertJwtConfig(config, functionSlug, expected) {
@@ -357,6 +415,9 @@ function printStatus(status, json) {
   console.log(`OK function: ${status.function}`);
   console.log(`OK project: ${status.projectRef}`);
   console.log(`OK git: ${status.git.headSha} (${status.git.branch})`);
+  if (status.git.canonicalMainSha) {
+    console.log(`OK canonical origin/main ancestry: ${status.git.canonicalMainSha}`);
+  }
   console.log(`OK supabase-cli: ${status.cliVersion}`);
   for (const file of status.bundle) {
     console.log(`OK bundle ${file.path} sha256=${file.sha256}`);

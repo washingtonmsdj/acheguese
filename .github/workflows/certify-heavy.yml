@@ -87,11 +87,22 @@ jobs:
             exit 1
           }
 
+          $comparison = Invoke-RestMethod -Method Get `
+            -Uri "https://api.github.com/repos/$expectedRepository/compare/$targetSha...main" `
+            -Headers $headers
+          if ($comparison.status -notin @("ahead", "identical")) {
+            Write-Error "Certification blocked: target SHA is not contained in canonical main. Comparison status=$($comparison.status)"
+            exit 1
+          }
+          $mainSha = [string]$comparison.head_commit.sha
+
           Add-Content -Path $env:GITHUB_OUTPUT -Value "sha=$targetSha" -Encoding UTF8
+          Add-Content -Path $env:GITHUB_OUTPUT -Value "main_sha=$mainSha" -Encoding UTF8
           @(
             "## Heavy certification target",
             "- Repository: $env:GITHUB_REPOSITORY",
             "- SHA: $targetSha",
+            "- Canonical main contains target: $mainSha",
             "- Actor: $env:GITHUB_ACTOR",
             "- Workflow run: $env:GITHUB_RUN_ID",
             "- Workflow ref: $env:GITHUB_WORKFLOW_REF"
@@ -234,8 +245,15 @@ jobs:
 
             Set-Content -Path "playwright.vercel-preview.config.ts" -Value $protectedPreviewConfig -Encoding UTF8
             npm run test:e2e:account-authenticated -- --config=playwright.vercel-preview.config.ts --retries=0
+            if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+
+            $logoutArgs = @("playwright", "test", "tests/e2e/logout-authenticated.spec.ts", "--project=chromium", "--reporter=list", "--retries=0", "--config=playwright.vercel-preview.config.ts")
+            & npx @logoutArgs
           } else {
             npm run test:e2e:account-authenticated -- --retries=0
+            if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+
+            & npx playwright test tests/e2e/logout-authenticated.spec.ts --project=chromium --reporter=list --retries=0
           }
 
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
@@ -324,7 +342,7 @@ jobs:
           @(
             "## Certification contract",
             "The self-hosted runner is repository-scoped Windows x64 with dedicated labels; WSL is not required.",
-            "The workflow accepts only an exact SHA that exists in washingtonmsdj/acheguese and checks out that immutable SHA.",
+            "The workflow accepts only an exact SHA that is reachable from canonical main and checks out that immutable SHA.",
             "Authenticated Account E2E accepts only allowlisted Achegue-se Production/project Preview HTTPS origins and runs with zero retries.",
             "Protected Vercel Preview E2E uses only the official VERCEL_AUTOMATION_BYPASS_SECRET GitHub Actions secret and an ephemeral Playwright config; the target SHA remains unchanged.",
             "Public territorial E2E is fixture-backed and uses no local Supabase, Docker, service-role key, or Production seed.",

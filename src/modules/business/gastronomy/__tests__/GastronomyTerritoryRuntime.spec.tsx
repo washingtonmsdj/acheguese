@@ -95,7 +95,7 @@ vi.mock("@/core/session", () => ({
   useSessionContext: () => useSessionContextMock(),
 }));
 
-vi.mock("@/shared/components/maps/MiniMap", () => ({
+vi.mock("@/core/maps/components/MiniMap", () => ({
   MiniMap: () => <div>mini-map</div>,
 }));
 
@@ -106,6 +106,13 @@ vi.mock("@/modules/business/gastronomy/hooks", async () => {
 
   return {
     ...actual,
+    useGastronomyCart: () => ({
+      cart: { total: 0 },
+      hasCart: false,
+      itemCount: 0,
+      minimumOrderReached: true,
+      minimumOrderRemaining: 0,
+    }),
     useGastronomyList: (...args: unknown[]) => useGastronomyListMock(...args),
     useGastronomyFoodCatalog: (...args: unknown[]) =>
       useGastronomyFoodCatalogMock(...args),
@@ -128,7 +135,7 @@ vi.mock("@/modules/business/public/hooks", () => ({
 
 describe("Gastronomy territorial runtime", () => {
   beforeEach(() => {
-    window.localStorage.clear();
+    window.localStorage?.clear();
 
     useTerritoryFilterMock.mockReset();
     useTerritorialContextMock.mockReset();

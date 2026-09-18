@@ -32,7 +32,7 @@ import { GastronomyBusinessInfoSidebar } from "./GastronomyBusinessInfoSidebar";
 import { GastronomyDetailHeroSection } from "./GastronomyDetailHeroSection";
 import { CategoryNav, ServiceBar } from "./GastronomyDetailNavigation";
 import { GastronomyDetailSeo } from "./GastronomyDetailSeo";
-import GastronomyDetailConceptPreviewPage from "./GastronomyDetailConceptPreviewPage";
+import GastronomyDetailConceptPreviewPage from "../dev/GastronomyDetailConceptPreviewPage";
 
 interface GastronomyDetailPageProps {
   routeParams?: {

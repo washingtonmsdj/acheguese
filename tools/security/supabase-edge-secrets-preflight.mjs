@@ -1,8 +1,8 @@
 #!/usr/bin/env node
 
-import { execFileSync } from 'node:child_process';
 import { existsSync, readFileSync } from 'node:fs';
 import { join } from 'node:path';
+import { runSupabaseCli } from '../supabase/supabase-cli-runner.mjs';
 
 const DEFAULT_TOKEN_ENV_NAMES = [
   'SUPABASE_ACCESS_TOKEN',
@@ -10,6 +10,18 @@ const DEFAULT_TOKEN_ENV_NAMES = [
 ];
 
 const FUNCTION_SECRET_REQUIREMENTS = Object.freeze({
+  'register-community-interest': Object.freeze([
+    'ALLOWED_ORIGINS',
+    'TURNSTILE_SECRET_KEY',
+  ]),
+  'create-professional-lead': Object.freeze([
+    'ALLOWED_ORIGINS',
+    'TURNSTILE_SECRET_KEY',
+  ]),
+  'submit-dpo-request': Object.freeze([
+    'ALLOWED_ORIGINS',
+    'TURNSTILE_SECRET_KEY',
+  ]),
   'get-push-config': Object.freeze([
     'ALLOWED_ORIGINS',
   ]),
@@ -44,9 +56,9 @@ const FUNCTION_SECRET_REQUIREMENTS = Object.freeze({
 function usage() {
   return [
     'Uso:',
-    '  node scripts/security/supabase-edge-secrets-preflight.mjs',
-    '  node scripts/security/supabase-edge-secrets-preflight.mjs --function get-push-config',
-    '  node scripts/security/supabase-edge-secrets-preflight.mjs --function media-assets-cleanup --json',
+    '  node tools/security/supabase-edge-secrets-preflight.mjs',
+    '  node tools/security/supabase-edge-secrets-preflight.mjs --function get-push-config',
+    '  node tools/security/supabase-edge-secrets-preflight.mjs --function media-assets-cleanup --json',
     '',
     'Opcoes:',
     '  --function <slug>      Valida uma funcao suportada. Pode ser repetido.',
@@ -162,21 +174,17 @@ function resolveAccessToken(tokenEnv) {
 }
 
 function listRemoteSecretNames(projectRef, accessToken) {
-  let stdout;
-  try {
-    stdout = execFileSync(
-      'supabase',
-      ['secrets', 'list', '--project-ref', projectRef, '--output', 'json'],
-      {
-        encoding: 'utf8',
-        env: {
-          ...process.env,
-          SUPABASE_ACCESS_TOKEN: accessToken,
-        },
-        stdio: ['ignore', 'pipe', 'pipe'],
+  const result = runSupabaseCli(
+    ['secrets', 'list', '--project-ref', projectRef, '--output', 'json'],
+    {
+      env: {
+        ...process.env,
+        SUPABASE_ACCESS_TOKEN: accessToken,
       },
-    );
-  } catch {
+    },
+  );
+
+  if (result.error || result.status !== 0) {
     throw new Error(
       'Falha ao executar `supabase secrets list`. Verifique CLI instalado, autenticacao e permissao de leitura de secrets.',
     );
@@ -184,7 +192,7 @@ function listRemoteSecretNames(projectRef, accessToken) {
 
   let entries;
   try {
-    entries = JSON.parse(stdout);
+    entries = JSON.parse(result.stdout ?? '');
   } catch {
     throw new Error('Supabase CLI retornou JSON invalido ao listar Edge Function secrets.');
   }

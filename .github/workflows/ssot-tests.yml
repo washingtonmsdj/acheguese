@@ -159,6 +159,9 @@ jobs:
 
   authenticated_account_e2e:
     name: Authenticated Account + Business + Education E2E (remote-only)
+    # Account credentials are restricted to trusted main runs. PR code uses
+    # fixture-backed public E2E and never receives the account secrets.
+    if: github.ref == 'refs/heads/main'
     runs-on: ubuntu-latest
     env:
       CI: true
@@ -273,9 +276,17 @@ jobs:
           if [ "${{ needs.phase-core-gate.result }}" != "success" ] || \
              [ "${{ needs.runtime-tests.result }}" != "success" ] || \
              [ "${{ needs.e2e-tests.result }}" != "success" ] || \
-             [ "${{ needs.authenticated_account_e2e.result }}" != "success" ] || \
              [ "${{ needs.regression-check.result }}" != "success" ]; then
             echo "One or more authoritative test gates failed"
+            exit 1
+          fi
+          if [ "${{ github.event_name }}" = "pull_request" ]; then
+            if [ "${{ needs.authenticated_account_e2e.result }}" != "skipped" ]; then
+              echo "Authenticated E2E must remain skipped for candidate-controlled pull request code."
+              exit 1
+            fi
+          elif [ "${{ needs.authenticated_account_e2e.result }}" != "success" ]; then
+            echo "Authenticated E2E did not pass on the trusted main ref."
             exit 1
           fi
           echo "All authoritative test gates passed"

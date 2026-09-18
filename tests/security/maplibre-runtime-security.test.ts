@@ -17,7 +17,7 @@ function collectSourceFiles(directory: string): string[] {
   });
 }
 
-const STATIC_MAPLIBRE_IMPORT = /import\s+(?!type\b)[\s\S]*?from\s+["']maplibre-gl["']/;
+const STATIC_MAPLIBRE_IMPORT = /\bimport\s+(?!type\b)[^;]*?\bfrom\s+["']maplibre-gl["']/;
 const STATIC_MAPLIBRE_CSS_IMPORT = /import\s+["']maplibre-gl\/dist\/maplibre-gl\.css["']/;
 
 const ALLOWED_STATIC_RUNTIME_OWNER =
@@ -26,10 +26,9 @@ const ALLOWED_STATIC_CSS_OWNER = "src/core/maps/runtime/maplibreRuntimeCss.ts";
 const LEGACY_ADAPTER_BRIDGE = "src/core/maps/components/v3/LazyMapLibreAdapter.tsx";
 
 const MIGRATED_CONSUMERS = [
-  "src/shared/components/maps/MiniMap.tsx",
-  "src/core/maps/components/v3/RouteLayer.tsx",
-  "src/shared/components/LocationPickerSheet.tsx",
-  "src/shared/components/standalone/StandaloneMap.tsx",
+  "src/core/maps/components/MiniMap.tsx",
+  "src/core/maps/components/LocationPickerSheet.tsx",
+  "src/core/maps/components/StandaloneMap.tsx",
   "src/core/guide/tourist-points/components/TouristPointsMap.tsx",
   "src/core/community-lost-found/components/LostFoundMiniMap.tsx",
   "src/core/mobility/components/RideTrackingMap.tsx",

@@ -22,8 +22,6 @@ export {
   getBusinessDataIdByProfileId,
   isBusinessCommunityLinkEligibleByDataId,
   getBusinessBySlug,
-  checkSlugExists,
-  getSimilarSlugs,
   getBusinessesByIds,
   searchBusinessesByName,
   getProducts,
@@ -32,6 +30,10 @@ export {
   getSimilarBusinesses,
   getGallery,
 } from "./business.queries";
+
+// Compatibility aliases; public-identity owns slug persistence and generation.
+export { checkSlugExists, getSimilarSlugs } from "./business.slug-queries";
+import { checkSlugExists, getSimilarSlugs } from "./business.slug-queries";
 
 // Re-exports de mutations (alias via BusinessService)
 export {
@@ -190,8 +192,8 @@ export class BusinessService {
   static isCommunityLinkEligibleByDataId =
     BusinessQueries.isBusinessCommunityLinkEligibleByDataId;
   static getBusinessBySlug = BusinessQueries.getBusinessBySlug;
-  static checkSlugExists = BusinessQueries.checkSlugExists;
-  static getSimilarSlugs = BusinessQueries.getSimilarSlugs;
+  static checkSlugExists = checkSlugExists;
+  static getSimilarSlugs = getSimilarSlugs;
   static getBusinessesByIds = BusinessQueries.getBusinessesByIds;
   static searchBusinessesByName = BusinessQueries.searchBusinessesByName;
   static getProducts = BusinessQueries.getProducts;

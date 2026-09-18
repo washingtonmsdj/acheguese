@@ -179,15 +179,49 @@ async function readBodyText(
     }
   }
 
-  const text = await req.text();
-  if (new TextEncoder().encode(text).length > maxBytes) {
-    return {
-      ok: false,
-      response: jsonResponse({ error: 'Request body too large' }, 413, methods, req),
-    };
+  const reader = req.body?.getReader();
+  if (!reader) return { ok: true, data: '' };
+
+  const chunks: Uint8Array[] = [];
+  let totalBytes = 0;
+
+  try {
+    while (true) {
+      const { done, value } = await reader.read();
+      if (done) break;
+
+      totalBytes += value.byteLength;
+      if (totalBytes > maxBytes) {
+        // Stop consuming immediately, but don't let a slow cancellation keep
+        // an oversized request handler open after the limit has been enforced.
+        void reader.cancel().catch(() => {
+          // The size limit is already enforced; cancellation is best-effort.
+        });
+        return {
+          ok: false,
+          response: jsonResponse(
+            { error: 'Request body too large' },
+            413,
+            methods,
+            req,
+          ),
+        };
+      }
+
+      chunks.push(value);
+    }
+  } finally {
+    reader.releaseLock();
   }
 
-  return { ok: true, data: text };
+  const bytes = new Uint8Array(totalBytes);
+  let offset = 0;
+  for (const chunk of chunks) {
+    bytes.set(chunk, offset);
+    offset += chunk.byteLength;
+  }
+
+  return { ok: true, data: new TextDecoder().decode(bytes) };
 }
 
 export async function readJsonBody<T = unknown>(

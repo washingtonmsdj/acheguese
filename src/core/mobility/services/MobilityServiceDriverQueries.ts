@@ -1,7 +1,7 @@
 import { supabase } from "@/integrations/supabase";
 import { profileService } from "@/core/profiles/services/ProfileService";
 import { logger } from "@/shared/utils/logger";
-import type { Json } from "@/integrations/supabase/types.generated";
+import type { Json } from "@/integrations/supabase";
 import { DriverEarningsReadService } from "./DriverEarningsReadService";
 import { RideRatingService } from "./RideRatingService";
 

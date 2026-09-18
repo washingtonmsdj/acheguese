@@ -55,6 +55,19 @@ describe("Supabase CLI runner", () => {
     );
   });
 
+  it("forwards a scoped environment when a CLI command needs an explicit token", () => {
+    const env = { SUPABASE_ACCESS_TOKEN: "test-token" };
+    const spawn = vi.fn(() => ({ error: undefined, status: 0, stdout: "[]" }));
+
+    runSupabaseCli(["secrets", "list"], { env, spawn });
+
+    expect(spawn).toHaveBeenCalledWith(
+      process.execPath,
+      [SUPABASE_CLI_ENTRYPOINT, "secrets", "list"],
+      { cwd: process.cwd(), encoding: "utf8", shell: false, env },
+    );
+  });
+
   it("rejects non-string arguments before process creation", () => {
     expect(() =>
       createSupabaseCliInvocation(["projects", 123] as unknown as string[]),

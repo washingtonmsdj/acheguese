@@ -19,6 +19,7 @@ export default defineConfig(({ mode }) => ({
     server: {
       deps: {
         external: [
+          /tools[\\/]supabase[\\/]community-interest-preflight\.mjs$/,
           /scripts[\\/]security[\\/]supabase-auth-hibp\.mjs$/,
           /scripts[\\/]security[\\/]supabase-postgis-owner-preflight\.mjs$/,
           /scripts[\\/]security[\\/]lgpd-purge-policy\.mjs$/,

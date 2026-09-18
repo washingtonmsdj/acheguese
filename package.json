@@ -108,6 +108,7 @@
     "generate:types": "tsx tools/supabase/generate-supabase-types.ts",
     "prepare": "husky",
     "verify:deploy": "node tools/release/verify-deploy-ready.mjs",
+    "security:edge-secrets:preflight": "node tools/security/supabase-edge-secrets-preflight.mjs",
     "test": "vitest --run",
     "test:education:inep-import": "vitest --run --environment=node --pool=vmThreads --maxWorkers=1 tests/scripts/public-education-inep-adapter.test.ts tests/scripts/public-education-inep-stager.test.ts tests/security/public-education-inep-import-staging-g6.test.ts tests/security/public-education-inep-import-planner-g6.test.ts",
     "test:watch": "vitest",

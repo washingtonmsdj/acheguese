@@ -31,7 +31,12 @@ describe("Supabase Edge admin canary deploy guard", () => {
     );
     expect(script).toContain("Worktree sujo; deploy recusado");
     expect(script).toContain("--expected-sha e obrigatorio com --apply");
-    expect(script).toContain("branch !== 'main'");
+    expect(script).toContain("if (branch !== 'main')");
+    expect(script).toContain("['remote', 'get-url', 'origin']");
+    expect(script).toContain("'https://github.com/washingtonmsdj/acheguese'");
+    expect(script).toContain("['fetch', '--quiet', '--no-tags', 'origin', 'main']");
+    expect(script).toContain("['merge-base', '--is-ancestor', headSha, mainSha]");
+    expect(script).not.toContain('checkout detached do SHA autorizado');
   });
 
   it("pins the target project to the versioned Supabase config", () => {

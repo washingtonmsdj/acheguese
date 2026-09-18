@@ -19,7 +19,7 @@ import {
   CSP_DIRECTIVES,
   SECURITY_HEADERS,
   SECURITY_AUDIT_LOG,
-} from '../../src/config/security.config';
+} from '../../src/shared/config/security.config';
 
 interface ValidationResult {
   passed: boolean;

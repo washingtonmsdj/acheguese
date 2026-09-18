@@ -1,12 +1,18 @@
 # Achegue-se — Execução `main`-only e prontidão MVP
 
 **Status:** ATIVO — SSOT OPERACIONAL  
-**Data do checkpoint GitHub:** 2026-09-09  
+**Data do checkpoint GitHub:** 2026-09-17
 **Repositório:** `washingtonmsdj/acheguese`  
 **Linha ativa:** `main`  
 **HEAD técnico de código anterior a este checkpoint documental:** `9c48494514fcf04d8f756b0a0a9a5deb4770c267`
 
 Este documento consolida ordem de execução, blockers e Definition of Done. Ele é um **registro operacional**, não uma fotografia autoritativa do que existe no produto. A fonte de verdade para decidir o que existe, o que está ativo e o que deve ser corrigido é sempre o **projeto real**: código da `main`, rotas, owners, serviços, schema/migrations, contratos, testes, deploy/runtime e comportamento observado.
+
+## Checkpoint 2026-09-17 — PR #117: hardening urgente e gates pendentes
+
+O branch do PR #117 recebeu hardening de limites de request, fronteira de secrets em workflows, proveniência do canário administrativo, ownership de mapas/identidade e gate remoto de Edge secrets. Validação local passou em typecheck, lint (dois avisos), build, dependências (zero violações), governança, migrations locais e testes focados. O registro completo está em [checkpoint de 2026-09-17](./checkpoints/2026-09-17-pr117-urgent-hardening.md).
+
+O plano continua ativo: falta validar nomes de secrets Supabase com token de leitura; a autoridade de release está bloqueada por exceções expiradas e snapshot de recuperação stale; os secrets GitHub ainda estão no escopo do repositório; hosted CI está limitado por orçamento e Vercel por rate limit. Não houve migration, deploy, merge nem habilitação de Mobilidade.
 
 ## Checkpoint 2026-09-09 — Mobilidade: remoção de bridges mortos e reconciliação runtime
 

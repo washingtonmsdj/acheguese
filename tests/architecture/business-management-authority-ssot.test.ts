@@ -14,7 +14,7 @@ describe("Business management authority SSOT", () => {
 
     expect(service).toContain("profileService.getProfileById(ownerProfileId)");
     expect(service).toContain("profile?.user_id === userId");
-    expect(service).toContain("ProfileMembersService.isManager(ownerProfileId, userId)");
+    expect(service).toContain("ProfileMembersService.getActiveRole(");
     expect(service).not.toContain(".from('profiles')");
 
     expect(membershipService).toContain(".eq('is_active', true)");
@@ -45,12 +45,11 @@ describe("Business management authority SSOT", () => {
   });
 
   it("keeps Business slug reads on the generated Supabase schema", () => {
-    const slugs = read("src/core/business/services/business.slug-queries.ts");
+    const slugs = read("src/core/public-identity/adapters/BusinessIdentityAdapter.ts");
 
     expect(slugs).toContain('.from("business_data")');
-    expect(slugs).not.toContain("BusinessSlugQueriesDbClient");
-    expect(slugs).not.toContain("SlugRow");
-    expect(slugs).not.toContain("supabase as unknown as");
+    expect(slugs).toContain("checkBusinessSlugExists");
+    expect(slugs).toContain("getExistingBusinessSlugs");
   });
 
   it("delegates the compatibility RLS helper to the canonical profile manager authority", () => {

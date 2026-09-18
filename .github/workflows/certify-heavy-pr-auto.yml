@@ -115,71 +115,6 @@ jobs:
         shell: powershell
         run: npx playwright install chromium
 
-      - name: Run deterministic authenticated logout E2E against exact local SHA
-        id: logout_e2e
-        continue-on-error: true
-        shell: powershell
-        env:
-          CI: true
-          PLAYWRIGHT_BASE_URL: http://127.0.0.1:8100
-          VITE_PUBLIC_APP_URL: http://127.0.0.1:8100
-          VITE_SUPABASE_URL: https://xhdowzacfujckjelqhtd.supabase.co
-          VITE_SUPABASE_PUBLISHABLE_KEY: sb_publishable_dc-rd2YjKuZ5KJc_zRYVYA_ANmcFxKk
-          VITE_SUPABASE_ANON_KEY: sb_publishable_dc-rd2YjKuZ5KJc_zRYVYA_ANmcFxKk
-          E2E_SUPABASE_URL: https://xhdowzacfujckjelqhtd.supabase.co
-          E2E_SUPABASE_PUBLISHABLE_KEY: sb_publishable_dc-rd2YjKuZ5KJc_zRYVYA_ANmcFxKk
-          E2E_USER_EMAIL: ${{ secrets.E2E_USER_EMAIL }}
-          E2E_USER_PASSWORD: ${{ secrets.E2E_USER_PASSWORD }}
-          ACCOUNT_TARGET_IS_PREVIEW: false
-          PLAYWRIGHT_SKIP_WEBSERVER: "1"
-        run: |
-          $ErrorActionPreference = "Stop"
-          if ([string]::IsNullOrWhiteSpace($env:E2E_USER_EMAIL) -or [string]::IsNullOrWhiteSpace($env:E2E_USER_PASSWORD)) {
-            Write-Error "Certification blocked: authenticated E2E credentials are not configured."
-            exit 1
-          }
-          & .\scripts\ci\run-preview-e2e.ps1 `
-            -Name "logout" `
-            -Port 8100 `
-            -DistDir ".e2e-dist/auth" `
-            -PlaywrightArgs @(
-              "test",
-              "tests/e2e/logout-authenticated.spec.ts",
-              "--project=chromium",
-              "--reporter=list",
-              "--retries=0",
-              "--output=test-results/logout"
-            )
-          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
-
-      - name: Print logout E2E failure diagnostics
-        if: steps.logout_e2e.outcome == 'failure'
-        shell: powershell
-        run: |
-          Write-Host "===== Authenticated logout E2E diagnostics ====="
-          $contexts = @(Get-ChildItem -Path "test-results/logout" -Recurse -File -Filter "error-context.md" -ErrorAction SilentlyContinue)
-          if ($contexts.Count -eq 0) {
-            Write-Host "No error-context.md files found."
-          } else {
-            foreach ($context in $contexts) {
-              Write-Host "--- $($context.FullName) ---"
-              Get-Content -Path $context.FullName -ErrorAction SilentlyContinue
-            }
-          }
-
-      - name: Upload logout E2E artifacts (non-gating transport)
-        if: always()
-        continue-on-error: true
-        uses: actions/upload-artifact@v7
-        with:
-          name: heavy-pr-logout-${{ github.run_id }}-${{ github.run_attempt }}
-          path: |
-            .e2e-logs/logout-preview.stdout.log
-            .e2e-logs/logout-preview.stderr.log
-            test-results/logout/
-          if-no-files-found: ignore
-          retention-days: 7
-
       - name: Run regression tests with non-empty discovery
         id: regression
         continue-on-error: true
@@ -296,14 +231,13 @@ jobs:
         if: always()
         shell: powershell
         env:
-          LOGOUT_OUTCOME: ${{ steps.logout_e2e.outcome }}
           REGRESSION_OUTCOME: ${{ steps.regression.outcome }}
           BOUNDARIES_OUTCOME: ${{ steps.boundaries.outcome }}
           PUBLIC_OUTCOME: ${{ steps.public_e2e.outcome }}
           TARGET_SHA: ${{ github.event.pull_request.head.sha }}
         run: |
           $results = @(
-            "Authenticated logout E2E=$env:LOGOUT_OUTCOME",
+            "Authenticated logout E2E=deferred to trusted manual certification",
             "Regression=$env:REGRESSION_OUTCOME",
             "Territorial boundaries=$env:BOUNDARIES_OUTCOME",
             "Public territorial E2E=$env:PUBLIC_OUTCOME"
@@ -318,7 +252,6 @@ jobs:
           }
 
           $failed = @(
-            $env:LOGOUT_OUTCOME,
             $env:REGRESSION_OUTCOME,
             $env:BOUNDARIES_OUTCOME,
             $env:PUBLIC_OUTCOME
