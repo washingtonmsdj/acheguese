@@ -1539,7 +1539,7 @@ export function CommunityOverviewSurface({
                   ) : mode === "public" ? (
                     <Link
                       to={loginHref}
-                      className="inline-flex min-h-8 w-full items-center justify-center rounded-lg bg-territory-brand px-2 text-xs font-semibold text-territory-image-overlay transition-colors hover:bg-territory-brand-strong sm:min-h-9 sm:w-auto sm:shrink-0 sm:rounded-xl sm:px-3 sm:text-sm md:min-h-11 md:px-5 xl:w-48 xl:text-xs"
+                      className="inline-flex min-h-8 w-full items-center justify-center rounded-lg bg-territory-sun px-2 text-xs font-semibold text-territory-ink transition-colors hover:bg-territory-sun/90 sm:min-h-9 sm:w-auto sm:shrink-0 sm:rounded-xl sm:px-3 sm:text-sm md:min-h-11 md:px-5 xl:w-48 xl:text-xs"
                     >
                       <LogIn className="mr-2 h-4 w-4 xl:hidden" />
                       <span className="xl:hidden">Participar</span>

@@ -63,6 +63,7 @@ import {
   buildModuleTerritoryUrl,
 } from "@/core/routing/utils/territoryUrls";
 import { SALVADOR_COMMUNITY_LAUNCH_GROUP_SLUG } from "@/core/community/config/communityLaunch";
+import { COMMUNITY_OVERVIEW_VISUAL_MOCK_QUERY_VALUE } from "@/core/community-feed/components/fixtures/communityOverviewVisualFixture";
 
 const GruposPage = lazy(() => import("@/core/community-groups/pages/GruposPage"));
 
@@ -118,6 +119,9 @@ export default function ComunidadePage({
   const requestedView = isCommunityOverviewView(requestedViewValue)
     ? requestedViewValue
     : null;
+  const visualMockEnabled =
+    import.meta.env.DEV &&
+    searchParams.get("visualMock") === COMMUNITY_OVERVIEW_VISUAL_MOCK_QUERY_VALUE;
   const routeActiveView: CommunityOverviewView = requestedView
     ? requestedView
     : requestedSection === "discussions"
@@ -472,12 +476,13 @@ export default function ComunidadePage({
       isAuthenticated={communityAccess.isAuthenticated}
       unreadCount={unreadCount}
       canCreatePost={
-        communitySurfaceState === "active" && communityAccess.can.create_post
+        (communitySurfaceState === "active" || visualMockEnabled) &&
+        communityAccess.can.create_post
       }
     />
   );
 
-  if (communitySurfaceState !== "active") {
+  if (communitySurfaceState !== "active" && !visualMockEnabled) {
     return (
       <TooltipProvider>
         <div className="min-h-[100dvh] text-territory-ink">
@@ -516,7 +521,7 @@ export default function ComunidadePage({
             communityId={linkedCommunityId}
             communityProfile={communityProfileQuery.data ?? null}
             mode="public"
-            canCreatePost={false}
+            canCreatePost={visualMockEnabled}
             activeView={activeView}
             onViewChange={setView}
           />

@@ -183,6 +183,10 @@ export function CommunityTerritorialShell() {
       resolveModuleKeyFromCommunityPath(location.pathname, Boolean(scopedSlug)),
     [location.pathname, scopedSlug],
   );
+  const visualMockEnabled =
+    import.meta.env.DEV &&
+    new URLSearchParams(location.search).get("visualMock") ===
+      "community-concept";
   const groupId =
     effectiveResolved?.kind === "group" ? effectiveResolved.group.id : null;
   const {
@@ -285,7 +289,9 @@ export function CommunityTerritorialShell() {
                 totalCount={availabilityResult.total_active_members}
               />
             ) : null}
-            {effectiveAvailability === "none" && !availabilityLoading ? (
+            {effectiveAvailability === "none" &&
+            !availabilityLoading &&
+            !visualMockEnabled ? (
               <UnavailableModuleBanner />
             ) : null}
           </>

@@ -82,3 +82,35 @@ Segunda tela priorizada no catálogo: Home territorial do Complexo, com primeira
 - Captura ao vivo confirmou o título mobile, rótulos legíveis e a composição de três atalhos mais “Ver todos”; a resolução de dados do ambiente pode manter o estado de carregamento antes da Home.
 - O contrato legado `territorial-copy.test.ts` continua exigindo strings antigas (`Hoje em ...` e `Vale saber em ...`) ausentes do componente antes desta rodada; não foi reintroduzido texto morto para satisfazê-lo.
 - O mock visual continua restrito ao parâmetro explícito de desenvolvimento e não substitui consultas reais em produção.
+
+## 18/09/2026 · Feed da comunidade
+
+### Escopo
+
+Terceira tela priorizada no catálogo: feed público da comunidade, com identidade territorial, navegação contextual, ordenação, leitura de publicações, agenda lateral e estados de acesso.
+
+### Alterações e decisões
+
+- Mantive `CommunityOverviewSurface`, `CommunityFeed`, `useCommunityFeedSimple`, consultas de eventos/grupos e os filtros de `launchScope` como fontes canônicas; não foram ativadas funções desenhadas na prancha que permanecem desabilitadas.
+- Corrigi o contraste do CTA público “Participar” no hero usando o token solar do tema, preservando a rota real de login.
+- Tornei a prévia visual existente inspecionável no navegador interno com `visualMock=community-concept`: somente em `DEV`, a guarda de disponibilidade e a faixa do shell são atravessadas para a inspeção; ações e regras de produção continuam reais.
+- A prévia pública mantém o compositor como entrada controlada: clicar leva ao login, sem habilitar publicação anônima.
+
+### Testes e evidências
+
+- TypeScript da aplicação passou.
+- ESLint passou nos três arquivos alterados.
+- `CommunityOverviewSurface.spec.tsx`: 6 testes passaram.
+- `ComunidadePage.publicDeepLink.spec.tsx`: 5 testes passaram.
+- Preview mantido aberto no navegador interno em `http://127.0.0.1:5175/comunidade/ba/salvador/complexo-do-nordeste-de-amaralina?visualMock=community-concept`; a captura ao vivo confirmou hero, CTA legível, atalhos, compositor, filtros, posts e navegação inferior mobile.
+- Uma execução agrupada dos testes encontrou timeout de inicialização de workers para dois arquivos, mas a repetição isolada dos dois contratos passou; o ambiente permanece lento para carregar módulos do feed.
+
+### Pendências
+
+- Validar a mesma composição em desktop com dados reais da Community quando a disponibilidade persistida do território estiver resolvida no ambiente.
+- A prancha permanece referência visual; nomes, contagens, permissões e módulos ativos seguem os contratos do produto.
+
+### Git
+
+- Branch: `codex/reformulacao-entrada-comunidade`.
+- As alterações preexistentes da catalogação e segurança permanecem fora desta entrega.
