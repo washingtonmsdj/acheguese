@@ -638,3 +638,68 @@ Achados residuais do Supabase Advisor tambem devem continuar registrados no
 relatorio canonico:
 
 - [Advisor remoto Supabase](../../audits/SUPABASE_REMOTE_SECURITY_ADVISOR_2026-07-06.md)
+
+
+## EXC-2026-09-18-RLS-FAIL-CLOSED-INTERNAL-TABLES
+
+Status: aberta
+Risco: Low
+Area: Supabase
+Responsavel: Tech/security owner
+Criada em: 2026-09-18
+Valida ate: 2026-12-18
+Validacao: remota
+
+### Contexto
+
+O Supabase Advisor reporta `RLS enabled no policy` quando uma tabela possui RLS
+ligado e zero policies, mesmo quando a ausencia de policy e a decisao de
+seguranca. No snapshot remoto de 2026-09-18 existem 19 relacoes nessa condicao.
+
+A inspeção do catalogo confirmou que nenhuma dessas 19 relacoes concede
+`SELECT` ou `INSERT` a `anon` ou `authenticated`; as relacoes sao
+owner-only ou server-owned. Nesse desenho, criar uma policy permissiva apenas
+para silenciar o Advisor reduziria a seguranca.
+
+### Regra Afetada
+
+Findings do Supabase Advisor devem ser corrigidos ou formalmente classificados.
+`RLS enabled no policy` e aceito somente para relacoes explicitamente
+inventariadas cuja ausencia de policy represente deny-by-default intencional e
+cujos grants de browser estejam ausentes.
+
+### Risco
+
+O risco principal e governanca futura: uma alteracao de grants, RLS ou ownership
+pode invalidar a classificacao fail-closed. A ausencia atual de policy nao abre
+dados por si so; com RLS ligado e sem policy, browser permanece sem linhas
+autorizadas.
+
+### Mitigacao Temporaria
+
+- cache keys sao registradas individualmente, sem wildcard;
+- `anon` e `authenticated` nao possuem acesso de tabela nas 19 relacoes;
+- storage sensivel continua owner/service-owned;
+- relacoes operacionais como `emergency_delivery_log`,
+  `notification_outbox`, `ride_state_audit` e `mobility_price_quotes`
+  permanecem sem policy de browser por design;
+- nenhuma policy artificial e criada apenas para remover INFO do Advisor.
+
+### Plano De Remocao
+
+Revalidar trimestralmente cada relacao. Remover a cache key quando a tabela for
+eliminada, movida para um schema nao exposto, ganhar uma policy legitima ou
+deixar de ser fail-closed. Qualquer nova relacao `RLS enabled no policy`
+continua falhando no gate ate ser investigada e registrada individualmente.
+
+### Evidencias
+
+- consulta remota de 2026-09-18: 19 relacoes com RLS ligado e zero policies;
+- para todas as 19, `anon_select=false`, `anon_insert=false`,
+  `auth_select=false` e `auth_insert=false`;
+- `docs/08-roadmap/checkpoints/2026-09-16-global-stabilization-priorities.md`
+  registra a classificacao deny-by-default e a orientacao de nao criar policy
+  artificial;
+- `docs/03-architecture/G5_RLS_GRANTS_AUDIT_2026-08-30.md` e
+  `docs/03-architecture/G5_FAIL_CLOSED_RELATION_PROVENANCE_2026-08-30.md`
+  documentam a origem dessa fronteira.
