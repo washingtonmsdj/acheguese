@@ -165,15 +165,19 @@ function selectExportTable(
   switch (table) {
     case "profiles": return supabaseAdmin.from("profiles").select(columns);
     case "personal_social_profiles": return supabaseAdmin.from("personal_social_profiles").select(columns);
+    case "profile_username_history": return supabaseAdmin.from("profile_username_history").select(columns);
+    case "profile_slug_history": return supabaseAdmin.from("profile_slug_history").select(columns);
     case "profile_members": return supabaseAdmin.from("profile_members").select(columns);
     case "user_active_profiles": return supabaseAdmin.from("user_active_profiles").select(columns);
     case "user_roles": return supabaseAdmin.from("user_roles").select(columns);
+    case "role_history": return supabaseAdmin.from("role_history").select(columns);
     case "user_residences": return supabaseAdmin.from("user_residences").select(columns);
     case "addresses": return supabaseAdmin.from("addresses").select(columns);
     case "user_consents": return supabaseAdmin.from("user_consents").select(columns);
     case "notification_preferences": return supabaseAdmin.from("notification_preferences").select(columns);
     case "user_mfa_status": return supabaseAdmin.from("user_mfa_status").select(columns);
     case "business_data": return supabaseAdmin.from("business_data").select(columns);
+    case "business_claims": return supabaseAdmin.from("business_claims").select(columns);
     case "business_products": return supabaseAdmin.from("business_products").select(columns);
     case "business_stats": return supabaseAdmin.from("business_stats").select(columns);
     case "professional_data": return supabaseAdmin.from("professional_data").select(columns);
@@ -189,7 +193,9 @@ function selectExportTable(
     case "community_questions": return supabaseAdmin.from("community_questions").select(columns);
     case "question_answers": return supabaseAdmin.from("question_answers").select(columns);
     case "classifieds": return supabaseAdmin.from("classifieds").select(columns);
+    case "classified_comments": return supabaseAdmin.from("classified_comments").select(columns);
     case "events": return supabaseAdmin.from("events").select(columns);
+    case "event_reviews": return supabaseAdmin.from("event_reviews").select(columns);
     case "vagas": return supabaseAdmin.from("vagas").select(columns);
     case "work_opportunities": return supabaseAdmin.from("work_opportunities").select(columns);
     case "communication_publications": return supabaseAdmin.from("communication_publications").select(columns);
@@ -200,11 +206,17 @@ function selectExportTable(
     case "group_members_new": return supabaseAdmin.from("group_members_new").select(columns);
     case "community_poll_votes": return supabaseAdmin.from("community_poll_votes").select(columns);
     case "community_issue_supports": return supabaseAdmin.from("community_issue_supports").select(columns);
+    case "classified_likes": return supabaseAdmin.from("classified_likes").select(columns);
+    case "question_answer_likes": return supabaseAdmin.from("question_answer_likes").select(columns);
+    case "event_participants": return supabaseAdmin.from("event_participants").select(columns);
+    case "event_review_helpfulness": return supabaseAdmin.from("event_review_helpfulness").select(columns);
+    case "event_reminders": return supabaseAdmin.from("event_reminders").select(columns);
     case "classified_favorites": return supabaseAdmin.from("classified_favorites").select(columns);
     case "professional_favorites": return supabaseAdmin.from("professional_favorites").select(columns);
     case "tourist_point_saved_items": return supabaseAdmin.from("tourist_point_saved_items").select(columns);
     case "vaga_saved_items": return supabaseAdmin.from("vaga_saved_items").select(columns);
     case "user_favorite_businesses": return supabaseAdmin.from("user_favorite_businesses").select(columns);
+    case "user_recommended_businesses": return supabaseAdmin.from("user_recommended_businesses").select(columns);
     case "ride_requests": return supabaseAdmin.from("ride_requests").select(columns);
     case "route_reservations": return supabaseAdmin.from("route_reservations").select(columns);
     case "orders": return supabaseAdmin.from("orders").select(columns);
