@@ -202,7 +202,7 @@ Consultas read-only ao projeto canônico `xhdowzacfujckjelqhtd` atualizaram os g
 1. Vincular este checkout ao projeto Supabase e disponibilizar uma sessão/token de Management API com escopo para executar os validadores remotos oficiais e checar Auth Settings.
 2. Obter do owner aprovação explícita para renovar/encerrar as seis exceções vencidas; a data não pode ser prorrogada pelo validador.
 3. Criar e ler de volta um novo backup privado de recuperação, depois revalidar os seis campos de estado remoto e sua janela de 24 horas.
-4. Fechar as identidades/content mismatches de migrations por recuperação de histórico ou migration de reconciliação revisada; não reaplicar nem renomear automaticamente.
+4. Fechar as identidades/content mismatches restantes de migrations por recuperação de histórico ou migration de reconciliação revisada. A reconciliação segura de nomes de 32 arquivos já confirmados no ledger foi registrada no commit `7fd8aa36a`; não reaplicar DDL nem renomear os mismatches restantes automaticamente.
 5. Certificar frontend e smokes do G39/G38 antes de remover as policies antigas, o writer autenticado de `professional_stats` e concluir o incremento de contatos.
 
 ### CI, Vercel e build local
@@ -226,7 +226,14 @@ As 38 refs históricas têm proveniência incompleta: 22 são heads exatos de PR
 - O deploy Vercel de produção `dpl_5GFF3fK11jgMDwyz8LN4tyU92ixM` está `READY` para exatamente esse SHA; o status GitHub `Vercel` é `success` e o smoke GET de `https://acheguese.com.br` retornou HTTP 200. Os aliases de produção foram publicados. O build remoto executou audit (0 vulnerabilidades), validação do sitemap, 21 inputs, CSP, Turnstile, typecheck, lint sem erros (2 warnings existentes) e Vite (6.089 módulos).
 - O hook local `typecheck:ci` passou antes do push. Nos testes focados locais, 96/97 passaram; a única falha exige evidência externa para seis exceções vencidas, sem relação com os testes novos, que passaram. `npm run validate:migrations` passou.
 - Os workflows GitHub no SHA `1778d727f` falharam antes de executar comandos: runs `35332329297`, `35332329254` e `35332329371` registram `steps=[]`; `gh run view --log-failed` retorna `log not found`. Esse bloqueio de CI continua aberto, embora o deploy Vercel e smoke estejam verdes.
-- Não foram incluídas migrations. O ledger segue em 645 remotas versus 664 locais, 628 identidades exatas, 36 local-only e 17 remote-only; a validação local não resolve nem autoriza reaplicar esses históricos. A proteção de `main` permanece parcial, conforme issue #28.
+- Os commits anteriores não incluíram migrations aplicáveis. O ledger segue em 645 remotas versus 664 locais, 628 identidades exatas, 36 local-only e 17 remote-only; o commit `7fd8aa36a` só alinhou nomes já confirmados no ledger, e a validação local não resolve nem autoriza reaplicar os históricos restantes. A proteção de `main` permanece parcial, conforme issue #28.
+
+### Main após reconciliação do ledger — 2026-09-18T11:11Z
+
+- `origin/main` está no SHA `7fd8aa36ac68a5d717b843bf82ccb441a33cc02b`. O commit renomeia 32 arquivos locais para as identidades de versão/nome confirmadas pelo ledger Supabase remoto; 31 pares preservam o SQL byte-a-byte e o par de rating acrescenta somente a anotação `security-authority`. Nenhuma migration foi aplicada remotamente.
+- `npm run validate:migrations` passou depois da reconciliação. O teste `security-authority-migrations` permaneceu em 72/73 por exigir evidência externa para as seis exceções vencidas já registradas.
+- O deploy Vercel `dpl_96d4hJHaqcx7b9ehRCw5GofYe819` chegou a `READY` para exatamente esse SHA, com aliases de produção; o status GitHub `Vercel` é `success` e `https://acheguese.com.br` respondeu HTTP 200. O build remoto passou audit (0 vulnerabilidades), SSOT/arquitetura/sitemap, typecheck, lint com os dois avisos conhecidos e Vite.
+- Os demais jobs GitHub desse SHA falharam antes de executar etapas (`steps=[]`); `Regenerate canonical database types` segue `queued`. O gate de CI hospedado e a geração canônica continuam bloqueados por infraestrutura.
 
 ## P2 — certificação funcional
 

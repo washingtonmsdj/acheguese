@@ -10,11 +10,11 @@ Este documento consolida ordem de execução, blockers e Definition of Done. Ele
 
 ## Snapshot remoto — 2026-09-18
 
-- Commits publicados em `main`: `7d7f1af6e` (catálogo de conceitos da outra conversa) e `1778d727f` (remoção de caller frontend do RPC service-only, validação de migrations e evidências de segurança).
+- Commits publicados em `main`: `7d7f1af6e` (catálogo de conceitos da outra conversa), `1778d727f` (remoção de caller frontend do RPC service-only, validação de migrations e evidências de segurança) e `7fd8aa36a` (reconciliação dos nomes de 32 migrations com o ledger remoto e anotações de autoridade).
 - O deploy de produção Vercel `dpl_5GFF3fK11jgMDwyz8LN4tyU92ixM` chegou a `READY` para o SHA `1778d727fb0fca510210c5e2c42dd31a4d23e3fb`; o check Vercel passou e `https://acheguese.com.br` respondeu HTTP 200. O `build:vercel` remoto passou com 21 inputs, typecheck, lint sem erros (2 avisos conhecidos) e Vite; o pre-push `typecheck:ci` também passou.
 - Os runs GitHub `35332329297`, `35332329254` e `35332329371` desse SHA falharam com `steps=[]`; o log de job retorna `log not found`. Não há evidência de etapa de código executada, portanto não contam como checks verdes.
 - Testes locais focados: 96 passaram e 1 falhou ao exigir evidência externa para seis exceções vencidas no registro de segurança. Os testes novos de parser/validador passaram. `npm run validate:migrations` passou localmente.
-- O ledger Supabase continua sem reconciliação: remoto 645 migrations, local 664 arquivos, 628 identidades exatas, 36 locais sem identidade remota e 17 remotas sem arquivo local. Nenhuma migration foi incluída nesses commits.
+- O ledger Supabase continua sem reconciliação completa: remoto 645 migrations, local 664 arquivos, 628 identidades exatas, 36 locais sem identidade remota e 17 remotas sem arquivo local. O commit `7fd8aa36a` apenas alinhou 32 nomes já confirmados no ledger remoto, sem reaplicar DDL; os mismatches restantes continuam bloqueados.
 - A proteção de `main` permanece parcial: admins sujeitos, force-push/deleção bloqueados e resolução de conversas exigida; PR obrigatório, required checks e restrição de push seguem ausentes (#28).
 
 Este snapshot descreve o último SHA com alteração de código; qualquer commit posterior, inclusive documental, precisa ser conferido no SHA que passar a ser o head remoto.
