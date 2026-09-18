@@ -10,8 +10,8 @@ describe("G140 passenger search snapshot boundary", () => {
   const rideReads = readProjectFile(
     "src/core/mobility/services/mobility.ride-read-queries.ts",
   );
-  const runtime = readProjectFile(
-    "src/core/mobility/services/MobilityRuntimeService.ts",
+  const page = readProjectFile(
+    "src/modules/mobility/pages/BuscandoMotoristaPage.tsx",
   );
   const snapshot = readProjectFile(
     "src/core/mobility/services/RideSearchSnapshotReadModel.ts",
@@ -29,12 +29,13 @@ describe("G140 passenger search snapshot boundary", () => {
     expect(method).not.toContain('select("*")');
   });
 
-  it("keeps the runtime compatibility method as delegation only", () => {
-    const start = runtime.indexOf("async getRideWithAddresses(");
-    const method = runtime.slice(start, runtime.indexOf("\n  }", start) + 4);
-    expect(method).toContain("return readRideSearchSnapshot(rideId)");
-    expect(method).not.toContain(".from<");
-    expect(method).not.toContain(".select(");
+  it("keeps the passenger search page on the canonical bounded read owner", () => {
+    expect(page).toContain(
+      'from "@/core/mobility/services/mobility.ride-read-queries"',
+    );
+    expect(page).toContain("queryFn: () => getRideWithAddresses(rideId!)");
+    expect(page).not.toContain("mobilityService.getRideWithAddresses");
+    expect(page).not.toContain("type RideWithAddresses =");
   });
 
   it("limits the snapshot to route presentation, lifecycle and offered price", () => {
