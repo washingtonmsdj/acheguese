@@ -16,7 +16,8 @@ import { ArrowLeft, Navigation, X, Car } from "lucide-react";
 import { Button } from "@/shared/components/ui/button";
 import { useMobilidade } from "@/modules/mobility/hooks/useMobilidade";
 import type { RideSearchStatus } from "@/modules/mobility/hooks/useRideSearch";
-import { mobilityService } from "@/core/mobility/services/MobilityService";
+import { getRideWithAddresses } from "@/core/mobility/services/mobility.ride-read-queries";
+import type { RideSearchSnapshotRow } from "@/core/mobility/services/RideSearchSnapshotReadModel";
 import { mobilityRoutes } from "@/core/mobility/routes/mobilityRoutes";
 import { DEFAULT_CAMERA, DEFAULT_TILE_STYLE } from "@/core/maps/providers/MapProvider";
 import { loadMapLibreRuntime } from "@/core/maps/runtime/loadMapLibreRuntime";
@@ -289,23 +290,11 @@ export default function BuscandoMotoristaPage() {
 
   const { data: ride } = useQuery({
     queryKey: MOBILITY_QUERY_KEYS.rideBuscando(rideId!),
-    queryFn: () => mobilityService.getRideWithAddresses(rideId!),
+    queryFn: () => getRideWithAddresses(rideId!),
     enabled: !!rideId,
     staleTime: TIMEOUTS.CACHE_STALE_TIME_MEDIUM,
   });
-  type RideWithAddresses = {
-    status?: string | null;
-    pickup_address?: { latitude?: number | null; longitude?: number | null; street?: string | null } | null;
-    dropoff_address?: { latitude?: number | null; longitude?: number | null; street?: string | null } | null;
-    pickup_location?: { name?: string | null } | null;
-    dropoff_location?: { name?: string | null } | null;
-    origin?: string | null;
-    destination?: string | null;
-    estimated_fare?: number | null;
-    final_price?: number | null;
-    suggested_price?: number | null;
-  };
-  const rideData = ride as RideWithAddresses | null | undefined;
+  const rideData: RideSearchSnapshotRow | null | undefined = ride;
   const snapshotRideStatus = String(rideData?.status ?? "");
   const rideStatus = liveRideStatus ?? snapshotRideStatus;
 
