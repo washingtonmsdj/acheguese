@@ -9,10 +9,6 @@ const broker = readFileSync(
   resolve(root, "src/core/session/services/SessionRpcService.ts"),
   "utf8",
 );
-const service = readFileSync(
-  resolve(root, "src/core/session/services/SessionSecurityService.ts"),
-  "utf8",
-);
 const config = readFileSync(resolve(root, "supabase/config.toml"), "utf8");
 
 describe("session-rpc Supabase Auth authority", () => {
@@ -40,16 +36,16 @@ describe("session-rpc Supabase Auth authority", () => {
     expect(edge).not.toMatch(/\.from\(["']user_sessions["']\)/);
   });
 
-  it("keeps individual legacy mutations fail-closed on the client", () => {
-    expect(service).toContain("SessionSecurityService.revokeSession.unsupported");
-    expect(service).toContain("SessionSecurityService.updateActivity.skipped");
-    expect(service).not.toContain("SessionRpcService.revokeSession");
-    expect(service).not.toContain("SessionRpcService.updateSessionActivity");
+  it("does not restore individual legacy session mutations on the client broker", () => {
+    expect(broker).not.toContain('| "revokeSession"');
+    expect(broker).not.toContain('| "updateSessionActivity"');
+    expect(broker).not.toContain("revoke_user_session");
+    expect(broker).not.toContain("update_session_activity");
   });
 
-  it("clears the current local session when the authoritative revoke is global", () => {
-    expect(service).toContain("if (result.requiresLocalSignOut)");
-    expect(service).toContain("supabase.auth.signOut({ scope: 'local' })");
+  it("returns explicit local-sign-out intent for a global authoritative revoke", () => {
+    expect(edge).toContain('requiresLocalSignOut: scope === "global"');
+    expect(broker).toContain("requiresLocalSignOut: boolean");
   });
 
   it("keeps JWT verification enabled for session-rpc", () => {
