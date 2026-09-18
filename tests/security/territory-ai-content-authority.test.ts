@@ -5,7 +5,7 @@ import { describe, expect, it } from "vitest";
 const root = process.cwd();
 const migrationsDir = resolve(root, "supabase/migrations");
 const FINAL_BOUNDARY =
-  "20260918135909_remove_territory_ai_legacy_browser_read.sql";
+  "20260918140847_enforce_territory_ai_broker_only_authority.sql";
 const TRIGGER_REMOVAL =
   "20260918135813_remove_obsolete_territory_ai_manual_edit_trigger.sql";
 
@@ -40,13 +40,13 @@ describe("territory AI content authority", () => {
     expect(finalBoundary).toContain("TO service_role");
 
     expect(finalBoundary).toContain(
-      "legacy table-wide territory AI SELECT remains",
+      "table-wide territory AI SELECT remains",
     );
     expect(finalBoundary).toContain(
       "browser territory AI mutation authority remains",
     );
     expect(finalBoundary).toContain(
-      "administrative territory AI columns remain browser-readable",
+      "administrative territory AI fields remain browser-readable",
     );
   });
 
@@ -150,10 +150,10 @@ describe("territory AI content authority", () => {
       }
 
       if (
-        /CREATE\s+(?:OR\s+REPLACE\s+)?FUNCTION\s+private\.stamp_territory_ai_manual_edit/i.test(
+        /CREATE\s+(?:OR\s+REPLACE\s+)?FUNCTION\s+private\.stamp_territory_ai_(?:legacy_)?manual_edit/i.test(
           sql,
         ) ||
-        /CREATE\s+TRIGGER\s+stamp_territory_ai_manual_edit/i.test(sql)
+        /CREATE\s+TRIGGER\s+stamp_territory_ai_(?:legacy_)?manual_edit/i.test(sql)
       ) {
         offenders.push(`${name}: obsolete manual-edit trigger authority`);
       }
