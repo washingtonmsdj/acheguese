@@ -231,10 +231,9 @@ export const DOMAIN_REGISTRY: DomainRegistryEntry[] = [
     ssotPaths: [
       "src/core/verticals/gastronomy/services/GastronomyUrlService.ts",
       "src/modules/business/gastronomy/services/GastronomyService.ts",
-      "src/modules/business/gastronomy/services/gastronomy-runtime.queries.ts",
+      "src/core/business/services/gastronomy-runtime.queries.ts",
       "src/core/business/services/GastronomyProfileService.ts",
-      "src/modules/business/gastronomy/services/MenuService.ts",
-      "src/modules/business/gastronomy/services/GastronomyMapService.ts",
+      "src/core/business/services/MenuService.ts",
     ],
     routePrefixes: [
       "/:communitySlug/gastronomia",
@@ -249,7 +248,7 @@ export const DOMAIN_REGISTRY: DomainRegistryEntry[] = [
       "GastronomyService.ts",
       "GastronomyProfileService.ts",
       "MenuService.ts",
-      "GastronomyMapService.ts",
+      "GastronomyUrlService.ts",
     ],
     canonicalTypeBasenames: ["gastronomy.ts", "menu.ts"],
     adminSummary:
@@ -257,7 +256,7 @@ export const DOMAIN_REGISTRY: DomainRegistryEntry[] = [
     docsSummary:
       "Boa no modulo, mas restrita ao runtime publico e delivery. Faltam contratos administrativos e matriz de ownership entre business_data, gastronomy_profiles e menu_*.",
     ssotSummary:
-      "GastronomyService centraliza dados do vertical. GastronomyUrlService centraliza home/listagem e compatibilidade legada; detalhe publico de restaurante delega para BusinessUrlService para evitar duplicacao de URL de entidade.",
+      "GastronomyProfileService e MenuService concentram persistencia reutilizavel em core/business; gastronomy-runtime.queries concentra leituras do vertical; GastronomyUrlService concentra URLs publicas. O modulo mantem somente aplicacao/UI e nao possui bridge de compatibilidade para os owners removidos.",
   },
   {
     id: "professionals-services",
