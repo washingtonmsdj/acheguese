@@ -2,7 +2,7 @@ import { lazy, Suspense, useEffect } from "react";
 import { QueryClientProvider } from "@tanstack/react-query";
 import { HelmetProvider } from "react-helmet-async";
 
-import { ErrorBoundary } from "@/app/components/ErrorBoundary";
+import { ErrorBoundary } from "@/shared/components/errors/ErrorBoundary";
 import SessionProfileRuntimeShell from "@/app/components/SessionProfileRuntimeShell";
 import { SEO } from "@/app/components/SEO";
 import { queryClient } from "@/shared/utils/queryClient";
@@ -54,7 +54,7 @@ export default function FullAppRuntimeShell({
   []);
 
   return (
-    <ErrorBoundary>
+    <ErrorBoundary onReset={() => window.location.reload()}>
       <HelmetProvider>
         <SEO />
         <QueryClientProvider client={queryClient}>
