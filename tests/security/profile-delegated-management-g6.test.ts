@@ -11,7 +11,7 @@ describe("G6 delegated profile management authority", () => {
       "supabase/migrations/20260906085824_harden_profile_delegated_management_g6.sql",
     );
     const ui = read(
-      "src/core/profiles/components/ProfileMembersManagerImproved.tsx",
+      "src/core/profiles/components/ProfileMembersManager.tsx",
     );
 
     expect(migration).toContain("Only the profile owner can manage people and access");
@@ -28,7 +28,7 @@ describe("G6 delegated profile management authority", () => {
       "supabase/migrations/20260906085824_harden_profile_delegated_management_g6.sql",
     );
     const ui = read(
-      "src/core/profiles/components/ProfileMembersManagerImproved.tsx",
+      "src/core/profiles/components/ProfileMembersManager.tsx",
     );
 
     expect(migration).toContain("UPDATE public.profiles");
@@ -80,6 +80,6 @@ describe("G6 delegated profile management authority", () => {
     );
     expect(page).toContain("Pessoas e acesso");
     expect(page).toContain("profileId={business.profile_id}");
-    expect(page).toContain("ProfileMembersManagerImproved");
+    expect(page).toContain("ProfileMembersManager");
   });
 });
