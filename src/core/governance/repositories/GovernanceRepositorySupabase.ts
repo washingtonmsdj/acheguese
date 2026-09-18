@@ -178,7 +178,7 @@ export class GovernanceRepositorySupabase implements IGovernanceRepository {
   async listVersionsForLocation(locationId: string): Promise<LocationVersion[]> {
     const { data, error } = await this.db
       .from<LocationVersionRow>('location_versions')
-      .select('*')
+      .select(LOCATION_VERSION_PUBLIC_COLUMNS)
       .eq('location_id', locationId)
       .order('version_number', { ascending: false });
 
