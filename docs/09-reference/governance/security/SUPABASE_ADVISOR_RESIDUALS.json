@@ -502,6 +502,101 @@
       "cacheKey": "authenticated_security_definer_function_executable_public_upsert_entity_coverage_p_entity_type text, p_entity_id uuid, p_coverage_id uuid, p_coverage_type text, p_location_id uuid, p_radius_km numeric, p_is_primary boolean, p_status text",
       "exceptionId": "EXC-2026-07-15-POSTGREST-SECURITY-DEFINER-COMMANDS",
       "summary": "Atomic Coverage upsert guarded by private.require_coverage_entity_write with bounded type, radius, location and status validation."
+    },
+    {
+      "cacheKey": "rls_enabled_no_policy_private_alpha_access_audit_log",
+      "exceptionId": "EXC-2026-09-18-RLS-FAIL-CLOSED-INTERNAL-TABLES",
+      "summary": "private.alpha_access_audit_log is intentionally fail-closed: RLS is enabled, no browser policy exists, and anon/authenticated table access is absent."
+    },
+    {
+      "cacheKey": "rls_enabled_no_policy_private_alpha_access_control",
+      "exceptionId": "EXC-2026-09-18-RLS-FAIL-CLOSED-INTERNAL-TABLES",
+      "summary": "private.alpha_access_control is intentionally fail-closed: RLS is enabled, no browser policy exists, and anon/authenticated table access is absent."
+    },
+    {
+      "cacheKey": "rls_enabled_no_policy_private_alpha_access_invites",
+      "exceptionId": "EXC-2026-09-18-RLS-FAIL-CLOSED-INTERNAL-TABLES",
+      "summary": "private.alpha_access_invites is intentionally fail-closed: RLS is enabled, no browser policy exists, and anon/authenticated table access is absent."
+    },
+    {
+      "cacheKey": "rls_enabled_no_policy_private_community_direct_message_audit_log",
+      "exceptionId": "EXC-2026-09-18-RLS-FAIL-CLOSED-INTERNAL-TABLES",
+      "summary": "private.community_direct_message_audit_log is intentionally fail-closed: RLS is enabled, no browser policy exists, and anon/authenticated table access is absent."
+    },
+    {
+      "cacheKey": "rls_enabled_no_policy_private_notification_outbox",
+      "exceptionId": "EXC-2026-09-18-RLS-FAIL-CLOSED-INTERNAL-TABLES",
+      "summary": "private.notification_outbox is intentionally fail-closed: RLS is enabled, no browser policy exists, and anon/authenticated table access is absent."
+    },
+    {
+      "cacheKey": "rls_enabled_no_policy_public_account_deletion_requests",
+      "exceptionId": "EXC-2026-09-18-RLS-FAIL-CLOSED-INTERNAL-TABLES",
+      "summary": "public.account_deletion_requests is intentionally fail-closed: RLS is enabled, no browser policy exists, and anon/authenticated table access is absent."
+    },
+    {
+      "cacheKey": "rls_enabled_no_policy_public_analytics_sessions",
+      "exceptionId": "EXC-2026-09-18-RLS-FAIL-CLOSED-INTERNAL-TABLES",
+      "summary": "public.analytics_sessions is intentionally fail-closed: RLS is enabled, no browser policy exists, and anon/authenticated table access is absent."
+    },
+    {
+      "cacheKey": "rls_enabled_no_policy_public_banned_users",
+      "exceptionId": "EXC-2026-09-18-RLS-FAIL-CLOSED-INTERNAL-TABLES",
+      "summary": "public.banned_users is intentionally fail-closed: RLS is enabled, no browser policy exists, and anon/authenticated table access is absent."
+    },
+    {
+      "cacheKey": "rls_enabled_no_policy_public_community_social_audit_log",
+      "exceptionId": "EXC-2026-09-18-RLS-FAIL-CLOSED-INTERNAL-TABLES",
+      "summary": "public.community_social_audit_log is intentionally fail-closed: RLS is enabled, no browser policy exists, and anon/authenticated table access is absent."
+    },
+    {
+      "cacheKey": "rls_enabled_no_policy_public_community_user_moderation_actions",
+      "exceptionId": "EXC-2026-09-18-RLS-FAIL-CLOSED-INTERNAL-TABLES",
+      "summary": "public.community_user_moderation_actions is intentionally fail-closed: RLS is enabled, no browser policy exists, and anon/authenticated table access is absent."
+    },
+    {
+      "cacheKey": "rls_enabled_no_policy_public_emergency_delivery_log",
+      "exceptionId": "EXC-2026-09-18-RLS-FAIL-CLOSED-INTERNAL-TABLES",
+      "summary": "public.emergency_delivery_log is intentionally fail-closed: RLS is enabled, no browser policy exists, and anon/authenticated table access is absent."
+    },
+    {
+      "cacheKey": "rls_enabled_no_policy_public_gastronomy_subscriptions",
+      "exceptionId": "EXC-2026-09-18-RLS-FAIL-CLOSED-INTERNAL-TABLES",
+      "summary": "public.gastronomy_subscriptions is intentionally fail-closed: RLS is enabled, no browser policy exists, and anon/authenticated table access is absent."
+    },
+    {
+      "cacheKey": "rls_enabled_no_policy_public_group_message_reactions",
+      "exceptionId": "EXC-2026-09-18-RLS-FAIL-CLOSED-INTERNAL-TABLES",
+      "summary": "public.group_message_reactions is intentionally fail-closed: RLS is enabled, no browser policy exists, and anon/authenticated table access is absent."
+    },
+    {
+      "cacheKey": "rls_enabled_no_policy_public_mobility_price_quotes",
+      "exceptionId": "EXC-2026-09-18-RLS-FAIL-CLOSED-INTERNAL-TABLES",
+      "summary": "public.mobility_price_quotes is intentionally fail-closed: RLS is enabled, no browser policy exists, and anon/authenticated table access is absent."
+    },
+    {
+      "cacheKey": "rls_enabled_no_policy_public_review_helpfulness",
+      "exceptionId": "EXC-2026-09-18-RLS-FAIL-CLOSED-INTERNAL-TABLES",
+      "summary": "public.review_helpfulness is intentionally fail-closed: RLS is enabled, no browser policy exists, and anon/authenticated table access is absent."
+    },
+    {
+      "cacheKey": "rls_enabled_no_policy_public_ride_state_audit",
+      "exceptionId": "EXC-2026-09-18-RLS-FAIL-CLOSED-INTERNAL-TABLES",
+      "summary": "public.ride_state_audit is intentionally fail-closed: RLS is enabled, no browser policy exists, and anon/authenticated table access is absent."
+    },
+    {
+      "cacheKey": "rls_enabled_no_policy_public_trust_admin_actions",
+      "exceptionId": "EXC-2026-09-18-RLS-FAIL-CLOSED-INTERNAL-TABLES",
+      "summary": "public.trust_admin_actions is intentionally fail-closed: RLS is enabled, no browser policy exists, and anon/authenticated table access is absent."
+    },
+    {
+      "cacheKey": "rls_enabled_no_policy_public_trust_events",
+      "exceptionId": "EXC-2026-09-18-RLS-FAIL-CLOSED-INTERNAL-TABLES",
+      "summary": "public.trust_events is intentionally fail-closed: RLS is enabled, no browser policy exists, and anon/authenticated table access is absent."
+    },
+    {
+      "cacheKey": "rls_enabled_no_policy_public_user_active_profiles",
+      "exceptionId": "EXC-2026-09-18-RLS-FAIL-CLOSED-INTERNAL-TABLES",
+      "summary": "public.user_active_profiles is intentionally fail-closed: RLS is enabled, no browser policy exists, and anon/authenticated table access is absent."
     }
   ]
 }
