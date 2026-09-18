@@ -1,7 +1,8 @@
 name: Supabase Types Sync
 
 # G5 bootstrap: workflow-file changes intentionally trigger live type reconciliation.
-# 2026-09-16: explicit reconciliation touch after Mobility RPC signature cutover.
+# 2026-09-18: publication is PR-based so main can require pull requests without
+# granting a direct-write bypass to the canonical generated-types publisher.
 on:
   push:
     branches: [main]
@@ -14,6 +15,7 @@ on:
 
 permissions:
   contents: write
+  pull-requests: write
 
 concurrency:
   group: supabase-types-sync-main
@@ -24,6 +26,7 @@ env:
   VITE_SUPABASE_PROJECT_ID: "xhdowzacfujckjelqhtd"
   SUPABASE_POOLER_HOST: "aws-0-sa-east-1.pooler.supabase.com"
   TYPES_PATH: "src/integrations/supabase/types.generated.ts"
+  SYNC_BRANCH: "automation/supabase-types-sync"
 
 jobs:
   sync-types:
@@ -117,7 +120,8 @@ jobs:
           $generatedBytes = [System.IO.File]::ReadAllBytes($env:TYPES_PATH)
           [System.IO.File]::WriteAllBytes($typesTempPath, $generatedBytes)
 
-      - name: Apply generated types to latest main
+      - name: Publish generated types to bot-owned branch
+        id: publish
         shell: powershell
         run: |
           $ErrorActionPreference = "Stop"
@@ -126,46 +130,95 @@ jobs:
             throw "Generated Supabase types artifact is missing from RUNNER_TEMP."
           }
 
-          function Refresh-MainAndCommitTypes {
-            $null = git fetch --no-tags --depth=1 origin "main:refs/remotes/origin/main"
-            if ($LASTEXITCODE -ne 0) { throw "Failed to fetch latest origin/main." }
+          git fetch --no-tags --depth=1 origin "main:refs/remotes/origin/main"
+          if ($LASTEXITCODE -ne 0) { throw "Failed to fetch latest origin/main." }
 
-            $null = git checkout -B main refs/remotes/origin/main
-            if ($LASTEXITCODE -ne 0) { throw "Failed to checkout latest origin/main." }
+          git checkout -B $env:SYNC_BRANCH refs/remotes/origin/main
+          if ($LASTEXITCODE -ne 0) { throw "Failed to create the bot-owned sync branch from latest main." }
 
-            $generatedBytes = [System.IO.File]::ReadAllBytes($typesTempPath)
-            [System.IO.File]::WriteAllBytes($env:TYPES_PATH, $generatedBytes)
+          $generatedBytes = [System.IO.File]::ReadAllBytes($typesTempPath)
+          [System.IO.File]::WriteAllBytes($env:TYPES_PATH, $generatedBytes)
 
-            $changes = @(git status --porcelain)
-            if ($LASTEXITCODE -ne 0) { throw "Failed to inspect generated type drift." }
-            if ($changes.Count -eq 0) {
-              Write-Host "Canonical Supabase types are already synchronized."
-              return $false
-            }
+          $changes = @(git status --porcelain)
+          if ($LASTEXITCODE -ne 0) { throw "Failed to inspect generated type drift." }
 
-            $unexpected = @($changes | Where-Object { $_ -notmatch ([regex]::Escape($env:TYPES_PATH) + '$') })
-            if ($unexpected.Count -ne 0) {
-              throw "Unexpected generated changes detected: $($unexpected -join '; ')"
-            }
-
-            $null = git add $env:TYPES_PATH
-            if ($LASTEXITCODE -ne 0) { throw "Failed to stage canonical Supabase types." }
-            $null = git config user.name "github-actions[bot]"
-            $null = git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-            $null = git commit -m "chore(g5): sync Supabase generated types"
-            if ($LASTEXITCODE -ne 0) { throw "Failed to commit canonical Supabase types." }
-            return $true
+          if ($changes.Count -eq 0) {
+            "changed=false" | Out-File -FilePath $env:GITHUB_OUTPUT -Encoding utf8 -Append
+            Write-Host "Canonical Supabase types are already synchronized."
+            exit 0
           }
 
-          $hasCommit = Refresh-MainAndCommitTypes
-          if (-not $hasCommit) { exit 0 }
+          $unexpected = @($changes | Where-Object { $_ -notmatch ([regex]::Escape($env:TYPES_PATH) + '$') })
+          if ($unexpected.Count -ne 0) {
+            throw "Unexpected generated changes detected: $($unexpected -join '; ')"
+          }
 
-          git push origin HEAD:main
-          if ($LASTEXITCODE -eq 0) { exit 0 }
+          git add $env:TYPES_PATH
+          if ($LASTEXITCODE -ne 0) { throw "Failed to stage canonical Supabase types." }
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git commit -m "chore(g5): sync Supabase generated types"
+          if ($LASTEXITCODE -ne 0) { throw "Failed to commit canonical Supabase types." }
 
-          Write-Host "main advanced or the first push was rejected; refreshing once before a final push."
-          $hasCommit = Refresh-MainAndCommitTypes
-          if (-not $hasCommit) { exit 0 }
-
-          git push origin HEAD:main
+          # This branch is exclusively owned by this workflow and is rebuilt from latest main
+          # on every run. Force-pushing it avoids accumulating stale generated commits while
+          # keeping main protected from direct writes.
+          git push --force origin "HEAD:refs/heads/$env:SYNC_BRANCH"
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+
+          "changed=true" | Out-File -FilePath $env:GITHUB_OUTPUT -Encoding utf8 -Append
+
+      - name: Open or refresh generated-types pull request
+        if: steps.publish.outputs.changed == 'true'
+        uses: actions/github-script@v8
+        with:
+          script: |
+            const owner = context.repo.owner;
+            const repo = context.repo.repo;
+            const branch = process.env.SYNC_BRANCH;
+            const head = `${owner}:${branch}`;
+            const title = "chore(g5): sync Supabase generated types";
+            const body = [
+              "Automated canonical Supabase type reconciliation.",
+              "",
+              "- source: live Supabase schema via the repository generator",
+              "- allowed generated artifact: `src/integrations/supabase/types.generated.ts` only",
+              "- base: latest `main` observed by the workflow",
+              "- publication: pull request; this workflow never pushes generated types directly to `main`",
+              "",
+              "Do not edit the generated snapshot manually. Merge only after the normal release gates are satisfied.",
+              "",
+              "Related: #28",
+            ].join("\n");
+
+            const { data: existing } = await github.rest.pulls.list({
+              owner,
+              repo,
+              state: "open",
+              head,
+              base: "main",
+              per_page: 100,
+            });
+
+            if (existing.length === 0) {
+              const { data: created } = await github.rest.pulls.create({
+                owner,
+                repo,
+                head: branch,
+                base: "main",
+                title,
+                body,
+                maintainer_can_modify: true,
+              });
+              core.notice(`Created Supabase types sync PR #${created.number}.`);
+            } else {
+              const pr = existing[0];
+              await github.rest.pulls.update({
+                owner,
+                repo,
+                pull_number: pr.number,
+                title,
+                body,
+              });
+              core.notice(`Refreshed Supabase types sync PR #${pr.number}.`);
+            }
