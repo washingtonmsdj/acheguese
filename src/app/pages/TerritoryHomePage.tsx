@@ -733,6 +733,14 @@ export default function TerritoryHomePage() {
         surface: "classifieds",
       },
       {
+        label: "Eventos",
+        description: "Agenda local",
+        href: urls.events,
+        icon: CalendarDays,
+        tone: "bg-territory-raised text-territory-brand",
+        surface: "events",
+      },
+      {
         label: "Educação",
         description: "Aprender no território",
         href: urls.education,
@@ -782,10 +790,14 @@ export default function TerritoryHomePage() {
         actionWidths.reduce((total, width) => total + width, 0) +
         Math.max(0, actionWidths.length - 1) * gap;
 
-      let visibleCount = quickActions.length;
-      if (allActionsWidth > availableWidth + 1) {
+      let visibleCount = Math.min(3, quickActions.length);
+      if (quickActions.length > 3 || allActionsWidth > availableWidth + 1) {
         visibleCount = 0;
-        for (let count = 1; count <= actionWidths.length; count += 1) {
+        for (
+          let count = 1;
+          count <= Math.min(3, actionWidths.length);
+          count += 1
+        ) {
           const candidateWidth =
             actionWidths.slice(0, count).reduce((total, width) => total + width, 0) +
             moreWidth +
@@ -817,11 +829,14 @@ export default function TerritoryHomePage() {
     [mobileQuickActionCount, moreQuickAction, quickActions],
   );
 
+  const shouldInviteVisitor =
+    !user && !access.isLoading && isCommunityAvailable;
   const hasWorthKnowing =
     data.highlights.length > 0 ||
     data.events.length > 0 ||
     data.opportunities.length > 0 ||
     data.classifieds.length > 0 ||
+    shouldInviteVisitor ||
     (communityVisibleInView &&
       (data.loading.community || data.posts.length > 0));
   const hasUsefulPlaces =
@@ -834,7 +849,9 @@ export default function TerritoryHomePage() {
 
   const heroTitle = isCityHome
     ? `${territoryName}, mais perto.`
-    : "Seu bairro, mais perto.";
+    : isOfficialCommunityTerritory
+      ? "Sua comunidade, mais perto."
+      : "Seu bairro, mais perto.";
 
   return (
     <div className="min-h-[100dvh] text-territory-ink">
@@ -876,7 +893,13 @@ export default function TerritoryHomePage() {
               ) : null}
             </section>
 
-            <section className="mt-0 md:mt-2" aria-labelledby="resolver-title">
+            <section
+              className="-mx-4 -mt-3 bg-territory-brand px-4 pb-4 sm:-mx-6 sm:-mt-4 sm:px-6 md:mx-0 md:mt-2 md:bg-transparent md:px-0 md:pb-0"
+              aria-labelledby="resolver-title"
+            >
+              <h1 className="mb-4 max-w-[20rem] font-heading text-[1.85rem] font-bold leading-[1.08] tracking-[-0.04em] text-white md:hidden">
+                {heroTitle}
+              </h1>
               <h2 id="resolver-title" className="sr-only">
                 Resolver por aqui
               </h2>
@@ -901,7 +924,7 @@ export default function TerritoryHomePage() {
                         >
                           <Icon className="h-5 w-5" aria-hidden="true" />
                         </span>
-                        <span className="mt-2 block text-xs font-semibold leading-5 text-territory-ink group-hover:text-territory-brand sm:text-sm">
+                        <span className="mt-2 block text-xs font-semibold leading-5 text-white group-hover:text-white sm:text-sm md:text-territory-ink md:group-hover:text-territory-brand">
                           {action.label}
                         </span>
                         <span className="sr-only">{action.description}</span>
@@ -938,7 +961,7 @@ export default function TerritoryHomePage() {
                 </div>
               </div>
               <div className="hidden md:grid md:grid-cols-[repeat(auto-fit,minmax(7rem,1fr))] md:gap-6">
-                {quickActions.map((action) => {
+                {[...quickActions, moreQuickAction].map((action) => {
                   const Icon = action.icon;
                   return (
                     <Link
@@ -1006,6 +1029,38 @@ export default function TerritoryHomePage() {
                     />
                   </TerritorySurface>
                 ))}
+                {shouldInviteVisitor ? (
+                  <TerritorySurface
+                    tone="highlight"
+                    className="p-4 sm:p-5"
+                    data-testid="visitor-community-invite"
+                  >
+                    <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                      <div className="min-w-0">
+                        <p className="font-heading text-base font-bold text-territory-ink">
+                          Explore sem conta.
+                        </p>
+                        <p className="mt-1 text-sm leading-6 text-territory-muted">
+                          Entre para conversar e participar da comunidade.
+                        </p>
+                      </div>
+                      <div className="flex shrink-0 flex-wrap items-center gap-2">
+                        <Link
+                          to={appUrls.auth.register}
+                          className="inline-flex min-h-11 items-center justify-center rounded-xl bg-territory-sun px-4 text-sm font-bold text-territory-ink hover:bg-territory-sun/90"
+                        >
+                          Criar minha conta
+                        </Link>
+                        <Link
+                          to={appUrls.auth.login}
+                          className="inline-flex min-h-11 items-center justify-center rounded-xl px-3 text-sm font-semibold text-territory-brand underline-offset-4 hover:underline"
+                        >
+                          Já tenho conta
+                        </Link>
+                      </div>
+                    </div>
+                  </TerritorySurface>
+                ) : null}
                 {communityVisibleInView && data.posts.length > 0 ? (
                   <TerritorySurface className={conceptMockEnabled ? "p-0" : "p-5 sm:p-6"}>
                     {conceptMockEnabled ? (
@@ -1336,7 +1391,7 @@ export default function TerritoryHomePage() {
                   resolved={resolved}
                   mapHref={urls.map}
                   territoryName={territoryName}
-                  title="Seu território"
+                  title={isOfficialCommunityTerritory ? "Conheça o território" : "Seu território"}
                 />
               </Suspense>
             </div>
