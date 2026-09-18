@@ -40,6 +40,21 @@ describe("Professional legacy retirement", () => {
     expect(mapper).not.toContain("metadata.longitude");
     expect(metadataSection).not.toContain("portfolio_images?:");
     expect(metadataSection).not.toContain("location?:");
+    expect(metadataSection).not.toContain("[key: string]: unknown");
+  });
+
+  it("keeps professional metadata closed and non-duplicated on writes", () => {
+    const lifecycle = read(
+      "src/core/professional/services/professional.profile-lifecycle.ts",
+    );
+
+    expect(lifecycle).toContain("copyCanonicalProfessionalMetadata");
+    expect(lifecycle).not.toContain("{ ...(options.currentMetadata ?? {}) }");
+    expect(lifecycle).not.toContain("category: validatedInput.category");
+    expect(lifecycle).not.toContain("price_range: validatedInput.price_range");
+    expect(lifecycle).not.toContain(
+      "available_hours: validatedInput.available_hours",
+    );
   });
 
   it("keeps live documentation canonical-only", () => {
