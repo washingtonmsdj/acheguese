@@ -325,7 +325,6 @@ export default tseslint.config(
     ],
     rules: {
       "ssot/no-direct-posts-polls-access": "off",
-      "@typescript-eslint/ban-ts-comment": "off",
     },
   },
   // Providers de maps dependem de contratos canonicos de core, nao de implementacoes de negocio.
