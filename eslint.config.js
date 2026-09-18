@@ -513,10 +513,5 @@ export default tseslint.config(
     }
   },
 
-  // ─── DÍVIDA TÉCNICA CONTROLADA ───────────────────────────────────────────
-
-  // MobilityAdminQueryService é o SSOT para consultas admin de mobility.
-  // Reconhecido pelo plugin via additionalServices — sem exceção formal necessária.
-
 );
 
