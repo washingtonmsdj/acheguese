@@ -18,8 +18,10 @@ describe("Supabase Types Sync publication authority", () => {
     expect(workflow).toContain('pull-requests: write');
     expect(workflow).toContain('actions: write');
     expect(workflow).toContain('SYNC_BRANCH: "automation/supabase-types-sync"');
-    expect(workflow).toContain("gh pr create --base main");
-    expect(workflow).toContain("--head $env:SYNC_BRANCH");
+    expect(workflow).toContain('pull-requests: write');
+    expect(workflow).toContain('GITHUB_API_TOKEN: ${{ github.token }}');
+    expect(workflow).toContain('-Path "/pulls"');
+    expect(workflow).toContain('head = $env:SYNC_BRANCH');
     expect(workflow).toContain("--force-with-lease");
   });
 
@@ -33,8 +35,21 @@ describe("Supabase Types Sync publication authority", () => {
       expect(workflow).toContain(gate);
     }
     expect(workflow).toContain(
-      "gh workflow run $workflow --ref $env:SYNC_BRANCH",
+      '-Path "/actions/workflows/$workflow/dispatches"',
     );
+    expect(workflow).toContain('@{ ref = $env:SYNC_BRANCH }');
+  });
+
+  it("closes stale automation PRs when there is no generated drift", () => {
+    expect(workflow).toContain('Get-OpenSyncPullRequest');
+    expect(workflow).toContain('-Method "PATCH"');
+    expect(workflow).toContain('@{ state = "closed" }');
+    expect(workflow).toContain('git push origin --delete $env:SYNC_BRANCH');
+  });
+
+  it("does not depend on GitHub CLI being installed on the self-hosted runner", () => {
+    expect(workflow).not.toMatch(/\bgh\s+(?:pr|workflow|api)\b/);
+    expect(workflow).toContain("Invoke-RestMethod");
   });
 
   it("keeps the canonical generator and self-hosted remote-only authority", () => {
