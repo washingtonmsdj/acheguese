@@ -1,6 +1,6 @@
 import type { Tables } from "@/integrations/supabase";
 import type { RideRequest } from "../types/types";
-import { toRideRequestContract } from "./RideCanonicalAdapter";
+import { toRideRequestContract } from "./RideRequestContractMapper";
 
 export type RideRequestReadRow = Pick<
   Tables<"ride_requests">,
@@ -66,10 +66,9 @@ export const RIDE_REQUEST_READ_SELECT = [
 
 /**
  * Converts the bounded database projection into the public/runtime RideRequest
- * contract. The canonical adapter currently declares the full generated row,
- * although this projection contains every field that adapter actually reads.
- * Keep the unavoidable widening explicit at this single read boundary instead
- * of fabricating unselected database fields.
+ * contract. The mapper declares the generated ride row, while this bounded
+ * projection contains every field it reads. Keep the unavoidable widening at
+ * this single database read boundary instead of fabricating unselected fields.
  */
 export function toRideRequestReadModel(row: RideRequestReadRow): RideRequest {
   return {
