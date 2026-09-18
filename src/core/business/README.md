@@ -31,15 +31,17 @@ não fazem parte da API: o código deve operar diretamente sobre o contrato
 canônico e respeitar `business_role`.
 
 A tela de endereço usa `getPhysicalBusinessCoordinates()`; quando não há
-Address geocodificado, o mini mapa não inventa posição.
+Address geocodificado, o mini mapa não inventa posição. Latitude/longitude
+editadas no formulário são persistidas no agregado Address.
 
 ## Dívida de schema
 
 O banco ainda contém colunas históricas de Business como
 `business_address`, `business_city`, `business_state`, `business_zip`,
-`address`, `latitude` e `longitude`. Elas não são autoridade para novos
-fluxos e devem ser aposentadas somente com migration/data backfill comprovado,
-sem fallback runtime.
+`address`, `latitude` e `longitude`. As colunas diretas de coordenadas já
+estão desconectadas das projeções runtime; a remoção física do schema fica para
+o rollout posterior ao deploy deste source. As colunas textuais ainda exigem
+backfill/censo próprio antes do DROP.
 
 ## Regras
 
