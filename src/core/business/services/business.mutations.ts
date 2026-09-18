@@ -179,6 +179,12 @@ function hasStructuredAddress(
   );
 }
 
+function hasAddressCoordinatePatch(
+  input: CreateBusinessInput | UpdateBusinessInput,
+): boolean {
+  return input.latitude !== undefined || input.longitude !== undefined;
+}
+
 function assertGeneralLifecycleStructure(
   input: CreateBusinessInput | UpdateBusinessInput,
   isUpdate: boolean,
@@ -217,7 +223,11 @@ async function syncAddress(
     return { addressId: input.address_id ?? undefined, created: false };
   }
 
-  if (!hasStructuredAddress(input)) {
+  const shouldSyncAddress =
+    hasStructuredAddress(input) ||
+    Boolean(existingAddressId && hasAddressCoordinatePatch(input));
+
+  if (!shouldSyncAddress) {
     return { addressId: existingAddressId ?? undefined, created: false };
   }
 
@@ -232,6 +242,8 @@ async function syncAddress(
     street: input.address_street ?? null,
     number: input.address_number ?? null,
     complement: input.address_complement ?? null,
+    ...(input.latitude !== undefined ? { latitude: input.latitude } : {}),
+    ...(input.longitude !== undefined ? { longitude: input.longitude } : {}),
     address_type: "exact" as const,
     precision: "exact" as const,
   };
@@ -501,7 +513,11 @@ export async function updateBusiness(
 
     const addressTouched =
       validatedInput.address_id !== undefined ||
-      hasStructuredAddress(validatedInput);
+      hasStructuredAddress(validatedInput) ||
+      Boolean(
+        currentBusiness.address_id &&
+          hasAddressCoordinatePatch(validatedInput),
+      );
     const businessPatch = buildBusinessBrokerPatch(
       validatedInput,
       addressTouched ? address.addressId : undefined,
