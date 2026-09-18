@@ -91,9 +91,34 @@ describe("compatibility facade retirement", () => {
 
   it("keeps the canonical registry at zero live runtime facades", () => {
     const registry = read("docs/03-architecture/COMPATIBILITY_BRIDGES.md");
+    const architectureRegistry = read(
+      "tools/architecture/architecture-registry.ts",
+    );
+    const gastronomyReadme = read(
+      "src/modules/business/gastronomy/README.md",
+    );
 
     expect(registry).toContain("zero live runtime compatibility facades");
-    expect(registry).toContain("There are **no approved live runtime compatibility facades**");
+    expect(registry).toContain(
+      "There are **no approved live runtime compatibility facades**",
+    );
     expect(registry).not.toContain("| Compatibility surface |");
+
+    expect(architectureRegistry).toContain(
+      "src/core/business/services/gastronomy-runtime.queries.ts",
+    );
+    expect(architectureRegistry).toContain(
+      "src/core/business/services/MenuService.ts",
+    );
+    expect(architectureRegistry).not.toContain(
+      "src/modules/business/gastronomy/services/GastronomyMapService.ts",
+    );
+    expect(architectureRegistry).not.toContain(
+      "src/modules/business/gastronomy/services/gastronomy-runtime.queries.ts",
+    );
+    expect(architectureRegistry).not.toContain(
+      "src/modules/business/gastronomy/services/MenuService.ts",
+    );
+    expect(gastronomyReadme).not.toContain("bridges one-way");
   });
 });
