@@ -110,54 +110,6 @@ export interface PollOption {
   created_at: string;
 }
 
-// ============================================================================
-// COMMUNITY POST TYPES (SSOT — sem campos legados)
-// ============================================================================
-
-export interface CommunityPost {
-  id: string;
-  author_profile_id: string;
-  type: PostType;
-  content: string;
-  images?: string[];
-  tags?: string[];
-  location_id: string;
-  location?: { id: string; name: string; type?: string; parent_id?: string };
-  reach: "street" | "neighborhood" | "city";
-  likes_count: number;
-  comments_count: number;
-  created_at: string;
-  updated_at: string;
-  // Compatibilidade legada de UI community
-  is_liked?: boolean;
-  is_saved?: boolean;
-  author_name?: string;
-  author_avatar?: string;
-  city?: string;
-  neighborhood?: string;
-  is_verified_resident?: boolean;
-  is_verified?: boolean;
-  is_edited?: boolean;
-  confirmations_count?: number;
-}
-
-export interface EditHistory {
-  id: string;
-  post_id: string;
-  previous_content: string;
-  edited_at: string;
-  edited_by?: string;
-}
-
-export interface CreateCommunityPostData {
-  author_profile_id: string;
-  type: PostType;
-  content: string;
-  location_id: string;
-  reach: "street" | "neighborhood" | "city";
-  images?: string[];
-  tags?: string[];
-}
 
 export class PostError extends Error {
   code: string;
