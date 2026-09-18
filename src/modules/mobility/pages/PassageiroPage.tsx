@@ -35,7 +35,7 @@ import type { LucideIcon } from "lucide-react";
 import { CreateDeliveryModal } from "../components/CreateDeliveryModal";
 import { CreateRideModal } from "../components/CreateRideModal";
 import { EmergencyButton } from "../components/EmergencyButton";
-import { ErrorBoundary, ErrorState } from "../components/ErrorBoundary";
+import { ErrorBoundary } from "@/shared/components/errors/ErrorBoundary";\nimport { ErrorState } from "../components/ErrorState";
 import { RideHistoryUnified } from "../components/RideHistoryUnified";
 import { CancelRideDialog } from "../components/driver/CancelRideDialog";
 import { ActiveRideCard } from "../components/passenger/ActiveRideCard";
