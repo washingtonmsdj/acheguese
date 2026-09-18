@@ -18,12 +18,17 @@ describe("admin site settings RPC security", () => {
     const migration = readProjectFile(
       "supabase/migrations/20260707141904_route_admin_site_settings_rpcs_through_edge_function.sql",
     );
+    const tableReadRetirement = readProjectFile(
+      "supabase/migrations/20260918122231_retire_public_site_settings_table_read.sql",
+    );
+    const publicRpcRetirement = readProjectFile(
+      "supabase/migrations/20260918122241_retire_public_get_site_setting_rpc.sql",
+    );
 
     expect(service).toContain('"admin-site-settings-rpc"');
     expect(service).toContain("invokeAdminSiteSettingsRpc");
-    expect(service).not.toMatch(/siteSettingsRpc\.rpc<[^>]+>\(\s*["']get_all_site_settings/);
-    expect(service).not.toMatch(/siteSettingsRpc\.rpc<[^>]+>\(\s*["']upsert_site_setting/);
-    expect(service).toContain('"get_site_setting"');
+    expect(service).not.toContain("siteSettingsRpc");
+    expect(service).not.toContain('"get_site_setting"');
 
     expect(edgeFunction).toContain("requireAdmin(req)");
     expect(edgeFunction).toContain("ACTIONS");
@@ -41,5 +46,22 @@ describe("admin site settings RPC security", () => {
     expect(migration).toContain("REVOKE ALL ON FUNCTION public.upsert_site_setting(TEXT, JSONB, TEXT)");
     expect(migration).toContain("FROM PUBLIC, anon, authenticated");
     expect(migration).toContain("TO service_role");
+
+    expect(tableReadRetirement).toContain(
+      'DROP POLICY IF EXISTS "site_settings_select_public"',
+    );
+    expect(tableReadRetirement).toContain(
+      "REVOKE SELECT (",
+    );
+    expect(tableReadRetirement).toContain("FROM anon, authenticated");
+
+    expect(publicRpcRetirement).toContain(
+      "REVOKE ALL ON FUNCTION public.get_site_setting(text)",
+    );
+    expect(publicRpcRetirement).toContain("FROM PUBLIC, anon, authenticated");
+    expect(publicRpcRetirement).toContain(
+      "GRANT EXECUTE ON FUNCTION public.get_site_setting(text)",
+    );
+    expect(publicRpcRetirement).toContain("TO service_role");
   });
 });
