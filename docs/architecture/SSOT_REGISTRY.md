@@ -175,7 +175,7 @@ npx tsx tools/architecture/check-ssot-compliance.ts
 | | |
 |---|---|
 | **Tipos** | `src/core/billing/types.ts` |
-| **Catálogo** | `src/core/billing/services/CatalogService.ts` + `BillingPlanService.ts` |
+| **Catálogo** | `src/core/billing/services/CatalogService.ts` |
 | **Assinatura user** | `src/core/billing/services/SubscriptionService.ts` |
 | **Assinatura Business** | `src/core/billing/BusinessSubscriptionService.ts` |
 | **Entitlements** | `src/core/billing/services/EntitlementResolver.ts` + `entitlementBaselines.ts` |
