@@ -3,7 +3,7 @@ import { PlanTier, type PlanEntitlements } from './types';
 /**
  * Runtime entitlement matrix used by synchronous guards.
  *
- * Commercial catalog data stays in BillingPlanService/database. Keep this file
+ * Commercial catalog data stays in CatalogService/database. Keep this file
  * limited to deterministic feature flags and limits.
  */
 const FREE_ENTITLEMENTS: PlanEntitlements = {
