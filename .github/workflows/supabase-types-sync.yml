@@ -14,6 +14,8 @@ on:
 
 permissions:
   contents: write
+  pull-requests: write
+  actions: write
 
 concurrency:
   group: supabase-types-sync-main
@@ -24,6 +26,7 @@ env:
   VITE_SUPABASE_PROJECT_ID: "xhdowzacfujckjelqhtd"
   SUPABASE_POOLER_HOST: "aws-0-sa-east-1.pooler.supabase.com"
   TYPES_PATH: "src/integrations/supabase/types.generated.ts"
+  SYNC_BRANCH: "automation/supabase-types-sync"
 
 jobs:
   sync-types:
@@ -117,8 +120,10 @@ jobs:
           $generatedBytes = [System.IO.File]::ReadAllBytes($env:TYPES_PATH)
           [System.IO.File]::WriteAllBytes($typesTempPath, $generatedBytes)
 
-      - name: Apply generated types to latest main
+      - name: Publish generated types through pull request
         shell: powershell
+        env:
+          GH_TOKEN: ${{ github.token }}
         run: |
           $ErrorActionPreference = "Stop"
           $typesTempPath = Join-Path $env:RUNNER_TEMP "acheguese-supabase-types.generated.ts"
@@ -126,46 +131,64 @@ jobs:
             throw "Generated Supabase types artifact is missing from RUNNER_TEMP."
           }
 
-          function Refresh-MainAndCommitTypes {
-            $null = git fetch --no-tags --depth=1 origin "main:refs/remotes/origin/main"
-            if ($LASTEXITCODE -ne 0) { throw "Failed to fetch latest origin/main." }
+          $null = git fetch --no-tags --depth=1 origin "main:refs/remotes/origin/main"
+          if ($LASTEXITCODE -ne 0) { throw "Failed to fetch latest origin/main." }
 
-            $null = git checkout -B main refs/remotes/origin/main
-            if ($LASTEXITCODE -ne 0) { throw "Failed to checkout latest origin/main." }
-
-            $generatedBytes = [System.IO.File]::ReadAllBytes($typesTempPath)
-            [System.IO.File]::WriteAllBytes($env:TYPES_PATH, $generatedBytes)
-
-            $changes = @(git status --porcelain)
-            if ($LASTEXITCODE -ne 0) { throw "Failed to inspect generated type drift." }
-            if ($changes.Count -eq 0) {
-              Write-Host "Canonical Supabase types are already synchronized."
-              return $false
-            }
-
-            $unexpected = @($changes | Where-Object { $_ -notmatch ([regex]::Escape($env:TYPES_PATH) + '$') })
-            if ($unexpected.Count -ne 0) {
-              throw "Unexpected generated changes detected: $($unexpected -join '; ')"
-            }
-
-            $null = git add $env:TYPES_PATH
-            if ($LASTEXITCODE -ne 0) { throw "Failed to stage canonical Supabase types." }
-            $null = git config user.name "github-actions[bot]"
-            $null = git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-            $null = git commit -m "chore(g5): sync Supabase generated types"
-            if ($LASTEXITCODE -ne 0) { throw "Failed to commit canonical Supabase types." }
-            return $true
+          git ls-remote --exit-code --heads origin $env:SYNC_BRANCH | Out-Null
+          $syncBranchExists = $LASTEXITCODE -eq 0
+          if ($syncBranchExists) {
+            $null = git fetch --no-tags --depth=1 origin "$($env:SYNC_BRANCH):refs/remotes/origin/$($env:SYNC_BRANCH)"
+            if ($LASTEXITCODE -ne 0) { throw "Failed to fetch existing automation branch." }
           }
 
-          $hasCommit = Refresh-MainAndCommitTypes
-          if (-not $hasCommit) { exit 0 }
+          $null = git checkout -B $env:SYNC_BRANCH refs/remotes/origin/main
+          if ($LASTEXITCODE -ne 0) { throw "Failed to create automation branch from latest main." }
 
-          git push origin HEAD:main
-          if ($LASTEXITCODE -eq 0) { exit 0 }
+          $generatedBytes = [System.IO.File]::ReadAllBytes($typesTempPath)
+          [System.IO.File]::WriteAllBytes($env:TYPES_PATH, $generatedBytes)
 
-          Write-Host "main advanced or the first push was rejected; refreshing once before a final push."
-          $hasCommit = Refresh-MainAndCommitTypes
-          if (-not $hasCommit) { exit 0 }
+          $changes = @(git status --porcelain)
+          if ($LASTEXITCODE -ne 0) { throw "Failed to inspect generated type drift." }
+          if ($changes.Count -eq 0) {
+            Write-Host "Canonical Supabase types are already synchronized."
+            exit 0
+          }
 
-          git push origin HEAD:main
+          $unexpected = @($changes | Where-Object { $_ -notmatch ([regex]::Escape($env:TYPES_PATH) + '$') })
+          if ($unexpected.Count -ne 0) {
+            throw "Unexpected generated changes detected: $($unexpected -join '; ')"
+          }
+
+          $null = git add $env:TYPES_PATH
+          if ($LASTEXITCODE -ne 0) { throw "Failed to stage canonical Supabase types." }
+          $null = git config user.name "github-actions[bot]"
+          $null = git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          $null = git commit -m "chore(supabase): sync generated types"
+          if ($LASTEXITCODE -ne 0) { throw "Failed to commit canonical Supabase types." }
+
+          if ($syncBranchExists) {
+            git push --force-with-lease origin "HEAD:refs/heads/$($env:SYNC_BRANCH)"
+          } else {
+            git push --set-upstream origin "HEAD:refs/heads/$($env:SYNC_BRANCH)"
+          }
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+
+          $headSha = (git rev-parse HEAD).Trim()
+          if ($headSha -notmatch "^[0-9a-f]{40}$") { throw "Invalid generated head SHA." }
+
+          $prNumber = (gh pr list --head $env:SYNC_BRANCH --base main --state open --json number --jq '.[0].number').Trim()
+          if ([string]::IsNullOrWhiteSpace($prNumber)) {
+            gh pr create --base main --head $env:SYNC_BRANCH --title "chore(supabase): sync generated types" --body "Automated canonical type regeneration from the live Supabase schema. Only src/integrations/supabase/types.generated.ts may change. This automation never writes directly to main; merge remains subject to normal PR/release gates."
+            if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          } else {
+            Write-Host "Updated existing Supabase types PR #$prNumber through branch synchronization."
+          }
+
+          foreach ($workflow in @("security-check.yml", "security-scan.yml", "ssot-enforcement.yml", "ssot-tests.yml")) {
+            gh workflow run $workflow --ref $env:SYNC_BRANCH
+            if ($LASTEXITCODE -ne 0) {
+              throw "Failed to dispatch $workflow for $headSha."
+            }
+          }
+
+          Write-Host "Generated types published for review at exact SHA $headSha."
