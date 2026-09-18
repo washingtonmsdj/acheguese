@@ -4,7 +4,6 @@
  * Utilitários reutilizáveis do módulo Business
  */
 
-export * from './businessHelpers';
 export * from './addressFormatters';
 export * from './businessPublicUrls';
 export {
@@ -21,3 +20,5 @@ export {
   isOpenEveryDay,
   getOpeningHoursSummary,
 } from './openingHoursHelpers';
+
+export { getPhysicalBusinessCoordinates } from "./physicalBusinessCoordinates";
