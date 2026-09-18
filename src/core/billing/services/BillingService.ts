@@ -1,9 +1,8 @@
 /**
  * BILLING SERVICE
  *
- * Gateway para checkout/portal Stripe e leituras auxiliares de billing.
- * Planos exibidos no cliente sao adaptados do catalogo publicado pelo
- * BillingPlanService; billing_plans nao e fonte runtime de oferta/preco.
+ * Gateway para checkout/portal Stripe e histórico de transações.
+ * Oferta, preço e plano publicado pertencem exclusivamente ao CatalogService.
  */
 
 import { logger } from '@/shared/utils/logger';
@@ -16,7 +15,6 @@ import {
   getAllowedRedirectOriginsFromEnv,
   navigateToSafeRedirect,
 } from '@/shared/utils/safeRedirect';
-import { BillingPlanService } from './BillingPlanService';
 
 export interface CreateCheckoutParams {
   planCode: string;
@@ -137,14 +135,6 @@ export class BillingService {
     if (!redirected) {
       throw new Error('URL do portal bloqueada pela politica de seguranca');
     }
-  }
-
-  static async getPlans() {
-    return BillingPlanService.getActivePlans();
-  }
-
-  static async getPlanByCode(code: string) {
-    return BillingPlanService.getPlanByCode(code);
   }
 
   static async getUserTransactions(userId: string) {
