@@ -15,8 +15,8 @@ export function GuideSidebarItem() {
   const { pathname } = useLocation();
   const touristPointUrls = useTouristPointPublicUrls();
 
-  // ✅ Sempre exibe o item, mesmo sem território ativo
-  // A URL do SSOT já tem fallback para cidade padrão
+  // The canonical URL owner provides the launch-city fallback when no
+  // active territory is available.
   const isActive = isAppModulePath(pathname, APP_MODULE_SLUGS.touristPoints);
 
   return (
