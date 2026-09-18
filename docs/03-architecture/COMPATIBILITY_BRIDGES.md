@@ -1,7 +1,7 @@
 # Compatibility Bridges Registry
 
 Status: CANONICAL — structural root cleanup closed; zero live compatibility facades  
-Reviewed: 2026-09-14  
+Reviewed: 2026-09-18  
 Plan authority: `/URGENTE_LEIA_PRIMEIRO_REORGANIZACAO_GLOBAL.md`
 
 ## Purpose
