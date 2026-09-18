@@ -136,6 +136,27 @@ function sanitizeAndValidateInput(
   return validation.data;
 }
 
+function copyCanonicalProfessionalMetadata(
+  source?: ProfessionalMetadata | null,
+): ProfessionalMetadata {
+  if (!source) return {};
+
+  const metadata: ProfessionalMetadata = {};
+
+  if (source.logo_url !== undefined) metadata.logo_url = source.logo_url;
+  if (source.banner_url !== undefined) metadata.banner_url = source.banner_url;
+  if (source.social_links !== undefined) {
+    metadata.social_links = { ...source.social_links };
+  }
+  if (source.rating !== undefined) metadata.rating = source.rating;
+  if (source.total_reviews !== undefined) metadata.total_reviews = source.total_reviews;
+  if (source.total_jobs !== undefined) metadata.total_jobs = source.total_jobs;
+  if (source.response_time !== undefined) metadata.response_time = source.response_time;
+  if (source.languages !== undefined) metadata.languages = [...source.languages];
+
+  return metadata;
+}
+
 function toProfessionalData(
   input: CreateProfessionalInput | UpdateProfessionalInput,
   options: {
@@ -166,7 +187,7 @@ function toProfessionalData(
     result.is_accepting_clients = true;
   }
 
-  const metadata: ProfessionalMetadata = { ...(options.currentMetadata ?? {}) };
+  const metadata = copyCanonicalProfessionalMetadata(options.currentMetadata);
 
   if (input.logo_url !== undefined) metadata.logo_url = input.logo_url;
   if (input.banner_url !== undefined) metadata.banner_url = input.banner_url;
@@ -240,12 +261,7 @@ export async function createProfessionalWithProfile(
     { ...validatedInput, slug },
     { mode: "create" },
   );
-  const metadata = {
-    ...(professionalPatch.metadata ?? {}),
-    category: validatedInput.category,
-    price_range: validatedInput.price_range ?? null,
-    available_hours: validatedInput.available_hours ?? null,
-  };
+  const metadata = professionalPatch.metadata ?? {};
 
   const created = await ProfileRpcService.createProfessional<
     BrokerCommandResult<{ profile_id: string; handle: string }>
