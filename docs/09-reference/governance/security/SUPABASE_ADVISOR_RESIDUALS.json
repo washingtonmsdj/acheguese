@@ -1,6 +1,6 @@
 {
   "schemaVersion": "supabase-advisor-residuals/v1",
-  "updatedAt": "2026-09-09",
+  "updatedAt": "2026-09-18",
   "sourceCommand": "supabase db advisors --linked --type security --fail-on none --output json",
   "residuals": [
     {
@@ -462,6 +462,46 @@
       "cacheKey": "authenticated_security_definer_function_executable_public_append_driver_moderation_event_p_driver_profile_id uuid, p_action text, p_reason text, p_metadata jsonb",
       "exceptionId": "EXC-2026-07-15-POSTGREST-SECURITY-DEFINER-COMMANDS",
       "summary": "Admin-only append command for immutable driver moderation history; authorization, moderator Profile and timestamp are derived server-side while authenticated table mutation remains revoked."
+    },
+    {
+      "cacheKey": "anon_security_definer_function_executable_public_track_analytics_event_p_entity_type text, p_entity_id uuid, p_event_type public.analytics_event_type, p_event_source public.analytics_event_source, p_user_id uuid, p_session_id text, p_ip_address inet, p_user_agent text, p_referrer text, p_latitude numeric, p_longitude numeric, p_metadata jsonb",
+      "exceptionId": "EXC-2026-07-15-POSTGREST-SECURITY-DEFINER-COMMANDS",
+      "summary": "Public analytics ingestion command with session binding, rate limits, user-id anti-spoof checks and service-role-only operational events."
+    },
+    {
+      "cacheKey": "authenticated_security_definer_function_executable_public_track_analytics_event_p_entity_type text, p_entity_id uuid, p_event_type public.analytics_event_type, p_event_source public.analytics_event_source, p_user_id uuid, p_session_id text, p_ip_address inet, p_user_agent text, p_referrer text, p_latitude numeric, p_longitude numeric, p_metadata jsonb",
+      "exceptionId": "EXC-2026-07-15-POSTGREST-SECURITY-DEFINER-COMMANDS",
+      "summary": "Authenticated analytics ingestion command with session binding, rate limits, user-id anti-spoof checks and service-role-only operational events."
+    },
+    {
+      "cacheKey": "authenticated_security_definer_function_executable_public_current_user_has_password_",
+      "exceptionId": "EXC-2026-07-15-POSTGREST-SECURITY-DEFINER-COMMANDS",
+      "summary": "Actor-bound boolean password-capability projection over auth.users; no credential material or cross-user identifier is returned."
+    },
+    {
+      "cacheKey": "authenticated_security_definer_function_executable_public_ensure_owned_driver_data_p_profile_id uuid",
+      "exceptionId": "EXC-2026-07-15-POSTGREST-SECURITY-DEFINER-COMMANDS",
+      "summary": "Owned-driver bootstrap command requiring authenticated ownership of a driver Profile before creating the canonical driver_data row."
+    },
+    {
+      "cacheKey": "authenticated_security_definer_function_executable_public_list_business_profile_correction_queue_p_status text, p_limit integer",
+      "exceptionId": "EXC-2026-07-15-POSTGREST-SECURITY-DEFINER-COMMANDS",
+      "summary": "Admin-only bounded Business profile correction queue read guarded by canonical private.is_admin_user authorization."
+    },
+    {
+      "cacheKey": "authenticated_security_definer_function_executable_public_list_profile_access_members_p_profile_id uuid",
+      "exceptionId": "EXC-2026-07-15-POSTGREST-SECURITY-DEFINER-COMMANDS",
+      "summary": "Delegated-profile member read available only to authenticated users authorized by private.user_can_manage_profile."
+    },
+    {
+      "cacheKey": "authenticated_security_definer_function_executable_public_update_owned_driver_data_p_profile_id uuid, p_updates jsonb",
+      "exceptionId": "EXC-2026-07-15-POSTGREST-SECURITY-DEFINER-COMMANDS",
+      "summary": "Owned-driver patch command deriving actor identity from auth.uid(), enforcing Profile ownership and a strict mutable-field allowlist."
+    },
+    {
+      "cacheKey": "authenticated_security_definer_function_executable_public_upsert_entity_coverage_p_entity_type text, p_entity_id uuid, p_coverage_id uuid, p_coverage_type text, p_location_id uuid, p_radius_km numeric, p_is_primary boolean, p_status text",
+      "exceptionId": "EXC-2026-07-15-POSTGREST-SECURITY-DEFINER-COMMANDS",
+      "summary": "Atomic Coverage upsert guarded by private.require_coverage_entity_write with bounded type, radius, location and status validation."
     }
   ]
 }
