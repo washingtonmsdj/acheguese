@@ -29,7 +29,6 @@ export interface LocationVersion {
   official_document_url: string | null;
   valid_from: string;
   valid_until: string | null;
-  created_by: string | null;
   created_at: string;
 }
 
@@ -101,7 +100,6 @@ export interface TerritoryChangeEvent {
   official_document_url: string | null;
   effective_date: string;
   processed_at: string | null;
-  processed_by: string | null;
   created_at: string;
   metadata: Record<string, unknown>;
 }
