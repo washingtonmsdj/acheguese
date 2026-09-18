@@ -116,7 +116,7 @@ export default function TouristPointsPage() {
   const moduleTerritory = useModuleTerritoryFilter({ routeResolved: resolved });
   const filter = moduleTerritory.territoryFilter;
   const { data: realPoints = [], isLoading: realLoading } = useTouristPoints(filter);
-  const guideUrls = useGuideUrls(resolved);
+  const touristPointUrls = useTouristPointPublicUrls(resolved);
 
   // State
   const [viewMode, setViewMode] = useState<ViewMode>('pontos');
@@ -245,7 +245,7 @@ export default function TouristPointsPage() {
           name="description"
           content={`Descubra os melhores pontos turísticos de ${territoryName}. Praias, museus, mirantes, parques e experiências culturais.`}
         />
-        <link rel="canonical" href={guideUrls.touristPoints} />
+        <link rel="canonical" href={touristPointUrls.touristPoints} />
       </Helmet>
 
       <div className="min-h-screen bg-background">
