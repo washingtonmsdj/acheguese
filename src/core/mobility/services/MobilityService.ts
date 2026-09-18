@@ -108,7 +108,6 @@ export { MobilityLocationService } from "./MobilityLocationService";
 export { MobilityRolloutService } from "./MobilityRolloutService";
 
 export * from "./validators";
-export * from "./RideCanonicalAdapter";
 
 import * as MobilityQueries from "./mobility.queries";
 import * as MobilityMutations from "./mobility.mutations";
