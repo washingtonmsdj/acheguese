@@ -316,7 +316,11 @@ export default function TerritoryEntryPage() {
               </p>
             </div>
 
-            <section className="entry-selection" aria-labelledby="entry-community-title">
+            <section
+              className="entry-selection"
+              aria-labelledby="entry-community-title"
+              aria-describedby="entry-community-context"
+            >
               <div className="entry-community-preview">
                 <div className="hidden w-full md:block" aria-hidden="true">
                   <img
@@ -351,10 +355,16 @@ export default function TerritoryEntryPage() {
               <p className="entry-no-account">
                 {isAuthenticated ? "Sua conta está conectada." : "Sem cadastro para explorar."}
               </p>
-              <a className="entry-account-link" href={primaryAccountHref}>
-                {primaryAccountLabel}
-              </a>
-              <p className="entry-residence-note">
+              {isAuthenticated ? (
+                <a className="entry-account-link" href={primaryAccountHref}>
+                  {primaryAccountLabel}
+                </a>
+              ) : (
+                <a className="entry-account-link" href={AUTH_PATHS.signup}>
+                  {primaryAccountLabel}
+                </a>
+              )}
+              <p id="entry-community-context" className="entry-residence-note">
                 Você pode conhecer a comunidade mesmo morando em outro lugar.
               </p>
             </section>
@@ -398,7 +408,7 @@ export default function TerritoryEntryPage() {
         data-entry-deferred-paint
       >
         <span>
-          Estamos começando {launchCommunityOriginLabel}. A expansão será por etapas.
+          Começamos {launchCommunityOriginLabel}. A expansão será por etapas.
         </span>
         <nav aria-label="Links institucionais">
           <a href={PRIVACY_POLICY_PATH}>Privacidade</a>
