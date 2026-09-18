@@ -13,6 +13,7 @@ const purgeMatrix = JSON.parse(
   ),
 ) as {
   schemaVersion: string;
+  classificationComplete: boolean;
   implementationComplete: boolean;
   rules: Record<string, unknown>;
   snapshot: {
@@ -21,6 +22,9 @@ const purgeMatrix = JSON.parse(
     profilesBlockingReferenceCount: number;
     nullableBlockingReferenceCount: number;
     requiredBlockingReferenceCount: number;
+    classifiedReferenceCount: number;
+    unclassifiedReferenceCount: number;
+    decisionCounts: Record<string, number>;
   };
   blockingReferences: Array<{
     constraint: string;
@@ -29,6 +33,7 @@ const purgeMatrix = JSON.parse(
     deleteAction: string;
     nullable: boolean;
     decision: string;
+    decisionSource?: string;
   }>;
 };
 const preflight = readFileSync(
@@ -43,6 +48,7 @@ const deleteHandler = readFileSync(
 describe('LGPD destructive purge readiness gate', () => {
   it('keeps the live blocking-FK snapshot explicit and fail-closed', () => {
     expect(purgeMatrix.schemaVersion).toBe('lgpd-purge-matrix/v1');
+    expect(purgeMatrix.classificationComplete).toBe(true);
     expect(purgeMatrix.implementationComplete).toBe(false);
     expect(purgeMatrix.rules.default).toBe('block');
     expect(purgeMatrix.rules.unclassifiedReference).toBe('block');
@@ -53,22 +59,64 @@ describe('LGPD destructive purge readiness gate', () => {
       purgeMatrix.rules.profileDeleteRequiresZeroUnclassifiedReferences,
     ).toBe(true);
 
-    expect(purgeMatrix.snapshot).toEqual({
+    expect(purgeMatrix.snapshot).toMatchObject({
       blockingReferenceCount: 28,
       authUsersBlockingReferenceCount: 20,
       profilesBlockingReferenceCount: 8,
       nullableBlockingReferenceCount: 25,
       requiredBlockingReferenceCount: 3,
+      classifiedReferenceCount: 28,
+      unclassifiedReferenceCount: 0,
+      decisionCounts: {
+        "set-null-before-delete": 20,
+        "anonymize-before-delete": 2,
+        "block-purge": 6,
+      },
     });
     expect(purgeMatrix.blockingReferences).toHaveLength(28);
     expect(
       new Set(purgeMatrix.blockingReferences.map((entry) => entry.constraint)).size,
     ).toBe(28);
     expect(
-      purgeMatrix.blockingReferences.every(
+      purgeMatrix.blockingReferences.some(
         (entry) => entry.decision === 'unclassified',
       ),
+    ).toBe(false);
+    expect(
+      purgeMatrix.blockingReferences.every(
+        (entry) => typeof entry.decisionSource === 'string',
+      ),
     ).toBe(true);
+  });
+
+  it('uses only policy-approved decisions and stays fail-closed where retention is unresolved', () => {
+    const byConstraint = new Map(
+      purgeMatrix.blockingReferences.map((entry) => [entry.constraint, entry]),
+    );
+
+    expect(
+      purgeMatrix.blockingReferences.filter(
+        (entry) => entry.target === 'auth.users',
+      ),
+    ).toSatisfyAll(
+      (entry) => entry.decision === 'set-null-before-delete',
+    );
+
+    expect(
+      byConstraint.get(
+        'community_user_moderation_actions_actor_profile_id_fkey',
+      )?.decision,
+    ).toBe('anonymize-before-delete');
+    expect(
+      byConstraint.get('trust_admin_actions_applied_by_profile_id_fkey')
+        ?.decision,
+    ).toBe('anonymize-before-delete');
+
+    expect(
+      byConstraint.get('communication_publications_author_profile_id_fkey')
+        ?.decision,
+    ).toBe('block-purge');
+    expect(purgeMatrix.implementationComplete).toBe(false);
   });
 
   it('records the three non-null RESTRICT references that cannot be solved by SET NULL', () => {
