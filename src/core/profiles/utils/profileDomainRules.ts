@@ -1,5 +1,8 @@
 import { Building2, Briefcase, Car, User, type LucideIcon } from "lucide-react";
-import { BusinessService } from "@/core/profiles/services/multi-profile/businessService";
+import {
+  getBusinessProfileExtension,
+  updateBusinessProfileExtension,
+} from "@/core/business/services/business.profile-extension";
 import { DriverService } from "@/core/profiles/services/multi-profile/driverService";
 import { ProfessionalService } from "@/core/profiles/services/multi-profile/professionalService";
 import type {
@@ -95,15 +98,10 @@ export async function saveProfileExtensionByType(
       profile_id: _unusedProfileId,
       created_at: _unusedCreatedAt,
       updated_at: _unusedUpdatedAt,
+      tax_id: _unusedTaxId,
       ...bizUpdates
-    } = forms.bizForm as BusinessData & {
-      created_at?: string;
-      updated_at?: string;
-    };
-    const result = await BusinessService.updateBusinessData(profile.id, bizUpdates);
-    if (!result.success) {
-      throw new Error(result.error);
-    }
+    } = forms.bizForm;
+    await updateBusinessProfileExtension(profile.id, bizUpdates);
     return;
   }
 
@@ -149,7 +147,7 @@ export async function loadProfileExtensionByType(
   drvForm?: DriverData;
 }> {
   if (profile.profile_type === "business") {
-    const bizForm = await BusinessService.getBusinessData(profile.id);
+    const bizForm = await getBusinessProfileExtension(profile.id);
     return bizForm ? { bizForm } : {};
   }
 
