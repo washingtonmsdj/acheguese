@@ -47,4 +47,17 @@ describe("Business helper ownership", () => {
     expect(addressCard).toContain("getPhysicalBusinessCoordinates");
     expect(addressCard).not.toContain("business.helpers");
   });
+
+  it("persists edited coordinates through Address and not business_data", () => {
+    const mutations = read("src/core/business/services/business.mutations.ts");
+    const queries = read("src/core/business/services/business.queries.ts");
+
+    expect(mutations).toContain("hasAddressCoordinatePatch");
+    expect(mutations).toContain("{ latitude: input.latitude }");
+    expect(mutations).toContain("{ longitude: input.longitude }");
+    expect(queries).not.toContain(
+      "address_id,\n  latitude,\n  longitude,\n  status",
+    );
+    expect(queries).toContain("address:addresses!address_id(");
+  });
 });
