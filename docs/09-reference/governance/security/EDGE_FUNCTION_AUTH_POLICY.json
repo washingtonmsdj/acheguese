@@ -164,6 +164,40 @@
     }
   },
   "serviceRoleAllowlist": {
+    "register-community-interest": {
+      "kind": "public-registration-broker",
+      "risk": "Critical",
+      "label": "public authoritative Community Interest service_role broker",
+      "requiredPatterns": [
+        "rateLimitMiddleware\\s*\\(",
+        "verifyTurnstileToken\\s*\\(",
+        "getSupabaseAdminClient\\s*\\(",
+        "community_interest_registrations"
+      ]
+    },
+    "create-professional-lead": {
+      "kind": "public-registration-broker",
+      "risk": "Critical",
+      "label": "public authoritative Professional lead service_role broker",
+      "requiredPatterns": [
+        "rateLimitMiddleware\\s*\\(",
+        "verifyTurnstileToken\\s*\\(",
+        "getSupabaseAdminClient\\s*\\(",
+        "get_active_profile",
+        "professional_leads"
+      ]
+    },
+    "submit-dpo-request": {
+      "kind": "public-registration-broker",
+      "risk": "Critical",
+      "label": "public LGPD data-subject request service_role broker",
+      "requiredPatterns": [
+        "rateLimitMiddleware\\s*\\(",
+        "verifyTurnstileToken\\s*\\(",
+        "getSupabaseAdminClient\\s*\\(",
+        "privacy_subject_requests"
+      ]
+    },
     "admin-business-rpc": {
       "kind": "admin-broker",
       "risk": "Critical",
@@ -202,16 +236,6 @@
       "label": "admin auth summary broker",
       "requiredPatterns": [
         "require(?:Admin|SuperAdmin)\\s*\\("
-      ]
-    },
-    "admin-highlights-rpc": {
-      "kind": "admin-broker",
-      "risk": "Critical",
-      "label": "admin territorial highlights lifecycle broker",
-      "requiredPatterns": [
-        "require(?:Admin|SuperAdmin)\\s*\\(",
-        "getSupabaseAdminClient\\s*\\(",
-        "territorial_highlights"
       ]
     },
     "admin-list-users": {
@@ -339,14 +363,14 @@
         "constructEvent\\s*\\("
       ]
     },
-    "business-network-rpc": {
-      "kind": "authenticated-broker",
+    "resend-emergency-webhook": {
+      "kind": "signed-webhook",
       "risk": "Critical",
-      "label": "authenticated transactional Business network broker",
+      "label": "Resend emergency delivery signed webhook service_role broker",
       "requiredPatterns": [
-        "auth\\.getUser\\s*\\(",
-        "requireOperationalAccount\\s*\\(",
-        "business_network_rpc_"
+        "webhookVerifier\\.verify\\s*\\(",
+        "RESEND_WEBHOOK_SECRET",
+        "apply_emergency_delivery_provider_event"
       ]
     },
     "business-reviews-rpc": {
@@ -383,35 +407,12 @@
         "contact_rpc_patch_owned_channels"
       ]
     },
-    "create-professional-lead": {
-      "kind": "public-registration-broker",
-      "risk": "Critical",
-      "label": "public authoritative Professional lead service_role broker",
-      "requiredPatterns": [
-        "rateLimitMiddleware\\s*\\(",
-        "verifyTurnstileToken\\s*\\(",
-        "getSupabaseAdminClient\\s*\\(",
-        "get_active_profile",
-        "professional_leads"
-      ]
-    },
     "delivery-rpc": {
       "kind": "authenticated-broker",
       "risk": "Critical",
       "label": "authenticated delivery RPC broker",
       "requiredPatterns": [
         "auth\\.getUser\\s*\\("
-      ]
-    },
-    "education-lead-rpc": {
-      "kind": "public-registration-broker",
-      "risk": "Critical",
-      "label": "public Education lead intake service_role broker",
-      "requiredPatterns": [
-        "rateLimitMiddleware\\s*\\(",
-        "requireLeadEligibleProfile\\s*\\(",
-        "education_leads",
-        "public_directory_form"
       ]
     },
     "event-rpc": {
@@ -456,6 +457,14 @@
         "list_media_asset_orphans"
       ]
     },
+    "mobility-rpc": {
+      "kind": "authenticated-broker",
+      "risk": "Critical",
+      "label": "authenticated mobility RPC broker",
+      "requiredPatterns": [
+        "auth\\.getUser\\s*\\("
+      ]
+    },
     "mobility-create-rpc": {
       "kind": "authenticated-broker",
       "risk": "Critical",
@@ -478,14 +487,6 @@
         "MOBILITY_ROUTING_BASE_URL"
       ]
     },
-    "mobility-rpc": {
-      "kind": "authenticated-broker",
-      "risk": "Critical",
-      "label": "authenticated mobility RPC broker",
-      "requiredPatterns": [
-        "auth\\.getUser\\s*\\("
-      ]
-    },
     "privacy-rpc": {
       "kind": "authenticated-broker",
       "risk": "Critical",
@@ -502,6 +503,14 @@
         "requireCronSecret\\s*\\("
       ]
     },
+    "professional-notifications-rpc": {
+      "kind": "notification-broker",
+      "risk": "Critical",
+      "label": "authenticated professional notifications RPC broker",
+      "requiredPatterns": [
+        "auth\\.getUser\\s*\\("
+      ]
+    },
     "professional-credentials-rpc": {
       "kind": "authenticated-broker",
       "risk": "Critical",
@@ -512,41 +521,12 @@
         "professional_credentials_rpc_patch_owned"
       ]
     },
-    "professional-notifications-rpc": {
-      "kind": "notification-broker",
-      "risk": "Critical",
-      "label": "authenticated professional notifications RPC broker",
-      "requiredPatterns": [
-        "auth\\.getUser\\s*\\("
-      ]
-    },
     "profile-rpc": {
       "kind": "authenticated-broker",
       "risk": "Critical",
       "label": "authenticated profile RPC broker",
       "requiredPatterns": [
         "auth\\.getUser\\s*\\("
-      ]
-    },
-    "register-community-interest": {
-      "kind": "public-registration-broker",
-      "risk": "Critical",
-      "label": "public authoritative Community Interest service_role broker",
-      "requiredPatterns": [
-        "rateLimitMiddleware\\s*\\(",
-        "verifyTurnstileToken\\s*\\(",
-        "getSupabaseAdminClient\\s*\\(",
-        "community_interest_registrations"
-      ]
-    },
-    "resend-emergency-webhook": {
-      "kind": "signed-webhook",
-      "risk": "Critical",
-      "label": "Resend emergency delivery signed webhook service_role broker",
-      "requiredPatterns": [
-        "webhookVerifier\\.verify\\s*\\(",
-        "RESEND_WEBHOOK_SECRET",
-        "apply_emergency_delivery_provider_event"
       ]
     },
     "role-rpc": {
@@ -589,17 +569,6 @@
       "label": "authenticated session RPC broker",
       "requiredPatterns": [
         "auth\\.getUser\\s*\\("
-      ]
-    },
-    "submit-dpo-request": {
-      "kind": "public-registration-broker",
-      "risk": "Critical",
-      "label": "public LGPD data-subject request service_role broker",
-      "requiredPatterns": [
-        "rateLimitMiddleware\\s*\\(",
-        "verifyTurnstileToken\\s*\\(",
-        "getSupabaseAdminClient\\s*\\(",
-        "privacy_subject_requests"
       ]
     },
     "subscribe-push": {
@@ -691,6 +660,37 @@
       "label": "authenticated user data export broker",
       "requiredPatterns": [
         "auth\\.getUser\\s*\\("
+      ]
+    },
+    "education-lead-rpc": {
+      "kind": "public-registration-broker",
+      "risk": "Critical",
+      "label": "public Education lead intake service_role broker",
+      "requiredPatterns": [
+        "rateLimitMiddleware\\s*\\(",
+        "requireLeadEligibleProfile\\s*\\(",
+        "education_leads",
+        "public_directory_form"
+      ]
+    },
+    "business-network-rpc": {
+      "kind": "authenticated-broker",
+      "risk": "Critical",
+      "label": "authenticated transactional Business network broker",
+      "requiredPatterns": [
+        "auth\\.getUser\\s*\\(",
+        "requireOperationalAccount\\s*\\(",
+        "business_network_rpc_"
+      ]
+    },
+    "admin-highlights-rpc": {
+      "kind": "admin-broker",
+      "risk": "Critical",
+      "label": "admin territorial highlights lifecycle broker",
+      "requiredPatterns": [
+        "require(?:Admin|SuperAdmin)\\s*\\(",
+        "getSupabaseAdminClient\\s*\\(",
+        "territorial_highlights"
       ]
     }
   },
