@@ -209,7 +209,7 @@ Consultas read-only ao projeto canônico `xhdowzacfujckjelqhtd` atualizaram os g
 
 Atualização do PR #117 em `2026-09-18T02:03:43Z`: head `85d70679c4dd5a08fb520b4948369b4d33b4ee48` segue aberto contra `main` `70bea7259572c2032371fe21fea5785f5191cdef`. Os 16 jobs falharam em 2–4 s com `steps=[]`; `gh run view --log-failed` retornou `log not found`, então não há erro de código/log de etapa que permita atribuir a causa. O job Heavy exato para esse SHA segue `QUEUED`. O status Vercel está verde, mas a implantação preview foi cancelada por `Ignored Build Step`.
 
-No checkout principal com alterações locais não commitadas, `npm run build:vercel` passou: 21 inputs, CSP, Turnstile, typecheck, lint e Vite. O lint reportou dois warnings (deps de `useEffect` em `RideTrackingMap.tsx` e diretiva ESLint sem uso em `RideRequestForm.tsx`); o Vite transformou 6.089 módulos e concluiu. Este resultado local não certifica o SHA remoto do PR. Não houve commit, deploy ou alteração de proteção de `main` nesta rodada.
+Snapshot anterior ao push de `2026-09-18T09:58Z`: no checkout principal, `npm run build:vercel` passou com 21 inputs, CSP, Turnstile, typecheck, lint e Vite (6.089 módulos). O lint reportou os dois avisos conhecidos de `RideTrackingMap.tsx` e `RideRequestForm.tsx`. A atualização posterior da `main` está registrada abaixo.
 
 Validação adicional na worktree limpa do PR, exatamente no SHA `85d70679c4dd5a08fb520b4948369b4d33b4ee48`: `npm run build:vercel` passou com os 21 inputs, CSP, Turnstile, typecheck, lint sem erros e Vite (6.094 módulos; build concluído). Permanecem os mesmos dois warnings de lint. Os sete workflows falhos foram reexecutados; no attempt 2, todos voltaram a falhar entre 2–17 s com zero steps. O gate Heavy continuava `QUEUED` às `2026-09-18T04:04Z`; o build local exato não substitui testes hospedados, E2E remoto, preview implantado nem smoke.
 
@@ -218,6 +218,15 @@ Validação adicional na worktree limpa do PR, exatamente no SHA `85d70679c4dd5a
 Leitura autenticada da API GitHub em `2026-09-18T04:04Z` retornou 40 branches: `main`, 38 refs históricas listadas na issue #84 e a branch ativa de #117. Os 38 nomes e SHAs históricos correspondem ao manifesto da issue; a única diferença é o head ativo de #117, atualizado de `44018f25...` para `85d70679...`. O namespace local `refs/remotes/inventory/*` contém 126 snapshots antigos e não representa branches remotas atuais.
 
 As 38 refs históricas têm proveniência incompleta: 22 são heads exatos de PRs fechados sem merge e 16 não têm PR. Nenhum head é ancestral da `main`; todos mantêm commits/diferenças desde seu merge-base. Quatro refs cuja delta exclusiva já havia sido destacada na issue continuam presentes: `handoff/4.6h-final` (4 commits), `agent/structure-cleanup-foundation` (66), `agent/lgpd-pending-deletion-boundary` (14) e `security/report-rpc-authz-batch-2-reconciled` (3). Não removi nenhuma ref; o exame semântico e a reconstrução de conteúdo útil continuam necessários antes de qualquer exclusão.
+
+### Main após a atualização remota — 2026-09-18T10:03Z
+
+- `origin/main` está no SHA `1778d727fb0fca510210c5e2c42dd31a4d23e3fb`. O commit anterior `7d7f1af6e` acrescentou o catálogo estático da outra conversa: 108 imagens, 35 fluxos e 242 arquivos, com hashes e links conferidos; caminhos absolutos do perfil local foram removidos do manifesto.
+- O commit `1778d727f` remove o caller frontend de `get_driver_dispatch_summaries` (EXECUTE remoto restrito a `service_role`), fortalece o parser do validador de migrations, adiciona regressões e registra os probes rollback-only de Safety e reações de grupos.
+- O deploy Vercel de produção `dpl_5GFF3fK11jgMDwyz8LN4tyU92ixM` está `READY` para exatamente esse SHA; o status GitHub `Vercel` é `success` e o smoke GET de `https://acheguese.com.br` retornou HTTP 200. Os aliases de produção foram publicados. O build remoto executou audit (0 vulnerabilidades), validação do sitemap, 21 inputs, CSP, Turnstile, typecheck, lint sem erros (2 warnings existentes) e Vite (6.089 módulos).
+- O hook local `typecheck:ci` passou antes do push. Nos testes focados locais, 96/97 passaram; a única falha exige evidência externa para seis exceções vencidas, sem relação com os testes novos, que passaram. `npm run validate:migrations` passou.
+- Os workflows GitHub no SHA `1778d727f` falharam antes de executar comandos: runs `35332329297`, `35332329254` e `35332329371` registram `steps=[]`; `gh run view --log-failed` retorna `log not found`. Esse bloqueio de CI continua aberto, embora o deploy Vercel e smoke estejam verdes.
+- Não foram incluídas migrations. O ledger segue em 645 remotas versus 664 locais, 628 identidades exatas, 36 local-only e 17 remote-only; a validação local não resolve nem autoriza reaplicar esses históricos. A proteção de `main` permanece parcial, conforme issue #28.
 
 ## P2 — certificação funcional
 

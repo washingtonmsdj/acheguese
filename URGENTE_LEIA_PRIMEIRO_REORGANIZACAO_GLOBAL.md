@@ -7,7 +7,7 @@
 ## Estado atual resumido
 
 - `main` tem branch protection parcial desde 2026-09-17: `protected=true`, admins sujeitos às regras, force-push/deleção bloqueados e resolução de conversas exigida. PR obrigatório, checks e restrição de push ainda estão ausentes porque `Supabase Types Sync` escreve diretamente em `main` (issue #28);
-- houve build/deploy real `READY` no mesmo SHA em `a30b7c7...`, mas commits posteriores não herdam essa certificação; qualquer HEAD final precisa repetir o gate real;
+- último SHA de código publicado e verificado: `1778d727fb0fca510210c5e2c42dd31a4d23e3fb`, com Vercel de produção `READY`, check `Vercel=success` e smoke HTTP 200 no mesmo SHA. Os workflows GitHub desse SHA falharam antes de iniciar etapas (`steps=[]`), então o gate global de release continua aberto; qualquer commit posterior exige nova verificação same-SHA;
 - Mobility continua pública **desabilitada** e já possui GPS minimizado, autorização negativa, preço terminal server-owned, replays sequenciais e contrato estrutural de atomicidade provados;
 - a prova runtime de concorrência em duas sessões independentes continua aberta;
 - drift de `types.generated.ts` continua aberto e deve ser corrigido somente pelo fluxo canônico de geração;

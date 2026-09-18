@@ -4,9 +4,20 @@
 **Data do checkpoint GitHub:** 2026-09-09  
 **Repositório:** `washingtonmsdj/acheguese`  
 **Linha ativa:** `main`  
-**HEAD técnico de código anterior a este checkpoint documental:** `9c48494514fcf04d8f756b0a0a9a5deb4770c267`
+**HEAD técnico de código registrado neste checkpoint:** `1778d727fb0fca510210c5e2c42dd31a4d23e3fb` (2026-09-18; último commit com alteração de código antes deste registro documental).
 
 Este documento consolida ordem de execução, blockers e Definition of Done. Ele é um **registro operacional**, não uma fotografia autoritativa do que existe no produto. A fonte de verdade para decidir o que existe, o que está ativo e o que deve ser corrigido é sempre o **projeto real**: código da `main`, rotas, owners, serviços, schema/migrations, contratos, testes, deploy/runtime e comportamento observado.
+
+## Snapshot remoto — 2026-09-18
+
+- Commits publicados em `main`: `7d7f1af6e` (catálogo de conceitos da outra conversa) e `1778d727f` (remoção de caller frontend do RPC service-only, validação de migrations e evidências de segurança).
+- O deploy de produção Vercel `dpl_5GFF3fK11jgMDwyz8LN4tyU92ixM` chegou a `READY` para o SHA `1778d727fb0fca510210c5e2c42dd31a4d23e3fb`; o check Vercel passou e `https://acheguese.com.br` respondeu HTTP 200. O `build:vercel` remoto passou com 21 inputs, typecheck, lint sem erros (2 avisos conhecidos) e Vite; o pre-push `typecheck:ci` também passou.
+- Os runs GitHub `35332329297`, `35332329254` e `35332329371` desse SHA falharam com `steps=[]`; o log de job retorna `log not found`. Não há evidência de etapa de código executada, portanto não contam como checks verdes.
+- Testes locais focados: 96 passaram e 1 falhou ao exigir evidência externa para seis exceções vencidas no registro de segurança. Os testes novos de parser/validador passaram. `npm run validate:migrations` passou localmente.
+- O ledger Supabase continua sem reconciliação: remoto 645 migrations, local 664 arquivos, 628 identidades exatas, 36 locais sem identidade remota e 17 remotas sem arquivo local. Nenhuma migration foi incluída nesses commits.
+- A proteção de `main` permanece parcial: admins sujeitos, force-push/deleção bloqueados e resolução de conversas exigida; PR obrigatório, required checks e restrição de push seguem ausentes (#28).
+
+Este snapshot descreve o último SHA com alteração de código; qualquer commit posterior, inclusive documental, precisa ser conferido no SHA que passar a ser o head remoto.
 
 ## Checkpoint 2026-09-09 — Mobilidade: remoção de bridges mortos e reconciliação runtime
 
