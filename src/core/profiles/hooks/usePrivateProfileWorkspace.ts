@@ -16,7 +16,6 @@ const EMPTY_WORKSPACE: ProfilePrivateWorkspace = {
   stats: {
     posts: 0,
     likes: 0,
-    favorites: 0,
     businesses: 0,
   },
   operations: {
@@ -28,8 +27,6 @@ const EMPTY_WORKSPACE: ProfilePrivateWorkspace = {
     events: 0,
     alerts: 0,
     issues: 0,
-    favoritesGiven: 0,
-    favoritesReceived: 0,
     notificationsTotal: 0,
     notificationsUnread: 0,
     ridesTotal: 0,
