@@ -190,14 +190,6 @@ class ResidenceService {
   }
 
   /**
-   * Verificar se residência está migrada
-   * ETAPA 12: Sempre true (campos canônicos obrigatórios)
-   */
-  isMigrated(residence: UserResidence): boolean {
-    return true; // Sempre migrado após ETAPA 12
-  }
-
-  /**
    * Obter endereço formatado (apenas canônico)
    * ETAPA 12: Sem fallback legado
    */
