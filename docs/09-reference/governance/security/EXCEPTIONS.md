@@ -94,10 +94,12 @@ grant direto. Probes remotos cobrem anonymous, usuario comum, admin, identidade
 forjada e contexto inexistente nos dominios Trust, Reviews, Messaging,
 Community, Moderation, Favorites, Notifications e Safety.
 
-Somente quatro RPCs sao anonimos: dois agregados publicos sem eventos/linhas
-privadas, a leitura Safety por token aleatorio e a projecao territorial
-consentida de Profile. O registro usa cache keys exatas; nao existe wildcard
-para novas funcoes.
+Somente cinco RPCs sob esta excecao sao anonimos: dois agregados publicos sem
+eventos/linhas privadas, a leitura Safety por token aleatorio, a projecao
+territorial consentida de Profile e `track_analytics_event`, cuja ingestao
+publica exige sessao de analytics, aplica rate limit/anti-spoof de user_id e
+reserva eventos operacionais a `service_role`. O registro usa cache keys
+exatas; nao existe wildcard para novas funcoes.
 
 Os quatro mappings de Poll abaixo sao excecoes individualizadas e nao usam
 esta excecao como wildcard: cada role, assinatura, fingerprint, grant,
@@ -126,7 +128,12 @@ negativo remoto e ownership declarado.
   aprovadas, incluindo perfil oculto e rejeicao de territorio bruto;
 - testes de Coverage, Profile Verification e fronteira de PII em 2026-07-18:
   18 casos aprovados; comandos derivam ator/ownership no servidor e a projecao
-  publica nao retorna PII.
+  publica nao retorna PII;
+- revalidacao remota em 2026-09-18: `track_analytics_event` permanece
+  session-bound, rate-limited, anti-spoof e com eventos operacionais restritos a
+  `service_role`; `current_user_has_password` retorna somente boolean actor-bound;
+  Driver, Business correction, delegated Profile access e Coverage mantem guards
+  internos de ownership/admin antes da escrita/leitura privilegiada.
 
 ## EXC-2026-08-12-POLL-GET-ANON-SECURITY-DEFINER
 
