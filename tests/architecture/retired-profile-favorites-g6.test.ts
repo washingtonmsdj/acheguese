@@ -46,12 +46,21 @@ describe("G6 retired profile favorites", () => {
     expect(adminSsot).toContain("user_favorite_businesses");
   });
 
-  it("keeps only an explicit zero compatibility adapter for legacy profile counters", () => {
+  it("does not recreate retired profile favorite counters or their zero adapter", () => {
     const queries = read("src/core/favorites/services/favorites.queries.ts");
+    const servicesIndex = read("src/core/favorites/services/index.ts");
+    const profileTypes = read("src/core/profiles/services/ProfileOperationTypes.ts");
+    const workspaceTypes = read("src/core/profiles/services/types.ts");
+    const workspace = read("src/core/profiles/services/profile.workspace.aggregate.ts");
 
-    expect(queries).toContain("export async function getFavoriteStats");
-    expect(queries).toContain("total_favorites_given: 0");
-    expect(queries).toContain("total_favorites_received: 0");
-    expect(queries).not.toContain(".from(");
+    expect(queries).not.toContain("getFavoriteStats");
+    expect(servicesIndex).not.toContain("getFavoriteStats");
+    expect(servicesIndex).not.toContain("FavoriteStats");
+    expect(profileTypes).not.toMatch(/\bfavorites:\s*number/);
+    expect(workspaceTypes).not.toContain("favoritesGiven");
+    expect(workspaceTypes).not.toContain("favoritesReceived");
+    expect(workspace).not.toContain("getFavoriteStats");
+    expect(workspace).not.toContain("favoritesGiven");
+    expect(workspace).not.toContain("favoritesReceived");
   });
 });
