@@ -94,19 +94,24 @@ provenance:
 3. `20260918135700_retire_territory_ai_legacy_admin_update`;
 4. `20260918135813_remove_obsolete_territory_ai_manual_edit_trigger`;
 5. `20260918135814_preserve_territory_ai_legacy_browser_read`;
-6. `20260918135909_remove_territory_ai_legacy_browser_read`.
+6. `20260918135909_remove_territory_ai_legacy_browser_read`;
+7. `20260918140509_restore_territory_ai_legacy_client_compatibility`;
+8. `20260918140847_enforce_territory_ai_broker_only_authority`.
 
-As etapas 2 e 5 registram bridges transitórias que existiram no ambiente.
+As etapas 2, 5 e 7 registram bridges transitórias que existiram no ambiente.
 Elas permanecem apenas porque migration aplicada é histórico imutável.
 
-O contrato ativo é definido pelas etapas 3, 4 e 6:
+A etapa 8 é o boundary final e neutraliza todas as variantes observadas de
+compatibilidade antiga:
 
 - nenhum DML browser;
-- trigger/helper transitório removido;
 - nenhum SELECT de tabela inteira;
-- somente a projeção editorial pública por coluna.
+- nenhum trigger/helper de manual edit legado;
+- nenhuma policy de UPDATE administrativa no Data API;
+- somente a projeção editorial pública por coluna;
+- `service_role` como única autoridade de persistência.
 
-Nenhuma nova implementação deve depender das etapas 2 ou 5.
+Nenhuma nova implementação deve depender das etapas 2, 5 ou 7.
 
 ## Estado live verificado
 
@@ -120,8 +125,10 @@ Nenhuma nova implementação deve depender das etapas 2 ou 5.
 - `id` público = false;
 - `is_manual_override` público = false;
 - descrição e `ai_generated_at` públicos por coluna = true;
-- trigger `stamp_territory_ai_manual_edit` ausente;
-- função `private.stamp_territory_ai_manual_edit()` ausente;
+- triggers `stamp_territory_ai_manual_edit` e
+  `stamp_territory_ai_legacy_manual_edit` ausentes;
+- helpers `private.stamp_territory_ai_manual_edit()` e
+  `private.stamp_territory_ai_legacy_manual_edit()` ausentes;
 - tabela contém 0 rows, portanto nenhum dado precisou ser transformado ou
   removido neste corte.
 
