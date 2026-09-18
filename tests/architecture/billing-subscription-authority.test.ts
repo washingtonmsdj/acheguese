@@ -35,7 +35,7 @@ const userSubscription = read("src/core/billing/services/SubscriptionService.ts"
 const subscriptionStatus = read("src/core/billing/services/SubscriptionStatusService.ts");
 const entitlementResolver = read("src/core/billing/services/EntitlementResolver.ts");
 const billingIndex = read("src/core/billing/index.ts");
-const billingPlanService = read("src/core/billing/services/BillingPlanService.ts");
+const catalogService = read("src/core/billing/services/CatalogService.ts");
 const billingService = read("src/core/billing/services/BillingService.ts");
 const checkout = read("supabase/functions/billing-create-checkout/index.ts");
 const webhook = read("supabase/functions/billing-webhook/index.ts");
@@ -158,8 +158,9 @@ describe("Billing subscription authority", () => {
   });
 
   it("uses one entitlement baseline behind published catalog resolution", () => {
-    expect(billingPlanService).toContain("getBaselineEntitlements");
-    expect(entitlementResolver).toContain("BillingPlanService.getPlanByCode");
+    expect(catalogService).toContain("getBaselineEntitlements");
+    expect(catalogService).toContain("getPublishedPlanEntitlements");
+    expect(entitlementResolver).toContain("CatalogService.getPublishedPlanByCode");
     expect(entitlementResolver).toContain("getBaselineEntitlements");
     expect(entitlementResolver).not.toContain("DEFAULT_FREE_ENTITLEMENTS");
   });
@@ -213,10 +214,22 @@ describe("Billing subscription authority", () => {
   });
 
   it("keeps published catalog as the runtime source of plan data", () => {
-    expect(billingPlanService).toContain("CatalogService.getPublishedBasePlans");
-    expect(billingPlanService).toContain("CatalogService.getPlanByCode");
-    expect(billingService).toContain("BillingPlanService.getActivePlans");
-    expect(billingService).toContain("BillingPlanService.getPlanByCode");
+    expect(
+      existsSync(resolve(root, "src/core/billing/services/BillingPlanService.ts")),
+    ).toBe(false);
+    expect(catalogService).toContain("static async getPublishedPlans()");
+    expect(catalogService).toContain("static async getPublishedPlanByCode(");
+    expect(catalogService).toContain("static async getPublishedPlanEntitlements(");
+    expect(billingService).not.toContain("BillingPlanService");
+    expect(billingService).not.toContain("static async getPlans()");
+    expect(billingService).not.toContain("static async getPlanByCode(");
+
+    const facadeCallers = runtimeSources
+      .filter((path) =>
+        readFileSync(path, "utf8").includes("BillingPlanService"),
+      )
+      .map((path) => path.slice(root.length + 1));
+    expect(facadeCallers).toEqual([]);
 
     const legacyTables = [
       "billing_plans",
