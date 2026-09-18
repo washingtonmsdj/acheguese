@@ -3,153 +3,162 @@ import { resolve } from "node:path";
 import { describe, expect, it } from "vitest";
 
 const root = process.cwd();
+const migrationsDir = resolve(root, "supabase/migrations");
+const FINAL_BOUNDARY =
+  "20260918135909_remove_territory_ai_legacy_browser_read.sql";
+const TRIGGER_REMOVAL =
+  "20260918135813_remove_obsolete_territory_ai_manual_edit_trigger.sql";
+
 const read = (path: string) => readFileSync(resolve(root, path), "utf8");
 
-const service = read(
-  "src/core/territorial/services/TerritorialAIService.ts",
-);
-const publicHook = read(
-  "src/core/territorial/hooks/useTerritoryAIContent.ts",
-);
-const adminHook = read(
-  "src/core/territorial/hooks/useTerritoryAIContentAdmin.ts",
-);
-const broker = read("supabase/functions/territory-ai-content/index.ts");
-
-const HARDENING =
-  "20260918135208_harden_territory_ai_content_browser_authority.sql";
-const LEGACY_UPDATE_BRIDGE =
-  "20260918135505_preserve_territory_ai_legacy_admin_update.sql";
-const RETIRE_DIRECT_UPDATE =
-  "20260918135700_retire_territory_ai_legacy_admin_update.sql";
-const REMOVE_TRIGGER =
-  "20260918135813_remove_obsolete_territory_ai_manual_edit_trigger.sql";
-const LEGACY_READ_BRIDGE =
-  "20260918135814_preserve_territory_ai_legacy_browser_read.sql";
-
 describe("territory AI content authority", () => {
-  it("keeps public runtime read-only on an explicit projection", () => {
-    expect(service).toContain("const PUBLIC_COLUMNS = [");
-    expect(service).toContain('.from("territory_ai_content")');
-    expect(service).toContain(".select(PUBLIC_COLUMNS)");
-    expect(service).not.toContain('.select("*")');
+  const finalBoundary = read(`supabase/migrations/${FINAL_BOUNDARY}`);
+  const triggerRemoval = read(`supabase/migrations/${TRIGGER_REMOVAL}`);
+  const service = read(
+    "src/core/territorial/services/TerritorialAIService.ts",
+  );
+  const publicHook = read(
+    "src/core/territorial/hooks/useTerritoryAIContent.ts",
+  );
+  const adminHook = read(
+    "src/core/territorial/hooks/useTerritoryAIContentAdmin.ts",
+  );
+  const edge = read("supabase/functions/territory-ai-content/index.ts");
+  const adminPage = read("src/modules/admin/pages/AdminTerritoryContent.tsx");
 
-    expect(publicHook).toContain("TerritorialAIService.getAIContent");
-    expect(publicHook).not.toContain("generateWithAI");
-    expect(publicHook).not.toContain("updateContent");
+  it("keeps the browser boundary read-only and column-bounded", () => {
+    expect(finalBoundary).toContain(
+      "REVOKE ALL PRIVILEGES ON TABLE public.territory_ai_content",
+    );
+    expect(finalBoundary).toContain("GRANT SELECT (");
+    expect(finalBoundary).toContain("territory_slug");
+    expect(finalBoundary).toContain("ai_generated_at");
+    expect(finalBoundary).toContain("TO anon, authenticated");
+    expect(finalBoundary).toContain(
+      "GRANT ALL PRIVILEGES ON TABLE public.territory_ai_content",
+    );
+    expect(finalBoundary).toContain("TO service_role");
+
+    expect(finalBoundary).toContain(
+      "legacy table-wide territory AI SELECT remains",
+    );
+    expect(finalBoundary).toContain(
+      "browser territory AI mutation authority remains",
+    );
+    expect(finalBoundary).toContain(
+      "administrative territory AI columns remain browser-readable",
+    );
   });
 
-  it("routes every admin read/write through the authenticated broker", () => {
-    expect(service).toContain('const TERRITORY_AI_FUNCTION = "territory-ai-content"');
+  it("keeps public reads explicit and all admin operations brokered", () => {
+    expect(service).toContain("PUBLIC_COLUMNS");
+    expect(service).toContain(".select(PUBLIC_COLUMNS)");
+    expect(service).not.toContain('.select("*")');
+    expect(service).not.toContain(".select('*')");
+    expect(service).not.toContain(".update(");
+    expect(service).not.toContain(".insert(");
+    expect(service).not.toContain(".upsert(");
+
     expect(service).toContain('action: "get"');
     expect(service).toContain('action: "generate"');
     expect(service).toContain('action: "update"');
-    expect(service).not.toMatch(
-      /\.from\(["']territory_ai_content["']\)[\s\S]{0,220}\.(?:insert|update|upsert|delete)\s*\(/m,
-    );
 
-    expect(adminHook).toContain("TerritorialAIService.getAdminContent");
-    expect(adminHook).toContain("TerritorialAIService.generateAIContent");
-    expect(adminHook).toContain("TerritorialAIService.updateAIContent");
+    expect(publicHook).not.toContain("useMutation");
+    expect(publicHook).not.toContain("generateWithAI");
+    expect(publicHook).not.toContain("updateContent");
+
+    expect(adminHook).toContain("useMutation");
+    expect(adminHook).toContain("generateAIContent");
+    expect(adminHook).toContain("updateAIContent");
   });
 
-  it("keeps the Edge broker admin/MFA authorized and canonicalizes territory identity server-side", () => {
-    expect(broker).toContain("requireAdmin(req, ALLOWED_METHODS)");
-    expect(broker).toContain("getRequiredEnv");
-    expect(broker).toContain('getRequiredEnv("SUPABASE_SERVICE_ROLE_KEY")');
-    expect(broker).toContain("resolveTerritoryContext");
-    expect(broker).toContain('.from("territorial_groups")');
-    expect(broker).toContain('.from("territorial_group_members")');
-    expect(broker).toContain('.from("locations")');
-    expect(broker).toContain('group.status !== "active"');
-    expect(broker).toContain('city.status !== "active"');
+  it("keeps territory identity server-owned in the admin flow", () => {
+    expect(adminPage).not.toContain("setName(");
+    expect(adminPage).not.toContain("territory_name:");
+    expect(adminPage).not.toContain("members:");
 
-    expect(broker).toContain("get: true");
-    expect(broker).toContain("generate: true");
-    expect(broker).toContain("update: true");
-    expect(broker).toContain("action === \"generate\" ? 10 : 120");
-    expect(broker).toContain("MAX_BODY_BYTES = 32_768");
+    expect(service).not.toContain("territory_name:");
+    expect(service).not.toContain("members:");
+
+    expect(edge).toContain("resolveTerritoryContext(");
+    expect(edge).toContain('.from("territorial_groups")');
+    expect(edge).toContain('.from("territorial_group_members")');
+    expect(edge).toContain('.from("locations")');
+    expect(edge).toContain("territory_name: context.territoryName");
   });
 
-  it("preserves the deployed legacy generate payload without trusting its name/member claims", () => {
-    expect(broker).toContain("Backward compatibility with the currently deployed admin client");
-    expect(broker).toContain('action: "generate"');
-    expect(broker).toContain(
-      "params: { territory_slug: body.territory_slug }",
-    );
-    expect(broker).not.toContain(
-      "params: { territory_slug: body.territory_slug, territory_name:",
-    );
-    expect(broker).not.toContain(
-      "params: { territory_slug: body.territory_slug, members:",
-    );
+  it("uses the canonical admin client with no compatibility fallback", () => {
+    expect(edge).toContain("getSupabaseAdminClient");
+    expect(edge).toContain("requireAdmin(req, ALLOWED_METHODS)");
+    expect(edge).toContain("rateLimitMiddleware(");
+    expect(edge).toContain("checkRateLimit(");
+    expect(edge).not.toContain("createClient");
+    expect(edge).not.toContain("SUPABASE_SERVICE_ROLE_KEY");
+    expect(edge).not.toContain("Backward compatibility");
+    expect(edge).not.toMatch(/\blegacy\b/i);
+    expect(edge).not.toContain("body.territory_slug");
+    expect(edge).not.toContain("body.territory_name");
+    expect(edge).not.toContain("body.members");
   });
 
-  it("versions the exact remote authority transition and retires browser mutations", () => {
-    for (const name of [
-      HARDENING,
-      LEGACY_UPDATE_BRIDGE,
-      RETIRE_DIRECT_UPDATE,
-      REMOVE_TRIGGER,
-      LEGACY_READ_BRIDGE,
-    ]) {
-      expect(read(`supabase/migrations/${name}`)).toBeTruthy();
-    }
-
-    const retirement = read(
-      `supabase/migrations/${RETIRE_DIRECT_UPDATE}`,
+  it("removes the obsolete browser-edit trigger and helper", () => {
+    expect(triggerRemoval).toContain(
+      "DROP TRIGGER IF EXISTS stamp_territory_ai_manual_edit",
     );
-    expect(retirement).toContain(
-      'DROP POLICY IF EXISTS "Admins update territory content"',
-    );
-    expect(retirement).toContain(
-      "REVOKE ALL PRIVILEGES ON TABLE public.territory_ai_content",
-    );
-    expect(retirement).toContain(
-      "browser mutation authority remains on territory_ai_content",
-    );
-
-    const cleanup = read(`supabase/migrations/${REMOVE_TRIGGER}`);
-    expect(cleanup).toContain(
+    expect(triggerRemoval).toContain(
       "DROP FUNCTION IF EXISTS private.stamp_territory_ai_manual_edit()",
     );
-  });
-
-  it("keeps the temporary legacy read bridge read-only", () => {
-    const bridge = read(`supabase/migrations/${LEGACY_READ_BRIDGE}`);
-    expect(bridge).toContain(
-      "GRANT SELECT ON TABLE public.territory_ai_content",
+    expect(triggerRemoval).toContain(
+      "obsolete territory AI manual-edit trigger still exists",
     );
-    expect(bridge).toContain("TO anon, authenticated");
-    expect(bridge).not.toMatch(
-      /GRANT\s+(?:INSERT|UPDATE|DELETE|ALL(?:\s+PRIVILEGES)?)\s+ON\s+(?:TABLE\s+)?public\.territory_ai_content\s+TO\s+[^;]*(?:anon|authenticated)/i,
-    );
-    expect(bridge).toContain(
-      "territory AI table-wide browser write authority returned",
+    expect(triggerRemoval).toContain(
+      "obsolete territory AI manual-edit function still exists",
     );
   });
 
-  it("does not let later migrations reintroduce browser writes", () => {
-    const migrationsDir = resolve(root, "supabase/migrations");
+  it("prevents future migrations from reopening legacy browser authority", () => {
+    const offenders: string[] = [];
     const later = readdirSync(migrationsDir)
-      .filter(
-        (name) =>
-          name.endsWith(".sql") && name > LEGACY_READ_BRIDGE,
-      )
+      .filter((name) => name.endsWith(".sql") && name > FINAL_BOUNDARY)
       .sort();
 
-    const regressions: string[] = [];
     for (const name of later) {
       const sql = readFileSync(resolve(migrationsDir, name), "utf8");
+
       if (
-        /GRANT\s+(?:ALL(?:\s+PRIVILEGES)?|INSERT|UPDATE|DELETE)\s+ON\s+(?:TABLE\s+)?public\.territory_ai_content\s+TO\s+[^;]*(?:\banon\b|\bauthenticated\b|\bPUBLIC\b)/i.test(
+        /GRANT\s+SELECT\s+ON\s+(?:TABLE\s+)?public\.territory_ai_content\s+TO\s+[^;]*(?:\banon\b|\bauthenticated\b|\bPUBLIC\b)/i.test(
           sql,
         )
       ) {
-        regressions.push(name);
+        offenders.push(`${name}: table-wide SELECT`);
+      }
+
+      if (
+        /GRANT\s+(?:INSERT|UPDATE|DELETE|ALL(?:\s+PRIVILEGES)?)\s+(?:\([^;]*\)\s*)?ON\s+(?:TABLE\s+)?public\.territory_ai_content\s+TO\s+[^;]*(?:\banon\b|\bauthenticated\b|\bPUBLIC\b)/i.test(
+          sql,
+        )
+      ) {
+        offenders.push(`${name}: browser DML`);
+      }
+
+      if (
+        /GRANT\s+SELECT\s*\([^;]*\b(?:id|is_manual_override|manually_edited_at|created_at|updated_at)\b[^;]*\)\s*ON\s+(?:TABLE\s+)?public\.territory_ai_content\s+TO\s+[^;]*(?:\banon\b|\bauthenticated\b|\bPUBLIC\b)/i.test(
+          sql,
+        )
+      ) {
+        offenders.push(`${name}: administrative SELECT columns`);
+      }
+
+      if (
+        /CREATE\s+(?:OR\s+REPLACE\s+)?FUNCTION\s+private\.stamp_territory_ai_manual_edit/i.test(
+          sql,
+        ) ||
+        /CREATE\s+TRIGGER\s+stamp_territory_ai_manual_edit/i.test(sql)
+      ) {
+        offenders.push(`${name}: obsolete manual-edit trigger authority`);
       }
     }
 
-    expect(regressions).toEqual([]);
+    expect(offenders).toEqual([]);
   });
 });
