@@ -730,6 +730,31 @@ describe("Security Authority migration validator", () => {
     expect(violations).toEqual([]);
   });
 
+  it("does not treat policy comments mentioning SECURITY DEFINER as function definitions", () => {
+    const violations = validateFixture(`
+      COMMENT ON POLICY privacy_subject_requests_deny_direct
+        ON public.privacy_subject_requests IS
+        'Reads use protected SECURITY DEFINER RPCs.';
+      DROP FUNCTION IF EXISTS public.retired_security_authority_probe();
+    `);
+
+    expect(violations).toEqual([]);
+  });
+
+  it("rejects a post-hardening SECURITY DEFINER function without a pinned search_path", () => {
+    const violations = validateFixture(`
+      CREATE OR REPLACE FUNCTION public.read_security_authority_probe()
+      RETURNS text
+      LANGUAGE sql
+      SECURITY DEFINER
+      AS 'SELECT ''safe''';
+    `);
+
+    expect(violations).toContainEqual(
+      expect.stringContaining("Funcao SECURITY DEFINER sem SET search_path explicito"),
+    );
+  });
+
   it("rejects an exposed mutating SECURITY DEFINER RPC without an auth guard", () => {
     const violations = validateFixture(`
       CREATE OR REPLACE FUNCTION public.update_security_authority_probe(p_value text)

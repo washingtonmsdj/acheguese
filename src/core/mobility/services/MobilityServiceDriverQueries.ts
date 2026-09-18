@@ -32,10 +32,6 @@ type TableClient<TRow> = PromiseLike<QueryPayload<TRow>> & {
 
 type MobilityDriverQueriesDbClient = {
   from<TRow = Record<string, unknown>>(table: string): TableClient<TRow>;
-  rpc<TRow = Record<string, unknown>>(
-    fn: string,
-    params?: Record<string, unknown>,
-  ): Promise<QueryPayload<TRow>>;
 };
 
 const mobilityDriverQueriesDb = supabase as unknown as MobilityDriverQueriesDbClient;
@@ -97,15 +93,6 @@ type DriverDirectoryRow = {
     | DriverDirectoryProfileRelation
     | readonly DriverDirectoryProfileRelation[]
     | null;
-};
-
-type DriverDataSummaryRow = {
-  profile_id: string;
-  rating: number | null;
-  can_do_delivery: boolean | null;
-  can_do_rides: boolean | null;
-  is_verified: boolean | null;
-  subscription_active: boolean | null;
 };
 
 function normalizeDirectoryProfile(
@@ -190,32 +177,6 @@ export async function getDriverProfiles(): Promise<{ data: unknown[]; error: unk
     logger.error("MobilityQueries.getDriverProfiles", error as Error);
     return { data: [], error };
   }
-}
-
-export async function getDriverDataByProfileIds(profileIds: string[]): Promise<unknown[]> {
-  if (!profileIds.length) return [];
-
-  const query = await mobilityDriverQueriesDb.rpc<DriverDataSummaryRow>(
-    "get_driver_dispatch_summaries",
-    { p_profile_ids: profileIds },
-  );
-
-  if (query.error) throw query.error;
-
-  const profiles = await Promise.all(
-    profileIds.map((profileId) => profileService.getProfileById(profileId).catch(() => null)),
-  );
-  const suspensionMap = new Map(
-    profileIds.map((profileId, index) => [
-      profileId,
-      isProfileSuspended(profiles.at(index) as Record<string, unknown> | null),
-    ]),
-  );
-
-  return (query.data ?? []).map((row) => ({
-    ...row,
-    is_suspended: suspensionMap.get(row.profile_id) ?? false,
-  }));
 }
 
 export async function getTopDrivers(

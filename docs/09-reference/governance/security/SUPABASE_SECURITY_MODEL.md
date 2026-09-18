@@ -188,10 +188,19 @@ A allowlist atual de funcoes sem JWT e:
 - `register-community-interest`: broker publico autoritativo da waitlist, com
   payload e metodo restritos, rate limit, honeypot, verificacao Turnstile de
   action/hostname e `INSERT` server-side por `service_role`. Durante a fase
-  ADDITIVE, `anon` e `authenticated` conservam apenas um grant temporario de
-  `INSERT` por coluna e uma policy `TEMPORARY LEGACY COMPATIBILITY`, sem
-  `SELECT`, `UPDATE` ou `DELETE` publico. A remocao ocorre somente pelo CUTOVER
-  evidence-gated mantido fora da fila ativa de migrations.
+  ADDITIVE, o remoto atual nega grants diretos de `INSERT` a `anon` e
+  `authenticated`, embora as policies historicas de `INSERT` ainda existam.
+  A remocao dessas policies ocorre somente pelo CUTOVER evidence-gated mantido
+  fora da fila ativa de migrations.
+- `create-professional-lead`: broker publico de contatos profissionais, com
+  payload limitado, rate limit, Turnstile de action/hostname, deteccao de
+  duplicatas e resolucao server-side opcional da identidade autenticada.
+- `submit-dpo-request`: broker publico de pedidos LGPD, com payload limitado,
+  rate limit, Turnstile de action/hostname e associacao opcional a usuario
+  autenticado quando um bearer valido for fornecido.
+- `resend-emergency-webhook`: ingresso sem sessao de usuario para eventos do
+  Resend; exige assinatura Svix valida, limita o corpo e aplica somente eventos
+  de entrega suportados por meio do RPC server-side.
 
 Qualquer novo `verify_jwt=false` precisa de justificativa no plano/auditoria,
 validacao de rate limit e atualizacao deliberada do gate

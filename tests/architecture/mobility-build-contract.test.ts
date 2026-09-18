@@ -42,7 +42,7 @@ describe("mobility production build boundaries", () => {
   it("keeps delivery completion price server-owned after the compatibility cutover", () => {
     const migration = read(
       "supabase/migrations/20260916233125_remove_mobility_delivery_final_price_compat.sql",
-    );
+    ).replace(/\r\n/g, "\n");
     const broker = read("supabase/functions/mobility-rpc/index.ts");
 
     expect(migration).toContain(

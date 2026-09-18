@@ -4,7 +4,7 @@ import { describe, expect, it } from "vitest";
 import {
   readSupabaseFunctionHttpErrorBody,
   resolveSupabaseFunctionErrorMessage,
-} from "./functionErrors";
+} from "@/integrations/supabase/functionErrors";
 
 describe("readSupabaseFunctionHttpErrorBody", () => {
   it("reads the JSON body from a Supabase FunctionsHttpError response", async () => {

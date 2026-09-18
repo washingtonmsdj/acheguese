@@ -32,7 +32,7 @@ describe("G106 admin driver directory authority", () => {
   it("builds the admin directory from explicit registration and public identity fields", () => {
     const method = queries.slice(
       queries.indexOf("export async function getDriverProfiles"),
-      queries.indexOf("export async function getDriverDataByProfileIds"),
+      queries.indexOf("export async function getTopDrivers"),
     );
 
     expect(method).toContain('.from<DriverDirectoryRow>("driver_data")');

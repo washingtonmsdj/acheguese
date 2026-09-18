@@ -53,7 +53,7 @@ describe("G86 driver registration authority", () => {
       "active_ride_mode",
     ]) {
       expect(driverRegistrationService).not.toContain(`'${operationalField}'`);
-      expect(driverRegistrationService).not.toContain(`\"${operationalField}\"`);
+      expect(driverRegistrationService).not.toContain(`"${operationalField}"`);
     }
   });
 });

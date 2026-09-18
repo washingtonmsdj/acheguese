@@ -213,8 +213,8 @@ Essa política substitui a antiga ideia de escolher um repositório e abandonar 
 ## Baseline GitHub confirmado
 
 - `main` é a única linha ativa escolhida para esta estabilização.
-- **93 branches existem no snapshot atual:** `main` + **92 refs históricas** pendentes de classificação segura (#84). A contagem foi revalidada diretamente: a página 93 existe e a página 94 está vazia com `per_page=1`.
-- `main` permanece sem proteção/ruleset autoritativo no último snapshot confirmado (#28).
+- Snapshot remoto de 2026-09-18: **40 branches** — `main`, a branch ativa do PR #117 e **38 refs históricas** ainda pendentes de classificação segura (#84). As 85 refs integradas ou ancestrais já foram removidas e conferidas pela API em 2026-09-17. Não excluir as 38 restantes antes da revisão semântica de cada delta.
+- `main` recebeu proteção parcial em 2026-09-17: `protected=true`, admins sujeitos às regras, force-push/deleção bloqueados e resolução de conversas exigida; PR/checks/push restrictions continuam pendentes até reconciliar o writer direto `Supabase Types Sync` (#28).
 - os workflows SSOT foram alinhados com `push` na `main`; alterações em tooling canônico sob `tools/**` e nos arquivos de configuração relevantes devem disparar os gates correspondentes.
 - o root legado `scripts/**` está aposentado; workflows/package scripts não devem depender de wrappers recriados nesse caminho.
 - a camada GitHub Actions apresentou nesta estabilização falhas pre-step com `steps=[]`/runner não provisionado; nenhum check desse tipo pode ser tratado como prova verde até executar comandos reais (#17).
@@ -344,7 +344,7 @@ Para cada módulo exigir: entrypoint canônico, banco/RPC atual, autorização p
 ## P2 — higiene E2E e branches
 
 - [x] provenance explícita das fixtures `business_data` (`source=e2e`, `source_kind=technical_fixture`) centralizada nos clients operacionais e protegida por regression guard (#83, concluído no nível de código);
-- [ ] classificar as **92 refs históricas** e reconstruir na `main` qualquer delta útil antes de removê-las (#84);
+- [ ] classificar as **38 refs históricas remanescentes** e reconstruir na `main` qualquer delta útil antes de removê-las (#84; as 85 refs comprovadamente integradas/ancestrais já foram removidas e verificadas pela API em 2026-09-17);
 - [ ] não fazer merge/delete em massa: cada ref histórica precisa de classificação de provenance e utilidade antes da decisão.
 
 ## Definition of Done — MVP

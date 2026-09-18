@@ -74,6 +74,27 @@ function stripSqlComments(content: string): string {
   return content.replace(/--.*$/gm, "").replace(/\/\*[\s\S]*?\*\//g, "");
 }
 
+function hasUnhardenedSecurityDefinerFunction(content: string): boolean {
+  const sql = stripSqlComments(content);
+  const createFunctionRegex = new RegExp(
+    String.raw`\bCREATE\s+(?:OR\s+REPLACE\s+)?FUNCTION\s+${SQL_IDENTIFIER}\s*\([^)]*\)([\s\S]*?)(?=\n\s*(?:CREATE|ALTER|DROP|GRANT|REVOKE|COMMENT|NOTIFY|DO\b|$))`,
+    "gi",
+  );
+  let match: RegExpExecArray | null;
+
+  while ((match = createFunctionRegex.exec(sql))) {
+    const definitionHeader = match[1].split(/\bAS\b/i, 1)[0];
+    if (
+      /\bSECURITY\s+DEFINER\b/i.test(definitionHeader) &&
+      !/\bSET\s+search_path\b/i.test(definitionHeader)
+    ) {
+      return true;
+    }
+  }
+
+  return false;
+}
+
 function normalizeSqlIdentifier(identifier: string): string {
   const parts = identifier
     .replace(/"/g, "")
@@ -662,8 +683,7 @@ export function validateMigrationFiles(files: MigrationFile[]): string[] {
 
     if (
       file.version > SECURITY_DEFINER_HARDENING_VERSION &&
-      /SECURITY\s+DEFINER/i.test(content) &&
-      !/SET\s+search_path/i.test(content)
+      hasUnhardenedSecurityDefinerFunction(content)
     ) {
       violations.push(
         `Funcao SECURITY DEFINER sem SET search_path explicito em ${file.name}.`,
