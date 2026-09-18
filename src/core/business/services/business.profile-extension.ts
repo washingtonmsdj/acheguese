@@ -84,8 +84,7 @@ export async function updateBusinessProfileExtension(
   updates: BusinessProfileExtensionUpdate,
 ): Promise<BusinessProfileExtensionRecord> {
   // tax_id is intentionally server-owned/read-only for authenticated users.
-  // Compatibility callers may still pass a broader BusinessData object through
-  // a cast, so strip it at runtime in addition to excluding it from the type.
+  // Strip it defensively at runtime in addition to excluding it from the type.
   const mutableUpdates = { ...updates } as Record<string, unknown>;
   delete mutableUpdates.tax_id;
 
