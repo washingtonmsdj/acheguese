@@ -65,6 +65,7 @@ describe("Ride request contract mapper ownership", () => {
     expect(readModel).toContain(
       'from "./RideRequestContractMapper"',
     );
+    expect(readModel).not.toContain("as unknown as Tables");
     expect(ssotCheck).not.toContain("RideCanonicalAdapter.ts");
     expect(ssotCheck).not.toContain("RideRequestContractMapper.ts");
   });
