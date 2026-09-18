@@ -81,22 +81,17 @@ function extractPortfolioImages(row: ProfessionalRow): string[] {
     .filter((url): url is string => typeof url === "string" && url.trim().length > 0);
 }
 
-function extractTerritory(row: ProfessionalRow, metadata: JsonRecord): {
+function extractTerritory(row: ProfessionalRow): {
   geographicPath?: string;
   city?: string;
   state?: string;
   neighborhood?: string;
 } {
-  const metadataLocation = asRecord(metadata.location);
   const location = firstRelation(row.location);
   const geographicPath = optionalString(row.geographic_path) ?? optionalString(location?.geographic_path);
 
   if (!geographicPath) {
-    return {
-      city: optionalString(metadataLocation.city),
-      state: optionalString(metadataLocation.state),
-      neighborhood: optionalString(metadataLocation.neighborhood),
-    };
+    return {};
   }
 
   const { city, state } = extractCityStateFromPath(geographicPath);
@@ -107,7 +102,7 @@ function extractTerritory(row: ProfessionalRow, metadata: JsonRecord): {
     geographicPath,
     city,
     state,
-    neighborhood: optionalString(metadataLocation.neighborhood) ?? neighborhood,
+    neighborhood,
   };
 }
 
@@ -116,7 +111,7 @@ export function mapProfessionalRow(row: ProfessionalRow): Professional {
   const address = firstRelation(row.address) ?? firstRelation(row.addresses);
   const metadata = asRecord(row.metadata);
   const socialLinks = asRecord(metadata.social_links);
-  const territory = extractTerritory(row, metadata);
+  const territory = extractTerritory(row);
 
   const professionalDataId = row.id ?? "";
   const serviceCategory = optionalString(row.service_category) ?? "outros";
@@ -138,8 +133,8 @@ export function mapProfessionalRow(row: ProfessionalRow): Professional {
     neighborhood: territory.neighborhood,
     city: territory.city,
     state: territory.state,
-    latitude: optionalNumber(address?.latitude) ?? optionalNumber(metadata.latitude),
-    longitude: optionalNumber(address?.longitude) ?? optionalNumber(metadata.longitude),
+    latitude: optionalNumber(address?.latitude),
+    longitude: optionalNumber(address?.longitude),
     certifications: asStringArray(row.certifications),
     experience_years: row.experience_years ?? undefined,
     education: optionalString(row.education),
