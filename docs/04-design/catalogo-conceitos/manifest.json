@@ -1,0 +1,1082 @@
+[
+  {
+    "id": 4,
+    "pagina": "01-identidade-visual",
+    "titulo": "identidade-simbolo",
+    "arquivo": "01-identidade-visual/historico/004-identidade-simbolo.png",
+    "origem": ".codex/generated_images/01a08607-a8d7-7ed0-9d31-72a4198da92f/exec-b468c004-f47b-4891-ba04-98bb8b2571ee.png",
+    "sha256": "0d8d7000c96ce4f29a50c844b4862f0451e40e0d708de5b10f487c6fc12b2998",
+    "classificacao": "Histórico — não aplicar automaticamente",
+    "implementacao": "não auditada pelo catálogo"
+  },
+  {
+    "id": 5,
+    "pagina": "01-identidade-visual",
+    "titulo": "logo-alternativa",
+    "arquivo": "01-identidade-visual/pranchas/005-logo-alternativa.png",
+    "origem": ".codex/generated_images/01a08607-a8d7-7ed0-9d31-72a4198da92f/exec-77a7f17c-c888-4c99-adef-1bfd055254c6.png",
+    "sha256": "9a7938f11f3d28bdd060dc159d19585571f7ea17a68d39e978d52917e202a51d",
+    "classificacao": "Referência para revisão",
+    "implementacao": "não auditada pelo catálogo"
+  },
+  {
+    "id": 6,
+    "pagina": "02-entrada-do-site",
+    "titulo": "entrada-introducao",
+    "arquivo": "02-entrada-do-site/historico/006-entrada-introducao.png",
+    "origem": ".codex/generated_images/01a08607-a8d7-7ed0-9d31-72a4198da92f/exec-f4499a92-33c0-401e-913a-f82a7e27b943.png",
+    "sha256": "115f3899c95181f9020aab0937ae6c2f5e88e8c555c2423642b934f336448e70",
+    "classificacao": "Histórico — não aplicar automaticamente",
+    "implementacao": "não auditada pelo catálogo"
+  },
+  {
+    "id": 7,
+    "pagina": "02-entrada-do-site",
+    "titulo": "entrada-mapa",
+    "arquivo": "02-entrada-do-site/historico/007-entrada-mapa.png",
+    "origem": ".codex/generated_images/01a08607-a8d7-7ed0-9d31-72a4198da92f/exec-d32eb48f-003b-4f49-93ce-6bb1d454563b.png",
+    "sha256": "25034969c802c6e302f43206f2ac6839ef208d20e1fb0397a89e4c7b2d2fc2b4",
+    "classificacao": "Histórico — não aplicar automaticamente",
+    "implementacao": "não auditada pelo catálogo"
+  },
+  {
+    "id": 53,
+    "pagina": "02-entrada-do-site",
+    "titulo": "entrada-mapa-revisada",
+    "arquivo": "02-entrada-do-site/historico/053-entrada-mapa-revisada.png",
+    "origem": ".codex/generated_images/01a08607-a8d7-7ed0-9d31-72a4198da92f/exec-8e779000-72df-4bb1-b19b-4a6662b3d708.png",
+    "sha256": "1ccb737f5d01441358d99a229a625566d7e71db55d006804f21744737c284d82",
+    "classificacao": "Histórico — não aplicar automaticamente",
+    "implementacao": "não auditada pelo catálogo"
+  },
+  {
+    "id": 59,
+    "pagina": "02-entrada-do-site",
+    "titulo": "entrada-mvp-complexo",
+    "arquivo": "02-entrada-do-site/pranchas/059-entrada-mvp-complexo.png",
+    "origem": ".codex/generated_images/01a08607-a8d7-7ed0-9d31-72a4198da92f/exec-569658a9-bc28-49b2-8175-37cc9fe2ca06.png",
+    "sha256": "b0be11c0188038ef958d80d485419164e4efc6d51fb77b1458c024750d00b5da",
+    "classificacao": "Referência para revisão",
+    "implementacao": "não auditada pelo catálogo"
+  },
+  {
+    "id": 54,
+    "pagina": "03-expansao-territorial",
+    "titulo": "encontrar-comunidade",
+    "arquivo": "03-expansao-territorial/historico/054-encontrar-comunidade.png",
+    "origem": ".codex/generated_images/01a08607-a8d7-7ed0-9d31-72a4198da92f/exec-93035238-044a-4805-921c-35bcfd6de749.png",
+    "sha256": "eb26030285c58f1759fbe89db144a82003686f953770ffe833e2cce0aacc353f",
+    "classificacao": "Histórico — não aplicar automaticamente",
+    "implementacao": "não auditada pelo catálogo"
+  },
+  {
+    "id": 60,
+    "pagina": "03-expansao-territorial",
+    "titulo": "expansao-interesse",
+    "arquivo": "03-expansao-territorial/pranchas/060-expansao-interesse.png",
+    "origem": ".codex/generated_images/01a08607-a8d7-7ed0-9d31-72a4198da92f/exec-dd76dc0e-a3fb-4978-99c2-68142b0645b7.png",
+    "sha256": "6e39a45ea97310dfb88ff83a1ce2f5b9a7008428053c57bdd723375efbca563b",
+    "classificacao": "Referência para revisão",
+    "implementacao": "não auditada pelo catálogo"
+  },
+  {
+    "id": 61,
+    "pagina": "04-como-funciona",
+    "titulo": "como-funciona-mobile",
+    "arquivo": "04-como-funciona/pranchas/061-como-funciona-mobile.png",
+    "origem": ".codex/generated_images/01a08607-a8d7-7ed0-9d31-72a4198da92f/exec-dc450161-af18-40cc-84d7-198662945ac1.png",
+    "sha256": "76fd0e8f4d0fafd7593686e4748aca212732b8b655be4399af2ffea0ab532271",
+    "classificacao": "Referência para revisão",
+    "implementacao": "não auditada pelo catálogo"
+  },
+  {
+    "id": 62,
+    "pagina": "04-como-funciona",
+    "titulo": "como-funciona-desktop",
+    "arquivo": "04-como-funciona/pranchas/062-como-funciona-desktop.png",
+    "origem": ".codex/generated_images/01a08607-a8d7-7ed0-9d31-72a4198da92f/exec-00d34a55-f074-4430-93a5-0a5085d055d0.png",
+    "sha256": "2d91fe023eb0c113c4c2d444e7c42971dc15ef9bb2b802261b949dcdd86efbaa",
+    "classificacao": "Referência para revisão",
+    "implementacao": "não auditada pelo catálogo"
+  },
+  {
+    "id": 1,
+    "pagina": "05-home-comunidade",
+    "titulo": "home-inicial",
+    "arquivo": "05-home-comunidade/historico/001-home-inicial.png",
+    "origem": ".codex/generated_images/01a08607-a8d7-7ed0-9d31-72a4198da92f/exec-c9ee05ff-557f-48fd-8fa3-3da1921d54a4.png",
+    "sha256": "3c05e28ae511ee77840fad7f2b1416284340f4425a1b0651f4a0fe39754e370a",
+    "classificacao": "Histórico — não aplicar automaticamente",
+    "implementacao": "não auditada pelo catálogo"
+  },
+  {
+    "id": 3,
+    "pagina": "05-home-comunidade",
+    "titulo": "home-petroleo",
+    "arquivo": "05-home-comunidade/historico/003-home-petroleo.png",
+    "origem": ".codex/generated_images/01a08607-a8d7-7ed0-9d31-72a4198da92f/exec-7e0cd3dc-3e66-4d78-b21d-25055cf64cd5.png",
+    "sha256": "9a8dacf1967dd87415d58e121bfb9ad5fc80cae30eaf21336e1e2b4674508ddc",
+    "classificacao": "Histórico — não aplicar automaticamente",
+    "implementacao": "não auditada pelo catálogo"
+  },
+  {
+    "id": 8,
+    "pagina": "05-home-comunidade",
+    "titulo": "home-territorio",
+    "arquivo": "05-home-comunidade/historico/008-home-territorio.png",
+    "origem": ".codex/generated_images/01a08607-a8d7-7ed0-9d31-72a4198da92f/exec-30917490-b051-46c6-b9ba-ecfe856da825.png",
+    "sha256": "95b8d0f03bc9542340103568487447b8c6cd134a18746f68adadfa376e8e7cc6",
+    "classificacao": "Histórico — não aplicar automaticamente",
+    "implementacao": "não auditada pelo catálogo"
+  },
+  {
+    "id": 76,
+    "pagina": "05-home-comunidade",
+    "titulo": "home-complexo-mobile",
+    "arquivo": "05-home-comunidade/pranchas/076-home-complexo-mobile.png",
+    "origem": ".codex/generated_images/01a08607-a8d7-7ed0-9d31-72a4198da92f/exec-d000905a-0fa2-487e-93dc-3c23c06ea973.png",
+    "sha256": "4eeb0bbfba7ba2c7b990d7986e390edc99682b9c908586d572ab8e4837c36793",
+    "classificacao": "Referência para revisão",
+    "implementacao": "não auditada pelo catálogo"
+  },
+  {
+    "id": 77,
+    "pagina": "05-home-comunidade",
+    "titulo": "home-complexo-desktop",
+    "arquivo": "05-home-comunidade/pranchas/077-home-complexo-desktop.png",
+    "origem": ".codex/generated_images/01a08607-a8d7-7ed0-9d31-72a4198da92f/exec-f5d65cae-e7a9-4a2f-9692-ef43ac88af98.png",
+    "sha256": "e0f28c5c4ce33192015815837057e09d8e61c883ebd07deb165873d3ee55c0de",
+    "classificacao": "Referência para revisão",
+    "implementacao": "não auditada pelo catálogo"
+  },
+  {
+    "id": 78,
+    "pagina": "05-home-comunidade",
+    "titulo": "home-complexo-estados",
+    "arquivo": "05-home-comunidade/pranchas/078-home-complexo-estados.png",
+    "origem": ".codex/generated_images/01a08607-a8d7-7ed0-9d31-72a4198da92f/exec-fd0696c4-2918-49ee-97d0-d5c97226d641.png",
+    "sha256": "6b67b0f5662be64bd180a5d4e285b0056c86a7b94a22c5aed2a7546531892e60",
+    "classificacao": "Referência para revisão",
+    "implementacao": "não auditada pelo catálogo"
+  },
+  {
+    "id": 2,
+    "pagina": "06-feed-comunidade",
+    "titulo": "feed-comunidade",
+    "arquivo": "06-feed-comunidade/pranchas/002-feed-comunidade.png",
+    "origem": ".codex/generated_images/01a08607-a8d7-7ed0-9d31-72a4198da92f/exec-d1b4215a-d9c4-4118-a1c8-352b7475cc31.png",
+    "sha256": "5310ab7afeff7aa8963618b5db0a10a3dd3a2c17d50fdc88c26613e6408b8b0b",
+    "classificacao": "Referência para revisão",
+    "implementacao": "não auditada pelo catálogo"
+  },
+  {
+    "id": 9,
+    "pagina": "07-explorar",
+    "titulo": "explorar-mapa-lista",
+    "arquivo": "07-explorar/pranchas/009-explorar-mapa-lista.png",
+    "origem": ".codex/generated_images/01a08607-a8d7-7ed0-9d31-72a4198da92f/exec-4325b5ce-9a31-4573-a609-4d77259e0fe2.png",
+    "sha256": "7966aa79bb4e537f769c8b41ac6eb39490ccf32d493e780074495de8f5916983",
+    "classificacao": "Referência para revisão",
+    "implementacao": "não auditada pelo catálogo"
+  },
+  {
+    "id": 10,
+    "pagina": "08-perfil-profissional",
+    "titulo": "perfil-profissional",
+    "arquivo": "08-perfil-profissional/pranchas/010-perfil-profissional.png",
+    "origem": ".codex/generated_images/01a08607-a8d7-7ed0-9d31-72a4198da92f/exec-64cb0708-f13c-4f60-b925-5bbb86ce7a33.png",
+    "sha256": "49531b7dbce005954c3f036b4ed12834ce46324b16f2cfc57361fe39764353f2",
+    "classificacao": "Referência para revisão",
+    "implementacao": "não auditada pelo catálogo"
+  },
+  {
+    "id": 11,
+    "pagina": "09-conversas",
+    "titulo": "conversas-inicial",
+    "arquivo": "09-conversas/historico/011-conversas-inicial.png",
+    "origem": ".codex/generated_images/01a08607-a8d7-7ed0-9d31-72a4198da92f/exec-3fd04129-af55-4c3e-99d8-eef3a77f5837.png",
+    "sha256": "26be31970c08fc5afb2228426547e76ad7edbbd5dab4ae7a6bcd4b0f50c8263b",
+    "classificacao": "Histórico — não aplicar automaticamente",
+    "implementacao": "não auditada pelo catálogo"
+  },
+  {
+    "id": 12,
+    "pagina": "09-conversas",
+    "titulo": "conversas-seletor",
+    "arquivo": "09-conversas/historico/012-conversas-seletor.png",
+    "origem": ".codex/generated_images/01a08607-a8d7-7ed0-9d31-72a4198da92f/exec-4d7a45e1-265b-479e-b038-0c03903ad0bc.png",
+    "sha256": "1fd526e0dab460c1ad5678824affe3d0efb3ed3db3402b934ee002752214c021",
+    "classificacao": "Histórico — não aplicar automaticamente",
+    "implementacao": "não auditada pelo catálogo"
+  },
+  {
+    "id": 14,
+    "pagina": "09-conversas",
+    "titulo": "conversas-perfis-lado-a-lado",
+    "arquivo": "09-conversas/pranchas/014-conversas-perfis-lado-a-lado.png",
+    "origem": ".codex/generated_images/01a08607-a8d7-7ed0-9d31-72a4198da92f/exec-1b4228ed-e66b-45af-a115-40e1380aaad3.png",
+    "sha256": "86d26b2023d1c08ae66bc671d140657100e375ce9c1108f4b57eb0b901607931",
+    "classificacao": "Referência para revisão",
+    "implementacao": "não auditada pelo catálogo"
+  },
+  {
+    "id": 13,
+    "pagina": "10-meus-perfis",
+    "titulo": "conta-perfis-inicial",
+    "arquivo": "10-meus-perfis/historico/013-conta-perfis-inicial.png",
+    "origem": ".codex/generated_images/01a08607-a8d7-7ed0-9d31-72a4198da92f/exec-a041273a-29de-48be-a95b-da33f387d03c.png",
+    "sha256": "a111b9a0bb44ebcbe9fc7144ee696b287a7ea9f8b5eb9b9cabddbe87b372cbf9",
+    "classificacao": "Histórico — não aplicar automaticamente",
+    "implementacao": "não auditada pelo catálogo"
+  },
+  {
+    "id": 15,
+    "pagina": "10-meus-perfis",
+    "titulo": "meus-perfis",
+    "arquivo": "10-meus-perfis/pranchas/015-meus-perfis.png",
+    "origem": ".codex/generated_images/01a08607-a8d7-7ed0-9d31-72a4198da92f/exec-2e8f4731-62f5-4ffc-8bab-897705f0813a.png",
+    "sha256": "f9faecebf647d819457f884c3dc182d82a92684ac45a1e8737894b0c8db15fd0",
+    "classificacao": "Referência para revisão",
+    "implementacao": "não auditada pelo catálogo"
+  },
+  {
+    "id": 16,
+    "pagina": "11-visao-geral-loja",
+    "titulo": "loja-visao-geral",
+    "arquivo": "11-visao-geral-loja/pranchas/016-loja-visao-geral.png",
+    "origem": ".codex/generated_images/01a08607-a8d7-7ed0-9d31-72a4198da92f/exec-115c975b-21ea-4a1f-b359-16bc788ac42b.png",
+    "sha256": "9054cba7e87bbf9242c0b0d425cf9c536c1057a31e2092fd6c49dcd702d4e384",
+    "classificacao": "Referência para revisão",
+    "implementacao": "não auditada pelo catálogo"
+  },
+  {
+    "id": 17,
+    "pagina": "12-gestao-cardapio",
+    "titulo": "gestao-cardapio",
+    "arquivo": "12-gestao-cardapio/pranchas/017-gestao-cardapio.png",
+    "origem": ".codex/generated_images/01a08607-a8d7-7ed0-9d31-72a4198da92f/exec-f34c7844-28bc-400a-b426-1001d4370771.png",
+    "sha256": "61ef5ef600fa1ff075af3978f9fc6f1c78f39ac78ef4fe19e52687d9e21b2061",
+    "classificacao": "Referência para revisão",
+    "implementacao": "não auditada pelo catálogo"
+  },
+  {
+    "id": 18,
+    "pagina": "13-cardapio-publico",
+    "titulo": "cardapio-publico",
+    "arquivo": "13-cardapio-publico/historico/018-cardapio-publico.png",
+    "origem": ".codex/generated_images/01a08607-a8d7-7ed0-9d31-72a4198da92f/exec-6dd7912f-f4e2-438b-945d-ca29f9574e6f.png",
+    "sha256": "4c21b3abef2a398ffb6d07c1615b932f9e30035768945286c1ed0d49c450116c",
+    "classificacao": "Histórico — não aplicar automaticamente",
+    "implementacao": "não auditada pelo catálogo"
+  },
+  {
+    "id": 19,
+    "pagina": "13-cardapio-publico",
+    "titulo": "cardapio-produto",
+    "arquivo": "13-cardapio-publico/pranchas/019-cardapio-produto.png",
+    "origem": ".codex/generated_images/01a08607-a8d7-7ed0-9d31-72a4198da92f/exec-fc9f0c0d-76db-414e-9454-38236c60bd5c.png",
+    "sha256": "ef25967e7fcadd6c547cfb26641ab3dfeed45734a09620ce5ff0687ce55b569f",
+    "classificacao": "Referência para revisão",
+    "implementacao": "não auditada pelo catálogo"
+  },
+  {
+    "id": 20,
+    "pagina": "14-finalizar-pedido",
+    "titulo": "checkout-inicial",
+    "arquivo": "14-finalizar-pedido/historico/020-checkout-inicial.png",
+    "origem": ".codex/generated_images/01a08607-a8d7-7ed0-9d31-72a4198da92f/exec-1292675b-e46a-4d3c-8b6e-649b5b9d643d.png",
+    "sha256": "a5930e09c0e59cf8c4f334dc4529a20180e74eafafd198b2bce8ed87d5cb42cb",
+    "classificacao": "Histórico — não aplicar automaticamente",
+    "implementacao": "não auditada pelo catálogo"
+  },
+  {
+    "id": 21,
+    "pagina": "14-finalizar-pedido",
+    "titulo": "checkout-plataforma",
+    "arquivo": "14-finalizar-pedido/pranchas/021-checkout-plataforma.png",
+    "origem": ".codex/generated_images/01a08607-a8d7-7ed0-9d31-72a4198da92f/exec-01d30cb8-7f50-4258-98fb-6e44f060dcb8.png",
+    "sha256": "b1e5cdebabeee1f561c205ae2a1c9d5b433ff8d25d4efd8589b8808775820f3b",
+    "classificacao": "Referência para revisão",
+    "implementacao": "não auditada pelo catálogo"
+  },
+  {
+    "id": 24,
+    "pagina": "14-finalizar-pedido",
+    "titulo": "checkout-mobile-estados",
+    "arquivo": "14-finalizar-pedido/pranchas/024-checkout-mobile-estados.png",
+    "origem": ".codex/generated_images/01a08607-a8d7-7ed0-9d31-72a4198da92f/exec-ad13d3f8-6e32-4b2c-acf9-2ca14b4f77f2.png",
+    "sha256": "e6894044f0741cbaeba25ccb534aa19a59acce7fc3e823361700690ec65effb3",
+    "classificacao": "Referência para revisão",
+    "implementacao": "não auditada pelo catálogo"
+  },
+  {
+    "id": 22,
+    "pagina": "15-acompanhar-pedido",
+    "titulo": "acompanhamento-inicial",
+    "arquivo": "15-acompanhar-pedido/historico/022-acompanhamento-inicial.png",
+    "origem": ".codex/generated_images/01a08607-a8d7-7ed0-9d31-72a4198da92f/exec-3e75482b-0bc4-4f41-984a-3b00ee460e85.png",
+    "sha256": "ab94e9531b6599d3101229c58a31cf362756fa45b1ad3d13b5ac71d94b70fcdd",
+    "classificacao": "Histórico — não aplicar automaticamente",
+    "implementacao": "não auditada pelo catálogo"
+  },
+  {
+    "id": 23,
+    "pagina": "15-acompanhar-pedido",
+    "titulo": "acompanhamento-mobile",
+    "arquivo": "15-acompanhar-pedido/pranchas/023-acompanhamento-mobile.png",
+    "origem": ".codex/generated_images/01a08607-a8d7-7ed0-9d31-72a4198da92f/exec-3dd777e7-267c-4061-8ed9-cb1896326ede.png",
+    "sha256": "68d62d1eb9a5c249ab00db22c4f036f051408e3476bec9ffd66e119bc817be3e",
+    "classificacao": "Referência para revisão",
+    "implementacao": "não auditada pelo catálogo"
+  },
+  {
+    "id": 25,
+    "pagina": "15-acompanhar-pedido",
+    "titulo": "acompanhamento-desktop",
+    "arquivo": "15-acompanhar-pedido/pranchas/025-acompanhamento-desktop.png",
+    "origem": ".codex/generated_images/01a08607-a8d7-7ed0-9d31-72a4198da92f/exec-68454d94-0cfd-481f-9dfe-b63140796a47.png",
+    "sha256": "67627a7db6a6bf16c27febecd75cde0290686c9c1c388e2cd2dc6b23e054451f",
+    "classificacao": "Referência para revisão",
+    "implementacao": "não auditada pelo catálogo"
+  },
+  {
+    "id": 26,
+    "pagina": "16-pedidos-loja",
+    "titulo": "pedidos-loja",
+    "arquivo": "16-pedidos-loja/pranchas/026-pedidos-loja.png",
+    "origem": ".codex/generated_images/01a08607-a8d7-7ed0-9d31-72a4198da92f/exec-036a65c8-4559-4e91-a1a2-8e4e8bc1f3eb.png",
+    "sha256": "cd96de2fab6ba38722c2dbf8cf15f5d6c9a750703b8c4b776f9f54b929906cc0",
+    "classificacao": "Referência para revisão",
+    "implementacao": "não auditada pelo catálogo"
+  },
+  {
+    "id": 27,
+    "pagina": "17-atendimento-pedido",
+    "titulo": "atendimento-mobile",
+    "arquivo": "17-atendimento-pedido/pranchas/027-atendimento-mobile.png",
+    "origem": ".codex/generated_images/01a08607-a8d7-7ed0-9d31-72a4198da92f/exec-3a99023d-ac5c-4141-82d4-6c6861a2970a.png",
+    "sha256": "75f2479f9be5e9a73d7a7e6719f6165f0d6f02c0f8b0985cbf0545582eb217da",
+    "classificacao": "Referência para revisão",
+    "implementacao": "não auditada pelo catálogo"
+  },
+  {
+    "id": 29,
+    "pagina": "17-atendimento-pedido",
+    "titulo": "atendimento-desktop",
+    "arquivo": "17-atendimento-pedido/pranchas/029-atendimento-desktop.png",
+    "origem": ".codex/generated_images/01a08607-a8d7-7ed0-9d31-72a4198da92f/exec-cbeb3a02-1080-4ef6-8d31-810cecdc6f01.png",
+    "sha256": "a5e16549767f725c71dfa2cd53f18fa8f73cc7df20886032c0b5b9ae03240ed9",
+    "classificacao": "Referência para revisão",
+    "implementacao": "não auditada pelo catálogo"
+  },
+  {
+    "id": 28,
+    "pagina": "18-entregas-loja",
+    "titulo": "entregas-visao-inicial",
+    "arquivo": "18-entregas-loja/historico/028-entregas-visao-inicial.png",
+    "origem": ".codex/generated_images/01a08607-a8d7-7ed0-9d31-72a4198da92f/exec-615092c8-b56d-4db5-b4c5-e3ef20f8121f.png",
+    "sha256": "e1e938507e8ac809f3bd0fc83e045aaa2f844ea0000451caea055eb5f4e2a8c2",
+    "classificacao": "Histórico — não aplicar automaticamente",
+    "implementacao": "não auditada pelo catálogo"
+  },
+  {
+    "id": 30,
+    "pagina": "18-entregas-loja",
+    "titulo": "entregas-mobile-rascunho",
+    "arquivo": "18-entregas-loja/historico/030-entregas-mobile-rascunho.png",
+    "origem": ".codex/generated_images/01a08607-a8d7-7ed0-9d31-72a4198da92f/exec-e58386ff-9504-4c6f-b973-fc56282cb47e.png",
+    "sha256": "7fec6cdac0916bbf9559d73c36d5d076db40c8f20609bcf1242aa6fcd0067337",
+    "classificacao": "Histórico — não aplicar automaticamente",
+    "implementacao": "não auditada pelo catálogo"
+  },
+  {
+    "id": 31,
+    "pagina": "18-entregas-loja",
+    "titulo": "entregas-mobile",
+    "arquivo": "18-entregas-loja/pranchas/031-entregas-mobile.png",
+    "origem": ".codex/generated_images/01a08607-a8d7-7ed0-9d31-72a4198da92f/exec-8e9e177b-55a8-4caa-aea4-cd14f60669dd.png",
+    "sha256": "2a24ce6e4952383357f35370726ec4047b45ec0bc30e709f042633271b8c654f",
+    "classificacao": "Referência para revisão",
+    "implementacao": "não auditada pelo catálogo"
+  },
+  {
+    "id": 32,
+    "pagina": "18-entregas-loja",
+    "titulo": "entregas-desktop-rascunho",
+    "arquivo": "18-entregas-loja/historico/032-entregas-desktop-rascunho.png",
+    "origem": ".codex/generated_images/01a08607-a8d7-7ed0-9d31-72a4198da92f/exec-619b122f-8906-4a4a-8736-bae0f9e82010.png",
+    "sha256": "086fb0d386679dc08b8f6d9d9a386fd620c4251fcedf49050d324f62a2d7ad94",
+    "classificacao": "Histórico — não aplicar automaticamente",
+    "implementacao": "não auditada pelo catálogo"
+  },
+  {
+    "id": 33,
+    "pagina": "18-entregas-loja",
+    "titulo": "entregas-desktop",
+    "arquivo": "18-entregas-loja/pranchas/033-entregas-desktop.png",
+    "origem": ".codex/generated_images/01a08607-a8d7-7ed0-9d31-72a4198da92f/exec-a056ff27-01e5-476d-a4bf-6a277b7e036e.png",
+    "sha256": "7611cc5bc31c4f9ea62035e63c5afec733b51fbe2d573802176c96bd90d6ae73",
+    "classificacao": "Referência para revisão",
+    "implementacao": "não auditada pelo catálogo"
+  },
+  {
+    "id": 46,
+    "pagina": "18-entregas-loja",
+    "titulo": "tres-modalidades-desktop",
+    "arquivo": "18-entregas-loja/pranchas/046-tres-modalidades-desktop.png",
+    "origem": ".codex/generated_images/01a08607-a8d7-7ed0-9d31-72a4198da92f/exec-e8287938-fde3-4fba-aad6-5bb3b1caad14.png",
+    "sha256": "654216d948d5e64782685ba5e4330cfdaaf505074416e9c5f85f1d8259f36798",
+    "classificacao": "Referência para revisão",
+    "implementacao": "não auditada pelo catálogo"
+  },
+  {
+    "id": 47,
+    "pagina": "18-entregas-loja",
+    "titulo": "diretorio-convite-inicial",
+    "arquivo": "18-entregas-loja/historico/047-diretorio-convite-inicial.png",
+    "origem": ".codex/generated_images/01a08607-a8d7-7ed0-9d31-72a4198da92f/exec-4464015d-9e47-4712-b011-394f9556f2f3.png",
+    "sha256": "af411a699916b6168b94c8ff9d959c6142d4bb6e352854c2e7c7dba9caaf91b3",
+    "classificacao": "Histórico — não aplicar automaticamente",
+    "implementacao": "não auditada pelo catálogo"
+  },
+  {
+    "id": 48,
+    "pagina": "18-entregas-loja",
+    "titulo": "diretorio-convite-mobile",
+    "arquivo": "18-entregas-loja/pranchas/048-diretorio-convite-mobile.png",
+    "origem": ".codex/generated_images/01a08607-a8d7-7ed0-9d31-72a4198da92f/exec-18e03e33-a587-4ce4-a5a4-2c860a65971f.png",
+    "sha256": "42657f57ad2d9559e0750f9167ba61ef9fa9f992dc738ead6d6b36cdd6715ce9",
+    "classificacao": "Referência para revisão",
+    "implementacao": "não auditada pelo catálogo"
+  },
+  {
+    "id": 49,
+    "pagina": "18-entregas-loja",
+    "titulo": "modalidades-operacao-mobile",
+    "arquivo": "18-entregas-loja/pranchas/049-modalidades-operacao-mobile.png",
+    "origem": ".codex/generated_images/01a08607-a8d7-7ed0-9d31-72a4198da92f/exec-d87c5d6f-45bc-49a5-851b-ac2bf3052052.png",
+    "sha256": "146b82ca32d551e5cd22b155ebc861d2f6d72f21bec6ec33618ab69109a0bc72",
+    "classificacao": "Referência para revisão",
+    "implementacao": "não auditada pelo catálogo"
+  },
+  {
+    "id": 34,
+    "pagina": "19-central-entregador",
+    "titulo": "central-entregador-inicial",
+    "arquivo": "19-central-entregador/historico/034-central-entregador-inicial.png",
+    "origem": ".codex/generated_images/01a08607-a8d7-7ed0-9d31-72a4198da92f/exec-3726140f-7294-4e25-9543-441dc5a7664f.png",
+    "sha256": "d2076a5627f7e13960510b618c97127e572dec3ed761d672b06c7637a855ce96",
+    "classificacao": "Histórico — não aplicar automaticamente",
+    "implementacao": "não auditada pelo catálogo"
+  },
+  {
+    "id": 35,
+    "pagina": "19-central-entregador",
+    "titulo": "central-entregador-mobile",
+    "arquivo": "19-central-entregador/pranchas/035-central-entregador-mobile.png",
+    "origem": ".codex/generated_images/01a08607-a8d7-7ed0-9d31-72a4198da92f/exec-776220ca-13dd-4997-aeca-c528bedb1234.png",
+    "sha256": "ce403d949639e30cb2dd18c049e14269d80a4bfa09e171e430560e1b92f1f9a3",
+    "classificacao": "Referência para revisão",
+    "implementacao": "não auditada pelo catálogo"
+  },
+  {
+    "id": 36,
+    "pagina": "19-central-entregador",
+    "titulo": "central-entregador-estados",
+    "arquivo": "19-central-entregador/pranchas/036-central-entregador-estados.png",
+    "origem": ".codex/generated_images/01a08607-a8d7-7ed0-9d31-72a4198da92f/exec-c437219f-af36-4ecf-8bf0-b19c86d1015a.png",
+    "sha256": "31fa42748b130ee8fbbe416693a17358e8f17e36ee545b3dde7ee52104876b0a",
+    "classificacao": "Referência para revisão",
+    "implementacao": "não auditada pelo catálogo"
+  },
+  {
+    "id": 37,
+    "pagina": "19-central-entregador",
+    "titulo": "central-entregador-desktop",
+    "arquivo": "19-central-entregador/pranchas/037-central-entregador-desktop.png",
+    "origem": ".codex/generated_images/01a08607-a8d7-7ed0-9d31-72a4198da92f/exec-50b7558f-ae57-402d-8bc5-1981d03f0571.png",
+    "sha256": "d5258f56fc6db6d4fbbae87a16c23b96684f053cd6181a5e48c46aeba003cbcd",
+    "classificacao": "Referência para revisão",
+    "implementacao": "não auditada pelo catálogo"
+  },
+  {
+    "id": 38,
+    "pagina": "20-cadastro-entregador",
+    "titulo": "cadastro-entregador-mobile",
+    "arquivo": "20-cadastro-entregador/pranchas/038-cadastro-entregador-mobile.png",
+    "origem": ".codex/generated_images/01a08607-a8d7-7ed0-9d31-72a4198da92f/exec-54a63bb1-403b-4010-9db5-219cdfe4d9df.png",
+    "sha256": "43883e44059419456e247a85cf5d66dae793e6ed49ec7bca9fb2f00884b4f64b",
+    "classificacao": "Referência para revisão",
+    "implementacao": "não auditada pelo catálogo"
+  },
+  {
+    "id": 39,
+    "pagina": "20-cadastro-entregador",
+    "titulo": "habilitacao-entregador",
+    "arquivo": "20-cadastro-entregador/pranchas/039-habilitacao-entregador.png",
+    "origem": ".codex/generated_images/01a08607-a8d7-7ed0-9d31-72a4198da92f/exec-37edae9f-7655-4be2-b163-4d5e1b436faa.png",
+    "sha256": "5aad9b8a1bc4ce4992a8be2272c9904adac2e6906790baecb08c31dd515c753d",
+    "classificacao": "Referência para revisão",
+    "implementacao": "não auditada pelo catálogo"
+  },
+  {
+    "id": 40,
+    "pagina": "20-cadastro-entregador",
+    "titulo": "cadastro-entregador-desktop",
+    "arquivo": "20-cadastro-entregador/pranchas/040-cadastro-entregador-desktop.png",
+    "origem": ".codex/generated_images/01a08607-a8d7-7ed0-9d31-72a4198da92f/exec-fa72e813-c3e4-41b3-a014-6170b65f8c3f.png",
+    "sha256": "4d45b91cc8a625d5bb00b299c0fbfe3d8496d84d237e202bd56b5fa84b6579b1",
+    "classificacao": "Referência para revisão",
+    "implementacao": "não auditada pelo catálogo"
+  },
+  {
+    "id": 41,
+    "pagina": "21-ganhos-entregador",
+    "titulo": "ganhos-mobile-inicial",
+    "arquivo": "21-ganhos-entregador/historico/041-ganhos-mobile-inicial.png",
+    "origem": ".codex/generated_images/01a08607-a8d7-7ed0-9d31-72a4198da92f/exec-d061e2af-b9bc-42e7-9872-e8d8bf97404b.png",
+    "sha256": "e17758ce2f820a7bc3b7971510ecf50c6516ec2e4c640d3b8cc02ad23ea1bca9",
+    "classificacao": "Histórico — não aplicar automaticamente",
+    "implementacao": "não auditada pelo catálogo"
+  },
+  {
+    "id": 42,
+    "pagina": "21-ganhos-entregador",
+    "titulo": "ganhos-mobile",
+    "arquivo": "21-ganhos-entregador/pranchas/042-ganhos-mobile.png",
+    "origem": ".codex/generated_images/01a08607-a8d7-7ed0-9d31-72a4198da92f/exec-663e888f-91a2-4f72-9f7e-a53271ccec95.png",
+    "sha256": "91ae63774a11583886ecb54d3586717da28f8a329d48b68f628e4110e5a46c5e",
+    "classificacao": "Referência para revisão",
+    "implementacao": "não auditada pelo catálogo"
+  },
+  {
+    "id": 43,
+    "pagina": "21-ganhos-entregador",
+    "titulo": "recebimentos-inicial",
+    "arquivo": "21-ganhos-entregador/historico/043-recebimentos-inicial.png",
+    "origem": ".codex/generated_images/01a08607-a8d7-7ed0-9d31-72a4198da92f/exec-48bd8399-7bcd-4013-8cef-c1d30f49d396.png",
+    "sha256": "7f86bbb57b581ba501946560048c834c7bf93dd04efad8a993b32d3a8643ab2f",
+    "classificacao": "Histórico — não aplicar automaticamente",
+    "implementacao": "não auditada pelo catálogo"
+  },
+  {
+    "id": 44,
+    "pagina": "21-ganhos-entregador",
+    "titulo": "recebimentos-estados",
+    "arquivo": "21-ganhos-entregador/pranchas/044-recebimentos-estados.png",
+    "origem": ".codex/generated_images/01a08607-a8d7-7ed0-9d31-72a4198da92f/exec-ea61e17e-e270-4c5e-917f-32bbc2fcfc30.png",
+    "sha256": "0b9f468eec63d2e0ba0fdb6a9a2ee3c120969dba789d269aff5d07af8c73d723",
+    "classificacao": "Referência para revisão",
+    "implementacao": "não auditada pelo catálogo"
+  },
+  {
+    "id": 45,
+    "pagina": "21-ganhos-entregador",
+    "titulo": "ganhos-desktop",
+    "arquivo": "21-ganhos-entregador/pranchas/045-ganhos-desktop.png",
+    "origem": ".codex/generated_images/01a08607-a8d7-7ed0-9d31-72a4198da92f/exec-cfd07ebd-500e-439a-afa2-d33282a1d05b.png",
+    "sha256": "eb7c29ebc78e05212a01bb5241b3e6cf81870c60344dcd30507f3f49a8a770ec",
+    "classificacao": "Referência para revisão",
+    "implementacao": "não auditada pelo catálogo"
+  },
+  {
+    "id": 50,
+    "pagina": "22-entregador-vinculado",
+    "titulo": "entregador-vinculado-mobile",
+    "arquivo": "22-entregador-vinculado/pranchas/050-entregador-vinculado-mobile.png",
+    "origem": ".codex/generated_images/01a08607-a8d7-7ed0-9d31-72a4198da92f/exec-8699f21b-34f3-486a-bd98-ffbb95bb1271.png",
+    "sha256": "c05665eec71ac39dfdffe084d51bdff4ef10f9beee8c9378439c475456e26314",
+    "classificacao": "Referência para revisão",
+    "implementacao": "não auditada pelo catálogo"
+  },
+  {
+    "id": 51,
+    "pagina": "22-entregador-vinculado",
+    "titulo": "comprovante-mobile",
+    "arquivo": "22-entregador-vinculado/pranchas/051-comprovante-mobile.png",
+    "origem": ".codex/generated_images/01a08607-a8d7-7ed0-9d31-72a4198da92f/exec-195e93ae-736e-4c46-b192-31297dea2585.png",
+    "sha256": "6e0c3d28f572c46967292574e7f0a9a2801a271fd8023bb60a62b4cc27a79cea",
+    "classificacao": "Referência para revisão",
+    "implementacao": "não auditada pelo catálogo"
+  },
+  {
+    "id": 52,
+    "pagina": "22-entregador-vinculado",
+    "titulo": "entregador-vinculado-desktop",
+    "arquivo": "22-entregador-vinculado/pranchas/052-entregador-vinculado-desktop.png",
+    "origem": ".codex/generated_images/01a08607-a8d7-7ed0-9d31-72a4198da92f/exec-d418b183-3ffe-4807-b6a2-f1f1e844a945.png",
+    "sha256": "609aa4dbda3d15ac85852fe53752031d4eb7254dc7638a9afd58ec97c4959817",
+    "classificacao": "Referência para revisão",
+    "implementacao": "não auditada pelo catálogo"
+  },
+  {
+    "id": 55,
+    "pagina": "23-ajuda-suporte",
+    "titulo": "suporte-mobile-inicial",
+    "arquivo": "23-ajuda-suporte/historico/055-suporte-mobile-inicial.png",
+    "origem": ".codex/generated_images/01a08607-a8d7-7ed0-9d31-72a4198da92f/exec-de1e9f6e-d577-426d-af31-0a50950f9fac.png",
+    "sha256": "f8ebd815204bbff40aa9def2b465d26a26cc42e189d36fa39ae26e2769d5090c",
+    "classificacao": "Histórico — não aplicar automaticamente",
+    "implementacao": "não auditada pelo catálogo"
+  },
+  {
+    "id": 56,
+    "pagina": "23-ajuda-suporte",
+    "titulo": "suporte-mobile",
+    "arquivo": "23-ajuda-suporte/pranchas/056-suporte-mobile.png",
+    "origem": ".codex/generated_images/01a08607-a8d7-7ed0-9d31-72a4198da92f/exec-b694051f-a20b-4b78-8c88-a372385ed2d9.png",
+    "sha256": "16cd61c911c2e808bc99de08f172876cb15a2fe7bedb080ccc145f582e88c931",
+    "classificacao": "Referência para revisão",
+    "implementacao": "não auditada pelo catálogo"
+  },
+  {
+    "id": 57,
+    "pagina": "23-ajuda-suporte",
+    "titulo": "suporte-desktop-inicial",
+    "arquivo": "23-ajuda-suporte/historico/057-suporte-desktop-inicial.png",
+    "origem": ".codex/generated_images/01a08607-a8d7-7ed0-9d31-72a4198da92f/exec-b734fa1a-9b40-4e2b-92a8-9ae5cb406142.png",
+    "sha256": "47eed872470425954f936e51df6dbfc96e3e5730326c477a9dd60223cf8238d9",
+    "classificacao": "Histórico — não aplicar automaticamente",
+    "implementacao": "não auditada pelo catálogo"
+  },
+  {
+    "id": 58,
+    "pagina": "23-ajuda-suporte",
+    "titulo": "suporte-desktop",
+    "arquivo": "23-ajuda-suporte/pranchas/058-suporte-desktop.png",
+    "origem": ".codex/generated_images/01a08607-a8d7-7ed0-9d31-72a4198da92f/exec-15324f49-323e-4bff-bd64-ab265483672e.png",
+    "sha256": "bab4531eccd542f3cf19a2d252126903ceaa1379820cb0ce0485960195f271ab",
+    "classificacao": "Referência para revisão",
+    "implementacao": "não auditada pelo catálogo"
+  },
+  {
+    "id": 63,
+    "pagina": "24-conta-acesso",
+    "titulo": "acesso-mobile-inicial",
+    "arquivo": "24-conta-acesso/historico/063-acesso-mobile-inicial.png",
+    "origem": ".codex/generated_images/01a08607-a8d7-7ed0-9d31-72a4198da92f/exec-768c5044-586f-4eb1-8a50-829357e4ef9b.png",
+    "sha256": "f843ac871f62dc2d927efe81bac8c580dfe28c9559f14aa49975fda74060a0b0",
+    "classificacao": "Histórico — não aplicar automaticamente",
+    "implementacao": "não auditada pelo catálogo"
+  },
+  {
+    "id": 64,
+    "pagina": "24-conta-acesso",
+    "titulo": "acesso-mobile",
+    "arquivo": "24-conta-acesso/pranchas/064-acesso-mobile.png",
+    "origem": ".codex/generated_images/01a08607-a8d7-7ed0-9d31-72a4198da92f/exec-2c490858-0c1e-4230-83d1-43294e691272.png",
+    "sha256": "9da9d085afca2976f1ab73d1aec8cb1a244aea493b4e34521d210288191c9cd2",
+    "classificacao": "Referência para revisão",
+    "implementacao": "não auditada pelo catálogo"
+  },
+  {
+    "id": 65,
+    "pagina": "24-conta-acesso",
+    "titulo": "recuperacao-mobile",
+    "arquivo": "24-conta-acesso/pranchas/065-recuperacao-mobile.png",
+    "origem": ".codex/generated_images/01a08607-a8d7-7ed0-9d31-72a4198da92f/exec-20eec158-361e-4452-9ba1-019d633dd2ac.png",
+    "sha256": "89e8d9315a423c238408fabbdbf588faa2bbfe9724b60919566c89357b67c040",
+    "classificacao": "Referência para revisão",
+    "implementacao": "não auditada pelo catálogo"
+  },
+  {
+    "id": 66,
+    "pagina": "24-conta-acesso",
+    "titulo": "acesso-desktop-inicial",
+    "arquivo": "24-conta-acesso/historico/066-acesso-desktop-inicial.png",
+    "origem": ".codex/generated_images/01a08607-a8d7-7ed0-9d31-72a4198da92f/exec-a155df8e-1d4e-481f-8a62-79b1f4a1b067.png",
+    "sha256": "53c991e1b0775260eef0d2a838ea37c9ac218999361c83312b4e55230e70c74b",
+    "classificacao": "Histórico — não aplicar automaticamente",
+    "implementacao": "não auditada pelo catálogo"
+  },
+  {
+    "id": 67,
+    "pagina": "24-conta-acesso",
+    "titulo": "acesso-desktop",
+    "arquivo": "24-conta-acesso/pranchas/067-acesso-desktop.png",
+    "origem": ".codex/generated_images/01a08607-a8d7-7ed0-9d31-72a4198da92f/exec-3339671f-2278-46f3-8132-b62315befd20.png",
+    "sha256": "dea86ac8449fd1b1092dbf8ea26319ac3aabbf6423242c4fdfd3c6f2bb3df34e",
+    "classificacao": "Referência para revisão",
+    "implementacao": "não auditada pelo catálogo"
+  },
+  {
+    "id": 68,
+    "pagina": "25-minha-conta",
+    "titulo": "minha-conta-mobile",
+    "arquivo": "25-minha-conta/pranchas/068-minha-conta-mobile.png",
+    "origem": ".codex/generated_images/01a08607-a8d7-7ed0-9d31-72a4198da92f/exec-6e7f104b-20b0-4af3-9dfd-1ae46d33abb2.png",
+    "sha256": "c582d0a72dbdb811b803a5dc210ad4efe0643e71c0634de121773de96f1377bb",
+    "classificacao": "Referência para revisão",
+    "implementacao": "não auditada pelo catálogo"
+  },
+  {
+    "id": 69,
+    "pagina": "25-minha-conta",
+    "titulo": "privacidade-mobile-inicial",
+    "arquivo": "25-minha-conta/historico/069-privacidade-mobile-inicial.png",
+    "origem": ".codex/generated_images/01a08607-a8d7-7ed0-9d31-72a4198da92f/exec-86dc5edb-ab36-4d79-bbbf-294eba5db7a3.png",
+    "sha256": "37fa02db25b67d8b0be958eac9dd724304a13026def642ced50edb73d46e5c65",
+    "classificacao": "Histórico — não aplicar automaticamente",
+    "implementacao": "não auditada pelo catálogo"
+  },
+  {
+    "id": 70,
+    "pagina": "25-minha-conta",
+    "titulo": "privacidade-mobile",
+    "arquivo": "25-minha-conta/pranchas/070-privacidade-mobile.png",
+    "origem": ".codex/generated_images/01a08607-a8d7-7ed0-9d31-72a4198da92f/exec-bb5d1615-45d0-48e6-bc82-6a66d36ea0aa.png",
+    "sha256": "9957aab87f8680a0dc60e5b39b1122009c3f335496342454304e6dc76918b648",
+    "classificacao": "Referência para revisão",
+    "implementacao": "não auditada pelo catálogo"
+  },
+  {
+    "id": 71,
+    "pagina": "25-minha-conta",
+    "titulo": "minha-conta-desktop",
+    "arquivo": "25-minha-conta/pranchas/071-minha-conta-desktop.png",
+    "origem": ".codex/generated_images/01a08607-a8d7-7ed0-9d31-72a4198da92f/exec-0a10c95b-3416-4ff2-b722-14aa7b91b0cc.png",
+    "sha256": "c3ab876fc7f17a1b5c15c4bae44e05aea13d64b9f420617312484f45e4a6b994",
+    "classificacao": "Referência para revisão",
+    "implementacao": "não auditada pelo catálogo"
+  },
+  {
+    "id": 72,
+    "pagina": "26-notificacoes",
+    "titulo": "notificacoes-mobile",
+    "arquivo": "26-notificacoes/pranchas/072-notificacoes-mobile.png",
+    "origem": ".codex/generated_images/01a08607-a8d7-7ed0-9d31-72a4198da92f/exec-1c3ed554-81f4-4ce1-9850-c95421389bef.png",
+    "sha256": "6a426975cd642e07e4d03bbd85fcc85bd065822969b6bfa587502248e23fc4b7",
+    "classificacao": "Referência para revisão",
+    "implementacao": "não auditada pelo catálogo"
+  },
+  {
+    "id": 73,
+    "pagina": "26-notificacoes",
+    "titulo": "notificacoes-estados-inicial",
+    "arquivo": "26-notificacoes/historico/073-notificacoes-estados-inicial.png",
+    "origem": ".codex/generated_images/01a08607-a8d7-7ed0-9d31-72a4198da92f/exec-3e5ff3b2-a2ad-4a25-ae07-bac5f7b517c0.png",
+    "sha256": "af0638d21dce432e5e8aa901e4fc9c3c515d2a21fd5bad2aded6537a8e285939",
+    "classificacao": "Histórico — não aplicar automaticamente",
+    "implementacao": "não auditada pelo catálogo"
+  },
+  {
+    "id": 74,
+    "pagina": "26-notificacoes",
+    "titulo": "notificacoes-estados",
+    "arquivo": "26-notificacoes/pranchas/074-notificacoes-estados.png",
+    "origem": ".codex/generated_images/01a08607-a8d7-7ed0-9d31-72a4198da92f/exec-bbb720b4-14a4-4480-990d-7d7b1568743a.png",
+    "sha256": "3f8a0a9b2ea03a011a90b0f9568d00a97b50eb748d3271753ba664cbb73c3058",
+    "classificacao": "Referência para revisão",
+    "implementacao": "não auditada pelo catálogo"
+  },
+  {
+    "id": 75,
+    "pagina": "26-notificacoes",
+    "titulo": "notificacoes-desktop",
+    "arquivo": "26-notificacoes/pranchas/075-notificacoes-desktop.png",
+    "origem": ".codex/generated_images/01a08607-a8d7-7ed0-9d31-72a4198da92f/exec-b5691166-87db-46d7-a97d-57fd91bf2fbe.png",
+    "sha256": "9f83c17fbc26a1b729c86c67049b1f2c4cb15b1581109a9ca2a46e20a3cada68",
+    "classificacao": "Referência para revisão",
+    "implementacao": "não auditada pelo catálogo"
+  },
+  {
+    "id": 79,
+    "pagina": "27-publicar-comunidade",
+    "titulo": "publicar-mobile-inicial",
+    "arquivo": "27-publicar-comunidade/historico/079-publicar-mobile-inicial.png",
+    "origem": ".codex/generated_images/01a08607-a8d7-7ed0-9d31-72a4198da92f/exec-389592a4-75a1-413c-902a-a80550268660.png",
+    "sha256": "f0d991a76e3ddc8a27b8a1c4e5b1d81dd44b7b0d7a43185ec8f168b16622bbe6",
+    "classificacao": "Histórico — não aplicar automaticamente",
+    "implementacao": "não auditada pelo catálogo"
+  },
+  {
+    "id": 80,
+    "pagina": "27-publicar-comunidade",
+    "titulo": "publicar-tipos-estados",
+    "arquivo": "27-publicar-comunidade/historico/080-publicar-tipos-estados.png",
+    "origem": ".codex/generated_images/01a08607-a8d7-7ed0-9d31-72a4198da92f/exec-f066d76e-9d0a-433c-bbd9-bd29ab7aae6e.png",
+    "sha256": "8f80f8bab717ac89f9a15d9703087e7e6f7e36013a4f4f4f23e1d01271c02df0",
+    "classificacao": "Histórico — não aplicar automaticamente",
+    "implementacao": "não auditada pelo catálogo"
+  },
+  {
+    "id": 81,
+    "pagina": "27-publicar-comunidade",
+    "titulo": "publicar-desktop-inicial",
+    "arquivo": "27-publicar-comunidade/historico/081-publicar-desktop-inicial.png",
+    "origem": ".codex/generated_images/01a08607-a8d7-7ed0-9d31-72a4198da92f/exec-033e2263-7f6d-4f93-96d6-794ee8715728.png",
+    "sha256": "712804647c50bfc5fa8cc7571d75f14a55f62fdea6986e6e5f8776ae4da1a69c",
+    "classificacao": "Histórico — não aplicar automaticamente",
+    "implementacao": "não auditada pelo catálogo"
+  },
+  {
+    "id": 82,
+    "pagina": "27-publicar-comunidade",
+    "titulo": "publicar-desktop-revisao",
+    "arquivo": "27-publicar-comunidade/historico/082-publicar-desktop-revisao.png",
+    "origem": ".codex/generated_images/01a08607-a8d7-7ed0-9d31-72a4198da92f/exec-4e5412b1-2792-4fbc-9ba8-e990e91b7566.png",
+    "sha256": "5eca8abbfc344add71533480a0f1c54a2ae9c458c0b522d83b85c5c509384e70",
+    "classificacao": "Histórico — não aplicar automaticamente",
+    "implementacao": "não auditada pelo catálogo"
+  },
+  {
+    "id": 86,
+    "pagina": "27-publicar-comunidade",
+    "titulo": "publicar-consolidado-mobile",
+    "arquivo": "27-publicar-comunidade/pranchas/086-publicar-consolidado-mobile.png",
+    "origem": ".codex/generated_images/01a08607-a8d7-7ed0-9d31-72a4198da92f/exec-a474744b-aec5-4b2c-8906-f32a187eb171.png",
+    "sha256": "329ec1c39f50c560d28d4d7eb85afbab4425e75ca2260c4327cbdd5d9b19722a",
+    "classificacao": "Referência para revisão",
+    "implementacao": "não auditada pelo catálogo"
+  },
+  {
+    "id": 87,
+    "pagina": "27-publicar-comunidade",
+    "titulo": "alertas-problemas-comunicados",
+    "arquivo": "27-publicar-comunidade/pranchas/087-alertas-problemas-comunicados.png",
+    "origem": ".codex/generated_images/01a08607-a8d7-7ed0-9d31-72a4198da92f/exec-f8693709-e5d2-46c9-ba8e-d05182bcff47.png",
+    "sha256": "bc72f9a8c5439113243bc499a34874061539cfdff8c4cc4de6bcc8753f76eedf",
+    "classificacao": "Referência para revisão",
+    "implementacao": "não auditada pelo catálogo"
+  },
+  {
+    "id": 88,
+    "pagina": "27-publicar-comunidade",
+    "titulo": "publicar-consolidado-desktop",
+    "arquivo": "27-publicar-comunidade/pranchas/088-publicar-consolidado-desktop.png",
+    "origem": ".codex/generated_images/01a08607-a8d7-7ed0-9d31-72a4198da92f/exec-6b6a3612-3ef4-4091-96d1-bd4b284e8faf.png",
+    "sha256": "da3b6dc23cb5e14c3044fcf40f15ad34998754dc9490b4c729bd8c60e1b0f901",
+    "classificacao": "Referência para revisão",
+    "implementacao": "não auditada pelo catálogo"
+  },
+  {
+    "id": 83,
+    "pagina": "28-meus-vinculos",
+    "titulo": "vinculo-solicitacao-mobile",
+    "arquivo": "28-meus-vinculos/pranchas/083-vinculo-solicitacao-mobile.png",
+    "origem": ".codex/generated_images/01a08607-a8d7-7ed0-9d31-72a4198da92f/exec-78c5d5d0-5f29-470c-a936-30f38bd77fa9.png",
+    "sha256": "778b9aac73b88697eeb4bffdc781f973b2d8f4c40c333744d2b0a36eed08fe7a",
+    "classificacao": "Referência para revisão",
+    "implementacao": "não auditada pelo catálogo"
+  },
+  {
+    "id": 84,
+    "pagina": "28-meus-vinculos",
+    "titulo": "vinculo-permissoes-mobile",
+    "arquivo": "28-meus-vinculos/pranchas/084-vinculo-permissoes-mobile.png",
+    "origem": ".codex/generated_images/01a08607-a8d7-7ed0-9d31-72a4198da92f/exec-b3b3c81a-fe2d-41c0-ae42-f4358a62d2fd.png",
+    "sha256": "9e1c3393b812bc040bf54160a25f939e4d8e8e660517562db5d5fa83e21458f2",
+    "classificacao": "Referência para revisão",
+    "implementacao": "não auditada pelo catálogo"
+  },
+  {
+    "id": 85,
+    "pagina": "28-meus-vinculos",
+    "titulo": "vinculo-gestao-desktop",
+    "arquivo": "28-meus-vinculos/pranchas/085-vinculo-gestao-desktop.png",
+    "origem": ".codex/generated_images/01a08607-a8d7-7ed0-9d31-72a4198da92f/exec-38f2f298-5935-4176-8003-b7ee521cfbe6.png",
+    "sha256": "adeb76b86aaef7cb573d703f48506cd2d799505a79387ba7c4ce7355e9612f74",
+    "classificacao": "Referência para revisão",
+    "implementacao": "não auditada pelo catálogo"
+  },
+  {
+    "id": 89,
+    "pagina": "29-detalhe-publicacao",
+    "titulo": "detalhe-mobile-desktop",
+    "arquivo": "29-detalhe-publicacao/pranchas/089-detalhe-mobile-desktop.png",
+    "origem": ".codex/generated_images/01a08607-a8d7-7ed0-9d31-72a4198da92f/exec-734accea-7d49-447d-a330-d9171d922363.png",
+    "sha256": "10c431e23e37e22f3b8da5d84a6256fceb12922a668ccc6c5b3e804f263dd93a",
+    "classificacao": "Referência para revisão",
+    "implementacao": "não auditada pelo catálogo"
+  },
+  {
+    "id": 90,
+    "pagina": "29-detalhe-publicacao",
+    "titulo": "detalhe-estados",
+    "arquivo": "29-detalhe-publicacao/pranchas/090-detalhe-estados.png",
+    "origem": ".codex/generated_images/01a08607-a8d7-7ed0-9d31-72a4198da92f/exec-409f6537-4035-4878-a726-d4b4d7c7fb7c.png",
+    "sha256": "1bd118d47b6b1a077a451593c10d7fc614bdb51ea9d6d9c297ad90b1d2afe9e7",
+    "classificacao": "Referência para revisão",
+    "implementacao": "não auditada pelo catálogo"
+  },
+  {
+    "id": 91,
+    "pagina": "28-meus-vinculos",
+    "titulo": "meus-vinculos-mobile",
+    "arquivo": "28-meus-vinculos/pranchas/091-meus-vinculos-mobile.png",
+    "origem": ".codex/generated_images/01a08607-a8d7-7ed0-9d31-72a4198da92f/exec-6c0566bc-282c-4c2e-9565-4b99ee8ccb44.png",
+    "sha256": "de0a7eae5d066a86f097be4d5e5364d52f8e1cf1780dda8d64a8c6a809d82d06",
+    "classificacao": "Referência principal proposta em 17/09/2026",
+    "implementacao": "Proposta; consultar FUNCIONAMENTO.md"
+  },
+  {
+    "id": 92,
+    "pagina": "28-meus-vinculos",
+    "titulo": "meus-vinculos-desktop",
+    "arquivo": "28-meus-vinculos/pranchas/092-meus-vinculos-desktop.png",
+    "origem": ".codex/generated_images/01a08607-a8d7-7ed0-9d31-72a4198da92f/exec-93339985-1b6c-462a-a38d-6f3d887ef629.png",
+    "sha256": "d33d27909a7b9a33b73c33f1f065b98564f1a982b2fb9cf904041314a9f503c4",
+    "classificacao": "Referência principal proposta em 17/09/2026",
+    "implementacao": "Proposta; consultar FUNCIONAMENTO.md"
+  },
+  {
+    "id": 93,
+    "pagina": "30-moderacao-comunidade",
+    "titulo": "moderacao-mobile",
+    "arquivo": "30-moderacao-comunidade/pranchas/093-moderacao-mobile.png",
+    "origem": ".codex/generated_images/01a08607-a8d7-7ed0-9d31-72a4198da92f/exec-d7b2b52a-d6d0-420f-a47e-5a89abe9e49f.png",
+    "sha256": "b50d92f5e6e52d5cdcc0f40dbd9d4a4abf56be501752f82dbef512e7e00e2ace",
+    "classificacao": "Referência proposta em 17/09/2026",
+    "implementacao": "Conceito; conferir README"
+  },
+  {
+    "id": 94,
+    "pagina": "30-moderacao-comunidade",
+    "titulo": "moderacao-desktop",
+    "arquivo": "30-moderacao-comunidade/pranchas/094-moderacao-desktop.png",
+    "origem": ".codex/generated_images/01a08607-a8d7-7ed0-9d31-72a4198da92f/exec-6542b706-0f12-420a-a3d9-da7346a67886.png",
+    "sha256": "e8d6f82ad67fb2a9634d32740fb2a4155670017c7b9d1c32bec9aee5fd875081",
+    "classificacao": "Referência proposta em 17/09/2026",
+    "implementacao": "Conceito; conferir README"
+  },
+  {
+    "id": 95,
+    "pagina": "31-minhas-publicacoes",
+    "titulo": "minhas-publicacoes-mobile",
+    "arquivo": "31-minhas-publicacoes/pranchas/095-minhas-publicacoes-mobile.png",
+    "origem": ".codex/generated_images/01a08607-a8d7-7ed0-9d31-72a4198da92f/exec-a026ee13-6a88-4135-80c9-859f88f648ea.png",
+    "sha256": "be838f1212cf1aa92d72e0345eca84c7db538b8287ef9d159466b82ad2b0942a",
+    "classificacao": "Referência proposta em 17/09/2026",
+    "implementacao": "Conceito; consultar README"
+  },
+  {
+    "id": 96,
+    "pagina": "31-minhas-publicacoes",
+    "titulo": "minhas-publicacoes-desktop",
+    "arquivo": "31-minhas-publicacoes/pranchas/096-minhas-publicacoes-desktop.png",
+    "origem": ".codex/generated_images/01a08607-a8d7-7ed0-9d31-72a4198da92f/exec-38abbb26-b86d-4f5e-bca0-cdc289ee023c.png",
+    "sha256": "a91dc86da80b8dd854bfc42dc479dfce0493a19710b757e575c608a88206112b",
+    "classificacao": "Referência proposta em 17/09/2026",
+    "implementacao": "Conceito; consultar README"
+  },
+  {
+    "id": 97,
+    "pagina": "32-grupos-comunidade",
+    "titulo": "grupos-mobile",
+    "arquivo": "32-grupos-comunidade/pranchas/097-grupos-mobile.png",
+    "origem": ".codex/generated_images/01a08607-a8d7-7ed0-9d31-72a4198da92f/exec-bc334759-c00f-4a25-9bd7-16d464305eb5.png",
+    "sha256": "3929081ce7f88580590dbc96f2ed55f70b5b1df74a7e0c40a3d9552d9919ea48",
+    "classificacao": "Referência proposta em 17/09/2026",
+    "implementacao": "Conceito; consultar README"
+  },
+  {
+    "id": 98,
+    "pagina": "32-grupos-comunidade",
+    "titulo": "grupos-desktop",
+    "arquivo": "32-grupos-comunidade/pranchas/098-grupos-desktop.png",
+    "origem": ".codex/generated_images/01a08607-a8d7-7ed0-9d31-72a4198da92f/exec-027401f3-d2d1-4c98-8b7d-cc14e9e7f50e.png",
+    "sha256": "d7030b32686f18be6aff7cf460523cb7ee4e8092cbae8c604b348f08d445a88c",
+    "classificacao": "Referência proposta em 17/09/2026",
+    "implementacao": "Conceito; consultar README"
+  },
+  {
+    "id": 99,
+    "pagina": "32-grupos-comunidade",
+    "titulo": "criar-gerenciar-grupo-mobile",
+    "arquivo": "32-grupos-comunidade/pranchas/099-criar-gerenciar-grupo-mobile.png",
+    "origem": ".codex/generated_images/01a08607-a8d7-7ed0-9d31-72a4198da92f/exec-a2d65e35-84a8-4437-bc42-d9cad8f6aa10.png",
+    "sha256": "f8642abffee7c44db22771f12f5eb477278d5058536fb15fb95c926a265be545",
+    "classificacao": "Complemento proposto em 17/09/2026",
+    "implementacao": "Conceito; consultar CRIAR-E-GERENCIAR.md"
+  },
+  {
+    "id": 100,
+    "pagina": "32-grupos-comunidade",
+    "titulo": "criar-gerenciar-grupo-desktop",
+    "arquivo": "32-grupos-comunidade/pranchas/100-criar-gerenciar-grupo-desktop.png",
+    "origem": ".codex/generated_images/01a08607-a8d7-7ed0-9d31-72a4198da92f/exec-1aebfd85-9204-4d72-9f95-808ec5c8d680.png",
+    "sha256": "408c02d24a4db3871caf0ae3e947ca155c114d9682540e1e67d316ed6e83c5f5",
+    "classificacao": "Complemento proposto em 17/09/2026",
+    "implementacao": "Conceito; consultar CRIAR-E-GERENCIAR.md"
+  },
+  {
+    "id": 101,
+    "pagina": "33-agenda-eventos",
+    "titulo": "agenda-eventos-mobile-inicial",
+    "arquivo": "33-agenda-eventos/historico/101-agenda-eventos-mobile-inicial.png",
+    "origem": ".codex/generated_images/01a08607-a8d7-7ed0-9d31-72a4198da92f/exec-23a633c9-7cd0-4ef8-a431-5fbd3406dc90.png",
+    "sha256": "ce24a2dab2e7e608522befb9ab07a0a766aebc7b369c92bb650e14bd4deb05a8",
+    "classificacao": "Histórico substituído por contraste",
+    "implementacao": "Conceito; consultar README"
+  },
+  {
+    "id": 102,
+    "pagina": "33-agenda-eventos",
+    "titulo": "agenda-eventos-desktop",
+    "arquivo": "33-agenda-eventos/pranchas/102-agenda-eventos-desktop.png",
+    "origem": ".codex/generated_images/01a08607-a8d7-7ed0-9d31-72a4198da92f/exec-cd0aa2af-5d62-441c-a960-4582cf2c27bc.png",
+    "sha256": "395e6de1945e12a810674e3dbbca9c4f42a955559acc38b76a6da96c53b22bfe",
+    "classificacao": "Referência proposta em 17/09/2026",
+    "implementacao": "Conceito; consultar README"
+  },
+  {
+    "id": 103,
+    "pagina": "33-agenda-eventos",
+    "titulo": "agenda-eventos-mobile",
+    "arquivo": "33-agenda-eventos/pranchas/103-agenda-eventos-mobile.png",
+    "origem": ".codex/generated_images/01a08607-a8d7-7ed0-9d31-72a4198da92f/exec-d12e012b-45ac-4ec6-8fcd-cf08fdbef93f.png",
+    "sha256": "2e988493382a95958742c8693402489a9bcc9f640bae985ccb2cd9ade322a305",
+    "classificacao": "Referência proposta em 17/09/2026",
+    "implementacao": "Conceito; consultar README"
+  },
+  {
+    "id": 104,
+    "pagina": "34-organizar-eventos",
+    "titulo": "organizar-eventos-mobile",
+    "arquivo": "34-organizar-eventos/pranchas/104-organizar-eventos-mobile.png",
+    "origem": ".codex/generated_images/01a08607-a8d7-7ed0-9d31-72a4198da92f/exec-85adcd14-767d-4f4a-9199-b72939a63b32.png",
+    "sha256": "1639403bb10200b8ed5b3ac7f6754e6391bdfbc1a43d96d871635fa83521f308",
+    "classificacao": "Referência proposta em 17/09/2026",
+    "implementacao": "Conceito; consultar README"
+  },
+  {
+    "id": 105,
+    "pagina": "34-organizar-eventos",
+    "titulo": "organizar-eventos-desktop",
+    "arquivo": "34-organizar-eventos/pranchas/105-organizar-eventos-desktop.png",
+    "origem": ".codex/generated_images/01a08607-a8d7-7ed0-9d31-72a4198da92f/exec-2fdd9ec8-8c04-4c87-9c9e-6257d9045183.png",
+    "sha256": "03b54eb6dca22e89b6cb3659e1bd17c8e0127f6263335d19e7e4112d0b2d24da",
+    "classificacao": "Referência proposta em 17/09/2026",
+    "implementacao": "Conceito; consultar README"
+  },
+  {
+    "id": 106,
+    "pagina": "35-inscricao-checkin",
+    "titulo": "inscricao-credencial-inicial",
+    "arquivo": "35-inscricao-checkin/historico/106-inscricao-credencial-inicial.png",
+    "origem": ".codex/generated_images/01a08607-a8d7-7ed0-9d31-72a4198da92f/exec-dfc07c2a-3873-42d9-9497-dfb46d2f84fe.png",
+    "sha256": "e4cd93b8a00a75cf9ad1c4bff28c75d9ba016880c6afad7872896ae77d7d548b",
+    "classificacao": "Histórico substituído por contraste",
+    "implementacao": "Conceito; consultar README"
+  },
+  {
+    "id": 107,
+    "pagina": "35-inscricao-checkin",
+    "titulo": "validacao-entrada-desktop",
+    "arquivo": "35-inscricao-checkin/pranchas/107-validacao-entrada-desktop.png",
+    "origem": ".codex/generated_images/01a08607-a8d7-7ed0-9d31-72a4198da92f/exec-f17ab91d-8793-4f7c-bd97-18204fc04665.png",
+    "sha256": "f004bb4ede871796e1446c6b20a04c684c9d988729fc48bb68bfaf8cfff3b26b",
+    "classificacao": "Referência proposta em 17/09/2026",
+    "implementacao": "Conceito; consultar README"
+  },
+  {
+    "id": 108,
+    "pagina": "35-inscricao-checkin",
+    "titulo": "inscricao-credencial-mobile",
+    "arquivo": "35-inscricao-checkin/pranchas/108-inscricao-credencial-mobile.png",
+    "origem": ".codex/generated_images/01a08607-a8d7-7ed0-9d31-72a4198da92f/exec-2e872327-5bdd-4f30-a372-ec27389bf734.png",
+    "sha256": "9efbd69198f8febe7f87fa5066176be30c38974588a12d37c02e83c54d984495",
+    "classificacao": "Referência proposta em 17/09/2026",
+    "implementacao": "Conceito; consultar README"
+  }
+]
