@@ -1,6 +1,6 @@
 # Compatibility Bridges Registry
 
-Status: CANONICAL — structural root cleanup remains closed; bounded live facades still exist  
+Status: CANONICAL — structural root cleanup closed; zero live compatibility facades  
 Reviewed: 2026-09-14  
 Plan authority: `/URGENTE_LEIA_PRIMEIRO_REORGANIZACAO_GLOBAL.md`
 
@@ -8,7 +8,7 @@ Plan authority: `/URGENTE_LEIA_PRIMEIRO_REORGANIZACAO_GLOBAL.md`
 
 This file is the current compatibility-debt ledger. It records only compatibility surfaces that still exist in active source and the guardrails for recently retired ones. Detailed historical retirement evidence remains in Git history and `docs/10-archive/**`.
 
-Do not infer “zero compatibility debt” from the completed physical reorganization. The retired global roots are still gone, but a small number of caller-backed facades remain and must be migrated atomically before deletion.
+The active source has zero registered service/path compatibility facades. Persisted-data normalization at explicit read boundaries may still exist, but it is not a second runtime owner and must not be expanded into a facade.
 
 ## Rules
 
@@ -22,15 +22,9 @@ Do not infer “zero compatibility debt” from the completed physical reorganiz
 
 ## Live compatibility debt
 
-These are the currently proven live facades. They are not new extension points.
+None.
 
-| Compatibility surface | Canonical owner | Current caller evidence | Removal gate |
-| --- | --- | --- | --- |
-| `src/modules/guide/hooks/useGuideUrls.ts` | `src/core/guide/tourist-points/routes/useTouristPointPublicUrls.ts` | `GuideSidebarItem`, `TouristPointsPage`, `TouristPointDetailPage` | migrate all three callers directly, update `src/modules/guide/index.ts`, delete facade in one batch |
-| `src/core/profiles/services/multi-profile/businessService.ts` | `src/core/business/services/business.profile-extension.ts` | multi-profile editor service and `profileDomainRules` | migrate all editor callers without changing the editor response contract, then remove barrel export/file |
-| `MobilityRuntimeService.getRideWithAddresses()` | `src/core/mobility/services/mobility.ride-read-queries.ts` | `BuscandoMotoristaPage` | migrate the page to the bounded read owner, remove runtime method/import, preserve G140 projection tests |
-
-No partial migration is considered closure. If a large caller cannot be safely rewritten in the current tooling session, the facade stays explicit here rather than being hidden behind another alias.
+`tests/architecture/compatibility-facade-retirement.test.ts` ratchets the three final retirements completed on 2026-09-18 and prevents replacement aliases.
 
 ## Retired module bridges — 2026-09-14
 
@@ -74,18 +68,18 @@ Historical Community and Events path/service bridges remain retired. Canonical r
 
 ### Guide / Tourist Points
 
-The old `src/core/verticals/guide/**` namespace is retired. Public tourist-point route ownership is canonical in `src/core/guide/tourist-points/routes`. One module alias facade, `src/modules/guide/hooks/useGuideUrls.ts`, still has three runtime callers and is therefore explicitly listed as live debt above.
+The old `src/core/verticals/guide/**` namespace is retired. Public tourist-point route ownership is canonical in `src/core/guide/tourist-points/routes`. The module alias `src/modules/guide/hooks/useGuideUrls.ts` was retired after all callers moved directly to the canonical owner.
 
 ### Profiles
 
-Business extension persistence belongs to `src/core/business/services/business.profile-extension.ts`. The multi-profile editor still consumes a compatibility-shaped facade in `src/core/profiles/services/multi-profile/businessService.ts`; this facade may not gain new persistence or new callers.
+Business extension persistence belongs to `src/core/business/services/business.profile-extension.ts`. The multi-profile editor consumes that owner directly; the former `src/core/profiles/services/multi-profile/businessService.ts` facade is retired.
 
 ### Mobility
 
-`getRideWithAddresses()` is owned by `mobility.ride-read-queries.ts`. `MobilityRuntimeService` still exposes one temporary UI forwarding method used by `BuscandoMotoristaPage`; new callers must import the bounded read owner directly.
+`getRideWithAddresses()` is owned by `mobility.ride-read-queries.ts`. `BuscandoMotoristaPage` consumes the bounded read owner directly and `MobilityRuntimeService` no longer forwards this read.
 
 ## Closure criteria
 
-Compatibility debt reaches zero only when all rows in **Live compatibility debt** are removed atomically and architecture search/ratchets show no replacement alias. Until then, the repository may be structurally reorganized, but it must not be described as having zero live service/path compatibility facades.
+Compatibility debt is currently zero for registered live service/path facades. Closure remains valid only while architecture ratchets show the retired files/methods absent and no replacement alias appears.
 
 Hosted build/test certification is a separate concern. Provider rate limits, runner failures, or missing logs are not source PASS evidence and do not change the bridge inventory.
