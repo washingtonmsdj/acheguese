@@ -4,6 +4,8 @@ import {
   type CatalogItem,
   type PublishedPlan,
 } from '../services/CatalogService';
+import { getBaselineEntitlements } from '../entitlementBaselines';
+import { PlanTier } from '../types';
 
 const freePlan: CatalogItem = {
   id: '1',
@@ -146,10 +148,7 @@ describe('CatalogService published plan projection', () => {
       currency: 'BRL',
       billingPeriod: 'monthly',
       features: [],
-      entitlements: (await (async () => {
-        vi.spyOn(CatalogService, 'getPlanByCode').mockResolvedValue(proPlan);
-        return CatalogService.getPublishedPlanEntitlements('pro');
-      })())!,
+      entitlements: getBaselineEntitlements(PlanTier.PRO),
       isActive: true,
       isFeatured: true,
       displayOrder: 2,
@@ -157,7 +156,6 @@ describe('CatalogService published plan projection', () => {
       updatedAt: new Date('2026-04-21T00:00:00Z'),
     };
 
-    vi.restoreAllMocks();
     vi.spyOn(CatalogService, 'getPublishedPlanByCode').mockResolvedValue(
       publishedPro,
     );
