@@ -120,6 +120,9 @@ verify_jwt = true
 [functions.admin-get-user-auth-summary]
 verify_jwt = true
 
+[functions.admin-highlights-rpc]
+verify_jwt = true
+
 [functions.admin-list-users]
 verify_jwt = true
 
