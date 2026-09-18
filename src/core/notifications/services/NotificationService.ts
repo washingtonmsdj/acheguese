@@ -2,12 +2,7 @@ import { logger } from "@/shared/utils/logger";
 import { supabase, type Tables } from "@/integrations/supabase";
 import { SessionService } from "@/core/session/services/SessionService";
 import { realtimeService } from "@/core/realtime";
-import type {
-  Notification,
-  NotificationCategory,
-  NotificationFilters,
-  NotificationPriority,
-} from "../types";
+import type { Notification, NotificationFilters } from "../types";
 import { normalizeNotification } from "../utils/normalizeNotification";
 
 export type { Notification, NotificationFilters } from "../types";
@@ -217,7 +212,6 @@ export class NotificationService {
   async fetchNotifications(filters?: NotificationFilters): Promise<Notification[]> {
     return NotificationService.getUserNotifications(filters);
   }
-
 
   createRealtimeChannel(userId: string, callback: (change: NotificationRealtimeChange) => void) {
     return NotificationService.subscribeToNotifications(userId, callback);
