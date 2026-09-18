@@ -132,7 +132,6 @@ export interface ProfessionalMetadata {
   total_jobs?: number;
   response_time?: string;
   languages?: string[];
-  [key: string]: unknown;
 }
 
 // ============================================================================
