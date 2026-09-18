@@ -11,12 +11,6 @@ import { profileService } from "@/core/profiles/services/ProfileService";
 import { logger } from "@/shared/utils/logger";
 import { PAGINATION } from "@/shared/constants";
 import {
-  getProfessionalTerritory,
-  hasPhysicalAddress as hasPhysicalAddressCanonical,
-  isProfessionalMigrated as isProfessionalMigratedCanonical,
-  type ProfessionalDataWithRelations,
-} from "./ProfessionalCanonicalAdapter";
-import {
   createProfessionalWithProfile,
   updateProfessionalWithProfile,
   deleteProfessionalWithProfile,
@@ -328,67 +322,6 @@ export class ProfessionalService {
       logger.error("Error fetching professionals by IDs:", error);
       return [];
     }
-  }
-
-  /** Verificar se profissional esta migrado para o modelo canonico. */
-  static isProfessionalMigrated(professional: ProfessionalDataRecord): boolean {
-    return isProfessionalMigratedCanonical(professional);
-  }
-
-  /** Verificar se profissional tem endereco fisico. */
-  static hasPhysicalAddress(professional: ProfessionalDataRecord): boolean {
-    return hasPhysicalAddressCanonical(professional);
-  }
-
-  /** Obter endereco formatado a partir da relacao canonica. */
-  static getFormattedAddress(professional: ProfessionalDataRecord): string {
-    if ((professional as ProfessionalDataWithRelations).address) {
-      const addr = (professional as ProfessionalDataWithRelations)
-        .address as unknown as Record<string, unknown>;
-      const parts: string[] = [];
-
-      if (typeof addr.street === "string") parts.push(addr.street);
-      if (typeof addr.number === "string") parts.push(addr.number);
-      if (typeof addr.neighborhood === "string") parts.push(addr.neighborhood);
-      if (typeof addr.city === "string") parts.push(addr.city);
-      if (typeof addr.state === "string") parts.push(addr.state);
-      if (typeof addr.postal_code === "string") {
-        parts.push(`CEP ${addr.postal_code}`);
-      }
-
-      return parts.join(", ");
-    }
-
-    return "";
-  }
-
-  /** Obter coordenadas da relacao canonica. */
-  static getCoordinates(
-    professional: ProfessionalDataRecord,
-  ): { latitude: number; longitude: number } | null {
-    const address = (professional as ProfessionalDataWithRelations).address;
-    if (address?.latitude != null && address.longitude != null) {
-      return {
-        latitude: address.latitude,
-        longitude: address.longitude,
-      };
-    }
-
-    return null;
-  }
-
-  /** Obter territorio principal. */
-  static getTerritory(professional: ProfessionalDataRecord): string | null {
-    return getProfessionalTerritory(professional);
-  }
-
-  /** Obter nome do territorio pela relacao canonica. */
-  static getTerritoryName(professional: ProfessionalDataRecord): string | null {
-    if ((professional as ProfessionalDataWithRelations).location?.name) {
-      return (professional as ProfessionalDataWithRelations).location.name;
-    }
-
-    return null;
   }
 
   /** Busca perfil publico de profissional por slug + UF + cidade. */
