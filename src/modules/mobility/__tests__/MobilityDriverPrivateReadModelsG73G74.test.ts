@@ -99,12 +99,13 @@ describe("G73/G74 private driver read models", () => {
     expect(historyService).toContain('functionName: FUNCTION_NAME');
     expect(historyService).not.toContain('from("ride_requests")');
     expect(historyService).not.toContain("p_driver_profile_id");
-    expect(historyService).not.toContain("driverProfileId: _driverProfileId");
+    expect(historyService).not.toContain("_driverProfileId");
+    expect(historyService).not.toContain("driverProfileId");
   });
 
   it("composes only accepted open rides with redacted terminal history", () => {
     expect(queries).toContain("DRIVER_OWNED_OPEN_RIDE_STATUSES");
-    expect(queries).toContain("DriverRideHistoryReadService.list(driverProfileId)");
+    expect(queries).toContain("DriverRideHistoryReadService.list()");
     expect(queries).toContain('.in("status", DRIVER_OWNED_OPEN_RIDE_STATUSES)');
   });
 
