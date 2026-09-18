@@ -141,8 +141,10 @@ describe('LGPD destructive purge readiness gate', () => {
     );
     expect(preflight).toContain('function inspectPurgeMatrix()');
     expect(preflight).toContain("reference?.decision === 'unclassified'");
+    expect(preflight).toContain("reference?.decision === 'block-purge'");
     expect(preflight).toContain('matrix?.implementationComplete === true');
     expect(preflight).toContain('unresolvedReferences === 0');
+    expect(preflight).toContain('blockedReferences === 0');
   });
 
   it('keeps the current destructive delete handler blocked', () => {
