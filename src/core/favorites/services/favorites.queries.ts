@@ -3,33 +3,16 @@
  *
  * Profile-to-profile favorites were retired in G6 after both legacy tables were
  * proven empty and dropped. Business/entity favorites remain on their canonical
- * stores. The zero-valued profile stats adapter is kept only for existing
- * workspace contracts until those legacy counters are removed from presentation.
+ * stores.
  */
 
 import { logger } from "@/shared/utils/logger";
 import { trackError } from "@/shared/utils/errorTracking";
-import type { FavoriteStats } from "../types";
 import { BusinessFavoriteStore } from "./BusinessFavoriteStore";
 import {
   resolveBusinessDataIdFromProfile,
   resolveBusinessProfileIdsByDataIds,
 } from "./businessFavoriteAdapters";
-
-/**
- * Legacy profile-to-profile favorite counters.
- *
- * The backing aggregates were retired with zero rows in
- * 20260906094125_drop_retired_business_and_profile_favorites_g6.sql.
- */
-export async function getFavoriteStats(
-  _profileId: string,
-): Promise<FavoriteStats> {
-  return {
-    total_favorites_given: 0,
-    total_favorites_received: 0,
-  };
-}
 
 /**
  * Verificar se um negócio é favorito do usuário.
