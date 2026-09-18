@@ -513,17 +513,6 @@ export default tseslint.config(
     }
   },
 
-  // Exceção: arquivos multi-profile canônicos podem usar useActiveProfile
-  {
-    files: [
-      "src/core/profiles/hooks/useProfileMembers.ts",
-      "src/core/profiles/hooks/useProfileLinks.ts",
-      "src/core/profiles/components/**/*.tsx",
-      "src/app/pages/ProfileSettingsPage.tsx",
-    ],
-    rules: { "no-restricted-imports": "off" },
-  },
-
   // ─── DÍVIDA TÉCNICA CONTROLADA ───────────────────────────────────────────
 
   // MobilityAdminQueryService é o SSOT para consultas admin de mobility.
