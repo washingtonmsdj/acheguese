@@ -132,12 +132,21 @@ describe('Regressão: Cleanup Pós-Sprint 2', () => {
     expect(content).not.toMatch(/\btexto\?:/);
   });
 
-  it('CommunityPost (Post.ts) não tem city/neighborhood/rua/street', () => {
-    const content = readSrc('src/core/posts/types/Post.ts');
-    expect(content).not.toMatch(/\bcity\?:/);
-    expect(content).not.toMatch(/\bneighborhood\?:/);
-    expect(content).not.toMatch(/\brua\?:/);
-    expect(content).not.toMatch(/\bstreet\?:/);
+  it('Community post presentation has one explicit view owner', () => {
+    expect(fs.existsSync(path.resolve('src/core/posts/types/Post.ts'))).toBe(false);
+    expect(fs.existsSync(path.resolve('src/core/posts/types/index.ts'))).toBe(false);
+
+    const serviceTypes = readSrc('src/core/posts/types.ts');
+    const view = readSrc('src/core/posts/views/CommunityPostView.ts');
+
+    expect(serviceTypes).not.toMatch(/interface CommunityPost\b/);
+    expect(serviceTypes).not.toMatch(/interface CreateCommunityPostData\b/);
+    expect(serviceTypes).not.toContain('Compatibilidade legada de UI community');
+    expect(view).toMatch(/interface CommunityPostView\b/);
+    expect(view).not.toMatch(/\bcity\?:/);
+    expect(view).not.toMatch(/\bneighborhood\?:/);
+    expect(view).not.toMatch(/\brua\?:/);
+    expect(view).not.toMatch(/\bstreet\?:/);
   });
 
   // ── PostAdapter sem passthrough legado ───────────────────────────────────
