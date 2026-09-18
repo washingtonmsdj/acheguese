@@ -28,7 +28,7 @@ O fluxo implementado cobre cadastro gastronômico, cardápio, carrinho, checkout
 - `MenuService`, áreas de entrega e resolução de identificador gastronômico pertencem a `src/core/business/services`.
 - Contratos e persistence de versionamento de nichos pertencem a `src/core/business/niches`.
 - Contratos admin e persistence da pizzaria pertencem a `src/core/business/niches/pizzaria`.
-- Os antigos paths correspondentes no módulo são bridges one-way para os owners canônicos.
+- Paths antigos de services/mutations no módulo foram removidos; consumidores usam os owners canônicos diretamente.
 - `GastronomyCheckoutService`, carrinho, páginas, hooks e componentes permanecem no módulo como camada de aplicação/UI.
 
 ## Dívida de integração do módulo
