@@ -145,6 +145,7 @@ function inspectPurgeMatrix() {
       ready: false,
       reason: 'matriz canonica de purge ausente',
       unresolvedReferences: null,
+      blockedReferences: null,
     };
   }
 
@@ -156,6 +157,9 @@ function inspectPurgeMatrix() {
     const unresolvedReferences = references.filter(
       (reference) => reference?.decision === 'unclassified',
     ).length;
+    const blockedReferences = references.filter(
+      (reference) => reference?.decision === 'block-purge',
+    ).length;
     const structurallyValid =
       matrix?.schemaVersion === PURGE_MATRIX_SCHEMA_VERSION &&
       matrix?.rules?.default === 'block' &&
@@ -166,22 +170,25 @@ function inspectPurgeMatrix() {
     const ready =
       structurallyValid &&
       matrix?.implementationComplete === true &&
-      unresolvedReferences === 0;
+      unresolvedReferences === 0 &&
+      blockedReferences === 0;
 
     return {
       ready,
       reason: ready
         ? null
         : structurallyValid
-          ? 'matriz canonica de purge ainda possui referencias sem decisao ou implementationComplete=false'
+          ? 'matriz canonica de purge ainda possui referencias bloqueadas/sem decisao ou implementationComplete=false'
           : 'matriz canonica de purge invalida ou enfraquecida',
       unresolvedReferences,
+      blockedReferences,
     };
   } catch {
     return {
       ready: false,
       reason: 'matriz canonica de purge contem JSON invalido',
       unresolvedReferences: null,
+      blockedReferences: null,
     };
   }
 }
@@ -200,6 +207,7 @@ function inspectFunction(functionName) {
       exportMatrixReady: policy.requiresExportMatrix ? false : null,
       purgeMatrixReady: policy.requiresPurgeMatrix ? false : null,
       unresolvedPurgeReferences: policy.requiresPurgeMatrix ? null : undefined,
+      blockedPurgeReferences: policy.requiresPurgeMatrix ? null : undefined,
     };
   }
 
@@ -211,7 +219,7 @@ function inspectFunction(functionName) {
     : { ready: true, reason: null };
   const purgeMatrix = policy.requiresPurgeMatrix
     ? inspectPurgeMatrix()
-    : { ready: true, reason: null, unresolvedReferences: null };
+    : { ready: true, reason: null, unresolvedReferences: null, blockedReferences: null };
   const ready =
     staleMarkers.length === 0 &&
     missingMarkers.length === 0 &&
@@ -231,6 +239,9 @@ function inspectFunction(functionName) {
     purgeMatrixReady: policy.requiresPurgeMatrix ? purgeMatrix.ready : null,
     unresolvedPurgeReferences: policy.requiresPurgeMatrix
       ? purgeMatrix.unresolvedReferences
+      : null,
+    blockedPurgeReferences: policy.requiresPurgeMatrix
+      ? purgeMatrix.blockedReferences
       : null,
   };
 }
@@ -262,6 +273,9 @@ function printStatus(status, json) {
     console.error('Matriz de purge: INCOMPLETA/INVALIDA');
     if (status.unresolvedPurgeReferences !== null) {
       console.error(`Referencias de purge sem decisao: ${status.unresolvedPurgeReferences}`);
+    }
+    if (status.blockedPurgeReferences !== null) {
+      console.error(`Referencias com decisao block-purge: ${status.blockedPurgeReferences}`);
     }
   }
 }
