@@ -22,7 +22,7 @@ import { CanonicalHero } from '@/shared/components/hero/CanonicalHero';
 import { useTerritorialContext } from '@/core/routing/components/TerritorialLayout';
 import { useModuleTerritoryFilter } from '@/core/location';
 import { useTouristPoints } from '../hooks/useTouristPoints';
-import { useGuideUrls, buildTouristPointDetailUrl } from '../hooks/useGuideUrls';
+import { buildTouristPointDetailUrl, useTouristPointPublicUrls } from '@/core/guide/tourist-points/routes/useTouristPointPublicUrls';
 import { TouristPointDiscoveryCard } from '../components/TouristPointDiscoveryCard';
 import { TouristPointCategoryCards } from '../components/TouristPointCategoryCards';
 import { TouristPointSectionCarousel } from '../components/TouristPointSectionCarousel';
