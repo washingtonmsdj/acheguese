@@ -66,6 +66,7 @@ describe("Mobility query surface integrity", () => {
     expect(rideReads).toContain('.select("available_seats")');
     expect(runtimeService).not.toContain("async getRideBasicInfo(");
     expect(runtimeService).not.toContain("async getRideAvailableSeats(");
-    expect(runtimeService).toContain("return readRideSearchSnapshot(rideId)");
+    expect(runtimeService).not.toContain("async getRideWithAddresses(");
+    expect(runtimeService).not.toContain("readRideSearchSnapshot");
   });
 });
