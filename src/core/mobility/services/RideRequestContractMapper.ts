@@ -6,7 +6,36 @@ import {
 } from "../core/RideLifecycleStatus";
 import type { RideRequest } from "../types/types";
 
-type RideRequestRecord = Tables<"ride_requests">;
+export type RideRequestContractSource = Pick<
+  Tables<"ride_requests">,
+  | "id"
+  | "passenger_profile_id"
+  | "driver_profile_id"
+  | "source_id"
+  | "ride_mode"
+  | "origin"
+  | "destination"
+  | "origin_lat"
+  | "origin_lng"
+  | "destination_lat"
+  | "destination_lng"
+  | "status"
+  | "suggested_price"
+  | "final_price"
+  | "driver_assigned_at"
+  | "passenger_boarded_at"
+  | "payment_method"
+  | "departure_time"
+  | "observation"
+  | "driver_accepted_at"
+  | "started_at"
+  | "completed_at"
+  | "passenger_confirmed_at"
+  | "cancelled_at"
+  | "created_at"
+  | "updated_at"
+>;
+
 
 const UNRESOLVED_COMPATIBILITY_STATUSES: readonly string[] = [
   ...LEGACY_UNRESOLVED_OPEN_RIDE_STATUSES,
@@ -33,7 +62,7 @@ function normalizeRideMode(
   return null;
 }
 
-export function toRideRequestContract(ride: RideRequestRecord): RideRequest {
+export function toRideRequestContract(ride: RideRequestContractSource): RideRequest {
   const rideMode = normalizeRideMode(ride.ride_mode);
   const originAddress = ride.origin ?? "";
   const destinationAddress = ride.destination ?? "";
