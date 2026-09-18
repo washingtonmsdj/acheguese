@@ -1410,21 +1410,21 @@ export type Database = {
           {
             foreignKeyName: "business_data_profile_id_fkey"
             columns: ["profile_id"]
-            isOneToOne: true
+            isOneToOne: false
             referencedRelation: "personal_social_profiles"
             referencedColumns: ["profile_id"]
           },
           {
             foreignKeyName: "business_data_profile_id_fkey"
             columns: ["profile_id"]
-            isOneToOne: true
+            isOneToOne: false
             referencedRelation: "profiles"
             referencedColumns: ["id"]
           },
           {
             foreignKeyName: "business_data_profile_id_fkey"
             columns: ["profile_id"]
-            isOneToOne: true
+            isOneToOne: false
             referencedRelation: "public_profiles"
             referencedColumns: ["id"]
           },
@@ -6157,7 +6157,7 @@ export type Database = {
           id: string
           is_verified: boolean
           profile_id: string
-          rating: number | null
+          rating: number
           total_earnings: number
           total_rides: number
           updated_at: string
@@ -6168,7 +6168,7 @@ export type Database = {
           id?: string
           is_verified?: boolean
           profile_id: string
-          rating?: number | null
+          rating?: number
           total_earnings?: number
           total_rides?: number
           updated_at?: string
@@ -6179,7 +6179,7 @@ export type Database = {
           id?: string
           is_verified?: boolean
           profile_id?: string
-          rating?: number | null
+          rating?: number
           total_earnings?: number
           total_rides?: number
           updated_at?: string
@@ -6898,75 +6898,39 @@ export type Database = {
       emergency_delivery_log: {
         Row: {
           alert_id: string
-          attempt_count: number
-          cancelled_at: string | null
           channel: string
-          claimed_at: string | null
           contact_id: string
           created_at: string
           delivered_at: string | null
-          dispatch_authorized_at: string | null
           error_message: string | null
           id: string
-          last_attempt_at: string | null
-          last_provider_attempt_at: string | null
           metadata: Json | null
-          provider_attempt_count: number
-          provider_event_at: string | null
-          provider_event_id: string | null
-          provider_message_id: string | null
-          provider_status: string | null
-          reconciliation_required_at: string | null
           status: string
           target: string
           updated_at: string
         }
         Insert: {
           alert_id: string
-          attempt_count?: number
-          cancelled_at?: string | null
           channel: string
-          claimed_at?: string | null
           contact_id: string
           created_at?: string
           delivered_at?: string | null
-          dispatch_authorized_at?: string | null
           error_message?: string | null
           id?: string
-          last_attempt_at?: string | null
-          last_provider_attempt_at?: string | null
           metadata?: Json | null
-          provider_attempt_count?: number
-          provider_event_at?: string | null
-          provider_event_id?: string | null
-          provider_message_id?: string | null
-          provider_status?: string | null
-          reconciliation_required_at?: string | null
           status: string
           target: string
           updated_at?: string
         }
         Update: {
           alert_id?: string
-          attempt_count?: number
-          cancelled_at?: string | null
           channel?: string
-          claimed_at?: string | null
           contact_id?: string
           created_at?: string
           delivered_at?: string | null
-          dispatch_authorized_at?: string | null
           error_message?: string | null
           id?: string
-          last_attempt_at?: string | null
-          last_provider_attempt_at?: string | null
           metadata?: Json | null
-          provider_attempt_count?: number
-          provider_event_at?: string | null
-          provider_event_id?: string | null
-          provider_message_id?: string | null
-          provider_status?: string | null
-          reconciliation_required_at?: string | null
           status?: string
           target?: string
           updated_at?: string
@@ -9015,168 +8979,6 @@ export type Database = {
           },
         ]
       }
-      mobility_price_quotes: {
-        Row: {
-          amount: number
-          consumed_at: string | null
-          consumed_by_ride_id: string | null
-          currency: string
-          destination_lat: number
-          destination_lng: number
-          distance_meters: number
-          dropoff_address_id: string
-          dropoff_location_id: string
-          duration_seconds: number
-          expires_at: string
-          id: string
-          issued_at: string
-          metadata: Json
-          mode: string
-          origin_lat: number
-          origin_lng: number
-          passenger_profile_id: string
-          pickup_address_id: string
-          pickup_location_id: string
-          pricing_rule_id: string
-          pricing_rule_updated_at: string
-          quote_engine_version: string
-          routing_profile: string
-          routing_provider: string
-        }
-        Insert: {
-          amount: number
-          consumed_at?: string | null
-          consumed_by_ride_id?: string | null
-          currency?: string
-          destination_lat: number
-          destination_lng: number
-          distance_meters: number
-          dropoff_address_id: string
-          dropoff_location_id: string
-          duration_seconds: number
-          expires_at: string
-          id?: string
-          issued_at?: string
-          metadata?: Json
-          mode: string
-          origin_lat: number
-          origin_lng: number
-          passenger_profile_id: string
-          pickup_address_id: string
-          pickup_location_id: string
-          pricing_rule_id: string
-          pricing_rule_updated_at: string
-          quote_engine_version?: string
-          routing_profile: string
-          routing_provider: string
-        }
-        Update: {
-          amount?: number
-          consumed_at?: string | null
-          consumed_by_ride_id?: string | null
-          currency?: string
-          destination_lat?: number
-          destination_lng?: number
-          distance_meters?: number
-          dropoff_address_id?: string
-          dropoff_location_id?: string
-          duration_seconds?: number
-          expires_at?: string
-          id?: string
-          issued_at?: string
-          metadata?: Json
-          mode?: string
-          origin_lat?: number
-          origin_lng?: number
-          passenger_profile_id?: string
-          pickup_address_id?: string
-          pickup_location_id?: string
-          pricing_rule_id?: string
-          pricing_rule_updated_at?: string
-          quote_engine_version?: string
-          routing_profile?: string
-          routing_provider?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "mobility_price_quotes_consumed_by_ride_id_fkey"
-            columns: ["consumed_by_ride_id"]
-            isOneToOne: false
-            referencedRelation: "ride_requests"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "mobility_price_quotes_dropoff_address_id_fkey"
-            columns: ["dropoff_address_id"]
-            isOneToOne: false
-            referencedRelation: "addresses"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "mobility_price_quotes_dropoff_address_id_fkey"
-            columns: ["dropoff_address_id"]
-            isOneToOne: false
-            referencedRelation: "addresses_public"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "mobility_price_quotes_dropoff_location_id_fkey"
-            columns: ["dropoff_location_id"]
-            isOneToOne: false
-            referencedRelation: "locations"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "mobility_price_quotes_passenger_profile_id_fkey"
-            columns: ["passenger_profile_id"]
-            isOneToOne: false
-            referencedRelation: "personal_social_profiles"
-            referencedColumns: ["profile_id"]
-          },
-          {
-            foreignKeyName: "mobility_price_quotes_passenger_profile_id_fkey"
-            columns: ["passenger_profile_id"]
-            isOneToOne: false
-            referencedRelation: "profiles"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "mobility_price_quotes_passenger_profile_id_fkey"
-            columns: ["passenger_profile_id"]
-            isOneToOne: false
-            referencedRelation: "public_profiles"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "mobility_price_quotes_pickup_address_id_fkey"
-            columns: ["pickup_address_id"]
-            isOneToOne: false
-            referencedRelation: "addresses"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "mobility_price_quotes_pickup_address_id_fkey"
-            columns: ["pickup_address_id"]
-            isOneToOne: false
-            referencedRelation: "addresses_public"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "mobility_price_quotes_pickup_location_id_fkey"
-            columns: ["pickup_location_id"]
-            isOneToOne: false
-            referencedRelation: "locations"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "mobility_price_quotes_pricing_rule_id_fkey"
-            columns: ["pricing_rule_id"]
-            isOneToOne: false
-            referencedRelation: "pricing_rules"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
       module_rollouts: {
         Row: {
           config: Json | null
@@ -10830,89 +10632,6 @@ export type Database = {
           },
         ]
       }
-      privacy_subject_request_events: {
-        Row: {
-          actor_user_id: string | null
-          event_type: string
-          from_status: string | null
-          id: string
-          occurred_at: string
-          request_id: string
-          to_status: string
-        }
-        Insert: {
-          actor_user_id?: string | null
-          event_type: string
-          from_status?: string | null
-          id?: string
-          occurred_at?: string
-          request_id: string
-          to_status: string
-        }
-        Update: {
-          actor_user_id?: string | null
-          event_type?: string
-          from_status?: string | null
-          id?: string
-          occurred_at?: string
-          request_id?: string
-          to_status?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "privacy_subject_request_events_request_id_fkey"
-            columns: ["request_id"]
-            isOneToOne: false
-            referencedRelation: "privacy_subject_requests"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
-      privacy_subject_requests: {
-        Row: {
-          id: string
-          message: string
-          request_type: string
-          requester_email: string
-          requester_name: string
-          resolved_at: string | null
-          status: string
-          subject: string
-          submitted_at: string
-          turnstile_verified: boolean
-          updated_at: string
-          user_id: string | null
-        }
-        Insert: {
-          id?: string
-          message: string
-          request_type: string
-          requester_email: string
-          requester_name: string
-          resolved_at?: string | null
-          status?: string
-          subject: string
-          submitted_at?: string
-          turnstile_verified?: boolean
-          updated_at?: string
-          user_id?: string | null
-        }
-        Update: {
-          id?: string
-          message?: string
-          request_type?: string
-          requester_email?: string
-          requester_name?: string
-          resolved_at?: string | null
-          status?: string
-          subject?: string
-          submitted_at?: string
-          turnstile_verified?: boolean
-          updated_at?: string
-          user_id?: string | null
-        }
-        Relationships: []
-      }
       professional_data: {
         Row: {
           accepts_remote: boolean | null
@@ -11053,21 +10772,21 @@ export type Database = {
           {
             foreignKeyName: "professional_data_profile_id_fkey"
             columns: ["profile_id"]
-            isOneToOne: true
+            isOneToOne: false
             referencedRelation: "personal_social_profiles"
             referencedColumns: ["profile_id"]
           },
           {
             foreignKeyName: "professional_data_profile_id_fkey"
             columns: ["profile_id"]
-            isOneToOne: true
+            isOneToOne: false
             referencedRelation: "profiles"
             referencedColumns: ["id"]
           },
           {
             foreignKeyName: "professional_data_profile_id_fkey"
             columns: ["profile_id"]
-            isOneToOne: true
+            isOneToOne: false
             referencedRelation: "public_profiles"
             referencedColumns: ["id"]
           },
@@ -13393,7 +13112,6 @@ export type Database = {
       ride_requests: {
         Row: {
           available_seats: number | null
-          cancellation_reason: string | null
           cancelled_at: string | null
           completed_at: string | null
           created_at: string
@@ -13426,7 +13144,6 @@ export type Database = {
           pickup_address_id: string
           pickup_confirmed_at: string | null
           pickup_location_id: string
-          pricing_quote_id: string | null
           proof_of_delivery: Json | null
           recipient_name: string | null
           recipient_phone: string | null
@@ -13442,7 +13159,6 @@ export type Database = {
         }
         Insert: {
           available_seats?: number | null
-          cancellation_reason?: string | null
           cancelled_at?: string | null
           completed_at?: string | null
           created_at?: string
@@ -13475,7 +13191,6 @@ export type Database = {
           pickup_address_id: string
           pickup_confirmed_at?: string | null
           pickup_location_id: string
-          pricing_quote_id?: string | null
           proof_of_delivery?: Json | null
           recipient_name?: string | null
           recipient_phone?: string | null
@@ -13491,7 +13206,6 @@ export type Database = {
         }
         Update: {
           available_seats?: number | null
-          cancellation_reason?: string | null
           cancelled_at?: string | null
           completed_at?: string | null
           created_at?: string
@@ -13524,7 +13238,6 @@ export type Database = {
           pickup_address_id?: string
           pickup_confirmed_at?: string | null
           pickup_location_id?: string
-          pricing_quote_id?: string | null
           proof_of_delivery?: Json | null
           recipient_name?: string | null
           recipient_phone?: string | null
@@ -13621,13 +13334,6 @@ export type Database = {
             columns: ["pickup_location_id"]
             isOneToOne: false
             referencedRelation: "locations"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "ride_requests_pricing_quote_id_fkey"
-            columns: ["pricing_quote_id"]
-            isOneToOne: false
-            referencedRelation: "mobility_price_quotes"
             referencedColumns: ["id"]
           },
           {
@@ -17215,21 +16921,21 @@ export type Database = {
           {
             foreignKeyName: "professional_data_profile_id_fkey"
             columns: ["profile_id"]
-            isOneToOne: true
+            isOneToOne: false
             referencedRelation: "personal_social_profiles"
             referencedColumns: ["profile_id"]
           },
           {
             foreignKeyName: "professional_data_profile_id_fkey"
             columns: ["profile_id"]
-            isOneToOne: true
+            isOneToOne: false
             referencedRelation: "profiles"
             referencedColumns: ["id"]
           },
           {
             foreignKeyName: "professional_data_profile_id_fkey"
             columns: ["profile_id"]
-            isOneToOne: true
+            isOneToOne: false
             referencedRelation: "public_profiles"
             referencedColumns: ["id"]
           },
@@ -17494,21 +17200,21 @@ export type Database = {
           {
             foreignKeyName: "business_data_profile_id_fkey"
             columns: ["profile_id"]
-            isOneToOne: true
+            isOneToOne: false
             referencedRelation: "personal_social_profiles"
             referencedColumns: ["profile_id"]
           },
           {
             foreignKeyName: "business_data_profile_id_fkey"
             columns: ["profile_id"]
-            isOneToOne: true
+            isOneToOne: false
             referencedRelation: "profiles"
             referencedColumns: ["id"]
           },
           {
             foreignKeyName: "business_data_profile_id_fkey"
             columns: ["profile_id"]
-            isOneToOne: true
+            isOneToOne: false
             referencedRelation: "public_profiles"
             referencedColumns: ["id"]
           },
@@ -17562,21 +17268,21 @@ export type Database = {
           {
             foreignKeyName: "professional_data_profile_id_fkey"
             columns: ["profile_id"]
-            isOneToOne: true
+            isOneToOne: false
             referencedRelation: "personal_social_profiles"
             referencedColumns: ["profile_id"]
           },
           {
             foreignKeyName: "professional_data_profile_id_fkey"
             columns: ["profile_id"]
-            isOneToOne: true
+            isOneToOne: false
             referencedRelation: "profiles"
             referencedColumns: ["id"]
           },
           {
             foreignKeyName: "professional_data_profile_id_fkey"
             columns: ["profile_id"]
-            isOneToOne: true
+            isOneToOne: false
             referencedRelation: "public_profiles"
             referencedColumns: ["id"]
           },
@@ -17775,10 +17481,6 @@ export type Database = {
         Args: { p_actor_user_id: string }
         Returns: Json
       }
-      admin_get_privacy_subject_request: {
-        Args: { p_actor_user_id: string; p_request_id: string }
-        Returns: Json
-      }
       admin_grant_business_institution_scope: {
         Args: {
           p_actor_user_id: string
@@ -17789,25 +17491,6 @@ export type Database = {
           p_target_profile_id: string
         }
         Returns: string
-      }
-      admin_list_privacy_subject_requests: {
-        Args: {
-          p_actor_user_id: string
-          p_limit?: number
-          p_offset?: number
-          p_request_type?: string
-          p_status?: string
-        }
-        Returns: {
-          id: string
-          linked_user: boolean
-          request_type: string
-          resolved_at: string
-          status: string
-          submitted_at: string
-          total_count: number
-          updated_at: string
-        }[]
       }
       admin_list_user_account_contexts: {
         Args: { p_page?: number; p_page_size?: number; p_search?: string }
@@ -17890,17 +17573,6 @@ export type Database = {
           settings: Json
         }[]
       }
-      admin_profile_rpc_set_suspension: {
-        Args: {
-          p_actor_user_id: string
-          p_reason?: string
-          p_suspended: boolean
-          p_suspended_until?: string
-          p_target_id: string
-          p_target_kind: string
-        }
-        Returns: Json
-      }
       admin_reject_communication_channel_request: {
         Args: {
           admin_notes?: string
@@ -17925,14 +17597,6 @@ export type Database = {
           p_scope_id: string
         }
         Returns: boolean
-      }
-      admin_transition_privacy_subject_request: {
-        Args: {
-          p_actor_user_id: string
-          p_next_status: string
-          p_request_id: string
-        }
-        Returns: Json
       }
       admin_update_ad_campaign_state: {
         Args: { p_campaign_id: string; p_payload?: Json }
@@ -17960,29 +17624,6 @@ export type Database = {
       alpha_access_set_admissions: {
         Args: { p_enabled: boolean }
         Returns: Json
-      }
-      append_driver_moderation_event: {
-        Args: {
-          p_action: string
-          p_driver_profile_id: string
-          p_metadata?: Json
-          p_reason?: string
-        }
-        Returns: {
-          action: string
-          admin_profile_id: string | null
-          created_at: string
-          driver_profile_id: string
-          id: string
-          metadata: Json
-          reason: string | null
-        }
-        SetofOptions: {
-          from: "*"
-          to: "driver_moderation_events"
-          isOneToOne: true
-          isSetofReturn: false
-        }
       }
       apply_business_profile_correction: {
         Args: { p_correction_id: string }
@@ -18016,46 +17657,6 @@ export type Database = {
         }
         Returns: string
       }
-      apply_emergency_delivery_provider_event: {
-        Args: {
-          p_delivery_id: string
-          p_event_created_at: string
-          p_event_type: string
-          p_provider_event_id: string
-          p_provider_message_id: string
-        }
-        Returns: {
-          alert_id: string
-          attempt_count: number
-          cancelled_at: string | null
-          channel: string
-          claimed_at: string | null
-          contact_id: string
-          created_at: string
-          delivered_at: string | null
-          dispatch_authorized_at: string | null
-          error_message: string | null
-          id: string
-          last_attempt_at: string | null
-          last_provider_attempt_at: string | null
-          metadata: Json | null
-          provider_attempt_count: number
-          provider_event_at: string | null
-          provider_event_id: string | null
-          provider_message_id: string | null
-          provider_status: string | null
-          reconciliation_required_at: string | null
-          status: string
-          target: string
-          updated_at: string
-        }
-        SetofOptions: {
-          from: "*"
-          to: "emergency_delivery_log"
-          isOneToOne: true
-          isSetofReturn: false
-        }
-      }
       apply_trust_admin_actions: {
         Args: {
           p_action_type: string
@@ -18084,40 +17685,6 @@ export type Database = {
         Args: { p_location_id: string }
         Returns: boolean
       }
-      authorize_emergency_email_dispatch: {
-        Args: { p_delivery_id: string; p_payload: Json }
-        Returns: {
-          alert_id: string
-          attempt_count: number
-          cancelled_at: string | null
-          channel: string
-          claimed_at: string | null
-          contact_id: string
-          created_at: string
-          delivered_at: string | null
-          dispatch_authorized_at: string | null
-          error_message: string | null
-          id: string
-          last_attempt_at: string | null
-          last_provider_attempt_at: string | null
-          metadata: Json | null
-          provider_attempt_count: number
-          provider_event_at: string | null
-          provider_event_id: string | null
-          provider_message_id: string | null
-          provider_status: string | null
-          reconciliation_required_at: string | null
-          status: string
-          target: string
-          updated_at: string
-        }
-        SetofOptions: {
-          from: "*"
-          to: "emergency_delivery_log"
-          isOneToOne: true
-          isSetofReturn: false
-        }
-      }
       backfill_missing_coordinates: {
         Args: never
         Returns: {
@@ -18126,40 +17693,6 @@ export type Database = {
           location_name: string
           location_type: string
         }[]
-      }
-      begin_emergency_provider_attempt: {
-        Args: { p_delivery_id: string }
-        Returns: {
-          alert_id: string
-          attempt_count: number
-          cancelled_at: string | null
-          channel: string
-          claimed_at: string | null
-          contact_id: string
-          created_at: string
-          delivered_at: string | null
-          dispatch_authorized_at: string | null
-          error_message: string | null
-          id: string
-          last_attempt_at: string | null
-          last_provider_attempt_at: string | null
-          metadata: Json | null
-          provider_attempt_count: number
-          provider_event_at: string | null
-          provider_event_id: string | null
-          provider_message_id: string | null
-          provider_status: string | null
-          reconciliation_required_at: string | null
-          status: string
-          target: string
-          updated_at: string
-        }
-        SetofOptions: {
-          from: "*"
-          to: "emergency_delivery_log"
-          isOneToOne: true
-          isSetofReturn: false
-        }
       }
       block_classified_conversation: {
         Args: { p_conversation_id: string; p_reason?: string }
@@ -18229,9 +17762,17 @@ export type Database = {
         Args: { p_business_id: string }
         Returns: boolean
       }
+      can_write_ride_dispatch_audit: {
+        Args: { p_driver_profile_id: string; p_ride_id: string }
+        Returns: boolean
+      }
       cancel_account_deletion_for_user: {
         Args: { p_reason?: string; p_user_id: string }
         Returns: boolean
+      }
+      cancel_pending_ride_offers: {
+        Args: { p_ride_id: string }
+        Returns: number
       }
       cast_community_poll_vote: {
         Args: { p_option_id: string; p_poll_id: string; p_profile_id: string }
@@ -18275,40 +17816,6 @@ export type Database = {
       }
       check_suspension_expiry: { Args: never; Returns: undefined }
       check_user_mfa_required: { Args: { p_user_id: string }; Returns: boolean }
-      claim_emergency_delivery_attempt: {
-        Args: { p_alert_id: string; p_channel?: string; p_contact_id: string }
-        Returns: {
-          alert_id: string
-          attempt_count: number
-          cancelled_at: string | null
-          channel: string
-          claimed_at: string | null
-          contact_id: string
-          created_at: string
-          delivered_at: string | null
-          dispatch_authorized_at: string | null
-          error_message: string | null
-          id: string
-          last_attempt_at: string | null
-          last_provider_attempt_at: string | null
-          metadata: Json | null
-          provider_attempt_count: number
-          provider_event_at: string | null
-          provider_event_id: string | null
-          provider_message_id: string | null
-          provider_status: string | null
-          reconciliation_required_at: string | null
-          status: string
-          target: string
-          updated_at: string
-        }
-        SetofOptions: {
-          from: "*"
-          to: "emergency_delivery_log"
-          isOneToOne: true
-          isSetofReturn: false
-        }
-      }
       cleanup_expired_cache: { Args: never; Returns: number }
       cleanup_expired_sessions: { Args: never; Returns: number }
       cleanup_old_logs: { Args: never; Returns: number }
@@ -18347,44 +17854,6 @@ export type Database = {
       communication_user_can_manage_channel: {
         Args: { p_channel_id: string; p_user_id: string }
         Returns: boolean
-      }
-      confirm_emergency_delivery_provider_acceptance: {
-        Args: {
-          p_accepted_at: string
-          p_delivery_id: string
-          p_provider_message_id: string
-        }
-        Returns: {
-          alert_id: string
-          attempt_count: number
-          cancelled_at: string | null
-          channel: string
-          claimed_at: string | null
-          contact_id: string
-          created_at: string
-          delivered_at: string | null
-          dispatch_authorized_at: string | null
-          error_message: string | null
-          id: string
-          last_attempt_at: string | null
-          last_provider_attempt_at: string | null
-          metadata: Json | null
-          provider_attempt_count: number
-          provider_event_at: string | null
-          provider_event_id: string | null
-          provider_message_id: string | null
-          provider_status: string | null
-          reconciliation_required_at: string | null
-          status: string
-          target: string
-          updated_at: string
-        }
-        SetofOptions: {
-          from: "*"
-          to: "emergency_delivery_log"
-          isOneToOne: true
-          isSetofReturn: false
-        }
       }
       consume_community_edge_rate_limit: {
         Args: {
@@ -18596,35 +18065,6 @@ export type Database = {
         Returns: string
       }
       create_community_issue: { Args: { payload: Json }; Returns: Json }
-      create_emergency_contact: {
-        Args: {
-          p_email: string
-          p_is_primary?: boolean
-          p_name: string
-          p_phone?: string
-          p_profile_id: string
-          p_relationship?: string
-        }
-        Returns: {
-          created_at: string
-          email: string | null
-          id: string
-          is_active: boolean
-          is_primary: boolean
-          metadata: Json | null
-          name: string
-          phone: string | null
-          profile_id: string
-          relationship: string | null
-          updated_at: string
-        }
-        SetofOptions: {
-          from: "*"
-          to: "emergency_contacts"
-          isOneToOne: true
-          isSetofReturn: false
-        }
-      }
       create_notification: {
         Args: {
           p_action_label?: string
@@ -18721,94 +18161,6 @@ export type Database = {
           isSetofReturn: false
         }
       }
-      create_safety_emergency_alert: {
-        Args: {
-          p_accuracy: number
-          p_alert_type: string
-          p_description: string
-          p_latitude: number
-          p_longitude: number
-          p_metadata: Json
-          p_profile_id: string
-          p_ride_id: string
-        }
-        Returns: {
-          accuracy: number | null
-          alert_type: string
-          created_at: string
-          description: string | null
-          id: string
-          latitude: number | null
-          longitude: number | null
-          metadata: Json
-          profile_id: string | null
-          resolved_at: string | null
-          ride_id: string | null
-          status: string
-          updated_at: string
-        }
-        SetofOptions: {
-          from: "*"
-          to: "emergency_alerts"
-          isOneToOne: true
-          isSetofReturn: false
-        }
-      }
-      create_safety_incident: {
-        Args: {
-          p_description: string
-          p_incident_type: string
-          p_latitude: number
-          p_longitude: number
-          p_reported_by: string
-          p_ride_id: string
-          p_severity: string
-        }
-        Returns: {
-          created_at: string
-          description: string
-          id: string
-          incident_type: string
-          latitude: number | null
-          longitude: number | null
-          metadata: Json | null
-          reported_by: string
-          resolved_at: string | null
-          ride_id: string | null
-          severity: string
-          status: string
-          updated_at: string
-        }
-        SetofOptions: {
-          from: "*"
-          to: "safety_incidents"
-          isOneToOne: true
-          isSetofReturn: false
-        }
-      }
-      create_safety_ride_share: {
-        Args: {
-          p_created_by: string
-          p_expires_in_hours?: number
-          p_ride_id: string
-        }
-        Returns: {
-          created_at: string
-          created_by: string
-          expires_at: string
-          id: string
-          revoked_at: string | null
-          ride_id: string
-          share_token: string
-          status: string
-        }
-        SetofOptions: {
-          from: "*"
-          to: "ride_shares"
-          isOneToOne: true
-          isSetofReturn: false
-        }
-      }
       create_vaga_report: {
         Args: { p_description?: string; p_reason: string; p_vaga_id: string }
         Returns: {
@@ -18831,7 +18183,6 @@ export type Database = {
           isSetofReturn: false
         }
       }
-      current_user_has_password: { Args: never; Returns: boolean }
       delete_cache: { Args: { p_key: string }; Returns: undefined }
       delete_cache_pattern: { Args: { p_pattern: string }; Returns: number }
       delete_profile: { Args: { p_profile_id: string }; Returns: Json }
@@ -19418,10 +18769,6 @@ export type Database = {
       }
       enable_strict_coordinate_validation: { Args: never; Returns: string }
       enablelongtransactions: { Args: never; Returns: string }
-      ensure_owned_driver_data: {
-        Args: { p_profile_id: string }
-        Returns: Json
-      }
       ensure_ride_chat: { Args: { p_ride_id: string }; Returns: Json }
       equals: { Args: { geom1: unknown; geom2: unknown }; Returns: boolean }
       expire_stale_work_opportunities: {
@@ -19430,45 +18777,6 @@ export type Database = {
           expired_count: number
           expired_ids: string[]
         }[]
-      }
-      fail_emergency_delivery_attempt: {
-        Args: {
-          p_delivery_id: string
-          p_error_message: string
-          p_expected_status: string
-          p_metadata?: Json
-        }
-        Returns: {
-          alert_id: string
-          attempt_count: number
-          cancelled_at: string | null
-          channel: string
-          claimed_at: string | null
-          contact_id: string
-          created_at: string
-          delivered_at: string | null
-          dispatch_authorized_at: string | null
-          error_message: string | null
-          id: string
-          last_attempt_at: string | null
-          last_provider_attempt_at: string | null
-          metadata: Json | null
-          provider_attempt_count: number
-          provider_event_at: string | null
-          provider_event_id: string | null
-          provider_message_id: string | null
-          provider_status: string | null
-          reconciliation_required_at: string | null
-          status: string
-          target: string
-          updated_at: string
-        }
-        SetofOptions: {
-          from: "*"
-          to: "emergency_delivery_log"
-          isOneToOne: true
-          isSetofReturn: false
-        }
       }
       fail_media_asset_upload: {
         Args: { p_asset_id: string }
@@ -19915,10 +19223,6 @@ export type Database = {
       get_elected_officials: { Args: { p_city_id: string }; Returns: Json }
       get_email_by_username: { Args: { p_username: string }; Returns: string }
       get_emergency_contacts: { Args: { p_city_id: string }; Returns: Json }
-      get_emergency_email_provider_payload: {
-        Args: { p_delivery_id: string }
-        Returns: Json
-      }
       get_event_statistics: {
         Args: { p_end_date?: string; p_event?: string; p_start_date?: string }
         Returns: {
@@ -20562,6 +19866,17 @@ export type Database = {
         }
         Returns: string
       }
+      log_ride_dispatch_attempt: {
+        Args: {
+          p_attempt_number: number
+          p_driver_profile_id: string
+          p_offered_at: string
+          p_ride_id: string
+          p_status: string
+          p_timeout_at: string
+        }
+        Returns: undefined
+      }
       longtransactionsenabled: { Args: never; Returns: boolean }
       mark_all_notifications_as_read: {
         Args: { p_user_id: string }
@@ -20633,16 +19948,25 @@ export type Database = {
           p_delivery_notes?: string
           p_departure_time?: string
           p_destination?: string
+          p_destination_lat?: number
+          p_destination_lng?: number
+          p_dropoff_address_id: string
+          p_dropoff_location_id: string
           p_observation?: string
           p_origin?: string
+          p_origin_lat?: number
+          p_origin_lng?: number
           p_package_description?: string
           p_package_size?: string
+          p_passenger_profile_id: string
           p_payment_method?: string
-          p_quote_id: string
+          p_pickup_address_id: string
+          p_pickup_location_id: string
           p_recipient_name: string
           p_recipient_phone?: string
           p_source_id: string
           p_source_type: string
+          p_suggested_price?: number
         }
         Returns: Json
       }
@@ -20651,57 +19975,24 @@ export type Database = {
           p_available_seats?: number
           p_departure_time?: string
           p_destination?: string
+          p_destination_lat?: number
+          p_destination_lng?: number
+          p_dropoff_address_id: string
+          p_dropoff_location_id: string
           p_observation?: string
           p_origin?: string
+          p_origin_lat?: number
+          p_origin_lng?: number
+          p_passenger_profile_id: string
           p_payment_method?: string
-          p_quote_id: string
+          p_pickup_address_id: string
+          p_pickup_location_id: string
+          p_suggested_price?: number
         }
         Returns: Json
       }
       mobility_expire_dispatch_atomic: {
         Args: { p_reason: string; p_ride_id: string }
-        Returns: Json
-      }
-      mobility_find_available_drivers_for_ride: {
-        Args: {
-          p_actor_user_id: string
-          p_limit?: number
-          p_radius_km?: number
-          p_ride_id: string
-        }
-        Returns: Json
-      }
-      mobility_issue_price_quote: {
-        Args: {
-          p_destination_lat: number
-          p_destination_lng: number
-          p_distance_meters: number
-          p_dropoff_address_id: string
-          p_dropoff_location_id: string
-          p_duration_seconds: number
-          p_mode: string
-          p_origin_lat: number
-          p_origin_lng: number
-          p_passenger_profile_id: string
-          p_pickup_address_id: string
-          p_pickup_location_id: string
-          p_routing_profile: string
-          p_routing_provider: string
-        }
-        Returns: Json
-      }
-      mobility_list_driver_offers: {
-        Args: {
-          p_actor_user_id: string
-          p_ascending?: boolean
-          p_driver_profile_id: string
-          p_limit?: number
-          p_max_price?: number
-          p_min_price?: number
-          p_package_sizes?: string[]
-          p_sort_by?: string
-          p_strategy: string
-        }
         Returns: Json
       }
       mobility_offer_driver_atomic: {
@@ -20712,25 +20003,6 @@ export type Database = {
           p_ride_id: string
           p_timeout_at: string
         }
-        Returns: Json
-      }
-      mobility_reconcile_stale_driver_availability: {
-        Args: { p_threshold_minutes?: number }
-        Returns: Json
-      }
-      mobility_rpc_create_driver_profile: {
-        Args: {
-          p_actor_user_id: string
-          p_avatar_url: string
-          p_bio: string
-          p_display_name: string
-          p_extension_data: Json
-          p_handle: string
-        }
-        Returns: Json
-      }
-      mobility_rpc_ensure_admin_driver_profile: {
-        Args: { p_actor_user_id: string }
         Returns: Json
       }
       mobility_timeout_driver_offer_atomic: {
@@ -20747,6 +20019,7 @@ export type Database = {
           p_command: string
           p_expected_from_state: string
           p_failed_delivery_metadata?: Json
+          p_final_price?: number
           p_proof_of_delivery?: Json
           p_reason?: string
           p_ride_id: string
@@ -20760,30 +20033,6 @@ export type Database = {
           p_reason?: string
           p_ride_id: string
           p_to_state: string
-        }
-        Returns: Json
-      }
-      mobility_update_driver_availability: {
-        Args: {
-          p_action: string
-          p_actor_user_id: string
-          p_lat?: number
-          p_lng?: number
-          p_profile_id: string
-          p_ride_mode?: string
-        }
-        Returns: Json
-      }
-      mobility_update_driver_location: {
-        Args: {
-          p_accuracy?: number
-          p_actor_user_id: string
-          p_altitude?: number
-          p_driver_profile_id: string
-          p_heading?: number
-          p_lat: number
-          p_lng: number
-          p_speed?: number
         }
         Returns: Json
       }
@@ -21038,28 +20287,6 @@ export type Database = {
           isSetofReturn: false
         }
       }
-      patch_emergency_contact: {
-        Args: { p_contact_id: string; p_updates: Json }
-        Returns: {
-          created_at: string
-          email: string | null
-          id: string
-          is_active: boolean
-          is_primary: boolean
-          metadata: Json | null
-          name: string
-          phone: string | null
-          profile_id: string
-          relationship: string | null
-          updated_at: string
-        }
-        SetofOptions: {
-          from: "*"
-          to: "emergency_contacts"
-          isOneToOne: true
-          isSetofReturn: false
-        }
-      }
       populate_geometry_columns:
         | { Args: { tbl_oid: unknown; use_typmod?: boolean }; Returns: number }
         | { Args: { use_typmod?: boolean }; Returns: string }
@@ -21140,42 +20367,6 @@ export type Database = {
           state: string
         }[]
       }
-      profile_rpc_clear_expired_suspension: {
-        Args: { p_actor_user_id: string; p_profile_id: string }
-        Returns: Json
-      }
-      profile_rpc_create_business: {
-        Args: {
-          p_actor_user_id: string
-          p_business_hours?: Json
-          p_business_patch: Json
-          p_contact_channels?: Json
-        }
-        Returns: Json
-      }
-      profile_rpc_create_personal: {
-        Args: {
-          p_actor_user_id: string
-          p_avatar_url?: string
-          p_bio?: string
-          p_display_name: string
-          p_patch?: Json
-          p_username: string
-        }
-        Returns: Json
-      }
-      profile_rpc_create_professional: {
-        Args: {
-          p_actor_user_id: string
-          p_avatar_url: string
-          p_bio: string
-          p_display_name: string
-          p_extension_data: Json
-          p_handle: string
-          p_professional_patch: Json
-        }
-        Returns: Json
-      }
       profile_rpc_create_profile_with_extension: {
         Args: {
           p_actor_user_id: string
@@ -21186,14 +20377,6 @@ export type Database = {
           p_handle: string
           p_profile_type: string
         }
-        Returns: Json
-      }
-      profile_rpc_deactivate_business: {
-        Args: { p_actor_user_id: string; p_profile_id: string }
-        Returns: Json
-      }
-      profile_rpc_deactivate_professional: {
-        Args: { p_actor_user_id: string; p_profile_id: string }
         Returns: Json
       }
       profile_rpc_delete_profile: {
@@ -21287,29 +20470,6 @@ export type Database = {
         }
         Returns: Json
       }
-      profile_rpc_update_business: {
-        Args: {
-          p_actor_user_id: string
-          p_business_hours?: Json
-          p_business_patch: Json
-          p_contact_channels?: Json
-          p_profile_id: string
-        }
-        Returns: Json
-      }
-      profile_rpc_update_owned_profile: {
-        Args: {
-          p_actor_user_id: string
-          p_new_username?: string
-          p_patch: Json
-          p_profile_id: string
-        }
-        Returns: Json
-      }
-      profile_rpc_update_professional_data: {
-        Args: { p_actor_user_id: string; p_patch: Json; p_profile_id: string }
-        Returns: Json
-      }
       profile_rpc_update_profile_handle: {
         Args: {
           p_actor_user_id: string
@@ -21338,33 +20498,6 @@ export type Database = {
         Args: { p_ride_id: string }
         Returns: Json
       }
-      register_safety_evidence: {
-        Args: {
-          p_evidence_type: string
-          p_file_name: string
-          p_incident_id: string
-          p_metadata?: Json
-          p_object_path: string
-        }
-        Returns: {
-          created_at: string
-          evidence_type: string
-          file_name: string
-          file_size: number
-          file_url: string
-          id: string
-          incident_id: string
-          metadata: Json | null
-          mime_type: string
-          uploaded_by: string
-        }
-        SetofOptions: {
-          from: "*"
-          to: "safety_evidence"
-          isOneToOne: true
-          isSetofReturn: false
-        }
-      }
       register_stripe_webhook_event: {
         Args: {
           p_event_data: Json
@@ -21372,6 +20505,10 @@ export type Database = {
           p_stripe_event_id: string
         }
         Returns: string
+      }
+      release_driver_availability_for_ride: {
+        Args: { p_driver_profile_id: string; p_ride_id: string }
+        Returns: boolean
       }
       remove_entity_coverage: {
         Args: {
@@ -21455,40 +20592,6 @@ export type Database = {
           p_verification_type: string
         }
         Returns: Json
-      }
-      require_emergency_delivery_reconciliation: {
-        Args: { p_delivery_id: string; p_reason: string }
-        Returns: {
-          alert_id: string
-          attempt_count: number
-          cancelled_at: string | null
-          channel: string
-          claimed_at: string | null
-          contact_id: string
-          created_at: string
-          delivered_at: string | null
-          dispatch_authorized_at: string | null
-          error_message: string | null
-          id: string
-          last_attempt_at: string | null
-          last_provider_attempt_at: string | null
-          metadata: Json | null
-          provider_attempt_count: number
-          provider_event_at: string | null
-          provider_event_id: string | null
-          provider_message_id: string | null
-          provider_status: string | null
-          reconciliation_required_at: string | null
-          status: string
-          target: string
-          updated_at: string
-        }
-        SetofOptions: {
-          from: "*"
-          to: "emergency_delivery_log"
-          isOneToOne: true
-          isSetofReturn: false
-        }
       }
       reserve_media_asset_upload: {
         Args: {
@@ -22411,6 +21514,14 @@ export type Database = {
         }
         Returns: Json
       }
+      suspend_profile: {
+        Args: {
+          p_admin_user_id: string
+          p_profile_id: string
+          p_reason: string
+        }
+        Returns: Json
+      }
       switch_active_profile: {
         Args: { p_profile_id: string; p_user_id: string }
         Returns: boolean
@@ -22462,9 +21573,14 @@ export type Database = {
         Args: { p_coverage_id: string; p_status: string }
         Returns: undefined
       }
-      update_owned_driver_data: {
-        Args: { p_profile_id: string; p_updates: Json }
-        Returns: Json
+      update_latest_ride_dispatch_attempt: {
+        Args: {
+          p_driver_profile_id: string
+          p_responded_at?: string
+          p_ride_id: string
+          p_status?: string
+        }
+        Returns: undefined
       }
       update_profile_handle: {
         Args: { p_new_handle: string; p_profile_id: string }
@@ -22565,39 +21681,6 @@ export type Database = {
           table_name: string
         }
         Returns: string
-      }
-      upsert_entity_coverage: {
-        Args: {
-          p_coverage_id: string
-          p_coverage_type: string
-          p_entity_id: string
-          p_entity_type: string
-          p_is_primary?: boolean
-          p_location_id: string
-          p_radius_km?: number
-          p_status?: string
-        }
-        Returns: {
-          center_latitude: number | null
-          center_longitude: number | null
-          coverage_polygon: unknown
-          coverage_type: string
-          created_at: string
-          entity_id: string
-          entity_type: string
-          id: string
-          is_primary: boolean
-          location_id: string
-          radius_km: number | null
-          status: string
-          updated_at: string
-        }
-        SetofOptions: {
-          from: "*"
-          to: "service_areas"
-          isOneToOne: true
-          isSetofReturn: false
-        }
       }
       upsert_profile_review: {
         Args: {
