@@ -45,7 +45,7 @@ Este checkpoint registra o trabalho local preparado para o PR e os gates que ain
 
 - PR #117 permanece aberto no branch `audit/mobility-launch-hardening-main-2026-09-17`, HEAD `3f1612287a36d4e56e3f7d06607b5340e36d872e`.
 - A API GitHub confirmou que os checks `security-scan`, SSOT, E2E fixture-backed, lockfile, lint/typecheck e visual regression foram bloqueados antes de iniciar por orçamento do Actions. Nenhum step desses checks executou.
-- A certificação pesada segue `QUEUED`; Vercel segue `PENDING`. O estado positivo de `Vercel Preview Comments` só confirma o comentário, não um deploy.
+- A certificação pesada segue `QUEUED`; na consulta inicial deste checkpoint, Vercel estava `PENDING`. A revalidação posterior da API Vercel está registrada abaixo. `Vercel Preview Comments` confirma apenas o comentário.
 - Próxima verificação: após a liberação do orçamento do Actions e do limite da Vercel, iniciar novamente os gates para o SHA que estiver no HEAD e obter deploy `READY`; não interpretar o `SKIPPED` autenticado nem os checks sem runner como aprovação.
 
 ### Revisão remota Supabase (somente leitura)
@@ -58,3 +58,10 @@ Este checkpoint registra o trabalho local preparado para o PR e os gates que ain
 - O Security Advisor remoto reporta HIBP/leaked-password protection desabilitado (WARN), `public.spatial_ref_sys` sem RLS (ERROR do Advisor, superfície PostGIS) e findings de funções `SECURITY DEFINER` expostas. Isso confirma estado remoto para a revisão das exceções vencidas; não autoriza renová-las nem fazer mudanças em lote.
 - A lista remota de migrations e os arquivos locais não coincidem em quantidade e há entradas com o mesmo nome sob versões diferentes, além de entradas presentes só em um dos lados. Isso exige reconciliação de proveniência antes de qualquer aplicação e não prova, por si só, divergência de schema.
 - O cutover G39 segue bloqueado pelo frontend LIVE e pelos smokes anônimo/autenticado ausentes; o cutover Community Interest também exige evidência de secrets configurados e frontend do broker LIVE. Nenhum cutover ou deploy foi aplicado.
+
+### Revalidação Vercel e frontend (2026-09-18)
+
+- A produção Vercel está `READY` no SHA `78c60e7db02de8dc82691e9c7bb5337c6ff04dee` (`main`), com aliases `acheguese.com.br`, `www.acheguese.com.br` e `acheguese.vercel.app`. O `main` atual é `70bea7259572c2032371fe21fea5785f5191cdef`; a diferença desde o SHA implantado contém somente um checkpoint documental e um teste SQL, sem arquivos de runtime.
+- O frontend de `main` usa `ProfessionalLeadIntakeService` → `create-professional-lead` e `CommunityInterestRegistrationService` → `register-community-interest`; não foi encontrado caller de `ProfessionalLeadService.createLead`. Isso confirma o frontend G39 em produção por proveniência de código, mas não substitui os smokes LIVE anônimo/autenticado.
+- O SHA funcional do PR `3f1612287a36d4e56e3f7d06607b5340e36d872e` tem deployment de preview `READY`; ele não é o alvo `production`. Para o HEAD documental `313aec752fbc449a0a9881360a4f187111ad998b`, a API Vercel mostra que o check GitHub `SUCCESS` corresponde a um deployment `CANCELED`: o comando `Ignored Build Step` retornou código 0 para o commit somente documental. Não contar esse check como build/deploy do HEAD.
+- A função `create-professional-lead` v2 está `ACTIVE`; o helper de intake remoto coincide com `main`, mas outros arquivos do pacote divergem, incluindo `_shared/security.ts`. As funções ativas ainda não contêm o leitor incremental com contagem de bytes do branch. Não marcar o gate de fonte reconciliada até revisar/redeployar o pacote depois do preflight de secrets.
