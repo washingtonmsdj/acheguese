@@ -149,6 +149,7 @@ GRANT EXECUTE ON FUNCTION public.create_safety_ride_share(
 REVOKE INSERT ON TABLE public.ride_shares FROM authenticated;
 DROP POLICY IF EXISTS ride_shares_insert_own ON public.ride_shares;
 
+-- security-authority: public-rpc public.get_shared_ride_safety_data
 -- Public bearer-token read is intentional. Keep it anonymous, but align its
 -- accepted syntax exactly with the table token contract and pin execution.
 CREATE OR REPLACE FUNCTION public.get_shared_ride_safety_data(

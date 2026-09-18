@@ -4,6 +4,7 @@
 -- gate preserves the intentionally public aggregate, but stops arbitrary UUIDs
 -- from revealing rating history for private profiles.
 
+-- security-authority: public-rpc public.get_ride_rating_summary
 CREATE OR REPLACE FUNCTION public.get_ride_rating_summary(
   p_profile_id uuid
 )
