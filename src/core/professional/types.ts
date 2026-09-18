@@ -121,21 +121,11 @@ export interface ProfessionalDataWithProfiles extends ProfessionalDataRecord {
 export interface ProfessionalMetadata {
   logo_url?: string;
   banner_url?: string;
-  portfolio_images?: string[];
   social_links?: {
     instagram?: string;
     facebook?: string;
     linkedin?: string;
     website?: string;
-  };
-  location?: {
-    address?: string;
-    neighborhood?: string;
-    city?: string;
-    state?: string;
-    cep?: string;
-    latitude?: number;
-    longitude?: number;
   };
   rating?: number;
   total_reviews?: number;
