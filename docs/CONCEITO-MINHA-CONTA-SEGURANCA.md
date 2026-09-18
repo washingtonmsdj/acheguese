@@ -8,7 +8,7 @@ Conceito de 14/09/2026. Inspeção do código local, sem teste de configuração
 - PrivacySettingsPage: consentimentos, exportação por download, solicitação de exclusão, status e cancelamento. PrivacyService também oferece requisições sobre dados.
 - NotificationPreferencesPage: e-mail, push, app; categorias transacionais, sociais, sistema e marketing; horário de silêncio e salvamento explícito. PushNotificationSettings trata o dispositivo.
 - useMFA: configuração, confirmação de fator, desativação e verificação; indisponibilidade não significa dispensa de MFA.
-- SessionSecurityService: lista de sessões vem de fonte legada; revogação individual retorna false por não ser suportada. Revogação das outras/todas as sessões usa serviço de autoridade separado. Não construir lista confiável ou botões individuais sobre o tracker antigo.
+- Sessões: Supabase Auth é a autoridade e `SessionRpcService`/`session-rpc` é o broker para revogação global ou das outras sessões. O tracker legado `public.user_sessions` não é exposto como fonte runtime; não construir lista de dispositivos, confiança ou revogação individual até existir uma API autoritativa suportada.
 - PasswordSection: alteração de senha já faz parte do projeto. Preservar política central.
 
 ## Melhorias propostas e limites
