@@ -95,12 +95,10 @@ describe('LGPD destructive purge readiness gate', () => {
     );
 
     expect(
-      purgeMatrix.blockingReferences.filter(
-        (entry) => entry.target === 'auth.users',
-      ),
-    ).toSatisfyAll(
-      (entry) => entry.decision === 'set-null-before-delete',
-    );
+      purgeMatrix.blockingReferences
+        .filter((entry) => entry.target === 'auth.users')
+        .every((entry) => entry.decision === 'set-null-before-delete'),
+    ).toBe(true);
 
     expect(
       byConstraint.get(
