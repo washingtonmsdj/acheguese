@@ -1,29 +1,22 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
+import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+import { requireAdmin } from "../_shared/adminAuth.ts";
 import {
   auditLog,
   checkRateLimit,
   getAllSecurityHeaders,
   getAuditInfo,
+  getRequiredEnv,
   isOriginAllowed,
   jsonResponse,
+  rateLimitMiddleware,
   readJsonBody,
   requireHttpMethod,
 } from "../_shared/security.ts";
-import {
-  getSupabaseAdminClient,
-  requireAdmin,
-} from "../_shared/adminAuth.ts";
 
 const ALLOWED_METHODS = "POST, OPTIONS";
-const MAX_BODY_BYTES = 32_000;
-const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY")?.trim() ?? "";
-
-const ACTIONS = {
-  get: true,
-  update: true,
-  generate: true,
-} as const;
-
+const FUNCTION_NAME = "territory-ai-content";
+const MAX_BODY_BYTES = 32_768;
 const ADMIN_COLUMNS = [
   "id",
   "territory_slug",
@@ -39,32 +32,28 @@ const ADMIN_COLUMNS = [
   "updated_at",
 ].join(",");
 
-const EVENT_CATEGORIES = new Set([
-  "cultura",
-  "esporte",
-  "religioso",
-  "comunitário",
-]);
+const ACTIONS = {
+  get: true,
+  generate: true,
+  update: true,
+} as const;
 
 type Action = keyof typeof ACTIONS;
+type Params = Record<string, unknown>;
 
 interface RequestBody {
   action?: string;
-  params?: Record<string, unknown>;
-}
-
-interface CanonicalTerritory {
-  id: string;
-  slug: string;
-  name: string;
-  members: string[];
+  params?: Params;
+  territory_slug?: unknown;
+  territory_name?: unknown;
+  members?: unknown;
 }
 
 interface TerritoryEvent {
   name: string;
   description: string;
   frequency: string;
-  category: string;
+  category: "cultura" | "esporte" | "religioso" | "comunitário";
 }
 
 interface TerritoryDemographics {
@@ -76,13 +65,6 @@ interface TerritoryDemographics {
   economy?: string;
 }
 
-interface EditorialContent {
-  description: string | null;
-  history: string | null;
-  demographics: TerritoryDemographics;
-  events: TerritoryEvent[];
-}
-
 class RequestValidationError extends Error {
   constructor(message: string) {
     super(message);
@@ -90,48 +72,48 @@ class RequestValidationError extends Error {
   }
 }
 
-function respond(
-  req: Request,
-  body: Record<string, unknown>,
-  status = 200,
-): Response {
-  return jsonResponse(body, status, ALLOWED_METHODS, req);
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return typeof value === "object" && value !== null && !Array.isArray(value);
 }
 
 function cleanSlug(value: unknown): string {
   if (typeof value !== "string") {
-    throw new RequestValidationError("Invalid territory slug");
+    throw new RequestValidationError("Invalid territory_slug");
   }
-
   const slug = value.trim().toLowerCase();
   if (
-    !slug ||
+    slug.length < 2 ||
     slug.length > 120 ||
     !/^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(slug)
   ) {
-    throw new RequestValidationError("Invalid territory slug");
+    throw new RequestValidationError("Invalid territory_slug");
   }
-
   return slug;
 }
 
-function cleanOptionalText(
+function cleanNullableText(
   value: unknown,
   field: string,
   maxLength: number,
 ): string | null {
-  if (value === undefined || value === null || value === "") return null;
+  if (value === null || value === undefined || value === "") return null;
   if (typeof value !== "string") {
     throw new RequestValidationError(`Invalid ${field}`);
   }
-
   const normalized = value.trim();
-  if (!normalized) return null;
   if (normalized.length > maxLength) {
-    throw new RequestValidationError(`Invalid ${field}`);
+    throw new RequestValidationError(`${field} is too long`);
   }
+  return normalized || null;
+}
 
-  return normalized;
+function cleanOptionalString(
+  value: unknown,
+  field: string,
+  maxLength: number,
+): string | undefined {
+  const cleaned = cleanNullableText(value, field, maxLength);
+  return cleaned === null ? undefined : cleaned;
 }
 
 function cleanOptionalNumber(
@@ -140,10 +122,12 @@ function cleanOptionalNumber(
   max: number,
 ): number | undefined {
   if (value === undefined || value === null || value === "") return undefined;
-  if (typeof value !== "number" || !Number.isFinite(value)) {
-    throw new RequestValidationError(`Invalid ${field}`);
-  }
-  if (value < 0 || value > max) {
+  if (
+    typeof value !== "number" ||
+    !Number.isFinite(value) ||
+    value < 0 ||
+    value > max
+  ) {
     throw new RequestValidationError(`Invalid ${field}`);
   }
   return value;
@@ -153,221 +137,274 @@ function cleanStringArray(
   value: unknown,
   field: string,
   maxItems: number,
-  maxItemLength: number,
+  maxLength: number,
 ): string[] | undefined {
   if (value === undefined || value === null) return undefined;
   if (!Array.isArray(value) || value.length > maxItems) {
     throw new RequestValidationError(`Invalid ${field}`);
   }
 
-  const result = value.map((item) => {
+  const cleaned = value.map((item) => {
     if (typeof item !== "string") {
       throw new RequestValidationError(`Invalid ${field}`);
     }
     const normalized = item.trim();
-    if (!normalized || normalized.length > maxItemLength) {
+    if (!normalized || normalized.length > maxLength) {
       throw new RequestValidationError(`Invalid ${field}`);
     }
     return normalized;
   });
 
-  return [...new Set(result)];
+  return [...new Set(cleaned)];
 }
 
 function cleanDemographics(value: unknown): TerritoryDemographics {
-  if (value === undefined || value === null) return {};
-  if (
-    typeof value !== "object" ||
-    Array.isArray(value)
-  ) {
+  if (!isRecord(value)) {
     throw new RequestValidationError("Invalid demographics");
   }
 
-  const input = value as Record<string, unknown>;
   return {
     estimated_population: cleanOptionalNumber(
-      input.estimated_population,
-      "estimated population",
-      50_000_000,
+      value.estimated_population,
+      "estimated_population",
+      100_000_000,
     ),
-    area_km2: cleanOptionalNumber(input.area_km2, "area", 100_000),
-    density:
-      cleanOptionalText(input.density, "density", 300) ?? undefined,
+    area_km2: cleanOptionalNumber(value.area_km2, "area_km2", 1_000_000),
+    density: cleanOptionalString(value.density, "density", 240),
     main_characteristics: cleanStringArray(
-      input.main_characteristics,
-      "main characteristics",
+      value.main_characteristics,
+      "main_characteristics",
       20,
       160,
     ),
     infrastructure: cleanStringArray(
-      input.infrastructure,
+      value.infrastructure,
       "infrastructure",
       30,
-      160,
+      200,
     ),
-    economy:
-      cleanOptionalText(input.economy, "economy", 2_000) ?? undefined,
+    economy: cleanOptionalString(value.economy, "economy", 2_000),
   };
 }
 
-function normalizeEventCategory(value: unknown): string {
-  if (typeof value !== "string") {
-    throw new RequestValidationError("Invalid event category");
+function cleanCategory(value: unknown): TerritoryEvent["category"] {
+  if (value === "comunitario") return "comunitário";
+  if (
+    value === "cultura" ||
+    value === "esporte" ||
+    value === "religioso" ||
+    value === "comunitário"
+  ) {
+    return value;
   }
-
-  const normalized =
-    value.trim().toLowerCase() === "comunitario"
-      ? "comunitário"
-      : value.trim().toLowerCase();
-
-  if (!EVENT_CATEGORIES.has(normalized)) {
-    throw new RequestValidationError("Invalid event category");
-  }
-
-  return normalized;
+  throw new RequestValidationError("Invalid event category");
 }
 
 function cleanEvents(value: unknown): TerritoryEvent[] {
-  if (value === undefined || value === null) return [];
   if (!Array.isArray(value) || value.length > 30) {
     throw new RequestValidationError("Invalid events");
   }
 
   return value.map((item) => {
-    if (!item || typeof item !== "object" || Array.isArray(item)) {
-      throw new RequestValidationError("Invalid event");
-    }
+    if (!isRecord(item)) throw new RequestValidationError("Invalid event");
+    const name = cleanNullableText(item.name, "event name", 180);
+    const description = cleanNullableText(
+      item.description,
+      "event description",
+      1_000,
+    );
+    const frequency = cleanNullableText(
+      item.frequency,
+      "event frequency",
+      120,
+    );
 
-    const event = item as Record<string, unknown>;
+    if (!name) throw new RequestValidationError("Invalid event name");
+
     return {
-      name:
-        cleanOptionalText(event.name, "event name", 160) ??
-        (() => {
-          throw new RequestValidationError("Invalid event name");
-        })(),
-      description:
-        cleanOptionalText(event.description, "event description", 600) ?? "",
-      frequency:
-        cleanOptionalText(event.frequency, "event frequency", 120) ?? "",
-      category: normalizeEventCategory(event.category),
+      name,
+      description: description ?? "",
+      frequency: frequency ?? "",
+      category: cleanCategory(item.category),
     };
   });
 }
 
-function cleanEditorialContent(params: Record<string, unknown>): EditorialContent {
+function cleanUpdateParams(params: Params) {
   return {
-    description: cleanOptionalText(params.description, "description", 8_000),
-    history: cleanOptionalText(params.history, "history", 12_000),
+    description: cleanNullableText(params.description, "description", 8_000),
+    history: cleanNullableText(params.history, "history", 8_000),
     demographics: cleanDemographics(params.demographics),
     events: cleanEvents(params.events),
   };
 }
 
-async function resolveCanonicalTerritory(
-  slug: string,
-): Promise<CanonicalTerritory> {
-  const supabase = getSupabaseAdminClient();
-
-  const { data: group, error: groupError } = await supabase
-    .from("territorial_groups")
-    .select("id,slug,name,status")
-    .eq("slug", slug)
-    .eq("status", "active")
-    .maybeSingle();
-
-  if (groupError) throw groupError;
-  if (!group) {
-    throw new RequestValidationError("Active territory group not found");
+function extractRequest(body: RequestBody): {
+  action: Action;
+  params: Params;
+  legacy: boolean;
+} {
+  if (body.action !== undefined) {
+    if (typeof body.action !== "string" || !(body.action in ACTIONS)) {
+      throw new RequestValidationError("Invalid action");
+    }
+    return {
+      action: body.action as Action,
+      params: isRecord(body.params) ? body.params : {},
+      legacy: false,
+    };
   }
 
-  const { data: memberships, error: membershipError } = await supabase
-    .from("territorial_group_members")
-    .select("location_id")
-    .eq("group_id", group.id);
+  // Backward compatibility with the currently deployed admin client. The
+  // server ignores client-supplied territory_name/members and resolves them
+  // from the canonical territorial-group tables.
+  return {
+    action: "generate",
+    params: { territory_slug: body.territory_slug },
+    legacy: true,
+  };
+}
 
-  if (membershipError) throw membershipError;
-
-  const locationIds = (memberships ?? []).map((item) => item.location_id);
-  let members: string[] = [];
-
-  if (locationIds.length > 0) {
-    const { data: locations, error: locationsError } = await supabase
-      .from("locations")
-      .select("id,name,status")
-      .in("id", locationIds)
-      .eq("status", "active");
-
-    if (locationsError) throw locationsError;
-
-    members = (locations ?? [])
-      .map((location) => location.name?.trim())
-      .filter((name): name is string => Boolean(name))
-      .sort((a, b) => a.localeCompare(b, "pt-BR"));
+function normalizeGeneratedPayload(value: unknown): {
+  description: string | null;
+  history: string | null;
+  demographics: TerritoryDemographics;
+  events: TerritoryEvent[];
+} {
+  if (!isRecord(value)) {
+    throw new Error("AI response is not an object");
   }
 
   return {
-    id: group.id,
-    slug: group.slug,
-    name: group.name,
+    description: cleanNullableText(value.description, "description", 8_000),
+    history: cleanNullableText(value.history, "history", 8_000),
+    demographics: cleanDemographics(value.demographics ?? {}),
+    events: cleanEvents(value.events ?? []),
+  };
+}
+
+async function resolveTerritoryContext(
+  supabaseAdmin: ReturnType<typeof createClient>,
+  territorySlug: string,
+): Promise<{
+  groupId: string;
+  territoryName: string;
+  cityName: string;
+  members: string[];
+}> {
+  const { data: group, error: groupError } = await supabaseAdmin
+    .from("territorial_groups")
+    .select("id,slug,name,anchor_city_id,status")
+    .eq("slug", territorySlug)
+    .maybeSingle();
+
+  if (groupError) throw groupError;
+  if (!group || group.status !== "active") {
+    throw new RequestValidationError("Territory group not found or inactive");
+  }
+
+  const [{ data: city, error: cityError }, { data: memberRows, error: membersError }] =
+    await Promise.all([
+      supabaseAdmin
+        .from("locations")
+        .select("name,status")
+        .eq("id", group.anchor_city_id)
+        .maybeSingle(),
+      supabaseAdmin
+        .from("territorial_group_members")
+        .select("locations(name,status)")
+        .eq("group_id", group.id),
+    ]);
+
+  if (cityError) throw cityError;
+  if (membersError) throw membersError;
+  if (!city || city.status !== "active") {
+    throw new RequestValidationError("Anchor city not found or inactive");
+  }
+
+  const members = (memberRows ?? [])
+    .map((row) => {
+      const location = row.locations as
+        | { name?: unknown; status?: unknown }
+        | { name?: unknown; status?: unknown }[]
+        | null;
+      const resolved = Array.isArray(location) ? location[0] : location;
+      return resolved?.status === "active" && typeof resolved.name === "string"
+        ? resolved.name.trim()
+        : "";
+    })
+    .filter((name): name is string => Boolean(name))
+    .slice(0, 30);
+
+  return {
+    groupId: group.id,
+    territoryName: group.name,
+    cityName: city.name,
     members,
   };
 }
 
-async function getAdminContent(slug: string) {
-  const supabase = getSupabaseAdminClient();
-  const { data, error } = await supabase
+async function getAdminContent(
+  supabaseAdmin: ReturnType<typeof createClient>,
+  territorySlug: string,
+) {
+  const { data, error } = await supabaseAdmin
     .from("territory_ai_content")
     .select(ADMIN_COLUMNS)
-    .eq("territory_slug", slug)
+    .eq("territory_slug", territorySlug)
     .maybeSingle();
 
   if (error) throw error;
   return data ?? null;
 }
 
-async function generateContent(territory: CanonicalTerritory) {
-  if (!LOVABLE_API_KEY) {
-    throw new Error("AI provider is not configured");
-  }
+async function generateContent(
+  supabaseAdmin: ReturnType<typeof createClient>,
+  territorySlug: string,
+) {
+  const apiKey = Deno.env.get("LOVABLE_API_KEY") ?? "";
+  if (!apiKey) throw new Error("LOVABLE_API_KEY not configured");
 
-  const membersText = territory.members.length
-    ? `O territorio e formado pelos bairros: ${territory.members.join(", ")}.`
+  const context = await resolveTerritoryContext(supabaseAdmin, territorySlug);
+  const membersText = context.members.length
+    ? `O território é formado pelos bairros/localidades: ${context.members.join(", ")}.`
     : "";
 
-  const prompt = `Voce e um especialista em geografia urbana e cultura de Salvador, Bahia, Brasil.
-Gere informacoes editoriais sobre o territorio "${territory.name}" em Salvador, BA.
+  const prompt = `Você é um especialista em geografia urbana e cultura local no Brasil.
+Gere informações factuais e úteis sobre o território "${context.territoryName}", localizado em ${context.cityName}.
 ${membersText}
 
-Retorne JSON puro com esta estrutura:
+Retorne JSON puro, sem markdown, exatamente com esta estrutura:
 {
-  "description": "Descricao geral do territorio",
-  "history": "Historia do territorio",
+  "description": "Descrição geral do território em 2-3 parágrafos",
+  "history": "História do território em 1-2 parágrafos",
   "demographics": {
     "estimated_population": 0,
     "area_km2": 0,
-    "density": "descricao",
-    "main_characteristics": ["item"],
+    "density": "descrição",
+    "main_characteristics": ["característica"],
     "infrastructure": ["item"],
-    "economy": "descricao"
+    "economy": "descrição breve"
   },
   "events": [
     {
       "name": "nome",
-      "description": "descricao",
-      "frequency": "frequencia",
-      "category": "cultura|esporte|religioso|comunitario"
+      "description": "descrição breve",
+      "frequency": "frequência",
+      "category": "cultura|esporte|religioso|comunitário"
     }
   ]
 }
 
-Quando um dado factual nao for confiavel, omita-o em vez de inventar precisao.`;
+Não invente precisão quando não houver base suficiente. Use estimativas apenas quando
+claramente apropriado ao contexto e não inclua dados pessoais.`;
 
   const aiResponse = await fetch(
     "https://ai.gateway.lovable.dev/v1/chat/completions",
     {
       method: "POST",
       headers: {
-        Authorization: `Bearer ${LOVABLE_API_KEY}`,
+        Authorization: `Bearer ${apiKey}`,
         "Content-Type": "application/json",
       },
       body: JSON.stringify({
@@ -376,7 +413,7 @@ Quando um dado factual nao for confiavel, omita-o em vez de inventar precisao.`;
           {
             role: "system",
             content:
-              "Responda somente em JSON valido. Nao invente precisao factual quando nao houver base confiavel.",
+              "Responda em JSON puro. Priorize informação urbana factual e não inclua dados pessoais.",
           },
           { role: "user", content: prompt },
         ],
@@ -386,52 +423,47 @@ Quando um dado factual nao for confiavel, omita-o em vez de inventar precisao.`;
 
   if (!aiResponse.ok) {
     if (aiResponse.status === 429) {
-      throw new RequestValidationError(
-        "Rate limit exceeded. Try again later.",
-      );
+      throw new RequestValidationError("AI rate limit exceeded");
     }
     if (aiResponse.status === 402) {
-      throw new RequestValidationError(
-        "AI provider quota is unavailable.",
-      );
+      throw new RequestValidationError("AI workspace requires funds");
     }
-
     console.error(
-      "[territory-ai-content] AI gateway failure",
+      "[territory-ai-content] AI gateway error",
       aiResponse.status,
+      await aiResponse.text(),
     );
     throw new Error("AI gateway error");
   }
 
   const aiData = await aiResponse.json();
   const rawContent = aiData?.choices?.[0]?.message?.content;
-  if (typeof rawContent !== "string" || !rawContent.trim()) {
-    throw new Error("AI response did not contain content");
+  if (typeof rawContent !== "string") {
+    throw new Error("AI response missing content");
   }
 
-  const normalized = rawContent
-    .replace(/```json\n?/g, "")
-    .replace(/```\n?/g, "")
+  const serialized = rawContent
+    .replace(/```json\s*/gi, "")
+    .replace(/```/g, "")
     .trim();
 
-  let parsed: Record<string, unknown>;
+  let parsed: unknown;
   try {
-    parsed = JSON.parse(normalized);
+    parsed = JSON.parse(serialized);
   } catch {
-    throw new Error("AI response was not valid JSON");
+    throw new Error("AI response is not valid JSON");
   }
 
-  const editorial = cleanEditorialContent(parsed);
+  const generated = normalizeGeneratedPayload(parsed);
   const now = new Date().toISOString();
-  const supabase = getSupabaseAdminClient();
 
-  const { data, error } = await supabase
+  const { data, error } = await supabaseAdmin
     .from("territory_ai_content")
     .upsert(
       {
-        territory_slug: territory.slug,
-        territory_name: territory.name,
-        ...editorial,
+        territory_slug: territorySlug,
+        territory_name: context.territoryName,
+        ...generated,
         ai_generated_at: now,
         manually_edited_at: null,
         is_manual_override: false,
@@ -447,26 +479,23 @@ Quando um dado factual nao for confiavel, omita-o em vez de inventar precisao.`;
 }
 
 async function updateContent(
-  territory: CanonicalTerritory,
-  params: Record<string, unknown>,
+  supabaseAdmin: ReturnType<typeof createClient>,
+  territorySlug: string,
+  params: Params,
 ) {
-  const editorial = cleanEditorialContent(params);
+  await resolveTerritoryContext(supabaseAdmin, territorySlug);
+  const update = cleanUpdateParams(params);
   const now = new Date().toISOString();
-  const supabase = getSupabaseAdminClient();
 
-  const { data, error } = await supabase
+  const { data, error } = await supabaseAdmin
     .from("territory_ai_content")
-    .upsert(
-      {
-        territory_slug: territory.slug,
-        territory_name: territory.name,
-        ...editorial,
-        manually_edited_at: now,
-        is_manual_override: true,
-        updated_at: now,
-      },
-      { onConflict: "territory_slug" },
-    )
+    .update({
+      ...update,
+      is_manual_override: true,
+      manually_edited_at: now,
+      updated_at: now,
+    })
+    .eq("territory_slug", territorySlug)
     .select(ADMIN_COLUMNS)
     .single();
 
@@ -475,11 +504,6 @@ async function updateContent(
 }
 
 serve(async (req: Request) => {
-  const origin = req.headers.get("origin");
-  if (origin && !isOriginAllowed(origin)) {
-    return respond(req, { error: "Origin not allowed" }, 403);
-  }
-
   if (req.method === "OPTIONS") {
     return new Response(null, {
       status: 204,
@@ -490,84 +514,140 @@ serve(async (req: Request) => {
   const methodError = requireHttpMethod(req, ["POST"], ALLOWED_METHODS);
   if (methodError) return methodError;
 
+  const origin = req.headers.get("origin");
+  if (origin && !isOriginAllowed(origin)) {
+    return jsonResponse(
+      { error: "Origin not allowed" },
+      403,
+      ALLOWED_METHODS,
+      req,
+    );
+  }
+
+  const perimeterLimit = await rateLimitMiddleware(
+    req,
+    120,
+    60_000,
+    ALLOWED_METHODS,
+  );
+  if (perimeterLimit) return perimeterLimit;
+
   const auth = await requireAdmin(req, ALLOWED_METHODS);
   if (auth instanceof Response) return auth;
 
-  const body = await readJsonBody<RequestBody>(req, {
+  const rawBody = await readJsonBody<RequestBody>(req, {
     maxBytes: MAX_BODY_BYTES,
     methods: ALLOWED_METHODS,
   });
-  if (!body.ok) return body.response;
+  if (!rawBody.ok) return rawBody.response;
 
-  const action = body.data?.action;
-  if (!action || !(action in ACTIONS)) {
-    return respond(req, { error: "Invalid action" }, 400);
+  let request: ReturnType<typeof extractRequest>;
+  try {
+    request = extractRequest(rawBody.data ?? {});
+  } catch (error) {
+    return jsonResponse(
+      {
+        error:
+          error instanceof RequestValidationError
+            ? error.message
+            : "Invalid request",
+      },
+      400,
+      ALLOWED_METHODS,
+      req,
+    );
   }
 
-  const safeAction = action as Action;
-  const params =
-    body.data.params &&
-    typeof body.data.params === "object" &&
-    !Array.isArray(body.data.params)
-      ? body.data.params
-      : {};
+  const { action, params, legacy } = request;
+  let territorySlug: string;
+  try {
+    territorySlug = cleanSlug(params.territory_slug);
+  } catch (error) {
+    return jsonResponse(
+      {
+        error:
+          error instanceof RequestValidationError
+            ? error.message
+            : "Invalid territory_slug",
+      },
+      400,
+      ALLOWED_METHODS,
+      req,
+    );
+  }
+
+  const actionLimit = await checkRateLimit(
+    `territory-ai:${action}:${auth.userId}`,
+    action === "generate" ? 10 : 120,
+    action === "generate" ? 60 * 60 * 1000 : 60 * 1000,
+  );
+  if (!actionLimit.allowed) {
+    return jsonResponse(
+      { error: "Rate limit exceeded" },
+      429,
+      ALLOWED_METHODS,
+      req,
+    );
+  }
+
+  const supabaseAdmin = createClient(
+    getRequiredEnv("SUPABASE_URL"),
+    getRequiredEnv("SUPABASE_SERVICE_ROLE_KEY"),
+    { auth: { autoRefreshToken: false, persistSession: false } },
+  );
 
   try {
-    const slug = cleanSlug(params.territory_slug);
-
-    const rateLimit = await checkRateLimit(
-      `territory-ai:${safeAction}:${auth.userId}`,
-      safeAction === "generate" ? 10 : 120,
-      safeAction === "generate" ? 60 * 60 * 1000 : 60 * 1000,
-    );
-    if (!rateLimit.allowed) {
-      return respond(
-        req,
-        { error: "Rate limit exceeded. Try again later." },
-        429,
-      );
-    }
-
     let data: unknown;
 
-    if (safeAction === "get") {
-      await resolveCanonicalTerritory(slug);
-      data = await getAdminContent(slug);
+    if (action === "get") {
+      data = await getAdminContent(supabaseAdmin, territorySlug);
+    } else if (action === "update") {
+      data = await updateContent(supabaseAdmin, territorySlug, params);
     } else {
-      const territory = await resolveCanonicalTerritory(slug);
-      data =
-        safeAction === "generate"
-          ? await generateContent(territory)
-          : await updateContent(territory, params);
+      data = await generateContent(supabaseAdmin, territorySlug);
     }
 
     auditLog({
       timestamp: new Date().toISOString(),
       userId: auth.userId,
-      action: `territory_ai_content_${safeAction}`,
-      resource: "territory-ai-content",
+      action: `territory_ai_${action}`,
+      resource: FUNCTION_NAME,
       status: "success",
-      details: { territorySlug: slug },
+      details: { territorySlug, legacy },
       ...getAuditInfo(req),
     });
 
-    return respond(req, { data });
+    return jsonResponse(
+      { success: true, data },
+      200,
+      ALLOWED_METHODS,
+      req,
+    );
   } catch (error: unknown) {
-    if (error instanceof RequestValidationError) {
-      return respond(req, { error: error.message }, 400);
-    }
+    const isValidation = error instanceof RequestValidationError;
+    console.error("[territory-ai-content]", action, error);
 
-    console.error("[territory-ai-content]", error);
     auditLog({
       timestamp: new Date().toISOString(),
       userId: auth.userId,
-      action: `territory_ai_content_${safeAction}`,
-      resource: "territory-ai-content",
+      action: `territory_ai_${action}`,
+      resource: FUNCTION_NAME,
       status: "failure",
-      details: { reason: "operation_failed" },
+      details: {
+        territorySlug,
+        legacy,
+        reason: isValidation ? error.message : "operation_failed",
+      },
       ...getAuditInfo(req),
     });
 
-    return respond(req, { error: "Internal server error" }, 500);
+    return jsonResponse(
+      {
+        error: isValidation ? error.message : "Internal server error",
+      },
+      isValidation ? 400 : 500,
+      ALLOWED_METHODS,
+      req,
+    );
   }
 });
