@@ -406,15 +406,6 @@ export class CatalogService {
     return plan?.entitlements ?? null;
   }
 
-  static async publishedPlanRequiresPayment(code: string): Promise<boolean> {
-    const plan = await this.getPublishedPlanByCode(code);
-    return Boolean(plan && plan.priceCents > 0);
-  }
-
-  static async getFeaturedPublishedPlan(): Promise<PublishedPlan | null> {
-    const plans = await this.getPublishedPlans();
-    return plans.find((plan) => plan.isFeatured) ?? null;
-  }
 
   static async getPlanByCode(planCode: string): Promise<CatalogItem | null> {
     try {
