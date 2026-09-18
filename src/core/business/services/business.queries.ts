@@ -93,8 +93,6 @@ const PUBLIC_BUSINESS_LIST_SELECT = `
   description,
   location_id,
   address_id,
-  latitude,
-  longitude,
   status,
   is_premium,
   is_verified,
