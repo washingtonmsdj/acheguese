@@ -87,16 +87,6 @@ const IDENTIFIER_PATTERN = new RegExp(
 const SKIP_DIRS = new Set(['node_modules', '.git', 'dist']);
 const SKIP_FILE_PATTERNS = [/\.generated\.tsx?$/];
 
-const REGRESSION_WHITELIST = new Set([
-  'src/core/profiles/hooks/useProfileMembers.ts',
-  'src/core/profiles/hooks/useProfileLinks.ts',
-  'src/core/profiles/hooks/index.ts',
-  'src/core/profiles/components/MultiProfileSwitcher.tsx',
-  'src/core/profiles/components/PrivacySettings.tsx',
-  'src/core/profiles/components/ProfileMembersManager.tsx',
-  'src/app/pages/PublicProfilePage.tsx',
-]);
-
 function isCommentLine(line: string): boolean {
   const trimmed = line.trimStart();
   return (
@@ -154,10 +144,6 @@ function scanFileForRegressions(filePath: string, cwd: string): RegressionViolat
   const content = readFileSync(filePath, 'utf-8');
   const lines = content.split('\n');
   const relPath = relative(cwd, filePath).replace(/\\/g, '/');
-
-  if (REGRESSION_WHITELIST.has(relPath)) {
-    return violations;
-  }
 
   for (let i = 0; i < lines.length; i++) {
     const line = lines[i];
