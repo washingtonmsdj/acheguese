@@ -424,7 +424,6 @@ export async function getStats(userId: string): Promise<ProfileActivityStats | n
   return {
     posts: postsCount || 0,
     likes: likesResult.count || 0,
-    favorites: 0,
     businesses: 0,
   };
 }
