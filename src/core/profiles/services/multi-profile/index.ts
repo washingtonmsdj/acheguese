@@ -1,7 +1,5 @@
 /**
- * MULTI-PROFILE SERVICES - FASE 3
- * Export central para todos os services da arquitetura multi-perfil
- * Fonte: ARQUITETURA_MULTI_PERFIL_DEFINITIVA.md v3.0
+ * Public exports for the active multi-profile service layer.
  */
 
 export { MultiProfileService } from './profileService';
