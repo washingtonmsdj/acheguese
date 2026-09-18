@@ -2,6 +2,7 @@ import { existsSync, readFileSync } from "node:fs";
 import { describe, expect, it } from "vitest";
 
 const CONFIG_PATH = "eslint.config.js";
+const SESSION_VALIDATOR_PATH = "tools/architecture/validate-session-context.ts";
 
 function explicitFileLiterals(config: string): string[] {
   return [
@@ -16,6 +17,7 @@ function explicitFileLiterals(config: string): string[] {
 
 describe("ESLint config hygiene", () => {
   const config = readFileSync(CONFIG_PATH, "utf8");
+  const sessionValidator = readFileSync(SESSION_VALIDATOR_PATH, "utf8");
 
   it("does not keep exceptions or ignores for deleted source files", () => {
     const missing = explicitFileLiterals(config).filter(
@@ -37,6 +39,14 @@ describe("ESLint config hygiene", () => {
     expect(config).not.toContain("src/core/maps/services/mapService.ts");
     expect(config).not.toContain(
       "src/integrations/maps/services/GeospatialServiceMock.ts",
+    );
+  });
+
+  it("keeps retired session symbols globally fail-closed", () => {
+    expect(sessionValidator).toContain("pattern: /\\buseActiveProfile\\b/");
+    expect(sessionValidator).not.toContain("REGRESSION_WHITELIST");
+    expect(config).not.toContain(
+      "// Exceção: arquivos multi-profile canônicos podem usar useActiveProfile",
     );
   });
 });
