@@ -63,7 +63,7 @@ describe("G4 profile membership SSOT", () => {
     const ui = fs.readFileSync(
       path.join(
         ROOT,
-        "src/core/profiles/components/ProfileMembersManagerImproved.tsx",
+        "src/core/profiles/components/ProfileMembersManager.tsx",
       ),
       "utf8",
     );
