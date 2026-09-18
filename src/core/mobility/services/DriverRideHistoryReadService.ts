@@ -94,13 +94,10 @@ function mapHistoryRow(value: unknown): DriverRideHistoryRow | null {
 
 export class DriverRideHistoryReadService {
   /**
-   * `driverProfileId` is a non-authoritative local selector retained for
-   * compatibility with the active-ride composition layer. It is deliberately
-   * never serialized to the broker. The authenticated user identity is the
-   * only authority used by mobility-rpc and the database read model.
+   * History authority is the authenticated user derived by mobility-rpc.
+   * The browser provides only pagination controls.
    */
   static async list(
-    _driverProfileId: string,
     options: { limit?: number; offset?: number } = {},
     client?: SupabaseBrokerClient,
   ): Promise<DriverRideHistoryRow[]> {
