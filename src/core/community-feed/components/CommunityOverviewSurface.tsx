@@ -3,10 +3,12 @@ import { Link, useLocation } from "react-router-dom";
 import {
   BadgeCheck,
   Bookmark,
+  ArrowLeftRight,
   Building2,
   CalendarDays,
   ChevronRight,
   CircleHelp,
+  Compass,
   Heart,
   Home,
   LayoutGrid,
@@ -77,6 +79,10 @@ import {
 import type { TerritoryFilter } from "@/core/location";
 import { useFriendlyModuleUrls } from "@/core/routing/hooks/useFriendlyModuleUrls";
 import { useCommunityUrls } from "@/core/routing/hooks/useCommunityUrls";
+import {
+  buildModuleTerritoryUrl,
+  MODULE_SLUGS,
+} from "@/core/routing/utils/territoryUrls";
 import type { ResolvedTerritory } from "@/core/routing/hooks/useResolveTerritoryFromUrl";
 import type { TerritorialCommunityProfile } from "@/core/community-experience/types";
 import type { PostType } from "@/core/posts/types";
@@ -370,7 +376,7 @@ function CommunityFeedContextNavigation({
 }) {
   return (
     <div
-      className="flex min-w-0 gap-6 overflow-x-auto rounded-xl border border-territory-border bg-territory-surface px-3 shadow-territory-highlight [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
+      className="flex min-w-0 gap-6 overflow-x-auto border-b border-territory-border bg-transparent px-1 [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
       role="group"
       aria-label="Navegação contextual do feed"
     >
@@ -1447,6 +1453,30 @@ export function CommunityOverviewSurface({
   const focusShortcutLinks = focusShortcutCandidates.filter(
     (item) => !item.surface || isLaunchSurfaceEnabled(item.surface),
   );
+  const territoryLandingHref = moduleUrls.landing ?? "/";
+  const territoryBaseHref = moduleUrls.base ?? "/";
+  const desktopSidebarLinks: ModuleLink[] = [
+    {
+      key: "home",
+      label: "Início",
+      href: territoryLandingHref,
+      icon: Home,
+    },
+    {
+      key: "community",
+      label: "Comunidade",
+      view: "feed",
+      icon: Users,
+      isActive: !activeSection && selectedView === "feed",
+    },
+    {
+      key: "explore",
+      label: "Explorar",
+      href: buildModuleTerritoryUrl(MODULE_SLUGS.search, territoryBaseHref),
+      icon: Compass,
+    },
+    ...moduleLinks.filter((item) => item.key !== "feed"),
+  ];
 
   return (
     <div
@@ -1459,10 +1489,67 @@ export function CommunityOverviewSurface({
           : undefined
       }
     >
-      <main className="min-w-0 space-y-4 xl:grid xl:grid-cols-[minmax(0,1fr)_20rem] xl:gap-x-5 xl:gap-y-4 xl:space-y-0">
+      <main className="min-w-0 space-y-4 xl:grid xl:grid-cols-[10.75rem_minmax(0,1fr)_20rem] xl:gap-x-5 xl:gap-y-4 xl:space-y-0 xl:space-x-0">
+        <aside className="hidden xl:col-start-1 xl:row-span-3 xl:flex xl:flex-col xl:gap-5">
+          <nav
+            aria-label="Navegação do território"
+            className="border-r border-territory-border pr-3"
+          >
+            <div className="space-y-1">
+              {desktopSidebarLinks.map((item) => (
+                <ModuleNavLink
+                  key={item.key}
+                  item={item}
+                  onViewChange={handleViewChange}
+                  className={cn(
+                    "flex min-h-10 items-center gap-3 rounded-xl px-3 text-sm font-medium transition-colors",
+                    item.isActive
+                      ? "bg-territory-brand/12 text-territory-brand-strong"
+                      : "text-territory-ink hover:bg-territory-brand/8",
+                  )}
+                />
+              ))}
+            </div>
+          </nav>
+          <Link
+            to="/?trocar=territorio"
+            className="mt-auto flex min-h-10 items-center gap-3 border-t border-territory-border px-3 pt-4 text-sm font-medium text-territory-muted transition-colors hover:text-territory-ink"
+          >
+            <ArrowLeftRight className="h-4 w-4 shrink-0" />
+            <span>Trocar território</span>
+          </Link>
+        </aside>
+        {selectedView === "feed" && !isEmbeddedModule ? (
+          <section
+            data-community-hero="true"
+            className="xl:col-span-2 xl:col-start-2"
+          >
+            <div className="flex min-w-0 items-start justify-between gap-4 border-b border-territory-border px-1 pb-3 sm:pb-4">
+              <div className="min-w-0">
+                <h1 className="font-heading text-[1.7rem] font-bold tracking-[-0.04em] text-territory-ink sm:text-3xl">
+                  Comunidade
+                </h1>
+                <p className="mt-1 text-sm text-territory-muted sm:text-base">
+                  A conversa do seu bairro.
+                </p>
+              </div>
+              <button
+                type="button"
+                onClick={() => handleViewChange("groups")}
+                className="hidden min-h-10 shrink-0 items-center gap-2 rounded-xl border border-territory-brand/30 bg-territory-surface px-3 text-sm font-semibold text-territory-brand hover:bg-territory-brand/8 sm:inline-flex"
+              >
+                <Users className="h-4 w-4" />
+                Meus grupos
+              </button>
+            </div>
+          </section>
+        ) : null}
         <section
-          data-community-hero="true"
-          className="relative isolate overflow-hidden rounded-territory-highlight border border-territory-border bg-territory-image-overlay shadow-territory-highlight xl:col-span-2 xl:col-start-1 xl:row-start-1"
+          data-community-hero-art="true"
+          className={cn(
+            "relative isolate overflow-hidden rounded-territory-highlight border border-territory-border bg-territory-image-overlay shadow-territory-highlight xl:col-span-2 xl:col-start-2 xl:row-start-1",
+            selectedView === "feed" && !isEmbeddedModule && "hidden",
+          )}
           style={{
             backgroundImage: `linear-gradient(90deg, hsl(var(--territory-image-overlay) / 0.84) 0%, hsl(var(--territory-image-overlay) / 0.64) 43%, hsl(var(--territory-image-overlay) / 0.16) 100%), url(${heroImage})`,
             backgroundPosition: "center 48%",
@@ -1605,7 +1692,13 @@ export function CommunityOverviewSurface({
           </div>
         </section>
 
-        <div className="sm:hidden" data-community-mobile-primary-nav="true">
+        <div
+          className={cn(
+            "sm:hidden",
+            selectedView === "feed" && !isEmbeddedModule && "hidden",
+          )}
+          data-community-mobile-primary-nav="true"
+        >
           <div className="grid grid-cols-4 gap-1.5">
             {moduleLinks.slice(0, 3).map((item) => (
               <ModuleNavLink
@@ -1735,7 +1828,7 @@ export function CommunityOverviewSurface({
         <div
           id="community-primary-content"
           className={cn(
-            "grid min-w-0 gap-4 xl:col-start-1 xl:row-start-2",
+            "grid min-w-0 gap-4 xl:col-start-2 xl:row-start-2",
             (isEmbeddedModule || selectedView !== "feed") && "xl:col-span-2",
           )}
           aria-live="polite"
@@ -1749,20 +1842,21 @@ export function CommunityOverviewSurface({
                 children
               ) : (
                 <>
+                  <CommunityFeedContextNavigation
+                    activeContextTab={feedContextTab}
+                    onContextTabChange={handleFeedContextTabChange}
+                  />
+
                   {canCreatePost ? (
                     <CommunityComposerEntry
                       id="feed"
                       communityName={communityTitle}
                       onOpenCreatePost={handleOpenComposer}
                       avatarUrl={visualMockEnabled ? personaMorador : undefined}
+                      showActions={visualMockEnabled}
                       className="xl:p-3"
                     />
                   ) : null}
-
-                  <CommunityFeedContextNavigation
-                    activeContextTab={feedContextTab}
-                    onContextTabChange={handleFeedContextTabChange}
-                  />
 
                   <div
                     id="community-feed-context-panel"
@@ -1799,6 +1893,38 @@ export function CommunityOverviewSurface({
                           ) : (
                             <div className="space-y-3">
                               {sortedDisplayPosts.map((post) => {
+                                if (visualMockEnabled && post.type === "aviso") {
+                                  return (
+                                    <article
+                                      id={`post-${post.id}`}
+                                      key={post.id}
+                                      data-feed-post-id={post.id}
+                                      className="rounded-xl border border-territory-sun/55 bg-territory-sun/20 px-3 py-2.5 shadow-territory-highlight"
+                                    >
+                                      <div className="flex min-w-0 items-center gap-3">
+                                        <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-territory-sun/70 text-territory-ink">
+                                          <Megaphone className="h-4 w-4" />
+                                        </span>
+                                        <div className="min-w-0 flex-1">
+                                          <p className="text-[0.62rem] font-bold uppercase tracking-[0.08em] text-territory-ink/70">
+                                            Aviso da comunidade
+                                          </p>
+                                          <h3 className="mt-0.5 text-[0.87rem] font-semibold leading-4 text-territory-ink">
+                                            {getPublicPostTitle(post)}
+                                          </h3>
+                                          <p className="mt-0.5 text-[0.68rem] text-territory-ink/70">
+                                            {formatPublicPostDate(
+                                              post.created_at,
+                                            )}{" "}
+                                            atrás
+                                          </p>
+                                        </div>
+                                        <ChevronRight className="h-4 w-4 shrink-0 text-territory-ink" />
+                                      </div>
+                                    </article>
+                                  );
+                                }
+
                                 const Icon = getPublicPostTypeIcon(post.type);
                                 const avatarUrl = getPublicPostAvatar(post);
                                 const summary = getPublicPostSummary(post);
@@ -1808,7 +1934,11 @@ export function CommunityOverviewSurface({
                                     id={`post-${post.id}`}
                                     key={post.id}
                                     data-feed-post-id={post.id}
-                                    className="rounded-xl border border-territory-border bg-territory-raised px-3 py-2.5 shadow-territory-highlight [content-visibility:auto] [contain-intrinsic-size:0_520px]"
+                                    className={cn(
+                                      "rounded-xl border border-territory-border bg-territory-raised px-3 py-2.5 shadow-territory-highlight [content-visibility:auto] [contain-intrinsic-size:0_520px]",
+                                      post.type === "aviso" &&
+                                        "border-territory-sun/55 bg-territory-sun/20",
+                                    )}
                                   >
                                     <div className="flex min-w-0 items-start gap-3">
                                       <span className="flex h-8 w-8 shrink-0 items-center justify-center overflow-hidden rounded-full border border-territory-border bg-territory-brand/12 text-territory-brand-strong">
@@ -2128,7 +2258,7 @@ export function CommunityOverviewSurface({
         </div>
 
         {!isEmbeddedModule && selectedView === "feed" ? (
-          <div className="min-w-0 space-y-4 xl:col-start-2 xl:row-start-2 xl:space-y-3">
+          <div className="min-w-0 space-y-4 xl:col-start-3 xl:row-start-2 xl:space-y-3">
             <SurfacePanel id="eventos" className="p-3">
               <SectionHeader
                 title="Próximos eventos"

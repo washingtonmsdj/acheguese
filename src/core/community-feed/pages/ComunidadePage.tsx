@@ -472,9 +472,13 @@ export default function ComunidadePage({
   const communityTopbar = (
     <TerritoryTopbar
       territoryName={territoryName}
-      contextLabel={territoryContextLabel}
+      contextLabel={visualMockEnabled ? "Salvador, BA" : territoryContextLabel}
       isAuthenticated={communityAccess.isAuthenticated}
       unreadCount={unreadCount}
+      variant="light"
+      searchHref={exploreHref}
+      showMobileSearch={false}
+      compactMobile
       canCreatePost={
         (communitySurfaceState === "active" || visualMockEnabled) &&
         communityAccess.can.create_post

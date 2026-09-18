@@ -1,5 +1,5 @@
 import React from "react";
-import { UserRound } from "lucide-react";
+import { CircleHelp, ImagePlus, Send, UserRound } from "lucide-react";
 
 import type { PostType } from "@/core/posts/types";
 import { useSessionContext } from "@/core/session";
@@ -11,6 +11,7 @@ interface CommunityComposerEntryProps {
   id?: string;
   className?: string;
   avatarUrl?: string | null;
+  showActions?: boolean;
 }
 
 export function CommunityComposerEntry({
@@ -19,6 +20,7 @@ export function CommunityComposerEntry({
   id,
   className,
   avatarUrl,
+  showActions = false,
 }: CommunityComposerEntryProps) {
   const { activeProfile } = useSessionContext();
   const resolvedAvatarUrl = avatarUrl ?? activeProfile?.avatarUrl ?? null;
@@ -55,11 +57,39 @@ export function CommunityComposerEntry({
           onKeyDown={(event) => {
             if (event.key === "Enter" || event.key === " ") openComposer();
           }}
-          placeholder={`Publicar no ${communityName}...`}
+          placeholder="O que você quer compartilhar?"
           aria-label={`Criar publicação em ${communityName}`}
           className="min-h-11 min-w-0 flex-1 cursor-text rounded-xl border border-border bg-muted/40 px-3 text-sm text-foreground outline-none placeholder:text-muted-foreground hover:border-primary/40 hover:bg-background focus:border-primary focus:bg-background focus-visible:ring-2 focus-visible:ring-primary/30"
         />
       </div>
+      {showActions ? (
+        <div className="mt-2 flex items-center gap-2 border-t border-border/60 pt-2">
+          <button
+            type="button"
+            onClick={() => onOpenCreatePost("discussao")}
+            className="inline-flex min-h-9 items-center gap-1.5 rounded-lg px-2 text-xs font-medium text-muted-foreground transition-colors hover:bg-muted/60 hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/30"
+          >
+            <ImagePlus className="h-4 w-4" aria-hidden="true" />
+            Foto
+          </button>
+          <button
+            type="button"
+            onClick={() => onOpenCreatePost("pergunta")}
+            className="inline-flex min-h-9 items-center gap-1.5 rounded-lg px-2 text-xs font-medium text-muted-foreground transition-colors hover:bg-muted/60 hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/30"
+          >
+            <CircleHelp className="h-4 w-4" aria-hidden="true" />
+            Pergunta
+          </button>
+          <button
+            type="button"
+            onClick={openComposer}
+            className="ml-auto inline-flex min-h-9 items-center gap-1.5 rounded-lg bg-primary px-3 text-xs font-semibold text-primary-foreground transition-colors hover:bg-primary/90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/30"
+          >
+            <Send className="h-3.5 w-3.5" aria-hidden="true" />
+            Publicar
+          </button>
+        </div>
+      ) : null}
     </section>
   );
 }

@@ -110,6 +110,21 @@ Terceira tela priorizada no catálogo: feed público da comunidade, com identida
 - Validar a mesma composição em desktop com dados reais da Community quando a disponibilidade persistida do território estiver resolvida no ambiente.
 - A prancha permanece referência visual; nomes, contagens, permissões e módulos ativos seguem os contratos do produto.
 
+### Segunda passada — fidelidade ao concept
+
+- Reestruturei a primeira dobra do feed para seguir a prancha: `TerritoryTopbar` claro, título “Comunidade”, subtítulo, composer com ações e cards de publicação em superfície branca; o hero fotográfico continua disponível nas visões territoriais que ainda dependem dele.
+- Adicionei a navegação lateral do desktop com Início, Comunidade, Explorar, módulos ativos e Trocar território. A grade usa `10.75rem / minmax(0,1fr) / 20rem` a partir de `xl`, mantendo a agenda na terceira coluna.
+- Mantive Posts, Grupos, Discussões, ordenação, consultas reais, launch scope e guards de acesso; o mock continua estritamente dev e o modo público não ganhou escrita anônima.
+- Ajustei o composer para o texto do concept e as ações Foto/Pergunta/Publicar; o primeiro post `aviso` recebe o destaque solar da referência sem alterar o tipo persistido.
+- A captura viva foi conferida lado a lado com `002-feed-comunidade.png` em viewport interno móvel de aproximadamente 425 px. A aba permanece aberta em `http://127.0.0.1:5175/comunidade/ba/salvador/complexo-do-nordeste-de-amaralina?visualMock=community-concept`.
+
+### Validação da segunda passada
+
+- TypeScript da aplicação passou.
+- ESLint passou nos quatro arquivos de código alterados nesta rodada.
+- `CommunityOverviewSurface.spec.tsx`: 6 testes passaram.
+- `ComunidadePage.publicDeepLink.spec.tsx`: 5 testes passaram.
+
 ### Git
 
 - Branch: `codex/reformulacao-entrada-comunidade`.

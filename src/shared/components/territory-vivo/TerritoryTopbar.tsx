@@ -28,6 +28,7 @@ interface TerritoryTopbarProps {
   messagesHref?: string;
   profileLabel?: string | null;
   profileAvatarUrl?: string | null;
+  variant?: "brand" | "light";
 }
 
 export function TerritoryTopbar({
@@ -43,7 +44,9 @@ export function TerritoryTopbar({
   messagesHref = "/mensagens",
   profileLabel,
   profileAvatarUrl,
+  variant = "brand",
 }: TerritoryTopbarProps) {
+  const isLight = variant === "light";
   const navigate = useNavigate();
   const location = useLocation();
   const queryFromUrl = new URLSearchParams(location.search).get("q")?.trim() ?? "";
@@ -106,7 +109,12 @@ export function TerritoryTopbar({
 
   return (
     <header
-      className="sticky top-0 z-40 border-b border-white/10 bg-territory-brand text-white shadow-territory-highlight xl:-ml-44 xl:w-[calc(100%+11rem)]"
+      className={cn(
+        "sticky top-0 z-40 border-b xl:-ml-44 xl:w-[calc(100%+11rem)]",
+        isLight
+          ? "border-territory-border bg-territory-surface text-territory-ink shadow-none"
+          : "border-white/10 bg-territory-brand text-white shadow-territory-highlight",
+      )}
       style={{ paddingTop: "env(safe-area-inset-top)" }}
     >
       <div
@@ -121,25 +129,59 @@ export function TerritoryTopbar({
           className="group flex min-h-11 min-w-0 shrink-0 items-center rounded-territory pr-1 lg:order-1"
           aria-label="Achegue-se — início"
         >
-          <span className="font-heading text-[1.35rem] font-bold tracking-[-0.055em] text-white sm:text-[1.5rem]">
+          <span
+            className={cn(
+              "font-heading text-[1.35rem] font-bold tracking-[-0.055em] sm:text-[1.5rem]",
+              isLight ? "text-territory-brand" : "text-white",
+            )}
+          >
             achegue-se<span className="text-territory-sun">.</span>
           </span>
         </Link>
 
         <Link
           to="/?trocar=territorio"
-          className="group col-span-2 row-start-2 flex min-h-10 min-w-0 items-center gap-2 rounded-xl px-1 hover:bg-white/10 lg:order-2 lg:col-auto lg:row-auto lg:px-3"
+          className={cn(
+            "group col-span-2 row-start-2 flex min-h-10 min-w-0 items-center gap-2 rounded-xl px-1 lg:order-2 lg:col-auto lg:row-auto lg:px-3",
+            compactMobile && isLight
+              ? "mt-1 mb-2 border border-territory-brand/10 bg-territory-brand/5 px-3"
+              : isLight
+                ? "hover:bg-territory-brand/5"
+                : "hover:bg-white/10",
+          )}
           aria-label={`Trocar território. Você está em ${territoryName}.`}
         >
-          <MapPin className="h-5 w-5 shrink-0 text-territory-info" aria-hidden="true" />
+          <MapPin
+            className={cn(
+              "h-5 w-5 shrink-0",
+              isLight ? "text-territory-brand" : "text-territory-info",
+            )}
+            aria-hidden="true"
+          />
           <span className="min-w-0">
             <span className="flex items-center gap-1">
-              <span className="block max-w-[11rem] truncate text-sm font-semibold text-white">
+              <span
+                className={cn(
+                  "block max-w-[11rem] truncate text-sm font-semibold",
+                  isLight ? "text-territory-ink" : "text-white",
+                )}
+              >
                 {territoryName}
               </span>
-              <ChevronDown className="h-4 w-4 shrink-0 text-white/70" aria-hidden="true" />
+              <ChevronDown
+                className={cn(
+                  "h-4 w-4 shrink-0",
+                  isLight ? "text-territory-muted" : "text-white/70",
+                )}
+                aria-hidden="true"
+              />
             </span>
-            <span className="block truncate text-[0.6875rem] text-white/70">
+            <span
+              className={cn(
+                "block truncate text-[0.6875rem]",
+                isLight ? "text-territory-muted" : "text-white/70",
+              )}
+            >
               {contextLabel}
             </span>
           </span>
@@ -152,7 +194,12 @@ export function TerritoryTopbar({
         <div className="ml-auto flex items-center gap-1.5 lg:order-4 sm:gap-2">
           <Link
             to={isAuthenticated ? "/notificacoes" : "/login"}
-            className="relative flex h-10 w-10 items-center justify-center rounded-full text-white transition-colors hover:bg-white/10 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-territory-sun"
+            className={cn(
+              "relative flex h-10 w-10 items-center justify-center rounded-full transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-territory-sun",
+              isLight
+                ? "text-territory-ink hover:bg-territory-brand/5"
+                : "text-white hover:bg-white/10",
+            )}
             aria-label={
               isAuthenticated && unreadCount > 0
                 ? `${unreadCount} notificações não lidas`
@@ -168,7 +215,12 @@ export function TerritoryTopbar({
           </Link>
           <Link
             to={isAuthenticated ? messagesHref : "/login"}
-            className="relative hidden h-10 w-10 items-center justify-center rounded-full text-white transition-colors hover:bg-white/10 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-territory-sun lg:flex"
+            className={cn(
+              "relative hidden h-10 w-10 items-center justify-center rounded-full transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-territory-sun lg:flex",
+              isLight
+                ? "text-territory-ink hover:bg-territory-brand/5"
+                : "text-white hover:bg-white/10",
+            )}
             aria-label="Conversas"
           >
             <MessageCircle className="h-[1.125rem] w-[1.125rem]" aria-hidden="true" />
@@ -176,10 +228,22 @@ export function TerritoryTopbar({
           {!isAuthenticated ? (
             <Link
               to="/login"
-              className="group inline-flex min-h-10 items-center gap-2 rounded-full px-1.5 text-sm font-semibold text-white hover:bg-white/10 sm:px-2"
+              className={cn(
+                "group inline-flex min-h-10 items-center gap-2 rounded-full px-1.5 text-sm font-semibold hover:bg-white/10 sm:px-2",
+                isLight
+                  ? "text-territory-ink hover:bg-territory-brand/5"
+                  : "text-white",
+              )}
               aria-label="Entrar"
             >
-              <span className="flex h-8 w-8 items-center justify-center rounded-full bg-white/10 text-white group-hover:bg-white/15">
+              <span
+                className={cn(
+                  "flex h-8 w-8 items-center justify-center rounded-full group-hover:bg-white/15",
+                  isLight
+                    ? "bg-territory-brand/8 text-territory-brand"
+                    : "bg-white/10 text-white",
+                )}
+              >
                 <UserRound className="h-4 w-4" aria-hidden="true" />
               </span>
               <span className="hidden sm:inline">Entrar</span>
@@ -187,13 +251,25 @@ export function TerritoryTopbar({
           ) : (
             <Link
               to="/conta"
-              className="flex h-10 max-w-[9rem] items-center gap-2 rounded-full bg-white/10 px-1.5 text-sm font-semibold text-white hover:bg-white/15 sm:px-2 sm:pr-3"
+              className={cn(
+                "flex h-10 max-w-[9rem] items-center gap-2 rounded-full px-1.5 text-sm font-semibold sm:px-2 sm:pr-3",
+                isLight
+                  ? "text-territory-ink hover:bg-territory-brand/5"
+                  : "bg-white/10 text-white hover:bg-white/15",
+              )}
               aria-label="Abrir minha conta"
             >
               {profileAvatarUrl ? (
                 <img src={profileAvatarUrl} alt="" className="h-8 w-8 rounded-full object-cover" />
               ) : (
-                <span className="flex h-8 w-8 items-center justify-center rounded-full bg-territory-sun text-territory-ink">
+                <span
+                  className={cn(
+                    "flex h-8 w-8 items-center justify-center rounded-full",
+                    isLight
+                      ? "bg-territory-brand/10 text-territory-brand"
+                      : "bg-territory-sun text-territory-ink",
+                  )}
+                >
                   <UserRound className="h-4 w-4" aria-hidden="true" />
                 </span>
               )}
