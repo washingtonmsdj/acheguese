@@ -419,8 +419,6 @@ export async function getStats(userId: string): Promise<ProfileActivityStats | n
       .eq("liker_profile_id", activeProfile.id),
   ]);
 
-  const commentsCount = 0;
-
   return {
     posts: postsCount || 0,
     likes: likesResult.count || 0,
