@@ -20,6 +20,7 @@ interface TerritoryTopbarProps {
   canCreatePost?: boolean;
   searchHref?: string;
   searchLabel?: string;
+  initialSearchQuery?: string;
   showMobileSearch?: boolean;
   /** Align the desktop bar with the full territory shell instead of a centered content column. */
   flushDesktop?: boolean;
@@ -40,6 +41,7 @@ export function TerritoryTopbar({
   unreadCount = 0,
   searchHref,
   searchLabel = "Buscar neste território",
+  initialSearchQuery,
   showMobileSearch = true,
   flushDesktop = false,
   compactMobile = false,
@@ -52,12 +54,14 @@ export function TerritoryTopbar({
   const isLight = variant === "light";
   const navigate = useNavigate();
   const location = useLocation();
-  const queryFromUrl = new URLSearchParams(location.search).get("q")?.trim() ?? "";
-  const [query, setQuery] = useState(queryFromUrl);
+  const queryFromUrl = new URLSearchParams(location.search).get("q");
+  const searchQuery =
+    queryFromUrl?.trim() ?? initialSearchQuery?.trim() ?? "";
+  const [query, setQuery] = useState(searchQuery);
 
   useEffect(() => {
-    setQuery(queryFromUrl);
-  }, [queryFromUrl]);
+    setQuery(searchQuery);
+  }, [searchQuery]);
 
   const submitSearch = (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();

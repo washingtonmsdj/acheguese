@@ -200,3 +200,25 @@ A prancha 117 também está coberta pelos estados demonstrativos de visitante, v
 - TypeScript da aplicação e ESLint dos dois arquivos de código passaram; `git diff --check` passou.
 - Comparei as pranchas 117 e a renderização ao vivo no navegador interno, no viewport móvel disponível, após o HMR: visitante, pendente, vazio e erro; conferi também o token da nuvem, a amostra única e a ausência de filtros/composer nos estados de participação.
 - Limite da evidência: esta passada valida visualmente o viewport móvel do navegador interno; não certifica captura pixel a pixel do artboard desktop em 1440 px. A aba continua aberta na rota principal do preview para acompanhamento.
+
+## 19/09/2026 · Explorar e encontrar — prancha 009
+
+### Auditoria e ajustes
+
+- Comparei `BuscaPage` com `07-explorar/pranchas/009-explorar-mapa-lista.png`. A página já usa busca federada, escopo territorial com descendentes, marcadores derivados de resultados reais e a rota canônica do mapa; categorias pausadas continuam sob `launchScope`.
+- No filtro padrão `Todos`, removi a linha mobile sem controles ativos e o link “Limpar” órfão; preservei 12 px entre as abas e o título dos resultados. A linha reaparece ao abrir Filtros e permanece no desktop; “Limpar” só aparece com uma categoria selecionada.
+- Mantive o campo do cabeçalho sincronizado com a query demonstrativa apenas no preview de desenvolvimento, e separei o nome curto do topbar do nome territorial completo usado nos resultados. O mock segue sob `import.meta.env.DEV`; consultas, navegação e dados reais não foram substituídos.
+- “Lista” agora é indicador da visualização atual, não um botão sem ação. “Mapa” e “Ver no mapa” continuam apontando para a rota territorial real.
+- A página mostra recuperação com nova tentativa quando o hook expõe erro. Limite de contrato encontrado: `SearchService.search` e seus provedores atualmente convertem falhas em resultados vazios; portanto, falha de provedor não chega a esse estado e continua pendente em nível de serviço.
+
+### Validação e evidências
+
+- `BuscaPage.spec.tsx`: 4 testes passaram, cobrindo query/território, filtros desativados, ausência de “Limpar” no padrão, query/nome territorial do concept e retry de erro exposto pelo hook.
+- TypeScript da aplicação, ESLint nos três arquivos de código e `git diff --check` passaram.
+- Comparei no navegador interno a renderização mobile do app em modo demonstrativo de desenvolvimento (`concept-mock=1`), em aproximadamente 504 × 1120 px, com a prancha; a aba permaneceu no fluxo Explorar. O painel interno não permite fixar a largura desktop nesta rodada; não considero a aparência desktop certificada pixel a pixel.
+- Os documentos e imagens do catálogo desta página foram preservados, conforme o escopo da implementação.
+
+### Git
+
+- Branch: `codex/reformulacao-entrada-comunidade`.
+- Somente os arquivos desta implementação e este relatório entram no commit; alterações staged preexistentes de catalogação e segurança permanecem excluídas.

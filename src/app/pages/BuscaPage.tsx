@@ -25,6 +25,7 @@ import {
   Map,
   MapPin,
   MessageSquare,
+  RefreshCw,
   Search,
   SlidersHorizontal,
   Store,
@@ -215,6 +216,8 @@ export default function BuscaPage() {
     isLoading,
     suggestions,
     history,
+    error,
+    refetch,
   } = useGlobalSearch(
     initialQuery,
     { category: activeFilter, territoryFilter: searchTerritoryFilter },
@@ -242,11 +245,12 @@ export default function BuscaPage() {
   const stateSlug = state ?? active.state;
   const citySlug = city ?? active.city;
   const territoryBase = `/${stateSlug}/${citySlug}${district ? `/${district}` : ""}`;
-  const territoryName = conceptMockEnabled
+  const territoryName = district
+    ? titleCase(district)
+    : moduleTerritory.displayLabel || titleCase(citySlug);
+  const topbarTerritoryName = conceptMockEnabled
     ? "Complexo do Nordeste"
-    : district
-      ? titleCase(district)
-      : moduleTerritory.displayLabel || titleCase(citySlug);
+    : territoryName;
   const contextLabel = conceptMockEnabled
     ? "Salvador, BA"
     : district
@@ -477,12 +481,13 @@ export default function BuscaPage() {
   return (
     <div className="min-h-[100dvh] text-territory-ink">
       <TerritoryTopbar
-        territoryName={territoryName}
+        territoryName={topbarTerritoryName}
         contextLabel={contextLabel}
         isAuthenticated={Boolean(user)}
         unreadCount={unreadCount}
         searchHref={moduleUrls.search}
         searchLabel="O que você procura por aqui?"
+        initialSearchQuery={conceptMockEnabled ? initialQuery : undefined}
         flushDesktop
       />
 
@@ -545,7 +550,14 @@ export default function BuscaPage() {
           </div>
         </nav>
 
-        <div className="relative mt-3 flex flex-wrap items-center gap-2 md:mt-3">
+        <div
+          className={cn(
+            "relative mt-3 flex flex-wrap items-center gap-2 md:mt-3",
+            activeFilter === "all" &&
+              !isFilterMenuOpen &&
+              "hidden md:flex",
+          )}
+        >
           <button
             type="button"
             onClick={toggleFilterMenu}
@@ -564,13 +576,15 @@ export default function BuscaPage() {
               <span aria-hidden="true">×</span>
             </button>
           ) : null}
-          <button
-            type="button"
-            onClick={handleClearFilters}
-            className="min-h-8 px-2 text-sm font-semibold text-territory-brand underline decoration-territory-brand/45 underline-offset-4 hover:text-territory-brand-strong"
-          >
-            Limpar
-          </button>
+          {activeFilter !== "all" ? (
+            <button
+              type="button"
+              onClick={handleClearFilters}
+              className="min-h-8 px-2 text-sm font-semibold text-territory-brand underline decoration-territory-brand/45 underline-offset-4 hover:text-territory-brand-strong"
+            >
+              Limpar
+            </button>
+          ) : null}
           <label className="relative ml-auto inline-flex min-h-10 items-center">
             <span className="sr-only">Ordenar resultados</span>
             <select
@@ -617,7 +631,12 @@ export default function BuscaPage() {
           ) : null}
         </div>
 
-        <div className="mt-0 grid gap-4 sm:mt-5 xl:grid-cols-[minmax(0,1fr)_minmax(0,1fr)] xl:items-start xl:gap-4">
+        <div
+          className={cn(
+            "grid gap-4 sm:mt-5 xl:grid-cols-[minmax(0,1fr)_minmax(0,1fr)] xl:items-start xl:gap-4",
+            activeFilter === "all" && !isFilterMenuOpen ? "mt-3" : "mt-0",
+          )}
+        >
           <section className="min-w-0">
             {!query ? (
               <ExploreStart
@@ -631,6 +650,28 @@ export default function BuscaPage() {
               />
             ) : isLoading || (!searchEnabled && !conceptMockEnabled) ? (
               <LoadingState />
+            ) : error ? (
+              <TerritorySurface
+                role="alert"
+                className="flex flex-col gap-4 p-5 sm:flex-row sm:items-center sm:justify-between"
+              >
+                <div>
+                  <p className="font-heading font-semibold text-territory-ink">
+                    Não foi possível carregar os resultados.
+                  </p>
+                  <p className="mt-1 text-sm leading-6 text-territory-muted">
+                    Tente novamente em instantes.
+                  </p>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => void refetch()}
+                  className="inline-flex min-h-11 shrink-0 items-center justify-center gap-2 rounded-xl border border-territory-border bg-territory-surface px-4 text-sm font-semibold text-territory-ink hover:border-territory-brand/45"
+                >
+                  <RefreshCw className="h-4 w-4" aria-hidden="true" />
+                  Tentar novamente
+                </button>
+              </TerritorySurface>
             ) : displayResults.total === 0 ? (
               <TerritoryState
                 icon={<Search className="h-5 w-5" aria-hidden="true" />}
@@ -962,14 +1003,14 @@ function ResultsView({
             aria-hidden="true"
           />
         </label>
-        <button
-          type="button"
+        <span
+          aria-current="true"
+          aria-label="Visualização atual: lista"
           className="inline-flex min-h-10 shrink-0 items-center justify-center gap-2 rounded-xl bg-territory-brand px-3 text-sm font-semibold text-[hsl(var(--territory-canvas))]"
-          aria-pressed="true"
         >
           <ListIcon className="h-4 w-4" aria-hidden="true" />
           Lista
-        </button>
+        </span>
         <Link
           to={mapHref}
           className="inline-flex min-h-10 shrink-0 items-center justify-center gap-2 rounded-xl border border-territory-border bg-territory-surface px-3 text-sm font-semibold text-territory-ink hover:border-territory-brand/45"
