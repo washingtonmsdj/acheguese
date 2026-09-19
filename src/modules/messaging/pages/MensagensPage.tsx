@@ -9,12 +9,9 @@ import {
   Home,
   MapPin,
   MessageCircle,
-  MoreVertical,
   Pin,
-  Plus,
   Search,
   Send,
-  SlidersHorizontal,
   UserRound,
   Users,
   X,
@@ -217,9 +214,13 @@ function DesktopHeader({
         <ChevronDown className="h-4 w-4 shrink-0 text-territory-ink" aria-hidden="true" />
       </Link>
       <div className="ml-auto flex items-center gap-4">
-        <button type="button" aria-label="Notificações" className="flex h-10 w-10 items-center justify-center rounded-full text-territory-ink hover:bg-territory-raised focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-territory-brand">
+        <Link
+          to="/notificacoes"
+          aria-label="Notificações"
+          className="flex h-10 w-10 items-center justify-center rounded-full text-territory-ink hover:bg-territory-raised focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-territory-brand"
+        >
           <Bell className="h-5 w-5" strokeWidth={1.8} aria-hidden="true" />
-        </button>
+        </Link>
         <button type="button" aria-label="Abrir menu do perfil" onClick={onToggleAccount} className="flex items-center gap-2 rounded-full px-1.5 py-1 hover:bg-territory-raised focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-territory-brand">
           <ProfileAvatar profile={account} size="sm" />
           <span className="max-w-28 truncate text-sm font-semibold text-territory-ink">{account.name}</span>
@@ -406,7 +407,7 @@ function ConversationColumn({
           const active = conversationFilter === option.value;
           return <button key={option.value} type="button" role="tab" aria-selected={active} onClick={() => onFilterChange(option.value)} className={cn("min-h-9 rounded-full border px-3 text-xs font-medium transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-territory-brand", active ? "border-territory-brand bg-territory-brand font-semibold text-white" : "border-transparent bg-territory-raised text-territory-ink hover:border-territory-border")}>{option.label}</button>;
         })}
-        <button type="button" aria-label="Abrir filtros" className="ml-auto inline-flex min-h-9 items-center gap-1 rounded-full border border-territory-border px-3 text-xs font-semibold text-territory-ink hover:bg-territory-raised focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-territory-brand"><SlidersHorizontal className="h-4 w-4" aria-hidden="true" />Filtros</button>
+
       </div>
       <div className="mt-4">
         {pinnedConversations.length ? <div><h2 className="mb-1.5 text-[0.6875rem] font-bold uppercase tracking-[0.12em] text-territory-muted">Fixadas</h2>{pinnedConversations.map((conversation) => <ConversationListItem key={conversation.id} conversation={conversation} selected={conversation.id === selectedConversationId} onClick={() => onSelectConversation(conversation.id)} />)}</div> : null}
@@ -438,23 +439,24 @@ function ConversationDetail({
   conversation: InboxConversation;
   selectedProfile: InboxProfile;
   messages?: Array<{ id: string; body: string; time: string; mine: boolean }>;
-  onSend: (body: string) => Promise<void> | void;
+  onSend: (body: string) => Promise<boolean> | boolean;
   canSend: boolean;
 }) {
   const [draft, setDraft] = useState("");
-  const [localMessages, setLocalMessages] = useState(messages ?? []);
+  const [sending, setSending] = useState(false);
 
-  useEffect(() => {
-    setLocalMessages(messages ?? []);
-  }, [conversation.id, messages]);
-
-  const submit = (event: FormEvent<HTMLFormElement>) => {
+  const submit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     const body = draft.trim();
-    if (!body) return;
-    setLocalMessages((current) => [...current, { id: `local-${Date.now()}`, body, time: "agora", mine: true }]);
-    setDraft("");
-    void onSend(body);
+    if (!body || !canSend || sending) return;
+
+    setSending(true);
+    try {
+      const sent = await onSend(body);
+      if (sent) setDraft("");
+    } finally {
+      setSending(false);
+    }
   };
 
   return (
@@ -465,17 +467,16 @@ function ConversationDetail({
           <h2 className="truncate font-heading text-[1.35rem] font-bold tracking-[-0.03em] text-territory-ink">{conversation.name}</h2>
           <p className="truncate text-sm text-territory-muted">Conversa como {selectedProfile.name}</p>
         </div>
-        <button type="button" aria-label="Mais opções da conversa" className="flex h-10 w-10 items-center justify-center rounded-full text-territory-ink hover:bg-territory-raised focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-territory-brand"><MoreVertical className="h-5 w-5" aria-hidden="true" /></button>
+
       </div>
       <div className="flex min-h-0 flex-1 flex-col px-7 py-5">
         <div className="flex min-h-12 items-center gap-3 rounded-xl bg-[hsl(var(--territory-success)/0.1)] px-4">
           <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-territory-surface text-territory-brand" aria-hidden="true"><MessageCircle className="h-4 w-4" strokeWidth={2} /></span>
           <span className="min-w-0 flex-1 truncate text-sm font-semibold text-territory-ink">{conversation.contextTitle ? `Sobre: ${conversation.contextTitle}` : "Conversa direta"}</span>
-          
         </div>
         <div className="my-6 flex items-center gap-4 text-xs text-territory-muted"><span className="h-px flex-1 bg-territory-border" />Hoje<span className="h-px flex-1 bg-territory-border" /></div>
         <div className="flex min-h-0 flex-1 flex-col justify-end gap-4 overflow-y-auto pb-5">
-          {localMessages.map((message) => <MessageBubble key={message.id} body={message.body} time={message.time} mine={message.mine} />)}
+          {(messages ?? []).map((message) => <MessageBubble key={message.id} body={message.body} time={message.time} mine={message.mine} />)}
         </div>
         <form onSubmit={submit} className="rounded-2xl border border-territory-border bg-territory-surface p-3 shadow-territory-subtle">
           <div className="mb-3 flex items-center gap-3 px-1">
@@ -483,9 +484,9 @@ function ConversationDetail({
             <span className="text-sm text-territory-muted">Respondendo como <strong className="font-semibold text-territory-ink">{selectedProfile.name}</strong></span>
           </div>
           <div className="flex items-center gap-2">
-            <button type="button" aria-label="Adicionar anexo" className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-territory-raised text-territory-brand hover:bg-[hsl(var(--territory-brand)/0.12)]"><Plus className="h-5 w-5" aria-hidden="true" /></button>
+
             <input value={draft} onChange={(event) => setDraft(event.target.value)} disabled={!canSend} placeholder="Escreva uma mensagem" className="h-11 min-w-0 flex-1 rounded-full border border-territory-border bg-territory-canvas px-4 text-sm text-territory-ink outline-none placeholder:text-territory-muted focus:border-territory-brand focus:ring-2 focus:ring-territory-brand/20 disabled:cursor-not-allowed disabled:opacity-60" />
-            <button type="submit" aria-label="Enviar mensagem" disabled={!draft.trim() || !canSend} className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-territory-sun text-territory-ink transition-transform hover:scale-105 disabled:cursor-not-allowed disabled:opacity-50"><Send className="h-5 w-5" aria-hidden="true" /></button>
+            <button type="submit" aria-label="Enviar mensagem" disabled={!draft.trim() || !canSend || sending} className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-territory-sun text-territory-ink transition-transform hover:scale-105 disabled:cursor-not-allowed disabled:opacity-50"><Send className="h-5 w-5" aria-hidden="true" /></button>
           </div>
         </form>
       </div>
@@ -504,24 +505,25 @@ function MobileConversationDetail({
   conversation: InboxConversation;
   selectedProfile: InboxProfile;
   messages?: Array<{ id: string; body: string; time: string; mine: boolean }>;
-  onSend: (body: string) => Promise<void> | void;
+  onSend: (body: string) => Promise<boolean> | boolean;
   canSend: boolean;
   onBack: () => void;
 }) {
   const [draft, setDraft] = useState("");
-  const [localMessages, setLocalMessages] = useState(messages ?? []);
+  const [sending, setSending] = useState(false);
 
-  useEffect(() => {
-    setLocalMessages(messages ?? []);
-  }, [conversation.id, messages]);
-
-  const submit = (event: FormEvent<HTMLFormElement>) => {
+  const submit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     const body = draft.trim();
-    if (!body) return;
-    setLocalMessages((current) => [...current, { id: `mobile-local-${Date.now()}`, body, time: "agora", mine: true }]);
-    setDraft("");
-    void onSend(body);
+    if (!body || !canSend || sending) return;
+
+    setSending(true);
+    try {
+      const sent = await onSend(body);
+      if (sent) setDraft("");
+    } finally {
+      setSending(false);
+    }
   };
 
   return (
@@ -533,24 +535,23 @@ function MobileConversationDetail({
           <h1 className="truncate font-heading text-base font-bold text-territory-ink">{conversation.name}</h1>
           <p className="truncate text-xs text-territory-muted">Conversa como {selectedProfile.name}</p>
         </div>
-        <button type="button" aria-label="Mais opções da conversa" className="flex h-10 w-10 items-center justify-center rounded-full text-territory-ink hover:bg-territory-raised focus-visible:outline-2 focus-visible:outline-offset-[-2px] focus-visible:outline-territory-brand"><MoreVertical className="h-5 w-5" aria-hidden="true" /></button>
+
       </header>
       <div className="flex min-h-0 flex-1 flex-col px-4 py-4">
         <div className="flex min-h-12 items-center gap-3 rounded-xl bg-[hsl(var(--territory-success)/0.1)] px-3">
           <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-territory-surface text-territory-brand" aria-hidden="true"><MessageCircle className="h-4 w-4" strokeWidth={2} /></span>
           <span className="min-w-0 flex-1 truncate text-sm font-semibold text-territory-ink">{conversation.contextTitle ? `Sobre: ${conversation.contextTitle}` : "Conversa direta"}</span>
-          
         </div>
         <div className="my-5 flex items-center gap-3 text-xs text-territory-muted"><span className="h-px flex-1 bg-territory-border" />Hoje<span className="h-px flex-1 bg-territory-border" /></div>
         <div className="flex min-h-0 flex-1 flex-col justify-end gap-3 overflow-y-auto pb-4">
-          {localMessages.map((message) => <MessageBubble key={message.id} body={message.body} time={message.time} mine={message.mine} />)}
+          {(messages ?? []).map((message) => <MessageBubble key={message.id} body={message.body} time={message.time} mine={message.mine} />)}
         </div>
         <form onSubmit={submit} className="mt-3 shrink-0 rounded-2xl border border-territory-border bg-territory-surface p-3 pb-[calc(0.75rem+env(safe-area-inset-bottom))] shadow-territory-subtle">
           <div className="mb-3 flex items-center gap-3 px-1"><InboxProfileIcon profile={selectedProfile} size="sm" /><span className="min-w-0 truncate text-sm text-territory-muted">Respondendo como <strong className="font-semibold text-territory-ink">{selectedProfile.name}</strong></span></div>
           <div className="flex items-center gap-2">
-            <button type="button" aria-label="Adicionar anexo" className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-territory-raised text-territory-brand hover:bg-[hsl(var(--territory-brand)/0.12)]"><Plus className="h-5 w-5" aria-hidden="true" /></button>
+
             <input value={draft} onChange={(event) => setDraft(event.target.value)} disabled={!canSend} placeholder="Escreva uma mensagem" className="h-11 min-w-0 flex-1 rounded-full border border-territory-border bg-territory-canvas px-4 text-sm text-territory-ink outline-none placeholder:text-territory-muted focus:border-territory-brand focus:ring-2 focus:ring-territory-brand/20 disabled:cursor-not-allowed disabled:opacity-60" />
-            <button type="submit" aria-label="Enviar mensagem" disabled={!draft.trim() || !canSend} className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-territory-sun text-territory-ink disabled:cursor-not-allowed disabled:opacity-50"><Send className="h-5 w-5" aria-hidden="true" /></button>
+            <button type="submit" aria-label="Enviar mensagem" disabled={!draft.trim() || !canSend || sending} className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-territory-sun text-territory-ink disabled:cursor-not-allowed disabled:opacity-50"><Send className="h-5 w-5" aria-hidden="true" /></button>
           </div>
         </form>
       </div>
@@ -752,9 +753,8 @@ export default function MensagensPage() {
   };
 
   const handleSend = async (body: string) => {
-    if (selectedConversation) {
-      await sendMessage(selectedConversation.id, body);
-    }
+    if (!selectedConversation) return false;
+    return sendMessage(selectedConversation.id, body);
   };
 
   const handleSelectConversation = (id: string) => {
