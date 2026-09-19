@@ -6,8 +6,8 @@ import { supabase } from '@/integrations/supabase';
 import { sanitizeString } from '@/shared/utils/sanitization';
 import { BusinessSubscriptionService } from '@/core/billing/BusinessSubscriptionService';
 import { EntitlementsService } from '@/core/billing/entitlements';
-import { BillingPlanService, type PlanEntitlements } from '@/core/billing/services/BillingPlanService';
-import { PlanTier } from '@/core/billing/types';
+import { CatalogService } from '@/core/billing/services/CatalogService';
+import { PlanTier, type PlanEntitlements } from '@/core/billing/types';
 import { isMediaAssetReference, resolveMediaAssetSource } from '@/core/media';
 import { PAGINATION } from '@/shared/constants';
 import { sanitizeForILike } from '@/shared/utils/sqlSanitization';
@@ -372,7 +372,7 @@ async function getEntitlementsForBusiness(businessId: string): Promise<PlanEntit
   const planTier = Object.values(PlanTier).includes(subscriptionResult.data?.plan_tier as PlanTier)
     ? (subscriptionResult.data?.plan_tier as PlanTier)
     : PlanTier.FREE;
-  const dynamicEntitlements = await BillingPlanService.getEntitlements(planTier).catch(() => null);
+  const dynamicEntitlements = await CatalogService.getPublishedPlanEntitlements(planTier).catch(() => null);
 
   if (dynamicEntitlements) {
     return dynamicEntitlements;
