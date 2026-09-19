@@ -19,15 +19,6 @@ export {
   type ServiceResult as GastronomyProfileServiceResult,
 } from "./GastronomyProfileService";
 
-// Compatibility mutation API; delegates to GastronomyProfileService.
-export {
-  createGastronomyProfile,
-  updateGastronomyProfile,
-  deleteGastronomyProfile,
-  updateOperationalStatus,
-  patchGastronomyProfile,
-} from "./gastronomy.mutations";
-
 // Types
 export type {
   Business,
