@@ -40,6 +40,31 @@ describe("gastronomy runtime boundaries", () => {
     expect(detail).not.toContain("__mocks__");
   });
 
+  it("keeps public gastronomy runtime free from concept-only branches", () => {
+    const detail = read("src/modules/business/gastronomy/pages/GastronomyDetailPage.tsx");
+    const orderDetails = read("src/modules/business/gastronomy/pages/OrderDetailsPage.tsx");
+    const checkout = read("src/modules/business/gastronomy/pages/GastronomyCheckoutPage.tsx");
+    const sidebar = read("src/app/components/AppLayoutSidebar.tsx");
+
+    expect(detail).not.toContain("GastronomyDetailConceptPreviewPage");
+    expect(detail).not.toContain("sabores-da-ana");
+    expect(orderDetails).not.toContain("concept-mock");
+    expect(orderDetails).not.toContain("OrderTrackingConcept");
+    expect(checkout).not.toContain("ConceptSurface");
+    expect(sidebar).not.toContain("isGastronomyConceptPreview");
+    expect(sidebar).not.toContain("isGastronomyMockRestaurantRoute");
+    expect(sidebar).not.toContain("isGastronomyCheckoutConcept");
+
+    for (const retiredPath of [
+      "src/modules/business/gastronomy/pages/GastronomyDetailConceptPreviewPage.tsx",
+      "src/modules/business/gastronomy/pages/OrderTrackingConceptMockPage.tsx",
+      "src/modules/business/gastronomy/pages/OrderTrackingConceptSurface.tsx",
+      "src/modules/business/gastronomy/pages/GastronomyCheckoutConceptSurface.tsx",
+    ]) {
+      expect(existsSync(resolve(root, retiredPath))).toBe(false);
+    }
+  });
+
   it("keeps concept-only order screens out of the normal application router", () => {
     const appRoutes = read("src/app/routes/sections/AppLayoutRoutes.tsx");
     const lazyImports = read("src/app/routes/lazyImports.ts");
