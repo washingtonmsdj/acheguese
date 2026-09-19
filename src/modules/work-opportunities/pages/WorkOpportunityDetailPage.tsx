@@ -308,7 +308,7 @@ export default function WorkOpportunityDetailPage() {
                       Ligar agora
                     </Button>
                   )}
-                  {data.contact_notes ? (
+                  {data.contact_notes?.trim() ? (
                     <Button variant="outline" onClick={handleCopyContact}>
                       Copiar contato
                     </Button>
