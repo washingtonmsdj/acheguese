@@ -1,6 +1,5 @@
 import React from "react";
-import { Award, Clock, Lightbulb } from "lucide-react";
-import { Button } from "@/shared/components/ui/button";
+import { Clock, Lightbulb } from "lucide-react";
 import { Switch } from "@/shared/components/ui/switch";
 import { Input } from "@/shared/components/ui/input";
 import { FormField } from "./shared";
@@ -62,7 +61,7 @@ export function SalaryStep({
           </FormField>
           <p className="flex items-start gap-1.5 text-xs text-muted-foreground px-1">
             <Lightbulb className="h-3.5 w-3.5 mt-0.5 shrink-0" aria-hidden="true" />
-            <span>Vagas com salário informado recebem até 3x mais candidaturas</span>
+            <span>Informar a faixa salarial ajuda candidatos a avaliar a oportunidade antes de se candidatar.</span>
           </p>
         </div>
       )}
@@ -83,18 +82,6 @@ export function SalaryStep({
         <Switch checked={urgente} onCheckedChange={setUrgente} />
       </div>
 
-      <div className="p-4 rounded-xl bg-accent/5 border border-accent/20">
-        <div className="flex items-center gap-2 mb-2">
-          <Award className="h-4 w-4 text-primary" />
-          <p className="text-sm font-semibold text-foreground">Destaque Premium</p>
-        </div>
-        <p className="text-xs text-muted-foreground mb-3">
-          Coloque sua vaga no topo dos resultados por 7 dias.
-        </p>
-        <Button variant="outline" size="sm" className="rounded-xl text-xs" disabled>
-          Em breve
-        </Button>
-      </div>
     </div>
   );
 }
