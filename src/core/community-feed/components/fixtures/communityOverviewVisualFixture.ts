@@ -153,6 +153,7 @@ export const COMMUNITY_OVERVIEW_VISUAL_FIXTURE = {
       territory_label: "Santa Cruz",
       title: "Mutirão na praça",
       detail: "Sábado, às 9h · Santa Cruz",
+      authorization_label: "Publicado por representante autorizado.",
     },
   ] satisfies Array<{
     id: string;
@@ -161,6 +162,7 @@ export const COMMUNITY_OVERVIEW_VISUAL_FIXTURE = {
     territory_label: string;
     title: string;
     detail: string;
+    authorization_label?: string;
   }>,
   events: [
     {

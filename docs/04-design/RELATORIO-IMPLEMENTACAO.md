@@ -164,3 +164,23 @@ A prancha 117 também está coberta pelos estados demonstrativos de visitante, v
 
 - Branch: `codex/reformulacao-entrada-comunidade`.
 - A entrega mantém fora do commit os arquivos staged preexistentes de catalogação e segurança.
+
+## 19/09/2026 · Refinamento de avisos e estados — prancha 117
+
+### Ajustes
+
+- Removi o painel externo e o segundo título redundante de Avisos; os filtros e relatos/comunicados agora seguem diretamente a área de conteúdo do shell 116.
+- Diferenciei visualmente relato e comunicado, aumentei a hierarquia tipográfica dos cards e mantive a autoria autorizada fora do cartão do comunicado, como na prancha 117. O território não é repetido quando já aparece nos detalhes.
+- Removi “Para perfil autorizado.” (anotação da prancha, não texto de produto). A ação “Criar publicação” no estado vazio só aparece quando `canCreatePost` permite; a tela de erro mantém apenas sua recuperação.
+- O mock de comunicado demonstra a identificação “Publicado por representante autorizado.”; isso não concede nem simula permissão no fluxo de produção.
+
+### Validação e evidências
+
+- `CommunityOverviewSurface.spec.tsx` e `ComunidadePage.publicDeepLink.spec.tsx`: 12 testes passaram, incluindo filtros de avisos, ausência de cópia instrucional e ação condicionada à permissão.
+- TypeScript da aplicação e ESLint dos três arquivos de código alterados passaram.
+- Revisei a aba Avisos no navegador interno após HMR, lado a lado com a prancha 117; a aba original permanece aberta para acompanhamento. A largura do painel interno não equivale ao artboard desktop, então esta passada não certifica captura pixel a pixel em 1440 px.
+- `git diff --check` passou; apenas avisos de conversão de fim de linha do Git foram emitidos.
+
+### Git
+
+- Entrega limitada ao componente, fixture, testes e este relatório; os arquivos staged preexistentes de catalogação e segurança permanecem fora do commit.

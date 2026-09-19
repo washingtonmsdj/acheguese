@@ -242,7 +242,63 @@ describe("CommunityOverviewSurface navigation", () => {
         '[data-community-feed-context-panel="alerts"]',
       ),
     ).toBeVisible();
+    const alertsPanel = within(
+      container.querySelector(
+        '[data-community-feed-context-panel="alerts"]',
+      ) as HTMLElement,
+    );
+    expect(
+      alertsPanel.queryByRole("heading", { name: "Avisos da comunidade" }),
+    ).toBeNull();
+    expect(alertsPanel.getByText("Iluminação na Rua do Campo")).toBeVisible();
+    const authorizationNote = alertsPanel.getByText(
+      "Publicado por representante autorizado.",
+    );
+    expect(authorizationNote).toBeVisible();
+    expect(authorizationNote.closest("article")).toBeNull();
+    expect(
+      alertsPanel.queryByText("Associação comunitária · Santa Cruz"),
+    ).toBeNull();
+    expect(
+      alertsPanel.getByRole("link", { name: /Ver comunicado/ }),
+    ).toHaveClass("bg-territory-sun/15");
+    fireEvent.click(alertsPanel.getByRole("button", { name: "Comunicados" }));
+    expect(alertsPanel.queryByText("Iluminação na Rua do Campo")).toBeNull();
+    expect(alertsPanel.getByText("Mutirão na praça")).toBeVisible();
     expect(onViewChange).not.toHaveBeenCalled();
+  });
+
+  it("does not present authorization guidance as product copy in the empty state", () => {
+    const previewRoute = (canCreatePost: boolean) => (
+      <MemoryRouter
+        initialEntries={[
+          "/comunidade/ba/salvador/pituba?visualMock=community-concept&previewState=empty",
+        ]}
+      >
+        <CommunityOverviewSurface
+          territoryName="Pituba"
+          territoryFilter={{
+            scope: "location",
+            location_id: "location-pituba",
+          }}
+          onRequireLogin={vi.fn()}
+          loginHref="/login"
+          canCreatePost={canCreatePost}
+        />
+      </MemoryRouter>
+    );
+
+    const { rerender } = render(previewRoute(false));
+    expect(screen.getByText("Sem publicações")).toBeVisible();
+    expect(screen.queryByText("Para perfil autorizado.")).toBeNull();
+    expect(
+      screen.queryByRole("button", { name: "Criar publicação" }),
+    ).toBeNull();
+
+    rerender(previewRoute(true));
+    expect(
+      screen.getByRole("button", { name: "Criar publicação" }),
+    ).toBeVisible();
   });
 
   it("exposes every enabled community section and keeps paused lost-and-found hidden", () => {

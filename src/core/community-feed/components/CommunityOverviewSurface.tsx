@@ -186,6 +186,7 @@ type CommunityVisualAlert = {
   territory_label: string;
   title: string;
   detail: string;
+  authorization_label?: string;
 };
 
 function EventPreviewItem({ event }: { event: PublicEvent }) {
@@ -655,9 +656,11 @@ function CommunityPendingParticipationCard() {
 function CommunityConceptFeedState({
   kind,
   onCreatePost,
+  canCreatePost,
 }: {
   kind: "empty" | "error";
   onCreatePost: () => void;
+  canCreatePost: boolean;
 }) {
   const isError = kind === "error";
 
@@ -686,7 +689,7 @@ function CommunityConceptFeedState({
         >
           Tentar novamente
         </button>
-      ) : (
+      ) : canCreatePost ? (
         <button
           type="button"
           onClick={onCreatePost}
@@ -694,9 +697,6 @@ function CommunityConceptFeedState({
         >
           Criar publicação
         </button>
-      )}
-      {!isError ? (
-        <p className="mt-2 text-xs text-territory-muted">Para perfil autorizado.</p>
       ) : null}
     </SurfacePanel>
   );
@@ -712,9 +712,8 @@ function CommunityAlertsPreview({
     filter === "all" ? alerts : alerts.filter((alert) => alert.kind === filter);
 
   return (
-    <SurfacePanel className="p-3 sm:p-4">
-      <SectionHeader title="Avisos da comunidade" />
-      <div className="mb-3 flex gap-2 overflow-x-auto pb-1 [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+    <div className="space-y-3 pt-1.5">
+      <div className="flex gap-2 overflow-x-auto pb-1 [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
         {[
           ["all", "Todos"],
           ["relato", "Relatos"],
@@ -738,50 +737,66 @@ function CommunityAlertsPreview({
       </div>
       <div className="space-y-3">
         {visibleAlerts.map((alert) => (
-          <article
-            key={alert.id}
-            id={alert.id}
-            className="rounded-xl border border-territory-border bg-territory-raised p-3"
-          >
-            <div className="flex items-start gap-3">
-              <span
-                className={cn(
-                  "mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-lg",
-                  alert.kind === "comunicado"
-                    ? "bg-territory-sun/30 text-territory-ink"
-                    : "bg-territory-brand/10 text-territory-brand",
-                )}
-              >
-                <Megaphone className="h-4 w-4" />
-              </span>
-              <div className="min-w-0 flex-1">
-                <p className="text-[0.62rem] font-bold uppercase tracking-[0.08em] text-territory-muted">
-                  {alert.kind === "comunicado"
-                    ? "Comunicado da organização"
-                    : "Relato da comunidade"}
-                </p>
-                <p className="mt-1 text-xs text-territory-muted">
-                  {alert.author_name} · {alert.territory_label}
-                </p>
-                <h3 className="mt-1 text-sm font-semibold text-territory-ink">
-                  {alert.title}
-                </h3>
-                <p className="mt-0.5 text-xs text-territory-muted">
-                  {alert.detail}
-                </p>
-                <a
-                  href={`#${alert.id}`}
-                  className="mt-2 inline-flex min-h-8 items-center gap-1 rounded-lg border border-territory-brand/35 px-2.5 text-xs font-semibold text-territory-brand hover:bg-territory-brand/8"
+          <div key={alert.id}>
+            <article
+              id={alert.id}
+              className="rounded-xl border border-territory-border bg-territory-raised p-3"
+            >
+              <div className="flex items-start gap-3">
+                <span
+                  className={cn(
+                    "mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-lg",
+                    alert.kind === "comunicado"
+                      ? "bg-territory-sun/30 text-territory-ink"
+                      : "bg-territory-brand/10 text-territory-brand",
+                  )}
                 >
-                  {alert.kind === "comunicado" ? "Ver comunicado" : "Ver relato"}
-                  <ChevronRight className="h-3.5 w-3.5" />
-                </a>
+                  {alert.kind === "comunicado" ? (
+                    <Megaphone className="h-4 w-4" aria-hidden="true" />
+                  ) : (
+                    <MessageCircle className="h-4 w-4" aria-hidden="true" />
+                  )}
+                </span>
+                <div className="min-w-0 flex-1">
+                  <p className="text-xs font-bold uppercase leading-4 tracking-[0.08em] text-territory-muted">
+                    {alert.kind === "comunicado"
+                      ? "Comunicado da organização"
+                      : "Relato da comunidade"}
+                  </p>
+                  <p className="mt-1 text-sm leading-5 text-territory-muted">
+                    {alert.author_name}
+                    {alert.kind === "relato" ? ` · ${alert.territory_label}` : ""}
+                  </p>
+                  <h3 className="mt-1 text-base font-semibold leading-5 text-territory-ink">
+                    {alert.title}
+                  </h3>
+                  <p className="mt-0.5 text-sm leading-5 text-territory-muted">
+                    {alert.detail}
+                  </p>
+                  <a
+                    href={`#${alert.id}`}
+                    className={cn(
+                      "mt-2 inline-flex min-h-8 items-center gap-1 rounded-lg border px-2.5 text-sm font-semibold",
+                      alert.kind === "comunicado"
+                        ? "border-territory-sun/70 bg-territory-sun/15 text-territory-ink hover:bg-territory-sun/25"
+                        : "border-territory-brand/35 text-territory-brand hover:bg-territory-brand/8",
+                    )}
+                  >
+                    {alert.kind === "comunicado" ? "Ver comunicado" : "Ver relato"}
+                    <ChevronRight className="h-3.5 w-3.5" />
+                  </a>
+                </div>
               </div>
-            </div>
-          </article>
+            </article>
+            {alert.authorization_label ? (
+              <p className="mt-1 pl-3 text-xs leading-4 text-territory-muted">
+                {alert.authorization_label}
+              </p>
+            ) : null}
+          </div>
         ))}
       </div>
-    </SurfacePanel>
+    </div>
   );
 }
 
@@ -2471,6 +2486,7 @@ export function CommunityOverviewSurface({
                         <CommunityConceptFeedState
                           kind={visualMockState}
                           onCreatePost={() => handleOpenComposer()}
+                          canCreatePost={canCreatePost}
                         />
                       ) : (
                         <>
