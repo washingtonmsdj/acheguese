@@ -4,7 +4,7 @@
  * Paridade com ShareBusinessDialog do módulo de empresas.
  */
 
-import { Copy, Download, Facebook, MessageCircle, Share2 } from 'lucide-react';
+import { Copy, Download, Facebook, MessageCircle } from 'lucide-react';
 import { QRCodeSVG } from 'qrcode.react';
 import { toast } from 'sonner';
 
@@ -34,9 +34,17 @@ export function GastronomyShareDialog({
   businessDescription,
   businessUrl,
 }: GastronomyShareDialogProps) {
-  const copyLink = () => {
-    navigator.clipboard.writeText(businessUrl);
-    toast.success('Link copiado!');
+  const copyLink = async () => {
+    try {
+      if (!navigator.clipboard?.writeText) {
+        throw new Error('Clipboard indisponível');
+      }
+
+      await navigator.clipboard.writeText(businessUrl);
+      toast.success('Link copiado!');
+    } catch {
+      toast.error('Não foi possível copiar o link.');
+    }
   };
 
   const shareWhatsApp = () => {
