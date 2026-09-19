@@ -4,7 +4,7 @@
 **Data do checkpoint GitHub:** 2026-09-19  
 **Repositório:** `washingtonmsdj/acheguese`  
 **Linha ativa:** `main`  
-**HEAD técnico de código registrado neste checkpoint:** `7f8b180c7ccacb7c59a6310c37c48e3d6ba802e7` (baseline remoto da `main` auditado para o corte MVP em 2026-09-19).
+**HEAD técnico base deste checkpoint:** `e4a7634d9b9efae4996883d213fddf368dab572a` (`main` após o hardening de Conta/Mensagens do PR #200; este checkpoint avança a partir desse SHA).
 
 Este documento consolida ordem de execução, blockers e Definition of Done. Ele é um **registro operacional**, não uma fotografia autoritativa do que existe no produto. A fonte de verdade para decidir o que existe, o que está ativo e o que deve ser corrigido é sempre o **projeto real**: código da `main`, rotas, owners, serviços, schema/migrations, contratos, testes, deploy/runtime e comportamento observado.
 
@@ -26,7 +26,7 @@ O primeiro release continua territorial. **Cobertura uniforme dos 170 bairros de
 
 ### Bloqueadores reais antes do release
 
-1. **Convergir Git, Supabase e PRs abertos.** A `main` ainda está em `7f8b180c...` e há uma fila grande de PRs de hardening/cleanup baseada no mesmo SHA. Não fazer merge em massa. Integrar em uma linha de release única, revalidando conflitos e priorizando primeiro qualquer migration/Edge/config já aplicada remotamente para eliminar drift Git ↔ runtime.
+1. **Concluir convergência Git ↔ Supabase/runtime.** A fila antiga de hardening/cleanup que afetava o corte público foi reconciliada até o PR #200 e a `main` base deste checkpoint está em `e4a7634d...`. O blocker residual não é mais a fila de PRs: é provar e eliminar drift remanescente de migrations, Edge Functions, tipos gerados e configuração aplicada remotamente.
 2. **Restaurar um gate executável.** Os GitHub Actions do HEAD continuam encerrando antes de steps. `steps=[]`/sem log não é teste vermelho de código nem teste verde. O candidato só pode avançar após security/lint/typecheck/test/build executarem de verdade no mesmo SHA.
 3. **Completar proteção da `main`.** Force-push/deleção já estão bloqueados, porém o fluxo ainda precisa exigir PR e checks que realmente executem. O publisher canônico de tipos Supabase deve deixar de escrever diretamente na `main` antes disso.
 4. **Reconciliar migrations, Edge Functions e tipos gerados.** O gate remoto precisa provar que a sequência local corresponde ao banco alvo e que Edge/source publicado é atribuível ao SHA candidato.
@@ -39,8 +39,22 @@ O primeiro release continua territorial. **Cobertura uniforme dos 170 bairros de
 
 ### Correções de gate identificadas neste corte
 
-- `tools/release/verify-deploy-ready.mjs` ainda valida o `buildCommand` antigo `npm run build:vercel`, enquanto `vercel.json`, o gerador de configuração e os testes canônicos usam `node tools/release/run-vercel-production-build.mjs`. O verificador deve reconhecer o runner canônico.
-- `tests/e2e/launch-scope-public.spec.ts` ainda trata Eventos e Vagas como pausados, enquanto `launchScope.ts` os marca `true`. O teste deve refletir o owner atual; a decisão de pausar uma dessas superfícies, se necessária para o release, deve ser feita no owner e então propagada aos testes.
+- [x] `tools/release/verify-deploy-ready.mjs` já reconhece o `buildCommand` canônico `node tools/release/run-vercel-production-build.mjs`, alinhado a `vercel.json`. Não manter este item como blocker.
+- [x] `tests/e2e/launch-scope-public.spec.ts` foi realinhado ao owner `launchScope.ts`: Eventos e Vagas já não eram tratados como pausados e `/mensagens` deixou de ser classificado incorretamente como `LaunchPausedPage` quando `communityCommunication: true`. O ratchet `tests/architecture/launch-scope-e2e-alignment.test.ts` protege esse contrato.
+
+### Progresso consolidado do corte público — 2026-09-19
+
+- [x] Home, Busca e perfil profissional público deixaram de aceitar dados `concept-mock` no runtime.
+- [x] Pontos Turísticos deixou de exibir proximidade simulada.
+- [x] Eventos pagos falham fechado enquanto não há checkout habilitado; inscrições gratuitas continuam no fluxo real.
+- [x] Upsells Premium foram retirados das superfícies públicas enquanto Billing permanece pausado.
+- [x] Gastronomia removeu rotas/telas `concept-mock` do roteador normal e consolidou checkout/rastreamento nas implementações reais.
+- [x] Conta e Mensagens não possuem mais bypass DEV de `ProtectedRoute`; perfis/conversas demonstrativos foram removidos do runtime.
+- [x] Mensagens usa perfis da sessão e threads persistidas, limpa estado privado ao trocar perfil e não exibe controles sem ação real.
+- [x] O E2E de launch scope foi sincronizado com `communityCommunication: true`.
+- [ ] CI continua incapaz de certificar o candidato: runs recentes encerram com `steps: null`, portanto nenhum lint/typecheck/test executou.
+- [ ] Vercel continua sem permitir nova prova de deploy por limite diário de builds; isso não conta como build aprovado.
+- [ ] Reconciliação exata de migrations/Edge/types e prova de deploy do mesmo SHA continuam blockers reais de release.
 
 ### Ordem de execução até MVP
 
