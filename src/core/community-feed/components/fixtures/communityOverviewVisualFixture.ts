@@ -1,8 +1,8 @@
 import catPizzarias from "@/assets/gastronomy/cat-pizzarias.jpg";
 import catRestaurantes from "@/assets/gastronomy/cat-restaurantes.jpg";
 import bairroPituba from "@/assets/bairro-pituba.jpg";
-import complexoCultura from "@/assets/complexo-cultura.jpg";
-import complexoMusica from "@/assets/complexo-musica.jpg";
+import communityStreetGathering from "@/assets/community-concept-encontro-rua.jpg";
+import communityGroupGathering from "@/assets/community-concept-grupo-encontros.jpg";
 import personaComerciante from "@/assets/persona-comerciante.jpg";
 import personaMorador from "@/assets/persona-morador.jpg";
 import personaPrestador from "@/assets/persona-prestador.jpg";
@@ -58,7 +58,7 @@ export const COMMUNITY_OVERVIEW_VISUAL_FIXTURE = {
       members_count: 3200,
       created_at: "2026-01-10T12:00:00.000Z",
       created_by: "visual-fixture",
-      avatar_url: complexoMusica,
+      avatar_url: communityGroupGathering,
     },
     {
       id: "visual-group-gastronomia",
@@ -121,7 +121,7 @@ export const COMMUNITY_OVERVIEW_VISUAL_FIXTURE = {
       avatar_url: personaPrestador,
       title: "O encontro de domingo foi especial",
       summary: "",
-      images: [complexoCultura],
+      images: [communityStreetGathering],
     },
     {
       id: "visual-post-padaria",

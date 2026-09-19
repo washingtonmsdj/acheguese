@@ -2407,10 +2407,10 @@ export function CommunityOverviewSurface({
         >
           <div
             className={cn(
-              "order-1 min-w-0 space-y-4",
-              visualMockEnabled
-                ? "min-[1000px]:space-y-3"
-                : "xl:space-y-2",
+            "order-1 min-w-0 space-y-4",
+            visualMockEnabled
+              ? "max-[999px]:space-y-3 min-[1000px]:space-y-3"
+              : "xl:space-y-2",
             )}
           >
             {selectedView === "feed" ? (
@@ -2448,7 +2448,7 @@ export function CommunityOverviewSurface({
                         profileLabel="Ana · Pessoal"
                         className={
                           visualMockEnabled
-                            ? "min-[1000px]:p-2"
+                            ? "max-[639px]:p-0.5 min-[1000px]:p-2"
                             : "xl:p-3"
                         }
                       />
@@ -2457,7 +2457,11 @@ export function CommunityOverviewSurface({
 
                   <div
                     id="community-feed-context-panel"
-                    className="space-y-3"
+                    className={cn(
+                      "space-y-3",
+                      visualMockEnabled &&
+                        "max-[639px]:!mt-2 max-[639px]:space-y-1.5",
+                    )}
                     data-community-feed-context-panel={feedContextTab}
                   >
                     {feedContextTab === "feed" ? (
@@ -2512,7 +2516,8 @@ export function CommunityOverviewSurface({
                             <div
                               className={cn(
                                 "space-y-3",
-                                visualMockEnabled && "mt-3 space-y-4",
+                                visualMockEnabled &&
+                                  "mt-3 space-y-4 max-[639px]:mt-1.5 max-[639px]:space-y-3",
                               )}
                             >
                               {sortedDisplayPosts.map((post) => {
@@ -2645,7 +2650,7 @@ export function CommunityOverviewSurface({
                                         className={cn(
                                           "mt-1 text-[0.92rem] font-semibold leading-[1.15rem] text-territory-ink",
                                           visualMockEnabled &&
-                                            "mb-0 text-base leading-5",
+                                            "mb-0 text-base leading-5 max-[639px]:text-[0.9375rem]",
                                         )}
                                       >
                                         {getPublicPostTitle(post)}
