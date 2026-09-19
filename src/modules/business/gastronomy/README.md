@@ -61,4 +61,4 @@ Gastronomy só pode ser marcado como certificado quando houver evidência no mes
 8. security/lint/typecheck/test/build executando de verdade;
 9. deployment do mesmo SHA comprovado no provider.
 
-O estado detalhado de lançamento e decisões históricas permanece em `PRODUCTION_AUDIT.md`. O SSOT operacional global do MVP está em `docs/08-roadmap/EXECUCAO_MAIN_ONLY.md`.
+Documentação histórica obsoleta não permanece no módulo. O SSOT operacional global do MVP está em `docs/08-roadmap/EXECUCAO_MAIN_ONLY.md`.
