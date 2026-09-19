@@ -1,13 +1,9 @@
-import React, { useState } from "react";
-import { Clock } from "lucide-react";
-
 import {
   Card,
   CardContent,
   CardFooter,
   CardHeader,
 } from "@/shared/components/ui/card";
-import { Button } from "@/shared/components/ui/button";
 import { PostHeader } from "@/core/community-feed/components/PostHeader";
 import {
   PostBadge,
@@ -22,11 +18,10 @@ import {
   getCardBackground,
   SPACING,
 } from "@/core/community/components/styles/communityDesignSystem";
-
-import type { CommunityPost } from "@/core/posts/types";
+import type { ProfileFeedPost } from "../types/profileFeed";
 
 interface PostCardProps {
-  post: CommunityPost;
+  post: ProfileFeedPost;
   currentUserId?: string;
   onLike: (postId: string) => void;
   onComment: (postId: string) => void;
@@ -52,7 +47,6 @@ export function ProfilePostCard({
   onTagClick,
   onPostClick,
 }: PostCardProps) {
-  const [showEditHistory, setShowEditHistory] = useState(false);
   const { state, isProcessing, handleLike, handleSave, handleShare } =
     usePostInteractions(post.id, {
       isLiked: post.is_liked || false,
@@ -97,8 +91,8 @@ export function ProfilePostCard({
         <PostHeader
           authorName={post.author_name}
           authorAvatar={post.author_avatar}
-          city={post.city}
-          neighborhood={post.neighborhood}
+          city={post.city ?? ""}
+          neighborhood={post.neighborhood ?? ""}
           timestamp={getRelativeTime(post.created_at)}
           isVerifiedResident={post.is_verified_resident}
           isOwnPost={isOwnPost}
@@ -115,20 +109,11 @@ export function ProfilePostCard({
       >
         <PostContent content={post.content} images={post.images} />
         {post.is_edited ? (
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={(e) => {
-              e.stopPropagation();
-              setShowEditHistory(true);
-            }}
-            className="mt-2 h-auto p-1 text-xs text-gray-500"
-          >
-            <Clock className="mr-1 h-3 w-3" />
-            Editado
-          </Button>
+          <span className="mt-2 block text-xs text-gray-500">Editado</span>
         ) : null}
-        {post.tags?.length ? <PostTags tags={post.tags} onTagClick={onTagClick} /> : null}
+        {post.tags?.length ? (
+          <PostTags tags={post.tags} onTagClick={onTagClick} />
+        ) : null}
       </CardContent>
 
       <CardFooter className={`${SPACING.cardPadding} flex-col gap-4 pt-0`}>
