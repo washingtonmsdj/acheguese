@@ -101,10 +101,13 @@ O fluxo implementado prova por UI + sessão autenticada:
 9. validar Analytics/upgrade sem zero artificial;
 10. limpar fixtures técnicas com prefixo `G6 E2E Education`.
 
-O job `Authenticated Account + Business + Education E2E` já está ligado ao
-workflow canônico, mas os runs do HEAD atual continuam encerrando com
-`steps=null`. Portanto a suite existe e está gateada, mas **a execução hosted
-same-SHA ainda não foi observada**.
+A suite `test:e2e:education-lifecycle-authenticated` permanece disponível como
+certificação dedicada, mas não integra o gate obrigatório de Account + Business
+enquanto `PUBLIC_LAUNCH_SURFACES.education=false`. Isso evita bloquear o MVP
+por um módulo explicitamente pausado sem apagar a cobertura funcional pronta.
+
+A execução hosted same-SHA da suite Education continua necessária antes de
+reativar a superfície pública ou privada no launch scope.
 
 ## 6. Confiabilidade de mutações
 
