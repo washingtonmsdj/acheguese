@@ -9,11 +9,11 @@ import { Link, useLocation } from 'react-router-dom';
 import { Camera } from 'lucide-react';
 import { SidebarMenuButton, SidebarMenuItem } from '@/shared/components/ui/sidebar';
 import { APP_MODULE_SLUGS, isAppModulePath } from '@/shared/config/moduleSlugs';
-import { useGuideUrls } from '../hooks/useGuideUrls';
+import { useTouristPointPublicUrls } from '@/core/guide/tourist-points/routes/useTouristPointPublicUrls';
 
 export function GuideSidebarItem() {
   const { pathname } = useLocation();
-  const guideUrls = useGuideUrls();
+  const guideUrls = useTouristPointPublicUrls();
 
   // ✅ Sempre exibe o item, mesmo sem território ativo
   // A URL do SSOT já tem fallback para cidade padrão
