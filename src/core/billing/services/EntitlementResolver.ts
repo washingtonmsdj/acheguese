@@ -1,8 +1,6 @@
 import { supabase } from '@/integrations/supabase';
-import {
-  BillingPlanService,
-  type PlanEntitlements,
-} from '@/core/billing/services/BillingPlanService';
+import { CatalogService } from '@/core/billing/services/CatalogService';
+import type { PlanEntitlements } from '@/core/billing/types';
 import { getBaselineEntitlements } from '@/core/billing/entitlementBaselines';
 import { PlanTier } from '@/core/billing/types';
 import { BillingEntitlementsRpcService } from '@/core/billing/services/BillingEntitlementsRpcService';
@@ -195,7 +193,7 @@ export class EntitlementResolver {
       }
 
       const tier = toPlanTier(subscription.plan_code);
-      const plan = await BillingPlanService.getPlanByCode(subscription.plan_code);
+      const plan = await CatalogService.getPublishedPlanByCode(subscription.plan_code);
       const entitlements =
         plan?.entitlements ??
         snapshotEntitlements(subscription.contract_snapshot, tier) ??
@@ -218,7 +216,7 @@ export class EntitlementResolver {
 
   private static async resolveFree(isActive: boolean): Promise<ResolvedEntitlements> {
     try {
-      const freePlan = await BillingPlanService.getPlanByCode(PlanTier.FREE);
+      const freePlan = await CatalogService.getPublishedPlanByCode(PlanTier.FREE);
       if (freePlan) {
         return buildResolved(
           freePlan.entitlements,
