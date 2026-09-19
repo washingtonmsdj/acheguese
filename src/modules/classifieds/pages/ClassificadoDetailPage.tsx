@@ -53,7 +53,7 @@ import {
 import { ReportReasonDialog } from "@/core/moderation";
 import { useToast } from "@/shared/components/ui/use-toast";
 import { cn } from "@/shared/utils/cn";
-import { buildWhatsAppUrl } from "@/shared/utils/contactLinks";
+import { buildWhatsAppUrl, onlyDigits } from "@/shared/utils/contactLinks";
 import { openSafeExternalUrl } from "@/shared/utils/safeRedirect";
 import { formatBrlNoCents } from "@/shared/utils/currency";
 import { formatDistanceToNow } from "date-fns";
@@ -95,6 +95,9 @@ export default function ClassificadoDetailPage({
   const { contact: sellerContact } = useVisibleProfileContact(
     classificado?.vendedor?.id,
   );
+  const sellerWhatsAppNumber =
+    sellerContact?.whatsapp || sellerContact?.phone || "";
+  const sellerHasValidWhatsApp = onlyDigits(sellerWhatsAppNumber).length >= 10;
   const {
     canFavorite,
     isFavorite,
@@ -152,17 +155,25 @@ export default function ClassificadoDetailPage({
   }, [classificado]);
 
   const handleWhatsApp = useCallback(() => {
-    if (!classificado?.vendedor) return;
-    const phone = sellerContact?.whatsapp || sellerContact?.phone;
-    if (!phone) return;
+    if (!classificado?.vendedor || !sellerHasValidWhatsApp) return;
+
     const url = buildWhatsAppUrl(
-      phone,
+      sellerWhatsAppNumber,
       `Olá! Vi seu anúncio "${classificado.titulo}" e tenho interesse.`,
     );
-    if (url) {
-      openSafeExternalUrl(url, { context: "classified-whatsapp" });
+    if (!url || !openSafeExternalUrl(url, { context: "classified-whatsapp" })) {
+      toast({
+        title: "WhatsApp indisponível",
+        description: "Não foi possível abrir o contato deste vendedor.",
+        variant: "destructive",
+      });
     }
-  }, [classificado, sellerContact]);
+  }, [
+    classificado,
+    sellerHasValidWhatsApp,
+    sellerWhatsAppNumber,
+    toast,
+  ]);
 
   const handleChat = useCallback(async () => {
     if (!user || !activeProfile?.id) {
@@ -216,20 +227,24 @@ export default function ClassificadoDetailPage({
 
   const handleShare = useCallback(async () => {
     const url = window.location.href;
-    try {
-      if (navigator.share) {
+
+    if (typeof navigator.share === "function") {
+      try {
         await navigator.share({
           title: classificado?.titulo,
           text: classificado?.descricao,
           url,
         });
         return;
+      } catch (error) {
+        if (error instanceof Error && error.name === "AbortError") return;
       }
-    } catch {
-      void 0;
     }
 
     try {
+      if (!navigator.clipboard?.writeText) {
+        throw new Error("Clipboard indisponível");
+      }
       await navigator.clipboard.writeText(url);
       toast({ title: "Link copiado!" });
     } catch {
@@ -268,6 +283,15 @@ export default function ClassificadoDetailPage({
     }
   }, [appUrls.auth.login, canFavorite, id, navigate, toast, toggleFavorite]);
 
+  const handleOpenReport = useCallback(() => {
+    if (!activeProfile?.id) {
+      navigate(appUrls.auth.login);
+      return;
+    }
+
+    setReportOpen(true);
+  }, [activeProfile?.id, appUrls.auth.login, navigate]);
+
   const handleReport = useCallback(
     async (reason: ReportReason, details?: string) => {
       if (!activeProfile?.id) {
@@ -282,7 +306,7 @@ export default function ClassificadoDetailPage({
         });
         toast({
           title: "Denúncia enviada",
-          description: "Nossa equipe irá analisar em breve.",
+          description: "Nossa equipe recebeu a denúncia para análise.",
         });
       } catch (error) {
         toast({
@@ -551,7 +575,7 @@ export default function ClassificadoDetailPage({
               <SellerCard
                 vendedor={classificado.vendedor}
                 onWhatsApp={handleWhatsApp}
-                hasWhatsApp={Boolean(sellerContact?.whatsapp || sellerContact?.phone)}
+                hasWhatsApp={sellerHasValidWhatsApp}
                 onChat={showInternalChat ? handleChat : undefined}
                 isChatLoading={startingChat}
                 activeAdsCount={sellerAds.length + 1}
@@ -614,7 +638,7 @@ export default function ClassificadoDetailPage({
               <SellerCard
                 vendedor={classificado.vendedor}
                 onWhatsApp={handleWhatsApp}
-                hasWhatsApp={Boolean(sellerContact?.whatsapp || sellerContact?.phone)}
+                hasWhatsApp={sellerHasValidWhatsApp}
                 onChat={showInternalChat ? handleChat : undefined}
                 isChatLoading={startingChat}
                 activeAdsCount={sellerAds.length + 1}
@@ -623,7 +647,7 @@ export default function ClassificadoDetailPage({
                 <SafetyTips />
               </div>
               <button
-                onClick={() => setReportOpen(true)}
+                onClick={handleOpenReport}
                 className="mt-4 flex items-center gap-1.5 text-xs text-muted-foreground hover:text-destructive transition-colors"
               >
                 <Flag className="h-3 w-3" />
@@ -706,7 +730,7 @@ export default function ClassificadoDetailPage({
         {/* -- Report link (mobile) ---------------------- */}
         <div className="lg:hidden mt-8 pt-4 border-t border-border text-center">
           <button
-            onClick={() => setReportOpen(true)}
+            onClick={handleOpenReport}
             className="text-xs text-muted-foreground hover:text-destructive font-medium inline-flex items-center gap-1"
           >
             <Flag className="h-3 w-3" />
