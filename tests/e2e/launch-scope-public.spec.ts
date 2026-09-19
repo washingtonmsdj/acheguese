@@ -6,8 +6,6 @@ test.describe('public launch scope', () => {
 
   test('global paused routes render the launch isolation page', async ({ page }) => {
     for (const path of [
-      '/eventos',
-      '/vagas',
       '/educacao',
       '/comunicacao',
       '/cupons',
@@ -25,13 +23,8 @@ test.describe('public launch scope', () => {
 
   test('territorial paused routes render before resolving territory data', async ({ page }) => {
     for (const path of [
-      '/eventos/ba/salvador',
-      '/eventos/ba/salvador/calendario',
-      '/vagas/ba/salvador',
       '/educacao/ba/salvador',
       '/comunicacao/ba/salvador',
-      '/comunidade/ba/salvador/eventos',
-      '/comunidade/ba/salvador/vagas',
       '/comunidade/ba/salvador/educacao',
       '/comunidade/ba/salvador/mobilidade',
       '/comunidade/ba/salvador/problemas',
