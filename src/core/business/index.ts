@@ -26,16 +26,5 @@ export * from './utils';
 // Validators
 export * from './services/validators';
 
-// Canonical Adapter (ETAPA 6)
-export {
-  isBusinessMigrated,
-  hasPhysicalAddress,
-  getFormattedBusinessAddress,
-  getBusinessCoordinates,
-  getBusinessTerritory,
-  getBusinessTerritoryName,
-  type BusinessWithCanonicalRelations as BusinessDataWithRelations,
-} from './services/BusinessCanonicalAdapter';
-
 export { default as NetworkTab } from './components/NetworkTab';
 export { useBusinessNavigation } from './hooks/useBusinessNavigation';

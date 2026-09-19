@@ -67,17 +67,6 @@ export type {
   BusinessInstitutionScopeAdminModel,
 } from "./business.admin";
 
-// Re-exports de helpers
-export {
-  isBusinessMigrated,
-  hasPhysicalAddress,
-  getFormattedAddress,
-  getCoordinates,
-  getTerritory,
-  getTerritoryName,
-  generateBusinessUsername,
-} from "./business.helpers";
-
 // Re-exports de validators
 export {
   isValidBusinessId,
@@ -120,7 +109,6 @@ import * as BusinessMappers from "./business.mappers";
 import * as BusinessQueries from "./business.queries";
 import * as BusinessMutations from "./business.mutations";
 import * as BusinessAdmin from "./business.admin";
-import * as BusinessHelpers from "./business.helpers";
 import type { Business, BusinessFilters } from "../types";
 
 const PUBLIC_BUSINESS_COMPAT_PAGE_SIZE = 100;
@@ -240,11 +228,4 @@ export class BusinessService {
   static revokeBusinessInstitutionScope =
     BusinessAdmin.revokeBusinessInstitutionScope;
 
-  // ===== HELPERS =====
-  static isBusinessMigrated = BusinessHelpers.isBusinessMigrated;
-  static hasPhysicalAddress = BusinessHelpers.hasPhysicalAddress;
-  static getFormattedAddress = BusinessHelpers.getFormattedAddress;
-  static getCoordinates = BusinessHelpers.getCoordinates;
-  static getTerritory = BusinessHelpers.getTerritory;
-  static getTerritoryName = BusinessHelpers.getTerritoryName;
 }
