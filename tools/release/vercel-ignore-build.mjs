@@ -9,6 +9,8 @@ const CRITICAL_DOC_PREFIXES = [
   "docs/09-reference/governance/security/",
 ];
 
+const PRODUCTION_GIT_BRANCH = "main";
+
 function normalizePath(filePath) {
   return String(filePath ?? "")
     .trim()
@@ -35,6 +37,11 @@ export function isSkippableVercelPath(filePath) {
   }
 
   return false;
+}
+
+export function shouldSkipAutomaticBranchBuild(commitRef) {
+  const normalized = String(commitRef ?? "").trim();
+  return normalized.length > 0 && normalized !== PRODUCTION_GIT_BRANCH;
 }
 
 export function shouldSkipVercelBuild(changedPaths) {
@@ -105,9 +112,17 @@ function continueBuild(reason) {
 }
 
 function main() {
+  const commitRef = String(process.env.VERCEL_GIT_COMMIT_REF ?? "").trim();
   const previousSha = String(process.env.VERCEL_GIT_PREVIOUS_SHA ?? "").trim();
   const currentSha =
     String(process.env.VERCEL_GIT_COMMIT_SHA ?? "HEAD").trim() || "HEAD";
+
+  if (shouldSkipAutomaticBranchBuild(commitRef)) {
+    console.log(
+      `[vercel-ignore] build skipped: automatic branch deployment disabled for ${commitRef}; production builds are reserved for ${PRODUCTION_GIT_BRANCH}`,
+    );
+    process.exit(0);
+  }
 
   if (!/^[0-9a-f]{40}$/i.test(previousSha)) {
     continueBuild("VERCEL_GIT_PREVIOUS_SHA is unavailable or invalid");
