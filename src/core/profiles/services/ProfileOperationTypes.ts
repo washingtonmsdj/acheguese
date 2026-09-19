@@ -17,7 +17,6 @@
 export interface ProfileActivityStats {
   posts: number;
   likes: number;
-  favorites: number;
   businesses: number;
 }
 

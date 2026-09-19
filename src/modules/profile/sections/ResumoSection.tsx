@@ -38,7 +38,7 @@ export function ResumoSection({
   navigate,
   appUrls,
 }: ResumoSectionProps) {
-  const totalPersonalActivity = operations.posts + operations.favoritesGiven;
+  const totalPersonalActivity = operations.posts;
   const totalOperationalAssets = operations.businesses + operations.services + operations.classifieds;
   const showFamilySafetyLinks = isLaunchSurfaceEnabled("familySafety");
 
@@ -104,7 +104,7 @@ export function ResumoSection({
             icon={UserRound}
             label="Atividade pessoal"
             value={totalPersonalActivity}
-            description="Posts e favoritos"
+            description="Posts publicados"
           />
           <DashboardMetricCard
             icon={Building2}

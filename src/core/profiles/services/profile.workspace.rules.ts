@@ -101,8 +101,6 @@ export function buildWorkspaceOperations(params: {
   eventsCount: number;
   alertsCount: number;
   issuesCount: number;
-  favoritesGiven: number;
-  favoritesReceived: number;
   notificationsTotal: number;
   notificationsUnread: number;
   ridesTotal: number;
@@ -117,8 +115,6 @@ export function buildWorkspaceOperations(params: {
     events: params.eventsCount,
     alerts: params.alertsCount,
     issues: params.issuesCount,
-    favoritesGiven: params.favoritesGiven,
-    favoritesReceived: params.favoritesReceived,
     notificationsTotal: params.notificationsTotal,
     notificationsUnread: params.notificationsUnread,
     ridesTotal: params.ridesTotal,

@@ -38,7 +38,6 @@ Tanto `AuthContext.activeProfile` quanto `SessionContext.activeProfile` usam est
 | **SocialInteractionsService** | `likePost`, `unlikePost`       | `userId`                 | `UserId`            | Resolve profile internamente                      |
 | **SocialInteractionsService** | `getLikesForPosts`             | `userId`                 | `UserId`            | Resolve profile internamente                      |
 | **CommunityReportService**    | `report`                       | ator derivado pelo banco | `ProfileId`         | O browser nao declara a identidade do denunciante |
-| **FavoritesService**          | `getFavoriteStats`             | `profileId`              | `ProfileId`         | Favoritos por perfil                              |
 | **SessionService**            | `getSession`, `refreshSession` | `userId`                 | `UserId`            | Sessão técnica                                    |
 
 ## 3. Branded Types

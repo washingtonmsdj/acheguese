@@ -54,7 +54,6 @@ export interface Operations {
   readonly classifieds: number;
   readonly ridesTotal: number;
   readonly activeRides: number;
-  readonly favoritesGiven: number;
 }
 
 // ============================================

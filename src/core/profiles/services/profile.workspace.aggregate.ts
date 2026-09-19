@@ -1,6 +1,5 @@
 import { supabase } from "@/integrations/supabase";
 import { logger } from "@/shared/utils/logger";
-import { getFavoriteStats } from "@/core/favorites/services/favorites.queries";
 import { getServicesByProfile } from "@/core/professional/services/professional.queries";
 import { BusinessUrlService } from "@/core/business/services/BusinessUrlService";
 import { getEligibleVerticals } from "@/core/verticals/config";
@@ -77,7 +76,6 @@ export async function getPrivateWorkspaceAggregate(
     stats: {
       posts: 0,
       likes: 0,
-      favorites: 0,
       businesses: 0,
     },
     operations: {
@@ -89,8 +87,6 @@ export async function getPrivateWorkspaceAggregate(
       events: 0,
       alerts: 0,
       issues: 0,
-      favoritesGiven: 0,
-      favoritesReceived: 0,
       notificationsTotal: 0,
       notificationsUnread: 0,
       ridesTotal: 0,
@@ -130,7 +126,6 @@ export async function getPrivateWorkspaceAggregate(
     const rolesPromise = deps.getUserRoles(deps.userId);
     const postsPromise = postService.getPostsCountByProfile(activeProfile.id).catch(() => 0);
     const likesPromise = deps.getUserLikesCount(activeProfile.id);
-    const favoritesPromise = getFavoriteStats(activeProfile.id);
     const verificationPromise = VerificationService.getVerification(
       activeProfile.id,
       "resident",
@@ -153,7 +148,6 @@ export async function getPrivateWorkspaceAggregate(
       roles,
       postsCount,
       likesCount,
-      favoritesResult,
       activeRide,
       verification,
       services,
@@ -170,7 +164,6 @@ export async function getPrivateWorkspaceAggregate(
       rolesPromise,
       postsPromise,
       likesPromise,
-      favoritesPromise,
       activeRidePromise,
       verificationPromise,
       servicesPromise,
@@ -291,7 +284,6 @@ export async function getPrivateWorkspaceAggregate(
     const stats: ProfileActivityStats = {
       posts: postsCount || 0,
       likes: likesCount || 0,
-      favorites: favoritesResult.total_favorites_given || 0,
       businesses: businesses.length,
     };
 
@@ -321,8 +313,6 @@ export async function getPrivateWorkspaceAggregate(
       eventsCount: Array.isArray(events) ? events.length : 0,
       alertsCount: alertsCount || 0,
       issuesCount: issuesCount || 0,
-      favoritesGiven: favoritesResult.total_favorites_given || 0,
-      favoritesReceived: favoritesResult.total_favorites_received || 0,
       notificationsTotal: notificationPayload.total,
       notificationsUnread: notificationPayload.unread,
       ridesTotal: ridesList.length,
