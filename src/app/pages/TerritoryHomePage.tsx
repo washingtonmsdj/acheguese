@@ -7,22 +7,19 @@ import {
   useState,
   type ReactNode,
 } from "react";
-import { Link, useLocation, useParams } from "react-router-dom";
+import { Link, useParams } from "react-router-dom";
 import {
   ArrowRight,
   BadgeCheck,
   BookOpen,
-  Bookmark,
   BriefcaseBusiness,
   BusFront,
   CalendarDays,
   Compass,
-  GraduationCap,
   Info,
   Map,
   MessageCircle,
   Megaphone,
-  Heart,
   MoreHorizontal,
   ShieldCheck,
   Store,
@@ -69,7 +66,6 @@ import type { PublicEvent } from "@/core/community-events";
 import { eventPublicRoutes } from "@/core/community-events/routes/eventPublicRoutes";
 import type { WorkOpportunityCard } from "@/core/work-opportunities/types";
 import { cn } from "@/shared/utils/cn";
-import { CONCEPT_HOME_MOCK } from "@/app/mocks/territoryHomeConceptMock";
 
 interface HomeUrls {
   business: string;
@@ -414,69 +410,6 @@ function CommunityPostRow({
   );
 }
 
-function ConceptMockPostCard({
-  post,
-  communityUrl,
-}: {
-  post: Post;
-  communityUrl: string;
-}) {
-  const author = post.profile?.displayName ?? "Pessoa da comunidade";
-  const separator = communityUrl.includes("?") ? "&" : "?";
-  const [question, detail] = post.content.split("\n");
-
-  return (
-    <Link
-      to={`${communityUrl}${separator}post=${encodeURIComponent(post.id)}`}
-      className="group block p-3.5 sm:p-5"
-    >
-      <span className="flex items-start gap-3">
-        {post.profile?.avatarUrl ? (
-          <img
-            src={post.profile.avatarUrl}
-            alt=""
-            className="h-10 w-10 shrink-0 rounded-full object-cover"
-          />
-        ) : (
-          <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-territory-brand/12 font-semibold text-territory-brand">
-            {getInitial(author)}
-          </span>
-        )}
-        <span className="min-w-0 flex-1">
-          <span className="block text-sm font-bold text-territory-ink">
-            {author}
-          </span>
-          <span className="mt-0.5 block text-xs text-territory-muted">
-            {post.location?.name ?? "Santa Cruz"} · {post.id === "concept-mock-post" ? "há 2h" : formatRelativeDate(post.created_at)}
-          </span>
-        </span>
-        <span
-          className="shrink-0 text-lg leading-none text-territory-ink"
-          aria-hidden="true"
-        >
-          ···
-        </span>
-      </span>
-      <span className="mt-3 block font-heading text-base font-bold leading-6 text-territory-ink group-hover:text-territory-brand sm:mt-4">
-        {question}
-      </span>
-      {detail ? (
-        <span className="mt-1 block text-sm leading-6 text-territory-muted">
-          {detail}
-        </span>
-      ) : null}
-      <span className="mt-3 flex items-center gap-5 text-xs font-semibold text-territory-muted sm:mt-4">
-        <span className="inline-flex items-center gap-1.5">
-          <MessageCircle className="h-4 w-4" aria-hidden="true" />
-          Responder
-        </span>
-        <Heart className="h-5 w-5" aria-hidden="true" />
-        <Bookmark className="h-5 w-5" aria-hidden="true" />
-      </span>
-    </Link>
-  );
-}
-
 function BusinessItem({
   business,
   href,
@@ -611,7 +544,6 @@ function getBusinessHref(
 
 export default function TerritoryHomePage() {
   const params = useParams();
-  const { search } = useLocation();
   const { resolved, baseUrl, communityBaseUrl, activeMemberIds } =
     useTerritorialContext();
   const { user, activeProfile } = useSessionContext();
@@ -641,11 +573,8 @@ export default function TerritoryHomePage() {
     territoryLoading: territory.isLoading,
     communityEnabled: !access.isLoading && isCommunityAvailable,
   });
-  const conceptMockEnabled =
-    import.meta.env.DEV &&
-    new URLSearchParams(search).get("concept-mock") === "1";
-  const data = conceptMockEnabled ? CONCEPT_HOME_MOCK : liveData;
-  const communityVisibleInView = isCommunityAvailable || conceptMockEnabled;
+  const data = liveData;
+  const communityVisibleInView = isCommunityAvailable;
 
   const cityBaseUrl = buildCityTerritoryBaseUrl(baseUrl);
   const isCityHome = cityBaseUrl === baseUrl;
@@ -852,7 +781,6 @@ export default function TerritoryHomePage() {
 
       <main
         className="mx-auto w-full max-w-[76rem] px-4 pb-24 pt-3 sm:px-6 sm:pt-4 md:pt-8 lg:px-8 lg:pb-10"
-        data-concept-mock={conceptMockEnabled ? "true" : undefined}
       >
         <div className="xl:grid xl:grid-cols-[minmax(0,1fr)_minmax(18rem,20rem)] xl:items-start xl:gap-8">
           <div className="xl:col-start-1">
@@ -964,12 +892,7 @@ export default function TerritoryHomePage() {
               </div>
             </section>
 
-            <div
-              className={cn(
-                "mt-0 grid gap-3 md:mt-4 md:gap-10",
-                !conceptMockEnabled && "gap-6",
-              )}
-            >
+            <div className="mt-0 grid gap-6 md:mt-4 md:gap-10">
           <section
             className="order-1 xl:col-start-1"
             aria-labelledby="worth-knowing-title"
@@ -989,11 +912,7 @@ export default function TerritoryHomePage() {
             {data.loading.worthKnowing ? (
               <SectionSkeleton />
             ) : hasWorthKnowing ? (
-              <div
-                className={
-                  conceptMockEnabled ? "space-y-3 md:space-y-4" : "space-y-4"
-                }
-              >
+              <div className="space-y-4">
                 {data.happeningSoon.slice(0, 1).map((event) => (
                   <TerritorySurface
                     key={event.id}
@@ -1007,42 +926,30 @@ export default function TerritoryHomePage() {
                   </TerritorySurface>
                 ))}
                 {communityVisibleInView && data.posts.length > 0 ? (
-                  <TerritorySurface className={conceptMockEnabled ? "p-0" : "p-5 sm:p-6"}>
-                    {conceptMockEnabled ? (
-                      data.posts.slice(0, 1).map((post) => (
-                        <ConceptMockPostCard
+                  <TerritorySurface className="p-5 sm:p-6">
+                    <div className="flex items-center justify-between gap-4">
+                      <p className="text-sm font-semibold text-territory-ink">
+                        Conversas por perto
+                      </p>
+                      <Link
+                        to={urls.community}
+                        className="text-sm font-semibold text-territory-brand hover:text-territory-brand-strong"
+                      >
+                        Ver feed
+                      </Link>
+                    </div>
+                    <div className="mt-3">
+                      {data.posts.slice(0, 2).map((post) => (
+                        <CommunityPostRow
                           key={post.id}
                           post={post}
                           communityUrl={urls.community}
                         />
-                      ))
-                    ) : (
-                      <>
-                        <div className="flex items-center justify-between gap-4">
-                          <p className="text-sm font-semibold text-territory-ink">
-                            Conversas por perto
-                          </p>
-                          <Link
-                            to={urls.community}
-                            className="text-sm font-semibold text-territory-brand hover:text-territory-brand-strong"
-                          >
-                            Ver feed
-                          </Link>
-                        </div>
-                        <div className="mt-3">
-                          {data.posts.slice(0, 2).map((post) => (
-                            <CommunityPostRow
-                              key={post.id}
-                              post={post}
-                              communityUrl={urls.community}
-                            />
-                          ))}
-                        </div>
-                      </>
-                    )}
+                      ))}
+                    </div>
                   </TerritorySurface>
                 ) : null}
-                {!conceptMockEnabled && (data.highlights.length > 0 ||
+                {(data.highlights.length > 0 ||
                 data.events.length > data.happeningSoon.length ||
                 data.opportunities.length > 0 ||
                 data.classifieds.length > 0) ? (
@@ -1183,138 +1090,54 @@ export default function TerritoryHomePage() {
             className="order-3 border-t border-territory-border pt-8 xl:col-start-1"
             aria-labelledby="discover-more-title"
           >
-            {conceptMockEnabled ? (
-              <>
-                <div className="md:hidden">
-                  <TerritorySectionHeading
-                    id="discover-more-title"
-                    title="Agenda e oportunidades"
-                    description={undefined}
-                  />
-                  <Link
-                    to={eventPublicRoutes.detailFromBase(
-                      urls.events,
-                      "concept-mock-roda-de-conversa",
-                    )}
-                    className="group flex min-h-[4.25rem] items-center gap-4 border-y border-territory-border py-3 transition-colors hover:bg-territory-raised/60"
-                  >
-                    <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-territory-raised text-territory-brand">
-                      <CalendarDays className="h-5 w-5" aria-hidden="true" />
-                    </span>
-                    <span className="min-w-0">
-                      <span className="block font-semibold text-territory-ink group-hover:text-territory-brand">
-                        Roda de conversa
+            <>
+              <TerritorySectionHeading
+                id="discover-more-title"
+                title="Oportunidades do bairro"
+                description={undefined}
+              />
+              <div className="divide-y divide-territory-border border-y border-territory-border">
+                {[
+                  {
+                    label: "Agenda do bairro",
+                    description: "Eventos e encontros públicos.",
+                    href: urls.events,
+                    icon: CalendarDays,
+                  },
+                  {
+                    label: "Vagas e oportunidades",
+                    description: "O que ainda está disponível por perto.",
+                    href: urls.jobs,
+                    icon: BriefcaseBusiness,
+                  },
+                ].map((item) => {
+                  const Icon = item.icon;
+                  return (
+                    <Link
+                      key={item.label}
+                      to={item.href}
+                      className="group flex min-h-[4.25rem] items-center gap-4 py-3 transition-colors hover:bg-territory-raised/60"
+                    >
+                      <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-territory-raised text-territory-brand">
+                        <Icon className="h-5 w-5" aria-hidden="true" />
                       </span>
-                      <span className="mt-1 block text-xs leading-5 text-territory-muted">
-                        Neste domingo · Chapada
+                      <span className="min-w-0">
+                        <span className="block font-semibold text-territory-ink group-hover:text-territory-brand">
+                          {item.label}
+                        </span>
+                        <span className="mt-1 block text-xs leading-5 text-territory-muted">
+                          {item.description}
+                        </span>
                       </span>
-                    </span>
-                    <ArrowRight
-                      className="ml-auto h-4 w-4 shrink-0 text-territory-muted transition-transform group-hover:translate-x-0.5 group-hover:text-territory-brand"
-                      aria-hidden="true"
-                    />
-                  </Link>
-                </div>
-                <div className="hidden md:block">
-                  <TerritorySectionHeading
-                    id="discover-more-desktop-title"
-                    title="Oportunidades do bairro"
-                    description={undefined}
-                  />
-                  <div className="divide-y divide-territory-border border-y border-territory-border">
-                    {[
-                      {
-                        label: "Aulas de reforço escolar",
-                        description: "Educação · Chapada",
-                        href: urls.education,
-                        icon: GraduationCap,
-                      },
-                      {
-                        label: "Serviços e trabalhos locais",
-                        description: "Conheça as oportunidades",
-                        href: urls.jobs,
-                        icon: BriefcaseBusiness,
-                      },
-                    ].map((item) => {
-                      const Icon = item.icon;
-                      return (
-                        <Link
-                          key={item.label}
-                          to={item.href}
-                          className="group flex min-h-[4.25rem] items-center gap-4 py-3 transition-colors hover:bg-territory-raised/60"
-                        >
-                          <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-territory-raised text-territory-brand">
-                            <Icon className="h-5 w-5" aria-hidden="true" />
-                          </span>
-                          <span className="min-w-0">
-                            <span className="block font-semibold text-territory-ink group-hover:text-territory-brand">
-                              {item.label}
-                            </span>
-                            <span className="mt-1 block text-xs leading-5 text-territory-muted">
-                              {item.description}
-                            </span>
-                          </span>
-                          <ArrowRight
-                            className="ml-auto h-4 w-4 shrink-0 text-territory-muted transition-transform group-hover:translate-x-0.5 group-hover:text-territory-brand"
-                            aria-hidden="true"
-                          />
-                        </Link>
-                      );
-                    })}
-                  </div>
-                </div>
-              </>
-            ) : (
-              <>
-                <TerritorySectionHeading
-                  id="discover-more-title"
-                  title="Oportunidades do bairro"
-                  description={undefined}
-                />
-                <div className="divide-y divide-territory-border border-y border-territory-border">
-                  {[
-                    {
-                      label: "Agenda do bairro",
-                      description: "Eventos e encontros públicos.",
-                      href: urls.events,
-                      icon: CalendarDays,
-                    },
-                    {
-                      label: "Vagas e oportunidades",
-                      description: "O que ainda está disponível por perto.",
-                      href: urls.jobs,
-                      icon: BriefcaseBusiness,
-                    },
-                  ].map((item) => {
-                    const Icon = item.icon;
-                    return (
-                      <Link
-                        key={item.label}
-                        to={item.href}
-                        className="group flex min-h-[4.25rem] items-center gap-4 py-3 transition-colors hover:bg-territory-raised/60"
-                      >
-                        <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-territory-raised text-territory-brand">
-                          <Icon className="h-5 w-5" aria-hidden="true" />
-                        </span>
-                        <span className="min-w-0">
-                          <span className="block font-semibold text-territory-ink group-hover:text-territory-brand">
-                            {item.label}
-                          </span>
-                          <span className="mt-1 block text-xs leading-5 text-territory-muted">
-                            {item.description}
-                          </span>
-                        </span>
-                        <ArrowRight
-                          className="ml-auto h-4 w-4 shrink-0 text-territory-muted transition-transform group-hover:translate-x-0.5 group-hover:text-territory-brand"
-                          aria-hidden="true"
-                        />
-                      </Link>
-                    );
-                  })}
-                </div>
-              </>
-            )}
-          </section>
+                      <ArrowRight
+                        className="ml-auto h-4 w-4 shrink-0 text-territory-muted transition-transform group-hover:translate-x-0.5 group-hover:text-territory-brand"
+                        aria-hidden="true"
+                      />
+                    </Link>
+                  );
+                })}
+              </div>
+            </>          </section>
 
             </div>
           </div>
