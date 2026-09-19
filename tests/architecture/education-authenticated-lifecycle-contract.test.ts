@@ -45,6 +45,9 @@ describe("G6 Education authenticated lifecycle gate", () => {
       '"test:e2e:education-lifecycle-authenticated": "node tools/release/run-education-lifecycle-authenticated.mjs"',
     );
     expect(packageJson).toContain(
+      '"test:e2e:education-lifecycle-authenticated": "node tools/release/run-education-lifecycle-authenticated.mjs"',
+    );
+    expect(packageJson).not.toContain(
       "npm run test:e2e:business-lifecycle-authenticated && npm run test:e2e:education-lifecycle-authenticated",
     );
   });

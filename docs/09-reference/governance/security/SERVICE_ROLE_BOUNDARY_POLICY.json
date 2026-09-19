@@ -22,7 +22,7 @@
     },
     {
       "prefix": "api/",
-      "label": "serverless API runtime outside the shared admin helper"
+      "label": "serverless API runtime; no service_role factory is currently allowlisted"
     }
   ],
   "allowedPrefixes": [
@@ -104,18 +104,6 @@
     }
   ],
   "allowedPaths": [
-    {
-      "path": "api/_shared/supabaseAdmin.ts",
-      "kind": "server-admin-client",
-      "risk": "Critical",
-      "label": "Single shared Vercel/API helper for service role Supabase clients.",
-      "authority": "docs/09-reference/governance/security/SUPABASE_SECURITY_MODEL.md#secrets",
-      "allowedPatternIds": [
-        "service-role-env-access",
-        "service-role-key-literal",
-        "server-api-supabase-client-factory-import"
-      ]
-    },
     {
       "path": "src/integrations/supabase/supabase.ts",
       "kind": "browser-supabase-client",
@@ -308,16 +296,6 @@
       "kind": "operator-script",
       "risk": "High",
       "label": "Remote slug-history validation tool requiring operator-supplied service_role.",
-      "authority": "docs/09-reference/governance/security/SUPABASE_SECURITY_MODEL.md#secrets",
-      "allowedPatternIds": [
-        "service-role-key-literal"
-      ]
-    },
-    {
-      "path": "tools/release/verify-deploy-ready.mjs",
-      "kind": "deploy-gate",
-      "risk": "High",
-      "label": "Deploy gate may require service_role to be configured in the deployment provider.",
       "authority": "docs/09-reference/governance/security/SUPABASE_SECURITY_MODEL.md#secrets",
       "allowedPatternIds": [
         "service-role-key-literal"

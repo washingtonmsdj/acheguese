@@ -9,6 +9,12 @@ const PREFLIGHT = join(
   "security",
   "supabase-edge-secrets-preflight.mjs",
 );
+const DEPLOY_VERIFY = join(
+  ROOT,
+  "tools",
+  "release",
+  "verify-deploy-ready.mjs",
+);
 const PUSH_CONFIG = join(
   ROOT,
   "supabase",
@@ -44,6 +50,34 @@ function requiredEnvNames(source: string): string[] {
 }
 
 describe("Supabase Edge secrets preflight", () => {
+  it("keeps Edge-only secrets out of the Vercel build environment gate", () => {
+    const deployVerify = readFileSync(DEPLOY_VERIFY, "utf8");
+
+    expect(deployVerify).toContain("REQUIRED_VERCEL_ENV_VARS");
+    expect(deployVerify).toContain('fail(`${envVar} ausente`)');
+    expect(deployVerify).toContain(
+      "supabase-edge-secrets-preflight.mjs --function <slug> --json",
+    );
+
+    for (const edgeOnlySecret of [
+      "SUPABASE_SERVICE_ROLE_KEY",
+      "STRIPE_SECRET_KEY",
+      "STRIPE_WEBHOOK_SECRET",
+      "RESEND_API_KEY",
+      "FIREBASE_PROJECT_ID",
+      "FIREBASE_SERVICE_ACCOUNT",
+      "LOVABLE_API_KEY",
+      "REPLICATE_API_TOKEN",
+      "TRYON_REPLICATE_MODEL_VERSION",
+      "VAPID_PUBLIC_KEY",
+      "NOMINATIM_BASE_URL",
+      "CRON_SECRET",
+      "ALLOWED_ORIGINS",
+    ]) {
+      expect(deployVerify).not.toContain(`'${edgeOnlySecret}'`);
+    }
+  });
+
   it("delegates secret listing to the official CLI and never calls the raw secrets API", () => {
     const source = readFileSync(PREFLIGHT, "utf8");
 

@@ -272,9 +272,10 @@ storage de auth cookie-only. O barrel `src/integrations/supabase/index.ts`
 exporta o cliente, tipos e helpers, mas nao reexporta `createClient`. A mesma
 fronteira e executavel: `security:validate` bloqueia import/export de
 `createClient` vindo de `@supabase/supabase-js` em `src/`, exceto no helper
-canonico. Em `api/`, a unica factory permitida e
-`api/_shared/supabaseAdmin.ts`; novos endpoints serverless devem usar esse
-helper ou uma Edge Function classificada, nao criar cliente paralelo.
+canonico. Em `api/` nao existe factory `service_role` ativa ou allowlistada:
+qualquer novo endpoint serverless que precise de privilegio administrativo deve
+primeiro declarar uma fronteira auditavel na policy canonica, ou preferir uma
+Edge Function classificada, em vez de criar cliente paralelo.
 
 Tipos publicos do `supabase-js` usados pelo runtime do app tambem devem entrar
 pelo barrel `@/integrations/supabase`. Arquivos de modulo que nao sao boundary

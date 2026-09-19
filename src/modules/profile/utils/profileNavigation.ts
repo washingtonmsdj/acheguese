@@ -6,6 +6,7 @@ import { isLaunchSurfaceEnabled, type LaunchSurfaceKey } from "@/app/config/laun
 
 const PROFILE_SECTION_SURFACES: Partial<Record<ProfileSectionId, LaunchSurfaceKey>> = {
   mobilidade: "mobility",
+  planos: "billing",
 };
 
 function isProfileSectionLaunchEnabled(section: ProfileSectionId): boolean {

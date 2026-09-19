@@ -1237,9 +1237,9 @@ describe("Security Authority service_role boundary", () => {
     ).toBe(true);
     expect(
       serviceRoleBoundaryPolicy.allowedPaths.some(
-        (entry) => entry.path === "api/_shared/supabaseAdmin.ts",
+        (entry) => entry.path.startsWith("api/"),
       ),
-    ).toBe(true);
+    ).toBe(false);
     expect(
       serviceRoleBoundaryPolicy.allowedPaths.some(
         (entry) => entry.path === "src/integrations/supabase/supabase.ts",
@@ -1299,7 +1299,7 @@ describe("Security Authority service_role boundary", () => {
     );
   });
 
-  it("allows the shared API admin helper boundary", async () => {
+  it("rejects unclassified service_role access in API runtime", async () => {
     const serviceRoleBoundaryPolicy = readJson<ServiceRoleBoundaryPolicy>(
       serviceRoleBoundaryPolicyPath,
     );
@@ -1310,14 +1310,20 @@ describe("Security Authority service_role boundary", () => {
       policy: serviceRoleBoundaryPolicy,
       files: [
         {
-          path: "api/_shared/supabaseAdmin.ts",
+          path: "api/admin.ts",
           content:
-            "import { createClient } from '@supabase/supabase-js'; const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY; throw new Error('Missing SUPABASE_SERVICE_ROLE_KEY');",
+            "import { createClient } from '@supabase/supabase-js'; const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;",
         },
       ],
     });
 
-    expect(issues).toEqual([]);
+    expect(issues).toContainEqual(
+      expect.objectContaining({
+        check: "Fronteira service_role violada",
+        file: "api/admin.ts",
+        severity: "CRITICO",
+      }),
+    );
   });
 
   it("allows only the canonical browser Supabase client to import createClient", async () => {

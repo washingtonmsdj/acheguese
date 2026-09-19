@@ -20,55 +20,13 @@ const REQUIRED_PUBLIC_ASSETS = [
   'public/og-image.png',
 ];
 
-const REQUIRED_ENV_VARS = [
+const REQUIRED_VERCEL_ENV_VARS = [
   'VITE_SUPABASE_URL',
   'VITE_SUPABASE_PUBLISHABLE_KEY',
   'VITE_TURNSTILE_SITE_KEY',
   'VITE_PUBLIC_SITE_URL',
   'VITE_CONTACT_EMAIL',
   'VITE_DPO_EMAIL',
-  'BASE_URL',
-  'SUPABASE_URL',
-  'SUPABASE_ANON_KEY',
-  'SUPABASE_SERVICE_ROLE_KEY',
-  'ALLOWED_ORIGINS',
-  'ALLOWED_REDIRECT_DOMAINS',
-  'CRON_SECRET',
-  'VAPID_PUBLIC_KEY',
-  'RESEND_API_KEY',
-  'FROM_EMAIL',
-  'EMAIL_FROM_DOMAIN',
-  'EMAIL_FROM_NAME',
-  'STRIPE_SECRET_KEY',
-  'STRIPE_WEBHOOK_SECRET',
-  'LOVABLE_API_KEY',
-  'REPLICATE_API_TOKEN',
-  'TRYON_REPLICATE_MODEL_VERSION',
-  'FIREBASE_PROJECT_ID',
-  'FIREBASE_SERVICE_ACCOUNT',
-  'NOMINATIM_BASE_URL',
-  'NOMINATIM_USER_AGENT',
-  'NOMINATIM_ACCEPT_LANGUAGE',
-  'NOMINATIM_DEFAULT_COUNTRY',
-  'NOMINATIM_DEFAULT_COUNTRY_CODES',
-  'NOMINATIM_DEFAULT_FORMAT',
-  'NOMINATIM_DEFAULT_ADDRESSDETAILS',
-  'NOMINATIM_DEFAULT_LIMIT',
-];
-
-const REQUIRED_ENV_GROUPS = [
-  {
-    name: 'TRYON_REPLICATE_HUMAN_IMAGE_*',
-    vars: [
-      'TRYON_REPLICATE_HUMAN_IMAGE_URL',
-      'TRYON_REPLICATE_HUMAN_IMAGE_MALE_URL',
-      'TRYON_REPLICATE_HUMAN_IMAGE_FEMALE_URL',
-      'TRYON_REPLICATE_HUMAN_IMAGE_NEUTRAL_URL',
-    ],
-    featureFlagEnv: 'VITE_FEATURE_AI_VIRTUAL_TRYON',
-    message:
-      'configure TRYON_REPLICATE_HUMAN_IMAGE_URL or all gender-specific human image URLs',
-  },
 ];
 
 const OPTIONAL_ENV_VARS = [
@@ -84,10 +42,6 @@ const OPTIONAL_ENV_VARS = [
   'IBGE_DISTRICTS_URL',
   'NOMINATIM_DEFAULT_COUNTRY_NAME',
   'NOMINATIM_REQUEST_DELAY_MS',
-];
-
-const REQUIRED_SUPABASE_EDGE_SECRETS = [
-  'TURNSTILE_SECRET_KEY',
 ];
 
 const REQUIRED_SCRIPTS = [
@@ -157,10 +111,6 @@ function getPublicSiteHost() {
     fail('VITE_PUBLIC_SITE_URL deve ser uma URL absoluta valida');
     return null;
   }
-}
-
-function isEnabledEnvironmentFlag(envVar) {
-  return process.env[envVar]?.trim().toLowerCase() === 'true';
 }
 
 function collectSourceFiles(root, extensions = new Set(['.ts', '.tsx', '.js', '.jsx', '.mjs'])) {
@@ -260,12 +210,12 @@ try {
 }
 console.log();
 
-console.log('Variaveis de ambiente para configurar na Vercel');
-console.log('  Obrigatorias:');
-for (const envVar of REQUIRED_ENV_VARS) {
+console.log('Variaveis de ambiente da Vercel');
+console.log('  Obrigatorias para build/browser:');
+for (const envVar of REQUIRED_VERCEL_ENV_VARS) {
   const value = process.env[envVar];
   if (!value) {
-    console.log(`    - ${envVar}`);
+    fail(`${envVar} ausente`);
     continue;
   }
 
@@ -275,28 +225,11 @@ for (const envVar of REQUIRED_ENV_VARS) {
     ok(`${envVar} configurada`);
   }
 }
-console.log('  Grupos obrigatorios:');
-for (const group of REQUIRED_ENV_GROUPS) {
-  if (group.featureFlagEnv && !isEnabledEnvironmentFlag(group.featureFlagEnv)) {
-    ok(`${group.name} nao exigido porque ${group.featureFlagEnv} nao esta ativo`);
-    continue;
-  }
-
-  const values = group.vars.map((envVar) => process.env[envVar]?.trim() ?? '');
-  const hasGlobal = Boolean(values[0]);
-  const hasAllSpecific = values.slice(1).every(Boolean);
-
-  if (!hasGlobal && !hasAllSpecific) {
-    fail(`${group.name}: ${group.message}`);
-    continue;
-  }
-
-  ok(`${group.name} configurado`);
-}
 console.log('  Opcionais recomendadas:');
 for (const envVar of OPTIONAL_ENV_VARS) console.log(`    - ${envVar}`);
-console.log('  Secrets obrigatorios no Supabase Edge (validacao remota pendente):');
-for (const envVar of REQUIRED_SUPABASE_EDGE_SECRETS) console.log(`    - ${envVar}`);
+console.log('  Supabase Edge:');
+console.log('    - secrets privados pertencem ao runtime Edge, nao ao build/browser da Vercel');
+console.log('    - valide cada Edge Function habilitada com tools/security/supabase-edge-secrets-preflight.mjs --function <slug> --json');
 console.log();
 
 console.log('Estrutura de build');
