@@ -26,6 +26,12 @@ export type CommunityConceptPost = {
   avatar_url?: string | null;
   title?: string | null;
   summary?: string | null;
+  images?: string[] | null;
+  response_preview?: {
+    author_name: string;
+    avatar_url?: string | null;
+    content: string;
+  } | null;
 };
 
 const now = Date.now();
@@ -80,30 +86,36 @@ export const COMMUNITY_OVERVIEW_VISUAL_FIXTURE = {
   ] satisfies GroupRow[],
   posts: [
     {
-      id: "visual-post-restaurante-japones",
+      id: "visual-post-reforco-escolar",
       type: "pergunta",
-      content: "Alguém conhece um bom restaurante japonês por aqui? Queria levar meu marido para jantar no sábado.",
+      content: "Quem indica aulas de reforço aqui no bairro? Procuro indicação para o ensino fundamental.",
       created_at: hoursAgo(2),
-      likes_count: 18,
-      comments_count: 24,
-      author_name: "Juliana Santos",
+      likes_count: 8,
+      comments_count: 4,
+      author_name: "Ana Santos",
       author_role: "Moradora",
       avatar_url: personaMorador,
-      title: "Alguém conhece um bom restaurante japonês por aqui? 🍣",
-      summary: "Queria levar meu marido para jantar no sábado.",
+      title: "Quem indica aulas de reforço aqui no bairro?",
+      summary: "Procuro indicação para o ensino fundamental.",
+      response_preview: {
+        author_name: "Mariana",
+        avatar_url: personaMorador,
+        content: "Tem um projeto na associação, à tarde.",
+      },
     },
     {
-      id: "visual-post-mutirao-orla",
-      type: "aviso",
-      content: "Mutirão de limpeza neste sábado (25) na Orla da Pituba. Vamos nos reunir às 7h30 em frente ao Parque dos Ventos. Leve sua garrafa d'água e luvas.",
-      created_at: hoursAgo(4),
-      likes_count: 32,
-      comments_count: 18,
+      id: "visual-post-encontro-domingo",
+      type: "recomendacao",
+      content: "O encontro de domingo foi especial para todo mundo que participou.",
+      created_at: hoursAgo(24),
+      likes_count: 26,
+      comments_count: 12,
       author_name: "Marcos Lima",
       author_role: "Morador",
       avatar_url: personaPrestador,
-      title: "Mutirão de limpeza neste sábado (25) na Orla da Pituba",
-      summary: "Vamos nos reunir às 7h30 em frente ao Parque dos Ventos. Leve sua garrafa d'água e luvas.",
+      title: "O encontro de domingo foi especial",
+      summary: "Um pouco do nosso encontro de domingo.",
+      images: [bairroPituba],
     },
     {
       id: "visual-post-padaria",
@@ -119,6 +131,31 @@ export const COMMUNITY_OVERVIEW_VISUAL_FIXTURE = {
       summary: "Tudo sempre fresquinho e o atendimento é excelente. Recomendo o croissant de queijo.",
     },
   ] satisfies CommunityConceptPost[],
+  alerts: [
+    {
+      id: "visual-alert-iluminacao",
+      kind: "relato" as const,
+      author_name: "João",
+      territory_label: "Santa Cruz",
+      title: "Iluminação na Rua do Campo",
+      detail: "Ainda sem confirmação.",
+    },
+    {
+      id: "visual-alert-mutirao",
+      kind: "comunicado" as const,
+      author_name: "Associação comunitária",
+      territory_label: "Santa Cruz",
+      title: "Mutirão na praça",
+      detail: "Sábado, às 9h · Santa Cruz",
+    },
+  ] satisfies Array<{
+    id: string;
+    kind: "relato" | "comunicado";
+    author_name: string;
+    territory_label: string;
+    title: string;
+    detail: string;
+  }>,
   events: [
     {
       id: "visual-event-mutirao-orla",

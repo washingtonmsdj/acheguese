@@ -192,6 +192,20 @@ export function TerritoryTopbar({
         </div>
 
         <div className="ml-auto flex items-center gap-1.5 lg:order-4 sm:gap-2">
+          {searchHref && !showMobileSearch ? (
+            <Link
+              to={searchHref}
+              className={cn(
+                "flex h-10 w-10 items-center justify-center rounded-full transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-territory-sun lg:hidden",
+                isLight
+                  ? "text-territory-ink hover:bg-territory-brand/5"
+                  : "text-white hover:bg-white/10",
+              )}
+              aria-label={searchLabel}
+            >
+              <Search className="h-[1.125rem] w-[1.125rem]" aria-hidden="true" />
+            </Link>
+          ) : null}
           <Link
             to={isAuthenticated ? "/notificacoes" : "/login"}
             className={cn(

@@ -153,8 +153,36 @@ const COMMUNITY_FEED_CONTEXT_SHORTCUTS = [
   icon: React.ElementType;
 }>;
 
+const COMMUNITY_CONCEPT_CONTEXT_SHORTCUTS = [
+  { view: "feed", label: "Publicações", icon: MessageCircle },
+  { view: "alerts", label: "Avisos", icon: Megaphone },
+  { view: "groups", label: "Grupos", icon: Users },
+  { view: "events", label: "Agenda", icon: CalendarDays },
+] as const satisfies ReadonlyArray<{
+  view: "feed" | "alerts" | "groups" | "events";
+  label: string;
+  icon: React.ElementType;
+}>;
+
 type CommunityFeedContextTab =
-  (typeof COMMUNITY_FEED_CONTEXT_SHORTCUTS)[number]["view"];
+  | (typeof COMMUNITY_FEED_CONTEXT_SHORTCUTS)[number]["view"]
+  | (typeof COMMUNITY_CONCEPT_CONTEXT_SHORTCUTS)[number]["view"];
+
+type CommunityVisualMockState =
+  | "member"
+  | "visitor"
+  | "pending"
+  | "empty"
+  | "error";
+
+type CommunityVisualAlert = {
+  id: string;
+  kind: "relato" | "comunicado";
+  author_name: string;
+  territory_label: string;
+  title: string;
+  detail: string;
+};
 
 function EventPreviewItem({ event }: { event: PublicEvent }) {
   const dateParts = getEventDateParts(event.date);
@@ -249,6 +277,11 @@ type DiscussionPreviewPost = {
   summary?: string | null;
   images?: string[] | null;
   image_url?: string | null;
+  response_preview?: {
+    author_name: string;
+    avatar_url?: string | null;
+    content: string;
+  } | null;
   author_profile?: {
     name?: string | null;
     avatar_url?: string | null;
@@ -403,6 +436,42 @@ function CommunityFeedContextNavigation({
   );
 }
 
+function CommunityConceptContextNavigation({
+  activeContextTab,
+  onContextTabChange,
+}: {
+  activeContextTab: CommunityFeedContextTab;
+  onContextTabChange: (tab: CommunityFeedContextTab) => void;
+}) {
+  return (
+    <div
+      className="flex min-w-0 gap-6 overflow-x-auto border-b border-territory-border bg-transparent px-1 [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
+      role="group"
+      aria-label="Navegação da comunidade"
+    >
+      {COMMUNITY_CONCEPT_CONTEXT_SHORTCUTS.map(({ view, label, icon: Icon }) => (
+        <button
+          key={view}
+          type="button"
+          data-community-feed-shortcut={view}
+          onClick={() => onContextTabChange(view)}
+          aria-pressed={activeContextTab === view}
+          className={cn(
+            "relative inline-flex min-h-10 shrink-0 items-center gap-1.5 border-0 px-0 text-xs font-medium transition-colors after:absolute after:inset-x-0 after:bottom-0 after:h-0.5 after:bg-transparent hover:text-territory-brand focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-territory-brand/70",
+            activeContextTab === view
+              ? "font-semibold text-territory-brand after:bg-territory-brand"
+              : "text-territory-muted",
+          )}
+          aria-controls="community-feed-context-panel"
+        >
+          <Icon className="h-3.5 w-3.5 shrink-0" aria-hidden="true" />
+          {label}
+        </button>
+      ))}
+    </div>
+  );
+}
+
 function CommunityPostSortControls({
   value,
   onChange,
@@ -436,6 +505,274 @@ function CommunityPostSortControls({
           {label}
         </button>
       ))}
+    </div>
+  );
+}
+
+function CommunityConceptFeedFilters({
+  value,
+  onChange,
+}: {
+  value: CommunityFeedSortType;
+  onChange: (sort: CommunityFeedSortType) => void;
+}) {
+  return (
+    <div className="flex min-w-0 items-center gap-2 overflow-x-auto px-1 [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+      <label className="sr-only" htmlFor="community-concept-scope">
+        Escopo das publicações
+      </label>
+      <select
+        id="community-concept-scope"
+        defaultValue="all"
+        className="min-h-9 shrink-0 rounded-lg border border-territory-border bg-territory-raised px-2.5 text-xs font-medium text-territory-ink outline-none focus:border-territory-brand focus:ring-2 focus:ring-territory-brand/20"
+      >
+        <option value="all">Todos os bairros</option>
+        <option value="territory">Complexo do Nordeste</option>
+      </select>
+      <label className="sr-only" htmlFor="community-concept-sort">
+        Ordenação das publicações
+      </label>
+      <select
+        id="community-concept-sort"
+        value={value}
+        onChange={(event) =>
+          onChange(event.target.value as CommunityFeedSortType)
+        }
+        className="min-h-9 shrink-0 rounded-lg border border-territory-border bg-territory-raised px-2.5 text-xs font-medium text-territory-ink outline-none focus:border-territory-brand focus:ring-2 focus:ring-territory-brand/20"
+      >
+        <option value="popular">Mais relevantes</option>
+        <option value="recent">Mais recentes</option>
+        <option value="commented">Mais comentadas</option>
+      </select>
+      <button
+        type="button"
+        className="ml-auto flex h-9 w-9 shrink-0 items-center justify-center rounded-lg border border-territory-border bg-territory-raised text-territory-brand transition-colors hover:bg-territory-brand/10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-territory-brand/30"
+        aria-label="Abrir filtros das publicações"
+        onClick={() => undefined}
+      >
+        <LayoutGrid className="h-4 w-4" aria-hidden="true" />
+      </button>
+    </div>
+  );
+}
+
+function CommunityVisitorParticipationCard({
+  onRequireLogin,
+}: {
+  onRequireLogin: () => void;
+}) {
+  return (
+    <SurfacePanel className="p-4 text-center sm:p-5">
+      <div className="mx-auto flex h-20 w-20 items-center justify-center rounded-3xl bg-territory-brand/8 text-4xl">
+        💬
+      </div>
+      <h2 className="mt-4 text-lg font-bold text-territory-ink">
+        Conheça as conversas do lugar.
+      </h2>
+      <p className="mx-auto mt-1 max-w-sm text-sm leading-5 text-territory-muted">
+        Você está vendo publicações públicas.
+      </p>
+      <button
+        type="button"
+        onClick={onRequireLogin}
+        className="mt-4 inline-flex min-h-11 w-full items-center justify-center rounded-xl bg-territory-sun px-4 text-sm font-bold text-territory-ink hover:bg-territory-sun/90 sm:w-auto"
+      >
+        Entrar para participar
+      </button>
+      <button
+        type="button"
+        onClick={() => undefined}
+        className="mt-2 inline-flex min-h-10 w-full items-center justify-center rounded-xl border border-territory-brand/35 px-4 text-sm font-semibold text-territory-brand hover:bg-territory-brand/8 sm:w-auto"
+      >
+        Explorar publicações
+      </button>
+    </SurfacePanel>
+  );
+}
+
+function CommunityPendingParticipationCard() {
+  return (
+    <SurfacePanel className="p-4 text-center sm:p-5">
+      <div className="mx-auto flex h-20 w-20 items-center justify-center rounded-3xl bg-territory-brand/8 text-4xl">
+        🕒
+      </div>
+      <h2 className="mt-4 text-lg font-bold text-territory-ink">
+        Solicitação em análise
+      </h2>
+      <p className="mx-auto mt-1 max-w-sm text-sm leading-5 text-territory-muted">
+        Acompanhe sua solicitação para saber quando poderá participar.
+      </p>
+      <Link
+        to="/conta"
+        className="mt-4 inline-flex min-h-11 w-full items-center justify-center rounded-xl bg-territory-sun px-4 text-sm font-bold text-territory-ink hover:bg-territory-sun/90 sm:w-auto"
+      >
+        Ver meus vínculos
+      </Link>
+    </SurfacePanel>
+  );
+}
+
+function CommunityAlertsPreview({
+  alerts,
+}: {
+  alerts: CommunityVisualAlert[];
+}) {
+  return (
+    <SurfacePanel className="p-3 sm:p-4">
+      <SectionHeader title="Avisos da comunidade" />
+      <div className="space-y-3">
+        {alerts.map((alert) => (
+          <article
+            key={alert.id}
+            className="rounded-xl border border-territory-border bg-territory-raised p-3"
+          >
+            <div className="flex items-start gap-3">
+              <span
+                className={cn(
+                  "mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-lg",
+                  alert.kind === "comunicado"
+                    ? "bg-territory-sun/30 text-territory-ink"
+                    : "bg-territory-brand/10 text-territory-brand",
+                )}
+              >
+                <Megaphone className="h-4 w-4" />
+              </span>
+              <div className="min-w-0 flex-1">
+                <p className="text-[0.62rem] font-bold uppercase tracking-[0.08em] text-territory-muted">
+                  {alert.kind === "comunicado"
+                    ? "Comunicado da organização"
+                    : "Relato da comunidade"}
+                </p>
+                <p className="mt-1 text-xs text-territory-muted">
+                  {alert.author_name} · {alert.territory_label}
+                </p>
+                <h3 className="mt-1 text-sm font-semibold text-territory-ink">
+                  {alert.title}
+                </h3>
+                <p className="mt-0.5 text-xs text-territory-muted">
+                  {alert.detail}
+                </p>
+                <button
+                  type="button"
+                  className="mt-2 inline-flex min-h-8 items-center gap-1 rounded-lg border border-territory-brand/35 px-2.5 text-xs font-semibold text-territory-brand hover:bg-territory-brand/8"
+                  onClick={() => undefined}
+                >
+                  {alert.kind === "comunicado" ? "Ver comunicado" : "Ver relato"}
+                  <ChevronRight className="h-3.5 w-3.5" />
+                </button>
+              </div>
+            </div>
+          </article>
+        ))}
+      </div>
+    </SurfacePanel>
+  );
+}
+
+function CommunityConceptSidebar({
+  alerts,
+  groups,
+  events,
+  eventsHref,
+  groupsHref,
+}: {
+  alerts: CommunityVisualAlert[];
+  groups: GroupRow[];
+  events: PublicEvent[];
+  eventsHref?: string;
+  groupsHref?: string;
+}) {
+  const alert = alerts[0];
+  const group = groups[0];
+  const event = events[0];
+  const eventDate = event ? getEventDateParts(event.date) : null;
+
+  return (
+    <div className="space-y-4">
+      {alert ? (
+        <SurfacePanel id="concept-sidebar-alert" className="p-3">
+          <SectionHeader title="Avisos da comunidade" />
+          <div className="flex items-start gap-2.5">
+            <span className="mt-1 h-3 w-3 shrink-0 rounded-full bg-territory-sun" />
+            <div className="min-w-0">
+              <p className="text-sm font-semibold text-territory-ink">{alert.title}</p>
+              <p className="mt-1 text-xs text-territory-muted">
+                {alert.author_name} · {alert.detail.replace("Ainda sem confirmação.", "Não confirmado")}
+              </p>
+              <a
+                href="#concept-sidebar-alert"
+                className="mt-3 inline-flex items-center gap-1 text-xs font-semibold text-territory-brand hover:text-territory-brand-strong"
+              >
+                Ver aviso <ChevronRight className="h-3.5 w-3.5" />
+              </a>
+            </div>
+          </div>
+        </SurfacePanel>
+      ) : null}
+
+      {group ? (
+        <SurfacePanel className="p-3">
+          <SectionHeader title="Encontre seu grupo" />
+          <div className="overflow-hidden rounded-xl border border-territory-border bg-territory-raised">
+            <div className="flex h-24 items-center justify-center bg-territory-brand/10 text-territory-brand">
+              <Users className="h-8 w-8" />
+            </div>
+            <div className="p-3">
+              <p className="text-sm font-semibold text-territory-ink">{group.name}</p>
+              <p className="mt-1 line-clamp-2 text-xs leading-4 text-territory-muted">
+                {group.description ?? "Troque ideias e participe das conversas do território."}
+              </p>
+              {groupsHref ? (
+                <Link
+                  to={groupsHref}
+                  className="mt-3 inline-flex items-center gap-1 text-xs font-semibold text-territory-brand hover:text-territory-brand-strong"
+                >
+                  Conhecer grupos <ChevronRight className="h-3.5 w-3.5" />
+                </Link>
+              ) : null}
+            </div>
+          </div>
+        </SurfacePanel>
+      ) : null}
+
+      {event && eventDate ? (
+        <SurfacePanel className="p-3">
+          <SectionHeader title="Na agenda" />
+          <div className="flex items-center gap-3">
+            <div className="flex h-12 w-12 shrink-0 flex-col items-center justify-center rounded-xl bg-territory-brand/8 text-center">
+              <span className="text-sm font-bold text-territory-ink">{eventDate.day}</span>
+              <span className="text-[0.6rem] font-bold uppercase text-territory-muted">{eventDate.month}</span>
+            </div>
+            <div className="min-w-0">
+              <p className="truncate text-sm font-semibold text-territory-ink">{event.title}</p>
+              <p className="mt-1 text-xs text-territory-muted">{eventDate.time} · {event.location}</p>
+            </div>
+          </div>
+          {eventsHref ? (
+            <Link
+              to={eventsHref}
+              className="mt-3 inline-flex items-center gap-1 text-xs font-semibold text-territory-brand hover:text-territory-brand-strong"
+            >
+              Ver agenda <ChevronRight className="h-3.5 w-3.5" />
+            </Link>
+          ) : null}
+        </SurfacePanel>
+      ) : null}
+
+      <nav
+        aria-label="Links da comunidade"
+        className="rounded-xl border border-territory-border bg-territory-raised px-3"
+      >
+        <Link to="/conta" className="flex min-h-10 items-center border-b border-territory-border text-xs font-medium text-territory-ink">
+          Meus vínculos <ChevronRight className="ml-auto h-3.5 w-3.5 text-territory-muted" />
+        </Link>
+        <a href="#community-primary-content" className="flex min-h-10 items-center border-b border-territory-border text-xs font-medium text-territory-ink">
+          Publicações salvas <ChevronRight className="ml-auto h-3.5 w-3.5 text-territory-muted" />
+        </a>
+        <a href="#regras-comunidade" className="flex min-h-10 items-center text-xs font-medium text-territory-ink">
+          Regras da comunidade <ChevronRight className="ml-auto h-3.5 w-3.5 text-territory-muted" />
+        </a>
+      </nav>
     </div>
   );
 }
@@ -902,6 +1239,15 @@ export function CommunityOverviewSurface({
   const communityEventsPreviewEnabled = isLaunchSurfaceEnabled(
     "communityEventsPreview",
   );
+  const visualMockState = useMemo<CommunityVisualMockState>(() => {
+    const value = new URLSearchParams(routeLocation.search).get("previewState");
+    return value === "visitor" ||
+      value === "pending" ||
+      value === "empty" ||
+      value === "error"
+      ? value
+      : "member";
+  }, [routeLocation.search]);
   const visualMockEnabled = useMemo(() => {
     const params = new URLSearchParams(routeLocation.search);
     // Fixture estritamente local para revisão visual. Production sempre usa dados reais.
@@ -1115,9 +1461,18 @@ export function CommunityOverviewSurface({
   });
 
   const previewGroups = groupsPage?.items ?? [];
-  const displayPosts: DiscussionPreviewPost[] = visualMockEnabled
-    ? COMMUNITY_OVERVIEW_VISUAL_FIXTURE.posts
-    : visiblePosts;
+  const displayPosts = useMemo<DiscussionPreviewPost[]>(
+    () =>
+      visualMockEnabled
+        ? visualMockState === "empty"
+          ? []
+          : COMMUNITY_OVERVIEW_VISUAL_FIXTURE.posts
+        : visiblePosts,
+    [visualMockEnabled, visualMockState, visiblePosts],
+  );
+  const displayAlerts: CommunityVisualAlert[] = visualMockEnabled
+    ? (COMMUNITY_OVERVIEW_VISUAL_FIXTURE.alerts as CommunityVisualAlert[])
+    : [];
   const displayBusinesses = visualMockEnabled
     ? COMMUNITY_OVERVIEW_VISUAL_FIXTURE.businesses
     : businesses;
@@ -1143,7 +1498,9 @@ export function CommunityOverviewSurface({
     ? COMMUNITY_OVERVIEW_VISUAL_FIXTURE.stats.posts
     : displayPosts.length;
   const displayLoadingFeed = visualMockEnabled ? false : isLoading;
-  const displayFeedError = visualMockEnabled ? false : isError;
+  const displayFeedError = visualMockEnabled
+    ? visualMockState === "error"
+    : isError;
   const displayLoadingBusinesses = visualMockEnabled
     ? false
     : loadingBusinesses;
@@ -1530,17 +1887,9 @@ export function CommunityOverviewSurface({
                   Comunidade
                 </h1>
                 <p className="mt-1 text-sm text-territory-muted sm:text-base">
-                  A conversa do seu bairro.
+                  Gente, histórias e ideias do nosso lugar.
                 </p>
               </div>
-              <button
-                type="button"
-                onClick={() => handleViewChange("groups")}
-                className="hidden min-h-10 shrink-0 items-center gap-2 rounded-xl border border-territory-brand/30 bg-territory-surface px-3 text-sm font-semibold text-territory-brand hover:bg-territory-brand/8 sm:inline-flex"
-              >
-                <Users className="h-4 w-4" />
-                Meus grupos
-              </button>
             </div>
           </section>
         ) : null}
@@ -1842,20 +2191,36 @@ export function CommunityOverviewSurface({
                 children
               ) : (
                 <>
-                  <CommunityFeedContextNavigation
-                    activeContextTab={feedContextTab}
-                    onContextTabChange={handleFeedContextTabChange}
-                  />
+                  {visualMockEnabled ? (
+                    <CommunityConceptContextNavigation
+                      activeContextTab={feedContextTab}
+                      onContextTabChange={handleFeedContextTabChange}
+                    />
+                  ) : (
+                    <CommunityFeedContextNavigation
+                      activeContextTab={feedContextTab}
+                      onContextTabChange={handleFeedContextTabChange}
+                    />
+                  )}
 
-                  {canCreatePost ? (
+                  {visualMockEnabled && visualMockState === "visitor" ? (
+                    <CommunityVisitorParticipationCard
+                      onRequireLogin={onRequireLogin}
+                    />
+                  ) : visualMockEnabled && visualMockState === "pending" ? (
+                    <CommunityPendingParticipationCard />
+                  ) : !visualMockEnabled || visualMockState === "member" ? (
+                    canCreatePost ? (
                     <CommunityComposerEntry
                       id="feed"
                       communityName={communityTitle}
                       onOpenCreatePost={handleOpenComposer}
                       avatarUrl={visualMockEnabled ? personaMorador : undefined}
-                      showActions={visualMockEnabled}
+                      variant={visualMockEnabled ? "concept" : "default"}
+                      profileLabel="Ana · Pessoal"
                       className="xl:p-3"
                     />
+                    ) : null
                   ) : null}
 
                   <div
@@ -1866,10 +2231,17 @@ export function CommunityOverviewSurface({
                     {feedContextTab === "feed" ? (
                       <>
                         <SurfacePanel className="p-2.5">
-                          <CommunityPostSortControls
-                            value={postSort}
-                            onChange={setPostSort}
-                          />
+                          {visualMockEnabled ? (
+                            <CommunityConceptFeedFilters
+                              value={postSort}
+                              onChange={setPostSort}
+                            />
+                          ) : (
+                            <CommunityPostSortControls
+                              value={postSort}
+                              onChange={setPostSort}
+                            />
+                          )}
                           {displayLoadingFeed ? (
                             <div className="mt-3 space-y-2">
                               {[0, 1, 2].map((index) => (
@@ -1991,6 +2363,26 @@ export function CommunityOverviewSurface({
                                           {summary}
                                         </p>
                                       ) : null}
+                                      {visualMockEnabled && post.response_preview ? (
+                                        <div className="mt-2 flex min-w-0 items-center gap-2 rounded-lg bg-territory-brand/8 px-2 py-1.5 text-[0.68rem] text-territory-ink">
+                                          <span className="flex h-6 w-6 shrink-0 items-center justify-center overflow-hidden rounded-full bg-territory-brand/12 text-[0.58rem] font-semibold text-territory-brand">
+                                            {post.response_preview.avatar_url ? (
+                                              <SafeImage
+                                                src={post.response_preview.avatar_url}
+                                                alt=""
+                                                className="h-full w-full object-cover"
+                                                loading="lazy"
+                                              />
+                                            ) : (
+                                              post.response_preview.author_name.slice(0, 1)
+                                            )}
+                                          </span>
+                                          <span className="min-w-0 truncate">
+                                            <strong>{post.response_preview.author_name}:</strong>{" "}
+                                            {post.response_preview.content}
+                                          </span>
+                                        </div>
+                                      ) : null}
                                       {postImages.length > 0 ? (
                                         <ImageGallery
                                           images={postImages}
@@ -2055,6 +2447,8 @@ export function CommunityOverviewSurface({
                           ) : null}
                         </SurfacePanel>
                       </>
+                    ) : feedContextTab === "alerts" ? (
+                      <CommunityAlertsPreview alerts={displayAlerts} />
                     ) : feedContextTab === "groups" ? (
                       <CommunityGroupsPreview
                         id="feed-groups-tab"
@@ -2068,6 +2462,19 @@ export function CommunityOverviewSurface({
                             : communityUrls.groupDetail(group.id)
                         }
                       />
+                    ) : feedContextTab === "events" ? (
+                      <SurfacePanel className="p-3 sm:p-4">
+                        <SectionHeader
+                          title="Na agenda"
+                          actionHref={fullEventsEnabled ? moduleUrls.events : undefined}
+                          actionLabel={fullEventsEnabled ? "Ver agenda" : undefined}
+                        />
+                        <div className="space-y-2">
+                          {displayEvents.slice(0, 3).map((event) => (
+                            <EventPreviewItem key={event.id} event={event} />
+                          ))}
+                        </div>
+                      </SurfacePanel>
                     ) : (
                       <CommunityDiscussionsPreview
                         id="feed-discussions-tab"
@@ -2259,7 +2666,17 @@ export function CommunityOverviewSurface({
 
         {!isEmbeddedModule && selectedView === "feed" ? (
           <div className="min-w-0 space-y-4 xl:col-start-3 xl:row-start-2 xl:space-y-3">
-            <SurfacePanel id="eventos" className="p-3">
+            {visualMockEnabled ? (
+              <CommunityConceptSidebar
+                alerts={displayAlerts}
+                groups={displayGroups}
+                events={displayEvents}
+                eventsHref={fullEventsEnabled ? moduleUrls.events : undefined}
+                groupsHref={communityUrls.groups}
+              />
+            ) : (
+              <>
+                <SurfacePanel id="eventos" className="p-3">
               <SectionHeader
                 title="Próximos eventos"
                 actionHref={fullEventsEnabled ? moduleUrls.events : undefined}
@@ -2295,9 +2712,9 @@ export function CommunityOverviewSurface({
                   ctaLabel={fullEventsEnabled ? "Abrir eventos" : undefined}
                 />
               )}
-            </SurfacePanel>
+                </SurfacePanel>
 
-            <SurfacePanel className="xl:hidden">
+                <SurfacePanel className="xl:hidden">
               <SectionHeader title="Anúncio local" />
               {loadingAd ? (
                 <div className="h-24 animate-pulse rounded-xl border border-territory-border bg-territory-raised" />
@@ -2312,7 +2729,9 @@ export function CommunityOverviewSurface({
                   Nenhuma campanha patrocinada ativa para este território.
                 </p>
               )}
-            </SurfacePanel>
+                </SurfacePanel>
+              </>
+            )}
           </div>
         ) : null}
       </main>

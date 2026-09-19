@@ -1,5 +1,5 @@
 import React from "react";
-import { CircleHelp, ImagePlus, Send, UserRound } from "lucide-react";
+import { CircleHelp, ImagePlus, Pencil, Send, UserRound } from "lucide-react";
 
 import type { PostType } from "@/core/posts/types";
 import { useSessionContext } from "@/core/session";
@@ -12,6 +12,8 @@ interface CommunityComposerEntryProps {
   className?: string;
   avatarUrl?: string | null;
   showActions?: boolean;
+  variant?: "default" | "concept";
+  profileLabel?: string;
 }
 
 export function CommunityComposerEntry({
@@ -21,9 +23,12 @@ export function CommunityComposerEntry({
   className,
   avatarUrl,
   showActions = false,
+  variant = "default",
+  profileLabel = "Ana · Pessoal",
 }: CommunityComposerEntryProps) {
   const { activeProfile } = useSessionContext();
   const resolvedAvatarUrl = avatarUrl ?? activeProfile?.avatarUrl ?? null;
+  const isConcept = variant === "concept";
   const openComposer = () => onOpenCreatePost("discussao");
 
   return (
@@ -32,6 +37,7 @@ export function CommunityComposerEntry({
       data-community-composer="entry"
       className={cn(
         "rounded-2xl border border-border/60 bg-card p-3",
+        isConcept && "rounded-xl border-territory-border bg-territory-raised p-2.5",
         className,
       )}
       aria-label="Criar publicação"
@@ -49,18 +55,48 @@ export function CommunityComposerEntry({
             <UserRound className="h-4 w-4" aria-hidden="true" />
           )}
         </span>
-        <input
-          type="text"
-          value=""
-          readOnly
-          onClick={openComposer}
-          onKeyDown={(event) => {
-            if (event.key === "Enter" || event.key === " ") openComposer();
-          }}
-          placeholder="O que você quer compartilhar?"
-          aria-label={`Criar publicação em ${communityName}`}
-          className="min-h-11 min-w-0 flex-1 cursor-text rounded-xl border border-border bg-muted/40 px-3 text-sm text-foreground outline-none placeholder:text-muted-foreground hover:border-primary/40 hover:bg-background focus:border-primary focus:bg-background focus-visible:ring-2 focus-visible:ring-primary/30"
-        />
+        {isConcept ? (
+          <div className="min-w-0 flex-1">
+            <span className="hidden text-xs font-semibold text-territory-ink sm:block">
+              {profileLabel}
+            </span>
+            <input
+              type="text"
+              value=""
+              readOnly
+              onClick={openComposer}
+              onKeyDown={(event) => {
+                if (event.key === "Enter" || event.key === " ") openComposer();
+              }}
+              placeholder="Compartilhe com a comunidade"
+              aria-label={`Criar publicação em ${communityName}`}
+              className="min-h-9 w-full min-w-0 cursor-text border-0 bg-transparent px-0 text-sm text-territory-ink outline-none placeholder:text-territory-muted focus-visible:ring-0"
+            />
+          </div>
+        ) : (
+          <input
+            type="text"
+            value=""
+            readOnly
+            onClick={openComposer}
+            onKeyDown={(event) => {
+              if (event.key === "Enter" || event.key === " ") openComposer();
+            }}
+            placeholder="O que você quer compartilhar?"
+            aria-label={`Criar publicação em ${communityName}`}
+            className="min-h-11 min-w-0 flex-1 cursor-text rounded-xl border border-border bg-muted/40 px-3 text-sm text-foreground outline-none placeholder:text-muted-foreground hover:border-primary/40 hover:bg-background focus:border-primary focus:bg-background focus-visible:ring-2 focus-visible:ring-primary/30"
+          />
+        )}
+        {isConcept ? (
+          <button
+            type="button"
+            onClick={openComposer}
+            className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg text-territory-brand transition-colors hover:bg-territory-brand/10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-territory-brand/30"
+            aria-label="Abrir publicação"
+          >
+            <Pencil className="h-4 w-4" aria-hidden="true" />
+          </button>
+        ) : null}
       </div>
       {showActions ? (
         <div className="mt-2 flex items-center gap-2 border-t border-border/60 pt-2">

@@ -475,7 +475,7 @@ export default function ComunidadePage({
       contextLabel={visualMockEnabled ? "Salvador, BA" : territoryContextLabel}
       isAuthenticated={communityAccess.isAuthenticated}
       unreadCount={unreadCount}
-      variant="light"
+      variant="brand"
       searchHref={exploreHref}
       showMobileSearch={false}
       compactMobile

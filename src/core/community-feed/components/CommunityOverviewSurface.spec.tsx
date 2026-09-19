@@ -205,7 +205,9 @@ describe("CommunityOverviewSurface navigation", () => {
     expect(primaryContent).not.toBeNull();
     const primary = within(primaryContent as HTMLElement);
 
-    expect(primary.getByRole("button", { name: "Posts" })).toHaveAttribute(
+    expect(
+      primary.getByRole("button", { name: "Publicações" }),
+    ).toHaveAttribute(
       "aria-controls",
       "community-feed-context-panel",
     );
@@ -215,7 +217,7 @@ describe("CommunityOverviewSurface navigation", () => {
       "aria-controls",
       "community-feed-context-panel",
     );
-    expect(primary.getByRole("button", { name: "Discussões" })).toHaveAttribute(
+    expect(primary.getByRole("button", { name: "Avisos" })).toHaveAttribute(
       "aria-controls",
       "community-feed-context-panel",
     );
@@ -230,14 +232,14 @@ describe("CommunityOverviewSurface navigation", () => {
     ).toBeVisible();
     expect(onViewChange).not.toHaveBeenCalled();
 
-    fireEvent.click(primary.getByRole("button", { name: "Discussões" }));
-    expect(primary.getByRole("button", { name: "Discussões" })).toHaveAttribute(
+    fireEvent.click(primary.getByRole("button", { name: "Avisos" }));
+    expect(primary.getByRole("button", { name: "Avisos" })).toHaveAttribute(
       "aria-pressed",
       "true",
     );
     expect(
       container.querySelector(
-        '[data-community-feed-context-panel="discussions"]',
+        '[data-community-feed-context-panel="alerts"]',
       ),
     ).toBeVisible();
     expect(onViewChange).not.toHaveBeenCalled();
