@@ -8,7 +8,6 @@ import {
   Building2,
   CalendarDays,
   ChevronRight,
-  CircleHelp,
   Compass,
   Heart,
   Home,
@@ -595,10 +594,10 @@ function CommunityVisitorParticipationCard({
 }) {
   return (
     <SurfacePanel className="p-4 text-center sm:p-5">
-      <div className="mx-auto flex h-20 w-20 items-center justify-center rounded-3xl bg-territory-brand/8 text-4xl">
-        💬
+      <div className="mx-auto flex h-36 w-full max-w-96 items-center justify-center">
+        <CommunityConversationIllustration />
       </div>
-      <h2 className="mt-4 text-lg font-bold text-territory-ink">
+      <h2 className="mt-2 text-lg font-bold text-territory-ink">
         Conheça as conversas do lugar.
       </h2>
       <p className="mx-auto mt-1 max-w-sm text-sm leading-5 text-territory-muted">
@@ -624,10 +623,10 @@ function CommunityVisitorParticipationCard({
 function CommunityPendingParticipationCard() {
   return (
     <SurfacePanel className="p-4 text-center sm:p-5">
-      <div className="mx-auto flex h-20 w-20 items-center justify-center rounded-3xl bg-territory-brand/8 text-4xl">
-        🕒
+      <div className="mx-auto flex h-36 w-full max-w-96 items-center justify-center">
+        <CommunityPendingIllustration />
       </div>
-      <h2 className="mt-4 text-lg font-bold text-territory-ink">
+      <h2 className="mt-2 text-lg font-bold text-territory-ink">
         Solicitação em análise
       </h2>
       <p className="mx-auto mt-1 max-w-sm text-sm leading-5 text-territory-muted">
@@ -653,6 +652,182 @@ function CommunityPendingParticipationCard() {
   );
 }
 
+function CommunityConversationIllustration() {
+  return (
+    <svg
+      viewBox="0 0 384 144"
+      className="h-full w-full"
+      aria-hidden="true"
+      focusable="false"
+    >
+      <path
+        d="M40 14h61a9 9 0 0 1 9 9v13a9 9 0 0 1-9 9H83l-10 9v-9H40a9 9 0 0 1-9-9V23a9 9 0 0 1 9-9Z"
+        className="fill-territory-brand/75"
+      />
+      <path
+        d="M281 18h62a9 9 0 0 1 9 9v13a9 9 0 0 1-9 9h-18l-10 9v-9h-24a9 9 0 0 1-9-9V27a9 9 0 0 1 9-9Z"
+        className="fill-territory-sun"
+      />
+      <circle cx="57" cy="32" r="2.5" className="fill-white" />
+      <circle cx="73" cy="32" r="2.5" className="fill-white" />
+      <circle cx="89" cy="32" r="2.5" className="fill-white" />
+      <circle cx="302" cy="36" r="2.5" className="fill-territory-ink" />
+      <circle cx="318" cy="36" r="2.5" className="fill-territory-ink" />
+      <circle cx="334" cy="36" r="2.5" className="fill-territory-ink" />
+      <path
+        d="M18 139c2-28 20-45 48-45s46 17 48 45H18Z"
+        className="fill-territory-brand/55"
+      />
+      <circle cx="66" cy="75" r="18" className="fill-territory-brand/25" />
+      <path
+        d="M119 143c2-39 26-62 73-62s71 23 73 62H119Z"
+        className="fill-territory-brand/80"
+      />
+      <circle cx="192" cy="67" r="23" className="fill-territory-brand/20" />
+      <path
+        d="M270 139c2-27 20-44 47-44s45 17 47 44H270Z"
+        className="fill-territory-sun/85"
+      />
+      <circle cx="317" cy="77" r="17" className="fill-territory-sun/50" />
+    </svg>
+  );
+}
+
+function CommunityPendingIllustration() {
+  return (
+    <svg
+      viewBox="0 0 384 144"
+      className="h-full w-full"
+      aria-hidden="true"
+      focusable="false"
+    >
+      <ellipse
+        cx="192"
+        cy="95"
+        rx="154"
+        ry="43"
+        fill="hsl(var(--territory-brand) / 0.08)"
+      />
+      <path
+        d="M20 136h344M43 136V96m0 24c-13-5-19-14-19-26 12 2 19 9 19 21m0-7c12-7 17-16 16-28-11 4-16 12-16 23m302 33V96m0 24c13-5 19-14 19-26-12 2-19 9-19 21m0-7c-12-7-17-16-16-28 11 4 16 12 16 23"
+        fill="none"
+        className="stroke-territory-brand/45"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        strokeWidth="3"
+      />
+      <path
+        d="M24 95c-9 1-14-4-15-13 10 1 15 5 15 13Zm35-7c9-3 12-9 10-17-9 4-12 9-10 17Zm276 7c9 1 14-4 15-13-10 1-15 5-15 13Zm-35-7c-9-3-12-9-10-17 9 4 12 9 10 17Z"
+        className="fill-territory-brand/25"
+      />
+      <rect
+        x="145"
+        y="9"
+        width="94"
+        height="116"
+        rx="13"
+        className="fill-territory-canvas stroke-territory-border"
+        strokeWidth="2.5"
+      />
+      <circle cx="170" cy="37" r="9" className="fill-territory-brand/20" />
+      <path
+        d="M190 34h31M190 42h23M161 62h59M161 72h49M161 86h39"
+        fill="none"
+        className="stroke-territory-brand/35"
+        strokeLinecap="round"
+        strokeWidth="3"
+      />
+      <circle
+        cx="247"
+        cy="96"
+        r="32"
+        className="fill-territory-canvas stroke-territory-sun"
+        strokeWidth="4"
+      />
+      <path
+        d="M247 78v19l13 8"
+        fill="none"
+        className="stroke-territory-ink"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        strokeWidth="4"
+      />
+    </svg>
+  );
+}
+
+function CommunityEmptyIllustration() {
+  return (
+    <svg
+      viewBox="0 0 384 144"
+      className="h-full w-full"
+      aria-hidden="true"
+      focusable="false"
+    >
+      <circle cx="318" cy="22" r="15" className="fill-territory-sun/75" />
+      <path
+        d="M24 128h336"
+        fill="none"
+        className="stroke-territory-brand/20"
+        strokeLinecap="round"
+        strokeWidth="4"
+      />
+      <path
+        d="M132 71h120v12H132zM140 48h104v15H140zM146 45V32m92 13V32m-87 38-7 55m101-55 7 55"
+        className="fill-territory-brand/15 stroke-territory-brand"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        strokeWidth="4"
+      />
+      <path
+        d="M52 127V90m0 22c-12-4-18-12-18-23 11 2 18 8 18 18m0-8c11-6 16-14 15-25-10 3-15 11-15 20m280 33V90m0 22c12-4 18-12 18-23-11 2-18 8-18 18m0-8c-11-6-16-14-15-25 10 3 15 11 15 20"
+        fill="none"
+        className="stroke-territory-brand/60"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        strokeWidth="3.5"
+      />
+      <path
+        d="M52 102c-11 1-15-4-16-13 11 1 16 5 16 13Zm14-20c9-3 12-9 10-17-9 4-12 9-10 17Zm266 20c11 1 15-4 16-13-11 1-16 5-16 13Zm-14-20c-9-3-12-9-10-17 9 4 12 9 10 17Z"
+        className="fill-territory-brand/25"
+      />
+    </svg>
+  );
+}
+
+function CommunityErrorIllustration() {
+  return (
+    <svg
+      viewBox="0 0 384 144"
+      className="h-full w-full"
+      aria-hidden="true"
+      focusable="false"
+    >
+      <path
+        d="M129 104h123a28 28 0 0 0 2-56 47 47 0 0 0-90-8 32 32 0 0 0-35 64Z"
+        fill="hsl(var(--territory-brand) / 0.12)"
+        stroke="hsl(var(--territory-brand) / 0.35)"
+        strokeWidth="2.5"
+      />
+      <circle cx="192" cy="84" r="23" className="fill-territory-sun/80" />
+      <path
+        d="M192 70v16m0 10v.5"
+        fill="none"
+        className="stroke-territory-ink"
+        strokeLinecap="round"
+        strokeWidth="4"
+      />
+      <path
+        d="M62 128h260"
+        fill="none"
+        className="stroke-territory-brand/15"
+        strokeLinecap="round"
+        strokeWidth="4"
+      />
+    </svg>
+  );
+}
+
 function CommunityConceptFeedState({
   kind,
   onCreatePost,
@@ -665,15 +840,11 @@ function CommunityConceptFeedState({
   const isError = kind === "error";
 
   return (
-    <SurfacePanel className="p-5 text-center sm:p-7">
-      <div className="mx-auto flex h-20 w-20 items-center justify-center rounded-3xl bg-territory-brand/8 text-territory-brand">
-        {isError ? (
-          <CircleHelp className="h-10 w-10" aria-hidden="true" />
-        ) : (
-          <MessageCircle className="h-10 w-10" aria-hidden="true" />
-        )}
+    <SurfacePanel className="p-4 text-center sm:p-7">
+      <div className="mx-auto flex h-36 w-full max-w-96 items-center justify-center">
+        {isError ? <CommunityErrorIllustration /> : <CommunityEmptyIllustration />}
       </div>
-      <h2 className="mt-4 text-lg font-bold text-territory-ink">
+      <h2 className="mt-2 text-lg font-bold text-territory-ink">
         {isError ? "Falha ao carregar" : "Sem publicações"}
       </h2>
       <p className="mx-auto mt-1 max-w-sm text-sm leading-5 text-territory-muted">
@@ -693,7 +864,7 @@ function CommunityConceptFeedState({
         <button
           type="button"
           onClick={onCreatePost}
-          className="mt-4 inline-flex min-h-11 items-center justify-center rounded-xl bg-territory-sun px-5 text-sm font-bold text-territory-ink hover:bg-territory-sun/90"
+          className="mt-4 inline-flex min-h-10 items-center justify-center rounded-xl bg-territory-sun px-5 text-sm font-bold text-territory-ink hover:bg-territory-sun/90"
         >
           Criar publicação
         </button>
@@ -1604,15 +1775,17 @@ export function CommunityOverviewSurface({
   });
 
   const previewGroups = groupsPage?.items ?? [];
-  const displayPosts = useMemo<DiscussionPreviewPost[]>(
-    () =>
-      visualMockEnabled
-        ? visualMockState === "empty"
-          ? []
-          : COMMUNITY_OVERVIEW_VISUAL_FIXTURE.posts
-        : visiblePosts,
-    [visualMockEnabled, visualMockState, visiblePosts],
-  );
+  const displayPosts = useMemo<DiscussionPreviewPost[]>(() => {
+    if (!visualMockEnabled) return visiblePosts;
+    if (visualMockState === "empty") return [];
+    if (visualMockState === "visitor" || visualMockState === "pending") {
+      return COMMUNITY_OVERVIEW_VISUAL_FIXTURE.posts.slice(0, 1);
+    }
+    return COMMUNITY_OVERVIEW_VISUAL_FIXTURE.posts;
+  }, [visualMockEnabled, visualMockState, visiblePosts]);
+  const hideConceptFeedFilters =
+    visualMockEnabled &&
+    (visualMockState === "visitor" || visualMockState === "pending");
   const displayAlerts: CommunityVisualAlert[] = visualMockEnabled
     ? (COMMUNITY_OVERVIEW_VISUAL_FIXTURE.alerts as CommunityVisualAlert[])
     : [];
@@ -2497,17 +2670,19 @@ export function CommunityOverviewSurface({
                               "rounded-none border-0 bg-transparent p-0 shadow-none",
                           )}
                         >
-                          {visualMockEnabled ? (
-                            <CommunityConceptFeedFilters
-                              value={postSort}
-                              onChange={setPostSort}
-                            />
-                          ) : (
-                            <CommunityPostSortControls
-                              value={postSort}
-                              onChange={setPostSort}
-                            />
-                          )}
+                          {!hideConceptFeedFilters ? (
+                            visualMockEnabled ? (
+                              <CommunityConceptFeedFilters
+                                value={postSort}
+                                onChange={setPostSort}
+                              />
+                            ) : (
+                              <CommunityPostSortControls
+                                value={postSort}
+                                onChange={setPostSort}
+                              />
+                            )
+                          ) : null}
                           {displayLoadingFeed ? (
                             <div className="mt-3 space-y-2">
                               {[0, 1, 2].map((index) => (

@@ -301,6 +301,127 @@ describe("CommunityOverviewSurface navigation", () => {
     ).toBeVisible();
   });
 
+  it("keeps the visitor concept focused on participation and one public sample", () => {
+    const { container } = render(
+      <MemoryRouter
+        initialEntries={[
+          "/comunidade/ba/salvador/pituba?visualMock=community-concept&previewState=visitor",
+        ]}
+      >
+        <CommunityOverviewSurface
+          territoryName="Pituba"
+          territoryFilter={{
+            scope: "location",
+            location_id: "location-pituba",
+          }}
+          onRequireLogin={vi.fn()}
+          loginHref="/login"
+          canCreatePost
+        />
+      </MemoryRouter>,
+    );
+
+    const primaryContent = within(
+      container.querySelector("#community-primary-content") as HTMLElement,
+    );
+    expect(
+      primaryContent.getByRole("heading", {
+        name: "Conheça as conversas do lugar.",
+      }),
+    ).toBeVisible();
+    expect(
+      primaryContent.getByRole("button", { name: "Entrar para participar" }),
+    ).toBeVisible();
+    expect(
+      primaryContent.getByRole("link", { name: "Explorar publicações" }),
+    ).toBeVisible();
+    expect(
+      primaryContent.queryByRole("button", {
+        name: "Abrir filtros das publicações",
+      }),
+    ).toBeNull();
+    expect(
+      primaryContent.queryByRole("textbox", {
+        name: /criar publicação em pituba/i,
+      }),
+    ).toBeNull();
+    expect(
+      primaryContent.getByRole("heading", {
+        name: "Quem indica aulas de reforço aqui no bairro?",
+      }),
+    ).toBeVisible();
+    expect(
+      primaryContent.queryByRole("heading", {
+        name: "O encontro de domingo foi especial",
+      }),
+    ).toBeNull();
+    expect(
+      primaryContent.queryByRole("heading", {
+        name: /Padaria Pão Nosso/,
+      }),
+    ).toBeNull();
+    expect(
+      container.querySelector(
+        '#community-primary-content svg[aria-hidden="true"]',
+      ),
+    ).not.toBeNull();
+  });
+
+  it("keeps pending participation separate from filters and members-only actions", () => {
+    const { container } = render(
+      <MemoryRouter
+        initialEntries={[
+          "/comunidade/ba/salvador/pituba?visualMock=community-concept&previewState=pending",
+        ]}
+      >
+        <CommunityOverviewSurface
+          territoryName="Pituba"
+          territoryFilter={{
+            scope: "location",
+            location_id: "location-pituba",
+          }}
+          onRequireLogin={vi.fn()}
+          loginHref="/login"
+        />
+      </MemoryRouter>,
+    );
+
+    const primaryContent = within(
+      container.querySelector("#community-primary-content") as HTMLElement,
+    );
+    expect(
+      primaryContent.getByRole("heading", { name: "Solicitação em análise" }),
+    ).toBeVisible();
+    expect(
+      primaryContent.getByRole("link", { name: "Ver meus vínculos" }),
+    ).toHaveAttribute("href", "/conta");
+    expect(
+      primaryContent.getByText(
+        "Enquanto isso, você pode continuar explorando as publicações públicas da comunidade.",
+      ),
+    ).toBeVisible();
+    expect(
+      primaryContent.queryByRole("button", {
+        name: "Abrir filtros das publicações",
+      }),
+    ).toBeNull();
+    expect(
+      primaryContent.queryByRole("button", {
+        name: "Criar publicação",
+      }),
+    ).toBeNull();
+    expect(
+      primaryContent.getByRole("heading", {
+        name: "Quem indica aulas de reforço aqui no bairro?",
+      }),
+    ).toBeVisible();
+    expect(
+      primaryContent.queryByRole("heading", {
+        name: "O encontro de domingo foi especial",
+      }),
+    ).toBeNull();
+  });
+
   it("exposes every enabled community section and keeps paused lost-and-found hidden", () => {
     render(
       <MemoryRouter>

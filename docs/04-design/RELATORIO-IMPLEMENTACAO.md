@@ -184,3 +184,19 @@ A prancha 117 também está coberta pelos estados demonstrativos de visitante, v
 ### Git
 
 - Entrega limitada ao componente, fixture, testes e este relatório; os arquivos staged preexistentes de catalogação e segurança permanecem fora do commit.
+
+## 19/09/2026 · Refinamento visual dos estados de participação — prancha 117
+
+### Ajustes
+
+- Recomparei visitante, vínculo pendente, vazio e erro com a prancha 117. Ampliei e redesenhei as ilustrações vetoriais para ocupar a largura prevista no concept, mantendo o ritmo compacto entre arte, título, texto, ações e amostra pública.
+- Corrigi os preenchimentos translúcidos dos SVGs para usar diretamente as variáveis de cor do território; isso evita classes de opacidade não geradas pelo tema, que apareciam pretas no navegador.
+- Visitante e vínculo pendente continuam mostrando somente uma publicação pública de exemplo, sem composer nem filtros redundantes. Esse recorte pertence apenas ao preview visual de desenvolvimento; consultas, permissões e conteúdo real da produção não mudam.
+- O estado vazio preserva a ação condicionada a `canCreatePost`; erro mantém apenas a recuperação. Não reintroduzi a anotação “Para perfil autorizado.” como texto de interface.
+
+### Validação e evidências
+
+- `CommunityOverviewSurface.spec.tsx`: 9 testes passaram; `ComunidadePage.publicDeepLink.spec.tsx`: 5 testes passaram, executados isoladamente por causa do timeout de inicialização observado quando os workers são agrupados.
+- TypeScript da aplicação e ESLint dos dois arquivos de código passaram; `git diff --check` passou.
+- Comparei as pranchas 117 e a renderização ao vivo no navegador interno, no viewport móvel disponível, após o HMR: visitante, pendente, vazio e erro; conferi também o token da nuvem, a amostra única e a ausência de filtros/composer nos estados de participação.
+- Limite da evidência: esta passada valida visualmente o viewport móvel do navegador interno; não certifica captura pixel a pixel do artboard desktop em 1440 px. A aba continua aberta na rota principal do preview para acompanhamento.
