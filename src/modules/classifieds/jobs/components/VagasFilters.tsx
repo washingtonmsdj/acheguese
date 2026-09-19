@@ -5,8 +5,8 @@
 import { Search, Filter, X, ChevronDown } from "lucide-react";
 import { Input } from "@/shared/components/ui/input";
 import { Button } from "@/shared/components/ui/button";
-import { VAGA_CATEGORIAS, CONTRATO_LABELS, MODALIDADE_LABELS, NIVEL_LABELS } from "../types/vagas.types";
-import type { VagaContrato, VagaModalidade, VagaNivel } from "../types/vagas.types";
+import { VAGA_CATEGORIAS, CONTRATO_LABELS, MODALIDADE_LABELS, NIVEL_LABELS, URGENCIA_LABELS } from "../types/vagas.types";
+import type { VagaContrato, VagaModalidade, VagaNivel, VagaUrgencia } from "../types/vagas.types";
 
 interface VagasFiltersProps {
   search: string;
@@ -19,6 +19,8 @@ interface VagasFiltersProps {
   onModalityChange: (value: VagaModalidade | null) => void;
   selectedLevel: VagaNivel | null;
   onLevelChange: (value: VagaNivel | null) => void;
+  selectedUrgency: VagaUrgencia | null;
+  onUrgencyChange: (value: VagaUrgencia | null) => void;
   hasActiveFilters: boolean;
   onClearFilters: () => void;
   resultsCount: number;
@@ -45,6 +47,7 @@ export function VagasFilters({
   selectedContract, onContractChange,
   selectedModality, onModalityChange,
   selectedLevel, onLevelChange,
+  selectedUrgency, onUrgencyChange,
   hasActiveFilters, onClearFilters,
   resultsCount,
 }: VagasFiltersProps) {
@@ -122,6 +125,19 @@ export function VagasFilters({
             onClick={() => onLevelChange(selectedLevel === key ? null : key)}
           />
         ))}
+
+        <span className="w-px h-5 bg-border self-center mx-1" />
+
+        {(Object.entries(URGENCIA_LABELS) as [VagaUrgencia, string][])
+          .filter(([key]) => key !== "normal")
+          .map(([key, label]) => (
+            <FilterChip
+              key={key}
+              label={label}
+              isActive={selectedUrgency === key}
+              onClick={() => onUrgencyChange(selectedUrgency === key ? null : key)}
+            />
+          ))}
       </div>
 
       {/* Active filters summary */}

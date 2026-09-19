@@ -12,7 +12,7 @@
 import { useState, useMemo, useCallback } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { VagasService } from "../services/VagasService";
-import type { Vaga, VagaContrato, VagaModalidade, VagaNivel } from "../types/vagas.types";
+import type { Vaga, VagaContrato, VagaModalidade, VagaNivel, VagaUrgencia } from "../types/vagas.types";
 import { VAGA_CATEGORIAS } from "../types/vagas.types";
 import { useModuleTerritoryFilter } from "@/core/location/hooks/useModuleTerritoryFilter";
 import type { ResolvedTerritory } from "@/core/routing/hooks/useResolveTerritoryFromUrl";
@@ -20,6 +20,13 @@ import type { ResolvedTerritory } from "@/core/routing/hooks/useResolveTerritory
 interface UseVagasParams {
   resolved?: ResolvedTerritory;
   activeMemberIds?: string[];
+}
+
+function normalizeFilterToken(value: string): string {
+  return value
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .toLocaleLowerCase("pt-BR");
 }
 
 export function useVagas(params: UseVagasParams = {}) {
@@ -30,6 +37,7 @@ export function useVagas(params: UseVagasParams = {}) {
   const [selectedContract, setSelectedContract] = useState<VagaContrato | null>(null);
   const [selectedModality, setSelectedModality] = useState<VagaModalidade | null>(null);
   const [selectedLevel, setSelectedLevel] = useState<VagaNivel | null>(null);
+  const [selectedUrgency, setSelectedUrgency] = useState<VagaUrgencia | null>(null);
 
   const moduleTerritory = useModuleTerritoryFilter({ routeResolved: resolved, activeMemberIds });
   const locationId = moduleTerritory.resolvedLocationIds[0] ?? "";
@@ -49,6 +57,25 @@ export function useVagas(params: UseVagasParams = {}) {
 
   const allVagas = useMemo(() => data?.vagas ?? [], [data?.vagas]);
 
+  const summary = useMemo(() => {
+    const now = Date.now();
+    const uniqueCompanies = new Set(
+      allVagas
+        .map((vaga) => vaga.empresaId || vaga.empresaNome.trim().toLocaleLowerCase("pt-BR"))
+        .filter((companyId) => companyId.length > 0),
+    );
+
+    return {
+      total: allVagas.length,
+      companies: uniqueCompanies.size,
+      urgent: allVagas.filter((vaga) => vaga.urgencia === "urgente" || vaga.urgencia === "extrema").length,
+      publishedLast24Hours: allVagas.filter((vaga) => {
+        const publishedAt = vaga.publishedAt ?? vaga.createdAt;
+        return now - publishedAt.getTime() <= 24 * 60 * 60 * 1000;
+      }).length,
+    };
+  }, [allVagas]);
+
   // Filtros client-side (busca textual e categorias)
   const filteredVagas = useMemo(() => {
     return allVagas.filter((vaga) => {
@@ -60,9 +87,19 @@ export function useVagas(params: UseVagasParams = {}) {
           vaga.tags.some(t => t.toLowerCase().includes(q));
         if (!match) return false;
       }
-      if (selectedContract && vaga.contrato !== selectedContract) return false;
-      if (selectedModality && vaga.modalidade !== selectedModality) return false;
-      if (selectedLevel && vaga.nivel !== selectedLevel) return false;
+      if (
+        selectedContract &&
+        normalizeFilterToken(vaga.contrato) !== normalizeFilterToken(selectedContract)
+      ) return false;
+      if (
+        selectedModality &&
+        normalizeFilterToken(vaga.modalidade) !== normalizeFilterToken(selectedModality)
+      ) return false;
+      if (
+        selectedLevel &&
+        normalizeFilterToken(vaga.nivel) !== normalizeFilterToken(selectedLevel)
+      ) return false;
+      if (selectedUrgency && vaga.urgencia !== selectedUrgency) return false;
       if (selectedCategory && selectedCategory !== "todos") {
         const cat = VAGA_CATEGORIAS.find(c => c.id === selectedCategory);
         if (cat) {
@@ -76,7 +113,7 @@ export function useVagas(params: UseVagasParams = {}) {
       }
       return true;
     });
-  }, [allVagas, search, selectedCategory, selectedContract, selectedModality, selectedLevel]);
+  }, [allVagas, search, selectedCategory, selectedContract, selectedModality, selectedLevel, selectedUrgency]);
 
   const urgentVagas = useMemo(() => allVagas.filter(v => v.urgencia === "urgente"), [allVagas]);
   const recentVagas = useMemo(() => [...allVagas].sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()).slice(0, 4), [allVagas]);
@@ -88,9 +125,12 @@ export function useVagas(params: UseVagasParams = {}) {
     setSelectedContract(null);
     setSelectedModality(null);
     setSelectedLevel(null);
+    setSelectedUrgency(null);
   }, []);
 
-  const hasActiveFilters = Boolean(search || selectedCategory || selectedContract || selectedModality || selectedLevel);
+  const hasActiveFilters = Boolean(
+    search || selectedCategory || selectedContract || selectedModality || selectedLevel || selectedUrgency,
+  );
 
   const getRelatedVagas = useCallback((vaga: Vaga, limit = 3): Vaga[] => {
     return allVagas
@@ -108,7 +148,9 @@ export function useVagas(params: UseVagasParams = {}) {
     selectedContract, setSelectedContract,
     selectedModality, setSelectedModality,
     selectedLevel, setSelectedLevel,
+    selectedUrgency, setSelectedUrgency,
     filteredVagas,
+    summary,
     urgentVagas,
     recentVagas,
     featuredVagas,

@@ -10,7 +10,7 @@
  * - TerritoryIndicator para contexto territorial
  */
 
-import { useState, useCallback, useMemo } from "react";
+import { useState, useCallback, useMemo, useRef } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { Helmet } from "react-helmet-async";
 import { motion } from "framer-motion";
@@ -459,6 +459,7 @@ export default function ServicosLandingPage({
   const moduleUrls = useFriendlyModuleUrls();
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedCategory, setSelectedCategory] = useState("todos");
+  const resultsSectionRef = useRef<HTMLElement>(null);
   const isCommunityScopedSurface = location.pathname.includes("/comunidade/");
   const isEmbedded = presentation === "embedded";
 
@@ -547,6 +548,10 @@ export default function ServicosLandingPage({
   const communityAverageRating = initialLoading ? "..." : formatAverageRating(serviceAggregate.averageRating);
   const communityVerifiedCount = initialLoading ? "..." : formatServicesMetric(serviceAggregate.verifiedCount);
 
+  const handleHeroSearch = useCallback(() => {
+    resultsSectionRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
+  }, []);
+
   const handleProfessionalClick = useCallback(
     (pro: ProfessionalItem) =>
       navigate(
@@ -629,8 +634,9 @@ export default function ServicosLandingPage({
           value: searchQuery,
           onChange: setSearchQuery,
           placeholder: "Buscar eletricista, encanador...",
+          onSubmit: handleHeroSearch,
         }}
-        primaryCTA={{ label: "Buscar", onClick: () => {} }}
+        primaryCTA={{ label: "Buscar", onClick: handleHeroSearch }}
         quickFilters={SERVICE_CATEGORY_OPTIONS.slice(1, 6).map((cat) => ({
           label: cat.name,
           isActive: selectedCategory === cat.id,
@@ -713,7 +719,7 @@ export default function ServicosLandingPage({
       )}
 
       {/* ── PROFISSIONAIS ─────────────────────────────────────────── */}
-      <section className="max-w-7xl mx-auto w-full px-4 pb-8 sm:px-6 md:pb-14">
+      <section ref={resultsSectionRef} className="max-w-7xl mx-auto w-full scroll-mt-24 px-4 pb-8 sm:px-6 md:pb-14">
         <div className="mb-6 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
           <div className="min-w-0">
             <h2 className="text-xl md:text-2xl font-bold text-foreground font-heading">

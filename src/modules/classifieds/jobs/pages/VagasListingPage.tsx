@@ -10,7 +10,7 @@
 
 import { useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
-import { useMemo } from "react";
+import { useCallback, useMemo, useRef } from "react";
 import {
   Briefcase, Search, MapPin, Sparkles, ArrowRight,
   Users, Star, Shield, Clock, Zap, TrendingUp,
@@ -32,13 +32,6 @@ import heroImg from "@/assets/empresas-hero.jpg";
 
 // ── Static data ──────────────────────────────────────────────────────
 
-const STATS = [
-  { icon: Briefcase, value: "150+",  label: "vagas ativas",       color: "text-primary" },
-  { icon: Users,     value: "80+",   label: "empresas contratando", color: "text-accent" },
-  { icon: Shield,    value: "100%",  label: "gratuito",            color: "text-success" },
-  { icon: Clock,     value: "24h",   label: "novas vagas/dia",     color: "text-warning" },
-];
-
 const HOW_IT_WORKS = [
   { step: "01", icon: Search,         title: "Encontre a vaga ideal",   description: "Busque por cargo, área ou localização. Use filtros para refinar os resultados e encontrar oportunidades perto de você." },
   { step: "02", icon: MessageCircle,  title: "Candidate-se",            description: "Entre em contato direto com a empresa via WhatsApp ou e-mail. Sem intermediários, sem cadastros longos." },
@@ -49,7 +42,7 @@ const BENEFITS = [
   { icon: BadgeCheck, title: "Empresas Verificadas",   description: "Vagas publicadas por empresas reais e verificadas da comunidade.",                          color: "text-primary", bgColor: "bg-primary/10" },
   { icon: MapPin,     title: "Vagas Locais",           description: "Oportunidades na sua região. Menos tempo no trânsito, mais qualidade de vida.",   color: "text-accent",  bgColor: "bg-accent/10"  },
   { icon: Shield,     title: "Sem Taxas",              description: "Totalmente gratuito para candidatos e empresas. Sem cobranças ocultas.",                    color: "text-success", bgColor: "bg-success/10" },
-  { icon: Zap,        title: "Contato Direto",         description: "Fale diretamente com o RH da empresa por WhatsApp ou e-mail. Resposta rápida garantida.",  color: "text-warning", bgColor: "bg-warning/10" },
+  { icon: Zap,        title: "Contato Direto",         description: "Use o canal de candidatura informado pela empresa, como WhatsApp, e-mail, telefone ou site externo.",  color: "text-warning", bgColor: "bg-warning/10" },
 ];
 
 // ── Props ────────────────────────────────────────────────────────────
@@ -81,7 +74,9 @@ export default function VagasListingPage({ resolved, activeMemberIds }: VagasLis
     selectedContract, setSelectedContract,
     selectedModality, setSelectedModality,
     selectedLevel, setSelectedLevel,
+    selectedUrgency, setSelectedUrgency,
     filteredVagas,
+    summary,
     urgentVagas,
     recentVagas,
     featuredVagas,
@@ -91,7 +86,40 @@ export default function VagasListingPage({ resolved, activeMemberIds }: VagasLis
     isError,
   } = useVagas({ resolved, activeMemberIds });
 
+  const resultsSectionRef = useRef<HTMLElement>(null);
+  const jobStats = useMemo(() => [
+    {
+      icon: Briefcase,
+      value: isLoading ? "..." : String(summary.total),
+      label: "vagas disponíveis",
+      color: "text-primary",
+    },
+    {
+      icon: Users,
+      value: isLoading ? "..." : String(summary.companies),
+      label: "empresas contratando",
+      color: "text-accent",
+    },
+    {
+      icon: Zap,
+      value: isLoading ? "..." : String(summary.urgent),
+      label: "vagas urgentes",
+      color: "text-destructive",
+    },
+    {
+      icon: Clock,
+      value: isLoading ? "..." : String(summary.publishedLast24Hours),
+      label: "publicadas nas últimas 24h",
+      color: "text-warning",
+    },
+  ], [isLoading, summary]);
+
   const publishUrl = jobPublicRoutes.publish();
+
+  const handleHeroSearch = useCallback(() => {
+    resultsSectionRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
+  }, []);
+
   const handleVagaClick = (vaga: Vaga) => {
     if (activeLocation?.geographic_path) {
       try {
@@ -146,18 +174,50 @@ export default function VagasListingPage({ resolved, activeMemberIds }: VagasLis
           value: search,
           onChange: setSearch,
           placeholder: "Buscar cargo, empresa, bairro...",
+          onSubmit: handleHeroSearch,
         }}
-        primaryCTA={{ label: "Buscar", onClick: () => {} }}
-        quickFilters={["CLT", "Remoto", "Estágio", "PJ", "Urgente"].map((tag) => ({
-          label: tag,
-          onClick: () => {},
-        }))}
+        primaryCTA={{ label: "Buscar", onClick: handleHeroSearch }}
+        quickFilters={[
+          {
+            label: "CLT",
+            isActive: selectedContract === "clt" || selectedContract === "CLT",
+            onClick: () => setSelectedContract(
+              selectedContract === "clt" || selectedContract === "CLT" ? null : "clt",
+            ),
+          },
+          {
+            label: "Remoto",
+            isActive: selectedModality === "remoto" || selectedModality === "Remoto",
+            onClick: () => setSelectedModality(
+              selectedModality === "remoto" || selectedModality === "Remoto" ? null : "remoto",
+            ),
+          },
+          {
+            label: "Estágio",
+            isActive: ["estagio", "estagiario", "Estágio"].includes(selectedContract ?? ""),
+            onClick: () => setSelectedContract(
+              ["estagio", "estagiario", "Estágio"].includes(selectedContract ?? "") ? null : "estagio",
+            ),
+          },
+          {
+            label: "PJ",
+            isActive: selectedContract === "pj" || selectedContract === "PJ",
+            onClick: () => setSelectedContract(
+              selectedContract === "pj" || selectedContract === "PJ" ? null : "pj",
+            ),
+          },
+          {
+            label: "Urgente",
+            isActive: selectedUrgency === "urgente",
+            onClick: () => setSelectedUrgency(selectedUrgency === "urgente" ? null : "urgente"),
+          },
+        ]}
       />
 
       {/* ── STATS ────────────────────────────────────────────── */}
       <section className="max-w-7xl mx-auto px-4 sm:px-6 py-10 md:py-14 w-full">
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-          {STATS.map((stat) => (
+          {jobStats.map((stat) => (
             <motion.div
               key={stat.label}
               initial={{ opacity: 0, y: 16 }}
@@ -203,7 +263,7 @@ export default function VagasListingPage({ resolved, activeMemberIds }: VagasLis
       )}
 
       {/* ── FILTROS + LISTAGEM ───────────────────────────────── */}
-      <section className="max-w-7xl mx-auto px-4 sm:px-6 pb-10 md:pb-14 w-full">
+      <section ref={resultsSectionRef} className="max-w-7xl mx-auto scroll-mt-24 px-4 sm:px-6 pb-10 md:pb-14 w-full">
         <div className="flex items-center justify-between mb-5">
           <div>
             <h2 className="text-xl font-bold text-foreground font-heading">Todas as Vagas</h2>
@@ -224,6 +284,8 @@ export default function VagasListingPage({ resolved, activeMemberIds }: VagasLis
             onModalityChange={setSelectedModality}
             selectedLevel={selectedLevel}
             onLevelChange={setSelectedLevel}
+            selectedUrgency={selectedUrgency}
+            onUrgencyChange={setSelectedUrgency}
             hasActiveFilters={hasActiveFilters}
             onClearFilters={clearFilters}
             resultsCount={filteredVagas.length}
