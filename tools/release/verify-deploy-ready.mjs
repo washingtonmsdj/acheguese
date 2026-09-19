@@ -215,7 +215,7 @@ console.log('  Obrigatorias para build/browser:');
 for (const envVar of REQUIRED_VERCEL_ENV_VARS) {
   const value = process.env[envVar];
   if (!value) {
-    console.log(`    - ${envVar}`);
+    fail(`${envVar} ausente`);
     continue;
   }
 
