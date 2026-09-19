@@ -12,6 +12,9 @@ const migration = read(
 const broker = read("supabase/functions/submit-dpo-request/index.ts");
 const service = read("src/core/privacy/services/PrivacyService.ts");
 const page = read("src/app/pages/DPOContactPage.tsx");
+const privacyContacts = read("src/shared/config/privacyContacts.ts");
+const deployVerifier = read("tools/release/verify-deploy-ready.mjs");
+const productionEnv = read(".env.production");
 const config = read("supabase/config.toml");
 const authPolicy = read(
   "docs/09-reference/governance/security/EDGE_FUNCTION_AUTH_POLICY.json",
@@ -56,6 +59,15 @@ describe("DPO request intake broker", () => {
     expect(service).toContain('supabase.functions.invoke("submit-dpo-request"');
     expect(service).not.toContain('.from("dpo_requests")');
     expect(service).not.toContain("DPO_REQUEST_STATUS");
+  });
+
+  it("requires a public DPO identity in the production release contract", () => {
+    expect(privacyContacts).toContain("VITE_DPO_NAME");
+    expect(privacyContacts).toContain("getDpoName");
+    expect(page).toContain("getDpoName");
+    expect(page).toContain("Identidade do encarregado");
+    expect(deployVerifier).toContain("'VITE_DPO_NAME'");
+    expect(productionEnv).toMatch(/^VITE_DPO_NAME=$/m);
   });
 
   it("requires anti-abuse verification in the production DPO form", () => {
