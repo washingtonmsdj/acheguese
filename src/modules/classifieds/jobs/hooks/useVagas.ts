@@ -60,16 +60,19 @@ export function useVagas(params: UseVagasParams = {}) {
   const summary = useMemo(() => {
     const now = Date.now();
     const uniqueCompanies = new Set(
-      allVagas.map((vaga) => vaga.empresaId || vaga.empresaNome.trim().toLocaleLowerCase("pt-BR")),
+      allVagas
+        .map((vaga) => vaga.empresaId || vaga.empresaNome.trim().toLocaleLowerCase("pt-BR"))
+        .filter((companyId) => companyId.length > 0),
     );
 
     return {
       total: allVagas.length,
       companies: uniqueCompanies.size,
       urgent: allVagas.filter((vaga) => vaga.urgencia === "urgente" || vaga.urgencia === "extrema").length,
-      publishedLast24Hours: allVagas.filter(
-        (vaga) => now - vaga.createdAt.getTime() <= 24 * 60 * 60 * 1000,
-      ).length,
+      publishedLast24Hours: allVagas.filter((vaga) => {
+        const publishedAt = vaga.publishedAt ?? vaga.createdAt;
+        return now - publishedAt.getTime() <= 24 * 60 * 60 * 1000;
+      }).length,
     };
   }, [allVagas]);
 
