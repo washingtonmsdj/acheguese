@@ -11,6 +11,8 @@ const page = readFileSync(
 describe("classified public action truthfulness", () => {
   it("only exposes WhatsApp for a plausible persisted contact", () => {
     expect(page).toContain("onlyDigits(sellerWhatsAppNumber).length >= 10");
+    expect(page).toContain('sellerContact?.whatsapp || ""');
+    expect(page).not.toContain("sellerContact?.whatsapp || sellerContact?.phone");
     expect(page).toContain("hasWhatsApp={sellerHasValidWhatsApp}");
     expect(page).toContain("!sellerHasValidWhatsApp");
     expect(page).toContain("!openSafeExternalUrl(url");
