@@ -9,9 +9,8 @@ Este diretório é o owner horizontal de catálogo comercial, assinaturas e enti
 
 ### Catálogo comercial
 
-- `services/CatalogService.ts` lê o catálogo publicado em `commercial_catalog_version`, `catalog_item` e políticas associadas.
-- `services/BillingPlanService.ts` é adapter de compatibilidade para o DTO histórico usado pela UI; não lê nem escreve `billing_plans`.
-- nome, preço, features, destaque e entitlements comerciais vêm do catálogo publicado.
+- `services/CatalogService.ts` é o único owner de oferta publicada: lê `commercial_catalog_version`, `catalog_item` e políticas associadas e expõe a projeção pública de planos consumida pela UI.
+- nome, preço, features, destaque e entitlements comerciais vêm diretamente desse owner; não existe facade de plano paralela.
 - `entitlementBaselines.ts` é somente fallback determinístico para guards síncronos/indisponibilidade; não é a fonte comercial primária.
 
 ### Assinatura de usuário
@@ -55,6 +54,7 @@ Foram retiradas do runtime por não serem autoridade válida ou por estarem órf
 - `src/core/subscription`;
 - `src/core/gastronomy/billing` — não existe mais; a referência antiga no registry era drift documental;
 - `core/billing/SubscriptionService.ts` — bridge deprecated removida após migração do último caller para `BusinessSubscriptionService`;
+- `services/BillingPlanService.ts` — antiga facade de DTO de plano removida após migração dos últimos callers para `CatalogService`;
 - `services/SubscriptionContractService.ts`;
 - `services/CatalogAdminService.ts`;
 - `services/CatalogVersionService.ts`;
@@ -85,7 +85,7 @@ A limpeza física, grants completos, migrations históricas e dependências exte
 - retorno de matriz própria de entitlements;
 - bypass de Stripe como autoridade de mudança comercial.
 
-Os testes de `BillingPlanService` e `CatalogService` também foram alinhados ao contrato do catálogo publicado, incluindo planos base horizontais com `vertical = null`.
+Os testes do `CatalogService` cobrem também a projeção pública de planos e o merge de entitlements, incluindo planos base horizontais com `vertical = null`.
 
 ## O que ainda NÃO está certificado
 
