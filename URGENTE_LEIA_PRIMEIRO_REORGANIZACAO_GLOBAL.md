@@ -15,7 +15,7 @@
 - Security Advisor revalidado em 2026-09-17: 1 erro de RLS no catálogo do PostGIS, 19 tabelas RLS sem policy confirmadas como deny-by-default e 9/85 RPCs `SECURITY DEFINER` expostas a `anon`/`authenticated`; a triagem é por autoridade e contrato, sem revoke em massa;
 - probe negativo de analytics comprovou bloqueio de spoof de `user_id` e de evento operacional sem `service_role`;
 - LGPD account-deletion reversível está reconciliado pela migration `20260826015916_reconcile_account_deletion_authority_live_drift`;
-- purge destrutivo **não existe** ainda e agora possui gate fail-closed: `LGPD_PURGE_MATRIX.json` registra 28 FKs bloqueantes, sendo 25 anuláveis e 3 obrigatórias/RESTRICT, todas ainda sem decisão de retenção;
+- purge destrutivo **não existe** ainda e possui gate fail-closed: `LGPD_PURGE_MATRIX.json` classifica as 28 FKs bloqueantes com 20 `set-null-before-delete`, 2 `anonymize-before-delete` e 6 `block-purge`; `implementationComplete=false` permanece e nenhum rollout destrutivo está autorizado;
 - `user-delete-account` legado permanece bloqueado; nenhuma política comercial ou de retenção será inventada para obter verde.
 
 ## Ordem urgente correta
@@ -45,7 +45,7 @@ Restante:
 
 ### P1 — LGPD/privacidade
 
-1. classificar explicitamente as 28 FKs de `LGPD_PURGE_MATRIX.json`;
+1. manter a classificação das 28 FKs reconciliada com `LGPD_PURGE_POLICY.json` e resolver as 6 referências `block-purge` sem inventar retenção;
 2. só depois implementar worker/scheduler de purge idempotente e observável;
 3. revogar sessões pela autoridade do Supabase Auth;
 4. manter `user-delete-account` legado bloqueado;
