@@ -430,18 +430,6 @@ export function VisibilityStep({
         <Switch checked={isActive} onCheckedChange={onActiveChange} />
       </div>
 
-      <div className="p-4 rounded-xl bg-accent/30 border border-accent/50">
-        <div className="flex items-center gap-2 mb-2">
-          <Sparkles className="h-4 w-4 text-primary" />
-          <p className="text-sm font-semibold text-foreground">Destaque Premium</p>
-        </div>
-        <p className="text-xs text-muted-foreground mb-3">
-          Destaque seu anúncio no topo dos resultados para mais visibilidade.
-        </p>
-        <Button variant="outline" size="sm" className="rounded-xl text-xs" disabled>
-          Em breve
-        </Button>
-      </div>
     </div>
   );
 }
