@@ -144,7 +144,20 @@ export default function EventDetailPage() {
     return <EventNotFound eventId={eventId} />;
   }
 
-  const isSoldOut = event.tickets.every(t => t.quantity_available === 0);
+  const hasFreeTickets = event.tickets.some((ticket) => ticket.is_free);
+  const availableFreeTicket = event.tickets.find(
+    (ticket) =>
+      ticket.is_free &&
+      ticket.status === 'disponivel' &&
+      ticket.quantity_available > 0,
+  );
+  const hasPaidAvailability = event.tickets.some(
+    (ticket) =>
+      !ticket.is_free &&
+      ticket.status === 'disponivel' &&
+      ticket.quantity_available > 0,
+  );
+  const isFreeRegistrationSoldOut = hasFreeTickets && !availableFreeTicket;
   const eventIsFavorited = isFavorited(event.id);
   const eventDetailUrl = eventUrls.eventDetail(event.id);
 
@@ -167,6 +180,15 @@ export default function EventDetailPage() {
       toast({
         title: 'Ingresso indisponivel',
         description: 'Nao foi possivel selecionar este ingresso agora.',
+        variant: 'destructive',
+      });
+      return;
+    }
+
+    if (!selectedTicket.is_free) {
+      toast({
+        title: 'Venda de ingresso indisponivel',
+        description: 'Ingressos pagos ainda nao possuem checkout no Achegue-se.',
         variant: 'destructive',
       });
       return;
@@ -202,10 +224,8 @@ export default function EventDetailPage() {
         ]);
 
         toast({
-          title: selectedTicket.is_free ? 'Vaga garantida' : 'Ingresso reservado',
-          description: selectedTicket.is_free
-            ? `${selectedTicket.name} confirmado para este evento.`
-            : `${selectedTicket.name} registrado. Confira os proximos passos no evento.`,
+          title: 'Vaga garantida',
+          description: `${selectedTicket.name} confirmado para este evento.`,
         });
       })
       .catch((error: unknown) => {
@@ -236,22 +256,20 @@ export default function EventDetailPage() {
       return;
     }
 
-    const firstAvailableTicket = event.tickets.find(
-      (ticket) => ticket.status === 'disponivel' && ticket.quantity_available > 0
-    );
-
-    if (!firstAvailableTicket) {
+    if (!availableFreeTicket) {
       ticketsSectionRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
       toast({
-        title: 'Sem vagas no momento',
-        description: 'Este evento esta sem ingressos disponiveis.',
+        title: hasPaidAvailability ? 'Compra indisponivel no app' : 'Sem vagas no momento',
+        description: hasPaidAvailability
+          ? 'Os ingressos pagos deste evento sao apenas informativos enquanto nao houver checkout integrado.'
+          : 'Este evento esta sem inscricoes gratuitas disponiveis.',
         variant: 'destructive',
       });
       return;
     }
 
     ticketsSectionRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
-    handleSelectTicket(firstAvailableTicket.id);
+    handleSelectTicket(availableFreeTicket.id);
   };
 
   const handleCancelRegistration = async () => {
@@ -590,27 +608,27 @@ export default function EventDetailPage() {
           eventDescription={event.short_description}
         />
 
-        {/* Sticky CTA */}
-        <EventCTA
-          cta={{
-            type: 'register',
-            label: isRegistering
-              ? 'Processando inscricao...'
-              : isCancelling
-              ? 'Cancelando inscricao...'
-              : isParticipating
-              ? 'Inscricao confirmada'
-              : event.is_free
-              ? 'Inscricao gratuita'
-              : 'Comprar ingresso',
-            action: '/register',
-            enabled: true
-          }}
-          isFree={event.is_free}
-          isSoldOut={isSoldOut}
-          disabled={isParticipating || isRegistering || isCancelling}
-          onAction={handleCTAAction}
-        />
+        {/* Sticky CTA: somente inscricao interna gratuita no MVP. */}
+        {hasFreeTickets && (
+          <EventCTA
+            cta={{
+              type: 'register',
+              label: isRegistering
+                ? 'Processando inscricao...'
+                : isCancelling
+                ? 'Cancelando inscricao...'
+                : isParticipating
+                ? 'Inscricao confirmada'
+                : 'Inscricao gratuita',
+              action: '/register',
+              enabled: true
+            }}
+            isFree
+            isSoldOut={isFreeRegistrationSoldOut}
+            disabled={isParticipating || isRegistering || isCancelling}
+            onAction={handleCTAAction}
+          />
+        )}
       </div>
       <ConfirmDialog />
     </>
