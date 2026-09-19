@@ -14,11 +14,11 @@ function read(relativePath: string): string {
 }
 
 describe("G4 Auth/session SSOT ownership", () => {
-  it("keeps runtime and security session services under the canonical session owner", () => {
+  it("keeps one runtime session owner and retires the legacy security facade", () => {
     expect(fs.existsSync(projectPath("src/core/session/services/SessionService.ts"))).toBe(true);
     expect(
       fs.existsSync(projectPath("src/core/session/services/SessionSecurityService.ts")),
-    ).toBe(true);
+    ).toBe(false);
 
     expect(fs.existsSync(projectPath("src/core/auth/services/SessionService.ts"))).toBe(false);
     expect(fs.existsSync(projectPath("src/core/auth/hooks/useSessions.ts"))).toBe(false);
@@ -57,13 +57,13 @@ describe("G4 Auth/session SSOT ownership", () => {
     expect(authIndex).not.toContain("AuthResult");
   });
 
-  it("keeps the session security surface explicit on the canonical barrel", () => {
+  it("does not re-export the retired session security facade", () => {
     const sessionIndex = read("src/core/session/index.ts");
     const servicesIndex = read("src/core/session/services/index.ts");
 
-    expect(sessionIndex).toContain("SessionSecurityService");
-    expect(sessionIndex).toContain("sessionSecurityService");
-    expect(servicesIndex).toContain('export * from "./SessionSecurityService"');
+    expect(sessionIndex).not.toContain("SessionSecurityService");
+    expect(sessionIndex).not.toContain("sessionSecurityService");
+    expect(servicesIndex).not.toContain("SessionSecurityService");
   });
 
   it("keeps the public auth hook delegated to the canonical session state", () => {
