@@ -21,7 +21,7 @@ import { VagasService } from '../services/VagasService';
 import { VagaReportService, type VagaReportReason } from '../services/VagaReportService';
 import type { Vaga } from '../types/vagas.types';
 import { useSessionContext } from '@/core/session';
-import { buildMailtoUrl, buildTelUrl, openContactUrl } from '@/shared/utils/contactLinks';
+import { buildMailtoUrl, buildTelUrl, buildWhatsAppUrl, onlyDigits, openContactUrl } from '@/shared/utils/contactLinks';
 import { openSafeExternalUrl } from '@/shared/utils/safeRedirect';
 
 // ═══════════════════════════════════════════════════════════════════════════════
@@ -32,6 +32,8 @@ interface UseVagaDetailParams {
   slug: string;
   locationId?: string; // Para buscar relacionadas
 }
+
+type VagaShareResult = 'shared' | 'copied';
 
 interface UseVagaDetailReturn {
   // Dados
@@ -51,7 +53,7 @@ interface UseVagaDetailReturn {
   
   // Ações
   refetch: () => void;
-  compartilhar: () => Promise<void>;
+  compartilhar: () => Promise<VagaShareResult>;
   salvarVaga: () => Promise<boolean>;
   denunciarVaga: (input: { reason: VagaReportReason; description?: string }) => Promise<void>;
   isSaved: boolean;
@@ -126,35 +128,49 @@ export function useVagaDetail(params: UseVagaDetailParams): UseVagaDetailReturn 
   const candidaturaMutation = useMutation({
     mutationFn: async (mensagem?: string) => {
       if (!vaga) throw new Error('Vaga não encontrada');
-      
+
       switch (vaga.applicationChannel) {
-        case 'whatsapp':
-          if (vaga.applicationWhatsapp) {
-            const text = encodeURIComponent(`Olá! Vi a vaga de ${vaga.titulo} e tenho interesse. Podemos conversar?`);
-            openSafeExternalUrl(`https://wa.me/55${vaga.applicationWhatsapp.replace(/\D/g, '')}?text=${text}`, {
-              context: 'job-apply-whatsapp',
-            });
+        case 'whatsapp': {
+          const digits = onlyDigits(vaga.applicationWhatsapp);
+          if (digits.length < 10) {
+            throw new Error('Canal de candidatura por WhatsApp indisponível.');
+          }
+
+          const url = buildWhatsAppUrl(
+            vaga.applicationWhatsapp,
+            `Olá! Vi a vaga de ${vaga.titulo} e tenho interesse. Podemos conversar?`,
+          );
+          if (!url || !openSafeExternalUrl(url, { context: 'job-apply-whatsapp' })) {
+            throw new Error('Não foi possível abrir o WhatsApp para esta vaga.');
           }
           break;
-        case 'email':
-          if (vaga.applicationEmail) {
-            openContactUrl(
-              buildMailtoUrl(vaga.applicationEmail, {
-                subject: `Candidatura: ${vaga.titulo}`,
-              }),
-            );
+        }
+        case 'email': {
+          const url = buildMailtoUrl(vaga.applicationEmail, {
+            subject: `Candidatura: ${vaga.titulo}`,
+          });
+          if (!openContactUrl(url)) {
+            throw new Error('E-mail de candidatura indisponível ou inválido.');
           }
           break;
+        }
         case 'external_url':
-          if (vaga.applicationUrl) {
-            openSafeExternalUrl(vaga.applicationUrl, { context: 'job-apply-external-url' });
+          if (
+            !vaga.applicationUrl ||
+            !openSafeExternalUrl(vaga.applicationUrl, {
+              context: 'job-apply-external-url',
+            })
+          ) {
+            throw new Error('Link externo de candidatura indisponível ou inválido.');
           }
           break;
-        case 'phone':
-          if (vaga.applicationPhone) {
-            openContactUrl(buildTelUrl(vaga.applicationPhone));
+        case 'phone': {
+          const digits = onlyDigits(vaga.applicationPhone);
+          if (digits.length < 10 || !openContactUrl(buildTelUrl(vaga.applicationPhone))) {
+            throw new Error('Telefone de candidatura indisponível ou inválido.');
           }
           break;
+        }
         case 'internal':
         default:
           if (!activeProfile?.id) {
@@ -171,8 +187,8 @@ export function useVagaDetail(params: UseVagaDetailParams): UseVagaDetailReturn 
       }
     },
     onSuccess: () => {
-      // Invalidar cache para atualizar contador
-      queryClient.invalidateQueries({ queryKey: ['vaga', slug] });
+      // Invalidar cache para atualizar contador/estado canônico.
+      void queryClient.invalidateQueries({ queryKey: ['vaga', slug] });
     },
   });
 
@@ -222,24 +238,35 @@ export function useVagaDetail(params: UseVagaDetailParams): UseVagaDetailReturn 
   }, [candidaturaMutation]);
 
   // Handler de compartilhamento
-  const compartilhar = useCallback(async () => {
-    if (!vaga) return;
-    
+  const compartilhar = useCallback(async (): Promise<VagaShareResult> => {
+    if (!vaga) throw new Error('Vaga não encontrada');
+    if (typeof window === 'undefined' || typeof navigator === 'undefined') {
+      throw new Error('Compartilhamento indisponível neste ambiente.');
+    }
+
     const shareData = {
       title: vaga.titulo,
       text: `Vaga: ${vaga.titulo} na ${vaga.empresaNome}`,
       url: window.location.href,
     };
 
-    try {
-      if (navigator.share) {
+    if (typeof navigator.share === 'function') {
+      try {
         await navigator.share(shareData);
-      } else {
-        await navigator.clipboard.writeText(window.location.href);
+        return 'shared';
+      } catch (error) {
+        if (error instanceof Error && error.name === 'AbortError') {
+          throw error;
+        }
       }
-    } catch {
-      // Usário cancelou ou não suportado
     }
+
+    if (!navigator.clipboard?.writeText) {
+      throw new Error('Compartilhamento não disponível neste navegador.');
+    }
+
+    await navigator.clipboard.writeText(window.location.href);
+    return 'copied';
   }, [vaga]);
 
   const salvarVaga = useCallback(async () => {
