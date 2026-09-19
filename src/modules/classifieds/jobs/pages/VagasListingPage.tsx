@@ -263,6 +263,8 @@ export default function VagasListingPage({ resolved, activeMemberIds }: VagasLis
             onModalityChange={setSelectedModality}
             selectedLevel={selectedLevel}
             onLevelChange={setSelectedLevel}
+            selectedUrgency={selectedUrgency}
+            onUrgencyChange={setSelectedUrgency}
             hasActiveFilters={hasActiveFilters}
             onClearFilters={clearFilters}
             resultsCount={filteredVagas.length}
