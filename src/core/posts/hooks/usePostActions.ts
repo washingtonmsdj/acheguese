@@ -1,13 +1,13 @@
 /**
- * FASE PROFILE.1.2 - Hook de ações de post migrado para ProfileService
+ * Ações de post para o usuário/perfil ativos da sessão.
  *
- * Migração dos acessos diretos ao banco para usar ProfileService
- * e verificações de permissão centralizadas
+ * Mutations de domínio são delegadas aos owners de Posts/Engagement; este hook
+ * coordena estado de sessão, cache e feedback de UI.
  */
 
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useSessionContext } from "@/core/session";
-import { PostsFacade, postService } from "@/core/posts/services"; // ✅ SSOT v2.0
+import { PostsFacade, postService } from "@/core/posts/services";
 import { toast } from "sonner";
 import { logger } from "@/shared/utils/logger";
 import { PostEngagementService } from "@/core/engagement/services/PostEngagementService";
@@ -76,23 +76,18 @@ function updateFeedCache(
 }
 
 /**
- * Hook de ações de post migrado para ProfileService
- *
- * ✅ MIGRADO - Usa AuthContext integrado com ProfileService
- * ✅ MIGRADO - Verificações de permissão centralizadas
- * ✅ MIGRADO - Elimina acessos diretos desnecessários
+ * Hook de ações de post baseado exclusivamente no contexto de sessão canônico.
  */
 export function usePostActions() {
   const { user, activeProfile: profileContext } = useSessionContext();
 
   const queryClient = useQueryClient();
 
-  // ✅ MIGRADO - Like/Unlike com verificação de permissão
   const likeMutation = useMutation({
     mutationFn: async (postId: string) => {
       if (!user || !profileContext) throw new Error("Usuário não autenticado");
 
-      // ✅ MIGRADO - Verifica permissão usando isActive
+      // Perfil inativo não pode executar interações sociais.
       if (!profileContext.isActive) {
         throw new Error("Você não tem permissão para curtir posts");
       }
@@ -115,7 +110,7 @@ export function usePostActions() {
           throw new Error(result.error || "Erro ao curtir post");
         }
 
-        // ✅ MIGRADO - Criar notificação de like usando PostService
+        // A notificação pertence ao fluxo de domínio após o like confirmado.
         return { action: "like" };
       }
     },
@@ -155,12 +150,11 @@ export function usePostActions() {
       queryClient.invalidateQueries({ queryKey: ["user-reputation"] });
     },
   });
-  // ✅ MIGRADO - Save/Unsave com verificação de permissão
   const saveMutation = useMutation({
     mutationFn: async (postId: string) => {
       if (!user || !profileContext) throw new Error("Usuário não autenticado");
 
-      // ✅ MIGRADO - Verifica permissão usando isActive
+      // Perfil inativo não pode executar interações sociais.
       if (!profileContext.isActive) {
         throw new Error("Você não tem permissão para salvar posts");
       }
@@ -231,17 +225,16 @@ export function usePostActions() {
     });
   };
 
-  // ✅ MIGRADO - Delete com verificação de permissão usando PostService
   const deleteMutation = useMutation({
     mutationFn: async (postId: string) => {
       if (!user || !profileContext) throw new Error("Usuário não autenticado");
 
-      // ✅ MIGRADO - Verifica permissão usando isActive
+      // Perfil inativo não pode executar interações sociais.
       if (!profileContext.isActive) {
         throw new Error("Você não tem permissão para deletar posts");
       }
 
-      // ✅ MIGRADO - Usar PostsFacade.mutations para deletar com verificação de ownership (SSOT v2.0)
+      // Delete permanece no owner de Posts, que valida ownership no comando.
       await PostsFacade.mutations.deletePostByAuthor(postId, profileContext.id);
     },
     onSuccess: () => {
