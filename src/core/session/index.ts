@@ -3,10 +3,6 @@ export { useSessionContext } from "./hooks/useSessionContext";
 export { ServiceGateway } from "./services/ServiceGateway";
 export { SessionState } from "./state/SessionState";
 export { SessionService } from "./services/SessionService";
-export {
-  SessionSecurityService,
-  sessionSecurityService,
-} from "./services/SessionSecurityService";
 export * from "./types/index";
 export * from "./errors/index";
 export * from "./types/canonical-boundary";

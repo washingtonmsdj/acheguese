@@ -129,16 +129,12 @@ describe("G4 Auth/session authority", () => {
     expect(privacy).not.toContain("supabase.auth.getSession(");
   });
 
-  it("keeps session-security auth reads delegated to SessionService", () => {
-    const sessionSecurity = fs.readFileSync(
-      path.join(ROOT, "src/core/session/services/SessionSecurityService.ts"),
-      "utf8",
-    );
-
-    expect(sessionSecurity).toContain("SessionService.getCurrentUser()");
-    expect(sessionSecurity).toContain("SessionService.getAccessToken()");
-    expect(sessionSecurity).not.toContain("supabase.auth.getUser(");
-    expect(sessionSecurity).not.toContain("supabase.auth.getSession(");
+  it("keeps the retired legacy session tracker outside the auth authority surface", () => {
+    expect(
+      fs.existsSync(
+        path.join(ROOT, "src/core/session/services/SessionSecurityService.ts"),
+      ),
+    ).toBe(false);
   });
 
   it("keeps verified recovery claims isolated from generic session reads", () => {
