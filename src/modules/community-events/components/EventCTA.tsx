@@ -170,12 +170,10 @@ export function EventCTA({
               >
                 <Icon className="h-5 w-5" />
                 <span className="font-bold">
-                  {isSoldOut 
-                    ? 'Esgotado' 
-                    : cta.type === 'waitlist' 
+                  {isSoldOut
+                    ? 'Esgotado'
+                    : cta.type === 'waitlist'
                     ? 'Entrar na lista de espera'
-                    : cta.type === 'register'
-                    ? cta.label
                     : cta.label
                   }
                 </span>
