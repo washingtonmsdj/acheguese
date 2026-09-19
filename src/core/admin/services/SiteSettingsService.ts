@@ -1,4 +1,3 @@
-import { supabase } from "@/integrations/supabase";
 import { invokeNullableSupabaseBroker } from "@/core/infrastructure/edge-functions/edgeFunctionBroker";
 import { logger } from "@/shared/utils/logger";
 import { mediaService } from "@/core/media/services/MediaService";
@@ -29,14 +28,6 @@ export interface SiteSettings {
   site_tagline?: string;
 }
 
-type SiteSettingsRpcClient = {
-  rpc<T>(fn: string, params?: Record<string, unknown>): Promise<{
-    data: T | null;
-    error: { message?: string | null } | null;
-  }>;
-};
-
-const siteSettingsRpc = supabase as unknown as SiteSettingsRpcClient;
 const ADMIN_SITE_SETTINGS_RPC_FUNCTION = "admin-site-settings-rpc";
 type AdminSiteSettingsAction = "getAllSettings" | "upsertSetting";
 
@@ -97,24 +88,6 @@ class SiteSettingsServiceClass {
       return settings;
     } catch (error) {
       logger.error("Erro ao obter configuracoes do site", error as Error);
-      throw error;
-    }
-  }
-
-  async getSetting(key: string): Promise<unknown> {
-    try {
-      const { data, error } = await siteSettingsRpc.rpc<unknown>("get_site_setting", {
-        p_key: key,
-      });
-
-      if (error) {
-        logger.error(`Erro ao buscar configuracao ${key}`, error);
-        throw error;
-      }
-
-      return data;
-    } catch (error) {
-      logger.error(`Erro ao obter configuracao ${key}`, error as Error);
       throw error;
     }
   }

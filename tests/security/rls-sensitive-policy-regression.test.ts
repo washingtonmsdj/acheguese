@@ -15,6 +15,7 @@ const SENSITIVE_TABLES = [
   "driver_profiles",
   "event_review_helpfulness",
   "profile_members",
+  "site_settings",
   "question_answer_likes",
   "user_follows",
   "issue_blocked_terms",
@@ -35,6 +36,7 @@ const REMOVED_PERMISSIVE_POLICIES = [
   "Follows viewable",
   "Members viewable by authenticated",
   "Owners manage members",
+  "site_settings_select_public",
 ] as const;
 
 function migrationsFromBaseline() {
