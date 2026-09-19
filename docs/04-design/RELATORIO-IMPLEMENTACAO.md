@@ -289,3 +289,24 @@ A prancha 117 também está coberta pelos estados demonstrativos de visitante, v
 
 - Branch: `codex/reformulacao-entrada-comunidade`.
 - Somente os arquivos desta implementação e este relatório serão incluídos; os arquivos staged preexistentes de catalogação e segurança permanecem excluídos.
+
+## 19/09/2026 · Visão geral da loja — prancha 016
+
+### Auditoria e ajuste
+
+- Comparei `BusinessManagementConceptPreviewPage` com `11-visao-geral-loja/pranchas/016-loja-visao-geral.png` em mobile e desktop. O preview já reproduzia o shell territorial, rail global e do negócio, identidade de `Sabores da Ana`, aviso de horários, atendimento, cardápio, publicações/ofertas e links de informações/equipe.
+- Mantive as ações demonstrativas conectadas: abrir conversas, abrir cardápio, ver página pública, editar horários, criar/continuar publicação e voltar para Meus perfis. A rota `concept-mock=1` continua isolada do fluxo real e não concede permissões.
+- Corrigi o espaçamento visual do CTA mobile `Editar horários →` para coincidir com a prancha. Não alterei a operação protegida, dados reais ou regras de acesso.
+
+### Validação e evidências
+
+- `npm run typecheck:app`: passou.
+- ESLint do arquivo alterado e `git diff --check`: passaram; a tela foi conferida após HMR.
+- Navegador interno: conferi mobile em viewport equivalente à prancha e desktop com viewport temporário de 1440 × 900; a aba permanece aberta para acompanhamento e o viewport será restaurado ao padrão antes do commit.
+- Validei a ação `Gerenciar cardápio`, que navega para `/central/cardapio?concept-mock=1`, e retornei o preview à visão geral.
+- Atualizei a revisão específica da página em `11-visao-geral-loja/REVISAO.md`, mantendo explícitas as limitações do concept e do preview DEV-only.
+
+### Git
+
+- Branch: `codex/reformulacao-entrada-comunidade`.
+- Somente os arquivos desta implementação e as duas documentações de revisão entram no commit; os arquivos staged preexistentes de catalogação e segurança permanecem excluídos.

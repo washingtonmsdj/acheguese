@@ -172,7 +172,7 @@ function ConceptNotice({ onClick }: { onClick: () => void }) {
       <div className="min-w-0 flex-1">
         <h2 className="text-sm font-bold text-territory-ink">Confira seus horários de atendimento</h2>
         <p className="mt-0.5 text-xs leading-[1.125rem] text-territory-muted md:leading-5">Mantenha os horários atualizados para quem visita sua página.</p>
-        <button type="button" onClick={onClick} className="mt-1 h-5 min-h-0 p-0 text-sm font-semibold leading-5 text-territory-brand underline-offset-2 hover:underline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-territory-brand md:hidden">Editar horários <span aria-hidden="true">→</span></button>
+        <button type="button" onClick={onClick} className="mt-1 h-5 min-h-0 p-0 text-sm font-semibold leading-5 text-territory-brand underline-offset-2 hover:underline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-territory-brand md:hidden">Editar horários <span aria-hidden="true"> →</span></button>
       </div>
       <button type="button" onClick={onClick} className="hidden min-h-10 shrink-0 rounded-xl bg-territory-sun px-4 text-sm font-bold text-territory-ink hover:brightness-95 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-territory-brand md:inline-flex md:items-center">Editar horários</button>
     </section>
