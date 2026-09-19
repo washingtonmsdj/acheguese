@@ -246,7 +246,7 @@ export default function WorkOpportunityDetailPage() {
                 <CardTitle className="text-base sm:text-lg">Contato e interesse</CardTitle>
               </CardHeader>
               <CardContent className="space-y-3 text-sm">
-                <p className="text-muted-foreground">{data.contact_notes ?? "Contato não informado. Use mensagem direta no perfil do autor."}</p>
+                <p className="text-muted-foreground">{data.contact_notes ?? "Contato não informado nesta oportunidade."}</p>
                 <div className="flex flex-wrap gap-2">
                   {contactCanOpen ? (
                     <Button
