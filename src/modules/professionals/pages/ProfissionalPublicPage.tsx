@@ -9,7 +9,6 @@ import {
   ArrowLeft,
   ArrowUpRight,
   ChevronRight,
-  Flag,
   Info,
   MapPin,
   MessageCircle,
@@ -99,34 +98,6 @@ function ProfileActions() {
     <div className="flex items-center gap-1">
       <ShareProfileButton />
     </div>
-  );
-}
-
-function ProfileTabs() {
-  return (
-    <nav
-      className="-mx-4 flex overflow-x-auto border-b border-territory-border px-4 scrollbar-hide sm:-mx-6 sm:px-6 lg:mx-0 lg:px-0"
-      aria-label="Seções do perfil"
-    >
-      {[
-        { label: "Sobre", active: true },
-        { label: "Serviços", active: false },
-        { label: "Trabalhos", active: false },
-        { label: "Recomendações", active: false },
-      ].map((tab) => (
-        <button
-          key={tab.label}
-          type="button"
-          className={cn(
-            "relative min-h-10 shrink-0 px-3 text-type-label font-medium text-territory-muted transition-colors first:pl-0 last:pr-0 hover:text-territory-ink after:absolute after:inset-x-3 after:bottom-[-1px] after:h-0.5 after:bg-transparent first:after:left-0 last:after:right-0 sm:px-4 sm:after:inset-x-4 md:min-h-12",
-            tab.active && "font-bold text-territory-ink after:bg-territory-brand",
-          )}
-          aria-current={tab.active ? "page" : undefined}
-        >
-          {tab.label}
-        </button>
-      ))}
-    </nav>
   );
 }
 
@@ -326,10 +297,6 @@ function ConversationAside({
           </div>
         </div>
 
-        <button type="button" className="mt-4 flex min-h-11 w-full items-center justify-center gap-2 border-t border-territory-border pt-3 text-type-caption font-semibold text-territory-muted hover:text-territory-brand">
-          <Flag className="h-4 w-4" aria-hidden="true" />
-          Denunciar perfil
-        </button>
       </TerritorySurface>
     </aside>
   );
@@ -428,10 +395,6 @@ export default function ProfissionalPublicPage() {
           <ConversationButton profile={profile} onOpen={() => setLeadDialogOpen(true)} className="w-full" />
           <p className="mt-1 text-center text-type-caption text-territory-muted">Conte o que precisa e combine os detalhes.</p>
         </div>
-        <div className="mt-5 md:mt-0">
-          <ProfileTabs />
-        </div>
-
         <div className="mt-4 grid gap-5 md:gap-8 xl:grid-cols-[minmax(0,540px)_20rem] xl:items-start xl:gap-9">
           <div className="min-w-0 space-y-5 md:space-y-4"><ServicesSection services={services} /><PortfolioSection portfolio={portfolio} /><MobileCoverageSection coverage={coverage} /><RecommendationsSection /></div>
           <ConversationAside profile={profile} coverage={coverage} onOpen={() => setLeadDialogOpen(true)} />
