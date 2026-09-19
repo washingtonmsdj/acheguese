@@ -23,6 +23,19 @@ describe("public professional profile real-data boundary", () => {
     expect(page).not.toContain("enabled: !conceptMockEnabled");
   });
 
+  it("does not expose a local-only saved state as persistence", () => {
+    const service = readFileSync(
+      "src/core/professional/services/ProfessionalService.ts",
+      "utf8",
+    );
+
+    expect(page).not.toContain("setSaved");
+    expect(page).not.toContain("aria-label={saved");
+    expect(page).not.toContain("Salvar perfil");
+    expect(service).not.toContain("toggleFavorite(");
+    expect(service).not.toContain("professional_favorites");
+  });
+
   it("does not invent portfolio or coverage data", () => {
     expect(page).toContain("const portfolio: string[] = [];");
     expect(page).toContain(
