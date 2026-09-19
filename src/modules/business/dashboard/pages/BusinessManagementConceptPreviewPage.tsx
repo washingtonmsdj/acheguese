@@ -145,8 +145,8 @@ function ConceptMobileBusinessIdentity({ onBack, onViewPage }: { onBack: () => v
       <div className="mt-4 flex items-center gap-3">
         <img src={foodImage} alt="Sabores da Ana" className="h-14 w-14 rounded-xl object-cover" />
         <div className="min-w-0 flex-1">
-          <h1 className="truncate font-heading text-lg font-bold tracking-[-0.025em] text-territory-ink">Sabores da Ana</h1>
-          <p className="text-sm text-territory-muted">Gestão do negócio</p>
+          <h1 className="mb-0 truncate font-heading text-lg font-bold tracking-[-0.025em] text-territory-ink">Sabores da Ana</h1>
+          <p className="mb-0 text-sm text-territory-muted">Gestão do negócio</p>
         </div>
         <button type="button" onClick={onViewPage} className="min-h-10 shrink-0 rounded-xl border border-territory-brand px-3 text-xs font-semibold text-territory-ink focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-territory-brand">
           Ver página
@@ -159,7 +159,7 @@ function ConceptMobileBusinessIdentity({ onBack, onViewPage }: { onBack: () => v
 function ConceptSectionTitle({ title, onClick }: { title: string; onClick?: () => void }) {
   return (
     <div className="flex items-center justify-between gap-3">
-      <h2 className="font-heading text-lg font-bold tracking-[-0.025em] text-territory-ink">{title}</h2>
+      <h2 className="mb-0 font-heading text-lg font-bold tracking-[-0.025em] text-territory-ink">{title}</h2>
       {onClick ? <button type="button" onClick={onClick} className="rounded-lg p-1 text-territory-ink focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-territory-brand"><ChevronRight className="h-5 w-5" aria-hidden="true" /></button> : null}
     </div>
   );
@@ -170,8 +170,8 @@ function ConceptNotice({ onClick }: { onClick: () => void }) {
     <section className="flex items-start gap-3 rounded-xl border border-territory-sun/50 bg-[hsl(var(--territory-sun)/0.2)] p-3 sm:p-4 md:items-center md:p-2.5">
       <Clock3 className="mt-0.5 h-7 w-7 shrink-0 text-territory-warm" aria-hidden="true" />
       <div className="min-w-0 flex-1">
-        <h2 className="text-sm font-bold text-territory-ink">Confira seus horários de atendimento</h2>
-        <p className="mt-0.5 text-xs leading-[1.125rem] text-territory-muted md:leading-5">Mantenha os horários atualizados para quem visita sua página.</p>
+        <h2 className="mb-0 text-sm font-bold text-territory-ink">Confira seus horários de atendimento</h2>
+        <p className="mb-0 mt-0.5 text-xs leading-[1.125rem] text-territory-muted md:leading-5">Mantenha os horários atualizados para quem visita sua página.</p>
         <button type="button" onClick={onClick} className="mt-1 h-5 min-h-0 p-0 text-sm font-semibold leading-5 text-territory-brand underline-offset-2 hover:underline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-territory-brand md:hidden">Editar horários <span aria-hidden="true"> →</span></button>
       </div>
       <button type="button" onClick={onClick} className="hidden min-h-10 shrink-0 rounded-xl bg-territory-sun px-4 text-sm font-bold text-territory-ink hover:brightness-95 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-territory-brand md:inline-flex md:items-center">Editar horários</button>
@@ -181,28 +181,28 @@ function ConceptNotice({ onClick }: { onClick: () => void }) {
 
 function ConceptConversationCard({ onOpen }: { onOpen: () => void }) {
   return (
-    <section className="rounded-xl border border-territory-border bg-territory-surface p-3.5 sm:p-4 md:p-3.5">
+    <section className="rounded-xl border border-territory-border bg-territory-surface p-3 sm:p-4 md:p-3.5">
       <ConceptSectionTitle title="Atendimento" onClick={onOpen} />
       <p className="mt-0.5 text-sm text-territory-muted">12 não lidas</p>
-      <div className="mt-3 space-y-2 md:mt-2">
-        <div className="flex items-center gap-3 rounded-xl border border-territory-border/80 p-2.5 md:p-2">
+      <div className="mt-2 space-y-2 md:mt-2">
+        <div className="flex items-center gap-3 rounded-xl border border-territory-border/80 p-2 md:p-2">
           <img src={ownerImage} alt="Mariana Costa" className="h-11 w-11 rounded-full object-cover" />
           <div className="min-w-0 flex-1">
-            <p className="truncate text-sm font-bold text-territory-ink">Mariana Costa</p>
-            <p className="truncate text-xs text-territory-muted">Pode ser às 12h?</p>
+            <p className="mb-0 truncate text-sm font-bold text-territory-ink">Mariana Costa</p>
+            <p className="mb-0 mt-0.5 truncate text-xs text-territory-muted">Pode ser às 12h?</p>
           </div>
           <span className="self-start text-xs text-territory-muted">10:24</span>
         </div>
         <div className="hidden items-center gap-3 rounded-xl border border-territory-border/80 p-2.5 md:flex md:p-2">
           <img src={ownerImage} alt="Lucas Almeida" className="h-11 w-11 rounded-full object-cover" />
           <div className="min-w-0 flex-1">
-            <p className="truncate text-sm font-bold text-territory-ink">Lucas Almeida</p>
-            <p className="truncate text-xs text-territory-muted">Vocês entregam em Santa Cruz?</p>
+            <p className="mb-0 truncate text-sm font-bold text-territory-ink">Lucas Almeida</p>
+            <p className="mb-0 mt-0.5 truncate text-xs text-territory-muted">Vocês entregam em Santa Cruz?</p>
           </div>
           <span className="self-start text-xs text-territory-muted">Ontem</span>
         </div>
       </div>
-      <button type="button" onClick={onOpen} className="mt-3 min-h-10 w-full rounded-xl bg-territory-brand px-4 text-sm font-bold text-white hover:brightness-95 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-territory-brand md:mt-2 md:min-h-9">Abrir conversas</button>
+      <button type="button" onClick={onOpen} className="mt-2 min-h-10 w-full rounded-xl bg-territory-brand px-4 text-sm font-bold text-white hover:brightness-95 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-territory-brand md:mt-2 md:min-h-9">Abrir conversas</button>
     </section>
   );
 }
@@ -213,15 +213,15 @@ function ConceptMenuCard({ onOpen }: { onOpen: () => void }) {
     { name: "Opção vegetariana", image: secondFoodImage },
   ];
   return (
-    <section className="rounded-xl border border-territory-border bg-territory-surface p-3.5 sm:p-4 md:p-3">
+    <section className="rounded-xl border border-territory-border bg-territory-surface p-3 sm:p-4 md:p-3">
       <ConceptSectionTitle title="Cardápio" onClick={onOpen} />
       <div className="mt-2 space-y-2">
         {items.map((item, index) => (
           <div key={item.name} className={cn("flex items-center gap-3 rounded-xl border border-territory-border/80 p-2", index > 0 && "hidden md:flex")}>
             <img src={item.image} alt="" className="h-14 w-16 rounded-lg object-cover" />
             <div className="min-w-0">
-              <p className="truncate text-sm font-bold text-territory-ink">{item.name}</p>
-              <p className="mt-0.5 text-xs font-medium text-territory-success">Disponível</p>
+              <p className="mb-0 truncate text-sm font-bold text-territory-ink">{item.name}</p>
+              <p className="mb-0 mt-0.5 text-xs font-medium text-territory-success">Disponível</p>
             </div>
           </div>
         ))}
@@ -233,16 +233,16 @@ function ConceptMenuCard({ onOpen }: { onOpen: () => void }) {
 
 function ConceptPublicationCard({ onOpen }: { onOpen: () => void }) {
   return (
-    <section className="rounded-xl border border-territory-border bg-territory-surface p-3.5 sm:p-4">
+    <section className="rounded-xl border border-territory-border bg-territory-surface p-3 sm:p-4">
       <div className="flex flex-wrap items-center justify-between gap-3">
-        <h2 className="font-heading text-lg font-bold tracking-[-0.025em] text-territory-ink">Publicações e ofertas</h2>
+        <h2 className="mb-0 font-heading text-lg font-bold tracking-[-0.025em] text-territory-ink">Publicações e ofertas</h2>
         <button type="button" onClick={onOpen} className="inline-flex min-h-9 items-center gap-1.5 rounded-xl bg-territory-sun px-3 text-xs font-bold text-territory-ink hover:brightness-95 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-territory-brand"><Plus className="h-4 w-4" aria-hidden="true" />Criar publicação</button>
       </div>
-      <div className="mt-3 flex flex-col gap-3 rounded-xl border border-territory-border/80 p-2.5 sm:flex-row sm:items-center">
+      <div className="mt-2 flex flex-col gap-3 rounded-xl border border-territory-border/80 p-2 sm:flex-row sm:items-center md:p-2.5">
         <img src={foodImage} alt="Almoço de sábado" className="h-28 w-full rounded-lg object-cover sm:h-24 sm:w-40" />
         <div className="min-w-0 flex-1">
           <span className="inline-flex rounded-md bg-territory-sun px-2 py-1 text-[0.6875rem] font-bold text-territory-ink">Rascunho</span>
-          <p className="mt-2 font-heading text-base font-bold text-territory-ink">Almoço de sábado</p>
+          <p className="mb-0 mt-2 font-heading text-base font-bold text-territory-ink">Almoço de sábado</p>
         </div>
         <ChevronRight className="hidden h-5 w-5 text-territory-ink sm:block" aria-hidden="true" />
         <button type="button" onClick={onOpen} className="min-h-10 rounded-xl border border-territory-brand px-3 text-xs font-semibold text-territory-ink hover:bg-[hsl(var(--territory-brand)/0.08)] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-territory-brand">Continuar edição</button>
@@ -322,7 +322,7 @@ export default function BusinessManagementConceptPreviewPage() {
           <div className="w-full">
             <div className="md:hidden">
               <ConceptMobileBusinessIdentity onBack={() => navigate("/conta?concept-mock=1")} onViewPage={() => navigate(territoryHref)} />
-              <div className="relative mt-5">
+              <div className="relative mt-4">
                 <button type="button" aria-expanded={overviewMenuOpen} onClick={() => setOverviewMenuOpen((value) => !value)} className="flex min-h-11 w-full items-center justify-between rounded-xl border border-territory-border bg-territory-surface px-4 text-sm font-semibold text-territory-ink focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-territory-brand">
                   {selectedArea}
                   <ChevronDown className={cn("h-5 w-5 transition-transform", overviewMenuOpen && "rotate-180")} aria-hidden="true" />
@@ -342,13 +342,13 @@ export default function BusinessManagementConceptPreviewPage() {
               </div>
             </div>
 
-            <div className="mt-4 lg:mt-4"><ConceptNotice onClick={() => selectArea("Configurações")} /></div>
-            <div className="mt-4 grid gap-4 lg:mt-3.5 lg:grid-cols-2 lg:gap-3.5">
+            <div className="mt-3 lg:mt-4"><ConceptNotice onClick={() => selectArea("Configurações")} /></div>
+            <div className="mt-3 grid gap-3 lg:mt-3.5 lg:grid-cols-2 lg:gap-3.5">
               <ConceptConversationCard onOpen={openMessages} />
               <ConceptMenuCard onOpen={openMenu} />
             </div>
-            <div className="mt-4 lg:mt-3.5"><ConceptPublicationCard onOpen={openPublications} /></div>
-            <div className="mt-4 lg:mt-3.5"><ConceptInfoLinks onOpen={selectArea} /></div>
+            <div className="mt-3 lg:mt-3.5"><ConceptPublicationCard onOpen={openPublications} /></div>
+            <div className="mt-3 lg:mt-3.5"><ConceptInfoLinks onOpen={selectArea} /></div>
           </div>
         </main>
       </div>
