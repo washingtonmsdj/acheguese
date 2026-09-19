@@ -37,13 +37,19 @@ export function CommunityComposerEntry({
       data-community-composer="entry"
       className={cn(
         "rounded-2xl border border-border/60 bg-card p-3",
-        isConcept && "rounded-xl border-territory-border bg-territory-raised p-2.5",
+        isConcept &&
+          "rounded-xl border-territory-border bg-territory-raised p-1.5 sm:p-2",
         className,
       )}
       aria-label="Criar publicação"
     >
       <div className="flex min-w-0 items-center gap-2.5">
-        <span className="flex h-10 w-10 shrink-0 items-center justify-center overflow-hidden rounded-full border border-border/60 bg-muted/40 text-muted-foreground">
+        <span
+          className={cn(
+            "flex h-10 w-10 shrink-0 items-center justify-center overflow-hidden rounded-full border border-border/60 bg-muted/40 text-muted-foreground",
+            isConcept && "h-9 w-9",
+          )}
+        >
           {resolvedAvatarUrl ? (
             <img
               src={resolvedAvatarUrl}
@@ -57,7 +63,7 @@ export function CommunityComposerEntry({
         </span>
         {isConcept ? (
           <div className="min-w-0 flex-1">
-            <span className="hidden text-xs font-semibold text-territory-ink sm:block">
+            <span className="hidden text-[0.68rem] font-semibold leading-3 text-territory-ink sm:block">
               {profileLabel}
             </span>
             <input
@@ -70,7 +76,7 @@ export function CommunityComposerEntry({
               }}
               placeholder="Compartilhe com a comunidade"
               aria-label={`Criar publicação em ${communityName}`}
-              className="min-h-9 w-full min-w-0 cursor-text border-0 bg-transparent px-0 text-sm text-territory-ink outline-none placeholder:text-territory-muted focus-visible:ring-0"
+              className="h-5 w-full min-w-0 cursor-text border-0 bg-transparent px-0 text-xs leading-4 text-territory-ink outline-none placeholder:text-territory-muted focus-visible:ring-0 sm:text-sm"
             />
           </div>
         ) : (
@@ -91,7 +97,7 @@ export function CommunityComposerEntry({
           <button
             type="button"
             onClick={openComposer}
-            className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg text-territory-brand transition-colors hover:bg-territory-brand/10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-territory-brand/30"
+            className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg text-territory-brand transition-colors hover:bg-territory-brand/10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-territory-brand/30"
             aria-label="Abrir publicação"
           >
             <Pencil className="h-4 w-4" aria-hidden="true" />

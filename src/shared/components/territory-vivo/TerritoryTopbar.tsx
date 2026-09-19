@@ -25,6 +25,8 @@ interface TerritoryTopbarProps {
   flushDesktop?: boolean;
   /** Match compact mobile concepts that place the territory row directly below the brand row. */
   compactMobile?: boolean;
+  /** Keep the mobile territory label on one line for the community concept preview. */
+  conceptMobile?: boolean;
   messagesHref?: string;
   profileLabel?: string | null;
   profileAvatarUrl?: string | null;
@@ -41,6 +43,7 @@ export function TerritoryTopbar({
   showMobileSearch = true,
   flushDesktop = false,
   compactMobile = false,
+  conceptMobile = false,
   messagesHref = "/mensagens",
   profileLabel,
   profileAvatarUrl,
@@ -144,7 +147,9 @@ export function TerritoryTopbar({
           className={cn(
             "group col-span-2 row-start-2 flex min-h-10 min-w-0 items-center gap-2 rounded-xl px-1 lg:order-2 lg:col-auto lg:row-auto lg:px-3",
             compactMobile && isLight
-              ? "mt-1 mb-2 border border-territory-brand/10 bg-territory-brand/5 px-3"
+              ? conceptMobile
+                ? "mt-1 mb-2 border-0 bg-transparent px-1"
+                : "mt-1 mb-2 border border-territory-brand/10 bg-territory-brand/5 px-3"
               : isLight
                 ? "hover:bg-territory-brand/5"
                 : "hover:bg-white/10",
@@ -158,11 +163,17 @@ export function TerritoryTopbar({
             )}
             aria-hidden="true"
           />
-          <span className="min-w-0">
-            <span className="flex items-center gap-1">
+          <span
+            className={cn(
+              "min-w-0",
+              conceptMobile && "flex items-center gap-2",
+            )}
+          >
+            <span className={cn("flex items-center gap-1", conceptMobile && "shrink-0")}>
               <span
                 className={cn(
                   "block max-w-[11rem] truncate text-sm font-semibold",
+                  conceptMobile && "max-w-[17rem] text-xs font-medium",
                   isLight ? "text-territory-ink" : "text-white",
                 )}
               >
@@ -171,6 +182,7 @@ export function TerritoryTopbar({
               <ChevronDown
                 className={cn(
                   "h-4 w-4 shrink-0",
+                  conceptMobile && "hidden",
                   isLight ? "text-territory-muted" : "text-white/70",
                 )}
                 aria-hidden="true"
@@ -179,6 +191,7 @@ export function TerritoryTopbar({
             <span
               className={cn(
                 "block truncate text-[0.6875rem]",
+                conceptMobile && "shrink-0 text-xs",
                 isLight ? "text-territory-muted" : "text-white/70",
               )}
             >

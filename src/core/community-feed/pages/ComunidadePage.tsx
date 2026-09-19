@@ -482,6 +482,7 @@ export default function ComunidadePage({
       searchHref={exploreHref}
       showMobileSearch={false}
       compactMobile
+      conceptMobile={visualMockEnabled}
       canCreatePost={
         (communitySurfaceState === "active" || visualMockEnabled) &&
         communityAccess.can.create_post

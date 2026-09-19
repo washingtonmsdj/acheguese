@@ -90,6 +90,7 @@ export function TerritoryAdaptiveNavigation({
       <nav
         className={cn(
           "fixed inset-x-0 bottom-0 z-[100] border-t border-territory-border bg-territory-surface/96 backdrop-blur-xl safe-area-bottom md:hidden",
+          communityConceptPreview && "bg-territory-surface backdrop-blur-none",
           hideMobile && "hidden",
         )}
         aria-label="Navegação principal mobile"

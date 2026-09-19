@@ -291,6 +291,19 @@ type DiscussionPreviewPost = {
   } | null;
 };
 
+function getCommunityConceptPostAge(postId: string): string {
+  switch (postId) {
+    case "visual-post-reforco-escolar":
+      return "2h";
+    case "visual-post-encontro-domingo":
+      return "1 dia";
+    case "visual-post-padaria":
+      return "3 dias";
+    default:
+      return "agora";
+  }
+}
+
 function getPublicPostRole(post: DiscussionPreviewPost): string {
   return post.author_role?.trim() || "Morador";
 }
@@ -448,11 +461,11 @@ function CommunityConceptContextNavigation({
 }) {
   return (
     <div
-      className="flex min-w-0 gap-6 overflow-x-auto border-b border-territory-border bg-transparent px-1 [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
+      className="flex min-w-0 gap-7 overflow-x-auto border-b border-territory-border bg-transparent px-1 [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
       role="group"
       aria-label="Navegação da comunidade"
     >
-      {COMMUNITY_CONCEPT_CONTEXT_SHORTCUTS.map(({ view, label, icon: Icon }) => (
+      {COMMUNITY_CONCEPT_CONTEXT_SHORTCUTS.map(({ view, label }) => (
         <button
           key={view}
           type="button"
@@ -460,14 +473,13 @@ function CommunityConceptContextNavigation({
           onClick={() => onContextTabChange(view)}
           aria-pressed={activeContextTab === view}
           className={cn(
-            "relative inline-flex min-h-10 shrink-0 items-center gap-1.5 border-0 px-0 text-xs font-medium transition-colors after:absolute after:inset-x-0 after:bottom-0 after:h-0.5 after:bg-transparent hover:text-territory-brand focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-territory-brand/70",
+            "relative inline-flex min-h-8 shrink-0 items-center border-0 px-0 text-sm font-medium transition-colors after:absolute after:inset-x-0 after:bottom-0 after:h-0.5 after:bg-transparent hover:text-territory-brand focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-territory-brand/70",
             activeContextTab === view
               ? "font-semibold text-territory-brand after:bg-territory-brand"
               : "text-territory-muted",
           )}
           aria-controls="community-feed-context-panel"
         >
-          <Icon className="h-3.5 w-3.5 shrink-0" aria-hidden="true" />
           {label}
         </button>
       ))}
@@ -527,7 +539,7 @@ function CommunityConceptFeedFilters({
       <select
         id="community-concept-scope"
         defaultValue="all"
-        className="min-h-9 shrink-0 rounded-lg border border-territory-border bg-territory-raised px-2.5 text-xs font-medium text-territory-ink outline-none focus:border-territory-brand focus:ring-2 focus:ring-territory-brand/20"
+        className="min-h-8 shrink-0 rounded-lg border border-territory-border bg-territory-raised px-2.5 text-xs font-medium text-territory-ink outline-none focus:border-territory-brand focus:ring-2 focus:ring-territory-brand/20"
       >
         <option value="all">Todos os bairros</option>
         <option value="territory">Complexo do Nordeste</option>
@@ -541,7 +553,7 @@ function CommunityConceptFeedFilters({
         onChange={(event) =>
           onChange(event.target.value as CommunityFeedSortType)
         }
-        className="min-h-9 shrink-0 rounded-lg border border-territory-border bg-territory-raised px-2.5 text-xs font-medium text-territory-ink outline-none focus:border-territory-brand focus:ring-2 focus:ring-territory-brand/20"
+        className="min-h-8 shrink-0 rounded-lg border border-territory-border bg-territory-raised px-2.5 text-xs font-medium text-territory-ink outline-none focus:border-territory-brand focus:ring-2 focus:ring-territory-brand/20"
       >
         <option value="popular">Mais relevantes</option>
         <option value="recent">Mais recentes</option>
@@ -549,7 +561,7 @@ function CommunityConceptFeedFilters({
       </select>
       <button
         type="button"
-        className="ml-auto flex h-9 w-9 shrink-0 items-center justify-center rounded-lg border border-territory-border bg-territory-raised text-territory-brand transition-colors hover:bg-territory-brand/10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-territory-brand/30"
+        className="ml-auto flex h-8 w-8 shrink-0 items-center justify-center rounded-lg border border-territory-border bg-territory-raised text-territory-brand transition-colors hover:bg-territory-brand/10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-territory-brand/30"
         aria-label="Abrir filtros das publicações"
         onClick={() => document.getElementById("community-concept-scope")?.focus()}
       >
@@ -1970,7 +1982,12 @@ export function CommunityOverviewSurface({
 
   return (
     <div
-      className="mx-auto w-full max-w-[76rem] min-w-0 px-4 py-5 text-territory-ink sm:px-6 sm:py-7 lg:px-8"
+      className={cn(
+        "mx-auto w-full max-w-[76rem] min-w-0 text-territory-ink",
+        visualMockEnabled
+          ? "px-4 py-4 sm:px-6 sm:py-4 lg:px-8"
+          : "px-4 py-5 sm:px-6 sm:py-7 lg:px-8",
+      )}
       data-community-overview="community-first"
       data-community-state="active"
       data-visual-mock={
@@ -1979,7 +1996,12 @@ export function CommunityOverviewSurface({
           : undefined
       }
     >
-      <main className="min-w-0 space-y-4 xl:grid xl:grid-cols-[10.75rem_minmax(0,1fr)_20rem] xl:gap-x-5 xl:gap-y-4 xl:space-y-0 xl:space-x-0">
+      <main
+        className={cn(
+          "min-w-0 space-y-4 xl:grid xl:grid-cols-[10.75rem_minmax(0,1fr)_20rem] xl:gap-x-5 xl:gap-y-4 xl:space-y-0 xl:space-x-0",
+          visualMockEnabled && "space-y-0 xl:gap-y-3",
+        )}
+      >
         <aside className="hidden xl:col-start-1 xl:row-span-3 xl:flex xl:flex-col xl:gap-5">
           <nav
             aria-label="Navegação do território"
@@ -2014,12 +2036,28 @@ export function CommunityOverviewSurface({
             data-community-hero="true"
             className="xl:col-span-2 xl:col-start-2"
           >
-            <div className="flex min-w-0 items-start justify-between gap-4 border-b border-territory-border px-1 pb-3 sm:pb-4">
+            <div
+              className={cn(
+                "flex min-w-0 items-start justify-between gap-4 border-b border-territory-border px-1 pb-3 sm:pb-4",
+                visualMockEnabled && "border-b-0 pb-0 sm:pb-0",
+              )}
+            >
               <div className="min-w-0">
-                <h1 className="font-heading text-[1.7rem] font-bold tracking-[-0.04em] text-territory-ink sm:text-3xl">
+                <h1
+                  className={cn(
+                    "font-heading text-[1.7rem] font-bold tracking-[-0.04em] text-territory-ink sm:text-3xl",
+                    visualMockEnabled &&
+                      "sm:text-[1.6rem] sm:leading-none",
+                  )}
+                >
                   Comunidade
                 </h1>
-                <p className="mt-1 text-sm text-territory-muted sm:text-base">
+                <p
+                  className={cn(
+                    "mt-1 text-sm text-territory-muted sm:text-base",
+                    visualMockEnabled && "mt-0 sm:text-sm sm:leading-5",
+                  )}
+                >
                   Gente, histórias e ideias do nosso lugar.
                 </p>
               </div>
@@ -2383,7 +2421,13 @@ export function CommunityOverviewSurface({
                         />
                       ) : (
                         <>
-                        <SurfacePanel className="p-2.5">
+                        <SurfacePanel
+                          className={cn(
+                            "p-2.5",
+                            visualMockEnabled &&
+                              "rounded-none border-0 bg-transparent p-0 shadow-none",
+                          )}
+                        >
                           {visualMockEnabled ? (
                             <CommunityConceptFeedFilters
                               value={postSort}
@@ -2416,7 +2460,12 @@ export function CommunityOverviewSurface({
                               território.
                             </p>
                           ) : (
-                            <div className="space-y-3">
+                            <div
+                              className={cn(
+                                "space-y-3",
+                                visualMockEnabled && "mt-3",
+                              )}
+                            >
                               {sortedDisplayPosts.map((post) => {
                                 if (visualMockEnabled && post.type === "aviso") {
                                   return (
@@ -2461,12 +2510,18 @@ export function CommunityOverviewSurface({
                                     data-feed-post-id={post.id}
                                     className={cn(
                                       "rounded-xl border border-territory-border bg-territory-raised px-3 py-2.5 shadow-territory-highlight [content-visibility:auto] [contain-intrinsic-size:0_520px]",
+                                      visualMockEnabled && "py-2",
                                       post.type === "aviso" &&
                                         "border-territory-sun/55 bg-territory-sun/20",
                                     )}
                                   >
                                     <div className="flex min-w-0 items-start gap-3">
-                                      <span className="flex h-8 w-8 shrink-0 items-center justify-center overflow-hidden rounded-full border border-territory-border bg-territory-brand/12 text-territory-brand-strong">
+                                      <span
+                                        className={cn(
+                                          "flex h-8 w-8 shrink-0 items-center justify-center overflow-hidden rounded-full border border-territory-border bg-territory-brand/12 text-territory-brand-strong",
+                                          visualMockEnabled && "h-9 w-9",
+                                        )}
+                                      >
                                         {avatarUrl ? (
                                           <SafeImage
                                             src={avatarUrl}
@@ -2481,13 +2536,13 @@ export function CommunityOverviewSurface({
                                       <div className="min-w-0 flex-1">
                                         {visualMockEnabled ? (
                                           <>
-                                            <p className="truncate text-xs font-semibold text-territory-ink">
+                                            <p className="truncate text-sm font-semibold leading-4 text-territory-ink">
                                               {getPublicPostAuthor(post)}
                                             </p>
-                                            <p className="mt-0.5 text-[0.68rem] text-territory-muted">
+                                            <p className="mt-0.5 text-xs leading-4 text-territory-muted">
                                               {post.territory_label ??
                                                 getPublicPostRole(post)}{" "}
-                                              · há {formatPublicPostDate(post.created_at)}
+                                              · há {getCommunityConceptPostAge(post.id)}
                                             </p>
                                           </>
                                         ) : (
@@ -2510,6 +2565,11 @@ export function CommunityOverviewSurface({
                                           </>
                                         )}
                                       </div>
+                                      {visualMockEnabled && post.type === "pergunta" ? (
+                                        <span className="mt-0.5 inline-flex min-h-5 shrink-0 items-center rounded bg-territory-sun/25 px-2 text-xs font-medium text-territory-ink ring-1 ring-inset ring-territory-sun/45">
+                                          {getPublicPostTypeLabel(post.type)}
+                                        </span>
+                                      ) : null}
                                       <button
                                         type="button"
                                         onClick={onRequireLogin}
@@ -2519,29 +2579,41 @@ export function CommunityOverviewSurface({
                                         •••
                                       </button>
                                     </div>
-                                    <div className="mt-1.5">
-                                      {(!visualMockEnabled ||
-                                        post.type === "pergunta") && (
+                                    <div className={cn("mt-1.5", visualMockEnabled && "mt-1") }>
+                                      {!visualMockEnabled &&
+                                        post.type === "pergunta" && (
                                         <span
                                           className={cn(
                                             "inline-flex min-h-4 items-center rounded px-1.5 text-[0.61rem] font-medium text-territory-brand-strong ring-1 ring-inset ring-territory-brand/20",
                                             visualMockEnabled &&
-                                              "bg-territory-sun/25 text-territory-ink ring-territory-sun/45",
+                                              "min-h-5 bg-territory-sun/25 px-2 text-xs text-territory-ink ring-territory-sun/45",
                                           )}
                                         >
                                           {getPublicPostTypeLabel(post.type)}
                                         </span>
                                       )}
-                                      <h3 className="mt-1 text-[0.92rem] font-semibold leading-[1.15rem] text-territory-ink">
+                                      <h3
+                                        className={cn(
+                                          "mt-1 text-[0.92rem] font-semibold leading-[1.15rem] text-territory-ink",
+                                          visualMockEnabled &&
+                                            "text-base leading-5",
+                                        )}
+                                      >
                                         {getPublicPostTitle(post)}
                                       </h3>
                                       {summary ? (
-                                        <p className="mt-0.5 text-[0.7rem] leading-4 text-territory-muted">
+                                        <p
+                                          className={cn(
+                                            "mt-0.5 text-[0.7rem] leading-4 text-territory-muted",
+                                            visualMockEnabled &&
+                                              "text-sm leading-5",
+                                          )}
+                                        >
                                           {summary}
                                         </p>
                                       ) : null}
                                       {visualMockEnabled && post.response_preview ? (
-                                        <div className="mt-2 flex min-w-0 items-center gap-2 rounded-lg bg-territory-brand/8 px-2 py-1.5 text-[0.68rem] text-territory-ink">
+                                        <div className="mt-1.5 flex min-w-0 items-center gap-2 rounded-lg bg-territory-brand/8 px-2 py-1 text-xs text-territory-ink">
                                           <span className="flex h-6 w-6 shrink-0 items-center justify-center overflow-hidden rounded-full bg-territory-brand/12 text-[0.58rem] font-semibold text-territory-brand">
                                             {post.response_preview.avatar_url ? (
                                               <SafeImage
@@ -2568,7 +2640,7 @@ export function CommunityOverviewSurface({
                                       ) : null}
                                     </div>
                                     {visualMockEnabled ? (
-                                      <div className="mt-1.5 flex items-center gap-5 border-t border-territory-border pt-1.5 text-[0.7rem] text-territory-muted">
+                                      <div className="mt-1 flex items-center gap-5 border-t border-territory-border pt-1 text-xs text-territory-muted">
                                         <button
                                           type="button"
                                           onClick={onRequireLogin}
