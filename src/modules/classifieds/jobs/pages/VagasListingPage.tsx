@@ -32,13 +32,6 @@ import heroImg from "@/assets/empresas-hero.jpg";
 
 // ── Static data ──────────────────────────────────────────────────────
 
-const STATS = [
-  { icon: Briefcase, value: "150+",  label: "vagas ativas",       color: "text-primary" },
-  { icon: Users,     value: "80+",   label: "empresas contratando", color: "text-accent" },
-  { icon: Shield,    value: "100%",  label: "gratuito",            color: "text-success" },
-  { icon: Clock,     value: "24h",   label: "novas vagas/dia",     color: "text-warning" },
-];
-
 const HOW_IT_WORKS = [
   { step: "01", icon: Search,         title: "Encontre a vaga ideal",   description: "Busque por cargo, área ou localização. Use filtros para refinar os resultados e encontrar oportunidades perto de você." },
   { step: "02", icon: MessageCircle,  title: "Candidate-se",            description: "Entre em contato direto com a empresa via WhatsApp ou e-mail. Sem intermediários, sem cadastros longos." },
@@ -49,7 +42,7 @@ const BENEFITS = [
   { icon: BadgeCheck, title: "Empresas Verificadas",   description: "Vagas publicadas por empresas reais e verificadas da comunidade.",                          color: "text-primary", bgColor: "bg-primary/10" },
   { icon: MapPin,     title: "Vagas Locais",           description: "Oportunidades na sua região. Menos tempo no trânsito, mais qualidade de vida.",   color: "text-accent",  bgColor: "bg-accent/10"  },
   { icon: Shield,     title: "Sem Taxas",              description: "Totalmente gratuito para candidatos e empresas. Sem cobranças ocultas.",                    color: "text-success", bgColor: "bg-success/10" },
-  { icon: Zap,        title: "Contato Direto",         description: "Fale diretamente com o RH da empresa por WhatsApp ou e-mail. Resposta rápida garantida.",  color: "text-warning", bgColor: "bg-warning/10" },
+  { icon: Zap,        title: "Contato Direto",         description: "Use o canal de candidatura informado pela empresa, como WhatsApp, e-mail, telefone ou site externo.",  color: "text-warning", bgColor: "bg-warning/10" },
 ];
 
 // ── Props ────────────────────────────────────────────────────────────
@@ -83,6 +76,7 @@ export default function VagasListingPage({ resolved, activeMemberIds }: VagasLis
     selectedLevel, setSelectedLevel,
     selectedUrgency, setSelectedUrgency,
     filteredVagas,
+    summary,
     urgentVagas,
     recentVagas,
     featuredVagas,
@@ -93,6 +87,33 @@ export default function VagasListingPage({ resolved, activeMemberIds }: VagasLis
   } = useVagas({ resolved, activeMemberIds });
 
   const resultsSectionRef = useRef<HTMLElement>(null);
+  const jobStats = useMemo(() => [
+    {
+      icon: Briefcase,
+      value: isLoading ? "..." : String(summary.total),
+      label: "vagas ativas",
+      color: "text-primary",
+    },
+    {
+      icon: Users,
+      value: isLoading ? "..." : String(summary.companies),
+      label: "empresas contratando",
+      color: "text-accent",
+    },
+    {
+      icon: Zap,
+      value: isLoading ? "..." : String(summary.urgent),
+      label: "vagas urgentes",
+      color: "text-destructive",
+    },
+    {
+      icon: Clock,
+      value: isLoading ? "..." : String(summary.publishedLast24Hours),
+      label: "publicadas nas últimas 24h",
+      color: "text-warning",
+    },
+  ], [isLoading, summary]);
+
   const publishUrl = jobPublicRoutes.publish();
 
   const handleHeroSearch = useCallback(() => {
@@ -196,7 +217,7 @@ export default function VagasListingPage({ resolved, activeMemberIds }: VagasLis
       {/* ── STATS ────────────────────────────────────────────── */}
       <section className="max-w-7xl mx-auto px-4 sm:px-6 py-10 md:py-14 w-full">
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-          {STATS.map((stat) => (
+          {jobStats.map((stat) => (
             <motion.div
               key={stat.label}
               initial={{ opacity: 0, y: 16 }}
