@@ -1,18 +1,13 @@
 /**
  * Perfil publico de profissional.
  * Rota: /servicos/:state/:city/profissional/:slug
- *
- * O estado concept-mock e exclusivo do desenvolvimento: ele fornece apenas
- * conteudo demonstrativo para validar a composicao visual sem alterar o
- * contrato publico ou inventar dados para perfis reais.
  */
 
 import { useEffect, useState } from "react";
-import { Link, useParams, useSearchParams } from "react-router-dom";
+import { Link, useParams } from "react-router-dom";
 import {
   ArrowLeft,
   ArrowUpRight,
-  Bookmark,
   ChevronRight,
   Flag,
   Info,
@@ -30,10 +25,6 @@ import { useSessionContext } from "@/core/session";
 import { useUnifiedNotifications } from "@/core/notifications/useUnifiedNotifications";
 import { Avatar, AvatarFallback, AvatarImage } from "@/shared/components/ui/avatar";
 import { cn } from "@/shared/utils/cn";
-import {
-  PROFESSIONAL_CONCEPT_DETAILS,
-  PROFESSIONAL_CONCEPT_MOCK,
-} from "../mocks/professionalConceptMock";
 import { ProfessionalLeadRequestDialog } from "../components/ProfessionalLeadRequestDialog";
 import {
   type ProfessionalPublicProfile,
@@ -56,8 +47,7 @@ function getInitials(name: string): string {
     .toUpperCase();
 }
 
-function getTerritoryName(profile: ProfessionalPublicProfile, conceptMockEnabled: boolean): string {
-  if (conceptMockEnabled) return "Complexo do Nordeste";
+function getTerritoryName(profile: ProfessionalPublicProfile): string {
   return profile.city ?? "Seu território";
 }
 
@@ -69,10 +59,7 @@ function getContextLabel(profile: ProfessionalPublicProfile, state?: string): st
 
 function getProfileServices(
   profile: ProfessionalPublicProfile,
-  conceptMockEnabled: boolean,
 ): ProfileServiceItem[] {
-  if (conceptMockEnabled) return PROFESSIONAL_CONCEPT_DETAILS.services;
-
   return [
     {
       title: profile.service_subcategory ?? profile.service_category ?? "Serviços profissionais",
@@ -107,19 +94,9 @@ function ShareProfileButton() {
   );
 }
 
-function ProfileActions({ saved, onToggleSaved }: { saved: boolean; onToggleSaved: () => void }) {
+function ProfileActions() {
   return (
     <div className="flex items-center gap-1">
-      <button
-        type="button"
-        onClick={onToggleSaved}
-        className="inline-flex min-h-10 items-center gap-2 rounded-lg px-2 text-type-label font-semibold text-territory-ink transition-colors hover:bg-territory-raised focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-territory-brand"
-        aria-pressed={saved}
-        aria-label={saved ? "Remover perfil dos salvos" : "Salvar perfil"}
-      >
-        <Bookmark className={cn("h-4 w-4", saved && "fill-current text-territory-brand")} aria-hidden="true" />
-        <span className="hidden sm:inline">{saved ? "Salvo" : "Salvar"}</span>
-      </button>
       <ShareProfileButton />
     </div>
   );
@@ -392,41 +369,35 @@ function ProfileLoading({ territoryName, contextLabel, searchHref }: { territory
 
 export default function ProfissionalPublicPage() {
   const { state, city, slug } = useParams<{ state: string; city: string; slug: string }>();
-  const [searchParams] = useSearchParams();
   const { user } = useSessionContext();
   const { unreadCount } = useUnifiedNotifications();
   const [leadDialogOpen, setLeadDialogOpen] = useState(false);
-  const [saved, setSaved] = useState(false);
-  const conceptMockEnabled = import.meta.env.DEV && searchParams.get("concept-mock") === "1";
-  const territoryName = conceptMockEnabled ? "Complexo do Nordeste" : "Seu território";
-  const contextLabel = conceptMockEnabled ? "Salvador, BA" : `${city ?? "Salvador"}, ${(state ?? "BA").toUpperCase()}`;
-  const searchTerritoryBase = conceptMockEnabled
-    ? `/${state ?? "ba"}/${city ?? "salvador"}/complexo-do-nordeste-de-amaralina`
-    : `/${state ?? "ba"}/${city ?? "salvador"}`;
+  const territoryName = "Seu território";
+  const contextLabel = `${city ?? "Salvador"}, ${(state ?? "BA").toUpperCase()}`;
+  const searchTerritoryBase = `/${state ?? "ba"}/${city ?? "salvador"}`;
   const searchHref = buildModuleTerritoryUrl(MODULE_SLUGS.search, searchTerritoryBase);
 
   const { data: professional, isLoading, error } = useProfessionalBySlug({
     uf: state ?? "",
     cidade: city ?? "",
     slug: slug ?? "",
-    enabled: !conceptMockEnabled,
   });
 
   useEffect(() => {
-    if (!isLoading && (error || !professional) && slug && state && city && !conceptMockEnabled) {
+    if (!isLoading && (error || !professional) && slug && state && city) {
       logPageNotFound({
         entityType: "professional",
         identifier: slug,
         attemptedUrl: professionalPublicRoutes.detail({ state, city, slug }),
       });
     }
-  }, [city, conceptMockEnabled, error, isLoading, professional, slug, state]);
+  }, [city, error, isLoading, professional, slug, state]);
 
-  if (isLoading && !conceptMockEnabled) {
+  if (isLoading) {
     return <ProfileLoading territoryName={territoryName} contextLabel={contextLabel} searchHref={searchHref} />;
   }
 
-  const profile = conceptMockEnabled ? PROFESSIONAL_CONCEPT_MOCK : professional;
+  const profile = professional;
   if (error || !profile) {
     return (
       <div className="flex min-h-[100dvh] flex-col items-center justify-center bg-territory-canvas px-4 text-center text-territory-ink">
@@ -436,14 +407,12 @@ export default function ProfissionalPublicPage() {
     );
   }
 
-  const profileTerritoryName = getTerritoryName(profile, conceptMockEnabled);
+  const profileTerritoryName = getTerritoryName(profile);
   const profileContextLabel = getContextLabel(profile, state);
-  const profileLocationLabel = conceptMockEnabled
-    ? PROFESSIONAL_CONCEPT_DETAILS.locationLabel
-    : [profile.city, profile.state].filter(Boolean).join(" · ");
-  const services = getProfileServices(profile, conceptMockEnabled);
-  const portfolio = conceptMockEnabled ? PROFESSIONAL_CONCEPT_DETAILS.portfolio : [];
-  const coverage = conceptMockEnabled ? PROFESSIONAL_CONCEPT_DETAILS.coverage : profile.city ? [profile.city] : [];
+  const profileLocationLabel = [profile.city, profile.state].filter(Boolean).join(" · ");
+  const services = getProfileServices(profile);
+  const portfolio: string[] = [];
+  const coverage = profile.city ? [profile.city] : [];
 
   return (
     <div className="min-h-[100dvh] bg-territory-canvas pb-24 text-territory-ink md:pb-8">
@@ -452,7 +421,7 @@ export default function ProfissionalPublicPage() {
       <main className="w-full max-w-[60rem] px-4 pb-8 pt-1 sm:px-6 md:pt-3 lg:px-6">
         <div className="hidden items-center gap-2 text-type-caption text-territory-muted md:flex"><Link to={searchHref} className="hover:text-territory-brand">Explorar</Link><span aria-hidden="true">/</span><Link to={buildModuleTerritoryUrl(MODULE_SLUGS.services, searchTerritoryBase)} className="hover:text-territory-brand">Serviços</Link><span aria-hidden="true">/</span><span className="truncate">{profile.professional_name}</span></div>
 
-        <div className="mt-0 flex items-center justify-between gap-3 md:mt-0"><Link to={searchHref} className="inline-flex min-h-10 items-center gap-2 rounded-lg px-1 text-type-label font-semibold text-territory-ink hover:bg-territory-raised focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-territory-brand"><ArrowLeft className="h-4 w-4" aria-hidden="true" />Voltar à busca</Link><ProfileActions saved={saved} onToggleSaved={() => setSaved((value) => !value)} /></div>
+        <div className="mt-0 flex items-center justify-between gap-3 md:mt-0"><Link to={searchHref} className="inline-flex min-h-10 items-center gap-2 rounded-lg px-1 text-type-label font-semibold text-territory-ink hover:bg-territory-raised focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-territory-brand"><ArrowLeft className="h-4 w-4" aria-hidden="true" />Voltar à busca</Link><ProfileActions /></div>
 
         <ProfileHero profile={profile} territoryName={profileTerritoryName} locationLabel={profileLocationLabel} />
         <div className="mt-1 md:hidden">
