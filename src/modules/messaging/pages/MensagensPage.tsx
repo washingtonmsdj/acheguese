@@ -33,7 +33,7 @@ import { useSessionContext } from "@/core/session";
 import type { SessionProfileView } from "@/core/session/types";
 import { cn } from "@/shared/utils/cn";
 
-type ProfileKind = "personal" | "business" | "professional";
+type ProfileKind = "personal" | "business" | "professional" | "other";
 
 interface InboxProfile {
   key: string;
@@ -61,9 +61,10 @@ interface InboxConversation {
 type ConversationFilter = "all" | "unread" | "archived";
 
 function getProfileKind(profileType: string | undefined): ProfileKind {
+  if (profileType === "personal") return "personal";
   if (profileType === "business") return "business";
   if (profileType === "professional") return "professional";
-  return "personal";
+  return "other";
 }
 
 function getInitials(value: string): string {
@@ -579,11 +580,13 @@ function buildInboxProfiles(sessionProfiles: SessionProfileView[]): InboxProfile
   return sessionProfiles.map((profile) => {
     const kind = getProfileKind(profile.profileType);
     const typeLabel =
-      kind === "business"
-        ? "Negócio"
-        : kind === "professional"
-          ? "Profissional"
-          : "Pessoal";
+      kind === "personal"
+        ? "Pessoal"
+        : kind === "business"
+          ? "Negócio"
+          : kind === "professional"
+            ? "Profissional"
+            : "Perfil";
 
     return {
       key: profile.id,
