@@ -13,6 +13,19 @@ function read(relativePath: string): string {
   return fs.readFileSync(projectPath(relativePath), "utf8");
 }
 
+function walkSource(dir: string): string[] {
+  const files: string[] = [];
+  for (const entry of fs.readdirSync(dir, { withFileTypes: true })) {
+    const absolute = path.join(dir, entry.name);
+    if (entry.isDirectory()) {
+      files.push(...walkSource(absolute));
+      continue;
+    }
+    if (entry.isFile() && /\.(?:ts|tsx)$/.test(entry.name)) files.push(absolute);
+  }
+  return files;
+}
+
 describe("G4 Auth/session SSOT ownership", () => {
   it("keeps one runtime session owner and retires the legacy security facade", () => {
     expect(fs.existsSync(projectPath("src/core/session/services/SessionService.ts"))).toBe(true);
@@ -22,6 +35,17 @@ describe("G4 Auth/session SSOT ownership", () => {
 
     expect(fs.existsSync(projectPath("src/core/auth/services/SessionService.ts"))).toBe(false);
     expect(fs.existsSync(projectPath("src/core/auth/hooks/useSessions.ts"))).toBe(false);
+  });
+
+  it("keeps legacy session trackers outside core/session runtime", () => {
+    const sessionRoot = projectPath("src/core/session");
+    const offenders = walkSource(sessionRoot)
+      .filter((filePath) =>
+        /user_sessions|session_anomalies/.test(fs.readFileSync(filePath, "utf8")),
+      )
+      .map((filePath) => path.relative(ROOT, filePath).replace(/\\/g, "/"));
+
+    expect(offenders).toEqual([]);
   });
 
   it("retires parallel auth hooks for session/profile runtime state", () => {
