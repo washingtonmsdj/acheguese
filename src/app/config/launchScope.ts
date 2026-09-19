@@ -9,6 +9,7 @@ export type LaunchSurfaceKey =
   | "home"
   | "community"
   | "business"
+  | "billing"
   | "gastronomy"
   | "services"
   | "classifieds"
@@ -35,6 +36,7 @@ export const PUBLIC_LAUNCH_SURFACES: Record<LaunchSurfaceKey, boolean> = {
   home: true,
   community: true,
   business: true,
+  billing: false,
   gastronomy: true,
   services: true,
   classifieds: true,
