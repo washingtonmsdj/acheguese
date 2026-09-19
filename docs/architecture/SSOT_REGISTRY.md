@@ -181,7 +181,7 @@ npx tsx tools/architecture/check-ssot-compliance.ts
 | **Entitlements** | `src/core/billing/services/EntitlementResolver.ts` + `entitlementBaselines.ts` |
 | **Checkout / Portal** | `src/core/billing/services/BillingService.ts` |
 | **Writer server-side** | `supabase/functions/billing-webhook/index.ts` |
-| **Responsabilidade** | Catálogo comercial horizontal, leitura de contratos, gates e integração Stripe; browser não escreve estado comercial |
+| **Responsabilidade** | Catálogo comercial horizontal, leitura de contratos, gates e integração Stripe; browser não escreve estado comercial; elegibilidade é server-only e entitlements/pricing públicos são projeções explícitas apenas do catálogo publicado |
 | **Tabelas canônicas** | `user_subscriptions`, `commercial_catalog_version`, `catalog_item`, `catalog_entitlement_policy`, `catalog_eligibility_rule`, `catalog_pricing_policy` |
 
 > `billing_plans`, `subscription_plans`, `business_subscriptions` e `gastronomy_subscriptions` não são SSOT runtime; referências remanescentes só podem existir para provenance/migração explicitamente governada.
@@ -401,7 +401,9 @@ Tabelas que só podem ser acessadas através de services/owners autorizados. Ace
 | `events` | `EventService` |
 | `reviews` | `ReviewsService` |
 | `user_subscriptions` | `SubscriptionService` + `BusinessSubscriptionService` (read); `billing-webhook` (write) |
-| `commercial_catalog_version`, `catalog_item`, `catalog_*_policy` | `CatalogService` / `BillingPlanService` (read); trusted server/service_role (write) |
+| `commercial_catalog_version`, `catalog_item` | `CatalogService` / `BillingPlanService` (published read); trusted server/service_role (write) |
+| `catalog_entitlement_policy`, `catalog_pricing_policy` | projeções públicas explícitas somente de itens `published`; trusted server/service_role (write) |
+| `catalog_eligibility_rule` | trusted server/service_role only |
 | `conversations`, `messages` | `ClassifiedMessagingService`; mutations pelos RPCs server-owned |
 | `community_direct_threads`, `community_direct_thread_participants`, `community_direct_messages`, `community_direct_message_reports` | `CommunityDirectMessagingService`; mutations pelos RPCs do agregado |
 | `notifications` | `NotificationService` para inbox self-state; outbox/RPC server-owned para criação |
