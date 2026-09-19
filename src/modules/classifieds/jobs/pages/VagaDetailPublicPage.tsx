@@ -320,13 +320,30 @@ export default function VagaDetailPublicPage() {
   // Handlers
   const handleShare = useCallback(async () => {
     try {
-      await compartilhar();
+      const result = await compartilhar();
+      toast(
+        result === "copied"
+          ? {
+              title: "Link copiado!",
+              description:
+                "O link da vaga foi copiado para a área de transferência.",
+            }
+          : {
+              title: "Compartilhamento concluído",
+              description: "A vaga foi enviada pelo canal escolhido.",
+            },
+      );
+    } catch (error) {
+      if (error instanceof Error && error.name === "AbortError") return;
+
       toast({
-        title: "Link copiado!",
-        description: "O link da vaga foi copiado para a área de transferência.",
+        title: "Não foi possível compartilhar",
+        description:
+          error instanceof Error
+            ? error.message
+            : "Tente novamente em instantes.",
+        variant: "destructive",
       });
-    } catch {
-      // Silencioso
     }
   }, [compartilhar, toast]);
 
@@ -378,7 +395,7 @@ export default function VagaDetailPublicPage() {
         });
         toast({
           title: "Denuncia enviada",
-          description: "Nossa equipe ira analisar esta vaga em breve.",
+          description: "Nossa equipe recebeu a denúncia para análise.",
         });
       } catch (error) {
         toast({
