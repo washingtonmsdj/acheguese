@@ -37,15 +37,19 @@ type FilterFactory = (query: QueryBuilder) => QueryBuilder;
 type ExportTable =
   | "profiles"
   | "personal_social_profiles"
+  | "profile_username_history"
+  | "profile_slug_history"
   | "profile_members"
   | "user_active_profiles"
   | "user_roles"
+  | "role_history"
   | "user_residences"
   | "addresses"
   | "user_consents"
   | "notification_preferences"
   | "user_mfa_status"
   | "business_data"
+  | "business_claims"
   | "business_products"
   | "business_stats"
   | "professional_data"
@@ -61,7 +65,9 @@ type ExportTable =
   | "community_questions"
   | "question_answers"
   | "classifieds"
+  | "classified_comments"
   | "events"
+  | "event_reviews"
   | "vagas"
   | "work_opportunities"
   | "communication_publications"
@@ -72,11 +78,17 @@ type ExportTable =
   | "group_members_new"
   | "community_poll_votes"
   | "community_issue_supports"
+  | "classified_likes"
+  | "question_answer_likes"
+  | "event_participants"
+  | "event_review_helpfulness"
+  | "event_reminders"
   | "classified_favorites"
   | "professional_favorites"
   | "tourist_point_saved_items"
   | "vaga_saved_items"
   | "user_favorite_businesses"
+  | "user_recommended_businesses"
   | "ride_requests"
   | "route_reservations"
   | "orders"
@@ -153,15 +165,19 @@ function selectExportTable(
   switch (table) {
     case "profiles": return supabaseAdmin.from("profiles").select(columns);
     case "personal_social_profiles": return supabaseAdmin.from("personal_social_profiles").select(columns);
+    case "profile_username_history": return supabaseAdmin.from("profile_username_history").select(columns);
+    case "profile_slug_history": return supabaseAdmin.from("profile_slug_history").select(columns);
     case "profile_members": return supabaseAdmin.from("profile_members").select(columns);
     case "user_active_profiles": return supabaseAdmin.from("user_active_profiles").select(columns);
     case "user_roles": return supabaseAdmin.from("user_roles").select(columns);
+    case "role_history": return supabaseAdmin.from("role_history").select(columns);
     case "user_residences": return supabaseAdmin.from("user_residences").select(columns);
     case "addresses": return supabaseAdmin.from("addresses").select(columns);
     case "user_consents": return supabaseAdmin.from("user_consents").select(columns);
     case "notification_preferences": return supabaseAdmin.from("notification_preferences").select(columns);
     case "user_mfa_status": return supabaseAdmin.from("user_mfa_status").select(columns);
     case "business_data": return supabaseAdmin.from("business_data").select(columns);
+    case "business_claims": return supabaseAdmin.from("business_claims").select(columns);
     case "business_products": return supabaseAdmin.from("business_products").select(columns);
     case "business_stats": return supabaseAdmin.from("business_stats").select(columns);
     case "professional_data": return supabaseAdmin.from("professional_data").select(columns);
@@ -177,7 +193,9 @@ function selectExportTable(
     case "community_questions": return supabaseAdmin.from("community_questions").select(columns);
     case "question_answers": return supabaseAdmin.from("question_answers").select(columns);
     case "classifieds": return supabaseAdmin.from("classifieds").select(columns);
+    case "classified_comments": return supabaseAdmin.from("classified_comments").select(columns);
     case "events": return supabaseAdmin.from("events").select(columns);
+    case "event_reviews": return supabaseAdmin.from("event_reviews").select(columns);
     case "vagas": return supabaseAdmin.from("vagas").select(columns);
     case "work_opportunities": return supabaseAdmin.from("work_opportunities").select(columns);
     case "communication_publications": return supabaseAdmin.from("communication_publications").select(columns);
@@ -188,11 +206,17 @@ function selectExportTable(
     case "group_members_new": return supabaseAdmin.from("group_members_new").select(columns);
     case "community_poll_votes": return supabaseAdmin.from("community_poll_votes").select(columns);
     case "community_issue_supports": return supabaseAdmin.from("community_issue_supports").select(columns);
+    case "classified_likes": return supabaseAdmin.from("classified_likes").select(columns);
+    case "question_answer_likes": return supabaseAdmin.from("question_answer_likes").select(columns);
+    case "event_participants": return supabaseAdmin.from("event_participants").select(columns);
+    case "event_review_helpfulness": return supabaseAdmin.from("event_review_helpfulness").select(columns);
+    case "event_reminders": return supabaseAdmin.from("event_reminders").select(columns);
     case "classified_favorites": return supabaseAdmin.from("classified_favorites").select(columns);
     case "professional_favorites": return supabaseAdmin.from("professional_favorites").select(columns);
     case "tourist_point_saved_items": return supabaseAdmin.from("tourist_point_saved_items").select(columns);
     case "vaga_saved_items": return supabaseAdmin.from("vaga_saved_items").select(columns);
     case "user_favorite_businesses": return supabaseAdmin.from("user_favorite_businesses").select(columns);
+    case "user_recommended_businesses": return supabaseAdmin.from("user_recommended_businesses").select(columns);
     case "ride_requests": return supabaseAdmin.from("ride_requests").select(columns);
     case "route_reservations": return supabaseAdmin.from("route_reservations").select(columns);
     case "orders": return supabaseAdmin.from("orders").select(columns);
@@ -555,6 +579,34 @@ async function collectExport(
     userId,
   );
 
+  const usernameHistory = await requireProfileRows(
+    "profile_identity_history:usernames",
+    supabaseAdmin,
+    "profile_username_history",
+    "old_username,new_username,changed_at",
+    "profile_id",
+    profileIds,
+    "changed_at",
+  );
+  const slugHistory = await requireProfileRows(
+    "profile_identity_history:slugs",
+    supabaseAdmin,
+    "profile_slug_history",
+    "old_slug,new_slug,changed_at",
+    "profile_id",
+    profileIds,
+    "changed_at",
+  );
+  const roleHistory = await requireUserRows(
+    "role_history",
+    supabaseAdmin,
+    "role_history",
+    "role,action,performed_at",
+    userId,
+    "user_id",
+    "performed_at",
+  );
+
   const residences = await requireUserRows(
     "residences",
     supabaseAdmin,
@@ -622,6 +674,16 @@ async function collectExport(
     "id,profile_id,views_count,favorites_count,shares_count,updated_at,business_id",
     "profile_id",
     profileIds,
+  );
+
+  const businessClaims = await requireUserRows(
+    "business_claim_requests",
+    supabaseAdmin,
+    "business_claims",
+    "business_id,status,notes,created_at,updated_at,reviewed_at",
+    userId,
+    "claimer_id",
+    "created_at",
   );
 
   const professionalByProfile = await requireProfileRows(
@@ -752,6 +814,16 @@ async function collectExport(
     ["profile_id", "seller_id"],
     profileIds,
   );
+  const classifiedComments = await requireProfileRows(
+    "classified_comments",
+    supabaseAdmin,
+    "classified_comments",
+    "classified_id,content,created_at,updated_at,deleted_at",
+    "author_profile_id",
+    profileIds,
+    "created_at",
+  );
+
   const events = await requireProfileRows(
     "events",
     supabaseAdmin,
@@ -760,6 +832,16 @@ async function collectExport(
     "organizer_profile_id",
     profileIds,
   );
+  const eventReviews = await requireProfileRows(
+    "event_reviews",
+    supabaseAdmin,
+    "event_reviews",
+    "event_id,comment,rating,helpful_count,status,created_at,updated_at",
+    "reviewer_profile_id",
+    profileIds,
+    "created_at",
+  );
+
   const vagas = await requireProfileRows(
     "vagas",
     supabaseAdmin,
@@ -853,6 +935,52 @@ async function collectExport(
     profileIds,
   );
 
+  const classifiedLikes = await requireUserRows(
+    "community_actions:classified_likes",
+    supabaseAdmin,
+    "classified_likes",
+    "classified_id,created_at",
+    userId,
+    "user_id",
+    "created_at",
+  );
+  const questionAnswerLikes = await requireUserRows(
+    "community_actions:question_answer_likes",
+    supabaseAdmin,
+    "question_answer_likes",
+    "answer_id,created_at",
+    userId,
+    "user_id",
+    "created_at",
+  );
+  const eventParticipants = await requireProfileRows(
+    "community_actions:event_participants",
+    supabaseAdmin,
+    "event_participants",
+    "event_id,joined_at,checked_in_at",
+    "profile_id",
+    profileIds,
+    "joined_at",
+  );
+  const eventReviewHelpfulness = await requireProfileRows(
+    "community_actions:event_review_helpfulness",
+    supabaseAdmin,
+    "event_review_helpfulness",
+    "review_id,created_at",
+    "profile_id",
+    profileIds,
+    "created_at",
+  );
+  const eventReminders = await requireProfileRows(
+    "community_actions:event_reminders",
+    supabaseAdmin,
+    "event_reminders",
+    "event_id,reminder_time,created_at",
+    "profile_id",
+    profileIds,
+    "created_at",
+  );
+
   const classifiedFavorites = await requireProfileRows(
     "classified_favorites",
     supabaseAdmin,
@@ -891,6 +1019,16 @@ async function collectExport(
     "user_favorite_businesses",
     "id,business_id,notify_on_promotions,notify_on_new_items,notes,tags,created_at,updated_at",
     userId,
+  );
+
+  const businessRecommendations = await requireUserRows(
+    "business_recommendations",
+    supabaseAdmin,
+    "user_recommended_businesses",
+    "business_id,source_module,created_at,updated_at",
+    userId,
+    "user_id",
+    "created_at",
   );
 
   const ridesRaw = await requireRowsByAnyProfileColumn(
@@ -1150,11 +1288,16 @@ async function collectExport(
       profiles,
       personal_social_profiles: personalSocialProfiles,
     },
+    profile_identity_history: {
+      username: usernameHistory,
+      slug: slugHistory,
+    },
     profile_memberships: {
       memberships: profileMembers,
       active_profile_selection: activeProfiles,
     },
     roles,
+    role_history: roleHistory,
     residences: { residences, addresses },
     privacy_preferences: {
       consents,
@@ -1166,6 +1309,7 @@ async function collectExport(
       products: businessProducts,
       stats: businessStats,
     },
+    business_claim_requests: businessClaims,
     professional_profiles: {
       profiles: professionalData,
       coverage: professionalCoverage,
@@ -1184,7 +1328,9 @@ async function collectExport(
       community_questions: communityQuestions,
       question_answers: questionAnswers,
       classifieds,
+      classified_comments: classifiedComments,
       events,
+      event_reviews: eventReviews,
       vagas,
       work_opportunities: workOpportunities,
       communication_publications: communicationPublications,
@@ -1199,6 +1345,11 @@ async function collectExport(
       group_memberships: groupMemberships,
       poll_votes: pollVotes,
       issue_supports: issueSupports,
+      classified_likes: classifiedLikes,
+      question_answer_likes: questionAnswerLikes,
+      event_participants: eventParticipants,
+      event_review_helpfulness: eventReviewHelpfulness,
+      event_reminders: eventReminders,
     },
     favorites_and_saved_items: {
       classifieds: classifiedFavorites,
@@ -1207,6 +1358,7 @@ async function collectExport(
       vagas: vagaSaved,
       businesses: favoriteBusinesses,
     },
+    business_recommendations: businessRecommendations,
     mobility: {
       rides: sanitizeRides(ridesRaw, profileIdSet),
       route_reservations: routeReservations.map((row) => ({

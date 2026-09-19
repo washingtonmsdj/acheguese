@@ -142,7 +142,7 @@ describe("privacy data export rollout boundary", () => {
     );
   });
 
-  it("does not mistake matrix classification for implementation completeness", () => {
+  it("implements classified sources but does not self-certify rollout", () => {
     for (const source of [
       "profile_username_history",
       "profile_slug_history",
@@ -157,7 +157,7 @@ describe("privacy data export rollout boundary", () => {
       "role_history",
       "user_recommended_businesses",
     ]) {
-      expect(exportFunction).not.toContain(`.from("${source}")`);
+      expect(exportFunction).toContain(`.from("${source}")`);
     }
 
     expect(exportFunction).toContain(
