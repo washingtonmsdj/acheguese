@@ -480,9 +480,15 @@ export default function ComunidadePage({
       profileAvatarUrl={visualMockEnabled ? personaMorador : undefined}
       variant="brand"
       searchHref={exploreHref}
+      searchLabel={
+        visualMockEnabled
+          ? "Buscar na comunidade..."
+          : "Buscar neste território"
+      }
       showMobileSearch={false}
       compactMobile
       conceptMobile={visualMockEnabled}
+      flushDesktop={visualMockEnabled}
       canCreatePost={
         (communitySurfaceState === "active" || visualMockEnabled) &&
         communityAccess.can.create_post

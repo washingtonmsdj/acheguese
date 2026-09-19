@@ -78,13 +78,19 @@ export function TerritoryTopbar({
       <form
         onSubmit={submitSearch}
         role="search"
-        className="relative w-full max-w-[26rem]"
+        className={cn(
+          "relative w-full",
+          conceptMobile ? "max-w-[19.75rem]" : "max-w-[26rem]",
+        )}
       >
         <label htmlFor={inputId} className="sr-only">
         {accessibleLabel}
         </label>
         <Search
-          className="pointer-events-none absolute left-4 top-1/2 h-5 w-5 -translate-y-1/2 text-territory-muted"
+          className={cn(
+            "pointer-events-none absolute left-4 top-1/2 h-5 w-5 -translate-y-1/2 text-territory-muted",
+            conceptMobile && "min-[1000px]:h-4 min-[1000px]:w-4",
+          )}
           aria-hidden="true"
         />
         <input
@@ -95,7 +101,10 @@ export function TerritoryTopbar({
           onChange={(event) => setQuery(event.target.value)}
           placeholder={searchLabel}
           autoComplete="off"
-          className="h-11 w-full rounded-xl border border-white/20 bg-white px-11 pr-12 text-sm text-territory-ink outline-none placeholder:text-territory-muted focus:border-territory-sun focus:ring-2 focus:ring-territory-sun/40"
+          className={cn(
+            "h-11 w-full rounded-xl border border-white/20 bg-white px-11 pr-12 text-sm text-territory-ink outline-none placeholder:text-territory-muted focus:border-territory-sun focus:ring-2 focus:ring-territory-sun/40",
+            conceptMobile && "min-[1000px]:h-9",
+          )}
         />
         {query ? (
           <button
@@ -113,7 +122,9 @@ export function TerritoryTopbar({
   return (
     <header
       className={cn(
-        "sticky top-0 z-40 border-b xl:-ml-44 xl:w-[calc(100%+11rem)]",
+        "sticky top-0 z-40 border-b",
+        conceptMobile && "mx-auto max-w-[63.25rem]",
+        !conceptMobile && "xl:-ml-44 xl:w-[calc(100%+11rem)]",
         isLight
           ? "border-territory-border bg-territory-surface text-territory-ink shadow-none"
           : "border-white/10 bg-territory-brand text-white shadow-territory-highlight",
@@ -122,9 +133,16 @@ export function TerritoryTopbar({
     >
       <div
         className={cn(
-          "grid grid-cols-[1fr_auto] items-center gap-x-3 gap-y-1 px-5 py-2 sm:px-6 lg:flex lg:h-16 lg:gap-6 lg:py-0",
+          "grid grid-cols-[1fr_auto] items-center gap-x-3 gap-y-1 px-5 py-2 sm:px-6",
           compactMobile ? "min-h-0 gap-y-0 px-4 py-0" : "min-h-16",
-          flushDesktop ? "mx-0 max-w-none lg:px-6" : "mx-auto max-w-[76rem] lg:px-8",
+          conceptMobile
+            ? "min-[1000px]:flex min-[1000px]:h-16 min-[1000px]:gap-4 min-[1000px]:px-4 min-[1000px]:py-0"
+            : "lg:flex lg:h-16 lg:gap-6 lg:py-0",
+          flushDesktop
+            ? conceptMobile
+              ? "mx-0 max-w-none"
+              : "mx-0 max-w-none lg:px-6"
+            : "mx-auto max-w-[76rem] lg:px-8",
         )}
       >
         <Link
@@ -160,13 +178,15 @@ export function TerritoryTopbar({
             className={cn(
               "h-5 w-5 shrink-0",
               isLight ? "text-territory-brand" : "text-territory-info",
+              conceptMobile && "text-white",
             )}
             aria-hidden="true"
           />
           <span
             className={cn(
               "min-w-0",
-              conceptMobile && "flex items-center gap-2",
+              conceptMobile &&
+                "flex items-center gap-2 min-[1000px]:flex-col min-[1000px]:items-start min-[1000px]:gap-0",
             )}
           >
             <span className={cn("flex items-center gap-1", conceptMobile && "shrink-0")}>
@@ -200,7 +220,14 @@ export function TerritoryTopbar({
           </span>
         </Link>
 
-        <div className="hidden min-w-0 flex-1 justify-center lg:order-3 lg:flex">
+        <div
+          className={cn(
+            "hidden min-w-0 flex-1 justify-center",
+            conceptMobile
+              ? "min-[1000px]:order-3 min-[1000px]:flex"
+              : "lg:order-3 lg:flex",
+          )}
+        >
           {renderSearchForm("territory-home-search-desktop")}
         </div>
 
@@ -209,7 +236,8 @@ export function TerritoryTopbar({
             <Link
               to={searchHref}
               className={cn(
-                "flex h-10 w-10 items-center justify-center rounded-full transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-territory-sun lg:hidden",
+                "flex h-10 w-10 items-center justify-center rounded-full transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-territory-sun",
+                conceptMobile ? "min-[1000px]:hidden" : "lg:hidden",
                 isLight
                   ? "text-territory-ink hover:bg-territory-brand/5"
                   : "text-white hover:bg-white/10",
@@ -243,7 +271,8 @@ export function TerritoryTopbar({
           <Link
             to={isAuthenticated ? messagesHref : "/login"}
             className={cn(
-              "relative hidden h-10 w-10 items-center justify-center rounded-full transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-territory-sun lg:flex",
+              "relative hidden h-10 w-10 items-center justify-center rounded-full transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-territory-sun",
+              !conceptMobile && "lg:flex",
               isLight
                 ? "text-territory-ink hover:bg-territory-brand/5"
                 : "text-white hover:bg-white/10",
@@ -303,6 +332,12 @@ export function TerritoryTopbar({
               <span className="hidden truncate sm:inline">
                 {profileLabel ?? "Minha conta"}
               </span>
+              {conceptMobile ? (
+                <ChevronDown
+                  className="hidden h-4 w-4 shrink-0 sm:block"
+                  aria-hidden="true"
+                />
+              ) : null}
             </Link>
           )}
         </div>

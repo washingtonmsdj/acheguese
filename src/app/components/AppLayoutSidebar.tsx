@@ -68,6 +68,12 @@ export function AppLayoutSidebar() {
     typeof window !== "undefined" &&
     isAccountRoute &&
     new URLSearchParams(window.location.search).get("concept-mock") === "1";
+  const communityConceptPreview =
+    import.meta.env.DEV &&
+    typeof window !== "undefined" &&
+    pathSegments[0] === MODULE_SLUGS.community &&
+    new URLSearchParams(window.location.search).get("visualMock") ===
+      "community-concept";
   const isPublicPersonalProfileRoute =
     pathSegments[0] === "u" && pathSegments.length === 2;
   const isProfessionalPublicRoute =
@@ -161,7 +167,7 @@ export function AppLayoutSidebar() {
       <>
         <div
           className={
-            accountUsesSettingsShell
+            accountUsesSettingsShell || communityConceptPreview
               ? "territory-vivo w-full"
               : "territory-vivo w-full md:pl-[4.5rem] xl:pl-44"
           }
@@ -181,7 +187,11 @@ export function AppLayoutSidebar() {
             conceptAccountPreview ||
             (accountUsesSettingsShell && !isAccountOverview)
           }
-          hideDesktop={conceptAccountPreview || accountUsesSettingsShell}
+          hideDesktop={
+            conceptAccountPreview ||
+            communityConceptPreview ||
+            accountUsesSettingsShell
+          }
         />
       </>
     );

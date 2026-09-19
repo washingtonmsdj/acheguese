@@ -1,6 +1,7 @@
 import catPizzarias from "@/assets/gastronomy/cat-pizzarias.jpg";
 import catRestaurantes from "@/assets/gastronomy/cat-restaurantes.jpg";
 import bairroPituba from "@/assets/bairro-pituba.jpg";
+import complexoCultura from "@/assets/complexo-cultura.jpg";
 import complexoMusica from "@/assets/complexo-musica.jpg";
 import personaComerciante from "@/assets/persona-comerciante.jpg";
 import personaMorador from "@/assets/persona-morador.jpg";
@@ -51,8 +52,8 @@ export const COMMUNITY_OVERVIEW_VISUAL_FIXTURE = {
   groups: [
     {
       id: "visual-group-moradores",
-      name: "Moradores da Pituba",
-      description: "Avisos, pedidos de ajuda e rotina dos moradores.",
+      name: "Cultura e encontros",
+      description: "Troca de ideias, arte e atividades no nosso território.",
       category: "Comunidade",
       members_count: 3200,
       created_at: "2026-01-10T12:00:00.000Z",
@@ -119,8 +120,8 @@ export const COMMUNITY_OVERVIEW_VISUAL_FIXTURE = {
       territory_label: "Vale das Pedrinhas",
       avatar_url: personaPrestador,
       title: "O encontro de domingo foi especial",
-      summary: "Um pouco do nosso encontro de domingo.",
-      images: [complexoMusica],
+      summary: "",
+      images: [complexoCultura],
     },
     {
       id: "visual-post-padaria",
@@ -165,19 +166,19 @@ export const COMMUNITY_OVERVIEW_VISUAL_FIXTURE = {
   events: [
     {
       id: "visual-event-mutirao-orla",
-      title: "Mutirão de limpeza da Orla",
-      description: "Ação comunitária para limpeza e cuidado da orla da Pituba.",
-      date: "2026-07-25T07:30:00-03:00",
-      event_date: "2026-07-25T07:30:00-03:00",
-      end_date: "2026-07-25T10:30:00-03:00",
-      location: "Parque dos Ventos",
+      title: "Mutirão na praça",
+      description: "Encontro da comunidade neste sábado em Santa Cruz.",
+      date: "2026-09-26T09:00:00-03:00",
+      event_date: "2026-09-26T09:00:00-03:00",
+      end_date: "2026-09-26T12:00:00-03:00",
+      location: "Santa Cruz",
       organizer_profile_id: "visual-fixture",
       category: "Comunitário",
       image_url: bairroPituba,
       current_participants: 48,
       status: "upcoming",
-      created_at: "2026-07-01T12:00:00.000Z",
-      updated_at: "2026-07-01T12:00:00.000Z",
+      created_at: "2026-09-01T12:00:00.000Z",
+      updated_at: "2026-09-01T12:00:00.000Z",
     },
   ] satisfies PublicEvent[],
   businesses: [
