@@ -245,9 +245,9 @@ console.log();
 console.log('vercel.json');
 try {
   const vercelConfig = readJson('vercel.json');
-  vercelConfig.buildCommand === 'npm run build:vercel'
+  vercelConfig.buildCommand === 'node tools/release/run-vercel-production-build.mjs'
     ? ok(`build command: ${vercelConfig.buildCommand}`)
-    : fail('buildCommand deve executar npm run build:vercel');
+    : fail('buildCommand deve executar o runner canônico de produção');
   vercelConfig.outputDirectory ? ok(`output directory: ${vercelConfig.outputDirectory}`) : fail('outputDirectory nao definido');
   Array.isArray(vercelConfig.rewrites) && vercelConfig.rewrites.length > 0 ? ok('rewrites configurados para SPA') : fail('rewrites nao configurados');
   Array.isArray(vercelConfig.headers) && vercelConfig.headers.length > 0 ? ok('headers configurados') : fail('headers nao configurados');
