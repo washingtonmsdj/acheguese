@@ -16,6 +16,17 @@ import { groupAvailabilityService } from '../GroupAvailabilityService';
 import type { ModuleKey } from '@/core/rollout/types';
 import type { GroupAvailabilityResult } from '../types';
 
+const DATABASE_UUID_PATTERN = /^[0-9a-f]{8}(?:-[0-9a-f]{4}){3}-[0-9a-f]{12}$/i;
+
+export function isGroupAvailabilityQueryEnabled(
+  groupId: string | null | undefined,
+  moduleKey: ModuleKey | null | undefined,
+): boolean {
+  return Boolean(
+    groupId && DATABASE_UUID_PATTERN.test(groupId) && moduleKey,
+  );
+}
+
 const NONE_RESULT = (groupId: string, moduleKey: ModuleKey): GroupAvailabilityResult => ({
   module_key: moduleKey,
   group_id: groupId,
@@ -30,7 +41,9 @@ export function useGroupAvailability(
   groupId: string | null | undefined,
   moduleKey: ModuleKey | null | undefined,
 ) {
-  const enabled = Boolean(groupId && moduleKey);
+  // Public fallback territories use stable string IDs and have no persisted rollout row.
+  // Never send those presentation-only IDs to a UUID-backed database query.
+  const enabled = isGroupAvailabilityQueryEnabled(groupId, moduleKey);
 
   const query = useQuery({
     queryKey: ['group-availability', groupId, moduleKey],

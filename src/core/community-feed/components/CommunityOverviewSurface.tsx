@@ -50,7 +50,7 @@ import {
   getTerritoryLocationLabel,
   normalizeCategoryLabel,
 } from "./communityOverviewHelpers";
-import personaMorador from "@/assets/persona-morador.jpg";
+import personaComerciante from "@/assets/persona-comerciante.jpg";
 import {
   isLaunchCommunityPostEnabled,
   isLaunchSurfaceEnabled,
@@ -2443,7 +2443,7 @@ export function CommunityOverviewSurface({
                         id="feed"
                         communityName={communityTitle}
                         onOpenCreatePost={handleOpenComposer}
-                        avatarUrl={visualMockEnabled ? personaMorador : undefined}
+                        avatarUrl={visualMockEnabled ? personaComerciante : undefined}
                         variant={visualMockEnabled ? "concept" : "default"}
                         profileLabel="Ana · Pessoal"
                         className={
@@ -2896,7 +2896,7 @@ export function CommunityOverviewSurface({
                     <CommunityComposerEntry
                       communityName={communityTitle}
                       onOpenCreatePost={handleOpenComposer}
-                      avatarUrl={visualMockEnabled ? personaMorador : undefined}
+                      avatarUrl={visualMockEnabled ? personaComerciante : undefined}
                     />
                   ) : null}
                   <SurfacePanel id="discussions-view" className="p-3 sm:p-4">

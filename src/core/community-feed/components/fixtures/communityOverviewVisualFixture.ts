@@ -4,7 +4,6 @@ import bairroPituba from "@/assets/bairro-pituba.jpg";
 import communityStreetGathering from "@/assets/community-concept-encontro-rua.jpg";
 import communityGroupGathering from "@/assets/community-concept-grupo-encontros.jpg";
 import personaComerciante from "@/assets/persona-comerciante.jpg";
-import personaMorador from "@/assets/persona-morador.jpg";
 import personaPrestador from "@/assets/persona-prestador.jpg";
 import type { GroupRow } from "@/core/community-groups/services/CommunityGroupsService";
 import type {
@@ -99,12 +98,12 @@ export const COMMUNITY_OVERVIEW_VISUAL_FIXTURE = {
       author_name: "Ana Santos",
       author_role: "Moradora",
       territory_label: "Santa Cruz",
-      avatar_url: personaMorador,
+      avatar_url: personaComerciante,
       title: "Quem indica aulas de reforço aqui no bairro?",
       summary: "Procuro indicação para o ensino fundamental.",
       response_preview: {
         author_name: "Mariana",
-        avatar_url: personaMorador,
+        avatar_url: personaComerciante,
         content: "Tem um projeto na associação, à tarde.",
       },
     },

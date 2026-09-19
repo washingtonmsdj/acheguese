@@ -64,7 +64,7 @@ import {
 } from "@/core/routing/utils/territoryUrls";
 import { SALVADOR_COMMUNITY_LAUNCH_GROUP_SLUG } from "@/core/community/config/communityLaunch";
 import { COMMUNITY_OVERVIEW_VISUAL_MOCK_QUERY_VALUE } from "@/core/community-feed/components/fixtures/communityOverviewVisualFixture";
-import personaMorador from "@/assets/persona-morador.jpg";
+import personaComerciante from "@/assets/persona-comerciante.jpg";
 
 const GruposPage = lazy(() => import("@/core/community-groups/pages/GruposPage"));
 
@@ -477,7 +477,7 @@ export default function ComunidadePage({
       isAuthenticated={communityAccess.isAuthenticated || visualMockEnabled}
       unreadCount={unreadCount}
       profileLabel={visualMockEnabled ? "Ana" : undefined}
-      profileAvatarUrl={visualMockEnabled ? personaMorador : undefined}
+      profileAvatarUrl={visualMockEnabled ? personaComerciante : undefined}
       variant="brand"
       searchHref={exploreHref}
       searchLabel={
