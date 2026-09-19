@@ -91,7 +91,7 @@ npx tsx tools/architecture/check-ssot-compliance.ts
 | **Arquivo** | `src/core/posts/types.ts` |
 | **Service** | `src/core/posts/services/PostService.ts` |
 | **Responsabilidade** | Owner canônico de Post: CRUD, leitura territorial, detalhe público fail-closed, paginação, polls e share events. A experiência Community Feed compõe esse owner com `TerritoryFilter`. |
-| **Tipos principais** | `Post`, `CommunityPost`, `Poll`, `PollOption`, `CreatePostData`, `FeedParams` |
+| **Tipos principais** | `Post`, `Poll`, `PollOption`, `CreatePostData`, `FeedParams` |
 | **Tabela** | `posts` |
 
 ---
@@ -101,7 +101,7 @@ npx tsx tools/architecture/check-ssot-compliance.ts
 | | |
 |---|---|
 | **Contrato atual** | `docs/07-modules/POSTS_FEED_SSOT.md` |
-| **UI/aplicação** | `src/core/community-feed` |
+| **UI/aplicação** | `src/core/community-feed` + `src/core/posts/views/CommunityPostView.ts` |
 | **Post owner** | `src/core/posts` / `postService` |
 | **Comment owner** | `src/core/comments` |
 | **Engagement owner** | `src/core/engagement` + owners específicos |

@@ -20,7 +20,7 @@ import { useCommunityLocation } from "@/core/community/hooks/useCommunityLocatio
 import { postService } from "@/core/posts/services";
 import { isLaunchSurfaceEnabled } from "@/app/config/launchScope";
 import { logger } from "@/shared/utils/logger";
-import type { PostType } from "@/core/posts/types/Post";
+import type { PostType } from "@/core/posts/types";
 import type { UnifiedPost } from "@/shared/types/posts";
 import type { CommunityReportReason } from "@/core/moderation";
 import type { TerritoryFilter } from "@/core/location/types";
