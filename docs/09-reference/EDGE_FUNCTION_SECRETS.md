@@ -2,8 +2,9 @@
 
 This is the canonical checklist for Supabase Edge Function runtime
 configuration. Templates live in `.env.example`, `.env.local.example`, and
-`.env.production`; real values must live in the deploy provider or Supabase
-secrets, never in committed files.
+`.env.production`; public Vercel build variables belong to the Vercel
+environment, while private Edge runtime values belong to Supabase secrets.
+Real secret values must never be committed.
 
 ## Required Runtime Variables
 
@@ -96,8 +97,11 @@ Before launch, run:
 
 ```powershell
 npm run security:validate
+node tools/security/supabase-edge-secrets-preflight.mjs --function <slug> --json
 npm run verify:deploy
 ```
 
-`verify:deploy` intentionally fails when required runtime variables are missing
-or still contain placeholders.
+Use the Edge preflight for each secret-bearing function that is actually enabled
+for the release. `verify:deploy` validates Vercel build/browser variables and
+the repository/release gates; it does not require Supabase Edge secrets to be
+duplicated into the Vercel build environment.
