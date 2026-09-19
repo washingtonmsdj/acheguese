@@ -4,7 +4,7 @@
  * Paridade com ShareBusinessDialog do módulo de empresas.
  */
 
-import { Copy, Download, Facebook, MessageCircle, Share2 } from 'lucide-react';
+import { Copy, Download, Facebook, MessageCircle } from 'lucide-react';
 import { QRCodeSVG } from 'qrcode.react';
 import { toast } from 'sonner';
 
