@@ -175,7 +175,7 @@ export function EventCTA({
                     : cta.type === 'waitlist' 
                     ? 'Entrar na lista de espera'
                     : cta.type === 'register'
-                    ? isFree ? 'Garantir vaga gratis' : 'Comprar ingresso'
+                    ? cta.label
                     : cta.label
                   }
                 </span>
