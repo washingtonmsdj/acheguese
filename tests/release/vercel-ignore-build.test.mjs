@@ -4,6 +4,7 @@ import { join } from "node:path";
 import {
   isSkippableVercelPath,
   previousCommitFetchArgs,
+  shouldSkipAutomaticBranchBuild,
   shouldSkipVercelBuild,
 } from "../../tools/release/vercel-ignore-build.mjs";
 
@@ -30,7 +31,15 @@ describe("Vercel ignored build step", () => {
     expect(ignoreRules).not.toContain(".git");
   });
 
-  it("skips only known non-deploy paths", () => {
+  it("skips automatic Vercel builds for non-main Git refs", () => {
+    expect(shouldSkipAutomaticBranchBuild("feature/example")).toBe(true);
+    expect(shouldSkipAutomaticBranchBuild("fix/security")).toBe(true);
+    expect(shouldSkipAutomaticBranchBuild("main")).toBe(false);
+    expect(shouldSkipAutomaticBranchBuild("")).toBe(false);
+    expect(shouldSkipAutomaticBranchBuild(undefined)).toBe(false);
+  });
+
+  it("skips only known non-deploy paths on the production branch", () => {
     const skippable = [
       "docs/03-architecture/G5_LIVE_REVALIDATION_2026-08-30.md",
       ".github/workflows/ssot-tests.yml",
@@ -97,6 +106,8 @@ describe("Vercel ignored build step", () => {
       join(ROOT, "tools/release/vercel-ignore-build.mjs"),
       "utf8",
     );
+    expect(source).toContain("VERCEL_GIT_COMMIT_REF");
+    expect(source).toContain("automatic branch deployment disabled");
     expect(source).toContain("VERCEL_GIT_PREVIOUS_SHA");
     expect(source).toContain('runGit(["cat-file", "-e"');
     expect(source).toContain('runGit(["remote", "get-url", name])');
