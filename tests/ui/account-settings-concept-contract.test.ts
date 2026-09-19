@@ -273,7 +273,8 @@ describe("account settings concept contract", () => {
     expect(appLayout).toContain("ACCOUNT_SETTINGS_SHELL_PATHS");
     expect(appLayout).toContain("accountUsesSettingsShell");
     expect(appLayout).toContain('id={accountUsesSettingsShell ? undefined : "main-content"}');
-    expect(appLayout).toContain("conceptAccountPreview || accountUsesSettingsShell");
+    expect(appLayout).not.toContain("conceptAccountPreview");
+    expect(appLayout).toContain("hideDesktop={accountUsesSettingsShell}");
     expect(appLayout).toContain("accountUsesSettingsShell && !isAccountOverview");
     expect(accountRoutes).toContain("ACCOUNT_PATHS.addresses");
   });
