@@ -52,7 +52,7 @@ export function EventTickets({
             {isFree ? 'Inscricoes gratuitas' : 'Ingressos'}
           </div>
           <h2 className="text-3xl font-bold text-foreground">
-            {isFree ? 'Garanta sua vaga' : 'Escolha seu ingresso'}
+            {isFree ? 'Garanta sua vaga' : 'Ingressos do evento'}
           </h2>
           <p className="mt-2 text-muted-foreground">
             {isFree
@@ -91,7 +91,7 @@ export function EventTickets({
                 onClick={() => canSelect && onSelectTicket(ticket.id)}
               >
                 {/* Popular Badge */}
-                {index === 0 && isAvailable && (
+                {index === 0 && isAvailable && ticket.is_free && (
                   <div className="absolute right-4 top-4">
                     <Badge className="bg-gradient-to-r from-primary to-purple-600 text-white border-0 gap-1">
                       <Sparkles className="h-3 w-3" />
