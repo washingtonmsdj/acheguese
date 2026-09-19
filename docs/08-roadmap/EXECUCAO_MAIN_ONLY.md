@@ -1,12 +1,60 @@
 # Achegue-se — Execução `main`-only e prontidão MVP
 
 **Status:** ATIVO — SSOT OPERACIONAL  
-**Data do checkpoint GitHub:** 2026-09-09  
+**Data do checkpoint GitHub:** 2026-09-19  
 **Repositório:** `washingtonmsdj/acheguese`  
 **Linha ativa:** `main`  
-**HEAD técnico de código registrado neste checkpoint:** `1778d727fb0fca510210c5e2c42dd31a4d23e3fb` (2026-09-18; último commit com alteração de código antes deste registro documental).
+**HEAD técnico de código registrado neste checkpoint:** `7f8b180c7ccacb7c59a6310c37c48e3d6ba802e7` (baseline remoto da `main` auditado para o corte MVP em 2026-09-19).
 
 Este documento consolida ordem de execução, blockers e Definition of Done. Ele é um **registro operacional**, não uma fotografia autoritativa do que existe no produto. A fonte de verdade para decidir o que existe, o que está ativo e o que deve ser corrigido é sempre o **projeto real**: código da `main`, rotas, owners, serviços, schema/migrations, contratos, testes, deploy/runtime e comportamento observado.
+
+## Corte de lançamento MVP — 2026-09-19
+
+Este corte substitui, para fins de **prioridade de lançamento**, a ordem histórica de certificação por módulo. O objetivo imediato é colocar no ar um MVP verificável, pequeno e seguro no território de lançamento, sem exigir que módulos deliberadamente pausados sejam concluídos antes do primeiro release público.
+
+### Escopo público do candidato
+
+A fonte executável continua sendo `src/app/config/launchScope.ts`. No baseline auditado, permanecem públicas: Home, Comunidade, Empresas, Gastronomia, Serviços, Classificados, Pontos Turísticos, Mapa, Perto de Mim, Busca, Vagas, Eventos, preview de eventos comunitários e comunicação comunitária já integrada ao fluxo de Comunidade.
+
+Para reduzir risco sem amputar capacidade válida:
+
+- **núcleo obrigatório do MVP:** autenticação/conta, Home territorial com dados reais/empty states, Comunidade básica, Empresas/Gastronomia/Serviços, Classificados, Busca, Mapa/Perto de Mim e Pontos Turísticos;
+- **superfícies condicionais:** Vagas e Eventos só entram no release se concluírem a mesma certificação do núcleo; se não concluírem, devem ser pausadas pelo owner `launchScope.ts` antes do release, sem remover código;
+- **fora do primeiro release:** Educação, Comunicação global, Mobilidade, Cupons, Gamificação, Analytics público, Alertas, Problemas/Issues, Achados e Perdidos, Safety familiar e demais superfícies que já estão `false` no launch scope. Essas capacidades não bloqueiam o MVP enquanto permanecerem realmente inacessíveis na superfície pública.
+
+O primeiro release continua territorial. **Cobertura uniforme dos 170 bairros de Salvador não é critério do MVP**; expansão municipal, ETL de todos os boundaries e rollout bairro a bairro ficam para depois da estabilização do território inicial.
+
+### Bloqueadores reais antes do release
+
+1. **Convergir Git, Supabase e PRs abertos.** A `main` ainda está em `7f8b180c...` e há uma fila grande de PRs de hardening/cleanup baseada no mesmo SHA. Não fazer merge em massa. Integrar em uma linha de release única, revalidando conflitos e priorizando primeiro qualquer migration/Edge/config já aplicada remotamente para eliminar drift Git ↔ runtime.
+2. **Restaurar um gate executável.** Os GitHub Actions do HEAD continuam encerrando antes de steps. `steps=[]`/sem log não é teste vermelho de código nem teste verde. O candidato só pode avançar após security/lint/typecheck/test/build executarem de verdade no mesmo SHA.
+3. **Completar proteção da `main`.** Force-push/deleção já estão bloqueados, porém o fluxo ainda precisa exigir PR e checks que realmente executem. O publisher canônico de tipos Supabase deve deixar de escrever diretamente na `main` antes disso.
+4. **Reconciliar migrations, Edge Functions e tipos gerados.** O gate remoto precisa provar que a sequência local corresponde ao banco alvo e que Edge/source publicado é atribuível ao SHA candidato.
+5. **Manter LGPD destrutivo fail-closed.** Delete/purge não pode ser habilitado enquanto `LGPD_PURGE_POLICY` não estiver pronto. Exportação também permanece desabilitada até certificação. O MVP pode lançar com essas capacidades indisponíveis, desde que a UI não prometa sucesso e nenhum caminho stale permaneça acessível.
+6. **Fechar segurança do que será exposto.** Priorizar Auth/conta, Profile, território, Comunidade, Business/Gastronomy/Services, Classificados, Busca/Mapa e superfícies administrativas necessárias. Hardening de módulos pausados pode continuar durante/depois do MVP, exceto quando compartilha uma boundary usada pelo núcleo.
+7. **Certificar o fluxo real das superfícies públicas.** Para cada item do escopo: rota/owner canônico, contrato DB/RPC, autorização positiva e negativa, loading/empty/error/auth, fluxo principal com dados reais, smoke mobile e E2E sem placeholder/paused contado como sucesso.
+8. **Provar deploy do mesmo SHA.** O SHA aprovado deve produzir build real no provider e smoke no domínio público, incluindo login/cadastro, troca/resolução territorial, Home, navegação do núcleo, mutações principais e logout.
+9. **Configuração legal/operacional mínima.** Produção deve ter origem pública, contato e DPO configurados; políticas e textos não podem apontar para placeholders.
+10. **Sem dados conceituais em produção.** Mocks visuais podem existir apenas sob gate de desenvolvimento. O território inicial precisa renderizar dado real ou empty state explícito, nunca atividade inventada.
+
+### Correções de gate identificadas neste corte
+
+- `tools/release/verify-deploy-ready.mjs` ainda valida o `buildCommand` antigo `npm run build:vercel`, enquanto `vercel.json`, o gerador de configuração e os testes canônicos usam `node tools/release/run-vercel-production-build.mjs`. O verificador deve reconhecer o runner canônico.
+- `tests/e2e/launch-scope-public.spec.ts` ainda trata Eventos e Vagas como pausados, enquanto `launchScope.ts` os marca `true`. O teste deve refletir o owner atual; a decisão de pausar uma dessas superfícies, se necessária para o release, deve ser feita no owner e então propagada aos testes.
+
+### Ordem de execução até MVP
+
+1. **R0 — congelar escopo:** nenhuma feature nova até o primeiro release; corrigir apenas blocker, regressão, segurança, dados de lançamento e qualidade necessária ao núcleo.
+2. **R1 — convergência:** integrar/reconciliar PRs que representam runtime já alterado, eliminar drift migrations/Edge/types e atualizar o candidato sobre a `main` mais nova.
+3. **R2 — release authority:** publisher de tipos via PR, CI realmente executando e branch protection exigindo o caminho aprovado.
+4. **R3 — Auth/Privacy/Security:** fechar autenticação e superfícies sensíveis do escopo; manter delete/export destrutivos fail-closed.
+5. **R4 — certificação funcional:** núcleo primeiro; Eventos/Vagas apenas se passarem no mesmo padrão.
+6. **R5 — exact-SHA:** security + lint + typecheck + tests + build + E2E + deploy real + smoke do mesmo SHA.
+7. **R6 — lançar MVP:** abrir somente superfícies certificadas e iniciar acompanhamento de erros/uso. Todo restante passa ao backlog durante/pós-MVP.
+
+### Não bloqueia o primeiro release
+
+Não usar como motivo para adiar o MVP: limpeza das 38 refs históricas remanescentes, redesign amplo, refatoração estética sem bug, cobertura de todos os bairros de Salvador, otimizações sem evidência de gargalo, Mobilidade, Educação, IA/virtual try-on, Cupons, Gamificação, Analytics público, expansão de monetização e hardening de capacidades que permaneçam comprovadamente pausadas e isoladas.
 
 ## Snapshot remoto — 2026-09-18
 
