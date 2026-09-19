@@ -226,8 +226,6 @@ export interface ProfileOperationsCounts {
   events: number;
   alerts: number;
   issues: number;
-  favoritesGiven: number;
-  favoritesReceived: number;
   notificationsTotal: number;
   notificationsUnread: number;
   ridesTotal: number;
