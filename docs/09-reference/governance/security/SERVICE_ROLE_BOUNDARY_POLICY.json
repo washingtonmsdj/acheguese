@@ -22,7 +22,7 @@
     },
     {
       "prefix": "api/",
-      "label": "serverless API runtime outside the shared admin helper"
+      "label": "serverless API runtime; no service_role factory is currently allowlisted"
     }
   ],
   "allowedPrefixes": [
