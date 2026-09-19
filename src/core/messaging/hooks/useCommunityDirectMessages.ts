@@ -210,6 +210,14 @@ export function useCommunityDirectMessages(communityId?: string) {
   );
 
   useEffect(() => {
+    setConversations([]);
+    setMessages([]);
+    setMessageCursor(null);
+    setActiveThreadId(null);
+    setError(null);
+  }, [profileId]);
+
+  useEffect(() => {
     if (!profileId || !activeThreadId) return;
 
     const subscription = communityDirectMessagingService.subscribeToMessages(
