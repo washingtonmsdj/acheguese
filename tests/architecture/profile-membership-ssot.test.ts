@@ -31,6 +31,30 @@ function walk(dir: string): string[] {
 }
 
 describe("G4 profile membership SSOT", () => {
+  it("keeps a single canonical profile members manager component", () => {
+    const canonicalPath =
+      "src/core/profiles/components/ProfileMembersManager.tsx";
+    const retiredPath =
+      "src/core/profiles/components/ProfileMembersManagerImproved.tsx";
+
+    expect(fs.existsSync(path.join(ROOT, canonicalPath))).toBe(true);
+    expect(fs.existsSync(path.join(ROOT, retiredPath))).toBe(false);
+
+    const canonical = fs.readFileSync(
+      path.join(ROOT, canonicalPath),
+      "utf8",
+    );
+    expect(canonical).toContain("export function ProfileMembersManager(");
+    expect(canonical).not.toContain("ProfileMembersManagerImproved");
+
+    const transientReferences = walk(SRC)
+      .filter((filePath) =>
+        fs.readFileSync(filePath, "utf8").includes("ProfileMembersManagerImproved"),
+      )
+      .map((filePath) => normalize(path.relative(ROOT, filePath)));
+
+    expect(transientReferences).toEqual([]);
+  });
   it("keeps active manager authority aligned with the database contract", () => {
     const service = fs.readFileSync(
       path.join(
@@ -63,7 +87,7 @@ describe("G4 profile membership SSOT", () => {
     const ui = fs.readFileSync(
       path.join(
         ROOT,
-        "src/core/profiles/components/ProfileMembersManagerImproved.tsx",
+        "src/core/profiles/components/ProfileMembersManager.tsx",
       ),
       "utf8",
     );

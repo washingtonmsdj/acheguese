@@ -1,7 +1,7 @@
 import { useNavigate } from "react-router-dom";
 import { SettingsTab } from "@/core/business/components/SettingsTab";
 import { businessManagementRoutes } from "@/core/business/utils/businessManagementRoutes";
-import { ProfileMembersManagerImproved } from "@/core/profiles/components/ProfileMembersManagerImproved";
+import { ProfileMembersManager } from "@/core/profiles/components/ProfileMembersManager";
 import { useBusinessDashboardContext } from "@/modules/business/dashboard/businessDashboardContext";
 import { Card, CardContent, CardHeader, CardTitle } from "@/shared/components/ui/card";
 import { Users } from "lucide-react";
@@ -25,7 +25,7 @@ export default function BusinessSettingsPage() {
           </CardTitle>
         </CardHeader>
         <CardContent>
-          <ProfileMembersManagerImproved
+          <ProfileMembersManager
             profileId={business.profile_id}
             profileType="business"
           />

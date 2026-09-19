@@ -51,7 +51,7 @@ describe("secondary account settings shell contract", () => {
   it("preserves real identity-management capabilities after the visual migration", () => {
     expect(profileSettings).toContain("<PrivacySettings profile={activeProfile}");
     expect(profileSettings).toContain("<ProfileLinksManager profileId={activeProfile.id}");
-    expect(profileSettings).toContain("<ProfileMembersManagerImproved");
+    expect(profileSettings).toContain("<ProfileMembersManager");
     expect(profileSettings).toContain("canProfileHaveMembers(activeProfile)");
     expect(profileSettings).toContain('value="privacy"');
     expect(profileSettings).toContain('value="links"');
