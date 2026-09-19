@@ -32,7 +32,6 @@ import { GastronomyBusinessInfoSidebar } from "./GastronomyBusinessInfoSidebar";
 import { GastronomyDetailHeroSection } from "./GastronomyDetailHeroSection";
 import { CategoryNav, ServiceBar } from "./GastronomyDetailNavigation";
 import { GastronomyDetailSeo } from "./GastronomyDetailSeo";
-import GastronomyDetailConceptPreviewPage from "./GastronomyDetailConceptPreviewPage";
 
 interface GastronomyDetailPageProps {
   routeParams?: {
@@ -591,12 +590,5 @@ function GastronomyDetailLivePage({
 export default function GastronomyDetailPage(
   props: GastronomyDetailPageProps = {},
 ) {
-  const urlParams = useParams();
-  const restaurantSlug = props.routeParams?.slug ?? urlParams.slug;
-  const saboresDaAnaMockEnabled =
-    import.meta.env.DEV && restaurantSlug === "sabores-da-ana";
-
-  return saboresDaAnaMockEnabled ? (
-    <GastronomyDetailConceptPreviewPage />
-  ) : <GastronomyDetailLivePage {...props} />;
+  return <GastronomyDetailLivePage {...props} />;
 }
