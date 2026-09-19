@@ -27,8 +27,8 @@ describe("canonical ride share token model", () => {
   });
 
   it("keeps runtime reads on the canonical Safety share projection", () => {
-    const adapter = readFileSync(
-      join(process.cwd(), "src", "core", "mobility", "services", "RideCanonicalAdapter.ts"),
+    const mapper = readFileSync(
+      join(process.cwd(), "src", "core", "mobility", "services", "RideRequestContractMapper.ts"),
       "utf8",
     );
     const runtime = readFileSync(
@@ -52,8 +52,8 @@ describe("canonical ride share token model", () => {
       "utf8",
     );
 
-    expect(adapter).not.toContain("ride.share_token");
-    expect(adapter).toContain("share_token: null");
+    expect(mapper).not.toContain("ride.share_token");
+    expect(mapper).toContain("share_token: null");
     expect(runtime).not.toContain('.eq("share_token", token)');
     expect(readQueries).not.toMatch(/export async function getRideByShareToken/);
     expect(queriesFacade).not.toContain("getRideByShareToken");
