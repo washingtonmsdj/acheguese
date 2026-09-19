@@ -11,10 +11,17 @@ export interface AdvisorFinding {
   title?: string;
 }
 
+export type AdvisorResidualCallerClass =
+  | "platform_extension"
+  | "public_endpoint"
+  | "authenticated_user_endpoint"
+  | "authenticated_admin_endpoint";
+
 export interface AdvisorResidual {
   cacheKey: string;
   exceptionId: string;
   summary: string;
+  callerClass?: AdvisorResidualCallerClass;
 }
 
 export interface AdvisorResidualRegister {
@@ -57,6 +64,30 @@ export function loadAllowedResidualCacheKeys(): Set<string> {
 
   if (!Array.isArray(register.residuals) || register.residuals.length === 0) {
     throw new Error(`Nenhum residual mapeado em ${RESIDUAL_REGISTER_PATH}.`);
+  }
+
+  const allowedCallerClasses = new Set<AdvisorResidualCallerClass>([
+    "platform_extension",
+    "public_endpoint",
+    "authenticated_user_endpoint",
+    "authenticated_admin_endpoint",
+  ]);
+
+  const unclassifiedSecurityDefiners = register.residuals.filter(
+    (residual) =>
+      residual.cacheKey.includes("security_definer_function_executable_") &&
+      (!residual.callerClass || !allowedCallerClasses.has(residual.callerClass)),
+  );
+
+  if (unclassifiedSecurityDefiners.length > 0) {
+    throw new Error(
+      [
+        "Residual SECURITY DEFINER sem callerClass valido:",
+        ...unclassifiedSecurityDefiners.map(
+          (residual) => `- ${residual.cacheKey}`,
+        ),
+      ].join("\n"),
+    );
   }
 
   const cacheKeys = register.residuals.map((residual) => residual.cacheKey);
