@@ -245,3 +245,25 @@ A prancha 117 também está coberta pelos estados demonstrativos de visitante, v
 
 - Branch: `codex/reformulacao-entrada-comunidade`.
 - Somente os arquivos desta implementação e este relatório serão incluídos; os arquivos staged preexistentes de catalogação e segurança permanecem excluídos.
+
+## 19/09/2026 · Conversas por perfil — prancha 014
+
+### Auditoria e ajuste
+
+- Comparei `MensagensPage` com `09-conversas/pranchas/014-conversas-perfis-lado-a-lado.png` em mobile e desktop. A composição já correspondia ao concept: seletor de perfis, caixa de entrada, busca, filtros, fixadas, recentes, detalhe da conversa e navegação responsiva.
+- Mantive o preview demonstrativo isolado por `import.meta.env.DEV` e `concept-mock=1`; fora dele, a página continua usando `useCommunityDirectMessages`, sessão ativa, troca de perfil, leitura e envio pelos serviços reais.
+- Completei o controle “Filtros”, que antes era apenas visual: agora ele abre um painel acessível e aplica “Somente conversas fixadas” sem mudar a composição fechada da prancha. Busca, Todas, Não lidas e Arquivadas continuam funcionando como antes.
+- Não acrescentei nomes, contagens, mensagens ou perfis fictícios ao fluxo de produção; os dados ilustrativos permanecem confinados ao mock já existente.
+
+### Validação e evidências
+
+- `npm run typecheck:app`: passou.
+- ESLint passou em `src/modules/messaging/pages/MensagensPage.tsx`.
+- Serviços de mensageria: 2 arquivos, 12 testes passaram.
+- Conferi no navegador interno a composição mobile após HMR, em aproximadamente 425 × 1108 px, e validei a abertura, marcação e limpeza do filtro adicional. O viewport desktop temporário também foi conferido e restaurado ao padrão; a aba permanece aberta e marcada como entrega visual.
+- A captura final voltou ao estado inicial do concept, com “Todas” ativo, fixadas e recentes visíveis.
+
+### Git
+
+- Branch: `codex/reformulacao-entrada-comunidade`.
+- Somente os arquivos desta implementação e este relatório serão incluídos; os arquivos staged preexistentes de catalogação e segurança permanecem excluídos.

@@ -432,10 +432,13 @@ function ConversationColumn({
   search: string;
   onSearchChange: (value: string) => void;
 }) {
+  const [advancedFiltersOpen, setAdvancedFiltersOpen] = useState(false);
+  const [onlyPinned, setOnlyPinned] = useState(false);
   const filteredConversations = conversations.filter((conversation) => {
     const matchesSearch = conversation.name.toLowerCase().includes(search.toLowerCase()) || conversation.preview.toLowerCase().includes(search.toLowerCase());
     const matchesFilter = conversationFilter === "all" || (conversationFilter === "unread" ? Boolean(conversation.unread) : Boolean(conversation.archived));
-    return matchesSearch && matchesFilter;
+    const matchesAdvancedFilters = !onlyPinned || Boolean(conversation.pinned);
+    return matchesSearch && matchesFilter && matchesAdvancedFilters;
   });
   const pinnedConversations = filteredConversations.filter((conversation) => conversation.pinned);
   const recentConversations = filteredConversations.filter((conversation) => !conversation.pinned);
@@ -474,8 +477,39 @@ function ConversationColumn({
           const active = conversationFilter === option.value;
           return <button key={option.value} type="button" role="tab" aria-selected={active} onClick={() => onFilterChange(option.value)} className={cn("min-h-9 rounded-full border px-3 text-xs font-medium transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-territory-brand", active ? "border-territory-brand bg-territory-brand font-semibold text-white" : "border-transparent bg-territory-raised text-territory-ink hover:border-territory-border")}>{option.label}</button>;
         })}
-        <button type="button" aria-label="Abrir filtros" className="ml-auto inline-flex min-h-9 items-center gap-1 rounded-full border border-territory-border px-3 text-xs font-semibold text-territory-ink hover:bg-territory-raised focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-territory-brand"><SlidersHorizontal className="h-4 w-4" aria-hidden="true" />Filtros</button>
+        <button
+          type="button"
+          aria-label="Abrir filtros"
+          aria-expanded={advancedFiltersOpen}
+          aria-controls="conversation-advanced-filters"
+          onClick={() => setAdvancedFiltersOpen((open) => !open)}
+          className={cn(
+            "ml-auto inline-flex min-h-9 items-center gap-1 rounded-full border px-3 text-xs font-semibold text-territory-ink transition-colors hover:bg-territory-raised focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-territory-brand",
+            advancedFiltersOpen || onlyPinned ? "border-territory-brand bg-territory-brand/10" : "border-territory-border",
+          )}
+        >
+          <SlidersHorizontal className="h-4 w-4" aria-hidden="true" />
+          Filtros
+        </button>
       </div>
+      {advancedFiltersOpen ? (
+        <div id="conversation-advanced-filters" className="mt-2 rounded-xl border border-territory-border bg-territory-surface p-3">
+          <label className="flex min-h-9 items-center gap-2 text-sm text-territory-ink">
+            <input
+              type="checkbox"
+              checked={onlyPinned}
+              onChange={(event) => setOnlyPinned(event.target.checked)}
+              className="h-4 w-4 rounded border-territory-border text-territory-brand accent-territory-brand focus:ring-territory-brand/30"
+            />
+            Somente conversas fixadas
+          </label>
+          {onlyPinned ? (
+            <button type="button" onClick={() => setOnlyPinned(false)} className="mt-2 text-xs font-semibold text-territory-brand hover:underline">
+              Limpar filtro adicional
+            </button>
+          ) : null}
+        </div>
+      ) : null}
       <div className="mt-4">
         {pinnedConversations.length ? <div><h2 className="mb-1.5 text-[0.6875rem] font-bold uppercase tracking-[0.12em] text-territory-muted">Fixadas</h2>{pinnedConversations.map((conversation) => <ConversationListItem key={conversation.id} conversation={conversation} selected={conversation.id === selectedConversationId} onClick={() => onSelectConversation(conversation.id)} />)}</div> : null}
         {recentConversations.length ? <div className={cn(pinnedConversations.length && "mt-4")}><h2 className="mb-1.5 text-[0.6875rem] font-bold uppercase tracking-[0.12em] text-territory-muted">Recentes</h2>{recentConversations.map((conversation) => <ConversationListItem key={conversation.id} conversation={conversation} selected={conversation.id === selectedConversationId} onClick={() => onSelectConversation(conversation.id)} />)}</div> : null}
