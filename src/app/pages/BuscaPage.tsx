@@ -44,11 +44,6 @@ import {
   isLaunchSurfaceEnabled,
   type LaunchSurfaceKey,
 } from "@/app/config/launchScope";
-import {
-  BUSCA_CONCEPT_MAP_VIEWPORT,
-  BUSCA_CONCEPT_MAP_POLYGONS,
-  BUSCA_CONCEPT_MOCK,
-} from "@/app/mocks/buscaConceptMock";
 import { useModuleTerritoryFilter } from "@/core/location/hooks/useModuleTerritoryFilter";
 import { usePublicBrowsingCity } from "@/core/location/hooks/usePublicBrowsingCity";
 import type { TerritoryFilter } from "@/core/location/types";
@@ -177,17 +172,12 @@ export default function BuscaPage() {
   const { user } = useSessionContext();
   const { unreadCount } = useUnifiedNotifications();
   const { navigateToBusiness } = useBusinessNavigation();
-  const conceptMockEnabled =
-    import.meta.env.DEV && searchParams.get("concept-mock") === "1";
-  const [activeFilter, setActiveFilter] = useState<SearchCategory>(() =>
-    conceptMockEnabled ? "professionals" : "all",
-  );
+  const [activeFilter, setActiveFilter] = useState<SearchCategory>("all");
   const [sortOrder, setSortOrder] = useState<"relevance" | "name">(
     "relevance",
   );
   const [isFilterMenuOpen, setIsFilterMenuOpen] = useState(false);
-  const initialQuery =
-    searchParams.get("q")?.trim() ?? (conceptMockEnabled ? "eletricista" : "");
+  const initialQuery = searchParams.get("q")?.trim() ?? "";
   const territoryResolution = useResolveTerritoryFromUrl();
   const moduleTerritory = useModuleTerritoryFilter({
     nearbyEnabled: false,
@@ -218,7 +208,7 @@ export default function BuscaPage() {
   } = useGlobalSearch(
     initialQuery,
     { category: activeFilter, territoryFilter: searchTerritoryFilter },
-    { enabled: searchEnabled && !conceptMockEnabled },
+    { enabled: searchEnabled },
   );
 
   useEffect(() => {
@@ -226,14 +216,13 @@ export default function BuscaPage() {
   }, [initialQuery, setQuery]);
 
   useEffect(() => {
-    if (!searchEnabled || conceptMockEnabled) return;
+    if (!searchEnabled) return;
     updateFilters({
       category: activeFilter,
       territoryFilter: searchTerritoryFilter,
     });
   }, [
     activeFilter,
-    conceptMockEnabled,
     searchEnabled,
     searchTerritoryFilter,
     updateFilters,
@@ -242,16 +231,12 @@ export default function BuscaPage() {
   const stateSlug = state ?? active.state;
   const citySlug = city ?? active.city;
   const territoryBase = `/${stateSlug}/${citySlug}${district ? `/${district}` : ""}`;
-  const territoryName = conceptMockEnabled
-    ? "Complexo do Nordeste"
-    : district
-      ? titleCase(district)
-      : moduleTerritory.displayLabel || titleCase(citySlug);
-  const contextLabel = conceptMockEnabled
-    ? "Salvador, BA"
-    : district
-      ? `${titleCase(citySlug)}, ${stateSlug.toLocaleUpperCase("pt-BR")}`
-      : `${stateSlug.toLocaleUpperCase("pt-BR")} · visão ampla da cidade`;
+  const territoryName = district
+    ? titleCase(district)
+    : moduleTerritory.displayLabel || titleCase(citySlug);
+  const contextLabel = district
+    ? `${titleCase(citySlug)}, ${stateSlug.toLocaleUpperCase("pt-BR")}`
+    : `${stateSlug.toLocaleUpperCase("pt-BR")} · visão ampla da cidade`;
 
   const moduleUrls = useMemo(
     () => ({
@@ -275,46 +260,35 @@ export default function BuscaPage() {
     [territoryBase],
   );
 
-  const displayResults = useMemo<SearchResultsViewModel>(() => {
-    if (conceptMockEnabled) {
-      return {
-        documents: [],
-        businesses: [],
-        professionals: BUSCA_CONCEPT_MOCK.professionals,
-        total: BUSCA_CONCEPT_MOCK.professionals.length,
-      };
-    }
-
-    return {
-      documents: results.documents,
-      businesses: results.businesses.map((business) => ({
-        id: business.id,
-        name: business.name,
-        logo_url: business.logo_url,
-        category: business.category,
-        neighborhood: business.location?.name ?? business.business_city,
-        description: business.description,
-        latitude: business.address?.latitude,
-        longitude: business.address?.longitude,
-        rating: business.rating,
-      })),
-      professionals: results.professionals.map((professional) => ({
-        id: professional.id,
-        name: professional.name,
-        target_url: professional.target_url,
-        logo_url: professional.logo_url,
-        category: professional.category,
-        neighborhood: professional.neighborhood,
-        city: professional.city,
-        description: professional.description,
-        latitude: professional.latitude,
-        longitude: professional.longitude,
-        rating: professional.rating,
-        total_reviews: professional.total_reviews,
-      })),
-      total: results.total,
-    };
-  }, [conceptMockEnabled, results]);
+  const displayResults = useMemo<SearchResultsViewModel>(() => ({
+    documents: results.documents,
+    businesses: results.businesses.map((business) => ({
+      id: business.id,
+      name: business.name,
+      logo_url: business.logo_url,
+      category: business.category,
+      neighborhood: business.location?.name ?? business.business_city,
+      description: business.description,
+      latitude: business.address?.latitude,
+      longitude: business.address?.longitude,
+      rating: business.rating,
+    })),
+    professionals: results.professionals.map((professional) => ({
+      id: professional.id,
+      name: professional.name,
+      target_url: professional.target_url,
+      logo_url: professional.logo_url,
+      category: professional.category,
+      neighborhood: professional.neighborhood,
+      city: professional.city,
+      description: professional.description,
+      latitude: professional.latitude,
+      longitude: professional.longitude,
+      rating: professional.rating,
+      total_reviews: professional.total_reviews,
+    })),
+    total: results.total,
+  }), [results]);
 
   const resultMarkers = useMemo<MapMarker[]>(() => {
     const businessMarkers = displayResults.businesses.flatMap((business) => {
@@ -351,11 +325,6 @@ export default function BuscaPage() {
           return [];
         }
 
-        const markerType = conceptMockEnabled
-          ? professional.id === displayResults.professionals[0]?.id
-            ? "classified"
-            : "service"
-          : "professional";
         const marker = mapEntityProjection.projectEntity(
           {
             id: `professional-${professional.id}`,
@@ -367,7 +336,7 @@ export default function BuscaPage() {
             description: professional.description,
             url: professional.target_url ?? undefined,
           },
-          markerType,
+          "professional",
           { includeMetadata: true },
         );
 
@@ -376,7 +345,7 @@ export default function BuscaPage() {
     );
 
     return [...businessMarkers, ...professionalMarkers];
-  }, [conceptMockEnabled, displayResults]);
+  }, [displayResults]);
 
   const featuredMapResult = useMemo(() => {
     const professional = displayResults.professionals[0];
@@ -629,7 +598,7 @@ export default function BuscaPage() {
                   setSearchParams({ q: suggestion });
                 }}
               />
-            ) : isLoading || (!searchEnabled && !conceptMockEnabled) ? (
+            ) : isLoading || !searchEnabled ? (
               <LoadingState />
             ) : displayResults.total === 0 ? (
               <TerritoryState
@@ -670,7 +639,7 @@ export default function BuscaPage() {
           >
             <DeferredMapPreview territoryName={territoryName}>
               <TerritoryMapPreview
-                resolved={conceptMockEnabled ? null : territoryResolution.resolved ?? null}
+                resolved={territoryResolution.resolved ?? null}
                 mapHref={moduleUrls.map}
                 territoryName={territoryName}
                 title="Resultados no mapa"
@@ -678,9 +647,7 @@ export default function BuscaPage() {
                 featuredResult={featuredMapResult}
                 showNavigationControls
                 navigationControlPosition="top-right"
-                initialViewport={conceptMockEnabled ? BUSCA_CONCEPT_MAP_VIEWPORT : undefined}
-                fitTerritoryBounds={!conceptMockEnabled}
-                territoryPolygons={conceptMockEnabled ? BUSCA_CONCEPT_MAP_POLYGONS : undefined}
+                fitTerritoryBounds
                 mapHeightClassName="h-[31rem]"
               />
             </DeferredMapPreview>
