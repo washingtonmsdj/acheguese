@@ -9,7 +9,6 @@ import {
   Home,
   MapPin,
   MessageCircle,
-  Pin,
   Search,
   Send,
   UserRound,
@@ -50,12 +49,11 @@ interface InboxConversation {
   preview: string;
   time: string;
   unread?: number;
-  pinned?: boolean;
-  archived?: boolean;
+  closed?: boolean;
   contextTitle?: string;
 }
 
-type ConversationFilter = "all" | "unread" | "archived";
+type ConversationFilter = "all" | "unread" | "closed";
 
 function getProfileKind(profileType: string | undefined): ProfileKind {
   if (profileType === "personal") return "personal";
@@ -81,6 +79,27 @@ function formatTerritoryLabel(value: string): string {
     .filter(Boolean)
     .map((part) => part.charAt(0).toLocaleUpperCase("pt-BR") + part.slice(1))
     .join(" ");
+}
+
+function formatMessagingTimestamp(value: string): string {
+  const date = new Date(value);
+  const now = new Date();
+  const sameDay =
+    date.getFullYear() === now.getFullYear() &&
+    date.getMonth() === now.getMonth() &&
+    date.getDate() === now.getDate();
+
+  return new Intl.DateTimeFormat(
+    "pt-BR",
+    sameDay
+      ? { hour: "2-digit", minute: "2-digit" }
+      : {
+          day: "2-digit",
+          month: "2-digit",
+          hour: "2-digit",
+          minute: "2-digit",
+        },
+  ).format(date);
 }
 
 function ProfileAvatar({
@@ -330,10 +349,11 @@ function ConversationListItem({
         </span>
         <span className="mt-1 block truncate text-sm text-territory-muted">{conversation.preview}</span>
       </span>
-      <span className="flex shrink-0 flex-col items-center gap-1">
-        {conversation.pinned ? <Pin className="h-4 w-4 text-territory-brand" fill="currentColor" strokeWidth={1.7} aria-label="Fixada" /> : null}
-        {conversation.unread ? <span className="flex h-5 min-w-5 items-center justify-center rounded-full bg-territory-error px-1 text-[0.6875rem] font-bold text-white">{conversation.unread}</span> : null}
-      </span>
+      {conversation.unread ? (
+        <span className="flex h-5 min-w-5 shrink-0 items-center justify-center rounded-full bg-territory-error px-1 text-[0.6875rem] font-bold text-white">
+          {conversation.unread}
+        </span>
+      ) : null}
     </button>
   );
 }
@@ -367,15 +387,13 @@ function ConversationColumn({
 }) {
   const filteredConversations = conversations.filter((conversation) => {
     const matchesSearch = conversation.name.toLowerCase().includes(search.toLowerCase()) || conversation.preview.toLowerCase().includes(search.toLowerCase());
-    const matchesFilter = conversationFilter === "all" || (conversationFilter === "unread" ? Boolean(conversation.unread) : Boolean(conversation.archived));
+    const matchesFilter = conversationFilter === "all" || (conversationFilter === "unread" ? Boolean(conversation.unread) : Boolean(conversation.closed));
     return matchesSearch && matchesFilter;
   });
-  const pinnedConversations = filteredConversations.filter((conversation) => conversation.pinned);
-  const recentConversations = filteredConversations.filter((conversation) => !conversation.pinned);
   const filterOptions: Array<{ value: ConversationFilter; label: string }> = [
     { value: "all", label: "Todas" },
     { value: "unread", label: "Não lidas" },
-    { value: "archived", label: "Arquivadas" },
+    { value: "closed", label: "Encerradas" },
   ];
 
   return (
@@ -410,9 +428,19 @@ function ConversationColumn({
 
       </div>
       <div className="mt-4">
-        {pinnedConversations.length ? <div><h2 className="mb-1.5 text-[0.6875rem] font-bold uppercase tracking-[0.12em] text-territory-muted">Fixadas</h2>{pinnedConversations.map((conversation) => <ConversationListItem key={conversation.id} conversation={conversation} selected={conversation.id === selectedConversationId} onClick={() => onSelectConversation(conversation.id)} />)}</div> : null}
-        {recentConversations.length ? <div className={cn(pinnedConversations.length && "mt-4")}><h2 className="mb-1.5 text-[0.6875rem] font-bold uppercase tracking-[0.12em] text-territory-muted">Recentes</h2>{recentConversations.map((conversation) => <ConversationListItem key={conversation.id} conversation={conversation} selected={conversation.id === selectedConversationId} onClick={() => onSelectConversation(conversation.id)} />)}</div> : null}
-        {!filteredConversations.length ? <p className="rounded-xl border border-dashed border-territory-border px-4 py-6 text-center text-sm text-territory-muted">Você ainda não tem conversas nesta caixa.</p> : null}
+        {filteredConversations.map((conversation) => (
+          <ConversationListItem
+            key={conversation.id}
+            conversation={conversation}
+            selected={conversation.id === selectedConversationId}
+            onClick={() => onSelectConversation(conversation.id)}
+          />
+        ))}
+        {!filteredConversations.length ? (
+          <p className="rounded-xl border border-dashed border-territory-border px-4 py-6 text-center text-sm text-territory-muted">
+            Você ainda não tem conversas nesta caixa.
+          </p>
+        ) : null}
       </div>
     </section>
   );
@@ -474,7 +502,6 @@ function ConversationDetail({
           <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-territory-surface text-territory-brand" aria-hidden="true"><MessageCircle className="h-4 w-4" strokeWidth={2} /></span>
           <span className="min-w-0 flex-1 truncate text-sm font-semibold text-territory-ink">{conversation.contextTitle ? `Sobre: ${conversation.contextTitle}` : "Conversa direta"}</span>
         </div>
-        <div className="my-6 flex items-center gap-4 text-xs text-territory-muted"><span className="h-px flex-1 bg-territory-border" />Hoje<span className="h-px flex-1 bg-territory-border" /></div>
         <div className="flex min-h-0 flex-1 flex-col justify-end gap-4 overflow-y-auto pb-5">
           {(messages ?? []).map((message) => <MessageBubble key={message.id} body={message.body} time={message.time} mine={message.mine} />)}
         </div>
@@ -542,7 +569,6 @@ function MobileConversationDetail({
           <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-territory-surface text-territory-brand" aria-hidden="true"><MessageCircle className="h-4 w-4" strokeWidth={2} /></span>
           <span className="min-w-0 flex-1 truncate text-sm font-semibold text-territory-ink">{conversation.contextTitle ? `Sobre: ${conversation.contextTitle}` : "Conversa direta"}</span>
         </div>
-        <div className="my-5 flex items-center gap-3 text-xs text-territory-muted"><span className="h-px flex-1 bg-territory-border" />Hoje<span className="h-px flex-1 bg-territory-border" /></div>
         <div className="flex min-h-0 flex-1 flex-col justify-end gap-3 overflow-y-auto pb-4">
           {(messages ?? []).map((message) => <MessageBubble key={message.id} body={message.body} time={message.time} mine={message.mine} />)}
         </div>
@@ -608,12 +634,9 @@ function toInboxConversation(thread: CommunityDirectThreadPreview): InboxConvers
     name: thread.other_profile_name,
     avatarUrl: thread.other_profile_avatar || "",
     preview: thread.last_message_text,
-    time: new Intl.DateTimeFormat("pt-BR", {
-      hour: "2-digit",
-      minute: "2-digit",
-    }).format(new Date(thread.last_message_at)),
+    time: formatMessagingTimestamp(thread.last_message_at),
     unread: thread.unread_count || undefined,
-    archived: Boolean(thread.closed_at),
+    closed: Boolean(thread.closed_at),
     contextTitle: thread.post_title || undefined,
   };
 }
@@ -622,7 +645,7 @@ function mapLiveMessage(message: CommunityDirectMessage, profileId: string | und
   return {
     id: message.id,
     body: message.body,
-    time: new Intl.DateTimeFormat("pt-BR", { hour: "2-digit", minute: "2-digit" }).format(new Date(message.created_at)),
+    time: formatMessagingTimestamp(message.created_at),
     mine: message.sender_profile_id === profileId,
   };
 }
