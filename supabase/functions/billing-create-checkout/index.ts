@@ -23,6 +23,10 @@ import {
 } from '../_shared/security.ts'
 
 const ALLOWED_METHODS = 'POST, OPTIONS'
+const BILLING_CHECKOUT_ROLLOUT_ENABLED =
+  (Deno.env.get('BILLING_CHECKOUT_ROLLOUT_ENABLED') ?? 'false')
+    .trim()
+    .toLowerCase() === 'true'
 
 type CatalogPricingPolicy = {
   price_cents: number
@@ -88,6 +92,16 @@ serve(async (req: Request) => {
 
   const methodError = requireHttpMethod(req, ['POST'], ALLOWED_METHODS)
   if (methodError) return methodError
+
+  if (!BILLING_CHECKOUT_ROLLOUT_ENABLED) {
+    return new Response(
+      JSON.stringify({ error: 'Billing checkout is temporarily unavailable' }),
+      {
+        status: 503,
+        headers: getAllSecurityHeaders(ALLOWED_METHODS, req),
+      },
+    )
+  }
 
   // Rate limiting via SSOT — 20 req/min por IP
   const rl = await rateLimitMiddleware(req, 20, 60000)

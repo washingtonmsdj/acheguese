@@ -39,6 +39,12 @@ Billing:
 - `STRIPE_SECRET_KEY`
 - `STRIPE_WEBHOOK_SECRET`
 
+Server-side rollout controls (not secrets):
+
+- `BILLING_CHECKOUT_ROLLOUT_ENABLED=false` by default; new Stripe checkout sessions require explicit `true`.
+- `TRYON_ROLLOUT_ENABLED=false` by default; Replicate Try-On generation requires explicit `true`.
+- Frontend visibility does not replace these backend controls.
+
 AI:
 
 - `LOVABLE_API_KEY`
