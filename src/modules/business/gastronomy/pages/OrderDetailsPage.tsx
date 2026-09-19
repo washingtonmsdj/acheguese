@@ -25,7 +25,7 @@ import { OrderTrackingCard } from '../components/orders/OrderTrackingCard';
 import { OrderOperationsPanel } from '../components/orders/OrderOperationsPanel';
 import { OrderTrustFeedbackPanel } from '../components/orders/OrderTrustFeedbackPanel';
 import { OrderPublicReviewPanel } from '../components/orders/OrderPublicReviewPanel';
-import OrderTrackingConceptSurface from './OrderTrackingConceptSurface';
+import OrderTrackingSurface from './OrderTrackingSurface';
 import { Button } from '@/shared/components/ui/button';
 import { Badge } from '@/shared/components/ui/badge';
 import { Card, CardContent, CardHeader, CardTitle } from '@/shared/components/ui/card';
@@ -35,9 +35,6 @@ import { businessManagementRoutes } from '@/core/business/utils/businessManageme
 import { GastronomyUrlService } from '@/core/verticals/gastronomy/services/GastronomyUrlService';
 import { buildTelUrl } from '@/shared/utils/contactLinks';
 import { formatBrl } from '../utils/currency';
-import OrderTrackingConceptMockPage, {
-  ORDER_TRACKING_CONCEPT_MOCK_ID,
-} from './OrderTrackingConceptMockPage';
 
 const ORDER_TYPE_LABELS = {
   pickup: 'Retirada',
@@ -116,17 +113,6 @@ function resolveTimelineTitle(event: OrderWithItems['status_history'][number]): 
 }
 
 export default function OrderDetailsPage() {
-  const { orderId } = useParams<{ orderId: string }>();
-  const conceptMockEnabled =
-    import.meta.env.DEV &&
-    orderId === ORDER_TRACKING_CONCEPT_MOCK_ID &&
-    typeof window !== 'undefined' &&
-    new URLSearchParams(window.location.search).get('concept-mock') === '1';
-
-  if (conceptMockEnabled) {
-    return <OrderTrackingConceptMockPage />;
-  }
-
   return <OrderDetailsDataPage />;
 }
 
@@ -168,7 +154,7 @@ function OrderDetailsDataPage() {
   }
 
   if (!businessId) {
-    return <OrderTrackingConceptSurface order={order} />;
+    return <OrderTrackingSurface order={order} />;
   }
 
   const isBusinessRoute = Boolean(businessId);

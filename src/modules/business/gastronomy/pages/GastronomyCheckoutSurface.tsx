@@ -1726,7 +1726,7 @@ function MobileCheckoutFooter({
   );
 }
 
-export default function GastronomyCheckoutConceptSurface({
+export default function GastronomyCheckoutSurface({
   business,
 }: {
   business: GastronomyBusiness;

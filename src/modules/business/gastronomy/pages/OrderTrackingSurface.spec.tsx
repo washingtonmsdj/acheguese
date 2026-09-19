@@ -3,7 +3,7 @@ import { HelmetProvider } from "react-helmet-async";
 import { MemoryRouter } from "react-router-dom";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
-import OrderTrackingConceptSurface from "./OrderTrackingConceptSurface";
+import OrderTrackingSurface from "./OrderTrackingSurface";
 import { useOrderTracking } from "../hooks/useOrderTracking";
 import type { OrderWithItems } from "../services/OrderService";
 
@@ -81,7 +81,7 @@ function renderSurface(order: OrderWithItems = baseOrder) {
   return render(
     <HelmetProvider>
       <MemoryRouter>
-        <OrderTrackingConceptSurface order={order} />
+        <OrderTrackingSurface order={order} />
       </MemoryRouter>
     </HelmetProvider>,
   );
@@ -99,7 +99,7 @@ function mockTracking(overrides: Partial<ReturnType<typeof useOrderTracking>> = 
   });
 }
 
-describe("OrderTrackingConceptSurface", () => {
+describe("OrderTrackingSurface", () => {
   beforeEach(() => {
     mockTracking();
   });

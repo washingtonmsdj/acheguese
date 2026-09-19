@@ -1240,7 +1240,7 @@ function DesktopTrackingLayout({
   );
 }
 
-export default function OrderTrackingConceptSurface({
+export default function OrderTrackingSurface({
   order,
   trackingOverride,
   driverLocationOverride,
@@ -1473,9 +1473,7 @@ export default function OrderTrackingConceptSurface({
               deliveryStageLabel={
                 hasTracking
                   ? trackingLabel
-                  : sourceMetadata.concept_mock === true
-                    ? "Buscando entregador"
-                    : "Entrega manual pela loja"
+                  : "Entrega manual pela loja"
               }
             />
           ) : state === "in_delivery" || state === "stale" ? (

@@ -74,17 +74,6 @@ export function AppLayoutSidebar() {
     pathSegments[0] === MODULE_SLUGS.services &&
     pathSegments[3] === "profissional" &&
     pathSegments.length >= 5;
-  const isGastronomyConceptPreview =
-    import.meta.env.DEV &&
-    pathSegments[0] === MODULE_SLUGS.gastronomy &&
-    pathSegments.length >= 5 &&
-    new URLSearchParams(window.location.search).get("concept-mock") === "1";
-  const isGastronomyMockRestaurantRoute =
-    import.meta.env.DEV &&
-    pathSegments[0] === MODULE_SLUGS.gastronomy &&
-    pathSegments[4] === "sabores-da-ana";
-  const isGastronomyCheckoutConcept =
-    isGastronomyMockRestaurantRoute && pathSegments[5] === "checkout";
   const isGastronomyOrderTrackingRoute =
     pathSegments[0] === MODULE_SLUGS.gastronomy &&
     pathSegments[1] === "pedidos" &&
@@ -106,8 +95,6 @@ export function AppLayoutSidebar() {
     isCommunityAliasPublicRoute ||
     isShortCommunityRoute ||
     isPublicBusinessLandingRoute ||
-    isGastronomyConceptPreview ||
-    isGastronomyMockRestaurantRoute ||
     isGastronomyOrderTrackingRoute;
 
   const isInternalGroupRoute =
@@ -127,8 +114,6 @@ export function AppLayoutSidebar() {
     isCommunityAliasPublicRoute ||
     isShortCommunityRoute ||
     isPublicBusinessLandingRoute ||
-    isGastronomyConceptPreview ||
-    isGastronomyMockRestaurantRoute ||
     isGastronomyOrderTrackingRoute;
   const hideMobileBottomNav =
     pathname === "/" ||
@@ -137,10 +122,7 @@ export function AppLayoutSidebar() {
     isPublicEntityDetailRoute ||
     isCommunityPublicLandingRoute ||
     isCommunityAliasPublicRoute ||
-    isGastronomyConceptPreview ||
-    isGastronomyMockRestaurantRoute ||
-    isGastronomyOrderTrackingRoute ||
-    isGastronomyCheckoutConcept;
+    isGastronomyOrderTrackingRoute;
 
   const isMessagingRoute =
     pathSegments[0] === "mensagens" || pathSegments[0] === "chat";
