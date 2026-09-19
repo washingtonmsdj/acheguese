@@ -21,7 +21,6 @@ import {
   Plus,
   Search,
   Settings,
-  Star,
   Trash2,
   UserRound,
   Users,
@@ -326,13 +325,22 @@ function MenuTabs({ activeTab, onChange }: { activeTab: "Itens" | "Categorias"; 
   );
 }
 
-function FilterSelect({ value, onChange, options, label, className }: { value: string; onChange: (value: string) => void; options: string[]; label: string; className?: string }) {
+function FilterSelect({ value, onChange, options, label, className, mobileFirstOptionLabel, desktopFirstOptionLabel }: { value: string; onChange: (value: string) => void; options: string[]; label: string; className?: string; mobileFirstOptionLabel?: string; desktopFirstOptionLabel?: string }) {
+  const renderOptions = (firstOptionLabel?: string) => options.map((option, index) => <option key={option} value={option}>{index === 0 && firstOptionLabel ? firstOptionLabel : option}</option>);
+  const selectClassName = "h-10 w-full appearance-none rounded-lg border border-territory-border bg-territory-surface px-3 pr-9 text-xs font-medium text-territory-ink outline-none focus-visible:border-territory-brand focus-visible:ring-2 focus-visible:ring-territory-brand/25";
   return (
     <label className={cn("relative block min-w-0", className)}>
       <span className="sr-only">{label}</span>
-      <select value={value} onChange={(event) => onChange(event.target.value)} className="h-10 w-full appearance-none rounded-lg border border-territory-border bg-territory-surface px-3 pr-9 text-xs font-medium text-territory-ink outline-none focus-visible:border-territory-brand focus-visible:ring-2 focus-visible:ring-territory-brand/25">
-        {options.map((option) => <option key={option} value={option}>{option}</option>)}
-      </select>
+      {mobileFirstOptionLabel || desktopFirstOptionLabel ? <>
+        <select value={value} onChange={(event) => onChange(event.target.value)} className={cn(selectClassName, "md:hidden")}>
+          {renderOptions(mobileFirstOptionLabel)}
+        </select>
+        <select value={value} onChange={(event) => onChange(event.target.value)} className={cn(selectClassName, "hidden md:block")}>
+          {renderOptions(desktopFirstOptionLabel)}
+        </select>
+      </> : <select value={value} onChange={(event) => onChange(event.target.value)} className={selectClassName}>
+        {renderOptions()}
+      </select>}
       <ChevronDown className="pointer-events-none absolute right-3 top-1/2 h-4 w-4 -translate-y-1/2 text-territory-ink" aria-hidden="true" />
     </label>
   );
@@ -340,15 +348,15 @@ function FilterSelect({ value, onChange, options, label, className }: { value: s
 
 function MenuFilters({ query, onQueryChange, category, onCategoryChange, status, onStatusChange, categoryOptions, viewMode, onViewModeChange }: { query: string; onQueryChange: (value: string) => void; category: string; onCategoryChange: (value: string) => void; status: string; onStatusChange: (value: string) => void; categoryOptions?: string[]; viewMode?: MenuViewMode; onViewModeChange?: (value: MenuViewMode) => void }) {
   return (
-    <div className="mt-3 grid grid-cols-[minmax(0,1fr)_minmax(0,1fr)_auto] gap-2 md:flex md:flex-wrap md:items-center md:gap-2 lg:gap-3">
-      <label className="relative col-span-3 block min-w-0 md:col-span-1 md:w-52 md:basis-full md:shrink-0 lg:basis-auto">
+    <div className="mt-3 grid grid-cols-2 gap-2 md:flex md:flex-wrap md:items-center md:gap-2 lg:gap-3">
+      <label className="relative col-span-2 block min-w-0 md:col-span-1 md:w-52 md:basis-full md:shrink-0 lg:basis-auto">
         <span className="sr-only">Buscar item pelo nome</span>
         <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-territory-muted" aria-hidden="true" />
         <input type="search" value={query} onChange={(event) => onQueryChange(event.target.value)} placeholder="Buscar item pelo nome" className="h-10 w-full rounded-lg border border-territory-border bg-territory-surface pl-9 pr-3 text-xs text-territory-ink outline-none placeholder:text-territory-muted focus-visible:border-territory-brand focus-visible:ring-2 focus-visible:ring-territory-brand/25" />
       </label>
-      <FilterSelect className="md:w-32 md:shrink-0" value={category} onChange={onCategoryChange} options={["Categorias", ...(categoryOptions ?? categories)]} label="Filtrar por categoria" />
-      <FilterSelect className="md:w-24 md:shrink-0" value={status} onChange={onStatusChange} options={["Status", "Disponível", "Indisponível", "Rascunho"]} label="Filtrar por status" />
-      {viewMode && onViewModeChange ? <div className="col-span-1 flex items-center justify-end gap-2 md:col-auto md:ml-auto md:flex" aria-label="Modo de visualização">
+      <FilterSelect className="md:w-40 md:shrink-0" value={category} onChange={onCategoryChange} options={["Categorias", ...(categoryOptions ?? categories)]} label="Filtrar por categoria" mobileFirstOptionLabel="Categoria" desktopFirstOptionLabel="Todas as categorias" />
+      <FilterSelect className="md:w-36 md:shrink-0" value={status} onChange={onStatusChange} options={["Status", "Disponível", "Indisponível", "Rascunho"]} label="Filtrar por status" mobileFirstOptionLabel="Status" desktopFirstOptionLabel="Todos os status" />
+      {viewMode && onViewModeChange ? <div className="hidden items-center justify-end gap-2" aria-label="Modo de visualização">
         <div className="inline-flex items-center rounded-lg border border-territory-border bg-territory-surface p-0.5">
         <button type="button" aria-pressed={viewMode === "list"} aria-label="Visualizar em lista" title="Lista" onClick={() => onViewModeChange("list")} className={cn("inline-flex h-9 w-9 items-center justify-center rounded-md focus-visible:outline-2 focus-visible:outline-offset-[-2px] focus-visible:outline-territory-brand", viewMode === "list" ? "bg-territory-brand text-white" : "text-territory-muted hover:text-territory-ink")}>
           <List className="h-4 w-4" aria-hidden="true" />
@@ -380,7 +388,6 @@ function MenuItemRow({ item, selected, onOpen, onToggle, className }: { item: Co
       <button type="button" onClick={onOpen} className="flex min-w-0 items-start justify-start gap-3 py-1.5 text-left focus-visible:outline-2 focus-visible:outline-offset-[-2px] focus-visible:outline-territory-brand">
         <span className="relative flex w-[5.25rem] shrink-0 flex-col items-start gap-0.5 md:w-20">
           <img src={item.image} alt="" className="h-16 w-full rounded-lg object-cover md:h-12" />
-          {item.featured ? <span className="absolute left-1 top-1 z-10 inline-flex max-w-[calc(100%-0.5rem)] items-center gap-1 rounded-full bg-territory-sun px-1.5 py-0.5 text-[0.5625rem] font-bold leading-4 text-territory-ink shadow-sm"><Star className="h-2.5 w-2.5 shrink-0 fill-current" aria-hidden="true" /><span className="truncate">Destaque</span></span> : null}
         </span>
         <span className="min-w-0">
           <span className="block min-w-0 truncate text-sm font-bold text-territory-ink">{item.name}</span>
@@ -432,7 +439,6 @@ function MenuItemGrid({ items, selectedId, onOpen, onToggle, onDelete, onMarkSol
             <button type="button" onClick={() => onOpen(item)} className="group block w-full text-left focus-visible:outline-2 focus-visible:outline-offset-[-2px] focus-visible:outline-territory-brand">
               <div className="relative aspect-[2/1] overflow-hidden bg-territory-raised 3xl:aspect-[2.5/1]">
                 <img src={item.image} alt="" className="h-full w-full object-cover transition-transform group-hover:scale-[1.02]" />
-                {item.featured ? <span className="absolute left-2 top-2 z-10 inline-flex max-w-[calc(100%-1rem)] items-center gap-1 rounded-full bg-territory-sun px-1.5 py-0.5 text-[0.5625rem] font-bold leading-4 text-territory-ink shadow-sm"><Star className="h-2.5 w-2.5 shrink-0 fill-current" aria-hidden="true" /><span className="truncate">Destaque</span></span> : null}
               </div>
               <div className="space-y-1.5 p-2">
                 <div className="min-w-0">
@@ -676,7 +682,7 @@ export default function BusinessMenuConceptPreviewPage() {
               <MobileBusinessIdentity onBack={() => navigate("/central?concept-mock=1")} />
               <MenuPageHeading mobile onAdd={addItem} />
               <MenuTabs activeTab={activeTab} onChange={setActiveTab} />
-              <MenuFilters query={query} onQueryChange={setQuery} category={category} onCategoryChange={setCategory} status={status} onStatusChange={setStatus} viewMode={viewMode} onViewModeChange={setViewMode} />
+              <MenuFilters query={query} onQueryChange={setQuery} category={category} onCategoryChange={setCategory} status={status} onStatusChange={setStatus} />
               {activeTab === "Itens" ? viewMode === "list" ? <MenuItemList items={filteredItems} selectedId={selectedId} onOpen={openEditor} onToggle={toggleAvailability} hideOverflowOnMobile={hideOverflowOnMobile} /> : <MenuItemGrid items={filteredItems} selectedId={selectedId} onOpen={openEditor} onToggle={toggleAvailability} onDelete={deleteItem} onMarkSoldOut={markSoldOut} /> : <CategoryPanel categories={categoryOrder} items={items} onAdd={addCategory} onRename={renameCategory} onDelete={deleteCategory} onReorder={reorderCategories} />}
               <p className="mt-2 text-xs text-territory-muted">24 itens</p>
             </> : <MenuEditor item={selectedItem} name={editorName} onNameChange={setEditorName} description={editorDescription} onDescriptionChange={setEditorDescription} category={editorCategory} onCategoryChange={setEditorCategory} categoryOptions={categoryOrder} price={editorPrice} onPriceChange={setEditorPrice} preparationTime={editorPreparationTime} onPreparationTimeChange={setEditorPreparationTime} stock={editorStock} onStockChange={setEditorStock} stockAlertThreshold={editorStockAlertThreshold} onStockAlertThresholdChange={setEditorStockAlertThreshold} featured={editorFeatured} onFeaturedChange={setEditorFeatured} dietaryTags={editorDietaryTags} onDietaryTagsChange={setEditorDietaryTags} ingredients={editorIngredients} onIngredientsChange={setEditorIngredients} allergens={editorAllergens} onAllergensChange={setEditorAllergens} tags={editorTags} onTagsChange={setEditorTags} image={editorImage} onImageChange={setEditorImage} available={editorAvailable} onAvailableChange={() => toggleAvailability(selectedItem)} onMarkSoldOut={() => markSoldOut(selectedItem)} onDelete={() => deleteItem(selectedItem)} onClose={() => setMobileEditorOpen(false)} onSave={saveEditor} mobile />}

@@ -311,3 +311,24 @@ A prancha 117 também está coberta pelos estados demonstrativos de visitante, v
 
 - Branch: `codex/reformulacao-entrada-comunidade`.
 - Somente os arquivos desta implementação e as duas documentações de revisão entram no commit; os arquivos staged preexistentes de catalogação e segurança permanecem excluídos.
+
+## 19/09/2026 · Gestão do cardápio — prancha 017
+
+### Auditoria e ajuste
+
+- Comparei `BusinessMenuConceptPreviewPage` com `12-gestao-cardapio/pranchas/017-gestao-cardapio.png` em mobile e desktop. A página já reproduzia o shell do negócio, a identidade de `Sabores da Ana`, a lista de itens, a seleção da Moqueca de peixe e o drawer de edição demonstrativo.
+- No mobile, removi os controles de lista/grade que não aparecem na prancha, retirei os selos “Destaque” que encobriam as fotos e mantive a densidade de cinco linhas visíveis, disponibilidade, preços e navegação inferior. Os filtros agora exibem `Categoria` e `Status`, como no concept.
+- No desktop, alinhei os rótulos para `Todas as categorias` e `Todos os status`, ampliei as larguras dos filtros e mantive o drawer aberto, a linha selecionada, as seis linhas e a paginação demonstrativa conforme a prancha.
+- O destaque do item continua editável dentro do editor; a mudança remove apenas a sobreposição visual da lista. A rota segue confinada ao preview DEV-only, sem alterar contratos, permissões ou persistência do cardápio real.
+
+### Validação e evidências
+
+- `npm run typecheck:app`: passou.
+- ESLint passou em `src/modules/business/dashboard/pages/BusinessMenuConceptPreviewPage.tsx`.
+- Comparei a captura mobile após HMR e a composição desktop temporária no navegador interno; conferi a presença dos filtros, cinco itens mobile, seis itens desktop, estado selecionado e editor. O viewport será restaurado ao padrão e a aba permanecerá aberta e marcada como entrega.
+- `git diff --check` passou; a revisão específica foi atualizada em `12-gestao-cardapio/REVISAO.md`.
+
+### Git
+
+- Branch: `codex/reformulacao-entrada-comunidade`.
+- Somente o componente de cardápio, a revisão específica e este relatório entram no commit; os arquivos staged preexistentes de catalogação e segurança permanecem excluídos.
