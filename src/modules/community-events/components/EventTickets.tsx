@@ -31,8 +31,10 @@ export function EventTickets({
   disabledLabel = 'Inscricao confirmada',
   className 
 }: EventTicketsProps) {
-  const availableTickets = tickets.filter(t => t.status === 'disponivel');
-  const hasAvailability = availableTickets.length > 0;
+  const hasAvailableInventory = tickets.some(
+    (ticket) => ticket.status === 'disponivel' && ticket.quantity_available > 0,
+  );
+  const hasComingSoon = tickets.some((ticket) => ticket.status === 'em_breve');
 
   return (
     <section className={cn("py-12", className)}>
@@ -53,9 +55,13 @@ export function EventTickets({
             {isFree ? 'Garanta sua vaga' : 'Escolha seu ingresso'}
           </h2>
           <p className="mt-2 text-muted-foreground">
-            {hasAvailability 
-              ? 'Selecione a melhor opcao para voce' 
-              : 'Ingressos esgotados'}
+            {isFree
+              ? hasAvailableInventory
+                ? 'Selecione a opcao disponivel para confirmar sua inscricao'
+                : hasComingSoon
+                  ? 'As inscricoes ainda nao estao abertas'
+                  : 'Inscricoes esgotadas'
+              : 'A compra de ingressos pagos nao esta disponivel no app.'}
           </p>
         </motion.div>
 
@@ -67,7 +73,7 @@ export function EventTickets({
             const isComingSoon = ticket.status === 'em_breve';
             const occupancyRate = (ticket.quantity_sold / ticket.quantity_total) * 100;
             const isAlmostSoldOut = occupancyRate >= 80 && !isSoldOut;
-            const canSelect = isAvailable && !disabled;
+            const canSelect = isAvailable && ticket.is_free && !disabled;
 
             return (
               <motion.div
@@ -238,10 +244,7 @@ export function EventTickets({
                       Garantir vaga gratis
                     </>
                   ) : (
-                    <>
-                      <Ticket className="h-4 w-4" />
-                      Comprar ingresso
-                    </>
+                    'Venda nao disponivel no app'
                   )}
                 </Button>
 
@@ -257,7 +260,7 @@ export function EventTickets({
         </div>
 
         {/* No Tickets Available */}
-        {!hasAvailability && (
+        {!hasAvailableInventory && (
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             whileInView={{ opacity: 1, y: 0 }}
@@ -266,10 +269,12 @@ export function EventTickets({
           >
             <AlertCircle className="mx-auto mb-3 h-12 w-12 text-muted-foreground" />
             <h3 className="mb-2 text-lg font-semibold text-foreground">
-              Ingressos esgotados
+              {hasComingSoon ? 'Inscricoes ainda nao abertas' : 'Ingressos indisponiveis'}
             </h3>
             <p className="text-sm text-muted-foreground">
-              Todos os ingressos para este evento ja foram vendidos.
+              {hasComingSoon
+                ? 'Aguarde a abertura das inscricoes informada pelo organizador.'
+                : 'Nao ha ingressos com disponibilidade neste momento.'}
             </p>
           </motion.div>
         )}
