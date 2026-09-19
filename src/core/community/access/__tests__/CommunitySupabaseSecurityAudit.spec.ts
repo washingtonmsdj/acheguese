@@ -567,27 +567,32 @@ describe("community supabase security audit", () => {
     );
   });
 
-  it("keeps public site setting reads invoker-scoped and least-privilege", () => {
-    const hardening = readProjectFile(
-      "supabase/migrations/20260707111214_harden_get_site_setting_invoker.sql",
+  it("keeps site settings behind the admin/service-role boundary", () => {
+    const tableReadRetirement = readProjectFile(
+      "supabase/migrations/20260918122231_retire_public_site_settings_table_read.sql",
+    );
+    const publicRpcRetirement = readProjectFile(
+      "supabase/migrations/20260918122241_retire_public_get_site_setting_rpc.sql",
+    );
+    const service = readProjectFile(
+      "src/core/admin/services/SiteSettingsService.ts",
     );
 
-    expect(hardening).toContain(
-      "REVOKE INSERT, UPDATE, DELETE, TRUNCATE, REFERENCES, TRIGGER",
+    expect(tableReadRetirement).toContain(
+      'DROP POLICY IF EXISTS "site_settings_select_public"',
     );
-    expect(hardening).toContain("ON TABLE public.site_settings");
-    expect(hardening).toContain("FROM anon, authenticated");
-    expect(hardening).toContain("GRANT SELECT");
-    expect(hardening).toContain("TO anon, authenticated");
-    expect(hardening).toContain(
-      "-- security-authority: public-rpc public.get_site_setting",
+    expect(tableReadRetirement).toContain("REVOKE SELECT (");
+    expect(tableReadRetirement).toContain("FROM anon, authenticated");
+
+    expect(publicRpcRetirement).toContain(
+      "REVOKE ALL ON FUNCTION public.get_site_setting(text)",
     );
-    expect(hardening).toContain("ALTER FUNCTION public.get_site_setting(text)");
-    expect(hardening).toContain("SECURITY INVOKER");
-    expect(hardening).toContain("REVOKE ALL");
-    expect(hardening).toContain("ON FUNCTION public.get_site_setting(text)");
-    expect(hardening).toContain("FROM PUBLIC, anon, authenticated");
-    expect(hardening).toContain("GRANT EXECUTE");
+    expect(publicRpcRetirement).toContain("FROM PUBLIC, anon, authenticated");
+    expect(publicRpcRetirement).toContain("TO service_role");
+
+    expect(service).toContain('"admin-site-settings-rpc"');
+    expect(service).not.toContain('"get_site_setting"');
+    expect(service).not.toContain("siteSettingsRpc");
   });
 
   it("keeps public territorial descendant lookup invoker-scoped", () => {
