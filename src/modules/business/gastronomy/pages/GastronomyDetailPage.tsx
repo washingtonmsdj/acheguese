@@ -288,17 +288,18 @@ function GastronomyDetailLivePage({
   };
 
   const handleShare = async () => {
-    if (navigator.share) {
+    if (typeof navigator.share === "function") {
       try {
         await navigator.share({
           title: business?.name,
           url: window.location.href,
         });
         return;
-      } catch {
-        // Fallback para dialog interno.
+      } catch (error) {
+        if (error instanceof Error && error.name === "AbortError") return;
       }
     }
+
     setShareOpen(true);
   };
 
