@@ -14,11 +14,35 @@ describe("Vercel ignored build step", () => {
   it("is wired through the canonical Vercel project config", () => {
     const config = JSON.parse(readFileSync(join(ROOT, "vercel.json"), "utf8"));
 
+    expect(config.git?.deploymentEnabled).toEqual({
+      "*": false,
+      main: true,
+    });
     expect(config.ignoreCommand).toBe(
       "node tools/release/vercel-ignore-build.mjs",
     );
+    expect(config.installCommand).toBe(
+      "node tools/release/validate-package-lock-consistency.mjs && npm ci",
+    );
     expect(config.buildCommand).toBe(
       "node tools/release/run-vercel-production-build.mjs",
+    );
+  });
+
+  it("keeps the generator aligned with deployment and install guards", () => {
+    const generator = readFileSync(
+      join(ROOT, "tools/security/generate-vercel-config.ts"),
+      "utf8",
+    );
+
+    expect(generator).toContain("deploymentEnabled");
+    expect(generator).toContain('"*": false');
+    expect(generator).toContain("main: true");
+    expect(generator).toContain(
+      '"node tools/release/vercel-ignore-build.mjs"',
+    );
+    expect(generator).toContain(
+      '"node tools/release/validate-package-lock-consistency.mjs && npm ci"',
     );
   });
 

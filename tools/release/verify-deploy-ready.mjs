@@ -196,6 +196,20 @@ console.log();
 console.log('vercel.json');
 try {
   const vercelConfig = readJson('vercel.json');
+  vercelConfig.git?.deploymentEnabled?.['*'] === false &&
+  vercelConfig.git?.deploymentEnabled?.main === true
+    ? ok('automatic Vercel deployments: main only')
+    : fail('git.deploymentEnabled deve bloquear previews automáticos e permitir main');
+
+  vercelConfig.ignoreCommand === 'node tools/release/vercel-ignore-build.mjs'
+    ? ok(`ignore command: ${vercelConfig.ignoreCommand}`)
+    : fail('ignoreCommand deve usar o guard canônico de build');
+
+  vercelConfig.installCommand ===
+  'node tools/release/validate-package-lock-consistency.mjs && npm ci'
+    ? ok('install command: lockfile consistency + npm ci')
+    : fail('installCommand deve validar o lockfile antes do npm ci');
+
   vercelConfig.buildCommand === 'node tools/release/run-vercel-production-build.mjs'
     ? ok(`build command: ${vercelConfig.buildCommand}`)
     : fail('buildCommand deve executar o runner canônico de produção');

@@ -25,10 +25,18 @@ import {
 
 const VERCEL_CONFIG_TEMPLATE = {
   $schema: "https://openapi.vercel.sh/vercel.json",
+  git: {
+    deploymentEnabled: {
+      "*": false,
+      main: true,
+    },
+  },
+  ignoreCommand: "node tools/release/vercel-ignore-build.mjs",
   buildCommand: "node tools/release/run-vercel-production-build.mjs",
   outputDirectory: "dist",
   devCommand: "npm run dev",
-  installCommand: "npm ci",
+  installCommand:
+    "node tools/release/validate-package-lock-consistency.mjs && npm ci",
   framework: "vite",
 
   rewrites: [
@@ -82,15 +90,42 @@ function generateVercelConfig() {
   fs.writeFileSync(outputPath, `${JSON.stringify(config, null, 2)}\n`);
 
   const generated = JSON.parse(fs.readFileSync(outputPath, "utf8")) as {
+    git?: {
+      deploymentEnabled?: Record<string, boolean>;
+    };
+    ignoreCommand?: string;
     buildCommand?: string;
+    installCommand?: string;
     headers?: Array<{ headers?: Array<{ key?: string }> }>;
   };
+
+  if (
+    generated.git?.deploymentEnabled?.["*"] !== false ||
+    generated.git?.deploymentEnabled?.main !== true
+  ) {
+    throw new Error(
+      "Automatic Vercel deployments must be disabled outside main",
+    );
+  }
+
+  if (
+    generated.ignoreCommand !== "node tools/release/vercel-ignore-build.mjs"
+  ) {
+    throw new Error("Ignored build step drifted from canonical release guard");
+  }
 
   if (
     generated.buildCommand !==
     "node tools/release/run-vercel-production-build.mjs"
   ) {
     throw new Error("Production build command drifted from guarded orchestrator");
+  }
+
+  if (
+    generated.installCommand !==
+    "node tools/release/validate-package-lock-consistency.mjs && npm ci"
+  ) {
+    throw new Error("Install command drifted from lockfile consistency guard");
   }
 
   const cspCount = (generated.headers ?? [])
