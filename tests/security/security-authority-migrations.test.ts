@@ -2144,6 +2144,11 @@ describe("Security Authority exception register", () => {
         cacheKey?: string;
         exceptionId?: string;
         summary?: string;
+        callerClass?:
+          | "platform_extension"
+          | "public_endpoint"
+          | "authenticated_user_endpoint"
+          | "authenticated_admin_endpoint";
       }>;
       schemaVersion?: string;
       sourceCommand?: string;
@@ -2177,7 +2182,59 @@ describe("Security Authority exception register", () => {
         (value: string | undefined) =>
           typeof value === "string" && value.length > 0,
       );
+
+      if (residual.cacheKey?.includes("security_definer_function_executable_")) {
+        expect(residual.callerClass).toSatisfy(
+          (value: string | undefined) =>
+            value === "platform_extension" ||
+            value === "public_endpoint" ||
+            value === "authenticated_user_endpoint" ||
+            value === "authenticated_admin_endpoint",
+        );
+      }
     }
+
+    const anonDefiners = residualRegister.residuals.filter((residual) =>
+      residual.cacheKey?.startsWith(
+        "anon_security_definer_function_executable_",
+      ),
+    );
+    const authenticatedDefiners = residualRegister.residuals.filter(
+      (residual) =>
+        residual.cacheKey?.startsWith(
+          "authenticated_security_definer_function_executable_",
+        ),
+    );
+
+    // Conservative known-key set: the live post-CP-001 Advisor reports 84
+    // authenticated findings. Keeping one resolved known key is intentional;
+    // the validator reports known/resolved but fails any unknown finding.
+    expect(anonDefiners).toHaveLength(9);
+    expect(authenticatedDefiners).toHaveLength(85);
+    expect(cacheKeys.some((key) => key?.includes("create_notification"))).toBe(
+      false,
+    );
+    expect(
+      cacheKeys.some((key) =>
+        key?.includes(
+          "authenticated_security_definer_function_executable_public_list_profile_access_members_p_profile_id uuid",
+        ),
+      ),
+    ).toBe(true);
+    expect(
+      cacheKeys.some((key) =>
+        key?.includes(
+          "authenticated_security_definer_function_executable_public_current_user_has_password_",
+        ),
+      ),
+    ).toBe(true);
+    expect(
+      cacheKeys.some((key) =>
+        key?.includes(
+          "anon_security_definer_function_executable_public_track_analytics_event_",
+        ),
+      ),
+    ).toBe(true);
   });
 });
 
