@@ -26,7 +26,7 @@ describe("work opportunity public action boundary", () => {
 
   it("shows contact and profile CTAs only when their real target exists", () => {
     expect(page).toContain("contactCanOpen ? (");
-    expect(page).toContain("data.contact_notes ? (");
+    expect(page).toContain("data.contact_notes?.trim() ? (");
     expect(page).toContain("data.professional.public_url ? (");
     expect(page).not.toContain("professionalPublicRoutes.home()");
     expect(page).not.toContain("navigate(data.professional?.public_url ??");
