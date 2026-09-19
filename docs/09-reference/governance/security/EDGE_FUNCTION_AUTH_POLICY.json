@@ -507,7 +507,13 @@
       "kind": "ai-broker",
       "risk": "Critical",
       "label": "admin territory AI content broker",
-      "requiredPatterns": ["require(?:Admin|SuperAdmin)\\s*\\("]
+      "requiredPatterns": [
+        "require(?:Admin|SuperAdmin)\\s*\\(",
+        "getSupabaseAdminClient\\s*\\(",
+        "territory_ai_content",
+        "territorial_groups",
+        "territorial_group_members"
+      ]
     },
     "track-public-view": {
       "kind": "public-counter-broker",

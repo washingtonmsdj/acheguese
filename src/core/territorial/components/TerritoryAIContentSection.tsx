@@ -5,17 +5,14 @@
  * descrição, história, dados demográficos e eventos.
  */
 
-import { useEffect } from 'react';
 import {
   Sparkles, BookOpen, Users, Calendar, MapPin,
-  Loader2, RefreshCw, Building2, TrendingUp,
+  Loader2, Building2, TrendingUp,
 } from 'lucide-react';
 import { useTerritoryAIContent } from '../hooks/useTerritoryAIContent';
 
 interface Props {
   territorySlug: string;
-  territoryName: string;
-  members?: string[];
   isGroup?: boolean;
 }
 
@@ -33,28 +30,16 @@ interface TerritoryEvent {
   category: string;
 }
 
-export function TerritoryAIContentSection({ territorySlug, territoryName, members, isGroup }: Props) {
-  const { content, isLoading, generateWithAI } = useTerritoryAIContent(territorySlug);
+export function TerritoryAIContentSection({ territorySlug, isGroup }: Props) {
+  const { content, isLoading } = useTerritoryAIContent(territorySlug);
 
-  // Auto-generate disabled until Edge Function is deployed
-  // useEffect(() => {
-  //   if (!isLoading && !content && territorySlug && !generateWithAI.isPending) {
-  //     generateWithAI.mutate(
-  //       { territory_slug: territorySlug, territory_name: territoryName, members },
-  //       { onError: () => { /* Edge Function não disponível — falha silenciosa */ } },
-  //     );
-  //   }
-  // }, [isLoading, content, territorySlug]);
-
-  if (isLoading || generateWithAI.isPending) {
+  if (isLoading) {
     return (
       <div className="px-4 mb-8">
         <div className="bg-gradient-to-br from-card to-muted/30 border border-border rounded-2xl p-6">
           <div className="flex items-center gap-3 mb-4">
             <Sparkles className="h-4 w-4 text-teal-500 animate-pulse" />
-            <span className="text-xs text-muted-foreground">
-              {generateWithAI.isPending ? 'Gerando conteúdo com IA...' : 'Carregando...'}
-            </span>
+            <span className="text-xs text-muted-foreground">Carregando...</span>
             <Loader2 className="h-3.5 w-3.5 animate-spin text-muted-foreground" />
           </div>
           <div className="space-y-2">

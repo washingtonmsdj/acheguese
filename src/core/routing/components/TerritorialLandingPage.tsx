@@ -554,8 +554,6 @@ export function TerritorialLandingPage() {
             ? resolved.group.slug || resolved.group.id
             : resolved?.location?.slug || resolved?.location?.id || ''
           }
-          territoryName={name}
-          members={memberList.length > 0 ? memberList : undefined}
           isGroup={isGroup}
         />
       </div>

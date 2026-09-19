@@ -541,19 +541,6 @@ export const publicViewEventSchema: Schema<PublicViewEventBody> = {
   entityId: { required: true, validator: v.uuid() },
 };
 
-/** Schema para geracao de conteudo de territorio por IA */
-export interface TerritoryAiContentBody {
-  territory_slug: string;
-  territory_name: string;
-  members?: string[];
-}
-
-export const territoryAiContentSchema: Schema<TerritoryAiContentBody> = {
-  territory_slug: { required: true, validator: v.string(1, 120) },
-  territory_name: { required: true, validator: v.string(1, 160) },
-  members: { required: false, validator: v.array(0) },
-};
-
 // ─────────────────────────────────────────────────────────────────────────────
 // HELPERS DE RESPOSTA
 // ─────────────────────────────────────────────────────────────────────────────
