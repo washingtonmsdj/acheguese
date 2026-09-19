@@ -44,13 +44,26 @@ export function TouristPointMapSection({
   const internalMapUrl = '/mapa';
 
   // URL territorial do mapa — SSOT via useFriendlyModuleUrls
-  const handleCopyCoordinates = () => {
+  const handleCopyCoordinates = async () => {
     const coords = `${latitude}, ${longitude}`;
-    navigator.clipboard.writeText(coords);
-    toast({
-      title: 'Coordenadas copiadas!',
-      description: coords,
-    });
+
+    try {
+      if (!navigator.clipboard?.writeText) {
+        throw new Error('Clipboard indisponível');
+      }
+
+      await navigator.clipboard.writeText(coords);
+      toast({
+        title: 'Coordenadas copiadas!',
+        description: coords,
+      });
+    } catch {
+      toast({
+        title: 'Não foi possível copiar as coordenadas',
+        description: 'Copie as coordenadas exibidas no botão.',
+        variant: 'destructive',
+      });
+    }
   };
 
   return (
