@@ -23,7 +23,6 @@ import {
 import { workOpportunitiesService } from "@/core/work-opportunities/services/WorkOpportunitiesService";
 import { workOpportunityTelemetryService } from "@/core/work-opportunities/services/WorkOpportunityTelemetryService";
 import { workOpportunityTrustService } from "@/core/work-opportunities/services/WorkOpportunityTrustService";
-import { professionalPublicRoutes } from "@/core/professional/routes/professionalPublicRoutes";
 import { useSessionContext } from "@/core/session";
 import { Button } from "@/shared/components/ui/button";
 import { Badge } from "@/shared/components/ui/badge";
@@ -58,6 +57,16 @@ function tryOpenContact(raw?: string | null): boolean {
   }
 
   return false;
+}
+
+function hasOpenableContact(raw?: string | null): boolean {
+  if (!raw) return false;
+  const trimmed = raw.trim();
+  if (trimmed.startsWith("http://") || trimmed.startsWith("https://")) {
+    return true;
+  }
+
+  return trimmed.replace(/\D/g, "").length >= 10;
 }
 
 function extractPhone(raw?: string | null): string | null {
@@ -107,6 +116,10 @@ export default function WorkOpportunityDetailPage() {
   const source = (searchParams.get("source") as OpportunityOpenSource | null) ?? "direct";
   const primaryPortfolio = useMemo(() => data?.professional?.portfolio_images?.slice(0, 6) ?? [], [data]);
   const directPhone = useMemo(() => extractPhone(data?.contact_notes), [data?.contact_notes]);
+  const contactCanOpen = useMemo(
+    () => hasOpenableContact(data?.contact_notes),
+    [data?.contact_notes],
+  );
 
   useEffect(() => {
     if (!data?.id) return;
@@ -134,8 +147,8 @@ export default function WorkOpportunityDetailPage() {
   };
 
   const handleFeedback = async (answer: OpportunityFeedbackAnswer) => {
-    if (!data?.id || !data.professional_id) {
-      toast.info("Feedback registrado.");
+    if (!data?.id) {
+      toast.error("Não foi possível identificar esta oportunidade.");
       return;
     }
 
@@ -235,20 +248,24 @@ export default function WorkOpportunityDetailPage() {
               <CardContent className="space-y-3 text-sm">
                 <p className="text-muted-foreground">{data.contact_notes ?? "Contato não informado. Use mensagem direta no perfil do autor."}</p>
                 <div className="flex flex-wrap gap-2">
-                  <Button
-                    className="gap-2"
-                    onClick={() => {
-                      void workOpportunityTelemetryService.trackInterestConversion({
-                        opportunityId: data.id,
-                        professionalId: data.professional_id,
-                        territoryLocationId: data.territory_location_id,
-                        source,
-                        actorProfileId: activeProfile?.id,
-                        actorUserId: activeProfile?.userId ?? null,
-                      });
+                  {contactCanOpen ? (
+                    <Button
+                      className="gap-2"
+                      onClick={() => {
+                        const opened = tryOpenContact(data.contact_notes);
+                        if (!opened) {
+                          toast.error("Não foi possível abrir o contato.");
+                          return;
+                        }
 
-                      const opened = tryOpenContact(data.contact_notes);
-                      if (opened) {
+                        void workOpportunityTelemetryService.trackInterestConversion({
+                          opportunityId: data.id,
+                          professionalId: data.professional_id,
+                          territoryLocationId: data.territory_location_id,
+                          source,
+                          actorProfileId: activeProfile?.id,
+                          actorUserId: activeProfile?.userId ?? null,
+                        });
                         void workOpportunityTelemetryService.trackContactStarted({
                           opportunityId: data.id,
                           professionalId: data.professional_id,
@@ -257,18 +274,25 @@ export default function WorkOpportunityDetailPage() {
                           actorProfileId: activeProfile?.id,
                           actorUserId: activeProfile?.userId ?? null,
                         });
-                      } else {
-                        toast.info("Não foi possível abrir automaticamente. Copie o contato.");
-                      }
-                    }}
-                  >
-                    <MessageCircle className="h-4 w-4" />
-                    Tenho interesse
-                  </Button>
+                      }}
+                    >
+                      <MessageCircle className="h-4 w-4" />
+                      Tenho interesse
+                    </Button>
+                  ) : null}
                   {directPhone && (
                     <Button
                       variant="outline"
                       onClick={() => {
+                        void workOpportunityTelemetryService.trackInterestConversion({
+                          opportunityId: data.id,
+                          professionalId: data.professional_id,
+                          territoryLocationId: data.territory_location_id,
+                          source,
+                          actorProfileId: activeProfile?.id,
+                          actorUserId: activeProfile?.userId ?? null,
+                          metadata: { conversion_type: "phone" },
+                        });
                         void workOpportunityTelemetryService.trackContactStarted({
                           opportunityId: data.id,
                           professionalId: data.professional_id,
@@ -284,26 +308,11 @@ export default function WorkOpportunityDetailPage() {
                       Ligar agora
                     </Button>
                   )}
-                  <Button
-                    variant="secondary"
-                    onClick={() => {
-                      void workOpportunityTelemetryService.trackInterestConversion({
-                        opportunityId: data.id,
-                        professionalId: data.professional_id,
-                        territoryLocationId: data.territory_location_id,
-                        source,
-                        actorProfileId: activeProfile?.id,
-                        actorUserId: activeProfile?.userId ?? null,
-                        metadata: { conversion_type: "quick_interest" },
-                      });
-                      toast.success("Interesse rápido enviado. Continue o contato direto.");
-                    }}
-                  >
-                    Interesse rápido
-                  </Button>
-                  <Button variant="outline" onClick={handleCopyContact}>
-                    Copiar contato
-                  </Button>
+                  {data.contact_notes ? (
+                    <Button variant="outline" onClick={handleCopyContact}>
+                      Copiar contato
+                    </Button>
+                  ) : null}
                 </div>
               </CardContent>
             </Card>
@@ -416,24 +425,26 @@ export default function WorkOpportunityDetailPage() {
                       <p className="text-muted-foreground">{data.professional.description}</p>
                     )}
 
-                    <Button
-                      variant="outline"
-                      className="w-full gap-2"
-                      onClick={() => {
-                        void workOpportunityTelemetryService.trackProfessionalProfileClick({
-                          opportunityId: data.id,
-                          professionalId: data.professional?.id,
-                          territoryLocationId: data.territory_location_id,
-                          source,
-                          actorProfileId: activeProfile?.id,
-                          actorUserId: activeProfile?.userId ?? null,
-                        });
-                        navigate(data.professional?.public_url ?? professionalPublicRoutes.home());
-                      }}
-                    >
-                      <Eye className="h-4 w-4" />
-                      Ver perfil profissional
-                    </Button>
+                    {data.professional.public_url ? (
+                      <Button
+                        variant="outline"
+                        className="w-full gap-2"
+                        onClick={() => {
+                          void workOpportunityTelemetryService.trackProfessionalProfileClick({
+                            opportunityId: data.id,
+                            professionalId: data.professional?.id,
+                            territoryLocationId: data.territory_location_id,
+                            source,
+                            actorProfileId: activeProfile?.id,
+                            actorUserId: activeProfile?.userId ?? null,
+                          });
+                          navigate(data.professional.public_url);
+                        }}
+                      >
+                        <Eye className="h-4 w-4" />
+                        Ver perfil profissional
+                      </Button>
+                    ) : null}
                   </>
                 ) : (
                   <p className="text-muted-foreground">Esta oportunidade ainda não está vinculada a um perfil profissional estruturado.</p>
