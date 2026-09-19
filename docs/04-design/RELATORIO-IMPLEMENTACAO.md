@@ -297,6 +297,7 @@ A prancha 117 também está coberta pelos estados demonstrativos de visitante, v
 - Comparei `BusinessManagementConceptPreviewPage` com `11-visao-geral-loja/pranchas/016-loja-visao-geral.png` em mobile e desktop. O preview já reproduzia o shell territorial, rail global e do negócio, identidade de `Sabores da Ana`, aviso de horários, atendimento, cardápio, publicações/ofertas e links de informações/equipe.
 - Mantive as ações demonstrativas conectadas: abrir conversas, abrir cardápio, ver página pública, editar horários, criar/continuar publicação e voltar para Meus perfis. A rota `concept-mock=1` continua isolada do fluxo real e não concede permissões.
 - Corrigi o ritmo mobile em detalhe: reduzi os intervalos entre identidade, seletor, aviso e cards, removi margens tipográficas herdadas e compactei o padding/gaps internos de Atendimento, Cardápio e Publicações; os valores explícitos de `md`/`lg` foram conferidos no desktop. Também alinhei o CTA `Editar horários →` à prancha. Não alterei a operação protegida, dados reais ou regras de acesso.
+- Aproximei os detalhes de conteúdo: miniaturas do cardápio com a largura da prancha, avatar de Mariana ampliado e avatar masculino próprio para Lucas no desktop. O estado mobile continua mostrando apenas a conversa destacada, como no concept.
 
 ### Validação e evidências
 

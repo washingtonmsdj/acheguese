@@ -23,6 +23,7 @@ import type { LucideIcon } from "lucide-react";
 import foodImage from "@/assets/gastronomy/cat-marmitas.jpg";
 import secondFoodImage from "@/assets/gastronomy/cat-restaurantes.jpg";
 import ownerImage from "@/assets/persona-comerciante.jpg";
+import residentImage from "@/assets/persona-morador.jpg";
 import { cn } from "@/shared/utils/cn";
 
 const territoryHref = "/ba/salvador/complexo-do-nordeste-de-amaralina";
@@ -186,7 +187,7 @@ function ConceptConversationCard({ onOpen }: { onOpen: () => void }) {
       <p className="mt-0.5 text-sm text-territory-muted">12 não lidas</p>
       <div className="mt-2 space-y-2 md:mt-2">
         <div className="flex items-center gap-3 rounded-xl border border-territory-border/80 p-2 md:p-2">
-          <img src={ownerImage} alt="Mariana Costa" className="h-11 w-11 rounded-full object-cover" />
+          <img src={ownerImage} alt="Mariana Costa" className="h-12 w-12 rounded-full object-cover" />
           <div className="min-w-0 flex-1">
             <p className="mb-0 truncate text-sm font-bold text-territory-ink">Mariana Costa</p>
             <p className="mb-0 mt-0.5 truncate text-xs text-territory-muted">Pode ser às 12h?</p>
@@ -194,7 +195,7 @@ function ConceptConversationCard({ onOpen }: { onOpen: () => void }) {
           <span className="self-start text-xs text-territory-muted">10:24</span>
         </div>
         <div className="hidden items-center gap-3 rounded-xl border border-territory-border/80 p-2.5 md:flex md:p-2">
-          <img src={ownerImage} alt="Lucas Almeida" className="h-11 w-11 rounded-full object-cover" />
+          <img src={residentImage} alt="Lucas Almeida" className="h-12 w-12 rounded-full object-cover" />
           <div className="min-w-0 flex-1">
             <p className="mb-0 truncate text-sm font-bold text-territory-ink">Lucas Almeida</p>
             <p className="mb-0 mt-0.5 truncate text-xs text-territory-muted">Vocês entregam em Santa Cruz?</p>
@@ -218,7 +219,7 @@ function ConceptMenuCard({ onOpen }: { onOpen: () => void }) {
       <div className="mt-2 space-y-2">
         {items.map((item, index) => (
           <div key={item.name} className={cn("flex items-center gap-3 rounded-xl border border-territory-border/80 p-2", index > 0 && "hidden md:flex")}>
-            <img src={item.image} alt="" className="h-14 w-16 rounded-lg object-cover" />
+            <img src={item.image} alt="" className="h-14 w-20 rounded-lg object-cover" />
             <div className="min-w-0">
               <p className="mb-0 truncate text-sm font-bold text-territory-ink">{item.name}</p>
               <p className="mb-0 mt-0.5 text-xs font-medium text-territory-success">Disponível</p>
