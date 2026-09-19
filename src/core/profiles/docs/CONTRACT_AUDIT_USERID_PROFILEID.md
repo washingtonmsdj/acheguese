@@ -1,78 +1,117 @@
-# Auditoria de Contratos: UserId vs ProfileId
+# Contrato de Identidade: UserId vs ProfileId
 
-> Atualizado: 2026-03-23  
-> Status: APROVADO — shape unificado em camelCase
+**Atualizado:** 2026-09-18  
+**Status:** contrato ativo
 
-## 1. Contrato Canônico
+Este documento define a fronteira de identidade entre conta autenticada e perfil
+de domínio. Ele descreve o estado atual; histórico de migração fica em
+`docs/08-roadmap/checkpoints` e `docs/10-archive`.
 
-```typescript
-// src/core/auth/hooks/useProfileContextIntegration.ts
-interface CanonicalActiveProfile {
-  id: string; // ProfileId — profiles.id
-  userId: string; // UserId — auth.users.id
-  profileType: string; // 'personal' | 'driver' | 'business' | 'professional'
-  displayName: string;
-  username?: string;
-  avatarUrl?: string;
-  isActive: boolean;
-  // ... campos opcionais
-}
-```
+## Autoridades canônicas
 
-Tanto `AuthContext.activeProfile` quanto `SessionContext.activeProfile` usam este shape.
+A sessão autenticada pertence a:
 
-## 2. Tabela de Contratos por Service
+- `src/core/session/services/SessionService.ts`;
+- `src/core/session/state/SessionState.ts`;
+- `src/core/session/providers/SessionProvider.tsx`;
+- `src/core/session/hooks/useSessionContext.ts`.
 
-| Service                       | Método                         | Recebe                   | Tipo                | Justificativa                                     |
-| ----------------------------- | ------------------------------ | ------------------------ | ------------------- | ------------------------------------------------- |
-| **AuthService**               | `signIn`, `signOut`, `isAdmin` | `userId`                 | `UserId`            | Operação técnica de auth                          |
-| **ProfileService**            | `getProfileContext`            | `userId`                 | `UserId`            | Busca perfis de um user                           |
-| **ProfileService**            | `getProfilesByUserId`          | `userId`                 | `UserId`            | FK profiles.user_id                               |
-| **ProfileService**            | `switchActiveProfile`          | `userId, profileId`      | `UserId, ProfileId` | Ambos necessários                                 |
-| **ProfileService**            | `getUserRoles`                 | `userId`                 | `UserId`            | user_roles.user_id                                |
-| **ProfileService**            | `getUserLikesCount`            | `profileId`              | `ProfileId`         | Contagem por perfil                               |
-| **ProfileService**            | `getUserBusinessesByProfiles`  | `profileIds[]`           | `ProfileId[]`       | FK por perfil                                     |
-| **PostService**               | `createSimplePost`             | `author_profile_id`      | `ProfileId`         | Autoria social                                    |
-| **PostService**               | `getPostsByProfile`            | `profileId`              | `ProfileId`         | Busca por perfil                                  |
-| **PostService**               | `getPostsCountByProfile`       | `profileId`              | `ProfileId`         | Contagem por perfil                               |
-| **SocialInteractionsService** | `likePost`, `unlikePost`       | `userId`                 | `UserId`            | Resolve profile internamente                      |
-| **SocialInteractionsService** | `getLikesForPosts`             | `userId`                 | `UserId`            | Resolve profile internamente                      |
-| **CommunityReportService**    | `report`                       | ator derivado pelo banco | `ProfileId`         | O browser nao declara a identidade do denunciante |
-| **SessionService**            | `getSession`, `refreshSession` | `userId`                 | `UserId`            | Sessão técnica                                    |
+O shape de perfil exposto pela sessão é
+`src/core/profiles/views/SessionProfileView.ts`. Ele usa camelCase e contém
+`id` como ProfileId e `userId` como UserId.
 
-## 3. Branded Types
+A projeção multi-profile em
+`src/core/profiles/contexts/multi-profile-runtime-context.tsx` é uma projeção
+rica para UI e contexto de módulo. Ela não é um segundo owner de autenticação:
+trocas de perfil persistentes delegam a `SessionService.switchProfile()`.
 
-```typescript
-// src/core/session/types/strict.ts
-type UserId = string & { readonly __brand: "UserId" };
-type ProfileId = string & { readonly __brand: "ProfileId" };
-```
+## UserId
 
-Disponíveis para adoção gradual. Atualmente os services usam `string` com `@ts-nocheck`.  
-Quando `@ts-nocheck` for removido, os branded types impedirão trocas acidentais.
+Use UserId para identidade de conta e operações ligadas a `auth.users`.
 
-## 4. Regra de Uso
+Exemplos:
 
-| Contexto                                       | Usar                           | Exemplo                                                                 |
-| ---------------------------------------------- | ------------------------------ | ----------------------------------------------------------------------- |
-| Auth, sessão, audit, roles                     | `user.id` (UserId)             | `AuthService.isAdmin(user.id)`                                          |
-| Posts, comments, reports, favoritos, ownership | `activeProfile.id` (ProfileId) | `postService.createSimplePost({ author_profile_id: activeProfile.id })` |
-| Services que resolvem internamente             | `user.id` (UserId)             | `SocialInteractionsService.likePost(postId, user.id)`                   |
+- autenticação e sessão;
+- roles globais;
+- preferências globais de conta;
+- auditoria técnica da conta;
+- relação usuário → perfis;
+- operações cuja autoridade backend é vinculada diretamente ao usuário
+  autenticado.
 
-## 5. Próxima Fase: Eliminar AuthContext Shim
+Nunca use UserId como substituto de ProfileId em ownership de entidades de
+domínio.
 
-### Consumidores atuais de useAuthContext (22 arquivos)
+## ProfileId
 
-Migração planejada em lotes:
+Use ProfileId para identidade de perfil e ownership de entidades de domínio.
 
-1. **Lote 1** — Hooks core: `useProfile`, `useActiveProfile`
-2. **Lote 2** — Páginas de perfil: `PerfilHubPage`, `ConfiguracoesPage`, `ProfilePublicPage`
-3. **Lote 3** — Admin: `AdminDashboard`, `AdminLayout`, `AdminUsuarios`
-4. **Lote 4** — Componentes: `ProfileSwitcher`, `ServiceAreasManager`, `useNovoPost`
-5. **Lote 5** — Restantes + remover AuthContext
+Exemplos:
 
-Cada lote:
+- autoria de posts e comentários;
+- membership e moderação contextual;
+- perfis Business/Professional/Driver;
+- favoritos e interações quando o contrato é profile-scoped;
+- entidades cujo FK aponta para `profiles.id`.
 
-- Trocar `useAuthContext()` por `useSessionContext()`
-- Ajustar propriedades se necessário
-- Rodar `tsc --noEmit` + `vite build`
+Quando uma operação protegida puder derivar o ator no backend, o browser não
+deve enviar `actor_user_id` ou `actor_profile_id` como autoridade. O backend
+deve resolver e validar o ator autenticado.
+
+## Shapes
+
+### Sessão
+
+`SessionProfileView` é o shape canônico de perfil dentro da sessão:
+
+- `id` → ProfileId;
+- `userId` → UserId;
+- `profileType`;
+- `displayName`;
+- `username`;
+- `avatarUrl`;
+- campos territoriais e de estado necessários à sessão.
+
+Não redefinir esse shape dentro de `core/session`.
+
+### Multi-profile
+
+Os contratos em `src/core/profiles/services/multi-profile` preservam o shape
+necessário às superfícies multi-profile. Eles podem usar naming diferente do
+`SessionProfileView`, mas não podem criar uma segunda sessão nem persistir
+troca de perfil fora de `SessionService`.
+
+## Branded types
+
+`src/core/session/types/strict.ts` disponibiliza:
+
+- `UserId`;
+- `ProfileId`;
+- `toUserId()`;
+- `toProfileId()`.
+
+A adoção é incremental. Esses tipos devem ser preferidos em boundaries novos ou
+refatorados quando ajudam a impedir troca acidental entre IDs.
+
+## Regras de implementação
+
+1. `useSessionContext` é a API React canônica para identidade autenticada.
+2. `useActiveProfile`, `useProfiles`, `useAuthContext` e `AuthProvider`
+   foram aposentados e não podem retornar ao source ativo.
+3. Não inferir autorização a partir de tipo de perfil no frontend.
+4. UI pode usar capability preview apenas para visibilidade; comando protegido
+   depende da autorização backend.
+5. Não confundir `auth.users.id` com `profiles.id`.
+6. Nomes de campos devem explicitar a identidade quando houver ambiguidade:
+   `userId`, `profileId`, `authorProfileId`, etc.
+7. Não manter shims ou aliases antigos depois do cutover.
+
+## Guardrails
+
+- `tools/architecture/validate-session-context.ts`;
+- `tests/architecture/session-ssot-ownership.test.ts`;
+- `tests/architecture/active-profile-canonical-owner.test.ts`;
+- regras `session-context/*` em `eslint.config.js`.
+
+Esses guardrails impedem a reintrodução de owners de sessão paralelos,
+identificadores ambíguos e hooks de perfil aposentados.
