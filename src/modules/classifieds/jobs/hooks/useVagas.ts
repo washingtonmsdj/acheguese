@@ -57,6 +57,22 @@ export function useVagas(params: UseVagasParams = {}) {
 
   const allVagas = useMemo(() => data?.vagas ?? [], [data?.vagas]);
 
+  const summary = useMemo(() => {
+    const now = Date.now();
+    const uniqueCompanies = new Set(
+      allVagas.map((vaga) => vaga.empresaId || vaga.empresaNome.trim().toLocaleLowerCase("pt-BR")),
+    );
+
+    return {
+      total: allVagas.length,
+      companies: uniqueCompanies.size,
+      urgent: allVagas.filter((vaga) => vaga.urgencia === "urgente" || vaga.urgencia === "extrema").length,
+      publishedLast24Hours: allVagas.filter(
+        (vaga) => now - vaga.createdAt.getTime() <= 24 * 60 * 60 * 1000,
+      ).length,
+    };
+  }, [allVagas]);
+
   // Filtros client-side (busca textual e categorias)
   const filteredVagas = useMemo(() => {
     return allVagas.filter((vaga) => {
@@ -131,6 +147,7 @@ export function useVagas(params: UseVagasParams = {}) {
     selectedLevel, setSelectedLevel,
     selectedUrgency, setSelectedUrgency,
     filteredVagas,
+    summary,
     urgentVagas,
     recentVagas,
     featuredVagas,
