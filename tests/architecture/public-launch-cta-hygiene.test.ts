@@ -56,6 +56,21 @@ describe("public launch CTA hygiene", () => {
     expect(filters).toContain("onUrgencyChange");
   });
 
+  it("does not expose placeholder nearby capability in public tourist detail", () => {
+    const detail = readFileSync(
+      "src/modules/guide/pages/TouristPointDetailPage.tsx",
+      "utf8",
+    );
+    const emptyState = readFileSync(
+      "src/modules/guide/components/TouristPointEmptyState.tsx",
+      "utf8",
+    );
+
+    expect(detail).not.toContain("NearbyPlacesBlock");
+    expect(emptyState).not.toContain("serão exibidos aqui em breve");
+    expect(emptyState).toContain("Ainda não há pontos turísticos publicados");
+  });
+
   it("does not advertise an unavailable tourist-point suggestion action", () => {
     const page = readFileSync(
       "src/modules/guide/pages/TouristPointsPage.tsx",
