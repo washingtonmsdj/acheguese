@@ -25,6 +25,10 @@ function responseHeaders(req: Request): Record<string, string> {
 const SUPABASE_URL = Deno.env.get("SUPABASE_URL")!;
 const SERVICE_ROLE = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
 const ANON_KEY = Deno.env.get("SUPABASE_ANON_KEY")!;
+const TRYON_ROLLOUT_ENABLED =
+  (Deno.env.get("TRYON_ROLLOUT_ENABLED") ?? "false")
+    .trim()
+    .toLowerCase() === "true";
 
 const REPLICATE_MODEL_VERSION = Deno.env.get("TRYON_REPLICATE_MODEL_VERSION")?.trim() ?? "";
 
@@ -308,6 +312,16 @@ Deno.serve(async (req) => {
 
   const methodError = requireHttpMethod(req, ["POST"], "POST, OPTIONS");
   if (methodError) return methodError;
+
+  if (!TRYON_ROLLOUT_ENABLED) {
+    return new Response(
+      JSON.stringify({ error: "Virtual Try-On is temporarily unavailable" }),
+      {
+        status: 503,
+        headers: responseHeaders(req),
+      },
+    );
+  }
 
   const rateLimitResponse = await rateLimitMiddleware(
     req,
