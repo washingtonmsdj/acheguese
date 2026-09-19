@@ -8,6 +8,10 @@
  */
 
 import { supabase } from "@/integrations/supabase";
+import {
+  invokeSupabaseBroker,
+  invokeSupabaseBrokerCommand,
+} from "@/core/infrastructure/edge-functions/edgeFunctionBroker";
 import { RolloutError } from "../errors/RolloutError";
 import type { IRolloutRepository } from "./IRolloutRepository";
 import type {
@@ -18,6 +22,7 @@ import type {
 import { ROLLOUT_PAGINATION, RolloutErrorCode } from "../types/index";
 
 const TABLE = "module_rollouts";
+const ADMIN_ROLLOUT_RPC_FUNCTION = "admin-rollout-rpc";
 const PUBLIC_ROLLOUT_COLUMNS =
   "id,module_key,location_id,status,config,created_at,updated_at";
 
@@ -32,14 +37,11 @@ interface QueryBuilder<TRow> {
     columns?: string,
     options?: { count?: "exact" | "planned" | "estimated" },
   ): QueryBuilder<TRow>;
-  upsert(values: unknown, options?: { onConflict?: string }): QueryBuilder<TRow>;
-  delete(): QueryBuilder<TRow>;
   eq(column: string, value: unknown): QueryBuilder<TRow>;
   in(column: string, values: readonly unknown[]): QueryBuilder<TRow>;
   order(column: string, options?: { ascending?: boolean }): QueryBuilder<TRow>;
   range(from: number, to: number): QueryBuilder<TRow>;
   maybeSingle(): QueryResult<TRow | null>;
-  single(): QueryResult<TRow>;
   then<
     TResult1 = {
       data: TRow[];
@@ -178,39 +180,42 @@ export class RolloutRepositorySupabase implements IRolloutRepository {
     config?: Record<string, unknown>,
     user_id?: string,
   ): Promise<ModuleRollout> {
-    const now = new Date().toISOString();
     void user_id;
 
-    const { data, error } = await rolloutDb
-      .from<ModuleRolloutRow>(TABLE)
-      .upsert(
-        {
+    try {
+      const row = await invokeSupabaseBroker<ModuleRolloutRow, "upsertRollout">({
+        action: "upsertRollout",
+        functionName: ADMIN_ROLLOUT_RPC_FUNCTION,
+        params: {
           module_key,
           location_id,
           status,
           config: config ?? null,
-          updated_at: now,
         },
-        { onConflict: "module_key,location_id" },
-      )
-      .select(PUBLIC_ROLLOUT_COLUMNS)
-      .single();
-
-    if (error) {
-      throw new RolloutError(RolloutErrorCode.DATABASE_ERROR, error.message);
+        serviceName: "RolloutRepositorySupabase",
+      });
+      return rowToRollout(row);
+    } catch (error) {
+      throw new RolloutError(
+        RolloutErrorCode.DATABASE_ERROR,
+        error instanceof Error ? error.message : "Rollout mutation failed",
+      );
     }
-    return rowToRollout(data);
   }
 
   async delete(module_key: ModuleKey, location_id: string): Promise<void> {
-    const { error } = await rolloutDb
-      .from<ModuleRolloutRow>(TABLE)
-      .delete()
-      .eq("module_key", module_key)
-      .eq("location_id", location_id);
-
-    if (error) {
-      throw new RolloutError(RolloutErrorCode.DATABASE_ERROR, error.message);
+    try {
+      await invokeSupabaseBrokerCommand<"deleteRollout">({
+        action: "deleteRollout",
+        functionName: ADMIN_ROLLOUT_RPC_FUNCTION,
+        params: { module_key, location_id },
+        serviceName: "RolloutRepositorySupabase",
+      });
+    } catch (error) {
+      throw new RolloutError(
+        RolloutErrorCode.DATABASE_ERROR,
+        error instanceof Error ? error.message : "Rollout deletion failed",
+      );
     }
   }
 }
