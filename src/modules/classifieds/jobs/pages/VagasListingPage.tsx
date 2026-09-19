@@ -91,7 +91,7 @@ export default function VagasListingPage({ resolved, activeMemberIds }: VagasLis
     {
       icon: Briefcase,
       value: isLoading ? "..." : String(summary.total),
-      label: "vagas ativas",
+      label: "vagas disponíveis",
       color: "text-primary",
     },
     {
