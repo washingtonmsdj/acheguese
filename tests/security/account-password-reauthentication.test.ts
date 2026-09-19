@@ -183,10 +183,14 @@ describe("account password reauthentication", () => {
     expect(release).toBeGreaterThan(save);
   });
 
-  it("distinguishes an existing password method from an OAuth-only account", () => {
+  it("distinguishes password capability from provider metadata", () => {
     expect(identityService).toContain("readMetadataProviders");
-    expect(identityService).toContain("data.user.app_metadata ?? {}");
-    expect(identityService).toContain('hasPassword: providers.includes("email")');
+    expect(identityService).toContain("user.app_metadata ?? {}");
+    expect(identityService).toContain(
+      'authIdentityDb.rpc<boolean>("current_user_has_password")',
+    );
+    expect(identityService).toContain('typeof hasPassword !== "boolean"');
+    expect(identityService).not.toContain('hasPassword: providers.includes("email")');
     expect(securityPage).toContain("hasPassword ? \"Alterar senha\" : \"Criar senha\"");
     expect(securityPage).toContain("Nenhuma senha foi criada para esta conta.");
   });
