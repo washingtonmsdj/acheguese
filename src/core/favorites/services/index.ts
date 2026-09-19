@@ -1,5 +1,4 @@
 export {
-  getFavoriteStats,
   getCurrentUserBusinessFavorites,
   isBusinessFavorited,
 } from "./favorites.queries";
@@ -9,8 +8,6 @@ export {
   removeBusinessFavorite,
   setBusinessFavorite,
 } from "./favorites.mutations";
-
-export type { FavoriteStats } from "../types";
 
 export {
   BusinessFavoriteStore,
