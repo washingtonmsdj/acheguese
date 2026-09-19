@@ -41,6 +41,7 @@ export function ResumoSection({
   const totalPersonalActivity = operations.posts;
   const totalOperationalAssets = operations.businesses + operations.services + operations.classifieds;
   const showFamilySafetyLinks = isLaunchSurfaceEnabled("familySafety");
+  const showBilling = isLaunchSurfaceEnabled("billing");
 
   return (
     <div className="space-y-6">
@@ -154,12 +155,14 @@ export function ResumoSection({
             description="Itens salvos e referências pessoais."
             onClick={() => setActiveSection("dados-pessoais")}
           />
-          <HubLinkCard
-            icon={CreditCard}
-            title="Planos pessoais"
-            description="Resumo de cobranças e assinaturas vinculadas."
-            onClick={() => navigate(appUrls.profile.billing)}
-          />
+          {showBilling ? (
+            <HubLinkCard
+              icon={CreditCard}
+              title="Planos pessoais"
+              description="Resumo de cobranças e assinaturas vinculadas."
+              onClick={() => navigate(appUrls.profile.billing)}
+            />
+          ) : null}
           <HubLinkCard
             icon={Settings2}
             title="Preferências"
