@@ -15,8 +15,8 @@ function readProjectFile(path: string): string {
 const migration = readProjectFile(
   "supabase/migrations/20260911032000_enforce_canonical_ride_status_writes_g62.sql",
 );
-const adapter = readProjectFile(
-  "src/core/mobility/services/RideCanonicalAdapter.ts",
+const mapper = readProjectFile(
+  "src/core/mobility/services/RideRequestContractMapper.ts",
 );
 
 describe("G62 canonical ride status write ratchet", () => {
@@ -103,10 +103,10 @@ describe("G62 canonical ride status write ratchet", () => {
   });
 
   it("routes compatibility reads through the lifecycle SSOT instead of a second alias map", () => {
-    expect(adapter).toContain("toCanonicalRideState");
-    expect(adapter).toContain("LEGACY_UNRESOLVED_OPEN_RIDE_STATUSES");
-    expect(adapter).toContain("LEGACY_CLOSED_RIDE_STATUSES");
-    expect(adapter).not.toContain("const LEGACY_STATUS_ALIASES");
-    expect(adapter).not.toContain('if (!status) return "pending"');
+    expect(mapper).toContain("toCanonicalRideState");
+    expect(mapper).toContain("LEGACY_UNRESOLVED_OPEN_RIDE_STATUSES");
+    expect(mapper).toContain("LEGACY_CLOSED_RIDE_STATUSES");
+    expect(mapper).not.toContain("const LEGACY_STATUS_ALIASES");
+    expect(mapper).not.toContain('if (!status) return "pending"');
   });
 });
