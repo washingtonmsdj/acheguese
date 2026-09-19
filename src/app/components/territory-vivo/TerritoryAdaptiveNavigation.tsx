@@ -1,5 +1,13 @@
 import { useSyncExternalStore } from "react";
-import { ArrowLeftRight, MapPin } from "lucide-react";
+import {
+  ArrowLeftRight,
+  Home,
+  MapPin,
+  MessageCircle,
+  Plus,
+  UserRound,
+  Users,
+} from "lucide-react";
 import { Link, useLocation } from "react-router-dom";
 import { usePublicBrowsingCity } from "@/core/location/hooks/usePublicBrowsingCity";
 import {
@@ -12,6 +20,7 @@ import {
   lastTerritoryStore,
   type LastTerritory,
 } from "@/core/routing/stores/LastTerritoryStore";
+import { buildCommunityTerritoryUrl } from "@/core/routing/utils/territoryUrls";
 import { useSessionContext } from "@/core/session";
 import { cn } from "@/shared/utils/cn";
 
@@ -43,6 +52,38 @@ export function TerritoryAdaptiveNavigation({
     fallbackBaseUrl,
     authenticated: Boolean(user),
   });
+  const communityConceptPreview =
+    import.meta.env.DEV &&
+    pathname.startsWith("/comunidade/") &&
+    new URLSearchParams(location.search).get("visualMock") ===
+      "community-concept";
+  const conceptMobileModes = [
+    { id: "home", label: "Início", href: territoryBase, icon: Home },
+    {
+      id: "community",
+      label: "Comunidade",
+      href: buildCommunityTerritoryUrl(territoryBase),
+      icon: Users,
+    },
+    {
+      id: "publish",
+      label: "Publicar",
+      href: "#feed",
+      icon: Plus,
+    },
+    {
+      id: "conversations",
+      label: "Conversas",
+      href: "/mensagens",
+      icon: MessageCircle,
+    },
+    {
+      id: "account",
+      label: "Conta",
+      href: "/conta",
+      icon: UserRound,
+    },
+  ] as const;
 
   return (
     <>
@@ -55,9 +96,16 @@ export function TerritoryAdaptiveNavigation({
         data-territory-navigation="mobile"
       >
         <div className="mx-auto flex h-16 max-w-lg items-stretch px-1">
-          {navigationModes.map((mode) => {
+          {(communityConceptPreview ? conceptMobileModes : navigationModes).map(
+            (mode) => {
             const Icon = mode.icon;
-            const activeMode = isTerritoryNavigationModeActive(pathname, mode);
+            const publishMode = mode.id === "publish";
+            const activeMode =
+              mode.id === "community"
+                ? pathname === mode.href
+                : mode.id === "publish"
+                  ? false
+                  : isTerritoryNavigationModeActive(pathname, mode);
 
             return (
               <Link
@@ -66,6 +114,7 @@ export function TerritoryAdaptiveNavigation({
                 className={cn(
                   "relative mx-0 flex min-w-0 flex-1 flex-col items-center justify-center gap-1 rounded-xl px-0 py-1.5 text-territory-muted transition-colors min-[360px]:mx-0.5 min-[360px]:px-1",
                   activeMode && "text-territory-brand",
+                  publishMode && "text-territory-ink",
                 )}
                 aria-label={mode.label}
                 aria-current={activeMode ? "page" : undefined}
@@ -75,16 +124,24 @@ export function TerritoryAdaptiveNavigation({
                   className={cn(
                     "flex h-8 w-10 items-center justify-center rounded-full",
                     activeMode && "bg-[hsl(var(--territory-brand)/0.12)]",
+                    publishMode &&
+                      "relative -top-3 h-12 w-12 bg-territory-sun text-territory-ink shadow-lg ring-4 ring-territory-surface",
                   )}
                 >
                   <Icon className="h-5 w-5" aria-hidden="true" />
                 </span>
-                <span className="max-w-full whitespace-nowrap text-[0.5625rem] font-semibold leading-none min-[360px]:text-[0.625rem]">
+                <span
+                  className={cn(
+                    "max-w-full whitespace-nowrap text-[0.5625rem] font-semibold leading-none min-[360px]:text-[0.625rem]",
+                    publishMode && "text-territory-ink",
+                  )}
+                >
                   {mode.label}
                 </span>
               </Link>
             );
-          })}
+          },
+          )}
         </div>
       </nav>
 

@@ -27,6 +27,7 @@ export type CommunityConceptPost = {
   avatar_url?: string | null;
   title?: string | null;
   summary?: string | null;
+  territory_label?: string | null;
   images?: string[] | null;
   response_preview?: {
     author_name: string;
@@ -96,6 +97,7 @@ export const COMMUNITY_OVERVIEW_VISUAL_FIXTURE = {
       comments_count: 4,
       author_name: "Ana Santos",
       author_role: "Moradora",
+      territory_label: "Santa Cruz",
       avatar_url: personaMorador,
       title: "Quem indica aulas de reforço aqui no bairro?",
       summary: "Procuro indicação para o ensino fundamental.",
@@ -114,6 +116,7 @@ export const COMMUNITY_OVERVIEW_VISUAL_FIXTURE = {
       comments_count: 12,
       author_name: "Marcos Lima",
       author_role: "Morador",
+      territory_label: "Vale das Pedrinhas",
       avatar_url: personaPrestador,
       title: "O encontro de domingo foi especial",
       summary: "Um pouco do nosso encontro de domingo.",
@@ -128,6 +131,7 @@ export const COMMUNITY_OVERVIEW_VISUAL_FIXTURE = {
       comments_count: 12,
       author_name: "Carla Menezes",
       author_role: "Moradora",
+      territory_label: "Pituba",
       avatar_url: personaComerciante,
       title: "Padaria Pão Nosso: meu pão francês preferido da região!",
       summary: "Tudo sempre fresquinho e o atendimento é excelente. Recomendo o croissant de queijo.",

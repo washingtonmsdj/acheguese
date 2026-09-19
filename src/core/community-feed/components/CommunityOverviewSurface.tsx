@@ -277,6 +277,7 @@ type DiscussionPreviewPost = {
   avatar_url?: string | null;
   title?: string | null;
   summary?: string | null;
+  territory_label?: string | null;
   images?: string[] | null;
   image_url?: string | null;
   response_preview?: {
@@ -2478,21 +2479,36 @@ export function CommunityOverviewSurface({
                                         )}
                                       </span>
                                       <div className="min-w-0 flex-1">
-                                        <p className="truncate text-xs font-semibold text-territory-ink">
-                                          {getPublicPostAuthor(post)}
-                                          <span className="mx-1.5 font-normal text-territory-muted/60">
-                                            •
-                                          </span>
-                                          <span className="font-normal text-territory-muted">
-                                            {getPublicPostRole(post)}
-                                          </span>
-                                        </p>
-                                        <p className="mt-0.5 text-[0.68rem] text-territory-muted">
-                                          {formatPublicPostDate(
-                                            post.created_at,
-                                          )}{" "}
-                                          atrás
-                                        </p>
+                                        {visualMockEnabled ? (
+                                          <>
+                                            <p className="truncate text-xs font-semibold text-territory-ink">
+                                              {getPublicPostAuthor(post)}
+                                            </p>
+                                            <p className="mt-0.5 text-[0.68rem] text-territory-muted">
+                                              {post.territory_label ??
+                                                getPublicPostRole(post)}{" "}
+                                              · há {formatPublicPostDate(post.created_at)}
+                                            </p>
+                                          </>
+                                        ) : (
+                                          <>
+                                            <p className="truncate text-xs font-semibold text-territory-ink">
+                                              {getPublicPostAuthor(post)}
+                                              <span className="mx-1.5 font-normal text-territory-muted/60">
+                                                •
+                                              </span>
+                                              <span className="font-normal text-territory-muted">
+                                                {getPublicPostRole(post)}
+                                              </span>
+                                            </p>
+                                            <p className="mt-0.5 text-[0.68rem] text-territory-muted">
+                                              {formatPublicPostDate(
+                                                post.created_at,
+                                              )}{" "}
+                                              atrás
+                                            </p>
+                                          </>
+                                        )}
                                       </div>
                                       <button
                                         type="button"
@@ -2504,9 +2520,18 @@ export function CommunityOverviewSurface({
                                       </button>
                                     </div>
                                     <div className="mt-1.5">
-                                      <span className="inline-flex min-h-4 items-center rounded px-1.5 text-[0.61rem] font-medium text-territory-brand-strong ring-1 ring-inset ring-territory-brand/20">
-                                        {getPublicPostTypeLabel(post.type)}
-                                      </span>
+                                      {(!visualMockEnabled ||
+                                        post.type === "pergunta") && (
+                                        <span
+                                          className={cn(
+                                            "inline-flex min-h-4 items-center rounded px-1.5 text-[0.61rem] font-medium text-territory-brand-strong ring-1 ring-inset ring-territory-brand/20",
+                                            visualMockEnabled &&
+                                              "bg-territory-sun/25 text-territory-ink ring-territory-sun/45",
+                                          )}
+                                        >
+                                          {getPublicPostTypeLabel(post.type)}
+                                        </span>
+                                      )}
                                       <h3 className="mt-1 text-[0.92rem] font-semibold leading-[1.15rem] text-territory-ink">
                                         {getPublicPostTitle(post)}
                                       </h3>
@@ -2542,40 +2567,70 @@ export function CommunityOverviewSurface({
                                         />
                                       ) : null}
                                     </div>
-                                    <div className="mt-1.5 flex items-center gap-6 border-t border-territory-border pt-1.5 text-[0.7rem] text-territory-muted">
-                                      <button
-                                        type="button"
-                                        onClick={onRequireLogin}
-                                        className="inline-flex items-center gap-1.5 hover:text-territory-ink"
-                                      >
-                                        <MessageCircle className="h-3.5 w-3.5" />
-                                        {post.comments_count ?? 0}
-                                      </button>
-                                      <button
-                                        type="button"
-                                        onClick={onRequireLogin}
-                                        className="inline-flex items-center gap-1.5 hover:text-territory-ink"
-                                      >
-                                        <Heart className="h-3.5 w-3.5" />
-                                        {post.likes_count ?? 0}
-                                      </button>
-                                      <button
-                                        type="button"
-                                        onClick={() => handleSharePost(post.id)}
-                                        className="inline-flex items-center gap-1.5 hover:text-territory-ink"
-                                      >
-                                        <Share2 className="h-3.5 w-3.5" />
-                                        Compartilhar
-                                      </button>
-                                      <button
-                                        type="button"
-                                        onClick={onRequireLogin}
-                                        className="ml-auto inline-flex items-center hover:text-territory-ink"
-                                        aria-label="Salvar publicação"
-                                      >
-                                        <Bookmark className="h-3.5 w-3.5" />
-                                      </button>
-                                    </div>
+                                    {visualMockEnabled ? (
+                                      <div className="mt-1.5 flex items-center gap-5 border-t border-territory-border pt-1.5 text-[0.7rem] text-territory-muted">
+                                        <button
+                                          type="button"
+                                          onClick={onRequireLogin}
+                                          className="inline-flex items-center gap-1.5 hover:text-territory-ink"
+                                        >
+                                          <MessageCircle className="h-3.5 w-3.5" />
+                                          Ver {post.comments_count ?? 0} respostas
+                                        </button>
+                                        <button
+                                          type="button"
+                                          onClick={onRequireLogin}
+                                          className="inline-flex items-center gap-1.5 hover:text-territory-ink"
+                                        >
+                                          <Heart className="h-3.5 w-3.5" />
+                                          Curtir
+                                        </button>
+                                        <button
+                                          type="button"
+                                          onClick={onRequireLogin}
+                                          className="ml-auto inline-flex items-center gap-1.5 hover:text-territory-ink"
+                                          aria-label="Salvar publicação"
+                                        >
+                                          <Bookmark className="h-3.5 w-3.5" />
+                                          Salvar
+                                        </button>
+                                      </div>
+                                    ) : (
+                                      <div className="mt-1.5 flex items-center gap-6 border-t border-territory-border pt-1.5 text-[0.7rem] text-territory-muted">
+                                        <button
+                                          type="button"
+                                          onClick={onRequireLogin}
+                                          className="inline-flex items-center gap-1.5 hover:text-territory-ink"
+                                        >
+                                          <MessageCircle className="h-3.5 w-3.5" />
+                                          {post.comments_count ?? 0}
+                                        </button>
+                                        <button
+                                          type="button"
+                                          onClick={onRequireLogin}
+                                          className="inline-flex items-center gap-1.5 hover:text-territory-ink"
+                                        >
+                                          <Heart className="h-3.5 w-3.5" />
+                                          {post.likes_count ?? 0}
+                                        </button>
+                                        <button
+                                          type="button"
+                                          onClick={() => handleSharePost(post.id)}
+                                          className="inline-flex items-center gap-1.5 hover:text-territory-ink"
+                                        >
+                                          <Share2 className="h-3.5 w-3.5" />
+                                          Compartilhar
+                                        </button>
+                                        <button
+                                          type="button"
+                                          onClick={onRequireLogin}
+                                          className="ml-auto inline-flex items-center hover:text-territory-ink"
+                                          aria-label="Salvar publicação"
+                                        >
+                                          <Bookmark className="h-3.5 w-3.5" />
+                                        </button>
+                                      </div>
+                                    )}
                                   </article>
                                 );
                               })}
