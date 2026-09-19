@@ -54,6 +54,7 @@ describe("Supabase Edge secrets preflight", () => {
     const deployVerify = readFileSync(DEPLOY_VERIFY, "utf8");
 
     expect(deployVerify).toContain("REQUIRED_VERCEL_ENV_VARS");
+    expect(deployVerify).toContain('fail(`${envVar} ausente`)');
     expect(deployVerify).toContain(
       "supabase-edge-secrets-preflight.mjs --function <slug> --json",
     );
