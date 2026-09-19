@@ -19,7 +19,7 @@ import {
   type EntitlementContext, 
   type ResolvedEntitlements 
 } from '../services/EntitlementResolver';
-import type { PlanEntitlements } from '../services/BillingPlanService';
+import type { PlanEntitlements } from '../types';
 
 // ─── Tipos ────────────────────────────────────────────────────────────────────
 
