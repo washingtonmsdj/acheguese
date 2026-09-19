@@ -41,13 +41,13 @@ export interface BusinessInput {
   address_street?: string;
   address_number?: string;
   address_complement?: string;
+  latitude?: number;
+  longitude?: number;
 
-  /** Compatibilidade legada - evitar em novos fluxos */
+  /** Aliases textuais historicos - nao usar como SSOT */
   address?: string;
   neighborhood?: string;
   cep?: string;
-  latitude?: number;
-  longitude?: number;
 
   /** Estrutura da empresa */
   business_role?: import("./Business").BusinessRole;
