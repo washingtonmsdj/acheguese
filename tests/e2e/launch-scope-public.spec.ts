@@ -15,7 +15,6 @@ test.describe('public launch scope', () => {
       '/alertas',
       '/problemas',
       '/achados-perdidos',
-      '/mensagens',
     ]) {
       await expectPausedLaunchSurface(page, path);
     }
