@@ -6,14 +6,14 @@ import { Skeleton } from "@/shared/components/ui/skeleton";
 import { useBillingPlans } from "@/core/billing/hooks/useBillingPlans";
 import { PlanTier } from "@/core/billing/types";
 import { cn } from "@/shared/utils/cn";
-import type { BillingPlan } from "@/core/billing/services/BillingPlanService";
+import type { PublishedPlan } from "@/core/billing/services/CatalogService";
 
 interface SubscriptionPlansProps {
   currentPlan?: PlanTier;
   onSelectPlan: (planId: PlanTier) => void;
 }
 
-function getPlanIcon(plan: BillingPlan) {
+function getPlanIcon(plan: PublishedPlan) {
   if (plan.code === PlanTier.FREE) return Sparkles;
   if (plan.code === PlanTier.DELIVERY) return Truck;
   if (plan.isFeatured) return Crown;
