@@ -37,6 +37,7 @@ const REMOVED_PERMISSIVE_POLICIES = [
   "Members viewable by authenticated",
   "Owners manage members",
   "site_settings_select_public",
+  "Termos bloqueados são públicos para leitura",
 ] as const;
 
 function migrationsFromBaseline() {
@@ -98,6 +99,26 @@ function hasClause(statement: string, clause: "using" | "with check"): boolean {
 }
 
 describe("sensitive RLS policy regression guard", () => {
+  it("keeps the moderation blocklist unreadable to anonymous clients", () => {
+    const migration = readFileSync(
+      join(
+        MIGRATIONS_DIR,
+        "20260918121943_close_public_issue_blocked_terms_read.sql",
+      ),
+      "utf8",
+    );
+
+    expect(migration).toContain(
+      'DROP POLICY IF EXISTS "Termos bloqueados são públicos para leitura"',
+    );
+    expect(migration).toContain(
+      "REVOKE SELECT ON TABLE public.issue_blocked_terms FROM anon;",
+    );
+    expect(migration).not.toContain(
+      "GRANT SELECT ON TABLE public.issue_blocked_terms TO anon",
+    );
+  });
+
   it("keeps the advertising shadow-removal baseline versioned", () => {
     const baseline = migrationsFromBaseline().find(({ name }) => name === BASELINE);
     expect(baseline, `${BASELINE} must remain versioned`).toBeDefined();
