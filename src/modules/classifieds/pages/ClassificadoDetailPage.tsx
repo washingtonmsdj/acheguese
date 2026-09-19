@@ -95,8 +95,7 @@ export default function ClassificadoDetailPage({
   const { contact: sellerContact } = useVisibleProfileContact(
     classificado?.vendedor?.id,
   );
-  const sellerWhatsAppNumber =
-    sellerContact?.whatsapp || sellerContact?.phone || "";
+  const sellerWhatsAppNumber = sellerContact?.whatsapp || "";
   const sellerHasValidWhatsApp = onlyDigits(sellerWhatsAppNumber).length >= 10;
   const {
     canFavorite,
