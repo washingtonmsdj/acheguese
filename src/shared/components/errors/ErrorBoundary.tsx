@@ -7,7 +7,7 @@
  * - reset opcional controlado pelo consumidor.
  */
 
-import React, { Component, type ErrorInfo, type ReactNode } from "react";
+import { Component, type ErrorInfo, type ReactNode } from "react";
 import { AlertTriangle, Home, RefreshCw } from "lucide-react";
 import { Button } from "@/shared/components/ui/button";
 import { captureSentryException } from "@/shared/config/sentry.config";
