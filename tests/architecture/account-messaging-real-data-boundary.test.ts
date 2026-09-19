@@ -55,6 +55,16 @@ describe("account and messaging MVP real-data boundary", () => {
     expect(messaging).toContain("key: profile.id");
     expect(messaging).toContain("liveThreads.map(toInboxConversation)");
     expect(messaging).toContain("contextTitle: thread.post_title || undefined");
+    expect(messaging).toContain('to="/notificacoes"');
+    expect(messaging).not.toContain('aria-label="Abrir filtros"');
+    expect(messaging).not.toContain('aria-label="Mais opções da conversa"');
+    expect(messaging).not.toContain('aria-label="Adicionar anexo"');
+    expect(messaging).not.toContain("localMessages");
+    expect(messaging).not.toContain("local-${Date.now()}");
+    expect(messaging).not.toContain("mobile-local-${Date.now()}");
+    expect(messaging).toContain(
+      "return sendMessage(selectedConversation.id, body);",
+    );
   });
 
   it("clears private thread state when the active profile changes", () => {
