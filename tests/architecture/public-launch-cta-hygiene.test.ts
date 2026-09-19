@@ -18,6 +18,21 @@ describe("public launch CTA hygiene", () => {
     }
   });
 
+  it("does not restore conceptual launch metrics or unsupported guarantees", () => {
+    const jobsPage = readFileSync(
+      "src/modules/classifieds/jobs/pages/VagasListingPage.tsx",
+      "utf8",
+    );
+
+    expect(jobsPage).not.toContain('"150+"');
+    expect(jobsPage).not.toContain('"80+"');
+    expect(jobsPage).not.toContain("novas vagas/dia");
+    expect(jobsPage).not.toContain("Resposta rápida garantida");
+    expect(jobsPage).toContain("summary.total");
+    expect(jobsPage).toContain("summary.companies");
+    expect(jobsPage).toContain("summary.publishedLast24Hours");
+  });
+
   it("keeps public jobs quick filters wired to real filter state", () => {
     const page = readFileSync(
       "src/modules/classifieds/jobs/pages/VagasListingPage.tsx",
