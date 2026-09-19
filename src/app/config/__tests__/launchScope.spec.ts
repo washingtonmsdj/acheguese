@@ -21,6 +21,8 @@ describe("launchScope", () => {
 
     expect(isLaunchSurfaceEnabled("jobs")).toBe(true);
     expect(isLaunchSurfaceEnabled("events")).toBe(true);
+    expect(isLaunchSurfaceEnabled("education")).toBe(false);
+    expect(isLaunchSurfaceEnabled("billing")).toBe(false);
     expect(isLaunchSurfaceEnabled("mobility")).toBe(false);
     expect(isLaunchSurfaceEnabled("communityAlerts")).toBe(false);
     expect(isLaunchSurfaceEnabled("communityIssues")).toBe(false);
