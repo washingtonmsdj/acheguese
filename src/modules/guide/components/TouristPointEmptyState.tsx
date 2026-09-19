@@ -19,8 +19,8 @@ export function TouristPointEmptyState({ territoryName }: TouristPointEmptyState
       </h3>
       <p className="text-sm text-muted-foreground max-w-sm">
         {territoryName
-          ? `Os pontos turísticos de ${territoryName} serão exibidos aqui em breve.`
-          : 'Os pontos turísticos serão exibidos aqui em breve.'}
+          ? `Ainda não há pontos turísticos publicados em ${territoryName}.`
+          : 'Ainda não há pontos turísticos publicados neste território.'}
       </p>
     </div>
   );
