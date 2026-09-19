@@ -36,6 +36,7 @@ type QueryBuilder<T> = {
   select(columns?: string): QueryBuilder<T>;
   update(values: BusinessProfileExtensionUpdate): QueryBuilder<T>;
   eq(column: string, value: unknown): QueryBuilder<T>;
+  maybeSingle(): Promise<QuerySingleResult<T>>;
   single(): Promise<QuerySingleResult<T>>;
 };
 
@@ -70,7 +71,7 @@ export async function getBusinessProfileExtension(
     .from<BusinessProfileExtensionRecord>("business_data")
     .select(BUSINESS_PROFILE_EXTENSION_SELECT)
     .eq("profile_id", profileId)
-    .single();
+    .maybeSingle();
 
   if (error) {
     throw new Error(error.message || "Failed to load business profile extension");
@@ -83,11 +84,13 @@ export async function updateBusinessProfileExtension(
   profileId: string,
   updates: BusinessProfileExtensionUpdate,
 ): Promise<BusinessProfileExtensionRecord> {
-  // tax_id is intentionally server-owned/read-only for authenticated users.
-  // Compatibility callers may still pass a broader BusinessData object through
-  // a cast, so strip it at runtime in addition to excluding it from the type.
+  // Immutable/server-owned fields are stripped defensively at the persistence
+  // boundary even though the public TypeScript contract excludes them.
   const mutableUpdates = { ...updates } as Record<string, unknown>;
+  delete mutableUpdates.profile_id;
   delete mutableUpdates.tax_id;
+  delete mutableUpdates.created_at;
+  delete mutableUpdates.updated_at;
 
   const { data, error } = await db
     .from<BusinessProfileExtensionRecord>("business_data")

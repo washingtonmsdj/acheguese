@@ -101,7 +101,11 @@ describe("business_data grants security", () => {
     expect(extension).toContain(
       '"profile_id" | "created_at" | "updated_at" | "tax_id"',
     );
+    expect(extension).toContain("delete mutableUpdates.profile_id");
     expect(extension).toContain("delete mutableUpdates.tax_id");
+    expect(extension).toContain("delete mutableUpdates.created_at");
+    expect(extension).toContain("delete mutableUpdates.updated_at");
+    expect(extension).toContain(".maybeSingle()");
     expect(extension).toContain(
       ".update(mutableUpdates as BusinessProfileExtensionUpdate)",
     );

@@ -5,7 +5,6 @@
  */
 
 export { MultiProfileService } from './profileService';
-export { BusinessService } from './businessService';
 export { ProfessionalService } from './professionalService';
 export { DriverService } from './driverService';
 export { ProfileMembersService } from './profileMembersService';
