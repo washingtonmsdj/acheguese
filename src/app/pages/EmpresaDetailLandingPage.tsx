@@ -295,12 +295,24 @@ export default function EmpresaDetailLandingPage(
     };
   }, [snapshotBusiness?.id, snapshotBusiness?.category, snapshotBusiness?.geographic_path, props.communityAliasOverride]);
 
-  const handleCopyPhone = () => {
-    if (!snapshotBusiness?.phone && !snapshot?.institutional.phone) return;
-    navigator.clipboard.writeText(snapshot?.institutional.phone ?? snapshotBusiness?.phone ?? "");
-    setCopiedPhone(true);
-    toast.success("Telefone copiado!");
-    setTimeout(() => setCopiedPhone(false), 2000);
+  const handleCopyPhone = async () => {
+    const phone =
+      snapshot?.institutional.phone ?? snapshotBusiness?.phone ?? "";
+    if (!phone.trim()) return;
+
+    try {
+      if (!navigator.clipboard?.writeText) {
+        throw new Error("Clipboard indisponível");
+      }
+
+      await navigator.clipboard.writeText(phone);
+      setCopiedPhone(true);
+      toast.success("Telefone copiado!");
+      setTimeout(() => setCopiedPhone(false), 2000);
+    } catch {
+      setCopiedPhone(false);
+      toast.error("Não foi possível copiar o telefone.");
+    }
   };
 
   const handleShare = async () => {
@@ -310,17 +322,25 @@ export default function EmpresaDetailLandingPage(
       url: window.location.href,
     };
 
-    if (navigator.share) {
+    if (typeof navigator.share === "function") {
       try {
         await navigator.share(shareData);
         return;
-      } catch {
-        // no-op: user cancel and unsupported paths should fall back below
+      } catch (error) {
+        if (error instanceof Error && error.name === "AbortError") return;
       }
     }
 
-    await navigator.clipboard.writeText(window.location.href);
-    toast.success("Link copiado!");
+    try {
+      if (!navigator.clipboard?.writeText) {
+        throw new Error("Clipboard indisponível");
+      }
+
+      await navigator.clipboard.writeText(window.location.href);
+      toast.success("Link copiado!");
+    } catch {
+      toast.error("Não foi possível compartilhar esta empresa.");
+    }
   };
 
   if (isLoading) {
