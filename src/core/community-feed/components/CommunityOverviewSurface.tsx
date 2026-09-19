@@ -2352,17 +2352,18 @@ export function CommunityOverviewSurface({
                     />
                   ) : visualMockEnabled && visualMockState === "pending" ? (
                     <CommunityPendingParticipationCard />
-                  ) : !visualMockEnabled || visualMockState === "member" ? (
+                  ) : (!visualMockEnabled || feedContextTab === "feed") &&
+                    (!visualMockEnabled || visualMockState === "member") ? (
                     canCreatePost ? (
-                    <CommunityComposerEntry
-                      id="feed"
-                      communityName={communityTitle}
-                      onOpenCreatePost={handleOpenComposer}
-                      avatarUrl={visualMockEnabled ? personaMorador : undefined}
-                      variant={visualMockEnabled ? "concept" : "default"}
-                      profileLabel="Ana · Pessoal"
-                      className="xl:p-3"
-                    />
+                      <CommunityComposerEntry
+                        id="feed"
+                        communityName={communityTitle}
+                        onOpenCreatePost={handleOpenComposer}
+                        avatarUrl={visualMockEnabled ? personaMorador : undefined}
+                        variant={visualMockEnabled ? "concept" : "default"}
+                        profileLabel="Ana · Pessoal"
+                        className="xl:p-3"
+                      />
                     ) : null
                   ) : null}
 
@@ -2817,7 +2818,12 @@ export function CommunityOverviewSurface({
         </div>
 
         {!isEmbeddedModule && selectedView === "feed" ? (
-          <div className="min-w-0 space-y-4 xl:col-start-3 xl:row-start-2 xl:space-y-3">
+          <div
+            className={cn(
+              "min-w-0 space-y-4 xl:col-start-3 xl:row-start-2 xl:space-y-3",
+              visualMockEnabled && "hidden xl:block",
+            )}
+          >
             {visualMockEnabled ? (
               <CommunityConceptSidebar
                 alerts={displayAlerts}

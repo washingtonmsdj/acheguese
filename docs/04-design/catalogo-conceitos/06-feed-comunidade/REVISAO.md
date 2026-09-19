@@ -16,3 +16,14 @@ Branch analisada: `codex/reformulacao-entrada-comunidade`; base `d061fb230`; dat
 | Funcionalidades futuras | Desativadas por regra | `src/app/config/launchScope.ts` e filtros do feed | Não ativar Alertas, Comunicação, Problemas ou tipos não autorizados apenas por aparecerem na prancha | Contratos de launch scope existentes preservados |
 
 Limitações: a captura visual usa o fixture local existente para validar composição e responsividade; o feed real continua condicionado à disponibilidade persistida da Community, sessão, vínculo e permissões específicas. A referência mostra controles de publicação de membro; no modo público o compositor exibe as ações do concept, mas cada ação continua direcionando para login. A API de preview disponível não permite forçar outra largura de viewport na aba interna; por isso a fidelidade desktop foi aplicada e revisada pelos breakpoints `xl`, enquanto a captura ao vivo permaneceu aberta no viewport móvel.
+
+## Atualização — pranchas 116 e 117
+
+As pranchas 116 e 117 substituem 002 e 115 como referência visual vigente. A implementação foi recalibrada para o shell petróleo/solar, com `Publicações`, `Avisos`, `Grupos` e `Agenda`, busca mobile acessível, composer compacto, resposta destacada e rail contextual no desktop.
+
+- `CommunityOverviewSurface.tsx`: remove os atalhos/cards de módulos antigos somente no preview visual, preserva a navegação canônica fora dele e implementa as variações de avisos, visitante, vínculo pendente, vazio e erro.
+- `CommunityComposerEntry.tsx`: adiciona a entrada compacta do concept, mantendo ações protegidas pela política de acesso.
+- `communityOverviewVisualFixture.ts`: mantém dados demonstrativos restritos ao query param de preview, com publicação de pergunta, resposta, foto, relato e comunicado autorizado.
+- `TerritoryTopbar.tsx`: mantém a busca disponível no mobile sem alterar a topbar compartilhada fora da comunidade.
+
+Validação: TypeScript, ESLint e os contratos específicos do surface e do deep link passaram; a aba interna permaneceu aberta no preview `visualMock=community-concept` durante a conferência visual dos cenários.

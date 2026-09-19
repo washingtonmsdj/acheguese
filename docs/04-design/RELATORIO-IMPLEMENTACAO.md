@@ -129,3 +129,17 @@ Terceira tela priorizada no catálogo: feed público da comunidade, com identida
 
 - Branch: `codex/reformulacao-entrada-comunidade`.
 - As alterações preexistentes da catalogação e segurança permanecem fora desta entrega.
+
+## 18/09/2026 · Feed da comunidade — pranchas 116 e 117
+
+As pranchas 116 e 117 passaram a ser a referência vigente do feed. Ajustei o preview visual e os contratos de composição para refletir o shell petróleo/solar, a aba `Publicações`, `Avisos`, `Grupos` e `Agenda`, composer compacto, filtros recentes, resposta em destaque e rail contextual do desktop. Os atalhos/cards de módulos antigos ficam fora do preview do concept e continuam preservados no fluxo canônico.
+
+A prancha 117 também está coberta pelos estados demonstrativos de visitante, vínculo pendente, avisos com filtros, vazio e erro com recuperação. A política real não foi ampliada: publicação, login, representação autorizada e vínculo continuam sujeitos aos contratos existentes.
+
+### Validação
+
+- TypeScript da aplicação passou.
+- ESLint passou nos arquivos alterados da superfície, topbar, composer, fixture, página e teste.
+- `CommunityOverviewSurface.spec.tsx`: 6 testes passaram.
+- `ComunidadePage.publicDeepLink.spec.tsx`: 5 testes passaram.
+- Preview interno conferido ao vivo nas rotas `visualMock=community-concept` e `previewState=visitor|pending|empty|error`; a aba permanece aberta.
