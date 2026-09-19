@@ -6,7 +6,7 @@ const root = process.cwd();
 const migration = readFileSync(
   resolve(
     root,
-    "supabase/migrations/20260915123000_add_current_user_password_authority.sql",
+    "supabase/migrations/20260915135002_add_current_user_password_authority.sql",
   ),
   "utf8",
 );
