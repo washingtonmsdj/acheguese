@@ -13,7 +13,7 @@
  * 6. CTA
  */
 
-import { useState, useMemo, useCallback } from 'react';
+import { useState, useMemo, useCallback, useRef } from 'react';
 import { Link } from 'react-router-dom';
 import { Helmet } from 'react-helmet-async';
 import { motion } from 'framer-motion';
@@ -117,6 +117,7 @@ export default function TouristPointsPage() {
   const filter = moduleTerritory.territoryFilter;
   const { data: realPoints = [], isLoading: realLoading } = useTouristPoints(filter);
   const guideUrls = useTouristPointPublicUrls(resolved);
+  const resultsSectionRef = useRef<HTMLElement>(null);
 
   // State
   const [viewMode, setViewMode] = useState<ViewMode>('pontos');
@@ -216,6 +217,12 @@ export default function TouristPointsPage() {
     setVisibleCount(prev => prev + 12);
   }, []);
 
+  const handleHeroSearch = useCallback(() => {
+    setVisibleCount(12);
+    setViewMode('pontos');
+    resultsSectionRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  }, []);
+
   const switchViewMode = useCallback((mode: ViewMode) => {
     setViewMode(mode);
     setVisibleCount(12);
@@ -266,8 +273,9 @@ export default function TouristPointsPage() {
             value: searchQuery,
             onChange: setSearchQuery,
             placeholder: "Praia, museu, mirante, parque...",
+            onSubmit: handleHeroSearch,
           }}
-          primaryCTA={{ label: "Buscar", icon: Search, onClick: () => {} }}
+          primaryCTA={{ label: "Buscar", icon: Search, onClick: handleHeroSearch }}
           quickFilters={QUICK_FILTERS.map(({ label, key, icon: Icon }) => ({
             label,
             icon: Icon,
@@ -398,7 +406,7 @@ export default function TouristPointsPage() {
             MAIN LISTING (Pontos mode)
         ================================================================ */}
         {viewMode === 'pontos' && (
-          <section className="container mx-auto px-4 py-6">
+          <section ref={resultsSectionRef} className="container mx-auto px-4 py-6 scroll-mt-24">
             <motion.div initial="hidden" whileInView="visible" viewport={{ once: true, margin: '-50px' }} variants={containerVariants}>
 
               {/* Sort / layout / filter bar */}
@@ -542,15 +550,12 @@ export default function TouristPointsPage() {
                 <Camera className="h-8 w-8 text-primary" />
               </div>
               <h2 className="text-2xl md:text-3xl font-display font-bold text-foreground mb-3">
-                Conhece um ponto turístico incrível?
+                Continue explorando {territoryName}
               </h2>
               <p className="text-muted-foreground mb-6 max-w-lg mx-auto">
-                Ajude outros visitantes a descobrir os melhores lugares de {territoryName}. Sugira um ponto turístico!
+                Descubra outros lugares, serviços e experiências no território sem depender de uma ação ainda não disponível.
               </p>
               <div className="flex flex-col sm:flex-row gap-3 justify-center">
-                <Button size="lg" className="rounded-full px-8 font-semibold">
-                  Sugerir Ponto Turístico
-                </Button>
                 <Button asChild variant="outline" size="lg" className="rounded-full px-8">
                   <Link to={baseUrl}>Explorar {territoryName}</Link>
                 </Button>
