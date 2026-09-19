@@ -11,8 +11,7 @@
  * 5. Mapa interativo
  * 6. Informações rápidas (facts panel)
  * 7. Fotos da comunidade (hashtag)
- * 8. O que tem por perto (camada secundária)
- * 9. Lugares relacionados
+ * 8. Lugares relacionados
  */
 
 import { useCallback, useEffect, useState } from 'react';
@@ -43,7 +42,6 @@ import { TouristPointGallery } from '../components/TouristPointGallery';
 import { TouristPointFactsPanel } from '../components/TouristPointFactsPanel';
 import { TouristPointTipsSection } from '../components/TouristPointTipsSection';
 import { TouristPointMapSection } from '../components/TouristPointMapSection';
-import { NearbyPlacesBlock } from '../components/NearbyPlacesBlock';
 import { RelatedPointsBlock } from '../components/RelatedPointsBlock';
 import { CommunityPhotosGallery } from '../components/CommunityPhotosGallery';
 import { CATEGORY_LABELS, CATEGORY_ICONS, type TouristPointCategory } from '../types/categories';
@@ -408,12 +406,6 @@ export default function TouristPointDetailPage() {
             city={params.city ?? ''}
             state={params.state}
             neighborhood={neighborhood ?? null}
-          />
-
-          {/* ── Nearby Places (secondary layer) ──────────────────── */}
-          <NearbyPlacesBlock
-            pointTitle={displayPoint.title}
-            neighborhood={neighborhood}
           />
 
           {/* ── Related Points ───────────────────────────────────── */}
