@@ -14158,14 +14158,20 @@ export type Database = {
         Row: {
           color: string | null
           created_at: string
+          cta_label: string | null
+          cta_url: string | null
           description: string | null
           ends_at: string | null
+          entity_id: string | null
+          highlight_type: string
           icon: string | null
           id: string
+          image_url: string | null
           metadata: Json | null
           position: number
           starts_at: string | null
           status: string
+          subtitle: string | null
           territory_ref_id: string
           territory_type: string
           title: string
@@ -14174,14 +14180,20 @@ export type Database = {
         Insert: {
           color?: string | null
           created_at?: string
+          cta_label?: string | null
+          cta_url?: string | null
           description?: string | null
           ends_at?: string | null
+          entity_id?: string | null
+          highlight_type?: string
           icon?: string | null
           id?: string
+          image_url?: string | null
           metadata?: Json | null
           position?: number
           starts_at?: string | null
           status?: string
+          subtitle?: string | null
           territory_ref_id: string
           territory_type: string
           title: string
@@ -14190,14 +14202,20 @@ export type Database = {
         Update: {
           color?: string | null
           created_at?: string
+          cta_label?: string | null
+          cta_url?: string | null
           description?: string | null
           ends_at?: string | null
+          entity_id?: string | null
+          highlight_type?: string
           icon?: string | null
           id?: string
+          image_url?: string | null
           metadata?: Json | null
           position?: number
           starts_at?: string | null
           status?: string
+          subtitle?: string | null
           territory_ref_id?: string
           territory_type?: string
           title?: string

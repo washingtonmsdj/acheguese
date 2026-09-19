@@ -188,6 +188,18 @@
       "label": "admin business RPC broker",
       "requiredPatterns": ["require(?:Admin|SuperAdmin)\\s*\\("]
     },
+    "admin-highlights-rpc": {
+      "kind": "admin-broker",
+      "risk": "Critical",
+      "label": "admin territorial highlights lifecycle broker",
+      "requiredPatterns": ["require(?:Admin|SuperAdmin)\\s*\\(", "getSupabaseAdminClient\\s*\\(", "territorial_highlights"]
+    },
+    "admin-rollout-rpc": {
+      "kind": "admin-broker",
+      "risk": "Critical",
+      "label": "admin territorial module rollout lifecycle broker",
+      "requiredPatterns": ["require(?:Admin|SuperAdmin)\\s*\\(", "getSupabaseAdminClient\\s*\\(", "module_rollouts"]
+    },
     "admin-communication-rpc": {
       "kind": "admin-broker",
       "risk": "Critical",

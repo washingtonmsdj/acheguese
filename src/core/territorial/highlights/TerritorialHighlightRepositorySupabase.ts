@@ -1,102 +1,133 @@
 /**
  * TerritorialHighlightRepositorySupabase
  *
- * Implementação Supabase — pronta para produção após migration 13.
+ * Public reads stay on the Data API with the reviewed projection/RLS boundary.
+ * Complete admin reads and every mutation go through admin-highlights-rpc.
  */
 import { logger } from '@/shared/utils/logger';
 import { supabase } from '@/integrations/supabase';
+import {
+  invokeNullableSupabaseBroker,
+  invokeSupabaseBroker,
+} from '@/core/infrastructure/edge-functions/edgeFunctionBroker';
 import type { ITerritorialHighlightRepository } from './ITerritorialHighlightRepository';
-import type { TerritorialHighlight, CreateHighlightInput, HighlightQuery } from './types';
+import type {
+  TerritorialHighlight,
+  CreateHighlightInput,
+  HighlightQuery,
+} from './types';
+
+const ADMIN_HIGHLIGHTS_FUNCTION = 'admin-highlights-rpc';
+const SERVICE_NAME = 'TerritorialHighlightRepositorySupabase';
+const PUBLIC_HIGHLIGHT_COLUMNS = [
+  'id',
+  'territory_type',
+  'territory_ref_id',
+  'highlight_type',
+  'entity_id',
+  'title',
+  'subtitle',
+  'image_url',
+  'cta_label',
+  'cta_url',
+  'position',
+  'status',
+  'starts_at',
+  'ends_at',
+  'created_at',
+  'updated_at',
+].join(',');
 
 export class TerritorialHighlightRepositorySupabase
   implements ITerritorialHighlightRepository
 {
   async listForTerritory(query: HighlightQuery): Promise<TerritorialHighlight[]> {
     const onlyValid = query.only_valid !== false;
-    const now = new Date().toISOString();
 
+    if (!onlyValid) {
+      try {
+        return await invokeSupabaseBroker<TerritorialHighlight[], 'listAll'>({
+          action: 'listAll',
+          functionName: ADMIN_HIGHLIGHTS_FUNCTION,
+          params: {
+            territory_type: query.territory_type,
+            territory_ref_id: query.territory_ref_id,
+          },
+          serviceName: SERVICE_NAME,
+        });
+      } catch (error) {
+        logger.warn(
+          '[TerritorialHighlightRepositorySupabase] admin list failed',
+          error,
+        );
+        return [];
+      }
+    }
+
+    const now = new Date().toISOString();
     let q = supabase
       .from('territorial_highlights')
-      .select('*')
+      .select(PUBLIC_HIGHLIGHT_COLUMNS)
       .eq('territory_type', query.territory_type);
-    
-    //  SSOT - Só adiciona filtro se territory_ref_id não estiver vazio
+
     if (query.territory_ref_id) {
       q = q.eq('territory_ref_id', query.territory_ref_id);
     }
-    
-    q = q
+
+    const { data, error } = await q
+      .eq('status', 'active')
+      .or(`starts_at.is.null,starts_at.lte.${now}`)
+      .or(`ends_at.is.null,ends_at.gt.${now}`)
       .order('position', { ascending: true })
       .order('starts_at', { ascending: false });
 
-    if (onlyValid) {
-      q = q
-        .eq('status', 'active')
-        // starts_at nulo ou no passado
-        .or(`starts_at.is.null,starts_at.lte.${now}`)
-        // ends_at nulo ou no futuro
-        .or(`ends_at.is.null,ends_at.gt.${now}`);
-    }
-
-    const { data, error } = await q;
     if (error) {
-      logger.warn(' TerritorialHighlightRepositorySupabase.listForTerritory:', error.message);
+      logger.warn(
+        '[TerritorialHighlightRepositorySupabase] public list failed',
+        error.message,
+      );
       return [];
     }
+
     return (data ?? []) as unknown as TerritorialHighlight[];
   }
 
   async findById(id: string): Promise<TerritorialHighlight | null> {
-    const { data, error } = await supabase
-      .from('territorial_highlights')
-      .select('*')
-      .eq('id', id)
-      .maybeSingle();
-    if (error) return null;
-    return data as unknown as TerritorialHighlight | null;
+    return await invokeNullableSupabaseBroker<TerritorialHighlight, 'getById'>({
+      action: 'getById',
+      functionName: ADMIN_HIGHLIGHTS_FUNCTION,
+      params: { id },
+      serviceName: SERVICE_NAME,
+    });
   }
 
   async create(input: CreateHighlightInput): Promise<TerritorialHighlight> {
-    const { data, error } = await supabase
-      .from('territorial_highlights')
-      .insert({
-        territory_type:   input.territory_type,
-        territory_ref_id: input.territory_ref_id,
-        highlight_type:   input.highlight_type,
-        entity_id:        input.entity_id ?? null,
-        title:            input.title,
-        subtitle:         input.subtitle ?? null,
-        image_url:        input.image_url ?? null,
-        cta_label:        input.cta_label ?? null,
-        cta_url:          input.cta_url ?? null,
-        position:         input.position ?? 0,
-        status:           input.status ?? 'active',
-        starts_at:        input.starts_at ?? null,
-        ends_at:          input.ends_at ?? null,
-      })
-      .select()
-      .single();
-    if (error) throw new Error(`Erro ao criar highlight: ${error.message}`);
-    return data as unknown as TerritorialHighlight;
+    return await invokeSupabaseBroker<TerritorialHighlight, 'create'>({
+      action: 'create',
+      functionName: ADMIN_HIGHLIGHTS_FUNCTION,
+      params: input,
+      serviceName: SERVICE_NAME,
+    });
   }
 
-  async update(id: string, input: Partial<CreateHighlightInput>): Promise<TerritorialHighlight> {
-    const { data, error } = await supabase
-      .from('territorial_highlights')
-      .update({ ...input, updated_at: new Date().toISOString() })
-      .eq('id', id)
-      .select()
-      .single();
-    if (error) throw new Error(`Erro ao atualizar highlight: ${error.message}`);
-    return data as unknown as TerritorialHighlight;
+  async update(
+    id: string,
+    input: Partial<CreateHighlightInput>,
+  ): Promise<TerritorialHighlight> {
+    return await invokeSupabaseBroker<TerritorialHighlight, 'update'>({
+      action: 'update',
+      functionName: ADMIN_HIGHLIGHTS_FUNCTION,
+      params: { id, ...input },
+      serviceName: SERVICE_NAME,
+    });
   }
 
   async delete(id: string): Promise<void> {
-    const { error } = await supabase
-      .from('territorial_highlights')
-      .delete()
-      .eq('id', id);
-    if (error) throw new Error(`Erro ao deletar highlight: ${error.message}`);
+    await invokeSupabaseBroker<{ removed: boolean }, 'delete'>({
+      action: 'delete',
+      functionName: ADMIN_HIGHLIGHTS_FUNCTION,
+      params: { id },
+      serviceName: SERVICE_NAME,
+    });
   }
 }
-
