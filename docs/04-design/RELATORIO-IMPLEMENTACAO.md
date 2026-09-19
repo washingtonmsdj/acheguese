@@ -222,3 +222,26 @@ A prancha 117 também está coberta pelos estados demonstrativos de visitante, v
 
 - Branch: `codex/reformulacao-entrada-comunidade`.
 - Somente os arquivos desta implementação e este relatório entram no commit; alterações staged preexistentes de catalogação e segurança permanecem excluídas.
+
+## 19/09/2026 · Perfil público profissional — prancha 010
+
+### Auditoria e ajustes
+
+- Comparei o perfil público de João Santos com `08-perfil-profissional/pranchas/010-perfil-profissional.png` em mobile e desktop. O preview usa o mock somente quando `import.meta.env.DEV` e `concept-mock=1`; a rota pública continua consultando o profissional real fora desse modo.
+- Alinhei o cabeçalho do concept: avatar demonstrativo no estado visual, utilitários de busca/notificação ocultos apenas no mobile do preview e mantidos no desktop. Isso não transforma visitantes reais em usuários autenticados fora do mock.
+- Reduzi a distância entre avatar e identidade no mobile e mantive a hierarquia da prancha: nome, categoria, localidade, território de atendimento, descrição e CTA amarelo.
+- Transformei as abas Sobre, Serviços, Trabalhos e Recomendações em âncoras navegáveis para as seções existentes, com `scroll-mt` para respeitar o cabeçalho fixo. “Ver fotos” também aponta para a galeria presente, sem criar uma ação fictícia.
+- Mantive o CTA conectado ao `ProfessionalLeadRequestDialog`, o estado de salvar, o compartilhamento, a cobertura territorial e os dados reais do perfil; não adicionei avaliações, fotos ou contagens inexistentes ao fluxo de produção. O nome acessível do CTA explicita a solicitação de orçamento sem alterar o texto visual do concept.
+
+### Validação e evidências
+
+- `npm run typecheck:app`: passou.
+- ESLint passou em `ProfissionalPublicPage.tsx` e `TerritoryTopbar.tsx`.
+- Contratos profissionais: 3 arquivos, 10 testes passaram (`professionalPublicRoutes`, `ProfessionalUrlService` e `ProfessionalLeadSSOT`).
+- Conferi no navegador interno a composição mobile após HMR, em aproximadamente 425 × 1108 px, e a composição desktop em viewport temporário de 1200 × 800 px; o viewport foi restaurado ao padrão e a aba permaneceu aberta e marcada como entrega visual.
+- A captura mobile confirmou o cabeçalho sem ações extras, perfil, CTA, abas, serviços, galeria, cobertura e barra fixa conforme a prancha. O desktop confirmou rail, breadcrumb, hero, coluna de contato e galeria; a escala de captura do painel interno não permite declarar equivalência pixel a pixel ao artboard 1440 px.
+
+### Git
+
+- Branch: `codex/reformulacao-entrada-comunidade`.
+- Somente os arquivos desta implementação e este relatório serão incluídos; os arquivos staged preexistentes de catalogação e segurança permanecem excluídos.

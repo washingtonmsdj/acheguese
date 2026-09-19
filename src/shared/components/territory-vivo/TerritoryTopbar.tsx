@@ -28,6 +28,8 @@ interface TerritoryTopbarProps {
   compactMobile?: boolean;
   /** Keep the mobile territory label on one line for the community concept preview. */
   conceptMobile?: boolean;
+  /** Hide search and notification controls on mobile-only concept headers. */
+  hideMobileUtilityActions?: boolean;
   messagesHref?: string;
   profileLabel?: string | null;
   profileAvatarUrl?: string | null;
@@ -46,6 +48,7 @@ export function TerritoryTopbar({
   flushDesktop = false,
   compactMobile = false,
   conceptMobile = false,
+  hideMobileUtilityActions = false,
   messagesHref = "/mensagens",
   profileLabel,
   profileAvatarUrl,
@@ -241,7 +244,11 @@ export function TerritoryTopbar({
               to={searchHref}
               className={cn(
                 "flex h-10 w-10 items-center justify-center rounded-full transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-territory-sun",
-                conceptMobile ? "min-[1000px]:hidden" : "lg:hidden",
+                hideMobileUtilityActions
+                  ? "hidden min-[1000px]:flex"
+                  : conceptMobile
+                    ? "min-[1000px]:hidden"
+                    : "lg:hidden",
                 isLight
                   ? "text-territory-ink hover:bg-territory-brand/5"
                   : "text-white hover:bg-white/10",
@@ -255,6 +262,7 @@ export function TerritoryTopbar({
             to={isAuthenticated ? "/notificacoes" : "/login"}
             className={cn(
               "relative flex h-10 w-10 items-center justify-center rounded-full transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-territory-sun",
+              hideMobileUtilityActions && "hidden min-[1000px]:flex",
               isLight
                 ? "text-territory-ink hover:bg-territory-brand/5"
                 : "text-white hover:bg-white/10",

@@ -126,28 +126,32 @@ function ProfileActions({ saved, onToggleSaved }: { saved: boolean; onToggleSave
 }
 
 function ProfileTabs() {
+  const tabs = [
+    { label: "Sobre", target: "professional-profile-title" },
+    { label: "Serviços", target: "professional-services-title" },
+    { label: "Trabalhos", target: "professional-portfolio-title" },
+    { label: "Recomendações", target: "professional-recommendations-title" },
+  ];
+  const [activeTab, setActiveTab] = useState(tabs[0].label);
+
   return (
     <nav
       className="-mx-4 flex overflow-x-auto border-b border-territory-border px-4 scrollbar-hide sm:-mx-6 sm:px-6 lg:mx-0 lg:px-0"
       aria-label="Seções do perfil"
     >
-      {[
-        { label: "Sobre", active: true },
-        { label: "Serviços", active: false },
-        { label: "Trabalhos", active: false },
-        { label: "Recomendações", active: false },
-      ].map((tab) => (
-        <button
+      {tabs.map((tab) => (
+        <a
           key={tab.label}
-          type="button"
+          href={`#${tab.target}`}
+          onClick={() => setActiveTab(tab.label)}
           className={cn(
             "relative min-h-10 shrink-0 px-3 text-type-label font-medium text-territory-muted transition-colors first:pl-0 last:pr-0 hover:text-territory-ink after:absolute after:inset-x-3 after:bottom-[-1px] after:h-0.5 after:bg-transparent first:after:left-0 last:after:right-0 sm:px-4 sm:after:inset-x-4 md:min-h-12",
-            tab.active && "font-bold text-territory-ink after:bg-territory-brand",
+            activeTab === tab.label && "font-bold text-territory-ink after:bg-territory-brand",
           )}
-          aria-current={tab.active ? "page" : undefined}
+          aria-current={activeTab === tab.label ? "page" : undefined}
         >
           {tab.label}
-        </button>
+        </a>
       ))}
     </nav>
   );
@@ -166,8 +170,8 @@ function ProfileHero({
   const category = profile.service_category ?? profile.service_subcategory ?? "Serviços profissionais";
 
   return (
-    <section className="mt-0 md:mt-2" aria-labelledby="professional-profile-title">
-      <div className="flex items-start gap-5 md:gap-4">
+    <section className="mt-0 scroll-mt-24 md:mt-2" aria-labelledby="professional-profile-title">
+      <div className="flex items-start gap-3 md:gap-4">
         <Avatar className="h-[5.5rem] w-[5.5rem] shrink-0 border border-territory-border bg-territory-raised md:h-[7.5rem] md:w-[7.5rem]">
           <AvatarImage src={profile.avatar_url ?? profile.logo_url ?? undefined} alt="" />
           <AvatarFallback className="bg-territory-raised text-xl font-bold text-territory-brand sm:text-2xl">
@@ -223,6 +227,7 @@ function ConversationButton({
       type="button"
       onClick={onOpen}
       disabled={!profile.is_accepting_clients}
+      aria-label={`${label ?? `Conversar com ${profile.professional_name.split(" ")[0]}`} — solicitar orçamento`}
       className={cn(
         "inline-flex min-h-10 items-center justify-center gap-2 rounded-xl bg-territory-sun px-4 text-type-label font-bold text-territory-ink shadow-territory-highlight transition-colors hover:bg-territory-sun/85 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-territory-brand disabled:cursor-not-allowed disabled:opacity-55 md:min-h-11",
         className,
@@ -236,7 +241,7 @@ function ConversationButton({
 
 function ServicesSection({ services }: { services: ProfileServiceItem[] }) {
   return (
-    <section aria-labelledby="professional-services-title">
+    <section className="scroll-mt-24" aria-labelledby="professional-services-title">
       <h2 id="professional-services-title" className="font-heading text-type-section font-bold tracking-[-0.025em] text-territory-ink">
         Como posso ajudar
       </h2>
@@ -266,16 +271,16 @@ function PortfolioSection({ portfolio }: { portfolio: string[] }) {
   if (portfolio.length === 0) return null;
 
   return (
-    <section aria-labelledby="professional-portfolio-title">
+    <section className="scroll-mt-24" aria-labelledby="professional-portfolio-title">
       <div className="flex items-center justify-between gap-3">
         <h2 id="professional-portfolio-title" className="font-heading text-type-section font-bold tracking-[-0.025em] text-territory-ink">
           Trabalhos realizados
         </h2>
-        <button type="button" className="inline-flex min-h-6 items-center gap-1 text-type-label font-bold text-territory-brand hover:text-territory-brand-strong md:min-h-10">
+        <a href="#professional-portfolio-title" className="inline-flex min-h-6 items-center gap-1 text-type-label font-bold text-territory-brand hover:text-territory-brand-strong md:min-h-10">
           <span className="hidden sm:inline">Ver todas as fotos</span>
           <span className="sm:hidden">Ver fotos</span>
           <ArrowUpRight className="h-4 w-4" aria-hidden="true" />
-        </button>
+        </a>
       </div>
       <div className="mt-2 grid grid-cols-2 gap-2 sm:mt-2 sm:grid-cols-3 sm:gap-2">
         {portfolio.map((image, index) => (
@@ -293,7 +298,7 @@ function PortfolioSection({ portfolio }: { portfolio: string[] }) {
 
 function RecommendationsSection() {
   return (
-    <section aria-labelledby="professional-recommendations-title">
+    <section className="scroll-mt-24" aria-labelledby="professional-recommendations-title">
       <h2 id="professional-recommendations-title" className="font-heading text-type-section font-bold tracking-[-0.025em] text-territory-ink">
         Recomendações
       </h2>
@@ -447,7 +452,21 @@ export default function ProfissionalPublicPage() {
 
   return (
     <div className="min-h-[100dvh] bg-territory-canvas pb-24 text-territory-ink md:pb-8">
-      <TerritoryTopbar territoryName={profileTerritoryName} contextLabel={profileContextLabel} isAuthenticated={Boolean(user)} unreadCount={unreadCount} searchHref={searchHref} searchLabel="Buscar serviços e negócios" showMobileSearch={false} flushDesktop compactMobile />
+      <TerritoryTopbar
+        territoryName={profileTerritoryName}
+        contextLabel={profileContextLabel}
+        isAuthenticated={conceptMockEnabled || Boolean(user)}
+        unreadCount={unreadCount}
+        searchHref={searchHref}
+        searchLabel="Buscar serviços e negócios"
+        showMobileSearch={false}
+        flushDesktop
+        compactMobile
+        conceptMobile={conceptMockEnabled}
+        hideMobileUtilityActions={conceptMockEnabled}
+        profileLabel={conceptMockEnabled ? "" : undefined}
+        profileAvatarUrl={conceptMockEnabled ? profile.avatar_url : undefined}
+      />
 
       <main className="w-full max-w-[60rem] px-4 pb-8 pt-1 sm:px-6 md:pt-3 lg:px-6">
         <div className="hidden items-center gap-2 text-type-caption text-territory-muted md:flex"><Link to={searchHref} className="hover:text-territory-brand">Explorar</Link><span aria-hidden="true">/</span><Link to={buildModuleTerritoryUrl(MODULE_SLUGS.services, searchTerritoryBase)} className="hover:text-territory-brand">Serviços</Link><span aria-hidden="true">/</span><span className="truncate">{profile.professional_name}</span></div>
