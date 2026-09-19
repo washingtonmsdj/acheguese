@@ -18,17 +18,9 @@ import {
   UserRound,
   Users,
   X,
-  Utensils,
-  Wrench,
 } from "lucide-react";
-import { Link, useSearchParams } from "react-router-dom";
+import { Link } from "react-router-dom";
 
-import foodImage from "@/assets/gastronomy/cat-marmitas.jpg";
-import communityImage from "@/assets/complexo-cultura.jpg";
-import merchantImage from "@/assets/persona-comerciante.jpg";
-import residentImage from "@/assets/persona-morador.jpg";
-import workerImage from "@/assets/persona-emprego.jpg";
-import providerImage from "@/assets/persona-prestador.jpg";
 import { usePublicBrowsingCity } from "@/core/location/hooks/usePublicBrowsingCity";
 import { useCommunityDirectMessages } from "@/core/messaging/hooks/useCommunityDirectMessages";
 import type { CommunityDirectMessage, CommunityDirectThreadPreview } from "@/core/messaging";
@@ -44,16 +36,17 @@ import { cn } from "@/shared/utils/cn";
 type ProfileKind = "personal" | "business" | "professional";
 
 interface InboxProfile {
-  key: ProfileKind;
-  id?: string;
+  key: string;
+  kind: ProfileKind;
+  id: string;
   name: string;
   typeLabel: string;
   avatarUrl: string;
   unread: number;
-  profile?: SessionProfileView;
+  profile: SessionProfileView;
 }
 
-interface ConceptConversation {
+interface InboxConversation {
   id: string;
   name: string;
   avatarUrl: string;
@@ -62,78 +55,10 @@ interface ConceptConversation {
   unread?: number;
   pinned?: boolean;
   archived?: boolean;
+  contextTitle?: string;
 }
 
 type ConversationFilter = "all" | "unread" | "archived";
-
-const conceptConversations: ConceptConversation[] = [
-  {
-    id: "concept-mariana-costa",
-    name: "Mariana Costa",
-    avatarUrl: merchantImage,
-    preview: "Pode ser às 12h?",
-    time: "10:24",
-    pinned: true,
-  },
-  {
-    id: "concept-associacao-local",
-    name: "Associação local",
-    avatarUrl: communityImage,
-    preview: "Confirmamos para sábado.",
-    time: "09:50",
-    pinned: true,
-  },
-  {
-    id: "concept-lucas-almeida",
-    name: "Lucas Almeida",
-    avatarUrl: providerImage,
-    preview: "Vocês entregam em Santa Cruz?",
-    time: "10:18",
-    unread: 3,
-  },
-  {
-    id: "concept-beatriz-santos",
-    name: "Beatriz Santos",
-    avatarUrl: merchantImage,
-    preview: "Obrigada pelo atendimento!",
-    time: "09:42",
-  },
-  {
-    id: "concept-pedro-souza",
-    name: "Pedro Souza",
-    avatarUrl: workerImage,
-    preview: "Gostaria de ver o cardápio.",
-    time: "09:30",
-    unread: 2,
-  },
-  {
-    id: "concept-carla-lima",
-    name: "Carla Lima",
-    avatarUrl: merchantImage,
-    preview: "Pode separar duas porções?",
-    time: "09:12",
-    unread: 1,
-  },
-  {
-    id: "concept-rafael-alves",
-    name: "Rafael Alves",
-    avatarUrl: residentImage,
-    preview: "Combinado, obrigado!",
-    time: "Ontem",
-  },
-];
-
-const conceptConversationIdsByProfile: Record<ProfileKind, string[]> = {
-  personal: ["concept-mariana-costa", "concept-lucas-almeida", "concept-beatriz-santos"],
-  business: conceptConversations.map((conversation) => conversation.id),
-  professional: ["concept-associacao-local", "concept-pedro-souza", "concept-rafael-alves"],
-};
-
-const conceptMessages = [
-  { id: "incoming-1", body: "Olá! Vocês têm opção vegetariana hoje?", time: "10:21", mine: false },
-  { id: "outgoing-1", body: "Olá, Mariana! Temos sim: legumes assados, arroz e feijão.", time: "10:23", mine: true },
-  { id: "incoming-2", body: "Ótimo! Quero reservar uma porção para retirar. Pode ser às 12h?", time: "10:24", mine: false },
-];
 
 function getProfileKind(profileType: string | undefined): ProfileKind {
   if (profileType === "business") return "business";
@@ -177,11 +102,13 @@ function ProfileAvatar({
   );
 }
 
-function ConceptProfileIcon({ profile, size = "md" }: { profile: InboxProfile; size?: "sm" | "md" | "lg" }) {
-  if (profile.key === "business") {
-    const sizeClass = size === "lg" ? "h-16 w-16" : size === "sm" ? "h-10 w-10" : "h-12 w-12";
-    return <img src={profile.avatarUrl || foodImage} alt="" className={cn(sizeClass, "shrink-0 rounded-xl object-cover")} />;
-  }
+function InboxProfileIcon({
+  profile,
+  size = "md",
+}: {
+  profile: InboxProfile;
+  size?: "sm" | "md" | "lg";
+}) {
   return <ProfileAvatar profile={profile} size={size} />;
 }
 
@@ -204,7 +131,7 @@ function ProfileSelectorRow({
       )}
       aria-pressed={selected}
     >
-      <ConceptProfileIcon profile={profile} size="sm" />
+      <InboxProfileIcon profile={profile} size="sm" />
       <span className="min-w-0 flex-1">
         <span className="block truncate text-[0.9375rem] font-semibold leading-5 text-territory-ink">{profile.name}</span>
         <span className="block text-[0.8125rem] leading-5 text-territory-muted">{profile.typeLabel}</span>
@@ -311,13 +238,17 @@ function DesktopHeader({
 }
 
 function ProfileStripVisual({ profile }: { profile: InboxProfile }) {
-  if (profile.key === "business") {
-    return <img src={profile.avatarUrl || foodImage} alt="" className="h-14 w-14 shrink-0 rounded-full object-cover ring-2 ring-white" />;
-  }
-  if (profile.key === "professional") {
-    return <span className="flex h-14 w-14 shrink-0 items-center justify-center rounded-full bg-[hsl(var(--territory-info)/0.14)] text-territory-brand ring-2 ring-white"><Wrench className="h-7 w-7" strokeWidth={1.8} aria-hidden="true" /></span>;
-  }
-  return profile.avatarUrl ? <img src={profile.avatarUrl} alt="" className="h-14 w-14 shrink-0 rounded-full object-cover ring-2 ring-white" /> : <span className="flex h-14 w-14 shrink-0 items-center justify-center rounded-full bg-territory-raised text-sm font-bold text-territory-brand">{getInitials(profile.name)}</span>;
+  return profile.avatarUrl ? (
+    <img
+      src={profile.avatarUrl}
+      alt=""
+      className="h-14 w-14 shrink-0 rounded-full object-cover ring-2 ring-white"
+    />
+  ) : (
+    <span className="flex h-14 w-14 shrink-0 items-center justify-center rounded-full bg-territory-raised text-sm font-bold text-territory-brand ring-2 ring-white">
+      {getInitials(profile.name)}
+    </span>
+  );
 }
 
 function ProfileStrip({
@@ -348,7 +279,7 @@ function ProfileStrip({
               <ProfileStripVisual profile={profile} />
               {profile.unread > 0 ? <span className="absolute -right-1.5 -top-1 flex h-5 min-w-5 items-center justify-center rounded-full bg-territory-error px-1 text-[0.6875rem] font-bold text-white">{profile.unread}</span> : null}
             </span>
-            <span className="max-w-full text-[0.8125rem] font-semibold leading-tight">{profile.key === "personal" ? "Pessoal" : profile.name}</span>
+            <span className="max-w-full text-[0.8125rem] font-semibold leading-tight">{profile.kind === "personal" ? "Pessoal" : profile.name}</span>
           </button>
         );
       })}
@@ -383,7 +314,7 @@ function ConversationListItem({
   selected,
   onClick,
 }: {
-  conversation: ConceptConversation;
+  conversation: InboxConversation;
   selected: boolean;
   onClick: () => void;
 }) {
@@ -424,7 +355,7 @@ function ConversationColumn({
   profileDirectoryOpen: boolean;
   onToggleProfileDirectory: () => void;
   onSelectProfile: (profile: InboxProfile) => void;
-  conversations: ConceptConversation[];
+  conversations: InboxConversation[];
   selectedConversationId: string;
   onSelectConversation: (id: string) => void;
   conversationFilter: ConversationFilter;
@@ -503,17 +434,17 @@ function ConversationDetail({
   onSend,
   canSend,
 }: {
-  conversation: ConceptConversation;
+  conversation: InboxConversation;
   selectedProfile: InboxProfile;
   messages?: Array<{ id: string; body: string; time: string; mine: boolean }>;
   onSend: (body: string) => Promise<void> | void;
   canSend: boolean;
 }) {
   const [draft, setDraft] = useState("");
-  const [localMessages, setLocalMessages] = useState(messages ?? conceptMessages);
+  const [localMessages, setLocalMessages] = useState(messages ?? []);
 
   useEffect(() => {
-    setLocalMessages(messages ?? conceptMessages);
+    setLocalMessages(messages ?? []);
   }, [conversation.id, messages]);
 
   const submit = (event: FormEvent<HTMLFormElement>) => {
@@ -531,15 +462,15 @@ function ConversationDetail({
         <ProfileAvatar profile={conversation} size="lg" />
         <div className="min-w-0 flex-1">
           <h2 className="truncate font-heading text-[1.35rem] font-bold tracking-[-0.03em] text-territory-ink">{conversation.name}</h2>
-          <p className="truncate text-sm text-territory-muted">Cliente · conversa com Sabores da Ana</p>
+          <p className="truncate text-sm text-territory-muted">Conversa como {selectedProfile.name}</p>
         </div>
         <button type="button" aria-label="Mais opções da conversa" className="flex h-10 w-10 items-center justify-center rounded-full text-territory-ink hover:bg-territory-raised focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-territory-brand"><MoreVertical className="h-5 w-5" aria-hidden="true" /></button>
       </div>
       <div className="flex min-h-0 flex-1 flex-col px-7 py-5">
         <div className="flex min-h-12 items-center gap-3 rounded-xl bg-[hsl(var(--territory-success)/0.1)] px-4">
-          <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-territory-surface text-territory-brand" aria-hidden="true"><Utensils className="h-4 w-4" strokeWidth={2} /></span>
-          <span className="min-w-0 flex-1 truncate text-sm font-semibold text-territory-ink">Sobre: almoço caseiro</span>
-          <button type="button" className="inline-flex items-center gap-1 text-sm font-semibold text-territory-brand hover:underline">Ver anúncio <ChevronRight className="h-4 w-4" aria-hidden="true" /></button>
+          <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-territory-surface text-territory-brand" aria-hidden="true"><MessageCircle className="h-4 w-4" strokeWidth={2} /></span>
+          <span className="min-w-0 flex-1 truncate text-sm font-semibold text-territory-ink">{conversation.contextTitle ? `Sobre: ${conversation.contextTitle}` : "Conversa direta"}</span>
+          
         </div>
         <div className="my-6 flex items-center gap-4 text-xs text-territory-muted"><span className="h-px flex-1 bg-territory-border" />Hoje<span className="h-px flex-1 bg-territory-border" /></div>
         <div className="flex min-h-0 flex-1 flex-col justify-end gap-4 overflow-y-auto pb-5">
@@ -547,7 +478,7 @@ function ConversationDetail({
         </div>
         <form onSubmit={submit} className="rounded-2xl border border-territory-border bg-territory-surface p-3 shadow-territory-subtle">
           <div className="mb-3 flex items-center gap-3 px-1">
-            <ConceptProfileIcon profile={selectedProfile} size="sm" />
+            <InboxProfileIcon profile={selectedProfile} size="sm" />
             <span className="text-sm text-territory-muted">Respondendo como <strong className="font-semibold text-territory-ink">{selectedProfile.name}</strong></span>
           </div>
           <div className="flex items-center gap-2">
@@ -569,7 +500,7 @@ function MobileConversationDetail({
   canSend,
   onBack,
 }: {
-  conversation: ConceptConversation;
+  conversation: InboxConversation;
   selectedProfile: InboxProfile;
   messages?: Array<{ id: string; body: string; time: string; mine: boolean }>;
   onSend: (body: string) => Promise<void> | void;
@@ -577,10 +508,10 @@ function MobileConversationDetail({
   onBack: () => void;
 }) {
   const [draft, setDraft] = useState("");
-  const [localMessages, setLocalMessages] = useState(messages ?? conceptMessages);
+  const [localMessages, setLocalMessages] = useState(messages ?? []);
 
   useEffect(() => {
-    setLocalMessages(messages ?? conceptMessages);
+    setLocalMessages(messages ?? []);
   }, [conversation.id, messages]);
 
   const submit = (event: FormEvent<HTMLFormElement>) => {
@@ -599,22 +530,22 @@ function MobileConversationDetail({
         <ProfileAvatar profile={conversation} size="sm" />
         <div className="min-w-0 flex-1">
           <h1 className="truncate font-heading text-base font-bold text-territory-ink">{conversation.name}</h1>
-          <p className="truncate text-xs text-territory-muted">Cliente · conversa com Sabores da Ana</p>
+          <p className="truncate text-xs text-territory-muted">Conversa como {selectedProfile.name}</p>
         </div>
         <button type="button" aria-label="Mais opções da conversa" className="flex h-10 w-10 items-center justify-center rounded-full text-territory-ink hover:bg-territory-raised focus-visible:outline-2 focus-visible:outline-offset-[-2px] focus-visible:outline-territory-brand"><MoreVertical className="h-5 w-5" aria-hidden="true" /></button>
       </header>
       <div className="flex min-h-0 flex-1 flex-col px-4 py-4">
         <div className="flex min-h-12 items-center gap-3 rounded-xl bg-[hsl(var(--territory-success)/0.1)] px-3">
-          <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-territory-surface text-territory-brand" aria-hidden="true"><Utensils className="h-4 w-4" strokeWidth={2} /></span>
-          <span className="min-w-0 flex-1 truncate text-sm font-semibold text-territory-ink">Sobre: almoço caseiro</span>
-          <button type="button" className="text-sm font-semibold text-territory-brand hover:underline">Ver anúncio</button>
+          <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-territory-surface text-territory-brand" aria-hidden="true"><MessageCircle className="h-4 w-4" strokeWidth={2} /></span>
+          <span className="min-w-0 flex-1 truncate text-sm font-semibold text-territory-ink">{conversation.contextTitle ? `Sobre: ${conversation.contextTitle}` : "Conversa direta"}</span>
+          
         </div>
         <div className="my-5 flex items-center gap-3 text-xs text-territory-muted"><span className="h-px flex-1 bg-territory-border" />Hoje<span className="h-px flex-1 bg-territory-border" /></div>
         <div className="flex min-h-0 flex-1 flex-col justify-end gap-3 overflow-y-auto pb-4">
           {localMessages.map((message) => <MessageBubble key={message.id} body={message.body} time={message.time} mine={message.mine} />)}
         </div>
         <form onSubmit={submit} className="mt-3 shrink-0 rounded-2xl border border-territory-border bg-territory-surface p-3 pb-[calc(0.75rem+env(safe-area-inset-bottom))] shadow-territory-subtle">
-          <div className="mb-3 flex items-center gap-3 px-1"><ConceptProfileIcon profile={selectedProfile} size="sm" /><span className="min-w-0 truncate text-sm text-territory-muted">Respondendo como <strong className="font-semibold text-territory-ink">{selectedProfile.name}</strong></span></div>
+          <div className="mb-3 flex items-center gap-3 px-1"><InboxProfileIcon profile={selectedProfile} size="sm" /><span className="min-w-0 truncate text-sm text-territory-muted">Respondendo como <strong className="font-semibold text-territory-ink">{selectedProfile.name}</strong></span></div>
           <div className="flex items-center gap-2">
             <button type="button" aria-label="Adicionar anexo" className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-territory-raised text-territory-brand hover:bg-[hsl(var(--territory-brand)/0.12)]"><Plus className="h-5 w-5" aria-hidden="true" /></button>
             <input value={draft} onChange={(event) => setDraft(event.target.value)} disabled={!canSend} placeholder="Escreva uma mensagem" className="h-11 min-w-0 flex-1 rounded-full border border-territory-border bg-territory-canvas px-4 text-sm text-territory-ink outline-none placeholder:text-territory-muted focus:border-territory-brand focus:ring-2 focus:ring-territory-brand/20 disabled:cursor-not-allowed disabled:opacity-60" />
@@ -644,35 +575,42 @@ function MobileBottomNavigation({ territoryHref }: { territoryHref: string }) {
   );
 }
 
-function buildInboxProfiles(sessionProfiles: SessionProfileView[], conceptMockEnabled: boolean): InboxProfile[] {
-  const profileByKind = new Map(sessionProfiles.map((profile) => [getProfileKind(profile.profileType), profile]));
-  const fallback: Record<ProfileKind, InboxProfile> = {
-    personal: { key: "personal", name: "Ana Silva", typeLabel: "Pessoal", avatarUrl: merchantImage, unread: 2 },
-    business: { key: "business", name: "Sabores da Ana", typeLabel: "Negócio", avatarUrl: foodImage, unread: 12 },
-    professional: { key: "professional", name: "Ana Serviços", typeLabel: "Profissional", avatarUrl: providerImage, unread: 0 },
-  };
-  return (["personal", "business", "professional"] as ProfileKind[]).map((key) => {
-    const profile = profileByKind.get(key);
-    if (!profile) return { ...fallback[key], unread: conceptMockEnabled ? fallback[key].unread : 0 };
+function buildInboxProfiles(sessionProfiles: SessionProfileView[]): InboxProfile[] {
+  return sessionProfiles.map((profile) => {
+    const kind = getProfileKind(profile.profileType);
+    const typeLabel =
+      kind === "business"
+        ? "Negócio"
+        : kind === "professional"
+          ? "Profissional"
+          : "Pessoal";
+
     return {
-      ...fallback[key],
+      key: profile.id,
+      kind,
       id: profile.id,
+      name: profile.displayName || profile.name || "Perfil sem nome",
+      typeLabel,
+      avatarUrl: profile.avatarUrl || "",
+      unread: 0,
       profile,
-      name: conceptMockEnabled ? fallback[key].name : profile.displayName || profile.name,
-      avatarUrl: profile.avatarUrl || fallback[key].avatarUrl,
-      unread: conceptMockEnabled ? fallback[key].unread : 0,
     };
   });
 }
 
-function toConceptConversation(thread: CommunityDirectThreadPreview): ConceptConversation {
+function toInboxConversation(thread: CommunityDirectThreadPreview): InboxConversation {
   return {
     id: thread.id,
     name: thread.other_profile_name,
-    avatarUrl: thread.other_profile_avatar || residentImage,
+    avatarUrl: thread.other_profile_avatar || "",
     preview: thread.last_message_text,
-    time: new Intl.DateTimeFormat("pt-BR", { hour: "2-digit", minute: "2-digit" }).format(new Date(thread.last_message_at)),
+    time: new Intl.DateTimeFormat("pt-BR", {
+      hour: "2-digit",
+      minute: "2-digit",
+    }).format(new Date(thread.last_message_at)),
     unread: thread.unread_count || undefined,
+    archived: Boolean(thread.closed_at),
+    contextTitle: thread.post_title || undefined,
   };
 }
 
@@ -686,69 +624,134 @@ function mapLiveMessage(message: CommunityDirectMessage, profileId: string | und
 }
 
 export default function MensagensPage() {
-  const [searchParams] = useSearchParams();
   const { active } = usePublicBrowsingCity();
   const { activeProfile, profiles, switchProfile } = useSessionContext();
-  const conceptMockEnabled = import.meta.env.DEV && searchParams.get("concept-mock") === "1";
   const [profileDirectoryOpen, setProfileDirectoryOpen] = useState(false);
   const [desktopAccountMenuOpen, setDesktopAccountMenuOpen] = useState(false);
-  const [selectedProfileKey, setSelectedProfileKey] = useState<ProfileKind>(conceptMockEnabled ? "business" : "personal");
-  const [selectedConversationId, setSelectedConversationId] = useState(conceptConversations[0].id);
-  const [conversationFilter, setConversationFilter] = useState<ConversationFilter>("all");
+  const [selectedProfileId, setSelectedProfileId] = useState(
+    () => activeProfile?.id ?? "",
+  );
+  const [selectedConversationId, setSelectedConversationId] = useState("");
+  const [conversationFilter, setConversationFilter] =
+    useState<ConversationFilter>("all");
   const [mobileConversationOpen, setMobileConversationOpen] = useState(false);
   const [search, setSearch] = useState("");
 
-  const { conversations: liveThreads, messages: liveMessages, fetchConversations, fetchMessages, sendMessage } = useCommunityDirectMessages();
-  const inboxProfiles = useMemo(() => buildInboxProfiles(profiles, conceptMockEnabled), [conceptMockEnabled, profiles]);
-  const selectedProfile = inboxProfiles.find((profile) => profile.key === selectedProfileKey) ?? inboxProfiles[0]!;
-  const liveConversations = useMemo(() => liveThreads.map(toConceptConversation), [liveThreads]);
-  const conversations = conceptMockEnabled ? conceptConversations : liveConversations;
-  const profileConversations = conceptMockEnabled
-    ? conversations.filter((conversation) => conceptConversationIdsByProfile[selectedProfileKey].includes(conversation.id))
-    : conversations;
-  const selectedConversation = profileConversations.find((conversation) => conversation.id === selectedConversationId) ?? profileConversations[0];
-  const isLiveConversation = Boolean(selectedConversation && liveConversations.some((conversation) => conversation.id === selectedConversation.id));
-  const liveDisplayMessages = useMemo(() => liveMessages.map((message) => mapLiveMessage(message, activeProfile?.id)), [activeProfile?.id, liveMessages]);
-  const territoryName = conceptMockEnabled ? "Complexo do Nordeste de Amaralina" : active.city ? formatTerritoryLabel(active.city) : "Seu território";
+  const {
+    conversations: liveThreads,
+    messages: liveMessages,
+    fetchConversations,
+    fetchMessages,
+    sendMessage,
+  } = useCommunityDirectMessages();
+  const sessionProfiles = useMemo(
+    () =>
+      profiles.length > 0
+        ? profiles
+        : activeProfile
+          ? [activeProfile]
+          : [],
+    [activeProfile, profiles],
+  );
+  const inboxProfiles = useMemo(
+    () => buildInboxProfiles(sessionProfiles),
+    [sessionProfiles],
+  );
+  const selectedProfile =
+    inboxProfiles.find((profile) => profile.id === selectedProfileId) ??
+    inboxProfiles.find((profile) => profile.id === activeProfile?.id) ??
+    inboxProfiles[0];
+  const liveConversations = useMemo(
+    () => liveThreads.map(toInboxConversation),
+    [liveThreads],
+  );
+  const profileConversations =
+    selectedProfile?.id === activeProfile?.id ? liveConversations : [];
+  const selectedConversation =
+    profileConversations.find(
+      (conversation) => conversation.id === selectedConversationId,
+    ) ?? profileConversations[0];
+  const liveDisplayMessages = useMemo(
+    () =>
+      liveMessages.map((message) =>
+        mapLiveMessage(message, activeProfile?.id),
+      ),
+    [activeProfile?.id, liveMessages],
+  );
+  const territoryName = active.city
+    ? formatTerritoryLabel(active.city)
+    : "Seu território";
   const contextLabel = `${active.city ? formatTerritoryLabel(active.city) : "Salvador"}, ${active.state.toUpperCase()}`;
-  const territoryHref = conceptMockEnabled ? "/ba/salvador/complexo-do-nordeste-de-amaralina" : `/${active.state}/${active.city}`;
-  const selectedConversationData = selectedConversation ?? conceptConversations[0];
+  const territoryHref =
+    active.state && active.city ? `/${active.state}/${active.city}` : "/";
 
   useEffect(() => {
-    if (!conceptMockEnabled) void fetchConversations();
-  }, [conceptMockEnabled, fetchConversations]);
+    void fetchConversations();
+  }, [fetchConversations]);
 
   useEffect(() => {
-    if (!conceptMockEnabled && profiles.length > 0) {
-      const activeOption = inboxProfiles.find((profile) => profile.id === activeProfile?.id);
-      if (activeOption) setSelectedProfileKey(activeOption.key);
+    if (!activeProfile?.id) return;
+    setSelectedProfileId(activeProfile.id);
+    setSelectedConversationId("");
+  }, [activeProfile?.id]);
+
+  useEffect(() => {
+    if (!liveConversations.length) {
+      setSelectedConversationId("");
+      return;
     }
-  }, [activeProfile?.id, conceptMockEnabled, inboxProfiles, profiles.length]);
+    setSelectedConversationId((current) =>
+      liveConversations.some((conversation) => conversation.id === current)
+        ? current
+        : liveConversations[0].id,
+    );
+  }, [liveConversations]);
 
+  const activeConversationId = selectedConversation?.id;
   useEffect(() => {
-    if (!liveConversations.length || conceptMockEnabled) return;
-    setSelectedConversationId((current) => liveConversations.some((conversation) => conversation.id === current) ? current : liveConversations[0].id);
-  }, [conceptMockEnabled, liveConversations]);
+    if (activeConversationId) void fetchMessages(activeConversationId);
+  }, [activeConversationId, fetchMessages]);
 
-  useEffect(() => {
-    if (!conceptMockEnabled && isLiveConversation && selectedConversation) void fetchMessages(selectedConversation.id);
-  }, [conceptMockEnabled, fetchMessages, isLiveConversation, selectedConversation]);
+  if (!selectedProfile) {
+    return (
+      <main className="flex min-h-[100dvh] items-center justify-center bg-territory-canvas px-4">
+        <div className="max-w-md rounded-2xl border border-territory-border bg-territory-surface p-6 text-center">
+          <h1 className="font-heading text-xl font-semibold text-territory-ink">
+            Nenhum perfil disponível
+          </h1>
+          <p className="mt-2 text-sm leading-6 text-territory-muted">
+            As conversas ficam disponíveis quando sua conta possui um perfil ativo.
+          </p>
+          <Link
+            to="/conta"
+            className="mt-4 inline-flex min-h-10 items-center justify-center rounded-xl bg-territory-brand px-4 text-sm font-semibold text-white"
+          >
+            Abrir conta
+          </Link>
+        </div>
+      </main>
+    );
+  }
 
   const handleSelectProfile = async (profile: InboxProfile) => {
-    setSelectedProfileKey(profile.key);
+    setSelectedProfileId(profile.id);
+    setSelectedConversationId("");
     setProfileDirectoryOpen(false);
     setDesktopAccountMenuOpen(false);
-    if (profile.id && profile.id !== activeProfile?.id) {
-      try {
-        await switchProfile(profile.id);
-      } catch {
-        // A server-side profile switch error remains available through session context.
-      }
+
+    if (profile.id === activeProfile?.id) return;
+
+    try {
+      await switchProfile(profile.id);
+    } catch {
+      setSelectedProfileId(activeProfile?.id ?? "");
     }
   };
 
   const handleSend = async (body: string) => {
-    if (isLiveConversation && selectedConversation) await sendMessage(selectedConversation.id, body);
+    if (selectedConversation) {
+      await sendMessage(selectedConversation.id, body);
+    }
   };
 
   const handleSelectConversation = (id: string) => {
@@ -764,7 +767,7 @@ export default function MensagensPage() {
       onToggleProfileDirectory={() => setProfileDirectoryOpen((open) => !open)}
       onSelectProfile={handleSelectProfile}
       conversations={profileConversations}
-      selectedConversationId={selectedConversationData.id}
+      selectedConversationId={selectedConversation?.id ?? ""}
       onSelectConversation={handleSelectConversation}
       conversationFilter={conversationFilter}
       onFilterChange={setConversationFilter}
@@ -777,7 +780,7 @@ export default function MensagensPage() {
     <div className="min-h-[100dvh] bg-territory-canvas text-territory-ink">
       <div className="lg:hidden">
         {mobileConversationOpen && selectedConversation ? (
-          <MobileConversationDetail conversation={selectedConversationData} selectedProfile={selectedProfile} messages={conceptMockEnabled ? undefined : liveDisplayMessages} onSend={handleSend} canSend={conceptMockEnabled || isLiveConversation} onBack={() => setMobileConversationOpen(false)} />
+          <MobileConversationDetail conversation={selectedConversation} selectedProfile={selectedProfile} messages={liveDisplayMessages} onSend={handleSend} canSend={Boolean(selectedConversation)} onBack={() => setMobileConversationOpen(false)} />
         ) : (
           <>
             <main className="min-h-[100dvh] pt-[env(safe-area-inset-top)] pb-[5.25rem]">{mobileList}</main>
@@ -787,12 +790,12 @@ export default function MensagensPage() {
       </div>
 
       <div className="hidden h-[100dvh] max-h-[100dvh] flex-col overflow-hidden bg-territory-canvas lg:flex">
-        <DesktopHeader territoryName={territoryName} contextLabel={contextLabel} account={inboxProfiles.find((profile) => profile.key === "personal") ?? selectedProfile} accountMenuOpen={desktopAccountMenuOpen} onToggleAccount={() => setDesktopAccountMenuOpen((open) => !open)} profileOptions={inboxProfiles} onSelectProfile={handleSelectProfile} />
+        <DesktopHeader territoryName={territoryName} contextLabel={contextLabel} account={selectedProfile} accountMenuOpen={desktopAccountMenuOpen} onToggleAccount={() => setDesktopAccountMenuOpen((open) => !open)} profileOptions={inboxProfiles} onSelectProfile={handleSelectProfile} />
         <main className="mx-auto flex min-h-0 w-full max-w-[68rem] flex-1 px-4 py-4 xl:px-0 xl:py-5">
           <div className="flex min-h-0 w-full flex-1 overflow-hidden rounded-2xl border border-territory-border bg-territory-canvas shadow-territory-subtle">
             <DesktopNavigation territoryHref={territoryHref} />
             {mobileList}
-            {selectedConversation ? <ConversationDetail conversation={selectedConversationData} selectedProfile={selectedProfile} messages={conceptMockEnabled ? undefined : liveDisplayMessages} onSend={handleSend} canSend={conceptMockEnabled || isLiveConversation} /> : null}
+            {selectedConversation ? <ConversationDetail conversation={selectedConversation} selectedProfile={selectedProfile} messages={liveDisplayMessages} onSend={handleSend} canSend={Boolean(selectedConversation)} /> : null}
           </div>
         </main>
       </div>
