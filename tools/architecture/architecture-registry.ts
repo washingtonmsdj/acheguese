@@ -756,7 +756,7 @@ export const CRITICAL_SHARED_COMPONENTS = [
   "src/app/components/AppLayoutSidebar.tsx",
   "src/app/components/AppTopbar.tsx",
   "src/app/components/BottomNav.tsx",
-  "src/app/components/ErrorBoundary.tsx",
+  "src/shared/components/errors/ErrorBoundary.tsx",
   "src/shared/components/hero/CanonicalHero.tsx",
   "src/shared/components/loading/PageLoader.tsx",
   "src/shared/components/ui/card.tsx",
