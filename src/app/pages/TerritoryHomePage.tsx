@@ -1090,8 +1090,7 @@ export default function TerritoryHomePage() {
             className="order-3 border-t border-territory-border pt-8 xl:col-start-1"
             aria-labelledby="discover-more-title"
           >
-            <>
-              <TerritorySectionHeading
+            <TerritorySectionHeading
                 id="discover-more-title"
                 title="Oportunidades do bairro"
                 description={undefined}
@@ -1137,7 +1136,7 @@ export default function TerritoryHomePage() {
                   );
                 })}
               </div>
-            </>          </section>
+          </section>
 
             </div>
           </div>
