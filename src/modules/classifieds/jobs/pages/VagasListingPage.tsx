@@ -10,7 +10,7 @@
 
 import { useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
-import { useMemo } from "react";
+import { useCallback, useMemo, useRef } from "react";
 import {
   Briefcase, Search, MapPin, Sparkles, ArrowRight,
   Users, Star, Shield, Clock, Zap, TrendingUp,
@@ -81,6 +81,7 @@ export default function VagasListingPage({ resolved, activeMemberIds }: VagasLis
     selectedContract, setSelectedContract,
     selectedModality, setSelectedModality,
     selectedLevel, setSelectedLevel,
+    selectedUrgency, setSelectedUrgency,
     filteredVagas,
     urgentVagas,
     recentVagas,
@@ -91,7 +92,13 @@ export default function VagasListingPage({ resolved, activeMemberIds }: VagasLis
     isError,
   } = useVagas({ resolved, activeMemberIds });
 
+  const resultsSectionRef = useRef<HTMLElement>(null);
   const publishUrl = jobPublicRoutes.publish();
+
+  const handleHeroSearch = useCallback(() => {
+    resultsSectionRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
+  }, []);
+
   const handleVagaClick = (vaga: Vaga) => {
     if (activeLocation?.geographic_path) {
       try {
@@ -146,12 +153,44 @@ export default function VagasListingPage({ resolved, activeMemberIds }: VagasLis
           value: search,
           onChange: setSearch,
           placeholder: "Buscar cargo, empresa, bairro...",
+          onSubmit: handleHeroSearch,
         }}
-        primaryCTA={{ label: "Buscar", onClick: () => {} }}
-        quickFilters={["CLT", "Remoto", "Estágio", "PJ", "Urgente"].map((tag) => ({
-          label: tag,
-          onClick: () => {},
-        }))}
+        primaryCTA={{ label: "Buscar", onClick: handleHeroSearch }}
+        quickFilters={[
+          {
+            label: "CLT",
+            isActive: selectedContract === "clt" || selectedContract === "CLT",
+            onClick: () => setSelectedContract(
+              selectedContract === "clt" || selectedContract === "CLT" ? null : "clt",
+            ),
+          },
+          {
+            label: "Remoto",
+            isActive: selectedModality === "remoto" || selectedModality === "Remoto",
+            onClick: () => setSelectedModality(
+              selectedModality === "remoto" || selectedModality === "Remoto" ? null : "remoto",
+            ),
+          },
+          {
+            label: "Estágio",
+            isActive: ["estagio", "estagiario", "Estágio"].includes(selectedContract ?? ""),
+            onClick: () => setSelectedContract(
+              ["estagio", "estagiario", "Estágio"].includes(selectedContract ?? "") ? null : "estagio",
+            ),
+          },
+          {
+            label: "PJ",
+            isActive: selectedContract === "pj" || selectedContract === "PJ",
+            onClick: () => setSelectedContract(
+              selectedContract === "pj" || selectedContract === "PJ" ? null : "pj",
+            ),
+          },
+          {
+            label: "Urgente",
+            isActive: selectedUrgency === "urgente",
+            onClick: () => setSelectedUrgency(selectedUrgency === "urgente" ? null : "urgente"),
+          },
+        ]}
       />
 
       {/* ── STATS ────────────────────────────────────────────── */}
@@ -203,7 +242,7 @@ export default function VagasListingPage({ resolved, activeMemberIds }: VagasLis
       )}
 
       {/* ── FILTROS + LISTAGEM ───────────────────────────────── */}
-      <section className="max-w-7xl mx-auto px-4 sm:px-6 pb-10 md:pb-14 w-full">
+      <section ref={resultsSectionRef} className="max-w-7xl mx-auto scroll-mt-24 px-4 sm:px-6 pb-10 md:pb-14 w-full">
         <div className="flex items-center justify-between mb-5">
           <div>
             <h2 className="text-xl font-bold text-foreground font-heading">Todas as Vagas</h2>
