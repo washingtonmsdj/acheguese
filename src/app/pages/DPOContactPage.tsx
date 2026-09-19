@@ -34,7 +34,7 @@ import {
   SelectValue,
 } from "@/shared/components/ui/select";
 import { Textarea } from "@/shared/components/ui/textarea";
-import { getDpoEmail } from "@/shared/config/privacyContacts";
+import { getDpoEmail, getDpoName } from "@/shared/config/privacyContacts";
 import { useToast } from "@/shared/hooks/use-toast";
 import { buildMailtoUrl } from "@/shared/utils/contactLinks";
 import { DPOContactSchema, type DPOContactInput } from "@/shared/validation/schemas/dpo.schema";
@@ -116,6 +116,7 @@ export default function DPOContactPage() {
   const { user } = useAuth();
   const { toast } = useToast();
   const dpoEmail = getDpoEmail();
+  const dpoName = getDpoName();
   const [honeypot, setHoneypot] = useState("");
   const [turnstileToken, setTurnstileToken] = useState<string | null>(null);
   const [turnstileError, setTurnstileError] = useState<string | null>(null);
@@ -435,6 +436,17 @@ export default function DPOContactPage() {
                   <CardTitle className="text-base">Informações do canal</CardTitle>
                 </CardHeader>
                 <CardContent className="space-y-4 text-sm">
+                  <div className="flex items-start gap-3">
+                    <Shield className="mt-0.5 h-4 w-4 shrink-0 text-muted-foreground" />
+                    <div>
+                      <p className="font-semibold text-foreground">Identidade do encarregado</p>
+                      {dpoName ? (
+                        <p className="text-muted-foreground">{dpoName}</p>
+                      ) : (
+                        <p className="text-muted-foreground">Identidade pública ainda não configurada.</p>
+                      )}
+                    </div>
+                  </div>
                   <div className="flex items-start gap-3">
                     <Mail className="mt-0.5 h-4 w-4 shrink-0 text-muted-foreground" />
                     <div>
