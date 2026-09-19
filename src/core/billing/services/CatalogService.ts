@@ -8,6 +8,8 @@
 
 import { supabase } from '@/integrations/supabase';
 import { logger } from '@/shared/utils/logger';
+import { PlanTier, type PlanEntitlements } from '../types';
+import { getBaselineEntitlements } from '../entitlementBaselines';
 
 export interface EligibilityContext {
   user_id: string;
@@ -60,6 +62,24 @@ export interface CatalogItem {
   updated_at: string;
   entitlement_policy?: CatalogEntitlementPolicy;
   pricing_policy?: CatalogPricingPolicy;
+}
+
+export interface PublishedPlan {
+  id: string;
+  code: string;
+  name: string;
+  description?: string;
+  priceCents: number;
+  priceDisplay: string;
+  currency: string;
+  billingPeriod: string;
+  features: string[];
+  entitlements: PlanEntitlements;
+  isActive: boolean;
+  isFeatured: boolean;
+  displayOrder: number;
+  createdAt: Date;
+  updatedAt: Date;
 }
 
 type CatalogVersion = {
@@ -201,6 +221,109 @@ function emptyCatalog(): EligibleCatalog {
   };
 }
 
+function publicPlanCode(itemCode: string): string {
+  return itemCode.startsWith('base-') ? itemCode.slice('base-'.length) : itemCode;
+}
+
+function toPlanTier(value: string | null | undefined): PlanTier {
+  const normalized = publicPlanCode(value?.trim().toLowerCase() ?? '');
+  if (normalized === PlanTier.DELIVERY) return PlanTier.DELIVERY;
+  if (normalized === PlanTier.PRO) return PlanTier.PRO;
+  return PlanTier.FREE;
+}
+
+function formatPublishedPrice(priceCents: number, currency: string): string {
+  if (priceCents === 0) return 'Grátis';
+
+  try {
+    return new Intl.NumberFormat('pt-BR', {
+      style: 'currency',
+      currency,
+    }).format(priceCents / 100);
+  } catch {
+    return `${currency} ${(priceCents / 100).toFixed(2)}`;
+  }
+}
+
+function mergeCatalogEntitlements(
+  policy: CatalogEntitlementPolicy | undefined,
+  planTier: PlanTier,
+): PlanEntitlements {
+  const baseline = getBaselineEntitlements(planTier);
+  const extras = (policy?.additional_entitlements ?? {}) as Partial<PlanEntitlements>;
+
+  const merged: PlanEntitlements = {
+    ...baseline,
+    ...extras,
+    canUsePremiumPublicPage:
+      policy?.can_use_premium_public_page ?? baseline.canUsePremiumPublicPage,
+    canUseShortPremiumLink:
+      policy?.can_use_short_premium_link ?? baseline.canUseShortPremiumLink,
+    canUseCustomQRCode:
+      policy?.can_use_custom_qr_code ?? baseline.canUseCustomQRCode,
+    canUseAdvancedMenu:
+      policy?.can_use_advanced_menu ?? baseline.canUseAdvancedMenu,
+    canReceiveInternalOrders:
+      policy?.can_receive_internal_orders ?? baseline.canReceiveInternalOrders,
+    canUseMotoboyNetwork:
+      policy?.can_use_motoboy_network ?? baseline.canUseMotoboyNetwork,
+    canUsePromotions:
+      policy?.can_use_promotions ?? baseline.canUsePromotions,
+    canUseBasicAnalytics:
+      policy?.can_use_basic_analytics ?? baseline.canUseBasicAnalytics,
+    canUseAdvancedAnalytics:
+      policy?.can_use_advanced_analytics ?? baseline.canUseAdvancedAnalytics,
+    maxMenuItems:
+      policy?.max_menu_items !== undefined ? policy.max_menu_items : baseline.maxMenuItems,
+    maxPromotions:
+      policy?.max_promotions !== undefined ? policy.max_promotions : baseline.maxPromotions,
+    maxImages:
+      policy?.max_images !== undefined ? policy.max_images : baseline.maxImages,
+    maxCategories:
+      policy?.max_categories !== undefined ? policy.max_categories : baseline.maxCategories,
+    maxOrdersPerDay:
+      policy?.max_orders_per_day !== undefined
+        ? policy.max_orders_per_day
+        : baseline.maxOrdersPerDay,
+  };
+
+  return {
+    ...merged,
+    canUsePremiumSite: merged.canUsePremiumPublicPage,
+    canUseShortLink: merged.canUseShortPremiumLink,
+    canUseAdvancedCatalog: merged.canUseAdvancedMenu,
+    canUseInternalOrders: merged.canReceiveInternalOrders,
+    canUseDeliveryRequests: merged.canRequestDelivery,
+    canUseDeliveryTracking: merged.canTrackDelivery,
+    canUseDeliveryNetwork: merged.canUseMotoboyNetwork,
+  };
+}
+
+function mapPublishedPlan(item: CatalogItem): PublishedPlan {
+  const pricing = item.pricing_policy;
+  const priceCents = pricing?.price_cents ?? 0;
+  const currency = pricing?.currency ?? 'BRL';
+  const planTier = toPlanTier(item.plan_tier || item.item_code);
+
+  return {
+    id: item.id,
+    code: publicPlanCode(item.item_code),
+    name: item.item_name.replace(/^Plano\s+/i, ''),
+    description: item.description ?? undefined,
+    priceCents,
+    priceDisplay: formatPublishedPrice(priceCents, currency),
+    currency,
+    billingPeriod: pricing?.billing_period ?? 'monthly',
+    features: item.features,
+    entitlements: mergeCatalogEntitlements(item.entitlement_policy, planTier),
+    isActive: item.status === 'published',
+    isFeatured: item.is_featured,
+    displayOrder: item.display_order,
+    createdAt: new Date(item.created_at),
+    updatedAt: new Date(item.updated_at),
+  };
+}
+
 export class CatalogService {
   static async getEligibleCatalog(
     context: EligibilityContext,
@@ -263,6 +386,26 @@ export class CatalogService {
       throw error;
     }
   }
+
+  static async getPublishedPlans(): Promise<PublishedPlan[]> {
+    const items = await this.getPublishedBasePlans();
+    return items.map(mapPublishedPlan);
+  }
+
+  static async getPublishedPlanByCode(code: string): Promise<PublishedPlan | null> {
+    const normalized = publicPlanCode(code.trim().toLowerCase());
+    const item = await this.getPlanByCode(normalized);
+    if (!item || item.item_type !== 'base_plan') return null;
+    return mapPublishedPlan(item);
+  }
+
+  static async getPublishedPlanEntitlements(
+    code: string,
+  ): Promise<PlanEntitlements | null> {
+    const plan = await this.getPublishedPlanByCode(code);
+    return plan?.entitlements ?? null;
+  }
+
 
   static async getPlanByCode(planCode: string): Promise<CatalogItem | null> {
     try {

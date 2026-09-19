@@ -115,7 +115,7 @@ describe("Education module hardening ratchet", () => {
       "src/modules/business/education/niches/hooks/useEducationNicheBilling.ts",
     );
 
-    expect(subscription).toContain("BillingPlanService.getEntitlements");
+    expect(subscription).toContain("CatalogService.getPublishedPlanEntitlements");
     expect(subscription).toContain("EntitlementsService.getAll");
     expect(subscription).not.toContain("maxPrograms");
     expect(subscription).not.toContain("maxLeadsPerMonth");

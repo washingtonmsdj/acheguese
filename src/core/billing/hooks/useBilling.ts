@@ -10,6 +10,7 @@
 
 import { useQuery, useMutation } from '@tanstack/react-query';
 import { BillingService, CreateCheckoutParams } from '../services/BillingService';
+import { CatalogService } from '../services/CatalogService';
 import { useToast } from '@/shared/hooks/use-toast';
 
 export function useBilling() {
@@ -23,7 +24,7 @@ export function useBilling() {
     refetch: refetchPlans,
   } = useQuery({
     queryKey: ['billing', 'plans'],
-    queryFn: () => BillingService.getPlans(),
+    queryFn: () => CatalogService.getPublishedPlans(),
   });
 
   // Mutation: Criar checkout session

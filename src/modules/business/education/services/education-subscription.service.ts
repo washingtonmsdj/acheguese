@@ -5,7 +5,7 @@
  *
  * Regras:
  * - assinatura e tier: BusinessSubscriptionService;
- * - oferta/entitlements: BillingPlanService + baseline canonico;
+ * - oferta/entitlements: CatalogService + baseline canonico;
  * - limites operacionais de programas/leads/eventos: niches/registry.ts.
  *
  * Este service nao mantem uma segunda matriz de limites por plano.
@@ -19,7 +19,7 @@ import {
   type BusinessSubscription,
   type PlanEntitlements,
 } from '@/core/billing';
-import { BillingPlanService } from '@/core/billing/services/BillingPlanService';
+import { CatalogService } from '@/core/billing/services/CatalogService';
 import { BusinessService } from '@/core/business/services/BusinessService';
 
 export interface EducationEntitlements {
@@ -50,7 +50,7 @@ function toEducationEntitlements(
 async function resolveCanonicalEntitlements(
   tier: PlanTier,
 ): Promise<EducationEntitlements> {
-  const published = await BillingPlanService.getEntitlements(tier);
+  const published = await CatalogService.getPublishedPlanEntitlements(tier);
   return toEducationEntitlements(
     published ?? EntitlementsService.getAll(tier),
   );

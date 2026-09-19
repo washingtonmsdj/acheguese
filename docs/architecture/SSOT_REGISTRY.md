@@ -175,7 +175,7 @@ npx tsx tools/architecture/check-ssot-compliance.ts
 | | |
 |---|---|
 | **Tipos** | `src/core/billing/types.ts` |
-| **Catálogo** | `src/core/billing/services/CatalogService.ts` + `BillingPlanService.ts` |
+| **Catálogo** | `src/core/billing/services/CatalogService.ts` |
 | **Assinatura user** | `src/core/billing/services/SubscriptionService.ts` |
 | **Assinatura Business** | `src/core/billing/BusinessSubscriptionService.ts` |
 | **Entitlements** | `src/core/billing/services/EntitlementResolver.ts` + `entitlementBaselines.ts` |
@@ -401,7 +401,7 @@ Tabelas que só podem ser acessadas através de services/owners autorizados. Ace
 | `events` | `EventService` |
 | `reviews` | `ReviewsService` |
 | `user_subscriptions` | `SubscriptionService` + `BusinessSubscriptionService` (read); `billing-webhook` (write) |
-| `commercial_catalog_version`, `catalog_item` | `CatalogService` / `BillingPlanService` (published read); trusted server/service_role (write) |
+| `commercial_catalog_version`, `catalog_item` | `CatalogService` (published read); trusted server/service_role (write) |
 | `catalog_entitlement_policy`, `catalog_pricing_policy` | projeções públicas explícitas somente de itens `published`; trusted server/service_role (write) |
 | `catalog_eligibility_rule` | trusted server/service_role only |
 | `conversations`, `messages` | `ClassifiedMessagingService`; mutations pelos RPCs server-owned |
