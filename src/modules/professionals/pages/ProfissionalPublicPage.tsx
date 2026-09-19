@@ -8,7 +8,6 @@ import { Link, useParams } from "react-router-dom";
 import {
   ArrowLeft,
   ArrowUpRight,
-  Bookmark,
   ChevronRight,
   Flag,
   Info,
@@ -95,19 +94,9 @@ function ShareProfileButton() {
   );
 }
 
-function ProfileActions({ saved, onToggleSaved }: { saved: boolean; onToggleSaved: () => void }) {
+function ProfileActions() {
   return (
     <div className="flex items-center gap-1">
-      <button
-        type="button"
-        onClick={onToggleSaved}
-        className="inline-flex min-h-10 items-center gap-2 rounded-lg px-2 text-type-label font-semibold text-territory-ink transition-colors hover:bg-territory-raised focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-territory-brand"
-        aria-pressed={saved}
-        aria-label={saved ? "Remover perfil dos salvos" : "Salvar perfil"}
-      >
-        <Bookmark className={cn("h-4 w-4", saved && "fill-current text-territory-brand")} aria-hidden="true" />
-        <span className="hidden sm:inline">{saved ? "Salvo" : "Salvar"}</span>
-      </button>
       <ShareProfileButton />
     </div>
   );
@@ -383,7 +372,6 @@ export default function ProfissionalPublicPage() {
   const { user } = useSessionContext();
   const { unreadCount } = useUnifiedNotifications();
   const [leadDialogOpen, setLeadDialogOpen] = useState(false);
-  const [saved, setSaved] = useState(false);
   const territoryName = "Seu território";
   const contextLabel = `${city ?? "Salvador"}, ${(state ?? "BA").toUpperCase()}`;
   const searchTerritoryBase = `/${state ?? "ba"}/${city ?? "salvador"}`;
@@ -433,7 +421,7 @@ export default function ProfissionalPublicPage() {
       <main className="w-full max-w-[60rem] px-4 pb-8 pt-1 sm:px-6 md:pt-3 lg:px-6">
         <div className="hidden items-center gap-2 text-type-caption text-territory-muted md:flex"><Link to={searchHref} className="hover:text-territory-brand">Explorar</Link><span aria-hidden="true">/</span><Link to={buildModuleTerritoryUrl(MODULE_SLUGS.services, searchTerritoryBase)} className="hover:text-territory-brand">Serviços</Link><span aria-hidden="true">/</span><span className="truncate">{profile.professional_name}</span></div>
 
-        <div className="mt-0 flex items-center justify-between gap-3 md:mt-0"><Link to={searchHref} className="inline-flex min-h-10 items-center gap-2 rounded-lg px-1 text-type-label font-semibold text-territory-ink hover:bg-territory-raised focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-territory-brand"><ArrowLeft className="h-4 w-4" aria-hidden="true" />Voltar à busca</Link><ProfileActions saved={saved} onToggleSaved={() => setSaved((value) => !value)} /></div>
+        <div className="mt-0 flex items-center justify-between gap-3 md:mt-0"><Link to={searchHref} className="inline-flex min-h-10 items-center gap-2 rounded-lg px-1 text-type-label font-semibold text-territory-ink hover:bg-territory-raised focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-territory-brand"><ArrowLeft className="h-4 w-4" aria-hidden="true" />Voltar à busca</Link><ProfileActions /></div>
 
         <ProfileHero profile={profile} territoryName={profileTerritoryName} locationLabel={profileLocationLabel} />
         <div className="mt-1 md:hidden">
