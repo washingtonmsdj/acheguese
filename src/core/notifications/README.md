@@ -18,13 +18,13 @@ Ownership canonico da caixa de entrada, preferencias e entrega de notificacoes.
 
 ## Autoridade da inbox
 
-`NotificationService.createNotification()` e estritamente self-only e delega ao RPC `create_notification`.
+A criacao generica de notificacao pelo browser foi aposentada. A migration `20260918115346_retire_browser_notification_creation_cp001.sql` revoga `EXECUTE` de `authenticated` em `create_notification`; somente `service_role` preserva esse materializador para brokers confiaveis.
 
-A migration `20260829185546_harden_notification_inbox_write_authority.sql` fechou o bypass browser conhecido:
+A migration `20260829185546_harden_notification_inbox_write_authority.sql` ja havia fechado o bypass de tabela; o corte CP-001 completa a fronteira:
 
-- `create_notification` executa como comando privilegiado com ACL explicita para `authenticated` e `service_role`; `anon` nao executa;
-- authenticated nao possui mais INSERT direto em `public.notifications`;
-- authenticated nao possui mais hard DELETE direto;
+- `create_notification` permanece como materializador privilegiado server-owned, sem API generica de browser;
+- authenticated nao possui INSERT direto em `public.notifications`;
+- authenticated nao possui hard DELETE direto;
 - o usuario continua podendo SELECT da propria inbox e UPDATE apenas as colunas de estado permitidas (`read`, `is_read`, `read_at`, `deleted_at`, `updated_at`), sempre sob RLS de ownership;
 - cross-user continua reservado a produtores server-side/outbox.
 
@@ -58,7 +58,7 @@ A migration `20260829185634_align_messaging_notification_realtime_publication.sq
 - Nao acessar `supabase.from('notifications')` em UI (`.tsx`).
 - Nao inserir ou hard-delete `public.notifications` pelo browser.
 - Integracoes novas importam de `@/core/notifications`.
-- Notificacao para terceiros usa trigger, RPC/Edge confiavel ou outbox; a UI nunca fornece o destinatario privilegiado.
+- Criacao de notificacao usa trigger, Edge confiavel ou outbox; a UI nao possui comando generico de criacao e nunca fornece destinatario privilegiado.
 - Preferencias desabilitadas geram `suppressed`, nao retry nem erro falso.
 
 ## Ratchets

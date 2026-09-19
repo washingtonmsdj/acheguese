@@ -33,6 +33,9 @@ const preferenceService = read(
 const authorityMigration = read(
   "supabase/migrations/20260829185546_harden_notification_inbox_write_authority.sql",
 );
+const browserCreateRetirement = read(
+  "supabase/migrations/20260918115346_retire_browser_notification_creation_cp001.sql",
+);
 
 const directNotificationCreateOrHardDelete =
   /\.from(?:<[^;]{0,500}>)?\(\s*["']notifications["']\s*\)\s*\.(?:insert|delete)\s*\(/m;
@@ -48,8 +51,9 @@ describe("Notification inbox authority", () => {
     expect(offenders).toEqual([]);
   });
 
-  it("routes self notification creation through the canonical RPC", () => {
-    expect(notificationService).toContain('supabase.rpc("create_notification"');
+  it("keeps generic notification creation out of browser runtime", () => {
+    expect(notificationService).not.toContain('supabase.rpc("create_notification"');
+    expect(notificationService).not.toContain("CreateNotificationInput");
     expect(notificationService).not.toMatch(
       /\.from(?:<[^;]{0,500}>)?\(\s*["']notifications["']\s*\)\s*\.insert\s*\(/m,
     );
@@ -66,10 +70,12 @@ describe("Notification inbox authority", () => {
     expect(preferenceService).not.toContain(".from('notification_preferences')");
   });
 
-  it("revokes direct inbox creation and hard delete while preserving RPC authority", () => {
+  it("revokes direct inbox creation and hard delete while keeping materialization server-owned", () => {
     expect(authorityMigration).toContain("SECURITY DEFINER");
     expect(authorityMigration).toContain("FROM PUBLIC, anon");
-    expect(authorityMigration).toContain("TO authenticated, service_role");
+    expect(browserCreateRetirement).toContain("FROM PUBLIC, anon, authenticated");
+    expect(browserCreateRetirement).toContain("TO service_role");
+    expect(browserCreateRetirement).not.toContain("TO authenticated, service_role");
     expect(authorityMigration).toContain(
       "DROP POLICY IF EXISTS notifications_insert_own",
     );

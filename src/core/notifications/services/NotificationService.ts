@@ -1,28 +1,11 @@
 import { logger } from "@/shared/utils/logger";
-import { supabase, type Json, type Tables } from "@/integrations/supabase";
+import { supabase, type Tables } from "@/integrations/supabase";
 import { SessionService } from "@/core/session/services/SessionService";
 import { realtimeService } from "@/core/realtime";
-import type {
-  Notification,
-  NotificationCategory,
-  NotificationFilters,
-  NotificationPriority,
-} from "../types";
+import type { Notification, NotificationFilters } from "../types";
 import { normalizeNotification } from "../utils/normalizeNotification";
 
 export type { Notification, NotificationFilters } from "../types";
-
-export interface CreateNotificationInput {
-  user_id: string;
-  type: "info" | "success" | "warning" | "error";
-  category?: NotificationCategory;
-  priority?: Exclude<NotificationPriority, "urgent">;
-  title: string;
-  message: string;
-  action_url?: string;
-  action_label?: string;
-  metadata?: Record<string, unknown>;
-}
 
 export interface NotificationRealtimeChange {
   eventType: "INSERT" | "UPDATE";
@@ -32,54 +15,11 @@ export interface NotificationRealtimeChange {
 type NotificationRow = Tables<"notifications">;
 const UUID_PATTERN = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
 
-function serializeNotificationMetadata(value: Record<string, unknown>): Json {
-  const serialized = JSON.stringify(value);
-  if (serialized.length > 32_768) {
-    throw new Error("Notification metadata exceeds 32 KB");
-  }
-  return JSON.parse(serialized) as Json;
-}
-
 function normalizeNotificationRow(row: NotificationRow): Notification {
   return normalizeNotification(row as unknown as Record<string, unknown>);
 }
 
 export class NotificationService {
-  static async createNotification(input: CreateNotificationInput): Promise<string | null> {
-    const user = await SessionService.getCurrentUser();
-    if (!user) {
-      throw new Error("User not authenticated");
-    }
-
-    if (input.user_id !== user.id) {
-      logger.warn("[NotificationService] blocked untrusted cross-user notification creation", {
-        actorUserId: user.id,
-        targetUserId: input.user_id,
-        category: input.category ?? "social",
-      });
-      return null;
-    }
-
-    const { data, error } = await supabase.rpc("create_notification", {
-      p_user_id: input.user_id,
-      p_type: input.type,
-      p_category: input.category ?? "social",
-      p_priority: input.priority ?? "medium",
-      p_title: input.title,
-      p_message: input.message,
-      p_action_url: input.action_url ?? null,
-      p_action_label: input.action_label ?? null,
-      p_metadata: serializeNotificationMetadata(input.metadata ?? {}),
-    });
-
-    if (error) {
-      logger.error("Error creating notification:", error);
-      throw error;
-    }
-
-    return data;
-  }
-
   static async getUserNotifications(filters: NotificationFilters = {}): Promise<Notification[]> {
     const user = await SessionService.getCurrentUser();
     if (!user) {
@@ -271,10 +211,6 @@ export class NotificationService {
 
   async fetchNotifications(filters?: NotificationFilters): Promise<Notification[]> {
     return NotificationService.getUserNotifications(filters);
-  }
-
-  async createNotification(input: CreateNotificationInput): Promise<string | null> {
-    return NotificationService.createNotification(input);
   }
 
   createRealtimeChannel(userId: string, callback: (change: NotificationRealtimeChange) => void) {
