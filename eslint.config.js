@@ -105,15 +105,6 @@ export default tseslint.config(
     },
   },
 
-
-  // API server-side infrastructure: Vercel functions run outside the browser bundle.
-  // Supabase service-role creation is centralized here, not in UI/core modules.
-  {
-    files: ["api/_shared/supabaseAdmin.ts"],
-    rules: {
-      "no-restricted-imports": "off",
-    },
-  },
   {
     files: ["api/_shared/profileAdminRepository.ts"],
     rules: {
