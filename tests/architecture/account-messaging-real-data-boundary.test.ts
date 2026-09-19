@@ -65,6 +65,11 @@ describe("account and messaging MVP real-data boundary", () => {
     expect(messaging).toContain(
       "return sendMessage(selectedConversation.id, body);",
     );
+    expect(messaging).not.toContain("pinned");
+    expect(messaging).not.toContain("Arquivadas");
+    expect(messaging).not.toContain(">Hoje<");
+    expect(messaging).toContain('{ value: "closed", label: "Encerradas" }');
+    expect(messaging).toContain("formatMessagingTimestamp(message.created_at)");
   });
 
   it("clears private thread state when the active profile changes", () => {
