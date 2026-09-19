@@ -2,7 +2,6 @@ import { useState } from "react";
 import { Clock, FileText, TrendingUp } from "lucide-react";
 import { PostCardSkeleton } from "@/core/community-feed/components/PostCardSkeleton";
 import { ProfilePostCard } from "./ProfilePostCard";
-import type { CommunityPost } from "@/core/posts/types";
 import { usePostActions } from "@/core/posts/hooks";
 import { InfiniteScrollTrigger } from "@/shared/components/ui";
 import {
@@ -14,7 +13,7 @@ import {
 } from "@/shared/components/ui/select";
 import { EmptyStateProfile } from "./EmptyStateProfile";
 import { useUserPosts } from "../hooks/useUserPosts";
-import type { ProfileFeedPost, ProfileFeedPostType } from "../types/profileFeed";
+import type { ProfileFeedPostType } from "../types/profileFeed";
 
 interface UserPostsGridProps {
   profileId: string;
@@ -41,13 +40,6 @@ function isTypeFilterValue(value: string): value is TypeFilterValue {
 
 function isSortValue(value: string): value is SortValue {
   return value === "recent" || value === "popular";
-}
-
-function toCommunityPost(post: ProfileFeedPost): CommunityPost {
-  return {
-    ...post,
-    type: post.type === "achados_e_perdidos" ? "achados" : post.type,
-  };
 }
 
 export function UserPostsGrid({
@@ -151,7 +143,7 @@ export function UserPostsGrid({
             {posts.map((post) => (
               <ProfilePostCard
                 key={post.id}
-                post={toCommunityPost(post)}
+                post={post}
                 currentUserId={currentProfileId}
                 onLike={likePost}
                 onComment={onCommentClick ?? (() => undefined)}
