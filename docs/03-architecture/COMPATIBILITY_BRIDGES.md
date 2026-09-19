@@ -1,7 +1,7 @@
 # Compatibility Bridges Registry
 
-Status: CANONICAL — structural root cleanup remains closed; bounded live facades still exist  
-Reviewed: 2026-09-14  
+Status: CANONICAL — structural root cleanup closed; one paused-module runtime facade remains  
+Reviewed: 2026-09-19  
 Plan authority: `/URGENTE_LEIA_PRIMEIRO_REORGANIZACAO_GLOBAL.md`
 
 ## Purpose
@@ -26,9 +26,7 @@ These are the currently proven live facades. They are not new extension points.
 
 | Compatibility surface | Canonical owner | Current caller evidence | Removal gate |
 | --- | --- | --- | --- |
-| `src/modules/guide/hooks/useGuideUrls.ts` | `src/core/guide/tourist-points/routes/useTouristPointPublicUrls.ts` | `GuideSidebarItem`, `TouristPointsPage`, `TouristPointDetailPage` | migrate all three callers directly, update `src/modules/guide/index.ts`, delete facade in one batch |
-| `src/core/profiles/services/multi-profile/businessService.ts` | `src/core/business/services/business.profile-extension.ts` | multi-profile editor service and `profileDomainRules` | migrate all editor callers without changing the editor response contract, then remove barrel export/file |
-| `MobilityRuntimeService.getRideWithAddresses()` | `src/core/mobility/services/mobility.ride-read-queries.ts` | `BuscandoMotoristaPage` | migrate the page to the bounded read owner, remove runtime method/import, preserve G140 projection tests |
+| `MobilityRuntimeService.getRideWithAddresses()` | `src/core/mobility/services/mobility.ride-read-queries.ts` | `BuscandoMotoristaPage` | Mobility is paused for MVP; migrate the page to the bounded read owner and remove the forwarding method before re-enabling the module |
 
 No partial migration is considered closure. If a large caller cannot be safely rewritten in the current tooling session, the facade stays explicit here rather than being hidden behind another alias.
 
@@ -74,11 +72,11 @@ Historical Community and Events path/service bridges remain retired. Canonical r
 
 ### Guide / Tourist Points
 
-The old `src/core/verticals/guide/**` namespace is retired. Public tourist-point route ownership is canonical in `src/core/guide/tourist-points/routes`. One module alias facade, `src/modules/guide/hooks/useGuideUrls.ts`, still has three runtime callers and is therefore explicitly listed as live debt above.
+The old `src/core/verticals/guide/**` namespace is retired. Public tourist-point route ownership is canonical in `src/core/guide/tourist-points/routes`. The module alias `src/modules/guide/hooks/useGuideUrls.ts` is retired and active callers import the canonical owner directly.
 
 ### Profiles
 
-Business extension persistence belongs to `src/core/business/services/business.profile-extension.ts`. The multi-profile editor still consumes a compatibility-shaped facade in `src/core/profiles/services/multi-profile/businessService.ts`; this facade may not gain new persistence or new callers.
+Business extension persistence belongs to `src/core/business/services/business.profile-extension.ts`. The multi-profile editor now consumes that owner directly; `src/core/profiles/services/multi-profile/businessService.ts` is retired.
 
 ### Mobility
 
@@ -86,6 +84,6 @@ Business extension persistence belongs to `src/core/business/services/business.p
 
 ## Closure criteria
 
-Compatibility debt reaches zero only when all rows in **Live compatibility debt** are removed atomically and architecture search/ratchets show no replacement alias. Until then, the repository may be structurally reorganized, but it must not be described as having zero live service/path compatibility facades.
+Guide and Profile/Business compatibility debt is closed and ratcheted. Compatibility debt reaches zero only when the remaining paused Mobility forwarding facade is removed without replacement before Mobility is re-enabled.
 
 Hosted build/test certification is a separate concern. Provider rate limits, runner failures, or missing logs are not source PASS evidence and do not change the bridge inventory.
