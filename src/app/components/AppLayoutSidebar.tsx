@@ -122,7 +122,6 @@ export function AppLayoutSidebar() {
     isPublicEntityDetailRoute ||
     isCommunityPublicLandingRoute ||
     isCommunityAliasPublicRoute ||
-    isGastronomyOrderTrackingRoute ||
     isGastronomyOrderTrackingRoute;
 
   const isMessagingRoute =
