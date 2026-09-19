@@ -1,14 +1,10 @@
 /**
  * Perfil publico de profissional.
  * Rota: /servicos/:state/:city/profissional/:slug
- *
- * O estado concept-mock e exclusivo do desenvolvimento: ele fornece apenas
- * conteudo demonstrativo para validar a composicao visual sem alterar o
- * contrato publico ou inventar dados para perfis reais.
  */
 
 import { useEffect, useState } from "react";
-import { Link, useParams, useSearchParams } from "react-router-dom";
+import { Link, useParams } from "react-router-dom";
 import {
   ArrowLeft,
   ArrowUpRight,
@@ -30,10 +26,6 @@ import { useSessionContext } from "@/core/session";
 import { useUnifiedNotifications } from "@/core/notifications/useUnifiedNotifications";
 import { Avatar, AvatarFallback, AvatarImage } from "@/shared/components/ui/avatar";
 import { cn } from "@/shared/utils/cn";
-import {
-  PROFESSIONAL_CONCEPT_DETAILS,
-  PROFESSIONAL_CONCEPT_MOCK,
-} from "../mocks/professionalConceptMock";
 import { ProfessionalLeadRequestDialog } from "../components/ProfessionalLeadRequestDialog";
 import {
   type ProfessionalPublicProfile,
@@ -56,8 +48,7 @@ function getInitials(name: string): string {
     .toUpperCase();
 }
 
-function getTerritoryName(profile: ProfessionalPublicProfile, conceptMockEnabled: boolean): string {
-  if (conceptMockEnabled) return "Complexo do Nordeste";
+function getTerritoryName(profile: ProfessionalPublicProfile): string {
   return profile.city ?? "Seu território";
 }
 
@@ -69,10 +60,7 @@ function getContextLabel(profile: ProfessionalPublicProfile, state?: string): st
 
 function getProfileServices(
   profile: ProfessionalPublicProfile,
-  conceptMockEnabled: boolean,
 ): ProfileServiceItem[] {
-  if (conceptMockEnabled) return PROFESSIONAL_CONCEPT_DETAILS.services;
-
   return [
     {
       title: profile.service_subcategory ?? profile.service_category ?? "Serviços profissionais",
@@ -392,41 +380,36 @@ function ProfileLoading({ territoryName, contextLabel, searchHref }: { territory
 
 export default function ProfissionalPublicPage() {
   const { state, city, slug } = useParams<{ state: string; city: string; slug: string }>();
-  const [searchParams] = useSearchParams();
   const { user } = useSessionContext();
   const { unreadCount } = useUnifiedNotifications();
   const [leadDialogOpen, setLeadDialogOpen] = useState(false);
   const [saved, setSaved] = useState(false);
-  const conceptMockEnabled = import.meta.env.DEV && searchParams.get("concept-mock") === "1";
-  const territoryName = conceptMockEnabled ? "Complexo do Nordeste" : "Seu território";
-  const contextLabel = conceptMockEnabled ? "Salvador, BA" : `${city ?? "Salvador"}, ${(state ?? "BA").toUpperCase()}`;
-  const searchTerritoryBase = conceptMockEnabled
-    ? `/${state ?? "ba"}/${city ?? "salvador"}/complexo-do-nordeste-de-amaralina`
-    : `/${state ?? "ba"}/${city ?? "salvador"}`;
+  const territoryName = "Seu território";
+  const contextLabel = `${city ?? "Salvador"}, ${(state ?? "BA").toUpperCase()}`;
+  const searchTerritoryBase = `/${state ?? "ba"}/${city ?? "salvador"}`;
   const searchHref = buildModuleTerritoryUrl(MODULE_SLUGS.search, searchTerritoryBase);
 
   const { data: professional, isLoading, error } = useProfessionalBySlug({
     uf: state ?? "",
     cidade: city ?? "",
     slug: slug ?? "",
-    enabled: !conceptMockEnabled,
   });
 
   useEffect(() => {
-    if (!isLoading && (error || !professional) && slug && state && city && !conceptMockEnabled) {
+    if (!isLoading && (error || !professional) && slug && state && city) {
       logPageNotFound({
         entityType: "professional",
         identifier: slug,
         attemptedUrl: professionalPublicRoutes.detail({ state, city, slug }),
       });
     }
-  }, [city, conceptMockEnabled, error, isLoading, professional, slug, state]);
+  }, [city, error, isLoading, professional, slug, state]);
 
-  if (isLoading && !conceptMockEnabled) {
+  if (isLoading) {
     return <ProfileLoading territoryName={territoryName} contextLabel={contextLabel} searchHref={searchHref} />;
   }
 
-  const profile = conceptMockEnabled ? PROFESSIONAL_CONCEPT_MOCK : professional;
+  const profile = professional;
   if (error || !profile) {
     return (
       <div className="flex min-h-[100dvh] flex-col items-center justify-center bg-territory-canvas px-4 text-center text-territory-ink">
@@ -436,14 +419,12 @@ export default function ProfissionalPublicPage() {
     );
   }
 
-  const profileTerritoryName = getTerritoryName(profile, conceptMockEnabled);
+  const profileTerritoryName = getTerritoryName(profile);
   const profileContextLabel = getContextLabel(profile, state);
-  const profileLocationLabel = conceptMockEnabled
-    ? PROFESSIONAL_CONCEPT_DETAILS.locationLabel
-    : [profile.city, profile.state].filter(Boolean).join(" · ");
-  const services = getProfileServices(profile, conceptMockEnabled);
-  const portfolio = conceptMockEnabled ? PROFESSIONAL_CONCEPT_DETAILS.portfolio : [];
-  const coverage = conceptMockEnabled ? PROFESSIONAL_CONCEPT_DETAILS.coverage : profile.city ? [profile.city] : [];
+  const profileLocationLabel = [profile.city, profile.state].filter(Boolean).join(" · ");
+  const services = getProfileServices(profile);
+  const portfolio: string[] = [];
+  const coverage = profile.city ? [profile.city] : [];
 
   return (
     <div className="min-h-[100dvh] bg-territory-canvas pb-24 text-territory-ink md:pb-8">
