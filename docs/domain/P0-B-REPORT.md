@@ -73,7 +73,7 @@ As seguintes chamadas a `.normalize('NFD')` em `src/core/` **não foram migradas
 | **Mobility** | `failedDelivery.ts`, `MobilityOfferService.ts` | Normalização de entrega/localização |
 | **Tourist Points** | `touristPointPublicRoutes.ts`, `types/index.ts` | Slug safety de ponto turístico |
 | **Community** | `territorialFeedEngine.ts` | Normalização de texto de feed |
-| **Residence** | `migrateUserResidencesToCanonical.ts`, `ResidenceManager.model.ts`, `residenceAddressPolicy.ts` | Normalização de endereço/residência |
+| **Residence** | `ResidenceManager.model.ts`, `residenceAddressPolicy.ts` | Normalização de endereço/residência; backfill one-shot canônico já aposentado |
 | **Public Identity** | 7 arquivos (policies, slugSafety) | Slug safety de identidade pública |
 | **Professional** | 4 arquivos (URL, lifecycle, routes, migration) | Normalização de dados profissionais |
 | **AI** | `RuleBasedAIProvider.ts` | Processamento de texto AI |
