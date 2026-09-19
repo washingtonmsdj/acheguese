@@ -1,3 +1,7 @@
+export function getDpoName(): string {
+  return (import.meta.env.VITE_DPO_NAME || "").trim();
+}
+
 export function getDpoEmail(): string {
   const configuredEmail =
     import.meta.env.VITE_DPO_EMAIL ||
