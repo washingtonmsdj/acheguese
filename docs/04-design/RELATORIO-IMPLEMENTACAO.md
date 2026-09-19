@@ -267,3 +267,25 @@ A prancha 117 também está coberta pelos estados demonstrativos de visitante, v
 
 - Branch: `codex/reformulacao-entrada-comunidade`.
 - Somente os arquivos desta implementação e este relatório serão incluídos; os arquivos staged preexistentes de catalogação e segurança permanecem excluídos.
+
+## 19/09/2026 · Meus perfis — prancha 015
+
+### Auditoria e ajustes
+
+- Comparei a composição de `ContaHubPage` com `10-meus-perfis/pranchas/015-meus-perfis.png` em mobile e desktop: hierarquia de conta, cabeçalho territorial, rail lateral, busca, filtros, quatro cards, favoritos, convites e navegação inferior.
+- Ajustei o avatar fallback de `Ana Serviços` para a ferramenta cruzada do concept, preservei os espaçamentos responsivos e mantive o texto de pendência específico para mobile e desktop.
+- Alinhei os estados de ação: `Gerenciar` usa o CTA preenchido do concept, `Abrir atendimento` permanece contornado, e os perfis de negócio abrem o central demonstrativo. A notificação do cabeçalho agora é uma rota navegável.
+- Reproduzi o texto contextual de favoritos por breakpoint, o ponto amarelo de novas conversas na navegação mobile e a assinatura do rodapé desktop. Busca, abas, favoritos, convites e links continuam interativos no preview DEV-only.
+
+### Validação e evidências
+
+- `npm run typecheck:app`: passou.
+- ESLint passou em `src/modules/profile/pages/ContaHubPage.tsx`.
+- `AccountTerritoryVivo.contract.spec.tsx`: 4 testes passaram.
+- No navegador interno, conferi a composição mobile e desktop após HMR e validei filtro `Negócios` (2 perfis) e busca por `Ana Serviços` (1 perfil). O viewport temporário foi restaurado ao padrão; a aba permanece aberta e marcada como entrega visual.
+- `git diff --check`: passou; os documentos e a prancha do catálogo foram preservados.
+
+### Git
+
+- Branch: `codex/reformulacao-entrada-comunidade`.
+- Somente os arquivos desta implementação e este relatório serão incluídos; os arquivos staged preexistentes de catalogação e segurança permanecem excluídos.

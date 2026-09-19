@@ -11,6 +11,7 @@ import {
   Compass,
   FileText,
   Globe2,
+  Hammer,
   HelpCircle,
   Home,
   LockKeyhole,
@@ -190,8 +191,9 @@ function ConceptManagedProfileAvatar({ profile }: { profile: ConceptManagedProfi
     return <img src={profile.avatarUrl} alt="" className="h-16 w-16 shrink-0 rounded-full object-cover sm:h-[4.5rem] sm:w-[4.5rem]" />;
   }
   return (
-    <span className="flex h-16 w-16 shrink-0 items-center justify-center rounded-full bg-territory-sun text-territory-brand sm:h-[4.5rem] sm:w-[4.5rem]">
-      <Wrench className="h-8 w-8" strokeWidth={2} aria-hidden="true" />
+    <span className="relative flex h-16 w-16 shrink-0 items-center justify-center rounded-full bg-territory-sun text-territory-brand sm:h-[4.5rem] sm:w-[4.5rem]">
+      <Hammer className="absolute h-8 w-8 -rotate-45" strokeWidth={2.2} aria-hidden="true" />
+      <Wrench className="absolute h-8 w-8 rotate-45" strokeWidth={2.2} aria-hidden="true" />
     </span>
   );
 }
@@ -211,9 +213,9 @@ function ConceptAccountHeader() {
         <ChevronRight className="h-4 w-4 rotate-90 text-territory-muted" aria-hidden="true" />
       </div>
       <div className="ml-auto flex items-center gap-4">
-        <button type="button" aria-label="Notificações" className="flex h-10 w-10 items-center justify-center rounded-full text-territory-ink hover:bg-territory-raised focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-territory-brand">
+        <Link to="/conta/notificacoes" aria-label="Notificações" className="flex h-10 w-10 items-center justify-center rounded-full text-territory-ink hover:bg-territory-raised focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-territory-brand">
           <Bell className="h-5 w-5" aria-hidden="true" />
-        </button>
+        </Link>
         <div className="flex items-center gap-2 border-l border-territory-border pl-4 text-sm font-semibold text-territory-ink">
           <img src={personalImage} alt="" className="h-9 w-9 rounded-full object-cover" />
           Ana Oliveira
@@ -295,7 +297,7 @@ function ConceptManagedProfileCard({
         <Star className="h-6 w-6" fill={favorite ? "currentColor" : "none"} strokeWidth={favorite ? 2 : 1.6} aria-hidden="true" />
       </button>
       <div className={cn("relative mt-1 grid gap-2 md:order-2 md:mt-0 md:flex md:shrink-0", isPersonal ? "grid-cols-2 md:w-[20rem]" : "grid-cols-1 md:max-w-[25rem]")}>
-        <button type="button" onClick={onPrimary} className="min-h-9 rounded-xl border border-territory-brand px-4 text-sm font-semibold text-territory-ink transition-colors hover:bg-[hsl(var(--territory-brand)/0.08)] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-territory-brand md:min-h-11 md:min-w-[8.8rem]">{profile.primaryAction}</button>
+        <button type="button" onClick={onPrimary} className={cn("min-h-9 rounded-xl border border-territory-brand px-4 text-sm font-semibold transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-territory-brand md:min-h-11 md:min-w-[8.8rem]", profile.id === "concept-sabores-da-ana" ? "bg-territory-brand text-white hover:bg-territory-brand/90" : "text-territory-ink hover:bg-[hsl(var(--territory-brand)/0.08)]")}>{profile.primaryAction}</button>
         {profile.secondaryAction ? <button type="button" onClick={onSecondary} className={cn("min-h-9 rounded-xl border border-territory-border bg-territory-raised px-4 text-sm font-medium text-territory-ink hover:border-territory-brand/40 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-territory-brand md:min-h-11", profile.category !== "personal" && "hidden md:block")}>{profile.secondaryAction}</button> : null}
         {profile.messageAction ? <button type="button" onClick={onMessages} className="relative min-h-9 rounded-xl border border-territory-border bg-territory-raised px-4 text-sm font-medium text-territory-ink hover:border-territory-brand/40 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-territory-brand md:min-h-11">{profile.messageAction}{profile.conversationCount ? <span className="ml-2 inline-flex h-6 min-w-6 items-center justify-center rounded-full bg-territory-sun px-1.5 text-xs font-bold text-territory-ink">{profile.conversationCount}</span> : null}</button> : null}
       </div>
@@ -305,15 +307,15 @@ function ConceptManagedProfileCard({
 
 function ConceptAccountBottomNavigation() {
   const items = [
-    { label: "Início", href: "/ba/salvador/complexo-do-nordeste-de-amaralina", icon: Home },
-    { label: "Explorar", href: "/busca/ba/salvador/complexo-do-nordeste-de-amaralina", icon: Search },
-    { label: "Comunidade", href: "/comunidade/ba/salvador/complexo-do-nordeste-de-amaralina", icon: Users },
-    { label: "Conversas", href: "/mensagens?concept-mock=1", icon: MessageCircle },
-    { label: "Conta", href: "/conta?concept-mock=1", icon: UserRound, active: true },
+    { label: "Início", href: "/ba/salvador/complexo-do-nordeste-de-amaralina", icon: Home, hasBadge: false },
+    { label: "Explorar", href: "/busca/ba/salvador/complexo-do-nordeste-de-amaralina", icon: Search, hasBadge: false },
+    { label: "Comunidade", href: "/comunidade/ba/salvador/complexo-do-nordeste-de-amaralina", icon: Users, hasBadge: false },
+    { label: "Conversas", href: "/mensagens?concept-mock=1", icon: MessageCircle, hasBadge: true },
+    { label: "Conta", href: "/conta?concept-mock=1", icon: UserRound, active: true, hasBadge: false },
   ];
   return (
     <nav className="fixed inset-x-0 bottom-0 z-30 flex h-16 border-t border-territory-border bg-territory-surface px-1 pb-[env(safe-area-inset-bottom)] md:hidden" aria-label="Navegação principal mobile">
-      {items.map(({ label, href, icon: Icon, active }) => <Link key={label} to={href} aria-current={active ? "page" : undefined} className={cn("flex min-w-0 flex-1 flex-col items-center justify-center gap-1 text-[0.625rem] font-medium text-territory-muted focus-visible:outline-2 focus-visible:outline-offset-[-2px] focus-visible:outline-territory-brand", active && "font-semibold text-territory-brand")}><Icon className="h-5 w-5" strokeWidth={active ? 2.2 : 1.8} aria-hidden="true" /><span>{label}</span></Link>)}
+      {items.map(({ label, href, icon: Icon, active, hasBadge }) => <Link key={label} to={href} aria-current={active ? "page" : undefined} className={cn("flex min-w-0 flex-1 flex-col items-center justify-center gap-1 text-[0.625rem] font-medium text-territory-muted focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-territory-brand", active && "font-semibold text-territory-brand")}><span className="relative"><Icon className="h-5 w-5" strokeWidth={active ? 2.2 : 1.8} aria-hidden="true" />{hasBadge ? <span className="absolute -right-1 -top-1 h-2.5 w-2.5 rounded-full border-2 border-territory-surface bg-territory-sun" aria-label="Novas conversas" /> : null}</span><span>{label}</span></Link>)}
     </nav>
   );
 }
@@ -372,7 +374,8 @@ function AccountConceptPreviewPage() {
             </div>
             <button type="button" onClick={openMessages} className="flex w-fit items-center gap-2 text-left text-sm text-territory-muted hover:text-territory-brand focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-territory-brand lg:shrink-0">
               <Star className="h-5 w-5 shrink-0 text-territory-sun" fill="currentColor" aria-hidden="true" />
-              Favoritos aparecem em Conversas.
+              <span className="lg:hidden">Favoritos aparecem em Conversas.</span>
+              <span className="hidden lg:inline">Favorite para ter acesso rápido em Conversas.</span>
             </button>
           </div>
         </div>
@@ -387,7 +390,7 @@ function AccountConceptPreviewPage() {
                 if (next.has(profile.id)) next.delete(profile.id); else next.add(profile.id);
                 return next;
               })}
-              onPrimary={profile.category === "business" && profile.name === "Sabores da Ana" ? () => navigate("/central?concept-mock=1") : editProfile}
+              onPrimary={profile.category === "business" ? () => navigate("/central?concept-mock=1") : editProfile}
               onSecondary={profile.category === "personal" ? () => navigate("/u/ana-oliveira") : editProfile}
               onMessages={openMessages}
             />
@@ -404,7 +407,7 @@ function AccountConceptPreviewPage() {
           </button>
         </section>
         {teamInvitesOpen ? <div className="mt-2 rounded-xl border border-territory-border bg-territory-surface p-4 text-sm text-territory-muted"><strong className="font-semibold text-territory-ink">Mercado da Praça</strong> convidou você para integrar a equipe. Acesse as notificações para revisar o convite.</div> : null}
-        <footer className="mt-8 hidden items-center justify-between text-xs text-territory-muted lg:flex"><span className="font-heading text-base font-bold tracking-[-0.04em] text-territory-brand">achegue-se<span className="text-territory-sun">.</span></span><span>Conceito visual · Dados demonstrativos</span></footer>
+        <footer className="mt-8 hidden items-center justify-between text-xs text-territory-muted lg:flex"><span className="font-heading text-base font-bold tracking-[-0.04em] text-territory-brand">achegue-se<span className="text-territory-sun">.</span></span><span className="hidden xl:inline">Conectando pessoas. Fortalecendo o nosso lugar.</span><span>Conceito visual · Dados demonstrativos</span></footer>
       </main>
       <ConceptAccountBottomNavigation />
     </div>
