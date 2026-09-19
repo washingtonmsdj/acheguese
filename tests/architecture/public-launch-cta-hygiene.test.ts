@@ -63,5 +63,8 @@ describe("public launch CTA hygiene", () => {
     );
 
     expect(page).not.toContain("Sugerir Ponto Turístico");
+    expect(page).not.toContain('MODE: AO REDOR');
+    expect(page).not.toContain('Camada "Ao redor"');
+    expect(page).not.toContain("switchViewMode");
   });
 });
