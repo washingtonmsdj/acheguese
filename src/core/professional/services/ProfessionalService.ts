@@ -36,8 +36,6 @@ type QueryResult<T> = Promise<{
 
 interface QueryBuilder<TRow> {
   select(columns?: string): QueryBuilder<TRow>;
-  insert(values: unknown): QueryBuilder<TRow>;
-  delete(): QueryBuilder<TRow>;
   eq(column: string, value: unknown): QueryBuilder<TRow>;
   or(filters: string): QueryBuilder<TRow>;
   single(): QueryResult<TRow>;
@@ -145,40 +143,6 @@ export class ProfessionalService {
   /** Soft-delete canonico do profissional. */
   static async deleteProfessional(id: string): Promise<void> {
     return deleteProfessionalWithProfile(id);
-  }
-
-  /** Alternar favorito do profissional. */
-  static async toggleFavorite(
-    professionalId: string,
-    userId: string,
-  ): Promise<boolean> {
-    try {
-      const { data: existing } = await professionalDb
-        .from<{ id: string }>("professional_favorites")
-        .select("id")
-        .eq("professional_id", professionalId)
-        .eq("profile_id", userId)
-        .single();
-
-      if (existing) {
-        await professionalDb
-          .from<{ id: string }>("professional_favorites")
-          .delete()
-          .eq("id", existing.id);
-        return false;
-      }
-
-      await professionalDb
-        .from<{ professional_id: string; profile_id: string }>(
-          "professional_favorites",
-        )
-        .insert({ professional_id: professionalId, profile_id: userId });
-      return true;
-    } catch (error) {
-      const message =
-        error instanceof Error ? error.message : "Erro desconhecido";
-      throw new Error(`Erro ao favoritar: ${message}`);
-    }
   }
 
   /** Obter estatisticas de um profissional. */
