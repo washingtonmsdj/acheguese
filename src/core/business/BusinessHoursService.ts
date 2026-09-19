@@ -58,6 +58,23 @@ type BusinessTemporarilyClosedRow = {
 
 const businessHoursDb = supabase as unknown as BusinessHoursDbClient;
 
+const BUSINESS_OPERATION_CONFIG_COLUMNS = [
+  "id",
+  "business_id",
+  "accepts_pickup",
+  "accepts_delivery",
+  "accepts_dine_in",
+  "uses_own_delivery",
+  "uses_platform_delivery",
+  "preparation_time_min",
+  "advance_order_hours",
+  "is_temporarily_closed",
+  "temporarily_closed_reason",
+  "temporarily_closed_until",
+  "created_at",
+  "updated_at",
+].join(",");
+
 // ── Tipos ─────────────────────────────────────────────────────────────────
 
 export interface ServiceResult<T> {
@@ -328,7 +345,7 @@ export const BusinessHoursService = {
     try {
       const { data, error } = await businessHoursDb
         .from<BusinessOperationConfig>('business_operation_config')
-        .select('*')
+        .select(BUSINESS_OPERATION_CONFIG_COLUMNS)
         .eq('business_id', businessId)
         .maybeSingle();
 
@@ -417,7 +434,7 @@ export const BusinessHoursService = {
         }, {
           onConflict: 'business_id',
         })
-        .select()
+        .select(BUSINESS_OPERATION_CONFIG_COLUMNS)
         .single();
 
       if (error) {
