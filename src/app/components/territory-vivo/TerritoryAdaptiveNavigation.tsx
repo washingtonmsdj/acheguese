@@ -149,7 +149,8 @@ export function TerritoryAdaptiveNavigation({
       <nav
         className={cn(
           "fixed inset-y-0 left-0 z-[90] hidden w-[4.5rem] flex-col border-r border-territory-border bg-territory-surface px-2 py-3 md:flex xl:hidden",
-          hideDesktop && "md:hidden",
+          hideDesktop && !communityConceptPreview && "md:hidden",
+          communityConceptPreview && "min-[1000px]:hidden",
         )}
         aria-label="Navegação principal tablet"
         data-territory-navigation="tablet"

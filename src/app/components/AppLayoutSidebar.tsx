@@ -167,9 +167,11 @@ export function AppLayoutSidebar() {
       <>
         <div
           className={
-            accountUsesSettingsShell || communityConceptPreview
+            accountUsesSettingsShell
               ? "territory-vivo w-full"
-              : "territory-vivo w-full md:pl-[4.5rem] xl:pl-44"
+              : communityConceptPreview
+                ? "territory-vivo w-full md:pl-[4.5rem] min-[1000px]:pl-0"
+                : "territory-vivo w-full md:pl-[4.5rem] xl:pl-44"
           }
         >
           <div
