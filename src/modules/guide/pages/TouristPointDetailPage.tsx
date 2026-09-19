@@ -37,7 +37,7 @@ import { useTerritorialContext } from '@/core/routing/components/TerritorialLayo
 import { useModuleTerritoryFilter } from '@/core/location';
 import { useTouristPoint } from '../hooks/useTouristPoint';
 import { useTouristPoints } from '../hooks/useTouristPoints';
-import { buildTouristPointDetailUrl, useGuideUrls } from '../hooks/useGuideUrls';
+import { buildTouristPointDetailUrl, useTouristPointPublicUrls } from '@/core/guide/tourist-points/routes/useTouristPointPublicUrls';
 import { useSavedTouristPoint } from '../hooks/useSavedTouristPoint';
 import { TouristPointGallery } from '../components/TouristPointGallery';
 import { TouristPointFactsPanel } from '../components/TouristPointFactsPanel';
@@ -90,7 +90,7 @@ function getCategoryIcon(category?: TouristPointCategory | null) {
 export default function TouristPointDetailPage() {
   const params = useParams<{ state?: string; city?: string; slug?: string; groupSlugOrDistrict?: string }>();
   const { resolved } = useTerritorialContext();
-  const guideUrls = useGuideUrls(resolved);
+  const guideUrls = useTouristPointPublicUrls(resolved);
 
   const pointSlug = params.slug ?? params.groupSlugOrDistrict;
   const locationId = resolved
