@@ -40,6 +40,33 @@ describe("gastronomy runtime boundaries", () => {
     expect(detail).not.toContain("__mocks__");
   });
 
+  it("keeps concept-only order screens out of the normal application router", () => {
+    const appRoutes = read("src/app/routes/sections/AppLayoutRoutes.tsx");
+    const lazyImports = read("src/app/routes/lazyImports.ts");
+    const retiredConceptPages = [
+      "OrdersConceptMockPage",
+      "OrderServiceConceptMockPage",
+      "DeliveryOrderConceptMockPage",
+      "DeliveryModesConceptMockPage",
+      "LinkedStoreDeliveryConceptMockPage",
+    ];
+
+    expect(appRoutes).not.toContain("/gastronomia/pedidos/concept-mock-");
+
+    for (const pageName of retiredConceptPages) {
+      expect(appRoutes).not.toContain(pageName);
+      expect(lazyImports).not.toContain(pageName);
+      expect(
+        existsSync(
+          resolve(
+            root,
+            `src/modules/business/gastronomy/pages/${pageName}.tsx`,
+          ),
+        ),
+      ).toBe(false);
+    }
+  });
+
   it("avoids generic hardcoded gastronomy navigation outside the SSOT", () => {
     const nearbyPage = read("src/app/pages/NearbyPage.tsx");
 

@@ -280,21 +280,6 @@ export const OrdersPage = lazy(
 export const OrderDetailsPage = lazy(
   () => import("@/modules/business/gastronomy/pages/OrderDetailsPage"),
 );
-export const OrdersConceptMockPage = lazy(
-  () => import("@/modules/business/gastronomy/pages/OrdersConceptMockPage"),
-);
-export const OrderServiceConceptMockPage = lazy(
-  () => import("@/modules/business/gastronomy/pages/OrderServiceConceptMockPage"),
-);
-export const DeliveryOrderConceptMockPage = lazy(
-  () => import("@/modules/business/gastronomy/pages/DeliveryOrderConceptMockPage"),
-);
-export const DeliveryModesConceptMockPage = lazy(
-  () => import("@/modules/business/gastronomy/pages/DeliveryModesConceptMockPage"),
-);
-export const LinkedStoreDeliveryConceptMockPage = lazy(
-  () => import("@/modules/business/gastronomy/pages/LinkedStoreDeliveryConceptMockPage"),
-);
 export const DeliveryManagementPage = createLaunchPausedRoute("Entregas");
 export const AnalyticsPage = createLaunchPausedRoute("Analytics");
 export const GastronomyPromotionsPage = createLaunchPausedRoute("Promocoes");
