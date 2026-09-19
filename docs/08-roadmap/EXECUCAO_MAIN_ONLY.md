@@ -19,6 +19,25 @@ Este documento consolida ordem de execução, blockers e Definition of Done. Ele
 
 Este snapshot descreve o último SHA com alteração de código; qualquer commit posterior, inclusive documental, precisa ser conferido no SHA que passar a ser o head remoto.
 
+## Checkpoint remoto — G42/G43 territorial — 2026-09-19
+
+- [x] preflight read-only confirmou `locations`, `territorial_groups`,
+  `territorial_group_members`, o índice de prefixo geográfico, o resolver de
+  descendentes, `private.is_admin` e os privilégios do `service_role`;
+- [x] a migration G42 foi promovida como
+  `20260919003851_transactional_location_visibility_cascade_g42`;
+- [x] a migration G43 phase 1 foi promovida como
+  `20260919003900_create_territorial_group_admin_commands_g43`;
+- [x] os quatro gateways territoriais estão `ACTIVE` no projeto Supabase
+  `xhdowzacfujckjelqhtd`, com `verify_jwt=true`;
+- [x] chamada sem JWT aos quatro gateways retornou `401`;
+- [ ] smoke positivo admin AAL2 ainda pendente;
+- [ ] frontend ainda usa o writer de compatibilidade até o cutover certificado;
+- [ ] migration G43 phase 2, que revoga DML autenticado, permanece bloqueada até
+  o smoke e o cutover.
+
+Evidência detalhada: `docs/08-roadmap/checkpoints/2026-09-19-territorial-g42-g43-runtime-cutover.md`.
+
 ## Checkpoint 2026-09-09 — Mobilidade: remoção de bridges mortos e reconciliação runtime
 
 Estado técnico anterior a este checkpoint documental: `d3490f45630f3d02117d4abe65d4473da70ca2fa`.

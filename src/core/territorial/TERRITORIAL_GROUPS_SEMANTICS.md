@@ -2,7 +2,7 @@
 
 **Data base:** 2026-09-10  
 **Versão:** 2.0.0  
-**Status:** OFICIAL — source G43 preparado; cutover runtime pendente
+**Status:** OFICIAL — G43 phase 1 remota ativa; cutover do broker no frontend pendente
 
 ## 1. Definição
 
@@ -127,9 +127,10 @@ Para lifecycle G43:
 
 ### Runtime atual
 
-Enquanto o G43 não for promovido no Supabase remoto, o frontend LIVE ainda pode
-depender dos métodos de compatibilidade de `TerritorialGroupService` /
-`TerritorialGroupRepositorySupabase`.
+O G43 phase 1 já foi promovido no Supabase canônico e o gateway
+`territorial-group-admin-rpc` está `ACTIVE` com `verify_jwt=true`. O frontend LIVE
+ainda pode depender dos métodos de compatibilidade de `TerritorialGroupService` /
+`TerritorialGroupRepositorySupabase` até o smoke admin AAL2 e o cutover do writer.
 
 Esses métodos **não devem ser descritos como transacionais**. Em particular, o
 writer histórico de substituição usa requests separados e existe apenas até o
@@ -140,9 +141,9 @@ terceiro writer para contornar o gate.
 
 ### Autoridade preparada — phase 1
 
-Migration pending:
+Migration promovida e versionada em:
 
-`docs/09-reference/migrations-pending/20260910220500_create_territorial_group_admin_commands_g43.sql`
+`supabase/migrations/20260919003900_create_territorial_group_admin_commands_g43.sql`
 
 Commands:
 
@@ -185,7 +186,8 @@ Os dois commands são `SECURITY INVOKER`. `EXECUTE` é revogado de `PUBLIC`,
 - ACK de `setStatus` correlacionado ao mesmo grupo e status solicitado;
 - 2xx incompatível é erro, não sucesso.
 
-Ele não deve ser implantado antes de os commands existirem no mesmo ambiente.
+Ele foi implantado depois da migration no mesmo ambiente. A prova positiva admin
+AAL2 ainda é necessária antes de apontar o frontend para o broker.
 
 ### Lock final — phase 2
 
@@ -258,7 +260,7 @@ Contrato atual corrigido:
 - inventário de memberships é buscado em lote, evitando uma consulta por grupo.
 
 O frontend ainda não deve apontar os writes para `territorial-group-admin-rpc`
-enquanto o runtime remoto não possuir phase 1 + Edge comprovados.
+enquanto o smoke positivo e o cutover do frontend não estiverem comprovados.
 
 ## 13. Invariantes que não podem regredir
 
@@ -275,7 +277,7 @@ enquanto o runtime remoto não possuir phase 1 + Edge comprovados.
 11. nenhum loop Edge/browser substitui atomicidade do banco;
 12. writer histórico só pode ser removido depois do cutover provado.
 
-## 14. Estado operacional em 2026-09-10
+## 14. Estado operacional em 2026-09-19
 
 Source:
 
@@ -287,13 +289,15 @@ Source:
 
 Runtime Supabase:
 
-- Postgres ainda retorna `connection timeout` nos preflights;
-- nenhuma migration pending G42/G43 foi promovida;
-- catálogo remoto não apresenta `territorial-get-tree`,
-  `territorial-update-group-visibility`, `territorial-update-location-visibility`
-  nem `territorial-group-admin-rpc`.
+- G42 foi promovida como `20260919003851_transactional_location_visibility_cascade_g42`;
+- G43 phase 1 foi promovida como `20260919003900_create_territorial_group_admin_commands_g43`;
+- `territorial-get-tree`, `territorial-update-group-visibility`,
+  `territorial-update-location-visibility` e `territorial-group-admin-rpc` estão
+  `ACTIVE` com `verify_jwt=true`;
+- chamadas sem JWT aos quatro gateways retornam `401`;
+- phase 2, smoke admin AAL2 e cutover do writer do frontend continuam pendentes.
 
-Estado correto: **SOURCE-READY / RUNTIME-PENDING**.
+Estado correto: **PHASE-1-REMOTE-ACTIVE / FRONTEND-CUTOVER-PENDING**.
 
 ## Referências
 

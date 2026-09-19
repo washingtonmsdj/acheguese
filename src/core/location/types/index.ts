@@ -4,6 +4,15 @@
  * Canonical contracts for the geographic hierarchy.
  */
 
+// Compatibility re-export only. Territorial group ownership remains in
+// core/territorial; location consumers must not define a second group model.
+export type {
+  TerritorialGroupStatus,
+  TerritorialGroup,
+  TerritorialGroupMember,
+  TerritorialGroupWithMembers,
+} from '@/core/territorial/contracts';
+
 export enum LocationType {
   COUNTRY = 'country',
   STATE = 'state',

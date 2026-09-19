@@ -1,6 +1,6 @@
 # Core Territorial
 
-**Status:** G43 — SOURCE DE AUTORIDADE PREPARADO; CUTOVER REMOTO PENDENTE  
+**Status:** G43 — PHASE 1 REMOTA ATIVA; CUTOVER DO BROKER NO FRONTEND PENDENTE
 **Owner:** `src/core/territorial`  
 **Escopo:** grupos territoriais, memberships, disponibilidade/rollout de grupo e gestão territorial composta.
 
@@ -43,7 +43,7 @@ As Edge Functions territoriais são gateways backend explícitos, não segundos 
 - `territorial-update-location-visibility` → gateway autenticado de visibilidade de locations; o source G42 chama a RPC transacional `territorial_update_location_visibility`;
 - `territorial-group-admin-rpc` → gateway G43 de lifecycle administrativo de grupos (`saveGroup`, `setStatus`), com `verify_jwt=true` e `requireAdmin`, portanto sujeito à política MFA/AAL2 canônica.
 
-O catálogo remoto observado em 2026-09-10 **não continha** os quatro gateways territoriais acima. Eles existem no source/configuração, mas não podem ser tratados como runtime ativo até deploy e smoke no ambiente alvo.
+Os quatro gateways estão `ACTIVE` no projeto Supabase canônico `xhdowzacfujckjelqhtd`, todos com `verify_jwt=true`. O runtime anônimo foi verificado e retorna `401` antes de executar a função. A prova positiva de admin AAL2 e o cutover dos writers do frontend continuam pendentes.
 
 ### Cascata de Location — G42
 
@@ -54,14 +54,14 @@ A semântica canônica é deliberadamente assimétrica:
 - `is_selector_active=true` reativa somente o nó solicitado e não força descendentes a `true`;
 - `is_landing_enabled` e `is_navigable` não fazem cascata.
 
-O SQL preparado está em
-`docs/09-reference/migrations-pending/20260910214500_transactional_location_visibility_cascade_g42.sql`.
+O SQL versionado está em
+`supabase/migrations/20260919003851_transactional_location_visibility_cascade_g42.sql`.
 
 Ele cria uma RPC `SECURITY INVOKER` executável somente por `service_role` e reutiliza o contrato de escala comprovado no G5: descendentes são alcançados pelo prefixo indexado de `geographic_path` (`raiz/%`), apoiado por `idx_locations_geographic_path_pattern`, em uma única operação SQL. A RPC serializa writes estruturais durante a mutação e devolve ACK correlacionado (`location`, `affectedCount`, `cascaded`). Não existe loop Edge nem uma segunda estratégia recursiva concorrente.
 
 O SQL não usa `auth.role()` como boundary: `PUBLIC`, `anon` e `authenticated` não podem executar a função; a Edge autenticada é responsável pela autorização de usuário e injeta o ator verificado onde o ator é persistido pela própria operação G42.
 
-**Não implantar a versão G42 de `territorial-update-location-visibility` antes de promover e provar essa migration no mesmo ambiente.** O Postgres remoto continuou encerrando o preflight por `connection timeout` em 2026-09-10.
+A migration G42 foi promovida no ambiente canônico como `20260919003851_transactional_location_visibility_cascade_g42`. A função RPC permanece `SECURITY INVOKER`, com `EXECUTE` exclusivo de `service_role`.
 
 ### Administração de grupos — G43
 
@@ -71,9 +71,9 @@ O G43 corrige três problemas estruturais do caminho histórico:
 2. ativação/desativação dependia do writer browser/RLS e não do gate administrativo MFA/AAL2;
 3. o formulário de edição lia `parent_id` onde o contrato real usa `anchor_city_id`, podendo abrir a cidade âncora vazia e permitindo tentativa de mudança de uma relação que o domínio considera imutável.
 
-A fase 1 está preparada em:
+A fase 1 foi promovida no ambiente canônico como `20260919003900_create_territorial_group_admin_commands_g43`. A fonte versionada correspondente está em:
 
-`docs/09-reference/migrations-pending/20260910220500_create_territorial_group_admin_commands_g43.sql`
+`supabase/migrations/20260919003900_create_territorial_group_admin_commands_g43.sql`
 
 Ela cria:
 
@@ -92,7 +92,7 @@ A fase 2 está separada em:
 
 Ela **não pode ser promovida antecipadamente**. Só depois de phase 1 + Edge ACTIVE + smoke admin AAL2 + frontend comprovadamente usando o broker, ela remove `INSERT/UPDATE/DELETE` de `authenticated` em `territorial_groups` e `territorial_group_members`, preservando SELECT público ativo-only e SELECT administrativo explícito.
 
-Enquanto esse gate remoto não fecha, os métodos antigos de escrita do repository/service permanecem apenas como caminho de compatibilidade do frontend atual. Não criar um segundo writer nem remover o caminho ativo antes do cutover.
+Enquanto o smoke admin AAL2 e o cutover do frontend não fecharem, os métodos antigos de escrita do repository/service permanecem como caminho de compatibilidade. Não remover o caminho ativo antes do cutover.
 
 ## Regras principais
 
@@ -129,21 +129,23 @@ Landing, sitemap e selector continuam consumindo somente grupos ativos. A gestã
 
 ## Estado do fechamento
 
-A autoridade de **source** G42/G43 está preparada, mas o **runtime** ainda não está certificado.
+A autoridade de **source** G42/G43 está promovida na fase aditiva e os gateways
+estão ativos; o runtime ainda não está certificado para o cutover final porque
+faltam os smokes admin AAL2 e a troca do writer do frontend.
 
 ### Para fechar G42
 
-1. Postgres remoto responder;
-2. executar preflight real;
-3. promover `20260910214500_transactional_location_visibility_cascade_g42.sql`;
-4. implantar `territorial-update-location-visibility` com `verify_jwt=true`;
+1. ~~Postgres remoto responder~~;
+2. ~~executar preflight real~~;
+3. ~~promover a migration G42~~;
+4. ~~implantar `territorial-update-location-visibility` com `verify_jwt=true`~~;
 5. smoke admin AAL2 confirmar raiz + todos descendentes ao desativar e não-cascata ao reativar.
 
 ### Para fechar G43
 
-1. Postgres remoto responder e confirmar schema/grants reais;
-2. promover a phase 1 `20260910220500_create_territorial_group_admin_commands_g43.sql`;
-3. implantar `territorial-group-admin-rpc` com `verify_jwt=true` e source exato;
+1. ~~Postgres remoto responder e confirmar schema/grants reais~~;
+2. ~~promover a phase 1 G43~~;
+3. ~~implantar `territorial-group-admin-rpc` com `verify_jwt=true` e source exato~~;
 4. smoke admin AAL2 de criação, edição atômica, conflito de slug, membro inválido, ativação e rejeição de grupo vazio;
 5. trocar o frontend ativo de create/update/status para o broker em um único cutover;
 6. certificar o frontend no mesmo SHA/descendente;

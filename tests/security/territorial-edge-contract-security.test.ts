@@ -5,10 +5,11 @@ import { join } from 'node:path';
 const ROOT = process.cwd();
 const EDGE = join(ROOT, 'supabase', 'functions', 'territorial-get-tree', 'index.ts');
 const QUERY = join(ROOT, 'src', 'core', 'territorial', 'services', 'territorial.queries.ts');
+const readEdge = () => readFileSync(EDGE, 'utf8').replace(/\r\n/g, '\n');
 
 describe('territorial-get-tree admin contract', () => {
   it('keeps the endpoint admin-only, POST-only and fail-closed on env', () => {
-    const edge = readFileSync(EDGE, 'utf8');
+    const edge = readEdge();
 
     expect(edge).toContain("requireHttpMethod(req, ['POST'], ALLOWED_METHODS)");
     expect(edge).toContain('requireAdmin(req)');
@@ -18,7 +19,7 @@ describe('territorial-get-tree admin contract', () => {
   });
 
   it('returns the flat serializable shape consumed by the admin UI', () => {
-    const edge = readFileSync(EDGE, 'utf8');
+    const edge = readEdge();
 
     expect(edge).toContain('JSON.stringify({ locations, groups, groupMembers })');
     expect(edge).toContain("type: 'group'");
@@ -30,7 +31,7 @@ describe('territorial-get-tree admin contract', () => {
   });
 
   it('preserves canonical territorial visibility defaults', () => {
-    const edge = readFileSync(EDGE, 'utf8');
+    const edge = readEdge();
 
     expect(edge).toContain('return metadata.is_selector_active === true');
     expect(edge).toContain('return metadata.is_landing_enabled !== false');
@@ -42,7 +43,7 @@ describe('territorial-get-tree admin contract', () => {
   });
 
   it('keeps authenticated admin data non-cacheable and origin-aware on failures', () => {
-    const edge = readFileSync(EDGE, 'utf8');
+    const edge = readEdge();
 
     expect(edge).toContain("'Cache-Control': 'private, no-store'");
     expect(edge).toContain('getAllSecurityHeaders(ALLOWED_METHODS, req)');
@@ -52,7 +53,7 @@ describe('territorial-get-tree admin contract', () => {
   });
 
   it('logs ordinary Supabase audit insert errors without exposing the dataset', () => {
-    const edge = readFileSync(EDGE, 'utf8');
+    const edge = readEdge();
 
     expect(edge).toContain("const { error: auditError } = await supabaseAdmin.from('function_audit').insert");
     expect(edge).toContain("console.error('Audit log error:', auditError)");
