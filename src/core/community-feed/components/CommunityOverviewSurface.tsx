@@ -18,9 +18,11 @@ import {
   Newspaper,
   MessageCircle,
   Share2,
+  SlidersHorizontal,
   Store,
   Tag,
   UserPlus,
+  UserRound,
   UtensilsCrossed,
   Users,
   Wrench,
@@ -548,9 +550,9 @@ function CommunityConceptFeedFilters({
         type="button"
         className="ml-auto flex h-9 w-9 shrink-0 items-center justify-center rounded-lg border border-territory-border bg-territory-raised text-territory-brand transition-colors hover:bg-territory-brand/10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-territory-brand/30"
         aria-label="Abrir filtros das publicações"
-        onClick={() => undefined}
+        onClick={() => document.getElementById("community-concept-scope")?.focus()}
       >
-        <LayoutGrid className="h-4 w-4" aria-hidden="true" />
+        <SlidersHorizontal className="h-4 w-4" aria-hidden="true" />
       </button>
     </div>
   );
@@ -579,13 +581,12 @@ function CommunityVisitorParticipationCard({
       >
         Entrar para participar
       </button>
-      <button
-        type="button"
-        onClick={() => undefined}
+      <a
+        href="#community-feed-context-panel"
         className="mt-2 inline-flex min-h-10 w-full items-center justify-center rounded-xl border border-territory-brand/35 px-4 text-sm font-semibold text-territory-brand hover:bg-territory-brand/8 sm:w-auto"
       >
         Explorar publicações
-      </button>
+      </a>
     </SurfacePanel>
   );
 }
@@ -608,6 +609,66 @@ function CommunityPendingParticipationCard() {
       >
         Ver meus vínculos
       </Link>
+      <a
+        href="#community-feed-context-panel"
+        className="mt-2 inline-flex min-h-10 w-full items-center justify-center rounded-xl border border-territory-brand/35 px-4 text-sm font-semibold text-territory-brand hover:bg-territory-brand/8 sm:w-auto"
+      >
+        Explorar conteúdo público
+      </a>
+      <p className="mx-auto mt-4 max-w-sm rounded-xl bg-territory-brand/6 px-3 py-3 text-left text-xs leading-5 text-territory-muted">
+        Enquanto isso, você pode continuar explorando as publicações públicas
+        da comunidade.
+      </p>
+    </SurfacePanel>
+  );
+}
+
+function CommunityConceptFeedState({
+  kind,
+  onCreatePost,
+}: {
+  kind: "empty" | "error";
+  onCreatePost: () => void;
+}) {
+  const isError = kind === "error";
+
+  return (
+    <SurfacePanel className="p-5 text-center sm:p-7">
+      <div className="mx-auto flex h-20 w-20 items-center justify-center rounded-3xl bg-territory-brand/8 text-territory-brand">
+        {isError ? (
+          <CircleHelp className="h-10 w-10" aria-hidden="true" />
+        ) : (
+          <MessageCircle className="h-10 w-10" aria-hidden="true" />
+        )}
+      </div>
+      <h2 className="mt-4 text-lg font-bold text-territory-ink">
+        {isError ? "Falha ao carregar" : "Sem publicações"}
+      </h2>
+      <p className="mx-auto mt-1 max-w-sm text-sm leading-5 text-territory-muted">
+        {isError
+          ? "Não conseguimos carregar as publicações."
+          : "A conversa pode começar com você."}
+      </p>
+      {isError ? (
+        <button
+          type="button"
+          onClick={() => window.location.reload()}
+          className="mt-4 inline-flex min-h-10 items-center justify-center rounded-xl border border-territory-brand/35 px-4 text-sm font-semibold text-territory-brand hover:bg-territory-brand/8"
+        >
+          Tentar novamente
+        </button>
+      ) : (
+        <button
+          type="button"
+          onClick={onCreatePost}
+          className="mt-4 inline-flex min-h-11 items-center justify-center rounded-xl bg-territory-sun px-5 text-sm font-bold text-territory-ink hover:bg-territory-sun/90"
+        >
+          Criar publicação
+        </button>
+      )}
+      {!isError ? (
+        <p className="mt-2 text-xs text-territory-muted">Para perfil autorizado.</p>
+      ) : null}
     </SurfacePanel>
   );
 }
@@ -617,13 +678,40 @@ function CommunityAlertsPreview({
 }: {
   alerts: CommunityVisualAlert[];
 }) {
+  const [filter, setFilter] = useState<"all" | "relato" | "comunicado">("all");
+  const visibleAlerts =
+    filter === "all" ? alerts : alerts.filter((alert) => alert.kind === filter);
+
   return (
     <SurfacePanel className="p-3 sm:p-4">
       <SectionHeader title="Avisos da comunidade" />
+      <div className="mb-3 flex gap-2 overflow-x-auto pb-1 [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+        {[
+          ["all", "Todos"],
+          ["relato", "Relatos"],
+          ["comunicado", "Comunicados"],
+        ].map(([value, label]) => (
+          <button
+            key={value}
+            type="button"
+            aria-pressed={filter === value}
+            onClick={() => setFilter(value as "all" | "relato" | "comunicado")}
+            className={cn(
+              "inline-flex min-h-9 shrink-0 items-center rounded-full px-3 text-xs font-semibold transition-colors",
+              filter === value
+                ? "bg-territory-sun text-territory-ink"
+                : "bg-territory-brand/8 text-territory-ink hover:bg-territory-brand/15",
+            )}
+          >
+            {label}
+          </button>
+        ))}
+      </div>
       <div className="space-y-3">
-        {alerts.map((alert) => (
+        {visibleAlerts.map((alert) => (
           <article
             key={alert.id}
+            id={alert.id}
             className="rounded-xl border border-territory-border bg-territory-raised p-3"
           >
             <div className="flex items-start gap-3">
@@ -652,14 +740,13 @@ function CommunityAlertsPreview({
                 <p className="mt-0.5 text-xs text-territory-muted">
                   {alert.detail}
                 </p>
-                <button
-                  type="button"
+                <a
+                  href={`#${alert.id}`}
                   className="mt-2 inline-flex min-h-8 items-center gap-1 rounded-lg border border-territory-brand/35 px-2.5 text-xs font-semibold text-territory-brand hover:bg-territory-brand/8"
-                  onClick={() => undefined}
                 >
                   {alert.kind === "comunicado" ? "Ver comunicado" : "Ver relato"}
                   <ChevronRight className="h-3.5 w-3.5" />
-                </button>
+                </a>
               </div>
             </div>
           </article>
@@ -714,8 +801,16 @@ function CommunityConceptSidebar({
         <SurfacePanel className="p-3">
           <SectionHeader title="Encontre seu grupo" />
           <div className="overflow-hidden rounded-xl border border-territory-border bg-territory-raised">
-            <div className="flex h-24 items-center justify-center bg-territory-brand/10 text-territory-brand">
-              <Users className="h-8 w-8" />
+            <div className="flex h-24 items-center justify-center overflow-hidden bg-territory-brand/10 text-territory-brand">
+              {group.avatar_url ? (
+                <SafeImage
+                  src={group.avatar_url}
+                  alt=""
+                  className="h-full w-full object-cover"
+                />
+              ) : (
+                <Users className="h-8 w-8" />
+              )}
             </div>
             <div className="p-3">
               <p className="text-sm font-semibold text-territory-ink">{group.name}</p>
@@ -1258,7 +1353,9 @@ export function CommunityOverviewSurface({
   }, [routeLocation.search]);
   const [feedContextTab, setFeedContextTab] =
     useState<CommunityFeedContextTab>("feed");
-  const [postSort, setPostSort] = useState<CommunityFeedSortType>("popular");
+  const [postSort, setPostSort] = useState<CommunityFeedSortType>(() =>
+    visualMockEnabled ? "recent" : "popular",
+  );
   const [mobileSectionsExpanded, setMobileSectionsExpanded] = useState(false);
   const [internalView, setInternalView] =
     useState<CommunityOverviewView>("feed");
@@ -1834,6 +1931,41 @@ export function CommunityOverviewSurface({
     },
     ...moduleLinks.filter((item) => item.key !== "feed"),
   ];
+  const visibleDesktopSidebarLinks: ModuleLink[] = visualMockEnabled
+    ? [
+        {
+          key: "home",
+          label: "Início",
+          href: territoryLandingHref,
+          icon: Home,
+        },
+        {
+          key: "community",
+          label: "Comunidade",
+          view: "feed",
+          icon: Users,
+          isActive: true,
+        },
+        {
+          key: "explore",
+          label: "Explorar",
+          href: buildModuleTerritoryUrl(MODULE_SLUGS.search, territoryBaseHref),
+          icon: Compass,
+        },
+        {
+          key: "conversations",
+          label: "Conversas",
+          href: "#community-feed-context-panel",
+          icon: MessageCircle,
+        },
+        {
+          key: "account",
+          label: "Conta",
+          href: "/conta",
+          icon: UserRound,
+        },
+      ]
+    : desktopSidebarLinks;
 
   return (
     <div
@@ -1853,7 +1985,7 @@ export function CommunityOverviewSurface({
             className="border-r border-territory-border pr-3"
           >
             <div className="space-y-1">
-              {desktopSidebarLinks.map((item) => (
+              {visibleDesktopSidebarLinks.map((item) => (
                 <ModuleNavLink
                   key={item.key}
                   item={item}
@@ -2044,6 +2176,7 @@ export function CommunityOverviewSurface({
         <div
           className={cn(
             "sm:hidden",
+            visualMockEnabled && "hidden",
             selectedView === "feed" && !isEmbeddedModule && "hidden",
           )}
           data-community-mobile-primary-nav="true"
@@ -2104,7 +2237,12 @@ export function CommunityOverviewSurface({
           ) : null}
         </div>
 
-        <div className="hidden gap-2 overflow-x-auto pb-1 sm:flex xl:hidden [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+        <div
+          className={cn(
+            "hidden gap-2 overflow-x-auto pb-1 sm:flex xl:hidden [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden",
+            visualMockEnabled && "sm:hidden",
+          )}
+        >
           {moduleLinks.map((item) => (
             <ModuleNavLink
               key={item.key}
@@ -2120,7 +2258,12 @@ export function CommunityOverviewSurface({
           ))}
         </div>
 
-        <div className="hidden gap-2 overflow-x-auto pb-1 [-ms-overflow-style:none] [scrollbar-width:none] sm:grid sm:grid-cols-2 sm:overflow-visible sm:pb-0 xl:hidden [&::-webkit-scrollbar]:hidden">
+        <div
+          className={cn(
+            "hidden gap-2 overflow-x-auto pb-1 [-ms-overflow-style:none] [scrollbar-width:none] sm:grid sm:grid-cols-2 sm:overflow-visible sm:pb-0 xl:hidden [&::-webkit-scrollbar]:hidden",
+            visualMockEnabled && "sm:hidden",
+          )}
+        >
           {focusShortcutLinks.map((item) => {
             const Icon = item.icon;
             const view = item.view;
@@ -2229,7 +2372,15 @@ export function CommunityOverviewSurface({
                     data-community-feed-context-panel={feedContextTab}
                   >
                     {feedContextTab === "feed" ? (
-                      <>
+                      visualMockEnabled &&
+                      (visualMockState === "empty" ||
+                        visualMockState === "error") ? (
+                        <CommunityConceptFeedState
+                          kind={visualMockState}
+                          onCreatePost={() => handleOpenComposer()}
+                        />
+                      ) : (
+                        <>
                         <SurfacePanel className="p-2.5">
                           {visualMockEnabled ? (
                             <CommunityConceptFeedFilters
@@ -2446,7 +2597,8 @@ export function CommunityOverviewSurface({
                             </div>
                           ) : null}
                         </SurfacePanel>
-                      </>
+                        </>
+                      )
                     ) : feedContextTab === "alerts" ? (
                       <CommunityAlertsPreview alerts={displayAlerts} />
                     ) : feedContextTab === "groups" ? (

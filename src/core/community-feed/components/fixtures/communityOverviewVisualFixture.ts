@@ -1,6 +1,7 @@
 import catPizzarias from "@/assets/gastronomy/cat-pizzarias.jpg";
 import catRestaurantes from "@/assets/gastronomy/cat-restaurantes.jpg";
 import bairroPituba from "@/assets/bairro-pituba.jpg";
+import complexoMusica from "@/assets/complexo-musica.jpg";
 import personaComerciante from "@/assets/persona-comerciante.jpg";
 import personaMorador from "@/assets/persona-morador.jpg";
 import personaPrestador from "@/assets/persona-prestador.jpg";
@@ -55,6 +56,7 @@ export const COMMUNITY_OVERVIEW_VISUAL_FIXTURE = {
       members_count: 3200,
       created_at: "2026-01-10T12:00:00.000Z",
       created_by: "visual-fixture",
+      avatar_url: complexoMusica,
     },
     {
       id: "visual-group-gastronomia",
@@ -115,13 +117,13 @@ export const COMMUNITY_OVERVIEW_VISUAL_FIXTURE = {
       avatar_url: personaPrestador,
       title: "O encontro de domingo foi especial",
       summary: "Um pouco do nosso encontro de domingo.",
-      images: [bairroPituba],
+      images: [complexoMusica],
     },
     {
       id: "visual-post-padaria",
       type: "recomendacao",
       content: "Padaria Pão Nosso: meu pão francês preferido da região. Tudo sempre fresquinho e o atendimento é excelente. Recomendo o croissant de queijo.",
-      created_at: hoursAgo(6),
+      created_at: hoursAgo(72),
       likes_count: 26,
       comments_count: 12,
       author_name: "Carla Menezes",
