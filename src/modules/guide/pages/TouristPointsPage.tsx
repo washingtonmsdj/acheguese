@@ -1,16 +1,14 @@
 /**
  * TouristPointsPage — Experiência item-first de pontos turísticos
  *
- * Modo padrão: PONTOS / EXPERIÊNCIAS (foco no lugar)
- * Modo secundário: AO REDOR (estabelecimentos próximos)
+ * Experiência pública item-first, limitada às capacidades com dados reais.
  *
  * Seções:
  * 1. Hero imersivo com busca
- * 2. Toggle Pontos / Ao redor
- * 3. Categorias (atalhos visuais)
- * 4. Seções temáticas (Destaques, Gratuitos, Mais Avaliados)
- * 5. Lista principal + filtros + ordenação
- * 6. CTA
+ * 2. Categorias (atalhos visuais)
+ * 3. Seções temáticas (Destaques, Gratuitos, Mais Avaliados)
+ * 4. Lista principal + filtros + ordenação
+ * 5. CTA
  */
 
 import { useState, useMemo, useCallback, useRef } from 'react';
@@ -31,7 +29,7 @@ import { Badge } from '@/shared/components/ui/badge';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/shared/components/ui/select';
 import {
   Loader2, Search, Star, Camera, ChevronRight,
-  LayoutGrid, List, Compass, Store,
+  LayoutGrid, List, Compass,
   Accessibility, Baby, DollarSign,
   TrendingUp, Heart,
 } from 'lucide-react';
@@ -42,7 +40,6 @@ import { toTouristPointDisplay, type TouristPointDisplay } from '../types/presen
 // TYPES
 // ============================================================================
 
-type ViewMode = 'pontos' | 'ao-redor';
 type DisplayLayout = 'grid' | 'list';
 
 // ============================================================================
@@ -120,7 +117,6 @@ export default function TouristPointsPage() {
   const resultsSectionRef = useRef<HTMLElement>(null);
 
   // State
-  const [viewMode, setViewMode] = useState<ViewMode>('pontos');
   const [displayLayout, setDisplayLayout] = useState<DisplayLayout>('grid');
   const [searchQuery, setSearchQuery] = useState('');
   const [categoryFilter, setCategoryFilter] = useState<string | undefined>();
@@ -219,13 +215,7 @@ export default function TouristPointsPage() {
 
   const handleHeroSearch = useCallback(() => {
     setVisibleCount(12);
-    setViewMode('pontos');
     resultsSectionRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
-  }, []);
-
-  const switchViewMode = useCallback((mode: ViewMode) => {
-    setViewMode(mode);
-    setVisibleCount(12);
   }, []);
 
   const getDetailUrl = useCallback((point: { slug: string; location?: { geographic_path: string } | null }) => 
@@ -289,40 +279,9 @@ export default function TouristPointsPage() {
         />
 
         {/* ================================================================
-            VIEW MODE TOGGLE — Pontos / Ao redor
-        ================================================================ */}
-        <section className="container mx-auto px-4 pt-6 pb-2">
-          <div className="flex items-center gap-2 bg-secondary/50 rounded-xl p-1 w-fit">
-            <button
-              onClick={() => switchViewMode('pontos')}
-              className={`flex items-center gap-2 px-5 py-2.5 rounded-lg text-sm font-semibold transition-all ${
-                viewMode === 'pontos'
-                  ? 'bg-primary text-primary-foreground shadow-sm'
-                  : 'text-muted-foreground hover:text-foreground'
-              }`}
-            >
-              <Compass className="h-4 w-4" />
-              Pontos / Experiências
-            </button>
-            <button
-              onClick={() => switchViewMode('ao-redor')}
-              className={`flex items-center gap-2 px-5 py-2.5 rounded-lg text-sm font-semibold transition-all ${
-                viewMode === 'ao-redor'
-                  ? 'bg-primary text-primary-foreground shadow-sm'
-                  : 'text-muted-foreground hover:text-foreground'
-              }`}
-            >
-              <Store className="h-4 w-4" />
-              Ao redor
-            </button>
-          </div>
-        </section>
-
-        {/* ================================================================
             CATEGORIES
         ================================================================ */}
-        {viewMode === 'pontos' && (
-          <section className="container mx-auto px-4 py-6">
+        <section className="container mx-auto px-4 py-6">
             <motion.div initial="hidden" whileInView="visible" viewport={{ once: true }} variants={fadeIn}>
               <div className="flex items-center gap-3 mb-4">
                 <div className="p-2 rounded-lg bg-primary/10">
@@ -339,12 +298,11 @@ export default function TouristPointsPage() {
               />
             </motion.div>
           </section>
-        )}
 
         {/* ================================================================
-            THEMED SECTIONS (only in Pontos mode, no active filters)
+            THEMED SECTIONS (no active filters)
         ================================================================ */}
-        {viewMode === 'pontos' && !hasActiveFilters && (
+        {!hasActiveFilters && (
           <div className="container mx-auto px-4 space-y-10 py-4">
             {featuredPoints.length > 0 && (
               <TouristPointSectionCarousel
@@ -382,31 +340,9 @@ export default function TouristPointsPage() {
         )}
 
         {/* ================================================================
-            MODE: AO REDOR (placeholder)
+            MAIN LISTING
         ================================================================ */}
-        {viewMode === 'ao-redor' && (
-          <section className="container mx-auto px-4 py-8">
-            <motion.div initial="hidden" animate="visible" variants={containerVariants}>
-              <motion.div variants={itemVariants} className="text-center py-12 bg-card/50 rounded-2xl border border-border/30">
-                <Store className="h-10 w-10 text-muted-foreground mx-auto mb-3" />
-                <p className="text-foreground font-semibold">Camada "Ao redor" em ajuste para dados reais</p>
-                <p className="text-sm text-muted-foreground mt-1">
-                  Esta seção será exibida quando houver estabelecimentos com localização validada neste território.
-                </p>
-                <Button variant="outline" className="mt-4 rounded-full gap-2" onClick={() => switchViewMode('pontos')}>
-                  <Compass className="h-4 w-4" />
-                  Ver Pontos / Experiências
-                </Button>
-              </motion.div>
-            </motion.div>
-          </section>
-        )}
-
-        {/* ================================================================
-            MAIN LISTING (Pontos mode)
-        ================================================================ */}
-        {viewMode === 'pontos' && (
-          <section ref={resultsSectionRef} className="container mx-auto px-4 py-6 scroll-mt-24">
+        <section ref={resultsSectionRef} className="container mx-auto px-4 py-6 scroll-mt-24">
             <motion.div initial="hidden" whileInView="visible" viewport={{ once: true, margin: '-50px' }} variants={containerVariants}>
 
               {/* Sort / layout / filter bar */}
@@ -535,7 +471,6 @@ export default function TouristPointsPage() {
 
             </motion.div>
           </section>
-        )}
 
         {/* ================================================================
             CTA
@@ -553,7 +488,7 @@ export default function TouristPointsPage() {
                 Continue explorando {territoryName}
               </h2>
               <p className="text-muted-foreground mb-6 max-w-lg mx-auto">
-                Descubra outros lugares, serviços e experiências no território sem depender de uma ação ainda não disponível.
+                Descubra outros lugares, serviços e experiências disponíveis em {territoryName}.
               </p>
               <div className="flex flex-col sm:flex-row gap-3 justify-center">
                 <Button asChild variant="outline" size="lg" className="rounded-full px-8">
