@@ -139,10 +139,8 @@ describe("notification outbox security", () => {
     for (const source of [workSource, trustSource, rideSource, orderSource, adminSource]) {
       expect(source).not.toContain("NotificationService.createNotification");
     }
-    expect(notificationSource).toContain("input.user_id !== user.id");
-    expect(notificationSource).toContain(
-      "blocked untrusted cross-user notification creation",
-    );
+    expect(notificationSource).not.toContain("NotificationService.createNotification");
+    expect(notificationSource).not.toContain('supabase.rpc("create_notification"');
   });
 
   it("keeps the remote behavior probe isolated and reversible", () => {
