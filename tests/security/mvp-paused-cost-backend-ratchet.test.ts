@@ -14,24 +14,27 @@ const tryOnGenerate = read("supabase/functions/tryon-generate/index.ts");
 function expectPrivateFailClosedRolloutGate(
   source: string,
   envName: string,
+  variableName: string,
   unavailableMessage: string,
-  firstCostMarker: string,
+  firstCostInvocation: string,
 ) {
-  const envRead = source.indexOf(`Deno.env.get("${envName}")`);
-  const envReadSingleQuote = source.indexOf(`Deno.env.get('${envName}')`);
-  const gateDeclaration = Math.max(envRead, envReadSingleQuote);
-  const defaultFalse = source.indexOf('?? "false"');
-  const defaultFalseSingleQuote = source.indexOf("?? 'false'");
-  const defaultIndex = Math.max(defaultFalse, defaultFalseSingleQuote);
-  const gateCheck = source.indexOf("if (!", gateDeclaration);
-  const unavailable = source.indexOf(unavailableMessage);
-  const costMarker = source.indexOf(firstCostMarker);
+  const doubleQuotedEnv = source.indexOf(`Deno.env.get("${envName}")`);
+  const singleQuotedEnv = source.indexOf(`Deno.env.get('${envName}')`);
+  const envRead = Math.max(doubleQuotedEnv, singleQuotedEnv);
 
-  expect(gateDeclaration).toBeGreaterThanOrEqual(0);
-  expect(defaultIndex).toBeGreaterThan(gateDeclaration);
-  expect(gateCheck).toBeGreaterThan(defaultIndex);
+  const doubleQuotedDefault = source.indexOf('?? "false"', envRead);
+  const singleQuotedDefault = source.indexOf("?? 'false'", envRead);
+  const defaultFalse = Math.max(doubleQuotedDefault, singleQuotedDefault);
+
+  const gateCheck = source.indexOf(`if (!${variableName})`, defaultFalse);
+  const unavailable = source.indexOf(unavailableMessage, gateCheck);
+  const costInvocation = source.indexOf(firstCostInvocation, gateCheck);
+
+  expect(envRead).toBeGreaterThanOrEqual(0);
+  expect(defaultFalse).toBeGreaterThan(envRead);
+  expect(gateCheck).toBeGreaterThan(defaultFalse);
   expect(unavailable).toBeGreaterThan(gateCheck);
-  expect(costMarker).toBeGreaterThan(unavailable);
+  expect(costInvocation).toBeGreaterThan(unavailable);
 }
 
 describe("MVP paused cost backends", () => {
@@ -43,8 +46,9 @@ describe("MVP paused cost backends", () => {
     expectPrivateFailClosedRolloutGate(
       billingCheckout,
       "BILLING_CHECKOUT_ROLLOUT_ENABLED",
+      "BILLING_CHECKOUT_ROLLOUT_ENABLED",
       "Billing checkout is temporarily unavailable",
-      "stripe.checkout.sessions.create",
+      "const session = await stripe.checkout.sessions.create",
     );
   });
 
@@ -52,8 +56,9 @@ describe("MVP paused cost backends", () => {
     expectPrivateFailClosedRolloutGate(
       tryOnGenerate,
       "TRYON_ROLLOUT_ENABLED",
+      "TRYON_ROLLOUT_ENABLED",
       "Virtual Try-On is temporarily unavailable",
-      'replicateRequest("/predictions"',
+      "const imageRef = await callReplicateTryOn",
     );
   });
 
