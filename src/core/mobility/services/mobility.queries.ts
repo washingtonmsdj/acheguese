@@ -159,7 +159,7 @@ export async function getRidesByDriverProfile(driverProfileId: string): Promise<
       .eq("driver_profile_id", driverProfileId)
       .in("status", DRIVER_OWNED_OPEN_RIDE_STATUSES)
       .order("created_at", { ascending: false }),
-    DriverRideHistoryReadService.list(driverProfileId),
+    DriverRideHistoryReadService.list(),
   ]);
 
   if (activeResult.error) throw activeResult.error;
