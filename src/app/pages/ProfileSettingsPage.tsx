@@ -5,7 +5,7 @@ import { useNavigate, useSearchParams } from "react-router-dom";
 
 import { PrivacySettings } from "@/core/profiles/components/PrivacySettings";
 import { ProfileLinksManager } from "@/core/profiles/components/ProfileLinksManager";
-import { ProfileMembersManagerImproved } from "@/core/profiles/components/ProfileMembersManagerImproved";
+import { ProfileMembersManager } from "@/core/profiles/components/ProfileMembersManager";
 import { useMultiProfileContext } from "@/core/profiles/contexts/multi-profile-runtime-context";
 import {
   canProfileHaveMembers,
@@ -236,7 +236,7 @@ export default function ProfileSettingsPage() {
           {canHaveMembers ? (
             <TabsContent value="members" className="mt-4">
               <div className="rounded-2xl border border-territory-border bg-territory-surface p-4 sm:p-5">
-                <ProfileMembersManagerImproved
+                <ProfileMembersManager
                   profileId={activeProfile.id}
                   profileType={
                     activeProfile.profile_type as "business" | "professional"
