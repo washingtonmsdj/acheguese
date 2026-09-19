@@ -8,7 +8,6 @@
 import {
   BarChart3,
   Bell,
-  Bookmark,
   Database,
   Globe,
   Lock,
@@ -64,12 +63,6 @@ export function DadosPessoaisSection({
             label: "Conexões",
             value: (stats.followers || 0) + (stats.following || 0),
             hint: "Seguidores e seguindo",
-          },
-          {
-            icon: Bookmark,
-            label: "Favoritos",
-            value: operations.favoritesGiven,
-            hint: "Itens marcados como favoritos",
           },
           {
             icon: BarChart3,
