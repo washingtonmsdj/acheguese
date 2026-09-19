@@ -96,7 +96,12 @@ describe("anonymous root bootstrap performance", () => {
     expect(fullShell).toContain("QueryClientProvider");
     expect(fullShell).toContain("HelmetProvider");
     expect(fullShell).toContain("AccessibilityProvider");
-    expect(fullShell).toContain("<ErrorBoundary>");
+    expect(fullShell).toContain(
+      'from "@/shared/components/errors/ErrorBoundary"',
+    );
+    expect(fullShell).toContain(
+      '<ErrorBoundary onReset={() => window.location.reload()}>',
+    );
   });
 
   it("preserves saved accessibility preferences through the lightweight shared owner", () => {
