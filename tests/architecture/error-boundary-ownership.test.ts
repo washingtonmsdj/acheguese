@@ -2,7 +2,7 @@ import { existsSync, readFileSync } from "node:fs";
 import { resolve } from "node:path";
 import { describe, expect, it } from "vitest";
 
-const ROOT = resolve(__dirname, "../..");
+const ROOT = process.cwd();
 const read = (path: string) => readFileSync(resolve(ROOT, path), "utf8");
 
 describe("ErrorBoundary ownership", () => {
