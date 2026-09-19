@@ -1,10 +1,8 @@
 import React, { Suspense, lazy } from "react";
 import { AnimatePresence } from "framer-motion";
 
-import type {
-  CommunityPost,
-  PostType as CommunityPostType,
-} from "@/core/posts/types/Post";
+import type { PostType as CommunityPostType } from "@/core/posts/types";
+import type { CommunityPostView } from "@/core/posts/views/CommunityPostView";
 import type { Poll } from "@/shared/types/poll";
 import type {
   ModalCommentData,
@@ -66,7 +64,7 @@ interface PostDetailData {
 interface CommunityModalsProps {
   modalState: ModalState;
   postId: string | null;
-  postData: CommunityPost | null;
+  postData: CommunityPostView | null;
   isLoadingPost: boolean;
   profileId?: string;
   onCloseModal: () => void;
@@ -89,20 +87,20 @@ function isCommentModalData(
 ): data is ModalCommentData {
   return Boolean(
     data &&
-    typeof data === "object" &&
-    "postId" in data &&
-    "authorProfileId" in data &&
-    "authorName" in data,
+      typeof data === "object" &&
+      "postId" in data &&
+      "authorProfileId" in data &&
+      "authorName" in data,
   );
 }
 
 function isReportModalData(data: ModalState["data"]): data is ModalReportData {
   return Boolean(
     data &&
-    typeof data === "object" &&
-    "targetType" in data &&
-    data.targetType === "post" &&
-    "targetId" in data,
+      typeof data === "object" &&
+      "targetType" in data &&
+      data.targetType === "post" &&
+      "targetId" in data,
   );
 }
 
@@ -127,24 +125,19 @@ function normalizePostType(type: CommunityPostType): DetailPostType {
   }
 }
 
-function normalizePostDetailData(post: CommunityPost): PostDetailData {
-  const neighborhood =
-    typeof post.location === "string"
-      ? post.location
-      : (post.location?.name ?? "");
-
+function normalizePostDetailData(post: CommunityPostView): PostDetailData {
   return {
     id: post.id,
     author_profile_id: post.author_profile_id,
     author_name: post.author_name,
     author_avatar: post.author_avatar,
-    type: normalizePostType(post.type as CommunityPostType),
+    type: normalizePostType(post.type),
     content: post.content,
     images: post.images,
     poll: post.poll as Poll | undefined,
     tags: post.tags,
     city: "",
-    neighborhood,
+    neighborhood: post.location?.name ?? "",
     rua: "",
     created_at: post.created_at,
     likes_count: post.likes_count,
