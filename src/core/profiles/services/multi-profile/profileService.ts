@@ -14,7 +14,10 @@ import { selectLooseRows } from '@/integrations/supabase';
 import { SessionService } from '@/core/session/services/SessionService';
 import { SessionState } from '@/core/session/state/SessionState';
 import { ProfileRpcService } from '../ProfileRpcService';
-import { BusinessService } from './businessService';
+import {
+  getBusinessProfileExtension,
+  updateBusinessProfileExtension,
+} from "@/core/business/services/business.profile-extension";
 import { ProfessionalService } from './professionalService';
 import { DriverService } from './driverService';
 import { ProfileMembersService } from './profileMembersService';
@@ -77,7 +80,7 @@ export class MultiProfileService {
     profile: Pick<Profile, 'id' | 'profile_type'>,
   ): Promise<ProfileEditorExtensionForms> {
     if (profile.profile_type === 'business') {
-      const bizForm = await BusinessService.getBusinessData(profile.id);
+      const bizForm = await getBusinessProfileExtension(profile.id);
       return {
         bizForm: bizForm || {},
         proForm: {},
@@ -120,16 +123,14 @@ export class MultiProfileService {
           profile_id: _unusedProfileId,
           created_at: _unusedCreatedAt,
           updated_at: _unusedUpdatedAt,
+          tax_id: _unusedTaxId,
           ...bizUpdates
         } = forms.bizForm as BusinessData & {
           created_at?: string;
           updated_at?: string;
         };
 
-        const result = await BusinessService.updateBusinessData(profile.id, bizUpdates);
-        if (!result.success) {
-          return { success: false, error: result.error };
-        }
+        await updateBusinessProfileExtension(profile.id, bizUpdates);
       }
 
       if (profile.profile_type === 'professional') {
