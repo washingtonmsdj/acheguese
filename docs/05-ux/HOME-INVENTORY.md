@@ -160,7 +160,8 @@ Legenda: **Pronto** = rota + página em produção · **Parcial** = rota existe 
 | Feature | Impl.? | Rota | Pronta? | Home? |
 |---|---|---|---|---|
 | Login / cadastro / reset / confirmação | Sim | `/login`, `/cadastro`, `/cadastro/confirmacao`, `/reset-password`, `/aceitar-termos` | Pronto | Só via header quando visitante. |
-| Sobre / contato / status / privacidade / termos / pricing | Sim | `/about`, `/contato`, `/status`, `/pricing`, `/planos`, `/dpo`, `/privacidade`, `/termos` | Pronto | Não. |
+| Sobre / contato / status / privacidade / termos | Sim | `/about`, `/contato`, `/status`, `/dpo`, `/privacidade`, `/termos` | Pronto | Não. |
+| Billing / preços | Preservado, mas pausado no MVP | `/planos`, `/checkout/*`, `/settings/subscription` | `LaunchPausedPage` com `billing=false` | Não. |
 | Educação | Sim | `/educacao` | Pronto | Chip opcional. |
 | Gamificação | Parcial | `/gamificacao` | Parcial | Não (sem UI estável). |
 | AI virtual try-on | Parcial | `/ai/virtual-try-on` | Parcial | Não. |
@@ -210,7 +211,7 @@ Legenda: **Pronto** = rota + página em produção · **Parcial** = rota existe 
 - Dashboards de empresa (`/dashboard-empresa`, `/edit-business/:profileId`).
 - Fluxos de mobilidade internos (passageiro, motorista, motoboy operações, contatos SOS).
 - Detalhe de post (`/p/:slug`) — é destino, não bloco.
-- Páginas institucionais (`/about`, `/pricing`, `/planos`, `/termos`, `/privacidade`, `/dpo`, `/status`).
+- Páginas institucionais (`/about`, `/termos`, `/privacidade`, `/dpo`, `/status`) e Billing pausado (`/planos`, `/checkout/*`, `/settings/subscription`).
 - Auth (`/login`, `/cadastro`, `/reset-password`, `/aceitar-termos`) — só acessados via header/CTA quando visitante.
 - Configurações de perfil (`/perfil/*`, `/conta/*`).
 - Rotas alias legadas (`/busca`, `/notifications`, `/empresas-landing`, `/conta/*`).
