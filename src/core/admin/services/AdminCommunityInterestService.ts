@@ -57,7 +57,7 @@ export interface CommunityInterestRegistration {
   community_slug: string | null;
   territory_path: string | null;
   full_name: string;
-  email: string;
+  email: string | null;
   phone: string | null;
   role: CommunityInterestRole;
   message: string | null;
@@ -118,7 +118,7 @@ function applyFilters<T>(
   if (filters.search && filters.search.trim().length > 0) {
     const term = filters.search.trim().replace(/[%_,]/g, "").slice(0, 80);
     q = q.or(
-      `full_name.ilike.%${term}%,email.ilike.%${term}%,message.ilike.%${term}%`,
+      `full_name.ilike.%${term}%,email.ilike.%${term}%,phone.ilike.%${term}%,message.ilike.%${term}%`,
     );
   }
   if (filters.communitySlug && filters.communitySlug.trim().length > 0) {
