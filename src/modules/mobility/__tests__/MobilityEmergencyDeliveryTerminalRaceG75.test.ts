@@ -7,10 +7,10 @@ function readProjectFile(relativePath: string): string {
 }
 
 const migration = readProjectFile(
-  "supabase/migrations/20260911170000_cancel_terminal_emergency_delivery_race_g75.sql",
+  "supabase/migrations/20260916095206_reconcile_g75_cancel_terminal_emergency_delivery_race.sql",
 );
 const immutablePayloadMigration = readProjectFile(
-  "supabase/migrations/20260911193000_immutable_emergency_provider_payload_g78.sql",
+  "supabase/migrations/20260916095321_reconcile_g78_immutable_emergency_provider_payload.sql",
 );
 const worker = readProjectFile(
   "supabase/functions/send-emergency-email/index.ts",

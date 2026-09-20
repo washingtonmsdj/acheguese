@@ -11,7 +11,7 @@ function readProjectFile(relativePath: string): string {
 }
 
 const migration = readProjectFile(
-  "supabase/migrations/20260911210000_autonomous_emergency_delivery_dispatcher_g80.sql",
+  "supabase/migrations/20260916095427_reconcile_g80_autonomous_emergency_delivery_dispatcher.sql",
 );
 const worker = readProjectFile(
   "supabase/functions/send-emergency-email/index.ts",
