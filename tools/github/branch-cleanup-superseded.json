@@ -264,6 +264,11 @@
       "evidence": "Superseded by the rebased Territory AI authority consolidation merged in PR #185."
     },
     {
+      "name": "security/authenticated-definer-classification-20260918",
+      "sha": "5ec7e2ad43db0cd26db4c63880f03f65fbffc9e9",
+      "evidence": "Closed SECURITY DEFINER classification precursor. validate-supabase-advisor-residuals.ts is byte-identical to main; its security-authority test was absorbed and later extended; the residual snapshot was superseded by live reconciliation merged in PR #166 and refreshed again in PR #209."
+    },
+    {
       "name": "security/bound-business-operation-config-columns-20260918",
       "sha": "48fee00b39606660772cbaa64f49fcdb991f8384",
       "evidence": "Superseded by the rebased public business operation projection merged in PR #158."
