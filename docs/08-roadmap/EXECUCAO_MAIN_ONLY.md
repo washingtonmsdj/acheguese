@@ -57,11 +57,21 @@ O primeiro release continua territorial. **Cobertura uniforme dos 170 bairros de
 - [x] Snapshots de produto já classificados como históricos (`DEMO-READY`, `PROJECT-HEALTH-REPORT`, `PROJECT-SCORE`) saíram da árvore documental ativa e foram preservados em `docs/10-archive/product/` (PR #224).
 - [x] Tipos Supabase foram revalidados no SHA auditado: Git e runtime têm 731731 caracteres normalizados e `exact=true`.
 - [x] O Supabase canônico mantém 60 Edge Functions implantadas e as 60 estão `ACTIVE`; as funções versionadas mas deliberadamente não implantadas continuam sujeitas ao rollout/authority próprio.
-- [~] Reconciliação de migrations avançou no PR #225 sem executar DDL: duas identidades comprovadamente equivalentes foram reconstruídas do ledger remoto. Estado auditado: 683 locais, 666 remotas, 649 exatas, 34 local-only e 17 remote-only.
+- [~] Reconciliação de migrations avançou no PR #225 sem executar DDL: duas identidades comprovadamente equivalentes foram reconstruídas do ledger remoto. Estado auditado após a reconciliação de Safety G71/G72/G75–G80: 683 locais, 666 remotas, 657 exatas, 26 local-only e 9 remote-only.
 - [ ] CI continua incapaz de certificar o candidato: no SHA `f45ec305...`, Security Check, SSOT Enforcement e SSOT Territorial Tests encerraram jobs com `steps: null`; lint/typecheck/test/E2E não chegaram a executar.
 - [ ] Vercel continua sem permitir nova prova de deploy por limite diário de builds; isso não conta como build aprovado.
-- [ ] O ledger de migrations ainda precisa chegar a paridade de identidade/provenance antes de qualquer `db push`.
+- [~] O ledger de migrations avançou novamente sem executar DDL: G71/G72/G75–G80 foram alinhadas às oito identidades `reconcile_*` realmente registradas no Supabase após prova de equivalência token-a-token. Estado: 683 locais / 666 remotas / 657 exatas / 26 local-only / 9 remote-only. Ainda não executar `db push`.
 - [ ] A prova de build/deploy/smoke do mesmo SHA continua blocker real de release.
+
+
+### Higiene de branches — 2026-09-19
+
+- o remoto possuía 152 branches no início da auditoria, com `delete_branch_on_merge=false`; esse setting explica o acúmulo após squash merge;
+- 73 branches são heads intactos de PRs já mergeados e 4 branches sem PR estão completamente contidas na `main`: 77 são candidatas seguras a remoção do ref;
+- 55 branches pertencem a PRs fechados sem merge e 21 branches sem PR ainda carregam delta exclusivo ou precisam de prova de supersessão; não remover em massa;
+- `cleanup/active-compat-facades-20260919` foi alterada após o PR mergeado e mantém delta adicional; preservar até análise específica;
+- enquanto a exclusão automática não puder ser habilitada pela integração atual, a frente urgente reutiliza `work/mvp-urgent` em vez de criar uma branch nova por micro-PR;
+- regra: branch só pode ser apagada automaticamente quando o PR correspondente foi mergeado e o head não foi alterado depois, ou quando a branch é comprovadamente contida na `main`; demais casos exigem comparação de conteúdo/provenance.
 
 ### Ordem de execução até MVP
 
