@@ -4418,7 +4418,7 @@ export type Database = {
           community_id: string | null
           community_slug: string | null
           created_at: string
-          email: string
+          email: string | null
           full_name: string
           id: string
           message: string | null
@@ -4440,7 +4440,7 @@ export type Database = {
           community_id?: string | null
           community_slug?: string | null
           created_at?: string
-          email: string
+          email?: string | null
           full_name: string
           id?: string
           message?: string | null
@@ -4462,7 +4462,7 @@ export type Database = {
           community_id?: string | null
           community_slug?: string | null
           created_at?: string
-          email?: string
+          email?: string | null
           full_name?: string
           id?: string
           message?: string | null
