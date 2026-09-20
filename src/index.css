@@ -3022,3 +3022,14 @@
 .messages-page p {
   margin-bottom: 0;
 }
+
+/* Managed profile cards follow the compact rhythm from concept 015. The
+ * global accessibility margins are useful for editorial copy, but would add
+ * a second vertical gap to each metadata line in these dense cards. */
+.account-concept-page article p {
+  margin-bottom: 0.25rem;
+}
+
+.account-concept-page article h2 {
+  margin-bottom: 0.25rem;
+}

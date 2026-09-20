@@ -338,7 +338,7 @@ function AccountConceptPreviewPage() {
   const editProfile = () => navigate("/conta/editar");
 
   return (
-    <div className="min-h-[100dvh] bg-territory-canvas text-territory-ink">
+    <div className="account-concept-page min-h-[100dvh] bg-territory-canvas text-territory-ink">
       <ConceptAccountSidebar />
       <ConceptAccountHeader />
       <main className="mx-auto w-full max-w-[68rem] px-4 pb-[calc(5.5rem+env(safe-area-inset-bottom))] pt-3 sm:px-6 sm:pt-6 lg:px-6 lg:pb-8 lg:pt-6 xl:px-8">

@@ -516,3 +516,23 @@ A prancha 117 também está coberta pelos estados demonstrativos de visitante, v
 
 - Branch: `codex/reformulacao-entrada-comunidade`.
 - Commit restrito à tela, ao estilo scoped e às documentações do concept; alterações staged preexistentes permanecem fora do commit.
+
+## 20/09/2026 · Meus perfis — prancha 015
+
+### Auditoria e ajuste
+
+- Comparei `AccountConceptPreviewPage` e `ConceptManagedProfileCard` com a prancha mobile/desktop de Meus perfis. A hierarquia de header, CTA amarelo, busca, filtros, nota de favoritos, cards por tipo de perfil, ações por permissão e navegação responsiva já estava presente; mantive as rotas e os contratos de interação.
+- A divergência visual comprovada estava no ritmo vertical dos cards: os defaults globais de acessibilidade aplicavam `margin-bottom: 1rem` a cada parágrafo e `12px` ao título, somando espaços duplicados entre categoria, contexto, status e ações.
+- Adicionei o escopo `.account-concept-page` e reduzi somente dentro dos cards as margens para `4px`. A correção deixa o card pessoal em aproximadamente `151px` no mobile e os cards de negócio/profissional com densidade compatível com a referência, sem alterar o SSOT tipográfico global.
+- O mock continua restrito a DEV (`?concept-mock=1`); a rota de produção permanece ligada à conta real, sessão, perfis e permissões.
+
+### Validação e evidências
+
+- Navegador interno mantido aberto em `/conta?concept-mock=1`; conferi mobile equivalente a `389 × 867` CSS px e desktop amplo equivalente a `1600 × 1067` CSS px.
+- Conferi ordem dos elementos, CTA, filtros, cards, ações, barra inferior, header territorial e rail lateral; o viewport não apresenta clipping nem erro de runtime.
+- `npm run typecheck:app`, ESLint no componente alterado e `git diff --check`.
+
+### Git
+
+- Branch: `codex/reformulacao-entrada-comunidade`.
+- Commit restrito à tela, ao estilo scoped e às documentações do concept; alterações staged preexistentes permanecem fora do commit.
