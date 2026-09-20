@@ -1,16 +1,20 @@
 #!/usr/bin/env node
 
+import { readFileSync } from "node:fs";
 import { resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 
 const DEFAULT_REPOSITORY = "washingtonmsdj/acheguese";
 const DEFAULT_BASE_BRANCH = "main";
 const DEFAULT_KEEP_BRANCHES = new Set(["main", "work/mvp-urgent"]);
+const DEFAULT_SUPERSEDED_MANIFEST = "tools/github/branch-cleanup-superseded.json";
 
 function parseArgs(argv) {
   const options = {
     apply: false,
     json: false,
+    includeSuperseded: false,
+    supersededManifest: DEFAULT_SUPERSEDED_MANIFEST,
     repo: process.env.GITHUB_REPOSITORY || DEFAULT_REPOSITORY,
     base: DEFAULT_BASE_BRANCH,
   };
@@ -18,7 +22,10 @@ function parseArgs(argv) {
   for (const arg of argv) {
     if (arg === "--apply") options.apply = true;
     else if (arg === "--json") options.json = true;
-    else if (arg.startsWith("--repo=")) options.repo = arg.slice("--repo=".length);
+    else if (arg === "--include-superseded") options.includeSuperseded = true;
+    else if (arg.startsWith("--superseded-manifest=")) {
+      options.supersededManifest = arg.slice("--superseded-manifest=".length);
+    } else if (arg.startsWith("--repo=")) options.repo = arg.slice("--repo=".length);
     else if (arg.startsWith("--base=")) options.base = arg.slice("--base=".length);
     else if (arg === "--help" || arg === "-h") options.help = true;
     else throw new Error(`Unknown argument: ${arg}`);
@@ -35,6 +42,7 @@ export function classifyBranch({
   keepBranches = DEFAULT_KEEP_BRANCHES,
   openHeadRefs,
   exactMergedHeads,
+  auditedSupersededHeads = new Map(),
   aheadBy,
 }) {
   if (name === baseBranch || keepBranches.has(name)) {
@@ -52,15 +60,41 @@ export function classifyBranch({
   if (aheadBy === 0) {
     return { action: "delete", reason: "fully-contained-in-base" };
   }
+  if (auditedSupersededHeads.get(name)?.has(sha)) {
+    return { action: "delete", reason: "audited-superseded-head" };
+  }
   return { action: "preserve", reason: "unique-commits" };
+}
+
+export function loadAuditedSupersededHeads(manifestPath) {
+  const absolutePath = resolve(process.cwd(), manifestPath);
+  const parsed = JSON.parse(readFileSync(absolutePath, "utf8"));
+  if (!parsed || !Array.isArray(parsed.branches)) {
+    throw new Error(`Invalid superseded branch manifest: ${manifestPath}`);
+  }
+
+  const heads = new Map();
+  for (const entry of parsed.branches) {
+    if (!entry || typeof entry.name !== "string" || !entry.name.trim()) {
+      throw new Error(`Invalid superseded branch name in ${manifestPath}`);
+    }
+    if (typeof entry.sha !== "string" || !/^[0-9a-f]{40}$/.test(entry.sha)) {
+      throw new Error(`Invalid superseded branch SHA for ${entry.name}`);
+    }
+    const shas = heads.get(entry.name) || new Set();
+    shas.add(entry.sha);
+    heads.set(entry.name, shas);
+  }
+  return heads;
 }
 
 function usage() {
   return [
-    "Usage: node tools/github/cleanup-merged-branches.mjs [--apply] [--json] [--repo=owner/name] [--base=main]",
+    "Usage: node tools/github/cleanup-merged-branches.mjs [--apply] [--json] [--include-superseded] [--superseded-manifest=path] [--repo=owner/name] [--base=main]",
     "",
     "Default is dry-run. --apply performs deletions only after revalidating branch SHA, protection,",
     "open PR state and containment immediately before each DELETE.",
+    "--include-superseded additionally allows exact SHA-pinned branches from the audited manifest.",
     "",
     "Credentials: GH_TOKEN or GITHUB_TOKEN with permission to read the repository and delete Git refs.",
   ].join("\n");
@@ -140,7 +174,7 @@ function refPath(name) {
     .join("/");
 }
 
-async function auditBranches({ client, baseBranch }) {
+async function auditBranches({ client, baseBranch, auditedSupersededHeads = new Map() }) {
   const [branches, closedPulls, openPulls, base] = await Promise.all([
     client.paginate("/branches"),
     client.paginate("/pulls?state=closed&sort=updated&direction=desc"),
@@ -197,6 +231,7 @@ async function auditBranches({ client, baseBranch }) {
       baseBranch,
       openHeadRefs,
       exactMergedHeads,
+      auditedSupersededHeads,
       aheadBy,
     });
 
@@ -259,7 +294,14 @@ async function main() {
 
   const token = process.env.GH_TOKEN || process.env.GITHUB_TOKEN;
   const client = createGitHubClient({ repo: options.repo, token });
-  const audit = await auditBranches({ client, baseBranch: options.base });
+  const auditedSupersededHeads = options.includeSuperseded
+    ? loadAuditedSupersededHeads(options.supersededManifest)
+    : new Map();
+  const audit = await auditBranches({
+    client,
+    baseBranch: options.base,
+    auditedSupersededHeads,
+  });
 
   const candidates = audit.rows.filter((row) => row.action === "delete");
   const preserved = audit.rows.filter((row) => row.action !== "delete");
@@ -268,6 +310,8 @@ async function main() {
     repository: options.repo,
     base: audit.base,
     mode: options.apply ? "apply" : "dry-run",
+    includeSuperseded: options.includeSuperseded,
+    supersededManifest: options.includeSuperseded ? options.supersededManifest : null,
     totalBranches: audit.rows.length,
     deleteCandidates: candidates.length,
     preservedBranches: preserved.length,

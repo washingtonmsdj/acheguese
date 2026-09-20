@@ -1,5 +1,8 @@
 import { describe, expect, it } from "vitest";
-import { classifyBranch } from "../../tools/github/cleanup-merged-branches.mjs";
+import {
+  classifyBranch,
+  loadAuditedSupersededHeads,
+} from "../../tools/github/cleanup-merged-branches.mjs";
 
 function classify(overrides: Record<string, unknown> = {}) {
   return classifyBranch({
@@ -71,6 +74,42 @@ describe("GitHub merged branch cleanup policy", () => {
       action: "delete",
       reason: "fully-contained-in-base",
     });
+  });
+
+  it("deletes only an exact SHA-pinned audited superseded branch when explicitly supplied", () => {
+    const auditedSupersededHeads = new Map([
+      ["feature/example", new Set(["abc123"])],
+    ]);
+
+    expect(
+      classify({ auditedSupersededHeads, aheadBy: 4 }),
+    ).toEqual({
+      action: "delete",
+      reason: "audited-superseded-head",
+    });
+
+    expect(
+      classify({
+        sha: "different-sha",
+        auditedSupersededHeads,
+        aheadBy: 4,
+      }),
+    ).toEqual({
+      action: "preserve",
+      reason: "unique-commits",
+    });
+  });
+
+  it("loads the repository superseded manifest as exact branch head pins", () => {
+    const heads = loadAuditedSupersededHeads(
+      "tools/github/branch-cleanup-superseded.json",
+    );
+
+    expect(
+      heads
+        .get("agent/security-nominatim-runtime-parity")
+        ?.has("580a3b8ce62aa0df28400ef9edbf673e56756c01"),
+    ).toBe(true);
   });
 
   it("preserves every branch that still has unique commits", () => {

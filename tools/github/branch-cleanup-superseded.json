@@ -1,0 +1,72 @@
+{
+  "version": 1,
+  "audited_at": "2026-09-20",
+  "policy": "Entries are intentionally superseded branches. Deletion is allowed only when the current branch head still exactly matches the pinned SHA and the cleanup tool is invoked with --include-superseded.",
+  "branches": [
+    {
+      "name": "agent/ci-vercel-remote-migration-drift-gate",
+      "sha": "4c1b15a4e82b4f91a305626ba4a4d13cd777a93d",
+      "evidence": "Superseded by current remote migration validators and PR #231 convergence."
+    },
+    {
+      "name": "agent/probe-private-classified-command-grants-final",
+      "sha": "3c42eeb71d8ea582a1f9655b833ca94d9d17fd05",
+      "evidence": "Temporary probe; final migration 20260820025810 is already in main."
+    },
+    {
+      "name": "agent/probe-private-classified-command-grants-test",
+      "sha": "5c2b9bacb50f782e01d2428426d495faaca1923e",
+      "evidence": "Temporary probe; superseded by the final classified grants migration."
+    },
+    {
+      "name": "agent/probe-private-classified-command-grants-test-v2",
+      "sha": "928d8fa0b71a05ffa024d2373f9916b23b74ab54",
+      "evidence": "Temporary probe; superseded by the final classified grants migration."
+    },
+    {
+      "name": "agent/security-analytics-authority",
+      "sha": "4f83570f7b4df156392523980c3ecda84abef6c3",
+      "evidence": "Authority migration is in main; later reconciliation merged in PR #35."
+    },
+    {
+      "name": "agent/security-audit-ip-normalization",
+      "sha": "b9c5a6041a857eab4685a12e99c7fba3eb0089ba",
+      "evidence": "Superseded by v2 merged in PR #38."
+    },
+    {
+      "name": "agent/security-auth-session-revocation",
+      "sha": "d4d9b740c2c2c7efa3630b624063f8cdc4669ff0",
+      "evidence": "Revocation contract absorbed by current session-rpc authority and broader ratchet."
+    },
+    {
+      "name": "agent/security-header-drift-guard",
+      "sha": "ae87f43cdcf40e74b5c0a030dd65c7e2b625011f",
+      "evidence": "Old path contract superseded by canonical shared/tools security config owners."
+    },
+    {
+      "name": "agent/security-nominatim-runtime-parity",
+      "sha": "580a3b8ce62aa0df28400ef9edbf673e56756c01",
+      "evidence": "Nominatim Edge source is already byte-identical in main."
+    },
+    {
+      "name": "agent/security-push-config-runtime-parity",
+      "sha": "9b85efbf71879af3a9f5a1abbe6972794f14f501",
+      "evidence": "Main contains the later push config runtime contract."
+    },
+    {
+      "name": "agent/web-seo-sitemap-build",
+      "sha": "ccb2c6c06442b1dcaef13dbf69f11514f6bc07d4",
+      "evidence": "Superseded by D-017 and the canonical sitemap generate/validate/build pipeline."
+    },
+    {
+      "name": "codex/ci-heavy-certification",
+      "sha": "c73d7ec3a3f7562ac82508c99fe0d437a2c65f04",
+      "evidence": "Superseded by current exact-SHA Heavy PR Certification workflow."
+    },
+    {
+      "name": "security/lgpd-purge-classification-20260919",
+      "sha": "6c29597832253c184d374e7fed3dd8e99bc51a14",
+      "evidence": "Superseded by the rebased LGPD purge classification merged into main."
+    }
+  ]
+}
