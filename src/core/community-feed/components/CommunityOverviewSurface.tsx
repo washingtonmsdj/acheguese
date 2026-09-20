@@ -955,7 +955,7 @@ export function CommunityOverviewSurface({
     territoryFilter,
     limit: children ? 6 : 12,
     enabled:
-            !isEmbeddedModule &&
+      !isEmbeddedModule &&
       (selectedView === "discussions" ||
         (selectedView === "feed" && feedContextTab !== "groups")),
   });
@@ -986,7 +986,7 @@ export function CommunityOverviewSurface({
       ),
     enabled:
       filterReady &&
-            !isEmbeddedModule &&
+      !isEmbeddedModule &&
       selectedView === "business",
     staleTime: 5 * 60 * 1000,
   });
@@ -1005,7 +1005,7 @@ export function CommunityOverviewSurface({
       ),
     enabled:
       filterReady &&
-            !isEmbeddedModule &&
+      !isEmbeddedModule &&
       selectedView === "services",
     staleTime: 5 * 60 * 1000,
   });
@@ -1024,7 +1024,7 @@ export function CommunityOverviewSurface({
       ),
     enabled:
       filterReady &&
-            !isEmbeddedModule &&
+      !isEmbeddedModule &&
       selectedView === "classifieds",
     staleTime: 5 * 60 * 1000,
   });
@@ -1043,7 +1043,7 @@ export function CommunityOverviewSurface({
       ),
     enabled:
       filterReady &&
-            !isEmbeddedModule &&
+      !isEmbeddedModule &&
       selectedView === "gastronomy",
     staleTime: 5 * 60 * 1000,
   });
@@ -1062,7 +1062,7 @@ export function CommunityOverviewSurface({
       enabled:
         filterReady &&
         communityEventsPreviewEnabled &&
-                !isEmbeddedModule &&
+        !isEmbeddedModule &&
         selectedView === "feed",
       staleTime: 5 * 60 * 1000,
     },
@@ -1082,7 +1082,7 @@ export function CommunityOverviewSurface({
       }),
     enabled:
       filterReady &&
-            !isEmbeddedModule &&
+      !isEmbeddedModule &&
       (selectedView === "groups" ||
         (selectedView === "feed" && feedContextTab === "groups")),
     staleTime: 5 * 60 * 1000,
@@ -1151,7 +1151,7 @@ export function CommunityOverviewSurface({
     fallbackLocationId,
     enabled:
       filterReady &&
-            !isEmbeddedModule &&
+      !isEmbeddedModule &&
       selectedView === "feed",
   });
 
