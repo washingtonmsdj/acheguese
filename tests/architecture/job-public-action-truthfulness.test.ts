@@ -80,7 +80,9 @@ describe("job public action truthfulness", () => {
     expect(page).not.toContain("Candidate-se agora!");
   });
 
-  it("keeps the jobs listing SEO truthful when the runtime is empty", () => {
+  it("keeps the jobs listing SEO truthful for error, empty and populated states", () => {
+    expect(listingPage).toContain("const pageDescription = isError");
+    expect(listingPage).toContain("Consulte vagas de emprego publicadas");
     expect(listingPage).toContain("total > 0");
     expect(listingPage).toContain("oportunidades de trabalho publicadas no Achegue-se");
     expect(listingPage).toContain("No momento não há vagas publicadas");
