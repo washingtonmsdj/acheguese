@@ -162,7 +162,7 @@ Essas 13 branches **não são fonte de trabalho pendente**. Devem ser apagadas s
 - dry-run auditável: `npm run maintenance:branches -- --include-superseded --json`;
 - aplicação física, somente com autoridade delete-ref: `npm run maintenance:branches -- --include-superseded --apply`.
 
-A manifest contém **65 heads auditados**: as 13 branches sem PR já classificadas como superseded, 31 branches antigas de PR fechado cujo sucessor `rebased`, `v2` ou equivalente foi efetivamente mergeado, 3 snapshots/probes antigos de Mobilidade já comprovadamente redundantes, 6 branches temporárias antigas de certificação/recovery/ops, 6 precursores fechados de sitemap/facades/ProfileMembersManager/tipos Supabase e 2 precursores de segurança absorvidos byte a byte pela `main`. Branches ainda em quarentena não entram na manifest.
+A manifest contém **66 heads auditados**: as 13 branches sem PR já classificadas como superseded, 31 branches antigas de PR fechado cujo sucessor `rebased`, `v2` ou equivalente foi efetivamente mergeado, 3 snapshots/probes antigos de Mobilidade já comprovadamente redundantes, 6 branches temporárias antigas de certificação/recovery/ops, 6 precursores fechados de sitemap/facades/ProfileMembersManager/tipos Supabase e 2 precursores de segurança absorvidos byte a byte pela `main`. Branches ainda em quarentena não entram na manifest.
 
 ### Segundo lote — PR fechado substituído por sucessor mergeado
 
@@ -226,6 +226,16 @@ A própria documentação de proveniência determina que o timestamp antigo não
 - `SUPABASE_ADVISOR_RESIDUALS.json` não deve ser restaurado ao snapshot antigo: a reconciliação live posterior foi mergeada no PR #166 e o registro foi atualizado novamente no PR #209.
 
 O head antigo, portanto, não contém autoridade atual que deva voltar para a `main`.
+
+### Oitavo lote — consolidação de helpers de Business totalmente absorvida
+
+`cleanup/business-helper-consolidation-20260918` foi classificada como **superseded / não reintegrar** após auditoria caminho a caminho dos 13 arquivos do delta:
+
+- todos os arquivos que continuam existentes são byte a byte idênticos à `main`;
+- `BusinessCanonicalAdapter.ts`, `business.helpers.ts` e `businessHelpers.ts` já estão ausentes tanto na branch quanto na `main`;
+- `physicalBusinessCoordinates.ts`, `AddressCard.tsx` e o ratchet `business-helper-ownership.test.ts` estão exatamente preservados na base atual.
+
+Não resta trabalho exclusivo nessa branch.
 
 ## Próximo passo
 
