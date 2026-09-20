@@ -27,6 +27,8 @@ type SubmitState =
   | { status: "success"; alreadyRegistered?: boolean }
   | { status: "error"; message: string };
 
+type IndicationStage = "indication" | "contact";
+
 export default function CommunityIndicationPage() {
   const navigate = useNavigate();
   const mountedAtRef = useRef(Date.now());
@@ -42,19 +44,27 @@ export default function CommunityIndicationPage() {
   const [turnstileGeneration, setTurnstileGeneration] = useState(0);
   const [turnstileError, setTurnstileError] = useState<string | null>(null);
   const [submitState, setSubmitState] = useState<SubmitState>({ status: "idle" });
+  const [indicationStage, setIndicationStage] = useState<IndicationStage>("indication");
 
   const isEmail = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(contact.trim());
   const phoneDigits = contact.replace(/\D/g, "");
   const validContact = isEmail || (phoneDigits.length >= 10 && phoneDigits.length <= 15);
-  const canSubmit =
-    name.trim().length >= 2 &&
+  const canContinue =
+    state.trim().length >= 2 &&
     city.trim().length >= 2 &&
-    neighborhood.trim().length >= 2 &&
+    neighborhood.trim().length >= 2;
+  const canSubmit =
+    canContinue &&
+    name.trim().length >= 2 &&
     validContact &&
     submitState.status !== "submitting";
 
   const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
+    if (indicationStage === "indication") {
+      if (canContinue) setIndicationStage("contact");
+      return;
+    }
     if (!canSubmit) return;
 
     if (
@@ -181,11 +191,28 @@ export default function CommunityIndicationPage() {
       <main className="community-indication-main is-form">
         <section className="community-indication-screen" aria-labelledby="indication-title">
           <div className="community-indication-heading-block">
-            <p className="entry-eyebrow">Expansão por etapas</p>
-            <h1 id="indication-title">Quer o Achegue-se na sua comunidade?</h1>
-            <p className="community-indication-lead">
-              Conte de onde você é e ajude a indicar os próximos lugares.
-            </p>
+            {indicationStage === "indication" ? (
+              <>
+                <h1 id="indication-title">Onde você quer o Achegue-se?</h1>
+                <p className="community-indication-lead">
+                  Sua indicação ajuda a planejar os próximos lugares.
+                </p>
+              </>
+            ) : (
+              <>
+                <button
+                  type="button"
+                  className="community-indication-text-action community-indication-stage-back"
+                  onClick={() => setIndicationStage("indication")}
+                >
+                  Voltar aos dados da região
+                </button>
+                <h1 id="indication-title">Como podemos confirmar sua indicação?</h1>
+                <p className="community-indication-lead">
+                  Deixe um contato para registrarmos sua indicação com segurança.
+                </p>
+              </>
+            )}
           </div>
 
           <form className="community-indication-form" onSubmit={handleSubmit} noValidate>
@@ -195,15 +222,15 @@ export default function CommunityIndicationPage() {
             </div>
 
             <label className="community-indication-field">
-              <span>Estado</span>
+              <span>Estado <b aria-hidden="true">*</b></span>
               <input value={state} onChange={(event) => setState(event.target.value)} required />
             </label>
             <label className="community-indication-field">
-              <span>Cidade</span>
+              <span>Cidade <b aria-hidden="true">*</b></span>
               <input value={city} onChange={(event) => setCity(event.target.value)} placeholder="Ex.: Salvador" required />
             </label>
             <label className="community-indication-field">
-              <span>Bairro</span>
+              <span>Bairro <b aria-hidden="true">*</b></span>
               <input value={neighborhood} onChange={(event) => setNeighborhood(event.target.value)} placeholder="Ex.: Nordeste de Amaralina" required />
             </label>
             <label className="community-indication-field is-optional">
@@ -221,40 +248,52 @@ export default function CommunityIndicationPage() {
               </span>
             </div>
 
-            <div className="community-indication-field">
-              <span>Seu nome</span>
-              <input value={name} onChange={(event) => setName(event.target.value)} autoComplete="name" placeholder="Como você se chama?" required />
-            </div>
-            <div className="community-indication-field">
-              <span>E-mail ou WhatsApp</span>
-              <input value={contact} onChange={(event) => setContact(event.target.value)} autoComplete="email" placeholder="Para identificarmos sua indicação" required />
-            </div>
-            <label className="community-indication-check-row">
-              <input type="checkbox" checked={wantsUpdates} onChange={(event) => setWantsUpdates(event.target.checked)} />
-              <span>Quero receber novidades sobre a expansão nesta região. <em>(opcional)</em></span>
-            </label>
+            {indicationStage === "contact" ? (
+              <>
+                <div className="community-indication-field">
+                  <span>Seu nome</span>
+                  <input value={name} onChange={(event) => setName(event.target.value)} autoComplete="name" placeholder="Como você se chama?" required />
+                </div>
+                <div className="community-indication-field">
+                  <span>E-mail ou WhatsApp</span>
+                  <input value={contact} onChange={(event) => setContact(event.target.value)} autoComplete="email" placeholder="Para identificarmos sua indicação" required />
+                </div>
+                <label className="community-indication-check-row">
+                  <input type="checkbox" checked={wantsUpdates} onChange={(event) => setWantsUpdates(event.target.checked)} />
+                  <span>Quero receber novidades sobre a expansão nesta região. <em>(opcional)</em></span>
+                </label>
 
-            {TURNSTILE_SITE_KEY ? (
-              <TurnstileWidget
-                key={turnstileGeneration}
-                siteKey={TURNSTILE_SITE_KEY}
-                action={COMMUNITY_INTEREST_ANTI_ABUSE_CONFIG.turnstileAction}
-                theme="light"
-                className="min-h-[65px]"
-                onVerify={(token) => { setTurnstileToken(token); setTurnstileError(null); }}
-                onExpire={() => setTurnstileToken(null)}
-                onError={() => { setTurnstileToken(null); setTurnstileError("Falha ao carregar a verificação anti-spam."); }}
-              />
-            ) : null}
+                {TURNSTILE_SITE_KEY ? (
+                  <TurnstileWidget
+                    key={turnstileGeneration}
+                    siteKey={TURNSTILE_SITE_KEY}
+                    action={COMMUNITY_INTEREST_ANTI_ABUSE_CONFIG.turnstileAction}
+                    theme="light"
+                    className="min-h-[65px]"
+                    onVerify={(token) => { setTurnstileToken(token); setTurnstileError(null); }}
+                    onExpire={() => setTurnstileToken(null)}
+                    onError={() => { setTurnstileToken(null); setTurnstileError("Falha ao carregar a verificação anti-spam."); }}
+                  />
+                ) : null}
 
-            {turnstileError ? <p role="alert" className="community-indication-error">{turnstileError}</p> : null}
-            {submitState.status === "error" ? <p role="alert" className="community-indication-error">{submitState.message}</p> : null}
+                {turnstileError ? <p role="alert" className="community-indication-error">{turnstileError}</p> : null}
+                {submitState.status === "error" ? <p role="alert" className="community-indication-error">{submitState.message}</p> : null}
 
-            <button type="submit" className="community-indication-primary" disabled={!canSubmit}>
-              {submitState.status === "submitting" ? <span>Enviando…</span> : <span>Indicar minha comunidade</span>}
-              <ArrowRight aria-hidden="true" />
-            </button>
-            <p className="community-indication-caption">Sem criar uma conta. Seus dados servem apenas para registrar a indicação.</p>
+                <button type="submit" className="community-indication-primary" disabled={!canSubmit}>
+                  {submitState.status === "submitting" ? <span>Enviando…</span> : <span>Enviar indicação</span>}
+                  <ArrowRight aria-hidden="true" />
+                </button>
+                <p className="community-indication-caption">Sem criar conta para indicar.</p>
+              </>
+            ) : (
+              <>
+                <button type="submit" className="community-indication-primary" disabled={!canContinue}>
+                  <span>Enviar indicação</span>
+                  <ArrowRight aria-hidden="true" />
+                </button>
+                <p className="community-indication-caption">Sem criar conta para indicar.</p>
+              </>
+            )}
           </form>
         </section>
       </main>

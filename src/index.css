@@ -2170,7 +2170,7 @@
   display: grid;
   min-height: 0;
   place-items: start center;
-  overflow: hidden;
+  overflow: auto;
 }
 
 .community-indication-content {
@@ -2187,6 +2187,12 @@
   font-weight: 800;
   letter-spacing: -0.07em;
   line-height: 0.98;
+}
+
+.community-indication-screen {
+  width: min(100%, 27rem);
+  box-sizing: border-box;
+  padding: 1.5rem 1.25rem;
 }
 
 .community-indication-lead {
@@ -2408,6 +2414,16 @@
   margin-top: -0.22rem;
 }
 
+.community-indication-error {
+  margin: 0;
+  border-radius: 0.7rem;
+  background: hsl(var(--territory-error) / 0.1);
+  color: hsl(var(--territory-error));
+  font-size: 0.76rem;
+  line-height: 1.35;
+  padding: 0.7rem 0.8rem;
+}
+
 .community-indication-cancel-note {
   color: hsl(var(--territory-muted-strong));
   text-align: center;
@@ -2425,6 +2441,12 @@
   text-decoration: underline;
   text-underline-offset: 3px;
   cursor: pointer;
+}
+
+.community-indication-stage-back {
+  display: inline-flex;
+  margin-bottom: 0.7rem;
+  text-align: left;
 }
 
 .community-indication-text-action:hover,
@@ -2629,7 +2651,10 @@
   }
 
   .community-indication-screen {
+    width: 100%;
     min-height: 100%;
+    box-sizing: border-box;
+    padding: 1.15rem 1rem 1.25rem;
   }
 
   .community-indication-main.is-form .community-indication-screen {
@@ -2668,8 +2693,10 @@
   }
 
   .community-indication-screen h1 {
-    font-size: 1.8rem;
-    line-height: 0.98;
+    font-size: 1.5rem;
+    font-weight: 700;
+    letter-spacing: -0.04em;
+    line-height: 1.08;
   }
 
   .community-indication-lead {

@@ -408,3 +408,27 @@ A prancha 117 também está coberta pelos estados demonstrativos de visitante, v
 - Reestruturei o header para refletir a composição aprovada: wordmark, navegação, busca e conta, sem repetir a localização do território dentro do header.
 - Corrigi a margem global do título desktop e retirei o texto auxiliar que não pertence ao concept, reduzindo o espaço entre retorno, título, loja e o primeiro cartão.
 - Revalidei o frame desktop equivalente ao concept e o estado mobile de endereço após HMR; o viewport foi restaurado ao padrão e a aba permaneceu aberta.
+
+## 19/09/2026 · Expansão territorial e interesse — prancha 060
+
+### Auditoria e ajuste
+
+- Comparei `CommunityIndicationPage` com `03-expansao-territorial/pranchas/060-expansao-interesse.png`. A primeira etapa agora segue a composição mobile da referência: wordmark e retorno no topo, título `Onde você quer o Achegue-se?`, apoio curto, três campos de região, relação opcional, aviso contextual, `Enviar indicação` e a legenda sobre não criar conta.
+- Corrigi o eixo lateral real da tela: o componente usava uma classe de conteúdo que não existia no JSX e, por isso, ficava encostado na borda. O espaçamento passou a ser aplicado no próprio `.community-indication-screen`, com 16 px no mobile e largura máxima de 27 rem; o container principal rola quando a segunda etapa precisa de mais altura.
+- Separei a indicação da confirmação de contato. A imagem é uma referência de composição, mas o serviço e o banco exigem nome e contato; esses dados agora aparecem em uma segunda etapa explícita, sem enviar payload incompleto nem inserir dados fictícios.
+- Mantive o gate funcional da rota `/comunidade/.../interesse`: quando a comunidade municipal não existe, ela continua indisponível. A entrada de interesse permanece em `/indicar-comunidade`, com os serviços, flags e permissões reais preservados.
+- Normalizei a apresentação dos erros de registro e Turnstile com tokens territoriais, mantendo a mensagem acessível via `role="alert"`.
+
+### Validação e evidências
+
+- Navegador interno: conferi a tela inicial limpa, obrigatoriedade dos três campos, CTA desabilitado, transição após preenchimento, retorno para a primeira etapa e scroll da etapa de contato.
+- Viewports conferidos: mobile padrão `425 × 1108` CSS px e largura reduzida `376 × 693` CSS px, sem clipping no primeiro estágio.
+- `npm run typecheck:app`.
+- ESLint no componente alterado.
+- `git diff --check`.
+- A aba do navegador foi mantida aberta na rota de indicação e será deixada no viewport mobile padrão para acompanhamento em tempo real.
+
+### Git
+
+- Branch: `codex/reformulacao-entrada-comunidade`.
+- Commit restrito ao componente, estilos e documentações do concept; arquivos staged preexistentes de catalogação e segurança permanecem fora da alteração.
