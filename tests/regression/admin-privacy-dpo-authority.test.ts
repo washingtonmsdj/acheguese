@@ -6,22 +6,22 @@ const ROOT = process.cwd();
 const read = (path: string) => readFileSync(join(ROOT, path), "utf8");
 
 const intakeMigration = read(
-  "supabase/migrations/20260916101000_create_privacy_subject_request_broker.sql",
+  "supabase/migrations/20260916102316_create_privacy_subject_request_broker.sql",
 );
 const migration = read(
-  "supabase/migrations/20260916103200_add_admin_privacy_request_authority.sql",
+  "supabase/migrations/20260916111238_add_admin_privacy_request_authority.sql",
 );
 const piiMinimizationMigration = read(
-  "supabase/migrations/20260916113200_minimize_admin_privacy_queue_pii.sql",
+  "supabase/migrations/20260916113731_minimize_admin_privacy_queue_pii.sql",
 );
 const historyMigration = read(
-  "supabase/migrations/20260916114500_add_privacy_request_event_history.sql",
+  "supabase/migrations/20260916114803_add_privacy_request_event_history.sql",
 );
 const denyDirectMigration = read(
-  "supabase/migrations/20260916115500_explicitly_deny_direct_privacy_ledger_access.sql",
+  "supabase/migrations/20260916115356_explicitly_deny_direct_privacy_ledger_access.sql",
 );
 const actorIndexMigration = read(
-  "supabase/migrations/20260916120500_index_privacy_request_event_actor.sql",
+  "supabase/migrations/20260916115610_index_privacy_request_event_actor.sql",
 );
 const runtimeGrantsMigration = read(
   "supabase/migrations/20260916120120_tighten_privacy_subject_request_runtime_grants.sql",

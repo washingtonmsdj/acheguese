@@ -69,6 +69,7 @@ O primeiro release continua territorial. **Cobertura uniforme dos 170 bairros de
 - [x] G36/G37 foram promovidos após dry-run: RPCs legados de Perfil foram removidos sem `CASCADE`, e os brokers profissionais passaram a rejeitar cobertura textual legada também no boundary SQL.
 - [x] Ledger de migrations fechado: **673 locais ativas / 673 remotas / 673 exatas / 0 local-only / 0 remote-only**. Os 13 SQLs não aplicados de Mobilidade foram preservados como pending, coerente com `PUBLIC_LAUNCH_SURFACES.mobility=false`.
 - [~] O `Heavy Pre-Merge Certification` self-hosted existente foi ampliado para executar security/lint/typecheck/arquitetura/SSOT/migrations remotas/Vitest antes dos E2E/build no mesmo SHA. Isso cria um fallback executável no runner autorizado sem substituir os checks hosted; falta o runner `acheguese-heavy-windows` voltar a ficar online e produzir a prova.
+- [x] Canal DPO público revalidado: `submit-dpo-request` está ACTIVE, com origin/rate-limit/honeypot/Turnstile fail-closed; testes DPO foram realinhados às migrations canônicas e `.env.production` agora declara a `VITE_TURNSTILE_SITE_KEY` exigida pelo gate. O `admin-privacy-rpc` remoto ainda está em v3 sem o fallback de paginação da `main`, pendente do rollout self-hosted autorizado.
 - [ ] A prova de build/deploy/smoke do mesmo SHA continua blocker real de release.
 
 
