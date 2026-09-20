@@ -77,8 +77,15 @@ export function AppLayoutSidebar() {
     typeof window !== "undefined" &&
     pathname === "/moderacao" &&
     new URLSearchParams(window.location.search).get("concept-mock") === "1";
+  const conceptMyPostsPreview =
+    import.meta.env.DEV &&
+    typeof window !== "undefined" &&
+    pathname === "/conta/publicacoes" &&
+    new URLSearchParams(window.location.search).get("concept-mock") === "1";
   const accountUsesSettingsShell =
-    ACCOUNT_SETTINGS_SHELL_PATHS.has(pathname) || conceptLinksPreview;
+    ACCOUNT_SETTINGS_SHELL_PATHS.has(pathname) ||
+    conceptLinksPreview ||
+    conceptMyPostsPreview;
   const conceptAccountPreview =
     import.meta.env.DEV &&
     typeof window !== "undefined" &&
@@ -145,7 +152,8 @@ export function AppLayoutSidebar() {
     conceptPublishPreview ||
     conceptLinksPreview ||
     conceptDetailPreview ||
-    conceptModerationPreview;
+    conceptModerationPreview ||
+    conceptMyPostsPreview;
 
   const isInternalGroupRoute =
     pathSegments[0] === "grupos" && pathSegments.length >= 2;
@@ -171,7 +179,8 @@ export function AppLayoutSidebar() {
     conceptPublishPreview ||
     conceptLinksPreview ||
     conceptDetailPreview ||
-    conceptModerationPreview;
+    conceptModerationPreview ||
+    conceptMyPostsPreview;
   const hideMobileBottomNav =
     pathname === "/" ||
     isInternalGroupRoute ||
@@ -186,7 +195,8 @@ export function AppLayoutSidebar() {
     conceptNotificationsPreview ||
     conceptPublishPreview ||
     conceptDetailPreview ||
-    conceptModerationPreview;
+    conceptModerationPreview ||
+    conceptMyPostsPreview;
 
   const isMessagingRoute =
     pathSegments[0] === "mensagens" || pathSegments[0] === "chat";
@@ -228,12 +238,14 @@ export function AppLayoutSidebar() {
             isProfessionalPublicRoute ||
             conceptAccountPreview ||
             conceptLinksPreview ||
+            conceptMyPostsPreview ||
             (accountUsesSettingsShell && !isAccountOverview)
           }
           hideDesktop={
             conceptAccountPreview ||
             conceptLinksPreview ||
             communityConceptPreview ||
+            conceptMyPostsPreview ||
             accountUsesSettingsShell
           }
         />

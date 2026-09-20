@@ -428,6 +428,9 @@ export const PublicacaoDetalheConceptMockPage = lazy(
 export const ModeracaoComunidadeConceptMockPage = lazy(
   () => import("@/app/pages/ModeracaoComunidadeConceptMockPage"),
 );
+export const MinhasPublicacoesConceptMockPage = lazy(
+  () => import("@/app/pages/MinhasPublicacoesConceptMockPage"),
+);
 
 // Comunicacao Territorial
 export const CommunicationLandingPage = createLaunchPausedRoute("Comunicacao");

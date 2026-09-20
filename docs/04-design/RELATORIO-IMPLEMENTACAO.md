@@ -864,3 +864,24 @@ A prancha 117 também está coberta pelos estados demonstrativos de visitante, v
 ### Git
 
 - Commit restrito ao mock de moderação, ao desvio de rota/layout de desenvolvimento e às documentações deste concept; alterações staged preexistentes permanecem fora do commit.
+
+## 20/09/2026 · Minhas publicações — pranchas 095 e 096
+
+### Auditoria e ajuste
+
+- A referência nova separa conteúdo publicado, rascunho local, situação de moderação e conteúdos administrados por outros módulos. A superfície real de conta, `useUserPosts`, `UserPostsGrid`, snapshot de rascunho e regras de perfil permaneceram preservados.
+- Criei `MinhasPublicacoesConceptMockPage` em `/conta/publicacoes?concept-mock=1`, restrita a `DEV`, com seletor de perfil/comunidade, publicações de pergunta/enquete/aviso, situação, comunidade, interações, ações e filtros da prancha desktop.
+- Recompus o desktop com rail territorial teal, topbar compacta, tabela sem overflow, painel de outros conteúdos e rascunho neste dispositivo. O rail usa a identidade territorial da prancha, e a área de conteúdo ocupa o viewport disponível sem centralização que altere as proporções.
+- Recompus o mobile com cabeçalho Conta, título sem marca duplicada, seletores empilhados, abas, busca/tipo, cartões compactos e CTA solar. Também materializei os estados de rascunho, moderação, outros módulos, vazio, erro e exclusão demonstrativa.
+- Os estados de moderação e exclusão são informativos no mock: não persistem, não autoaprovam, não alteram conteúdo e não contornam permissões.
+
+### Validação e evidências
+
+- Navegador interno mantido aberto em mobile `389 × 867` e desktop `1707 × 960` durante a comparação lado a lado.
+- Publicadas, rascunho local, moderação, outros módulos, vazio, erro e exclusão foram conferidos; `body.scrollWidth` ficou dentro do viewport e os containers de tabela/filtros não apresentaram overflow horizontal.
+- Logs finais do navegador ficaram sem erros; `npx eslint` direcionado e `git diff --check` passaram.
+- O typecheck global não pôde concluir porque o working tree já contém a exclusão de `src/core/business/services/business.slug-queries.ts`, alteração fora do escopo deste concept.
+
+### Git
+
+- Commit restrito ao mock de Minhas publicações, aos desvios de rota/layout de desenvolvimento e à documentação deste concept; alterações alheias staged/unstaged permanecem fora do commit.

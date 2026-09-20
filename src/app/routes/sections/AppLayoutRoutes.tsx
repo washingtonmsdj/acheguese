@@ -323,6 +323,11 @@ export function AppLayoutRoutes() {
     typeof window !== "undefined" &&
     window.location.pathname === "/moderacao" &&
     new URLSearchParams(window.location.search).get("concept-mock") === "1";
+  const conceptMyPostsPreview =
+    import.meta.env.DEV &&
+    typeof window !== "undefined" &&
+    window.location.pathname === "/conta/publicacoes" &&
+    new URLSearchParams(window.location.search).get("concept-mock") === "1";
   const launchElement = (
     surface: LaunchSurfaceKey,
     moduleName: string,
@@ -520,6 +525,16 @@ export function AppLayoutRoutes() {
           element={
             conceptLinksPreview ? (
               <P.MeusVinculosConceptMockPage />
+            ) : (
+              protectedElement(<P.ProfileSettingsPage />)
+            )
+          }
+        />
+        <Route
+          path="/conta/publicacoes"
+          element={
+            conceptMyPostsPreview ? (
+              <P.MinhasPublicacoesConceptMockPage />
             ) : (
               protectedElement(<P.ProfileSettingsPage />)
             )
