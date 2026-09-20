@@ -8,11 +8,11 @@
  * - Image caching (Stale-While-Revalidate)
  * - Offline fallback
  * 
- * @version 2.0.4
+ * @version 2.0.7
  */
 
 // Service Worker version
-const SW_VERSION = '2.0.5';
+const SW_VERSION = '2.0.7';
 const IS_LOCALHOST =
   self.location.hostname === 'localhost' ||
   self.location.hostname === '127.0.0.1' ||
@@ -219,13 +219,13 @@ function getNotificationUrl(data) {
       return '/perto-de-mim';
     
     case 'order':
-      return `/orders/${data.orderId || ''}`;
+      return `/gastronomia/pedidos/${data.orderId || ''}`;
     
     case 'payment':
       return getLaunchSafeNotificationUrl('/settings/subscription');
     
     case 'security':
-      return '/settings/sessions';
+      return '/conta/seguranca';
     
     case 'social':
       return getLaunchSafeNotificationUrl(data.url);
@@ -256,7 +256,7 @@ function getActionUrl(action, data) {
       return getLaunchSafeNotificationUrl(data.declineUrl, '/');
     
     case 'settings':
-      return '/settings/notifications';
+      return '/conta/notificacoes';
     
     default:
       return '/';

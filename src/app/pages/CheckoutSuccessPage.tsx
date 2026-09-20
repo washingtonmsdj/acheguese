@@ -15,6 +15,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/sha
 import { useNavigate } from 'react-router-dom';
 import { useSubscription } from '@/core/billing/hooks/useSubscription';
 import confetti from 'canvas-confetti';
+import { ACCOUNT_PATHS } from '@/core/routing/config/account';
 
 export default function CheckoutSuccessPage() {
   const navigate = useNavigate();
@@ -92,9 +93,9 @@ export default function CheckoutSuccessPage() {
           <div className="flex flex-col sm:flex-row gap-3 pt-4">
             <Button
               className="flex-1"
-              onClick={() => navigate('/dashboard')}
+              onClick={() => navigate(ACCOUNT_PATHS.home)}
             >
-              Ir para o Painel
+              Ir para minha conta
             </Button>
             <Button
               variant="outline"

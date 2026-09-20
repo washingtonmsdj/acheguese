@@ -12,6 +12,7 @@ import { XCircle, ArrowLeft, HelpCircle } from 'lucide-react';
 import { Button } from '@/shared/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/shared/components/ui/card';
 import { useNavigate } from 'react-router-dom';
+import { ACCOUNT_PATHS } from '@/core/routing/config/account';
 
 export default function CheckoutCancelPage() {
   const navigate = useNavigate();
@@ -83,9 +84,9 @@ export default function CheckoutCancelPage() {
             </p>
             <Button
               variant="ghost"
-              onClick={() => navigate('/dashboard')}
+              onClick={() => navigate(ACCOUNT_PATHS.home)}
             >
-              Ir para o Painel
+              Ir para minha conta
             </Button>
           </div>
         </CardContent>

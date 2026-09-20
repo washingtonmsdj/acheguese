@@ -12,6 +12,7 @@ import {
   supabase,
 } from '@/integrations/supabase';
 import { buildPublicAbsoluteUrl } from '@/shared/config/publicAppOrigin';
+import { ACCOUNT_PATHS } from '@/core/routing/config/account';
 
 export interface EmailTemplate {
   subject: string;
@@ -299,21 +300,21 @@ export class EmailService {
   }
 
   private static getWelcomeEmailTemplate(name: string): EmailTemplate {
-    const dashboardUrl = buildPublicAbsoluteUrl('/dashboard');
+    const accountUrl = buildPublicAbsoluteUrl(ACCOUNT_PATHS.home);
     const safeName = escapeHtml(name.trim() || 'Olá');
     return {
       subject: 'Bem-vindo ao Achegue-se',
       html: renderEmailDocument(
         'Bem-vindo ao Achegue-se',
         `<p>Olá, <strong>${safeName}</strong>.</p><p>Sua conta está pronta. Complete seu perfil, escolha seu território e explore serviços e oportunidades da sua região.</p>`,
-        { label: 'Abrir Achegue-se', href: dashboardUrl },
+        { label: 'Abrir minha conta', href: accountUrl },
       ),
-      text: `Olá, ${name.trim() || 'tudo bem'}?\n\nSua conta no Achegue-se está pronta.\n\nAcesse: ${dashboardUrl}`,
+      text: `Olá, ${name.trim() || 'tudo bem'}?\n\nSua conta no Achegue-se está pronta.\n\nAcesse: ${accountUrl}`,
     };
   }
 
   private static getMFASetupConfirmationTemplate(): EmailTemplate {
-    const securityUrl = buildPublicAbsoluteUrl('/settings/security');
+    const securityUrl = buildPublicAbsoluteUrl(ACCOUNT_PATHS.mfa);
     return {
       subject: 'Autenticação de dois fatores ativada',
       html: renderEmailDocument(
@@ -331,7 +332,7 @@ export class EmailService {
     ip: string;
     timestamp: string;
   }): EmailTemplate {
-    const sessionsUrl = buildPublicAbsoluteUrl('/settings/sessions');
+    const securityUrl = buildPublicAbsoluteUrl(ACCOUNT_PATHS.security);
     return {
       subject: 'Novo login detectado',
       html: renderEmailDocument(
@@ -344,9 +345,9 @@ export class EmailService {
 <li><strong>Data/Hora:</strong> ${escapeHtml(device.timestamp)}</li>
 </ul>
 <p>Se você não reconhece esse acesso, altere sua senha e revise suas sessões.</p>`,
-        { label: 'Revisar sessões', href: sessionsUrl },
+        { label: 'Revisar sessões', href: securityUrl },
       ),
-      text: `Novo login detectado\n\nDispositivo: ${device.name}\nLocalização: ${device.location}\nIP: ${device.ip}\nData/Hora: ${device.timestamp}\n\nRevisar sessões: ${sessionsUrl}`,
+      text: `Novo login detectado\n\nDispositivo: ${device.name}\nLocalização: ${device.location}\nIP: ${device.ip}\nData/Hora: ${device.timestamp}\n\nRevisar sessões: ${securityUrl}`,
     };
   }
 
@@ -407,7 +408,7 @@ export class EmailService {
     timestamp: string;
     action: string;
   }): EmailTemplate {
-    const securityUrl = buildPublicAbsoluteUrl('/settings/security');
+    const securityUrl = buildPublicAbsoluteUrl(ACCOUNT_PATHS.security);
     return {
       subject: 'Alerta de segurança',
       html: renderEmailDocument(
