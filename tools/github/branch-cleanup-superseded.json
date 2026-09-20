@@ -94,6 +94,11 @@
       "evidence": "Superseded by D-017 and the canonical sitemap generate/validate/build pipeline."
     },
     {
+      "name": "agent/web-sitemap-build-contract",
+      "sha": "acf28523cfacec1addc7e1d3541b7ad64c2e0475",
+      "evidence": "Closed unmerged precursor of the sitemap build work. Superseded by the later SEO sitemap branch and the current D-017 generate/validate/build/dist validation pipeline already documented in main."
+    },
+    {
       "name": "cert/production-auth-694b4f9",
       "sha": "d919a476910a3a3ae5fc63a71b90c6275456df0d",
       "evidence": "One-time production logout certification pinned to old production SHA 694b4f9. Superseded by current certify-heavy-pr-auto.yml, which validates exact PR head SHA and includes authenticated logout plus broader regression/security gates."
@@ -107,6 +112,11 @@
       "name": "ci/supabase-types-pr-writer-20260918",
       "sha": "0b85b3f2a338265c3205bbc67752c2a713d33dde",
       "evidence": "Superseded by the rebased PR writer merged in PR #153."
+    },
+    {
+      "name": "cleanup/active-compat-facades-20260919",
+      "sha": "6dac9e1e99849bd4211e95c57bcda001cbadbc4e",
+      "evidence": "Post-merge branch reaudited path-by-path on 2026-09-20. Twelve of fourteen paths are already identical/removed in main; the two residual Guide diffs would reintroduce obsolete NearbyPlaces/Ao redor placeholder behavior and must not be reintegrated."
     },
     {
       "name": "cleanup/community-post-view-ownership-20260918",
@@ -124,6 +134,11 @@
       "evidence": "Superseded by the current-main ESLint hygiene cleanup merged in PR #186."
     },
     {
+      "name": "cleanup/final-compatibility-bridges-20260918",
+      "sha": "71d99ee70acc1f84a37b943acf2daff8d84e6587",
+      "evidence": "Closed unmerged compatibility-facade cleanup superseded by the later active-facades line merged in PR #176 and the subsequent path-by-path retirement audit recorded in main."
+    },
+    {
       "name": "cleanup/live-docs-contracts-20260918",
       "sha": "4dc9e289a613f83b3b005bb532fa430f4888381d",
       "evidence": "Superseded by the current-main live docs cleanup merged in PR #189."
@@ -139,6 +154,11 @@
       "evidence": "Superseded by the rebased fake-favorites cleanup merged in PR #165."
     },
     {
+      "name": "cleanup/remove-stale-phase-comments-20260918",
+      "sha": "d412b6a4ce7fcd6847317f186cde2026af644c75",
+      "evidence": "Closed unmerged ProfileMembersManager consolidation precursor. Superseded by cleanup/profile-members-manager-owner-20260919 merged in PR #171."
+    },
+    {
       "name": "cleanup/residence-legacy-migration-retirement-20260918",
       "sha": "7071a05fd0b542e8563f4dfaa601fb3e8de706d9",
       "evidence": "Superseded by the residence legacy retirement merged in PR #173."
@@ -147,6 +167,11 @@
       "name": "cleanup/retire-billing-plan-facade-20260918",
       "sha": "4813c4bde45c456c63745266ee82f880d69735f9",
       "evidence": "Superseded by the current-main BillingPlanService retirement merged in PR #190."
+    },
+    {
+      "name": "cleanup/retire-live-compatibility-facades-20260918",
+      "sha": "a6fe39e2a13143955e94bd1af6b52a9c021cb61c",
+      "evidence": "Earlier closed compatibility-facade retirement attempt. Superseded by the later active-facades cleanup merged in PR #176 and current compatibility retirement tests/docs."
     },
     {
       "name": "cleanup/ride-contract-mapper-20260918",
@@ -257,6 +282,11 @@
       "name": "security/retire-public-site-settings-read-20260918",
       "sha": "835535da57ea43ab4ef9fa3e3f5ba3e92db1fb30",
       "evidence": "Superseded by the rebased site-settings public-read retirement merged in PR #160."
+    },
+    {
+      "name": "sync/supabase-types-canonical-20260918",
+      "sha": "e4af64111f1e0c55c34f5335787b4a6a60314f7e",
+      "evidence": "Closed unmerged generated-types sync precursor. Superseded by the PR-based writer merged in PR #153 and the live generated types sync merged in PR #168."
     },
     {
       "name": "tmp-probe-unused",
