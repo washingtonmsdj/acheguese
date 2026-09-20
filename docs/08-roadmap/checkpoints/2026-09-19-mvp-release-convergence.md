@@ -29,7 +29,7 @@ O projeto `acheguese-v2` inativo não é o alvo de release.
 
 ### Migrations
 
-O ledger remoto observado contém **666 migrations** e a árvore Git contém **683 arquivos locais**. No SHA auditado a comparação por identidade `version_name` resulta em **649 identidades exatas, 34 somente locais e 17 somente remotas**.
+O ledger remoto observado contém **666 migrations** e, após este corte, a árvore Git contém **686 arquivos locais**. As **666 identidades remotas passam a existir no Git**; permanecem **20 arquivos somente locais** que ainda exigem prova de supersessão/necessidade.
 
 Últimas migrations remotas observadas:
 
@@ -48,7 +48,7 @@ npm run validate:migrations:provenance
 npm run validate:migrations:remote
 ```
 
-`validate:migrations:remote` só pode marcar PASS com zero aliases, zero conflicts, zero local-only, zero remote-only e nenhuma versão local duplicada. O estado auditado ainda falha esse critério (34 local-only / 17 remote-only); portanto **não executar `supabase db push --linked`**. A próxima ação é reconstruir provenance migration por migration, começando pelas reconciliações de Safety/Mobilidade e pelos artefatos remotos G42/G43.
+`validate:migrations:remote` só pode marcar PASS com zero aliases, zero conflicts, zero local-only, zero remote-only e nenhuma versão local duplicada. Este corte fecha `remote-only=0`, mas ainda deixa **20 local-only**; portanto **não executar `supabase db push --linked`**. A próxima ação é provar, um a um, quais desses 20 arquivos são drafts/superseded e quais ainda pertencem ao bootstrap canônico.
 
 ### Tipos gerados
 
@@ -119,7 +119,7 @@ O PR #209 removeu duas exceções antigas que já não aparecem no Advisor, redu
 ## Blockers de release que permanecem
 
 1. Executar o GitHub Actions de verdade em runner válido e obter security/lint/typecheck/test/build no SHA candidato.
-2. Fechar o drift de migrations até o gate remoto atingir zero divergências; estado atual após Safety provenance: 683 locais / 666 remotas / 664 exatas / 20 local-only / 2 remote-only.
+2. Fechar o drift de migrations até o gate remoto atingir zero divergências; estado atual após Safety provenance: 686 locais / 666 remotas / 666 exatas / 20 local-only / 0 remote-only.
 3. Completar branch protection/release authority depois que existir check executável.
 4. Produzir build/deploy real do mesmo SHA aprovado; o provider Vercel vinha bloqueando novas provas pelo limite diário.
 5. Executar smoke do domínio no mesmo SHA.
@@ -178,7 +178,7 @@ Após a reconciliação de Vagas, o corte urgente avançou em quatro frentes sem
 - Supabase canônico: `ACTIVE_HEALTHY`;
 - Edge Functions implantadas: 60, todas `ACTIVE`;
 - tipos gerados Git ↔ Supabase: `exact=true`, 731731 caracteres normalizados;
-- migrations: 683 locais / 666 remotas / 664 exatas / 20 local-only / 2 remote-only;
+- migrations: 686 locais / 666 remotas / 666 exatas / 20 local-only / 0 remote-only;
 - Vercel no SHA auditado: status de falha por build rate limit, portanto sem nova prova de deploy;
 - `main` está protegida, porém o endpoint acessível mostra required status checks sem enforcement/contextos; a leitura completa da branch protection não está disponível à integração atual. Não declarar release authority fechada com essa evidência parcial.
 
@@ -209,7 +209,7 @@ Quatro pares adicionais local ↔ remoto foram comparados por tokenização SQL 
 
 As identidades locais foram alinhadas às versões realmente registradas no Supabase sem executar DDL. O teste que lê a migration de `quote_id` foi atualizado para o caminho canônico.
 
-Estado resultante: **683 locais / 666 remotas / 664 exatas / 20 local-only / 2 remote-only**.
+Estado resultante: **686 locais / 666 remotas / 666 exatas / 20 local-only / 0 remote-only**.
 
 Os cinco remote-only restantes são: três migrations da cadeia de preço terminal da entrega (`make_delivery_final_price_server_owned`, `restore_atomic_delivery_completion_with_server_owned_price`, `ignore_client_final_price_in_delivery_wrapper`) e as territoriais G42/G43. A cadeia terminal é materialmente diferente do draft local e exige reconstrução de provenance em grupo; não renomear automaticamente.
 
@@ -230,4 +230,20 @@ Provas:
 
 Os dois drafts locais foram substituídos pelas três identidades realmente registradas no ledger remoto. Nenhum DDL foi reaplicado.
 
-Estado resultante: **684 arquivos locais / 666 remotas / 664 identidades exatas / 20 local-only / 2 remote-only**. Os únicos remote-only agora são G42 e G43 territoriais.
+Estado resultante: **686 arquivos locais / 666 remotas / 666 identidades exatas / 20 local-only / 0 remote-only**. G42 e G43 territoriais foram promovidas a identidades Git canônicas; `remote-only=0`.
+
+
+## Atualização — G42/G43 territoriais promovidas do staging histórico — 2026-09-20
+
+A investigação encontrou as duas migrations `remote-only` já versionadas, porém incorretamente mantidas em `docs/09-reference/migrations-pending/`:
+
+- G42 staging `20260910214500_transactional_location_visibility_cascade_g42.sql` ↔ ledger `20260919003851_transactional_location_visibility_cascade_g42`;
+- G43 phase 1 staging `20260910220500_create_territorial_group_admin_commands_g43.sql` ↔ ledger `20260919003900_create_territorial_group_admin_commands_g43`.
+
+Ambos os pares foram comparados token-a-token, ignorando apenas comentários, whitespace/case e wrapper transacional; os dois retornaram equivalência integral. Os artefatos foram promovidos para `supabase/migrations` com as identidades reais do ledger e removidos de `migrations-pending`. Testes e documentação passaram a apontar para os caminhos canônicos.
+
+Revalidação viva confirmou `territorial-update-location-visibility`, `territorial-update-group-visibility`, `territorial-get-tree` e `territorial-group-admin-rpc` como `ACTIVE` com `verify_jwt=true`.
+
+**Importante:** G43 phase 2 continua pendente. O frontend administrativo ainda usa `updateGroup()` + `replaceMembers()` do writer compatível; o DML browser não deve ser revogado antes de cutover e smoke AAL2. O arquivo `20260910221500_lock_territorial_group_writes_to_broker_g43.sql` permanece em `migrations-pending` de forma intencional.
+
+Resultado do ledger após este corte: **686 locais / 666 remotas / 666 identidades remotas presentes no Git / 20 local-only / 0 remote-only**.
