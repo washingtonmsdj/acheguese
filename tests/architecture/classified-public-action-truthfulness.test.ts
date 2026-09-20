@@ -1,4 +1,4 @@
-import { readFileSync } from "node:fs";
+import { existsSync, readFileSync } from "node:fs";
 import { resolve } from "node:path";
 import { describe, expect, it } from "vitest";
 
@@ -17,6 +17,19 @@ describe("classified public action truthfulness", () => {
     expect(page).toContain("!sellerHasValidWhatsApp");
     expect(page).toContain("!openSafeExternalUrl(url");
     expect(page).toContain('title: "WhatsApp indisponível"');
+  });
+
+
+  it("does not ship a simulated inline seller conversation", () => {
+    const retiredInlineChat = resolve(
+      root,
+      "src/modules/classifieds/components/detail/InlineChat.tsx",
+    );
+
+    expect(existsSync(retiredInlineChat)).toBe(false);
+    expect(page).not.toContain("InlineChat");
+    expect(page).not.toContain("Online agora");
+    expect(page).not.toContain("Obrigado pelo interesse! Vou responder em breve.");
   });
 
   it("does not convert native-share cancellation into an automatic copy", () => {
