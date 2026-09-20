@@ -388,9 +388,9 @@ function ConversationListItem({
   onClick: () => void;
 }) {
   return (
-    <button type="button" onClick={onClick} className={cn("flex min-h-[4.25rem] w-full items-center gap-3 border-b border-territory-border px-1 text-left transition-colors last:border-b-0 focus-visible:outline-2 focus-visible:outline-offset-[-2px] focus-visible:outline-territory-brand", selected ? "rounded-xl bg-[hsl(var(--territory-success)/0.14)]" : "hover:bg-territory-raised")}>
+    <button type="button" onClick={onClick} className={cn("flex min-h-[3.75rem] w-full items-center gap-3 border-b border-territory-border px-1 text-left transition-colors last:border-b-0 focus-visible:outline-2 focus-visible:outline-offset-[-2px] focus-visible:outline-territory-brand", selected ? "rounded-xl bg-[hsl(var(--territory-success)/0.14)]" : "hover:bg-territory-raised")}>
       <ProfileAvatar profile={conversation} size="md" />
-      <span className="min-w-0 flex-1 py-2">
+      <span className="min-w-0 flex-1 py-1">
         <span className="flex items-center gap-2">
           <span className="min-w-0 flex-1 truncate text-[0.9375rem] font-semibold text-territory-ink">{conversation.name}</span>
           <span className="shrink-0 text-xs text-territory-muted">{conversation.time}</span>
@@ -808,7 +808,7 @@ export default function MensagensPage() {
   );
 
   return (
-    <div className="min-h-[100dvh] bg-territory-canvas text-territory-ink">
+    <div className="messages-page min-h-[100dvh] bg-territory-canvas text-territory-ink">
       <div className="lg:hidden">
         {mobileConversationOpen && selectedConversation ? (
           <MobileConversationDetail conversation={selectedConversationData} selectedProfile={selectedProfile} messages={conceptMockEnabled ? undefined : liveDisplayMessages} onSend={handleSend} canSend={conceptMockEnabled || isLiveConversation} onBack={() => setMobileConversationOpen(false)} />

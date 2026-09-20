@@ -3015,3 +3015,10 @@
   margin-bottom: 0;
   margin-top: 0;
 }
+
+/* Conversation bubbles and their composer already own their vertical rhythm.
+ * Keep the global accessibility paragraph margin from adding a second gap
+ * when the detail panel is opened on mobile or desktop. */
+.messages-page p {
+  margin-bottom: 0;
+}

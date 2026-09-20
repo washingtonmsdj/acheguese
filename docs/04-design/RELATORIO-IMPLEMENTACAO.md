@@ -496,3 +496,23 @@ A prancha 117 também está coberta pelos estados demonstrativos de visitante, v
 
 - Branch: `codex/reformulacao-entrada-comunidade`.
 - Commit restrito ao perfil, ao estilo scoped e às documentações do concept; alterações staged preexistentes permanecem fora do commit.
+
+## 20/09/2026 · Conversas por perfil — prancha 014
+
+### Auditoria e ajuste
+
+- Comparei `MensagensPage` com a prancha mobile/desktop de Conversas. A composição já tinha os três perfis, badges, fixadas, recentes, busca, filtros, painel de conversa e alternância mobile lista/detalhe; mantive esses contratos e refinei o ritmo visual.
+- A lista de conversas foi reduzida de 68 px para aproximadamente 60 px por linha, mantendo avatar, horário, prévia, pin, unread e alvo de toque. Isso aproxima a quantidade de itens visível no viewport da referência sem recorrer a zoom ou clipping.
+- A causa adicional de excesso de espaço estava nos defaults globais de parágrafo: bolhas, subtítulos e compositor herdavam `margin-bottom: 1rem`. O escopo `.messages-page p` neutraliza apenas essa margem na tela de Conversas.
+- O mock permanece somente em DEV; em produção, a tela continua usando sessão, troca de perfil, threads e envio pela camada de mensagens existente.
+
+### Validação e evidências
+
+- Navegador interno mantido aberto em `/mensagens?concept-mock=1`, com viewport mobile equivalente a `389 × 867` CSS px; conferi lista, perfil ativo, filtros, densidade das linhas e barra inferior.
+- Também conferi a composição de detalhe: assunto, bolhas, resposta como `Sabores da Ana`, campo de mensagem e envio habilitado somente no mock/contrato live.
+- `npm run typecheck:app`, ESLint no componente, testes dos serviços de mensagens e `git diff --check`.
+
+### Git
+
+- Branch: `codex/reformulacao-entrada-comunidade`.
+- Commit restrito à tela, ao estilo scoped e às documentações do concept; alterações staged preexistentes permanecem fora do commit.
