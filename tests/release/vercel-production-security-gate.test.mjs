@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { readFileSync } from "node:fs";
+import { existsSync, readFileSync } from "node:fs";
 import { join } from "node:path";
 
 const ROOT = process.cwd();
@@ -29,6 +29,13 @@ describe("production dependency audit gate", () => {
     expect(source).not.toContain("--audit=false");
     expect(source).not.toContain("audit-level=low");
     expect(source).not.toMatch(/npm audit[^\n]*\|\|\s*true/);
+  });
+
+
+  it("does not keep a simulated deploy script that can report success without deploying", () => {
+    expect(
+      existsSync(join(ROOT, "tools/release/deploy-security-updates.sh")),
+    ).toBe(false);
   });
 
   it("keeps known production dependency blockers on patched versions", () => {
