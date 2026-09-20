@@ -12,13 +12,18 @@ describe("public events action truthfulness", () => {
   );
 
   it("does not silently accept an unauthenticated favorite action", () => {
-    const authGuard = detail.indexOf("if (!activeProfile?.id)");
-    const favoriteCommand = detail.indexOf("void toggleFavorite(event.id)");
+    const favoriteStart = detail.indexOf("const handleFavorite = () => {");
+    const favoriteEnd = detail.indexOf("const handleShare = () => {", favoriteStart);
+    const favoriteHandler = detail.slice(favoriteStart, favoriteEnd);
+    const authGuard = favoriteHandler.indexOf("if (!activeProfile?.id)");
+    const favoriteCommand = favoriteHandler.indexOf("void toggleFavorite(event.id)");
 
+    expect(favoriteStart).toBeGreaterThanOrEqual(0);
+    expect(favoriteEnd).toBeGreaterThan(favoriteStart);
     expect(authGuard).toBeGreaterThanOrEqual(0);
     expect(favoriteCommand).toBeGreaterThan(authGuard);
-    expect(detail).toContain("Faca login para salvar");
-    expect(detail).toContain("Entre com sua conta para salvar este evento.");
+    expect(favoriteHandler).toContain("Faca login para salvar");
+    expect(favoriteHandler).toContain("Entre com sua conta para salvar este evento.");
   });
 
   it("confirms clipboard copy only after a successful write", () => {
