@@ -2,19 +2,18 @@
 
 Status: **REVALIDAÇÃO DE RELEASE EM ANDAMENTO**
 
-Base observada nesta revalidação: `0c6cdb8a84f0e3e5f40c1e586075686a413a67d7` ou descendente sem alteração dos fatos abaixo.
+Base técnica observada nesta revalidação: `f45ec30501b91716182fdc1eb10ec38d3807281c`. O commit deste checkpoint pode ser descendente apenas documental; qualquer alteração funcional posterior exige nova prova.
 
 Este checkpoint atualiza os blockers operacionais do primeiro release sem reescrever snapshots históricos. A autoridade continua sendo o projeto real + runtime observado.
 
 ## GitHub Actions
 
-Os workflows recentes continuam falhando antes de executar código:
+Os workflows do SHA `f45ec305...` continuam falhando antes de executar código:
 
-- jobs encerram com `steps: null`/sem steps;
-- logs de job não são produzidos;
-- evidência histórica e atual registra `runner_id=0` e `runner_name=""`;
-- no head do PR #208 falharam Security Check, SSOT Enforcement, Security Scan e SSOT Territorial Tests sem executar um primeiro step;
-- Heavy PR Certification permaneceu em fila.
+- Security Check (`35482298437`): `Lint and Type Check`, `Run Tests`, `Maps Architecture Enforcement` e `Validate No Hardcoded Credentials` terminaram com `steps: null`;
+- SSOT Enforcement (`35482298618`): `SSOT Enforcement Checks` terminou com `steps: null`;
+- SSOT Territorial Tests (`35482298511`): E2E, Phase Core Gate, Account + Business E2E, Runtime Tests e agregação terminaram sem steps; `Regression Check` foi `skipped`;
+- Supabase Types Sync (`35482298480`) estava `queued` na observação e não conta como aprovação.
 
 Conclusão: **não há evidência de falha de lint/test/typecheck/source nesses runs**. O blocker é de execução/alocação/configuração administrativa do Actions até prova em contrário. Não alterar source/YAML às cegas para reagir a esses runs.
 
@@ -30,14 +29,16 @@ O projeto `acheguese-v2` inativo não é o alvo de release.
 
 ### Migrations
 
-O ledger remoto observado agora contém **664 migrations**.
+O ledger remoto observado contém **666 migrations** e a árvore Git contém **683 arquivos locais**. No SHA auditado a comparação por identidade `version_name` resulta em **649 identidades exatas, 34 somente locais e 17 somente remotas**.
 
-Últimas migrations observadas:
+Últimas migrations remotas observadas:
 
 - `20260919003851_transactional_location_visibility_cascade_g42`;
-- `20260919003900_create_territorial_group_admin_commands_g43`.
+- `20260919003900_create_territorial_group_admin_commands_g43`;
+- `20260920004231_reconcile_vagas_runtime_mvp`;
+- `20260920012056_allow_phone_only_community_interest_mvp`.
 
-A contagem remota agora coincide com a contagem local conhecida de 664 arquivos, mas **paridade de contagem não é paridade de identidade/conteúdo**.
+O PR #225 reconciliou somente dois pares cuja equivalência foi provada por conteúdo e reconstrução do array `statements` remoto: `retire_private_alpha_signup_gate` e `tighten_privacy_subject_request_runtime_grants`. Nenhum DDL foi executado. Os cinco outros pares recentes de mesmo nome apresentaram diferença material de SQL e permanecem bloqueados para análise de provenance; **não renomear nem aplicar por aproximação**.
 
 A autoridade de aceite continua sendo:
 
@@ -47,7 +48,7 @@ npm run validate:migrations:provenance
 npm run validate:migrations:remote
 ```
 
-`validate:migrations:remote` só pode marcar PASS com zero aliases, zero conflicts, zero local-only, zero remote-only e nenhuma versão local duplicada. Até essa execução ocorrer num checkout local linkado ao Supabase, não declarar o ledger completamente reconciliado e não executar `supabase db push --linked`.
+`validate:migrations:remote` só pode marcar PASS com zero aliases, zero conflicts, zero local-only, zero remote-only e nenhuma versão local duplicada. O estado auditado ainda falha esse critério (34 local-only / 17 remote-only); portanto **não executar `supabase db push --linked`**. A próxima ação é reconstruir provenance migration por migration, começando pelas reconciliações de Safety/Mobilidade e pelos artefatos remotos G42/G43.
 
 ### Tipos gerados
 
@@ -57,7 +58,7 @@ Resultado:
 
 - PostgREST remoto: `14.5`;
 - arquivo Git: `14.5`;
-- tamanho normalizado em ambos: **729024 bytes/caracteres de texto**;
+- tamanho normalizado em ambos: **731731 caracteres de texto**;
 - comparação normalizada: **exact_equal=true**;
 - primeiro diff: inexistente.
 
@@ -118,7 +119,7 @@ O PR #209 removeu duas exceções antigas que já não aparecem no Advisor, redu
 ## Blockers de release que permanecem
 
 1. Executar o GitHub Actions de verdade em runner válido e obter security/lint/typecheck/test/build no SHA candidato.
-2. Executar `validate:migrations:remote` no checkout local linkado e fechar a prova das 664 identidades.
+2. Fechar o drift de migrations até o gate remoto atingir zero divergências; estado atual: 683 locais / 666 remotas / 649 exatas / 34 local-only / 17 remote-only.
 3. Completar branch protection/release authority depois que existir check executável.
 4. Produzir build/deploy real do mesmo SHA aprovado; o provider Vercel vinha bloqueando novas provas pelo limite diário.
 5. Executar smoke do domínio no mesmo SHA.
@@ -163,3 +164,22 @@ O Supabase registrou a migration em `20260920004231`. O filename Git foi realinh
 
 **Estado:** o drift estrutural de Vagas e o drift de tipos gerados não devem mais ser tratados como blockers genéricos. A superfície ainda precisa do gate executável/E2E e smoke exact-SHA antes do release, como todo o restante do MVP. O banco agora contém zero vagas fictícias; até haver publicação real, a UI deve mostrar empty state verdadeiro.
 
+## Atualização — fechamento de superfícies e provenance — 2026-09-19
+
+Após a reconciliação de Vagas, o corte urgente avançou em quatro frentes sem ampliar escopo de produto:
+
+- **PR #221:** cadastro de interesse deixou de criar identidade sintética de e-mail; o runtime recebeu `20260920012056_allow_phone_only_community_interest_mvp` e aceita telefone como canal real quando o formulário o fornece;
+- **PR #223:** o fluxo público de publicação de Vagas perdeu o estado morto `destaque` e não consegue mais gravar `highlightType="premium"` enquanto Billing está pausado; urgência continua mapeando somente para `featured`;
+- **PR #224:** `DEMO-READY.md`, `PROJECT-HEALTH-REPORT.md` e `PROJECT-SCORE.md`, já classificados como históricos, foram movidos de `docs/01-product` para `docs/10-archive/product` sem perda de conteúdo, eliminando instruções antigas de demo fictícia da árvore documental ativa;
+- **PR #225:** duas identidades de migration comprovadamente equivalentes foram alinhadas ao ledger remoto sem executar DDL; os demais mismatches foram preservados para investigação porque não possuem prova suficiente de equivalência.
+
+### Diagnóstico operacional após #225
+
+- Supabase canônico: `ACTIVE_HEALTHY`;
+- Edge Functions implantadas: 60, todas `ACTIVE`;
+- tipos gerados Git ↔ Supabase: `exact=true`, 731731 caracteres normalizados;
+- migrations: 683 locais / 666 remotas / 649 exatas / 34 local-only / 17 remote-only;
+- Vercel no SHA auditado: status de falha por build rate limit, portanto sem nova prova de deploy;
+- `main` está protegida, porém o endpoint acessível mostra required status checks sem enforcement/contextos; a leitura completa da branch protection não está disponível à integração atual. Não declarar release authority fechada com essa evidência parcial.
+
+**Próximo gate:** tratar a divergência do ledger por provenance e estado remoto, sem `db push` global. Priorizar os registros G71/G72/G75–G80 e os remotos G42/G43, pois já existem checkpoints de runtime que permitem separar migrations superseded/reconciliadas de DDL realmente ausente.

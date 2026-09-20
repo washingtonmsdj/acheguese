@@ -4,7 +4,7 @@
 **Data do checkpoint GitHub:** 2026-09-19  
 **Repositório:** `washingtonmsdj/acheguese`  
 **Linha ativa:** `main`  
-**HEAD técnico base deste checkpoint:** `e4a7634d9b9efae4996883d213fddf368dab572a` (`main` após o hardening de Conta/Mensagens do PR #200; este checkpoint avança a partir desse SHA).
+**HEAD técnico auditado neste checkpoint:** `f45ec30501b91716182fdc1eb10ec38d3807281c` (`main` após os PRs #223–#225). O commit que atualizar este próprio documento será descendente documental desse SHA; qualquer alteração funcional posterior exige nova revalidação.
 
 Este documento consolida ordem de execução, blockers e Definition of Done. Ele é um **registro operacional**, não uma fotografia autoritativa do que existe no produto. A fonte de verdade para decidir o que existe, o que está ativo e o que deve ser corrigido é sempre o **projeto real**: código da `main`, rotas, owners, serviços, schema/migrations, contratos, testes, deploy/runtime e comportamento observado.
 
@@ -26,10 +26,10 @@ O primeiro release continua territorial. **Cobertura uniforme dos 170 bairros de
 
 ### Bloqueadores reais antes do release
 
-1. **Concluir convergência Git ↔ Supabase/runtime.** A fila antiga de hardening/cleanup que afetava o corte público foi reconciliada até o PR #200 e a `main` base deste checkpoint está em `e4a7634d...`. O blocker residual não é mais a fila de PRs: é provar e eliminar drift remanescente de migrations, Edge Functions, tipos gerados e configuração aplicada remotamente.
+1. **Concluir convergência Git ↔ Supabase/runtime.** O runtime canônico está saudável, os tipos gerados estão byte-a-byte equivalentes ao Supabase vivo e as 60 Edge Functions implantadas estão `ACTIVE`. O blocker residual de convergência é agora específico: o ledger possui 666 migrations remotas contra 683 arquivos locais; no SHA auditado existem 649 identidades exatas, 34 identidades somente locais e 17 somente remotas. Tratar cada divergência por provenance; não executar `db push` nem renomear por aproximação.
 2. **Restaurar um gate executável.** Os GitHub Actions do HEAD continuam encerrando antes de steps. `steps=[]`/sem log não é teste vermelho de código nem teste verde. O candidato só pode avançar após security/lint/typecheck/test/build executarem de verdade no mesmo SHA.
 3. **Completar proteção da `main`.** Force-push/deleção já estão bloqueados, porém o fluxo ainda precisa exigir PR e checks que realmente executem. O publisher canônico de tipos Supabase deve deixar de escrever diretamente na `main` antes disso.
-4. **Reconciliar migrations, Edge Functions e tipos gerados.** O gate remoto precisa provar que a sequência local corresponde ao banco alvo e que Edge/source publicado é atribuível ao SHA candidato.
+4. **Fechar o ledger de migrations e manter a prova de runtime.** `validate:migrations:remote` precisa chegar a zero aliases/conflicts/local-only/remote-only. Tipos gerados não são blocker no estado auditado (`exact=true`, 731731 caracteres normalizados) e Edge Functions não devem ser implantadas em massa apenas para obter paridade numérica.
 5. **Manter LGPD destrutivo fail-closed.** Delete/purge não pode ser habilitado enquanto `LGPD_PURGE_POLICY` não estiver pronto. Exportação também permanece desabilitada até certificação. O MVP pode lançar com essas capacidades indisponíveis, desde que a UI não prometa sucesso e nenhum caminho stale permaneça acessível.
 6. **Fechar segurança do que será exposto.** Priorizar Auth/conta, Profile, território, Comunidade, Business/Gastronomy/Services, Classificados, Busca/Mapa e superfícies administrativas necessárias. Hardening de módulos pausados pode continuar durante/depois do MVP, exceto quando compartilha uma boundary usada pelo núcleo.
 7. **Certificar o fluxo real das superfícies públicas.** Para cada item do escopo: rota/owner canônico, contrato DB/RPC, autorização positiva e negativa, loading/empty/error/auth, fluxo principal com dados reais, smoke mobile e E2E sem placeholder/paused contado como sucesso.
@@ -52,14 +52,21 @@ O primeiro release continua territorial. **Cobertura uniforme dos 170 bairros de
 - [x] Conta e Mensagens não possuem mais bypass DEV de `ProtectedRoute`; perfis/conversas demonstrativos foram removidos do runtime.
 - [x] Mensagens usa perfis da sessão e threads persistidas, limpa estado privado ao trocar perfil e não exibe controles sem ação real.
 - [x] O E2E de launch scope foi sincronizado com `communityCommunication: true`.
-- [ ] CI continua incapaz de certificar o candidato: runs recentes encerram com `steps: null`, portanto nenhum lint/typecheck/test executou.
+- [x] Cadastro de interesse deixou de sintetizar identidade de e-mail e aceita telefone como canal real quando aplicável (PR #221; migration remota `20260920012056_allow_phone_only_community_interest_mvp`).
+- [x] O fluxo público de Vagas não mantém mais writer oculto para `highlightType="premium"` enquanto Billing está pausado (PR #223).
+- [x] Snapshots de produto já classificados como históricos (`DEMO-READY`, `PROJECT-HEALTH-REPORT`, `PROJECT-SCORE`) saíram da árvore documental ativa e foram preservados em `docs/10-archive/product/` (PR #224).
+- [x] Tipos Supabase foram revalidados no SHA auditado: Git e runtime têm 731731 caracteres normalizados e `exact=true`.
+- [x] O Supabase canônico mantém 60 Edge Functions implantadas e as 60 estão `ACTIVE`; as funções versionadas mas deliberadamente não implantadas continuam sujeitas ao rollout/authority próprio.
+- [~] Reconciliação de migrations avançou no PR #225 sem executar DDL: duas identidades comprovadamente equivalentes foram reconstruídas do ledger remoto. Estado auditado: 683 locais, 666 remotas, 649 exatas, 34 local-only e 17 remote-only.
+- [ ] CI continua incapaz de certificar o candidato: no SHA `f45ec305...`, Security Check, SSOT Enforcement e SSOT Territorial Tests encerraram jobs com `steps: null`; lint/typecheck/test/E2E não chegaram a executar.
 - [ ] Vercel continua sem permitir nova prova de deploy por limite diário de builds; isso não conta como build aprovado.
-- [ ] Reconciliação exata de migrations/Edge/types e prova de deploy do mesmo SHA continuam blockers reais de release.
+- [ ] O ledger de migrations ainda precisa chegar a paridade de identidade/provenance antes de qualquer `db push`.
+- [ ] A prova de build/deploy/smoke do mesmo SHA continua blocker real de release.
 
 ### Ordem de execução até MVP
 
 1. **R0 — congelar escopo:** nenhuma feature nova até o primeiro release; corrigir apenas blocker, regressão, segurança, dados de lançamento e qualidade necessária ao núcleo.
-2. **R1 — convergência:** integrar/reconciliar PRs que representam runtime já alterado, eliminar drift migrations/Edge/types e atualizar o candidato sobre a `main` mais nova.
+2. **R1 — convergência:** fechar o drift de identidade/provenance das migrations restantes; preservar a igualdade já provada de tipos e a classificação explícita das Edge Functions; atualizar o candidato sobre a `main` mais nova.
 3. **R2 — release authority:** publisher de tipos via PR, CI realmente executando e branch protection exigindo o caminho aprovado.
 4. **R3 — Auth/Privacy/Security:** fechar autenticação e superfícies sensíveis do escopo; manter delete/export destrutivos fail-closed.
 5. **R4 — certificação funcional:** núcleo primeiro; Eventos/Vagas apenas se passarem no mesmo padrão.
