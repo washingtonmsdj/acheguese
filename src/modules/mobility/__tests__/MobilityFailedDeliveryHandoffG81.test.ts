@@ -7,16 +7,16 @@ function readProjectFile(relativePath: string): string {
 }
 
 const handoffMigration = readProjectFile(
-  "supabase/migrations/20260911230000_receiver_confirmed_failed_delivery_handoff_g81.sql",
+  "docs/09-reference/migrations-pending/20260911230000_receiver_confirmed_failed_delivery_handoff_g81.sql",
 );
 const handoffOfferMigration = readProjectFile(
-  "supabase/migrations/20260911231000_targeted_failed_delivery_handoff_offer_g81.sql",
+  "docs/09-reference/migrations-pending/20260911231000_targeted_failed_delivery_handoff_offer_g81.sql",
 );
 const handoffPinMigration = readProjectFile(
-  "supabase/migrations/20260911232000_align_handoff_pin_authority_g81.sql",
+  "docs/09-reference/migrations-pending/20260911232000_align_handoff_pin_authority_g81.sql",
 );
 const handoffDiscoveryMigration = readProjectFile(
-  "supabase/migrations/20260911233000_route_failed_delivery_candidate_discovery_g81.sql",
+  "docs/09-reference/migrations-pending/20260911233000_route_failed_delivery_candidate_discovery_g81.sql",
 );
 const canonicalLifecycleMigration = readProjectFile(
   "supabase/migrations/20260909192625_restore_canonical_ride_share_terminal_trigger_g20.sql",
