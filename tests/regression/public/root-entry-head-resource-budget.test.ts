@@ -35,7 +35,7 @@ describe("public root head resource budget", () => {
     const sw = read("public/sw.js");
     const staticAssetsBlock = sw.match(/const STATIC_ASSETS = \[([\s\S]*?)\];/)?.[1] ?? "";
 
-    expect(sw).toContain("const SW_VERSION = '2.0.5'");
+    expect(sw).toContain("const SW_VERSION = '2.0.6'");
     expect(staticAssetsBlock).not.toContain("/images/logo-icon.png");
     expect(staticAssetsBlock).toContain("/icon-192x192.png");
     expect(staticAssetsBlock).toContain("/icon-512x512.png");
