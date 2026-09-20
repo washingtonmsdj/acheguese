@@ -9,6 +9,9 @@ const hook = read("src/modules/classifieds/jobs/hooks/useVagaDetail.ts");
 const page = read(
   "src/modules/classifieds/jobs/pages/VagaDetailPublicPage.tsx",
 );
+const listingPage = read(
+  "src/modules/classifieds/jobs/pages/VagasPublicPage.tsx",
+);
 
 describe("job public action truthfulness", () => {
   it("fails closed when an external application channel cannot really open", () => {
@@ -75,5 +78,12 @@ describe("job public action truthfulness", () => {
 
   it("keeps SEO descriptive even when the vacancy cannot be applied to", () => {
     expect(page).not.toContain("Candidate-se agora!");
+  });
+
+  it("keeps the jobs listing SEO truthful when the runtime is empty", () => {
+    expect(listingPage).toContain("total > 0");
+    expect(listingPage).toContain("oportunidades de trabalho publicadas no Achegue-se");
+    expect(listingPage).toContain("No momento não há vagas publicadas");
+    expect(listingPage).not.toContain("Candidate-se agora!");
   });
 });
