@@ -189,7 +189,9 @@ export default function BusinessDashboardShellPage() {
             <div className="space-y-2">
               <div className="flex items-center gap-2">
                 <h1 className="text-2xl font-semibold text-foreground">{business.name}</h1>
-                <Badge variant="secondary">{planTier.toUpperCase()}</Badge>
+                {showBilling && (
+                  <Badge variant="secondary">{planTier.toUpperCase()}</Badge>
+                )}
                 <Badge variant="outline">{business.status}</Badge>
               </div>
               <p className="text-sm text-muted-foreground capitalize">{business.category}</p>
