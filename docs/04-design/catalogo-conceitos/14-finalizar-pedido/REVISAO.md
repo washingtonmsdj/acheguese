@@ -39,4 +39,10 @@ Branch analisada: `codex/reformulacao-entrada-comunidade`. Data: 19/09/2026.
 - Removi os valores arbitrários de 23,2 px e 10,9 px/11 px do checkout. A escala agora consome as classes canônicas `text-type-label`, `text-type-caption`, `text-type-micro` e `text-type-body`.
 - Validação visual confirmou 24 px/700 no mobile e 30 px/700 no desktop no navegador interno, com o viewport restaurado ao padrão e a aba mantida aberta.
 
+## Quarta rodada — estado “Outro endereço”
+
+- Ao selecionar `Outro endereço`, o cartão vazio agora troca o rótulo para `Outro endereço`; ele não continua comunicando que o destino é o endereço do perfil.
+- O editor de endereço permanece acionado somente pela escolha explícita e mantém o CTA fixo, o estado vazio real e as regras de autenticação já existentes.
+- Conferi o estado aberto no navegador interno após HMR; nenhuma residência demonstrativa foi inserida na sessão.
+
 Registrar branch/commit analisado, data, limitações e funcionalidades mantidas desativadas.

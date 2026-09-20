@@ -373,6 +373,7 @@ function AddressCard({
   destination,
   compact = false,
   onEdit,
+  emptyLabel = "Endereço do perfil",
   recipientName,
   recipientPhone,
   referencePoint,
@@ -380,6 +381,7 @@ function AddressCard({
   destination: ReturnType<typeof buildCheckoutDeliveryAddress>;
   compact?: boolean;
   onEdit?: () => void;
+  emptyLabel?: string;
   recipientName?: string;
   recipientPhone?: string;
   referencePoint?: string;
@@ -403,7 +405,7 @@ function AddressCard({
                 aria-hidden="true"
               />
             )}
-            {address?.label || "Endereço do perfil"}
+            {address?.label || emptyLabel}
           </p>
           {hasAddress ? (
             <div className="mt-1 pl-6 text-territory-muted">
@@ -619,19 +621,20 @@ function MobileAddressStage({
               aria-hidden="true"
             />
           </span>
-           {profileName}{" "}
-           <span className="font-normal text-territory-muted">· {profileType}</span>
+          {profileName}{" "}
+          <span className="font-normal text-territory-muted">· {profileType}</span>
         </span>
-          <ChevronRight
+        <ChevronRight
           className="h-4 w-4 shrink-0 text-territory-muted"
           aria-hidden="true"
         />
       </div>
-      {mode === "delivery" ? <div>
-        <p className="mb-2 text-type-label font-bold text-territory-ink">
-          Endereço de entrega
-        </p>
-        <div className="mb-2 grid grid-cols-2 gap-2 text-type-caption">
+      {mode === "delivery" ? (
+        <div>
+          <p className="mb-2 text-type-label font-bold text-territory-ink">
+            Endereço de entrega
+          </p>
+          <div className="mb-2 grid grid-cols-2 gap-2 text-type-caption">
           <button
             type="button"
             aria-pressed={addressMode === "saved"}
@@ -660,16 +663,20 @@ function MobileAddressStage({
           >
             Outro endereço
           </button>
+          </div>
+          <AddressCard
+            destination={destination}
+            emptyLabel={
+              addressMode === "other" ? "Outro endereço" : "Endereço do perfil"
+            }
+            onEdit={onEditAddress}
+            recipientName={profileName}
+            recipientPhone={profilePhone}
+            referencePoint={referencePoint}
+          />
+          {addressEditor}
         </div>
-        <AddressCard
-          destination={destination}
-          onEdit={onEditAddress}
-          recipientName={profileName}
-          recipientPhone={profilePhone}
-          referencePoint={referencePoint}
-        />
-        {addressEditor}
-      </div> : null}
+      ) : null}
       {mode === "delivery" ? (
         <p className="flex items-center gap-1.5 rounded-lg bg-territory-info/10 px-3 py-2 text-type-caption text-territory-ink">
           <Info
@@ -1304,6 +1311,7 @@ function AddressSection({
       <div className="mt-3">
         <AddressCard
           destination={destination}
+          emptyLabel={addressMode === "other" ? "Outro endereço" : "Endereço do perfil"}
           onEdit={onEditAddress}
           recipientName={profileName}
           recipientPhone={profilePhone}

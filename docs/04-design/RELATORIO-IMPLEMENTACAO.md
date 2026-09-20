@@ -389,3 +389,9 @@ A prancha 117 também está coberta pelos estados demonstrativos de visitante, v
 - Normalizei os títulos para 24 px/700 no mobile e 30 px/700 no desktop; seções ficam em 16 px/700, rótulos em 14 px/600–700 e metadados em 12 px. O wordmark desktop usa 800, o único peso de display aplicado.
 - Substituí os tamanhos arbitrários de 23,2 px e 10,9/11 px pelas classes canônicas `text-type-label`, `text-type-caption`, `text-type-micro` e `text-type-body`, preservando os paddings ajustados na rodada anterior.
 - A medição no navegador interno confirmou os valores computados do título mobile (24/700/30) e desktop (30/700/37,5), mantendo a aba aberta e o viewport padrão restaurado ao final.
+
+### Quarta rodada — consistência do estado de endereço
+
+- Ao abrir `Outro endereço`, o cartão vazio agora usa o rótulo contextual da opção selecionada. Isso elimina a contradição visual entre a aba ativa e o título `Endereço do perfil`.
+- O ajuste preserva o contrato real: o editor continua sendo aberto por ação explícita, o CTA fixo permanece disponível e nenhum endereço ilustrativo é criado.
+- A conferência foi feita no navegador interno após HMR, com a aba mantida aberta no estado de edição para inspeção visual.
