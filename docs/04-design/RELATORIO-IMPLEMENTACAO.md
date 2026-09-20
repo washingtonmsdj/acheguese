@@ -963,3 +963,23 @@ A prancha 117 também está coberta pelos estados demonstrativos de visitante, v
 ### Git
 
 - Commit restrito ao mock de inscrição/check-in, aos desvios de rota/layout de desenvolvimento e às documentações deste concept; alterações alheias staged/unstaged permanecem fora do commit.
+
+## 20/09/2026 · Classificados da comunidade — pranchas 109 e 110
+
+### Auditoria e ajuste
+
+- O módulo canônico de classificados e seus contratos de busca, status, comentários, contato e mensageria foram preservados. A comparação foi isolada em `DEV + /classificados?concept-mock=1`.
+- Recompus o mobile na sequência da prancha 109: descoberta territorial com busca/filtros/categorias, detalhe com galeria e bairro, conversa privada contextualizada e anúncio vendido/encerrado com semelhantes.
+- Recompus o desktop na proporção da prancha 110: rail territorial, topbar com território e busca, galeria, dados do anúncio, anunciante, perguntas públicas, contato condicionado, denúncia, semelhantes e os estados de refino/vazio/indisponível.
+- Mantive as regras de produto: anúncio é canônico, pergunta pública não vira conversa privada, endereço exato não aparece, contato não é inventado, perguntas novas ficam indisponíveis no encerrado e não há checkout/garantia/entrega simulados.
+- A navegação inferior mobile é fixa e reserva espaço no conteúdo; os grids desktop permanecem limitados ao viewport para manter o ritmo da prancha sem overflow.
+
+### Validação e evidências
+
+- Navegador interno mantido aberto em duas abas durante a implementação: mobile `491 × 1108` e desktop `1707 × 960`; as telas foram comparadas lado a lado.
+- Foram conferidos descoberta, detalhe, conversa, filtros, anúncio encerrado e os três cartões de estado desktop. `body.scrollWidth` permaneceu dentro do viewport e os logs das abas ficaram sem erros.
+- ESLint direcionado e typecheck dos projetos `app` e `node` passaram após o ajuste final.
+
+### Git
+
+- Commit restrito ao mock de Classificados, aos desvios de rota/layout de desenvolvimento e às documentações deste concept; alterações alheias staged/unstaged permanecem fora do commit.
