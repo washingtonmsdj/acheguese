@@ -57,10 +57,11 @@ O primeiro release continua territorial. **Cobertura uniforme dos 170 bairros de
 - [x] Snapshots de produto já classificados como históricos (`DEMO-READY`, `PROJECT-HEALTH-REPORT`, `PROJECT-SCORE`) saíram da árvore documental ativa e foram preservados em `docs/10-archive/product/` (PR #224).
 - [x] Tipos Supabase foram revalidados no SHA auditado: Git e runtime têm 731731 caracteres normalizados e `exact=true`.
 - [x] O Supabase canônico mantém 60 Edge Functions implantadas e as 60 estão `ACTIVE`; as funções versionadas mas deliberadamente não implantadas continuam sujeitas ao rollout/authority próprio.
-- [~] Reconciliação de migrations avançou no PR #225 sem executar DDL: duas identidades comprovadamente equivalentes foram reconstruídas do ledger remoto. Estado auditado após a reconciliação de Safety G71/G72/G75–G80: 683 locais, 666 remotas, 657 exatas, 26 local-only e 9 remote-only.
+- [~] Reconciliação de migrations avançou no PR #225 sem executar DDL: duas identidades comprovadamente equivalentes foram reconstruídas do ledger remoto. Estado auditado após a reconciliação de Safety G71/G72/G75–G80: 683 locais, 666 remotas, 661 exatas, 22 local-only e 5 remote-only.
 - [ ] CI continua incapaz de certificar o candidato: no SHA `f45ec305...`, Security Check, SSOT Enforcement e SSOT Territorial Tests encerraram jobs com `steps: null`; lint/typecheck/test/E2E não chegaram a executar.
 - [ ] Vercel continua sem permitir nova prova de deploy por limite diário de builds; isso não conta como build aprovado.
-- [~] O ledger de migrations avançou novamente sem executar DDL: G71/G72/G75–G80 foram alinhadas às oito identidades `reconcile_*` realmente registradas no Supabase após prova de equivalência token-a-token. Estado: 683 locais / 666 remotas / 657 exatas / 26 local-only / 9 remote-only. Ainda não executar `db push`.
+- [~] O ledger de migrations avançou novamente sem executar DDL: G71/G72/G75–G80 foram alinhadas às oito identidades `reconcile_*` realmente registradas no Supabase após prova de equivalência token-a-token. Estado: 683 locais / 666 remotas / 661 exatas / 22 local-only / 5 remote-only. Ainda não executar `db push`.
+- [~] Quatro identidades adicionais de Mobilidade foram alinhadas após prova token-a-token: `remove_provisional_mobility_fare_floor`, `persist_mobility_cancellation_reason`, `enforce_server_owned_mobility_quotes` e `require_explicit_mobility_quote_id`. O bloco de preço terminal da entrega não foi alterado porque o SQL remoto é materialmente diferente.
 - [ ] A prova de build/deploy/smoke do mesmo SHA continua blocker real de release.
 
 
