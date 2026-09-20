@@ -162,7 +162,7 @@ Essas 13 branches **não são fonte de trabalho pendente**. Devem ser apagadas s
 - dry-run auditável: `npm run maintenance:branches -- --include-superseded --json`;
 - aplicação física, somente com autoridade delete-ref: `npm run maintenance:branches -- --include-superseded --apply`.
 
-A manifest contém **47 heads auditados**: as 13 branches sem PR já classificadas como superseded, 31 branches antigas de PR fechado cujo sucessor `rebased`, `v2` ou equivalente foi efetivamente mergeado, 2 snapshots antigos de Mobilidade comprovadamente ancestrais de `module/mobilidade` e 1 probe temporário G73/G74 cujo conteúdo foi preservado/coberto pela `main`. Branches ainda em quarentena não entram na manifest.
+A manifest contém **53 heads auditados**: as 13 branches sem PR já classificadas como superseded, 31 branches antigas de PR fechado cujo sucessor `rebased`, `v2` ou equivalente foi efetivamente mergeado, 3 snapshots/probes antigos de Mobilidade já comprovadamente redundantes e 6 branches temporárias antigas de certificação/recovery/ops. Branches ainda em quarentena não entram na manifest.
 
 ### Segundo lote — PR fechado substituído por sucessor mergeado
 
@@ -171,6 +171,19 @@ Foram adicionadas **31 branches** à manifest somente quando o histórico mostra
 Exemplos de pares comprovados: `cleanup/driver-history-dead-selector-20260918` -> PR #187, `cleanup/retire-billing-plan-facade-20260918` -> PR #190, `fix/admin-rollout-broker-20260918` -> PR #159, `security/bound-business-operation-config-columns-20260918` -> PR #158, `agent/reconcile-edge-admin-canary-deploy-guard` -> PR #58 e `agent/revoke-residual-anon-private-admin-helpers` -> PR #72.
 
 Não entraram neste lote branches de Mobilidade, report/RPC sem sucessor inequívoco, LGPD operacional ainda sensível, recovery/ops temporário sem auditoria de conteúdo ou qualquer branch cujo destino ainda dependa de decisão funcional.
+
+### Terceiro lote — certificação, recovery e ops temporários
+
+Foram auditadas seis branches antigas de 2026-08-18/19 e todas foram classificadas como **superseded / não reintegrar**:
+
+- `agent/ci-security-gate-recovery`: workflow diagnóstico self-hosted temporário; a `main` atual mantém `Security Check`, `Security Scan` e `Heavy PR Certification (Auto)` com proveniência exact-SHA e gates mantidos;
+- `cert/production-auth-694b4f9`: certificação one-shot de logout em produção presa ao SHA antigo `694b4f9`; substituída pelo workflow de certificação pesada atual, que inclui logout autenticado e cobertura mais ampla;
+- `cert/recovery-4.6-934f9df`: harness temporário de snapshot da Fase 4.6 preso ao candidato `934f9df`; a governança atual trata freshness de recovery como requisito explícito e bloqueia snapshot stale;
+- `handoff/4.6h-final`: snapshot de handoff histórico e ancestral direto das duas linhas de recovery subsequentes, sem trabalho exclusivo que justifique manter o head;
+- `ops/enable-hibp-20260818`: workflow one-shot para ativar HIBP nativo; a governança atual registra corretamente que o controle nativo está indisponível no plano Free e usa `tools/security/supabase-auth-hibp.mjs` como caminho canônico de check/apply quando houver suporte de provider/plano;
+- `ops/recovery-refresh-20260818`: workflow/script temporário de captura preso ao estado de agosto e a um alvo local de Drive; foi substituído pela governança e validação atuais de recovery, que não aceitam evidência stale como prova de release.
+
+Nenhuma dessas branches contém código de produto que deva voltar para o MVP. Todas entram na manifest apenas com **SHA pinado**, mantendo as mesmas proteções de branch protegida, PR aberto e mudança de head antes de qualquer delete-ref real.
 
 ## Próximo passo
 
