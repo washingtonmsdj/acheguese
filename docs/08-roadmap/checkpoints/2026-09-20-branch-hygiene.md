@@ -248,6 +248,17 @@ Não resta trabalho exclusivo nessa branch.
 
 A documentação de proveniência também registra que os timestamps locais antigos não devem ser aplicados atrasados.
 
+### Quarentena residual intencional — 4 heads
+
+Após os lotes acima, restam apenas quatro branches com PR fechado sem merge e sem classificação de exclusão. Elas ficam **preservadas deliberadamente**:
+
+- `agent/lgpd-pending-deletion-boundary`: LGPD operacional sensível; não aposentar sem auditoria específica de fluxo de exclusão pendente, compensação e estado remoto;
+- `agent/structure-cleanup-foundation`: 66 commits exclusivos, sem sucessor mergeado direto; mistura reorganização de source, docs, testes e módulos. Não há base segura para inferir supersessão em bloco;
+- `audit/mobility-launch-hardening-2026-09-16`;
+- `audit/mobility-launch-hardening-main-2026-09-17`: ambas pertencem à linha de Mobilidade pausada e continuam fora do primeiro release; preservar até auditoria pós-MVP/retomada explícita dessa capability.
+
+Com isso, **não restam branches fechadas sem merge em estado ambíguo**: ou estão SHA-pinadas na manifest de superseded, ou estão explicitamente preservadas nesta quarentena residual.
+
 ## Próximo passo
 
 Executar primeiro o dry-run com credencial administrativa, conferir que a contagem continua coerente e somente então usar `--apply`.
