@@ -22,8 +22,8 @@ export {
   getBusinessDataIdByProfileId,
   isBusinessCommunityLinkEligibleByDataId,
   getBusinessBySlug,
-  checkSlugExists,
-  getSimilarSlugs,
+  checkBusinessSlugExists,
+  getBusinessSimilarSlugs,
   getBusinessesByIds,
   searchBusinessesByName,
   getProducts,
@@ -190,8 +190,8 @@ export class BusinessService {
   static isCommunityLinkEligibleByDataId =
     BusinessQueries.isBusinessCommunityLinkEligibleByDataId;
   static getBusinessBySlug = BusinessQueries.getBusinessBySlug;
-  static checkSlugExists = BusinessQueries.checkSlugExists;
-  static getSimilarSlugs = BusinessQueries.getSimilarSlugs;
+  static checkSlugExists = BusinessQueries.checkBusinessSlugExists;
+  static getSimilarSlugs = BusinessQueries.getBusinessSimilarSlugs;
   static getBusinessesByIds = BusinessQueries.getBusinessesByIds;
   static searchBusinessesByName = BusinessQueries.searchBusinessesByName;
   static getProducts = BusinessQueries.getProducts;

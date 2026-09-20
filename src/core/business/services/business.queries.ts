@@ -79,6 +79,12 @@ interface BusinessCommunityLinkEligibilityRow {
   status: string | null;
 }
 
+interface BusinessSlugRow {
+  id: string;
+  profile_id: string | null;
+  slug: string | null;
+}
+
 const businessQueriesDb = supabase as unknown as BusinessQueriesDbClient;
 
 // Keep the public list projection explicit. `public_business_search.*` also
@@ -762,7 +768,59 @@ export async function getBusinessBySlug(slug: string): Promise<{
   }
 }
 
-export { checkSlugExists, getSimilarSlugs } from "./business.slug-queries";
+/**
+ * Verifica unicidade de slug no agregado Business.
+ *
+ * A checagem usa profile_id para preservar o contrato dos consumidores de
+ * Business, que identificam a entidade pública pelo perfil proprietário.
+ */
+export async function checkBusinessSlugExists(
+  slug: string,
+  excludeProfileId?: string,
+): Promise<boolean> {
+  const normalizedSlug = slug.trim();
+  if (!isValidSlug(normalizedSlug)) return false;
+
+  let query = businessQueriesDb
+    .from<BusinessSlugRow>("business_data")
+    .select("id, profile_id, slug")
+    .eq("slug", normalizedSlug)
+    .limit(1);
+
+  if (excludeProfileId) {
+    query = query.neq("profile_id", excludeProfileId);
+  }
+
+  const { data, error } = await query.maybeSingle();
+  if (error) {
+    throw new Error(error.message ?? "Erro ao verificar slug da empresa");
+  }
+
+  return Boolean(data?.id);
+}
+
+/** Busca slugs de empresas que podem compor uma sugestão de identidade. */
+export async function getBusinessSimilarSlugs(
+  slug: string,
+  limit = 20,
+): Promise<string[]> {
+  const normalizedSlug = slug.trim();
+  if (!normalizedSlug) return [];
+
+  const { data, error } = await businessQueriesDb
+    .from<Pick<BusinessSlugRow, "slug">>("business_data")
+    .select("slug")
+    .ilike("slug", `${normalizedSlug}%`)
+    .limit(limit);
+
+  if (error) {
+    throw new Error(error.message ?? "Erro ao buscar slugs semelhantes");
+  }
+
+  return (data ?? [])
+    .map((row) => row.slug)
+    .filter((value): value is string => Boolean(value));
+}
 
 /**
  * Buscar businesses por IDs (para uso em serviços agregadores)
