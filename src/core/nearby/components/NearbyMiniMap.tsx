@@ -29,12 +29,9 @@ export function NearbyMiniMap({
     return entities
       .slice(0, 30)
       .map((entity) => {
-        const entityMetadata = entity.metadata ?? {};
-        const {
-          distance: _distance,
-          distance_meters: _distanceMeters,
-          ...metadataWithoutProximity
-        } = entityMetadata;
+        const metadataWithoutProximity = { ...(entity.metadata ?? {}) };
+        delete metadataWithoutProximity.distance;
+        delete metadataWithoutProximity.distance_meters;
         const proximityMetadata = showProximity
           ? {
               distance: entity.distance,
