@@ -4,7 +4,7 @@
 **Data do checkpoint GitHub:** 2026-09-20  
 **Repositório:** `washingtonmsdj/acheguese`  
 **Linha ativa:** `main`  
-**HEAD técnico base desta revalidação:** `31bc4db416e7d068b4be79e0e5970922a059beea` (`main` após o PR #231). O commit deste próprio corte será descendente desse SHA.
+**HEAD técnico base desta revalidação:** `194440370e3782751f36e6c6f55819340cf4f78e` (`main` após os PRs #233–#234). O commit deste próprio corte será descendente desse SHA.
 
 Este documento consolida ordem de execução, blockers e Definition of Done. Ele é um **registro operacional**, não uma fotografia autoritativa do que existe no produto. A fonte de verdade para decidir o que existe, o que está ativo e o que deve ser corrigido é sempre o **projeto real**: código da `main`, rotas, owners, serviços, schema/migrations, contratos, testes, deploy/runtime e comportamento observado.
 
@@ -28,7 +28,7 @@ O primeiro release continua territorial. **Cobertura uniforme dos 170 bairros de
 
 1. **Manter a convergência Git ↔ Supabase/runtime já fechada.** A cadeia ativa possui **673 migrations locais / 673 remotas / 673 identidades exatas / 0 local-only / 0 remote-only**. Os 13 hardenings de Mobilidade nunca aplicados foram preservados em `docs/09-reference/migrations-pending/` porque `mobility=false`; não executar `db push` nem promover módulo pausado apenas para alterar contagem.
 2. **Restaurar um gate executável.** No SHA `31bc4db4...`, jobs `ubuntu-latest` continuam retornando `runner_id=0` e `steps=[]`; o Types Sync self-hosted permanece queued sem runner. Isso é bloqueio de scheduler/conta/runner até prova em contrário, não teste vermelho de código. O candidato só avança quando security/lint/typecheck/test/build executarem de verdade no mesmo SHA.
-3. **Completar proteção da `main`.** Force-push/deleção já estão bloqueados, porém o fluxo ainda precisa exigir PR e checks que realmente executem. O publisher canônico de tipos Supabase deve deixar de escrever diretamente na `main` antes disso.
+3. **Completar proteção da `main`.** Force-push/deleção já estão bloqueados e o publisher canônico de tipos Supabase **já não escreve diretamente na `main`**: ele usa `automation/supabase-types-sync`, abre/atualiza PR e dispara os gates canônicos. O blocker restante é administrativo: exigir PR + checks que realmente executem e impedir bypass fora da release authority aprovada.
 4. **Preservar a prova de ledger/runtime no SHA candidato.** A auditoria de identidade já está em zero divergências; `validate:migrations`, `validate:migrations:provenance` e `validate:migrations:remote` ainda precisam executar de verdade no runner do candidato. Tipos gerados foram regenerados do runtime após os últimos DDLs.
 5. **Manter LGPD destrutivo fail-closed.** Delete/purge não pode ser habilitado enquanto `LGPD_PURGE_POLICY` não estiver pronto. Exportação também permanece desabilitada até certificação. O MVP pode lançar com essas capacidades indisponíveis, desde que a UI não prometa sucesso e nenhum caminho stale permaneça acessível.
 6. **Fechar segurança do que será exposto.** Priorizar Auth/conta, Profile, território, Comunidade, Business/Gastronomy/Services, Classificados, Busca/Mapa e superfícies administrativas necessárias. Hardening de módulos pausados pode continuar durante/depois do MVP, exceto quando compartilha uma boundary usada pelo núcleo.
@@ -70,6 +70,7 @@ O primeiro release continua territorial. **Cobertura uniforme dos 170 bairros de
 - [x] Ledger de migrations fechado: **673 locais ativas / 673 remotas / 673 exatas / 0 local-only / 0 remote-only**. Os 13 SQLs não aplicados de Mobilidade foram preservados como pending, coerente com `PUBLIC_LAUNCH_SURFACES.mobility=false`.
 - [~] O `Heavy Pre-Merge Certification` self-hosted existente foi ampliado para executar security/lint/typecheck/arquitetura/SSOT/migrations remotas/Vitest antes dos E2E/build no mesmo SHA. Isso cria um fallback executável no runner autorizado sem substituir os checks hosted; falta o runner `acheguese-heavy-windows` voltar a ficar online e produzir a prova.
 - [x] Canal DPO público revalidado: `submit-dpo-request` está ACTIVE, com origin/rate-limit/honeypot/Turnstile fail-closed; testes DPO foram realinhados às migrations canônicas e `.env.production` agora declara a `VITE_TURNSTILE_SITE_KEY` exigida pelo gate. O `admin-privacy-rpc` remoto ainda está em v3 sem o fallback de paginação da `main`, pendente do rollout self-hosted autorizado.
+- [x] O publisher de tipos Supabase não escreve mais diretamente na `main`: `supabase-types-sync.yml` usa a branch `automation/supabase-types-sync`, cria/atualiza PR, dispara Security/SSOT gates e o ratchet `supabase-types-sync-pr-authority.test.ts` impede regressão.
 - [ ] A prova de build/deploy/smoke do mesmo SHA continua blocker real de release.
 
 
@@ -88,7 +89,7 @@ O primeiro release continua territorial. **Cobertura uniforme dos 170 bairros de
 
 1. **R0 — congelar escopo:** nenhuma feature nova até o primeiro release; corrigir apenas blocker, regressão, segurança, dados de lançamento e qualidade necessária ao núcleo.
 2. **R1 — convergência:** **fechado no ledger** (673/673 exatas); manter a igualdade de tipos e reexecutar os validadores no mesmo SHA candidato.
-3. **R2 — release authority:** publisher de tipos via PR, CI realmente executando e branch protection exigindo o caminho aprovado.
+3. **R2 — release authority:** publisher de tipos via PR **fechado**; faltam CI realmente executando e branch protection exigindo o caminho aprovado.
 4. **R3 — Auth/Privacy/Security:** fechar autenticação e superfícies sensíveis do escopo; manter delete/export destrutivos fail-closed.
 5. **R4 — certificação funcional:** núcleo primeiro; Eventos/Vagas apenas se passarem no mesmo padrão.
 6. **R5 — exact-SHA:** security + lint + typecheck + tests + build + E2E + deploy real + smoke do mesmo SHA.
