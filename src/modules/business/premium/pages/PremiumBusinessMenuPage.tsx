@@ -6,6 +6,7 @@ import { Badge } from "@/shared/components/ui/badge";
 import { Button } from "@/shared/components/ui/button";
 import { Input } from "@/shared/components/ui/input";
 import { cn } from "@/shared/utils/cn";
+import { isLaunchSurfaceEnabled } from "@/app/config/launchScope";
 import {
   MenuItemCard,
   MenuItemDetailDrawer,
@@ -64,9 +65,10 @@ export default function PremiumBusinessMenuPage() {
   const [viewMode, setViewMode] = useState<MenuViewMode>("list");
   const [selectedItem, setSelectedItem] =
     useState<MenuItemWithRelations | null>(null);
+  const showCoupons = isLaunchSurfaceEnabled("coupons");
   const business = gastronomySnapshot?.gastronomy.business ?? null;
   const menu = gastronomySnapshot?.gastronomy.menu ?? null;
-  const promotions = gastronomySnapshot?.gastronomy.promotions ?? [];
+  const promotions = showCoupons ? gastronomySnapshot?.gastronomy.promotions ?? [] : [];
   const categories = useMemo(
     () =>
       [...(menu?.categories ?? [])].sort(
