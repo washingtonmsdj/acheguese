@@ -69,7 +69,7 @@ export function classifyBranch({
 export function loadAuditedSupersededHeads(manifestPath) {
   const absolutePath = resolve(process.cwd(), manifestPath);
   const parsed = JSON.parse(readFileSync(absolutePath, "utf8"));
-  if (!parsed || !Array.isArray(parsed.branches)) {
+  if (!parsed || parsed.version !== 1 || !Array.isArray(parsed.branches)) {
     throw new Error(`Invalid superseded branch manifest: ${manifestPath}`);
   }
 
@@ -81,9 +81,13 @@ export function loadAuditedSupersededHeads(manifestPath) {
     if (typeof entry.sha !== "string" || !/^[0-9a-f]{40}$/.test(entry.sha)) {
       throw new Error(`Invalid superseded branch SHA for ${entry.name}`);
     }
-    const shas = heads.get(entry.name) || new Set();
-    shas.add(entry.sha);
-    heads.set(entry.name, shas);
+    if (typeof entry.evidence !== "string" || !entry.evidence.trim()) {
+      throw new Error(`Missing superseded branch evidence for ${entry.name}`);
+    }
+    if (heads.has(entry.name)) {
+      throw new Error(`Duplicate superseded branch entry: ${entry.name}`);
+    }
+    heads.set(entry.name, new Set([entry.sha]));
   }
   return heads;
 }
