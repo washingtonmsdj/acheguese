@@ -30,12 +30,14 @@ export default function BusinessOverviewPage() {
             <CardTitle>{business.status}</CardTitle>
           </CardHeader>
         </Card>
-        <Card>
-          <CardHeader className="pb-2">
-            <CardDescription>Plano atual</CardDescription>
-            <CardTitle className="uppercase">{planTier}</CardTitle>
-          </CardHeader>
-        </Card>
+        {showBilling && (
+          <Card>
+            <CardHeader className="pb-2">
+              <CardDescription>Plano atual</CardDescription>
+              <CardTitle className="uppercase">{planTier}</CardTitle>
+            </CardHeader>
+          </Card>
+        )}
         <Card>
           <CardHeader className="pb-2">
             <CardDescription>Vertical gastronomia</CardDescription>
