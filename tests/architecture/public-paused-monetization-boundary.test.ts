@@ -11,6 +11,14 @@ describe("public paused monetization boundary", () => {
     "src/modules/classifieds/pages/NovoClassificadoPageSections.tsx",
     "utf8",
   );
+  const jobsPublishPage = readFileSync(
+    "src/modules/classifieds/jobs/pages/PublicarVagaPage.tsx",
+    "utf8",
+  );
+  const jobsPublishWorkflow = readFileSync(
+    "src/modules/classifieds/jobs/services/VagasPublishWorkflowService.ts",
+    "utf8",
+  );
 
   it("keeps Billing outside the MVP launch scope", () => {
     expect(launchScope).toContain("billing: false");
@@ -22,6 +30,16 @@ describe("public paused monetization boundary", () => {
     expect(classifiedsVisibility).not.toContain("Destaque Premium");
     expect(classifiedsVisibility).not.toContain(
       "Destaque seu anúncio no topo dos resultados",
+    );
+  });
+
+  it("does not retain a hidden premium write path while Billing is paused", () => {
+    expect(jobsPublishPage).not.toContain("setDestaque");
+    expect(jobsPublishPage).not.toContain("destaque,");
+    expect(jobsPublishWorkflow).not.toContain("form.destaque");
+    expect(jobsPublishWorkflow).not.toContain('highlightType = "premium"');
+    expect(jobsPublishWorkflow).toContain(
+      'const highlightType: VagaHighlightType = form.urgente ? "featured" : "none";',
     );
   });
 

@@ -36,7 +36,6 @@ interface PublishFormInput {
   salaryMode: VagaSalaryMode;
   salaryText: string | null;
   urgente: boolean;
-  destaque: boolean;
 }
 
 interface PublishContextInput {
@@ -62,9 +61,7 @@ export class VagasPublishWorkflowService {
     else if (form.contatoTelefone.trim()) applicationChannel = "phone";
     else if (form.contatoEmail.trim()) applicationChannel = "email";
 
-    let highlightType: VagaHighlightType = "none";
-    if (form.destaque) highlightType = "premium";
-    else if (form.urgente) highlightType = "featured";
+    const highlightType: VagaHighlightType = form.urgente ? "featured" : "none";
 
     const createdVaga = await VagasService.createVaga({
       slug: VagasService.generateSlug(form.titulo.trim(), form.empresa.trim()),

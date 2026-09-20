@@ -109,7 +109,6 @@ export default function PublicarVagaPage() {
   const [linkExterno, setLinkExterno] = useState("");
 
   // Visibility
-  const [destaque, setDestaque] = useState(false);
   const [urgente, setUrgente] = useState(false);
 
   // UI state
@@ -299,7 +298,6 @@ export default function PublicarVagaPage() {
           salaryMode: normalizedSalaryMode,
           salaryText: salary.text,
           urgente,
-          destaque,
         },
         context: {
           activeProfileId: activeProfile.id,
@@ -338,7 +336,6 @@ export default function PublicarVagaPage() {
     salarioMin,
     salarioMax,
     ocultarSalario,
-    destaque,
     urgente,
     categoria,
     contrato,
