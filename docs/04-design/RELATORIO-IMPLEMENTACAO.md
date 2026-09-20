@@ -685,3 +685,25 @@ A prancha 117 também está coberta pelos estados demonstrativos de visitante, v
 
 - Branch: `codex/reformulacao-entrada-comunidade`.
 - Commit restrito aos ganhos, ao estilo scoped e às documentações deste concept; alterações staged preexistentes permanecem fora do commit.
+
+## 20/09/2026 · Operação do entregador vinculado e comprovante — pranchas 050, 051 e 052
+
+### Auditoria e ajuste
+
+- Comparei as pranchas mobile de solicitação, coleta, coleta confirmada, destino e comprovante com `CentralMotoboyConceptMockPage`. O mock tinha oferta, coleta e destino, mas não representava o estado intermediário de coleta confirmada; incluí `phase=ready` com a mesma hierarquia da prancha 050.
+- Na solicitação mobile, alinhei a sequência visual para loja integrada, rota, mapa, remuneração e ações. Na coleta, mantive o checklist do pedido, o aviso de lacre, o contato com a loja e as ações de confirmação/problema. No destino, corrigi a ação principal para `Registrar recebimento`.
+- No desktop, substituí a composição antiga de solicitação de plataforma pela composição vinculada: rota vertical de coleta/destino, itens da entrega, remuneração conforme acordo e um único grupo de ações. O estado de coleta confirmada também recebeu composição própria para não saltar diretamente da coleta ao destino.
+- Corrigi identificadores e cabeçalhos para `#1043`, removi duplicidade de título na solicitação desktop e alinhei comprovante, formulário de recebimento, histórico e estados offline/problema ao vocabulário das pranchas 051/052.
+- Mantive a operação demonstrativa: contatos, navegação, aceite, código e comprovante não simulam persistência real; remuneração não confirma pagamento e foto não é requisito padrão.
+
+### Validação e evidências
+
+- Navegador interno mantido aberto nas rotas mobile e desktop do entregador; a tela mobile final ficou na rota de coleta confirmada para acompanhamento do novo estado.
+- Mobile conferido em `389 × 867` CSS px: solicitação, coleta, coleta confirmada, destino, recebimento e comprovante sem overflow horizontal; o formulário de recebimento mantém a ação desabilitada enquanto código/observação obrigatórios não estão completos.
+- Desktop conferido em `1440 × 867` e `1707 × 960` CSS px: solicitação com proporção compacta da prancha, entrega com mapa/ações e estados de conclusão sem overflow do documento.
+- `npx eslint src/modules/central/pages/CentralMotoboyConceptMockPage.tsx`, `npm run typecheck:app` e `git diff --check` executados.
+
+### Git
+
+- Branch: `codex/reformulacao-entrada-comunidade`.
+- Commit restrito ao componente e à documentação deste concept; alterações staged preexistentes permanecem fora do commit.

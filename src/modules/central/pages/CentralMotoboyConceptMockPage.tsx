@@ -12,6 +12,7 @@ import {
   Check,
   CheckCircle2,
   ChevronDown,
+  ChevronRight,
   CircleHelp,
   CircleOff,
   Clock3,
@@ -24,6 +25,7 @@ import {
   Info,
   MapPin,
   MessageCircle,
+  List,
   MoreHorizontal,
   Navigation,
   Package,
@@ -47,7 +49,7 @@ import { cn } from "@/shared/utils/cn";
 import type { DeliveryProof } from "@/core/mobility/delivery/proof-of-delivery/types";
 
 type DriverCenterState = "overview" | "delivery" | "earnings" | "availability";
-type MobileDeliveryPhase = "offer" | "pickup" | "delivery";
+type MobileDeliveryPhase = "offer" | "pickup" | "ready" | "delivery";
 type CompletionScreen = "proof" | "problem" | "offline" | "history";
 
 type CompletionDeliveryData = {
@@ -64,7 +66,7 @@ type CompletionDeliveryData = {
 };
 
 const COMPLETION_DELIVERY: CompletionDeliveryData = {
-  id: "#1042",
+  id: "#1043",
   recipientName: "Ana Oliveira",
   recipientPhone: "(71) 9 9123-4567",
   storeName: "Sabores da Ana",
@@ -77,8 +79,8 @@ const COMPLETION_DELIVERY: CompletionDeliveryData = {
 };
 
 const COMPLETION_HISTORY = [
-  { ...COMPLETION_DELIVERY, id: "#1042", storeName: "Sabores da Ana", deliveryTime: "12:46", deliveryValue: "R$ 7,00" },
-  { ...COMPLETION_DELIVERY, id: "#1038", storeName: "Mercado da Praça", deliveryTime: "11:30", deliveryValue: "R$ 8,00" },
+  { ...COMPLETION_DELIVERY, id: "#1043", storeName: "Sabores da Ana", deliveryTime: "12:46", deliveryValue: "R$ 7,00" },
+  { ...COMPLETION_DELIVERY, id: "#1044", storeName: "Mercado da Praça", deliveryTime: "11:30", deliveryValue: "R$ 8,00" },
 ];
 
 type StateConfig = {
@@ -105,7 +107,7 @@ function parseState(value: string | null): DriverCenterState {
 }
 
 function parseMobileDeliveryPhase(value: string | null): MobileDeliveryPhase {
-  return value === "offer" || value === "pickup" || value === "delivery" ? value : "delivery";
+  return value === "offer" || value === "pickup" || value === "ready" || value === "delivery" ? value : "delivery";
 }
 
 function parseCompletionScreen(value: string | null): CompletionScreen {
@@ -149,8 +151,9 @@ function ProfileControl({ mobile = false }: { mobile?: boolean }) {
 }
 
 function MobileTopBar({ state, phase, completionScreen }: { state: DriverCenterState; phase: MobileDeliveryPhase; completionScreen?: CompletionScreen | null }) {
-  if (state === "delivery" && completionScreen === "history") {
-    return <header className="h-12 shrink-0 bg-white md:hidden" aria-hidden="true" />;
+  if (state === "delivery" && completionScreen) {
+    const title = completionScreen === "proof" ? "Recebimento · #1043" : completionScreen === "history" ? "Comprovante · #1043" : "Entrega · #1043";
+    return <header className="flex h-12 shrink-0 items-center gap-3 bg-territory-brand px-4 text-white md:hidden"><button type="button" onClick={() => window.history.back()} className="flex h-9 w-9 items-center justify-center rounded-full" aria-label="Voltar"><ArrowLeft className="h-5 w-5" aria-hidden="true" /></button><span className="flex-1 text-center font-heading text-sm font-bold">{title}</span><span className="h-9 w-9" aria-hidden="true" /></header>;
   }
 
   if (state === "overview") {
@@ -166,11 +169,14 @@ function MobileTopBar({ state, phase, completionScreen }: { state: DriverCenterS
 
   if (state === "delivery" && phase === "offer" && !completionScreen) {
     return (
-      <header className="flex h-12 shrink-0 items-center gap-2 border-b border-territory-border bg-white px-3 md:hidden">
+      <header className="grid h-12 shrink-0 grid-cols-[2.5rem_1fr_2.5rem] items-center border-b border-territory-border bg-white px-3 md:hidden">
         <button type="button" onClick={() => window.history.back()} className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full text-territory-brand" aria-label="Voltar">
           <ArrowLeft className="h-5 w-5" aria-hidden="true" />
         </button>
-        <span className="font-heading text-sm font-bold text-territory-ink">Entregas</span>
+        <span className="text-center font-heading text-sm font-bold text-territory-ink">Nova entrega #1043</span>
+        <button type="button" onClick={() => toast.info("Mais opções ficarão disponíveis quando conectadas.")} className="flex h-9 w-9 items-center justify-center justify-self-end rounded-full text-territory-brand" aria-label="Mais opções">
+          <MoreHorizontal className="h-5 w-5" aria-hidden="true" />
+        </button>
       </header>
     );
   }
@@ -181,7 +187,7 @@ function MobileTopBar({ state, phase, completionScreen }: { state: DriverCenterS
         <ArrowLeft className="h-5 w-5" aria-hidden="true" />
       </button>
       <span className="text-center font-heading text-sm font-bold text-territory-ink">
-        {state === "delivery" ? (completionScreen === "history" ? "Minhas entregas" : phase === "offer" ? "Entregas" : "Entrega #1042") : state === "earnings" ? "Ganhos" : "Disponibilidade"}
+        {state === "delivery" ? (completionScreen === "history" ? "Minhas entregas" : phase === "offer" ? "Nova entrega #1043" : "Entrega #1043") : state === "earnings" ? "Ganhos" : "Disponibilidade"}
       </span>
       {phase === "offer" ? <span aria-hidden="true" /> : <button type="button" onClick={() => toast.info("Mais opções ficarão disponíveis quando conectadas.")} className="flex h-9 w-9 items-center justify-center justify-self-end rounded-full text-territory-brand" aria-label="Mais opções">
         <MoreHorizontal className="h-5 w-5" aria-hidden="true" />
@@ -194,6 +200,7 @@ type MobileAction = {
   label: string;
   icon?: LucideIcon;
   onClick: () => void;
+  disabled?: boolean;
   tone?: "sun" | "danger";
 };
 
@@ -204,11 +211,11 @@ function MobileActionFooter({ primary, secondary, className, size = "default" }:
   return (
     <div className={cn("sticky bottom-0 z-20 -mx-1 bg-[#fbfaf7]/95 px-1 pb-[max(0.5rem,env(safe-area-inset-bottom))] pt-2 backdrop-blur-sm", className)}>
       <div className="flex flex-col gap-2">
-        <Button type="button" onClick={primary.onClick} className={cn("w-full rounded-xl text-sm font-bold", size === "concept" ? "h-[3.25rem]" : "h-11", primary.tone === "danger" ? "bg-rose-600 text-white hover:bg-rose-700" : "bg-territory-sun text-territory-ink hover:bg-territory-sun/85")}>
+        <Button type="button" disabled={primary.disabled} onClick={primary.onClick} className={cn("w-full rounded-xl text-sm font-bold", size === "concept" ? "h-[3.25rem]" : "h-11", primary.tone === "danger" ? "bg-rose-600 text-white hover:bg-rose-700" : "bg-territory-sun text-territory-ink hover:bg-territory-sun/85")}>
           {PrimaryIcon ? <PrimaryIcon className="mr-2 h-4 w-4" aria-hidden="true" /> : null}
           {primary.label}
         </Button>
-        <Button type="button" variant="outline" onClick={secondary.onClick} className={cn("w-full rounded-xl border-territory-border bg-territory-surface text-sm font-bold text-territory-ink", size === "concept" ? "h-[3.25rem]" : "h-11")}>
+        <Button type="button" disabled={secondary.disabled} variant="outline" onClick={secondary.onClick} className={cn("w-full rounded-xl border-territory-border bg-territory-surface text-sm font-bold text-territory-ink", size === "concept" ? "h-[3.25rem]" : "h-11")}>
           {SecondaryIcon ? <SecondaryIcon className="mr-2 h-4 w-4" aria-hidden="true" /> : null}
           {secondary.label}
         </Button>
@@ -265,13 +272,14 @@ function Sidebar({ state, onChange }: { state: DriverCenterState; onChange: (nex
 }
 
 function PageHeader({ state, phase, completionScreen, isOnline, onToggleOnline }: { state: DriverCenterState; phase: MobileDeliveryPhase; completionScreen?: CompletionScreen | null; isOnline: boolean; onToggleOnline: () => void }) {
-  const title = state === "overview" ? "Sua central" : state === "delivery" ? (completionScreen ? "Conclusão, imprevistos e histórico" : "Pedido #1042") : state === "earnings" ? "Ganhos e histórico" : "Disponibilidade";
-  const subtitle = state === "overview" ? "Ofertas perto de você, na sua área de atuação." : state === "delivery" ? (completionScreen ? "Finalize entregas e consulte os registros da operação." : phase === "offer" ? "Confira os detalhes e solicite a entrega." : "Siga o roteiro e conclua com segurança.") : state === "earnings" ? "Acompanhe suas entregas e valores registrados." : "Defina sua área de atuação e fique online para receber ofertas.";
+  const title = state === "overview" ? "Sua central" : state === "delivery" ? (completionScreen === "proof" ? "Registrar recebimento · #1043" : completionScreen === "problem" ? "Registrar problema · #1043" : completionScreen === "history" ? "Comprovante · #1043" : completionScreen === "offline" ? "Entrega #1043" : phase === "offer" ? "Nova entrega #1043" : "Entrega #1043") : state === "earnings" ? "Ganhos e histórico" : "Disponibilidade";
+  const subtitle = state === "overview" ? "Ofertas perto de você, na sua área de atuação." : state === "delivery" ? (completionScreen ? "Sabores da Ana · Equipe da loja integrada" : phase === "offer" ? "Confira os detalhes e solicite a entrega." : "Siga o roteiro e conclua com segurança.") : state === "earnings" ? "Acompanhe suas entregas e valores registrados." : "Defina sua área de atuação e fique online para receber ofertas.";
+  const deliveryStatus = state === "delivery" && !completionScreen && phase !== "offer" ? (phase === "ready" ? "Coleta confirmada" : "Em entrega") : null;
 
   return (
     <div className="flex flex-wrap items-start justify-between gap-3 border-b border-territory-border pb-3">
       <div>
-        <h1 className="font-heading text-xl font-bold tracking-[-0.045em] text-territory-ink">{title}</h1>
+        <div className="flex flex-wrap items-center gap-2"><h1 className="font-heading text-xl font-bold tracking-[-0.045em] text-territory-ink">{title}</h1>{deliveryStatus ? <span className={cn("inline-flex items-center rounded-full px-2.5 py-1 text-[0.68rem] font-bold", phase === "ready" ? "bg-emerald-100 text-emerald-800" : "bg-blue-100 text-blue-800")}>{deliveryStatus}</span> : null}</div>
         <p className="mt-0.5 text-xs text-territory-muted">{subtitle}</p>
       </div>
       <div className="flex items-center gap-2">
@@ -412,8 +420,8 @@ function getMobileDeliveryFlowConfig(phase: MobileDeliveryPhase): MobileDelivery
       quickActionIcon: MessageCircle,
       quickActionToast: "O contato com a loja será aberto quando conectado.",
       primary: { label: "Confirmar coleta", icon: Check, onClick: () => toast.success("Coleta confirmada na demonstração.") },
-      secondary: { label: "Preciso de ajuda", icon: CircleHelp, onClick: () => toast.info("A ajuda ficará disponível quando conectada.") },
-      notice: "Confira o pedido antes de confirmar a coleta.",
+      secondary: { label: "Registrar problema", icon: AlertCircle, onClick: () => toast.info("O registro de problema será aberto quando conectado.") },
+      notice: "Não abra a embalagem lacrada.",
     };
   }
 
@@ -431,7 +439,7 @@ function getMobileDeliveryFlowConfig(phase: MobileDeliveryPhase): MobileDelivery
     quickActionLabel: "Falar com o cliente",
     quickActionIcon: MessageCircle,
     quickActionToast: "O contato com o cliente será aberto quando conectado.",
-    primary: { label: "Confirmar entrega", icon: Check, onClick: () => toast.success("Entrega confirmada na demonstração.") },
+    primary: { label: "Registrar recebimento", icon: Check, onClick: () => toast.success("Recebimento registrado na demonstração.") },
     secondary: { label: "Registrar problema", icon: AlertCircle, onClick: () => toast.info("O registro de problema será aberto quando conectado.") },
     notice: undefined,
     safetyNote: true,
@@ -470,29 +478,23 @@ function MobileOfferDetail({ icon: Icon, title, value, tone }: { icon: LucideIco
 
 function MobileOfferContent() {
   return (
-    <div className="flex h-[calc(100dvh-4.5rem)] max-h-[calc(100dvh-4.5rem)] min-h-0 flex-col gap-2 overflow-y-auto overscroll-contain pb-0">
-      <div className="px-1"><h1 className="font-heading text-[1.35rem] font-bold tracking-[-0.045em] text-territory-brand">Nova oferta</h1></div>
-      <div className="flex items-center gap-3 px-1">
+    <div className="flex h-[calc(100dvh-4.5rem)] max-h-[calc(100dvh-4.5rem)] min-h-0 flex-col gap-2 overflow-x-hidden overflow-y-auto overscroll-contain pb-0">
+      <section className="flex items-center gap-3 rounded-xl border border-territory-border bg-territory-surface p-3">
         <img src={foodImage} alt="" className="h-12 w-12 rounded-lg object-cover" />
-        <div className="min-w-0"><p className="truncate text-base font-bold text-territory-ink">Sabores da Ana</p><p className="text-xs text-territory-muted">Restaurante · Santa Cruz</p></div>
-      </div>
-      <MapCanvas mode="delivery" size="mobile" phase="offer" mobileAdaptive="offer" />
-      <div className="grid grid-cols-2 divide-x divide-territory-border rounded-xl border border-territory-border bg-territory-surface py-2.5">
-        <div className="flex items-center justify-center gap-2 px-2 text-center"><Bike className="h-5 w-5 shrink-0 text-territory-brand" aria-hidden="true" /><span className="text-xs text-territory-muted"><strong className="block whitespace-nowrap text-[0.8rem] font-bold text-territory-ink">Até a coleta</strong>0,8 km</span></div>
-        <div className="flex items-center justify-center gap-2 px-2 text-center"><Navigation className="h-5 w-5 shrink-0 text-territory-brand" aria-hidden="true" /><span className="text-xs text-territory-muted"><strong className="block whitespace-nowrap text-[0.8rem] font-bold text-territory-ink">Coleta ao destino</strong>2,1 km</span></div>
-      </div>
-      <div className="space-y-1.5 px-1">
+        <div className="min-w-0 flex-1"><p className="truncate text-base font-bold text-territory-ink">Sabores da Ana</p><p className="text-xs text-territory-muted">Comida caseira</p></div>
+        <span className="inline-flex items-center gap-1 rounded-full bg-emerald-50 px-2 py-1 text-[0.68rem] font-bold text-emerald-800"><CheckCircle2 className="h-3.5 w-3.5" aria-hidden="true" />Equipe da loja integrada</span>
+      </section>
+      <section className="space-y-3 rounded-xl border border-territory-border bg-territory-surface p-3">
         <MobileOfferDetail icon={MapPin} title="Coleta" value="Sabores da Ana · Santa Cruz" tone="pickup" />
         <MobileOfferDetail icon={MapPin} title="Destino" value="Nordeste de Amaralina · Salvador" tone="delivery" />
         <MobileOfferDetail icon={Package} title="Pacote" value="Refeição · 1 sacola" tone="package" />
-      </div>
-      <section className="rounded-xl bg-emerald-50 px-3 py-2.5">
-        <div className="flex items-center justify-between gap-2"><div><p className="text-xs text-territory-muted">Valor da oferta</p><p className="font-heading text-2xl font-bold text-territory-ink">R$ 7,00</p></div><ArrowRight className="h-5 w-5 text-territory-ink" aria-hidden="true" /></div>
-        <button type="button" onClick={() => toast.info("A composição do valor ficará disponível quando conectada.")} className="mt-1 text-xs font-semibold text-territory-muted">Ver composição do valor</button>
       </section>
+      <MapCanvas mode="delivery" size="mobile" phase="offer" mobileAdaptive="offer" />
       <div>
-        <p className="flex items-center gap-2 px-1 text-xs text-territory-muted"><Info className="h-4 w-4 shrink-0 text-territory-brand" aria-hidden="true" />Confira os detalhes antes de aceitar.</p>
-        <MobileActionFooter primary={{ label: "Aceitar entrega", icon: Check, onClick: () => toast.success("Entrega aceita na demonstração.") }} secondary={{ label: "Agora não", onClick: () => toast.info("Oferta recusada na demonstração.") }} />
+        <InfoNotice className="bg-blue-50 text-blue-900" icon={Coins}>Remuneração conforme acordo com a loja.</InfoNotice>
+        <Button type="button" variant="outline" onClick={() => toast.info("O contato com a loja será aberto quando conectado.")} className="mt-2 h-11 w-full border-territory-border bg-territory-surface text-sm font-bold text-territory-ink"><MessageCircle className="mr-2 h-4 w-4" aria-hidden="true" />Falar com a loja</Button>
+        <MobileActionFooter primary={{ label: "Aceitar entrega", icon: Check, onClick: () => toast.success("Entrega aceita na demonstração.") }} secondary={{ label: "Recusar", onClick: () => toast.info("Oferta recusada na demonstração.") }} />
+        <p className="mt-2 text-center text-xs text-territory-muted">Recusar não cancela o pedido do cliente.</p>
       </div>
     </div>
   );
@@ -500,6 +502,7 @@ function MobileOfferContent() {
 
 function MobileDeliveryContent({ phase, onConfirmDelivery }: { phase: MobileDeliveryPhase; onConfirmDelivery?: () => void }) {
   if (phase === "offer") return <MobileOfferContent />;
+  if (phase === "ready") return <MobileReadyContent />;
 
   const config = getMobileDeliveryFlowConfig(phase);
   const StatusIcon = config.statusIcon;
@@ -507,36 +510,52 @@ function MobileDeliveryContent({ phase, onConfirmDelivery }: { phase: MobileDeli
   const primaryAction = phase === "delivery" && onConfirmDelivery ? { ...config.primary, onClick: onConfirmDelivery } : config.primary;
 
   return (
-    <div className="flex h-[calc(100dvh-4.5rem)] max-h-[calc(100dvh-4.5rem)] min-h-0 flex-col gap-3 overflow-y-auto overscroll-contain pb-0 pt-3">
+    <div className="flex h-[calc(100dvh-4.5rem)] max-h-[calc(100dvh-4.5rem)] min-h-0 flex-col gap-3 overflow-x-hidden overflow-y-auto overscroll-contain pb-0 pt-3">
       <div className="flex justify-center">
         <span className={cn("inline-flex items-center gap-2 rounded-full px-4 py-2 text-xs font-bold", config.statusClassName)}><StatusIcon className="h-4 w-4" aria-hidden="true" />{config.statusLabel}</span>
       </div>
-      {config.currentStep ? <ProgressSteps currentStep={config.currentStep} /> : null}
       <MapCanvas mode="delivery" size="mobile" phase={phase} mobileAdaptive="flow" />
       <MobileDeliveryOrderCard config={config} />
-
-      <div className="grid grid-cols-2 gap-2">
-        <Button type="button" variant="outline" onClick={() => toast.info("A navegação será aberta quando o rastreamento estiver conectado.")} className="h-11 border-territory-border bg-territory-surface px-2 text-xs font-bold text-territory-ink"><Navigation className="mr-1.5 h-4 w-4" aria-hidden="true" />Abrir navegação</Button>
-        <Button type="button" variant="outline" onClick={() => toast.info(config.quickActionToast)} className="h-11 border-territory-border bg-territory-surface px-2 text-xs font-bold text-territory-ink"><QuickActionIcon className="mr-1.5 h-4 w-4" aria-hidden="true" />{config.quickActionLabel}</Button>
-      </div>
-      <div>
-        {config.notice ? <InfoNotice className="min-h-10 bg-amber-50 text-amber-900" icon={AlertCircle}>{config.notice}</InfoNotice> : null}
-        <MobileActionFooter className={config.notice ? "mt-2" : undefined} primary={primaryAction} secondary={config.secondary} />
-        {config.safetyNote ? <p className="mt-6 flex items-center justify-center gap-2 text-xs text-territory-muted"><Bike className="h-4 w-4" aria-hidden="true" />Use o aplicativo com a moto parada.</p> : null}
-      </div>
+      {phase === "pickup" ? <>
+        <Button type="button" onClick={() => toast.info("A navegação será aberta quando o rastreamento estiver conectado.")} className="h-11 w-full rounded-xl bg-territory-brand text-sm font-bold text-white hover:bg-territory-brand/90"><Navigation className="mr-2 h-4 w-4" aria-hidden="true" />Abrir navegação</Button>
+        <section className="rounded-xl border border-territory-border bg-territory-surface p-3"><label className="flex items-center gap-3 text-sm text-territory-ink"><input type="checkbox" className="h-5 w-5 accent-territory-brand" />Confira o número do pedido</label><label className="mt-3 flex items-center gap-3 text-sm text-territory-ink"><input type="checkbox" className="h-5 w-5 accent-territory-brand" />Confira 1 volume e o lacre</label></section>
+        <InfoNotice className="min-h-10 bg-blue-50 text-blue-900" icon={Info}>{config.notice}</InfoNotice>
+        <Button type="button" variant="outline" onClick={() => toast.info(config.quickActionToast)} className="h-11 w-full border-territory-border bg-territory-surface text-sm font-bold text-territory-ink"><QuickActionIcon className="mr-2 h-4 w-4" aria-hidden="true" />{config.quickActionLabel}</Button>
+        <MobileActionFooter primary={primaryAction} secondary={config.secondary} />
+      </> : <>
+        <section className="rounded-xl border border-territory-border bg-territory-surface p-3"><div className="flex items-center gap-2.5"><span className="flex h-10 w-10 items-center justify-center rounded-lg bg-slate-100 text-territory-brand"><Package className="h-5 w-5" aria-hidden="true" /></span><div><p className="text-sm font-bold text-territory-ink">Pacote</p><p className="text-xs text-territory-muted">Refeição · 1 sacola</p></div></div></section>
+        <section className="rounded-xl border border-territory-border bg-territory-surface p-3"><div className="flex items-center gap-2.5"><span className="flex h-10 w-10 items-center justify-center rounded-lg bg-slate-100 text-territory-brand"><FileText className="h-5 w-5" aria-hidden="true" /></span><div><p className="text-sm font-bold text-territory-ink">Orientação do pedido</p><p className="text-xs text-territory-muted">Entregar em mãos</p></div></div></section>
+        <div className="grid grid-cols-2 gap-2"><Button type="button" variant="outline" onClick={() => toast.info("A navegação será aberta quando o rastreamento estiver conectado.")} className="h-11 border-territory-border bg-territory-surface px-2 text-xs font-bold text-territory-ink"><Navigation className="mr-1.5 h-4 w-4" aria-hidden="true" />Abrir navegação</Button><Button type="button" variant="outline" onClick={() => toast.info(config.quickActionToast)} className="h-11 border-territory-border bg-territory-surface px-2 text-xs font-bold text-territory-ink"><QuickActionIcon className="mr-1.5 h-4 w-4" aria-hidden="true" />{config.quickActionLabel}</Button></div>
+        <InfoNotice className="min-h-10 bg-blue-50 text-blue-900" icon={Info}>A próxima etapa é seguir ao destino.</InfoNotice>
+        <MobileActionFooter primary={primaryAction} secondary={config.secondary} />
+        {config.safetyNote ? <p className="mt-1 flex items-center justify-center gap-2 text-xs text-territory-muted"><Bike className="h-4 w-4" aria-hidden="true" />Use o aplicativo com a moto parada.</p> : null}
+      </>}
     </div>
   );
 }
 
 function MobileCompletionFrame({ screen, children }: { screen: CompletionScreen; children: ReactNode }) {
-  return <div className={cn("flex min-h-0 flex-col gap-4 overflow-y-auto overscroll-contain pb-0", screen === "history" ? "h-[calc(100dvh-8.75rem)] max-h-[calc(100dvh-8.75rem)]" : "h-[calc(100dvh-4.5rem)] max-h-[calc(100dvh-4.5rem)]")}>{children}</div>;
+  return <div className={cn("flex min-h-0 flex-col gap-2 overflow-x-hidden overflow-y-auto overscroll-contain pb-1", screen === "history" ? "h-[calc(100dvh-3rem)] max-h-[calc(100dvh-3rem)]" : "h-[calc(100dvh-3rem)] max-h-[calc(100dvh-3rem)]")}>{children}</div>;
+}
+
+function MobileReadyContent() {
+  return (
+    <div className="flex h-[calc(100dvh-4.5rem)] max-h-[calc(100dvh-4.5rem)] min-h-0 flex-col gap-3 overflow-x-hidden overflow-y-auto overscroll-contain pb-0 pt-3">
+      <div className="flex justify-center"><span className="inline-flex items-center gap-2 rounded-full bg-emerald-50 px-4 py-2 text-xs font-bold text-emerald-800"><CheckCircle2 className="h-4 w-4" aria-hidden="true" />Coleta confirmada</span></div>
+      <section className="flex items-center gap-3 rounded-xl border border-emerald-200 bg-emerald-50 px-3 py-3"><span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-emerald-600 text-white"><Check className="h-5 w-5" aria-hidden="true" /></span><div><p className="text-sm font-bold text-territory-ink">Pedido coletado na loja</p><p className="text-xs text-emerald-800">Sabores da Ana · 10:12</p></div></section>
+      <section className="flex items-center gap-3 rounded-xl border border-territory-border bg-territory-surface p-3"><span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-slate-100 text-territory-brand"><UserRound className="h-5 w-5" aria-hidden="true" /></span><div className="min-w-0 flex-1"><p className="text-sm font-bold text-territory-ink">Ana Oliveira</p><p className="text-xs text-territory-muted">Rua Exemplo, 120 · Casa 2</p><p className="text-xs text-territory-muted">Nordeste de Amaralina · Salvador</p></div><ChevronRight className="h-5 w-5 text-territory-muted" aria-hidden="true" /></section>
+      <section className="flex items-center gap-3 rounded-xl border border-territory-border bg-territory-surface p-3"><span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-slate-100 text-territory-brand"><Package className="h-5 w-5" aria-hidden="true" /></span><div><p className="text-sm font-bold text-territory-ink">Pacote</p><p className="text-xs text-territory-muted">Refeição · 1 sacola</p></div></section>
+      <InfoNotice className="min-h-10 bg-blue-50 text-blue-900" icon={Info}>A próxima etapa é seguir ao destino.</InfoNotice>
+      <MobileActionFooter primary={{ label: "Iniciar entrega", icon: ArrowRight, onClick: () => toast.success("Entrega iniciada na demonstração.") }} secondary={{ label: "Ver detalhes", icon: List, onClick: () => toast.info("Os detalhes já estão exibidos nesta demonstração.") }} />
+    </div>
+  );
 }
 
 function CompletionStoreSummary({ delivery = COMPLETION_DELIVERY }: { delivery?: CompletionDeliveryData }) {
   return (
     <section className="flex items-center gap-3 rounded-xl bg-slate-50 px-3 py-3">
       <span className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-amber-100 text-amber-700"><Store className="h-6 w-6" aria-hidden="true" /></span>
-      <div className="min-w-0 flex-1"><p className="text-sm font-bold text-territory-ink">{delivery.recipientName}</p><p className="truncate text-xs text-territory-muted">{delivery.storeName} → {delivery.destination.split(" · ")[0]}</p></div>
+      <div className="min-w-0 flex-1"><p className="text-sm font-bold text-territory-ink">{delivery.storeName}</p><p className="truncate text-xs text-territory-muted">Equipe da loja integrada</p></div>
     </section>
   );
 }
@@ -556,14 +575,13 @@ function MobileProofContent({ delivery = COMPLETION_DELIVERY, onConfirm, onBack 
 
   return (
     <MobileCompletionFrame screen="proof">
-      <div className="px-1 pt-1"><h1 className="font-heading text-[1.35rem] font-bold tracking-[-0.045em] text-territory-ink">Confirmar entrega</h1></div>
       <CompletionStoreSummary delivery={delivery} />
-      <label className="px-1 text-sm font-semibold text-territory-ink">Código do destinatário <span className="font-normal text-territory-muted">(opcional)</span><input value={proofCode} onChange={(event) => setProofCode(event.target.value)} className="mt-2 h-11 w-full rounded-lg border border-territory-border bg-territory-surface px-3 text-sm font-normal text-territory-ink outline-none placeholder:text-slate-400 focus:border-territory-brand" placeholder="Digite o código" /></label>
-      <label className="px-1 text-sm font-semibold text-territory-ink">Como foi entregue? <span className="text-rose-600">*</span><textarea value={proofObservation} onChange={(event) => setProofObservation(event.target.value)} className="mt-2 min-h-24 w-full resize-none rounded-lg border border-territory-border bg-territory-surface px-3 py-2.5 text-sm font-normal text-territory-ink outline-none focus:border-territory-brand" /><span className="mt-1 block text-xs font-normal text-territory-muted">Essa informação ficará no comprovante.</span></label>
-      <div className="mt-auto pt-1">
-        <InfoNotice className="bg-blue-50 text-blue-900">Confirme somente após entregar o pedido.</InfoNotice>
-        <MobileActionFooter size="concept" className="mt-2" primary={{ label: "Confirmar entrega", icon: Check, onClick: () => onConfirm({ code: proofCode.trim() || undefined, observation: proofObservation.trim() || undefined }) }} secondary={{ label: "Voltar à entrega", onClick: onBack }} />
-      </div>
+      <label className="px-1 text-sm font-semibold text-territory-ink">Como foi entregue? <span className="text-rose-600">*</span><select className="mt-2 h-11 w-full rounded-lg border border-territory-border bg-territory-surface px-3 text-sm font-normal text-territory-ink"><option>Ao destinatário</option><option>Em local autorizado</option></select></label>
+      <label className="px-1 text-sm font-semibold text-territory-ink">Quem recebeu? <span className="text-rose-600">*</span><input value={delivery.recipientName} readOnly className="mt-2 h-11 w-full rounded-lg border border-territory-border bg-territory-surface px-3 text-sm font-normal text-territory-ink" /></label>
+      <label className="px-1 text-sm font-semibold text-territory-ink">Código de entrega <span className="text-rose-600">*</span><input value={proofCode} onChange={(event) => setProofCode(event.target.value)} className="mt-2 h-11 w-full rounded-lg border border-territory-border bg-territory-surface px-3 text-sm font-normal text-territory-ink outline-none placeholder:text-slate-400 focus:border-territory-brand" placeholder="Informe o código do destinatário" /><span className="mt-1 block text-xs font-normal text-territory-muted">Exigido neste pedido. Peça apenas no momento da entrega.</span></label>
+      <label className="px-1 text-sm font-semibold text-territory-ink">Observação <span className="text-rose-600">*</span><textarea value={proofObservation} onChange={(event) => setProofObservation(event.target.value)} className="mt-2 min-h-20 w-full resize-none rounded-lg border border-territory-border bg-territory-surface px-3 py-2.5 text-sm font-normal text-territory-ink outline-none focus:border-territory-brand" /></label>
+      <InfoNotice className="bg-blue-50 text-blue-900">Foto não exigida nesta entrega.</InfoNotice>
+      <div className="mt-auto pt-1"><Button type="button" disabled={!proofCode.trim() || !proofObservation.trim()} onClick={() => onConfirm({ code: proofCode.trim() || undefined, observation: proofObservation.trim() || undefined })} className="h-11 w-full rounded-xl bg-territory-sun text-sm font-bold text-territory-ink hover:bg-territory-sun/85">Validar e concluir</Button><button type="button" onClick={onBack} className="mt-2 block w-full text-center text-sm font-semibold text-blue-700 underline">Problema com o código</button></div>
     </MobileCompletionFrame>
   );
 }
@@ -616,19 +634,14 @@ function MobileOfflineContent({ delivery = COMPLETION_DELIVERY, onRetry, onBack 
   );
 }
 
-function MobileHistoryCard({ delivery, onOpenProof }: { delivery: CompletionDeliveryData; onOpenProof: () => void }) {
-  return <section className="rounded-xl border border-territory-border bg-territory-surface p-3"><div className="flex items-start gap-2"><div className="min-w-0 flex-1"><p className="truncate text-sm font-bold text-territory-ink">{delivery.id} · {delivery.storeName}</p><p className="mt-2 flex items-center gap-2 text-xs text-territory-muted"><CalendarDays className="h-4 w-4" aria-hidden="true" />Hoje, {delivery.deliveryTime}</p><p className="mt-2 flex items-center gap-2 text-xs text-territory-muted"><Coins className="h-4 w-4" aria-hidden="true" />Valor registrado</p><p className="text-sm font-bold text-territory-ink">{delivery.deliveryValue}</p></div><span className="rounded-lg bg-emerald-100 px-2 py-1 text-xs font-bold text-emerald-800">Entregue</span></div><div className="mt-3 flex items-center justify-between border-t border-territory-border pt-3 text-xs font-semibold text-blue-700"><button type="button" onClick={onOpenProof} className="flex items-center gap-1"><Receipt className="h-4 w-4" aria-hidden="true" />Ver comprovante</button><button type="button" onClick={() => toast.info("Detalhes ficarão disponíveis quando conectados.")} className="flex items-center gap-1">Ver detalhes <ArrowRight className="h-4 w-4" aria-hidden="true" /></button></div></section>;
-}
-
-function MobileHistoryContent({ history = COMPLETION_HISTORY, onOpenProof }: { history?: CompletionDeliveryData[]; onOpenProof: () => void }) {
+function MobileHistoryContent() {
   return (
     <MobileCompletionFrame screen="history">
-      <div className="px-1 pt-1"><h1 className="font-heading text-[1.35rem] font-bold tracking-[-0.045em] text-territory-ink">Minhas entregas</h1></div>
-      <div className="grid grid-cols-2 border-b border-territory-border text-sm"><button type="button" className="border-b-2 border-transparent py-2.5 text-territory-muted">Em andamento</button><button type="button" className="border-b-2 border-territory-brand py-2.5 font-bold text-territory-brand">Histórico</button></div>
-      <label className="relative block"><Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-territory-muted" aria-hidden="true" /><input className="h-11 w-full rounded-lg border border-territory-border bg-territory-surface pl-9 pr-3 text-sm text-territory-ink outline-none placeholder:text-territory-muted focus:border-territory-brand" placeholder="Buscar entrega" /></label>
-      <div className="grid grid-cols-[86px_1fr] gap-2"><Button type="button" className="h-9 rounded-lg bg-territory-brand text-xs font-bold text-white hover:bg-territory-brand/90">Hoje</Button><Button type="button" variant="outline" onClick={() => toast.info("Os filtros ficarão disponíveis quando conectados.")} className="h-9 justify-between border-territory-border bg-territory-surface px-3 text-xs font-semibold text-territory-ink">Todos os status <ChevronDown className="h-4 w-4 text-territory-muted" aria-hidden="true" /></Button></div>
-      <div className="space-y-2">{history.map((delivery) => <MobileHistoryCard key={delivery.id} delivery={delivery} onOpenProof={onOpenProof} />)}</div>
-      <button type="button" onClick={() => toast.info("Os ganhos ficarão disponíveis quando conectados.")} className="flex h-12 items-center gap-3 rounded-xl border border-territory-border bg-slate-50 px-3 text-left"><Gauge className="h-5 w-5 text-territory-brand" aria-hidden="true" /><span className="flex-1 text-sm font-semibold text-blue-800">Consultar ganhos</span><ArrowRight className="h-4 w-4 text-blue-800" aria-hidden="true" /></button>
+      <section className="flex flex-col items-center rounded-xl bg-territory-surface px-3 py-5 text-center"><span className="flex h-16 w-16 items-center justify-center rounded-full bg-emerald-100 text-emerald-700"><Check className="h-9 w-9" aria-hidden="true" /></span><h1 className="mt-3 font-heading text-xl font-bold text-territory-ink">Entrega concluída</h1><p className="mt-1 text-sm text-territory-muted">Hoje, às 10:35</p></section>
+      <section className="rounded-xl border border-territory-border bg-territory-surface p-3"><div className="flex items-center gap-3 border-b border-territory-border pb-3"><span className="flex h-9 w-9 items-center justify-center rounded-lg bg-amber-100 text-amber-700"><Utensils className="h-5 w-5" aria-hidden="true" /></span><div><p className="text-sm font-bold text-territory-ink">Sabores da Ana</p><p className="text-xs text-territory-muted">Entrega #1043</p></div></div><div className="divide-y divide-territory-border text-xs"><div className="flex items-center gap-3 py-3"><UserRound className="h-5 w-5 text-territory-brand" aria-hidden="true" /><span><span className="block text-territory-muted">Recebido por</span><strong>Ana Oliveira</strong></span></div><div className="flex items-center gap-3 py-3"><Package className="h-5 w-5 text-territory-brand" aria-hidden="true" /><span><span className="block text-territory-muted">Forma de entrega</span><strong>Em mãos ao destinatário</strong></span></div><div className="flex items-center gap-3 py-3"><CheckCircle2 className="h-5 w-5 text-territory-brand" aria-hidden="true" /><span><span className="block text-territory-muted">Validação</span><strong>Código validado</strong></span></div><div className="flex items-center gap-3 pt-3"><FileText className="h-5 w-5 text-territory-brand" aria-hidden="true" /><span><span className="block text-territory-muted">Observação</span><strong>Entregue pessoalmente à destinatária.</strong></span></div></div></section>
+      <section className="flex items-center gap-3 rounded-xl border border-territory-border bg-territory-surface p-3"><img src={driverAvatar} alt="" className="h-11 w-11 rounded-full object-cover" /><div><p className="text-xs text-territory-muted">Entregador</p><p className="text-sm font-bold text-territory-ink">Carlos Santos</p><p className="text-xs text-territory-muted">Equipe da loja integrada</p></div></section>
+      <InfoNotice className="bg-blue-50 text-blue-900">Este comprovante registra a entrega, não o pagamento.</InfoNotice>
+      <Button type="button" onClick={() => window.history.back()} className="h-11 w-full rounded-xl bg-territory-brand text-sm font-bold text-white hover:bg-territory-brand/90">Voltar às entregas</Button><button type="button" onClick={() => toast.info("O suporte ficará disponível quando conectado.")} className="text-center text-sm font-semibold text-blue-700 underline">Preciso de ajuda</button>
     </MobileCompletionFrame>
   );
 }
@@ -636,7 +649,7 @@ function MobileHistoryContent({ history = COMPLETION_HISTORY, onOpenProof }: { h
 function MobileCompletionContent({ screen, onConfirmProof, onRegisterProblem, onRetry, onBack, onOpenProof }: { screen: CompletionScreen; onConfirmProof: (proof: DeliveryProof) => void; onRegisterProblem: (reason: string, details: string) => void; onRetry: () => void; onBack: () => void; onOpenProof: () => void }) {
   if (screen === "problem") return <MobileProblemContent onRegister={onRegisterProblem} onBack={onBack} />;
   if (screen === "offline") return <MobileOfflineContent onRetry={onRetry} onBack={onBack} />;
-  if (screen === "history") return <MobileHistoryContent onOpenProof={onOpenProof} />;
+  if (screen === "history") return <MobileHistoryContent />;
   return <MobileProofContent onConfirm={onConfirmProof} onBack={onBack} />;
 }
 
@@ -753,54 +766,24 @@ function OfferPanel() {
   );
 }
 
-function AddressLine({ icon: Icon, title, value, tone }: { icon: LucideIcon; title: string; value: string; tone: "brand" | "error" }) {
-  return <div className="flex items-start gap-2.5 lg:gap-4"><Icon className={cn("mt-0.5 h-4 w-4 shrink-0 lg:h-6 lg:w-6", tone === "brand" ? "text-emerald-600" : "text-rose-500")} aria-hidden="true" /><div><p className="font-bold text-territory-ink">{title}</p><p className="text-[0.7rem] text-territory-muted lg:text-sm">{value}</p></div></div>;
+function AddressLine({ icon: Icon, title, value, tone }: { icon: LucideIcon; title: string; value: string; tone: "brand" | "error" | "sun" }) {
+  return <div className="flex items-start gap-2.5 lg:gap-4"><Icon className={cn("mt-0.5 h-4 w-4 shrink-0 lg:h-6 lg:w-6", tone === "brand" ? "text-emerald-600" : tone === "sun" ? "text-amber-500" : "text-rose-500")} aria-hidden="true" /><div><p className="font-bold text-territory-ink">{title}</p><p className="text-[0.7rem] text-territory-muted lg:text-sm">{value}</p></div></div>;
 }
 
 function OverviewContent() {
   return <div className="grid min-h-0 gap-3 md:flex-1 md:grid-cols-[minmax(0,1.45fr)_minmax(250px,1fr)] lg:gap-4 lg:grid-cols-[minmax(0,1.45fr)_minmax(280px,1fr)]"><MapCanvas mode="overview" /><OfferPanel /></div>;
 }
 
-function DesktopOrderSummary({ deliveryLabel = "Entrega (plataforma)", totalLabel = "Total estimado", total = "R$ 56,00" }: { deliveryLabel?: string; totalLabel?: string; total?: string }) {
-  return (
-    <section className="flex min-h-0 flex-col rounded-xl border border-territory-border bg-territory-surface p-3 md:h-full lg:p-4">
-      <div className="flex items-start gap-3 border-b border-territory-border pb-3">
-        <Store className="mt-0.5 h-5 w-5 shrink-0 text-territory-brand" aria-hidden="true" />
-        <div><p className="text-xs font-bold text-territory-ink">Coleta (restaurante)</p><p className="text-sm font-bold text-territory-ink">Sabores da Ana</p><p className="text-xs text-territory-muted">Santa Cruz, Salvador · BA</p></div>
-      </div>
-      <div className="flex items-start gap-3 border-b border-territory-border py-3">
-        <MapPin className="mt-0.5 h-5 w-5 shrink-0 text-territory-brand" aria-hidden="true" />
-        <div><p className="text-xs font-bold text-territory-ink">Destino</p><p className="text-sm text-territory-ink">Rua Exemplo, 120 · Casa 2</p><p className="text-xs text-territory-muted">Santa Cruz, Salvador · BA</p></div>
-      </div>
-      <div className="border-b border-territory-border py-3">
-        <p className="text-xs font-bold text-territory-ink">Itens do pedido</p>
-        <div className="mt-2 flex items-center justify-between gap-3 text-xs text-territory-ink"><span>1× Moqueca individual + farofa extra</span><span className="shrink-0">R$ 41,00</span></div>
-        <div className="mt-2 flex items-center justify-between gap-3 text-xs text-territory-ink"><span>1× Suco</span><span className="shrink-0">R$ 8,00</span></div>
-      </div>
-      <div className="mt-auto pt-3 text-xs text-territory-ink">
-        <div className="flex items-center justify-between"><span>Produtos</span><span>R$ 49,00</span></div>
-        <div className="mt-2 flex items-center justify-between"><span>{deliveryLabel}</span><span>R$ 7,00</span></div>
-        <div className="mt-3 flex items-center justify-between border-t border-territory-border pt-3 text-sm font-bold"><span>{totalLabel}</span><span>{total}</span></div>
-      </div>
-    </section>
-  );
-}
-
 function DesktopRequestContent() {
   return (
-    <div className="grid min-h-0 gap-3 md:flex-1 md:grid-cols-[minmax(0,1.35fr)_minmax(280px,0.85fr)] lg:gap-4 lg:grid-cols-[minmax(0,1.35fr)_minmax(300px,0.85fr)]">
-      <section className="flex min-h-0 flex-col rounded-xl border border-territory-border bg-territory-surface p-3 md:h-full lg:p-4">
-        <div className="flex items-start gap-3">
-          <Bike className="mt-0.5 h-6 w-6 shrink-0 text-territory-brand" aria-hidden="true" />
-          <div><h2 className="font-heading text-lg font-bold text-territory-ink lg:text-xl">Solicitar motoboy</h2><p className="mt-1 max-w-xl text-xs text-territory-muted lg:text-sm">A solicitação inicia a busca. O aceite depende de um entregador disponível.</p></div>
-        </div>
-        <div className="mt-auto flex flex-col gap-2 pt-6">
-          <Button type="button" onClick={() => toast.success("Busca por entregador solicitada na demonstração.")} className="min-h-10 w-full rounded-lg bg-territory-sun text-sm font-bold text-territory-ink hover:bg-territory-sun/85">Solicitar entrega <ArrowRight className="ml-2 h-4 w-4" aria-hidden="true" /></Button>
-          <Button type="button" variant="outline" onClick={() => toast.info("O pedido ficará disponível quando conectado.")} className="min-h-10 w-full border-territory-border bg-territory-surface text-sm font-bold text-territory-ink">Ver pedido</Button>
-          <button type="button" onClick={() => toast.info("A ajuda ficará disponível quando conectada.")} className="mt-3 flex items-center gap-2 text-left text-xs font-semibold text-blue-700"><CircleHelp className="h-4 w-4" aria-hidden="true" />Ajuda sobre a entrega da plataforma</button>
-        </div>
+    <div className="grid min-h-0 gap-3 md:flex-1 md:grid-cols-[minmax(0,1.2fr)_minmax(240px,0.8fr)] lg:gap-4">
+      <section className="flex min-h-0 flex-col rounded-xl border border-territory-border bg-territory-surface p-3 lg:p-4">
+        <div className="flex items-center gap-3 border-b border-territory-border pb-3"><Store className="h-6 w-6 shrink-0 text-territory-brand" aria-hidden="true" /><p className="text-sm font-bold text-territory-ink">Sabores da Ana</p></div>
+        <div className="relative mt-4 rounded-lg border border-territory-border bg-white p-3 pl-11"><span className="absolute bottom-8 left-[1.15rem] top-8 w-px bg-territory-brand/40" /><div className="relative"><span className="absolute -left-[1.55rem] top-0 h-3 w-3 rounded-full bg-territory-brand" /><AddressLine icon={MapPin} title="Coleta (loja)" value="Sabores da Ana · Rua Exemplo, 80 · Santa Cruz · Salvador - BA" tone="brand" /></div><div className="relative mt-5"><span className="absolute -left-[1.55rem] top-0 h-3 w-3 rounded-full bg-territory-sun" /><AddressLine icon={MapPin} title="Entrega (destino)" value="Nordeste de Amaralina · Salvador - BA" tone="sun" /></div></div>
+        <InfoNotice className="mt-3 bg-blue-50 text-blue-900" icon={Info}>Recusar a solicitação não cancela o pedido do cliente.</InfoNotice>
+        <div className="mt-auto grid gap-2 pt-4 sm:grid-cols-3"><Button type="button" variant="outline" onClick={() => toast.info("O contato com a loja será aberto quando conectado.")} className="h-10 border-territory-border bg-territory-surface text-xs font-bold text-territory-ink"><MessageCircle className="mr-1.5 h-4 w-4" aria-hidden="true" />Falar com a loja</Button><Button type="button" onClick={() => toast.success("Entrega aceita na demonstração.")} className="h-10 bg-territory-sun text-xs font-bold text-territory-ink hover:bg-territory-sun/85"><Check className="mr-1.5 h-4 w-4" aria-hidden="true" />Aceitar entrega</Button><Button type="button" variant="outline" onClick={() => toast.info("Oferta recusada na demonstração.")} className="h-10 border-territory-border bg-territory-surface text-xs font-bold text-territory-ink"><X className="mr-1.5 h-4 w-4" aria-hidden="true" />Recusar</Button></div>
       </section>
-      <DesktopOrderSummary />
+      <section className="flex min-h-0 flex-col rounded-xl border border-territory-border bg-territory-surface p-3 lg:p-4"><div className="flex items-center gap-2.5 border-b border-territory-border pb-3"><Package className="h-5 w-5 text-territory-brand" aria-hidden="true" /><h2 className="text-sm font-bold text-territory-ink">Itens da entrega</h2></div><div className="mt-4 flex items-center gap-3 rounded-lg border border-territory-border bg-white p-3"><img src={foodImage} alt="" className="h-12 w-12 rounded-lg object-cover" /><div><p className="text-sm font-bold text-territory-ink">Refeição</p><p className="text-xs text-territory-muted">1 sacola · Sabores da Ana</p></div></div><div className="mt-4 flex items-start gap-3 rounded-lg bg-blue-50 p-3"><Coins className="mt-0.5 h-5 w-5 shrink-0 text-territory-brand" aria-hidden="true" /><div><p className="text-xs font-bold text-territory-ink">Remuneração</p><p className="mt-1 text-xs text-territory-muted">Conforme acordo com a loja</p></div></div></section>
     </div>
   );
 }
@@ -808,7 +791,7 @@ function DesktopRequestContent() {
 function DesktopCompletionAside({ screen }: { screen: CompletionScreen }) {
   return (
     <section className="flex min-h-0 flex-col rounded-xl border border-territory-border bg-territory-surface p-4 lg:p-5">
-      <div className="flex items-start gap-3 border-b border-territory-border pb-4"><Store className="mt-0.5 h-5 w-5 shrink-0 text-territory-brand" aria-hidden="true" /><div><p className="text-xs font-bold text-territory-ink">Entrega #1042</p><p className="text-sm font-bold text-territory-ink">Sabores da Ana</p><p className="text-xs text-territory-muted">Ana Oliveira · Nordeste de Amaralina</p></div></div>
+      <div className="flex items-start gap-3 border-b border-territory-border pb-4"><Store className="mt-0.5 h-5 w-5 shrink-0 text-territory-brand" aria-hidden="true" /><div><p className="text-xs font-bold text-territory-ink">Entrega #1043</p><p className="text-sm font-bold text-territory-ink">Sabores da Ana</p><p className="text-xs text-territory-muted">Ana Oliveira · Nordeste de Amaralina</p></div></div>
       {screen === "history" ? <>
         <div className="border-b border-territory-border py-4"><p className="text-xs font-bold text-territory-ink">Resumo do período</p><div className="mt-3 grid grid-cols-2 gap-2"><MetricCard icon={CheckCircle2} label="Entregues" value="2" tone="green" /><MetricCard icon={Coins} label="Registrado" value="R$ 15,00" tone="yellow" /></div></div>
         <button type="button" onClick={() => toast.info("Os ganhos ficarão disponíveis quando conectados.")} className="mt-auto flex items-center gap-2 pt-4 text-left text-sm font-semibold text-blue-700"><Gauge className="h-5 w-5" aria-hidden="true" />Consultar ganhos <ArrowRight className="ml-auto h-4 w-4" aria-hidden="true" /></button>
@@ -871,6 +854,7 @@ function DesktopHistoryRow({ delivery, onOpenProof }: { delivery: CompletionDeli
 
 function DeliveryContent({ phase, onConfirmDelivery }: { phase: MobileDeliveryPhase; onConfirmDelivery?: () => void }) {
   if (phase === "offer") return <DesktopRequestContent />;
+  if (phase === "ready") return <DesktopReadyContent />;
 
   return (
     <div className="grid min-h-0 gap-3 md:flex-1 md:grid-cols-[minmax(0,1.35fr)_minmax(280px,0.85fr)] lg:gap-4 lg:grid-cols-[minmax(0,1.35fr)_minmax(300px,0.85fr)]">
@@ -880,7 +864,7 @@ function DeliveryContent({ phase, onConfirmDelivery }: { phase: MobileDeliveryPh
         <div className="mt-4 rounded-lg bg-slate-100 px-3 py-2 text-xs text-territory-muted">Referência: portão azul</div>
         <ProgressSteps />
         <Button type="button" onClick={() => toast.info("A navegação será aberta quando o rastreamento estiver conectado.")} className="mt-auto min-h-10 w-full rounded-lg bg-territory-brand text-sm font-bold text-white hover:bg-territory-brand/90"><Navigation className="mr-2 h-4 w-4" aria-hidden="true" />Abrir navegação</Button>
-        <div className="mt-2 grid grid-cols-2 gap-2"><Button type="button" variant="outline" onClick={() => toast.info("O contato será aberto quando conectado.")} className="h-10 border-territory-border bg-territory-surface text-xs font-bold text-territory-ink hover:bg-territory-raised"><MessageCircle className="mr-1.5 h-4 w-4" aria-hidden="true" />Falar com cliente</Button><Button type="button" onClick={onConfirmDelivery ?? (() => toast.success("Entrega confirmada na demonstração."))} className="h-10 bg-territory-sun text-xs font-bold text-territory-ink hover:bg-territory-sun/85"><Check className="mr-1.5 h-4 w-4" aria-hidden="true" />Confirmar entrega</Button></div>
+        <div className="mt-2 grid grid-cols-2 gap-2"><Button type="button" variant="outline" onClick={() => toast.info("O contato será aberto quando conectado.")} className="h-10 border-territory-border bg-territory-surface text-xs font-bold text-territory-ink hover:bg-territory-raised"><MessageCircle className="mr-1.5 h-4 w-4" aria-hidden="true" />Falar com cliente</Button><Button type="button" onClick={onConfirmDelivery ?? (() => toast.success("Entrega confirmada na demonstração."))} className="h-10 bg-territory-sun text-xs font-bold text-territory-ink hover:bg-territory-sun/85"><Check className="mr-1.5 h-4 w-4" aria-hidden="true" />Registrar recebimento</Button></div>
         <div className="mt-2 grid grid-cols-2 gap-2"><Button type="button" variant="outline" onClick={() => toast.info("O registro de problema será aberto quando conectado.")} className="h-10 border-territory-border bg-territory-surface text-xs font-bold text-territory-ink hover:bg-territory-raised"><AlertCircle className="mr-1.5 h-4 w-4" aria-hidden="true" />Registrar problema</Button><Button type="button" variant="outline" onClick={() => toast.info("O contato com a loja será aberto quando conectado.")} className="h-10 border-territory-border bg-territory-surface text-xs font-bold text-territory-ink hover:bg-territory-raised"><Store className="mr-1.5 h-4 w-4" aria-hidden="true" />Falar com a loja</Button></div>
       </section>
     </div>
@@ -974,6 +958,15 @@ function DeliveryAreaMap() {
 
 function AvailabilityContent({ isOnline, onToggleOnline }: { isOnline: boolean; onToggleOnline: () => void }) {
   return <div className="flex flex-col gap-3 lg:gap-4"><div className="grid gap-3 md:grid-cols-2"><section className="flex flex-col rounded-xl border border-territory-border bg-territory-surface p-3 lg:p-4"><div className="flex items-start gap-2.5 border-b border-territory-border pb-3 lg:gap-3"><span className="flex h-9 w-9 items-center justify-center rounded-lg bg-emerald-50 lg:h-10 lg:w-10"><MapPin className="h-4 w-4 text-emerald-700 lg:h-5 lg:w-5" aria-hidden="true" /></span><div><h2 className="font-heading text-sm font-bold lg:text-base">Área de atuação</h2><p className="text-[0.7rem] text-territory-muted lg:text-xs">Escolha onde deseja receber ofertas.</p></div></div><DeliveryAreaMap /><div className="mt-3 space-y-2 text-xs lg:mt-4 lg:space-y-3 lg:text-sm">{DELIVERY_AREAS.map((area) => <div key={area} className="flex items-center gap-2.5 lg:gap-3"><CheckCircle2 className="h-4 w-4 text-emerald-600 lg:h-5 lg:w-5" aria-hidden="true" /><span>{area}</span></div>)}</div><div className="mt-auto flex items-center justify-between border-t border-territory-border pt-3 text-[0.7rem] lg:mt-auto lg:pt-4 lg:text-xs"><span className="flex items-center gap-2 text-territory-muted"><MapPin className="h-3.5 w-3.5 lg:h-4 lg:w-4" aria-hidden="true" />Salvador · Bahia</span><button type="button" onClick={() => toast.info("O gerenciamento de áreas ficará disponível quando conectado.")} className="font-semibold text-blue-700">Gerenciar áreas <ArrowRight className="inline h-3 w-3" aria-hidden="true" /></button></div></section><section className="flex flex-col rounded-xl border border-territory-border bg-territory-surface p-3 lg:p-4"><div className="flex items-start gap-2.5 border-b border-territory-border pb-3 lg:gap-3"><span className="flex h-9 w-9 items-center justify-center rounded-lg bg-slate-100 lg:h-10 lg:w-10"><UserRound className="h-4 w-4 text-territory-brand lg:h-5 lg:w-5" aria-hidden="true" /></span><div><h2 className="font-heading text-sm font-bold lg:text-base">Perfil operacional</h2><p className="text-[0.7rem] text-territory-muted lg:text-xs">Carlos Santos · Motoboy</p></div></div><div className="mt-3 flex items-center gap-2 text-[0.7rem] text-emerald-700 lg:mt-4 lg:text-xs"><CheckCircle2 className="h-3.5 w-3.5 lg:h-4 lg:w-4" aria-hidden="true" />Entregas habilitadas</div><div className="mt-4 flex items-center gap-3 border-t border-territory-border pt-3 lg:mt-5 lg:pt-4"><Bike className="h-7 w-7 text-territory-brand lg:h-8 lg:w-8" aria-hidden="true" /><div><p className="text-xs font-bold lg:text-sm">Motocicleta</p><p className="text-[0.7rem] text-territory-muted lg:text-xs">Honda CG 160 · Placa ABC1D23</p></div></div><button type="button" onClick={() => toast.info("O cadastro ficará disponível quando conectado.")} className="mt-auto pt-4 text-left text-[0.7rem] font-semibold text-blue-700 lg:text-xs">Ver cadastro e veículo <ArrowRight className="inline h-3 w-3" aria-hidden="true" /></button></section></div><section className="flex flex-wrap items-center justify-between gap-3 rounded-xl border border-amber-200 bg-amber-50 px-3 py-2.5 lg:px-4 lg:py-3"><div className="flex items-start gap-2.5 lg:gap-3"><MapPin className="mt-0.5 h-4 w-4 text-amber-700 lg:h-5 lg:w-5" aria-hidden="true" /><div><p className="text-xs font-bold text-amber-950 lg:text-sm">Localização desativada</p><p className="text-[0.7rem] text-amber-900/75 lg:text-xs">Ative a localização para receber ofertas próximas.</p></div></div><Button type="button" onClick={() => { onToggleOnline(); toast.success("Localização ativada na demonstração."); }} className="h-8 bg-territory-sun px-3 text-[0.7rem] font-bold text-territory-ink hover:bg-territory-sun/85 lg:h-9 lg:text-xs">Ativar localização</Button></section><InfoNotice icon={CircleOff}>{isOnline ? "Você está disponível para novas ofertas." : "O botão ficar online será liberado após ativar a localização."}</InfoNotice></div>;
+}
+
+function DesktopReadyContent() {
+  return (
+    <div className="grid min-h-0 gap-3 md:flex-1 md:grid-cols-[minmax(0,1.2fr)_minmax(280px,0.8fr)] lg:gap-4">
+      <section className="flex min-h-0 flex-col rounded-xl border border-territory-border bg-territory-surface p-4 lg:p-5"><div className="flex items-center gap-3 rounded-lg border border-emerald-200 bg-emerald-50 p-3"><span className="flex h-10 w-10 items-center justify-center rounded-full bg-emerald-600 text-white"><Check className="h-5 w-5" aria-hidden="true" /></span><div><h2 className="text-sm font-bold text-territory-ink">Pedido coletado na loja</h2><p className="text-xs text-emerald-800">Sabores da Ana · 10:12</p></div></div><div className="mt-4 rounded-lg border border-territory-border p-3"><div className="flex items-center gap-3"><span className="flex h-10 w-10 items-center justify-center rounded-full bg-slate-100 text-territory-brand"><UserRound className="h-5 w-5" aria-hidden="true" /></span><div><p className="text-sm font-bold text-territory-ink">Ana Oliveira</p><p className="text-xs text-territory-muted">Rua Exemplo, 120 · Casa 2</p><p className="text-xs text-territory-muted">Nordeste de Amaralina · Salvador</p></div></div></div><div className="mt-3 rounded-lg border border-territory-border p-3"><div className="flex items-center gap-3"><span className="flex h-10 w-10 items-center justify-center rounded-lg bg-slate-100 text-territory-brand"><Package className="h-5 w-5" aria-hidden="true" /></span><div><p className="text-sm font-bold text-territory-ink">Pacote</p><p className="text-xs text-territory-muted">Refeição · 1 sacola</p></div></div></div><InfoNotice className="mt-auto bg-blue-50 text-blue-900" icon={Info}>A próxima etapa é seguir ao destino.</InfoNotice></section>
+      <section className="flex min-h-0 flex-col rounded-xl border border-territory-border bg-territory-surface p-4 lg:p-5"><p className="text-sm font-bold text-territory-ink">Próxima etapa</p><p className="mt-1 text-xs text-territory-muted">Confirme quando estiver a caminho do destino.</p><Button type="button" onClick={() => toast.success("Entrega iniciada na demonstração.")} className="mt-auto h-11 w-full bg-territory-sun text-sm font-bold text-territory-ink hover:bg-territory-sun/85"><ArrowRight className="mr-2 h-4 w-4" aria-hidden="true" />Iniciar entrega</Button><Button type="button" variant="outline" onClick={() => toast.info("Os detalhes já estão exibidos nesta demonstração.")} className="mt-2 h-10 w-full border-territory-border text-sm font-bold text-territory-ink"><List className="mr-2 h-4 w-4" aria-hidden="true" />Ver detalhes</Button></section>
+    </div>
+  );
 }
 
 function StateContent({ state, phase, completionScreen, isOnline, onToggleOnline, onOpenOffer, onConfirmDelivery, onConfirmProof, onRegisterProblem, onRetryCompletion, onBackToDelivery, onOpenProof }: { state: DriverCenterState; phase: MobileDeliveryPhase; completionScreen?: CompletionScreen | null; isOnline: boolean; onToggleOnline: () => void; onOpenOffer: () => void; onConfirmDelivery?: () => void; onConfirmProof: (proof: DeliveryProof) => void; onRegisterProblem: (reason: string, details: string) => void; onRetryCompletion: () => void; onBackToDelivery: () => void; onOpenProof: () => void }) {
@@ -1094,7 +1087,7 @@ export default function CentralMotoboyConceptMockPage() {
               <div className="flex min-h-0 flex-col md:flex-1">
                 <StateContent state={state} phase={phase} completionScreen={completionScreen} isOnline={isOnline} onToggleOnline={toggleOnline} onOpenOffer={openOffer} onConfirmDelivery={openCompletionProof} onConfirmProof={confirmProof} onRegisterProblem={registerProblem} onRetryCompletion={openCompletionProof} onBackToDelivery={backToDelivery} onOpenProof={openCompletionProof} />
               </div>
-              {state === "overview" || completionScreen === "history" ? <MobileBottomNav state={completionScreen === "history" ? "delivery" : state} onChange={changeState} /> : null}
+              {state === "overview" ? <MobileBottomNav state={state} onChange={changeState} /> : null}
               <p className="mt-auto hidden pt-1 text-center text-[0.65rem] text-territory-muted md:block lg:pt-2 lg:text-xs">Conceito proposto · Dados e mapas ilustrativos · Melhorias dependem de habilitação e regras operacionais.</p>
             </div>
           </main>
