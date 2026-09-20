@@ -408,7 +408,7 @@ export class EmailService {
     timestamp: string;
     action: string;
   }): EmailTemplate {
-    const securityUrl = buildPublicAbsoluteUrl('/settings/security');
+    const securityUrl = buildPublicAbsoluteUrl(ACCOUNT_PATHS.security);
     return {
       subject: 'Alerta de segurança',
       html: renderEmailDocument(
