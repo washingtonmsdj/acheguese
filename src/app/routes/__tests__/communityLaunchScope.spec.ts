@@ -17,6 +17,13 @@ describe("community launch scope routing", () => {
     expect(isLaunchSurfaceEnabled("communityIssues")).toBe(false);
   });
 
+  it("keeps production feature flags aligned with paused community launch surfaces", () => {
+    const productionEnv = readProjectFile(".env.production");
+
+    expect(productionEnv).toMatch(/^VITE_FEATURE_COMMUNITY_ALERTS=false$/m);
+    expect(productionEnv).toMatch(/^VITE_FEATURE_COMMUNITY_ISSUES=false$/m);
+  });
+
   it("keeps global alert and issue routes behind launchElement", () => {
     const routesSource = readProjectFile("src/app/routes/sections/AppLayoutRoutes.tsx");
 
