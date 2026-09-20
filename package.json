@@ -158,7 +158,8 @@
     "lint:security:fix": "eslint src api supabase/functions --config eslint.config.security.mjs --ext .ts,.tsx --fix --no-inline-config",
     "test:e2e:business-lifecycle-authenticated": "node tools/release/run-business-lifecycle-authenticated.mjs",
     "test:e2e:education-lifecycle-authenticated": "node tools/release/run-education-lifecycle-authenticated.mjs",
-    "stage:education:inep-import": "node tools/data-quality/stage-public-education-inep-import.mjs"
+    "stage:education:inep-import": "node tools/data-quality/stage-public-education-inep-import.mjs",
+    "maintenance:branches": "node tools/github/cleanup-merged-branches.mjs"
   },
   "dependencies": {
     "@hookform/resolvers": "^3.10.0",

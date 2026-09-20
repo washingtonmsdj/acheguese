@@ -75,12 +75,13 @@ O primeiro release continua territorial. **Cobertura uniforme dos 170 bairros de
 ### Higiene de branches — 2026-09-19
 
 - o remoto possuía 152 branches no início da auditoria e passou a 153 após os cortes recentes, com `delete_branch_on_merge=false`; esse setting explica o acúmulo após squash merge;
-- 73 branches são heads intactos de PRs já mergeados e 4 branches sem PR estão completamente contidas na `main`: 77 são candidatas seguras a remoção do ref;
-- 55 branches pertencem a PRs fechados sem merge e 21 branches sem PR ainda carregam delta exclusivo ou precisam de prova de supersessão; não remover em massa;
+- 74 branches são heads intactos de PRs já mergeados e 3 branches sem PR estão completamente contidas na `main`: **77 são candidatas seguras à remoção física do ref**;
+- 72 branches sem PR mergeado conhecido ainda possuem commits exclusivos; duas branches alteradas depois de merge (`cleanup/active-compat-facades-20260919` e `codex/identidade-visual-achegue-se`) também carregam delta exclusivo. Preservar todas até prova de supersessão;
 - `cleanup/active-compat-facades-20260919` foi alterada após o PR mergeado e mantém delta adicional; preservar até análise específica;
 - enquanto a exclusão automática não puder ser habilitada pela integração atual, a frente urgente reutiliza `work/mvp-urgent` em vez de criar uma branch nova por micro-PR;
 - regra: branch só pode ser apagada automaticamente quando o PR correspondente foi mergeado e o head não foi alterado depois, ou quando a branch é comprovadamente contida na `main`; demais casos exigem comparação de conteúdo/provenance.
 - a integração GitHub disponível neste chat não expõe `DELETE ref` nem alteração de `delete_branch_on_merge`; portanto não mascarar a limpeza movendo refs antigas para `main`. A exclusão física deve usar GitHub CLI/API autenticada ou autoridade administrativa equivalente, aplicando a classificação segura já registrada.
+- [x] `tools/github/cleanup-merged-branches.mjs` + `npm run maintenance:branches` materializam essa política: dry-run por padrão, `--apply` explícito, revalidação de SHA/proteção/PR aberto antes de cada DELETE e novo compare para branches classificadas por contenção. Checkpoint: `docs/08-roadmap/checkpoints/2026-09-20-branch-hygiene.md`.
 
 ### Ordem de execução até MVP
 
