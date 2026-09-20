@@ -416,6 +416,9 @@ export const ProblemasPage = createLaunchPausedRoute("Problemas");
 export const NovoPostPage = lazy(
   () => import("@/core/community-feed/pages/NovoPostPage"),
 );
+export const PublicarComunidadeConceptMockPage = lazy(
+  () => import("@/app/pages/PublicarComunidadeConceptMockPage"),
+);
 
 // Comunicacao Territorial
 export const CommunicationLandingPage = createLaunchPausedRoute("Comunicacao");

@@ -73,6 +73,11 @@ export function AppLayoutSidebar() {
     typeof window !== "undefined" &&
     ["/notifications", "/notificacoes"].includes(pathname) &&
     new URLSearchParams(window.location.search).get("concept-mock") === "1";
+  const conceptPublishPreview =
+    import.meta.env.DEV &&
+    typeof window !== "undefined" &&
+    pathname === "/novo-post" &&
+    new URLSearchParams(window.location.search).get("concept-mock") === "1";
   const communityConceptPreview =
     import.meta.env.DEV &&
     typeof window !== "undefined" &&
@@ -120,7 +125,8 @@ export function AppLayoutSidebar() {
     isGastronomyConceptPreview ||
     isGastronomyMockRestaurantRoute ||
     isGastronomyOrderTrackingRoute ||
-    conceptNotificationsPreview;
+    conceptNotificationsPreview ||
+    conceptPublishPreview;
 
   const isInternalGroupRoute =
     pathSegments[0] === "grupos" && pathSegments.length >= 2;
@@ -142,7 +148,8 @@ export function AppLayoutSidebar() {
     isGastronomyConceptPreview ||
     isGastronomyMockRestaurantRoute ||
     isGastronomyOrderTrackingRoute ||
-    conceptNotificationsPreview;
+    conceptNotificationsPreview ||
+    conceptPublishPreview;
   const hideMobileBottomNav =
     pathname === "/" ||
     isInternalGroupRoute ||
@@ -154,7 +161,8 @@ export function AppLayoutSidebar() {
     isGastronomyMockRestaurantRoute ||
     isGastronomyOrderTrackingRoute ||
     isGastronomyCheckoutConcept ||
-    conceptNotificationsPreview;
+    conceptNotificationsPreview ||
+    conceptPublishPreview;
 
   const isMessagingRoute =
     pathSegments[0] === "mensagens" || pathSegments[0] === "chat";

@@ -786,3 +786,23 @@ A prancha 117 também está coberta pelos estados demonstrativos de visitante, v
 ### Git
 
 - Commit restrito ao mock de notificações, aos desvios de rota/layout de desenvolvimento e à documentação deste concept; alterações staged preexistentes permanecem fora do commit.
+
+## 20/09/2026 · Publicar na comunidade — pranchas 086, 087 e 088
+
+### Auditoria e ajuste
+
+- O fluxo real de `NovoPostPage`/`CreatePostModal` foi mantido para produção. O modo `DEV + concept-mock=1` passou a oferecer uma superfície comparável às pranchas consolidadas, sem substituir as guardas e permissões reais.
+- Recompus a entrada sem vínculo, a solicitação de vínculo, a escolha de destino comunitário e os encaminhamentos a Classificados, Serviços, Vagas e Eventos.
+- Alinhei o desktop à composição da prancha 088: seção `Na comunidade` em cards 3×3, painel independente `Em outros módulos`, rail lateral e hierarquia de etapa.
+- Alinhei o mobile às pranchas 086/087: cabeçalho compacto, cards centralizados, ordem do aviso, campo de validade, imagens opcionais, avisos de não oficialidade e revisão antes de publicar.
+- Mantive estados separados para aviso comunitário, problema/alerta e comunicado de organização autorizada. Os dados são demonstrativos e nenhuma ação do mock persiste ou envia comunicação real.
+
+### Validação e evidências
+
+- Navegador interno mantido aberto nas abas mobile `389 × 867` e desktop `1707 × 960`, com comparação dos estados durante a implementação.
+- Foram conferidos participação, tipos, aviso, revisão, problema, comunicado e encaminhamento; não houve overflow horizontal nem erro nos logs finais.
+- `npx eslint` direcionado, `npx tsc -p tsconfig.app.json --noEmit --pretty false` e `git diff --check` executados.
+
+### Git
+
+- Commit restrito ao mock de publicação, aos desvios de rota/layout de desenvolvimento e às documentações deste concept; alterações staged preexistentes permanecem fora do commit.
