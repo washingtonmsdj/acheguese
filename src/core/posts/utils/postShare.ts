@@ -91,7 +91,7 @@ export async function sharePost(options: SharePostOptions): Promise<boolean> {
       succeeded = true;
     } else {
       toast.info("Copie o link do post", { description: url, duration: 8000 });
-      succeeded = true;
+      return false;
     }
   } catch (error) {
     const name = (error as Error)?.name;
