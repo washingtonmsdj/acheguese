@@ -28,6 +28,8 @@ O GitHub Status público reportava **Actions operacional** em 2026-09-20 09:44 U
 
 **Regra:** não alterar source/YAML e não disparar reruns repetitivos enquanto `runner_id=0`/sem steps persistir. A próxima prova administrativa deve ser feita via GitHub CLI/API autenticada com acesso a Actions settings/usage/runners; o self-hosted já possui workflow exact-SHA canônico e não deve ser duplicado.
 
+O workflow existente `.github/workflows/certify-heavy.yml` foi fortalecido sem criar nova autoridade. No runner `acheguese-heavy-windows`, ele passa a executar sobre o SHA explicitamente atestado: security validation, lint, typecheck, gates de arquitetura/SSOT, validação local + provenance + paridade remota de migrations, suíte Vitest completa, E2E público/autenticado, regression e build/análise de bundle. O link remoto usa somente `SUPABASE_ACCESS_TOKEN` + `SUPABASE_DB_PASSWORD` dos GitHub Actions secrets. Esse caminho é fallback de certificação enquanto o hosted scheduler não executa; ele não autoriza remover os checks normais.
+
 ## Supabase canônico
 
 Projeto: `xhdowzacfujckjelqhtd` (`acheguese`)
