@@ -331,10 +331,6 @@ export function EventHero({
                 </Button>
               </div>
 
-              {/* Views Counter */}
-              <div className="text-center text-xs text-muted-foreground">
-                {event.views_count.toLocaleString('pt-BR')} visualizacoes
-              </div>
             </motion.div>
           </div>
         </div>
