@@ -112,10 +112,11 @@ Legenda: **Pronto** = rota + página em produção · **Parcial** = rota existe 
 ### 2.2 Comunidade — módulos transversais
 | Feature | Impl.? | Rota | Pronta? | Home? | Tela principal se não |
 |---|---|---|---|---|---|
-| Alertas do bairro | Sim | `/alertas` | Pronto | **Sim** (top hoje). | `/alertas`. |
-| Achados & Perdidos | Sim | `/achados-perdidos` (+ `/novo`, `/:id`) | Pronto | Talvez (resumo pequeno). | `/achados-perdidos`. |
+| Alertas do bairro | Preservado, pausado no MVP | `/alertas` | `LaunchPausedPage` (`communityAlerts=false`) | Não enquanto pausado. | `/alertas`. |
+| Problemas do bairro | Preservado, pausado no MVP | `/problemas` | `LaunchPausedPage` (`communityIssues=false`) | Não enquanto pausado. | `/problemas`. |
+| Achados & Perdidos | Preservado, pausado no MVP | `/achados-perdidos` (+ `/novo`, `/:id`) | `LaunchPausedPage` (`communityLostFound=false`) | Não enquanto pausado. | `/achados-perdidos`. |
 | Mensagens diretas | Sim | `/mensagens`, `/chat/:id` | Pronto | Só como indicador no header (contador). | `/mensagens`. |
-| Comunicação territorial | Sim | `/comunicacao` (+ agente/empresa/solicitar) | Pronto | Talvez (bloco editorial). | `/comunicacao`. |
+| Comunicação territorial | Preservado, pausado no MVP | `/comunicacao` (+ agente/empresa/solicitar) | `LaunchPausedPage` (`communication=false`) | Não enquanto pausado. | `/comunicacao`. |
 | Busca federada | Sim | `/buscar` (alias `/busca`) | Pronto | **Sim** (barra de busca). | `/buscar`. |
 | Recomendações | Parcial | dentro da comunidade | Parcial | Não obrigatório. | Feed. |
 | Perguntas / Enquetes | Parcial | tipo de post | Parcial | Não. | Feed. |
@@ -128,7 +129,7 @@ Legenda: **Pronto** = rota + página em produção · **Parcial** = rota existe 
 | Site premium empresa | Sim | `/p/:slug/*` | Pronto | Não. | `/p/:slug`. |
 | Cadastro empresa | Sim | `/empresas/cadastrar` | Pronto | Talvez (CTA "cadastre sua empresa"). | `/empresas/cadastrar`. |
 | Dashboard empresa | Sim | `/dashboard-empresa` | Pronto | Não (perfil dono). | `/perfil`. |
-| Cupons / Promoções | Sim | `/cupons`, `/promocoes` | Pronto | Talvez (bloco "ofertas"). | `/cupons`. |
+| Cupons / Promoções | Preservado, pausado no MVP | `/cupons`, `/promocoes` | `LaunchPausedPage` (`coupons=false`) | Não enquanto pausado. | `/cupons`. |
 | Gastronomia | Parcial | via `LAUNCH_URLS.gastronomy` | Parcial | **Sim** (ação rápida). | `/gastronomia` ou landing. |
 
 ### 2.4 Classificados / Serviços / Vagas
@@ -142,10 +143,10 @@ Legenda: **Pronto** = rota + página em produção · **Parcial** = rota existe 
 ### 2.5 Mobilidade
 | Feature | Impl.? | Rota | Pronta? | Home? |
 |---|---|---|---|---|
-| Home mobilidade | Sim | `/mobilidade` | Pronto | Chip "Como chegar" ok; bloco dedicado não. |
-| Passageiro / motorista / motoboy | Sim | `/mobilidade/*` | Pronto | Não. |
-| Histórico | Sim | `/mobilidade/historico` | Pronto | Não. |
-| Contatos de emergência | Sim | `/mobilidade/contatos-emergencia` | Pronto | Não. |
+| Home mobilidade | Preservado, pausado no MVP | `/mobilidade` | `LaunchPausedPage` (`mobility=false`) | Não enquanto pausado. |
+| Passageiro / motorista / motoboy | Preservado, pausado no MVP | `/mobilidade/*` | `LaunchPausedPage` (`mobility=false`) | Não. |
+| Histórico | Preservado, pausado no MVP | `/mobilidade/historico` | `LaunchPausedPage` (`mobility=false`) | Não. |
+| Contatos de emergência | Preservado, pausado no MVP | `/mobilidade/contatos-emergencia` | `LaunchPausedPage` (`mobility=false`) | Não. |
 
 ### 2.6 Perfil, conta, notificações
 | Feature | Impl.? | Rota | Pronta? | Home? |
@@ -162,8 +163,8 @@ Legenda: **Pronto** = rota + página em produção · **Parcial** = rota existe 
 | Login / cadastro / reset / confirmação | Sim | `/login`, `/cadastro`, `/cadastro/confirmacao`, `/reset-password`, `/aceitar-termos` | Pronto | Só via header quando visitante. |
 | Sobre / contato / status / privacidade / termos | Sim | `/about`, `/contato`, `/status`, `/dpo`, `/privacidade`, `/termos` | Pronto | Não. |
 | Billing / preços | Preservado, mas pausado no MVP | `/planos`, `/checkout/*`, `/settings/subscription` | `LaunchPausedPage` com `billing=false` | Não. |
-| Educação | Sim | `/educacao` | Pronto | Chip opcional. |
-| Gamificação | Parcial | `/gamificacao` | Parcial | Não (sem UI estável). |
+| Educação | Preservado, pausado no MVP | `/educacao` | `LaunchPausedPage` (`education=false`) | Não enquanto pausado. |
+| Gamificação | Preservado, pausado no MVP | `/gamificacao` | `LaunchPausedPage` (`gamification=false`) | Não. |
 | AI virtual try-on | Parcial | `/ai/virtual-try-on` | Parcial | Não. |
 | Offline settings | Parcial | `/offline-settings` | Parcial | Não. |
 | Launch paused | Sim | `LaunchPausedPage` | Pronto | Aparece dentro de rotas de módulos pausados. |
