@@ -236,5 +236,33 @@ describe("community Events canonical owner", () => {
     expect(calendar).toContain("Nenhum evento publicado neste período");
   });
 
+  it("does not collapse public list read failures into a truthful empty state", () => {
+    const readService = read(
+      "src/core/community-events/services/EventReadService.ts",
+    );
+    const runtime = read(
+      "src/core/community-events/services/EventRuntimeService.ts",
+    );
+    const listPage = read(
+      "src/modules/community-events/pages/EventsListPage.tsx",
+    );
+    const results = read(
+      "src/modules/community-events/pages/EventsListResults.tsx",
+    );
+
+    expect(readService).toContain("async getEventsStrict");
+    expect(readService).toContain("return await this.getEventsStrict(filters)");
+    expect(runtime).toContain("async getEventsStrict");
+    expect(listPage).toContain("eventRuntimeService.getEventsStrict");
+    expect(listPage).toContain("isError: isEventsError");
+    expect(listPage).toContain("refetch: refetchEvents");
+    expect(results).toContain("isError ? (");
+    expect(results).toContain("Não foi possível carregar os eventos");
+    expect(results).toContain("Tentar novamente");
+    expect(results.indexOf("isError ? (")).toBeLessThan(
+      results.indexOf("events.length === 0 ? ("),
+    );
+  });
+
 
 });
