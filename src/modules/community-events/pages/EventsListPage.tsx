@@ -332,7 +332,7 @@ export default function EventsListPage({ resolved, activeMemberIds }: EventsList
                     <TrendingUp className="h-4 w-4 text-primary sm:h-5 sm:w-5" />
                     <div className="text-left">
                       <p className="text-[10px] text-white/60 sm:text-xs">Total</p>
-                      <p className="text-base font-bold text-white sm:text-lg">{stats.total}</p>
+                      <p className="text-base font-bold text-white sm:text-lg">{isEventsError ? "—" : stats.total}</p>
                     </div>
                   </motion.div>
                   <motion.div
@@ -342,7 +342,7 @@ export default function EventsListPage({ resolved, activeMemberIds }: EventsList
                     <Sparkles className="h-4 w-4 text-emerald-400 sm:h-5 sm:w-5" />
                     <div className="text-left">
                       <p className="text-[10px] text-white/60 sm:text-xs">Próximos</p>
-                      <p className="text-base font-bold text-white sm:text-lg">{stats.upcoming}</p>
+                      <p className="text-base font-bold text-white sm:text-lg">{isEventsError ? "—" : stats.upcoming}</p>
                     </div>
                   </motion.div>
                   <motion.div
@@ -352,7 +352,7 @@ export default function EventsListPage({ resolved, activeMemberIds }: EventsList
                     <Users className="h-4 w-4 text-blue-400 sm:h-5 sm:w-5" />
                     <div className="text-left">
                       <p className="text-[10px] text-white/60 sm:text-xs">Participantes</p>
-                      <p className="text-base font-bold text-white sm:text-lg">{stats.participants}</p>
+                      <p className="text-base font-bold text-white sm:text-lg">{isEventsError ? "—" : stats.participants}</p>
                     </div>
                   </motion.div>
                 </div>
