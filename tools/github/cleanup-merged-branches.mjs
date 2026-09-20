@@ -25,8 +25,7 @@ function parseArgs(argv) {
     else if (arg === "--include-superseded") options.includeSuperseded = true;
     else if (arg.startsWith("--superseded-manifest=")) {
       options.supersededManifest = arg.slice("--superseded-manifest=".length);
-    }
-    else if (arg.startsWith("--repo=")) options.repo = arg.slice("--repo=".length);
+    } else if (arg.startsWith("--repo=")) options.repo = arg.slice("--repo=".length);
     else if (arg.startsWith("--base=")) options.base = arg.slice("--base=".length);
     else if (arg === "--help" || arg === "-h") options.help = true;
     else throw new Error(`Unknown argument: ${arg}`);
