@@ -247,3 +247,17 @@ Revalidação viva confirmou `territorial-update-location-visibility`, `territor
 **Importante:** G43 phase 2 continua pendente. O frontend administrativo ainda usa `updateGroup()` + `replaceMembers()` do writer compatível; o DML browser não deve ser revogado antes de cutover e smoke AAL2. O arquivo `20260910221500_lock_territorial_group_writes_to_broker_g43.sql` permanece em `migrations-pending` de forma intencional.
 
 Resultado do ledger após este corte: **686 locais / 666 remotas / 666 identidades remotas presentes no Git / 20 local-only / 0 remote-only**.
+
+
+## Atualização — Business/Mapa G154 e username de signup reconciliados — 2026-09-20
+
+A auditoria viva encontrou três migrations local-only que eram blockers reais do MVP, não drafts:
+
+- o runtime não possuía os índices de `public_business_search` e as RPCs `search_entities_by_radius`, `search_entities_by_bounds` e `search_entities_hybrid` ainda apontavam Business para a relação legada `public.businesses`, ausente no banco;
+- `public.handle_new_user()` ainda ignorava `raw_user_meta_data.handle`, apesar do cadastro enviar o @ escolhido.
+
+Os três SQLs versionados passaram em dry-run transacional com rollback e foram então promovidos pelo mecanismo canônico de migration do Supabase. O runtime registrou `20260920094738_index_public_business_map_bounds_g154`, `20260920094744_retarget_business_spatial_search_read_model_g154` e `20260920094751_honor_signup_username_in_auth_trigger`.
+
+Pós-check vivo confirmou os três índices, as três RPCs usando `public_business_search`, e `handle_new_user()` usando o handle solicitado + guard de username reservado. Os filenames Git foram alinhados às identidades remotas.
+
+Estado do ledger após este corte: **686 locais / 669 remotas / 669 exatas / 17 local-only / 0 remote-only**.
