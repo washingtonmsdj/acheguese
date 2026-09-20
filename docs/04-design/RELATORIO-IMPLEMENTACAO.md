@@ -476,3 +476,23 @@ A prancha 117 também está coberta pelos estados demonstrativos de visitante, v
 
 - Branch: `codex/reformulacao-entrada-comunidade`.
 - Commit restrito ao componente, estilos e documentações do concept; arquivos staged preexistentes de catalogação e segurança permanecem fora da alteração.
+
+## 20/09/2026 · Perfil público profissional — prancha 010
+
+### Auditoria e ajuste
+
+- Comparei `ProfissionalPublicPage` com a prancha mobile/desktop do perfil de João Santos. A estrutura já usava a rota pública real, os dados demonstrativos DEV e o diálogo de lead existente; mantive esses contratos e concentrei a alteração no desvio visual comprovado.
+- A causa do excesso de espaço estava nos defaults globais de acessibilidade: `p` recebe `margin-bottom: 1rem`, o que duplicava a altura de cada descrição dentro das três linhas de serviço. Isso empurrava `Trabalhos realizados` para fora do viewport mobile.
+- Adicionei a classe de escopo `.professional-public-page` e neutralizei somente nesse perfil as margens automáticas de `p` e headings. A regra não altera o SSOT tipográfico global nem outras páginas.
+- Mantive a composição da referência: retorno e ações no topo, hero com identidade e cobertura, CTA amarelo de conversa, abas, três serviços compactos, fotos do portfólio, cobertura no mobile e coluna lateral de conversa no desktop.
+
+### Validação e evidências
+
+- Navegador interno mantido aberto na rota `/servicos/ba/salvador/profissional/joao-santos?concept-mock=1`; a comparação usa viewport mobile equivalente a `389 × 867` CSS px e desktop equivalente a `1440 × 867` CSS px.
+- Conferi a ordem do conteúdo, a altura das linhas de serviço, a entrada do portfólio no frame mobile, a coluna lateral desktop e a ausência de erros de runtime.
+- `npm run typecheck:app`, ESLint no componente alterado, testes dos serviços profissionais e `git diff --check`.
+
+### Git
+
+- Branch: `codex/reformulacao-entrada-comunidade`.
+- Commit restrito ao perfil, ao estilo scoped e às documentações do concept; alterações staged preexistentes permanecem fora do commit.

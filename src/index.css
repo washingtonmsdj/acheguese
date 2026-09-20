@@ -3001,3 +3001,17 @@
     font-size: 0.7rem;
   }
 }
+
+/* The public professional profile has deliberate utility spacing. The global
+ * accessibility defaults add a paragraph margin that otherwise doubles every
+ * service row and pushes the portfolio below the mobile concept viewport. */
+.professional-public-page p {
+  margin-bottom: 0;
+}
+
+.professional-public-page h1,
+.professional-public-page h2,
+.professional-public-page h3 {
+  margin-bottom: 0;
+  margin-top: 0;
+}

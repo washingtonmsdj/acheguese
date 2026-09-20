@@ -451,7 +451,7 @@ export default function ProfissionalPublicPage() {
   const coverage = conceptMockEnabled ? PROFESSIONAL_CONCEPT_DETAILS.coverage : profile.city ? [profile.city] : [];
 
   return (
-    <div className="min-h-[100dvh] bg-territory-canvas pb-24 text-territory-ink md:pb-8">
+    <div className="professional-public-page min-h-[100dvh] bg-territory-canvas pb-24 text-territory-ink md:pb-8">
       <TerritoryTopbar
         territoryName={profileTerritoryName}
         contextLabel={profileContextLabel}
