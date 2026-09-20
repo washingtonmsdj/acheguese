@@ -12,6 +12,7 @@ interface NearbyMiniMapProps {
   userLocation: { latitude: number; longitude: number } | null;
   entities: NearbyEntity[];
   radiusKm: number;
+  showProximity: boolean;
   className?: string;
 }
 
@@ -19,6 +20,7 @@ export function NearbyMiniMap({
   userLocation,
   entities,
   radiusKm,
+  showProximity,
   className = "",
 }: NearbyMiniMapProps) {
   const adapterRef = useRef(null);
@@ -27,6 +29,16 @@ export function NearbyMiniMap({
     return entities
       .slice(0, 30)
       .map((entity) => {
+        const metadataWithoutProximity = { ...(entity.metadata ?? {}) };
+        delete metadataWithoutProximity.distance;
+        delete metadataWithoutProximity.distance_meters;
+        const proximityMetadata = showProximity
+          ? {
+              distance: entity.distance,
+              distance_meters: entity.distance,
+            }
+          : {};
+
         const marker = mapEntityProjection.projectEntity(
           {
             id: entity.id,
@@ -34,7 +46,8 @@ export function NearbyMiniMap({
             latitude: entity.latitude,
             longitude: entity.longitude,
             status: EntityStatus.ACTIVE,
-            ...entity.metadata,
+            ...metadataWithoutProximity,
+            ...proximityMetadata,
           },
           entity.type,
           { includeMetadata: true },
@@ -44,15 +57,15 @@ export function NearbyMiniMap({
 
         marker.metadata = {
           ...marker.metadata,
-          distance: entity.distance,
+          ...metadataWithoutProximity,
+          ...proximityMetadata,
           source: "nearby",
-          ...entity.metadata,
         };
 
         return marker;
       })
       .filter((marker): marker is MapMarker => marker !== null);
-  }, [entities]);
+  }, [entities, showProximity]);
 
   const center = useMemo(() => {
     if (userLocation) {
@@ -95,7 +108,10 @@ export function NearbyMiniMap({
         styleUrl={DEFAULT_TILE_STYLE.styleUrl}
         initialViewport={{ center, zoom }}
         markers={markers}
-        userLocationMarker={{ enabled: true, autoAdd: true }}
+        userLocationMarker={{
+          enabled: showProximity,
+          autoAdd: showProximity,
+        }}
         className="h-full w-full"
       />
     </div>

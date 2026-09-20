@@ -9,6 +9,7 @@ import type { NearbyEntity } from "../hooks/useNearbyEntities";
 interface NearbyCardProps {
   entity: NearbyEntity;
   onNavigate: (url: string) => void;
+  showProximity: boolean;
 }
 
 const ENTITY_CONFIG = {
@@ -37,12 +38,13 @@ function getWalkingTime(meters: number): string {
   return mins > 0 ? `${hours}h ${mins}min` : `${hours}h`;
 }
 
-export function NearbyCard({ entity, onNavigate }: NearbyCardProps) {
+export function NearbyCard({ entity, onNavigate, showProximity }: NearbyCardProps) {
   const friendlyUrls = useFriendlyModuleUrls();
   const config = ENTITY_CONFIG[entity.type];
   const Icon = config.icon;
   const baseUrl = entity.type === "tourist_point" ? friendlyUrls.touristPoints : config.baseUrl;
-  const hasRealDistance = entity.distance > 0 && entity.distance < 100000;
+  const hasRealDistance =
+    showProximity && entity.distance > 0 && entity.distance < 100000;
   const neighborhood =
     typeof entity.metadata?.neighborhood === "string" ? entity.metadata.neighborhood : null;
   const city = typeof entity.metadata?.city === "string" ? entity.metadata.city : null;

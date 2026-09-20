@@ -44,6 +44,7 @@ interface NearbyFiltersProps {
   activeCategory: QuickCategoryKey;
   onCategoryChange: (key: QuickCategoryKey) => void;
   resultCount: number;
+  showProximity: boolean;
 }
 
 export function NearbyFilters({
@@ -52,6 +53,7 @@ export function NearbyFilters({
   activeCategory,
   onCategoryChange,
   resultCount,
+  showProximity,
 }: NearbyFiltersProps) {
   return (
     <div className="space-y-4">
@@ -59,7 +61,9 @@ export function NearbyFilters({
         <div className="p-1.5 rounded-lg bg-primary/10">
           <Navigation className="h-4 w-4 text-primary" />
         </div>
-        <span className="text-sm font-medium text-foreground">Raio:</span>
+        <span className="text-sm font-medium text-foreground">
+          {showProximity ? "Raio:" : "Recorte a partir do centro:"}
+        </span>
         <div className="flex gap-1.5 flex-wrap">
           {RADIUS_OPTIONS.map((option) => (
             <Button

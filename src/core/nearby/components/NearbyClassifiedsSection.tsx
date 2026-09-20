@@ -1,7 +1,6 @@
 import { useMemo } from "react";
 import { useNavigate } from "react-router-dom";
 import { ShoppingBag } from "lucide-react";
-import { Button } from "@/shared/components/ui/button";
 import { useTerritoryLabels } from "@/core/location";
 import { useModuleUrls } from "@/core/routing/hooks/useModuleUrls";
 import type { ResolvedTerritory } from "@/core/routing/hooks/useResolveTerritoryFromUrl";
@@ -14,18 +13,13 @@ import { formatBrlNoCents } from "@/shared/utils/currency";
 import { NearbySection } from "./NearbySection";
 
 interface NearbyClassifiedsSectionProps {
-  userLocation?: { latitude: number; longitude: number } | null;
-  radiusKm?: number;
   limit?: number;
   resolved?: ResolvedTerritory | null;
-  onShowInMap?: (ad: ClassificadoWithVendedor) => void;
 }
 
 export function NearbyClassifiedsSection({
-  userLocation,
   limit = 6,
   resolved = null,
-  onShowInMap,
 }: NearbyClassifiedsSectionProps) {
   const navigate = useNavigate();
   const moduleUrls = useModuleUrls();
@@ -37,8 +31,6 @@ export function NearbyClassifiedsSection({
 
   const nearbyClassifieds = useMemo(() => {
     const active = classificados.filter((classified) => classified.status === "active");
-    if (!userLocation) return active.slice(0, limit);
-
     const territoryName = territoryLabels.name.trim().toLowerCase();
     if (!territoryName) return active.slice(0, limit);
 
@@ -50,7 +42,7 @@ export function NearbyClassifiedsSection({
     );
 
     return [...sameNeighborhood, ...remaining].slice(0, limit);
-  }, [classificados, limit, territoryLabels.name, userLocation]);
+  }, [classificados, limit, territoryLabels.name]);
 
   const handleAdClick = (ad: ClassificadoWithVendedor) => {
     const publicUrl = classifiedUrlService.buildPublicUrl(ad);
@@ -101,18 +93,6 @@ export function NearbyClassifiedsSection({
                 )}
               </div>
             </button>
-            {onShowInMap && (
-              <div className="px-2 pb-2">
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  className="h-7 w-full text-xs"
-                  onClick={() => onShowInMap(ad)}
-                >
-                  Ver no mapa
-                </Button>
-              </div>
-            )}
           </div>
         ))}
       </div>
