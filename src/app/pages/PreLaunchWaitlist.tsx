@@ -96,7 +96,7 @@ function getPhoneDigits(value: string): string {
 }
 
 function buildRegistrationContact(contact: string): {
-  email: string;
+  email: string | null;
   phone: string | null;
   contactMode: "email" | "whatsapp";
 } | null {
@@ -112,7 +112,7 @@ function buildRegistrationContact(contact: string): {
   const digits = getPhoneDigits(normalized);
   if (digits.length >= 10 && digits.length <= 15) {
     return {
-      email: `whatsapp+${digits}@waitlist.acheguese.local`,
+      email: null,
       phone: normalized,
       contactMode: "whatsapp",
     };
