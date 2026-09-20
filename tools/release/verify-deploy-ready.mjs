@@ -28,6 +28,7 @@ const REQUIRED_VERCEL_ENV_VARS = [
   'VITE_CONTACT_EMAIL',
   'VITE_DPO_NAME',
   'VITE_DPO_EMAIL',
+  'VITE_LEGAL_FORUM',
 ];
 
 const OPTIONAL_ENV_VARS = [
@@ -102,16 +103,29 @@ function readJson(file) {
   return JSON.parse(readFileSync(file, 'utf-8'));
 }
 
-function getPublicSiteHost() {
+function getPublicSiteUrl() {
   const rawUrl = process.env.VITE_PUBLIC_SITE_URL?.trim();
   if (!rawUrl) return null;
 
   try {
-    return new URL(rawUrl).hostname;
+    const url = new URL(rawUrl);
+    if (url.protocol !== 'https:') {
+      fail('VITE_PUBLIC_SITE_URL deve usar HTTPS em producao');
+      return null;
+    }
+    return url;
   } catch {
     fail('VITE_PUBLIC_SITE_URL deve ser uma URL absoluta valida');
     return null;
   }
+}
+
+function getPublicSiteHost() {
+  return getPublicSiteUrl()?.hostname ?? null;
+}
+
+function isValidEmail(value) {
+  return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value);
 }
 
 function collectSourceFiles(root, extensions = new Set(['.ts', '.tsx', '.js', '.jsx', '.mjs'])) {
@@ -240,6 +254,25 @@ for (const envVar of REQUIRED_VERCEL_ENV_VARS) {
     ok(`${envVar} configurada`);
   }
 }
+
+for (const emailVar of ['VITE_CONTACT_EMAIL', 'VITE_DPO_EMAIL']) {
+  const value = process.env[emailVar]?.trim() ?? '';
+  if (value && !isValidEmail(value)) {
+    fail(`${emailVar} deve conter um email valido`);
+  }
+}
+
+const dpoName = process.env.VITE_DPO_NAME?.trim() ?? '';
+if (dpoName && dpoName.length < 3) {
+  fail('VITE_DPO_NAME deve identificar publicamente o encarregado');
+}
+
+const legalForum = process.env.VITE_LEGAL_FORUM?.trim() ?? '';
+if (legalForum && legalForum.length < 3) {
+  fail('VITE_LEGAL_FORUM deve identificar o foro aplicavel');
+}
+
+getPublicSiteUrl();
 console.log('  Opcionais recomendadas:');
 for (const envVar of OPTIONAL_ENV_VARS) console.log(`    - ${envVar}`);
 console.log('  Supabase Edge:');
