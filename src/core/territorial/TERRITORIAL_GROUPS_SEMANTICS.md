@@ -2,7 +2,7 @@
 
 **Data base:** 2026-09-10  
 **Versão:** 2.0.0  
-**Status:** OFICIAL — source G43 preparado; cutover runtime pendente
+**Status:** OFICIAL — G42/G43 phase 1 LIVE; cutover G43 phase 2 pendente
 
 ## 1. Definição
 
@@ -127,22 +127,24 @@ Para lifecycle G43:
 
 ### Runtime atual
 
-Enquanto o G43 não for promovido no Supabase remoto, o frontend LIVE ainda pode
-depender dos métodos de compatibilidade de `TerritorialGroupService` /
-`TerritorialGroupRepositorySupabase`.
+G43 phase 1 já está promovida no Supabase remoto e o broker
+`territorial-group-admin-rpc` está ACTIVE com `verify_jwt=true`. O frontend
+administrativo, porém, ainda usa os métodos de compatibilidade de
+`TerritorialGroupService` / `TerritorialGroupRepositorySupabase` enquanto o
+cutover do owner de escrita não é certificado.
 
 Esses métodos **não devem ser descritos como transacionais**. Em particular, o
 writer histórico de substituição usa requests separados e existe apenas até o
 cutover ser comprovado.
 
-Não remover o caminho compatível antes de o broker novo estar LIVE; não criar um
+Não remover o caminho compatível antes de o frontend migrar e passar pelo smoke AAL2; não criar um
 terceiro writer para contornar o gate.
 
-### Autoridade preparada — phase 1
+### Autoridade canônica — phase 1 aplicada
 
-Migration pending:
+Migration canônica aplicada:
 
-`docs/09-reference/migrations-pending/20260910220500_create_territorial_group_admin_commands_g43.sql`
+`supabase/migrations/20260919003900_create_territorial_group_admin_commands_g43.sql`
 
 Commands:
 
@@ -151,7 +153,7 @@ territorial_admin_save_group
 territorial_admin_set_group_status
 ```
 
-`territorial_admin_save_group` é a futura autoridade de criação/edição:
+`territorial_admin_save_group` é a autoridade transacional de criação/edição:
 
 - criação/edição do grupo e substituição do conjunto completo de memberships
   acontecem na mesma transação;
@@ -173,7 +175,7 @@ Os dois commands são `SECURITY INVOKER`. `EXECUTE` é revogado de `PUBLIC`,
 
 ### Gateway administrativo
 
-`territorial-group-admin-rpc` é o gateway G43 preparado:
+`territorial-group-admin-rpc` é o gateway G43 implantado:
 
 - `verify_jwt=true`;
 - `requireAdmin()`;
@@ -185,7 +187,7 @@ Os dois commands são `SECURITY INVOKER`. `EXECUTE` é revogado de `PUBLIC`,
 - ACK de `setStatus` correlacionado ao mesmo grupo e status solicitado;
 - 2xx incompatível é erro, não sucesso.
 
-Ele não deve ser implantado antes de os commands existirem no mesmo ambiente.
+No runtime auditado, o broker e os commands coexistem no mesmo ambiente; o próximo gate é migrar o frontend e certificar o smoke AAL2 antes da phase 2.
 
 ### Lock final — phase 2
 
@@ -212,8 +214,9 @@ is_navigable
 Atualizações especializadas passam pelos gateways territoriais. Browser não
 deve recriar lógica de metadata com read-modify-write paralelo.
 
-A cascata de `locations` é uma autoridade distinta: G42 prepara
-`territorial_update_location_visibility(...)`, que atualiza raiz + todos os
+A cascata de `locations` é uma autoridade distinta: G42 materializa
+`territorial_update_location_visibility(...)` pela migration canônica
+`20260919003851_transactional_location_visibility_cascade_g42.sql`, que atualiza raiz + todos os
 descendentes numa única transação quando `is_selector_active=false`.
 
 ## 10. Resolução de grupo
@@ -257,8 +260,7 @@ Contrato atual corrigido:
   redundante;
 - inventário de memberships é buscado em lote, evitando uma consulta por grupo.
 
-O frontend ainda não deve apontar os writes para `territorial-group-admin-rpc`
-enquanto o runtime remoto não possuir phase 1 + Edge comprovados.
+O frontend administrativo ainda precisa migrar os writes para `territorial-group-admin-rpc` e ser certificado; somente depois disso a phase 2 pode remover o DML browser legado.
 
 ## 13. Invariantes que não podem regredir
 
@@ -294,6 +296,18 @@ Runtime Supabase:
   nem `territorial-group-admin-rpc`.
 
 Estado correto: **SOURCE-READY / RUNTIME-PENDING**.
+
+## 15. Estado operacional em 2026-09-20
+
+Revalidação viva do Supabase canônico:
+
+- G42 está registrada como `20260919003851_transactional_location_visibility_cascade_g42`;
+- G43 phase 1 está registrada como `20260919003900_create_territorial_group_admin_commands_g43`;
+- `territorial-update-location-visibility`, `territorial-update-group-visibility`, `territorial-get-tree` e `territorial-group-admin-rpc` estão `ACTIVE` com `verify_jwt=true`;
+- o frontend administrativo ainda usa `updateGroup()` + `replaceMembers()` do caminho de compatibilidade;
+- por isso a migration G43 phase 2 continua corretamente em `docs/09-reference/migrations-pending/` e não deve ser promovida antes do cutover + smoke AAL2.
+
+Estado correto: **PHASE-1-LIVE / FRONTEND-CUTOVER-PENDING / PHASE-2-PENDING**.
 
 ## Referências
 

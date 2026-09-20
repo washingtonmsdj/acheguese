@@ -4,7 +4,7 @@
 **Data do checkpoint GitHub:** 2026-09-19  
 **Repositório:** `washingtonmsdj/acheguese`  
 **Linha ativa:** `main`  
-**HEAD técnico auditado neste checkpoint:** `f45ec30501b91716182fdc1eb10ec38d3807281c` (`main` após os PRs #223–#225). O commit que atualizar este próprio documento será descendente documental desse SHA; qualquer alteração funcional posterior exige nova revalidação.
+**HEAD técnico base desta revalidação:** `20e58eab9db44239d4c849f74885e9c2c9d81f9f` (`main` após os PRs #227–#229). O commit deste próprio corte será descendente desse SHA.
 
 Este documento consolida ordem de execução, blockers e Definition of Done. Ele é um **registro operacional**, não uma fotografia autoritativa do que existe no produto. A fonte de verdade para decidir o que existe, o que está ativo e o que deve ser corrigido é sempre o **projeto real**: código da `main`, rotas, owners, serviços, schema/migrations, contratos, testes, deploy/runtime e comportamento observado.
 
@@ -26,7 +26,7 @@ O primeiro release continua territorial. **Cobertura uniforme dos 170 bairros de
 
 ### Bloqueadores reais antes do release
 
-1. **Concluir convergência Git ↔ Supabase/runtime.** O runtime canônico está saudável, os tipos gerados estão byte-a-byte equivalentes ao Supabase vivo e as 60 Edge Functions implantadas estão `ACTIVE`. O blocker residual de convergência é agora específico: o ledger possui 666 migrations remotas contra 683 arquivos locais; no SHA auditado existem 649 identidades exatas, 34 identidades somente locais e 17 somente remotas. Tratar cada divergência por provenance; não executar `db push` nem renomear por aproximação.
+1. **Concluir convergência Git ↔ Supabase/runtime.** O runtime canônico está saudável, os tipos gerados permanecem equivalentes ao Supabase vivo e as Edge Functions implantadas estão `ACTIVE`. Após a promoção canônica de G42/G43, todas as 666 identidades remotas existem no Git; o blocker residual são **20 migrations local-only**. Tratar cada uma por provenance; não executar `db push` nem remover arquivos por aproximação.
 2. **Restaurar um gate executável.** Os GitHub Actions do HEAD continuam encerrando antes de steps. `steps=[]`/sem log não é teste vermelho de código nem teste verde. O candidato só pode avançar após security/lint/typecheck/test/build executarem de verdade no mesmo SHA.
 3. **Completar proteção da `main`.** Force-push/deleção já estão bloqueados, porém o fluxo ainda precisa exigir PR e checks que realmente executem. O publisher canônico de tipos Supabase deve deixar de escrever diretamente na `main` antes disso.
 4. **Fechar o ledger de migrations e manter a prova de runtime.** `validate:migrations:remote` precisa chegar a zero aliases/conflicts/local-only/remote-only. Tipos gerados não são blocker no estado auditado (`exact=true`, 731731 caracteres normalizados) e Edge Functions não devem ser implantadas em massa apenas para obter paridade numérica.
@@ -57,12 +57,13 @@ O primeiro release continua territorial. **Cobertura uniforme dos 170 bairros de
 - [x] Snapshots de produto já classificados como históricos (`DEMO-READY`, `PROJECT-HEALTH-REPORT`, `PROJECT-SCORE`) saíram da árvore documental ativa e foram preservados em `docs/10-archive/product/` (PR #224).
 - [x] Tipos Supabase foram revalidados no SHA auditado: Git e runtime têm 731731 caracteres normalizados e `exact=true`.
 - [x] O Supabase canônico mantém 60 Edge Functions implantadas e as 60 estão `ACTIVE`; as funções versionadas mas deliberadamente não implantadas continuam sujeitas ao rollout/authority próprio.
-- [~] Reconciliação de migrations avançou no PR #225 sem executar DDL: duas identidades comprovadamente equivalentes foram reconstruídas do ledger remoto. Estado auditado após a reconciliação de Safety G71/G72/G75–G80: 683 locais, 666 remotas, 664 exatas, 20 local-only e 2 remote-only.
+- [~] Reconciliação de migrations avançou no PR #225 sem executar DDL. Após Safety G71/G72/G75–G80, o estado chegou a 683 locais, 666 remotas, 657 exatas, 26 local-only e 9 remote-only.
 - [ ] CI continua incapaz de certificar o candidato: no SHA `f45ec305...`, Security Check, SSOT Enforcement e SSOT Territorial Tests encerraram jobs com `steps: null`; lint/typecheck/test/E2E não chegaram a executar.
 - [ ] Vercel continua sem permitir nova prova de deploy por limite diário de builds; isso não conta como build aprovado.
-- [~] O ledger de migrations avançou novamente sem executar DDL: G71/G72/G75–G80 foram alinhadas às oito identidades `reconcile_*` realmente registradas no Supabase após prova de equivalência token-a-token. Estado: 683 locais / 666 remotas / 664 exatas / 20 local-only / 2 remote-only. Ainda não executar `db push`.
+- [~] O ledger de migrations avançou sem executar DDL: G71/G72/G75–G80 foram alinhadas às oito identidades `reconcile_*` realmente registradas no Supabase após prova de equivalência token-a-token. Estado daquela etapa: 683 locais / 666 remotas / 657 exatas / 26 local-only / 9 remote-only.
 - [~] Quatro identidades adicionais de Mobilidade foram alinhadas após prova token-a-token: `remove_provisional_mobility_fare_floor`, `persist_mobility_cancellation_reason`, `enforce_server_owned_mobility_quotes` e `require_explicit_mobility_quote_id`. O bloco de preço terminal da entrega não foi alterado porque o SQL remoto é materialmente diferente.
-- [~] A cadeia terminal de entrega foi reconciliada como uma sequência de três migrations remotas canônicas (`make_delivery_final_price_server_owned`, `restore_atomic_delivery_completion_with_server_owned_price`, `ignore_client_final_price_in_delivery_wrapper`). Os dois drafts locais G70/restore foram aposentados após prova de equivalência das funções e wrappers relevantes. Restam apenas G42/G43 como remote-only.
+- [~] A cadeia terminal de entrega foi reconciliada como uma sequência de três migrations remotas canônicas (`make_delivery_final_price_server_owned`, `restore_atomic_delivery_completion_with_server_owned_price`, `ignore_client_final_price_in_delivery_wrapper`). Ao fim dessa etapa restavam apenas G42/G43 como remote-only; este corte fecha essas duas identidades.
+- [x] G42 e G43 phase 1 territoriais foram retiradas de `migrations-pending` e promovidas às identidades reais do ledger após equivalência token-a-token; os quatro Edge territoriais auditados estão `ACTIVE` com `verify_jwt=true`. G43 phase 2 permanece pendente porque o frontend ainda usa o writer compatível.
 - [ ] A prova de build/deploy/smoke do mesmo SHA continua blocker real de release.
 
 

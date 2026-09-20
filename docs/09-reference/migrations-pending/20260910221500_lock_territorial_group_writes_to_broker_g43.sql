@@ -2,8 +2,8 @@
 --
 -- DO NOT PROMOTE this migration merely because phase 1 exists in Git.
 -- Manual release gate before promotion:
---   1. 20260910220500_create_territorial_group_admin_commands_g43.sql is
---      promoted and its postconditions pass in this exact environment;
+--   1. 20260919003900_create_territorial_group_admin_commands_g43.sql is
+--      already applied and its postconditions pass in this exact environment;
 --   2. territorial-group-admin-rpc is ACTIVE with verify_jwt=true and exact
 --      source provenance;
 --   3. authenticated admin AAL2 smoke proves saveGroup + setStatus;

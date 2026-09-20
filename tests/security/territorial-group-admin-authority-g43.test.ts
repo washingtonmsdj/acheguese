@@ -8,7 +8,7 @@ const read = (path: string) => readFileSync(resolve(root, path), "utf8");
 const config = read("supabase/config.toml");
 const broker = read("supabase/functions/territorial-group-admin-rpc/index.ts");
 const phaseOne = read(
-  "docs/09-reference/migrations-pending/20260910220500_create_territorial_group_admin_commands_g43.sql",
+  "supabase/migrations/20260919003900_create_territorial_group_admin_commands_g43.sql",
 );
 const phaseTwo = read(
   "docs/09-reference/migrations-pending/20260910221500_lock_territorial_group_writes_to_broker_g43.sql",
