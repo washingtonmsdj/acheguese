@@ -250,9 +250,16 @@ describe("community Events canonical owner", () => {
       "src/modules/community-events/pages/EventsListResults.tsx",
     );
 
+    const detailPage = read(
+      "src/modules/community-events/pages/EventDetailPage.tsx",
+    );
+
     expect(readService).toContain("async getEventsStrict");
     expect(readService).toContain("return await this.getEventsStrict(filters)");
+    expect(readService).toContain("async getEventByIdStrict");
+    expect(readService).toContain("async getPublicEventByIdStrict");
     expect(runtime).toContain("async getEventsStrict");
+    expect(runtime).toContain("async getPublicEventByIdStrict");
     expect(listPage).toContain("eventRuntimeService.getEventsStrict");
     expect(listPage).toContain("isError: isEventsError");
     expect(listPage).toContain("refetch: refetchEvents");
@@ -261,6 +268,13 @@ describe("community Events canonical owner", () => {
     expect(results).toContain("Tentar novamente");
     expect(results.indexOf("isError ? (")).toBeLessThan(
       results.indexOf("events.length === 0 ? ("),
+    );
+    expect(detailPage).toContain("eventRuntimeService.getPublicEventByIdStrict");
+    expect(detailPage).toContain("isError: isEventError");
+    expect(detailPage).toContain("refetch: refetchEvent");
+    expect(detailPage).toContain("Não foi possível carregar este evento");
+    expect(detailPage.indexOf("if (isEventError)")).toBeLessThan(
+      detailPage.indexOf("if (!event)"),
     );
   });
 
