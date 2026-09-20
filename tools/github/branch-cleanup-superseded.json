@@ -229,6 +229,11 @@
       "evidence": "Superseded by the rebased site-settings public-read retirement merged in PR #160."
     },
     {
+      "name": "tmp-probe-unused",
+      "sha": "9f5ddc7e9a13b309d51134fba982a9394bfcbcc6",
+      "evidence": "Temporary G73/G74 probe snapshot. Its two migrations are byte-identical to the canonical files preserved under docs/09-reference/migrations-pending, several touched runtime files are already byte-identical to main, and main ratchets the current G73/G74 broker/read-model contracts in MobilityDriverPrivateReadModelsG73G74.test.ts."
+    },
+    {
       "name": "tmp-should-not-create",
       "sha": "d6d3610e12e0ee682c8a7e447bb69a6178953d40",
       "evidence": "Strict ancestor of module/mobilidade-g62-work (ahead by 5, behind by 0) and therefore also of module/mobilidade; no unique work is lost by deleting this temporary snapshot."
