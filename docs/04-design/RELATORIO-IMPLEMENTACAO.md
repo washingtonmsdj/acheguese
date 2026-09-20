@@ -1,5 +1,24 @@
 # Relatório de implementação — Reformulação do Achegue-se
 
+## 20/09/2026 · Auditoria da identidade visual — prancha 005
+
+### Escopo
+
+Auditoria final da base de marca do catálogo. A prancha 005 é uma proposta alternativa de símbolo; o README da página determina que ela não constitui aprovação de marca. A SSOT vigente continua sendo a referência autoritativa para a implementação.
+
+### Resultado
+
+- O wordmark `achegue-se.` já é renderizado pelos shells compartilhados em Plus Jakarta Sans, com petróleo no texto e ponto solar.
+- As cores da SSOT foram conferidas: petróleo `#123E3D`, solar `#F3CB4C`, marfim `#FAFBF7` e texto `#203534`.
+- A alternativa de símbolo da prancha e o asset legado multicolorido não foram promovidos para produção; introduzi-los criaria uma segunda marca sem aprovação.
+- A auditoria foi registrada em `docs/04-design/catalogo-conceitos/01-identidade-visual/REVISAO.md`.
+
+### Validação
+
+- Wordmark conferido no preview desktop e mobile mantido aberto no navegador interno.
+- Link semântico, foco e variante claro/escuro verificados no `TerritoryTopbar` e nos shells de conceito.
+- Não houve alteração de código: a SSOT existente já atende à referência aprovada.
+
 ## 18/09/2026 · Entrada do site
 
 ### Escopo
@@ -49,7 +68,7 @@ Primeiro fluxo implementado conforme a ordem priorizada no catálogo: entrada p�
 
 - Branch: `codex/reformulacao-entrada-comunidade`.
 - Base: `main`/`origin/main`.
-- Commit e PR: pendentes da conferência final; alterações preexistentes da catalogação e segurança não fazem parte desta entrega.
+- Commits visuais publicados no branch remoto `codex/reformulacao-entrada-comunidade`; alterações preexistentes da catalogação e segurança foram preservadas fora dos commits por caminho.
 
 ## 18/09/2026 · Home da comunidade
 

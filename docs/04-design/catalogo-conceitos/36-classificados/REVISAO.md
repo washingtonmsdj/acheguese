@@ -1,5 +1,8 @@
 # Revisão de implementação
 
+Status: concluída em 20/09/2026.
+Branch analisada: `codex/reformulacao-entrada-comunidade`.
+
 | Verificação | Estado |
 | --- | --- |
 | Comparar filtros, categorias e condições com os contratos atuais | Conferido no mock conforme `sections/types.ts`: preço, condição, bairro e foto |

@@ -51,4 +51,4 @@ Status: implementada nesta branch em 18/09/2026.
 
 - Branch: `codex/reformulacao-entrada-comunidade`.
 - Base de comparação: `main` alinhada a `origin/main` no início do trabalho.
-- Commit e PR: pendentes até a verificação final e a separação das alterações preexistentes de outras conversas.
+- Commit visual publicado no branch remoto `codex/reformulacao-entrada-comunidade`; a separação das alterações preexistentes foi preservada com commits por caminho.

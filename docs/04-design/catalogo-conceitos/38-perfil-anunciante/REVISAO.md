@@ -1,5 +1,8 @@
 # Revisão de implementação
 
+Status: concluída em 20/09/2026.
+Branch analisada: `codex/reformulacao-entrada-comunidade`.
+
 | Item | Estado no concept mock |
 | --- | --- |
 | Remover indicadores sem fonte real e vendas inferidas de avaliações | Implementado; nenhum indicador de vendas ou resposta rápida é inventado |

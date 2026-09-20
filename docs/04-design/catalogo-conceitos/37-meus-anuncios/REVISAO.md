@@ -1,5 +1,8 @@
 # Revisão para implementação
 
+Status: concluída em 20/09/2026.
+Branch analisada: `codex/reformulacao-entrada-comunidade`.
+
 | Item | Estado no concept mock |
 | --- | --- |
 | Persistir todos os campos exibidos e distinguir tipos de preço | Regra preservada; mock não simula persistência |
