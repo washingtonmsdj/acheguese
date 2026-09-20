@@ -54,6 +54,7 @@ export function BusinessModulesSection({
   onNavigate,
   onCopy,
 }: BusinessModulesSectionProps) {
+  const showBilling = isLaunchSurfaceEnabled("billing");
   const businessSummary = {
     premium: businessModules.filter((item) => item.isPremium).length,
     gastronomy: businessModules.filter((item) => item.gastronomy.active).length,
@@ -76,7 +77,11 @@ export function BusinessModulesSection({
         showOnboarding ? (
           <EmptyPanel
             title="Nenhuma empresa ativa vinculada"
-            description="A plataforma já tem dashboard empresarial, vertical gastronômica, QR e billing. Falta apenas uma empresa sua entrar nesse fluxo."
+            description={
+              showBilling
+                ? "A plataforma já tem dashboard empresarial, vertical gastronômica, QR e billing. Falta apenas uma empresa sua entrar nesse fluxo."
+                : "A plataforma já tem dashboard empresarial e vertical gastronômica. Falta apenas uma empresa sua entrar nesse fluxo."
+            }
             actionLabel="Criar empresa"
             onAction={onCreateBusiness}
           />
@@ -139,9 +144,12 @@ function BusinessModuleCard({
 }) {
   const showMobility = isLaunchSurfaceEnabled("mobility");
   const showPublicAnalytics = isLaunchSurfaceEnabled("publicAnalytics");
+  const showBilling = isLaunchSurfaceEnabled("billing");
+  const hasPremiumLink =
+    business.subscription.canUseShortPremiumLink && Boolean(business.shareUrl);
 
   const featureBadges = [
-    business.subscription.canUseShortPremiumLink && business.shareUrl ? "Link premium" : null,
+    hasPremiumLink ? "Link premium" : null,
     business.qrCode.hasActive ? "QR pronto" : null,
     business.gastronomy.active ? "Gastronomia ativa" : null,
     business.gastronomy.deliveryEnabled ? "Delivery ativo" : null,
@@ -220,14 +228,16 @@ function BusinessModuleCard({
           <Button size="sm" className="gap-1.5" onClick={() => onNavigate(business.dashboardUrl)}>
             Gerenciar empresa
           </Button>
-          <Button
-            size="sm"
-            variant="outline"
-            className="gap-1.5"
-            onClick={() => onNavigate(businessManagementRoutes.planos(business.businessId))}
-          >
-            Planos
-          </Button>
+          {showBilling ? (
+            <Button
+              size="sm"
+              variant="outline"
+              className="gap-1.5"
+              onClick={() => onNavigate(businessManagementRoutes.planos(business.businessId))}
+            >
+              Planos
+            </Button>
+          ) : null}
           {business.gastronomy.dashboardUrl ? (
             <Button
               size="sm"
@@ -238,14 +248,16 @@ function BusinessModuleCard({
               Gastronomia
             </Button>
           ) : null}
-          <Button
-            size="sm"
-            variant="outline"
-            className="gap-1.5"
-            onClick={() => onNavigate(businessManagementRoutes.linkPremium(business.businessId))}
-          >
-            Link premium
-          </Button>
+          {showBilling || hasPremiumLink ? (
+            <Button
+              size="sm"
+              variant="outline"
+              className="gap-1.5"
+              onClick={() => onNavigate(businessManagementRoutes.linkPremium(business.businessId))}
+            >
+              Link premium
+            </Button>
+          ) : null}
           <Button
             size="sm"
             variant="outline"
