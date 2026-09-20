@@ -65,16 +65,24 @@ export function PlanStatusWidget({
         <div className="flex items-center justify-between">
           <div>
             <CardTitle className="flex items-center gap-2">
-              Plano Atual
-              <Badge variant={badgeVariant} className="flex items-center">
-                {badgeIcon}
-                {entitlements.planName}
-              </Badge>
+              {showBilling ? 'Plano Atual' : 'Recursos habilitados'}
+              {showBilling && (
+                <Badge variant={badgeVariant} className="flex items-center">
+                  {badgeIcon}
+                  {entitlements.planName}
+                </Badge>
+              )}
             </CardTitle>
             <CardDescription>
-              {isFree && 'Recursos basicos para comecar'}
-              {isPro && 'Recursos avancados para crescer'}
-              {isDelivery && 'Recursos ampliados para operacao de pedidos'}
+              {showBilling ? (
+                <>
+                  {isFree && 'Recursos basicos para comecar'}
+                  {isPro && 'Recursos avancados para crescer'}
+                  {isDelivery && 'Recursos ampliados para operacao de pedidos'}
+                </>
+              ) : (
+                'Limites e capacidades atualmente atribuídos a esta empresa.'
+              )}
             </CardDescription>
           </div>
           {showUpgradeCTA && (
