@@ -151,6 +151,18 @@ Essas 13 branches **não são fonte de trabalho pendente**. Devem ser apagadas s
 
 As quatro últimas carregam deltas históricos grandes de Mobilidade. Como Mobilidade está fora do primeiro release, **não devem ser mergeadas na `main` do MVP**. Permanecem apenas como material de auditoria pós-MVP até provar supersessão ou selecionar commits específicos.
 
+### Execução das branches superseded auditadas
+
+`tools/github/branch-cleanup-superseded.json` fixa por nome + SHA as branches explicitamente auditadas como superseded.
+
+- o comportamento padrão de `npm run maintenance:branches` **não mudou**;
+- `--include-superseded` é opt-in e só torna elegível um head cujo SHA atual seja exatamente o SHA pinado na manifest;
+- proteção de branch, PR aberto e mudança de SHA continuam tendo precedência e bloqueiam a exclusão;
+- dry-run auditável: `npm run maintenance:branches -- --include-superseded --json`;
+- aplicação física, somente com autoridade delete-ref: `npm run maintenance:branches -- --include-superseded --apply`.
+
+A manifest inicial contém somente as 13 branches sem PR já auditadas como superseded. Branches em quarentena não entram na manifest.
+
 ## Próximo passo
 
 Executar primeiro o dry-run com credencial administrativa, conferir que a contagem continua coerente e somente então usar `--apply`.
