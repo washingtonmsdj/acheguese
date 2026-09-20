@@ -196,9 +196,11 @@ function BusinessModuleCard({
                 Premium
               </Badge>
             ) : null}
-            <Badge variant="secondary" className="h-5 text-[10px]">
-              Plano {formatPlanLabel(business.subscription.planTier)}
-            </Badge>
+            {showBilling ? (
+              <Badge variant="secondary" className="h-5 text-[10px]">
+                Plano {formatPlanLabel(business.subscription.planTier)}
+              </Badge>
+            ) : null}
             <Badge variant="outline" className="h-5 text-[10px]">
               {business.subscription.status}
             </Badge>
