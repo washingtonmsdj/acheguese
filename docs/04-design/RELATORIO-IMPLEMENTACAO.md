@@ -728,3 +728,23 @@ A prancha 117 também está coberta pelos estados demonstrativos de visitante, v
 
 - Branch: `codex/reformulacao-entrada-comunidade`.
 - Commit restrito à superfície de conceito, ao desvio controlado em `ContactPage` e à documentação deste concept; alterações staged preexistentes permanecem fora do commit.
+
+## 20/09/2026 · Conta e acesso — pranchas 064, 065 e 067
+
+### Auditoria e decisão
+
+- Comparei login, criação de conta, confirmação de e-mail e recuperação de acesso com as pranchas atuais. As superfícies existentes (`LoginPage`, `CadastroPage`, `CadastroConfirmacaoPage` e `ResetPasswordPage`) já reproduzem a hierarquia mobile/desktop, textos, ações, Google condicionado, segurança, termos e links legais.
+- A composição desktop mantém ilustração territorial à esquerda e formulário compacto à direita; no mobile, a navegação, títulos, campos, espaçamentos e CTAs seguem a escala das pranchas 064/065.
+- Não alterei código: não havia desvio visual/funcional que justificasse mudança e os contratos de autenticação, callback, confirmação, senha e redirecionamento devem permanecer no Auth/Supabase.
+- A rota de confirmação sem uma jornada ativa mantém o fallback seguro de localizar a inscrição, em vez de inventar e-mail, conta ou confirmação.
+
+### Validação e evidências
+
+- Navegador interno mantido aberto nas rotas de login, cadastro, confirmação e recuperação para acompanhamento mobile e desktop.
+- Mobile conferido em viewport compacto; desktop conferido em `1707 × 960`, sem overflow do documento.
+- `npm run typecheck:app` e auditoria visual executados; nenhuma alteração funcional necessária.
+
+### Git
+
+- Branch: `codex/reformulacao-entrada-comunidade`.
+- Este concept altera apenas a documentação da revisão; não houve mudança de código.
