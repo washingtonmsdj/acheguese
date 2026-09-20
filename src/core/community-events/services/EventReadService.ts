@@ -137,22 +137,31 @@ function applyFilters<TRow>(
 }
 
 export class EventReadService {
-  async getEventById(id: string): Promise<PublicEvent | null> {
+  async getEventByIdStrict(id: string): Promise<PublicEvent | null> {
     if (!isUuid(id)) return null;
 
-    try {
-      const { data, error } = await eventsDb
-        .from<EventRowWithLegacyCity>("events")
-        .select("*")
-        .eq("id", id)
-        .maybeSingle();
+    const { data, error } = await eventsDb
+      .from<EventRowWithLegacyCity>("events")
+      .select("*")
+      .eq("id", id)
+      .maybeSingle();
 
-      if (error) throw error;
-      return data ? mapEventRow(data) : null;
+    if (error) throw error;
+    return data ? mapEventRow(data) : null;
+  }
+
+  async getEventById(id: string): Promise<PublicEvent | null> {
+    try {
+      return await this.getEventByIdStrict(id);
     } catch (error) {
       logger.error("EventReadService.getEventById", error);
       return null;
     }
+  }
+
+  async getPublicEventByIdStrict(id: string): Promise<PublicEvent | null> {
+    const event = await this.getEventByIdStrict(id);
+    return event && isEventCurrentOrFuture(event) ? event : null;
   }
 
   async getPublicEventById(id: string): Promise<PublicEvent | null> {
@@ -160,18 +169,22 @@ export class EventReadService {
     return event && isEventCurrentOrFuture(event) ? event : null;
   }
 
+  async getEventsStrict(filters: EventFilters = {}): Promise<PublicEvent[]> {
+    let query = eventsDb
+      .from<EventRowWithLegacyCity>("events")
+      .select("*")
+      .order("date", { ascending: true });
+
+    query = applyFilters(query, filters);
+
+    const { data, error } = await query;
+    if (error) throw error;
+    return (data ?? []).map(mapEventRow);
+  }
+
   async getEvents(filters: EventFilters = {}): Promise<PublicEvent[]> {
     try {
-      let query = eventsDb
-        .from<EventRowWithLegacyCity>("events")
-        .select("*")
-        .order("date", { ascending: true });
-
-      query = applyFilters(query, filters);
-
-      const { data, error } = await query;
-      if (error) throw error;
-      return (data ?? []).map(mapEventRow);
+      return await this.getEventsStrict(filters);
     } catch (error) {
       logger.error("EventReadService.getEvents", error);
       return [];

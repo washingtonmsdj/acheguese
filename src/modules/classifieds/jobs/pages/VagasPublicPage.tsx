@@ -121,7 +121,11 @@ export default function VagasPublicPage({ resolved, activeMemberIds }: VagasPubl
 
   // SEO
   const pageTitle = `Vagas de Emprego em ${cityName} | AcheGuese`;
-  const pageDescription = `Encontre vagas de emprego em ${cityName}. ${total} oportunidades de trabalho disponíveis. Candidate-se agora!`;
+  const pageDescription = isError
+    ? `Consulte vagas de emprego publicadas em ${cityName} no Achegue-se.`
+    : total > 0
+      ? `Encontre vagas de emprego em ${cityName}. ${total} oportunidades de trabalho publicadas no Achegue-se.`
+      : `No momento não há vagas publicadas em ${cityName}. Consulte novamente em breve.`;
   const communityJobsBasePath = useMemo(
     () =>
       communityContext

@@ -49,3 +49,26 @@ Eventos e Vagas continuam **condicionais no release** até existir certificaçã
 5. smoke no domínio de produção confirmar os fluxos reais.
 
 Se qualquer uma das duas superfícies não passar pelo mesmo gate do núcleo, a ação correta continua sendo pausar somente o respectivo owner em `launchScope.ts`, sem remover o código.
+
+## Revalidação viva do runtime — 2026-09-20
+
+Supabase canônico revalidado após o fechamento do ledger:
+
+- `public.vagas`: RLS habilitada, 5 policies, **0 linhas**, 0 candidaturas, 0 itens salvos e 0 marcadores de mock;
+- `public.vaga_saved_items`: RLS habilitada, policy canônica presente;
+- `public.events`: RLS habilitada, 3 policies, **0 linhas**, 0 participantes e 0 marcadores de mock;
+- `public.event_saved_items`: RLS habilitada + forçada, 3 policies, 0 linhas.
+
+O runtime vazio confirma que o comportamento correto do produto hoje é **empty state verdadeiro** — não dados demonstrativos.
+
+Durante esta revalidação foram encontrados e corrigidos dois resíduos de veracidade:
+
+1. a listagem pública de Eventos usava `getEvents()`, cuja leitura fail-soft convertia erro de banco em `[]`; isso fazia indisponibilidade parecer “Nenhum evento encontrado”. A listagem agora usa `getEventsStrict()`, propaga erro ao React Query e renderiza estado de erro com retry antes do empty state. O detalhe recebeu o mesmo tratamento via `getPublicEventByIdStrict()`, reservando `EventNotFound` para ausência real/ID inválido em vez de indisponibilidade do backend;
+2. a meta description de Vagas dizia “Candidate-se agora!” mesmo com total zero. O SEO agora distingue `total > 0` do runtime vazio e descreve somente oportunidades realmente publicadas.
+
+Ratchets:
+
+- `events-owner-migration.test.ts` exige a separação error/empty/not-found e os caminhos estritos da listagem e do detalhe;
+- `job-public-action-truthfulness.test.ts` proíbe promessa de candidatura na listagem vazia.
+
+**Conclusão:** nenhuma evidência runtime/source atual exige pausar `events:true` ou `jobs:true`. As duas superfícies continuam condicionais apenas ao gate exact-SHA executável, build/deploy e smoke do candidato.

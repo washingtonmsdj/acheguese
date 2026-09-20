@@ -236,5 +236,51 @@ describe("community Events canonical owner", () => {
     expect(calendar).toContain("Nenhum evento publicado neste período");
   });
 
+  it("does not collapse public list read failures into a truthful empty state", () => {
+    const readService = read(
+      "src/core/community-events/services/EventReadService.ts",
+    );
+    const runtime = read(
+      "src/core/community-events/services/EventRuntimeService.ts",
+    );
+    const listPage = read(
+      "src/modules/community-events/pages/EventsListPage.tsx",
+    );
+    const results = read(
+      "src/modules/community-events/pages/EventsListResults.tsx",
+    );
+
+    const detailPage = read(
+      "src/modules/community-events/pages/EventDetailPage.tsx",
+    );
+
+    expect(readService).toContain("async getEventsStrict");
+    expect(readService).toContain("return await this.getEventsStrict(filters)");
+    expect(readService).toContain("async getEventByIdStrict");
+    expect(readService).toContain("async getPublicEventByIdStrict");
+    expect(runtime).toContain("async getEventsStrict");
+    expect(runtime).toContain("async getPublicEventByIdStrict");
+    expect(listPage).toContain("eventRuntimeService.getEventsStrict");
+    expect(listPage).toContain("isError: isEventsError");
+    expect(listPage).toContain("refetch: refetchEvents");
+    expect(results).toContain("isError ? (");
+    expect(results).toContain("Não foi possível carregar os eventos");
+    expect(results).toContain("Tentar novamente");
+    expect(results).toContain("No momento não há eventos publicados nesta região");
+    expect(listPage).toContain('isEventsError ? "—" : stats.total');
+    expect(listPage).toContain('isEventsError ? "—" : stats.upcoming');
+    expect(listPage).toContain('isEventsError ? "—" : stats.participants');
+    expect(results.indexOf("isError ? (")).toBeLessThan(
+      results.indexOf("events.length === 0 ? ("),
+    );
+    expect(detailPage).toContain("eventRuntimeService.getPublicEventByIdStrict");
+    expect(detailPage).toContain("isError: isEventError");
+    expect(detailPage).toContain("refetch: refetchEvent");
+    expect(detailPage).toContain("Não foi possível carregar este evento");
+    expect(detailPage.indexOf("if (isEventError)")).toBeLessThan(
+      detailPage.indexOf("if (!event)"),
+    );
+  });
+
 
 });

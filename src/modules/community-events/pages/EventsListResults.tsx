@@ -1,5 +1,5 @@
 ﻿import { motion } from 'framer-motion';
-import { Calendar, ChevronLeft, ChevronRight } from 'lucide-react';
+import { AlertTriangle, Calendar, ChevronLeft, ChevronRight, RefreshCw } from 'lucide-react';
 import { Button } from '@/shared/components/ui/button';
 import { cn } from '@/shared/utils/cn';
 import { EVENTS_ITEMS_PER_PAGE } from '../constants';
@@ -13,8 +13,10 @@ type EventsListResultsProps = {
   currentPage: number;
   events: Event[];
   filteredCount: number;
+  isError: boolean;
   isLoading: boolean;
   onClearFilters: () => void;
+  onRetry: () => void;
   onEventClick: (eventId: string) => void;
   onPageChange: (page: number) => void;
   totalPages: number;
@@ -26,9 +28,11 @@ export function EventsListResults({
   currentPage,
   events,
   filteredCount,
+  isError,
   isLoading,
   onClearFilters,
   onEventClick,
+  onRetry,
   onPageChange,
   totalPages,
   viewMode,
@@ -55,6 +59,22 @@ export function EventsListResults({
                 <EventSkeleton key={index} variant={viewMode === 'grid' ? 'card' : 'compact'} />
               ))}
             </div>
+          ) : isError ? (
+            <div className="flex flex-col items-center justify-center py-12 text-center sm:py-16">
+              <div className="mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-destructive/10 sm:h-20 sm:w-20">
+                <AlertTriangle className="h-8 w-8 text-destructive sm:h-10 sm:w-10" />
+              </div>
+              <h3 className="mb-2 text-base font-semibold text-foreground sm:text-lg">
+                Não foi possível carregar os eventos
+              </h3>
+              <p className="mb-4 max-w-md text-sm text-muted-foreground">
+                O serviço de eventos está indisponível no momento. Tente novamente em instantes.
+              </p>
+              <Button onClick={onRetry} variant="outline" size="sm" className="gap-2">
+                <RefreshCw className="h-4 w-4" />
+                Tentar novamente
+              </Button>
+            </div>
           ) : events.length === 0 ? (
             <motion.div
               initial={{ opacity: 0, y: 20 }}
@@ -65,7 +85,11 @@ export function EventsListResults({
                 <Calendar className="h-8 w-8 text-muted-foreground sm:h-10 sm:w-10" />
               </div>
               <h3 className="mb-2 text-base font-semibold text-foreground sm:text-lg">Nenhum evento encontrado</h3>
-              <p className="mb-4 text-sm text-muted-foreground">Tente ajustar os filtros ou buscar por outros termos</p>
+              <p className="mb-4 max-w-md text-sm text-muted-foreground">
+                {activeFiltersCount > 0
+                  ? 'Tente ajustar os filtros ou buscar por outros termos.'
+                  : 'No momento não há eventos publicados nesta região. Volte em breve.'}
+              </p>
               {activeFiltersCount > 0 && (
                 <Button onClick={onClearFilters} variant="outline" size="sm">
                   Limpar filtros
