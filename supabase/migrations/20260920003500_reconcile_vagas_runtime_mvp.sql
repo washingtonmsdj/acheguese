@@ -213,6 +213,11 @@ DROP POLICY IF EXISTS "vagas_owner_create" ON public.vagas;
 DROP POLICY IF EXISTS "vagas_owner_update" ON public.vagas;
 DROP POLICY IF EXISTS "vagas_owner_delete" ON public.vagas;
 
+-- The notification trigger references status in its trigger column list. Its
+-- function body already uses the canonical textual value "published", so only
+-- the trigger binding must be recreated around the enum rebind.
+DROP TRIGGER IF EXISTS trg_enqueue_vaga_match_notifications ON public.vagas;
+
 -- Drop indexes that depend on the legacy vaga_status enum or the old search expression.
 DROP INDEX IF EXISTS public.idx_vagas_destaque;
 DROP INDEX IF EXISTS public.idx_vagas_location;
@@ -436,6 +441,18 @@ CREATE POLICY "vagas_owner_delete"
       AND status IN ('draft', 'pending_review')
     )
   );
+
+CREATE TRIGGER trg_enqueue_vaga_match_notifications
+  BEFORE INSERT OR UPDATE OF
+    status,
+    categoria,
+    location_id,
+    owner_profile_id,
+    slug,
+    matching_notified_at
+  ON public.vagas
+  FOR EACH ROW
+  EXECUTE FUNCTION private.enqueue_vaga_match_notifications();
 
 DO $postcondition$
 DECLARE
