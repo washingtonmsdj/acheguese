@@ -35,7 +35,7 @@ import type { ResolvedTerritory } from '@/core/routing/hooks/useResolveTerritory
 import { useFriendlyModuleUrls } from '@/core/routing/hooks/useFriendlyModuleUrls';
 import {
   MapPin, Navigation, Loader2, Store, AlertTriangle,
-  Landmark, Compass, ChevronRight, TrendingUp, Sparkles,
+  Landmark, Compass, ChevronRight, TrendingUp,
   UtensilsCrossed, Briefcase, Map, Info,
 } from 'lucide-react';
 
@@ -88,16 +88,6 @@ function resolveEntityTypesByCategory(category: QuickCategoryKey): NearbyEntityT
 // ANIMATIONS
 // ============================================================================
 
-const fadeIn = {
-  hidden: { opacity: 0, y: 24 },
-  visible: { opacity: 1, y: 0, transition: { duration: 0.5 } },
-};
-
-const stagger = {
-  hidden: { opacity: 0 },
-  visible: { opacity: 1, transition: { staggerChildren: 0.05, delayChildren: 0.1 } },
-};
-
 const itemVariants = {
   hidden: { opacity: 0, y: 16 },
   visible: { opacity: 1, y: 0, transition: { duration: 0.3 } },
@@ -136,7 +126,6 @@ export default function NearbyPage() {
   const {
     coords: userLocation,
     status: locationStatus,
-    isGps,
     isGoodForProximity,
     sourceMessage,
     resolve: resolveLocation,
