@@ -4,7 +4,6 @@ import {
   BarChart3,
   Calendar,
   Copy,
-  DollarSign,
   Download,
   Edit,
   Eye,
@@ -17,7 +16,6 @@ import {
 import { Button } from '@/shared/components/ui/button';
 import { Input } from '@/shared/components/ui/input';
 import { Badge } from '@/shared/components/ui/badge';
-import { formatBrl } from '@/shared/utils/currency';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -63,34 +61,31 @@ export function EventsOrganizerStatsSection({ stats }: EventsOrganizerStatsSecti
             iconClassName="bg-primary/10"
             label="Total de Eventos"
             value={stats.total}
-            helper={`${stats.published} publicados`}
+            helper={`${stats.completed} finalizados`}
           />
           <OrganizerStatCard
             delay={0.2}
+            icon={<Calendar className="h-6 w-6 text-emerald-600" />}
+            iconClassName="bg-emerald-500/10"
+            label="Proximos"
+            value={stats.published}
+            helper="Status persistido"
+          />
+          <OrganizerStatCard
+            delay={0.3}
+            icon={<BarChart3 className="h-6 w-6 text-amber-600" />}
+            iconClassName="bg-amber-500/10"
+            label="Em andamento"
+            value={stats.ongoing}
+            helper="Status persistido"
+          />
+          <OrganizerStatCard
+            delay={0.4}
             icon={<Users className="h-6 w-6 text-green-600" />}
             iconClassName="bg-green-500/10"
             label="Participantes"
             value={stats.totalParticipants.toLocaleString('pt-BR')}
-            helper="+12% este mes"
-            helperClassName="text-green-600"
-          />
-          <OrganizerStatCard
-            delay={0.3}
-            icon={<Eye className="h-6 w-6 text-blue-600" />}
-            iconClassName="bg-blue-500/10"
-            label="Visualizacoes"
-            value={stats.totalViews.toLocaleString('pt-BR')}
-            helper="+8% este mes"
-            helperClassName="text-blue-600"
-          />
-          <OrganizerStatCard
-            delay={0.4}
-            icon={<DollarSign className="h-6 w-6 text-amber-600" />}
-            iconClassName="bg-amber-500/10"
-            label="Receita Total"
-            value={formatBrl(stats.totalRevenue)}
-            helper="+15% este mes"
-            helperClassName="text-amber-600"
+            helper="Inscricoes registradas"
           />
         </div>
       </div>
@@ -297,10 +292,6 @@ function OrganizerEventRow({
               <div className="flex items-center gap-1">
                 <Users className="h-3 w-3" />
                 {event.participants_count} participantes
-              </div>
-              <div className="flex items-center gap-1">
-                <Eye className="h-3 w-3" />
-                {event.views_count} visualizacoes
               </div>
             </div>
           </div>
