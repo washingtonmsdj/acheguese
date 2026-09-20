@@ -209,12 +209,6 @@
       "callerClass": "authenticated_admin_endpoint"
     },
     {
-      "cacheKey": "authenticated_security_definer_function_executable_public_get_ride_offer_trust_decisions_p_ride_ids uuid[]",
-      "exceptionId": "EXC-2026-07-15-POSTGREST-SECURITY-DEFINER-COMMANDS",
-      "summary": "Eligible-driver bounded Trust offer read model.",
-      "callerClass": "authenticated_user_endpoint"
-    },
-    {
       "cacheKey": "authenticated_security_definer_function_executable_public_get_ride_rating_summary_p_profile_id uuid",
       "exceptionId": "EXC-2026-07-15-POSTGREST-SECURITY-DEFINER-COMMANDS",
       "summary": "Public aggregate ride rating read model with no private rows.",
@@ -586,12 +580,6 @@
       "callerClass": "authenticated_user_endpoint"
     },
     {
-      "cacheKey": "authenticated_security_definer_function_executable_public_mobility_get_driver_location_for_ride_p_ride_id uuid",
-      "exceptionId": "EXC-2026-07-15-POSTGREST-SECURITY-DEFINER-COMMANDS",
-      "summary": "Ride-scoped precise driver-location read that authorizes participant/admin access and returns GPS only during canonical live-tracking states.",
-      "callerClass": "authenticated_user_endpoint"
-    },
-    {
       "cacheKey": "authenticated_security_definer_function_executable_public_current_user_has_password_",
       "exceptionId": "EXC-2026-07-15-POSTGREST-SECURITY-DEFINER-COMMANDS",
       "summary": "Self-only boolean Auth projection over auth.users, bound exclusively to the current authenticated user through auth.uid().",
@@ -605,12 +593,12 @@
     }
   ],
   "snapshotEvidence": {
-    "advisorObservedAt": "2026-09-19T17:45:01.146Z",
+    "advisorObservedAt": "2026-09-19T23:58:36.141Z",
     "observedAnonymousSecurityDefinerCount": 9,
     "observedAuthenticatedSecurityDefinerCountBeforeCp001": 85,
     "cp001": "20260918115346_retire_browser_notification_creation_cp001",
     "observedAuthenticatedSecurityDefinerCountAfterCp001": 84,
     "liveRecheckStatus": "verified_live_2026-09-19",
-    "note": "Live Supabase Security Advisor rechecked on 2026-09-19. The register is a conservative known-key set: known findings no longer present are reported as resolved, and any unknown live finding fails validation."
+    "note": "Live Supabase Security Advisor rechecked on 2026-09-19. All 99 non-INFO live findings are covered by the canonical residual register; two stale authenticated SECURITY DEFINER entries resolved from the live Advisor were removed. Any unknown live finding must fail validation."
   }
 }
