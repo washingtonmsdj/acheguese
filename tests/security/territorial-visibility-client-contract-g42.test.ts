@@ -12,8 +12,8 @@ const locationEdge = read(
 const groupEdge = read(
   "supabase/functions/territorial-update-group-visibility/index.ts",
 );
-const pendingLocationCascade = read(
-  "docs/09-reference/migrations-pending/20260910214500_transactional_location_visibility_cascade_g42.sql",
+const locationCascade = read(
+  "supabase/migrations/20260919003851_transactional_location_visibility_cascade_g42.sql",
 );
 
 describe("G42 territorial visibility client contract", () => {
@@ -47,31 +47,31 @@ describe("G42 territorial visibility client contract", () => {
     expect(locationEdge).not.toMatch(/\.from\(['\"]locations['\"]\)/);
     expect(locationEdge).not.toContain("for (const child of children)");
 
-    expect(pendingLocationCascade).toContain(
+    expect(locationCascade).toContain(
       "CREATE OR REPLACE FUNCTION public.territorial_update_location_visibility(",
     );
-    expect(pendingLocationCascade).toContain("SECURITY INVOKER");
-    expect(pendingLocationCascade).toContain(
+    expect(locationCascade).toContain("SECURITY INVOKER");
+    expect(locationCascade).toContain(
       "idx_locations_geographic_path_pattern",
     );
-    expect(pendingLocationCascade).toContain(
+    expect(locationCascade).toContain(
       "rpc_get_location_descendants_ids(uuid)",
     );
-    expect(pendingLocationCascade).toContain(
+    expect(locationCascade).toContain(
       "target.geographic_path LIKE v_path || '/%'",
     );
-    expect(pendingLocationCascade).not.toContain("WITH RECURSIVE mutation_scope");
-    expect(pendingLocationCascade).toContain(
+    expect(locationCascade).not.toContain("WITH RECURSIVE mutation_scope");
+    expect(locationCascade).toContain(
       "LOCK TABLE public.locations IN SHARE ROW EXCLUSIVE MODE",
     );
-    expect(pendingLocationCascade).toContain(
+    expect(locationCascade).toContain(
       "p_flag = 'is_selector_active'",
     );
-    expect(pendingLocationCascade).toContain("p_value IS FALSE");
-    expect(pendingLocationCascade).toContain("FROM PUBLIC, anon, authenticated");
-    expect(pendingLocationCascade).toContain("TO service_role");
-    expect(pendingLocationCascade).not.toMatch(/IF\s+(?:\(SELECT\s+)?auth\.role\(\)/);
-    expect(pendingLocationCascade).toContain("deprecated auth.role boundary reintroduced");
+    expect(locationCascade).toContain("p_value IS FALSE");
+    expect(locationCascade).toContain("FROM PUBLIC, anon, authenticated");
+    expect(locationCascade).toContain("TO service_role");
+    expect(locationCascade).not.toMatch(/IF\s+(?:\(SELECT\s+)?auth\.role\(\)/);
+    expect(locationCascade).toContain("deprecated auth.role boundary reintroduced");
   });
 
   it("requires a correlated transactional acknowledgement before reporting success", () => {
