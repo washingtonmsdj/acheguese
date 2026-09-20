@@ -162,12 +162,20 @@ export default function EventDetailPage() {
   const eventDetailUrl = eventUrls.eventDetail(event.id);
 
   const handleFavorite = () => {
+    if (!activeProfile?.id) {
+      toast({
+        title: 'Faca login para salvar',
+        description: 'Entre com sua conta para salvar este evento.',
+        variant: 'destructive',
+      });
+      return;
+    }
+
     void toggleFavorite(event.id);
   };
 
   const handleShare = () => {
     setShowShareModal(true);
-    // Implement share functionality
   };
 
   const handleSelectTicket = (ticketId: string) => {
