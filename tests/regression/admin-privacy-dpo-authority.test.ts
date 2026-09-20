@@ -24,7 +24,7 @@ const actorIndexMigration = read(
   "supabase/migrations/20260916120500_index_privacy_request_event_actor.sql",
 );
 const runtimeGrantsMigration = read(
-  "supabase/migrations/20260916121200_tighten_privacy_subject_request_runtime_grants.sql",
+  "supabase/migrations/20260916120120_tighten_privacy_subject_request_runtime_grants.sql",
 );
 const broker = read("supabase/functions/admin-privacy-rpc/index.ts");
 const config = read("supabase/config.toml");
