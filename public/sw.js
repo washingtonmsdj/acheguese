@@ -12,7 +12,7 @@
  */
 
 // Service Worker version
-const SW_VERSION = '2.0.4';
+const SW_VERSION = '2.0.5';
 const IS_LOCALHOST =
   self.location.hostname === 'localhost' ||
   self.location.hostname === '127.0.0.1' ||
@@ -198,11 +198,13 @@ self.addEventListener('notificationclose', (event) => {
 /**
  * Get URL for notification click based on notification data
  */
+const PAUSED_NOTIFICATION_ROUTE_PATTERN =
+  /^\/(?:mobility|mobilidade|track|educacao|comunicacao|cupons|ranking|gamificacao|analytics|alertas|achados-perdidos|achados-e-perdidos|problemas|planos|checkout)(?:\/|$)|^\/settings\/subscription(?:\/|$)|^\/perfil\/familia(?:\/|$)/i;
+
 function getLaunchSafeNotificationUrl(url, fallback = '/notifications') {
   if (!url) return fallback;
   const value = String(url);
-  const pausedRoutePattern = /^\/(messages|mensagens|chat|mobility|mobilidade|track|eventos|vagas|oportunidades|educacao|comunicacao|cupons|ranking|gamificacao|analytics|alertas|achados-perdidos|achados-e-perdidos|problemas)\b/i;
-  return pausedRoutePattern.test(value) ? fallback : value;
+  return PAUSED_NOTIFICATION_ROUTE_PATTERN.test(value) ? fallback : value;
 }
 
 function getNotificationUrl(data) {
@@ -220,7 +222,7 @@ function getNotificationUrl(data) {
       return `/orders/${data.orderId || ''}`;
     
     case 'payment':
-      return '/settings/subscription';
+      return getLaunchSafeNotificationUrl('/settings/subscription');
     
     case 'security':
       return '/settings/sessions';
