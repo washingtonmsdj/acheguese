@@ -8,6 +8,9 @@ const read = (path: string) => readFileSync(resolve(root, path), "utf8");
 const launchScope = read("src/app/config/launchScope.ts");
 const launchE2e = read("tests/e2e/launch-scope-public.spec.ts");
 const appRoutes = read("src/app/routes/sections/AppLayoutRoutes.tsx");
+const screenMap = read("docs/SCREEN-MAP.md");
+const featureMap = read("docs/FEATURE-MAP.md");
+const homeInventory = read("docs/05-ux/HOME-INVENTORY.md");
 
 describe("MVP launch-scope E2E alignment", () => {
   it("does not classify enabled community messaging as paused", () => {
@@ -16,6 +19,36 @@ describe("MVP launch-scope E2E alignment", () => {
     expect(appRoutes).toContain('path="/mensagens"');
     expect(appRoutes).toContain('"communityCommunication"');
     expect(appRoutes).toContain("protectedElement(");
+  });
+
+  it("keeps active launch documentation aligned with paused MVP surfaces", () => {
+    const pausedFlags = [
+      "billing=false",
+      "education=false",
+      "communication=false",
+      "mobility=false",
+      "coupons=false",
+      "gamification=false",
+      "communityAlerts=false",
+      "communityIssues=false",
+      "communityLostFound=false",
+      "publicAnalytics=false",
+    ];
+
+    for (const [documentName, source] of [
+      ["SCREEN-MAP", screenMap],
+      ["FEATURE-MAP", featureMap],
+      ["HOME-INVENTORY", homeInventory],
+    ] as const) {
+      for (const flag of pausedFlags) {
+        expect(source, `${documentName}: ${flag}`).toContain(flag);
+      }
+    }
+
+    expect(launchScope).toContain("communityCommunication: true");
+    expect(screenMap).toContain("DM comunitária");
+    expect(featureMap).toContain("Direct messages comunitário");
+    expect(homeInventory).toContain("Mensagens diretas | Sim");
   });
 
   it("keeps explicitly paused public modules in the launch isolation E2E", () => {

@@ -6,6 +6,8 @@ Domain status: Feed = STATUS: FROZEN.
 >
 > Status: ✅ ativo · 🟡 parcial · ⏸ pausado pelo launch scope · 🗄 legado (a remover) · ↪ redireciona
 
+> Corte MVP adicional: Analytics público permanece pausado (`publicAnalytics=false`). Painéis administrativos internos não são equivalentes à superfície pública de Analytics.
+
 ## Núcleo Territory (SSOT)
 
 | Rota                                       | Página (canônica)                                               | Objetivo                                                                                                                    | Responsável        | Jornada                     | Status | Legado / sucessora                             |
@@ -29,10 +31,11 @@ Domain status: Feed = STATUS: FROZEN.
 | Rota                                        | Página                  | Objetivo           | Status |
 | ------------------------------------------- | ----------------------- | ------------------ | ------ |
 | `/novo-post`                                | `NovoPostPage`          | Publicar no bairro | ✅     |
-| `/alertas`                                  | Community alerts        | Alertas do bairro  | ✅     |
-| `/achados-perdidos` (+ `/novo`, `/:id`)     | Lost & found            | Achados/perdidos   | ✅     |
+| `/alertas`                                  | Community alerts        | Alertas do bairro  | ⏸ `communityAlerts=false` |
+| `/problemas`                                | Community issues        | Problemas do bairro | ⏸ `communityIssues=false` |
+| `/achados-perdidos` (+ `/novo`, `/:id`)     | Lost & found            | Achados/perdidos   | ⏸ `communityLostFound=false` |
 | `/mensagens`, `/chat/:conversationId`       | DM comunitária          | Conversas 1:1      | ✅     |
-| `/comunicacao` (+ agente/empresa/solicitar) | Comunicação territorial | Canais oficiais    | ✅     |
+| `/comunicacao` (+ agente/empresa/solicitar) | Comunicação territorial | Canais oficiais    | ⏸ `communication=false` |
 | `/buscar`                                   | `BuscarPage`            | Busca federada     | ✅     |
 | `/busca`                                    | ↪ `/buscar`             | alias              | 🗄     |
 
@@ -46,7 +49,7 @@ Domain status: Feed = STATUS: FROZEN.
 | `/empresas-landing`                    | ↪ `/empresas`          | alias               | 🗄     |
 | `/dashboard-empresa`                   | `DashboardEmpresaPage` | Owner dashboard     | ✅     |
 | `/edit-business/:profileId`            | Editor                 | Owner edita         | ✅     |
-| `/cupons`, `/cupons/:id`, `/promocoes` | Cupons/promos          | Ofertas             | ✅     |
+| `/cupons`, `/cupons/:id`, `/promocoes` | Cupons/promos          | Ofertas             | ⏸ `coupons=false` |
 
 ## Classificados · Profissionais · Serviços
 
@@ -60,12 +63,12 @@ Domain status: Feed = STATUS: FROZEN.
 
 | Rota                                          | Objetivo        | Status |
 | --------------------------------------------- | --------------- | ------ |
-| `/mobilidade`                                 | Home mobilidade | ✅     |
-| `/mobilidade/passageiro`, `/buscando/:rideId` | Passageiro      | ✅     |
-| `/mobilidade/motorista`, `/perfil`            | Motorista       | ✅     |
-| `/mobilidade/motoboy`                         | Motoboy         | ✅     |
-| `/mobilidade/historico`                       | Histórico       | ✅     |
-| `/mobilidade/contatos-emergencia`             | Contatos SOS    | ✅     |
+| `/mobilidade`                                 | Home mobilidade | ⏸ `mobility=false` |
+| `/mobilidade/passageiro`, `/buscando/:rideId` | Passageiro      | ⏸ `mobility=false` |
+| `/mobilidade/motorista`, `/perfil`            | Motorista       | ⏸ `mobility=false` |
+| `/mobilidade/motoboy`                         | Motoboy         | ⏸ `mobility=false` |
+| `/mobilidade/historico`                       | Histórico       | ⏸ `mobility=false` |
+| `/mobilidade/contatos-emergencia`             | Contatos SOS    | ⏸ `mobility=false` |
 
 ## Perfil & Conta
 
@@ -89,8 +92,8 @@ Domain status: Feed = STATUS: FROZEN.
 | `/about`, `/contato`, `/status`, `/dpo`, `/privacidade`, `/termos`                       | Institucional        | ✅                                 |
 | `/planos`, `/checkout/*`, `/settings/subscription`                                             | Billing/assinaturas  | ⏸ MVP: `billing=false`            |
 | `/pricing`                                                                                         | alias documental antigo; sem rota runtime canônica | 🗄 |
-| `/educacao`                                                                               | Landing Educação     | ✅                                 |
-| `/gamificacao`                                                                            | Gamificação          | 🟡 sem entrada estável na UI       |
+| `/educacao`                                                                               | Landing Educação     | ⏸ `education=false`              |
+| `/gamificacao`                                                                            | Gamificação          | ⏸ `gamification=false`           |
 | `/ai/virtual-try-on`                                                                      | AI feature           | 🟡 sem entrada visível             |
 | `/offline-settings`                                                                       | Config offline       | 🟡 sem CTA — mover p/ Preferências |
 | `/notificacoes`                                                                           | Central notificações | ✅                                 |

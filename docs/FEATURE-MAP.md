@@ -6,6 +6,8 @@ Domain status: Feed = STATUS: FROZEN.
 >
 > Status: ✅ ativo · 🟡 parcial/beta · 🚧 em construção · 🗄 arquivado
 
+> Corte MVP: Analytics público permanece pausado (`publicAnalytics=false`); referências administrativas a métricas não reativam essa superfície.
+
 ---
 
 ## 1. Onboarding & Identidade
@@ -51,9 +53,10 @@ Status do dominio Feed: FROZEN. Documento oficial: `docs/feed/FEED-FREEZE.md`.
 | Comentários (thread + composer humanizado)  | ✅     | `core/community-feed/components/comments`      | dentro do post                                                      |
 | Compartilhar post                           | ✅     | `core/posts/utils/postShare` + `postService.recordPostShare()` | ícone no card/detalhe; preserva rota Community quando presente |
 | Reações / social engagement                 | ✅     | inline no card                                  | tap direto                                                          |
-| Aba Comunicação territorial                 | ✅     | `TerritorialCommunityCommunicationPage`         | tabs do bairro                                                      |
-| Alertas comunitários                        | ✅     | `/alertas`                                      | menu comunidade                                                     |
-| Achados & perdidos                          | ✅     | `/achados-perdidos`, `/achados-perdidos/novo`   | menu comunidade                                                     |
+| Aba Comunicação territorial                 | ⏸     | `TerritorialCommunityCommunicationPage`         | pausada no MVP (`communication=false`)                             |
+| Alertas comunitários                        | ⏸     | `/alertas`                                      | pausado no MVP (`communityAlerts=false`)                           |
+| Problemas comunitários                      | ⏸     | `/problemas`                                    | pausado no MVP (`communityIssues=false`)                           |
+| Achados & perdidos                          | ⏸     | `/achados-perdidos`, `/achados-perdidos/novo`   | pausado no MVP (`communityLostFound=false`)                        |
 | Direct messages comunitário                 | ✅     | `/mensagens`, `/chat/:id`                       | header/notificações                                                 |
 
 ---
@@ -68,7 +71,7 @@ Status do dominio Feed: FROZEN. Documento oficial: `docs/feed/FEED-FREEZE.md`.
 | Cadastro de empresa           | ✅     | `/empresas/cadastrar`       | CTA "Cadastrar minha empresa"                        |
 | Dashboard de empresa          | ✅     | `DashboardEmpresaPage`      | área logada como owner                               |
 | Editar empresa                | ✅     | `/edit-business/:profileId` | dashboard da empresa                                 |
-| Cupons / promoções            | ✅     | `/cupons`, `/promocoes`     | dentro da empresa e feed                             |
+| Cupons / promoções            | ⏸     | `/cupons`, `/promocoes`     | pausado no MVP (`coupons=false`)                    |
 | Favoritos de empresa          | ✅     | dentro do perfil            | Perfil → Favoritos                                   |
 
 ---
@@ -99,12 +102,12 @@ Status do dominio Feed: FROZEN. Documento oficial: `docs/feed/FEED-FREEZE.md`.
 
 | Funcionalidade              | Status | Rota                                                     |
 | --------------------------- | ------ | -------------------------------------------------------- |
-| Home mobilidade             | ✅     | `/mobilidade`                                            |
-| Passageiro (buscar corrida) | ✅     | `/mobilidade/passageiro`, `/mobilidade/buscando/:rideId` |
-| Motorista (turno)           | ✅     | `/mobilidade/motorista`, `/mobilidade/motorista/perfil`  |
-| Motoboy                     | ✅     | `/mobilidade/motoboy`                                    |
-| Histórico                   | ✅     | `/mobilidade/historico`                                  |
-| Contatos de emergência      | ✅     | `/mobilidade/contatos-emergencia`                        |
+| Home mobilidade             | ⏸     | `/mobilidade` — `mobility=false`                                            |
+| Passageiro (buscar corrida) | ⏸     | `/mobilidade/passageiro`, `/mobilidade/buscando/:rideId` — `mobility=false` |
+| Motorista (turno)           | ⏸     | `/mobilidade/motorista`, `/mobilidade/motorista/perfil` — `mobility=false`  |
+| Motoboy                     | ⏸     | `/mobilidade/motoboy` — `mobility=false`                                    |
+| Histórico                   | ⏸     | `/mobilidade/historico` — `mobility=false`                                  |
+| Contatos de emergência      | ⏸     | `/mobilidade/contatos-emergencia` — `mobility=false`                        |
 
 ---
 
@@ -150,16 +153,16 @@ Chegada: menu admin (visível só para roles apropriados).
 
 ## 12. Institucional
 
-| Funcionalidade              | Rota                  |
-| --------------------------- | --------------------- |
-| Sobre                       | `/about`              |
-| Contato                     | `/contato`            |
-| Status público              | `/status`             |
-| Billing / preços (pós-MVP) | `/planos` — gated por `billing=false`; `/pricing` não possui rota runtime |
-| Educação (landing)          | `/educacao`           |
-| Gamificação                 | `/gamificacao`        |
-| AI: Virtual try-on          | `/ai/virtual-try-on`  |
-| Launch paused (kill-switch) | `LaunchPausedPage`    |
+| Funcionalidade              | Status | Rota                  |
+| --------------------------- | ------ | --------------------- |
+| Sobre                       | ✅     | `/about`              |
+| Contato                     | ✅     | `/contato`            |
+| Status público              | ✅     | `/status`             |
+| Billing / preços (pós-MVP) | ⏸     | `/planos` — `billing=false`; `/pricing` não possui rota runtime |
+| Educação (landing)          | ⏸     | `/educacao` — `education=false` |
+| Gamificação                 | ⏸     | `/gamificacao` — `gamification=false` |
+| AI: Virtual try-on          | 🟡     | `/ai/virtual-try-on`  |
+| Launch paused (kill-switch) | ✅     | `LaunchPausedPage`    |
 
 > Billing permanece preservado como fundação pós-MVP, mas preço, checkout e gestão de assinatura não fazem parte do lançamento atual enquanto `PUBLIC_LAUNCH_SURFACES.billing=false`.
 
