@@ -160,18 +160,22 @@ export class EventReadService {
     return event && isEventCurrentOrFuture(event) ? event : null;
   }
 
+  async getEventsStrict(filters: EventFilters = {}): Promise<PublicEvent[]> {
+    let query = eventsDb
+      .from<EventRowWithLegacyCity>("events")
+      .select("*")
+      .order("date", { ascending: true });
+
+    query = applyFilters(query, filters);
+
+    const { data, error } = await query;
+    if (error) throw error;
+    return (data ?? []).map(mapEventRow);
+  }
+
   async getEvents(filters: EventFilters = {}): Promise<PublicEvent[]> {
     try {
-      let query = eventsDb
-        .from<EventRowWithLegacyCity>("events")
-        .select("*")
-        .order("date", { ascending: true });
-
-      query = applyFilters(query, filters);
-
-      const { data, error } = await query;
-      if (error) throw error;
-      return (data ?? []).map(mapEventRow);
+      return await this.getEventsStrict(filters);
     } catch (error) {
       logger.error("EventReadService.getEvents", error);
       return [];
