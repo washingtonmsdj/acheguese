@@ -44,6 +44,11 @@
       "evidence": "Superseded by the v2 fail-closed canary guard merged in PR #58."
     },
     {
+      "name": "agent/reconcile-session-rpc-auth-authority",
+      "sha": "d59bf297e81e3c972d0bf658d25942f4cf6bd5be",
+      "evidence": "Closed unmerged auth/session reconciliation. SessionRpcService is byte-identical to main, legacy auth SessionService/useSessions owners are explicitly retired by session-ssot-ownership.test.ts, and current session-rpc preserves Supabase Auth revocation authority while adding later MFA/account-operational hardening."
+    },
+    {
       "name": "agent/revoke-residual-anon-private-admin-helpers",
       "sha": "485c96e3b0cce23b30cf11a365a564cfeace4acc",
       "evidence": "Superseded by the cleaned equivalent merged in PR #72."
@@ -97,6 +102,11 @@
       "name": "agent/security-remediation-plan",
       "sha": "87fd4025dc5d825ba04f7ca2352a0896ee7f6a7e",
       "evidence": "Superseded by the refreshed canonical audit and implementation plan merged in PR #71."
+    },
+    {
+      "name": "agent/security-report-rpc-contract-batch-2",
+      "sha": "aef90bead5bee3c39406ff7b668ec74736a56309",
+      "evidence": "Closed precursor of report RPC hardening batch 2. The old 20260820084132 migration was intentionally retired from the active chain; current authority is forward-only migration 20260830091107, with the original authorization SQL spec preserved and the regression ratchet relocated under tests/regression/security."
     },
     {
       "name": "agent/web-seo-sitemap-build",
@@ -287,6 +297,11 @@
       "name": "security/lgpd-purge-classification-20260919",
       "sha": "6c29597832253c184d374e7fed3dd8e99bc51a14",
       "evidence": "Superseded by the rebased LGPD purge classification merged into main."
+    },
+    {
+      "name": "security/report-rpc-authz-batch-2-reconciled",
+      "sha": "7c8f636a04a361ab97cb93b6b29b640daf1980ff",
+      "evidence": "Closed reconciled report RPC batch-2 branch. Its old local-only migration is archived by provenance and explicitly must not be reapplied; main uses applied canonical migration 20260830091107 plus the current regression/security ratchet."
     },
     {
       "name": "security/retire-public-site-settings-read-20260918",
