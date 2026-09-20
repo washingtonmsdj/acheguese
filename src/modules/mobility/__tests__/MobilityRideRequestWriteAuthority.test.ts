@@ -67,7 +67,7 @@ describe("ride_requests browser write authority", () => {
 
   it("keeps database INSERT authority quote-owned and server-only", () => {
     const quoteMigration = read(
-      "supabase/migrations/20260916113000_require_explicit_mobility_quote_id.sql",
+      "supabase/migrations/20260916104609_require_explicit_mobility_quote_id.sql",
     );
     const revokeMigration = read(
       "supabase/migrations/20260909141356_revoke_browser_ride_request_insert_g6.sql",
