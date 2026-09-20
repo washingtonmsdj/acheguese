@@ -579,3 +579,23 @@ A prancha 117 também está coberta pelos estados demonstrativos de visitante, v
 
 - Branch: `codex/reformulacao-entrada-comunidade`.
 - Commit restrito à tela e às documentações do concept; alterações staged preexistentes permanecem fora do commit.
+
+## 20/09/2026 · Atendimento do pedido — pranchas 027 e 029
+
+### Auditoria e decisão
+
+- Comparei `OrderServiceConceptMockPage` com as pranchas mobile/desktop de Atendimento do pedido. Os quatro estados — Receber, Preparar, Cancelar e Concluir — já estavam representados com os módulos esperados: itens, totais, pagamento separado, cliente, endereço, timeline, comprovante, ocorrência privada e ações por etapa.
+- A implementação já tinha topbar e rail desktop, header mobile com menu de estados, composição responsiva, validação de cancelamento e feedbacks. Não alterei código porque não havia divergência visual ou funcional comprovada nesta rodada.
+- Mantive as transições protegidas: receber não confirma pagamento sozinho, preparar avança apenas por `Marcar pronto`, cancelar exige detalhe mínimo e concluir registra ocorrência como superfície autorizada. O mock continua isolado da persistência real.
+
+### Validação e evidências
+
+- Navegador interno mantido aberto em `/gastronomia/pedidos/concept-mock-attendance?state=receive`.
+- Conferi os quatro estados no mobile `389 × 867` CSS px e o layout desktop amplo equivalente a `1440 × 867` CSS px; prepare exibiu endereço/timeline/`Marcar pronto`, cancel exibiu motivo/detalhe/confirmar, complete exibiu comprovante/ocorrência.
+- Console do mock sem erros.
+- Como não houve alteração de código, esta auditoria foi registrada junto ao próximo commit de documentação para manter o catálogo rastreável.
+
+### Git
+
+- Branch: `codex/reformulacao-entrada-comunidade`.
+- Commit restrito à documentação do concept; alterações staged preexistentes permanecem fora do commit.
