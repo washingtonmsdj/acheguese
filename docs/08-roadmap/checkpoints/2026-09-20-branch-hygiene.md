@@ -94,6 +94,15 @@ A limpeza física deve ser executada somente com uma autoridade GitHub que tenha
 - branch totalmente contida na base pode ser limpa;
 - qualquer commit exclusivo preserva a branch.
 
+## Follow-up — 2026-09-20
+
+- PR #238 consolidou `work/mvp-urgent` na `main` como `ce55b23fa3aa7c4d4fd68e56cea2944277e4e230`, removendo o fixture visual conceitual da Comunidade do runtime público.
+- após o squash, `work/mvp-urgent` foi realinhada exatamente a `main@ce55b23f...`, permanecendo como branch operacional reutilizável e sem delta próprio.
+- `cleanup/active-compat-facades-20260919` foi reauditada caminho a caminho: 12 dos 14 caminhos do delta já estão idênticos à `main` ou removidos nela; as duas diferenças restantes estão em `TouristPointDetailPage.tsx` e `TouristPointsPage.tsx`.
+- essas duas diferenças residuais são **superseded e não devem ser integradas**: reintroduziriam a camada antiga `NearbyPlacesBlock` e o modo/placeholder `Ao redor`, enquanto a `main` atual mantém Pontos Turísticos item-first, sem placeholder contado como capability real.
+- portanto essa branch deixa de ser candidata a merge. A exclusão física continua pendente de autoridade delete-ref; não mover/reforçar a ref artificialmente apenas para mascarar a limpeza.
+- `codex/identidade-visual-achegue-se` continua preservada: é uma branch muito antiga/divergente com um grande lote conceitual exclusivo; não deve ser misturada ao corte urgente do MVP sem auditoria própria pós-MVP.
+
 ## Próximo passo
 
 Executar primeiro o dry-run com credencial administrativa, conferir que a contagem continua coerente e somente então usar `--apply`.
