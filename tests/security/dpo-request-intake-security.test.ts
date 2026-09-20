@@ -68,6 +68,7 @@ describe("DPO request intake broker", () => {
     expect(page).toContain("Identidade do encarregado");
     expect(deployVerifier).toContain("'VITE_DPO_NAME'");
     expect(productionEnv).toMatch(/^VITE_DPO_NAME=$/m);
+    expect(productionEnv).toMatch(/^VITE_TURNSTILE_SITE_KEY=$/m);
   });
 
   it("requires anti-abuse verification in the production DPO form", () => {
