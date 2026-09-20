@@ -64,6 +64,7 @@ O primeiro release continua territorial. **Cobertura uniforme dos 170 bairros de
 - [~] Quatro identidades adicionais de Mobilidade foram alinhadas após prova token-a-token: `remove_provisional_mobility_fare_floor`, `persist_mobility_cancellation_reason`, `enforce_server_owned_mobility_quotes` e `require_explicit_mobility_quote_id`. O bloco de preço terminal da entrega não foi alterado porque o SQL remoto é materialmente diferente.
 - [~] A cadeia terminal de entrega foi reconciliada como uma sequência de três migrations remotas canônicas (`make_delivery_final_price_server_owned`, `restore_atomic_delivery_completion_with_server_owned_price`, `ignore_client_final_price_in_delivery_wrapper`). Ao fim dessa etapa restavam apenas G42/G43 como remote-only; este corte fecha essas duas identidades.
 - [x] G42 e G43 phase 1 territoriais foram retiradas de `migrations-pending` e promovidas às identidades reais do ledger após equivalência token-a-token; os quatro Edge territoriais auditados estão `ACTIVE` com `verify_jwt=true`. G43 phase 2 permanece pendente porque o frontend ainda usa o writer compatível.
+- [x] Business/Mapa G154 foi promovido ao runtime: índices de `public_business_search` existem e as RPCs espaciais não consultam mais a relação legada inexistente `businesses`; o trigger de signup agora honra o @ escolhido. Ledger: 686 locais / 669 remotas / 669 exatas / 17 local-only / 0 remote-only.
 - [ ] A prova de build/deploy/smoke do mesmo SHA continua blocker real de release.
 
 
