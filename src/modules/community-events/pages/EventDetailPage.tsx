@@ -34,7 +34,9 @@ import {
   Heart,
   Bookmark,
   ExternalLink,
-  CheckCircle2
+  CheckCircle2,
+  AlertTriangle,
+  RefreshCw
 } from 'lucide-react';
 import { EventHero } from '../components/EventHero';
 import { EventTickets } from '../components/EventTickets';
@@ -81,11 +83,16 @@ export default function EventDetailPage() {
   const queryClient = useQueryClient();
   const { confirm, ConfirmDialog } = useConfirmActionDialog();
 
-  const { data: event, isLoading } = useQuery({
+  const {
+    data: event,
+    isError: isEventError,
+    isLoading,
+    refetch: refetchEvent,
+  } = useQuery({
     queryKey: ['event-detail-ssot', eventId],
     queryFn: async () => {
       if (!eventId) return null;
-      const row = await eventRuntimeService.getPublicEventById(eventId);
+      const row = await eventRuntimeService.getPublicEventByIdStrict(eventId);
       return row ? mapCommunityEventToEvent(row) : null;
     },
   });
@@ -139,7 +146,33 @@ export default function EventDetailPage() {
     return <div className="min-h-[40vh] animate-pulse bg-muted/30" />;
   }
 
-  // Show 404 if event not found
+  if (isEventError) {
+    return (
+      <div className="flex min-h-[40vh] flex-col items-center justify-center px-4 text-center">
+        <div className="mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-destructive/10">
+          <AlertTriangle className="h-8 w-8 text-destructive" />
+        </div>
+        <h1 className="mb-2 text-xl font-semibold text-foreground">
+          Não foi possível carregar este evento
+        </h1>
+        <p className="mb-5 max-w-md text-sm text-muted-foreground">
+          O serviço de eventos está indisponível no momento. Tente novamente em instantes.
+        </p>
+        <Button
+          variant="outline"
+          className="gap-2"
+          onClick={() => {
+            void refetchEvent();
+          }}
+        >
+          <RefreshCw className="h-4 w-4" />
+          Tentar novamente
+        </Button>
+      </div>
+    );
+  }
+
+  // Show 404 only when the strict read completed without a runtime error.
   if (!event) {
     return <EventNotFound eventId={eventId} />;
   }
