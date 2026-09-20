@@ -17,14 +17,14 @@ Esse drift era P0 porque a obrigação externa de notificar um contato de emerg�
 
 Foram aplicadas ao banco de produção, na ordem versionada do repositório:
 
-1. `20260911132000_harden_safety_status_state_machine_g71.sql`;
-2. `20260911141000_durable_emergency_delivery_outbox_g72.sql`;
-3. `20260911170000_cancel_terminal_emergency_delivery_race_g75.sql`;
-4. `20260911180000_idempotent_emergency_dispatch_recovery_g76.sql`;
-5. `20260911190000_provider_confirmed_emergency_delivery_g77.sql`;
-6. `20260911193000_immutable_emergency_provider_payload_g78.sql`;
-7. `20260911200000_single_emergency_delivery_failure_authority_g79.sql`;
-8. `20260911210000_autonomous_emergency_delivery_dispatcher_g80.sql`.
+1. `20260916095115_reconcile_g71_safety_status_state_machine.sql`;
+2. `20260916095139_reconcile_g72_durable_emergency_delivery_outbox.sql`;
+3. `20260916095206_reconcile_g75_cancel_terminal_emergency_delivery_race.sql`;
+4. `20260916095228_reconcile_g76_idempotent_emergency_dispatch_recovery.sql`;
+5. `20260916095255_reconcile_g77_provider_confirmed_emergency_delivery.sql`;
+6. `20260916095321_reconcile_g78_immutable_emergency_provider_payload.sql`;
+7. `20260916095337_reconcile_g79_single_emergency_delivery_failure_authority.sql`;
+8. `20260916095427_reconcile_g80_autonomous_emergency_delivery_dispatcher.sql`.
 
 O runtime resultante preserva estes invariantes:
 
