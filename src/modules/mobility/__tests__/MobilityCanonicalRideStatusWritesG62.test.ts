@@ -13,7 +13,7 @@ function readProjectFile(path: string): string {
 }
 
 const migration = readProjectFile(
-  "supabase/migrations/20260911032000_enforce_canonical_ride_status_writes_g62.sql",
+  "docs/09-reference/migrations-pending/20260911032000_enforce_canonical_ride_status_writes_g62.sql",
 );
 const mapper = readProjectFile(
   "src/core/mobility/services/RideRequestContractMapper.ts",
