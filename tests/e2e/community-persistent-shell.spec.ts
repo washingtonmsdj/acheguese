@@ -349,7 +349,7 @@ test.describe("community persistent shell", () => {
     await page.setViewportSize({ width: 390, height: 844 });
     await openPublicRoute(
       page,
-      `${COMMUNITY_BASE}?view=business&visualMock=community-concept`,
+      `${COMMUNITY_BASE}?view=business`,
       { waitUntil: "domcontentloaded", dismissConsent: true },
     );
     await expectRouteReady(page, {
@@ -385,7 +385,6 @@ test.describe("community persistent shell", () => {
     await expect(
       page.getByRole("heading", { name: "Empresas da comunidade" }),
     ).toBeVisible();
-    await expect(page.getByText("Negócio local")).toHaveCount(3);
     await expect(
       page.locator('[data-community-feed-discovery="true"]'),
     ).toHaveCount(0);
@@ -408,7 +407,7 @@ test.describe("community persistent shell", () => {
 
     await openPublicRoute(
       page,
-      `${COMMUNITY_BASE}?visualMock=community-concept`,
+      COMMUNITY_BASE,
       {
         waitUntil: "domcontentloaded",
         dismissConsent: true,

@@ -153,4 +153,22 @@ describe("root community-first MVP entry", () => {
     expect(source).toContain('window.matchMedia("(min-width: 768px)")');
     expect(source).toContain("if (desktopMedia.matches) {\n        setIsMobileMenuOpen(false);");
   });
+  it("keeps public community runtime free of concept and visual fixture data", () => {
+    const source = read(
+      "src/core/community-feed/components/CommunityOverviewSurface.tsx",
+    );
+    const visualFixture = path.join(
+      ROOT,
+      "src/core/community-feed/components/fixtures/communityOverviewVisualFixture.ts",
+    );
+
+    expect(source).not.toContain("communityOverviewVisualFixture");
+    expect(source).not.toContain("COMMUNITY_OVERVIEW_VISUAL_FIXTURE");
+    expect(source).not.toContain("COMMUNITY_OVERVIEW_VISUAL_MOCK_QUERY_VALUE");
+    expect(source).not.toContain("visualMockEnabled");
+    expect(source).not.toContain('params.get("visualMock")');
+    expect(source).not.toContain("data-visual-mock");
+    expect(fs.existsSync(visualFixture)).toBe(false);
+  });
+
 });

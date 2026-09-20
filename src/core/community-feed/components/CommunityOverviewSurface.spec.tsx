@@ -183,7 +183,7 @@ describe("CommunityOverviewSurface navigation", () => {
     const { container } = render(
       <MemoryRouter
         initialEntries={[
-          "/comunidade/ba/salvador/pituba?visualMock=community-concept",
+          "/comunidade/ba/salvador/pituba",
         ]}
       >
         <CommunityOverviewSurface
@@ -325,11 +325,11 @@ describe("CommunityOverviewSurface navigation", () => {
     ).toBeNull();
   });
 
-  it("shows a limited business preview before the complete module", () => {
+  it("shows the real-data business preview without fixture fallback", () => {
     render(
       <MemoryRouter
         initialEntries={[
-          "/comunidade/ba/salvador/pituba?view=business&visualMock=community-concept",
+          "/comunidade/ba/salvador/pituba?view=business",
         ]}
       >
         <CommunityOverviewSurface
@@ -348,7 +348,9 @@ describe("CommunityOverviewSurface navigation", () => {
     expect(
       screen.getByRole("heading", { name: "Empresas da comunidade" }),
     ).toBeVisible();
-    expect(screen.getAllByText("Negócio local")).toHaveLength(3);
+    expect(
+      screen.getByText("Nenhuma empresa ativa cadastrada nesta comunidade."),
+    ).toBeVisible();
     expect(
       screen.getByRole("link", { name: /ver todas as empresas/i }),
     ).toHaveAttribute("href", "/empresas");
