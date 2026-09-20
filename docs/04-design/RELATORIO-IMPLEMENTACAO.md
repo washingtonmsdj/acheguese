@@ -767,3 +767,22 @@ A prancha 117 também está coberta pelos estados demonstrativos de visitante, v
 ### Git
 
 - Commit restrito ao mock de conta, ao desvio de rotas de desenvolvimento e à documentação deste concept; alterações staged preexistentes permanecem fora do commit.
+
+## 20/09/2026 · Central de notificações — pranchas 072, 074 e 075
+
+### Auditoria e ajuste
+
+- A página existente usava o `NotificationCenter` genérico, sem a composição territorial das pranchas, filtro por perfil/assunto, detalhe contextual e estados operacionais de 074. A superfície real e os serviços canônicos foram preservados.
+- Criei `NotificationsConceptMockPage` apenas para `DEV + concept-mock=1`, com rail desktop, cabeçalho mobile, navegação inferior, lista de três perfis, filtros, detalhe do pedido `#1042`, opções, confirmação de marcar todas e preferências.
+- Incluí os estados distintos de vazio, erro de carregamento e conteúdo indisponível, mantendo a diferença semântica entre aviso não lido, falha do serviço e destino removido.
+- Alinhei o rail, o logo em uma linha, os controles de perfil/assunto, cartões, contexto do pedido e CTA solar aos viewports das pranchas. Nenhuma ação do mock chama persistência de notificações.
+
+### Validação e evidências
+
+- Navegador interno mantido aberto em mobile `389 × 867` e desktop `1707 × 960` durante a comparação lado a lado.
+- Lista, filtro, detalhe, opções, marcar todas, vazio, erro e indisponível foram abertos; não houve overflow horizontal e os logs finais do navegador ficaram sem erros.
+- ESLint direcionado, typecheck completo do app e `git diff --check` executados.
+
+### Git
+
+- Commit restrito ao mock de notificações, aos desvios de rota/layout de desenvolvimento e à documentação deste concept; alterações staged preexistentes permanecem fora do commit.

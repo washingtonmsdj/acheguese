@@ -188,6 +188,9 @@ export const SubscriptionManagementPage = lazy(
 export const NotificationsPage = lazy(
   () => import("@/app/pages/NotificationsPage"),
 );
+export const NotificationsConceptMockPage = lazy(
+  () => import("@/app/pages/NotificationsConceptMockPage"),
+);
 export const NotificationPreferencesPage = lazy(
   () => import("@/app/pages/NotificationPreferencesPage"),
 );

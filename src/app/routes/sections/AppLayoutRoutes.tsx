@@ -298,6 +298,11 @@ export function AppLayoutRoutes() {
     import.meta.env.DEV &&
     typeof window !== "undefined" &&
     new URLSearchParams(window.location.search).get("concept-mock") === "1";
+  const conceptNotificationsPreview =
+    import.meta.env.DEV &&
+    typeof window !== "undefined" &&
+    ["/notifications", "/notificacoes"].includes(window.location.pathname) &&
+    new URLSearchParams(window.location.search).get("concept-mock") === "1";
   const launchElement = (
     surface: LaunchSurfaceKey,
     moduleName: string,
@@ -412,11 +417,11 @@ export function AppLayoutRoutes() {
         {/* Rotas de Notificacoes */}
         <Route
           path="/notifications"
-          element={protectedElement(<P.NotificationsPage />)}
+          element={conceptNotificationsPreview ? <P.NotificationsConceptMockPage /> : protectedElement(<P.NotificationsPage />)}
         />
         <Route
           path="/notificacoes"
-          element={protectedElement(<P.NotificationsPage />)}
+          element={conceptNotificationsPreview ? <P.NotificationsConceptMockPage /> : protectedElement(<P.NotificationsPage />)}
         />
         <Route
           path="/settings/notifications"
