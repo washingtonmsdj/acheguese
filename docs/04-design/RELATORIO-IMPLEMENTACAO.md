@@ -332,3 +332,24 @@ A prancha 117 também está coberta pelos estados demonstrativos de visitante, v
 
 - Branch: `codex/reformulacao-entrada-comunidade`.
 - Somente o componente de cardápio, a revisão específica e este relatório entram no commit; os arquivos staged preexistentes de catalogação e segurança permanecem excluídos.
+
+## 19/09/2026 · Cardápio público e seleção de itens — prancha 019
+
+### Auditoria e ajuste
+
+- Comparei `GastronomyDetailConceptPreviewPage` com `13-cardapio-publico/pranchas/019-cardapio-produto.png` em mobile e desktop. O preview já reproduzia o header público, hero, identidade, abas, lista, oferta, item selecionado, personalização e carrinho fixo.
+- Corrigi o estado inicial de atendimento para exibir Entrega, Retirada e No local, com No local selecionado e a cópia de retirada/taxa/horários alinhada por breakpoint. Troquei o ícone de Salvar para bookmark, como na prancha.
+- Removi da superfície visual inicial os controles de grade, preço, ordenação e contador de itens que não aparecem no concept, sem apagar as capacidades já implementadas no código. A oferta ganhou a quebra de preço do mobile, a linha selecionada recebeu contorno teal e a imagem do personalizador desktop foi ampliada para a proporção da referência.
+- Mantive seleção de item, adicionais, tamanho, observações, quantidade, carrinho, salvar, compartilhar e navegação para checkout demonstrativo. A rota continua confinada ao mock de desenvolvimento e não altera o runtime público real.
+
+### Validação e evidências
+
+- `npm run typecheck:app`: passou.
+- ESLint passou em `src/modules/business/gastronomy/pages/GastronomyDetailConceptPreviewPage.tsx`.
+- Comparei a composição mobile e desktop no navegador interno após HMR; a aba foi mantida na rota pública do cardápio e o estado final foi restaurado para mobile, sem modal aberto.
+- `git diff --check` passou. `GastronomyTerritoryRuntime.spec.tsx` ficou bloqueado no `beforeEach` por `window.localStorage` ausente no ambiente Vitest, antes dos casos serem executados.
+
+### Git
+
+- Branch: `codex/reformulacao-entrada-comunidade`.
+- Somente o componente público, a revisão específica e este relatório entram no commit; os arquivos staged preexistentes de catalogação e segurança permanecem excluídos.

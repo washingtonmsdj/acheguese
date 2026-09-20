@@ -5,7 +5,7 @@ import {
   ChevronRight,
   Clock3,
   Grid2X2,
-  Heart,
+  Bookmark,
   List as ListIcon,
   MapPin,
   MessageCircle,
@@ -97,7 +97,7 @@ const conceptBusiness: GastronomyBusiness = {
     price_range: "$$",
     delivery_enabled: true,
     takeout_enabled: true,
-    dine_in_enabled: false,
+    dine_in_enabled: true,
     delivery_fee: 5,
     delivery_time_min: 35,
     delivery_time_max: 50,
@@ -254,7 +254,7 @@ function ConceptPublicHeader({
         </button>
         <div className="flex items-center gap-1">
           <button type="button" onClick={onSave} aria-pressed={saved} className={cn("inline-flex min-h-9 items-center gap-1 rounded-lg px-2 text-xs font-semibold focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-territory-brand", saved ? "text-territory-brand" : "text-territory-ink")}>
-            <Heart className={cn("h-4 w-4", saved && "fill-current")} aria-hidden="true" />
+            <Bookmark className={cn("h-4 w-4", saved && "fill-current")} aria-hidden="true" />
             Salvar
           </button>
           <button type="button" onClick={onShare} className="inline-flex min-h-9 items-center gap-1 rounded-lg px-2 text-xs font-semibold text-territory-ink focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-territory-brand">
@@ -278,8 +278,8 @@ function BusinessIdentity({
 }) {
   return (
     <section className="relative z-10 border-b border-territory-border bg-territory-surface">
-      <div className="flex flex-wrap items-end gap-3 px-4 pb-2 pt-0 sm:gap-4 sm:px-6 sm:pb-2 lg:pb-1 lg:px-8">
-        <div className="-mt-8 flex h-20 w-20 shrink-0 items-center justify-center rounded-full border-4 border-territory-surface bg-[#ad5944] text-center font-heading text-sm font-bold leading-4 text-white shadow-territory-subtle sm:h-24 sm:w-24 sm:text-base">
+      <div className="flex flex-nowrap items-center gap-3 px-4 pb-2 pt-3 sm:gap-4 sm:px-6 sm:pb-2 sm:pt-0 lg:pb-1 lg:px-8">
+        <div className="relative -mt-8 -translate-y-5 flex h-20 w-20 shrink-0 items-center justify-center rounded-full border-4 border-territory-surface bg-[#ad5944] text-center font-heading text-sm font-bold leading-4 text-white shadow-territory-subtle sm:h-24 sm:w-24 sm:text-base">
           Sabores
           <br />
           da Ana
@@ -294,7 +294,7 @@ function BusinessIdentity({
         </div>
         <div className="hidden items-center gap-2 pb-1 sm:flex">
           <Button type="button" variant="outline" className="h-9 rounded-lg border-territory-border bg-territory-surface px-4 text-xs font-semibold text-territory-ink hover:bg-territory-raised" onClick={onSave}>
-            <Heart className={cn("mr-1.5 h-4 w-4", saved && "fill-current text-territory-brand")} aria-hidden="true" />
+            <Bookmark className={cn("mr-1.5 h-4 w-4", saved && "fill-current text-territory-brand")} aria-hidden="true" />
             Salvar
           </Button>
           <Button type="button" variant="outline" className="h-9 rounded-lg border-territory-border bg-territory-surface px-4 text-xs font-semibold text-territory-ink hover:bg-territory-raised" onClick={onShare}>
@@ -335,7 +335,7 @@ function FulfillmentBar({ mode, onChange, availableModes }: { mode: FulfillmentM
     { value: "dine-in", label: "No local", icon: Store },
   ];
   const options = allOptions.filter((option) => availableModes.includes(option.value));
-  const modeDescription = mode === "delivery" ? "Entrega no seu endereço" : mode === "pickup" ? "Retirada no estabelecimento" : "Consumo no estabelecimento";
+  const modeDescription = mode === "delivery" ? "Entrega no seu endereço" : "Retirada no estabelecimento";
 
   return (
     <section className="border-b border-territory-border bg-territory-surface">
@@ -352,12 +352,19 @@ function FulfillmentBar({ mode, onChange, availableModes }: { mode: FulfillmentM
             );
           })}
         </div>
-        <div className="flex min-w-0 flex-nowrap items-center justify-center gap-x-1 overflow-hidden whitespace-nowrap text-[0.625rem] leading-4 text-territory-muted sm:gap-x-2 sm:text-xs">
+        <div className="flex min-w-0 flex-nowrap items-center justify-center gap-x-1 overflow-hidden whitespace-nowrap text-[0.625rem] leading-4 text-territory-muted sm:hidden">
           <span className="truncate">{modeDescription}</span>
           <span aria-hidden="true">•</span>
           <span>{mode === "delivery" ? "Taxa calculada no checkout" : "Sem taxa de entrega"}</span>
           <span aria-hidden="true">•</span>
           <button type="button" className="font-semibold text-territory-brand underline-offset-2 hover:underline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-territory-brand">Ver horários</button>
+        </div>
+        <div className="hidden min-w-0 flex-nowrap items-center justify-center gap-x-2 overflow-hidden whitespace-nowrap text-xs leading-4 text-territory-muted sm:flex">
+          <button type="button" className="font-semibold text-territory-brand underline-offset-2 hover:underline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-territory-brand">Ver horários</button>
+          <span aria-hidden="true">|</span>
+          <span className="truncate">{modeDescription}</span>
+          <span aria-hidden="true">•</span>
+          <span>{mode === "delivery" ? "Taxa calculada no checkout" : "Sem taxa de entrega"}</span>
         </div>
       </div>
     </section>
@@ -380,7 +387,7 @@ function SearchAndCategories({ query, onQueryChange, category, onCategoryChange,
             </button>
           ))}
         </div>
-        <div className="inline-flex shrink-0 items-center gap-0.5 rounded-lg border border-territory-border bg-territory-surface p-0.5" role="group" aria-label="Visualização dos itens">
+        <div className="hidden" role="group" aria-label="Visualização dos itens">
           <button type="button" aria-label="Visualizar em lista" aria-pressed={viewMode === "list"} onClick={() => onViewModeChange("list")} className={cn("inline-flex h-8 w-8 items-center justify-center rounded-md text-territory-muted transition-colors focus-visible:z-10 focus-visible:outline-2 focus-visible:outline-offset-[-2px] focus-visible:outline-territory-brand", viewMode === "list" ? "bg-territory-brand text-white" : "hover:bg-territory-raised hover:text-territory-ink")}>
             <ListIcon className="h-4 w-4" aria-hidden="true" />
           </button>
@@ -389,7 +396,7 @@ function SearchAndCategories({ query, onQueryChange, category, onCategoryChange,
           </button>
         </div>
       </div>
-      <div className="flex flex-wrap items-center gap-2">
+      <div className="hidden flex-wrap items-center gap-2">
         <label className="min-w-0 flex-1 sm:flex-none">
           <span className="sr-only">Filtrar por preço</span>
           <select value={priceFilter} onChange={(event) => onPriceFilterChange(event.target.value as PriceFilter)} aria-label="Filtrar por preço" className="h-8 w-full min-w-0 rounded-lg border border-territory-border bg-territory-surface px-2.5 text-[0.6875rem] font-semibold text-territory-ink focus-visible:outline-2 focus-visible:outline-offset-[-2px] focus-visible:outline-territory-brand sm:h-9 sm:w-auto sm:text-xs">
@@ -416,7 +423,7 @@ function SearchAndCategories({ query, onQueryChange, category, onCategoryChange,
 
 function MenuRow({ item, selected, onSelect }: { item: ConceptMenuItem; selected: boolean; onSelect: () => void }) {
   return (
-    <button type="button" disabled={item.available === false} onClick={onSelect} className={cn("group flex w-full items-center gap-2.5 border-b border-territory-border px-2.5 py-2 text-left transition-colors last:border-b-0 focus-visible:z-10 focus-visible:outline-2 focus-visible:outline-offset-[-2px] focus-visible:outline-territory-brand sm:gap-4 sm:px-3 sm:py-2.5", selected && "lg:bg-[hsl(var(--territory-success)/0.12)]", item.available === false ? "cursor-not-allowed opacity-55" : "hover:bg-territory-raised")}>
+    <button type="button" disabled={item.available === false} onClick={onSelect} className={cn("group flex w-full items-center gap-2.5 border-b border-territory-border px-2.5 py-2 text-left transition-colors last:border-b-0 focus-visible:z-10 focus-visible:outline-2 focus-visible:outline-offset-[-2px] focus-visible:outline-territory-brand sm:gap-4 sm:px-3 sm:py-2.5", selected && "lg:bg-[hsl(var(--territory-success)/0.12)] lg:ring-1 lg:ring-inset lg:ring-territory-brand", item.available === false ? "cursor-not-allowed opacity-55" : "hover:bg-territory-raised")}>
       <span className="relative h-12 w-[3.75rem] shrink-0 overflow-hidden rounded-lg bg-territory-raised sm:h-12 sm:w-[4.75rem]">
         <img src={item.image} alt="" className="h-full w-full object-cover" />
       </span>
@@ -455,10 +462,10 @@ function MenuGridCard({ item, selected, featured = false, onSelect }: { item: Co
 function OfferCard({ onOpen }: { onOpen: () => void }) {
   return (
     <button type="button" onClick={onOpen} className="flex w-full items-center gap-3 rounded-lg bg-territory-sun/25 px-2.5 py-2 text-left transition-colors hover:bg-territory-sun/35 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-territory-brand">
-      <img src={foodImage} alt="" className="h-11 w-16 shrink-0 rounded-lg object-cover" />
+      <img src={foodImage} alt="" className="h-12 w-20 shrink-0 rounded-lg object-cover" />
       <span className="min-w-0 flex-1">
         <span className="block text-[0.6875rem] font-semibold text-territory-brand sm:text-xs">Ofertas</span>
-        <span className="block truncate text-xs font-bold text-territory-ink sm:text-sm">Prato do dia + suco · {money(29)}</span>
+        <span className="block truncate text-xs font-bold text-territory-ink sm:text-sm">Prato do dia + suco <span className="sm:inline">· </span><span className="block sm:inline">{money(29)}</span></span>
       </span>
       <ChevronRight className="h-4 w-4 shrink-0 text-territory-ink" aria-hidden="true" />
     </button>
@@ -478,7 +485,7 @@ function ItemCustomizer({ item, size, setSize, quantity, setQuantity, farofa, se
           <h2 className="font-heading text-base font-bold text-territory-ink sm:text-lg">{item.name}</h2>
           <p className="mt-1 text-xs leading-5 text-territory-muted sm:text-sm">{item.description}</p>
         </div>
-        <img src={item.image} alt="" className="h-20 w-24 shrink-0 rounded-lg object-cover sm:h-24 sm:w-28" />
+        <img src={item.image} alt="" className="h-20 w-24 shrink-0 rounded-lg object-cover sm:h-24 sm:w-28 lg:h-44 lg:w-40" />
       </div>
 
       {isOffer ? (
@@ -609,7 +616,7 @@ export default function GastronomyDetailConceptPreviewPage() {
   const [viewMode, setViewMode] = useState<MenuViewMode>("list");
   const [priceFilter, setPriceFilter] = useState<PriceFilter>("all");
   const [sortMode, setSortMode] = useState<MenuSortMode>("relevance");
-  const [fulfillmentMode, setFulfillmentMode] = useState<FulfillmentMode>("pickup");
+  const [fulfillmentMode, setFulfillmentMode] = useState<FulfillmentMode>("dine-in");
   const [saved, setSaved] = useState(false);
   const [selectedItemId, setSelectedItemId] = useState<string | null>("moqueca-de-peixe");
   const [mobileCustomizerOpen, setMobileCustomizerOpen] = useState(false);
