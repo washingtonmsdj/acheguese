@@ -2,7 +2,7 @@
  * 🔗 EVENT SHARE MODAL
  * 
  * Modal para compartilhar evento em redes sociais
- * Inclui WhatsApp, Facebook, Twitter, Instagram e QR Code
+ * Inclui WhatsApp, Facebook, Twitter, email e QR Code
  * 
  * @version 1.0.0
  */
@@ -46,21 +46,29 @@ export function EventShareModal({
   const [copied, setCopied] = useState(false);
   const [qrCodeUrl, setQrCodeUrl] = useState<string>('');
   const [showQRCode, setShowQRCode] = useState(false);
+  const [actionError, setActionError] = useState<string | null>(null);
 
   const fullUrl = `${window.location.origin}${eventUrl}`;
   const shareText = `Confira este evento: ${eventTitle}`;
 
   const handleCopyLink = async () => {
+    setActionError(null);
     try {
+      if (!navigator.clipboard?.writeText) {
+        throw new Error('Clipboard unavailable');
+      }
       await navigator.clipboard.writeText(fullUrl);
       setCopied(true);
       setTimeout(() => setCopied(false), 2000);
     } catch (error) {
+      setCopied(false);
+      setActionError('Nao foi possivel copiar o link neste navegador.');
       console.error('Failed to copy:', error);
     }
   };
 
   const handleGenerateQRCode = async () => {
+    setActionError(null);
     try {
       const qr = await QRCode.toDataURL(fullUrl, {
         width: 300,
@@ -73,6 +81,8 @@ export function EventShareModal({
       setQrCodeUrl(qr);
       setShowQRCode(true);
     } catch (error) {
+      setShowQRCode(false);
+      setActionError('Nao foi possivel gerar o QR Code agora.');
       console.error('Failed to generate QR code:', error);
     }
   };
@@ -236,6 +246,15 @@ export function EventShareModal({
                       <QrCode className="h-4 w-4" />
                       Gerar QR Code
                     </Button>
+                    {actionError && (
+                      <p
+                        role="status"
+                        aria-live="polite"
+                        className="mt-3 text-sm text-destructive"
+                      >
+                        {actionError}
+                      </p>
+                    )}
                   </>
                 ) : (
                   <>
