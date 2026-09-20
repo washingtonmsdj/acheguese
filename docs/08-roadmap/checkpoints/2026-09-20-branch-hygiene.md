@@ -161,7 +161,15 @@ As quatro últimas carregam deltas históricos grandes de Mobilidade. Como Mobil
 - dry-run auditável: `npm run maintenance:branches -- --include-superseded --json`;
 - aplicação física, somente com autoridade delete-ref: `npm run maintenance:branches -- --include-superseded --apply`.
 
-A manifest inicial contém somente as 13 branches sem PR já auditadas como superseded. Branches em quarentena não entram na manifest.
+A manifest contém **44 heads auditados**: as 13 branches sem PR já classificadas como superseded e mais 31 branches antigas de PR fechado cujo sucessor `rebased`, `v2` ou equivalente foi efetivamente mergeado. Branches em quarentena não entram na manifest.
+
+### Segundo lote — PR fechado substituído por sucessor mergeado
+
+Foram adicionadas **31 branches** à manifest somente quando o histórico mostra uma linha sucessora inequívoca já mergeada (por exemplo `rebased`, `v2` ou a mesma correção consolidada na `main`).
+
+Exemplos de pares comprovados: `cleanup/driver-history-dead-selector-20260918` -> PR #187, `cleanup/retire-billing-plan-facade-20260918` -> PR #190, `fix/admin-rollout-broker-20260918` -> PR #159, `security/bound-business-operation-config-columns-20260918` -> PR #158, `agent/reconcile-edge-admin-canary-deploy-guard` -> PR #58 e `agent/revoke-residual-anon-private-admin-helpers` -> PR #72.
+
+Não entraram neste lote branches de Mobilidade, report/RPC sem sucessor inequívoco, LGPD operacional ainda sensível, recovery/ops temporário sem auditoria de conteúdo ou qualquer branch cujo destino ainda dependa de decisão funcional.
 
 ## Próximo passo
 
