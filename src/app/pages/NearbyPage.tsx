@@ -147,7 +147,6 @@ export default function NearbyPage() {
   const [radiusKm, setRadiusKm] = useState(5);
   const [activeCategory, setActiveCategory] = useState<QuickCategoryKey>('all');
   const [visibleCount, setVisibleCount] = useState(12);
-  const [highlightedItemId, setHighlightedItemId] = useState<string | null>(null);
 
   // ── Derived entity types from category ─────────────────────────────
   const entityTypes = useMemo(() => resolveEntityTypesByCategory(activeCategory), [activeCategory]);
@@ -187,26 +186,27 @@ export default function NearbyPage() {
     setVisibleCount((v) => v + 12);
   }, []);
 
-  const handleShowClassifiedInMap = useCallback((ad: { id: string }) => {
-    const mapSection = document.querySelector('[aria-label="Mapa"]');
-    if (mapSection) {
-      mapSection.scrollIntoView({ behavior: 'smooth', block: 'center' });
-      setHighlightedItemId(ad.id);
-      setTimeout(() => setHighlightedItemId(null), 3000);
-    }
-  }, []);
-
-  // ── Contexto de distância (GPS vs territorial) ─────────────────────
-  const distanceContext = isGps ? 'proximity' : 'territorial';
-  const proximityLabel = isGps ? 'perto de você' : territoryLabels.inTerritory;
+  // ── Contexto de distância: só dados adequados podem representar proximidade pessoal.
+  const hasPreciseProximity = isGoodForProximity;
+  const proximityLabel = hasPreciseProximity
+    ? 'perto de você'
+    : territoryLabels.inTerritory;
 
   return (
     <>
       <Helmet>
-        <title>{`${territoryLabels.nearbyLabel} — ${entities.length} resultados em ${radiusKm}km`}</title>
+        <title>
+          {hasPreciseProximity
+            ? `${territoryLabels.nearbyLabel} — ${entities.length} resultados em ${radiusKm}km`
+            : `${territoryLabels.nearbyLabel} — ${entities.length} resultados ${territoryLabels.inTerritory}`}
+        </title>
         <meta
           name="description"
-            content={`Descubra empresas, gastronomia, serviços, classificados e pontos turísticos ${proximityLabel} em um raio de ${radiusKm}km.`}
+          content={
+            hasPreciseProximity
+              ? `Descubra empresas, gastronomia, serviços, classificados e pontos turísticos perto de você em um raio de ${radiusKm}km.`
+              : `Descubra empresas, gastronomia, serviços, classificados e pontos turísticos ${territoryLabels.inTerritory}. O recorte usa o centro do território como referência; ative o GPS para ver distâncias pessoais.`
+          }
         />
       </Helmet>
 
@@ -220,10 +220,14 @@ export default function NearbyPage() {
           title="Descubra o que está"
           titleHighlight={proximityLabel}
           subtitle={`Empresas, gastronomia, serviços, classificados e pontos turísticos, tudo organizado ${
-            isGps ? 'por proximidade' : `${territoryLabels.inTerritory}`
+            hasPreciseProximity
+              ? 'por proximidade'
+              : `${territoryLabels.inTerritory}, sem atribuir distância pessoal`
           }.`}
           stats={[
-            { value: `${radiusKm}km`, label: 'raio' },
+            hasPreciseProximity
+              ? { value: `${radiusKm}km`, label: 'raio' }
+              : { value: 'Território', label: 'referência' },
             { value: String(entities.length), label: entities.length === 1 ? 'resultado' : 'resultados' },
             { value: String(businesses.length), label: 'empresas' },
           ]}
@@ -244,20 +248,20 @@ export default function NearbyPage() {
         {/* ── Location source banner ──────────────────────────────── */}
         {locationStatus !== 'idle' && locationStatus !== 'resolving' && (
           <div className={`max-w-7xl mx-auto px-4 sm:px-6 py-2 ${
-            isGps ? 'bg-green-500/5' : 'bg-amber-500/5'
+            hasPreciseProximity ? 'bg-green-500/5' : 'bg-amber-500/5'
           }`}>
             <div className="flex items-center justify-between gap-2 text-sm">
               <div className="flex items-center gap-2">
-                {isGps ? (
+                {hasPreciseProximity ? (
                   <Navigation className="h-3.5 w-3.5 text-green-600" />
                 ) : (
                   <Info className="h-3.5 w-3.5 text-amber-600" />
                 )}
-                <span className={isGps ? 'text-green-700' : 'text-amber-700'}>
+                <span className={hasPreciseProximity ? 'text-green-700' : 'text-amber-700'}>
                   {sourceMessage}
                 </span>
               </div>
-              {!isGps && (
+              {!hasPreciseProximity && (
                 <Button
                   variant="ghost"
                   size="sm"
@@ -283,6 +287,7 @@ export default function NearbyPage() {
               activeCategory={activeCategory}
               onCategoryChange={handleCategoryChange}
               resultCount={entities.length}
+              showProximity={hasPreciseProximity}
             />
           </div>
         </div>
@@ -294,7 +299,11 @@ export default function NearbyPage() {
           <div className="max-w-7xl mx-auto px-4 sm:px-6 py-16 text-center">
             <Loader2 className="h-10 w-10 animate-spin text-primary mx-auto mb-4" />
             <p className="text-muted-foreground">
-              {locationLoading ? 'Obtendo sua localização...' : 'Buscando locais próximos...'}
+              {locationLoading
+                ? 'Obtendo sua localização...'
+                : hasPreciseProximity
+                  ? 'Buscando locais próximos...'
+                  : 'Buscando locais no território...'}
             </p>
           </div>
         )}
@@ -311,7 +320,7 @@ export default function NearbyPage() {
               Erro ao buscar locais
             </h3>
             <p className="text-muted-foreground mb-6">
-              Não foi possível buscar entidades próximas. Tente novamente.
+              Não foi possível buscar os locais deste recorte. Tente novamente.
             </p>
             <Button onClick={() => window.location.reload()} variant="outline" className="rounded-full">
               Tentar Novamente
@@ -328,7 +337,11 @@ export default function NearbyPage() {
             {/* ── Mini Mapa ───────────────────────────────────────── */}
             <NearbySection
               title={territoryLabels.mapLabel}
-              subtitle={isGps ? `Seus arredores em ${radiusKm}km` : `Mapa ${territoryLabels.inTerritory}`}
+              subtitle={
+                hasPreciseProximity
+                  ? `Seus arredores em ${radiusKm}km`
+                  : `Mapa ${territoryLabels.inTerritory} — referência territorial`
+              }
               icon={Map}
               iconColorClass="bg-accent/10 text-accent-foreground"
             >
@@ -336,6 +349,7 @@ export default function NearbyPage() {
                 userLocation={userLocation}
                 entities={entities}
                 radiusKm={radiusKm}
+                showProximity={hasPreciseProximity}
               />
             </NearbySection>
 
@@ -352,7 +366,12 @@ export default function NearbyPage() {
             >
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
                 {businesses.slice(0, 6).map((e) => (
-                  <NearbyCard key={e.id} entity={e} onNavigate={navigate} />
+                  <NearbyCard
+                    key={e.id}
+                    entity={e}
+                    onNavigate={navigate}
+                    showProximity={hasPreciseProximity}
+                  />
                 ))}
               </div>
             </NearbySection>
@@ -360,7 +379,7 @@ export default function NearbyPage() {
             {/* ── Gastronomia ─────────────────────────────────────── */}
             <NearbySection
               title={`Gastronomia ${proximityLabel}`}
-              subtitle={isGps ? "O que comer por perto" : `Onde comer ${territoryLabels.inTerritory}`}
+              subtitle={hasPreciseProximity ? "O que comer por perto" : `Onde comer ${territoryLabels.inTerritory}`}
               icon={UtensilsCrossed}
               iconColorClass="bg-orange-500/10 text-orange-500"
               count={businesses.filter((b) => b.metadata?.category === 'food' || b.metadata?.gastronomy_profile).length}
@@ -372,7 +391,12 @@ export default function NearbyPage() {
                   .filter((b) => b.metadata?.category === 'food' || b.metadata?.gastronomy_profile)
                   .slice(0, 6)
                   .map((e) => (
-                    <NearbyCard key={e.id} entity={e} onNavigate={navigate} />
+                    <NearbyCard
+                    key={e.id}
+                    entity={e}
+                    onNavigate={navigate}
+                    showProximity={hasPreciseProximity}
+                  />
                   ))}
               </div>
             </NearbySection>
@@ -380,7 +404,7 @@ export default function NearbyPage() {
             {/* ── Serviços / Profissionais ─────────────────────────── */}
             <NearbySection
               title={`Serviços ${proximityLabel}`}
-              subtitle={isGps ? "Encontre quem resolve por perto" : `Profissionais ${territoryLabels.inTerritory}`}
+              subtitle={hasPreciseProximity ? "Encontre quem resolve por perto" : `Profissionais ${territoryLabels.inTerritory}`}
               icon={Briefcase}
               iconColorClass="bg-indigo-500/10 text-indigo-500"
               count={businesses.filter((b) => b.metadata?.category === 'services').length}
@@ -392,24 +416,26 @@ export default function NearbyPage() {
                   .filter((b) => b.metadata?.category === 'services')
                   .slice(0, 6)
                   .map((e) => (
-                    <NearbyCard key={e.id} entity={e} onNavigate={navigate} />
+                    <NearbyCard
+                    key={e.id}
+                    entity={e}
+                    onNavigate={navigate}
+                    showProximity={hasPreciseProximity}
+                  />
                   ))}
               </div>
             </NearbySection>
 
             {/* ── Classificados ────────────────────────────────────── */}
             <NearbyClassifiedsSection
-              userLocation={userLocation}
-              radiusKm={radiusKm}
               limit={6}
               resolved={resolved}
-              onShowInMap={handleShowClassifiedInMap}
             />
 
             {/* ── Pontos Turísticos ────────────────────────────────── */}
             <NearbySection
               title={`Pontos turísticos ${proximityLabel}`}
-              subtitle={isGps ? "Explore os arredores" : `Lugares para conhecer ${territoryLabels.inTerritory}`}
+              subtitle={hasPreciseProximity ? "Explore os arredores" : `Lugares para conhecer ${territoryLabels.inTerritory}`}
               icon={Landmark}
               iconColorClass="bg-purple-500/10 text-purple-500"
               count={touristPoints.length}
@@ -419,7 +445,12 @@ export default function NearbyPage() {
             >
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
                 {touristPoints.slice(0, 6).map((e) => (
-                  <NearbyCard key={e.id} entity={e} onNavigate={navigate} />
+                  <NearbyCard
+                    key={e.id}
+                    entity={e}
+                    onNavigate={navigate}
+                    showProximity={hasPreciseProximity}
+                  />
                 ))}
               </div>
             </NearbySection>
@@ -428,14 +459,18 @@ export default function NearbyPage() {
             {entities.length > 0 && (
               <NearbySection
                 title="Todos os resultados"
-                subtitle={`${entities.length} locais encontrados ${isGps ? `em ${radiusKm}km` : territoryLabels.inTerritory}`}
+                subtitle={`${entities.length} locais encontrados ${hasPreciseProximity ? `em ${radiusKm}km` : territoryLabels.inTerritory}`}
                 icon={TrendingUp}
                 count={entities.length}
               >
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
                   {displayedEntities.map((e) => (
                     <motion.div key={`${e.type}-${e.id}`} variants={itemVariants}>
-                      <NearbyCard entity={e} onNavigate={navigate} />
+                      <NearbyCard
+                        entity={e}
+                        onNavigate={navigate}
+                        showProximity={hasPreciseProximity}
+                      />
                     </motion.div>
                   ))}
                 </div>
@@ -464,7 +499,7 @@ export default function NearbyPage() {
                   Nenhum local encontrado
                 </h3>
                 <p className="text-muted-foreground mb-6 max-w-md mx-auto">
-                  {isGps
+                  {hasPreciseProximity
                     ? `Não há locais em um raio de ${radiusKm}km. Tente aumentar o raio.`
                     : `Não encontramos resultados ${territoryLabels.inTerritory}. Tente outro território ou ative o GPS.`
                   }
@@ -475,9 +510,11 @@ export default function NearbyPage() {
                     variant="outline"
                     className="rounded-full"
                   >
-                    Ampliar busca para 20km
+                    {hasPreciseProximity
+                      ? 'Ampliar raio para 20km'
+                      : 'Ampliar recorte territorial para 20km'}
                   </Button>
-                  {!isGps && (
+                  {!hasPreciseProximity && (
                     <Button
                       onClick={() => resolveLocation()}
                       variant="default"
