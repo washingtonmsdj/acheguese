@@ -49,6 +49,11 @@
       "evidence": "Superseded by the cleaned equivalent merged in PR #72."
     },
     {
+      "name": "agent/security-admin-role-display-validity",
+      "sha": "b0c1629c41e6af5ada68e94948c0ae6950a2bb41",
+      "evidence": "Closed unmerged precursor. Its admin-role validity migration and dedicated security test are byte-identical to main; later admin role provenance reconciliation was merged in PR #57."
+    },
+    {
       "name": "agent/security-analytics-authority",
       "sha": "4f83570f7b4df156392523980c3ecda84abef6c3",
       "evidence": "Authority migration is in main; later reconciliation merged in PR #35."
@@ -62,6 +67,11 @@
       "name": "agent/security-auth-session-revocation",
       "sha": "d4d9b740c2c2c7efa3630b624063f8cdc4669ff0",
       "evidence": "Revocation contract absorbed by current session-rpc authority and broader ratchet."
+    },
+    {
+      "name": "agent/security-classified-report-rpc-contract",
+      "sha": "10e5f4754376da09eaa49975027e74163a000852",
+      "evidence": "Closed unmerged precursor. Its classified report RPC migration and authorization spec are byte-identical to main; later provenance reconciliation was merged in PR #54."
     },
     {
       "name": "agent/security-edge-admin-canary-deploy-guard",
