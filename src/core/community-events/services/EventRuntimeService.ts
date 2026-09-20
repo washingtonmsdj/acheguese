@@ -37,6 +37,10 @@ export class EventRuntimeService {
     return eventsReadService.getPublicEventById(id);
   }
 
+  async getPublicEventByIdStrict(id: string): Promise<Event | null> {
+    return eventsReadService.getPublicEventByIdStrict(id);
+  }
+
   async getEvents(filters?: GetEventsFilters): Promise<Event[]> {
     return eventsReadService.getEvents(filters);
   }
