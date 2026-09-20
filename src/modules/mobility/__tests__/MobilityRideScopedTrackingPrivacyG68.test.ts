@@ -9,7 +9,7 @@ function readProjectFile(relativePath: string): string {
 describe("G68 ride-scoped precise tracking privacy", () => {
   it("does not expose passenger live GPS before explicit driver acceptance", () => {
     const policyMigration = readProjectFile(
-      "supabase/migrations/20260911100000_tighten_driver_location_read_window_g68.sql",
+      "docs/09-reference/migrations-pending/20260911100000_tighten_driver_location_read_window_g68.sql",
     );
     const viewPolicy = readProjectFile(
       "src/core/mobility/core/PassengerRideViewPolicy.ts",
@@ -30,7 +30,7 @@ describe("G68 ride-scoped precise tracking privacy", () => {
 
   it("authorizes precise location through a ride-scoped SECURITY DEFINER read", () => {
     const migration = readProjectFile(
-      "supabase/migrations/20260911101000_add_ride_scoped_driver_location_read_g68.sql",
+      "docs/09-reference/migrations-pending/20260911101000_add_ride_scoped_driver_location_read_g68.sql",
     );
 
     expect(migration).toContain(
