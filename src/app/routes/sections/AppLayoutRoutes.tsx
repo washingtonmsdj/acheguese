@@ -353,6 +353,16 @@ export function AppLayoutRoutes() {
     typeof window !== "undefined" &&
     window.location.pathname === "/classificados" &&
     new URLSearchParams(window.location.search).get("concept-mock") === "1";
+  const conceptMeusAnunciosPreview =
+    import.meta.env.DEV &&
+    typeof window !== "undefined" &&
+    window.location.pathname === "/meus-anuncios" &&
+    new URLSearchParams(window.location.search).get("concept-mock") === "1";
+  const conceptPerfilAnunciantePreview =
+    import.meta.env.DEV &&
+    typeof window !== "undefined" &&
+    window.location.pathname === "/perfil-anunciante" &&
+    new URLSearchParams(window.location.search).get("concept-mock") === "1";
   const launchElement = (
     surface: LaunchSurfaceKey,
     moduleName: string,
@@ -821,6 +831,26 @@ export function AppLayoutRoutes() {
               <P.ClassificadosConceptMockPage />
             ) : (
               <Navigate to="/comunidade" replace />
+            )
+          }
+        />
+        <Route
+          path="/meus-anuncios"
+          element={
+            conceptMeusAnunciosPreview ? (
+              <P.MeusAnunciosConceptMockPage />
+            ) : (
+              <Navigate to="/conta" replace />
+            )
+          }
+        />
+        <Route
+          path="/perfil-anunciante"
+          element={
+            conceptPerfilAnunciantePreview ? (
+              <P.PerfilAnuncianteConceptMockPage />
+            ) : (
+              <Navigate to="/classificados" replace />
             )
           }
         />

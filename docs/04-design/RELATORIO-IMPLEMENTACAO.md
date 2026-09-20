@@ -983,3 +983,42 @@ A prancha 117 também está coberta pelos estados demonstrativos de visitante, v
 ### Git
 
 - Commit restrito ao mock de Classificados, aos desvios de rota/layout de desenvolvimento e às documentações deste concept; alterações alheias staged/unstaged permanecem fora do commit.
+
+## 20/09/2026 · Criar e gerenciar meus anúncios — pranchas 111 e 112
+
+### Auditoria e ajuste
+
+- O fluxo canônico de classificados foi preservado; a comparação foi isolada em `DEV + /meus-anuncios?concept-mock=1`.
+- Recompus o mobile na ordem da prancha 111: informações com perfil autor, fotos com limite de 10, revisão com retorno por etapa e gestão com busca, filtros e estados ativo/em análise/pausado.
+- Recompus o desktop conforme a prancha 112: rail das oito etapas, edição de contato, visibilidade opcional de telefone, conversa condicionada, prévia pública e cartões de gestão/vendido/envio não concluído.
+- Corrigi os contadores da referência para os limites SSOT de 100/2000, mantive bairros do Complexo e tratei “Pessoal” como identidade do perfil. Nenhum botão de rascunho ou envio declara persistência ou publicação garantida.
+- O refinamento visual final alinhou o stepper para pontos conectados, trocou símbolos improvisados por ícones do sistema, adicionou placeholders de contato, ação “Salvar rascunho” e realce da etapa ativa desktop.
+
+### Validação e evidências
+
+- Navegador interno mantido aberto nas abas mobile `491 × 1108` e desktop `1707 × 960`; informações, fotos, revisão, gestão e edição desktop foram conferidas lado a lado com as pranchas.
+- `document.documentElement.scrollWidth` e `document.body.scrollWidth` permaneceram dentro dos respectivos viewports: 491 no mobile e 1687 no desktop.
+- ESLint direcionado e typecheck global passaram após o ajuste final. Os assets de produto específicos não existem isoladamente no repositório; foram mantidos assets territoriais existentes apenas para preservar recorte e proporção.
+
+### Git
+
+- Commit restrito ao mock de Meus anúncios, aos desvios de rota/layout de desenvolvimento e às documentações deste concept; alterações alheias staged/unstaged permanecem fora do commit.
+
+## 20/09/2026 · Perfil público do anunciante — pranchas 113 e 114
+
+### Auditoria e ajuste
+
+- O perfil canônico de anunciante e seus contratos de contato foram preservados; a comparação foi isolada em `DEV + /perfil-anunciante?concept-mock=1`.
+- Recompus o mobile conforme a prancha 113: perfil com anúncios, aba Sobre, localização pública, contato por WhatsApp, denúncia, seleção explícita do anúncio para conversa, mensagem editável e estados sem anúncios/sem resultado/falha/perfil indisponível.
+- Recompus o desktop conforme a prancha 114: rail de classificados, topbar territorial, busca, cabeçalho do perfil, tabs, filtros, cards de anúncios, painel “Sobre o anunciante”, contato e três cartões de estado.
+- Mantive privacidade e autoridade: sem endereço exato, sem data de ingresso inventada, sem vendas inferidas de avaliações, sem fallback silencioso de WhatsApp para telefone e sem envio automático de mensagem.
+
+### Validação e evidências
+
+- Navegador interno mantido aberto nas abas mobile `425 × 1108` e desktop `1707 × 960`; perfil, Sobre, conversa, vazio e estados alternativos foram comparados lado a lado.
+- `body.scrollWidth` permaneceu dentro do viewport nos dois tamanhos; a navegação global foi ocultada no shell de desenvolvimento para não encobrir a CTA do concept mobile.
+- ESLint direcionado e typecheck completo executados após os ajustes finais. Assets de bicicleta/cadeira não existem individualmente no repositório; foram usados assets territoriais existentes para preservar proporção e recorte.
+
+### Git
+
+- Commit restrito ao mock de Perfil do anunciante, aos desvios de rota/layout de desenvolvimento e às documentações deste concept; alterações alheias staged/unstaged permanecem fora do commit.

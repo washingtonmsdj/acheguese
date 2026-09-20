@@ -107,6 +107,16 @@ export function AppLayoutSidebar() {
     typeof window !== "undefined" &&
     pathname === "/classificados" &&
     new URLSearchParams(window.location.search).get("concept-mock") === "1";
+  const conceptMeusAnunciosPreview =
+    import.meta.env.DEV &&
+    typeof window !== "undefined" &&
+    pathname === "/meus-anuncios" &&
+    new URLSearchParams(window.location.search).get("concept-mock") === "1";
+  const conceptPerfilAnunciantePreview =
+    import.meta.env.DEV &&
+    typeof window !== "undefined" &&
+    pathname === "/perfil-anunciante" &&
+    new URLSearchParams(window.location.search).get("concept-mock") === "1";
   const accountUsesSettingsShell =
     ACCOUNT_SETTINGS_SHELL_PATHS.has(pathname) ||
     conceptLinksPreview ||
@@ -183,7 +193,9 @@ export function AppLayoutSidebar() {
     conceptAgendaPreview ||
     conceptOrganizeEventsPreview ||
     conceptInscricaoCheckinPreview ||
-    conceptClassificadosPreview;
+    conceptClassificadosPreview ||
+    conceptMeusAnunciosPreview ||
+    conceptPerfilAnunciantePreview;
 
   const isInternalGroupRoute =
     pathSegments[0] === "grupos" && pathSegments.length >= 2;
@@ -215,7 +227,9 @@ export function AppLayoutSidebar() {
     conceptAgendaPreview ||
     conceptOrganizeEventsPreview ||
     conceptInscricaoCheckinPreview ||
-    conceptClassificadosPreview;
+    conceptClassificadosPreview ||
+    conceptMeusAnunciosPreview ||
+    conceptPerfilAnunciantePreview;
   const hideMobileBottomNav =
     pathname === "/" ||
     isInternalGroupRoute ||
@@ -236,7 +250,9 @@ export function AppLayoutSidebar() {
     conceptAgendaPreview ||
     conceptOrganizeEventsPreview ||
     conceptInscricaoCheckinPreview ||
-    conceptClassificadosPreview;
+    conceptClassificadosPreview ||
+    conceptMeusAnunciosPreview ||
+    conceptPerfilAnunciantePreview;
 
   const isMessagingRoute =
     pathSegments[0] === "mensagens" || pathSegments[0] === "chat";
