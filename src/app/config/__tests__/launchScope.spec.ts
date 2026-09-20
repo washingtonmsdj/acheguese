@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 
+import { ACTIVE_MODULES, getContextMessageFromPath } from "../modules";
 import {
   filterLaunchItems,
   filterLaunchSections,
@@ -51,6 +52,31 @@ describe("launchScope", () => {
         { label: "Pausadas", items: [{ id: "education" }, { id: "mobility" }] },
       ]),
     ).toEqual([{ label: "Ativas", items: [{ id: "map" }] }]);
+  });
+
+
+  it("keeps the global module registry aligned with launch scope", () => {
+    const activeIds = ACTIVE_MODULES.map((module) => module.id);
+
+    expect(activeIds).toContain("business");
+    expect(activeIds).toContain("gastronomy");
+    expect(activeIds).toContain("community-events");
+    expect(activeIds).not.toContain("mobility");
+    expect(activeIds).not.toContain("education");
+    expect(activeIds).not.toContain("ranking");
+    expect(activeIds).not.toContain("community-alerts");
+    expect(activeIds).not.toContain("community-issues");
+    expect(activeIds).not.toContain("community-lost-found");
+  });
+
+  it("does not expose paused module context in territory chrome", () => {
+    expect(getContextMessageFromPath("/mobilidade")).toBeNull();
+    expect(getContextMessageFromPath("/educacao/ba/salvador")).toBeNull();
+    expect(getContextMessageFromPath("/ranking")).toBeNull();
+
+    expect(getContextMessageFromPath("/empresas/ba/salvador")).toBe(
+      "Exibindo empresas de",
+    );
   });
 
   it("keeps jobs classified categories aligned with the active launch surface", () => {
