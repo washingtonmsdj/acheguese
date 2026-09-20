@@ -8,13 +8,12 @@ import {
   Check,
   ChevronDown,
   ChevronRight,
-  Clock3,
   CircleAlert,
+  House,
   Info,
   MapPin,
   MessageCircle,
   PackageCheck,
-  Pencil,
   ShoppingBag,
   Store,
   Truck,
@@ -181,11 +180,13 @@ function ModeButton({
   active,
   icon: Icon,
   label,
+  activeClassName,
   onClick,
 }: {
   active: boolean;
   icon: typeof Truck;
   label: string;
+  activeClassName?: string;
   onClick: () => void;
 }) {
   return (
@@ -195,9 +196,10 @@ function ModeButton({
       aria-checked={active}
       onClick={onClick}
       className={cn(
-        "inline-flex min-h-10 items-center justify-center gap-1 rounded-lg border px-2 text-[0.6875rem] font-semibold text-territory-ink transition-colors focus-visible:z-10 focus-visible:outline-2 focus-visible:outline-offset-[-2px] focus-visible:outline-territory-brand sm:text-xs",
+        "inline-flex min-h-10 items-center justify-center gap-1 rounded-lg border px-2 text-xs font-semibold text-territory-ink transition-colors focus-visible:z-10 focus-visible:outline-2 focus-visible:outline-offset-[-2px] focus-visible:outline-territory-brand",
         active
-          ? "border-territory-brand bg-territory-brand text-white"
+          ? (activeClassName ??
+            "border-territory-brand bg-territory-brand text-white")
           : "border-territory-border bg-territory-surface hover:border-territory-brand/50",
       )}
     >
@@ -316,11 +318,11 @@ function CheckoutHeader({
           </nav>
         </div>
       </header>
-      <div className="border-b border-territory-border bg-territory-surface px-3 py-2.5 lg:hidden">
+      <div className="border-b border-territory-border bg-territory-surface px-4 py-2 lg:hidden">
         <button
           type="button"
           onClick={onBack}
-          className="inline-flex min-h-9 items-center gap-2 text-xs font-semibold text-territory-ink focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-territory-brand"
+          className="inline-flex min-h-8 items-center gap-2 text-xs font-semibold text-territory-ink focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-territory-brand"
         >
           <ArrowLeft className="h-4 w-4" aria-hidden="true" />
           {stage === "address" ? "Cardápio" : "Voltar"}
@@ -331,10 +333,12 @@ function CheckoutHeader({
 }
 
 function BusinessSummary({ business }: { business: GastronomyBusiness }) {
+  const cityState = [business.business_city, business.business_state]
+    .filter(Boolean)
+    .join(", ");
   const locationLabel = [
     business.location?.name,
-    business.business_city ?? business.location?.full_name,
-    business.business_state,
+    cityState || business.location?.full_name,
   ]
     .filter(Boolean)
     .join(" · ");
@@ -347,7 +351,7 @@ function BusinessSummary({ business }: { business: GastronomyBusiness }) {
         className="h-12 w-12 rounded-full object-cover"
       />
       <div className="min-w-0">
-        <p className="truncate text-sm font-bold text-territory-ink">
+        <p className="truncate text-sm font-bold text-territory-ink lg:text-base">
           {business.name}
         </p>
         <p className="text-xs text-territory-muted">
@@ -381,25 +385,35 @@ function AddressCard({
       <div className="flex items-start justify-between gap-3">
         <div className="min-w-0">
           <p className="flex items-center gap-2 font-bold">
-            <MapPin
-              className="h-4 w-4 shrink-0 text-territory-brand"
-              aria-hidden="true"
-            />
-            {address?.label ? "Endereço de entrega" : "Endereço do perfil"}
+            {address?.label ? (
+              <House
+                className="h-4 w-4 shrink-0 text-territory-brand"
+                aria-hidden="true"
+              />
+            ) : (
+              <MapPin
+                className="h-4 w-4 shrink-0 text-territory-brand"
+                aria-hidden="true"
+              />
+            )}
+            {address?.label || "Endereço do perfil"}
           </p>
           {hasAddress ? (
-            <p className="mt-1 pl-6 text-territory-muted">
-              {[address?.street, address?.number, address?.complement]
-                .filter(Boolean)
-                .join(" · ") || address?.label}
-              <br />
-              {[address?.neighborhood, address?.city, address?.state]
-                .filter(Boolean)
-                .join(" · ")}
-              {!compact && address?.postal_code
-                ? ` · CEP ${address.postal_code}`
-                : ""}
-            </p>
+            <div className="mt-1 pl-6 text-territory-muted">
+              <p>
+                {[address?.street, address?.number, address?.complement]
+                  .filter(Boolean)
+                  .join(" · ")}
+              </p>
+              <p>
+                {[address?.neighborhood, address?.city, address?.state]
+                  .filter(Boolean)
+                  .join(" · ")}
+                {!compact && address?.postal_code
+                  ? ` · CEP ${address.postal_code}`
+                  : ""}
+              </p>
+            </div>
           ) : (
             <p className="mt-1 pl-6 text-territory-muted">
               Informe um endereço completo para continuar.
@@ -412,7 +426,7 @@ function AddressCard({
             onClick={onEdit}
             className="shrink-0 font-semibold text-territory-brand underline-offset-2 hover:underline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-territory-brand"
           >
-            {hasAddress ? "Alterar" : "Adicionar"}
+            {hasAddress ? "Editar" : "Adicionar"}
           </button>
         ) : null}
       </div>
@@ -548,6 +562,11 @@ function MobileAddressStage({
   onContinue: () => void;
   onToggleItems: () => void;
 }) {
+  const mobileAvailableModes =
+    mode === "dine_in"
+      ? availableModes
+      : availableModes.filter((availableMode) => availableMode !== "dine_in");
+
   return (
     <div className="space-y-3">
       <h1 className="font-heading text-[1.45rem] font-bold tracking-[-0.04em] text-territory-ink">
@@ -556,14 +575,14 @@ function MobileAddressStage({
       <div
         className={cn(
           "grid gap-2",
-          availableModes.length === 1
+          mobileAvailableModes.length === 1
             ? "grid-cols-1"
-            : availableModes.length === 2
+            : mobileAvailableModes.length === 2
               ? "grid-cols-2"
               : "grid-cols-3",
         )}
       >
-        {availableModes.map((availableMode) => {
+        {mobileAvailableModes.map((availableMode) => {
           const Icon =
             availableMode === "delivery"
               ? Truck
@@ -575,7 +594,11 @@ function MobileAddressStage({
               key={availableMode}
               active={mode === availableMode}
               icon={Icon}
-              label={fulfillmentLabel(availableMode)}
+              label={
+                availableMode === "takeout"
+                  ? "Retirada no local"
+                  : fulfillmentLabel(availableMode)
+              }
               onClick={() => onModeChange(availableMode)}
             />
           );
@@ -583,10 +606,12 @@ function MobileAddressStage({
       </div>
       <div className="flex min-h-12 items-center justify-between gap-3 rounded-lg border border-territory-border bg-territory-surface px-3 text-xs">
         <span className="flex min-w-0 items-center gap-2 font-semibold text-territory-ink">
-          <UserRound
-            className="h-4 w-4 shrink-0 text-territory-brand"
-            aria-hidden="true"
-          />
+          <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-territory-raised">
+            <UserRound
+              className="h-4 w-4 text-territory-brand"
+              aria-hidden="true"
+            />
+          </span>
            {profileName}{" "}
            <span className="font-normal text-territory-muted">· {profileType}</span>
         </span>
@@ -1231,21 +1256,13 @@ function AddressSection({
       className="rounded-xl border border-territory-border bg-territory-surface p-4 sm:p-5"
       aria-labelledby="checkout-address-title"
     >
-      <div className="flex items-center justify-between gap-3">
+      <div>
         <h2
           id="checkout-address-title"
           className="font-heading text-base font-bold text-territory-ink"
         >
           2. Endereço e destinatário
         </h2>
-        <button
-          type="button"
-          onClick={onEditAddress}
-          className="inline-flex min-h-9 items-center gap-1 text-xs font-semibold text-territory-brand underline-offset-2 hover:underline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-territory-brand"
-        >
-          <Pencil className="h-3.5 w-3.5" aria-hidden="true" />
-          Editar
-        </button>
       </div>
       <div className="mt-3 grid grid-cols-2 gap-2 text-xs">
         <button
@@ -1329,7 +1346,6 @@ function FulfillmentSection({
         >
           1. Recebimento
         </h2>
-        <Clock3 className="h-5 w-5 text-territory-brand" aria-hidden="true" />
       </div>
       <div
         className={cn(
@@ -1354,6 +1370,7 @@ function FulfillmentSection({
               active={mode === availableMode}
               icon={Icon}
               label={fulfillmentLabel(availableMode)}
+              activeClassName="border-territory-brand bg-territory-success/10 text-territory-ink"
               onClick={() => onModeChange(availableMode)}
             />
           );
@@ -1367,6 +1384,7 @@ function FulfillmentSection({
           <div className="mt-2 grid gap-2 sm:grid-cols-2">
             <ChoiceButton
               active={deliveryOption === "store"}
+              activeClassName="border-territory-sun bg-territory-sun/10 text-territory-ink"
               onClick={() => onDeliveryOptionChange("store")}
             >
               <span className="block font-semibold">
@@ -1765,7 +1783,7 @@ function MobileCheckoutFooter({
           : onReviewConfirm;
 
   return (
-    <div className="pointer-events-none fixed inset-x-0 bottom-0 z-40 px-3 pb-[calc(1.5rem+env(safe-area-inset-bottom))] pt-3 lg:hidden">
+    <div className="pointer-events-none fixed inset-x-0 bottom-0 z-40 px-4 pb-[calc(1.5rem+env(safe-area-inset-bottom))] pt-3 lg:hidden">
       <div className="mx-auto max-w-[42rem]">
         <Button
           type="button"
@@ -2199,7 +2217,7 @@ export default function GastronomyCheckoutConceptSurface({
         onAccount={() => navigate(appUrls.profile.home)}
         stage={stage}
       />
-      <main className="mx-auto max-w-[84rem] px-3 pb-[calc(5.5rem+env(safe-area-inset-bottom))] pt-3 sm:px-6 sm:pt-6 lg:px-8 lg:pb-10">
+      <main className="mx-auto max-w-[84rem] px-4 pb-[calc(5.5rem+env(safe-area-inset-bottom))] pt-4 sm:px-6 sm:pt-6 lg:px-8 lg:pb-10">
         <div className="lg:hidden">
           <BusinessSummary business={business} />
           <div className="mt-3">

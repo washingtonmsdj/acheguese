@@ -375,3 +375,10 @@ A prancha 117 também está coberta pelos estados demonstrativos de visitante, v
 
 - Branch: `codex/reformulacao-entrada-comunidade`.
 - Somente `GastronomyCheckoutConceptSurface.tsx`, `useDeliveryDestination.ts`, a revisão da página e este relatório entram no commit; os arquivos staged preexistentes de catalogação e segurança permanecem excluídos.
+
+### Segunda rodada — refinamento de padding, header e estados
+
+- Recomparei a tela com as pranchas em viewport mobile e desktop. Ajustei o shell mobile para 16 px laterais, cabeçalho de 48 px, CTA fixo alinhado ao mesmo eixo e tipografia dos botões de modalidade para a escala do concept.
+- Diferenciei os estados ativos por breakpoint: mobile teal preenchido, desktop teal claro com borda e entrega da loja em amarelo claro. Retirei ações e ícone extras do título de endereço para manter a hierarquia da prancha.
+- O cartão de endereço agora apresenta o rótulo real da residência e ícone de casa quando houver destino resolvido. O mock de `Sabores da Ana` também fornece a relação territorial carregada para exibir `Santa Cruz · Salvador, BA` sem alterar dados de produção.
+- No mobile, `Retirada no local` ocupa a segunda coluna no fluxo de Entrega/Retirada; `No local` só permanece na grade quando já é o estado selecionado do carrinho, evitando perda de modalidade.

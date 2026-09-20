@@ -69,6 +69,11 @@ const conceptBusiness: GastronomyBusiness = {
   category: "restaurante",
   subcategoria: "Comida regional",
   location_id: "concept-santa-cruz",
+  location: {
+    name: "Santa Cruz",
+    full_name: "Santa Cruz, Salvador, BA",
+    geographic_path: territoryHref,
+  },
   business_address: "Rua Exemplo, 120",
   business_city: "Salvador",
   business_state: "BA",

@@ -24,4 +24,11 @@ Status: revisada em 19/09/2026.
 
 Branch analisada: `codex/reformulacao-entrada-comunidade`. Data: 19/09/2026.
 
+## Segunda rodada de fidelidade visual
+
+- O padding mobile do shell passou para 16 px, o cabeçalho ficou mais compacto e o CTA fixo usa a mesma margem lateral do conteúdo.
+- No mobile, quando a etapa está em Entrega ou Retirada, a modalidade `No local` não ocupa uma terceira coluna que não aparece na prancha; ela continua visível quando é o modo já selecionado, preservando o estado real do carrinho.
+- Os estados ativos agora respeitam a diferença entre breakpoints: preenchimento teal no mobile, fundo claro com borda teal para a modalidade desktop e destaque amarelo para a entrega da loja.
+- A identidade da loja usa o território do concept (`Santa Cruz · Salvador, BA`) quando o objeto carregado o fornece; o cartão de endereço usa o rótulo real da residência e ícone de casa, sem inventar endereço no runtime.
+
 Registrar branch/commit analisado, data, limitações e funcionalidades mantidas desativadas.
