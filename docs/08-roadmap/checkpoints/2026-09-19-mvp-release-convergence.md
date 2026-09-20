@@ -133,3 +133,33 @@ Não transformar blocker de infraestrutura em alteração de produto.
 - Edge Function versionada e não implantada não autoriza deploy em massa.
 - Finding conhecido do Advisor não autoriza alteração de ownership/policy fora da authority existente.
 - Feature pausada/fail-closed não precisa ser concluída para o MVP se continuar inacessível e não for prometida pela UI.
+
+## Atualização — Vagas runtime reconciliado — 2026-09-19
+
+A auditoria viva do Supabase encontrou um blocker real na superfície `jobs=true`:
+
+- `public.vagas` ainda usava `vaga_status = ativa/pausada/encerrada/preenchida`;
+- a policy pública já exigia `published`, portanto o catálogo público não conseguia expor as vagas legadas;
+- `vaga_modalidade` e `vaga_nivel` também permaneciam no formato antigo, enquanto a tela de publicação grava os valores canônicos;
+- vários campos já consumidos por `VagasService` ainda não existiam no runtime;
+- `VagasService` consultava `search_vector`, mas a coluna não existia;
+- as 15 linhas existentes eram dados de demonstração: 13 do seed histórico `seed_vagas` e 2 marcadas `MOCK_FEED_SEED_V1`;
+- as 15 linhas possuíam zero candidaturas, zero denúncias e zero itens salvos.
+
+Correção aplicada:
+
+- PR #216 / commit `6c8377af26cb64fdad518ccd8934ad7cde3592aa`;
+- migration remota canônica `20260920004231_reconcile_vagas_runtime_mvp`;
+- 15 seeds removidos com guard explícito de engajamento;
+- `vaga_status`, `vaga_contrato`, `vaga_modalidade` e `vaga_nivel` reconciliados ao contrato do app;
+- campos canônicos de detalhe/candidatura/SEO adicionados e compatibilidade antiga backfilled;
+- `search_vector` agora é coluna `tsvector` gerada e indexada;
+- policies duplicadas de admin foram removidas; owner/public ficaram na authority canônica;
+- `vaga_applications_insert` foi preservada e agora referencia o enum canônico;
+- `trg_enqueue_vaga_match_notifications` foi removido/recriado transacionalmente e permanece ativo;
+- pós-check vivo confirmou zero seed e zero mock no domínio Vagas.
+
+O Supabase registrou a migration em `20260920004231`. O filename Git foi realinhado a essa identidade e `src/integrations/supabase/types.generated.ts` foi regenerado diretamente do runtime. A comparação normalizada Git ↔ Supabase retornou `exact=true`.
+
+**Estado:** o drift estrutural de Vagas e o drift de tipos gerados não devem mais ser tratados como blockers genéricos. A superfície ainda precisa do gate executável/E2E e smoke exact-SHA antes do release, como todo o restante do MVP. O banco agora contém zero vagas fictícias; até haver publicação real, a UI deve mostrar empty state verdadeiro.
+
