@@ -2,7 +2,7 @@
 
 Status: **REVALIDAÇÃO DE RELEASE EM ANDAMENTO**
 
-Base técnica mais recente observada nesta revalidação: `31bc4db416e7d068b4be79e0e5970922a059beea` (`main`, PR #231). O commit deste checkpoint pode ser descendente apenas documental; qualquer alteração funcional posterior exige nova prova.
+Base técnica mais recente observada nesta revalidação: `194440370e3782751f36e6c6f55819340cf4f78e` (`main`, após PRs #233–#234). O commit deste checkpoint pode ser descendente apenas documental; qualquer alteração funcional posterior exige nova prova.
 
 Este checkpoint atualiza os blockers operacionais do primeiro release sem reescrever snapshots históricos. A autoridade continua sendo o projeto real + runtime observado.
 
@@ -131,7 +131,7 @@ O PR #209 removeu duas exceções antigas que já não aparecem no Advisor, redu
 
 1. Executar o GitHub Actions de verdade em runner válido e obter security/lint/typecheck/test/build no SHA candidato.
 2. Reexecutar os validadores de migrations no runner do SHA candidato; a auditoria direta atual já está em **673 locais / 673 remotas / 673 exatas / 0 local-only / 0 remote-only**.
-3. Completar branch protection/release authority depois que existir check executável.
+3. Completar branch protection/release authority depois que existir check executável. O publisher de tipos já publica somente por PR em `automation/supabase-types-sync`; esse subitem está fechado e protegido por ratchet.
 4. Produzir build/deploy real do mesmo SHA aprovado; o provider Vercel vinha bloqueando novas provas pelo limite diário.
 5. Executar smoke do domínio no mesmo SHA.
 6. Certificar todas as superfícies `launchScope=true`; Vagas/Eventos continuam condicionais e podem ser pausados antes do release se não passarem pelo mesmo gate.
@@ -285,3 +285,17 @@ A investigação dos 17 `local-only` restantes separou runtime necessário de st
 **Resultado final da cadeia ativa:** **673 migrations Git / 673 migrations Supabase / 673 identidades exatas / 0 local-only / 0 remote-only**.
 
 Isso fecha o blocker de provenance/identidade do ledger. O blocker de release remanescente é execução do gate no mesmo SHA (CI/lint/typecheck/tests/build/E2E/deploy/smoke), não mais divergência de migrations.
+
+
+## Atualização — publisher Supabase Types já é PR-only — 2026-09-20
+
+A revisão do workflow `.github/workflows/supabase-types-sync.yml` confirmou que o publisher canônico **não escreve diretamente em `main`**:
+
+- checkout nasce de `main`, mas alterações são commitadas apenas em `automation/supabase-types-sync`;
+- a automação cria/atualiza pull request com base `main`;
+- branch existente é atualizada com `--force-with-lease`, não push direto na base;
+- Security Check, Security Scan, SSOT Enforcement e SSOT Territorial Tests são disparados sobre a branch gerada;
+- quando não há drift, PR stale é fechado e a branch de automação é removida;
+- `tests/architecture/supabase-types-sync-pr-authority.test.ts` impede retorno de push direto à `main`.
+
+**Conclusão:** publisher de tipos via PR deixa de ser blocker. Permanecem branch protection administrativa e disponibilidade real dos checks/runners.
