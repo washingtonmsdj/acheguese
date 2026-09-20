@@ -41,6 +41,10 @@ export class EventRuntimeService {
     return eventsReadService.getEvents(filters);
   }
 
+  async getEventsStrict(filters?: GetEventsFilters): Promise<Event[]> {
+    return eventsReadService.getEventsStrict(filters);
+  }
+
   async getEventsPage(input: GetEventsPageInput = {}): Promise<GetEventsPageOutput> {
     return eventsReadService.getEventsPage(input);
   }
