@@ -4,6 +4,11 @@
   "policy": "Entries are intentionally superseded branches. Deletion is allowed only when the current branch head still exactly matches the pinned SHA, the branch is unprotected, no open PR exists, and the cleanup tool is invoked with --include-superseded.",
   "branches": [
     {
+      "name": "agent/ci-security-gate-recovery",
+      "sha": "46a634ce943ccb3d840ef144d311b19f8f3d5925",
+      "evidence": "Temporary self-hosted CI diagnostic. Current main has canonical Security Check, Security Scan and Heavy PR Certification workflows with exact-SHA provenance and broader maintained gates."
+    },
+    {
       "name": "agent/ci-vercel-remote-migration-drift-gate",
       "sha": "4c1b15a4e82b4f91a305626ba4a4d13cd777a93d",
       "evidence": "Superseded by current remote migration validators and PR #231 convergence."
@@ -89,6 +94,16 @@
       "evidence": "Superseded by D-017 and the canonical sitemap generate/validate/build pipeline."
     },
     {
+      "name": "cert/production-auth-694b4f9",
+      "sha": "d919a476910a3a3ae5fc63a71b90c6275456df0d",
+      "evidence": "One-time production logout certification pinned to old production SHA 694b4f9. Superseded by current certify-heavy-pr-auto.yml, which validates exact PR head SHA and includes authenticated logout plus broader regression/security gates."
+    },
+    {
+      "name": "cert/recovery-4.6-934f9df",
+      "sha": "4312e0d14a2a61063118f3cf9fee12693b79a9af",
+      "evidence": "Temporary Phase 4.6 recovery harness pinned to candidate 934f9df. Current release governance tracks recovery freshness explicitly and treats stale snapshots as blockers; this historical harness is not a current runtime or release capability."
+    },
+    {
       "name": "ci/supabase-types-pr-writer-20260918",
       "sha": "0b85b3f2a338265c3205bbc67752c2a713d33dde",
       "evidence": "Superseded by the rebased PR writer merged in PR #153."
@@ -169,9 +184,24 @@
       "evidence": "Superseded by the rebased Territorial Highlights reconciliation merged in PR #161."
     },
     {
+      "name": "handoff/4.6h-final",
+      "sha": "934f9df1004bee5ba185500cde7b5bad59e59123",
+      "evidence": "Historical Phase 4.6 handoff snapshot. It is a strict ancestor of both ops/recovery-refresh-20260818 and cert/recovery-4.6-934f9df, so no unique history depends on retaining this head."
+    },
+    {
       "name": "module/mobilidade-g62-work",
       "sha": "8ba5ae2d84be5b3e0d9efa51fdcf5cb2f5fbe5c1",
       "evidence": "Strict ancestor of module/mobilidade: compare module/mobilidade-g62-work...module/mobilidade is ahead by 122 and behind by 0, so the newer quarantine branch preserves all history."
+    },
+    {
+      "name": "ops/enable-hibp-20260818",
+      "sha": "744d2266417785ac4e2acfedf87773c995b86065",
+      "evidence": "Temporary one-shot workflow attempted to enable native Supabase HIBP. Current governance explicitly records native HIBP as unavailable on the current Free plan and uses tools/security/supabase-auth-hibp.mjs for canonical check/apply when provider/plan support exists."
+    },
+    {
+      "name": "ops/recovery-refresh-20260818",
+      "sha": "8289f8a73280ab51839c5a9088a9775405792014",
+      "evidence": "Temporary recovery capture branch pinned to the August Phase 4.6 production SHA and local Drive workflow. Current recovery governance and release checks supersede this one-shot operational harness and explicitly detect stale snapshots."
     },
     {
       "name": "privacy/lgpd-purge-matrix-classification-20260918",
