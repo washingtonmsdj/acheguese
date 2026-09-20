@@ -67,7 +67,16 @@ describe("DPO request intake broker", () => {
     expect(page).toContain("getDpoName");
     expect(page).toContain("Identidade do encarregado");
     expect(deployVerifier).toContain("'VITE_DPO_NAME'");
+    expect(deployVerifier).toContain("'VITE_DPO_EMAIL'");
+    expect(deployVerifier).toContain("'VITE_CONTACT_EMAIL'");
+    expect(deployVerifier).toContain("'VITE_LEGAL_FORUM'");
+    expect(deployVerifier).toContain("VITE_CONTACT_EMAIL deve conter um email valido");
+    expect(deployVerifier).toContain("VITE_DPO_EMAIL deve conter um email valido");
+    expect(deployVerifier).toContain("VITE_PUBLIC_SITE_URL deve usar HTTPS em producao");
     expect(productionEnv).toMatch(/^VITE_DPO_NAME=$/m);
+    expect(productionEnv).toMatch(/^VITE_DPO_EMAIL=$/m);
+    expect(productionEnv).toMatch(/^VITE_CONTACT_EMAIL=$/m);
+    expect(productionEnv).toMatch(/^VITE_LEGAL_FORUM=$/m);
     expect(productionEnv).toMatch(/^VITE_TURNSTILE_SITE_KEY=$/m);
   });
 
