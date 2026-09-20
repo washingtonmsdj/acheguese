@@ -55,6 +55,14 @@ describe("public paused monetization boundary", () => {
     "src/app/routes/sections/AppLayoutRoutes.tsx",
     "utf8",
   );
+  const appTopbar = readFileSync(
+    "src/app/components/navigation/AppTopbar.tsx",
+    "utf8",
+  );
+  const centralHeader = readFileSync(
+    "src/modules/central/components/CentralHeader.tsx",
+    "utf8",
+  );
 
   it("keeps Billing outside the MVP launch scope", () => {
     expect(launchScope).toContain("billing: false");
@@ -102,6 +110,14 @@ describe("public paused monetization boundary", () => {
       'const showBilling = isLaunchSurfaceEnabled("billing")',
     );
     expect(businessHub).toContain("{showBilling ? (");
+    expect(appTopbar).toContain(
+      'const showBilling = isLaunchSurfaceEnabled("billing")',
+    );
+    expect(appTopbar).toContain("{showBilling ? (");
+    expect(centralHeader).toContain(
+      'const showBilling = isLaunchSurfaceEnabled("billing")',
+    );
+    expect(centralHeader).toContain("{showBilling ? (");
   });
 
   it("preserves already-granted premium capabilities without exposing a purchase path", () => {
@@ -127,10 +143,16 @@ describe("public paused monetization boundary", () => {
     );
     expect(gastronomyUpgradePrompt).toContain("if (!showBilling)");
     expect(gastronomyUpgradePrompt).toContain(
+      "useBillingPlan(showBilling ? offer.planCode : '')",
+    );
+    expect(gastronomyUpgradePrompt).toContain(
       "Recurso não habilitado para esta empresa no lançamento atual.",
     );
     expect(gastronomyPlanStatus).toContain(
       "const showUpgradeCTA = showBilling && !isDelivery",
+    );
+    expect(gastronomyPlanStatus).toContain(
+      "{showBilling ? 'Plano Atual' : 'Recursos habilitados'}",
     );
     expect(gastronomyPlanStatus).toContain("showBilling && isFree");
     expect(gastronomyPlanStatus).toContain("showBilling && isPro");
