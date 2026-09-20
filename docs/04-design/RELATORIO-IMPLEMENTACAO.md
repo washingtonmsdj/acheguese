@@ -905,3 +905,22 @@ A prancha 117 também está coberta pelos estados demonstrativos de visitante, v
 ### Git
 
 - Commit restrito ao mock de grupos, aos desvios de rota/layout de desenvolvimento e às documentações deste concept; alterações staged/unstaged preexistentes permanecem fora do commit.
+
+## 20/09/2026 · Agenda e eventos da comunidade — pranchas 102 e 103
+
+### Auditoria e ajuste
+
+- O módulo real de eventos (`EventsListPage`, `EventsCalendarPage`, `EventsMapPage`, `EventDetailPage` e os serviços de leitura/mutação/engajamento) foi preservado. A comparação foi isolada em `DEV + /agenda?concept-mock=1`, sem substituir o caminho territorial `/eventos`.
+- Recompus o mobile na sequência da prancha 103: descoberta com território, busca, abas, filtros e modos de visualização; detalhe com hero, metadados, orientações, salvar/compartilhar e participação; confirmação com perfil, resumo, aviso e aceite explícito; e confirmação concluída.
+- Recompus o desktop na proporção da prancha 102: rail teal, topbar territorial, busca/filtros, lista de eventos, detalhe selecionado, links úteis, eventos semelhantes, estados de participação e rodapé.
+- Mantive a regra de qualidade do fluxo: o consentimento não vem pré-marcado, o CTA de confirmação fica bloqueado sem aceite e o estado confirmado é apenas demonstrativo do concept, sem persistência, capacidade ou lista de espera inventadas.
+
+### Validação e evidências
+
+- Navegador interno mantido aberto em duas abas durante a implementação: mobile `425 × 1108` e desktop `1707 × 960`; ambas retornam à descoberta do conceito ao concluir a revisão.
+- Foram conferidos descoberta, detalhe, confirmação sem aceite, confirmação após aceite, participação confirmada e estados de vagas/cancelamento/falha. `body.scrollWidth` permaneceu dentro do viewport.
+- ESLint direcionado passou; os estados de confirmação e os limites de viewport foram validados no navegador interno. O typecheck global permanece em execução no terminal e será registrado no commit conforme o resultado.
+
+### Git
+
+- Commit restrito ao mock de Agenda, aos desvios de rota/layout de desenvolvimento e às documentações deste concept; alterações staged/unstaged preexistentes permanecem fora do commit.
