@@ -26,6 +26,7 @@ import {
 } from "../components";
 import { useFavoritesManager } from "../hooks";
 import { getCuisineLabel } from "../constants";
+import { isLaunchSurfaceEnabled } from "@/app/config/launchScope";
 import type { MenuItemWithRelations } from "../types";
 import { useGastronomyOpeningStatus } from "../hooks/useGastronomyOpeningStatus";
 import { GastronomyBusinessInfoSidebar } from "./GastronomyBusinessInfoSidebar";
@@ -182,11 +183,12 @@ function GastronomyDetailLivePage({
     { state, city, district, slug },
   );
 
+  const showCoupons = isLaunchSurfaceEnabled("coupons");
   const business = snapshot?.gastronomy.business ?? null;
   const profile =
     snapshot?.gastronomy.profile ?? business?.gastronomy_profile ?? null;
   const menu = snapshot?.gastronomy.menu ?? null;
-  const promotions = snapshot?.gastronomy.promotions ?? [];
+  const promotions = showCoupons ? snapshot?.gastronomy.promotions ?? [] : [];
   const gastronomyCanonicalUrl =
     snapshot?.seo.canonicalGastronomyUrl ??
     snapshot?.seo.canonical ??
