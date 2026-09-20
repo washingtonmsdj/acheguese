@@ -1,5 +1,8 @@
 #!/usr/bin/env node
 
+import { resolve } from "node:path";
+import { fileURLToPath } from "node:url";
+
 const DEFAULT_REPOSITORY = "washingtonmsdj/acheguese";
 const DEFAULT_BASE_BRANCH = "main";
 const DEFAULT_KEEP_BRANCHES = new Set(["main", "work/mvp-urgent"]);
@@ -59,7 +62,7 @@ function usage() {
     "Default is dry-run. --apply performs deletions only after revalidating branch SHA, protection,",
     "open PR state and containment immediately before each DELETE.",
     "",
-    "Credentials: GH_TOKEN or GITHUB_TOKEN with Contents/Administration permission sufficient to delete refs.",
+    "Credentials: GH_TOKEN or GITHUB_TOKEN with permission to read the repository and delete Git refs.",
   ].join("\n");
 }
 
@@ -123,7 +126,7 @@ function createGitHubClient({ repo, token }) {
     return rows;
   }
 
-  return { owner, request, paginate };
+  return { owner, repository: repo, request, paginate };
 }
 
 function branchParam(name) {
@@ -147,7 +150,7 @@ async function auditBranches({ client, baseBranch }) {
 
   const openHeadRefs = new Set(
     openPulls
-      .filter((pr) => pr.head?.repo?.full_name === `${client.owner}/${base.name ? "" : ""}` || true)
+      .filter((pr) => pr.head?.repo?.full_name === client.repository)
       .map((pr) => pr.head?.ref)
       .filter(Boolean),
   );
@@ -155,9 +158,7 @@ async function auditBranches({ client, baseBranch }) {
   const exactMergedHeads = new Map();
   for (const pr of closedPulls) {
     if (!pr.merged_at || !pr.head?.ref || !pr.head?.sha) continue;
-    if (pr.head?.repo?.full_name && !pr.head.repo.full_name.endsWith("/" + base.name)) {
-      continue;
-    }
+    if (pr.head?.repo?.full_name !== client.repository) continue;
     const heads = exactMergedHeads.get(pr.head.ref) || new Set();
     heads.add(pr.head.sha);
     exactMergedHeads.set(pr.head.ref, heads);
@@ -339,9 +340,8 @@ async function main() {
 }
 
 const isDirectExecution =
-  process.argv[1] &&
-  new URL(import.meta.url).pathname.replace(/^\/[A-Za-z]:/, (m) => m.slice(1)) ===
-    process.argv[1].replace(/\\/g, "/");
+  Boolean(process.argv[1]) &&
+  fileURLToPath(import.meta.url) === resolve(process.argv[1]);
 
 if (isDirectExecution) {
   main().catch((error) => {
