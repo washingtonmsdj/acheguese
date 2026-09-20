@@ -388,15 +388,33 @@ export function AppLayoutRoutes() {
         <Route path="/inicio" element={<P.NationalHubPage />} />
 
         {/* Rotas de Billing e Assinaturas */}
-        <Route path="/planos" element={protectedElement(<P.PricingPage />)} />
+        <Route
+          path="/planos"
+          element={launchElement(
+            "billing",
+            "Planos",
+            protectedElement(<P.PricingPage />),
+          )}
+        />
         <Route
           path="/checkout/success"
-          element={protectedElement(<P.CheckoutSuccessPage />)}
+          element={launchElement(
+            "billing",
+            "Planos",
+            protectedElement(<P.CheckoutSuccessPage />),
+          )}
         />
-        <Route path="/checkout/cancel" element={<P.CheckoutCancelPage />} />
+        <Route
+          path="/checkout/cancel"
+          element={launchElement("billing", "Planos", <P.CheckoutCancelPage />)}
+        />
         <Route
           path="/settings/subscription"
-          element={protectedElement(<P.SubscriptionManagementPage />)}
+          element={launchElement(
+            "billing",
+            "Planos",
+            protectedElement(<P.SubscriptionManagementPage />),
+          )}
         />
 
         {/* Rotas de Notificacoes */}
