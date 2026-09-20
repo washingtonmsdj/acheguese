@@ -15,10 +15,10 @@ function sliceBetween(source: string, start: string, end: string): string {
 }
 
 const g73Migration = readProjectFile(
-  "supabase/migrations/20260911152000_redact_driver_history_and_derive_feedback_targets_g73.sql",
+  "docs/09-reference/migrations-pending/20260911152000_redact_driver_history_and_derive_feedback_targets_g73.sql",
 );
 const g74Migration = readProjectFile(
-  "supabase/migrations/20260911160000_server_owned_driver_earnings_read_model_g74.sql",
+  "docs/09-reference/migrations-pending/20260911160000_server_owned_driver_earnings_read_model_g74.sql",
 );
 const mobilityRpc = readProjectFile("supabase/functions/mobility-rpc/index.ts");
 const historyService = readProjectFile(
