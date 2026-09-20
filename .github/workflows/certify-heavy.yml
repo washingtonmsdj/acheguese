@@ -29,7 +29,7 @@ jobs:
       - acheguese-heavy-windows
       - playwright-chromium
       - remote-only
-    timeout-minutes: 90
+    timeout-minutes: 180
 
     steps:
       - name: Validate runner platform
@@ -171,6 +171,111 @@ jobs:
 
       - name: Install dependencies
         run: npm ci
+
+      - name: Run static security, lint and type gates
+        shell: powershell
+        env:
+          CI: true
+        run: |
+          $ErrorActionPreference = "Stop"
+
+          $commands = @(
+            @("run", "security:validate"),
+            @("run", "lint"),
+            @("run", "typecheck"),
+            @("run", "validate:upload:ssot"),
+            @("run", "validate:maps"),
+            @("run", "lint:maps")
+          )
+
+          foreach ($args in $commands) {
+            Write-Host "npm $($args -join ' ')"
+            & npm @args
+            if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          }
+
+      - name: Run architecture and SSOT gates
+        shell: powershell
+        env:
+          CI: true
+        run: |
+          $ErrorActionPreference = "Stop"
+
+          $commands = @(
+            @("run", "validate:deps"),
+            @("run", "validate:taxonomy"),
+            @("run", "validate:architecture:phase1"),
+            @("run", "validate:architecture:incremental"),
+            @("run", "validate:architecture:core-platform"),
+            @("run", "validate:architecture:governance"),
+            @("run", "validate:architecture:delivery"),
+            @("run", "validate:architecture:communication"),
+            @("run", "validate:architecture:file-sizes"),
+            @("run", "validate:ssot"),
+            @("run", "validate:architecture:community")
+          )
+
+          foreach ($args in $commands) {
+            Write-Host "npm $($args -join ' ')"
+            & npm @args
+            if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          }
+
+          & npx tsx tools/architecture/validate-education-module-boundaries.ts
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+
+          & npx tsx tools/architecture/validate-gastronomy-module-boundaries.ts
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+
+          & npx eslint --config eslint-rules/configs/billing-rules.config.js "src/**/*.{ts,tsx}"
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+
+          & npm run test -- src/core/billing/__tests__/contracts/
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+
+      - name: Validate canonical migration chain and remote parity
+        shell: powershell
+        env:
+          CI: true
+          SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
+          SUPABASE_DB_PASSWORD: ${{ secrets.SUPABASE_DB_PASSWORD }}
+        run: |
+          $ErrorActionPreference = "Stop"
+
+          if ([string]::IsNullOrWhiteSpace($env:SUPABASE_ACCESS_TOKEN)) {
+            Write-Error "Certification blocked: SUPABASE_ACCESS_TOKEN is required for remote migration parity."
+            exit 1
+          }
+          if ([string]::IsNullOrWhiteSpace($env:SUPABASE_DB_PASSWORD)) {
+            Write-Error "Certification blocked: SUPABASE_DB_PASSWORD is required for non-interactive Supabase link."
+            exit 1
+          }
+
+          Write-Output "::add-mask::$($env:SUPABASE_DB_PASSWORD)"
+
+          & npm run validate:migrations
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+
+          & npm run validate:migrations:provenance
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+
+          & npm run test:migrations:provenance
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+
+          & npx supabase link --project-ref xhdowzacfujckjelqhtd
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+
+          & npm run validate:migrations:remote
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+
+      - name: Run complete unit and integration test suite
+        shell: powershell
+        env:
+          CI: true
+        run: |
+          $ErrorActionPreference = "Stop"
+          & npm run test
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
 
       - name: Install Playwright Chromium
         run: npx playwright install chromium
@@ -330,6 +435,7 @@ jobs:
             "Public territorial E2E is fixture-backed and uses no local Supabase, Docker, service-role key, or Production seed.",
             "Authenticated Account E2E uses explicit public Supabase project configuration plus only E2E_USER_EMAIL/E2E_USER_PASSWORD from GitHub Actions and covers mobile, tablet, and desktop in the target test suite.",
             "Regression discovery fails closed when no regression test files are present.",
+            "Static security, lint, typecheck, architecture/SSOT, migration parity and the complete Vitest suite execute on the same attested SHA before E2E/build.",
             "Production bundle build and root bundle report run against the same attested SHA.",
             "No automatic fallback to GitHub-hosted runners exists."
           ) | Add-Content -Path $env:GITHUB_STEP_SUMMARY -Encoding UTF8
