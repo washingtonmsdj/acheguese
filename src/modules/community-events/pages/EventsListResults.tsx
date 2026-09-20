@@ -85,7 +85,11 @@ export function EventsListResults({
                 <Calendar className="h-8 w-8 text-muted-foreground sm:h-10 sm:w-10" />
               </div>
               <h3 className="mb-2 text-base font-semibold text-foreground sm:text-lg">Nenhum evento encontrado</h3>
-              <p className="mb-4 text-sm text-muted-foreground">Tente ajustar os filtros ou buscar por outros termos</p>
+              <p className="mb-4 max-w-md text-sm text-muted-foreground">
+                {activeFiltersCount > 0
+                  ? 'Tente ajustar os filtros ou buscar por outros termos.'
+                  : 'No momento não há eventos publicados nesta região. Volte em breve.'}
+              </p>
               {activeFiltersCount > 0 && (
                 <Button onClick={onClearFilters} variant="outline" size="sm">
                   Limpar filtros
