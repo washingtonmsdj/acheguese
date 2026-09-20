@@ -75,10 +75,15 @@ export default function EventsListPage({ resolved, activeMemberIds }: EventsList
   const { count: favoritesCount } = useFavorites();
   const eventUrls = useCommunityUrls(resolved);
   const territoryFilter = useEventTerritoryFilter(resolved, activeMemberIds);
-  const { data: eventsData = [], isLoading: isEventsLoading } = useQuery({
+  const {
+    data: eventsData = [],
+    isError: isEventsError,
+    isLoading: isEventsLoading,
+    refetch: refetchEvents,
+  } = useQuery({
     queryKey: ['events-list-ssot', territoryFilter],
     queryFn: async () => {
-      const rows = await eventRuntimeService.getEvents({
+      const rows = await eventRuntimeService.getEventsStrict({
         upcoming: true,
         territoryFilter,
       });
@@ -617,10 +622,14 @@ export default function EventsListPage({ resolved, activeMemberIds }: EventsList
           currentPage={currentPage}
           events={paginatedEvents}
           filteredCount={filteredAndSortedEvents.length}
+          isError={isEventsError}
           isLoading={isEventsLoading}
           onClearFilters={handleClearFilters}
           onEventClick={handleEventClick}
           onPageChange={handlePageChange}
+          onRetry={() => {
+            void refetchEvents();
+          }}
           totalPages={totalPages}
           viewMode={viewMode}
         />
