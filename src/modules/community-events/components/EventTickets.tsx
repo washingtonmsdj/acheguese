@@ -7,7 +7,7 @@
  */
 
 import { motion } from 'framer-motion';
-import { Check, Ticket, Users, Clock, AlertCircle, Sparkles } from 'lucide-react';
+import { Check, Ticket, Users, Clock, AlertCircle } from 'lucide-react';
 import { Button } from '@/shared/components/ui/button';
 import { Badge } from '@/shared/components/ui/badge';
 import { cn } from '@/shared/utils/cn';
@@ -32,7 +32,9 @@ export function EventTickets({
   className 
 }: EventTicketsProps) {
   const hasAvailableInventory = tickets.some(
-    (ticket) => ticket.status === 'disponivel' && ticket.quantity_available > 0,
+    (ticket) =>
+      ticket.status === 'disponivel' &&
+      (ticket.quantity_available === null || ticket.quantity_available > 0),
   );
   const hasComingSoon = tickets.some((ticket) => ticket.status === 'em_breve');
 
@@ -68,11 +70,19 @@ export function EventTickets({
         {/* Tickets Grid */}
         <div className="grid gap-4 md:grid-cols-2">
           {tickets.map((ticket, index) => {
-            const isAvailable = ticket.status === 'disponivel' && ticket.quantity_available > 0;
-            const isSoldOut = ticket.status === 'esgotado' || ticket.quantity_available === 0;
+            const hasKnownCapacity =
+              ticket.quantity_total !== null && ticket.quantity_total > 0;
+            const isAvailable =
+              ticket.status === 'disponivel' &&
+              (ticket.quantity_available === null || ticket.quantity_available > 0);
+            const isSoldOut =
+              ticket.status === 'esgotado' || ticket.quantity_available === 0;
             const isComingSoon = ticket.status === 'em_breve';
-            const occupancyRate = (ticket.quantity_sold / ticket.quantity_total) * 100;
-            const isAlmostSoldOut = occupancyRate >= 80 && !isSoldOut;
+            const occupancyRate = hasKnownCapacity
+              ? Math.min((ticket.quantity_sold / ticket.quantity_total!) * 100, 100)
+              : null;
+            const isAlmostSoldOut =
+              occupancyRate !== null && occupancyRate >= 80 && !isSoldOut;
             const canSelect = isAvailable && ticket.is_free && !disabled;
 
             return (
@@ -90,16 +100,6 @@ export function EventTickets({
                 )}
                 onClick={() => canSelect && onSelectTicket(ticket.id)}
               >
-                {/* Popular Badge */}
-                {index === 0 && isAvailable && ticket.is_free && (
-                  <div className="absolute right-4 top-4">
-                    <Badge className="bg-gradient-to-r from-primary to-purple-600 text-white border-0 gap-1">
-                      <Sparkles className="h-3 w-3" />
-                      Popular
-                    </Badge>
-                  </div>
-                )}
-
                 {/* Status Badge */}
                 {isSoldOut && (
                   <div className="absolute right-4 top-4">
@@ -163,12 +163,17 @@ export function EventTickets({
                     <Users className="h-4 w-4 text-muted-foreground" />
                     <span className="text-muted-foreground">
                       {isAvailable ? (
-                        <>
-                          <span className="font-semibold text-foreground">
-                            {ticket.quantity_available}
-                          </span>
-                          {' '}de {ticket.quantity_total} disponiveis
-                        </>
+                        ticket.quantity_available === null ||
+                        ticket.quantity_total === null ? (
+                          'Inscricoes abertas · limite nao informado'
+                        ) : (
+                          <>
+                            <span className="font-semibold text-foreground">
+                              {ticket.quantity_available}
+                            </span>
+                            {' '}de {ticket.quantity_total} disponiveis
+                          </>
+                        )
                       ) : isSoldOut ? (
                         'Esgotado'
                       ) : (
@@ -199,7 +204,7 @@ export function EventTickets({
                 </div>
 
                 {/* Progress Bar */}
-                {isAvailable && (
+                {isAvailable && occupancyRate !== null && (
                   <div className="mb-4">
                     <div className="h-1.5 overflow-hidden rounded-full bg-muted">
                       <motion.div

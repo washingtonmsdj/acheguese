@@ -46,16 +46,16 @@ export function EventCard({
   const eventDate = new Date(event.start_date);
   const isOnline = event.type === 'online' || event.type === 'hibrido';
   
-  const availableTickets = event.tickets.reduce(
-    (acc, ticket) => acc + ticket.quantity_available, 
-    0
-  );
-  const totalCapacity = event.capacity || event.tickets.reduce(
-    (acc, ticket) => acc + ticket.quantity_total, 
-    0
-  );
-  const occupancyRate = totalCapacity > 0 ? ((totalCapacity - availableTickets) / totalCapacity) * 100 : 0;
-  const isAlmostFull = occupancyRate >= 80;
+  const totalCapacity = event.capacity ?? null;
+  const availableTickets =
+    totalCapacity === null
+      ? null
+      : Math.max(0, totalCapacity - event.participants_count);
+  const occupancyRate =
+    totalCapacity !== null && totalCapacity > 0
+      ? Math.min((event.participants_count / totalCapacity) * 100, 100)
+      : null;
+  const isAlmostFull = occupancyRate !== null && occupancyRate >= 80;
   const isSoldOut = availableTickets === 0;
 
   const handleFavoriteClick = (e: React.MouseEvent) => {

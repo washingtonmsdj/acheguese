@@ -28,8 +28,8 @@ export interface EventTicket {
   description?: string;
   price: number;
   currency: string;
-  quantity_total: number;
-  quantity_available: number;
+  quantity_total: number | null;
+  quantity_available: number | null;
   quantity_sold: number;
   sales_start?: string;
   sales_end?: string;

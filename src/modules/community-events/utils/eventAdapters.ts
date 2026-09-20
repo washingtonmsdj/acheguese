@@ -16,6 +16,20 @@ function toEventType(type?: string | null): Event["type"] {
   return "presencial";
 }
 
+function toPresentationStatus(status: PublicEvent["status"]): Event["status"] {
+  switch (status) {
+    case "ongoing":
+      return "em_andamento";
+    case "completed":
+      return "finalizado";
+    case "cancelled":
+      return "cancelado";
+    case "upcoming":
+    default:
+      return "publicado";
+  }
+}
+
 function readStringRecord(value: unknown): Record<string, unknown> {
   return value && typeof value === "object" && !Array.isArray(value)
     ? (value as Record<string, unknown>)
@@ -123,7 +137,7 @@ export function mapCommunityEventToEvent(input: PublicEvent): Event {
     category: toEventCategory(input.category),
     tags: input.tags ?? undefined,
     type: toEventType(input.location_type),
-    status: input.status === "cancelled" ? "cancelado" : "publicado",
+    status: toPresentationStatus(input.status),
     start_date: input.date,
     end_date: input.end_date ?? undefined,
     timezone: input.timezone ?? "America/Sao_Paulo",
@@ -144,7 +158,7 @@ export function mapCommunityEventToEvent(input: PublicEvent): Event {
     },
     organizer: {
       id: input.organizer_profile_id,
-      name: "Organizador da comunidade",
+      name: "Organizador",
       verified: false,
       contact: {
         whatsapp: asString(organizerContact.whatsapp),
@@ -161,13 +175,16 @@ export function mapCommunityEventToEvent(input: PublicEvent): Event {
         name: isFree ? "Inscricao gratuita" : "Ingresso",
         price,
         currency: "BRL",
-        quantity_total: capacity ?? Math.max(input.current_participants, 100),
-        quantity_available: Math.max(
-          0,
-          (capacity ?? Math.max(input.current_participants, 100)) - input.current_participants,
-        ),
+        quantity_total: capacity ?? null,
+        quantity_available:
+          capacity === undefined
+            ? null
+            : Math.max(0, capacity - input.current_participants),
         quantity_sold: input.current_participants,
-        status: "disponivel",
+        status:
+          capacity !== undefined && input.current_participants >= capacity
+            ? "esgotado"
+            : "disponivel",
         is_free: isFree,
       },
     ],

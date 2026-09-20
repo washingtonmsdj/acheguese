@@ -149,13 +149,13 @@ export default function EventDetailPage() {
     (ticket) =>
       ticket.is_free &&
       ticket.status === 'disponivel' &&
-      ticket.quantity_available > 0,
+      (ticket.quantity_available === null || ticket.quantity_available > 0),
   );
   const hasPaidAvailability = event.tickets.some(
     (ticket) =>
       !ticket.is_free &&
       ticket.status === 'disponivel' &&
-      ticket.quantity_available > 0,
+      (ticket.quantity_available === null || ticket.quantity_available > 0),
   );
   const isFreeRegistrationSoldOut = hasFreeTickets && !availableFreeTicket;
   const eventIsFavorited = isFavorited(event.id);

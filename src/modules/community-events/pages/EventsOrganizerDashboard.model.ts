@@ -5,10 +5,9 @@ import { getRecordValue } from '@/shared/utils/recordLookup';
 export type OrganizerDashboardStats = {
   total: number;
   published: number;
-  draft: number;
+  ongoing: number;
+  completed: number;
   totalParticipants: number;
-  totalViews: number;
-  totalRevenue: number;
 };
 
 export type OrganizerParticipant = {
@@ -34,21 +33,17 @@ export function getOrganizerDashboardStats(events: Event[]): OrganizerDashboardS
     (stats, event) => {
       stats.total += 1;
       if (event.status === 'publicado') stats.published += 1;
-      if (event.status === 'rascunho') stats.draft += 1;
+      if (event.status === 'em_andamento') stats.ongoing += 1;
+      if (event.status === 'finalizado') stats.completed += 1;
       stats.totalParticipants += event.participants_count;
-      stats.totalViews += event.views_count;
-      if (!event.is_free) {
-        stats.totalRevenue += event.tickets.reduce((sum, ticket) => sum + ticket.quantity_sold * ticket.price, 0);
-      }
       return stats;
     },
     {
       total: 0,
       published: 0,
-      draft: 0,
+      ongoing: 0,
+      completed: 0,
       totalParticipants: 0,
-      totalViews: 0,
-      totalRevenue: 0,
     },
   );
 }
