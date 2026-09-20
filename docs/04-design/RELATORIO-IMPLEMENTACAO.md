@@ -924,3 +924,22 @@ A prancha 117 também está coberta pelos estados demonstrativos de visitante, v
 ### Git
 
 - Commit restrito ao mock de Agenda, aos desvios de rota/layout de desenvolvimento e às documentações deste concept; alterações staged/unstaged preexistentes permanecem fora do commit.
+
+## 20/09/2026 · Criar e gerenciar eventos — pranchas 104 e 105
+
+### Auditoria e ajuste
+
+- Os owners reais de eventos (`EventsOrganizerForm`, `EventsOrganizerDashboard`, `EventsOrganizerAnalyticsPage`, `EventMutationService`, `EventReadService` e `EventRuntimeService`) foram preservados. A comparação foi isolada em `DEV + /organizar-eventos?concept-mock=1`.
+- Recompus o mobile na ordem da prancha 104: meus eventos com publicado/rascunho, criação com stepper de informações e local, participação com gratuidade/inscrição/capacidade, revisão e participantes com inscrição/check-in separados.
+- Recompus o desktop conforme a prancha 105: rail de organizador, dashboard de `Encontro de leitura`, métricas de inscrições/vagas/check-ins, tabela de participantes, configuração lateral e painéis alternativos de publicação, alteração e cancelamento.
+- Mantive a precisão operacional: capacidade total não é saldo, lista de espera não é prometida, check-in não é inscrição, rascunho não é autosave e nenhuma confirmação visual declara persistência do servidor.
+
+### Validação e evidências
+
+- Navegador interno mantido aberto nas abas mobile `491 × 1108` e desktop `1707 × 960`; formulários, participação e participantes foram comparados lado a lado.
+- `body.scrollWidth` ficou dentro do viewport nos estados de eventos, informações, participação e participantes. O typecheck completo segue em execução antes do commit.
+- ESLint direcionado passou; as imagens específicas da prancha foram substituídas somente por assets territoriais já existentes, sem inventar novos dados visuais.
+
+### Git
+
+- Commit restrito ao mock de organização, aos desvios de rota/layout de desenvolvimento e às documentações deste concept; alterações staged/unstaged preexistentes permanecem fora do commit.

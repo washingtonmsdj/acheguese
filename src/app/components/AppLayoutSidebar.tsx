@@ -92,6 +92,11 @@ export function AppLayoutSidebar() {
     typeof window !== "undefined" &&
     pathname === "/agenda" &&
     new URLSearchParams(window.location.search).get("concept-mock") === "1";
+  const conceptOrganizeEventsPreview =
+    import.meta.env.DEV &&
+    typeof window !== "undefined" &&
+    pathname === "/organizar-eventos" &&
+    new URLSearchParams(window.location.search).get("concept-mock") === "1";
   const accountUsesSettingsShell =
     ACCOUNT_SETTINGS_SHELL_PATHS.has(pathname) ||
     conceptLinksPreview ||
@@ -165,7 +170,8 @@ export function AppLayoutSidebar() {
     conceptModerationPreview ||
     conceptMyPostsPreview ||
     conceptGroupsPreview ||
-    conceptAgendaPreview;
+    conceptAgendaPreview ||
+    conceptOrganizeEventsPreview;
 
   const isInternalGroupRoute =
     pathSegments[0] === "grupos" && pathSegments.length >= 2;
@@ -194,7 +200,8 @@ export function AppLayoutSidebar() {
     conceptModerationPreview ||
     conceptMyPostsPreview ||
     conceptGroupsPreview ||
-    conceptAgendaPreview;
+    conceptAgendaPreview ||
+    conceptOrganizeEventsPreview;
   const hideMobileBottomNav =
     pathname === "/" ||
     isInternalGroupRoute ||
@@ -212,7 +219,8 @@ export function AppLayoutSidebar() {
     conceptModerationPreview ||
     conceptMyPostsPreview ||
     conceptGroupsPreview ||
-    conceptAgendaPreview;
+    conceptAgendaPreview ||
+    conceptOrganizeEventsPreview;
 
   const isMessagingRoute =
     pathSegments[0] === "mensagens" || pathSegments[0] === "chat";
