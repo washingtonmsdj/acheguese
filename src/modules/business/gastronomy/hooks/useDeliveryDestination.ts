@@ -34,6 +34,7 @@ interface UseDeliveryDestinationOptions {
   autoRequestLocation?: boolean;
   navigateOnSavedResidenceApply?: boolean;
   allowGpsDestination?: boolean;
+  openEditorWhenEmpty?: boolean;
 }
 
 export function useDeliveryDestination(options: UseDeliveryDestinationOptions) {
@@ -43,6 +44,7 @@ export function useDeliveryDestination(options: UseDeliveryDestinationOptions) {
     autoRequestLocation = true,
     navigateOnSavedResidenceApply = true,
     allowGpsDestination = true,
+    openEditorWhenEmpty = true,
   } = options;
   const navigate = useNavigate();
   const location = useLocation();
@@ -58,7 +60,7 @@ export function useDeliveryDestination(options: UseDeliveryDestinationOptions) {
     },
   );
   const [showDestinationEditor, setShowDestinationEditor] = useState(
-    () => !readStoredDeliveryDestination(),
+    () => openEditorWhenEmpty && !readStoredDeliveryDestination(),
   );
   const [destinationAddressQuery, setDestinationAddressQuery] = useState('');
   const [destinationErrorMessage, setDestinationErrorMessage] = useState<string | null>(null);
@@ -141,10 +143,10 @@ export function useDeliveryDestination(options: UseDeliveryDestinationOptions) {
 
   // Abrir editor se não houver destino
   useEffect(() => {
-    if (!deliveryDestination) {
+    if (!deliveryDestination && openEditorWhenEmpty) {
       setShowDestinationEditor(true);
     }
-  }, [deliveryDestination]);
+  }, [deliveryDestination, openEditorWhenEmpty]);
 
   // Atualizar destino quando GPS mudar
   useEffect(() => {

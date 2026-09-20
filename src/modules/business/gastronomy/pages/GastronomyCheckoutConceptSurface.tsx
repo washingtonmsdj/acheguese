@@ -4,6 +4,7 @@ import { useNavigate } from "react-router-dom";
 import { Helmet } from "react-helmet-async";
 import {
   ArrowLeft,
+  Bike,
   Check,
   ChevronDown,
   ChevronRight,
@@ -45,6 +46,7 @@ import {
   formatDeliveryDestinationDisplayLabel,
   getEnabledFulfillmentModes,
   isCheckoutSubmitDisabled,
+  isPlatformCourierCheckoutAvailable,
   isPlatformCourierUnavailableForCheckout,
   isStructuredDeliveryDestinationReady,
   normalizeFulfillmentMode,
@@ -275,28 +277,28 @@ function CheckoutHeader({
 
   return (
     <>
-      <header className="hidden border-b border-territory-border bg-territory-surface lg:block">
+      <header className="hidden border-b border-territory-brand/40 bg-territory-brand lg:block">
         <div className="mx-auto flex h-[4.25rem] max-w-[84rem] items-center gap-8 px-6">
           <button
             type="button"
             onClick={onBack}
-            className="font-heading text-[1.45rem] font-bold tracking-[-0.05em] text-territory-brand focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-territory-brand"
+            className="font-heading text-[1.45rem] font-bold tracking-[-0.05em] text-white focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-white"
           >
             Achegue-se<span className="text-territory-sun">.</span>
           </button>
-          <span className="h-7 w-px bg-territory-border" aria-hidden="true" />
-          <div className="flex items-center gap-2 text-xs text-territory-ink">
+          <span className="h-7 w-px bg-white/25" aria-hidden="true" />
+          <div className="flex items-center gap-2 text-xs text-white">
             <MapPin
-              className="h-4 w-4 text-territory-brand"
+              className="h-4 w-4 text-white"
               aria-hidden="true"
             />
             <span>{territoryLabel || business.name}</span>
-            <span className="text-territory-muted">
+            <span className="text-white/70">
               {cityLabel || "Território não informado"}
             </span>
           </div>
           <nav
-            className="ml-auto flex items-center gap-7 text-xs font-semibold text-territory-ink"
+            className="ml-auto flex items-center gap-7 text-xs font-semibold text-white"
             aria-label="Navegação"
           >
             <span>Descobrir</span>
@@ -305,7 +307,7 @@ function CheckoutHeader({
             <button
               type="button"
               onClick={onAccount}
-              className="inline-flex h-9 w-9 items-center justify-center rounded-full border border-territory-border focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-territory-brand"
+              className="inline-flex h-9 w-9 items-center justify-center rounded-full border border-white/35 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white"
               aria-label={`Conta de ${profileName}`}
             >
               <UserRound className="h-4 w-4" aria-hidden="true" />
@@ -670,6 +672,7 @@ function MobileDeliveryStage({
   destination,
   subtotal,
   deliveryFee,
+  platformCourierAvailable,
   businessName,
   onModeChange,
   onDeliveryOptionChange,
@@ -681,6 +684,7 @@ function MobileDeliveryStage({
   destination: ReturnType<typeof buildCheckoutDeliveryAddress>;
   subtotal: number;
   deliveryFee: number;
+  platformCourierAvailable: boolean;
   businessName: string;
   onModeChange: (mode: FulfillmentMode) => void;
   onDeliveryOptionChange: (option: DeliveryOption) => void;
@@ -710,6 +714,27 @@ function MobileDeliveryStage({
           </span>
           <span className="mt-1 block pl-7 text-[0.6875rem] text-territory-muted">
             Seu pedido será entregue pela equipe do {businessName}.
+          </span>
+        </ChoiceButton>
+        <ChoiceButton
+          active={false}
+          disabled={!platformCourierAvailable}
+          onClick={() => onDeliveryOptionChange("platform")}
+        >
+          <span className="flex items-center gap-2 font-bold">
+            <Bike
+              className="h-5 w-5 text-territory-brand"
+              aria-hidden="true"
+            />
+            Motoboy Achegue-se
+            <span className="ml-auto text-[0.6875rem] font-normal text-territory-muted">
+              {platformCourierAvailable ? "Disponível" : "Indisponível"}
+            </span>
+          </span>
+          <span className="mt-1 block pl-7 text-[0.6875rem] text-territory-muted">
+            {platformCourierAvailable
+              ? "Entregador buscado pela plataforma."
+              : "A plataforma ainda não está disponível neste checkout."}
           </span>
         </ChoiceButton>
         {availableModes.includes("takeout") ? (
@@ -1211,7 +1236,7 @@ function AddressSection({
           id="checkout-address-title"
           className="font-heading text-base font-bold text-territory-ink"
         >
-          1. Onde vamos entregar?
+          2. Endereço e destinatário
         </h2>
         <button
           type="button"
@@ -1278,6 +1303,7 @@ function FulfillmentSection({
   deliveryOption,
   availableModes,
   deliveryFee,
+  platformCourierAvailable,
   businessName,
   onModeChange,
   onDeliveryOptionChange,
@@ -1286,6 +1312,7 @@ function FulfillmentSection({
   deliveryOption: DeliveryOption;
   availableModes: FulfillmentMode[];
   deliveryFee: number;
+  platformCourierAvailable: boolean;
   businessName: string;
   onModeChange: (mode: FulfillmentMode) => void;
   onDeliveryOptionChange: (option: DeliveryOption) => void;
@@ -1300,7 +1327,7 @@ function FulfillmentSection({
           id="checkout-fulfillment-title"
           className="font-heading text-base font-bold text-territory-ink"
         >
-          2. {availableModes.includes("delivery") ? "Escolha a entrega" : "Escolha como receber"}
+          1. Recebimento
         </h2>
         <Clock3 className="h-5 w-5 text-territory-brand" aria-hidden="true" />
       </div>
@@ -1352,8 +1379,34 @@ function FulfillmentSection({
               <span className="mt-1 block text-[0.6875rem] text-territory-muted">
                 Seu pedido será entregue pela equipe do {businessName}.
               </span>
+              </ChoiceButton>
+            <ChoiceButton
+              active={false}
+              disabled={!platformCourierAvailable}
+              onClick={() => onDeliveryOptionChange("platform")}
+            >
+              <span className="block font-semibold">
+                <Bike className="mr-1 inline h-4 w-4 text-territory-brand" aria-hidden="true" />
+                Motoboy Achegue-se
+              </span>
+              <span className="mt-0.5 block text-[0.6875rem] text-territory-muted">
+                {platformCourierAvailable
+                  ? "Entregador buscado pela plataforma"
+                  : "Indisponível neste checkout"
+                }
+              </span>
+              <span className="mt-1 block text-[0.6875rem] text-territory-muted">
+                {platformCourierAvailable
+                  ? "A taxa será calculada conforme o endereço."
+                  : "A operação atual usa a entrega da loja."
+                }
+              </span>
             </ChoiceButton>
           </div>
+          <p className="mt-3 flex items-center gap-2 text-[0.6875rem] text-territory-muted">
+            <Info className="h-3.5 w-3.5 shrink-0 text-territory-brand" aria-hidden="true" />
+            A disponibilidade depende do endereço e da operação na região.
+          </p>
         </>
       ) : (
         <p className="mt-3 text-xs text-territory-muted">
@@ -1371,6 +1424,7 @@ function PaymentSection({
   onCashChangeForChange,
   onChange,
   compact = false,
+  stepNumber = 3,
 }: {
   method: string;
   options: CheckoutPaymentOption[];
@@ -1378,6 +1432,7 @@ function PaymentSection({
   onCashChangeForChange: (value: string) => void;
   onChange: (method: string) => void;
   compact?: boolean;
+  stepNumber?: number;
 }) {
   return (
     <section
@@ -1394,7 +1449,7 @@ function PaymentSection({
             id="checkout-payment-title"
             className="font-heading text-base font-bold text-territory-ink"
           >
-            3. Pagamento
+            {stepNumber}. Pagamento
           </h2>
           <p className="mt-2 flex items-center gap-2 rounded-lg bg-territory-sun/20 px-3 py-2 text-[0.6875rem] text-territory-ink sm:text-xs">
             <WalletCards
@@ -1778,6 +1833,7 @@ export default function GastronomyCheckoutConceptSurface({
     autoRequestLocation: false,
     navigateOnSavedResidenceApply: false,
     allowGpsDestination: false,
+    openEditorWhenEmpty: false,
   });
   const {
     deliveryDestination,
@@ -1935,7 +1991,7 @@ export default function GastronomyCheckoutConceptSurface({
   const profileName =
     activeProfile?.displayName || activeProfile?.name || "Perfil ativo";
   const profileType = profileTypeLabel(activeProfile?.profileType);
-  const addressEditor = requiresAddress && (showDestinationEditor || !destinationLabel) ? (
+  const addressEditor = requiresAddress && showDestinationEditor ? (
     <div className="space-y-3">
       <GastronomyDeliveryDestinationPanel
         destinationLabel={destinationLabel}
@@ -2177,6 +2233,7 @@ export default function GastronomyCheckoutConceptSurface({
                 destination={checkoutAddress}
                 subtotal={subtotal}
                 deliveryFee={deliveryFee}
+                platformCourierAvailable={isPlatformCourierCheckoutAvailable()}
                 businessName={business.name}
                 onModeChange={handleModeChange}
                 onDeliveryOptionChange={setDeliveryOption}
@@ -2254,6 +2311,9 @@ export default function GastronomyCheckoutConceptSurface({
               <p className="mt-1 text-sm text-territory-muted">
                 Confira endereço, entrega e pagamento antes de confirmar.
               </p>
+              <div className="mt-4">
+                <BusinessSummary business={business} />
+              </div>
             </div>
             <div className="flex items-center gap-3 rounded-lg border border-territory-border bg-territory-surface px-4 py-3 text-xs">
               <span className="flex h-8 w-8 items-center justify-center rounded-full bg-territory-raised">
@@ -2293,6 +2353,16 @@ export default function GastronomyCheckoutConceptSurface({
           ) : (
           <div className="mt-5 grid gap-5 lg:grid-cols-[minmax(0,1fr)_22rem] lg:items-start">
             <div className="space-y-4 sm:space-y-5">
+              <FulfillmentSection
+                mode={fulfillmentMode}
+                deliveryOption={deliveryOption}
+                availableModes={availableModes}
+                deliveryFee={deliveryFee}
+                platformCourierAvailable={isPlatformCourierCheckoutAvailable()}
+                businessName={business.name}
+                onModeChange={handleModeChange}
+                onDeliveryOptionChange={setDeliveryOption}
+              />
               <AddressSection
                 mode={fulfillmentMode}
                 destination={checkoutAddress}
@@ -2305,26 +2375,13 @@ export default function GastronomyCheckoutConceptSurface({
                 onAddressModeChange={handleAddressModeChange}
                 onEditAddress={() => setShowDestinationEditor(true)}
               />
-              <FulfillmentSection
-                mode={fulfillmentMode}
-                deliveryOption={deliveryOption}
-                availableModes={availableModes}
-                deliveryFee={deliveryFee}
-                businessName={business.name}
-                onModeChange={handleModeChange}
-                onDeliveryOptionChange={setDeliveryOption}
-              />
               <PaymentSection
                 method={paymentMethod}
                 options={paymentOptions}
                 cashChangeFor={cashChangeFor}
+                stepNumber={fulfillmentMode === "delivery" ? 3 : 2}
                 onCashChangeForChange={setCashChangeFor}
                 onChange={setPaymentMethod}
-              />
-              <ItemsSection
-                items={items}
-                onRemoveItem={removeItem}
-                onAddMoreItems={() => navigate("..")}
               />
               <section className="rounded-xl border border-territory-border bg-territory-surface p-4 sm:p-5" aria-labelledby="checkout-notes-title">
                 <div className="flex items-center justify-between gap-3">

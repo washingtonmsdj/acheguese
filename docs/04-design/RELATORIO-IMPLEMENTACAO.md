@@ -353,3 +353,25 @@ A prancha 117 também está coberta pelos estados demonstrativos de visitante, v
 
 - Branch: `codex/reformulacao-entrada-comunidade`.
 - Somente o componente público, a revisão específica e este relatório entram no commit; os arquivos staged preexistentes de catalogação e segurança permanecem excluídos.
+
+## 19/09/2026 · Finalizar pedido — pranchas 021 e 024
+
+### Auditoria e ajuste
+
+- Comparei `GastronomyCheckoutConceptSurface` com as pranchas de checkout plataforma e estados mobile. A superfície agora aproxima a composição aprovada: cabeçalho desktop teal, identidade da loja junto ao título, stepper, ordem `Recebimento` → `Endereço e destinatário` → `Pagamento`, resumo lateral do pedido e CTA fixo no mobile.
+- Corrigi o excesso de espaçamento causado pelo editor de endereço aberto automaticamente quando não havia destino. `useDeliveryDestination` ganhou a opção de não abrir esse editor no checkout; o cartão compacto continua exibindo o estado vazio e abre o formulário somente após uma ação explícita ou uma tentativa de continuar.
+- A opção de entrega por plataforma é apresentada como estado desabilitado quando o contrato oficial ainda não a suporta. Não ativei seleção, cobrança ou despacho ilustrativos: a regra `isPlatformCourierCheckoutAvailable()` continua sendo a fonte de verdade e o fallback permanece disponível para indisponibilidade de cobertura.
+- Removi a repetição dos itens no corpo desktop, mantendo-os no resumo lateral, e ajustei a numeração contextual do pagamento para modalidades sem endereço. Hooks, serviços, permissões, cálculo de frete e métodos de pagamento reais continuam preservados.
+
+### Validação e evidências
+
+- `npm run typecheck:app`: passou.
+- ESLint passou nos dois arquivos de código alterados; `git diff --check` passou.
+- Auditorias de checkout, regras de modalidade e serviço de criação de pedido: 3 arquivos, 10 testes passaram.
+- Conferi no navegador interno o checkout pelo caminho real do cardápio, em mobile e desktop temporário. A comparação cobriu o estado sem endereço, o estado Entrega, o cabeçalho teal, a hierarquia dos cards, a coluna de resumo e o CTA fixo. O viewport voltou ao padrão e a aba ficou aberta para visualização em tempo real.
+- Limitação da evidência: a sessão de desenvolvimento não retorna uma residência salva; a captura mostra o vazio funcional, enquanto a prancha usa Casa/Ana Oliveira como dado demonstrativo. Não foram inseridos dados fictícios no runtime.
+
+### Git
+
+- Branch: `codex/reformulacao-entrada-comunidade`.
+- Somente `GastronomyCheckoutConceptSurface.tsx`, `useDeliveryDestination.ts`, a revisão da página e este relatório entram no commit; os arquivos staged preexistentes de catalogação e segurança permanecem excluídos.
