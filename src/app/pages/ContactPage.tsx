@@ -5,6 +5,7 @@ import { Link, useNavigate, useSearchParams } from "react-router-dom";
 import { TERRITORY_CONFIG } from "@/core/routing/config/territory";
 import { Button } from "@/shared/components/ui/button";
 import { buildMailtoUrl } from "@/shared/utils/contactLinks";
+import HelpSupportConceptMockPage from "@/app/pages/HelpSupportConceptMockPage";
 
 const contactEmail = import.meta.env.VITE_CONTACT_EMAIL ?? "";
 
@@ -18,6 +19,10 @@ const CONTACT_REASONS = [
 export default function ContactPage() {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
+
+  if (import.meta.env.DEV && searchParams.get("concept-mock") === "1") {
+    return <HelpSupportConceptMockPage />;
+  }
 
   const requestedCity = searchParams.get("cidade")?.trim();
   const launchPlace = `${TERRITORY_CONFIG.launch.name}, ${TERRITORY_CONFIG.launch.state.toUpperCase()}`;

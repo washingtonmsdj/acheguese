@@ -707,3 +707,24 @@ A prancha 117 também está coberta pelos estados demonstrativos de visitante, v
 
 - Branch: `codex/reformulacao-entrada-comunidade`.
 - Commit restrito ao componente e à documentação deste concept; alterações staged preexistentes permanecem fora do commit.
+
+## 20/09/2026 · Ajuda e suporte — pranchas 056 e 058
+
+### Auditoria e ajuste
+
+- A página de contato existente era institucional e não representava a central de ajuda das pranchas. Mantive o contato original intacto para produção e criei uma superfície de conceito ativada somente em desenvolvimento por `/contato?concept-mock=1`.
+- Implementei o hub mobile com busca, entrega contextual, categorias, chamados, CTA de atendimento e links de contato/privacidade na mesma ordem da prancha 056. O desktop usa rail teal, cabeçalho de Ajuda e suporte, coluna principal e contexto lateral conforme a prancha 058.
+- Implementei os quatro estados navegáveis: central de ajuda, abertura de chamado, meus chamados e conversa. O contexto `#AT1043`, status, mensagens, encaminhamento transparente e estados de resposta são demonstrativos e não criam atendimento real.
+- Mantive explícitos os limites do fluxo: não há SLA inventado, não há persistência de chamado/anexo/mensagem e o suporte não altera pedido, pagamento, coleta ou código automaticamente.
+
+### Validação e evidências
+
+- Navegador interno mantido aberto em `/contato?concept-mock=1` em aba mobile e aba desktop.
+- Mobile conferido em viewport compacto: hub, abertura, envio para lista e conversa renderizados sem erro; a ordem visual segue contexto, categorias, chamados e CTA.
+- Desktop conferido no viewport disponível `1707 × 960`: rail, categorias, contexto lateral e lista sem overflow do documento; conversa e lista abertas por interação.
+- `npx eslint src/app/pages/HelpSupportConceptMockPage.tsx src/app/pages/ContactPage.tsx`, `npm run typecheck:app` e `git diff --check` executados.
+
+### Git
+
+- Branch: `codex/reformulacao-entrada-comunidade`.
+- Commit restrito à superfície de conceito, ao desvio controlado em `ContactPage` e à documentação deste concept; alterações staged preexistentes permanecem fora do commit.
