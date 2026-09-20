@@ -313,3 +313,12 @@ A auditoria dos textos legais confirmou que a UI não inventa identidade do DPO 
 - rejeitar identidade/foro vazios ou insuficientes antes de certificar deploy.
 
 `tests/security/dpo-request-intake-security.test.ts` ratcheta o contrato. **Conclusão:** configuração legal mínima deixa de depender apenas de revisão humana; build/provider com valor ausente/inválido deve falhar antes da certificação.
+
+
+## Atualização — flags de produção alinhadas ao launch scope — 2026-09-20
+
+A auditoria comparou `.env.production` com `PUBLIC_LAUNCH_SURFACES` e encontrou uma inconsistência: `communityAlerts=false` no owner de lançamento, mas `VITE_FEATURE_COMMUNITY_ALERTS=true` no template de produção.
+
+O template foi corrigido para `VITE_FEATURE_COMMUNITY_ALERTS=false`. `VITE_FEATURE_COMMUNITY_ISSUES` já estava `false`; Maps V4 e Location Boundaries permanecem `true` por fazerem parte do núcleo ativo. O teste `communityLaunchScope.spec.ts` agora exige que Alertas e Problemas permaneçam desabilitados no template de produção enquanto seus launch surfaces estiverem pausados.
+
+Não havia caller vivo de `AlertFeedSection` fora do módulo; portanto o corte previne reativação acidental futura sem alterar comportamento público atual.
