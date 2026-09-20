@@ -4,7 +4,7 @@
 **Data do checkpoint operacional:** 2026-09-20
 **Repositório:** `washingtonmsdj/acheguese`  
 **Linha ativa:** `codex/reformulacao-entrada-comunidade` (acompanhando `origin/codex/reformulacao-entrada-comunidade`; alvo de release: `main`)
-**Commit de implementação do checkpoint:** `6b9f0c43f` (`feat: route territorial admin writes through broker`; inclui o corte G43 do frontend, testes de contrato e checkpoints operacionais). O commit documental e o commit de correção SSOT deste ciclo acompanham a mesma branch; o push remoto será validado pelo SHA após a publicação.
+**Commit de implementação do checkpoint:** `6b9f0c43f` (`feat: route territorial admin writes through broker`; inclui o corte G43 do frontend, testes de contrato e checkpoints operacionais). O commit de correção SSOT e os checkpoints documentais foram publicados na mesma branch; o remoto foi confirmado após o push. A referência autoritativa continua sendo o tracking remoto desta branch.
 
 Este documento consolida ordem de execução, blockers e Definition of Done. Ele é um **registro operacional**, não uma fotografia autoritativa do que existe no produto. A fonte de verdade para decidir o que existe, o que está ativo e o que deve ser corrigido é sempre o **projeto real**: código da `main`, rotas, owners, serviços, schema/migrations, contratos, testes, deploy/runtime e comportamento observado.
 
@@ -13,8 +13,8 @@ Este documento consolida ordem de execução, blockers e Definition of Done. Ele
 Este checkpoint registra o estado comprovado no workspace da branch
 `codex/reformulacao-entrada-comunidade`, que acompanha
 `origin/codex/reformulacao-entrada-comunidade`. O corte de implementação G43
-está fechado localmente e será publicado neste ciclo; nenhuma DDL ou Edge
-Function foi escrita no Supabase neste ciclo.
+está fechado e publicado na branch; nenhuma DDL ou Edge Function foi escrita
+no Supabase neste ciclo.
 
 ### Fechado localmente
 
@@ -86,9 +86,9 @@ Function foi escrita no Supabase neste ciclo.
   `public.spatial_ref_sys`, 4 extensões em `public`, 9 funções
   `SECURITY DEFINER` executáveis por `anon`, 84 por `authenticated` e HIBP
   desabilitado;
+- [x] a branch GitHub foi atualizada com os commits deste checkpoint;
 - [ ] certificação hosted same-SHA/Vercel e branch protection continuam sem
-  evidência nova; a branch GitHub será atualizada com os commits deste
-  checkpoint, mas isso não equivale a deploy hosted;
+  evidência nova; publicação GitHub não equivale a deploy hosted;
 - [x] os fixtures de autoridade de Profile/Business foram reconciliados com os
   nomes reais das migrations G35/G36 no checkout; `profile-rpc-security`,
   `admin-create-user-authority-g37` e `business-data-grants-security` passaram

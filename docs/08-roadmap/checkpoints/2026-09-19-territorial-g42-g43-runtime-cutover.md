@@ -77,7 +77,7 @@ em `public.spatial_ref_sys` neste checkpoint.
 - [x] os caminhos DML diretos foram removidos do repository/service de grupos;
 - [x] o ledger remoto continua contendo G43 phase 1;
 - [ ] smoke positivo admin AAL2 e prova do bundle hosted no mesmo SHA ainda
-  pendentes; a branch GitHub receberá o source-cutover neste ciclo;
+  pendentes; o source-cutover já foi publicado na branch GitHub;
 - [ ] phase 2 `20260910221500_lock_territorial_group_writes_to_broker_g43.sql`
   ainda não foi promovida; nenhuma escrita DDL/Edge foi executada no Supabase
   neste ciclo.
