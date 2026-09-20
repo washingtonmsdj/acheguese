@@ -162,7 +162,7 @@ Essas 13 branches **não são fonte de trabalho pendente**. Devem ser apagadas s
 - dry-run auditável: `npm run maintenance:branches -- --include-superseded --json`;
 - aplicação física, somente com autoridade delete-ref: `npm run maintenance:branches -- --include-superseded --apply`.
 
-A manifest contém **66 heads auditados**: as 13 branches sem PR já classificadas como superseded, 31 branches antigas de PR fechado cujo sucessor `rebased`, `v2` ou equivalente foi efetivamente mergeado, 3 snapshots/probes antigos de Mobilidade já comprovadamente redundantes, 6 branches temporárias antigas de certificação/recovery/ops, 6 precursores fechados de sitemap/facades/ProfileMembersManager/tipos Supabase e 2 precursores de segurança absorvidos byte a byte pela `main`. Branches ainda em quarentena não entram na manifest.
+A manifest contém **67 heads auditados**: as 13 branches sem PR já classificadas como superseded, 31 branches antigas de PR fechado cujo sucessor `rebased`, `v2` ou equivalente foi efetivamente mergeado, 3 snapshots/probes antigos de Mobilidade já comprovadamente redundantes, 6 branches temporárias antigas de certificação/recovery/ops, 6 precursores fechados de sitemap/facades/ProfileMembersManager/tipos Supabase e 2 precursores de segurança absorvidos byte a byte pela `main`. Branches ainda em quarentena não entram na manifest.
 
 ### Segundo lote — PR fechado substituído por sucessor mergeado
 
@@ -236,6 +236,17 @@ O head antigo, portanto, não contém autoridade atual que deva voltar para a `m
 - `physicalBusinessCoordinates.ts`, `AddressCard.tsx` e o ratchet `business-helper-ownership.test.ts` estão exatamente preservados na base atual.
 
 Não resta trabalho exclusivo nessa branch.
+
+### Nono lote — superfície anon/private substituída por hardenings canônicos
+
+`agent/security-anon-private-authz-surface` foi classificada como **superseded / não reintegrar**:
+
+- três arquivos sobreviventes do delta já são byte a byte idênticos à `main`;
+- o hardening antigo de report RPC `20260820084132` foi substituído pela authority forward-only `20260830091107`;
+- o intent de `20260820095633_restrict_anon_private_authorization_surface.sql` foi substituído por migrations canônicas posteriores: `20260825183353_harden_admin_helper_anon_scope.sql` e `20260825233757_remove_anon_private_helper_execute.sql`, além dos hardenings de grants browser;
+- os ratchets atuais `admin-helper-anon-scope-security.test.ts`, `private-helper-anon-execute-security.test.ts` e `browser-table-grants-security.test.ts` impedem reabertura da superfície anônima.
+
+A documentação de proveniência também registra que os timestamps locais antigos não devem ser aplicados atrasados.
 
 ## Próximo passo
 
