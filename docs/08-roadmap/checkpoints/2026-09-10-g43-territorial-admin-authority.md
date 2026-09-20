@@ -18,6 +18,31 @@ O princípio deste checkpoint é:
 
 Não foi autorizado inverter essa ordem para simplificar o código.
 
+## Atualização operacional — 2026-09-20
+
+O estado de source deste checkpoint avançou desde o staging original:
+
+- [x] `TerritorialGroupAdminService` chama somente o broker
+  `territorial-group-admin-rpc` para `saveGroup` e `setStatus`;
+- [x] criação/edição de grupo e substituição completa de memberships agora são
+  um único comando transacional, e o cliente rejeita ACK inconsistente;
+- [x] `TerritorialGroupService` e `TerritorialGroupRepositorySupabase` não
+  expõem mais operações DML; permaneceram apenas leituras públicas e de
+  inventário administrativo;
+- [x] os callers de Admin foram migrados e os testes de autoridade/contrato
+  passaram em 15/15;
+- [x] o serviço usa `invokeSupabaseBroker`, o helper canônico de transporte,
+  log e erro; `security:validate` passou sem finding novo;
+- [x] a consulta read-only ao projeto Supabase confirmou
+  `territorial-group-admin-rpc` como `ACTIVE`, versão 1 e `verify_jwt=true`, e
+  a migration G43 phase 1 no ledger remoto;
+- [ ] ainda falta certificar o bundle hospedado, smoke admin AAL2 e a promoção
+  da phase 2 que revoga DML autenticado no banco. Nenhuma escrita remota foi
+  executada neste ciclo.
+
+As frases abaixo que descrevem o frontend ainda usando o writer histórico são o
+registro do estado anterior a este update; não representam mais o source atual.
+
 ## G42 — cascata de Location corrigida no source
 
 O defeito G42 era real: o caminho anterior de visibilidade podia atualizar o nó
@@ -92,8 +117,9 @@ são carregadas em lote por `group_id`, depois agrupadas em memória.
 - bloqueia mudança de cidade âncora em grupo existente;
 - mantém a seleção de bairros editável;
 - informa corretamente que grupo novo nasce `inactive`;
-- não migrou ainda a escrita para o broker G43 porque esse broker não está
-  implantado no runtime.
+- no estado original deste checkpoint, não havia migração de escrita para o
+  broker G43; o source atual já foi migrado, mas o runtime hospedado ainda não
+  foi certificado.
 
 `DistrictSelector` ganhou `anchorCityLocked`, sem desabilitar a edição dos
 membros, e seu efeito de reconciliação deixou de depender de supressão global de
@@ -155,7 +181,9 @@ O ACK de `saveGroup` precisa corresponder a ID, slug, nome, descrição, cidade,
 conjunto de membros, contagem e estado de criação. O ACK de `setStatus` precisa
 corresponder ao mesmo ID e status solicitados. HTTP 2xx incompatível é falha.
 
-**O broker não foi implantado.** Ele depende da phase 1 no mesmo ambiente.
+No snapshot original deste checkpoint, o broker ainda não estava implantado. A
+promoção/runtime atual deve ser confirmada por inventário e smoke no mesmo
+ambiente antes de considerar o cutover certificado.
 
 ### Phase 2 — browser DML lock
 
@@ -216,12 +244,12 @@ Em 2026-09-10:
 Essa diferença deve ser tratada como drift/runtime ausente, não como autorização
 para criar fallback browser ou marcar o source como LIVE.
 
-## O que NÃO foi feito
+## O que NÃO foi feito no snapshot de 2026-09-10
 
 - nenhuma migration pending foi movida para `supabase/migrations`;
 - nenhuma DDL foi aplicada sem preflight;
 - nenhuma Edge territorial nova foi implantada;
-- o frontend de escrita ainda não foi apontado ao broker inexistente no remoto;
+- o frontend de escrita ainda não era apontado ao broker inexistente no remoto;
 - a phase 2 não foi aplicada;
 - `module/mobilidade` e `codex/identidade-visual-achegue-se` não foram tocadas;
 - nenhum workflow pesado foi disparado para contornar a indisponibilidade de
@@ -237,11 +265,12 @@ Quando o Postgres remoto voltar:
 4. implantar os gateways territoriais necessários com `verify_jwt=true` e source
    exato;
 5. executar smokes admin AAL2 positivos e negativos;
-6. migrar o frontend de group lifecycle para `territorial-group-admin-rpc` sem
-   manter writer paralelo;
-7. certificar o mesmo SHA/descendente;
-8. aplicar G43 phase 2 e remover DML browser;
-9. só depois retirar os métodos de compatibilidade do repository/service cuja
-   ausência de callers for comprovada.
+6. certificar no hosted o source que já aponta o frontend de group lifecycle para
+   `territorial-group-admin-rpc`, sem manter writer paralelo;
+7. executar smoke positivo e negativo com admin AAL2 no mesmo SHA/descendente;
+8. aplicar G43 phase 2 e remover DML browser no banco;
+9. confirmar no runtime que o repository/service não possui mais caminho de
+   compatibilidade, mantendo apenas os owners de leitura.
 
-G43 está **SOURCE-READY / RUNTIME-PENDING**. Não confundir os dois estados.
+G43 está **SOURCE-CUTOVER-READY / RUNTIME-CERTIFICATION-PENDING**. Não
+confundir os dois estados.

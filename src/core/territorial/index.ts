@@ -29,12 +29,11 @@ export type {
 export { GroupAvailabilityService, groupAvailabilityService } from './GroupAvailabilityService';
 export { TerritorialRolloutService, territorialRolloutService } from './TerritorialRolloutService';
 export { TerritorialGroupService, territorialGroupService } from './services/TerritorialGroupService';
-export type {
-  CreateTerritorialGroupInput,
-  UpdateTerritorialGroupInput,
-  AddMembersInput,
-  RemoveMembersInput,
-} from './services/TerritorialGroupService';
+export {
+  TerritorialGroupAdminService,
+  territorialGroupAdminService,
+} from './services/TerritorialGroupAdminService';
+export type { SaveTerritorialGroupInput } from './services/TerritorialGroupAdminService';
 export { listAdminTerritorialGroups } from './services/territorial.admin.queries';
 export { TerritorialManagementService } from './services/TerritorialManagementService';
 export type {

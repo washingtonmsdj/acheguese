@@ -9,11 +9,7 @@ import { supabase } from '@/integrations/supabase';
 import type { SupabaseClient } from '@/integrations/supabase';
 import type { Location } from '@/core/location/types';
 import type { TerritorialGroup, TerritorialGroupWithMembers } from '../contracts';
-import type {
-  ITerritorialGroupRepository,
-  CreateTerritorialGroupData,
-  UpdateTerritorialGroupData,
-} from './ITerritorialGroupRepository';
+import type { ITerritorialGroupRepository } from './ITerritorialGroupRepository';
 
 interface TerritorialMembershipLocationRow {
   group_id: string;
@@ -64,19 +60,6 @@ export class TerritorialGroupRepositorySupabase implements ITerritorialGroupRepo
     return ((data ?? []) as unknown as Array<{ locations: Location | null }>)
       .map((row) => row.locations)
       .filter((location): location is Location => Boolean(location));
-  }
-
-  async hasMember(groupId: string, locationId: string): Promise<boolean> {
-    const { data, error } = await this.db
-      .from('territorial_group_members')
-      .select('group_id')
-      .eq('group_id', groupId)
-      .eq('location_id', locationId)
-      .limit(1)
-      .maybeSingle();
-
-    if (error) throw error;
-    return Boolean(data);
   }
 
   async findGroupsContainingLocation(locationId: string): Promise<TerritorialGroup[]> {
@@ -133,72 +116,4 @@ export class TerritorialGroupRepositorySupabase implements ITerritorialGroupRepo
     return this.listWithMembers();
   }
 
-  async create(data: CreateTerritorialGroupData): Promise<TerritorialGroup> {
-    const { data: group, error } = await this.db
-      .from('territorial_groups')
-      .insert({
-        slug: data.slug,
-        name: data.name,
-        description: data.description ?? null,
-        anchor_city_id: data.anchor_city_id,
-        status: data.status ?? 'inactive',
-        metadata: data.metadata ?? {},
-      })
-      .select()
-      .single();
-
-    if (error) throw error;
-    return group;
-  }
-
-  async update(groupId: string, data: UpdateTerritorialGroupData): Promise<TerritorialGroup> {
-    const { data: group, error } = await this.db
-      .from('territorial_groups')
-      .update({
-        ...(data.slug !== undefined && { slug: data.slug }),
-        ...(data.name !== undefined && { name: data.name }),
-        ...(data.description !== undefined && { description: data.description }),
-        ...(data.status !== undefined && { status: data.status }),
-        ...(data.metadata !== undefined && { metadata: data.metadata }),
-        updated_at: new Date().toISOString(),
-      })
-      .eq('id', groupId)
-      .select()
-      .single();
-
-    if (error) throw error;
-    return group;
-  }
-
-  async addMembers(groupId: string, locationIds: string[]): Promise<void> {
-    if (locationIds.length === 0) return;
-
-    const { error } = await this.db
-      .from('territorial_group_members')
-      .insert(locationIds.map((locationId) => ({ group_id: groupId, location_id: locationId })));
-
-    if (error) throw error;
-  }
-
-  async removeMembers(groupId: string, locationIds: string[]): Promise<void> {
-    if (locationIds.length === 0) return;
-
-    const { error } = await this.db
-      .from('territorial_group_members')
-      .delete()
-      .eq('group_id', groupId)
-      .in('location_id', locationIds);
-
-    if (error) throw error;
-  }
-
-  async replaceMembers(groupId: string, locationIds: string[]): Promise<void> {
-    const { error: deleteError } = await this.db
-      .from('territorial_group_members')
-      .delete()
-      .eq('group_id', groupId);
-
-    if (deleteError) throw deleteError;
-    if (locationIds.length > 0) await this.addMembers(groupId, locationIds);
-  }
 }

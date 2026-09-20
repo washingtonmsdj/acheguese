@@ -66,3 +66,20 @@ um smoke positivo com uma sessão administrativa MFA/AAL2.
 
 Não foi feito purge, alteração de retenção, habilitação de Mobility ou mudança
 em `public.spatial_ref_sys` neste checkpoint.
+
+## Atualização operacional — 2026-09-20
+
+- [x] consulta read-only ao catálogo remoto confirmou
+  `territorial-group-admin-rpc` `ACTIVE`, versão 1 e `verify_jwt=true`;
+- [x] o source do Admin foi certificado localmente para chamar somente esse
+  broker: `saveGroup` cobre criação/edição + memberships em um comando, e
+  `setStatus` cobre ativação/desativação;
+- [x] os caminhos DML diretos foram removidos do repository/service de grupos;
+- [x] o ledger remoto continua contendo G43 phase 1;
+- [ ] smoke positivo admin AAL2 e prova do source/SHA publicado ainda pendentes;
+- [ ] phase 2 `20260910221500_lock_territorial_group_writes_to_broker_g43.sql`
+  ainda não foi promovida; nenhuma escrita remota foi executada neste ciclo.
+
+Os itens 2 e 3 da lista de gates acima descrevem o estado anterior ao corte de
+source e ficam superseded por esta atualização; a certificação hosted ainda é
+obrigatória antes da phase 2.

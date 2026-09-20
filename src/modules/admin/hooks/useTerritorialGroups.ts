@@ -7,11 +7,9 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import {
   listAdminTerritorialGroups,
-  TerritorialGroupService,
+  territorialGroupAdminService,
 } from '@/core/territorial';
 import { toast } from 'sonner';
-
-const service = new TerritorialGroupService();
 
 export function useTerritorialGroups() {
   const queryClient = useQueryClient();
@@ -29,10 +27,10 @@ export function useTerritorialGroups() {
 
   const toggleStatus = useMutation({
     mutationFn: async ({ groupId, currentStatus }: { groupId: string; currentStatus: string }) => {
-      if (currentStatus === 'active') {
-        return service.deactivateGroup(groupId);
-      }
-      return service.activateGroup(groupId);
+      return territorialGroupAdminService.setStatus(
+        groupId,
+        currentStatus === 'active' ? 'inactive' : 'active',
+      );
     },
     onSuccess: (_, variables) => {
       queryClient.invalidateQueries({ queryKey: ['admin', 'territorial-groups'] });

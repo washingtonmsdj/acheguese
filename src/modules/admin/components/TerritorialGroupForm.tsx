@@ -7,7 +7,7 @@
  */
 import { useEffect, useState } from 'react';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
-import { TerritorialGroupService } from '@/core/territorial';
+import { territorialGroupAdminService } from '@/core/territorial';
 import { Button } from '@/shared/components/ui/button';
 import { Input } from '@/shared/components/ui/input';
 import { Textarea } from '@/shared/components/ui/textarea';
@@ -40,8 +40,6 @@ type GroupFormPayload = {
   anchor_city_id: string;
   member_location_ids: string[];
 };
-
-const service = new TerritorialGroupService();
 
 export function TerritorialGroupForm({ group, onSuccess, onCancel }: TerritorialGroupFormProps) {
   const queryClient = useQueryClient();
@@ -90,12 +88,12 @@ export function TerritorialGroupForm({ group, onSuccess, onCancel }: Territorial
 
   const createMutation = useMutation({
     mutationFn: async (data: GroupFormPayload) => {
-      return service.createGroup({
+      return territorialGroupAdminService.saveGroup({
         name: data.name,
         slug: data.slug,
         description: data.description,
-        anchor_city_id: data.anchor_city_id,
-        member_location_ids: data.member_location_ids,
+        anchorCityId: data.anchor_city_id,
+        memberLocationIds: data.member_location_ids,
       });
     },
     onSuccess: () => {
@@ -114,12 +112,14 @@ export function TerritorialGroupForm({ group, onSuccess, onCancel }: Territorial
     mutationFn: async (data: GroupFormPayload) => {
       if (!group) throw new Error('Grupo territorial nao selecionado');
 
-      await service.updateGroup(group.id, {
+      return territorialGroupAdminService.saveGroup({
+        groupId: group.id,
         name: data.name,
         slug: data.slug,
         description: data.description,
+        anchorCityId: data.anchor_city_id,
+        memberLocationIds: data.member_location_ids,
       });
-      await service.replaceMembers(group.id, data.member_location_ids);
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['admin', 'territorial-groups'] });

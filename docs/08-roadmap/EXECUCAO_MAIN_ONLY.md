@@ -1,12 +1,113 @@
 # Achegue-se — Execução `main`-only e prontidão MVP
 
 **Status:** ATIVO — SSOT OPERACIONAL  
-**Data do checkpoint GitHub:** 2026-09-09  
+**Data do checkpoint operacional:** 2026-09-20
 **Repositório:** `washingtonmsdj/acheguese`  
-**Linha ativa:** `main`  
-**HEAD técnico de código registrado neste checkpoint:** `1778d727fb0fca510210c5e2c42dd31a4d23e3fb` (2026-09-18; último commit com alteração de código antes deste registro documental).
+**Linha ativa:** `codex/reformulacao-entrada-comunidade` (acompanhando `origin/codex/reformulacao-entrada-comunidade`; alvo de release: `main`)
+**HEAD do workspace:** `041437f743488954c238eafc8b2eef8ceaa6e44d` (`feat: alinhar organizacao de eventos ao concept`; branch 1 commit à frente de `origin/codex/reformulacao-entrada-comunidade`, sem push neste ciclo).
 
 Este documento consolida ordem de execução, blockers e Definition of Done. Ele é um **registro operacional**, não uma fotografia autoritativa do que existe no produto. A fonte de verdade para decidir o que existe, o que está ativo e o que deve ser corrigido é sempre o **projeto real**: código da `main`, rotas, owners, serviços, schema/migrations, contratos, testes, deploy/runtime e comportamento observado.
+
+## Checkpoint de execução — 2026-09-20 — P0/MVP estrutural
+
+Este checkpoint registra o estado comprovado no workspace da branch
+`codex/reformulacao-entrada-comunidade`, que acompanha
+`origin/codex/reformulacao-entrada-comunidade`. O commit de organização de
+eventos está presente no workspace; não houve push nem escrita no Supabase
+neste ciclo.
+
+### Fechado localmente
+
+- [x] `vercel.json` usa `npm run build:vercel` como comando de build, mantendo os
+  gates de inputs, CSP, Turnstile, typecheck, lint e Vite no mesmo caminho;
+- [x] dependências e fronteiras arquiteturais passaram sem violações: 0 ciclos,
+  0 imports legados e 0 violações incrementais;
+- [x] hardcodes SSOT, typecheck, lint, build de produção e segurança MapLibre
+  passaram; o build final transformou 6106 módulos;
+- [x] mapas foram consolidados em `src/core/maps`, removendo os bridges de
+  `src/shared/components/maps`, `src/shared/components/standalone` e o
+  `LocationPickerSheet` antigo depois da migração dos callers;
+- [x] o slug público de negócio passou a ter owner em
+  `src/core/public-identity`; a implementação paralela
+  `business.slug-queries.ts` foi removida após prova de zero callers;
+- [x] `StatusBadge` e registro de motorista passaram a ter owners canônicos em
+  `src/core/mobility`, preservando reexports apenas onde ainda são contratos de
+  compatibilidade usados;
+- [x] diálogos nativos foram substituídos por diálogos de produto no mock de
+  gestão de cardápio; a varredura de runtime não encontrou `alert`, `prompt` ou
+  `window.confirm` nativos;
+- [x] a validação de governance foi corrigida na raiz: o detector agora acusa
+  ramificações imperativas de negócio, não condicionais de apresentação JSX;
+  a decisão de carregar dados de motorista foi movida do hook para
+  `AdminUserDetailService.loadDriverDetail`; o contrato do detector passa em
+  2/2 testes.
+- [x] o lifecycle administrativo de grupos territoriais foi cortado para o
+  broker transacional G43: criação/edição agora são um único `saveGroup`,
+  ativação/desativação usa `setStatus`, e o cliente valida ACK, grupo e conjunto
+  completo de membros;
+- [x] o `TerritorialGroupService` e o repository de grupos ficaram somente
+  leitura; os métodos DML históricos e a sequência não atômica
+  `updateGroup()+replaceMembers()` foram removidos após prova de zero callers;
+  o ratchet G43 e os testes de contrato do novo serviço passaram em 15/15;
+- [x] o `verify:deploy` foi executado após as correções: build:vercel,
+  arquitetura, SSOT, segurança local, TypeScript, higiene de runtime e SEO
+  passaram; o processo encerrou somente pelos dois gates que exigem autoridade
+  remota/evidência de segurança atualizada, descritos abaixo.
+- [x] a rodada final do `verify:deploy`, após o corte G43 para o helper de broker
+  canônico, confirmou novamente `build:vercel`, lint, arquitetura, SSOT,
+  migrations locais, `security:validate`, `security:config`, higiene de runtime,
+  TypeScript e SEO; não restou blocker de código novo.
+
+### Ainda bloqueado por evidência externa ou decisão de produto
+
+- [ ] validação de migrations remotas: `npm run validate:migrations:remote` e o
+  preflight PostGIS retornam `Cannot find project ref. Have you run supabase
+  link?`; `supabase projects list` também retorna `Unauthorized`. O checkout
+  não possui `supabase/.temp/project-ref` nem token de gestão, portanto não há
+  prova detalhada de drift de statements pelo CLI neste ciclo;
+- [x] a leitura read-only pelo plugin Supabase confirmou o projeto
+  `xhdowzacfujckjelqhtd` como `ACTIVE_HEALTHY` (Postgres `17.6.1.084`) e o
+  ledger remoto com 673 migrations até
+  `20260920101850_block_professional_legacy_coverage_writes_g37`; a árvore de
+  migrations desta branch foi alinhada ao conjunto canônico de `origin/main`,
+  que coincide com o ledger remoto;
+- [x] a leitura read-only do catálogo Edge confirmou
+  `territorial-group-admin-rpc` `ACTIVE`, versão 1 e `verify_jwt=true`; isso
+  comprova a presença/configuração do gateway, mas não substitui smoke AAL2 nem
+  prova que o source do bundle publicado é o mesmo SHA desta branch;
+- [ ] security authority/free-release governance: permanecem as exceções
+  expiradas `EXC-2026-08-11-AUTH-HIBP-FREE-PLAN` e
+  `EXC-2026-08-11-POSTGIS-PUBLIC-SURFACE`, além de
+  `RECOVERY_SNAPSHOT_STALE`; não foram renovadas artificialmente;
+- [ ] o snapshot read-only remoto de 2026-09-20 confirmou
+  `authUsers=289`, `authIdentities=287`, `storageObjects=65` e
+  `storageTotalBytes=23926702`, mas isso não substitui backup off-device com
+  readback; os advisors ainda reportam 1 `ERROR` de RLS desabilitado em
+  `public.spatial_ref_sys`, 4 extensões em `public`, 9 funções
+  `SECURITY DEFINER` executáveis por `anon`, 84 por `authenticated` e HIBP
+  desabilitado;
+- [ ] certificação hosted same-SHA/Vercel e branch protection continuam sem
+  evidência nova;
+- [x] os fixtures de autoridade de Profile/Business foram reconciliados com os
+  nomes reais das migrations G35/G36 no checkout; `profile-rpc-security`,
+  `admin-create-user-authority-g37` e `business-data-grants-security` passaram
+  em 16/16 testes, sem remover cobertura;
+- [ ] a validação do MVP não habilita superfícies `launch-paused` nem altera
+  DDL/Edge remoto sem vínculo, credencial e smoke positivo correspondente.
+- [ ] o cutover ainda precisa de certificação no runtime hospedado: prova do
+  source exato, smoke autenticado AAL2 de `saveGroup`/`setStatus` e confirmação
+  same-SHA; o gateway está ativo no catálogo remoto, mas o código local já não
+  possui writer browser paralelo e isso não prova o bundle publicado.
+
+### Próxima execução autorizada
+
+1. manter a árvore de migrations canônica sincronizada com `origin/main`, sem
+   reintroduzir aliases ou aplicar DDL cego;
+2. com o CLI Supabase vinculado e token válido, repetir a validação detalhada
+   de drift e registrar o resultado neste documento;
+3. separar as pendências de exceção/security authority em correções de causa
+   (HIBP, PostGIS e recovery snapshot), sem prorrogação tácita;
+4. só depois repetir o gate hosted do mesmo SHA e revisar proteção da branch.
 
 ## Snapshot remoto — 2026-09-18
 
@@ -32,7 +133,8 @@ Este snapshot descreve o último SHA com alteração de código; qualquer commit
   `xhdowzacfujckjelqhtd`, com `verify_jwt=true`;
 - [x] chamada sem JWT aos quatro gateways retornou `401`;
 - [ ] smoke positivo admin AAL2 ainda pendente;
-- [ ] frontend ainda usa o writer de compatibilidade até o cutover certificado;
+- [ ] frontend do runtime publicado ainda não foi certificado no cutover; o
+  source desta branch já usa exclusivamente `territorial-group-admin-rpc`;
 - [ ] migration G43 phase 2, que revoga DML autenticado, permanece bloqueada até
   o smoke e o cutover.
 

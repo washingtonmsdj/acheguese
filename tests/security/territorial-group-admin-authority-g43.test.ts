@@ -20,6 +20,9 @@ const repositoryContract = read(
 const repository = read(
   "src/core/territorial/repositories/TerritorialGroupRepositorySupabase.ts",
 );
+const adminService = read(
+  "src/core/territorial/services/TerritorialGroupAdminService.ts",
+);
 const adminQuery = read(
   "src/core/territorial/services/territorial.admin.queries.ts",
 );
@@ -153,5 +156,27 @@ describe("G43 territorial group admin authority", () => {
     expect(groupForm).toContain("anchorCityLocked={Boolean(group)}");
     expect(districtSelector).toContain("anchorCityLocked?: boolean");
     expect(districtSelector).toContain("disabled={disabled || anchorCityLocked}");
+  });
+
+  it("routes every browser lifecycle write through the atomic admin broker", () => {
+    expect(adminService).toContain("const FUNCTION_NAME = 'territorial-group-admin-rpc'");
+    expect(adminService).toContain("invokeSupabaseBroker<Record<string, unknown>");
+    expect(adminService).toContain("type TerritorialGroupAdminAction = 'saveGroup' | 'setStatus'");
+    expect(adminService).toContain("invoke('setStatus'");
+    expect(adminService).toContain("!sameMemberSet(data.memberIds, input.memberLocationIds)");
+
+    expect(adminHook).toContain("territorialGroupAdminService.setStatus");
+    expect(adminHook).not.toContain("TerritorialGroupService");
+    expect(groupForm).toContain("territorialGroupAdminService.saveGroup");
+    expect(groupForm).not.toContain("TerritorialGroupService");
+
+    expect(repository).not.toMatch(/\.insert\(/);
+    expect(repository).not.toMatch(/\.update\(/);
+    expect(repository).not.toMatch(/\.delete\(/);
+    expect(repositoryContract).not.toMatch(/\b(create|update|addMembers|removeMembers|replaceMembers)\s*\(/);
+    expect(repositoryContract).not.toContain("hasMember(");
+    expect(read("src/core/territorial/services/TerritorialGroupService.ts")).not.toMatch(
+      /\b(listActiveMembers|listAllMembers|resolveGroupToLocationIds|isGroupActive)\s*\(/,
+    );
   });
 });
