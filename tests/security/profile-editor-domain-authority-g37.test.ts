@@ -14,7 +14,7 @@ describe("Professional coverage authority", () => {
     const editor = read("src/modules/profile/pages/ContaEditarPerfilPage.tsx");
     const profileEdge = read("supabase/functions/profile-rpc/index.ts");
     const contract = read(
-      "supabase/migrations/20260910011000_block_professional_legacy_coverage_writes_g37.sql",
+      "supabase/migrations/20260920101850_block_professional_legacy_coverage_writes_g37.sql",
     );
 
     expect(types).not.toContain("service_area?: string[]");
