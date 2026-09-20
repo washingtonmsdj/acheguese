@@ -3064,3 +3064,10 @@
 .driver-registration-concept-page h3 {
   margin-bottom: 0;
 }
+
+.driver-earnings-concept-page p,
+.driver-earnings-concept-page h1,
+.driver-earnings-concept-page h2,
+.driver-earnings-concept-page h3 {
+  margin-bottom: 0;
+}

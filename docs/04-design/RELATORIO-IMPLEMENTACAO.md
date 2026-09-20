@@ -664,3 +664,24 @@ A prancha 117 também está coberta pelos estados demonstrativos de visitante, v
 
 - Branch: `codex/reformulacao-entrada-comunidade`.
 - Commit restrito ao cadastro, ao estilo scoped e às documentações deste concept; alterações staged preexistentes permanecem fora do commit.
+
+## 20/09/2026 · Ganhos do entregador — pranchas 042, 044 e 045
+
+### Auditoria e ajuste
+
+- Comparei `CentralMotoboyGanhosConceptMockPage` com as pranchas de resumo/histórico/detalhe, estados de recebimento e quatro composições desktop.
+- O gráfico mobile estava usando amarelo em todas as plataformas; agora usa teal no mobile, mantendo amarelo no desktop como na referência 045.
+- Os defaults globais de parágrafo inflavam os cards do detalhe mobile e escondiam histórico/solicitação de revisão atrás da navegação inferior. Adicionei reset tipográfico scoped e compactei os cartões e linhas de ação somente no detalhe da entrega.
+- Mantive a semântica financeira: valor registrado não confirma recebimento; recebimento futuro, revisão e falha continuam representados como estados demonstrativos sem persistência.
+
+### Validação e evidências
+
+- Navegador interno mantido aberto em `/central/motoboy/ganhos?concept-mock=1&view=summary`.
+- Mobile `389 × 867` CSS px: resumo, histórico, detalhe, pendente, confirmado, revisão, recebimentos, vazio e erro conferidos sem overflow; detalhe termina com a CTA em `y=798,7`, acima da navegação fixa.
+- Desktop `1440 × 867` CSS px: resumo, histórico, detalhe, revisão e recebimentos conferidos sem overflow horizontal/vertical.
+- `npm run typecheck:app`, ESLint direcionado e `git diff --check` executados.
+
+### Git
+
+- Branch: `codex/reformulacao-entrada-comunidade`.
+- Commit restrito aos ganhos, ao estilo scoped e às documentações deste concept; alterações staged preexistentes permanecem fora do commit.
