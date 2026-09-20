@@ -119,7 +119,7 @@ O PR #209 removeu duas exceções antigas que já não aparecem no Advisor, redu
 ## Blockers de release que permanecem
 
 1. Executar o GitHub Actions de verdade em runner válido e obter security/lint/typecheck/test/build no SHA candidato.
-2. Fechar o drift de migrations até o gate remoto atingir zero divergências; estado atual: 683 locais / 666 remotas / 649 exatas / 34 local-only / 17 remote-only.
+2. Fechar o drift de migrations até o gate remoto atingir zero divergências; estado atual após Safety provenance: 683 locais / 666 remotas / 657 exatas / 26 local-only / 9 remote-only.
 3. Completar branch protection/release authority depois que existir check executável.
 4. Produzir build/deploy real do mesmo SHA aprovado; o provider Vercel vinha bloqueando novas provas pelo limite diário.
 5. Executar smoke do domínio no mesmo SHA.
@@ -178,8 +178,22 @@ Após a reconciliação de Vagas, o corte urgente avançou em quatro frentes sem
 - Supabase canônico: `ACTIVE_HEALTHY`;
 - Edge Functions implantadas: 60, todas `ACTIVE`;
 - tipos gerados Git ↔ Supabase: `exact=true`, 731731 caracteres normalizados;
-- migrations: 683 locais / 666 remotas / 649 exatas / 34 local-only / 17 remote-only;
+- migrations: 683 locais / 666 remotas / 657 exatas / 26 local-only / 9 remote-only;
 - Vercel no SHA auditado: status de falha por build rate limit, portanto sem nova prova de deploy;
 - `main` está protegida, porém o endpoint acessível mostra required status checks sem enforcement/contextos; a leitura completa da branch protection não está disponível à integração atual. Não declarar release authority fechada com essa evidência parcial.
 
 **Próximo gate:** tratar a divergência do ledger por provenance e estado remoto, sem `db push` global. Priorizar os registros G71/G72/G75–G80 e os remotos G42/G43, pois já existem checkpoints de runtime que permitem separar migrations superseded/reconciliadas de DDL realmente ausente.
+
+## Atualização — provenance Safety G71/G72/G75–G80 — 2026-09-19
+
+A comparação do SQL local antigo com as oito migrations `reconcile_*` realmente registradas no ledger remoto foi feita por tokenização SQL, ignorando apenas whitespace, comentários e wrappers transacionais. Os oito pares retornaram a mesma sequência de tokens.
+
+Consequência:
+
+- os oito filenames locais históricos foram alinhados às versões/names reais do ledger remoto;
+- o conteúdo SQL legível foi preservado porque é semanticamente idêntico ao aplicado;
+- testes que leem esses artefatos foram apontados para as identidades canônicas;
+- nenhum SQL foi reaplicado e nenhum dado/schema/runtime foi alterado;
+- a paridade de identidade melhora de 649 para 657 migrations exatas; local-only cai de 34 para 26 e remote-only de 17 para 9.
+
+Continuam sem reconciliação: pricing/cancellation de Mobilidade, G42/G43 territoriais e o conjunto local-only restante. Não inferir equivalência sem a mesma prova de provenance.
