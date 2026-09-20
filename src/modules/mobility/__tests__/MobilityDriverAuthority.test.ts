@@ -15,7 +15,7 @@ describe("Mobility driver authority", () => {
       "supabase/migrations/20260910003000_domain_owned_profile_creation_g36.sql",
     );
     const contractMigration = readProjectFile(
-      "supabase/migrations/20260910004500_retire_legacy_profile_creation_bridges_g36.sql",
+      "supabase/migrations/20260920101836_retire_legacy_profile_creation_bridges_g36.sql",
     );
     const mobilityRpc = readProjectFile("supabase/functions/mobility-rpc/index.ts");
     const runtime = readProjectFile(
