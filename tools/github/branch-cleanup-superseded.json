@@ -139,6 +139,11 @@
       "evidence": "Post-merge branch reaudited path-by-path on 2026-09-20. Twelve of fourteen paths are already identical/removed in main; the two residual Guide diffs would reintroduce obsolete NearbyPlaces/Ao redor placeholder behavior and must not be reintegrated."
     },
     {
+      "name": "cleanup/business-helper-consolidation-20260918",
+      "sha": "294eb57cd9fa43a1a3a2bea5ec5ef18d02d85d61",
+      "evidence": "Closed unmerged Business helper consolidation. All surviving touched files are byte-identical to main, and the retired BusinessCanonicalAdapter/business.helpers/businessHelpers files are absent from both branch and main. No unique runtime work remains."
+    },
+    {
       "name": "cleanup/community-post-view-ownership-20260918",
       "sha": "35913559c3d3a14c9c2f30f46ea034bc762fb56d",
       "evidence": "Superseded by the current-main ownership consolidation merged in PR #170."
