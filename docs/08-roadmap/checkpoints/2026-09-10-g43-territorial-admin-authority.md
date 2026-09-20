@@ -44,9 +44,9 @@ Também foi removido `auth.role()` do command novo. O boundary SQL é o ACL da
 função + `SECURITY INVOKER`; a autoridade de usuário pertence ao Edge. O ratchet
 G42 impede retorno desse padrão.
 
-Migration ainda pendente:
+Naquele checkpoint, a migration ainda estava pendente. Ela foi posteriormente promovida com a identidade canônica:
 
-`docs/09-reference/migrations-pending/20260910214500_transactional_location_visibility_cascade_g42.sql`
+`supabase/migrations/20260919003851_transactional_location_visibility_cascade_g42.sql`
 
 ## G43 — defeitos encontrados em grupos territoriais
 
@@ -101,9 +101,9 @@ membros, e seu efeito de reconciliação deixou de depender de supressão global
 
 ### Commands transacionais G43
 
-Phase 1 preparada em:
+Naquele checkpoint, a phase 1 estava preparada. Ela foi posteriormente promovida como:
 
-`docs/09-reference/migrations-pending/20260910220500_create_territorial_group_admin_commands_g43.sql`
+`supabase/migrations/20260919003900_create_territorial_group_admin_commands_g43.sql`
 
 Ela cria:
 
@@ -155,7 +155,7 @@ O ACK de `saveGroup` precisa corresponder a ID, slug, nome, descrição, cidade,
 conjunto de membros, contagem e estado de criação. O ACK de `setStatus` precisa
 corresponder ao mesmo ID e status solicitados. HTTP 2xx incompatível é falha.
 
-**O broker não foi implantado.** Ele depende da phase 1 no mesmo ambiente.
+**Naquele checkpoint o broker ainda não estava implantado.** A revalidação de 2026-09-20 confirmou a phase 1 aplicada e o broker ACTIVE no mesmo ambiente.
 
 ### Phase 2 — browser DML lock
 
@@ -245,3 +245,15 @@ Quando o Postgres remoto voltar:
    ausência de callers for comprovada.
 
 G43 está **SOURCE-READY / RUNTIME-PENDING**. Não confundir os dois estados.
+
+## Addendum — runtime revalidado em 2026-09-20
+
+O estado histórico acima foi superado parcialmente:
+
+- G42 foi aplicada sob `20260919003851_transactional_location_visibility_cascade_g42`;
+- G43 phase 1 foi aplicada sob `20260919003900_create_territorial_group_admin_commands_g43`;
+- os quatro Edge Functions territoriais auditados estão `ACTIVE` com `verify_jwt=true`;
+- o frontend administrativo ainda não fez o cutover: `TerritorialGroupForm` continua usando `updateGroup()` + `replaceMembers()`;
+- portanto G43 phase 2 permanece pendente e o writer compatível não deve ser removido ainda.
+
+Estado atual: **PHASE-1-LIVE / CUTOVER-PENDING**.
