@@ -12,7 +12,7 @@
  */
 
 // Service Worker version
-const SW_VERSION = '2.0.5';
+const SW_VERSION = '2.0.6';
 const IS_LOCALHOST =
   self.location.hostname === 'localhost' ||
   self.location.hostname === '127.0.0.1' ||
@@ -225,7 +225,7 @@ function getNotificationUrl(data) {
       return getLaunchSafeNotificationUrl('/settings/subscription');
     
     case 'security':
-      return '/settings/sessions';
+      return '/conta/seguranca';
     
     case 'social':
       return getLaunchSafeNotificationUrl(data.url);
