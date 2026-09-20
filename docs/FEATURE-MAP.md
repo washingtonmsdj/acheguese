@@ -6,6 +6,8 @@ Domain status: Feed = STATUS: FROZEN.
 >
 > Status: ✅ ativo · 🟡 parcial/beta · 🚧 em construção · 🗄 arquivado
 
+> Corte MVP: Analytics público permanece pausado (`publicAnalytics=false`); referências administrativas a métricas não reativam essa superfície.
+
 ---
 
 ## 1. Onboarding & Identidade
