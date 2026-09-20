@@ -33,12 +33,12 @@ export function UpgradePrompt({
   benefits = [],
 }: UpgradePromptProps) {
   const offer = BillingOfferService.getOffer(offerKey);
-  const { data: planData } = useBillingPlan(offer.planCode);
+  const showBilling = isLaunchSurfaceEnabled('billing');
+  const { data: planData } = useBillingPlan(showBilling ? offer.planCode : '');
 
   const planName = planData?.name || offer.label;
   const planPrice = planData?.priceDisplay || 'Preço indisponível';
   const planIcon = offer.icon === 'crown' ? <Crown className="w-5 h-5" /> : <Zap className="w-5 h-5" />;
-  const showBilling = isLaunchSurfaceEnabled('billing');
 
   if (!showBilling) {
     return (
@@ -129,9 +129,9 @@ export function UpgradePromptInline({
   offerKey,
 }: UpgradePromptInlineProps) {
   const offer = BillingOfferService.getOffer(offerKey);
-  const { data: planData } = useBillingPlan(offer.planCode);
-  const planName = planData?.name || offer.label;
   const showBilling = isLaunchSurfaceEnabled('billing');
+  const { data: planData } = useBillingPlan(showBilling ? offer.planCode : '');
+  const planName = planData?.name || offer.label;
 
   if (!showBilling) {
     return (
