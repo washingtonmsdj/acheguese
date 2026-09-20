@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 
 import { APP_MODULE_SLUGS } from "@/shared/config/moduleSlugs";
+import { isLaunchSurfaceEnabled } from "@/app/config/launchScope";
 import {
   REQUIRED_CITY_TERRITORIAL_MODULES,
   TERRITORIAL_ROUTE_PARAMS,
@@ -69,9 +70,15 @@ describe("territorial route patterns", () => {
       "eventos",
       "vagas",
       "gastronomia",
-      "educacao",
       "mapa",
       "pontos-turisticos",
     ]);
+  });
+
+  it("does not require paused education as a public city module", () => {
+    expect(isLaunchSurfaceEnabled("education")).toBe(false);
+    expect(REQUIRED_CITY_TERRITORIAL_MODULES).not.toContain(
+      APP_MODULE_SLUGS.education,
+    );
   });
 });
