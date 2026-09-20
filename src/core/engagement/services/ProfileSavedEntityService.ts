@@ -11,7 +11,7 @@ export type ProfileSavedEntityKind =
 interface ProfileSavedEntityConfig {
   tableName:
     | "classified_favorites"
-    | "event_favorites"
+    | "event_saved_items"
     | "tourist_point_saved_items"
     | "vaga_saved_items";
   entityIdColumn:
@@ -27,7 +27,7 @@ const SAVED_ENTITY_CONFIGS = {
     entityIdColumn: "classified_id",
   },
   event: {
-    tableName: "event_favorites",
+    tableName: "event_saved_items",
     entityIdColumn: "event_id",
   },
   tourist_point: {
