@@ -17,8 +17,7 @@ describe("community post share truthfulness", () => {
 
   it("keeps manual-copy fallback useful without counting it as a completed share", () => {
     const fallbackStart = source.indexOf('toast.info("Copie o link do post"');
-    const fallbackEnd = source.indexOf("}", fallbackStart);
-    const fallback = source.slice(fallbackStart, fallbackEnd + 1);
+    const fallback = source.slice(fallbackStart, fallbackStart + 220);
 
     expect(fallbackStart).toBeGreaterThanOrEqual(0);
     expect(fallback).toContain("return false");
