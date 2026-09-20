@@ -53,6 +53,7 @@ import { useAuth } from "@/core/auth/hooks/useAuth";
 import { jobPublicRoutes } from "@/core/work-opportunities/routes/jobPublicRoutes";
 import { TERRITORY_CONFIG } from "@/core/routing/config/territory";
 import { useToast } from "@/shared/hooks/use-toast";
+import { BusinessUrlService } from "@/core/business/services/BusinessUrlService";
 
 import { useVagaDetail } from "../hooks/useVagaDetail";
 import { VagaCard } from "../components/VagaCard";
@@ -314,7 +315,7 @@ export default function VagaDetailPublicPage() {
     ? `${vaga.titulo} na ${vaga.empresaNome} | Vagas ${city}`
     : "Vaga de Emprego";
   const pageDescription = vaga
-    ? `Vaga de ${vaga.titulo} na ${vaga.empresaNome}. ${vaga.resumo || vaga.descricao.slice(0, 150)}... Candidate-se agora!`
+    ? `Vaga de ${vaga.titulo} na ${vaga.empresaNome}. ${vaga.resumo || vaga.descricao.slice(0, 150)}...`
     : "Detalhes da vaga de emprego";
 
   // Handlers
@@ -381,6 +382,22 @@ export default function VagaDetailPublicPage() {
 
     setReportOpen(true);
   }, [appUrls.auth.login, navigate, user]);
+
+  const handleOpenBusinessProfile = useCallback(async () => {
+    if (!vaga?.empresaId) return;
+
+    const context = await BusinessUrlService.resolveById(vaga.empresaId);
+    if (!context) {
+      toast({
+        title: "Perfil da empresa indisponível",
+        description: "Não foi possível abrir o perfil público desta empresa.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    navigate(BusinessUrlService.getPublicCanonicalUrl(context));
+  }, [navigate, toast, vaga?.empresaId]);
 
   const handleDenuncia = useCallback(
     async (reason: VagaReportReason, description?: string) => {
@@ -787,7 +804,7 @@ export default function VagaDetailPublicPage() {
                     <p className="font-medium text-sm">{vaga.empresaNome}</p>
                     {vaga.empresaId && (
                       <button
-                        onClick={() => navigate(`/empresa/${vaga.empresaId}`)}
+                        onClick={() => void handleOpenBusinessProfile()}
                         className="text-xs text-primary hover:underline"
                       >
                         Ver perfil da empresa
@@ -838,10 +855,14 @@ export default function VagaDetailPublicPage() {
                 <span className="text-muted-foreground">Visualizações</span>
                 <span className="font-medium">{vaga.viewCount}</span>
               </div>
-              <div className="flex items-center justify-between text-sm">
-                <span className="text-muted-foreground">Candidaturas</span>
-                <span className="font-medium">{vaga.applicationCount}</span>
-              </div>
+              {vaga.applicationChannel === "internal" && (
+                <div className="flex items-center justify-between text-sm">
+                  <span className="text-muted-foreground">
+                    Candidaturas no Achegue-se
+                  </span>
+                  <span className="font-medium">{vaga.applicationCount}</span>
+                </div>
+              )}
             </div>
           </div>
         </div>
