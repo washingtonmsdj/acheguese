@@ -536,3 +536,25 @@ A prancha 117 também está coberta pelos estados demonstrativos de visitante, v
 
 - Branch: `codex/reformulacao-entrada-comunidade`.
 - Commit restrito à tela, ao estilo scoped e às documentações do concept; alterações staged preexistentes permanecem fora do commit.
+
+## 20/09/2026 · Acompanhar pedido — pranchas 023 e 025
+
+### Auditoria e ajuste
+
+- Comparei `OrderTrackingConceptSurface` com as referências mobile e desktop de Acompanhar pedido. A superfície já cobria preparo, entrega, sinal desatualizado e conclusão, com composição responsiva, pagamento, itens, histórico, comprovante, avaliação e ações de contato; mantive os contratos reais e revisei os quatro estados no navegador.
+- A divergência funcional encontrada estava no preview DEV: mesmo recebendo uma localização demonstrativa, `RideTrackingMap` inicializava `useDriverLocation` com `enabled: true` e tentava consultar a RPC de posição real. Isso poluía o console com erro de schema e não era aceitável para uma referência visual limpa.
+- Adicionei `trackingEnabled` ao componente compartilhado e desliguei a consulta apenas quando existe `driverLocationOverride`. O mapa continua usando o rastreamento real em produção e o mock passa a renderizar somente o snapshot autorizado pelo próprio preview.
+- Alinhei a asserção histórica da suíte ao fixture de `11/09/2026`: datas antigas são exibidas como `11/09 às HH:mm`; “Hoje” só aparece quando a data do pedido coincide com o dia corrente.
+
+### Validação e evidências
+
+- Navegador interno mantido aberto em `/gastronomia/pedidos/concept-mock-order-1042?concept-mock=1&state=preparing`.
+- Estados `preparing`, `in_delivery`, `stale` e `completed` conferidos em `389 × 867` CSS px; desktop conferido em viewport amplo equivalente a `1440 × 867` CSS px.
+- Console do mock sem erros após o ajuste; preparo não renderiza mapa, entrega renderiza mapa/contato quando há coordenadas e concluído renderiza comprovante/avaliação/cardápio.
+- `npm exec vitest -- --run src/modules/business/gastronomy/pages/OrderTrackingConceptSurface.spec.tsx --pool=threads --maxWorkers=1` — 5 testes aprovados.
+- `npm run typecheck:app`, ESLint nos arquivos alterados e `git diff --check`.
+
+### Git
+
+- Branch: `codex/reformulacao-entrada-comunidade`.
+- Commit restrito ao componente de mapa, à superfície de acompanhamento, ao teste e às documentações do concept; alterações staged preexistentes permanecem fora do commit.

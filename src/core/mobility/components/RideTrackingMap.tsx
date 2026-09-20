@@ -38,6 +38,7 @@ interface RideTrackingMapProps {
   compactFill?: boolean;
   mode?: 'live' | 'snapshot';
   locationOverride?: DriverLocationData;
+  trackingEnabled?: boolean;
   compactStatusLabel?: string;
   showSnapshotOverlay?: boolean;
 }
@@ -60,6 +61,7 @@ export const RideTrackingMap = memo(function RideTrackingMap({
   compactFill = false,
   mode = 'live',
   locationOverride,
+  trackingEnabled = true,
   compactStatusLabel,
   showSnapshotOverlay = true,
 }: RideTrackingMapProps) {
@@ -82,7 +84,7 @@ export const RideTrackingMap = memo(function RideTrackingMap({
   } = useDriverLocation({
     driverProfileId,
     rideId,
-    enabled: true,
+    enabled: trackingEnabled,
     subscribe: mode === 'live',
   });
 

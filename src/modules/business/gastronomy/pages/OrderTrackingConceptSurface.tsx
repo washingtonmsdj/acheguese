@@ -1136,6 +1136,7 @@ function DesktopTrackingLayout({
         }
         showSnapshotOverlay={false}
         compactFill
+        trackingEnabled={!driverLocationOverride}
         className="rounded-lg"
       />
     ) : null;
@@ -1506,6 +1507,7 @@ export default function OrderTrackingConceptSurface({
                     : undefined
                 }
                 showSnapshotOverlay={false}
+                trackingEnabled={!driverLocationOverride}
                 className="rounded-xl"
               />
             ) : (

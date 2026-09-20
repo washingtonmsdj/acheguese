@@ -192,7 +192,7 @@ describe("OrderTrackingConceptSurface", () => {
     } as OrderWithItems);
 
     expect(screen.getAllByText("Pedido entregue")).toHaveLength(2);
-    expect(screen.getAllByText(/^Hoje às /)).toHaveLength(2);
+    expect(screen.getAllByText(/^11\/09 às /)).toHaveLength(4);
     expect(screen.getByText("Recebido por")).toBeInTheDocument();
     expect(screen.getAllByText("Comprovante de entrega")).toHaveLength(2);
     expect(screen.getAllByText("Ver comprovante")).toHaveLength(2);
