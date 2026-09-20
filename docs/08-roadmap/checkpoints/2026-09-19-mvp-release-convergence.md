@@ -30,6 +30,21 @@ O GitHub Status público reportava **Actions operacional** em 2026-09-20 09:44 U
 
 O workflow existente `.github/workflows/certify-heavy.yml` foi fortalecido sem criar nova autoridade. No runner `acheguese-heavy-windows`, ele passa a executar sobre o SHA explicitamente atestado: security validation, lint, typecheck, gates de arquitetura/SSOT, validação local + provenance + paridade remota de migrations, suíte Vitest completa, E2E público/autenticado, regression e build/análise de bundle. O link remoto usa somente `SUPABASE_ACCESS_TOKEN` + `SUPABASE_DB_PASSWORD` dos GitHub Actions secrets. Esse caminho é fallback de certificação enquanto o hosted scheduler não executa; ele não autoriza remover os checks normais.
 
+## Revalidação CI — 2026-09-20 após higiene de branches
+
+Nova prova foi coletada no head do PR #252 (`f8675e64df5e55a6f5700738bfc179782edf4faf`) sem alterar source ou workflows:
+
+- SSOT Enforcement run `35514923838` criou o job `SSOT Enforcement Checks`, mas encerrou em `failure` com `steps=[]` e sem log de job;
+- SSOT Territorial Tests run `35514923847` criou os jobs Phase Core, Runtime, E2E e Account/Business, todos inicialmente encerrados sem steps;
+- um único rerun controlado foi disparado para excluir falha transitória: o SSOT Enforcement gerou novo job `106091774593` e repetiu `failure` com `steps=[]`; o Territorial voltou a colocar os quatro jobs em `queued`, ainda sem qualquer step iniciado;
+- no head do PR #251 (`ff621a6bf8f0d3558c60fc133864d0b50169c098`), Security Check run `35514851113` também havia criado quatro jobs hosted que falharam sem steps, enquanto Heavy PR Certification run `35514851145` permaneceu queued no self-hosted;
+- os YAMLs atuais foram reinspecionados: Security Check, SSOT Enforcement e SSOT Territorial Tests usam `ubuntu-latest` e contêm steps válidos; Heavy PR Certification usa deliberadamente as labels `self-hosted/windows/x64/acheguese-heavy-windows/playwright-chromium/remote-only`;
+- a integração GitHub disponível não permite leitura de Actions permissions/runners nem branch protection administrativa (endpoint de protection retorna 403 e endpoints de Actions settings/runners não são expostos pela conexão).
+
+**Conclusão:** o blocker continua anterior ao checkout. Não há evidência de erro de lint, typecheck, teste, build ou YAML. A causa remanescente está em provisioning/scheduler/limite/permissão da conta ou indisponibilidade do runner self-hosted. Não criar workflow paralelo, não trocar labels e não enfraquecer required checks para contornar o problema.
+
+**Regra após esta revalidação:** não disparar novos reruns enquanto o padrão `steps=[]` persistir. A próxima ação válida é administrativa, com credencial capaz de inspecionar Actions usage/billing/permissions/runners; depois disso, executar a certificação exact-SHA já versionada.
+
 ## Supabase canônico
 
 Projeto: `xhdowzacfujckjelqhtd` (`acheguese`)
