@@ -41,7 +41,6 @@ export const REQUIRED_CITY_TERRITORIAL_MODULES = [
   APP_MODULE_SLUGS.events,
   APP_MODULE_SLUGS.jobs,
   APP_MODULE_SLUGS.gastronomy,
-  APP_MODULE_SLUGS.education,
   APP_MODULE_SLUGS.map,
   APP_MODULE_SLUGS.touristPoints,
 ] as const satisfies readonly AppModuleSlug[];
