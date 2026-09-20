@@ -162,7 +162,7 @@ Essas 13 branches **não são fonte de trabalho pendente**. Devem ser apagadas s
 - dry-run auditável: `npm run maintenance:branches -- --include-superseded --json`;
 - aplicação física, somente com autoridade delete-ref: `npm run maintenance:branches -- --include-superseded --apply`.
 
-A manifest contém **59 heads auditados**: as 13 branches sem PR já classificadas como superseded, 31 branches antigas de PR fechado cujo sucessor `rebased`, `v2` ou equivalente foi efetivamente mergeado, 3 snapshots/probes antigos de Mobilidade já comprovadamente redundantes, 6 branches temporárias antigas de certificação/recovery/ops e 6 precursores fechados/superseded adicionais de sitemap, facades, ProfileMembersManager e tipos Supabase. Branches ainda em quarentena não entram na manifest.
+A manifest contém **61 heads auditados**: as 13 branches sem PR já classificadas como superseded, 31 branches antigas de PR fechado cujo sucessor `rebased`, `v2` ou equivalente foi efetivamente mergeado, 3 snapshots/probes antigos de Mobilidade já comprovadamente redundantes, 6 branches temporárias antigas de certificação/recovery/ops, 6 precursores fechados de sitemap/facades/ProfileMembersManager/tipos Supabase e 2 precursores de segurança absorvidos byte a byte pela `main`. Branches ainda em quarentena não entram na manifest.
 
 ### Segundo lote — PR fechado substituído por sucessor mergeado
 
@@ -197,6 +197,15 @@ Foram classificados mais seis heads como **superseded / não reintegrar**:
 - `sync/supabase-types-canonical-20260918`: sync de tipos fechado sem merge; substituído pelo writer via PR do PR #153 e pelo sync live mergeado no PR #168.
 
 Esse lote reduz branches fechadas sem merge que ainda apareciam como trabalho potencial, sem apagar nenhuma linha funcional única. Todas continuam protegidas por SHA pinado e revalidação antes de delete-ref.
+
+### Quinto lote — precursores de segurança absorvidos byte a byte
+
+Mais dois heads fechados sem merge foram provados como superseded:
+
+- `agent/security-admin-role-display-validity`: a migration `20260820012139_filter_admin_role_display_validity.sql` e o teste `admin-role-display-validity-security.test.ts` são byte a byte idênticos aos arquivos atuais da `main`; a reconciliação posterior de proveniência foi mergeada no PR #57;
+- `agent/security-classified-report-rpc-contract`: a migration `20260820081746_harden_classified_report_rpc_contract.sql` e a spec `classified_report_authorization_spec.sql` são byte a byte idênticas à `main`; a reconciliação posterior foi mergeada no PR #54.
+
+Como o conteúdo útil já está preservado exatamente na base atual, esses heads não representam trabalho pendente nem histórico funcional único necessário para o MVP.
 
 ## Próximo passo
 
