@@ -7,10 +7,10 @@ function readProjectFile(relativePath: string): string {
 }
 
 const migration = readProjectFile(
-  "supabase/migrations/20260911222000_complete_delivery_in_single_transaction_g70.sql",
+  "supabase/migrations/20260916113602_restore_atomic_delivery_completion_with_server_owned_price.sql",
 );
 const serverOwnedPriceMigration = readProjectFile(
-  "supabase/migrations/20260916084500_restore_atomic_delivery_completion_with_server_owned_price.sql",
+  "supabase/migrations/20260916113754_ignore_client_final_price_in_delivery_wrapper.sql",
 );
 const deliveryActions = readProjectFile(
   "src/core/mobility/core/RideDeliveryOperationalActions.ts",
@@ -34,7 +34,7 @@ const mobilityRpcService = readProjectFile(
 describe("G70 atomic terminal delivery", () => {
   it("keeps the public delivery RPC contract single and wraps the prior authority", () => {
     expect(migration).toContain(
-      "RENAME TO mobility_transition_delivery_state_atomic_base_g70",
+      "CREATE OR REPLACE FUNCTION private.mobility_transition_delivery_state_atomic_base_g70(",
     );
     expect(migration).toContain(
       "private.mobility_transition_delivery_state_atomic_base_g70(",
