@@ -299,3 +299,17 @@ A revisão do workflow `.github/workflows/supabase-types-sync.yml` confirmou que
 - `tests/architecture/supabase-types-sync-pr-authority.test.ts` impede retorno de push direto à `main`.
 
 **Conclusão:** publisher de tipos via PR deixa de ser blocker. Permanecem branch protection administrativa e disponibilidade real dos checks/runners.
+
+
+## Atualização — gate legal de produção fail-closed — 2026-09-20
+
+A auditoria dos textos legais confirmou que a UI não inventa identidade do DPO quando configuração falta: Termos usa fallback jurídico genérico e a página DPO mostra estado não configurado/falha fechado. O risco residual estava no gate de deploy, que exigia DPO/contato mas não exigia foro e não validava formato dos e-mails.
+
+`tools/release/verify-deploy-ready.mjs` foi endurecido para:
+
+- exigir `VITE_LEGAL_FORUM` junto com URL pública, contato, DPO e Turnstile;
+- exigir `VITE_PUBLIC_SITE_URL` em HTTPS;
+- validar formato de `VITE_CONTACT_EMAIL` e `VITE_DPO_EMAIL`;
+- rejeitar identidade/foro vazios ou insuficientes antes de certificar deploy.
+
+`tests/security/dpo-request-intake-security.test.ts` ratcheta o contrato. **Conclusão:** configuração legal mínima deixa de depender apenas de revisão humana; build/provider com valor ausente/inválido deve falhar antes da certificação.
