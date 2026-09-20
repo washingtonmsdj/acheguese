@@ -3,7 +3,7 @@ import { describe, expect, it } from "vitest";
 
 describe("MVP vagas runtime reconciliation migration", () => {
   const migration = readFileSync(
-    "supabase/migrations/20260920003500_reconcile_vagas_runtime_mvp.sql",
+    "supabase/migrations/20260920004231_reconcile_vagas_runtime_mvp.sql",
     "utf8",
   );
 
