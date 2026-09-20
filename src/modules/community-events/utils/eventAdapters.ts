@@ -161,13 +161,16 @@ export function mapCommunityEventToEvent(input: PublicEvent): Event {
         name: isFree ? "Inscricao gratuita" : "Ingresso",
         price,
         currency: "BRL",
-        quantity_total: capacity ?? Math.max(input.current_participants, 100),
-        quantity_available: Math.max(
-          0,
-          (capacity ?? Math.max(input.current_participants, 100)) - input.current_participants,
-        ),
+        quantity_total: capacity ?? null,
+        quantity_available:
+          capacity === undefined
+            ? null
+            : Math.max(0, capacity - input.current_participants),
         quantity_sold: input.current_participants,
-        status: "disponivel",
+        status:
+          capacity !== undefined && input.current_participants >= capacity
+            ? "esgotado"
+            : "disponivel",
         is_free: isFree,
       },
     ],
