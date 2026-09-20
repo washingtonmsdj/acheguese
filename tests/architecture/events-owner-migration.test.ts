@@ -266,6 +266,10 @@ describe("community Events canonical owner", () => {
     expect(results).toContain("isError ? (");
     expect(results).toContain("Não foi possível carregar os eventos");
     expect(results).toContain("Tentar novamente");
+    expect(results).toContain("No momento não há eventos publicados nesta região");
+    expect(listPage).toContain('isEventsError ? "—" : stats.total');
+    expect(listPage).toContain('isEventsError ? "—" : stats.upcoming');
+    expect(listPage).toContain('isEventsError ? "—" : stats.participants');
     expect(results.indexOf("isError ? (")).toBeLessThan(
       results.indexOf("events.length === 0 ? ("),
     );
