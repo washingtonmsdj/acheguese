@@ -155,7 +155,7 @@ Ratchet:
 
 Migration source:
 
-`supabase/migrations/20260913004500_index_public_business_map_bounds_g154.sql`
+`supabase/migrations/20260920094738_index_public_business_map_bounds_g154.sql`
 
 Adiciona na read model pública:
 
@@ -169,7 +169,7 @@ Essas migrations estão no source; **não há prova neste checkpoint de aplicaç
 
 Migration source:
 
-`supabase/migrations/20260913010000_retarget_business_spatial_search_read_model_g154.sql`
+`supabase/migrations/20260920094744_retarget_business_spatial_search_read_model_g154.sql`
 
 Substitui os contracts públicos:
 
