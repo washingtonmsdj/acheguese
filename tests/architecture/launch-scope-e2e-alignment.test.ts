@@ -32,6 +32,7 @@ describe("MVP launch-scope E2E alignment", () => {
       "communityAlerts=false",
       "communityIssues=false",
       "communityLostFound=false",
+      "publicAnalytics=false",
     ];
 
     for (const flag of pausedFlags) {
@@ -43,7 +44,7 @@ describe("MVP launch-scope E2E alignment", () => {
       ).toBe(true);
     }
 
-    expect(screenMap).toContain("communityCommunication");
+    expect(launchScope).toContain("communityCommunication: true");
     expect(screenMap).toContain("DM comunitária");
     expect(featureMap).toContain("Direct messages comunitário");
     expect(homeInventory).toContain("Mensagens diretas | Sim");
