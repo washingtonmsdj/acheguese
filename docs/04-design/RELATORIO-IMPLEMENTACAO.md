@@ -431,6 +431,28 @@ A prancha 117 também está coberta pelos estados demonstrativos de visitante, v
 - Branch: `codex/reformulacao-entrada-comunidade`.
 - Commit restrito ao componente e às documentações do concept; alterações staged preexistentes permanecem fora do commit.
 
+## 19/09/2026 · Explorar e encontrar — prancha 009
+
+### Auditoria e ajuste
+
+- Comparei `BuscaPage` com a referência de mapa/lista. Busca territorial, query, chip `Serviços`, ordenação, lista de profissionais, CTA `Ver no mapa` e mapa continuam usando os componentes e contratos existentes; o mock DEV só fornece os três resultados demonstrativos já definidos para a prancha.
+- A divergência principal estava na navegação do preview: a barra global exibia `Hoje`, `Community` e `Atividade`, enquanto a prancha mostra `Início`, `Comunidade`, `Publicar`, `Conversas` e `Conta`. O `TerritoryAdaptiveNavigation` agora troca esse conjunto somente em `/busca/...?...concept-mock=1` durante desenvolvimento.
+- No desktop do preview, o rail agora reproduz os módulos da referência: Início, Comunidade, Explorar, Negócios, Serviços, Mobilidade, Classificados e Educação, com `Explorar` ativo e `Trocar território` no rodapé.
+- A ação `Publicar` aponta para o fluxo real da comunidade com `action=publicar`; não concede permissão nem persiste conteúdo. Fora do preview, a navegação global permanece inalterada.
+
+### Validação e evidências
+
+- Navegador interno: conferi mobile equivalente a `389 × 867` CSS px e desktop amplo `1440 × 867` CSS px. Foram verificados header, busca, categorias, filtros, resultados, mapa, navegação mobile e rail desktop.
+- `npm run typecheck:app`.
+- ESLint no componente de navegação alterado.
+- `git diff --check`.
+- A aba permaneceu aberta na rota de busca e o viewport retornou ao padrão mobile para acompanhamento.
+
+### Git
+
+- Branch: `codex/reformulacao-entrada-comunidade`.
+- Commit restrito ao componente de navegação e às documentações do concept; alterações staged preexistentes permanecem fora do commit.
+
 ## 19/09/2026 · Expansão territorial e interesse — prancha 060
 
 ### Auditoria e ajuste

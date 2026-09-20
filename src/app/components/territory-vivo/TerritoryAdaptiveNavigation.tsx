@@ -1,12 +1,18 @@
 import { useSyncExternalStore } from "react";
 import {
   ArrowLeftRight,
+  BookOpen,
+  Building2,
+  Car,
+  Compass,
   Home,
   MapPin,
   MessageCircle,
   Plus,
+  Tag,
   UserRound,
   Users,
+  Wrench,
 } from "lucide-react";
 import { Link, useLocation } from "react-router-dom";
 import { usePublicBrowsingCity } from "@/core/location/hooks/usePublicBrowsingCity";
@@ -20,7 +26,11 @@ import {
   lastTerritoryStore,
   type LastTerritory,
 } from "@/core/routing/stores/LastTerritoryStore";
-import { buildCommunityTerritoryUrl } from "@/core/routing/utils/territoryUrls";
+import {
+  buildCommunityTerritoryUrl,
+  buildModuleTerritoryUrl,
+  MODULE_SLUGS,
+} from "@/core/routing/utils/territoryUrls";
 import { useSessionContext } from "@/core/session";
 import { cn } from "@/shared/utils/cn";
 
@@ -57,6 +67,15 @@ export function TerritoryAdaptiveNavigation({
     pathname.startsWith("/comunidade/") &&
     new URLSearchParams(location.search).get("visualMock") ===
       "community-concept";
+  const searchConceptPreview =
+    import.meta.env.DEV &&
+    pathname.startsWith("/busca/") &&
+    new URLSearchParams(location.search).get("concept-mock") === "1";
+  const conceptNavigationPreview =
+    communityConceptPreview || searchConceptPreview;
+  const conceptPublishHref = searchConceptPreview
+    ? `${buildCommunityTerritoryUrl(territoryBase)}?action=publicar`
+    : "#feed";
   const conceptMobileModes = [
     { id: "home", label: "Início", href: territoryBase, icon: Home },
     {
@@ -68,7 +87,7 @@ export function TerritoryAdaptiveNavigation({
     {
       id: "publish",
       label: "Publicar",
-      href: "#feed",
+      href: conceptPublishHref,
       icon: Plus,
     },
     {
@@ -84,6 +103,64 @@ export function TerritoryAdaptiveNavigation({
       icon: UserRound,
     },
   ] as const;
+  const conceptSearchDesktopModes = [
+    {
+      id: "today",
+      label: "Início",
+      href: territoryBase,
+      description: "O que importa agora",
+      icon: Home,
+    },
+    {
+      id: "community",
+      label: "Comunidade",
+      href: buildCommunityTerritoryUrl(territoryBase),
+      description: "Participação no território",
+      icon: Users,
+    },
+    {
+      id: "explore",
+      label: "Explorar",
+      href: buildModuleTerritoryUrl(MODULE_SLUGS.search, territoryBase),
+      description: "Buscar, filtrar e mapear",
+      icon: Compass,
+    },
+    {
+      id: "business",
+      label: "Negócios",
+      href: buildModuleTerritoryUrl(MODULE_SLUGS.business, territoryBase),
+      description: "Conheça e apoie negócios",
+      icon: Building2,
+    },
+    {
+      id: "services",
+      label: "Serviços",
+      href: buildModuleTerritoryUrl(MODULE_SLUGS.services, territoryBase),
+      description: "Encontre profissionais",
+      icon: Wrench,
+    },
+    {
+      id: "mobility",
+      label: "Mobilidade",
+      href: buildModuleTerritoryUrl(MODULE_SLUGS.mobility, territoryBase),
+      description: "Deslocamentos no território",
+      icon: Car,
+    },
+    {
+      id: "classifieds",
+      label: "Classificados",
+      href: buildModuleTerritoryUrl(MODULE_SLUGS.classifieds, territoryBase),
+      description: "Comprar, vender e circular",
+      icon: Tag,
+    },
+    {
+      id: "education",
+      label: "Educação",
+      href: buildModuleTerritoryUrl(MODULE_SLUGS.education, territoryBase),
+      description: "Cursos e escolas locais",
+      icon: BookOpen,
+    },
+  ] as const;
 
   return (
     <>
@@ -97,7 +174,7 @@ export function TerritoryAdaptiveNavigation({
         data-territory-navigation="mobile"
       >
         <div className="mx-auto flex h-16 max-w-lg items-stretch px-1">
-          {(communityConceptPreview ? conceptMobileModes : navigationModes).map(
+          {(conceptNavigationPreview ? conceptMobileModes : navigationModes).map(
             (mode) => {
             const Icon = mode.icon;
             const publishMode = mode.id === "publish";
@@ -150,7 +227,7 @@ export function TerritoryAdaptiveNavigation({
         className={cn(
           "fixed inset-y-0 left-0 z-[90] hidden w-[4.5rem] flex-col border-r border-territory-border bg-territory-surface px-2 py-3 md:flex xl:hidden",
           hideDesktop && !communityConceptPreview && "md:hidden",
-          communityConceptPreview && "min-[1000px]:hidden",
+          conceptNavigationPreview && "min-[1000px]:hidden",
         )}
         aria-label="Navegação principal tablet"
         data-territory-navigation="tablet"
@@ -163,9 +240,11 @@ export function TerritoryAdaptiveNavigation({
           <MapPin className="h-5 w-5" aria-hidden="true" />
         </Link>
         <div className="mt-6 flex flex-1 flex-col gap-1">
-          {navigationModes.map((mode) => {
+          {(searchConceptPreview ? conceptSearchDesktopModes : navigationModes).map((mode) => {
             const Icon = mode.icon;
-            const activeMode = isTerritoryNavigationModeActive(pathname, mode);
+            const activeMode = searchConceptPreview
+              ? pathname === mode.href || pathname.startsWith(`${mode.href}/`)
+              : isTerritoryNavigationModeActive(pathname, mode);
 
             return (
               <Link
@@ -197,9 +276,11 @@ export function TerritoryAdaptiveNavigation({
         data-territory-navigation="desktop"
       >
         <div className="mt-2 flex flex-1 flex-col gap-1">
-          {navigationModes.map((mode) => {
+          {(searchConceptPreview ? conceptSearchDesktopModes : navigationModes).map((mode) => {
             const Icon = mode.icon;
-            const activeMode = isTerritoryNavigationModeActive(pathname, mode);
+            const activeMode = searchConceptPreview
+              ? pathname === mode.href || pathname.startsWith(`${mode.href}/`)
+              : isTerritoryNavigationModeActive(pathname, mode);
 
             return (
               <Link
@@ -224,11 +305,11 @@ export function TerritoryAdaptiveNavigation({
           })}
         </div>
         <Link
-          to="/"
+          to={searchConceptPreview ? "/buscar" : "/"}
           className="flex min-h-11 items-center gap-3 border-t border-territory-border px-3 pt-4 text-sm font-semibold text-territory-muted hover:text-territory-brand"
         >
           <ArrowLeftRight className="h-5 w-5" aria-hidden="true" />
-          Voltar à entrada
+          {searchConceptPreview ? "Trocar território" : "Voltar à entrada"}
         </Link>
       </nav>
     </>
