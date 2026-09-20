@@ -18747,17 +18747,6 @@ export type Database = {
         Returns: Json
       }
       create_post_with_poll: { Args: { payload: Json }; Returns: Json }
-      create_profile_with_extension: {
-        Args: {
-          p_avatar_url?: string
-          p_bio?: string
-          p_display_name: string
-          p_extension_data?: Json
-          p_handle: string
-          p_profile_type: string
-        }
-        Returns: Json
-      }
       create_review_report: {
         Args: { p_description?: string; p_reason: string; p_review_id: string }
         Returns: {
@@ -18932,7 +18921,6 @@ export type Database = {
       current_user_has_password: { Args: never; Returns: boolean }
       delete_cache: { Args: { p_key: string }; Returns: undefined }
       delete_cache_pattern: { Args: { p_pattern: string }; Returns: number }
-      delete_profile: { Args: { p_profile_id: string }; Returns: Json }
       delete_profile_review: {
         Args: { p_review_id: string; p_reviewer_profile_id: string }
         Returns: boolean
@@ -20245,10 +20233,6 @@ export type Database = {
         Args: { vaga_id: string }
         Returns: undefined
       }
-      invite_profile_member_by_email: {
-        Args: { p_email: string; p_profile_id: string; p_role?: string }
-        Returns: Json
-      }
       is_admin: { Args: { p_user_id: string }; Returns: boolean }
       is_admin_from_roles: { Args: { p_user_id: string }; Returns: boolean }
       is_admin_user: { Args: { p_user_id: string }; Returns: boolean }
@@ -21271,18 +21255,6 @@ export type Database = {
           p_extension_data: Json
           p_handle: string
           p_professional_patch: Json
-        }
-        Returns: Json
-      }
-      profile_rpc_create_profile_with_extension: {
-        Args: {
-          p_actor_user_id: string
-          p_avatar_url: string
-          p_bio: string
-          p_display_name: string
-          p_extension_data: Json
-          p_handle: string
-          p_profile_type: string
         }
         Returns: Json
       }
@@ -22570,10 +22542,6 @@ export type Database = {
         }
         Returns: string
       }
-      transfer_profile_ownership: {
-        Args: { p_new_owner_user_id: string; p_profile_id: string }
-        Returns: Json
-      }
       unaccent: { Args: { "": string }; Returns: string }
       unlockrows: { Args: { "": string }; Returns: number }
       update_communication_publication_draft: {
@@ -22586,10 +22554,6 @@ export type Database = {
       }
       update_owned_driver_data: {
         Args: { p_profile_id: string; p_updates: Json }
-        Returns: Json
-      }
-      update_profile_handle: {
-        Args: { p_new_handle: string; p_profile_id: string }
         Returns: Json
       }
       update_safety_emergency_alert_status: {
