@@ -89,3 +89,16 @@ Nenhuma alteração desta rodada toca mobilidade, cadastro, SMTP, Resend ou conf
 ## Pendências separadas
 
 A matriz `user-export-data` continua bloqueada até concluir sua certificação de completude LGPD. `public.privacy_subject_requests` e `public.privacy_subject_request_events` estão classificados como fontes DPO excluídas do export self-service nesta fase. A existência do canal DPO e da fila administrativa não autoriza habilitar esse exportador.
+
+
+## Revalidação do corte MVP — 2026-09-20
+
+- `submit-dpo-request` foi revalidada no projeto canônico como **ACTIVE v1**, `verify_jwt=false`, coerente com o intake público protegido pelo próprio código;
+- o bundle remoto confirma origin allowlist, body limit, rate limit, honeypot e Turnstile com action/hostname; falha de configuração ou indisponibilidade do provider retorna erro e não insere pedido;
+- o source canônico continua gravando somente via service role em `privacy_subject_requests`; o navegador usa exclusivamente a Edge Function;
+- os ratchets DPO foram realinhados às identidades reais do ledger de migrations após a convergência 673/673;
+- `.env.production` passou a declarar explicitamente `VITE_TURNSTILE_SITE_KEY=`, já exigida por `verify-deploy-ready` e `validate-turnstile-production-config`.
+
+O `admin-privacy-rpc` remoto continua **ACTIVE v3** com `verify_jwt=true`. A comparação com a `main` confirma que o runtime ainda não contém o probe de paginação para página vazia (`items.length === 0 && page > 1`, `p_limit: 1`, `p_offset: 0`). Autenticação, MFA, ações e RPCs permanecem equivalentes no contrato observado.
+
+**Classificação:** o intake público LGPD está funcionalmente protegido no runtime observado. O sync do `admin-privacy-rpc` continua pendente pela authority self-hosted existente; não fazer deploy manual paralelo apenas para contornar indisponibilidade do runner.
