@@ -8,7 +8,7 @@
  * - Image caching (Stale-While-Revalidate)
  * - Offline fallback
  * 
- * @version 2.0.4
+ * @version 2.0.6
  */
 
 // Service Worker version
@@ -256,7 +256,7 @@ function getActionUrl(action, data) {
       return getLaunchSafeNotificationUrl(data.declineUrl, '/');
     
     case 'settings':
-      return '/settings/notifications';
+      return '/conta/notificacoes';
     
     default:
       return '/';
