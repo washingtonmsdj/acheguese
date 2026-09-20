@@ -29,6 +29,7 @@ export function AppTopbar() {
   const { activeProfile, user } = useSessionContext();
   const appUrls = useAppUrls();
   const showMessages = isLaunchSurfaceEnabled("communityCommunication");
+  const showBilling = isLaunchSurfaceEnabled("billing");
 
   const handleLogout = async () => {
     await AuthService.signOut();
@@ -40,9 +41,11 @@ export function AppTopbar() {
       <SidebarTrigger className="text-muted-foreground hover:text-foreground md:mr-2" />
 
       <div className="ml-auto flex items-center gap-3">
-        <Link to="/planos" className="hidden text-xs text-muted-foreground transition-colors hover:text-foreground sm:inline">
-          Planos
-        </Link>
+        {showBilling ? (
+          <Link to="/planos" className="hidden text-xs text-muted-foreground transition-colors hover:text-foreground sm:inline">
+            Planos
+          </Link>
+        ) : null}
         <Link to="/sobre" className="hidden text-xs text-muted-foreground transition-colors hover:text-foreground sm:inline">
           Sobre
         </Link>

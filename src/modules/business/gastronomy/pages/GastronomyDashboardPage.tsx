@@ -25,6 +25,7 @@ import { Button } from '@/shared/components/ui/button';
 import { getMenuUsageStats } from '@/modules/business/gastronomy/services';
 import { businessManagementRoutes } from '@/core/business/utils/businessManagementRoutes';
 import { useBusinessDashboardContext } from '@/modules/business/dashboard/businessDashboardContext';
+import { isLaunchSurfaceEnabled } from '@/app/config/launchScope';
 import {
   UtensilsCrossed,
   QrCode,
@@ -36,10 +37,11 @@ import {
 
 export default function GastronomyDashboardPage() {
   const { businessId, businessDataId } = useBusinessDashboardContext();
-  const { can, isLoading } = useEntitlements({
+  const { can, isLoading, hasShortPremiumLink } = useEntitlements({
     business_id: businessDataId,
     subscription_scope: 'business',
   });
+  const showBilling = isLaunchSurfaceEnabled('billing');
   const { data: usageStats } = useQuery({
     queryKey: ['gastronomy', 'dashboard-usage', businessDataId],
     enabled: !!businessDataId,
@@ -130,11 +132,21 @@ export default function GastronomyDashboardPage() {
               <span className="text-muted-foreground">Scans totais</span>
               <span className="font-medium">Não rastreado</span>
             </div>
-            <Link to={businessManagementRoutes.linkPremium(businessId)}>
-              <Button className="w-full" variant="outline">
-                Ver QR Code
-              </Button>
-            </Link>
+            {hasShortPremiumLink ? (
+              <Link to={businessManagementRoutes.linkPremium(businessId)}>
+                <Button className="w-full" variant="outline">
+                  Ver QR Code
+                </Button>
+              </Link>
+            ) : showBilling ? (
+              <p className="text-sm text-muted-foreground">
+                Consulte os recursos disponíveis na área de planos.
+              </p>
+            ) : (
+              <p className="text-sm text-muted-foreground">
+                QR Code personalizado não está habilitado para esta empresa no lançamento atual.
+              </p>
+            )}
             {can('canUseCustomQRCode') && (
               <p className="flex items-center gap-1.5 text-xs text-muted-foreground">
                 <CheckCircle2 className="h-3.5 w-3.5 text-success" aria-hidden="true" />

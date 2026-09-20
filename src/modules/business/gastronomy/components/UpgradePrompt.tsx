@@ -15,6 +15,7 @@ import { Badge } from '@/shared/components/ui/badge';
 import { Crown, Zap, Lock, TrendingUp } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { businessManagementRoutes } from '@/core/business/utils/businessManagementRoutes';
+import { isLaunchSurfaceEnabled } from '@/app/config/launchScope';
 
 interface UpgradePromptProps {
   businessId: string;
@@ -32,11 +33,32 @@ export function UpgradePrompt({
   benefits = [],
 }: UpgradePromptProps) {
   const offer = BillingOfferService.getOffer(offerKey);
-  const { data: planData } = useBillingPlan(offer.planCode);
+  const showBilling = isLaunchSurfaceEnabled('billing');
+  const { data: planData } = useBillingPlan(showBilling ? offer.planCode : '');
 
   const planName = planData?.name || offer.label;
   const planPrice = planData?.priceDisplay || 'Preço indisponível';
   const planIcon = offer.icon === 'crown' ? <Crown className="w-5 h-5" /> : <Zap className="w-5 h-5" />;
+
+  if (!showBilling) {
+    return (
+      <Card className="border-dashed">
+        <CardHeader>
+          <div className="flex items-start gap-4">
+            <div className="p-3 rounded-lg bg-muted">
+              <Lock className="w-6 h-6 text-muted-foreground" />
+            </div>
+            <div>
+              <CardTitle>{feature}</CardTitle>
+              <CardDescription>
+                Este recurso não está habilitado para esta empresa no lançamento atual.
+              </CardDescription>
+            </div>
+          </div>
+        </CardHeader>
+      </Card>
+    );
+  }
 
   return (
     <Card className="border-dashed">
@@ -107,8 +129,23 @@ export function UpgradePromptInline({
   offerKey,
 }: UpgradePromptInlineProps) {
   const offer = BillingOfferService.getOffer(offerKey);
-  const { data: planData } = useBillingPlan(offer.planCode);
+  const showBilling = isLaunchSurfaceEnabled('billing');
+  const { data: planData } = useBillingPlan(showBilling ? offer.planCode : '');
   const planName = planData?.name || offer.label;
+
+  if (!showBilling) {
+    return (
+      <div className="flex items-center gap-3 p-4 border rounded-lg bg-muted/50">
+        <Lock className="w-5 h-5 text-muted-foreground" />
+        <div>
+          <p className="text-sm font-medium">{feature}</p>
+          <p className="text-xs text-muted-foreground">
+            Recurso não habilitado para esta empresa no lançamento atual.
+          </p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="flex items-center justify-between p-4 border rounded-lg bg-muted/50">

@@ -6,6 +6,7 @@ import { Button } from "@/shared/components/ui/button";
 import { useSessionContext } from "@/core/session";
 import { AuthService } from "@/core/auth/services/AuthService";
 import { buildPublicAbsoluteUrl } from "@/shared/config/publicAppOrigin";
+import { isLaunchSurfaceEnabled } from "@/app/config/launchScope";
 
 /**
  * CentralHeader
@@ -15,6 +16,7 @@ import { buildPublicAbsoluteUrl } from "@/shared/config/publicAppOrigin";
 export function CentralHeader() {
   const { activeProfile, user } = useSessionContext();
   const publicHomeUrl = buildPublicAbsoluteUrl("/");
+  const showBilling = isLaunchSurfaceEnabled("billing");
 
   const handleLogout = async () => {
     await AuthService.signOut();
@@ -34,9 +36,11 @@ export function CentralHeader() {
           <Home className="h-4 w-4" />
           <span className="hidden sm:inline">Ver site</span>
         </a>
-        <Link to="/planos" className="hidden text-xs text-muted-foreground transition-colors hover:text-foreground sm:inline">
-          Planos
-        </Link>
+        {showBilling ? (
+          <Link to="/planos" className="hidden text-xs text-muted-foreground transition-colors hover:text-foreground sm:inline">
+            Planos
+          </Link>
+        ) : null}
         <Link to="/sobre" className="hidden text-xs text-muted-foreground transition-colors hover:text-foreground sm:inline">
           Sobre
         </Link>

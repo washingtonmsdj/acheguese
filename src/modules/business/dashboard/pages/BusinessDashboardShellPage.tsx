@@ -114,6 +114,8 @@ export default function BusinessDashboardShellPage() {
       : null;
 
   const basePath = businessManagementRoutes.overview(businessId);
+  const showBilling = isLaunchSurfaceEnabled("billing");
+  const showPremiumManagement = showBilling || Boolean(premiumUrl);
   const navItems: NavItem[] = [
     { label: "Visao geral", to: basePath, icon: Store },
     { label: "Dados da empresa", to: businessManagementRoutes.dados(businessId), icon: Building2 },
@@ -135,9 +137,13 @@ export default function BusinessDashboardShellPage() {
           },
         ]
       : []),
-    { label: "Planos", to: businessManagementRoutes.planos(businessId), icon: CreditCard },
+    ...(showBilling
+      ? [{ label: "Planos", to: businessManagementRoutes.planos(businessId), icon: CreditCard }]
+      : []),
     { label: "Anuncios", to: businessManagementRoutes.anuncios(businessId), icon: Megaphone },
-    { label: "Link premium", to: businessManagementRoutes.linkPremium(businessId), icon: LinkIcon },
+    ...(showPremiumManagement
+      ? [{ label: "Link premium", to: businessManagementRoutes.linkPremium(businessId), icon: LinkIcon }]
+      : []),
     ...(isLaunchSurfaceEnabled("publicAnalytics")
       ? [{ label: "Analytics", to: businessManagementRoutes.analytics(businessId), icon: BarChart3 }]
       : []),
@@ -183,7 +189,9 @@ export default function BusinessDashboardShellPage() {
             <div className="space-y-2">
               <div className="flex items-center gap-2">
                 <h1 className="text-2xl font-semibold text-foreground">{business.name}</h1>
-                <Badge variant="secondary">{planTier.toUpperCase()}</Badge>
+                {showBilling && (
+                  <Badge variant="secondary">{planTier.toUpperCase()}</Badge>
+                )}
                 <Badge variant="outline">{business.status}</Badge>
               </div>
               <p className="text-sm text-muted-foreground capitalize">{business.category}</p>
@@ -208,9 +216,11 @@ export default function BusinessDashboardShellPage() {
                 Mini-site premium
               </Button>
             )}
-            <Button size="sm" onClick={() => navigate(businessManagementRoutes.planos(businessId))}>
-              Ver planos
-            </Button>
+            {showBilling && (
+              <Button size="sm" onClick={() => navigate(businessManagementRoutes.planos(businessId))}>
+                Ver planos
+              </Button>
+            )}
           </div>
         </CardContent>
       </Card>

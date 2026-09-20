@@ -29,6 +29,7 @@ import { ArrowLeft, ChevronLeft, ChevronRight, LayoutGrid, List, Plus, Search } 
 import type { MenuCategory, MenuItem } from '@/core/business/services/MenuService';
 import { businessManagementRoutes } from '@/core/business/utils/businessManagementRoutes';
 import { PAGINATION } from '@/shared/constants';
+import { isLaunchSurfaceEnabled } from '@/app/config/launchScope';
 
 const MENU_ITEMS_PAGE_SIZE = PAGINATION.MEDIUM_LIMIT;
 
@@ -38,6 +39,7 @@ export default function MenuManagementPage() {
   const { entitlements, isLoading: loadingSubscription } =
     useBusinessSubscription(businessDataId);
   const { user } = useSessionContext();
+  const showBilling = isLaunchSurfaceEnabled('billing');
 
   const { menuId, isLoading: loadingMenuId } = useGastronomyMenuId(businessDataId);
   const { data: gastronomyProfile } = useGastronomyProfile(businessDataId);
@@ -342,13 +344,17 @@ export default function MenuManagementPage() {
 
               {!canUseImages && (
                 <div className="text-sm text-muted-foreground bg-muted/50 border rounded-lg p-3">
-                  Seu plano não permite imagens nos itens.
+                  {showBilling
+                    ? 'Seu plano não permite imagens nos itens.'
+                    : 'Imagens nos itens não estão habilitadas para esta empresa.'}
                 </div>
               )}
 
               {!canAddMoreItems && (
                 <div className="text-sm text-amber-600 bg-amber-50 border border-amber-200 rounded-lg p-3">
-                  Você atingiu o limite de {entitlements.maxMenuItems} itens. Faça upgrade para adicionar mais.
+                  {showBilling
+                    ? `Você atingiu o limite de ${entitlements.maxMenuItems} itens. Faça upgrade para adicionar mais.`
+                    : `Você atingiu o limite de ${entitlements.maxMenuItems} itens habilitado para esta empresa.`}
                 </div>
               )}
             </CardContent>

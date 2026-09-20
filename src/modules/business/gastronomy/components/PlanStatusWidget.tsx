@@ -6,6 +6,7 @@ import { Progress } from '@/shared/components/ui/progress';
 import { AlertTriangle, CheckCircle2, Crown, TrendingUp, Zap } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { businessManagementRoutes } from '@/core/business/utils/businessManagementRoutes';
+import { isLaunchSurfaceEnabled } from '@/app/config/launchScope';
 
 interface PlanStatusWidgetProps {
   /** Profile ID usado somente para a rota de planos. */
@@ -55,7 +56,8 @@ export function PlanStatusWidget({
     : isPro
       ? <Crown className="w-3 h-3 mr-1" />
       : null;
-  const showUpgradeCTA = !isDelivery;
+  const showBilling = isLaunchSurfaceEnabled('billing');
+  const showUpgradeCTA = showBilling && !isDelivery;
 
   return (
     <Card>
@@ -63,16 +65,24 @@ export function PlanStatusWidget({
         <div className="flex items-center justify-between">
           <div>
             <CardTitle className="flex items-center gap-2">
-              Plano Atual
-              <Badge variant={badgeVariant} className="flex items-center">
-                {badgeIcon}
-                {entitlements.planName}
-              </Badge>
+              {showBilling ? 'Plano Atual' : 'Recursos habilitados'}
+              {showBilling && (
+                <Badge variant={badgeVariant} className="flex items-center">
+                  {badgeIcon}
+                  {entitlements.planName}
+                </Badge>
+              )}
             </CardTitle>
             <CardDescription>
-              {isFree && 'Recursos basicos para comecar'}
-              {isPro && 'Recursos avancados para crescer'}
-              {isDelivery && 'Recursos ampliados para operacao de pedidos'}
+              {showBilling ? (
+                <>
+                  {isFree && 'Recursos basicos para comecar'}
+                  {isPro && 'Recursos avancados para crescer'}
+                  {isDelivery && 'Recursos ampliados para operacao de pedidos'}
+                </>
+              ) : (
+                'Limites e capacidades atualmente atribuídos a esta empresa.'
+              )}
             </CardDescription>
           </div>
           {showUpgradeCTA && (
@@ -99,7 +109,11 @@ export function PlanStatusWidget({
             {menuItemsProgress >= 90 && (
               <p className="flex items-start gap-1.5 text-xs text-amber-600">
                 <AlertTriangle className="h-3.5 w-3.5 mt-0.5 shrink-0" aria-hidden="true" />
-                <span>Voce esta proximo do limite. Faca upgrade para adicionar mais itens.</span>
+                <span>
+                  {showBilling
+                    ? 'Voce esta proximo do limite. Faca upgrade para adicionar mais itens.'
+                    : 'Voce esta proximo do limite de itens permitido para esta empresa.'}
+                </span>
               </p>
             )}
           </div>
@@ -132,7 +146,7 @@ export function PlanStatusWidget({
           </div>
         )}
 
-        {isFree && (
+        {showBilling && isFree && (
           <div className="pt-2 border-t space-y-1">
             <p className="text-sm font-medium">Desbloqueie com Pro:</p>
             <ul className="text-xs text-muted-foreground space-y-1 ml-4">
@@ -144,7 +158,7 @@ export function PlanStatusWidget({
           </div>
         )}
 
-        {isPro && (
+        {showBilling && isPro && (
           <div className="pt-2 border-t space-y-1">
             <p className="text-sm font-medium">Desbloqueie com Delivery:</p>
             <ul className="text-xs text-muted-foreground space-y-1 ml-4">
