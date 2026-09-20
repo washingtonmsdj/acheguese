@@ -35,13 +35,14 @@ describe("MVP launch-scope E2E alignment", () => {
       "publicAnalytics=false",
     ];
 
-    for (const flag of pausedFlags) {
-      expect(
-        [screenMap, featureMap, homeInventory].some((source) =>
-          source.includes(flag),
-        ),
-        flag,
-      ).toBe(true);
+    for (const [documentName, source] of [
+      ["SCREEN-MAP", screenMap],
+      ["FEATURE-MAP", featureMap],
+      ["HOME-INVENTORY", homeInventory],
+    ] as const) {
+      for (const flag of pausedFlags) {
+        expect(source, `${documentName}: ${flag}`).toContain(flag);
+      }
     }
 
     expect(launchScope).toContain("communityCommunication: true");
