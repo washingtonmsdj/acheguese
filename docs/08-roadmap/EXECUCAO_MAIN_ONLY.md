@@ -72,6 +72,7 @@ O primeiro release continua territorial. **Cobertura uniforme dos 170 bairros de
 - [x] Canal DPO público revalidado: `submit-dpo-request` está ACTIVE, com origin/rate-limit/honeypot/Turnstile fail-closed; testes DPO foram realinhados às migrations canônicas e `.env.production` agora declara a `VITE_TURNSTILE_SITE_KEY` exigida pelo gate. O `admin-privacy-rpc` remoto ainda está em v3 sem o fallback de paginação da `main`, pendente do rollout self-hosted autorizado.
 - [x] O publisher de tipos Supabase não escreve mais diretamente na `main`: `supabase-types-sync.yml` usa a branch `automation/supabase-types-sync`, cria/atualiza PR, dispara Security/SSOT gates e o ratchet `supabase-types-sync-pr-authority.test.ts` impede regressão.
 - [x] O gate de deploy legal foi endurecido: `VITE_LEGAL_FORUM` tornou-se obrigatório, `VITE_CONTACT_EMAIL`/`VITE_DPO_EMAIL` precisam ter formato válido e `VITE_PUBLIC_SITE_URL` precisa usar HTTPS; o ratchet DPO protege esse contrato.
+- [x] Flags de produção foram reconciliadas ao launch scope comunitário: `VITE_FEATURE_COMMUNITY_ALERTS=false` e `VITE_FEATURE_COMMUNITY_ISSUES=false`; o ratchet de rotas exige que Alertas/Problemas permaneçam pausados até certificação.
 - [ ] A prova de build/deploy/smoke do mesmo SHA continua blocker real de release.
 
 
