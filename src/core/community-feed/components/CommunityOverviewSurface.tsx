@@ -44,7 +44,6 @@ import {
   getTerritoryLocationLabel,
   normalizeCategoryLabel,
 } from "./communityOverviewHelpers";
-import personaMorador from "@/assets/persona-morador.jpg";
 import {
   isLaunchCommunityPostEnabled,
   isLaunchSurfaceEnabled,
@@ -80,10 +79,6 @@ import { useCommunityUrls } from "@/core/routing/hooks/useCommunityUrls";
 import type { ResolvedTerritory } from "@/core/routing/hooks/useResolveTerritoryFromUrl";
 import type { TerritorialCommunityProfile } from "@/core/community-experience/types";
 import type { PostType } from "@/core/posts/types";
-import {
-  COMMUNITY_OVERVIEW_VISUAL_FIXTURE,
-  COMMUNITY_OVERVIEW_VISUAL_MOCK_QUERY_VALUE,
-} from "./fixtures/communityOverviewVisualFixture";
 import {
   isCommunitySocialView,
   type CommunityOverviewSection,
@@ -896,14 +891,6 @@ export function CommunityOverviewSurface({
   const communityEventsPreviewEnabled = isLaunchSurfaceEnabled(
     "communityEventsPreview",
   );
-  const visualMockEnabled = useMemo(() => {
-    const params = new URLSearchParams(routeLocation.search);
-    // Fixture estritamente local para revisão visual. Production sempre usa dados reais.
-    return (
-      import.meta.env.DEV &&
-      params.get("visualMock") === COMMUNITY_OVERVIEW_VISUAL_MOCK_QUERY_VALUE
-    );
-  }, [routeLocation.search]);
   const [feedContextTab, setFeedContextTab] =
     useState<CommunityFeedContextTab>("feed");
   const [postSort, setPostSort] = useState<CommunityFeedSortType>("popular");
@@ -968,8 +955,7 @@ export function CommunityOverviewSurface({
     territoryFilter,
     limit: children ? 6 : 12,
     enabled:
-      !visualMockEnabled &&
-      !isEmbeddedModule &&
+            !isEmbeddedModule &&
       (selectedView === "discussions" ||
         (selectedView === "feed" && feedContextTab !== "groups")),
   });
@@ -982,7 +968,7 @@ export function CommunityOverviewSurface({
   const { data: stats } = useQuery({
     queryKey: ["community-overview", "territory-stats", filterKey],
     queryFn: () => LandingFeaturedService.getTerritoryStats(territoryFilter),
-    enabled: filterReady && !visualMockEnabled,
+    enabled: filterReady,
     staleTime: 5 * 60 * 1000,
   });
 
@@ -1000,8 +986,7 @@ export function CommunityOverviewSurface({
       ),
     enabled:
       filterReady &&
-      !visualMockEnabled &&
-      !isEmbeddedModule &&
+            !isEmbeddedModule &&
       selectedView === "business",
     staleTime: 5 * 60 * 1000,
   });
@@ -1020,8 +1005,7 @@ export function CommunityOverviewSurface({
       ),
     enabled:
       filterReady &&
-      !visualMockEnabled &&
-      !isEmbeddedModule &&
+            !isEmbeddedModule &&
       selectedView === "services",
     staleTime: 5 * 60 * 1000,
   });
@@ -1040,8 +1024,7 @@ export function CommunityOverviewSurface({
       ),
     enabled:
       filterReady &&
-      !visualMockEnabled &&
-      !isEmbeddedModule &&
+            !isEmbeddedModule &&
       selectedView === "classifieds",
     staleTime: 5 * 60 * 1000,
   });
@@ -1060,8 +1043,7 @@ export function CommunityOverviewSurface({
       ),
     enabled:
       filterReady &&
-      !visualMockEnabled &&
-      !isEmbeddedModule &&
+            !isEmbeddedModule &&
       selectedView === "gastronomy",
     staleTime: 5 * 60 * 1000,
   });
@@ -1080,8 +1062,7 @@ export function CommunityOverviewSurface({
       enabled:
         filterReady &&
         communityEventsPreviewEnabled &&
-        !visualMockEnabled &&
-        !isEmbeddedModule &&
+                !isEmbeddedModule &&
         selectedView === "feed",
       staleTime: 5 * 60 * 1000,
     },
@@ -1101,59 +1082,32 @@ export function CommunityOverviewSurface({
       }),
     enabled:
       filterReady &&
-      !visualMockEnabled &&
-      !isEmbeddedModule &&
+            !isEmbeddedModule &&
       (selectedView === "groups" ||
         (selectedView === "feed" && feedContextTab === "groups")),
     staleTime: 5 * 60 * 1000,
   });
 
   const previewGroups = groupsPage?.items ?? [];
-  const displayPosts: DiscussionPreviewPost[] = visualMockEnabled
-    ? COMMUNITY_OVERVIEW_VISUAL_FIXTURE.posts
-    : visiblePosts;
-  const displayBusinesses = visualMockEnabled
-    ? COMMUNITY_OVERVIEW_VISUAL_FIXTURE.businesses
-    : businesses;
-  const displayServices = visualMockEnabled
-    ? COMMUNITY_OVERVIEW_VISUAL_FIXTURE.services
-    : services;
-  const displayClassifieds = visualMockEnabled
-    ? COMMUNITY_OVERVIEW_VISUAL_FIXTURE.classifieds
-    : classifieds;
-  const displayGastronomy = visualMockEnabled
-    ? COMMUNITY_OVERVIEW_VISUAL_FIXTURE.gastronomy
-    : gastronomy;
-  const displayEvents = visualMockEnabled
-    ? COMMUNITY_OVERVIEW_VISUAL_FIXTURE.events
-    : previewEvents;
-  const displayEventsTotal = visualMockEnabled
-    ? COMMUNITY_OVERVIEW_VISUAL_FIXTURE.stats.events
-    : eventsPreviewTotal;
-  const displayGroups = visualMockEnabled
-    ? COMMUNITY_OVERVIEW_VISUAL_FIXTURE.groups
-    : previewGroups;
-  const displayPostCount = visualMockEnabled
-    ? COMMUNITY_OVERVIEW_VISUAL_FIXTURE.stats.posts
-    : displayPosts.length;
-  const displayLoadingFeed = visualMockEnabled ? false : isLoading;
-  const displayFeedError = visualMockEnabled ? false : isError;
-  const displayLoadingBusinesses = visualMockEnabled
-    ? false
-    : loadingBusinesses;
-  const displayLoadingServices = visualMockEnabled ? false : loadingServices;
-  const displayLoadingClassifieds = visualMockEnabled
-    ? false
-    : loadingClassifieds;
-  const displayLoadingGastronomy = visualMockEnabled
-    ? false
-    : loadingGastronomy;
-  const displayLoadingEvents = visualMockEnabled ? false : loadingEventsPreview;
-  const displayLoadingGroups = visualMockEnabled ? false : loadingGroups;
-  const displayHasNextPage = visualMockEnabled ? false : hasNextPage;
-  const displayIsFetchingNextPage = visualMockEnabled
-    ? false
-    : isFetchingNextPage;
+  const displayPosts: DiscussionPreviewPost[] = visiblePosts;
+  const displayBusinesses = businesses;
+  const displayServices = services;
+  const displayClassifieds = classifieds;
+  const displayGastronomy = gastronomy;
+  const displayEvents = previewEvents;
+  const displayEventsTotal = eventsPreviewTotal;
+  const displayGroups = previewGroups;
+  const displayPostCount = displayPosts.length;
+  const displayLoadingFeed = isLoading;
+  const displayFeedError = isError;
+  const displayLoadingBusinesses = loadingBusinesses;
+  const displayLoadingServices = loadingServices;
+  const displayLoadingClassifieds = loadingClassifieds;
+  const displayLoadingGastronomy = loadingGastronomy;
+  const displayLoadingEvents = loadingEventsPreview;
+  const displayLoadingGroups = loadingGroups;
+  const displayHasNextPage = hasNextPage;
+  const displayIsFetchingNextPage = isFetchingNextPage;
   const sortedDisplayPosts = useMemo(() => {
     const posts = [...displayPosts];
     const newestFirst = (
@@ -1197,8 +1151,7 @@ export function CommunityOverviewSurface({
     fallbackLocationId,
     enabled:
       filterReady &&
-      !visualMockEnabled &&
-      !isEmbeddedModule &&
+            !isEmbeddedModule &&
       selectedView === "feed",
   });
 
@@ -1342,51 +1295,28 @@ export function CommunityOverviewSurface({
     [mode, onOpenCreatePost, onRequireLogin],
   );
 
-  const statItems = visualMockEnabled
-    ? [
-        {
-          label: "Membros",
-          value: COMMUNITY_OVERVIEW_VISUAL_FIXTURE.stats.members,
-          icon: Users,
-        },
-        {
-          label: "Empresas locais",
-          value: COMMUNITY_OVERVIEW_VISUAL_FIXTURE.stats.businesses,
-          icon: Building2,
-        },
-        {
-          label: "Publicações recentes",
-          value: COMMUNITY_OVERVIEW_VISUAL_FIXTURE.stats.posts,
-          icon: MessageCircle,
-        },
-        {
-          label: "Eventos disponíveis",
-          value: COMMUNITY_OVERVIEW_VISUAL_FIXTURE.stats.events,
-          icon: CalendarDays,
-        },
-      ]
-    : [
-        {
-          label: "Empresas locais",
-          value: stats?.businesses ?? 0,
-          icon: Building2,
-        },
-        {
-          label: "Classificados ativos",
-          value: stats?.classifieds ?? 0,
-          icon: Tag,
-        },
-        {
-          label: "Publicações recentes",
-          value: displayPostCount,
-          icon: MessageCircle,
-        },
-        {
-          label: "Eventos disponíveis",
-          value: communityEventsPreviewEnabled ? displayEventsTotal : 0,
-          icon: CalendarDays,
-        },
-      ];
+  const statItems = [
+    {
+      label: "Empresas locais",
+      value: stats?.businesses ?? 0,
+      icon: Building2,
+    },
+    {
+      label: "Classificados ativos",
+      value: stats?.classifieds ?? 0,
+      icon: Tag,
+    },
+    {
+      label: "Publicações recentes",
+      value: displayPostCount,
+      icon: MessageCircle,
+    },
+    {
+      label: "Eventos disponíveis",
+      value: communityEventsPreviewEnabled ? displayEventsTotal : 0,
+      icon: CalendarDays,
+    },
+  ];
 
   const focusShortcutCandidates: FocusShortcut[] = [
     {
@@ -1453,11 +1383,6 @@ export function CommunityOverviewSurface({
       className="mx-auto w-full max-w-[76rem] min-w-0 px-4 py-5 text-territory-ink sm:px-6 sm:py-7 lg:px-8"
       data-community-overview="community-first"
       data-community-state="active"
-      data-visual-mock={
-        visualMockEnabled
-          ? COMMUNITY_OVERVIEW_VISUAL_MOCK_QUERY_VALUE
-          : undefined
-      }
     >
       <main className="min-w-0 space-y-4 xl:grid xl:grid-cols-[minmax(0,1fr)_20rem] xl:gap-x-5 xl:gap-y-4 xl:space-y-0">
         <section
@@ -1754,7 +1679,6 @@ export function CommunityOverviewSurface({
                       id="feed"
                       communityName={communityTitle}
                       onOpenCreatePost={handleOpenComposer}
-                      avatarUrl={visualMockEnabled ? personaMorador : undefined}
                       className="xl:p-3"
                     />
                   ) : null}
@@ -1932,11 +1856,7 @@ export function CommunityOverviewSurface({
                         groups={displayGroups}
                         loading={displayLoadingGroups}
                         actionHref={communityUrls.groups}
-                        groupHref={(group) =>
-                          visualMockEnabled
-                            ? "#feed-groups-tab"
-                            : communityUrls.groupDetail(group.id)
-                        }
+                        groupHref={(group) => communityUrls.groupDetail(group.id)}
                       />
                     ) : (
                       <CommunityDiscussionsPreview
@@ -1989,11 +1909,7 @@ export function CommunityOverviewSurface({
                         <GroupPreviewItem
                           key={group.id}
                           group={group}
-                          href={
-                            visualMockEnabled
-                              ? "#groups-view"
-                              : communityUrls.groupDetail(group.id)
-                          }
+                          href={communityUrls.groupDetail(group.id)}
                         />
                       ))}
                     </div>
@@ -2013,7 +1929,6 @@ export function CommunityOverviewSurface({
                     <CommunityComposerEntry
                       communityName={communityTitle}
                       onOpenCreatePost={handleOpenComposer}
-                      avatarUrl={visualMockEnabled ? personaMorador : undefined}
                     />
                   ) : null}
                   <SurfacePanel id="discussions-view" className="p-3 sm:p-4">
