@@ -145,11 +145,11 @@ Essas 13 branches **não são fonte de trabalho pendente**. Devem ser apagadas s
 
 - `codex/reformulacao-entrada-comunidade`: trabalho recente e amplo de design/runtime; não misturar com limpeza de branches nem com o corte urgente sem revisão própria;
 - `module/mobilidade`;
-- `module/mobilidade-g62-work`;
-- `tmp-probe-unused`;
-- `tmp-should-not-create`.
+- `tmp-probe-unused`.
 
-As quatro últimas carregam deltas históricos grandes de Mobilidade. Como Mobilidade está fora do primeiro release, **não devem ser mergeadas na `main` do MVP**. Permanecem apenas como material de auditoria pós-MVP até provar supersessão ou selecionar commits específicos.
+`module/mobilidade-g62-work` e `tmp-should-not-create` saíram da quarentena após prova de ancestralidade linear: `tmp-should-not-create` é ancestral direto de `module/mobilidade-g62-work` (5 commits adiante / 0 atrás) e `module/mobilidade-g62-work` é ancestral direto de `module/mobilidade` (122 commits adiante / 0 atrás). Logo, a linha `module/mobilidade` preserva integralmente o trabalho dessas duas snapshots antigas.
+
+As duas branches de Mobilidade que continuam em quarentena carregam deltas históricos não equivalentes. Como Mobilidade está fora do primeiro release, **não devem ser mergeadas na `main` do MVP**. Permanecem apenas como material de auditoria pós-MVP até provar supersessão ou selecionar commits específicos.
 
 ### Execução das branches superseded auditadas
 
@@ -161,7 +161,7 @@ As quatro últimas carregam deltas históricos grandes de Mobilidade. Como Mobil
 - dry-run auditável: `npm run maintenance:branches -- --include-superseded --json`;
 - aplicação física, somente com autoridade delete-ref: `npm run maintenance:branches -- --include-superseded --apply`.
 
-A manifest contém **44 heads auditados**: as 13 branches sem PR já classificadas como superseded e mais 31 branches antigas de PR fechado cujo sucessor `rebased`, `v2` ou equivalente foi efetivamente mergeado. Branches em quarentena não entram na manifest.
+A manifest contém **46 heads auditados**: as 13 branches sem PR já classificadas como superseded, 31 branches antigas de PR fechado cujo sucessor `rebased`, `v2` ou equivalente foi efetivamente mergeado e 2 snapshots antigos de Mobilidade comprovadamente ancestrais de `module/mobilidade`. Branches ainda em quarentena não entram na manifest.
 
 ### Segundo lote — PR fechado substituído por sucessor mergeado
 
