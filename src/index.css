@@ -3057,3 +3057,10 @@
 .driver-center-concept-page h3 {
   margin-bottom: 0;
 }
+
+.driver-registration-concept-page p,
+.driver-registration-concept-page h1,
+.driver-registration-concept-page h2,
+.driver-registration-concept-page h3 {
+  margin-bottom: 0;
+}

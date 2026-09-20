@@ -643,3 +643,24 @@ A prancha 117 também está coberta pelos estados demonstrativos de visitante, v
 
 - Branch: `codex/reformulacao-entrada-comunidade`.
 - Commit restrito à Central, ao estilo scoped e às documentações do concept; alterações staged preexistentes permanecem fora do commit.
+
+## 20/09/2026 · Cadastro e habilitação do entregador — pranchas 038, 039 e 040
+
+### Auditoria e ajuste
+
+- Comparei os quatro passos mobile, os estados de habilitação e as quatro composições desktop do cadastro com `CentralMotoboyCadastroConceptMockPage`.
+- A primeira etapa ainda usava um avatar genérico, o progresso mobile não tinha a linha conectada da prancha e os defaults de parágrafo deixavam a CTA final ultrapassar o viewport compacto. A tela agora usa o asset demonstrativo de Carlos com badge de câmera, progressão conectada e reset tipográfico scoped.
+- Compactei o shell desktop para rail de 128 px, conteúdo máximo de 768 px e card lateral de 224 px. No passo de habilitação, o heading e as abas desktop foram alinhados ao concept sem alterar a linguagem mais curta do mobile.
+- Mantive as ações demonstrativas explicitamente isoladas: anexos, análise, permissões e liberação operacional não foram simulados como operações reais.
+
+### Validação e evidências
+
+- Navegador interno mantido aberto em `/central/motoboy/cadastro?concept-mock=1&step=1` para acompanhamento.
+- Mobile `389 × 867` CSS px: passos 1–4, área e estados de análise, correção, aprovado e suspenso conferidos sem overflow de documento/body e com CTAs dentro do frame.
+- Desktop `1440 × 867` CSS px: rail, formulário, card lateral, título/abas e estados desktop conferidos sem overflow horizontal/vertical.
+- `npm run typecheck:app`, ESLint direcionado e `git diff --check` executados.
+
+### Git
+
+- Branch: `codex/reformulacao-entrada-comunidade`.
+- Commit restrito ao cadastro, ao estilo scoped e às documentações deste concept; alterações staged preexistentes permanecem fora do commit.
