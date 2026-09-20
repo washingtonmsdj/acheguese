@@ -68,6 +68,7 @@ O primeiro release continua territorial. **Cobertura uniforme dos 170 bairros de
 - [x] Eventos voltou a ter persistência canônica de itens salvos: `event_saved_items` foi criado com RLS forçada, policies own-only e o registry de `ProfileSavedEntityService` deixou de apontar para `event_favorites` já aposentado.
 - [x] G36/G37 foram promovidos após dry-run: RPCs legados de Perfil foram removidos sem `CASCADE`, e os brokers profissionais passaram a rejeitar cobertura textual legada também no boundary SQL.
 - [x] Ledger de migrations fechado: **673 locais ativas / 673 remotas / 673 exatas / 0 local-only / 0 remote-only**. Os 13 SQLs não aplicados de Mobilidade foram preservados como pending, coerente com `PUBLIC_LAUNCH_SURFACES.mobility=false`.
+- [~] O `Heavy Pre-Merge Certification` self-hosted existente foi ampliado para executar security/lint/typecheck/arquitetura/SSOT/migrations remotas/Vitest antes dos E2E/build no mesmo SHA. Isso cria um fallback executável no runner autorizado sem substituir os checks hosted; falta o runner `acheguese-heavy-windows` voltar a ficar online e produzir a prova.
 - [ ] A prova de build/deploy/smoke do mesmo SHA continua blocker real de release.
 
 
