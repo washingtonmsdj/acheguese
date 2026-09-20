@@ -16183,14 +16183,18 @@ export type Database = {
       }
       vagas: {
         Row: {
-          application_channel:
-            | Database["public"]["Enums"]["vaga_application_channel"]
-            | null
+          application_channel: Database["public"]["Enums"]["vaga_application_channel"]
           application_count: number | null
+          application_email: string | null
+          application_instructions: string | null
+          application_phone: string | null
+          application_url: string | null
+          application_whatsapp: string | null
           bairro_id: string | null
           bairro_nome: string | null
           beneficios: string[]
           categoria: string | null
+          closed_at: string | null
           contato_email: string | null
           contato_url: string | null
           contato_whatsapp: string | null
@@ -16199,28 +16203,40 @@ export type Database = {
           created_at: string
           descricao: string
           destaque: boolean
+          diferenciais: string[]
           empresa: string
+          empresa_id: string | null
           empresa_logo: string | null
+          empresa_logo_url: string | null
+          empresa_nome: string
           expires_at: string | null
           feed_post_id: string | null
-          highlight_type:
-            | Database["public"]["Enums"]["vaga_highlight_type"]
-            | null
+          highlight_type: Database["public"]["Enums"]["vaga_highlight_type"]
           id: string
+          jornada_descricao: string | null
           location_id: string
           matching_notified_at: string | null
+          meta_description: string | null
+          meta_title: string | null
           modalidade: Database["public"]["Enums"]["vaga_modalidade"]
           nivel: Database["public"]["Enums"]["vaga_nivel"]
-          owner_profile_id: string | null
+          og_image_url: string | null
+          owner_profile_id: string
           published_at: string | null
+          requisitos: string[]
+          responsabilidades: string[]
+          resumo: string | null
           salario_max: number | null
           salario_min: number | null
           salario_texto: string | null
-          salary_mode: Database["public"]["Enums"]["vaga_salary_mode"] | null
+          salary_mode: Database["public"]["Enums"]["vaga_salary_mode"]
+          search_vector: unknown
           seo_meta_description: string | null
           seo_meta_title: string | null
+          share_count: number
           slug: string
           status: Database["public"]["Enums"]["vaga_status"]
+          subcategoria: string | null
           tags: string[]
           titulo: string
           updated_at: string
@@ -16229,14 +16245,18 @@ export type Database = {
           view_count: number | null
         }
         Insert: {
-          application_channel?:
-            | Database["public"]["Enums"]["vaga_application_channel"]
-            | null
+          application_channel?: Database["public"]["Enums"]["vaga_application_channel"]
           application_count?: number | null
+          application_email?: string | null
+          application_instructions?: string | null
+          application_phone?: string | null
+          application_url?: string | null
+          application_whatsapp?: string | null
           bairro_id?: string | null
           bairro_nome?: string | null
           beneficios?: string[]
           categoria?: string | null
+          closed_at?: string | null
           contato_email?: string | null
           contato_url?: string | null
           contato_whatsapp?: string | null
@@ -16245,28 +16265,40 @@ export type Database = {
           created_at?: string
           descricao: string
           destaque?: boolean
+          diferenciais?: string[]
           empresa: string
+          empresa_id?: string | null
           empresa_logo?: string | null
+          empresa_logo_url?: string | null
+          empresa_nome: string
           expires_at?: string | null
           feed_post_id?: string | null
-          highlight_type?:
-            | Database["public"]["Enums"]["vaga_highlight_type"]
-            | null
+          highlight_type?: Database["public"]["Enums"]["vaga_highlight_type"]
           id?: string
+          jornada_descricao?: string | null
           location_id: string
           matching_notified_at?: string | null
+          meta_description?: string | null
+          meta_title?: string | null
           modalidade: Database["public"]["Enums"]["vaga_modalidade"]
           nivel: Database["public"]["Enums"]["vaga_nivel"]
-          owner_profile_id?: string | null
+          og_image_url?: string | null
+          owner_profile_id: string
           published_at?: string | null
+          requisitos?: string[]
+          responsabilidades?: string[]
+          resumo?: string | null
           salario_max?: number | null
           salario_min?: number | null
           salario_texto?: string | null
-          salary_mode?: Database["public"]["Enums"]["vaga_salary_mode"] | null
+          salary_mode?: Database["public"]["Enums"]["vaga_salary_mode"]
+          search_vector?: unknown
           seo_meta_description?: string | null
           seo_meta_title?: string | null
+          share_count?: number
           slug: string
           status?: Database["public"]["Enums"]["vaga_status"]
+          subcategoria?: string | null
           tags?: string[]
           titulo: string
           updated_at?: string
@@ -16275,14 +16307,18 @@ export type Database = {
           view_count?: number | null
         }
         Update: {
-          application_channel?:
-            | Database["public"]["Enums"]["vaga_application_channel"]
-            | null
+          application_channel?: Database["public"]["Enums"]["vaga_application_channel"]
           application_count?: number | null
+          application_email?: string | null
+          application_instructions?: string | null
+          application_phone?: string | null
+          application_url?: string | null
+          application_whatsapp?: string | null
           bairro_id?: string | null
           bairro_nome?: string | null
           beneficios?: string[]
           categoria?: string | null
+          closed_at?: string | null
           contato_email?: string | null
           contato_url?: string | null
           contato_whatsapp?: string | null
@@ -16291,28 +16327,40 @@ export type Database = {
           created_at?: string
           descricao?: string
           destaque?: boolean
+          diferenciais?: string[]
           empresa?: string
+          empresa_id?: string | null
           empresa_logo?: string | null
+          empresa_logo_url?: string | null
+          empresa_nome?: string
           expires_at?: string | null
           feed_post_id?: string | null
-          highlight_type?:
-            | Database["public"]["Enums"]["vaga_highlight_type"]
-            | null
+          highlight_type?: Database["public"]["Enums"]["vaga_highlight_type"]
           id?: string
+          jornada_descricao?: string | null
           location_id?: string
           matching_notified_at?: string | null
+          meta_description?: string | null
+          meta_title?: string | null
           modalidade?: Database["public"]["Enums"]["vaga_modalidade"]
           nivel?: Database["public"]["Enums"]["vaga_nivel"]
-          owner_profile_id?: string | null
+          og_image_url?: string | null
+          owner_profile_id?: string
           published_at?: string | null
+          requisitos?: string[]
+          responsabilidades?: string[]
+          resumo?: string | null
           salario_max?: number | null
           salario_min?: number | null
           salario_texto?: string | null
-          salary_mode?: Database["public"]["Enums"]["vaga_salary_mode"] | null
+          salary_mode?: Database["public"]["Enums"]["vaga_salary_mode"]
+          search_vector?: unknown
           seo_meta_description?: string | null
           seo_meta_title?: string | null
+          share_count?: number
           slug?: string
           status?: Database["public"]["Enums"]["vaga_status"]
+          subcategoria?: string | null
           tags?: string[]
           titulo?: string
           updated_at?: string
@@ -22892,12 +22940,34 @@ export type Database = {
         | "email"
         | "external_url"
         | "phone"
-      vaga_contrato: "CLT" | "PJ" | "Temporário" | "Estágio" | "Freelance"
+      vaga_contrato:
+        | "CLT"
+        | "PJ"
+        | "estagio"
+        | "temporario"
+        | "freelancer"
+        | "aprendiz"
       vaga_highlight_type: "none" | "premium" | "sponsored" | "featured"
-      vaga_modalidade: "Presencial" | "Remoto" | "Híbrido"
-      vaga_nivel: "Júnior" | "Pleno" | "Sênior" | "Especialista"
+      vaga_modalidade: "presencial" | "hibrido" | "remoto"
+      vaga_nivel:
+        | "junior"
+        | "pleno"
+        | "senior"
+        | "especialista"
+        | "gerente"
+        | "diretor"
+        | "estagio"
+        | "auxiliar"
       vaga_salary_mode: "fixed" | "range" | "a_combinar"
-      vaga_status: "ativa" | "pausada" | "encerrada" | "preenchida"
+      vaga_status:
+        | "draft"
+        | "pending_review"
+        | "published"
+        | "paused"
+        | "closed"
+        | "expired"
+        | "rejected"
+        | "removed"
       vaga_urgencia: "normal" | "urgente" | "extrema"
       vertical:
         | "gastronomy"
@@ -23296,12 +23366,37 @@ export const Constants = {
         "external_url",
         "phone",
       ],
-      vaga_contrato: ["CLT", "PJ", "Temporário", "Estágio", "Freelance"],
+      vaga_contrato: [
+        "CLT",
+        "PJ",
+        "estagio",
+        "temporario",
+        "freelancer",
+        "aprendiz",
+      ],
       vaga_highlight_type: ["none", "premium", "sponsored", "featured"],
-      vaga_modalidade: ["Presencial", "Remoto", "Híbrido"],
-      vaga_nivel: ["Júnior", "Pleno", "Sênior", "Especialista"],
+      vaga_modalidade: ["presencial", "hibrido", "remoto"],
+      vaga_nivel: [
+        "junior",
+        "pleno",
+        "senior",
+        "especialista",
+        "gerente",
+        "diretor",
+        "estagio",
+        "auxiliar",
+      ],
       vaga_salary_mode: ["fixed", "range", "a_combinar"],
-      vaga_status: ["ativa", "pausada", "encerrada", "preenchida"],
+      vaga_status: [
+        "draft",
+        "pending_review",
+        "published",
+        "paused",
+        "closed",
+        "expired",
+        "rejected",
+        "removed",
+      ],
       vaga_urgencia: ["normal", "urgente", "extrema"],
       vertical: [
         "gastronomy",
