@@ -29,7 +29,7 @@ O projeto `acheguese-v2` inativo não é o alvo de release.
 
 ### Migrations
 
-O ledger remoto observado contém **666 migrations** e, após este corte, a árvore Git contém **686 arquivos locais**. As **666 identidades remotas passam a existir no Git**; permanecem **20 arquivos somente locais** que ainda exigem prova de supersessão/necessidade.
+O ledger remoto observado contém **673 migrations** e a cadeia ativa Git contém **673 arquivos**. A comparação por identidade `version_name` resulta em **673 identidades exatas, 0 local-only e 0 remote-only**.
 
 Últimas migrations remotas observadas:
 
@@ -48,7 +48,7 @@ npm run validate:migrations:provenance
 npm run validate:migrations:remote
 ```
 
-`validate:migrations:remote` só pode marcar PASS com zero aliases, zero conflicts, zero local-only, zero remote-only e nenhuma versão local duplicada. Este corte fecha `remote-only=0`, mas ainda deixa **20 local-only**; portanto **não executar `supabase db push --linked`**. A próxima ação é provar, um a um, quais desses 20 arquivos são drafts/superseded e quais ainda pertencem ao bootstrap canônico.
+`validate:migrations:remote` só pode marcar PASS com zero aliases, zero conflicts, zero local-only, zero remote-only e nenhuma versão local duplicada. A auditoria direta do tree + ledger agora satisfaz a parte de identidade com **0/0 divergências**. Ainda assim, não executar `supabase db push --linked`: o gate deve ser reproduzido pelo validator no mesmo SHA candidato.
 
 ### Tipos gerados
 
@@ -58,7 +58,7 @@ Resultado:
 
 - PostgREST remoto: `14.5`;
 - arquivo Git: `14.5`;
-- tamanho normalizado em ambos: **731731 caracteres de texto**;
+- tamanho normalizado atual após os últimos DDLs: **732103 caracteres de texto**;
 - comparação normalizada: **exact_equal=true**;
 - primeiro diff: inexistente.
 
@@ -119,7 +119,7 @@ O PR #209 removeu duas exceções antigas que já não aparecem no Advisor, redu
 ## Blockers de release que permanecem
 
 1. Executar o GitHub Actions de verdade em runner válido e obter security/lint/typecheck/test/build no SHA candidato.
-2. Fechar o drift de migrations até o gate remoto atingir zero divergências; estado atual após Safety provenance: 686 locais / 666 remotas / 666 exatas / 20 local-only / 0 remote-only.
+2. Reexecutar os validadores de migrations no runner do SHA candidato; a auditoria direta atual já está em **673 locais / 673 remotas / 673 exatas / 0 local-only / 0 remote-only**.
 3. Completar branch protection/release authority depois que existir check executável.
 4. Produzir build/deploy real do mesmo SHA aprovado; o provider Vercel vinha bloqueando novas provas pelo limite diário.
 5. Executar smoke do domínio no mesmo SHA.
@@ -247,3 +247,30 @@ Revalidação viva confirmou `territorial-update-location-visibility`, `territor
 **Importante:** G43 phase 2 continua pendente. O frontend administrativo ainda usa `updateGroup()` + `replaceMembers()` do writer compatível; o DML browser não deve ser revogado antes de cutover e smoke AAL2. O arquivo `20260910221500_lock_territorial_group_writes_to_broker_g43.sql` permanece em `migrations-pending` de forma intencional.
 
 Resultado do ledger após este corte: **686 locais / 666 remotas / 666 identidades remotas presentes no Git / 20 local-only / 0 remote-only**.
+
+
+## Atualização — Business/Mapa G154 e username de signup reconciliados — 2026-09-20
+
+A auditoria viva encontrou três migrations local-only que eram blockers reais do MVP, não drafts:
+
+- o runtime não possuía os índices de `public_business_search` e as RPCs `search_entities_by_radius`, `search_entities_by_bounds` e `search_entities_hybrid` ainda apontavam Business para a relação legada `public.businesses`, ausente no banco;
+- `public.handle_new_user()` ainda ignorava `raw_user_meta_data.handle`, apesar do cadastro enviar o @ escolhido.
+
+Os três SQLs versionados passaram em dry-run transacional com rollback e foram então promovidos pelo mecanismo canônico de migration do Supabase. O runtime registrou `20260920094738_index_public_business_map_bounds_g154`, `20260920094744_retarget_business_spatial_search_read_model_g154` e `20260920094751_honor_signup_username_in_auth_trigger`.
+
+Pós-check vivo confirmou os três índices, as três RPCs usando `public_business_search`, e `handle_new_user()` usando o handle solicitado + guard de username reservado. Os filenames Git foram alinhados às identidades remotas.
+
+Estado do ledger após este corte: **686 locais / 669 remotas / 669 exatas / 17 local-only / 0 remote-only**.
+
+
+## Atualização — fechamento final do ledger e superfícies públicas — 2026-09-20
+
+A investigação dos 17 `local-only` restantes separou runtime necessário de staging futuro:
+
+- `create_event_saved_items_ssot` era blocker real de Eventos: `event_favorites` já havia sido aposentada, mas o registry interno ainda apontava para ela. A migration passou dry-run, foi promovida como `20260920095040_create_event_saved_items_ssot`, criou `event_saved_items` com RLS habilitada e forçada e três policies own-only; os tipos foram regenerados e o registry agora usa a tabela canônica.
+- G36/G37 eram blockers reais de Perfil/Professional: os RPCs legados ainda existiam server-side e os brokers profissionais ainda aceitavam cobertura textual no SQL. Os três SQLs passaram dry-run sem `CASCADE`/dependência e foram promovidos como `20260920101836_retire_legacy_profile_creation_bridges_g36`, `20260920101844_retire_legacy_profile_public_rpcs_g36` e `20260920101850_block_professional_legacy_coverage_writes_g37`. Pós-check confirmou os RPCs legados ausentes e os dois guards de cobertura ativos.
+- os 13 `local-only` restantes eram exclusivamente de Mobilidade G60/G62/G63/G68/G69/G73/G74/G81/G82. Como `PUBLIC_LAUNCH_SURFACES.mobility=false` e nenhum deles existe no ledger remoto, foram retirados de `supabase/migrations` e preservados em `docs/09-reference/migrations-pending/`. Testes e checkpoints continuam lendo os contratos pending; nenhum DDL de Mobilidade foi aplicado.
+
+**Resultado final da cadeia ativa:** **673 migrations Git / 673 migrations Supabase / 673 identidades exatas / 0 local-only / 0 remote-only**.
+
+Isso fecha o blocker de provenance/identidade do ledger. O blocker de release remanescente é execução do gate no mesmo SHA (CI/lint/typecheck/tests/build/E2E/deploy/smoke), não mais divergência de migrations.

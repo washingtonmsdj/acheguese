@@ -32,7 +32,7 @@ O fluxo exige, entre outros invariantes:
 - `src/core/mobility/core/RideOperationalTypes.ts`
 - `src/core/mobility/core/RideDeliveryOperationalActions.ts`
 - `src/core/mobility/services/MobilityRpcService.ts`
-- `supabase/migrations/20260911234000_reopen_failed_delivery_same_custodian_g82.sql`
+- `docs/09-reference/migrations-pending/20260911234000_reopen_failed_delivery_same_custodian_g82.sql`
 
 ## Hardening pós-integração na main
 

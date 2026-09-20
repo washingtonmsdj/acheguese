@@ -17,7 +17,7 @@ describe('business map bounded read', () => {
     'src/app/pages/CidadeLandingPage.tsx',
   );
   const migration = readProjectFile(
-    'supabase/migrations/20260913004500_index_public_business_map_bounds_g154.sql',
+    'supabase/migrations/20260920094738_index_public_business_map_bounds_g154.sql',
   );
 
   it('filters viewport and territory in the database-backed public read model', () => {

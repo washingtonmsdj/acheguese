@@ -11,10 +11,10 @@ function readProjectFile(path: string): string {
 }
 
 const locationRls = readProjectFile(
-  "supabase/migrations/20260911100000_tighten_driver_location_read_window_g68.sql",
+  "docs/09-reference/migrations-pending/20260911100000_tighten_driver_location_read_window_g68.sql",
 );
 const canonicalStatusGate = readProjectFile(
-  "supabase/migrations/20260911032000_enforce_canonical_ride_status_writes_g62.sql",
+  "docs/09-reference/migrations-pending/20260911032000_enforce_canonical_ride_status_writes_g62.sql",
 );
 const activeCard = readProjectFile(
   "src/modules/mobility/components/passenger/ActiveRideCard.tsx",

@@ -13,7 +13,7 @@ describe("Trust operational command boundary", () => {
     "supabase/migrations/20260715109000_consolidate_trust_commands.sql",
   );
   const rideFeedbackMigration = readProjectFile(
-    "supabase/migrations/20260911152000_redact_driver_history_and_derive_feedback_targets_g73.sql",
+    "docs/09-reference/migrations-pending/20260911152000_redact_driver_history_and_derive_feedback_targets_g73.sql",
   );
   const rateLimitSchemaMigration = readProjectFile(
     "supabase/migrations/20260715111000_fix_trust_command_rate_limit.sql",

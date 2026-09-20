@@ -115,7 +115,7 @@ describe("account and access concept contract", () => {
 
   it("persists the username chosen during email signup instead of discarding it in the auth trigger", () => {
     const migration = readProjectFile(
-      "supabase/migrations/20260914173000_honor_signup_username_in_auth_trigger.sql",
+      "supabase/migrations/20260920094751_honor_signup_username_in_auth_trigger.sql",
     );
 
     expect(migration).toContain("NEW.raw_user_meta_data->>'handle'");

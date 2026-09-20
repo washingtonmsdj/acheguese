@@ -8,7 +8,7 @@ const read = (path: string) => readFileSync(resolve(repoRoot, path), "utf8");
 describe("profile public RPC contract", () => {
   it("retires generic public mutation RPCs after domain broker cutover", () => {
     const contract = read(
-      "supabase/migrations/20260910005500_retire_legacy_profile_public_rpcs_g36.sql",
+      "supabase/migrations/20260920101844_retire_legacy_profile_public_rpcs_g36.sql",
     );
     const validator = read("tools/supabase/validate-implementation.ts");
     const profileEdge = read("supabase/functions/profile-rpc/index.ts");

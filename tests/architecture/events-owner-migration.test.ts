@@ -94,11 +94,23 @@ describe("community Events canonical owner", () => {
     );
     const generatedTypes = read("src/integrations/supabase/types.generated.ts");
     const migration = read("supabase/migrations/20260905151306_drop_unused_event_favorites_g6.sql");
+    const savedItemsMigration = read(
+      "supabase/migrations/20260920095040_create_event_saved_items_ssot.sql",
+    );
+    const savedEntityService = read(
+      "src/core/engagement/services/ProfileSavedEntityService.ts",
+    );
 
     expect(engagement).toContain("ProfileSavedEntityService");
     expect(engagement).not.toContain("event_favorites");
+    expect(savedEntityService).toContain('tableName: "event_saved_items"');
+    expect(savedEntityService).not.toContain('tableName: "event_favorites"');
     expect(generatedTypes).not.toContain("event_favorites: {");
+    expect(generatedTypes).toContain("event_saved_items: {");
     expect(migration).toContain("DROP TABLE public.event_favorites RESTRICT");
+    expect(savedItemsMigration).toContain("CREATE TABLE IF NOT EXISTS public.event_saved_items");
+    expect(savedItemsMigration).toContain("ENABLE ROW LEVEL SECURITY");
+    expect(savedItemsMigration).toContain("FORCE ROW LEVEL SECURITY");
   });
 
   it("does not advertise persistent event reminders without a delivery authority", () => {

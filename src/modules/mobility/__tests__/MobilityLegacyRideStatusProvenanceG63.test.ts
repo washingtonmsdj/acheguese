@@ -11,7 +11,7 @@ function readProjectFile(path: string): string {
 }
 
 const g63 = readProjectFile(
-  "supabase/migrations/20260911040500_reconcile_ambiguous_legacy_ride_statuses_g63.sql",
+  "docs/09-reference/migrations-pending/20260911040500_reconcile_ambiguous_legacy_ride_statuses_g63.sql",
 );
 
 describe("G63 legacy ride status provenance", () => {
