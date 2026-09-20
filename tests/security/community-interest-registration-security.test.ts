@@ -187,6 +187,44 @@ describe("Community Interest authoritative operation", () => {
     expect(insertRegistration).not.toHaveBeenCalled();
   });
 
+  it("accepts a real phone-only contact without synthesizing email", async () => {
+    const insertRegistration = acceptedInsert();
+
+    const result = await executeCommunityInterestRegistration(
+      validPayload({
+        email: null,
+        phone: "+55 (71) 99999-9999",
+      }),
+      {
+        userAgent: "server-agent",
+        verifyTurnstile: acceptedVerifier(),
+        insertRegistration,
+      },
+    );
+
+    expect(result).toEqual({ status: "registered" });
+    expect(insertRegistration).toHaveBeenCalledWith(
+      expect.objectContaining({
+        email: null,
+        phone: "+55 (71) 99999-9999",
+      }),
+    );
+  });
+
+  it("rejects a payload with neither email nor phone", async () => {
+    const verifyTurnstile = acceptedVerifier();
+    const insertRegistration = acceptedInsert();
+
+    const result = await executeCommunityInterestRegistration(
+      validPayload({ email: null, phone: null }),
+      { userAgent: null, verifyTurnstile, insertRegistration },
+    );
+
+    expect(result).toEqual({ status: "invalid_payload" });
+    expect(verifyTurnstile).not.toHaveBeenCalled();
+    expect(insertRegistration).not.toHaveBeenCalled();
+  });
+
   it("does not insert when Turnstile rejects the token", async () => {
     const verifyTurnstile = vi.fn(
       async (): Promise<TurnstileVerificationResult> => ({
