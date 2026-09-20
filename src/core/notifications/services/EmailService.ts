@@ -332,7 +332,7 @@ export class EmailService {
     ip: string;
     timestamp: string;
   }): EmailTemplate {
-    const sessionsUrl = buildPublicAbsoluteUrl(ACCOUNT_PATHS.security);
+    const securityUrl = buildPublicAbsoluteUrl(ACCOUNT_PATHS.security);
     return {
       subject: 'Novo login detectado',
       html: renderEmailDocument(
@@ -345,9 +345,9 @@ export class EmailService {
 <li><strong>Data/Hora:</strong> ${escapeHtml(device.timestamp)}</li>
 </ul>
 <p>Se você não reconhece esse acesso, altere sua senha e revise suas sessões.</p>`,
-        { label: 'Revisar sessões', href: sessionsUrl },
+        { label: 'Revisar sessões', href: securityUrl },
       ),
-      text: `Novo login detectado\n\nDispositivo: ${device.name}\nLocalização: ${device.location}\nIP: ${device.ip}\nData/Hora: ${device.timestamp}\n\nRevisar sessões: ${sessionsUrl}`,
+      text: `Novo login detectado\n\nDispositivo: ${device.name}\nLocalização: ${device.location}\nIP: ${device.ip}\nData/Hora: ${device.timestamp}\n\nRevisar sessões: ${securityUrl}`,
     };
   }
 
