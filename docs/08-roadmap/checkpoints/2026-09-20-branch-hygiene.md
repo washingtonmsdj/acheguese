@@ -162,7 +162,7 @@ Essas 13 branches **não são fonte de trabalho pendente**. Devem ser apagadas s
 - dry-run auditável: `npm run maintenance:branches -- --include-superseded --json`;
 - aplicação física, somente com autoridade delete-ref: `npm run maintenance:branches -- --include-superseded --apply`.
 
-A manifest contém **61 heads auditados**: as 13 branches sem PR já classificadas como superseded, 31 branches antigas de PR fechado cujo sucessor `rebased`, `v2` ou equivalente foi efetivamente mergeado, 3 snapshots/probes antigos de Mobilidade já comprovadamente redundantes, 6 branches temporárias antigas de certificação/recovery/ops, 6 precursores fechados de sitemap/facades/ProfileMembersManager/tipos Supabase e 2 precursores de segurança absorvidos byte a byte pela `main`. Branches ainda em quarentena não entram na manifest.
+A manifest contém **64 heads auditados**: as 13 branches sem PR já classificadas como superseded, 31 branches antigas de PR fechado cujo sucessor `rebased`, `v2` ou equivalente foi efetivamente mergeado, 3 snapshots/probes antigos de Mobilidade já comprovadamente redundantes, 6 branches temporárias antigas de certificação/recovery/ops, 6 precursores fechados de sitemap/facades/ProfileMembersManager/tipos Supabase e 2 precursores de segurança absorvidos byte a byte pela `main`. Branches ainda em quarentena não entram na manifest.
 
 ### Segundo lote — PR fechado substituído por sucessor mergeado
 
@@ -206,6 +206,16 @@ Mais dois heads fechados sem merge foram provados como superseded:
 - `agent/security-classified-report-rpc-contract`: a migration `20260820081746_harden_classified_report_rpc_contract.sql` e a spec `classified_report_authorization_spec.sql` são byte a byte idênticas à `main`; a reconciliação posterior foi mergeada no PR #54.
 
 Como o conteúdo útil já está preservado exatamente na base atual, esses heads não representam trabalho pendente nem histórico funcional único necessário para o MVP.
+
+### Sexto lote — session/auth e report RPC reconciliados
+
+Foram classificados mais três heads fechados sem merge como **superseded / não reintegrar**:
+
+- `agent/reconcile-session-rpc-auth-authority`: `SessionRpcService.ts` é byte a byte idêntico à `main`; os antigos `src/core/auth/services/SessionService.ts` e `src/core/auth/hooks/useSessions.ts` foram aposentados explicitamente pelo ratchet `session-ssot-ownership.test.ts`; o `session-rpc` atual preserva a autoridade de revogação via Supabase Auth e adiciona endurecimentos posteriores de MFA/conta operacional;
+- `agent/security-report-rpc-contract-batch-2`: precursor do hardening batch 2; o timestamp local antigo `20260820084132` foi retirado da cadeia ativa e preservado em arquivo de proveniência;
+- `security/report-rpc-authz-batch-2-reconciled`: reconciliação intermediária do mesmo lote; a autoridade canônica é a migration forward-only `20260830091107_canonicalize_report_rpc_authenticated_only_contract_g5.sql`, aplicada/versionada, com ratchet atual em `tests/regression/security/report-rpc-authorization-batch-2.test.ts`.
+
+A própria documentação de proveniência determina que o timestamp antigo não deve ser reaplicado. Esses heads, portanto, não são fonte ativa de trabalho pendente.
 
 ## Próximo passo
 
