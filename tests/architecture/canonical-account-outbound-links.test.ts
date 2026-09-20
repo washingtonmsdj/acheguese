@@ -28,11 +28,15 @@ describe("canonical outbound account links", () => {
     expect(email).not.toContain("buildPublicAbsoluteUrl('/settings/sessions')");
   });
 
-  it("keeps security and settings push actions on canonical account routes", () => {
+  it("keeps security, settings and order push actions on canonical routes", () => {
     expect(sw).toContain("case 'security':\n      return '/conta/seguranca';");
     expect(sw).toContain("case 'settings':\n      return '/conta/notificacoes';");
+    expect(sw).toContain(
+      "case 'order':\n      return \`/gastronomia/pedidos/\${data.orderId || ''}\`;",
+    );
     expect(sw).not.toContain("return '/settings/sessions';");
     expect(sw).not.toContain("return '/settings/notifications';");
+    expect(sw).not.toContain("\`/orders/\${data.orderId || ''}\`");
   });
 
   it("does not restore the removed generic dashboard destination in checkout", () => {
