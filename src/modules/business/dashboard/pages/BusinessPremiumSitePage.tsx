@@ -6,12 +6,14 @@ import { Badge } from "@/shared/components/ui/badge";
 import { Button } from "@/shared/components/ui/button";
 import { QrImageGenerator } from "@/core/qr";
 import { useBusinessDashboardContext } from "@/modules/business/dashboard/businessDashboardContext";
+import { isLaunchSurfaceEnabled } from "@/app/config/launchScope";
 
 export default function BusinessPremiumSitePage() {
   const { business, premiumUrl, publicUrl, entitlements } = useBusinessDashboardContext();
   const [isGeneratingQr, setIsGeneratingQr] = useState(false);
 
   const isPremiumEnabled = Boolean(premiumUrl && entitlements.canUseShortPremiumLink);
+  const showBilling = isLaunchSurfaceEnabled("billing");
 
   const getAbsolutePremiumUrl = (): string | null => {
     if (!premiumUrl) return null;
@@ -59,6 +61,29 @@ export default function BusinessPremiumSitePage() {
       toast.error("Não foi possível copiar o link.");
     }
   };
+
+  if (!isPremiumEnabled && !showBilling) {
+    return (
+      <div className="space-y-4">
+        <Card>
+          <CardHeader>
+            <CardTitle>Link premium da empresa</CardTitle>
+            <CardDescription>
+              Este recurso não está habilitado para esta empresa no lançamento atual.
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <div className="rounded-md border p-3 text-sm">
+              <p className="font-medium">Página pública comum</p>
+              <p className="text-muted-foreground">
+                {publicUrl || "Não disponível"}
+              </p>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-4">
