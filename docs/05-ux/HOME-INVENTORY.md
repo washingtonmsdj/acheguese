@@ -6,6 +6,8 @@
 >
 > Fontes primárias consultadas: `TerritoryHomePage.tsx`, `docs/SCREEN-MAP.md`, `docs/FEATURE-MAP.md`, `src/config/moduleSlugs.ts`, `src/config/territory.ts`, `src/core/navigation/BottomNav.tsx`, `src/app/routes/AppRoutes.tsx`.
 
+> Corte MVP atual: Analytics público não é candidato à Home enquanto `publicAnalytics=false`.
+
 ---
 
 ## 1. Inventário da Territory Home atual
