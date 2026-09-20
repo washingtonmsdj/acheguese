@@ -163,6 +163,7 @@ Correção aplicada:
 O Supabase registrou a migration em `20260920004231`. O filename Git foi realinhado a essa identidade e `src/integrations/supabase/types.generated.ts` foi regenerado diretamente do runtime. A comparação normalizada Git ↔ Supabase retornou `exact=true`.
 
 **Estado:** o drift estrutural de Vagas e o drift de tipos gerados não devem mais ser tratados como blockers genéricos. A superfície ainda precisa do gate executável/E2E e smoke exact-SHA antes do release, como todo o restante do MVP. O banco agora contém zero vagas fictícias; até haver publicação real, a UI deve mostrar empty state verdadeiro.
+
 ## Atualização — fechamento de superfícies e provenance — 2026-09-19
 
 Após a reconciliação de Vagas, o corte urgente avançou em quatro frentes sem ampliar escopo de produto:
