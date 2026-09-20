@@ -277,6 +277,7 @@ export function useProfileHub() {
     [navigate, appUrls],
   );
 
+  const showBilling = isLaunchSurfaceEnabled('billing');
   const showBusinessOnboarding =
     !hasBusinesses &&
     Boolean(
@@ -311,8 +312,9 @@ export function useProfileHub() {
         showBusinessOnboarding
           ? {
               title: 'Ativar operação empresarial',
-              description:
-                'Este perfil já pode entrar no fluxo de empresa, dashboard, billing e verticalização.',
+              description: showBilling
+                ? 'Este perfil já pode entrar no fluxo de empresa, dashboard, billing e verticalização.'
+                : 'Este perfil já pode entrar no fluxo de empresa, dashboard e verticalização.',
               actionLabel: 'Criar empresa',
               onClick: () => navigate(appUrls.business.create),
             }
@@ -335,6 +337,7 @@ export function useProfileHub() {
       territoryLabel,
       canOpenPublicProfile,
       showBusinessOnboarding,
+      showBilling,
       notifications.unread,
       activeProfileId,
       navigate,
