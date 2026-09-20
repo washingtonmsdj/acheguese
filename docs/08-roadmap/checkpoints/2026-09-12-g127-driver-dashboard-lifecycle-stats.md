@@ -17,7 +17,7 @@ O fallback de `cancelledRides` também contava somente o alias histórico `cance
 
 ## Evidência de lifecycle
 
-`supabase/migrations/20260911222000_complete_delivery_in_single_transaction_g70.sql` encerra a confirmação de entrega como `delivered -> completed` antes do comando retornar. `RideLifecycleStatus.ts` também documenta `delivered` como marco transitório não operacional.
+`supabase/migrations/20260916113602_restore_atomic_delivery_completion_with_server_owned_price.sql` encerra a confirmação de entrega como `delivered -> completed` antes do comando retornar. `RideLifecycleStatus.ts` também documenta `delivered` como marco transitório não operacional.
 
 ## Ratchet
 
