@@ -82,6 +82,11 @@ export function AppLayoutSidebar() {
     typeof window !== "undefined" &&
     pathname === "/conta/publicacoes" &&
     new URLSearchParams(window.location.search).get("concept-mock") === "1";
+  const conceptGroupsPreview =
+    import.meta.env.DEV &&
+    typeof window !== "undefined" &&
+    pathname === "/grupos" &&
+    new URLSearchParams(window.location.search).get("concept-mock") === "1";
   const accountUsesSettingsShell =
     ACCOUNT_SETTINGS_SHELL_PATHS.has(pathname) ||
     conceptLinksPreview ||
@@ -153,7 +158,8 @@ export function AppLayoutSidebar() {
     conceptLinksPreview ||
     conceptDetailPreview ||
     conceptModerationPreview ||
-    conceptMyPostsPreview;
+    conceptMyPostsPreview ||
+    conceptGroupsPreview;
 
   const isInternalGroupRoute =
     pathSegments[0] === "grupos" && pathSegments.length >= 2;
@@ -180,7 +186,8 @@ export function AppLayoutSidebar() {
     conceptLinksPreview ||
     conceptDetailPreview ||
     conceptModerationPreview ||
-    conceptMyPostsPreview;
+    conceptMyPostsPreview ||
+    conceptGroupsPreview;
   const hideMobileBottomNav =
     pathname === "/" ||
     isInternalGroupRoute ||
@@ -196,7 +203,8 @@ export function AppLayoutSidebar() {
     conceptPublishPreview ||
     conceptDetailPreview ||
     conceptModerationPreview ||
-    conceptMyPostsPreview;
+    conceptMyPostsPreview ||
+    conceptGroupsPreview;
 
   const isMessagingRoute =
     pathSegments[0] === "mensagens" || pathSegments[0] === "chat";

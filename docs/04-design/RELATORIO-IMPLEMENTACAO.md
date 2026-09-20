@@ -885,3 +885,23 @@ A prancha 117 também está coberta pelos estados demonstrativos de visitante, v
 ### Git
 
 - Commit restrito ao mock de Minhas publicações, aos desvios de rota/layout de desenvolvimento e à documentação deste concept; alterações alheias staged/unstaged permanecem fora do commit.
+
+## 20/09/2026 · Grupos da comunidade — pranchas 097, 098, 099 e 100
+
+### Auditoria e ajuste
+
+- As telas reais `GruposPage`, `GrupoDetailPage`, `GrupoDetailChat`, `GrupoDetailMembersPanel`, `GrupoDetailInfoPanel`, `CreateGroupDialog`, hooks e serviços canônicos foram preservadas para produção. A implementação visual foi isolada em `DEV + /grupos?concept-mock=1`.
+- Recompus o mobile conforme as pranchas: descoberta territorial com filtros, cards compactos, detalhe com regras e responsáveis, conversa com evento/resposta/composer e solicitação pendente sem confundir vínculo territorial com entrada no grupo.
+- Recompus o desktop com rail territorial, topbar, lista de grupos, conversa central, painel de informações e navegação contextual de gestão. Solicitações ganharam busca, status e ações; membros/funções e arquivamento têm estados próprios.
+- Corrigi o espaçamento afetado pelo reset global de acessibilidade dentro do escopo do concept, mantendo botões, títulos e textos nos pesos/ritmos da referência e sem alterar o restante da aplicação.
+- Os estados são demonstrativos: não autoaprovam, não inventam status oficial, não persistem decisões e não expõem permissões além do que a prancha permite.
+
+### Validação e evidências
+
+- Navegador interno mantido aberto em duas abas: mobile `425 × 1108` e desktop `1707 × 960`, ambas restauradas em `/grupos?concept-mock=1` ao final.
+- Foram conferidos descobrir, detalhe, conversa, pendência, criação, regras, revisão, solicitações, funções e arquivamento. `body.scrollWidth` permaneceu igual ao viewport em ambos os tamanhos.
+- ESLint direcionado passou e `git diff --check` foi executado. O typecheck global continua condicionado à exclusão preexistente de `src/core/business/services/business.slug-queries.ts`, fora do escopo deste concept; os logs Vite existentes de `StandaloneMap` também são anteriores e não impedem a rota de conceito.
+
+### Git
+
+- Commit restrito ao mock de grupos, aos desvios de rota/layout de desenvolvimento e às documentações deste concept; alterações staged/unstaged preexistentes permanecem fora do commit.
