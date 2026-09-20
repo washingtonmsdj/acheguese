@@ -14,6 +14,7 @@ import {
   MapPin,
   MessageCircle,
   PackageCheck,
+  Search,
   ShoppingBag,
   Store,
   Truck,
@@ -64,11 +65,11 @@ type CheckoutStage = "address" | "delivery" | "review" | "fallback";
 type DeliveryEligibilityState = "unknown" | "eligible" | "ineligible";
 
 const CHECKOUT_SCREEN_TITLE_CLASS =
-  "font-heading text-2xl font-bold leading-tight tracking-[-0.04em] text-territory-ink";
+  "m-0 font-heading text-2xl font-bold leading-tight tracking-[-0.04em] text-territory-ink";
 const CHECKOUT_DESKTOP_TITLE_CLASS =
-  "font-heading text-3xl font-bold leading-tight tracking-[-0.04em] text-territory-ink";
+  "m-0 font-heading text-3xl font-bold leading-tight tracking-[-0.04em] text-territory-ink";
 const CHECKOUT_SECTION_TITLE_CLASS =
-  "font-heading text-base font-bold leading-5 text-territory-ink";
+  "m-0 font-heading text-base font-bold leading-5 text-territory-ink";
 
 const currency = (value: number) =>
   new Intl.NumberFormat("pt-BR", {
@@ -115,10 +116,7 @@ function fulfillmentLabel(mode: FulfillmentMode): string {
   }
 }
 
-function deliveryLabel(
-  mode: FulfillmentMode,
-  option: DeliveryOption,
-): string {
+function deliveryLabel(mode: FulfillmentMode, option: DeliveryOption): string {
   if (mode === "takeout") return "Retirada na loja";
   if (mode === "dine_in") return "Consumo no local";
   return option === "platform" ? "Motoboy Achegue-se" : "Entrega da loja";
@@ -206,7 +204,7 @@ function ModeButton({
         "inline-flex min-h-10 items-center justify-center gap-1 rounded-lg border px-2 text-type-caption font-semibold text-territory-ink transition-colors focus-visible:z-10 focus-visible:outline-2 focus-visible:outline-offset-[-2px] focus-visible:outline-territory-brand",
         active
           ? (activeClassName ??
-            "border-territory-brand bg-territory-brand text-white")
+              "border-territory-brand bg-territory-brand text-white")
           : "border-territory-border bg-territory-surface hover:border-territory-brand/50",
       )}
     >
@@ -265,29 +263,20 @@ function Stepper({ stage }: { stage: CheckoutStage }) {
 }
 
 function CheckoutHeader({
-  business,
   profileName,
-  profileType,
   onBack,
   onAccount,
   stage,
 }: {
-  business: GastronomyBusiness;
   profileName: string;
-  profileType: string;
   onBack: () => void;
   onAccount: () => void;
   stage: CheckoutStage;
 }) {
-  const territoryLabel = business.location?.full_name || business.location?.name;
-  const cityLabel = [business.business_city, business.business_state]
-    .filter(Boolean)
-    .join(" · ");
-
   return (
     <>
       <header className="hidden border-b border-territory-brand/40 bg-territory-brand lg:block">
-        <div className="mx-auto flex h-[4.25rem] max-w-[84rem] items-center gap-8 px-6">
+        <div className="mx-auto flex h-14 max-w-[84rem] items-center gap-6 px-6">
           <button
             type="button"
             onClick={onBack}
@@ -295,24 +284,20 @@ function CheckoutHeader({
           >
             Achegue-se<span className="text-territory-sun">.</span>
           </button>
-          <span className="h-7 w-px bg-white/25" aria-hidden="true" />
-          <div className="flex items-center gap-2 text-type-caption text-white">
-            <MapPin
-              className="h-4 w-4 text-white"
-              aria-hidden="true"
-            />
-            <span>{territoryLabel || business.name}</span>
-            <span className="text-white/70">
-              {cityLabel || "Território não informado"}
-            </span>
-          </div>
           <nav
-            className="ml-auto flex items-center gap-7 text-type-caption font-semibold text-white"
+            className="ml-auto flex items-center gap-6 text-type-caption font-semibold text-white"
             aria-label="Navegação"
           >
             <span>Descobrir</span>
             <span>Meus pedidos</span>
             <span>Apoio à comunidade</span>
+            <button
+              type="button"
+              className="inline-flex h-9 w-9 items-center justify-center rounded-full focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white"
+              aria-label="Buscar"
+            >
+              <Search className="h-4 w-4" aria-hidden="true" />
+            </button>
             <button
               type="button"
               onClick={onAccount}
@@ -321,7 +306,10 @@ function CheckoutHeader({
             >
               <UserRound className="h-4 w-4" aria-hidden="true" />
             </button>
-            <span>{profileName} · {profileType}</span>
+            <span className="inline-flex items-center gap-1 whitespace-nowrap">
+              {profileName}
+              <ChevronDown className="h-3.5 w-3.5" aria-hidden="true" />
+            </span>
           </nav>
         </div>
       </header>
@@ -579,7 +567,9 @@ function MobileAddressStage({
   return (
     <div className="space-y-3">
       <h1 className={CHECKOUT_SCREEN_TITLE_CLASS}>
-        {mode === "delivery" ? "Onde vamos entregar?" : "Como você quer receber?"}
+        {mode === "delivery"
+          ? "Onde vamos entregar?"
+          : "Como você quer receber?"}
       </h1>
       <div
         className={cn(
@@ -622,7 +612,9 @@ function MobileAddressStage({
             />
           </span>
           <span className="text-type-label font-semibold">{profileName}</span>{" "}
-          <span className="font-normal text-territory-muted">· {profileType}</span>
+          <span className="font-normal text-territory-muted">
+            · {profileType}
+          </span>
         </span>
         <ChevronRight
           className="h-4 w-4 shrink-0 text-territory-muted"
@@ -635,34 +627,34 @@ function MobileAddressStage({
             Endereço de entrega
           </p>
           <div className="mb-2 grid grid-cols-2 gap-2 text-type-caption">
-          <button
-            type="button"
-            aria-pressed={addressMode === "saved"}
-            disabled={!hasSavedAddress}
-            onClick={() => onAddressModeChange("saved")}
-            className={cn(
-              "min-h-9 rounded-lg border px-2 font-semibold text-territory-ink focus-visible:outline-2 focus-visible:outline-offset-[-2px] focus-visible:outline-territory-brand",
-              addressMode === "saved"
-                ? "border-territory-brand bg-territory-raised"
-                : "border-territory-border bg-territory-surface",
-              !hasSavedAddress && "cursor-not-allowed opacity-55",
-            )}
-          >
-            Endereço do perfil
-          </button>
-          <button
-            type="button"
-            aria-pressed={addressMode === "other"}
-            onClick={() => onAddressModeChange("other")}
-            className={cn(
-              "min-h-9 rounded-lg border px-2 text-territory-ink focus-visible:outline-2 focus-visible:outline-offset-[-2px] focus-visible:outline-territory-brand",
-              addressMode === "other"
-                ? "border-territory-brand bg-territory-raised font-semibold"
-                : "border-territory-border bg-territory-surface",
-            )}
-          >
-            Outro endereço
-          </button>
+            <button
+              type="button"
+              aria-pressed={addressMode === "saved"}
+              disabled={!hasSavedAddress}
+              onClick={() => onAddressModeChange("saved")}
+              className={cn(
+                "min-h-9 rounded-lg border px-2 font-semibold text-territory-ink focus-visible:outline-2 focus-visible:outline-offset-[-2px] focus-visible:outline-territory-brand",
+                addressMode === "saved"
+                  ? "border-territory-brand bg-territory-raised"
+                  : "border-territory-border bg-territory-surface",
+                !hasSavedAddress && "cursor-not-allowed opacity-55",
+              )}
+            >
+              Endereço do perfil
+            </button>
+            <button
+              type="button"
+              aria-pressed={addressMode === "other"}
+              onClick={() => onAddressModeChange("other")}
+              className={cn(
+                "min-h-9 rounded-lg border px-2 text-territory-ink focus-visible:outline-2 focus-visible:outline-offset-[-2px] focus-visible:outline-territory-brand",
+                addressMode === "other"
+                  ? "border-territory-brand bg-territory-raised font-semibold"
+                  : "border-territory-border bg-territory-surface",
+              )}
+            >
+              Outro endereço
+            </button>
           </div>
           <AddressCard
             destination={destination}
@@ -731,9 +723,7 @@ function MobileDeliveryStage({
 }) {
   return (
     <div className="space-y-3">
-      <h1 className={CHECKOUT_SCREEN_TITLE_CLASS}>
-        Escolha a entrega
-      </h1>
+      <h1 className={CHECKOUT_SCREEN_TITLE_CLASS}>Escolha a entrega</h1>
       <AddressCard destination={destination} compact />
       <div className="space-y-2">
         <ChoiceButton
@@ -746,7 +736,8 @@ function MobileDeliveryStage({
               className="h-5 w-5 text-territory-brand"
               aria-hidden="true"
             />
-            Entrega da loja <span className="ml-auto">{currency(deliveryFee)}</span>
+            Entrega da loja{" "}
+            <span className="ml-auto">{currency(deliveryFee)}</span>
           </span>
           <span className="mt-1 block pl-7 text-type-caption text-territory-muted">
             Equipe do estabelecimento
@@ -761,10 +752,7 @@ function MobileDeliveryStage({
           onClick={() => onDeliveryOptionChange("platform")}
         >
           <span className="flex items-center gap-2 text-type-label font-bold">
-            <Bike
-              className="h-5 w-5 text-territory-brand"
-              aria-hidden="true"
-            />
+            <Bike className="h-5 w-5 text-territory-brand" aria-hidden="true" />
             Motoboy Achegue-se
             <span className="ml-auto text-type-caption font-normal text-territory-muted">
               {platformCourierAvailable ? "Disponível" : "Indisponível"}
@@ -807,11 +795,17 @@ function MobileDeliveryStage({
           <span className="text-territory-muted">
             {deliveryLabel(mode, deliveryOption)}
           </span>
-          <strong>{currency(deliveryOption === "platform" ? 0 : deliveryFee)}</strong>
+          <strong>
+            {currency(deliveryOption === "platform" ? 0 : deliveryFee)}
+          </strong>
         </div>
         <div className="mt-3 flex items-center justify-between gap-3 border-t border-territory-border pt-3 text-type-body font-bold leading-tight">
           <span>Total</span>
-          <span>{currency(subtotal + (deliveryOption === "platform" ? 0 : deliveryFee))}</span>
+          <span>
+            {currency(
+              subtotal + (deliveryOption === "platform" ? 0 : deliveryFee),
+            )}
+          </span>
         </div>
       </div>
       <button
@@ -882,9 +876,7 @@ function MobileReviewStage({
     mode === "delivery" ? Truck : mode === "takeout" ? ShoppingBag : Store;
   return (
     <div className="space-y-3">
-      <h1 className={CHECKOUT_SCREEN_TITLE_CLASS}>
-        Revisar pedido
-      </h1>
+      <h1 className={CHECKOUT_SCREEN_TITLE_CLASS}>Revisar pedido</h1>
       <Stepper stage="review" />
       <div className="space-y-2">
         <button
@@ -905,11 +897,19 @@ function MobileReviewStage({
               {destination ? (
                 <>
                   {" · "}
-                  {[destination.street, destination.number, destination.complement]
+                  {[
+                    destination.street,
+                    destination.number,
+                    destination.complement,
+                  ]
                     .filter(Boolean)
                     .join(", ") || destination.label}
                   <br />
-                  {[destination.neighborhood, destination.city, destination.state]
+                  {[
+                    destination.neighborhood,
+                    destination.city,
+                    destination.state,
+                  ]
                     .filter(Boolean)
                     .join(" · ")}
                 </>
@@ -936,9 +936,7 @@ function MobileReviewStage({
             aria-hidden="true"
           />
           <span className="min-w-0 flex-1 text-type-caption">
-            <strong className="block text-type-label">
-              {paymentLabel}
-            </strong>
+            <strong className="block text-type-label">{paymentLabel}</strong>
             <span className="mt-0.5 block text-type-caption text-territory-muted">
               Produtos pagos diretamente à loja
             </span>
@@ -1002,8 +1000,7 @@ function MobileReviewStage({
         onClick={onToggleNotes}
         className="flex min-h-10 w-full items-center justify-between rounded-lg border border-territory-border bg-territory-surface px-3 text-left text-type-caption font-semibold text-territory-ink focus-visible:outline-2 focus-visible:outline-offset-[-2px] focus-visible:outline-territory-brand"
       >
-        Observações do pedido{" "}
-        <span className="sr-only">(opcional)</span>
+        Observações do pedido <span className="sr-only">(opcional)</span>
         <span className="flex items-center gap-1 text-territory-brand">
           {notes ? `${notes.length}/280` : "Adicionar"}{" "}
           <ChevronDown
@@ -1120,9 +1117,7 @@ function MobileFallbackStage({
   if (!hasSelectableMode) {
     return (
       <div className="space-y-3">
-        <h1 className={CHECKOUT_SCREEN_TITLE_CLASS}>
-          Ajuste a entrega
-        </h1>
+        <h1 className={CHECKOUT_SCREEN_TITLE_CLASS}>Ajuste a entrega</h1>
         {warning}
         {onEditAddress ? (
           <button
@@ -1154,9 +1149,7 @@ function MobileFallbackStage({
 
   return (
     <div className="space-y-3">
-      <h1 className={CHECKOUT_SCREEN_TITLE_CLASS}>
-        Ajuste a entrega
-      </h1>
+      <h1 className={CHECKOUT_SCREEN_TITLE_CLASS}>Ajuste a entrega</h1>
       {warning}
       <AddressCard destination={destination} compact onEdit={onEditAddress} />
       <div className="space-y-2">
@@ -1173,15 +1166,29 @@ function MobileFallbackStage({
             >
               <span className="flex items-center gap-2 text-type-label font-bold">
                 {isDelivery ? (
-                  <Truck className="h-5 w-5 text-territory-brand" aria-hidden="true" />
+                  <Truck
+                    className="h-5 w-5 text-territory-brand"
+                    aria-hidden="true"
+                  />
                 ) : (
-                  <Store className="h-5 w-5 text-territory-brand" aria-hidden="true" />
+                  <Store
+                    className="h-5 w-5 text-territory-brand"
+                    aria-hidden="true"
+                  />
                 )}
-                {isDelivery ? "Entrega da loja" : availableMode === "takeout" ? "Retirada na loja" : "Consumo no local"}
-                {isDelivery ? <span className="ml-auto">{currency(deliveryFee)}</span> : null}
+                {isDelivery
+                  ? "Entrega da loja"
+                  : availableMode === "takeout"
+                    ? "Retirada na loja"
+                    : "Consumo no local"}
+                {isDelivery ? (
+                  <span className="ml-auto">{currency(deliveryFee)}</span>
+                ) : null}
               </span>
               <span className="mt-1 block pl-7 text-type-caption text-territory-muted">
-                {isDelivery ? "Equipe do estabelecimento" : "Sem taxa de entrega"}
+                {isDelivery
+                  ? "Equipe do estabelecimento"
+                  : "Sem taxa de entrega"}
               </span>
             </ChoiceButton>
           );
@@ -1189,7 +1196,10 @@ function MobileFallbackStage({
       </div>
       <div className="rounded-lg border border-territory-border bg-territory-surface p-3">
         <div className="flex items-center justify-between gap-3 text-type-caption font-bold">
-          <span>Seu pedido · {items.reduce((total, item) => total + item.quantity, 0)} itens</span>
+          <span>
+            Seu pedido ·{" "}
+            {items.reduce((total, item) => total + item.quantity, 0)} itens
+          </span>
           <span>{currency(subtotal)}</span>
         </div>
         <p className="mt-1 text-type-caption text-territory-muted">
@@ -1311,7 +1321,9 @@ function AddressSection({
       <div className="mt-3">
         <AddressCard
           destination={destination}
-          emptyLabel={addressMode === "other" ? "Outro endereço" : "Endereço do perfil"}
+          emptyLabel={
+            addressMode === "other" ? "Outro endereço" : "Endereço do perfil"
+          }
           onEdit={onEditAddress}
           recipientName={profileName}
           recipientPhone={profilePhone}
@@ -1412,32 +1424,36 @@ function FulfillmentSection({
               <span className="mt-1 block text-type-caption text-territory-muted">
                 Seu pedido será entregue pela equipe do {businessName}.
               </span>
-              </ChoiceButton>
+            </ChoiceButton>
             <ChoiceButton
               active={false}
               disabled={!platformCourierAvailable}
               onClick={() => onDeliveryOptionChange("platform")}
             >
               <span className="block text-type-label font-semibold">
-                <Bike className="mr-1 inline h-4 w-4 text-territory-brand" aria-hidden="true" />
+                <Bike
+                  className="mr-1 inline h-4 w-4 text-territory-brand"
+                  aria-hidden="true"
+                />
                 Motoboy Achegue-se
               </span>
               <span className="mt-0.5 block text-type-caption text-territory-muted">
                 {platformCourierAvailable
                   ? "Entregador buscado pela plataforma"
-                  : "Indisponível neste checkout"
-                }
+                  : "Indisponível neste checkout"}
               </span>
               <span className="mt-1 block text-type-caption text-territory-muted">
                 {platformCourierAvailable
                   ? "A taxa será calculada conforme o endereço."
-                  : "A operação atual usa a entrega da loja."
-                }
+                  : "A operação atual usa a entrega da loja."}
               </span>
             </ChoiceButton>
           </div>
           <p className="mt-3 flex items-center gap-2 text-type-caption text-territory-muted">
-            <Info className="h-3.5 w-3.5 shrink-0 text-territory-brand" aria-hidden="true" />
+            <Info
+              className="h-3.5 w-3.5 shrink-0 text-territory-brand"
+              aria-hidden="true"
+            />
             A disponibilidade depende do endereço e da operação na região.
           </p>
         </>
@@ -1500,7 +1516,9 @@ function PaymentSection({
             active={method === option.value}
             onClick={() => onChange(option.value)}
           >
-            <span className="block text-type-label font-semibold">{option.label}</span>
+            <span className="block text-type-label font-semibold">
+              {option.label}
+            </span>
             <span className="mt-0.5 block text-type-caption text-territory-muted">
               Pagamento combinado diretamente com a loja
             </span>
@@ -1545,10 +1563,7 @@ function ItemsSection({
       aria-labelledby="checkout-items-title"
     >
       <div className="flex items-center justify-between gap-3">
-        <h2
-          id="checkout-items-title"
-          className={CHECKOUT_SECTION_TITLE_CLASS}
-        >
+        <h2 id="checkout-items-title" className={CHECKOUT_SECTION_TITLE_CLASS}>
           Itens do pedido
         </h2>
         <button
@@ -1729,7 +1744,9 @@ function OrderSummary({
         disabled={isSubmitDisabled}
         className="mt-4 h-12 w-full rounded-lg bg-territory-sun text-sm font-bold text-territory-ink hover:bg-territory-sun/90"
       >
-        {isSubmitting ? "Criando pedido..." : `Confirmar pedido · ${currency(total)}`}
+        {isSubmitting
+          ? "Criando pedido..."
+          : `Confirmar pedido · ${currency(total)}`}
       </Button>
       <p className="mt-3 text-center text-type-caption text-territory-muted">
         Após confirmar, a loja recebe o pedido e combina os detalhes do
@@ -1786,7 +1803,7 @@ function MobileCheckoutFooter({
       : stage === "delivery"
         ? "Continuar para pagamento"
         : stage === "fallback"
-          ? fallbackLabel ?? "Continuar com a opção escolhida"
+          ? (fallbackLabel ?? "Continuar com a opção escolhida")
           : `Confirmar pedido · ${currency(total)}`;
   const onClick =
     stage === "address"
@@ -1822,8 +1839,13 @@ export default function GastronomyCheckoutConceptSurface({
   const navigate = useNavigate();
   const appUrls = useAppUrls();
   const { user, activeProfile } = useSessionContext();
-  const { cart, hasCart, minimumOrderReached, minimumOrderRemaining, removeItem } =
-    useGastronomyCart(business);
+  const {
+    cart,
+    hasCart,
+    minimumOrderReached,
+    minimumOrderRemaining,
+    removeItem,
+  } = useGastronomyCart(business);
   const { checkout, isSubmitting, hasActiveProfile } = useGastronomyCheckout();
   const availableModes = useMemo(
     () => getEnabledFulfillmentModes(business),
@@ -1844,8 +1866,10 @@ export default function GastronomyCheckoutConceptSurface({
   const [fallbackReason, setFallbackReason] = useState<"store" | "platform">(
     "platform",
   );
-  const [fallbackMode, setFallbackMode] = useState<FulfillmentMode>(
-    () => availableModes.includes("delivery") ? "delivery" : availableModes[0] ?? "takeout",
+  const [fallbackMode, setFallbackMode] = useState<FulfillmentMode>(() =>
+    availableModes.includes("delivery")
+      ? "delivery"
+      : (availableModes[0] ?? "takeout"),
   );
   const [deliveryEligibility, setDeliveryEligibility] =
     useState<DeliveryEligibilityState>("unknown");
@@ -1935,7 +1959,8 @@ export default function GastronomyCheckoutConceptSurface({
   );
   const items = useMemo(() => toDisplayItems(checkoutCart), [checkoutCart]);
   const subtotal = checkoutCart.subtotal;
-  const deliveryFee = deliveryOption === "platform" ? 0 : checkoutCart.delivery_fee;
+  const deliveryFee =
+    deliveryOption === "platform" ? 0 : checkoutCart.delivery_fee;
   const total = subtotal + deliveryFee;
   const paymentOptions = useMemo(
     () => resolveCheckoutPaymentOptions(business, fulfillmentMode),
@@ -1960,7 +1985,9 @@ export default function GastronomyCheckoutConceptSurface({
         : "Continuar com consumo no local";
 
   useEffect(() => {
-    setFulfillmentMode((current) => normalizeFulfillmentMode(business, current));
+    setFulfillmentMode((current) =>
+      normalizeFulfillmentMode(business, current),
+    );
   }, [business]);
 
   useEffect(() => {
@@ -1970,7 +1997,9 @@ export default function GastronomyCheckoutConceptSurface({
 
   useEffect(() => {
     setFallbackMode((current) =>
-      availableModes.includes(current) ? current : availableModes[0] ?? "takeout",
+      availableModes.includes(current)
+        ? current
+        : (availableModes[0] ?? "takeout"),
     );
   }, [availableModes]);
 
@@ -1989,8 +2018,9 @@ export default function GastronomyCheckoutConceptSurface({
 
   useEffect(() => {
     if (!activeProfile) return;
-    setRecipientName((current) =>
-      current || activeProfile.displayName || activeProfile.name || "",
+    setRecipientName(
+      (current) =>
+        current || activeProfile.displayName || activeProfile.name || "",
     );
     setRecipientPhone((current) => current || activeProfile.phone || "");
   }, [activeProfile]);
@@ -2024,46 +2054,50 @@ export default function GastronomyCheckoutConceptSurface({
   const profileName =
     activeProfile?.displayName || activeProfile?.name || "Perfil ativo";
   const profileType = profileTypeLabel(activeProfile?.profileType);
-  const addressEditor = requiresAddress && showDestinationEditor ? (
-    <div className="space-y-3">
-      <GastronomyDeliveryDestinationPanel
-        destinationLabel={destinationLabel}
-        destinationSourceLabel={effectiveDestination ? destinationSourceLabel : null}
-        isEditing={showDestinationEditor}
-        addressQuery={destinationAddressQuery}
-        isResolvingAddress={isResolvingDestinationAddress}
-        isLocatingUser={isLocatingUser}
-        hasSavedAddressOption={hasSavedResidence}
-        savedAddressLabel={savedResidenceLabel}
-        isAuthenticated={Boolean(user)}
-        errorMessage={destinationErrorMessage}
-        onAddressQueryChange={setDestinationAddressQuery}
-        onSubmitAddress={() => void handleSubmitAddressDestination()}
-        onUseCurrentLocation={handleActivateLocation}
-        onUseSavedAddress={() => void handleUseSavedResidence()}
-        onOpenEditor={() => setShowDestinationEditor(true)}
-        onCloseEditor={() => setShowDestinationEditor(false)}
-        onGoToLogin={() => navigate(appUrls.auth.login)}
-        showCurrentLocationAction={false}
-      />
-      {effectiveDestination && (showDestinationEditor || !structuredAddressReady) ? (
-        <CheckoutDeliveryAddressFields
-          idPrefix="concept-checkout"
-          deliveryDestination={effectiveDestination}
-          streetNumber={streetNumber}
-          complement={complement}
-          referencePoint={referencePoint}
-          recipientName={recipientName}
-          recipientPhone={recipientPhone}
-          onStreetNumberChange={setStreetNumber}
-          onComplementChange={setComplement}
-          onReferencePointChange={setReferencePoint}
-          onRecipientNameChange={setRecipientName}
-          onRecipientPhoneChange={setRecipientPhone}
+  const addressEditor =
+    requiresAddress && showDestinationEditor ? (
+      <div className="space-y-3">
+        <GastronomyDeliveryDestinationPanel
+          destinationLabel={destinationLabel}
+          destinationSourceLabel={
+            effectiveDestination ? destinationSourceLabel : null
+          }
+          isEditing={showDestinationEditor}
+          addressQuery={destinationAddressQuery}
+          isResolvingAddress={isResolvingDestinationAddress}
+          isLocatingUser={isLocatingUser}
+          hasSavedAddressOption={hasSavedResidence}
+          savedAddressLabel={savedResidenceLabel}
+          isAuthenticated={Boolean(user)}
+          errorMessage={destinationErrorMessage}
+          onAddressQueryChange={setDestinationAddressQuery}
+          onSubmitAddress={() => void handleSubmitAddressDestination()}
+          onUseCurrentLocation={handleActivateLocation}
+          onUseSavedAddress={() => void handleUseSavedResidence()}
+          onOpenEditor={() => setShowDestinationEditor(true)}
+          onCloseEditor={() => setShowDestinationEditor(false)}
+          onGoToLogin={() => navigate(appUrls.auth.login)}
+          showCurrentLocationAction={false}
         />
-      ) : null}
-    </div>
-  ) : null;
+        {effectiveDestination &&
+        (showDestinationEditor || !structuredAddressReady) ? (
+          <CheckoutDeliveryAddressFields
+            idPrefix="concept-checkout"
+            deliveryDestination={effectiveDestination}
+            streetNumber={streetNumber}
+            complement={complement}
+            referencePoint={referencePoint}
+            recipientName={recipientName}
+            recipientPhone={recipientPhone}
+            onStreetNumberChange={setStreetNumber}
+            onComplementChange={setComplement}
+            onReferencePointChange={setReferencePoint}
+            onRecipientNameChange={setRecipientName}
+            onRecipientPhoneChange={setRecipientPhone}
+          />
+        ) : null}
+      </div>
+    ) : null;
 
   const handleModeChange = (nextMode: FulfillmentMode) => {
     setFulfillmentMode(nextMode);
@@ -2213,7 +2247,8 @@ export default function GastronomyCheckoutConceptSurface({
   };
   const returnToPrevious = () => {
     if (stage === "delivery") setStage("address");
-    else if (stage === "review") setStage(fulfillmentMode === "delivery" ? "delivery" : "address");
+    else if (stage === "review")
+      setStage(fulfillmentMode === "delivery" ? "delivery" : "address");
     else if (stage === "fallback") setStage("review");
     else navigate(-1);
   };
@@ -2225,9 +2260,7 @@ export default function GastronomyCheckoutConceptSurface({
         <meta name="robots" content="noindex, nofollow" />
       </Helmet>
       <CheckoutHeader
-        business={business}
         profileName={profileName}
-        profileType={profileType}
         onBack={returnToPrevious}
         onAccount={() => navigate(appUrls.profile.home)}
         stage={stage}
@@ -2278,8 +2311,9 @@ export default function GastronomyCheckoutConceptSurface({
                 mode={fulfillmentMode}
                 deliveryOption={deliveryOption}
                 paymentLabel={
-                  paymentOptions.find((option) => option.value === paymentMethod)?.label ??
-                    "Forma de pagamento"
+                  paymentOptions.find(
+                    (option) => option.value === paymentMethod,
+                  )?.label ?? "Forma de pagamento"
                 }
                 destination={checkoutAddress}
                 recipientName={profileName}
@@ -2294,7 +2328,9 @@ export default function GastronomyCheckoutConceptSurface({
                 paymentOptions={paymentOptions}
                 cashChangeFor={cashChangeFor}
                 onGoToDelivery={() =>
-                  setStage(fulfillmentMode === "delivery" ? "delivery" : "address")
+                  setStage(
+                    fulfillmentMode === "delivery" ? "delivery" : "address",
+                  )
                 }
                 onGoToPayment={() => setPaymentExpanded((current) => !current)}
                 onEditItems={() => navigate("..")}
@@ -2341,30 +2377,27 @@ export default function GastronomyCheckoutConceptSurface({
               <h1 className={CHECKOUT_DESKTOP_TITLE_CLASS}>
                 {stage === "fallback" ? "Ajuste a entrega" : "Finalizar pedido"}
               </h1>
-              <p className="mt-1 text-sm text-territory-muted">
-                Confira endereço, entrega e pagamento antes de confirmar.
-              </p>
               <div className="mt-4">
                 <BusinessSummary business={business} />
               </div>
             </div>
-            <div className="flex items-center gap-3 rounded-lg border border-territory-border bg-territory-surface px-4 py-3 text-type-caption">
+            <div className="mt-20 flex items-center gap-3 rounded-lg border border-territory-border bg-territory-surface px-4 py-3 text-type-caption">
               <span className="flex h-8 w-8 items-center justify-center rounded-full bg-territory-raised">
-                <UserRound className="h-4 w-4 text-territory-brand" aria-hidden="true" />
+                <UserRound
+                  className="h-4 w-4 text-territory-brand"
+                  aria-hidden="true"
+                />
               </span>
               <span>
-                 Pedido como <strong>{profileName}</strong> · {profileType}
+                Pedido como <strong>{profileName}</strong> · {profileType}
               </span>
-              <button type="button" className="font-semibold text-territory-brand">
+              <button
+                type="button"
+                className="font-semibold text-territory-brand"
+              >
                 Alterar
               </button>
             </div>
-          </div>
-          <div className="mt-5 flex items-center justify-between gap-6 rounded-xl border border-territory-border bg-territory-surface px-5 py-3">
-            <Stepper stage={stage} />
-            <p className="max-w-sm text-right text-type-caption text-territory-muted">
-              Etapa {stage === "address" ? "1" : stage === "delivery" ? "2" : "3"} de 3 · Seus itens ficam preservados durante o ajuste.
-            </p>
           </div>
           {stage === "fallback" ? (
             <div className="mt-5 max-w-2xl">
@@ -2384,70 +2417,89 @@ export default function GastronomyCheckoutConceptSurface({
               />
             </div>
           ) : (
-          <div className="mt-5 grid gap-5 lg:grid-cols-[minmax(0,1fr)_22rem] lg:items-start">
-            <div className="space-y-4 sm:space-y-5">
-              <FulfillmentSection
+            <div className="mt-4 grid gap-5 lg:grid-cols-[minmax(0,1fr)_22rem] lg:items-start">
+              <div className="space-y-4 sm:space-y-5">
+                <FulfillmentSection
+                  mode={fulfillmentMode}
+                  deliveryOption={deliveryOption}
+                  availableModes={availableModes}
+                  deliveryFee={deliveryFee}
+                  platformCourierAvailable={isPlatformCourierCheckoutAvailable()}
+                  businessName={business.name}
+                  onModeChange={handleModeChange}
+                  onDeliveryOptionChange={setDeliveryOption}
+                />
+                <AddressSection
+                  mode={fulfillmentMode}
+                  destination={checkoutAddress}
+                  addressMode={addressMode}
+                  hasSavedAddress={hasSavedResidence}
+                  addressEditor={addressEditor}
+                  profileName={profileName}
+                  profilePhone={recipientPhone}
+                  referencePoint={referencePoint}
+                  onAddressModeChange={handleAddressModeChange}
+                  onEditAddress={() => setShowDestinationEditor(true)}
+                />
+                <PaymentSection
+                  method={paymentMethod}
+                  options={paymentOptions}
+                  cashChangeFor={cashChangeFor}
+                  stepNumber={fulfillmentMode === "delivery" ? 3 : 2}
+                  onCashChangeForChange={setCashChangeFor}
+                  onChange={setPaymentMethod}
+                />
+                <section
+                  className="rounded-xl border border-territory-border bg-territory-surface p-4 sm:p-5"
+                  aria-labelledby="checkout-notes-title"
+                >
+                  <div className="flex items-center justify-between gap-3">
+                    <h2
+                      id="checkout-notes-title"
+                      className={CHECKOUT_SECTION_TITLE_CLASS}
+                    >
+                      Observações do pedido{" "}
+                      <span className="font-normal text-territory-muted">
+                        (opcional)
+                      </span>
+                    </h2>
+                    <span className="text-type-caption text-territory-muted">
+                      {notes.length}/280
+                    </span>
+                  </div>
+                  <Textarea
+                    value={notes}
+                    onChange={(event) => setNotes(event.target.value)}
+                    maxLength={280}
+                    rows={3}
+                    placeholder="Algo que a loja precisa saber?"
+                    className="mt-3 min-h-20 resize-none rounded-lg border-territory-border bg-territory-surface text-sm placeholder:text-territory-muted"
+                  />
+                </section>
+              </div>
+              <OrderSummary
                 mode={fulfillmentMode}
                 deliveryOption={deliveryOption}
-                availableModes={availableModes}
+                items={items}
+                subtotal={subtotal}
                 deliveryFee={deliveryFee}
-                platformCourierAvailable={isPlatformCourierCheckoutAvailable()}
-                businessName={business.name}
-                onModeChange={handleModeChange}
-                onDeliveryOptionChange={setDeliveryOption}
+                minimumOrderRemaining={minimumOrderRemaining}
+                isSubmitDisabled={isSubmitDisabled}
+                isSubmitting={isSubmitting}
+                onAddMoreItems={() => navigate("..")}
+                onRemoveItem={removeItem}
+                onConfirm={handleSubmit}
+                onFallback={() => {
+                  setFallbackReason("platform");
+                  setStage("fallback");
+                }}
+                onContactStore={() => navigate(appUrls.messages)}
               />
-              <AddressSection
-                mode={fulfillmentMode}
-                destination={checkoutAddress}
-                addressMode={addressMode}
-                hasSavedAddress={hasSavedResidence}
-                addressEditor={addressEditor}
-                profileName={profileName}
-                profilePhone={recipientPhone}
-                referencePoint={referencePoint}
-                onAddressModeChange={handleAddressModeChange}
-                onEditAddress={() => setShowDestinationEditor(true)}
-              />
-              <PaymentSection
-                method={paymentMethod}
-                options={paymentOptions}
-                cashChangeFor={cashChangeFor}
-                stepNumber={fulfillmentMode === "delivery" ? 3 : 2}
-                onCashChangeForChange={setCashChangeFor}
-                onChange={setPaymentMethod}
-              />
-              <section className="rounded-xl border border-territory-border bg-territory-surface p-4 sm:p-5" aria-labelledby="checkout-notes-title">
-                <div className="flex items-center justify-between gap-3">
-                  <h2 id="checkout-notes-title" className={CHECKOUT_SECTION_TITLE_CLASS}>
-                    Observações do pedido <span className="font-normal text-territory-muted">(opcional)</span>
-                  </h2>
-                  <span className="text-type-caption text-territory-muted">{notes.length}/280</span>
-                </div>
-                <Textarea value={notes} onChange={(event) => setNotes(event.target.value)} maxLength={280} rows={3} placeholder="Algo que a loja precisa saber?" className="mt-3 min-h-20 resize-none rounded-lg border-territory-border bg-territory-surface text-sm placeholder:text-territory-muted" />
-              </section>
             </div>
-            <OrderSummary
-              mode={fulfillmentMode}
-              deliveryOption={deliveryOption}
-              items={items}
-              subtotal={subtotal}
-              deliveryFee={deliveryFee}
-              minimumOrderRemaining={minimumOrderRemaining}
-              isSubmitDisabled={isSubmitDisabled}
-              isSubmitting={isSubmitting}
-              onAddMoreItems={() => navigate("..")}
-              onRemoveItem={removeItem}
-              onConfirm={handleSubmit}
-              onFallback={() => {
-                setFallbackReason("platform");
-                setStage("fallback");
-              }}
-              onContactStore={() => navigate(appUrls.messages)}
-            />
-          </div>
           )}
           <p className="mt-6 text-center text-type-caption text-territory-muted">
-            Pedido e pagamento serão registrados no fluxo oficial de Gastronomia.
+            Pedido e pagamento serão registrados no fluxo oficial de
+            Gastronomia.
           </p>
         </div>
       </main>

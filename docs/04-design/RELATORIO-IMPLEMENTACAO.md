@@ -358,7 +358,7 @@ A prancha 117 também está coberta pelos estados demonstrativos de visitante, v
 
 ### Auditoria e ajuste
 
-- Comparei `GastronomyCheckoutConceptSurface` com as pranchas de checkout plataforma e estados mobile. A superfície agora aproxima a composição aprovada: cabeçalho desktop teal, identidade da loja junto ao título, stepper, ordem `Recebimento` → `Endereço e destinatário` → `Pagamento`, resumo lateral do pedido e CTA fixo no mobile.
+- Comparei `GastronomyCheckoutConceptSurface` com as pranchas de checkout plataforma e estados mobile. A superfície agora aproxima a composição aprovada: cabeçalho desktop teal, identidade da loja junto ao título, ordem `Recebimento` → `Endereço e destinatário` → `Pagamento`, resumo lateral do pedido e CTA fixo no mobile.
 - Corrigi o excesso de espaçamento causado pelo editor de endereço aberto automaticamente quando não havia destino. `useDeliveryDestination` ganhou a opção de não abrir esse editor no checkout; o cartão compacto continua exibindo o estado vazio e abre o formulário somente após uma ação explícita ou uma tentativa de continuar.
 - A opção de entrega por plataforma é apresentada como estado desabilitado quando o contrato oficial ainda não a suporta. Não ativei seleção, cobrança ou despacho ilustrativos: a regra `isPlatformCourierCheckoutAvailable()` continua sendo a fonte de verdade e o fallback permanece disponível para indisponibilidade de cobertura.
 - Removi a repetição dos itens no corpo desktop, mantendo-os no resumo lateral, e ajustei a numeração contextual do pagamento para modalidades sem endereço. Hooks, serviços, permissões, cálculo de frete e métodos de pagamento reais continuam preservados.
@@ -401,3 +401,10 @@ A prancha 117 também está coberta pelos estados demonstrativos de visitante, v
 - Recomparei `Revisar pedido` com a prancha mobile 024. Os títulos dos cartões de entrega, pagamento e itens agora usam 14 px/700; descrições e metadados permanecem em 12 px, e totais em 16 px/700.
 - O refinamento preserva os gaps, o CTA fixo e as regras de habilitação. A aparência desabilitada do CTA continua sendo consequência da sessão de desenvolvimento, não de uma alteração visual que mascare autorização incompleta.
 - A etapa foi conferida no mobile e no desktop temporário; o viewport foi restaurado e a aba ficou aberta na revisão mobile.
+
+### Sexta rodada — composição desktop contra a prancha 021
+
+- Removi a barra de etapas do desktop, que duplicava a numeração dos cartões e não existe na prancha 021. A progressão numerada permanece nos próprios cartões; o stepper continua restrito à revisão mobile, como na prancha 024.
+- Reestruturei o header para refletir a composição aprovada: wordmark, navegação, busca e conta, sem repetir a localização do território dentro do header.
+- Corrigi a margem global do título desktop e retirei o texto auxiliar que não pertence ao concept, reduzindo o espaço entre retorno, título, loja e o primeiro cartão.
+- Revalidei o frame desktop equivalente ao concept e o estado mobile de endereço após HMR; o viewport foi restaurado ao padrão e a aba permaneceu aberta.

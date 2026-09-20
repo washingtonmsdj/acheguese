@@ -8,7 +8,7 @@ Status: revisada em 19/09/2026.
 
 ## Decisões de implementação
 
-- O desktop agora usa o cabeçalho teal, identidade da loja junto ao título, stepper e a ordem visual `1. Recebimento` → `2. Endereço e destinatário` → `3. Pagamento`, com o resumo do pedido fixo na coluna lateral.
+- O desktop agora usa o cabeçalho teal do concept (wordmark, navegação, busca e conta), identidade da loja junto ao título e a ordem visual `1. Recebimento` → `2. Endereço e destinatário` → `3. Pagamento`, com o resumo do pedido fixo na coluna lateral. A progressão fica indicada pela numeração das seções; a barra de etapas permanece apenas na revisão mobile, onde a prancha 024 a apresenta.
 - O cartão de endereço mobile permanece compacto quando não há residência salva. O editor completo só abre por ação explícita (`Adicionar`, `Outro endereço` ou continuação sem endereço), evitando o bloco de formulário aberto e o excesso de altura observado na comparação.
 - A opção `Motoboy Achegue-se` aparece como referência visual, mas fica desabilitada enquanto `isPlatformCourierCheckoutAvailable()` permanecer falso. A loja continua sendo a única modalidade ativável no checkout oficial, conforme `checkoutRules.ts` e `GastronomyCheckoutService`.
 - O fluxo continua consumindo carrinho, perfil, endereço, modalidades, pagamentos, taxas e validação de cobertura dos hooks/serviços existentes. Nenhum dado ilustrativo das pranchas foi promovido para produção.
@@ -50,5 +50,12 @@ Branch analisada: `codex/reformulacao-entrada-comunidade`. Data: 19/09/2026.
 - Os títulos dos cartões de entrega, pagamento e itens da revisão mobile passaram para 14 px/700, alinhados ao papel de rótulo da SSOT.
 - As descrições, destinos e metadados continuam em 12 px; o total permanece em 16 px/700. O ajuste não alterou os gaps nem a altura do CTA fixo.
 - Comparei novamente a etapa `Revisar pedido` da prancha 024 no mobile e a composição desktop; o estado de CTA desabilitado continua refletindo a sessão de desenvolvimento sem autorização/perfil operacional completo.
+
+## Sexta rodada — composição desktop contra a prancha 021
+
+- Removi do desktop a barra de progresso redundante que não aparece na prancha 021; isso recupera o ritmo vertical entre retorno, título, identidade da loja e o primeiro cartão.
+- O cabeçalho desktop deixou de repetir território/localização e passou a seguir a navegação do concept, incluindo busca, conta e chevron de perfil.
+- Limpei a margem global do título do checkout e retirei a frase auxiliar não presente na prancha. O conteúdo passa a respeitar a escala de 30 px/700 e os eixos de 32 px do shell desktop sem acrescentar espaçamento ornamental.
+- Comparei novamente no frame desktop equivalente ao concept e retornei ao viewport mobile padrão; a aba ficou aberta para inspeção em tempo real.
 
 Registrar branch/commit analisado, data, limitações e funcionalidades mantidas desativadas.
