@@ -51,4 +51,29 @@ describe("job public action truthfulness", () => {
     expect(page).toContain("Nossa equipe recebeu a denúncia para análise.");
     expect(page).not.toContain("Nossa equipe ira analisar esta vaga em breve.");
   });
+
+  it("resolves the company profile through the canonical business URL owner", () => {
+    expect(page).toContain("BusinessUrlService.resolveById(vaga.empresaId)");
+    expect(page).toContain("BusinessUrlService.getPublicCanonicalUrl(context)");
+    expect(page).not.toContain("navigate(\`/empresa/\${vaga.empresaId}\`)");
+    expect(page).toContain("Perfil da empresa indisponível");
+  });
+
+  it("does not present external-channel opens as known application totals", () => {
+    expect(page).toContain('vaga.applicationChannel === "internal"');
+    expect(page).toContain("Candidaturas no Achegue-se");
+    expect(page).not.toContain('>Candidaturas</span>');
+  });
+
+  it("uses the vacancy own territory for related jobs when no override is supplied", () => {
+    expect(hook).toContain("const relatedLocationId = locationId ?? vaga?.locationId");
+    expect(hook).toContain(
+      "VagasService.getVagasRelacionadas(vaga.id, relatedLocationId, 4)",
+    );
+    expect(hook).toContain("enabled: Boolean(vaga?.id && relatedLocationId)");
+  });
+
+  it("keeps SEO descriptive even when the vacancy cannot be applied to", () => {
+    expect(page).not.toContain("Candidate-se agora!");
+  });
 });
