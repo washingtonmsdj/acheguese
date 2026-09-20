@@ -1,10 +1,10 @@
 # Achegue-se — Execução `main`-only e prontidão MVP
 
 **Status:** ATIVO — SSOT OPERACIONAL  
-**Data do checkpoint GitHub:** 2026-09-19  
+**Data do checkpoint GitHub:** 2026-09-20  
 **Repositório:** `washingtonmsdj/acheguese`  
 **Linha ativa:** `main`  
-**HEAD técnico base desta revalidação:** `532e3d5695671ef928e62cd41bf253c4bfdb4a4e` (`main` após o PR #230). O commit deste próprio corte será descendente desse SHA.
+**HEAD técnico base desta revalidação:** `31bc4db416e7d068b4be79e0e5970922a059beea` (`main` após o PR #231). O commit deste próprio corte será descendente desse SHA.
 
 Este documento consolida ordem de execução, blockers e Definition of Done. Ele é um **registro operacional**, não uma fotografia autoritativa do que existe no produto. A fonte de verdade para decidir o que existe, o que está ativo e o que deve ser corrigido é sempre o **projeto real**: código da `main`, rotas, owners, serviços, schema/migrations, contratos, testes, deploy/runtime e comportamento observado.
 
@@ -27,7 +27,7 @@ O primeiro release continua territorial. **Cobertura uniforme dos 170 bairros de
 ### Bloqueadores reais antes do release
 
 1. **Manter a convergência Git ↔ Supabase/runtime já fechada.** A cadeia ativa possui **673 migrations locais / 673 remotas / 673 identidades exatas / 0 local-only / 0 remote-only**. Os 13 hardenings de Mobilidade nunca aplicados foram preservados em `docs/09-reference/migrations-pending/` porque `mobility=false`; não executar `db push` nem promover módulo pausado apenas para alterar contagem.
-2. **Restaurar um gate executável.** Os GitHub Actions do HEAD continuam encerrando antes de steps. `steps=[]`/sem log não é teste vermelho de código nem teste verde. O candidato só pode avançar após security/lint/typecheck/test/build executarem de verdade no mesmo SHA.
+2. **Restaurar um gate executável.** No SHA `31bc4db4...`, jobs `ubuntu-latest` continuam retornando `runner_id=0` e `steps=[]`; o Types Sync self-hosted permanece queued sem runner. Isso é bloqueio de scheduler/conta/runner até prova em contrário, não teste vermelho de código. O candidato só avança quando security/lint/typecheck/test/build executarem de verdade no mesmo SHA.
 3. **Completar proteção da `main`.** Force-push/deleção já estão bloqueados, porém o fluxo ainda precisa exigir PR e checks que realmente executem. O publisher canônico de tipos Supabase deve deixar de escrever diretamente na `main` antes disso.
 4. **Preservar a prova de ledger/runtime no SHA candidato.** A auditoria de identidade já está em zero divergências; `validate:migrations`, `validate:migrations:provenance` e `validate:migrations:remote` ainda precisam executar de verdade no runner do candidato. Tipos gerados foram regenerados do runtime após os últimos DDLs.
 5. **Manter LGPD destrutivo fail-closed.** Delete/purge não pode ser habilitado enquanto `LGPD_PURGE_POLICY` não estiver pronto. Exportação também permanece desabilitada até certificação. O MVP pode lançar com essas capacidades indisponíveis, desde que a UI não prometa sucesso e nenhum caminho stale permaneça acessível.
@@ -58,7 +58,7 @@ O primeiro release continua territorial. **Cobertura uniforme dos 170 bairros de
 - [x] Tipos Supabase foram revalidados no SHA auditado: Git e runtime têm 731731 caracteres normalizados e `exact=true`.
 - [x] O Supabase canônico mantém 60 Edge Functions implantadas e as 60 estão `ACTIVE`; as funções versionadas mas deliberadamente não implantadas continuam sujeitas ao rollout/authority próprio.
 - [~] Reconciliação de migrations avançou no PR #225 sem executar DDL. Após Safety G71/G72/G75–G80, o estado chegou a 683 locais, 666 remotas, 657 exatas, 26 local-only e 9 remote-only.
-- [ ] CI continua incapaz de certificar o candidato: no SHA `f45ec305...`, Security Check, SSOT Enforcement e SSOT Territorial Tests encerraram jobs com `steps: null`; lint/typecheck/test/E2E não chegaram a executar.
+- [ ] CI continua incapaz de certificar o candidato: no SHA `31bc4db4...`, Security Check, SSOT Enforcement, Auth Concept Regression e SSOT Territorial Tests tiveram jobs GitHub-hosted com `runner_id=0`/`steps=[]`; Types Sync self-hosted ficou queued com `runner_id=0`. O GitHub Status público indicava Actions operacional, então falta prova administrativa de quota/billing/policy/provisioning e disponibilidade do runner local.
 - [ ] Vercel continua sem permitir nova prova de deploy por limite diário de builds; isso não conta como build aprovado.
 - [~] O ledger de migrations avançou sem executar DDL: G71/G72/G75–G80 foram alinhadas às oito identidades `reconcile_*` realmente registradas no Supabase após prova de equivalência token-a-token. Estado daquela etapa: 683 locais / 666 remotas / 657 exatas / 26 local-only / 9 remote-only.
 - [~] Quatro identidades adicionais de Mobilidade foram alinhadas após prova token-a-token: `remove_provisional_mobility_fare_floor`, `persist_mobility_cancellation_reason`, `enforce_server_owned_mobility_quotes` e `require_explicit_mobility_quote_id`. O bloco de preço terminal da entrega não foi alterado porque o SQL remoto é materialmente diferente.
@@ -73,12 +73,13 @@ O primeiro release continua territorial. **Cobertura uniforme dos 170 bairros de
 
 ### Higiene de branches — 2026-09-19
 
-- o remoto possuía 152 branches no início da auditoria, com `delete_branch_on_merge=false`; esse setting explica o acúmulo após squash merge;
+- o remoto possuía 152 branches no início da auditoria e passou a 153 após os cortes recentes, com `delete_branch_on_merge=false`; esse setting explica o acúmulo após squash merge;
 - 73 branches são heads intactos de PRs já mergeados e 4 branches sem PR estão completamente contidas na `main`: 77 são candidatas seguras a remoção do ref;
 - 55 branches pertencem a PRs fechados sem merge e 21 branches sem PR ainda carregam delta exclusivo ou precisam de prova de supersessão; não remover em massa;
 - `cleanup/active-compat-facades-20260919` foi alterada após o PR mergeado e mantém delta adicional; preservar até análise específica;
 - enquanto a exclusão automática não puder ser habilitada pela integração atual, a frente urgente reutiliza `work/mvp-urgent` em vez de criar uma branch nova por micro-PR;
 - regra: branch só pode ser apagada automaticamente quando o PR correspondente foi mergeado e o head não foi alterado depois, ou quando a branch é comprovadamente contida na `main`; demais casos exigem comparação de conteúdo/provenance.
+- a integração GitHub disponível neste chat não expõe `DELETE ref` nem alteração de `delete_branch_on_merge`; portanto não mascarar a limpeza movendo refs antigas para `main`. A exclusão física deve usar GitHub CLI/API autenticada ou autoridade administrativa equivalente, aplicando a classificação segura já registrada.
 
 ### Ordem de execução até MVP
 
