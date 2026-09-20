@@ -4,7 +4,7 @@
 **Data do checkpoint GitHub:** 2026-09-19  
 **Repositório:** `washingtonmsdj/acheguese`  
 **Linha ativa:** `main`  
-**HEAD técnico base desta revalidação:** `20e58eab9db44239d4c849f74885e9c2c9d81f9f` (`main` após os PRs #227–#229). O commit deste próprio corte será descendente desse SHA.
+**HEAD técnico base desta revalidação:** `532e3d5695671ef928e62cd41bf253c4bfdb4a4e` (`main` após o PR #230). O commit deste próprio corte será descendente desse SHA.
 
 Este documento consolida ordem de execução, blockers e Definition of Done. Ele é um **registro operacional**, não uma fotografia autoritativa do que existe no produto. A fonte de verdade para decidir o que existe, o que está ativo e o que deve ser corrigido é sempre o **projeto real**: código da `main`, rotas, owners, serviços, schema/migrations, contratos, testes, deploy/runtime e comportamento observado.
 
@@ -26,10 +26,10 @@ O primeiro release continua territorial. **Cobertura uniforme dos 170 bairros de
 
 ### Bloqueadores reais antes do release
 
-1. **Concluir convergência Git ↔ Supabase/runtime.** O runtime canônico está saudável, os tipos gerados permanecem equivalentes ao Supabase vivo e as Edge Functions implantadas estão `ACTIVE`. Após a promoção canônica de G42/G43, todas as 666 identidades remotas existem no Git; o blocker residual são **20 migrations local-only**. Tratar cada uma por provenance; não executar `db push` nem remover arquivos por aproximação.
+1. **Manter a convergência Git ↔ Supabase/runtime já fechada.** A cadeia ativa possui **673 migrations locais / 673 remotas / 673 identidades exatas / 0 local-only / 0 remote-only**. Os 13 hardenings de Mobilidade nunca aplicados foram preservados em `docs/09-reference/migrations-pending/` porque `mobility=false`; não executar `db push` nem promover módulo pausado apenas para alterar contagem.
 2. **Restaurar um gate executável.** Os GitHub Actions do HEAD continuam encerrando antes de steps. `steps=[]`/sem log não é teste vermelho de código nem teste verde. O candidato só pode avançar após security/lint/typecheck/test/build executarem de verdade no mesmo SHA.
 3. **Completar proteção da `main`.** Force-push/deleção já estão bloqueados, porém o fluxo ainda precisa exigir PR e checks que realmente executem. O publisher canônico de tipos Supabase deve deixar de escrever diretamente na `main` antes disso.
-4. **Fechar o ledger de migrations e manter a prova de runtime.** `validate:migrations:remote` precisa chegar a zero aliases/conflicts/local-only/remote-only. Tipos gerados não são blocker no estado auditado (`exact=true`, 731731 caracteres normalizados) e Edge Functions não devem ser implantadas em massa apenas para obter paridade numérica.
+4. **Preservar a prova de ledger/runtime no SHA candidato.** A auditoria de identidade já está em zero divergências; `validate:migrations`, `validate:migrations:provenance` e `validate:migrations:remote` ainda precisam executar de verdade no runner do candidato. Tipos gerados foram regenerados do runtime após os últimos DDLs.
 5. **Manter LGPD destrutivo fail-closed.** Delete/purge não pode ser habilitado enquanto `LGPD_PURGE_POLICY` não estiver pronto. Exportação também permanece desabilitada até certificação. O MVP pode lançar com essas capacidades indisponíveis, desde que a UI não prometa sucesso e nenhum caminho stale permaneça acessível.
 6. **Fechar segurança do que será exposto.** Priorizar Auth/conta, Profile, território, Comunidade, Business/Gastronomy/Services, Classificados, Busca/Mapa e superfícies administrativas necessárias. Hardening de módulos pausados pode continuar durante/depois do MVP, exceto quando compartilha uma boundary usada pelo núcleo.
 7. **Certificar o fluxo real das superfícies públicas.** Para cada item do escopo: rota/owner canônico, contrato DB/RPC, autorização positiva e negativa, loading/empty/error/auth, fluxo principal com dados reais, smoke mobile e E2E sem placeholder/paused contado como sucesso.
@@ -64,7 +64,10 @@ O primeiro release continua territorial. **Cobertura uniforme dos 170 bairros de
 - [~] Quatro identidades adicionais de Mobilidade foram alinhadas após prova token-a-token: `remove_provisional_mobility_fare_floor`, `persist_mobility_cancellation_reason`, `enforce_server_owned_mobility_quotes` e `require_explicit_mobility_quote_id`. O bloco de preço terminal da entrega não foi alterado porque o SQL remoto é materialmente diferente.
 - [~] A cadeia terminal de entrega foi reconciliada como uma sequência de três migrations remotas canônicas (`make_delivery_final_price_server_owned`, `restore_atomic_delivery_completion_with_server_owned_price`, `ignore_client_final_price_in_delivery_wrapper`). Ao fim dessa etapa restavam apenas G42/G43 como remote-only; este corte fecha essas duas identidades.
 - [x] G42 e G43 phase 1 territoriais foram retiradas de `migrations-pending` e promovidas às identidades reais do ledger após equivalência token-a-token; os quatro Edge territoriais auditados estão `ACTIVE` com `verify_jwt=true`. G43 phase 2 permanece pendente porque o frontend ainda usa o writer compatível.
-- [x] Business/Mapa G154 foi promovido ao runtime: índices de `public_business_search` existem e as RPCs espaciais não consultam mais a relação legada inexistente `businesses`; o trigger de signup agora honra o @ escolhido. Ledger: 686 locais / 669 remotas / 669 exatas / 17 local-only / 0 remote-only.
+- [x] Business/Mapa G154 foi promovido ao runtime: índices de `public_business_search` existem e as RPCs espaciais não consultam mais a relação legada inexistente `businesses`; o trigger de signup agora honra o @ escolhido.
+- [x] Eventos voltou a ter persistência canônica de itens salvos: `event_saved_items` foi criado com RLS forçada, policies own-only e o registry de `ProfileSavedEntityService` deixou de apontar para `event_favorites` já aposentado.
+- [x] G36/G37 foram promovidos após dry-run: RPCs legados de Perfil foram removidos sem `CASCADE`, e os brokers profissionais passaram a rejeitar cobertura textual legada também no boundary SQL.
+- [x] Ledger de migrations fechado: **673 locais ativas / 673 remotas / 673 exatas / 0 local-only / 0 remote-only**. Os 13 SQLs não aplicados de Mobilidade foram preservados como pending, coerente com `PUBLIC_LAUNCH_SURFACES.mobility=false`.
 - [ ] A prova de build/deploy/smoke do mesmo SHA continua blocker real de release.
 
 
@@ -80,7 +83,7 @@ O primeiro release continua territorial. **Cobertura uniforme dos 170 bairros de
 ### Ordem de execução até MVP
 
 1. **R0 — congelar escopo:** nenhuma feature nova até o primeiro release; corrigir apenas blocker, regressão, segurança, dados de lançamento e qualidade necessária ao núcleo.
-2. **R1 — convergência:** fechar o drift de identidade/provenance das migrations restantes; preservar a igualdade já provada de tipos e a classificação explícita das Edge Functions; atualizar o candidato sobre a `main` mais nova.
+2. **R1 — convergência:** **fechado no ledger** (673/673 exatas); manter a igualdade de tipos e reexecutar os validadores no mesmo SHA candidato.
 3. **R2 — release authority:** publisher de tipos via PR, CI realmente executando e branch protection exigindo o caminho aprovado.
 4. **R3 — Auth/Privacy/Security:** fechar autenticação e superfícies sensíveis do escopo; manter delete/export destrutivos fail-closed.
 5. **R4 — certificação funcional:** núcleo primeiro; Eventos/Vagas apenas se passarem no mesmo padrão.
