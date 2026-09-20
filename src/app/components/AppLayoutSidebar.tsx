@@ -62,7 +62,13 @@ export function AppLayoutSidebar() {
         pathSegments.length <= 4));
   const isAccountRoute = pathSegments[0] === "conta";
   const isAccountOverview = pathname === ACCOUNT_PATHS.home;
-  const accountUsesSettingsShell = ACCOUNT_SETTINGS_SHELL_PATHS.has(pathname);
+  const conceptLinksPreview =
+    import.meta.env.DEV &&
+    typeof window !== "undefined" &&
+    pathname === "/conta/vinculos" &&
+    new URLSearchParams(window.location.search).get("concept-mock") === "1";
+  const accountUsesSettingsShell =
+    ACCOUNT_SETTINGS_SHELL_PATHS.has(pathname) || conceptLinksPreview;
   const conceptAccountPreview =
     import.meta.env.DEV &&
     typeof window !== "undefined" &&
@@ -126,7 +132,8 @@ export function AppLayoutSidebar() {
     isGastronomyMockRestaurantRoute ||
     isGastronomyOrderTrackingRoute ||
     conceptNotificationsPreview ||
-    conceptPublishPreview;
+    conceptPublishPreview ||
+    conceptLinksPreview;
 
   const isInternalGroupRoute =
     pathSegments[0] === "grupos" && pathSegments.length >= 2;
@@ -149,7 +156,8 @@ export function AppLayoutSidebar() {
     isGastronomyMockRestaurantRoute ||
     isGastronomyOrderTrackingRoute ||
     conceptNotificationsPreview ||
-    conceptPublishPreview;
+    conceptPublishPreview ||
+    conceptLinksPreview;
   const hideMobileBottomNav =
     pathname === "/" ||
     isInternalGroupRoute ||
@@ -203,10 +211,12 @@ export function AppLayoutSidebar() {
           hideMobile={
             isProfessionalPublicRoute ||
             conceptAccountPreview ||
+            conceptLinksPreview ||
             (accountUsesSettingsShell && !isAccountOverview)
           }
           hideDesktop={
             conceptAccountPreview ||
+            conceptLinksPreview ||
             communityConceptPreview ||
             accountUsesSettingsShell
           }

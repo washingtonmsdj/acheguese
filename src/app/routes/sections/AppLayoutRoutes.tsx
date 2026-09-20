@@ -308,6 +308,11 @@ export function AppLayoutRoutes() {
     typeof window !== "undefined" &&
     window.location.pathname === "/novo-post" &&
     new URLSearchParams(window.location.search).get("concept-mock") === "1";
+  const conceptLinksPreview =
+    import.meta.env.DEV &&
+    typeof window !== "undefined" &&
+    window.location.pathname === "/conta/vinculos" &&
+    new URLSearchParams(window.location.search).get("concept-mock") === "1";
   const launchElement = (
     surface: LaunchSurfaceKey,
     moduleName: string,
@@ -499,6 +504,16 @@ export function AppLayoutRoutes() {
         <Route
           path="/conta/preferencias"
           element={accountElement(<P.ContaPreferenciasPage />)}
+        />
+        <Route
+          path="/conta/vinculos"
+          element={
+            conceptLinksPreview ? (
+              <P.MeusVinculosConceptMockPage />
+            ) : (
+              protectedElement(<P.ProfileSettingsPage />)
+            )
+          }
         />
         <Route
           path="/conta/notificacoes"

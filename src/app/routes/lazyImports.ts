@@ -419,6 +419,9 @@ export const NovoPostPage = lazy(
 export const PublicarComunidadeConceptMockPage = lazy(
   () => import("@/app/pages/PublicarComunidadeConceptMockPage"),
 );
+export const MeusVinculosConceptMockPage = lazy(
+  () => import("@/app/pages/MeusVinculosConceptMockPage"),
+);
 
 // Comunicacao Territorial
 export const CommunicationLandingPage = createLaunchPausedRoute("Comunicacao");

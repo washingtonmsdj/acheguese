@@ -806,3 +806,23 @@ A prancha 117 também está coberta pelos estados demonstrativos de visitante, v
 ### Git
 
 - Commit restrito ao mock de publicação, aos desvios de rota/layout de desenvolvimento e às documentações deste concept; alterações staged preexistentes permanecem fora do commit.
+
+## 20/09/2026 · Meus vínculos e participação — pranchas 091 e 092
+
+### Auditoria e ajuste
+
+- A área existente cobria vínculos entre perfis, mas não apresentava a relação perfil ↔ território nem a composição das pranchas novas. Mantive os serviços, políticas e componentes de produção intactos.
+- Criei `MeusVinculosConceptMockPage` em rota de desenvolvimento `/conta/vinculos?concept-mock=1`, com estado confirmado, permissões por perfil, solicitação em análise, confirmação indisponível, atualização e complementação.
+- Recompus o desktop com rail teal, topbar territorial, seletor de perfil, cartão do Complexo, território explorado, painel de permissões e perfil de negócio separado.
+- Recompus o mobile com cabeçalho Conta/Meus vínculos, identidade pessoal, comunidade, relação/bairro, ações, permissões, exploração e outros perfis, mantendo a hierarquia compacta das pranchas 091/084.
+- Estados demonstrativos não fazem upload, não autoaprovam, não alteram vínculo e não expõem evidências privadas; a rota sem a flag continua protegida.
+
+### Validação e evidências
+
+- Navegador interno mantido aberto em mobile `389 × 867` e desktop `1707 × 960` durante a comparação lado a lado.
+- Confirmado, permissões, análise, indisponível, atualização e complementação foram abertos; nenhum viewport apresentou overflow horizontal e os logs finais ficaram sem erros.
+- `npx eslint` direcionado, `npx tsc -p tsconfig.app.json --noEmit --pretty false` e `git diff --check` executados.
+
+### Git
+
+- Commit restrito ao mock de vínculos, ao desvio de rota/layout de desenvolvimento e às documentações deste concept; alterações staged preexistentes permanecem fora do commit.
