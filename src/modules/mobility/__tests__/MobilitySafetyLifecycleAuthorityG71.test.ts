@@ -7,7 +7,7 @@ function readProjectFile(relativePath: string): string {
 }
 
 const migration = readProjectFile(
-  "supabase/migrations/20260911132000_harden_safety_status_state_machine_g71.sql",
+  "supabase/migrations/20260916095115_reconcile_g71_safety_status_state_machine.sql",
 );
 
 describe("G71 safety lifecycle forensic authority", () => {
