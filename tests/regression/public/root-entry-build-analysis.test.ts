@@ -76,4 +76,35 @@ describe("public root production bundle analysis", () => {
     expect(workflow).toContain("dist/stats.html");
     expect(workflow).toContain("dist/.vite/manifest.json");
   });
+  it("keeps exact-SHA self-hosted certification equivalent to core release gates", () => {
+    const workflow = read(".github/workflows/certify-heavy.yml");
+
+    for (const required of [
+      "Run static security, lint and type gates",
+      '@("run", "security:validate")',
+      '@("run", "lint")',
+      '@("run", "typecheck")',
+      "Run architecture and SSOT gates",
+      '@("run", "validate:deps")',
+      '@("run", "validate:ssot")',
+      "Validate canonical migration chain and remote parity",
+      "SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}",
+      "SUPABASE_DB_PASSWORD: ${{ secrets.SUPABASE_DB_PASSWORD }}",
+      "npm run validate:migrations",
+      "npm run validate:migrations:provenance",
+      "npm run test:migrations:provenance",
+      "npx supabase link --project-ref xhdowzacfujckjelqhtd",
+      "npm run validate:migrations:remote",
+      "Run complete unit and integration test suite",
+      "npm run test",
+    ]) {
+      expect(workflow).toContain(required);
+    }
+
+    expect(workflow).toContain("- self-hosted");
+    expect(workflow).toContain("- acheguese-heavy-windows");
+    expect(workflow).toContain("- remote-only");
+    expect(workflow).not.toContain("runs-on: ubuntu-latest");
+  });
+
 });
