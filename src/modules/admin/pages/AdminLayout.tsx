@@ -11,7 +11,7 @@ import { Button } from "@/shared/components/ui/button";
 import { cn } from "@/shared/utils/cn";
 import { logger } from "@/shared/utils/logger";
 import {
-  ADMIN_NAV_SECTIONS,
+  ADMIN_VISIBLE_NAV_SECTIONS,
   type AdminNavBadge,
 } from "../config/adminNavigation.config";
 
@@ -138,7 +138,7 @@ export default function AdminLayout() {
       </div>
 
       <nav className="flex-1 overflow-y-auto p-2" aria-label="Administração">
-        {ADMIN_NAV_SECTIONS.map((section) => (
+        {ADMIN_VISIBLE_NAV_SECTIONS.map((section) => (
           <div key={section.id} className="mb-3">
             {section.label ? (
               <p className="px-3 pb-1.5 pt-3 text-[10px] font-bold uppercase tracking-wider text-muted-foreground/70">

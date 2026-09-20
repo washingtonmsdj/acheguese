@@ -291,6 +291,27 @@ export const ADMIN_NAV_SECTIONS: readonly AdminNavSection[] = [
   },
 ];
 
+
+const ADMIN_PAUSED_NAV_ITEM_IDS = new Set([
+  "motoristas",
+  "reports-passageiros",
+  "pontos-embarque",
+  "analytics-mobilidade",
+  "vagas",
+  "eventos",
+  "cupons",
+  "promocoes",
+  "mensagens",
+  "comunicacao",
+  "analytics",
+]);
+
+export const ADMIN_VISIBLE_NAV_SECTIONS: readonly AdminNavSection[] =
+  ADMIN_NAV_SECTIONS.map((section) => ({
+    ...section,
+    items: section.items.filter((item) => !ADMIN_PAUSED_NAV_ITEM_IDS.has(item.id)),
+  })).filter((section) => section.items.length > 0);
+
 export function getAdminNavItems(): readonly AdminNavItem[] {
-  return ADMIN_NAV_SECTIONS.flatMap((section) => section.items);
+  return ADMIN_VISIBLE_NAV_SECTIONS.flatMap((section) => section.items);
 }
