@@ -2,22 +2,31 @@
 
 Status: **REVALIDAÇÃO DE RELEASE EM ANDAMENTO**
 
-Base técnica observada nesta revalidação: `f45ec30501b91716182fdc1eb10ec38d3807281c`. O commit deste checkpoint pode ser descendente apenas documental; qualquer alteração funcional posterior exige nova prova.
+Base técnica mais recente observada nesta revalidação: `31bc4db416e7d068b4be79e0e5970922a059beea` (`main`, PR #231). O commit deste checkpoint pode ser descendente apenas documental; qualquer alteração funcional posterior exige nova prova.
 
 Este checkpoint atualiza os blockers operacionais do primeiro release sem reescrever snapshots históricos. A autoridade continua sendo o projeto real + runtime observado.
 
 ## GitHub Actions
 
-Os workflows do SHA `f45ec305...` continuam falhando antes de executar código:
+A revalidação no SHA atual da `main`, `31bc4db416e7d068b4be79e0e5970922a059beea`, confirma o mesmo bloqueio **antes da execução de qualquer step**:
 
-- Security Check (`35482298437`): `Lint and Type Check`, `Run Tests`, `Maps Architecture Enforcement` e `Validate No Hardcoded Credentials` terminaram com `steps: null`;
-- SSOT Enforcement (`35482298618`): `SSOT Enforcement Checks` terminou com `steps: null`;
-- SSOT Territorial Tests (`35482298511`): E2E, Phase Core Gate, Account + Business E2E, Runtime Tests e agregação terminaram sem steps; `Regression Check` foi `skipped`;
-- Supabase Types Sync (`35482298480`) estava `queued` na observação e não conta como aprovação.
+- Security Check push `35505171424`: todos os quatro jobs usam `ubuntu-latest`, retornaram `runner_id=0`, `runner_name=""`, `runner_group_id=0` e `steps=[]`;
+- SSOT Enforcement push `35505171435`: job encerrou antes de steps;
+- Auth Concept Regression push `35505171528`: os dois jobs encerraram antes de steps;
+- SSOT Territorial Tests push `35505171546`: Phase Core, Runtime, E2E e Account/Business encerraram antes de steps;
+- Supabase Types Sync push `35505171539`: permanece `queued`, com `runner_id=0` e labels `self-hosted/windows/x64/acheguese-heavy-windows/remote-only`;
+- no head do PR #231 (`bbe83c73...`) o mesmo padrão ocorreu: checks `ubuntu-latest` falharam sem steps e o Heavy PR Certification ficou queued no self-hosted.
 
-Conclusão: **não há evidência de falha de lint/test/typecheck/source nesses runs**. O blocker é de execução/alocação/configuração administrativa do Actions até prova em contrário. Não alterar source/YAML às cegas para reagir a esses runs.
+Os logs dos jobs sem runner retornam ausência de blob/log; portanto **não existe evidência de lint, typecheck, teste ou source executado e falhando**.
 
-Próxima prova: usar GitHub CLI/API autenticada fora do conector para verificar Actions permissions, quota/billing/spending, inventário de runners e fila; se o hosted runner estiver indisponível, self-hosted runner pode ser preparado como fallback sem remover os gates.
+O YAML foi conferido:
+- Security/SSOT/Auth usam `ubuntu-latest` corretamente;
+- Types Sync e Heavy Certification usam deliberadamente o runner autorizado `acheguese-heavy-windows`;
+- não há justificativa para trocar labels ou enfraquecer gates.
+
+O GitHub Status público reportava **Actions operacional** em 2026-09-20 09:44 UTC. Assim, o diagnóstico atual fica restrito a configuração/limite da conta (permissions/quota/billing/spending) ou provisioning específico, além da indisponibilidade do self-hosted. A conexão GitHub atual não expõe os endpoints administrativos necessários para separar essas hipóteses.
+
+**Regra:** não alterar source/YAML e não disparar reruns repetitivos enquanto `runner_id=0`/sem steps persistir. A próxima prova administrativa deve ser feita via GitHub CLI/API autenticada com acesso a Actions settings/usage/runners; o self-hosted já possui workflow exact-SHA canônico e não deve ser duplicado.
 
 ## Supabase canônico
 
