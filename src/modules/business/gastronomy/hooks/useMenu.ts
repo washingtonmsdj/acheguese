@@ -30,10 +30,13 @@ export function useFeaturedItems(businessId?: string, limit?: number) {
   });
 }
 
-export function useActivePromotions(businessId?: string) {
+export function useActivePromotions(
+  businessId?: string,
+  enabled = true,
+) {
   return useQuery({
     queryKey: ['menu', 'promotions', businessId],
     queryFn: () => GastronomyFacade.queries.getActiveMenuPromotions(businessId!),
-    enabled: !!businessId,
+    enabled: enabled && !!businessId,
   });
 }

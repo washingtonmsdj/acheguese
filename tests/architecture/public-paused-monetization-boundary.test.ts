@@ -63,6 +63,22 @@ describe("public paused monetization boundary", () => {
     "src/modules/central/components/CentralHeader.tsx",
     "utf8",
   );
+  const gastronomyDetail = readFileSync(
+    "src/modules/business/gastronomy/pages/GastronomyDetailPage.tsx",
+    "utf8",
+  );
+  const premiumBusinessMenu = readFileSync(
+    "src/modules/business/premium/pages/PremiumBusinessMenuPage.tsx",
+    "utf8",
+  );
+  const premiumGastronomyDetail = readFileSync(
+    "src/modules/business/gastronomy/pages/GastronomyPremiumDetailPage.tsx",
+    "utf8",
+  );
+  const gastronomyMenuHook = readFileSync(
+    "src/modules/business/gastronomy/hooks/useMenu.ts",
+    "utf8",
+  );
 
   it("keeps Billing outside the MVP launch scope", () => {
     expect(launchScope).toContain("billing: false");
@@ -162,6 +178,32 @@ describe("public paused monetization boundary", () => {
     expect(menuManagement).toContain(
       "itens habilitado para esta empresa.",
     );
+  });
+
+  it("keeps paused coupons and promotions out of active gastronomy surfaces", () => {
+    expect(launchScope).toContain("coupons: false");
+    expect(gastronomyDetail).toContain(
+      'const showCoupons = isLaunchSurfaceEnabled("coupons")',
+    );
+    expect(gastronomyDetail).toContain(
+      "const promotions = showCoupons ? snapshot?.gastronomy.promotions ?? [] : [];",
+    );
+    expect(premiumBusinessMenu).toContain(
+      'const showCoupons = isLaunchSurfaceEnabled("coupons")',
+    );
+    expect(premiumBusinessMenu).toContain(
+      "const promotions = showCoupons ? gastronomySnapshot?.gastronomy.promotions ?? [] : [];",
+    );
+    expect(premiumGastronomyDetail).toContain(
+      "const showCoupons = isLaunchSurfaceEnabled('coupons')",
+    );
+    expect(premiumGastronomyDetail).toContain(
+      "useActivePromotions(\n    business?.business_data_id,\n    showCoupons,",
+    );
+    expect(gastronomyMenuHook).toContain("enabled: enabled && !!businessId");
+    expect(premiumGastronomyDetail).not.toContain("premium-coupon-code");
+    expect(premiumGastronomyDetail).not.toContain("couponCode");
+    expect(premiumGastronomyDetail).not.toContain('aria-label="Cupom"');
   });
 
   it("does not restore unsupported conversion claims", () => {

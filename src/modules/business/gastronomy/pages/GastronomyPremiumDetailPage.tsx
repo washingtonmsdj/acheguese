@@ -37,6 +37,7 @@ import { getCuisineLabel } from '../constants';
 import type { MenuItemWithRelations } from '../types';
 import { formatBrl } from '../utils/currency';
 import { getRecordValue, setRecordValue } from '@/shared/utils/recordLookup';
+import { isLaunchSurfaceEnabled } from '@/app/config/launchScope';
 
 type SortMode = 'mais-pedidos' | 'menor-preco' | 'maior-preco';
 
@@ -44,6 +45,7 @@ export default function GastronomyPremiumDetailPage() {
   const { state, city, district, slug } = useParams();
   const navigate = useNavigate();
   const { user } = useSessionContext();
+  const showCoupons = isLaunchSurfaceEnabled('coupons');
 
   const [activeCategory, setActiveCategory] = useState<string | null>(null);
   const [selectedItem, setSelectedItem] = useState<MenuItemWithRelations | null>(null);
@@ -55,7 +57,6 @@ export default function GastronomyPremiumDetailPage() {
   const [glutenFreeOnly, setGlutenFreeOnly] = useState(false);
   const [lactoseFreeOnly, setLactoseFreeOnly] = useState(false);
   const [itemQuantities, setItemQuantities] = useState<Record<string, number>>({});
-  const [couponCode, setCouponCode] = useState('');
   const [orderNotes, setOrderNotes] = useState('');
 
   const { data: business, isLoading: isLoadingBusiness } = useGastronomyDetail({
@@ -65,7 +66,10 @@ export default function GastronomyPremiumDetailPage() {
     slug,
   });
   const { data: businessMenus } = useMenusByBusiness(business?.business_data_id);
-  const { data: promotions = [] } = useActivePromotions(business?.business_data_id);
+  const { data: promotions = [] } = useActivePromotions(
+    business?.business_data_id,
+    showCoupons,
+  );
 
   const { isFavorited, toggleFavorite, isToggling } = useFavoritesManager(
     business?.business_data_id,
@@ -402,7 +406,7 @@ export default function GastronomyPremiumDetailPage() {
               )}
             </div>
 
-            {promotions.length > 0 && (
+            {showCoupons && promotions.length > 0 && (
               <div className="rounded-2xl border border-[hsl(var(--warning)/0.35)] bg-[hsl(var(--warning)/0.08)] p-4">
                 <p className="text-sm font-semibold">Campanhas premium ativas</p>
                 <div className="mt-2 grid gap-2 sm:grid-cols-2">
@@ -607,13 +611,6 @@ export default function GastronomyPremiumDetailPage() {
                   </div>
                 </div>
 
-                <Input
-                  id="premium-coupon-code"
-                  aria-label="Cupom"
-                  placeholder="Cupom"
-                  value={couponCode}
-                  onChange={(event) => setCouponCode(event.target.value)}
-                />
                 <Textarea
                   rows={3}
                   id="premium-order-notes"
