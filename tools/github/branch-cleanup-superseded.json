@@ -1,12 +1,17 @@
 {
   "version": 1,
   "audited_at": "2026-09-20",
-  "policy": "Entries are intentionally superseded branches. Deletion is allowed only when the current branch head still exactly matches the pinned SHA and the cleanup tool is invoked with --include-superseded.",
+  "policy": "Entries are intentionally superseded branches. Deletion is allowed only when the current branch head still exactly matches the pinned SHA, the branch is unprotected, no open PR exists, and the cleanup tool is invoked with --include-superseded.",
   "branches": [
     {
       "name": "agent/ci-vercel-remote-migration-drift-gate",
       "sha": "4c1b15a4e82b4f91a305626ba4a4d13cd777a93d",
       "evidence": "Superseded by current remote migration validators and PR #231 convergence."
+    },
+    {
+      "name": "agent/p0-supabase-types-sync-pr-20260918",
+      "sha": "b0cb3d358df5143f3d16386aaef774f061698e82",
+      "evidence": "Superseded by the PR-based generated types writer merged in PR #153."
     },
     {
       "name": "agent/probe-private-classified-command-grants-final",
@@ -24,6 +29,21 @@
       "evidence": "Temporary probe; superseded by the final classified grants migration."
     },
     {
+      "name": "agent/reconcile-admin-role-display-provenance",
+      "sha": "84a9837ce5c5054476fb0ba3134cfd577a257053",
+      "evidence": "Superseded by the v2 reconciliation merged in PR #57."
+    },
+    {
+      "name": "agent/reconcile-edge-admin-canary-deploy-guard",
+      "sha": "9aa5bcbf9b5919b133f2211d4d65b5b073dd70a8",
+      "evidence": "Superseded by the v2 fail-closed canary guard merged in PR #58."
+    },
+    {
+      "name": "agent/revoke-residual-anon-private-admin-helpers",
+      "sha": "485c96e3b0cce23b30cf11a365a564cfeace4acc",
+      "evidence": "Superseded by the cleaned equivalent merged in PR #72."
+    },
+    {
       "name": "agent/security-analytics-authority",
       "sha": "4f83570f7b4df156392523980c3ecda84abef6c3",
       "evidence": "Authority migration is in main; later reconciliation merged in PR #35."
@@ -37,6 +57,11 @@
       "name": "agent/security-auth-session-revocation",
       "sha": "d4d9b740c2c2c7efa3630b624063f8cdc4669ff0",
       "evidence": "Revocation contract absorbed by current session-rpc authority and broader ratchet."
+    },
+    {
+      "name": "agent/security-edge-admin-canary-deploy-guard",
+      "sha": "52b1c26e7ee53c97108cd5df726aeeb2a0a79da3",
+      "evidence": "Superseded by the reconciled v2 canary guard merged in PR #58."
     },
     {
       "name": "agent/security-header-drift-guard",
@@ -54,9 +79,69 @@
       "evidence": "Main contains the later push config runtime contract."
     },
     {
+      "name": "agent/security-remediation-plan",
+      "sha": "87fd4025dc5d825ba04f7ca2352a0896ee7f6a7e",
+      "evidence": "Superseded by the refreshed canonical audit and implementation plan merged in PR #71."
+    },
+    {
       "name": "agent/web-seo-sitemap-build",
       "sha": "ccb2c6c06442b1dcaef13dbf69f11514f6bc07d4",
       "evidence": "Superseded by D-017 and the canonical sitemap generate/validate/build pipeline."
+    },
+    {
+      "name": "ci/supabase-types-pr-writer-20260918",
+      "sha": "0b85b3f2a338265c3205bbc67752c2a713d33dde",
+      "evidence": "Superseded by the rebased PR writer merged in PR #153."
+    },
+    {
+      "name": "cleanup/community-post-view-ownership-20260918",
+      "sha": "35913559c3d3a14c9c2f30f46ea034bc762fb56d",
+      "evidence": "Superseded by the current-main ownership consolidation merged in PR #170."
+    },
+    {
+      "name": "cleanup/driver-history-dead-selector-20260918",
+      "sha": "24f8be8a8266ec0a21567bda6cc73a95aaa54602",
+      "evidence": "Superseded by the rebased driver-history cleanup merged in PR #187."
+    },
+    {
+      "name": "cleanup/eslint-stale-allowlists-20260918",
+      "sha": "2a384209b7761610db3161cc7a4432a9cc71d36f",
+      "evidence": "Superseded by the current-main ESLint hygiene cleanup merged in PR #186."
+    },
+    {
+      "name": "cleanup/live-docs-contracts-20260918",
+      "sha": "4dc9e289a613f83b3b005bb532fa430f4888381d",
+      "evidence": "Superseded by the current-main live docs cleanup merged in PR #189."
+    },
+    {
+      "name": "cleanup/professional-legacy-retirement-20260918",
+      "sha": "47517b18fb046d5bffac36ff9073310ba45f2a04",
+      "evidence": "Superseded by the safe professional legacy retirement merged in PR #174."
+    },
+    {
+      "name": "cleanup/profile-favorite-zero-counters-20260918",
+      "sha": "f6a8a485e34bc279d3e25ad55ac465cc0de75b2a",
+      "evidence": "Superseded by the rebased fake-favorites cleanup merged in PR #165."
+    },
+    {
+      "name": "cleanup/residence-legacy-migration-retirement-20260918",
+      "sha": "7071a05fd0b542e8563f4dfaa601fb3e8de706d9",
+      "evidence": "Superseded by the residence legacy retirement merged in PR #173."
+    },
+    {
+      "name": "cleanup/retire-billing-plan-facade-20260918",
+      "sha": "4813c4bde45c456c63745266ee82f880d69735f9",
+      "evidence": "Superseded by the current-main BillingPlanService retirement merged in PR #190."
+    },
+    {
+      "name": "cleanup/ride-contract-mapper-20260918",
+      "sha": "7eae4da7da547b2a3f1d8d051a7001f7a51730f7",
+      "evidence": "Superseded by the current-main RideCanonicalAdapter retirement merged in PR #188."
+    },
+    {
+      "name": "cleanup/session-security-legacy-facade-20260918",
+      "sha": "de9cb1a35dce9bc594af19df17d9be969ae2a26a",
+      "evidence": "Superseded by the canonical session security facade retirement merged in PR #172."
     },
     {
       "name": "codex/ci-heavy-certification",
@@ -64,9 +149,79 @@
       "evidence": "Superseded by current exact-SHA Heavy PR Certification workflow."
     },
     {
+      "name": "fix/admin-rollout-broker-20260918",
+      "sha": "d4c8a0ab70848f45500ba451cdd26da83c398b33",
+      "evidence": "Superseded by the rebased admin rollout broker fix merged in PR #159."
+    },
+    {
+      "name": "fix/auth-password-migration-reference-20260918",
+      "sha": "d9228ee95215b714b2d0cab3d5c90649e7464285",
+      "evidence": "Superseded by the rebased password authority reconciliation merged in PR #155."
+    },
+    {
+      "name": "fix/governance-history-column-projection-20260918",
+      "sha": "fd48d7ef05d580a52be47d779fe385dad94b5697",
+      "evidence": "Superseded by the governance history column boundary merged in PR #162."
+    },
+    {
+      "name": "fix/territorial-highlights-authority-20260918",
+      "sha": "a214272a01dca2ab81cf88d4e41226dd32b5f4ed",
+      "evidence": "Superseded by the rebased Territorial Highlights reconciliation merged in PR #161."
+    },
+    {
+      "name": "privacy/lgpd-purge-matrix-classification-20260918",
+      "sha": "60aba8b9405ec670e70c79d340b992ea43e3e8d8",
+      "evidence": "Superseded by the rebased LGPD purge classification merged in PR #184."
+    },
+    {
+      "name": "refactor/error-boundary-single-owner-20260918",
+      "sha": "aaadc669ce3a6e4931f6005c26f13902aba06785",
+      "evidence": "Superseded by the canonical ErrorBoundary consolidation merged in PR #169."
+    },
+    {
+      "name": "refactor/territory-ai-content-authority-20260918",
+      "sha": "975c18ca99a9aa7f0511e6c829425b488d3c7238",
+      "evidence": "Superseded by the rebased Territory AI authority consolidation merged in PR #185."
+    },
+    {
+      "name": "security/bound-business-operation-config-columns-20260918",
+      "sha": "48fee00b39606660772cbaa64f49fcdb991f8384",
+      "evidence": "Superseded by the rebased public business operation projection merged in PR #158."
+    },
+    {
+      "name": "security/bound-business-premium-link-columns-20260918",
+      "sha": "cb57937e411c41543ccfdbf24705d2566fa78115",
+      "evidence": "Superseded by the rebased premium-link authority boundary merged in PR #157."
+    },
+    {
+      "name": "security/bound-governance-history-columns-20260918",
+      "sha": "75eb1010ba8dd32095148099fafb87335b7e22f2",
+      "evidence": "Superseded by the governance history column boundary merged in PR #162."
+    },
+    {
+      "name": "security/close-public-issue-blocked-terms-20260918",
+      "sha": "480c144310ca3cfb2555a98662f2120a0bfbf66b",
+      "evidence": "Superseded by the rebased moderation blocklist closure merged in PR #163."
+    },
+    {
+      "name": "security/cp001-retire-browser-notification-create-20260918",
+      "sha": "60a060273fb542ba435ad542b3453428968274b8",
+      "evidence": "Superseded by the CP-001 notification reconciliation merged in PR #154."
+    },
+    {
+      "name": "security/harden-catalog-eligibility-entitlement-20260918",
+      "sha": "44701130bc5c517a5e34801cce4199bb6873401a",
+      "evidence": "Superseded by the rebased catalog public boundary merged in PR #156."
+    },
+    {
       "name": "security/lgpd-purge-classification-20260919",
       "sha": "6c29597832253c184d374e7fed3dd8e99bc51a14",
       "evidence": "Superseded by the rebased LGPD purge classification merged into main."
+    },
+    {
+      "name": "security/retire-public-site-settings-read-20260918",
+      "sha": "835535da57ea43ab4ef9fa3e3f5ba3e92db1fb30",
+      "evidence": "Superseded by the rebased site-settings public-read retirement merged in PR #160."
     }
   ]
 }
