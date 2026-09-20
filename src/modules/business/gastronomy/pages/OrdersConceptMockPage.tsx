@@ -16,8 +16,10 @@ import {
   Search,
   Store,
   Truck,
+  UserRound,
   Users,
   UtensilsCrossed,
+  WifiOff,
   XCircle,
 } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
@@ -223,6 +225,24 @@ function DesktopSidebar({ onTabChange }: { onTabChange: (tab: ConceptTab) => voi
         <span className="mt-2 block h-0.5 w-8 bg-territory-sun" />
       </div>
     </aside>
+  );
+}
+
+function DesktopStoreHeader() {
+  return (
+    <header className="hidden h-12 items-center gap-5 bg-territory-brand px-6 text-white md:flex lg:px-8">
+      <ConceptBrand />
+      <span className="h-6 w-px bg-white/20" aria-hidden="true" />
+      <span className="inline-flex items-center gap-2 text-xs font-semibold text-white/90">
+        <ClipboardList className="h-4 w-4" aria-hidden="true" />
+        Pedidos
+      </span>
+      <div className="ml-auto flex items-center gap-2 text-xs font-semibold text-white/90">
+        <UserRound className="h-4 w-4" aria-hidden="true" />
+        Ana Oliveira
+        <ChevronDown className="h-3.5 w-3.5" aria-hidden="true" />
+      </div>
+    </header>
   );
 }
 
@@ -548,6 +568,7 @@ export default function OrdersConceptMockPage() {
         <meta name="robots" content="noindex, nofollow" />
       </Helmet>
       <div className="min-h-screen overflow-x-hidden bg-territory-canvas text-territory-ink max-md:h-[100dvh] max-md:overflow-y-auto max-md:scrollbar-hide md:flex md:h-screen md:flex-col md:overflow-hidden">
+        <DesktopStoreHeader />
         <div className="flex min-h-0 flex-1">
           <DesktopSidebar onTabChange={setActiveTab} />
           <main className="flex min-w-0 flex-1 flex-col px-4 pb-[calc(5.5rem+env(safe-area-inset-bottom))] pt-4 sm:px-6 sm:pt-6 md:overflow-hidden md:px-6 md:py-5 lg:px-8">
@@ -557,9 +578,13 @@ export default function OrdersConceptMockPage() {
                 <h1 className="font-heading text-2xl font-bold tracking-[-0.045em] text-territory-ink md:text-[2rem]">Pedidos</h1>
                 <p className="mt-0.5 text-sm text-territory-muted">Acompanhe e gerencie os pedidos da sua loja</p>
               </div>
-              <div className="hidden items-center gap-2 md:flex">
+                <div className="hidden items-center gap-2 md:flex">
                 <button type="button" onClick={() => toast.success("Pedidos atualizados agora.")} className="flex min-h-10 items-center gap-2 rounded-lg border border-territory-border bg-territory-surface px-3 text-sm font-semibold text-territory-ink hover:bg-territory-raised"><Store className="h-4 w-4 text-territory-brand" aria-hidden="true" />Sabores da Ana<ChevronDown className="h-4 w-4" aria-hidden="true" /></button>
                 <Button type="button" onClick={() => toast.success("Pedidos atualizados agora.")} variant="outline" className="min-h-10 border-territory-border bg-territory-surface text-territory-ink"><Clock3 className="mr-2 h-4 w-4" aria-hidden="true" />Atualizar</Button>
+                <div className="hidden max-w-[12rem] items-start gap-2 rounded-lg bg-territory-raised px-3 py-2 text-[0.6875rem] leading-4 text-territory-muted xl:flex">
+                  <WifiOff className="mt-0.5 h-4 w-4 shrink-0 text-territory-muted" aria-hidden="true" />
+                  <span>Sem conexão: mantenha os dados e ofereça Atualizar.</span>
+                </div>
               </div>
             </div>
             <div className="mt-4 hidden md:block"><ConceptTabs activeTab={activeTab} onTabChange={setActiveTab} /></div>

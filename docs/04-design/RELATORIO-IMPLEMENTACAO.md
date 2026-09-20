@@ -558,3 +558,24 @@ A prancha 117 também está coberta pelos estados demonstrativos de visitante, v
 
 - Branch: `codex/reformulacao-entrada-comunidade`.
 - Commit restrito ao componente de mapa, à superfície de acompanhamento, ao teste e às documentações do concept; alterações staged preexistentes permanecem fora do commit.
+
+## 20/09/2026 · Pedidos da loja — prancha 026
+
+### Auditoria e ajuste
+
+- Comparei `OrdersConceptMockPage` com a prancha desktop/mobile de Pedidos da loja. A fila por etapas, filtros, busca, alternância de quadro/lista, tabs de Clientes/Indicadores, cards de pedido e navegação mobile já estavam implementados; mantive a lógica de filtros e os avanços explícitos de etapa.
+- A diferença visual desktop era objetiva: faltava a barra superior teal com wordmark, contexto `Pedidos` e conta da loja. Também faltava o aviso de conexão que a prancha mostra ao lado dos controles da loja.
+- Adicionei `DesktopStoreHeader` e o aviso de conexão somente no concept DEV. Não alterei o fluxo real, não persisti pedidos demonstrativos e não transformei o aviso visual em uma falsa condição de conectividade de produção.
+- O mobile continua sem a barra desktop e mantém a composição da prancha: identidade da loja, fila de novos pedidos, cards compactos e navegação inferior.
+
+### Validação e evidências
+
+- Navegador interno mantido aberto em `/gastronomia/pedidos/concept-mock-store`.
+- Conferi desktop equivalente a `1440 × 867` CSS px e mobile `389 × 867` CSS px; header, rail, aviso, quadro, cards, filtros, abas e barra inferior ficaram sem clipping.
+- Console do mock sem erros.
+- `npm run typecheck:app`, ESLint no componente e `git diff --check`.
+
+### Git
+
+- Branch: `codex/reformulacao-entrada-comunidade`.
+- Commit restrito à tela e às documentações do concept; alterações staged preexistentes permanecem fora do commit.
