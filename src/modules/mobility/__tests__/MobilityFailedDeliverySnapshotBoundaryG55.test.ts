@@ -19,7 +19,7 @@ const deliveryActions = readProjectFile(
   "src/core/mobility/core/RideDeliveryOperationalActions.ts",
 );
 const serverAuthority = readProjectFile(
-  "supabase/migrations/20260911222000_complete_delivery_in_single_transaction_g70.sql",
+  "supabase/migrations/20260916113602_restore_atomic_delivery_completion_with_server_owned_price.sql",
 );
 
 describe("G55 failed-delivery snapshot authority", () => {
