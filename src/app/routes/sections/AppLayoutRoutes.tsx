@@ -313,6 +313,11 @@ export function AppLayoutRoutes() {
     typeof window !== "undefined" &&
     window.location.pathname === "/conta/vinculos" &&
     new URLSearchParams(window.location.search).get("concept-mock") === "1";
+  const conceptDetailPreview =
+    import.meta.env.DEV &&
+    typeof window !== "undefined" &&
+    window.location.pathname.startsWith("/publicacao/") &&
+    new URLSearchParams(window.location.search).get("concept-mock") === "1";
   const launchElement = (
     surface: LaunchSurfaceKey,
     moduleName: string,
@@ -703,6 +708,16 @@ export function AppLayoutRoutes() {
         <Route
           path="/novo-post"
           element={conceptPublishPreview ? <P.PublicarComunidadeConceptMockPage /> : protectedElement(<P.NovoPostPage />)}
+        />
+        <Route
+          path="/publicacao/:postId"
+          element={
+            conceptDetailPreview ? (
+              <P.PublicacaoDetalheConceptMockPage />
+            ) : (
+              <Navigate to="/comunidade" replace />
+            )
+          }
         />
         <Route path="/busca" element={<P.BuscaPage />} />
         <Route path="/buscar" element={<P.BuscarPage />} />

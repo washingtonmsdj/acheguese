@@ -826,3 +826,22 @@ A prancha 117 também está coberta pelos estados demonstrativos de visitante, v
 ### Git
 
 - Commit restrito ao mock de vínculos, ao desvio de rota/layout de desenvolvimento e às documentações deste concept; alterações staged preexistentes permanecem fora do commit.
+
+## 20/09/2026 · Detalhe da publicação e conversa — pranchas 089 e 090
+
+### Auditoria e ajuste
+
+- O detalhe existente via `PostDetailModal` e `PostCommentsPanel` já concentra os contratos reais de posts, comentários, interações e moderação. Esses componentes permaneceram intactos.
+- Criei `PublicacaoDetalheConceptMockPage` em `/publicacao/eletricista?concept-mock=1` para materializar a composição consolidada: contexto territorial, pergunta, tags, métricas, conversa, respostas, composer e painel lateral.
+- Incluí estados de resposta com erro, enquete encerrada, aviso atualizado e falta de vínculo, distinguindo conteúdo demonstrativo de ações que precisam de integração real.
+- O desktop usa rail/topbar/painel contextual; o mobile usa retorno à comunidade, território, publicação e conversa em fluxo contínuo, sem barra inferior concorrente.
+
+### Validação e evidências
+
+- Navegador interno mantido aberto em mobile `389 × 867` e desktop `1707 × 960`, com comparação dos estados durante a implementação.
+- Pergunta, resposta com falha, enquete, aviso atualizado e bloqueio por vínculo foram abertos; não houve overflow horizontal nem erro nos logs finais.
+- `npx eslint` direcionado, `npx tsc -p tsconfig.app.json --noEmit --pretty false` e `git diff --check` executados.
+
+### Git
+
+- Commit restrito ao mock de detalhe, ao desvio de rota/layout de desenvolvimento e às documentações deste concept; alterações staged preexistentes permanecem fora do commit.
