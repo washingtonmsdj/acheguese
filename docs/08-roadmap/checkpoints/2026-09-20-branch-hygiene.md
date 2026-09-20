@@ -162,7 +162,7 @@ Essas 13 branches **não são fonte de trabalho pendente**. Devem ser apagadas s
 - dry-run auditável: `npm run maintenance:branches -- --include-superseded --json`;
 - aplicação física, somente com autoridade delete-ref: `npm run maintenance:branches -- --include-superseded --apply`.
 
-A manifest contém **53 heads auditados**: as 13 branches sem PR já classificadas como superseded, 31 branches antigas de PR fechado cujo sucessor `rebased`, `v2` ou equivalente foi efetivamente mergeado, 3 snapshots/probes antigos de Mobilidade já comprovadamente redundantes e 6 branches temporárias antigas de certificação/recovery/ops. Branches ainda em quarentena não entram na manifest.
+A manifest contém **59 heads auditados**: as 13 branches sem PR já classificadas como superseded, 31 branches antigas de PR fechado cujo sucessor `rebased`, `v2` ou equivalente foi efetivamente mergeado, 3 snapshots/probes antigos de Mobilidade já comprovadamente redundantes, 6 branches temporárias antigas de certificação/recovery/ops e 6 precursores fechados/superseded adicionais de sitemap, facades, ProfileMembersManager e tipos Supabase. Branches ainda em quarentena não entram na manifest.
 
 ### Segundo lote — PR fechado substituído por sucessor mergeado
 
@@ -184,6 +184,19 @@ Foram auditadas seis branches antigas de 2026-08-18/19 e todas foram classificad
 - `ops/recovery-refresh-20260818`: workflow/script temporário de captura preso ao estado de agosto e a um alvo local de Drive; foi substituído pela governança e validação atuais de recovery, que não aceitam evidência stale como prova de release.
 
 Nenhuma dessas branches contém código de produto que deva voltar para o MVP. Todas entram na manifest apenas com **SHA pinado**, mantendo as mesmas proteções de branch protegida, PR aberto e mudança de head antes de qualquer delete-ref real.
+
+### Quarto lote — precursores fechados com sucessor canônico
+
+Foram classificados mais seis heads como **superseded / não reintegrar**:
+
+- `agent/web-sitemap-build-contract`: precursor fechado sem merge; substituído pela linha SEO posterior e pela decisão D-017 com pipeline canônico `generate:sitemap -> validate-production-sitemap -> build -> validate dist`;
+- `cleanup/active-compat-facades-20260919`: a auditoria já registrada provou que 12/14 caminhos estão absorvidos e os dois resíduos de Guide reintroduziriam UI placeholder/legada; agora essa conclusão também está refletida na manifest executável;
+- `cleanup/final-compatibility-bridges-20260918`: tentativa anterior de aposentadoria de facades, substituída pela linha consolidada mergeada no PR #176;
+- `cleanup/retire-live-compatibility-facades-20260918`: tentativa ainda mais antiga da mesma frente, também substituída pela consolidação posterior e pelos ratchets atuais;
+- `cleanup/remove-stale-phase-comments-20260918`: precursor da consolidação de `ProfileMembersManager`; sucessor canônico mergeado no PR #171;
+- `sync/supabase-types-canonical-20260918`: sync de tipos fechado sem merge; substituído pelo writer via PR do PR #153 e pelo sync live mergeado no PR #168.
+
+Esse lote reduz branches fechadas sem merge que ainda apareciam como trabalho potencial, sem apagar nenhuma linha funcional única. Todas continuam protegidas por SHA pinado e revalidação antes de delete-ref.
 
 ## Próximo passo
 
