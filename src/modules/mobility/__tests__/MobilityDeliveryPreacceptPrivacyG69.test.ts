@@ -7,7 +7,7 @@ function readProjectFile(relativePath: string): string {
 }
 
 const g69 = readProjectFile(
-  "supabase/migrations/20260911221000_harden_preaccept_ride_and_delivery_offer_privacy_g69.sql",
+  "docs/09-reference/migrations-pending/20260911221000_harden_preaccept_ride_and_delivery_offer_privacy_g69.sql",
 );
 const dashboard = readProjectFile(
   "src/core/mobility/hooks/useDriverDashboardBase.ts",
