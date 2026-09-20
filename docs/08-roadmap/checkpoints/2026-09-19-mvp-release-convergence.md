@@ -119,7 +119,7 @@ O PR #209 removeu duas exceções antigas que já não aparecem no Advisor, redu
 ## Blockers de release que permanecem
 
 1. Executar o GitHub Actions de verdade em runner válido e obter security/lint/typecheck/test/build no SHA candidato.
-2. Fechar o drift de migrations até o gate remoto atingir zero divergências; estado atual após Safety provenance: 683 locais / 666 remotas / 661 exatas / 22 local-only / 5 remote-only.
+2. Fechar o drift de migrations até o gate remoto atingir zero divergências; estado atual após Safety provenance: 683 locais / 666 remotas / 664 exatas / 20 local-only / 2 remote-only.
 3. Completar branch protection/release authority depois que existir check executável.
 4. Produzir build/deploy real do mesmo SHA aprovado; o provider Vercel vinha bloqueando novas provas pelo limite diário.
 5. Executar smoke do domínio no mesmo SHA.
@@ -178,7 +178,7 @@ Após a reconciliação de Vagas, o corte urgente avançou em quatro frentes sem
 - Supabase canônico: `ACTIVE_HEALTHY`;
 - Edge Functions implantadas: 60, todas `ACTIVE`;
 - tipos gerados Git ↔ Supabase: `exact=true`, 731731 caracteres normalizados;
-- migrations: 683 locais / 666 remotas / 661 exatas / 22 local-only / 5 remote-only;
+- migrations: 683 locais / 666 remotas / 664 exatas / 20 local-only / 2 remote-only;
 - Vercel no SHA auditado: status de falha por build rate limit, portanto sem nova prova de deploy;
 - `main` está protegida, porém o endpoint acessível mostra required status checks sem enforcement/contextos; a leitura completa da branch protection não está disponível à integração atual. Não declarar release authority fechada com essa evidência parcial.
 
@@ -209,6 +209,25 @@ Quatro pares adicionais local ↔ remoto foram comparados por tokenização SQL 
 
 As identidades locais foram alinhadas às versões realmente registradas no Supabase sem executar DDL. O teste que lê a migration de `quote_id` foi atualizado para o caminho canônico.
 
-Estado resultante: **683 locais / 666 remotas / 661 exatas / 22 local-only / 5 remote-only**.
+Estado resultante: **683 locais / 666 remotas / 664 exatas / 20 local-only / 2 remote-only**.
 
 Os cinco remote-only restantes são: três migrations da cadeia de preço terminal da entrega (`make_delivery_final_price_server_owned`, `restore_atomic_delivery_completion_with_server_owned_price`, `ignore_client_final_price_in_delivery_wrapper`) e as territoriais G42/G43. A cadeia terminal é materialmente diferente do draft local e exige reconstrução de provenance em grupo; não renomear automaticamente.
+
+## Atualização — cadeia terminal de preço/entrega — 2026-09-19
+
+A cadeia remota foi tratada como sequência, não como rename isolado:
+
+1. `20260916112547_make_delivery_final_price_server_owned`: implementação monolítica passa a derivar preço terminal do estado server-owned;
+2. `20260916113602_restore_atomic_delivery_completion_with_server_owned_price`: a mesma implementação base é materializada explicitamente em `private.mobility_transition_delivery_state_atomic_base_g70` e o wrapper público G70 fecha `delivered -> completed` atomicamente;
+3. `20260916113754_ignore_client_final_price_in_delivery_wrapper`: o wrapper mantém a assinatura de rollout, mas passa `NULL::numeric` à base, ignorando autoridade monetária do cliente.
+
+Provas:
+
+- a função pública de `112547` e a base privada de `113602` têm a mesma sequência de tokens após normalizar somente o nome qualificado da função;
+- o wrapper público de `113602` é token-a-token idêntico ao wrapper do antigo draft local G70;
+- o wrapper de `113754` é token-a-token idêntico ao antigo draft local de server-owned price;
+- a migration posterior `20260916233125_remove_mobility_delivery_final_price_compat` permanece e remove a compatibilidade `p_final_price` depois do cutover.
+
+Os dois drafts locais foram substituídos pelas três identidades realmente registradas no ledger remoto. Nenhum DDL foi reaplicado.
+
+Estado resultante: **684 arquivos locais / 666 remotas / 664 identidades exatas / 20 local-only / 2 remote-only**. Os únicos remote-only agora são G42 e G43 territoriais.
