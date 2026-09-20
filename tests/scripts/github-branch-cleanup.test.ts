@@ -106,8 +106,10 @@ describe("GitHub merged branch cleanup policy", () => {
     );
 
     expect(
-      heads.get("agent/security-nominatim-runtime-parity"),
-    ).toContain("580a3b8ce62aa0df28400ef9edbf673e56756c01");
+      heads
+        .get("agent/security-nominatim-runtime-parity")
+        ?.has("580a3b8ce62aa0df28400ef9edbf673e56756c01"),
+    ).toBe(true);
   });
 
   it("preserves every branch that still has unique commits", () => {
