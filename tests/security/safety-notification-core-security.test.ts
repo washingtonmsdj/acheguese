@@ -18,22 +18,22 @@ const contactPrivacyMigration = readProjectFile(
   "supabase/migrations/20260826003840_restrict_emergency_contacts_to_direct_owner.sql",
 );
 const durableOutboxMigration = readProjectFile(
-  "supabase/migrations/20260911141000_durable_emergency_delivery_outbox_g72.sql",
+  "supabase/migrations/20260916095139_reconcile_g72_durable_emergency_delivery_outbox.sql",
 );
 const terminalRaceMigration = readProjectFile(
-  "supabase/migrations/20260911170000_cancel_terminal_emergency_delivery_race_g75.sql",
+  "supabase/migrations/20260916095206_reconcile_g75_cancel_terminal_emergency_delivery_race.sql",
 );
 const providerEventMigration = readProjectFile(
-  "supabase/migrations/20260911190000_provider_confirmed_emergency_delivery_g77.sql",
+  "supabase/migrations/20260916095255_reconcile_g77_provider_confirmed_emergency_delivery.sql",
 );
 const immutablePayloadMigration = readProjectFile(
-  "supabase/migrations/20260911193000_immutable_emergency_provider_payload_g78.sql",
+  "supabase/migrations/20260916095321_reconcile_g78_immutable_emergency_provider_payload.sql",
 );
 const singleAuthorityMigration = readProjectFile(
-  "supabase/migrations/20260911200000_single_emergency_delivery_failure_authority_g79.sql",
+  "supabase/migrations/20260916095337_reconcile_g79_single_emergency_delivery_failure_authority.sql",
 );
 const autonomousDeliveryMigration = readProjectFile(
-  "supabase/migrations/20260911210000_autonomous_emergency_delivery_dispatcher_g80.sql",
+  "supabase/migrations/20260916095427_reconcile_g80_autonomous_emergency_delivery_dispatcher.sql",
 );
 const safetyService = readProjectFile(
   "src/core/safety/services/SafetyService.ts",
