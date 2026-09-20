@@ -80,9 +80,7 @@ export default function CommunityIndicationPage() {
       const normalizedCity = slugifyTerritory(city.trim());
       const normalizedNeighborhood = slugifyTerritory(neighborhood.trim());
       const phone = isEmail ? null : contact.trim();
-      const email = isEmail
-        ? contact.trim().toLowerCase()
-        : `whatsapp+${phoneDigits}@waitlist.acheguese.local`;
+      const email = isEmail ? contact.trim().toLowerCase() : null;
 
       const result = await registerCommunityInterest({
         communityId: null,

@@ -402,7 +402,7 @@ export default function AdminCommunityInterest() {
           setSearch(value);
           setPage(1);
         }}
-        searchPlaceholder="Buscar por nome, email ou mensagem"
+        searchPlaceholder="Buscar por nome, email, telefone ou mensagem"
         filters={[ROLE_FILTER_OPTIONS, UPDATES_FILTER_OPTIONS]}
         filterValues={{ role, wantsUpdates }}
         onFilterChange={handleFilterChange}
@@ -551,9 +551,11 @@ export default function AdminCommunityInterest() {
                       ) : null}
                     </TableCell>
                     <TableCell className="text-sm">
-                      <div>{row.email}</div>
+                      {row.email ? <div>{row.email}</div> : null}
                       {row.phone ? (
-                        <div className="text-xs text-muted-foreground">{row.phone}</div>
+                        <div className={row.email ? "text-xs text-muted-foreground" : undefined}>
+                          {row.phone}
+                        </div>
                       ) : null}
                     </TableCell>
                     <TableCell>

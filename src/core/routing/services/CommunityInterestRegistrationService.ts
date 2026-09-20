@@ -15,7 +15,7 @@ export interface RegisterCommunityInterestInput {
   communitySlug: string | null;
   territoryPath: string | null;
   fullName: string;
-  email: string;
+  email: string | null;
   phone: string | null;
   role: CommunityInterestRole;
   message: string | null;

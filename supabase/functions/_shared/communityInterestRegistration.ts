@@ -31,7 +31,7 @@ export interface CommunityInterestRegistrationRow {
   community_slug: string | null;
   territory_path: string | null;
   full_name: string;
-  email: string;
+  email: string | null;
   phone: string | null;
   role: CommunityInterestRole;
   message: string | null;
@@ -135,7 +135,8 @@ function parseCommunityInterestRequest(payload: unknown): ParsedCommunityInteres
   const communitySlug = optionalString(payload, "communitySlug", 120);
   const territoryPath = optionalString(payload, "territoryPath", 300);
   const fullName = requiredString(payload, "fullName", 2, 120);
-  const email = requiredString(payload, "email", 3, 255)?.toLowerCase() ?? null;
+  const emailValue = optionalString(payload, "email", 255);
+  const email = typeof emailValue === "string" ? emailValue.toLowerCase() : emailValue;
   const phone = optionalString(payload, "phone", 30);
   const role = Reflect.get(payload, "role");
   const message = optionalString(payload, "message", 1_000);
@@ -147,8 +148,14 @@ function parseCommunityInterestRequest(payload: unknown): ParsedCommunityInteres
   if (communityId === undefined || (communityId !== null && !UUID_PATTERN.test(communityId))) return null;
   if (communitySlug === undefined || (communitySlug !== null && !isSlug(communitySlug))) return null;
   if (territoryPath === undefined || (territoryPath !== null && !isTerritoryPath(territoryPath))) return null;
-  if (!fullName || !email || !EMAIL_PATTERN.test(email)) return null;
+  if (!fullName || email === undefined) return null;
+  if (email !== null && !EMAIL_PATTERN.test(email)) return null;
   if (phone === undefined || (phone !== null && !PHONE_PATTERN.test(phone))) return null;
+  if (phone !== null) {
+    const phoneDigits = phone.replace(/\D/g, "");
+    if (phoneDigits.length < 10 || phoneDigits.length > 15) return null;
+  }
+  if (email === null && phone === null) return null;
   if (
     !isRole(role) ||
     message === undefined ||

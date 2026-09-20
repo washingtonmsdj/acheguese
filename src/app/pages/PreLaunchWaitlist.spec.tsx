@@ -125,7 +125,7 @@ describe("PreLaunchWaitlist", () => {
     );
     expect(registerCommunityInterest).toHaveBeenCalledWith(
       expect.objectContaining({
-        email: "whatsapp+71999998888@waitlist.acheguese.local",
+        email: null,
         phone: "71999998888",
       }),
     );
