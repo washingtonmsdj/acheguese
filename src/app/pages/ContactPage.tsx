@@ -1,5 +1,5 @@
 import { Helmet } from "react-helmet-async";
-import { ArrowLeft, Building2, Mail, MapPin, MessageSquare, Phone } from "lucide-react";
+import { ArrowLeft, Building2, Mail, MapPin, MessageSquare } from "lucide-react";
 import { Link, useNavigate, useSearchParams } from "react-router-dom";
 
 import { TERRITORY_CONFIG } from "@/core/routing/config/territory";
@@ -158,15 +158,6 @@ export default function ContactPage() {
                     </div>
                   </div>
 
-                  <div className="flex items-start gap-3">
-                    <div className="rounded-2xl bg-primary/10 p-2.5 text-primary">
-                      <Phone className="h-5 w-5" />
-                    </div>
-                    <div>
-                      <p className="text-sm font-medium text-foreground">Tempo de resposta</p>
-                      <p className="text-sm text-muted-foreground">Até 48 horas úteis.</p>
-                    </div>
-                  </div>
                 </div>
               </section>
 
