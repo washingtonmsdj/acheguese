@@ -213,6 +213,9 @@ DROP POLICY IF EXISTS "vagas_owner_create" ON public.vagas;
 DROP POLICY IF EXISTS "vagas_owner_update" ON public.vagas;
 DROP POLICY IF EXISTS "vagas_owner_delete" ON public.vagas;
 
+-- Cross-table application policy reads vagas.status and must be rebound too.
+DROP POLICY IF EXISTS "vaga_applications_insert" ON public.vaga_applications;
+
 -- The notification trigger references status in its trigger column list. Its
 -- function body already uses the canonical textual value "published", so only
 -- the trigger binding must be recreated around the enum rebind.
@@ -439,6 +442,26 @@ CREATE POLICY "vagas_owner_delete"
     OR (
       private.can_manage_profile(owner_profile_id)
       AND status IN ('draft', 'pending_review')
+    )
+  );
+
+CREATE POLICY "vaga_applications_insert"
+  ON public.vaga_applications
+  FOR INSERT
+  TO authenticated
+  WITH CHECK (
+    EXISTS (
+      SELECT 1
+      FROM public.profiles p
+      WHERE p.id = candidato_profile_id
+        AND p.user_id = auth.uid()
+    )
+    AND EXISTS (
+      SELECT 1
+      FROM public.vagas v
+      WHERE v.id = vaga_id
+        AND v.status = 'published'
+        AND v.owner_profile_id <> candidato_profile_id
     )
   );
 
