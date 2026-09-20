@@ -90,17 +90,18 @@ export function useVagaDetail(params: UseVagaDetailParams): UseVagaDetailReturn 
   });
 
   // Query: vagas relacionadas (mesma categoria/tags)
+  const relatedLocationId = locationId ?? vaga?.locationId;
   const {
     data: vagasRelacionadas = [],
     isLoading: isLoadingRelacionadas,
   } = useQuery({
-    queryKey: ['vagas-relacionadas', vaga?.id, locationId],
+    queryKey: ['vagas-relacionadas', vaga?.id, relatedLocationId],
     queryFn: () => {
-      if (!vaga?.id || !locationId) return [];
-      return VagasService.getVagasRelacionadas(vaga.id, locationId, 4);
+      if (!vaga?.id || !relatedLocationId) return [];
+      return VagasService.getVagasRelacionadas(vaga.id, relatedLocationId, 4);
     },
     staleTime: STALE_TIME,
-    enabled: !!vaga?.id && !!locationId,
+    enabled: Boolean(vaga?.id && relatedLocationId),
   });
 
   // Query: outras vagas da mesma empresa
