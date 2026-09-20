@@ -149,6 +149,9 @@ export const BrasilShowcasePage = lazy(() =>
 export const ContaPage = lazy(
   () => import("@/modules/profile/pages/ContaHubPage"),
 );
+export const ContaConceptMockPage = lazy(
+  () => import("@/modules/profile/pages/ContaConceptMockPage"),
+);
 export const ContaEditarPerfilPage = lazy(
   () => import("@/modules/profile/pages/ContaEditarPerfilPage"),
 );

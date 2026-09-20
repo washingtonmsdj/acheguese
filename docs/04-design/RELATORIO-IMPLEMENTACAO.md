@@ -748,3 +748,22 @@ A prancha 117 também está coberta pelos estados demonstrativos de visitante, v
 
 - Branch: `codex/reformulacao-entrada-comunidade`.
 - Este concept altera apenas a documentação da revisão; não houve mudança de código.
+
+## 20/09/2026 · Minha conta, segurança e privacidade — pranchas 068, 070 e 071
+
+### Auditoria e ajuste
+
+- A entrada de conta em modo de conceito ainda abria a composição antiga de “Meus perfis”, divergente da prancha 068. A produção autenticada foi preservada e o modo `DEV + concept-mock=1` passou a usar `ContaConceptMockPage`.
+- Recompus o shell com rail teal desktop, navegação mobile inferior, cabeçalho compacto e a hierarquia visual da referência: Minha conta, Dados de acesso, Senha e segurança, Notificações, Privacidade e dados, Meus perfis, Ajuda e Sair da conta.
+- Implementei os estados demonstrativos necessários para a comparação das pranchas: métodos de acesso, MFA não ativada e configuração, acesso a dispositivos indisponível, canais/tipos/horário de silêncio, escolhas de privacidade, exportação, modal de exclusão e exclusão solicitada.
+- Ajustei títulos responsivos que mudam entre mobile e desktop (`Notificações`/`Controle o que chega até você` e `Privacidade e dados`/`Suas escolhas, seus dados`), mantendo a tipografia, cores e componentes da SSOT. Nenhuma ação demonstrativa chama serviço real.
+
+### Validação e evidências
+
+- Navegador interno mantido aberto nas abas mobile `389 × 867` e desktop `1707 × 960`, com comparação lado a lado durante cada ajuste.
+- Hub, acesso, segurança, MFA, notificações, privacidade, modal, exportação e estado de exclusão foram abertos e conferidos; nenhum viewport apresentou overflow horizontal e os logs finais do navegador não apresentaram erros.
+- `npx eslint src/modules/profile/pages/ContaConceptMockPage.tsx src/app/routes/sections/AppLayoutRoutes.tsx src/app/routes/lazyImports.ts`, `npx tsc -b tsconfig.app.json tsconfig.node.json --pretty false --force` e `git diff --check` concluídos.
+
+### Git
+
+- Commit restrito ao mock de conta, ao desvio de rotas de desenvolvimento e à documentação deste concept; alterações staged preexistentes permanecem fora do commit.

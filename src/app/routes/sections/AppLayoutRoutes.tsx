@@ -315,6 +315,8 @@ export function AppLayoutRoutes() {
   const protectedElement = (element: ReactNode) => (
     <ProtectedRoute>{element}</ProtectedRoute>
   );
+  const accountElement = (element: ReactNode) =>
+    conceptAccountPreview ? <P.ContaConceptMockPage /> : protectedElement(element);
 
   return (
     <Routes>
@@ -486,15 +488,15 @@ export function AppLayoutRoutes() {
         />
         <Route
           path="/conta/preferencias"
-          element={protectedElement(<P.ContaPreferenciasPage />)}
+          element={accountElement(<P.ContaPreferenciasPage />)}
         />
         <Route
           path="/conta/notificacoes"
-          element={protectedElement(<P.NotificationPreferencesPage />)}
+          element={accountElement(<P.NotificationPreferencesPage />)}
         />
         <Route
           path="/conta/privacidade"
-          element={protectedElement(<P.PrivacySettingsPage />)}
+          element={accountElement(<P.PrivacySettingsPage />)}
         />
         <Route
           path="/conta/perfil/configuracoes"
@@ -502,7 +504,7 @@ export function AppLayoutRoutes() {
         />
         <Route
           path="/conta/seguranca"
-          element={protectedElement(<P.ContaSegurancaPage />)}
+          element={accountElement(<P.ContaSegurancaPage />)}
         />
         <Route
           path="/conta/enderecos"
@@ -522,7 +524,7 @@ export function AppLayoutRoutes() {
         />
         <Route
           path="/conta"
-          element={conceptAccountPreview ? <P.ContaPage /> : protectedElement(<P.ContaPage />)}
+          element={accountElement(<P.ContaPage />)}
         />
         <Route path="/perfil" element={<Navigate to="/conta" replace />} />
         <Route
