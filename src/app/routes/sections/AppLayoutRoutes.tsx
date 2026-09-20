@@ -343,6 +343,11 @@ export function AppLayoutRoutes() {
     typeof window !== "undefined" &&
     window.location.pathname === "/organizar-eventos" &&
     new URLSearchParams(window.location.search).get("concept-mock") === "1";
+  const conceptInscricaoCheckinPreview =
+    import.meta.env.DEV &&
+    typeof window !== "undefined" &&
+    window.location.pathname === "/inscricoes-checkin" &&
+    new URLSearchParams(window.location.search).get("concept-mock") === "1";
   const launchElement = (
     surface: LaunchSurfaceKey,
     moduleName: string,
@@ -789,6 +794,16 @@ export function AppLayoutRoutes() {
           element={
             conceptOrganizeEventsPreview ? (
               <P.OrganizarEventosConceptMockPage />
+            ) : (
+              <Navigate to="/comunidade" replace />
+            )
+          }
+        />
+        <Route
+          path="/inscricoes-checkin"
+          element={
+            conceptInscricaoCheckinPreview ? (
+              <P.InscricaoCheckinConceptMockPage />
             ) : (
               <Navigate to="/comunidade" replace />
             )

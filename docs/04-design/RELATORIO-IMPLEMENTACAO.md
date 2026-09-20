@@ -943,3 +943,23 @@ A prancha 117 também está coberta pelos estados demonstrativos de visitante, v
 ### Git
 
 - Commit restrito ao mock de organização, aos desvios de rota/layout de desenvolvimento e às documentações deste concept; alterações staged/unstaged preexistentes permanecem fora do commit.
+
+## 20/09/2026 · Inscrição e check-in — pranchas 107 e 108
+
+### Auditoria e ajuste
+
+- Os owners reais de inscrição e check-in (`EventCheckin.tsx`, `EventRuntimeService` e as políticas descritas no README do conceito) foram preservados. A comparação foi isolada em `DEV + /inscricoes-checkin?concept-mock=1`.
+- Recompus o mobile conforme a prancha 108: lista de inscrições, credencial com QR demonstrativo, confirmação de presença registrada pelo servidor e indisponibilidade de consulta. O estado sem conexão usa linguagem de incerteza e oferece nova tentativa/equipe, sem declarar falha definitiva.
+- Recompus o desktop conforme a prancha 107: topbar de equipe autorizada, tabs de validação, leitura de câmera desativada com permissão explícita, código manual, conferência do evento e três resultados distintos (confirmada, já registrada e não validada).
+- Mantive as regras de segurança do conceito: QR/código são demonstrativos, câmera não é ativada automaticamente, check-in não é confundido com inscrição, certificado depende do organizador e nenhuma entrada é apresentada como confirmação produtiva.
+- Corrigi o posicionamento da navegação inferior mobile para permanecer ancorada ao viewport e alinhei a escala do desktop (topbar, recuos, título e subtítulo) à prancha, sem overflow horizontal.
+
+### Validação e evidências
+
+- Navegador interno mantido aberto em duas abas durante a implementação: mobile `491 × 1108` e desktop `1707 × 960`; as telas foram comparadas lado a lado e a rota permaneceu aberta para inspeção.
+- Foram conferidos inscrições, credencial, entrada registrada, sem conexão e validação desktop. `body.scrollWidth` ficou dentro do viewport em ambos os tamanhos.
+- ESLint direcionado passou e o typecheck dos projetos `app` e `node` foi executado após os ajustes finais.
+
+### Git
+
+- Commit restrito ao mock de inscrição/check-in, aos desvios de rota/layout de desenvolvimento e às documentações deste concept; alterações alheias staged/unstaged permanecem fora do commit.
