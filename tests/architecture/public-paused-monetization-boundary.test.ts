@@ -19,6 +19,38 @@ describe("public paused monetization boundary", () => {
     "src/modules/classifieds/jobs/services/VagasPublishWorkflowService.ts",
     "utf8",
   );
+  const businessShell = readFileSync(
+    "src/modules/business/dashboard/pages/BusinessDashboardShellPage.tsx",
+    "utf8",
+  );
+  const businessOverview = readFileSync(
+    "src/modules/business/dashboard/pages/BusinessOverviewPage.tsx",
+    "utf8",
+  );
+  const businessHub = readFileSync(
+    "src/core/profiles/components/hub/BusinessModulesSection.tsx",
+    "utf8",
+  );
+  const premiumSite = readFileSync(
+    "src/modules/business/dashboard/pages/BusinessPremiumSitePage.tsx",
+    "utf8",
+  );
+  const gastronomyDashboard = readFileSync(
+    "src/modules/business/gastronomy/pages/GastronomyDashboardPage.tsx",
+    "utf8",
+  );
+  const gastronomyPlanStatus = readFileSync(
+    "src/modules/business/gastronomy/components/PlanStatusWidget.tsx",
+    "utf8",
+  );
+  const gastronomyUpgradePrompt = readFileSync(
+    "src/modules/business/gastronomy/components/UpgradePrompt.tsx",
+    "utf8",
+  );
+  const menuManagement = readFileSync(
+    "src/modules/business/gastronomy/pages/MenuManagementPage.tsx",
+    "utf8",
+  );
 
   it("keeps Billing outside the MVP launch scope", () => {
     expect(launchScope).toContain("billing: false");
@@ -40,6 +72,61 @@ describe("public paused monetization boundary", () => {
     expect(jobsPublishWorkflow).not.toContain('highlightType = "premium"');
     expect(jobsPublishWorkflow).toContain(
       'const highlightType: VagaHighlightType = form.urgente ? "featured" : "none";',
+    );
+  });
+
+
+  it("keeps authenticated plan and upgrade entry points behind Billing launch scope", () => {
+    expect(businessShell).toContain(
+      'const showBilling = isLaunchSurfaceEnabled("billing")',
+    );
+    expect(businessShell).toContain("...(showBilling");
+    expect(businessShell).toContain("{showBilling && (");
+    expect(businessOverview).toContain(
+      'const showBilling = isLaunchSurfaceEnabled("billing")',
+    );
+    expect(businessOverview).toContain("{showBilling && (");
+    expect(businessHub).toContain(
+      'const showBilling = isLaunchSurfaceEnabled("billing")',
+    );
+    expect(businessHub).toContain("{showBilling ? (");
+  });
+
+  it("preserves already-granted premium capabilities without exposing a purchase path", () => {
+    expect(businessShell).toContain(
+      'const showPremiumManagement = showBilling || Boolean(premiumUrl)',
+    );
+    expect(businessOverview).toContain(
+      'const showPremiumManagement = showBilling || Boolean(premiumUrl)',
+    );
+    expect(premiumSite).toContain("if (!isPremiumEnabled && !showBilling)");
+    expect(premiumSite).toContain(
+      "Este recurso não está habilitado para esta empresa no lançamento atual.",
+    );
+    expect(gastronomyDashboard).toContain("hasShortPremiumLink ? (");
+    expect(gastronomyDashboard).toContain(
+      "QR Code personalizado não está habilitado para esta empresa no lançamento atual.",
+    );
+  });
+
+  it("turns paused gastronomy upsells into factual entitlement states", () => {
+    expect(gastronomyUpgradePrompt).toContain(
+      "const showBilling = isLaunchSurfaceEnabled('billing')",
+    );
+    expect(gastronomyUpgradePrompt).toContain("if (!showBilling)");
+    expect(gastronomyUpgradePrompt).toContain(
+      "Recurso não habilitado para esta empresa no lançamento atual.",
+    );
+    expect(gastronomyPlanStatus).toContain(
+      "const showUpgradeCTA = showBilling && !isDelivery",
+    );
+    expect(gastronomyPlanStatus).toContain("showBilling && isFree");
+    expect(gastronomyPlanStatus).toContain("showBilling && isPro");
+    expect(menuManagement).toContain(
+      "const showBilling = isLaunchSurfaceEnabled('billing')",
+    );
+    expect(menuManagement).toContain(
+      "itens habilitado para esta empresa.",
     );
   });
 
