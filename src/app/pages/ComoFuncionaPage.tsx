@@ -26,9 +26,6 @@ import { LAUNCH_URLS, TERRITORY_CONFIG } from "@/core/routing/config/territory";
 import { cn } from "@/shared/utils/cn";
 import heroCommunity from "@/assets/hero-complexo-nordeste.jpg";
 import communityPhoto from "@/assets/complexo-cultura.jpg";
-import residentPhoto from "@/assets/persona-morador.jpg";
-import businessPhoto from "@/assets/persona-comerciante.jpg";
-import professionalPhoto from "@/assets/persona-prestador.jpg";
 
 const FALLBACK_COMMUNITY_NAME = "Complexo do Nordeste de Amaralina";
 const COMMUNITY_NAME =
@@ -102,22 +99,22 @@ const ENABLED_MODULES = MODULES.filter((module) =>
 
 const PROFILES = [
   {
-    name: "Ana Oliveira",
+    name: "Perfil pessoal",
     type: "Pessoal",
     description: "Participe da comunidade, comente e compartilhe histórias.",
-    image: residentPhoto,
+    icon: Users,
   },
   {
-    name: "Sabores da Ana",
+    name: "Perfil de negócio",
     type: "Negócio",
     description: "Divulgue seu negócio, compartilhe novidades e converse com clientes.",
-    image: businessPhoto,
+    icon: Store,
   },
   {
-    name: "Ana Serviços",
+    name: "Perfil profissional",
     type: "Profissional",
     description: "Ofereça seus serviços e mostre o seu trabalho.",
-    image: professionalPhoto,
+    icon: Wrench,
   },
 ] as const;
 
@@ -222,17 +219,16 @@ function ProfileCard({
   name,
   type,
   description,
-  image,
+  icon: Icon,
 }: (typeof PROFILES)[number]) {
   return (
     <article className="flex h-full items-center gap-3 rounded-2xl border border-territory-border bg-territory-surface p-3 sm:gap-4 sm:p-4 lg:min-h-[5.5rem] lg:gap-2 lg:p-2">
-      <img
-        src={image}
-        alt=""
-        className="h-14 w-14 shrink-0 rounded-full object-cover sm:h-16 sm:w-16 lg:h-10 lg:w-10"
-        loading="lazy"
-        decoding="async"
-      />
+      <span
+        className="flex h-14 w-14 shrink-0 items-center justify-center rounded-full bg-territory-brand/[0.08] text-territory-brand sm:h-16 sm:w-16 lg:h-10 lg:w-10"
+        aria-hidden="true"
+      >
+        <Icon className="h-7 w-7 sm:h-8 sm:w-8 lg:h-5 lg:w-5" strokeWidth={1.8} />
+      </span>
       <div className="min-w-0">
         <h3 className="font-heading text-base font-bold leading-5 text-territory-ink lg:text-sm lg:leading-4">{name}</h3>
         <p className="mt-0.5 text-xs font-semibold text-territory-brand lg:text-[0.68rem]">{type}</p>
