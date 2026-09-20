@@ -119,7 +119,7 @@ O PR #209 removeu duas exceções antigas que já não aparecem no Advisor, redu
 ## Blockers de release que permanecem
 
 1. Executar o GitHub Actions de verdade em runner válido e obter security/lint/typecheck/test/build no SHA candidato.
-2. Fechar o drift de migrations até o gate remoto atingir zero divergências; estado atual após Safety provenance: 683 locais / 666 remotas / 657 exatas / 26 local-only / 9 remote-only.
+2. Fechar o drift de migrations até o gate remoto atingir zero divergências; estado atual após Safety provenance: 683 locais / 666 remotas / 661 exatas / 22 local-only / 5 remote-only.
 3. Completar branch protection/release authority depois que existir check executável.
 4. Produzir build/deploy real do mesmo SHA aprovado; o provider Vercel vinha bloqueando novas provas pelo limite diário.
 5. Executar smoke do domínio no mesmo SHA.
@@ -178,7 +178,7 @@ Após a reconciliação de Vagas, o corte urgente avançou em quatro frentes sem
 - Supabase canônico: `ACTIVE_HEALTHY`;
 - Edge Functions implantadas: 60, todas `ACTIVE`;
 - tipos gerados Git ↔ Supabase: `exact=true`, 731731 caracteres normalizados;
-- migrations: 683 locais / 666 remotas / 657 exatas / 26 local-only / 9 remote-only;
+- migrations: 683 locais / 666 remotas / 661 exatas / 22 local-only / 5 remote-only;
 - Vercel no SHA auditado: status de falha por build rate limit, portanto sem nova prova de deploy;
 - `main` está protegida, porém o endpoint acessível mostra required status checks sem enforcement/contextos; a leitura completa da branch protection não está disponível à integração atual. Não declarar release authority fechada com essa evidência parcial.
 
@@ -197,3 +197,18 @@ Consequência:
 - a paridade de identidade melhora de 649 para 657 migrations exatas; local-only cai de 34 para 26 e remote-only de 17 para 9.
 
 Continuam sem reconciliação: pricing/cancellation de Mobilidade, G42/G43 territoriais e o conjunto local-only restante. Não inferir equivalência sem a mesma prova de provenance.
+
+## Atualização — pricing/cancelamento com equivalência comprovada — 2026-09-19
+
+Quatro pares adicionais local ↔ remoto foram comparados por tokenização SQL e retornaram sequência de tokens idêntica:
+
+- `20260916064000_remove_provisional_mobility_fare_floor` ↔ `20260916091805_remove_provisional_mobility_fare_floor`;
+- `20260916123000_persist_mobility_cancellation_reason` ↔ `20260916093913_persist_mobility_cancellation_reason`;
+- `20260916104000_enforce_server_owned_mobility_quotes` ↔ `20260916102110_enforce_server_owned_mobility_quotes`;
+- `20260916113000_require_explicit_mobility_quote_id` ↔ `20260916104609_require_explicit_mobility_quote_id`.
+
+As identidades locais foram alinhadas às versões realmente registradas no Supabase sem executar DDL. O teste que lê a migration de `quote_id` foi atualizado para o caminho canônico.
+
+Estado resultante: **683 locais / 666 remotas / 661 exatas / 22 local-only / 5 remote-only**.
+
+Os cinco remote-only restantes são: três migrations da cadeia de preço terminal da entrega (`make_delivery_final_price_server_owned`, `restore_atomic_delivery_completion_with_server_owned_price`, `ignore_client_final_price_in_delivery_wrapper`) e as territoriais G42/G43. A cadeia terminal é materialmente diferente do draft local e exige reconstrução de provenance em grupo; não renomear automaticamente.
