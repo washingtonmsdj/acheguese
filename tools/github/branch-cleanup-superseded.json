@@ -64,6 +64,11 @@
       "evidence": "Authority migration is in main; later reconciliation merged in PR #35."
     },
     {
+      "name": "agent/security-anon-private-authz-surface",
+      "sha": "7d9b990aff8c7d0e444d6c12b399780a59a3d37e",
+      "evidence": "Closed anon/private authorization hardening precursor. Three surviving report/spec files are byte-identical to main; old report migration 20260820084132 is superseded by canonical 20260830091107; the 20260820095633 anon/private intent is superseded by canonical migrations 20260825183353 and 20260825233757 plus current admin/private-helper/browser-grant ratchets."
+    },
+    {
       "name": "agent/security-audit-ip-normalization",
       "sha": "b9c5a6041a857eab4685a12e99c7fba3eb0089ba",
       "evidence": "Superseded by v2 merged in PR #38."
