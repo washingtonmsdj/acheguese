@@ -38,6 +38,7 @@ import {
 } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
 import foodImage from "@/assets/gastronomy/cat-marmitas.jpg";
+import driverAvatar from "@/assets/professional-concept/joao-santos.png";
 import { useNeighborhoodBounds } from "@/core/business/hooks/useNeighborhoodBounds";
 import { MapLibreAdapter } from "@/core/maps/components/v3/MapLibreAdapter";
 import { DEFAULT_TILE_STYLE } from "@/core/maps/providers/MapProvider";
@@ -115,10 +116,11 @@ function getStateConfig(state: DriverCenterState) {
   return stateOptions.find((option) => option.id === state) ?? stateOptions[0];
 }
 
-function Brand({ dark = false }: { dark?: boolean }) {
+function Brand({ dark = false, compact = false }: { dark?: boolean; compact?: boolean }) {
   return (
     <span className={cn(
-      "inline-flex items-baseline font-heading text-xl font-bold tracking-[-0.06em] lg:text-[1.35rem]",
+      "inline-flex items-baseline font-heading font-bold tracking-[-0.06em]",
+      compact ? "text-[1.05rem]" : "text-xl",
       dark ? "text-territory-brand" : "text-white",
     )}>
       achegue-se<span className="ml-0.5 text-territory-sun">.</span>
@@ -136,9 +138,7 @@ function ProfileControl({ mobile = false }: { mobile?: boolean }) {
         mobile ? "rounded-lg border border-white/20 px-2 py-1.5 text-white" : "text-territory-ink",
       )}
     >
-      <span className={cn("flex h-8 w-8 items-center justify-center rounded-full", mobile ? "bg-white text-[#0b5350]" : "bg-[#e5eeee] text-territory-brand")}>
-        <UserRound className="h-4 w-4" aria-hidden="true" />
-      </span>
+      <img src={driverAvatar} alt="" className={cn("h-8 w-8 rounded-full object-cover", mobile ? "ring-1 ring-white/70" : "ring-1 ring-[#d7e5e3]")} />
       <span className={cn("leading-tight", mobile ? "hidden sm:flex sm:flex-col" : "flex flex-col")}>
         <span>Carlos Santos</span>
         <span className={cn("text-[0.65rem] font-normal", mobile ? "text-white/70" : "text-territory-muted")}>Motoboy</span>
@@ -219,11 +219,11 @@ function MobileActionFooter({ primary, secondary, className, size = "default" }:
 
 function Sidebar({ state, onChange }: { state: DriverCenterState; onChange: (next: DriverCenterState) => void }) {
   return (
-    <aside className="hidden w-[clamp(10rem,16.7vw,22.5rem)] shrink-0 flex-col bg-[#0b5350] px-2.5 py-3 text-white md:flex lg:px-3 lg:py-4" aria-label="Navegação da central">
-      <div className="px-3 pb-7 pt-2 lg:px-4 lg:pb-8 lg:pt-3">
-        <Brand />
+    <aside className="hidden w-32 shrink-0 flex-col bg-[#0b5350] px-2.5 py-3 text-white md:flex" aria-label="Navegação da central">
+      <div className="px-1 pb-7 pt-2">
+        <Brand compact />
       </div>
-      <nav className="space-y-1.5">
+      <nav className="space-y-1">
         {stateOptions.map(({ id, label, icon: Icon }) => {
           const active = id === state;
           return (
@@ -232,29 +232,29 @@ function Sidebar({ state, onChange }: { state: DriverCenterState; onChange: (nex
               type="button"
               onClick={() => onChange(id)}
               className={cn(
-                "flex min-h-10 w-full items-center gap-2.5 rounded-lg px-2.5 text-left text-sm font-semibold transition-colors lg:min-h-11 lg:gap-3 lg:px-3 lg:text-base",
+                "flex min-h-8 w-full items-center gap-2 rounded-lg px-2 text-left text-[0.7rem] font-semibold transition-colors",
                 active ? "bg-territory-sun text-territory-ink" : "text-white/85 hover:bg-white/10",
               )}
             >
-              <Icon className="h-5 w-5 shrink-0 lg:h-[1.35rem] lg:w-[1.35rem]" aria-hidden="true" />
+              <Icon className="h-4 w-4 shrink-0" aria-hidden="true" />
               {label}
             </button>
           );
         })}
-        <div className="my-4 h-px bg-white/15" />
+        <div className="my-3 h-px bg-white/15" />
         {secondaryNavItems.map(({ label, icon: Icon }) => (
           <button
             key={label}
             type="button"
             onClick={() => toast.info(`${label} ficará disponível nesta próxima etapa.`)}
-            className="flex min-h-10 w-full items-center gap-2.5 rounded-lg px-2.5 text-left text-sm font-semibold text-white/85 hover:bg-white/10 lg:min-h-11 lg:gap-3 lg:px-3 lg:text-base"
+            className="flex min-h-8 w-full items-center gap-2 rounded-lg px-2 text-left text-[0.7rem] font-semibold text-white/85 hover:bg-white/10"
           >
-            <Icon className="h-5 w-5 shrink-0 lg:h-[1.35rem] lg:w-[1.35rem]" aria-hidden="true" />
+            <Icon className="h-4 w-4 shrink-0" aria-hidden="true" />
             {label}
           </button>
         ))}
       </nav>
-      <div className="mt-auto px-2 pb-1 text-[0.65rem] text-white/65 lg:px-3 lg:text-xs">
+      <div className="mt-auto px-1 pb-1 text-[0.6rem] leading-tight text-white/65">
         <p>Mais entregas</p>
         <p>Mais oportunidades</p>
         <p>para a sua jornada.</p>
@@ -269,19 +269,19 @@ function PageHeader({ state, phase, completionScreen, isOnline, onToggleOnline }
   const subtitle = state === "overview" ? "Ofertas perto de você, na sua área de atuação." : state === "delivery" ? (completionScreen ? "Finalize entregas e consulte os registros da operação." : phase === "offer" ? "Confira os detalhes e solicite a entrega." : "Siga o roteiro e conclua com segurança.") : state === "earnings" ? "Acompanhe suas entregas e valores registrados." : "Defina sua área de atuação e fique online para receber ofertas.";
 
   return (
-    <div className="flex flex-wrap items-start justify-between gap-3 border-b border-territory-border pb-4 lg:gap-4 lg:pb-5">
+    <div className="flex flex-wrap items-start justify-between gap-3 border-b border-territory-border pb-3">
       <div>
-        <h1 className="font-heading text-xl font-bold tracking-[-0.045em] text-territory-ink lg:text-3xl">{title}</h1>
-        <p className="mt-1 text-xs text-territory-muted lg:text-base">{subtitle}</p>
+        <h1 className="font-heading text-xl font-bold tracking-[-0.045em] text-territory-ink">{title}</h1>
+        <p className="mt-0.5 text-xs text-territory-muted">{subtitle}</p>
       </div>
-      <div className="flex items-center gap-2 lg:gap-3">
+      <div className="flex items-center gap-2">
         {state === "overview" ? (
           <>
-            <span className={cn("inline-flex items-center gap-2 rounded-lg px-2.5 py-1.5 text-[0.7rem] font-bold lg:px-3 lg:py-2 lg:text-xs", isOnline ? "bg-emerald-100 text-emerald-900" : "bg-slate-100 text-slate-700")}>
+              <span className={cn("inline-flex items-center gap-2 rounded-lg px-2.5 py-1.5 text-[0.7rem] font-bold", isOnline ? "bg-emerald-100 text-emerald-900" : "bg-slate-100 text-slate-700")}>
               <span className={cn("h-2 w-2 rounded-full", isOnline ? "bg-emerald-600" : "bg-slate-400")} />
               {isOnline ? "Disponível" : "Offline"}
             </span>
-            <Button type="button" variant="outline" onClick={onToggleOnline} className="h-8 border-territory-border bg-territory-surface px-3 text-[0.7rem] font-bold text-territory-ink lg:h-9 lg:text-xs">
+            <Button type="button" variant="outline" onClick={onToggleOnline} className="h-8 border-territory-border bg-territory-surface px-3 text-[0.7rem] font-bold text-territory-ink">
               {isOnline ? "Ficar offline" : "Ficar online"}
             </Button>
           </>
@@ -305,7 +305,7 @@ function PageHeader({ state, phase, completionScreen, isOnline, onToggleOnline }
           </>
         ) : null}
         <div className="hidden items-center gap-3 md:flex">
-          <span className="h-8 w-px bg-territory-border" aria-hidden="true" />
+          <span className="h-7 w-px bg-territory-border" aria-hidden="true" />
           <ProfileControl />
         </div>
       </div>
@@ -317,9 +317,7 @@ function MobileOverviewContent({ isOnline, onToggleOnline, onOpenOffer }: { isOn
   return (
     <div className="flex flex-col gap-3 pb-3">
       <div className="flex items-center gap-3 px-1 pt-1">
-        <span className="flex h-12 w-12 items-center justify-center rounded-full bg-[#dbe9e7] text-territory-brand">
-          <UserRound className="h-6 w-6" aria-hidden="true" />
-        </span>
+        <img src={driverAvatar} alt="" className="h-12 w-12 rounded-full object-cover ring-1 ring-[#d7e5e3]" />
         <div>
           <p className="font-heading text-base font-bold text-territory-ink">Carlos Santos</p>
           <p className="text-xs text-territory-muted">Motoboy · Salvador</p>
@@ -363,7 +361,7 @@ function MobileOverviewContent({ isOnline, onToggleOnline, onOpenOffer }: { isOn
 
       <section className="rounded-xl border border-territory-border bg-territory-surface p-3">
         <div className="flex items-start gap-2.5">
-          <span className="flex h-12 w-12 shrink-0 items-center justify-center rounded-lg bg-amber-100 text-amber-700"><Utensils className="h-6 w-6" aria-hidden="true" /></span>
+          <img src={foodImage} alt="" className="h-12 w-12 shrink-0 rounded-lg object-cover" />
           <div className="min-w-0 flex-1"><p className="truncate text-sm font-bold text-territory-ink">Sabores da Ana</p><p className="text-xs text-territory-muted">Coleta em Santa Cruz</p><p className="text-xs text-territory-muted">Destino: Nordeste de Amaralina</p></div>
         </div>
         <div className="mt-3 flex items-end justify-between border-t border-territory-border pt-2.5">
@@ -651,7 +649,7 @@ function MobileBottomNav({ state, onChange }: { state: DriverCenterState; onChan
   ];
 
   return (
-    <nav className="mt-auto grid grid-cols-4 border-t border-territory-border bg-white px-1 pb-[max(0.35rem,env(safe-area-inset-bottom))] pt-1 md:hidden" aria-label="Navegação mobile">
+    <nav className="fixed inset-x-0 bottom-0 z-30 grid grid-cols-4 border-t border-territory-border bg-white px-1 pb-[max(0.35rem,env(safe-area-inset-bottom))] pt-1 md:hidden" aria-label="Navegação mobile">
       {items.map(({ label, icon: Icon, target }) => {
         const active = (target ?? "overview") === state && target !== undefined;
         return <button key={label} type="button" onClick={() => target ? onChange(target) : toast.info("O perfil ficará disponível nesta próxima etapa.")} className={cn("flex min-h-12 flex-col items-center justify-center gap-0.5 text-[0.65rem] font-semibold", active ? "text-territory-brand" : "text-territory-muted")}><Icon className="h-5 w-5" aria-hidden="true" />{label}</button>;
@@ -975,7 +973,7 @@ function DeliveryAreaMap() {
 }
 
 function AvailabilityContent({ isOnline, onToggleOnline }: { isOnline: boolean; onToggleOnline: () => void }) {
-  return <div className="flex flex-col gap-3 md:min-h-0 md:flex-1 lg:gap-4"><div className="grid min-h-0 gap-3 md:flex-1 md:grid-cols-2"><section className="flex flex-col rounded-xl border border-territory-border bg-territory-surface p-3 lg:p-4"><div className="flex items-start gap-2.5 border-b border-territory-border pb-3 lg:gap-3"><span className="flex h-9 w-9 items-center justify-center rounded-lg bg-emerald-50 lg:h-10 lg:w-10"><MapPin className="h-4 w-4 text-emerald-700 lg:h-5 lg:w-5" aria-hidden="true" /></span><div><h2 className="font-heading text-sm font-bold lg:text-base">Área de atuação</h2><p className="text-[0.7rem] text-territory-muted lg:text-xs">Escolha onde deseja receber ofertas.</p></div></div><DeliveryAreaMap /><div className="mt-3 space-y-2 text-xs lg:mt-4 lg:space-y-3 lg:text-sm">{DELIVERY_AREAS.map((area) => <div key={area} className="flex items-center gap-2.5 lg:gap-3"><CheckCircle2 className="h-4 w-4 text-emerald-600 lg:h-5 lg:w-5" aria-hidden="true" /><span>{area}</span></div>)}</div><div className="mt-auto flex items-center justify-between border-t border-territory-border pt-3 text-[0.7rem] lg:mt-auto lg:pt-4 lg:text-xs"><span className="flex items-center gap-2 text-territory-muted"><MapPin className="h-3.5 w-3.5 lg:h-4 lg:w-4" aria-hidden="true" />Salvador · Bahia</span><button type="button" onClick={() => toast.info("O gerenciamento de áreas ficará disponível quando conectado.")} className="font-semibold text-blue-700">Gerenciar áreas <ArrowRight className="inline h-3 w-3" aria-hidden="true" /></button></div></section><section className="flex flex-col rounded-xl border border-territory-border bg-territory-surface p-3 lg:p-4"><div className="flex items-start gap-2.5 border-b border-territory-border pb-3 lg:gap-3"><span className="flex h-9 w-9 items-center justify-center rounded-lg bg-slate-100 lg:h-10 lg:w-10"><UserRound className="h-4 w-4 text-territory-brand lg:h-5 lg:w-5" aria-hidden="true" /></span><div><h2 className="font-heading text-sm font-bold lg:text-base">Perfil operacional</h2><p className="text-[0.7rem] text-territory-muted lg:text-xs">Carlos Santos · Motoboy</p></div></div><div className="mt-3 flex items-center gap-2 text-[0.7rem] text-emerald-700 lg:mt-4 lg:text-xs"><CheckCircle2 className="h-3.5 w-3.5 lg:h-4 lg:w-4" aria-hidden="true" />Entregas habilitadas</div><div className="mt-4 flex items-center gap-3 border-t border-territory-border pt-3 lg:mt-5 lg:pt-4"><Bike className="h-7 w-7 text-territory-brand lg:h-8 lg:w-8" aria-hidden="true" /><div><p className="text-xs font-bold lg:text-sm">Motocicleta</p><p className="text-[0.7rem] text-territory-muted lg:text-xs">Honda CG 160 · Placa ABC1D23</p></div></div><button type="button" onClick={() => toast.info("O cadastro ficará disponível quando conectado.")} className="mt-auto pt-4 text-left text-[0.7rem] font-semibold text-blue-700 lg:text-xs">Ver cadastro e veículo <ArrowRight className="inline h-3 w-3" aria-hidden="true" /></button></section></div><section className="flex flex-wrap items-center justify-between gap-3 rounded-xl border border-amber-200 bg-amber-50 px-3 py-2.5 lg:px-4 lg:py-3"><div className="flex items-start gap-2.5 lg:gap-3"><MapPin className="mt-0.5 h-4 w-4 text-amber-700 lg:h-5 lg:w-5" aria-hidden="true" /><div><p className="text-xs font-bold text-amber-950 lg:text-sm">Localização desativada</p><p className="text-[0.7rem] text-amber-900/75 lg:text-xs">Ative a localização para receber ofertas próximas.</p></div></div><Button type="button" onClick={() => { onToggleOnline(); toast.success("Localização ativada na demonstração."); }} className="h-8 bg-territory-sun px-3 text-[0.7rem] font-bold text-territory-ink hover:bg-territory-sun/85 lg:h-9 lg:text-xs">Ativar localização</Button></section><InfoNotice icon={CircleOff}>{isOnline ? "Você está disponível para novas ofertas." : "O botão ficar online será liberado após ativar a localização."}</InfoNotice></div>;
+  return <div className="flex flex-col gap-3 lg:gap-4"><div className="grid gap-3 md:grid-cols-2"><section className="flex flex-col rounded-xl border border-territory-border bg-territory-surface p-3 lg:p-4"><div className="flex items-start gap-2.5 border-b border-territory-border pb-3 lg:gap-3"><span className="flex h-9 w-9 items-center justify-center rounded-lg bg-emerald-50 lg:h-10 lg:w-10"><MapPin className="h-4 w-4 text-emerald-700 lg:h-5 lg:w-5" aria-hidden="true" /></span><div><h2 className="font-heading text-sm font-bold lg:text-base">Área de atuação</h2><p className="text-[0.7rem] text-territory-muted lg:text-xs">Escolha onde deseja receber ofertas.</p></div></div><DeliveryAreaMap /><div className="mt-3 space-y-2 text-xs lg:mt-4 lg:space-y-3 lg:text-sm">{DELIVERY_AREAS.map((area) => <div key={area} className="flex items-center gap-2.5 lg:gap-3"><CheckCircle2 className="h-4 w-4 text-emerald-600 lg:h-5 lg:w-5" aria-hidden="true" /><span>{area}</span></div>)}</div><div className="mt-auto flex items-center justify-between border-t border-territory-border pt-3 text-[0.7rem] lg:mt-auto lg:pt-4 lg:text-xs"><span className="flex items-center gap-2 text-territory-muted"><MapPin className="h-3.5 w-3.5 lg:h-4 lg:w-4" aria-hidden="true" />Salvador · Bahia</span><button type="button" onClick={() => toast.info("O gerenciamento de áreas ficará disponível quando conectado.")} className="font-semibold text-blue-700">Gerenciar áreas <ArrowRight className="inline h-3 w-3" aria-hidden="true" /></button></div></section><section className="flex flex-col rounded-xl border border-territory-border bg-territory-surface p-3 lg:p-4"><div className="flex items-start gap-2.5 border-b border-territory-border pb-3 lg:gap-3"><span className="flex h-9 w-9 items-center justify-center rounded-lg bg-slate-100 lg:h-10 lg:w-10"><UserRound className="h-4 w-4 text-territory-brand lg:h-5 lg:w-5" aria-hidden="true" /></span><div><h2 className="font-heading text-sm font-bold lg:text-base">Perfil operacional</h2><p className="text-[0.7rem] text-territory-muted lg:text-xs">Carlos Santos · Motoboy</p></div></div><div className="mt-3 flex items-center gap-2 text-[0.7rem] text-emerald-700 lg:mt-4 lg:text-xs"><CheckCircle2 className="h-3.5 w-3.5 lg:h-4 lg:w-4" aria-hidden="true" />Entregas habilitadas</div><div className="mt-4 flex items-center gap-3 border-t border-territory-border pt-3 lg:mt-5 lg:pt-4"><Bike className="h-7 w-7 text-territory-brand lg:h-8 lg:w-8" aria-hidden="true" /><div><p className="text-xs font-bold lg:text-sm">Motocicleta</p><p className="text-[0.7rem] text-territory-muted lg:text-xs">Honda CG 160 · Placa ABC1D23</p></div></div><button type="button" onClick={() => toast.info("O cadastro ficará disponível quando conectado.")} className="mt-auto pt-4 text-left text-[0.7rem] font-semibold text-blue-700 lg:text-xs">Ver cadastro e veículo <ArrowRight className="inline h-3 w-3" aria-hidden="true" /></button></section></div><section className="flex flex-wrap items-center justify-between gap-3 rounded-xl border border-amber-200 bg-amber-50 px-3 py-2.5 lg:px-4 lg:py-3"><div className="flex items-start gap-2.5 lg:gap-3"><MapPin className="mt-0.5 h-4 w-4 text-amber-700 lg:h-5 lg:w-5" aria-hidden="true" /><div><p className="text-xs font-bold text-amber-950 lg:text-sm">Localização desativada</p><p className="text-[0.7rem] text-amber-900/75 lg:text-xs">Ative a localização para receber ofertas próximas.</p></div></div><Button type="button" onClick={() => { onToggleOnline(); toast.success("Localização ativada na demonstração."); }} className="h-8 bg-territory-sun px-3 text-[0.7rem] font-bold text-territory-ink hover:bg-territory-sun/85 lg:h-9 lg:text-xs">Ativar localização</Button></section><InfoNotice icon={CircleOff}>{isOnline ? "Você está disponível para novas ofertas." : "O botão ficar online será liberado após ativar a localização."}</InfoNotice></div>;
 }
 
 function StateContent({ state, phase, completionScreen, isOnline, onToggleOnline, onOpenOffer, onConfirmDelivery, onConfirmProof, onRegisterProblem, onRetryCompletion, onBackToDelivery, onOpenProof }: { state: DriverCenterState; phase: MobileDeliveryPhase; completionScreen?: CompletionScreen | null; isOnline: boolean; onToggleOnline: () => void; onOpenOffer: () => void; onConfirmDelivery?: () => void; onConfirmProof: (proof: DeliveryProof) => void; onRegisterProblem: (reason: string, details: string) => void; onRetryCompletion: () => void; onBackToDelivery: () => void; onOpenProof: () => void }) {
@@ -984,7 +982,7 @@ function StateContent({ state, phase, completionScreen, isOnline, onToggleOnline
       "flex min-h-0 flex-col",
       state === "availability"
         ? "md:flex-none"
-        : "md:h-[clamp(420px,calc((100vw-16rem)/1.72),calc(100dvh-11rem))] md:flex-none",
+        : "md:h-[clamp(26rem,50vh,calc(100dvh-11rem))] md:flex-none",
     )}>
       {state === "overview" ? <><div className="md:hidden"><MobileOverviewContent isOnline={isOnline} onToggleOnline={onToggleOnline} onOpenOffer={onOpenOffer} /></div><div className="hidden min-h-0 md:flex md:flex-1"><OverviewContent /></div></> : null}
       {state === "delivery" ? <>{completionScreen ? <><div className="md:hidden"><MobileCompletionContent screen={completionScreen} onConfirmProof={onConfirmProof} onRegisterProblem={onRegisterProblem} onRetry={onRetryCompletion} onBack={onBackToDelivery} onOpenProof={onOpenProof} /></div><div className="hidden min-h-0 md:flex md:flex-1"><DesktopCompletionContent screen={completionScreen} onConfirmProof={onConfirmProof} onRegisterProblem={onRegisterProblem} onRetry={onRetryCompletion} onBack={onBackToDelivery} onOpenProof={onOpenProof} /></div></> : <><div className="md:hidden"><MobileDeliveryContent phase={phase} onConfirmDelivery={onConfirmDelivery} /></div><div className="hidden min-h-0 md:flex md:flex-1"><DeliveryContent phase={phase} onConfirmDelivery={onConfirmDelivery} /></div></>}</> : null}
@@ -1084,12 +1082,12 @@ export default function CentralMotoboyConceptMockPage() {
   return (
     <>
       <Helmet><title>Central do entregador | achegue-se.</title><meta name="robots" content="noindex, nofollow" /></Helmet>
-      <div className="flex h-[100dvh] min-h-0 overflow-hidden bg-[#fbfaf7] text-territory-ink">
+      <div className="driver-center-concept-page flex h-[100dvh] min-h-0 overflow-hidden bg-[#fbfaf7] text-territory-ink">
         <Sidebar state={state} onChange={changeState} />
         <div className="flex min-h-0 min-w-0 flex-1 flex-col">
           <MobileTopBar state={state} phase={phase} completionScreen={completionScreen} />
             <main className="min-h-0 min-w-0 flex-1 overflow-hidden md:overflow-y-auto">
-            <div className="mx-auto flex min-h-full w-full flex-col gap-3 p-3 md:gap-3 md:p-4 xl:gap-4 xl:p-8">
+            <div className="mx-0 flex min-h-full w-full flex-col gap-3 p-3 md:max-w-[38rem] md:gap-3 md:p-4 md:pb-0">
               <div className="hidden md:block">
                 <PageHeader state={state} phase={phase} completionScreen={completionScreen} isOnline={isOnline} onToggleOnline={toggleOnline} />
               </div>

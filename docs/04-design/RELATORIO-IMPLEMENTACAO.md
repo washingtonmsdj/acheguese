@@ -621,3 +621,25 @@ A prancha 117 também está coberta pelos estados demonstrativos de visitante, v
 
 - Branch: `codex/reformulacao-entrada-comunidade`.
 - Commit restrito às superfícies de entrega, estilos scoped e documentações deste concept; alterações staged preexistentes permanecem fora do commit.
+
+## 20/09/2026 · Central do entregador — pranchas 035, 036 e 037
+
+### Auditoria e ajuste
+
+- Comparei `CentralMotoboyConceptMockPage` com as pranchas mobile de disponibilidade, oferta, coleta, entrega, comprovante, problema, offline e histórico, além das quatro composições desktop da prancha 037.
+- A diferença visual mais evidente era a densidade mobile: avatar e foto da oferta eram representados por ícones, e os defaults globais de parágrafo adicionavam altura sem fazer parte do concept. O mock agora usa os assets existentes de Carlos e da oferta, com reset tipográfico restrito ao `.driver-center-concept-page`.
+- A escala desktop estava calculada pela largura total do navegador. Ajustei somente o shell do concept para rail de 128 px e conteúdo máximo de 608 px, mantendo 576 px úteis após padding; isso reproduz o painel compacto da prancha e preserva o espaço externo do navegador sem esticar cards e tipografia.
+- A navegação inferior mobile passou a permanecer fixa no rodapé do viewport. O conteúdo continua em fluxo e as ações finais não ficam sob a barra; o padding inferior desktop também foi normalizado para remover o overflow residual de 12 px.
+- Mantive a separação de responsabilidades: disponibilidade, localização, ganhos, contatos e mapas continuam ilustrativos/desativados quando não existe contrato real; nenhum dado demonstrativo foi promovido à produção.
+
+### Validação e evidências
+
+- Navegador interno mantido aberto nas rotas de Central mobile e desktop para acompanhamento em tempo real.
+- Mobile `389 × 867` CSS px: visão geral, nova oferta, coleta, entrega, comprovante, problema, offline e histórico conferidos; todos sem overflow de documento ou `main`. A navegação fixa ocupa `y=808–867`; CTAs finais ficaram dentro do frame.
+- Desktop `1440 × 867` CSS px: visão geral, entrega e disponibilidade conferidas no shell `128 + 608 px`, com `main.scrollHeight === clientHeight` e sem overflow horizontal/vertical.
+- `npm run typecheck:app`, ESLint direcionado ao componente, `git diff --check`.
+
+### Git
+
+- Branch: `codex/reformulacao-entrada-comunidade`.
+- Commit restrito à Central, ao estilo scoped e às documentações do concept; alterações staged preexistentes permanecem fora do commit.

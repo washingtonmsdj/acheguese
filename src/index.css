@@ -3050,3 +3050,10 @@
 .delivery-modes-concept-page h3 {
   margin-bottom: 0;
 }
+
+.driver-center-concept-page p,
+.driver-center-concept-page h1,
+.driver-center-concept-page h2,
+.driver-center-concept-page h3 {
+  margin-bottom: 0;
+}
