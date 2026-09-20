@@ -18,6 +18,8 @@ export default function BusinessOverviewPage() {
     premiumUrl,
   } = useBusinessDashboardContext();
   const showAnalytics = isLaunchSurfaceEnabled("publicAnalytics");
+  const showBilling = isLaunchSurfaceEnabled("billing");
+  const showPremiumManagement = showBilling || Boolean(premiumUrl);
 
   return (
     <div className="space-y-4">
@@ -65,24 +67,28 @@ export default function BusinessOverviewPage() {
               </Button>
             </Link>
           )}
-          <Link to={businessManagementRoutes.planos(businessId)}>
-            <Button variant="outline" className="gap-2">
-              <CreditCard className="h-4 w-4" />
-              Planos
-            </Button>
-          </Link>
+          {showBilling && (
+            <Link to={businessManagementRoutes.planos(businessId)}>
+              <Button variant="outline" className="gap-2">
+                <CreditCard className="h-4 w-4" />
+                Planos
+              </Button>
+            </Link>
+          )}
           <Link to={businessManagementRoutes.anuncios(businessId)}>
             <Button variant="outline" className="gap-2">
               <Megaphone className="h-4 w-4" />
               Anuncios
             </Button>
           </Link>
-          <Link to={businessManagementRoutes.linkPremium(businessId)}>
-            <Button variant="outline" className="gap-2">
-              <LinkIcon className="h-4 w-4" />
-              Link premium
-            </Button>
-          </Link>
+          {showPremiumManagement && (
+            <Link to={businessManagementRoutes.linkPremium(businessId)}>
+              <Button variant="outline" className="gap-2">
+                <LinkIcon className="h-4 w-4" />
+                Link premium
+              </Button>
+            </Link>
+          )}
           {showAnalytics && (
             <Link to={businessManagementRoutes.analytics(businessId)}>
               <Button variant="outline" className="gap-2">
@@ -103,10 +109,12 @@ export default function BusinessOverviewPage() {
             <Badge variant="outline">Publico</Badge>
             <span className="text-muted-foreground">{publicUrl || "Nao disponivel"}</span>
           </div>
-          <div className="flex items-center gap-2">
-            <Badge variant="outline">Premium</Badge>
-            <span className="text-muted-foreground">{premiumUrl || "Nao disponivel"}</span>
-          </div>
+          {premiumUrl && (
+            <div className="flex items-center gap-2">
+              <Badge variant="outline">Premium</Badge>
+              <span className="text-muted-foreground">{premiumUrl}</span>
+            </div>
+          )}
         </CardContent>
       </Card>
     </div>
