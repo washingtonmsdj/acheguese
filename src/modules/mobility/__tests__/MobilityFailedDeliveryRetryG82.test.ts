@@ -7,7 +7,7 @@ function readProjectFile(relativePath: string): string {
 }
 
 const migration = readProjectFile(
-  "supabase/migrations/20260911234000_reopen_failed_delivery_same_custodian_g82.sql",
+  "docs/09-reference/migrations-pending/20260911234000_reopen_failed_delivery_same_custodian_g82.sql",
 );
 const metadataTypes = readProjectFile(
   "src/core/mobility/types/FailedDeliveryMetadata.ts",
