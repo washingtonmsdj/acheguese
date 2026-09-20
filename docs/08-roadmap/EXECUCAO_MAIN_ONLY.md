@@ -34,7 +34,7 @@ O primeiro release continua territorial. **Cobertura uniforme dos 170 bairros de
 6. **Fechar segurança do que será exposto.** Priorizar Auth/conta, Profile, território, Comunidade, Business/Gastronomy/Services, Classificados, Busca/Mapa e superfícies administrativas necessárias. Hardening de módulos pausados pode continuar durante/depois do MVP, exceto quando compartilha uma boundary usada pelo núcleo.
 7. **Certificar o fluxo real das superfícies públicas.** Para cada item do escopo: rota/owner canônico, contrato DB/RPC, autorização positiva e negativa, loading/empty/error/auth, fluxo principal com dados reais, smoke mobile e E2E sem placeholder/paused contado como sucesso.
 8. **Provar deploy do mesmo SHA.** O SHA aprovado deve produzir build real no provider e smoke no domínio público, incluindo login/cadastro, troca/resolução territorial, Home, navegação do núcleo, mutações principais e logout.
-9. **Configuração legal/operacional mínima.** Produção deve ter origem pública, contato e DPO configurados; políticas e textos não podem apontar para placeholders.
+9. **Configuração legal/operacional mínima.** O verifier de deploy já exige origem pública HTTPS, contato e DPO válidos e foro configurado; políticas/textos falham fechado quando identidade pública não existe. O blocker restante é o provider fornecer valores válidos no build exact-SHA.
 10. **Sem dados conceituais em produção.** Mocks visuais podem existir apenas sob gate de desenvolvimento. O território inicial precisa renderizar dado real ou empty state explícito, nunca atividade inventada.
 
 ### Correções de gate identificadas neste corte
@@ -71,6 +71,7 @@ O primeiro release continua territorial. **Cobertura uniforme dos 170 bairros de
 - [~] O `Heavy Pre-Merge Certification` self-hosted existente foi ampliado para executar security/lint/typecheck/arquitetura/SSOT/migrations remotas/Vitest antes dos E2E/build no mesmo SHA. Isso cria um fallback executável no runner autorizado sem substituir os checks hosted; falta o runner `acheguese-heavy-windows` voltar a ficar online e produzir a prova.
 - [x] Canal DPO público revalidado: `submit-dpo-request` está ACTIVE, com origin/rate-limit/honeypot/Turnstile fail-closed; testes DPO foram realinhados às migrations canônicas e `.env.production` agora declara a `VITE_TURNSTILE_SITE_KEY` exigida pelo gate. O `admin-privacy-rpc` remoto ainda está em v3 sem o fallback de paginação da `main`, pendente do rollout self-hosted autorizado.
 - [x] O publisher de tipos Supabase não escreve mais diretamente na `main`: `supabase-types-sync.yml` usa a branch `automation/supabase-types-sync`, cria/atualiza PR, dispara Security/SSOT gates e o ratchet `supabase-types-sync-pr-authority.test.ts` impede regressão.
+- [x] O gate de deploy legal foi endurecido: `VITE_LEGAL_FORUM` tornou-se obrigatório, `VITE_CONTACT_EMAIL`/`VITE_DPO_EMAIL` precisam ter formato válido e `VITE_PUBLIC_SITE_URL` precisa usar HTTPS; o ratchet DPO protege esse contrato.
 - [ ] A prova de build/deploy/smoke do mesmo SHA continua blocker real de release.
 
 
