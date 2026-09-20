@@ -103,6 +103,54 @@ A limpeza física deve ser executada somente com uma autoridade GitHub que tenha
 - portanto essa branch deixa de ser candidata a merge. A exclusão física continua pendente de autoridade delete-ref; não mover/reforçar a ref artificialmente apenas para mascarar a limpeza.
 - `codex/identidade-visual-achegue-se` continua preservada: é uma branch muito antiga/divergente com um grande lote conceitual exclusivo; não deve ser misturada ao corte urgente do MVP sem auditoria própria pós-MVP.
 
+## Reauditoria das branches sem PR — 2026-09-20
+
+Cruzamento do inventário remoto atual com os PRs fechados:
+
+- **153 branches remotas** no total;
+- `main` + `work/mvp-urgent`: 2 branches deliberadamente preservadas;
+- **76 branches** restantes têm pelo menos um PR já mergeado;
+- **54 branches** têm somente PR(s) fechado(s) sem merge;
+- **21 branches** não possuem PR associado conhecido.
+
+As **21 branches sem PR** ficam classificadas assim:
+
+### Contidas na `main` e seguras para remoção física
+
+- `cleanup/maps-governance-docs-20260918`;
+- `fix/mvp-jobs-business-canonical-route`;
+- `fix/mvp-paused-cost-backend-gates-20260919`.
+
+Essas três já haviam sido provadas por compare com `ahead_by=0`.
+
+### Superseded / não reintegrar
+
+- `agent/ci-vercel-remote-migration-drift-gate`: substituída pelos validadores canônicos atuais e pela convergência remota fechada no PR #231;
+- `agent/probe-private-classified-command-grants-final`;
+- `agent/probe-private-classified-command-grants-test`;
+- `agent/probe-private-classified-command-grants-test-v2`: probes temporários; a migration final `20260820025810_restrict_private_classified_command_grants.sql` já está na `main`;
+- `agent/security-analytics-authority`: a migration de authority já está byte a byte na `main` e a reconciliação posterior entrou pelo PR #35;
+- `agent/security-audit-ip-normalization`: precursor substituído pela normalização v2 mergeada no PR #38;
+- `agent/security-auth-session-revocation`: o contrato útil de revogação foi absorvido pelo `session-rpc` atual e pelo ratchet `session-rpc-auth-authority-security.test.ts`, que cobre Supabase Auth e adiciona requirements posteriores;
+- `agent/security-header-drift-guard`: contrato antigo de paths; a `main` usa os owners canônicos `src/shared/config/security.config.ts` e `tools/security/security-header-drift-contract.json`;
+- `agent/security-nominatim-runtime-parity`: source do Edge é idêntico ao atual na `main`;
+- `agent/security-push-config-runtime-parity`: a `main` contém uma versão posterior do Edge/contrato;
+- `agent/web-seo-sitemap-build`: substituída pela decisão D-017 e pelo pipeline canônico `generate:sitemap -> validate-production-sitemap -> build -> validate dist`;
+- `codex/ci-heavy-certification`: substituída pelo workflow corrente `certify-heavy-pr-auto.yml`, exact-SHA e com gates mais amplos;
+- `security/lgpd-purge-classification-20260919`: substituída pela branch rebased mergeada; o `LGPD_PURGE_MATRIX.json` atual é byte a byte o da versão rebased.
+
+Essas 13 branches **não são fonte de trabalho pendente**. Devem ser apagadas somente por delete-ref real quando a autoridade estiver disponível; não fazer merge nem mover ref para `main`.
+
+### Quarentena / preservar até auditoria específica
+
+- `codex/reformulacao-entrada-comunidade`: trabalho recente e amplo de design/runtime; não misturar com limpeza de branches nem com o corte urgente sem revisão própria;
+- `module/mobilidade`;
+- `module/mobilidade-g62-work`;
+- `tmp-probe-unused`;
+- `tmp-should-not-create`.
+
+As quatro últimas carregam deltas históricos grandes de Mobilidade. Como Mobilidade está fora do primeiro release, **não devem ser mergeadas na `main` do MVP**. Permanecem apenas como material de auditoria pós-MVP até provar supersessão ou selecionar commits específicos.
+
 ## Próximo passo
 
 Executar primeiro o dry-run com credencial administrativa, conferir que a contagem continua coerente e somente então usar `--apply`.
