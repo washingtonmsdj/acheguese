@@ -45,4 +45,10 @@ Branch analisada: `codex/reformulacao-entrada-comunidade`. Data: 19/09/2026.
 - O editor de endereço permanece acionado somente pela escolha explícita e mantém o CTA fixo, o estado vazio real e as regras de autenticação já existentes.
 - Conferi o estado aberto no navegador interno após HMR; nenhuma residência demonstrativa foi inserida na sessão.
 
+## Quinta rodada — hierarquia da revisão
+
+- Os títulos dos cartões de entrega, pagamento e itens da revisão mobile passaram para 14 px/700, alinhados ao papel de rótulo da SSOT.
+- As descrições, destinos e metadados continuam em 12 px; o total permanece em 16 px/700. O ajuste não alterou os gaps nem a altura do CTA fixo.
+- Comparei novamente a etapa `Revisar pedido` da prancha 024 no mobile e a composição desktop; o estado de CTA desabilitado continua refletindo a sessão de desenvolvimento sem autorização/perfil operacional completo.
+
 Registrar branch/commit analisado, data, limitações e funcionalidades mantidas desativadas.

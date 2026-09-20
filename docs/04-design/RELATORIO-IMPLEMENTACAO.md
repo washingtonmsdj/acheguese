@@ -395,3 +395,9 @@ A prancha 117 também está coberta pelos estados demonstrativos de visitante, v
 - Ao abrir `Outro endereço`, o cartão vazio agora usa o rótulo contextual da opção selecionada. Isso elimina a contradição visual entre a aba ativa e o título `Endereço do perfil`.
 - O ajuste preserva o contrato real: o editor continua sendo aberto por ação explícita, o CTA fixo permanece disponível e nenhum endereço ilustrativo é criado.
 - A conferência foi feita no navegador interno após HMR, com a aba mantida aberta no estado de edição para inspeção visual.
+
+### Quinta rodada — hierarquia dos cartões de revisão
+
+- Recomparei `Revisar pedido` com a prancha mobile 024. Os títulos dos cartões de entrega, pagamento e itens agora usam 14 px/700; descrições e metadados permanecem em 12 px, e totais em 16 px/700.
+- O refinamento preserva os gaps, o CTA fixo e as regras de habilitação. A aparência desabilitada do CTA continua sendo consequência da sessão de desenvolvimento, não de uma alteração visual que mascare autorização incompleta.
+- A etapa foi conferida no mobile e no desktop temporário; o viewport foi restaurado e a aba ficou aberta na revisão mobile.

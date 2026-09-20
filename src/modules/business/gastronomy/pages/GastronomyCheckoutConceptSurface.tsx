@@ -614,14 +614,14 @@ function MobileAddressStage({
         })}
       </div>
       <div className="flex min-h-12 items-center justify-between gap-3 rounded-lg border border-territory-border bg-territory-surface px-3 text-type-caption">
-        <span className="flex min-w-0 items-center gap-2 font-semibold text-territory-ink">
+        <span className="flex min-w-0 items-center gap-2 text-type-caption text-territory-ink">
           <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-territory-raised">
             <UserRound
               className="h-4 w-4 text-territory-brand"
               aria-hidden="true"
             />
           </span>
-          {profileName}{" "}
+          <span className="text-type-label font-semibold">{profileName}</span>{" "}
           <span className="font-normal text-territory-muted">· {profileType}</span>
         </span>
         <ChevronRight
@@ -897,10 +897,10 @@ function MobileReviewStage({
             aria-hidden="true"
           />
           <span className="min-w-0 flex-1 text-type-caption">
-            <strong className="block">
+            <strong className="block text-type-label">
               {deliveryLabel(mode, deliveryOption)}
             </strong>
-            <span className="mt-0.5 block text-territory-muted">
+            <span className="mt-0.5 block text-type-caption text-territory-muted">
               {recipientName || "Cliente"}
               {destination ? (
                 <>
@@ -936,10 +936,10 @@ function MobileReviewStage({
             aria-hidden="true"
           />
           <span className="min-w-0 flex-1 text-type-caption">
-            <strong className="block">
+            <strong className="block text-type-label">
               {paymentLabel}
             </strong>
-            <span className="mt-0.5 block text-territory-muted">
+            <span className="mt-0.5 block text-type-caption text-territory-muted">
               Produtos pagos diretamente à loja
             </span>
           </span>
@@ -982,7 +982,7 @@ function MobileReviewStage({
                 className="h-12 w-12 shrink-0 rounded-lg object-cover"
               />
               <span className="min-w-0 flex-1 text-type-caption">
-                <strong className="block truncate">
+                <strong className="block truncate text-type-label">
                   {item.quantity} × {item.name}
                 </strong>
                 <span className="block text-type-caption text-territory-muted">
