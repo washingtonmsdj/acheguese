@@ -8,7 +8,7 @@ function readProjectFile(path: string): string {
 
 describe('Business spatial read-model ownership', () => {
   const migration = readProjectFile(
-    'supabase/migrations/20260913010000_retarget_business_spatial_search_read_model_g154.sql',
+    'supabase/migrations/20260920094744_retarget_business_spatial_search_read_model_g154.sql',
   );
 
   it('routes every Business spatial RPC through public_business_search', () => {
