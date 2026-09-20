@@ -155,11 +155,13 @@ Chegada: menu admin (visível só para roles apropriados).
 | Sobre                       | `/about`              |
 | Contato                     | `/contato`            |
 | Status público              | `/status`             |
-| Preços                      | `/pricing`, `/planos` |
+| Billing / preços (pós-MVP) | `/planos` — gated por `billing=false`; `/pricing` não possui rota runtime |
 | Educação (landing)          | `/educacao`           |
 | Gamificação                 | `/gamificacao`        |
 | AI: Virtual try-on          | `/ai/virtual-try-on`  |
 | Launch paused (kill-switch) | `LaunchPausedPage`    |
+
+> Billing permanece preservado como fundação pós-MVP, mas preço, checkout e gestão de assinatura não fazem parte do lançamento atual enquanto `PUBLIC_LAUNCH_SURFACES.billing=false`.
 
 ---
 

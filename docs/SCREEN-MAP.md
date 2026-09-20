@@ -4,7 +4,7 @@ Domain status: Feed = STATUS: FROZEN.
 
 > Mapa único de telas/rotas. Nomenclatura canônica: `Territory*Page`. Nomes antigos permanecem como aliases (ver [`06-navigation/NAVIGATION-MAPPING.md`](./06-navigation/NAVIGATION-MAPPING.md)).
 >
-> Status: ✅ ativo · 🟡 parcial · 🗄 legado (a remover) · ↪ redireciona
+> Status: ✅ ativo · 🟡 parcial · ⏸ pausado pelo launch scope · 🗄 legado (a remover) · ↪ redireciona
 
 ## Núcleo Territory (SSOT)
 
@@ -86,7 +86,9 @@ Domain status: Feed = STATUS: FROZEN.
 | Rota                                                                                      | Objetivo             | Status                             |
 | ----------------------------------------------------------------------------------------- | -------------------- | ---------------------------------- |
 | `/login`, `/cadastro`, `/cadastro/confirmacao`, `/reset-password`, `/aceitar-termos`      | Auth                 | ✅                                 |
-| `/about`, `/contato`, `/status`, `/pricing`, `/planos`, `/dpo`, `/privacidade`, `/termos` | Institucional        | ✅                                 |
+| `/about`, `/contato`, `/status`, `/dpo`, `/privacidade`, `/termos`                       | Institucional        | ✅                                 |
+| `/planos`, `/checkout/*`, `/settings/subscription`                                             | Billing/assinaturas  | ⏸ MVP: `billing=false`            |
+| `/pricing`                                                                                         | alias documental antigo; sem rota runtime canônica | 🗄 |
 | `/educacao`                                                                               | Landing Educação     | ✅                                 |
 | `/gamificacao`                                                                            | Gamificação          | 🟡 sem entrada estável na UI       |
 | `/ai/virtual-try-on`                                                                      | AI feature           | 🟡 sem entrada visível             |
