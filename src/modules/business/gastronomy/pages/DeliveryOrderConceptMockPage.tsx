@@ -111,20 +111,24 @@ function ReadyBanner() {
 
 function MobileActionFooter({ state }: { state: DeliveryState }) {
   const footer = getFooterModel(state);
+  const compact = state === "unavailable";
 
   return (
-    <div className="sticky bottom-0 z-10 mt-auto shrink-0 bg-territory-surface/95 pb-[env(safe-area-inset-bottom)] pt-2 backdrop-blur-sm">
-      <div className="flex flex-col gap-2">
+    <div className={cn(
+      "shrink-0 bg-territory-surface/95 pb-[env(safe-area-inset-bottom)] pt-2",
+      compact ? "mt-1" : "mt-2",
+    )}>
+      <div className={cn("flex flex-col", compact ? "gap-1.5" : "gap-2")}>
         {footer.heading ? <p className="text-sm font-bold text-territory-ink">{footer.heading}</p> : null}
         {footer.actions.map((action) => (
-          <FooterActionButton key={action.label} action={action} />
+          <FooterActionButton key={action.label} action={action} compact={compact} />
         ))}
       </div>
     </div>
   );
 }
 
-function FooterActionButton({ action }: { action: FooterAction }) {
+function FooterActionButton({ action, compact = false }: { action: FooterAction; compact?: boolean }) {
   const Icon = action.icon;
 
   if (action.style === "help") {
@@ -132,7 +136,10 @@ function FooterActionButton({ action }: { action: FooterAction }) {
       <button
         type="button"
         onClick={action.onClick}
-        className="flex min-h-9 w-full items-center justify-center gap-2 text-sm font-semibold text-territory-ink"
+        className={cn(
+          "flex w-full items-center justify-center gap-2 text-sm font-semibold text-territory-ink",
+          compact ? "min-h-8" : "min-h-9",
+        )}
       >
         <Icon className="h-5 w-5" aria-hidden="true" />
         {action.label}
@@ -153,8 +160,9 @@ function FooterActionButton({ action }: { action: FooterAction }) {
       variant={isOutline ? "outline" : "default"}
       onClick={action.onClick}
       className={cn(
-        "min-h-10 w-full rounded-xl text-sm font-bold",
-        action.style === "brand" || action.style === "sun" ? "min-h-11" : null,
+        "w-full rounded-xl text-sm font-bold",
+        compact ? "min-h-9" : "min-h-10",
+        action.style === "brand" || action.style === "sun" ? (compact ? "min-h-10" : "min-h-11") : null,
         colorClass,
       )}
     >
@@ -166,23 +174,32 @@ function FooterActionButton({ action }: { action: FooterAction }) {
 
 function DeliveryCard({ icon: Icon, title, children }: { icon: LucideIcon; title: string; children: ReactNode }) {
   return (
-    <section className="rounded-xl border border-territory-border bg-territory-surface p-3">
-      <h2 className="flex items-center gap-3 border-b border-territory-border pb-3 font-heading text-lg font-bold tracking-[-0.035em] text-territory-ink">
-        <Icon className="h-8 w-8 shrink-0 text-territory-brand" aria-hidden="true" />
+    <section className="rounded-xl border border-territory-border bg-territory-surface p-2.5">
+      <h2 className="flex items-center gap-2.5 border-b border-territory-border pb-2 font-heading text-lg font-bold tracking-[-0.035em] text-territory-ink">
+        <Icon className="h-7 w-7 shrink-0 text-territory-brand" aria-hidden="true" />
         {title}
       </h2>
-      <div className="mt-3">{children}</div>
+      <div className="mt-2">{children}</div>
     </section>
   );
 }
 
-function InfoNotice({ children, tone = "neutral" }: { children: ReactNode; tone?: "neutral" | "warning" }) {
+function InfoNotice({
+  children,
+  tone = "neutral",
+  compact = false,
+}: {
+  children: ReactNode;
+  tone?: "neutral" | "warning";
+  compact?: boolean;
+}) {
   const Icon = tone === "warning" ? CircleAlert : Info;
 
   return (
     <div
       className={cn(
-        "flex items-start gap-3 rounded-xl px-3 py-3 text-sm",
+        "flex items-start gap-3 rounded-xl px-3 text-sm",
+        compact ? "py-2" : "py-2.5",
         tone === "warning" ? "bg-amber-100 text-amber-950" : "bg-slate-100 text-slate-800",
       )}
     >
@@ -206,13 +223,13 @@ function Collection() {
 
 function OrderSummary() {
   return (
-    <section className="border-t border-territory-border pt-3">
-      <div className="flex items-center gap-3">
+    <section className="border-t border-territory-border pt-2">
+      <div className="flex items-center gap-2.5">
         <FileText className="h-5 w-5 text-territory-brand" aria-hidden="true" />
         <div className="min-w-0 flex-1">
           <p className="text-sm font-bold text-territory-ink">Resumo do pedido</p>
-          <p className="text-sm text-territory-ink">2 itens · R$ 54,00</p>
-          <p className="text-xs text-territory-muted">(R$ 49,00 em produtos + R$ 5,00 de taxa)</p>
+          <p className="text-sm leading-tight text-territory-ink">2 itens · R$ 54,00</p>
+          <p className="text-xs leading-tight text-territory-muted">(R$ 49,00 em produtos + R$ 5,00 de taxa)</p>
         </div>
         <button
           type="button"
@@ -229,13 +246,13 @@ function OrderSummary() {
 
 function Destination({ divider = true }: { divider?: boolean }) {
   return (
-    <section className={cn(divider ? "border-t border-territory-border pt-3" : null)}>
-      <div className="flex items-start gap-3">
+    <section className={cn(divider ? "border-t border-territory-border pt-2" : null)}>
+      <div className="flex items-start gap-2.5">
         <MapPin className="mt-0.5 h-6 w-6 shrink-0 text-territory-brand" aria-hidden="true" />
         <div>
           <p className="text-sm font-bold text-territory-ink">Destino</p>
-          <p className="text-sm text-territory-ink">Rua Exemplo, 120 · Casa 2</p>
-          <p className="text-sm text-territory-muted">Santa Cruz, Salvador · BA</p>
+          <p className="text-sm leading-tight text-territory-ink">Rua Exemplo, 120 · Casa 2</p>
+          <p className="text-sm leading-tight text-territory-muted">Santa Cruz, Salvador · BA</p>
         </div>
       </div>
     </section>
@@ -247,7 +264,7 @@ function HistoryRow({ label, icon: Icon = History }: { label: string; icon?: Luc
     <button
       type="button"
       onClick={() => toast.info(`${label} será expandido quando houver histórico do pedido.`)}
-      className="flex min-h-10 w-full items-center gap-3 border-t border-territory-border pt-3 text-left"
+      className="flex min-h-9 w-full items-center gap-2.5 border-t border-territory-border pt-2 text-left"
     >
       <Icon className="h-5 w-5 shrink-0 text-territory-ink" aria-hidden="true" />
       <span className="flex-1 text-sm font-semibold text-territory-ink">{label}</span>
@@ -284,7 +301,9 @@ function StateBody({ state }: { state: DeliveryState }) {
         <InfoNotice>
           Sem rastreamento vinculado
           <br />
-          <span className="text-sm font-normal">Atualize o andamento quando sua equipe sair para entregar.</span>
+          <span className="text-xs font-normal leading-snug">
+            Atualize o andamento quando sua equipe sair para entregar.
+          </span>
         </InfoNotice>
         <OrderSummary />
         <Destination />
@@ -330,16 +349,16 @@ function StateBody({ state }: { state: DeliveryState }) {
   }
 
   return (
-    <div className="space-y-3">
-      <InfoNotice tone="warning">Não encontramos um motoboy para esta solicitação.</InfoNotice>
+    <div className="space-y-2">
+      <InfoNotice compact tone="warning">Não encontramos um motoboy para esta solicitação.</InfoNotice>
       <Collection />
       <Destination divider={false} />
-      <InfoNotice>
+      <InfoNotice compact>
         Pedido mantido
         <br />
         <span className="text-sm font-normal">O pedido continua pronto para coleta na sua loja.</span>
       </InfoNotice>
-      <InfoNotice>Combine com o cliente antes de mudar a modalidade ou o valor.</InfoNotice>
+      <InfoNotice compact>Combine com o cliente antes de mudar a modalidade ou o valor.</InfoNotice>
     </div>
   );
 }
@@ -654,13 +673,13 @@ function DesktopStateBody({ state }: { state: DeliveryState }) {
       <div className="space-y-2">
         {footer.actions.slice(0, 3).map((action) => <FooterActionButton key={action.label} action={action} />)}
       </div>
+      <InfoNotice>Combine com o cliente antes de mudar a modalidade ou o valor.</InfoNotice>
     </div>
   );
 }
 
 function DesktopStateView({ state }: { state: DeliveryState }) {
   const config = getStateConfig(state);
-  const footer = getFooterModel(state);
 
   return (
     <div className="flex min-h-0 flex-1 flex-col gap-3">
@@ -681,10 +700,6 @@ function DesktopStateView({ state }: { state: DeliveryState }) {
           <div className="mt-4">
             <DesktopStateBody state={state} />
           </div>
-          <div className="mt-4 space-y-2 border-t border-territory-border pt-4">
-            {footer.heading ? <p className="text-sm font-bold text-territory-ink">{footer.heading}</p> : null}
-            {footer.actions.map((action) => <FooterActionButton key={action.label} action={action} />)}
-          </div>
         </section>
         <DesktopDetails state={state} />
       </div>
@@ -694,7 +709,7 @@ function DesktopStateView({ state }: { state: DeliveryState }) {
 
 function DesktopStateShell({ state }: { state: DeliveryState }) {
   return (
-    <div className="hidden h-[100dvh] min-h-0 flex-col overflow-hidden bg-territory-canvas text-territory-ink md:flex">
+    <div className="delivery-concept-page hidden h-[100dvh] min-h-0 flex-col overflow-hidden bg-territory-canvas text-territory-ink md:flex">
       <DesktopTopBar />
       <div className="flex min-h-0 flex-1">
         <DesktopSidebar />
@@ -726,7 +741,7 @@ export default function DeliveryOrderConceptMockPage() {
         <meta name="robots" content="noindex, nofollow" />
       </Helmet>
       <DesktopStateShell state={state} />
-      <div className="flex h-[100dvh] min-h-0 flex-col overflow-hidden bg-territory-canvas text-territory-ink md:hidden">
+      <div className="delivery-concept-page flex h-[100dvh] min-h-0 flex-col overflow-hidden bg-territory-canvas text-territory-ink md:hidden">
         <MobileHeader />
         <main className="min-h-0 flex-1 overflow-hidden">
           <div className="mx-auto flex h-full min-h-0 max-w-md flex-col px-4">

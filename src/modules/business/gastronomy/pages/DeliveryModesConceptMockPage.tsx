@@ -48,7 +48,6 @@ import { cn } from "@/shared/utils/cn";
 import foodImage from "@/assets/gastronomy/cat-marmitas.jpg";
 import driverImage from "@/assets/persona-prestador.jpg";
 import directoryImageTwo from "@/assets/persona-morador.jpg";
-import directoryImageThree from "@/assets/persona-emprego.jpg";
 
 type DeliveryView =
   | "modalities"
@@ -361,7 +360,6 @@ function MobileDirectoryContent({ navigate }: { navigate: (view: DeliveryView) =
   const people = [
     { name: "Carlos Santos", area: "Santa Cruz e região", interest: "Por entrega e por turno", image: driverImage },
     { name: "Joana Lima", area: "Nordeste de Amaralina", interest: "Por turno", image: directoryImageTwo },
-    { name: "Marcos Oliveira", area: "Vale das Pedrinhas", interest: "Por entrega", image: directoryImageThree },
   ];
   return <div className="flex min-h-full flex-col gap-3"><div className="flex min-h-[3.5rem] items-center gap-3 px-1"><span className="grid h-12 w-12 shrink-0 place-items-center rounded-xl bg-[#fff0bd] text-territory-brand"><Store className="h-6 w-6" /></span><div className="min-w-0"><p className="text-sm font-bold">Sabores da Ana</p><p className="text-xs text-territory-muted">Santa Cruz · Salvador, BA</p></div></div><div className="flex h-11 items-center gap-2 rounded-lg border border-territory-border bg-white px-3 text-xs text-territory-muted"><Search className="h-4 w-4 shrink-0" />Nome ou região</div><div className="flex items-center gap-2 text-[0.68rem]"><span className="flex min-w-0 flex-1 items-center justify-between rounded-lg border border-territory-border bg-white px-2.5 py-2"><span><span className="block text-territory-muted">Cidade</span><b>Salvador</b></span><ChevronDown className="h-3.5 w-3.5 shrink-0" /></span><span className="flex min-w-0 flex-1 items-center justify-between rounded-lg border border-territory-border bg-white px-2.5 py-2"><span><span className="block text-territory-muted">Bairro</span><b>Todos</b></span><ChevronDown className="h-3.5 w-3.5 shrink-0" /></span><button type="button" className="flex shrink-0 items-center gap-1 px-0.5 font-bold text-blue-700">Mais filtros<SlidersHorizontal className="h-3.5 w-3.5" /></button></div><h2 className="mt-2 text-sm font-bold">Profissionais interessados em propostas</h2><div className="space-y-2">{people.map((person) => <ConceptCard key={person.name} className="h-[8rem] min-h-0 p-2.5"><div className="flex min-h-0 items-center gap-2.5"><img src={person.image} alt="" className="h-12 w-12 shrink-0 rounded-lg object-cover" /><div className="min-w-0 flex-1"><p className="truncate text-sm font-bold leading-tight">{person.name}</p><p className="text-[0.68rem] leading-tight text-territory-muted">Moto · Salvador</p><p className="mt-0.5 flex items-center gap-1 truncate text-[0.68rem] leading-tight"><MapPin className="h-3 w-3 shrink-0" />{person.area}</p><p className="truncate text-[0.68rem] leading-tight text-territory-muted">Interesse: {person.interest}</p></div><ChevronRight className="h-4 w-4 shrink-0" /></div><Button type="button" variant="outline" onClick={() => navigate("profile")} className="mt-1.5 h-8 w-full border-territory-border bg-white px-2 text-xs text-territory-ink">Ver perfil</Button></ConceptCard>)}</div><InfoNotice>A presença no diretório não confirma disponibilidade imediata.</InfoNotice></div>;
 }
@@ -419,54 +417,57 @@ function MobileOperationContent({ state, navigate }: { state: OperationState; na
 
 function MobileCourierContent({ navigate }: { navigate: (view: DeliveryView, state?: OperationState) => void }) {
   return (
-    <div className="flex min-h-0 flex-1 flex-col gap-2">
-      <div className="flex items-center justify-between border-b border-territory-border pb-2">
+    <div className="flex min-h-0 flex-1 flex-col gap-1.5">
+      <div className="flex items-center justify-between border-b border-territory-border pb-1.5">
         <div className="flex gap-5 text-sm">
-          <button type="button" className="border-b-2 border-territory-brand pb-2 font-bold">Minhas lojas</button>
-          <button type="button" className="pb-2 text-territory-muted">Rede Achegue-se</button>
+          <button type="button" className="border-b-2 border-territory-brand pb-1.5 font-bold">Minhas lojas</button>
+          <button type="button" className="pb-1.5 text-territory-muted">Rede Achegue-se</button>
         </div>
       </div>
-      <ConceptCard className="p-2.5">
+      <ConceptCard className="p-2">
         <div className="flex items-center gap-2">
-          <span className="grid h-10 w-10 shrink-0 place-items-center rounded-full bg-territory-brand text-territory-sun"><Coffee className="h-5 w-5" /></span>
+          <span className="grid h-9 w-9 shrink-0 place-items-center rounded-full bg-territory-brand text-territory-sun"><Coffee className="h-4 w-4" /></span>
           <div className="min-w-0 flex-1">
             <p className="truncate whitespace-nowrap text-sm font-bold">{store.name}</p>
             <p className="truncate text-xs text-territory-muted">1 entrega em andamento</p>
           </div>
           <StatusPill>Vínculo ativo</StatusPill>
         </div>
-        <button type="button" onClick={() => navigate("operation", "tracking")} className="mt-2 flex w-full items-center gap-2 rounded-lg bg-[#e8f7ef] p-2.5 text-left">
-          <span className="h-6 w-1 shrink-0 rounded-full bg-territory-brand" />
+        <button type="button" onClick={() => navigate("operation", "tracking")} className="mt-1.5 flex w-full items-center gap-2 rounded-lg bg-[#e8f7ef] p-2 text-left">
+          <span className="h-5 w-1 shrink-0 rounded-full bg-territory-brand" />
           <span className="min-w-0 flex-1"><b className="block text-sm">#1043 · Em entrega</b><span className="text-xs text-territory-muted">Santa Cruz → Nordeste de Amaralina</span></span>
           <ChevronRight className="h-4 w-4 shrink-0" />
         </button>
-        <Button type="button" onClick={() => navigate("operation", "tracking")} className="mt-2 h-9 w-full bg-territory-sun px-3 text-xs text-territory-ink hover:bg-territory-sun/85">Continuar entrega</Button>
+        <Button type="button" onClick={() => navigate("operation", "tracking")} className="mt-1.5 h-8 w-full bg-territory-sun px-3 text-xs text-territory-ink hover:bg-territory-sun/85">Continuar entrega</Button>
       </ConceptCard>
-      <h2 className="pt-1 text-sm font-bold">Convites</h2>
-      <ConceptCard className="p-2.5">
-        <div className="flex items-start gap-2.5">
-          <span className="grid h-9 w-9 shrink-0 place-items-center rounded-full bg-territory-surface"><Store className="h-5 w-5 text-territory-brand" /></span>
+      <h2 className="text-sm font-bold">Convites</h2>
+      <ConceptCard className="p-2">
+        <div className="flex items-start gap-2">
+          <span className="grid h-8 w-8 shrink-0 place-items-center rounded-full bg-territory-surface"><Store className="h-4 w-4 text-territory-brand" /></span>
           <div className="min-w-0 flex-1">
             <div className="flex items-start justify-between gap-2"><p className="truncate text-sm font-bold">Mercado da Praça</p><span className="shrink-0 rounded-full bg-[#ffe4cd] px-2 py-1 text-[0.68rem] font-bold text-[#984500]">Convite pendente</span></div>
-            <p className="mt-1 text-xs leading-snug text-territory-muted">Você foi convidado para fazer entregas por esta loja.</p>
+            <p className="mt-0.5 text-xs leading-snug text-territory-muted">Você foi convidado para fazer entregas por esta loja.</p>
           </div>
         </div>
-        <Button type="button" onClick={() => navigate("accept")} variant="outline" className="mt-2 h-8 w-full border-territory-border bg-white text-xs text-territory-ink">Ver convite</Button>
+        <Button type="button" onClick={() => navigate("accept")} variant="outline" className="mt-1.5 h-8 w-full border-territory-border bg-white text-xs text-territory-ink">Ver convite</Button>
       </ConceptCard>
-      <h2 className="pt-1 text-sm font-bold">Rede Achegue-se</h2>
-      <ConceptCard className="p-2.5">
-        <div className="flex items-start gap-2.5">
-          <LocateFixed className="mt-1 h-5 w-5 shrink-0 text-territory-brand" />
+      <h2 className="text-sm font-bold">Rede Achegue-se</h2>
+      <ConceptCard className="p-2">
+        <div className="flex items-start gap-2">
+          <LocateFixed className="mt-0.5 h-4 w-4 shrink-0 text-territory-brand" />
           <div className="min-w-0"><p className="text-sm font-bold">Participação ainda não habilitada</p><p className="text-xs leading-snug text-territory-muted">Entregue para mais lojas e amplie suas oportunidades.</p></div>
         </div>
-        <Button type="button" onClick={() => toast.info("Os requisitos da rede serão exibidos em seguida.")} variant="outline" className="mt-2 h-8 w-full border-territory-border bg-white text-xs text-territory-ink">Conhecer requisitos</Button>
-        <div className="mt-2 flex items-center gap-2 border-t border-territory-border pt-2">
+        <Button type="button" onClick={() => toast.info("Os requisitos da rede serão exibidos em seguida.")} variant="outline" className="mt-1.5 h-8 w-full border-territory-border bg-white text-xs text-territory-ink">Conhecer requisitos</Button>
+        <div className="mt-1.5 flex items-center gap-2 border-t border-territory-border pt-1.5">
           <Eye className="h-4 w-4 shrink-0 text-territory-brand" />
           <div className="min-w-0 flex-1"><p className="text-xs font-bold">Visibilidade no diretório</p><p className="text-[0.68rem] text-territory-muted">Visível para lojas</p></div>
           <Settings className="h-4 w-4 shrink-0 text-territory-muted" />
         </div>
+        <div className="mt-1.5 flex items-start gap-2 border-t border-territory-border pt-1.5 text-[0.68rem] leading-snug text-territory-muted">
+          <Info className="mt-0.5 h-3.5 w-3.5 shrink-0" />
+          <span>Vínculo com loja e participação na rede são independentes.</span>
+        </div>
       </ConceptCard>
-      <InfoNotice>Vínculo com loja e participação na rede são independentes.</InfoNotice>
     </div>
   );
 }
@@ -477,7 +478,7 @@ function CourierContent({ navigate }: { navigate: (view: DeliveryView, state?: O
 
 function DesktopPage({ view, state, navigate }: { view: DeliveryView; state: OperationState; navigate: (view: DeliveryView, state?: OperationState) => void }) {
   const content = view === "modalities" ? <ModalitiesContent navigate={navigate} /> : view === "manual" ? <ManualContent navigate={navigate} /> : view === "team" ? <TeamContent navigate={navigate} /> : view === "network" ? <NetworkContent navigate={navigate} /> : view === "directory" ? <DirectoryContent navigate={navigate} /> : view === "profile" ? <ProfileContent navigate={navigate} /> : view === "invite" ? <InviteContent navigate={navigate} /> : view === "accept" ? <AcceptContent navigate={navigate} /> : view === "operation" ? <OperationContent state={state} navigate={navigate} /> : <CourierContent navigate={navigate} />;
-  return <div className="hidden h-full min-h-0 flex-1 md:flex"><DesktopSidebar view={view} navigate={navigate} /><div className="flex min-w-0 flex-1 flex-col"><StoreTopbar /><main className="min-h-0 flex-1 overflow-hidden bg-territory-canvas p-4 lg:p-5"><div className="mx-auto flex h-full min-h-0 max-w-none flex-col">{content}</div></main></div></div>;
+  return <div className="hidden h-full min-h-0 flex-1 md:flex"><DesktopSidebar view={view} navigate={navigate} /><div className="flex min-w-0 flex-1 flex-col"><StoreTopbar /><main className="min-h-0 flex-1 overflow-hidden bg-territory-canvas p-4 lg:p-5"><div className="mx-0 flex h-full min-h-0 w-full max-w-[36rem] flex-col">{content}</div></main></div></div>;
 }
 
 function MobilePage({ view, state, navigate }: { view: DeliveryView; state: OperationState; navigate: (view: DeliveryView, state?: OperationState) => void }) {
@@ -505,5 +506,5 @@ export default function DeliveryModesConceptMockPage() {
   const state = parseState(searchParams.get("state"));
   const goView = (nextView: DeliveryView, nextState?: OperationState) => navigate(`${DELIVERY_LINK}&view=${nextView}${nextState ? `&state=${nextState}` : ""}`);
   const title = useMemo(() => view === "modalities" ? "Entregas da loja" : view === "manual" ? "Entrega própria" : view === "team" ? "Minha equipe" : view === "network" ? "Rede Achegue-se" : view === "directory" ? "Encontrar entregadores" : view === "profile" ? "Perfil do entregador" : view === "invite" ? "Convidar entregador" : view === "accept" ? "Convite de uma loja" : view === "operation" ? "Operação da entrega" : "Minhas lojas", [view]);
-  return <><Helmet><title>{title} · Sabores da Ana</title><meta name="robots" content="noindex, nofollow" /></Helmet><div className="h-[100dvh] min-h-0 overflow-hidden text-territory-ink"><DesktopPage view={view} state={state} navigate={goView} /><MobilePage view={view} state={state} navigate={goView} /></div></>;
+  return <><Helmet><title>{title} · Sabores da Ana</title><meta name="robots" content="noindex, nofollow" /></Helmet><div className="delivery-modes-concept-page h-[100dvh] min-h-0 overflow-hidden text-territory-ink"><DesktopPage view={view} state={state} navigate={goView} /><MobilePage view={view} state={state} navigate={goView} /></div></>;
 }

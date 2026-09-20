@@ -599,3 +599,25 @@ A prancha 117 também está coberta pelos estados demonstrativos de visitante, v
 
 - Branch: `codex/reformulacao-entrada-comunidade`.
 - Commit restrito à documentação do concept; alterações staged preexistentes permanecem fora do commit.
+
+## 20/09/2026 · Entregas da loja e vínculos — pranchas 031, 033, 046, 048 e 049
+
+### Auditoria e ajuste
+
+- Comparei `DeliveryOrderConceptMockPage`, `DeliveryModesConceptMockPage` e as rotas de diretório/convite com as pranchas de entrega própria, três modalidades, convite e operação mobile.
+- Na entrega própria, o mobile tinha ações sobrepostas ao histórico no viewport compacto e o desktop repetia o mesmo grupo de CTAs em dois pontos. Removi a dependência de rodapé sticky no mobile, compactei os blocos de estado e mantive uma única fonte de ações no desktop.
+- Nas modalidades, o conteúdo desktop estava se expandindo para toda a largura disponível. Limitei somente o shell do concept a `36rem` após o rail para reproduzir a escala das pranchas; o mobile recebeu ritmo compacto sem reduzir a legibilidade.
+- No contexto do entregador, a nota de independência entre vínculo de loja e rede foi incorporada ao cartão da rede, evitando que a navegação inferior cobrisse a informação. O diretório ficou com os dois profissionais ilustrados na prancha 048.
+- Mantive a rede Achegue-se desabilitada, a operação própria sem rastreamento e o vínculo dependente de aceite. Não promovi dados demonstrativos nem ações de mock para o fluxo real.
+
+### Validação e evidências
+
+- Navegador interno mantido aberto nas rotas `/gastronomia/pedidos/concept-mock-delivery`, `/gastronomia/pedidos/concept-mock-modalidades` e nas telas de diretório/convite.
+- Mobile conferido em `389 × 867` CSS px: o estado indisponível termina em `y=863,4`, modalidades em `y=578`, contextos do entregador sem clipping e diretório/convites com CTAs dentro do viewport.
+- Desktop conferido em `1440 × 867` e `1707 × 960` CSS px: painel com proporção da prancha, ações únicas e sem overflow horizontal.
+- Console do mock sem erros ou avisos; `npm run typecheck:app`, ESLint direcionado e `git diff --check` executados.
+
+### Git
+
+- Branch: `codex/reformulacao-entrada-comunidade`.
+- Commit restrito às superfícies de entrega, estilos scoped e documentações deste concept; alterações staged preexistentes permanecem fora do commit.

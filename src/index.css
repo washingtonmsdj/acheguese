@@ -3033,3 +3033,20 @@
 .account-concept-page article h2 {
   margin-bottom: 0.25rem;
 }
+
+/* The delivery concepts use explicit utility spacing from the source boards.
+ * Remove the global editorial paragraph/heading margin so each row keeps the
+ * dense mobile rhythm and the history/action block cannot drift into overlap. */
+.delivery-concept-page p,
+.delivery-concept-page h1,
+.delivery-concept-page h2,
+.delivery-concept-page h3 {
+  margin-bottom: 0;
+}
+
+.delivery-modes-concept-page p,
+.delivery-modes-concept-page h1,
+.delivery-modes-concept-page h2,
+.delivery-modes-concept-page h3 {
+  margin-bottom: 0;
+}
