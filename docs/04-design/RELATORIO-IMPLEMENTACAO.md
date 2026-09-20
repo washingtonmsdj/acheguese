@@ -382,3 +382,10 @@ A prancha 117 também está coberta pelos estados demonstrativos de visitante, v
 - Diferenciei os estados ativos por breakpoint: mobile teal preenchido, desktop teal claro com borda e entrega da loja em amarelo claro. Retirei ações e ícone extras do título de endereço para manter a hierarquia da prancha.
 - O cartão de endereço agora apresenta o rótulo real da residência e ícone de casa quando houver destino resolvido. O mock de `Sabores da Ana` também fornece a relação territorial carregada para exibir `Santa Cruz · Salvador, BA` sem alterar dados de produção.
 - No mobile, `Retirada no local` ocupa a segunda coluna no fluxo de Entrega/Retirada; `No local` só permanece na grade quando já é o estado selecionado do carrinho, evitando perda de modalidade.
+
+### Terceira rodada — tipografia fiel à SSOT
+
+- Auditei família, tamanho, peso e line-height de todas as etapas do checkout contra `DESIGN-TOKENS.md` e `src/index.css`. A família continua `Plus Jakarta Sans`, com `font-heading` para headings e `font-sans` no restante.
+- Normalizei os títulos para 24 px/700 no mobile e 30 px/700 no desktop; seções ficam em 16 px/700, rótulos em 14 px/600–700 e metadados em 12 px. O wordmark desktop usa 800, o único peso de display aplicado.
+- Substituí os tamanhos arbitrários de 23,2 px e 10,9/11 px pelas classes canônicas `text-type-label`, `text-type-caption`, `text-type-micro` e `text-type-body`, preservando os paddings ajustados na rodada anterior.
+- A medição no navegador interno confirmou os valores computados do título mobile (24/700/30) e desktop (30/700/37,5), mantendo a aba aberta e o viewport padrão restaurado ao final.

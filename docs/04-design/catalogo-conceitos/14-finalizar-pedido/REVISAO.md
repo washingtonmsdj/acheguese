@@ -31,4 +31,12 @@ Branch analisada: `codex/reformulacao-entrada-comunidade`. Data: 19/09/2026.
 - Os estados ativos agora respeitam a diferença entre breakpoints: preenchimento teal no mobile, fundo claro com borda teal para a modalidade desktop e destaque amarelo para a entrega da loja.
 - A identidade da loja usa o território do concept (`Santa Cruz · Salvador, BA`) quando o objeto carregado o fornece; o cartão de endereço usa o rótulo real da residência e ícone de casa, sem inventar endereço no runtime.
 
+## Terceira rodada — tipografia SSOT
+
+- A família permanece `Plus Jakarta Sans` via `font-heading`/`font-sans`, sem fonte local paralela.
+- Os títulos de etapa foram normalizados para 24 px/700 no mobile e 30 px/700 no desktop, com line-height fechado; títulos de seção usam 16 px/700.
+- Rótulos de interação e títulos internos usam 14 px/600–700; metadados, ajuda e estados auxiliares usam 12 px. O wordmark do header desktop usa 800, reservado pela SSOT para marca/display.
+- Removi os valores arbitrários de 23,2 px e 10,9 px/11 px do checkout. A escala agora consome as classes canônicas `text-type-label`, `text-type-caption`, `text-type-micro` e `text-type-body`.
+- Validação visual confirmou 24 px/700 no mobile e 30 px/700 no desktop no navegador interno, com o viewport restaurado ao padrão e a aba mantida aberta.
+
 Registrar branch/commit analisado, data, limitações e funcionalidades mantidas desativadas.

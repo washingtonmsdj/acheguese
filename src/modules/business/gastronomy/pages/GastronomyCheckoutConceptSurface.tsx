@@ -63,6 +63,13 @@ type DeliveryOption = "store" | "platform";
 type CheckoutStage = "address" | "delivery" | "review" | "fallback";
 type DeliveryEligibilityState = "unknown" | "eligible" | "ineligible";
 
+const CHECKOUT_SCREEN_TITLE_CLASS =
+  "font-heading text-2xl font-bold leading-tight tracking-[-0.04em] text-territory-ink";
+const CHECKOUT_DESKTOP_TITLE_CLASS =
+  "font-heading text-3xl font-bold leading-tight tracking-[-0.04em] text-territory-ink";
+const CHECKOUT_SECTION_TITLE_CLASS =
+  "font-heading text-base font-bold leading-5 text-territory-ink";
+
 const currency = (value: number) =>
   new Intl.NumberFormat("pt-BR", {
     style: "currency",
@@ -151,7 +158,7 @@ function ChoiceButton({
       disabled={disabled}
       onClick={onClick}
       className={cn(
-        "flex min-h-11 w-full items-start gap-2 rounded-lg border px-3 py-3 text-left text-xs transition-colors focus-visible:z-10 focus-visible:outline-2 focus-visible:outline-offset-[-2px] focus-visible:outline-territory-brand sm:text-sm",
+        "flex min-h-11 w-full items-start gap-2 rounded-lg border px-3 py-3 text-left text-type-caption transition-colors focus-visible:z-10 focus-visible:outline-2 focus-visible:outline-offset-[-2px] focus-visible:outline-territory-brand sm:text-type-label",
         active
           ? (activeClassName ??
               "border-territory-brand bg-territory-raised text-territory-ink")
@@ -196,7 +203,7 @@ function ModeButton({
       aria-checked={active}
       onClick={onClick}
       className={cn(
-        "inline-flex min-h-10 items-center justify-center gap-1 rounded-lg border px-2 text-xs font-semibold text-territory-ink transition-colors focus-visible:z-10 focus-visible:outline-2 focus-visible:outline-offset-[-2px] focus-visible:outline-territory-brand",
+        "inline-flex min-h-10 items-center justify-center gap-1 rounded-lg border px-2 text-type-caption font-semibold text-territory-ink transition-colors focus-visible:z-10 focus-visible:outline-2 focus-visible:outline-offset-[-2px] focus-visible:outline-territory-brand",
         active
           ? (activeClassName ??
             "border-territory-brand bg-territory-brand text-white")
@@ -214,7 +221,7 @@ function Stepper({ stage }: { stage: CheckoutStage }) {
   const steps = ["Endereço", "Pagamento", "Revisão"];
 
   return (
-    <div className="grid grid-cols-3 items-start gap-2 text-center text-[0.625rem] text-territory-muted sm:max-w-sm sm:text-xs">
+    <div className="grid grid-cols-3 items-start gap-2 text-center text-type-micro text-territory-muted sm:max-w-sm sm:text-type-caption">
       {steps.map((label, index) => (
         <div key={label} className="relative">
           {index < steps.length - 1 ? (
@@ -230,7 +237,7 @@ function Stepper({ stage }: { stage: CheckoutStage }) {
           ) : null}
           <span
             className={cn(
-              "relative z-10 mx-auto flex h-6 w-6 items-center justify-center rounded-full text-[0.6875rem] font-bold",
+              "relative z-10 mx-auto flex h-6 w-6 items-center justify-center rounded-full text-type-caption font-bold",
               index < activeStep && "bg-territory-brand text-white",
               index === activeStep && "bg-territory-sun text-territory-ink",
               index > activeStep &&
@@ -284,12 +291,12 @@ function CheckoutHeader({
           <button
             type="button"
             onClick={onBack}
-            className="font-heading text-[1.45rem] font-bold tracking-[-0.05em] text-white focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-white"
+            className="font-heading text-2xl font-extrabold tracking-[-0.05em] text-white focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-white"
           >
             Achegue-se<span className="text-territory-sun">.</span>
           </button>
           <span className="h-7 w-px bg-white/25" aria-hidden="true" />
-          <div className="flex items-center gap-2 text-xs text-white">
+          <div className="flex items-center gap-2 text-type-caption text-white">
             <MapPin
               className="h-4 w-4 text-white"
               aria-hidden="true"
@@ -300,7 +307,7 @@ function CheckoutHeader({
             </span>
           </div>
           <nav
-            className="ml-auto flex items-center gap-7 text-xs font-semibold text-white"
+            className="ml-auto flex items-center gap-7 text-type-caption font-semibold text-white"
             aria-label="Navegação"
           >
             <span>Descobrir</span>
@@ -322,7 +329,7 @@ function CheckoutHeader({
         <button
           type="button"
           onClick={onBack}
-          className="inline-flex min-h-8 items-center gap-2 text-xs font-semibold text-territory-ink focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-territory-brand"
+          className="inline-flex min-h-8 items-center gap-2 text-type-caption font-semibold text-territory-ink focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-territory-brand"
         >
           <ArrowLeft className="h-4 w-4" aria-hidden="true" />
           {stage === "address" ? "Cardápio" : "Voltar"}
@@ -354,7 +361,7 @@ function BusinessSummary({ business }: { business: GastronomyBusiness }) {
         <p className="truncate text-sm font-bold text-territory-ink lg:text-base">
           {business.name}
         </p>
-        <p className="text-xs text-territory-muted">
+        <p className="text-type-caption text-territory-muted">
           {locationLabel || "Território não informado"}
         </p>
       </div>
@@ -381,10 +388,10 @@ function AddressCard({
   const hasAddress = Boolean(address);
 
   return (
-    <div className="rounded-lg border border-territory-border bg-territory-surface p-3 text-xs text-territory-ink">
+    <div className="rounded-lg border border-territory-border bg-territory-surface p-3 text-type-caption text-territory-ink">
       <div className="flex items-start justify-between gap-3">
         <div className="min-w-0">
-          <p className="flex items-center gap-2 font-bold">
+          <p className="flex items-center gap-2 text-type-label font-bold">
             {address?.label ? (
               <House
                 className="h-4 w-4 shrink-0 text-territory-brand"
@@ -424,7 +431,7 @@ function AddressCard({
           <button
             type="button"
             onClick={onEdit}
-            className="shrink-0 font-semibold text-territory-brand underline-offset-2 hover:underline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-territory-brand"
+            className="shrink-0 text-type-caption font-semibold text-territory-brand underline-offset-2 hover:underline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-territory-brand"
           >
             {hasAddress ? "Editar" : "Adicionar"}
           </button>
@@ -478,10 +485,10 @@ function ItemsSummary({
           className="h-10 w-10 shrink-0 rounded-lg object-cover"
         />
         <span className="min-w-0 flex-1">
-          <span className="block text-xs font-bold text-territory-ink">
+          <span className="block text-type-caption font-bold text-territory-ink">
             Itens do pedido · {currency(subtotal)}
           </span>
-          <span className="block text-[0.6875rem] text-territory-muted">
+          <span className="block text-type-caption text-territory-muted">
             {items.reduce((total, item) => total + item.quantity, 0)} itens
           </span>
         </span>
@@ -502,17 +509,17 @@ function ItemsSummary({
                 alt=""
                 className="h-10 w-10 rounded-lg object-cover"
               />
-              <span className="min-w-0 flex-1 text-xs text-territory-ink">
-                <span className="block font-semibold">
+              <span className="min-w-0 flex-1 text-type-caption text-territory-ink">
+                <span className="block text-type-label font-semibold">
                   {item.quantity} × {item.name}
                 </span>
                 {item.detail ? (
-                  <span className="block text-[0.6875rem] text-territory-muted">
+                  <span className="block text-type-caption text-territory-muted">
                     {item.detail}
                   </span>
                 ) : null}
               </span>
-              <span className="shrink-0 text-xs font-bold text-territory-ink">
+              <span className="shrink-0 text-type-caption font-bold text-territory-ink">
                 {currency(item.price)}
               </span>
             </div>
@@ -569,7 +576,7 @@ function MobileAddressStage({
 
   return (
     <div className="space-y-3">
-      <h1 className="font-heading text-[1.45rem] font-bold tracking-[-0.04em] text-territory-ink">
+      <h1 className={CHECKOUT_SCREEN_TITLE_CLASS}>
         {mode === "delivery" ? "Onde vamos entregar?" : "Como você quer receber?"}
       </h1>
       <div
@@ -604,7 +611,7 @@ function MobileAddressStage({
           );
         })}
       </div>
-      <div className="flex min-h-12 items-center justify-between gap-3 rounded-lg border border-territory-border bg-territory-surface px-3 text-xs">
+      <div className="flex min-h-12 items-center justify-between gap-3 rounded-lg border border-territory-border bg-territory-surface px-3 text-type-caption">
         <span className="flex min-w-0 items-center gap-2 font-semibold text-territory-ink">
           <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-territory-raised">
             <UserRound
@@ -621,10 +628,10 @@ function MobileAddressStage({
         />
       </div>
       {mode === "delivery" ? <div>
-        <p className="mb-2 text-xs font-bold text-territory-ink">
+        <p className="mb-2 text-type-label font-bold text-territory-ink">
           Endereço de entrega
         </p>
-        <div className="mb-2 grid grid-cols-2 gap-2 text-xs">
+        <div className="mb-2 grid grid-cols-2 gap-2 text-type-caption">
           <button
             type="button"
             aria-pressed={addressMode === "saved"}
@@ -664,7 +671,7 @@ function MobileAddressStage({
         {addressEditor}
       </div> : null}
       {mode === "delivery" ? (
-        <p className="flex items-center gap-1.5 rounded-lg bg-territory-info/10 px-3 py-2 text-[0.6875rem] leading-4 text-territory-ink">
+        <p className="flex items-center gap-1.5 rounded-lg bg-territory-info/10 px-3 py-2 text-type-caption text-territory-ink">
           <Info
             className="h-3.5 w-3.5 shrink-0 text-territory-brand"
             aria-hidden="true"
@@ -717,7 +724,7 @@ function MobileDeliveryStage({
 }) {
   return (
     <div className="space-y-3">
-      <h1 className="font-heading text-[1.45rem] font-bold tracking-[-0.04em] text-territory-ink">
+      <h1 className={CHECKOUT_SCREEN_TITLE_CLASS}>
         Escolha a entrega
       </h1>
       <AddressCard destination={destination} compact />
@@ -727,17 +734,17 @@ function MobileDeliveryStage({
           activeClassName="border-territory-sun bg-territory-sun/10 text-territory-ink"
           onClick={() => onDeliveryOptionChange("store")}
         >
-          <span className="flex items-center gap-2 font-bold">
+          <span className="flex items-center gap-2 text-type-label font-bold">
             <Truck
               className="h-5 w-5 text-territory-brand"
               aria-hidden="true"
             />
             Entrega da loja <span className="ml-auto">{currency(deliveryFee)}</span>
           </span>
-          <span className="mt-1 block pl-7 text-[0.6875rem] text-territory-muted">
+          <span className="mt-1 block pl-7 text-type-caption text-territory-muted">
             Equipe do estabelecimento
           </span>
-          <span className="mt-1 block pl-7 text-[0.6875rem] text-territory-muted">
+          <span className="mt-1 block pl-7 text-type-caption text-territory-muted">
             Seu pedido será entregue pela equipe do {businessName}.
           </span>
         </ChoiceButton>
@@ -746,17 +753,17 @@ function MobileDeliveryStage({
           disabled={!platformCourierAvailable}
           onClick={() => onDeliveryOptionChange("platform")}
         >
-          <span className="flex items-center gap-2 font-bold">
+          <span className="flex items-center gap-2 text-type-label font-bold">
             <Bike
               className="h-5 w-5 text-territory-brand"
               aria-hidden="true"
             />
             Motoboy Achegue-se
-            <span className="ml-auto text-[0.6875rem] font-normal text-territory-muted">
+            <span className="ml-auto text-type-caption font-normal text-territory-muted">
               {platformCourierAvailable ? "Disponível" : "Indisponível"}
             </span>
           </span>
-          <span className="mt-1 block pl-7 text-[0.6875rem] text-territory-muted">
+          <span className="mt-1 block pl-7 text-type-caption text-territory-muted">
             {platformCourierAvailable
               ? "Entregador buscado pela plataforma."
               : "A plataforma ainda não está disponível neste checkout."}
@@ -769,7 +776,7 @@ function MobileDeliveryStage({
               onModeChange("takeout");
               onContinue();
             }}
-            className="flex min-h-12 w-full items-center justify-between rounded-lg border border-territory-border bg-territory-surface px-3 text-left text-xs font-semibold text-territory-ink hover:border-territory-brand/50 focus-visible:outline-2 focus-visible:outline-offset-[-2px] focus-visible:outline-territory-brand"
+            className="flex min-h-12 w-full items-center justify-between rounded-lg border border-territory-border bg-territory-surface px-3 text-left text-type-label font-semibold text-territory-ink hover:border-territory-brand/50 focus-visible:outline-2 focus-visible:outline-offset-[-2px] focus-visible:outline-territory-brand"
           >
             <span className="flex items-center gap-2">
               <Store
@@ -778,13 +785,13 @@ function MobileDeliveryStage({
               />
               Retirar na loja
             </span>
-            <span className="flex items-center gap-1 text-[0.6875rem] font-normal text-territory-muted">
+            <span className="flex items-center gap-1 text-type-caption font-normal text-territory-muted">
               Sem taxa <ChevronRight className="h-4 w-4" aria-hidden="true" />
             </span>
           </button>
         ) : null}
       </div>
-      <div className="rounded-lg border border-territory-border bg-territory-surface p-3 text-xs">
+      <div className="rounded-lg border border-territory-border bg-territory-surface p-3 text-type-caption">
         <div className="flex items-center justify-between gap-3">
           <span className="text-territory-muted">Produtos</span>
           <strong>{currency(subtotal)}</strong>
@@ -795,7 +802,7 @@ function MobileDeliveryStage({
           </span>
           <strong>{currency(deliveryOption === "platform" ? 0 : deliveryFee)}</strong>
         </div>
-        <div className="mt-3 flex items-center justify-between gap-3 border-t border-territory-border pt-3 text-base font-bold">
+        <div className="mt-3 flex items-center justify-between gap-3 border-t border-territory-border pt-3 text-type-body font-bold leading-tight">
           <span>Total</span>
           <span>{currency(subtotal + (deliveryOption === "platform" ? 0 : deliveryFee))}</span>
         </div>
@@ -868,7 +875,7 @@ function MobileReviewStage({
     mode === "delivery" ? Truck : mode === "takeout" ? ShoppingBag : Store;
   return (
     <div className="space-y-3">
-      <h1 className="font-heading text-[1.45rem] font-bold tracking-[-0.04em] text-territory-ink">
+      <h1 className={CHECKOUT_SCREEN_TITLE_CLASS}>
         Revisar pedido
       </h1>
       <Stepper stage="review" />
@@ -882,7 +889,7 @@ function MobileReviewStage({
             className="mt-0.5 h-5 w-5 shrink-0 text-territory-brand"
             aria-hidden="true"
           />
-          <span className="min-w-0 flex-1 text-xs">
+          <span className="min-w-0 flex-1 text-type-caption">
             <strong className="block">
               {deliveryLabel(mode, deliveryOption)}
             </strong>
@@ -907,7 +914,7 @@ function MobileReviewStage({
               )}
             </span>
           </span>
-          <span className="shrink-0 text-xs font-semibold text-territory-brand">
+          <span className="shrink-0 text-type-caption font-semibold text-territory-brand">
             Editar
           </span>
         </button>
@@ -921,7 +928,7 @@ function MobileReviewStage({
             className="mt-0.5 h-5 w-5 shrink-0 text-territory-brand"
             aria-hidden="true"
           />
-          <span className="min-w-0 flex-1 text-xs">
+          <span className="min-w-0 flex-1 text-type-caption">
             <strong className="block">
               {paymentLabel}
             </strong>
@@ -929,7 +936,7 @@ function MobileReviewStage({
               Produtos pagos diretamente à loja
             </span>
           </span>
-          <span className="shrink-0 text-xs font-semibold text-territory-brand">
+          <span className="shrink-0 text-type-caption font-semibold text-territory-brand">
             Editar
           </span>
         </button>
@@ -948,13 +955,13 @@ function MobileReviewStage({
       </div>
       <div className="rounded-lg border border-territory-border bg-territory-surface p-2.5">
         <div className="flex items-center justify-between gap-3">
-          <h2 className="text-sm font-bold text-territory-ink">
+          <h2 className="font-heading text-type-label font-bold text-territory-ink">
             Itens do pedido
           </h2>
           <button
             type="button"
             onClick={onEditItems}
-            className="text-xs font-semibold text-territory-brand focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-territory-brand"
+            className="text-type-caption font-semibold text-territory-brand focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-territory-brand"
           >
             Editar
           </button>
@@ -967,15 +974,15 @@ function MobileReviewStage({
                 alt=""
                 className="h-12 w-12 shrink-0 rounded-lg object-cover"
               />
-              <span className="min-w-0 flex-1 text-xs">
+              <span className="min-w-0 flex-1 text-type-caption">
                 <strong className="block truncate">
                   {item.quantity} × {item.name}
                 </strong>
-                <span className="block text-[0.6875rem] text-territory-muted">
+                <span className="block text-type-caption text-territory-muted">
                   {item.detail}
                 </span>
               </span>
-              <span className="shrink-0 text-xs font-bold">
+              <span className="shrink-0 text-type-caption font-bold">
                 {currency(item.price)}
               </span>
             </div>
@@ -986,7 +993,7 @@ function MobileReviewStage({
         type="button"
         aria-expanded={notesExpanded}
         onClick={onToggleNotes}
-        className="flex min-h-10 w-full items-center justify-between rounded-lg border border-territory-border bg-territory-surface px-3 text-left text-xs font-semibold text-territory-ink focus-visible:outline-2 focus-visible:outline-offset-[-2px] focus-visible:outline-territory-brand"
+        className="flex min-h-10 w-full items-center justify-between rounded-lg border border-territory-border bg-territory-surface px-3 text-left text-type-caption font-semibold text-territory-ink focus-visible:outline-2 focus-visible:outline-offset-[-2px] focus-visible:outline-territory-brand"
       >
         Observações do pedido{" "}
         <span className="sr-only">(opcional)</span>
@@ -1008,7 +1015,7 @@ function MobileReviewStage({
           className="min-h-20 resize-none rounded-lg border-territory-border bg-territory-surface text-sm placeholder:text-territory-muted"
         />
       ) : null}
-      <div className="rounded-lg border border-territory-border bg-territory-surface p-2.5 text-xs">
+      <div className="rounded-lg border border-territory-border bg-territory-surface p-2.5 text-type-caption">
         <div className="flex items-center justify-between gap-3">
           <span className="text-territory-muted">Produtos</span>
           <span>{currency(subtotal)}</span>
@@ -1019,7 +1026,7 @@ function MobileReviewStage({
           </span>
           <span>{currency(deliveryFee)}</span>
         </div>
-        <div className="mt-2 flex items-center justify-between gap-3 border-t border-territory-border pt-2 text-base font-bold">
+        <div className="mt-2 flex items-center justify-between gap-3 border-t border-territory-border pt-2 text-type-body font-bold leading-tight">
           <span>Total</span>
           <span>{currency(total)}</span>
         </div>
@@ -1028,7 +1035,7 @@ function MobileReviewStage({
         <button
           type="button"
           onClick={onOpenFallback}
-          className="flex w-full items-center justify-between border-t border-territory-border pt-2.5 text-left text-xs font-semibold text-territory-brand focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-territory-brand"
+          className="flex w-full items-center justify-between border-t border-territory-border pt-2.5 text-left text-type-caption font-semibold text-territory-brand focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-territory-brand"
         >
           Se não houver entregador disponível{" "}
           <ChevronDown className="h-4 w-4" aria-hidden="true" />
@@ -1083,8 +1090,8 @@ function MobileFallbackStage({
         ? "Retirada na loja"
         : "Consumo no local";
   const warning = (
-    <div className="rounded-lg bg-territory-warning/20 p-3 text-xs text-territory-ink">
-      <p className="flex items-center gap-2 font-bold">
+    <div className="rounded-lg bg-territory-warning/20 p-3 text-type-caption text-territory-ink">
+      <p className="flex items-center gap-2 text-type-label font-bold">
         <CircleAlert
           className="h-5 w-5 shrink-0 text-territory-warning"
           aria-hidden="true"
@@ -1106,7 +1113,7 @@ function MobileFallbackStage({
   if (!hasSelectableMode) {
     return (
       <div className="space-y-3">
-        <h1 className="font-heading text-[1.45rem] font-bold tracking-[-0.04em] text-territory-ink">
+        <h1 className={CHECKOUT_SCREEN_TITLE_CLASS}>
           Ajuste a entrega
         </h1>
         {warning}
@@ -1122,7 +1129,7 @@ function MobileFallbackStage({
         <button
           type="button"
           onClick={onContactStore}
-          className="flex min-h-10 w-full items-center justify-center gap-2 rounded-lg border border-territory-brand px-4 py-2.5 text-xs font-bold text-territory-brand focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-territory-brand"
+          className="flex min-h-10 w-full items-center justify-center gap-2 rounded-lg border border-territory-brand px-4 py-2.5 text-type-label font-bold text-territory-brand focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-territory-brand"
         >
           <MessageCircle className="h-4 w-4" aria-hidden="true" />
           Falar com a loja
@@ -1140,13 +1147,13 @@ function MobileFallbackStage({
 
   return (
     <div className="space-y-3">
-      <h1 className="font-heading text-[1.45rem] font-bold tracking-[-0.04em] text-territory-ink">
+      <h1 className={CHECKOUT_SCREEN_TITLE_CLASS}>
         Ajuste a entrega
       </h1>
       {warning}
       <AddressCard destination={destination} compact onEdit={onEditAddress} />
       <div className="space-y-2">
-        <p className="text-xs font-bold text-territory-ink">
+        <p className="text-type-label font-bold text-territory-ink">
           Escolha uma opção disponível
         </p>
         {selectableModes.map((availableMode) => {
@@ -1157,7 +1164,7 @@ function MobileFallbackStage({
               active={selectedMode === availableMode}
               onClick={() => onSelectMode(availableMode)}
             >
-              <span className="flex items-center gap-2 font-bold">
+              <span className="flex items-center gap-2 text-type-label font-bold">
                 {isDelivery ? (
                   <Truck className="h-5 w-5 text-territory-brand" aria-hidden="true" />
                 ) : (
@@ -1166,7 +1173,7 @@ function MobileFallbackStage({
                 {isDelivery ? "Entrega da loja" : availableMode === "takeout" ? "Retirada na loja" : "Consumo no local"}
                 {isDelivery ? <span className="ml-auto">{currency(deliveryFee)}</span> : null}
               </span>
-              <span className="mt-1 block pl-7 text-[0.6875rem] text-territory-muted">
+              <span className="mt-1 block pl-7 text-type-caption text-territory-muted">
                 {isDelivery ? "Equipe do estabelecimento" : "Sem taxa de entrega"}
               </span>
             </ChoiceButton>
@@ -1174,15 +1181,15 @@ function MobileFallbackStage({
         })}
       </div>
       <div className="rounded-lg border border-territory-border bg-territory-surface p-3">
-        <div className="flex items-center justify-between gap-3 text-xs font-bold">
+        <div className="flex items-center justify-between gap-3 text-type-caption font-bold">
           <span>Seu pedido · {items.reduce((total, item) => total + item.quantity, 0)} itens</span>
           <span>{currency(subtotal)}</span>
         </div>
-        <p className="mt-1 text-[0.6875rem] text-territory-muted">
+        <p className="mt-1 text-type-caption text-territory-muted">
           Seus itens foram mantidos.
         </p>
       </div>
-      <div className="rounded-lg border border-territory-border bg-territory-surface p-3 text-xs">
+      <div className="rounded-lg border border-territory-border bg-territory-surface p-3 text-type-caption">
         <div className="flex items-center justify-between gap-3">
           <span className="text-territory-muted">Produtos</span>
           <span>{currency(subtotal)}</span>
@@ -1191,7 +1198,7 @@ function MobileFallbackStage({
           <span className="text-territory-muted">{selectedModeLabel}</span>
           <span>{currency(selectedDeliveryFee)}</span>
         </div>
-        <div className="mt-3 flex items-center justify-between gap-3 border-t border-territory-border pt-3 text-base font-bold">
+        <div className="mt-3 flex items-center justify-between gap-3 border-t border-territory-border pt-3 text-type-body font-bold leading-tight">
           <span>Total</span>
           <span>{currency(subtotal + selectedDeliveryFee)}</span>
         </div>
@@ -1218,7 +1225,7 @@ function MobileFallbackStage({
       <button
         type="button"
         onClick={onContactStore}
-        className="flex min-h-10 w-full items-center justify-center gap-2 rounded-lg border border-territory-brand px-4 py-2.5 text-xs font-bold text-territory-brand focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-territory-brand"
+        className="flex min-h-10 w-full items-center justify-center gap-2 rounded-lg border border-territory-brand px-4 py-2.5 text-type-label font-bold text-territory-brand focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-territory-brand"
       >
         <MessageCircle className="h-4 w-4" aria-hidden="true" />
         Falar com a loja
@@ -1259,12 +1266,12 @@ function AddressSection({
       <div>
         <h2
           id="checkout-address-title"
-          className="font-heading text-base font-bold text-territory-ink"
+          className={CHECKOUT_SECTION_TITLE_CLASS}
         >
           2. Endereço e destinatário
         </h2>
       </div>
-      <div className="mt-3 grid grid-cols-2 gap-2 text-xs">
+      <div className="mt-3 grid grid-cols-2 gap-2 text-type-caption">
         <button
           type="button"
           aria-pressed={addressMode === "saved"}
@@ -1304,7 +1311,7 @@ function AddressSection({
         />
       </div>
       {addressEditor}
-      <p className="mt-3 flex items-center gap-1.5 rounded-lg bg-territory-info/10 px-3 py-2 text-[0.6875rem] leading-4 text-territory-ink">
+      <p className="mt-3 flex items-center gap-1.5 rounded-lg bg-territory-info/10 px-3 py-2 text-type-caption text-territory-ink">
         <Info
           className="h-3.5 w-3.5 shrink-0 text-territory-brand"
           aria-hidden="true"
@@ -1342,7 +1349,7 @@ function FulfillmentSection({
       <div className="flex items-center justify-between gap-3">
         <h2
           id="checkout-fulfillment-title"
-          className="font-heading text-base font-bold text-territory-ink"
+          className={CHECKOUT_SECTION_TITLE_CLASS}
         >
           1. Recebimento
         </h2>
@@ -1378,7 +1385,7 @@ function FulfillmentSection({
       </div>
       {mode === "delivery" ? (
         <>
-          <h3 className="mt-5 text-xs font-bold text-territory-ink sm:text-sm">
+          <h3 className="mt-5 text-type-label font-semibold text-territory-ink">
             Quem entrega
           </h3>
           <div className="mt-2 grid gap-2 sm:grid-cols-2">
@@ -1387,14 +1394,14 @@ function FulfillmentSection({
               activeClassName="border-territory-sun bg-territory-sun/10 text-territory-ink"
               onClick={() => onDeliveryOptionChange("store")}
             >
-              <span className="block font-semibold">
+              <span className="block text-type-label font-semibold">
                 Entrega da loja{" "}
                 <span className="float-right">{currency(deliveryFee)}</span>
               </span>
-              <span className="mt-0.5 block text-[0.6875rem] text-territory-muted">
+              <span className="mt-0.5 block text-type-caption text-territory-muted">
                 Equipe do estabelecimento
               </span>
-              <span className="mt-1 block text-[0.6875rem] text-territory-muted">
+              <span className="mt-1 block text-type-caption text-territory-muted">
                 Seu pedido será entregue pela equipe do {businessName}.
               </span>
               </ChoiceButton>
@@ -1403,17 +1410,17 @@ function FulfillmentSection({
               disabled={!platformCourierAvailable}
               onClick={() => onDeliveryOptionChange("platform")}
             >
-              <span className="block font-semibold">
+              <span className="block text-type-label font-semibold">
                 <Bike className="mr-1 inline h-4 w-4 text-territory-brand" aria-hidden="true" />
                 Motoboy Achegue-se
               </span>
-              <span className="mt-0.5 block text-[0.6875rem] text-territory-muted">
+              <span className="mt-0.5 block text-type-caption text-territory-muted">
                 {platformCourierAvailable
                   ? "Entregador buscado pela plataforma"
                   : "Indisponível neste checkout"
                 }
               </span>
-              <span className="mt-1 block text-[0.6875rem] text-territory-muted">
+              <span className="mt-1 block text-type-caption text-territory-muted">
                 {platformCourierAvailable
                   ? "A taxa será calculada conforme o endereço."
                   : "A operação atual usa a entrega da loja."
@@ -1421,13 +1428,13 @@ function FulfillmentSection({
               </span>
             </ChoiceButton>
           </div>
-          <p className="mt-3 flex items-center gap-2 text-[0.6875rem] text-territory-muted">
+          <p className="mt-3 flex items-center gap-2 text-type-caption text-territory-muted">
             <Info className="h-3.5 w-3.5 shrink-0 text-territory-brand" aria-hidden="true" />
             A disponibilidade depende do endereço e da operação na região.
           </p>
         </>
       ) : (
-        <p className="mt-3 text-xs text-territory-muted">
+        <p className="mt-3 text-type-caption text-territory-muted">
           Sem taxa de entrega. Combine os detalhes diretamente com a loja.
         </p>
       )}
@@ -1465,11 +1472,11 @@ function PaymentSection({
         <>
           <h2
             id="checkout-payment-title"
-            className="font-heading text-base font-bold text-territory-ink"
+            className={CHECKOUT_SECTION_TITLE_CLASS}
           >
             {stepNumber}. Pagamento
           </h2>
-          <p className="mt-2 flex items-center gap-2 rounded-lg bg-territory-sun/20 px-3 py-2 text-[0.6875rem] text-territory-ink sm:text-xs">
+          <p className="mt-2 flex items-center gap-2 rounded-lg bg-territory-sun/20 px-3 py-2 text-type-caption text-territory-ink">
             <WalletCards
               className="h-4 w-4 shrink-0 text-territory-brand"
               aria-hidden="true"
@@ -1485,15 +1492,15 @@ function PaymentSection({
             active={method === option.value}
             onClick={() => onChange(option.value)}
           >
-            <span className="block font-semibold">{option.label}</span>
-            <span className="mt-0.5 block text-[0.6875rem] text-territory-muted">
+            <span className="block text-type-label font-semibold">{option.label}</span>
+            <span className="mt-0.5 block text-type-caption text-territory-muted">
               Pagamento combinado diretamente com a loja
             </span>
           </ChoiceButton>
         ))}
       </div>
       {method === "cash" ? (
-        <label className="mt-3 block text-xs font-semibold text-territory-ink">
+        <label className="mt-3 block text-type-caption font-semibold text-territory-ink">
           Troco para (opcional)
           <input
             value={cashChangeFor}
@@ -1506,7 +1513,7 @@ function PaymentSection({
       ) : null}
       <button
         type="button"
-        className="mt-3 flex min-h-9 w-full items-center justify-between border-t border-territory-border pt-3 text-left text-xs font-semibold text-territory-ink focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-territory-brand"
+        className="mt-3 flex min-h-9 w-full items-center justify-between border-t border-territory-border pt-3 text-left text-type-caption font-semibold text-territory-ink focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-territory-brand"
       >
         Como funciona o pagamento{" "}
         <ChevronDown className="h-4 w-4" aria-hidden="true" />
@@ -1532,14 +1539,14 @@ function ItemsSection({
       <div className="flex items-center justify-between gap-3">
         <h2
           id="checkout-items-title"
-          className="font-heading text-base font-bold text-territory-ink"
+          className={CHECKOUT_SECTION_TITLE_CLASS}
         >
           Itens do pedido
         </h2>
         <button
           type="button"
           onClick={onAddMoreItems}
-          className="text-xs font-semibold text-territory-brand underline-offset-2 hover:underline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-territory-brand"
+          className="text-type-caption font-semibold text-territory-brand underline-offset-2 hover:underline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-territory-brand"
         >
           Editar
         </button>
@@ -1557,7 +1564,7 @@ function ItemsSection({
                 {item.quantity} × {item.name}
               </p>
               {item.detail ? (
-                <p className="mt-0.5 text-xs text-territory-muted">
+                <p className="mt-0.5 text-type-caption text-territory-muted">
                   {item.detail}
                 </p>
               ) : null}
@@ -1570,7 +1577,7 @@ function ItemsSection({
                 <button
                   type="button"
                   onClick={() => onRemoveItem(item.lineId)}
-                  className="text-[0.6875rem] font-semibold text-territory-brand underline-offset-2 hover:underline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-territory-brand"
+                  className="text-type-caption font-semibold text-territory-brand underline-offset-2 hover:underline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-territory-brand"
                 >
                   Remover
                 </button>
@@ -1629,7 +1636,7 @@ function OrderSummary({
         <button
           type="button"
           onClick={onAddMoreItems}
-          className="text-xs font-semibold text-territory-brand underline-offset-2 hover:underline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-territory-brand"
+          className="text-type-caption font-semibold text-territory-brand underline-offset-2 hover:underline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-territory-brand"
         >
           Adicionar mais itens
         </button>
@@ -1652,11 +1659,11 @@ function OrderSummary({
                 </span>
               </div>
               {item.detail ? (
-                <p className="mt-1 text-xs text-territory-muted">
+                <p className="mt-1 text-type-caption text-territory-muted">
                   {item.detail}
                 </p>
               ) : null}
-              <div className="mt-2 flex gap-3 text-[0.6875rem] text-territory-brand">
+              <div className="mt-2 flex gap-3 text-type-caption text-territory-brand">
                 <button
                   type="button"
                   onClick={onAddMoreItems}
@@ -1692,7 +1699,7 @@ function OrderSummary({
         </div>
       </div>
       {minimumOrderRemaining > 0 ? (
-        <p className="mt-3 flex items-center gap-2 rounded-lg bg-territory-warning/15 px-3 py-2 text-[0.6875rem] text-territory-ink">
+        <p className="mt-3 flex items-center gap-2 rounded-lg bg-territory-warning/15 px-3 py-2 text-type-caption text-territory-ink">
           <CircleAlert
             className="h-4 w-4 shrink-0 text-territory-warning"
             aria-hidden="true"
@@ -1700,7 +1707,7 @@ function OrderSummary({
           Faltam {currency(minimumOrderRemaining)} para o pedido mínimo.
         </p>
       ) : (
-        <p className="mt-3 flex items-center gap-2 rounded-lg bg-territory-success/10 px-3 py-2 text-[0.6875rem] text-territory-ink">
+        <p className="mt-3 flex items-center gap-2 rounded-lg bg-territory-success/10 px-3 py-2 text-type-caption text-territory-ink">
           <Check
             className="h-4 w-4 shrink-0 text-territory-success"
             aria-hidden="true"
@@ -1716,7 +1723,7 @@ function OrderSummary({
       >
         {isSubmitting ? "Criando pedido..." : `Confirmar pedido · ${currency(total)}`}
       </Button>
-      <p className="mt-3 text-center text-[0.6875rem] leading-4 text-territory-muted">
+      <p className="mt-3 text-center text-type-caption text-territory-muted">
         Após confirmar, a loja recebe o pedido e combina os detalhes do
         pagamento.
       </p>
@@ -1724,7 +1731,7 @@ function OrderSummary({
         <button
           type="button"
           onClick={onFallback}
-          className="mt-4 flex w-full items-center justify-between border-t border-territory-border pt-4 text-left text-xs font-semibold text-territory-brand focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-territory-brand"
+          className="mt-4 flex w-full items-center justify-between border-t border-territory-border pt-4 text-left text-type-caption font-semibold text-territory-brand focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-territory-brand"
         >
           Se não houver entregador disponível{" "}
           <ChevronDown className="h-4 w-4" aria-hidden="true" />
@@ -1733,7 +1740,7 @@ function OrderSummary({
       <button
         type="button"
         onClick={onContactStore}
-        className="mt-4 flex min-h-10 items-center gap-2 text-xs font-semibold text-territory-brand focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-territory-brand"
+        className="mt-4 flex min-h-10 items-center gap-2 text-type-caption font-semibold text-territory-brand focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-territory-brand"
       >
         <MessageCircle className="h-4 w-4" aria-hidden="true" />
         Falar com a loja
@@ -2318,12 +2325,12 @@ export default function GastronomyCheckoutConceptSurface({
               <button
                 type="button"
                 onClick={() => navigate(-1)}
-                className="mb-3 inline-flex items-center gap-1 text-xs font-semibold text-territory-brand focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-territory-brand"
+                className="mb-3 inline-flex items-center gap-1 text-type-caption font-semibold text-territory-brand focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-territory-brand"
               >
                 <ArrowLeft className="h-4 w-4" aria-hidden="true" />
                 Voltar ao cardápio
               </button>
-              <h1 className="font-heading text-3xl font-bold tracking-[-0.04em] text-territory-ink">
+              <h1 className={CHECKOUT_DESKTOP_TITLE_CLASS}>
                 {stage === "fallback" ? "Ajuste a entrega" : "Finalizar pedido"}
               </h1>
               <p className="mt-1 text-sm text-territory-muted">
@@ -2333,7 +2340,7 @@ export default function GastronomyCheckoutConceptSurface({
                 <BusinessSummary business={business} />
               </div>
             </div>
-            <div className="flex items-center gap-3 rounded-lg border border-territory-border bg-territory-surface px-4 py-3 text-xs">
+            <div className="flex items-center gap-3 rounded-lg border border-territory-border bg-territory-surface px-4 py-3 text-type-caption">
               <span className="flex h-8 w-8 items-center justify-center rounded-full bg-territory-raised">
                 <UserRound className="h-4 w-4 text-territory-brand" aria-hidden="true" />
               </span>
@@ -2347,7 +2354,7 @@ export default function GastronomyCheckoutConceptSurface({
           </div>
           <div className="mt-5 flex items-center justify-between gap-6 rounded-xl border border-territory-border bg-territory-surface px-5 py-3">
             <Stepper stage={stage} />
-            <p className="max-w-sm text-right text-xs text-territory-muted">
+            <p className="max-w-sm text-right text-type-caption text-territory-muted">
               Etapa {stage === "address" ? "1" : stage === "delivery" ? "2" : "3"} de 3 · Seus itens ficam preservados durante o ajuste.
             </p>
           </div>
@@ -2403,10 +2410,10 @@ export default function GastronomyCheckoutConceptSurface({
               />
               <section className="rounded-xl border border-territory-border bg-territory-surface p-4 sm:p-5" aria-labelledby="checkout-notes-title">
                 <div className="flex items-center justify-between gap-3">
-                  <h2 id="checkout-notes-title" className="font-heading text-base font-bold text-territory-ink">
+                  <h2 id="checkout-notes-title" className={CHECKOUT_SECTION_TITLE_CLASS}>
                     Observações do pedido <span className="font-normal text-territory-muted">(opcional)</span>
                   </h2>
-                  <span className="text-[0.6875rem] text-territory-muted">{notes.length}/280</span>
+                  <span className="text-type-caption text-territory-muted">{notes.length}/280</span>
                 </div>
                 <Textarea value={notes} onChange={(event) => setNotes(event.target.value)} maxLength={280} rows={3} placeholder="Algo que a loja precisa saber?" className="mt-3 min-h-20 resize-none rounded-lg border-territory-border bg-territory-surface text-sm placeholder:text-territory-muted" />
               </section>
@@ -2431,7 +2438,7 @@ export default function GastronomyCheckoutConceptSurface({
             />
           </div>
           )}
-          <p className="mt-6 text-center text-xs text-territory-muted">
+          <p className="mt-6 text-center text-type-caption text-territory-muted">
             Pedido e pagamento serão registrados no fluxo oficial de Gastronomia.
           </p>
         </div>
