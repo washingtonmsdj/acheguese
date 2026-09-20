@@ -7,7 +7,7 @@ function readProjectFile(relativePath: string): string {
 }
 
 const migration = readProjectFile(
-  "supabase/migrations/20260911180000_idempotent_emergency_dispatch_recovery_g76.sql",
+  "supabase/migrations/20260916095228_reconcile_g76_idempotent_emergency_dispatch_recovery.sql",
 );
 const worker = readProjectFile(
   "supabase/functions/send-emergency-email/index.ts",
