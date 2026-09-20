@@ -51,6 +51,10 @@ describe("public paused monetization boundary", () => {
     "src/modules/business/gastronomy/pages/MenuManagementPage.tsx",
     "utf8",
   );
+  const appLayoutRoutes = readFileSync(
+    "src/app/routes/sections/AppLayoutRoutes.tsx",
+    "utf8",
+  );
 
   it("keeps Billing outside the MVP launch scope", () => {
     expect(launchScope).toContain("billing: false");
@@ -75,6 +79,14 @@ describe("public paused monetization boundary", () => {
     );
   });
 
+
+  it("gates public pricing, checkout and subscription management at the router", () => {
+    expect(appLayoutRoutes).toContain('path="/planos"');
+    expect(appLayoutRoutes).toContain('path="/checkout/success"');
+    expect(appLayoutRoutes).toContain('path="/checkout/cancel"');
+    expect(appLayoutRoutes).toContain('path="/settings/subscription"');
+    expect(appLayoutRoutes.match(/launchElement\(\s*"billing"/g)?.length ?? 0).toBeGreaterThanOrEqual(4);
+  });
 
   it("keeps authenticated plan and upgrade entry points behind Billing launch scope", () => {
     expect(businessShell).toContain(
