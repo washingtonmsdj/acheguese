@@ -6,6 +6,8 @@ Domain status: Feed = STATUS: FROZEN.
 >
 > Status: ✅ ativo · 🟡 parcial · ⏸ pausado pelo launch scope · 🗄 legado (a remover) · ↪ redireciona
 
+> Corte MVP adicional: Analytics público permanece pausado (`publicAnalytics=false`). Painéis administrativos internos não são equivalentes à superfície pública de Analytics.
+
 ## Núcleo Territory (SSOT)
 
 | Rota                                       | Página (canônica)                                               | Objetivo                                                                                                                    | Responsável        | Jornada                     | Status | Legado / sucessora                             |
