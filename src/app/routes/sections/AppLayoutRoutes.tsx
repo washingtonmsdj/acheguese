@@ -318,6 +318,11 @@ export function AppLayoutRoutes() {
     typeof window !== "undefined" &&
     window.location.pathname.startsWith("/publicacao/") &&
     new URLSearchParams(window.location.search).get("concept-mock") === "1";
+  const conceptModerationPreview =
+    import.meta.env.DEV &&
+    typeof window !== "undefined" &&
+    window.location.pathname === "/moderacao" &&
+    new URLSearchParams(window.location.search).get("concept-mock") === "1";
   const launchElement = (
     surface: LaunchSurfaceKey,
     moduleName: string,
@@ -714,6 +719,16 @@ export function AppLayoutRoutes() {
           element={
             conceptDetailPreview ? (
               <P.PublicacaoDetalheConceptMockPage />
+            ) : (
+              <Navigate to="/comunidade" replace />
+            )
+          }
+        />
+        <Route
+          path="/moderacao"
+          element={
+            conceptModerationPreview ? (
+              <P.ModeracaoComunidadeConceptMockPage />
             ) : (
               <Navigate to="/comunidade" replace />
             )

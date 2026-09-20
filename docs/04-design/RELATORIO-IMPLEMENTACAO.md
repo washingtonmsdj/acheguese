@@ -845,3 +845,22 @@ A prancha 117 também está coberta pelos estados demonstrativos de visitante, v
 ### Git
 
 - Commit restrito ao mock de detalhe, ao desvio de rota/layout de desenvolvimento e às documentações deste concept; alterações staged preexistentes permanecem fora do commit.
+
+## 20/09/2026 · Central de moderação da comunidade — pranchas 093 e 094
+
+### Auditoria e ajuste
+
+- Os serviços canônicos de moderação comunitária e triagem federada já existiam e foram preservados. A revisão não alterou autorização, contrato de decisão ou persistência.
+- Criei `ModeracaoComunidadeConceptMockPage` em `/moderacao?concept-mock=1`, com rail administrativo, escopo territorial, fila, filtros, análise de conteúdo e decisões manter/ocultar/remover.
+- Implementei os estados visuais de confirmação, decisão registrada, comunicação pendente, falta de permissão, conflito com outro moderador e contestação condicionada.
+- Mantive a justificativa obrigatória e o limite de 1.000 caracteres documentado; não confundi volume de denúncias com prova de infração e não exibi dados de denunciantes.
+
+### Validação e evidências
+
+- Navegador interno mantido aberto em mobile `389 × 867` e desktop `1707 × 960`, com comparação da fila e dos estados.
+- Fluxo fila → análise → revisão → confirmação → registro, além de permissão, conflito e contestação, foi percorrido sem overflow horizontal e sem erros nos logs finais.
+- `npx eslint` direcionado, `npx tsc -p tsconfig.app.json --noEmit --pretty false` e `git diff --check` executados.
+
+### Git
+
+- Commit restrito ao mock de moderação, ao desvio de rota/layout de desenvolvimento e às documentações deste concept; alterações staged preexistentes permanecem fora do commit.

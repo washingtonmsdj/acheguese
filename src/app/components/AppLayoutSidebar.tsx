@@ -72,6 +72,11 @@ export function AppLayoutSidebar() {
     typeof window !== "undefined" &&
     pathname.startsWith("/publicacao/") &&
     new URLSearchParams(window.location.search).get("concept-mock") === "1";
+  const conceptModerationPreview =
+    import.meta.env.DEV &&
+    typeof window !== "undefined" &&
+    pathname === "/moderacao" &&
+    new URLSearchParams(window.location.search).get("concept-mock") === "1";
   const accountUsesSettingsShell =
     ACCOUNT_SETTINGS_SHELL_PATHS.has(pathname) || conceptLinksPreview;
   const conceptAccountPreview =
@@ -139,7 +144,8 @@ export function AppLayoutSidebar() {
     conceptNotificationsPreview ||
     conceptPublishPreview ||
     conceptLinksPreview ||
-    conceptDetailPreview;
+    conceptDetailPreview ||
+    conceptModerationPreview;
 
   const isInternalGroupRoute =
     pathSegments[0] === "grupos" && pathSegments.length >= 2;
@@ -164,7 +170,8 @@ export function AppLayoutSidebar() {
     conceptNotificationsPreview ||
     conceptPublishPreview ||
     conceptLinksPreview ||
-    conceptDetailPreview;
+    conceptDetailPreview ||
+    conceptModerationPreview;
   const hideMobileBottomNav =
     pathname === "/" ||
     isInternalGroupRoute ||
@@ -178,7 +185,8 @@ export function AppLayoutSidebar() {
     isGastronomyCheckoutConcept ||
     conceptNotificationsPreview ||
     conceptPublishPreview ||
-    conceptDetailPreview;
+    conceptDetailPreview ||
+    conceptModerationPreview;
 
   const isMessagingRoute =
     pathSegments[0] === "mensagens" || pathSegments[0] === "chat";
