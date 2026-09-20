@@ -33,7 +33,8 @@ describe('gastronomy premium detail accessibility audit', () => {
     expect(premiumDetailSource).toContain('aria-label={`Diminuir quantidade de ${item.name}`}');
     expect(premiumDetailSource).toContain('aria-label={`Aumentar quantidade de ${item.name}`}');
     expect(premiumDetailSource).toContain('aria-label={`Remover ${line.name} do carrinho`}');
-    expect(premiumDetailSource).toContain('aria-label="Cupom"');
+    expect(premiumDetailSource).not.toContain('aria-label="Cupom"');
+    expect(premiumDetailSource).not.toContain('premium-coupon-code');
     expect(premiumDetailSource).toContain('aria-label="Observações do pedido"');
 
     expect(orderCardSource).toContain('break-words');
