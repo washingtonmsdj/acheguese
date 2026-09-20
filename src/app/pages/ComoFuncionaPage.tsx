@@ -24,7 +24,7 @@ import { useState, type ReactNode } from "react";
 import { isLaunchSurfaceEnabled, type LaunchSurfaceKey } from "@/app/config/launchScope";
 import { LAUNCH_URLS, TERRITORY_CONFIG } from "@/core/routing/config/territory";
 import { cn } from "@/shared/utils/cn";
-import heroCommunity from "@/assets/hero-complexo-nordeste.jpg";
+import heroCommunity from "@/assets/complexo-comercio.jpg";
 import communityPhoto from "@/assets/complexo-cultura.jpg";
 import residentPhoto from "@/assets/persona-morador.jpg";
 import businessPhoto from "@/assets/persona-comerciante.jpg";
@@ -407,7 +407,8 @@ export default function ComoFuncionaPage() {
             <div className="lg:pt-5">
               <SectionKicker>Começamos pelo Complexo</SectionKicker>
               <h1 id="como-funciona-title" className="mt-3 max-w-[29rem] font-heading text-[2.45rem] font-bold leading-[0.98] tracking-[-0.06em] text-territory-brand sm:text-5xl lg:mt-2 lg:max-w-none lg:text-[3rem]">
-                Seu lugar, mais perto.
+                <span className="block sm:inline">Seu lugar,</span>{" "}
+                <span>mais perto.</span>
               </h1>
               <p className="mt-5 max-w-[31rem] text-base leading-6 text-territory-muted sm:text-lg sm:leading-7 lg:mt-2 lg:text-base lg:leading-6">
                 <span className="sm:hidden">Encontre negócios, serviços e histórias da sua comunidade.</span>
@@ -528,7 +529,7 @@ export default function ComoFuncionaPage() {
         </main>
 
         <footer className="border-t border-territory-border/80 bg-territory-surface">
-          <div className="mx-auto flex w-full max-w-[76rem] flex-col gap-5 px-5 py-7 sm:flex-row sm:items-center sm:justify-between sm:px-8 lg:px-10">
+          <div className="mx-auto flex w-full max-w-[76rem] flex-col items-center gap-5 px-5 py-7 text-center sm:flex-row sm:items-center sm:justify-between sm:px-8 sm:text-left lg:px-10">
             <Link to="/?trocar=territorio" aria-label="Achegue-se — início" className={focusRing}><Wordmark /></Link>
             <nav className="flex flex-wrap items-center gap-x-4 gap-y-2 text-xs text-territory-muted" aria-label="Links do rodapé">
               <Link to="/contato" className={cn("hover:text-territory-ink", focusRing)}>Ajuda</Link>

@@ -409,6 +409,28 @@ A prancha 117 também está coberta pelos estados demonstrativos de visitante, v
 - Corrigi a margem global do título desktop e retirei o texto auxiliar que não pertence ao concept, reduzindo o espaço entre retorno, título, loja e o primeiro cartão.
 - Revalidei o frame desktop equivalente ao concept e o estado mobile de endereço após HMR; o viewport foi restaurado ao padrão e a aba permaneceu aberta.
 
+## 19/09/2026 · Como funciona — pranchas 061 e 062
+
+### Auditoria e ajuste
+
+- Comparei `ComoFuncionaPage` com as referências mobile e desktop. A estrutura existente já cobria os quatro trechos de rolagem: conhecer, explorar/participar, perfis e chegada de novas comunidades; mantive os links reais, launch scope, FAQ e menu móvel.
+- Ajustei a fotografia do primeiro trecho para `complexo-comercio.jpg`, mais coerente com o comércio local mostrado na prancha, sem gerar ou introduzir conteúdo ilustrativo novo.
+- Corrigi a tipografia responsiva do título: no mobile a quebra ocorre depois de `Seu lugar,`, como na prancha 061; no desktop amplo o título permanece em uma linha, como na prancha 062.
+- Corrigi o alinhamento do rodapé mobile para centralizar wordmark e links; no desktop a distribuição horizontal continua preservada.
+
+### Validação e evidências
+
+- Navegador interno: conferi mobile equivalente a `389 × 867` CSS px e desktop temporário `1440 × 867` CSS px. Foram verificados header, menu, hero, módulos habilitados, perfis, participação, expansão, FAQ e rodapé.
+- `npm run typecheck:app`.
+- ESLint no componente alterado.
+- `git diff --check`.
+- A aba foi mantida aberta na rota `/como-funciona` e o viewport retornou ao padrão mobile para acompanhamento.
+
+### Git
+
+- Branch: `codex/reformulacao-entrada-comunidade`.
+- Commit restrito ao componente e às documentações do concept; alterações staged preexistentes permanecem fora do commit.
+
 ## 19/09/2026 · Expansão territorial e interesse — prancha 060
 
 ### Auditoria e ajuste
