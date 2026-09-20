@@ -76,9 +76,11 @@ em `public.spatial_ref_sys` neste checkpoint.
   `setStatus` cobre ativação/desativação;
 - [x] os caminhos DML diretos foram removidos do repository/service de grupos;
 - [x] o ledger remoto continua contendo G43 phase 1;
-- [ ] smoke positivo admin AAL2 e prova do source/SHA publicado ainda pendentes;
+- [ ] smoke positivo admin AAL2 e prova do bundle hosted no mesmo SHA ainda
+  pendentes; a branch GitHub receberá o source-cutover neste ciclo;
 - [ ] phase 2 `20260910221500_lock_territorial_group_writes_to_broker_g43.sql`
-  ainda não foi promovida; nenhuma escrita remota foi executada neste ciclo.
+  ainda não foi promovida; nenhuma escrita DDL/Edge foi executada no Supabase
+  neste ciclo.
 
 Os itens 2 e 3 da lista de gates acima descrevem o estado anterior ao corte de
 source e ficam superseded por esta atualização; a certificação hosted ainda é
