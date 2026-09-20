@@ -178,7 +178,7 @@ Após a reconciliação de Vagas, o corte urgente avançou em quatro frentes sem
 - Supabase canônico: `ACTIVE_HEALTHY`;
 - Edge Functions implantadas: 60, todas `ACTIVE`;
 - tipos gerados Git ↔ Supabase: `exact=true`, 731731 caracteres normalizados;
-- migrations: 686 locais / 666 remotas / 666 exatas / 20 local-only / 0 remote-only;
+- migrations: 683 locais / 666 remotas / 649 exatas / 34 local-only / 17 remote-only;
 - Vercel no SHA auditado: status de falha por build rate limit, portanto sem nova prova de deploy;
 - `main` está protegida, porém o endpoint acessível mostra required status checks sem enforcement/contextos; a leitura completa da branch protection não está disponível à integração atual. Não declarar release authority fechada com essa evidência parcial.
 
@@ -209,7 +209,7 @@ Quatro pares adicionais local ↔ remoto foram comparados por tokenização SQL 
 
 As identidades locais foram alinhadas às versões realmente registradas no Supabase sem executar DDL. O teste que lê a migration de `quote_id` foi atualizado para o caminho canônico.
 
-Estado resultante: **686 locais / 666 remotas / 666 exatas / 20 local-only / 0 remote-only**.
+Estado naquele estágio: **683 locais / 666 remotas / 661 exatas / 22 local-only / 5 remote-only**.
 
 Os cinco remote-only restantes são: três migrations da cadeia de preço terminal da entrega (`make_delivery_final_price_server_owned`, `restore_atomic_delivery_completion_with_server_owned_price`, `ignore_client_final_price_in_delivery_wrapper`) e as territoriais G42/G43. A cadeia terminal é materialmente diferente do draft local e exige reconstrução de provenance em grupo; não renomear automaticamente.
 
@@ -230,7 +230,7 @@ Provas:
 
 Os dois drafts locais foram substituídos pelas três identidades realmente registradas no ledger remoto. Nenhum DDL foi reaplicado.
 
-Estado resultante: **686 arquivos locais / 666 remotas / 666 identidades exatas / 20 local-only / 0 remote-only**. G42 e G43 territoriais foram promovidas a identidades Git canônicas; `remote-only=0`.
+Estado naquele estágio: **684 arquivos locais / 666 remotas / 664 identidades exatas / 20 local-only / 2 remote-only**. Os únicos remote-only eram G42 e G43 territoriais.
 
 
 ## Atualização — G42/G43 territoriais promovidas do staging histórico — 2026-09-20
