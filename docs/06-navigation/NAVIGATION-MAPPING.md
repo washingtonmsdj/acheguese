@@ -2,9 +2,9 @@
 
 Sprint TERRITORY.2 — padronização de nomenclatura das páginas para refletir a arquitetura baseada em Territory.
 
-> Atualização 2026-09-21: o MVP público está reduzido a **Empresas + Mapa +
-> Perto de mim**. Home/Território e Conta são plataforma. Search, Community e
-> demais módulos permanecem `paused`. O lifecycle executável em
+> Atualização 2026-09-21: o MVP público possui **Empresas + Mapa + Perto de mim
+> + Busca**. Home/Território e Conta são plataforma. Community e demais módulos
+> pós-MVP permanecem `paused`. O lifecycle executável em
 > `productModuleRegistry.ts` prevalece sobre descrições históricas deste mapa.
 
 Escopo desta etapa:
@@ -28,7 +28,7 @@ Legenda de situação:
 | ---------------- | ---------------------------------------------------------------------------------------------------------------------------- |
 | Nomes removidos  | `AchegueSeHomePage`, `AchegueSeHomePageMap`, `TerritorySelectorPage`                                                         |
 | Nome canônico    | `TerritoryEntryPage`                                                                                                         |
-| Responsabilidade | Apresentar a entrada territorial do MVP e os três módulos ativos. **Não é Home de conteúdo nem catálogo de módulos pausados.** |
+| Responsabilidade | Apresentar a entrada territorial do MVP e os quatro módulos ativos. **Não é Home de conteúdo nem catálogo de módulos pausados.** |
 | Rotas            | `/`; a entrada deriva URLs territoriais de Empresas/Mapa e mantém Perto de mim como capacidade própria. |
 | Arquivo canônico | `src/app/pages/TerritoryEntryPage.tsx`                                                                                       |
 | Dependências     | `TERRITORY_CONFIG`/`LAUNCH_URLS`, catálogo `locations`, boundary canônica e mapa territorial                                 |
@@ -39,8 +39,8 @@ Legenda de situação:
 
 No MVP atual:
 
-- a raiz apresenta Empresas, Mapa e Perto de mim;
-- não usa Community/Search para completar a experiência;
+- a raiz apresenta Empresas, Mapa, Perto de mim e Busca;
+- não usa Community ou módulos pausados para completar a experiência;
 - `lastTerritoryStore` pode preservar contexto territorial, mas não ativa módulo;
 - criação de conta permanece fluxo de plataforma;
 - futuras experiências multi-community só retornam após reativação formal do módulo Community.
@@ -58,7 +58,8 @@ Owners atuais do MVP:
 - entrada pública: `TerritoryEntryPage`;
 - Empresas: `EmpresasLandingPage` + owner `core/business`;
 - Mapa: `MapaPageV4`;
-- Perto de mim: `core/nearby/pages/NearbyPage.tsx`.
+- Perto de mim: `core/nearby/pages/NearbyPage.tsx`;
+- Busca: `BuscaPage` + owner `core/search`, com `/buscar` assistida sob o mesmo lifecycle.
 
 `BuscaPage` permanece ativa no MVP e consome somente providers habilitados pelo lifecycle. Community permanece preservada para pós-MVP e `paused` no lifecycle. `CidadeLandingPage` foi removida após migração dos
 callers e não é compatibilidade ativa.
@@ -81,7 +82,7 @@ Não recriar uma segunda Home/Explorer monolítica.
 
 Regras adicionais:
 
-- a Home expõe somente Empresas, Mapa e Perto de mim no MVP;
+- a Home expõe somente Empresas, Mapa, Perto de mim e Busca no MVP;
 - o lifecycle pertence a `productModuleRegistry.ts`;
 - módulos pausados não são consultados para preencher previews escondidos;
 - produção não substitui dados ausentes por conteúdo conceitual;
