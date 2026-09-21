@@ -111,6 +111,16 @@ jobs:
             --reporter=verbose
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
 
+      - name: Run MVP architecture contract
+        id: mvp_arch
+        continue-on-error: true
+        shell: powershell
+        env:
+          CI: true
+        run: |
+          npm run test:mvp:architecture
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+
       - name: Install Playwright Chromium
         shell: powershell
         run: npx playwright install chromium
@@ -238,7 +248,7 @@ jobs:
           }
           Write-Host "Territorial regression boundaries passed."
 
-      - name: Run public territorial E2E
+      - name: Run MVP public E2E
         id: public_e2e
         continue-on-error: true
         shell: powershell
@@ -258,6 +268,7 @@ jobs:
             -PlaywrightArgs @(
               "test",
               "tests/e2e/territory-home-operational.spec.ts",
+              "tests/e2e/launch-scope-public.spec.ts",
               "--project=chromium",
               "--reporter=list",
               "--output=test-results/public"
@@ -296,6 +307,7 @@ jobs:
         if: always()
         shell: powershell
         env:
+          MVP_ARCH_OUTCOME: ${{ steps.mvp_arch.outcome }}
           LOGOUT_OUTCOME: ${{ steps.logout_e2e.outcome }}
           REGRESSION_OUTCOME: ${{ steps.regression.outcome }}
           BOUNDARIES_OUTCOME: ${{ steps.boundaries.outcome }}
@@ -303,10 +315,11 @@ jobs:
           TARGET_SHA: ${{ github.event.pull_request.head.sha }}
         run: |
           $results = @(
+            "MVP architecture=$env:MVP_ARCH_OUTCOME",
             "Authenticated logout E2E=$env:LOGOUT_OUTCOME",
             "Regression=$env:REGRESSION_OUTCOME",
             "Territorial boundaries=$env:BOUNDARIES_OUTCOME",
-            "Public territorial E2E=$env:PUBLIC_OUTCOME"
+            "MVP public E2E=$env:PUBLIC_OUTCOME"
           )
           @(
             "## Automatic heavy PR certification",
@@ -318,6 +331,7 @@ jobs:
           }
 
           $failed = @(
+            $env:MVP_ARCH_OUTCOME,
             $env:LOGOUT_OUTCOME,
             $env:REGRESSION_OUTCOME,
             $env:BOUNDARIES_OUTCOME,
