@@ -106,7 +106,7 @@ O primeiro release continua territorial. **Cobertura uniforme dos 170 bairros de
 2. **R1 — convergência:** **fechado no ledger** (673/673 exatas); manter a igualdade de tipos e reexecutar os validadores no mesmo SHA candidato.
 3. **R2 — release authority:** publisher de tipos via PR **fechado**; faltam CI realmente executando e branch protection exigindo o caminho aprovado.
 4. **R3 — Auth/Privacy/Security:** fechar autenticação e superfícies sensíveis do escopo; manter delete/export destrutivos fail-closed.
-5. **R4 — certificação funcional:** certificar somente Empresas, Mapa e Perto de mim, além da infraestrutura estritamente necessária ao fluxo.
+5. **R4 — certificação funcional:** certificar somente Empresas, Mapa e Perto de mim, além da infraestrutura estritamente necessária ao fluxo. O contrato automatizado já foi reconciliado; falta execução real.
 6. **R5 — exact-SHA:** security + lint + typecheck + tests + build + E2E + deploy real + smoke do mesmo SHA.
 7. **R6 — lançar MVP:** abrir somente superfícies certificadas e iniciar acompanhamento de erros/uso. Todo restante passa ao backlog durante/pós-MVP.
 
@@ -460,16 +460,19 @@ Para cada módulo exigir: entrypoint canônico, banco/RPC atual, autorização p
 
 ## P2 — higiene E2E e branches
 
-- [x] provenance explícita das fixtures `business_data` (`source=e2e`, `source_kind=technical_fixture`) centralizada nos clients operacionais e protegida por regression guard (#83, concluído no nível de código);
-- [ ] classificar as **38 refs históricas remanescentes** e reconstruir na `main` qualquer delta útil antes de removê-las (#84; as 85 refs comprovadamente integradas/ancestrais já foram removidas e verificadas pela API em 2026-09-17);
-- [ ] não fazer merge/delete em massa: cada ref histórica precisa de classificação de provenance e utilidade antes da decisão.
+- [x] provenance explícita das fixtures técnicas permanece separada de dados públicos de Production;
+- [x] contrato E2E do release foi reconciliado ao MVP atual: a prova determinística cobre **Empresas + Mapa + Perto de mim** e, em conjunto com `launch-scope-public.spec.ts`, comprova que módulos pós-MVP falham fechado;
+- [x] `main` é a única linha ativa de desenvolvimento; não há PR aberto concorrente no marco zero;
+- [x] auditoria remota de 2026-09-21 classificou 165 refs como removíveis sem perda: 92 heads exatos de PR mergeado, 67 heads SHA-pinados como superseded e 6 refs totalmente contidas na `main`;
+- [ ] exclusão física dessas 165 refs continua pendente porque o runner do workflow de higiene encerra com `steps=null` e a integração atual não expõe `DELETE ref`;
+- [ ] nove refs com commits exclusivos permanecem somente como preservação histórica até arquivamento/auditoria específica; nenhuma delas é linha ativa de desenvolvimento.
 
 ## Definition of Done — MVP
 
 O Achegue-se só pode ser marcado **MVP READY** quando todos os itens abaixo forem comprovados:
 
 - [ ] SSOT documental/arquitetural sem referência canônica quebrada conhecida;
-- [ ] `main` protegida e sem linha operacional concorrente;
+- [x] `main` protegida e definida como única linha operacional ativa; branches históricas remanescentes não recebem desenvolvimento novo;
 - [ ] security/lint/typecheck/test/build executando de verdade e verdes no mesmo SHA;
 - [ ] migrations/Edge/source reconciliados com o runtime correspondente;
 - [ ] LGPD seguro ou explicitamente indisponível/fail-closed até certificação;

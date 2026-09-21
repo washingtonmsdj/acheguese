@@ -78,9 +78,17 @@ Regras:
 
 Os workflows do candidato atual podem aparecer como `failure`, porém os jobs auditados retornam `steps=null`. Portanto, esses resultados **não constituem evidência de falha de código ou teste executado**.
 
+O contrato de certificação foi corrigido antes da próxima execução real:
+
+- `test:mvp:architecture` prova registry, launch scope, boundary Map -> Business, Nearby e fluxo público de Business;
+- `test:e2e:mvp` cobre raiz/Home + Empresas + Mapa + Perto de mim;
+- o mesmo E2E inclui `launch-scope-public.spec.ts` para provar que módulos pós-MVP continuam isolados;
+- `certify-heavy.yml` permanece a autoridade exact-SHA e agora chama explicitamente essas provas;
+- o workflow automático de PR agrega o mesmo contrato, sem criar uma segunda definição de MVP.
+
 A Vercel também bloqueou novos deploys por limite diário de deployments. Isso mantém o gate de deploy exact-SHA aberto, mas não deve ser registrado como regressão funcional do projeto.
 
-Até existir execução real, lint/typecheck/test/build continuam **não certificados**.
+Até existir execução real, security/lint/typecheck/test/build/E2E continuam **não certificados**.
 
 ## Pós-MVP
 

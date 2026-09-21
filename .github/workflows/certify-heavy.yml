@@ -212,7 +212,8 @@ jobs:
             @("run", "validate:architecture:communication"),
             @("run", "validate:architecture:file-sizes"),
             @("run", "validate:ssot"),
-            @("run", "validate:architecture:community")
+            @("run", "validate:architecture:community"),
+            @("run", "test:mvp:architecture")
           )
 
           foreach ($args in $commands) {
@@ -280,7 +281,7 @@ jobs:
       - name: Install Playwright Chromium
         run: npx playwright install chromium
 
-      - name: Run deterministic public territorial E2E
+      - name: Run deterministic MVP public E2E
         env:
           CI: true
           PLAYWRIGHT_BASE_URL: http://127.0.0.1:8099
@@ -288,7 +289,7 @@ jobs:
           VITE_SUPABASE_URL: https://ci-fixtures.invalid
           VITE_SUPABASE_PUBLISHABLE_KEY: ci-public-fixture-key
           VITE_SUPABASE_ANON_KEY: ci-public-fixture-key
-        run: npm run test:e2e:ci
+        run: npm run test:e2e:mvp
 
       - name: Run non-destructive authenticated Account E2E
         shell: powershell
@@ -432,7 +433,8 @@ jobs:
             "The workflow accepts only an exact SHA that exists in washingtonmsdj/acheguese and checks out that immutable SHA.",
             "Authenticated Account E2E accepts only allowlisted Achegue-se Production/project Preview HTTPS origins and runs with zero retries.",
             "Protected Vercel Preview E2E uses only the official VERCEL_AUTOMATION_BYPASS_SECRET GitHub Actions secret and an ephemeral Playwright config; the target SHA remains unchanged.",
-            "Public territorial E2E is fixture-backed and uses no local Supabase, Docker, service-role key, or Production seed.",
+            "MVP public E2E proves Empresas + Mapa + Perto de mim and proves post-MVP public routes fail closed.",
+            "Public MVP E2E is fixture-backed and uses no local Supabase, Docker, service-role key, or Production seed.",
             "Authenticated Account E2E uses explicit public Supabase project configuration plus only E2E_USER_EMAIL/E2E_USER_PASSWORD from GitHub Actions and covers mobile, tablet, and desktop in the target test suite.",
             "Regression discovery fails closed when no regression test files are present.",
             "Static security, lint, typecheck, architecture/SSOT, migration parity and the complete Vitest suite execute on the same attested SHA before E2E/build.",

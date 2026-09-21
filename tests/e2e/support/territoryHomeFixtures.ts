@@ -62,6 +62,42 @@ export const HOME_TERRITORIES = {
   },
 } as const;
 
+export const HOME_BUSINESS = {
+  id: "20000000-0000-4000-8000-000000000001",
+  profile_id: "30000000-0000-4000-8000-000000000001",
+  business_name: "Mercado Horizonte",
+  slug: "mercado-horizonte",
+  category: "comercio",
+  description: "Mercado local da Pituba",
+  location_id: HOME_TERRITORIES.pituba.id,
+  address_id: null,
+  status: "active",
+  is_premium: false,
+  is_verified: true,
+  rating: 4.8,
+  recommendations_count: 12,
+  business_role: "standalone",
+  metadata: {
+    neighborhood: "Pituba",
+    city: "Salvador",
+    state: "BA",
+  },
+  latitude: -13.0032,
+  longitude: -38.4596,
+  geographic_path: HOME_TERRITORIES.pituba.geographic_path,
+  created_at: CREATED_AT,
+  updated_at: CREATED_AT,
+  address: null,
+  location: {
+    id: HOME_TERRITORIES.pituba.id,
+    name: "Pituba",
+    full_name: "Pituba, Salvador, Bahia",
+    geographic_path: HOME_TERRITORIES.pituba.geographic_path,
+    canonical_lat: -13.0032,
+    canonical_lng: -38.4596,
+  },
+} as const;
+
 type TerritoryRow = (typeof HOME_TERRITORIES)[keyof typeof HOME_TERRITORIES];
 
 const ALL_TERRITORIES: readonly TerritoryRow[] =
@@ -142,8 +178,22 @@ function requestTargetsPituba(url: URL): boolean {
   return decodeURIComponent(url.search).includes(HOME_TERRITORIES.pituba.id);
 }
 
+function requestTargetsFixtureBusiness(url: URL): boolean {
+  const query = decodeURIComponent(url.search);
+  return (
+    !query ||
+    query.includes(HOME_TERRITORIES.pituba.id) ||
+    query.includes(HOME_BUSINESS.profile_id) ||
+    query.includes(HOME_BUSINESS.id)
+  );
+}
+
 function fixtureRows(table: string, url: URL): unknown[] {
   if (table === "locations") return locationRowsForRequest(url);
+
+  if (table === "public_business_search") {
+    return requestTargetsFixtureBusiness(url) ? [HOME_BUSINESS] : [];
+  }
 
   if (table === "business_data") {
     const select = url.searchParams.get("select") ?? "";
@@ -274,6 +324,28 @@ export async function installTerritoryHomeFixtures(page: Page): Promise<void> {
   });
 
   await page.route(/\/rest\/v1\/rpc\/.*/, async (route) => {
+    const url = new URL(route.request().url());
+    const rpcName = url.pathname.split("/rpc/")[1] ?? "";
+
+    if (
+      rpcName === "search_entities_by_radius" ||
+      rpcName === "search_entities_hybrid"
+    ) {
+      await fulfillPostgrest(route, [
+        {
+          id: HOME_BUSINESS.profile_id,
+          name: HOME_BUSINESS.business_name,
+          latitude: HOME_BUSINESS.latitude,
+          longitude: HOME_BUSINESS.longitude,
+          distance_meters: 430,
+          location_id: HOME_BUSINESS.location_id,
+          in_territory: true,
+          slug: HOME_BUSINESS.slug,
+        },
+      ]);
+      return;
+    }
+
     await fulfillPostgrest(route, []);
   });
 }
