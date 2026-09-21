@@ -22,7 +22,7 @@ import type {
 
 const uuidSchema = z.string().uuid();
 
-const threadPreviewSchema = z.object({
+const threadPreviewSchema: z.ZodType<BusinessDirectThreadPreview> = z.object({
   id: uuidSchema,
   business_id: uuidSchema,
   business_name: z.string(),
@@ -45,7 +45,7 @@ const threadPreviewSchema = z.object({
   created_at: z.string().datetime({ offset: true }),
 });
 
-const messageSchema = z.object({
+const messageSchema: z.ZodType<BusinessDirectMessage> = z.object({
   id: uuidSchema,
   thread_id: uuidSchema,
   sender_profile_id: uuidSchema,
