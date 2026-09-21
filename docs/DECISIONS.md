@@ -12,29 +12,29 @@
 
 **Decisão:** `/` resolve ou seleciona território e não é Home de conteúdo. `/:uf/:cidade` é a Home territorial ampla da cidade e `/:uf/:cidade/:territorio` é a Home prioritária de bairro ou grupo resolvido. Visitantes podem explorar conteúdo público sem onboarding obrigatório. **Referência:** `05-ux/HOME-SPEC.md`.
 
-## D-003 — Community-first
+## D-003 — Produto territory-first e modular
 
-**Decisão:** o produto orbita a Comunidade Local. Módulos verticais (empresas, classificados, mobilidade) atendem à comunidade, não o contrário. **Referência:** `03-architecture/COMMUNITY_FIRST_ARCHITECTURE_SSOT.md`.
+**Decisão:** o Achegue-se é **territory-first**. Território é o contexto raiz e os módulos de produto são capacidades independentes com lifecycle explícito. No MVP vigente, somente **Empresas + Mapa + Perto de mim** estão ativos; Community e demais módulos permanecem `paused`. A visão comunitária continua preservada para pós-MVP, mas não é pré-requisito arquitetural nem superfície implícita do núcleo atual. **Referências:** `03-architecture/PRODUCT_MODULE_LIFECYCLE.md`, `05-ux/HOME-SPEC.md`.
 
 ## D-004 — Nomenclatura canônica de telas
 
 `TerritoryEntryPage · TerritoryHomePage · BuscaPage · ComunidadePage · PostPage · CommunityInterestPage`. “Territory Feed” permanece o conceito de produto; o owner técnico é `ComunidadePage` em `core/community-feed`, sem um segundo arquivo de página. O alias `TerritoryExplorerPage` foi aposentado em 2026-09-09; descoberta ampla pertence a Busca/Mapa, não a uma segunda Home. `LaunchPausedPage` é uma superfície app-level de kill-switch, não uma tela territorial. **Ref.:** `06-navigation/NAVIGATION-MAPPING.md`.
 
-## D-005 — Vozes editoriais unificadas (Home = Feed = Post)
+## D-005 — Voz editorial consistente por superfície ativa
 
-**Decisão:** microcopy neighborly em pt-BR, primeira pessoa, sem jargão técnico ("Postar", "Publicar no bairro", "Conversa no post"). **Ref.:** `05-ux/HOME-CONTENT.md`, `FEED-CONTENT.md`, `POST-CONTENT.md`.
+**Decisão:** microcopy em pt-BR deve permanecer consistente e sem jargão técnico. Contratos de Feed/Post continuam preservados para o módulo Community pós-MVP, mas não ativam essas superfícies nem obrigam a Home atual a compô-las. **Ref.:** `05-ux/HOME-SPEC.md`, `FEED-CONTENT.md`, `POST-CONTENT.md`.
 
 ## D-006 — Design tokens são SSOT visual
 
 **Decisão:** proibido `text-white`, `bg-black`, `bg-[#...]` em componentes. Toda cor vem de tokens semânticos em `index.css` + `contentCategories.ts`. **Ref.:** `04-design/DESIGN-TOKENS.md`.
 
-## D-007 — Publicação é ação contextual, não tab global
+## D-007 — Publicação é ação contextual do módulo Community
 
-**Decisão:** a navegação primária territorial começa por `Hoje` e preserva o território atual. `Publicar`/`Postar` só aparece quando `CommunityAccessPolicy` autoriza `create_post`; não é destino global permanente para visitante ou perfil inelegível. **Referência:** `05-ux/HOME-SPEC.md`.
+**Decisão:** enquanto Community estiver `paused`, `Publicar`/`Postar` não pertence à navegação do MVP. Quando o módulo for reativado, a ação continua contextual e só aparece quando `CommunityAccessPolicy` autorizar `create_post`; nunca volta como tab global por conveniência. **Referência:** `05-ux/HOME-SPEC.md`.
 
-## D-008 — Bairros `coming_soon` viram waitlist
+## D-008 — Waitlist de Community permanece contrato pós-MVP
 
-**Decisão:** bairros `coming_soon` com Community persistida e identidade territorial inequívoca redirecionam para `/interesse` (`CommunityInterestPage`) com Turnstile anti-spam. O frontend não fabrica Community nem permite escrita a partir de perfil sintético. Uma rota municipal sem Community persistida permanece fail-closed e direciona o visitante ao explorador para escolher um bairro; `community_id = null` não autoriza, por si só, um contrato genérico de interesse por cidade ou território. Suporte futuro a city/territory interest exige decisão e modelo próprios, e nenhuma Community municipal deve ser criada apenas para satisfazer uma rota. O frontend novo registra exclusivamente por `register-community-interest`; durante a migration ADDITIVE, o frontend legado conserva um writer direto mínimo, por colunas, até o CUTOVER evidence-gated. O painel admin fica em `/admin/community-interest`. **Ref.:** `supabase/migrations/20260809184409_create_authoritative_community_interest_registration.sql`.
+**Decisão:** o fluxo de interesse/waitlist não integra o MVP enquanto Community estiver `paused`. Quando reativado, bairros `coming_soon` só podem usar o contrato persistido e anti-spam já definido; o frontend não fabrica Community, não cria identidade sintética e não usa redirect para simular disponibilidade. O backend/rollout continua fail-closed. **Ref.:** `supabase/migrations/20260809184409_create_authoritative_community_interest_registration.sql`.
 
 ## D-009 — Rascunhos de post são criptografados
 
@@ -84,17 +84,10 @@
 
 **Decisão:** snapshots com palavras "FINAL", "100%", "COMPLETO", "PRONTO PARA PRODUÇÃO" não são fonte de decisão. Se conflitam com um doc numerado (`01-` … `09-`), o numerado vence.
 
-## D-021 — Cobertura do produto é independente do rollout da Community
+## D-021 — Lifecycle público do MVP é independente da visão pós-MVP
 
-**Contexto:** abrir a camada social simultaneamente em todos os bairros dilui atividade e faz comunidades locais parecerem vazias. **Decisão:** o Achegue-se pode oferecer Home, busca, empresas, serviços, classificados, vagas, eventos e demais módulos públicos em toda Salvador enquanto a Community é ativada de forma territorial e gradual. O primeiro cluster oficial de lançamento da Community é o **Complexo do Nordeste de Amaralina**, inicialmente concentrando Nordeste de Amaralina, Santa Cruz, Vale das Pedrinhas e Chapada, preservando a identidade canônica de cada Territory. Os demais bairros continuam utilizáveis no produto; quando a Community não estiver ativa, a Home deve permanecer útil e mostrar estado `coming_soon`/waitlist apenas para a camada comunitária. A expansão da Community deve ocorrer por evidência operacional e de demanda — interesse local, capacidade de moderação, atividade e condições de lançamento — e não por calendário automático. **Referências:** `03-architecture/COMMUNITY_FIRST_ARCHITECTURE_SSOT.md`, `05-ux/HOME-SPEC.md`.
+**Decisão:** o conjunto público ativo é determinado exclusivamente por `src/app/config/productModuleRegistry.ts`. No MVP atual, os únicos módulos de produto ativos são **Business, Map e Nearby**, com `nearby -> [map, business]`. Busca, Community, Serviços, Classificados, Eventos, Vagas e demais capacidades permanecem `paused` e fail-closed. Cobertura técnica, código preservado ou dados existentes não autorizam exposição pública. **Referências:** `03-architecture/PRODUCT_MODULE_LIFECYCLE.md`, `FEATURE-MAP.md`, `SCREEN-MAP.md`.
 
-## D-022 — Estado ativo da Community exige perfil persistido e rollout
+## D-022 — Community permanece fail-closed até reativação formal
 
-**Decisao:** `territory_communities.status` e a fonte da identidade e do estado
-especifico da Community; `module_rollouts` e a fonte de habilitacao operacional.
-Somente perfil persistido `active` combinado com rollout efetivo ativo abre
-overview e Feed. Rollout herdado nao fabrica Community. Perfil persistido
-`coming_soon`, `launching` ou `waiting_list` pode oferecer interesse pelo
-contrato D-008; ausencia/inatividade/erro permanece fail-closed e mantem acesso
-a Home e Explorar. **Referencia:**
-`03-architecture/COMMUNITY_FIRST_ARCHITECTURE_SSOT.md`.
+**Decisão:** Community está fora do MVP atual. Seu contrato interno continua preservado: `territory_communities.status` define identidade/estado e `module_rollouts` participa da habilitação operacional, mas nenhum deles pode contornar o `productModuleRegistry`. Somente após Community passar a `active` no lifecycle, com certificação própria, um perfil persistido `active` combinado com rollout efetivo poderá abrir overview/Feed. Até lá, rotas públicas, prefetch, navegação e queries do módulo permanecem isolados. **Referência:** `03-architecture/COMMUNITY_FIRST_ARCHITECTURE_SSOT.md`.
