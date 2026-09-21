@@ -46,7 +46,7 @@ Database -> Service -> Hook -> Component
 - Territorio e o contexto geografico raiz.
 - Modulos de produto sao capacidades independentes com lifecycle explicito em
   `src/app/config/productModuleRegistry.ts`.
-- No MVP atual, somente `business`, `map` e `nearby` estao ativos;
+- No MVP atual, somente `business`, `map`, `nearby` e `search` estao ativos;
   `nearby` depende de `map + business`.
 - Community e demais capabilities pos-MVP continuam versionadas, mas
   `paused` e fail-closed ate certificacao propria.
