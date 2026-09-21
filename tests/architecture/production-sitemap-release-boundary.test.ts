@@ -63,7 +63,7 @@ describe("production sitemap release boundary", () => {
     const launchScope = read("src/app/config/launchScope.ts");
     const releaseSitemap = read("src/core/routing/seo/generateSitemap.ts");
 
-    expect(launchScope).toContain('nearby: isProductModuleEnabled("nearby")');
+    expect(launchScope).toContain('nearby: isPlatformCapabilityEnabled("nearby")');
     expect(releaseSitemap).toContain(
       "TERRITORY_SITEMAP_MODULES.filter((module) => isLaunchSurfaceEnabled(module.surface))",
     );
