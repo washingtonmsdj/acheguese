@@ -1,8 +1,8 @@
 /**
- * Messaging product-module barrel.
+ * Horizontal Messaging UI module.
  *
- * The user-facing Inbox is owned by core/messaging. Domain-specific providers
- * plug into that horizontal capability; this module intentionally exposes no
- * parallel runtime implementation.
+ * Core messaging owns contracts/services and domain adapters. This module owns
+ * the global Inbox/Chat presentation layer once the platform capability is
+ * certified and activated.
  */
 export {};
