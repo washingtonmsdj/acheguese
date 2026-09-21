@@ -12,6 +12,7 @@ export const PRELAUNCH_LOCKDOWN_ENABLED =
 
 export type LaunchSurfaceKey =
   | "home"
+  | "profiles"
   | "community"
   | "business"
   | "billing"
@@ -40,6 +41,7 @@ export type LaunchSurfaceKey =
 
 export const PUBLIC_LAUNCH_SURFACES: Record<LaunchSurfaceKey, boolean> = {
   home: true,
+  profiles: isPlatformCapabilityEnabled("profiles"),
   community: isProductModuleEnabled("community"),
   business: isProductModuleEnabled("business"),
   billing: isProductModuleEnabled("billing"),
