@@ -22,7 +22,7 @@ import type {
 
 const uuidSchema = z.string().uuid();
 
-const threadPreviewSchema: z.ZodType<BusinessDirectThreadPreview> = z.object({
+const threadPreviewSchema = z.object({
   id: uuidSchema,
   business_id: uuidSchema,
   business_name: z.string(),
@@ -43,16 +43,16 @@ const threadPreviewSchema: z.ZodType<BusinessDirectThreadPreview> = z.object({
   blocked_by_other: z.boolean(),
   closed_at: z.string().datetime({ offset: true }).nullable(),
   created_at: z.string().datetime({ offset: true }),
-});
+}).required();
 
-const messageSchema: z.ZodType<BusinessDirectMessage> = z.object({
+const messageSchema = z.object({
   id: uuidSchema,
   thread_id: uuidSchema,
   sender_profile_id: uuidSchema,
   body: z.string(),
   is_removed: z.boolean(),
   created_at: z.string().datetime({ offset: true }),
-});
+}).required();
 
 function requireUuid(value: string, label: string): void {
   if (!uuidSchema.safeParse(value).success) {
