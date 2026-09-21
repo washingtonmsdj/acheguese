@@ -9,7 +9,6 @@ export { EmpresaCTAsSection } from './EmpresaCTAsSection';
 export { EmpresaResumoSection } from './EmpresaResumoSection';
 export { EmpresaInfoSection } from './EmpresaInfoSection';
 export { EmpresaProdutosSection } from './EmpresaProdutosSection';
-export { EmpresaGastronomiaPreviewSection } from './EmpresaGastronomiaPreviewSection';
 export { EmpresaAvaliacoesSection } from './EmpresaAvaliacoesSection';
 export { EmpresaFotosSection } from './EmpresaFotosSection';
 export { EmpresaProximasSection } from './EmpresaProximasSection';
