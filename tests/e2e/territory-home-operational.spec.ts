@@ -172,6 +172,10 @@ test.describe("MVP público — Empresas + Mapa + Perto de mim", () => {
     const mapLink = page.getByRole("link", { name: /Ver no mapa/i }).first();
     await expect(mapLink).toHaveAttribute("href", /\/mapa/);
 
+    await expect(page.locator('a[href="/perto-de-mim"]').first()).toBeVisible();
+    await expect(page.locator('a[href^="/recomendacoes"]')).toHaveCount(0);
+    await expect(page.getByText("Indicar negocio", { exact: true })).toHaveCount(0);
+
     await expectNoHorizontalOverflow(page);
     health.assertHealthy();
   });

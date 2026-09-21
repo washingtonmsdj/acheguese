@@ -47,6 +47,7 @@ import type { Business, BusinessSortOption, HeroStat } from "@/app/features/busi
 import { CategoryCard } from "@/app/features/business-landing/components/cards";
 import { QuickFilterChip } from "@/app/features/business-landing/components/filters/QuickFilterChip";
 import { withQueryParams } from "@/core/landing/utils/landingPresentation";
+import { APP_MODULE_SLUGS, buildAppModulePath } from "@/shared/config/moduleSlugs";
 
 interface EmpresasLandingPageProps {
   resolved?: ResolvedTerritory;
@@ -390,7 +391,7 @@ export default function EmpresasLandingPage({
     () => (user ? businessUrls.create : withQueryParams(appUrls.auth.login, { redirect: businessUrls.create })),
     [appUrls.auth.login, businessUrls.create, user],
   );
-  const recommendationHref = "/recomendacoes/nova";
+  const nearbyHref = buildAppModulePath(APP_MODULE_SLUGS.nearby);
   const topPrimaryHref = user ? businessUrls.create : appUrls.auth.register;
   const topPrimaryLabel = user ? "Cadastrar empresa" : "Criar conta";
   const topSecondaryHref = user ? appUrls.profile.businesses : appUrls.auth.login;
@@ -439,8 +440,8 @@ export default function EmpresasLandingPage({
         stats={heroStats}
         primaryHref={createBusinessHref}
         primaryLabel="Cadastrar empresa"
-        secondaryHref={recommendationHref}
-        secondaryLabel="Indicar negocio"
+        secondaryHref={nearbyHref}
+        secondaryLabel="Perto de mim"
         mapHref={moduleUrls.map}
         onOpenLocationDialog={() => setLocationDialogOpen(true)}
         onOpenBusiness={openBusiness}

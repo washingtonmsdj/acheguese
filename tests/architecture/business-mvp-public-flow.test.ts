@@ -22,6 +22,14 @@ describe("MVP Business public flow", () => {
     expect(page).toContain("realBusinesses.map(normalizeRealBusinessEntry)");
   });
 
+  it("keeps Business CTAs inside the active MVP module set", () => {
+    expect(page).toContain("APP_MODULE_SLUGS.nearby");
+    expect(page).toContain("buildAppModulePath(APP_MODULE_SLUGS.nearby)");
+    expect(page).toContain('secondaryLabel="Perto de mim"');
+    expect(page).not.toContain('"/recomendacoes/nova"');
+    expect(page).not.toContain('secondaryLabel="Indicar negocio"');
+  });
+
   it("keeps a rollback-only real-data proof for list to canonical detail", () => {
     expect(remoteProbe).toContain("BEGIN;");
     expect(remoteProbe).toContain("ROLLBACK;");
