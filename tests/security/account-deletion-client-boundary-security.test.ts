@@ -35,9 +35,10 @@ describe("LGPD pending deletion client boundary", () => {
     expect(privacySettingsService).not.toContain(
       'buildSupabaseFunctionUrl("user-delete-account"',
     );
-    expect(privacyService).toContain(
+    expect(privacyService).not.toContain(
       "PrivacyRpcService.requestAccountDeletion",
     );
+    expect(privacyService).not.toContain("static async deleteAccount(");
     expect(privacySettingsService).toContain(
       "PrivacyRpcService.requestAccountDeletion",
     );
