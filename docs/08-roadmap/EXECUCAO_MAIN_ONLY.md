@@ -114,6 +114,25 @@ no Supabase neste ciclo.
    (HIBP, PostGIS e recovery snapshot), sem prorrogação tácita;
 4. só depois repetir o gate hosted do mesmo SHA e revisar proteção da branch.
 
+## Atualização operacional — 2026-09-20 — sequência do MVP urgente
+
+- [x] a limpeza documental das migrations pending foi publicada como
+  `1189b4ed3`; as cópias antigas de G42/G43 phase 1 não fazem mais parte do
+  inventário e a phase 2 continua separada;
+- [x] o snapshot read-only atual confirmou o projeto Supabase
+  `xhdowzacfujckjelqhtd` como `ACTIVE_HEALTHY`, região `us-west-2` e Postgres
+  `17.6.1.084`;
+- [x] o ledger remoto continua com 673 migrations, terminando em
+  `20260920101850_block_professional_legacy_coverage_writes_g37`;
+- [x] os quatro Edge territoriais continuam `ACTIVE`, versão 1 e
+  `verify_jwt=true`; o bundle observado de
+  `territorial-group-admin-rpc` tem SHA
+  `96f33e22a7033d1aef30204c217dea6157eee31ab8fded03da035542a1a7291c`;
+- [ ] essa leitura não prova que o bundle Edge nem o frontend hosted são o
+  mesmo SHA do source publicado; o smoke admin AAL2 permanece obrigatório;
+- [ ] não houve escrita DDL/Edge nesta sequência e a G43 phase 2 continua sem
+  promoção até a certificação hosted e o smoke positivo/negativo.
+
 ## Snapshot remoto — 2026-09-18
 
 - Commits publicados em `main`: `7d7f1af6e` (catálogo de conceitos da outra conversa), `1778d727f` (remoção de caller frontend do RPC service-only, validação de migrations e evidências de segurança) e `7fd8aa36a` (reconciliação dos nomes de 32 migrations com o ledger remoto e anotações de autoridade).
