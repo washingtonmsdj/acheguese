@@ -5,6 +5,11 @@ import {
   ADMIN_USER_REPORT_STATUS,
   type AdminUserReportStatus,
 } from "@/core/admin/config/user-report-status";
+import {
+  AdminDriverDetailReadService,
+  type AdminDriverDetail,
+} from "@/core/admin/services/AdminDriverDetailReadService";
+import { DriverModerationEventsService } from "@/core/mobility/services/runtime";
 
 export interface UserReport {
   id: string;
@@ -14,6 +19,30 @@ export interface UserReport {
   status: AdminUserReportStatus;
   reporter_name: string;
   created_at: string;
+}
+
+export interface AdminSuspensionHistory {
+  id: string;
+  user_id: string;
+  reason: string;
+  suspended_at: string;
+  suspended_until: string;
+  suspended_by: string;
+  suspended_by_name: string;
+  lifted_at: string | null;
+  lifted_by: string | null;
+  is_active: boolean;
+}
+
+export interface AdminModerationProfileSnapshot {
+  id: string;
+  user_id: string;
+  profile_type: string | null;
+  is_suspended?: boolean | null;
+  suspended_until?: string | null;
+  suspension_reason?: string | null;
+  suspended_at?: string | null;
+  updated_at?: string | null;
 }
 
 type RideReportRow = {
@@ -68,6 +97,107 @@ function toUserReport(row: RideReportRow, namesByProfileId: Map<string, string>)
 }
 
 export class AdminUserDetailService {
+  static async loadModerationContext(
+    profile: AdminModerationProfileSnapshot,
+  ): Promise<{
+    driverData: AdminDriverDetail | null;
+    suspensionHistory: AdminSuspensionHistory[];
+  }> {
+    const isDriver = profile.profile_type === "driver";
+
+    const [driverData, moderationEvents] = await Promise.all([
+      isDriver ? AdminDriverDetailReadService.get(profile.id) : Promise.resolve(null),
+      isDriver
+        ? DriverModerationEventsService.listByDriverProfile(profile.id)
+        : Promise.resolve([]),
+    ]);
+
+    const moderationTimeline = moderationEvents.filter(
+      (event) => event.action === "suspended" || event.action === "reactivated",
+    );
+
+    if (moderationTimeline.length > 0) {
+      const reactivationEvents = moderationTimeline
+        .filter((event) => event.action === "reactivated")
+        .sort(
+          (a, b) =>
+            new Date(a.created_at).getTime() - new Date(b.created_at).getTime(),
+        );
+
+      const history = moderationTimeline.map((event) => {
+        const nextReactivation = reactivationEvents.find(
+          (reactivation) =>
+            new Date(reactivation.created_at).getTime() >
+            new Date(event.created_at).getTime(),
+        );
+
+        const isSuspensionEvent = event.action === "suspended";
+        const isActiveSuspension =
+          isSuspensionEvent && !nextReactivation && Boolean(profile.is_suspended);
+
+        const liftedAt =
+          nextReactivation?.created_at ||
+          (event.action === "reactivated" ? event.created_at : null);
+        const liftedBy =
+          nextReactivation?.admin_profile_id ||
+          (event.action === "reactivated" ? event.admin_profile_id : null);
+
+        return {
+          id: event.id,
+          user_id: profile.user_id,
+          reason:
+            event.reason ||
+            (event.action === "reactivated"
+              ? "Suspensao removida"
+              : "Suspensao aplicada"),
+          suspended_at: event.created_at,
+          suspended_until:
+            isActiveSuspension && profile.suspended_until
+              ? profile.suspended_until
+              : "",
+          suspended_by: event.admin_profile_id || "admin",
+          suspended_by_name: event.admin_name || "Administrador",
+          lifted_at: liftedAt,
+          lifted_by: liftedBy,
+          is_active: isActiveSuspension,
+        } satisfies AdminSuspensionHistory;
+      });
+
+      return {
+        driverData,
+        suspensionHistory: history.sort(
+          (a, b) =>
+            new Date(b.suspended_at).getTime() - new Date(a.suspended_at).getTime(),
+        ),
+      };
+    }
+
+    if (profile.is_suspended) {
+      return {
+        driverData,
+        suspensionHistory: [
+          {
+            id: `${profile.id}-active-suspension`,
+            user_id: profile.user_id,
+            reason: profile.suspension_reason || "Suspensao ativa",
+            suspended_at:
+              profile.suspended_at ||
+              profile.updated_at ||
+              new Date().toISOString(),
+            suspended_until: profile.suspended_until || "",
+            suspended_by: "admin",
+            suspended_by_name: "Administrador",
+            lifted_at: null,
+            lifted_by: null,
+            is_active: true,
+          },
+        ],
+      };
+    }
+
+    return { driverData, suspensionHistory: [] };
+  }
+
   static async loadRideReports(userId: string): Promise<{
     reportsMade: UserReport[];
     reportsReceived: UserReport[];
