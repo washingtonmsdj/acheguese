@@ -204,8 +204,9 @@ describe("public paused monetization boundary", () => {
     );
   });
 
-  it("keeps /p public sites limited to businesses with a pre-granted premium flag", () => {
-    expect(appRoutes).toContain('path="/p/:slug/*"');
+  it("keeps premium public-site code preserved but outside the MVP route tree", () => {
+    expect(appRoutes).not.toContain('path="/p/:slug/*"');
+    expect(appRoutes).not.toContain("PremiumBusinessSiteRoute");
     expect(premiumPublicRoute).toContain("PremiumBusinessSiteResolver.resolve");
     expect(premiumPublicResolver).toContain("if (!context?.is_premium)");
     expect(premiumPublicResolver).toContain("return null");
