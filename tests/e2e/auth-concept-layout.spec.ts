@@ -4,7 +4,7 @@ import { seedAuthFlowState } from "./helpers/authFlowState";
 
 const MOBILE = { width: 390, height: 844 };
 const DESKTOP = { width: 1440, height: 900 };
-const AUTH_RETURN_PATH = "/mensagens/sabores-da-ana";
+const AUTH_RETURN_PATH = "/mensagens/business/44444444-4444-4444-8444-444444444444";
 
 async function prepareAuthVisualState(page: Page) {
   await seedAuthFlowState(page, {
