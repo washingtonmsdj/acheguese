@@ -380,7 +380,6 @@ export default function CadastroPage() {
                       <FormControl>
                         <PasswordInput
                           {...field}
-                          id="cadastro-password"
                           autoComplete="new-password"
                           disabled={authBusy}
                           invalid={Boolean(fieldState.error)}
