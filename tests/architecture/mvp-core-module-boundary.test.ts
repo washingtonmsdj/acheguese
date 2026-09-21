@@ -8,6 +8,7 @@ const read = (path: string) => readFileSync(resolve(root, path), "utf8");
 describe("MVP core module boundary", () => {
   const registry = read("src/app/config/productModuleRegistry.ts");
   const launchScope = read("src/app/config/launchScope.ts");
+  const entry = read("src/app/pages/TerritoryEntryPage.tsx");
   const home = read("src/app/pages/TerritoryHomePage.tsx");
   const map = read("src/core/maps/pages/MapaPageV4.tsx");
   const nearby = read("src/core/nearby/pages/NearbyPage.tsx");
@@ -32,6 +33,15 @@ describe("MVP core module boundary", () => {
     );
     expect(launchScope).toContain('map: isProductModuleEnabled("map")');
     expect(launchScope).toContain('nearby: isProductModuleEnabled("nearby")');
+  });
+
+  it("keeps the public entry pointed only at the MVP core", () => {
+    expect(entry).toContain("launchBusinessUrl");
+    expect(entry).toContain("launchMapUrl");
+    expect(entry).toContain("launchNearbyUrl");
+    expect(entry).not.toContain("LAUNCH_URLS.community");
+    expect(entry).not.toContain("/indicar-comunidade");
+    expect(entry).not.toContain("serviços e histórias");
   });
 
   it("keeps the active Home limited to the three MVP product modules", () => {
