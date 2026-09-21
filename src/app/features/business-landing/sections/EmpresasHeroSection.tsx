@@ -265,7 +265,7 @@ export function EmpresasHeroSection({
               to={secondaryHref}
               className="mt-3 inline-flex items-center gap-2 text-xs font-medium text-teal-200 hover:text-teal-100 xl:text-sm"
             >
-              Saiba mais sobre confianca local
+              Ver empresas perto de mim
               <ArrowRight className="h-4 w-4" />
             </Link>
           </div>
