@@ -30,6 +30,8 @@ const APP_LAYOUT_BUSINESS_SERVICE_CLASSIFIED_ROUTES: readonly AppLayoutRouteDesc
   [
     {
       id: "business-detail",
+      launchSurface: "business",
+      pausedModuleName: "Empresas",
       path: buildTerritorialModuleRoutePath(APP_MODULE_SLUGS.business, [
         TERRITORIAL_PARAMS.district,
         TERRITORIAL_PARAMS.slug,
@@ -42,6 +44,8 @@ const APP_LAYOUT_BUSINESS_SERVICE_CLASSIFIED_ROUTES: readonly AppLayoutRouteDesc
     },
     {
       id: "business-category-city",
+      launchSurface: "business",
+      pausedModuleName: "Empresas",
       path: buildTerritorialModuleRoutePath(APP_MODULE_SLUGS.business, [
         TERRITORIAL_STATIC.category,
         TERRITORIAL_PARAMS.category,
@@ -51,6 +55,8 @@ const APP_LAYOUT_BUSINESS_SERVICE_CLASSIFIED_ROUTES: readonly AppLayoutRouteDesc
     },
     {
       id: "business-category-district",
+      launchSurface: "business",
+      pausedModuleName: "Empresas",
       path: buildTerritorialModuleRoutePath(APP_MODULE_SLUGS.business, [
         TERRITORIAL_PARAMS.district,
         TERRITORIAL_STATIC.category,
@@ -61,6 +67,8 @@ const APP_LAYOUT_BUSINESS_SERVICE_CLASSIFIED_ROUTES: readonly AppLayoutRouteDesc
     },
     {
       id: "business-district",
+      launchSurface: "business",
+      pausedModuleName: "Empresas",
       path: buildTerritorialModuleRoutePath(APP_MODULE_SLUGS.business, [
         TERRITORIAL_PARAMS.district,
       ]),
@@ -69,12 +77,16 @@ const APP_LAYOUT_BUSINESS_SERVICE_CLASSIFIED_ROUTES: readonly AppLayoutRouteDesc
     },
     {
       id: "business-city",
+      launchSurface: "business",
+      pausedModuleName: "Empresas",
       path: buildTerritorialModuleRoutePath(APP_MODULE_SLUGS.business),
       element: <TerritorialLayout />,
       indexElement: <P.EmpresasLandingPage />,
     },
     {
       id: "services-district",
+      launchSurface: "services",
+      pausedModuleName: "Serviços",
       path: buildTerritorialModuleRoutePath(APP_MODULE_SLUGS.services, [
         TERRITORIAL_PARAMS.district,
       ]),
@@ -83,17 +95,23 @@ const APP_LAYOUT_BUSINESS_SERVICE_CLASSIFIED_ROUTES: readonly AppLayoutRouteDesc
     },
     {
       id: "services-city",
+      launchSurface: "services",
+      pausedModuleName: "Serviços",
       path: buildTerritorialModuleRoutePath(APP_MODULE_SLUGS.services),
       element: <TerritorialLayout />,
       indexElement: <P.TerritorialServicesPage />,
     },
     {
       id: "classified-detail",
+      launchSurface: "classifieds",
+      pausedModuleName: "Classificados",
       path: "/classificados/:uf/:cidade/:bairro/:categoria/:subcategoria/:slug/:publicId",
       element: <P.ClassifiedCanonicalRoute />,
     },
     {
       id: "classified-subcategory-district",
+      launchSurface: "classifieds",
+      pausedModuleName: "Classificados",
       path: buildTerritorialModuleRoutePath(APP_MODULE_SLUGS.classifieds, [
         TERRITORIAL_PARAMS.district,
         TERRITORIAL_PARAMS.category,
@@ -104,6 +122,8 @@ const APP_LAYOUT_BUSINESS_SERVICE_CLASSIFIED_ROUTES: readonly AppLayoutRouteDesc
     },
     {
       id: "classified-category-district",
+      launchSurface: "classifieds",
+      pausedModuleName: "Classificados",
       path: buildTerritorialModuleRoutePath(APP_MODULE_SLUGS.classifieds, [
         TERRITORIAL_PARAMS.district,
         TERRITORIAL_PARAMS.category,
@@ -113,6 +133,8 @@ const APP_LAYOUT_BUSINESS_SERVICE_CLASSIFIED_ROUTES: readonly AppLayoutRouteDesc
     },
     {
       id: "classified-district",
+      launchSurface: "classifieds",
+      pausedModuleName: "Classificados",
       path: buildTerritorialModuleRoutePath(APP_MODULE_SLUGS.classifieds, [
         TERRITORIAL_PARAMS.district,
       ]),
@@ -121,6 +143,8 @@ const APP_LAYOUT_BUSINESS_SERVICE_CLASSIFIED_ROUTES: readonly AppLayoutRouteDesc
     },
     {
       id: "classified-city",
+      launchSurface: "classifieds",
+      pausedModuleName: "Classificados",
       path: buildTerritorialModuleRoutePath(APP_MODULE_SLUGS.classifieds),
       element: <TerritorialLayout />,
       indexElement: <P.TerritorialClassificadosPage />,
@@ -209,6 +233,8 @@ export const APP_LAYOUT_EVENT_TERRITORIAL_ROUTES: readonly AppLayoutRouteDescrip
 const APP_LAYOUT_MAP_TERRITORIAL_ROUTES: readonly AppLayoutRouteDescriptor[] = [
   {
     id: "map-district",
+    launchSurface: "map",
+    pausedModuleName: "Mapa",
     path: buildTerritorialModuleRoutePath(APP_MODULE_SLUGS.map, [
       TERRITORIAL_PARAMS.district,
     ]),
@@ -217,6 +243,8 @@ const APP_LAYOUT_MAP_TERRITORIAL_ROUTES: readonly AppLayoutRouteDescriptor[] = [
   },
   {
     id: "map-city",
+    launchSurface: "map",
+    pausedModuleName: "Mapa",
     path: buildTerritorialModuleRoutePath(APP_MODULE_SLUGS.map),
     element: <TerritorialLayout />,
     indexElement: <P.TerritorialMapPage />,
