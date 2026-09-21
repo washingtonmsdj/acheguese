@@ -269,6 +269,11 @@ export async function getBusinesses(
         ).order("created_at", { ascending: false });
     }
 
+    query = query.range(
+      pageParam * pageSize,
+      (pageParam + 1) * pageSize - 1,
+    );
+
     const { data, error } = await query;
 
     if (error) {
@@ -410,8 +415,7 @@ export async function getBusinessesList(
     let query = supabase
       .from("public_business_search")
       .select(PUBLIC_BUSINESS_LIST_SELECT)
-      .in("business_role", ["standalone", "branch"])
-      .range(pageParam * pageSize, (pageParam + 1) * pageSize - 1);
+      .in("business_role", ["standalone", "branch"]);
 
     const pausedBusinessCategories = getLaunchPausedBusinessCategoryIds();
     if (pausedBusinessCategories.length > 0) {
