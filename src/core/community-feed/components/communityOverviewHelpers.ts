@@ -7,36 +7,13 @@ import {
   Tag,
 } from "lucide-react";
 
-import bairroChapada from "@/assets/bairro-chapada.jpg";
-import bairroNordeste from "@/assets/bairro-nordeste.jpg";
-import bairroOndina from "@/assets/bairro-ondina.jpg";
-import bairroPituba from "@/assets/bairro-pituba.jpg";
-import bairroRioVermelho from "@/assets/bairro-riovermelho.jpg";
-import bairroSantaCruz from "@/assets/bairro-santa-cruz.jpg";
-import bairroStiep from "@/assets/bairro-stiep.jpg";
-import bairroValePedrinhas from "@/assets/bairro-vale-pedrinhas.jpg";
-import heroSalvador from "@/assets/hero-cidade-salvador-real.jpg";
 import neighborhoodFeatured from "@/assets/neighborhood-featured.jpg";
 
 import type { FeaturedBusiness } from "@/core/landing/services/LandingFeaturedService";
 import type { ResolvedTerritory } from "@/core/routing/hooks/useResolveTerritoryFromUrl";
 import type { TerritorialCommunityProfile } from "@/core/community-experience/types";
-import { getRecordValue } from "@/shared/utils/recordLookup";
 
 import type { CommunityOverviewView } from "@/core/community-feed/navigation";
-
-export const COMMUNITY_HERO_IMAGES: Record<string, string> = {
-  barra: bairroOndina,
-  chapada: bairroChapada,
-  "complexo-do-nordeste-de-amaralina": bairroNordeste,
-  nordeste: bairroNordeste,
-  ondina: bairroOndina,
-  pituba: bairroPituba,
-  "rio-vermelho": bairroRioVermelho,
-  "santa-cruz": bairroSantaCruz,
-  stiep: bairroStiep,
-  "vale-das-pedrinhas": bairroValePedrinhas,
-};
 
 export function formatSlugLabel(value: string): string {
   return value
@@ -52,14 +29,24 @@ export function getResolvedSlug(resolved?: ResolvedTerritory): string | null {
   return null;
 }
 
+function getMetadataHeroImage(
+  metadata?: Record<string, unknown> | null,
+): string | null {
+  const value = metadata?.hero_image_url;
+  return typeof value === "string" && value.trim().length > 0
+    ? value.trim()
+    : null;
+}
+
 export function getHeroImage(resolved?: ResolvedTerritory): string {
-  const slug = getResolvedSlug(resolved);
-  const communityImage = slug
-    ? getRecordValue(COMMUNITY_HERO_IMAGES, slug)
-    : undefined;
-  if (communityImage) return communityImage;
-  if (resolved?.kind === "location" && resolved.location.type === "city")
-    return heroSalvador;
+  if (resolved?.kind === "location") {
+    return getMetadataHeroImage(resolved.location.metadata) ?? neighborhoodFeatured;
+  }
+
+  if (resolved?.kind === "group") {
+    return getMetadataHeroImage(resolved.group.metadata) ?? neighborhoodFeatured;
+  }
+
   return neighborhoodFeatured;
 }
 

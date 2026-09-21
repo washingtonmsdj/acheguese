@@ -1,5 +1,7 @@
 # P0-D-REPORT.md — Relatório da Sprint TERRITORY.P0.D
 
+> **Correção de estado (2026-09-21):** este relatório registrava P0.6 como concluído, mas a verificação do banco remoto mostrou `hero_image_url = null` e o runtime ainda continha `COMMUNITY_HERO_IMAGES`. A conclusão efetiva ocorreu na migration `20260921040847_backfill_territory_hero_image_metadata.sql`, com assets públicos estáveis e remoção do mapa por slug.
+
 **Sprint**: TERRITORY.P0.D
 **Data**: 2026-07-23
 **Itens executados**: P0.4 + P0.7

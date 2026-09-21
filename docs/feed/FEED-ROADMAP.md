@@ -399,7 +399,7 @@ Origem: `FEED-P2-05`.
 
 | Campo | Valor |
 | --- | --- |
-| Descricao | Remover dependencia evolutiva de imagens por slug e fixture visual em superficie publica nominal; manter dados visuais via SSOT territorial quando aplicavel. |
+| Descricao | ✅ Resolvido em 2026-09-21: fixture visual pública removida; heroes territoriais migrados para `metadata.hero_image_url` com assets estáveis em `/territory/heroes/*`. |
 | Impacto | Medio. |
 | Risco | Baixo. |
 | Esforco | S |
@@ -408,7 +408,7 @@ Origem: `FEED-P2-05`.
 | Compatibilidade | Fallback visual deve continuar sem parecer dado real. |
 | Ordem obrigatoria | 19 |
 | Pode ser paralelo? | Sim. |
-| Bloqueia congelamento? | Parcialmente, se fixture/hardcode permanecer como caminho nominal. |
+| Bloqueia congelamento? | Não; o hardcode/fixture nominal foi removido e protegido por regressão. |
 | Bloqueia lancamento? | Nao, se nao afetar dados reais. |
 | Dominio responsavel | Feed, Community e Territory. |
 

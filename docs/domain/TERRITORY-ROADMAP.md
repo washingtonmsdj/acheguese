@@ -86,14 +86,15 @@ Itens que NÃO envolvem mudança de schema nem re-arquitetura — apenas correç
 - **Descrição**: Remover a chave `public_navigation_enabled` do metadata seed na migration `20260530120000`. O campo real usado é `is_navigable` em `territoryVisibility.ts`. Não requer nova migration — apenas remover do seed existente (que já rodou, mas evita confusão futura).
 
 ### P0.6 — Migrar `COMMUNITY_HERO_IMAGES` para metadata
+- **Status**: ✅ Concluído em 2026-09-21
 - **Origem**: H6
-- **Arquivos**: `communityOverviewHelpers.ts:28-39`
+- **Arquivos**: `communityOverviewHelpers.ts`, `public/territory/heroes/*`, migration `20260921040847_backfill_territory_hero_image_metadata.sql`
 - **Esforço**: S
-- **Risco**: 🟢 Baixo — fallback mantido
+- **Risco**: 🟢 Baixo — fallback genérico preservado
 - **Dependências**: Nenhuma
-- **Breaking**: ✅ Compatível — adiciona campo, mantém fallback
-- **Pré/pós Salvador**: Pré — adicionar bairro não deve exigir deploy de código
-- **Descrição**: Adicionar campo `hero_image_url` ao metadata das locations dos 9 bairros atuais. No componente, tentar `location.metadata?.hero_image_url` primeiro; se ausente, cair no `COMMUNITY_HERO_IMAGES` existente como fallback. Assim o hardcode vira fallback legado, não bloqueio.
+- **Breaking**: ✅ Compatível — `hero_image_url` é metadata aditiva
+- **Pré/pós Salvador**: Pré — novo território pode receber imagem sem deploy de código
+- **Descrição**: O runtime lê `metadata.hero_image_url` para Location e Territorial Group. O mapa `COMMUNITY_HERO_IMAGES` e o fallback específico de Salvador foram removidos; ausência de metadata cai apenas no asset genérico `neighborhood-featured.jpg`. Os assets existentes passaram a ter caminhos públicos estáveis em `/territory/heroes/*`.
 
 ### P0.7 — Corrigir slug SQL para ser consistente com JS
 - **Origem**: F7
