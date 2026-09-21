@@ -16,7 +16,9 @@ describe("MVP core module boundary", () => {
   const businessSections = read("src/modules/business/company/sections/index.ts");
   const businessSectionTypes = read("src/modules/business/company/sections/types.ts");
   const branchNetwork = read("src/core/business/components/BranchNetworkBlock.tsx");
-    const map = read("src/core/maps/pages/MapaPageV4.tsx");
+  const businessMapQuery = read("src/core/business/services/BusinessMapQueryService.ts");
+  const mapBusinessAdapter = read("src/core/maps/services/MapBusinessLayerRuntimeService.ts");
+  const map = read("src/core/maps/pages/MapaPageV4.tsx");
   const nearby = read("src/core/nearby/pages/NearbyPage.tsx");
   const sidebar = read("src/app/components/navigation/AppSidebar.tsx");
   const territoryNavigation = read(
@@ -127,6 +129,10 @@ describe("MVP core module boundary", () => {
   it("keeps Map independent from paused product owners", () => {
     expect(map).toContain("mapBusinessLayerRuntimeService");
     expect(map).toContain("makeBusinessFetcher");
+    expect(mapBusinessAdapter).toContain("businessMapQueryService.getBusinessesByBounds");
+    expect(mapBusinessAdapter).not.toContain("public_business_search");
+    expect(mapBusinessAdapter).not.toContain("@/integrations/supabase");
+    expect(businessMapQuery).toContain('from<BusinessMapRow>("public_business_search")');
 
     for (const forbidden of [
       "mapGastronomyLayerRuntimeService",
