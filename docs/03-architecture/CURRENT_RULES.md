@@ -1,8 +1,8 @@
 # Regras Vigentes do Sistema
 
-Data-base: 2026-09-14  
+Data-base: 2026-09-21  
 Status: ATIVO / CANONICO  
-Versao documental: 5.4
+Versao documental: 5.5
 
 Este documento define regras arquiteturais globais. Contratos detalhados de domínio permanecem nos owners executáveis e nos documentos específicos listados em `docs/README.md`; este arquivo não deve duplicar implementação.
 
@@ -43,6 +43,9 @@ Regras:
 - `src/shared` contém UI/utilitários realmente compartilhados, sem absorver regra de domínio.
 - `src/features` é namespace aposentado; não deve existir nem ser recriado. Eventos pertence a `src/modules/community-events`.
 - módulos não importam implementação interna de outros módulos; integração cruzada passa por `core`, adapter formal ou contrato compartilhado.
+- `src/app/config/productModuleRegistry.ts` é o owner único do lifecycle de módulos de produto (`active | paused`) e das dependências formais entre módulos.
+- `src/app/config/launchScope.ts` é projeção/compatibilidade de superfície derivada do registry; não mantém uma segunda decisão independente de lifecycle.
+- módulo `paused` falha fechado: não participa de navegação pública, rota funcional, prefetch/warmup, discovery, provider público ou layer de Mapa. Reativação ocorre pelo owner de lifecycle após certificação; exceção local, alias ou redirect não substituem esse contrato.
 - páginas/componentes não acessam Supabase diretamente; acesso fica em services/repositories, migrations, scripts e Edge Functions conforme o boundary aplicável.
 - páginas e hooks orquestram estado/fetch/render; regra de negócio pertence ao owner de domínio.
 - cada tabela mutável possui owner de escrita único. Read models adicionais devem ser declarados e não criam writer paralelo.
@@ -153,11 +156,11 @@ Regra: este documento não replica lifecycle, tabelas, RPCs ou allowlists desses
 
 ## 7. Roteamento, rollout e território
 
-- Território é contexto raiz da experiência pública/community-first.
+- Território é contexto geográfico raiz da experiência pública. No MVP vigente, ele serve de plataforma para **Empresas + Mapa + Perto de mim** e não implica ativação de Community ou de qualquer outro módulo pausado.
 - entidade pública possui namespace canônico único; alias legado não cria segunda superfície oficial.
 - contexto `/comunidade/...` é explícito e não deve sequestrar automaticamente uma URL pública de entidade.
 - contexto de lançamento da `/` vem de `TERRITORY_CONFIG`/`LAUNCH_URLS`; a entrada não cria segundo owner local de estado, cidade, slug ou nome do território de launch.
-- `src/app/config/launchScope.ts` é o owner do rollout público por superfície e da interpretação de `VITE_PRELAUNCH_LOCKDOWN`; consumidores usam `PRELAUNCH_LOCKDOWN_ENABLED` e não reinterpretam a env.
+- `src/app/config/productModuleRegistry.ts` é o owner do lifecycle de produto e dependências. `src/app/config/launchScope.ts` projeta esse lifecycle para superfícies públicas e continua sendo o owner da interpretação de `VITE_PRELAUNCH_LOCKDOWN`; consumidores usam `PRELAUNCH_LOCKDOWN_ENABLED` e não reinterpretam a env.
 - `src/core/community/config/communityLaunch.ts` é somente projeção do rollout Community sobre o território/configuração de lançamento; não mantém lista própria de bairros, slug paralelo de grupo ou alias territorial escondido.
 - membros de grupo e slugs territoriais vêm do owner territorial. Rótulo público curto pode existir como metadata de apresentação sem alterar nome/slug geográfico canônico.
 - ações comunitárias mutáveis exigem autenticação/Profile e autorização territorial conforme o backend.
