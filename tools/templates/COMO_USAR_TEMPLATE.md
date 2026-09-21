@@ -81,7 +81,8 @@ Evite deep imports públicos quando um barrel canônico existir.
 
 ## Referências do repositório
 
-- Plano permanente: `URGENTE_LEIA_PRIMEIRO_REORGANIZACAO_GLOBAL.md`
+- SSOT operacional: `docs/08-roadmap/EXECUCAO_MAIN_ONLY.md`
+- Índice/precedência documental: `docs/README.md`
 - Arquitetura: `docs/03-architecture/`
 - Template: `tools/templates/module-template/`
 
