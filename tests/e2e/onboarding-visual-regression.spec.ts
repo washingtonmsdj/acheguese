@@ -1,4 +1,5 @@
 import { expect, test, devices } from '@playwright/test';
+import { installOnboardingVisualState } from './support/onboardingVisualState';
 
 /**
  * Visual regression tests for the /onboarding page (neighborhood selection).
@@ -20,6 +21,7 @@ import { expect, test, devices } from '@playwright/test';
 const MOBILE_VIEWPORT = devices['iPhone 13'].viewport; // 390x844, close to concept 393x852
 
 test.use({
+  colorScheme: 'light',
   viewport: MOBILE_VIEWPORT,
   deviceScaleFactor: 2,
   isMobile: true,
@@ -30,25 +32,7 @@ test.describe('OnboardingPage - visual regression (mobile)', () => {
   test.setTimeout(90_000);
 
   test.beforeEach(async ({ page }) => {
-    // Warm route: /onboarding depends on a previously selected city.
-    // Seed localStorage before navigation so the neighborhood list has data.
-    await page.addInitScript(() => {
-      try {
-        window.localStorage.setItem(
-          'achegue-se:last-city',
-          JSON.stringify({ city: 'Salvador', state: 'BA', uf: 'ba' }),
-        );
-        // Disable any animation that could produce flaky diffs.
-        const style = document.createElement('style');
-        style.innerHTML = `*, *::before, *::after {
-          animation-duration: 0s !important;
-          animation-delay: 0s !important;
-          transition-duration: 0s !important;
-          transition-delay: 0s !important;
-        }`;
-        document.documentElement.appendChild(style);
-      } catch {}
-    });
+    await installOnboardingVisualState(page);
   });
 
   test('matches baseline layout on mobile', async ({ page }) => {
