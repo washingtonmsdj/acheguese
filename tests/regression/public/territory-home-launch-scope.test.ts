@@ -1,6 +1,10 @@
 import { describe, expect, it } from "vitest";
 import * as fs from "node:fs";
 import * as path from "node:path";
+import {
+  getActiveProductModules,
+  PRODUCT_MODULE_REGISTRY,
+} from "../../../src/app/config/productModuleRegistry";
 import { isLaunchSurfaceEnabled } from "../../../src/app/config/launchScope";
 
 function read(filePath: string): string {
@@ -8,34 +12,34 @@ function read(filePath: string): string {
 }
 
 describe("Territory Home launch-scope regression", () => {
-  it("keeps paused launch modules disabled", () => {
-    expect(isLaunchSurfaceEnabled("mobility")).toBe(false);
-    expect(isLaunchSurfaceEnabled("education")).toBe(false);
+  it("keeps exactly the three MVP modules active", () => {
+    expect(getActiveProductModules().sort()).toEqual(
+      ["business", "map", "nearby"].sort(),
+    );
+    expect(PRODUCT_MODULE_REGISTRY.nearby.dependsOn).toEqual([
+      "map",
+      "business",
+    ]);
+
+    expect(isLaunchSurfaceEnabled("business")).toBe(true);
+    expect(isLaunchSurfaceEnabled("map")).toBe(true);
+    expect(isLaunchSurfaceEnabled("nearby")).toBe(true);
+    expect(isLaunchSurfaceEnabled("community")).toBe(false);
+    expect(isLaunchSurfaceEnabled("classifieds")).toBe(false);
+    expect(isLaunchSurfaceEnabled("search")).toBe(false);
   });
 
-  it("gates every quick action through its launch surface", () => {
+  it("keeps Home as infrastructure with only MVP destinations", () => {
     const source = read("src/app/pages/TerritoryHomePage.tsx");
 
-    expect(source).toContain('surface: "gastronomy"');
-    expect(source).toContain('surface: "business"');
-    expect(source).toContain('surface: "services"');
-    expect(source).toContain('surface: "mobility"');
-    expect(source).toContain('surface: "classifieds"');
-    expect(source).toContain('surface: "education"');
-    expect(source).toContain(
-      "actions.filter((action) => isLaunchSurfaceEnabled(action.surface))",
-    );
-    expect(source).not.toContain(
-      'action.href !== urls.gastronomy || isLaunchSurfaceEnabled("gastronomy")',
-    );
-  });
-
-  it("does not reserve six desktop columns when paused actions are hidden", () => {
-    const source = read("src/app/pages/TerritoryHomePage.tsx");
-
-    expect(source).toContain(
-      "md:grid-cols-[repeat(auto-fit,minmax(7rem,1fr))]",
-    );
-    expect(source).not.toContain("md:grid-cols-6 md:gap-6");
+    expect(source).toContain("MODULE_SLUGS.business");
+    expect(source).toContain("MODULE_SLUGS.map");
+    expect(source).toContain("APP_MODULE_SLUGS.nearby");
+    expect(source).not.toContain("isLaunchSurfaceEnabled");
+    expect(source).not.toContain("MODULE_SLUGS.community");
+    expect(source).not.toContain("MODULE_SLUGS.classifieds");
+    expect(source).not.toContain("MODULE_SLUGS.services");
+    expect(source).not.toContain("MODULE_SLUGS.gastronomy");
+    expect(source).not.toContain("MODULE_SLUGS.search");
   });
 });
