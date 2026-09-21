@@ -6,6 +6,7 @@ import {
 } from "./helpers/authFlowState";
 
 const RETURN_PATH = "/mensagens/business/44444444-4444-4444-8444-444444444444";
+const LOGIN_WITH_RETURN = `/login?redirect=${encodeURIComponent(RETURN_PATH)}`;
 
 async function expectNoHorizontalOverflow(page: Page) {
   const dimensions = await page.evaluate(() => ({
@@ -40,7 +41,7 @@ test.describe("Google OAuth — recuperação de callback", () => {
     await expect(page.getByText("provider-text-must-not-be-reflected")).toHaveCount(0);
     await expect(
       page.getByRole("link", { name: "Voltar e tentar novamente" }),
-    ).toHaveAttribute("href", "/login?redirect=%2Fmensagens%2Fsabores-da-ana");
+    ).toHaveAttribute("href", LOGIN_WITH_RETURN);
     await expect(page.locator("main#main-content svg")).toHaveCount(0);
     await expectNoHorizontalOverflow(page);
   });
@@ -76,7 +77,7 @@ test.describe("Google OAuth — recuperação de callback", () => {
     await expect(page).toHaveURL(/code=orphaned-google-code/);
     await expect(
       page.getByRole("link", { name: "Voltar e tentar novamente" }),
-    ).toHaveAttribute("href", "/login?redirect=%2Fmensagens%2Fsabores-da-ana");
+    ).toHaveAttribute("href", LOGIN_WITH_RETURN);
     await expectNoHorizontalOverflow(page);
   });
 });
