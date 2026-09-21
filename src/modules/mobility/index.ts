@@ -22,7 +22,7 @@ export { ActiveRideWidget } from "./components/ActiveRideWidget";
 export { RideHistoryList } from "./components/RideHistoryList";
 export { EmergencyButton } from "./components/EmergencyButton";
 export { ShareRideButton } from "./components/ShareRideButton";
-export { StatusBadge } from "./components/StatusBadge";
+export { StatusBadge } from "@/core/mobility/components/StatusBadge";
 export { StatusTimeline } from "./components/StatusTimeline";
 
 // Components - Driver
