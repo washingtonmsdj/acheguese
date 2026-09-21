@@ -54,7 +54,7 @@ Rotas sujeitas a lançamento usam `isLaunchSurfaceEnabled()` / `launchElement()`
 
 ### `lazyImports.ts`
 
-É um barrel exclusivo da árvore de `AppLayoutRoutes` e seus registries. Não contém novamente Login, Cadastro, Recuperação, Splash, Status, QR, páginas institucionais root-owned, catálogo público sem layout ou mini-site premium.
+É um barrel exclusivo da árvore de `AppLayoutRoutes` e seus registries. Não contém novamente Login, Cadastro, Recuperação, Splash, Status, QR, páginas institucionais root-owned, catálogo público sem layout, mini-site premium nem páginas da árvore `/admin/*`. A administração pertence exclusivamente a `adminLazyImports.ts` + `AdminRoutes.tsx`.
 
 ## Conta e acesso
 
