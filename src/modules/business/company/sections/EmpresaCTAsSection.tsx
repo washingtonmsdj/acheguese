@@ -2,6 +2,7 @@ import {
   Bookmark,
   Share2,
   MessageCircle,
+  MessagesSquare,
   Navigation,
   Phone,
   ThumbsUp,
@@ -21,10 +22,10 @@ export function EmpresaCTAsSection({
   onToggleRecommended,
   onToggleRouteOptions,
   onRoute,
+  onMessage,
+  messageLoading = false,
   onShare,
 }: EmpresaCTAsSectionProps) {
-  const hasPrimaryContactActions = Boolean(business.whatsapp || business.phone);
-
   return (
     <section
       className={
@@ -34,7 +35,13 @@ export function EmpresaCTAsSection({
       }
     >
       <div className="space-y-1.5 sm:space-y-3">
-        <div className="hidden xl:grid xl:grid-cols-5 xl:gap-3 [@media(max-height:1080px)]:gap-2.5">
+        <div
+          className={
+            onMessage
+              ? "hidden xl:grid xl:grid-cols-6 xl:gap-3 [@media(max-height:1080px)]:gap-2.5"
+              : "hidden xl:grid xl:grid-cols-5 xl:gap-3 [@media(max-height:1080px)]:gap-2.5"
+          }
+        >
           {business.whatsapp ? (
             <ActionButton
               icon={MessageCircle}
@@ -47,6 +54,17 @@ export function EmpresaCTAsSection({
           ) : (
             <div />
           )}
+          {onMessage ? (
+            <ActionButton
+              icon={MessagesSquare}
+              label="Mensagem"
+              onClick={onMessage}
+              color="primary"
+              appearance="solid"
+              layout="inline"
+              disabled={messageLoading}
+            />
+          ) : null}
           {business.phone ? (
             <ActionButton
               icon={Phone}
@@ -88,47 +106,43 @@ export function EmpresaCTAsSection({
           />
         </div>
 
-        {hasPrimaryContactActions ? (
-          <div className="grid grid-cols-3 gap-2 sm:gap-3 xl:hidden">
-            {business.whatsapp ? (
-              <ActionButton
-                icon={MessageCircle}
-                label="WhatsApp"
-                href={buildWhatsAppUrl(business.whatsapp) ?? undefined}
-                color="emerald-400"
-                appearance="solid"
-              />
-            ) : <div />}
-            {business.phone ? (
-              <ActionButton
-                icon={Phone}
-                label="Ligar"
-                href={buildTelUrl(business.phone) ?? undefined}
-                color="primary"
-                appearance="solid"
-              />
-            ) : <div />}
+        <div className="grid grid-cols-2 gap-2 sm:grid-cols-4 sm:gap-3 xl:hidden">
+          {onMessage ? (
             <ActionButton
-              icon={Navigation}
-              label="Rota"
-              onClick={onToggleRouteOptions}
-              color="sky-400"
+              icon={MessagesSquare}
+              label="Mensagem"
+              onClick={onMessage}
+              color="primary"
+              appearance="solid"
+              disabled={messageLoading}
+            />
+          ) : null}
+          {business.whatsapp ? (
+            <ActionButton
+              icon={MessageCircle}
+              label="WhatsApp"
+              href={buildWhatsAppUrl(business.whatsapp) ?? undefined}
+              color="emerald-400"
               appearance="solid"
             />
-          </div>
-        ) : (
-          <div className="grid grid-cols-3 gap-2 sm:gap-3">
+          ) : null}
+          {business.phone ? (
             <ActionButton
-              icon={Navigation}
-              label="Rota"
-              onClick={onToggleRouteOptions}
-              color="sky-400"
+              icon={Phone}
+              label="Ligar"
+              href={buildTelUrl(business.phone) ?? undefined}
+              color="primary"
               appearance="solid"
             />
-            <div />
-            <div />
-          </div>
-        )}
+          ) : null}
+          <ActionButton
+            icon={Navigation}
+            label="Rota"
+            onClick={onToggleRouteOptions}
+            color="sky-400"
+            appearance="solid"
+          />
+        </div>
 
         <div className="grid grid-cols-3 gap-2 sm:gap-3 xl:hidden">
           <ActionButton
