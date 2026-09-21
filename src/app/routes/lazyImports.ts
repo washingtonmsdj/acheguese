@@ -105,9 +105,6 @@ export const TerritorialMapPage = lazy(() =>
 // ============================================================
 // PAGINAS PUBLICAS PERTENCENTES AO APP LAYOUT
 // ============================================================
-export const NationalHubPage = lazy(
-  () => import("@/app/pages/NationalHubPage"),
-);
 export const EmpresasLandingPage = lazy(
   () => import("@/app/pages/EmpresasLandingPage"),
 );
