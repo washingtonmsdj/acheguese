@@ -31,8 +31,8 @@ A probe foi executada no Supabase canônico em 2026-09-21 sem exceção.
 
 - `business=true`;
 - `education=false`;
-- `isLaunchBusinessCategoryEnabled("educacao") === true`;
-- ativar/desativar uma vertical especializada não altera automaticamente a visibilidade institucional de uma categoria Business.
+- não existe helper de launch scope para filtrar categorias Business;
+- ativar/desativar uma vertical especializada não altera a visibilidade institucional de uma categoria Business.
 
 ## Pendências
 
