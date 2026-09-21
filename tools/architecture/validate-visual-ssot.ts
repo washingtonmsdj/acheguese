@@ -46,7 +46,7 @@ const MIGRATED_RUNTIME_FILES = [
   'src/modules/mobility/components/GeolocationButton.tsx',
   'src/modules/mobility/components/NeighborRankingPanel.tsx',
   'src/modules/mobility/components/ShareRideButton.tsx',
-  'src/modules/mobility/components/StatusBadge.tsx',
+  'src/core/mobility/components/StatusBadge.tsx',
   'src/modules/mobility/components/chat/ChatWindow.tsx',
   'src/modules/mobility/components/chat/MobilityChatList.tsx',
   'src/modules/mobility/components/driver/CancelRideDialog.tsx',
