@@ -175,13 +175,13 @@ test.describe("Conta autenticada — fixture remota determinística", () => {
         const accountBox = await accountItem.boundingBox();
         expect(accountBox?.height ?? 0).toBeGreaterThanOrEqual(44);
 
-        const communityLabel = visibleNavigation
-          .locator('[data-bottom-nav-item="community"] span')
+        const searchLabel = visibleNavigation
+          .locator('[data-bottom-nav-item="busca"] span')
           .last();
-        const communityFits = await communityLabel.evaluate(
+        const searchFits = await searchLabel.evaluate(
           (element) => element.scrollWidth <= element.clientWidth + 1,
         );
-        expect(communityFits).toBe(true);
+        expect(searchFits).toBe(true);
       } else {
         // The account settings shell owns tablet/desktop navigation and hides
         // the global TerritoryAdaptiveNavigation to avoid duplicate sidebars.
