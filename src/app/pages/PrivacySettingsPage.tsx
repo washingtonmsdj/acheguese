@@ -322,6 +322,8 @@ export default function PrivacySettingsPage() {
   if (!user) return <Navigate to={appUrls.auth.login} replace />;
 
   const exportAvailable = PrivacySettingsService.isUserDataExportAvailable();
+  const deletionRequestAvailable =
+    PrivacySettingsService.isAccountDeletionRequestAvailable();
 
   const handleExportData = async () => {
     if (!exportAvailable || isExporting) return;
@@ -346,7 +348,12 @@ export default function PrivacySettingsPage() {
   };
 
   const handleDeleteAccount = async () => {
-    if (deletionStatusLoading || deletionStatusError || deletionStatus?.status === "scheduled") return;
+    if (
+      !deletionRequestAvailable ||
+      deletionStatusLoading ||
+      deletionStatusError ||
+      deletionStatus?.status === "scheduled"
+    ) return;
     setDeleting(true);
     try {
       const accessToken = await PrivacySettingsService.getAccessToken();
@@ -492,7 +499,7 @@ export default function PrivacySettingsPage() {
 
             <Surface className="mt-4 p-4 sm:p-5">
               <h2 className="font-heading text-base font-bold text-territory-ink">Antes da conclusão</h2>
-              <p className="mt-2 text-sm leading-5 text-territory-muted">A exclusão será processada conforme as condições apresentadas na solicitação.</p>
+              <p className="mt-2 text-sm leading-5 text-territory-muted">A solicitação permanece registrada, mas o processamento automático está indisponível no lançamento atual. Use o canal de proteção de dados para acompanhar a conclusão.</p>
               <details className="group mt-4">
                 <summary className="flex min-h-11 cursor-pointer list-none items-center justify-center rounded-xl border border-territory-border px-4 text-sm font-semibold text-territory-ink hover:bg-territory-raised focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-territory-brand [&::-webkit-details-marker]:hidden">
                   Ver detalhes
@@ -501,7 +508,7 @@ export default function PrivacySettingsPage() {
                   {scheduledDate ? (
                     <div className="flex items-start gap-2">
                       <Clock3 className="mt-0.5 h-4 w-4 shrink-0 text-territory-brand" aria-hidden="true" />
-                      <span>Data informada para processamento: {scheduledDate}.</span>
+                      <span>Data registrada no pedido: {scheduledDate}. Essa data não confirma processamento automático.</span>
                     </div>
                   ) : (
                     <p>O serviço não informou uma data de processamento neste momento.</p>
@@ -622,7 +629,8 @@ export default function PrivacySettingsPage() {
 
         {!scheduled && !deletionStatusLoading && !deletionStatusError ? (
           <div className="mt-4 border-t border-territory-border pt-4">
-            <AlertDialog open={showDeleteConfirm} onOpenChange={(open) => {
+            {deletionRequestAvailable ? (
+              <AlertDialog open={showDeleteConfirm} onOpenChange={(open) => {
               if (deleting) return;
               setShowDeleteConfirm(open);
               if (!open) setDeleteAcknowledged(false);
@@ -668,7 +676,29 @@ export default function PrivacySettingsPage() {
                   </AlertDialogAction>
                 </AlertDialogFooter>
               </AlertDialogContent>
-            </AlertDialog>
+              </AlertDialog>
+            ) : (
+              <Surface className="p-4 sm:p-5">
+                <div className="flex items-start gap-3">
+                  <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-red-50 text-destructive">
+                    <Trash2 className="h-5 w-5" aria-hidden="true" />
+                  </span>
+                  <div className="min-w-0 flex-1">
+                    <h2 className="font-heading text-base font-bold text-territory-ink">Exclusão automática temporariamente indisponível</h2>
+                    <p className="mt-1 text-sm leading-5 text-territory-muted">Novas solicitações automáticas ficam bloqueadas até a política de purge, o worker e a certificação de segurança estarem concluídos.</p>
+                  </div>
+                </div>
+                <Button
+                  type="button"
+                  variant="outline"
+                  className="mt-4 min-h-11 w-full"
+                  onClick={() => navigate(DATA_PROTECTION_CONTACT_PATH)}
+                >
+                  <MessageCircleMore className="mr-2 h-4 w-4" aria-hidden="true" />
+                  Falar com proteção de dados
+                </Button>
+              </Surface>
+            )}
           </div>
         ) : null}
       </AccountSettingsShell>

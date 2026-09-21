@@ -1,7 +1,7 @@
 /**
  * Privacy service SSOT for privacy and LGPD operations.
  *
- * Centralizes DPO requests, user data export and account deletion flows.
+ * Centralizes DPO requests and user data export flows.
  * Sensitive operations run through Edge Functions/RPC brokers; browser code
  * never writes privacy ledgers directly.
  */
@@ -12,7 +12,6 @@ import {
   supabase,
 } from "@/integrations/supabase";
 import { logger } from "@/shared/utils/logger";
-import { PrivacyRpcService } from "./PrivacyRpcService";
 
 export type DPORequestType =
   | "access"
@@ -41,20 +40,6 @@ export interface ExportDataResponse {
   data: Record<string, unknown>;
   sizeBytes: number;
   tablesExported: number;
-}
-
-export interface DeleteAccountParams {
-  reason?: string;
-  /** Must be true as an explicit user confirmation. */
-  confirmation: true;
-  /** When true, requests an export before final purge. */
-  exportFirst?: boolean;
-}
-
-export interface DeleteAccountResponse {
-  scheduledPurgeAt: string;
-  daysUntilPurge: number;
-  recoveryPossibleUntil: string;
 }
 
 function isRecord(value: unknown): value is Record<string, unknown> {
@@ -144,25 +129,4 @@ export class PrivacyService {
     };
   }
 
-  /**
-   * Schedules account deletion for the authenticated user through the
-   * authoritative privacy broker. This does not invoke the stale destructive
-   * `user-delete-account` handler.
-   */
-  static async deleteAccount(params: DeleteAccountParams): Promise<DeleteAccountResponse> {
-    if (!params.confirmation) {
-      throw new Error("Confirmation required to delete account");
-    }
-
-    const result = await PrivacyRpcService.requestAccountDeletion({
-      reason: params.reason ?? null,
-      exportRequested: params.exportFirst ?? false,
-    });
-
-    return {
-      scheduledPurgeAt: result.scheduledPurgeAt,
-      daysUntilPurge: result.daysUntilPurge,
-      recoveryPossibleUntil: result.recoveryPossibleUntil,
-    };
-  }
 }

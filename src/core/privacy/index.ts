@@ -7,6 +7,4 @@ export type {
   CreateDPORequestParams,
   DPORequestType,
   ExportDataResponse,
-  DeleteAccountParams,
-  DeleteAccountResponse,
 } from './services/PrivacyService';

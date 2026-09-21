@@ -53,6 +53,7 @@ O primeiro release continua territorial. **Cobertura uniforme dos 170 bairros de
 - [x] Mensagens usa perfis da sessão e threads persistidas, limpa estado privado ao trocar perfil e não exibe controles sem ação real.
 - [x] O E2E de launch scope foi sincronizado com `communityCommunication: true`.
 - [x] Cadastro de interesse deixou de sintetizar identidade de e-mail e aceita telefone como canal real quando aplicável (PR #221; migration remota `20260920012056_allow_phone_only_community_interest_mvp`).
+- [x] Novas solicitações automáticas de exclusão de conta ficam fail-closed no MVP: rollout certificado + flag de ambiente são obrigatórios, a UI direciona ao canal DPO e o `PrivacySettingsService` bloqueia callers diretos; solicitações antigas continuam visíveis/canceláveis sem promessa de purge automático.
 - [x] O fluxo público de Vagas não mantém mais writer oculto para `highlightType="premium"` enquanto Billing está pausado (PR #223).
 - [x] Snapshots de produto já classificados como históricos (`DEMO-READY`, `PROJECT-HEALTH-REPORT`, `PROJECT-SCORE`) saíram da árvore documental ativa e foram preservados em `docs/10-archive/product/` (PR #224).
 - [x] Tipos Supabase foram revalidados no SHA auditado: Git e runtime têm 731731 caracteres normalizados e `exact=true`.

@@ -1,4 +1,5 @@
 const PRIVACY_DATA_EXPORT_FEATURE_ENV = "VITE_FEATURE_PRIVACY_DATA_EXPORT";
+const PRIVACY_ACCOUNT_DELETION_FEATURE_ENV = "VITE_FEATURE_PRIVACY_ACCOUNT_DELETION";
 
 /**
  * This certification is intentionally independent from the deployment flag.
@@ -26,3 +27,26 @@ export function assertPrivacyDataExportEnabled(): void {
 }
 
 export const PRIVACY_DATA_EXPORT_FEATURE_FLAG = PRIVACY_DATA_EXPORT_FEATURE_ENV;
+
+
+/**
+ * Account deletion remains fail-closed until the destructive purge pipeline,
+ * retention policy and exact-SHA rollout evidence are certified.
+ */
+export const PRIVACY_ACCOUNT_DELETION_RELEASE_CERTIFIED = false;
+
+export function isPrivacyAccountDeletionEnabled(): boolean {
+  return (
+    PRIVACY_ACCOUNT_DELETION_RELEASE_CERTIFIED &&
+    import.meta.env.VITE_FEATURE_PRIVACY_ACCOUNT_DELETION === "true"
+  );
+}
+
+export function assertPrivacyAccountDeletionEnabled(): void {
+  if (!isPrivacyAccountDeletionEnabled()) {
+    throw new Error("Exclusao automatica de conta temporariamente indisponivel");
+  }
+}
+
+export const PRIVACY_ACCOUNT_DELETION_FEATURE_FLAG =
+  PRIVACY_ACCOUNT_DELETION_FEATURE_ENV;
