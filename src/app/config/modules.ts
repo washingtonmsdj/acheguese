@@ -1,10 +1,9 @@
 /**
  * Configuração de Módulos
  * 
- * SSOT para todos os módulos territoriais da aplicação.
- * Define metadados, rotas e comportamentos de forma centralizada.
- * 
- * Princípio: Adicionar um novo módulo deve ser trivial - apenas uma entrada aqui.
+ * Catálogo de apresentação dos módulos da aplicação.
+ * Metadados visuais vivem aqui; o ciclo de vida (active/paused e dependências)
+ * pertence exclusivamente a productModuleRegistry.ts.
  */
 
 import type { LucideIcon } from 'lucide-react';
@@ -17,6 +16,7 @@ import {
   Briefcase,
   UtensilsCrossed,
   MapPin,
+  Navigation,
   Car,
   GraduationCap,
 } from 'lucide-react';
@@ -53,10 +53,8 @@ export interface ModuleConfig {
 }
 
 /**
- * Configuração centralizada de todos os módulos
- * 
- * IMPORTANTE: Esta é a única fonte de verdade para módulos.
- * Qualquer novo módulo deve ser adicionado aqui.
+ * Catálogo centralizado de metadados dos módulos.
+ * O status efetivo sempre é derivado do registry de produto via launchScope.
  */
 export const MODULES: Record<string, ModuleConfig> = {
   communityFeed: {
@@ -251,6 +249,18 @@ export const MODULES: Record<string, ModuleConfig> = {
     order: 16,
   },
 
+  nearby: {
+    id: 'nearby',
+    name: 'Perto de Mim',
+    slug: APP_MODULE_SLUGS.nearby,
+    icon: Navigation,
+    contextMessage: 'Perto de',
+    color: 'hsl(var(--primary))',
+    isTerritorial: false,
+    isActive: isLaunchSurfaceEnabled('nearby'),
+    order: 17,
+  },
+
   search: {
     id: 'search',
     name: 'Busca',
@@ -260,7 +270,7 @@ export const MODULES: Record<string, ModuleConfig> = {
     color: 'hsl(var(--primary))',
     isTerritorial: false,
     isActive: isLaunchSurfaceEnabled('search'),
-    order: 17,
+    order: 18,
   },
 
   ranking: {
