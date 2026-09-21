@@ -6,6 +6,7 @@ import { seedAuthFlowState } from "./helpers/authFlowState";
 
 const OUTPUT_DIR = resolve(process.cwd(), "auth-concept-captures");
 const RETURN_PATH = "/mensagens/business/44444444-4444-4444-8444-444444444444";
+const LOGIN_WITH_RETURN = `/login?redirect=${encodeURIComponent(RETURN_PATH)}`;
 mkdirSync(OUTPUT_DIR, { recursive: true });
 
 async function prepare(page: Page) {
@@ -34,7 +35,7 @@ test.describe("Auth concept capture", () => {
   test("captures mobile concept screens", async ({ page }) => {
     await page.setViewportSize({ width: 390, height: 844 });
 
-    await page.goto("/login?redirect=%2Fmensagens%2Fsabores-da-ana", {
+    await page.goto(LOGIN_WITH_RETURN, {
       waitUntil: "domcontentloaded",
     });
     await expect(
@@ -88,7 +89,7 @@ test.describe("Auth concept capture", () => {
   test("captures desktop concept screens", async ({ page }) => {
     await page.setViewportSize({ width: 1440, height: 900 });
 
-    await page.goto("/login?redirect=%2Fmensagens%2Fsabores-da-ana", {
+    await page.goto(LOGIN_WITH_RETURN, {
       waitUntil: "domcontentloaded",
     });
     await expect(
@@ -110,7 +111,7 @@ test.describe("Auth concept capture", () => {
 
     await page.goto("/cadastro/confirmacao", { waitUntil: "domcontentloaded" });
     await expect(
-      page.getByText("Só falta confirmar seu e-mail.", { exact: true }),
+      page.getByRole("heading", { name: /Só falta\s*confirmar\s*seu e-mail\./ }),
     ).toBeVisible();
     await capture(page, "desktop-confirm-email.png");
 
