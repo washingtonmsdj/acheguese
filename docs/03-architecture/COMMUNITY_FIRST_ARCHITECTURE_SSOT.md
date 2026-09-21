@@ -1,21 +1,26 @@
-# Community First Architecture SSOT
+# Community Architecture — contrato pós-MVP
 
-Data de referencia: 2026-07-09
+Data de referencia original: 2026-07-09  
+Status de produto: **PAUSED no MVP desde 2026-09-21**
 
-Este documento e o contrato arquitetural vivo para a arquitetura Community
-First do Achegue-se. O plano detalhado de implementacao incremental permanece
-preservado em `docs/10-archive/plans/COMMUNITY_FIRST_ARCHITECTURE_PLAN.md`.
+> Este documento preserva o contrato interno da capability Community para uma futura reativacao.
+> Ele **nao** e autoridade de lifecycle publico. A ativacao pertence exclusivamente a
+> `src/app/config/productModuleRegistry.ts`, onde Community permanece `paused`.
 
-## Decisao Oficial
+O plano detalhado de implementacao incremental permanece preservado em
+`docs/10-archive/plans/COMMUNITY_FIRST_ARCHITECTURE_PLAN.md`.
 
-O core domain do Achegue-se e:
+## Decisao Oficial do modulo
+
+O core domain **da capability Community** e:
 
 **Comunidade Local**
 
-Comunidade Local e a entidade social ancorada em um territorio canonico. Ela
-organiza descoberta, contexto, pertencimento, interacoes e distribuicao local
-de entidades independentes, como empresas, gastronomia, servicos,
-classificados, eventos e conteudo.
+Comunidade Local e a entidade social ancorada em um territorio canonico. Quando
+o modulo for certificado e reativado, ela podera organizar pertencimento,
+interacoes e distribuicao local de entidades independentes. Enquanto o lifecycle
+estiver `paused`, este contrato nao autoriza Home, Feed, discovery, navegacao,
+prefetch ou queries publicas de Community.
 
 ## SSOTs Canonicos
 
