@@ -7,13 +7,10 @@ import {
   Truck,
   MessageCircle,
 } from "lucide-react";
-import { isLaunchBusinessCategoryEnabled } from "@/app/config/launchScope";
 import { getAllCategories } from "@/core/business/config/categoryFilters";
 import type { Category, QuickFilter } from "../sections/types";
 
-export const CATEGORIES: readonly Category[] = getAllCategories()
-  .filter((category) => isLaunchBusinessCategoryEnabled(category.slug))
-  .map((category) => ({
+export const CATEGORIES: readonly Category[] = getAllCategories().map((category) => ({
     icon: category.icon,
     label: category.labelPlural,
     iconColor: category.color,
