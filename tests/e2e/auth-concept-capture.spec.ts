@@ -91,7 +91,9 @@ test.describe("Auth concept capture", () => {
     await page.goto("/login?redirect=%2Fmensagens%2Fsabores-da-ana", {
       waitUntil: "domcontentloaded",
     });
-    await expect(page.getByText("Seu lugar, mais perto.", { exact: true })).toBeVisible();
+    await expect(
+      page.getByRole("heading", { name: /Seu lugar,\s*mais perto\./ }),
+    ).toBeVisible();
     await expect(
       page.getByRole("button", { name: "Continuar com Google" }),
     ).toBeVisible();
