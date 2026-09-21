@@ -1,4 +1,6 @@
-# Checkpoint — corte definitivo do MVP em três módulos
+# Checkpoint — corte inicial do MVP em três módulos
+
+> **Status: SUPERADO NO MESMO DIA.** Este checkpoint registra o estado do PR #283, mas a decisão vigente foi corrigida em 2026-09-21: **Busca permanece no MVP**. O escopo atual é **Empresas + Mapa + Perto de mim + Busca**. Não usar este arquivo para pausar Search.
 
 **Data:** 2026-09-21  
 **Branch de trabalho:** `release/narrow-mvp-scope`  
@@ -12,7 +14,7 @@ O MVP público do Achegue-se fica reduzido a:
 - **Mapa**;
 - **Perto de mim**.
 
-Essa decisão substitui escopos anteriores que tratavam Comunidade, Busca, Classificados, Serviços, Gastronomia, Eventos, Vagas, Pontos Turísticos ou outras verticais como núcleo obrigatório do primeiro release.
+Este foi o corte registrado naquele PR. A parte que removia **Busca** foi posteriormente corrigida; Comunidade, Classificados, Serviços, Gastronomia, Eventos, Vagas, Pontos Turísticos e demais módulos continuam pós-MVP.
 
 ## Arquitetura
 
@@ -79,5 +81,5 @@ Consequência:
 1. concluir a remoção de resíduos do escopo anterior;
 2. validar os ratchets de lifecycle e boundaries;
 3. executar os gates reais no mesmo SHA;
-4. provar deploy e smoke de Empresas + Mapa + Perto de mim;
+4. provar deploy e smoke do escopo vigente (**Empresas + Mapa + Perto de mim + Busca**);
 5. somente então marcar MVP READY.
