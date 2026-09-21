@@ -19,6 +19,15 @@ const protectedRoute = readFileSync(
   join(root, "src/core/routing/components/ProtectedRoute.tsx"),
   "utf8",
 );
+const privacyRollout = readFileSync(
+  join(root, "src/core/privacy/config/privacyRollout.ts"),
+  "utf8",
+);
+const privacyPage = readFileSync(
+  join(root, "src/app/pages/PrivacySettingsPage.tsx"),
+  "utf8",
+);
+const productionEnv = readFileSync(join(root, ".env.production"), "utf8");
 
 describe("LGPD pending deletion client boundary", () => {
   it("removes the destructive legacy delete handler from active privacy services", () => {
@@ -147,4 +156,32 @@ describe("LGPD pending deletion client boundary", () => {
     expect(mutation).toBeGreaterThan(normalization);
     expect(privacySettingsService).toContain("reason,");
   });
+  it("keeps new account-deletion requests fail-closed until purge rollout is certified", () => {
+    expect(privacyRollout).toContain(
+      "PRIVACY_ACCOUNT_DELETION_RELEASE_CERTIFIED = false",
+    );
+    expect(privacyRollout).toContain(
+      'import.meta.env.VITE_FEATURE_PRIVACY_ACCOUNT_DELETION === "true"',
+    );
+    expect(productionEnv).toMatch(
+      /^VITE_FEATURE_PRIVACY_ACCOUNT_DELETION=false$/m,
+    );
+    expect(privacySettingsService).toContain(
+      "assertPrivacyAccountDeletionEnabled();",
+    );
+    expect(privacySettingsService).toContain(
+      "static isAccountDeletionRequestAvailable(): boolean",
+    );
+    expect(privacyPage).toContain(
+      "PrivacySettingsService.isAccountDeletionRequestAvailable()",
+    );
+    expect(privacyPage).toContain("deletionRequestAvailable ? (");
+    expect(privacyPage).toContain(
+      "Exclusão automática temporariamente indisponível",
+    );
+    expect(privacyPage).toContain(
+      "Essa data não confirma processamento automático.",
+    );
+  });
+
 });
