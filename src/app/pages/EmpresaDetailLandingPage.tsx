@@ -435,14 +435,14 @@ export default function EmpresaDetailLandingPage(
     gastronomyEnabled && snapshot.verticals.canonicalVerticalUrl
       ? contextualBusinessUrl ?? snapshot.verticals.canonicalVerticalUrl
       : null;
-  const verticalPublicUrls = gastronomyEnabled && contextualBusinessUrl && snapshot.verticals.verticalPublicUrls.gastronomy
-    ? {
-        ...snapshot.verticals.verticalPublicUrls,
-        gastronomy: contextualBusinessUrl,
-      }
-    : gastronomyEnabled
-      ? snapshot.verticals.verticalPublicUrls
-      : { ...snapshot.verticals.verticalPublicUrls, gastronomy: null };
+  const verticalPublicUrls = gastronomyEnabled
+    ? contextualBusinessUrl && snapshot.verticals.verticalPublicUrls.gastronomy
+      ? {
+          ...snapshot.verticals.verticalPublicUrls,
+          gastronomy: contextualBusinessUrl,
+        }
+      : snapshot.verticals.verticalPublicUrls
+    : {};
   const isDeliveryBusiness =
     business.tem_delivery || business.modos_atendimento?.includes("delivery");
   const hasDesktopProducts = products.length > 0;
