@@ -6,7 +6,7 @@
 
 Achegue-se é uma plataforma **hiperlocal, territory-first e modular**, cuja unidade fundamental é o **Território** (país → estado → cidade → bairro).
 
-A visão pós-MVP pode incorporar Comunidade, Classificados, Profissionais/Serviços, Mobilidade, Educação e verticais. **O produto público ativo do MVP é deliberadamente menor: Empresas + Mapa + Perto de mim.** O lifecycle executável pertence a `src/app/config/productModuleRegistry.ts`; nenhuma visão de produto, rota preservada ou documentação de módulo pode contornar esse owner.
+A visão pós-MVP pode incorporar Comunidade, Classificados, Profissionais/Serviços, Mobilidade, Educação e verticais. **O produto público ativo do MVP é deliberadamente menor: Empresas + Mapa + Perto de mim + Busca.** O lifecycle executável pertence a `src/app/config/productModuleRegistry.ts`; nenhuma visão de produto, rota preservada ou documentação de módulo pode contornar esse owner.
 
 ## Autoridade e precedência
 
