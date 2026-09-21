@@ -7,11 +7,12 @@
 
 ## Escopo do MVP
 
-O MVP público atual possui somente três módulos de produto:
+O MVP público atual possui quatro módulos de produto:
 
 - `business` — Empresas;
 - `map` — Mapa;
-- `nearby` — Perto de mim.
+- `nearby` — Perto de mim;
+- `search` — Busca.
 
 `nearby` depende formalmente de `map + business`.
 
@@ -49,6 +50,7 @@ A direção da dependência deve seguir o domínio base para a extensão:
 
 - permitido: `nearby -> business`;
 - permitido: `map -> business public port`;
+- permitido: `search -> providers de módulos ativos`;
 - permitido no futuro: `gastronomy -> business`;
 - proibido: `business -> gastronomy`;
 - proibido: um módulo ativo depender de implementação de módulo pausado.
