@@ -17,8 +17,10 @@ function collectSourceFiles(directory: string): string[] {
   });
 }
 
-const STATIC_MAPLIBRE_IMPORT = /import\s+(?!type\b)[\s\S]*?from\s+["']maplibre-gl["']/;
-const STATIC_MAPLIBRE_CSS_IMPORT = /import\s+["']maplibre-gl\/dist\/maplibre-gl\.css["']/;
+const STATIC_MAPLIBRE_IMPORT =
+  /^import\s+(?!type\b)[^;\n]*from\s+["']maplibre-gl["'];?/m;
+const STATIC_MAPLIBRE_CSS_IMPORT =
+  /^import\s+["']maplibre-gl\/dist\/maplibre-gl\.css["'];?/m;
 
 const ALLOWED_STATIC_RUNTIME_OWNER =
   "src/core/maps/components/v3/MapLibreAdapterRuntime.tsx";
