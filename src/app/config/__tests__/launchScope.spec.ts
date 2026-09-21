@@ -16,21 +16,20 @@ import {
 } from "../launchScope";
 
 describe("launchScope", () => {
-  it("keeps only Mapa, Empresas and Perto de mim active as product modules", () => {
+  it("keeps Mapa, Empresas, Perto de mim and Busca active as product modules", () => {
     expect(getActiveProductModules().sort()).toEqual(
-      ["business", "map", "nearby"].sort(),
+      ["business", "map", "nearby", "search"].sort(),
     );
     expect(PRODUCT_MODULE_REGISTRY.nearby).toEqual({
       status: "active",
       dependsOn: ["map", "business"],
     });
 
-    for (const enabled of ["home", "business", "map", "nearby"] as const) {
+    for (const enabled of ["home", "business", "map", "nearby", "search"] as const) {
       expect(isLaunchSurfaceEnabled(enabled)).toBe(true);
     }
 
     for (const paused of [
-      "search",
       "community",
       "billing",
       "gastronomy",
@@ -68,19 +67,26 @@ describe("launchScope", () => {
         { id: "business", label: "Empresas" },
         { id: "map", label: "Mapa" },
         { id: "nearby", label: "Perto de Mim" },
+        { id: "search", label: "Busca" },
         { id: "classifieds", label: "Classificados" },
       ]),
     ).toEqual([
       { id: "business", label: "Empresas" },
       { id: "map", label: "Mapa" },
       { id: "nearby", label: "Perto de Mim" },
+      { id: "search", label: "Busca" },
     ]);
 
     expect(
       filterLaunchSections([
         {
           label: "MVP",
-          items: [{ id: "business" }, { id: "map" }, { id: "nearby" }],
+          items: [
+            { id: "business" },
+            { id: "map" },
+            { id: "nearby" },
+            { id: "search" },
+          ],
         },
         {
           label: "Pós-MVP",
@@ -90,7 +96,12 @@ describe("launchScope", () => {
     ).toEqual([
       {
         label: "MVP",
-        items: [{ id: "business" }, { id: "map" }, { id: "nearby" }],
+        items: [
+          { id: "business" },
+          { id: "map" },
+          { id: "nearby" },
+          { id: "search" },
+        ],
       },
     ]);
   });
@@ -98,12 +109,11 @@ describe("launchScope", () => {
   it("keeps presentation metadata aligned without duplicating lifecycle ownership", () => {
     const activeIds = ACTIVE_MODULES.map((module) => module.id);
 
-    for (const activeId of ["business", "map", "nearby"]) {
+    for (const activeId of ["business", "map", "nearby", "search"]) {
       expect(activeIds).toContain(activeId);
     }
 
     for (const pausedId of [
-      "search",
       "community-feed",
       "community-groups",
       "community-recommendations",
@@ -130,6 +140,7 @@ describe("launchScope", () => {
     );
     expect(getContextMessageFromPath("/mapa/ba/salvador")).toBe("Mapa de");
     expect(getContextMessageFromPath("/perto-de-mim")).toBe("Perto de");
+    expect(getContextMessageFromPath("/busca/ba/salvador")).toBe("Buscar em");
 
     expect(getContextMessageFromPath("/servicos/ba/salvador")).toBeNull();
     expect(getContextMessageFromPath("/classificados/ba/salvador")).toBeNull();
