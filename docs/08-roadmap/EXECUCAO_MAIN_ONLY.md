@@ -14,17 +14,18 @@ Este corte substitui, para fins de **prioridade de lançamento**, a ordem histó
 
 ### Escopo público do candidato
 
-A decisão definitiva de release de **2026-09-21** reduz o MVP a três módulos públicos de produto:
+A decisão definitiva de release de **2026-09-21** define o MVP com quatro módulos públicos de produto:
 
 - **Empresas** — catálogo institucional, detalhe canônico, contato e localização;
 - **Mapa** — visualização geográfica dos dados pertencentes aos módulos ativos; no MVP, somente Business é layer público de domínio;
-- **Perto de mim** — descoberta por proximidade de Empresas, com dependências formais de `map + business`.
+- **Perto de mim** — descoberta por proximidade de Empresas, com dependências formais de `map + business`;
+- **Busca** — descoberta textual orquestrada por Search, limitada aos providers cujas superfícies estão ativas.
 
 O lifecycle canônico pertence a `src/app/config/productModuleRegistry.ts`. `launchScope.ts` é apenas a camada de compatibilidade das superfícies existentes e deriva seu estado do registry.
 
 **Home/Território, Auth/Conta, sessão, localização, roteamento, segurança, storage e observabilidade são infraestrutura**, não módulos extras do MVP.
 
-Ficam explicitamente **pós-MVP**, preservados e isolados até trabalho/certificação individual: Comunidade, Busca pública, Gastronomia, Serviços profissionais, Classificados, Pontos Turísticos, Educação, Vagas/Oportunidades, Eventos, Mensagens/Comunicação, Mobilidade, Cupons, Gamificação, Analytics público, Alertas, Issues, Achados e Perdidos, Safety familiar e Billing.
+Ficam explicitamente **pós-MVP**, preservados e isolados até trabalho/certificação individual: Comunidade, Gastronomia, Serviços profissionais, Classificados, Pontos Turísticos, Educação, Vagas/Oportunidades, Eventos, Mensagens/Comunicação, Mobilidade, Cupons, Gamificação, Analytics público, Alertas, Issues, Achados e Perdidos, Safety familiar e Billing.
 
 A regra de modularidade é fail-closed: pausar um módulo no registry remove sua navegação, suas rotas públicas e seus loaders/discovery ativos. Reativação futura deve ocorrer pelo owner canônico e suas dependências, nunca por redirect, alias ou exceção local.
 
@@ -37,7 +38,7 @@ O primeiro release continua territorial. **Cobertura uniforme dos 170 bairros de
 3. **Completar proteção da `main`.** Force-push/deleção já estão bloqueados e o publisher canônico de tipos Supabase **já não escreve diretamente na `main`**: ele usa `automation/supabase-types-sync`, abre/atualiza PR e dispara os gates canônicos. O blocker restante é administrativo: exigir PR + checks que realmente executem e impedir bypass fora da release authority aprovada.
 4. **Preservar a prova de ledger/runtime no SHA candidato.** A auditoria de identidade já está em zero divergências; `validate:migrations`, `validate:migrations:provenance` e `validate:migrations:remote` ainda precisam executar de verdade no runner do candidato. Tipos gerados foram regenerados do runtime após os últimos DDLs.
 5. **Manter LGPD destrutivo fail-closed.** Delete/purge não pode ser habilitado enquanto `LGPD_PURGE_POLICY` não estiver pronto. Exportação também permanece desabilitada até certificação. O MVP pode lançar com essas capacidades indisponíveis, desde que a UI não prometa sucesso e nenhum caminho stale permaneça acessível.
-6. **Fechar segurança do que será exposto.** Priorizar Auth/Conta, Profile, território e os owners de Empresas, Mapa e Perto de mim. Módulos pausados só bloqueiam o MVP quando compartilham uma boundary realmente usada por esse núcleo. Certificações especializadas de Educação, Gastronomia e Billing permanecem no ciclo próprio desses módulos e não são pré-requisito funcional do release atual; qualidade global (lint/typecheck/security/SSOT/Vitest) continua obrigatória.
+6. **Fechar segurança do que será exposto.** Priorizar Auth/Conta, Profile, território e os owners de Empresas, Mapa, Perto de mim e Busca. Módulos pausados só bloqueiam o MVP quando compartilham uma boundary realmente usada por esse núcleo. Certificações especializadas de Educação, Gastronomia e Billing permanecem no ciclo próprio desses módulos e não são pré-requisito funcional do release atual; qualidade global (lint/typecheck/security/SSOT/Vitest) continua obrigatória.
 7. **Certificar o fluxo real das superfícies públicas.** Para cada item do escopo: rota/owner canônico, contrato DB/RPC, autorização positiva e negativa, loading/empty/error/auth, fluxo principal com dados reais, smoke mobile e E2E sem placeholder/paused contado como sucesso.
 8. **Provar deploy do mesmo SHA.** O SHA aprovado deve produzir build real no provider e smoke no domínio público, incluindo login/cadastro, troca/resolução territorial, Home, navegação do núcleo, mutações principais e logout.
 9. **Configuração legal/operacional mínima.** O verifier de deploy já exige origem pública HTTPS, contato e DPO válidos e foro configurado; políticas/textos falham fechado quando identidade pública não existe. O blocker restante é o provider fornecer valores válidos no build exact-SHA.
@@ -46,11 +47,11 @@ O primeiro release continua territorial. **Cobertura uniforme dos 170 bairros de
 ### Correções de gate identificadas neste corte
 
 - [x] `tools/release/verify-deploy-ready.mjs` já reconhece o `buildCommand` canônico `node tools/release/run-vercel-production-build.mjs`, alinhado a `vercel.json`. Não manter este item como blocker.
-- [x] `tests/e2e/launch-scope-public.spec.ts` e `tests/architecture/launch-scope-e2e-alignment.test.ts` foram realinhados ao corte definitivo de 2026-09-21: somente Empresas, Mapa e Perto de mim são módulos ativos; os demais módulos públicos devem render isolamento de lançamento.
+- [x] `tests/e2e/launch-scope-public.spec.ts` e `tests/architecture/launch-scope-e2e-alignment.test.ts` foram realinhados ao corte definitivo de 2026-09-21: Empresas, Mapa, Perto de mim e Busca são módulos ativos; os demais módulos públicos devem render isolamento de lançamento.
 
 ### Progresso consolidado do corte público — 2026-09-19
 
-- [x] Corte MVP definitivo de 2026-09-21: `productModuleRegistry.ts` mantém somente `business + map + nearby` ativos; `nearby` depende formalmente de `map + business`. Home/Conta/Território são infraestrutura, e todos os demais módulos permanecem pós-MVP e isolados.
+- [x] Corte MVP definitivo de 2026-09-21: `productModuleRegistry.ts` mantém `business + map + nearby + search` ativos; `nearby` depende formalmente de `map + business`. Home/Conta/Território são infraestrutura, e todos os demais módulos permanecem pós-MVP e isolados.
 - [x] Home, Busca e perfil profissional público deixaram de aceitar dados `concept-mock` no runtime.
 - [x] Pontos Turísticos deixou de exibir proximidade simulada.
 - [x] Eventos pagos falham fechado enquanto não há checkout habilitado; inscrições gratuitas continuam no fluxo real.
@@ -461,7 +462,7 @@ Para cada módulo exigir: entrypoint canônico, banco/RPC atual, autorização p
 ## P2 — higiene E2E e branches
 
 - [x] provenance explícita das fixtures técnicas permanece separada de dados públicos de Production;
-- [x] contrato E2E do release foi reconciliado ao MVP atual: a prova determinística cobre **Empresas + Mapa + Perto de mim** e, em conjunto com `launch-scope-public.spec.ts`, comprova que módulos pós-MVP falham fechado;
+- [x] contrato E2E do release foi reconciliado ao MVP atual: a prova determinística cobre **Empresas + Mapa + Perto de mim + Busca + Busca** e, em conjunto com `launch-scope-public.spec.ts`, comprova que módulos pós-MVP falham fechado;
 - [x] `main` é a única linha ativa de desenvolvimento; não há PR aberto concorrente no marco zero;
 - [x] auditoria remota de 2026-09-21 classificou 165 refs como removíveis sem perda: 92 heads exatos de PR mergeado, 67 heads SHA-pinados como superseded e 6 refs totalmente contidas na `main`;
 - [ ] exclusão física dessas 165 refs continua pendente porque o runner do workflow de higiene encerra com `steps=null` e a integração atual não expõe `DELETE ref`;
