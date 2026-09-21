@@ -6,7 +6,7 @@ const root = process.cwd();
 const read = (path: string) => readFileSync(resolve(root, path), "utf8");
 
 const migration = read(
-  "supabase/migrations/20260921135500_create_business_direct_messaging_mvp.sql",
+  "supabase/migrations/20260921174312_create_business_direct_messaging_mvp.sql",
 );
 const service = read(
   "src/core/messaging/services/BusinessDirectMessagingService.ts",
