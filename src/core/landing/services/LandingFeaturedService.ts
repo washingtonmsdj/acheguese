@@ -787,6 +787,18 @@ export class LandingFeaturedService {
         })()
       : Promise.resolve({ count: 0, data: null, error: null });
 
+    const classifiedCountPromise = isLaunchSurfaceEnabled("classifieds")
+      ? (() => {
+          // eslint-disable-next-line ssot/no-direct-classified-access
+          let query = landingDb
+            .from<{ id: string }>("classifieds")
+            .select("id", { count: "exact", head: true })
+            .eq("status", "active");
+          query = applyTerritoryFilter(query, filter);
+          return query;
+        })()
+      : Promise.resolve({ count: 0, data: null, error: null });
+
     const schoolCountPromise = isLaunchSurfaceEnabled("education")
       ? this.getPublishedSchoolCount(filter)
       : Promise.resolve<number | null>(null);
@@ -804,15 +816,7 @@ export class LandingFeaturedService {
           return query;
         })(),
         serviceCountPromise,
-        (() => {
-          // eslint-disable-next-line ssot/no-direct-classified-access
-          let query = landingDb
-            .from<{ id: string }>("classifieds")
-            .select("id", { count: "exact", head: true })
-            .eq("status", "active");
-          query = applyTerritoryFilter(query, filter);
-          return query;
-        })(),
+        classifiedCountPromise,
         schoolCountPromise,
       ]);
 
