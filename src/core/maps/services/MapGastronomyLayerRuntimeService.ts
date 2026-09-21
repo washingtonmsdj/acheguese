@@ -1,6 +1,7 @@
 import { applyTerritoryFilter } from "@/core/location";
 import type { TerritoryFilter } from "@/core/location/types";
 import { supabase } from "@/integrations/supabase";
+import { PUBLIC_READ_LIMITS } from "@/shared/config/publicReadLimits";
 import { logger } from "@/shared/utils/logger";
 import type { BoundingBox } from "../types/core";
 
@@ -26,9 +27,6 @@ type MapGastronomyDbClient = {
 };
 
 const mapGastronomyDb = supabase as unknown as MapGastronomyDbClient;
-
-const DEFAULT_GASTRONOMY_MAP_LIMIT = 100;
-const MAX_GASTRONOMY_MAP_LIMIT = 200;
 
 export interface GastronomyMapEntity {
   id: string;
@@ -80,9 +78,9 @@ function validateBounds(bounds: BoundingBox): void {
 
 function normalizeLimit(value: number | undefined): number {
   if (!Number.isFinite(value) || value == null) {
-    return DEFAULT_GASTRONOMY_MAP_LIMIT;
+    return PUBLIC_READ_LIMITS.MAP_DEFAULT;
   }
-  return Math.max(1, Math.min(MAX_GASTRONOMY_MAP_LIMIT, Math.trunc(value)));
+  return Math.max(1, Math.min(PUBLIC_READ_LIMITS.MAP_MAX, Math.trunc(value)));
 }
 
 class MapGastronomyLayerRuntimeService {
