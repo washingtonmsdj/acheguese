@@ -2,30 +2,35 @@ import { describe, expect, it } from "vitest";
 
 import {
   PRODUCT_MODULE_REGISTRY,
-  getActiveProductModules,
-  isProductModuleEnabled,
   type ProductModuleKey,
 } from "../productModuleRegistry";
+import {
+  getActiveProductModules,
+  isProductModuleEnabled,
+} from "../lifecycleRegistry";
 
 describe("productModuleRegistry", () => {
-  it("keeps the MVP product set exactly Business + Map + Nearby + Search", () => {
-    expect(getActiveProductModules().sort()).toEqual([
+  it("keeps Business as the only active domain module in the MVP", () => {
+    expect(getActiveProductModules()).toEqual(["business"]);
+    expect(isProductModuleEnabled("business")).toBe(true);
+  });
+
+  it("keeps cross-domain dependencies explicit without treating platform capabilities as product modules", () => {
+    expect(PRODUCT_MODULE_REGISTRY.gastronomy.dependsOnProductModules).toEqual([
       "business",
+    ]);
+    expect(PRODUCT_MODULE_REGISTRY.education.dependsOnProductModules).toEqual([
+      "business",
+    ]);
+    expect(PRODUCT_MODULE_REGISTRY.touristPoints.dependsOnCapabilities).toEqual([
       "map",
-      "nearby",
-      "search",
+    ]);
+    expect(PRODUCT_MODULE_REGISTRY.mobility.dependsOnCapabilities).toEqual([
+      "map",
     ]);
   });
 
-  it("keeps Nearby dependent on both active base modules", () => {
-    expect(PRODUCT_MODULE_REGISTRY.nearby.dependsOn).toEqual([
-      "map",
-      "business",
-    ]);
-    expect(isProductModuleEnabled("nearby")).toBe(true);
-  });
-
-  it("references only declared modules and contains no dependency cycle", () => {
+  it("references only declared product-module dependencies and contains no product dependency cycle", () => {
     const keys = new Set(
       Object.keys(PRODUCT_MODULE_REGISTRY) as ProductModuleKey[],
     );
@@ -39,7 +44,8 @@ describe("productModuleRegistry", () => {
       const nextPath = new Set(path);
       nextPath.add(module);
 
-      for (const dependency of PRODUCT_MODULE_REGISTRY[module].dependsOn ?? []) {
+      for (const dependency of
+        PRODUCT_MODULE_REGISTRY[module].dependsOnProductModules ?? []) {
         expect(keys.has(dependency), `${module} -> missing ${dependency}`).toBe(
           true,
         );
@@ -52,7 +58,7 @@ describe("productModuleRegistry", () => {
     }
   });
 
-  it("fails closed for paused post-MVP modules", () => {
+  it("fails closed for paused post-MVP domain modules", () => {
     for (const module of [
       "community",
       "gastronomy",
@@ -63,7 +69,6 @@ describe("productModuleRegistry", () => {
       "jobs",
       "events",
       "communication",
-      "messaging",
       "mobility",
       "coupons",
       "gamification",
