@@ -1,4 +1,5 @@
 import { expect, test } from '@playwright/test';
+import { installOnboardingVisualState } from './support/onboardingVisualState';
 
 /**
  * Visual regression tests for /onboarding on desktop viewport.
@@ -17,6 +18,7 @@ import { expect, test } from '@playwright/test';
 const DESKTOP_VIEWPORT = { width: 1440, height: 900 };
 
 test.use({
+  colorScheme: 'light',
   viewport: DESKTOP_VIEWPORT,
   deviceScaleFactor: 1,
   isMobile: false,
@@ -27,22 +29,7 @@ test.describe('OnboardingPage - visual regression (desktop)', () => {
   test.setTimeout(90_000);
 
   test.beforeEach(async ({ page }) => {
-    await page.addInitScript(() => {
-      try {
-        window.localStorage.setItem(
-          'achegue-se:last-city',
-          JSON.stringify({ city: 'Salvador', state: 'BA', uf: 'ba' }),
-        );
-        const style = document.createElement('style');
-        style.innerHTML = `*, *::before, *::after {
-          animation-duration: 0s !important;
-          animation-delay: 0s !important;
-          transition-duration: 0s !important;
-          transition-delay: 0s !important;
-        }`;
-        document.documentElement.appendChild(style);
-      } catch {}
-    });
+    await installOnboardingVisualState(page);
   });
 
   test('matches baseline layout on desktop', async ({ page }) => {
