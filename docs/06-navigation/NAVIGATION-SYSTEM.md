@@ -23,16 +23,18 @@ Destinos vigentes:
 2. **Mapa** — descoberta geográfica de Business;
 3. **Empresas** — catálogo/lista Business;
 4. **Perto de mim** — proximidade Business; depende de Mapa + Empresas;
-5. **Conta / Entrar** — infraestrutura de identidade.
+5. **Busca** — descoberta textual restrita aos providers ativos;
+6. **Conta / Entrar** — infraestrutura de identidade.
 
 Home e Conta são plataforma, não módulos adicionais do produto.
 
 ## Regras de lifecycle
 
-- `business`, `map` e `nearby` são os únicos módulos ativos do MVP;
+- `business`, `map`, `nearby` e `search` são os módulos ativos do MVP;
 - `nearby` depende formalmente de `map + business`;
-- Search, Community, Gastronomia, Serviços, Classificados, Eventos, Vagas,
+- Community, Gastronomia, Serviços, Classificados, Eventos, Vagas,
   Educação, Mobilidade e demais módulos pós-MVP não aparecem na navegação;
+- Search aparece como destino ativo, mas somente providers de superfícies ativas podem responder;
 - um módulo `paused` também fica fora de rota funcional, prefetch/warmup,
   discovery e layers públicas;
 - renderer não cria exceção local para lifecycle;
@@ -41,8 +43,8 @@ Home e Conta são plataforma, não módulos adicionais do produto.
 ## Mobile
 
 A bottom navigation deve consumir o mesmo registry e manter poucos destinos.
-No MVP, os destinos de produto são Mapa, Empresas e Perto de mim, além de Home
-e Conta.
+No MVP, os destinos de produto são Mapa, Empresas, Perto de mim e Busca, além
+de Home e Conta.
 
 Não reservar tabs para módulos pausados nem exibir teaser que pareça
 funcionalidade disponível.
@@ -59,6 +61,7 @@ O shell pode mostrar:
 - Mapa;
 - Empresas;
 - Perto de mim;
+- Busca;
 - Conta/Entrar;
 - infraestrutura autenticada estritamente necessária.
 
@@ -87,8 +90,13 @@ lifecycle.
 
 ## Busca
 
-Busca federada pública está `paused` no MVP. Componentes ou serviços internos
-de busca podem continuar versionados, mas não constituem destino global nem tab.
+Busca é módulo ativo do MVP. Ela é um orquestrador e não um segundo owner de dados.
+
+Regras:
+- Business é provider ativo no corte atual;
+- Community, Serviços, Classificados, Eventos, Vagas e demais providers pausados permanecem desligados;
+- filtros/coleções de módulos pausados não aparecem na UI;
+- páginas de resultado de busca continuam fora do sitemap quando parametrizadas, mesmo com Search ativa.
 
 ## Evolução pós-MVP
 
