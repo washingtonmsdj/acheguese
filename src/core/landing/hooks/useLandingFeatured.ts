@@ -9,6 +9,7 @@
  */
 
 import { useQuery } from "@tanstack/react-query";
+import { isLaunchSurfaceEnabled } from "@/app/config/launchScope";
 import { createLandingFeaturedService } from "./createLandingFeaturedService";
 import {
   isTerritoryFilterReady,
@@ -56,7 +57,7 @@ export function useLandingFeatured(
       communityId
         ? svc.getCommunityFeaturedServices(communityId, filter, featuredLimit)
         : svc.getFeaturedServices(filter, featuredLimit),
-    enabled,
+    enabled: enabled && isLaunchSurfaceEnabled("services"),
     staleTime: STALE_TIME,
   });
 
@@ -70,7 +71,7 @@ export function useLandingFeatured(
             featuredLimit,
           )
         : svc.getFeaturedGastronomyBusinesses(filter, featuredLimit),
-    enabled,
+    enabled: enabled && isLaunchSurfaceEnabled("gastronomy"),
     staleTime: STALE_TIME,
   });
 
