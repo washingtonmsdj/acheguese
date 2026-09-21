@@ -132,6 +132,11 @@ no Supabase neste ciclo.
   mesmo SHA do source publicado; o smoke admin AAL2 permanece obrigatório;
 - [ ] não houve escrita DDL/Edge nesta sequência e a G43 phase 2 continua sem
   promoção até a certificação hosted e o smoke positivo/negativo.
+- [x] a revalidação local de `npm run validate:docs-live-links` e
+  `npm run validate:migrations` passou após o checkpoint;
+- [x] o ref remoto da branch foi conferido em
+  `4150d0bb5216331614027d308d96c6738f941a85`, sem divergência para o `HEAD`
+  documental publicado.
 
 ## Snapshot remoto — 2026-09-18
 
