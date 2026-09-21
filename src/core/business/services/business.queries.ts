@@ -314,6 +314,48 @@ export async function getBusinesses(
   }
 }
 
+export async function getLaunchVisibleBusinessProfileIds(
+  profileIds: readonly string[],
+): Promise<Set<string>> {
+  const uniqueProfileIds = [...new Set(profileIds.filter(Boolean))];
+  if (uniqueProfileIds.length === 0) return new Set();
+
+  try {
+    let query = supabase
+      .from("public_business_search")
+      .select("profile_id, category")
+      .in("profile_id", uniqueProfileIds);
+
+    const pausedBusinessCategories = getLaunchPausedBusinessCategoryIds();
+    if (pausedBusinessCategories.length > 0) {
+      query = query.or(
+        `category.is.null,category.not.in.(${pausedBusinessCategories.join(",")})`,
+      );
+    }
+
+    const { data, error } = await query;
+    if (error) {
+      logger.error(
+        "[BusinessQueries] launch-visible profile lookup failed",
+        error,
+      );
+      return new Set();
+    }
+
+    return new Set(
+      (data ?? [])
+        .map((row) => row.profile_id)
+        .filter((profileId): profileId is string => Boolean(profileId)),
+    );
+  } catch (error) {
+    logger.error(
+      "[BusinessQueries] launch-visible profile lookup failed",
+      error,
+    );
+    return new Set();
+  }
+}
+
 /**
  * Buscar empresas com paginação (para infinite scroll)
  * FASE 1 IA: Usa public_business_search (view pública segura)
