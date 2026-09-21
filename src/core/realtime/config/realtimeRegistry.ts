@@ -171,6 +171,20 @@ export const REALTIME_TOPIC_REGISTRY = {
       },
     ],
   },
+  "messaging.business-thread-messages": {
+    bindings: [
+      {
+        id: "insert",
+        table: "business_direct_messages",
+        event: "INSERT",
+        filter: {
+          column: "thread_id",
+          valueKey: "threadId",
+          validator: "uuid",
+        },
+      },
+    ],
+  },
   "mobility.driver-rides": {
     bindings: [
       {
