@@ -31,7 +31,9 @@ Ela não deve consultar, contar, destacar ou anunciar módulos pausados.
 
 ## Conteúdo proibido enquanto pausado
 
-Não renderizar previews, contadores ou CTAs de Comunidade, Gastronomia, Serviços, Classificados, Turismo, Educação, Vagas, Eventos, Mensagens, Mobilidade, Cupons, Analytics ou Gamificação.
+Não renderizar previews, contadores ou CTAs de Comunidade, Gastronomia, Serviços, Classificados, Turismo, Educação, Vagas, Eventos, Mobilidade, Cupons, Analytics ou Gamificação.
+
+Mensagens é capability ativa, mas a Home não precisa promover a Inbox: o acesso nasce de contextos legítimos (por exemplo, o CTA `Mensagem` de uma Empresa) e da navegação autenticada.
 
 ## Regras de dados
 
