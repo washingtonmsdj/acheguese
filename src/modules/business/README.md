@@ -82,4 +82,4 @@ Empresas so pode ser marcado como MVP certificado quando houver, no mesmo SHA:
 9. lint/typecheck/test/build/security executados de verdade;
 10. deployment e smoke do mesmo SHA comprovados.
 
-O checkpoint tecnico detalhado fica em `VALIDATION.md`; o SSOT global de execucao permanece em `docs/08-roadmap/EXECUCAO_MAIN_ONLY.md` e o plano permanente em `URGENTE_LEIA_PRIMEIRO_REORGANIZACAO_GLOBAL.md`.
+O checkpoint tecnico detalhado fica em `VALIDATION.md`; o SSOT global de execucao permanece em `docs/08-roadmap/EXECUCAO_MAIN_ONLY.md`, sob a precedência documental definida por `docs/README.md`.
