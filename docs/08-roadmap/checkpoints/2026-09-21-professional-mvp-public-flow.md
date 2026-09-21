@@ -8,7 +8,7 @@ Certificação parcial da jornada pública de Serviços:
 
 ## Finding real
 
-O launch cluster continha um profissional real com:
+O banco remoto de desenvolvimento continha um registro sintético de profissional com:
 
 - `visibility=public_listed`;
 - `is_accepting_clients=true`;
@@ -16,7 +16,7 @@ O launch cluster continha um profissional real com:
 
 A landing de Serviços renderizava esse registro como card clicável. Como o owner de URLs exige slug, o clique não abria detalhe: `useServiceUrls.detail()` caía silenciosamente para a própria listagem. Isso era um falso happy path.
 
-O registro legado afetado era Antônio Costa. A criação profissional atual já deriva slug do handle, mas o banco ainda permitia que um perfil público permanecesse ou voltasse a ficar sem slug.
+O registro era fixture de desenvolvimento, não dado de produto. A criação profissional atual já deriva slug do handle; a correção permanente é o invariante genérico de roteabilidade, não qualquer exceção para a fixture.
 
 ## Correção
 
@@ -26,7 +26,7 @@ Migration remota e versionada:
 
 Ela:
 
-- backfillou o único legado para `antonio-costa`;
+- o runtime remoto recebeu um backfill pontual antes desta revisão; ele é tratado apenas como histórico operacional da migration já aplicada, não como regra de produto;
 - adicionou `professional_public_visibility_requires_slug`;
 - permite draft `private` sem slug;
 - exige slug para `public_listed` e `public_unlisted`;
@@ -52,19 +52,14 @@ foi executado no Supabase canônico e concluiu sem exceção.
 Ele prova:
 
 1. tentar remover o slug de um perfil público é bloqueado pelo `CHECK`;
-2. `anon` lê Antônio Costa em `public_professional_search`;
-3. o território retornado é `/br/ba/salvador/nordeste-de-amaralina`;
-4. um segundo profissional alterado temporariamente para `private` deixa de ser legível por `anon` tanto em `professional_data` quanto no read model;
+2. o read model público não expõe nenhuma linha sem slug;
+3. quando existe uma fixture pública, ela é escolhida dinamicamente, sem nome ou UUID hardcoded;
+4. a fixture escolhida, alterada temporariamente para `private`, deixa de ser legível por `anon` tanto em `professional_data` quanto no read model;
 5. tudo termina em `ROLLBACK`.
 
-## Evidência real do launch cluster
+## Natureza dos dados
 
-Como `anon`, o read model retorna dois profissionais no grupo inicial, ambos roteáveis:
-
-- Antônio Costa -> `/servicos/ba/salvador/profissional/antonio-costa`;
-- Joao Eletricista IA -> `/servicos/ba/salvador/profissional/joao-eletricista-ia-1777812847554`.
-
-Após a probe, João permaneceu `public_listed`, comprovando o rollback.
+Os registros atuais de profissionais, empresas e usuários do ambiente são sintéticos/fixtures; não devem ser usados como evidência de adoção ou conteúdo real. A única exceção de conteúdo externo real informada para o projeto são as escolas, enquanto a conta `washingtonsdj` é a identidade administrativa original. As provas deste checkpoint validam contratos, RLS e invariantes do runtime, não autenticidade comercial das fixtures.
 
 ## Ratchets
 
@@ -81,8 +76,8 @@ Provado neste checkpoint:
 
 - listagem usa território canônico;
 - read model público real;
-- todos os itens públicos listados são roteáveis;
-- URL canônica de detalhe;
+- o read model só permite itens públicos roteáveis;
+- URL canônica de detalhe sem fallback silencioso para a listagem;
 - autorização positiva e negativa;
 - constraint de integridade;
 - broker remoto atualizado e equalizado ao source;
