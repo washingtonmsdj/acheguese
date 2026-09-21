@@ -225,8 +225,8 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
-      - name: Run Regression Tests
-        run: npm run test:regression
+      - name: Run active MVP regression contract
+        run: npm run test:mvp:regression
         env:
           CI: true
 
