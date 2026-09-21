@@ -1,6 +1,6 @@
 # FEED-REVIEW — Sprint FEED.1
 
-Auditoria do Territory Feed (`/comunidade/...` → `TerritoryFeedPage`) com base na régua estabelecida pela Territory Home (HOME.1 / HOME.1.5).
+Auditoria do Territory Feed (`/comunidade/...` → `ComunidadePage`, owner em `core/community-feed`) com base na régua estabelecida pela Territory Home (HOME.1 / HOME.1.5).
 
 Sem mudanças de arquitetura, backend, banco, funcionalidades ou domínio. O objetivo é único: **o Feed deve parecer a continuação da Home, não um outro produto.**
 
