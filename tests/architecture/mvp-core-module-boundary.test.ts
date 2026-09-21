@@ -10,6 +10,7 @@ describe("MVP core module boundary", () => {
   const launchScope = read("src/app/config/launchScope.ts");
   const entry = read("src/app/pages/TerritoryEntryPage.tsx");
   const home = read("src/app/pages/TerritoryHomePage.tsx");
+  const howItWorks = read("src/app/pages/ComoFuncionaPage.tsx");
   const map = read("src/core/maps/pages/MapaPageV4.tsx");
   const nearby = read("src/core/nearby/pages/NearbyPage.tsx");
   const sidebar = read("src/app/components/navigation/AppSidebar.tsx");
@@ -43,6 +44,24 @@ describe("MVP core module boundary", () => {
     expect(entry).not.toContain("LAUNCH_URLS.community");
     expect(entry).not.toContain("/indicar-comunidade");
     expect(entry).not.toContain("serviços e histórias");
+    expect(entry).toContain("isAuthenticated ? ACCOUNT_PATH : AUTH_PATHS.login");
+  });
+
+  it("keeps institutional product copy aligned with the three-module MVP", () => {
+    expect(howItWorks).toContain('title: "Empresas"');
+    expect(howItWorks).toContain('title: "Mapa"');
+    expect(howItWorks).toContain('title: "Perto de mim"');
+
+    for (const paused of [
+      "LAUNCH_URLS.community",
+      "LAUNCH_URLS.services",
+      "LAUNCH_URLS.gastronomy",
+      "LAUNCH_URLS.classifieds",
+      "/indicar-comunidade",
+      "Perfil profissional",
+    ]) {
+      expect(howItWorks).not.toContain(paused);
+    }
   });
 
   it("keeps the active Home limited to the three MVP product modules", () => {
