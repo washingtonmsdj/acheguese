@@ -93,18 +93,18 @@ Regras adicionais:
 
 ---
 
-## 4. TerritoryFeedPage
+## 4. Community / Territory Feed
 
-| Item             | Valor                                                                                                                            |
-| ---------------- | -------------------------------------------------------------------------------------------------------------------------------- |
-| Nome antigo      | `ComunidadePage`                                                                                                                 |
-| Novo nome        | `TerritoryFeedPage`                                                                                                              |
-| Responsabilidade | Overview e timeline da Community persistida, com Feed, Grupos e Discussões no mesmo contexto.                                    |
-| Rotas            | `/comunidade/:alias`, variantes territoriais, `/feed`, `/grupos` e `?view=...`                                                   |
-| Arquivo canônico | `src/app/pages/TerritoryFeedPage.tsx` (alias → `@/core/community/pages/ComunidadePage`)                                          |
-| Dependências     | `useCommunityFeed`, `useTerritoryFilter`, cards do `@/core/community/*`                                                          |
-| Situação         | **Migrado visualmente na Fase 4.4** — `ComunidadePage` é a implementação técnica canônica; o alias público permanece compatível. |
-| Remoção prevista | Nenhuma. `ComunidadePage` permanece como implementação; apenas o _nome público_ migra para `TerritoryFeedPage`.                  |
+| Item             | Valor                                                                                                      |
+| ---------------- | ---------------------------------------------------------------------------------------------------------- |
+| Conceito produto | `Territory Feed`                                                                                           |
+| Owner técnico    | `ComunidadePage`                                                                                           |
+| Responsabilidade | Overview e timeline da Community persistida, com Feed, Grupos e Discussões no mesmo contexto.              |
+| Rotas            | `/comunidade/:alias`, variantes territoriais, `/feed`, `/grupos` e `?view=...`                             |
+| Arquivo canônico | `src/core/community-feed/pages/ComunidadePage.tsx`                                                         |
+| Dependências     | `useCommunityFeed`, `useTerritoryFilter`, componentes de `core/community-feed` e domínios relacionados |
+| Situação         | **Canônico** — rotas, prefetch e testes importam diretamente `ComunidadePage`.                            |
+| Alias aposentado | `src/app/pages/TerritoryFeedPage.tsx` foi removido por não ter caller de runtime.                          |
 
 ---
 
@@ -165,7 +165,8 @@ Removidos em 2026-09-09:
 
 - `src/app/pages/PublicCityLandingPage.tsx`;
 - `src/app/pages/PublicCityLandingPage.css`;
-- `src/app/pages/TerritoryExplorerPage.tsx`.
+- `src/app/pages/TerritoryExplorerPage.tsx`;
+- `src/app/pages/TerritoryFeedPage.tsx` — re-export sem caller, aposentado em 2026-09-21.
 
 Ainda candidato futuro:
 

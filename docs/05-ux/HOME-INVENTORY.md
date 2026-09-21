@@ -102,7 +102,7 @@ Legenda: **Pronto** = rota + página em produção · **Parcial** = rota existe 
 ### 2.1 Núcleo territorial / comunidade
 | Feature | Implementada? | Rota | Página | Pronta? | Faz sentido na Home? | Tela principal se não for Home |
 |---|---|---|---|---|---|---|
-| Feed do bairro | Sim | `/comunidade/:uf/:city/:hood/feed` | `TerritoryFeedPage` | **Pronto** | **Sim** (resumo dos últimos posts). | — |
+| Feed do bairro | Sim | `/comunidade/:uf/:city/:hood/feed` | `ComunidadePage` | **Pronto** | **Sim** (resumo dos últimos posts). | — |
 | Timeline / Home do bairro | Sim | `/`, `/inicio`, `/comunidade/:uf/:city/:hood` | `TerritoryHomePage` | Pronto (mocks) | **É a própria Home.** | — |
 | Detalhe de post | Sim | `/p/:slug/*` | `PostPage` + modal | Pronto | Não (é destino, não bloco). | Home → card → PostPage. |
 | Publicar post | Sim | `/novo-post` | `NovoPostPage` | Pronto (rascunhos + Turnstile) | **Sim** como CTA/FAB, não bloco. | Bottom nav + FAB. |

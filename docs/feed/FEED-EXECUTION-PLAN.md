@@ -86,7 +86,6 @@ Componentes afetados:
 Paginas afetadas:
 
 - `ComunidadePage`
-- `TerritoryFeedPage` como alias de superficie
 
 Criterios de rollback:
 
@@ -144,7 +143,7 @@ Arquivos previstos:
 - `src/core/feed/hooks/useFeedItemDetail.ts`
 - `src/core/community/hooks/usePostById.ts`
 - `src/core/community/components/modals/PostDetailModal.tsx`
-- `src/core/community/pages/ComunidadePage.tsx`
+- `src/core/community-feed/pages/ComunidadePage.tsx`
 - testes de detalhe territorial
 
 Ordem exata das alteracoes:

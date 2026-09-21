@@ -35,7 +35,7 @@ O caminho principal de timeline em `ComunidadePage` -> `CommunityFeed` -> `useCo
 
 | Camada | Estado | Evidência | Avaliação |
 | --- | --- | --- | --- |
-| Páginas | Parcialmente pronto | `src/app/pages/TerritoryFeedPage.tsx`, `src/core/community/pages/ComunidadePage.tsx`, `src/core/community/pages/NovoPostPage.tsx`, `src/app/pages/BuscaPage.tsx`, `src/app/pages/BuscarPage.tsx` | A página territorial principal resolve território. A rota direta `/novo-post` não recebe `ResolvedTerritory` da rota e depende de fallback do usuário/sessão. |
+| Páginas | Parcialmente pronto | `src/core/community-feed/pages/ComunidadePage.tsx`, `src/core/community-feed/pages/ComunidadePage.tsx`, `src/core/community/pages/NovoPostPage.tsx`, `src/app/pages/BuscaPage.tsx`, `src/app/pages/BuscarPage.tsx` | A página territorial principal resolve território. A rota direta `/novo-post` não recebe `ResolvedTerritory` da rota e depende de fallback do usuário/sessão. |
 | Componentes | Parcialmente pronto | `CommunityFeed`, `UnifiedFeedWithMessages`, `UnifiedPostCard`, `CreatePostModal`, `PostCommentsPanel`, `CommunityOverviewSurface` | Há componentes modernos e componentes legados coexistindo. O componente principal usa filtro territorial, mas cards, modais e ações reutilizam serviços por ID. |
 | Hooks | Parcialmente pronto | `useCommunityFeedSimple`, `useCommunityAccess`, `useCommunityRollout`, `usePostActions`, `useComments`, `useCommunityFiltersAAA`, hooks legados em `hooks/posts` | Hooks territoriais existem, mas nem todos os hooks de Feed exigem território. Há filtros que não se refletem completamente na consulta. |
 | Services | Parcialmente pronto | `PostService`, `posts.feed.queries`, `posts.queries`, `posts.mutations`, `CommentService`, `PostEngagementService`, `CommunityRolloutService`, `SearchService` | Timeline tem serviço dedicado com localização obrigatória. Leitura por ID, comentários, engajamento e alguns serviços por tipo ainda não exigem `TerritoryFilter`. |
@@ -48,7 +48,7 @@ O caminho principal de timeline em `ComunidadePage` -> `CommunityFeed` -> `useCo
 
 | Rota / tela | Estado | Observação |
 | --- | --- | --- |
-| `/comunidade/:uf/:city/:hood/feed` | Parcialmente pronto | Mapeada em `SCREEN-MAP.md` como `TerritoryFeedPage`, mas o arquivo real é apenas alias para `ComunidadePage`. O caminho principal usa território. |
+| `/comunidade/:uf/:city/:hood/feed` | Parcialmente pronto | Mapeada em `SCREEN-MAP.md` pelo owner real `ComunidadePage` em `core/community-feed`. O caminho principal usa território. |
 | `/comunidade/:uf/:city/:hood` | Parcialmente pronto | `CommunityOverviewSurface` usa `territoryFilter` para previews, mas contém fixture visual via query param e imagens hardcoded por slug. |
 | `/novo-post` | Não pronto | Rota direta autentica o usuário, mas não resolve território da rota nem aplica explicitamente o gate de rollout/acesso do território alvo. |
 | `?post=<id>` no Feed | Parcialmente pronto | O compartilhamento usa query param no caminho atual. A leitura por ID não recebe filtro territorial. |
