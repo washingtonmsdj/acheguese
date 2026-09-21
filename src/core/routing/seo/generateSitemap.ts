@@ -12,6 +12,7 @@ import {
   TERMS_OF_SERVICE_PATH,
 } from '@/shared/constants/legal';
 import { isLaunchSurfaceEnabled, type LaunchSurfaceKey } from '@/app/config/launchScope';
+import { APP_MODULE_SLUGS, buildAppModulePath } from '@/shared/config/moduleSlugs';
 import { territorialGroupService, type TerritorialGroupWithMembers } from '@/core/territorial';
 import {
   MODULE_SLUGS,
@@ -240,8 +241,16 @@ function collectSitemapUrls(
   ];
 
   const staticPages = [
-    { path: '/inicio', priority: 0.9, changefreq: 'weekly' as const },
     { path: '/ba/salvador', priority: 0.95, changefreq: 'daily' as const },
+    ...(isLaunchSurfaceEnabled('nearby')
+      ? [
+          {
+            path: buildAppModulePath(APP_MODULE_SLUGS.nearby),
+            priority: 0.8,
+            changefreq: 'daily' as const,
+          },
+        ]
+      : []),
     { path: '/como-funciona', priority: 0.7, changefreq: 'monthly' as const },
     { path: '/sobre', priority: 0.6, changefreq: 'monthly' as const },
     { path: SUPPORT_PATH, priority: 0.6, changefreq: 'monthly' as const },
