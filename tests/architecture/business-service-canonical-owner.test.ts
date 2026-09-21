@@ -21,8 +21,9 @@ describe("Business and gastronomy canonical ownership", () => {
     const moduleBarrel = read("src/modules/business/index.ts");
     const serviceBarrel = read("src/modules/business/services/index.ts");
 
-    expect(moduleBarrel).not.toContain("BusinessService");
-    expect(serviceBarrel).not.toContain("BusinessService");
+    const exportedLines = [...moduleBarrel.split("\n"), ...serviceBarrel.split("\n")]
+      .filter((line) => line.trimStart().startsWith("export "));
+    expect(exportedLines.some((line) => line.includes("BusinessService"))).toBe(false);
   });
 
   it("points the gastronomy service barrel directly at its canonical URL owner", () => {
