@@ -1,5 +1,7 @@
 # FEATURE-MAP
 
+> **MVP enxuto — decisão de release 2026-09-21:** os únicos domínios públicos de produto são **Comunidade básica, Empresas e Classificados**. Home, Conta, Território e Busca são infraestrutura de acesso. Permanecem pausados para pós-MVP: `billing=false`, `gastronomy=false`, `services=false`, `touristPoints=false`, `map=false`, `nearby=false`, `education=false`, `jobs=false`, `events=false`, `communityEventsPreview=false`, `communication=false`, `mobility=false`, `coupons=false`, `gamification=false` e `communityCommunication=false`. O código desses módulos é preservado; as superfícies públicas ficam isoladas por `launchScope.ts`.
+
 Domain status: Feed = STATUS: FROZEN.
 
 > Mapa único de funcionalidades do Achegue-se. Toda funcionalidade precisa ter uma **entrada de navegação**. Toda rota precisa ter uma funcionalidade que a justifica.
