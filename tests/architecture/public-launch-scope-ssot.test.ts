@@ -85,4 +85,20 @@ describe("public launch scope SSOT", () => {
     expect(waitlist).not.toContain("slugifyTerritory(selectedBairro)");
     expect(waitlist).not.toContain('"Complexo Nordeste de Amaralina"');
   });
+  it("owns paused Business category discovery policy in launchScope", () => {
+    const owner = read(OWNER);
+    const businessQueries = read("src/core/business/services/business.queries.ts");
+    const landingFeatured = read("src/core/landing/services/LandingFeaturedService.ts");
+    const spatial = read("src/core/geospatial/services/SpatialSearchService.ts");
+
+    expect(owner).toContain("getLaunchPausedBusinessCategoryIds");
+    expect(owner).toContain('educacao: "education"');
+    expect(businessQueries).toContain("getLaunchPausedBusinessCategoryIds");
+    expect(businessQueries).toContain("category.not.in.");
+    expect(landingFeatured).toContain("applyLaunchBusinessCategoryExclusion");
+    expect(spatial).toContain("BusinessService.getLaunchVisibleBusinessProfileIds");
+    expect(spatial).not.toContain(".from('public_business_search')");
+    expect(businessQueries).toContain("launch-visible profile lookup failed");
+  });
+
 });

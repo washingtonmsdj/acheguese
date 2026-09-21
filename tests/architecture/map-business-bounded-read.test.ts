@@ -27,6 +27,8 @@ describe('business map bounded read', () => {
     expect(service).toContain('.gte("latitude", south)');
     expect(service).toContain('.lte("latitude", north)');
     expect(service).toContain('applyTerritoryFilter(query, territoryFilter)');
+    expect(service).toContain('getLaunchPausedBusinessCategoryIds');
+    expect(service).toContain('category.not.in.');
     expect(service).toContain('public_business_search_location_id_fkey');
     expect(service).toContain('geographic_path: location?.geographic_path ?? null');
     expect(service).not.toContain('BusinessService.getBusinesses(');

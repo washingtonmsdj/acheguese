@@ -7,6 +7,7 @@
  * - Mapeamento de dados via business.mappers
  */
 
+import { getLaunchPausedBusinessCategoryIds } from "@/app/config/launchScope";
 import { supabase } from "@/integrations/supabase";
 import { logger } from "@/shared/utils/logger";
 import { LocationHierarchyReadService } from "@/core/location";
@@ -268,6 +269,11 @@ export async function getBusinesses(
         ).order("created_at", { ascending: false });
     }
 
+    query = query.range(
+      pageParam * pageSize,
+      (pageParam + 1) * pageSize - 1,
+    );
+
     const { data, error } = await query;
 
     if (error) {
@@ -310,6 +316,48 @@ export async function getBusinesses(
     const message = error instanceof Error ? error.message : String(error);
     logger.warn(" Unexpected error in getBusinesses:", message);
     return [];
+  }
+}
+
+export async function getLaunchVisibleBusinessProfileIds(
+  profileIds: readonly string[],
+): Promise<Set<string>> {
+  const uniqueProfileIds = [...new Set(profileIds.filter(Boolean))];
+  if (uniqueProfileIds.length === 0) return new Set();
+
+  try {
+    let query = supabase
+      .from("public_business_search")
+      .select("profile_id, category")
+      .in("profile_id", uniqueProfileIds);
+
+    const pausedBusinessCategories = getLaunchPausedBusinessCategoryIds();
+    if (pausedBusinessCategories.length > 0) {
+      query = query.or(
+        `category.is.null,category.not.in.(${pausedBusinessCategories.join(",")})`,
+      );
+    }
+
+    const { data, error } = await query;
+    if (error) {
+      logger.error(
+        "[BusinessQueries] launch-visible profile lookup failed",
+        error,
+      );
+      return new Set();
+    }
+
+    return new Set(
+      (data ?? [])
+        .map((row) => row.profile_id)
+        .filter((profileId): profileId is string => Boolean(profileId)),
+    );
+  } catch (error) {
+    logger.error(
+      "[BusinessQueries] launch-visible profile lookup failed",
+      error,
+    );
+    return new Set();
   }
 }
 
@@ -367,8 +415,14 @@ export async function getBusinessesList(
     let query = supabase
       .from("public_business_search")
       .select(PUBLIC_BUSINESS_LIST_SELECT)
-      .in("business_role", ["standalone", "branch"])
-      .range(pageParam * pageSize, (pageParam + 1) * pageSize - 1);
+      .in("business_role", ["standalone", "branch"]);
+
+    const pausedBusinessCategories = getLaunchPausedBusinessCategoryIds();
+    if (pausedBusinessCategories.length > 0) {
+      query = query.or(
+        `category.is.null,category.not.in.(${pausedBusinessCategories.join(",")})`,
+      );
+    }
 
     // Aplicar filtros
     if (category && category !== "todos") {

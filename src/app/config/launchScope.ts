@@ -123,6 +123,12 @@ export function isLaunchBusinessCategoryEnabled(categoryId: string): boolean {
   return surface ? isLaunchSurfaceEnabled(surface) : true;
 }
 
+export function getLaunchPausedBusinessCategoryIds(): string[] {
+  return Object.entries(BUSINESS_CATEGORY_SURFACES)
+    .filter(([, surface]) => !isLaunchSurfaceEnabled(surface))
+    .map(([categoryId]) => categoryId);
+}
+
 export function isLaunchCommunityFeedChannelEnabled(channelId: string): boolean {
   const surface = COMMUNITY_FEED_CHANNEL_SURFACES[channelId];
   return surface ? isLaunchSurfaceEnabled(surface) : true;

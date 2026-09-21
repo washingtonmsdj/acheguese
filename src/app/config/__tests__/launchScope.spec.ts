@@ -4,6 +4,7 @@ import { ACTIVE_MODULES, getContextMessageFromPath } from "../modules";
 import {
   filterLaunchItems,
   filterLaunchSections,
+  getLaunchPausedBusinessCategoryIds,
   isLaunchBusinessCategoryEnabled,
   isLaunchClassifiedCategoryEnabled,
   isLaunchCommunityFeedChannelEnabled,
@@ -87,6 +88,8 @@ describe("launchScope", () => {
   it("hides paused business categories", () => {
     expect(isLaunchBusinessCategoryEnabled("educacao")).toBe(false);
     expect(isLaunchBusinessCategoryEnabled("restaurante")).toBe(true);
+    expect(getLaunchPausedBusinessCategoryIds()).toContain("educacao");
+    expect(getLaunchPausedBusinessCategoryIds()).not.toContain("restaurante");
   });
 
   it("keeps active feed channels and filters paused post formats", () => {
