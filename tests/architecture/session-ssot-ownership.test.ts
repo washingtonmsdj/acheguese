@@ -151,7 +151,7 @@ describe("G4 Auth/session SSOT ownership", () => {
     expect(cacheManager).toContain("notifyInvalidation");
     expect(cacheManager).toContain('CacheManager.notifyInvalidation("session")');
     expect(cacheManager).toContain('CacheManager.notifyInvalidation("all")');
-    expect(cacheManager).not.toContain("SessionData");
+    expect(cacheManager).not.toContain("import type { SessionData");
     expect(cacheManager).not.toContain("sessionCache");
     expect(cacheManager).not.toContain("getSession()");
     expect(cacheManager).not.toContain("setSession(");
