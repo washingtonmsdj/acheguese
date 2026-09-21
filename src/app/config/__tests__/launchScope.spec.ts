@@ -3,8 +3,14 @@ import { describe, expect, it } from "vitest";
 import { ACTIVE_MODULES, getContextMessageFromPath } from "../modules";
 import {
   PRODUCT_MODULE_REGISTRY,
-  getActiveProductModules,
 } from "../productModuleRegistry";
+import {
+  PLATFORM_CAPABILITY_REGISTRY,
+} from "../platformCapabilityRegistry";
+import {
+  getActivePlatformCapabilities,
+  getActiveProductModules,
+} from "../lifecycleRegistry";
 import {
   filterLaunchItems,
   filterLaunchSections,
@@ -16,14 +22,18 @@ import {
 } from "../launchScope";
 
 describe("launchScope", () => {
-  it("keeps Mapa, Empresas, Perto de mim and Busca active as product modules", () => {
-    expect(getActiveProductModules().sort()).toEqual(
-      ["business", "map", "nearby", "search"].sort(),
+  it("keeps Business active as domain and Map/Nearby/Search active as platform capabilities", () => {
+    expect(getActiveProductModules()).toEqual(["business"]);
+    expect(getActivePlatformCapabilities()).toEqual(
+      expect.arrayContaining(["map", "nearby", "search"]),
     );
-    expect(PRODUCT_MODULE_REGISTRY.nearby).toEqual({
+    expect(PLATFORM_CAPABILITY_REGISTRY.nearby).toEqual({
       status: "active",
-      dependsOn: ["map", "business"],
+      dependsOnCapabilities: ["map", "location"],
+      dependsOnProductModules: ["business"],
     });
+
+    expect(PRODUCT_MODULE_REGISTRY.business.status).toBe("active");
 
     for (const enabled of ["home", "business", "map", "nearby", "search"] as const) {
       expect(isLaunchSurfaceEnabled(enabled)).toBe(true);
