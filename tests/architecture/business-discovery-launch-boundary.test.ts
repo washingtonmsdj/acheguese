@@ -13,8 +13,9 @@ describe("MVP Business discovery launch boundary", () => {
   const nearby = read("src/core/nearby/hooks/useNearbyBusinesses.ts");
   const aiSearch = read("src/core/ai/actions/SearchBusinessesActionHandler.ts");
 
-  it("owns paused Business categories in launchScope", () => {
-    expect(launchScope).toContain('educacao: "education"');
+  it("does not couple Business categories to paused specialized verticals", () => {
+    expect(launchScope).toContain("const BUSINESS_CATEGORY_SURFACES");
+    expect(launchScope).toContain("= {};");
     expect(launchScope).toContain("getLaunchPausedBusinessCategoryIds");
   });
 
@@ -23,7 +24,7 @@ describe("MVP Business discovery launch boundary", () => {
     const range = businessQueries.indexOf("query = query.range(", launchFilter);
 
     expect(launchFilter).toBeGreaterThanOrEqual(0);
-    expect(businessQueries).toContain("category.not.in.");
+    expect(businessQueries).toContain("pausedBusinessCategories.length > 0");
     expect(range).toBeGreaterThan(launchFilter);
     expect(searchProviders).toContain("BusinessService.getBusinessesList");
   });
@@ -36,7 +37,7 @@ describe("MVP Business discovery launch boundary", () => {
       .toBeLessThan(landing.indexOf("query = query.limit(limit)"));
 
     expect(map).toContain("getLaunchPausedBusinessCategoryIds");
-    expect(map).toContain("category.not.in.");
+    expect(map).toContain("pausedBusinessCategories.length > 0");
     expect(map.indexOf("getLaunchPausedBusinessCategoryIds"))
       .toBeLessThan(map.indexOf("query = query.limit(limit)"));
   });
