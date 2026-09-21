@@ -9,18 +9,27 @@ import { useLocationContext } from "@/core/location/hooks/useLocationContext";
 import { useResolvedUserLocation } from "@/core/location/hooks/useResolvedUserLocation";
 import { useTerritoryLabels } from "@/core/location/hooks/useTerritoryLabels";
 import type { ResolvedTerritory } from "@/core/routing/hooks/useResolveTerritoryFromUrl";
-import { useFriendlyModuleUrls } from "@/core/routing/hooks/useFriendlyModuleUrls";
+import {
+  MODULE_SLUGS,
+  buildLocationModuleUrl,
+} from "@/core/routing/utils/territoryUrls";
+import {
+  APP_MODULE_SLUGS,
+  buildAppModulePath,
+} from "@/shared/config/moduleSlugs";
 import { NearbyCard, NearbyFilters, NearbyMiniMap, NearbySection } from "../components";
 import { useNearbyBusinesses } from "../hooks/useNearbyBusinesses";
 
 export default function NearbyPage() {
   const navigate = useNavigate();
-  const moduleUrls = useFriendlyModuleUrls();
   const { activeLocation, activeTerritory } = useLocationContext();
 
   const resolved: ResolvedTerritory | null = activeTerritory?.location
     ? { kind: "location", location: activeTerritory.location }
     : null;
+  const businessUrl = activeLocation
+    ? buildLocationModuleUrl(activeLocation, MODULE_SLUGS.business)
+    : buildAppModulePath(APP_MODULE_SLUGS.business);
   const territoryLabels = useTerritoryLabels(resolved);
 
   const {
@@ -177,7 +186,7 @@ export default function NearbyPage() {
             <p className="mb-6 text-muted-foreground">
               Tente novamente ou abra o módulo Empresas.
             </p>
-            <Button onClick={() => navigate(moduleUrls.business)} variant="outline">
+            <Button onClick={() => navigate(businessUrl)} variant="outline">
               Abrir Empresas
             </Button>
           </div>
@@ -211,7 +220,7 @@ export default function NearbyPage() {
               count={businesses.length}
               isEmpty={businesses.length === 0}
               isLoading={isLoading}
-              onSeeAll={() => navigate(moduleUrls.business)}
+              onSeeAll={() => navigate(businessUrl)}
             >
               <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
                 {visibleBusinesses.map((business) => (
