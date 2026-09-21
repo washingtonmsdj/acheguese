@@ -178,6 +178,7 @@ const COMMUNITY_DESKTOP_NAV_IDS = new Set<PublicHeaderNavItemId>([
   "classifieds",
   "services",
   "map",
+  "nearby",
 ]);
 
 type StatCard = {
@@ -1436,6 +1437,7 @@ function NeighborhoodCommunityHeader({
         services: urls.services,
         classifieds: urls.classifieds,
         map: urls.map,
+        nearby: buildAppModulePath(APP_MODULE_SLUGS.nearby),
         search: urls.search,
       }).filter((item) => COMMUNITY_DESKTOP_NAV_IDS.has(item.id)),
     [
