@@ -1,0 +1,57 @@
+name: Milestone Zero Branch Hygiene
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - ".github/workflows/milestone-zero-branch-hygiene.yml"
+
+permissions:
+  contents: write
+  pull-requests: read
+
+concurrency:
+  group: milestone-zero-branch-hygiene
+  cancel-in-progress: false
+
+jobs:
+  cleanup:
+    name: Revalidate and delete safe branch refs
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - name: Checkout exact main SHA
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.sha }}
+          fetch-depth: 1
+
+      - name: Setup Node 24
+        uses: actions/setup-node@v4
+        with:
+          node-version: "24"
+
+      - name: Dry-run audited cleanup
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          node tools/github/cleanup-merged-branches.mjs --include-superseded --json > branch-cleanup-dry-run.json
+          cat branch-cleanup-dry-run.json
+
+      - name: Apply audited cleanup
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          node tools/github/cleanup-merged-branches.mjs --apply --include-superseded --json > branch-cleanup-applied.json
+          cat branch-cleanup-applied.json
+
+      - name: Upload cleanup evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: milestone-zero-branch-cleanup
+          path: |
+            branch-cleanup-dry-run.json
+            branch-cleanup-applied.json
+          if-no-files-found: warn

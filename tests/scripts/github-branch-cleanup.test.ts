@@ -10,7 +10,7 @@ function classify(overrides: Record<string, unknown> = {}) {
     sha: "abc123",
     protectedBranch: false,
     baseBranch: "main",
-    keepBranches: new Set(["main", "work/mvp-urgent"]),
+    keepBranches: new Set(["main"]),
     openHeadRefs: new Set<string>(),
     exactMergedHeads: new Map<string, Set<string>>(),
     aheadBy: 1,
@@ -19,14 +19,16 @@ function classify(overrides: Record<string, unknown> = {}) {
 }
 
 describe("GitHub merged branch cleanup policy", () => {
-  it("preserves base and explicitly reusable branches", () => {
+  it("preserves the base branch and treats former work branches by evidence", () => {
     expect(classify({ name: "main" })).toEqual({
       action: "preserve",
       reason: "explicit-keep",
     });
-    expect(classify({ name: "work/mvp-urgent" })).toEqual({
-      action: "preserve",
-      reason: "explicit-keep",
+    expect(
+      classify({ name: "work/mvp-urgent", aheadBy: 0 }),
+    ).toEqual({
+      action: "delete",
+      reason: "fully-contained-in-base",
     });
   });
 
