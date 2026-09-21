@@ -15,7 +15,7 @@ const WORKFLOW_PATH = path.join(
   "ssot-enforcement.yml",
 );
 const PACKAGE_PATH = path.join(ROOT, "package.json");
-const PERMANENT_PLAN = "URGENTE_LEIA_PRIMEIRO_REORGANIZACAO_GLOBAL.md";
+const ROOT_COMPAT_POINTER = "URGENTE_LEIA_PRIMEIRO_REORGANIZACAO_GLOBAL.md";
 
 const NON_BLOCKING_VALIDATORS = new Map([
   [
@@ -118,6 +118,6 @@ describe("G3 architecture validator coverage", () => {
       "utf8",
     );
 
-    expect(docsValidator).toContain(PERMANENT_PLAN);
+    expect(docsValidator).toContain(ROOT_COMPAT_POINTER);
   });
 });
