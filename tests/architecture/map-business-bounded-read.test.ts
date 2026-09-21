@@ -44,7 +44,7 @@ describe('business map bounded read', () => {
   });
 
   it('bounds result cardinality and rejects the retired businesses spatial table', () => {
-    expect(businessService).toContain('MAX_BUSINESS_MAP_LIMIT = 200');
+    expect(businessService).toContain('PUBLIC_READ_LIMITS.MAP_MAX');
     expect(businessService).toContain('.limit(limit)');
     expect(businessService).not.toContain('from<BusinessMapRow>("businesses")');
   });
