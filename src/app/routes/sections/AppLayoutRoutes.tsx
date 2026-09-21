@@ -442,7 +442,14 @@ export function AppLayoutRoutes() {
         />
         {/* Rotas globais */}
         <Route path="/u/:username" element={<P.ProfilePublicRoute />} />
-        <Route path="/c/:publicId" element={<P.ClassifiedShortRoute />} />
+        <Route
+          path="/c/:publicId"
+          element={launchElement(
+            "classifieds",
+            "Classificados",
+            <P.ClassifiedShortRoute />,
+          )}
+        />
         <Route
           path={JOB_ROUTES.publish}
           element={launchElement("jobs", "Vagas", <P.PublicarVagaPage />)}
@@ -489,15 +496,27 @@ export function AppLayoutRoutes() {
         />
         <Route
           path="/classificados/novo"
-          element={protectedElement(<P.NovoClassificadoPage />)}
+          element={launchElement(
+            "classifieds",
+            "Classificados",
+            protectedElement(<P.NovoClassificadoPage />),
+          )}
         />
         <Route
           path="/classificados/editar/:id"
-          element={protectedElement(<P.EditarClassificadoPage />)}
+          element={launchElement(
+            "classifieds",
+            "Classificados",
+            protectedElement(<P.EditarClassificadoPage />),
+          )}
         />
         <Route
           path="/classificados/vendedor/:sellerId"
-          element={<P.VendedorPerfilPage />}
+          element={launchElement(
+            "classifieds",
+            "Classificados",
+            <P.VendedorPerfilPage />,
+          )}
         />
 
         <Route
@@ -652,14 +671,29 @@ export function AppLayoutRoutes() {
             <P.TerritorialCommunityIssuesPage />,
           )}
         />
-        <Route path="/recomendacoes" element={<P.RecomendacoesPage />} />
+        <Route
+          path="/recomendacoes"
+          element={launchElement(
+            "community",
+            "Comunidade",
+            <P.RecomendacoesPage />,
+          )}
+        />
         <Route
           path="/recomendacoes/nova"
-          element={protectedElement(<P.NovaRecomendacaoPage />)}
+          element={launchElement(
+            "community",
+            "Comunidade",
+            protectedElement(<P.NovaRecomendacaoPage />),
+          )}
         />
         <Route
           path="/recomendacoes/:id"
-          element={<P.RecomendacaoDetailPage />}
+          element={launchElement(
+            "community",
+            "Comunidade",
+            <P.RecomendacaoDetailPage />,
+          )}
         />
         <Route
           path="/achados-perdidos"
@@ -697,7 +731,11 @@ export function AppLayoutRoutes() {
         />
         <Route
           path="/novo-post"
-          element={protectedElement(<P.NovoPostPage />)}
+          element={launchElement(
+            "community",
+            "Comunidade",
+            protectedElement(<P.NovoPostPage />),
+          )}
         />
         <Route path="/busca" element={<P.BuscaPage />} />
         <Route path="/buscar" element={<P.BuscarPage />} />
@@ -759,7 +797,14 @@ export function AppLayoutRoutes() {
           path="/servicos"
           element={launchElement("services", "Serviços", <P.ServicosLandingPage />)}
         />
-        <Route path="/classificados" element={<P.ClassificadosPage />} />
+        <Route
+          path="/classificados"
+          element={launchElement(
+            "classifieds",
+            "Classificados",
+            <P.ClassificadosPage />,
+          )}
+        />
         <Route
           path={mobilityRoutes.passageiro.home}
           element={launchElement(
@@ -818,7 +863,11 @@ export function AppLayoutRoutes() {
         {/* Rota publica de profissional: /servicos/:state/:city/profissional/:slug */}
         <Route
           path={professionalPublicRoutes.detailRoutePath()}
-          element={<P.ProfissionalPublicPage />}
+          element={launchElement(
+            "services",
+            "Serviços",
+            <P.ProfissionalPublicPage />,
+          )}
         />
 
         {/* Comunicacao Territorial - rotas especificas antes das territoriais genericas */}
