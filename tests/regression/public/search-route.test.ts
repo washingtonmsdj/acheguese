@@ -8,8 +8,12 @@ function readProjectFile(path: string): string {
 
 describe("public federated search route", () => {
   it("keeps public navigation and SEO pointing to /busca", () => {
-    const sidebar = readProjectFile("src/app/components/navigation/AppSidebar.tsx");
-    const navigationConfig = readProjectFile("src/app/components/navigation/navigation.config.ts");
+    const navigationModes = readProjectFile(
+      "src/core/navigation/territoryNavigationModes.ts",
+    );
+    const navigationConfig = readProjectFile(
+      "src/app/components/navigation/navigation.config.ts",
+    );
     const appUrls = readProjectFile("src/core/routing/hooks/useAppUrls.ts");
     const jsonLd = readProjectFile("src/shared/utils/seo/jsonLd.ts");
 
