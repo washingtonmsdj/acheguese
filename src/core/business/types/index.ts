@@ -304,3 +304,12 @@ export type {
   UpdateMenuPromotionInput,
   MenuItemFilters,
 } from "./gastronomyMenu";
+
+export {
+  BUSINESS_PROFILE_REPORT_REASONS,
+} from "./profileReports";
+export type {
+  BusinessProfileReportReason,
+  BusinessProfileReportRecord,
+  BusinessProfileReportStatus,
+} from "./profileReports";
