@@ -61,7 +61,8 @@ describe("browser geolocation SSOT boundary", () => {
       expect(source).not.toContain("navigator.geolocation");
     }
 
-    expect(ride).toContain("coords?.latitude ?? null");
-    expect(ride).toContain("coords?.longitude ?? null");
+    expect(ride).toContain("result.coords.latitude");
+    expect(ride).toContain("result.coords.longitude");
+    expect(ride).toContain("setOriginCoords(coords)");
   });
 });
