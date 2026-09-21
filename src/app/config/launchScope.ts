@@ -45,7 +45,7 @@ export const PUBLIC_LAUNCH_SURFACES: Record<LaunchSurfaceKey, boolean> = {
   touristPoints: isProductModuleEnabled("touristPoints"),
   map: isProductModuleEnabled("map"),
   nearby: isProductModuleEnabled("nearby"),
-  search: true,
+  search: isProductModuleEnabled("search"),
   education: isProductModuleEnabled("education"),
   jobs: isProductModuleEnabled("jobs"),
   events: isProductModuleEnabled("events"),
@@ -83,9 +83,9 @@ const CLASSIFIED_CATEGORY_SURFACES: Partial<Record<string, LaunchSurfaceKey>> = 
   vagas: "jobs",
 };
 
-const BUSINESS_CATEGORY_SURFACES: Partial<Record<string, LaunchSurfaceKey>> = {
-  educacao: "education",
-};
+// Business category visibility is independent from specialized vertical modules.
+// A school remains a valid Business entity while the Education vertical is paused.
+const BUSINESS_CATEGORY_SURFACES: Partial<Record<string, LaunchSurfaceKey>> = {};
 
 const COMMUNITY_FEED_CHANNEL_SURFACES: Partial<Record<string, LaunchSurfaceKey>> = {
   alertas: "communityAlerts",
