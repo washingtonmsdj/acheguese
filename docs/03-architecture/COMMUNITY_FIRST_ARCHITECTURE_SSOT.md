@@ -194,33 +194,34 @@ mais comunidades sem copiar seus dados mestres:
 
 ### Busca E Descoberta
 
-Search permanece um bounded context preservado para pós-MVP:
+Search é um bounded context ativo e independente de Community:
 
 - `src/core/search`;
 - `SearchService`;
 - `SearchDocumentMapper`;
 - `searchProviders`.
 
-No MVP de 2026-09-21, `search` está `paused` no
-`src/app/config/productModuleRegistry.ts`. Portanto Busca não participa da
-Home, navegação, prefetch ativo ou discovery público.
+No MVP de 2026-09-21, `search` está `active` no
+`src/app/config/productModuleRegistry.ts`. Search continua sendo um
+orquestrador: consome ports dos domínios donos e não passa a possuir Business,
+Community, Events, Classifieds, Professional ou Jobs.
 
-Quando for reativado, Search continua sendo um orquestrador: ele consome ports
-dos domínios donos e não passa a possuir Business, Community, Events,
-Classifieds, Professional ou Jobs.
+Providers de superfícies `paused` permanecem desligados. Portanto Search ativa
+não reativa Community nem qualquer outro módulo indiretamente.
 
 A antiga agregação de Home por `HomeDiscoveryService` e
 `HomeCommunityRankingService` foi aposentada. `TerritoryHomePage` não é uma
 plataforma paralela de discovery: no MVP ela apresenta somente os módulos
-efetivamente ativos — Empresas, Mapa e Perto de mim — usando URLs e contratos
+efetivamente ativos — Empresas, Mapa, Perto de mim e Busca — usando URLs e contratos
 canônicos.
 
 A Home não fabrica ranking, atividade, métricas sociais, eventos, vagas,
 serviços ou conteúdo editorial para preencher ausência de dados. Módulos
 pausados não são consultados apenas para montar cards escondidos.
 
-Comunidade e Search podem voltar depois do MVP pelos próprios owners e pelo
-lifecycle canônico. A reativação não deve restaurar agregadores monolíticos da
+Comunidade pode voltar depois do MVP pelo próprio owner e pelo lifecycle
+canônico. Search já integra o MVP e deve permanecer desacoplada dos módulos
+pausados. A reativação não deve restaurar agregadores monolíticos da
 Home nem acesso cruzado direto a tabelas de outros domínios.
 
 Anuncios patrocinados pertencem a `src/core/business/promotions`. A Home e
