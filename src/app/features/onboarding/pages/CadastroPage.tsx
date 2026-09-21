@@ -257,6 +257,7 @@ export default function CadastroPage() {
                       <FormControl>
                         <Input
                           {...field}
+                          aria-label="Nome"
                           autoComplete="name"
                           disabled={authBusy}
                           className={cn(
