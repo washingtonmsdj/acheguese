@@ -23,7 +23,6 @@ export {
   isBusinessCommunityLinkEligibleByDataId,
   getBusinessBySlug,
   checkSlugExists,
-  getSimilarSlugs,
   getBusinessesByIds,
   searchBusinessesByName,
   getProducts,
@@ -181,7 +180,6 @@ export class BusinessService {
     BusinessQueries.isBusinessCommunityLinkEligibleByDataId;
   static getBusinessBySlug = BusinessQueries.getBusinessBySlug;
   static checkSlugExists = BusinessQueries.checkSlugExists;
-  static getSimilarSlugs = BusinessQueries.getSimilarSlugs;
   static getBusinessesByIds = BusinessQueries.getBusinessesByIds;
   static searchBusinessesByName = BusinessQueries.searchBusinessesByName;
   static getProducts = BusinessQueries.getProducts;
