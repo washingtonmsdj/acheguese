@@ -54,8 +54,8 @@ describe("Google OAuth fast-start contract", () => {
     expect(
       existsSync(resolve(root, "src/core/auth/services/AuthBackendAvailability.ts")),
     ).toBe(false);
-    expect(messages).toContain("/gateway timeout/i");
-    expect(messages).toContain("/connection timeout/i");
-    expect(messages).toContain("/failed to fetch/i");
+    expect(messages).toContain("gateway timeout|connection timeout");
+    expect(messages).toContain("timed out|timeout");
+    expect(messages).toContain("failed to fetch|networkerror");
   });
 });
