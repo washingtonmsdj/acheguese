@@ -1,4 +1,8 @@
 export {
+  BusinessDirectMessagingService,
+  businessDirectMessagingService,
+} from "./services/BusinessDirectMessagingService";
+export {
   ClassifiedMessagingService,
   classifiedMessagingService,
 } from "./services/ClassifiedMessagingService";
@@ -6,6 +10,15 @@ export {
   CommunityDirectMessagingService,
   communityDirectMessagingService,
 } from "./services/CommunityDirectMessagingService";
+export type {
+  BusinessDirectMessage,
+  BusinessDirectMessageCursor,
+  BusinessDirectReportReason,
+  BusinessDirectThreadCursor,
+  BusinessDirectThreadPreview,
+  CreateBusinessDirectThreadInput,
+  SendBusinessDirectMessageInput,
+} from "./businessDirectTypes";
 export type {
   ClassifiedConversation,
   ClassifiedConversationBlockReason,
