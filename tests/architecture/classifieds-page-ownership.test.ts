@@ -3,9 +3,11 @@ import { describe, expect, it } from "vitest";
 
 const CANONICAL_PAGE =
   "src/modules/classifieds/pages/ClassificadosPage.tsx";
-const RETIRED_PARALLEL_PAGES = [
+const RETIRED_PARALLEL_FILES = [
   "src/modules/classifieds/pages/ClassificadosLandingPage.tsx",
   "src/modules/classifieds/pages/ClassificadosLandingPageSections.tsx",
+  "src/modules/classifieds/components/ClassificadosHeader.tsx",
+  "src/modules/classifieds/components/filters/AdvancedFilters.tsx",
 ] as const;
 
 const lazyImports = readFileSync("src/app/routes/lazyImports.ts", "utf8");
@@ -22,7 +24,7 @@ describe("classifieds public page ownership", () => {
   it("keeps a single canonical public implementation", () => {
     expect(existsSync(CANONICAL_PAGE)).toBe(true);
 
-    for (const retiredPath of RETIRED_PARALLEL_PAGES) {
+    for (const retiredPath of RETIRED_PARALLEL_FILES) {
       expect(existsSync(retiredPath)).toBe(false);
     }
   });
