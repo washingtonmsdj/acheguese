@@ -15,9 +15,10 @@ describe('business and gastronomy public page separation', () => {
     const source = readProjectFile('src/app/pages/EmpresaDetailLandingPage.tsx');
 
     expect(source).toContain('usePublicBusinessSnapshot');
-    expect(source).toContain('EmpresaGastronomiaPreviewSection');
-    expect(source).toContain('snapshot.verticals.primaryVertical === "gastronomy"');
-    expect(source).toContain('<GastronomyDetailPage');
+    expect(source).not.toContain('EmpresaGastronomiaPreviewSection');
+    expect(source).not.toContain('snapshot.verticals.primaryVertical === "gastronomy"');
+    expect(source).not.toContain('<GastronomyDetailPage');
+    expect(source).not.toContain('@/modules/business/gastronomy/');
     expect(source).not.toContain('useGastronomyDetail');
     expect(source).not.toContain('useMenu(');
     expect(source).not.toContain('useMenusByBusiness');
@@ -73,8 +74,8 @@ describe('business and gastronomy public page separation', () => {
       'BusinessHoursService.getOperationConfig(snapshotBusiness.id)',
     );
     expect(pageSource).toContain('recommendLoading={recommendLoading}');
-    expect(pageSource).toContain('const robotsContent = props.communityAliasOverride');
-    expect(pageSource).toContain('? "noindex, follow"');
+    expect(pageSource).toContain('const robotsContent = snapshot.seo.robots');
+    expect(pageSource).not.toContain('communityAliasOverride');
     expect(sectionSource).toContain("label={isFavorite ? 'Salvo' : 'Salvar'}");
     expect(sectionSource).toContain("label={hasRecommended ? 'Recomendado' : 'Recomendar'}");
     expect(sectionSource).toContain('ariaPressed={isFavorite}');
