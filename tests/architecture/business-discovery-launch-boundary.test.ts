@@ -10,6 +10,7 @@ describe("MVP Business discovery launch boundary", () => {
   const landing = read("src/core/landing/services/LandingFeaturedService.ts");
   const map = read("src/core/maps/services/MapBusinessLayerRuntimeService.ts");
   const businessMap = read("src/core/business/services/BusinessMapQueryService.ts");
+  const businessMap = read("src/core/business/services/BusinessMapQueryService.ts");
   const spatial = read("src/core/geospatial/services/SpatialSearchService.ts");
   const nearby = read("src/core/nearby/hooks/useNearbyBusinesses.ts");
   const aiSearch = read("src/core/ai/actions/SearchBusinessesActionHandler.ts");
