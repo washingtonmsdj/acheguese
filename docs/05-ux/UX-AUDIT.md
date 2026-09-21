@@ -12,9 +12,9 @@ Legenda de severidade:
 
 ---
 
-## 1. TerritorySelectorPage (`AchegueSeHomePage`)
+## 1. TerritoryEntryPage
 
-Papel: escolher cidade/território antes de entrar no produto.
+Papel: entrada pública e resolução territorial. O antigo `AchegueSeHomePage` já foi removido; os diagnósticos abaixo registram a auditoria da experiência de entrada que originou a tela atual.
 
 | # | Pergunta | Diagnóstico |
 |---|---|---|
@@ -89,7 +89,7 @@ Problemas:
 
 ---
 
-## 4. TerritoryFeedPage (`ComunidadePage`)
+## 4. Territory Feed (`ComunidadePage`, owner em `core/community-feed`)
 
 Papel: timeline completa do território.
 
