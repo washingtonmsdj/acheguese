@@ -18,6 +18,7 @@
 - `community-recommendations`
 - `guide`
 - `mobility`
+- `messaging`
 - `professionals`
 - `profile`
 - `work-opportunities`
@@ -50,6 +51,11 @@
 : `classifieds/jobs`
 - Services capability stays consolidated in `professionals`.
 : `professionals/services`
+- Private inbox/chat UI is a horizontal product module.
+: `messaging`
+  It consumes contracts/facades from `src/core/messaging`; Business,
+  Classifieds, Community and future domains provide their own messaging
+  aggregates/adapters without owning the global inbox shell.
 
 ## Out of `src/modules`
 
