@@ -17,7 +17,7 @@
  * @module core/geospatial/services
  */
 
-import { isLaunchBusinessCategoryEnabled } from '@/app/config/launchScope';
+import { BusinessService } from '@/core/business/services/BusinessService';
 import { logger } from '@/shared/utils/logger';
 import { supabase } from '@/integrations/supabase';
 // ============================================
@@ -87,11 +87,6 @@ interface SpatialSearchRow {
   location_id?: string | null;
   in_territory?: boolean | null;
   slug?: string | null;
-}
-
-interface BusinessSpatialCategoryRow {
-  profile_id: string;
-  category: string | null;
 }
 
 const MAX_SPATIAL_RPC_LIMIT = 200;
@@ -312,28 +307,8 @@ export class SpatialSearchService {
     if (results.length === 0) return [];
 
     const profileIds = [...new Set(results.map((result) => result.id))];
-    const { data, error } = await supabase
-      .from('public_business_search')
-      .select('profile_id, category')
-      .in('profile_id', profileIds);
-
-    if (error) {
-      logger.error(
-        '[SpatialSearchService] business launch-category lookup failed',
-        error,
-      );
-      return [];
-    }
-
-    const visibleProfileIds = new Set(
-      ((data ?? []) as BusinessSpatialCategoryRow[])
-        .filter(
-          (row) =>
-            Boolean(row.profile_id) &&
-            isLaunchBusinessCategoryEnabled(row.category ?? ''),
-        )
-        .map((row) => row.profile_id),
-    );
+    const visibleProfileIds =
+      await BusinessService.getLaunchVisibleBusinessProfileIds(profileIds);
 
     return results
       .filter((result) => visibleProfileIds.has(result.id))
