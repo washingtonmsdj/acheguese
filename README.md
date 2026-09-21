@@ -2,7 +2,7 @@
 
 Plataforma hiperlocal com arquitetura modular orientada a território.
 
-> **MVP atual (2026-09-21):** somente **Empresas + Mapa + Perto de mim** como módulos de produto ativos.
+> **MVP atual (2026-09-21):** **Empresas + Mapa + Perto de mim + Busca** como módulos de produto ativos.
 >
 > Os demais módulos permanecem pausados e fora do produto ativo até certificação e reintegração individual.
 
@@ -37,6 +37,7 @@ Estado do MVP:
 - `business: active`;
 - `map: active`;
 - `nearby: active` com dependência formal de `map + business`;
+- `search: active`, limitado a providers de módulos ativos;
 - demais módulos de produto: `paused`.
 
 Módulo pausado pode continuar versionado para evolução pós-MVP, mas não participa de navegação pública, rota funcional, prefetch/warmup, discovery, provider público ou layer do Mapa.
