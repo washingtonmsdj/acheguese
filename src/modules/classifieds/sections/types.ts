@@ -181,16 +181,6 @@ export interface ClassifiedsFiltrosSectionProps extends BaseSectionProps {
 }
 
 export interface ClassifiedsHorizontalSectionProps extends BaseSectionProps {
-  readonly title?: string;
-  readonly subtitle?: string;
-  readonly icon?: React.ReactNode;
-  readonly ads: readonly Classificado[];
-  readonly badgeText?: string;
-  readonly badgeColor?: string;
-  readonly onAdClick: (ad: Classificado) => void;
-}
-
-export interface ClassifiedsSponsoredSectionProps extends BaseSectionProps {
   readonly ads: readonly Classificado[];
   readonly onAdClick: (ad: Classificado) => void;
 }
@@ -221,10 +211,8 @@ export type ClassifiedsSectionId =
   | "hero"
   | "categories"
   | "filtros"
-  | "trending"
-  | "popular"
-  | "featured"
-  | "sponsored"
+  | "recent"
+  | "categorySample"
   | "listagem"
   | "footer";
 
@@ -232,10 +220,8 @@ export type SectionPropsMap = {
   readonly hero: ClassifiedsHeroSectionProps;
   readonly categories: ClassifiedsCategoriesSectionProps;
   readonly filtros: ClassifiedsFiltrosSectionProps;
-  readonly trending: ClassifiedsHorizontalSectionProps;
-  readonly popular: ClassifiedsHorizontalSectionProps;
-  readonly featured: ClassifiedsHorizontalSectionProps;
-  readonly sponsored: ClassifiedsSponsoredSectionProps;
+  readonly recent: ClassifiedsHorizontalSectionProps;
+  readonly categorySample: ClassifiedsHorizontalSectionProps;
   readonly listagem: ClassifiedsListagemSectionProps;
   readonly footer: ClassifiedsFooterSectionProps;
 };
