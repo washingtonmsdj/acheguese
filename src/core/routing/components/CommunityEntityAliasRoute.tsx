@@ -30,7 +30,6 @@ type SupportedEntityModule =
 export interface CommunityEntityAliasBusinessDetailProps {
   routeParams: BusinessEntityRouteParams;
   canonicalPathOverride: string;
-  communityAliasOverride: string;
 }
 
 interface CommunityEntityAliasRouteProps {
@@ -145,7 +144,6 @@ export function CommunityEntityAliasRoute({
         {renderBusinessDetail({
           routeParams: state.routeParams,
           canonicalPathOverride: state.publicPath,
-          communityAliasOverride: state.canonicalAlias,
         })}
       </Suspense>
     </>
