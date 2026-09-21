@@ -11,7 +11,10 @@ describe("MVP core module boundary", () => {
   const entry = read("src/app/pages/TerritoryEntryPage.tsx");
   const home = read("src/app/pages/TerritoryHomePage.tsx");
   const howItWorks = read("src/app/pages/ComoFuncionaPage.tsx");
-  const map = read("src/core/maps/pages/MapaPageV4.tsx");
+  const businessDetail = read("src/app/pages/EmpresaDetailLandingPage.tsx");
+  const businessCtas = read("src/modules/business/company/sections/EmpresaCTAsSection.tsx");
+  const branchNetwork = read("src/core/business/components/BranchNetworkBlock.tsx");
+    const map = read("src/core/maps/pages/MapaPageV4.tsx");
   const nearby = read("src/core/nearby/pages/NearbyPage.tsx");
   const sidebar = read("src/app/components/navigation/AppSidebar.tsx");
   const territoryNavigation = read(
@@ -95,6 +98,24 @@ describe("MVP core module boundary", () => {
         resolve(root, "src/core/landing/utils/territoryHomeFreshness.ts"),
       ),
     ).toBe(false);
+  });
+
+  it("keeps Business independent from paused vertical and community modules", () => {
+    for (const forbidden of [
+      "@/modules/business/gastronomy/",
+      "GastronomyDetailPage",
+      "EmpresaGastronomiaPreviewSection",
+      "communityAliasOverride",
+      "verticalPublicUrls",
+      "gastronomyUrl",
+    ]) {
+      expect(businessDetail).not.toContain(forbidden);
+    }
+
+    expect(businessCtas).not.toContain("@/core/verticals");
+    expect(businessCtas).not.toContain("Experiencias especializadas");
+    expect(branchNetwork).not.toContain("getCommunityScopedUrl");
+    expect(branchNetwork).not.toContain("communityAliasOverride");
   });
 
   it("keeps Map independent from paused product owners", () => {
