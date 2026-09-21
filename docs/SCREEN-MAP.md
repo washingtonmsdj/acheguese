@@ -1,117 +1,47 @@
 # SCREEN-MAP
 
-> **MVP enxuto — decisão de release 2026-09-21:** os únicos domínios públicos de produto são **Comunidade básica, Empresas e Classificados**. Home, Conta, Território e Busca são infraestrutura de acesso. Permanecem pausados para pós-MVP: `billing=false`, `gastronomy=false`, `services=false`, `touristPoints=false`, `map=false`, `nearby=false`, `education=false`, `jobs=false`, `events=false`, `communityEventsPreview=false`, `communication=false`, `mobility=false`, `coupons=false`, `gamification=false` e `communityCommunication=false`. O código desses módulos é preservado; as superfícies públicas ficam isoladas por `launchScope.ts`.
-
-Domain status: Feed = STATUS: FROZEN.
-
-> Mapa único de telas/rotas. Nomenclatura canônica: `Territory*Page`. Nomes antigos permanecem como aliases (ver [`06-navigation/NAVIGATION-MAPPING.md`](./06-navigation/NAVIGATION-MAPPING.md)).
+> **MVP atual — decisão de 2026-09-21:** os únicos módulos públicos de produto são **Empresas + Mapa + Perto de mim**.
 >
-> Status: ✅ ativo · 🟡 parcial · ⏸ pausado pelo launch scope · 🗄 legado (a remover) · ↪ redireciona
+> Lifecycle canônico: `src/app/config/productModuleRegistry.ts`. Compatibilidade de superfície: `src/app/config/launchScope.ts`.
+>
+> Flags efetivas do corte: `map=true`, `nearby=true`, `business=true`, `search=false`, `billing=false`, `gastronomy=false`, `services=false`, `touristPoints=false`, `education=false`, `jobs=false`, `events=false`, `communityEventsPreview=false`, `communication=false`, `mobility=false`, `coupons=false`, `gamification=false`, `communityCommunication=false`.
 
-> Corte MVP adicional: Analytics público permanece pausado (`publicAnalytics=false`). Painéis administrativos internos não são equivalentes à superfície pública de Analytics.
+## Produto público ativo
 
-## Núcleo Territory (SSOT)
+| Superfície | Rotas principais | Owner | Estado |
+| --- | --- | --- | --- |
+| Empresas | `/empresas`, `/empresas/:uf/:cidade[/:bairro]`, detalhe canônico por slug | `core/business` + `EmpresasLandingPage` | ativo |
+| Mapa | `/mapa`, `/mapa/:uf/:cidade[/:bairro]` | `core/maps` | ativo |
+| Perto de mim | `/perto-de-mim` | `core/nearby` | ativo; depende de Mapa + Empresas |
 
-| Rota                                       | Página (canônica)                                               | Objetivo                                                                                                                    | Responsável        | Jornada                     | Status | Legado / sucessora                             |
-| ------------------------------------------ | --------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------- | ------------------ | --------------------------- | ------ | ---------------------------------------------- |
-| `/`                                        | `RootRouteEntry` → redirect territorial \| `TerritoryEntryPage` | Entrada/resolução territorial. Se há território salvo, redireciona; sem contexto, permite escolher e explorar publicamente. | app/routes         | Primeira visita · Retorno   | ✅     | implementação canônica; não é Home de conteúdo |
-| `/onboarding`                              | `OnboardingPage`                                                | Escolher cidade + bairro                                                                                                    | app/pages          | Primeira visita             | ✅     | —                                              |
-| `/inicio`                                  | `NationalHubPage`                                               | Hub nacional legado                                                                                                         | app/pages          | Entrada ampla               | ✅     | não é alias da Home                            |
-| `/:state/:city`                            | `TerritoryHomePage`                                             | Home territorial ampla da cidade                                                                                            | routes/territorial | Entrada pública · retorno   | ✅     | Home canônica de cidade                        |
-| `/:state/:city/:territory`                 | `TerritoryHomePage`                                             | Home territorial prioritária de bairro/grupo                                                                                | routes/territorial | Deep-link · retorno         | ✅     | Home canônica local                            |
-| `/comunidade/:uf/:city[/:territory]`       | `ComunidadePage`                                                | Participação comunitária do território                                                                                      | routes/territorial | Home → Community            | ✅     | Community não é a Home                         |
-| `/comunidade/:uf/:city/:hood/feed`         | `ComunidadePage`                                                | Timeline completa do bairro                                                                                                 | community-feed     | Home → "Ver mais"           | ✅     | mesmo owner da superfície Community            |
-| `/comunidade/:uf/:city/:hood?post=:postId` | `PostDetailModal` via `postService.getPublicPostById()`         | Deep-link territorial de post                                                                                               | Feed               | Tap no card / share / busca | ✅     | query param canonico                           |
-| `/p/:slug/*`                               | `PremiumBusinessSiteRoute`                                      | Mini-site de empresa previamente habilitado                                                                                 | business           | Link premium existente      | ✅     | sem compra/upgrade no MVP                      |
-| `/interesse`                               | `CommunityInterestPage`                                         | Waitlist para bairro coming_soon                                                                                            | community          | Bairro indisponível         | ✅     | —                                              |
-| `/br`, `/brasil`                           | `NationalHubPage`                                               | Hub país (SEO + escolha de UF)                                                                                              | app/pages          | SEO / entrada externa       | ✅     | —                                              |
-| `/:state`                                  | rota de entrada estadual                                        | Entrada ampla/SEO do estado                                                                                                 | app/routes         | Google / links              | ✅     | `/:state/:city` já é Territory Home            |
+### Contrato de integração
 
-## Comunidade — módulos transversais
+- Mapa público renderiza somente layers de módulos ativos; no MVP, o layer de domínio é Business.
+- Perto de mim consulta Business por proximidade e projeta as mesmas URLs canônicas de Empresas.
+- Categoria de empresa não depende do lifecycle de uma vertical especializada. Uma escola pode aparecer em Empresas/Mapa/Perto de mim enquanto `education=false`.
+- Nenhum módulo pausado pode reaparecer por URL direta, navegação, preview, busca, mapa ou Central.
 
-| Rota                                        | Página                  | Objetivo           | Status |
-| ------------------------------------------- | ----------------------- | ------------------ | ------ |
-| `/novo-post`                                | `NovoPostPage`          | Publicar no bairro | ✅     |
-| `/alertas`                                  | Community alerts        | Alertas do bairro  | ⏸ `communityAlerts=false` |
-| `/problemas`                                | Community issues        | Problemas do bairro | ⏸ `communityIssues=false` |
-| `/achados-perdidos` (+ `/novo`, `/:id`)     | Lost & found            | Achados/perdidos   | ⏸ `communityLostFound=false` |
-| `/mensagens`, `/chat/:conversationId`       | DM comunitária          | Conversas 1:1      | ✅     |
-| `/comunicacao` (+ agente/empresa/solicitar) | Comunicação territorial | Canais oficiais    | ⏸ `communication=false` |
-| `/buscar`                                   | `BuscarPage`            | Busca federada     | ✅     |
-| `/busca`                                    | ↪ `/buscar`             | alias              | 🗄     |
+## Infraestrutura pública
 
-## Empresas
+Estas superfícies suportam o produto, mas **não contam como módulos do MVP**:
 
-| Rota                                   | Página                 | Objetivo            | Status |
-| -------------------------------------- | ---------------------- | ------------------- | ------ |
-| `/empresas`                            | `EmpresasLandingPage`  | Comércio do bairro  | ✅     |
-| `/empresas/:id/catalogo`               | Catálogo               | Produtos da empresa | ✅     |
-| `/empresas/cadastrar`                  | Cadastro               | Owner cria empresa  | ✅     |
-| `/empresas-landing`                    | ↪ `/empresas`          | redirect legado     | 🗄     |
-| `/dashboard-empresa`                   | `DashboardEmpresaPage` | Owner dashboard     | ✅     |
-| `/edit-business/:profileId`            | Editor                 | Owner edita         | ✅     |
-| `/cupons`, `/cupons/:id`, `/promocoes` | Cupons/promos          | Ofertas             | ⏸ `coupons=false` |
+| Superfície | Objetivo |
+| --- | --- |
+| `/`, `/:uf/:cidade[/:territorio]` | resolução e contexto territorial |
+| Auth / Conta | login, cadastro, sessão, privacidade e preferências |
+| Institucional | termos, privacidade, DPO, contato/status quando aplicável |
+| Admin/Central | operação interna, RBAC e gestão estritamente necessária |
 
-## Classificados · Profissionais · Serviços
+Busca federada é pós-MVP neste corte: `search=false`. Os serviços internos de busca podem permanecer como infraestrutura reutilizável, mas suas rotas públicas ficam isoladas.
 
-| Rota                                                            | Objetivo               | Status |
-| --------------------------------------------------------------- | ---------------------- | ------ |
-| `/classificados`, `/novo`, `/editar/:id`, `/vendedor/:sellerId` | CRUD classificados     | ✅     |
-| `/oportunidades`, `/oportunidades/:id`                          | Vagas rápidas          | ✅     |
-| `/servicos` (admin sub-rota)                                    | Serviços profissionais | ✅     |
+## Módulos pós-MVP
 
-## Mobilidade
+Permanecem versionados e isolados até certificação individual: Comunidade, Gastronomia, Serviços profissionais, Classificados, Pontos Turísticos, Educação, Vagas/Oportunidades, Eventos, Comunicação/Mensagens, Mobilidade, Cupons, Gamificação, Analytics público, Alertas, Issues, Achados e Perdidos, Safety familiar e Billing.
 
-| Rota                                          | Objetivo        | Status |
-| --------------------------------------------- | --------------- | ------ |
-| `/mobilidade`                                 | Home mobilidade | ⏸ `mobility=false` |
-| `/mobilidade/passageiro`, `/buscando/:rideId` | Passageiro      | ⏸ `mobility=false` |
-| `/mobilidade/motorista`, `/perfil`            | Motorista       | ⏸ `mobility=false` |
-| `/mobilidade/motoboy`                         | Motoboy         | ⏸ `mobility=false` |
-| `/mobilidade/historico`                       | Histórico       | ⏸ `mobility=false` |
-| `/mobilidade/contatos-emergencia`             | Contatos SOS    | ⏸ `mobility=false` |
+Ativar um módulo exige alterar o lifecycle no registry e satisfazer suas dependências. Não é permitido reativar um módulo criando rota paralela, redirect ou exceção local.
 
-## Perfil & Conta
+## Rotas legadas
 
-| Rota canônica                 | Alias legado                | Objetivo                                           | Status |
-| ----------------------------- | --------------------------- | -------------------------------------------------- | ------ |
-| `/conta`, `/conta/*`          | `/perfil`, `/perfil/*`      | Área pessoal multi-perfil no shell Território Vivo | ✅     |
-| `/conta/editar/:profileId`    | `/perfil/editar/:profileId` | Editar identidade                                  | ✅     |
-| `/conta/perfil/configuracoes` | `/perfil/configuracoes`     | Configurar perfil                                  | ✅     |
-| `/conta/enderecos`            | `/perfil/enderecos`         | Endereços privados e território                    | ✅     |
-| `/conta/notificacoes`         | `/perfil/notificacoes`      | Notificações do usuário                            | ✅     |
-| `/conta/preferencias`         | `/perfil/preferencias`      | Preferências                                       | ✅     |
-| `/conta/privacidade`          | —                           | Privacidade LGPD                                   | ✅     |
-| `/conta/seguranca`            | —                           | Segurança                                          | ✅     |
-| `/conta/profissional`         | —                           | Perfil profissional                                | ✅     |
-
-## Autenticação & Institucional
-
-| Rota                                                                                      | Objetivo             | Status                             |
-| ----------------------------------------------------------------------------------------- | -------------------- | ---------------------------------- |
-| `/login`, `/cadastro`, `/cadastro/confirmacao`, `/reset-password`, `/aceitar-termos`      | Auth                 | ✅                                 |
-| `/about`, `/contato`, `/status`, `/dpo`, `/privacidade`, `/termos`                       | Institucional        | ✅                                 |
-| `/planos`, `/checkout/*`, `/settings/subscription`                                             | Billing/assinaturas  | ⏸ MVP: `billing=false`            |
-| `/pricing`                                                                                         | alias documental antigo; sem rota runtime canônica | 🗄 |
-| `/educacao`                                                                               | Landing Educação     | ⏸ `education=false`              |
-| `/gamificacao`                                                                            | Gamificação          | ⏸ `gamification=false`           |
-| `/ai/virtual-try-on`                                                                      | AI feature           | 🟡 sem entrada visível             |
-| `/offline-settings`                                                                       | Config offline       | 🟡 sem CTA — mover p/ Preferências |
-| `/notificacoes`                                                                           | Central notificações | ✅                                 |
-| `/notifications`                                                                          | alias en-US          | 🗄                                 |
-| `LaunchPausedPage`                                                                        | Kill-switch          | ✅                                 |
-
-## Admin / Central
-
-Prefixo `/admin/*` e `/central/*` (RBAC). Sub-rotas:
-
-`analytics · usuarios · roles · reivindicacoes · verificacoes · moderacao · pedidos · promocoes · planos · pontos-embarque · reports-passageiros · motoristas · motoboy · motoboy-operacoes · realtime-dashboard · territorial-groups · territory-management · territory-content · locations · ssot · setup · vagas · servicos · community-interest · operacoes · produto/:productSlug`
-
-Responsável: `modules/admin` e `modules/central`. Jornada: acessado por menu admin (visível apenas para roles com permissão via `has_role`).
-
-## Regras
-
-1. Toda rota nova exige entrada nesta tabela **antes** do merge.
-2. Toda página com status 🟡 "sem entrada" é débito de navegação e deve ser resolvida ou removida.
-3. Aliases legados (`/perfil/*`, `/busca`, `/empresas-landing`, `/notifications`) existem apenas como redirects/compatibilidade; novas navegações devem usar os caminhos canônicos.
-4. Nomes de arquivo canônicos: `Territory*Page`. Ver [`06-navigation/NAVIGATION-MAPPING.md`](./06-navigation/NAVIGATION-MAPPING.md) para o mapeamento antigo → novo.
+- `/empresas-landing` foi removida. Não existe redirect de compatibilidade.
+- `/conta/profissional` foi removida do shell público enquanto Serviços está pausado.
+- aliases privados de Conta/Perfil que ainda existirem só podem permanecer quando houver justificativa explícita de compatibilidade de conta; não devem ser usados para esconder módulos de produto.
