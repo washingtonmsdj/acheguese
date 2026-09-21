@@ -82,10 +82,15 @@ const MODULE_COPY: Record<ModuleSlug, ModuleCopy> = {
     focus: 'Mapa local',
     descriptionSuffix: 'Explore o mapa interativo da região.',
   },
+  'perto-de-mim': {
+    label: 'Perto de mim',
+    focus: 'Empresas próximas',
+    descriptionSuffix: 'Descubra empresas próximas usando sua localização quando disponível.',
+  },
   busca: {
     label: 'Busca',
     focus: 'Busca territorial',
-    descriptionSuffix: 'Encontre comunidades, empresas, serviços, classificados e conteúdos locais.',
+    descriptionSuffix: 'Encontre empresas e resultados locais dos módulos disponíveis.',
   },
   ranking: {
     label: 'Ranking',
