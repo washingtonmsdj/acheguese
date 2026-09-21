@@ -4,10 +4,7 @@
  * Servico centralizado para os blocos de destaque da landing territorial.
  * Queries leves, limitadas, respeitando TerritoryFilter canonico.
  */
-import {
-  getLaunchPausedBusinessCategoryIds,
-  isLaunchSurfaceEnabled,
-} from "@/app/config/launchScope";
+import { isLaunchSurfaceEnabled } from "@/app/config/launchScope";
 import { logger } from "@/shared/utils/logger";
 import { supabase } from "@/integrations/supabase";
 import { applyTerritoryFilter } from "@/core/location/utils";
@@ -35,7 +32,6 @@ type LandingQuery<TRow> = PromiseLike<LandingQueryPayload<TRow>> & {
   in(column: string, values: string[]): LandingQuery<TRow>;
   limit(value: number): LandingQuery<TRow>;
   not(column: string, operator: string, value: unknown): LandingQuery<TRow>;
-  or(filters: string): LandingQuery<TRow>;
   order(column: string, options?: { ascending?: boolean }): LandingQuery<TRow>;
   select(
     columns?: string,
@@ -50,17 +46,6 @@ type LandingDbClient = {
 const landingDb = supabase as unknown as LandingDbClient;
 const BUSINESS_LINK_CANDIDATE_MULTIPLIER = 6;
 const GASTRONOMY_LINK_CANDIDATE_MULTIPLIER = 6;
-
-function applyLaunchBusinessCategoryExclusion<TRow>(
-  query: LandingQuery<TRow>,
-): LandingQuery<TRow> {
-  const pausedBusinessCategories = getLaunchPausedBusinessCategoryIds();
-  if (pausedBusinessCategories.length === 0) return query;
-
-  return query.or(
-    `category.is.null,category.not.in.(${pausedBusinessCategories.join(",")})`,
-  );
-}
 
 export interface FeaturedBusiness {
   id: string;
@@ -362,7 +347,6 @@ export class LandingFeaturedService {
         .order("rating", { ascending: false })
         .order("created_at", { ascending: false });
 
-      query = applyLaunchBusinessCategoryExclusion(query);
       query = applyTerritoryFilter(query, filter);
       query = query.limit(limit);
 
@@ -411,7 +395,6 @@ export class LandingFeaturedService {
         .eq("status", "active")
         .in("id", linkedIds);
 
-      query = applyLaunchBusinessCategoryExclusion(query);
       const { data, error } = await query;
 
       if (error) {
@@ -811,8 +794,7 @@ export class LandingFeaturedService {
             .select("id", { count: "exact", head: true })
             .eq("status", "active")
             .not("location_id", "is", null);
-          query = applyLaunchBusinessCategoryExclusion(query);
-          query = applyTerritoryFilter(query, filter);
+              query = applyTerritoryFilter(query, filter);
           return query;
         })(),
         serviceCountPromise,
