@@ -14,65 +14,100 @@ import {
 } from "../launchScope";
 
 describe("launchScope", () => {
-  it("keeps MVP public surfaces enabled and paused surfaces disabled", () => {
-    expect(isLaunchSurfaceEnabled("map")).toBe(true);
-    expect(isLaunchSurfaceEnabled("nearby")).toBe(true);
-    expect(isLaunchSurfaceEnabled("community")).toBe(true);
-    expect(isLaunchSurfaceEnabled("classifieds")).toBe(true);
-    expect(isLaunchSurfaceEnabled("communityEventsPreview")).toBe(true);
+  it("keeps only the narrow MVP product domains public", () => {
+    for (const enabled of ["home", "community", "business", "classifieds", "search"] as const) {
+      expect(isLaunchSurfaceEnabled(enabled)).toBe(true);
+    }
 
-    expect(isLaunchSurfaceEnabled("jobs")).toBe(true);
-    expect(isLaunchSurfaceEnabled("events")).toBe(true);
-    expect(isLaunchSurfaceEnabled("education")).toBe(false);
-    expect(isLaunchSurfaceEnabled("billing")).toBe(false);
-    expect(isLaunchSurfaceEnabled("mobility")).toBe(false);
-    expect(isLaunchSurfaceEnabled("communityAlerts")).toBe(false);
-    expect(isLaunchSurfaceEnabled("communityIssues")).toBe(false);
+    for (const paused of [
+      "billing",
+      "gastronomy",
+      "services",
+      "touristPoints",
+      "map",
+      "nearby",
+      "education",
+      "jobs",
+      "events",
+      "communityEventsPreview",
+      "communication",
+      "mobility",
+      "coupons",
+      "gamification",
+      "publicAnalytics",
+      "communityAlerts",
+      "communityIssues",
+      "communityLostFound",
+      "communityCommunication",
+      "familySafety",
+    ] as const) {
+      expect(isLaunchSurfaceEnabled(paused)).toBe(false);
+    }
   });
 
-  it("filters navigation items and removes empty sections", () => {
-    expect(isLaunchNavItemEnabled("map")).toBe(true);
-    expect(isLaunchNavItemEnabled("nearby")).toBe(true);
-    expect(isLaunchNavItemEnabled("jobs")).toBe(true);
+  it("filters paused navigation items and removes empty sections", () => {
+    expect(isLaunchNavItemEnabled("business")).toBe(true);
+    expect(isLaunchNavItemEnabled("classifieds")).toBe(true);
+    expect(isLaunchNavItemEnabled("map")).toBe(false);
+    expect(isLaunchNavItemEnabled("nearby")).toBe(false);
+    expect(isLaunchNavItemEnabled("jobs")).toBe(false);
 
     expect(
       filterLaunchItems([
+        { id: "business", label: "Empresas" },
         { id: "map", label: "Mapa" },
+        { id: "classifieds", label: "Classificados" },
         { id: "jobs", label: "Vagas" },
-        { id: "nearby", label: "Perto de Mim" },
       ]),
     ).toEqual([
-      { id: "map", label: "Mapa" },
-      { id: "jobs", label: "Vagas" },
-      { id: "nearby", label: "Perto de Mim" },
+      { id: "business", label: "Empresas" },
+      { id: "classifieds", label: "Classificados" },
     ]);
 
     expect(
       filterLaunchSections([
-        { label: "Ativas", items: [{ id: "map" }] },
-        { label: "Pausadas", items: [{ id: "education" }, { id: "mobility" }] },
+        { label: "Ativas", items: [{ id: "business" }, { id: "classifieds" }] },
+        { label: "Pausadas", items: [{ id: "education" }, { id: "map" }] },
       ]),
-    ).toEqual([{ label: "Ativas", items: [{ id: "map" }] }]);
+    ).toEqual([
+      { label: "Ativas", items: [{ id: "business" }, { id: "classifieds" }] },
+    ]);
   });
 
-
-  it("keeps the global module registry aligned with launch scope", () => {
+  it("keeps the global module registry aligned with the narrow MVP", () => {
     const activeIds = ACTIVE_MODULES.map((module) => module.id);
 
+    expect(activeIds).toContain("community-feed");
+    expect(activeIds).toContain("community-groups");
+    expect(activeIds).toContain("community-recommendations");
     expect(activeIds).toContain("business");
-    expect(activeIds).toContain("gastronomy");
-    expect(activeIds).toContain("community-events");
-    expect(activeIds).not.toContain("mobility");
-    expect(activeIds).not.toContain("education");
-    expect(activeIds).not.toContain("ranking");
-    expect(activeIds).not.toContain("community-alerts");
-    expect(activeIds).not.toContain("community-issues");
-    expect(activeIds).not.toContain("community-lost-found");
+    expect(activeIds).toContain("classifieds");
+    expect(activeIds).toContain("search");
+
+    for (const pausedId of [
+      "services",
+      "community-events",
+      "jobs",
+      "gastronomy",
+      "touristPoints",
+      "map",
+      "mobility",
+      "education",
+      "ranking",
+      "community-alerts",
+      "community-issues",
+      "community-lost-found",
+    ]) {
+      expect(activeIds).not.toContain(pausedId);
+    }
   });
 
   it("does not expose paused module context in territory chrome", () => {
     expect(getContextMessageFromPath("/mobilidade")).toBeNull();
     expect(getContextMessageFromPath("/educacao/ba/salvador")).toBeNull();
+    expect(getContextMessageFromPath("/gastronomia/ba/salvador")).toBeNull();
+    expect(getContextMessageFromPath("/servicos/ba/salvador")).toBeNull();
+    expect(getContextMessageFromPath("/mapa/ba/salvador")).toBeNull();
     expect(getContextMessageFromPath("/ranking")).toBeNull();
 
     expect(getContextMessageFromPath("/empresas/ba/salvador")).toBe(
@@ -80,37 +115,35 @@ describe("launchScope", () => {
     );
   });
 
-  it("keeps jobs classified categories aligned with the active launch surface", () => {
-    expect(isLaunchClassifiedCategoryEnabled("vagas")).toBe(true);
+  it("keeps Vagas hidden inside Classificados while jobs are post-MVP", () => {
+    expect(isLaunchClassifiedCategoryEnabled("vagas")).toBe(false);
     expect(isLaunchClassifiedCategoryEnabled("imoveis")).toBe(true);
   });
 
-  it("hides paused business categories", () => {
+  it("keeps Education hidden from Business without hiding normal companies", () => {
     expect(isLaunchBusinessCategoryEnabled("educacao")).toBe(false);
     expect(isLaunchBusinessCategoryEnabled("restaurante")).toBe(true);
     expect(getLaunchPausedBusinessCategoryIds()).toContain("educacao");
     expect(getLaunchPausedBusinessCategoryIds()).not.toContain("restaurante");
   });
 
-  it("keeps active feed channels and filters paused post formats", () => {
+  it("keeps Community basic while filtering event/job/alert post formats", () => {
     expect(isLaunchCommunityFeedChannelEnabled("geral")).toBe(true);
-    expect(isLaunchCommunityFeedChannelEnabled("eventos")).toBe(true);
-    expect(isLaunchCommunityFeedChannelEnabled("vagas")).toBe(true);
+    expect(isLaunchCommunityFeedChannelEnabled("eventos")).toBe(false);
+    expect(isLaunchCommunityFeedChannelEnabled("vagas")).toBe(false);
 
-    expect(isLaunchCommunityPostEnabled({ content_intent: "duvida" })).toBe(
-      true,
-    );
+    expect(isLaunchCommunityPostEnabled({ content_intent: "duvida" })).toBe(true);
     expect(
       isLaunchCommunityPostEnabled({ content_intent: "alerta_urgente" }),
     ).toBe(false);
     expect(isLaunchCommunityPostEnabled({ display_format: "event_card" })).toBe(
-      true,
+      false,
     );
-    expect(isLaunchCommunityPostEnabled({ type: "oportunidade" })).toBe(true);
+    expect(isLaunchCommunityPostEnabled({ type: "oportunidade" })).toBe(false);
     expect(
       isLaunchCommunityPostEnabled({
         distribution_channels: ["geral", "eventos"],
       }),
-    ).toBe(true);
+    ).toBe(false);
   });
 });
