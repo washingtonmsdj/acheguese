@@ -157,6 +157,7 @@ export function useGastronomyDetailMenu(menu: MenuWithCategories | null) {
 
   return {
     activeCategory,
+    setActiveCategory,
     activeCategoryData,
     categoriesWithAll,
     itemCounts,
