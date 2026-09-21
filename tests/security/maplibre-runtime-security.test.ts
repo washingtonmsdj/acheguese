@@ -26,10 +26,9 @@ const ALLOWED_STATIC_CSS_OWNER = "src/core/maps/runtime/maplibreRuntimeCss.ts";
 const LEGACY_ADAPTER_BRIDGE = "src/core/maps/components/v3/LazyMapLibreAdapter.tsx";
 
 const MIGRATED_CONSUMERS = [
-  "src/shared/components/maps/MiniMap.tsx",
+  "src/core/maps/components/MiniMap.tsx",
   "src/core/maps/components/v3/RouteLayer.tsx",
-  "src/shared/components/LocationPickerSheet.tsx",
-  "src/shared/components/standalone/StandaloneMap.tsx",
+  "src/core/maps/components/LocationPickerSheet.tsx",
   "src/core/guide/tourist-points/components/TouristPointsMap.tsx",
   "src/core/community-lost-found/components/LostFoundMiniMap.tsx",
   "src/core/mobility/components/RideTrackingMap.tsx",
