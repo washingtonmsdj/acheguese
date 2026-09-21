@@ -9,7 +9,7 @@ Current provenance supplied for the project:
 - school Business rows are the only current business dataset intended to represent external real-world entities;
 - the remaining store/company rows are synthetic fixtures;
 - current Professional rows are synthetic fixtures;
-- user/profile cleanup is handled separately because admin authority must be resolved from an authoritative relation before changing personal profile visibility.
+- the original administrative personal profile is resolved by active `user_roles.admin` plus the stable handle `washingtonmsdj`; test admins are not preserved merely because they also hold an admin role.
 
 This provenance is a data-hygiene rule for the current dataset, not a permanent product rule.
 
@@ -60,8 +60,17 @@ The intended model is:
 3. tests create or select fixtures explicitly and never convert those fixtures into product truth;
 4. invalid identity/URL state fails closed instead of redirecting elsewhere.
 
-## Remaining user/profile cleanup
+## Public profile quarantine
 
-Personal/user profiles are not changed in this migration.
+A second migration,
+`20260921103912_quarantine_synthetic_public_profiles_mvp.sql`,
+uses the actual authority relation `user_roles`.
 
-The current `admin_users` relation is empty, so it cannot safely identify the original administrative identity. Personal-profile quarantine must wait for the actual admin authority/ownership source to be identified; deleting or hiding hundreds of profiles based on names would be a data-integrity shortcut.
+After it:
+
+- public Personal profiles: 1, the active admin profile `washingtonmsdj`;
+- public Business profiles: 15, each backed by an active `educacao/education` Business row;
+- public Professional profiles: 0;
+- public Driver profiles: 0.
+
+Profiles remain active internally where needed for development fixtures; only public exposure changes.
