@@ -16,8 +16,8 @@ import { Helmet } from "react-helmet-async";
 import { motion } from "framer-motion";
 import {
   Search, Wrench, Star, MapPin, ChevronRight, ArrowRight,
-  Sparkles, BadgeCheck, MessageCircle, Shield, TrendingUp,
-  Clock, Users, Phone, Filter, Trophy, Zap, Heart, LayoutList,
+  Sparkles, BadgeCheck, MessageCircle, Shield,
+  Clock, Users, Phone, Filter, Trophy, Zap, LayoutList,
   Building2, Tag, UtensilsCrossed,
 } from "lucide-react";
 import { CanonicalHero } from "@/shared/components/hero/CanonicalHero";
@@ -49,14 +49,14 @@ import heroImg from "@/assets/servicos-hero.jpg";
 
 const HOW_IT_WORKS = [
   { step: "01", icon: Search, title: "Busque o serviço",    description: "Encontre o profissional ideal filtrando por categoria, avaliação ou proximidade." },
-  { step: "02", icon: Phone,  title: "Entre em contato",    description: "Fale diretamente via WhatsApp ou chat. Sem intermediários, sem taxas." },
+  { step: "02", icon: Phone,  title: "Entre em contato",    description: "Use os canais de contato informados pelo profissional no perfil." },
   { step: "03", icon: Star,   title: "Avalie o serviço",    description: "Após concluir, avalie o profissional para ajudar outros moradores." },
 ];
 
 const BENEFITS = [
   { icon: BadgeCheck, title: "Perfis verificados", description: "Profissionais verificados aparecem identificados no perfil e nos resultados.",                                    color: "text-primary", bgColor: "bg-primary/10" },
-  { icon: MapPin,     title: "Perto de Você",             description: "Profissionais da sua região, com menor tempo de deslocamento e maior compromisso.",                        color: "text-accent",  bgColor: "bg-accent/10"  },
-  { icon: Shield,     title: "Garantia Comunitária",      description: "Avaliações reais de moradores como você. Transparência total.",                                            color: "text-success", bgColor: "bg-success/10" },
+  { icon: MapPin,     title: "Cobertura no território",   description: "Veja profissionais com atuação informada para a região selecionada.",                                      color: "text-accent",  bgColor: "bg-accent/10"  },
+  { icon: Shield,     title: "Avaliações da comunidade",  description: "Consulte notas e avaliações publicadas quando houver histórico disponível.",                              color: "text-success", bgColor: "bg-success/10" },
   { icon: Zap,        title: "Contato direto",           description: "Quando o profissional informa WhatsApp ou prazo de resposta, esses dados aparecem no perfil.",                  color: "text-warning", bgColor: "bg-warning/10" },
 ];
 
@@ -610,8 +610,8 @@ export default function ServicosLandingPage({
         <div className="max-w-7xl mx-auto px-4 sm:px-6 py-2.5 flex items-center justify-center gap-2 text-sm">
           <Sparkles className="h-4 w-4 text-primary" />
           <span className="text-muted-foreground">
-            <span className="font-semibold text-foreground">Cadastre-se grátis!</span>{" "}
-            Ofereça seus serviços para milhares de moradores na sua região.
+            <span className="font-semibold text-foreground">Cadastre seu serviço.</span>{" "}
+            Organize seu perfil profissional no território selecionado.
           </span>
           <button onClick={() => navigate(appUrls.services.register)}
             className="text-primary font-semibold hover:underline ml-1 flex items-center gap-0.5">
@@ -826,14 +826,14 @@ export default function ServicosLandingPage({
           <div className="absolute top-0 right-0 w-64 h-64 bg-primary/5 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2" />
           <div className="relative p-6 md:p-10 flex flex-col md:flex-row items-center gap-6">
             <div className="flex-1 text-center md:text-left">
-              <h2 className="text-xl md:text-2xl font-bold text-foreground mb-2 font-heading">É Profissional? Cadastre-se Grátis!</h2>
+              <h2 className="text-xl md:text-2xl font-bold text-foreground mb-2 font-heading">É profissional? Cadastre seu serviço</h2>
               <p className="text-muted-foreground text-sm md:text-base mb-4 max-w-lg">
-                Aumente sua visibilidade, receba avaliações dos moradores e conquiste novos clientes na sua região. Sem taxas, sem intermediários.
+                Organize seu perfil profissional com serviços oferecidos, área de atuação e canais de contato para consulta no território.
               </p>
               <div className="flex items-center gap-4 justify-center md:justify-start text-xs text-muted-foreground">
-                <span className="flex items-center gap-1"><BadgeCheck className="h-3.5 w-3.5 text-primary" /> Perfil verificado</span>
-                <span className="flex items-center gap-1"><Heart className="h-3.5 w-3.5 text-accent" /> Avaliações reais</span>
-                <span className="flex items-center gap-1"><TrendingUp className="h-3.5 w-3.5 text-success" /> Mais clientes</span>
+                <span className="flex items-center gap-1"><BadgeCheck className="h-3.5 w-3.5 text-primary" /> Dados do perfil</span>
+                <span className="flex items-center gap-1"><Star className="h-3.5 w-3.5 text-accent" /> Avaliações quando houver</span>
+                <span className="flex items-center gap-1"><Phone className="h-3.5 w-3.5 text-success" /> Canais de contato</span>
               </div>
             </div>
             <Button onClick={() => navigate(user ? appUrls.services.register : appUrls.auth.login)}
@@ -849,7 +849,7 @@ export default function ServicosLandingPage({
         <div className="max-w-3xl mx-auto px-4 sm:px-6 py-12 md:py-16 text-center">
           <h2 className="text-2xl md:text-3xl font-bold text-foreground mb-3 font-heading">Precisa de um Serviço?</h2>
           <p className="text-muted-foreground text-sm md:text-base mb-6 max-w-lg mx-auto">
-            Encontre profissionais avaliados pela comunidade. Rápido, confiável e perto de você.
+            Consulte profissionais do território, avaliações disponíveis e os canais de contato informados no perfil.
           </p>
           <Button onClick={() => navigate(appUrls.services.list)}
             className="bg-primary hover:bg-primary/90 text-primary-foreground font-bold text-sm md:text-base h-11 px-8 rounded-lg shadow-lg">
