@@ -1,4 +1,5 @@
 import { getLaunchPausedBusinessCategoryIds } from "@/app/config/launchScope";
+import { BusinessUrlService } from "@/core/business/services/BusinessUrlService";
 import { applyTerritoryFilter } from "@/core/location";
 import type { TerritoryFilter } from "@/core/location/types";
 import { supabase } from "@/integrations/supabase";
@@ -43,7 +44,8 @@ export interface BusinessMapEntity {
   is_premium: boolean;
   is_verified: boolean;
   category: string | null;
-  geographic_path: string | null;
+  geographic_path: string;
+  canonical_url: string;
 }
 
 type BusinessMapLocationRow = {
@@ -132,6 +134,21 @@ class MapBusinessLayerRuntimeService {
         if (row.latitude == null || row.longitude == null) return [];
         const location = firstLocation(row.location);
 
+        const geographicPath = location?.geographic_path ?? null;
+        if (!row.slug || !geographicPath) return [];
+
+        let canonicalUrl: string;
+        try {
+          canonicalUrl = BusinessUrlService.getPublicCanonicalUrl({
+            id: row.profile_id,
+            slug: row.slug,
+            is_premium: Boolean(row.is_premium),
+            geographic_path: geographicPath,
+          });
+        } catch {
+          return [];
+        }
+
         return [{
           id: row.profile_id,
           business_data_id: row.id,
@@ -143,7 +160,8 @@ class MapBusinessLayerRuntimeService {
           is_premium: Boolean(row.is_premium),
           is_verified: Boolean(row.is_verified),
           category: row.category,
-          geographic_path: location?.geographic_path ?? null,
+          geographic_path: geographicPath,
+          canonical_url: canonicalUrl,
         }];
       });
     } catch (error) {
