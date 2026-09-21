@@ -9,6 +9,8 @@ test.describe('public launch scope', () => {
       '/gastronomia',
       '/servicos',
       '/classificados',
+      '/busca',
+      '/buscar',
       '/recomendacoes',
       '/vagas',
       '/eventos',
