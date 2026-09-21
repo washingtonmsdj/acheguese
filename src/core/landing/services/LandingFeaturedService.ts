@@ -336,7 +336,7 @@ export class LandingFeaturedService {
   ): Promise<FeaturedBusiness[]> {
     if (filter.scope === "none") return [];
     try {
-      let query = landingDb
+      const query = landingDb
         .from<FeaturedBusinessRow>("business_data")
         .select(
           "id, profile_id, business_name, category, metadata, rating, is_premium, is_verified, slug, location:locations!location_id(geographic_path), owner_profile:profiles!business_data_profile_id_fkey(display_name, name, username)",
