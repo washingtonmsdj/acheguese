@@ -14,7 +14,7 @@
 
 ## D-003 — Produto territory-first e modular
 
-**Decisão:** o Achegue-se é **territory-first**. Território é o contexto raiz e os módulos de produto são capacidades independentes com lifecycle explícito. No MVP vigente, **Empresas + Mapa + Perto de mim + Busca** estão ativos; Community e demais módulos permanecem `paused`. A visão comunitária continua preservada para pós-MVP, mas não é pré-requisito arquitetural nem superfície implícita do núcleo atual. **Referências:** `03-architecture/PRODUCT_MODULE_LIFECYCLE.md`, `05-ux/HOME-SPEC.md`.
+**Decisão:** o Achegue-se é **territory-first**. Território é contexto raiz. O lifecycle separa **domínios de produto** de **capabilities horizontais**. No MVP vigente, **Business/Empresas** é o domínio ativo; **Mapa, Perto de mim, Busca e Mensagens (provider Business)** são capabilities horizontais ativas, junto da infraestrutura de identidade/território necessária. Community e demais domínios permanecem `paused`. **Referências:** `03-architecture/PRODUCT_MODULE_LIFECYCLE.md`, `05-ux/HOME-SPEC.md`.
 
 ## D-004 — Nomenclatura canônica de telas
 
@@ -86,7 +86,7 @@
 
 ## D-021 — Lifecycle público do MVP é independente da visão pós-MVP
 
-**Decisão:** o conjunto público ativo é determinado exclusivamente por `src/app/config/productModuleRegistry.ts`. No MVP atual, os módulos de produto ativos são **Business, Map, Nearby e Search**, com `nearby -> [map, business]`. Search orquestra apenas providers cujas superfícies estão ativas. Community, Serviços, Classificados, Eventos, Vagas e demais capacidades permanecem `paused` e fail-closed. Cobertura técnica, código preservado ou dados existentes não autorizam exposição pública. **Referências:** `03-architecture/PRODUCT_MODULE_LIFECYCLE.md`, `FEATURE-MAP.md`, `SCREEN-MAP.md`.
+**Decisão:** o conjunto ativo é derivado de três autoridades executáveis: `productModuleRegistry.ts` para domínios, `platformCapabilityRegistry.ts` para capabilities horizontais e `lifecycleRegistry.ts` para resolver dependências cruzadas. No MVP, **Business** é o domínio ativo; **Map, Nearby, Search e Messaging** são capabilities ativas. `nearby` depende de Map + Location + Business; Messaging registra somente o provider Business. Community, Serviços, Classificados, Eventos, Vagas e demais domínios permanecem `paused` e fail-closed. Cobertura técnica, código preservado ou dados existentes não autorizam exposição pública. **Referências:** `03-architecture/PRODUCT_MODULE_LIFECYCLE.md`, `FEATURE-MAP.md`, `SCREEN-MAP.md`.
 
 ## D-022 — Community permanece fail-closed até reativação formal
 
