@@ -25,7 +25,7 @@ describe("launchScope", () => {
   it("keeps Business active as domain and Map/Nearby/Search active as platform capabilities", () => {
     expect(getActiveProductModules()).toEqual(["business"]);
     expect(getActivePlatformCapabilities()).toEqual(
-      expect.arrayContaining(["map", "nearby", "search"]),
+      expect.arrayContaining(["map", "nearby", "search", "messaging"]),
     );
     expect(PLATFORM_CAPABILITY_REGISTRY.nearby).toEqual({
       status: "active",
@@ -35,7 +35,7 @@ describe("launchScope", () => {
 
     expect(PRODUCT_MODULE_REGISTRY.business.status).toBe("active");
 
-    for (const enabled of ["home", "business", "map", "nearby", "search"] as const) {
+    for (const enabled of ["home", "business", "map", "nearby", "search", "messaging"] as const) {
       expect(isLaunchSurfaceEnabled(enabled)).toBe(true);
     }
 
@@ -51,7 +51,6 @@ describe("launchScope", () => {
       "events",
       "communityEventsPreview",
       "communication",
-      "messaging",
       "mobility",
       "coupons",
       "gamification",
@@ -72,7 +71,7 @@ describe("launchScope", () => {
     expect(isLaunchNavItemEnabled("nearby")).toBe(true);
     expect(isLaunchNavItemEnabled("classifieds")).toBe(false);
     expect(isLaunchNavItemEnabled("community")).toBe(false);
-    expect(isLaunchNavItemEnabled("messaging")).toBe(false);
+    expect(isLaunchNavItemEnabled("messaging")).toBe(true);
 
     expect(
       filterLaunchItems([
