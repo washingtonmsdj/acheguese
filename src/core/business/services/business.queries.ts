@@ -7,6 +7,7 @@
  * - Mapeamento de dados via business.mappers
  */
 
+import { getLaunchPausedBusinessCategoryIds } from "@/app/config/launchScope";
 import { supabase } from "@/integrations/supabase";
 import { logger } from "@/shared/utils/logger";
 import { LocationHierarchyReadService } from "@/core/location";
@@ -369,6 +370,13 @@ export async function getBusinessesList(
       .select(PUBLIC_BUSINESS_LIST_SELECT)
       .in("business_role", ["standalone", "branch"])
       .range(pageParam * pageSize, (pageParam + 1) * pageSize - 1);
+
+    const pausedBusinessCategories = getLaunchPausedBusinessCategoryIds();
+    if (pausedBusinessCategories.length > 0) {
+      query = query.or(
+        `category.is.null,category.not.in.(${pausedBusinessCategories.join(",")})`,
+      );
+    }
 
     // Aplicar filtros
     if (category && category !== "todos") {
