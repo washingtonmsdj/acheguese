@@ -29,6 +29,12 @@ vi.mock("@/shared/config/publicSupabase", () => ({
   buildSupabaseFunctionUrl: (name: string) =>
     `https://privacy-contract.invalid/functions/v1/${name}`,
 }));
+vi.mock("@/core/privacy/config/privacyRollout", () => ({
+  assertPrivacyAccountDeletionEnabled: vi.fn(),
+  assertPrivacyDataExportEnabled: vi.fn(),
+  isPrivacyAccountDeletionEnabled: () => true,
+  isPrivacyDataExportEnabled: () => true,
+}));
 
 import { PrivacySettingsService } from "./PrivacySettingsService";
 
