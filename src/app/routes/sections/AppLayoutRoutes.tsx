@@ -434,7 +434,14 @@ export function AppLayoutRoutes() {
         />
 
         {/* Rotas globais */}
-        <Route path="/u/:username" element={<P.ProfilePublicRoute />} />
+        <Route
+          path="/u/:username"
+          element={launchElement(
+            "community",
+            "Perfis públicos",
+            <P.ProfilePublicRoute />,
+          )}
+        />
         <Route
           path="/c/:publicId"
           element={launchElement(
