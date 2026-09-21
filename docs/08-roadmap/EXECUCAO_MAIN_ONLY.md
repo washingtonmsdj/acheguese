@@ -75,6 +75,10 @@ no Supabase neste ciclo.
   `territorial-group-admin-rpc` `ACTIVE`, versão 1 e `verify_jwt=true`; isso
   comprova a presença/configuração do gateway, mas não substitui smoke AAL2 nem
   prova que o source do bundle publicado é o mesmo SHA desta branch;
+- [x] as cópias pending antigas das migrations G42/G43 phase 1 foram removidas
+  do inventário depois de comparação byte a byte com as migrations canônicas já
+  presentes em `supabase/migrations/` e no ledger remoto; a phase 2 continua
+  separada e bloqueada pelos gates de runtime;
 - [ ] security authority/free-release governance: permanecem as exceções
   expiradas `EXC-2026-08-11-AUTH-HIBP-FREE-PLAN` e
   `EXC-2026-08-11-POSTGIS-PUBLIC-SURFACE`, além de

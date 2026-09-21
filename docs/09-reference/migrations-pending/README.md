@@ -1,52 +1,51 @@
-# Migrações Pendentes (para aplicar no Supabase)
+# Migrações pendentes e gates de promoção
 
-Esta pasta reúne migrações e ajustes SQL que **ainda não foram aplicados** no projeto Supabase de produção. O objetivo é permitir que outro agente (Codex, Cursor, ou humano com acesso ao Supabase CLI/SQL Editor) faça o review e aplique com segurança.
+Esta pasta contém somente mudanças ainda não promovidas ao ledger remoto do
+Supabase. Cada item precisa de preflight, revisão de risco e smoke do runtime
+correspondente antes de ser promovido. Não copie a pasta inteira para
+`supabase/migrations/` e não aplique SQL por ordem apenas pelo timestamp.
 
-## Como aplicar
+## Estado atual
 
-Duas formas equivalentes:
+As migrations G42/G43 phase 1 territoriais não ficam mais nesta pasta: as
+versões antigas eram cópias byte a byte das migrations canônicas já presentes
+no ledger remoto:
 
-### Opção A — Supabase CLI (recomendado)
+- `supabase/migrations/20260919003851_transactional_location_visibility_cascade_g42.sql`;
+- `supabase/migrations/20260919003900_create_territorial_group_admin_commands_g43.sql`.
 
-1. Copie os arquivos `.sql` desta pasta para `supabase/migrations/` mantendo o prefixo `YYYYMMDDHHMMSS_`.
-2. Rode:
-   ```bash
-   npm run validate:migrations
-   npm run validate:migrations:remote
-   supabase db push --linked --dry-run
-   supabase db push --linked
-   ```
-3. Rode `npm run validate:security-authority` para garantir que o SSOT de segurança continua verde.
+Os arquivos pending antigos foram removidos deste inventário; o histórico
+continua no Git e a phase 2 permanece separada até a certificação hosted.
 
-### Opção B — SQL Editor do Supabase
+## Inventário pending
 
-1. Abra o SQL Editor do projeto (`https://supabase.com/dashboard/project/<ref>/sql`).
-2. Cole o conteúdo de cada arquivo desta pasta **na ordem numérica** (menor timestamp primeiro).
-3. Execute um por vez, conferindo o resultado antes de seguir para o próximo.
+| Arquivo | Estado | Gate principal |
+| --- | --- | --- |
+| `20260810152013_finalize_community_poll_cutover.sql` | PENDING | preflight de Poll, janela de observação e prova de dados |
+| `20260810152014_finalize_community_interest_cutover.sql` | PENDING | Edge, Turnstile, origins, frontend broker e smoke |
+| `20260910133000_finalize_professional_lead_intake_g39.sql` | PENDING | frontend LIVE no broker e smoke anônimo/autenticado |
+| `20260910203000_harden_mfa_authority_g42.sql` | PENDING | preflight remoto de Auth/RLS/grants e smoke AAL2 |
+| `20260910211500_lock_user_role_writes_to_admin_broker_g42.sql` | PENDING | broker admin LIVE, grants remotos e smoke super-admin AAL2 |
+| `20260910221500_lock_territorial_group_writes_to_broker_g43.sql` | PENDING | frontend hosted same-SHA e smoke admin AAL2 de `saveGroup`/`setStatus` |
+| `20260910233000_atomic_group_visibility_g43.sql` | PENDING | migration G43 correspondente, Edge e smoke de visibilidade |
+| `20260911235000_retire_driver_data_presence_writes_g83.sql` | PENDING | preflight da função, grants/policies e callers atuais |
+| `g104-admin-mobility-analytics-snapshot.md` | OPERACIONAL | decisão/review do snapshot administrativo |
+| `g122-public-ride-share-preaccept-privacy.md` | OPERACIONAL | preflight e validação do corte de privacidade |
 
-> Não pule a ordem. Cada arquivo pode depender do anterior (tabela → grants → RLS → policies → dados).
+## Antes de promover qualquer SQL
 
-## Checklist obrigatório antes de aplicar
+1. Confirmar o project ref e executar o preflight read-only no ambiente alvo.
+2. Classificar risco e revisar grants, RLS, policies, `SECURITY DEFINER` e
+   postconditions.
+3. Confirmar que o Edge e o frontend hospedado usam o mesmo contrato e SHA.
+4. Executar smoke positivo e negativo, registrar evidência e só então criar
+   uma migration canônica com timestamp novo quando o arquivo exigir isso.
+5. Rodar `npm run validate:migrations` e os gates de security authority depois
+   da promoção.
 
-Para cada arquivo desta pasta, siga o [AI Agent Rules](../governance/security/AI_AGENT_RULES.md):
+## Regra de encerramento
 
-- [ ] Classificar risco (baixo / médio / alto).
-- [ ] Confirmar que `GRANT` explícito existe para toda tabela pública nova.
-- [ ] Confirmar `ALTER TABLE ... ENABLE ROW LEVEL SECURITY` quando aplicável.
-- [ ] Revisar todas as `POLICY` — nenhuma deve usar `TO authenticated USING (true)` para dados por usuário.
-- [ ] Se houver `SECURITY DEFINER`, checar `SET search_path = public` e checagem interna de identidade.
-- [ ] Rodar `npm run validate:migrations` e `npm run validate:security-authority` após copiar.
-
-## Arquivos nesta pasta
-
-| Ordem | Arquivo                                                  | Descrição                                                                                                                                                 | Risco     |
-| ----- | -------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------- | --------- |
-| 1     | `20260810152013_finalize_community_poll_cutover.sql`     | CUTOVER Poll deliberadamente fora da fila ativa; promover com timestamp novo somente apos preflight e janela de observacao.                               | Alto      |
-| 2     | `20260810152014_finalize_community_interest_cutover.sql` | CUTOVER Community Interest fora da fila ativa; exige Edge, Turnstile, origins, frontend broker e smoke test comprovados antes de remover o writer legacy. | Alto      |
-
-## Depois de aplicar
-
-1. Confirme no Supabase que o objeto criado pela migration existe.
-2. Teste o fluxo correspondente em ambiente controlado.
-3. Mova os arquivos aplicados de `docs/migrations-pending/` para `supabase/migrations/` (se ainda não estiverem lá) e commit.
-4. Atualize esta tabela removendo os arquivos aplicados.
+Quando uma pendência for promovida, registrar o nome/timestamp canônico, o
+resultado do smoke e a evidência remota neste documento e no checkpoint do
+roadmap. Remover o item do inventário somente depois dessa confirmação; nunca
+remover um pending para esconder um blocker.
