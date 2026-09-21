@@ -14,7 +14,7 @@
 
 ## D-003 — Produto territory-first e modular
 
-**Decisão:** o Achegue-se é **territory-first**. Território é o contexto raiz e os módulos de produto são capacidades independentes com lifecycle explícito. No MVP vigente, somente **Empresas + Mapa + Perto de mim** estão ativos; Community e demais módulos permanecem `paused`. A visão comunitária continua preservada para pós-MVP, mas não é pré-requisito arquitetural nem superfície implícita do núcleo atual. **Referências:** `03-architecture/PRODUCT_MODULE_LIFECYCLE.md`, `05-ux/HOME-SPEC.md`.
+**Decisão:** o Achegue-se é **territory-first**. Território é o contexto raiz e os módulos de produto são capacidades independentes com lifecycle explícito. No MVP vigente, **Empresas + Mapa + Perto de mim + Busca** estão ativos; Community e demais módulos permanecem `paused`. A visão comunitária continua preservada para pós-MVP, mas não é pré-requisito arquitetural nem superfície implícita do núcleo atual. **Referências:** `03-architecture/PRODUCT_MODULE_LIFECYCLE.md`, `05-ux/HOME-SPEC.md`.
 
 ## D-004 — Nomenclatura canônica de telas
 
@@ -70,7 +70,7 @@
 
 ## D-017 — Sitemap oficial é derivado do lifecycle do produto
 
-**Decisão:** `tools/release/generate-sitemap.ts` produz e o pipeline de release valida `public/sitemap.xml`. Rotas de módulos só entram quando a superfície correspondente está ativa no lifecycle; no MVP atual, o sitemap publica **Empresas + Mapa + Perto de mim** e não anuncia Community, Busca, Serviços, Classificados, Eventos ou outras superfícies pausadas. A Edge Function `sitemap` é somente um endpoint público de compatibilidade para o sitemap canônico e não mantém inventário de domínio próprio.
+**Decisão:** `tools/release/generate-sitemap.ts` produz e o pipeline de release valida `public/sitemap.xml`. Rotas de módulos só entram quando a superfície correspondente está ativa no lifecycle; no MVP atual, o sitemap publica as superfícies indexáveis de **Empresas + Mapa + Perto de mim**. **Busca permanece ativa**, mas páginas de resultado/consulta continuam fora do sitemap por política de indexação. Community, Serviços, Classificados, Eventos e outras superfícies pausadas não são anunciadas. A Edge Function `sitemap` é somente um endpoint público de compatibilidade para o sitemap canônico e não mantém inventário de domínio próprio.
 
 ## D-018 — Voz de estados vazios / loading
 
@@ -86,7 +86,7 @@
 
 ## D-021 — Lifecycle público do MVP é independente da visão pós-MVP
 
-**Decisão:** o conjunto público ativo é determinado exclusivamente por `src/app/config/productModuleRegistry.ts`. No MVP atual, os únicos módulos de produto ativos são **Business, Map e Nearby**, com `nearby -> [map, business]`. Busca, Community, Serviços, Classificados, Eventos, Vagas e demais capacidades permanecem `paused` e fail-closed. Cobertura técnica, código preservado ou dados existentes não autorizam exposição pública. **Referências:** `03-architecture/PRODUCT_MODULE_LIFECYCLE.md`, `FEATURE-MAP.md`, `SCREEN-MAP.md`.
+**Decisão:** o conjunto público ativo é determinado exclusivamente por `src/app/config/productModuleRegistry.ts`. No MVP atual, os módulos de produto ativos são **Business, Map, Nearby e Search**, com `nearby -> [map, business]`. Search orquestra apenas providers cujas superfícies estão ativas. Community, Serviços, Classificados, Eventos, Vagas e demais capacidades permanecem `paused` e fail-closed. Cobertura técnica, código preservado ou dados existentes não autorizam exposição pública. **Referências:** `03-architecture/PRODUCT_MODULE_LIFECYCLE.md`, `FEATURE-MAP.md`, `SCREEN-MAP.md`.
 
 ## D-022 — Community permanece fail-closed até reativação formal
 
