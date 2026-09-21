@@ -90,9 +90,9 @@ describe("public launch scope SSOT", () => {
     const businessQueries = read("src/core/business/services/business.queries.ts");
     const spatial = read("src/core/geospatial/services/SpatialSearchService.ts");
 
-    expect(owner).toContain("getLaunchPausedBusinessCategoryIds");
-    expect(owner).toContain("const BUSINESS_CATEGORY_SURFACES");
-    expect(owner).toContain("= {};");
+    expect(owner).not.toContain("BUSINESS_CATEGORY_SURFACES");
+    expect(owner).not.toContain("isLaunchBusinessCategoryEnabled");
+    expect(owner).not.toContain("getLaunchPausedBusinessCategoryIds");
     expect(spatial).toContain("BusinessService.getLaunchVisibleBusinessProfileIds");
     expect(spatial).not.toContain(".from('public_business_search')");
     expect(businessQueries).toContain("launch-visible profile lookup failed");
