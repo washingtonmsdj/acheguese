@@ -1,4 +1,9 @@
-import { assertPrivacyDataExportEnabled, isPrivacyDataExportEnabled } from "@/core/privacy/config/privacyRollout";
+import {
+  assertPrivacyAccountDeletionEnabled,
+  assertPrivacyDataExportEnabled,
+  isPrivacyAccountDeletionEnabled,
+  isPrivacyDataExportEnabled,
+} from "@/core/privacy/config/privacyRollout";
 import { SessionService } from "@/core/session/services/SessionService";
 import { supabase } from "@/integrations/supabase";
 import { buildSupabaseFunctionUrl } from "@/shared/config/publicSupabase";
@@ -121,6 +126,10 @@ export class PrivacySettingsService {
 
   static isUserDataExportAvailable(): boolean {
     return isPrivacyDataExportEnabled();
+  }
+
+  static isAccountDeletionRequestAvailable(): boolean {
+    return isPrivacyAccountDeletionEnabled();
   }
 
   static async getUserConsents(userId: string): Promise<UserConsentRecord[]> {
@@ -290,6 +299,7 @@ export class PrivacySettingsService {
     accessToken: string;
     reason: string;
   }): Promise<{ days_until_purge: number }> {
+    assertPrivacyAccountDeletionEnabled();
     this.assertCurrentSessionAccessToken(input.accessToken);
 
     const reason = input.reason.trim();
