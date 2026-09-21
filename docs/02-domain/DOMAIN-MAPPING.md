@@ -23,10 +23,10 @@ Consolidação do domínio **Territory**. Nesta etapa **não há renomeação de
 | `TerritoryFeedPage.tsx` | — | ✅ Removido | Re-export sem caller; o owner runtime já era `core/community-feed/pages/ComunidadePage.tsx`. | — | Não recriar. |
 | `TerritoryUnavailablePage.tsx` | — | ✅ Removido | Re-export sem caller; misturava `coming_soon` territorial com kill-switch de módulo. | — | Não recriar. |
 | `PublicCityLandingPage.tsx` (+ `.css`) | — | ✅ Removido | Segunda Home sem caller runtime; removida em 2026-09-09. | — | Não recriar. |
-| `CidadeLandingPage.tsx` (+ `.css`, `*.sections.tsx`, `*.neighborhood-*.tsx`, `*.constants.ts`, `*.utils.ts`) | `TerritoryExplorerPage` (sections) | 🟨 Legado | Versão pré-Territory da landing de cidade. | Rotas legadas `/cidade/*`. | Mover partes reutilizáveis para `territory/sections/`; deprecar. |
+| `CidadeLandingPage.tsx` + família `CidadeLanding.*` | — | ✅ Removido | Shell pré-Territory sem responsabilidade no MVP modular. | — | Não recriar; Home/Business/Map/Nearby têm owners próprios. |
 | `LaunchPausedPage.tsx` | `LaunchPausedPage` | ✅ Canônico app-level | Kill-switch de superfícies fora do launch scope; não representa território `coming_soon`. | `launchScope` e factories de rota pausada. | Manter como owner único de módulo pausado. |
 | `ComunidadePage.tsx` (em `core/community-feed/pages`) | `ComunidadePage` | ✅ Canônico | Owner real da superfície Community/Feed territorial, incluindo deep-link de post. | `lazyImports`, `prefetch`, `TerritorialModulePages`. | Manter como implementação única. |
-| `EmpresasLandingPage.tsx`, `EmpresaDetailLandingPage.tsx` | `BusinessDirectoryPage`, `BusinessDetailPage` | 🟨 Legado (fora do domínio Territory) | Pertence ao domínio Business. | rotas `/empresas`. | Fora do escopo desta sprint. |
+| `EmpresasLandingPage.tsx`, `EmpresaDetailLandingPage.tsx` | superfícies públicas Business | ✅ Canônico no domínio Business | Pertence a Business e não ao domínio Territory. | rotas `/empresas`. | Territory fornece contexto; Business mantém ownership da entidade e URLs. |
 
 ---
 
