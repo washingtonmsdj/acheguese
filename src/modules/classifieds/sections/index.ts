@@ -5,10 +5,8 @@
 export { ClassifiedsHeroSection } from "./ClassifiedsHeroSection";
 export { ClassifiedsCategoriesSection } from "./ClassifiedsCategoriesSection";
 export { ClassifiedsFiltrosSection } from "./ClassifiedsFiltrosSection";
-export { ClassifiedsTrendingSection } from "./ClassifiedsTrendingSection";
-export { ClassifiedsPopularSection } from "./ClassifiedsPopularSection";
-export { ClassifiedsFeaturedSection } from "./ClassifiedsFeaturedSection";
-export { ClassifiedsSponsoredSection } from "./ClassifiedsSponsoredSection";
+export { ClassifiedsRecentSection } from "./ClassifiedsRecentSection";
+export { ClassifiedsCategorySampleSection } from "./ClassifiedsCategorySampleSection";
 export { ClassifiedsListagemSection } from "./ClassifiedsListagemSection";
 export { ClassifiedsFooterSection } from "./ClassifiedsFooterSection";
 
@@ -17,7 +15,6 @@ export type {
   ClassifiedsCategoriesSectionProps,
   ClassifiedsFiltrosSectionProps,
   ClassifiedsHorizontalSectionProps,
-  ClassifiedsSponsoredSectionProps,
   ClassifiedsListagemSectionProps,
   ClassifiedsFooterSectionProps,
 } from "./types";
