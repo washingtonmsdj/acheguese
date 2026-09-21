@@ -1,0 +1,62 @@
+name: Refresh Onboarding Visual Baselines
+
+on:
+  push:
+    branches:
+      - fix/mvp-keep-search-active
+    paths:
+      - ".github/workflows/refresh-onboarding-visual-baselines.yml"
+
+permissions:
+  contents: write
+
+concurrency:
+  group: refresh-onboarding-visual-baselines
+  cancel-in-progress: false
+
+jobs:
+  refresh:
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - name: Checkout branch
+        uses: actions/checkout@v6
+        with:
+          ref: fix/mvp-keep-search-active
+          fetch-depth: 0
+
+      - name: Setup Node 24
+        uses: actions/setup-node@v6
+        with:
+          node-version: "24"
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Install Chromium
+        run: npx playwright install --with-deps chromium
+
+      - name: Generate deterministic Linux baselines
+        env:
+          CI: "true"
+        run: >-
+          npx playwright test
+          tests/e2e/onboarding-visual-regression.spec.ts
+          tests/e2e/onboarding-visual-regression-tablet.spec.ts
+          tests/e2e/onboarding-visual-regression-desktop.spec.ts
+          --project=chromium
+          --update-snapshots
+
+      - name: Commit generated baselines
+        shell: bash
+        run: |
+          git add             tests/e2e/onboarding-visual-regression.spec.ts-snapshots/             tests/e2e/onboarding-visual-regression-tablet.spec.ts-snapshots/             tests/e2e/onboarding-visual-regression-desktop.spec.ts-snapshots/
+          if git diff --cached --quiet; then
+            echo "Visual baselines already current."
+            exit 0
+          fi
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git commit -m "test(visual): refresh deterministic onboarding baselines"
+          git push origin HEAD:fix/mvp-keep-search-active
