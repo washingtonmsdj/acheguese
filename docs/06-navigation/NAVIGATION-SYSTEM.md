@@ -2,9 +2,9 @@
 
 Status: **ATIVO / MVP 2026-09-21**
 
-Este documento descreve a navegação vigente. O lifecycle executável pertence a
-`src/app/config/productModuleRegistry.ts`; este documento não pode ativar uma
-superfície pausada.
+Este documento descreve a navegação vigente. O lifecycle executável é dividido
+entre `productModuleRegistry.ts` (domínios), `platformCapabilityRegistry.ts`
+(capabilities horizontais) e `lifecycleRegistry.ts` (avaliação).
 
 ## Objetivo
 
@@ -24,14 +24,17 @@ Destinos vigentes:
 3. **Empresas** — catálogo/lista Business;
 4. **Perto de mim** — proximidade Business; depende de Mapa + Empresas;
 5. **Busca** — descoberta textual restrita aos providers ativos;
-6. **Conta / Entrar** — infraestrutura de identidade.
+6. **Mensagens** — Inbox privada horizontal; Business é o provider ativo;
+7. **Conta / Entrar** — infraestrutura de identidade.
 
 Home e Conta são plataforma, não módulos adicionais do produto.
 
 ## Regras de lifecycle
 
-- `business`, `map`, `nearby` e `search` são os módulos ativos do MVP;
-- `nearby` depende formalmente de `map + business`;
+- `business` é o domínio de produto ativo;
+- `map`, `nearby`, `search` e `messaging` são capabilities horizontais ativas;
+- `nearby` depende de Map + Location + Business;
+- Messaging registra somente providers cujos domínios estão ativos; no MVP, Business;
 - Community, Gastronomia, Serviços, Classificados, Eventos, Vagas,
   Educação, Mobilidade e demais módulos pós-MVP não aparecem na navegação;
 - Search aparece como destino ativo, mas somente providers de superfícies ativas podem responder;
@@ -43,8 +46,9 @@ Home e Conta são plataforma, não módulos adicionais do produto.
 ## Mobile
 
 A bottom navigation deve consumir o mesmo registry e manter poucos destinos.
-No MVP, os destinos de produto são Mapa, Empresas, Perto de mim e Busca, além
-de Home e Conta.
+No MVP, a navegação combina o domínio Empresas com Mapa, Perto de mim e Busca.
+Mensagens fica acessível à sessão autenticada pela topbar/Conta e pelos CTAs de
+Business, sem exigir Community.
 
 Não reservar tabs para módulos pausados nem exibir teaser que pareça
 funcionalidade disponível.
@@ -90,7 +94,7 @@ lifecycle.
 
 ## Busca
 
-Busca é módulo ativo do MVP. Ela é um orquestrador e não um segundo owner de dados.
+Busca é capability horizontal ativa do MVP. Ela é um orquestrador e não um segundo owner de dados.
 
 Regras:
 - Business é provider ativo no corte atual;
@@ -121,6 +125,8 @@ hipótese de evolução, não o contrato vigente. Qualquer retomada deve:
 ## Referências
 
 - `src/app/config/productModuleRegistry.ts`;
+- `src/app/config/platformCapabilityRegistry.ts`;
+- `src/app/config/lifecycleRegistry.ts`;
 - `src/core/navigation/territoryNavigationModes.ts`;
 - `docs/03-architecture/PRODUCT_MODULE_LIFECYCLE.md`;
 - `docs/05-ux/HOME-SPEC.md`;
