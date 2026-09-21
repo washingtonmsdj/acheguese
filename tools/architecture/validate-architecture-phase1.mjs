@@ -28,6 +28,7 @@ const PHASE1_COMMANDS = [
   ["npm", ["run", "-s", "validate:architecture:governance", "--", "--json"]],
   ["npm", ["run", "-s", "validate:taxonomy"]],
   ["npm", ["run", "-s", "validate:docs-structure"]],
+  ["npm", ["run", "-s", "validate:workflow:references"]],
   ["npm", ["run", "-s", "validate:docs-live-links"]],
   ["npm", ["run", "-s", "validate:ssot"]],
   ["npm", ["run", "-s", "check:ssot"]],

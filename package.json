@@ -64,6 +64,7 @@
     "validate:architecture:incremental": "node tools/architecture/validate-architecture-boundaries-incremental.mjs",
     "validate:architecture:core-platform": "node tools/architecture/validate-core-platform-ownership.mjs",
     "validate:docs-structure": "tsx tools/architecture/validate-docs-structure.ts",
+    "validate:workflow:references": "node tools/architecture/validate-workflow-local-references.mjs",
     "validate:docs-live-links": "tsx tools/architecture/validate-doc-live-links.ts",
     "validate:migrations": "tsx tools/migrations/validate-supabase-migrations.ts",
     "validate:migrations:provenance": "node tools/migrations/validate-migration-provenance.mjs",

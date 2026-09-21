@@ -59,6 +59,7 @@ const REQUIRED_SCRIPTS = [
   'validate:architecture:incremental',
   'validate:architecture:core-platform',
   'validate:architecture:governance',
+  'validate:workflow:references',
   'validate:session-context',
   'validate:ssot',
   'validate:hardcodes',
@@ -308,6 +309,7 @@ runNpmScript('validate:taxonomy');
 runNpmScript('validate:architecture:incremental');
 runNpmScript('validate:architecture:core-platform');
 runNpmScript('validate:architecture:governance');
+runNpmScript('validate:workflow:references');
 runNpmScript('validate:session-context');
 runNpmScript('validate:ssot');
 runNpmScript('validate:hardcodes');
