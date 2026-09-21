@@ -114,23 +114,23 @@ interface SearchResultsViewModel {
 const FILTERS: FilterOption[] = (
   [
     { id: "all", label: "Todos", icon: Search },
-    { id: "communities", label: "Comunidades", icon: Users },
-    { id: "businesses", label: "Negócios", icon: Store },
-    { id: "professionals", label: "Serviços", icon: Wrench },
+    { id: "communities", label: "Comunidades", icon: Users, launchSurface: "community" },
+    { id: "businesses", label: "Negócios", icon: Store, launchSurface: "business" },
+    { id: "professionals", label: "Serviços", icon: Wrench, launchSurface: "services" },
     {
       id: "events",
       label: "Eventos",
       icon: CalendarDays,
       launchSurface: "events",
     },
-    { id: "classifieds", label: "Classificados", icon: Tag },
+    { id: "classifieds", label: "Classificados", icon: Tag, launchSurface: "classifieds" },
     {
       id: "opportunities",
       label: "Oportunidades",
       icon: BriefcaseBusiness,
       launchSurface: "jobs",
     },
-    { id: "posts", label: "Posts", icon: MessageSquare },
+    { id: "posts", label: "Posts", icon: MessageSquare, launchSurface: "community" },
   ] satisfies FilterOption[]
 ).filter(
   (filter) =>
@@ -395,6 +395,7 @@ export default function BuscaPage() {
         href: moduleUrls.services,
         icon: Wrench,
         tone: "bg-[hsl(var(--category-discussion)/0.14)] text-category-discussion",
+        surface: "services",
       },
       {
         label: "Gastronomia",
@@ -410,6 +411,7 @@ export default function BuscaPage() {
         href: moduleUrls.classifieds,
         icon: Tag,
         tone: "bg-[hsl(var(--category-classified)/0.15)] text-category-classified",
+        surface: "classifieds",
       },
       {
         label: "Eventos",
