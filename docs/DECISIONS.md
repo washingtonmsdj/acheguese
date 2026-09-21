@@ -68,9 +68,9 @@
 
 **Decisão:** todas as functions críticas validam JWT server-side e usam `getClaims` para role checking. `verify_jwt=true` no `config.toml`.
 
-## D-017 — Sitemap oficial gerado por tooling canônico
+## D-017 — Sitemap oficial é derivado do lifecycle do produto
 
-**Decisão:** `tools/release/generate-sitemap.ts` produz `public/sitemap.xml` a partir do território seed. Bairros `coming_soon` são incluídos apontando para `/interesse`.
+**Decisão:** `tools/release/generate-sitemap.ts` produz e o pipeline de release valida `public/sitemap.xml`. Rotas de módulos só entram quando a superfície correspondente está ativa no lifecycle; no MVP atual, o sitemap publica **Empresas + Mapa + Perto de mim** e não anuncia Community, Busca, Serviços, Classificados, Eventos ou outras superfícies pausadas. A Edge Function `sitemap` é somente um endpoint público de compatibilidade para o sitemap canônico e não mantém inventário de domínio próprio.
 
 ## D-018 — Voz de estados vazios / loading
 
