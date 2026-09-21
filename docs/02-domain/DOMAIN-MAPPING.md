@@ -1,6 +1,8 @@
-# DOMAIN-MAPPING.md — Sprint DOMAIN.1
+# DOMAIN-MAPPING.md — Territory / lifecycle atual
 
-Consolidação do domínio **Territory**. Nesta etapa **não há renomeação de arquivos, rotas ou imports**. Este documento é o SSOT conceitual do mapeamento entre nomes atuais e nomes canônicos.
+> **Atualizado em 2026-09-21.** Este documento descreve o mapeamento conceitual do domínio Territory, mas não possui autoridade para ativar módulo público. O lifecycle executável pertence a `src/app/config/productModuleRegistry.ts`.
+
+O MVP atual possui somente **Empresas + Mapa + Perto de mim** como módulos de produto ativos. Community, Search e demais capabilities pós-MVP permanecem `paused`.
 
 ## Legenda de status
 
@@ -25,7 +27,7 @@ Consolidação do domínio **Territory**. Nesta etapa **não há renomeação de
 | `PublicCityLandingPage.tsx` (+ `.css`) | — | ✅ Removido | Segunda Home sem caller runtime; removida em 2026-09-09. | — | Não recriar. |
 | `CidadeLandingPage.tsx` + família `CidadeLanding.*` | — | ✅ Removido | Shell pré-Territory sem responsabilidade no MVP modular. | — | Não recriar; Home/Business/Map/Nearby têm owners próprios. |
 | `LaunchPausedPage.tsx` | `LaunchPausedPage` | ✅ Canônico app-level | Kill-switch de superfícies fora do launch scope; não representa território `coming_soon`. | `launchScope` e factories de rota pausada. | Manter como owner único de módulo pausado. |
-| `ComunidadePage.tsx` (em `core/community-feed/pages`) | `ComunidadePage` | ✅ Canônico | Owner real da superfície Community/Feed territorial, incluindo deep-link de post. | `lazyImports`, `prefetch`, `TerritorialModulePages`. | Manter como implementação única. |
+| `ComunidadePage.tsx` (em `core/community-feed/pages`) | `ComunidadePage` | ⏸️ Owner preservado | Owner interno da capability Community/Feed. O módulo está `paused` no MVP e não integra navegação, prefetch ou superfície pública ativa. | lifecycle + contratos internos de Community. | Preservar para pós-MVP; reativar somente após certificação e mudança explícita no registry. |
 | `EmpresasLandingPage.tsx`, `EmpresaDetailLandingPage.tsx` | superfícies públicas Business | ✅ Canônico no domínio Business | Pertence a Business e não ao domínio Territory. | rotas `/empresas`. | Territory fornece contexto; Business mantém ownership da entidade e URLs. |
 
 ---
@@ -65,15 +67,19 @@ Consolidação do domínio **Territory**. Nesta etapa **não há renomeação de
 
 ---
 
-## 4. Rotas e URLs (não alterar nesta sprint — apenas classificar)
+## 4. Rotas e URLs vigentes
 
-| Padrão atual | Canônico futuro | Status | Notas |
-|--------------|-----------------|--------|-------|
-| `/inicio` | `/inicio` | ✅ Canônico | Selector. |
-| `/:uf/:city` | `/:uf/:city` | ✅ Canônico | Explorer. |
-| `/:uf/:city/:neighborhood` | `/:uf/:city/:neighborhood` | ✅ Canônico | Territory Home. |
-| `/comunidade/*` | `/:territory/comunidade` (subrota) | 🟦 Alias | Manter alias público. |
-| `/cidade/*` | `/:uf/:city` | 🟨 Legado | Redirecionar futuramente. |
+| Padrão | Estado | Notas |
+|--------|--------|-------|
+| `/` | ✅ Canônico | Entrada pública do MVP via `TerritoryEntryPage`. |
+| `/:uf/:city` | ✅ Canônico | Home territorial. |
+| `/:uf/:city/:neighborhood` | ✅ Canônico | Home territorial de bairro/grupo resolvido. |
+| `/empresas/:uf/:city[/:neighborhood]` | ✅ Ativo | Módulo Business. |
+| `/mapa/:uf/:city[/:neighborhood]` | ✅ Ativo | Módulo Map. |
+| `/perto-de-mim` | ✅ Ativo | Módulo Nearby; depende de Map + Business. |
+| `/inicio` | ⛔ Legado | Não é entrada canônica nem deve aparecer no sitemap do MVP. |
+| `/comunidade/*` | ⏸️ Pausado | Owner preservado, mas Community não é superfície pública ativa do MVP. |
+| `/cidade/*` | 🟨 Legado | Não criar redirect paliativo; compatibilidade só permanece com justificativa externa real. |
 
 ---
 
@@ -93,6 +99,6 @@ A partir desta sprint, novos módulos, componentes e tipos **não podem** introd
 
 1. **DOMAIN.2** — Introduzir re-exports `Territory = Location`, `TerritoryType = LocationType` em `core/location/index.ts`.
 2. **DOMAIN.3** — Fundir `core/territorial` em `core/location` sob o namespace `territory/`.
-3. **DOMAIN.4** — Continuar removendo aliases restantes; `AchegueSeHomePage`, `PublicCityLandingPage`, `TerritoryUnavailablePage` e `TerritoryFeedPage` já foram aposentados. `ComunidadePage` permanece owner canônico do feed.
+3. **DOMAIN.4** — Continuar removendo aliases restantes; `AchegueSeHomePage`, `PublicCityLandingPage`, `TerritoryUnavailablePage` e `TerritoryFeedPage` já foram aposentados. `ComunidadePage` permanece owner interno preservado, mas Community continua `paused` no MVP.
 4. **DOMAIN.5** — Redirecionar rotas legadas reais (`/cidade/*`) sem inventar aliases de indisponibilidade.
 5. **DOMAIN.6** — Deprecar `core/city`, `core/landing`, `core/community-*` movendo para subpastas canônicas.

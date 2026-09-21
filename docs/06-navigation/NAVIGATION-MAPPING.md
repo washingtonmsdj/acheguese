@@ -114,7 +114,7 @@ Regras adicionais:
 | Responsabilidade | Discussão completa de um post do território.                                                     |
 | Rotas            | `/comunidade/post/:postId` (e variantes territoriais existentes)                                 |
 | Arquivo canônico | (mantido no core — sem alias criado nesta etapa)                                                 |
-| Situação         | **Legado ativo** — nome canônico já é `PostPage` conceitualmente; nenhuma renomeação necessária. |
+| Situação         | **Owner preservado / Community pausada** — o detalhe de post não integra o MVP ativo e só volta após reativação formal do módulo. |
 
 ---
 
@@ -122,7 +122,7 @@ Regras adicionais:
 
 `LaunchPausedPage` é o owner canônico do **kill-switch de módulos**. Ele recebe `moduleName` e é renderizado pelos gates de `launchScope` quando uma superfície preservada está fora do lançamento.
 
-`CommunityInterestPage` é o owner do fluxo territorial **`coming_soon`** quando existe Community persistida e identidade territorial inequívoca. Esse caso segue D-008 e leva ao registro de interesse; não reutiliza o kill-switch de módulos.
+`CommunityInterestPage` permanece como owner preservado do fluxo **`coming_soon`** de Community, mas não integra o MVP enquanto Community estiver `paused`. Quando o módulo for reativado, esse fluxo continua separado do kill-switch de módulos e só pode operar com identidade territorial persistida e inequívoca.
 
 `TerritoryUnavailablePage` foi aposentada: era apenas um re-export sem caller e misturava dois estados de produto diferentes. Não existe rota pública `/territory/unavailable`.
 
