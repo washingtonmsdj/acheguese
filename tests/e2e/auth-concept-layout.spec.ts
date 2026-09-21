@@ -49,7 +49,7 @@ test.describe("Conta e acesso — contrato visual responsivo do concept", () => 
       page.getByRole("heading", { name: "Bom ter você por aqui." }),
     ).toBeVisible();
     await expect(page.getByText("Você voltará para", { exact: true })).toBeVisible();
-    await expect(page.getByText("Sabores da Ana", { exact: true })).toBeVisible();
+    await expect(page.getByText("Conversas", { exact: true })).toBeVisible();
     await expect(page.locator('img[src="/auth/login-hero.webp"]')).toBeHidden();
     await expect(page.getByRole("button", { name: "Entrar" })).toBeVisible();
     await expect(
@@ -155,7 +155,7 @@ test.describe("Conta e acesso — contrato visual responsivo do concept", () => 
       const hero = main.locator(`img[src="${current.asset}"]`);
       await expect(hero).toBeVisible();
       await expect(page.getByRole("heading", { name: current.heading })).toBeVisible();
-      await expect(page.getByText(current.cardHeading, { exact: true })).toBeVisible();
+      await expect(page.getByRole("heading", { name: current.cardHeading, exact: true })).toBeVisible();
 
       const sections = main.locator(":scope > section");
       await expect(sections).toHaveCount(2);
