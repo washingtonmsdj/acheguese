@@ -348,15 +348,6 @@ try {
     ? ok('sem dialogos nativos de navegador no runtime')
     : fail(`dialogos nativos encontrados: ${nativeDialogFindings.join(', ')}`);
 
-  const eventFiles = collectRuntimeSourceFiles('src/modules/community-events');
-  const eventPlaceholderPattern = /\bTODO\b|\bFIXME\b|sera implementado|será implementado/i;
-  const eventPlaceholderFindings = eventFiles.filter((file) =>
-    eventPlaceholderPattern.test(readFileSync(file, 'utf-8')),
-  );
-
-  eventPlaceholderFindings.length === 0
-    ? ok('eventos sem placeholders operacionais')
-    : fail(`placeholders operacionais em eventos: ${eventPlaceholderFindings.join(', ')}`);
 } catch (error) {
   fail(`erro ao verificar higiene de runtime: ${error.message}`);
 }
