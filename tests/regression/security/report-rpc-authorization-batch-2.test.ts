@@ -21,7 +21,14 @@ const signatures = [
   'moderate_ride_report(uuid, text, text, text)',
 ] as const;
 
-const normalizedMigration = migration.replace(/\s+/g, ' ').trim();
+const normalizeSql = (sql: string) =>
+  sql
+    .replace(/\s+/g, ' ')
+    .replace(/\(\s+/g, '(')
+    .replace(/\s+\)/g, ')')
+    .trim();
+
+const normalizedMigration = normalizeSql(migration);
 
 describe('regression: report RPC authorization batch 2', () => {
   it('keeps every report wrapper/helper authenticated-only in the migration', () => {
