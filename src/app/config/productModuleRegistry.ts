@@ -5,6 +5,7 @@ export type ProductModuleKey =
   | "map"
   | "nearby"
   | "search"
+  | "messaging"
   | "community"
   | "gastronomy"
   | "services"
@@ -38,6 +39,7 @@ export const PRODUCT_MODULE_REGISTRY: Record<
   map: { status: "active" },
   nearby: { status: "active", dependsOn: ["map", "business"] },
   search: { status: "active" },
+  messaging: { status: "paused" },
 
   community: { status: "paused" },
   gastronomy: { status: "paused", dependsOn: ["business"] },
