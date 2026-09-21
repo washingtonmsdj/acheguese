@@ -8,7 +8,7 @@ const read = (path: string) => readFileSync(resolve(root, path), "utf8");
 const routes = read("src/app/routes/sections/AppLayoutRoutes.tsx");
 const sidebar = read("src/app/components/AppLayoutSidebar.tsx");
 const account = read("src/modules/profile/pages/ContaHubPage.tsx");
-const messaging = read("src/modules/messaging/pages/MensagensPage.tsx");
+const messaging = read("src/modules/communication-territorial/pages/MensagensPage.tsx");
 const messagingHook = read(
   "src/core/messaging/hooks/useCommunityDirectMessages.ts",
 );
