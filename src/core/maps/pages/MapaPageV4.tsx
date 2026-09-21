@@ -373,6 +373,7 @@ function makeBusinessFetcher(territoryFilter: TerritoryFilter | undefined) {
           longitude: business.longitude,
           status: EntityStatus.ACTIVE,
           slug: business.slug ?? undefined,
+          url: business.canonical_url,
           is_premium: business.is_premium,
           is_verified: business.is_verified,
           rating: business.rating,
@@ -380,7 +381,7 @@ function makeBusinessFetcher(territoryFilter: TerritoryFilter | undefined) {
           map_layer_key: 'businesses',
         })),
         'business',
-        { includeMetadata: true, calculateScore: true, baseUrl: BUSINESS_MAP_BASE_URL },
+        { includeMetadata: true, calculateScore: true },
       );
     } catch {
       return [];
