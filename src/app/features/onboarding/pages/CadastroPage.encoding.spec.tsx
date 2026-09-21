@@ -32,6 +32,12 @@ vi.mock("@/core/auth/hooks/useAuth", () => ({
     googleAuthAvailable: false,
   }),
 }));
+vi.mock("@/core/session/hooks/useSessionContext", () => ({
+  useSessionContext: () => ({
+    user: null,
+    isLoading: false,
+  }),
+}));
 vi.mock("@/core/auth/services/AuthService", () => ({
   AuthService: { signUp: vi.fn() },
 }));
