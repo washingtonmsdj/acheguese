@@ -16,6 +16,7 @@ describe("MVP core module boundary", () => {
   const businessSections = read("src/modules/business/company/sections/index.ts");
   const businessSectionTypes = read("src/modules/business/company/sections/types.ts");
   const branchNetwork = read("src/core/business/components/BranchNetworkBlock.tsx");
+  const businessIndex = read("src/core/business/index.ts");
   const businessMapQuery = read("src/core/business/services/BusinessMapQueryService.ts");
   const mapBusinessAdapter = read("src/core/maps/services/MapBusinessLayerRuntimeService.ts");
   const map = read("src/core/maps/pages/MapaPageV4.tsx");
@@ -124,6 +125,8 @@ describe("MVP core module boundary", () => {
     expect(businessSectionTypes).not.toContain("EmpresaAvaliacoesSectionProps");
     expect(businessSectionTypes).not.toContain("ReviewCardProps");
     expect(businessSectionTypes).not.toContain("RatingDistributionProps");
+    expect(businessIndex).not.toContain("hasGastronomyProfile");
+    expect(businessIndex).not.toContain("gastronomy.queries");
   });
 
   it("keeps Map independent from paused product owners", () => {
@@ -208,6 +211,16 @@ describe("MVP core module boundary", () => {
     );
     expect(appRoutes).toContain(
       '"business",\n            "Empresas",\n            protectedElement(<P.EmpresasCadastroLandingPage />)',
+    );
+  });
+
+  it("keeps paused route prefetches fail-closed before loading chunks", () => {
+    const prefetch = read("src/app/routes/prefetch.ts");
+    expect(prefetch).toContain(
+      "if (candidate.surface && !isLaunchSurfaceEnabled(candidate.surface)) return;",
+    );
+    expect(prefetch).toContain(
+      ".filter((entry) => !entry.surface || isLaunchSurfaceEnabled(entry.surface))",
     );
   });
 
