@@ -4,6 +4,7 @@
  * Servico centralizado para os blocos de destaque da landing territorial.
  * Queries leves, limitadas, respeitando TerritoryFilter canonico.
  */
+import { getLaunchPausedBusinessCategoryIds } from "@/app/config/launchScope";
 import { logger } from "@/shared/utils/logger";
 import { supabase } from "@/integrations/supabase";
 import { applyTerritoryFilter } from "@/core/location/utils";
@@ -31,6 +32,7 @@ type LandingQuery<TRow> = PromiseLike<LandingQueryPayload<TRow>> & {
   in(column: string, values: string[]): LandingQuery<TRow>;
   limit(value: number): LandingQuery<TRow>;
   not(column: string, operator: string, value: unknown): LandingQuery<TRow>;
+  or(filters: string): LandingQuery<TRow>;
   order(column: string, options?: { ascending?: boolean }): LandingQuery<TRow>;
   select(
     columns?: string,
@@ -44,6 +46,17 @@ type LandingDbClient = {
 
 const landingDb = supabase as unknown as LandingDbClient;
 const GASTRONOMY_LINK_CANDIDATE_MULTIPLIER = 6;
+
+function applyLaunchBusinessCategoryExclusion<TRow>(
+  query: LandingQuery<TRow>,
+): LandingQuery<TRow> {
+  const pausedBusinessCategories = getLaunchPausedBusinessCategoryIds();
+  if (pausedBusinessCategories.length === 0) return query;
+
+  return query.or(
+    `category.is.null,category.not.in.(${pausedBusinessCategories.join(",")})`,
+  );
+}
 
 export interface FeaturedBusiness {
   id: string;
@@ -346,6 +359,7 @@ export class LandingFeaturedService {
         .order("created_at", { ascending: false })
         .limit(limit);
 
+      query = applyLaunchBusinessCategoryExclusion(query);
       query = applyTerritoryFilter(query, filter);
 
       const { data, error } = await query;
@@ -381,13 +395,16 @@ export class LandingFeaturedService {
     }
 
     try {
-      const { data, error } = await landingDb
+      let query = landingDb
         .from<FeaturedBusinessRow>("business_data")
         .select(
           "id, profile_id, business_name, category, metadata, rating, is_premium, is_verified, slug, location:locations!location_id(geographic_path), owner_profile:profiles!business_data_profile_id_fkey(display_name, name, username)",
         )
         .eq("status", "active")
         .in("id", linkedIds);
+
+      query = applyLaunchBusinessCategoryExclusion(query);
+      const { data, error } = await query;
 
       if (error) {
         logger.warn(
@@ -756,6 +773,7 @@ export class LandingFeaturedService {
             .select("id", { count: "exact", head: true })
             .eq("status", "active")
             .not("location_id", "is", null);
+          query = applyLaunchBusinessCategoryExclusion(query);
           query = applyTerritoryFilter(query, filter);
           return query;
         })(),
