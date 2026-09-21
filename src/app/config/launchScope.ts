@@ -1,3 +1,5 @@
+import { isProductModuleEnabled } from "./productModuleRegistry";
+
 type PublicEnv = Partial<Record<string, string>>;
 
 const publicEnv = ((import.meta as ImportMeta & { env?: PublicEnv }).env ?? {}) as PublicEnv;
@@ -34,30 +36,30 @@ export type LaunchSurfaceKey =
 
 export const PUBLIC_LAUNCH_SURFACES: Record<LaunchSurfaceKey, boolean> = {
   home: true,
-  community: true,
-  business: true,
-  billing: false,
-  gastronomy: false,
-  services: false,
-  classifieds: true,
-  touristPoints: false,
-  map: false,
-  nearby: false,
+  community: isProductModuleEnabled("community"),
+  business: isProductModuleEnabled("business"),
+  billing: isProductModuleEnabled("billing"),
+  gastronomy: isProductModuleEnabled("gastronomy"),
+  services: isProductModuleEnabled("services"),
+  classifieds: isProductModuleEnabled("classifieds"),
+  touristPoints: isProductModuleEnabled("touristPoints"),
+  map: isProductModuleEnabled("map"),
+  nearby: isProductModuleEnabled("nearby"),
   search: true,
-  education: false,
-  jobs: false,
-  events: false,
-  communityEventsPreview: false,
-  communication: false,
-  mobility: false,
-  coupons: false,
-  gamification: false,
-  publicAnalytics: false,
-  communityAlerts: false,
-  communityIssues: false,
-  communityLostFound: false,
-  communityCommunication: false,
-  familySafety: false,
+  education: isProductModuleEnabled("education"),
+  jobs: isProductModuleEnabled("jobs"),
+  events: isProductModuleEnabled("events"),
+  communityEventsPreview: isProductModuleEnabled("events"),
+  communication: isProductModuleEnabled("communication"),
+  mobility: isProductModuleEnabled("mobility"),
+  coupons: isProductModuleEnabled("coupons"),
+  gamification: isProductModuleEnabled("gamification"),
+  publicAnalytics: isProductModuleEnabled("publicAnalytics"),
+  communityAlerts: isProductModuleEnabled("communityAlerts"),
+  communityIssues: isProductModuleEnabled("communityIssues"),
+  communityLostFound: isProductModuleEnabled("communityLostFound"),
+  communityCommunication: isProductModuleEnabled("communityCommunication"),
+  familySafety: isProductModuleEnabled("familySafety"),
 };
 
 const NAV_ITEM_SURFACES: Partial<Record<string, LaunchSurfaceKey>> = {
