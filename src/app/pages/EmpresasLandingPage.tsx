@@ -2,7 +2,6 @@ import { useCallback, useMemo, useState } from "react";
 import { Helmet } from "react-helmet-async";
 import { Link, useNavigate } from "react-router-dom";
 import { CircleUserRound, MapPin, Search, SlidersHorizontal, UserRoundPlus } from "lucide-react";
-import { isLaunchBusinessCategoryEnabled } from "@/app/config/launchScope";
 import { TERRITORY_CONFIG } from "@/core/routing/config/territory";
 import { useAuth } from "@/core/auth/hooks/useAuth";
 import { useBusinessList } from "@/modules/business/hooks/useBusinessList";
@@ -276,13 +275,7 @@ export default function EmpresasLandingPage({
   });
 
   const businessesToShow = useMemo(() => {
-    const normalizedBusinesses = realBusinesses
-      .map(normalizeRealBusinessEntry)
-      .filter((business) =>
-        isLaunchBusinessCategoryEnabled(
-          normalizeBusinessCategoryId(business.category),
-        ),
-      );
+    const normalizedBusinesses = realBusinesses.map(normalizeRealBusinessEntry);
 
     if (sortBy === "distance" && nearbyBusinesses?.length) {
       const distanceByBusinessId = new Map(
