@@ -1,49 +1,25 @@
-import {
-  isPlatformCapabilityEnabled,
-  isProductModuleEnabled,
-} from "@/app/config/lifecycleRegistry";
 import type {
   MessagingInboxProvider,
   MessagingProviderId,
 } from "../inboxTypes";
 import { businessMessagingProvider } from "./BusinessMessagingProvider";
 
-type MessagingProviderDefinition = {
-  provider: MessagingInboxProvider;
-  isDomainEnabled: () => boolean;
-};
-
-const MESSAGING_PROVIDER_REGISTRY: Record<
-  MessagingProviderId,
-  MessagingProviderDefinition | null
+const MESSAGING_PROVIDER_REGISTRY: Partial<
+  Record<MessagingProviderId, MessagingInboxProvider>
 > = {
-  business: {
-    provider: businessMessagingProvider,
-    isDomainEnabled: () => isProductModuleEnabled("business"),
-  },
-  classifieds: null,
-  community: null,
+  business: businessMessagingProvider,
 };
 
 export function getMessagingProvider(
   providerId: MessagingProviderId,
 ): MessagingInboxProvider | null {
-  if (!isPlatformCapabilityEnabled("messaging")) return null;
-
-  const definition = MESSAGING_PROVIDER_REGISTRY[providerId];
-  if (!definition || !definition.isDomainEnabled()) return null;
-  return definition.provider;
+  return MESSAGING_PROVIDER_REGISTRY[providerId] ?? null;
 }
 
-export function getActiveMessagingProviders(): MessagingInboxProvider[] {
-  if (!isPlatformCapabilityEnabled("messaging")) return [];
-
-  return Object.values(MESSAGING_PROVIDER_REGISTRY)
-    .filter(
-      (definition): definition is MessagingProviderDefinition =>
-        Boolean(definition) && definition.isDomainEnabled(),
-    )
-    .map((definition) => definition.provider);
+export function getRegisteredMessagingProviders(): MessagingInboxProvider[] {
+  return Object.values(MESSAGING_PROVIDER_REGISTRY).filter(
+    (provider): provider is MessagingInboxProvider => Boolean(provider),
+  );
 }
 
 export function isMessagingProviderId(
