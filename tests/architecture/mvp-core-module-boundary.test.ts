@@ -7,6 +7,8 @@ const read = (path: string) => readFileSync(resolve(root, path), "utf8");
 
 describe("MVP core module boundary", () => {
   const registry = read("src/app/config/productModuleRegistry.ts");
+  const platformRegistry = read("src/app/config/platformCapabilityRegistry.ts");
+  const lifecycleRegistry = read("src/app/config/lifecycleRegistry.ts");
   const launchScope = read("src/app/config/launchScope.ts");
   const entry = read("src/app/pages/TerritoryEntryPage.tsx");
   const home = read("src/app/pages/TerritoryHomePage.tsx");
@@ -33,22 +35,35 @@ describe("MVP core module boundary", () => {
   const heavyExactShaWorkflow = read(".github/workflows/certify-heavy.yml");
   const previewE2eRunner = read("tools/release/run-preview-e2e.ps1");
 
-  it("keeps lifecycle ownership centralized and Nearby dependent on Map + Business", () => {
+  it("keeps domain modules separate from horizontal platform capabilities", () => {
     expect(registry).toContain('business: { status: "active" }');
-    expect(registry).toContain('map: { status: "active" }');
-    expect(registry).toContain(
-      'nearby: { status: "active", dependsOn: ["map", "business"] }',
-    );
-    expect(registry).toContain('search: { status: "active" }');
+    expect(registry).not.toContain('| "search"');
+    expect(registry).not.toContain('| "messaging"');
+    expect(registry).not.toContain('| "map"');
+    expect(registry).not.toContain('| "nearby"');
     expect(registry).toContain('community: { status: "paused" }');
     expect(registry).toContain('classifieds: { status: "paused" }');
+
+    expect(platformRegistry).toContain('| "map"');
+    expect(platformRegistry).toContain('| "nearby"');
+    expect(platformRegistry).toContain('| "search"');
+    expect(platformRegistry).toContain('| "messaging"');
+    expect(platformRegistry).toContain('dependsOnProductModules: ["business"]');
+    expect(lifecycleRegistry).toContain("isProductModuleEnabled");
+    expect(lifecycleRegistry).toContain("isPlatformCapabilityEnabled");
 
     expect(launchScope).toContain(
       'business: isProductModuleEnabled("business")',
     );
-    expect(launchScope).toContain('map: isProductModuleEnabled("map")');
-    expect(launchScope).toContain('nearby: isProductModuleEnabled("nearby")');
-    expect(launchScope).toContain('search: isProductModuleEnabled("search")');
+    expect(launchScope).toContain(
+      'map: isPlatformCapabilityEnabled("map")',
+    );
+    expect(launchScope).toContain(
+      'nearby: isPlatformCapabilityEnabled("nearby")',
+    );
+    expect(launchScope).toContain(
+      'search: isPlatformCapabilityEnabled("search")',
+    );
   });
 
   it("keeps the public entry pointed only at the MVP core", () => {
