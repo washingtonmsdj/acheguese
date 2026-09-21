@@ -119,7 +119,7 @@ test.describe("Auth concept capture", () => {
       waitUntil: "domcontentloaded",
     });
     await expect(
-      page.getByText("Vamos ajudar você a voltar.", { exact: true }),
+      page.getByRole("heading", { name: /Vamos ajudar\s*você a voltar\./ }),
     ).toBeVisible();
     await capture(page, "desktop-recovery-request.png");
 
