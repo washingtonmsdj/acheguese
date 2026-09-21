@@ -50,7 +50,7 @@ describe("email confirmation callback contract", () => {
 
     expect(login).toContain("const isBusy =");
     expect(login).toContain("pendingAction !== null ||\n    emailConfirmationSettling;");
-    expect((login.match(/if \(sessionLoading \|\| user\) return;/g) ?? []).length).toBeGreaterThanOrEqual(2);
+    expect(login).toContain("sessionLoading || user || authActionInFlightRef.current");
     expect(login).toContain("disabled={isBusy}");
     expect(login).toContain("disabled={isBusy || !turnstile.isReady}");
   });
