@@ -1,4 +1,5 @@
 name: Refresh Onboarding Linux Baselines
+# one-shot: canonicalize Linux snapshots for PR #292
 
 on:
   push:
