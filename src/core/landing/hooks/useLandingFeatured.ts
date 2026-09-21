@@ -85,7 +85,7 @@ export function useLandingFeatured(
             featuredLimit,
           )
         : svc.getFeaturedClassifieds(filter, featuredLimit),
-    enabled,
+    enabled: enabled && isLaunchSurfaceEnabled("classifieds"),
     staleTime: STALE_TIME,
   });
 
