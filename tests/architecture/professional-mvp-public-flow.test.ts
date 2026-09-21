@@ -13,6 +13,11 @@ describe("MVP Professional public flow", () => {
   );
   const serviceUrls = read("src/core/professional/hooks/useServiceUrls.ts");
   const queries = read("src/core/professional/services/professional.queries.ts");
+  const centralModel = read("src/modules/central/pages/CentralProfissionalPage.model.ts");
+  const profileServices = read("src/modules/profile/components/UserServicesSection.tsx");
+  const searchProviders = read("src/core/search/providers/searchProviders.ts");
+  const mapServices = read("src/core/maps/services/MapServicesLayerRuntimeService.ts");
+  const mapProjection = read("src/core/maps/services/MapEntityProjectionService.ts");
   const probe = read(
     "tests/security/professional-mvp-public-flow-remote-probe.sql",
   );
@@ -39,6 +44,12 @@ describe("MVP Professional public flow", () => {
     expect(serviceUrls).not.toContain("?? listUrl");
     expect(serviceUrls).not.toContain('typeof target === "string"');
     expect(landing).toContain("if (!detailUrl) return;");
+    expect(centralModel).not.toContain("professionalPublicRoutes.home()");
+    expect(profileServices).not.toContain("professionalPublicRoutes.home()");
+    expect(searchProviders).toContain("if");
+    expect(searchProviders).toContain("target_url: targetUrl");
+    expect(mapServices).toContain("if (!url) return [];");
+    expect(mapProjection).toContain("if (!publicUrl) return null;");
     expect(queries).toContain(
       '.from<ProfessionalQueryRow>("public_professional_search")',
     );
