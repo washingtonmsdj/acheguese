@@ -1,7 +1,4 @@
-import {
-  isProductModuleEnabled,
-  type ProductModuleKey,
-} from "./productModuleRegistry";
+import type { ProductModuleKey } from "./productModuleRegistry";
 
 export type PlatformCapabilityStatus = "active" | "paused";
 
@@ -25,10 +22,7 @@ export interface PlatformCapabilityLifecycle {
 }
 
 /**
- * Horizontal product infrastructure.
- *
- * These capabilities are not business domains. They can serve multiple
- * product modules and therefore have an independent lifecycle.
+ * Horizontal capabilities that can serve multiple product modules.
  */
 export const PLATFORM_CAPABILITY_REGISTRY: Record<
   PlatformCapabilityKey,
@@ -63,41 +57,3 @@ export const PLATFORM_CAPABILITY_REGISTRY: Record<
     dependsOnProductModules: ["business"],
   },
 };
-
-function isEnabled(
-  capability: PlatformCapabilityKey,
-  visiting: ReadonlySet<PlatformCapabilityKey>,
-): boolean {
-  if (visiting.has(capability)) return false;
-
-  const config = PLATFORM_CAPABILITY_REGISTRY[capability];
-  if (config.status !== "active") return false;
-
-  const next = new Set(visiting);
-  next.add(capability);
-
-  const capabilityDependencies = config.dependsOnCapabilities ?? [];
-  if (
-    !capabilityDependencies.every((dependency) =>
-      isEnabled(dependency, next),
-    )
-  ) {
-    return false;
-  }
-
-  return (config.dependsOnProductModules ?? []).every(
-    isProductModuleEnabled,
-  );
-}
-
-export function isPlatformCapabilityEnabled(
-  capability: PlatformCapabilityKey,
-): boolean {
-  return isEnabled(capability, new Set());
-}
-
-export function getActivePlatformCapabilities(): PlatformCapabilityKey[] {
-  return (
-    Object.keys(PLATFORM_CAPABILITY_REGISTRY) as PlatformCapabilityKey[]
-  ).filter(isPlatformCapabilityEnabled);
-}
