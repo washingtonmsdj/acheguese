@@ -4,7 +4,7 @@
 >
 > Lifecycle: `src/app/config/productModuleRegistry.ts`.
 >
-> Estado atual: `map=true`, `nearby=true`, `business=true`, `search=true`, `billing=false`, `gastronomy=false`, `services=false`, `touristPoints=false`, `education=false`, `jobs=false`, `events=false`, `communityEventsPreview=false`, `communication=false`, `mobility=false`, `coupons=false`, `gamification=false`, `communityCommunication=false`.
+> Estado atual: `map=true`, `nearby=true`, `business=true`, `search=true`, `billing=false`, `gastronomy=false`, `services=false`, `touristPoints=false`, `education=false`, `jobs=false`, `events=false`, `communityEventsPreview=false`, `communication=false`, `messaging=false`, `mobility=false`, `coupons=false`, `gamification=false`, `communityCommunication=false`.
 
 ## Módulos ativos
 
@@ -51,6 +51,17 @@ No MVP:
 
 Auth/Conta, território, roteamento, localização, sessão, segurança, storage e observabilidade continuam disponíveis quando necessários aos quatro módulos.
 
+## Mensagens — arquitetura pós-MVP
+
+`messaging=false` no release atual, mas o boundary é horizontal:
+
+- `src/core/messaging` contém contratos e serviços;
+- `src/modules/messaging` contém a UI geral de Inbox/Chat;
+- Classificados e Community mantêm agregados próprios;
+- Business e futuros domínios poderão fornecer adapters próprios;
+- a Inbox não pertence a Community nem a Comunicação Territorial;
+- não existe obrigação de uma tabela/serviço monolítico para todos os tipos de conversa.
+
 ## Pós-MVP
 
 Os módulos abaixo permanecem preservados, mas não integram o release atual:
@@ -63,7 +74,8 @@ Os módulos abaixo permanecem preservados, mas não integram o release atual:
 - Educação;
 - Vagas/Oportunidades;
 - Eventos;
-- Comunicação/Mensagens;
+- Comunicação territorial;
+- Mensagens/Inbox horizontal;
 - Mobilidade;
 - Cupons;
 - Gamificação;
