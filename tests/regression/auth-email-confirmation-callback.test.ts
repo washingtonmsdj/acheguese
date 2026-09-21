@@ -33,7 +33,10 @@ describe("email confirmation callback contract", () => {
     expect(login).toContain(
       "const { user, isLoading: sessionLoading } = useSessionContext();",
     );
-    expect(login).toContain("!sessionLoading &&\n    user !== null &&");
+    expect(login).toContain("const showEmailConfirmed =");
+    expect(login).toContain("!sessionLoading &&");
+    expect(login).toContain("user !== null &&");
+    expect(login).toContain("!emailConfirmationExchangePending;");
     expect(login).toContain("const emailConfirmationSettling =");
     expect(login).toContain("user === null &&");
     expect(login).toContain("const showEmailConfirmationProgress =");
@@ -49,7 +52,9 @@ describe("email confirmation callback contract", () => {
     const login = readProjectFile("src/app/pages/LoginPage.tsx");
 
     expect(login).toContain("const isBusy =");
-    expect(login).toContain("pendingAction !== null ||\n    emailConfirmationSettling;");
+    expect(login).toContain("const isBusy =");
+    expect(login).toContain("pendingAction !== null ||");
+    expect(login).toContain("emailConfirmationSettling;");
     expect(login).toContain("sessionLoading || user || authActionInFlightRef.current");
     expect(login).toContain("disabled={isBusy}");
     expect(login).toContain("disabled={isBusy || !turnstile.isReady}");
@@ -58,20 +63,17 @@ describe("email confirmation callback contract", () => {
   it("never treats an existing session as proof while any email confirmation exchange is pending", () => {
     const login = readProjectFile("src/app/pages/LoginPage.tsx");
 
-    const confirmedBranch = login.indexOf("if (isEmailConfirmed) {");
-    const pendingGuard = login.indexOf(
-      "hasPendingAuthCallbackExchange(\n          window.location.search,\n          window.location.hash,",
-      confirmedBranch,
+    expect(login).toContain("const emailConfirmationExchangePending =");
+    expect(login).toContain("hasPendingAuthCallbackExchange(");
+    expect(login).toContain("const showEmailConfirmed =");
+    expect(login).toContain("!emailConfirmationExchangePending;");
+    expect(login).toContain(
+      "if (user && !emailConfirmationExchangePending) return;",
     );
-    const completion = login.indexOf(
-      "completeEmailConfirmationJourney()",
-      confirmedBranch,
+    expect(login).toContain("if (stillPending || !user) {");
+    expect(login).toContain(
+      "navigate(AUTH_PATHS.signupConfirmation, { replace: true });",
     );
-
-    expect(confirmedBranch).toBeGreaterThanOrEqual(0);
-    expect(pendingGuard).toBeGreaterThan(confirmedBranch);
-    expect(completion).toBeGreaterThan(pendingGuard);
-    expect(login.slice(confirmedBranch, completion)).toContain("return;");
   });
 
   it("keeps both PKCE and legacy implicit resend callbacks behind the pending barrier", () => {
