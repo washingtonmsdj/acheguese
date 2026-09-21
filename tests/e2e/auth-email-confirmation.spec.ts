@@ -3,7 +3,7 @@ import { expect, test } from "@playwright/test";
 import { seedAuthFlowState } from "./helpers/authFlowState";
 
 const SIGNUP_EMAIL = "moradora@example.com";
-const RETURN_PATH = "/mensagens/sabores-da-ana";
+const RETURN_PATH = "/mensagens/business/44444444-4444-4444-8444-444444444444";
 
 test.describe("confirmação de e-mail — recuperação de callback", () => {
   test.beforeEach(async ({ page }) => {
