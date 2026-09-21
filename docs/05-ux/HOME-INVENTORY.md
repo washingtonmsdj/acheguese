@@ -2,7 +2,7 @@
 
 > **MVP atual:** **Empresas + Mapa + Perto de mim + Busca**.
 >
-> Flags do corte: `map=true`, `nearby=true`, `business=true`, `search=true`, `billing=false`, `gastronomy=false`, `services=false`, `touristPoints=false`, `education=false`, `jobs=false`, `events=false`, `communityEventsPreview=false`, `communication=false`, `messaging=false`, `mobility=false`, `coupons=false`, `gamification=false`, `communityCommunication=false`.
+> Flags do corte: `map=true`, `nearby=true`, `business=true`, `search=true`, `billing=false`, `gastronomy=false`, `services=false`, `touristPoints=false`, `education=false`, `jobs=false`, `events=false`, `communityEventsPreview=false`, `communication=false`, `messaging=true`, `mobility=false`, `coupons=false`, `gamification=false`, `communityCommunication=false`.
 
 ## Papel da Home
 
