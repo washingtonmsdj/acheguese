@@ -443,9 +443,11 @@ export const RankingPage = createLaunchPausedRoute("Ranking");
 
 // ============================================================
 // MENSAGENS E CHAT
+// Horizontal Inbox remains lifecycle-paused until a provider-based UI is
+// certified. Community-specific messaging is not used as the global Inbox.
 // ============================================================
-export const MensagensPage = lazy(() => import("@/modules/messaging/pages/MensagensPage"));
-export const ChatPage = lazy(() => import("@/modules/messaging/pages/MensagensPage"));
+export const MensagensPage = createLaunchPausedRoute("Mensagens");
+export const ChatPage = createLaunchPausedRoute("Mensagens");
 
 // ============================================================
 // MAPAS E GEOLOCALIZACAO
