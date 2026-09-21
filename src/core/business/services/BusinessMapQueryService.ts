@@ -2,6 +2,7 @@ import { BusinessUrlService } from "./BusinessUrlService";
 import { applyTerritoryFilter } from "@/core/location";
 import type { TerritoryFilter } from "@/core/location/types";
 import { supabase } from "@/integrations/supabase";
+import { PUBLIC_READ_LIMITS } from "@/shared/config/publicReadLimits";
 import { logger } from "@/shared/utils/logger";
 
 type ErrorLike = { message?: string | null; code?: string | null } | null;
@@ -26,9 +27,6 @@ type BusinessMapDbClient = {
 };
 
 const businessMapDb = supabase as unknown as BusinessMapDbClient;
-
-const DEFAULT_BUSINESS_MAP_LIMIT = 100;
-const MAX_BUSINESS_MAP_LIMIT = 200;
 
 export type BusinessGeoBounds = readonly [
   west: number,
@@ -83,8 +81,8 @@ function validateBounds(bounds: BusinessGeoBounds): void {
 }
 
 function normalizeLimit(value: number | undefined): number {
-  if (!Number.isFinite(value) || value == null) return DEFAULT_BUSINESS_MAP_LIMIT;
-  return Math.max(1, Math.min(MAX_BUSINESS_MAP_LIMIT, Math.trunc(value)));
+  if (!Number.isFinite(value) || value == null) return PUBLIC_READ_LIMITS.MAP_DEFAULT;
+  return Math.max(1, Math.min(PUBLIC_READ_LIMITS.MAP_MAX, Math.trunc(value)));
 }
 
 function firstLocation(
