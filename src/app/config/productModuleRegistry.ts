@@ -37,7 +37,7 @@ export const PRODUCT_MODULE_REGISTRY: Record<
   business: { status: "active" },
   map: { status: "active" },
   nearby: { status: "active", dependsOn: ["map", "business"] },
-  search: { status: "paused" },
+  search: { status: "active" },
 
   community: { status: "paused" },
   gastronomy: { status: "paused", dependsOn: ["business"] },
