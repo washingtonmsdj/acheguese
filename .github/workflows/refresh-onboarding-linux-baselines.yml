@@ -1,0 +1,60 @@
+name: Refresh Onboarding Linux Baselines
+
+on:
+  push:
+    branches:
+      - fix/mvp-keep-search-active
+    paths:
+      - ".github/workflows/refresh-onboarding-linux-baselines.yml"
+
+permissions:
+  contents: write
+
+concurrency:
+  group: refresh-onboarding-linux-baselines
+  cancel-in-progress: false
+
+jobs:
+  refresh:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - name: Checkout branch
+        uses: actions/checkout@v4
+        with:
+          ref: fix/mvp-keep-search-active
+          fetch-depth: 0
+
+      - name: Setup Node 24
+        uses: actions/setup-node@v4
+        with:
+          node-version: "24"
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Install Chromium
+        run: npx playwright install --with-deps chromium
+
+      - name: Generate canonical Linux snapshots
+        run: >
+          npx playwright test
+          tests/e2e/onboarding-visual-regression.spec.ts
+          tests/e2e/onboarding-visual-regression-tablet.spec.ts
+          tests/e2e/onboarding-visual-regression-desktop.spec.ts
+          --project=chromium
+          --update-snapshots
+
+      - name: Commit generated Linux baselines
+        shell: bash
+        run: |
+          if git diff --quiet -- 'tests/e2e/*-snapshots/*.png'; then
+            echo "Visual baselines already current"
+            exit 0
+          fi
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add 'tests/e2e/*-snapshots/*.png'
+          git commit -m "test(visual): add canonical Linux onboarding baselines"
+          git push origin HEAD:fix/mvp-keep-search-active
