@@ -17,9 +17,9 @@ describe("public federated search route", () => {
     const appUrls = readProjectFile("src/core/routing/hooks/useAppUrls.ts");
     const jsonLd = readProjectFile("src/shared/utils/seo/jsonLd.ts");
 
-    expect(sidebar).toContain("buildModuleTerritoryUrl(MODULE_SLUGS.search");
-    expect(sidebar).not.toContain("`/buscar${activeCityBase}`");
-    expect(sidebar).not.toContain("`/buscar/${communityContext.state}");
+    expect(navigationModes).toContain("buildModuleTerritoryUrl(MODULE_SLUGS.search");
+    expect(navigationModes).not.toContain("`/buscar${activeCityBase}`");
+    expect(navigationModes).not.toContain("`/buscar/${communityContext.state}");
     expect(navigationConfig).toContain("href: '/busca'");
     expect(appUrls).toContain("search: buildModuleTerritoryUrl(MODULE_SLUGS.search, cityBase)");
     expect(jsonLd).toContain("/busca?q={search_term_string}");
