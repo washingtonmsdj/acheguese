@@ -5,7 +5,7 @@ import { expect, test, type Page } from "@playwright/test";
 import { seedAuthFlowState } from "./helpers/authFlowState";
 
 const OUTPUT_DIR = resolve(process.cwd(), "auth-concept-captures");
-const RETURN_PATH = "/mensagens/sabores-da-ana";
+const RETURN_PATH = "/mensagens/business/44444444-4444-4444-8444-444444444444";
 mkdirSync(OUTPUT_DIR, { recursive: true });
 
 async function prepare(page: Page) {
