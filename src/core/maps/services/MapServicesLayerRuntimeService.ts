@@ -119,6 +119,7 @@ class MapServicesLayerRuntimeService {
           slug: row.slug,
           geographic_path: row.geographic_path,
         });
+        if (!url) return [];
 
         return [{
           id: `service-${row.id}`,
