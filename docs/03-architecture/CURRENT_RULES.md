@@ -156,7 +156,7 @@ Regra: este documento não replica lifecycle, tabelas, RPCs ou allowlists desses
 
 ## 7. Roteamento, rollout e território
 
-- Território é contexto geográfico raiz da experiência pública. No MVP vigente, ele serve de plataforma para **Empresas + Mapa + Perto de mim** e não implica ativação de Community ou de qualquer outro módulo pausado.
+- Território é contexto geográfico raiz da experiência pública. No MVP vigente, ele serve de plataforma para **Empresas + Mapa + Perto de mim + Busca** e não implica ativação de Community ou de qualquer outro módulo pausado.
 - entidade pública possui namespace canônico único; alias legado não cria segunda superfície oficial.
 - contexto `/comunidade/...` é explícito e não deve sequestrar automaticamente uma URL pública de entidade.
 - contexto de lançamento da `/` vem de `TERRITORY_CONFIG`/`LAUNCH_URLS`; a entrada não cria segundo owner local de estado, cidade, slug ou nome do território de launch.
