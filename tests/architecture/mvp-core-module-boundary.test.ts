@@ -219,6 +219,9 @@ describe("MVP core module boundary", () => {
     expect(prefetch).toContain(
       "if (candidate.surface && !isLaunchSurfaceEnabled(candidate.surface)) return;",
     );
+    expect(prefetch).toContain('APP_MODULE_SLUGS.nearby');
+    expect(prefetch).toContain('surface: "nearby"');
+    expect(prefetch).toContain('import("@/core/nearby/pages/NearbyPage")');
     expect(prefetch).toContain("IDLE_WARMUP_ROUTES.filter(");
     expect(prefetch).toContain(
       "(entry) => !entry.surface || isLaunchSurfaceEnabled(entry.surface)",
