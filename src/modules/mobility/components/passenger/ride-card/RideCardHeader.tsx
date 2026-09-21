@@ -2,7 +2,7 @@ import { Car, Package } from "lucide-react";
 
 import { Badge } from "@/shared/components/ui/badge";
 import { cn } from "@/shared/utils/cn";
-import { StatusBadge } from "../../StatusBadge";
+import { StatusBadge } from "@/core/mobility/components/StatusBadge";
 
 interface RideCardHeaderProps {
   status: string;
