@@ -8,8 +8,6 @@
 import type { NavigateFunction } from "react-router-dom";
 import type { AuthUser } from "@/core/auth/services/types";
 import type { Business } from "@/core/business/types";
-import type { VerticalKey } from "@/core/verticals";
-import type { PublicGastronomyPreviewItem } from "@/core/business/types/publicSnapshots";
 
 // ============================================
 // Business Extended (com campos adicionais)
@@ -120,9 +118,6 @@ export interface EmpresaHeroSectionProps extends BaseSectionProps {
 
 export interface EmpresaCTAsSectionProps extends BaseSectionProps {
   readonly business: BusinessExtended;
-  readonly isDeliveryBusiness: boolean;
-  readonly gastronomyUrl: string | null;
-  readonly verticalPublicUrls?: Partial<Record<VerticalKey, string>>;
   readonly embedded?: boolean;
   readonly isFavorite: boolean;
   readonly hasRecommended: boolean;
@@ -165,13 +160,6 @@ export interface EmpresaProdutosSectionProps extends BaseSectionProps {
   readonly embedded?: boolean;
   readonly onSelectCategory: (category: string) => void;
   readonly onToggleShowAll: () => void;
-}
-
-export interface EmpresaGastronomiaPreviewSectionProps extends BaseSectionProps {
-  readonly items: readonly PublicGastronomyPreviewItem[];
-  readonly canonicalUrl: string;
-  readonly businessName: string;
-  readonly isLoading?: boolean;
 }
 
 export interface EmpresaAvaliacoesSectionProps extends BaseSectionProps {
@@ -283,7 +271,6 @@ export type EmpresaSectionId =
   | "resumo"
   | "info"
   | "produtos"
-  | "gastronomiaPreview"
   | "avaliacoes"
   | "fotos"
   | "proximas";
@@ -294,7 +281,6 @@ export type SectionPropsMap = {
   readonly resumo: EmpresaResumoSectionProps;
   readonly info: EmpresaInfoSectionProps;
   readonly produtos: EmpresaProdutosSectionProps;
-  readonly gastronomiaPreview: EmpresaGastronomiaPreviewSectionProps;
   readonly avaliacoes: EmpresaAvaliacoesSectionProps;
   readonly fotos: EmpresaFotosSectionProps;
   readonly proximas: EmpresaProximasSectionProps;
