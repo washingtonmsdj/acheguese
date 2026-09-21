@@ -1,3 +1,4 @@
+import { getLaunchPausedBusinessCategoryIds } from "@/app/config/launchScope";
 import { applyTerritoryFilter } from "@/core/location";
 import type { TerritoryFilter } from "@/core/location/types";
 import { supabase } from "@/integrations/supabase";
@@ -17,6 +18,7 @@ type TableClient<TRow> = PromiseLike<QueryPayload<TRow>> & {
   gte(column: string, value: unknown): TableClient<TRow>;
   lte(column: string, value: unknown): TableClient<TRow>;
   in(column: string, values: readonly unknown[]): TableClient<TRow>;
+  or(filters: string): TableClient<TRow>;
   order(column: string, options?: { ascending: boolean }): TableClient<TRow>;
   limit(count: number): TableClient<TRow>;
 };
@@ -110,6 +112,13 @@ class MapBusinessLayerRuntimeService {
         .lte("latitude", north)
         .order("rating", { ascending: false })
         .limit(limit);
+
+      const pausedBusinessCategories = getLaunchPausedBusinessCategoryIds();
+      if (pausedBusinessCategories.length > 0) {
+        query = query.or(
+          `category.is.null,category.not.in.(${pausedBusinessCategories.join(",")})`,
+        );
+      }
 
       if (territoryFilter) {
         query = applyTerritoryFilter(query, territoryFilter);
