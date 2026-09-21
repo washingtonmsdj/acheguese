@@ -1,4 +1,4 @@
-import { Route, Routes } from "react-router-dom";
+import { Outlet, Route, Routes } from "react-router-dom";
 import type { ReactNode } from "react";
 import { isLaunchSurfaceEnabled, type LaunchSurfaceKey } from "@/app/config/launchScope";
 import LaunchPausedPage from "@/app/pages/LaunchPausedPage";
@@ -57,7 +57,10 @@ export function CentralRoutes() {
             <Route element={<P.BusinessDashboardShellPage />}>
               <Route index element={<P.BusinessOverviewPage />} />
               <Route path="dados" element={<P.BusinessDetailsPage />} />
-              <Route path="gastronomia">
+              <Route
+                path="gastronomia"
+                element={launchElement("gastronomy", "Gastronomia", <Outlet />)}
+              >
                 <Route index element={<P.GastronomyDashboardPage />} />
                 <Route path="setup" element={<P.GastronomySetupPage />} />
                 <Route path="cardapio" element={<P.MenuManagementPage />} />
@@ -85,7 +88,10 @@ export function CentralRoutes() {
               <Route path="configuracoes" element={<P.BusinessSettingsPage />} />
             </Route>
           </Route>
-          <Route path="profissional" element={<P.ProfessionalGuard />}>
+          <Route
+            path="profissional"
+            element={launchElement("services", "Serviços", <P.ProfessionalGuard />)}
+          >
             <Route index element={<P.CentralProfissionalPage />} />
           </Route>
           <Route path="motorista" element={launchElement("mobility", "Mobilidade", <P.DriverGuard service="motorista" />)}>
