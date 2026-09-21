@@ -1,5 +1,7 @@
 # HOME-INVENTORY
 
+> **MVP enxuto — decisão de release 2026-09-21:** os únicos domínios públicos de produto são **Comunidade básica, Empresas e Classificados**. Home, Conta, Território e Busca são infraestrutura de acesso. Permanecem pausados para pós-MVP: `billing=false`, `gastronomy=false`, `services=false`, `touristPoints=false`, `map=false`, `nearby=false`, `education=false`, `jobs=false`, `events=false`, `communityEventsPreview=false`, `communication=false`, `mobility=false`, `coupons=false`, `gamification=false` e `communityCommunication=false`. O código desses módulos é preservado; as superfícies públicas ficam isoladas por `launchScope.ts`.
+
 > Sprint **HOME.SPEC.1** — inventário congelado da Territory Home (`src/app/pages/TerritoryHomePage.tsx`) e das funcionalidades do Achegue-se.
 >
 > Escopo: **somente leitura**. Sem código, sem wireframe, sem decisão de layout. Base de referência para a especificação oficial da Home.
@@ -132,15 +134,15 @@ Legenda: **Pronto** = rota + página em produção · **Parcial** = rota existe 
 | Cadastro empresa | Sim | `/empresas/cadastrar` | Pronto | Talvez (CTA "cadastre sua empresa"). | `/empresas/cadastrar`. |
 | Dashboard empresa | Sim | `/dashboard-empresa` | Pronto | Não (perfil dono). | `/perfil`. |
 | Cupons / Promoções | Preservado, pausado no MVP | `/cupons`, `/promocoes` | `LaunchPausedPage` (`coupons=false`) | Não enquanto pausado. | `/cupons`. |
-| Gastronomia | Parcial | via `LAUNCH_URLS.gastronomy` | Parcial | **Sim** (ação rápida). | `/gastronomia` ou landing. |
+| Gastronomia | Preservado, pausado pós-MVP | via `LAUNCH_URLS.gastronomy` | `LaunchPausedPage` (`gastronomy=false`) | Não. | Pós-MVP. |
 
 ### 2.4 Classificados / Serviços / Vagas
 | Feature | Impl.? | Rota | Pronta? | Home? |
 |---|---|---|---|---|
 | Classificados | Sim | `/classificados` (+ CRUD) | Pronto | Chip em "Explore". |
 | Vendedor | Sim | `/vendedor/:sellerId` | Pronto | Não. |
-| Oportunidades / vagas rápidas | Sim | `/oportunidades` | Pronto | Talvez chip. |
-| Serviços profissionais | Parcial | `/servicos` | Parcial | Chip em "Explore". |
+| Oportunidades / vagas rápidas | Preservado, pausado pós-MVP | `/oportunidades` | `LaunchPausedPage` (`jobs=false`) | Não. |
+| Serviços profissionais | Preservado, pausado pós-MVP | `/servicos` | `LaunchPausedPage` (`services=false`) | Não. |
 
 ### 2.5 Mobilidade
 | Feature | Impl.? | Rota | Pronta? | Home? |
