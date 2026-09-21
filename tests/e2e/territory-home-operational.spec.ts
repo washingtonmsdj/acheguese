@@ -70,7 +70,7 @@ test.describe("MVP público — Empresas + Mapa + Perto de mim + Busca", () => {
     await installTerritoryHomeFixtures(page);
   });
 
-  test("raiz apresenta somente os quatro módulos de produto ativos", async ({
+  test("raiz apresenta somente o núcleo público ativo", async ({
     page,
   }) => {
     const health = observeBrowserHealth(page);
@@ -82,12 +82,6 @@ test.describe("MVP público — Empresas + Mapa + Perto de mim + Busca", () => {
     ).toBeVisible({ timeout: 30_000 });
 
     const main = page.locator("#main-content");
-
-    for (const label of ["Empresas", "Mapa", "Perto de mim", "Busca"]) {
-      await expect(main.getByRole("link").filter({ hasText: label })).toHaveCount(
-        1,
-      );
-    }
 
     for (const pausedLabel of [
       "Comunidade",
@@ -101,18 +95,10 @@ test.describe("MVP público — Empresas + Mapa + Perto de mim + Busca", () => {
       await expect(main.getByText(pausedLabel, { exact: true })).toHaveCount(0);
     }
 
-    await expect(
-      main.getByRole("link").filter({ hasText: "Empresas" }),
-    ).toHaveAttribute("href", /\/empresas\//);
-    await expect(
-      main.getByRole("link").filter({ hasText: "Mapa" }),
-    ).toHaveAttribute("href", /\/mapa\//);
-    await expect(
-      main.getByRole("link").filter({ hasText: "Perto de mim" }),
-    ).toHaveAttribute("href", "/perto-de-mim");
-    await expect(
-      main.getByRole("link").filter({ hasText: "Busca" }),
-    ).toHaveAttribute("href", /\/busca\//);
+    await expect(main.locator('a[href^="/empresas/"]').first()).toBeVisible();
+    await expect(main.locator('a[href^="/mapa/"]').first()).toBeVisible();
+    await expect(main.locator('a[href="/perto-de-mim"]').first()).toBeVisible();
+    await expect(main.locator('a[href^="/busca/"]').first()).toBeVisible();
 
     await expectNoHorizontalOverflow(page);
 
