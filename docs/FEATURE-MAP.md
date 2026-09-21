@@ -173,7 +173,7 @@ Chegada: menu admin (visível só para roles apropriados).
 - **`/busca` × `/buscar`** — manter `/buscar` como canônico, `/busca` é alias legado.
 - **`/notificacoes` × `/notifications`** — manter `/notificacoes` (pt-BR).
 - **`/conta/*` × `/perfil/*`** — `/conta/*` é o namespace privado canônico; `/perfil/*` existe somente por compatibilidade.
-- **`/empresas` × `/empresas-landing`** — `/empresas` é canônico.
+- **`/empresas` × `/empresas-landing`** — `/empresas` é canônico; o alias legado apenas redireciona.
 - **`/inicio` × `/`** — `/` resolve território; `/inicio` mantém o hub nacional legado. A Home canônica está em `/:uf/:cidade[/:territorio]`.
 
 ## Funcionalidades sem entrada visível na UI
