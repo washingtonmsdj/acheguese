@@ -4,7 +4,10 @@
  * Servico centralizado para os blocos de destaque da landing territorial.
  * Queries leves, limitadas, respeitando TerritoryFilter canonico.
  */
-import { getLaunchPausedBusinessCategoryIds } from "@/app/config/launchScope";
+import {
+  getLaunchPausedBusinessCategoryIds,
+  isLaunchSurfaceEnabled,
+} from "@/app/config/launchScope";
 import { logger } from "@/shared/utils/logger";
 import { supabase } from "@/integrations/supabase";
 import { applyTerritoryFilter } from "@/core/location/utils";
@@ -771,6 +774,10 @@ export class LandingFeaturedService {
       return { businesses: 0, services: 0, classifieds: 0, schools: null };
     }
 
+    const schoolCountPromise = isLaunchSurfaceEnabled("education")
+      ? this.getPublishedSchoolCount(filter)
+      : Promise.resolve<number | null>(null);
+
     const [businessRes, serviceRes, classifiedRes, schoolRes] =
       await Promise.allSettled([
         (() => {
@@ -802,7 +809,7 @@ export class LandingFeaturedService {
           query = applyTerritoryFilter(query, filter);
           return query;
         })(),
-        this.getPublishedSchoolCount(filter),
+        schoolCountPromise,
       ]);
 
     return {
