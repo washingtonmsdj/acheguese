@@ -118,6 +118,8 @@ jobs:
         env:
           CI: true
         run: |
+          npm run validate:workflow:references
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
           npm run test:mvp:architecture
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
 
