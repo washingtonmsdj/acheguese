@@ -1,8 +1,10 @@
 # HOME-UI-REVIEW.md — Sprint HOME.UI.1
 
-> **Status:** entregue.
-> **Escopo:** apenas frontend da Territory Home (`src/app/pages/TerritoryHomePage.tsx`).
-> **Base normativa:** `docs/05-ux/HOME-SPEC.md`, `HOME-INVENTORY.md`, `HOME-CONTENT.md`, `docs/04-design/DESIGN-TOKENS.md`.
+> **Status:** **HISTÓRICO / SUPERADO PELO MVP DE 2026-09-21**.
+> **Escopo original:** revisão visual antiga da Territory Home.
+> **Autoridade atual:** `docs/05-ux/HOME-SPEC.md`, `docs/FEATURE-MAP.md`, `docs/SCREEN-MAP.md` e `src/app/config/productModuleRegistry.ts`.
+>
+> As seções abaixo registram a antiga sprint HOME.UI.1 e **não devem ser usadas como backlog vigente**. Busca, Feed/Community, Eventos, Serviços, Postar e Explorar descritos neste arquivo pertencem a módulos pausados ou a uma arquitetura anterior. O MVP atual da Home apresenta somente **Empresas + Mapa + Perto de mim** como capacidades de produto.
 
 ---
 
@@ -135,4 +137,4 @@ Auditoria dos itens do `BottomNav` atual:
 
 ---
 
-> **Próxima sprint sugerida (HOME.UI.2):** conectar as fontes reais dos blocos Hoje / Acontecendo / Explore e reintroduzir Ações rápidas + Vale conferir + Rodapé de continuidade, mantendo a linguagem visual desta sprint.
+> **Nota de continuidade:** não executar a antiga sugestão HOME.UI.2 como plano atual. Qualquer retomada de Feed, Search, Eventos ou outras capacidades deve ocorrer módulo a módulo, com lifecycle `paused -> active` após certificação.
