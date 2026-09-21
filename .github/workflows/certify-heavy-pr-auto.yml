@@ -152,6 +152,7 @@ jobs:
             -PlaywrightArgs @(
               "test",
               "tests/e2e/logout-authenticated.spec.ts",
+              "tests/e2e/messaging-authenticated.spec.ts",
               "--project=chromium",
               "--reporter=list",
               "--retries=0",
