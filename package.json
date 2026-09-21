@@ -138,7 +138,7 @@
     "test:e2e:ui": "playwright test tests/e2e/tourist-points.spec.ts --ui",
     "test:e2e:report": "playwright show-report",
     "test:e2e:network": "playwright test tests/e2e/network-branches.spec.ts --reporter=list",
-    "test:regression": "vitest --run --passWithNoTests tests/regression-*.test.ts",
+    "test:regression": "vitest --run tests/regression",
     "test:all": "npm run test:ssot && npm run test:e2e && npm run test:regression",
     "test:maps": "vitest --run src/core/maps",
     "test:maps:watch": "vitest src/core/maps",
