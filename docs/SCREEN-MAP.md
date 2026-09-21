@@ -1,5 +1,7 @@
 # SCREEN-MAP
 
+> **MVP enxuto — decisão de release 2026-09-21:** os únicos domínios públicos de produto são **Comunidade básica, Empresas e Classificados**. Home, Conta, Território e Busca são infraestrutura de acesso. Permanecem pausados para pós-MVP: `billing=false`, `gastronomy=false`, `services=false`, `touristPoints=false`, `map=false`, `nearby=false`, `education=false`, `jobs=false`, `events=false`, `communityEventsPreview=false`, `communication=false`, `mobility=false`, `coupons=false`, `gamification=false` e `communityCommunication=false`. O código desses módulos é preservado; as superfícies públicas ficam isoladas por `launchScope.ts`.
+
 Domain status: Feed = STATUS: FROZEN.
 
 > Mapa único de telas/rotas. Nomenclatura canônica: `Territory*Page`. Nomes antigos permanecem como aliases (ver [`06-navigation/NAVIGATION-MAPPING.md`](./06-navigation/NAVIGATION-MAPPING.md)).
