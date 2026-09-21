@@ -1,14 +1,19 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 const mocks = vi.hoisted(() => ({
-  getUser: vi.fn(),
+  getVerifiedAuthUser: vi.fn(),
+  rpc: vi.fn(),
+}));
+
+vi.mock("@/core/session/services/SessionService", () => ({
+  SessionService: {
+    getVerifiedAuthUser: mocks.getVerifiedAuthUser,
+  },
 }));
 
 vi.mock("@/integrations/supabase", () => ({
   supabase: {
-    auth: {
-      getUser: mocks.getUser,
-    },
+    rpc: mocks.rpc,
   },
 }));
 
@@ -17,48 +22,62 @@ import { AuthIdentityService } from "@/core/auth/services/AuthIdentityService";
 describe("AuthIdentityService", () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    mocks.rpc.mockResolvedValue({ data: true, error: null });
   });
 
-  it("derives linked providers only from authenticated identities", async () => {
-    mocks.getUser.mockResolvedValue({
-      data: {
-        user: {
-          identities: [
-            { provider: "email" },
-            { provider: "google" },
-            { provider: "google" },
-          ],
-        },
-      },
-      error: null,
+  it("derives linked providers only from verified authenticated identities", async () => {
+    mocks.getVerifiedAuthUser.mockResolvedValue({
+      identities: [
+        { provider: "email" },
+        { provider: "google" },
+        { provider: "google" },
+      ],
+      app_metadata: {},
     });
 
     await expect(AuthIdentityService.getLinkedProviders()).resolves.toEqual({
       providers: ["email", "google"],
+      hasPassword: true,
       hasGoogle: true,
     });
+    expect(mocks.rpc).toHaveBeenCalledWith("current_user_has_password");
   });
 
   it("does not infer a Google link from provider availability", async () => {
-    mocks.getUser.mockResolvedValue({
-      data: { user: { identities: [{ provider: "email" }] } },
-      error: null,
+    mocks.getVerifiedAuthUser.mockResolvedValue({
+      identities: [{ provider: "email" }],
+      app_metadata: {},
     });
+    mocks.rpc.mockResolvedValue({ data: false, error: null });
 
     await expect(AuthIdentityService.getLinkedProviders()).resolves.toEqual({
       providers: ["email"],
+      hasPassword: false,
       hasGoogle: false,
     });
   });
 
   it("fails instead of showing a guessed provider state", async () => {
-    mocks.getUser.mockResolvedValue({
-      data: { user: null },
-      error: new Error("identity lookup failed"),
+    mocks.getVerifiedAuthUser.mockResolvedValue(null);
+
+    await expect(AuthIdentityService.getLinkedProviders()).rejects.toThrow(
+      "Authenticated user unavailable",
+    );
+    expect(mocks.rpc).not.toHaveBeenCalled();
+  });
+
+  it("fails closed when password capability authority fails", async () => {
+    mocks.getVerifiedAuthUser.mockResolvedValue({
+      identities: [{ provider: "email" }],
+      app_metadata: {},
+    });
+    mocks.rpc.mockResolvedValue({
+      data: null,
+      error: new Error("password capability unavailable"),
     });
 
     await expect(AuthIdentityService.getLinkedProviders()).rejects.toThrow(
-      "identity lookup failed",
+      "password capability unavailable",
     );
   });
 });
