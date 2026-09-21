@@ -96,9 +96,9 @@ describe("public launch scope SSOT", () => {
     expect(businessQueries).toContain("getLaunchPausedBusinessCategoryIds");
     expect(businessQueries).toContain("category.not.in.");
     expect(landingFeatured).toContain("applyLaunchBusinessCategoryExclusion");
-    expect(spatial).toContain("isLaunchBusinessCategoryEnabled");
-    expect(spatial).toContain("business launch-category lookup failed");
-    expect(spatial).toContain("return [];");
+    expect(spatial).toContain("BusinessService.getLaunchVisibleBusinessProfileIds");
+    expect(spatial).not.toContain(".from('public_business_search')");
+    expect(businessQueries).toContain("launch-visible profile lookup failed");
   });
 
 });
