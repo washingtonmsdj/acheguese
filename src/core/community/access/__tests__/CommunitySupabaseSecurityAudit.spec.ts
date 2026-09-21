@@ -2,7 +2,6 @@ import { readFileSync } from "node:fs";
 import { resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import { describe, expect, it } from "vitest";
-import { PRODUCT_MODULE_REGISTRY } from "@/app/config/productModuleRegistry";
 
 const currentDir = resolve(fileURLToPath(import.meta.url), "..");
 const repoRoot = resolve(currentDir, "../../../../..");
@@ -368,6 +367,9 @@ describe("community supabase security audit", () => {
       "supabase/migrations/20260706100000_harden_community_creation_residence_authorization.sql",
     );
     const launchScope = readProjectFile("src/app/config/launchScope.ts");
+    const productRegistry = readProjectFile(
+      "src/app/config/productModuleRegistry.ts",
+    );
 
     expect(hardening).toContain(
       "CREATE OR REPLACE FUNCTION public.auth_has_verified_residence_at_location",
@@ -400,8 +402,12 @@ describe("community supabase security audit", () => {
       "GRANT EXECUTE ON FUNCTION public.create_community_issue(JSONB) TO authenticated;",
     );
 
-    expect(PRODUCT_MODULE_REGISTRY.communityAlerts.status).toBe("paused");
-    expect(PRODUCT_MODULE_REGISTRY.communityIssues.status).toBe("paused");
+    expect(productRegistry).toMatch(
+      /communityAlerts:\s*\{\s*status:\s*"paused"/,
+    );
+    expect(productRegistry).toMatch(
+      /communityIssues:\s*\{\s*status:\s*"paused"/,
+    );
     expect(launchScope).toContain(
       'communityAlerts: isProductModuleEnabled("communityAlerts")',
     );
