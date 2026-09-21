@@ -30,6 +30,9 @@ export default function NearbyPage() {
   const businessUrl = activeLocation
     ? buildLocationModuleUrl(activeLocation, MODULE_SLUGS.business)
     : buildAppModulePath(APP_MODULE_SLUGS.business);
+  const mapUrl = activeLocation
+    ? buildLocationModuleUrl(activeLocation, MODULE_SLUGS.map)
+    : buildAppModulePath(APP_MODULE_SLUGS.map);
   const territoryLabels = useTerritoryLabels(resolved);
 
   const {
@@ -203,6 +206,8 @@ export default function NearbyPage() {
               }
               icon={Map}
               iconColorClass="bg-accent/10 text-accent-foreground"
+              onSeeAll={() => navigate(mapUrl)}
+              seeAllLabel="Abrir mapa"
             >
               <NearbyMiniMap
                 userLocation={userLocation}
