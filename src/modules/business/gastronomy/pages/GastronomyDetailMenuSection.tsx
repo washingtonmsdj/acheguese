@@ -10,9 +10,11 @@ import type { GastronomyDetailMenuView } from "./useGastronomyDetailMenu";
 export function GastronomyDetailMenuSection({
   view,
   onSelectItem,
+  hasMenu,
 }: {
   view: GastronomyDetailMenuView;
   onSelectItem: (item: MenuItemWithRelations) => void;
+  hasMenu: boolean;
 }) {
   return (
     <section id="cardapio" className="space-y-4">
@@ -163,7 +165,9 @@ export function GastronomyDetailMenuSection({
           <p className="mt-4 text-muted-foreground">
             {view.query || view.priceFilter !== "all"
               ? "Nenhum item corresponde aos filtros selecionados."
-              : "Nenhum item disponível nesta categoria."}
+              : hasMenu
+                ? "Nenhum item disponível nesta categoria."
+                : "Este estabelecimento ainda não publicou um cardápio operacional."}
           </p>
         </div>
       )}
