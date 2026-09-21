@@ -47,7 +47,7 @@ import {
 import type { Business, BusinessSortOption, HeroStat } from "@/app/features/business-landing/sections/types";
 import { CategoryCard } from "@/app/features/business-landing/components/cards";
 import { QuickFilterChip } from "@/app/features/business-landing/components/filters/QuickFilterChip";
-import { withQueryParams } from "@/app/pages/CidadeLanding.utils";
+import { withQueryParams } from "@/core/landing/utils/landingPresentation";
 
 interface EmpresasLandingPageProps {
   resolved?: ResolvedTerritory;
