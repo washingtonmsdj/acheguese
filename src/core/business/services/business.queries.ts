@@ -505,6 +505,11 @@ export async function getBusinessesList(
         break;
     }
 
+    query = query.range(
+      pageParam * pageSize,
+      (pageParam + 1) * pageSize - 1,
+    );
+
     const { data, error } = await query;
 
     if (error) {
