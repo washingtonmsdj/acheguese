@@ -48,8 +48,8 @@ export type {
 } from "./contracts";
 
 export {
-  getActiveMessagingProviders,
   getMessagingProvider,
+  getRegisteredMessagingProviders,
   isMessagingProviderId,
 } from "./providers/messagingProviderRegistry";
 export type {
