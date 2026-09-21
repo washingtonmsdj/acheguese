@@ -4,9 +4,9 @@
 
 ## Visão do produto
 
-Achegue-se é uma plataforma **hiperlocal, community-first**, cuja unidade fundamental é o **Território** (país → estado → cidade → bairro). Navegação, comunidade, comércio local e serviços são resolvidos a partir do território ativo.
+Achegue-se é uma plataforma **hiperlocal, territory-first e modular**, cuja unidade fundamental é o **Território** (país → estado → cidade → bairro).
 
-A visão pós-MVP continua modular e pode incorporar Comunidade, Classificados, Profissionais/Serviços, Mobilidade, Educação e verticais. **O produto público ativo do MVP, porém, é deliberadamente menor: Empresas + Mapa + Perto de mim.** O lifecycle executável pertence a `src/app/config/productModuleRegistry.ts`; módulos pós-MVP permanecem pausados até certificação individual.
+A visão pós-MVP pode incorporar Comunidade, Classificados, Profissionais/Serviços, Mobilidade, Educação e verticais. **O produto público ativo do MVP é deliberadamente menor: Empresas + Mapa + Perto de mim.** O lifecycle executável pertence a `src/app/config/productModuleRegistry.ts`; nenhuma visão de produto, rota preservada ou documentação de módulo pode contornar esse owner.
 
 ## Autoridade e precedência
 
@@ -67,7 +67,7 @@ Alguns caminhos antigos ainda existem fora das pastas numeradas por compatibilid
 
 - [Regras vigentes](./03-architecture/CURRENT_RULES.md)
 - [Arquitetura global](./03-architecture/ARCHITECTURE.md)
-- [Community-first architecture SSOT](./03-architecture/COMMUNITY_FIRST_ARCHITECTURE_SSOT.md)
+- [Community architecture — contrato pós-MVP](./03-architecture/COMMUNITY_FIRST_ARCHITECTURE_SSOT.md) — preserva internals da capability; não é autoridade de ativação pública.
 - [Core Platform architecture SSOT](./03-architecture/CORE_PLATFORM_ARCHITECTURE_SSOT.md)
 - [Canonical map / ownership](./03-architecture/CANONICAL_MAP.md)
 - [Product module lifecycle](./03-architecture/PRODUCT_MODULE_LIFECYCLE.md) — regras para ativar, pausar, remover e reintegrar módulos; owner executável em `productModuleRegistry.ts`.
