@@ -5,7 +5,7 @@ import {
   seedAuthFlowState,
 } from "./helpers/authFlowState";
 
-const RETURN_PATH = "/mensagens/sabores-da-ana";
+const RETURN_PATH = "/mensagens/business/44444444-4444-4444-8444-444444444444";
 
 async function expectNoHorizontalOverflow(page: Page) {
   const dimensions = await page.evaluate(() => ({
