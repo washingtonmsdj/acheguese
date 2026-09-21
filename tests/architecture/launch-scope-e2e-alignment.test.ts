@@ -10,20 +10,21 @@ const productRegistry = read("src/app/config/productModuleRegistry.ts");
 const launchE2e = read("tests/e2e/launch-scope-public.spec.ts");
 const appRoutes = read("src/app/routes/sections/AppLayoutRoutes.tsx");
 const searchProviders = read("src/core/search/providers/searchProviders.ts");
+const searchPage = read("src/app/pages/BuscaPage.tsx");
 const screenMap = read("docs/SCREEN-MAP.md");
 const featureMap = read("docs/FEATURE-MAP.md");
 const homeInventory = read("docs/05-ux/HOME-INVENTORY.md");
 
-describe("narrow MVP launch-scope alignment", () => {
-  it("keeps exactly Mapa, Empresas and Perto de mim active in the product registry", () => {
+describe("MVP launch-scope alignment", () => {
+  it("keeps Mapa, Empresas, Perto de mim and Busca active in the product registry", () => {
     expect(productRegistry).toContain('business: { status: "active" }');
     expect(productRegistry).toContain('map: { status: "active" }');
     expect(productRegistry).toContain(
       'nearby: { status: "active", dependsOn: ["map", "business"] }',
     );
+    expect(productRegistry).toContain('search: { status: "active" }');
 
     for (const moduleKey of [
-      "search",
       "community",
       "gastronomy",
       "services",
@@ -52,6 +53,15 @@ describe("narrow MVP launch-scope alignment", () => {
     expect(searchProviders).toContain(
       'bucket: "events",\n  linkedEntityTypes: ["event"],\n  isEnabled: () => isLaunchSurfaceEnabled("events")',
     );
+    expect(searchProviders).toContain(
+      'bucket: "businesses",\n  linkedEntityTypes: ["business"],\n  isEnabled: () => isLaunchSurfaceEnabled("business")',
+    );
+
+    expect(searchPage).toContain('launchSurface: "community"');
+    expect(searchPage).toContain('launchSurface: "services"');
+    expect(searchPage).toContain('launchSurface: "classifieds"');
+    expect(searchPage).toContain('surface: "services"');
+    expect(searchPage).toContain('surface: "classifieds"');
   });
 
   it("keeps active documentation aligned with the narrow MVP flags", () => {
@@ -62,7 +72,7 @@ describe("narrow MVP launch-scope alignment", () => {
       "touristPoints=false",
       "map=true",
       "nearby=true",
-      "search=false",
+      "search=true",
       "education=false",
       "jobs=false",
       "events=false",
@@ -89,8 +99,6 @@ describe("narrow MVP launch-scope alignment", () => {
     for (const path of [
       "/gastronomia",
       "/servicos",
-      "/busca",
-      "/buscar",
       "/vagas",
       "/eventos",
       "/mensagens",
