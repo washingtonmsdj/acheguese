@@ -2,9 +2,11 @@
 
 Data: 2026-07-26
 
-Status: marco arquitetural consolidado do projeto apos Territory e Feed Freeze. Feed STATUS: FROZEN.
+Status: **MARCO HISTORICO / NAO E STATUS ATUAL DO PRODUTO**.
 
-Regra de escopo: este documento apenas registra o estado arquitetural atual. Nao implementa codigo, nao altera arquitetura, nao altera banco, nao altera contratos e nao modifica documentos existentes.
+Este arquivo preserva o milestone arquitetural observado em julho de 2026 após Territory e Feed Freeze. O estado vigente do MVP está em `docs/08-roadmap/checkpoints/2026-09-21-milestone-zero.md`, `docs/FEATURE-MAP.md`, `docs/SCREEN-MAP.md` e `docs/08-roadmap/EXECUCAO_MAIN_ONLY.md`.
+
+Regra de escopo: este documento não ativa módulos, não define prontidão de release e não pode sobrescrever o lifecycle atual em `src/app/config/productModuleRegistry.ts`.
 
 ## 1. Base do marco
 
