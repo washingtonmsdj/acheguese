@@ -15,7 +15,6 @@ import { useBusinessProducts } from "@/modules/business/hooks/useBusinessProduct
 import { useBusinessRecommendation } from "@/modules/business/hooks/useBusinessRecommendation";
 import { usePublicBusinessSnapshot } from "@/modules/business/public/hooks";
 import { LAUNCH_URLS } from "@/core/routing/config/territory";
-import { isLaunchSurfaceEnabled } from "@/app/config/launchScope";
 import { buildGoogleMapsSearchUrl } from "@/shared/utils/contactLinks";
 import { openSafeExternalUrl } from "@/shared/utils/safeRedirect";
 import { getRecordValue } from "@/shared/utils/recordLookup";
@@ -23,7 +22,6 @@ import { useMediaQuery } from "@/shared/hooks/useMediaQuery";
 import {
   EmpresaCTAsSection,
   EmpresaFotosSection,
-  EmpresaGastronomiaPreviewSection,
   EmpresaHeroSection,
   EmpresaInfoSection,
   EmpresaProdutosSection,
@@ -33,7 +31,6 @@ import {
 import { AddressCard, CompanyInfoCard } from "@/modules/business/company/components/info";
 import { EmpresaDetailLayout } from "@/modules/business/company/pages/EmpresaDetailLayout";
 import { getYearsActive } from "@/modules/business/company/utils";
-import GastronomyDetailPage from "@/modules/business/gastronomy/pages/GastronomyDetailPage";
 import type {
   BusinessExtended,
   NearbyBusiness,
@@ -50,7 +47,6 @@ interface EmpresaDetailLandingPageProps {
     slug?: string;
   };
   canonicalPathOverride?: string;
-  communityAliasOverride?: string;
 }
 
 export default function EmpresaDetailLandingPage(
@@ -70,7 +66,6 @@ export default function EmpresaDetailLandingPage(
   const district = props.routeParams?.district ?? urlParams.district;
   const slug = props.routeParams?.slug ?? urlParams.slug;
   const navigate = useNavigate();
-  const gastronomyEnabled = isLaunchSurfaceEnabled("gastronomy");
 
   const [showAllHours, setShowAllHours] = useState(false);
   const [showAllProducts, setShowAllProducts] = useState(false);
@@ -96,9 +91,7 @@ export default function EmpresaDetailLandingPage(
     toggleRecommendation,
     loading: recommendLoading,
   } = useBusinessRecommendation(institutionalBusinessDataId);
-  const { products: rawProducts } = useBusinessProducts(
-    snapshot?.verticals.primaryVertical === "gastronomy" ? undefined : snapshotBusiness?.id,
-  );
+  const { products: rawProducts } = useBusinessProducts(snapshotBusiness?.id);
 
   const normalizedProducts = useMemo<CompanyProduct[]>(
     () =>
@@ -249,21 +242,10 @@ export default function EmpresaDetailLandingPage(
                     slug: detail.slug,
                     is_premium: detail.is_premium,
                     geographic_path: detail.geographic_path,
-                    community_alias:
-                      props.communityAliasOverride &&
-                      detail.geographic_path === snapshotBusiness.geographic_path
-                        ? props.communityAliasOverride
-                        : null,
                   }
                 : null;
             const canonicalUrl = routeContext
-              ? props.communityAliasOverride &&
-                detail?.geographic_path === snapshotBusiness.geographic_path
-                ? BusinessUrlService.getCommunityScopedUrl(
-                    routeContext,
-                    props.communityAliasOverride,
-                  )
-                : BusinessUrlService.getCanonicalUrl(routeContext)
+              ? BusinessUrlService.getCanonicalUrl(routeContext)
               : undefined;
 
             return {
@@ -295,7 +277,7 @@ export default function EmpresaDetailLandingPage(
     return () => {
       cancelled = true;
     };
-  }, [snapshotBusiness?.id, snapshotBusiness?.category, snapshotBusiness?.geographic_path, props.communityAliasOverride]);
+  }, [snapshotBusiness?.id, snapshotBusiness?.category]);
 
   const handleCopyPhone = async () => {
     const phone =
@@ -395,16 +377,6 @@ export default function EmpresaDetailLandingPage(
     );
   }
 
-  if (gastronomyEnabled && snapshot.verticals.primaryVertical === "gastronomy") {
-    return (
-      <GastronomyDetailPage
-        routeParams={{ state, city, district, slug }}
-        communityScoped={Boolean(props.communityAliasOverride)}
-        canonicalPathOverride={props.canonicalPathOverride ?? snapshot.seo.canonical}
-      />
-    );
-  }
-
   const business = snapshotBusiness;
   const institutional = snapshot.institutional;
   const products = normalizedProducts;
@@ -419,30 +391,7 @@ export default function EmpresaDetailLandingPage(
       context: "company-detail-route",
     });
   };
-  const contextualBusinessUrl = props.communityAliasOverride
-    ? BusinessUrlService.getCanonicalUrl({
-        id: business.id,
-        slug: business.slug,
-        is_premium: business.is_premium,
-        geographic_path: business.geographic_path,
-        community_alias: props.communityAliasOverride,
-      })
-    : null;
-  const robotsContent = props.communityAliasOverride
-    ? "noindex, follow"
-    : snapshot.seo.robots;
-  const gastronomyUrl =
-    gastronomyEnabled && snapshot.verticals.canonicalVerticalUrl
-      ? contextualBusinessUrl ?? snapshot.verticals.canonicalVerticalUrl
-      : null;
-  const verticalPublicUrls = gastronomyEnabled
-    ? contextualBusinessUrl && snapshot.verticals.verticalPublicUrls.gastronomy
-      ? {
-          ...snapshot.verticals.verticalPublicUrls,
-          gastronomy: contextualBusinessUrl,
-        }
-      : snapshot.verticals.verticalPublicUrls
-    : {};
+  const robotsContent = snapshot.seo.robots;
   const isDeliveryBusiness =
     business.tem_delivery || business.modos_atendimento?.includes("delivery");
   const hasDesktopProducts = products.length > 0;
@@ -489,8 +438,6 @@ export default function EmpresaDetailLandingPage(
                 embedded
                 business={business}
                 isDeliveryBusiness={Boolean(isDeliveryBusiness)}
-                gastronomyUrl={gastronomyUrl}
-                verticalPublicUrls={verticalPublicUrls}
                 isFavorite={isFavorite}
                 hasRecommended={hasRecommended}
                 recommendLoading={recommendLoading}
@@ -625,8 +572,6 @@ export default function EmpresaDetailLandingPage(
             embedded
             business={business}
             isDeliveryBusiness={Boolean(isDeliveryBusiness)}
-            gastronomyUrl={gastronomyUrl}
-            verticalPublicUrls={verticalPublicUrls}
             isFavorite={isFavorite}
             hasRecommended={hasRecommended}
             recommendLoading={recommendLoading}
@@ -667,15 +612,7 @@ export default function EmpresaDetailLandingPage(
           />
         </div>
 
-        {gastronomyUrl ? (
-          <EmpresaGastronomiaPreviewSection
-            items={snapshot.gastronomyPreview}
-            canonicalUrl={gastronomyUrl}
-            businessName={business.name}
-            isLoading={false}
-          />
-        ) : (
-          <div className="xl:hidden">
+        <div className="xl:hidden">
           <EmpresaProdutosSection
             products={products}
             selectedCategory={selectedProductCategory}
@@ -683,8 +620,7 @@ export default function EmpresaDetailLandingPage(
             onSelectCategory={setSelectedProductCategory}
             onToggleShowAll={() => setShowAllProducts(!showAllProducts)}
           />
-          </div>
-        )}
+        </div>
 
         {institutional.photos.length > 0 && (
           <div className="xl:hidden">
@@ -704,8 +640,6 @@ export default function EmpresaDetailLandingPage(
                 currentBranchId={business.id}
                 brandHubId={business.id}
                 brandName={business.business_name || business.name}
-                communityAliasOverride={props.communityAliasOverride}
-                currentBusinessGeographicPath={business.geographic_path}
               />
             </section>
           </div>
