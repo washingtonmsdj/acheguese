@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
-import { useNavigate, useParams } from "react-router-dom";
+import { useLocation, useNavigate, useParams } from "react-router-dom";
 import { toast } from "sonner";
 import { ArrowLeft, Store } from "lucide-react";
 import { Button } from "@/shared/components/ui/button";
@@ -10,6 +10,10 @@ import BranchNetworkBlock from "@/core/business/components/BranchNetworkBlock";
 import { BusinessService } from "@/core/business/services/BusinessService";
 import { BusinessUrlService } from "@/core/business/services/BusinessUrlService";
 import { BusinessHoursService } from "@/core/business";
+import { businessDirectMessagingService } from "@/core/messaging";
+import { buildLoginPath } from "@/core/auth/constants/authFlow";
+import { useSessionContext } from "@/core/session/hooks/useSessionContext";
+import { isPlatformCapabilityEnabled } from "@/app/config/lifecycleRegistry";
 import { useCanonicalBusinessFavorite } from "@/modules/business/hooks/useCanonicalBusinessFavorite";
 import { useBusinessProducts } from "@/modules/business/hooks/useBusinessProducts";
 import { useBusinessRecommendation } from "@/modules/business/hooks/useBusinessRecommendation";
@@ -66,6 +70,9 @@ export default function EmpresaDetailLandingPage(
   const district = props.routeParams?.district ?? urlParams.district;
   const slug = props.routeParams?.slug ?? urlParams.slug;
   const navigate = useNavigate();
+  const location = useLocation();
+  const { user, activeProfile } = useSessionContext();
+  const messagingEnabled = isPlatformCapabilityEnabled("messaging");
 
   const [showAllHours, setShowAllHours] = useState(false);
   const [showAllProducts, setShowAllProducts] = useState(false);
@@ -74,6 +81,7 @@ export default function EmpresaDetailLandingPage(
   const [selectedProductCategory, setSelectedProductCategory] = useState("todos");
   const [nearbyBusinesses, setNearbyBusinesses] = useState<NearbyBusiness[]>([]);
   const [operationConfig, setOperationConfig] = useState<BusinessOperationConfig | null>(null);
+  const [messageLoading, setMessageLoading] = useState(false);
 
   const { data: snapshot, isLoading } = usePublicBusinessSnapshot({
     state,
@@ -384,6 +392,46 @@ export default function EmpresaDetailLandingPage(
   const openStatus = resolvedOpenStatus;
 
   const yearsActive = getYearsActive(business.created_at);
+  const canMessageBusiness =
+    messagingEnabled && activeProfile?.id !== business.profile_id;
+
+  const handleMessage = async () => {
+    if (!institutionalBusinessDataId) {
+      toast.error("Não foi possível iniciar a conversa com esta empresa.");
+      return;
+    }
+
+    if (!user) {
+      const returnTo = `${location.pathname}${location.search}`;
+      navigate(buildLoginPath(returnTo));
+      return;
+    }
+
+    if (!activeProfile) {
+      toast.error("Selecione um perfil ativo para enviar mensagens.");
+      navigate("/conta");
+      return;
+    }
+
+    if (activeProfile.id === business.profile_id) {
+      toast.info("Esta é a sua empresa.");
+      return;
+    }
+
+    setMessageLoading(true);
+    try {
+      const threadId = await businessDirectMessagingService.createOrGetThread({
+        profileId: activeProfile.id,
+        businessId: institutionalBusinessDataId,
+      });
+      navigate(`/mensagens/business/${threadId}`);
+    } catch {
+      toast.error("Não foi possível iniciar a conversa.");
+    } finally {
+      setMessageLoading(false);
+    }
+  };
+
   const handleRoute = () => {
     const addr = institutional.addressText || business.name || "";
     const loc = institutional.locationText || "";
@@ -449,6 +497,8 @@ export default function EmpresaDetailLandingPage(
                 }}
                 onToggleRouteOptions={() => setShowRouteOptions(!showRouteOptions)}
                 onRoute={handleRoute}
+                onMessage={canMessageBusiness ? () => void handleMessage() : undefined}
+                messageLoading={messageLoading}
                 onShare={() => {
                   void handleShare();
                 }}
