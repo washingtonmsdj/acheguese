@@ -1,325 +1,120 @@
-# Navigation System - Achegue-se
+# Navigation System — Achegue-se
 
-Status: fundacao adaptativa implementada em Home territorial e Explorar na
-Fase 4.2; entrada territorial `/` migrada na Fase 4.3. Community, Feed, Perfil
-e demais superficies continuam no shell anterior ate migracao explicita.
+Status: **ATIVO / MVP 2026-09-21**
 
-## Objetivo da navegacao
+Este documento descreve a navegação vigente. O lifecycle executável pertence a
+`src/app/config/productModuleRegistry.ts`; este documento não pode ativar uma
+superfície pausada.
 
-A navegacao deve esconder a complexidade estrutural do produto e revelar opcoes conforme contexto, intencao e permissao.
+## Objetivo
 
-O usuario nao deve navegar por uma lista de modulos. Ele deve navegar por modos de uso.
+A navegação deve preservar contexto territorial e expor somente capacidades
+realmente disponíveis. Adicionar, pausar ou remover um módulo não deve exigir
+uma segunda decisão manual em cada renderer.
 
-Antes da resolução territorial, `/` não exibe os modos globais como se já
-houvesse contexto. Essa superfície oferece localização, busca, Salvador inteira,
-bairros sugeridos e login opcional. Depois da escolha, a URL territorial assume
-e a navegação adaptativa passa a representar o contexto resolvido.
+## Navegação primária do MVP
 
-## Modelo recomendado
+O registry de apresentação é
+`src/core/navigation/territoryNavigationModes.ts`.
 
-### Nivel 1 - Modos globais
+Destinos vigentes:
 
-Entradas globais:
+1. **Home** — contexto territorial;
+2. **Mapa** — descoberta geográfica de Business;
+3. **Empresas** — catálogo/lista Business;
+4. **Perto de mim** — proximidade Business; depende de Mapa + Empresas;
+5. **Conta / Entrar** — infraestrutura de identidade.
 
-- Hoje
-- Explorar
-- Community
-- Atividade
-- Conta
+Home e Conta são plataforma, não módulos adicionais do produto.
 
-Essas entradas devem ser estaveis, especialmente no mobile.
+## Regras de lifecycle
 
-### Nivel 2 - Categorias contextuais
+- `business`, `map` e `nearby` são os únicos módulos ativos do MVP;
+- `nearby` depende formalmente de `map + business`;
+- Search, Community, Gastronomia, Serviços, Classificados, Eventos, Vagas,
+  Educação, Mobilidade e demais módulos pós-MVP não aparecem na navegação;
+- um módulo `paused` também fica fora de rota funcional, prefetch/warmup,
+  discovery e layers públicas;
+- renderer não cria exceção local para lifecycle;
+- redirect não é mecanismo de ativação nem de pausa.
 
-Categorias que aparecem dentro de um modo:
+## Mobile
 
-- Empresas.
-- Gastronomia.
-- Servicos.
-- Classificados.
-- Eventos.
-- Grupos.
-- Alertas.
-- Imoveis.
-- Vagas.
-- Mapa.
+A bottom navigation deve consumir o mesmo registry e manter poucos destinos.
+No MVP, os destinos de produto são Mapa, Empresas e Perto de mim, além de Home
+e Conta.
 
-### Nivel 3 - Destinos
+Não reservar tabs para módulos pausados nem exibir teaser que pareça
+funcionalidade disponível.
 
-Destinos que o usuario abre para agir:
+## Tablet e desktop
 
-- Perfil de empresa.
-- Cardapio.
-- Prestador.
-- Evento.
-- Classificado.
-- Grupo.
-- Post.
-- Conversa.
-- Configuracao.
+Rail/sidebar são apresentações do mesmo contrato. Não existe menu de desktop
+com autoridade própria.
 
-### Nivel 4 - Acoes
+O shell pode mostrar:
 
-Acoes de contexto:
+- território ativo;
+- Home;
+- Mapa;
+- Empresas;
+- Perto de mim;
+- Conta/Entrar;
+- infraestrutura autenticada estritamente necessária.
 
-- Publicar.
-- Comentar.
-- Curtir.
-- Compartilhar.
-- Salvar.
-- Contatar.
-- Ver rota.
-- Pedir orcamento.
-- Comprar/reservar/candidatar.
-- Editar.
+## Território
 
-## Mobile-first
-
-### Bottom Navigation
-
-Proposta:
-
-1. Hoje
-2. Explorar
-3. Comunidade
-4. Atividade
-5. Conta
-
-Justificativa:
-
-- "Hoje" da ao usuario retorno imediato.
-- "Explorar" concentra busca, mapa e categorias.
-- "Comunidade" concentra feed, grupos, alertas e participacao.
-- "Atividade" concentra mensagens e notificacoes.
-- "Conta" concentra perfil, configuracoes e Central quando aplicavel.
-
-O bottom nav nao deve conter:
-
-- Empresas como tab fixa.
-- Classificados como tab fixa.
-- Eventos como tab fixa.
-- Vagas como tab fixa.
-- Mapa como tab fixa.
-
-Esses itens sao importantes, mas devem aparecer dentro de Explorar, Comunidade ou Resolver conforme intencao.
-
-### Top Bar mobile
-
-Elementos recomendados:
-
-- Chip de territorio ativo: cidade/bairro.
-- Acesso rapido a busca.
-- Sinal de notificacao quando houver algo novo.
-
-Elementos que devem ser evitados na Top Bar mobile:
-
-- Muitos links textuais.
-- Logo grande depois do primeiro contato.
-- Alternancia de tema como item primario.
-- Entradas administrativas permanentes.
-
-### Acao de publicacao
-
-A publicacao deve representar uma intencao contextual, nao um modulo fixo nem
-um destino permanente da navegacao.
-
-Acao possivel:
-
-- Publicar.
-
-Quando a superficie oferecer um seletor de intencao:
-
-- Postagem.
-- Pergunta.
-- Alerta.
-- Classificado.
-- Evento.
-- Empresa/Servico, se o usuario tiver permissao ou intencao comercial.
-
-Regras:
-
-- a acao so aparece quando rollout, perfil ativo e policy permitem;
-- autenticacao isolada nao habilita publicacao;
-- Home e Explorar nao reservam um FAB global apenas para preencher layout;
-- quando adotado, o seletor abre intencoes compreensiveis, nao formatos tecnicos.
-
-### Busca mobile
-
-Busca deve ser global e territorial.
-
-Comportamento esperado:
-
-- Campo unico: "Buscar no bairro".
-- Sugestoes antes de digitar.
-- Resultados agrupados por tipo.
-- Filtros progressivos.
-- Correcoes de termo.
-- Estado vazio com sugestoes.
-
-Primeiros filtros:
-
-- Perto de mim.
-- Aberto agora.
-- Hoje/esta semana.
-- Categoria.
-- Bairro.
-
-Filtros avancados so aparecem depois de uma categoria.
-
-### Troca de bairro
-
-Troca de bairro deve ser um controle global, sempre compreensivel.
-
-Proposta:
-
-- Chip no topo com nome do territorio.
-- Toque abre seletor.
-- Opcoes: meu bairro, cidade atual, perto de mim, escolher outro bairro.
-- Ao trocar, manter o modo atual quando fizer sentido.
+Trocar território deve manter o módulo atual quando houver URL territorial
+canônica para ele.
 
 Exemplo:
 
-- Usuario esta em Empresas e troca de Pituba para Barra.
-- Deve continuar em Empresas, agora filtrado pela Barra.
+- usuário está em Empresas/Pituba;
+- troca para Barra;
+- continua em Empresas, agora no novo território.
 
-### Fluxos mobile principais
+Perto de mim pode usar GPS real. Fallback territorial não pode ser apresentado
+como localização pessoal.
 
-Hoje:
+## Ações
 
-1. Abrir app.
-2. Ver territorio ativo.
-3. Ver destaques.
-4. Abrir item ou explorar.
+Ações pertencem ao owner do domínio. A navegação global não promove ações de
+módulos pausados.
 
-Explorar:
+`Publicar`, Feed, Community, mensagens sociais, classificados e outras ações
+pós-MVP só retornam quando seus módulos forem certificados e reativados no
+lifecycle.
 
-1. Tocar em Explorar.
-2. Buscar ou escolher categoria.
-3. Filtrar.
-4. Abrir destino.
+## Busca
 
-Comunidade:
+Busca federada pública está `paused` no MVP. Componentes ou serviços internos
+de busca podem continuar versionados, mas não constituem destino global nem tab.
 
-1. Tocar em Comunidade.
-2. Ver feed/grupos/alertas.
-3. Publicar via FAB.
-4. Acompanhar respostas.
+## Evolução pós-MVP
 
-Atividade:
+A organização por intenção (Explorar, Community, Atividade etc.) permanece uma
+hipótese de evolução, não o contrato vigente. Qualquer retomada deve:
 
-1. Tocar em Atividade.
-2. Alternar mensagens/notificacoes.
-3. Abrir contexto.
+1. nascer/voltar `paused`;
+2. possuir owner e dependências explícitos;
+3. passar testes e certificação isolada;
+4. ser ativada no registry;
+5. somente então entrar nos renderers de navegação.
 
-Conta:
+## Acessibilidade e responsividade
 
-1. Tocar em Conta.
-2. Ver perfil e configuracoes.
-3. Acessar Central se tiver empresa, perfil profissional ou papel operacional.
+- foco visível;
+- alvos de toque adequados;
+- sem overflow horizontal;
+- `prefers-reduced-motion` respeitado;
+- rótulos compreensíveis;
+- comportamento equivalente entre bottom nav, rail e sidebar.
 
-## Desktop
+## Referências
 
-### Estrutura desktop recomendada
-
-Desktop deve aproveitar espaco, mas nao expor tudo ao mesmo tempo.
-
-Layout implementado na fundacao Territorio Vivo:
-
-- Sidebar esquerda com modos principais.
-- Top bar territorial com troca de contexto, notificacoes e conta/entrada.
-- Area central para conteudo.
-- Painel direito contextual somente quando agregar valor.
-
-Sidebar principal:
-
-- Hoje.
-- Explorar.
-- Community.
-- Atividade.
-- Conta/Entrar.
-
-Dentro de cada modo, usar navegacao secundaria contextual.
-
-### Sidebar desktop
-
-Regras:
-
-- Mostrar exatamente os cinco modos globais na fundacao atual.
-- Expor Resolver, mapa e modulos dentro da Home/Explorar, nao no nivel principal.
-- Exibir "Central" apenas para usuarios autenticados e com papel relevante.
-- Ao entrar em uma comunidade, a sidebar pode se tornar contextual, mas mantendo saida clara para modos globais.
-
-### Top Bar desktop
-
-Elementos recomendados:
-
-- Busca global.
-- Territorio ativo.
-- Notificacoes.
-- Mensagens.
-- Perfil.
-
-Elementos secundarios:
-
-- Planos.
-- Sobre.
-- Tema.
-- Logout.
-
-Esses elementos devem ficar em menus ou area de conta, nao disputar atencao com tarefas primarias.
-
-### Desktop: painel direito
-
-Painel direito deve ser contextual:
-
-- Em Hoje: agenda, alertas, sugestoes.
-- Em Comunidade: grupos, regras, pessoas ativas.
-- Em Empresas: filtros salvos, mapa pequeno, categorias.
-- Em Evento: detalhes, local, participantes.
-- Em Central: status e proximas acoes.
-
-Nao deve virar uma segunda navegacao global.
-
-### Breakpoints canônicos da fundacao
-
-- `< 768 px`: bottom navigation fixa; padding inferior respeita safe area.
-- `768–1279 px`: navigation rail fixa de 72 px.
-- `>= 1280 px`: sidebar de 224 px; rail contextual pertence a cada modo.
-
-Os três formatos usam o mesmo array de modos e o mesmo resolvedor de contexto
-territorial. Trocar viewport nao muda a arquitetura de informacao.
-
-## Navegacao por estado de login
-
-Visitante:
-
-- Hoje.
-- Explorar.
-- Comunidade em modo leitura.
-- Entrar/criar conta quando tentar participar.
-
-Morador autenticado:
-
-- Hoje.
-- Explorar.
-- Comunidade.
-- Atividade.
-- Conta.
-
-Dono/prestador:
-
-- Mesma base do morador.
-- Central aparece em Conta e como atalho desktop.
-
-Administrador:
-
-- Central/Admin separado, sem contaminar navegacao comum.
-
-## Regras contra excesso
-
-1. Nunca mostrar mais de cinco entradas fixas no mobile.
-2. Nunca listar todos os dominios como tabs globais.
-3. Usar "Mais" apenas para destinos, nao para despejar modulos.
-4. Promover modulos por relevancia contextual.
-5. Esconder modulos pausados ou sem dados.
-6. Separar descoberta, participacao e gestao.
+- `src/app/config/productModuleRegistry.ts`;
+- `src/core/navigation/territoryNavigationModes.ts`;
+- `docs/03-architecture/PRODUCT_MODULE_LIFECYCLE.md`;
+- `docs/05-ux/HOME-SPEC.md`;
+- `docs/SCREEN-MAP.md`;
+- `docs/FEATURE-MAP.md`.
