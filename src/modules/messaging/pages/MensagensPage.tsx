@@ -16,12 +16,12 @@ import {
 import { useNavigate, useParams } from "react-router-dom";
 
 import {
-  getActiveMessagingProviders,
   getMessagingProvider,
   isMessagingProviderId,
   type MessagingInboxMessage,
   type MessagingInboxProvider,
   type MessagingInboxThread,
+  type MessagingProviderId,
 } from "@/core/messaging";
 import { useSessionContext } from "@/core/session/hooks/useSessionContext";
 import { Avatar, AvatarFallback, AvatarImage } from "@/shared/components/ui/avatar";
@@ -55,7 +55,11 @@ function threadRoute(thread: MessagingInboxThread): string {
   return `/mensagens/${thread.providerId}/${thread.threadId}`;
 }
 
-export default function MensagensPage() {
+export interface MensagensPageProps {
+  providerIds: readonly MessagingProviderId[];
+}
+
+export default function MensagensPage({ providerIds }: MensagensPageProps) {
   const navigate = useNavigate();
   const { providerId, threadId } = useParams<{
     providerId?: string;
@@ -72,11 +76,20 @@ export default function MensagensPage() {
   const [sending, setSending] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const providers = useMemo(() => getActiveMessagingProviders(), []);
+  const providers = useMemo(
+    () =>
+      providerIds
+        .map((id) => getMessagingProvider(id))
+        .filter(
+          (provider): provider is MessagingInboxProvider => provider !== null,
+        ),
+    [providerIds],
+  );
   const activeProvider = useMemo<MessagingInboxProvider | null>(() => {
     if (!isMessagingProviderId(providerId)) return null;
+    if (!providerIds.includes(providerId)) return null;
     return getMessagingProvider(providerId);
-  }, [providerId]);
+  }, [providerId, providerIds]);
 
   const selectedThread = useMemo(
     () =>
