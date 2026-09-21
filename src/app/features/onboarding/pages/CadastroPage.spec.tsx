@@ -6,7 +6,7 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 
 import { AUTH_PATHS } from "@/core/auth/constants/authFlow";
 import { AuthService } from "@/core/auth/services/AuthService";
-import { PublicIdentityService } from "@/core/public-identity/services/PublicIdentityService";
+import { PublicIdentityService } from "@/core/public-identity";
 import CadastroPage from "./CadastroPage";
 
 const mocks = vi.hoisted(() => ({
@@ -69,7 +69,7 @@ vi.mock("@/core/public-identity/hooks/useIdentityAvailability", () => ({
   }),
 }));
 
-vi.mock("@/core/public-identity/services/PublicIdentityService", () => ({
+vi.mock("@/core/public-identity", () => ({
   PublicIdentityService: { checkAvailability: vi.fn() },
 }));
 
