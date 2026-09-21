@@ -22,7 +22,7 @@ import type {
 
 const uuidSchema = z.string().uuid();
 
-const threadPreviewSchema: z.ZodType<BusinessDirectThreadPreview> = z.object({
+const threadPreviewSchema = z.object({
   id: uuidSchema,
   business_id: uuidSchema,
   business_name: z.string(),
@@ -45,7 +45,7 @@ const threadPreviewSchema: z.ZodType<BusinessDirectThreadPreview> = z.object({
   created_at: z.string().datetime({ offset: true }),
 });
 
-const messageSchema: z.ZodType<BusinessDirectMessage> = z.object({
+const messageSchema = z.object({
   id: uuidSchema,
   thread_id: uuidSchema,
   sender_profile_id: uuidSchema,
@@ -66,12 +66,44 @@ function requireTimestamp(value: string, label: string): void {
   }
 }
 
-function toPreview(row: BusinessDirectThreadPreview): BusinessDirectThreadPreview {
-  return row;
+function toPreview(
+  row: z.infer<typeof threadPreviewSchema>,
+): BusinessDirectThreadPreview {
+  return {
+    id: row.id!,
+    business_id: row.business_id!,
+    business_name: row.business_name!,
+    business_slug: row.business_slug!,
+    business_profile_id: row.business_profile_id!,
+    business_avatar_url: row.business_avatar_url!,
+    customer_profile_id: row.customer_profile_id!,
+    customer_name: row.customer_name!,
+    customer_avatar_url: row.customer_avatar_url!,
+    counterparty_profile_id: row.counterparty_profile_id!,
+    counterparty_name: row.counterparty_name!,
+    counterparty_avatar_url: row.counterparty_avatar_url!,
+    participant_role: row.participant_role!,
+    last_message_at: row.last_message_at!,
+    last_message_text: row.last_message_text!,
+    unread_count: row.unread_count!,
+    blocked_by_me: row.blocked_by_me!,
+    blocked_by_other: row.blocked_by_other!,
+    closed_at: row.closed_at ?? null,
+    created_at: row.created_at!,
+  };
 }
 
-function toMessage(row: BusinessDirectMessage): BusinessDirectMessage {
-  return row;
+function toMessage(
+  row: z.infer<typeof messageSchema>,
+): BusinessDirectMessage {
+  return {
+    id: row.id!,
+    thread_id: row.thread_id!,
+    sender_profile_id: row.sender_profile_id!,
+    body: row.body!,
+    is_removed: row.is_removed!,
+    created_at: row.created_at!,
+  };
 }
 
 export class BusinessDirectMessagingService
