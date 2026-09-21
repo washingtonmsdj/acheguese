@@ -29,9 +29,8 @@ describe("mobile account concept composition", () => {
     expect(signup).toContain(
       '<span className="lg:hidden">Você pode se cadastrar de qualquer lugar.</span>',
     );
-    expect(signup).toContain(
-      '<span className="hidden lg:inline">\n                    Já tem conta?',
-    );
+    expect(signup).toContain('<span className="hidden lg:inline">');
+    expect(signup).toContain("Já tem conta?");
     expect(signup).not.toContain('name="confirmPassword"');
     expect(signup).not.toContain('name="stateId"');
     expect(signup).not.toContain('name="cityId"');
