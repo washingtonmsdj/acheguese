@@ -1484,3 +1484,12 @@ Próximo gate obrigatório:
 3. separar preferência de UI de capability operacional server-owned — especialmente aceitar entregas/corridas, que não pode ser alterado apenas no client;
 4. manter `PUBLIC_LAUNCH_SURFACES.mobility=false` até os E2E finais.
 
+### Checkpoint MVP — launch scope, rotas e governança (2026-09-20)
+
+- corrigido vazamento do item Admin de Mobilidade em launch-paused;
+- removida a segunda autoridade de exports Admin de `lazyImports.ts`;
+- `URGENTE_LEIA_PRIMEIRO_REORGANIZACAO_GLOBAL.md` reduzido a ponteiro de compatibilidade sem estado mutável;
+- CI do head auditado continua sem execução real: jobs retornam `steps=[]` e Heavy PR permanece queued;
+- detalhes e evidências: `checkpoints/2026-09-20-mvp-launch-scope-route-governance.md`.
+
+**Gate permanece aberto:** não marcar release como certificado até lint/typecheck/security/test/build + deploy/smoke same-SHA executarem de verdade.
