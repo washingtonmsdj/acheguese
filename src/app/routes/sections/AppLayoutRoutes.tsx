@@ -437,7 +437,7 @@ export function AppLayoutRoutes() {
         <Route
           path="/u/:username"
           element={launchElement(
-            "community",
+            "profiles",
             "Perfis públicos",
             <P.ProfilePublicRoute />,
           )}
