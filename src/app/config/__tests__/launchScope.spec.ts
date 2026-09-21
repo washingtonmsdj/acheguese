@@ -22,10 +22,10 @@ import {
 } from "../launchScope";
 
 describe("launchScope", () => {
-  it("keeps Business active as domain and Map/Nearby/Search active as platform capabilities", () => {
+  it("keeps Business active as domain and the MVP platform capabilities active", () => {
     expect(getActiveProductModules()).toEqual(["business"]);
     expect(getActivePlatformCapabilities()).toEqual(
-      expect.arrayContaining(["map", "nearby", "search", "messaging"]),
+      expect.arrayContaining(["profiles", "map", "nearby", "search", "messaging"]),
     );
     expect(PLATFORM_CAPABILITY_REGISTRY.nearby).toEqual({
       status: "active",
@@ -35,7 +35,15 @@ describe("launchScope", () => {
 
     expect(PRODUCT_MODULE_REGISTRY.business.status).toBe("active");
 
-    for (const enabled of ["home", "business", "map", "nearby", "search", "messaging"] as const) {
+    for (const enabled of [
+      "home",
+      "profiles",
+      "business",
+      "map",
+      "nearby",
+      "search",
+      "messaging",
+    ] as const) {
       expect(isLaunchSurfaceEnabled(enabled)).toBe(true);
     }
 
