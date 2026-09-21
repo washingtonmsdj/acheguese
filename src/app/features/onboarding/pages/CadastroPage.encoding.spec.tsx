@@ -88,7 +88,9 @@ describe("Cadastro — encoding e texto pt-BR", () => {
       count: 0,
       unavailable: false,
     });
-    vi.mocked(AuthService.signUp).mockResolvedValue(undefined);
+    vi.mocked(AuthService.signUp).mockResolvedValue({
+      requiresEmailConfirmation: true,
+    });
   });
 
   it("preserva nome Unicode sem mojibake e não persiste território fictício", async () => {
