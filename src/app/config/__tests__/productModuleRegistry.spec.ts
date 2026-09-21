@@ -8,11 +8,12 @@ import {
 } from "../productModuleRegistry";
 
 describe("productModuleRegistry", () => {
-  it("keeps the MVP product set exactly Business + Map + Nearby", () => {
+  it("keeps the MVP product set exactly Business + Map + Nearby + Search", () => {
     expect(getActiveProductModules().sort()).toEqual([
       "business",
       "map",
       "nearby",
+      "search",
     ]);
   });
 
@@ -54,7 +55,6 @@ describe("productModuleRegistry", () => {
   it("fails closed for paused post-MVP modules", () => {
     for (const module of [
       "community",
-      "search",
       "gastronomy",
       "services",
       "classifieds",
