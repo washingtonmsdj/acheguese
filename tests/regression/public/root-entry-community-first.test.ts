@@ -171,4 +171,18 @@ describe("root community-first MVP entry", () => {
     expect(fs.existsSync(visualFixture)).toBe(false);
   });
 
+  it("keeps community hero selection metadata-driven", () => {
+    const helper = read(
+      "src/core/community-feed/components/communityOverviewHelpers.ts",
+    );
+
+    expect(helper).toContain("metadata?.hero_image_url");
+    expect(helper).toContain("resolved.location.metadata");
+    expect(helper).toContain("resolved.group.metadata");
+    expect(helper).not.toContain("COMMUNITY_HERO_IMAGES");
+    expect(helper).not.toContain("@/assets/bairro-");
+    expect(helper).not.toContain("hero-cidade-salvador-real");
+    expect(helper).not.toContain("getRecordValue");
+  });
+
 });
