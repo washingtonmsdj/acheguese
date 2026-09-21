@@ -74,7 +74,7 @@ describe("MVP core module boundary", () => {
     expect(entry).not.toContain("LAUNCH_URLS.community");
     expect(entry).not.toContain("/indicar-comunidade");
     expect(entry).not.toContain("serviços e histórias");
-    expect(entry).toContain("isAuthenticated ? ACCOUNT_PATH : AUTH_PATHS.login");
+    expect(entry).toContain("buildLoginPath(ACCOUNT_PATH)");
   });
 
   it("keeps institutional product copy aligned with the four-module MVP", () => {
