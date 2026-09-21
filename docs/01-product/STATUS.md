@@ -7,7 +7,7 @@ Este arquivo não é fonte de verdade operacional, arquitetural, de segurança o
 
 Use, nesta ordem:
 
-- `URGENTE_LEIA_PRIMEIRO_REORGANIZACAO_GLOBAL.md` — regra de retomada e reorganização global;
+- `docs/README.md` — índice e precedência documental;
 - `docs/08-roadmap/EXECUCAO_MAIN_ONLY.md` — execução ativa e prontidão do MVP;
 - `docs/08-roadmap/checkpoints/` — checkpoints factuais recentes;
 - `docs/architecture/SSOT_REGISTRY.md` — owners/SSOTs ativos;

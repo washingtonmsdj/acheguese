@@ -54,7 +54,7 @@
 
 ## D-013 — Raiz do repo é mínima e governada
 
-**Decisão:** a raiz documental permanente contém `README.md`, `SECURITY.md` e `URGENTE_LEIA_PRIMEIRO_REORGANIZACAO_GLOBAL.md`; o último é a exceção permanente de governança durante e após a reorganização global. Demais documentos vivem em `docs/`. O validador canônico é `tools/architecture/validate-docs-structure.ts`.
+**Decisão atual:** a raiz documental permanente contém `README.md` e `SECURITY.md`. `URGENTE_LEIA_PRIMEIRO_REORGANIZACAO_GLOBAL.md` é somente um ponteiro temporário de compatibilidade, sem autoridade própria, permitido pelo validador enquanto callers históricos ainda dependem do nome. Novos documentos vivem em `docs/`; o ponteiro deve ser removido quando esses callers forem migrados. O validador canônico é `tools/architecture/validate-docs-structure.ts`.
 
 ## D-014 — SSOT documental: `docs/README.md` é a porta de entrada
 

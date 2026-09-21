@@ -97,4 +97,4 @@ Reconciliação exaustiva de migrations ↔ schema remoto, RLS/grants, dados e l
 - `docs/02-domain/GEOGRAPHIC_FOUNDATION.md`
 - `src/core/territorial/README.md`
 - `tools/architecture/validate-territory-ssot.ts`
-- `URGENTE_LEIA_PRIMEIRO_REORGANIZACAO_GLOBAL.md`
+- `docs/architecture/SSOT_REGISTRY.md`

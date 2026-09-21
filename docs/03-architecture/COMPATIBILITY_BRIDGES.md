@@ -2,7 +2,7 @@
 
 Status: CANONICAL — structural root cleanup closed; one paused-module runtime facade remains  
 Reviewed: 2026-09-19  
-Plan authority: `/URGENTE_LEIA_PRIMEIRO_REORGANIZACAO_GLOBAL.md`
+Operational authority: `docs/08-roadmap/EXECUCAO_MAIN_ONLY.md`
 
 ## Purpose
 
