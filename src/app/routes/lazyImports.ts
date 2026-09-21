@@ -111,9 +111,6 @@ export const NationalHubPage = lazy(
 export const EmpresasLandingPage = lazy(
   () => import("@/app/pages/EmpresasLandingPage"),
 );
-export const CidadeLandingPage = lazy(
-  () => import("@/app/pages/CidadeLandingPage"),
-);
 export const BuscaPage = lazy(() => import("@/app/pages/BuscaPage"));
 export const BuscarPage = lazy(() => import("@/app/pages/BuscarPage"));
 export const NearbyPage = lazy(() => import("@/core/nearby/pages/NearbyPage"));
