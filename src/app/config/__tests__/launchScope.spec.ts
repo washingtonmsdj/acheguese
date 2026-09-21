@@ -27,11 +27,12 @@ describe("launchScope", () => {
       dependsOn: ["map", "business"],
     });
 
-    for (const enabled of ["home", "business", "map", "nearby", "search"] as const) {
+    for (const enabled of ["home", "business", "map", "nearby"] as const) {
       expect(isLaunchSurfaceEnabled(enabled)).toBe(true);
     }
 
     for (const paused of [
+      "search",
       "community",
       "billing",
       "gastronomy",
@@ -99,11 +100,12 @@ describe("launchScope", () => {
   it("keeps presentation metadata aligned without duplicating lifecycle ownership", () => {
     const activeIds = ACTIVE_MODULES.map((module) => module.id);
 
-    for (const activeId of ["business", "map", "nearby", "search"]) {
+    for (const activeId of ["business", "map", "nearby"]) {
       expect(activeIds).toContain(activeId);
     }
 
     for (const pausedId of [
+      "search",
       "community-feed",
       "community-groups",
       "community-recommendations",
@@ -149,9 +151,10 @@ describe("launchScope", () => {
     ).toBe(false);
   });
 
-  it("keeps paused Education out of the active Business module", () => {
-    expect(isLaunchBusinessCategoryEnabled("educacao")).toBe(false);
+  it("keeps Business categories independent from paused specialized verticals", () => {
+    expect(isLaunchSurfaceEnabled("education")).toBe(false);
+    expect(isLaunchBusinessCategoryEnabled("educacao")).toBe(true);
     expect(isLaunchBusinessCategoryEnabled("restaurante")).toBe(true);
-    expect(getLaunchPausedBusinessCategoryIds()).toContain("educacao");
+    expect(getLaunchPausedBusinessCategoryIds()).toEqual([]);
   });
 });
