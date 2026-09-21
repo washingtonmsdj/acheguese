@@ -4,6 +4,16 @@
  * Canonical contracts for the geographic hierarchy.
  */
 
+export {
+  TERRITORIAL_GROUP_STATUS,
+} from '@/core/territorial/contracts';
+export type {
+  TerritorialGroup,
+  TerritorialGroupMember,
+  TerritorialGroupStatus,
+  TerritorialGroupWithMembers,
+} from '@/core/territorial/contracts';
+
 export enum LocationType {
   COUNTRY = 'country',
   STATE = 'state',
