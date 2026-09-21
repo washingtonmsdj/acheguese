@@ -51,9 +51,8 @@ export function AppLayoutSidebar() {
       isCommunityRouteSuffixSegment(pathSegments[1]) ||
       (pathSegments.length === 2 && !isReservedSlug(pathSegments[1] ?? "")));
   const isPublicBusinessLandingRoute =
-    pathname === "/empresas-landing" ||
-    (pathSegments[0] === MODULE_SLUGS.business &&
-      pathSegments[1] !== "cadastrar");
+    pathSegments[0] === MODULE_SLUGS.business &&
+    pathSegments[1] !== "cadastrar";
   const isTerritoryVivoExploreRoute =
     pathSegments[0] === MODULE_SLUGS.search &&
     (pathSegments.length === 1 ||
