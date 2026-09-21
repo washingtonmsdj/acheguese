@@ -792,7 +792,7 @@ export async function getBusinessBySlug(slug: string): Promise<{
   }
 }
 
-export { checkSlugExists, getSimilarSlugs } from "./business.slug-queries";
+export { checkSlugExists } from "./business.slug-queries";
 
 /**
  * Buscar businesses por IDs (para uso em serviços agregadores)
