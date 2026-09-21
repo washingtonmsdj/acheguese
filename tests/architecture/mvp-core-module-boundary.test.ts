@@ -30,6 +30,7 @@ describe("MVP core module boundary", () => {
   const publicMvpE2e = read("tests/e2e/territory-home-operational.spec.ts");
   const packageJson = read("package.json");
   const heavyPrWorkflow = read(".github/workflows/certify-heavy-pr-auto.yml");
+  const heavyExactShaWorkflow = read(".github/workflows/certify-heavy.yml");
   const previewE2eRunner = read("tools/release/run-preview-e2e.ps1");
 
   it("keeps lifecycle ownership centralized and Nearby dependent on Map + Business", () => {
@@ -273,6 +274,28 @@ describe("MVP core module boundary", () => {
     );
     expect(heavyPrWorkflow).not.toContain(
       ".\\scripts\\ci\\run-preview-e2e.ps1",
+    );
+  });
+
+  it("keeps exact-SHA release certification focused on the active MVP while preserving global quality gates", () => {
+    expect(heavyExactShaWorkflow).toContain('npm run test:e2e:mvp');
+    expect(heavyExactShaWorkflow).toContain('@("run", "test:mvp:architecture")');
+    expect(heavyExactShaWorkflow).toContain('& npm run test');
+    expect(heavyExactShaWorkflow).toContain('@("run", "lint")');
+    expect(heavyExactShaWorkflow).toContain('@("run", "typecheck")');
+    expect(heavyExactShaWorkflow).toContain('@("run", "security:validate")');
+
+    expect(heavyExactShaWorkflow).not.toContain(
+      "validate-education-module-boundaries.ts",
+    );
+    expect(heavyExactShaWorkflow).not.toContain(
+      "validate-gastronomy-module-boundaries.ts",
+    );
+    expect(heavyExactShaWorkflow).not.toContain(
+      "eslint-rules/configs/billing-rules.config.js",
+    );
+    expect(heavyExactShaWorkflow).not.toContain(
+      "src/core/billing/__tests__/contracts/",
     );
   });
 });
