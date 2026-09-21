@@ -276,9 +276,9 @@ export default function CadastroPage() {
                   render={({ field, fieldState }) => (
                     <FormItem className="space-y-1.5">
                       <FormLabel className="text-[14px] font-semibold text-foreground">Nome de usuário</FormLabel>
-                      <FormControl>
-                        <div className="relative">
-                          <span className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-[16px] text-muted-foreground">@</span>
+                      <div className="relative">
+                        <span className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-[16px] text-muted-foreground">@</span>
+                        <FormControl>
                           <Input
                             {...field}
                             autoComplete="username"
@@ -306,8 +306,8 @@ export default function CadastroPage() {
                                 "border-success",
                             )}
                           />
-                        </div>
-                      </FormControl>
+                        </FormControl>
+                      </div>
                       <div id="cadastro-username-status" aria-live="polite" className="min-h-4 text-[11.5px] leading-4">
                         {usernameAvailability.isChecking ? (
                           <span className="text-muted-foreground">Verificando disponibilidade…</span>
