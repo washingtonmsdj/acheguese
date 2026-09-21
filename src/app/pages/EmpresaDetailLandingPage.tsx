@@ -15,6 +15,7 @@ import { useBusinessProducts } from "@/modules/business/hooks/useBusinessProduct
 import { useBusinessRecommendation } from "@/modules/business/hooks/useBusinessRecommendation";
 import { usePublicBusinessSnapshot } from "@/modules/business/public/hooks";
 import { LAUNCH_URLS } from "@/core/routing/config/territory";
+import { isLaunchSurfaceEnabled } from "@/app/config/launchScope";
 import { buildGoogleMapsSearchUrl } from "@/shared/utils/contactLinks";
 import { openSafeExternalUrl } from "@/shared/utils/safeRedirect";
 import { getRecordValue } from "@/shared/utils/recordLookup";
@@ -69,6 +70,7 @@ export default function EmpresaDetailLandingPage(
   const district = props.routeParams?.district ?? urlParams.district;
   const slug = props.routeParams?.slug ?? urlParams.slug;
   const navigate = useNavigate();
+  const gastronomyEnabled = isLaunchSurfaceEnabled("gastronomy");
 
   const [showAllHours, setShowAllHours] = useState(false);
   const [showAllProducts, setShowAllProducts] = useState(false);
@@ -393,7 +395,7 @@ export default function EmpresaDetailLandingPage(
     );
   }
 
-  if (snapshot.verticals.primaryVertical === "gastronomy") {
+  if (gastronomyEnabled && snapshot.verticals.primaryVertical === "gastronomy") {
     return (
       <GastronomyDetailPage
         routeParams={{ state, city, district, slug }}
@@ -429,15 +431,18 @@ export default function EmpresaDetailLandingPage(
   const robotsContent = props.communityAliasOverride
     ? "noindex, follow"
     : snapshot.seo.robots;
-  const gastronomyUrl = snapshot.verticals.canonicalVerticalUrl
-    ? contextualBusinessUrl ?? snapshot.verticals.canonicalVerticalUrl
-    : null;
-  const verticalPublicUrls = contextualBusinessUrl && snapshot.verticals.verticalPublicUrls.gastronomy
+  const gastronomyUrl =
+    gastronomyEnabled && snapshot.verticals.canonicalVerticalUrl
+      ? contextualBusinessUrl ?? snapshot.verticals.canonicalVerticalUrl
+      : null;
+  const verticalPublicUrls = gastronomyEnabled && contextualBusinessUrl && snapshot.verticals.verticalPublicUrls.gastronomy
     ? {
         ...snapshot.verticals.verticalPublicUrls,
         gastronomy: contextualBusinessUrl,
       }
-    : snapshot.verticals.verticalPublicUrls;
+    : gastronomyEnabled
+      ? snapshot.verticals.verticalPublicUrls
+      : { ...snapshot.verticals.verticalPublicUrls, gastronomy: null };
   const isDeliveryBusiness =
     business.tem_delivery || business.modos_atendimento?.includes("delivery");
   const hasDesktopProducts = products.length > 0;
