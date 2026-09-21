@@ -1,57 +1,39 @@
 # Checkpoint R4 — Empresas públicas no MVP — 2026-09-21
 
-## Escopo
+## Estado atual
 
-Certificação parcial do fluxo público de Empresas no território de lançamento, sem ampliar o launch scope.
+Este checkpoint substitui a suposição anterior de que `category=educacao` deveria ser escondida quando o módulo Educação estivesse pausado.
 
-## Finding corrigido
+A decisão final do MVP separa dois conceitos:
 
-O read model real do Complexo do Nordeste de Amaralina contém registros de categoria `educacao`, enquanto `PUBLIC_LAUNCH_SURFACES.education=false`.
+- **Business category**: classificação institucional da empresa;
+- **vertical module**: experiência especializada opcional.
 
-A navegação de categorias já ocultava Educação, mas `EmpresasLandingPage` usava a coleção real completa no modo “Tudo”. Isso permitia que empresas/escolas de uma vertical pausada aparecessem em cards, hero, contadores, favoritos e destaques de uma superfície ativa.
+Portanto uma escola continua sendo uma Empresa pública válida, mesmo com `education=false`.
 
-A landing agora aplica `isLaunchBusinessCategoryEnabled(normalizeBusinessCategoryId(...))` imediatamente após normalizar os dados reais. Todo downstream visual parte dessa coleção filtrada.
+## Evidência
 
-## Evidência remota
+O dataset público preservado contém escolas reais e as fixtures de lojas/profissionais foram retiradas da exposição pública.
 
-Projeto canônico Supabase: `acheguese`.
+A probe `tests/security/business-mvp-public-flow-remote-probe.sql` agora seleciona dinamicamente qualquer Business ativo e roteável no território de lançamento, sem excluir Educação e sem depender de nome/UUID de fixture.
 
-No snapshot auditado do grupo `complexo-do-nordeste-de-amaralina`:
+Ela valida em transação rollback-only:
 
-- 15 registros ativos de `public_business_search` estavam em `category=educacao`;
-- 1 registro ativo estava em `category=servicos`;
-- o registro liberado usado na prova foi `Tone Cos Loja` (`tone-cos-loja`);
-- localização: `/br/ba/salvador/nordeste-de-amaralina`;
-- a RPC `get_public_business_snapshot_by_slug` retornou snapshot real;
-- canonical retornada: `/empresas/ba/salvador/nordeste-de-amaralina/tone-cos-loja`;
-- `identity.businessId` do snapshot corresponde ao row de `public_business_search`.
+- `public_business_search`;
+- slug e `geographic_path` válidos;
+- `get_public_business_snapshot_by_slug`;
+- identidade do Business;
+- URL canônica de detalhe.
 
-O probe versionado `tests/security/business-mvp-public-flow-remote-probe.sql` foi executado contra o projeto canônico e concluiu sem exceção, encerrando em `ROLLBACK`.
+A probe foi executada no Supabase canônico em 2026-09-21 sem exceção.
 
-## Ratchets
+## Contrato
 
-- `tests/architecture/business-mvp-public-flow.test.ts` exige filtro de categoria pausada antes das derivações visuais.
-- O mesmo teste exige o probe rollback-only e a validação de identidade/canonical do detalhe.
-- `src/app/config/__tests__/launchScope.spec.ts` já prova `education=false` e `isLaunchBusinessCategoryEnabled("educacao") === false`.
+- `business=true`;
+- `education=false`;
+- `isLaunchBusinessCategoryEnabled("educacao") === true`;
+- ativar/desativar uma vertical especializada não altera automaticamente a visibilidade institucional de uma categoria Business.
 
-## Estado R4
+## Pendências
 
-**Parcialmente certificado.**
-
-Provado neste checkpoint:
-
-- território real;
-- read model real;
-- exclusão de categoria pausada da vitrine ativa;
-- empresa permitida real;
-- RPC de detalhe real;
-- URL canônica real;
-- probe remoto repetível e sem persistência.
-
-Ainda não provado:
-
-- browser E2E no mesmo SHA;
-- build/deploy do mesmo SHA;
-- smoke no domínio público do mesmo SHA.
-
-Esses três itens permanecem dependentes da restauração dos runners e da liberação da cota de deploy; não devem ser confundidos com falha funcional de Empresas.
+Browser E2E, build/deploy do mesmo SHA e smoke público continuam pendentes enquanto a infraestrutura de CI/deploy não produzir execução real.
