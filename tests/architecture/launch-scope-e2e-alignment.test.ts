@@ -36,7 +36,7 @@ describe("MVP launch-scope alignment", () => {
     expect(PLATFORM_CAPABILITY_REGISTRY.map.status).toBe("active");
     expect(PLATFORM_CAPABILITY_REGISTRY.nearby.status).toBe("active");
     expect(PLATFORM_CAPABILITY_REGISTRY.search.status).toBe("active");
-    expect(PLATFORM_CAPABILITY_REGISTRY.messaging.status).toBe("paused");
+    expect(PLATFORM_CAPABILITY_REGISTRY.messaging.status).toBe("active");
     expect(PLATFORM_CAPABILITY_REGISTRY.nearby.dependsOnCapabilities).toEqual([
       "map",
       "location",
@@ -94,7 +94,7 @@ describe("MVP launch-scope alignment", () => {
       "events=false",
       "communityEventsPreview=false",
       "communication=false",
-      "messaging=false",
+      "messaging=true",
       "mobility=false",
       "coupons=false",
       "gamification=false",
@@ -118,7 +118,6 @@ describe("MVP launch-scope alignment", () => {
       "/servicos",
       "/vagas",
       "/eventos",
-      "/mensagens",
       "/educacao",
       "/mobilidade",
     ]) {
