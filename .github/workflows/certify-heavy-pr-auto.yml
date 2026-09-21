@@ -195,12 +195,12 @@ jobs:
           CI: true
         run: |
           $regressionFiles = @(
-            Get-ChildItem -Path "tests" -File -Filter "regression-*.test.ts" |
-              Sort-Object Name |
+            Get-ChildItem -Path "tests/regression" -Recurse -File -Filter "*.test.ts" |
+              Sort-Object FullName |
               ForEach-Object { $_.FullName }
           )
           if ($regressionFiles.Count -eq 0) {
-            Write-Error "Certification blocked: no regression-*.test.ts files were found."
+            Write-Error "Certification blocked: tests/regression contains no *.test.ts files."
             exit 1
           }
           Write-Host "Regression files ($($regressionFiles.Count)):"
