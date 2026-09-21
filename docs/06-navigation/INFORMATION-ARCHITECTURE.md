@@ -4,8 +4,9 @@ Status: **VISÃO PÓS-MVP / não executável**.
 
 > O contrato vigente de navegação está em `NAVIGATION-SYSTEM.md` e no
 > `productModuleRegistry.ts`. As categorias/modos descritos abaixo são opções
-> de evolução e não autorizam Search, Community, Serviços, Classificados ou
-> qualquer módulo `paused`.
+> de evolução e não autorizam Community, Serviços, Classificados ou qualquer
+> módulo `paused`. **Search está ativo no MVP**, mas isso não ativa os outros
+> modos descritos abaixo.
 
 ## Principio central
 
@@ -23,6 +24,7 @@ No release atual, a arquitetura de informação é deliberadamente menor:
 - **Empresas** — entidade Business;
 - **Mapa** — projeção geográfica do núcleo ativo;
 - **Perto de mim** — descoberta Business por proximidade;
+- **Busca** — descoberta textual sobre providers atualmente ativos;
 - **Conta/Entrar** — plataforma.
 
 Demais modos e entidades deste documento são pós-MVP enquanto seus módulos
