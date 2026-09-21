@@ -5,6 +5,7 @@ import { seedAuthFlowState } from "./helpers/authFlowState";
 const MOBILE = { width: 390, height: 844 };
 const DESKTOP = { width: 1440, height: 900 };
 const AUTH_RETURN_PATH = "/mensagens/business/44444444-4444-4444-8444-444444444444";
+const LOGIN_WITH_RETURN = `/login?redirect=${encodeURIComponent(AUTH_RETURN_PATH)}`;
 
 async function prepareAuthVisualState(page: Page) {
   await seedAuthFlowState(page, {
@@ -42,7 +43,7 @@ test.describe("Conta e acesso — contrato visual responsivo do concept", () => 
   test("mobile mantém a composição de uma coluna do concept", async ({ page }) => {
     await page.setViewportSize(MOBILE);
 
-    await page.goto("/login?redirect=%2Fmensagens%2Fsabores-da-ana", {
+    await page.goto(LOGIN_WITH_RETURN, {
       waitUntil: "domcontentloaded",
     });
     await expect(
@@ -107,7 +108,7 @@ test.describe("Conta e acesso — contrato visual responsivo do concept", () => 
     await expect(page.getByText("Conversas", { exact: true })).toBeVisible();
     await expect(page.getByRole("link", { name: "Voltar para entrar" })).toHaveAttribute(
       "href",
-      "/login?redirect=%2Fmensagens%2Fsabores-da-ana",
+      LOGIN_WITH_RETURN,
     );
     await expectNoHorizontalOverflow(page);
     await expectNoGenericSvgInMain(page);
