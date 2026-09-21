@@ -17,6 +17,10 @@ const provider = read(
 const providerRegistry = read(
   "src/core/messaging/providers/messagingProviderRegistry.ts",
 );
+const providerScope = read(
+  "src/app/config/messagingProviderScope.ts",
+);
+const inboxWrapper = read("src/app/pages/MessagingInboxPage.tsx");
 const inbox = read("src/modules/messaging/pages/MensagensPage.tsx");
 const cta = read(
   "src/modules/business/company/sections/EmpresaCTAsSection.tsx",
@@ -81,10 +85,13 @@ describe("Business Messaging MVP", () => {
     );
 
     expect(providerRegistry).toContain("businessMessagingProvider");
-    expect(providerRegistry).toContain("classifieds: null");
-    expect(providerRegistry).toContain("community: null");
+    expect(providerRegistry).not.toContain("@/app/");
+    expect(providerScope).toContain('isPlatformCapabilityEnabled("messaging")');
+    expect(providerScope).toContain('isProductModuleEnabled(productModule)');
+    expect(providerScope).toContain('getMessagingProvider(providerId) !== null');
+    expect(inboxWrapper).toContain("getActiveMessagingProviderIds()");
     expect(provider).toContain('providerId: "business"');
-    expect(inbox).toContain("getActiveMessagingProviders()");
+    expect(inbox).toContain("providerIds");
     expect(inbox).toContain('/mensagens/${thread.providerId}/${thread.threadId}');
   });
 
