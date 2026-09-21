@@ -4,17 +4,17 @@
 >
 > **Decisão vigente:** 2026-09-21.
 >
-> **Módulos de produto ativos:** **Empresas + Mapa + Perto de mim**.
+> **Módulos de produto ativos:** **Empresas + Mapa + Perto de mim + Busca**.
 
 ## 1. Papel da Home
 
-A Home não é um quarto módulo de produto.
+A Home não é um módulo de produto adicional.
 
 Ela é uma superfície de plataforma responsável por:
 
 - estabelecer o contexto territorial;
 - apresentar somente capacidades efetivamente ativas;
-- encaminhar para Empresas, Mapa e Perto de mim;
+- encaminhar para Empresas, Mapa, Perto de mim e Busca;
 - manter estados de loading, erro e ausência de dados coerentes;
 - não recriar regras de domínio que pertencem aos módulos.
 
@@ -29,6 +29,7 @@ O MVP contém somente:
 | Empresas | `business` | `active` | — |
 | Mapa | `map` | `active` | port público de Business quando projeta empresas |
 | Perto de mim | `nearby` | `active` | `map + business` |
+| Busca | `search` | `active` | providers habilitados pelo lifecycle |
 
 A autoridade executável é `src/app/config/productModuleRegistry.ts`.
 
@@ -41,6 +42,7 @@ A Home pode apresentar:
 - entrada para Empresas;
 - entrada para Mapa;
 - entrada para Perto de mim;
+- entrada para Busca;
 - contexto territorial necessário a essas experiências;
 - estado de localização quando necessário;
 - estados vazios e mensagens operacionais reais.
@@ -52,7 +54,6 @@ A Home **não pode** consultar, pré-carregar ou montar cards escondidos de mód
 Enquanto estiverem `paused`, não participam da Home:
 
 - Comunidade/Feed;
-- Busca federada;
 - Classificados;
 - Serviços/Profissionais;
 - Gastronomia;
@@ -82,13 +83,14 @@ Home, Conta/Auth e outros elementos de plataforma podem existir quando necessár
 
 ## 6. Dados e composição
 
-A Home não é owner dos dados de Empresas, Mapa ou Perto de mim.
+A Home não é owner dos dados de Empresas, Mapa, Perto de mim ou Busca.
 
 Direções esperadas:
 
 - Home -> URL/port público do módulo;
 - Mapa -> `businessMapQueryService` -> read model público de Business;
 - Perto de mim -> Business + Map pelas interfaces autorizadas;
+- Busca -> Search providers -> owners ativos, sem acesso cruzado direto;
 - nunca Home/Mapa/Nearby -> tabela interna de módulo pausado.
 
 A antiga composição multi-domínio da Home não deve retornar por conveniência.
@@ -158,7 +160,7 @@ Novo módulo nasce isolado e `paused`; só vira `active` após certificação.
 
 A Home do MVP está correta quando:
 
-- apresenta somente Empresas, Mapa e Perto de mim como capacidades de produto;
+- apresenta somente Empresas, Mapa, Perto de mim e Busca como capacidades de produto;
 - nenhuma superfície pausada aparece por navegação, card, provider, prefetch ou layer;
 - `nearby` depende formalmente de `map + business`;
 - Mapa acessa Business por port público;
