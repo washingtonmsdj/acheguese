@@ -5,7 +5,6 @@
  * - Território   → useModuleTerritoryFilter({ routeResolved, activeMemberIds })
  * - Focus target → URL com lat/lng explicita, sem herdar filtro territorial artificial
  * - Businesses   → MapBusinessLayerRuntimeService com bounds + territoryFilter no banco
- * - Eventos      → EventsService.getByBounds com territoryFilter
  * - Projeção     → mapEntityProjection (MapEntityProjectionService)
  * - Viewport     → useMapViewportFetch + MapLibreAdapter
  * - Geoloc GPS   → MapLibreAdapter.controls.location (via MapLocationControl → useRobustGeolocation → GeolocationService)
@@ -15,7 +14,7 @@
 
 import React, { useRef, useCallback, useEffect, useMemo, useState } from 'react';
 import { Link, useNavigate, useSearchParams } from 'react-router-dom';
-import { Building2, MapPin, Navigation } from 'lucide-react';
+import { Building2, Navigation } from 'lucide-react';
 import { MapLibreAdapter, type MapLibreAdapterHandle } from '../components/v3/MapLibreAdapter';
 import { MapMarkerPopup } from '../components/v3/MapMarkerPopup';
 import { useMapViewportFetch } from '../hooks/useMapViewportFetch';
@@ -33,6 +32,12 @@ import { useTerritoryPolygon, type TerritoryPolygon } from '../hooks/useTerritor
 import { useQuery } from '@tanstack/react-query';
 import { createLocationRepository } from '@/core/location/repositories/createLocationRepository';
 import { APP_MODULE_SLUGS, buildAppModulePath } from '@/shared/config/moduleSlugs';
+import {
+  MODULE_SLUGS,
+  buildGroupBaseUrl,
+  buildModuleTerritoryUrl,
+  geoPathToPublicUrl,
+} from '@/core/routing/utils/territoryUrls';
 import { boundaryService } from '@/core/geospatial';
 import { EntityStatus } from '@/shared/types/enums';
 import type { BoundingBox, MapLayerKey, MapMarker, MapViewport } from '../types/core';
@@ -55,9 +60,11 @@ const INITIAL_ZOOM = MAP_DEFAULT_ZOOM;
 function MvpMapHeader({
   territoryName,
   mapLabel,
+  businessHref,
 }: {
   territoryName: string;
   mapLabel: string;
+  businessHref: string;
 }) {
   return (
     <section className="rounded-[24px] border border-border bg-card px-4 py-4 shadow-sm sm:px-5">
@@ -78,7 +85,7 @@ function MvpMapHeader({
           aria-label="Módulos relacionados ao mapa"
         >
           <Link
-            to={BUSINESS_MAP_BASE_URL}
+            to={businessHref}
             className="inline-flex min-h-10 items-center gap-2 rounded-xl border border-border px-3 text-sm font-semibold text-foreground transition-colors hover:bg-muted"
           >
             <Building2 className="h-4 w-4" aria-hidden="true" />
@@ -252,6 +259,25 @@ function resolvedCenterKey(resolved: ResolvedTerritory | null): string {
   return `group:${resolved.group.id}`;
 }
 
+function resolveBusinessListUrl(resolved: ResolvedTerritory | null): string {
+  if (!resolved) return BUSINESS_MAP_BASE_URL;
+
+  if (resolved.kind === 'location') {
+    return buildModuleTerritoryUrl(
+      MODULE_SLUGS.business,
+      geoPathToPublicUrl(resolved.location.geographic_path),
+    );
+  }
+
+  const firstMember = resolved.group.members.at(0);
+  if (!firstMember?.geographic_path) return BUSINESS_MAP_BASE_URL;
+
+  return buildModuleTerritoryUrl(
+    MODULE_SLUGS.business,
+    buildGroupBaseUrl(resolved.group, firstMember.geographic_path),
+  );
+}
+
 function makeBusinessFetcher(territoryFilter: TerritoryFilter | undefined) {
   return async (bounds: BoundingBox): Promise<MapMarker[]> => {
     try {
@@ -400,6 +426,10 @@ export default function MapaPageV4({
   const { polygons: territoryPolygons } = useTerritoryPolygon(effectiveResolved);
   const territoryLabels = useTerritoryLabels(effectiveResolved);
   const territoryName = territoryLabels.name || publicBrowsingCity.city || 'Seu território';
+  const businessListUrl = React.useMemo(
+    () => resolveBusinessListUrl(effectiveResolved),
+    [effectiveResolved],
+  );
 
   const businessesLayerVisible = visibleLayers.businesses !== false;
 
@@ -610,6 +640,7 @@ export default function MapaPageV4({
       <MvpMapHeader
         territoryName={territoryName}
         mapLabel={territoryLabels.mapLabel}
+        businessHref={businessListUrl}
       />
       <section className="overflow-hidden rounded-[24px] border border-border bg-card shadow-sm">
         <div className="h-[68vh] min-h-[28rem]">
