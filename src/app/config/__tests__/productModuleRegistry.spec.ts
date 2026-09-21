@@ -63,6 +63,7 @@ describe("productModuleRegistry", () => {
       "jobs",
       "events",
       "communication",
+      "messaging",
       "mobility",
       "coupons",
       "gamification",
