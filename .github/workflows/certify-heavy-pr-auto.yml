@@ -188,27 +188,13 @@ jobs:
           if-no-files-found: ignore
           retention-days: 7
 
-      - name: Run regression tests with non-empty discovery
+      - name: Run active MVP regression contract
         id: regression
         continue-on-error: true
         shell: powershell
         env:
           CI: true
-        run: |
-          $regressionFiles = @(
-            Get-ChildItem -Path "tests/regression" -Recurse -File -Filter "*.test.ts" |
-              Sort-Object FullName |
-              ForEach-Object { $_.FullName }
-          )
-          if ($regressionFiles.Count -eq 0) {
-            Write-Error "Certification blocked: tests/regression contains no *.test.ts files."
-            exit 1
-          }
-          Write-Host "Regression files ($($regressionFiles.Count)):"
-          $regressionFiles | ForEach-Object { Write-Host " - $_" }
-          $vitestArgs = @("vitest", "--run") + $regressionFiles
-          & npx @vitestArgs
-          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+        run: npm run test:mvp:regression
 
       - name: Validate territorial regression boundaries
         id: boundaries
