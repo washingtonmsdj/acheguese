@@ -42,18 +42,22 @@ jobs:
 
       - name: Run ESLint Security Scan
         id: eslint_security
+        continue-on-error: true
         run: npm run lint:security
 
       - name: Run npm audit (production moderate+ gate)
         id: npm_audit_production
+        continue-on-error: true
         run: npm audit --omit=dev --audit-level=moderate
 
       - name: Run npm audit (full tree high and critical gate)
         id: npm_audit
+        continue-on-error: true
         run: npm audit --audit-level=high
 
       - name: Run Semgrep Security Scan
         id: semgrep
+        continue-on-error: true
         uses: returntocorp/semgrep-action@v1
         with:
           config: >-
@@ -64,6 +68,7 @@ jobs:
 
       - name: Run Gitleaks
         id: gitleaks
+        continue-on-error: true
         shell: bash
         run: |
           version="8.30.1"
@@ -73,13 +78,19 @@ jobs:
           curl --fail --silent --show-error --location "$release/gitleaks_${version}_checksums.txt" --output checksums.txt
           grep " $archive$" checksums.txt | sha256sum --check --strict
           tar -xzf "$archive" gitleaks
-          ./gitleaks git . --config .gitleaks.toml --redact --no-banner
+          ./gitleaks git . \
+            --config .gitleaks.toml \
+            --redact \
+            --no-banner \
+            --report-format json \
+            --report-path gitleaks-report.json
 
           baseline_count="$(grep -Ev '^(#|[[:space:]]*$)' .gitleaksignore | wc -l | tr -d ' ')"
           echo "Historical Gitleaks baseline: ${baseline_count} fingerprint(s)." >> "$GITHUB_STEP_SUMMARY"
 
       - name: Scan for XSS patterns
         id: xss_patterns
+        continue-on-error: true
         shell: bash
         run: |
           if grep -r "\.innerHTML\s*=" src/ | grep -v "DOMPurify"; then
@@ -101,6 +112,7 @@ jobs:
 
       - name: TypeScript Strict Check
         id: typescript_strict
+        continue-on-error: true
         run: npx tsc --noEmit --strict
 
       - name: Generate truthful security report
@@ -125,12 +137,45 @@ jobs:
             echo "The artifact is a convenience copy. Scanner outcomes above are the security gate."
           } | tee security-report.md >> "$GITHUB_STEP_SUMMARY"
 
-      - name: Upload security report (non-gating transport)
+      - name: Upload security diagnostics (non-gating transport)
         if: always()
         continue-on-error: true
         uses: actions/upload-artifact@v7
         with:
           name: security-report
-          path: security-report.md
-          if-no-files-found: error
+          path: |
+            security-report.md
+            gitleaks-report.json
+          if-no-files-found: warn
           retention-days: 7
+
+      - name: Enforce security scan outcomes
+        if: always()
+        shell: bash
+        env:
+          ESLINT_OUTCOME: ${{ steps.eslint_security.outcome }}
+          NPM_PROD_OUTCOME: ${{ steps.npm_audit_production.outcome }}
+          NPM_FULL_OUTCOME: ${{ steps.npm_audit.outcome }}
+          SEMGREP_OUTCOME: ${{ steps.semgrep.outcome }}
+          GITLEAKS_OUTCOME: ${{ steps.gitleaks.outcome }}
+          XSS_OUTCOME: ${{ steps.xss_patterns.outcome }}
+          TYPESCRIPT_OUTCOME: ${{ steps.typescript_strict.outcome }}
+        run: |
+          failed=0
+          for entry in \
+            "ESLint security=$ESLINT_OUTCOME" \
+            "npm audit production=$NPM_PROD_OUTCOME" \
+            "npm audit full=$NPM_FULL_OUTCOME" \
+            "Semgrep=$SEMGREP_OUTCOME" \
+            "Gitleaks=$GITLEAKS_OUTCOME" \
+            "XSS patterns=$XSS_OUTCOME" \
+            "TypeScript strict=$TYPESCRIPT_OUTCOME"
+          do
+            name="${entry%%=*}"
+            outcome="${entry#*=}"
+            if [ "$outcome" != "success" ]; then
+              echo "::error::Security gate failed: $name ($outcome)"
+              failed=1
+            fi
+          done
+          exit "$failed"
