@@ -461,10 +461,10 @@ export default function BuscaPage() {
         <header className="relative">
           <div className="pr-0 md:pr-0">
             <h1 className="font-heading text-[2rem] font-bold leading-[1.08] tracking-[-0.04em] text-territory-ink sm:text-4xl">
-              Explorar
+              Busca
             </h1>
             <p className="mt-2 hidden text-[0.9375rem] leading-6 text-territory-muted sm:block sm:text-base">
-              Encontre o que você precisa na comunidade.
+              Encontre empresas e resultados dos módulos ativos neste território.
             </p>
           </div>
           <button
