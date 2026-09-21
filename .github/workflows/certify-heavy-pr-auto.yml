@@ -148,7 +148,7 @@ jobs:
             Write-Error "Certification blocked: authenticated E2E credentials are not configured."
             exit 1
           }
-          & .\scripts\ci\run-preview-e2e.ps1 `
+          & .\tools\release\run-preview-e2e.ps1 `
             -Name "logout" `
             -Port 8100 `
             -DistDir ".e2e-dist/auth" `
@@ -261,7 +261,7 @@ jobs:
           VITE_SUPABASE_ANON_KEY: ci-public-fixture-key
           PLAYWRIGHT_SKIP_WEBSERVER: "1"
         run: |
-          & .\scripts\ci\run-preview-e2e.ps1 `
+          & .\tools\release\run-preview-e2e.ps1 `
             -Name "public" `
             -Port 8099 `
             -DistDir ".e2e-dist/public" `
