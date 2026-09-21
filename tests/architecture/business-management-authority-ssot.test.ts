@@ -14,7 +14,8 @@ describe("Business management authority SSOT", () => {
 
     expect(service).toContain("profileService.getProfileById(ownerProfileId)");
     expect(service).toContain("profile?.user_id === userId");
-    expect(service).toContain("ProfileMembersService.isManager(ownerProfileId, userId)");
+    expect(service).toContain("ProfileMembersService.getActiveRole(");
+    expect(service).toContain("activeRole === 'admin' ? 'admin' : null");
     expect(service).not.toContain(".from('profiles')");
 
     expect(membershipService).toContain(".eq('is_active', true)");
