@@ -27,6 +27,8 @@ describe("MVP core module boundary", () => {
   );
   const appRoutes = read("src/app/routes/sections/AppLayoutRoutes.tsx");
   const rootRoutes = read("src/app/routes/AppRoutes.tsx");
+  const publicMvpE2e = read("tests/e2e/territory-home-operational.spec.ts");
+  const packageJson = read("package.json");
 
   it("keeps lifecycle ownership centralized and Nearby dependent on Map + Business", () => {
     expect(registry).toContain('business: { status: "active" }');
@@ -237,5 +239,27 @@ describe("MVP core module boundary", () => {
     expect(territoryNavigation).not.toContain('id: "explore"');
     expect(territoryNavigation).not.toContain('id: "activity"');
     expect(territoryNavigation).not.toContain('MODULE_SLUGS.search');
+  });
+
+  it("keeps release E2E aligned with the three-module MVP instead of the retired community-first contract", () => {
+    expect(publicMvpE2e).toContain("/empresas/ba/salvador/pituba");
+    expect(publicMvpE2e).toContain("/mapa/ba/salvador/pituba");
+    expect(publicMvpE2e).toContain("/perto-de-mim");
+    expect(publicMvpE2e).toContain("HOME_BUSINESS");
+    expect(publicMvpE2e).toContain("430m");
+
+    for (const stale of [
+      "Explorar o Complexo do Nordeste de Amaralina",
+      "Community ainda não liberada",
+      'name: "Explorar"',
+      'name: "Comunidade"',
+      'data-bottom-nav-item="comunidade"',
+    ]) {
+      expect(publicMvpE2e).not.toContain(stale);
+    }
+
+    expect(packageJson).toContain('"test:mvp:architecture"');
+    expect(packageJson).toContain('"test:e2e:mvp"');
+    expect(packageJson).toContain("tests/e2e/launch-scope-public.spec.ts");
   });
 });
