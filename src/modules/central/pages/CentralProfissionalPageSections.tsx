@@ -231,12 +231,14 @@ function ServiceCard({ service }: { service: Professional }) {
               Editar
             </Link>
           </Button>
-          <Button asChild variant="outline" size="sm">
-            <Link to={publicUrl}>
-              <Eye className="mr-2 h-4 w-4" />
-              Ver público
-            </Link>
-          </Button>
+          {publicUrl && (
+            <Button asChild variant="outline" size="sm">
+              <Link to={publicUrl}>
+                <Eye className="mr-2 h-4 w-4" />
+                Ver público
+              </Link>
+            </Button>
+          )}
         </div>
       </CardContent>
     </Card>
