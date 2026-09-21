@@ -465,15 +465,27 @@ export function AppLayoutRoutes() {
         />
         <Route
           path="/servicos/cadastrar"
-          element={protectedElement(<P.CadastrarServicoPage />)}
+          element={launchElement(
+            "services",
+            "Serviços",
+            protectedElement(<P.CadastrarServicoPage />),
+          )}
         />
         <Route
           path="/servicos/:id/editar"
-          element={protectedElement(<P.EditarServicoPage />)}
+          element={launchElement(
+            "services",
+            "Serviços",
+            protectedElement(<P.EditarServicoPage />),
+          )}
         />
         <Route
           path="/servicos/orcamentos/:leadId"
-          element={protectedElement(<P.ProfessionalLeadTrackingPage />)}
+          element={launchElement(
+            "services",
+            "Serviços",
+            protectedElement(<P.ProfessionalLeadTrackingPage />),
+          )}
         />
         <Route
           path="/classificados/novo"
@@ -608,8 +620,14 @@ export function AppLayoutRoutes() {
             ),
           )}
         />
-        <Route path="/mapa" element={<P.MapaPage />} />
-        <Route path="/perto-de-mim" element={<P.NearbyPage />} />
+        <Route
+          path="/mapa"
+          element={launchElement("map", "Mapa", <P.MapaPage />)}
+        />
+        <Route
+          path="/perto-de-mim"
+          element={launchElement("nearby", "Perto de mim", <P.NearbyPage />)}
+        />
         <Route
           path="/analytics"
           element={launchElement(
@@ -737,7 +755,10 @@ export function AppLayoutRoutes() {
             <P.CommunicationRequestPage />,
           )}
         />
-        <Route path="/servicos" element={<P.ServicosLandingPage />} />
+        <Route
+          path="/servicos"
+          element={launchElement("services", "Serviços", <P.ServicosLandingPage />)}
+        />
         <Route path="/classificados" element={<P.ClassificadosPage />} />
         <Route
           path={mobilityRoutes.passageiro.home}
@@ -841,7 +862,7 @@ export function AppLayoutRoutes() {
         {/* Detalhe com territorio (4 segmentos): /pontos-turisticos/:state/:city/:district/:slug */}
         <Route
           path={touristPointPublicRoutes.detailWithTerritoryRoutePath()}
-          element={<TerritorialLayout />}
+          element={launchTerritorialLayout("touristPoints", "Pontos turísticos")}
         >
           <Route index element={<P.GuideTouristPointDetailPage />} />
         </Route>
@@ -849,7 +870,7 @@ export function AppLayoutRoutes() {
         {/* Rota territorial de 3 segmentos: listagem de distrito/grupo ou detalhe sem distrito */}
         <Route
           path={touristPointPublicRoutes.districtOrDetailRoutePath()}
-          element={<TerritorialLayout />}
+          element={launchTerritorialLayout("touristPoints", "Pontos turísticos")}
         >
           <Route index element={<P.TouristPointRouteResolver />} />
         </Route>
@@ -857,7 +878,7 @@ export function AppLayoutRoutes() {
         {/* Listagem cidade (2 segmentos): /pontos-turisticos/:state/:city */}
         <Route
           path={touristPointPublicRoutes.cityRoutePath()}
-          element={<TerritorialLayout />}
+          element={launchTerritorialLayout("touristPoints", "Pontos turísticos")}
         >
           <Route index element={<P.GuideTouristPointsPage />} />
         </Route>
@@ -903,18 +924,30 @@ export function AppLayoutRoutes() {
         {/* Rotas de gastronomia */}
         <Route
           path={gastronomyPublicRoutes.home()}
-          element={<P.GastronomyLandingPage />}
+          element={launchElement(
+            "gastronomy",
+            "Gastronomia",
+            <P.GastronomyLandingPage />,
+          )}
         />
         {/* Rotas publicas estaticas precisam vir antes das territoriais dinamicas. */}
         <Route
           path={gastronomyPublicRoutes.favorites()}
-          element={<P.MyFavoritesPage />}
+          element={launchElement(
+            "gastronomy",
+            "Gastronomia",
+            <P.MyFavoritesPage />,
+          )}
         />
         <Route
           path={gastronomyPublicRoutes.orderDetails(
             GASTRONOMY_PUBLIC_ROUTE_PARAMS.orderId,
           )}
-          element={<P.OrderDetailsPage />}
+          element={launchElement(
+            "gastronomy",
+            "Gastronomia",
+            <P.OrderDetailsPage />,
+          )}
         />
 
         {/* Detalhe premium: /gastronomia-premium/:uf/:cidade/:bairro/:slug */}
@@ -923,7 +956,7 @@ export function AppLayoutRoutes() {
             TERRITORIAL_STATIC.gastronomyPremium,
             [TERRITORIAL_PARAMS.district, TERRITORIAL_PARAMS.slug],
           )}
-          element={<TerritorialLayout />}
+          element={launchTerritorialLayout("gastronomy", "Gastronomia")}
         >
           <Route index element={<P.GastronomyPremiumDetailPage />} />
           <Route path="checkout" element={<P.GastronomyCheckoutPage />} />
@@ -935,7 +968,7 @@ export function AppLayoutRoutes() {
             TERRITORIAL_PARAMS.district,
             TERRITORIAL_PARAMS.slug,
           ])}
-          element={<TerritorialLayout />}
+          element={launchTerritorialLayout("gastronomy", "Gastronomia")}
         >
           <Route index element={<P.GastronomyDetailPage />} />
           <Route path="checkout" element={<P.GastronomyCheckoutPage />} />
@@ -946,7 +979,7 @@ export function AppLayoutRoutes() {
           path={buildTerritorialModuleRoutePath(APP_MODULE_SLUGS.gastronomy, [
             TERRITORIAL_PARAMS.district,
           ])}
-          element={<TerritorialLayout />}
+          element={launchTerritorialLayout("gastronomy", "Gastronomia")}
         >
           <Route index element={<P.GastronomyLandingPage />} />
         </Route>
@@ -954,7 +987,7 @@ export function AppLayoutRoutes() {
         {/* Listagem cidade: /gastronomia/:uf/:cidade */}
         <Route
           path={buildTerritorialModuleRoutePath(APP_MODULE_SLUGS.gastronomy)}
-          element={<TerritorialLayout />}
+          element={launchTerritorialLayout("gastronomy", "Gastronomia")}
         >
           <Route index element={<P.GastronomyLandingPage />} />
         </Route>
