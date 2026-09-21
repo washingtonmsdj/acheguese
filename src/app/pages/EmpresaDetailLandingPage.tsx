@@ -632,6 +632,8 @@ export default function EmpresaDetailLandingPage(
             }}
             onToggleRouteOptions={() => setShowRouteOptions(!showRouteOptions)}
             onRoute={handleRoute}
+            onMessage={canMessageBusiness ? () => void handleMessage() : undefined}
+            messageLoading={messageLoading}
             onShare={() => {
               void handleShare();
             }}
