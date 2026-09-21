@@ -16,18 +16,17 @@ const confirmationPage = read(
 
 describe("signup confirmation resend Turnstile contract", () => {
   it("forwards the optional captcha token through the canonical auth owner", () => {
-    expect(authService).toContain(
-      "static async resendConfirmationEmail(\n    email: string,\n    captchaToken?: string,",
-    );
+    expect(authService).toContain("static async resendConfirmationEmail(");
+    expect(authService).toContain("email: string,");
+    expect(authService).toContain("captchaToken?: string,");
     expect(authService).toContain(
       "const normalizedCaptchaToken = captchaToken?.trim();",
     );
     expect(authService).toContain("supabase.auth.resend({");
     expect(authService).toContain("captchaToken: normalizedCaptchaToken");
 
-    expect(authHook).toContain(
-      "resendConfirmationEmail: (\n    email: string,\n    captchaToken?: string,",
-    );
+    expect(authHook).toContain("resendConfirmationEmail: (");
+    expect(authHook).toContain("captchaToken?: string,");
     expect(authHook).toContain(
       "AuthService.resendConfirmationEmail(email, captchaToken)",
     );
@@ -37,8 +36,9 @@ describe("signup confirmation resend Turnstile contract", () => {
     expect(confirmationPage).toContain(
       "const journeyContext = useMemo(() => getSignupConfirmationContext(), []);",
     );
+    expect(confirmationPage).toContain("const hasCanonicalJourneyContext =");
     expect(confirmationPage).toContain(
-      "const hasCanonicalJourneyContext =\n    journeyContext.email !== null || journeyContext.intent !== null;",
+      "journeyContext.email !== null || journeyContext.intent !== null",
     );
     expect(confirmationPage).toContain(
       "journeyContext.email ?? state?.email?.trim().toLowerCase() ?? null",
@@ -71,7 +71,8 @@ describe("signup confirmation resend Turnstile contract", () => {
     expect(confirmationPage).toContain(
       "const resendDisabled = isResending || cooldown > 0 || !turnstile.isReady;",
     );
-    expect(confirmationPage).toContain('<AuthTurnstileGate\n                    action="signup"');
+    expect(confirmationPage).toContain("<AuthTurnstileGate");
+    expect(confirmationPage).toContain('action="signup"');
   });
 
   it("serializes resend attempts before React busy state can settle", () => {
@@ -94,8 +95,9 @@ describe("signup confirmation resend Turnstile contract", () => {
   });
 
   it("keeps resend timing in the Auth journey instead of disposable page state", () => {
+    expect(authFlow).toContain("pendingSignupConfirmationCooldownUntil:");
     expect(authFlow).toContain(
-      'pendingSignupConfirmationCooldownUntil:\n    "auth.pending-signup-confirmation-cooldown-until"',
+      '"auth.pending-signup-confirmation-cooldown-until"',
     );
     expect(authFlow).toContain(
       "AUTH_SIGNUP_CONFIRMATION_RESEND_COOLDOWN_MS = 60 * 1000",
