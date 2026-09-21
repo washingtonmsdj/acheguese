@@ -2,79 +2,21 @@
 
 > **STATUS: PONTEIRO DE COMPATIBILIDADE, NÃO SSOT.**
 >
-> Este arquivo preserva o nome histórico usado por workflows/agentes antigos. A autoridade operacional continua em `docs/08-roadmap/EXECUCAO_MAIN_ONLY.md`; o estado detalhado e verificável desta retomada está em `docs/08-roadmap/checkpoints/2026-09-16-global-stabilization-priorities.md`.
+> Este arquivo existe somente porque workflows, agentes e links históricos ainda podem referenciar este nome. **Não registrar estado, blockers, decisões, números de migrations, SHAs ou checkpoints aqui.** Essas informações envelhecem e criam uma segunda autoridade.
 
-## Estado atual resumido
+## Retomada correta
 
-- `main` tem branch protection parcial desde 2026-09-17: `protected=true`, admins sujeitos às regras, force-push/deleção bloqueados e resolução de conversas exigida. PR obrigatório, checks e restrição de push ainda estão ausentes porque `Supabase Types Sync` escreve diretamente em `main` (issue #28);
-- último SHA de código publicado e verificado: `1778d727fb0fca510210c5e2c42dd31a4d23e3fb`, com Vercel de produção `READY`, check `Vercel=success` e smoke HTTP 200 no mesmo SHA. Os workflows GitHub desse SHA falharam antes de iniciar etapas (`steps=[]`), então o gate global de release continua aberto; qualquer commit posterior exige nova verificação same-SHA;
-- o baseline remoto de código verificado é `7fd8aa36ac68a5d717b843bf82ccb441a33cc02b`, commit de reconciliação nominal de 32 migrations já presentes no ledger Supabase. Registros documentais posteriores preservam esse baseline. O Vercel desse SHA está `READY`, com `Vercel=success` e smoke HTTP 200; os demais jobs hospedados continuam falhando antes de etapas e o sync canônico de tipos permanece `queued`;
-- Mobility continua pública **desabilitada** e já possui GPS minimizado, autorização negativa, preço terminal server-owned, replays sequenciais e contrato estrutural de atomicidade provados;
-- a prova runtime de concorrência em duas sessões independentes continua aberta;
-- drift de `types.generated.ts` continua aberto e deve ser corrigido somente pelo fluxo canônico de geração;
-- Security Advisor revalidado em 2026-09-17: 1 erro de RLS no catálogo do PostGIS, 19 tabelas RLS sem policy confirmadas como deny-by-default e 9/85 RPCs `SECURITY DEFINER` expostas a `anon`/`authenticated`; a triagem é por autoridade e contrato, sem revoke em massa;
-- probe negativo de analytics comprovou bloqueio de spoof de `user_id` e de evento operacional sem `service_role`;
-- LGPD account-deletion reversível está reconciliado pela migration `20260826015916_reconcile_account_deletion_authority_live_drift`;
-- purge destrutivo **não existe** ainda e possui gate fail-closed: `LGPD_PURGE_MATRIX.json` classifica as 28 FKs bloqueantes com 20 `set-null-before-delete`, 2 `anonymize-before-delete` e 6 `block-purge`; `implementationComplete=false` permanece e nenhum rollout destrutivo está autorizado;
-- `user-delete-account` legado permanece bloqueado; nenhuma política comercial ou de retenção será inventada para obter verde.
+Leia nesta ordem:
 
-## Ordem urgente correta
+1. `docs/README.md` — índice e precedência documental;
+2. `docs/03-architecture/CURRENT_RULES.md` — regras arquiteturais atuais;
+3. `docs/08-roadmap/EXECUCAO_MAIN_ONLY.md` — **SSOT operacional e de prontidão do MVP**;
+4. `docs/08-roadmap/checkpoints/` — evidências factuais recentes;
+5. `docs/architecture/SSOT_REGISTRY.md` — owners e fontes de verdade executáveis;
+6. `SECURITY.md` — política de segurança.
 
-### P0 — release authority
+## Regra de execução
 
-1. obter execução real de typecheck/lint/security/test/build/deploy no SHA candidato final;
-2. exigir Vercel `READY` no mesmo SHA; `Ignored Build Step`, `pending`, rate-limit, commit ou merge não são aprovação;
-3. ativar proteção/ruleset da `main` com PR obrigatório, sem force-push/deleção e required check executável.
+O projeto real prevalece sobre snapshots antigos: `main`, rotas, owners, schema/migrations, contratos, testes, runtime e deploy devem ser verificados antes de qualquer mudança.
 
-### P1 — Mobilidade
-
-Restante:
-
-1. aprovar política comercial real por modalidade;
-2. regenerar tipos Supabase pelo fluxo canônico;
-3. provar concorrência real em sessões independentes;
-4. executar E2E/smoke + same-SHA completo;
-5. manter `PUBLIC_LAUNCH_SURFACES.mobility=false` até todos os gates.
-
-### P1 — segurança transversal
-
-1. classificar `SECURITY DEFINER` por autoridade real e adicionar negative probes onde necessário;
-2. ativar Leaked Password Protection quando houver capacidade de gestão Auth;
-3. tratar RLS/grants/extensões/PostGIS por menor privilégio, sem mudanças em massa por advisor;
-4. priorizar relações sensíveis antes de normalizar policies permissivas.
-
-### P1 — LGPD/privacidade
-
-1. manter a classificação das 28 FKs reconciliada com `LGPD_PURGE_POLICY.json` e resolver as 6 referências `block-purge` sem inventar retenção;
-2. só depois implementar worker/scheduler de purge idempotente e observável;
-3. revogar sessões pela autoridade do Supabase Auth;
-4. manter `user-delete-account` legado bloqueado;
-5. certificar exportação contra `LGPD_EXPORT_MATRIX` antes de rollout.
-
-### P2 — certificação funcional
-
-Seguir issue #50: Mobilidade/Central -> Business/Gastronomia/Professionals -> Comunidade -> Marketplace/Identidade -> Admin e superfícies auxiliares. Placeholder, `launch-paused`, fallback ou E2E que retorna cedo não contam.
-
-### P3 — performance/UX/limpeza
-
-Só depois de contratos funcionais estáveis: índices/FKs com telemetria real, RLS redundante, bundle/CSS, visual SSOT, acessibilidade, responsividade e redução de bridges/documentação temporária.
-
-## Regras invioláveis
-
-- runtime + schema + testes prevalecem sobre checkpoint antigo;
-- não remover feature válida ou reduzir gate para fazer build passar;
-- não editar tipos Supabase gerados para esconder drift;
-- não introduzir autoridade paralela no browser;
-- mudança persistente de schema exige migration versionada;
-- segurança sensível exige teste negativo;
-- `READY` prova deploy, não certifica sozinho o fluxo funcional;
-- detalhes pertencem aos checkpoints do roadmap, não a este ponteiro.
-
-## Leia nesta ordem
-
-1. `docs/README.md`;
-2. `docs/03-architecture/CURRENT_RULES.md`;
-3. `docs/08-roadmap/EXECUCAO_MAIN_ONLY.md`;
-4. `docs/08-roadmap/checkpoints/2026-09-16-global-stabilization-priorities.md`;
-5. `docs/08-roadmap/checkpoints/2026-09-16-mobility-authority-privacy-hardening.md`;
-6. `SECURITY.md`.
+Não crie novos planos ou checkpoints neste arquivo. Quando os callers históricos forem migrados, este ponteiro deve ser removido conforme a política documental da raiz.
