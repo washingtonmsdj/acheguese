@@ -2,11 +2,10 @@
 
 Sprint TERRITORY.2 — padronização de nomenclatura das páginas para refletir a arquitetura baseada em Territory.
 
-> Atualização Fase 4.5: o MVP entra diretamente pela primeira comunidade do
-> Complexo do Nordeste de Amaralina. Home, Explorar e Community compartilham o
-> sistema Território Vivo; a Community consolidou overview, Feed, Grupos e
-> Discussões em uma única superfície. Regras históricas desta sprint ficam
-> subordinadas aos contratos atuais abaixo e a `docs/05-ux/HOME-SPEC.md`.
+> Atualização 2026-09-21: o MVP público está reduzido a **Empresas + Mapa +
+> Perto de mim**. Home/Território e Conta são plataforma. Search, Community e
+> demais módulos permanecem `paused`. O lifecycle executável em
+> `productModuleRegistry.ts` prevalece sobre descrições históricas deste mapa.
 
 Escopo desta etapa:
 
@@ -29,8 +28,8 @@ Legenda de situação:
 | ---------------- | ---------------------------------------------------------------------------------------------------------------------------- |
 | Nomes removidos  | `AchegueSeHomePage`, `AchegueSeHomePageMap`, `TerritorySelectorPage`                                                         |
 | Nome canônico    | `TerritoryEntryPage`                                                                                                         |
-| Responsabilidade | Apresentar a entrada pública community-first do MVP e conduzir ao Complexo. **Não é uma Home de conteúdo nem um seletor.**   |
-| Rotas            | `/`; `/?trocar=territorio` permanece compatível, mas renderiza a mesma entrada enquanto só há uma comunidade lançada.       |
+| Responsabilidade | Apresentar a entrada territorial do MVP e os três módulos ativos. **Não é Home de conteúdo nem catálogo de módulos pausados.** |
+| Rotas            | `/`; a entrada deriva URLs territoriais de Empresas/Mapa e mantém Perto de mim como capacidade própria. |
 | Arquivo canônico | `src/app/pages/TerritoryEntryPage.tsx`                                                                                       |
 | Dependências     | `TERRITORY_CONFIG`/`LAUNCH_URLS`, catálogo `locations`, boundary canônica e mapa territorial                                 |
 | Situação         | **Migrado em G157/G159** — implementação única consumida por `RootRouteEntry`.                                               |
@@ -38,16 +37,13 @@ Legenda de situação:
 
 ### Regra vigente da raiz
 
-Enquanto o lançamento público possui somente o Complexo como comunidade inicial:
+No MVP atual:
 
-- não existe busca por cidade na raiz;
-- não existe botão de geolocalização na raiz;
-- não existe seletor de múltiplas comunidades;
-- `lastTerritoryStore` continua útil para preservar contexto **depois** que a pessoa entrou no produto, mas não controla mais o render de `/`;
-- a navegação interna pode usar o último território para retornar de Conta/Atividade ao contexto anterior;
-- criação de conta e indicação de outra comunidade são fluxos separados da entrada territorial.
-
-Quando mais de uma comunidade estiver efetivamente lançada, a evolução da raiz deve reutilizar o SSOT territorial existente em vez de restaurar seletores legados.
+- a raiz apresenta Empresas, Mapa e Perto de mim;
+- não usa Community/Search para completar a experiência;
+- `lastTerritoryStore` pode preservar contexto territorial, mas não ativa módulo;
+- criação de conta permanece fluxo de plataforma;
+- futuras experiências multi-community só retornam após reativação formal do módulo Community.
 
 ---
 
