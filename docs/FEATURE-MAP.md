@@ -33,8 +33,7 @@ Domain status: Feed = STATUS: FROZEN.
 | Territory Home (cidade ou bairro/grupo)    | ✅     | `TerritoryHomePage`                     | `/:state/:city[/:territory]`                     |
 | Explorar (busca + mapa)                    | ✅     | módulos territoriais de busca/mapa      | `/busca/:state/:city[/:territory]` · `/mapa/...` |
 | Territory Feed (timeline completa)         | ✅     | `TerritoryFeedPage`                     | Home → "Ver mais do bairro"                      |
-| Territory Unavailable (bairro coming_soon) | ✅     | `TerritoryUnavailablePage`              | redirecionamento automático + `/interesse`       |
-| Waitlist de interesse (bairro futuro)      | ✅     | `CommunityInterestPage`                 | banner "Bairro chegando em breve"                |
+| Bairro `coming_soon` / waitlist            | ✅     | `CommunityInterestPage`                 | fluxo territorial de interesse                    |
 | National hub                               | ✅     | `NationalHubPage`                       | `/br`, `/brasil`                                 |
 | Landing pública de cidade                  | ✅     | `PublicCityLandingPage`                 | SEO — links externos, sitemap                    |
 
