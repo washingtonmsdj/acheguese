@@ -19,8 +19,6 @@ export type {
 export { DAY_NAMES } from './BusinessHoursService';
 export type * from './types';
 
-// Gastronomy queries
-export { hasGastronomyProfile } from './services/gastronomy.queries';
 
 // Utils
 export * from './utils';
