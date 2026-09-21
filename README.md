@@ -1,6 +1,10 @@
 # Achegue-se
 
-Plataforma hiperlocal e community-first para comunidade, empresas, classificados, profissionais, mobilidade e educação.
+Plataforma hiperlocal com arquitetura modular orientada a território.
+
+> **MVP atual (2026-09-21):** somente **Empresas + Mapa + Perto de mim** como módulos de produto ativos.
+>
+> Os demais módulos permanecem pausados e fora do produto ativo até certificação e reintegração individual.
 
 ## Stack
 
@@ -20,7 +24,24 @@ src/
   integrations/   adaptadores externos
 ```
 
-`src/features` é namespace legado e não recebe código novo. O único resíduo atual é Eventos e sua consolidação deve ocorrer no owner `src/modules/community-events` sem criar facade concorrente.
+`src/features` é namespace legado e não recebe código novo. Resíduos ainda preservados devem ser consolidados no owner de domínio correspondente antes de qualquer reativação.
+
+## Lifecycle de módulos
+
+A autoridade executável é:
+
+- `src/app/config/productModuleRegistry.ts`.
+
+Estado do MVP:
+
+- `business: active`;
+- `map: active`;
+- `nearby: active` com dependência formal de `map + business`;
+- demais módulos de produto: `paused`.
+
+Módulo pausado pode continuar versionado para evolução pós-MVP, mas não participa de navegação pública, rota funcional, prefetch/warmup, discovery, provider público ou layer do Mapa.
+
+A política completa está em [docs/03-architecture/PRODUCT_MODULE_LIFECYCLE.md](./docs/03-architecture/PRODUCT_MODULE_LIFECYCLE.md).
 
 ## Setup rápido
 
@@ -48,28 +69,29 @@ A documentação possui **uma porta de entrada canônica**:
 
 - [docs/README.md](./docs/README.md) — índice e autoridade documental;
 - [docs/03-architecture/CURRENT_RULES.md](./docs/03-architecture/CURRENT_RULES.md) — regras arquiteturais vigentes;
+- [docs/03-architecture/PRODUCT_MODULE_LIFECYCLE.md](./docs/03-architecture/PRODUCT_MODULE_LIFECYCLE.md) — contrato de ativação/pausa/remoção/adição de módulos;
 - [docs/08-roadmap/EXECUCAO_MAIN_ONLY.md](./docs/08-roadmap/EXECUCAO_MAIN_ONLY.md) — execução operacional corrente e critérios de MVP;
+- [docs/08-roadmap/NEXT-STEPS.md](./docs/08-roadmap/NEXT-STEPS.md) — sequência curta do lançamento;
 - [SECURITY.md](./SECURITY.md) — regras de segurança e gates de release.
 
-Documentos em `docs/10-archive/` são históricos e **nunca** substituem uma fonte ativa. Checkpoints antigos de auditoria também não devem ser tratados como estado atual sem revalidação.
+Documentos em `docs/10-archive/` são históricos e **nunca** substituem uma fonte ativa. Checkpoints antigos também não representam o escopo atual sem revalidação.
 
 ## Política da `main`
 
-- `main` é a única linha ativa de desenvolvimento.
-- Não criar branch nova para continuar a estabilização atual.
+- `main` é a linha canônica de integração.
+- Não duplicar funcionalidades já implementadas em branches paralelas.
 - Mudança persistente de schema precisa de migration versionada.
 - Merge/commit não equivale a produção validada.
 - Não reduzir gates para obter verde.
 - Código, documentação, testes e runtime devem apontar para o mesmo owner/SSOT.
+- Correções devem atacar a causa raiz; paliativos e redirects sem justificativa funcional não são aceitos.
 
 ## Política documental da raiz
 
-A raiz mantém somente os documentos de entrada e governança transversal:
+A raiz mantém somente documentos de entrada e governança transversal:
 
 - `README.md`;
 - `SECURITY.md`;
-- `URGENTE_LEIA_PRIMEIRO_REORGANIZACAO_GLOBAL.md` **temporariamente como ponteiro de compatibilidade**, sem autoridade própria.
-
-Novos planos/status/checkpoints pertencem a `docs/`. O ponteiro URGENTE deve ser removido quando os callers ativos forem migrados.
+- `URGENTE_LEIA_PRIMEIRO_REORGANIZACAO_GLOBAL.md` temporariamente como ponteiro de compatibilidade, sem autoridade própria.
 
 Planos, arquitetura, status e histórico pertencem a `docs/` e devem estar referenciados pelo índice canônico.
