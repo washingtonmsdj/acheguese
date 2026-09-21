@@ -6,7 +6,6 @@
  */
 
 import type { NavigateFunction } from "react-router-dom";
-import type { AuthUser } from "@/core/auth/services/types";
 import type { Business } from "@/core/business/types";
 
 // ============================================
@@ -46,28 +45,6 @@ export interface Product {
   readonly image_url?: string | null;
   readonly featured?: boolean;
   readonly active?: boolean;
-}
-
-// ============================================
-// Review
-// ============================================
-
-export interface Review {
-  readonly id: string;
-  readonly user_name: string;
-  readonly rating: number;
-  readonly comment: string;
-  readonly created_at: string;
-  readonly isNeighbor?: boolean;
-  readonly avatar?: string | null;
-}
-
-export interface RatingBreakdown {
-  readonly 5?: number;
-  readonly 4?: number;
-  readonly 3?: number;
-  readonly 2?: number;
-  readonly 1?: number;
 }
 
 // ============================================
@@ -162,15 +139,6 @@ export interface EmpresaProdutosSectionProps extends BaseSectionProps {
   readonly onToggleShowAll: () => void;
 }
 
-export interface EmpresaAvaliacoesSectionProps extends BaseSectionProps {
-  readonly business: BusinessExtended;
-  readonly reviews: readonly Review[];
-  readonly user: (AuthUser & { user_metadata?: Record<string, unknown> }) | null;
-  readonly reviewUrl?: string | null;
-  readonly ratingBreakdown?: RatingBreakdown | null;
-  readonly embedded?: boolean;
-}
-
 export interface EmpresaFotosSectionProps extends BaseSectionProps {
   readonly fotos: readonly string[];
   readonly businessName: string;
@@ -191,11 +159,6 @@ export interface EmpresaProximasSectionProps extends BaseSectionProps {
 
 export interface ProductCardProps {
   readonly product: Product;
-}
-
-export interface ReviewCardProps {
-  readonly review: Review;
-  readonly compact?: boolean;
 }
 
 export interface NearbyBusinessCardProps {
@@ -250,17 +213,6 @@ export interface RouteOptionsProps {
   readonly onRoute: () => void;
 }
 
-export interface RatingSummaryProps {
-  readonly rating: number;
-  readonly totalReviews: number;
-}
-
-export interface RatingDistributionProps {
-  readonly reviews: readonly Review[];
-  readonly ratingBreakdown?: RatingBreakdown | null;
-  readonly totalReviews?: number;
-}
-
 // ============================================
 // Section Map Type (para type safety)
 // ============================================
@@ -271,7 +223,6 @@ export type EmpresaSectionId =
   | "resumo"
   | "info"
   | "produtos"
-  | "avaliacoes"
   | "fotos"
   | "proximas";
 
@@ -281,7 +232,6 @@ export type SectionPropsMap = {
   readonly resumo: EmpresaResumoSectionProps;
   readonly info: EmpresaInfoSectionProps;
   readonly produtos: EmpresaProdutosSectionProps;
-  readonly avaliacoes: EmpresaAvaliacoesSectionProps;
   readonly fotos: EmpresaFotosSectionProps;
   readonly proximas: EmpresaProximasSectionProps;
 };
