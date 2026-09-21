@@ -46,3 +46,20 @@ export type {
   MessageThreadPort,
   PaginatedMessageThreadPort,
 } from "./contracts";
+
+export {
+  getActiveMessagingProviders,
+  getMessagingProvider,
+  isMessagingProviderId,
+} from "./providers/messagingProviderRegistry";
+export type {
+  MessagingInboxMessage,
+  MessagingInboxProvider,
+  MessagingInboxQuery,
+  MessagingInboxThread,
+  MessagingMessageCursor,
+  MessagingMessagePageQuery,
+  MessagingProviderId,
+  MessagingSendInput,
+  MessagingThreadCursor,
+} from "./inboxTypes";
