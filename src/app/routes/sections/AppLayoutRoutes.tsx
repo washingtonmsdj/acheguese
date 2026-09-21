@@ -600,14 +600,25 @@ export function AppLayoutRoutes() {
             <P.GamificacaoPage />,
           )}
         />
-        <Route path="/empresas" element={<P.EmpresasLandingPage />} />
+        <Route
+          path="/empresas"
+          element={launchElement("business", "Empresas", <P.EmpresasLandingPage />)}
+        />
         <Route
           path="/empresas/cadastrar"
-          element={protectedElement(<P.EmpresasCadastroLandingPage />)}
+          element={launchElement(
+            "business",
+            "Empresas",
+            protectedElement(<P.EmpresasCadastroLandingPage />),
+          )}
         />
         <Route
           path="/edit-business/:profileId"
-          element={protectedElement(<P.EditarEmpresaPage />)}
+          element={launchElement(
+            "business",
+            "Empresas",
+            protectedElement(<P.EditarEmpresaPage />),
+          )}
         />
 
         <Route
