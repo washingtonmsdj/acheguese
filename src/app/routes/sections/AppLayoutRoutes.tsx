@@ -435,9 +435,11 @@ export function AppLayoutRoutes() {
           element={protectedElement(<P.EmailLogsPage />)}
         />
 
-        {/* Rotas publicas de landing pages */}
-        <Route path="/empresas-landing" element={<P.EmpresasLandingPage />} />
-        <Route path="/servicos-landing" element={<P.ServicosLandingPage />} />
+        {/* Alias público legado: preservar compatibilidade sem duplicar conteúdo. */}
+        <Route
+          path="/empresas-landing"
+          element={<Navigate to="/empresas" replace />}
+        />
         {/* Rotas globais */}
         <Route path="/u/:username" element={<P.ProfilePublicRoute />} />
         <Route path="/c/:publicId" element={<P.ClassifiedShortRoute />} />

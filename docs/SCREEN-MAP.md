@@ -46,7 +46,7 @@ Domain status: Feed = STATUS: FROZEN.
 | `/empresas`                            | `EmpresasLandingPage`  | Comércio do bairro  | ✅     |
 | `/empresas/:id/catalogo`               | Catálogo               | Produtos da empresa | ✅     |
 | `/empresas/cadastrar`                  | Cadastro               | Owner cria empresa  | ✅     |
-| `/empresas-landing`                    | ↪ `/empresas`          | alias               | 🗄     |
+| `/empresas-landing`                    | ↪ `/empresas`          | redirect legado     | 🗄     |
 | `/dashboard-empresa`                   | `DashboardEmpresaPage` | Owner dashboard     | ✅     |
 | `/edit-business/:profileId`            | Editor                 | Owner edita         | ✅     |
 | `/cupons`, `/cupons/:id`, `/promocoes` | Cupons/promos          | Ofertas             | ⏸ `coupons=false` |
@@ -112,5 +112,5 @@ Responsável: `modules/admin` e `modules/central`. Jornada: acessado por menu ad
 
 1. Toda rota nova exige entrada nesta tabela **antes** do merge.
 2. Toda página com status 🟡 "sem entrada" é débito de navegação e deve ser resolvida ou removida.
-3. Aliases legados (`/perfil/*`, `/busca`, `/empresas-landing`, `/notifications`) só existem por compatibilidade; novos links privados devem usar `/conta/*`.
+3. Aliases legados (`/perfil/*`, `/busca`, `/empresas-landing`, `/notifications`) existem apenas como redirects/compatibilidade; novas navegações devem usar os caminhos canônicos.
 4. Nomes de arquivo canônicos: `Territory*Page`. Ver [`06-navigation/NAVIGATION-MAPPING.md`](./06-navigation/NAVIGATION-MAPPING.md) para o mapeamento antigo → novo.
