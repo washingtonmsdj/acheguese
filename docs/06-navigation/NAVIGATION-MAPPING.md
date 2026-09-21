@@ -121,17 +121,13 @@ Regras adicionais:
 
 ---
 
-## 6. TerritoryUnavailablePage
+## 6. Superfícies indisponíveis: contratos separados
 
-| Item             | Valor                                                                                                                                                                                                                                               |
-| ---------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Nome antigo      | `LaunchPausedPage`                                                                                                                                                                                                                                  |
-| Novo nome        | `TerritoryUnavailablePage`                                                                                                                                                                                                                          |
-| Responsabilidade | Superfície ou território ainda não lançado. No release atual, módulos `launch-paused` devem falhar fechados também em URL direta.                                                                                                                   |
-| Rotas            | Gates em `AppLayoutRoutes` / `DIRECT_PAUSED_ROUTES` e fallbacks territoriais correspondentes.                                                                                                                                                       |
-| Arquivo canônico | `src/app/pages/TerritoryUnavailablePage.tsx` (alias → `LaunchPausedPage`)                                                                                                                                                                           |
-| Dependências     | `launchScope`; `CommunityInterestPage`/registro de interesse somente quando o contrato de expansão permitir.                                                                                                                                        |
-| Situação         | **Compatibilidade ativa** — `LaunchPausedPage` continua sendo a implementação renderizada pelos gates atuais.                                                                                                                                       |
+`LaunchPausedPage` é o owner canônico do **kill-switch de módulos**. Ele recebe `moduleName` e é renderizado pelos gates de `launchScope` quando uma superfície preservada está fora do lançamento.
+
+`CommunityInterestPage` é o owner do fluxo territorial **`coming_soon`** quando existe Community persistida e identidade territorial inequívoca. Esse caso segue D-008 e leva ao registro de interesse; não reutiliza o kill-switch de módulos.
+
+`TerritoryUnavailablePage` foi aposentada: era apenas um re-export sem caller e misturava dois estados de produto diferentes. Não existe rota pública `/territory/unavailable`.
 
 No estado atual, ocultar um módulo da navegação não é suficiente. Educação, Mobilidade e qualquer outra superfície pausada também precisam permanecer interceptadas por rota direta.
 
@@ -174,7 +170,6 @@ Removidos em 2026-09-09:
 Ainda candidato futuro:
 
 - `src/app/pages/CidadeLandingPage.tsx` + `CidadeLanding.*` — somente quando as seções `feed/grupos/business/...` migrarem para páginas dedicadas de módulo;
-- `src/app/pages/LaunchPausedPage.tsx` — quando todos os callers migrarem de fato para `TerritoryUnavailablePage`.
 
 ## Regras da migração
 

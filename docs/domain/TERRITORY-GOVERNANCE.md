@@ -355,8 +355,8 @@ ETAPA 3: RESOLVER CAPABILITIES
 │ • is_selector_active === true → aparece no seletor          │
 │ • is_landing_enabled !== false → landing disponível         │
 │                                                             │
-│ ⚠️  Território inactive → TerritoryUnavailablePage          │
-│ ⚠️  Território restricted → redirect ou mensagem            │
+│ ⚠️  Território inactive → TerritoryStatusMessage fail-closed│
+│ ⚠️  Território restricted → TerritoryStatusMessage + cidade │
 └──────────────────────┬──────────────────────────────────────┘
                        │
                        ▼

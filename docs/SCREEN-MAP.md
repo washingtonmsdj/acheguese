@@ -24,7 +24,6 @@ Domain status: Feed = STATUS: FROZEN.
 | `/interesse`                               | `CommunityInterestPage`                                         | Waitlist para bairro coming_soon                                                                                            | community          | Bairro indisponível         | ✅     | —                                              |
 | `/br`, `/brasil`                           | `NationalHubPage`                                               | Hub país (SEO + escolha de UF)                                                                                              | app/pages          | SEO / entrada externa       | ✅     | —                                              |
 | `/:state`                                  | rota de entrada estadual                                        | Entrada ampla/SEO do estado                                                                                                 | app/routes         | Google / links              | ✅     | `/:state/:city` já é Territory Home            |
-| `/territory/unavailable`                   | `TerritoryUnavailablePage`                                      | Território sem cobertura                                                                                                    | app/pages          | Redirect                    | ✅     | —                                              |
 
 ## Comunidade — módulos transversais
 
