@@ -298,7 +298,7 @@ Community é a camada social/editorial que existe SOBRE um Territory.
 | A3 | **Fallback centrado em coordenadas de Salvador** | `BoundaryService.ts:155` — `[-12.975, -38.476]` | P1.1 — `resolveFallbackCenter()` |
 | A4 | **Fallback restrito a `state === "ba" && city === "salvador"`** | `publicTerritoryFallbacks.ts:142` | P1.3 — fallback dinâmico |
 | A5 | **Query direta a `territorial_group_members` fora do repositório** | `education.queries.ts`, `landing.queries.ts`, `LocationGeocodingService.ts:731`, `TerritorialGroupsReadService.ts:29` | P3.9 — usar `ITerritorialGroupRepository` |
-| A6 | **Hardcode `COMMUNITY_HERO_IMAGES`** | `communityOverviewHelpers.ts:28-39` | P0.6 — `hero_image_url` em metadata |
+| A6 | **Hardcode `COMMUNITY_HERO_IMAGES`** | ✅ Removido em 2026-09-21; runtime lê `metadata.hero_image_url` | P0.6 concluído — não recriar |
 | A7 | **Metadados inconsistentes** (`source` vs `provider`) | migrations `20260720100000` vs `20260609193000` | P0.4 — schema canônico unificado |
 | A8 | **Código morto `public_navigation_enabled`** | migration `20260530120000:65` | P0.5 — remover |
 | A9 | **Slug SQL inconsistente com JS** | `rpc_upsert_canonical_city_by_ibge` | P0.7 — NFD normalization |
