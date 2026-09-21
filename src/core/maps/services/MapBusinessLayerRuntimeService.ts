@@ -110,8 +110,7 @@ class MapBusinessLayerRuntimeService {
         .lte("longitude", east)
         .gte("latitude", south)
         .lte("latitude", north)
-        .order("rating", { ascending: false })
-        .limit(limit);
+        .order("rating", { ascending: false });
 
       const pausedBusinessCategories = getLaunchPausedBusinessCategoryIds();
       if (pausedBusinessCategories.length > 0) {
@@ -123,6 +122,8 @@ class MapBusinessLayerRuntimeService {
       if (territoryFilter) {
         query = applyTerritoryFilter(query, territoryFilter);
       }
+
+      query = query.limit(limit);
 
       const { data, error } = await query;
       if (error) throw error;
