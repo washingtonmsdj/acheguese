@@ -7,7 +7,7 @@ const SITEMAP_MAX_BYTES = 50 * 1024 * 1024;
 const SITEMAP_INDEX_MAX_ENTRIES = 50_000;
 const REQUIRED_PATHS = [
   "/",
-  "/inicio",
+  "/perto-de-mim",
   "/ba/salvador",
   "/sobre",
   "/contato",
@@ -34,7 +34,21 @@ const NON_INDEXABLE_PREFIXES = [
   "/checkout",
   "/planos",
 ];
-const DISABLED_ROUTE_SEGMENTS = new Set(["mobilidade", "comunidade"]);
+const DISABLED_ROUTE_SEGMENTS = new Set([
+  "mobilidade",
+  "comunidade",
+  "busca",
+  "gastronomia",
+  "servicos",
+  "classificados",
+  "eventos",
+  "vagas",
+  "educacao",
+  "pontos-turisticos",
+  "cupons",
+  "gamificacao",
+  "analytics",
+]);
 
 const target = process.argv[2] ?? "public";
 if (!new Set(["public", "dist"]).has(target)) {
