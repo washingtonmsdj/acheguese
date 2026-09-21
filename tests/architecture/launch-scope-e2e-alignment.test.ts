@@ -80,36 +80,30 @@ describe("MVP launch-scope alignment", () => {
     expect(searchPage).toContain('surface: "classifieds"');
   });
 
-  it("keeps active documentation aligned with the narrow MVP flags", () => {
-    const pausedFlags = [
-      "billing=false",
-      "gastronomy=false",
-      "services=false",
-      "touristPoints=false",
-      "map=true",
-      "nearby=true",
-      "search=true",
-      "education=false",
-      "jobs=false",
-      "events=false",
-      "communityEventsPreview=false",
-      "communication=false",
-      "messaging=true",
-      "mobility=false",
-      "coupons=false",
-      "gamification=false",
-      "communityCommunication=false",
-    ];
-
-    for (const [documentName, source] of [
-      ["SCREEN-MAP", screenMap],
-      ["FEATURE-MAP", featureMap],
-      ["HOME-INVENTORY", homeInventory],
-    ] as const) {
-      for (const flag of pausedFlags) {
-        expect(source, `${documentName}: ${flag}`).toContain(flag);
+  it("keeps active documentation aligned with domain/capability lifecycle", () => {
+    for (const source of [screenMap, homeInventory]) {
+      for (const flag of [
+        "map=true",
+        "nearby=true",
+        "search=true",
+        "messaging=true",
+        "billing=false",
+        "services=false",
+        "events=false",
+        "mobility=false",
+      ]) {
+        expect(source, flag).toContain(flag);
       }
     }
+
+    expect(featureMap).toContain("Domínio de produto ativo");
+    expect(featureMap).toContain("Empresas (`business`)");
+    expect(featureMap).toContain("Capacidades horizontais ativas");
+    expect(featureMap).toContain("Business Direct Messaging");
+    expect(featureMap).toContain("Community;");
+    expect(featureMap).toContain("Classificados;");
+    expect(featureMap).toContain("Billing.");
+    expect(featureMap).not.toContain("messaging=false");
   });
 
   it("keeps representative paused routes in the public isolation E2E", () => {
