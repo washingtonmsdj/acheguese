@@ -162,7 +162,8 @@
     "test:e2e:business-lifecycle-authenticated": "node tools/release/run-business-lifecycle-authenticated.mjs",
     "test:e2e:education-lifecycle-authenticated": "node tools/release/run-education-lifecycle-authenticated.mjs",
     "stage:education:inep-import": "node tools/data-quality/stage-public-education-inep-import.mjs",
-    "maintenance:branches": "node tools/github/cleanup-merged-branches.mjs"
+    "maintenance:branches": "node tools/github/cleanup-merged-branches.mjs",
+    "test:mvp:unit": "node tools/release/run-mvp-unit-tests.mjs"
   },
   "dependencies": {
     "@hookform/resolvers": "^3.10.0",
