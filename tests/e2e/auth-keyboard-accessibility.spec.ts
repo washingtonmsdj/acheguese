@@ -67,7 +67,7 @@ test.describe("Conta e acesso — teclado e foco", () => {
 
   test("retomada de erro OAuth é alcançável e ativável pelo teclado", async ({ page }) => {
     await seedAuthFlowState(page, {
-      pendingReturn: "/mensagens/sabores-da-ana",
+      pendingReturn: "/mensagens/business/44444444-4444-4444-8444-444444444444",
       pendingIntent: AUTH_JOURNEY_INTENTS.login,
     });
     await page.setViewportSize({ width: 390, height: 844 });
