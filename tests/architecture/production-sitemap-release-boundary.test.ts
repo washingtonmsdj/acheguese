@@ -59,39 +59,32 @@ describe("production sitemap release boundary", () => {
     expect(sitemap).not.toContain("{ path: '/contato'");
   });
 
-  it("does not advertise mobility while the canonical launch surface is paused", () => {
+  it("indexes only lifecycle-enabled product surfaces and includes Nearby", () => {
     const launchScope = read("src/app/config/launchScope.ts");
     const releaseSitemap = read("src/core/routing/seo/generateSitemap.ts");
-    const edgeSitemap = read("supabase/functions/sitemap/index.ts");
 
-    expect(launchScope).toContain("mobility: false");
+    expect(launchScope).toContain('nearby: isProductModuleEnabled("nearby")');
     expect(releaseSitemap).toContain(
       "TERRITORY_SITEMAP_MODULES.filter((module) => isLaunchSurfaceEnabled(module.surface))",
     );
-    expect(edgeSitemap).not.toContain("{ loc: '/mobilidade'");
+    expect(releaseSitemap).toContain("isLaunchSurfaceEnabled('nearby')");
+    expect(releaseSitemap).toContain("APP_MODULE_SLUGS.nearby");
+    expect(releaseSitemap).not.toContain("{ path: '/inicio'");
   });
 
-  it("does not publish removed top-level community or cookie aliases", () => {
+  it("keeps the public Edge endpoint as a thin compatibility redirect to the canonical sitemap", () => {
     const edgeSitemap = read("supabase/functions/sitemap/index.ts");
-    const communityRoutesTest = read(
-      "src/app/routes/__tests__/communityRoutesCanonical.spec.ts",
-    );
 
-    expect(communityRoutesTest).toContain(
-      "expect(routesSource).not.toContain('path=\"/comunidade\"')",
-    );
-    expect(edgeSitemap).not.toContain("{ loc: '/comunidade'");
-    expect(edgeSitemap).not.toContain("{ loc: '/cookies'");
-  });
-
-  it("preserves GET request CORS on sitemap error responses", () => {
-    const edgeSitemap = read("supabase/functions/sitemap/index.ts");
-    const security = read("supabase/functions/_shared/security.ts");
-
-    expect(security).toContain("req?: Request");
-    expect(security).toContain("methods = 'POST, OPTIONS'");
-    expect(security).toContain("headers: getAllSecurityHeaders(methods, req)");
-    expect(edgeSitemap).toContain("errorResponse(\n      'Failed to generate sitemap'");
-    expect(edgeSitemap).toContain("req,\n      'GET, OPTIONS'");
+    expect(edgeSitemap).toContain("new URL('/sitemap.xml'");
+    expect(edgeSitemap).toContain("status: 308");
+    expect(edgeSitemap).toContain("Location: canonicalSitemapUrl");
+    expect(edgeSitemap).toContain("rateLimitMiddleware(req");
+    expect(edgeSitemap).not.toContain("createClient");
+    expect(edgeSitemap).not.toContain(".from(");
+    expect(edgeSitemap).not.toContain("community_public_aliases");
+    expect(edgeSitemap).not.toContain("events");
+    expect(edgeSitemap).not.toContain("classifieds");
+    expect(edgeSitemap).not.toContain("gastronomia");
+    expect(edgeSitemap).not.toContain("servicos");
   });
 });
