@@ -10,6 +10,10 @@ const launchPausedFactory = readFileSync(
   "src/app/routes/launchPausedComponent.ts",
   "utf8",
 );
+const territorialLayout = readFileSync(
+  "src/core/routing/components/TerritorialLayout.tsx",
+  "utf8",
+);
 
 describe("unavailable surface ownership", () => {
   it("does not keep the retired TerritoryUnavailablePage alias", () => {
@@ -32,5 +36,13 @@ describe("unavailable surface ownership", () => {
     expect(
       existsSync("src/core/routing/components/CommunityInterestPage.tsx"),
     ).toBe(true);
+  });
+
+  it("keeps inactive and restricted territory states fail-closed in TerritorialLayout", () => {
+    expect(territorialLayout).toContain('if (status === "inactive")');
+    expect(territorialLayout).toContain('title="Território inativo"');
+    expect(territorialLayout).toContain('if (status === "restricted")');
+    expect(territorialLayout).toContain('title="Território indisponível"');
+    expect(territorialLayout).not.toContain("TerritoryUnavailablePage");
   });
 });
