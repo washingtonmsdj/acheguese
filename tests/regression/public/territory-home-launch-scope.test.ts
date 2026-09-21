@@ -12,9 +12,9 @@ function read(filePath: string): string {
 }
 
 describe("Territory Home launch-scope regression", () => {
-  it("keeps exactly the three MVP modules active", () => {
+  it("keeps exactly the four MVP modules active", () => {
     expect(getActiveProductModules().sort()).toEqual(
-      ["business", "map", "nearby"].sort(),
+      ["business", "map", "nearby", "search"].sort(),
     );
     expect(PRODUCT_MODULE_REGISTRY.nearby.dependsOn).toEqual([
       "map",
@@ -26,7 +26,7 @@ describe("Territory Home launch-scope regression", () => {
     expect(isLaunchSurfaceEnabled("nearby")).toBe(true);
     expect(isLaunchSurfaceEnabled("community")).toBe(false);
     expect(isLaunchSurfaceEnabled("classifieds")).toBe(false);
-    expect(isLaunchSurfaceEnabled("search")).toBe(false);
+    expect(isLaunchSurfaceEnabled("search")).toBe(true);
   });
 
   it("keeps Home as infrastructure with only MVP destinations", () => {
@@ -35,11 +35,11 @@ describe("Territory Home launch-scope regression", () => {
     expect(source).toContain("MODULE_SLUGS.business");
     expect(source).toContain("MODULE_SLUGS.map");
     expect(source).toContain("APP_MODULE_SLUGS.nearby");
+    expect(source).toContain("MODULE_SLUGS.search");
     expect(source).not.toContain("isLaunchSurfaceEnabled");
     expect(source).not.toContain("MODULE_SLUGS.community");
     expect(source).not.toContain("MODULE_SLUGS.classifieds");
     expect(source).not.toContain("MODULE_SLUGS.services");
     expect(source).not.toContain("MODULE_SLUGS.gastronomy");
-    expect(source).not.toContain("MODULE_SLUGS.search");
   });
 });
