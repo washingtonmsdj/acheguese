@@ -78,7 +78,7 @@ describe("Google OAuth account/access contract", () => {
     expect(terms).toContain("Entrar com Google não pula esta etapa");
   });
 
-  it("continues immediately when current terms are already accepted or a new acceptance succeeds", () => {
+  it("continues through the correct journey when current terms are already accepted or a new acceptance succeeds", () => {
     const terms = readProjectFile(
       "src/app/features/onboarding/pages/AceiteTermosPage.tsx",
     );
@@ -86,22 +86,55 @@ describe("Google OAuth account/access contract", () => {
     const existingAcceptance = terms.indexOf(
       "consents.some((consent) => hasCurrentTermsAcceptance(consent))",
     );
-    const recordConsent = terms.indexOf("await PrivacySettingsService.recordConsent");
+    const existingSignupCompletion = terms.indexOf(
+      "completeExistingGoogleSignupJourney();",
+      existingAcceptance,
+    );
+    const existingSignupNavigation = terms.indexOf(
+      "navigate(signupOriginalReturn, { replace: true });",
+      existingSignupCompletion,
+    );
+    const existingRegularCompletion = terms.indexOf(
+      "completeTermsJourney();",
+      existingSignupNavigation,
+    );
+    const existingRegularNavigation = terms.indexOf(
+      "navigate(returnTo, { replace: true });",
+      existingRegularCompletion,
+    );
+
+    const recordConsent = terms.indexOf(
+      "await PrivacySettingsService.recordConsent",
+    );
+    const recordedSignupCompletion = terms.indexOf(
+      "completeExistingGoogleSignupJourney();",
+      recordConsent,
+    );
+    const recordedSignupNavigation = terms.indexOf(
+      "navigate(signupOriginalReturn, { replace: true });",
+      recordedSignupCompletion,
+    );
+    const recordedRegularCompletion = terms.indexOf(
+      "completeTermsJourney();",
+      recordedSignupNavigation,
+    );
+    const recordedRegularNavigation = terms.indexOf(
+      "navigate(returnTo, { replace: true });",
+      recordedRegularCompletion,
+    );
 
     expect(existingAcceptance).toBeGreaterThanOrEqual(0);
+    expect(existingSignupCompletion).toBeGreaterThan(existingAcceptance);
+    expect(existingSignupNavigation).toBeGreaterThan(existingSignupCompletion);
+    expect(existingRegularCompletion).toBeGreaterThan(existingSignupNavigation);
+    expect(existingRegularNavigation).toBeGreaterThan(existingRegularCompletion);
+
     expect(recordConsent).toBeGreaterThanOrEqual(0);
-    expect(terms.slice(existingAcceptance, existingAcceptance + 260)).toContain(
-      "completeTermsJourney()",
-    );
-    expect(terms.slice(existingAcceptance, existingAcceptance + 320)).toContain(
-      "navigate(returnTo, { replace: true })",
-    );
-    expect(terms.slice(recordConsent, recordConsent + 520)).toContain(
-      "completeTermsJourney()",
-    );
-    expect(terms.slice(recordConsent, recordConsent + 560)).toContain(
-      "navigate(returnTo, { replace: true })",
-    );
+    expect(recordedSignupCompletion).toBeGreaterThan(recordConsent);
+    expect(recordedSignupNavigation).toBeGreaterThan(recordedSignupCompletion);
+    expect(recordedRegularCompletion).toBeGreaterThan(recordedSignupNavigation);
+    expect(recordedRegularNavigation).toBeGreaterThan(recordedRegularCompletion);
+
     expect(terms).not.toContain('state === "accepted"');
     expect(terms).not.toContain("Tudo certo com os termos.");
   });
