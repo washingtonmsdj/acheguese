@@ -2,7 +2,6 @@ import { useCallback, useMemo, useState } from "react";
 import { Helmet } from "react-helmet-async";
 import { Link, useNavigate } from "react-router-dom";
 import { CircleUserRound, MapPin, Search, SlidersHorizontal, UserRoundPlus } from "lucide-react";
-import { isLaunchBusinessCategoryEnabled } from "@/app/config/launchScope";
 import { TERRITORY_CONFIG } from "@/core/routing/config/territory";
 import { useAuth } from "@/core/auth/hooks/useAuth";
 import { useBusinessList } from "@/modules/business/hooks/useBusinessList";
@@ -47,7 +46,7 @@ import {
 import type { Business, BusinessSortOption, HeroStat } from "@/app/features/business-landing/sections/types";
 import { CategoryCard } from "@/app/features/business-landing/components/cards";
 import { QuickFilterChip } from "@/app/features/business-landing/components/filters/QuickFilterChip";
-import { withQueryParams } from "@/app/pages/CidadeLanding.utils";
+import { withQueryParams } from "@/core/landing/utils/landingPresentation";
 
 interface EmpresasLandingPageProps {
   resolved?: ResolvedTerritory;
@@ -122,7 +121,7 @@ function LandingTopBar({
                 type="search"
                 value={searchQuery}
                 onChange={(event) => onSearchChange(event.target.value)}
-                placeholder="Buscar empresa, servico ou produto no bairro"
+                placeholder="Buscar empresa ou estabelecimento no bairro"
                 aria-label="Buscar empresas no bairro"
                 className="h-12 rounded-2xl border-white/10 bg-white/[0.03] pl-11 pr-16 text-white placeholder:text-white/36 focus-visible:ring-teal-400/30 focus-visible:ring-offset-0"
               />
@@ -276,13 +275,7 @@ export default function EmpresasLandingPage({
   });
 
   const businessesToShow = useMemo(() => {
-    const normalizedBusinesses = realBusinesses
-      .map(normalizeRealBusinessEntry)
-      .filter((business) =>
-        isLaunchBusinessCategoryEnabled(
-          normalizeBusinessCategoryId(business.category),
-        ),
-      );
+    const normalizedBusinesses = realBusinesses.map(normalizeRealBusinessEntry);
 
     if (sortBy === "distance" && nearbyBusinesses?.length) {
       const distanceByBusinessId = new Map(

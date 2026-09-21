@@ -10,6 +10,7 @@ const URLS = {
   services: "/comunidade/pituba/servicos",
   classifieds: "/comunidade/pituba/classificados",
   map: "/comunidade/pituba/mapa",
+  nearby: "/perto-de-mim",
   search: "/busca/ba/salvador",
 } as const;
 
@@ -19,22 +20,16 @@ describe("publicHeaderNavigation", () => {
 
     expect(items.map((item) => item.id)).toEqual([
       "home",
-      "community",
       "business",
-      "gastronomy",
-      "services",
-      "classifieds",
       "map",
+      "nearby",
       "search",
     ]);
     expect(items.map((item) => item.href)).toEqual([
       URLS.home,
-      URLS.community,
       URLS.business,
-      URLS.gastronomy,
-      URLS.services,
-      URLS.classifieds,
       URLS.map,
+      URLS.nearby,
       URLS.search,
     ]);
     expect(items.every((item) => item.icon && item.description)).toBe(true);
@@ -47,6 +42,6 @@ describe("publicHeaderNavigation", () => {
     });
 
     expect(items.find((item) => item.id === "home")?.label).toBe("Cidade");
-    expect(items.find((item) => item.id === "community")?.label).toBe("Comunidade");
+    expect(items.find((item) => item.id === "community")).toBeUndefined();
   });
 });

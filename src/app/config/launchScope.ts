@@ -1,3 +1,5 @@
+import { isProductModuleEnabled } from "./productModuleRegistry";
+
 type PublicEnv = Partial<Record<string, string>>;
 
 const publicEnv = ((import.meta as ImportMeta & { env?: PublicEnv }).env ?? {}) as PublicEnv;
@@ -34,30 +36,30 @@ export type LaunchSurfaceKey =
 
 export const PUBLIC_LAUNCH_SURFACES: Record<LaunchSurfaceKey, boolean> = {
   home: true,
-  community: true,
-  business: true,
-  billing: false,
-  gastronomy: true,
-  services: true,
-  classifieds: true,
-  touristPoints: true,
-  map: true,
-  nearby: true,
-  search: true,
-  education: false,
-  jobs: true,
-  events: true,
-  communityEventsPreview: true,
-  communication: false,
-  mobility: false,
-  coupons: false,
-  gamification: false,
-  publicAnalytics: false,
-  communityAlerts: false,
-  communityIssues: false,
-  communityLostFound: false,
-  communityCommunication: true,
-  familySafety: false,
+  community: isProductModuleEnabled("community"),
+  business: isProductModuleEnabled("business"),
+  billing: isProductModuleEnabled("billing"),
+  gastronomy: isProductModuleEnabled("gastronomy"),
+  services: isProductModuleEnabled("services"),
+  classifieds: isProductModuleEnabled("classifieds"),
+  touristPoints: isProductModuleEnabled("touristPoints"),
+  map: isProductModuleEnabled("map"),
+  nearby: isProductModuleEnabled("nearby"),
+  search: isProductModuleEnabled("search"),
+  education: isProductModuleEnabled("education"),
+  jobs: isProductModuleEnabled("jobs"),
+  events: isProductModuleEnabled("events"),
+  communityEventsPreview: isProductModuleEnabled("events"),
+  communication: isProductModuleEnabled("communication"),
+  mobility: isProductModuleEnabled("mobility"),
+  coupons: isProductModuleEnabled("coupons"),
+  gamification: isProductModuleEnabled("gamification"),
+  publicAnalytics: isProductModuleEnabled("publicAnalytics"),
+  communityAlerts: isProductModuleEnabled("communityAlerts"),
+  communityIssues: isProductModuleEnabled("communityIssues"),
+  communityLostFound: isProductModuleEnabled("communityLostFound"),
+  communityCommunication: isProductModuleEnabled("communityCommunication"),
+  familySafety: isProductModuleEnabled("familySafety"),
 };
 
 const NAV_ITEM_SURFACES: Partial<Record<string, LaunchSurfaceKey>> = {
@@ -79,10 +81,6 @@ const NAV_ITEM_SURFACES: Partial<Record<string, LaunchSurfaceKey>> = {
 
 const CLASSIFIED_CATEGORY_SURFACES: Partial<Record<string, LaunchSurfaceKey>> = {
   vagas: "jobs",
-};
-
-const BUSINESS_CATEGORY_SURFACES: Partial<Record<string, LaunchSurfaceKey>> = {
-  educacao: "education",
 };
 
 const COMMUNITY_FEED_CHANNEL_SURFACES: Partial<Record<string, LaunchSurfaceKey>> = {
@@ -114,22 +112,13 @@ export function isLaunchSurfaceEnabled(surface: LaunchSurfaceKey): boolean {
 }
 
 export function isLaunchClassifiedCategoryEnabled(categoryId: string): boolean {
+  if (!isLaunchSurfaceEnabled("classifieds")) return false;
   const surface = CLASSIFIED_CATEGORY_SURFACES[categoryId];
   return surface ? isLaunchSurfaceEnabled(surface) : true;
 }
 
-export function isLaunchBusinessCategoryEnabled(categoryId: string): boolean {
-  const surface = BUSINESS_CATEGORY_SURFACES[categoryId];
-  return surface ? isLaunchSurfaceEnabled(surface) : true;
-}
-
-export function getLaunchPausedBusinessCategoryIds(): string[] {
-  return Object.entries(BUSINESS_CATEGORY_SURFACES)
-    .filter(([, surface]) => !isLaunchSurfaceEnabled(surface))
-    .map(([categoryId]) => categoryId);
-}
-
 export function isLaunchCommunityFeedChannelEnabled(channelId: string): boolean {
+  if (!isLaunchSurfaceEnabled("community")) return false;
   const surface = COMMUNITY_FEED_CHANNEL_SURFACES[channelId];
   return surface ? isLaunchSurfaceEnabled(surface) : true;
 }
@@ -140,6 +129,8 @@ export function isLaunchCommunityPostEnabled(post: {
   type?: string | null;
   distribution_channels?: readonly string[] | null;
 }): boolean {
+  if (!isLaunchSurfaceEnabled("community")) return false;
+
   const intentSurface = post.content_intent
     ? COMMUNITY_POST_INTENT_SURFACES[post.content_intent]
     : undefined;

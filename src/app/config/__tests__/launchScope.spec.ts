@@ -2,10 +2,12 @@ import { describe, expect, it } from "vitest";
 
 import { ACTIVE_MODULES, getContextMessageFromPath } from "../modules";
 import {
+  PRODUCT_MODULE_REGISTRY,
+  getActiveProductModules,
+} from "../productModuleRegistry";
+import {
   filterLaunchItems,
   filterLaunchSections,
-  getLaunchPausedBusinessCategoryIds,
-  isLaunchBusinessCategoryEnabled,
   isLaunchClassifiedCategoryEnabled,
   isLaunchCommunityFeedChannelEnabled,
   isLaunchCommunityPostEnabled,
@@ -14,103 +16,142 @@ import {
 } from "../launchScope";
 
 describe("launchScope", () => {
-  it("keeps MVP public surfaces enabled and paused surfaces disabled", () => {
-    expect(isLaunchSurfaceEnabled("map")).toBe(true);
-    expect(isLaunchSurfaceEnabled("nearby")).toBe(true);
-    expect(isLaunchSurfaceEnabled("community")).toBe(true);
-    expect(isLaunchSurfaceEnabled("classifieds")).toBe(true);
-    expect(isLaunchSurfaceEnabled("communityEventsPreview")).toBe(true);
+  it("keeps only Mapa, Empresas and Perto de mim active as product modules", () => {
+    expect(getActiveProductModules().sort()).toEqual(
+      ["business", "map", "nearby"].sort(),
+    );
+    expect(PRODUCT_MODULE_REGISTRY.nearby).toEqual({
+      status: "active",
+      dependsOn: ["map", "business"],
+    });
 
-    expect(isLaunchSurfaceEnabled("jobs")).toBe(true);
-    expect(isLaunchSurfaceEnabled("events")).toBe(true);
-    expect(isLaunchSurfaceEnabled("education")).toBe(false);
-    expect(isLaunchSurfaceEnabled("billing")).toBe(false);
-    expect(isLaunchSurfaceEnabled("mobility")).toBe(false);
-    expect(isLaunchSurfaceEnabled("communityAlerts")).toBe(false);
-    expect(isLaunchSurfaceEnabled("communityIssues")).toBe(false);
+    for (const enabled of ["home", "business", "map", "nearby"] as const) {
+      expect(isLaunchSurfaceEnabled(enabled)).toBe(true);
+    }
+
+    for (const paused of [
+      "search",
+      "community",
+      "billing",
+      "gastronomy",
+      "services",
+      "classifieds",
+      "touristPoints",
+      "education",
+      "jobs",
+      "events",
+      "communityEventsPreview",
+      "communication",
+      "mobility",
+      "coupons",
+      "gamification",
+      "publicAnalytics",
+      "communityAlerts",
+      "communityIssues",
+      "communityLostFound",
+      "communityCommunication",
+      "familySafety",
+    ] as const) {
+      expect(isLaunchSurfaceEnabled(paused)).toBe(false);
+    }
   });
 
-  it("filters navigation items and removes empty sections", () => {
+  it("filters navigation from the same lifecycle contract", () => {
+    expect(isLaunchNavItemEnabled("business")).toBe(true);
     expect(isLaunchNavItemEnabled("map")).toBe(true);
     expect(isLaunchNavItemEnabled("nearby")).toBe(true);
-    expect(isLaunchNavItemEnabled("jobs")).toBe(true);
+    expect(isLaunchNavItemEnabled("classifieds")).toBe(false);
+    expect(isLaunchNavItemEnabled("community")).toBe(false);
 
     expect(
       filterLaunchItems([
+        { id: "business", label: "Empresas" },
         { id: "map", label: "Mapa" },
-        { id: "jobs", label: "Vagas" },
         { id: "nearby", label: "Perto de Mim" },
+        { id: "classifieds", label: "Classificados" },
       ]),
     ).toEqual([
+      { id: "business", label: "Empresas" },
       { id: "map", label: "Mapa" },
-      { id: "jobs", label: "Vagas" },
       { id: "nearby", label: "Perto de Mim" },
     ]);
 
     expect(
       filterLaunchSections([
-        { label: "Ativas", items: [{ id: "map" }] },
-        { label: "Pausadas", items: [{ id: "education" }, { id: "mobility" }] },
+        {
+          label: "MVP",
+          items: [{ id: "business" }, { id: "map" }, { id: "nearby" }],
+        },
+        {
+          label: "Pós-MVP",
+          items: [{ id: "community" }, { id: "classifieds" }],
+        },
       ]),
-    ).toEqual([{ label: "Ativas", items: [{ id: "map" }] }]);
+    ).toEqual([
+      {
+        label: "MVP",
+        items: [{ id: "business" }, { id: "map" }, { id: "nearby" }],
+      },
+    ]);
   });
 
-
-  it("keeps the global module registry aligned with launch scope", () => {
+  it("keeps presentation metadata aligned without duplicating lifecycle ownership", () => {
     const activeIds = ACTIVE_MODULES.map((module) => module.id);
 
-    expect(activeIds).toContain("business");
-    expect(activeIds).toContain("gastronomy");
-    expect(activeIds).toContain("community-events");
-    expect(activeIds).not.toContain("mobility");
-    expect(activeIds).not.toContain("education");
-    expect(activeIds).not.toContain("ranking");
-    expect(activeIds).not.toContain("community-alerts");
-    expect(activeIds).not.toContain("community-issues");
-    expect(activeIds).not.toContain("community-lost-found");
+    for (const activeId of ["business", "map", "nearby"]) {
+      expect(activeIds).toContain(activeId);
+    }
+
+    for (const pausedId of [
+      "search",
+      "community-feed",
+      "community-groups",
+      "community-recommendations",
+      "services",
+      "classifieds",
+      "community-events",
+      "jobs",
+      "gastronomy",
+      "touristPoints",
+      "mobility",
+      "education",
+      "ranking",
+      "community-alerts",
+      "community-issues",
+      "community-lost-found",
+    ]) {
+      expect(activeIds).not.toContain(pausedId);
+    }
   });
 
-  it("does not expose paused module context in territory chrome", () => {
-    expect(getContextMessageFromPath("/mobilidade")).toBeNull();
-    expect(getContextMessageFromPath("/educacao/ba/salvador")).toBeNull();
-    expect(getContextMessageFromPath("/ranking")).toBeNull();
-
+  it("exposes territory context only for enabled modules", () => {
     expect(getContextMessageFromPath("/empresas/ba/salvador")).toBe(
       "Exibindo empresas de",
     );
+    expect(getContextMessageFromPath("/mapa/ba/salvador")).toBe("Mapa de");
+    expect(getContextMessageFromPath("/perto-de-mim")).toBe("Perto de");
+
+    expect(getContextMessageFromPath("/servicos/ba/salvador")).toBeNull();
+    expect(getContextMessageFromPath("/classificados/ba/salvador")).toBeNull();
+    expect(getContextMessageFromPath("/comunidade/ba/salvador")).toBeNull();
+    expect(getContextMessageFromPath("/gastronomia/ba/salvador")).toBeNull();
   });
 
-  it("keeps jobs classified categories aligned with the active launch surface", () => {
-    expect(isLaunchClassifiedCategoryEnabled("vagas")).toBe(true);
-    expect(isLaunchClassifiedCategoryEnabled("imoveis")).toBe(true);
-  });
+  it("fails closed for helpers owned by paused parent modules", () => {
+    expect(isLaunchClassifiedCategoryEnabled("vagas")).toBe(false);
+    expect(isLaunchClassifiedCategoryEnabled("imoveis")).toBe(false);
 
-  it("hides paused business categories", () => {
-    expect(isLaunchBusinessCategoryEnabled("educacao")).toBe(false);
-    expect(isLaunchBusinessCategoryEnabled("restaurante")).toBe(true);
-    expect(getLaunchPausedBusinessCategoryIds()).toContain("educacao");
-    expect(getLaunchPausedBusinessCategoryIds()).not.toContain("restaurante");
-  });
-
-  it("keeps active feed channels and filters paused post formats", () => {
-    expect(isLaunchCommunityFeedChannelEnabled("geral")).toBe(true);
-    expect(isLaunchCommunityFeedChannelEnabled("eventos")).toBe(true);
-    expect(isLaunchCommunityFeedChannelEnabled("vagas")).toBe(true);
-
-    expect(isLaunchCommunityPostEnabled({ content_intent: "duvida" })).toBe(
-      true,
-    );
+    expect(isLaunchCommunityFeedChannelEnabled("geral")).toBe(false);
+    expect(isLaunchCommunityFeedChannelEnabled("eventos")).toBe(false);
+    expect(isLaunchCommunityPostEnabled({ content_intent: "duvida" })).toBe(false);
     expect(
-      isLaunchCommunityPostEnabled({ content_intent: "alerta_urgente" }),
+      isLaunchCommunityPostEnabled({ distribution_channels: ["geral"] }),
     ).toBe(false);
-    expect(isLaunchCommunityPostEnabled({ display_format: "event_card" })).toBe(
-      true,
-    );
-    expect(isLaunchCommunityPostEnabled({ type: "oportunidade" })).toBe(true);
-    expect(
-      isLaunchCommunityPostEnabled({
-        distribution_channels: ["geral", "eventos"],
-      }),
-    ).toBe(true);
+  });
+
+  it("keeps specialized vertical lifecycle independent from Business", () => {
+    expect(isLaunchSurfaceEnabled("business")).toBe(true);
+    expect(isLaunchSurfaceEnabled("education")).toBe(false);
+    expect(isLaunchSurfaceEnabled("gastronomy")).toBe(false);
   });
 });

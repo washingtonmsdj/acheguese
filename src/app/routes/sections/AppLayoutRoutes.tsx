@@ -385,8 +385,6 @@ export function AppLayoutRoutes() {
       />
 
       <Route element={<AppLayoutSidebar />}>
-        <Route path="/inicio" element={<P.NationalHubPage />} />
-
         {/* Rotas de Billing e Assinaturas */}
         <Route
           path="/planos"
@@ -435,14 +433,23 @@ export function AppLayoutRoutes() {
           element={protectedElement(<P.EmailLogsPage />)}
         />
 
-        {/* Alias público legado: preservar compatibilidade sem duplicar conteúdo. */}
-        <Route
-          path="/empresas-landing"
-          element={<Navigate to="/empresas" replace />}
-        />
         {/* Rotas globais */}
-        <Route path="/u/:username" element={<P.ProfilePublicRoute />} />
-        <Route path="/c/:publicId" element={<P.ClassifiedShortRoute />} />
+        <Route
+          path="/u/:username"
+          element={launchElement(
+            "community",
+            "Perfis públicos",
+            <P.ProfilePublicRoute />,
+          )}
+        />
+        <Route
+          path="/c/:publicId"
+          element={launchElement(
+            "classifieds",
+            "Classificados",
+            <P.ClassifiedShortRoute />,
+          )}
+        />
         <Route
           path={JOB_ROUTES.publish}
           element={launchElement("jobs", "Vagas", <P.PublicarVagaPage />)}
@@ -465,27 +472,51 @@ export function AppLayoutRoutes() {
         />
         <Route
           path="/servicos/cadastrar"
-          element={protectedElement(<P.CadastrarServicoPage />)}
+          element={launchElement(
+            "services",
+            "Serviços",
+            protectedElement(<P.CadastrarServicoPage />),
+          )}
         />
         <Route
           path="/servicos/:id/editar"
-          element={protectedElement(<P.EditarServicoPage />)}
+          element={launchElement(
+            "services",
+            "Serviços",
+            protectedElement(<P.EditarServicoPage />),
+          )}
         />
         <Route
           path="/servicos/orcamentos/:leadId"
-          element={protectedElement(<P.ProfessionalLeadTrackingPage />)}
+          element={launchElement(
+            "services",
+            "Serviços",
+            protectedElement(<P.ProfessionalLeadTrackingPage />),
+          )}
         />
         <Route
           path="/classificados/novo"
-          element={protectedElement(<P.NovoClassificadoPage />)}
+          element={launchElement(
+            "classifieds",
+            "Classificados",
+            protectedElement(<P.NovoClassificadoPage />),
+          )}
         />
         <Route
           path="/classificados/editar/:id"
-          element={protectedElement(<P.EditarClassificadoPage />)}
+          element={launchElement(
+            "classifieds",
+            "Classificados",
+            protectedElement(<P.EditarClassificadoPage />),
+          )}
         />
         <Route
           path="/classificados/vendedor/:sellerId"
-          element={<P.VendedorPerfilPage />}
+          element={launchElement(
+            "classifieds",
+            "Classificados",
+            <P.VendedorPerfilPage />,
+          )}
         />
 
         <Route
@@ -519,10 +550,6 @@ export function AppLayoutRoutes() {
         <Route
           path="/conta/enderecos"
           element={protectedElement(<P.ContaEnderecosPage />)}
-        />
-        <Route
-          path="/conta/profissional"
-          element={<Navigate to="/central" replace />}
         />
         <Route
           path="/conta/editar"
@@ -578,14 +605,25 @@ export function AppLayoutRoutes() {
             <P.GamificacaoPage />,
           )}
         />
-        <Route path="/empresas" element={<P.EmpresasLandingPage />} />
+        <Route
+          path="/empresas"
+          element={launchElement("business", "Empresas", <P.EmpresasLandingPage />)}
+        />
         <Route
           path="/empresas/cadastrar"
-          element={protectedElement(<P.EmpresasCadastroLandingPage />)}
+          element={launchElement(
+            "business",
+            "Empresas",
+            protectedElement(<P.EmpresasCadastroLandingPage />),
+          )}
         />
         <Route
           path="/edit-business/:profileId"
-          element={protectedElement(<P.EditarEmpresaPage />)}
+          element={launchElement(
+            "business",
+            "Empresas",
+            protectedElement(<P.EditarEmpresaPage />),
+          )}
         />
 
         <Route
@@ -608,8 +646,14 @@ export function AppLayoutRoutes() {
             ),
           )}
         />
-        <Route path="/mapa" element={<P.MapaPage />} />
-        <Route path="/perto-de-mim" element={<P.NearbyPage />} />
+        <Route
+          path="/mapa"
+          element={launchElement("map", "Mapa", <P.MapaPage />)}
+        />
+        <Route
+          path="/perto-de-mim"
+          element={launchElement("nearby", "Perto de mim", <P.NearbyPage />)}
+        />
         <Route
           path="/analytics"
           element={launchElement(
@@ -634,14 +678,29 @@ export function AppLayoutRoutes() {
             <P.TerritorialCommunityIssuesPage />,
           )}
         />
-        <Route path="/recomendacoes" element={<P.RecomendacoesPage />} />
+        <Route
+          path="/recomendacoes"
+          element={launchElement(
+            "community",
+            "Comunidade",
+            <P.RecomendacoesPage />,
+          )}
+        />
         <Route
           path="/recomendacoes/nova"
-          element={protectedElement(<P.NovaRecomendacaoPage />)}
+          element={launchElement(
+            "community",
+            "Comunidade",
+            protectedElement(<P.NovaRecomendacaoPage />),
+          )}
         />
         <Route
           path="/recomendacoes/:id"
-          element={<P.RecomendacaoDetailPage />}
+          element={launchElement(
+            "community",
+            "Comunidade",
+            <P.RecomendacaoDetailPage />,
+          )}
         />
         <Route
           path="/achados-perdidos"
@@ -679,29 +738,39 @@ export function AppLayoutRoutes() {
         />
         <Route
           path="/novo-post"
-          element={protectedElement(<P.NovoPostPage />)}
+          element={launchElement(
+            "community",
+            "Comunidade",
+            protectedElement(<P.NovoPostPage />),
+          )}
         />
-        <Route path="/busca" element={<P.BuscaPage />} />
-        <Route path="/buscar" element={<P.BuscarPage />} />
+        <Route
+          path="/busca"
+          element={launchElement("search", "Busca", <P.BuscaPage />)}
+        />
+        <Route
+          path="/buscar"
+          element={launchElement("search", "Busca", <P.BuscarPage />)}
+        />
         <Route
           path={buildTerritorialModuleRoutePath(APP_MODULE_SLUGS.search)}
-          element={<P.BuscaPage />}
+          element={launchElement("search", "Busca", <P.BuscaPage />)}
         />
         <Route
           path={buildTerritorialModuleRoutePath(APP_MODULE_SLUGS.search, [
             TERRITORIAL_PARAMS.district,
           ])}
-          element={<P.BuscaPage />}
+          element={launchElement("search", "Busca", <P.BuscaPage />)}
         />
         <Route
           path={buildTerritorialRoutePath(TERRITORIAL_STATIC.searchAlias)}
-          element={<P.BuscarPage />}
+          element={launchElement("search", "Busca", <P.BuscarPage />)}
         />
         <Route
           path={buildTerritorialRoutePath(TERRITORIAL_STATIC.searchAlias, [
             TERRITORIAL_PARAMS.district,
           ])}
-          element={<P.BuscarPage />}
+          element={launchElement("search", "Busca", <P.BuscarPage />)}
         />
         {aiVirtualTryOnEnabled && (
           <Route path="/ai/virtual-try-on" element={<P.VirtualTryOnPage />} />
@@ -737,8 +806,18 @@ export function AppLayoutRoutes() {
             <P.CommunicationRequestPage />,
           )}
         />
-        <Route path="/servicos" element={<P.ServicosLandingPage />} />
-        <Route path="/classificados" element={<P.ClassificadosPage />} />
+        <Route
+          path="/servicos"
+          element={launchElement("services", "Serviços", <P.ServicosLandingPage />)}
+        />
+        <Route
+          path="/classificados"
+          element={launchElement(
+            "classifieds",
+            "Classificados",
+            <P.ClassificadosPage />,
+          )}
+        />
         <Route
           path={mobilityRoutes.passageiro.home}
           element={launchElement(
@@ -797,7 +876,11 @@ export function AppLayoutRoutes() {
         {/* Rota publica de profissional: /servicos/:state/:city/profissional/:slug */}
         <Route
           path={professionalPublicRoutes.detailRoutePath()}
-          element={<P.ProfissionalPublicPage />}
+          element={launchElement(
+            "services",
+            "Serviços",
+            <P.ProfissionalPublicPage />,
+          )}
         />
 
         {/* Comunicacao Territorial - rotas especificas antes das territoriais genericas */}
@@ -841,7 +924,7 @@ export function AppLayoutRoutes() {
         {/* Detalhe com territorio (4 segmentos): /pontos-turisticos/:state/:city/:district/:slug */}
         <Route
           path={touristPointPublicRoutes.detailWithTerritoryRoutePath()}
-          element={<TerritorialLayout />}
+          element={launchTerritorialLayout("touristPoints", "Pontos turísticos")}
         >
           <Route index element={<P.GuideTouristPointDetailPage />} />
         </Route>
@@ -849,7 +932,7 @@ export function AppLayoutRoutes() {
         {/* Rota territorial de 3 segmentos: listagem de distrito/grupo ou detalhe sem distrito */}
         <Route
           path={touristPointPublicRoutes.districtOrDetailRoutePath()}
-          element={<TerritorialLayout />}
+          element={launchTerritorialLayout("touristPoints", "Pontos turísticos")}
         >
           <Route index element={<P.TouristPointRouteResolver />} />
         </Route>
@@ -857,7 +940,7 @@ export function AppLayoutRoutes() {
         {/* Listagem cidade (2 segmentos): /pontos-turisticos/:state/:city */}
         <Route
           path={touristPointPublicRoutes.cityRoutePath()}
-          element={<TerritorialLayout />}
+          element={launchTerritorialLayout("touristPoints", "Pontos turísticos")}
         >
           <Route index element={<P.GuideTouristPointsPage />} />
         </Route>
@@ -903,18 +986,30 @@ export function AppLayoutRoutes() {
         {/* Rotas de gastronomia */}
         <Route
           path={gastronomyPublicRoutes.home()}
-          element={<P.GastronomyLandingPage />}
+          element={launchElement(
+            "gastronomy",
+            "Gastronomia",
+            <P.GastronomyLandingPage />,
+          )}
         />
         {/* Rotas publicas estaticas precisam vir antes das territoriais dinamicas. */}
         <Route
           path={gastronomyPublicRoutes.favorites()}
-          element={<P.MyFavoritesPage />}
+          element={launchElement(
+            "gastronomy",
+            "Gastronomia",
+            <P.MyFavoritesPage />,
+          )}
         />
         <Route
           path={gastronomyPublicRoutes.orderDetails(
             GASTRONOMY_PUBLIC_ROUTE_PARAMS.orderId,
           )}
-          element={<P.OrderDetailsPage />}
+          element={launchElement(
+            "gastronomy",
+            "Gastronomia",
+            <P.OrderDetailsPage />,
+          )}
         />
 
         {/* Detalhe premium: /gastronomia-premium/:uf/:cidade/:bairro/:slug */}
@@ -923,7 +1018,7 @@ export function AppLayoutRoutes() {
             TERRITORIAL_STATIC.gastronomyPremium,
             [TERRITORIAL_PARAMS.district, TERRITORIAL_PARAMS.slug],
           )}
-          element={<TerritorialLayout />}
+          element={launchTerritorialLayout("gastronomy", "Gastronomia")}
         >
           <Route index element={<P.GastronomyPremiumDetailPage />} />
           <Route path="checkout" element={<P.GastronomyCheckoutPage />} />
@@ -935,7 +1030,7 @@ export function AppLayoutRoutes() {
             TERRITORIAL_PARAMS.district,
             TERRITORIAL_PARAMS.slug,
           ])}
-          element={<TerritorialLayout />}
+          element={launchTerritorialLayout("gastronomy", "Gastronomia")}
         >
           <Route index element={<P.GastronomyDetailPage />} />
           <Route path="checkout" element={<P.GastronomyCheckoutPage />} />
@@ -946,7 +1041,7 @@ export function AppLayoutRoutes() {
           path={buildTerritorialModuleRoutePath(APP_MODULE_SLUGS.gastronomy, [
             TERRITORIAL_PARAMS.district,
           ])}
-          element={<TerritorialLayout />}
+          element={launchTerritorialLayout("gastronomy", "Gastronomia")}
         >
           <Route index element={<P.GastronomyLandingPage />} />
         </Route>
@@ -954,7 +1049,7 @@ export function AppLayoutRoutes() {
         {/* Listagem cidade: /gastronomia/:uf/:cidade */}
         <Route
           path={buildTerritorialModuleRoutePath(APP_MODULE_SLUGS.gastronomy)}
-          element={<TerritorialLayout />}
+          element={launchTerritorialLayout("gastronomy", "Gastronomia")}
         >
           <Route index element={<P.GastronomyLandingPage />} />
         </Route>

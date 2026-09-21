@@ -1,10 +1,9 @@
 BEGIN;
 
-DO $$
+DO $business_spatial_visibility$
 DECLARE
   v_raw_count integer;
-  v_paused_count integer;
-  v_visible_count integer;
+  v_school_count integer;
   v_unjoined_count integer;
 BEGIN
   WITH raw AS (
@@ -29,13 +28,11 @@ BEGIN
   )
   SELECT
     count(*)::integer,
-    count(*) FILTER (WHERE category = 'educacao')::integer,
-    count(*) FILTER (WHERE category IS NULL OR category <> 'educacao')::integer,
+    count(*) FILTER (WHERE category IN ('educacao', 'education'))::integer,
     count(*) FILTER (WHERE category IS NULL)::integer
   INTO
     v_raw_count,
-    v_paused_count,
-    v_visible_count,
+    v_school_count,
     v_unjoined_count
   FROM classified;
 
@@ -45,12 +42,15 @@ BEGIN
       v_unjoined_count;
   END IF;
 
+  IF v_raw_count < 1 THEN
+    RAISE EXCEPTION 'business_discovery_probe_no_public_business';
+  END IF;
+
   RAISE NOTICE
-    'BUSINESS_DISCOVERY_MVP raw=% paused_education=% launch_visible=%',
+    'BUSINESS_DISCOVERY_MVP raw=% school_businesses=%',
     v_raw_count,
-    v_paused_count,
-    v_visible_count;
+    v_school_count;
 END
-$$;
+$business_spatial_visibility$;
 
 ROLLBACK;

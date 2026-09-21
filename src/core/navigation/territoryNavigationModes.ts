@@ -1,19 +1,26 @@
 import {
-  Bell,
-  Compass,
-  Sun,
+  Building2,
+  Home,
+  Map,
+  Navigation,
   UserRound,
-  Users,
   type LucideIcon,
 } from "lucide-react";
+import {
+  APP_MODULE_SLUGS,
+  buildAppModulePath,
+} from "@/shared/config/moduleSlugs";
 import { parsePublicTerritoryPath } from "@/core/routing/utils/publicTerritoryPath";
-import { buildCommunityTerritoryUrl } from "@/core/routing/utils/territoryUrls";
+import {
+  MODULE_SLUGS,
+  buildModuleTerritoryUrl,
+} from "@/core/routing/utils/territoryUrls";
 
 export type TerritoryNavigationModeId =
-  | "today"
-  | "explore"
-  | "community"
-  | "activity"
+  | "home"
+  | "map"
+  | "business"
+  | "nearby"
   | "account";
 
 export interface TerritoryNavigationMode {
@@ -83,38 +90,36 @@ export function buildTerritoryNavigationModes({
     fallback,
     fallbackBaseUrl,
   );
-  const territoryModule = (module: string) =>
-    `/${module}${territoryBase}`;
 
   return [
     {
-      id: "today",
+      id: "home",
       href: territoryBase,
-      label: "Hoje",
-      description: "O que importa agora",
-      icon: Sun,
+      label: "Início",
+      description: "Contexto do território atual",
+      icon: Home,
       exact: true,
     },
     {
-      id: "explore",
-      href: territoryModule("busca"),
-      label: "Explorar",
-      description: "Buscar, filtrar e mapear",
-      icon: Compass,
+      id: "map",
+      href: buildModuleTerritoryUrl(MODULE_SLUGS.map, territoryBase),
+      label: "Mapa",
+      description: "Empresas no mapa",
+      icon: Map,
     },
     {
-      id: "community",
-      href: buildCommunityTerritoryUrl(territoryBase),
-      label: "Community",
-      description: "Participação no território",
-      icon: Users,
+      id: "business",
+      href: buildModuleTerritoryUrl(MODULE_SLUGS.business, territoryBase),
+      label: "Empresas",
+      description: "Empresas do território",
+      icon: Building2,
     },
     {
-      id: "activity",
-      href: authenticated ? "/notificacoes" : "/login",
-      label: "Atividade",
-      description: "Avisos e atualizações",
-      icon: Bell,
+      id: "nearby",
+      href: buildAppModulePath(APP_MODULE_SLUGS.nearby),
+      label: "Perto",
+      description: "Empresas perto de mim",
+      icon: Navigation,
     },
     {
       id: "account",
@@ -136,13 +141,6 @@ export function isTerritoryNavigationModeActive(
   const target = normalizePath(mode.href);
 
   if (mode.exact) return current === target;
-
-  if (mode.id === "activity") {
-    return (
-      current === "/notificacoes" ||
-      current.startsWith("/notificacoes/")
-    );
-  }
 
   if (mode.id === "account" && mode.href === "/login") {
     return current === "/login" || current.startsWith("/login/");

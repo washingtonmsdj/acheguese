@@ -6,33 +6,72 @@ const root = process.cwd();
 const read = (path: string) => readFileSync(resolve(root, path), "utf8");
 
 const launchScope = read("src/app/config/launchScope.ts");
+const productRegistry = read("src/app/config/productModuleRegistry.ts");
 const launchE2e = read("tests/e2e/launch-scope-public.spec.ts");
 const appRoutes = read("src/app/routes/sections/AppLayoutRoutes.tsx");
+const searchProviders = read("src/core/search/providers/searchProviders.ts");
 const screenMap = read("docs/SCREEN-MAP.md");
 const featureMap = read("docs/FEATURE-MAP.md");
 const homeInventory = read("docs/05-ux/HOME-INVENTORY.md");
 
-describe("MVP launch-scope E2E alignment", () => {
-  it("does not classify enabled community messaging as paused", () => {
-    expect(launchScope).toContain("communityCommunication: true");
-    expect(launchE2e).not.toContain("'/mensagens'");
-    expect(appRoutes).toContain('path="/mensagens"');
-    expect(appRoutes).toContain('"communityCommunication"');
-    expect(appRoutes).toContain("protectedElement(");
+describe("narrow MVP launch-scope alignment", () => {
+  it("keeps exactly Mapa, Empresas and Perto de mim active in the product registry", () => {
+    expect(productRegistry).toContain('business: { status: "active" }');
+    expect(productRegistry).toContain('map: { status: "active" }');
+    expect(productRegistry).toContain(
+      'nearby: { status: "active", dependsOn: ["map", "business"] }',
+    );
+
+    for (const moduleKey of [
+      "search",
+      "community",
+      "gastronomy",
+      "services",
+      "classifieds",
+      "touristPoints",
+      "jobs",
+      "events",
+      "communityCommunication",
+    ]) {
+      expect(productRegistry).toContain(`${moduleKey}: { status: "paused"`);
+    }
+
+    expect(launchScope).toContain('search: isProductModuleEnabled("search")');
+    expect(appRoutes).toContain('launchElement("map", "Mapa"');
+    expect(appRoutes).toContain('launchElement("nearby", "Perto de mim"');
+    expect(appRoutes).toContain('launchElement("search", "Busca"');
   });
 
-  it("keeps active launch documentation aligned with paused MVP surfaces", () => {
+  it("limits global search providers to launch-enabled domains", () => {
+    expect(searchProviders).toContain(
+      'bucket: "professionals",\n  linkedEntityTypes: ["professional"],\n  isEnabled: () => isLaunchSurfaceEnabled("services")',
+    );
+    expect(searchProviders).toContain(
+      'bucket: "opportunities",\n  linkedEntityTypes: [],\n  isEnabled: () => isLaunchSurfaceEnabled("jobs")',
+    );
+    expect(searchProviders).toContain(
+      'bucket: "events",\n  linkedEntityTypes: ["event"],\n  isEnabled: () => isLaunchSurfaceEnabled("events")',
+    );
+  });
+
+  it("keeps active documentation aligned with the narrow MVP flags", () => {
     const pausedFlags = [
       "billing=false",
+      "gastronomy=false",
+      "services=false",
+      "touristPoints=false",
+      "map=true",
+      "nearby=true",
+      "search=false",
       "education=false",
+      "jobs=false",
+      "events=false",
+      "communityEventsPreview=false",
       "communication=false",
       "mobility=false",
       "coupons=false",
       "gamification=false",
-      "communityAlerts=false",
-      "communityIssues=false",
-      "communityLostFound=false",
-      "publicAnalytics=false",
+      "communityCommunication=false",
     ];
 
     for (const [documentName, source] of [
@@ -44,24 +83,19 @@ describe("MVP launch-scope E2E alignment", () => {
         expect(source, `${documentName}: ${flag}`).toContain(flag);
       }
     }
-
-    expect(launchScope).toContain("communityCommunication: true");
-    expect(screenMap).toContain("DM comunitária");
-    expect(featureMap).toContain("Direct messages comunitário");
-    expect(homeInventory).toContain("Mensagens diretas | Sim");
   });
 
-  it("keeps explicitly paused public modules in the launch isolation E2E", () => {
+  it("keeps representative paused routes in the public isolation E2E", () => {
     for (const path of [
+      "/gastronomia",
+      "/servicos",
+      "/busca",
+      "/buscar",
+      "/vagas",
+      "/eventos",
+      "/mensagens",
       "/educacao",
-      "/comunicacao",
-      "/cupons",
-      "/analytics",
       "/mobilidade",
-      "/ranking",
-      "/alertas",
-      "/problemas",
-      "/achados-perdidos",
     ]) {
       expect(launchE2e).toContain(`'${path}'`);
     }

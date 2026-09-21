@@ -33,9 +33,10 @@ describe("MVP persistent fixture quarantine", () => {
     expect(profileMigration).not.toMatch(/[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f-]{27,}/i);
   });
 
-  it("does not turn school provenance into a public launch exception", () => {
-    expect(launchScope).toMatch(/education:\s*false/);
-    expect(launchScope).toContain('educacao: "education"');
+  it("keeps schools in Business without activating the Education vertical", () => {
+    expect(launchScope).toContain('education: isProductModuleEnabled("education")');
+    expect(launchScope).toContain("const BUSINESS_CATEGORY_SURFACES");
+    expect(launchScope).toContain("= {};");
   });
 
   it("keeps the remote proof data-agnostic and rollback-only", () => {

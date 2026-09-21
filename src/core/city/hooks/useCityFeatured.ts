@@ -6,6 +6,7 @@
  */
 
 import { useQuery } from '@tanstack/react-query';
+import { isLaunchSurfaceEnabled } from '@/app/config/launchScope';
 import { LandingFeaturedService } from '@/core/landing/services/LandingFeaturedService';
 import type { TerritoryFilter } from '@/core/location/types';
 
@@ -31,14 +32,14 @@ export function useCityFeatured(
     queryKey: ['city-featured', 'services', state, city],
     queryFn: () => svc.getFeaturedServices(territoryFilter, 6),
     staleTime: STALE_TIME,
-    enabled,
+    enabled: enabled && isLaunchSurfaceEnabled('services'),
   });
 
   const classifieds = useQuery({
     queryKey: ['city-featured', 'classifieds', state, city],
     queryFn: () => svc.getFeaturedClassifieds(territoryFilter, 6),
     staleTime: STALE_TIME,
-    enabled,
+    enabled: enabled && isLaunchSurfaceEnabled('classifieds'),
   });
 
   return {

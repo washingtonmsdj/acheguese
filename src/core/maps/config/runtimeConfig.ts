@@ -63,9 +63,9 @@ export const MAP_PRODUCT_SURFACES: MapProductSurface[] = [
     note: "Mapa contextual por bairro.",
   },
   {
-    route: "/perto-de-mim",
-    owner: "src/pages/NearbyPage.tsx",
-    status: "attention",
-    note: "Superficie ativa, mas ainda fora do ownership direto de core/maps.",
+    route: buildAppModulePath(APP_MODULE_SLUGS.nearby),
+    owner: "src/core/nearby/pages/NearbyPage.tsx",
+    status: "official",
+    note: "Superficie oficial de proximidade; usa localizacao compartilhada, BusinessService e o runtime de mapa.",
   },
 ];

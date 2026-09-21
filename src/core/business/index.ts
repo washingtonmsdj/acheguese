@@ -6,6 +6,8 @@
 export { BusinessService } from './services/BusinessService';
 export { BusinessUrlService } from './services/BusinessUrlService';
 export { BusinessOwnershipService } from './services/BusinessOwnershipService';
+export { businessMapQueryService } from './services/BusinessMapQueryService';
+export type { BusinessGeoBounds, BusinessMapEntity } from './services/BusinessMapQueryService';
 export { BusinessHoursService } from './BusinessHoursService';
 export type { BusinessUrlContext, ResolvedBusinessUrl } from './services/BusinessUrlService';
 export type {
@@ -17,8 +19,6 @@ export type {
 export { DAY_NAMES } from './BusinessHoursService';
 export type * from './types';
 
-// Gastronomy queries
-export { hasGastronomyProfile } from './services/gastronomy.queries';
 
 // Utils
 export * from './utils';

@@ -54,6 +54,11 @@ const PREFETCHERS: Array<{
     surface: "map",
   },
   {
+    test: (path) => isAppModulePath(path, APP_MODULE_SLUGS.nearby),
+    load: () => import("@/core/nearby/pages/NearbyPage"),
+    surface: "nearby",
+  },
+  {
     test: (path) => isAppModulePath(path, APP_MODULE_SLUGS.search),
     load: () => import("@/app/pages/BuscaPage"),
     surface: "search",
@@ -88,6 +93,7 @@ const IDLE_WARMUP_ROUTES: Array<{
   { href: LAUNCH_URLS.community, surface: "community" },
   { href: buildAppModulePath(APP_MODULE_SLUGS.services), surface: "services" },
   { href: buildAppModulePath(APP_MODULE_SLUGS.map), surface: "map" },
+  { href: buildAppModulePath(APP_MODULE_SLUGS.nearby), surface: "nearby" },
   { href: buildAppModulePath(APP_MODULE_SLUGS.search), surface: "search" },
   { href: LAUNCH_URLS.touristPoints, surface: "touristPoints" },
   { href: "/notifications" },

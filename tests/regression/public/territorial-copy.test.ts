@@ -28,19 +28,15 @@ const suspiciousMojibakeTokens = [
 ] as const;
 
 const publicSurfaceFiles = [
-  "src/app/components/Breadcrumbs.tsx",
+  "src/app/pages/TerritoryEntryPage.tsx",
   "src/app/pages/TerritoryHomePage.tsx",
-  "src/app/pages/CidadeLandingPage.tsx",
   "src/app/pages/EmpresasLandingPage.tsx",
-  "src/modules/professionals/services/pages/ServicosLandingPage.tsx",
-  "src/modules/classifieds/pages/ClassificadosPage.tsx",
-  "src/app/pages/CidadeLanding.neighborhood-hero.tsx",
-  "src/app/pages/CidadeLanding.neighborhood-stream.tsx",
-  "src/app/pages/CidadeLanding.neighborhood-panels.tsx",
+  "src/core/maps/pages/MapaPageV4.tsx",
+  "src/core/nearby/pages/NearbyPage.tsx",
 ] as const;
 
 describe("public territorial copy regression", () => {
-  it("keeps public territorial surfaces free from common mojibake tokens", () => {
+  it("keeps active public territorial surfaces free from common mojibake tokens", () => {
     for (const file of publicSurfaceFiles) {
       const content = read(file);
       for (const token of suspiciousMojibakeTokens) {
@@ -52,40 +48,18 @@ describe("public territorial copy regression", () => {
     }
   });
 
-  it("preserves canonical neighborhood community copy", () => {
-    const hero = read("src/app/pages/CidadeLanding.neighborhood-hero.tsx");
-    expect(hero).toContain("Comunidade publica");
-    expect(hero).toContain("Leitura publica");
-    expect(hero).toContain("servicos e negocios perto de voce");
-
-    const stream = read("src/app/pages/CidadeLanding.neighborhood-stream.tsx");
-    expect(stream).toContain("Tudo do bairro");
-    expect(stream).toContain("Comentar");
-    expect(stream).toContain("Recomendar");
-    expect(stream).toContain("Avaliar");
-    expect(stream).toContain("Interagir");
-
-    const panels = read("src/app/pages/CidadeLanding.neighborhood-panels.tsx");
-    expect(panels).toContain("Morar aqui libera publicação e grupos");
-    expect(panels).toContain("Entrar libera comentários e recomendações");
-    expect(panels).toContain("Sem alertas públicos agora");
-    expect(panels).toContain("Enviar alerta ou informação");
-  });
-
-  it("preserves canonical city and territorial Home labels", () => {
-    const cityLanding = read("src/app/pages/CidadeLandingPage.tsx");
-    expect(cityLanding).toContain("Serviços");
-    expect(cityLanding).toContain("Território verificado");
-    expect(cityLanding).toContain("Resultados conectados ao território atual");
-
+  it("keeps canonical MVP copy aligned with the active product", () => {
     const territoryHome = read("src/app/pages/TerritoryHomePage.tsx");
-    expect(territoryHome).toContain("Hoje em ${territoryName}");
-    expect(territoryHome).toContain("Panorama de ${territoryName}");
-    expect(territoryHome).toContain("Vale saber em ${territoryName}");
-    expect(territoryHome).toContain("Community em ${territoryName}");
+    expect(territoryHome).toContain(
+      "Descubra empresas e lugares ao seu redor.",
+    );
+    expect(territoryHome).toContain('title="Empresas"');
+    expect(territoryHome).toContain('title="Mapa"');
+    expect(territoryHome).toContain('title="Perto de mim"');
 
-    const breadcrumbs = read("src/app/components/Breadcrumbs.tsx");
-    expect(breadcrumbs).toContain('configuracoes: "Configurações"');
-    expect(breadcrumbs).toContain('services: "Serviços"');
+    const entry = read("src/app/pages/TerritoryEntryPage.tsx");
+    expect(entry).toContain("Encontre empresas, visualize o território no mapa");
+    expect(entry).not.toContain("eventos");
+    expect(entry).not.toContain("serviços e histórias");
   });
 });

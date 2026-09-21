@@ -4,10 +4,7 @@
  * Servico centralizado para os blocos de destaque da landing territorial.
  * Queries leves, limitadas, respeitando TerritoryFilter canonico.
  */
-import {
-  getLaunchPausedBusinessCategoryIds,
-  isLaunchSurfaceEnabled,
-} from "@/app/config/launchScope";
+import { isLaunchSurfaceEnabled } from "@/app/config/launchScope";
 import { logger } from "@/shared/utils/logger";
 import { supabase } from "@/integrations/supabase";
 import { applyTerritoryFilter } from "@/core/location/utils";
@@ -35,7 +32,6 @@ type LandingQuery<TRow> = PromiseLike<LandingQueryPayload<TRow>> & {
   in(column: string, values: string[]): LandingQuery<TRow>;
   limit(value: number): LandingQuery<TRow>;
   not(column: string, operator: string, value: unknown): LandingQuery<TRow>;
-  or(filters: string): LandingQuery<TRow>;
   order(column: string, options?: { ascending?: boolean }): LandingQuery<TRow>;
   select(
     columns?: string,
@@ -50,17 +46,6 @@ type LandingDbClient = {
 const landingDb = supabase as unknown as LandingDbClient;
 const BUSINESS_LINK_CANDIDATE_MULTIPLIER = 6;
 const GASTRONOMY_LINK_CANDIDATE_MULTIPLIER = 6;
-
-function applyLaunchBusinessCategoryExclusion<TRow>(
-  query: LandingQuery<TRow>,
-): LandingQuery<TRow> {
-  const pausedBusinessCategories = getLaunchPausedBusinessCategoryIds();
-  if (pausedBusinessCategories.length === 0) return query;
-
-  return query.or(
-    `category.is.null,category.not.in.(${pausedBusinessCategories.join(",")})`,
-  );
-}
 
 export interface FeaturedBusiness {
   id: string;
@@ -362,7 +347,6 @@ export class LandingFeaturedService {
         .order("rating", { ascending: false })
         .order("created_at", { ascending: false });
 
-      query = applyLaunchBusinessCategoryExclusion(query);
       query = applyTerritoryFilter(query, filter);
       query = query.limit(limit);
 
@@ -411,7 +395,6 @@ export class LandingFeaturedService {
         .eq("status", "active")
         .in("id", linkedIds);
 
-      query = applyLaunchBusinessCategoryExclusion(query);
       const { data, error } = await query;
 
       if (error) {
@@ -774,6 +757,31 @@ export class LandingFeaturedService {
       return { businesses: 0, services: 0, classifieds: 0, schools: null };
     }
 
+    const serviceCountPromise = isLaunchSurfaceEnabled("services")
+      ? (() => {
+          let query = landingDb
+            .from<{ id: string }>("professional_data")
+            .select("id", { count: "exact", head: true })
+            .eq("is_accepting_clients", true)
+            .eq("visibility", "public_listed")
+            .not("location_id", "is", null);
+          query = applyTerritoryFilter(query, filter);
+          return query;
+        })()
+      : Promise.resolve({ count: 0, data: null, error: null });
+
+    const classifiedCountPromise = isLaunchSurfaceEnabled("classifieds")
+      ? (() => {
+          // eslint-disable-next-line ssot/no-direct-classified-access
+          let query = landingDb
+            .from<{ id: string }>("classifieds")
+            .select("id", { count: "exact", head: true })
+            .eq("status", "active");
+          query = applyTerritoryFilter(query, filter);
+          return query;
+        })()
+      : Promise.resolve({ count: 0, data: null, error: null });
+
     const schoolCountPromise = isLaunchSurfaceEnabled("education")
       ? this.getPublishedSchoolCount(filter)
       : Promise.resolve<number | null>(null);
@@ -786,29 +794,11 @@ export class LandingFeaturedService {
             .select("id", { count: "exact", head: true })
             .eq("status", "active")
             .not("location_id", "is", null);
-          query = applyLaunchBusinessCategoryExclusion(query);
-          query = applyTerritoryFilter(query, filter);
+              query = applyTerritoryFilter(query, filter);
           return query;
         })(),
-        (() => {
-          let query = landingDb
-            .from<{ id: string }>("professional_data")
-            .select("id", { count: "exact", head: true })
-            .eq("is_accepting_clients", true)
-            .eq("visibility", "public_listed")
-            .not("location_id", "is", null);
-          query = applyTerritoryFilter(query, filter);
-          return query;
-        })(),
-        (() => {
-          // eslint-disable-next-line ssot/no-direct-classified-access
-          let query = landingDb
-            .from<{ id: string }>("classifieds")
-            .select("id", { count: "exact", head: true })
-            .eq("status", "active");
-          query = applyTerritoryFilter(query, filter);
-          return query;
-        })(),
+        serviceCountPromise,
+        classifiedCountPromise,
         schoolCountPromise,
       ]);
 

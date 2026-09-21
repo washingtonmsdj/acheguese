@@ -1,27 +1,5 @@
-import { useMemo } from 'react';
-import { Link, useLocation } from 'react-router-dom';
-import {
-  Bell,
-  Briefcase,
-  Building2,
-  Calendar,
-  Car,
-  GraduationCap,
-  Home,
-  LayoutList,
-  LogIn,
-  MapPin,
-  MessageSquare,
-  Newspaper,
-  Search,
-  Settings,
-  Sun,
-  Tag,
-  UtensilsCrossed,
-  Users,
-  Wrench,
-  Moon,
-} from 'lucide-react';
+import { Link, useLocation } from "react-router-dom";
+import { LogIn, Moon, Settings, Sun } from "lucide-react";
 import {
   Sidebar,
   SidebarContent,
@@ -34,302 +12,87 @@ import {
   SidebarMenuButton,
   SidebarMenuItem,
   useSidebar,
-} from '@/shared/components/ui/sidebar';
-import { Avatar, AvatarFallback, AvatarImage } from '@/shared/components/ui/avatar';
-import { cn } from '@/shared/utils/cn';
-import { useSessionContext } from '@/core/session';
-import { useAuth } from '@/core/auth/hooks/useAuth';
-import { useAppUrls } from '@/core/routing/hooks/useAppUrls';
-import { GuideSidebarItem } from '@/modules/guide/components/GuideSidebarItem';
-import { prefetchRouteByHref } from '@/app/routes/prefetch';
-import { NAV_SECTIONS, type NavItem } from './navigation.config';
-import { usePublicBrowsingCity } from '@/core/location/hooks/usePublicBrowsingCity';
-import { PublicCitySelector } from './PublicCitySelector';
-import { useTheme } from '@/shared/hooks/useTheme';
-import { useHomeCommunityHref } from '@/core/routing/hooks/useHomeCommunityHref';
-import { useCommunityNavigationContext } from '@/core/routing/hooks/useCommunityNavigationContext';
-import { useResolveTerritoryFromUrl } from '@/core/routing/hooks/useResolveTerritoryFromUrl';
-import { parsePublicTerritoryPath } from '@/core/routing/utils/publicTerritoryPath';
+} from "@/shared/components/ui/sidebar";
+import { Avatar, AvatarFallback, AvatarImage } from "@/shared/components/ui/avatar";
+import { cn } from "@/shared/utils/cn";
+import { useSessionContext } from "@/core/session";
+import { useAuth } from "@/core/auth/hooks/useAuth";
+import { useAppUrls } from "@/core/routing/hooks/useAppUrls";
+import { prefetchRouteByHref } from "@/app/routes/prefetch";
+import { NAV_SECTIONS, type NavItem } from "./navigation.config";
+import { usePublicBrowsingCity } from "@/core/location/hooks/usePublicBrowsingCity";
+import { PublicCitySelector } from "./PublicCitySelector";
+import { useTheme } from "@/shared/hooks/useTheme";
+import { parsePublicTerritoryPath } from "@/core/routing/utils/publicTerritoryPath";
 import {
   buildModuleTerritoryUrl,
   MODULE_SLUGS,
-} from '@/core/routing/utils/territoryUrls';
-import { buildCommunityNavigationModuleUrls } from '@/core/routing/utils/communityNavigationContext';
-import { useGroupAvailability } from '@/core/territorial/hooks/useGroupAvailability';
-import { ModuleKey } from '@/core/rollout/types';
-import { GastronomyUrlService } from '@/core/verticals/gastronomy/services/GastronomyUrlService';
-import { isLaunchSurfaceEnabled } from '@/app/config/launchScope';
+} from "@/core/routing/utils/territoryUrls";
 
 function getInitials(value?: string | null): string {
-  if (!value) return 'U';
+  if (!value) return "U";
   return value
-    .split(' ')
+    .split(" ")
     .filter(Boolean)
     .map((part) => part[0])
-    .join('')
+    .join("")
     .toUpperCase()
     .slice(0, 2);
 }
 
-function formatSlugLabel(slug?: string): string {
-  if (!slug) return 'Comunidade';
-  return slug
-    .split('-')
-    .filter(Boolean)
-    .map((part) => part.charAt(0).toUpperCase() + part.slice(1))
-    .join(' ');
-}
-
-const OFFICIAL_LOGO_SRC = '/images/logo-icon.png';
-
-type SidebarNavItem = NavItem & { visible?: boolean };
-
-function visibleNavItems(items: readonly SidebarNavItem[]): NavItem[] {
-  return items
-    .filter((item) => item.visible !== false)
-    .map(({ visible: _visible, ...item }) => item);
-}
+const OFFICIAL_LOGO_SRC = "/images/logo-icon.png";
 
 export function AppSidebar() {
   const location = useLocation();
   const { state: sidebarState } = useSidebar();
-  const collapsed = sidebarState === 'collapsed';
+  const collapsed = sidebarState === "collapsed";
   const { user } = useAuth();
   const { activeProfile } = useSessionContext();
   const appUrls = useAppUrls();
   const { active } = usePublicBrowsingCity();
   const { theme, toggleTheme } = useTheme();
-  const homeCommunityHref = useHomeCommunityHref();
-  const communityContext = useCommunityNavigationContext();
-  const territoryResolve = useResolveTerritoryFromUrl();
-
-  const communityGroupId = useMemo(() => {
-    if (!communityContext) return null;
-    if (communityContext.groupId) return communityContext.groupId;
-    if (territoryResolve.status !== 'resolved_group') return null;
-    return territoryResolve.resolved?.kind === 'group' ? territoryResolve.resolved.group.id : null;
-  }, [communityContext, territoryResolve.resolved, territoryResolve.status]);
-
-  const communityModuleAvailability = useGroupAvailability(communityGroupId, ModuleKey.COMMUNITY);
-  const businessModuleAvailability = useGroupAvailability(communityGroupId, ModuleKey.BUSINESS);
-  const gastronomyModuleAvailability = useGroupAvailability(communityGroupId, ModuleKey.GASTRONOMY);
-  const servicesModuleAvailability = useGroupAvailability(communityGroupId, ModuleKey.SERVICES);
-  const classifiedsModuleAvailability = useGroupAvailability(communityGroupId, ModuleKey.CLASSIFIEDS);
-  const jobsModuleAvailability = useGroupAvailability(communityGroupId, ModuleKey.JOBS);
-  const eventsModuleAvailability = useGroupAvailability(communityGroupId, ModuleKey.EVENTS);
-  const mobilityModuleAvailability = useGroupAvailability(communityGroupId, ModuleKey.MOBILITY);
-
-  const moduleVisibility = useMemo(() => {
-    const isAvailable = (moduleState: ReturnType<typeof useGroupAvailability>) => {
-      if (!communityGroupId) return true;
-      if (moduleState.isLoading) return true;
-      return moduleState.availability !== 'none';
-    };
-
-    return {
-      community: isLaunchSurfaceEnabled("community") && isAvailable(communityModuleAvailability),
-      business: isLaunchSurfaceEnabled("business") && isAvailable(businessModuleAvailability),
-      gastronomy: isLaunchSurfaceEnabled("gastronomy") && isAvailable(gastronomyModuleAvailability),
-      services: isLaunchSurfaceEnabled("services") && isAvailable(servicesModuleAvailability),
-      classifieds: isLaunchSurfaceEnabled("classifieds") && isAvailable(classifiedsModuleAvailability),
-      education: isLaunchSurfaceEnabled("education"),
-      jobs: isLaunchSurfaceEnabled("jobs") && isAvailable(jobsModuleAvailability),
-      events: isLaunchSurfaceEnabled("events") && isAvailable(eventsModuleAvailability),
-      mobility: isLaunchSurfaceEnabled("mobility") && isAvailable(mobilityModuleAvailability),
-      map: isLaunchSurfaceEnabled("map"),
-      nearby: isLaunchSurfaceEnabled("nearby"),
-      search: isLaunchSurfaceEnabled("search"),
-      communityAlerts: isLaunchSurfaceEnabled("communityAlerts"),
-      communityIssues: isLaunchSurfaceEnabled("communityIssues"),
-      communityLostFound: isLaunchSurfaceEnabled("communityLostFound"),
-      communityCommunication: isLaunchSurfaceEnabled("communityCommunication"),
-    };
-  }, [
-    communityGroupId,
-    communityModuleAvailability,
-    businessModuleAvailability,
-    gastronomyModuleAvailability,
-    servicesModuleAvailability,
-    classifiedsModuleAvailability,
-    jobsModuleAvailability,
-    eventsModuleAvailability,
-    mobilityModuleAvailability,
-  ]);
-
-  const communitySections = useMemo(() => {
-    if (!communityContext) return [];
-
-    const base = communityContext.basePath;
-    const communityModuleUrls = buildCommunityNavigationModuleUrls(communityContext);
-    const communitySearchUrl = buildModuleTerritoryUrl(
-      MODULE_SLUGS.search,
-      communityContext.territoryBasePath,
-    );
-    const territoryName = formatSlugLabel(communityContext.territorySlug).replace(
-      /^Complexo Do\s+/i,
-      'Complexo do ',
-    );
-
-    return [
-      {
-        id: 'community',
-        label: 'Comunidade',
-        items: visibleNavItems([
-          { id: 'community-home', icon: Home, label: 'Meu bairro', description: 'O que está acontecendo no bairro hoje', href: base, visible: moduleVisibility.community },
-          { id: 'community-feed', icon: LayoutList, label: 'Feed', description: 'Feed da comunidade', href: `${base}/feed`, visible: moduleVisibility.community },
-          { id: 'community-groups', icon: Users, label: 'Grupos', description: 'Núcleos e interesses locais', href: `${base}/grupos`, visible: moduleVisibility.community },
-          { id: 'community-comms', icon: Newspaper, label: 'Comunicação', description: 'Mídias e canais locais', href: `${base}/comunicacao`, visible: moduleVisibility.community && moduleVisibility.communityCommunication },
-          { id: 'community-alerts', icon: Bell, label: 'Alertas', description: 'Alertas da comunidade', href: `${base}/feed?tab=alertas`, visible: moduleVisibility.community && moduleVisibility.communityAlerts },
-          { id: 'community-issues', icon: MessageSquare, label: 'Problemas', description: 'Problemas da região', href: `${base}/problemas`, visible: moduleVisibility.community && moduleVisibility.communityIssues },
-          { id: 'community-lost-found', icon: Search, label: 'Achados e perdidos', description: 'Itens perdidos e encontrados', href: `${base}/achados-e-perdidos`, visible: moduleVisibility.community && moduleVisibility.communityLostFound },
-        ]),
-      },
-      {
-        id: 'local',
-        label: 'Comércio local',
-        items: visibleNavItems([
-          {
-            id: 'community-business',
-            icon: Building2,
-            label: `Comércios do ${territoryName}`,
-            description: `Comércios do ${territoryName}`,
-            href: communityModuleUrls.business,
-            visible: moduleVisibility.business,
-          },
-          {
-            id: 'community-gastronomy',
-            icon: UtensilsCrossed,
-            label: 'Gastronomia',
-            description: 'Restaurantes e cardápios locais',
-            href: communityModuleUrls.gastronomy,
-            visible: moduleVisibility.gastronomy,
-          },
-          {
-            id: 'community-education',
-            icon: GraduationCap,
-            label: 'Educação',
-            description: `Escolas e cursos do ${territoryName}`,
-            href: communityModuleUrls.education,
-            visible: moduleVisibility.education,
-          },
-          {
-            id: 'community-services',
-            icon: Wrench,
-            label: 'Serviços locais',
-            description: `Serviços do ${territoryName}`,
-            href: communityModuleUrls.services,
-            visible: moduleVisibility.services,
-          },
-        ]),
-      },
-      {
-        id: 'opportunities',
-        label: 'Anuncios locais',
-        items: visibleNavItems([
-          {
-            id: 'community-classifieds',
-            icon: Tag,
-            label: 'Classificados da comunidade',
-            description: `Classificados do ${territoryName}`,
-            href: communityModuleUrls.classifieds,
-            visible: moduleVisibility.classifieds,
-          },
-          {
-            id: 'community-jobs',
-            icon: Briefcase,
-            label: 'Oportunidades perto de você',
-            description: 'Oportunidades perto de você',
-            href: communityModuleUrls.jobs,
-            visible: moduleVisibility.jobs,
-          },
-          {
-            id: 'community-events',
-            icon: Calendar,
-            label: 'Eventos do bairro',
-            description: `Eventos do ${territoryName}`,
-            href: communityModuleUrls.events,
-            visible: moduleVisibility.events,
-          },
-        ]),
-      },
-      {
-        id: 'tools',
-        label: 'Ferramentas',
-        items: visibleNavItems([
-          { id: 'community-map', icon: MapPin, label: 'Mapa', description: 'Camadas territoriais', href: communityModuleUrls.map, visible: moduleVisibility.map },
-          { id: 'community-search', icon: Search, label: 'Busca', description: 'Busca no contexto local', href: communitySearchUrl, visible: moduleVisibility.search },
-          { id: 'community-nearby', icon: MapPin, label: 'Perto de mim', description: 'Explorar o que está por perto', href: '/perto-de-mim', visible: moduleVisibility.nearby },
-          {
-            id: 'community-mobility',
-            icon: Car,
-            label: 'Mobilidade',
-            description: 'Caronas e entregas locais',
-            href: communityModuleUrls.mobility,
-            visible: moduleVisibility.mobility,
-          },
-        ]),
-      },
-    ].filter((section) => section.items.length > 0);
-  }, [communityContext, moduleVisibility]);
 
   const parsedTerritory = parsePublicTerritoryPath(location.pathname);
   const activeCityBase = `/${active.state}/${active.city}`;
-  const homeHref = parsedTerritory.state && parsedTerritory.city
-    ? `/${parsedTerritory.state}/${parsedTerritory.city}${parsedTerritory.territorySlug ? `/${parsedTerritory.territorySlug}` : ''}`
-    : activeCityBase;
+  const territoryBase =
+    parsedTerritory.state && parsedTerritory.city
+      ? `/${parsedTerritory.state}/${parsedTerritory.city}${
+          parsedTerritory.territorySlug
+            ? `/${parsedTerritory.territorySlug}`
+            : ""
+        }`
+      : activeCityBase;
+
   const activeModuleUrls = {
-    business: buildModuleTerritoryUrl(MODULE_SLUGS.business, activeCityBase),
-    gastronomy: GastronomyUrlService.getTerritoryUrl(activeCityBase),
-    services: buildModuleTerritoryUrl(MODULE_SLUGS.services, activeCityBase),
-    education: buildModuleTerritoryUrl(MODULE_SLUGS.education, activeCityBase),
-    classifieds: buildModuleTerritoryUrl(MODULE_SLUGS.classifieds, activeCityBase),
-    jobs: buildModuleTerritoryUrl(MODULE_SLUGS.jobs, activeCityBase),
-    events: buildModuleTerritoryUrl(MODULE_SLUGS.events, activeCityBase),
-    map: buildModuleTerritoryUrl(MODULE_SLUGS.map, activeCityBase),
-    search: buildModuleTerritoryUrl(MODULE_SLUGS.search, activeCityBase),
+    business: buildModuleTerritoryUrl(MODULE_SLUGS.business, territoryBase),
+    map: buildModuleTerritoryUrl(MODULE_SLUGS.map, territoryBase),
   } as const;
 
   const getNavHref = (item: NavItem): string => {
     switch (item.id) {
-      case 'home':
-        return homeHref;
-      case 'neighborhood':
-        return homeCommunityHref;
-      case 'business':
+      case "home":
+        return territoryBase;
+      case "business":
         return activeModuleUrls.business;
-      case 'gastronomy':
-        return activeModuleUrls.gastronomy;
-      case 'services':
-        return activeModuleUrls.services;
-      case 'education':
-        return activeModuleUrls.education;
-      case 'classifieds':
-        return activeModuleUrls.classifieds;
-      case 'jobs':
-        return activeModuleUrls.jobs;
-      case 'events':
-        return activeModuleUrls.events;
-      case 'map':
+      case "map":
         return activeModuleUrls.map;
-      case 'search':
-        return activeModuleUrls.search;
       default:
         return item.href;
     }
   };
 
   const isActiveHref = (href: string): boolean => {
-    const [path, query] = href.split('?');
-    if (href === '/') return location.pathname === '/';
+    const [path, query] = href.split("?");
+    if (href === "/") return location.pathname === "/";
     if (!query) return location.pathname.startsWith(path);
 
-    const expectedTab = new URLSearchParams(query).get('tab');
-    const currentTab = new URLSearchParams(location.search).get('tab');
+    const expectedTab = new URLSearchParams(query).get("tab");
+    const currentTab = new URLSearchParams(location.search).get("tab");
     return location.pathname.startsWith(path) && expectedTab === currentTab;
   };
 
-  const renderSectionItems = (items: NavItem[], showDescription = false) => (
-    <SidebarMenu className={showDescription ? 'space-y-1' : undefined}>
+  const renderSectionItems = (items: NavItem[]) => (
+    <SidebarMenu>
       {items.map((item) => {
         if (item.requiresAuth && !user) return null;
 
@@ -340,7 +103,6 @@ export function AppSidebar() {
               asChild
               isActive={isActiveHref(href)}
               tooltip={item.label}
-              className={showDescription ? 'h-auto min-h-12 items-start py-2.5' : undefined}
             >
               <Link
                 to={href}
@@ -348,19 +110,8 @@ export function AppSidebar() {
                 onFocus={() => prefetchRouteByHref(href)}
                 onTouchStart={() => prefetchRouteByHref(href)}
               >
-                <item.icon className={cn('h-4 w-4', showDescription ? 'mt-0.5' : '')} />
-                {showDescription ? (
-                  <span className="min-w-0 flex-1 leading-tight">
-                    <span className="block truncate text-[13px] font-medium">{item.label}</span>
-                    {item.description ? (
-                      <span className="mt-1 block truncate text-[11px] text-muted-foreground/90">
-                        {item.description}
-                      </span>
-                    ) : null}
-                  </span>
-                ) : (
-                  <span>{item.label}</span>
-                )}
+                <item.icon className="h-4 w-4" />
+                <span>{item.label}</span>
               </Link>
             </SidebarMenuButton>
           </SidebarMenuItem>
@@ -375,22 +126,22 @@ export function AppSidebar() {
         <Link
           to="/"
           className={cn(
-            'w-full rounded-lg transition-colors hover:bg-sidebar-accent/60',
+            "w-full rounded-lg transition-colors hover:bg-sidebar-accent/60",
             collapsed
-              ? 'flex h-10 items-center justify-center'
-              : 'flex flex-col items-center justify-center gap-0 px-3 pt-0 pb-3',
+              ? "flex h-10 items-center justify-center"
+              : "flex flex-col items-center justify-center gap-0 px-3 pb-3 pt-0",
           )}
         >
           <img
             src={OFFICIAL_LOGO_SRC}
             alt="Achegue-se"
             className={cn(
-              'object-contain',
-              collapsed ? 'h-8 w-8 rounded-sm' : 'h-32 w-auto max-w-full',
+              "object-contain",
+              collapsed ? "h-8 w-8 rounded-sm" : "h-32 w-auto max-w-full",
             )}
           />
           {!collapsed ? (
-            <span className="w-full text-center text-2xl font-semibold text-foreground font-heading leading-none -mt-3">
+            <span className="-mt-3 w-full text-center font-heading text-2xl font-semibold leading-none text-foreground">
               Achegue-<span className="text-primary">se</span>
             </span>
           ) : null}
@@ -402,31 +153,13 @@ export function AppSidebar() {
         ) : null}
       </SidebarHeader>
 
-      <SidebarContent className="gap-0 flex-1 overflow-hidden">
+      <SidebarContent className="flex-1 gap-0 overflow-hidden">
         <div className="flex-1 overflow-y-auto py-2">
-          {communityContext ? (
-            <>
-              {communitySections.map((section) => (
-                <SidebarGroup key={section.id} className="px-2 py-1.5">
-                  <SidebarGroupLabel className="mb-1 h-6 px-2 text-[11px] font-semibold uppercase tracking-wide text-sidebar-foreground/60">
-                    {section.label}
-                  </SidebarGroupLabel>
-                  <SidebarGroupContent className="rounded-xl border border-sidebar-border/60 bg-sidebar-accent/20 px-1 py-1.5">
-                    {renderSectionItems(section.items, true)}
-                  </SidebarGroupContent>
-                </SidebarGroup>
-              ))}
-            </>
-          ) : null}
-
-          {!communityContext ? NAV_SECTIONS.map((section) => {
+          {NAV_SECTIONS.map((section) => {
             const visibleItems = section.items.filter(
               (item) => !item.requiresAuth || Boolean(user),
             );
-            const hasVisibleItems = visibleItems.length > 0;
-            const showGuestCommunityCta = section.id === 'main' && !user;
-
-            if (!hasVisibleItems && !showGuestCommunityCta) return null;
+            if (visibleItems.length === 0) return null;
 
             return (
               <SidebarGroup key={section.id} className="px-2 py-1">
@@ -434,46 +167,27 @@ export function AppSidebar() {
                   {section.label}
                 </SidebarGroupLabel>
                 <SidebarGroupContent>
-                  {renderSectionItems(section.items)}
-
-                  {section.id === 'main' ? (
-                    <SidebarMenu>
-                      <GuideSidebarItem />
-                    </SidebarMenu>
-                  ) : null}
-
-                  {showGuestCommunityCta && !collapsed ? (
-                    <SidebarMenu className="mt-1">
-                      <SidebarMenuItem>
-                        <SidebarMenuButton asChild tooltip="Entrar">
-                          <Link
-                            to="/login"
-                            onMouseEnter={() => prefetchRouteByHref('/login')}
-                            onFocus={() => prefetchRouteByHref('/login')}
-                            onTouchStart={() => prefetchRouteByHref('/login')}
-                          >
-                            <LogIn className="h-4 w-4" />
-                            <span>Entrar na comunidade</span>
-                          </Link>
-                        </SidebarMenuButton>
-                      </SidebarMenuItem>
-                    </SidebarMenu>
-                  ) : null}
+                  {renderSectionItems(visibleItems)}
                 </SidebarGroupContent>
               </SidebarGroup>
             );
-          }) : null}
+          })}
         </div>
       </SidebarContent>
 
-      <SidebarFooter className="border-t border-sidebar-border p-2 space-y-2">
-        {/* Botao de tema */}
+      <SidebarFooter className="space-y-2 border-t border-sidebar-border p-2">
         <button
           onClick={toggleTheme}
-          className="flex items-center gap-2 w-full rounded-xl px-2 py-2 text-sm text-muted-foreground hover:text-foreground hover:bg-sidebar-accent/50 transition-colors"
+          className="flex w-full items-center gap-2 rounded-xl px-2 py-2 text-sm text-muted-foreground transition-colors hover:bg-sidebar-accent/50 hover:text-foreground"
         >
-          {theme === "dark" ? <Sun className="h-4 w-4" /> : <Moon className="h-4 w-4" />}
-          {!collapsed && <span>{theme === "dark" ? "Modo Claro" : "Modo Escuro"}</span>}
+          {theme === "dark" ? (
+            <Sun className="h-4 w-4" />
+          ) : (
+            <Moon className="h-4 w-4" />
+          )}
+          {!collapsed ? (
+            <span>{theme === "dark" ? "Modo Claro" : "Modo Escuro"}</span>
+          ) : null}
         </button>
 
         {user ? (
@@ -495,11 +209,13 @@ export function AppSidebar() {
                   </Avatar>
                   {!collapsed ? (
                     <div className="min-w-0 text-left">
-                      <p className="text-sm font-medium truncate">
-                        {activeProfile?.displayName || user.email?.split('@')[0]}
+                      <p className="truncate text-sm font-medium">
+                        {activeProfile?.displayName || user.email?.split("@")[0]}
                       </p>
-                      <p className="text-[11px] text-muted-foreground truncate">
-                        {activeProfile?.username ? `@${activeProfile.username}` : 'Ver perfil'}
+                      <p className="truncate text-[11px] text-muted-foreground">
+                        {activeProfile?.username
+                          ? `@${activeProfile.username}`
+                          : "Ver perfil"}
                       </p>
                     </div>
                   ) : null}
@@ -507,7 +223,7 @@ export function AppSidebar() {
               </SidebarMenuButton>
             </SidebarMenuItem>
             <SidebarMenuItem>
-              <SidebarMenuButton asChild tooltip="Preferencias da conta">
+              <SidebarMenuButton asChild tooltip="Preferências da conta">
                 <Link
                   to={appUrls.settings}
                   onMouseEnter={() => prefetchRouteByHref(appUrls.settings)}
@@ -515,7 +231,7 @@ export function AppSidebar() {
                   onTouchStart={() => prefetchRouteByHref(appUrls.settings)}
                 >
                   <Settings className="h-4 w-4" />
-                  <span>Preferencias da conta</span>
+                  <span>Preferências da conta</span>
                 </Link>
               </SidebarMenuButton>
             </SidebarMenuItem>
@@ -526,9 +242,9 @@ export function AppSidebar() {
               <SidebarMenuButton asChild tooltip="Entrar">
                 <Link
                   to="/login"
-                  onMouseEnter={() => prefetchRouteByHref('/login')}
-                  onFocus={() => prefetchRouteByHref('/login')}
-                  onTouchStart={() => prefetchRouteByHref('/login')}
+                  onMouseEnter={() => prefetchRouteByHref("/login")}
+                  onFocus={() => prefetchRouteByHref("/login")}
+                  onTouchStart={() => prefetchRouteByHref("/login")}
                 >
                   <LogIn className="h-4 w-4" />
                   <span>Entrar / Criar conta</span>

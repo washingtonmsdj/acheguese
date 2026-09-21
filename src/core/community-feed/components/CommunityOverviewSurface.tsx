@@ -145,6 +145,21 @@ const COMMUNITY_FEED_CONTEXT_SHORTCUTS = [
 type CommunityFeedContextTab =
   (typeof COMMUNITY_FEED_CONTEXT_SHORTCUTS)[number]["view"];
 
+function isOverviewViewLaunchEnabled(view: CommunityOverviewView): boolean {
+  switch (view) {
+    case "business":
+      return isLaunchSurfaceEnabled("business");
+    case "services":
+      return isLaunchSurfaceEnabled("services");
+    case "classifieds":
+      return isLaunchSurfaceEnabled("classifieds");
+    case "gastronomy":
+      return isLaunchSurfaceEnabled("gastronomy");
+    default:
+      return true;
+  }
+}
+
 function EventPreviewItem({ event }: { event: PublicEvent }) {
   const dateParts = getEventDateParts(event.date);
 
@@ -898,12 +913,16 @@ export function CommunityOverviewSurface({
   const [internalView, setInternalView] =
     useState<CommunityOverviewView>("feed");
   const mobileSectionsId = React.useId();
-  const selectedView = activeView ?? internalView;
+  const requestedView = activeView ?? internalView;
+  const selectedView = isOverviewViewLaunchEnabled(requestedView)
+    ? requestedView
+    : "feed";
   const isEmbeddedModule = Boolean(
     children && activeSection && !isCommunitySocialView(activeSection),
   );
   const handleViewChange = useCallback(
     (view: CommunityOverviewView) => {
+      if (!isOverviewViewLaunchEnabled(view)) return;
       if (activeView === undefined) setInternalView(view);
       if (view === "feed") setFeedContextTab("feed");
       onViewChange?.(view);
@@ -1004,6 +1023,7 @@ export function CommunityOverviewSurface({
         4,
       ),
     enabled:
+      isLaunchSurfaceEnabled("services") &&
       filterReady &&
       !isEmbeddedModule &&
       selectedView === "services",
@@ -1042,6 +1062,7 @@ export function CommunityOverviewSurface({
         4,
       ),
     enabled:
+      isLaunchSurfaceEnabled("gastronomy") &&
       filterReady &&
       !isEmbeddedModule &&
       selectedView === "gastronomy",

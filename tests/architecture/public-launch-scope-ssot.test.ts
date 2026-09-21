@@ -35,7 +35,7 @@ describe("public launch scope SSOT", () => {
     const owner = read(OWNER);
     expect(owner).toContain("export const PRELAUNCH_LOCKDOWN_ENABLED");
     expect(owner).toContain("publicEnv.VITE_PRELAUNCH_LOCKDOWN");
-    expect(owner).toContain("mobility: false");
+    expect(owner).toContain('mobility: isProductModuleEnabled("mobility")');
   });
 
   it("keeps launch consumers on the canonical flag", () => {
@@ -85,17 +85,14 @@ describe("public launch scope SSOT", () => {
     expect(waitlist).not.toContain("slugifyTerritory(selectedBairro)");
     expect(waitlist).not.toContain('"Complexo Nordeste de Amaralina"');
   });
-  it("owns paused Business category discovery policy in launchScope", () => {
+  it("keeps Business discovery owned by Business while vertical modules stay independent", () => {
     const owner = read(OWNER);
     const businessQueries = read("src/core/business/services/business.queries.ts");
-    const landingFeatured = read("src/core/landing/services/LandingFeaturedService.ts");
     const spatial = read("src/core/geospatial/services/SpatialSearchService.ts");
 
-    expect(owner).toContain("getLaunchPausedBusinessCategoryIds");
-    expect(owner).toContain('educacao: "education"');
-    expect(businessQueries).toContain("getLaunchPausedBusinessCategoryIds");
-    expect(businessQueries).toContain("category.not.in.");
-    expect(landingFeatured).toContain("applyLaunchBusinessCategoryExclusion");
+    expect(owner).not.toContain("BUSINESS_CATEGORY_SURFACES");
+    expect(owner).not.toContain("isLaunchBusinessCategoryEnabled");
+    expect(owner).not.toContain("getLaunchPausedBusinessCategoryIds");
     expect(spatial).toContain("BusinessService.getLaunchVisibleBusinessProfileIds");
     expect(spatial).not.toContain(".from('public_business_search')");
     expect(businessQueries).toContain("launch-visible profile lookup failed");

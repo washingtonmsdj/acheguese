@@ -189,107 +189,34 @@ mais comunidades sem copiar seus dados mestres:
 
 ### Busca E Descoberta
 
-SSOT operacional:
+Search permanece um bounded context preservado para pós-MVP:
 
-- `src/core/search`
-- `src/core/search/services/SearchService.ts`
-- `src/core/search/services/SearchDocumentMapper.ts`
-- `src/core/landing/services/HomeDiscoveryService.ts`
+- `src/core/search`;
+- `SearchService`;
+- `SearchDocumentMapper`;
+- `searchProviders`.
 
-Responsabilidade:
+No MVP de 2026-09-21, `search` está `paused` no
+`src/app/config/productModuleRegistry.ts`. Portanto Busca não participa da
+Home, navegação, prefetch ativo ou discovery público.
 
-- expor `SearchDocument` como contrato canonico de resultado para UI/Home;
-- orquestrar busca federada entre services/read models dos dominios donos;
-- centralizar mapeadores de entidades para `SearchDocument`, para que busca,
-  Home e futuras superficies de descoberta nao dupliquem formatacao, URLs,
-  tipos e metadados;
-- preservar arrays especificos de dominio apenas como compatibilidade de UI;
-- aplicar filtros por tipo e `TerritoryFilter` canonico quando o dominio
-  consultado suportar esse filtro.
-- aplicar filtro por `communityId` dentro de `SearchService`, consumindo
-  `CommunityEntityLinkService` para recortar businesses, professionals,
-  classifieds, events e posts por links ativos da comunidade, sem expor
-  `community_entity_links` para componentes de UI.
-- respeitar `src/config/launchScope.ts`: buckets pausados, como `events` e
-  `jobs`, nao devem ser consultados, sugeridos ou usados para buscar vinculos
-  comunitarios ate a surface publica ser habilitada.
-- falhar fechado em busca comunitaria para buckets dependentes de
-  `community_entity_links`: ausencia ou falha de leitura de vinculo nao pode
-  virar fallback para resultado amplo fora da comunidade.
+Quando for reativado, Search continua sendo um orquestrador: ele consome ports
+dos domínios donos e não passa a possuir Business, Community, Events,
+Classifieds, Professional ou Jobs.
 
-`SearchService` nao e dono de empresas, comunidades, eventos, classificados,
-profissionais, oportunidades ou posts. Ele deve compor resultados consumindo
-os services canonicos de cada dominio. A primeira etapa oficial e busca
-federada via services/read models; indice denormalizado ou RPC de busca so deve
-ser criado quando houver necessidade real de ranking, latencia ou volume.
+A antiga agregação de Home por `HomeDiscoveryService` e
+`HomeCommunityRankingService` foi aposentada. `TerritoryHomePage` não é uma
+plataforma paralela de discovery: no MVP ela apresenta somente os módulos
+efetivamente ativos — Empresas, Mapa e Perto de mim — usando URLs e contratos
+canônicos.
 
-Quando existir contexto de Comunidade Local, `SearchFilters.communityId` e o
-contrato publico do core/search. A busca pode consultar links comunitarios
-ativos por service canonico para tipos ja modelados em `community_entity_links`;
-tipos ainda sem vinculo canonico, como oportunidades rapidas, continuam
-dependentes do filtro territorial ate a fase de modelagem correspondente.
+A Home não fabrica ranking, atividade, métricas sociais, eventos, vagas,
+serviços ou conteúdo editorial para preencher ausência de dados. Módulos
+pausados não são consultados apenas para montar cards escondidos.
 
-Oportunidades rapidas e vagas estruturadas compartilham a launch surface
-`jobs`, mas possuem aggregates diferentes. `SearchService` pode federar
-`work_opportunities` pelo `WorkOpportunitiesService`; vagas estruturadas so
-devem entrar na busca global por um adapter explicito do dominio de jobs, sem
-consultas diretas de UI e sem tratar `vagas` como alias de
-`work_opportunities`.
-
-Rotas publicas de busca:
-
-- `/busca` e `/busca/:state/:city[/district]` sao a superficie federada de
-  descoberta publica multi-dominio, usando `BuscaPage`, `useGlobalSearch` e
-  `SearchService`.
-- Navegacao publica generica, `useAppUrls.search` e JSON-LD `SearchAction`
-  devem apontar para `/busca`, nao para `/buscar`.
-- `BuscaPage` deve renderizar resultados federados por dominio a partir de
-  `SearchDocument`, sem recriar mapeadores nem consultar dominios diretamente.
-  Blocos genericos como "outros resultados" nao devem esconder entidades
-  canonicas quando o contrato ja informa o tipo do documento.
-- `/buscar` e `/buscar/:state/:city[/district]` permanecem como superficie de
-  busca inteligente por linguagem natural, focada em empresas e servicos no
-  estado atual. Ela nao substitui o SSOT federado de descoberta e nao deve ser
-  usada como destino generico de navegacao/SEO.
-
-`HomeDiscoveryService` e o contrato de descoberta da Home. Ele pode compor
-cards de atividade, confianca, comunidades, ranking, sugestoes, anuncios e
-indicadores a partir de services canonicos, mas nao pode consultar tabelas de
-dominio diretamente nem recriar regras de URLs, territorio ou visibilidade.
-Leitura publica de Comunidade Local deve passar por
-`CommunityExperienceService`, cujo repository e o owner de
-`territory_communities` e `community_public_aliases`. Componentes como
-`MainLandingPage` devem consumir esse contrato por dados ja normalizados,
-mantendo a Home como superficie de apresentacao e nao como dominio.
-
-Componentes publicos de navegacao nao podem importar hooks ou services do
-bounded context `core/admin`. Branding publico deve usar asset/contrato publico
-explicito; leitura e escrita de `site_settings` por
-`admin-site-settings-rpc` pertencem somente ao modulo admin.
-
-Quando uma secao do concept ainda nao tiver agregado publico canonico em escala
--- por exemplo membros ativos ou indicadores operacionais agregados -- o
-fallback de lancamento deve ficar explicitamente dentro de
-`HomeDiscoveryService` e documentado como editorial. Esse fallback nao pode
-virar segunda fonte de verdade nem consultar dados privados como
-`community_memberships` no browser.
-
-Indicadores numericos da barra final da Home so podem vir de agregados
-publicos canonicos. O contrato atual aceita `businesses`, `services` e
-`classifieds` a partir de `LandingFeaturedService.getTerritoryStats`,
-`events` a partir de `eventsReadService.getEventsPage(...).totalCount` quando a
-surface esta habilitada, e `rating` a partir das avaliacoes publicas de
-`trustDocuments`. `members`, `safety` e `responses` nao pertencem ao runtime da
-Home enquanto nao houver read model ou RPC publica aprovada para esses sinais.
-Pela mesma regra, cards de comunidade nao devem mostrar contagem de membros ou
-crescimento percentual editorial. Sem agregado publico aprovado, usam labels
-neutras (`Comunidade ativa`, `Ativa`).
-
-Ranking da Home pertence a `HomeCommunityRankingService`. A regra v1 usa
-ordem/destaque editorial e sinais publicos de `community_entity_links` ativos
-(`link_type`, `entity_type` e `priority`). Sinais privados de membership,
-residencia, perfil ou PII so podem entrar no ranking por agregado publico
-seguro ou RPC/read model aprovado.
+Comunidade e Search podem voltar depois do MVP pelos próprios owners e pelo
+lifecycle canônico. A reativação não deve restaurar agregadores monolíticos da
+Home nem acesso cruzado direto a tabelas de outros domínios.
 
 Anuncios patrocinados pertencem a `src/core/business/promotions`. A Home e
 outros consumidores devem usar `AdDeliveryService`/`useAdDelivery`, nunca

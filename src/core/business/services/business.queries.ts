@@ -7,7 +7,6 @@
  * - Mapeamento de dados via business.mappers
  */
 
-import { getLaunchPausedBusinessCategoryIds } from "@/app/config/launchScope";
 import { supabase } from "@/integrations/supabase";
 import { logger } from "@/shared/utils/logger";
 import { LocationHierarchyReadService } from "@/core/location";
@@ -326,19 +325,10 @@ export async function getLaunchVisibleBusinessProfileIds(
   if (uniqueProfileIds.length === 0) return new Set();
 
   try {
-    let query = supabase
+    const { data, error } = await supabase
       .from("public_business_search")
-      .select("profile_id, category")
+      .select("profile_id")
       .in("profile_id", uniqueProfileIds);
-
-    const pausedBusinessCategories = getLaunchPausedBusinessCategoryIds();
-    if (pausedBusinessCategories.length > 0) {
-      query = query.or(
-        `category.is.null,category.not.in.(${pausedBusinessCategories.join(",")})`,
-      );
-    }
-
-    const { data, error } = await query;
     if (error) {
       logger.error(
         "[BusinessQueries] launch-visible profile lookup failed",
@@ -416,13 +406,6 @@ export async function getBusinessesList(
       .from("public_business_search")
       .select(PUBLIC_BUSINESS_LIST_SELECT)
       .in("business_role", ["standalone", "branch"]);
-
-    const pausedBusinessCategories = getLaunchPausedBusinessCategoryIds();
-    if (pausedBusinessCategories.length > 0) {
-      query = query.or(
-        `category.is.null,category.not.in.(${pausedBusinessCategories.join(",")})`,
-      );
-    }
 
     // Aplicar filtros
     if (category && category !== "todos") {

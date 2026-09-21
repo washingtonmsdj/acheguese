@@ -6,11 +6,11 @@ import { MAP_DEFAULT_COORDINATES } from "@/core/maps/config/defaultCoordinates";
 import { DEFAULT_TILE_STYLE } from "@/core/maps/providers/MapProvider";
 import type { MapMarker } from "@/core/maps/types";
 import { EntityStatus } from "@/shared/types/enums";
-import type { NearbyEntity } from "../hooks/useNearbyEntities";
+import type { NearbyBusiness } from "../domain/types";
 
 interface NearbyMiniMapProps {
   userLocation: { latitude: number; longitude: number } | null;
-  entities: NearbyEntity[];
+  businesses: NearbyBusiness[];
   radiusKm: number;
   showProximity: boolean;
   className?: string;
@@ -18,7 +18,7 @@ interface NearbyMiniMapProps {
 
 export function NearbyMiniMap({
   userLocation,
-  entities,
+  businesses,
   radiusKm,
   showProximity,
   className = "",
@@ -26,46 +26,32 @@ export function NearbyMiniMap({
   const adapterRef = useRef(null);
 
   const markers = useMemo<MapMarker[]>(() => {
-    return entities
+    return businesses
       .slice(0, 30)
-      .map((entity) => {
-        const metadataWithoutProximity = { ...(entity.metadata ?? {}) };
-        delete metadataWithoutProximity.distance;
-        delete metadataWithoutProximity.distance_meters;
-        const proximityMetadata = showProximity
-          ? {
-              distance: entity.distance,
-              distance_meters: entity.distance,
-            }
-          : {};
-
-        const marker = mapEntityProjection.projectEntity(
+      .map((business) =>
+        mapEntityProjection.projectBusiness(
           {
-            id: entity.id,
-            name: entity.name,
-            latitude: entity.latitude,
-            longitude: entity.longitude,
+            id: business.id,
+            name: business.name,
+            latitude: business.latitude,
+            longitude: business.longitude,
             status: EntityStatus.ACTIVE,
-            ...metadataWithoutProximity,
-            ...proximityMetadata,
+            url: business.canonicalUrl,
+            category: business.category,
+            rating: business.rating,
+            is_verified: business.verified,
+            ...(showProximity
+              ? {
+                  distance: business.distanceMeters,
+                  distance_meters: business.distanceMeters,
+                }
+              : {}),
           },
-          entity.type,
           { includeMetadata: true },
-        );
-
-        if (!marker) return null;
-
-        marker.metadata = {
-          ...marker.metadata,
-          ...metadataWithoutProximity,
-          ...proximityMetadata,
-          source: "nearby",
-        };
-
-        return marker;
-      })
+        ),
+      )
       .filter((marker): marker is MapMarker => marker !== null);
-  }, [entities, showProximity]);
+  }, [businesses, showProximity]);
 
   const center = useMemo(() => {
     if (userLocation) {
@@ -88,11 +74,11 @@ export function NearbyMiniMap({
   if (!userLocation) {
     return (
       <div
-        className={`rounded-2xl border border-border/50 bg-muted/30 flex items-center justify-center h-64 ${className}`}
+        className={`flex h-64 items-center justify-center rounded-2xl border border-border/50 bg-muted/30 ${className}`}
       >
         <div className="text-center text-muted-foreground">
-          <MapPin className="h-8 w-8 mx-auto mb-2 opacity-50" />
-          <p className="text-sm">Ative a localizacao para ver o mapa</p>
+          <MapPin className="mx-auto mb-2 h-8 w-8 opacity-50" />
+          <p className="text-sm">Ative a localização para ver o mapa</p>
         </div>
       </div>
     );
@@ -100,7 +86,7 @@ export function NearbyMiniMap({
 
   return (
     <div
-      className={`rounded-2xl border border-border/50 overflow-hidden ${className}`}
+      className={`overflow-hidden rounded-2xl border border-border/50 ${className}`}
       style={{ height: "400px" }}
     >
       <MapLibreAdapter

@@ -92,11 +92,11 @@ describe("gastronomy runtime boundaries", () => {
     }
   });
 
-  it("avoids generic hardcoded gastronomy navigation outside the SSOT", () => {
-    const nearbyPage = read("src/app/pages/NearbyPage.tsx");
+  it("keeps paused Gastronomy out of the Nearby module boundary", () => {
+    const nearbyPage = read("src/core/nearby/pages/NearbyPage.tsx");
 
-    expect(nearbyPage).not.toContain("navigate('/gastronomia')");
-    expect(nearbyPage).toContain("moduleUrls.gastronomy");
+    expect(nearbyPage).not.toContain("gastronomy");
+    expect(nearbyPage).not.toContain("moduleUrls.gastronomy");
   });
 
   it("allows mock imports only inside __mocks__/__tests__ or gated dev runtime adapters", () => {

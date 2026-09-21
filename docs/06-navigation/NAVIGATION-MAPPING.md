@@ -56,16 +56,17 @@ Quando mais de uma comunidade estiver efetivamente lançada, a evolução da rai
 O alias `TerritoryExplorerPage` e a implementação `PublicCityLandingPage`
 foram aposentados em 2026-09-09 após prova de zero caller de rota.
 
-Owners atuais:
+Owners atuais do MVP:
 
-- Home de cidade/bairro/grupo: `TerritoryHomePage`;
-- entrada pública do MVP: `TerritoryEntryPage`;
-- descoberta/busca: `BuscaPage`;
-- mapa: `MapaPageV4`;
-- `CidadeLandingPage` permanece somente como compatibilidade do portal
-  Community enquanto módulos embutidos ainda dependem dessa moldura.
+- Home territorial: `TerritoryHomePage`;
+- entrada pública: `TerritoryEntryPage`;
+- Empresas: `EmpresasLandingPage` + owner `core/business`;
+- Mapa: `MapaPageV4`;
+- Perto de mim: `core/nearby/pages/NearbyPage.tsx`.
 
-`BuscaPage` é uma busca **interna ao território atual**. No MVP ela é acessada após a entrada no Complexo; não deve ser promovida novamente a campo de cidade/bairro na primeira tela.
+`BuscaPage` e Community permanecem preservadas para pós-MVP, mas estão
+`paused` no lifecycle. `CidadeLandingPage` foi removida após migração dos
+callers e não é compatibilidade ativa.
 
 Não recriar uma segunda Home/Explorer monolítica.
 
@@ -80,15 +81,15 @@ Não recriar uma segunda Home/Explorer monolítica.
 | Responsabilidade | Home territorial útil de cidade/bairro/grupo. Blocos usam dados reais, estados reais e apenas superfícies lançadas. |
 | Rotas            | `/:uf/:city`, `/:uf/:city/:district-or-group`                                                                        |
 | Arquivo canônico | `src/app/pages/TerritoryHomePage.tsx`                                                                                |
-| Dependências     | `TerritorialLayout`, `useModuleTerritoryFilter`, `useTerritoryHomeData`, `useCommunityAccess`, `launchScope`        |
+| Dependências     | `TerritorialLayout`, URLs de módulo e lifecycle canônico em `productModuleRegistry.ts`                                      |
 | Situação         | **Migrado**                                                                                                          |
 
 Regras adicionais:
 
-- quick actions passam por `isLaunchSurfaceEnabled(...)`;
-- Mobilidade e Educação não aparecem enquanto seus gates estiverem `false`;
-- `Publicar` é CTA contextual e depende de `CommunityAccessPolicy.can.create_post`;
-- Production não substitui dados ausentes por conteúdo conceitual;
+- a Home expõe somente Empresas, Mapa e Perto de mim no MVP;
+- o lifecycle pertence a `productModuleRegistry.ts`;
+- módulos pausados não são consultados para preencher previews escondidos;
+- produção não substitui dados ausentes por conteúdo conceitual;
 - mocks visuais só podem existir sob gate explícito de desenvolvimento.
 
 ---
@@ -103,7 +104,7 @@ Regras adicionais:
 | Rotas            | `/comunidade/:alias`, variantes territoriais, `/feed`, `/grupos` e `?view=...`                             |
 | Arquivo canônico | `src/core/community-feed/pages/ComunidadePage.tsx`                                                         |
 | Dependências     | `useCommunityFeed`, `useTerritoryFilter`, componentes de `core/community-feed` e domínios relacionados |
-| Situação         | **Canônico** — rotas, prefetch e testes importam diretamente `ComunidadePage`.                            |
+| Situação         | **Owner preservado / módulo pausado no MVP** — reativação futura passa pelo lifecycle canônico.             |
 | Alias aposentado | `src/app/pages/TerritoryFeedPage.tsx` foi removido por não ter caller de runtime.                          |
 
 ---
@@ -135,47 +136,49 @@ No estado atual, ocultar um módulo da navegação não é suficiente. Educaçã
 
 ## 7. Navegação Território Vivo
 
-O registry global canônico é `src/core/navigation/territoryNavigationModes.ts`.
+O registry de apresentação é `src/core/navigation/territoryNavigationModes.ts`
+e o lifecycle de produto pertence a
+`src/app/config/productModuleRegistry.ts`.
 
-Os cinco modos globais são:
+Os cinco destinos primários do MVP são:
 
-1. `Hoje`;
-2. `Explorar`;
-3. `Community`;
-4. `Atividade`;
-5. `Conta` / `Entrar`.
+1. Home;
+2. Mapa;
+3. Empresas;
+4. Perto de mim;
+5. Conta / Entrar.
 
-`TerritoryAdaptiveNavigation` e `BottomNav` são renderers desse registry, não autoridades paralelas.
+`TerritoryAdaptiveNavigation` e `BottomNav` são renderers; não possuem
+autoridade própria para ativar módulos.
 
 Regras:
 
-- `Publicar` não é modo global; aparece somente em contexto autorizado por policy;
-- módulos como Empresas, Serviços, Gastronomia, Classificados, Eventos etc. são destinos contextuais de Home/Explorar, não novos modos globais;
-- um território presente na URL sempre prevalece;
-- em rotas não territoriais, o último território válido da sessão pode preservar o contexto de retorno;
-- sem último território válido, o fallback do MVP é o território de lançamento configurado;
-- esse contexto interno não pode voltar a fazer `/` pular a entrada pública;
-- toda superfície pausada continua sujeita a `launchScope` e ao gate de rota.
+- um destino de módulo só aparece quando seu lifecycle efetivo está ativo;
+- `nearby` depende formalmente de `map + business`;
+- rotas não territoriais podem preservar o último território válido apenas como
+  contexto, nunca como autorização para reativar módulo pausado;
+- Search, Community e demais módulos pós-MVP não aparecem na navegação primária;
+- pausar um módulo precisa removê-lo também de rota funcional, prefetch,
+  discovery e layers públicas, não apenas do menu.
 
 ---
 
 ## Páginas legadas a remover após migração completa
 
-Removidos em 2026-09-09:
+Removidos após migração e prova de ausência de caller:
 
 - `src/app/pages/PublicCityLandingPage.tsx`;
 - `src/app/pages/PublicCityLandingPage.css`;
 - `src/app/pages/TerritoryExplorerPage.tsx`;
-- `src/app/pages/TerritoryFeedPage.tsx` — re-export sem caller, aposentado em 2026-09-21.
+- `src/app/pages/TerritoryFeedPage.tsx`;
+- `src/app/pages/CidadeLandingPage.tsx` e a família `CidadeLanding.*`.
 
-Ainda candidato futuro:
-
-- `src/app/pages/CidadeLandingPage.tsx` + `CidadeLanding.*` — somente quando as seções `feed/grupos/business/...` migrarem para páginas dedicadas de módulo;
+Esses arquivos não são camadas de compatibilidade e não devem ser recriados.
 
 ## Regras da migração
 
-1. Nenhuma rota pública pode ser removida sem compatibilidade explícita.
-2. Nenhum arquivo antigo pode ser deletado enquanto houver import ativo.
+1. Rota antiga só recebe redirect quando existe contrato externo legítimo de URL canônica; módulo pausado ou código quebrado não justifica redirect.
+2. Arquivo antigo só é removido após prova de ausência de import/caller ativo.
 3. Nova refatoração deve importar sempre o owner canônico (`TerritoryHomePage`, `TerritoryEntryPage`, etc.), nunca recriar alias como autoridade.
 4. A navegação global é adaptativa: bottom navigation no mobile, rail no tablet e sidebar no desktop; todos consomem o mesmo registry global.
 5. Community não monta shell global paralelo.

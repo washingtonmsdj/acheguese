@@ -11,7 +11,7 @@
  */
 
 import { lazy, Suspense, type ReactNode } from "react";
-import { Link, useLocation, useOutlet } from "react-router-dom";
+import { Link, Outlet, useLocation } from "react-router-dom";
 import { Helmet } from "react-helmet-async";
 import { useTerritorialContext } from "@/core/routing/components/TerritorialLayout";
 import { ModulePageLoader } from "@/shared/components/loading/PageLoader";
@@ -29,13 +29,11 @@ import {
   buildModuleTerritoryUrl,
 } from "@/core/routing/utils/territoryUrls";
 import { createLaunchPausedRoute } from "@/app/routes/launchPausedComponent";
-import type { CommunityOverviewSection } from "@/core/community-feed/navigation";
 
 // Lazy imports dos módulos existentes
 const ComunidadePage = lazy(
   () => import("@/core/community-feed/pages/ComunidadePage"),
 );
-const CidadeLandingPage = lazy(() => import("@/app/pages/CidadeLandingPage"));
 // Sprint TERRITORY.1: Territory Home passa a ser a home única de qualquer território
 // (cidade ou bairro). O feed completo continua em `/comunidade/.../feed` via ComunidadePage.
 const CommunityCommunicationTabPage = lazy(
@@ -73,90 +71,12 @@ function isCommunityScopedPath(pathname: string): boolean {
   return pathname === communityRoot || pathname.startsWith(`${communityRoot}/`);
 }
 
-function resolvePersistentCommunitySection(
-  pathname: string,
-  search: string,
-  communityBaseUrl: string,
-): {
-  section: CommunityOverviewSection;
-  embedOutlet: boolean;
-  renderOutletOnly?: boolean;
-} {
-  const relativePath = pathname.startsWith(communityBaseUrl)
-    ? pathname.slice(communityBaseUrl.length)
-    : "";
-  const segments = relativePath.split("/").filter(Boolean);
-  const firstSegment = segments[0];
-
-  if (!firstSegment) {
-    const requestedView = new URLSearchParams(search).get("view");
-    if (requestedView === "groups" || requestedView === "discussions") {
-      return {
-        section: requestedView,
-        embedOutlet: false,
-        renderOutletOnly: true,
-      };
-    }
-    return { section: "feed", embedOutlet: false, renderOutletOnly: true };
-  }
-
-  if (firstSegment === "feed") {
-    return { section: "feed", embedOutlet: false, renderOutletOnly: true };
-  }
-  if (firstSegment === "grupos") {
-    return { section: "groups", embedOutlet: false, renderOutletOnly: true };
-  }
-
-  switch (firstSegment) {
-    case MODULE_SLUGS.business:
-      return { section: "business", embedOutlet: true };
-    case MODULE_SLUGS.services:
-      return { section: "services", embedOutlet: true };
-    case MODULE_SLUGS.classifieds:
-      return { section: "classifieds", embedOutlet: true };
-    case MODULE_SLUGS.gastronomy:
-      return { section: "gastronomy", embedOutlet: true };
-    case MODULE_SLUGS.map:
-      return { section: "map", embedOutlet: true };
-    default:
-      return { section: "feed", embedOutlet: true };
-  }
-}
-
 export function CommunityPersistentPortalLayout() {
   const territorialContext = useTerritorialContext();
-  const location = useLocation();
-  const outlet = useOutlet(territorialContext);
-  const presentation = resolvePersistentCommunitySection(
-    location.pathname,
-    location.search,
-    territorialContext.communityBaseUrl,
-  );
-
-  // Overview, Feed, Grupos e Discussões usam uma única superfície Community.
-  // O portal legado permanece apenas como moldura temporária de módulos adjacentes.
-  if (presentation.renderOutletOnly) {
-    return <Suspense fallback={<ModulePageLoader />}>{outlet}</Suspense>;
-  }
-
-  const communityContent = presentation.embedOutlet ? (
-    <Suspense
-      fallback={
-        <div data-community-module-loading="true">
-          <ModulePageLoader />
-        </div>
-      }
-    >
-      {outlet}
-    </Suspense>
-  ) : undefined;
 
   return (
     <Suspense fallback={<ModulePageLoader />}>
-      <CidadeLandingPage
-        activeCommunitySection={presentation.section}
-        communityContent={communityContent}
-      />
+      <Outlet context={territorialContext} />
     </Suspense>
   );
 }

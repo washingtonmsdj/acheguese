@@ -14,15 +14,21 @@ Este corte substitui, para fins de **prioridade de lançamento**, a ordem histó
 
 ### Escopo público do candidato
 
-A fonte executável continua sendo `src/app/config/launchScope.ts`. No baseline auditado, permanecem públicas: Home, Comunidade, Empresas, Gastronomia, Serviços, Classificados, Pontos Turísticos, Mapa, Perto de Mim, Busca, Vagas, Eventos, preview de eventos comunitários e comunicação comunitária já integrada ao fluxo de Comunidade.
+A decisão definitiva de release de **2026-09-21** reduz o MVP a três módulos públicos de produto:
 
-Para reduzir risco sem amputar capacidade válida:
+- **Empresas** — catálogo institucional, detalhe canônico, contato e localização;
+- **Mapa** — visualização geográfica dos dados pertencentes aos módulos ativos; no MVP, somente Business é layer público de domínio;
+- **Perto de mim** — descoberta por proximidade de Empresas, com dependências formais de `map + business`.
 
-- **núcleo obrigatório do MVP:** autenticação/conta, Home territorial com dados reais/empty states, Comunidade básica, Empresas/Gastronomia/Serviços, Classificados, Busca, Mapa/Perto de Mim e Pontos Turísticos;
-- **superfícies condicionais:** Vagas e Eventos só entram no release se concluírem a mesma certificação do núcleo; se não concluírem, devem ser pausadas pelo owner `launchScope.ts` antes do release, sem remover código;
-- **fora do primeiro release:** Educação, Comunicação global, Mobilidade, Cupons, Gamificação, Analytics público, Alertas, Problemas/Issues, Achados e Perdidos, Safety familiar e demais superfícies que já estão `false` no launch scope. Essas capacidades não bloqueiam o MVP enquanto permanecerem realmente inacessíveis na superfície pública.
+O lifecycle canônico pertence a `src/app/config/productModuleRegistry.ts`. `launchScope.ts` é apenas a camada de compatibilidade das superfícies existentes e deriva seu estado do registry.
 
-O primeiro release continua territorial. **Cobertura uniforme dos 170 bairros de Salvador não é critério do MVP**; expansão municipal, ETL de todos os boundaries e rollout bairro a bairro ficam para depois da estabilização do território inicial.
+**Home/Território, Auth/Conta, sessão, localização, roteamento, segurança, storage e observabilidade são infraestrutura**, não módulos extras do MVP.
+
+Ficam explicitamente **pós-MVP**, preservados e isolados até trabalho/certificação individual: Comunidade, Busca pública, Gastronomia, Serviços profissionais, Classificados, Pontos Turísticos, Educação, Vagas/Oportunidades, Eventos, Mensagens/Comunicação, Mobilidade, Cupons, Gamificação, Analytics público, Alertas, Issues, Achados e Perdidos, Safety familiar e Billing.
+
+A regra de modularidade é fail-closed: pausar um módulo no registry remove sua navegação, suas rotas públicas e seus loaders/discovery ativos. Reativação futura deve ocorrer pelo owner canônico e suas dependências, nunca por redirect, alias ou exceção local.
+
+O primeiro release continua territorial. **Cobertura uniforme dos 170 bairros de Salvador não é critério do MVP**; expansão municipal e rollout bairro a bairro ficam para depois da estabilização do território inicial.
 
 ### Bloqueadores reais antes do release
 
@@ -31,7 +37,7 @@ O primeiro release continua territorial. **Cobertura uniforme dos 170 bairros de
 3. **Completar proteção da `main`.** Force-push/deleção já estão bloqueados e o publisher canônico de tipos Supabase **já não escreve diretamente na `main`**: ele usa `automation/supabase-types-sync`, abre/atualiza PR e dispara os gates canônicos. O blocker restante é administrativo: exigir PR + checks que realmente executem e impedir bypass fora da release authority aprovada.
 4. **Preservar a prova de ledger/runtime no SHA candidato.** A auditoria de identidade já está em zero divergências; `validate:migrations`, `validate:migrations:provenance` e `validate:migrations:remote` ainda precisam executar de verdade no runner do candidato. Tipos gerados foram regenerados do runtime após os últimos DDLs.
 5. **Manter LGPD destrutivo fail-closed.** Delete/purge não pode ser habilitado enquanto `LGPD_PURGE_POLICY` não estiver pronto. Exportação também permanece desabilitada até certificação. O MVP pode lançar com essas capacidades indisponíveis, desde que a UI não prometa sucesso e nenhum caminho stale permaneça acessível.
-6. **Fechar segurança do que será exposto.** Priorizar Auth/conta, Profile, território, Comunidade, Business/Gastronomy/Services, Classificados, Busca/Mapa e superfícies administrativas necessárias. Hardening de módulos pausados pode continuar durante/depois do MVP, exceto quando compartilha uma boundary usada pelo núcleo.
+6. **Fechar segurança do que será exposto.** Priorizar Auth/Conta, Profile, território e os owners de Empresas, Mapa e Perto de mim. Módulos pausados só bloqueiam o MVP quando compartilham uma boundary realmente usada por esse núcleo.
 7. **Certificar o fluxo real das superfícies públicas.** Para cada item do escopo: rota/owner canônico, contrato DB/RPC, autorização positiva e negativa, loading/empty/error/auth, fluxo principal com dados reais, smoke mobile e E2E sem placeholder/paused contado como sucesso.
 8. **Provar deploy do mesmo SHA.** O SHA aprovado deve produzir build real no provider e smoke no domínio público, incluindo login/cadastro, troca/resolução territorial, Home, navegação do núcleo, mutações principais e logout.
 9. **Configuração legal/operacional mínima.** O verifier de deploy já exige origem pública HTTPS, contato e DPO válidos e foro configurado; políticas/textos falham fechado quando identidade pública não existe. O blocker restante é o provider fornecer valores válidos no build exact-SHA.
@@ -40,10 +46,11 @@ O primeiro release continua territorial. **Cobertura uniforme dos 170 bairros de
 ### Correções de gate identificadas neste corte
 
 - [x] `tools/release/verify-deploy-ready.mjs` já reconhece o `buildCommand` canônico `node tools/release/run-vercel-production-build.mjs`, alinhado a `vercel.json`. Não manter este item como blocker.
-- [x] `tests/e2e/launch-scope-public.spec.ts` foi realinhado ao owner `launchScope.ts`: Eventos e Vagas já não eram tratados como pausados e `/mensagens` deixou de ser classificado incorretamente como `LaunchPausedPage` quando `communityCommunication: true`. O ratchet `tests/architecture/launch-scope-e2e-alignment.test.ts` protege esse contrato.
+- [x] `tests/e2e/launch-scope-public.spec.ts` e `tests/architecture/launch-scope-e2e-alignment.test.ts` foram realinhados ao corte definitivo de 2026-09-21: somente Empresas, Mapa e Perto de mim são módulos ativos; os demais módulos públicos devem render isolamento de lançamento.
 
 ### Progresso consolidado do corte público — 2026-09-19
 
+- [x] Corte MVP definitivo de 2026-09-21: `productModuleRegistry.ts` mantém somente `business + map + nearby` ativos; `nearby` depende formalmente de `map + business`. Home/Conta/Território são infraestrutura, e todos os demais módulos permanecem pós-MVP e isolados.
 - [x] Home, Busca e perfil profissional público deixaram de aceitar dados `concept-mock` no runtime.
 - [x] Pontos Turísticos deixou de exibir proximidade simulada.
 - [x] Eventos pagos falham fechado enquanto não há checkout habilitado; inscrições gratuitas continuam no fluxo real.
@@ -99,7 +106,7 @@ O primeiro release continua territorial. **Cobertura uniforme dos 170 bairros de
 2. **R1 — convergência:** **fechado no ledger** (673/673 exatas); manter a igualdade de tipos e reexecutar os validadores no mesmo SHA candidato.
 3. **R2 — release authority:** publisher de tipos via PR **fechado**; faltam CI realmente executando e branch protection exigindo o caminho aprovado.
 4. **R3 — Auth/Privacy/Security:** fechar autenticação e superfícies sensíveis do escopo; manter delete/export destrutivos fail-closed.
-5. **R4 — certificação funcional:** núcleo primeiro; Eventos/Vagas apenas se passarem no mesmo padrão.
+5. **R4 — certificação funcional:** certificar somente Empresas, Mapa e Perto de mim, além da infraestrutura estritamente necessária ao fluxo.
 6. **R5 — exact-SHA:** security + lint + typecheck + tests + build + E2E + deploy real + smoke do mesmo SHA.
 7. **R6 — lançar MVP:** abrir somente superfícies certificadas e iniciar acompanhamento de erros/uso. Todo restante passa ao backlog durante/pós-MVP.
 

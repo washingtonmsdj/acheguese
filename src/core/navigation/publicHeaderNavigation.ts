@@ -2,6 +2,7 @@ import {
   Building2,
   Home,
   Map,
+  Navigation,
   Search,
   Tag,
   Users,
@@ -23,6 +24,7 @@ export type PublicHeaderNavItemId =
   | "services"
   | "classifieds"
   | "map"
+  | "nearby"
   | "search";
 
 export type PublicHeaderNavItem = {
@@ -94,9 +96,16 @@ const PUBLIC_HEADER_NAV_DEFINITIONS: readonly PublicHeaderNavDefinition[] = [
     surface: "map",
   },
   {
+    id: "nearby",
+    label: "Perto de mim",
+    description: "Empresas próximas no mapa",
+    icon: Navigation,
+    surface: "nearby",
+  },
+  {
     id: "search",
     label: "Busca",
-    description: "Pesquisa em todos os módulos",
+    description: "Pesquise no conteúdo ativo",
     icon: Search,
     surface: "search",
   },

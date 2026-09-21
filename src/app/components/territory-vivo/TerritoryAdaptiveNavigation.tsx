@@ -99,7 +99,7 @@ export function TerritoryAdaptiveNavigation({
         <Link
           to={territoryBase}
           className="mx-auto flex h-11 w-11 items-center justify-center rounded-territory bg-territory-brand text-[hsl(var(--territory-canvas))]"
-          aria-label="Achegue-se — Hoje"
+          aria-label="Achegue-se — Início"
         >
           <MapPin className="h-5 w-5" aria-hidden="true" />
         </Link>

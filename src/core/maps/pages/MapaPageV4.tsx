@@ -5,7 +5,6 @@
  * - Território   → useModuleTerritoryFilter({ routeResolved, activeMemberIds })
  * - Focus target → URL com lat/lng explicita, sem herdar filtro territorial artificial
  * - Businesses   → MapBusinessLayerRuntimeService com bounds + territoryFilter no banco
- * - Eventos      → EventsService.getByBounds com territoryFilter
  * - Projeção     → mapEntityProjection (MapEntityProjectionService)
  * - Viewport     → useMapViewportFetch + MapLibreAdapter
  * - Geoloc GPS   → MapLibreAdapter.controls.location (via MapLocationControl → useRobustGeolocation → GeolocationService)
@@ -14,24 +13,16 @@
  */
 
 import React, { useRef, useCallback, useEffect, useMemo, useState } from 'react';
-import { Link, useLocation, useNavigate, useSearchParams } from 'react-router-dom';
-import { Building2, LayoutList, MapPin, Tag, UtensilsCrossed, Wrench } from 'lucide-react';
+import { Link, useNavigate, useSearchParams } from 'react-router-dom';
+import { Building2, Navigation } from 'lucide-react';
 import { MapLibreAdapter, type MapLibreAdapterHandle } from '../components/v3/MapLibreAdapter';
 import { MapMarkerPopup } from '../components/v3/MapMarkerPopup';
 import { useMapViewportFetch } from '../hooks/useMapViewportFetch';
 import { mapEntityProjection } from '../services/MapEntityProjectionService';
 import { DEFAULT_TILE_STYLE } from '../providers/MapProvider';
 import { MAP_DEFAULT_BOUNDS, MAP_DEFAULT_ZOOM } from '../config/defaultCoordinates';
-import {
-  MAP_PUBLIC_RUNTIME_LAYER_KEYS,
-  isMapRuntimeLayerEnabled,
-} from '../config/runtimeConfig';
-import { eventsReadService } from '@/core/community-events';
-import { eventPublicRoutes } from '@/core/community-events/routes/eventPublicRoutes';
+import { MAP_PUBLIC_RUNTIME_LAYER_KEYS } from '../config/runtimeConfig';
 import { mapBusinessLayerRuntimeService } from '@/core/maps/services/MapBusinessLayerRuntimeService';
-import { mapClassifiedsLayerRuntimeService } from '@/core/maps/services/MapClassifiedsLayerRuntimeService';
-import { mapGastronomyLayerRuntimeService } from '@/core/maps/services/MapGastronomyLayerRuntimeService';
-import { mapServicesLayerRuntimeService } from '@/core/maps/services/MapServicesLayerRuntimeService';
 import { usePublicBrowsingCity } from '@/core/location/hooks/usePublicBrowsingCity';
 import { useResolvedUserLocation } from '@/core/location/hooks/useResolvedUserLocation';
 import { territoryFilterKey } from '@/core/location/hooks/useTerritoryFilter';
@@ -41,11 +32,13 @@ import { useTerritoryPolygon, type TerritoryPolygon } from '../hooks/useTerritor
 import { useQuery } from '@tanstack/react-query';
 import { createLocationRepository } from '@/core/location/repositories/createLocationRepository';
 import { APP_MODULE_SLUGS, buildAppModulePath } from '@/shared/config/moduleSlugs';
-import { NeighborhoodTerritoryArt } from '@/core/maps/components/NeighborhoodTerritoryArt';
-import { useFriendlyModuleUrls } from '@/core/routing/hooks/useFriendlyModuleUrls';
+import {
+  MODULE_SLUGS,
+  buildGroupBaseUrl,
+  buildModuleTerritoryUrl,
+  geoPathToPublicUrl,
+} from '@/core/routing/utils/territoryUrls';
 import { boundaryService } from '@/core/geospatial';
-import { spatialSearchService } from '@/core/geospatial/services/SpatialSearchService';
-import { useTouristPointPublicUrls } from '@/core/guide/tourist-points/routes/useTouristPointPublicUrls';
 import { EntityStatus } from '@/shared/types/enums';
 import type { BoundingBox, MapLayerKey, MapMarker, MapViewport } from '../types/core';
 import { LocationStatus, type Location, type TerritoryFilter } from '@/core/location/types';
@@ -60,143 +53,52 @@ interface MapaPageV4Props {
 
 const TILE_STYLE_URL = DEFAULT_TILE_STYLE.styleUrl;
 const BUSINESS_MAP_BASE_URL = buildAppModulePath(APP_MODULE_SLUGS.business);
-const GASTRONOMY_MAP_BASE_URL = buildAppModulePath(APP_MODULE_SLUGS.gastronomy);
+const NEARBY_URL = buildAppModulePath(APP_MODULE_SLUGS.nearby);
 const INITIAL_BOUNDS: BoundingBox = MAP_DEFAULT_BOUNDS;
 const INITIAL_ZOOM = MAP_DEFAULT_ZOOM;
 
-const COMMUNITY_MODULE_TABS = [
-  { key: 'feed', label: 'Feed', shortLabel: 'Feed', icon: LayoutList },
-  { key: 'business', label: 'Empresas', shortLabel: 'Emp.', icon: Building2 },
-  { key: 'services', label: 'Serviços', shortLabel: 'Serv.', icon: Wrench },
-  { key: 'classifieds', label: 'Classificados', shortLabel: 'Class.', icon: Tag },
-  { key: 'gastronomy', label: 'Gastronomia', shortLabel: 'Gast.', icon: UtensilsCrossed },
-  { key: 'map', label: 'Mapa', shortLabel: 'Mapa', icon: MapPin },
-] as const;
-
-const COMMUNITY_MAP_LAYER_BADGES = [
-  { key: 'businesses', label: 'Negócios' },
-  { key: 'services', label: 'Serviços' },
-  { key: 'gastronomy', label: 'Gastronomia' },
-  { key: 'classifieds', label: 'Classificados' },
-] as const;
-
-function NeighborhoodMapHero({
+function MvpMapHeader({
   territoryName,
-  moduleUrls,
   mapLabel,
-  polygons,
-  markers,
+  businessHref,
 }: {
   territoryName: string;
-  moduleUrls: ReturnType<typeof useFriendlyModuleUrls>;
   mapLabel: string;
-  polygons: TerritoryPolygon[];
-  markers: MapMarker[];
+  businessHref: string;
 }) {
-  const moduleLinks = [
-    { ...COMMUNITY_MODULE_TABS[5], href: moduleUrls.map, isActive: true },
-    { ...COMMUNITY_MODULE_TABS[0], href: moduleUrls.community, isActive: false },
-    { ...COMMUNITY_MODULE_TABS[1], href: moduleUrls.business, isActive: false },
-    { ...COMMUNITY_MODULE_TABS[2], href: moduleUrls.services, isActive: false },
-    { ...COMMUNITY_MODULE_TABS[3], href: moduleUrls.classifieds, isActive: false },
-    { ...COMMUNITY_MODULE_TABS[4], href: moduleUrls.gastronomy, isActive: false },
-  ] as const;
-
   return (
-    <section className="overflow-hidden rounded-[24px] border border-white/10 bg-[linear-gradient(180deg,rgba(10,24,32,0.98),rgba(7,17,24,0.98))] text-white shadow-xl shadow-black/10">
-      <div className="border-b border-white/10 px-4 py-3 sm:px-5">
-        <div className="flex snap-x snap-mandatory gap-2 overflow-x-auto pb-1 [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
-          {moduleLinks.map((item) => {
-            const Icon = item.icon;
-            return item.isActive ? (
-              <span
-                key={item.key}
-                className="inline-flex min-h-10 shrink-0 snap-start items-center gap-2 rounded-full border border-cyan-300/35 bg-cyan-300/12 px-3 text-xs font-semibold text-cyan-100 sm:px-4"
-              >
-                <Icon className="h-4 w-4" />
-                <span className="sm:hidden">{item.shortLabel}</span>
-                <span className="hidden sm:inline">{item.label}</span>
-              </span>
-            ) : (
-              <Link
-                key={item.key}
-                to={item.href}
-                className="inline-flex min-h-10 shrink-0 snap-start items-center gap-2 rounded-full border border-white/10 bg-white/[0.03] px-3 text-xs font-semibold text-white/65 transition-colors hover:border-white/20 hover:text-white sm:px-4"
-              >
-                <Icon className="h-4 w-4" />
-                <span className="sm:hidden">{item.shortLabel}</span>
-                <span className="hidden sm:inline">{item.label}</span>
-              </Link>
-            );
-          })}
-        </div>
-      </div>
-
-      <div className="grid gap-3 px-4 py-4 sm:gap-4 sm:px-5 sm:py-5 lg:grid-cols-[minmax(0,1fr)_18rem]">
+    <section className="rounded-[24px] border border-border bg-card px-4 py-4 shadow-sm sm:px-5">
+      <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div className="min-w-0">
-          <p className="text-[0.7rem] font-semibold uppercase tracking-[0.22em] text-cyan-300">
+          <p className="text-xs font-semibold uppercase tracking-[0.18em] text-primary">
             {territoryName}
           </p>
-          <h1 className="mt-2 max-w-[12ch] text-[1.75rem] font-semibold leading-[1.05] sm:max-w-none sm:text-[2rem]">
+          <h1 className="mt-1 text-2xl font-semibold text-foreground">
             {mapLabel}
           </h1>
-          <p className="mt-2 max-w-xl text-sm leading-6 text-white/62">
-            Mapa vivo, contorno territorial e camadas locais no contexto real do bairro.
+          <p className="mt-1 max-w-2xl text-sm text-muted-foreground">
+            Visualize empresas públicas válidas no território e abra o detalhe canônico de cada estabelecimento.
           </p>
-
-          <div className="mt-4 flex flex-wrap gap-2">
-            <span className="inline-flex min-h-8 items-center rounded-full border border-cyan-300/30 bg-cyan-300/10 px-3 text-xs font-semibold text-cyan-100">
-              Território ativo
-            </span>
-            <span className="inline-flex min-h-8 items-center rounded-full border border-white/10 bg-white/[0.03] px-3 text-xs font-semibold text-white/75">
-              Camadas ao vivo
-            </span>
-          </div>
-
-          <div className="mt-4 grid gap-2 sm:max-w-xl sm:grid-cols-2 sm:gap-3">
-            <Link
-              to={moduleUrls.community}
-              className="inline-flex min-h-11 items-center justify-center rounded-xl bg-cyan-400 px-4 text-sm font-semibold text-slate-950 transition-colors hover:bg-cyan-300"
-            >
-              <LayoutList className="mr-2 h-4 w-4" />
-              Ver feed do bairro
-            </Link>
-            <Link
-              to={moduleUrls.business}
-              className="inline-flex min-h-11 items-center justify-center rounded-xl border border-white/14 bg-white/[0.03] px-4 text-sm font-semibold text-white transition-colors hover:bg-white/[0.08]"
-            >
-              <Building2 className="mr-2 h-4 w-4" />
-              Explorar empresas
-            </Link>
-          </div>
         </div>
-
-        <div className="grid gap-3 rounded-[20px] border border-white/10 bg-black/20 p-3 lg:p-4">
-          <div>
-            <p className="text-xs font-semibold uppercase tracking-[0.18em] text-white/45">
-              Leitura territorial
-            </p>
-            <p className="mt-1 text-sm text-white/65">
-              O contorno e os pins seguem o território ativo da comunidade.
-            </p>
-          </div>
-          <div className="overflow-hidden rounded-[18px] border border-white/10 bg-[#07131a]">
-            <NeighborhoodTerritoryArt polygons={polygons} markers={markers} compact decorative />
-          </div>
-          <div className="flex flex-wrap gap-2">
-            {COMMUNITY_MAP_LAYER_BADGES.map((layer) => (
-              <span
-                key={layer.key}
-                className="inline-flex min-h-8 items-center rounded-full border border-white/10 bg-white/[0.03] px-3 text-xs font-semibold text-white/75"
-              >
-                {layer.label}
-              </span>
-            ))}
-          </div>
-          <div className="rounded-2xl border border-cyan-300/15 bg-cyan-300/[0.05] px-3 py-3 text-sm text-white/68">
-            A descoberta visual do bairro acontece aqui, sem trocar de landing e sem quebrar o contexto da comunidade.
-          </div>
-        </div>
+        <nav
+          className="flex shrink-0 flex-wrap gap-2"
+          aria-label="Módulos relacionados ao mapa"
+        >
+          <Link
+            to={businessHref}
+            className="inline-flex min-h-10 items-center gap-2 rounded-xl border border-border px-3 text-sm font-semibold text-foreground transition-colors hover:bg-muted"
+          >
+            <Building2 className="h-4 w-4" aria-hidden="true" />
+            Empresas
+          </Link>
+          <Link
+            to={NEARBY_URL}
+            className="inline-flex min-h-10 items-center gap-2 rounded-xl border border-border px-3 text-sm font-semibold text-foreground transition-colors hover:bg-muted"
+          >
+            <Navigation className="h-4 w-4" aria-hidden="true" />
+            Perto de mim
+          </Link>
+        </nav>
       </div>
     </section>
   );
@@ -357,6 +259,30 @@ function resolvedCenterKey(resolved: ResolvedTerritory | null): string {
   return `group:${resolved.group.id}`;
 }
 
+function resolveBusinessListUrl(resolved: ResolvedTerritory | null): string {
+  if (!resolved) return BUSINESS_MAP_BASE_URL;
+
+  if (resolved.kind === 'location') {
+    return buildModuleTerritoryUrl(
+      MODULE_SLUGS.business,
+      geoPathToPublicUrl(resolved.location.geographic_path),
+    );
+  }
+
+  const firstMember = resolved.group.members.at(0);
+  if (!firstMember?.geographic_path) return BUSINESS_MAP_BASE_URL;
+
+  const [country, state, city] = firstMember.geographic_path
+    .split("/")
+    .filter(Boolean);
+  if (!country || !state || !city) return BUSINESS_MAP_BASE_URL;
+
+  return buildModuleTerritoryUrl(
+    MODULE_SLUGS.business,
+    buildGroupBaseUrl(resolved.group, `/${country}/${state}/${city}`),
+  );
+}
+
 function makeBusinessFetcher(territoryFilter: TerritoryFilter | undefined) {
   return async (bounds: BoundingBox): Promise<MapMarker[]> => {
     try {
@@ -373,6 +299,7 @@ function makeBusinessFetcher(territoryFilter: TerritoryFilter | undefined) {
           longitude: business.longitude,
           status: EntityStatus.ACTIVE,
           slug: business.slug ?? undefined,
+          url: business.canonical_url,
           is_premium: business.is_premium,
           is_verified: business.is_verified,
           rating: business.rating,
@@ -380,136 +307,6 @@ function makeBusinessFetcher(territoryFilter: TerritoryFilter | undefined) {
           map_layer_key: 'businesses',
         })),
         'business',
-        { includeMetadata: true, calculateScore: true, baseUrl: BUSINESS_MAP_BASE_URL },
-      );
-    } catch {
-      return [];
-    }
-  };
-}
-
-function makeGastronomyFetcher(territoryFilter: TerritoryFilter | undefined) {
-  return async (bounds: BoundingBox): Promise<MapMarker[]> => {
-    try {
-      const gastronomyBusinesses = await mapGastronomyLayerRuntimeService.getGastronomyByBounds(bounds, {
-        territoryFilter,
-        limit: 200,
-      });
-
-      return mapEntityProjection.projectEntities(
-        gastronomyBusinesses.map((business) => ({
-          id: business.id,
-          name: business.name,
-          slug: business.slug,
-          latitude: business.latitude,
-          longitude: business.longitude,
-          status: EntityStatus.ACTIVE,
-          is_premium: business.is_premium,
-          is_verified: business.is_verified,
-          rating: business.rating,
-          category: 'gastronomy',
-          cuisine_type: business.cuisine_type,
-          delivery_enabled: business.delivery_enabled,
-          map_layer_key: 'gastronomy',
-        })),
-        'business',
-        { includeMetadata: true, calculateScore: true, baseUrl: GASTRONOMY_MAP_BASE_URL },
-      );
-    } catch {
-      return [];
-    }
-  };
-}
-
-function makeServicesFetcher(territoryFilter: TerritoryFilter | undefined) {
-  return async (bounds: BoundingBox): Promise<MapMarker[]> => {
-    try {
-      const services = await mapServicesLayerRuntimeService.getServicesByBounds(bounds, {
-        territoryFilter,
-        limit: 200,
-      });
-
-      return mapEntityProjection.projectEntities(
-        services.map((service) => ({
-          id: service.id,
-          name: service.name,
-          url: service.url ?? undefined,
-          latitude: service.latitude,
-          longitude: service.longitude,
-          status: EntityStatus.ACTIVE,
-          is_verified: service.is_verified,
-          rating: service.rating,
-          category: service.category,
-          subcategory: service.subcategory,
-          description: service.description,
-          map_layer_key: 'services',
-        })),
-        'service',
-        { includeMetadata: true, calculateScore: true },
-      );
-    } catch {
-      return [];
-    }
-  };
-}
-
-function makeClassifiedsFetcher(territoryFilter: TerritoryFilter | undefined) {
-  return async (bounds: BoundingBox): Promise<MapMarker[]> => {
-    try {
-      const classifieds = await mapClassifiedsLayerRuntimeService.getClassifiedsByBounds(bounds, {
-        territoryFilter,
-        limit: 200,
-      });
-
-      return mapEntityProjection.projectEntities(
-        classifieds.map((classified) => ({
-          id: classified.id,
-          name: classified.name,
-          url: classified.url ?? undefined,
-          latitude: classified.latitude,
-          longitude: classified.longitude,
-          status: EntityStatus.ACTIVE,
-          category: classified.category,
-          description: classified.description,
-          price: classified.price,
-          condition: classified.condition,
-          created_at: classified.created_at,
-          map_layer_key: 'classifieds',
-        })),
-        'classified',
-        { includeMetadata: true, calculateScore: true },
-      );
-    } catch {
-      return [];
-    }
-  };
-}
-
-function makeEventsFetcher(territoryFilter: TerritoryFilter | undefined) {
-  return async (bounds: BoundingBox): Promise<MapMarker[]> => {
-    try {
-      const events = await eventsReadService.getByBounds(bounds, {
-        territoryFilter,
-        limit: 200,
-      });
-
-      return mapEntityProjection.projectEntities(
-        events.map((event) => ({
-          id: event.id,
-          name: event.title,
-          description: event.description,
-          url: eventPublicRoutes.detail(event.id),
-          latitude: event.latitude,
-          longitude: event.longitude,
-          status: EntityStatus.ACTIVE,
-          category: event.category,
-          start_date: event.date,
-          end_date: event.end_date,
-          coordinate_source: event.coordinate_source,
-          current_participants: event.current_participants,
-          map_layer_key: 'events',
-        })),
-        'event',
         { includeMetadata: true, calculateScore: true },
       );
     } catch {
@@ -526,15 +323,11 @@ export default function MapaPageV4({
 }: MapaPageV4Props) {
   const adapterRef = useRef<MapLibreAdapterHandle>(null);
   const [selectedMarker, setSelectedMarker] = useState<MapMarker | null>(null);
-  const [currentBounds, setCurrentBounds] = useState<BoundingBox>(INITIAL_BOUNDS);
-  const [currentZoom, setCurrentZoom] = useState<number>(INITIAL_ZOOM);
   const [visibleLayers, setVisibleLayers] = useState<Partial<Record<MapLayerKey, boolean>>>(() =>
     createFocusedVisibleLayers(initialLayers),
   );
-  const location = useLocation();
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
-  const moduleUrls = useFriendlyModuleUrls();
   const { active: publicBrowsingCity } = usePublicBrowsingCity();
   const requestedLayers = React.useMemo(() => parseLayerQuery(searchParams), [searchParams]);
   const requestedLayersKey = React.useMemo(() => requestedLayers.join(','), [requestedLayers]);
@@ -636,55 +429,27 @@ export default function MapaPageV4({
   const isFocusOnlyMode = Boolean(focusTarget) && !effectiveResolved;
   const runtimeTerritoryFilter = isFocusOnlyMode ? undefined : territoryFilter;
   const { polygons: territoryPolygons } = useTerritoryPolygon(effectiveResolved);
-  const guideUrls = useTouristPointPublicUrls(effectiveResolved);
   const territoryLabels = useTerritoryLabels(effectiveResolved);
-  const isCommunityScopedSurface = location.pathname.includes('/comunidade/');
   const territoryName = territoryLabels.name || publicBrowsingCity.city || 'Seu território';
-
-  const touristLayerVisible = isMapRuntimeLayerEnabled('tourist_points') && visibleLayers.tourist_points !== false;
-  const businessesLayerVisible = isMapRuntimeLayerEnabled('businesses') && visibleLayers.businesses !== false;
-  const gastronomyLayerVisible = isMapRuntimeLayerEnabled('gastronomy') && visibleLayers.gastronomy !== false;
-  const servicesLayerVisible = isMapRuntimeLayerEnabled('services') && visibleLayers.services !== false;
-  const classifiedsLayerVisible = isMapRuntimeLayerEnabled('classifieds') && visibleLayers.classifieds !== false;
-  const eventsLayerVisible = isMapRuntimeLayerEnabled('events') && visibleLayers.events !== false;
-
-  const touristBounds = React.useMemo(
-    () => ({
-      west: currentBounds[0],
-      south: currentBounds[1],
-      east: currentBounds[2],
-      north: currentBounds[3],
-    }),
-    [currentBounds],
+  const businessListUrl = React.useMemo(
+    () => resolveBusinessListUrl(effectiveResolved),
+    [effectiveResolved],
   );
 
-  const { data: touristPointsData } = useQuery({
-    queryKey: ['tourist-points-spatial-bounds', touristBounds],
-    queryFn: () =>
-      spatialSearchService.searchByBounds({
-        bounds: touristBounds,
-        entityType: 'tourist_point',
-        limit: 200,
-      }),
-    enabled: touristLayerVisible && currentZoom >= 10,
-    staleTime: 1000 * 60 * 2,
-    retry: false,
-    placeholderData: (previousData) => previousData,
-  });
+  const businessesLayerVisible = visibleLayers.businesses !== false;
 
   const filterKey = isFocusOnlyMode
     ? 'focus-target'
     : territoryFilterKey(territoryFilter);
   const fetchers = React.useMemo(
     () => ({
-      ...(businessesLayerVisible ? { businesses: makeBusinessFetcher(runtimeTerritoryFilter) } : {}),
-      ...(gastronomyLayerVisible ? { gastronomy: makeGastronomyFetcher(runtimeTerritoryFilter) } : {}),
-      ...(servicesLayerVisible ? { services: makeServicesFetcher(runtimeTerritoryFilter) } : {}),
-      ...(classifiedsLayerVisible ? { classifieds: makeClassifiedsFetcher(runtimeTerritoryFilter) } : {}),
-      ...(eventsLayerVisible ? { events: makeEventsFetcher(runtimeTerritoryFilter) } : {}),
+      ...(businessesLayerVisible
+        ? { businesses: makeBusinessFetcher(runtimeTerritoryFilter) }
+        : {}),
     }),
+    // territoryFilterKey is the stable identity used by the fetcher closure.
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    [filterKey, businessesLayerVisible, gastronomyLayerVisible, servicesLayerVisible, classifiedsLayerVisible, eventsLayerVisible],
+    [filterKey, businessesLayerVisible],
   );
 
   const { layerData, loadingLayers, fetchByBounds, clearLayer } = useMapViewportFetch({
@@ -732,8 +497,6 @@ export default function MapaPageV4({
 
   const handleViewportChange = useCallback(
     (viewport: MapViewport, bounds: BoundingBox) => {
-      setCurrentBounds(bounds);
-      setCurrentZoom(viewport.zoom);
       fetchByBounds(bounds, viewport.zoom);
     },
     [fetchByBounds],
@@ -758,26 +521,10 @@ export default function MapaPageV4({
     );
   }, [focusTarget]);
 
-  const markers = React.useMemo(() => {
-    const touristPointMarkers = touristLayerVisible
-      ? mapEntityProjection.projectEntities(
-          (touristPointsData || []).map((result) => ({
-            id: result.id,
-            name: result.name,
-            latitude: result.latitude,
-            longitude: result.longitude,
-            status: EntityStatus.ACTIVE,
-            location_id: result.location_id,
-            map_layer_key: 'tourist_points',
-          })),
-          'tourist_point',
-          { includeMetadata: true, calculateScore: true, baseUrl: guideUrls.touristPoints },
-        )
-      : [];
-
-    const merged = [...Object.values(layerData).flat(), ...touristPointMarkers];
-    return [...focusMarkers, ...merged];
-  }, [touristPointsData, layerData, touristLayerVisible, focusMarkers, guideUrls.touristPoints]);
+  const markers = React.useMemo(
+    () => [...focusMarkers, ...Object.values(layerData).flat()],
+    [focusMarkers, layerData],
+  );
 
   useEffect(() => {
     if (!focusTarget || selectedMarker || focusMarkers.length === 0) return;
@@ -821,8 +568,8 @@ export default function MapaPageV4({
               autoFlyTo: true,
             },
             layers: {
-              enabled: true,
-              position: isCommunityScopedSurface ? 'bottom-right' : 'bottom-left',
+              enabled: MAP_PUBLIC_RUNTIME_LAYER_KEYS.length > 1,
+              position: 'bottom-left',
               layers: MAP_PUBLIC_RUNTIME_LAYER_KEYS,
               layout: 'vertical',
               visibleLayers,
@@ -864,7 +611,7 @@ export default function MapaPageV4({
         <div
           style={{
             position: 'absolute',
-            bottom: isCommunityScopedSurface ? 88 : 16,
+            bottom: 16,
             left: '50%',
             transform: 'translateX(-50%)',
             zIndex: 10,
@@ -889,43 +636,23 @@ export default function MapaPageV4({
     </div>
   );
 
-  if (isCommunityScopedSurface) {
-    return (
-      <div
-        className="mx-auto flex w-full max-w-7xl flex-col px-4 pb-20 pt-3 sm:px-6 md:pb-6 md:pt-5"
-        data-module-presentation={presentation}
-      >
-        {presentation !== 'embedded' ? (
-          <NeighborhoodMapHero
-            territoryName={territoryName}
-            moduleUrls={moduleUrls}
-            mapLabel={territoryLabels.mapLabel}
-            polygons={territoryPolygons}
-            markers={markers}
-          />
-        ) : null}
-
-        <section className={presentation === 'embedded'
-          ? "overflow-hidden rounded-[24px] border border-white/10 bg-[#0d161b] shadow-xl shadow-black/10"
-          : "mt-4 overflow-hidden rounded-[24px] border border-white/10 bg-[#0d161b] shadow-xl shadow-black/10"}
-        >
-          <div className="flex items-center justify-between gap-3 border-b border-white/10 px-4 py-3 sm:px-5">
-            <div className="min-w-0">
-              <p className="text-xs font-semibold uppercase tracking-[0.18em] text-cyan-300">
-                Vista operacional
-              </p>
-              <p className="mt-1 text-sm text-white/62">
-                Navegue pelo mapa do bairro com camadas territoriais e pontos ativos.
-              </p>
-            </div>
-          </div>
-          <div className="h-[58vh] min-h-[20rem] max-h-[38rem] md:h-[calc(100vh-12rem)] md:min-h-[28rem]">
-            {mapCanvas}
-          </div>
-        </section>
-      </div>
-    );
+  if (presentation === 'embedded') {
+    return mapCanvas;
   }
 
-  return mapCanvas;
+  return (
+    <div className="mx-auto flex w-full max-w-7xl flex-col gap-4 px-4 pb-20 pt-3 sm:px-6 md:pb-6 md:pt-5">
+      <MvpMapHeader
+        territoryName={territoryName}
+        mapLabel={territoryLabels.mapLabel}
+        businessHref={businessListUrl}
+      />
+      <section className="overflow-hidden rounded-[24px] border border-border bg-card shadow-sm">
+        <div className="h-[68vh] min-h-[28rem]">
+          {mapCanvas}
+        </div>
+      </section>
+    </div>
+  );
+
 }

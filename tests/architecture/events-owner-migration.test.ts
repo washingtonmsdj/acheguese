@@ -179,9 +179,6 @@ describe("community Events canonical owner", () => {
     const linkEligibility = read(
       "src/core/community-events/services/EventLinkEligibilityService.ts",
     );
-    const homeFreshness = read(
-      "src/core/landing/utils/territoryHomeFreshness.ts",
-    );
 
     expect(freshness).toContain("isEventCurrentOrFuture");
     expect(readService).toContain("applyActiveStatusFreshness");
@@ -189,24 +186,17 @@ describe("community Events canonical owner", () => {
     expect(readService).toContain("status.eq.ongoing");
     expect(readService).toContain("end_date.gte");
     expect(linkEligibility).toContain("isEventCurrentOrFuture(event)");
-    expect(homeFreshness).toContain(
-      '@/core/community-events/eventFreshness',
-    );
   });
 
 
 
-  it("keeps the Events map backed by the canonical Events bounds reader", () => {
+  it("keeps paused Events out of the active MVP Map owner", () => {
     const map = read("src/core/maps/pages/MapaPageV4.tsx");
-    const eventsMap = read(
-      "src/modules/community-events/pages/EventsMapPage.tsx",
-    );
 
-    expect(map).toContain("makeEventsFetcher");
-    expect(map).toContain("eventsReadService.getByBounds");
-    expect(map).toContain("eventPublicRoutes.detail(event.id)");
-    expect(map).toContain("events: makeEventsFetcher");
-    expect(eventsMap).toContain("initialLayers={['events']}");
+    expect(map).not.toContain("makeEventsFetcher");
+    expect(map).not.toContain("eventsReadService");
+    expect(map).not.toContain("eventPublicRoutes");
+    expect(map).not.toContain("map_layer_key: 'events'");
   });
 
 

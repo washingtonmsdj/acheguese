@@ -1,84 +1,119 @@
 # Próximos passos — lançamento MVP
 
-Este arquivo é um resumo navegacional. O **SSOT operacional** continua em [`EXECUCAO_MAIN_ONLY.md`](./EXECUCAO_MAIN_ONLY.md), agora orientado ao primeiro release público.
+Este arquivo é um resumo navegacional. O **SSOT operacional** permanece em [`EXECUCAO_MAIN_ONLY.md`](./EXECUCAO_MAIN_ONLY.md) e o lifecycle de módulos em [`PRODUCT_MODULE_LIFECYCLE.md`](../03-architecture/PRODUCT_MODULE_LIFECYCLE.md).
+
+## Decisão vigente — 2026-09-21
+
+O MVP público possui **somente três módulos de produto**:
+
+1. **Empresas** (`business`);
+2. **Mapa** (`map`);
+3. **Perto de mim** (`nearby`).
+
+`nearby` depende formalmente de `map + business`.
+
+Home/Território, Auth/Conta, sessão, localização, roteamento, segurança, storage, observabilidade e infraestrutura necessária ao funcionamento do produto são **plataforma**, não módulos adicionais do MVP.
+
+Todos os demais módulos de produto permanecem **pausados e fail-closed** até certificação individual. Código preservado para pós-MVP não pode aparecer em navegação, rotas funcionais, prefetch, discovery, providers públicos ou layers do Mapa.
 
 ## Objetivo imediato
 
-Publicar um MVP pequeno, verificável e seguro no território inicial. Até esse release:
+Entregar um candidato pequeno, verificável e profissional sem reabrir escopo.
 
-- não adicionar feature nova;
-- não usar Mobilidade, Educação, IA, expansão territorial ou limpeza histórica como blocker;
-- não remover capacidade válida apenas para obter gate verde;
-- corrigir causa raiz dos blockers do núcleo;
-- manter qualquer superfície não certificada fechada por `launchScope.ts`.
+Regras:
+
+- não adicionar novos módulos ao MVP;
+- corrigir causas raiz, não sintomas;
+- não criar redirect, alias, fallback ou feature flag local para esconder arquitetura quebrada;
+- manter uma única autoridade de lifecycle em `src/app/config/productModuleRegistry.ts`;
+- remover código morto, duplicidades e dependências cruzadas que pertençam apenas ao runtime antigo;
+- manter código pós-MVP apenas quando houver owner claro, fronteira limpa e zero interferência no produto ativo;
+- nenhuma superfície pausada pode ser consultada apenas para montar UI escondida;
+- nenhuma mudança recebe status de release por ter sido apenas mergeada.
 
 ## Ordem atual
 
-1. **Convergir a linha de release**
-   - rebasear/integrar os PRs urgentes de forma sequencial, sem merge em massa;
-   - priorizar alterações já aplicadas no Supabase/runtime para eliminar drift Git ↔ produção;
-   - reconciliar migrations, Edge Functions e tipos gerados.
+1. **Concluir o corte modular**
+   - manter `business`, `map` e `nearby` como únicos módulos ativos;
+   - provar `nearby -> map + business`;
+   - manter Mapa consumindo Business por port público, sem conhecer schema/tabelas internas;
+   - eliminar imports e delegações do núcleo ativo para módulos pausados.
 
-2. **Restaurar autoridade de release**
-   - concluir o publisher de tipos Supabase via PR;
-   - fazer GitHub Actions executar steps reais;
-   - provar security/lint/typecheck/test/build verdes no mesmo SHA;
-   - exigir PR + checks executáveis na `main`.
+2. **Fechar rotas, navegação e prefetch**
+   - navegação pública deve expor somente destinos do MVP e infraestrutura necessária;
+   - módulo pausado não pode possuir rota funcional acessível;
+   - prefetch/warmup deve consultar lifecycle antes de carregar qualquer módulo;
+   - redirects só permanecem quando há mudança legítima de URL pública com compatibilidade externa real.
 
-3. **Fechar Auth, Privacy e segurança do escopo público**
-   - consolidar autoridade de senha/autenticação;
-   - integrar hardening das boundaries usadas pelo MVP;
-   - manter account deletion/purge bloqueado enquanto LGPD purge não estiver certificado;
-   - manter exportação LGPD desligada até exact-SHA + probe real;
-   - confirmar contato/DPO/origem pública sem placeholders.
+3. **Limpar resíduos do escopo anterior**
+   - remover componentes, services, helpers, facades, previews, aliases e imports sem caller real;
+   - remover implementações paralelas e owners duplicados;
+   - manter migrations históricas somente quando necessárias à integridade/proveniência;
+   - atualizar testes arquiteturais para impedir reintrodução do legado.
 
-4. **Certificar apenas o núcleo do MVP**
-   - Auth/conta e Profile;
-   - Home territorial;
-   - Comunidade básica;
-   - Empresas/Gastronomia/Serviços;
-   - Classificados;
-   - Busca;
-   - Mapa/Perto de Mim;
-   - Pontos Turísticos.
-   - Eventos e Vagas entram somente se passarem pelo mesmo padrão; caso contrário, pausar no launch scope antes do release.
+4. **Certificar o núcleo ativo**
+   - Empresas;
+   - Mapa;
+   - Perto de mim;
+   - contratos de plataforma utilizados diretamente por esses módulos;
+   - truthfulness de localização/distância;
+   - boundary Map -> Business;
+   - rotas e navegação launch-safe.
 
 5. **Executar candidato exact-SHA**
-   - corrigir contratos de release divergentes;
-   - security + lint + typecheck + testes + build;
-   - E2E funcional e mobile sem placeholder;
-   - deploy real do mesmo SHA;
-   - smoke do domínio público e fluxos autenticados principais.
+   - security;
+   - lint;
+   - typecheck;
+   - testes arquiteturais/unitários;
+   - build;
+   - E2E dos três módulos;
+   - deploy do mesmo SHA;
+   - smoke público do mesmo SHA.
 
 6. **Lançar e observar**
-   - liberar apenas superfícies certificadas;
-   - acompanhar erros, feedback e comportamento real;
-   - corrigir regressões do MVP antes de ampliar escopo.
+   - corrigir regressões no núcleo antes de ampliar produto;
+   - qualquer módulo futuro nasce/retorna `paused`, é certificado isoladamente e só então passa a `active`.
 
-## Fica para durante o MVP
+## Estado do CI observado em 2026-09-21
 
-- hardening adicional que não seja boundary compartilhada do núcleo;
-- refinamentos de UX/acessibilidade não bloqueadores;
-- performance guiada por métricas reais;
-- observabilidade e dashboards adicionais;
-- conteúdo/cobertura territorial incremental;
-- Eventos/Vagas, se forem pausados no primeiro release.
+Os workflows do candidato atual podem aparecer como `failure`, porém os jobs auditados retornam `steps=null`. Portanto, esses resultados **não constituem evidência de falha de código ou teste executado**.
 
-## Fica para depois do MVP
+A Vercel também bloqueou novos deploys por limite diário de deployments. Isso mantém o gate de deploy exact-SHA aberto, mas não deve ser registrado como regressão funcional do projeto.
 
+Até existir execução real, lint/typecheck/test/build continuam **não certificados**.
+
+## Pós-MVP
+
+Ficam fora do produto ativo até trabalho individual e reintegração formal, entre outros:
+
+- Comunidade/Feed;
+- Busca federada;
+- Classificados;
+- Serviços/Profissionais;
+- Gastronomia;
+- Eventos;
+- Vagas;
+- Pontos Turísticos;
 - Mobilidade;
 - Educação;
-- Comunicação global;
-- Alertas/Problemas/Achados e Perdidos/Safety familiar;
-- Cupons, Gamificação e Analytics público;
-- IA/virtual try-on;
-- expansão de monetização;
-- rollout dos 170 bairros e ETL completo de boundaries;
-- limpeza das refs históricas remanescentes;
-- redesigns/refactors amplos sem impacto de lançamento.
+- monetização/billing;
+- comunicação global;
+- gamificação;
+- analytics público;
+- demais verticais preservadas no repositório.
+
+Preservar código pós-MVP não significa mantê-lo conectado ao runtime ativo.
 
 ## Critério de MVP READY
 
-O release só recebe `MVP READY` quando o escopo efetivamente habilitado estiver certificado em **um único SHA**: Git/runtime reconciliados, gates executados de verdade, autorização sensível testada, deploy real comprovado e smoke de produção sem erro crítico recorrente.
+O release só recebe **MVP READY** quando **Empresas + Mapa + Perto de mim** estiverem certificados em um único SHA, com:
 
-Superfícies explicitamente pausadas não precisam ser concluídas para o primeiro release; precisam apenas permanecer inacessíveis, não interferir no núcleo e não compartilhar um risco de segurança aberto com o MVP.
+- lifecycle modular coerente;
+- zero dependência ativa em módulo pausado;
+- rotas/navegação/prefetch alinhados;
+- security/lint/typecheck/test/build realmente executados;
+- E2E e smoke dos três módulos;
+- deploy real do mesmo SHA;
+- nenhum erro crítico recorrente.
+
+Módulos pausados não precisam ser concluídos para o primeiro release. Precisam permanecer realmente fora do produto ativo.

@@ -11,14 +11,12 @@ function readProjectFile(path: string): string {
 }
 
 describe("premium business public site", () => {
-  it("exposes isolated /p routes and does not use legacy redirect route", () => {
+  it("preserves the premium implementation without exposing it in the MVP route tree", () => {
     const routesSource = readProjectFile("src/app/routes/AppRoutes.tsx");
 
-    expect(routesSource).toContain('path="/p/:slug/*"');
-    expect(routesSource).toContain('path="cardapio"');
-    expect(routesSource).toContain('path="produto/:productSlug"');
-    expect(routesSource).toContain('path="carrinho"');
-    expect(routesSource).toContain('path="checkout"');
+    expect(routesSource).not.toContain('path="/p/:slug/*"');
+    expect(routesSource).not.toContain("PremiumBusinessSiteRoute");
+    expect(routesSource).not.toContain("PremiumBusinessCheckoutPage");
     expect(routesSource).not.toContain("BusinessPremiumRoute");
   });
 

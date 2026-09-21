@@ -105,18 +105,12 @@ export const TerritorialMapPage = lazy(() =>
 // ============================================================
 // PAGINAS PUBLICAS PERTENCENTES AO APP LAYOUT
 // ============================================================
-export const NationalHubPage = lazy(
-  () => import("@/app/pages/NationalHubPage"),
-);
 export const EmpresasLandingPage = lazy(
   () => import("@/app/pages/EmpresasLandingPage"),
 );
-export const CidadeLandingPage = lazy(
-  () => import("@/app/pages/CidadeLandingPage"),
-);
 export const BuscaPage = lazy(() => import("@/app/pages/BuscaPage"));
 export const BuscarPage = lazy(() => import("@/app/pages/BuscarPage"));
-export const NearbyPage = lazy(() => import("@/app/pages/NearbyPage"));
+export const NearbyPage = lazy(() => import("@/core/nearby/pages/NearbyPage"));
 export { default as LaunchPausedPage } from "@/app/pages/LaunchPausedPage";
 export const NotFound = lazy(() => import("@/app/pages/NotFound"));
 export const VirtualTryOnPage = lazy(

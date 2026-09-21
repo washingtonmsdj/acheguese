@@ -137,13 +137,13 @@ Os demais dominios possuem SSOTs tecnicos, documentos de modulo ou contratos par
 
 | Campo | Estado |
 | --- | --- |
-| Governanca | Parcial. `SEARCH_SSOT.md` define SearchService como orquestrador federado, mas nao ha roadmap/milestone macro do dominio Search. |
-| SSOT | `src/core/search`, `SearchService`, `SearchDocumentMapper`, `searchProviders`, `useGlobalSearch` e `HomeDiscoveryService` para discovery de Home. |
-| Roadmap | Nao ha roadmap proprio consolidado. A busca de posts com destino canonico territorial esta congelada no Feed; o dominio Search macro ainda depende de governanca propria. |
-| Milestone | Sem milestone proprio. |
-| Freeze | Nao congelado. |
-| Dependencias | Territory, Community entity links, Business, Services/Professional, Events, Classifieds, Work Opportunities, Feed/Posts e launch gates. |
-| Proxima Sprint | Search governance/audit apos Feed Freeze, para congelar o dominio Search macro sem reabrir o boundary de posts do Feed. |
+| Governanca | Preservada para pós-MVP; `SearchService` continua sendo o orquestrador federado do domínio quando reativado. |
+| SSOT | `src/core/search`, `SearchService`, `SearchDocumentMapper`, `searchProviders` e `useGlobalSearch`. |
+| Roadmap | Pós-MVP. Search não participa da Home nem da navegação pública atual. |
+| Milestone | Pausado no corte de lançamento de 2026-09-21. |
+| Freeze | Fail-closed pelo `productModuleRegistry.ts`. |
+| Dependencias | Territory e adapters dos domínios consultados; módulos donos continuam responsáveis pelos próprios dados. |
+| Proxima Sprint | Reativar somente após certificação isolada e integração pelo lifecycle canônico. |
 
 ### 3.9 Notifications
 

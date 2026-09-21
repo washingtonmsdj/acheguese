@@ -33,9 +33,6 @@ const CadastroPage = lazy(
 const CadastroPrimeiroAcessoPage = lazy(
   () => import("@/app/features/onboarding/pages/CadastroPrimeiroAcessoPage"),
 );
-const CommunityIndicationPage = lazy(
-  () => import("@/app/pages/CommunityIndicationPage"),
-);
 const CadastroConfirmacaoPage = lazy(
   () => import("@/app/features/onboarding/pages/CadastroConfirmacaoPage"),
 );
@@ -47,27 +44,6 @@ const ComoFuncionaPage = lazy(() => import("@/app/pages/ComoFuncionaPage"));
 const ContactPage = lazy(() => import("@/app/pages/ContactPage"));
 const OnboardingPage = lazy(() => import("@/app/pages/OnboardingPage"));
 const ResetPasswordPage = lazy(() => import("@/app/pages/ResetPasswordPage"));
-const EmpresaCatalogoPublicoPage = lazy(
-  () => import("@/modules/business/pages/EmpresaCatalogoPublicoPage"),
-);
-const PremiumBusinessSiteRoute = lazy(
-  () => import("@/modules/business/premium/pages/PremiumBusinessSiteRoute"),
-);
-const PremiumBusinessHomePage = lazy(
-  () => import("@/modules/business/premium/pages/PremiumBusinessHomePage"),
-);
-const PremiumBusinessMenuPage = lazy(
-  () => import("@/modules/business/premium/pages/PremiumBusinessMenuPage"),
-);
-const PremiumBusinessProductPage = lazy(
-  () => import("@/modules/business/premium/pages/PremiumBusinessProductPage"),
-);
-const PremiumBusinessCartPage = lazy(
-  () => import("@/modules/business/premium/pages/PremiumBusinessCartPage"),
-);
-const PremiumBusinessCheckoutPage = lazy(
-  () => import("@/modules/business/premium/pages/PremiumBusinessCheckoutPage"),
-);
 const CentralRoutes = lazy(() =>
   import("./sections/CentralRoutes").then((module) => ({
     default: module.CentralRoutes,
@@ -120,10 +96,6 @@ export function AppRoutes() {
       <Route path={AUTH_PATHS.signup} element={<CadastroPage />} />
       <Route path={AUTH_PATHS.firstAccess} element={<CadastroPrimeiroAcessoPage />} />
       <Route
-        path="/indicar-comunidade"
-        element={<CommunityIndicationPage />}
-      />
-      <Route
         path={AUTH_PATHS.signupConfirmation}
         element={<CadastroConfirmacaoPage />}
       />
@@ -133,20 +105,6 @@ export function AppRoutes() {
       <Route path="/contato" element={<ContactPage />} />
       <Route path="/onboarding" element={<OnboardingPage />} />
       <Route path={AUTH_PATHS.passwordReset} element={<ResetPasswordPage />} />
-      <Route
-        path="/empresas/:id/catalogo"
-        element={<EmpresaCatalogoPublicoPage />}
-      />
-      <Route path="/p/:slug/*" element={<PremiumBusinessSiteRoute />}>
-        <Route index element={<PremiumBusinessHomePage />} />
-        <Route path="cardapio" element={<PremiumBusinessMenuPage />} />
-        <Route
-          path="produto/:productSlug"
-          element={<PremiumBusinessProductPage />}
-        />
-        <Route path="carrinho" element={<PremiumBusinessCartPage />} />
-        <Route path="checkout" element={<PremiumBusinessCheckoutPage />} />
-      </Route>
 
       <Route path="/central/*" element={<CentralRoutes />} />
       <Route path="/admin/*" element={<AdminRoutes />} />

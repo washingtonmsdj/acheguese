@@ -7,21 +7,13 @@ function readProjectFile(path: string): string {
 }
 
 describe("Territory Home runtime state", () => {
-  it("keeps session and notification state on the canonical Territory Home", () => {
-    const home = readProjectFile(
-      "src/app/pages/TerritoryHomePage.tsx",
-    );
-    const topbar = readProjectFile(
-      "src/shared/components/territory-vivo/TerritoryTopbar.tsx",
-    );
+  it("keeps account and notification runtime out of the lightweight public Home", () => {
+    const home = readProjectFile("src/app/pages/TerritoryHomePage.tsx");
 
-    expect(home).toContain("useSessionContext");
-    expect(home).toContain("useUnifiedNotifications");
-    expect(home).toContain("activeProfile?.displayName");
-    expect(home).toContain("unreadCount={unreadCount}");
-    expect(home).toContain("<TerritoryTopbar");
-
-    expect(topbar).toContain("unreadCount");
-    expect(topbar).not.toContain("<span>3</span>");
+    expect(home).not.toContain("useSessionContext");
+    expect(home).not.toContain("useUnifiedNotifications");
+    expect(home).not.toContain("TerritoryTopbar");
+    expect(home).not.toContain("activeProfile");
+    expect(home).not.toContain("unreadCount");
   });
 });

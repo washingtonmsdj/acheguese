@@ -1,28 +1,13 @@
-import React from "react";
-import { AlertTriangle, Calendar, Clock, Landmark, MapPin, Navigation, Store } from "lucide-react";
+import { Clock, MapPin, Navigation, Store } from "lucide-react";
 import { Badge } from "@/shared/components/ui/badge";
 import { Card } from "@/shared/components/ui/card";
-import { APP_MODULE_SLUGS, buildAppModulePath } from "@/shared/config/moduleSlugs";
-import { useFriendlyModuleUrls } from "@/core/routing/hooks/useFriendlyModuleUrls";
-import type { NearbyEntity } from "../hooks/useNearbyEntities";
+import type { NearbyBusiness } from "../domain/types";
 
 interface NearbyCardProps {
-  entity: NearbyEntity;
+  business: NearbyBusiness;
   onNavigate: (url: string) => void;
   showProximity: boolean;
 }
-
-const ENTITY_CONFIG = {
-  business: { label: "Empresa", baseUrl: buildAppModulePath(APP_MODULE_SLUGS.business), icon: Store, color: "bg-blue-500" },
-  event: { label: "Evento", baseUrl: buildAppModulePath(APP_MODULE_SLUGS.events), icon: Calendar, color: "bg-green-500" },
-  alert: { label: "Alerta", baseUrl: buildAppModulePath(APP_MODULE_SLUGS.communityAlerts), icon: AlertTriangle, color: "bg-red-500" },
-  tourist_point: {
-    label: "Ponto turistico",
-    baseUrl: "",
-    icon: Landmark,
-    color: "bg-purple-500",
-  },
-};
 
 function formatDistance(meters: number): string {
   if (meters < 1000) return `${Math.round(meters)}m`;
@@ -38,71 +23,61 @@ function getWalkingTime(meters: number): string {
   return mins > 0 ? `${hours}h ${mins}min` : `${hours}h`;
 }
 
-export function NearbyCard({ entity, onNavigate, showProximity }: NearbyCardProps) {
-  const friendlyUrls = useFriendlyModuleUrls();
-  const config = ENTITY_CONFIG[entity.type];
-  const Icon = config.icon;
-  const baseUrl = entity.type === "tourist_point" ? friendlyUrls.touristPoints : config.baseUrl;
+export function NearbyCard({
+  business,
+  onNavigate,
+  showProximity,
+}: NearbyCardProps) {
   const hasRealDistance =
-    showProximity && entity.distance > 0 && entity.distance < 100000;
-  const neighborhood =
-    typeof entity.metadata?.neighborhood === "string" ? entity.metadata.neighborhood : null;
-  const city = typeof entity.metadata?.city === "string" ? entity.metadata.city : null;
-  const territoryName = neighborhood || city || null;
-  const isService = entity.metadata?.category === "services" || entity.metadata?.is_mobile_service;
-
-  const url = React.useMemo(() => {
-    if ((entity.type === "business" || entity.type === "event") && entity.metadata?.slug) {
-      return `${baseUrl}/${entity.metadata.slug}`;
-    }
-    if (entity.type === "tourist_point") {
-      return `${baseUrl}/${entity.metadata?.slug || entity.id}`;
-    }
-    return `${baseUrl}/${entity.id}`;
-  }, [baseUrl, entity.id, entity.metadata?.slug, entity.type]);
+    showProximity &&
+    business.distanceMeters > 0 &&
+    business.distanceMeters < 100000;
+  const territoryName = business.neighborhood || business.city || "na região";
 
   return (
     <Card
-      className="group relative overflow-hidden hover:shadow-lg transition-all duration-300 cursor-pointer border-2 hover:border-primary/50"
-      onClick={() => onNavigate(url)}
+      className="group cursor-pointer overflow-hidden border-2 transition-all duration-300 hover:border-primary/50 hover:shadow-lg"
+      onClick={() => onNavigate(business.canonicalUrl)}
     >
-      <div className="relative p-4">
+      <div className="p-4">
         <div className="flex items-start gap-4">
-          <div className={`flex-shrink-0 p-3 rounded-xl ${config.color} text-white shadow-sm`}>
-            <Icon className="h-6 w-6" />
+          <div className="shrink-0 rounded-xl bg-blue-500 p-3 text-white shadow-sm">
+            <Store className="h-6 w-6" />
           </div>
-          <div className="flex-1 min-w-0">
-            <div className="flex items-start justify-between gap-2 mb-2">
-              <h3 className="font-semibold text-foreground group-hover:text-primary transition-colors line-clamp-2">
-                {entity.name}
+          <div className="min-w-0 flex-1">
+            <div className="mb-2 flex items-start justify-between gap-2">
+              <h3 className="line-clamp-2 font-semibold text-foreground transition-colors group-hover:text-primary">
+                {business.name}
               </h3>
-              <Badge variant="secondary" className="flex-shrink-0 text-xs">
-                {isService ? "Servico" : config.label}
+              <Badge variant="secondary" className="shrink-0 text-xs">
+                {business.category || "Empresa"}
               </Badge>
             </div>
-            <div className="flex items-center gap-4 text-sm">
+
+            <div className="flex flex-wrap items-center gap-4 text-sm">
               {hasRealDistance ? (
                 <>
-                  <div className="flex items-center gap-1.5 text-primary font-semibold">
+                  <div className="flex items-center gap-1.5 font-semibold text-primary">
                     <Navigation className="h-4 w-4" />
-                    <span>{formatDistance(entity.distance)}</span>
+                    <span>{formatDistance(business.distanceMeters)}</span>
                   </div>
                   <div className="flex items-center gap-1.5 text-muted-foreground">
                     <Clock className="h-4 w-4" />
-                    <span>{getWalkingTime(entity.distance)}</span>
+                    <span>{getWalkingTime(business.distanceMeters)}</span>
                   </div>
                 </>
               ) : (
                 <div className="flex items-center gap-1.5 text-muted-foreground">
                   <MapPin className="h-4 w-4" />
-                  <span>{territoryName || "na regiao"}</span>
+                  <span>{territoryName}</span>
                 </div>
               )}
-              {isService && (
-                <Badge variant="outline" className="text-xs px-1.5 py-0">
-                  Atende na regiao
-                </Badge>
-              )}
+
+              {business.rating > 0 ? (
+                <span className="text-xs text-muted-foreground">
+                  {business.rating.toFixed(1)} / 5
+                </span>
+              ) : null}
             </div>
           </div>
         </div>

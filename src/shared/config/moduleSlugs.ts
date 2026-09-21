@@ -15,6 +15,7 @@ export const APP_MODULE_SLUGS = {
   mobility: "mobilidade",
   education: "educacao",
   map: "mapa",
+  nearby: "perto-de-mim",
   search: "busca",
   ranking: "ranking",
 } as const;
@@ -43,6 +44,7 @@ export const ROUTING_MODULE_SLUGS = {
   jobs: APP_MODULE_SLUGS.jobs,
   alerts: APP_MODULE_SLUGS.communityAlerts,
   map: APP_MODULE_SLUGS.map,
+  nearby: APP_MODULE_SLUGS.nearby,
   guide: "guia",
   search: APP_MODULE_SLUGS.search,
   ranking: APP_MODULE_SLUGS.ranking,
