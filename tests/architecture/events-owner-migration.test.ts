@@ -45,15 +45,16 @@ describe("community Events canonical owner", () => {
     expect(route).not.toContain("@/features/events");
   });
 
-  it("keeps deploy hygiene scanning the canonical Events owner", () => {
+  it("keeps paused Events out of MVP deploy readiness", () => {
     const deployGuard = read("tools/release/verify-deploy-ready.mjs");
+    const registry = read("src/app/config/productModuleRegistry.ts");
 
-    expect(deployGuard).toContain(
+    expect(registry).toContain('events: { status: "paused" }');
+    expect(deployGuard).not.toContain(
       "collectRuntimeSourceFiles('src/modules/community-events')",
     );
-    expect(deployGuard).not.toContain(
-      "collectRuntimeSourceFiles('src/features/events')",
-    );
+    expect(deployGuard).not.toContain("eventPlaceholderPattern");
+    expect(deployGuard).not.toContain("placeholders operacionais em eventos");
   });
 
   it("removes the completed legacy migration allowance", () => {
