@@ -217,8 +217,11 @@ describe("MVP core module boundary", () => {
     expect(rootRoutes).not.toContain('path="/empresas/:id/catalogo"');
     expect(rootRoutes).not.toContain('path="/p/:slug/*"');
     expect(rootRoutes).not.toContain("PremiumBusinessCheckoutPage");
-    expect(appRoutes).toContain(
-      '"community",\n            "Perfis públicos",\n            <P.ProfilePublicRoute />',
+    expect(appRoutes).toContain('path="/u/:username"');
+    expect(appRoutes).toContain('"profiles"');
+    expect(appRoutes).toContain("<P.ProfilePublicRoute />");
+    expect(appRoutes).not.toContain(
+      '"community",\n            "Perfis públicos"',
     );
   });
 
@@ -233,8 +236,10 @@ describe("MVP core module boundary", () => {
       'element={launchElement("nearby", "Perto de mim", <P.NearbyPage />)}',
     );
     expect(appRoutes).toContain('launchElement("search", "Busca"');
+    expect(appRoutes).toContain('path="/empresas/cadastrar"');
+    expect(appRoutes).toContain('"business"');
     expect(appRoutes).toContain(
-      '"business",\n            "Empresas",\n            protectedElement(<P.EmpresasCadastroLandingPage />)',
+      "protectedElement(<P.EmpresasCadastroLandingPage />)",
     );
   });
 
