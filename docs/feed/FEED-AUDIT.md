@@ -49,7 +49,7 @@ O caminho principal de timeline em `ComunidadePage` -> `CommunityFeed` -> `useCo
 | Rota / tela | Estado | Observação |
 | --- | --- | --- |
 | `/comunidade/:uf/:city/:hood/feed` | Parcialmente pronto | Mapeada em `SCREEN-MAP.md` pelo owner real `ComunidadePage` em `core/community-feed`. O caminho principal usa território. |
-| `/comunidade/:uf/:city/:hood` | Parcialmente pronto | `CommunityOverviewSurface` usa `territoryFilter` para previews, mas contém fixture visual via query param e imagens hardcoded por slug. |
+| `/comunidade/:uf/:city/:hood` | Parcialmente pronto | `CommunityOverviewSurface` usa `territoryFilter` para previews; fixture visual pública e imagens por slug já foram removidas do runtime. |
 | `/novo-post` | Não pronto | Rota direta autentica o usuário, mas não resolve território da rota nem aplica explicitamente o gate de rollout/acesso do território alvo. |
 | `?post=<id>` no Feed | Parcialmente pronto | O compartilhamento usa query param no caminho atual. A leitura por ID não recebe filtro territorial. |
 | `/p/:slug/*` | Não pronto para Feed | `SCREEN-MAP.md` descreve como detalhe de post, mas a rota real é mini-site premium de empresa. O Feed não tem URL canônica de detalhe por post. |
@@ -288,14 +288,12 @@ Mesmo que RLS bloqueie parte desses cenários, o domínio Feed ainda não cumpre
 - Dependências: Feed states, shared EmptyState, Alert, skeletons.
 - Problema: há `FeedStates` com retry e estados locais no `CommunityFeed`; busca, comentários e overview seguem padrões próprios.
 
-### FEED-P2-05 - Hardcodes visuais permanecem na superfície de Feed/Community
+### FEED-P2-05 - Hardcodes visuais na superfície Feed/Community — ✅ resolvido
 
-- Impacto: médio.
-- Esforço estimado: baixo.
-- Risco: baixo.
-- Dependências: metadata territorial, assets, CommunityOverview.
-- Evidência: `communityOverviewHelpers.ts` contém mapa de imagens por slug; `CommunityOverviewSurface` habilita fixture visual via `?visualMock=community-concept`.
-- Problema: não afeta o caminho nominal do feed listado, mas viola a direção de SSOT visual/territorial se for mantido como padrão evolutivo.
+- Resolvido em: 2026-09-21.
+- A fixture pública por `visualMock` já estava removida e protegida por regressão.
+- `COMMUNITY_HERO_IMAGES` foi removido; hero territorial agora vem de `metadata.hero_image_url`.
+- Assets existentes usam caminhos públicos estáveis em `/territory/heroes/*`; ausência de metadata usa fallback genérico, não slug/cidade hardcoded.
 
 ### FEED-P2-06 - Performance precisa de validação com dados reais
 
@@ -349,7 +347,7 @@ Mesmo que RLS bloqueie parte desses cenários, o domínio Feed ainda não cumpre
 
 ### 5. Existe hardcode?
 
-**Sim.** Há `LAUNCH_URLS` em caminhos próximos ao Feed, imagens por slug na superfície Community e fixture visual ativável por query param.
+**Parcialmente.** `LAUNCH_URLS` ainda aparece em caminhos próximos ao Feed. Imagens por slug e fixture visual ativável por query param já foram removidas do runtime.
 
 ### 6. Existe vazamento territorial?
 
