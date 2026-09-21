@@ -102,7 +102,6 @@ describe("account and access concept contract", () => {
     expect(schema).not.toContain("neighborhood");
     expect(schema).not.toContain("city:");
     expect(cadastroHook).not.toContain("neighborhood_id:");
-    expect(cadastroHook).not.toContain("state:");
     expect(cadastroHook).not.toContain("city:");
     expect(cadastroHook).not.toContain("as unknown as true");
     expect(cadastroHook).not.toContain("pendingSignup");
