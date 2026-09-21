@@ -14,6 +14,7 @@
 | Mapa | `/mapa`, `/mapa/:uf/:cidade[/:bairro]` | `core/maps` | ativo |
 | Perto de mim | `/perto-de-mim` | `core/nearby` | ativo; depende de Mapa + Empresas |
 | Busca | `/busca`, `/busca/:uf/:cidade[/:bairro]`, `/buscar` | `core/search` + `BuscaPage`/`BuscarPage` | ativo; providers derivados do lifecycle |
+| Mensagens | `/mensagens`, `/mensagens/business/:threadId` | `core/messaging` + `modules/messaging` | ativo; provider Business no MVP |
 
 ### Contrato de integração
 
@@ -31,13 +32,14 @@ Estas superfícies suportam o produto, mas **não contam como módulos do MVP**:
 | --- | --- |
 | `/`, `/:uf/:cidade[/:territorio]` | resolução e contexto territorial |
 | Auth / Conta | login, cadastro, sessão, privacidade e preferências |
+| Mensagens | Inbox/Chat horizontal; Business é o provider ativo |
 | Institucional | termos, privacidade, DPO, contato/status quando aplicável |
 | Admin/Central | operação interna, RBAC e gestão estritamente necessária |
 
 
 ## Módulos pós-MVP
 
-Permanecem versionados e isolados até certificação individual: Comunidade, Gastronomia, Serviços profissionais, Classificados, Pontos Turísticos, Educação, Vagas/Oportunidades, Eventos, Comunicação territorial, Mensagens/Inbox horizontal, Mobilidade, Cupons, Gamificação, Analytics público, Alertas, Issues, Achados e Perdidos, Safety familiar e Billing.
+Permanecem versionados e isolados até certificação individual: Comunidade, Gastronomia, Serviços profissionais, Classificados, Pontos Turísticos, Educação, Vagas/Oportunidades, Eventos, Comunicação territorial, Mobilidade, Cupons, Gamificação, Analytics público, Alertas, Issues, Achados e Perdidos, Safety familiar e Billing.
 
 Ativar um módulo exige alterar o lifecycle no registry e satisfazer suas dependências. Não é permitido reativar um módulo criando rota paralela, redirect ou exceção local.
 
