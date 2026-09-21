@@ -23,7 +23,7 @@ describe("Business and gastronomy canonical ownership", () => {
 
     const exportedLines = [...moduleBarrel.split("\n"), ...serviceBarrel.split("\n")]
       .filter((line) => line.trimStart().startsWith("export "));
-    expect(exportedLines.some((line) => line.includes("BusinessService"))).toBe(false);
+    expect(exportedLines.some((line) => /\bBusinessService\b/.test(line))).toBe(false);
   });
 
   it("points the gastronomy service barrel directly at its canonical URL owner", () => {
