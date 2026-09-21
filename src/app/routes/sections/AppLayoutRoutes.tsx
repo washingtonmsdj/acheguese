@@ -251,12 +251,12 @@ const DIRECT_PAUSED_ROUTES: DirectPausedRoute[] = [
   },
   {
     path: "/mensagens",
-    surface: "communityCommunication",
+    surface: "messaging",
     moduleName: "Mensagens",
   },
   {
     path: "/chat/:conversationId",
-    surface: "communityCommunication",
+    surface: "messaging",
     moduleName: "Mensagens",
   },
   ...buildCommunityPausedRoutes([APP_MODULE_SLUGS.events], "events", "Eventos"),
