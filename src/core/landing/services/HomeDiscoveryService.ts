@@ -519,6 +519,7 @@ export class HomeDiscoveryService {
     const activityLimit = options.activityLimit ?? DEFAULT_ACTIVITY_LIMIT;
     const communityLimit = options.communityLimit ?? DEFAULT_COMMUNITY_LIMIT;
     const trustLimit = options.trustLimit ?? DEFAULT_TRUST_LIMIT;
+    const servicesEnabled = isLaunchSurfaceEnabled("services");
     const eventsEnabled = isLaunchSurfaceEnabled("events");
     const jobsEnabled = isLaunchSurfaceEnabled("jobs");
     const fallbackLocationId = filter.scope === "location" ? filter.location_id : null;
@@ -535,7 +536,9 @@ export class HomeDiscoveryService {
       topPostsResult,
     ] = await Promise.allSettled([
       LandingFeaturedService.getFeaturedBusinesses(filter, trustLimit),
-      LandingFeaturedService.getFeaturedServices(filter, trustLimit),
+      servicesEnabled
+        ? LandingFeaturedService.getFeaturedServices(filter, trustLimit)
+        : Promise.resolve([]),
       LandingFeaturedService.getFeaturedClassifieds(filter, activityLimit),
       eventsEnabled
         ? eventsReadService.getEventsPage({
