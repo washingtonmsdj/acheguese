@@ -547,10 +547,6 @@ export function AppLayoutRoutes() {
           element={protectedElement(<P.ContaEnderecosPage />)}
         />
         <Route
-          path="/conta/profissional"
-          element={<Navigate to="/central" replace />}
-        />
-        <Route
           path="/conta/editar"
           element={protectedElement(<P.ContaEditarPage />)}
         />
@@ -732,27 +728,33 @@ export function AppLayoutRoutes() {
             protectedElement(<P.NovoPostPage />),
           )}
         />
-        <Route path="/busca" element={<P.BuscaPage />} />
-        <Route path="/buscar" element={<P.BuscarPage />} />
+        <Route
+          path="/busca"
+          element={launchElement("search", "Busca", <P.BuscaPage />)}
+        />
+        <Route
+          path="/buscar"
+          element={launchElement("search", "Busca", <P.BuscarPage />)}
+        />
         <Route
           path={buildTerritorialModuleRoutePath(APP_MODULE_SLUGS.search)}
-          element={<P.BuscaPage />}
+          element={launchElement("search", "Busca", <P.BuscaPage />)}
         />
         <Route
           path={buildTerritorialModuleRoutePath(APP_MODULE_SLUGS.search, [
             TERRITORIAL_PARAMS.district,
           ])}
-          element={<P.BuscaPage />}
+          element={launchElement("search", "Busca", <P.BuscaPage />)}
         />
         <Route
           path={buildTerritorialRoutePath(TERRITORIAL_STATIC.searchAlias)}
-          element={<P.BuscarPage />}
+          element={launchElement("search", "Busca", <P.BuscarPage />)}
         />
         <Route
           path={buildTerritorialRoutePath(TERRITORIAL_STATIC.searchAlias, [
             TERRITORIAL_PARAMS.district,
           ])}
-          element={<P.BuscarPage />}
+          element={launchElement("search", "Busca", <P.BuscarPage />)}
         />
         {aiVirtualTryOnEnabled && (
           <Route path="/ai/virtual-try-on" element={<P.VirtualTryOnPage />} />
