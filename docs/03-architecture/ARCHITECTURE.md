@@ -44,13 +44,17 @@ Database -> Service -> Hook -> Component
 
 ## Produto territory-first e lifecycle modular
 - Territorio e o contexto geografico raiz.
-- Modulos de produto sao capacidades independentes com lifecycle explicito em
-  `src/app/config/productModuleRegistry.ts`.
-- No MVP atual, somente `business`, `map`, `nearby` e `search` estao ativos;
-  `nearby` depende de `map + business`.
-- Community e demais capabilities pos-MVP continuam versionadas, mas
-  `paused` e fail-closed ate certificacao propria.
-- Contratos internos de modulo nao podem contornar o lifecycle publico.
+- Dominios de produto vivem em `productModuleRegistry.ts`; no MVP, somente
+  `business` esta ativo.
+- Capabilities horizontais vivem em `platformCapabilityRegistry.ts`; no MVP,
+  Map, Nearby, Search, Messaging, Auth, Profiles/Account, Territory, Location,
+  Notifications e Central estao ativos.
+- `lifecycleRegistry.ts` resolve dependencias cruzadas sem transformar
+  capability horizontal em dominio.
+- Nearby depende de Map + Location + Business.
+- Messaging depende de Auth + Profiles + Business e registra apenas o provider
+  Business no MVP.
+- Community e demais dominios pos-MVP continuam `paused` e fail-closed.
 - Regras completas: [PRODUCT_MODULE_LIFECYCLE.md](./PRODUCT_MODULE_LIFECYCLE.md).
 
 ## Fronteiras
