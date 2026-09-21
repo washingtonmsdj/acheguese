@@ -14,11 +14,12 @@ const remoteProbe = readFileSync(
 
 describe("MVP Business public flow", () => {
   it("keeps Business category visibility independent from specialized vertical lifecycle", () => {
-    expect(launchScope).toContain("const BUSINESS_CATEGORY_SURFACES");
-    expect(launchScope).toContain("= {};");
-    expect(constants).toContain("isLaunchBusinessCategoryEnabled(category.slug)");
-    expect(page).toContain("isLaunchBusinessCategoryEnabled(");
-    expect(page).toContain("normalizeBusinessCategoryId(business.category)");
+    expect(launchScope).not.toContain("BUSINESS_CATEGORY_SURFACES");
+    expect(launchScope).not.toContain("isLaunchBusinessCategoryEnabled");
+    expect(constants).toContain("getAllCategories().map(");
+    expect(constants).not.toContain("isLaunchBusinessCategoryEnabled");
+    expect(page).not.toContain("isLaunchBusinessCategoryEnabled");
+    expect(page).toContain("realBusinesses.map(normalizeRealBusinessEntry)");
   });
 
   it("keeps a rollback-only real-data proof for list to canonical detail", () => {
