@@ -7,6 +7,7 @@ const read = (path: string) => readFileSync(resolve(root, path), "utf8");
 
 const launchScope = read("src/app/config/launchScope.ts");
 const productRegistry = read("src/app/config/productModuleRegistry.ts");
+const platformRegistry = read("src/app/config/platformCapabilityRegistry.ts");
 const launchE2e = read("tests/e2e/launch-scope-public.spec.ts");
 const appRoutes = read("src/app/routes/sections/AppLayoutRoutes.tsx");
 const searchProviders = read("src/core/search/providers/searchProviders.ts");
@@ -16,13 +17,12 @@ const featureMap = read("docs/FEATURE-MAP.md");
 const homeInventory = read("docs/05-ux/HOME-INVENTORY.md");
 
 describe("MVP launch-scope alignment", () => {
-  it("keeps Mapa, Empresas, Perto de mim and Busca active in the product registry", () => {
+  it("keeps Business as the active domain while Map/Nearby/Search are horizontal capabilities", () => {
     expect(productRegistry).toContain('business: { status: "active" }');
-    expect(productRegistry).toContain('map: { status: "active" }');
-    expect(productRegistry).toContain(
-      'nearby: { status: "active", dependsOn: ["map", "business"] }',
-    );
-    expect(productRegistry).toContain('search: { status: "active" }');
+    expect(platformRegistry).toContain('map: {');
+    expect(platformRegistry).toContain('nearby: {');
+    expect(platformRegistry).toContain('search: {');
+    expect(platformRegistry).toContain('messaging: {');
 
     for (const moduleKey of [
       "community",
@@ -32,13 +32,21 @@ describe("MVP launch-scope alignment", () => {
       "touristPoints",
       "jobs",
       "events",
-      "messaging",
       "communityCommunication",
     ]) {
       expect(productRegistry).toContain(`${moduleKey}: { status: "paused"`);
     }
 
-    expect(launchScope).toContain('search: isProductModuleEnabled("search")');
+    expect(platformRegistry).toContain('messaging: {\n    status: "paused"');
+    expect(launchScope).toContain(
+      'search: isPlatformCapabilityEnabled("search")',
+    );
+    expect(launchScope).toContain(
+      'map: isPlatformCapabilityEnabled("map")',
+    );
+    expect(launchScope).toContain(
+      'nearby: isPlatformCapabilityEnabled("nearby")',
+    );
     expect(appRoutes).toContain('launchElement("map", "Mapa"');
     expect(appRoutes).toContain('launchElement("nearby", "Perto de mim"');
     expect(appRoutes).toContain('launchElement("search", "Busca"');
