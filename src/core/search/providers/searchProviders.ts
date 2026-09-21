@@ -106,7 +106,7 @@ function toOpportunity(card: WorkOpportunityCard): WorkOpportunitySearchResult {
 const communitiesProvider: SearchProvider = {
   bucket: "communities",
   linkedEntityTypes: [],
-  isEnabled: () => true,
+  isEnabled: () => isLaunchSurfaceEnabled("community"),
   async search({ query, filters, signal }) {
     throwIfAborted(signal);
     const found = await CommunityExperienceService.searchPublicCommunities(query, 12);
@@ -125,7 +125,7 @@ const communitiesProvider: SearchProvider = {
 const businessesProvider: SearchProvider = {
   bucket: "businesses",
   linkedEntityTypes: ["business"],
-  isEnabled: () => true,
+  isEnabled: () => isLaunchSurfaceEnabled("business"),
   async search({ query, filters, linkedEntityIds, signal }) {
     throwIfAborted(signal);
     const page = await BusinessService.getBusinessesList({
@@ -149,7 +149,7 @@ const businessesProvider: SearchProvider = {
 const professionalsProvider: SearchProvider = {
   bucket: "professionals",
   linkedEntityTypes: ["professional"],
-  isEnabled: () => true,
+  isEnabled: () => isLaunchSurfaceEnabled("services"),
   async search({ query, filters, linkedEntityIds, signal }) {
     throwIfAborted(signal);
     const found = await ProfessionalService.searchProfessionals(query, {
@@ -210,7 +210,7 @@ const opportunitiesProvider: SearchProvider = {
 const classifiedsProvider: SearchProvider = {
   bucket: "classifieds",
   linkedEntityTypes: ["classified"],
-  isEnabled: () => true,
+  isEnabled: () => isLaunchSurfaceEnabled("classifieds"),
   async search({ query, filters, linkedEntityIds, signal }) {
     throwIfAborted(signal);
     const found = await searchClassifieds(query, {
@@ -270,7 +270,7 @@ const eventsProvider: SearchProvider = {
 const postsProvider: SearchProvider = {
   bucket: "posts",
   linkedEntityTypes: ["post"],
-  isEnabled: () => true,
+  isEnabled: () => isLaunchSurfaceEnabled("community"),
   async search({ query, filters, linkedEntityIds, signal }) {
     throwIfAborted(signal);
     const found = await searchPublicPosts(query, {
