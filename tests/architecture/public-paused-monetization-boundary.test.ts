@@ -79,6 +79,26 @@ describe("public paused monetization boundary", () => {
     "src/modules/business/gastronomy/hooks/useMenu.ts",
     "utf8",
   );
+  const classifiedsPage = readFileSync(
+    "src/modules/classifieds/pages/ClassificadosPage.tsx",
+    "utf8",
+  );
+  const classifiedsSections = readFileSync(
+    "src/modules/classifieds/sections/index.ts",
+    "utf8",
+  );
+  const classifiedsCards = readFileSync(
+    "src/modules/classifieds/components/cards/index.ts",
+    "utf8",
+  );
+  const classifiedsHorizontalSection = readFileSync(
+    "src/modules/classifieds/components/sections/HorizontalSection.tsx",
+    "utf8",
+  );
+  const classifiedsListingSection = readFileSync(
+    "src/modules/classifieds/sections/ClassifiedsListagemSection.tsx",
+    "utf8",
+  );
 
   it("keeps Billing outside the MVP launch scope", () => {
     expect(launchScope).toContain("billing: false");
@@ -91,6 +111,25 @@ describe("public paused monetization boundary", () => {
     expect(classifiedsVisibility).not.toContain(
       "Destaque seu anúncio no topo dos resultados",
     );
+  });
+
+  it("does not fabricate sponsored or premium classifieds while Billing is paused", () => {
+    expect(classifiedsPage).not.toContain("ClassifiedsSponsoredSection");
+    expect(classifiedsPage).not.toContain("ClassifiedsFeaturedSection");
+    expect(classifiedsPage).not.toContain("featuredAds");
+    expect(classifiedsPage).not.toContain("maior tração");
+    expect(classifiedsPage).not.toContain("Mais procurados");
+    expect(classifiedsPage).toContain("recentAds");
+    expect(classifiedsPage).toContain("categorySampleAds");
+    expect(classifiedsSections).not.toContain("ClassifiedsSponsoredSection");
+    expect(classifiedsSections).not.toContain("ClassifiedsFeaturedSection");
+    expect(classifiedsCards).not.toContain("SponsoredCard");
+  });
+
+  it("keeps classifieds collection navigation functional without a fake CTA", () => {
+    expect(classifiedsHorizontalSection).toContain('href="#classificados-listagem"');
+    expect(classifiedsHorizontalSection).not.toContain("<button className=");
+    expect(classifiedsListingSection).toContain('id="classificados-listagem"');
   });
 
   it("does not retain a hidden premium write path while Billing is paused", () => {
