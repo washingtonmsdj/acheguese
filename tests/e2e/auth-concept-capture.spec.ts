@@ -100,7 +100,9 @@ test.describe("Auth concept capture", () => {
     await capture(page, "desktop-login.png");
 
     await page.goto("/cadastro", { waitUntil: "domcontentloaded" });
-    await expect(page.getByText("Comece por você.", { exact: true })).toBeVisible();
+    await expect(
+      page.getByRole("heading", { name: /Comece\s*por você\./ }),
+    ).toBeVisible();
     await expect(
       page.getByRole("button", { name: "Continuar com Google" }),
     ).toBeVisible();
