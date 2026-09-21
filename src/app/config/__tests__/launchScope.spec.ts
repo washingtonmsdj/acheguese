@@ -8,8 +8,6 @@ import {
 import {
   filterLaunchItems,
   filterLaunchSections,
-  getLaunchPausedBusinessCategoryIds,
-  isLaunchBusinessCategoryEnabled,
   isLaunchClassifiedCategoryEnabled,
   isLaunchCommunityFeedChannelEnabled,
   isLaunchCommunityPostEnabled,
@@ -151,10 +149,9 @@ describe("launchScope", () => {
     ).toBe(false);
   });
 
-  it("keeps Business categories independent from paused specialized verticals", () => {
+  it("keeps specialized vertical lifecycle independent from Business", () => {
+    expect(isLaunchSurfaceEnabled("business")).toBe(true);
     expect(isLaunchSurfaceEnabled("education")).toBe(false);
-    expect(isLaunchBusinessCategoryEnabled("educacao")).toBe(true);
-    expect(isLaunchBusinessCategoryEnabled("restaurante")).toBe(true);
-    expect(getLaunchPausedBusinessCategoryIds()).toEqual([]);
+    expect(isLaunchSurfaceEnabled("gastronomy")).toBe(false);
   });
 });
