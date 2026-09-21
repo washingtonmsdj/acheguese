@@ -17,6 +17,7 @@
  * @module core/geospatial/services
  */
 
+import { isLaunchBusinessCategoryEnabled } from '@/app/config/launchScope';
 import { logger } from '@/shared/utils/logger';
 import { supabase } from '@/integrations/supabase';
 // ============================================
@@ -88,6 +89,30 @@ interface SpatialSearchRow {
   slug?: string | null;
 }
 
+interface BusinessSpatialCategoryRow {
+  profile_id: string;
+  category: string | null;
+}
+
+const MAX_SPATIAL_RPC_LIMIT = 200;
+const BUSINESS_SPATIAL_CANDIDATE_MULTIPLIER = 4;
+
+function normalizeRequestedLimit(limit: number | undefined, fallback: number): number {
+  if (!Number.isFinite(limit) || limit == null) return fallback;
+  return Math.max(1, Math.min(MAX_SPATIAL_RPC_LIMIT, Math.trunc(limit)));
+}
+
+function resolveSpatialCandidateLimit(
+  entityType: EntityType,
+  requestedLimit: number,
+): number {
+  if (entityType !== 'business') return requestedLimit;
+  return Math.min(
+    MAX_SPATIAL_RPC_LIMIT,
+    requestedLimit * BUSINESS_SPATIAL_CANDIDATE_MULTIPLIER,
+  );
+}
+
 // ============================================
 // SERVICE
 // ============================================
@@ -110,13 +135,14 @@ export class SpatialSearchService {
     this.validateCoordinates(input.center);
     this.validateRadius(input.radiusKm);
 
+    const requestedLimit = normalizeRequestedLimit(input.limit, 50);
     const { data, error } = await supabase.rpc('search_entities_by_radius', {
       p_latitude: input.center.latitude,
       p_longitude: input.center.longitude,
       p_radius_km: input.radiusKm,
       p_entity_type: input.entityType,
       p_location_id: input.locationId ?? null,
-      p_limit: input.limit ?? 50,
+      p_limit: resolveSpatialCandidateLimit(input.entityType, requestedLimit),
       p_offset: input.offset ?? 0,
     });
 
@@ -125,7 +151,12 @@ export class SpatialSearchService {
       throw new Error(`Erro ao buscar por raio: ${error.message}`);
     }
 
-    return (data || []).map(this.mapResult);
+    const mapped = (data || []).map(this.mapResult);
+    return this.filterLaunchBusinessResults(
+      mapped,
+      input.entityType,
+      requestedLimit,
+    );
   }
 
   /**
@@ -143,6 +174,7 @@ export class SpatialSearchService {
   async searchByBounds(input: SearchByBoundsInput): Promise<SpatialSearchResult[]> {
     this.validateBounds(input.bounds);
 
+    const requestedLimit = normalizeRequestedLimit(input.limit, 100);
     const { data, error } = await supabase.rpc('search_entities_by_bounds', {
       p_west: input.bounds.west,
       p_south: input.bounds.south,
@@ -150,7 +182,7 @@ export class SpatialSearchService {
       p_north: input.bounds.north,
       p_entity_type: input.entityType,
       p_location_id: input.locationId ?? null,
-      p_limit: input.limit ?? 100,
+      p_limit: resolveSpatialCandidateLimit(input.entityType, requestedLimit),
     });
 
     if (error) {
@@ -158,7 +190,12 @@ export class SpatialSearchService {
       throw new Error(`Erro ao buscar por bounds: ${error.message}`);
     }
 
-    return (data || []).map(this.mapResult);
+    const mapped = (data || []).map(this.mapResult);
+    return this.filterLaunchBusinessResults(
+      mapped,
+      input.entityType,
+      requestedLimit,
+    );
   }
 
   /**
@@ -181,13 +218,14 @@ export class SpatialSearchService {
     this.validateCoordinates(input.center);
     this.validateRadius(input.radiusKm);
 
+    const requestedLimit = normalizeRequestedLimit(input.limit, 50);
     const { data, error } = await supabase.rpc('search_entities_hybrid', {
       p_latitude: input.center.latitude,
       p_longitude: input.center.longitude,
       p_radius_km: input.radiusKm,
       p_entity_type: input.entityType,
       p_location_ids: input.locationIds ?? null,
-      p_limit: input.limit ?? 50,
+      p_limit: resolveSpatialCandidateLimit(input.entityType, requestedLimit),
     });
 
     if (error) {
@@ -195,7 +233,12 @@ export class SpatialSearchService {
       throw new Error(`Erro ao buscar híbrido: ${error.message}`);
     }
 
-    return (data || []).map(this.mapResult);
+    const mapped = (data || []).map(this.mapResult);
+    return this.filterLaunchBusinessResults(
+      mapped,
+      input.entityType,
+      requestedLimit,
+    );
   }
 
   /**
@@ -259,6 +302,43 @@ export class SpatialSearchService {
   // ============================================
   // HELPERS
   // ============================================
+
+  private async filterLaunchBusinessResults(
+    results: SpatialSearchResult[],
+    entityType: EntityType,
+    requestedLimit: number,
+  ): Promise<SpatialSearchResult[]> {
+    if (entityType !== 'business') return results.slice(0, requestedLimit);
+    if (results.length === 0) return [];
+
+    const profileIds = [...new Set(results.map((result) => result.id))];
+    const { data, error } = await supabase
+      .from('public_business_search')
+      .select('profile_id, category')
+      .in('profile_id', profileIds);
+
+    if (error) {
+      logger.error(
+        '[SpatialSearchService] business launch-category lookup failed',
+        error,
+      );
+      return [];
+    }
+
+    const visibleProfileIds = new Set(
+      ((data ?? []) as BusinessSpatialCategoryRow[])
+        .filter(
+          (row) =>
+            Boolean(row.profile_id) &&
+            isLaunchBusinessCategoryEnabled(row.category ?? ''),
+        )
+        .map((row) => row.profile_id),
+    );
+
+    return results
+      .filter((result) => visibleProfileIds.has(result.id))
+      .slice(0, requestedLimit);
+  }
 
   private validateCoordinates(coords: Coordinates): void {
     if (
