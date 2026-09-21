@@ -83,10 +83,6 @@ const CLASSIFIED_CATEGORY_SURFACES: Partial<Record<string, LaunchSurfaceKey>> = 
   vagas: "jobs",
 };
 
-// Business category visibility is independent from specialized vertical modules.
-// A school remains a valid Business entity while the Education vertical is paused.
-const BUSINESS_CATEGORY_SURFACES: Partial<Record<string, LaunchSurfaceKey>> = {};
-
 const COMMUNITY_FEED_CHANNEL_SURFACES: Partial<Record<string, LaunchSurfaceKey>> = {
   alertas: "communityAlerts",
   eventos: "events",
@@ -119,18 +115,6 @@ export function isLaunchClassifiedCategoryEnabled(categoryId: string): boolean {
   if (!isLaunchSurfaceEnabled("classifieds")) return false;
   const surface = CLASSIFIED_CATEGORY_SURFACES[categoryId];
   return surface ? isLaunchSurfaceEnabled(surface) : true;
-}
-
-export function isLaunchBusinessCategoryEnabled(categoryId: string): boolean {
-  if (!isLaunchSurfaceEnabled("business")) return false;
-  const surface = BUSINESS_CATEGORY_SURFACES[categoryId];
-  return surface ? isLaunchSurfaceEnabled(surface) : true;
-}
-
-export function getLaunchPausedBusinessCategoryIds(): string[] {
-  return Object.entries(BUSINESS_CATEGORY_SURFACES)
-    .filter(([, surface]) => !isLaunchSurfaceEnabled(surface))
-    .map(([categoryId]) => categoryId);
 }
 
 export function isLaunchCommunityFeedChannelEnabled(channelId: string): boolean {
