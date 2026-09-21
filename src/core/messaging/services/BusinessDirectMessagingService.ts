@@ -22,7 +22,7 @@ import type {
 
 const uuidSchema = z.string().uuid();
 
-const threadPreviewSchema = z.object({
+const threadPreviewSchema: z.ZodType<BusinessDirectThreadPreview> = z.object({
   id: uuidSchema,
   business_id: uuidSchema,
   business_name: z.string(),
@@ -43,16 +43,16 @@ const threadPreviewSchema = z.object({
   blocked_by_other: z.boolean(),
   closed_at: z.string().datetime({ offset: true }).nullable(),
   created_at: z.string().datetime({ offset: true }),
-}).required();
+});
 
-const messageSchema = z.object({
+const messageSchema: z.ZodType<BusinessDirectMessage> = z.object({
   id: uuidSchema,
   thread_id: uuidSchema,
   sender_profile_id: uuidSchema,
   body: z.string(),
   is_removed: z.boolean(),
   created_at: z.string().datetime({ offset: true }),
-}).required();
+});
 
 function requireUuid(value: string, label: string): void {
   if (!uuidSchema.safeParse(value).success) {
@@ -66,15 +66,11 @@ function requireTimestamp(value: string, label: string): void {
   }
 }
 
-function toPreview(
-  row: z.infer<typeof threadPreviewSchema>,
-): BusinessDirectThreadPreview {
+function toPreview(row: BusinessDirectThreadPreview): BusinessDirectThreadPreview {
   return row;
 }
 
-function toMessage(
-  row: z.infer<typeof messageSchema>,
-): BusinessDirectMessage {
+function toMessage(row: BusinessDirectMessage): BusinessDirectMessage {
   return row;
 }
 
