@@ -25,7 +25,8 @@ BEGIN
   WHERE g.slug = 'complexo-do-nordeste-de-amaralina'
     AND b.status = 'active'
     AND b.business_role IN ('standalone', 'branch')
-    AND COALESCE(b.category, '') <> 'educacao'
+    AND NULLIF(btrim(b.slug), '') IS NOT NULL
+    AND NULLIF(btrim(l.geographic_path), '') IS NOT NULL
   ORDER BY b.business_name, b.id
   LIMIT 1;
 
