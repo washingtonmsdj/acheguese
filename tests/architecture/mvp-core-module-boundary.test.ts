@@ -15,6 +15,7 @@ describe("MVP core module boundary", () => {
   const territoryNavigation = read(
     "src/core/navigation/territoryNavigationModes.ts",
   );
+  const appRoutes = read("src/app/routes/sections/AppLayoutRoutes.tsx");
 
   it("keeps lifecycle ownership centralized and Nearby dependent on Map + Business", () => {
     expect(registry).toContain('business: { status: "active" }');
@@ -119,6 +120,21 @@ describe("MVP core module boundary", () => {
     ]) {
       expect(sidebar).not.toContain(forbidden);
     }
+  });
+
+  it("keeps active modules behind the same lifecycle gate used by paused modules", () => {
+    expect(appRoutes).toContain(
+      'element={launchElement("business", "Empresas", <P.EmpresasLandingPage />)}',
+    );
+    expect(appRoutes).toContain(
+      'element={launchElement("map", "Mapa", <P.MapaPage />)}',
+    );
+    expect(appRoutes).toContain(
+      'element={launchElement("nearby", "Perto de mim", <P.NearbyPage />)}',
+    );
+    expect(appRoutes).toContain(
+      '"business",\n            "Empresas",\n            protectedElement(<P.EmpresasCadastroLandingPage />)',
+    );
   });
 
   it("keeps primary territorial navigation on the MVP core", () => {
