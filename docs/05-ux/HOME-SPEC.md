@@ -4,7 +4,9 @@
 >
 > **Decisão vigente:** 2026-09-21.
 >
-> **Módulos de produto ativos:** **Empresas + Mapa + Perto de mim + Busca**.
+> **Domínio de produto ativo:** **Empresas (Business)**.
+>
+> **Capabilities horizontais ativas:** **Mapa + Perto de mim + Busca + Mensagens**, além de Auth/Perfis/Conta/Território/Localização/Notificações/Central.
 
 ## 1. Papel da Home
 
@@ -15,6 +17,7 @@ Ela é uma superfície de plataforma responsável por:
 - estabelecer o contexto territorial;
 - apresentar somente capacidades efetivamente ativas;
 - encaminhar para Empresas, Mapa, Perto de mim e Busca;
+- manter Mensagens acessível pela topbar autenticada e pelos CTAs dos domínios habilitados;
 - manter estados de loading, erro e ausência de dados coerentes;
 - não recriar regras de domínio que pertencem aos módulos.
 
@@ -22,18 +25,24 @@ A Home não pode funcionar como agregador monolítico de módulos pausados.
 
 ## 2. Escopo público atual
 
-O MVP contém somente:
+O domínio de produto ativo é:
 
-| Módulo | ID | Estado | Dependências |
-| --- | --- | --- | --- |
-| Empresas | `business` | `active` | — |
-| Mapa | `map` | `active` | port público de Business quando projeta empresas |
-| Perto de mim | `nearby` | `active` | `map + business` |
-| Busca | `search` | `active` | providers habilitados pelo lifecycle |
+| Domínio | ID | Estado |
+| --- | --- | --- |
+| Empresas | `business` | `active` |
 
-A autoridade executável é `src/app/config/productModuleRegistry.ts`.
+Capabilities horizontais ativas:
 
-`launchScope.ts` é compatibilidade derivada do registry e não pode se tornar uma segunda fonte de verdade.
+| Capability | Estado | Dependências relevantes |
+| --- | --- | --- |
+| Mapa | `active` | Território; providers de domínios ativos |
+| Perto de mim | `active` | Mapa + Localização + Business |
+| Busca | `active` | Território + providers de domínios ativos |
+| Mensagens | `active` | Auth + Perfis + Business; provider MVP = Business |
+
+As autoridades executáveis são `productModuleRegistry.ts`,
+`platformCapabilityRegistry.ts` e `lifecycleRegistry.ts`.
+`launchScope.ts` é apenas compatibilidade derivada.
 
 ## 3. O que a Home pode exibir
 
@@ -160,9 +169,10 @@ Novo módulo nasce isolado e `paused`; só vira `active` após certificação.
 
 A Home do MVP está correta quando:
 
-- apresenta somente Empresas, Mapa, Perto de mim e Busca como capacidades de produto;
+- apresenta somente Business e as capabilities horizontais certificadas para o MVP;
 - nenhuma superfície pausada aparece por navegação, card, provider, prefetch ou layer;
-- `nearby` depende formalmente de `map + business`;
+- `nearby` depende formalmente de Map + Location + Business;
+- Mensagens usa somente o provider Business enquanto os demais domínios estão pausados;
 - Mapa acessa Business por port público;
 - a Home não contém agregador multi-domínio paralelo;
 - redirects existentes possuem justificativa funcional legítima;
@@ -172,6 +182,8 @@ A Home do MVP está correta quando:
 ## 12. Referências
 
 - `src/app/config/productModuleRegistry.ts`;
+- `src/app/config/platformCapabilityRegistry.ts`;
+- `src/app/config/lifecycleRegistry.ts`;
 - `src/app/config/launchScope.ts`;
 - `docs/03-architecture/PRODUCT_MODULE_LIFECYCLE.md`;
 - `docs/FEATURE-MAP.md`;
