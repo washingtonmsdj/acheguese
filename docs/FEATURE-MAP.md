@@ -1,10 +1,10 @@
 # FEATURE-MAP
 
-> **Escopo MVP:** **Empresas + Mapa + Perto de mim**.
+> **Escopo MVP:** **Empresas + Mapa + Perto de mim + Busca**.
 >
 > Lifecycle: `src/app/config/productModuleRegistry.ts`.
 >
-> Estado atual: `map=true`, `nearby=true`, `business=true`, `search=false`, `billing=false`, `gastronomy=false`, `services=false`, `touristPoints=false`, `education=false`, `jobs=false`, `events=false`, `communityEventsPreview=false`, `communication=false`, `mobility=false`, `coupons=false`, `gamification=false`, `communityCommunication=false`.
+> Estado atual: `map=true`, `nearby=true`, `business=true`, `search=true`, `billing=false`, `gastronomy=false`, `services=false`, `touristPoints=false`, `education=false`, `jobs=false`, `events=false`, `communityEventsPreview=false`, `communication=false`, `mobility=false`, `coupons=false`, `gamification=false`, `communityCommunication=false`.
 
 ## Módulos ativos
 
@@ -37,11 +37,19 @@ Dependências declaradas:
 
 Se qualquer dependência for pausada, Perto de mim deve falhar fechado automaticamente pelo registry.
 
+### Busca
+
+Responsabilidade: descoberta textual nos módulos atualmente ativos, preservando o território e delegando cada consulta ao owner do domínio.
+
+No MVP:
+- Business é o provider público ativo;
+- providers de Community, Serviços, Classificados, Eventos e Vagas permanecem desligados pelo lifecycle;
+- filtros e coleções de módulos pausados não aparecem na interface;
+- Search não possui dados de outros domínios: apenas orquestra providers habilitados.
+
 ## Infraestrutura, não módulos
 
-Auth/Conta, território, roteamento, localização, sessão, segurança, storage e observabilidade continuam disponíveis quando necessários aos três módulos.
-
-A Busca pública está pausada (`search=false`). O mecanismo interno de consulta pode permanecer reutilizável sem constituir superfície pública.
+Auth/Conta, território, roteamento, localização, sessão, segurança, storage e observabilidade continuam disponíveis quando necessários aos quatro módulos.
 
 ## Pós-MVP
 
