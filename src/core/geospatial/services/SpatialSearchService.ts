@@ -18,6 +18,7 @@
  */
 
 import { BusinessService } from '@/core/business/services/BusinessService';
+import { PUBLIC_READ_LIMITS } from '@/shared/config/publicReadLimits';
 import { logger } from '@/shared/utils/logger';
 import { supabase } from '@/integrations/supabase';
 // ============================================
@@ -89,12 +90,9 @@ interface SpatialSearchRow {
   slug?: string | null;
 }
 
-const MAX_SPATIAL_RPC_LIMIT = 200;
-const BUSINESS_SPATIAL_CANDIDATE_MULTIPLIER = 4;
-
 function normalizeRequestedLimit(limit: number | undefined, fallback: number): number {
   if (!Number.isFinite(limit) || limit == null) return fallback;
-  return Math.max(1, Math.min(MAX_SPATIAL_RPC_LIMIT, Math.trunc(limit)));
+  return Math.max(1, Math.min(PUBLIC_READ_LIMITS.SPATIAL_RPC_MAX, Math.trunc(limit)));
 }
 
 function resolveSpatialCandidateLimit(
@@ -103,8 +101,8 @@ function resolveSpatialCandidateLimit(
 ): number {
   if (entityType !== 'business') return requestedLimit;
   return Math.min(
-    MAX_SPATIAL_RPC_LIMIT,
-    requestedLimit * BUSINESS_SPATIAL_CANDIDATE_MULTIPLIER,
+    PUBLIC_READ_LIMITS.SPATIAL_RPC_MAX,
+    requestedLimit * PUBLIC_READ_LIMITS.BUSINESS_SPATIAL_CANDIDATE_MULTIPLIER,
   );
 }
 
