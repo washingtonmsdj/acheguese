@@ -11,6 +11,7 @@ const inbox = read("src/modules/messaging/pages/MensagensPage.tsx");
 const providerRegistry = read(
   "src/core/messaging/providers/messagingProviderRegistry.ts",
 );
+const providerScope = read("src/app/config/messagingProviderScope.ts");
 const businessProvider = read(
   "src/core/messaging/providers/BusinessMessagingProvider.ts",
 );
@@ -41,7 +42,7 @@ describe("account and horizontal messaging real-data boundary", () => {
   });
 
   it("keeps the global Inbox provider-based instead of Community-owned", () => {
-    expect(inbox).toContain("getActiveMessagingProviders()");
+    expect(inbox).toContain("providerIds");
     expect(inbox).toContain("getMessagingProvider(providerId)");
     expect(inbox).toContain("useSessionContext()");
     expect(inbox).not.toContain("useCommunityDirectMessages");
@@ -49,9 +50,10 @@ describe("account and horizontal messaging real-data boundary", () => {
     expect(inbox).not.toContain("localMessages");
 
     expect(providerRegistry).toContain("businessMessagingProvider");
-    expect(providerRegistry).toContain("isProductModuleEnabled(\"business\")");
-    expect(providerRegistry).toContain("classifieds: null");
-    expect(providerRegistry).toContain("community: null");
+    expect(providerRegistry).not.toContain("@/app/");
+    expect(providerScope).toContain('isPlatformCapabilityEnabled("messaging")');
+    expect(providerScope).toContain('isProductModuleEnabled(productModule)');
+    expect(providerScope).toContain('getMessagingProvider(providerId) !== null');
 
     expect(businessProvider).toContain("businessDirectMessagingService");
     expect(businessProvider).not.toContain("community");
