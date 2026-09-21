@@ -14,11 +14,11 @@ export function ClassifiedsRecentSection({
 
   return (
     <HorizontalSection
-      title="Novos anúncios"
-      subtitle="Publicados recentemente"
+      title="Últimos anúncios"
+      subtitle="Ordenados por data de publicação"
       icon={<Clock className="h-4 w-4 text-primary" />}
       ads={ads}
-      badgeText="Novo"
+      badgeText="Anúncio"
       badgeColor="bg-primary/90"
       onAdClick={onAdClick}
     />
