@@ -41,6 +41,7 @@ describe("launchScope", () => {
       "events",
       "communityEventsPreview",
       "communication",
+      "messaging",
       "mobility",
       "coupons",
       "gamification",
@@ -61,6 +62,7 @@ describe("launchScope", () => {
     expect(isLaunchNavItemEnabled("nearby")).toBe(true);
     expect(isLaunchNavItemEnabled("classifieds")).toBe(false);
     expect(isLaunchNavItemEnabled("community")).toBe(false);
+    expect(isLaunchNavItemEnabled("messaging")).toBe(false);
 
     expect(
       filterLaunchItems([
