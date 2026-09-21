@@ -134,7 +134,7 @@ describe("BuscaPage", () => {
     renderPage("/busca/ba/salvador/pituba?q=pizzaria");
 
     expect(
-      screen.getByRole("searchbox", { name: "Buscar em Pituba" }),
+      screen.getByRole("searchbox", { name: "O que você procura por aqui?" }),
     ).toHaveValue("pizzaria");
     expect(
       screen.queryByRole("button", { name: /Eventos/i }),
