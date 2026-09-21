@@ -437,7 +437,6 @@ export default function EmpresaDetailLandingPage(
               <EmpresaCTAsSection
                 embedded
                 business={business}
-                isDeliveryBusiness={Boolean(isDeliveryBusiness)}
                 isFavorite={isFavorite}
                 hasRecommended={hasRecommended}
                 recommendLoading={recommendLoading}
@@ -571,7 +570,6 @@ export default function EmpresaDetailLandingPage(
           <EmpresaCTAsSection
             embedded
             business={business}
-            isDeliveryBusiness={Boolean(isDeliveryBusiness)}
             isFavorite={isFavorite}
             hasRecommended={hasRecommended}
             recommendLoading={recommendLoading}
