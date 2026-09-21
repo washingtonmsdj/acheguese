@@ -12,7 +12,6 @@ test.describe('public launch scope', () => {
       '/recomendacoes',
       '/vagas',
       '/eventos',
-      '/mensagens',
       '/educacao',
       '/comunicacao',
       '/cupons',
