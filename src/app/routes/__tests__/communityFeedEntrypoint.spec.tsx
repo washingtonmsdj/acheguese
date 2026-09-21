@@ -1,4 +1,3 @@
-import type { ReactNode } from "react";
 import { render, screen } from "@testing-library/react";
 import { MemoryRouter, Route, Routes, useSearchParams } from "react-router-dom";
 import { describe, expect, it, vi } from "vitest";
@@ -34,20 +33,6 @@ vi.mock("@/core/routing/components/TerritorialLayout", () => ({
 
 vi.mock("@/core/city/hooks/useCityMetadata", () => ({
   useCityMetadata: () => ({ data: { city_status: "active" } }),
-}));
-
-vi.mock("@/app/pages/CidadeLandingPage", () => ({
-  default: ({
-    activeCommunitySection,
-    communityContent,
-  }: {
-    activeCommunitySection: string;
-    communityContent?: ReactNode;
-  }) => (
-    <div data-testid="community-overview" data-section={activeCommunitySection}>
-      {communityContent}
-    </div>
-  ),
 }));
 
 vi.mock("@/core/community-feed/pages/ComunidadePage", () => ({
