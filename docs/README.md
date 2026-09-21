@@ -6,7 +6,7 @@
 
 Achegue-se é uma plataforma **hiperlocal, community-first**, cuja unidade fundamental é o **Território** (país → estado → cidade → bairro). Navegação, comunidade, comércio local e serviços são resolvidos a partir do território ativo.
 
-Domínios de produto: **Comunidade** (feed, posts, alertas, achados/perdidos, grupos, eventos, recomendações), **Empresas** (base horizontal + verticais oficiais), **Classificados**, **Profissionais/Serviços**, **Mobilidade** e **Educação**.
+A visão pós-MVP continua modular e pode incorporar Comunidade, Classificados, Profissionais/Serviços, Mobilidade, Educação e verticais. **O produto público ativo do MVP, porém, é deliberadamente menor: Empresas + Mapa + Perto de mim.** O lifecycle executável pertence a `src/app/config/productModuleRegistry.ts`; módulos pós-MVP permanecem pausados até certificação individual.
 
 ## Autoridade e precedência
 
@@ -70,6 +70,7 @@ Alguns caminhos antigos ainda existem fora das pastas numeradas por compatibilid
 - [Community-first architecture SSOT](./03-architecture/COMMUNITY_FIRST_ARCHITECTURE_SSOT.md)
 - [Core Platform architecture SSOT](./03-architecture/CORE_PLATFORM_ARCHITECTURE_SSOT.md)
 - [Canonical map / ownership](./03-architecture/CANONICAL_MAP.md)
+- [Product module lifecycle](./03-architecture/PRODUCT_MODULE_LIFECYCLE.md) — regras para ativar, pausar, remover e reintegrar módulos; owner executável em `productModuleRegistry.ts`.
 
 ### Segurança e governance
 
