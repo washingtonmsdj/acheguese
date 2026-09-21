@@ -60,8 +60,7 @@ Owners atuais do MVP:
 - Mapa: `MapaPageV4`;
 - Perto de mim: `core/nearby/pages/NearbyPage.tsx`.
 
-`BuscaPage` e Community permanecem preservadas para pós-MVP, mas estão
-`paused` no lifecycle. `CidadeLandingPage` foi removida após migração dos
+`BuscaPage` permanece ativa no MVP e consome somente providers habilitados pelo lifecycle. Community permanece preservada para pós-MVP e `paused` no lifecycle. `CidadeLandingPage` foi removida após migração dos
 callers e não é compatibilidade ativa.
 
 Não recriar uma segunda Home/Explorer monolítica.
@@ -136,13 +135,14 @@ O registry de apresentação é `src/core/navigation/territoryNavigationModes.ts
 e o lifecycle de produto pertence a
 `src/app/config/productModuleRegistry.ts`.
 
-Os cinco destinos primários do MVP são:
+Os seis destinos primários do MVP são:
 
 1. Home;
 2. Mapa;
 3. Empresas;
 4. Perto de mim;
-5. Conta / Entrar.
+5. Busca;
+6. Conta / Entrar.
 
 `TerritoryAdaptiveNavigation` e `BottomNav` são renderers; não possuem
 autoridade própria para ativar módulos.
@@ -153,7 +153,7 @@ Regras:
 - `nearby` depende formalmente de `map + business`;
 - rotas não territoriais podem preservar o último território válido apenas como
   contexto, nunca como autorização para reativar módulo pausado;
-- Search, Community e demais módulos pós-MVP não aparecem na navegação primária;
+- Search aparece como módulo ativo; Community e demais módulos pós-MVP não aparecem na navegação primária;
 - pausar um módulo precisa removê-lo também de rota funcional, prefetch,
   discovery e layers públicas, não apenas do menu.
 
