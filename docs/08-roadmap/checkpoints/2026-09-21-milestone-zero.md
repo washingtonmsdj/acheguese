@@ -5,11 +5,13 @@
 
 ## Estado do produto
 
-O PR #283 foi integrado por squash e estabeleceu o MVP em:
+O PR #283 foi integrado por squash e estabeleceu o corte inicial do MVP em:
 
 - **Empresas**;
 - **Mapa**;
 - **Perto de mim**.
+
+**Correção do mesmo marco em 2026-09-21:** Busca não deve ser removida do MVP. O lifecycle vigente passa a manter também **Busca (`search`) ativa**, com providers de módulos pausados fail-closed. O escopo atual, portanto, é **Empresas + Mapa + Perto de mim + Busca**.
 
 O PR #284 foi integrado por squash e mudou a política de higiene: `main` é a única branch explicitamente preservada como linha ativa.
 
@@ -100,7 +102,7 @@ Antes de `MVP READY`, ainda é obrigatório provar no **mesmo SHA**:
 - typecheck;
 - testes unitários/arquiteturais;
 - build;
-- E2E de Empresas + Mapa + Perto de mim;
+- E2E de Empresas + Mapa + Perto de mim + Busca;
 - deploy real;
 - smoke de produção.
 
