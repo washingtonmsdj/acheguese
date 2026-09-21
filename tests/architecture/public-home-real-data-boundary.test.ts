@@ -9,23 +9,32 @@ describe("public home real-data boundary", () => {
     expect(page).not.toContain("CONCEPT_HOME_MOCK");
     expect(page).not.toContain("conceptMockEnabled");
     expect(page).not.toContain("ConceptMockPostCard");
-    expect(
-      existsSync("src/app/mocks/territoryHomeConceptMock.ts"),
-    ).toBe(false);
+    expect(existsSync("src/app/mocks/territoryHomeConceptMock.ts")).toBe(false);
   });
 
-  it("keeps the home bound to the live territory owner", () => {
-    expect(page).toContain("const data = liveData;");
-    expect(page).toContain(
-      "const communityVisibleInView = isCommunityAvailable;",
-    );
-    expect(page).toContain("useTerritoryHomeData");
+  it("does not load post-MVP domain data into the Home", () => {
+    expect(page).not.toContain("useTerritoryHomeData");
+    expect(page).not.toContain("useQuery");
+    expect(page).not.toContain("useCommunityAccess");
+    expect(page).not.toContain("eventsReadService");
+    expect(page).not.toContain("WorkOpportunitiesService");
+    expect(page).not.toContain("classifiedUrlService");
   });
 
-  it("does not restore invented home opportunities", () => {
-    expect(page).not.toContain("Roda de conversa");
-    expect(page).not.toContain("Aulas de reforço escolar");
-    expect(page).toContain("Agenda do bairro");
-    expect(page).toContain("Vagas e oportunidades");
+  it("advertises only the three active product modules", () => {
+    expect(page).toContain('title="Empresas"');
+    expect(page).toContain('title="Mapa"');
+    expect(page).toContain('title="Perto de mim"');
+
+    for (const pausedCopy of [
+      "Agenda do bairro",
+      "Vagas e oportunidades",
+      "Classificados",
+      "Gastronomia",
+      "Serviços",
+      "Comunidade",
+    ]) {
+      expect(page).not.toContain(pausedCopy);
+    }
   });
 });
