@@ -446,7 +446,7 @@ export const RankingPage = createLaunchPausedRoute("Ranking");
 // Horizontal Inbox composes lifecycle-enabled domain providers.
 // ============================================================
 export const MensagensPage = lazy(
-  () => import("@/modules/messaging/pages/MensagensPage"),
+  () => import("@/app/pages/MessagingInboxPage"),
 );
 
 // ============================================================
