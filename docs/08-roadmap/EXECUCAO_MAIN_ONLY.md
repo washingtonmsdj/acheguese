@@ -14,18 +14,17 @@ Este corte substitui, para fins de **prioridade de lançamento**, a ordem histó
 
 ### Escopo público do candidato
 
-A decisão definitiva de release de **2026-09-21** define o MVP com quatro módulos públicos de produto:
+A decisão definitiva de release de **2026-09-21** separa domínio de produto e capabilities horizontais:
 
-- **Empresas** — catálogo institucional, detalhe canônico, contato e localização;
-- **Mapa** — visualização geográfica dos dados pertencentes aos módulos ativos; no MVP, somente Business é layer público de domínio;
-- **Perto de mim** — descoberta por proximidade de Empresas, com dependências formais de `map + business`;
-- **Busca** — descoberta textual orquestrada por Search, limitada aos providers cujas superfícies estão ativas.
+- **Domínio ativo:** Empresas/Business;
+- **Capabilities ativas:** Mapa, Perto de mim, Busca e Mensagens;
+- **Plataforma ativa:** Auth, Perfis/Conta, Território, Localização, Notificações, Central, segurança, storage e observabilidade.
 
-O lifecycle canônico pertence a `src/app/config/productModuleRegistry.ts`. `launchScope.ts` é apenas a camada de compatibilidade das superfícies existentes e deriva seu estado do registry.
+Mensagens é horizontal e, no MVP, registra **somente Business Direct Messaging**. Classificados e Community preservam seus agregados, mas não entram na Inbox enquanto seus domínios estiverem pausados.
 
-**Home/Território, Auth/Conta, sessão, localização, roteamento, segurança, storage e observabilidade são infraestrutura**, não módulos extras do MVP.
+O lifecycle canônico pertence a `productModuleRegistry.ts` + `platformCapabilityRegistry.ts`, avaliados por `lifecycleRegistry.ts`. `launchScope.ts` é apenas compatibilidade derivada.
 
-Ficam explicitamente **pós-MVP**, preservados e isolados até trabalho/certificação individual: Comunidade, Gastronomia, Serviços profissionais, Classificados, Pontos Turísticos, Educação, Vagas/Oportunidades, Eventos, Mensagens/Comunicação, Mobilidade, Cupons, Gamificação, Analytics público, Alertas, Issues, Achados e Perdidos, Safety familiar e Billing.
+Ficam explicitamente **pós-MVP**, preservados e isolados até trabalho/certificação individual: Comunidade, Gastronomia, Serviços profissionais, Classificados, Pontos Turísticos, Educação, Vagas/Oportunidades, Eventos, Comunicação territorial, Mobilidade, Cupons, Gamificação, Analytics público, Alertas, Issues, Achados e Perdidos, Safety familiar e Billing.
 
 A regra de modularidade é fail-closed: pausar um módulo no registry remove sua navegação, suas rotas públicas e seus loaders/discovery ativos. Reativação futura deve ocorrer pelo owner canônico e suas dependências, nunca por redirect, alias ou exceção local.
 
@@ -38,7 +37,7 @@ O primeiro release continua territorial. **Cobertura uniforme dos 170 bairros de
 3. **Completar proteção da `main`.** Force-push/deleção já estão bloqueados e o publisher canônico de tipos Supabase **já não escreve diretamente na `main`**: ele usa `automation/supabase-types-sync`, abre/atualiza PR e dispara os gates canônicos. O blocker restante é administrativo: exigir PR + checks que realmente executem e impedir bypass fora da release authority aprovada.
 4. **Preservar a prova de ledger/runtime no SHA candidato.** A auditoria de identidade já está em zero divergências; `validate:migrations`, `validate:migrations:provenance` e `validate:migrations:remote` ainda precisam executar de verdade no runner do candidato. Tipos gerados foram regenerados do runtime após os últimos DDLs.
 5. **Manter LGPD destrutivo fail-closed.** Delete/purge não pode ser habilitado enquanto `LGPD_PURGE_POLICY` não estiver pronto. Exportação também permanece desabilitada até certificação. O MVP pode lançar com essas capacidades indisponíveis, desde que a UI não prometa sucesso e nenhum caminho stale permaneça acessível.
-6. **Fechar segurança do que será exposto.** Priorizar Auth/Conta, Profile, território e os owners de Empresas, Mapa, Perto de mim e Busca. Módulos pausados só bloqueiam o MVP quando compartilham uma boundary realmente usada por esse núcleo. Certificações especializadas de Educação, Gastronomia e Billing permanecem no ciclo próprio desses módulos e não são pré-requisito funcional do release atual; qualidade global (lint/typecheck/security/SSOT/Vitest) continua obrigatória.
+6. **Fechar segurança do que será exposto.** Priorizar Auth/Conta, Profile, território, Business e as capabilities Mapa, Perto de mim, Busca e Mensagens. Módulos pausados só bloqueiam o MVP quando compartilham uma boundary realmente usada por esse núcleo. Certificações especializadas de Educação, Gastronomia e Billing permanecem no ciclo próprio desses módulos e não são pré-requisito funcional do release atual; qualidade global (lint/typecheck/security/SSOT/Vitest) continua obrigatória.
 7. **Certificar o fluxo real das superfícies públicas.** Para cada item do escopo: rota/owner canônico, contrato DB/RPC, autorização positiva e negativa, loading/empty/error/auth, fluxo principal com dados reais, smoke mobile e E2E sem placeholder/paused contado como sucesso.
 8. **Provar deploy do mesmo SHA.** O SHA aprovado deve produzir build real no provider e smoke no domínio público, incluindo login/cadastro, troca/resolução territorial, Home, navegação do núcleo, mutações principais e logout.
 9. **Configuração legal/operacional mínima.** O verifier de deploy já exige origem pública HTTPS, contato e DPO válidos e foro configurado; políticas/textos falham fechado quando identidade pública não existe. O blocker restante é o provider fornecer valores válidos no build exact-SHA.
@@ -51,7 +50,7 @@ O primeiro release continua territorial. **Cobertura uniforme dos 170 bairros de
 
 ### Progresso consolidado do corte público — 2026-09-19
 
-- [x] Corte MVP definitivo de 2026-09-21: `productModuleRegistry.ts` mantém `business + map + nearby + search` ativos; `nearby` depende formalmente de `map + business`. Home/Conta/Território são infraestrutura, e todos os demais módulos permanecem pós-MVP e isolados.
+- [x] Corte MVP definitivo de 2026-09-21: `productModuleRegistry.ts` mantém Business como domínio ativo; `platformCapabilityRegistry.ts` mantém Map/Nearby/Search/Messaging e infraestrutura transversal; `nearby` depende de Map + Location + Business; Messaging usa apenas provider Business no MVP.
 - [x] Home, Busca e perfil profissional público deixaram de aceitar dados `concept-mock` no runtime.
 - [x] Pontos Turísticos deixou de exibir proximidade simulada.
 - [x] Eventos pagos falham fechado enquanto não há checkout habilitado; inscrições gratuitas continuam no fluxo real.
@@ -107,7 +106,7 @@ O primeiro release continua territorial. **Cobertura uniforme dos 170 bairros de
 2. **R1 — convergência:** **fechado no ledger** (673/673 exatas); manter a igualdade de tipos e reexecutar os validadores no mesmo SHA candidato.
 3. **R2 — release authority:** publisher de tipos via PR **fechado**; faltam CI realmente executando e branch protection exigindo o caminho aprovado.
 4. **R3 — Auth/Privacy/Security:** fechar autenticação e superfícies sensíveis do escopo; manter delete/export destrutivos fail-closed.
-5. **R4 — certificação funcional:** certificar somente Empresas, Mapa, Perto de mim e Busca, além da infraestrutura estritamente necessária ao fluxo. Busca assistida também deve respeitar o lifecycle e não executar handlers de módulos pausados.
+5. **R4 — certificação funcional:** certificar Business + Mapa + Perto de mim + Busca + Mensagens/Business Direct Messaging, além da infraestrutura estritamente necessária ao fluxo. Busca assistida também deve respeitar o lifecycle e não executar handlers de módulos pausados.
 6. **R5 — exact-SHA:** security + lint + typecheck + tests + build + E2E + deploy real + smoke do mesmo SHA.
 7. **R6 — lançar MVP:** abrir somente superfícies certificadas e iniciar acompanhamento de erros/uso. Todo restante passa ao backlog durante/pós-MVP.
 
