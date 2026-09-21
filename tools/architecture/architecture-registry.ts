@@ -594,8 +594,7 @@ export const DOMAIN_REGISTRY: DomainRegistryEntry[] = [
       "src/core/geocoding",
       "src/core/geospatial",
       "src/integrations/maps",
-      "src/features/nearby",
-      "src/pages/NearbyPage.tsx",
+      "src/core/nearby",
     ],
     docsPaths: [
       "src/core/maps/README.md",
