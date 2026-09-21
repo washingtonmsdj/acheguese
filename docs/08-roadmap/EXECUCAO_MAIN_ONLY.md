@@ -46,7 +46,7 @@ O primeiro release continua territorial. **Cobertura uniforme dos 170 bairros de
 ### Correções de gate identificadas neste corte
 
 - [x] `tools/release/verify-deploy-ready.mjs` já reconhece o `buildCommand` canônico `node tools/release/run-vercel-production-build.mjs`, alinhado a `vercel.json`. Não manter este item como blocker.
-- [x] `tests/e2e/launch-scope-public.spec.ts` e `tests/architecture/launch-scope-e2e-alignment.test.ts` foram realinhados ao corte definitivo de 2026-09-21: Empresas, Mapa, Perto de mim e Busca são módulos ativos; os demais módulos públicos devem render isolamento de lançamento.
+- [x] `tests/e2e/launch-scope-public.spec.ts` e `tests/architecture/launch-scope-e2e-alignment.test.ts` foram realinhados ao corte definitivo de 2026-09-21: Business/Empresas é o domínio ativo; Mapa, Perto de mim, Busca e Mensagens são capabilities horizontais ativas; os demais domínios públicos devem render isolamento de lançamento.
 
 ### Progresso consolidado do corte público — 2026-09-19
 
