@@ -21,10 +21,10 @@ Consolidação do domínio **Territory**. Nesta etapa **não há renomeação de
 | `TerritoryExplorerPage.tsx` | — | ✅ Removido | Alias sem caller de rota; descoberta pertence a Busca/Mapa e Home a `TerritoryHomePage`. | — | Não recriar. |
 | `TerritoryHomePage.tsx` | `TerritoryHomePage` | ✅ Canônico | Home oficial de qualquer território. | `TerritorialModulePages`. | Manter. |
 | `TerritoryFeedPage.tsx` | `TerritoryFeedPage` | ✅ Canônico | Timeline completa do território. | `lazyImports`. | Manter. |
-| `TerritoryUnavailablePage.tsx` | `TerritoryUnavailablePage` | ✅ Canônico | Território sem suporte. | rotas. | Manter. |
+| `TerritoryUnavailablePage.tsx` | — | ✅ Removido | Re-export sem caller; misturava `coming_soon` territorial com kill-switch de módulo. | — | Não recriar. |
 | `PublicCityLandingPage.tsx` (+ `.css`) | — | ✅ Removido | Segunda Home sem caller runtime; removida em 2026-09-09. | — | Não recriar. |
 | `CidadeLandingPage.tsx` (+ `.css`, `*.sections.tsx`, `*.neighborhood-*.tsx`, `*.constants.ts`, `*.utils.ts`) | `TerritoryExplorerPage` (sections) | 🟨 Legado | Versão pré-Territory da landing de cidade. | Rotas legadas `/cidade/*`. | Mover partes reutilizáveis para `territory/sections/`; deprecar. |
-| `LaunchPausedPage.tsx` | `TerritoryUnavailablePage` | 🟦 Alias temporário | Implementação real do unavailable. | `TerritoryUnavailablePage.tsx`. | Consolidar em `TerritoryUnavailablePage`. |
+| `LaunchPausedPage.tsx` | `LaunchPausedPage` | ✅ Canônico app-level | Kill-switch de superfícies fora do launch scope; não representa território `coming_soon`. | `launchScope` e factories de rota pausada. | Manter como owner único de módulo pausado. |
 | `ComunidadePage.tsx` (em `core/community/pages`) | `TerritoryFeedPage` | 🟦 Alias temporário | Implementação real do feed territorial. | `TerritoryFeedPage.tsx`. | Consolidar em `TerritoryFeedPage`. |
 | `EmpresasLandingPage.tsx`, `EmpresaDetailLandingPage.tsx` | `BusinessDirectoryPage`, `BusinessDetailPage` | 🟨 Legado (fora do domínio Territory) | Pertence ao domínio Business. | rotas `/empresas`. | Fora do escopo desta sprint. |
 
@@ -74,7 +74,6 @@ Consolidação do domínio **Territory**. Nesta etapa **não há renomeação de
 | `/:uf/:city/:neighborhood` | `/:uf/:city/:neighborhood` | ✅ Canônico | Territory Home. |
 | `/comunidade/*` | `/:territory/comunidade` (subrota) | 🟦 Alias | Manter alias público. |
 | `/cidade/*` | `/:uf/:city` | 🟨 Legado | Redirecionar futuramente. |
-| `/lancamento-pausado`, `/launch-paused` | `/territorio-indisponivel` | 🟨 Legado | Renomear em DOMAIN.4. |
 
 ---
 
@@ -83,7 +82,7 @@ Consolidação do domínio **Territory**. Nesta etapa **não há renomeação de
 A partir desta sprint, novos módulos, componentes e tipos **não podem** introduzir:
 
 - `Landing*` (usar `TerritoryExplorer*` ou `TerritorySelector*`)
-- `Launch*` (usar `Territory*Unavailable` / `Territory*Rollout`)
+- `Launch*` dentro do domínio Territory; `LaunchPausedPage` é exceção app-level para kill-switch de launch scope
 - `Home*` genérico sem prefixo (usar `TerritoryHome*`)
 - `City*`, `Cidade*`, `Neighborhood*`, `Bairro*`, `District*` como **tipos de domínio** (permitido apenas como *label* de UI ou valor de `TerritoryType`)
 - `Community*` sem estar sob o subdomínio `community/` de Territory
@@ -94,6 +93,6 @@ A partir desta sprint, novos módulos, componentes e tipos **não podem** introd
 
 1. **DOMAIN.2** — Introduzir re-exports `Territory = Location`, `TerritoryType = LocationType` em `core/location/index.ts`.
 2. **DOMAIN.3** — Fundir `core/territorial` em `core/location` sob o namespace `territory/`.
-3. **DOMAIN.4** — Continuar removendo aliases restantes (`AchegueSeHomePage`, `LaunchPausedPage`, `ComunidadePage`); `PublicCityLandingPage` já foi aposentada.
-4. **DOMAIN.5** — Redirecionar rotas legadas (`/cidade/*`, `/launch-paused`).
+3. **DOMAIN.4** — Continuar removendo aliases restantes (`AchegueSeHomePage`, `ComunidadePage`); `PublicCityLandingPage` e `TerritoryUnavailablePage` já foram aposentadas.
+4. **DOMAIN.5** — Redirecionar rotas legadas reais (`/cidade/*`) sem inventar aliases de indisponibilidade.
 5. **DOMAIN.6** — Deprecar `core/city`, `core/landing`, `core/community-*` movendo para subpastas canônicas.
