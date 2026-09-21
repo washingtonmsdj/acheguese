@@ -293,7 +293,7 @@ export const ADMIN_NAV_SECTIONS: readonly AdminNavSection[] = [
 
 
 const ADMIN_PAUSED_NAV_ITEM_IDS = new Set([
-  "motoristas",
+  "mobilidade",
   "reports-passageiros",
   "pontos-embarque",
   "analytics-mobilidade",
