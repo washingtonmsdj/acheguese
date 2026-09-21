@@ -17,6 +17,7 @@ describe("MVP core module boundary", () => {
     "src/core/navigation/territoryNavigationModes.ts",
   );
   const appRoutes = read("src/app/routes/sections/AppLayoutRoutes.tsx");
+  const rootRoutes = read("src/app/routes/AppRoutes.tsx");
 
   it("keeps lifecycle ownership centralized and Nearby dependent on Map + Business", () => {
     expect(registry).toContain('business: { status: "active" }');
@@ -132,6 +133,15 @@ describe("MVP core module boundary", () => {
     ]) {
       expect(sidebar).not.toContain(forbidden);
     }
+  });
+
+  it("keeps post-MVP premium and social surfaces out of the public route tree", () => {
+    expect(rootRoutes).not.toContain('path="/empresas/:id/catalogo"');
+    expect(rootRoutes).not.toContain('path="/p/:slug/*"');
+    expect(rootRoutes).not.toContain("PremiumBusinessCheckoutPage");
+    expect(appRoutes).toContain(
+      '"community",\n            "Perfis públicos",\n            <P.ProfilePublicRoute />',
+    );
   });
 
   it("keeps active modules behind the same lifecycle gate used by paused modules", () => {
