@@ -29,7 +29,6 @@ const LEGACY_ADAPTER_BRIDGE = "src/core/maps/components/v3/LazyMapLibreAdapter.t
 
 const MIGRATED_CONSUMERS = [
   "src/core/maps/components/MiniMap.tsx",
-  "src/core/maps/components/v3/RouteLayer.tsx",
   "src/core/maps/components/LocationPickerSheet.tsx",
   "src/core/guide/tourist-points/components/TouristPointsMap.tsx",
   "src/core/community-lost-found/components/LostFoundMiniMap.tsx",
@@ -90,6 +89,17 @@ describe("MapLibre production security runtime", () => {
       expect(source).not.toMatch(STATIC_MAPLIBRE_CSS_IMPORT);
       expect(source).toContain("loadMapLibreRuntime");
     }
+  });
+
+  it("keeps RouteLayer as a map-instance consumer rather than a second runtime loader", () => {
+    const routeLayer = readProjectFile(
+      "src/core/maps/components/v3/RouteLayer.tsx",
+    );
+
+    expect(routeLayer).toContain("MapLibreMap");
+    expect(routeLayer).not.toMatch(STATIC_MAPLIBRE_IMPORT);
+    expect(routeLayer).not.toMatch(STATIC_MAPLIBRE_CSS_IMPORT);
+    expect(routeLayer).not.toContain("loadMapLibreRuntime");
   });
 
   it("forbids new static MapLibre engine or CSS owners outside the canonical core", () => {
