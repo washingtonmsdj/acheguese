@@ -1,186 +1,71 @@
 # FEATURE-MAP
 
-> **MVP enxuto — decisão de release 2026-09-21:** os únicos domínios públicos de produto são **Comunidade básica, Empresas e Classificados**. Home, Conta, Território e Busca são infraestrutura de acesso. Permanecem pausados para pós-MVP: `billing=false`, `gastronomy=false`, `services=false`, `touristPoints=false`, `map=false`, `nearby=false`, `education=false`, `jobs=false`, `events=false`, `communityEventsPreview=false`, `communication=false`, `mobility=false`, `coupons=false`, `gamification=false` e `communityCommunication=false`. O código desses módulos é preservado; as superfícies públicas ficam isoladas por `launchScope.ts`.
-
-Domain status: Feed = STATUS: FROZEN.
-
-> Mapa único de funcionalidades do Achegue-se. Toda funcionalidade precisa ter uma **entrada de navegação**. Toda rota precisa ter uma funcionalidade que a justifica.
+> **Escopo MVP:** **Empresas + Mapa + Perto de mim**.
 >
-> Status: ✅ ativo · 🟡 parcial/beta · 🚧 em construção · 🗄 arquivado
+> Lifecycle: `src/app/config/productModuleRegistry.ts`.
+>
+> Estado atual: `map=true`, `nearby=true`, `business=true`, `search=false`, `billing=false`, `gastronomy=false`, `services=false`, `touristPoints=false`, `education=false`, `jobs=false`, `events=false`, `communityEventsPreview=false`, `communication=false`, `mobility=false`, `coupons=false`, `gamification=false`, `communityCommunication=false`.
 
-> Corte MVP: Analytics público permanece pausado (`publicAnalytics=false`); referências administrativas a métricas não reativam essa superfície.
+## Módulos ativos
 
----
+### Empresas
 
-## 1. Onboarding & Identidade
+Responsabilidade: catálogo institucional público de entidades Business, detalhe canônico, dados de contato, localização e integração com Mapa/Perto de mim.
 
-| Funcionalidade                                  | Status | Onde aparece              | Como o usuário chega                      |
-| ----------------------------------------------- | ------ | ------------------------- | ----------------------------------------- |
-| Splash / entrada anônima                        | ✅     | `SplashPage`              | `/` (visitante sem território)            |
-| Onboarding de território (cidade + bairro)      | ✅     | `OnboardingPage`          | `/onboarding` · CTA "Escolher meu bairro" |
-| Cadastro (email + senha, terms, força de senha) | ✅     | `CadastroPage`            | `/cadastro` · header + CTAs de login      |
-| Confirmação de cadastro (resend)                | ✅     | `CadastroConfirmacaoPage` | pós-cadastro                              |
-| Login (com Turnstile + banner de erro)          | ✅     | `LoginPage`               | `/login`                                  |
-| Reset de senha                                  | ✅     | `ResetPasswordPage`       | `/reset-password` · link do login         |
-| Aceite de termos                                | ✅     | Rota `/aceitar-termos`    | forçado no primeiro acesso pós-cadastro   |
+Regras:
+- não depende de Gastronomia, Educação ou outras verticalizações;
+- categorias continuam válidas mesmo quando a vertical especializada correspondente está pausada;
+- registros sem identidade/slug/território válidos falham fechado;
+- fixtures sintéticas não devem ser expostas como conteúdo público.
 
----
+### Mapa
 
-## 2. Território (SSOT de navegação)
+Responsabilidade: visualização geográfica dos módulos ativos.
 
-| Funcionalidade                             | Status | Onde aparece                            | Como o usuário chega                             |
-| ------------------------------------------ | ------ | --------------------------------------- | ------------------------------------------------ |
-| Territory Entry (mudar bairro/cidade)      | ✅     | `TerritoryEntryPage`                    | troca territorial → `/?trocar=territorio`        |
-| Entrada/resolução territorial              | ✅     | `RootRouteEntry` / `TerritoryEntryPage` | `/`                                              |
-| Territory Home (cidade ou bairro/grupo)    | ✅     | `TerritoryHomePage`                     | `/:state/:city[/:territory]`                     |
-| Explorar (busca + mapa)                    | ✅     | módulos territoriais de busca/mapa      | `/busca/:state/:city[/:territory]` · `/mapa/...` |
-| Territory Feed (timeline completa)         | ✅     | `ComunidadePage` (`core/community-feed`) | Home → "Ver mais do bairro"                      |
-| Bairro `coming_soon` / waitlist            | ✅     | `CommunityInterestPage`                 | fluxo territorial de interesse                    |
-| National hub                               | ✅     | `NationalHubPage`                       | `/br`, `/brasil`                                 |
-| Entrada pública/SEO da cidade              | ✅     | `TerritoryHomePage`                     | `/:state/:city`                                  |
+No MVP:
+- somente Business é layer de domínio público;
+- layers de Gastronomia, Serviços, Classificados, Eventos, Alertas e Pontos Turísticos permanecem desligados pelo lifecycle;
+- pins de empresa usam a URL canônica de Business.
 
----
+### Perto de mim
 
-## 3. Comunidade (Feed & Posts)
+Responsabilidade: descoberta por proximidade de Empresas e transição para Mapa/detalhe Business.
 
-Status do dominio Feed: FROZEN. Documento oficial: `docs/feed/FEED-FREEZE.md`.
+Dependências declaradas:
+- `map`;
+- `business`.
 
-| Funcionalidade                              | Status | Onde aparece                                    | Como o usuário chega                                                |
-| ------------------------------------------- | ------ | ----------------------------------------------- | ------------------------------------------------------------------- |
-| Feed do bairro (timeline unificada)         | ✅     | `CommunityFeed`                                 | Home → resumo de Community → Community territorial                  |
-| Publicar post (composer + rascunho AES-GCM) | ✅     | `NovoPostPage` / `CreatePostModal`              | CTA contextual somente com `create_post` permitido                  |
-| Rascunho local offline criptografado        | ✅     | `core/community-feed/drafts/postDraft*`         | reabertura do composer no mesmo dispositivo                         |
-| Detalhe do post (modal)                     | ✅     | `PostDetailModal` + `postService.getPublicPostById()` | tap no card do feed · URL territorial com `?post=<id>`         |
-| Comentários (thread + composer humanizado)  | ✅     | `core/community-feed/components/comments`      | dentro do post                                                      |
-| Compartilhar post                           | ✅     | `core/posts/utils/postShare` + `postService.recordPostShare()` | ícone no card/detalhe; preserva rota Community quando presente |
-| Reações / social engagement                 | ✅     | inline no card                                  | tap direto                                                          |
-| Aba Comunicação territorial                 | ⏸     | `TerritorialCommunityCommunicationPage`         | pausada no MVP (`communication=false`)                             |
-| Alertas comunitários                        | ⏸     | `/alertas`                                      | pausado no MVP (`communityAlerts=false`)                           |
-| Problemas comunitários                      | ⏸     | `/problemas`                                    | pausado no MVP (`communityIssues=false`)                           |
-| Achados & perdidos                          | ⏸     | `/achados-perdidos`, `/achados-perdidos/novo`   | pausado no MVP (`communityLostFound=false`)                        |
-| Direct messages comunitário                 | ✅     | `/mensagens`, `/chat/:id`                       | header/notificações                                                 |
+Se qualquer dependência for pausada, Perto de mim deve falhar fechado automaticamente pelo registry.
 
----
+## Infraestrutura, não módulos
 
-## 4. Empresas (comércio local)
+Auth/Conta, território, roteamento, localização, sessão, segurança, storage e observabilidade continuam disponíveis quando necessários aos três módulos.
 
-| Funcionalidade                | Status | Onde aparece                | Como o usuário chega                                 |
-| ----------------------------- | ------ | --------------------------- | ---------------------------------------------------- |
-| Landing de empresas do bairro | ✅     | `EmpresasLandingPage`       | `/empresas` · Territory Home → "Passear pelo bairro" |
-| Detalhe de empresa            | ✅     | `EmpresaDetailLandingPage`  | tap no card de empresa                               |
-| Catálogo de produtos          | ✅     | `/empresas/:id/catalogo`    | dentro da página da empresa                          |
-| Cadastro de empresa           | ✅     | `/empresas/cadastrar`       | CTA "Cadastrar minha empresa"                        |
-| Dashboard de empresa          | ✅     | `DashboardEmpresaPage`      | área logada como owner                               |
-| Editar empresa                | ✅     | `/edit-business/:profileId` | dashboard da empresa                                 |
-| Cupons / promoções            | ⏸     | `/cupons`, `/promocoes`     | pausado no MVP (`coupons=false`)                    |
-| Favoritos de empresa          | ✅     | dentro do perfil            | Perfil → Favoritos                                   |
+A Busca pública está pausada (`search=false`). O mecanismo interno de consulta pode permanecer reutilizável sem constituir superfície pública.
 
----
+## Pós-MVP
 
-## 5. Classificados
+Os módulos abaixo permanecem preservados, mas não integram o release atual:
 
-| Funcionalidade              | Status | Onde aparece                        | Como chega      |
-| --------------------------- | ------ | ----------------------------------- | --------------- |
-| Feed de classificados       | ✅     | `/classificados`                    | menu principal  |
-| Novo classificado           | ✅     | `/classificados/novo`               | CTA no feed     |
-| Editar classificado         | ✅     | `/classificados/editar/:id`         | próprio anúncio |
-| Vendedor (perfil)           | ✅     | `/classificados/vendedor/:sellerId` | tap no autor    |
-| Mensageria de classificados | ✅     | inbox territorial                   | notificações    |
+- Comunidade;
+- Gastronomia;
+- Serviços profissionais;
+- Classificados;
+- Pontos Turísticos;
+- Educação;
+- Vagas/Oportunidades;
+- Eventos;
+- Comunicação/Mensagens;
+- Mobilidade;
+- Cupons;
+- Gamificação;
+- Analytics público;
+- Alertas/Issues/Achados e Perdidos;
+- Safety familiar;
+- Billing.
 
----
+Cada módulo volta individualmente: contrato -> dados reais -> autorização -> rotas -> navegação -> integração -> testes -> ativação no registry.
 
-## 6. Profissionais & Serviços
+## Regra contra redirects paliativos
 
-| Funcionalidade            | Status | Onde chega                             |
-| ------------------------- | ------ | -------------------------------------- |
-| Oportunidades de trabalho | ✅     | `/oportunidades`, `/oportunidades/:id` |
-| Área profissional         | ✅     | `/conta/profissional`                  |
-| Vagas / serviços (admin)  | ✅     | admin sub-rotas                        |
-
----
-
-## 7. Mobilidade
-
-| Funcionalidade              | Status | Rota                                                     |
-| --------------------------- | ------ | -------------------------------------------------------- |
-| Home mobilidade             | ⏸     | `/mobilidade` — `mobility=false`                                            |
-| Passageiro (buscar corrida) | ⏸     | `/mobilidade/passageiro`, `/mobilidade/buscando/:rideId` — `mobility=false` |
-| Motorista (turno)           | ⏸     | `/mobilidade/motorista`, `/mobilidade/motorista/perfil` — `mobility=false`  |
-| Motoboy                     | ⏸     | `/mobilidade/motoboy` — `mobility=false`                                    |
-| Histórico                   | ⏸     | `/mobilidade/historico` — `mobility=false`                                  |
-| Contatos de emergência      | ⏸     | `/mobilidade/contatos-emergencia` — `mobility=false`                        |
-
----
-
-## 8. Perfil & Conta
-
-| Funcionalidade                             | Status | Rota                                                                                            |
-| ------------------------------------------ | ------ | ----------------------------------------------------------------------------------------------- |
-| Conta privada multi-perfil                 | ✅     | `/conta`, `/conta/*`                                                                            |
-| Editar perfil (com `profileId`)            | ✅     | `/conta/editar`, `/conta/editar/:profileId`                                                     |
-| Configurações / privacidade / notificações | ✅     | `/conta/perfil/configuracoes`, `/conta/preferencias`, `/conta/enderecos`, `/conta/notificacoes` |
-| Aliases legados de perfil                  | ✅     | `/perfil/*` → `/conta/*`                                                                        |
-| DPO / LGPD                                 | ✅     | `/dpo`, `/privacidade`, `/termos`                                                               |
-| Segurança da conta                         | ✅     | `/conta/seguranca`                                                                              |
-
----
-
-## 9. Busca
-
-| Funcionalidade           | Status | Rota                                   |
-| ------------------------ | ------ | -------------------------------------- |
-| Busca federada no bairro | ✅     | `/buscar` (canônico), `/busca` (alias) |
-
----
-
-## 10. Notificações
-
-| Funcionalidade          | Status | Rota                              |
-| ----------------------- | ------ | --------------------------------- |
-| Central de notificações | ✅     | `/notificacoes`, `/notifications` |
-| Preferências            | ✅     | `NotificationPreferencesPage`     |
-
----
-
-## 11. Admin & Central operacional
-
-Todas em `/admin/*` e `/central/*` (RBAC obrigatório):
-
-- Coverage matrix · usuarios · roles · reivindicações · verificações · moderação · pedidos · promoções · planos · pontos-embarque · reports-passageiros · motoristas · motoboy-operacoes · realtime-dashboard · territory-management · territory-content · territorial-groups · SSOT · setup · analytics · **community-interest** (waitlist)
-
-Chegada: menu admin (visível só para roles apropriados).
-
----
-
-## 12. Institucional
-
-| Funcionalidade              | Status | Rota                  |
-| --------------------------- | ------ | --------------------- |
-| Sobre                       | ✅     | `/about`              |
-| Contato                     | ✅     | `/contato`            |
-| Status público              | ✅     | `/status`             |
-| Billing / preços (pós-MVP) | ⏸     | `/planos` — `billing=false`; `/pricing` não possui rota runtime |
-| Educação (landing)          | ⏸     | `/educacao` — `education=false` |
-| Gamificação                 | ⏸     | `/gamificacao` — `gamification=false` |
-| AI: Virtual try-on          | 🟡     | `/ai/virtual-try-on`  |
-| Launch paused (kill-switch) | ✅     | `LaunchPausedPage`    |
-
-> Billing permanece preservado como fundação pós-MVP, mas preço, checkout e gestão de assinatura não fazem parte do lançamento atual enquanto `PUBLIC_LAUNCH_SURFACES.billing=false`.
-
----
-
-## Rotas órfãs / duplicadas identificadas
-
-- **`/busca` × `/buscar`** — manter `/buscar` como canônico, `/busca` é alias legado.
-- **`/notificacoes` × `/notifications`** — manter `/notificacoes` (pt-BR).
-- **`/conta/*` × `/perfil/*`** — `/conta/*` é o namespace privado canônico; `/perfil/*` existe somente por compatibilidade.
-- **`/empresas` × `/empresas-landing`** — `/empresas` é canônico; o alias legado apenas redireciona.
-- **`/inicio` × `/`** — `/` resolve território; `/inicio` mantém o hub nacional legado. A Home canônica está em `/:uf/:cidade[/:territorio]`.
-
-## Funcionalidades sem entrada visível na UI
-
-- **`/ai/virtual-try-on`** — sem link em menu; acessível apenas via URL direta. **Ação:** decidir se promove no perfil da empresa ou remove.
-- **`/offline-settings`** — sem CTA principal; hoje só via link técnico. **Ação:** mover para dentro de "Preferências".
-- **`/gamificacao`** — sem entrada estável. **Ação:** confirmar se roadmap pretende expor ou arquivar.
-
-Toda funcionalidade acima com "sem entrada" é **débito de navegação** e deve ser resolvida antes do go-live.
+Redirect não é mecanismo de lifecycle. Rota antiga sem justificativa funcional deve ser removida ou isolada. Redirect só permanece quando existe uma compatibilidade deliberada e documentada que não mascara owner quebrado, entidade inválida ou módulo pausado.
