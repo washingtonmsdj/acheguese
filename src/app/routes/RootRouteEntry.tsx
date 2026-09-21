@@ -1,9 +1,10 @@
 /**
  * RootRouteEntry
  *
- * Entrada pública do MVP. Enquanto o lançamento possui uma única comunidade
- * principal, `/` sempre apresenta a entrada community-first em vez de pular
- * silenciosamente para um território salvo ou do perfil.
+ * Entrada pública do MVP.
+ *
+ * A raiz apresenta o território inicial e os três módulos ativos do produto:
+ * Empresas, Mapa e Perto de mim. Não encaminha para módulos pausados.
  */
 import { lazy, Suspense } from "react";
 import { PRELAUNCH_LOCKDOWN_ENABLED } from "@/app/config/launchScope";
