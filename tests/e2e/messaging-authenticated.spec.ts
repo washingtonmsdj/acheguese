@@ -14,7 +14,7 @@ test.describe("Mensagens autenticadas — provider Business", () => {
     "E2E autenticado exige E2E_USER_EMAIL/E2E_USER_PASSWORD.",
   );
 
-  test("abre a Inbox e consulta o provider Business sem escrever em produção", async ({
+  test("abre a Inbox e consulta o provider Business sem criar mensagens", async ({
     page,
   }) => {
     const credentials = requireE2EUserCredentials();
@@ -45,6 +45,20 @@ test.describe("Mensagens autenticadas — provider Business", () => {
       credentials.email,
       credentials.password,
     );
+
+    await page.waitForURL(
+      (url) =>
+        url.pathname === "/mensagens" || url.pathname === "/aceitar-termos",
+      { timeout: 30_000 },
+    );
+
+    if (new URL(page.url()).pathname === "/aceitar-termos") {
+      await expect(
+        page.getByText(/Li e aceito os Termos de Uso/i),
+      ).toBeVisible({ timeout: 30_000 });
+      await page.locator("#terms-acceptance").click();
+      await page.getByRole("button", { name: "Aceitar e continuar" }).click();
+    }
 
     await expect(page).toHaveURL(/\/mensagens(?:\?|$)/, {
       timeout: 30_000,
