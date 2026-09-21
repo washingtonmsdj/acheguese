@@ -637,12 +637,12 @@ export function AppLayoutRoutes() {
           )}
         />
         <Route
-          path="/chat/:conversationId"
+          path="/mensagens/:providerId/:threadId"
           element={protectedElement(
             launchElement(
               "messaging",
               "Mensagens",
-              <P.ChatPage />,
+              <P.MensagensPage />,
             ),
           )}
         />
