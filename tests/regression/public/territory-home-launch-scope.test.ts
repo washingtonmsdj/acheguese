@@ -1,10 +1,12 @@
 import { describe, expect, it } from "vitest";
 import * as fs from "node:fs";
 import * as path from "node:path";
+import { PRODUCT_MODULE_REGISTRY } from "../../../src/app/config/productModuleRegistry";
+import { PLATFORM_CAPABILITY_REGISTRY } from "../../../src/app/config/platformCapabilityRegistry";
 import {
+  getActivePlatformCapabilities,
   getActiveProductModules,
-  PRODUCT_MODULE_REGISTRY,
-} from "../../../src/app/config/productModuleRegistry";
+} from "../../../src/app/config/lifecycleRegistry";
 import { isLaunchSurfaceEnabled } from "../../../src/app/config/launchScope";
 
 function read(filePath: string): string {
@@ -12,14 +14,17 @@ function read(filePath: string): string {
 }
 
 describe("Territory Home launch-scope regression", () => {
-  it("keeps exactly the four MVP modules active", () => {
-    expect(getActiveProductModules().sort()).toEqual(
-      ["business", "map", "nearby", "search"].sort(),
+  it("keeps Business active with horizontal Map/Nearby/Search capabilities", () => {
+    expect(getActiveProductModules()).toEqual(["business"]);
+    expect(getActivePlatformCapabilities()).toEqual(
+      expect.arrayContaining(["map", "nearby", "search"]),
     );
-    expect(PRODUCT_MODULE_REGISTRY.nearby.dependsOn).toEqual([
-      "map",
-      "business",
-    ]);
+    expect(PRODUCT_MODULE_REGISTRY.business.status).toBe("active");
+    expect(PLATFORM_CAPABILITY_REGISTRY.nearby).toEqual({
+      status: "active",
+      dependsOnCapabilities: ["map", "location"],
+      dependsOnProductModules: ["business"],
+    });
 
     expect(isLaunchSurfaceEnabled("business")).toBe(true);
     expect(isLaunchSurfaceEnabled("map")).toBe(true);
