@@ -91,7 +91,9 @@ describe("MVP core module boundary", () => {
 
   it("keeps Nearby as a Business proximity adapter instead of a second discovery platform", () => {
     expect(nearby).toContain("useNearbyBusinesses");
-    expect(nearby).toContain("moduleUrls.business");
+    expect(nearby).toContain("buildLocationModuleUrl");
+    expect(nearby).toContain("MODULE_SLUGS.business");
+    expect(nearby).not.toContain("useFriendlyModuleUrls");
 
     for (const forbidden of [
       "NearbyClassifiedsSection",
