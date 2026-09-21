@@ -4,7 +4,7 @@
 >
 > Lifecycle canônico: `src/app/config/productModuleRegistry.ts`. Compatibilidade de superfície: `src/app/config/launchScope.ts`.
 >
-> Flags efetivas do corte: `map=true`, `nearby=true`, `business=true`, `search=true`, `billing=false`, `gastronomy=false`, `services=false`, `touristPoints=false`, `education=false`, `jobs=false`, `events=false`, `communityEventsPreview=false`, `communication=false`, `messaging=false`, `mobility=false`, `coupons=false`, `gamification=false`, `communityCommunication=false`.
+> Flags efetivas do corte: `map=true`, `nearby=true`, `business=true`, `search=true`, `billing=false`, `gastronomy=false`, `services=false`, `touristPoints=false`, `education=false`, `jobs=false`, `events=false`, `communityEventsPreview=false`, `communication=false`, `messaging=true`, `mobility=false`, `coupons=false`, `gamification=false`, `communityCommunication=false`.
 
 ## Produto público ativo
 
