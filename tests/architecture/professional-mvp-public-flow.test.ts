@@ -34,8 +34,11 @@ describe("MVP Professional public flow", () => {
     expect(landing).toContain("appUrls.services.detail({");
     expect(landing).toContain("slug: pro.slug");
     expect(serviceUrls).toContain(
-      "ProfessionalUrlService.getCanonicalUrlFromTarget(target) ?? listUrl",
+      "ProfessionalUrlService.getCanonicalUrlFromTarget(target)",
     );
+    expect(serviceUrls).not.toContain("?? listUrl");
+    expect(serviceUrls).not.toContain('typeof target === "string"');
+    expect(landing).toContain("if (!detailUrl) return;");
     expect(queries).toContain(
       '.from<ProfessionalQueryRow>("public_professional_search")',
     );
@@ -49,7 +52,9 @@ describe("MVP Professional public flow", () => {
     expect(probe).toContain("ROLLBACK;");
     expect(probe).toContain("SET LOCAL ROLE anon;");
     expect(probe).toContain("professional_public_slug_constraint_not_enforced");
-    expect(probe).toContain("professional_public_probe_expected_one_row");
+    expect(probe).not.toMatch(/[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f-]{27,}/i);
+    expect(probe).not.toContain("antonio");
+    expect(probe).not.toContain("joao");
     expect(probe).toContain("private_professional_visible_to_anon");
     expect(probe).toContain(
       "private_professional_visible_in_public_read_model",
