@@ -116,11 +116,13 @@ export function isLaunchSurfaceEnabled(surface: LaunchSurfaceKey): boolean {
 }
 
 export function isLaunchClassifiedCategoryEnabled(categoryId: string): boolean {
+  if (!isLaunchSurfaceEnabled("classifieds")) return false;
   const surface = CLASSIFIED_CATEGORY_SURFACES[categoryId];
   return surface ? isLaunchSurfaceEnabled(surface) : true;
 }
 
 export function isLaunchBusinessCategoryEnabled(categoryId: string): boolean {
+  if (!isLaunchSurfaceEnabled("business")) return false;
   const surface = BUSINESS_CATEGORY_SURFACES[categoryId];
   return surface ? isLaunchSurfaceEnabled(surface) : true;
 }
@@ -132,6 +134,7 @@ export function getLaunchPausedBusinessCategoryIds(): string[] {
 }
 
 export function isLaunchCommunityFeedChannelEnabled(channelId: string): boolean {
+  if (!isLaunchSurfaceEnabled("community")) return false;
   const surface = COMMUNITY_FEED_CHANNEL_SURFACES[channelId];
   return surface ? isLaunchSurfaceEnabled(surface) : true;
 }
@@ -142,6 +145,8 @@ export function isLaunchCommunityPostEnabled(post: {
   type?: string | null;
   distribution_channels?: readonly string[] | null;
 }): boolean {
+  if (!isLaunchSurfaceEnabled("community")) return false;
+
   const intentSurface = post.content_intent
     ? COMMUNITY_POST_INTENT_SURFACES[post.content_intent]
     : undefined;
