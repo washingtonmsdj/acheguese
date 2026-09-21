@@ -35,6 +35,18 @@ describe("public paused monetization boundary", () => {
     "src/modules/business/dashboard/pages/BusinessPremiumSitePage.tsx",
     "utf8",
   );
+  const premiumPublicResolver = readFileSync(
+    "src/core/business/services/PremiumBusinessSiteResolver.ts",
+    "utf8",
+  );
+  const premiumPublicRoute = readFileSync(
+    "src/modules/business/premium/pages/PremiumBusinessSiteRoute.tsx",
+    "utf8",
+  );
+  const appRoutes = readFileSync(
+    "src/app/routes/AppRoutes.tsx",
+    "utf8",
+  );
   const gastronomyDashboard = readFileSync(
     "src/modules/business/gastronomy/pages/GastronomyDashboardPage.tsx",
     "utf8",
@@ -190,6 +202,16 @@ describe("public paused monetization boundary", () => {
     expect(gastronomyDashboard).toContain(
       "QR Code personalizado não está habilitado para esta empresa no lançamento atual.",
     );
+  });
+
+  it("keeps /p public sites limited to businesses with a pre-granted premium flag", () => {
+    expect(appRoutes).toContain('path="/p/:slug/*"');
+    expect(premiumPublicRoute).toContain("PremiumBusinessSiteResolver.resolve");
+    expect(premiumPublicResolver).toContain("if (!context?.is_premium)");
+    expect(premiumPublicResolver).toContain("return null");
+    expect(premiumPublicResolver).not.toContain("createCheckout");
+    expect(premiumPublicResolver).not.toContain("upgrade");
+    expect(premiumPublicResolver).not.toContain("subscription");
   });
 
   it("turns paused gastronomy upsells into factual entitlement states", () => {
