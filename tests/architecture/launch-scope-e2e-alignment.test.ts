@@ -32,6 +32,7 @@ describe("MVP launch-scope alignment", () => {
       "touristPoints",
       "jobs",
       "events",
+      "messaging",
       "communityCommunication",
     ]) {
       expect(productRegistry).toContain(`${moduleKey}: { status: "paused"`);
@@ -78,6 +79,7 @@ describe("MVP launch-scope alignment", () => {
       "events=false",
       "communityEventsPreview=false",
       "communication=false",
+      "messaging=false",
       "mobility=false",
       "coupons=false",
       "gamification=false",
