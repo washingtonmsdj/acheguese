@@ -1,9 +1,9 @@
 /**
  * BottomNav
  *
- * Navegacao primaria mobile territorial. Modulos especificos permanecem na
- * Home e em Explorar; a barra reserva espaco para orientacao, participacao,
- * atividade e identidade.
+ * Navegação primária mobile do MVP.
+ * Exibe Início, Mapa, Empresas e Perto de mim; Conta/Entrar é infraestrutura
+ * de identidade e não constitui um módulo adicional de produto.
  */
 
 import { useSyncExternalStore } from "react";
