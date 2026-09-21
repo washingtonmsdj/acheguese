@@ -2,7 +2,6 @@ import { useQuery } from "@tanstack/react-query";
 import { useNavigate } from "react-router-dom";
 import { ProfessionalService } from "@/core/professional/services/ProfessionalService";
 import { ProfessionalUrlService } from "@/core/professional/services/ProfessionalUrlService";
-import { professionalPublicRoutes } from "@/core/professional/routes/professionalPublicRoutes";
 import type { Professional } from "@/core/professional/types";
 import { Card, CardContent } from "@/shared/components/ui/card";
 import { Button } from "@/shared/components/ui/button";
@@ -15,8 +14,8 @@ interface UserServicesSectionProps {
   onEdit: (id: string) => void;
 }
 
-function resolveServicePublicUrl(service: Professional): string {
-  return ProfessionalUrlService.getCanonicalUrlFromTarget(service) ?? professionalPublicRoutes.home();
+function resolveServicePublicUrl(service: Professional): string | null {
+  return ProfessionalUrlService.getCanonicalUrlFromTarget(service);
 }
 
 export function UserServicesSection({
@@ -85,18 +84,26 @@ export function UserServicesSection({
             Clique em uma profissão para abrir o perfil estruturado e conectado ao módulo de serviços.
           </p>
           <div className="mt-3 flex flex-wrap gap-2">
-            {services.map((service) => (
-              <button
-                key={`service-chip-${service.professional_data_id || service.id}`}
-                type="button"
-                className="rounded-full border border-border bg-background px-3 py-1 text-xs hover:border-primary/50"
-                onClick={() => {
-                  navigate(resolveServicePublicUrl(service));
-                }}
-              >
-                {service.category || "serviço"}
-              </button>
-            ))}
+            {services.map((service) => {
+              const publicUrl = resolveServicePublicUrl(service);
+              return publicUrl ? (
+                <button
+                  key={`service-chip-${service.professional_data_id || service.id}`}
+                  type="button"
+                  className="rounded-full border border-border bg-background px-3 py-1 text-xs hover:border-primary/50"
+                  onClick={() => navigate(publicUrl)}
+                >
+                  {service.category || "serviço"}
+                </button>
+              ) : (
+                <span
+                  key={`service-chip-${service.professional_data_id || service.id}`}
+                  className="rounded-full border border-border bg-muted px-3 py-1 text-xs text-muted-foreground"
+                >
+                  {service.category || "serviço"}
+                </span>
+              );
+            })}
           </div>
         </CardContent>
       </Card>
@@ -113,7 +120,9 @@ export function UserServicesSection({
       </Card>
 
       <div className="grid gap-4">
-        {services.map((service) => (
+        {services.map((service) => {
+          const publicUrl = resolveServicePublicUrl(service);
+          return (
           <Card key={service.professional_data_id || service.id} className="hover:shadow-md transition-shadow">
             <CardContent className="p-6">
               <div className="flex items-start justify-between gap-4">
@@ -163,17 +172,17 @@ export function UserServicesSection({
                 </div>
 
                 <div className="flex flex-col gap-2">
-                  <Button
-                    size="sm"
-                    variant="ghost"
-                    onClick={() => {
-                      navigate(resolveServicePublicUrl(service));
-                    }}
-                    className="gap-2"
-                  >
-                    <Eye className="h-4 w-4" />
-                    Ver perfil
-                  </Button>
+                  {publicUrl && (
+                    <Button
+                      size="sm"
+                      variant="ghost"
+                      onClick={() => navigate(publicUrl)}
+                      className="gap-2"
+                    >
+                      <Eye className="h-4 w-4" />
+                      Ver perfil
+                    </Button>
+                  )}
                   <Button
                     size="sm"
                     variant="outline"
@@ -187,7 +196,8 @@ export function UserServicesSection({
               </div>
             </CardContent>
           </Card>
-        ))}
+          );
+        })}
       </div>
 
     </div>
