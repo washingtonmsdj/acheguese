@@ -29,7 +29,7 @@ test.describe('public launch scope', () => {
 
   test('Search remains active without reactivating paused domains', async ({ page }) => {
     await page.goto('/busca');
-    await expect(page.getByRole('heading', { name: 'Explorar' })).toBeVisible();
+    await expect(page.getByRole('heading', { name: 'Busca' })).toBeVisible();
     await expect(page.getByText('Serviços', { exact: true })).toHaveCount(0);
     await expect(page.getByText('Classificados', { exact: true })).toHaveCount(0);
     await expect(page.getByText('Eventos', { exact: true })).toHaveCount(0);
