@@ -14,13 +14,17 @@ Este corte substitui, para fins de **prioridade de lançamento**, a ordem histó
 
 ### Escopo público do candidato
 
-A fonte executável continua sendo `src/app/config/launchScope.ts`. No baseline auditado, permanecem públicas: Home, Comunidade, Empresas, Gastronomia, Serviços, Classificados, Pontos Turísticos, Mapa, Perto de Mim, Busca, Vagas, Eventos, preview de eventos comunitários e comunicação comunitária já integrada ao fluxo de Comunidade.
+A fonte executável continua sendo `src/app/config/launchScope.ts`. A decisão de release de **2026-09-21** reduz o primeiro MVP a três domínios públicos de produto:
 
-Para reduzir risco sem amputar capacidade válida:
+- **Comunidade básica** — feed, grupos/discussões e experiência territorial essencial;
+- **Empresas** — descoberta e detalhe institucional de empresa, sem promover verticalizações pausadas;
+- **Classificados** — listagem, detalhe e CRUD geral; a categoria `vagas` permanece oculta porque depende de `jobs=false`.
 
-- **núcleo obrigatório do MVP:** autenticação/conta, Home territorial com dados reais/empty states, Comunidade básica, Empresas/Gastronomia/Serviços, Classificados, Busca, Mapa/Perto de Mim e Pontos Turísticos;
-- **superfícies condicionais:** Vagas e Eventos só entram no release se concluírem a mesma certificação do núcleo; se não concluírem, devem ser pausadas pelo owner `launchScope.ts` antes do release, sem remover código;
-- **fora do primeiro release:** Educação, Comunicação global, Mobilidade, Cupons, Gamificação, Analytics público, Alertas, Problemas/Issues, Achados e Perdidos, Safety familiar e demais superfícies que já estão `false` no launch scope. Essas capacidades não bloqueiam o MVP enquanto permanecerem realmente inacessíveis na superfície pública.
+**Home, Conta/Auth, Território e Busca** permanecem como infraestrutura transversal do candidato, não como módulos adicionais de produto. A Busca deve consultar somente domínios habilitados pelo launch scope.
+
+Ficam explicitamente **pós-MVP**, com código preservado e superfície pública isolada: Gastronomia, Serviços profissionais, Pontos Turísticos, Mapa, Perto de Mim, Educação, Vagas/Oportunidades, Eventos, preview de eventos comunitários, Mensagens/DM comunitária, Comunicação global, Mobilidade, Cupons, Gamificação, Analytics público, Alertas, Issues, Achados e Perdidos e Safety familiar.
+
+Reviews não constitui um módulo público independente neste corte: os writers/experiências de avaliação atualmente pertencem principalmente a Gastronomia, Serviços e Eventos. Com esses owners pausados, Reviews fica naturalmente pós-MVP sem introduzir uma flag artificial adicional.
 
 O primeiro release continua territorial. **Cobertura uniforme dos 170 bairros de Salvador não é critério do MVP**; expansão municipal, ETL de todos os boundaries e rollout bairro a bairro ficam para depois da estabilização do território inicial.
 
@@ -31,7 +35,7 @@ O primeiro release continua territorial. **Cobertura uniforme dos 170 bairros de
 3. **Completar proteção da `main`.** Force-push/deleção já estão bloqueados e o publisher canônico de tipos Supabase **já não escreve diretamente na `main`**: ele usa `automation/supabase-types-sync`, abre/atualiza PR e dispara os gates canônicos. O blocker restante é administrativo: exigir PR + checks que realmente executem e impedir bypass fora da release authority aprovada.
 4. **Preservar a prova de ledger/runtime no SHA candidato.** A auditoria de identidade já está em zero divergências; `validate:migrations`, `validate:migrations:provenance` e `validate:migrations:remote` ainda precisam executar de verdade no runner do candidato. Tipos gerados foram regenerados do runtime após os últimos DDLs.
 5. **Manter LGPD destrutivo fail-closed.** Delete/purge não pode ser habilitado enquanto `LGPD_PURGE_POLICY` não estiver pronto. Exportação também permanece desabilitada até certificação. O MVP pode lançar com essas capacidades indisponíveis, desde que a UI não prometa sucesso e nenhum caminho stale permaneça acessível.
-6. **Fechar segurança do que será exposto.** Priorizar Auth/conta, Profile, território, Comunidade, Business/Gastronomy/Services, Classificados, Busca/Mapa e superfícies administrativas necessárias. Hardening de módulos pausados pode continuar durante/depois do MVP, exceto quando compartilha uma boundary usada pelo núcleo.
+6. **Fechar segurança do que será exposto.** Priorizar Auth/Conta, Profile, território, Comunidade, Business institucional, Classificados, Busca e superfícies administrativas estritamente necessárias. Gastronomia, Serviços, Mapa e demais módulos pausados não bloqueiam o MVP, exceto quando compartilham uma boundary usada pelo núcleo.
 7. **Certificar o fluxo real das superfícies públicas.** Para cada item do escopo: rota/owner canônico, contrato DB/RPC, autorização positiva e negativa, loading/empty/error/auth, fluxo principal com dados reais, smoke mobile e E2E sem placeholder/paused contado como sucesso.
 8. **Provar deploy do mesmo SHA.** O SHA aprovado deve produzir build real no provider e smoke no domínio público, incluindo login/cadastro, troca/resolução territorial, Home, navegação do núcleo, mutações principais e logout.
 9. **Configuração legal/operacional mínima.** O verifier de deploy já exige origem pública HTTPS, contato e DPO válidos e foro configurado; políticas/textos falham fechado quando identidade pública não existe. O blocker restante é o provider fornecer valores válidos no build exact-SHA.
@@ -40,10 +44,11 @@ O primeiro release continua territorial. **Cobertura uniforme dos 170 bairros de
 ### Correções de gate identificadas neste corte
 
 - [x] `tools/release/verify-deploy-ready.mjs` já reconhece o `buildCommand` canônico `node tools/release/run-vercel-production-build.mjs`, alinhado a `vercel.json`. Não manter este item como blocker.
-- [x] `tests/e2e/launch-scope-public.spec.ts` foi realinhado ao owner `launchScope.ts`: Eventos e Vagas já não eram tratados como pausados e `/mensagens` deixou de ser classificado incorretamente como `LaunchPausedPage` quando `communityCommunication: true`. O ratchet `tests/architecture/launch-scope-e2e-alignment.test.ts` protege esse contrato.
+- [x] `tests/e2e/launch-scope-public.spec.ts` e `tests/architecture/launch-scope-e2e-alignment.test.ts` foram realinhados ao corte enxuto de 2026-09-21: Gastronomia, Serviços, Turismo, Mapa/Perto de Mim, Vagas, Eventos e Mensagens são superfícies pós-MVP e devem render isolamento de lançamento.
 
 ### Progresso consolidado do corte público — 2026-09-19
 
+- [x] Corte MVP enxuto de 2026-09-21: somente Comunidade básica, Empresas e Classificados permanecem como domínios públicos; Home/Conta/Território/Busca são infraestrutura. Gastronomia, Serviços, Turismo, Mapa/Perto de Mim, Vagas, Eventos e Mensagens foram pausados sem remoção de código; Busca/Home deixaram de consultar owners pausados e aliases diretos foram colocados atrás do launch gate.
 - [x] Home, Busca e perfil profissional público deixaram de aceitar dados `concept-mock` no runtime.
 - [x] Pontos Turísticos deixou de exibir proximidade simulada.
 - [x] Eventos pagos falham fechado enquanto não há checkout habilitado; inscrições gratuitas continuam no fluxo real.
