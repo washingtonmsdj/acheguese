@@ -120,7 +120,7 @@ describe('Integração - Módulo de Mobilidade', () => {
 
   describe('Rotas', () => {
     it('deve ter rotas de admin registradas', async () => {
-      const module = await import('@/app/routes/lazyImports');
+      const module = await import('@/app/routes/adminLazyImports');
       
       expect(module.AdminMotoboyOperations).toBeDefined();
       expect(module.AdminReportsPassageiros).toBeDefined();

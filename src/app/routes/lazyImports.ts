@@ -435,13 +435,6 @@ export const TouristPointRouteResolver = lazy(() =>
     default: m.TouristPointRouteResolver,
   })),
 );
-export const AdminGuideTouristPointsPage = lazy(
-  () => import("@/modules/guide/pages/AdminTouristPointsPage"),
-);
-export const AdminGuideTouristPointFormPage = lazy(
-  () => import("@/modules/guide/pages/AdminTouristPointFormPage"),
-);
-
 // ============================================================
 // CUPONS E PROMOCOES
 // ============================================================
@@ -489,54 +482,3 @@ export const PrivacySettingsPage = lazy(
 );
 export const DPOContactPage = lazy(() => import("@/app/pages/DPOContactPage"));
 
-export const LocationsAdminPage = createLaunchPausedRoute("Admin");
-
-// ============================================================
-// ADMIN DASHBOARD E MODULOS
-// ============================================================
-
-// ============================================================
-// ADMIN LAYOUT E PAGINAS
-// ============================================================
-export const AdminLayout = createLaunchPausedRoute("Admin");
-export const AdminDashboard = createLaunchPausedRoute("Admin");
-export const AdminBanners = createLaunchPausedRoute("Admin");
-export const AdminEmpresas = createLaunchPausedRoute("Admin");
-export const AdminGastronomia = createLaunchPausedRoute("Admin");
-export const AdminServicos = createLaunchPausedRoute("Admin");
-export const AdminClassificados = createLaunchPausedRoute("Admin");
-export const AdminClassificadosDenuncias = createLaunchPausedRoute("Admin");
-export const AdminVagas = createLaunchPausedRoute("Admin");
-export const AdminEventos = createLaunchPausedRoute("Admin");
-export const AdminUsuarios = createLaunchPausedRoute("Admin");
-export const AdminMotoristas = createLaunchPausedRoute("Admin");
-export const AdminReportsPassageiros = createLaunchPausedRoute("Admin");
-export const AdminPontosEmbarque = createLaunchPausedRoute("Admin");
-export const AdminVerificacoes = createLaunchPausedRoute("Admin");
-export const AdminAnalyticsMobilidade = createLaunchPausedRoute("Admin");
-export const AdminRealtimeDashboard = createLaunchPausedRoute("Admin");
-// AdminModeracao: consumido via src/app/routes/adminLazyImports.ts (rota ativa em AdminRoutes.tsx). Nao redeclarar aqui.
-export const AdminAnalytics = createLaunchPausedRoute("Admin");
-export const AdminCupons = createLaunchPausedRoute("Admin");
-export const AdminPromocoes = createLaunchPausedRoute("Admin");
-export const AdminAssinaturas = createLaunchPausedRoute("Admin");
-export const AdminRoles = createLaunchPausedRoute("Admin");
-export const AdminPricing = createLaunchPausedRoute("Admin");
-export const AdminBranding = createLaunchPausedRoute("Admin");
-export const AdminMensagens = createLaunchPausedRoute("Admin");
-export const AdminNotifications = createLaunchPausedRoute("Admin");
-export const AdminCommunityAlerts = createLaunchPausedRoute("Admin");
-export const AdminCommunityIssues = createLaunchPausedRoute("Admin");
-export const AdminComunicacao = createLaunchPausedRoute("Admin");
-export const AdminIdentidade = createLaunchPausedRoute("Admin");
-export const AdminMapa = createLaunchPausedRoute("Admin");
-export const AdminConfiguracoes = createLaunchPausedRoute("Admin");
-export const AdminOperacoes = createLaunchPausedRoute("Admin");
-export const AdminMotoboyOperations = createLaunchPausedRoute("Admin");
-export const AdminReivindicacoes = createLaunchPausedRoute("Admin");
-export const AdminSSOT = createLaunchPausedRoute("Admin");
-export const AdminHighlights = createLaunchPausedRoute("Admin");
-export const AdminTerritoryContent = createLaunchPausedRoute("Admin");
-export const AdminTerritorialGroups = createLaunchPausedRoute("Admin");
-export const AdminCityMetadata = createLaunchPausedRoute("Admin");
-export const AdminTerritoryManagement = createLaunchPausedRoute("Admin");
