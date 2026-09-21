@@ -18,7 +18,7 @@
 
 ## D-004 — Nomenclatura canônica de telas
 
-`TerritoryEntryPage · TerritoryHomePage · BuscaPage · TerritoryFeedPage · PostPage · CommunityInterestPage`. O alias `TerritoryExplorerPage` foi aposentado em 2026-09-09; descoberta ampla pertence a Busca/Mapa, não a uma segunda Home. `LaunchPausedPage` é uma superfície app-level de kill-switch, não uma tela territorial. **Ref.:** `06-navigation/NAVIGATION-MAPPING.md`.
+`TerritoryEntryPage · TerritoryHomePage · BuscaPage · ComunidadePage · PostPage · CommunityInterestPage`. “Territory Feed” permanece o conceito de produto; o owner técnico é `ComunidadePage` em `core/community-feed`, sem um segundo arquivo de página. O alias `TerritoryExplorerPage` foi aposentado em 2026-09-09; descoberta ampla pertence a Busca/Mapa, não a uma segunda Home. `LaunchPausedPage` é uma superfície app-level de kill-switch, não uma tela territorial. **Ref.:** `06-navigation/NAVIGATION-MAPPING.md`.
 
 ## D-005 — Vozes editoriais unificadas (Home = Feed = Post)
 
