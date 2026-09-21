@@ -45,6 +45,7 @@ type LandingDbClient = {
 };
 
 const landingDb = supabase as unknown as LandingDbClient;
+const BUSINESS_LINK_CANDIDATE_MULTIPLIER = 6;
 const GASTRONOMY_LINK_CANDIDATE_MULTIPLIER = 6;
 
 function applyLaunchBusinessCategoryExclusion<TRow>(
@@ -389,7 +390,11 @@ export class LandingFeaturedService {
     fallbackFilter: TerritoryFilter,
     limit = 4,
   ): Promise<FeaturedBusiness[]> {
-    const linkedIds = await getLinkedEntityIds(communityId, "business", limit);
+    const linkedIds = await getLinkedEntityIds(
+      communityId,
+      "business",
+      Math.max(limit * BUSINESS_LINK_CANDIDATE_MULTIPLIER, limit),
+    );
     if (!linkedIds) {
       return this.getFeaturedBusinesses(fallbackFilter, limit);
     }
@@ -419,6 +424,7 @@ export class LandingFeaturedService {
         (data ?? []) as FeaturedBusinessRow[],
       )
         .filter((row) => !hasTestProfileIdentity(row.owner_profile))
+        .slice(0, limit)
         .map(mapFeaturedBusinessRow);
     } catch (err) {
       logger.warn(
