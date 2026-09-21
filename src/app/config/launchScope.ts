@@ -1,4 +1,7 @@
-import { isProductModuleEnabled } from "./productModuleRegistry";
+import {
+  isPlatformCapabilityEnabled,
+  isProductModuleEnabled,
+} from "./lifecycleRegistry";
 
 type PublicEnv = Partial<Record<string, string>>;
 
@@ -44,10 +47,10 @@ export const PUBLIC_LAUNCH_SURFACES: Record<LaunchSurfaceKey, boolean> = {
   services: isProductModuleEnabled("services"),
   classifieds: isProductModuleEnabled("classifieds"),
   touristPoints: isProductModuleEnabled("touristPoints"),
-  map: isProductModuleEnabled("map"),
-  nearby: isProductModuleEnabled("nearby"),
-  search: isProductModuleEnabled("search"),
-  messaging: isProductModuleEnabled("messaging"),
+  map: isPlatformCapabilityEnabled("map"),
+  nearby: isPlatformCapabilityEnabled("nearby"),
+  search: isPlatformCapabilityEnabled("search"),
+  messaging: isPlatformCapabilityEnabled("messaging"),
   education: isProductModuleEnabled("education"),
   jobs: isProductModuleEnabled("jobs"),
   events: isProductModuleEnabled("events"),
