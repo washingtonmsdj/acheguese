@@ -48,12 +48,12 @@ Alguns caminhos antigos ainda existem fora das pastas numeradas por compatibilid
 
 ### Produto
 
-- [Project milestone / status oficial](./architecture/PROJECT-MILESTONE-1.md)
-- [Project score / saúde](./01-product/PROJECT-SCORE.md)
-- [Feature map](./FEATURE-MAP.md)
-- [Screen map](./SCREEN-MAP.md)
+- [Marco zero do MVP — 2026-09-21](./08-roadmap/checkpoints/2026-09-21-milestone-zero.md) — marco atual de escopo/branch;
+- [Execução main-only e prontidão MVP](./08-roadmap/EXECUCAO_MAIN_ONLY.md) — status operacional e gates de release;
+- [Feature map](./FEATURE-MAP.md) — funcionalidades públicas ativas/pausadas;
+- [Screen map](./SCREEN-MAP.md) — rotas e superfícies vigentes.
 
-`01-product/STATUS.md` está marcado como **SUBSTITUÍDO** e permanece apenas por histórico/compatibilidade; não é autoridade de status.
+`architecture/PROJECT-MILESTONE-1.md` registra um marco arquitetural histórico de julho e não representa o status atual. `01-product/STATUS.md` está **SUBSTITUÍDO**. O antigo `PROJECT-SCORE.md` foi arquivado em `10-archive/product/`.
 
 ### Domínio
 
