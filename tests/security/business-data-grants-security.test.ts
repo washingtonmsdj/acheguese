@@ -78,12 +78,16 @@ describe("business_data grants security", () => {
 
     expect(schemas).not.toContain("is_verified: z.boolean().optional()");
     expect(schemas).not.toContain("is_premium: z.boolean().optional()");
-    expect(inputTypes).not.toMatch(
-      /export interface BusinessInput[\s\S]*?is_verified\?: boolean;/,
+    const businessInputStart = inputTypes.indexOf("export interface BusinessInput {");
+    const businessInputEnd = inputTypes.indexOf(
+      "export type CreateBusinessInput",
+      businessInputStart,
     );
-    expect(inputTypes).not.toMatch(
-      /export interface BusinessInput[\s\S]*?is_premium\?: boolean;/,
-    );
+    const businessInput = inputTypes.slice(businessInputStart, businessInputEnd);
+    expect(businessInputStart).toBeGreaterThanOrEqual(0);
+    expect(businessInputEnd).toBeGreaterThan(businessInputStart);
+    expect(businessInput).not.toContain("is_verified");
+    expect(businessInput).not.toContain("is_premium");
     expect(mapper).not.toContain(
       'setIfDefined(result, "is_verified", input.is_verified)',
     );
@@ -226,7 +230,7 @@ describe("business_data grants security", () => {
     );
     const edge = readProjectFile("supabase/functions/profile-rpc/index.ts");
     const migration = readProjectFile(
-      "supabase/migrations/20260909234000_broker_owned_business_lifecycle_g36.sql",
+      "supabase/migrations/20260909232757_broker_owned_business_lifecycle_g36.sql",
     );
 
     expect(mutation).toContain("ProfileRpcService.createBusiness");
