@@ -88,10 +88,10 @@ export class MapEntityProjectionService {
     }
 
     // Adicionar URL se disponível
-    if (entity.slug && options.baseUrl) {
-      marker.url = `${options.baseUrl}/${entity.slug}`;
-    } else if (entity.url) {
+    if (entity.url) {
       marker.url = entity.url as string;
+    } else if (entity.slug && options.baseUrl) {
+      marker.url = `${options.baseUrl}/${entity.slug}`;
     }
 
     // Adicionar premium flag
