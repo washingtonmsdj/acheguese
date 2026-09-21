@@ -254,11 +254,6 @@ const DIRECT_PAUSED_ROUTES: DirectPausedRoute[] = [
     surface: "messaging",
     moduleName: "Mensagens",
   },
-  {
-    path: "/chat/:conversationId",
-    surface: "messaging",
-    moduleName: "Mensagens",
-  },
   ...buildCommunityPausedRoutes([APP_MODULE_SLUGS.events], "events", "Eventos"),
   ...buildCommunityPausedRoutes([APP_MODULE_SLUGS.jobs], "jobs", "Vagas"),
   ...buildCommunityPausedRoutes(
