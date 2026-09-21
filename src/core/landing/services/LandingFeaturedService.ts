@@ -360,11 +360,11 @@ export class LandingFeaturedService {
         .not("location_id", "is", null)
         .order("is_premium", { ascending: false })
         .order("rating", { ascending: false })
-        .order("created_at", { ascending: false })
-        .limit(limit);
+        .order("created_at", { ascending: false });
 
       query = applyLaunchBusinessCategoryExclusion(query);
       query = applyTerritoryFilter(query, filter);
+      query = query.limit(limit);
 
       const { data, error } = await query;
       if (error) {
