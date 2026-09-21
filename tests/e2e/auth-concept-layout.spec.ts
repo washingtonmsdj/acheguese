@@ -93,7 +93,7 @@ test.describe("Conta e acesso — contrato visual responsivo do concept", () => 
     await page.goto("/reset-password?mode=request", { waitUntil: "domcontentloaded" });
     await expect(page.getByRole("heading", { name: /Vamos recuperar/ })).toBeVisible();
     await expect(page.locator('img[src="/auth/recovery-hero.webp"]')).toBeHidden();
-    await expect(page.getByRole("button", { name: "Voltar" })).toContainText("Voltar");
+    await expect(page.getByRole("button", { name: "Voltar", exact: true })).toContainText("Voltar");
     await expect(
       page.getByRole("button", { name: "Enviar link de recuperação" }),
     ).toBeVisible();
@@ -186,7 +186,9 @@ test.describe("Conta e acesso — contrato visual responsivo do concept", () => 
     await expect(termsMain).toBeVisible();
     await expect(termsMain.locator(":scope > section")).toHaveCount(2);
     await expect(
-      page.getByText("Entre sabendo como cuidamos desse espaço.", { exact: true }),
+      page.getByRole("heading", {
+        name: /Entre sabendo\s*como cuidamos\s*desse espaço\./,
+      }),
     ).toBeVisible();
     await expect(
       page.getByRole("heading", { name: "Antes de continuar" }),
