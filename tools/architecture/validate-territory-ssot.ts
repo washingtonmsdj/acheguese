@@ -32,7 +32,10 @@ const TERRITORIAL_BACKEND_GROUP_GATEWAYS = new Set([
   "supabase/functions/territorial-get-tree/index.ts",
   "supabase/functions/territorial-update-group-visibility/index.ts",
   "supabase/functions/territory-ai-content/index.ts",
+  "supabase/functions/admin-highlights-rpc/index.ts",
 ]);
+const HIGHLIGHTS_TERRITORY_READ_GATEWAY =
+  "supabase/functions/admin-highlights-rpc/index.ts";
 const GROUP_VISIBILITY_EDGE =
   "supabase/functions/territorial-update-group-visibility/index.ts";
 const LOCATION_VISIBILITY_EDGE =
@@ -185,6 +188,20 @@ function main(): void {
       ) {
         violations.push(
           `${relative}: backend territorial-group table access is not an authorized gateway.`,
+        );
+      }
+    }
+
+    if (relative === HIGHLIGHTS_TERRITORY_READ_GATEWAY) {
+      const groupWrites = findTableWrites(content, "territorial_groups");
+      if (groupWrites.length > 0) {
+        violations.push(
+          `${relative}: highlights territory gateway must remain read-only.`,
+        );
+      }
+      if (!content.includes('.from("territorial_groups")') || !content.includes('.select("id")')) {
+        violations.push(
+          `${relative}: highlights territory gateway must use a minimal territorial_groups id projection.`,
         );
       }
     }
