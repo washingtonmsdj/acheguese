@@ -104,6 +104,8 @@ export interface EmpresaCTAsSectionProps extends BaseSectionProps {
   readonly onToggleRecommended: () => void;
   readonly onToggleRouteOptions: () => void;
   readonly onRoute: () => void;
+  readonly onMessage?: () => void;
+  readonly messageLoading?: boolean;
   readonly onShare?: () => void;
 }
 
