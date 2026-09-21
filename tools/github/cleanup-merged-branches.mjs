@@ -6,7 +6,7 @@ import { fileURLToPath } from "node:url";
 
 const DEFAULT_REPOSITORY = "washingtonmsdj/acheguese";
 const DEFAULT_BASE_BRANCH = "main";
-const DEFAULT_KEEP_BRANCHES = new Set(["main", "work/mvp-urgent"]);
+const DEFAULT_KEEP_BRANCHES = new Set(["main"]);
 const DEFAULT_SUPERSEDED_MANIFEST = "tools/github/branch-cleanup-superseded.json";
 
 function parseArgs(argv) {
