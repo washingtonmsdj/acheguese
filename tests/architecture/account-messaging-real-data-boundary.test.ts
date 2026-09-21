@@ -39,6 +39,8 @@ describe("account and horizontal messaging real-data boundary", () => {
     expect(account).not.toContain("Dados demonstrativos");
     expect(account).toContain("useProfileHub()");
     expect(account).toContain("data.allProfiles");
+    expect(account).toContain('title="Mensagens"');
+    expect(account).toContain('navigate("/mensagens")');
   });
 
   it("keeps the global Inbox provider-based instead of Community-owned", () => {
