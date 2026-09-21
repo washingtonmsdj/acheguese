@@ -97,9 +97,12 @@ describe("community entity link domain eligibility", () => {
   });
 
   it("allows only upcoming or ongoing events", async () => {
+    const now = Date.now();
     mocks.getEventById.mockResolvedValue({
       id: "event-1",
       status: "ongoing",
+      date: new Date(now - 60 * 60 * 1000).toISOString(),
+      end_date: new Date(now + 60 * 60 * 1000).toISOString(),
     });
 
     await expect(
