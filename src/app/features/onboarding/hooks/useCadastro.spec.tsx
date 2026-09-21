@@ -93,7 +93,7 @@ describe("useCadastroForm", () => {
     expect(AuthService.signUp).not.toHaveBeenCalled();
     expect(prepareEmailSignupConfirmation).not.toHaveBeenCalled();
     expect(prepareAuthenticatedEmailSignup).not.toHaveBeenCalled();
-    expect(result.current.form.formState.errors.termsAccepted).toBeDefined();
+    expect(result.current.form.getFieldState("termsAccepted").error).toBeDefined();
   });
 
   it("serializa submits concorrentes antes de consumir o mesmo desafio Auth", async () => {
