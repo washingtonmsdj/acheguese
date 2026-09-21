@@ -8,10 +8,11 @@ import {
 } from "@/core/community-feed/utils/communityFeedTab";
 
 describe("communityFeedTab SSOT", () => {
-  it("maps active public tabs and redirects paused tabs to para_voce", () => {
-    expect(resolveCommunityFeedChannelFromTab("vagas")).toBe("oportunidades");
-    expect(resolveCommunityFeedChannelFromTab("eventos")).toBe("eventos");
+  it("redirects every Community channel to para_voce while Community is paused", () => {
+    expect(resolveCommunityFeedChannelFromTab("vagas")).toBe("para_voce");
+    expect(resolveCommunityFeedChannelFromTab("eventos")).toBe("para_voce");
     expect(resolveCommunityFeedChannelFromTab("alertas")).toBe("para_voce");
+    expect(resolveCommunityFeedChannelFromTab("empresas")).toBe("para_voce");
   });
 
   it("defaults unknown tab to para_voce", () => {
@@ -20,15 +21,12 @@ describe("communityFeedTab SSOT", () => {
     );
   });
 
-  it("emits canonical query tabs only for active channels", () => {
-    expect(resolveCommunityFeedQueryTabFromChannel("oportunidades")).toBe(
-      "oportunidades",
-    );
-    expect(resolveCommunityFeedQueryTabFromChannel("vagas")).toBe(
-      "oportunidades",
-    );
-    expect(resolveCommunityFeedQueryTabFromChannel("eventos")).toBe("eventos");
+  it("emits no Community query tab while the parent Community module is paused", () => {
+    expect(resolveCommunityFeedQueryTabFromChannel("oportunidades")).toBeNull();
+    expect(resolveCommunityFeedQueryTabFromChannel("vagas")).toBeNull();
+    expect(resolveCommunityFeedQueryTabFromChannel("eventos")).toBeNull();
     expect(resolveCommunityFeedQueryTabFromChannel("alertas")).toBeNull();
+    expect(resolveCommunityFeedQueryTabFromChannel("empresas")).toBeNull();
   });
 
   it("returns null for para_voce and unsupported channels", () => {
@@ -36,11 +34,8 @@ describe("communityFeedTab SSOT", () => {
     expect(resolveCommunityFeedQueryTabFromChannel("moradores")).toBeNull();
   });
 
-  it("keeps only launch-enabled header filters", () => {
-    expect(COMMUNITY_FEED_HEADER_FILTERS).toEqual([
-      { id: "para_voce", label: "Para voce" },
-      { id: "empresas", label: "Empresas" },
-    ]);
+  it("keeps Community header filters empty while the parent module is paused", () => {
+    expect(COMMUNITY_FEED_HEADER_FILTERS).toEqual([]);
   });
 
   it("keeps sort filter order stable", () => {
