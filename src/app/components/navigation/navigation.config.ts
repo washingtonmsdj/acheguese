@@ -55,6 +55,7 @@ const NAV_MODULE_ROOTS = {
   jobs: buildAppModulePath(APP_MODULE_SLUGS.jobs),
   events: buildAppModulePath(APP_MODULE_SLUGS.events),
   map: buildAppModulePath(APP_MODULE_SLUGS.map),
+  nearby: buildAppModulePath(APP_MODULE_SLUGS.nearby),
   mobility: buildAppModulePath(APP_MODULE_SLUGS.mobility),
 } as const;
 
@@ -163,7 +164,7 @@ const RAW_NAV_SECTIONS: NavSection[] = [
         id: 'nearby',
         icon: MapPin,
         label: 'Perto de Mim',
-        href: '/perto-de-mim',
+        href: NAV_MODULE_ROOTS.nearby,
         description: 'Descubra o que está próximo',
       },
       {
@@ -171,7 +172,7 @@ const RAW_NAV_SECTIONS: NavSection[] = [
         icon: Map,
         label: 'Mapa',
         href: NAV_MODULE_ROOTS.map,
-        description: 'Mapa de empresas e serviços',
+        description: 'Mapa de empresas',
       },
       {
         id: 'mobility',
@@ -185,7 +186,7 @@ const RAW_NAV_SECTIONS: NavSection[] = [
         icon: Search,
         label: 'Busca',
         href: '/busca',
-        description: 'Busca territorial federada',
+        description: 'Busca no conteúdo ativo',
       },
     ],
   },
