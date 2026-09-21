@@ -268,11 +268,6 @@ export async function getBusinesses(
         ).order("created_at", { ascending: false });
     }
 
-    query = query.range(
-      pageParam * pageSize,
-      (pageParam + 1) * pageSize - 1,
-    );
-
     const { data, error } = await query;
 
     if (error) {
