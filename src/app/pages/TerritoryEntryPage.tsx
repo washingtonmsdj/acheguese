@@ -1,7 +1,7 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useState } from "react";
 import { Building2, Map, MapPin, Navigation } from "lucide-react";
 import TerritoryEntryMap from "@/app/components/territory-vivo/TerritoryEntryMap";
-import { AUTH_PATHS, buildLoginPath } from "@/core/auth/constants/authFlow";
+import { AUTH_PATHS } from "@/core/auth/constants/authFlow";
 import { TERRITORY_CONFIG } from "@/core/routing/config/territory";
 import {
   getPublicTerritoryGroupPresentation,
@@ -108,16 +108,11 @@ export default function TerritoryEntryPage() {
     };
   }, []);
 
-  const territoryLabel = useMemo(() => {
-    const article = launchPresentation.article;
-    return article
-      ? `${article} ${launchPresentation.label}`
-      : launchPresentation.label;
-  }, []);
+  const territoryLabel = launchPresentation.article
+    ? `${launchPresentation.article} ${launchPresentation.label}`
+    : launchPresentation.label;
 
-  const accountHref = isAuthenticated
-    ? buildLoginPath(ACCOUNT_PATH)
-    : AUTH_PATHS.login;
+  const accountHref = isAuthenticated ? ACCOUNT_PATH : AUTH_PATHS.login;
   const accountLabel = isAuthenticated ? "Minha conta" : "Entrar";
 
   const rememberTerritory = () => {
