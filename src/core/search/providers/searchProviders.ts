@@ -159,10 +159,12 @@ const professionalsProvider: SearchProvider = {
       territoryFilter: filters.territoryFilter,
     });
     throwIfAborted(signal);
-    const mapped = (found as Professional[]).map((professional) => ({
-      ...professional,
-      target_url: ProfessionalUrlService.getCanonicalUrlFromTarget(professional),
-    }));
+    const mapped = (found as Professional[]).flatMap((professional) => {
+      const targetUrl = ProfessionalUrlService.getCanonicalUrlFromTarget(professional);
+      return targetUrl
+        ? [{ ...professional, target_url: targetUrl }]
+        : [];
+    });
     const professionals = filterByLinkedEntityIds(
       mapped,
       linkedEntityIds,
