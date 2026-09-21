@@ -20,7 +20,7 @@ O módulo Educação continua pausado e suas rotas/experiências especializadas 
 - URLs: `BusinessUrlService`;
 - layers do mapa: filtrados por lifecycle; no MVP público, somente Business.
 
-`getLaunchPausedBusinessCategoryIds()` permanece como extensão futura de política de categoria, mas atualmente retorna vazio. Ele não é usado para acoplar `educacao` a `education=false`.
+A política de categoria não passa pelo launch scope. Não existe mapa de categoria Business → vertical: `education=false` ou `gastronomy=false` pausa somente a experiência especializada, nunca a entidade institucional.
 
 ## Evidência remota
 
