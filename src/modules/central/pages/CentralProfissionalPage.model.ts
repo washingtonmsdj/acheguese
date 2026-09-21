@@ -1,5 +1,4 @@
 import { ProfessionalUrlService } from "@/core/professional/services/ProfessionalUrlService";
-import { professionalPublicRoutes } from "@/core/professional/routes/professionalPublicRoutes";
 import type { Professional, ProfessionalStats } from "@/core/professional/types";
 import { getRecordValue } from "@/shared/utils/recordLookup";
 
@@ -23,8 +22,8 @@ export function formatProfessionalOperationalHours(
   return entries.length ? entries.join(" | ") : "Nao informado";
 }
 
-export function resolveProfessionalPublicUrl(service: Professional): string {
-  return ProfessionalUrlService.getCanonicalUrlFromTarget(service) ?? professionalPublicRoutes.home();
+export function resolveProfessionalPublicUrl(service: Professional): string | null {
+  return ProfessionalUrlService.getCanonicalUrlFromTarget(service);
 }
 
 export function getProfessionalStatsValue(
