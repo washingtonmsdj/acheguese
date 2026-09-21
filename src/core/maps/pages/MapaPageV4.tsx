@@ -272,9 +272,14 @@ function resolveBusinessListUrl(resolved: ResolvedTerritory | null): string {
   const firstMember = resolved.group.members.at(0);
   if (!firstMember?.geographic_path) return BUSINESS_MAP_BASE_URL;
 
+  const [country, state, city] = firstMember.geographic_path
+    .split("/")
+    .filter(Boolean);
+  if (!country || !state || !city) return BUSINESS_MAP_BASE_URL;
+
   return buildModuleTerritoryUrl(
     MODULE_SLUGS.business,
-    buildGroupBaseUrl(resolved.group, firstMember.geographic_path),
+    buildGroupBaseUrl(resolved.group, `/${country}/${state}/${city}`),
   );
 }
 
