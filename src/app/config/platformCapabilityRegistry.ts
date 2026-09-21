@@ -52,7 +52,7 @@ export const PLATFORM_CAPABILITY_REGISTRY: Record<
     dependsOnCapabilities: ["territory"],
   },
   messaging: {
-    status: "paused",
+    status: "active",
     dependsOnCapabilities: ["auth", "profiles"],
     dependsOnProductModules: ["business"],
   },
