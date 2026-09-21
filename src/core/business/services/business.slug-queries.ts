@@ -29,27 +29,3 @@ export async function checkSlugExists(
     throw error;
   }
 }
-
-export async function getSlugsByPrefix(
-  prefix: string,
-  limit = 20,
-): Promise<string[]> {
-  const normalizedPrefix = prefix.trim().toLocaleLowerCase("pt-BR");
-  if (!normalizedPrefix) return [];
-
-  const safeLimit = Math.max(1, Math.min(limit, 50));
-  const { data, error } = await supabase
-    .from("business_data")
-    .select("slug")
-    .ilike("slug", `${normalizedPrefix}%`)
-    .limit(safeLimit);
-
-  if (error) {
-    logger.error("Error fetching Business slugs by prefix:", error);
-    throw error;
-  }
-
-  return (data ?? [])
-    .map((row) => row.slug)
-    .filter((slug): slug is string => Boolean(slug));
-}
