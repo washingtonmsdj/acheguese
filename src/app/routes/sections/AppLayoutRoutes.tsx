@@ -630,7 +630,7 @@ export function AppLayoutRoutes() {
           path="/mensagens"
           element={protectedElement(
             launchElement(
-              "communityCommunication",
+              "messaging",
               "Mensagens",
               <P.MensagensPage />,
             ),
@@ -640,7 +640,7 @@ export function AppLayoutRoutes() {
           path="/chat/:conversationId"
           element={protectedElement(
             launchElement(
-              "communityCommunication",
+              "messaging",
               "Mensagens",
               <P.ChatPage />,
             ),
