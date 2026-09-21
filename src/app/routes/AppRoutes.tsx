@@ -33,9 +33,6 @@ const CadastroPage = lazy(
 const CadastroPrimeiroAcessoPage = lazy(
   () => import("@/app/features/onboarding/pages/CadastroPrimeiroAcessoPage"),
 );
-const CommunityIndicationPage = lazy(
-  () => import("@/app/pages/CommunityIndicationPage"),
-);
 const CadastroConfirmacaoPage = lazy(
   () => import("@/app/features/onboarding/pages/CadastroConfirmacaoPage"),
 );
@@ -119,10 +116,6 @@ export function AppRoutes() {
       />
       <Route path={AUTH_PATHS.signup} element={<CadastroPage />} />
       <Route path={AUTH_PATHS.firstAccess} element={<CadastroPrimeiroAcessoPage />} />
-      <Route
-        path="/indicar-comunidade"
-        element={<CommunityIndicationPage />}
-      />
       <Route
         path={AUTH_PATHS.signupConfirmation}
         element={<CadastroConfirmacaoPage />}
