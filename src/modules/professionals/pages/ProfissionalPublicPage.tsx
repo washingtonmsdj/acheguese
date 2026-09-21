@@ -16,7 +16,8 @@ import {
   Wrench,
   type LucideIcon,
 } from "lucide-react";
-import { TerritorySurface, TerritoryTopbar } from "@/app/components/territory-vivo";
+import { TerritorySurface } from "@/shared/components/territory-vivo/TerritorySurface";
+import { TerritoryTopbar } from "@/shared/components/territory-vivo/TerritoryTopbar";
 import { MODULE_SLUGS, buildModuleTerritoryUrl } from "@/core/routing/utils/territoryUrls";
 import { professionalPublicRoutes } from "@/core/professional/routes/professionalPublicRoutes";
 import { logPageNotFound } from "@/core/public-identity/utils/identity-logger";
