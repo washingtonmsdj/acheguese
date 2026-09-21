@@ -48,7 +48,7 @@ import {
   TrendingDown,
   TrendingUp,
 } from "lucide-react";
-import { StatusBadge } from "./StatusBadge";
+import { StatusBadge } from "@/core/mobility/components/StatusBadge";
 
 const PASSENGER_FEEDBACK_REASONS: TrustFeedbackReason[] = [
   { value: "smooth_operation", label: "Atendimento correto / sem problema", severity: "low" },
