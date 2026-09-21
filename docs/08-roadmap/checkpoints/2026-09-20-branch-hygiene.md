@@ -264,3 +264,18 @@ Com isso, **não restam branches fechadas sem merge em estado ambíguo**: ou est
 Executar primeiro o dry-run com credencial administrativa, conferir que a contagem continua coerente e somente então usar `--apply`.
 
 Depois da limpeza, habilitar `delete_branch_on_merge` no repositório quando a autoridade administrativa estiver disponível, para impedir novo acúmulo.
+
+
+## Marco zero — 2026-09-21
+
+A política operacional mudou após o merge do PR #283 na `main` como marco arquitetural do MVP.
+
+A partir deste ponto:
+
+- `main` é a única branch explicitamente preservada;
+- `work/mvp-urgent` deixa de ser exceção operacional e passa pelas mesmas provas de qualquer outra branch;
+- branches de PR já mergeado, branches totalmente contidas na `main` e heads SHA-pinados como superseded podem ser removidos pelo utilitário;
+- qualquer branch protegida, com PR aberto, SHA alterado ou commits exclusivos continua fail-closed e é preservada;
+- nenhuma branch é movida artificialmente para `main` para simular limpeza.
+
+A meta é chegar ao menor conjunto de refs possível sem destruir trabalho exclusivo. Branch remanescente após a limpeza automática precisa de auditoria explícita antes de ser removida.
