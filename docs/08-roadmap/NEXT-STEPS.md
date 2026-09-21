@@ -4,11 +4,12 @@ Este arquivo é um resumo navegacional. O **SSOT operacional** permanece em [`EX
 
 ## Decisão vigente — 2026-09-21
 
-O MVP público possui **somente três módulos de produto**:
+O MVP público possui **quatro módulos de produto**:
 
 1. **Empresas** (`business`);
 2. **Mapa** (`map`);
-3. **Perto de mim** (`nearby`).
+3. **Perto de mim** (`nearby`);
+4. **Busca** (`search`).
 
 `nearby` depende formalmente de `map + business`.
 
@@ -34,7 +35,7 @@ Regras:
 ## Ordem atual
 
 1. **Concluir o corte modular**
-   - manter `business`, `map` e `nearby` como únicos módulos ativos;
+   - manter `business`, `map`, `nearby` e `search` como módulos ativos;
    - provar `nearby -> map + business`;
    - manter Mapa consumindo Business por port público, sem conhecer schema/tabelas internas;
    - eliminar imports e delegações do núcleo ativo para módulos pausados.
@@ -55,6 +56,7 @@ Regras:
    - Empresas;
    - Mapa;
    - Perto de mim;
+   - Busca;
    - contratos de plataforma utilizados diretamente por esses módulos;
    - truthfulness de localização/distância;
    - boundary Map -> Business;
@@ -66,7 +68,7 @@ Regras:
    - typecheck;
    - testes arquiteturais/unitários;
    - build;
-   - E2E dos três módulos;
+   - E2E dos quatro módulos;
    - deploy do mesmo SHA;
    - smoke público do mesmo SHA.
 
@@ -80,8 +82,8 @@ Os workflows do candidato atual podem aparecer como `failure`, porém os jobs au
 
 O contrato de certificação foi corrigido antes da próxima execução real:
 
-- `test:mvp:architecture` prova registry, launch scope, boundary Map -> Business, Nearby e fluxo público de Business;
-- `test:e2e:mvp` cobre raiz/Home + Empresas + Mapa + Perto de mim;
+- `test:mvp:architecture` prova registry, launch scope, boundary Map -> Business, Nearby, Search e fluxo público de Business;
+- `test:e2e:mvp` cobre raiz/Home + Empresas + Mapa + Perto de mim + Busca;
 - o mesmo E2E inclui `launch-scope-public.spec.ts` para provar que módulos pós-MVP continuam isolados;
 - `certify-heavy.yml` permanece a autoridade exact-SHA e agora chama explicitamente essas provas;
 - o workflow automático de PR agrega o mesmo contrato, sem criar uma segunda definição de MVP.
@@ -95,7 +97,6 @@ Até existir execução real, security/lint/typecheck/test/build/E2E continuam *
 Ficam fora do produto ativo até trabalho individual e reintegração formal, entre outros:
 
 - Comunidade/Feed;
-- Busca federada;
 - Classificados;
 - Serviços/Profissionais;
 - Gastronomia;
@@ -114,13 +115,13 @@ Preservar código pós-MVP não significa mantê-lo conectado ao runtime ativo.
 
 ## Critério de MVP READY
 
-O release só recebe **MVP READY** quando **Empresas + Mapa + Perto de mim** estiverem certificados em um único SHA, com:
+O release só recebe **MVP READY** quando **Empresas + Mapa + Perto de mim + Busca** estiverem certificados em um único SHA, com:
 
 - lifecycle modular coerente;
 - zero dependência ativa em módulo pausado;
 - rotas/navegação/prefetch alinhados;
 - security/lint/typecheck/test/build realmente executados;
-- E2E e smoke dos três módulos;
+- E2E e smoke dos quatro módulos;
 - deploy real do mesmo SHA;
 - nenhum erro crítico recorrente.
 
