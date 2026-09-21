@@ -19,6 +19,7 @@ export type LaunchSurfaceKey =
   | "map"
   | "nearby"
   | "search"
+  | "messaging"
   | "education"
   | "jobs"
   | "events"
@@ -46,6 +47,7 @@ export const PUBLIC_LAUNCH_SURFACES: Record<LaunchSurfaceKey, boolean> = {
   map: isProductModuleEnabled("map"),
   nearby: isProductModuleEnabled("nearby"),
   search: isProductModuleEnabled("search"),
+  messaging: isProductModuleEnabled("messaging"),
   education: isProductModuleEnabled("education"),
   jobs: isProductModuleEnabled("jobs"),
   events: isProductModuleEnabled("events"),
@@ -77,6 +79,9 @@ const NAV_ITEM_SURFACES: Partial<Record<string, LaunchSurfaceKey>> = {
   map: "map",
   mobility: "mobility",
   search: "search",
+  messaging: "messaging",
+  messages: "messaging",
+  conversations: "messaging",
 };
 
 const CLASSIFIED_CATEGORY_SURFACES: Partial<Record<string, LaunchSurfaceKey>> = {
