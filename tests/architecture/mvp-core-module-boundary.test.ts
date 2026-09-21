@@ -13,6 +13,8 @@ describe("MVP core module boundary", () => {
   const howItWorks = read("src/app/pages/ComoFuncionaPage.tsx");
   const businessDetail = read("src/app/pages/EmpresaDetailLandingPage.tsx");
   const businessCtas = read("src/modules/business/company/sections/EmpresaCTAsSection.tsx");
+  const businessSections = read("src/modules/business/company/sections/index.ts");
+  const businessSectionTypes = read("src/modules/business/company/sections/types.ts");
   const branchNetwork = read("src/core/business/components/BranchNetworkBlock.tsx");
     const map = read("src/core/maps/pages/MapaPageV4.tsx");
   const nearby = read("src/core/nearby/pages/NearbyPage.tsx");
@@ -116,6 +118,10 @@ describe("MVP core module boundary", () => {
     expect(businessCtas).not.toContain("Experiencias especializadas");
     expect(branchNetwork).not.toContain("getCommunityScopedUrl");
     expect(branchNetwork).not.toContain("communityAliasOverride");
+    expect(businessSections).not.toContain("EmpresaAvaliacoesSection");
+    expect(businessSectionTypes).not.toContain("EmpresaAvaliacoesSectionProps");
+    expect(businessSectionTypes).not.toContain("ReviewCardProps");
+    expect(businessSectionTypes).not.toContain("RatingDistributionProps");
   });
 
   it("keeps Map independent from paused product owners", () => {
