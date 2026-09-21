@@ -444,8 +444,8 @@ export const RankingPage = createLaunchPausedRoute("Ranking");
 // ============================================================
 // MENSAGENS E CHAT
 // ============================================================
-export const MensagensPage = lazy(() => import("@/modules/messaging/pages/MensagensPage"));
-export const ChatPage = lazy(() => import("@/modules/messaging/pages/MensagensPage"));
+export const MensagensPage = lazy(() => import("@/modules/communication-territorial/pages/MensagensPage"));
+export const ChatPage = lazy(() => import("@/modules/communication-territorial/pages/MensagensPage"));
 
 // ============================================================
 // MAPAS E GEOLOCALIZACAO
