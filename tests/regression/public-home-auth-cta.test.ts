@@ -23,6 +23,7 @@ describe("public home auth CTA", () => {
     expect(entry).toContain("buildLoginPath(ACCOUNT_PATH)");
     expect(entry).toContain('isAuthenticated ? "Minha conta" : "Entrar"');
     expect(entry).toContain('isAuthenticated ? "Minha conta"');
-    expect(entry).toContain('AUTH_PATHS.signup');
+    expect(entry).not.toContain('href="/login"');
+    expect(entry).not.toContain('href="/cadastro"');
   });
 });
