@@ -8,7 +8,6 @@
  */
 
 import { supabase } from '@/integrations/supabase';
-import type { Database } from '@/integrations/supabase/types.generated';
 import { logger } from '@/shared/utils/logger';
 import { getRecordValue } from '@/shared/utils/recordLookup';
 import type {
@@ -71,11 +70,45 @@ function parseEducationPublicRoute(
   };
 }
 
-type PublicEducationSearchRow =
-  Database['public']['Functions']['list_public_education_profiles']['Returns'][number];
+interface PublicEducationSearchRow {
+  id: string;
+  business_id: string;
+  business_data_id: string | null;
+  business_name: string | null;
+  slug: string | null;
+  is_claimable: boolean;
+  geographic_path: string | null;
+  institution_type: string;
+  niche_key: string;
+  support_level: string;
+  summary: string | null;
+  whatsapp_number: string | null;
+  status: string;
+  published_at: string | null;
+  created_at: string;
+  updated_at: string;
+  school_type: string | null;
+  school_network: string | null;
+  school_inep_code: string | null;
+  school_source_url: string | null;
+  school_source_updated_at: string | null;
+  education_levels: unknown;
+  shifts: unknown;
+  age_range_min: number | null;
+  age_range_max: number | null;
+  enrollment_open: boolean | null;
+  school_basic_resources: unknown;
+  school_accessibility_features: unknown;
+  school_equipment_features: unknown;
+  school_facility_features: unknown;
+  total_count: number | null;
+}
 
-type PublicEducationDistrictRow =
-  Database['public']['Functions']['list_public_education_districts']['Returns'][number];
+interface PublicEducationDistrictRow {
+  district_slug: string;
+  geographic_path: string;
+  profile_count: number | null;
+}
 
 function toStringArray(value: unknown): string[] | null {
   if (!Array.isArray(value)) return null;
