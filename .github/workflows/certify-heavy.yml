@@ -222,18 +222,6 @@ jobs:
             if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
           }
 
-          & npx tsx tools/architecture/validate-education-module-boundaries.ts
-          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
-
-          & npx tsx tools/architecture/validate-gastronomy-module-boundaries.ts
-          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
-
-          & npx eslint --config eslint-rules/configs/billing-rules.config.js "src/**/*.{ts,tsx}"
-          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
-
-          & npm run test -- src/core/billing/__tests__/contracts/
-          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
-
       - name: Validate canonical migration chain and remote parity
         shell: powershell
         env:
@@ -437,7 +425,8 @@ jobs:
             "Public MVP E2E is fixture-backed and uses no local Supabase, Docker, service-role key, or Production seed.",
             "Authenticated Account E2E uses explicit public Supabase project configuration plus only E2E_USER_EMAIL/E2E_USER_PASSWORD from GitHub Actions and covers mobile, tablet, and desktop in the target test suite.",
             "Regression discovery fails closed when no regression test files are present.",
-            "Static security, lint, typecheck, architecture/SSOT, migration parity and the complete Vitest suite execute on the same attested SHA before E2E/build.",
+            "Static security, lint, typecheck, repository-wide architecture/SSOT, migration parity and the complete Vitest suite execute on the same attested SHA before E2E/build.",
+            "Paused-module specialist certification (Education/Gastronomy/Billing) is not a release prerequisite; their repository boundaries remain covered by global SSOT/quality gates until individual reactivation.",
             "Production bundle build and root bundle report run against the same attested SHA.",
             "No automatic fallback to GitHub-hosted runners exists."
           ) | Add-Content -Path $env:GITHUB_STEP_SUMMARY -Encoding UTF8
