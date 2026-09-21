@@ -42,6 +42,6 @@ describe("publicHeaderNavigation", () => {
     });
 
     expect(items.find((item) => item.id === "home")?.label).toBe("Cidade");
-    expect(items.find((item) => item.id === "community")?.label).toBe("Comunidade");
+    expect(items.find((item) => item.id === "community")).toBeUndefined();
   });
 });
