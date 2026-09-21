@@ -49,7 +49,14 @@ Side effects de notificacao gerados por Messaging usam a autoridade de Notificat
 
 Messaging/Chat permanece launch-paused no composition root. As antigas `pages`, `components` e `hooks` dentro de `src/core/messaging` foram aposentadas porque estavam sem caller runtime e violavam a taxonomia `core = dominio / modules = UI`.
 
-Quando a UI for retomada em G6, ela deve nascer em `src/modules/messaging` e consumir apenas as facades publicas de `@/core/messaging`.
+A UI geral pertence a `src/modules/messaging` e permanece fail-closed enquanto
+não existir composição certificada de providers. A Inbox horizontal deve
+consumir apenas facades públicas de `@/core/messaging` e adapters dos domínios
+habilitados.
+
+A UI específica de Community Direct Messaging não é a Inbox global. Business,
+Classifieds, Community e futuros domínios podem participar da Inbox sem se
+tornarem donos dela.
 
 ## Ratchets
 
