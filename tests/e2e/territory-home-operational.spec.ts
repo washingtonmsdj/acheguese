@@ -166,7 +166,7 @@ test.describe("MVP público — Empresas + Mapa + Perto de mim + Busca", () => {
     await gotoApp(page, "/busca/ba/salvador/pituba");
 
     await expect(
-      page.getByRole("heading", { name: "Busca" }),
+      page.getByRole("heading", { name: "Busca", exact: true }),
     ).toBeVisible({ timeout: 30_000 });
     await expect(page.getByText("Negócios", { exact: true })).toBeVisible();
 
