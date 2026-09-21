@@ -1,12 +1,12 @@
 # SCREEN-MAP
 
-> **MVP atual — decisão de 2026-09-21:** os únicos módulos públicos de produto são **Empresas + Mapa + Perto de mim + Busca**.
+> **MVP atual — decisão de 2026-09-21:** **Business/Empresas** é o domínio público ativo. **Mapa, Perto de mim, Busca e Mensagens** são capabilities horizontais ativas.
 >
-> Lifecycle canônico: `src/app/config/productModuleRegistry.ts`. Compatibilidade de superfície: `src/app/config/launchScope.ts`.
+> Lifecycle canônico: `productModuleRegistry.ts` + `platformCapabilityRegistry.ts`, avaliados por `lifecycleRegistry.ts`. `launchScope.ts` é compatibilidade de superfície.
 >
 > Flags efetivas do corte: `map=true`, `nearby=true`, `business=true`, `search=true`, `billing=false`, `gastronomy=false`, `services=false`, `touristPoints=false`, `education=false`, `jobs=false`, `events=false`, `communityEventsPreview=false`, `communication=false`, `messaging=true`, `mobility=false`, `coupons=false`, `gamification=false`, `communityCommunication=false`.
 
-## Produto público ativo
+## Superfícies públicas ativas
 
 | Superfície | Rotas principais | Owner | Estado |
 | --- | --- | --- | --- |
@@ -26,7 +26,7 @@
 
 ## Infraestrutura pública
 
-Estas superfícies suportam o produto, mas **não contam como módulos do MVP**:
+Estas superfícies/capabilities suportam o domínio Business e **não são domínios adicionais**:
 
 | Superfície | Objetivo |
 | --- | --- |
