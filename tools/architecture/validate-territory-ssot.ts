@@ -31,6 +31,7 @@ const RETIRED_LOCATION_GROUP_FILES = [
 const TERRITORIAL_BACKEND_GROUP_GATEWAYS = new Set([
   "supabase/functions/territorial-get-tree/index.ts",
   "supabase/functions/territorial-update-group-visibility/index.ts",
+  "supabase/functions/territory-ai-content/index.ts",
 ]);
 const GROUP_VISIBILITY_EDGE =
   "supabase/functions/territorial-update-group-visibility/index.ts";
