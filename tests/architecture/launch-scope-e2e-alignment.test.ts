@@ -1,13 +1,13 @@
 import { readFileSync } from "node:fs";
 import { resolve } from "node:path";
 import { describe, expect, it } from "vitest";
+import { PRODUCT_MODULE_REGISTRY } from "../../src/app/config/productModuleRegistry";
+import { PLATFORM_CAPABILITY_REGISTRY } from "../../src/app/config/platformCapabilityRegistry";
 
 const root = process.cwd();
 const read = (path: string) => readFileSync(resolve(root, path), "utf8");
 
 const launchScope = read("src/app/config/launchScope.ts");
-const productRegistry = read("src/app/config/productModuleRegistry.ts");
-const platformRegistry = read("src/app/config/platformCapabilityRegistry.ts");
 const launchE2e = read("tests/e2e/launch-scope-public.spec.ts");
 const appRoutes = read("src/app/routes/sections/AppLayoutRoutes.tsx");
 const searchProviders = read("src/core/search/providers/searchProviders.ts");
@@ -18,11 +18,7 @@ const homeInventory = read("docs/05-ux/HOME-INVENTORY.md");
 
 describe("MVP launch-scope alignment", () => {
   it("keeps Business as the active domain while Map/Nearby/Search are horizontal capabilities", () => {
-    expect(productRegistry).toContain('business: { status: "active" }');
-    expect(platformRegistry).toContain('map: {');
-    expect(platformRegistry).toContain('nearby: {');
-    expect(platformRegistry).toContain('search: {');
-    expect(platformRegistry).toContain('messaging: {');
+    expect(PRODUCT_MODULE_REGISTRY.business.status).toBe("active");
 
     for (const moduleKey of [
       "community",
@@ -33,11 +29,22 @@ describe("MVP launch-scope alignment", () => {
       "jobs",
       "events",
       "communityCommunication",
-    ]) {
-      expect(productRegistry).toContain(`${moduleKey}: { status: "paused"`);
+    ] as const) {
+      expect(PRODUCT_MODULE_REGISTRY[moduleKey].status, moduleKey).toBe("paused");
     }
 
-    expect(platformRegistry).toContain('messaging: {\n    status: "paused"');
+    expect(PLATFORM_CAPABILITY_REGISTRY.map.status).toBe("active");
+    expect(PLATFORM_CAPABILITY_REGISTRY.nearby.status).toBe("active");
+    expect(PLATFORM_CAPABILITY_REGISTRY.search.status).toBe("active");
+    expect(PLATFORM_CAPABILITY_REGISTRY.messaging.status).toBe("paused");
+    expect(PLATFORM_CAPABILITY_REGISTRY.nearby.dependsOnCapabilities).toEqual([
+      "map",
+      "location",
+    ]);
+    expect(PLATFORM_CAPABILITY_REGISTRY.nearby.dependsOnProductModules).toEqual([
+      "business",
+    ]);
+
     expect(launchScope).toContain(
       'search: isPlatformCapabilityEnabled("search")',
     );
