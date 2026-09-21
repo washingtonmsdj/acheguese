@@ -78,15 +78,29 @@ jobs:
           curl --fail --silent --show-error --location "$release/gitleaks_${version}_checksums.txt" --output checksums.txt
           grep " $archive$" checksums.txt | sha256sum --check --strict
           tar -xzf "$archive" gitleaks
-          ./gitleaks git . \
-            --config .gitleaks.toml \
-            --redact \
-            --no-banner \
-            --report-format json \
-            --report-path gitleaks-report.json
+          if [ "${{ github.event_name }}" = "pull_request" ]; then
+            base_sha="${{ github.event.pull_request.base.sha }}"
+            head_sha="${{ github.event.pull_request.head.sha }}"
+            ./gitleaks git . \
+              --log-opts="${base_sha}..${head_sha}" \
+              --config .gitleaks.toml \
+              --redact \
+              --no-banner \
+              --report-format json \
+              --report-path gitleaks-report.json
+            echo "Gitleaks scope: PR commits ${base_sha}..${head_sha}" >> "$GITHUB_STEP_SUMMARY"
+          else
+            ./gitleaks dir . \
+              --config .gitleaks.toml \
+              --redact \
+              --no-banner \
+              --report-format json \
+              --report-path gitleaks-report.json
+            echo "Gitleaks scope: current working tree." >> "$GITHUB_STEP_SUMMARY"
+          fi
 
           baseline_count="$(grep -Ev '^(#|[[:space:]]*$)' .gitleaksignore | wc -l | tr -d ' ')"
-          echo "Historical Gitleaks baseline: ${baseline_count} fingerprint(s)." >> "$GITHUB_STEP_SUMMARY"
+          echo "Historical Gitleaks baseline retained separately: ${baseline_count} fingerprint(s)." >> "$GITHUB_STEP_SUMMARY"
 
       - name: Scan for XSS patterns
         id: xss_patterns
