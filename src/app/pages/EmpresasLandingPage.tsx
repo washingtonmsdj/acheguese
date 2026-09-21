@@ -122,7 +122,7 @@ function LandingTopBar({
                 type="search"
                 value={searchQuery}
                 onChange={(event) => onSearchChange(event.target.value)}
-                placeholder="Buscar empresa, servico ou produto no bairro"
+                placeholder="Buscar empresa ou estabelecimento no bairro"
                 aria-label="Buscar empresas no bairro"
                 className="h-12 rounded-2xl border-white/10 bg-white/[0.03] pl-11 pr-16 text-white placeholder:text-white/36 focus-visible:ring-teal-400/30 focus-visible:ring-offset-0"
               />
