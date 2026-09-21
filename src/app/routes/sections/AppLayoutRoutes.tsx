@@ -385,8 +385,6 @@ export function AppLayoutRoutes() {
       />
 
       <Route element={<AppLayoutSidebar />}>
-        <Route path="/inicio" element={<P.NationalHubPage />} />
-
         {/* Rotas de Billing e Assinaturas */}
         <Route
           path="/planos"
