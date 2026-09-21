@@ -1004,6 +1004,7 @@ export function CommunityOverviewSurface({
         4,
       ),
     enabled:
+      isLaunchSurfaceEnabled("services") &&
       filterReady &&
       !isEmbeddedModule &&
       selectedView === "services",
@@ -1042,6 +1043,7 @@ export function CommunityOverviewSurface({
         4,
       ),
     enabled:
+      isLaunchSurfaceEnabled("gastronomy") &&
       filterReady &&
       !isEmbeddedModule &&
       selectedView === "gastronomy",
