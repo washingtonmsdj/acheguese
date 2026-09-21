@@ -219,8 +219,9 @@ describe("MVP core module boundary", () => {
     expect(prefetch).toContain(
       "if (candidate.surface && !isLaunchSurfaceEnabled(candidate.surface)) return;",
     );
+    expect(prefetch).toContain("IDLE_WARMUP_ROUTES.filter(");
     expect(prefetch).toContain(
-      ".filter((entry) => !entry.surface || isLaunchSurfaceEnabled(entry.surface))",
+      "(entry) => !entry.surface || isLaunchSurfaceEnabled(entry.surface)",
     );
   });
 
