@@ -10,7 +10,7 @@ describe("MVP Business discovery launch boundary", () => {
   const landing = read("src/core/landing/services/LandingFeaturedService.ts");
   const map = read("src/core/maps/services/MapBusinessLayerRuntimeService.ts");
   const spatial = read("src/core/geospatial/services/SpatialSearchService.ts");
-  const nearby = read("src/core/nearby/hooks/useNearbyEntities.ts");
+  const nearby = read("src/core/nearby/hooks/useNearbyBusinesses.ts");
   const aiSearch = read("src/core/ai/actions/SearchBusinessesActionHandler.ts");
 
   it("owns paused Business categories in launchScope", () => {
@@ -48,6 +48,8 @@ describe("MVP Business discovery launch boundary", () => {
     expect(businessQueries).toContain("getLaunchVisibleBusinessProfileIds");
     expect(businessQueries).toContain("launch-visible profile lookup failed");
     expect(nearby).toContain('entityType: "business"');
+    expect(nearby).toContain("BusinessService.getBusinessesByIds(ids)");
+    expect(nearby).toContain("BusinessUrlService.getPublicCanonicalUrl");
     expect(aiSearch).toContain('entityType: "business"');
   });
 });
