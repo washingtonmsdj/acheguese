@@ -29,6 +29,8 @@ describe("MVP core module boundary", () => {
   const rootRoutes = read("src/app/routes/AppRoutes.tsx");
   const publicMvpE2e = read("tests/e2e/territory-home-operational.spec.ts");
   const packageJson = read("package.json");
+  const heavyPrWorkflow = read(".github/workflows/certify-heavy-pr-auto.yml");
+  const previewE2eRunner = read("tools/release/run-preview-e2e.ps1");
 
   it("keeps lifecycle ownership centralized and Nearby dependent on Map + Business", () => {
     expect(registry).toContain('business: { status: "active" }');
@@ -261,5 +263,16 @@ describe("MVP core module boundary", () => {
     expect(packageJson).toContain('"test:mvp:architecture"');
     expect(packageJson).toContain('"test:e2e:mvp"');
     expect(packageJson).toContain("tests/e2e/launch-scope-public.spec.ts");
+  });
+
+  it("keeps automatic heavy E2E on the canonical preview runner", () => {
+    expect(previewE2eRunner).toContain("param(");
+    expect(previewE2eRunner).toContain("[string[]]$PlaywrightArgs");
+    expect(heavyPrWorkflow).toContain(
+      ".\\tools\\release\\run-preview-e2e.ps1",
+    );
+    expect(heavyPrWorkflow).not.toContain(
+      ".\\scripts\\ci\\run-preview-e2e.ps1",
+    );
   });
 });
