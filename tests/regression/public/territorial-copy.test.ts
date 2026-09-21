@@ -28,15 +28,15 @@ const suspiciousMojibakeTokens = [
 ] as const;
 
 const publicSurfaceFiles = [
-  "src/app/components/Breadcrumbs.tsx",
+  "src/app/pages/TerritoryEntryPage.tsx",
   "src/app/pages/TerritoryHomePage.tsx",
   "src/app/pages/EmpresasLandingPage.tsx",
-  "src/modules/professionals/services/pages/ServicosLandingPage.tsx",
-  "src/modules/classifieds/pages/ClassificadosPage.tsx",
+  "src/core/maps/pages/MapaPageV4.tsx",
+  "src/core/nearby/pages/NearbyPage.tsx",
 ] as const;
 
 describe("public territorial copy regression", () => {
-  it("keeps public territorial surfaces free from common mojibake tokens", () => {
+  it("keeps active public territorial surfaces free from common mojibake tokens", () => {
     for (const file of publicSurfaceFiles) {
       const content = read(file);
       for (const token of suspiciousMojibakeTokens) {
@@ -48,14 +48,18 @@ describe("public territorial copy regression", () => {
     }
   });
 
-  it("preserves canonical city and territorial Home labels", () => {
+  it("keeps canonical MVP copy aligned with the active product", () => {
     const territoryHome = read("src/app/pages/TerritoryHomePage.tsx");
-    expect(territoryHome).toContain("Hoje em ${territoryName}");
-    expect(territoryHome).toContain("Panorama de ${territoryName}");
-    expect(territoryHome).toContain("Vale saber em ${territoryName}");
+    expect(territoryHome).toContain(
+      "Descubra empresas e lugares ao seu redor.",
+    );
+    expect(territoryHome).toContain('title="Empresas"');
+    expect(territoryHome).toContain('title="Mapa"');
+    expect(territoryHome).toContain('title="Perto de mim"');
 
-    const breadcrumbs = read("src/app/components/Breadcrumbs.tsx");
-    expect(breadcrumbs).toContain('configuracoes: "Configurações"');
-    expect(breadcrumbs).toContain('services: "Serviços"');
+    const entry = read("src/app/pages/TerritoryEntryPage.tsx");
+    expect(entry).toContain("Encontre empresas, visualize o território no mapa");
+    expect(entry).not.toContain("eventos");
+    expect(entry).not.toContain("serviços e histórias");
   });
 });
