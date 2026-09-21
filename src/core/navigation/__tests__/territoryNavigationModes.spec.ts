@@ -8,7 +8,7 @@ const CITY_FALLBACK = { state: "ba", city: "salvador" };
 const COMPLEX_BASE = "/ba/salvador/complexo-do-nordeste-de-amaralina";
 
 describe("territoryNavigationModes", () => {
-  it("preserves the remembered territory on non-territorial routes", () => {
+  it("preserves remembered territory and exposes only MVP modules", () => {
     expect(
       resolveTerritoryNavigationBase("/conta", CITY_FALLBACK, COMPLEX_BASE),
     ).toBe(COMPLEX_BASE);
@@ -20,16 +20,31 @@ describe("territoryNavigationModes", () => {
       authenticated: true,
     });
 
-    expect(modes.find((mode) => mode.id === "today")?.href).toBe(COMPLEX_BASE);
-    expect(modes.find((mode) => mode.id === "explore")?.href).toBe(
-      `/busca${COMPLEX_BASE}`,
+    expect(modes.map((mode) => mode.id)).toEqual([
+      "home",
+      "map",
+      "business",
+      "nearby",
+      "account",
+    ]);
+    expect(modes.find((mode) => mode.id === "home")?.href).toBe(COMPLEX_BASE);
+    expect(modes.find((mode) => mode.id === "map")?.href).toBe(
+      `/mapa${COMPLEX_BASE}`,
     );
+    expect(modes.find((mode) => mode.id === "business")?.href).toBe(
+      `/empresas${COMPLEX_BASE}`,
+    );
+    expect(modes.find((mode) => mode.id === "nearby")?.href).toBe(
+      "/perto-de-mim",
+    );
+    expect(modes.some((mode) => mode.id === ("community" as never))).toBe(false);
+    expect(modes.some((mode) => mode.id === ("explore" as never))).toBe(false);
   });
 
   it("keeps the current URL territory ahead of remembered fallback", () => {
     expect(
       resolveTerritoryNavigationBase(
-        "/busca/ba/salvador/santa-cruz",
+        "/mapa/ba/salvador/santa-cruz",
         CITY_FALLBACK,
         COMPLEX_BASE,
       ),
