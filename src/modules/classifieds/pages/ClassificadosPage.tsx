@@ -6,7 +6,7 @@
  * 
  * Responsabilidades:
  * - Carregar dados via hooks
- * - Processar dados derivados (trending, popular, featured)
+ * - Processar somente coleções derivadas de sinais reais
  * - Construir props específicas por section
  * - Renderizar layout + sections
  */
@@ -20,8 +20,6 @@ import {
   Wrench,
   Briefcase,
   Sparkles,
-  Flame,
-  Star,
   LayoutList,
   Tag,
   UtensilsCrossed,
@@ -37,10 +35,8 @@ import {
   ClassifiedsHeroSection,
   ClassifiedsCategoriesSection,
   ClassifiedsFiltrosSection,
-  ClassifiedsTrendingSection,
-  ClassifiedsPopularSection,
-  ClassifiedsFeaturedSection,
-  ClassifiedsSponsoredSection,
+  ClassifiedsRecentSection,
+  ClassifiedsCategorySampleSection,
   ClassifiedsListagemSection,
   ClassifiedsFooterSection,
 } from "../sections";
@@ -285,8 +281,8 @@ export default function ClassificadosPage({
     return name;
   }, [resolved]);
 
-  // Em alta: recém-criados
-  const trendingAds = useMemo(() => {
+  // Coleção factual: anúncios ativos ordenados pela data de publicação.
+  const recentAds = useMemo(() => {
     return [...classificados]
       .filter((c) => c.status === "active")
       .sort(
@@ -296,8 +292,8 @@ export default function ClassificadosPage({
       .slice(0, 8);
   }, [classificados]);
 
-  // Mais procurados: diversidade de categorias
-  const mostWantedAds = useMemo(() => {
+  // Coleção factual: uma amostra de anúncios ativos, no máximo um por categoria.
+  const categorySampleAds = useMemo(() => {
     const seen = new Set<string>();
     return classificados
       .filter((c) => c.status === "active")
@@ -306,14 +302,6 @@ export default function ClassificadosPage({
         seen.add(c.categoria);
         return true;
       })
-      .slice(0, 6);
-  }, [classificados]);
-
-  // Destaques premium: mais caros
-  const featuredAds = useMemo(() => {
-    return [...classificados]
-      .filter((c) => c.status === "active")
-      .sort((a, b) => (b.preco || 0) - (a.preco || 0))
       .slice(0, 6);
   }, [classificados]);
 
@@ -380,52 +368,26 @@ export default function ClassificadosPage({
         onCategoryChange={handleCategoryChange}
       />
 
-      {/* Em Alta (Trending) */}
+      {/* Coleções derivadas somente de sinais disponíveis no dado real */}
       {!isCommunityScopedSurface && !isLoading && viewMode === "anuncios" && (
-        <ClassifiedsTrendingSection
+        <ClassifiedsRecentSection
           territoryName={territoryName}
           navigate={navigate}
-          title="Em alta"
-          subtitle="Anúncios com maior tração"
-          icon={<Flame className="h-4 w-4 text-orange-400" />}
-          badgeText="Alta"
-          badgeColor="bg-orange-500/90"
-          ads={trendingAds}
+          ads={recentAds}
           onAdClick={handleClassificadoClick}
         />
       )}
 
-      {/* Mais Procurados */}
       {!isCommunityScopedSurface && !isLoading && viewMode === "anuncios" && (
-        <ClassifiedsPopularSection
+        <ClassifiedsCategorySampleSection
           territoryName={territoryName}
           navigate={navigate}
-          title="Mais procurados"
-          subtitle="Categorias com maior procura"
-          icon={<Sparkles className="h-4 w-4 text-emerald-400" />}
-          badgeText="Popular"
-          badgeColor="bg-emerald-500/90"
-          ads={mostWantedAds}
+          ads={categorySampleAds}
           onAdClick={handleClassificadoClick}
         />
       )}
 
-      {/* Destaques Premium */}
-      {!isCommunityScopedSurface && !isLoading && viewMode === "anuncios" && (
-        <ClassifiedsFeaturedSection
-          territoryName={territoryName}
-          navigate={navigate}
-          title="Destaques"
-          subtitle="Itens premium selecionados"
-          icon={<Star className="h-4 w-4 text-amber-400" />}
-          badgeText="Premium"
-          badgeColor="bg-amber-500/90"
-          ads={featuredAds}
-          onAdClick={handleClassificadoClick}
-        />
-      )}
-
-      {/* Mini Banner + Patrocinados */}
+      {/* Mini Banner */}
       {!isCommunityScopedSurface ? (
         <ClassifiedsFooterSection
           territoryName={territoryName}
@@ -433,15 +395,6 @@ export default function ClassificadosPage({
           onNewClassificado={handleNewClassificado}
         />
       ) : null}
-
-      {!isCommunityScopedSurface && !isLoading && viewMode === "anuncios" && (
-        <ClassifiedsSponsoredSection
-          territoryName={territoryName}
-          navigate={navigate}
-          ads={featuredAds}
-          onAdClick={handleClassificadoClick}
-        />
-      )}
 
       {/* Listagem Principal */}
       <ClassifiedsListagemSection

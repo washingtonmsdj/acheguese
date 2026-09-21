@@ -37,6 +37,7 @@ export function ClassifiedsListagemSection({
 
       {/* Main Content */}
       <section
+        id="classificados-listagem"
         className="px-4 pb-4 flex-1"
         aria-label={
           viewMode === "anuncios" ? "Todos os anúncios" : "Vendedores"
