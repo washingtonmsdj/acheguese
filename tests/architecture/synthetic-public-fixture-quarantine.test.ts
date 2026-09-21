@@ -8,6 +8,9 @@ describe("MVP persistent fixture quarantine", () => {
     "supabase/migrations/20260921103540_quarantine_synthetic_public_business_professional_fixtures.sql",
   );
   const launchScope = read("src/app/config/launchScope.ts");
+  const profileMigration = read(
+    "supabase/migrations/20260921103912_quarantine_synthetic_public_profiles_mvp.sql",
+  );
   const probe = read(
     "tests/security/synthetic-public-fixture-quarantine-remote-probe.sql",
   );
@@ -19,6 +22,15 @@ describe("MVP persistent fixture quarantine", () => {
     expect(migration).toContain("is_accepting_clients = false");
     expect(migration).toContain("SET is_public = false");
     expect(migration).not.toMatch(/[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f-]{27,}/i);
+  });
+
+  it("keeps only the original admin personal profile and active school Business profiles public", () => {
+    expect(profileMigration).toContain("lower(COALESCE(profile.handle::text, '')) = 'washingtonmsdj'");
+    expect(profileMigration).toContain("user_role.role = 'admin'");
+    expect(profileMigration).toContain("business.category IN ('educacao', 'education')");
+    expect(profileMigration).toContain("business.status = 'active'");
+    expect(profileMigration).toContain("profile_type IN ('professional', 'driver')");
+    expect(profileMigration).not.toMatch(/[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f-]{27,}/i);
   });
 
   it("does not turn school provenance into a public launch exception", () => {
