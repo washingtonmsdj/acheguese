@@ -17,7 +17,7 @@ export interface ServiceDetailUrlInput {
 
 export interface ServiceUrls {
   list: string;
-  detail: (target: ServiceDetailUrlInput | string) => string;
+  detail: (target: ServiceDetailUrlInput) => string | null;
   register: string;
   edit: (id: string) => string;
 }
@@ -48,10 +48,8 @@ export function useServiceUrls(routeResolved?: ResolvedTerritory | null): Servic
 
   return {
     list: listUrl,
-    detail: (target: ServiceDetailUrlInput | string) => {
-      if (typeof target === "string") return listUrl;
-      return ProfessionalUrlService.getCanonicalUrlFromTarget(target) ?? listUrl;
-    },
+    detail: (target: ServiceDetailUrlInput) =>
+      ProfessionalUrlService.getCanonicalUrlFromTarget(target),
     register: professionalPublicRoutes.register(),
     edit: (id: string) => `/servicos/${id}/editar`,
   };

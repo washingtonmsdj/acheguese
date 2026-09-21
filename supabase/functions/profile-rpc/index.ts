@@ -653,6 +653,10 @@ function sanitizeProfessionalPatch(value: unknown): Record<string, unknown> {
     throw new RequestValidationError("location_id cannot be cleared");
   }
 
+  if ("slug" in input && input.slug === null) {
+    throw new RequestValidationError("slug cannot be cleared");
+  }
+
   if (typeof input.slug === "string") {
     const slug = input.slug.trim().toLowerCase();
     if (

@@ -197,8 +197,10 @@ export class MapEntityProjectionService {
       city: typeof professional.city === 'string' ? professional.city : null,
     });
 
+    if (!publicUrl) return null;
+
     return this.projectEntity(
-      publicUrl ? { ...professional, url: publicUrl } : professional,
+      { ...professional, url: publicUrl },
       'professional',
       options,
     );
