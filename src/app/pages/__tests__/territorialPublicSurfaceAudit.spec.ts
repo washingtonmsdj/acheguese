@@ -20,6 +20,13 @@ describe("public territorial surface audit", () => {
     expect(pageSource).toContain("useSpatialSearchHybrid");
     expect(pageSource).toContain("locationIds: moduleTerritory.resolvedLocationIds");
     expect(pageSource).toContain("normalizeRealBusinessEntry");
+    expect(pageSource).toContain("isLaunchBusinessCategoryEnabled");
+    expect(pageSource).toContain(
+      "normalizeBusinessCategoryId(business.category)",
+    );
+    expect(pageSource).toContain(
+      ".filter((business) =>",
+    );
     expect(pageSource).not.toContain("normalizeNearbyBusiness");
     expect(listHookSource).toContain("enabled: enabled && filterReady");
     expect(accountSource).toContain("navigate(data.appUrls.profile.businesses)");
