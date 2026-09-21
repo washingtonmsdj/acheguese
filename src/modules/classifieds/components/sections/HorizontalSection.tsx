@@ -58,9 +58,12 @@ export function HorizontalSection({
             </span>
           </div>
         </div>
-        <button className="flex items-center gap-0.5 text-[10px] font-semibold text-primary hover:underline">
+        <a
+          href="#classificados-listagem"
+          className="flex items-center gap-0.5 text-[10px] font-semibold text-primary hover:underline"
+        >
           Ver todos <ArrowRight className="h-3 w-3" />
-        </button>
+        </a>
       </div>
       <div className="flex gap-3 overflow-x-auto scrollbar-hide pb-2">
         {ads.map((ad, i) => (
