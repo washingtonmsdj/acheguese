@@ -171,6 +171,8 @@ export class BusinessService {
   // ===== QUERIES =====
   static getBusinesses = getBusinesses;
   static getBusinessesList = BusinessQueries.getBusinessesList;
+  static getLaunchVisibleBusinessProfileIds =
+    BusinessQueries.getLaunchVisibleBusinessProfileIds;
   static getBusinessProfile = BusinessQueries.getBusinessProfile;
   static getBusinessById = BusinessQueries.getBusinessById;
   static getBusinessDataIdByProfileId =
