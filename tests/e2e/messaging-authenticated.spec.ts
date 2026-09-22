@@ -6,7 +6,10 @@ import {
   hasE2EUserCredentials,
   requireE2EUserCredentials,
 } from "./helpers/auth";
-import { installPrivacyRpcPreviewBridge } from "./helpers/remoteEdgeCorsBridge";
+import {
+  installPrivacyRpcPreviewBridge,
+  installSessionProfilePreviewBridges,
+} from "./helpers/remoteEdgeCorsBridge";
 
 test.setTimeout(120_000);
 
@@ -33,7 +36,10 @@ test.describe("Mensagens autenticadas — provider Business", () => {
       timeout: 30_000,
     });
 
-    await installPrivacyRpcPreviewBridge(page);
+    await Promise.all([
+      installPrivacyRpcPreviewBridge(page),
+      installSessionProfilePreviewBridges(page),
+    ]);
 
     const businessPreviewStatuses: number[] = [];
     page.on("response", (response) => {
