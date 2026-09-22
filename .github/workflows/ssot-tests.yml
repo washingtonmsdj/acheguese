@@ -164,6 +164,8 @@ jobs:
     env:
       CI: true
       PLAYWRIGHT_BASE_URL: https://acheguese.com.br
+      E2E_SUPABASE_URL: https://xhdowzacfujckjelqhtd.supabase.co
+      E2E_SUPABASE_PUBLISHABLE_KEY: sb_publishable_dc-rd2YjKuZ5KJc_zRYVYA_ANmcFxKk
       E2E_USER_EMAIL: ${{ secrets.E2E_USER_EMAIL }}
       E2E_USER_PASSWORD: ${{ secrets.E2E_USER_PASSWORD }}
 
