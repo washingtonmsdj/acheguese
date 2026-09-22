@@ -142,10 +142,26 @@ export interface LocationPostalCodeLookupResult {
   territory: TerritoryResolution;
 }
 
+type LocationAliasRow = {
+  location_id: string;
+  alias_value: string;
+};
+
+type TerritorialGroupMemberRow = {
+  location_id: string;
+  territorial_groups: { id: string; slug: string; name: string } | null;
+};
+
 export interface LocationGeocodingServiceDeps {
   geocoding?: GeocodingEngine;
   locationRepository?: ILocationRepository;
   locationCacheTtlMs?: number;
+  loadLocationAliases?: () => Promise<LocationAliasRow[]>;
+  loadTerritorialGroupMembers?: () => Promise<TerritorialGroupMemberRow[]>;
+  matchDistrictIdByPoint?: (
+    cityId: string,
+    coordinates: { latitude: number; longitude: number },
+  ) => Promise<string | null>;
 }
 
 const DEFAULT_LOCATION_CACHE_TTL_MS = 5 * 60 * 1000;
@@ -249,11 +265,20 @@ export class LocationGeocodingService {
   private territoryIndex: CachedTerritoryIndex | null = null;
   private territoryIndexPromise: Promise<CachedTerritoryIndex> | null = null;
   private aliasLookupDisabled = false;
+  private readonly injectedAliasLoader?: () => Promise<LocationAliasRow[]>;
+  private readonly injectedGroupLoader?: () => Promise<TerritorialGroupMemberRow[]>;
+  private readonly injectedBoundaryMatcher?: (
+    cityId: string,
+    coordinates: { latitude: number; longitude: number },
+  ) => Promise<string | null>;
 
   constructor(deps: LocationGeocodingServiceDeps = {}) {
     this.geocoding = deps.geocoding ?? providerGeocodingService;
     this.locationRepository = deps.locationRepository ?? createLocationRepository();
     this.locationCacheTtlMs = deps.locationCacheTtlMs ?? DEFAULT_LOCATION_CACHE_TTL_MS;
+    this.injectedAliasLoader = deps.loadLocationAliases;
+    this.injectedGroupLoader = deps.loadTerritorialGroupMembers;
+    this.injectedBoundaryMatcher = deps.matchDistrictIdByPoint;
   }
 
   async geocode(request: GeocodeRequest): Promise<LocationGeocodingResult[]> {
@@ -686,9 +711,11 @@ export class LocationGeocodingService {
     }
 
     const aliasesByNormalizedValue = new Map<string, Set<string>>();
-    let aliasesData: Array<{ location_id: string; alias_value: string }> | null = null;
+    let aliasesData: LocationAliasRow[] = [];
 
-    if (!this.aliasLookupDisabled) {
+    if (this.injectedAliasLoader) {
+      aliasesData = await this.injectedAliasLoader();
+    } else if (!this.aliasLookupDisabled) {
       const aliasesWithValidity = await supabase
         .from('location_aliases' as never)
         .select('location_id, alias_value, valid_until')
@@ -708,14 +735,14 @@ export class LocationGeocodingService {
             logger.warn('[LocationGeocodingService] Failed to load location aliases', aliasesFallback.error);
           }
         } else {
-          aliasesData = aliasesFallback.data as Array<{ location_id: string; alias_value: string }>;
+          aliasesData = aliasesFallback.data as LocationAliasRow[];
         }
       } else {
-        aliasesData = aliasesWithValidity.data as Array<{ location_id: string; alias_value: string }>;
+        aliasesData = aliasesWithValidity.data as LocationAliasRow[];
       }
     }
 
-    for (const row of aliasesData ?? []) {
+    for (const row of aliasesData) {
       const key = normalizeText(row.alias_value);
       if (!key) continue;
       const existing = aliasesByNormalizedValue.get(key) ?? new Set<string>();
@@ -727,13 +754,12 @@ export class LocationGeocodingService {
       string,
       Array<{ id: string; slug: string; name: string }>
     >();
-    const { data: groupsData } = await supabase
-      .from('territorial_group_members' as never)
-      .select('location_id, territorial_groups(id, slug, name)');
-    for (const row of (groupsData ?? []) as Array<{
-      location_id: string;
-      territorial_groups: { id: string; slug: string; name: string } | null;
-    }>) {
+    const groupsData: TerritorialGroupMemberRow[] = this.injectedGroupLoader
+      ? await this.injectedGroupLoader()
+      : ((await supabase
+          .from('territorial_group_members' as never)
+          .select('location_id, territorial_groups(id, slug, name)')).data ?? []) as TerritorialGroupMemberRow[];
+    for (const row of groupsData) {
       if (!row.territorial_groups) continue;
       const bucket = territorialGroupsByDistrictId.get(row.location_id) ?? [];
       bucket.push(row.territorial_groups);
@@ -758,6 +784,11 @@ export class LocationGeocodingService {
     cityId: string,
     coordinates: { latitude: number; longitude: number },
   ): Promise<Location | null> {
+    if (this.injectedBoundaryMatcher) {
+      const locationId = await this.injectedBoundaryMatcher(cityId, coordinates);
+      return locationId ? this.locationRepository.findById(locationId) : null;
+    }
+
     const { data, error } = await supabase.rpc('rpc_match_district_by_point', {
       p_city_id: cityId,
       p_lat: coordinates.latitude,
