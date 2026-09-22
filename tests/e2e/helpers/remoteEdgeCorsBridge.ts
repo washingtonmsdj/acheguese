@@ -1,13 +1,14 @@
 import type { Page } from "@playwright/test";
 import { getOperationalEnv } from "../../helpers/operational-env";
 
-const FUNCTION_NAME = "privacy-rpc";
+const PRIVACY_FUNCTION_NAME = "privacy-rpc";
+const SESSION_FUNCTION_NAMES = ["profile-rpc", "session-rpc"] as const;
 
 function requireRemoteSupabaseUrl(): string {
   const value = getOperationalEnv().supabaseUrl?.trim();
   if (!value) {
     throw new Error(
-      "E2E Supabase URL is required for the privacy-rpc preview bridge.",
+      "E2E Supabase URL is required for the remote Edge preview bridge.",
     );
   }
   return value.replace(/\/+$/, "");
@@ -31,10 +32,12 @@ function resolvePreviewOrigin(): string {
  * Do not broaden this helper to arbitrary Edge Functions. Each additional
  * function must earn an explicit test contract.
  */
-export async function installPrivacyRpcPreviewBridge(
+async function installExplicitEdgePreviewBridge(
   page: Page,
+  functionName: string,
 ): Promise<void> {
-  const endpoint = `${requireRemoteSupabaseUrl()}/functions/v1/${FUNCTION_NAME}`;
+  const endpoint =
+    `${requireRemoteSupabaseUrl()}/functions/v1/${functionName}`;
   const previewOrigin = resolvePreviewOrigin();
 
   await page.route(endpoint, async (route) => {
@@ -55,4 +58,23 @@ export async function installPrivacyRpcPreviewBridge(
       headers: responseHeaders,
     });
   });
+}
+
+export function installPrivacyRpcPreviewBridge(page: Page): Promise<void> {
+  return installExplicitEdgePreviewBridge(page, PRIVACY_FUNCTION_NAME);
+}
+
+/**
+ * Session hydration on the local preview must still exercise the real remote
+ * profile/session brokers. These are the only additional functions allowed by
+ * this test bridge; production CORS policy remains unchanged.
+ */
+export async function installSessionProfilePreviewBridges(
+  page: Page,
+): Promise<void> {
+  await Promise.all(
+    SESSION_FUNCTION_NAMES.map((functionName) =>
+      installExplicitEdgePreviewBridge(page, functionName),
+    ),
+  );
 }
