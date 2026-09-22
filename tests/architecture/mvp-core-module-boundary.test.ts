@@ -36,6 +36,9 @@ describe("MVP core module boundary", () => {
   const heavyPrWorkflow = read(".github/workflows/certify-heavy-pr-auto.yml");
   const heavyExactShaWorkflow = read(".github/workflows/certify-heavy.yml");
   const previewE2eRunner = read("tools/release/run-preview-e2e.ps1");
+  const ssotWorkflow = read(".github/workflows/ssot-tests.yml");
+  const e2eAuthHelper = read("tests/e2e/helpers/auth.ts");
+  const operationalEnv = read("tests/helpers/operational-env.ts");
 
   it("keeps domain modules separate from horizontal platform capabilities", () => {
     expect(registry).toContain('business: { status: "active" }');
@@ -324,6 +327,27 @@ describe("MVP core module boundary", () => {
     );
     expect(heavyPrWorkflow).not.toContain(
       ".\\scripts\\ci\\run-preview-e2e.ps1",
+    );
+  });
+
+  it("keeps Production authenticated smoke on explicit public Supabase configuration", () => {
+    expect(ssotWorkflow).toContain(
+      "E2E_SUPABASE_URL: https://xhdowzacfujckjelqhtd.supabase.co",
+    );
+    expect(ssotWorkflow).toContain(
+      "E2E_SUPABASE_PUBLISHABLE_KEY: sb_publishable_dc-rd2YjKuZ5KJc_zRYVYA_ANmcFxKk",
+    );
+    expect(operationalEnv).toContain("readEnv('E2E_SUPABASE_URL')");
+    expect(operationalEnv).toContain(
+      "readEnv('E2E_SUPABASE_PUBLISHABLE_KEY')",
+    );
+    expect(e2eAuthHelper).toContain(
+      "Authenticated E2E requires explicit E2E_SUPABASE_URL",
+    );
+    expect(e2eAuthHelper).not.toContain("scriptSources");
+    expect(e2eAuthHelper).not.toContain("publicBundles");
+    expect(e2eAuthHelper).not.toContain(
+      "Unable to discover the public Supabase browser configuration from Production.",
     );
   });
 
