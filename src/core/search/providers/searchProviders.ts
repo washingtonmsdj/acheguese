@@ -1,20 +1,7 @@
 import { BusinessService } from "@/core/business";
 import type { Business } from "@/core/business/types/Business";
-import {
-  ClassifiedUrlService,
-  searchClassifieds,
-} from "@/core/classifieds/services";
-import { CommunityExperienceService } from "@/core/community-experience/services/CommunityExperienceService";
-import { ProfessionalService } from "@/core/professional/services/ProfessionalService";
-import { ProfessionalUrlService } from "@/core/professional/services/ProfessionalUrlService";
-import { searchPublicPosts } from "@/core/posts/services";
 import type { Professional } from "@/core/professional/types";
-import { eventsReadService } from "@/core/community-events";
-import { eventPublicRoutes } from "@/core/community-events/routes/eventPublicRoutes";
-import {
-  WorkOpportunitiesService,
-  type WorkOpportunityCard,
-} from "@/core/work-opportunities";
+import type { WorkOpportunityCard } from "@/core/work-opportunities";
 import { isLaunchSurfaceEnabled } from "@/app/config/launchScope";
 import {
   getCommunitySearchCandidateLimit,
@@ -109,6 +96,10 @@ const communitiesProvider: SearchProvider = {
   isEnabled: () => isLaunchSurfaceEnabled("community"),
   async search({ query, filters, signal }) {
     throwIfAborted(signal);
+    const { CommunityExperienceService } = await import(
+      "@/core/community-experience/services/CommunityExperienceService"
+    );
+    throwIfAborted(signal);
     const found = await CommunityExperienceService.searchPublicCommunities(query, 12);
     throwIfAborted(signal);
     const communities = filters.communityId
@@ -152,6 +143,12 @@ const professionalsProvider: SearchProvider = {
   isEnabled: () => isLaunchSurfaceEnabled("services"),
   async search({ query, filters, linkedEntityIds, signal }) {
     throwIfAborted(signal);
+    const [{ ProfessionalService }, { ProfessionalUrlService }] =
+      await Promise.all([
+        import("@/core/professional/services/ProfessionalService"),
+        import("@/core/professional/services/ProfessionalUrlService"),
+      ]);
+    throwIfAborted(signal);
     const found = await ProfessionalService.searchProfessionals(query, {
       city: filters.city,
       neighborhood: filters.neighborhood,
@@ -189,6 +186,10 @@ const opportunitiesProvider: SearchProvider = {
     if (filters.communityId && !filters.territoryFilter) {
       return result("opportunities", [], []);
     }
+    const { WorkOpportunitiesService } = await import(
+      "@/core/work-opportunities"
+    );
+    throwIfAborted(signal);
     const cards = await WorkOpportunitiesService.listPublicOpportunityCards({
       search: query,
       territoryLocationId:
@@ -212,6 +213,10 @@ const classifiedsProvider: SearchProvider = {
   linkedEntityTypes: ["classified"],
   isEnabled: () => isLaunchSurfaceEnabled("classifieds"),
   async search({ query, filters, linkedEntityIds, signal }) {
+    throwIfAborted(signal);
+    const { ClassifiedUrlService, searchClassifieds } = await import(
+      "@/core/classifieds/services"
+    );
     throwIfAborted(signal);
     const found = await searchClassifieds(query, {
       filter: filters.territoryFilter,
@@ -243,6 +248,11 @@ const eventsProvider: SearchProvider = {
   isEnabled: () => isLaunchSurfaceEnabled("events"),
   async search({ query, filters, linkedEntityIds, signal }) {
     throwIfAborted(signal);
+    const [{ eventsReadService }, { eventPublicRoutes }] = await Promise.all([
+      import("@/core/community-events"),
+      import("@/core/community-events/routes/eventPublicRoutes"),
+    ]);
+    throwIfAborted(signal);
     const page = await eventsReadService.getEventsPage({
       search: query,
       territoryFilter: filters.territoryFilter,
@@ -272,6 +282,8 @@ const postsProvider: SearchProvider = {
   linkedEntityTypes: ["post"],
   isEnabled: () => isLaunchSurfaceEnabled("community"),
   async search({ query, filters, linkedEntityIds, signal }) {
+    throwIfAborted(signal);
+    const { searchPublicPosts } = await import("@/core/posts/services");
     throwIfAborted(signal);
     const found = await searchPublicPosts(query, {
       territoryFilter: filters.territoryFilter,
