@@ -2,6 +2,7 @@ import { expect, test } from "@playwright/test";
 import {
   bootstrapFixtureSession,
   bootstrapProtectedPreviewAccess,
+  ensureFixtureCurrentTermsAcceptance,
   hasE2EUserCredentials,
   requireE2EUserCredentials,
 } from "./helpers/auth";
@@ -43,25 +44,17 @@ test.describe("Mensagens autenticadas — provider Business", () => {
       }
     });
 
-    await bootstrapFixtureSession(
+    const client = await bootstrapFixtureSession(
       page,
       credentials.email,
       credentials.password,
     );
+    await ensureFixtureCurrentTermsAcceptance(client);
 
-    await page.waitForURL(
-      (url) =>
-        url.pathname === "/mensagens" || url.pathname === "/aceitar-termos",
-      { timeout: 30_000 },
-    );
-
-    if (new URL(page.url()).pathname === "/aceitar-termos") {
-      await expect(
-        page.getByText(/Li e aceito os Termos de Uso/i),
-      ).toBeVisible({ timeout: 30_000 });
-      await page.locator("#terms-acceptance").click();
-      await page.getByRole("button", { name: "Aceitar e continuar" }).click();
-    }
+    await page.goto("/mensagens", {
+      waitUntil: "domcontentloaded",
+      timeout: 60_000,
+    });
 
     await expect(page).toHaveURL(/\/mensagens(?:\?|$)/, {
       timeout: 30_000,
