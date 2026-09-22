@@ -163,6 +163,27 @@
         "Location:\\s*canonicalSitemapUrl",
         "Cache-Control"
       ]
+    },
+    "ci-auth-fixture-session": {
+      "kind": "external-oidc-broker",
+      "label": "GitHub Actions OIDC fixture-session broker",
+      "requiredPatterns": [
+        "rateLimitMiddleware\\s*\\(",
+        "createRemoteJWKSet\\s*\\(",
+        "jwtVerify\\s*\\(",
+        "token\\.actions\\.githubusercontent\\.com",
+        "GITHUB_OIDC_AUDIENCE",
+        "EXPECTED_REPOSITORY_ID",
+        "EXPECTED_WORKFLOW_REF",
+        "EXPECTED_REF",
+        "EXPECTED_EVENT",
+        "EXPECTED_RUNNER_ENVIRONMENT",
+        "claims\\.sha\\s*!==\\s*expectedSha",
+        "app_metadata\\?\\.acheguese_fixture",
+        "FIXTURE_MARKER",
+        "signInWithPassword\\s*\\(",
+        "resource:\\s*[\"']ci-auth-fixture-session[\"']"
+      ]
     }
   },
   "serviceRoleAllowlist": {
