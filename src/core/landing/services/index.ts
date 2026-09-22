@@ -21,12 +21,6 @@ export {
 } from "./LandingService";
 
 export { LandingFeaturedService } from "./LandingFeaturedService";
-export {
-  buildNeighborhoodStreamItems,
-  getNeighborhoodStreamMoreConfig,
-  type NeighborhoodStreamUrls,
-} from "./NeighborhoodStreamModelService";
-
 export type {
   ActiveTerritoriesWithLanding,
   CountryData,
@@ -40,15 +34,6 @@ export type {
   NationalStats,
   VerifiedBusiness,
 } from "./LandingService";
-
-export type {
-  NeighborhoodCommunityTab,
-  NeighborhoodCommunityTabId,
-  NeighborhoodStreamGroups,
-  NeighborhoodStreamItem,
-  NeighborhoodStreamMoreConfig,
-  NeighborhoodStreamTone,
-} from "@/core/landing/types";
 
 export type {
   FeaturedBusiness,
