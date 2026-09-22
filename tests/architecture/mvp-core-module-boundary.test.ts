@@ -315,6 +315,13 @@ describe("MVP core module boundary", () => {
     expect(heavyPrWorkflow).toContain(
       ".\\tools\\release\\run-preview-e2e.ps1",
     );
+    expect(heavyPrWorkflow).toContain("push:");
+    expect(heavyPrWorkflow).toContain("- main");
+    expect(heavyPrWorkflow).toContain("github.event_name == 'push'");
+    expect(heavyPrWorkflow).toContain("github.sha");
+    expect(heavyPrWorkflow).toContain(
+      "github.event.pull_request.number || github.sha",
+    );
     expect(heavyPrWorkflow).not.toContain(
       ".\\scripts\\ci\\run-preview-e2e.ps1",
     );
