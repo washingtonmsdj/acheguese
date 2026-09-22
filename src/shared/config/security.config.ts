@@ -439,15 +439,16 @@ export const INPUT_VALIDATION = {
 } as const;
 
 export const SECURITY_AUDIT_LOG = {
-  lastReview: '2026-09-16',
+  lastReview: '2026-09-21',
   reviewer: 'OpenAI',
   version: '2.24.0',
   changes: [
     'CSP/security domain registry remain the canonical browser security authority',
     'HIBP k-Anonymity endpoint explicitly allowed in connect-src',
     'Historical change log moved out of executable configuration to keep the SSOT operational',
+    'Production release identity is explicitly no-store so smoke gates observe deployment convergence',
   ],
-  nextReview: '2026-10-16',
+  nextReview: '2026-10-21',
 } as const;
 
 export const CACHE_HEADERS = {
