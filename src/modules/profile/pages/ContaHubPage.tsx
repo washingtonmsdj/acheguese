@@ -95,11 +95,12 @@ function AccountAction({
 function ContaHubLivePage() {
   const navigate = useNavigate();
   const data = useProfileHub();
+  const resolvedProfile = data.profile ?? data.activeProfile ?? null;
   const personalProfile: RuntimeProfile | null =
     data.allProfiles.find((profile) => profile.profile_type === "personal") ??
     data.activeProfile ??
     null;
-  const editorProfileId = personalProfile?.id ?? data.profile?.id ?? null;
+  const editorProfileId = personalProfile?.id ?? resolvedProfile?.id ?? null;
 
   useEffect(() => {
     if (!data.loading && !data.user) {
@@ -107,7 +108,7 @@ function ContaHubLivePage() {
     }
   }, [data.loading, data.user, navigate, data.appUrls.auth.login]);
 
-  if (data.loading) {
+  if (data.loading && !resolvedProfile) {
     return (
       <div className="territory-vivo flex min-h-[70dvh] items-center justify-center bg-territory-canvas px-4">
         <div className="space-y-3 text-center" role="status">
@@ -120,7 +121,7 @@ function ContaHubLivePage() {
     );
   }
 
-  if (data.error && !data.profile && !data.identity) {
+  if (data.error && !resolvedProfile && !data.identity) {
     return (
       <GuardCard
         icon={<CircleAlert className="mx-auto h-10 w-10 text-territory-warm" />}
@@ -147,7 +148,7 @@ function ContaHubLivePage() {
     );
   }
 
-  if (!data.activeProfile && !data.profile) {
+  if (!resolvedProfile) {
     return (
       <GuardCard
         icon={<Users className="mx-auto h-10 w-10 text-territory-brand" />}
@@ -163,7 +164,7 @@ function ContaHubLivePage() {
   return (
     <ContaHubLayout
       personalProfile={personalProfile}
-      profile={data.profile}
+      profile={resolvedProfile}
       allProfiles={data.allProfiles}
       isVerified={data.isVerified}
       canOpenPublicProfile={data.canOpenPublicProfile}
