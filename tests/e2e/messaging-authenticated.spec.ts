@@ -31,14 +31,17 @@ test.describe("Mensagens autenticadas — provider Business", () => {
       timeout: 30_000,
     });
 
-    const previewResponse = page.waitForResponse(
-      (response) =>
+    const businessPreviewStatuses: number[] = [];
+    page.on("response", (response) => {
+      if (
         response.request().method() === "POST" &&
         response.url().includes(
           "/rest/v1/rpc/list_business_direct_thread_previews",
-        ),
-      { timeout: 30_000 },
-    );
+        )
+      ) {
+        businessPreviewStatuses.push(response.status());
+      }
+    });
 
     await bootstrapFixtureSession(
       page,
@@ -70,9 +73,12 @@ test.describe("Mensagens autenticadas — provider Business", () => {
       page.getByRole("heading", { name: "Mensagens" }).first(),
     ).toBeVisible();
 
-    const response = await previewResponse;
-    expect(response.status()).toBeGreaterThanOrEqual(200);
-    expect(response.status()).toBeLessThan(300);
+    await expect
+      .poll(() => businessPreviewStatuses.length, { timeout: 30_000 })
+      .toBeGreaterThan(0);
+    expect(businessPreviewStatuses.every((status) => status >= 200 && status < 300)).toBe(
+      true,
+    );
 
     await expect(page.locator("body")).not.toContainText(
       /não foi possível carregar suas conversas/i,
