@@ -35,6 +35,9 @@ jobs:
   certify-heavy-pr:
     name: Heavy gates for exact source SHA
     if: github.event_name == 'push' || github.event.pull_request.head.repo.full_name == github.repository
+    concurrency:
+      group: acheguese-authenticated-e2e-fixture
+      cancel-in-progress: false
     runs-on: windows-latest
     timeout-minutes: 180
 
