@@ -65,7 +65,6 @@ function invalidRequest(req: Request, message: string): Response {
 interface FixtureAuthErrorShape {
   code?: string;
   status?: number;
-  name?: string;
 }
 
 interface FixtureAuthFailure {
