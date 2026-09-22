@@ -33,6 +33,17 @@ const platformRegistry = read(
 const realtimeRegistry = read(
   "src/core/realtime/config/realtimeRegistry.ts",
 );
+const advisorResidualRegister = JSON.parse(
+  read(
+    "docs/09-reference/governance/security/SUPABASE_ADVISOR_RESIDUALS.json",
+  ),
+) as {
+  residuals: Array<{
+    cacheKey: string;
+    callerClass?: string;
+    exceptionId: string;
+  }>;
+};
 
 describe("Business Messaging MVP", () => {
   it("keeps Business messaging as a dedicated aggregate with server-owned writes", () => {
@@ -105,6 +116,30 @@ describe("Business Messaging MVP", () => {
       expect(normalizedMigration).toContain(
         `GRANT EXECUTE ON FUNCTION public.${signature} TO authenticated, service_role;`,
       );
+    }
+  });
+
+  it("classifies every intentional Business Messaging SECURITY DEFINER endpoint individually", () => {
+    const expectedCacheKeys = [
+      "authenticated_security_definer_function_executable_public_create_business_direct_thread_p_profile_id uuid, p_business_id uuid",
+      "authenticated_security_definer_function_executable_public_list_business_direct_messages_p_profile_id uuid, p_thread_id uuid, p_limit integer, p_cursor_created_at timestamp with time zone, p_cursor_id uuid",
+      "authenticated_security_definer_function_executable_public_list_business_direct_thread_previews_p_profile_id uuid, p_limit integer, p_cursor_last_message_at timestamp with time zone, p_cursor_id uuid, p_search text",
+      "authenticated_security_definer_function_executable_public_mark_business_direct_thread_read_p_profile_id uuid, p_thread_id uuid",
+      "authenticated_security_definer_function_executable_public_report_business_direct_thread_p_profile_id uuid, p_thread_id uuid, p_message_id uuid, p_reason text, p_description text",
+      "authenticated_security_definer_function_executable_public_send_business_direct_message_p_profile_id uuid, p_thread_id uuid, p_body text",
+      "authenticated_security_definer_function_executable_public_set_business_direct_thread_blocked_p_profile_id uuid, p_thread_id uuid, p_blocked boolean, p_reason text",
+    ];
+
+    for (const cacheKey of expectedCacheKeys) {
+      const residual = advisorResidualRegister.residuals.find(
+        (entry) => entry.cacheKey === cacheKey,
+      );
+
+      expect(residual).toMatchObject({
+        cacheKey,
+        callerClass: "authenticated_user_endpoint",
+        exceptionId: "EXC-2026-07-15-POSTGREST-SECURITY-DEFINER-COMMANDS",
+      });
     }
   });
 
