@@ -154,11 +154,11 @@ test.describe("Business lifecycle — fixture autenticada remota", () => {
     const renamedName = `${originalName} Atualizada`;
 
     try {
-      await page.goto("/central/empresas/nova/educacao", {
+      await page.goto("/central/empresas/nova", {
         waitUntil: "domcontentloaded",
       });
       await expect(
-        page.getByRole("heading", { name: /Cadastrar instituição de ensino/i }),
+        page.getByRole("heading", { name: /^Criar empresa$/i }),
       ).toBeVisible({ timeout: 30_000 });
 
       await page.locator("#name").fill(originalName);
@@ -180,11 +180,11 @@ test.describe("Business lifecycle — fixture autenticada remota", () => {
       await page.getByRole("button", { name: "Criar empresa" }).click();
 
       await page.waitForURL(
-        /\/central\/empresas\/[0-9a-f-]{36}\/educacao\/setup(?:\?|$)/i,
+        /\/central\/empresas\/[0-9a-f-]{36}(?:\/?|\?.*)$/i,
         { timeout: 40_000 },
       );
       const profileId =
-        page.url().match(/\/central\/empresas\/([0-9a-f-]{36})\//i)?.[1];
+        page.url().match(/\/central\/empresas\/([0-9a-f-]{36})(?:\/|\?|$)/i)?.[1];
       expect(profileId).toBeTruthy();
 
       await page.goto(`/edit-business/${profileId}`, {
