@@ -72,17 +72,17 @@ interface FixtureAuthFailure {
   code:
     | "fixture_credentials_rejected"
     | "fixture_account_unavailable"
+    | "auth_rate_limited"
     | "auth_upstream_unavailable"
     | "fixture_auth_failed";
-  status: 401 | 503;
+  status: 401 | 429 | 503;
 }
 
 function classifyFixtureAuthFailure(
   error: FixtureAuthErrorShape | null,
 ): FixtureAuthFailure {
   if (
-    error?.code === "invalid_credentials" ||
-    error?.code === "invalid_grant"
+    error?.code === "invalid_credentials"
   ) {
     return { code: "fixture_credentials_rejected", status: 401 };
   }
@@ -95,10 +95,11 @@ function classifyFixtureAuthFailure(
     return { code: "fixture_account_unavailable", status: 401 };
   }
 
-  if (
-    (typeof error?.status === "number" && error.status >= 500) ||
-    error?.name === "AuthRetryableFetchError"
-  ) {
+  if (error?.status === 429) {
+    return { code: "auth_rate_limited", status: 429 };
+  }
+
+  if (typeof error?.status === "number" && error.status >= 500) {
     return { code: "auth_upstream_unavailable", status: 503 };
   }
 
