@@ -6,6 +6,7 @@ import {
   hasE2EUserCredentials,
   requireE2EUserCredentials,
 } from "./helpers/auth";
+import { installPrivacyRpcPreviewBridge } from "./helpers/remoteEdgeCorsBridge";
 
 test.setTimeout(120_000);
 
@@ -31,6 +32,8 @@ test.describe("Mensagens autenticadas — provider Business", () => {
     await expect(page).toHaveURL(/\/login\?redirect=%2Fmensagens$/, {
       timeout: 30_000,
     });
+
+    await installPrivacyRpcPreviewBridge(page);
 
     const businessPreviewStatuses: number[] = [];
     page.on("response", (response) => {
