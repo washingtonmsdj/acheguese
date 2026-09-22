@@ -97,7 +97,10 @@ function generateVercelConfig() {
     ignoreCommand?: string;
     buildCommand?: string;
     installCommand?: string;
-    headers?: Array<{ headers?: Array<{ key?: string }> }>;
+    headers?: Array<{
+      source?: string;
+      headers?: Array<{ key?: string; value?: string }>;
+    }>;
   };
 
   if (
@@ -137,6 +140,16 @@ function generateVercelConfig() {
     throw new Error(
       `Generated vercel.json must contain exactly one CSP header; found ${cspCount}`,
     );
+  }
+
+  const releaseIdentityHeaders = (generated.headers ?? []).find(
+    (entry) => entry.source === "/release.json",
+  )?.headers;
+  const releaseCacheControl = releaseIdentityHeaders?.find(
+    (header) => header.key === "Cache-Control",
+  )?.value;
+  if (releaseCacheControl !== "no-cache, no-store, must-revalidate") {
+    throw new Error("release.json must remain uncached for deployment convergence checks");
   }
 
   console.log(`vercel.json generated successfully: ${outputPath}`);
