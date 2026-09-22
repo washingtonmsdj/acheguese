@@ -33,16 +33,16 @@ test.describe("Business Create Form", () => {
     test.setTimeout(180_000);
 
     await loginAsUser(page);
-    await page.goto("/central/empresas/nova/educacao", {
+    await page.goto("/central/empresas/nova", {
       waitUntil: "domcontentloaded",
       timeout: 60_000,
     });
 
     await expect(
-      page.getByRole("heading", { name: /Cadastrar .* ensino/i }),
+      page.getByRole("heading", { name: /^Criar empresa$/i }),
     ).toBeVisible({ timeout: 30_000 });
 
-    await page.locator("#name").fill(`E2E Escola Fluxo ${Date.now()}`);
+    await page.locator("#name").fill(`E2E Empresa Fluxo ${Date.now()}`);
     await page
       .locator("#description")
       .fill("Cadastro E2E para validar avanço de etapas do formulário sem travamento.");
