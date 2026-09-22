@@ -119,10 +119,13 @@ jobs:
         env:
           CI: true
         run: |
+          New-Item -ItemType Directory -Force ".gate-status" | Out-Null
+          Remove-Item ".gate-status/mvp-architecture.success" -Force -ErrorAction SilentlyContinue
           npm run validate:workflow:references
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
           npm run test:mvp:architecture
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          Set-Content -Path ".gate-status/mvp-architecture.success" -Value "success" -Encoding ASCII
 
       - name: Install Playwright Chromium
         shell: powershell
@@ -165,11 +168,17 @@ jobs:
               "--output=test-results/logout"
             )
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          New-Item -ItemType Directory -Force ".gate-status" | Out-Null
+          Set-Content -Path ".gate-status/logout.success" -Value "success" -Encoding ASCII
 
       - name: Print logout E2E failure diagnostics
-        if: steps.logout_e2e.outcome == 'failure'
+        if: always()
         shell: powershell
         run: |
+          if (Test-Path ".gate-status/logout.success") {
+            Write-Host "Authenticated logout E2E passed; no failure diagnostics required."
+            exit 0
+          }
           Write-Host "===== Authenticated logout E2E diagnostics ====="
           $contexts = @(Get-ChildItem -Path "test-results/logout" -Recurse -File -Filter "error-context.md" -ErrorAction SilentlyContinue)
           if ($contexts.Count -eq 0) {
@@ -200,7 +209,12 @@ jobs:
         shell: powershell
         env:
           CI: true
-        run: npm run test:mvp:regression
+        run: |
+          Remove-Item ".gate-status/regression.success" -Force -ErrorAction SilentlyContinue
+          npm run test:mvp:regression
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          New-Item -ItemType Directory -Force ".gate-status" | Out-Null
+          Set-Content -Path ".gate-status/regression.success" -Value "success" -Encoding ASCII
 
       - name: Validate territorial regression boundaries
         id: boundaries
@@ -237,6 +251,8 @@ jobs:
             exit 1
           }
           Write-Host "Territorial regression boundaries passed."
+          New-Item -ItemType Directory -Force ".gate-status" | Out-Null
+          Set-Content -Path ".gate-status/boundaries.success" -Value "success" -Encoding ASCII
 
       - name: Run MVP public E2E
         id: public_e2e
@@ -264,11 +280,17 @@ jobs:
               "--output=test-results/public"
             )
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          New-Item -ItemType Directory -Force ".gate-status" | Out-Null
+          Set-Content -Path ".gate-status/public-e2e.success" -Value "success" -Encoding ASCII
 
       - name: Print public E2E failure diagnostics
-        if: steps.public_e2e.outcome == 'failure'
+        if: always()
         shell: powershell
         run: |
+          if (Test-Path ".gate-status/public-e2e.success") {
+            Write-Host "Public territorial E2E passed; no failure diagnostics required."
+            exit 0
+          }
           Write-Host "===== Public territorial E2E diagnostics ====="
           $contexts = @(Get-ChildItem -Path "test-results/public" -Recurse -File -Filter "error-context.md" -ErrorAction SilentlyContinue)
           if ($contexts.Count -eq 0) {
@@ -297,39 +319,33 @@ jobs:
         if: always()
         shell: powershell
         env:
-          MVP_ARCH_OUTCOME: ${{ steps.mvp_arch.outcome }}
-          LOGOUT_OUTCOME: ${{ steps.logout_e2e.outcome }}
-          REGRESSION_OUTCOME: ${{ steps.regression.outcome }}
-          BOUNDARIES_OUTCOME: ${{ steps.boundaries.outcome }}
-          PUBLIC_OUTCOME: ${{ steps.public_e2e.outcome }}
-          TARGET_SHA: ${{ github.event.pull_request.head.sha }}
+          TARGET_SHA: ${{ github.event_name == 'pull_request' && github.event.pull_request.head.sha || github.sha }}
         run: |
-          $results = @(
-            "MVP architecture=$env:MVP_ARCH_OUTCOME",
-            "Authenticated logout E2E=$env:LOGOUT_OUTCOME",
-            "Regression=$env:REGRESSION_OUTCOME",
-            "Territorial boundaries=$env:BOUNDARIES_OUTCOME",
-            "MVP public E2E=$env:PUBLIC_OUTCOME"
-          )
+          $gates = [ordered]@{
+            "MVP architecture" = ".gate-status/mvp-architecture.success"
+            "Authenticated logout E2E" = ".gate-status/logout.success"
+            "Regression" = ".gate-status/regression.success"
+            "Territorial boundaries" = ".gate-status/boundaries.success"
+            "MVP public E2E" = ".gate-status/public-e2e.success"
+          }
+
           @(
             "## Automatic heavy exact-SHA certification",
             "- SHA: $env:TARGET_SHA"
           ) | Add-Content -Path $env:GITHUB_STEP_SUMMARY -Encoding UTF8
-          $results | ForEach-Object {
-            "- $_" | Add-Content -Path $env:GITHUB_STEP_SUMMARY -Encoding UTF8
-            Write-Host $_
+
+          $failed = @()
+          foreach ($gate in $gates.GetEnumerator()) {
+            $outcome = if (Test-Path $gate.Value) { "success" } else { "failure" }
+            "- $($gate.Key)=$outcome" | Add-Content -Path $env:GITHUB_STEP_SUMMARY -Encoding UTF8
+            Write-Host "$($gate.Key)=$outcome"
+            if ($outcome -ne "success") {
+              $failed += $gate.Key
+            }
           }
 
-          $failed = @(
-            $env:MVP_ARCH_OUTCOME,
-            $env:LOGOUT_OUTCOME,
-            $env:REGRESSION_OUTCOME,
-            $env:BOUNDARIES_OUTCOME,
-            $env:PUBLIC_OUTCOME
-          ) | Where-Object { $_ -ne "success" }
-
           if ($failed.Count -gt 0) {
-            Write-Error "Heavy PR certification failed. See individual gate outcomes above."
+            Write-Error "Heavy PR certification failed. Missing current-attempt success markers: $($failed -join ', ')."
             exit 1
           }
           Write-Host "HEAVY_PR_CERTIFICATION_PASS"
