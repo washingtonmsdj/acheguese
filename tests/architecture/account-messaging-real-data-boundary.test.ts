@@ -7,6 +7,7 @@ const read = (path: string) => readFileSync(resolve(root, path), "utf8");
 
 const routes = read("src/app/routes/sections/AppLayoutRoutes.tsx");
 const account = read("src/modules/profile/pages/ContaHubPage.tsx");
+const appTopbar = read("src/app/components/navigation/AppTopbar.tsx");
 const inbox = read("src/modules/messaging/pages/MensagensPage.tsx");
 const providerRegistry = read(
   "src/core/messaging/providers/messagingProviderRegistry.ts",
@@ -47,6 +48,16 @@ describe("account and horizontal messaging real-data boundary", () => {
     expect(account).toContain("data.allProfiles");
     expect(account).toContain('title="Mensagens"');
     expect(account).toContain('navigate("/mensagens")');
+  });
+
+  it("keeps global Messaging navigation owned by the horizontal capability", () => {
+    expect(appTopbar).toContain(
+      'const showMessages = isLaunchSurfaceEnabled("messaging")',
+    );
+    expect(appTopbar).not.toContain(
+      'isLaunchSurfaceEnabled("communityCommunication")',
+    );
+    expect(appTopbar).toContain("to={appUrls.messages}");
   });
 
   it("keeps the global Inbox provider-based instead of Community-owned", () => {
