@@ -43,8 +43,10 @@ describe("signup confirmation resend Turnstile contract", () => {
     expect(confirmationPage).toContain(
       "journeyContext.email ?? state?.email?.trim().toLowerCase() ?? null",
     );
+    expect(confirmationPage).toContain("hasCanonicalJourneyContext");
+    expect(confirmationPage).toContain("? journeyContext.returnTo");
     expect(confirmationPage).toContain(
-      "hasCanonicalJourneyContext\n          ? journeyContext.returnTo\n          : state?.redirectTo ?? journeyContext.returnTo",
+      ": state?.redirectTo ?? journeyContext.returnTo",
     );
     expect(confirmationPage).not.toContain(
       "state?.email?.trim().toLowerCase() || journeyContext.email",
