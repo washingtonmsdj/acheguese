@@ -19,7 +19,7 @@ function readPositiveInteger(name, fallback) {
 function writeOutput(name, value) {
   const output = process.env.GITHUB_OUTPUT;
   if (!output) return;
-  appendFileSync(output, name + "=" + String(value) + "\\n", "utf8");
+  appendFileSync(output, name + "=" + String(value) + "\n", "utf8");
 }
 
 function sleep(ms) {
