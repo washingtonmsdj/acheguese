@@ -1,6 +1,6 @@
 {
   "schemaVersion": "supabase-advisor-residuals/v1",
-  "updatedAt": "2026-09-19",
+  "updatedAt": "2026-09-21",
   "sourceCommand": "supabase db advisors --linked --type security --fail-on none --output json",
   "residuals": [
     {
@@ -590,6 +590,48 @@
       "exceptionId": "EXC-2026-07-15-POSTGREST-SECURITY-DEFINER-COMMANDS",
       "summary": "Admin-only Business profile correction queue read with auth.uid() presence check and private.is_admin_user(auth.uid()) authorization.",
       "callerClass": "authenticated_admin_endpoint"
+    },
+    {
+      "cacheKey": "authenticated_security_definer_function_executable_public_create_business_direct_thread_p_profile_id uuid, p_business_id uuid",
+      "exceptionId": "EXC-2026-07-15-POSTGREST-SECURITY-DEFINER-COMMANDS",
+      "summary": "Business Direct Messaging thread command with authenticated active-Profile ownership and active-Business validation.",
+      "callerClass": "authenticated_user_endpoint"
+    },
+    {
+      "cacheKey": "authenticated_security_definer_function_executable_public_list_business_direct_messages_p_profile_id uuid, p_thread_id uuid, p_limit integer, p_cursor_created_at timestamp with time zone, p_cursor_id uuid",
+      "exceptionId": "EXC-2026-07-15-POSTGREST-SECURITY-DEFINER-COMMANDS",
+      "summary": "Participant-only Business Direct Messaging read with active-Profile ownership and bounded keyset pagination.",
+      "callerClass": "authenticated_user_endpoint"
+    },
+    {
+      "cacheKey": "authenticated_security_definer_function_executable_public_list_business_direct_thread_previews_p_profile_id uuid, p_limit integer, p_cursor_last_message_at timestamp with time zone, p_cursor_id uuid, p_search text",
+      "exceptionId": "EXC-2026-07-15-POSTGREST-SECURITY-DEFINER-COMMANDS",
+      "summary": "Owned-Profile Business Direct Messaging inbox read with participant joins, bounded search and keyset pagination.",
+      "callerClass": "authenticated_user_endpoint"
+    },
+    {
+      "cacheKey": "authenticated_security_definer_function_executable_public_mark_business_direct_thread_read_p_profile_id uuid, p_thread_id uuid",
+      "exceptionId": "EXC-2026-07-15-POSTGREST-SECURITY-DEFINER-COMMANDS",
+      "summary": "Participant-only Business Direct Messaging read-state command bound to an owned active Profile.",
+      "callerClass": "authenticated_user_endpoint"
+    },
+    {
+      "cacheKey": "authenticated_security_definer_function_executable_public_report_business_direct_thread_p_profile_id uuid, p_thread_id uuid, p_message_id uuid, p_reason text, p_description text",
+      "exceptionId": "EXC-2026-07-15-POSTGREST-SECURITY-DEFINER-COMMANDS",
+      "summary": "Participant-only Business Direct Messaging report command with bounded reason/description and metadata-only audit.",
+      "callerClass": "authenticated_user_endpoint"
+    },
+    {
+      "cacheKey": "authenticated_security_definer_function_executable_public_send_business_direct_message_p_profile_id uuid, p_thread_id uuid, p_body text",
+      "exceptionId": "EXC-2026-07-15-POSTGREST-SECURITY-DEFINER-COMMANDS",
+      "summary": "Participant-only Business Direct Messaging send command with active-Profile ownership, block/closed checks and server-side rate limiting.",
+      "callerClass": "authenticated_user_endpoint"
+    },
+    {
+      "cacheKey": "authenticated_security_definer_function_executable_public_set_business_direct_thread_blocked_p_profile_id uuid, p_thread_id uuid, p_blocked boolean, p_reason text",
+      "exceptionId": "EXC-2026-07-15-POSTGREST-SECURITY-DEFINER-COMMANDS",
+      "summary": "Participant-only Business Direct Messaging block-state command bound to an owned active Profile and metadata-only audit.",
+      "callerClass": "authenticated_user_endpoint"
     }
   ],
   "snapshotEvidence": {
