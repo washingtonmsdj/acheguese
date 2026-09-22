@@ -1,6 +1,4 @@
-import { BusinessUrlService } from '@/core/business/services/BusinessUrlService';
 import { LAUNCH_URLS } from '@/core/routing/config/territory';
-import { getPublicPostPreview } from '@/core/posts/utils/publicPostContent';
 import type { SearchDocument } from '@/core/search';
 import { formatBrlNoCents } from '@/shared/utils/currency';
 
@@ -36,47 +34,6 @@ export function withQueryParams(path: string, params: Record<string, string>): s
 
   const queryString = query.toString();
   return `${basePath}${queryString ? `?${queryString}` : ''}${hash ? `#${hash}` : ''}`;
-}
-
-export function getBusinessPublicUrl(
-  business: { id: string; slug?: string | null; is_premium?: boolean | null; geographic_path?: string | null },
-  fallback: string,
-): string {
-  if (!business.slug || !business.geographic_path) return fallback;
-
-  try {
-    return BusinessUrlService.getCanonicalUrl({
-      id: business.id,
-      slug: business.slug,
-      is_premium: Boolean(business.is_premium),
-      geographic_path: business.geographic_path,
-    });
-  } catch {
-    return fallback;
-  }
-}
-
-export function getTextPreview(value: string | null | undefined, maxLength: number): string {
-  return getPublicPostPreview(value, maxLength, 'Publicação da comunidade local.');
-}
-
-export function formatRelativeTime(value: string | null | undefined): string {
-  if (!value) return 'agora';
-  const timestamp = new Date(value).getTime();
-  if (!Number.isFinite(timestamp)) return 'agora';
-
-  const diffMs = Math.max(0, Date.now() - timestamp);
-  const minutes = Math.floor(diffMs / 60000);
-  if (minutes < 1) return 'agora';
-  if (minutes < 60) return `há ${minutes} min`;
-
-  const hours = Math.floor(minutes / 60);
-  if (hours < 24) return `há ${hours} h`;
-
-  const days = Math.floor(hours / 24);
-  if (days < 7) return `há ${days} d`;
-
-  return new Intl.DateTimeFormat('pt-BR', { day: '2-digit', month: '2-digit' }).format(new Date(timestamp));
 }
 
 export function formatCategory(category: string): string {
