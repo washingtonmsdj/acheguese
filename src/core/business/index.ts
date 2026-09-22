@@ -26,5 +26,4 @@ export * from './utils';
 // Validators
 export * from './services/validators';
 
-export { default as NetworkTab } from './components/NetworkTab';
 export { useBusinessNavigation } from './hooks/useBusinessNavigation';
