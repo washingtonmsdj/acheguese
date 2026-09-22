@@ -251,12 +251,7 @@ const DIRECT_PAUSED_ROUTES: DirectPausedRoute[] = [
   },
   {
     path: "/mensagens",
-    surface: "communityCommunication",
-    moduleName: "Mensagens",
-  },
-  {
-    path: "/chat/:conversationId",
-    surface: "communityCommunication",
+    surface: "messaging",
     moduleName: "Mensagens",
   },
   ...buildCommunityPausedRoutes([APP_MODULE_SLUGS.events], "events", "Eventos"),
@@ -437,7 +432,7 @@ export function AppLayoutRoutes() {
         <Route
           path="/u/:username"
           element={launchElement(
-            "community",
+            "profiles",
             "Perfis públicos",
             <P.ProfilePublicRoute />,
           )}
@@ -630,19 +625,19 @@ export function AppLayoutRoutes() {
           path="/mensagens"
           element={protectedElement(
             launchElement(
-              "communityCommunication",
+              "messaging",
               "Mensagens",
               <P.MensagensPage />,
             ),
           )}
         />
         <Route
-          path="/chat/:conversationId"
+          path="/mensagens/:providerId/:threadId"
           element={protectedElement(
             launchElement(
-              "communityCommunication",
+              "messaging",
               "Mensagens",
-              <P.ChatPage />,
+              <P.MensagensPage />,
             ),
           )}
         />

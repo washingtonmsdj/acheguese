@@ -5,7 +5,7 @@ import {
   sanitizeLicenseNumber,
   sanitizeVehiclePlate,
   validateDriverRegistrationInput,
-} from "@/modules/mobility/utils/driverRegistration";
+} from "@/core/mobility/utils/driverRegistration";
 
 describe("driverRegistration", () => {
   it("hidrata valores iniciais com defaults do perfil sem hardcode territorial", () => {

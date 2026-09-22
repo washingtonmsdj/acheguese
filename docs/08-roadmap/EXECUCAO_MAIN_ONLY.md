@@ -4,7 +4,7 @@
 **Data do checkpoint GitHub:** 2026-09-20  
 **Repositório:** `washingtonmsdj/acheguese`  
 **Linha ativa:** `main`  
-**HEAD técnico base desta revalidação:** `194440370e3782751f36e6c6f55819340cf4f78e` (`main` após os PRs #233–#234). O commit deste próprio corte será descendente desse SHA.
+**Candidato atual:** PR #292. O SHA exato muda durante a correção dos últimos gates; somente o head final verde pode ser promovido à `main`.
 
 Este documento consolida ordem de execução, blockers e Definition of Done. Ele é um **registro operacional**, não uma fotografia autoritativa do que existe no produto. A fonte de verdade para decidir o que existe, o que está ativo e o que deve ser corrigido é sempre o **projeto real**: código da `main`, rotas, owners, serviços, schema/migrations, contratos, testes, deploy/runtime e comportamento observado.
 
@@ -14,17 +14,17 @@ Este corte substitui, para fins de **prioridade de lançamento**, a ordem histó
 
 ### Escopo público do candidato
 
-A decisão definitiva de release de **2026-09-21** reduz o MVP a três módulos públicos de produto:
+A decisão definitiva de release de **2026-09-21** separa domínio de produto e capabilities horizontais:
 
-- **Empresas** — catálogo institucional, detalhe canônico, contato e localização;
-- **Mapa** — visualização geográfica dos dados pertencentes aos módulos ativos; no MVP, somente Business é layer público de domínio;
-- **Perto de mim** — descoberta por proximidade de Empresas, com dependências formais de `map + business`.
+- **Domínio ativo:** Empresas/Business;
+- **Capabilities ativas:** Mapa, Perto de mim, Busca e Mensagens;
+- **Plataforma ativa:** Auth, Perfis/Conta, Território, Localização, Notificações, Central, segurança, storage e observabilidade.
 
-O lifecycle canônico pertence a `src/app/config/productModuleRegistry.ts`. `launchScope.ts` é apenas a camada de compatibilidade das superfícies existentes e deriva seu estado do registry.
+Mensagens é horizontal e, no MVP, registra **somente Business Direct Messaging**. Classificados e Community preservam seus agregados, mas não entram na Inbox enquanto seus domínios estiverem pausados.
 
-**Home/Território, Auth/Conta, sessão, localização, roteamento, segurança, storage e observabilidade são infraestrutura**, não módulos extras do MVP.
+O lifecycle canônico pertence a `productModuleRegistry.ts` + `platformCapabilityRegistry.ts`, avaliados por `lifecycleRegistry.ts`. `launchScope.ts` é apenas compatibilidade derivada.
 
-Ficam explicitamente **pós-MVP**, preservados e isolados até trabalho/certificação individual: Comunidade, Busca pública, Gastronomia, Serviços profissionais, Classificados, Pontos Turísticos, Educação, Vagas/Oportunidades, Eventos, Mensagens/Comunicação, Mobilidade, Cupons, Gamificação, Analytics público, Alertas, Issues, Achados e Perdidos, Safety familiar e Billing.
+Ficam explicitamente **pós-MVP**, preservados e isolados até trabalho/certificação individual: Comunidade, Gastronomia, Serviços profissionais, Classificados, Pontos Turísticos, Educação, Vagas/Oportunidades, Eventos, Comunicação territorial, Mobilidade, Cupons, Gamificação, Analytics público, Alertas, Issues, Achados e Perdidos, Safety familiar e Billing.
 
 A regra de modularidade é fail-closed: pausar um módulo no registry remove sua navegação, suas rotas públicas e seus loaders/discovery ativos. Reativação futura deve ocorrer pelo owner canônico e suas dependências, nunca por redirect, alias ou exceção local.
 
@@ -33,11 +33,11 @@ O primeiro release continua territorial. **Cobertura uniforme dos 170 bairros de
 ### Bloqueadores reais antes do release
 
 1. **Manter a convergência Git ↔ Supabase/runtime já fechada.** A cadeia ativa possui **673 migrations locais / 673 remotas / 673 identidades exatas / 0 local-only / 0 remote-only**. Os 13 hardenings de Mobilidade nunca aplicados foram preservados em `docs/09-reference/migrations-pending/` porque `mobility=false`; não executar `db push` nem promover módulo pausado apenas para alterar contagem.
-2. **Restaurar um gate executável.** No SHA `31bc4db4...`, jobs `ubuntu-latest` continuam retornando `runner_id=0` e `steps=[]`; o Types Sync self-hosted permanece queued sem runner. Isso é bloqueio de scheduler/conta/runner até prova em contrário, não teste vermelho de código. O candidato só avança quando security/lint/typecheck/test/build executarem de verdade no mesmo SHA.
+2. **Concluir um gate executável no SHA candidato.** O problema anterior de jobs GitHub-hosted com `runner_id=0`/`steps=[]` deixou de reproduzir no PR #292: Security, SSOT e E2E iniciaram jobs reais, com checkout/setup/install visíveis. Isso remove o antigo bloqueio de scheduler dos runners hospedados. O candidato ainda só avança quando esses jobs e os gates restantes concluírem com sucesso no mesmo SHA.
 3. **Completar proteção da `main`.** Force-push/deleção já estão bloqueados e o publisher canônico de tipos Supabase **já não escreve diretamente na `main`**: ele usa `automation/supabase-types-sync`, abre/atualiza PR e dispara os gates canônicos. O blocker restante é administrativo: exigir PR + checks que realmente executem e impedir bypass fora da release authority aprovada.
 4. **Preservar a prova de ledger/runtime no SHA candidato.** A auditoria de identidade já está em zero divergências; `validate:migrations`, `validate:migrations:provenance` e `validate:migrations:remote` ainda precisam executar de verdade no runner do candidato. Tipos gerados foram regenerados do runtime após os últimos DDLs.
 5. **Manter LGPD destrutivo fail-closed.** Delete/purge não pode ser habilitado enquanto `LGPD_PURGE_POLICY` não estiver pronto. Exportação também permanece desabilitada até certificação. O MVP pode lançar com essas capacidades indisponíveis, desde que a UI não prometa sucesso e nenhum caminho stale permaneça acessível.
-6. **Fechar segurança do que será exposto.** Priorizar Auth/Conta, Profile, território e os owners de Empresas, Mapa e Perto de mim. Módulos pausados só bloqueiam o MVP quando compartilham uma boundary realmente usada por esse núcleo. Certificações especializadas de Educação, Gastronomia e Billing permanecem no ciclo próprio desses módulos e não são pré-requisito funcional do release atual; qualidade global (lint/typecheck/security/SSOT/Vitest) continua obrigatória.
+6. **Fechar segurança do que será exposto.** Priorizar Auth/Conta, Profile, território, Business e as capabilities Mapa, Perto de mim, Busca e Mensagens. Módulos pausados só bloqueiam o MVP quando compartilham uma boundary realmente usada por esse núcleo. Certificações especializadas de Educação, Gastronomia e Billing permanecem no ciclo próprio desses módulos e não são pré-requisito funcional do release atual; qualidade global (lint/typecheck/security/SSOT/Vitest) continua obrigatória.
 7. **Certificar o fluxo real das superfícies públicas.** Para cada item do escopo: rota/owner canônico, contrato DB/RPC, autorização positiva e negativa, loading/empty/error/auth, fluxo principal com dados reais, smoke mobile e E2E sem placeholder/paused contado como sucesso.
 8. **Provar deploy do mesmo SHA.** O SHA aprovado deve produzir build real no provider e smoke no domínio público, incluindo login/cadastro, troca/resolução territorial, Home, navegação do núcleo, mutações principais e logout.
 9. **Configuração legal/operacional mínima.** O verifier de deploy já exige origem pública HTTPS, contato e DPO válidos e foro configurado; políticas/textos falham fechado quando identidade pública não existe. O blocker restante é o provider fornecer valores válidos no build exact-SHA.
@@ -46,11 +46,11 @@ O primeiro release continua territorial. **Cobertura uniforme dos 170 bairros de
 ### Correções de gate identificadas neste corte
 
 - [x] `tools/release/verify-deploy-ready.mjs` já reconhece o `buildCommand` canônico `node tools/release/run-vercel-production-build.mjs`, alinhado a `vercel.json`. Não manter este item como blocker.
-- [x] `tests/e2e/launch-scope-public.spec.ts` e `tests/architecture/launch-scope-e2e-alignment.test.ts` foram realinhados ao corte definitivo de 2026-09-21: somente Empresas, Mapa e Perto de mim são módulos ativos; os demais módulos públicos devem render isolamento de lançamento.
+- [x] `tests/e2e/launch-scope-public.spec.ts` e `tests/architecture/launch-scope-e2e-alignment.test.ts` foram realinhados ao corte definitivo de 2026-09-21: Business/Empresas é o domínio ativo; Mapa, Perto de mim, Busca e Mensagens são capabilities horizontais ativas; os demais domínios públicos devem render isolamento de lançamento.
 
 ### Progresso consolidado do corte público — 2026-09-19
 
-- [x] Corte MVP definitivo de 2026-09-21: `productModuleRegistry.ts` mantém somente `business + map + nearby` ativos; `nearby` depende formalmente de `map + business`. Home/Conta/Território são infraestrutura, e todos os demais módulos permanecem pós-MVP e isolados.
+- [x] Corte MVP definitivo de 2026-09-21: `productModuleRegistry.ts` mantém Business como domínio ativo; `platformCapabilityRegistry.ts` mantém Map/Nearby/Search/Messaging e infraestrutura transversal; `nearby` depende de Map + Location + Business; Messaging usa apenas provider Business no MVP.
 - [x] Home, Busca e perfil profissional público deixaram de aceitar dados `concept-mock` no runtime.
 - [x] Pontos Turísticos deixou de exibir proximidade simulada.
 - [x] Eventos pagos falham fechado enquanto não há checkout habilitado; inscrições gratuitas continuam no fluxo real.
@@ -58,7 +58,7 @@ O primeiro release continua territorial. **Cobertura uniforme dos 170 bairros de
 - [x] Gastronomia removeu rotas/telas `concept-mock` do roteador normal e consolidou checkout/rastreamento nas implementações reais.
 - [x] Conta e Mensagens não possuem mais bypass DEV de `ProtectedRoute`; perfis/conversas demonstrativos foram removidos do runtime.
 - [x] Mensagens usa perfis da sessão e threads persistidas, limpa estado privado ao trocar perfil e não exibe controles sem ação real.
-- [x] O E2E de launch scope foi sincronizado com `communityCommunication: true`.
+- [x] O E2E de launch scope mantém `communityCommunication=false` e prova fail-closed para Community enquanto Messaging horizontal permanece independente e ativo com provider Business.
 - [x] Cadastro de interesse deixou de sintetizar identidade de e-mail e aceita telefone como canal real quando aplicável (PR #221; migration remota `20260920012056_allow_phone_only_community_interest_mvp`).
 - [x] Novas solicitações automáticas de exclusão de conta ficam fail-closed no MVP: rollout certificado + flag de ambiente são obrigatórios, a UI direciona ao canal DPO e o `PrivacySettingsService` bloqueia callers diretos; solicitações antigas continuam visíveis/canceláveis sem promessa de purge automático.
 - [x] Empresas R4 parcial: a vitrine filtra categorias de módulos pausados antes de qualquer derivação visual; probe remoto rollback-only provou `public_business_search` → `get_public_business_snapshot_by_slug` → URL canônica com dado real do território de lançamento. Browser E2E/deploy same-SHA seguem pendentes por infraestrutura. Ver `checkpoints/2026-09-21-business-mvp-public-flow.md`.
@@ -70,7 +70,7 @@ O primeiro release continua territorial. **Cobertura uniforme dos 170 bairros de
 - [x] Tipos Supabase foram revalidados no SHA auditado: Git e runtime têm 731731 caracteres normalizados e `exact=true`.
 - [x] O Supabase canônico mantém 60 Edge Functions implantadas e as 60 estão `ACTIVE`; as funções versionadas mas deliberadamente não implantadas continuam sujeitas ao rollout/authority próprio.
 - [~] Reconciliação de migrations avançou no PR #225 sem executar DDL. Após Safety G71/G72/G75–G80, o estado chegou a 683 locais, 666 remotas, 657 exatas, 26 local-only e 9 remote-only.
-- [ ] CI continua incapaz de certificar o candidato: no SHA `31bc4db4...`, Security Check, SSOT Enforcement, Auth Concept Regression e SSOT Territorial Tests tiveram jobs GitHub-hosted com `runner_id=0`/`steps=[]`; Types Sync self-hosted ficou queued com `runner_id=0`. O GitHub Status público indicava Actions operacional, então falta prova administrativa de quota/billing/policy/provisioning e disponibilidade do runner local.
+- [~] CI hospedado está executável no PR #292: Security, Auth, SSOT, E2E e Heavy já rodaram em runners GitHub reais. O Heavy automático usa `windows-latest`; o workflow manual self-hosted permanece apenas como opção especial. Falta certificar o head final exato e o deploy de produção.
 - [ ] Vercel continua sem permitir nova prova de deploy por limite diário de builds; isso não conta como build aprovado.
 - [~] O ledger de migrations avançou sem executar DDL: G71/G72/G75–G80 foram alinhadas às oito identidades `reconcile_*` realmente registradas no Supabase após prova de equivalência token-a-token. Estado daquela etapa: 683 locais / 666 remotas / 657 exatas / 26 local-only / 9 remote-only.
 - [~] Quatro identidades adicionais de Mobilidade foram alinhadas após prova token-a-token: `remove_provisional_mobility_fare_floor`, `persist_mobility_cancellation_reason`, `enforce_server_owned_mobility_quotes` e `require_explicit_mobility_quote_id`. O bloco de preço terminal da entrega não foi alterado porque o SQL remoto é materialmente diferente.
@@ -80,7 +80,7 @@ O primeiro release continua territorial. **Cobertura uniforme dos 170 bairros de
 - [x] Eventos voltou a ter persistência canônica de itens salvos: `event_saved_items` foi criado com RLS forçada, policies own-only e o registry de `ProfileSavedEntityService` deixou de apontar para `event_favorites` já aposentado.
 - [x] G36/G37 foram promovidos após dry-run: RPCs legados de Perfil foram removidos sem `CASCADE`, e os brokers profissionais passaram a rejeitar cobertura textual legada também no boundary SQL.
 - [x] Ledger de migrations fechado: **673 locais ativas / 673 remotas / 673 exatas / 0 local-only / 0 remote-only**. Os 13 SQLs não aplicados de Mobilidade foram preservados como pending, coerente com `PUBLIC_LAUNCH_SURFACES.mobility=false`.
-- [~] O `Heavy Pre-Merge Certification` self-hosted existente foi ampliado para executar security/lint/typecheck/arquitetura/SSOT/migrations remotas/Vitest antes dos E2E/build no mesmo SHA. Isso cria um fallback executável no runner autorizado sem substituir os checks hosted; falta o runner `acheguese-heavy-windows` voltar a ficar online e produzir a prova.
+- [x] O Heavy automático de PR foi migrado para `windows-latest`, preservando provenance, exact-SHA, LGPD/security contracts, arquitetura MVP e E2Es. O workflow manual self-hosted continua disponível como caminho especial, mas não é requisito para certificar PRs do próprio repositório.
 - [x] Canal DPO público revalidado: `submit-dpo-request` está ACTIVE, com origin/rate-limit/honeypot/Turnstile fail-closed; testes DPO foram realinhados às migrations canônicas e `.env.production` agora declara a `VITE_TURNSTILE_SITE_KEY` exigida pelo gate. O `admin-privacy-rpc` remoto ainda está em v3 sem o fallback de paginação da `main`, pendente do rollout self-hosted autorizado.
 - [x] O publisher de tipos Supabase não escreve mais diretamente na `main`: `supabase-types-sync.yml` usa a branch `automation/supabase-types-sync`, cria/atualiza PR, dispara Security/SSOT gates e o ratchet `supabase-types-sync-pr-authority.test.ts` impede regressão.
 - [x] O gate de deploy legal foi endurecido: `VITE_LEGAL_FORUM` tornou-se obrigatório, `VITE_CONTACT_EMAIL`/`VITE_DPO_EMAIL` precisam ter formato válido e `VITE_PUBLIC_SITE_URL` precisa usar HTTPS; o ratchet DPO protege esse contrato.
@@ -106,7 +106,7 @@ O primeiro release continua territorial. **Cobertura uniforme dos 170 bairros de
 2. **R1 — convergência:** **fechado no ledger** (673/673 exatas); manter a igualdade de tipos e reexecutar os validadores no mesmo SHA candidato.
 3. **R2 — release authority:** publisher de tipos via PR **fechado**; faltam CI realmente executando e branch protection exigindo o caminho aprovado.
 4. **R3 — Auth/Privacy/Security:** fechar autenticação e superfícies sensíveis do escopo; manter delete/export destrutivos fail-closed.
-5. **R4 — certificação funcional:** certificar somente Empresas, Mapa e Perto de mim, além da infraestrutura estritamente necessária ao fluxo. O contrato automatizado já foi reconciliado; falta execução real.
+5. **R4 — certificação funcional:** certificar Business + Mapa + Perto de mim + Busca + Mensagens/Business Direct Messaging, além da infraestrutura estritamente necessária ao fluxo. Busca assistida também deve respeitar o lifecycle e não executar handlers de módulos pausados.
 6. **R5 — exact-SHA:** security + lint + typecheck + tests + build + E2E + deploy real + smoke do mesmo SHA.
 7. **R6 — lançar MVP:** abrir somente superfícies certificadas e iniciar acompanhamento de erros/uso. Todo restante passa ao backlog durante/pós-MVP.
 
@@ -461,7 +461,7 @@ Para cada módulo exigir: entrypoint canônico, banco/RPC atual, autorização p
 ## P2 — higiene E2E e branches
 
 - [x] provenance explícita das fixtures técnicas permanece separada de dados públicos de Production;
-- [x] contrato E2E do release foi reconciliado ao MVP atual: a prova determinística cobre **Empresas + Mapa + Perto de mim** e, em conjunto com `launch-scope-public.spec.ts`, comprova que módulos pós-MVP falham fechado;
+- [x] contrato E2E do release foi reconciliado ao MVP atual: a prova determinística cobre **Empresas + Mapa + Perto de mim + Busca + Busca** e, em conjunto com `launch-scope-public.spec.ts`, comprova que módulos pós-MVP falham fechado;
 - [x] `main` é a única linha ativa de desenvolvimento; não há PR aberto concorrente no marco zero;
 - [x] auditoria remota de 2026-09-21 classificou 165 refs como removíveis sem perda: 92 heads exatos de PR mergeado, 67 heads SHA-pinados como superseded e 6 refs totalmente contidas na `main`;
 - [ ] exclusão física dessas 165 refs continua pendente porque o runner do workflow de higiene encerra com `steps=null` e a integração atual não expõe `DELETE ref`;

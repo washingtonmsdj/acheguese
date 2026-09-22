@@ -330,12 +330,20 @@ async function requireTerritory(
   territoryType: "location" | "group",
   territoryRefId: string,
 ): Promise<void> {
-  const table = territoryType === "location" ? "locations" : "territorial_groups";
-  const { data, error } = await supabaseAdmin
-    .from(table)
-    .select("id")
-    .eq("id", territoryRefId)
-    .maybeSingle();
+  const query =
+    territoryType === "location"
+      ? supabaseAdmin
+          .from("locations")
+          .select("id")
+          .eq("id", territoryRefId)
+          .maybeSingle()
+      : supabaseAdmin
+          .from("territorial_groups")
+          .select("id")
+          .eq("id", territoryRefId)
+          .maybeSingle();
+
+  const { data, error } = await query;
 
   if (error) throw error;
   if (!data) {

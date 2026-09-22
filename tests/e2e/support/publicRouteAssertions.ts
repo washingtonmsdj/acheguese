@@ -28,7 +28,6 @@ const DEFAULT_NAVIGATION_TIMEOUT_MS = 120_000;
 const DEFAULT_READY_TIMEOUT_MS = 120_000;
 export const DEFAULT_MOBILE_VIEWPORT: Readonly<MobileViewport> = { width: 360, height: 800 };
 const LOADER_PATTERNS = [/Preparando a casa/i, /Buscando as informa/i];
-const PAUSED_SURFACE_PATTERNS = [/MVP p(?:ú|u)blico/i, /separado para ajustes/i];
 const CONSENT_BUTTON_LABELS = ['Aceitar Todos', 'Aceitar todos', 'Fechar'];
 
 export async function dismissConsentBanner(page: Page) {
@@ -92,8 +91,10 @@ export async function hasBlockingLoader(page: Page) {
 }
 
 export async function hasPausedSurfaceCopy(page: Page) {
-  const text = await readBodyText(page);
-  return PAUSED_SURFACE_PATTERNS.every((pattern) => pattern.test(text));
+  return page
+    .locator('[data-page="launch-paused"]')
+    .isVisible()
+    .catch(() => false);
 }
 
 export async function expectRouteReady(page: Page, options: ExpectRouteReadyOptions) {
@@ -135,10 +136,11 @@ export async function expectPausedLaunchSurface(page: Page, path: string, option
       async () => {
         const text = await readBodyText(page);
         const hasMain = await hasMainLandmark(page);
+        const pausedSurface = await hasPausedSurfaceCopy(page);
 
         return (
           hasMain &&
-          PAUSED_SURFACE_PATTERNS.every((pattern) => pattern.test(text)) &&
+          pausedSurface &&
           !LOADER_PATTERNS.some((pattern) => pattern.test(text))
         );
       },

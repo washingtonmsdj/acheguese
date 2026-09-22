@@ -35,4 +35,60 @@ describe("AIOrchestratorService", () => {
     expect(result.items).toEqual([]);
     expect(execute).not.toHaveBeenCalled();
   });
+  it("nao executa handler de Services enquanto Services estiver pausado", async () => {
+    const execute = vi.fn();
+    const handler: IActionHandler = {
+      type: "service_search",
+      execute,
+    };
+    const serviceIntent: AIIntent = {
+      type: "service_search",
+      query: "eletricista",
+      normalizedQuery: "eletricista",
+      confidence: 0.9,
+      filters: { tags: [] },
+      source: "fallback",
+    };
+    class MockIntentParser extends IntentParser {
+      override parse = vi.fn().mockResolvedValue(serviceIntent);
+    }
+
+    const orchestrator = new AIOrchestratorService(new MockIntentParser(), [handler]);
+    const result = await orchestrator.search({
+      query: "eletricista",
+      context: {},
+    });
+
+    expect(result.items).toEqual([]);
+    expect(result.message).toContain("ainda nao esta disponivel");
+    expect(execute).not.toHaveBeenCalled();
+  });
+
+  it("continua executando Business enquanto Business estiver ativo", async () => {
+    const execute = vi.fn().mockResolvedValue([]);
+    const handler: IActionHandler = {
+      type: "business_search",
+      execute,
+    };
+    const businessIntent: AIIntent = {
+      type: "business_search",
+      query: "mercado",
+      normalizedQuery: "mercado",
+      confidence: 0.9,
+      filters: { tags: [] },
+      source: "fallback",
+    };
+    class MockIntentParser extends IntentParser {
+      override parse = vi.fn().mockResolvedValue(businessIntent);
+    }
+
+    const orchestrator = new AIOrchestratorService(new MockIntentParser(), [handler]);
+    await orchestrator.search({
+      query: "mercado",
+      context: {},
+    });
+
+    expect(execute).toHaveBeenCalledTimes(1);
+  });
+
 });

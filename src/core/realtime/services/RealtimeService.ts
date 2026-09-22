@@ -443,6 +443,16 @@ export class RealtimeService {
     });
   }
 
+  subscribeToBusinessDirectMessages(
+    threadId: string,
+    onMessage: (message: RealtimeRow) => void,
+  ): RealtimeSubscription {
+    return this.subscribe("messaging.business-thread-messages", {
+      filterValues: { threadId },
+      onEvent: ({ row }) => onMessage(row),
+    });
+  }
+
   unsubscribe(subscriptionId: string): void {
     this.subscriptions.get(subscriptionId)?.unsubscribe();
   }

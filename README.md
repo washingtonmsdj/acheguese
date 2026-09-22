@@ -2,9 +2,11 @@
 
 Plataforma hiperlocal com arquitetura modular orientada a território.
 
-> **MVP atual (2026-09-21):** somente **Empresas + Mapa + Perto de mim** como módulos de produto ativos.
+> **MVP atual (2026-09-21):** **Business/Empresas** é o domínio de produto ativo.
 >
-> Os demais módulos permanecem pausados e fora do produto ativo até certificação e reintegração individual.
+> **Capabilities horizontais ativas:** Mapa, Perto de mim, Busca, Mensagens (provider Business), Auth, Perfis/Conta, Território, Localização, Notificações e Central.
+>
+> Community, Classificados, Serviços, Gastronomia, Eventos, Educação, Mobilidade e demais domínios permanecem pausados até certificação individual.
 
 ## Stack
 
@@ -28,18 +30,21 @@ src/
 
 ## Lifecycle de módulos
 
-A autoridade executável é:
+As autoridades executáveis são:
 
-- `src/app/config/productModuleRegistry.ts`.
+- `src/app/config/productModuleRegistry.ts` — domínios de produto;
+- `src/app/config/platformCapabilityRegistry.ts` — capabilities horizontais;
+- `src/app/config/lifecycleRegistry.ts` — avaliação cruzada.
 
 Estado do MVP:
 
-- `business: active`;
-- `map: active`;
-- `nearby: active` com dependência formal de `map + business`;
-- demais módulos de produto: `paused`.
+- domínio: `business: active`;
+- capabilities: `map`, `nearby`, `search`, `messaging`, Auth, Perfis/Conta, Território, Localização, Notificações e Central ativas;
+- `nearby` depende de Map + Location + Business;
+- `messaging` registra somente Business Direct Messaging;
+- demais domínios de produto: `paused`.
 
-Módulo pausado pode continuar versionado para evolução pós-MVP, mas não participa de navegação pública, rota funcional, prefetch/warmup, discovery, provider público ou layer do Mapa.
+Domínio pausado pode continuar versionado para evolução pós-MVP, mas não participa de rota funcional, prefetch/warmup, provider de Busca/Mensagens ou layer do Mapa.
 
 A política completa está em [docs/03-architecture/PRODUCT_MODULE_LIFECYCLE.md](./docs/03-architecture/PRODUCT_MODULE_LIFECYCLE.md).
 

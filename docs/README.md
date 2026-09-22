@@ -6,7 +6,7 @@
 
 Achegue-se é uma plataforma **hiperlocal, territory-first e modular**, cuja unidade fundamental é o **Território** (país → estado → cidade → bairro).
 
-A visão pós-MVP pode incorporar Comunidade, Classificados, Profissionais/Serviços, Mobilidade, Educação e verticais. **O produto público ativo do MVP é deliberadamente menor: Empresas + Mapa + Perto de mim.** O lifecycle executável pertence a `src/app/config/productModuleRegistry.ts`; nenhuma visão de produto, rota preservada ou documentação de módulo pode contornar esse owner.
+A visão pós-MVP pode incorporar Comunidade, Classificados, Profissionais/Serviços, Mobilidade, Educação e verticais. **No MVP, Business/Empresas é o domínio de produto ativo; Mapa, Perto de mim, Busca e Mensagens são capabilities horizontais da plataforma, junto de Auth, Perfis/Conta, Território, Localização, Notificações e Central.** O lifecycle executável é dividido entre `productModuleRegistry.ts`, `platformCapabilityRegistry.ts` e o avaliador `lifecycleRegistry.ts`; documentação não pode contornar esses owners.
 
 ## Autoridade e precedência
 
@@ -70,7 +70,7 @@ Alguns caminhos antigos ainda existem fora das pastas numeradas por compatibilid
 - [Community architecture — contrato pós-MVP](./03-architecture/COMMUNITY_FIRST_ARCHITECTURE_SSOT.md) — preserva internals da capability; não é autoridade de ativação pública.
 - [Core Platform architecture SSOT](./03-architecture/CORE_PLATFORM_ARCHITECTURE_SSOT.md)
 - [Canonical map / ownership](./03-architecture/CANONICAL_MAP.md)
-- [Product module lifecycle](./03-architecture/PRODUCT_MODULE_LIFECYCLE.md) — regras para ativar, pausar, remover e reintegrar módulos; owner executável em `productModuleRegistry.ts`.
+- [Product & platform lifecycle](./03-architecture/PRODUCT_MODULE_LIFECYCLE.md) — regras para domínios e capabilities; owners executáveis em `productModuleRegistry.ts`, `platformCapabilityRegistry.ts` e `lifecycleRegistry.ts`.
 
 ### Segurança e governance
 

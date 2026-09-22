@@ -18,7 +18,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/shared/components/ui/dialog';
-import { LazyMiniMap } from '@/shared/components/maps/LazyMiniMap';
+import { LazyMiniMap } from '@/core/maps/components/LazyMiniMap';
 import { toast } from '@/shared/components/ui/use-toast';
 
 interface TouristPointMapSectionProps {

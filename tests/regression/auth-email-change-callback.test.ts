@@ -38,8 +38,9 @@ describe("account email change callback ownership", () => {
   });
 
   it("owns a public callback route even while launch lockdown is active", () => {
+    expect(routes).toContain("const EmailChangeConfirmationPage = lazy(");
     expect(routes).toContain(
-      'const EmailChangeConfirmationPage = lazy(\n  () => import("@/app/pages/EmailChangeConfirmationPage"),',
+      'import("@/app/pages/EmailChangeConfirmationPage")',
     );
     expect(
       routes.match(/path=\{AUTH_PATHS\.emailChangeConfirmation\}/g)?.length,
@@ -57,8 +58,12 @@ describe("account email change callback ownership", () => {
     expect(callbackPage).toContain(
       "!hasCallbackExchangeEvidence ||",
     );
+    expect(callbackPage).toContain("const pendingAuthExchange =");
     expect(callbackPage).toContain(
-      "const pendingAuthExchange =\n    hasCallbackExchangeEvidence &&",
+      "hasCallbackExchangeEvidence &&",
+    );
+    expect(callbackPage).toContain(
+      "hasPendingAuthCallbackExchange(liveSearch, liveHash)",
     );
   });
 
@@ -89,8 +94,10 @@ describe("account email change callback ownership", () => {
     );
     expect(callbackPage).toContain("sessionLoading || callbackSettlementPending");
     expect(callbackPage).toContain("(!pendingAuthExchange && user)");
+    expect(callbackPage).toContain("const callbackSettlementPending =");
+    expect(callbackPage).toContain("!user && !exchangeObservedSettled");
     expect(callbackPage).toContain(
-      "A evidência do\n  // callback nunca substitui `user`",
+      'sessionLoading || callbackSettlementPending',
     );
   });
 

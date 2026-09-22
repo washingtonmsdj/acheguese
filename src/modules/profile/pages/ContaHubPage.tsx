@@ -8,6 +8,7 @@ import {
   Globe2,
   LockKeyhole,
   MapPin,
+  MessageCircle,
   RefreshCw,
   Shield,
   SlidersHorizontal,
@@ -225,6 +226,12 @@ function ContaHubLivePage() {
                   : "Em dia"
               }
               onClick={() => navigate(data.appUrls.profile.notifications)}
+            />
+            <AccountAction
+              icon={MessageCircle}
+              title="Mensagens"
+              description="Conversas privadas com empresas e outros providers habilitados."
+              onClick={() => navigate("/mensagens")}
             />
             <AccountAction
               icon={SlidersHorizontal}

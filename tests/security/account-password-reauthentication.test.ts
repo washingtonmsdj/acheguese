@@ -191,7 +191,9 @@ describe("account password reauthentication", () => {
     );
     expect(identityService).toContain('typeof hasPassword !== "boolean"');
     expect(identityService).not.toContain('hasPassword: providers.includes("email")');
-    expect(securityPage).toContain("hasPassword ? \"Alterar senha\" : \"Criar senha\"");
+    expect(securityPage).toContain("const passwordActionLabel = providersResolved");
+    expect(securityPage).toContain('? "Alterar senha"');
+    expect(securityPage).toContain(': "Criar senha"');
     expect(securityPage).toContain("Nenhuma senha foi criada para esta conta.");
   });
 

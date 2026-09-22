@@ -111,26 +111,44 @@ interface SearchResultsViewModel {
   total: number;
 }
 
+const SEARCH_DOCUMENT_SURFACE: Record<
+  SearchDocument["type"],
+  LaunchSurfaceKey
+> = {
+  community: "community",
+  business: "business",
+  professional: "services",
+  opportunity: "jobs",
+  classified: "classifieds",
+  event: "events",
+  post: "community",
+  coupon: "coupons",
+};
+
+function isVisibleSearchDocument(document: SearchDocument): boolean {
+  return isLaunchSurfaceEnabled(SEARCH_DOCUMENT_SURFACE[document.type]);
+}
+
 const FILTERS: FilterOption[] = (
   [
     { id: "all", label: "Todos", icon: Search },
-    { id: "communities", label: "Comunidades", icon: Users },
-    { id: "businesses", label: "Negócios", icon: Store },
-    { id: "professionals", label: "Serviços", icon: Wrench },
+    { id: "communities", label: "Comunidades", icon: Users, launchSurface: "community" },
+    { id: "businesses", label: "Negócios", icon: Store, launchSurface: "business" },
+    { id: "professionals", label: "Serviços", icon: Wrench, launchSurface: "services" },
     {
       id: "events",
       label: "Eventos",
       icon: CalendarDays,
       launchSurface: "events",
     },
-    { id: "classifieds", label: "Classificados", icon: Tag },
+    { id: "classifieds", label: "Classificados", icon: Tag, launchSurface: "classifieds" },
     {
       id: "opportunities",
       label: "Oportunidades",
       icon: BriefcaseBusiness,
       launchSurface: "jobs",
     },
-    { id: "posts", label: "Posts", icon: MessageSquare },
+    { id: "posts", label: "Posts", icon: MessageSquare, launchSurface: "community" },
   ] satisfies FilterOption[]
 ).filter(
   (filter) =>
@@ -260,35 +278,45 @@ export default function BuscaPage() {
     [territoryBase],
   );
 
-  const displayResults = useMemo<SearchResultsViewModel>(() => ({
-    documents: results.documents,
-    businesses: results.businesses.map((business) => ({
-      id: business.id,
-      name: business.name,
-      logo_url: business.logo_url,
-      category: business.category,
-      neighborhood: business.location?.name ?? business.business_city,
-      description: business.description,
-      latitude: business.address?.latitude,
-      longitude: business.address?.longitude,
-      rating: business.rating,
-    })),
-    professionals: results.professionals.map((professional) => ({
-      id: professional.id,
-      name: professional.name,
-      target_url: professional.target_url,
-      logo_url: professional.logo_url,
-      category: professional.category,
-      neighborhood: professional.neighborhood,
-      city: professional.city,
-      description: professional.description,
-      latitude: professional.latitude,
-      longitude: professional.longitude,
-      rating: professional.rating,
-      total_reviews: professional.total_reviews,
-    })),
-    total: results.total,
-  }), [results]);
+  const displayResults = useMemo<SearchResultsViewModel>(() => {
+    const documents = results.documents.filter(isVisibleSearchDocument);
+    const businesses = isLaunchSurfaceEnabled("business")
+      ? results.businesses.map((business) => ({
+          id: business.id,
+          name: business.name,
+          logo_url: business.logo_url,
+          category: business.category,
+          neighborhood: business.location?.name ?? business.business_city,
+          description: business.description,
+          latitude: business.address?.latitude,
+          longitude: business.address?.longitude,
+          rating: business.rating,
+        }))
+      : [];
+    const professionals = isLaunchSurfaceEnabled("services")
+      ? results.professionals.map((professional) => ({
+          id: professional.id,
+          name: professional.name,
+          target_url: professional.target_url,
+          logo_url: professional.logo_url,
+          category: professional.category,
+          neighborhood: professional.neighborhood,
+          city: professional.city,
+          description: professional.description,
+          latitude: professional.latitude,
+          longitude: professional.longitude,
+          rating: professional.rating,
+          total_reviews: professional.total_reviews,
+        }))
+      : [];
+
+    return {
+      documents,
+      businesses,
+      professionals,
+      total: documents.length + businesses.length + professionals.length,
+    };
+  }, [results]);
 
   const resultMarkers = useMemo<MapMarker[]>(() => {
     const businessMarkers = displayResults.businesses.flatMap((business) => {
@@ -395,6 +423,7 @@ export default function BuscaPage() {
         href: moduleUrls.services,
         icon: Wrench,
         tone: "bg-[hsl(var(--category-discussion)/0.14)] text-category-discussion",
+        surface: "services",
       },
       {
         label: "Gastronomia",
@@ -410,6 +439,7 @@ export default function BuscaPage() {
         href: moduleUrls.classifieds,
         icon: Tag,
         tone: "bg-[hsl(var(--category-classified)/0.15)] text-category-classified",
+        surface: "classifieds",
       },
       {
         label: "Eventos",
@@ -459,10 +489,10 @@ export default function BuscaPage() {
         <header className="relative">
           <div className="pr-0 md:pr-0">
             <h1 className="font-heading text-[2rem] font-bold leading-[1.08] tracking-[-0.04em] text-territory-ink sm:text-4xl">
-              Explorar
+              Busca
             </h1>
             <p className="mt-2 hidden text-[0.9375rem] leading-6 text-territory-muted sm:block sm:text-base">
-              Encontre o que você precisa na comunidade.
+              Encontre empresas e resultados dos módulos ativos neste território.
             </p>
           </div>
           <button

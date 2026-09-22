@@ -41,9 +41,10 @@ describe("nearby MVP boundary", () => {
   });
 
   it("never renders personal distance or a user marker from a territorial center", () => {
-    expect(card).toContain(
-      "showProximity &&\n    business.distanceMeters > 0",
-    );
+    expect(card).toContain("const hasRealDistance =");
+    expect(card).toContain("showProximity &&");
+    expect(card).toContain("business.distanceMeters > 0");
+    expect(card).toContain("business.distanceMeters < 100000");
     expect(filters).toContain(
       'showProximity ? "Raio:" : "Recorte a partir do centro:"',
     );

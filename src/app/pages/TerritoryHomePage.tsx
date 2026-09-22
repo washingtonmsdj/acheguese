@@ -6,6 +6,7 @@ import {
   Map,
   MapPin,
   Navigation,
+  Search,
   type LucideIcon,
 } from "lucide-react";
 import { useTerritorialContext } from "@/core/routing/components/TerritorialLayout";
@@ -66,6 +67,7 @@ export default function TerritoryHomePage() {
   const businessUrl = buildModuleTerritoryUrl(MODULE_SLUGS.business, baseUrl);
   const mapUrl = buildModuleTerritoryUrl(MODULE_SLUGS.map, baseUrl);
   const nearbyUrl = buildAppModulePath(APP_MODULE_SLUGS.nearby);
+  const searchUrl = buildModuleTerritoryUrl(MODULE_SLUGS.search, baseUrl);
 
   return (
     <>
@@ -73,7 +75,7 @@ export default function TerritoryHomePage() {
         <title>{territoryName} | Achegue-se</title>
         <meta
           name="description"
-          content={`Encontre empresas em ${territoryName}, explore o mapa e descubra o que está perto de você.`}
+          content={`Encontre empresas em ${territoryName}, pesquise o que precisa, explore o mapa e descubra o que está perto de você.`}
         />
       </Helmet>
 
@@ -88,12 +90,12 @@ export default function TerritoryHomePage() {
               Descubra empresas e lugares ao seu redor.
             </h1>
             <p className="mt-3 max-w-2xl text-base leading-7 text-muted-foreground">
-              O Achegue-se conecta Empresas, Mapa e Perto de mim usando o mesmo
-              contexto territorial e as mesmas identidades públicas.
+              O Achegue-se conecta Empresas, Busca, Mapa e Perto de mim usando o
+              mesmo contexto territorial e as mesmas identidades públicas.
             </p>
           </div>
 
-          <div className="mt-6 grid gap-4 md:grid-cols-3">
+          <div className="mt-6 grid gap-4 md:grid-cols-2 xl:grid-cols-4">
             <MvpModuleCard
               title="Empresas"
               description="Veja empresas públicas do território e abra seus detalhes canônicos."
@@ -111,6 +113,12 @@ export default function TerritoryHomePage() {
               description="Use sua localização quando disponível para encontrar empresas próximas sem fabricar distâncias."
               href={nearbyUrl}
               icon={Navigation}
+            />
+            <MvpModuleCard
+              title="Busca"
+              description="Pesquise empresas e resultados apenas dos módulos atualmente ativos."
+              href={searchUrl}
+              icon={Search}
             />
           </div>
         </section>

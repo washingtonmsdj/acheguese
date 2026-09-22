@@ -87,7 +87,9 @@ describe("auth/public route ownership", () => {
     expect(root).not.toContain("EVENT_ROUTES");
     expect(root).not.toContain('moduleName="Eventos"');
     expect(appLayout).toContain("EVENT_ROUTES.home");
-    expect(appLayout).toContain('launchElement(\n          "events"');
+    expect(appLayout).toContain("EVENT_ROUTES.home");
+    expect(appLayout).toContain('launchElement(');
+    expect(appLayout).toContain('"events"');
     expect(appLayout).toContain('surface: "events"');
   });
 });

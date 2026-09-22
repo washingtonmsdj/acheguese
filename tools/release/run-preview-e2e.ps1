@@ -140,3 +140,7 @@ try {
     Write-Host "$Name preview process tree stopped."
   }
 }
+
+# Stop-Process can leave the terminated preview process code in $LASTEXITCODE.
+# Reaching this point means build, HTTP readiness and Playwright all succeeded.
+exit 0

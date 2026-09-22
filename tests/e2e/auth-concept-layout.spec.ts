@@ -4,7 +4,8 @@ import { seedAuthFlowState } from "./helpers/authFlowState";
 
 const MOBILE = { width: 390, height: 844 };
 const DESKTOP = { width: 1440, height: 900 };
-const AUTH_RETURN_PATH = "/mensagens/sabores-da-ana";
+const AUTH_RETURN_PATH = "/mensagens/business/44444444-4444-4444-8444-444444444444";
+const LOGIN_WITH_RETURN = `/login?redirect=${encodeURIComponent(AUTH_RETURN_PATH)}`;
 
 async function prepareAuthVisualState(page: Page) {
   await seedAuthFlowState(page, {
@@ -42,14 +43,14 @@ test.describe("Conta e acesso — contrato visual responsivo do concept", () => 
   test("mobile mantém a composição de uma coluna do concept", async ({ page }) => {
     await page.setViewportSize(MOBILE);
 
-    await page.goto("/login?redirect=%2Fmensagens%2Fsabores-da-ana", {
+    await page.goto(LOGIN_WITH_RETURN, {
       waitUntil: "domcontentloaded",
     });
     await expect(
       page.getByRole("heading", { name: "Bom ter você por aqui." }),
     ).toBeVisible();
     await expect(page.getByText("Você voltará para", { exact: true })).toBeVisible();
-    await expect(page.getByText("Sabores da Ana", { exact: true })).toBeVisible();
+    await expect(page.getByText("Conversas", { exact: true })).toBeVisible();
     await expect(page.locator('img[src="/auth/login-hero.webp"]')).toBeHidden();
     await expect(page.getByRole("button", { name: "Entrar" })).toBeVisible();
     await expect(
@@ -93,7 +94,7 @@ test.describe("Conta e acesso — contrato visual responsivo do concept", () => 
     await page.goto("/reset-password?mode=request", { waitUntil: "domcontentloaded" });
     await expect(page.getByRole("heading", { name: /Vamos recuperar/ })).toBeVisible();
     await expect(page.locator('img[src="/auth/recovery-hero.webp"]')).toBeHidden();
-    await expect(page.getByRole("button", { name: "Voltar" })).toContainText("Voltar");
+    await expect(page.getByRole("button", { name: "Voltar", exact: true })).toContainText("Voltar");
     await expect(
       page.getByRole("button", { name: "Enviar link de recuperação" }),
     ).toBeVisible();
@@ -107,7 +108,7 @@ test.describe("Conta e acesso — contrato visual responsivo do concept", () => 
     await expect(page.getByText("Conversas", { exact: true })).toBeVisible();
     await expect(page.getByRole("link", { name: "Voltar para entrar" })).toHaveAttribute(
       "href",
-      "/login?redirect=%2Fmensagens%2Fsabores-da-ana",
+      LOGIN_WITH_RETURN,
     );
     await expectNoHorizontalOverflow(page);
     await expectNoGenericSvgInMain(page);
@@ -155,7 +156,7 @@ test.describe("Conta e acesso — contrato visual responsivo do concept", () => 
       const hero = main.locator(`img[src="${current.asset}"]`);
       await expect(hero).toBeVisible();
       await expect(page.getByRole("heading", { name: current.heading })).toBeVisible();
-      await expect(page.getByText(current.cardHeading, { exact: true })).toBeVisible();
+      await expect(page.getByRole("heading", { name: current.cardHeading, exact: true })).toBeVisible();
 
       const sections = main.locator(":scope > section");
       await expect(sections).toHaveCount(2);
@@ -186,7 +187,9 @@ test.describe("Conta e acesso — contrato visual responsivo do concept", () => 
     await expect(termsMain).toBeVisible();
     await expect(termsMain.locator(":scope > section")).toHaveCount(2);
     await expect(
-      page.getByText("Entre sabendo como cuidamos desse espaço.", { exact: true }),
+      page.getByRole("heading", {
+        name: /Entre sabendo\s*como cuidamos\s*desse espaço\./,
+      }),
     ).toBeVisible();
     await expect(
       page.getByRole("heading", { name: "Antes de continuar" }),

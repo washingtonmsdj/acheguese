@@ -20,8 +20,15 @@ describe('Business spatial read-model ownership', () => {
       expect(migration).toContain(`FUNCTION public.${functionName}(`);
     }
 
-    expect(migration.match(/FROM public\.public_business_search b/g)?.length).toBe(3);
-    expect(migration).not.toMatch(/FROM\s+(?:public\.)?businesses\s+b/i);
+    const executableSql = migration
+      .split("\n")
+      .filter((line) => !line.trimStart().startsWith("--"))
+      .join("\n");
+
+    expect(executableSql.match(/FROM public\.public_business_search b/g)?.length).toBe(3);
+    expect(executableSql).not.toMatch(
+      /^\s*FROM\s+(?:public\.)?businesses\s+b\b/im,
+    );
   });
 
   it('returns canonical profile identity for Business consumers', () => {

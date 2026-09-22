@@ -1,8 +1,21 @@
+import {
+  isLaunchSurfaceEnabled,
+  type LaunchSurfaceKey,
+} from "@/app/config/launchScope";
 import { SearchBusinessesActionHandler } from "../actions/SearchBusinessesActionHandler";
 import { SearchServicesActionHandler } from "../actions/SearchServicesActionHandler";
 import type { IActionHandler } from "../actions/IActionHandler";
-import type { AIActionResult, AIOrchestratorSearchInput } from "../domain/types";
+import type {
+  AIActionResult,
+  AIIntentType,
+  AIOrchestratorSearchInput,
+} from "../domain/types";
 import { IntentParser } from "../intent/IntentParser";
+
+const INTENT_LAUNCH_SURFACE: Partial<Record<AIIntentType, LaunchSurfaceKey>> = {
+  business_search: "business",
+  service_search: "services",
+};
 
 export class AIOrchestratorService {
   private readonly handlers: Map<string, IActionHandler>;
@@ -28,6 +41,15 @@ export class AIOrchestratorService {
         intent,
         items: [],
         message: "Nao consegui identificar uma busca de empresa ou servico.",
+      };
+    }
+
+    const launchSurface = INTENT_LAUNCH_SURFACE[intent.type];
+    if (launchSurface && !isLaunchSurfaceEnabled(launchSurface)) {
+      return {
+        intent,
+        items: [],
+        message: "Esta categoria de busca ainda nao esta disponivel nesta fase.",
       };
     }
 

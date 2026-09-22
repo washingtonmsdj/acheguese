@@ -23,7 +23,7 @@ import {
 import { useRealtimeMetrics } from "@/core/admin/hooks/useRealtimeMetrics";
 import { AdminAccessDenied } from "@/modules/admin/components/AdminAccessDenied";
 import { useAdminGuard } from "@/modules/admin/hooks/useAdminGuard";
-import { StatusBadge } from "@/modules/mobility/components/StatusBadge";
+import { StatusBadge } from "@/core/mobility/components/StatusBadge";
 import { Avatar, AvatarFallback, AvatarImage } from "@/shared/components/ui/avatar";
 import { Badge } from "@/shared/components/ui/badge";
 import { Button } from "@/shared/components/ui/button";

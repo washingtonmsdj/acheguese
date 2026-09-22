@@ -12,15 +12,11 @@ const DIRECT_AUTH_READ_RE =
 const ALLOWED_DIRECT_AUTH_READS = new Map<string, readonly string[]>([
   [
     "src/core/session/services/SessionService.ts",
-    ["getSession", "onAuthStateChange"],
+    ["getSession", "getUser", "onAuthStateChange"],
   ],
   [
     "src/core/auth/services/AuthRecoveryAuthority.ts",
     ["getClaims"],
-  ],
-  [
-    "src/integrations/supabase/supabase.ts",
-    ["getSession"],
   ],
 ]);
 
@@ -109,9 +105,11 @@ describe("G4 Auth/session authority", () => {
       "utf8",
     );
 
-    expect(login).toContain(
-      "const isBusy = sessionLoading || user !== null || pendingAction !== null;",
-    );
+    expect(login).toContain("const isBusy =");
+    expect(login).toContain("sessionLoading ||");
+    expect(login).toContain("user !== null ||");
+    expect(login).toContain("pendingAction !== null ||");
+    expect(login).toContain("emailConfirmationSettling;");
     expect(signup).toContain(
       "const authBusy = sessionLoading || user !== null || loading || googleLoading;",
     );

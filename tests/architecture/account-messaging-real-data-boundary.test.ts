@@ -6,23 +6,30 @@ const root = process.cwd();
 const read = (path: string) => readFileSync(resolve(root, path), "utf8");
 
 const routes = read("src/app/routes/sections/AppLayoutRoutes.tsx");
-const sidebar = read("src/app/components/AppLayoutSidebar.tsx");
 const account = read("src/modules/profile/pages/ContaHubPage.tsx");
-const messaging = read("src/modules/messaging/pages/MensagensPage.tsx");
-const messagingHook = read(
-  "src/core/messaging/hooks/useCommunityDirectMessages.ts",
+const inbox = read("src/modules/messaging/pages/MensagensPage.tsx");
+const providerRegistry = read(
+  "src/core/messaging/providers/messagingProviderRegistry.ts",
+);
+const providerScope = read("src/app/config/messagingProviderScope.ts");
+const businessProvider = read(
+  "src/core/messaging/providers/BusinessMessagingProvider.ts",
+);
+const communityMessaging = read(
+  "src/modules/community-feed/pages/CommunityDirectMessagesPage.tsx",
 );
 
-describe("account and messaging MVP real-data boundary", () => {
-  it("keeps account and messaging routes authenticated without concept bypasses", () => {
+describe("account and horizontal messaging real-data boundary", () => {
+  it("keeps account and Messaging authenticated without concept bypasses", () => {
     expect(routes).not.toContain("conceptMessagesPreview");
     expect(routes).not.toContain("conceptAccountPreview");
     expect(routes).not.toContain('get("concept-mock")');
     expect(routes).toContain('path="/conta"');
     expect(routes).toContain("protectedElement(<P.ContaPage />)");
     expect(routes).toContain('path="/mensagens"');
-    expect(routes).toContain('path="/chat/:conversationId"');
-    expect(routes).toContain('"communityCommunication"');
+    expect(routes).toContain('path="/mensagens/:providerId/:threadId"');
+    expect(routes).not.toContain('path="/chat/:conversationId"');
+    expect(routes).toContain('"messaging"');
   });
 
   it("keeps the account overview on the live profile workspace", () => {
@@ -32,51 +39,32 @@ describe("account and messaging MVP real-data boundary", () => {
     expect(account).not.toContain("Dados demonstrativos");
     expect(account).toContain("useProfileHub()");
     expect(account).toContain("data.allProfiles");
-    expect(sidebar).not.toContain("conceptAccountPreview");
+    expect(account).toContain('title="Mensagens"');
+    expect(account).toContain('navigate("/mensagens")');
   });
 
-  it("uses only session profiles and persisted community conversations", () => {
-    for (const marker of [
-      "concept-mock",
-      "conceptConversations",
-      "conceptMessages",
-      "conceptConversationIdsByProfile",
-      "Sabores da Ana",
-      "almoço caseiro",
-      "Ana Silva",
-      "Ana Serviços",
-    ]) {
-      expect(messaging).not.toContain(marker);
-    }
+  it("keeps the global Inbox provider-based instead of Community-owned", () => {
+    expect(inbox).toContain("providerIds");
+    expect(inbox).toContain("getMessagingProvider(providerId)");
+    expect(inbox).toContain("useSessionContext()");
+    expect(inbox).not.toContain("useCommunityDirectMessages");
+    expect(inbox).not.toContain("concept-mock");
+    expect(inbox).not.toContain("localMessages");
 
-    expect(messaging).toContain("useSessionContext()");
-    expect(messaging).toContain("useCommunityDirectMessages()");
-    expect(messaging).toContain("sessionProfiles.map((profile)");
-    expect(messaging).toContain("key: profile.id");
-    expect(messaging).toContain("liveThreads.map(toInboxConversation)");
-    expect(messaging).toContain("contextTitle: thread.post_title || undefined");
-    expect(messaging).toContain('to="/notificacoes"');
-    expect(messaging).not.toContain('aria-label="Abrir filtros"');
-    expect(messaging).not.toContain('aria-label="Mais opções da conversa"');
-    expect(messaging).not.toContain('aria-label="Adicionar anexo"');
-    expect(messaging).not.toContain("localMessages");
-    expect(messaging).not.toContain("local-${Date.now()}");
-    expect(messaging).not.toContain("mobile-local-${Date.now()}");
-    expect(messaging).toContain(
-      "return sendMessage(selectedConversation.id, body);",
-    );
-    expect(messaging).not.toContain("pinned");
-    expect(messaging).not.toContain("Arquivadas");
-    expect(messaging).not.toContain(">Hoje<");
-    expect(messaging).toContain('{ value: "closed", label: "Encerradas" }');
-    expect(messaging).toContain("formatMessagingTimestamp(message.created_at)");
+    expect(providerRegistry).toContain("businessMessagingProvider");
+    expect(providerRegistry).not.toContain("@/app/");
+    expect(providerScope).toContain('isPlatformCapabilityEnabled("messaging")');
+    expect(providerScope).toContain('isProductModuleEnabled(productModule)');
+    expect(providerScope).toContain('getMessagingProvider(providerId) !== null');
+
+    expect(businessProvider).toContain("businessDirectMessagingService");
+    expect(businessProvider).not.toContain("community");
+    expect(businessProvider).not.toContain("classified");
   });
 
-  it("clears private thread state when the active profile changes", () => {
-    expect(messagingHook).toContain("setConversations([])");
-    expect(messagingHook).toContain("setMessages([])");
-    expect(messagingHook).toContain("setMessageCursor(null)");
-    expect(messagingHook).toContain("setActiveThreadId(null)");
-    expect(messagingHook).toContain("}, [profileId]);");
+  it("preserves Community Direct Messaging as a separate domain-specific UI", () => {
+    expect(communityMessaging).toContain("useCommunityDirectMessages()");
+    expect(communityMessaging).toContain("useSessionContext()");
+    expect(inbox).not.toContain("CommunityDirectMessagesPage");
   });
 });

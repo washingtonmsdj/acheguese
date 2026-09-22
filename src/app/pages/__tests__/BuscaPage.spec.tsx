@@ -95,8 +95,10 @@ function renderPage(path: string) {
 describe("BuscaPage", () => {
   beforeEach(() => {
     vi.clearAllMocks();
-    mocks.isLaunchSurfaceEnabled.mockImplementation(
-      (surface: string) => !["events", "jobs", "education"].includes(surface),
+    mocks.isLaunchSurfaceEnabled.mockImplementation((surface: string) =>
+      ["home", "business", "map", "nearby", "search", "messaging"].includes(
+        surface,
+      ),
     );
     mocks.useGlobalSearch.mockImplementation(
       (initialQuery, initialFilters, options) => ({
@@ -132,7 +134,7 @@ describe("BuscaPage", () => {
     renderPage("/busca/ba/salvador/pituba?q=pizzaria");
 
     expect(
-      screen.getByRole("searchbox", { name: "Buscar em Pituba" }),
+      screen.getByRole("searchbox", { name: "O que você procura por aqui?" }),
     ).toHaveValue("pizzaria");
     expect(
       screen.queryByRole("button", { name: /Eventos/i }),
@@ -156,7 +158,7 @@ describe("BuscaPage", () => {
     );
   });
 
-  it("renders federated non-business results in domain sections", () => {
+  it("does not render stale results from paused providers", () => {
     mocks.useGlobalSearch.mockImplementation(
       (initialQuery, initialFilters, options) => ({
         query: initialQuery,
@@ -178,13 +180,6 @@ describe("BuscaPage", () => {
               subtitle: "Equipamentos",
               url: "/c/abc12345",
             },
-            {
-              id: "post-1",
-              type: "post",
-              title: "Alguém recomenda pizzaria?",
-              subtitle: "recomendacao",
-              url: null,
-            },
           ],
           communities: [],
           businesses: [],
@@ -194,7 +189,7 @@ describe("BuscaPage", () => {
           events: [],
           posts: [],
           coupons: [],
-          total: 3,
+          total: 2,
         },
         isLoading: false,
         error: null,
@@ -211,16 +206,10 @@ describe("BuscaPage", () => {
     renderPage("/busca/ba/salvador/pituba?q=pizza");
 
     expect(
-      screen.getByRole("heading", { name: "Comunidades" }),
-    ).toBeInTheDocument();
+      screen.queryByRole("heading", { name: "Comunidades" }),
+    ).not.toBeInTheDocument();
     expect(
-      screen.getByRole("heading", { name: "Classificados" }),
-    ).toBeInTheDocument();
-    expect(
-      screen.getByRole("heading", { name: "Atividade pública" }),
-    ).toBeInTheDocument();
-    expect(
-      screen.queryByRole("heading", { name: "Outros resultados" }),
+      screen.queryByRole("heading", { name: "Classificados" }),
     ).not.toBeInTheDocument();
   });
 });

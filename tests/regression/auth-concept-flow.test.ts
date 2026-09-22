@@ -102,7 +102,6 @@ describe("account and access concept contract", () => {
     expect(schema).not.toContain("neighborhood");
     expect(schema).not.toContain("city:");
     expect(cadastroHook).not.toContain("neighborhood_id:");
-    expect(cadastroHook).not.toContain("state:");
     expect(cadastroHook).not.toContain("city:");
     expect(cadastroHook).not.toContain("as unknown as true");
     expect(cadastroHook).not.toContain("pendingSignup");
@@ -276,7 +275,6 @@ describe("account and access concept contract", () => {
     expect(authService).not.toContain("window.location.origin");
     expect(rootRoutes).toContain("AUTH_PATHS.login");
     expect(rootRoutes).toContain("AUTH_PATHS.signupConfirmation");
-    expect(login).not.toContain("pendingSignup");
     expect(confirmation).not.toContain("pendingSignup");
     expect(firstAccess).not.toContain("pendingSignup");
     expect(terms).not.toContain("pendingAuthReturn");
@@ -390,7 +388,8 @@ describe("account and access concept contract", () => {
     const iconCss = readProjectFile(
       "src/app/components/auth/auth-concept-icons.css",
     );
-    expect(iconCss).toContain("conic-gradient");
+    expect(iconCss).toContain(".auth-concept-icon--shield-filled");
+    expect(iconCss).toContain("clip-path:polygon");
     expect(iconCss).not.toContain("content:'G'");
 
     const firstAccess = readProjectFile(

@@ -16,11 +16,21 @@ export const BUSINESS_PROFILE_REPORT_REASONS = [
 export type BusinessProfileReportReason =
   (typeof BUSINESS_PROFILE_REPORT_REASONS)[number];
 
+export const BUSINESS_PROFILE_REPORT_STATUSES = [
+  "pending",
+  "under_review",
+  "resolved",
+  "dismissed",
+] as const;
+
+export type BusinessProfileReportStatus =
+  (typeof BUSINESS_PROFILE_REPORT_STATUSES)[number];
+
 export interface BusinessProfileReportRecord {
   id: string;
   business_id: string;
   reason: BusinessProfileReportReason;
-  status: "pending" | "under_review" | "resolved" | "dismissed";
+  status: BusinessProfileReportStatus;
   created_at: string;
 }
 

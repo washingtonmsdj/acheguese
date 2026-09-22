@@ -30,6 +30,8 @@ vi.mock("@/core/session/services/SessionService", () => ({
     getCurrentUser: vi.fn(),
     onAuthStateChange: vi.fn(),
     refreshSession: vi.fn(),
+    cleanup: vi.fn(),
+    initialize: vi.fn(),
   },
 }));
 

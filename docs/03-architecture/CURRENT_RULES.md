@@ -43,8 +43,10 @@ Regras:
 - `src/shared` contém UI/utilitários realmente compartilhados, sem absorver regra de domínio.
 - `src/features` é namespace aposentado; não deve existir nem ser recriado. Eventos pertence a `src/modules/community-events`.
 - módulos não importam implementação interna de outros módulos; integração cruzada passa por `core`, adapter formal ou contrato compartilhado.
-- `src/app/config/productModuleRegistry.ts` é o owner único do lifecycle de módulos de produto (`active | paused`) e das dependências formais entre módulos.
-- `src/app/config/launchScope.ts` é projeção/compatibilidade de superfície derivada do registry; não mantém uma segunda decisão independente de lifecycle.
+- `src/app/config/productModuleRegistry.ts` é o owner do lifecycle de **domínios de produto**.
+- `src/app/config/platformCapabilityRegistry.ts` é o owner do lifecycle de **capabilities horizontais** como Map, Nearby, Search e Messaging.
+- `src/app/config/lifecycleRegistry.ts` é o único avaliador das dependências cruzadas domínio ↔ capability.
+- `src/app/config/launchScope.ts` é projeção/compatibilidade de superfície derivada desses owners; não mantém uma segunda decisão independente de lifecycle.
 - módulo `paused` falha fechado: não participa de navegação pública, rota funcional, prefetch/warmup, discovery, provider público ou layer de Mapa. Reativação ocorre pelo owner de lifecycle após certificação; exceção local, alias ou redirect não substituem esse contrato.
 - páginas/componentes não acessam Supabase diretamente; acesso fica em services/repositories, migrations, scripts e Edge Functions conforme o boundary aplicável.
 - páginas e hooks orquestram estado/fetch/render; regra de negócio pertence ao owner de domínio.
@@ -156,7 +158,7 @@ Regra: este documento não replica lifecycle, tabelas, RPCs ou allowlists desses
 
 ## 7. Roteamento, rollout e território
 
-- Território é contexto geográfico raiz da experiência pública. No MVP vigente, ele serve de plataforma para **Empresas + Mapa + Perto de mim** e não implica ativação de Community ou de qualquer outro módulo pausado.
+- Território é contexto geográfico raiz da experiência pública. No MVP vigente, **Business/Empresas** é o domínio ativo; Mapa, Perto de mim, Busca e Mensagens são capabilities horizontais. Isso não implica ativação de Community ou de qualquer outro domínio pausado.
 - entidade pública possui namespace canônico único; alias legado não cria segunda superfície oficial.
 - contexto `/comunidade/...` é explícito e não deve sequestrar automaticamente uma URL pública de entidade.
 - contexto de lançamento da `/` vem de `TERRITORY_CONFIG`/`LAUNCH_URLS`; a entrada não cria segundo owner local de estado, cidade, slug ou nome do território de launch.

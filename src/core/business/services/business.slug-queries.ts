@@ -1,6 +1,5 @@
 import { supabase } from "@/integrations/supabase";
 import { logger } from "@/shared/utils/logger";
-import { PAGINATION } from "@/shared/constants";
 
 export async function checkSlugExists(
   slug: string,
@@ -31,27 +30,26 @@ export async function checkSlugExists(
   }
 }
 
-export async function getSimilarSlugs(
-  slug: string,
-  limit = PAGINATION.DEFAULT_LIMIT,
+export async function listCanonicalSlugsByPrefix(
+  prefix: string,
+  limit = 20,
 ): Promise<string[]> {
-  try {
-    const { data, error } = await supabase
-      .from("business_data")
-      .select("slug")
-      .ilike("slug", `${slug}%`)
-      .limit(limit);
+  const normalizedPrefix = prefix.trim().toLocaleLowerCase("pt-BR");
+  if (!normalizedPrefix) return [];
 
-    if (error) {
-      logger.error("Error getting similar business slugs:", error);
-      throw error;
-    }
+  const safeLimit = Math.max(1, Math.min(limit, 50));
+  const { data, error } = await supabase
+    .from("business_data")
+    .select("slug")
+    .like("slug", `${normalizedPrefix}%`)
+    .limit(safeLimit);
 
-    return (data ?? [])
-      .map((item) => item.slug)
-      .filter((item): item is string => Boolean(item));
-  } catch (error) {
-    logger.error("Error in getSimilarSlugs:", error);
+  if (error) {
+    logger.error("Error fetching canonical Business slugs by prefix:", error);
     throw error;
   }
+
+  return (data ?? [])
+    .map((row) => row.slug)
+    .filter((slug): slug is string => Boolean(slug));
 }

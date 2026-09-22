@@ -8,7 +8,7 @@ function readProjectFile(path: string): string {
 
 describe("G101 canonical ride status presentation", () => {
   const statusBadge = readProjectFile(
-    "src/modules/mobility/components/StatusBadge.tsx",
+    "src/core/mobility/components/StatusBadge.tsx",
   );
   const rideCardHeader = readProjectFile(
     "src/modules/mobility/components/passenger/ride-card/RideCardHeader.tsx",
@@ -27,7 +27,7 @@ describe("G101 canonical ride status presentation", () => {
 
   it("uses the canonical mobility badge in the admin realtime dashboard", () => {
     expect(adminDashboard).toContain(
-      'import { StatusBadge } from "@/modules/mobility/components/StatusBadge"',
+      'import { StatusBadge } from "@/core/mobility/components/StatusBadge"',
     );
     expect(adminDashboard).toContain('<StatusBadge status={ride.status} size="sm" />');
     expect(adminDashboard).not.toContain("const getStatusColor");

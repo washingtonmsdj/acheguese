@@ -1,76 +1,149 @@
 # Core Messaging
 
-**Status:** G4 SSOT SOURCE EM FECHAMENTO — NAO MVP CERTIFICADO  
-**Data do checkpoint:** 2026-08-29
+**Status:** ATIVO NO MVP — boundary horizontal com provider Business  
+**Atualizado:** 2026-09-21
 
-`src/core/messaging` e o boundary horizontal de contratos e services de mensagens. Ele **nao** representa uma tabela generica unica e nao deve ganhar um `MessagingService` monolitico.
+`src/core/messaging` é o boundary horizontal de contratos, services e providers
+de mensagens. Ele **não** representa uma tabela genérica única e não deve ganhar
+um `MessagingService` monolítico.
 
-## Agregados canonicos
+A Inbox global pertence à capability `messaging`; cada domínio preserva seu
+próprio agregado e participa da Inbox por provider/adaptor explícito.
 
-### Classified Messaging
+## Agregados canônicos
 
-Owner: `src/core/messaging/services/ClassifiedMessagingService.ts`
+### Business Direct Messaging — ativo no MVP
 
-Persistencia principal:
+Owner:
+
+- `src/core/messaging/services/BusinessDirectMessagingService.ts`;
+- `src/core/messaging/providers/BusinessMessagingProvider.ts`.
+
+Persistência:
+
+- `public.business_direct_threads`;
+- `public.business_direct_thread_participants`;
+- `public.business_direct_messages`;
+- `public.business_direct_message_reports`;
+- audit metadata-only em `private.business_direct_message_audit_log`.
+
+Comandos/read models públicos:
+
+- `create_business_direct_thread`;
+- `list_business_direct_thread_previews`;
+- `list_business_direct_messages`;
+- `send_business_direct_message`;
+- `mark_business_direct_thread_read`;
+- `set_business_direct_thread_blocked`;
+- `report_business_direct_thread`.
+
+Regras:
+
+- browser autenticado possui leitura via RLS, sem INSERT/UPDATE/DELETE direto;
+- mutações são server-owned por RPC `SECURITY DEFINER`;
+- identidade/autorização derivam do usuário e Profile ativo;
+- a mesma empresa/cliente reutiliza a thread existente;
+- mensagens privadas não entram em telemetry/audit textual;
+- `business_direct_messages` participa da publication `supabase_realtime`.
+
+### Classified Messaging — preservado, provider pausado
+
+Owner: `src/core/messaging/services/ClassifiedMessagingService.ts`.
+
+Persistência principal:
 
 - `public.conversations`;
 - `public.messages`.
 
-Mutacoes de conversa/mensagem passam pelos RPCs server-owned (`create_classified_conversation`, `send_classified_message`, `mark_classified_messages_read`, `block_classified_conversation`, `moderate_classified_conversation`). O service mantem apenas read models autorizados e a fachada de dominio.
+O agregado continua válido, mas não é registrado na Inbox enquanto
+`classifieds` estiver pausado.
 
-### Community Direct Messaging
+### Community Direct Messaging — preservado, provider pausado
 
-Owner: `src/core/messaging/services/CommunityDirectMessagingService.ts`
+Owner: `src/core/messaging/services/CommunityDirectMessagingService.ts`.
 
-Persistencia principal:
+Persistência principal:
 
 - `public.community_direct_threads`;
 - `public.community_direct_thread_participants`;
 - `public.community_direct_messages`;
 - `public.community_direct_message_reports`.
 
-O agregado e intencionalmente separado de Classified, Ride e Group chat. Criacao, envio, leitura, bloqueio e report passam pelos RPCs canonicos do dominio.
+A UI específica de Community Direct não é a Inbox global. Enquanto Community
+estiver pausada, esse agregado não participa da composição ativa.
+
+### Mobility chat
+
+Chat de corrida/entrega mantém semântica e lifecycle próprios de Mobilidade.
+Compartilhar a ideia de “mensagem” não obriga usar o agregado privado genérico.
 
 ## Contratos compartilhados
 
-`src/core/messaging/contracts.ts` define portas de inbox/thread/paginacao reutilizadas pelos agregados. Esses contratos nao criam um owner de persistencia paralelo.
+`src/core/messaging/contracts.ts` e `inboxTypes.ts` definem portas de
+Inbox/thread/paginação. Esses contratos permitem composição sem transformar
+Messaging em owner dos dados de cada domínio.
 
-## Realtime
+O registry de providers está em
+`src/core/messaging/providers/messagingProviderRegistry.ts`.
 
-Toda abertura de canal Supabase pertence a `src/core/realtime/services/RealtimeService.ts`. Services de Messaging apenas delegam subscriptions ao owner de Realtime.
-
-A migration `20260829185634_align_messaging_notification_realtime_publication.sql` garante no schema alvo a publication dos streams usados por Classified (`public.messages`) e Notifications (`public.notifications`). Community Direct ja usa `public.community_direct_messages` na mesma publication.
-
-## Notifications
-
-Side effects de notificacao gerados por Messaging usam a autoridade de Notifications/outbox. Messaging nao deve inserir em `public.notifications` diretamente nem criar um segundo sistema de delivery.
+No MVP, **somente Business** é registrado.
 
 ## UI
 
-Messaging/Chat permanece launch-paused no composition root. As antigas `pages`, `components` e `hooks` dentro de `src/core/messaging` foram aposentadas porque estavam sem caller runtime e violavam a taxonomia `core = dominio / modules = UI`.
+A UI horizontal fica em `src/modules/messaging`.
 
-Quando a UI for retomada em G6, ela deve nascer em `src/modules/messaging` e consumir apenas as facades publicas de `@/core/messaging`.
+Rotas ativas:
 
-## Ratchets
+- `/mensagens`;
+- `/mensagens/:providerId/:threadId`;
+- thread Business canônica: `/mensagens/business/:threadId`.
 
-- `tests/architecture/classified-messaging-ssot.test.ts` protege o owner Classified e proibe UI dentro de `core/messaging`;
-- `tests/architecture/community-direct-messaging-ssot.test.ts` protege o agregado Community Direct;
-- `tests/architecture/realtime-ssot.test.ts` proibe `.channel()` fora do owner de Realtime e exige os streams publicados;
-- `tests/architecture/notification-inbox-authority.test.ts` impede Messaging/qualquer runtime browser de criar ou hard-delete notificacoes diretamente.
+A página recebe providers registrados pelo composition root. Ela não importa
+Community/Classificados diretamente e não inventa conversas de módulos pausados.
 
-## O que G4 nao certifica
+## Realtime
 
-Este fechamento arquitetural nao certifica ainda:
+Toda abertura de canal Supabase pertence a
+`src/core/realtime/services/RealtimeService.ts`. Services de Messaging apenas
+delegam subscriptions ao owner de Realtime.
 
-- UX final de inbox/chat, atualmente pausada;
-- E2E real de envio/recebimento/reconnect;
-- volume, ordering, retry e offline behavior sob carga;
-- auditoria exaustiva de migrations/RLS/grants/legados de todos os chats;
-- same-SHA lint/typecheck/test/build/deploy/smoke.
+Streams ativos de Business usam `public.business_direct_messages`.
 
-Essas provas continuam em G5/G6/G7.
+## Notifications
 
-## Community Direct Messaging React boundary
+Side effects de notificações usam a autoridade de Notifications/outbox.
+Messaging não cria uma segunda infraestrutura de delivery nem escreve
+`public.notifications` diretamente.
 
-- `hooks/useCommunityDirectMessages.ts` owns the React state adapter for the Community Direct Messaging aggregate.
-- Feed-specific presentation remains in `src/core/community-feed`; persistence and commands remain in `CommunityDirectMessagingService`.
+## Segurança
+
+Business Direct Messaging possui:
+
+- RLS habilitado em todas as tabelas públicas do agregado;
+- grants browser read-only;
+- RPCs operacionais executáveis por `authenticated` e `service_role`;
+- nenhuma mutação direta concedida a `anon`/`authenticated`;
+- bloqueio, report e fechamento modelados como comandos do agregado;
+- audit privado sem conteúdo textual de mensagem.
+
+## Guardrails
+
+- `tests/architecture/business-messaging-mvp.test.ts`;
+- `tests/architecture/classified-messaging-ssot.test.ts`;
+- `tests/architecture/community-direct-messaging-ssot.test.ts`;
+- `tests/architecture/realtime-ssot.test.ts`;
+- `tests/architecture/notification-inbox-authority.test.ts`;
+- `src/core/messaging/services/BusinessDirectMessagingService.test.ts`;
+- `tests/e2e/messaging-authenticated.spec.ts`.
+
+## Evolução
+
+Novo provider só entra na Inbox quando:
+
+1. o domínio estiver ativo;
+2. o agregado possuir autorização/RLS/comandos próprios;
+3. o provider implementar os contratos horizontais;
+4. o composition root registrar explicitamente o provider;
+5. testes de isolamento provarem que nenhum domínio pausado foi reativado.
+
+Não criar tabela universal ou bridge temporário para acelerar essa integração.

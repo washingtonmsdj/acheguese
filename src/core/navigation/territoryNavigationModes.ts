@@ -3,6 +3,7 @@ import {
   Home,
   Map,
   Navigation,
+  Search,
   UserRound,
   type LucideIcon,
 } from "lucide-react";
@@ -21,6 +22,7 @@ export type TerritoryNavigationModeId =
   | "map"
   | "business"
   | "nearby"
+  | "search"
   | "account";
 
 export interface TerritoryNavigationMode {
@@ -120,6 +122,13 @@ export function buildTerritoryNavigationModes({
       label: "Perto",
       description: "Empresas perto de mim",
       icon: Navigation,
+    },
+    {
+      id: "search",
+      href: buildModuleTerritoryUrl(MODULE_SLUGS.search, territoryBase),
+      label: "Busca",
+      description: "Buscar nos módulos ativos",
+      icon: Search,
     },
     {
       id: "account",

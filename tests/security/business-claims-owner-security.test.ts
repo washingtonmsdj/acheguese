@@ -12,9 +12,13 @@ const service = read("src/core/business/services/business.admin.ts");
 
 describe("Business Claim owner boundary", () => {
   it("uses the canonical Portuguese status contract", () => {
-    expect(service).toContain('.update({ status, resolved_at: new Date().toISOString() })');
-    expect(service).not.toContain('"approved"');
-    expect(service).not.toContain('"rejected"');
+    expect(service).toContain('action: "resolveClaim"');
+    expect(service).toContain('functionName: "admin-business-rpc"');
+    expect(service).toContain('status: "aprovada" | "rejeitada"');
+    expect(service).toContain(
+      'decision: status === "aprovada" ? "approve" : "reject"',
+    );
+    expect(service).not.toContain('.from("business_claims").update(');
   });
 
   it("binds client claim ownership to user_id and pending state", () => {

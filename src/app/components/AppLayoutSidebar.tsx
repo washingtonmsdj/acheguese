@@ -94,7 +94,7 @@ export function AppLayoutSidebar() {
   const isInternalGroupRoute =
     pathSegments[0] === "grupos" && pathSegments.length >= 2;
   const isConversationRoute =
-    pathSegments[0] === "chat" && pathSegments.length >= 2;
+    pathSegments[0] === "mensagens" && pathSegments.length >= 3;
   const isPublicEntityDetailRoute =
     isShortCommunityRoute &&
     pathSegments.length === 2 &&
@@ -118,8 +118,7 @@ export function AppLayoutSidebar() {
     isCommunityAliasPublicRoute ||
     isGastronomyOrderTrackingRoute;
 
-  const isMessagingRoute =
-    pathSegments[0] === "mensagens" || pathSegments[0] === "chat";
+  const isMessagingRoute = pathSegments[0] === "mensagens";
 
   if (isMessagingRoute) {
     return (

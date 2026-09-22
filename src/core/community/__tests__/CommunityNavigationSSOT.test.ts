@@ -2,26 +2,36 @@ import { describe, expect, it } from "vitest";
 import {
   resolveCommunityFeedChannelFromTab,
   resolveCommunityFeedQueryTabFromChannel,
-} from "../utils/communityFeedTab";
+} from "@/core/community-feed/utils/communityFeedTab";
 
 describe("community navigation SSOT", () => {
-  it("maps launch-enabled public tabs to canonical feed channels", () => {
-    expect(resolveCommunityFeedChannelFromTab("empresas")).toBe("empresas");
-    expect(resolveCommunityFeedChannelFromTab("desconhecido")).toBe(
-      "para_voce",
-    );
-  });
-
-  it("maps active launch tabs to their canonical channels", () => {
-    expect(resolveCommunityFeedChannelFromTab("eventos")).toBe("eventos");
-    expect(resolveCommunityFeedChannelFromTab("vagas")).toBe("oportunidades");
-  });
-
-  it("maps active channels back to canonical URL query tabs", () => {
-    expect(resolveCommunityFeedQueryTabFromChannel("para_voce")).toBeNull();
-    expect(resolveCommunityFeedQueryTabFromChannel("vagas")).toBe(
+  it("falls back to para_voce while Community feed channels are paused", () => {
+    for (const tab of [
+      "empresas",
+      "eventos",
+      "vagas",
       "oportunidades",
-    );
-    expect(resolveCommunityFeedQueryTabFromChannel("eventos")).toBe("eventos");
+      "alertas",
+      "desconhecido",
+    ]) {
+      expect(resolveCommunityFeedChannelFromTab(tab), tab).toBe("para_voce");
+    }
+  });
+
+  it("does not expose query tabs for paused channels", () => {
+    for (const channel of [
+      "empresas",
+      "eventos",
+      "vagas",
+      "oportunidades",
+      "alertas",
+    ] as const) {
+      expect(resolveCommunityFeedQueryTabFromChannel(channel), channel).toBeNull();
+    }
+  });
+
+  it("keeps para_voce canonical without a query tab", () => {
+    expect(resolveCommunityFeedChannelFromTab("para_voce")).toBe("para_voce");
+    expect(resolveCommunityFeedQueryTabFromChannel("para_voce")).toBeNull();
   });
 });

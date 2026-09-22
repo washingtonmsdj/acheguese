@@ -2,7 +2,7 @@ import React from "react";
 import { Button } from "@/shared/components/ui/button";
 import { usePollVote } from "@/core/community-feed/hooks/usePollVote";
 import { Poll } from "@/shared/types/poll";
-import { INLINE_STYLES, SPACING } from "@/core/community/components/styles/communityDesignSystem";
+import { INLINE_STYLES, SPACING } from "@/core/community-feed/styles/communityDesignSystem";
 import { Check, Clock } from "lucide-react";
 import { cn } from "@/shared/utils/cn";
 /**

@@ -33,7 +33,7 @@ describe("getAuthErrorMessage", () => {
       "Confirme seu e-mail antes de entrar. Verifique sua caixa de entrada.",
     );
     expect(getAuthErrorMessage({ message: "over email rate limit" })).toBe(
-      "Muitas tentativas. Aguarde alguns minutos antes de tentar novamente.",
+      "Muitas tentativas. Aguarde um pouco antes de tentar novamente.",
     );
     expect(getAuthErrorMessage({ message: "error sending confirmation email" })).toBe(
       "Não foi possível enviar o e-mail de confirmação agora. Tente novamente em instantes.",

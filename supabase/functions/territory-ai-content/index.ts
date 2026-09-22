@@ -82,17 +82,28 @@ function isRecord(value: unknown): value is Record<string, unknown> {
   return typeof value === "object" && value !== null && !Array.isArray(value);
 }
 
+function isSlugCharacter(character: string): boolean {
+  const code = character.charCodeAt(0);
+  const isDigit = code >= 48 && code <= 57;
+  const isLowercaseLetter = code >= 97 && code <= 122;
+  return isDigit || isLowercaseLetter || character === "-";
+}
+
+function isValidTerritorySlug(slug: string): boolean {
+  if (slug.length < 2 || slug.length > 120) return false;
+  if (slug.startsWith("-") || slug.endsWith("-") || slug.includes("--")) {
+    return false;
+  }
+  return Array.from(slug).every(isSlugCharacter);
+}
+
 function cleanSlug(value: unknown): string {
   if (typeof value !== "string") {
     throw new RequestValidationError("Invalid territory_slug");
   }
 
   const slug = value.trim().toLowerCase();
-  if (
-    slug.length < 2 ||
-    slug.length > 120 ||
-    !/^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(slug)
-  ) {
+  if (!isValidTerritorySlug(slug)) {
     throw new RequestValidationError("Invalid territory_slug");
   }
 

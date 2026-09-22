@@ -1,30 +1,26 @@
 import { Link } from "react-router-dom";
-import { ArrowLeft, Building2, Home, Map, MapPin, Search, Tag, Users, Wrench } from "lucide-react";
+import { ArrowLeft, Building2, Home, Map, MapPin, Search } from "lucide-react";
 import { Button } from "@/shared/components/ui/button";
-import { LAUNCH_URLS } from "@/core/routing/config/territory";
 
 interface LaunchPausedPageProps {
   moduleName?: string;
 }
 
-const STATIC_ACTIVE_LINKS = [
+const ACTIVE_LINKS = [
   { label: "Início", href: "/", icon: Home },
   { label: "Empresas", href: "/empresas", icon: Building2 },
-  { label: "Serviços", href: "/servicos", icon: Wrench },
-  { label: "Classificados", href: "/classificados", icon: Tag },
   { label: "Mapa", href: "/mapa", icon: Map },
   { label: "Perto de Mim", href: "/perto-de-mim", icon: MapPin },
   { label: "Busca", href: "/busca", icon: Search },
 ] as const;
 
 export default function LaunchPausedPage({ moduleName = "Módulo" }: LaunchPausedPageProps) {
-  const activeLinks = [
-    { label: "Comunidade", href: LAUNCH_URLS.community, icon: Users },
-    ...STATIC_ACTIVE_LINKS,
-  ] as const;
-
   return (
-    <main id="main-content" className="min-h-[calc(100vh-5rem)] bg-background px-4 py-10 text-foreground sm:px-6">
+    <main
+      id="main-content"
+      data-page="launch-paused"
+      className="min-h-[calc(100vh-5rem)] bg-background px-4 py-10 text-foreground sm:px-6"
+    >
       <div className="mx-auto flex max-w-4xl flex-col gap-8">
         <Button asChild variant="ghost" className="w-fit gap-2 px-0 text-muted-foreground hover:bg-transparent">
           <Link to="/">
@@ -51,7 +47,7 @@ export default function LaunchPausedPage({ moduleName = "Módulo" }: LaunchPause
             Continue explorando o bairro
           </h2>
           <div className="mt-4 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
-            {activeLinks.map((item) => (
+            {ACTIVE_LINKS.map((item) => (
               <Link
                 key={item.href}
                 to={item.href}

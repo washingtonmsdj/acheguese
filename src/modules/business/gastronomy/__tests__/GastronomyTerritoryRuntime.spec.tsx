@@ -95,7 +95,7 @@ vi.mock("@/core/session", () => ({
   useSessionContext: () => useSessionContextMock(),
 }));
 
-vi.mock("@/shared/components/maps/MiniMap", () => ({
+vi.mock("@/core/maps/components/MiniMap", () => ({
   MiniMap: () => <div>mini-map</div>,
 }));
 

@@ -2,7 +2,7 @@
 
 > **Atualizado em 2026-09-21.** Este documento descreve o mapeamento conceitual do domínio Territory, mas não possui autoridade para ativar módulo público. O lifecycle executável pertence a `src/app/config/productModuleRegistry.ts`.
 
-O MVP atual possui somente **Empresas + Mapa + Perto de mim** como módulos de produto ativos. Community, Search e demais capabilities pós-MVP permanecem `paused`.
+O MVP atual possui **Empresas + Mapa + Perto de mim + Busca** como módulos de produto ativos. Community e demais capabilities pós-MVP permanecem `paused`.
 
 ## Legenda de status
 
@@ -77,6 +77,8 @@ O MVP atual possui somente **Empresas + Mapa + Perto de mim** como módulos de p
 | `/empresas/:uf/:city[/:neighborhood]` | ✅ Ativo | Módulo Business. |
 | `/mapa/:uf/:city[/:neighborhood]` | ✅ Ativo | Módulo Map. |
 | `/perto-de-mim` | ✅ Ativo | Módulo Nearby; depende de Map + Business. |
+| `/busca[/:uf/:city[/:neighborhood]]` | ✅ Ativo | Search canônica; consulta somente providers habilitados pelo lifecycle. |
+| `/buscar[/:uf/:city[/:neighborhood]]` | ✅ Ativo | Experiência de busca assistida sob o mesmo lifecycle de Search. |
 | `/inicio` | ⛔ Legado | Não é entrada canônica nem deve aparecer no sitemap do MVP. |
 | `/comunidade/*` | ⏸️ Pausado | Owner preservado, mas Community não é superfície pública ativa do MVP. |
 | `/cidade/*` | 🟨 Legado | Não criar redirect paliativo; compatibilidade só permanece com justificativa externa real. |

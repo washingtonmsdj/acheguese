@@ -40,6 +40,7 @@ const CANONICAL_MODULES = [
   "communication-territorial",
   "guide",
   "mobility",
+  "messaging",
   "professionals",
   "profile",
   "work-opportunities",

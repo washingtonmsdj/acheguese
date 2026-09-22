@@ -3,10 +3,32 @@ import path from "node:path";
 import { describe, expect, it } from "vitest";
 
 const SOURCE_ROOT = path.resolve(process.cwd(), "src");
-const DIRECT_RIDE_INSERT =
-  /\.from(?:<[^>]+>)?\(\s*["']ride_requests["']\s*\)[\s\S]{0,400}?\.insert\s*\(/;
-const DIRECT_RIDE_UPDATE =
-  /\.from(?:<[^>]+>)?\(\s*["']ride_requests["']\s*\)[\s\S]{0,400}?\.update\s*\(/;
+const RIDE_REQUEST_TABLE = "ride_requests";
+const MAX_CHAIN_LOOKAHEAD = 400;
+
+function hasDirectRideMutation(source: string, method: "insert" | "update"): boolean {
+  let cursor = 0;
+
+  while (cursor < source.length) {
+    const tableIndex = source.indexOf(RIDE_REQUEST_TABLE, cursor);
+    if (tableIndex === -1) return false;
+
+    const prefix = source.slice(Math.max(0, tableIndex - 160), tableIndex);
+    if (prefix.lastIndexOf(".from") !== -1) {
+      const suffix = source.slice(
+        tableIndex + RIDE_REQUEST_TABLE.length,
+        tableIndex + RIDE_REQUEST_TABLE.length + MAX_CHAIN_LOOKAHEAD,
+      );
+      if (suffix.includes(`.${method}(`) || suffix.includes(`.${method} (`)) {
+        return true;
+      }
+    }
+
+    cursor = tableIndex + RIDE_REQUEST_TABLE.length;
+  }
+
+  return false;
+}
 
 function collectRuntimeFiles(dir: string): string[] {
   return fs.readdirSync(dir, { withFileTypes: true }).flatMap((entry) => {
@@ -36,7 +58,9 @@ function read(relativePath: string): string {
 describe("ride_requests browser write authority", () => {
   it("keeps runtime source free from direct ride INSERT chains", () => {
     const violations = collectRuntimeFiles(SOURCE_ROOT)
-      .filter((file) => DIRECT_RIDE_INSERT.test(fs.readFileSync(file, "utf8")))
+      .filter((file) =>
+        hasDirectRideMutation(fs.readFileSync(file, "utf8"), "insert"),
+      )
       .map((file) => path.relative(process.cwd(), file));
 
     expect(violations).toEqual([]);
@@ -44,7 +68,9 @@ describe("ride_requests browser write authority", () => {
 
   it("keeps runtime source free from direct ride UPDATE chains", () => {
     const violations = collectRuntimeFiles(SOURCE_ROOT)
-      .filter((file) => DIRECT_RIDE_UPDATE.test(fs.readFileSync(file, "utf8")))
+      .filter((file) =>
+        hasDirectRideMutation(fs.readFileSync(file, "utf8"), "update"),
+      )
       .map((file) => path.relative(process.cwd(), file));
 
     expect(violations).toEqual([]);

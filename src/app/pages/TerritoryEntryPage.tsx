@@ -1,7 +1,10 @@
 import { useEffect, useState } from "react";
-import { Building2, Map, MapPin, Navigation } from "lucide-react";
+import { Building2, Map, MapPin, Navigation, Search } from "lucide-react";
 import TerritoryEntryMap from "@/app/components/territory-vivo/TerritoryEntryMap";
-import { AUTH_PATHS } from "@/core/auth/constants/authFlow";
+import {
+  AUTH_PATHS,
+  buildLoginPath,
+} from "@/core/auth/constants/authFlow";
 import { TERRITORY_CONFIG } from "@/core/routing/config/territory";
 import {
   getPublicTerritoryGroupPresentation,
@@ -53,6 +56,10 @@ const launchMapUrl = buildModuleTerritoryUrl(
   launchTerritoryBase,
 );
 const launchNearbyUrl = buildAppModulePath(APP_MODULE_SLUGS.nearby);
+const launchSearchUrl = buildModuleTerritoryUrl(
+  MODULE_SLUGS.search,
+  launchTerritoryBase,
+);
 
 const MODULE_LINKS = [
   {
@@ -72,6 +79,12 @@ const MODULE_LINKS = [
     description: "Use sua localização para encontrar empresas próximas.",
     href: launchNearbyUrl,
     icon: Navigation,
+  },
+  {
+    label: "Busca",
+    description: "Pesquise empresas e conteúdo dos módulos ativos neste território.",
+    href: launchSearchUrl,
+    icon: Search,
   },
 ] as const;
 
@@ -112,7 +125,9 @@ export default function TerritoryEntryPage() {
     ? `${launchPresentation.article} ${launchPresentation.label}`
     : launchPresentation.label;
 
-  const accountHref = isAuthenticated ? ACCOUNT_PATH : AUTH_PATHS.login;
+  const accountHref = isAuthenticated
+    ? ACCOUNT_PATH
+    : buildLoginPath(ACCOUNT_PATH);
   const accountLabel = isAuthenticated ? "Minha conta" : "Entrar";
 
   const rememberTerritory = () => {
@@ -163,8 +178,8 @@ export default function TerritoryEntryPage() {
               Seu lugar, mais perto.
             </h1>
             <p className="mt-4 max-w-xl text-base leading-7 text-muted-foreground sm:text-lg">
-              Encontre empresas, visualize o território no mapa e descubra o
-              que está perto de você.
+              Encontre empresas, pesquise o que precisa, visualize o território no mapa e
+              descubra o que está perto de você.
             </p>
 
             <div className="mt-6 rounded-2xl border border-border bg-card p-4">
@@ -186,7 +201,7 @@ export default function TerritoryEntryPage() {
               ) : null}
             </div>
 
-            <div className="mt-6 grid gap-3 sm:grid-cols-3">
+            <div className="mt-6 grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
               {MODULE_LINKS.map(({ label, description, href, icon: Icon }) => (
                 <a
                   key={label}

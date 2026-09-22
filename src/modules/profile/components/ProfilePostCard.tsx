@@ -17,7 +17,7 @@ import {
   getCardClasses,
   getCardBackground,
   SPACING,
-} from "@/core/community/components/styles/communityDesignSystem";
+} from "@/core/community-feed/styles/communityDesignSystem";
 import type { ProfileFeedPost } from "../types/profileFeed";
 
 interface PostCardProps {

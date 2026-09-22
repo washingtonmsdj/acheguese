@@ -8,7 +8,7 @@ import { AUTH_PATHS } from "@/core/auth/constants/authFlow";
 import { AuthService } from "@/core/auth/services/AuthService";
 import { prepareEmailSignupConfirmation } from "@/core/auth/utils/authJourney";
 import { checkPasswordCompromise } from "@/core/auth/utils/compromisedPassword";
-import { PublicIdentityService } from "@/core/public-identity/services/PublicIdentityService";
+import { PublicIdentityService } from "@/core/public-identity";
 import CadastroPage from "./CadastroPage";
 
 const mocks = vi.hoisted(() => ({
@@ -32,6 +32,12 @@ vi.mock("@/core/auth/hooks/useAuth", () => ({
     googleAuthAvailable: false,
   }),
 }));
+vi.mock("@/core/session/hooks/useSessionContext", () => ({
+  useSessionContext: () => ({
+    user: null,
+    isLoading: false,
+  }),
+}));
 vi.mock("@/core/auth/services/AuthService", () => ({
   AuthService: { signUp: vi.fn() },
 }));
@@ -53,7 +59,7 @@ vi.mock("@/core/public-identity/hooks/useIdentityAvailability", () => ({
     reset: mocks.resetAvailability,
   }),
 }));
-vi.mock("@/core/public-identity/services/PublicIdentityService", () => ({
+vi.mock("@/core/public-identity", () => ({
   PublicIdentityService: { checkAvailability: vi.fn() },
 }));
 vi.mock("@/shared/hooks/use-toast", () => ({
@@ -82,7 +88,9 @@ describe("Cadastro — encoding e texto pt-BR", () => {
       count: 0,
       unavailable: false,
     });
-    vi.mocked(AuthService.signUp).mockResolvedValue(undefined);
+    vi.mocked(AuthService.signUp).mockResolvedValue({
+      requiresEmailConfirmation: true,
+    });
   });
 
   it("preserva nome Unicode sem mojibake e não persiste território fictício", async () => {

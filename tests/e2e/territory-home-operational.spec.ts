@@ -62,7 +62,7 @@ async function enablePreciseGeolocation(
   });
 }
 
-test.describe("MVP público — Empresas + Mapa + Perto de mim", () => {
+test.describe("MVP público — Empresas + Mapa + Perto de mim + Busca", () => {
   test.describe.configure({ timeout: 120_000 });
 
   test.beforeEach(async ({ page }) => {
@@ -70,7 +70,7 @@ test.describe("MVP público — Empresas + Mapa + Perto de mim", () => {
     await installTerritoryHomeFixtures(page);
   });
 
-  test("raiz apresenta somente os três módulos de produto ativos", async ({
+  test("raiz apresenta somente o núcleo público ativo", async ({
     page,
   }) => {
     const health = observeBrowserHealth(page);
@@ -82,12 +82,6 @@ test.describe("MVP público — Empresas + Mapa + Perto de mim", () => {
     ).toBeVisible({ timeout: 30_000 });
 
     const main = page.locator("#main-content");
-
-    for (const label of ["Empresas", "Mapa", "Perto de mim"]) {
-      await expect(main.getByRole("link").filter({ hasText: label })).toHaveCount(
-        1,
-      );
-    }
 
     for (const pausedLabel of [
       "Comunidade",
@@ -101,15 +95,10 @@ test.describe("MVP público — Empresas + Mapa + Perto de mim", () => {
       await expect(main.getByText(pausedLabel, { exact: true })).toHaveCount(0);
     }
 
-    await expect(
-      main.getByRole("link").filter({ hasText: "Empresas" }),
-    ).toHaveAttribute("href", /\/empresas\//);
-    await expect(
-      main.getByRole("link").filter({ hasText: "Mapa" }),
-    ).toHaveAttribute("href", /\/mapa\//);
-    await expect(
-      main.getByRole("link").filter({ hasText: "Perto de mim" }),
-    ).toHaveAttribute("href", "/perto-de-mim");
+    await expect(main.locator('a[href^="/empresas/"]').first()).toBeVisible();
+    await expect(main.locator('a[href^="/mapa/"]').first()).toBeVisible();
+    await expect(main.locator('a[href="/perto-de-mim"]').first()).toBeVisible();
+    await expect(main.locator('a[href^="/busca/"]').first()).toBeVisible();
 
     await expectNoHorizontalOverflow(page);
 
@@ -137,9 +126,11 @@ test.describe("MVP público — Empresas + Mapa + Perto de mim", () => {
       main.locator('a[href="/mapa/ba/salvador/pituba"]'),
     ).toBeVisible();
     await expect(main.locator('a[href="/perto-de-mim"]')).toBeVisible();
+    await expect(
+      main.locator('a[href="/busca/ba/salvador/pituba"]'),
+    ).toBeVisible();
 
     for (const staleSurface of [
-      "/busca",
       "/comunidade",
       "/classificados",
       "/servicos",
@@ -149,6 +140,24 @@ test.describe("MVP público — Empresas + Mapa + Perto de mim", () => {
       await expect(main.locator('a[href^="' + staleSurface + '"]')).toHaveCount(
         0,
       );
+    }
+
+    await expectNoHorizontalOverflow(page);
+    health.assertHealthy();
+  });
+
+  test("Busca fica ativa e não expõe categorias pausadas", async ({ page }) => {
+    const health = observeBrowserHealth(page);
+
+    await gotoApp(page, "/busca/ba/salvador/pituba");
+
+    await expect(
+      page.getByRole("heading", { name: "Busca", exact: true }),
+    ).toBeVisible({ timeout: 30_000 });
+    await expect(page.getByText("Negócios", { exact: true })).toBeVisible();
+
+    for (const paused of ["Comunidades", "Serviços", "Classificados", "Eventos", "Oportunidades", "Posts"]) {
+      await expect(page.getByText(paused, { exact: true })).toHaveCount(0);
     }
 
     await expectNoHorizontalOverflow(page);

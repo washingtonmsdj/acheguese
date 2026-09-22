@@ -40,7 +40,7 @@ describe("generateSitemap", () => {
     expect(sitemap).toContain(
       "https://acheguese.com.br/empresas/ba/salvador/chapada-do-rio-vermelho",
     );
-    expect(sitemap).toContain(
+    expect(sitemap).not.toContain(
       "https://acheguese.com.br/gastronomia/ba/salvador/chapada-do-rio-vermelho",
     );
     expect(sitemap).toContain(
@@ -175,12 +175,21 @@ describe("generateSitemap", () => {
     expect(locationReader).toContain('.order("geographic_path")');
     expect(locationReader).toContain('.limit(COMPLETE_READ_PAGE_SIZE)');
     expect(locationReader).toContain('.gt("geographic_path", cursor)');
-    expect(locationReader).not.toContain(
-      '.select(PUBLIC_ROUTING_LOCATION_SELECT, { count: "exact" })',
+    const publicRoutingStart = locationReader.indexOf(
+      "static async getAllCompleteForPublicRouting()",
     );
-    expect(locationReader).not.toContain(
-      '.range(offset, offset + COMPLETE_READ_PAGE_SIZE - 1)',
+    const publicRoutingEnd = locationReader.indexOf(
+      "static async getById(",
+      publicRoutingStart,
     );
+    const publicRoutingReader = locationReader.slice(
+      publicRoutingStart,
+      publicRoutingEnd,
+    );
+    expect(publicRoutingStart).toBeGreaterThanOrEqual(0);
+    expect(publicRoutingEnd).toBeGreaterThan(publicRoutingStart);
+    expect(publicRoutingReader).not.toContain('{ count: "exact" }');
+    expect(publicRoutingReader).not.toContain(".range(");
   });
 
   it("mantem artefatos publicos sem URLs legadas de comunidade", () => {

@@ -1,4 +1,7 @@
-import { isProductModuleEnabled } from "./productModuleRegistry";
+import {
+  isPlatformCapabilityEnabled,
+  isProductModuleEnabled,
+} from "./lifecycleRegistry";
 
 type PublicEnv = Partial<Record<string, string>>;
 
@@ -9,6 +12,7 @@ export const PRELAUNCH_LOCKDOWN_ENABLED =
 
 export type LaunchSurfaceKey =
   | "home"
+  | "profiles"
   | "community"
   | "business"
   | "billing"
@@ -19,6 +23,7 @@ export type LaunchSurfaceKey =
   | "map"
   | "nearby"
   | "search"
+  | "messaging"
   | "education"
   | "jobs"
   | "events"
@@ -36,6 +41,7 @@ export type LaunchSurfaceKey =
 
 export const PUBLIC_LAUNCH_SURFACES: Record<LaunchSurfaceKey, boolean> = {
   home: true,
+  profiles: isPlatformCapabilityEnabled("profiles"),
   community: isProductModuleEnabled("community"),
   business: isProductModuleEnabled("business"),
   billing: isProductModuleEnabled("billing"),
@@ -43,9 +49,10 @@ export const PUBLIC_LAUNCH_SURFACES: Record<LaunchSurfaceKey, boolean> = {
   services: isProductModuleEnabled("services"),
   classifieds: isProductModuleEnabled("classifieds"),
   touristPoints: isProductModuleEnabled("touristPoints"),
-  map: isProductModuleEnabled("map"),
-  nearby: isProductModuleEnabled("nearby"),
-  search: isProductModuleEnabled("search"),
+  map: isPlatformCapabilityEnabled("map"),
+  nearby: isPlatformCapabilityEnabled("nearby"),
+  search: isPlatformCapabilityEnabled("search"),
+  messaging: isPlatformCapabilityEnabled("messaging"),
   education: isProductModuleEnabled("education"),
   jobs: isProductModuleEnabled("jobs"),
   events: isProductModuleEnabled("events"),
@@ -77,6 +84,9 @@ const NAV_ITEM_SURFACES: Partial<Record<string, LaunchSurfaceKey>> = {
   map: "map",
   mobility: "mobility",
   search: "search",
+  messaging: "messaging",
+  messages: "messaging",
+  conversations: "messaging",
 };
 
 const CLASSIFIED_CATEGORY_SURFACES: Partial<Record<string, LaunchSurfaceKey>> = {

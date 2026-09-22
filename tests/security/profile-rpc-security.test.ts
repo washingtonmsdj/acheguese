@@ -362,7 +362,7 @@ describe("profile rpc broker security", () => {
       "src/modules/mobility/hooks/useDriverCreateMultiProfile.ts",
     );
     const driverRegistration = readProjectFile(
-      "src/modules/mobility/utils/driverRegistration.ts",
+      "src/core/mobility/utils/driverRegistration.ts",
     );
     const driverIdentity = readProjectFile(
       "src/core/mobility/hooks/useDriverProfileIdentity.ts",

@@ -4,15 +4,18 @@ Este arquivo é um resumo navegacional. O **SSOT operacional** permanece em [`EX
 
 ## Decisão vigente — 2026-09-21
 
-O MVP público possui **somente três módulos de produto**:
+O MVP público possui **um domínio de produto ativo: Empresas (`business`)**.
 
-1. **Empresas** (`business`);
-2. **Mapa** (`map`);
-3. **Perto de mim** (`nearby`).
+Capabilities horizontais ativas no lançamento:
 
-`nearby` depende formalmente de `map + business`.
+1. **Mapa** (`map`);
+2. **Perto de mim** (`nearby`);
+3. **Busca** (`search`);
+4. **Mensagens** (`messaging`, provider MVP = Business);
+5. Auth, Perfis/Conta, Território, Localização, Notificações e Central.
 
-Home/Território, Auth/Conta, sessão, localização, roteamento, segurança, storage, observabilidade e infraestrutura necessária ao funcionamento do produto são **plataforma**, não módulos adicionais do MVP.
+`nearby` depende de Map + Location + Business. `messaging` depende de Auth +
+Perfis + Business e registra somente providers de domínios ativos.
 
 Todos os demais módulos de produto permanecem **pausados e fail-closed** até certificação individual. Código preservado para pós-MVP não pode aparecer em navegação, rotas funcionais, prefetch, discovery, providers públicos ou layers do Mapa.
 
@@ -25,7 +28,7 @@ Regras:
 - não adicionar novos módulos ao MVP;
 - corrigir causas raiz, não sintomas;
 - não criar redirect, alias, fallback ou feature flag local para esconder arquitetura quebrada;
-- manter uma única autoridade de lifecycle em `src/app/config/productModuleRegistry.ts`;
+- manter as autoridades de lifecycle separadas: `productModuleRegistry.ts` para domínios, `platformCapabilityRegistry.ts` para capabilities e `lifecycleRegistry.ts` como avaliador único;
 - remover código morto, duplicidades e dependências cruzadas que pertençam apenas ao runtime antigo;
 - manter código pós-MVP apenas quando houver owner claro, fronteira limpa e zero interferência no produto ativo;
 - nenhuma superfície pausada pode ser consultada apenas para montar UI escondida;
@@ -34,8 +37,10 @@ Regras:
 ## Ordem atual
 
 1. **Concluir o corte modular**
-   - manter `business`, `map` e `nearby` como únicos módulos ativos;
-   - provar `nearby -> map + business`;
+   - manter `business` como domínio ativo;
+   - manter `map`, `nearby`, `search` e `messaging` como capabilities ativas;
+   - provar `nearby -> map + location + business`;
+   - provar `messaging -> auth + profiles + business` e provider Business-only;
    - manter Mapa consumindo Business por port público, sem conhecer schema/tabelas internas;
    - eliminar imports e delegações do núcleo ativo para módulos pausados.
 
@@ -55,7 +60,9 @@ Regras:
    - Empresas;
    - Mapa;
    - Perto de mim;
-   - contratos de plataforma utilizados diretamente por esses módulos;
+   - Busca;
+   - Mensagens/Business Direct Messaging;
+   - contratos de plataforma utilizados diretamente pelo domínio e capabilities;
    - truthfulness de localização/distância;
    - boundary Map -> Business;
    - rotas e navegação launch-safe.
@@ -66,7 +73,7 @@ Regras:
    - typecheck;
    - testes arquiteturais/unitários;
    - build;
-   - E2E dos três módulos;
+   - E2E do domínio Business + capabilities públicas do MVP;
    - deploy do mesmo SHA;
    - smoke público do mesmo SHA.
 
@@ -76,26 +83,25 @@ Regras:
 
 ## Estado do CI observado em 2026-09-21
 
-Os workflows do candidato atual podem aparecer como `failure`, porém os jobs auditados retornam `steps=null`. Portanto, esses resultados **não constituem evidência de falha de código ou teste executado**.
+Os runners hospedados voltaram a executar steps reais no PR #292. A certificação atual deve ser julgada pelos resultados reais do mesmo SHA; failures antigos com `steps=null` permanecem apenas como histórico de infraestrutura.
 
 O contrato de certificação foi corrigido antes da próxima execução real:
 
-- `test:mvp:architecture` prova registry, launch scope, boundary Map -> Business, Nearby e fluxo público de Business;
-- `test:e2e:mvp` cobre raiz/Home + Empresas + Mapa + Perto de mim;
+- `test:mvp:architecture` prova registry de domínios, registry de capabilities, launch scope, Map -> Business, Nearby, Search, Messaging e fluxo público de Business;
+- `test:e2e:mvp` cobre raiz/Home + Empresas + Mapa + Perto de mim + Busca; Messaging possui testes de boundary/service e CTA Business;
 - o mesmo E2E inclui `launch-scope-public.spec.ts` para provar que módulos pós-MVP continuam isolados;
 - `certify-heavy.yml` permanece a autoridade exact-SHA e agora chama explicitamente essas provas;
 - o workflow automático de PR agrega o mesmo contrato, sem criar uma segunda definição de MVP.
 
-A Vercel também bloqueou novos deploys por limite diário de deployments. Isso mantém o gate de deploy exact-SHA aberto, mas não deve ser registrado como regressão funcional do projeto.
+Os runners hospedados já executam os gates reais. No PR #292, Dependency Lock, Security Scan, Auth Regression, SSOT Territorial, SSOT Enforcement e Visual Regression já produziram execuções verdes em heads candidatos; Security Check e Heavy também passaram por execução real, não por jobs vazios. **A evidência final ainda precisa pertencer ao head exato que será mergeado**, porque qualquer correção documental gera novo SHA.
 
-Até existir execução real, security/lint/typecheck/test/build/E2E continuam **não certificados**.
+A Vercel de Preview pode continuar sujeita a limite de builds. Isso não é regressão de código nem substitui o gate de produção: após o merge único na `main`, o SHA final precisa produzir deploy de produção e smoke público antes de receber `MVP READY`.
 
 ## Pós-MVP
 
 Ficam fora do produto ativo até trabalho individual e reintegração formal, entre outros:
 
 - Comunidade/Feed;
-- Busca federada;
 - Classificados;
 - Serviços/Profissionais;
 - Gastronomia;
@@ -105,7 +111,6 @@ Ficam fora do produto ativo até trabalho individual e reintegração formal, en
 - Mobilidade;
 - Educação;
 - monetização/billing;
-- comunicação global;
 - gamificação;
 - analytics público;
 - demais verticais preservadas no repositório.
@@ -114,13 +119,13 @@ Preservar código pós-MVP não significa mantê-lo conectado ao runtime ativo.
 
 ## Critério de MVP READY
 
-O release só recebe **MVP READY** quando **Empresas + Mapa + Perto de mim** estiverem certificados em um único SHA, com:
+O release só recebe **MVP READY** quando **Business + Mapa + Perto de mim + Busca + Mensagens (Business provider)** estiverem certificados em um único SHA, com:
 
 - lifecycle modular coerente;
 - zero dependência ativa em módulo pausado;
 - rotas/navegação/prefetch alinhados;
 - security/lint/typecheck/test/build realmente executados;
-- E2E e smoke dos três módulos;
+- E2E/smoke das superfícies ativas e fluxo de Mensagens Business;
 - deploy real do mesmo SHA;
 - nenhum erro crítico recorrente.
 

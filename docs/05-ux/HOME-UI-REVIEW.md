@@ -4,7 +4,7 @@
 > **Escopo original:** revisão visual antiga da Territory Home.
 > **Autoridade atual:** `docs/05-ux/HOME-SPEC.md`, `docs/FEATURE-MAP.md`, `docs/SCREEN-MAP.md` e `src/app/config/productModuleRegistry.ts`.
 >
-> As seções abaixo registram a antiga sprint HOME.UI.1 e **não devem ser usadas como backlog vigente**. Busca, Feed/Community, Eventos, Serviços, Postar e Explorar descritos neste arquivo pertencem a módulos pausados ou a uma arquitetura anterior. O MVP atual da Home apresenta somente **Empresas + Mapa + Perto de mim** como capacidades de produto.
+> As seções abaixo registram a antiga sprint HOME.UI.1 e **não devem ser usadas como backlog vigente**. Feed/Community, Eventos, Serviços, Postar e o antigo Explorar pertencem a módulos pausados ou a uma arquitetura anterior. **Busca permanece ativa no MVP**, mas sua implementação canônica é a Search atual, limitada aos providers habilitados pelo lifecycle. A Home atual apresenta **Empresas + Mapa + Perto de mim + Busca** como capacidades de produto.
 
 ---
 

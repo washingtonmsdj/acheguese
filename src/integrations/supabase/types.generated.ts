@@ -1430,6 +1430,400 @@ export type Database = {
           },
         ]
       }
+      business_direct_message_reports: {
+        Row: {
+          created_at: string
+          description: string | null
+          id: string
+          message_id: string | null
+          reason: string
+          reported_profile_id: string
+          reporter_profile_id: string
+          resolution_notes: string | null
+          reviewed_at: string | null
+          reviewed_by_profile_id: string | null
+          status: string
+          thread_id: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          description?: string | null
+          id?: string
+          message_id?: string | null
+          reason: string
+          reported_profile_id: string
+          reporter_profile_id: string
+          resolution_notes?: string | null
+          reviewed_at?: string | null
+          reviewed_by_profile_id?: string | null
+          status?: string
+          thread_id: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          description?: string | null
+          id?: string
+          message_id?: string | null
+          reason?: string
+          reported_profile_id?: string
+          reporter_profile_id?: string
+          resolution_notes?: string | null
+          reviewed_at?: string | null
+          reviewed_by_profile_id?: string | null
+          status?: string
+          thread_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "business_direct_message_reports_message_id_fkey"
+            columns: ["message_id"]
+            isOneToOne: false
+            referencedRelation: "business_direct_messages"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "business_direct_message_reports_reported_profile_id_fkey"
+            columns: ["reported_profile_id"]
+            isOneToOne: false
+            referencedRelation: "personal_social_profiles"
+            referencedColumns: ["profile_id"]
+          },
+          {
+            foreignKeyName: "business_direct_message_reports_reported_profile_id_fkey"
+            columns: ["reported_profile_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "business_direct_message_reports_reported_profile_id_fkey"
+            columns: ["reported_profile_id"]
+            isOneToOne: false
+            referencedRelation: "public_profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "business_direct_message_reports_reporter_profile_id_fkey"
+            columns: ["reporter_profile_id"]
+            isOneToOne: false
+            referencedRelation: "personal_social_profiles"
+            referencedColumns: ["profile_id"]
+          },
+          {
+            foreignKeyName: "business_direct_message_reports_reporter_profile_id_fkey"
+            columns: ["reporter_profile_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "business_direct_message_reports_reporter_profile_id_fkey"
+            columns: ["reporter_profile_id"]
+            isOneToOne: false
+            referencedRelation: "public_profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "business_direct_message_reports_reviewed_by_profile_id_fkey"
+            columns: ["reviewed_by_profile_id"]
+            isOneToOne: false
+            referencedRelation: "personal_social_profiles"
+            referencedColumns: ["profile_id"]
+          },
+          {
+            foreignKeyName: "business_direct_message_reports_reviewed_by_profile_id_fkey"
+            columns: ["reviewed_by_profile_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "business_direct_message_reports_reviewed_by_profile_id_fkey"
+            columns: ["reviewed_by_profile_id"]
+            isOneToOne: false
+            referencedRelation: "public_profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "business_direct_message_reports_thread_id_fkey"
+            columns: ["thread_id"]
+            isOneToOne: false
+            referencedRelation: "business_direct_threads"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      business_direct_messages: {
+        Row: {
+          body: string
+          created_at: string
+          id: string
+          is_removed: boolean
+          removed_at: string | null
+          removed_by_profile_id: string | null
+          removed_reason: string | null
+          sender_profile_id: string
+          thread_id: string
+        }
+        Insert: {
+          body: string
+          created_at?: string
+          id?: string
+          is_removed?: boolean
+          removed_at?: string | null
+          removed_by_profile_id?: string | null
+          removed_reason?: string | null
+          sender_profile_id: string
+          thread_id: string
+        }
+        Update: {
+          body?: string
+          created_at?: string
+          id?: string
+          is_removed?: boolean
+          removed_at?: string | null
+          removed_by_profile_id?: string | null
+          removed_reason?: string | null
+          sender_profile_id?: string
+          thread_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "business_direct_messages_removed_by_profile_id_fkey"
+            columns: ["removed_by_profile_id"]
+            isOneToOne: false
+            referencedRelation: "personal_social_profiles"
+            referencedColumns: ["profile_id"]
+          },
+          {
+            foreignKeyName: "business_direct_messages_removed_by_profile_id_fkey"
+            columns: ["removed_by_profile_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "business_direct_messages_removed_by_profile_id_fkey"
+            columns: ["removed_by_profile_id"]
+            isOneToOne: false
+            referencedRelation: "public_profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "business_direct_messages_sender_profile_id_fkey"
+            columns: ["sender_profile_id"]
+            isOneToOne: false
+            referencedRelation: "personal_social_profiles"
+            referencedColumns: ["profile_id"]
+          },
+          {
+            foreignKeyName: "business_direct_messages_sender_profile_id_fkey"
+            columns: ["sender_profile_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "business_direct_messages_sender_profile_id_fkey"
+            columns: ["sender_profile_id"]
+            isOneToOne: false
+            referencedRelation: "public_profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "business_direct_messages_thread_id_fkey"
+            columns: ["thread_id"]
+            isOneToOne: false
+            referencedRelation: "business_direct_threads"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      business_direct_thread_participants: {
+        Row: {
+          archived_at: string | null
+          block_reason: string | null
+          blocked_at: string | null
+          joined_at: string
+          last_read_at: string | null
+          participant_role: string
+          profile_id: string
+          thread_id: string
+          updated_at: string
+        }
+        Insert: {
+          archived_at?: string | null
+          block_reason?: string | null
+          blocked_at?: string | null
+          joined_at?: string
+          last_read_at?: string | null
+          participant_role: string
+          profile_id: string
+          thread_id: string
+          updated_at?: string
+        }
+        Update: {
+          archived_at?: string | null
+          block_reason?: string | null
+          blocked_at?: string | null
+          joined_at?: string
+          last_read_at?: string | null
+          participant_role?: string
+          profile_id?: string
+          thread_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "business_direct_thread_participants_profile_id_fkey"
+            columns: ["profile_id"]
+            isOneToOne: false
+            referencedRelation: "personal_social_profiles"
+            referencedColumns: ["profile_id"]
+          },
+          {
+            foreignKeyName: "business_direct_thread_participants_profile_id_fkey"
+            columns: ["profile_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "business_direct_thread_participants_profile_id_fkey"
+            columns: ["profile_id"]
+            isOneToOne: false
+            referencedRelation: "public_profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "business_direct_thread_participants_thread_id_fkey"
+            columns: ["thread_id"]
+            isOneToOne: false
+            referencedRelation: "business_direct_threads"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      business_direct_threads: {
+        Row: {
+          business_id: string
+          close_reason: string | null
+          closed_at: string | null
+          closed_by_profile_id: string | null
+          created_at: string
+          customer_profile_id: string
+          id: string
+          initiated_by_profile_id: string
+          last_message_at: string
+          updated_at: string
+        }
+        Insert: {
+          business_id: string
+          close_reason?: string | null
+          closed_at?: string | null
+          closed_by_profile_id?: string | null
+          created_at?: string
+          customer_profile_id: string
+          id?: string
+          initiated_by_profile_id: string
+          last_message_at?: string
+          updated_at?: string
+        }
+        Update: {
+          business_id?: string
+          close_reason?: string | null
+          closed_at?: string | null
+          closed_by_profile_id?: string | null
+          created_at?: string
+          customer_profile_id?: string
+          id?: string
+          initiated_by_profile_id?: string
+          last_message_at?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "business_direct_threads_business_id_fkey"
+            columns: ["business_id"]
+            isOneToOne: false
+            referencedRelation: "business_data"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "business_direct_threads_business_id_fkey"
+            columns: ["business_id"]
+            isOneToOne: false
+            referencedRelation: "user_companies"
+            referencedColumns: ["company_id"]
+          },
+          {
+            foreignKeyName: "business_direct_threads_closed_by_profile_id_fkey"
+            columns: ["closed_by_profile_id"]
+            isOneToOne: false
+            referencedRelation: "personal_social_profiles"
+            referencedColumns: ["profile_id"]
+          },
+          {
+            foreignKeyName: "business_direct_threads_closed_by_profile_id_fkey"
+            columns: ["closed_by_profile_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "business_direct_threads_closed_by_profile_id_fkey"
+            columns: ["closed_by_profile_id"]
+            isOneToOne: false
+            referencedRelation: "public_profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "business_direct_threads_customer_profile_id_fkey"
+            columns: ["customer_profile_id"]
+            isOneToOne: false
+            referencedRelation: "personal_social_profiles"
+            referencedColumns: ["profile_id"]
+          },
+          {
+            foreignKeyName: "business_direct_threads_customer_profile_id_fkey"
+            columns: ["customer_profile_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "business_direct_threads_customer_profile_id_fkey"
+            columns: ["customer_profile_id"]
+            isOneToOne: false
+            referencedRelation: "public_profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "business_direct_threads_initiated_by_profile_id_fkey"
+            columns: ["initiated_by_profile_id"]
+            isOneToOne: false
+            referencedRelation: "personal_social_profiles"
+            referencedColumns: ["profile_id"]
+          },
+          {
+            foreignKeyName: "business_direct_threads_initiated_by_profile_id_fkey"
+            columns: ["initiated_by_profile_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "business_direct_threads_initiated_by_profile_id_fkey"
+            columns: ["initiated_by_profile_id"]
+            isOneToOne: false
+            referencedRelation: "public_profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       business_gallery: {
         Row: {
           business_id: string
@@ -18553,6 +18947,10 @@ export type Database = {
         }
         Returns: string
       }
+      create_business_direct_thread: {
+        Args: { p_business_id: string; p_profile_id: string }
+        Returns: string
+      }
       create_business_profile_correction: {
         Args: {
           p_business_id: string
@@ -20268,6 +20666,54 @@ export type Database = {
         }
         Returns: Json
       }
+      list_business_direct_messages: {
+        Args: {
+          p_cursor_created_at?: string
+          p_cursor_id?: string
+          p_limit?: number
+          p_profile_id: string
+          p_thread_id: string
+        }
+        Returns: {
+          body: string
+          created_at: string
+          id: string
+          is_removed: boolean
+          sender_profile_id: string
+          thread_id: string
+        }[]
+      }
+      list_business_direct_thread_previews: {
+        Args: {
+          p_cursor_id?: string
+          p_cursor_last_message_at?: string
+          p_limit?: number
+          p_profile_id: string
+          p_search?: string
+        }
+        Returns: {
+          blocked_by_me: boolean
+          blocked_by_other: boolean
+          business_avatar_url: string
+          business_id: string
+          business_name: string
+          business_profile_id: string
+          business_slug: string
+          closed_at: string
+          counterparty_avatar_url: string
+          counterparty_name: string
+          counterparty_profile_id: string
+          created_at: string
+          customer_avatar_url: string
+          customer_name: string
+          customer_profile_id: string
+          id: string
+          last_message_at: string
+          last_message_text: string
+          participant_role: string
+          unread_count: number
+        }[]
+      }
       list_business_profile_correction_queue: {
         Args: { p_limit?: number; p_status?: string }
         Returns: {
@@ -20651,6 +21097,10 @@ export type Database = {
       }
       mark_best_answer: {
         Args: { _answer_id: string; _question_id: string }
+        Returns: undefined
+      }
+      mark_business_direct_thread_read: {
+        Args: { p_profile_id: string; p_thread_id: string }
         Returns: undefined
       }
       mark_classified_messages_read: {
@@ -21475,6 +21925,16 @@ export type Database = {
           isSetofReturn: true
         }
       }
+      report_business_direct_thread: {
+        Args: {
+          p_description?: string
+          p_message_id: string
+          p_profile_id: string
+          p_reason: string
+          p_thread_id: string
+        }
+        Returns: string
+      }
       report_classified_comment: {
         Args: {
           p_classified_id: string
@@ -21775,6 +22235,17 @@ export type Database = {
           user_id: string
         }[]
       }
+      send_business_direct_message: {
+        Args: { p_body: string; p_profile_id: string; p_thread_id: string }
+        Returns: {
+          body: string
+          created_at: string
+          id: string
+          is_removed: boolean
+          sender_profile_id: string
+          thread_id: string
+        }[]
+      }
       send_classified_message: {
         Args: { p_conversation_id: string; p_text: string }
         Returns: {
@@ -21806,6 +22277,15 @@ export type Database = {
       send_ride_chat_message: {
         Args: { p_message: string; p_ride_id: string }
         Returns: Json
+      }
+      set_business_direct_thread_blocked: {
+        Args: {
+          p_blocked: boolean
+          p_profile_id: string
+          p_reason?: string
+          p_thread_id: string
+        }
+        Returns: undefined
       }
       set_cache: {
         Args: {

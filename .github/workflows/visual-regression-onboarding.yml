@@ -6,6 +6,7 @@ on:
       - "src/app/pages/OnboardingPage.tsx"
       - "src/**/onboarding/**"
       - "tests/e2e/onboarding-visual-regression*.spec.ts"
+      - "tests/e2e/support/onboardingVisualState.ts"
       - "tests/e2e/onboarding-visual-regression*.spec.ts-snapshots/**"
       - "playwright.config.ts"
       - "package.json"

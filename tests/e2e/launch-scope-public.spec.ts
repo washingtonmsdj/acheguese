@@ -1,4 +1,4 @@
-import { test } from '@playwright/test';
+import { expect, test } from '@playwright/test';
 import { expectPausedLaunchSurface } from './support/publicRouteAssertions';
 
 test.describe('public launch scope', () => {
@@ -9,12 +9,9 @@ test.describe('public launch scope', () => {
       '/gastronomia',
       '/servicos',
       '/classificados',
-      '/busca',
-      '/buscar',
       '/recomendacoes',
       '/vagas',
       '/eventos',
-      '/mensagens',
       '/educacao',
       '/comunicacao',
       '/cupons',
@@ -27,6 +24,17 @@ test.describe('public launch scope', () => {
     ]) {
       await expectPausedLaunchSurface(page, path);
     }
+  });
+
+  test('Search remains active without reactivating paused domains', async ({ page }) => {
+    await page.goto('/busca');
+    await expect(page.getByRole('heading', { name: 'Busca', exact: true })).toBeVisible();
+    await expect(page.getByText('Serviços', { exact: true })).toHaveCount(0);
+    await expect(page.getByText('Classificados', { exact: true })).toHaveCount(0);
+    await expect(page.getByText('Eventos', { exact: true })).toHaveCount(0);
+
+    await page.goto('/buscar');
+    await expect(page.getByRole('heading', { name: 'Procurar no bairro' })).toBeVisible();
   });
 
   test('territorial post-MVP routes isolate before loading domain data', async ({ page }) => {

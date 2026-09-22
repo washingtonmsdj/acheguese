@@ -33,11 +33,12 @@ const NON_INDEXABLE_PREFIXES = [
   "/reset-password",
   "/checkout",
   "/planos",
+  "/busca",
+  "/buscar",
 ];
 const DISABLED_ROUTE_SEGMENTS = new Set([
   "mobilidade",
   "comunidade",
-  "busca",
   "gastronomia",
   "servicos",
   "classificados",

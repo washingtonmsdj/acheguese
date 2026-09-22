@@ -268,11 +268,6 @@ export async function getBusinesses(
         ).order("created_at", { ascending: false });
     }
 
-    query = query.range(
-      pageParam * pageSize,
-      (pageParam + 1) * pageSize - 1,
-    );
-
     const { data, error } = await query;
 
     if (error) {
@@ -509,6 +504,11 @@ export async function getBusinessesList(
         ).order("rating", { ascending: false });
         break;
     }
+
+    query = query.range(
+      pageParam * pageSize,
+      (pageParam + 1) * pageSize - 1,
+    );
 
     const { data, error } = await query;
 
@@ -797,7 +797,7 @@ export async function getBusinessBySlug(slug: string): Promise<{
   }
 }
 
-export { checkSlugExists, getSimilarSlugs } from "./business.slug-queries";
+export { checkSlugExists, listCanonicalSlugsByPrefix } from "./business.slug-queries";
 
 /**
  * Buscar businesses por IDs (para uso em serviços agregadores)

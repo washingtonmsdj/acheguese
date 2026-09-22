@@ -2,7 +2,7 @@
  * BusinessIdentityAdapter - persistencia de identidade publica de empresas.
  */
 import { logger } from '@/shared/utils/logger';
-import { BusinessService } from '@/core/business/services/BusinessService';
+import { BusinessService } from '@/core/business';
 import { BusinessIdentityPolicy } from '../policies/BusinessIdentityPolicy';
 import type { IdentityAdapter } from '../domain/IdentityAdapter';
 import type {
@@ -29,7 +29,11 @@ export class BusinessIdentityAdapter implements IdentityAdapter {
 
   async getExistingSimilar(slug: string): Promise<string[]> {
     try {
-      return await BusinessService.getSimilarSlugs(slug, 20);
+      const normalizedSlug = this.policy.normalize(slug);
+      return await BusinessService.listCanonicalSlugsByPrefix(
+        normalizedSlug,
+        20,
+      );
     } catch (error) {
       logger.error('[BusinessIdentityAdapter] getExistingSimilar error:', error);
       throw new Error('Infrastructure error getting similar identifiers');

@@ -26,6 +26,11 @@ vi.mock("@/shared/utils/logger", () => ({
   },
 }));
 
+vi.mock("@/core/privacy/config/privacyRollout", () => ({
+  assertPrivacyDataExportEnabled: vi.fn(),
+}));
+
+
 import { PrivacyService } from "./PrivacyService";
 
 describe("PrivacyService.exportUserData", () => {

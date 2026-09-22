@@ -2,13 +2,14 @@
 
 ## Decisão atual
 
-Mapa e Perto de mim fazem parte do MVP e devem descobrir **Empresas**. Categorias Business não são desligadas pelo lifecycle de verticalizações especializadas.
+Mapa, Perto de mim e Busca fazem parte do MVP e devem descobrir **Empresas** pelas interfaces públicas apropriadas. Categorias Business não são desligadas pelo lifecycle de verticalizações especializadas.
 
 Assim, escolas reais são elegíveis para:
 
 - Empresas;
 - Mapa;
-- Perto de mim.
+- Perto de mim;
+- Busca.
 
 O módulo Educação continua pausado e suas rotas/experiências especializadas permanecem isoladas.
 
@@ -17,6 +18,7 @@ O módulo Educação continua pausado e suas rotas/experiências especializadas 
 - lista Business: `BusinessService`;
 - mapa: `MapBusinessLayerRuntimeService`;
 - proximidade: `useNearbyBusinesses` -> geospatial -> Business owner;
+- busca textual: `searchProviders` -> Business owner, com providers pausados fail-closed;
 - URLs: `BusinessUrlService`;
 - layers do mapa: filtrados por lifecycle; no MVP público, somente Business.
 
@@ -30,4 +32,4 @@ A probe foi executada no Supabase canônico em 2026-09-21 sem exceção.
 
 ## Estado
 
-Business discovery está alinhado ao MVP de três módulos no source e no runtime remoto. CI/browser/build exact-SHA continuam pendentes enquanto os runners/provider não executarem de fato.
+Business discovery está alinhado ao MVP vigente de quatro módulos no source; a prova remota de Business permanece válida e Search usa esse owner sem reativar outros domínios. CI/browser/build exact-SHA continuam pendentes enquanto os runners/provider não executarem de fato.

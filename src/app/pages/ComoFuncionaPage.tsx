@@ -6,6 +6,7 @@ import {
   Map,
   MapPin,
   Navigation,
+  Search,
   ShieldCheck,
   type LucideIcon,
 } from "lucide-react";
@@ -43,6 +44,13 @@ const MODULES: readonly ModuleCardProps[] = [
       "Com sua permissão de localização, encontre empresas próximas usando distância real.",
     href: buildAppModulePath(APP_MODULE_SLUGS.nearby),
     icon: Navigation,
+  },
+  {
+    title: "Busca",
+    description:
+      "Pesquise nos módulos ativos sem misturar resultados de capacidades pausadas.",
+    href: LAUNCH_URLS.search,
+    icon: Search,
   },
 ] as const;
 
@@ -84,7 +92,7 @@ export default function ComoFuncionaPage() {
         <title>Como funciona | Achegue-se</title>
         <meta
           name="description"
-          content="Entenda como Empresas, Mapa e Perto de mim funcionam juntos no Achegue-se."
+          content="Entenda como Empresas, Busca, Mapa e Perto de mim funcionam juntos no Achegue-se."
         />
       </Helmet>
 
@@ -119,17 +127,17 @@ export default function ComoFuncionaPage() {
                 {launchName}
               </div>
               <h1 className="mt-4 text-4xl font-semibold tracking-tight sm:text-5xl">
-                Três módulos, uma experiência territorial.
+                Quatro módulos, uma experiência territorial.
               </h1>
               <p className="mt-4 text-base leading-7 text-muted-foreground sm:text-lg">
-                O MVP do Achegue-se foi reduzido ao essencial: descobrir
-                empresas, visualizá-las no mapa e encontrar as mais próximas.
-                Os três módulos compartilham território e identidade, sem
-                duplicar dados nem regras.
+                O MVP do Achegue-se foi reduzido ao essencial: descobrir e
+                pesquisar empresas, visualizá-las no mapa e encontrar as mais
+                próximas. Os quatro módulos compartilham território e identidade,
+                sem duplicar dados nem regras.
               </p>
             </div>
 
-            <div className="mt-10 grid gap-4 md:grid-cols-3">
+            <div className="mt-10 grid gap-4 md:grid-cols-2 xl:grid-cols-4">
               {MODULES.map((module) => (
                 <ModuleCard key={module.title} {...module} />
               ))}

@@ -5,7 +5,7 @@ import {
   inspectLgpdPurgeReadiness,
   loadLgpdPurgePolicy,
   validateLgpdPurgePolicy,
-} from "../../tools/security/lgpd-purge-policy.mjs";
+} from "../../tools/security/lgpd-purge-policy-lib.mjs";
 
 const ROOT = process.cwd();
 const POLICY_PATH = join(

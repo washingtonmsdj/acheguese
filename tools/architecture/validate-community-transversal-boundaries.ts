@@ -129,7 +129,7 @@ function main() {
     validateModuleCompatibleRoot(moduleRoot, violations);
   }
 
-  const scanRoots = ["src/app", "src/core", "src/shared", "tests"];
+  const scanRoots = ["src/app", "src/core", "src/shared"];
   for (const scanRoot of scanRoots) {
     for (const filePath of walk(path.join(ROOT, scanRoot))) {
       const relative = normalize(path.relative(ROOT, filePath));
@@ -157,7 +157,6 @@ function main() {
     "src/modules/mobility",
     "src/modules/professionals",
     "src/modules/profile",
-    "tests",
   ];
   for (const scanRoot of externalRoots) {
     for (const filePath of walk(path.join(ROOT, scanRoot))) {

@@ -367,6 +367,9 @@ describe("community supabase security audit", () => {
       "supabase/migrations/20260706100000_harden_community_creation_residence_authorization.sql",
     );
     const launchScope = readProjectFile("src/app/config/launchScope.ts");
+    const productRegistry = readProjectFile(
+      "src/app/config/productModuleRegistry.ts",
+    );
 
     expect(hardening).toContain(
       "CREATE OR REPLACE FUNCTION public.auth_has_verified_residence_at_location",
@@ -399,8 +402,18 @@ describe("community supabase security audit", () => {
       "GRANT EXECUTE ON FUNCTION public.create_community_issue(JSONB) TO authenticated;",
     );
 
-    expect(launchScope).toContain("communityAlerts: false");
-    expect(launchScope).toContain("communityIssues: false");
+    expect(productRegistry).toMatch(
+      /communityAlerts:\s*\{\s*status:\s*"paused"/,
+    );
+    expect(productRegistry).toMatch(
+      /communityIssues:\s*\{\s*status:\s*"paused"/,
+    );
+    expect(launchScope).toContain(
+      'communityAlerts: isProductModuleEnabled("communityAlerts")',
+    );
+    expect(launchScope).toContain(
+      'communityIssues: isProductModuleEnabled("communityIssues")',
+    );
   });
 
   it("keeps community social writes tied to the authenticated profile author", () => {

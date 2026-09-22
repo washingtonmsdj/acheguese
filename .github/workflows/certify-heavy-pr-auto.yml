@@ -9,8 +9,9 @@ on:
       - synchronize
       - reopened
     # Heavy Playwright/regression certification protects product, DB and test
-    # changes. Docs-only and workflow-only PRs use their own focused checks and
-    # must not starve the single repository self-hosted runner.
+    # changes. Docs-only and workflow-only PRs use their own focused checks.
+    # Product PRs run on GitHub-hosted Windows so certification does not depend
+    # on the availability of a developer machine or repository self-hosted runner.
     # GitHub paths-ignore skips only when every changed path matches.
     paths-ignore:
       - "docs/**"
@@ -31,13 +32,7 @@ jobs:
   certify-heavy-pr:
     name: Heavy PR gates for exact head SHA
     if: github.event.pull_request.head.repo.full_name == github.repository
-    runs-on:
-      - self-hosted
-      - windows
-      - x64
-      - acheguese-heavy-windows
-      - playwright-chromium
-      - remote-only
+    runs-on: windows-latest
     timeout-minutes: 180
 
     steps:
@@ -57,7 +52,7 @@ jobs:
             exit 1
           }
           if ($env:HEAD_REPOSITORY -ne $env:GITHUB_REPOSITORY) {
-            Write-Error "Certification blocked: self-hosted runner never executes fork PR code."
+            Write-Error "Certification blocked: heavy certification never executes fork PR code."
             exit 1
           }
           $sha = ([string]$env:TARGET_SHA).Trim().ToLowerInvariant()
@@ -157,6 +152,7 @@ jobs:
             -PlaywrightArgs @(
               "test",
               "tests/e2e/logout-authenticated.spec.ts",
+              "tests/e2e/messaging-authenticated.spec.ts",
               "--project=chromium",
               "--reporter=list",
               "--retries=0",
@@ -192,27 +188,13 @@ jobs:
           if-no-files-found: ignore
           retention-days: 7
 
-      - name: Run regression tests with non-empty discovery
+      - name: Run active MVP regression contract
         id: regression
         continue-on-error: true
         shell: powershell
         env:
           CI: true
-        run: |
-          $regressionFiles = @(
-            Get-ChildItem -Path "tests" -File -Filter "regression-*.test.ts" |
-              Sort-Object Name |
-              ForEach-Object { $_.FullName }
-          )
-          if ($regressionFiles.Count -eq 0) {
-            Write-Error "Certification blocked: no regression-*.test.ts files were found."
-            exit 1
-          }
-          Write-Host "Regression files ($($regressionFiles.Count)):"
-          $regressionFiles | ForEach-Object { Write-Host " - $_" }
-          $vitestArgs = @("vitest", "--run") + $regressionFiles
-          & npx @vitestArgs
-          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+        run: npm run test:mvp:regression
 
       - name: Validate territorial regression boundaries
         id: boundaries

@@ -17,8 +17,10 @@ function collectSourceFiles(directory: string): string[] {
   });
 }
 
-const STATIC_MAPLIBRE_IMPORT = /import\s+(?!type\b)[\s\S]*?from\s+["']maplibre-gl["']/;
-const STATIC_MAPLIBRE_CSS_IMPORT = /import\s+["']maplibre-gl\/dist\/maplibre-gl\.css["']/;
+const STATIC_MAPLIBRE_IMPORT =
+  /^import\s+(?!type\b)[^;\n]*from\s+["']maplibre-gl["'];?/m;
+const STATIC_MAPLIBRE_CSS_IMPORT =
+  /^import\s+["']maplibre-gl\/dist\/maplibre-gl\.css["'];?/m;
 
 const ALLOWED_STATIC_RUNTIME_OWNER =
   "src/core/maps/components/v3/MapLibreAdapterRuntime.tsx";
@@ -26,10 +28,8 @@ const ALLOWED_STATIC_CSS_OWNER = "src/core/maps/runtime/maplibreRuntimeCss.ts";
 const LEGACY_ADAPTER_BRIDGE = "src/core/maps/components/v3/LazyMapLibreAdapter.tsx";
 
 const MIGRATED_CONSUMERS = [
-  "src/shared/components/maps/MiniMap.tsx",
-  "src/core/maps/components/v3/RouteLayer.tsx",
-  "src/shared/components/LocationPickerSheet.tsx",
-  "src/shared/components/standalone/StandaloneMap.tsx",
+  "src/core/maps/components/MiniMap.tsx",
+  "src/core/maps/components/LocationPickerSheet.tsx",
   "src/core/guide/tourist-points/components/TouristPointsMap.tsx",
   "src/core/community-lost-found/components/LostFoundMiniMap.tsx",
   "src/core/mobility/components/RideTrackingMap.tsx",
@@ -89,6 +89,17 @@ describe("MapLibre production security runtime", () => {
       expect(source).not.toMatch(STATIC_MAPLIBRE_CSS_IMPORT);
       expect(source).toContain("loadMapLibreRuntime");
     }
+  });
+
+  it("keeps RouteLayer as a map-instance consumer rather than a second runtime loader", () => {
+    const routeLayer = readProjectFile(
+      "src/core/maps/components/v3/RouteLayer.tsx",
+    );
+
+    expect(routeLayer).toContain("MapLibreMap");
+    expect(routeLayer).not.toMatch(STATIC_MAPLIBRE_IMPORT);
+    expect(routeLayer).not.toMatch(STATIC_MAPLIBRE_CSS_IMPORT);
+    expect(routeLayer).not.toContain("loadMapLibreRuntime");
   });
 
   it("forbids new static MapLibre engine or CSS owners outside the canonical core", () => {

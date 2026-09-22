@@ -7,6 +7,8 @@ const read = (path: string) => readFileSync(resolve(root, path), "utf8");
 
 describe("MVP core module boundary", () => {
   const registry = read("src/app/config/productModuleRegistry.ts");
+  const platformRegistry = read("src/app/config/platformCapabilityRegistry.ts");
+  const lifecycleRegistry = read("src/app/config/lifecycleRegistry.ts");
   const launchScope = read("src/app/config/launchScope.ts");
   const entry = read("src/app/pages/TerritoryEntryPage.tsx");
   const home = read("src/app/pages/TerritoryHomePage.tsx");
@@ -33,37 +35,53 @@ describe("MVP core module boundary", () => {
   const heavyExactShaWorkflow = read(".github/workflows/certify-heavy.yml");
   const previewE2eRunner = read("tools/release/run-preview-e2e.ps1");
 
-  it("keeps lifecycle ownership centralized and Nearby dependent on Map + Business", () => {
+  it("keeps domain modules separate from horizontal platform capabilities", () => {
     expect(registry).toContain('business: { status: "active" }');
-    expect(registry).toContain('map: { status: "active" }');
-    expect(registry).toContain(
-      'nearby: { status: "active", dependsOn: ["map", "business"] }',
-    );
-    expect(registry).toContain('search: { status: "paused" }');
+    expect(registry).not.toContain('| "search"');
+    expect(registry).not.toContain('| "messaging"');
+    expect(registry).not.toContain('| "map"');
+    expect(registry).not.toContain('| "nearby"');
     expect(registry).toContain('community: { status: "paused" }');
     expect(registry).toContain('classifieds: { status: "paused" }');
+
+    expect(platformRegistry).toContain('| "map"');
+    expect(platformRegistry).toContain('| "nearby"');
+    expect(platformRegistry).toContain('| "search"');
+    expect(platformRegistry).toContain('| "messaging"');
+    expect(platformRegistry).toContain('dependsOnProductModules: ["business"]');
+    expect(lifecycleRegistry).toContain("isProductModuleEnabled");
+    expect(lifecycleRegistry).toContain("isPlatformCapabilityEnabled");
 
     expect(launchScope).toContain(
       'business: isProductModuleEnabled("business")',
     );
-    expect(launchScope).toContain('map: isProductModuleEnabled("map")');
-    expect(launchScope).toContain('nearby: isProductModuleEnabled("nearby")');
+    expect(launchScope).toContain(
+      'map: isPlatformCapabilityEnabled("map")',
+    );
+    expect(launchScope).toContain(
+      'nearby: isPlatformCapabilityEnabled("nearby")',
+    );
+    expect(launchScope).toContain(
+      'search: isPlatformCapabilityEnabled("search")',
+    );
   });
 
   it("keeps the public entry pointed only at the MVP core", () => {
     expect(entry).toContain("launchBusinessUrl");
     expect(entry).toContain("launchMapUrl");
     expect(entry).toContain("launchNearbyUrl");
+    expect(entry).toContain("launchSearchUrl");
     expect(entry).not.toContain("LAUNCH_URLS.community");
     expect(entry).not.toContain("/indicar-comunidade");
     expect(entry).not.toContain("serviços e histórias");
-    expect(entry).toContain("isAuthenticated ? ACCOUNT_PATH : AUTH_PATHS.login");
+    expect(entry).toContain("buildLoginPath(ACCOUNT_PATH)");
   });
 
-  it("keeps institutional product copy aligned with the three-module MVP", () => {
+  it("keeps institutional product copy aligned with the four-module MVP", () => {
     expect(howItWorks).toContain('title: "Empresas"');
     expect(howItWorks).toContain('title: "Mapa"');
     expect(howItWorks).toContain('title: "Perto de mim"');
+    expect(howItWorks).toContain('title: "Busca"');
 
     for (const paused of [
       "LAUNCH_URLS.community",
@@ -77,10 +95,11 @@ describe("MVP core module boundary", () => {
     }
   });
 
-  it("keeps the active Home limited to the three MVP product modules", () => {
+  it("keeps the active Home limited to the four MVP product modules", () => {
     expect(home).toContain("MODULE_SLUGS.business");
     expect(home).toContain("MODULE_SLUGS.map");
     expect(home).toContain("APP_MODULE_SLUGS.nearby");
+    expect(home).toContain("MODULE_SLUGS.search");
 
     for (const forbidden of [
       "useTerritoryHomeData",
@@ -93,7 +112,6 @@ describe("MVP core module boundary", () => {
       "MODULE_SLUGS.gastronomy",
       "MODULE_SLUGS.events",
       "MODULE_SLUGS.jobs",
-      "MODULE_SLUGS.search",
     ]) {
       expect(home).not.toContain(forbidden);
     }
@@ -199,8 +217,11 @@ describe("MVP core module boundary", () => {
     expect(rootRoutes).not.toContain('path="/empresas/:id/catalogo"');
     expect(rootRoutes).not.toContain('path="/p/:slug/*"');
     expect(rootRoutes).not.toContain("PremiumBusinessCheckoutPage");
-    expect(appRoutes).toContain(
-      '"community",\n            "Perfis públicos",\n            <P.ProfilePublicRoute />',
+    expect(appRoutes).toContain('path="/u/:username"');
+    expect(appRoutes).toContain('"profiles"');
+    expect(appRoutes).toContain("<P.ProfilePublicRoute />");
+    expect(appRoutes).not.toContain(
+      '"community",\n            "Perfis públicos"',
     );
   });
 
@@ -214,8 +235,11 @@ describe("MVP core module boundary", () => {
     expect(appRoutes).toContain(
       'element={launchElement("nearby", "Perto de mim", <P.NearbyPage />)}',
     );
+    expect(appRoutes).toContain('launchElement("search", "Busca"');
+    expect(appRoutes).toContain('path="/empresas/cadastrar"');
+    expect(appRoutes).toContain('"business"');
     expect(appRoutes).toContain(
-      '"business",\n            "Empresas",\n            protectedElement(<P.EmpresasCadastroLandingPage />)',
+      "protectedElement(<P.EmpresasCadastroLandingPage />)",
     );
   });
 
@@ -234,20 +258,20 @@ describe("MVP core module boundary", () => {
   });
 
   it("keeps primary territorial navigation on the MVP core", () => {
-    for (const id of ['"home"', '"map"', '"business"', '"nearby"', '"account"']) {
+    for (const id of ['"home"', '"map"', '"business"', '"nearby"', '"search"', '"account"']) {
       expect(territoryNavigation).toContain(`id: ${id}`);
     }
 
     expect(territoryNavigation).not.toContain('id: "community"');
     expect(territoryNavigation).not.toContain('id: "explore"');
     expect(territoryNavigation).not.toContain('id: "activity"');
-    expect(territoryNavigation).not.toContain('MODULE_SLUGS.search');
   });
 
-  it("keeps release E2E aligned with the three-module MVP instead of the retired community-first contract", () => {
+  it("keeps release E2E aligned with the four-module MVP instead of the retired community-first contract", () => {
     expect(publicMvpE2e).toContain("/empresas/ba/salvador/pituba");
     expect(publicMvpE2e).toContain("/mapa/ba/salvador/pituba");
     expect(publicMvpE2e).toContain("/perto-de-mim");
+    expect(publicMvpE2e).toContain("/busca/ba/salvador/pituba");
     expect(publicMvpE2e).toContain("HOME_BUSINESS");
     expect(publicMvpE2e).toContain("430m");
 

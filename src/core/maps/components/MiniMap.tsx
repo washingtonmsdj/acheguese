@@ -8,7 +8,7 @@ import { useEffect, useRef } from 'react';
 import type { Map as MapLibreMap, Marker as MapLibreMarker, Popup as MapLibrePopup } from "maplibre-gl";
 import { loadMapLibreRuntime } from '@/core/maps/runtime/loadMapLibreRuntime';
 import { DEFAULT_TILE_STYLE } from '@/shared/config/mapDefaults';
-import { createMapPopupContent } from './mapPopupContent';
+import { createMapPopupContent } from '@/shared/components/maps/mapPopupContent';
 
 export interface MiniMapProps {
   latitude: number;

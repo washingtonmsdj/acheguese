@@ -94,7 +94,7 @@
     "test:e2e:mobility-operational": "playwright test tests/e2e/mobility-operational.spec.ts --project=chromium --reporter=list",
     "test:e2e:mobile-core-layout": "playwright test tests/e2e/mobile-core-layout.spec.ts --project=chromium --reporter=list",
     "test:e2e:mobile-auth-dashboards": "playwright test tests/e2e/mobile-auth-dashboards.spec.ts --project=chromium --reporter=list",
-    "test:e2e:account-authenticated": "playwright test tests/e2e/account-authenticated.spec.ts --project=chromium --reporter=list && npm run test:e2e:business-lifecycle-authenticated",
+    "test:e2e:account-authenticated": "playwright test tests/e2e/account-authenticated.spec.ts tests/e2e/messaging-authenticated.spec.ts --project=chromium --reporter=list && npm run test:e2e:business-lifecycle-authenticated",
     "test:e2e:mobile": "playwright test tests/e2e/mobile-core-layout.spec.ts tests/e2e/mobile-auth-dashboards.spec.ts --project=chromium --reporter=list",
     "test:e2e:operations": "playwright test tests/e2e/gastronomy-operational.spec.ts tests/e2e/mobility-operational.spec.ts tests/e2e/professional-operational.spec.ts tests/e2e/professional-leads-operational.spec.ts tests/e2e/central/central-validation.spec.ts --project=chromium --reporter=list",
     "validate:operations:phase": "npm run typecheck && npm run lint && npm run test:e2e:operations",
@@ -110,7 +110,7 @@
     "prepare": "husky",
     "verify:deploy": "node tools/release/verify-deploy-ready.mjs",
     "test": "vitest --run",
-    "test:mvp:architecture": "vitest --run src/app/config/__tests__/productModuleRegistry.spec.ts src/app/config/__tests__/launchScope.spec.ts tests/architecture/mvp-core-module-boundary.test.ts tests/architecture/map-business-bounded-read.test.ts tests/architecture/nearby-proximity-truthfulness.test.ts tests/architecture/business-mvp-public-flow.test.ts tests/architecture/production-sitemap-release-boundary.test.ts tests/architecture/territory-home-owner.test.ts",
+    "test:mvp:architecture": "vitest --run src/app/config/__tests__/productModuleRegistry.spec.ts src/app/config/__tests__/platformCapabilityRegistry.spec.ts src/app/config/__tests__/launchScope.spec.ts tests/architecture/mvp-core-module-boundary.test.ts tests/architecture/map-business-bounded-read.test.ts tests/architecture/nearby-proximity-truthfulness.test.ts tests/architecture/business-mvp-public-flow.test.ts tests/architecture/production-sitemap-release-boundary.test.ts tests/architecture/territory-home-owner.test.ts tests/architecture/business-messaging-mvp.test.ts tests/architecture/account-messaging-real-data-boundary.test.ts src/core/messaging/services/BusinessDirectMessagingService.test.ts",
     "test:education:inep-import": "vitest --run --environment=node --pool=vmThreads --maxWorkers=1 tests/scripts/public-education-inep-adapter.test.ts tests/scripts/public-education-inep-stager.test.ts tests/security/public-education-inep-import-staging-g6.test.ts tests/security/public-education-inep-import-planner-g6.test.ts",
     "test:watch": "vitest",
     "test:community-interest:security": "vitest --run --pool=forks --maxWorkers=1 tests/security/community-interest-registration-security.test.ts tests/security/community-interest-compatibility-window.test.ts tests/scripts/community-interest-preflight.test.ts",
@@ -125,7 +125,7 @@
     "test:media:ssot": "vitest --run src/core/media/services/MediaService.test.ts src/core/media/references/mediaAssetReference.spec.ts tests/architecture/media-assets-ssot.test.ts",
     "test:classifieds:ssot": "vitest --run src/core/classifieds/services/__tests__/classifieds.persistence.spec.ts src/core/classifieds/services/__tests__/ClassifiedUrlService.spec.ts src/core/classifieds/services/__tests__/ClassifiedReportService.spec.ts tests/architecture/classifieds-territory-ssot.test.ts tests/architecture/classified-messaging-ssot.test.ts tests/public-territorial-copy-regression.test.ts tests/security/location-rpc-security.test.ts",
     "test:realtime:ssot": "vitest --run src/core/realtime/services/RealtimeService.test.ts tests/architecture/realtime-ssot.test.ts",
-    "test:messaging:ssot": "vitest --run src/core/messaging/services/ClassifiedMessagingService.test.ts src/core/messaging/services/CommunityDirectMessagingService.test.ts tests/architecture/classified-messaging-ssot.test.ts tests/architecture/community-direct-messaging-ssot.test.ts tests/security/trust-messaging-incident-commands-security.test.ts",
+    "test:messaging:ssot": "vitest --run src/core/messaging/services/BusinessDirectMessagingService.test.ts tests/architecture/business-messaging-mvp.test.ts src/core/messaging/services/ClassifiedMessagingService.test.ts src/core/messaging/services/CommunityDirectMessagingService.test.ts tests/architecture/classified-messaging-ssot.test.ts tests/architecture/community-direct-messaging-ssot.test.ts tests/security/trust-messaging-incident-commands-security.test.ts",
     "test:reviews:ssot": "vitest --run tests/architecture/reviews-ssot.test.ts tests/security/business-reviews-rpc-security.test.ts",
     "test:entities:private-data": "vitest --run tests/architecture/entity-private-data-ssot.test.ts tests/security/entity-private-data-boundary-security.test.ts",
     "test:moderation:ssot": "vitest --run src/shared/components/moderation/ReportReasonDialog.spec.tsx src/core/moderation/services/FederatedModerationQueueService.spec.ts src/core/community/moderation/CommunityReportService.spec.ts src/core/community/audit/CommunitySocialAuditReader.spec.ts src/core/trust/services/ActiveBanReader.spec.ts tests/architecture/audit-moderation-ssot.test.ts tests/architecture/moderation-trust-boundary.test.ts",
@@ -138,7 +138,7 @@
     "test:e2e:ui": "playwright test tests/e2e/tourist-points.spec.ts --ui",
     "test:e2e:report": "playwright show-report",
     "test:e2e:network": "playwright test tests/e2e/network-branches.spec.ts --reporter=list",
-    "test:regression": "vitest --run --passWithNoTests tests/regression-*.test.ts",
+    "test:regression": "vitest --run tests/regression",
     "test:all": "npm run test:ssot && npm run test:e2e && npm run test:regression",
     "test:maps": "vitest --run src/core/maps",
     "test:maps:watch": "vitest src/core/maps",
@@ -162,7 +162,9 @@
     "test:e2e:business-lifecycle-authenticated": "node tools/release/run-business-lifecycle-authenticated.mjs",
     "test:e2e:education-lifecycle-authenticated": "node tools/release/run-education-lifecycle-authenticated.mjs",
     "stage:education:inep-import": "node tools/data-quality/stage-public-education-inep-import.mjs",
-    "maintenance:branches": "node tools/github/cleanup-merged-branches.mjs"
+    "maintenance:branches": "node tools/github/cleanup-merged-branches.mjs",
+    "test:mvp:unit": "node tools/release/run-mvp-unit-tests.mjs",
+    "test:mvp:regression": "node tools/release/run-mvp-regression-tests.mjs"
   },
   "dependencies": {
     "@hookform/resolvers": "^3.10.0",
@@ -255,7 +257,7 @@
     "@types/react": "^18.3.23",
     "@types/react-dom": "^18.3.7",
     "@vitejs/plugin-react-swc": "^4.3.1",
-    "@vitest/coverage-v8": "^4.1.7",
+    "@vitest/coverage-v8": "^4.1.11",
     "autoprefixer": "^10.4.21",
     "axe-core": "^4.11.1",
     "eslint": "^9.32.0",
@@ -277,7 +279,7 @@
     "typescript": "^5.8.3",
     "typescript-eslint": "^8.38.0",
     "vite": "^7.3.3",
-    "vitest": "^4.1.7"
+    "vitest": "^4.1.11"
   },
   "lint-staged": {
     "*.{ts,tsx}": [
@@ -287,5 +289,9 @@
     "*.{js,jsx,json,css,md}": [
       "prettier --write"
     ]
+  },
+  "overrides": {
+    "browserslist": "4.29.0",
+    "js-yaml": "4.3.2"
   }
 }

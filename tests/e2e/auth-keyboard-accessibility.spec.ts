@@ -5,8 +5,15 @@ import {
   seedAuthFlowState,
 } from "./helpers/authFlowState";
 
+const AUTH_RETURN_PATH =
+  "/mensagens/business/44444444-4444-4444-8444-444444444444";
+const LOGIN_WITH_RETURN =
+  `/login?redirect=${encodeURIComponent(AUTH_RETURN_PATH)}`;
+
 test.describe("Conta e acesso — teclado e foco", () => {
-  test("login mantém ordem de foco útil e controles de senha operáveis", async ({ page }) => {
+  test("login mantém ordem de foco útil e controles de senha operáveis", async ({
+    page,
+  }) => {
     await page.setViewportSize({ width: 390, height: 844 });
     await page.goto("/login", { waitUntil: "domcontentloaded" });
 
@@ -25,16 +32,17 @@ test.describe("Conta e acesso — teclado e foco", () => {
 
     await page.keyboard.press("Enter");
     await expect(password).toHaveAttribute("type", "text");
-    await expect(page.getByRole("button", { name: "Ocultar senha" })).toHaveAttribute(
-      "aria-pressed",
-      "true",
-    );
+    await expect(
+      page.getByRole("button", { name: "Ocultar senha" }),
+    ).toHaveAttribute("aria-pressed", "true");
 
     await page.keyboard.press("Shift+Tab");
     await expect(password).toBeFocused();
   });
 
-  test("esqueci minha senha funciona por teclado e preserva e-mail digitado", async ({ page }) => {
+  test("esqueci minha senha funciona por teclado e preserva e-mail digitado", async ({
+    page,
+  }) => {
     await page.setViewportSize({ width: 390, height: 844 });
     await page.goto("/login", { waitUntil: "domcontentloaded" });
 
@@ -44,30 +52,45 @@ test.describe("Conta e acesso — teclado e foco", () => {
     await expect(forgot).toBeFocused();
     await page.keyboard.press("Enter");
 
-    await expect(page).toHaveURL(/\/reset-password\?mode=request&email=ana%40example\.com$/);
-    await expect(page.getByRole("heading", { name: /Vamos recuperar/ })).toBeVisible();
+    await expect(page).toHaveURL(
+      /\/reset-password\?mode=request&email=ana%40example\.com$/,
+    );
+    await expect(
+      page.getByRole("heading", { name: /Vamos recuperar/ }),
+    ).toBeVisible();
   });
 
-  test("Google e ações principais expõem nomes acessíveis e foco nativo", async ({ page }) => {
+  test("Google e ações principais expõem nomes acessíveis e foco nativo", async ({
+    page,
+  }) => {
     await page.setViewportSize({ width: 1440, height: 900 });
 
     await page.goto("/login", { waitUntil: "domcontentloaded" });
-    const loginGoogle = page.getByRole("button", { name: "Continuar com Google" });
+    const loginGoogle = page.getByRole("button", {
+      name: "Continuar com Google",
+    });
     await loginGoogle.focus();
     await expect(loginGoogle).toBeFocused();
     await expect(loginGoogle).toBeEnabled();
 
     await page.goto("/cadastro", { waitUntil: "domcontentloaded" });
-    const signupGoogle = page.getByRole("button", { name: "Continuar com Google" });
+    const signupGoogle = page.getByRole("button", {
+      name: "Continuar com Google",
+    });
     await signupGoogle.focus();
     await expect(signupGoogle).toBeFocused();
     await expect(signupGoogle).toBeEnabled();
-    await expect(page.getByRole("checkbox")).toHaveAttribute("aria-checked", "false");
+    await expect(page.getByRole("checkbox")).toHaveAttribute(
+      "aria-checked",
+      "false",
+    );
   });
 
-  test("retomada de erro OAuth é alcançável e ativável pelo teclado", async ({ page }) => {
+  test("retomada de erro OAuth é alcançável e ativável pelo teclado", async ({
+    page,
+  }) => {
     await seedAuthFlowState(page, {
-      pendingReturn: "/mensagens/sabores-da-ana",
+      pendingReturn: AUTH_RETURN_PATH,
       pendingIntent: AUTH_JOURNEY_INTENTS.login,
     });
     await page.setViewportSize({ width: 390, height: 844 });
@@ -75,12 +98,16 @@ test.describe("Conta e acesso — teclado e foco", () => {
       waitUntil: "domcontentloaded",
     });
 
-    const retry = page.getByRole("link", { name: "Voltar e tentar novamente" });
+    const retry = page.getByRole("link", {
+      name: "Voltar e tentar novamente",
+    });
     await retry.focus();
     await expect(retry).toBeFocused();
     await page.keyboard.press("Enter");
 
-    await expect(page).toHaveURL(/\/login\?redirect=%2Fmensagens%2Fsabores-da-ana$/);
+    await expect(page).toHaveURL((url) => {
+      return `${url.pathname}${url.search}` === LOGIN_WITH_RETURN;
+    });
     await expect(
       page.getByRole("button", { name: "Continuar com Google" }),
     ).toBeVisible();

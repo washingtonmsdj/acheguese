@@ -17,17 +17,30 @@ const signatures = [
   'moderate_vaga_report(uuid, text, text)',
   'create_review_report(uuid, text, text)',
   'moderate_review_report(uuid, text, text)',
-  'create_ride_report(\n  uuid, text, text, text, text, text[], double precision, double precision\n)',
+  'create_ride_report(uuid, text, text, text, text, text[], double precision, double precision)',
   'moderate_ride_report(uuid, text, text, text)',
 ] as const;
+
+const normalizeSql = (sql: string) =>
+  sql
+    .replace(/\s+/g, ' ')
+    .replace(/\(\s+/g, '(')
+    .replace(/\s+\)/g, ')')
+    .trim();
+
+const normalizedMigration = normalizeSql(migration);
 
 describe('regression: report RPC authorization batch 2', () => {
   it('keeps every report wrapper/helper authenticated-only in the migration', () => {
     for (const signature of signatures) {
       for (const schema of ['public', 'private'] as const) {
         const qualified = `${schema}.${signature}`;
-        expect(migration).toContain(`revoke execute on function ${qualified}`);
-        expect(migration).toContain(`grant execute on function ${qualified}`);
+        expect(normalizedMigration).toContain(
+          `revoke execute on function ${qualified}`,
+        );
+        expect(normalizedMigration).toContain(
+          `grant execute on function ${qualified}`,
+        );
       }
     }
 
