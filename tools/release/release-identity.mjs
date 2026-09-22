@@ -54,7 +54,9 @@ export function listTrackedDeployEntries() {
     entries.push({ path: filePath, mode, blobSha: blobSha.toLowerCase() });
   }
 
-  return entries.sort((a, b) => a.path.localeCompare(b.path, "en"));
+  return entries.sort((a, b) =>
+    a.path < b.path ? -1 : a.path > b.path ? 1 : 0,
+  );
 }
 
 export function computeDeployFingerprint() {
