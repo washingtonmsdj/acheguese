@@ -146,6 +146,7 @@ jobs:
             'rateLimitMiddleware',
             '"fixture_credentials_rejected"',
             '"fixture_account_unavailable"',
+            '"auth_rate_limited"',
             '"auth_upstream_unavailable"',
             '"fixture_auth_failed"',
             'return fixtureAuthFailureResponse(req, failure)',
