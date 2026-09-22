@@ -177,7 +177,7 @@ jobs:
             }
             $hash = (Get-FileHash -Algorithm SHA256 $file).Hash.ToLowerInvariant()
             Write-Host "BUNDLE_SHA256 $file $hash"
-            Add-Content -Path $env:GITHUB_STEP_SUMMARY -Value "- `$file` — `$hash`" -Encoding UTF8
+            Add-Content -Path $env:GITHUB_STEP_SUMMARY -Value "- ``$file`` — ``$hash``" -Encoding UTF8
           }
 
       - name: Deploy ci-auth-fixture-session from exact checkout
@@ -207,8 +207,8 @@ jobs:
             throw "Remote ci-auth-fixture-session is not ACTIVE: $($broker[0].status)"
           }
           Write-Host "REMOTE_CI_AUTH_FIXTURE_SESSION version=$($broker[0].version) status=$($broker[0].status) verify_jwt=$($broker[0].verify_jwt)"
-          Add-Content -Path $env:GITHUB_STEP_SUMMARY -Value "- Remote ci-auth-fixture-session version: `$($broker[0].version)`" -Encoding UTF8
-          Add-Content -Path $env:GITHUB_STEP_SUMMARY -Value "- Remote verify_jwt: `$($broker[0].verify_jwt)`" -Encoding UTF8
+          Add-Content -Path $env:GITHUB_STEP_SUMMARY -Value "- Remote ci-auth-fixture-session version: ``$($broker[0].version)``" -Encoding UTF8
+          Add-Content -Path $env:GITHUB_STEP_SUMMARY -Value "- Remote verify_jwt: ``$($broker[0].verify_jwt)``" -Encoding UTF8
 
       - name: Record deployment provenance
         if: always()
