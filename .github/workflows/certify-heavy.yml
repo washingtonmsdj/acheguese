@@ -22,6 +22,9 @@ env:
 jobs:
   certify-heavy:
     name: Heavy gates for explicit SHA
+    concurrency:
+      group: acheguese-authenticated-e2e-fixture
+      cancel-in-progress: false
     runs-on:
       - self-hosted
       - windows

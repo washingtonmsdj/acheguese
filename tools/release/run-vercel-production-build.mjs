@@ -23,6 +23,7 @@ const steps = [
   ["npm", ["run", "generate:sitemap"]],
   ["node", ["tools/release/validate-production-sitemap.mjs", "public"]],
   ["npm", ["run", "build:vercel"]],
+  ["node", ["tools/release/generate-release-identity.mjs"]],
   ["node", ["tools/release/validate-production-sitemap.mjs", "dist"]],
 ];
 

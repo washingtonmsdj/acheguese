@@ -4,20 +4,6 @@ on:
   workflow_dispatch:
   push:
     branches: [main]
-    paths:
-      - ".github/workflows/ssot-tests.yml"
-      - "README.md"
-      - "SECURITY.md"
-      - "docs/**"
-      - "package.json"
-      - "package-lock.json"
-      - "playwright.config.ts"
-      - "tools/seeds/seed-e2e-users.ts"
-      - "src/app/**"
-      - "src/core/**"
-      - "src/modules/**"
-      - "tests/**"
-      - "supabase/migrations/**"
   pull_request:
     branches: [main, develop]
     paths:
@@ -160,6 +146,9 @@ jobs:
   authenticated_account_e2e:
     name: Authenticated Account + Business E2E (Production smoke)
     if: github.event_name != 'pull_request'
+    concurrency:
+      group: acheguese-authenticated-e2e-fixture
+      cancel-in-progress: false
     runs-on: ubuntu-latest
     env:
       CI: true
@@ -177,6 +166,14 @@ jobs:
         with:
           node-version: "24"
           cache: npm
+
+      - name: Wait for deployed runtime identity
+        id: release_identity
+        env:
+          RELEASE_IDENTITY_URL: https://acheguese.com.br/release.json
+          RELEASE_WAIT_TIMEOUT_MS: "600000"
+          RELEASE_WAIT_INTERVAL_MS: "5000"
+        run: node tools/release/wait-for-production-release.mjs
 
       - name: Install dependencies
         run: npm ci
@@ -196,6 +193,7 @@ jobs:
           else
             echo "Authenticated Account E2E was explicitly skipped because fixture credentials are not configured." >> "$GITHUB_STEP_SUMMARY"
           fi
+          echo "Runtime identity mode: ${{ steps.release_identity.outputs.mode }}; deployed SHA: ${{ steps.release_identity.outputs.deployed_sha }}; expected SHA: ${{ steps.release_identity.outputs.expected_sha }}." >> "$GITHUB_STEP_SUMMARY"
           echo "This post-merge smoke validates the deployed Production surface against the canonical remote Supabase project." >> "$GITHUB_STEP_SUMMARY"
           echo "Business lifecycle mutations are limited to the dedicated account-authenticated-e2e fixture and cleaned through owner RLS." >> "$GITHUB_STEP_SUMMARY"
           echo "No service-role key is exposed to the browser job." >> "$GITHUB_STEP_SUMMARY"

@@ -23,6 +23,9 @@ describe("production sitemap release boundary", () => {
       '["node", ["tools/release/validate-production-sitemap.mjs", "public"]]',
     );
     const build = runner.indexOf('["npm", ["run", "build:vercel"]]');
+    const releaseIdentity = runner.indexOf(
+      '["node", ["tools/release/generate-release-identity.mjs"]]',
+    );
     const validateDist = runner.indexOf(
       '["node", ["tools/release/validate-production-sitemap.mjs", "dist"]]',
     );
@@ -30,7 +33,34 @@ describe("production sitemap release boundary", () => {
     expect(generate).toBeGreaterThanOrEqual(0);
     expect(validatePublic).toBeGreaterThan(generate);
     expect(build).toBeGreaterThan(validatePublic);
-    expect(validateDist).toBeGreaterThan(build);
+    expect(releaseIdentity).toBeGreaterThan(build);
+    expect(validateDist).toBeGreaterThan(releaseIdentity);
+  });
+
+  it("publishes an uncached Git-backed runtime identity and waits for deployment convergence", () => {
+    const releaseIdentity = read("tools/release/release-identity.mjs");
+    const generator = read("tools/release/generate-release-identity.mjs");
+    const waiter = read("tools/release/wait-for-production-release.mjs");
+    const workflow = read(".github/workflows/ssot-tests.yml");
+    const securityConfig = read("src/shared/config/security.config.ts");
+    const vercel = read("vercel.json");
+
+    expect(releaseIdentity).toContain('isSkippableVercelPath');
+    expect(releaseIdentity).toContain('["ls-files", "--stage", "-z"]');
+    expect(releaseIdentity).toContain('deployFingerprint');
+    expect(releaseIdentity).toContain('"exact" : "equivalent"');
+    expect(generator).toContain('"dist", "release.json"');
+    expect(waiter).toContain("classifyReleaseIdentityMatch");
+    expect(waiter).toContain('cache: "no-store"');
+    expect(workflow).toContain("Wait for deployed runtime identity");
+    expect(workflow).toMatch(
+      /push:\r?\n\s+branches: \[main\]\r?\n\s+pull_request:/,
+    );
+    expect(workflow).toContain("node tools/release/wait-for-production-release.mjs");
+    expect(securityConfig).toContain("RELEASE_IDENTITY");
+    expect(securityConfig).toContain("pattern: '/release.json'");
+    expect(vercel).toContain('"source": "/release.json"');
+    expect(vercel).toContain('"no-cache, no-store, must-revalidate"');
   });
 
   it("keeps robots pointing at the same production sitemap origin", () => {

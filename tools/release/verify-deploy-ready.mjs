@@ -10,6 +10,9 @@ const REQUIRED_FILES = [
   'vercel.json',
   '.vercelignore',
   'tsconfig.json',
+  'tools/release/release-identity.mjs',
+  'tools/release/generate-release-identity.mjs',
+  'tools/release/wait-for-production-release.mjs',
 ];
 
 const REQUIRED_PUBLIC_ASSETS = [
@@ -235,6 +238,15 @@ try {
   const serializedHeaders = JSON.stringify(vercelConfig.headers ?? []);
   serializedHeaders.includes('Content-Security-Policy') ? ok('Content-Security-Policy configurada') : fail('Content-Security-Policy ausente');
   serializedHeaders.includes('Strict-Transport-Security') ? ok('Strict-Transport-Security configurado') : fail('Strict-Transport-Security ausente');
+  const releaseIdentityHeaders = (vercelConfig.headers ?? []).find(
+    (entry) => entry.source === '/release.json',
+  )?.headers ?? [];
+  const releaseIdentityCacheControl = releaseIdentityHeaders.find(
+    (header) => header.key === 'Cache-Control',
+  )?.value;
+  releaseIdentityCacheControl === 'no-cache, no-store, must-revalidate'
+    ? ok('release.json sem cache para convergencia de deploy')
+    : fail('release.json deve usar no-cache, no-store, must-revalidate');
 } catch (error) {
   fail(`erro ao ler vercel.json: ${error.message}`);
 }

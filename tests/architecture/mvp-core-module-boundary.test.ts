@@ -349,6 +349,17 @@ describe("MVP core module boundary", () => {
     expect(e2eAuthHelper).not.toContain(
       "Unable to discover the public Supabase browser configuration from Production.",
     );
+
+    for (const workflow of [
+      ssotWorkflow,
+      heavyPrWorkflow,
+      heavyExactShaWorkflow,
+    ]) {
+      expect(workflow).toContain(
+        "group: acheguese-authenticated-e2e-fixture",
+      );
+      expect(workflow).toContain("cancel-in-progress: false");
+    }
   });
 
   it("keeps exact-SHA release certification focused on the active MVP while preserving global quality gates", () => {
