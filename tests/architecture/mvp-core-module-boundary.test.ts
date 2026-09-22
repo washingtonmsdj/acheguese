@@ -338,15 +338,15 @@ describe("MVP core module boundary", () => {
   });
 
   it("keeps Production authenticated smoke on explicit public Supabase configuration", () => {
-    expect(ssotWorkflow).toMatch(
-      /authenticated_account_e2e:[\s\S]*?runs-on: windows-latest/,
-    );
-    expect(ssotWorkflow).toMatch(
-      /authenticated_account_e2e:[\s\S]*?Install Playwright browser[\s\S]*?npx playwright install chromium/,
-    );
-    expect(ssotWorkflow).not.toMatch(
-      /authenticated_account_e2e:[\s\S]*?runs-on: ubuntu-latest/,
-    );
+    const authenticatedSmoke =
+      ssotWorkflow.match(
+        /\n  authenticated_account_e2e:[\s\S]*?(?=\n  [a-zA-Z0-9_-]+:\n)/,
+      )?.[0] ?? "";
+
+    expect(authenticatedSmoke).toContain("runs-on: windows-latest");
+    expect(authenticatedSmoke).toContain("Install Playwright browser");
+    expect(authenticatedSmoke).toContain("npx playwright install chromium");
+    expect(authenticatedSmoke).not.toContain("runs-on: ubuntu-latest");
     expect(ssotWorkflow).toContain(
       "E2E_SUPABASE_URL: https://xhdowzacfujckjelqhtd.supabase.co",
     );
