@@ -15,7 +15,9 @@ describe("G6 Education private/public launch separation", () => {
       "utf8",
     );
 
-    expect(launchScope).toContain("education: false");
+    expect(launchScope).toContain(
+      'education: isProductModuleEnabled("education")',
+    );
     expect(publicLazy).toContain(
       'EducationExplorerPage = createLaunchPausedRoute("Educacao")',
     );
@@ -24,7 +26,7 @@ describe("G6 Education private/public launch separation", () => {
     );
   });
 
-  it("keeps authenticated Business management routable for certification", () => {
+  it("keeps authenticated Education management behind the launch gate", () => {
     const centralLazy = readFileSync(
       join(ROOT, "src/app/routes/centralLazyImports.ts"),
       "utf8",
@@ -47,10 +49,10 @@ describe("G6 Education private/public launch separation", () => {
       'import("@/modules/business/education/pages/EducationEventsPage")',
     );
     expect(centralRoutes).toContain(
-      'path="educacao/setup" element={<P.EducationSetupPage />}',
+      'path="educacao/setup" element={launchElement("education", "Educação", <P.EducationSetupPage />)}',
     );
     expect(centralRoutes).not.toContain(
-      'path="educacao/setup" element={launchElement("education"',
+      'path="educacao/setup" element={<P.EducationSetupPage />}',
     );
   });
 });

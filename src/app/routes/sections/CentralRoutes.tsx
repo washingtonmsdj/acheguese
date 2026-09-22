@@ -3,6 +3,7 @@ import type { ReactNode } from "react";
 import { isLaunchSurfaceEnabled, type LaunchSurfaceKey } from "@/app/config/launchScope";
 import LaunchPausedPage from "@/app/pages/LaunchPausedPage";
 import * as P from "../centralLazyImports";
+import { VERTICAL_CONFIGS } from "@/core/verticals/config";
 
 export function CentralRoutes() {
   const conceptMock =
@@ -52,7 +53,15 @@ export function CentralRoutes() {
           <Route path="comunicacao/:channelSlug" element={launchElement("communication", "Comunicação", <P.CommunicationAgentDashboard />)} />
           <Route path="empresas" element={<P.CentralEmpresasPage />} />
           <Route path="empresas/nova" element={<P.CriarEmpresaPage />} />
-          <Route path="empresas/nova/:verticalSlug" element={<P.CriarEmpresaPage />} />
+          {Object.values(VERTICAL_CONFIGS).flatMap((vertical) =>
+            vertical.createSlugs.map((slug) => (
+              <Route
+                key={`${vertical.key}:${slug}`}
+                path={`empresas/nova/${slug}`}
+                element={launchElement(vertical.key, vertical.label, <P.CriarEmpresaPage />)}
+              />
+            )),
+          )}
           <Route path="empresas/:businessId" element={<P.BusinessAdminGuard />}>
             <Route element={<P.BusinessDashboardShellPage />}>
               <Route index element={<P.BusinessOverviewPage />} />
