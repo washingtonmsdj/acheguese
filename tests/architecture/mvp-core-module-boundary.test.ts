@@ -38,6 +38,9 @@ describe("MVP core module boundary", () => {
   const previewE2eRunner = read("tools/release/run-preview-e2e.ps1");
   const ssotWorkflow = read(".github/workflows/ssot-tests.yml");
   const e2eAuthHelper = read("tests/e2e/helpers/auth.ts");
+  const fixtureAuthPasswordGrant = read(
+    "tests/e2e/helpers/fixtureAuthPasswordGrant.ts",
+  );
   const accountAuthenticatedE2e = read("tests/e2e/account-authenticated.spec.ts");
   const privateProfileWorkspaceAggregate = read(
     "src/core/profiles/services/profile.workspace.aggregate.ts",
@@ -393,10 +396,23 @@ describe("MVP core module boundary", () => {
     expect(e2eAuthHelper).not.toContain(
       "Unable to discover the public Supabase browser configuration from Production.",
     );
-    expect(e2eAuthHelper).toContain("FIXTURE_AUTH_MAX_ATTEMPTS = 3");
-    expect(e2eAuthHelper).toContain("isTransientFixtureAuthError");
     expect(e2eAuthHelper).toContain(
-      "Fixture Auth bootstrap failed after transient-safe retry",
+      "signInFixtureWithPasswordGrant",
+    );
+    expect(fixtureAuthPasswordGrant).toContain("maxAttempts = 3");
+    expect(fixtureAuthPasswordGrant).toContain("isTransientStatus");
+    expect(e2eAuthHelper).toContain("client.auth.setSession");
+    expect(e2eAuthHelper).not.toContain("client.auth.signInWithPassword");
+    expect(fixtureAuthPasswordGrant).toContain(
+      '"/auth/v1/token?grant_type=password"',
+    );
+    expect(fixtureAuthPasswordGrant).toContain('apikey: publishableKey');
+    expect(fixtureAuthPasswordGrant).toContain(
+      'Accept: "application/json"',
+    );
+    expect(fixtureAuthPasswordGrant).not.toContain("Authorization:");
+    expect(fixtureAuthPasswordGrant).toContain(
+      "returned non-JSON response",
     );
     expect(packageJson).toContain(
       "tests/e2e/messaging-authenticated.spec.ts --project=chromium --reporter=list --retries=0",

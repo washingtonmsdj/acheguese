@@ -24,6 +24,7 @@ const EXPLICIT_MVP_CONTRACTS = [
   "src/app/pages/__tests__/BuscaPage.spec.tsx",
   "src/core/routing/seo/__tests__/generateSitemap.spec.ts",
   "src/integrations/supabase/apiKeySafeFetch.spec.ts",
+  "tests/e2e/helpers/fixtureAuthPasswordGrant.spec.ts",
   "tests/architecture/mvp-core-module-boundary.test.ts",
   "tests/architecture/map-business-bounded-read.test.ts",
   "tests/architecture/nearby-proximity-truthfulness.test.ts",

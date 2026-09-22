@@ -4,6 +4,7 @@ import {
   createOperationalAnonClientForPublicConfig,
   getOperationalEnv,
 } from "../../helpers/operational-env";
+import { signInFixtureWithPasswordGrant } from "./fixtureAuthPasswordGrant";
 
 // Credenciais de teste — lidas de variáveis de ambiente
 export const TEST_USER = {
@@ -19,58 +20,6 @@ export const TEST_ADMIN = {
   email: process.env.E2E_ADMIN_EMAIL ?? "",
   password: process.env.E2E_ADMIN_PASSWORD ?? "",
 };
-
-const FIXTURE_AUTH_MAX_ATTEMPTS = 3;
-
-function getErrorMessage(error: unknown): string {
-  if (error instanceof Error) return error.message;
-  if (error && typeof error === "object" && "message" in error) {
-    const message = (error as { message?: unknown }).message;
-    return typeof message === "string" ? message : String(message ?? "");
-  }
-  return String(error ?? "");
-}
-
-function isTransientFixtureAuthError(error: unknown): boolean {
-  const status =
-    error && typeof error === "object" && "status" in error
-      ? Number((error as { status?: unknown }).status)
-      : NaN;
-  if (status === 408 || status === 425 || status === 429 || (status >= 500 && status <= 599)) {
-    return true;
-  }
-
-  const message = getErrorMessage(error);
-  return /Unexpected token ['"]?<|failed to fetch|fetch failed|network|timed? out|connection timed out|\b52[0-4]\b/i.test(
-    message,
-  );
-}
-
-async function signInFixtureWithTransientRetry(
-  client: ReturnType<typeof createOperationalAnonClientForPublicConfig>,
-  email: string,
-  password: string,
-) {
-  let lastError: unknown = null;
-
-  for (let attempt = 1; attempt <= FIXTURE_AUTH_MAX_ATTEMPTS; attempt += 1) {
-    const { data, error } = await client.auth.signInWithPassword({ email, password });
-    if (!error && data.session) {
-      return data.session;
-    }
-
-    lastError = error ?? new Error("session missing");
-    if (!isTransientFixtureAuthError(lastError) || attempt === FIXTURE_AUTH_MAX_ATTEMPTS) {
-      break;
-    }
-
-    await new Promise((resolve) => setTimeout(resolve, attempt * 750));
-  }
-
-  throw new Error(
-    `Fixture Auth bootstrap failed after transient-safe retry: ${getErrorMessage(lastError) || "session missing"}`,
-  );
-}
 
 export function hasE2EUserCredentials(): boolean {
   return Boolean(TEST_USER.email && TEST_USER.password);
@@ -180,11 +129,22 @@ export async function bootstrapFixtureSession(
     url,
     publishableKey,
   );
-  const session = await signInFixtureWithTransientRetry(
-    client,
+  const tokenSession = await signInFixtureWithPasswordGrant({
+    supabaseUrl: url,
+    publishableKey,
     email,
     password,
-  );
+  });
+  const { data: sessionData, error: sessionError } = await client.auth.setSession({
+    access_token: tokenSession.access_token,
+    refresh_token: tokenSession.refresh_token,
+  });
+  if (sessionError || !sessionData.session) {
+    throw new Error(
+      `Fixture Auth session hydration failed: ${sessionError?.message ?? "session missing"}`,
+    );
+  }
+  const session = sessionData.session;
 
   const serializedSession = JSON.stringify(session);
   const chunks = splitCookieValue(serializedSession);
