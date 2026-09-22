@@ -43,6 +43,10 @@ describe("MVP core module boundary", () => {
     "src/core/profiles/services/profile.workspace.aggregate.ts",
   );
   const operationalEnv = read("tests/helpers/operational-env.ts");
+  const supabaseRuntimeClient = read("src/integrations/supabase/supabase.ts");
+  const supabaseApiKeySafeFetch = read(
+    "src/integrations/supabase/apiKeySafeFetch.ts",
+  );
   const onboardingVisualState = read(
     "tests/e2e/support/onboardingVisualState.ts",
   );
@@ -344,10 +348,12 @@ describe("MVP core module boundary", () => {
         /\n  authenticated_account_e2e:[\s\S]*?(?=\n  [a-zA-Z0-9_-]+:\n)/,
       )?.[0] ?? "";
 
-    expect(authenticatedSmoke).toContain("runs-on: windows-latest");
+    expect(authenticatedSmoke).toContain("runs-on: ubuntu-latest");
     expect(authenticatedSmoke).toContain("Install Playwright browser");
-    expect(authenticatedSmoke).toContain("npx playwright install chromium");
-    expect(authenticatedSmoke).not.toContain("runs-on: ubuntu-latest");
+    expect(authenticatedSmoke).toContain(
+      "npx playwright install --with-deps chromium",
+    );
+    expect(authenticatedSmoke).not.toContain("runs-on: windows-latest");
     expect(ssotWorkflow).toContain(
       "E2E_SUPABASE_URL: https://xhdowzacfujckjelqhtd.supabase.co",
     );
@@ -357,6 +363,27 @@ describe("MVP core module boundary", () => {
     expect(operationalEnv).toContain("readEnv('E2E_SUPABASE_URL')");
     expect(operationalEnv).toContain(
       "readEnv('E2E_SUPABASE_PUBLISHABLE_KEY')",
+    );
+    expect(supabaseRuntimeClient).toContain(
+      "createSupabaseApiKeySafeFetch(",
+    );
+    expect(supabaseRuntimeClient).toContain(
+      "PUBLIC_SUPABASE_CONFIG.publishableKey",
+    );
+    expect(operationalEnv).toContain(
+      "createSupabaseApiKeySafeFetch(supabaseKey)",
+    );
+    expect(supabaseApiKeySafeFetch).toContain(
+      'headers.get("Authorization") === `Bearer ${apiKey}`',
+    );
+    expect(supabaseApiKeySafeFetch).toContain(
+      'headers.delete("Authorization")',
+    );
+    expect(supabaseApiKeySafeFetch).toContain(
+      'apiKey.startsWith("sb_publishable_")',
+    );
+    expect(supabaseApiKeySafeFetch).toContain(
+      'apiKey.startsWith("sb_secret_")',
     );
     expect(e2eAuthHelper).toContain(
       "Authenticated E2E requires explicit E2E_SUPABASE_URL",
