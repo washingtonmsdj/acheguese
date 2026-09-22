@@ -17,6 +17,9 @@ on:
       - "docs/**"
       - "**/*.md"
       - ".github/workflows/**"
+  push:
+    branches:
+      - main
 
 permissions:
   contents: read
@@ -25,13 +28,13 @@ env:
   FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: "true"
 
 concurrency:
-  group: heavy-pr-${{ github.event.pull_request.number }}
+  group: heavy-exact-sha-${{ github.event.pull_request.number || github.sha }}
   cancel-in-progress: true
 
 jobs:
   certify-heavy-pr:
-    name: Heavy PR gates for exact head SHA
-    if: github.event.pull_request.head.repo.full_name == github.repository
+    name: Heavy gates for exact source SHA
+    if: github.event_name == 'push' || github.event.pull_request.head.repo.full_name == github.repository
     runs-on: windows-latest
     timeout-minutes: 180
 
@@ -39,8 +42,8 @@ jobs:
       - name: Validate runner and PR provenance
         shell: powershell
         env:
-          TARGET_SHA: ${{ github.event.pull_request.head.sha }}
-          HEAD_REPOSITORY: ${{ github.event.pull_request.head.repo.full_name }}
+          TARGET_SHA: ${{ github.event_name == 'pull_request' && github.event.pull_request.head.sha || github.sha }}
+          HEAD_REPOSITORY: ${{ github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name || github.repository }}
         run: |
           $ErrorActionPreference = "Stop"
           if ($env:RUNNER_OS -ne "Windows" -or $env:RUNNER_ARCH -ne "X64") {
@@ -57,23 +60,23 @@ jobs:
           }
           $sha = ([string]$env:TARGET_SHA).Trim().ToLowerInvariant()
           if ($sha -notmatch '^[0-9a-f]{40}$') {
-            Write-Error "Certification blocked: PR head is not an exact 40-character SHA."
+            Write-Error "Certification blocked: target is not an exact 40-character SHA."
             exit 1
           }
           Write-Host "Automatic certification target: $sha"
 
-      - name: Checkout exact PR head SHA
+      - name: Checkout exact target SHA
         uses: actions/checkout@v6
         with:
           repository: washingtonmsdj/acheguese
-          ref: ${{ github.event.pull_request.head.sha }}
+          ref: ${{ github.event_name == 'pull_request' && github.event.pull_request.head.sha || github.sha }}
           fetch-depth: 1
           persist-credentials: false
 
       - name: Assert checkout SHA
         shell: powershell
         env:
-          EXPECTED_SHA: ${{ github.event.pull_request.head.sha }}
+          EXPECTED_SHA: ${{ github.event_name == 'pull_request' && github.event.pull_request.head.sha || github.sha }}
         run: |
           $actualSha = (git rev-parse HEAD).Trim().ToLowerInvariant()
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
@@ -306,7 +309,7 @@ jobs:
             "MVP public E2E=$env:PUBLIC_OUTCOME"
           )
           @(
-            "## Automatic heavy PR certification",
+            "## Automatic heavy exact-SHA certification",
             "- SHA: $env:TARGET_SHA"
           ) | Add-Content -Path $env:GITHUB_STEP_SUMMARY -Encoding UTF8
           $results | ForEach-Object {
