@@ -149,7 +149,11 @@ jobs:
     concurrency:
       group: acheguese-authenticated-e2e-fixture
       cancel-in-progress: false
-    runs-on: ubuntu-latest
+    # This remote Auth smoke uses the GitHub-hosted runner family already
+    # proven against the canonical Supabase Auth route. Public deterministic
+    # browser tests remain on Ubuntu; only the remote authenticated fixture
+    # uses Windows to avoid the repeatable Ubuntu -> Auth gateway HTML failure.
+    runs-on: windows-latest
     env:
       CI: true
       PLAYWRIGHT_BASE_URL: https://acheguese.com.br
@@ -179,7 +183,7 @@ jobs:
         run: npm ci
 
       - name: Install Playwright browser
-        run: npx playwright install --with-deps chromium
+        run: npx playwright install chromium
 
       - name: Run authenticated Account and Business lifecycle E2E
         run: npm run test:e2e:account-authenticated
