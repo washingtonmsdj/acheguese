@@ -133,6 +133,11 @@ describe("CI Auth fixture session boundary", () => {
       'details: { reason: "github_oidc_rejected" }',
     );
     expect(deployWorkflow).not.toContain("--no-verify-jwt");
-    expect(deployWorkflow).not.toContain("SUPABASE_SERVICE_ROLE_KEY");
+    expect(deployWorkflow).toContain(
+      '$entry.Contains("SUPABASE_SERVICE_ROLE_KEY")',
+    );
+    expect(deployWorkflow).not.toMatch(
+      /^\s*SUPABASE_SERVICE_ROLE_KEY\s*:/m,
+    );
   });
 });
