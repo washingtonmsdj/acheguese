@@ -441,7 +441,7 @@ export const INPUT_VALIDATION = {
 export const SECURITY_AUDIT_LOG = {
   lastReview: '2026-09-16',
   reviewer: 'OpenAI',
-  version: '2.23.0',
+  version: '2.24.0',
   changes: [
     'CSP/security domain registry remain the canonical browser security authority',
     'HIBP k-Anonymity endpoint explicitly allowed in connect-src',
@@ -473,6 +473,14 @@ export const CACHE_HEADERS = {
       Expires: '0',
     },
   },
+  RELEASE_IDENTITY: {
+    pattern: '/release.json',
+    headers: {
+      'Cache-Control': 'no-cache, no-store, must-revalidate',
+      Pragma: 'no-cache',
+      Expires: '0',
+    },
+  },
   SERVICE_WORKER: {
     pattern: '/sw.js',
     headers: {
@@ -498,7 +506,7 @@ export const CACHE_HEADERS = {
 export const SECURITY_CONFIG_METADATA = {
   version: '2.23.0',
   created: '2026-04-18',
-  lastModified: '2026-09-16',
+  lastModified: '2026-09-21',
   author: 'Achegue-se engineering',
   purpose: 'Single Source of Truth for security configurations',
   criticality: 'CRITICAL',
