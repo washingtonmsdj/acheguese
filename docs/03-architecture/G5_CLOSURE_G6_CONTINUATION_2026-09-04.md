@@ -113,6 +113,20 @@ Additional G6 consolidation on 2026-09-04:
 - cleaned both Business public barrels while preserving active hooks, pages, `ContactLink`, company sections and canonical core owners;
 - added `tests/architecture/business-base-orphans-retired.test.ts`.
 
+## Supersessão do dashboard legado — 2026-09-22
+
+O censo de callers do corte MVP confirmou que `src/app/pages/DashboardEmpresaPage.tsx` já não possuía rota nem caller runtime. Por isso, os owners promovidos neste checkpoint exclusivamente para aquele shell deixaram de ser owners ativos e foram aposentados em conjunto:
+
+- `EmpresaDashboardTab`;
+- `AnalyticsDashboard`;
+- `CouponManager`;
+- `SubscriptionPlans`;
+- `NetworkTab`;
+- `useDashboardTabs`;
+- o antigo shell compartilhado `src/shared/components/dashboard/*`.
+
+A autoridade atual de gestão empresarial é a árvore roteada `src/modules/business/dashboard/pages/BusinessDashboardShellPage.tsx` + suas páginas filhas (`BusinessOverviewPage`, `BusinessDetailsPage`, `BusinessSettingsPage` e superfícies explicitamente launch-gated). Não restaurar `DashboardEmpresaPage` para satisfazer testes ou documentação históricos.
+
 ## Hosted validation classification
 
 Before the recent allocation degradation, `f92bee10a3133c56d37d34949a750429dfe24f73` had real hosted proof for the important executable gates:
