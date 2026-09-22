@@ -80,9 +80,7 @@ interface FixtureAuthFailure {
 function classifyFixtureAuthFailure(
   error: FixtureAuthErrorShape | null,
 ): FixtureAuthFailure {
-  if (
-    error?.code === "invalid_credentials"
-  ) {
+  if (error?.code === "invalid_credentials") {
     return { code: "fixture_credentials_rejected", status: 401 };
   }
 
@@ -111,7 +109,7 @@ function fixtureAuthFailureResponse(
 ): Response {
   return jsonResponse(
     {
-      error: failure.status === 503 ? "Authentication unavailable" : "Unauthorized",
+      error: failure.status === 401 ? "Unauthorized" : "Authentication unavailable",
       code: failure.code,
     },
     failure.status,
