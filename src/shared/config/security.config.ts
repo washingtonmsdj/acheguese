@@ -504,7 +504,7 @@ export const CACHE_HEADERS = {
 } as const;
 
 export const SECURITY_CONFIG_METADATA = {
-  version: '2.23.0',
+  version: '2.24.0',
   created: '2026-04-18',
   lastModified: '2026-09-21',
   author: 'Achegue-se engineering',
