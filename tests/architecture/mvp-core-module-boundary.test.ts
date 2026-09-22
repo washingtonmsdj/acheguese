@@ -43,6 +43,9 @@ describe("MVP core module boundary", () => {
     "src/core/profiles/services/profile.workspace.aggregate.ts",
   );
   const operationalEnv = read("tests/helpers/operational-env.ts");
+  const onboardingVisualState = read(
+    "tests/e2e/support/onboardingVisualState.ts",
+  );
 
   it("keeps domain modules separate from horizontal platform capabilities", () => {
     expect(registry).toContain('business: { status: "active" }');
@@ -378,6 +381,33 @@ describe("MVP core module boundary", () => {
       );
       expect(workflow).toContain("cancel-in-progress: false");
     }
+  });
+
+  it("keeps heavy aggregation rerun-safe and onboarding visuals deterministic", () => {
+    expect(heavyPrWorkflow).toContain(".gate-status/mvp-architecture.success");
+    expect(heavyPrWorkflow).toContain(".gate-status/logout.success");
+    expect(heavyPrWorkflow).toContain(".gate-status/regression.success");
+    expect(heavyPrWorkflow).toContain(".gate-status/boundaries.success");
+    expect(heavyPrWorkflow).toContain(".gate-status/public-e2e.success");
+    expect(heavyPrWorkflow).not.toContain(
+      "LOGOUT_OUTCOME: ${{ steps.logout_e2e.outcome }}",
+    );
+    expect(heavyPrWorkflow).not.toContain(
+      "PUBLIC_OUTCOME: ${{ steps.public_e2e.outcome }}",
+    );
+    expect(heavyPrWorkflow).toContain(
+      "github.event_name == 'pull_request' && github.event.pull_request.head.sha || github.sha",
+    );
+
+    expect(onboardingVisualState).toContain("ONBOARDING_LOCATION_FIXTURE");
+    expect(onboardingVisualState).toContain(
+      'page.route("**/rest/v1/locations*"',
+    );
+    expect(onboardingVisualState).toContain(
+      'page.route("**/rest/v1/city_metadata*"',
+    );
+    expect(onboardingVisualState).toContain('"Acupe"');
+    expect(onboardingVisualState).toContain('"Alto das Pombas"');
   });
 
   it("keeps Account workspace independent from paused product domains", () => {
