@@ -60,6 +60,16 @@ describe("CI Auth fixture session boundary", () => {
     );
     expect(edgeFunction).toContain("signInWithPassword");
     expect(edgeFunction).toContain("rateLimitMiddleware");
+    expect(edgeFunction).toContain(
+      'return unauthorized(req, "fixture_auth_failed")',
+    );
+    expect(edgeFunction).toContain(
+      'return unauthorized(req, "fixture_provenance_rejected")',
+    );
+    expect(edgeFunction).toContain(
+      'details: { reason: "github_oidc_rejected" }',
+    );
+    expect(edgeFunction).toContain("return unauthorized(req);");
   });
 
   it("forces the post-merge production smoke onto the OIDC broker", () => {
@@ -77,6 +87,10 @@ describe("CI Auth fixture session boundary", () => {
     expect(oidcBroker).toContain("ACTIONS_ID_TOKEN_REQUEST_URL");
     expect(oidcBroker).toContain("ACTIONS_ID_TOKEN_REQUEST_TOKEN");
     expect(oidcBroker).toContain("GITHUB_SHA");
+    expect(oidcBroker).toContain("GITHUB_REPOSITORY_ID");
+    expect(oidcBroker).toContain("GITHUB_WORKFLOW_REF");
+    expect(oidcBroker).toContain("RUNNER_ENVIRONMENT");
+    expect(oidcBroker).toContain("GitHub OIDC token claim mismatch");
     expect(oidcBroker).toContain("ci-auth-fixture-session");
   });
 

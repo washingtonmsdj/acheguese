@@ -49,8 +49,13 @@ interface GithubOidcClaims extends JWTPayload {
   workflow_ref?: string;
 }
 
-function unauthorized(req: Request): Response {
-  return jsonResponse({ error: "Unauthorized" }, 401, ALLOWED_METHODS, req);
+function unauthorized(req: Request, code?: string): Response {
+  return jsonResponse(
+    code ? { error: "Unauthorized", code } : { error: "Unauthorized" },
+    401,
+    ALLOWED_METHODS,
+    req,
+  );
 }
 
 function invalidRequest(req: Request, message: string): Response {
@@ -187,29 +192,36 @@ Deno.serve(async (req: Request) => {
 
     const marker = data.user?.app_metadata?.acheguese_fixture;
     const fixtureVersion = data.user?.app_metadata?.fixture_version;
-    if (
-      error ||
-      !data.session ||
-      !data.user ||
-      marker !== FIXTURE_MARKER ||
-      fixtureVersion !== FIXTURE_VERSION
-    ) {
+    if (error || !data.session || !data.user) {
       auditLog({
         timestamp: new Date().toISOString(),
         action: "ci_auth_fixture_session",
         resource: "ci-auth-fixture-session",
         status: "failure",
         details: {
-          reason:
-            marker === FIXTURE_MARKER
-              ? "fixture_auth_failed"
-              : "fixture_provenance_rejected",
+          reason: "fixture_auth_failed",
           githubRunId: oidcClaims.run_id ?? null,
           githubSha: oidcClaims.sha ?? null,
         },
         ...auditInfo,
       });
-      return unauthorized(req);
+      return unauthorized(req, "fixture_auth_failed");
+    }
+
+    if (marker !== FIXTURE_MARKER || fixtureVersion !== FIXTURE_VERSION) {
+      auditLog({
+        timestamp: new Date().toISOString(),
+        action: "ci_auth_fixture_session",
+        resource: "ci-auth-fixture-session",
+        status: "failure",
+        details: {
+          reason: "fixture_provenance_rejected",
+          githubRunId: oidcClaims.run_id ?? null,
+          githubSha: oidcClaims.sha ?? null,
+        },
+        ...auditInfo,
+      });
+      return unauthorized(req, "fixture_provenance_rejected");
     }
 
     auditLog({
