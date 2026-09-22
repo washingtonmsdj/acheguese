@@ -39,7 +39,6 @@ describe("MVP core module boundary", () => {
   const ssotWorkflow = read(".github/workflows/ssot-tests.yml");
   const e2eAuthHelper = read("tests/e2e/helpers/auth.ts");
   const accountAuthenticatedE2e = read("tests/e2e/account-authenticated.spec.ts");
-  const packageJson = read("package.json");
   const privateProfileWorkspaceAggregate = read(
     "src/core/profiles/services/profile.workspace.aggregate.ts",
   );
