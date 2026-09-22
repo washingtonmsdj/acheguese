@@ -1,11 +1,10 @@
 import type { Page } from "@playwright/test";
+import { getOperationalEnv } from "../../helpers/operational-env";
 
 const FUNCTION_NAME = "privacy-rpc";
 
 function requireRemoteSupabaseUrl(): string {
-  const value =
-    process.env.E2E_SUPABASE_URL?.trim() ||
-    process.env.VITE_SUPABASE_URL?.trim();
+  const value = getOperationalEnv().supabaseUrl?.trim();
   if (!value) {
     throw new Error(
       "E2E Supabase URL is required for the privacy-rpc preview bridge.",
