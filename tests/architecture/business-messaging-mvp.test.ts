@@ -8,6 +8,7 @@ const read = (path: string) => readFileSync(resolve(root, path), "utf8");
 const migration = read(
   "supabase/migrations/20260921174312_create_business_direct_messaging_mvp.sql",
 );
+const normalizedMigration = migration.replace(/\s+/g, " ");
 const service = read(
   "src/core/messaging/services/BusinessDirectMessagingService.ts",
 );
@@ -64,6 +65,47 @@ describe("Business Messaging MVP", () => {
     expect(migration).toContain("business_direct_thread_rate_limit_exceeded");
     expect(migration).toContain("private.business_direct_message_audit_log");
     expect(migration).toContain("Metadata-only");
+  });
+
+  it("keeps authenticated clients read-only on messaging tables and anon outside RPC execution", () => {
+    const tables = [
+      "business_direct_threads",
+      "business_direct_thread_participants",
+      "business_direct_messages",
+      "business_direct_message_reports",
+    ];
+
+    for (const table of tables) {
+      expect(normalizedMigration).toContain(
+        `REVOKE ALL ON TABLE public.${table} FROM PUBLIC, anon, authenticated;`,
+      );
+      expect(normalizedMigration).toContain(
+        `GRANT SELECT ON TABLE public.${table} TO authenticated;`,
+      );
+    }
+
+    expect(normalizedMigration).not.toMatch(
+      /GRANT (?:INSERT|UPDATE|DELETE|ALL) ON TABLE public\.business_direct_(?:threads|thread_participants|messages|message_reports) TO authenticated;/,
+    );
+
+    const rpcSignatures = [
+      "create_business_direct_thread(UUID, UUID)",
+      "list_business_direct_thread_previews( UUID, INTEGER, TIMESTAMPTZ, UUID, TEXT )",
+      "list_business_direct_messages( UUID, UUID, INTEGER, TIMESTAMPTZ, UUID )",
+      "send_business_direct_message(UUID, UUID, TEXT)",
+      "mark_business_direct_thread_read(UUID, UUID)",
+      "set_business_direct_thread_blocked( UUID, UUID, BOOLEAN, TEXT )",
+      "report_business_direct_thread( UUID, UUID, UUID, TEXT, TEXT )",
+    ];
+
+    for (const signature of rpcSignatures) {
+      expect(normalizedMigration).toContain(
+        `REVOKE ALL ON FUNCTION public.${signature} FROM PUBLIC, anon;`,
+      );
+      expect(normalizedMigration).toContain(
+        `GRANT EXECUTE ON FUNCTION public.${signature} TO authenticated, service_role;`,
+      );
+    }
   });
 
   it("keeps the browser service on RPC + Realtime owners only", () => {
