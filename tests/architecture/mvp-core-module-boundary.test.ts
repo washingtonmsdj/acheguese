@@ -38,6 +38,7 @@ describe("MVP core module boundary", () => {
   const previewE2eRunner = read("tools/release/run-preview-e2e.ps1");
   const ssotWorkflow = read(".github/workflows/ssot-tests.yml");
   const e2eAuthHelper = read("tests/e2e/helpers/auth.ts");
+  const accountAuthenticatedE2e = read("tests/e2e/account-authenticated.spec.ts");
   const operationalEnv = read("tests/helpers/operational-env.ts");
 
   it("keeps domain modules separate from horizontal platform capabilities", () => {
@@ -348,6 +349,12 @@ describe("MVP core module boundary", () => {
     expect(e2eAuthHelper).not.toContain("publicBundles");
     expect(e2eAuthHelper).not.toContain(
       "Unable to discover the public Supabase browser configuration from Production.",
+    );
+    expect(accountAuthenticatedE2e).toContain(
+      "ensureFixtureCurrentTermsAcceptance(client)",
+    );
+    expect(accountAuthenticatedE2e).toContain(
+      'await page.goto("/conta", { waitUntil: "domcontentloaded" })',
     );
 
     for (const workflow of [
