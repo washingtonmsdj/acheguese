@@ -1,0 +1,234 @@
+name: Supabase CI Auth Fixture Session Deploy
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "supabase/functions/ci-auth-fixture-session/**"
+      - "supabase/functions/_shared/security.ts"
+      - "supabase/config.toml"
+      - ".github/workflows/supabase-ci-auth-fixture-session-deploy.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: supabase-ci-auth-fixture-session-production
+  cancel-in-progress: true
+
+env:
+  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: "true"
+  SUPABASE_CLI_VERSION: "2.115.0"
+  SUPABASE_PROJECT_REF: "xhdowzacfujckjelqhtd"
+
+jobs:
+  deploy-ci-auth-fixture-session:
+    name: Exact-main ci-auth-fixture-session deploy
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    env:
+      SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
+
+    steps:
+      - name: Validate immutable main target
+        id: target
+        shell: pwsh
+        env:
+          EVENT_REF: ${{ github.ref }}
+          EVENT_SHA: ${{ github.sha }}
+        run: |
+          $ErrorActionPreference = "Stop"
+
+          if ($env:GITHUB_REPOSITORY -ne "washingtonmsdj/acheguese") {
+            throw "Unexpected repository: $env:GITHUB_REPOSITORY"
+          }
+          if ($env:EVENT_REF -ne "refs/heads/main") {
+            throw "Only refs/heads/main is authorized. Received $env:EVENT_REF"
+          }
+          if ($env:GITHUB_EVENT_NAME -ne "push" -and $env:GITHUB_EVENT_NAME -ne "workflow_dispatch") {
+            throw "Unsupported event: $env:GITHUB_EVENT_NAME"
+          }
+
+          $targetSha = ([string]$env:EVENT_SHA).Trim().ToLowerInvariant()
+          if ($targetSha -notmatch '^[0-9a-f]{40}$') {
+            throw "Target SHA must be exactly 40 hex characters."
+          }
+
+          Add-Content -Path $env:GITHUB_OUTPUT -Value "sha=$targetSha" -Encoding UTF8
+          Write-Host "Exact main SHA accepted: $targetSha"
+
+      - name: Checkout isolated Supabase source at exact SHA
+        uses: actions/checkout@v6
+        with:
+          repository: washingtonmsdj/acheguese
+          ref: ${{ steps.target.outputs.sha }}
+          fetch-depth: 1
+          persist-credentials: false
+          clean: false
+          path: ci-auth-edge-gate
+          sparse-checkout: |
+            supabase
+          sparse-checkout-cone-mode: true
+
+      - name: Assert checkout provenance
+        shell: pwsh
+        working-directory: ci-auth-edge-gate
+        env:
+          EXPECTED_SHA: ${{ steps.target.outputs.sha }}
+        run: |
+          $ErrorActionPreference = "Stop"
+          $actual = (git rev-parse HEAD).Trim().ToLowerInvariant()
+          if ($actual -ne $env:EXPECTED_SHA) {
+            throw "Checkout provenance mismatch. expected=$env:EXPECTED_SHA actual=$actual"
+          }
+          if (git status --porcelain) {
+            throw "Isolated worktree must be clean before production Edge deploy."
+          }
+          Write-Host "Exact checkout provenance confirmed: $actual"
+
+      - name: Validate Supabase credential
+        shell: pwsh
+        run: |
+          $ErrorActionPreference = "Stop"
+          if ([string]::IsNullOrWhiteSpace($env:SUPABASE_ACCESS_TOKEN)) {
+            throw "GitHub Actions secret SUPABASE_ACCESS_TOKEN is missing."
+          }
+          Write-Host "Supabase access credential is present."
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v6
+        with:
+          node-version: "24"
+
+      - name: Pin Supabase CLI
+        shell: pwsh
+        working-directory: ci-auth-edge-gate
+        run: |
+          $ErrorActionPreference = "Stop"
+          $version = (& npx --yes "supabase@$env:SUPABASE_CLI_VERSION" --version).Trim()
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          if ($version -ne $env:SUPABASE_CLI_VERSION) {
+            throw "Unexpected Supabase CLI version: $version"
+          }
+          Write-Host "Supabase CLI pinned: $version"
+
+      - name: Validate CI auth broker source contracts
+        shell: pwsh
+        working-directory: ci-auth-edge-gate
+        run: |
+          $ErrorActionPreference = "Stop"
+
+          $config = Get-Content "supabase/config.toml" -Raw
+          $entry = Get-Content "supabase/functions/ci-auth-fixture-session/index.ts" -Raw
+
+          $section = [regex]::Match(
+            $config,
+            '(?ms)^\[functions\.ci-auth-fixture-session\]\s*(.*?)(?=^\[|\z)'
+          )
+          if (-not $section.Success -or $section.Groups[1].Value -notmatch '(?m)^verify_jwt\s*=\s*false\s*$') {
+            throw "ci-auth-fixture-session must remain verify_jwt=false because GitHub OIDC is verified inside the handler."
+          }
+
+          $requiredMarkers = @(
+            'createRemoteJWKSet',
+            'jwtVerify',
+            'GITHUB_OIDC_AUDIENCE = "acheguese-supabase-ci-auth"',
+            'EXPECTED_REPOSITORY_ID = "1211499732"',
+            'washingtonmsdj/acheguese/.github/workflows/ssot-tests.yml@refs/heads/main',
+            'EXPECTED_REF = "refs/heads/main"',
+            'EXPECTED_EVENT = "push"',
+            'EXPECTED_RUNNER_ENVIRONMENT = "github-hosted"',
+            'claims.sha !== expectedSha',
+            'FIXTURE_MARKER = "account-authenticated-e2e"',
+            'data.user?.app_metadata?.acheguese_fixture',
+            'signInWithPassword',
+            'rateLimitMiddleware',
+            '"fixture_credentials_rejected"',
+            '"fixture_account_unavailable"',
+            '"auth_rate_limited"',
+            '"auth_upstream_unavailable"',
+            '"fixture_auth_failed"',
+            'return fixtureAuthFailureResponse(req, failure)',
+            'return unauthorized(req, "fixture_provenance_rejected")',
+            'details: { reason: "github_oidc_rejected" }',
+            'return unauthorized(req);'
+          )
+          foreach ($marker in $requiredMarkers) {
+            if (-not $entry.Contains($marker)) {
+              throw "ci-auth-fixture-session source contract missing: $marker"
+            }
+          }
+
+          if ($entry.Contains("SUPABASE_SERVICE_ROLE_KEY")) {
+            throw "ci-auth-fixture-session must not depend on service-role authority."
+          }
+
+          Write-Host "GitHub OIDC, fixture provenance, fail-closed diagnostics and no-service-role contracts confirmed."
+
+      - name: Record exact source bundle hashes
+        shell: pwsh
+        working-directory: ci-auth-edge-gate
+        run: |
+          $ErrorActionPreference = "Stop"
+          $files = @(
+            "supabase/functions/ci-auth-fixture-session/index.ts",
+            "supabase/functions/_shared/security.ts"
+          )
+
+          foreach ($file in $files) {
+            if (-not (Test-Path $file)) {
+              throw "Required Edge source missing: $file"
+            }
+            $hash = (Get-FileHash -Algorithm SHA256 $file).Hash.ToLowerInvariant()
+            Write-Host "BUNDLE_SHA256 $file $hash"
+            Add-Content -Path $env:GITHUB_STEP_SUMMARY -Value "- ``$file`` — ``$hash``" -Encoding UTF8
+          }
+
+      - name: Deploy ci-auth-fixture-session from exact checkout
+        shell: pwsh
+        working-directory: ci-auth-edge-gate
+        run: |
+          $ErrorActionPreference = "Stop"
+          & npx --yes "supabase@$env:SUPABASE_CLI_VERSION" functions deploy ci-auth-fixture-session --project-ref $env:SUPABASE_PROJECT_REF --use-api
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+
+      - name: Verify remote function inventory
+        shell: pwsh
+        working-directory: ci-auth-edge-gate
+        run: |
+          $ErrorActionPreference = "Stop"
+          $raw = (& npx --yes "supabase@$env:SUPABASE_CLI_VERSION" functions list --project-ref $env:SUPABASE_PROJECT_REF --output json)
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          $functions = $raw | ConvertFrom-Json
+          $broker = @($functions | Where-Object { $_.slug -eq "ci-auth-fixture-session" -or $_.name -eq "ci-auth-fixture-session" })
+          if ($broker.Count -ne 1) {
+            throw "Expected exactly one remote ci-auth-fixture-session entry; found $($broker.Count)."
+          }
+          if ($broker[0].verify_jwt -ne $false) {
+            throw "Remote ci-auth-fixture-session verify_jwt is not false."
+          }
+          if ($broker[0].status -and $broker[0].status -ne "ACTIVE") {
+            throw "Remote ci-auth-fixture-session is not ACTIVE: $($broker[0].status)"
+          }
+          Write-Host "REMOTE_CI_AUTH_FIXTURE_SESSION version=$($broker[0].version) status=$($broker[0].status) verify_jwt=$($broker[0].verify_jwt)"
+          Add-Content -Path $env:GITHUB_STEP_SUMMARY -Value "- Remote ci-auth-fixture-session version: ``$($broker[0].version)``" -Encoding UTF8
+          Add-Content -Path $env:GITHUB_STEP_SUMMARY -Value "- Remote verify_jwt: ``$($broker[0].verify_jwt)``" -Encoding UTF8
+
+      - name: Record deployment provenance
+        if: always()
+        shell: pwsh
+        env:
+          TARGET_SHA: ${{ steps.target.outputs.sha }}
+        run: |
+          @(
+            "## Supabase ci-auth-fixture-session exact-source gate",
+            "- Repository: washingtonmsdj/acheguese",
+            "- Target SHA: $env:TARGET_SHA",
+            "- Branch authority: main only",
+            "- Project ref: $env:SUPABASE_PROJECT_REF",
+            "- Supabase CLI: $env:SUPABASE_CLI_VERSION",
+            "- verify_jwt must remain false only because GitHub Actions OIDC is verified cryptographically inside the handler.",
+            "- OIDC rejection remains generic; post-OIDC fixture stages may expose only bounded diagnostic codes.",
+            "- Deployment source is the isolated exact-SHA checkout, never a reconstructed bundle."
+          ) | Add-Content -Path $env:GITHUB_STEP_SUMMARY -Encoding UTF8

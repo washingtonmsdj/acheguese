@@ -8,6 +8,7 @@ const read = (path: string) => readFileSync(resolve(root, path), "utf8");
 const edgeFunction = read("supabase/functions/ci-auth-fixture-session/index.ts");
 const config = read("supabase/config.toml");
 const workflow = read(".github/workflows/ssot-tests.yml");
+const deployWorkflow = read(".github/workflows/supabase-ci-auth-fixture-session-deploy.yml");
 const authHelper = read("tests/e2e/helpers/auth.ts");
 const oidcBroker = read("tests/e2e/helpers/fixtureAuthGithubOidcBroker.ts");
 const policy = JSON.parse(
@@ -60,8 +61,17 @@ describe("CI Auth fixture session boundary", () => {
     );
     expect(edgeFunction).toContain("signInWithPassword");
     expect(edgeFunction).toContain("rateLimitMiddleware");
+    expect(edgeFunction).toContain('"fixture_credentials_rejected"');
+    expect(edgeFunction).toContain('"fixture_account_unavailable"');
+    expect(edgeFunction).toContain('"auth_rate_limited"');
+    expect(edgeFunction).toContain('"auth_upstream_unavailable"');
+    expect(edgeFunction).toContain('"fixture_auth_failed"');
+    expect(edgeFunction).toContain("return fixtureAuthFailureResponse(req, failure)");
     expect(edgeFunction).toContain(
-      'return unauthorized(req, "fixture_auth_failed")',
+      'return { code: "auth_upstream_unavailable", status: 503 }',
+    );
+    expect(edgeFunction).toContain(
+      'error: failure.status === 401 ? "Unauthorized" : "Authentication unavailable"',
     );
     expect(edgeFunction).toContain(
       'return unauthorized(req, "fixture_provenance_rejected")',
@@ -100,5 +110,39 @@ describe("CI Auth fixture session boundary", () => {
     expect(entry.kind).toBe("external-oidc-broker");
     expect(entry.label).toContain("GitHub Actions OIDC");
     expect(entry.requiredPatterns.length).toBeGreaterThan(8);
+  });
+
+  it("deploys the broker only from an exact main SHA with remote verification", () => {
+    expect(deployWorkflow).toContain("Supabase CI Auth Fixture Session Deploy");
+    expect(deployWorkflow).toContain('branches: [main]');
+    expect(deployWorkflow).toContain('"supabase/functions/ci-auth-fixture-session/**"');
+    expect(deployWorkflow).toContain('"supabase/functions/_shared/security.ts"');
+    expect(deployWorkflow).toContain("workflow_dispatch:");
+    expect(deployWorkflow).toContain("contents: read");
+    expect(deployWorkflow).toContain("runs-on: ubuntu-latest");
+    expect(deployWorkflow).toContain(
+      'SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}',
+    );
+    expect(deployWorkflow).toContain('ref: ${{ steps.target.outputs.sha }}');
+    expect(deployWorkflow).toContain("persist-credentials: false");
+    expect(deployWorkflow).toContain('SUPABASE_CLI_VERSION: "2.115.0"');
+    expect(deployWorkflow).toContain(
+      "functions deploy ci-auth-fixture-session --project-ref $env:SUPABASE_PROJECT_REF --use-api",
+    );
+    expect(deployWorkflow).toContain(
+      "Remote ci-auth-fixture-session verify_jwt is not false.",
+    );
+    expect(deployWorkflow).toContain("createRemoteJWKSet");
+    expect(deployWorkflow).toContain("jwtVerify");
+    expect(deployWorkflow).toContain(
+      'details: { reason: "github_oidc_rejected" }',
+    );
+    expect(deployWorkflow).not.toContain("--no-verify-jwt");
+    expect(deployWorkflow).toContain(
+      '$entry.Contains("SUPABASE_SERVICE_ROLE_KEY")',
+    );
+    expect(deployWorkflow).not.toMatch(
+      /^\s*SUPABASE_SERVICE_ROLE_KEY\s*:/m,
+    );
   });
 });

@@ -182,4 +182,65 @@ describe("GitHub OIDC fixture auth broker", () => {
     );
     expect(fetchImpl).toHaveBeenCalledTimes(2);
   });
+
+  it("surfaces a bounded credential rejection after valid OIDC", async () => {
+    const fetchImpl = vi
+      .fn<typeof fetch>()
+      .mockResolvedValueOnce(
+        new Response(JSON.stringify({ value: tokenWithClaims() }), {
+          status: 200,
+          headers: { "content-type": "application/json" },
+        }),
+      )
+      .mockResolvedValueOnce(
+        new Response(
+          JSON.stringify({
+            error: "Unauthorized",
+            code: "fixture_credentials_rejected",
+          }),
+          {
+            status: 401,
+            headers: { "content-type": "application/json" },
+          },
+        ),
+      );
+
+    await expect(
+      signInFixtureViaGithubOidcBroker({ ...base, fetchImpl }),
+    ).rejects.toThrow(
+      "CI Auth fixture broker failed: HTTP 401; Unauthorized [fixture_credentials_rejected].",
+    );
+    expect(fetchImpl).toHaveBeenCalledTimes(2);
+  });
+
+  it("treats bounded upstream Auth unavailability as transient", async () => {
+    let brokerCalls = 0;
+    const fetchImpl = vi.fn<typeof fetch>(async (input) => {
+      const url = String(input);
+      if (url.includes("token.actions.githubusercontent.com")) {
+        return new Response(JSON.stringify({ value: tokenWithClaims() }), {
+          status: 200,
+          headers: { "content-type": "application/json" },
+        });
+      }
+
+      brokerCalls += 1;
+      return new Response(
+        JSON.stringify({
+          error: "Authentication unavailable",
+          code: "auth_upstream_unavailable",
+        }),
+        {
+          status: 503,
+          headers: { "content-type": "application/json" },
+        },
+      );
+    });
+
+    await expect(
+      signInFixtureViaGithubOidcBroker({ ...base, fetchImpl }),
+    ).rejects.toThrow("failed after transient-safe retry");
+    expect(brokerCalls).toBe(3);
+    expect(fetchImpl).toHaveBeenCalledTimes(6);
+  });
 });

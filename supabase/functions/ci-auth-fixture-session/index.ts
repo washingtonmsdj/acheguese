@@ -62,6 +62,62 @@ function invalidRequest(req: Request, message: string): Response {
   return jsonResponse({ error: message }, 400, ALLOWED_METHODS, req);
 }
 
+interface FixtureAuthErrorShape {
+  code?: string;
+  status?: number;
+}
+
+interface FixtureAuthFailure {
+  code:
+    | "fixture_credentials_rejected"
+    | "fixture_account_unavailable"
+    | "auth_rate_limited"
+    | "auth_upstream_unavailable"
+    | "fixture_auth_failed";
+  status: 401 | 429 | 503;
+}
+
+function classifyFixtureAuthFailure(
+  error: FixtureAuthErrorShape | null,
+): FixtureAuthFailure {
+  if (error?.code === "invalid_credentials") {
+    return { code: "fixture_credentials_rejected", status: 401 };
+  }
+
+  if (
+    error?.code === "email_not_confirmed" ||
+    error?.code === "phone_not_confirmed" ||
+    error?.code === "user_banned"
+  ) {
+    return { code: "fixture_account_unavailable", status: 401 };
+  }
+
+  if (error?.status === 429) {
+    return { code: "auth_rate_limited", status: 429 };
+  }
+
+  if (typeof error?.status === "number" && error.status >= 500) {
+    return { code: "auth_upstream_unavailable", status: 503 };
+  }
+
+  return { code: "fixture_auth_failed", status: 401 };
+}
+
+function fixtureAuthFailureResponse(
+  req: Request,
+  failure: FixtureAuthFailure,
+): Response {
+  return jsonResponse(
+    {
+      error: failure.status === 401 ? "Unauthorized" : "Authentication unavailable",
+      code: failure.code,
+    },
+    failure.status,
+    ALLOWED_METHODS,
+    req,
+  );
+}
+
 function validateFixtureRequest(
   body: unknown,
   req: Request,
@@ -193,19 +249,20 @@ Deno.serve(async (req: Request) => {
     const marker = data.user?.app_metadata?.acheguese_fixture;
     const fixtureVersion = data.user?.app_metadata?.fixture_version;
     if (error || !data.session || !data.user) {
+      const failure = classifyFixtureAuthFailure(error);
       auditLog({
         timestamp: new Date().toISOString(),
         action: "ci_auth_fixture_session",
         resource: "ci-auth-fixture-session",
         status: "failure",
         details: {
-          reason: "fixture_auth_failed",
+          reason: failure.code,
           githubRunId: oidcClaims.run_id ?? null,
           githubSha: oidcClaims.sha ?? null,
         },
         ...auditInfo,
       });
-      return unauthorized(req, "fixture_auth_failed");
+      return fixtureAuthFailureResponse(req, failure);
     }
 
     if (marker !== FIXTURE_MARKER || fixtureVersion !== FIXTURE_VERSION) {
