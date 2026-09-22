@@ -4,20 +4,6 @@ on:
   workflow_dispatch:
   push:
     branches: [main]
-    paths:
-      - ".github/workflows/ssot-tests.yml"
-      - "README.md"
-      - "SECURITY.md"
-      - "docs/**"
-      - "package.json"
-      - "package-lock.json"
-      - "playwright.config.ts"
-      - "tools/seeds/seed-e2e-users.ts"
-      - "src/app/**"
-      - "src/core/**"
-      - "src/modules/**"
-      - "tests/**"
-      - "supabase/migrations/**"
   pull_request:
     branches: [main, develop]
     paths:
