@@ -80,6 +80,8 @@ As seguintes chamadas a `.normalize('NFD')` em `src/core/` **não foram migradas
 
 **Total**: 25 ocorrências em ~20 arquivos. Nenhuma é do domínio Territory. Todas usam `.normalize('NFD')` para propósitos de negócio (limpeza de texto, matching, slug safety), não para geração de slug territorial.
 
+> **Atualização de proveniência — 2026-09-22:** esta seção registra o censo de 2026-07-23. O antigo `src/core/business/components/NetworkTab.tsx` foi posteriormente aposentado junto com o shell sem rota `DashboardEmpresaPage`; sua menção acima permanece apenas como evidência histórica da sprint P0-B.
+
 ---
 
 ## RISCOS
