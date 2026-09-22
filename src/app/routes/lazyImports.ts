@@ -202,9 +202,6 @@ export const EmpresasCadastroLandingPage = lazy(
 export const EditarEmpresaPage = lazy(
   () => import("@/modules/business/pages/EditarEmpresaPage"),
 );
-export const DashboardEmpresaPage = lazy(
-  () => import("@/app/pages/DashboardEmpresaPage"),
-);
 export const BusinessDashboardShellPage = lazy(
   () => import("@/modules/business/dashboard/pages/BusinessDashboardShellPage"),
 );
