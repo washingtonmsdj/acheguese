@@ -28,6 +28,7 @@ import { Button } from "@/shared/components/ui/button";
 import { useMultiProfileContext } from "@/core/profiles/contexts/multi-profile-runtime-context";
 import { ActiveProfileBadge } from "@/core/profiles/components/ActiveProfileBadge";
 import { getEligibleVerticals, getVerticalByCreateSlug } from "@/core/verticals/config";
+import { isLaunchSurfaceEnabled } from "@/app/config/launchScope";
 import { businessManagementRoutes } from "@/core/business/utils/businessManagementRoutes";
 import { EntityStatus } from "@/shared/types/enums";
 import { locationContextStore } from "@/core/location/stores/LocationContextStore";
@@ -78,6 +79,12 @@ const STEP2_FIELDS = [
   "horario_funcionamento",
   "modos_atendimento",
 ] as const;
+
+function getLaunchEligibleVerticals(category: BusinessCategory) {
+  return getEligibleVerticals(category).filter((vertical) =>
+    isLaunchSurfaceEnabled(vertical.key),
+  );
+}
 
 function getStepErrorMessages(
   errors: Record<string, string>,
@@ -149,10 +156,12 @@ export default function CriarEmpresaPage() {
     };
   }, [activeLocation?.geographic_path]);
 
-  const createVertical = useMemo(
-    () => getVerticalByCreateSlug(verticalSlug ?? searchParams.get("vertical")),
-    [searchParams, verticalSlug],
-  );
+  const createVertical = useMemo(() => {
+    const vertical = getVerticalByCreateSlug(
+      verticalSlug ?? searchParams.get("vertical"),
+    );
+    return vertical && isLaunchSurfaceEnabled(vertical.key) ? vertical : null;
+  }, [searchParams, verticalSlug]);
 
   useEffect(() => {
     setModuleContext("business");
@@ -168,7 +177,9 @@ export default function CriarEmpresaPage() {
   const { createBusinessAsync, isLoading: isCreating, isError, error } = useBusinessCreateMultiProfile({
     onSuccess: (result) => {
       const category = form.getValues("category");
-      const eligibleVerticals = createVertical ? [createVertical] : getEligibleVerticals(category);
+      const eligibleVerticals = createVertical
+        ? [createVertical]
+        : getLaunchEligibleVerticals(category);
 
       if (eligibleVerticals.length > 0) {
         navigate(eligibleVerticals[0].setupRoute(result.profile_id));
@@ -212,7 +223,7 @@ export default function CriarEmpresaPage() {
 
   const selectedCategory = form.watch("category");
   const eligibleVerticals = useMemo(
-    () => getEligibleVerticals(selectedCategory),
+    () => getLaunchEligibleVerticals(selectedCategory),
     [selectedCategory],
   );
 
