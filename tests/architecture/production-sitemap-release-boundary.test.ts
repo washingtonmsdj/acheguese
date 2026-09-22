@@ -53,7 +53,9 @@ describe("production sitemap release boundary", () => {
     expect(waiter).toContain("classifyReleaseIdentityMatch");
     expect(waiter).toContain('cache: "no-store"');
     expect(workflow).toContain("Wait for deployed runtime identity");
-    expect(workflow).toContain("push:\n    branches: [main]\n  pull_request:");
+    expect(workflow).toMatch(
+      /push:\\r?\\n\\s+branches: \\[main\\]\\r?\\n\\s+pull_request:/,
+    );
     expect(workflow).toContain("node tools/release/wait-for-production-release.mjs");
     expect(securityConfig).toContain("RELEASE_IDENTITY");
     expect(securityConfig).toContain("pattern: '/release.json'");
