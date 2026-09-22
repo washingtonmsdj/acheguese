@@ -8,6 +8,12 @@ interface GithubOidcEnvironment {
   requestUrl: string;
   requestToken: string;
   expectedSha: string;
+  repository: string;
+  repositoryId: string;
+  ref: string;
+  workflowRef: string;
+  eventName: string;
+  runnerEnvironment: string;
 }
 
 interface BrokerOptions extends GithubOidcEnvironment {
@@ -44,6 +50,43 @@ function readJsonObject(raw: string): Record<string, unknown> {
   }
 }
 
+function decodeOidcClaims(token: string): Record<string, unknown> {
+  const payload = token.split(".")[1] ?? "";
+  try {
+    const decoded = Buffer.from(payload, "base64url").toString("utf8");
+    return readJsonObject(decoded);
+  } catch {
+    throw new Error("GitHub OIDC token payload is not valid base64url JSON.");
+  }
+}
+
+function assertExpectedOidcClaims(
+  token: string,
+  env: GithubOidcEnvironment,
+): void {
+  const claims = decodeOidcClaims(token);
+  const expected: Record<string, string> = {
+    aud: GITHUB_OIDC_AUDIENCE,
+    repository: env.repository,
+    repository_id: env.repositoryId,
+    ref: env.ref,
+    workflow_ref: env.workflowRef,
+    event_name: env.eventName,
+    runner_environment: env.runnerEnvironment,
+    sha: env.expectedSha,
+  };
+
+  const mismatches = Object.entries(expected)
+    .filter(([key, value]) => claims[key] !== value)
+    .map(([key]) => key);
+
+  if (mismatches.length > 0) {
+    throw new Error(
+      `GitHub OIDC token claim mismatch: ${mismatches.join(", ")}.`,
+    );
+  }
+}
+
 async function requestGithubOidcToken(
   env: GithubOidcEnvironment,
   fetchImpl: typeof fetch,
@@ -64,6 +107,7 @@ async function requestGithubOidcToken(
     );
   }
 
+  assertExpectedOidcClaims(value, env);
   return value;
 }
 
@@ -80,15 +124,45 @@ export function resolveGithubOidcEnvironment(
   const requestUrl = env.ACTIONS_ID_TOKEN_REQUEST_URL?.trim() ?? "";
   const requestToken = env.ACTIONS_ID_TOKEN_REQUEST_TOKEN?.trim() ?? "";
   const expectedSha = env.GITHUB_SHA?.trim().toLowerCase() ?? "";
+  const repository = env.GITHUB_REPOSITORY?.trim() ?? "";
+  const repositoryId = env.GITHUB_REPOSITORY_ID?.trim() ?? "";
+  const ref = env.GITHUB_REF?.trim() ?? "";
+  const workflowRef = env.GITHUB_WORKFLOW_REF?.trim() ?? "";
+  const eventName = env.GITHUB_EVENT_NAME?.trim() ?? "";
+  const runnerEnvironment = env.RUNNER_ENVIRONMENT?.trim() ?? "";
 
-  if (!requestUrl && !requestToken && !expectedSha) return null;
-  if (!requestUrl || !requestToken || !/^[0-9a-f]{40}$/.test(expectedSha)) {
+  const values = [
+    requestUrl,
+    requestToken,
+    expectedSha,
+    repository,
+    repositoryId,
+    ref,
+    workflowRef,
+    eventName,
+    runnerEnvironment,
+  ];
+  if (values.every((value) => !value)) return null;
+  if (
+    values.some((value) => !value) ||
+    !/^[0-9a-f]{40}$/.test(expectedSha)
+  ) {
     throw new Error(
-      "GitHub OIDC broker requires ACTIONS_ID_TOKEN_REQUEST_URL, ACTIONS_ID_TOKEN_REQUEST_TOKEN and a full GITHUB_SHA.",
+      "GitHub OIDC broker requires the complete Actions OIDC and workflow identity environment.",
     );
   }
 
-  return { requestUrl, requestToken, expectedSha };
+  return {
+    requestUrl,
+    requestToken,
+    expectedSha,
+    repository,
+    repositoryId,
+    ref,
+    workflowRef,
+    eventName,
+    runnerEnvironment,
+  };
 }
 
 export async function signInFixtureViaGithubOidcBroker({
@@ -139,8 +213,12 @@ export async function signInFixtureViaGithubOidcBroker({
         typeof body.error === "string" && body.error
           ? `; ${body.error}`
           : "";
+      const stage =
+        typeof body.code === "string" && body.code
+          ? ` [${body.code}]`
+          : "";
       const error = new Error(
-        `CI Auth fixture broker failed: HTTP ${response.status}${message}.`,
+        `CI Auth fixture broker failed: HTTP ${response.status}${message}${stage}.`,
       );
       if (!transientStatus(response.status)) throw error;
       lastError = error;
