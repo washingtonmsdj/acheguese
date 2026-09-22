@@ -4,7 +4,7 @@
 **Data do checkpoint GitHub:** 2026-09-20  
 **Repositório:** `washingtonmsdj/acheguese`  
 **Linha ativa:** `main`  
-**HEAD técnico base desta revalidação:** `194440370e3782751f36e6c6f55819340cf4f78e` (`main` após os PRs #233–#234). O commit deste próprio corte será descendente desse SHA.
+**Candidato atual:** PR #292. O SHA exato muda durante a correção dos últimos gates; somente o head final verde pode ser promovido à `main`.
 
 Este documento consolida ordem de execução, blockers e Definition of Done. Ele é um **registro operacional**, não uma fotografia autoritativa do que existe no produto. A fonte de verdade para decidir o que existe, o que está ativo e o que deve ser corrigido é sempre o **projeto real**: código da `main`, rotas, owners, serviços, schema/migrations, contratos, testes, deploy/runtime e comportamento observado.
 
@@ -58,7 +58,7 @@ O primeiro release continua territorial. **Cobertura uniforme dos 170 bairros de
 - [x] Gastronomia removeu rotas/telas `concept-mock` do roteador normal e consolidou checkout/rastreamento nas implementações reais.
 - [x] Conta e Mensagens não possuem mais bypass DEV de `ProtectedRoute`; perfis/conversas demonstrativos foram removidos do runtime.
 - [x] Mensagens usa perfis da sessão e threads persistidas, limpa estado privado ao trocar perfil e não exibe controles sem ação real.
-- [x] O E2E de launch scope foi sincronizado com `communityCommunication: true`.
+- [x] O E2E de launch scope mantém `communityCommunication=false` e prova fail-closed para Community enquanto Messaging horizontal permanece independente e ativo com provider Business.
 - [x] Cadastro de interesse deixou de sintetizar identidade de e-mail e aceita telefone como canal real quando aplicável (PR #221; migration remota `20260920012056_allow_phone_only_community_interest_mvp`).
 - [x] Novas solicitações automáticas de exclusão de conta ficam fail-closed no MVP: rollout certificado + flag de ambiente são obrigatórios, a UI direciona ao canal DPO e o `PrivacySettingsService` bloqueia callers diretos; solicitações antigas continuam visíveis/canceláveis sem promessa de purge automático.
 - [x] Empresas R4 parcial: a vitrine filtra categorias de módulos pausados antes de qualquer derivação visual; probe remoto rollback-only provou `public_business_search` → `get_public_business_snapshot_by_slug` → URL canônica com dado real do território de lançamento. Browser E2E/deploy same-SHA seguem pendentes por infraestrutura. Ver `checkpoints/2026-09-21-business-mvp-public-flow.md`.
@@ -70,7 +70,7 @@ O primeiro release continua territorial. **Cobertura uniforme dos 170 bairros de
 - [x] Tipos Supabase foram revalidados no SHA auditado: Git e runtime têm 731731 caracteres normalizados e `exact=true`.
 - [x] O Supabase canônico mantém 60 Edge Functions implantadas e as 60 estão `ACTIVE`; as funções versionadas mas deliberadamente não implantadas continuam sujeitas ao rollout/authority próprio.
 - [~] Reconciliação de migrations avançou no PR #225 sem executar DDL. Após Safety G71/G72/G75–G80, o estado chegou a 683 locais, 666 remotas, 657 exatas, 26 local-only e 9 remote-only.
-- [~] CI voltou a executar em runner hospedado no PR #292: Security Check, Security Scan, SSOT Enforcement e SSOT Territorial Tests já criaram jobs com steps reais. Falta concluir os gates e registrar seus resultados no SHA candidato; o Heavy PR gate ainda pode depender da disponibilidade do runner configurado para ele.
+- [~] CI hospedado está executável no PR #292: Security, Auth, SSOT, E2E e Heavy já rodaram em runners GitHub reais. O Heavy automático usa `windows-latest`; o workflow manual self-hosted permanece apenas como opção especial. Falta certificar o head final exato e o deploy de produção.
 - [ ] Vercel continua sem permitir nova prova de deploy por limite diário de builds; isso não conta como build aprovado.
 - [~] O ledger de migrations avançou sem executar DDL: G71/G72/G75–G80 foram alinhadas às oito identidades `reconcile_*` realmente registradas no Supabase após prova de equivalência token-a-token. Estado daquela etapa: 683 locais / 666 remotas / 657 exatas / 26 local-only / 9 remote-only.
 - [~] Quatro identidades adicionais de Mobilidade foram alinhadas após prova token-a-token: `remove_provisional_mobility_fare_floor`, `persist_mobility_cancellation_reason`, `enforce_server_owned_mobility_quotes` e `require_explicit_mobility_quote_id`. O bloco de preço terminal da entrega não foi alterado porque o SQL remoto é materialmente diferente.
@@ -80,7 +80,7 @@ O primeiro release continua territorial. **Cobertura uniforme dos 170 bairros de
 - [x] Eventos voltou a ter persistência canônica de itens salvos: `event_saved_items` foi criado com RLS forçada, policies own-only e o registry de `ProfileSavedEntityService` deixou de apontar para `event_favorites` já aposentado.
 - [x] G36/G37 foram promovidos após dry-run: RPCs legados de Perfil foram removidos sem `CASCADE`, e os brokers profissionais passaram a rejeitar cobertura textual legada também no boundary SQL.
 - [x] Ledger de migrations fechado: **673 locais ativas / 673 remotas / 673 exatas / 0 local-only / 0 remote-only**. Os 13 SQLs não aplicados de Mobilidade foram preservados como pending, coerente com `PUBLIC_LAUNCH_SURFACES.mobility=false`.
-- [~] O `Heavy Pre-Merge Certification` self-hosted existente foi ampliado para executar security/lint/typecheck/arquitetura/SSOT/migrations remotas/Vitest antes dos E2E/build no mesmo SHA. Isso cria um fallback executável no runner autorizado sem substituir os checks hosted; falta o runner `acheguese-heavy-windows` voltar a ficar online e produzir a prova.
+- [x] O Heavy automático de PR foi migrado para `windows-latest`, preservando provenance, exact-SHA, LGPD/security contracts, arquitetura MVP e E2Es. O workflow manual self-hosted continua disponível como caminho especial, mas não é requisito para certificar PRs do próprio repositório.
 - [x] Canal DPO público revalidado: `submit-dpo-request` está ACTIVE, com origin/rate-limit/honeypot/Turnstile fail-closed; testes DPO foram realinhados às migrations canônicas e `.env.production` agora declara a `VITE_TURNSTILE_SITE_KEY` exigida pelo gate. O `admin-privacy-rpc` remoto ainda está em v3 sem o fallback de paginação da `main`, pendente do rollout self-hosted autorizado.
 - [x] O publisher de tipos Supabase não escreve mais diretamente na `main`: `supabase-types-sync.yml` usa a branch `automation/supabase-types-sync`, cria/atualiza PR, dispara Security/SSOT gates e o ratchet `supabase-types-sync-pr-authority.test.ts` impede regressão.
 - [x] O gate de deploy legal foi endurecido: `VITE_LEGAL_FORUM` tornou-se obrigatório, `VITE_CONTACT_EMAIL`/`VITE_DPO_EMAIL` precisam ter formato válido e `VITE_PUBLIC_SITE_URL` precisa usar HTTPS; o ratchet DPO protege esse contrato.
