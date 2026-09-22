@@ -39,6 +39,9 @@ describe("MVP core module boundary", () => {
   const ssotWorkflow = read(".github/workflows/ssot-tests.yml");
   const e2eAuthHelper = read("tests/e2e/helpers/auth.ts");
   const accountAuthenticatedE2e = read("tests/e2e/account-authenticated.spec.ts");
+  const privateProfileWorkspaceAggregate = read(
+    "src/core/profiles/services/profile.workspace.aggregate.ts",
+  );
   const operationalEnv = read("tests/helpers/operational-env.ts");
 
   it("keeps domain modules separate from horizontal platform capabilities", () => {
@@ -367,6 +370,27 @@ describe("MVP core module boundary", () => {
       );
       expect(workflow).toContain("cancel-in-progress: false");
     }
+  });
+
+  it("keeps Account workspace independent from paused product domains", () => {
+    expect(privateProfileWorkspaceAggregate).toContain(
+      "optionalWorkspaceRead",
+    );
+    expect(privateProfileWorkspaceAggregate).toContain(
+      "Paused domains never participate in the Account critical path.",
+    );
+    expect(privateProfileWorkspaceAggregate).not.toContain(
+      'professional/services/professional.queries',
+    );
+    expect(privateProfileWorkspaceAggregate).not.toContain(
+      'classifieds/services',
+    );
+    expect(privateProfileWorkspaceAggregate).not.toContain(
+      'billing/services/EntitlementResolver',
+    );
+    expect(privateProfileWorkspaceAggregate).not.toContain(
+      'from("gastronomy_profiles")',
+    );
   });
 
   it("keeps exact-SHA release certification focused on the active MVP while preserving global quality gates", () => {
