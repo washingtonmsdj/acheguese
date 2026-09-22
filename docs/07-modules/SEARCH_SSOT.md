@@ -22,7 +22,10 @@ Cada dominio conserva:
 A composition root `src/core/search/providers/searchProviders.ts` registra os
 providers de Comunidades, Empresas, Profissionais, Oportunidades,
 Classificados, Eventos e Posts. Cada provider delega para o service canonico do
-dominio correspondente. `SearchDocument` e somente um read model para
+dominio correspondente. No corte MVP, somente Business — dominio ativo — fica
+como dependencia runtime estatica de Search. Services de dominios pausados sao
+carregados por `import()` dentro do provider e somente quando o launch gate
+habilita esse provider. `SearchDocument` e somente um read model para
 apresentacao e descoberta; nunca substitui a entidade canonica.
 
 ## 2. Fluxo canonico
@@ -100,8 +103,9 @@ Nenhum desses contratos substitui `SearchService`.
 - provider indisponivel retorna bucket vazio sem apagar providers saudaveis;
 - cancelamento e cooperativo antes e depois das chamadas de dominio e o
   `AbortError` nunca e convertido em sucesso vazio;
-- launch gates impedem consultas de Eventos/Oportunidades quando a superficie
-  correspondente estiver pausada.
+- launch gates impedem consultas e carregamento runtime dos services de
+  dominios pausados; Business permanece o unico provider de dominio carregado
+  estaticamente no MVP.
 
 O contrato atual entrega um conjunto superior limitado e nao oferece
 paginacao. Adicionar cursor artificial sem ranking federado estavel nao e
@@ -138,6 +142,8 @@ do fechamento; nao existe segunda copia ativa do hook.
 
 - novos dominios entram por `SearchProvider`, nunca por branch em
   `SearchService`;
+- provider de dominio pausado nao pode introduzir import runtime top-level no
+  composition root; use carregamento lazy dentro do provider, depois do gate;
 - provider nao pode gravar nem tornar Search owner do dominio;
 - SearchService/providers nao podem acessar Supabase diretamente;
 - Search nao pode consultar `public_business_search` ou

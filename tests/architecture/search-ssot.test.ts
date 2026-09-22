@@ -30,6 +30,48 @@ describe("Federated Search ownership", () => {
     expect(providers).not.toContain("public_professional_search");
   });
 
+  it("keeps paused domain runtimes lazy behind launch-enabled providers", () => {
+    const providers = read("src/core/search/providers/searchProviders.ts");
+
+    expect(providers).toContain(
+      'import { BusinessService } from "@/core/business";',
+    );
+
+    for (const forbiddenStaticImport of [
+      'import { ClassifiedUrlService',
+      'import { CommunityExperienceService',
+      'import { ProfessionalService',
+      'import { ProfessionalUrlService',
+      'import { searchPublicPosts',
+      'import { eventsReadService',
+      'import { eventPublicRoutes',
+      'import { WorkOpportunitiesService',
+    ]) {
+      expect(providers, forbiddenStaticImport).not.toContain(forbiddenStaticImport);
+    }
+
+    for (const lazyModule of [
+      "@/core/community-experience/services/CommunityExperienceService",
+      "@/core/professional/services/ProfessionalService",
+      "@/core/professional/services/ProfessionalUrlService",
+      "@/core/work-opportunities",
+      "@/core/classifieds/services",
+      "@/core/community-events",
+      "@/core/community-events/routes/eventPublicRoutes",
+      "@/core/posts/services",
+    ]) {
+      expect(providers, lazyModule).toContain(lazyModule);
+    }
+
+    expect(providers).toContain("await import(");
+    expect(providers).toContain('isEnabled: () => isLaunchSurfaceEnabled("business")');
+    expect(providers).toContain('isEnabled: () => isLaunchSurfaceEnabled("services")');
+    expect(providers).toContain('isEnabled: () => isLaunchSurfaceEnabled("classifieds")');
+    expect(providers).toContain('isEnabled: () => isLaunchSurfaceEnabled("events")');
+    expect(providers).toContain('isEnabled: () => isLaunchSurfaceEnabled("jobs")');
+    expect(providers).toContain('isEnabled: () => isLaunchSurfaceEnabled("community")');
+  });
+
   it("keeps domain read models owned by Business and Professional", () => {
     const businessQueries = read("src/core/business/services/business.queries.ts");
     const professionalQueries = read(
