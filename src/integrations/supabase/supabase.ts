@@ -15,6 +15,7 @@ import type { Database } from "./types.generated";
 import { createBrowserAuthStorage } from "./cookieStorage";
 import { AUTH_STORAGE_KEY } from "@/shared/config/security.config";
 import { PUBLIC_SUPABASE_CONFIG } from "@/shared/config/publicSupabase";
+import { createSupabaseApiKeySafeFetch } from "./apiKeySafeFetch";
 
 const viteEnv = typeof import.meta !== "undefined" ? import.meta.env : undefined;
 const nodeEnv = typeof process !== "undefined" ? process.env : undefined;
@@ -49,6 +50,11 @@ export const supabase = createClient<Database>(
   PUBLIC_SUPABASE_CONFIG.url,
   PUBLIC_SUPABASE_CONFIG.publishableKey,
   {
+    global: {
+      fetch: createSupabaseApiKeySafeFetch(
+        PUBLIC_SUPABASE_CONFIG.publishableKey,
+      ),
+    },
     auth: {
       storage: typeof window !== "undefined" ? createBrowserAuthStorage() : undefined,
       storageKey: AUTH_STORAGE_KEY,
