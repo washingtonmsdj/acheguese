@@ -9,7 +9,7 @@ const outputPath = resolve(process.cwd(), "dist", "release.json");
 mkdirSync(resolve(process.cwd(), "dist"), { recursive: true });
 
 const identity = buildReleaseIdentity();
-writeFileSync(outputPath, JSON.stringify(identity, null, 2) + "\\n", "utf8");
+writeFileSync(outputPath, JSON.stringify(identity, null, 2) + "\n", "utf8");
 
 const persisted = JSON.parse(readFileSync(outputPath, "utf8"));
 if (classifyReleaseIdentityMatch(identity, persisted) !== "exact") {
