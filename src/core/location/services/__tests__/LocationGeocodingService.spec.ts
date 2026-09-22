@@ -159,6 +159,9 @@ describe('LocationGeocodingService', () => {
           },
         ],
       }),
+      loadLocationAliases: async () => [],
+      loadTerritorialGroupMembers: async () => [],
+      matchDistrictIdByPoint: async () => null,
       locationRepository: new RepositoryStub([state, city, district]),
     });
 
@@ -195,6 +198,9 @@ describe('LocationGeocodingService', () => {
           },
         ],
       }),
+      loadLocationAliases: async () => [],
+      loadTerritorialGroupMembers: async () => [],
+      matchDistrictIdByPoint: async () => null,
       locationRepository: new RepositoryStub([state, city, district]),
     });
 
@@ -226,6 +232,9 @@ describe('LocationGeocodingService', () => {
           coordinates: { latitude: -12.981, longitude: -38.455 },
         }),
       }),
+      loadLocationAliases: async () => [],
+      loadTerritorialGroupMembers: async () => [],
+      matchDistrictIdByPoint: async () => null,
       locationRepository: new RepositoryStub([state, city, district]),
     });
 
@@ -253,6 +262,9 @@ describe('LocationGeocodingService', () => {
           coordinates: { latitude: -12.3169, longitude: -38.7668 },
         }),
       }),
+      loadLocationAliases: async () => [],
+      loadTerritorialGroupMembers: async () => [],
+      matchDistrictIdByPoint: async () => null,
       locationRepository: new RepositoryStub([state, city, district, conceicaoDoJacuipe]),
     });
 
