@@ -8,6 +8,7 @@ const read = (path: string) => readFileSync(resolve(root, path), "utf8");
 const migration = read(
   "supabase/migrations/20260921174312_create_business_direct_messaging_mvp.sql",
 );
+const normalizedMigration = migration.replace(/\s+/g, " ");
 const service = read(
   "src/core/messaging/services/BusinessDirectMessagingService.ts",
 );
@@ -32,6 +33,17 @@ const platformRegistry = read(
 const realtimeRegistry = read(
   "src/core/realtime/config/realtimeRegistry.ts",
 );
+const advisorResidualRegister = JSON.parse(
+  read(
+    "docs/09-reference/governance/security/SUPABASE_ADVISOR_RESIDUALS.json",
+  ),
+) as {
+  residuals: Array<{
+    cacheKey: string;
+    callerClass?: string;
+    exceptionId: string;
+  }>;
+};
 
 describe("Business Messaging MVP", () => {
   it("keeps Business messaging as a dedicated aggregate with server-owned writes", () => {
@@ -64,6 +76,71 @@ describe("Business Messaging MVP", () => {
     expect(migration).toContain("business_direct_thread_rate_limit_exceeded");
     expect(migration).toContain("private.business_direct_message_audit_log");
     expect(migration).toContain("Metadata-only");
+  });
+
+  it("keeps authenticated clients read-only on messaging tables and anon outside RPC execution", () => {
+    const tables = [
+      "business_direct_threads",
+      "business_direct_thread_participants",
+      "business_direct_messages",
+      "business_direct_message_reports",
+    ];
+
+    for (const table of tables) {
+      expect(normalizedMigration).toContain(
+        `REVOKE ALL ON TABLE public.${table} FROM PUBLIC, anon, authenticated;`,
+      );
+      expect(normalizedMigration).toContain(
+        `GRANT SELECT ON TABLE public.${table} TO authenticated;`,
+      );
+    }
+
+    expect(normalizedMigration).not.toMatch(
+      /GRANT (?:INSERT|UPDATE|DELETE|ALL) ON TABLE public\.business_direct_(?:threads|thread_participants|messages|message_reports) TO authenticated;/,
+    );
+
+    const rpcSignatures = [
+      "create_business_direct_thread(UUID, UUID)",
+      "list_business_direct_thread_previews( UUID, INTEGER, TIMESTAMPTZ, UUID, TEXT )",
+      "list_business_direct_messages( UUID, UUID, INTEGER, TIMESTAMPTZ, UUID )",
+      "send_business_direct_message(UUID, UUID, TEXT)",
+      "mark_business_direct_thread_read(UUID, UUID)",
+      "set_business_direct_thread_blocked( UUID, UUID, BOOLEAN, TEXT )",
+      "report_business_direct_thread( UUID, UUID, UUID, TEXT, TEXT )",
+    ];
+
+    for (const signature of rpcSignatures) {
+      expect(normalizedMigration).toContain(
+        `REVOKE ALL ON FUNCTION public.${signature} FROM PUBLIC, anon;`,
+      );
+      expect(normalizedMigration).toContain(
+        `GRANT EXECUTE ON FUNCTION public.${signature} TO authenticated, service_role;`,
+      );
+    }
+  });
+
+  it("classifies every intentional Business Messaging SECURITY DEFINER endpoint individually", () => {
+    const expectedCacheKeys = [
+      "authenticated_security_definer_function_executable_public_create_business_direct_thread_p_profile_id uuid, p_business_id uuid",
+      "authenticated_security_definer_function_executable_public_list_business_direct_messages_p_profile_id uuid, p_thread_id uuid, p_limit integer, p_cursor_created_at timestamp with time zone, p_cursor_id uuid",
+      "authenticated_security_definer_function_executable_public_list_business_direct_thread_previews_p_profile_id uuid, p_limit integer, p_cursor_last_message_at timestamp with time zone, p_cursor_id uuid, p_search text",
+      "authenticated_security_definer_function_executable_public_mark_business_direct_thread_read_p_profile_id uuid, p_thread_id uuid",
+      "authenticated_security_definer_function_executable_public_report_business_direct_thread_p_profile_id uuid, p_thread_id uuid, p_message_id uuid, p_reason text, p_description text",
+      "authenticated_security_definer_function_executable_public_send_business_direct_message_p_profile_id uuid, p_thread_id uuid, p_body text",
+      "authenticated_security_definer_function_executable_public_set_business_direct_thread_blocked_p_profile_id uuid, p_thread_id uuid, p_blocked boolean, p_reason text",
+    ];
+
+    for (const cacheKey of expectedCacheKeys) {
+      const residual = advisorResidualRegister.residuals.find(
+        (entry) => entry.cacheKey === cacheKey,
+      );
+
+      expect(residual).toMatchObject({
+        cacheKey,
+        callerClass: "authenticated_user_endpoint",
+        exceptionId: "EXC-2026-07-15-POSTGREST-SECURITY-DEFINER-COMMANDS",
+      });
+    }
   });
 
   it("keeps the browser service on RPC + Realtime owners only", () => {
