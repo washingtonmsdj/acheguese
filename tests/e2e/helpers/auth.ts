@@ -5,6 +5,10 @@ import {
   getOperationalEnv,
 } from "../../helpers/operational-env";
 import { signInFixtureWithPasswordGrant } from "./fixtureAuthPasswordGrant";
+import {
+  resolveGithubOidcEnvironment,
+  signInFixtureViaGithubOidcBroker,
+} from "./fixtureAuthGithubOidcBroker";
 
 // Credenciais de teste — lidas de variáveis de ambiente
 export const TEST_USER = {
@@ -112,8 +116,9 @@ export async function bootstrapProtectedPreviewAccess(page: Page): Promise<void>
 }
 
 /**
- * Authenticates the dedicated fixture through the public Supabase Auth API
- * and installs the resulting session in the same cookie contract used by the
+ * Authenticates the dedicated fixture through the explicitly selected transport.
+ * Production CI requires the GitHub OIDC Edge broker; local workflows may use
+ * the direct password grant. The resulting real session is installed in the
  * browser client. This avoids making CI depend on solving Cloudflare
  * Turnstile while preserving the real Production session and authorization
  * path for the application.
@@ -129,12 +134,36 @@ export async function bootstrapFixtureSession(
     url,
     publishableKey,
   );
-  const tokenSession = await signInFixtureWithPasswordGrant({
-    supabaseUrl: url,
-    publishableKey,
-    email,
-    password,
-  });
+  const authTransport =
+    process.env.E2E_AUTH_TRANSPORT?.trim() || "direct-password-grant";
+  const tokenSession =
+    authTransport === "github-oidc-broker"
+      ? await (async () => {
+          const oidcEnv = resolveGithubOidcEnvironment();
+          if (!oidcEnv) {
+            throw new Error(
+              "Production authenticated E2E requires GitHub OIDC broker environment; direct Auth fallback is forbidden.",
+            );
+          }
+          return signInFixtureViaGithubOidcBroker({
+            supabaseUrl: url,
+            email,
+            password,
+            ...oidcEnv,
+          });
+        })()
+      : authTransport === "direct-password-grant"
+        ? await signInFixtureWithPasswordGrant({
+            supabaseUrl: url,
+            publishableKey,
+            email,
+            password,
+          })
+        : (() => {
+            throw new Error(
+              `Unsupported E2E_AUTH_TRANSPORT: ${authTransport}`,
+            );
+          })();
   const { data: sessionData, error: sessionError } = await client.auth.setSession({
     access_token: tokenSession.access_token,
     refresh_token: tokenSession.refresh_token,

@@ -7,6 +7,7 @@ import {
 
 export const EDGE_FUNCTION_NO_JWT_POLICY_KINDS = new Set([
   'cron-secret',
+  'external-oidc-broker',
   'public-auth-broker',
   'public-counter-broker',
   'public-proxy',

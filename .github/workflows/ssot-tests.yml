@@ -146,6 +146,9 @@ jobs:
   authenticated_account_e2e:
     name: Authenticated Account + Business E2E (Production smoke)
     if: github.event_name != 'pull_request'
+    permissions:
+      contents: read
+      id-token: write
     concurrency:
       group: acheguese-authenticated-e2e-fixture
       cancel-in-progress: false
@@ -155,6 +158,7 @@ jobs:
       PLAYWRIGHT_BASE_URL: https://acheguese.com.br
       E2E_SUPABASE_URL: https://xhdowzacfujckjelqhtd.supabase.co
       E2E_SUPABASE_PUBLISHABLE_KEY: sb_publishable_dc-rd2YjKuZ5KJc_zRYVYA_ANmcFxKk
+      E2E_AUTH_TRANSPORT: github-oidc-broker
       E2E_USER_EMAIL: ${{ secrets.E2E_USER_EMAIL }}
       E2E_USER_PASSWORD: ${{ secrets.E2E_USER_PASSWORD }}
 
@@ -196,7 +200,7 @@ jobs:
           echo "Runtime identity mode: ${{ steps.release_identity.outputs.mode }}; deployed SHA: ${{ steps.release_identity.outputs.deployed_sha }}; expected SHA: ${{ steps.release_identity.outputs.expected_sha }}." >> "$GITHUB_STEP_SUMMARY"
           echo "This post-merge smoke validates the deployed Production surface against the canonical remote Supabase project." >> "$GITHUB_STEP_SUMMARY"
           echo "Business lifecycle mutations are limited to the dedicated account-authenticated-e2e fixture and cleaned through owner RLS." >> "$GITHUB_STEP_SUMMARY"
-          echo "No service-role key is exposed to the browser job." >> "$GITHUB_STEP_SUMMARY"
+          echo "Fixture Auth transport: GitHub OIDC -> Supabase Edge broker; no service-role key is exposed to the browser job." >> "$GITHUB_STEP_SUMMARY"
 
       - name: Upload authenticated E2E report (non-gating transport)
         if: always()

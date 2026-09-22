@@ -25,6 +25,8 @@ const EXPLICIT_MVP_CONTRACTS = [
   "src/core/routing/seo/__tests__/generateSitemap.spec.ts",
   "src/integrations/supabase/apiKeySafeFetch.spec.ts",
   "tests/e2e/helpers/fixtureAuthPasswordGrant.spec.ts",
+  "tests/e2e/helpers/fixtureAuthGithubOidcBroker.spec.ts",
+  "tests/security/ci-auth-fixture-session-contract.test.ts",
   "tests/architecture/mvp-core-module-boundary.test.ts",
   "tests/architecture/map-business-bounded-read.test.ts",
   "tests/architecture/nearby-proximity-truthfulness.test.ts",
