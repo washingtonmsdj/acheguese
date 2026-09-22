@@ -10,6 +10,7 @@ describe("MVP core module boundary", () => {
   const platformRegistry = read("src/app/config/platformCapabilityRegistry.ts");
   const lifecycleRegistry = read("src/app/config/lifecycleRegistry.ts");
   const launchScope = read("src/app/config/launchScope.ts");
+  const domainMapping = read("docs/02-domain/DOMAIN-MAPPING.md");
   const entry = read("src/app/pages/TerritoryEntryPage.tsx");
   const home = read("src/app/pages/TerritoryHomePage.tsx");
   const howItWorks = read("src/app/pages/ComoFuncionaPage.tsx");
@@ -66,6 +67,20 @@ describe("MVP core module boundary", () => {
     );
   });
 
+  it("keeps living Territory docs aligned with the domain/capability lifecycle split", () => {
+    expect(domainMapping).toContain(
+      "**Business/Empresas** é o único domínio de produto ativo",
+    );
+    expect(domainMapping).toContain("platformCapabilityRegistry.ts");
+    expect(domainMapping).toContain("lifecycleRegistry.ts");
+    expect(domainMapping).toContain("Capability horizontal Map");
+    expect(domainMapping).toContain("Capability horizontal Nearby");
+    expect(domainMapping).not.toContain("como módulos de produto ativos");
+    expect(domainMapping).not.toContain("Módulo Map");
+    expect(domainMapping).not.toContain("Módulo Nearby");
+    expect(domainMapping).not.toContain("capability Community/Feed");
+  });
+
   it("keeps the public entry pointed only at the MVP core", () => {
     expect(entry).toContain("launchBusinessUrl");
     expect(entry).toContain("launchMapUrl");
@@ -77,7 +92,7 @@ describe("MVP core module boundary", () => {
     expect(entry).toContain("buildLoginPath(ACCOUNT_PATH)");
   });
 
-  it("keeps institutional product copy aligned with the four-module MVP", () => {
+  it("keeps institutional product copy aligned with Business plus active platform capabilities", () => {
     expect(howItWorks).toContain('title: "Empresas"');
     expect(howItWorks).toContain('title: "Mapa"');
     expect(howItWorks).toContain('title: "Perto de mim"');
@@ -95,7 +110,7 @@ describe("MVP core module boundary", () => {
     }
   });
 
-  it("keeps the active Home limited to the four MVP product modules", () => {
+  it("keeps the active Home limited to Business plus active horizontal capabilities", () => {
     expect(home).toContain("MODULE_SLUGS.business");
     expect(home).toContain("MODULE_SLUGS.map");
     expect(home).toContain("APP_MODULE_SLUGS.nearby");
@@ -267,7 +282,7 @@ describe("MVP core module boundary", () => {
     expect(territoryNavigation).not.toContain('id: "activity"');
   });
 
-  it("keeps release E2E aligned with the four-module MVP instead of the retired community-first contract", () => {
+  it("keeps release E2E aligned with the active MVP lifecycle instead of the retired community-first contract", () => {
     expect(publicMvpE2e).toContain("/empresas/ba/salvador/pituba");
     expect(publicMvpE2e).toContain("/mapa/ba/salvador/pituba");
     expect(publicMvpE2e).toContain("/perto-de-mim");
