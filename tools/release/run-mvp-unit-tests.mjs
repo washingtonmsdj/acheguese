@@ -39,6 +39,7 @@ const EXPLICIT_MVP_CONTRACTS = [
   "tests/architecture/geolocation-ssot-boundary.test.ts",
   "tests/regression/public/search-route.test.ts",
   "tests/release/vercel-ignore-build.test.mjs",
+  "tests/release/release-identity.test.mjs",
   "tests/security/lgpd-purge-policy-security.test.ts",
   "tests/security/account-operational-edge-policy.test.ts",
   "tests/security/session-rpc-auth-authority-security.test.ts",
