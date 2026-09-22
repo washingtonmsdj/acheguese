@@ -165,6 +165,9 @@ verify_jwt = true
 [functions.auth-username-login]
 verify_jwt = false
 
+[functions.ci-auth-fixture-session]
+verify_jwt = false
+
 [functions.auto-dispatch-ride]
 verify_jwt = false
 
