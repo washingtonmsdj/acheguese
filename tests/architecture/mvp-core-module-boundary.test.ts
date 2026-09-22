@@ -39,6 +39,7 @@ describe("MVP core module boundary", () => {
   const ssotWorkflow = read(".github/workflows/ssot-tests.yml");
   const e2eAuthHelper = read("tests/e2e/helpers/auth.ts");
   const accountAuthenticatedE2e = read("tests/e2e/account-authenticated.spec.ts");
+  const packageJson = read("package.json");
   const privateProfileWorkspaceAggregate = read(
     "src/core/profiles/services/profile.workspace.aggregate.ts",
   );
@@ -352,6 +353,14 @@ describe("MVP core module boundary", () => {
     expect(e2eAuthHelper).not.toContain("publicBundles");
     expect(e2eAuthHelper).not.toContain(
       "Unable to discover the public Supabase browser configuration from Production.",
+    );
+    expect(e2eAuthHelper).toContain("FIXTURE_AUTH_MAX_ATTEMPTS = 3");
+    expect(e2eAuthHelper).toContain("isTransientFixtureAuthError");
+    expect(e2eAuthHelper).toContain(
+      "Fixture Auth bootstrap failed after transient-safe retry",
+    );
+    expect(packageJson).toContain(
+      "tests/e2e/messaging-authenticated.spec.ts --project=chromium --reporter=list --retries=0",
     );
     expect(accountAuthenticatedE2e).toContain(
       "ensureFixtureCurrentTermsAcceptance(client)",
