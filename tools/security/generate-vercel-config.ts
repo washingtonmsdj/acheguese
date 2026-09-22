@@ -27,7 +27,8 @@ const VERCEL_CONFIG_TEMPLATE = {
   $schema: "https://openapi.vercel.sh/vercel.json",
   git: {
     deploymentEnabled: {
-      "*": false,
+      // Globstar is intentional: it also matches branch names containing "/".
+      "**": false,
       main: true,
     },
   },
@@ -100,7 +101,7 @@ function generateVercelConfig() {
   };
 
   if (
-    generated.git?.deploymentEnabled?.["*"] !== false ||
+    generated.git?.deploymentEnabled?.["**"] !== false ||
     generated.git?.deploymentEnabled?.main !== true
   ) {
     throw new Error(

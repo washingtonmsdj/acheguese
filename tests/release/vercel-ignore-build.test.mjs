@@ -11,11 +11,11 @@ import {
 const ROOT = process.cwd();
 
 describe("Vercel ignored build step", () => {
-  it("is wired through the canonical Vercel project config", () => {
+  it("disables automatic Vercel deployments for every non-main branch, including slash-named branches", () => {
     const config = JSON.parse(readFileSync(join(ROOT, "vercel.json"), "utf8"));
 
     expect(config.git?.deploymentEnabled).toEqual({
-      "*": false,
+      "**": false,
       main: true,
     });
     expect(config.ignoreCommand).toBe(
@@ -36,7 +36,7 @@ describe("Vercel ignored build step", () => {
     );
 
     expect(generator).toContain("deploymentEnabled");
-    expect(generator).toContain('"*": false');
+    expect(generator).toContain('"**": false');
     expect(generator).toContain("main: true");
     expect(generator).toContain(
       '"node tools/release/vercel-ignore-build.mjs"',
