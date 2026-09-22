@@ -38,6 +38,12 @@ describe("account and horizontal messaging real-data boundary", () => {
     expect(account).not.toContain("conceptManagedProfiles");
     expect(account).not.toContain("Dados demonstrativos");
     expect(account).toContain("useProfileHub()");
+    expect(account).toContain(
+      "const resolvedProfile = data.profile ?? data.activeProfile ?? null",
+    );
+    expect(account).toContain("if (data.loading && !resolvedProfile)");
+    expect(account).toContain("profile={resolvedProfile}");
+    expect(account).not.toContain("if (data.loading) {");
     expect(account).toContain("data.allProfiles");
     expect(account).toContain('title="Mensagens"');
     expect(account).toContain('navigate("/mensagens")');

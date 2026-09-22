@@ -43,6 +43,9 @@ describe("MVP core module boundary", () => {
     "src/core/profiles/services/profile.workspace.aggregate.ts",
   );
   const operationalEnv = read("tests/helpers/operational-env.ts");
+  const onboardingVisualState = read(
+    "tests/e2e/support/onboardingVisualState.ts",
+  );
 
   it("keeps domain modules separate from horizontal platform capabilities", () => {
     expect(registry).toContain('business: { status: "active" }');
@@ -353,6 +356,14 @@ describe("MVP core module boundary", () => {
     expect(e2eAuthHelper).not.toContain(
       "Unable to discover the public Supabase browser configuration from Production.",
     );
+    expect(e2eAuthHelper).toContain("FIXTURE_AUTH_MAX_ATTEMPTS = 3");
+    expect(e2eAuthHelper).toContain("isTransientFixtureAuthError");
+    expect(e2eAuthHelper).toContain(
+      "Fixture Auth bootstrap failed after transient-safe retry",
+    );
+    expect(packageJson).toContain(
+      "tests/e2e/messaging-authenticated.spec.ts --project=chromium --reporter=list --retries=0",
+    );
     expect(accountAuthenticatedE2e).toContain(
       "ensureFixtureCurrentTermsAcceptance(client)",
     );
@@ -370,6 +381,51 @@ describe("MVP core module boundary", () => {
       );
       expect(workflow).toContain("cancel-in-progress: false");
     }
+  });
+
+  it("keeps heavy aggregation rerun-safe and onboarding visuals deterministic", () => {
+    expect(heavyPrWorkflow).toContain(".gate-status/mvp-architecture.success");
+    expect(heavyPrWorkflow).toContain(".gate-status/auth-session.success");
+    expect(heavyPrWorkflow).toContain(".gate-status/regression.success");
+    expect(heavyPrWorkflow).toContain(".gate-status/boundaries.success");
+    expect(heavyPrWorkflow).toContain(".gate-status/public-e2e.success");
+    expect(heavyPrWorkflow).not.toContain(
+      "LOGOUT_OUTCOME: ${{ steps.logout_e2e.outcome }}",
+    );
+    expect(heavyPrWorkflow).not.toContain(
+      "PUBLIC_OUTCOME: ${{ steps.public_e2e.outcome }}",
+    );
+    expect(heavyPrWorkflow).not.toContain("E2E_USER_EMAIL");
+    expect(heavyPrWorkflow).not.toContain(
+      "tests/e2e/logout-authenticated.spec.ts",
+    );
+    expect(heavyPrWorkflow).not.toContain(
+      "tests/e2e/messaging-authenticated.spec.ts",
+    );
+    expect(heavyPrWorkflow).toContain(
+      "tests/regression/auth/logout.test.ts",
+    );
+    expect(heavyPrWorkflow).toContain(
+      "SessionService.initialization.spec.ts",
+    );
+    expect(heavyPrWorkflow).toContain("ProtectedRoute.spec.tsx");
+    expect(ssotWorkflow).toContain(
+      "Run authenticated Account and Business lifecycle E2E",
+    );
+    expect(ssotWorkflow).toContain("npm run test:e2e:account-authenticated");
+    expect(heavyPrWorkflow).toContain(
+      "github.event_name == 'pull_request' && github.event.pull_request.head.sha || github.sha",
+    );
+
+    expect(onboardingVisualState).toContain("ONBOARDING_LOCATION_FIXTURE");
+    expect(onboardingVisualState).toContain(
+      'page.route("**/rest/v1/locations*"',
+    );
+    expect(onboardingVisualState).toContain(
+      'page.route("**/rest/v1/city_metadata*"',
+    );
+    expect(onboardingVisualState).toContain('"Acupe"');
+    expect(onboardingVisualState).toContain('"Alto das Pombas"');
   });
 
   it("keeps Account workspace independent from paused product domains", () => {
