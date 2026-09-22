@@ -46,13 +46,14 @@ describe("production sitemap release boundary", () => {
     const vercel = read("vercel.json");
 
     expect(releaseIdentity).toContain('isSkippableVercelPath');
-    expect(releaseIdentity).toContain('git ls-files');
+    expect(releaseIdentity).toContain('["ls-files", "--stage", "-z"]');
     expect(releaseIdentity).toContain('deployFingerprint');
     expect(releaseIdentity).toContain('"exact" : "equivalent"');
     expect(generator).toContain('"dist", "release.json"');
     expect(waiter).toContain("classifyReleaseIdentityMatch");
     expect(waiter).toContain('cache: "no-store"');
     expect(workflow).toContain("Wait for deployed runtime identity");
+    expect(workflow).toContain("push:\n    branches: [main]\n  pull_request:");
     expect(workflow).toContain("node tools/release/wait-for-production-release.mjs");
     expect(securityConfig).toContain("RELEASE_IDENTITY");
     expect(securityConfig).toContain("pattern: '/release.json'");
