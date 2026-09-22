@@ -2,6 +2,7 @@ import { expect, test, type Page } from "@playwright/test";
 import {
   bootstrapFixtureSession,
   bootstrapProtectedPreviewAccess,
+  ensureFixtureCurrentTermsAcceptance,
   hasE2EUserCredentials,
   requireE2EUserCredentials,
 } from "./helpers/auth";
@@ -118,7 +119,13 @@ test.describe("Conta autenticada — fixture remota determinística", () => {
       await expect(page.locator("#login-identifier")).toBeVisible({
         timeout: 30_000,
       });
-      await bootstrapFixtureSession(page, credentials.email, credentials.password);
+      const client = await bootstrapFixtureSession(
+        page,
+        credentials.email,
+        credentials.password,
+      );
+      await ensureFixtureCurrentTermsAcceptance(client);
+      await page.goto("/conta", { waitUntil: "domcontentloaded" });
       await expect(page).toHaveURL(/\/conta(?:\?|$)/, { timeout: 30_000 });
 
       for (const route of ACCOUNT_ROUTES) {
