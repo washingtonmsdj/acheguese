@@ -4,6 +4,7 @@ import {
   hasApprovedOperationalMutationTarget,
 } from './operational-mutation-safety';
 import { wrapOperationalTechnicalAuthClient } from '../../tools/supabase/operational-alpha-invite.mjs';
+import { createSupabaseApiKeySafeFetch } from '../../src/integrations/supabase/apiKeySafeFetch';
 
 export type OperationalSupabaseClient = SupabaseClient<any, 'public', any>;
 type OperationalSuite = () => void;
@@ -206,6 +207,9 @@ function createOperationalClient(
   operationalClientSequence += 1;
 
   const client = createClient(supabaseUrl, supabaseKey, {
+    global: {
+      fetch: createSupabaseApiKeySafeFetch(supabaseKey),
+    },
     auth: {
       autoRefreshToken: false,
       persistSession: false,
