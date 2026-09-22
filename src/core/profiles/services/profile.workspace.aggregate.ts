@@ -1,9 +1,6 @@
 import { supabase } from "@/integrations/supabase";
 import { logger } from "@/shared/utils/logger";
-import { getServicesByProfile } from "@/core/professional/services/professional.queries";
 import { BusinessUrlService } from "@/core/business/services/BusinessUrlService";
-import { getEligibleVerticals } from "@/core/verticals/config";
-import { EntitlementResolver } from "@/core/billing/services/EntitlementResolver";
 import type {
   ProfileContext,
   ProfilePrivateWorkspace,
@@ -34,30 +31,31 @@ interface PrivateWorkspaceDependencies {
   resolvePermissions: (profileContext: ProfileContext | null) => ProfilePermissions;
 }
 
-async function getGastronomyProfileByBusinessId(businessId: string): Promise<{
-  cuisine_type?: string | null;
-  delivery_enabled?: boolean | null;
-  dine_in_enabled?: boolean | null;
-  takeout_enabled?: boolean | null;
-} | null> {
-  const { data, error } = await supabase
-    .from("gastronomy_profiles")
-    .select("cuisine_type, delivery_enabled, dine_in_enabled, takeout_enabled")
-    .eq("business_id", businessId)
-    .maybeSingle();
+const MVP_DISABLED_ENTITLEMENTS = {
+  canUsePremiumPublicPage: false,
+  canUseShortPremiumLink: false,
+  canUseCustomQRCode: false,
+  canReceiveInternalOrders: false,
+  canUseOrdersPanel: false,
+  canUseMotoboyNetwork: false,
+  canRequestDelivery: false,
+  canTrackDelivery: false,
+  canConfigureDeliveryArea: false,
+  canSetDeliveryFees: false,
+  canUseOwnDelivery: false,
+} as const;
 
-  if (error) {
-    throw error;
+async function optionalWorkspaceRead<T>(
+  label: string,
+  read: () => Promise<T>,
+  fallback: T,
+): Promise<T> {
+  try {
+    return await read();
+  } catch (error) {
+    logger.warn("[profile-workspace] optional read failed", { label, error });
+    return fallback;
   }
-
-  return (data || null) as
-    | {
-        cuisine_type?: string | null;
-        delivery_enabled?: boolean | null;
-        dine_in_enabled?: boolean | null;
-        takeout_enabled?: boolean | null;
-      }
-    | null;
 }
 
 export async function getPrivateWorkspaceAggregate(
@@ -114,118 +112,98 @@ export async function getPrivateWorkspaceAggregate(
       return emptyWorkspace;
     }
 
-    const { postService } = await import("@/core/posts/services");
-    const { VerificationService } = await import(
-      "@/core/verification/services/VerificationService"
-    );
-    const { getUserClassifieds } = await import("@/core/classifieds/services");
-    const { notificationService } = await import("@/core/notifications/services");
-
-    const profileContextPromise = deps.getProfileContext(deps.userId);
-    const profilesPromise = deps.getProfilesByUserId(deps.userId);
-    const rolesPromise = deps.getUserRoles(deps.userId);
-    const postsPromise = postService.getPostsCountByProfile(activeProfile.id).catch(() => 0);
-    const likesPromise = deps.getUserLikesCount(activeProfile.id);
-    const verificationPromise = VerificationService.getVerification(
-      activeProfile.id,
-      "resident",
-    );
-    const servicesPromise = getServicesByProfile(activeProfile.id).catch(() => []);
-    const classifiedsPromise = getUserClassifieds(activeProfile.id).catch(() => []);
-    const activeRidePromise = Promise.resolve(null);
-    const eventsPromise = Promise.resolve([]);
-    const alertsCountPromise = Promise.resolve(0);
-    const issuesCountPromise = Promise.resolve(0);
-    const notificationStatsPromise = notificationService.getStats(deps.userId).catch(() => null);
-    const notificationFeedPromise = notificationService
-      .fetchNotifications({ limit: 5 })
-      .catch(() => []);
-    const ridesPromise = Promise.resolve([]);
-
     const [
       profileContext,
       profiles,
       roles,
-      postsCount,
-      likesCount,
-      activeRide,
       verification,
-      services,
-      classifieds,
-      events,
-      alertsCount,
-      issuesCount,
       notificationStats,
       recentNotifications,
-      rides,
     ] = await Promise.all([
-      profileContextPromise,
-      profilesPromise,
-      rolesPromise,
-      postsPromise,
-      likesPromise,
-      activeRidePromise,
-      verificationPromise,
-      servicesPromise,
-      classifiedsPromise,
-      eventsPromise,
-      alertsCountPromise,
-      issuesCountPromise,
-      notificationStatsPromise,
-      notificationFeedPromise,
-      ridesPromise,
+      optionalWorkspaceRead(
+        "profile-context",
+        () => deps.getProfileContext(deps.userId),
+        null,
+      ),
+      optionalWorkspaceRead(
+        "profiles",
+        () => deps.getProfilesByUserId(deps.userId),
+        [activeProfile],
+      ),
+      optionalWorkspaceRead("roles", () => deps.getUserRoles(deps.userId), []),
+      optionalWorkspaceRead(
+        "resident-verification",
+        async () => {
+          const { VerificationService } = await import(
+            "@/core/verification/services/VerificationService"
+          );
+          return VerificationService.getVerification(activeProfile.id, "resident");
+        },
+        null,
+      ),
+      optionalWorkspaceRead(
+        "notification-stats",
+        async () => {
+          const { notificationService } = await import(
+            "@/core/notifications/services"
+          );
+          return notificationService.getStats(deps.userId);
+        },
+        null,
+      ),
+      optionalWorkspaceRead(
+        "notification-feed",
+        async () => {
+          const { notificationService } = await import(
+            "@/core/notifications/services"
+          );
+          return notificationService.fetchNotifications({ limit: 5 });
+        },
+        [],
+      ),
     ]);
+
+    // Paused domains never participate in the Account critical path.
+    const postsCount = 0;
+    const likesCount = 0;
+    const services: unknown[] = [];
+    const classifieds: unknown[] = [];
+    const activeRide = null;
+    const events: unknown[] = [];
+    const alertsCount = 0;
+    const issuesCount = 0;
+    const rides: unknown[] = [];
 
     const businesses = mapBusinessRecords(
       await deps.getUserBusinessesByProfiles(
         profiles.length ? profiles.map((profile) => profile.id) : [activeProfile.id],
       ),
     );
-    const businessModules = await Promise.all(
-      businesses.map(async (business) => {
-        const [
-          { QrCodeService },
-          { QrEntityType },
-        ] = await Promise.all([
-          import("@/core/qr"),
-          import("@/core/qr/types"),
-        ]);
-
-        const [resolvedEntitlements, gastronomyResult, qrCodeResult] =
-          await Promise.all([
-            EntitlementResolver.resolve({
-              user_id: deps.userId,
-              business_id: business.business_data_id,
-              subscription_scope: "business",
-            }),
-            getGastronomyProfileByBusinessId(business.business_data_id),
-            QrCodeService.getByEntity(QrEntityType.BUSINESS, business.id),
-          ]);
-
-        const subscription = {
-          status: resolvedEntitlements.subscriptionStatus,
-          current_period_end: resolvedEntitlements.currentPeriodEnd,
-        };
-        const gastronomyProfile = gastronomyResult;
-        const qrCode = qrCodeResult.data;
-        const planTier = resolvedEntitlements.planTier;
-        const entitlements = resolvedEntitlements;
-        const gastronomyEligible = Boolean(
-          business.category && getEligibleVerticals(business.category as never).length > 0,
-        );
-        return buildBusinessModuleSnapshot({
-          business,
-          planTier,
-          subscription,
-          entitlements,
-          gastronomyEligible,
-          gastronomyProfile,
-          qrCode,
-          getCanonicalUrl: (ctx) => BusinessUrlService.getCanonicalUrl(ctx),
-          getShareUrl: (ctx) => BusinessUrlService.getShareUrl(ctx),
-        });
-      }),
-    );
+    const businessModules = (
+      await Promise.all(
+        businesses.map(async (business) => {
+          try {
+            return await buildBusinessModuleSnapshot({
+              business,
+              planTier: "free",
+              subscription: null,
+              entitlements: MVP_DISABLED_ENTITLEMENTS,
+              gastronomyEligible: false,
+              gastronomyProfile: null,
+              qrCode: null,
+              getCanonicalUrl: (ctx) => BusinessUrlService.getCanonicalUrl(ctx),
+              getShareUrl: (ctx) => BusinessUrlService.getShareUrl(ctx),
+            });
+          } catch (error) {
+            logger.warn("[profile-workspace] business snapshot failed", {
+              businessId: business.id,
+              error,
+            });
+            return null;
+          }
+        }),
+      )
+    ).filter((module): module is NonNullable<typeof module> => module !== null);
 
     const activeRideStatuses = new Set([
       "pending",
