@@ -63,6 +63,7 @@ describe("CI Auth fixture session boundary", () => {
     expect(edgeFunction).toContain("rateLimitMiddleware");
     expect(edgeFunction).toContain('"fixture_credentials_rejected"');
     expect(edgeFunction).toContain('"fixture_account_unavailable"');
+    expect(edgeFunction).toContain('"auth_rate_limited"');
     expect(edgeFunction).toContain('"auth_upstream_unavailable"');
     expect(edgeFunction).toContain('"fixture_auth_failed"');
     expect(edgeFunction).toContain("return fixtureAuthFailureResponse(req, failure)");
