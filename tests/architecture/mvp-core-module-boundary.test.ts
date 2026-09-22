@@ -12,6 +12,7 @@ describe("MVP core module boundary", () => {
   const launchScope = read("src/app/config/launchScope.ts");
   const domainMapping = read("docs/02-domain/DOMAIN-MAPPING.md");
   const entry = read("src/app/pages/TerritoryEntryPage.tsx");
+  const rootEntry = read("src/app/routes/RootRouteEntry.tsx");
   const home = read("src/app/pages/TerritoryHomePage.tsx");
   const howItWorks = read("src/app/pages/ComoFuncionaPage.tsx");
   const businessDetail = read("src/app/pages/EmpresaDetailLandingPage.tsx");
@@ -79,6 +80,9 @@ describe("MVP core module boundary", () => {
     expect(domainMapping).not.toContain("Módulo Map");
     expect(domainMapping).not.toContain("Módulo Nearby");
     expect(domainMapping).not.toContain("capability Community/Feed");
+    expect(rootEntry).toContain("Business/Empresas como domínio ativo");
+    expect(rootEntry).toContain("capabilities horizontais");
+    expect(rootEntry).not.toContain("três módulos ativos do produto");
   });
 
   it("keeps the public entry pointed only at the MVP core", () => {
