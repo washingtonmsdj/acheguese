@@ -146,6 +146,9 @@ jobs:
   authenticated_account_e2e:
     name: Authenticated Account + Business E2E (Production smoke)
     if: github.event_name != 'pull_request'
+    concurrency:
+      group: acheguese-authenticated-e2e-fixture
+      cancel-in-progress: false
     runs-on: ubuntu-latest
     env:
       CI: true
