@@ -28,7 +28,7 @@ function getInitials(value?: string | null): string {
 export function AppTopbar() {
   const { activeProfile, user } = useSessionContext();
   const appUrls = useAppUrls();
-  const showMessages = isLaunchSurfaceEnabled("communityCommunication");
+  const showMessages = isLaunchSurfaceEnabled("messaging");
   const showBilling = isLaunchSurfaceEnabled("billing");
 
   const handleLogout = async () => {

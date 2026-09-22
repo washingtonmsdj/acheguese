@@ -34,6 +34,7 @@ const CENTRAL_NAV_ITEM_SURFACES: Partial<Record<string, LaunchSurfaceKey>> = {
   'events-list': 'events',
   'events-new': 'events',
   'communication-home': 'communication',
+  'professional-home': 'services',
   'driver-home': 'mobility',
   'driver-cadastro': 'mobility',
   'driver-disponibilidade': 'mobility',
