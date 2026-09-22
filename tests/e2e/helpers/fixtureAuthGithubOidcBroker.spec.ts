@@ -6,7 +6,33 @@ import {
 } from "./fixtureAuthGithubOidcBroker";
 
 const sha = "a".repeat(40);
-const oidcToken = ["header", "payload", "signature"].join(".");
+const workflowRef =
+  "washingtonmsdj/acheguese/.github/workflows/ssot-tests.yml@refs/heads/main";
+const oidcClaims = {
+  aud: GITHUB_OIDC_AUDIENCE,
+  repository: "washingtonmsdj/acheguese",
+  repository_id: "1211499732",
+  ref: "refs/heads/main",
+  workflow_ref: workflowRef,
+  event_name: "push",
+  runner_environment: "github-hosted",
+  sha,
+};
+
+function encodeBase64Url(value: unknown): string {
+  return Buffer.from(JSON.stringify(value), "utf8").toString("base64url");
+}
+
+function tokenWithClaims(
+  overrides: Record<string, unknown> = {},
+): string {
+  return [
+    encodeBase64Url({ alg: "RS256", typ: "JWT" }),
+    encodeBase64Url({ ...oidcClaims, ...overrides }),
+    "signature",
+  ].join(".");
+}
+
 const base = {
   supabaseUrl: "https://project.supabase.co",
   email: "fixture-e2e@example.com",
@@ -14,6 +40,12 @@ const base = {
   requestUrl: "https://token.actions.githubusercontent.com/request?id=1",
   requestToken: "github-request-token",
   expectedSha: sha,
+  repository: "washingtonmsdj/acheguese",
+  repositoryId: "1211499732",
+  ref: "refs/heads/main",
+  workflowRef,
+  eventName: "push",
+  runnerEnvironment: "github-hosted",
   retryDelayMs: 0,
 };
 
@@ -24,10 +56,11 @@ describe("GitHub OIDC fixture auth broker", () => {
       resolveGithubOidcEnvironment({
         ACTIONS_ID_TOKEN_REQUEST_URL: base.requestUrl,
       }),
-    ).toThrow("GitHub OIDC broker requires");
+    ).toThrow("complete Actions OIDC and workflow identity environment");
   });
 
-  it("requests a custom-audience token and exchanges it for fixture session tokens", async () => {
+  it("requests a custom-audience token, validates its claims and exchanges it for fixture session tokens", async () => {
+    const oidcToken = tokenWithClaims();
     const fetchImpl = vi
       .fn<typeof fetch>()
       .mockImplementationOnce(async (input, init) => {
@@ -76,11 +109,33 @@ describe("GitHub OIDC fixture auth broker", () => {
     expect(fetchImpl).toHaveBeenCalledTimes(2);
   });
 
-  it("fails closed when the broker rejects the OIDC identity", async () => {
+  it("fails before the broker call when a GitHub OIDC claim differs from the runner identity", async () => {
+    const fetchImpl = vi.fn<typeof fetch>().mockResolvedValueOnce(
+      new Response(
+        JSON.stringify({
+          value: tokenWithClaims({
+            workflow_ref:
+              "washingtonmsdj/acheguese/.github/workflows/other.yml@refs/heads/main",
+          }),
+        }),
+        {
+          status: 200,
+          headers: { "content-type": "application/json" },
+        },
+      ),
+    );
+
+    await expect(
+      signInFixtureViaGithubOidcBroker({ ...base, fetchImpl }),
+    ).rejects.toThrow("GitHub OIDC token claim mismatch: workflow_ref.");
+    expect(fetchImpl).toHaveBeenCalledTimes(1);
+  });
+
+  it("keeps an OIDC rejection generic", async () => {
     const fetchImpl = vi
       .fn<typeof fetch>()
       .mockResolvedValueOnce(
-        new Response(JSON.stringify({ value: oidcToken }), {
+        new Response(JSON.stringify({ value: tokenWithClaims() }), {
           status: 200,
           headers: { "content-type": "application/json" },
         }),
@@ -95,6 +150,36 @@ describe("GitHub OIDC fixture auth broker", () => {
     await expect(
       signInFixtureViaGithubOidcBroker({ ...base, fetchImpl }),
     ).rejects.toThrow("CI Auth fixture broker failed: HTTP 401; Unauthorized.");
+    expect(fetchImpl).toHaveBeenCalledTimes(2);
+  });
+
+  it("surfaces a post-OIDC fixture rejection stage without exposing token claims", async () => {
+    const fetchImpl = vi
+      .fn<typeof fetch>()
+      .mockResolvedValueOnce(
+        new Response(JSON.stringify({ value: tokenWithClaims() }), {
+          status: 200,
+          headers: { "content-type": "application/json" },
+        }),
+      )
+      .mockResolvedValueOnce(
+        new Response(
+          JSON.stringify({
+            error: "Unauthorized",
+            code: "fixture_provenance_rejected",
+          }),
+          {
+            status: 401,
+            headers: { "content-type": "application/json" },
+          },
+        ),
+      );
+
+    await expect(
+      signInFixtureViaGithubOidcBroker({ ...base, fetchImpl }),
+    ).rejects.toThrow(
+      "CI Auth fixture broker failed: HTTP 401; Unauthorized [fixture_provenance_rejected].",
+    );
     expect(fetchImpl).toHaveBeenCalledTimes(2);
   });
 });
