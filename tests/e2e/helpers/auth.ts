@@ -1,4 +1,5 @@
 import { Page } from "@playwright/test";
+import { TERMS_OF_SERVICE_VERSION } from "../../../src/core/legal/termsOfService";
 import {
   createOperationalAnonClientForPublicConfig,
   getOperationalEnv,
@@ -10,6 +11,7 @@ export const TEST_USER = {
   password: process.env.E2E_USER_PASSWORD ?? "",
 };
 
+export const E2E_AUTH_FIXTURE_MARKER = "account-authenticated-e2e";
 const AUTH_COOKIE_NAME = "sb-auth-acheguese-auth-token";
 const AUTH_COOKIE_CHUNK_SIZE = 3_800;
 
@@ -195,6 +197,69 @@ export async function bootstrapFixtureSession(
 
   await page.reload({ waitUntil: "domcontentloaded", timeout: 60_000 });
   return client;
+}
+
+export async function ensureFixtureCurrentTermsAcceptance(
+  client: Awaited<ReturnType<typeof bootstrapFixtureSession>>,
+): Promise<void> {
+  const { data: userData, error: userError } = await client.auth.getUser();
+  if (userError || !userData.user) {
+    throw userError ?? new Error("Fixture Auth user is unavailable.");
+  }
+
+  const fixtureMarker =
+    userData.user.app_metadata?.acheguese_fixture ??
+    userData.user.user_metadata?.acheguese_fixture;
+  if (fixtureMarker !== E2E_AUTH_FIXTURE_MARKER) {
+    throw new Error(
+      "Terms bootstrap refused: authenticated account is not the dedicated E2E fixture.",
+    );
+  }
+
+  const { data: currentConsent, error: consentReadError } = await client
+    .from("user_consents")
+    .select("id")
+    .eq("user_id", userData.user.id)
+    .eq("consent_type", "terms_of_service")
+    .eq("granted", true)
+    .eq("terms_version", TERMS_OF_SERVICE_VERSION)
+    .is("revoked_at", null)
+    .limit(1);
+
+  if (consentReadError) throw consentReadError;
+  if ((currentConsent ?? []).length > 0) return;
+
+  const { data, error } = await client.functions.invoke("privacy-rpc", {
+    body: {
+      action: "recordConsent",
+      params: {
+        consentType: "terms_of_service",
+        granted: true,
+        userAgent: "acheguese-e2e-fixture",
+        termsVersion: TERMS_OF_SERVICE_VERSION,
+        privacyVersion: "1.0",
+      },
+    },
+  });
+
+  if (error) {
+    throw new Error(
+      `Fixture terms bootstrap failed through privacy-rpc: ${error.message}`,
+    );
+  }
+
+  const receipt =
+    data && typeof data === "object" && "data" in data
+      ? (data as { data?: unknown }).data
+      : null;
+  if (
+    !receipt ||
+    typeof receipt !== "object" ||
+    !("consentId" in receipt) ||
+    typeof (receipt as { consentId?: unknown }).consentId !== "string"
+  ) {
+    throw new Error("privacy-rpc returned an invalid fixture consent receipt.");
+  }
 }
 
 async function waitForLoginForm(page: Page) {
