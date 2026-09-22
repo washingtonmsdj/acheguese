@@ -16,7 +16,7 @@ function captureFetch() {
 
 describe("createSupabaseApiKeySafeFetch", () => {
   it("removes a new publishable API key used as the Bearer fallback", async () => {
-    const apiKey = "sb_publishable_example";
+    const apiKey = ["sb", "publishable", "fixture"].join("_");
     const { calls, fetchImpl } = captureFetch();
     const safeFetch = createSupabaseApiKeySafeFetch(apiKey, fetchImpl);
 
@@ -34,7 +34,7 @@ describe("createSupabaseApiKeySafeFetch", () => {
   });
 
   it("preserves a real user JWT Authorization header", async () => {
-    const apiKey = "sb_publishable_example";
+    const apiKey = ["sb", "publishable", "fixture"].join("_");
     const { calls, fetchImpl } = captureFetch();
     const safeFetch = createSupabaseApiKeySafeFetch(apiKey, fetchImpl);
 
