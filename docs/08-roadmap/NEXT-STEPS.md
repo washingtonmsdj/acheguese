@@ -93,9 +93,9 @@ O contrato de certificação foi corrigido antes da próxima execução real:
 - `certify-heavy.yml` permanece a autoridade exact-SHA e agora chama explicitamente essas provas;
 - o workflow automático de PR agrega o mesmo contrato, sem criar uma segunda definição de MVP.
 
-A Vercel também bloqueou novos deploys por limite diário de deployments. Isso mantém o gate de deploy exact-SHA aberto, mas não deve ser registrado como regressão funcional do projeto.
+Os runners hospedados já executam os gates reais. No PR #292, Dependency Lock, Security Scan, Auth Regression, SSOT Territorial, SSOT Enforcement e Visual Regression já produziram execuções verdes em heads candidatos; Security Check e Heavy também passaram por execução real, não por jobs vazios. **A evidência final ainda precisa pertencer ao head exato que será mergeado**, porque qualquer correção documental gera novo SHA.
 
-Até existir execução real, security/lint/typecheck/test/build/E2E continuam **não certificados**.
+A Vercel de Preview pode continuar sujeita a limite de builds. Isso não é regressão de código nem substitui o gate de produção: após o merge único na `main`, o SHA final precisa produzir deploy de produção e smoke público antes de receber `MVP READY`.
 
 ## Pós-MVP
 
