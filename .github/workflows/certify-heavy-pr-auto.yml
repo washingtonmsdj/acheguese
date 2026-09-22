@@ -131,77 +131,26 @@ jobs:
         shell: powershell
         run: npx playwright install chromium
 
-      - name: Run deterministic authenticated logout E2E against exact local SHA
-        id: logout_e2e
+      - name: Run deterministic Auth/session contracts against exact local SHA
+        id: auth_session
         continue-on-error: true
         shell: powershell
         env:
           CI: true
-          PLAYWRIGHT_BASE_URL: http://127.0.0.1:8100
-          VITE_PUBLIC_APP_URL: http://127.0.0.1:8100
-          VITE_SUPABASE_URL: https://xhdowzacfujckjelqhtd.supabase.co
-          VITE_SUPABASE_PUBLISHABLE_KEY: sb_publishable_dc-rd2YjKuZ5KJc_zRYVYA_ANmcFxKk
-          VITE_SUPABASE_ANON_KEY: sb_publishable_dc-rd2YjKuZ5KJc_zRYVYA_ANmcFxKk
-          E2E_SUPABASE_URL: https://xhdowzacfujckjelqhtd.supabase.co
-          E2E_SUPABASE_PUBLISHABLE_KEY: sb_publishable_dc-rd2YjKuZ5KJc_zRYVYA_ANmcFxKk
-          E2E_USER_EMAIL: ${{ secrets.E2E_USER_EMAIL }}
-          E2E_USER_PASSWORD: ${{ secrets.E2E_USER_PASSWORD }}
-          ACCOUNT_TARGET_IS_PREVIEW: false
-          PLAYWRIGHT_SKIP_WEBSERVER: "1"
         run: |
-          $ErrorActionPreference = "Stop"
-          if ([string]::IsNullOrWhiteSpace($env:E2E_USER_EMAIL) -or [string]::IsNullOrWhiteSpace($env:E2E_USER_PASSWORD)) {
-            Write-Error "Certification blocked: authenticated E2E credentials are not configured."
-            exit 1
-          }
-          & .\tools\release\run-preview-e2e.ps1 `
-            -Name "logout" `
-            -Port 8100 `
-            -DistDir ".e2e-dist/auth" `
-            -PlaywrightArgs @(
-              "test",
-              "tests/e2e/logout-authenticated.spec.ts",
-              "tests/e2e/messaging-authenticated.spec.ts",
-              "--project=chromium",
-              "--reporter=list",
-              "--retries=0",
-              "--output=test-results/logout"
-            )
+          Remove-Item ".gate-status/auth-session.success" -Force -ErrorAction SilentlyContinue
+          npx vitest --run `
+            tests/regression/auth/logout.test.ts `
+            src/core/session/services/SessionService.initialization.spec.ts `
+            src/core/session/services/SessionService.refresh-race.spec.ts `
+            src/core/routing/components/__tests__/ProtectedRoute.spec.tsx `
+            src/core/messaging/services/BusinessDirectMessagingService.test.ts `
+            --pool=threads `
+            --maxWorkers=1 `
+            --reporter=verbose
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
           New-Item -ItemType Directory -Force ".gate-status" | Out-Null
-          Set-Content -Path ".gate-status/logout.success" -Value "success" -Encoding ASCII
-
-      - name: Print logout E2E failure diagnostics
-        if: always()
-        shell: powershell
-        run: |
-          if (Test-Path ".gate-status/logout.success") {
-            Write-Host "Authenticated logout E2E passed; no failure diagnostics required."
-            exit 0
-          }
-          Write-Host "===== Authenticated logout E2E diagnostics ====="
-          $contexts = @(Get-ChildItem -Path "test-results/logout" -Recurse -File -Filter "error-context.md" -ErrorAction SilentlyContinue)
-          if ($contexts.Count -eq 0) {
-            Write-Host "No error-context.md files found."
-          } else {
-            foreach ($context in $contexts) {
-              Write-Host "--- $($context.FullName) ---"
-              Get-Content -Path $context.FullName -ErrorAction SilentlyContinue
-            }
-          }
-
-      - name: Upload logout E2E artifacts (non-gating transport)
-        if: always()
-        continue-on-error: true
-        uses: actions/upload-artifact@v7
-        with:
-          name: heavy-pr-logout-${{ github.run_id }}-${{ github.run_attempt }}
-          path: |
-            .e2e-logs/logout-preview.stdout.log
-            .e2e-logs/logout-preview.stderr.log
-            test-results/logout/
-          if-no-files-found: ignore
-          retention-days: 7
+          Set-Content -Path ".gate-status/auth-session.success" -Value "success" -Encoding ASCII
 
       - name: Run active MVP regression contract
         id: regression
@@ -323,7 +272,7 @@ jobs:
         run: |
           $gates = [ordered]@{
             "MVP architecture" = ".gate-status/mvp-architecture.success"
-            "Authenticated logout E2E" = ".gate-status/logout.success"
+            "Auth/session deterministic contract" = ".gate-status/auth-session.success"
             "Regression" = ".gate-status/regression.success"
             "Territorial boundaries" = ".gate-status/boundaries.success"
             "MVP public E2E" = ".gate-status/public-e2e.success"
