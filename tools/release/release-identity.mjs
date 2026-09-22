@@ -34,15 +34,15 @@ export function listTrackedDeployEntries() {
   const output = runGit(["ls-files", "--stage", "-z"]);
   const entries = [];
 
-  for (const record of output.split("\\0")) {
+  for (const record of output.split("\0")) {
     if (!record) continue;
 
-    const tabIndex = record.indexOf("\\t");
+    const tabIndex = record.indexOf("\t");
     if (tabIndex < 0) {
       throw new Error("Unexpected git ls-files record: " + record);
     }
 
-    const metadata = record.slice(0, tabIndex).trim().split(/\\s+/);
+    const metadata = record.slice(0, tabIndex).trim().split(/\s+/);
     const filePath = record.slice(tabIndex + 1);
     const [mode, blobSha, stage] = metadata;
 
@@ -66,11 +66,11 @@ export function computeDeployFingerprint() {
   const hash = createHash("sha256");
   for (const entry of entries) {
     hash.update(entry.path);
-    hash.update("\\0");
+    hash.update("\0");
     hash.update(entry.mode);
-    hash.update("\\0");
+    hash.update("\0");
     hash.update(entry.blobSha);
-    hash.update("\\0");
+    hash.update("\0");
   }
 
   return hash.digest("hex");
