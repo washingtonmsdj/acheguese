@@ -338,8 +338,9 @@ describe("MVP core module boundary", () => {
   });
 
   it("keeps Production authenticated smoke on explicit public Supabase configuration", () => {
+    const normalizedSsotWorkflow = ssotWorkflow.replace(/\r\n/g, "\n");
     const authenticatedSmoke =
-      ssotWorkflow.match(
+      normalizedSsotWorkflow.match(
         /\n  authenticated_account_e2e:[\s\S]*?(?=\n  [a-zA-Z0-9_-]+:\n)/,
       )?.[0] ?? "";
 
