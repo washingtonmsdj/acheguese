@@ -3,8 +3,9 @@
  *
  * Entrada pública do MVP.
  *
- * A raiz apresenta o território inicial e os três módulos ativos do produto:
- * Empresas, Mapa e Perto de mim. Não encaminha para módulos pausados.
+ * A raiz apresenta o território inicial e o núcleo público do MVP:
+ * Business/Empresas como domínio ativo, com Mapa, Perto de mim e Busca como
+ * capabilities horizontais. Não encaminha para domínios pausados.
  */
 import { lazy, Suspense } from "react";
 import { PRELAUNCH_LOCKDOWN_ENABLED } from "@/app/config/launchScope";

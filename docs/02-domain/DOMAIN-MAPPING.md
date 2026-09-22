@@ -1,8 +1,8 @@
 # DOMAIN-MAPPING.md — Territory / lifecycle atual
 
-> **Atualizado em 2026-09-21.** Este documento descreve o mapeamento conceitual do domínio Territory, mas não possui autoridade para ativar módulo público. O lifecycle executável pertence a `src/app/config/productModuleRegistry.ts`.
+> **Atualizado em 2026-09-21.** Este documento descreve o mapeamento conceitual do domínio Territory, mas não possui autoridade para ativar domínio ou capability pública. O lifecycle executável pertence a `src/app/config/productModuleRegistry.ts`, `src/app/config/platformCapabilityRegistry.ts` e ao avaliador `src/app/config/lifecycleRegistry.ts`.
 
-O MVP atual possui **Empresas + Mapa + Perto de mim + Busca** como módulos de produto ativos. Community e demais capabilities pós-MVP permanecem `paused`.
+No MVP atual, **Business/Empresas** é o único domínio de produto ativo. **Mapa, Perto de mim, Busca e Mensagens (provider Business)** são capabilities horizontais ativas, junto de Auth, Perfis/Conta, Território, Localização, Notificações e Central. Community e os demais domínios de produto permanecem `paused`.
 
 ## Legenda de status
 
@@ -27,7 +27,7 @@ O MVP atual possui **Empresas + Mapa + Perto de mim + Busca** como módulos de p
 | `PublicCityLandingPage.tsx` (+ `.css`) | — | ✅ Removido | Segunda Home sem caller runtime; removida em 2026-09-09. | — | Não recriar. |
 | `CidadeLandingPage.tsx` + família `CidadeLanding.*` | — | ✅ Removido | Shell pré-Territory sem responsabilidade no MVP modular. | — | Não recriar; Home/Business/Map/Nearby têm owners próprios. |
 | `LaunchPausedPage.tsx` | `LaunchPausedPage` | ✅ Canônico app-level | Kill-switch de superfícies fora do launch scope; não representa território `coming_soon`. | `launchScope` e factories de rota pausada. | Manter como owner único de módulo pausado. |
-| `ComunidadePage.tsx` (em `core/community-feed/pages`) | `ComunidadePage` | ⏸️ Owner preservado | Owner interno da capability Community/Feed. O módulo está `paused` no MVP e não integra navegação, prefetch ou superfície pública ativa. | lifecycle + contratos internos de Community. | Preservar para pós-MVP; reativar somente após certificação e mudança explícita no registry. |
+| `ComunidadePage.tsx` (em `core/community-feed/pages`) | `ComunidadePage` | ⏸️ Owner preservado | Owner interno do domínio Community/Feed. O módulo está `paused` no MVP e não integra navegação, prefetch ou superfície pública ativa. | lifecycle + contratos internos de Community. | Preservar para pós-MVP; reativar somente após certificação e mudança explícita no registry. |
 | `EmpresasLandingPage.tsx`, `EmpresaDetailLandingPage.tsx` | superfícies públicas Business | ✅ Canônico no domínio Business | Pertence a Business e não ao domínio Territory. | rotas `/empresas`. | Territory fornece contexto; Business mantém ownership da entidade e URLs. |
 
 ---
@@ -75,8 +75,8 @@ O MVP atual possui **Empresas + Mapa + Perto de mim + Busca** como módulos de p
 | `/:uf/:city` | ✅ Canônico | Home territorial. |
 | `/:uf/:city/:neighborhood` | ✅ Canônico | Home territorial de bairro/grupo resolvido. |
 | `/empresas/:uf/:city[/:neighborhood]` | ✅ Ativo | Módulo Business. |
-| `/mapa/:uf/:city[/:neighborhood]` | ✅ Ativo | Módulo Map. |
-| `/perto-de-mim` | ✅ Ativo | Módulo Nearby; depende de Map + Business. |
+| `/mapa/:uf/:city[/:neighborhood]` | ✅ Ativo | Capability horizontal Map; consome apenas layers de domínios ativos. |
+| `/perto-de-mim` | ✅ Ativo | Capability horizontal Nearby; depende de Map + Location + Business. |
 | `/busca[/:uf/:city[/:neighborhood]]` | ✅ Ativo | Search canônica; consulta somente providers habilitados pelo lifecycle. |
 | `/buscar[/:uf/:city[/:neighborhood]]` | ✅ Ativo | Experiência de busca assistida sob o mesmo lifecycle de Search. |
 | `/inicio` | ⛔ Legado | Não é entrada canônica nem deve aparecer no sitemap do MVP. |

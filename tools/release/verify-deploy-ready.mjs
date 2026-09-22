@@ -211,7 +211,7 @@ console.log();
 console.log('vercel.json');
 try {
   const vercelConfig = readJson('vercel.json');
-  vercelConfig.git?.deploymentEnabled?.['*'] === false &&
+  vercelConfig.git?.deploymentEnabled?.['**'] === false &&
   vercelConfig.git?.deploymentEnabled?.main === true
     ? ok('automatic Vercel deployments: main only')
     : fail('git.deploymentEnabled deve bloquear previews automáticos e permitir main');
