@@ -55,43 +55,20 @@ function splitCookieValue(value: string): string[] {
   return chunks;
 }
 
-async function resolvePublicSupabaseConfig(page: Page): Promise<{
+function resolvePublicSupabaseConfig(): {
   url: string;
   publishableKey: string;
-}> {
+} {
   const operationalEnv = getOperationalEnv();
-  const configuredUrl =
-    process.env.E2E_SUPABASE_URL ?? operationalEnv.supabaseUrl ?? "";
-  const configuredKey =
-    process.env.E2E_SUPABASE_PUBLISHABLE_KEY ?? operationalEnv.anonKey ?? "";
-  if (configuredUrl && configuredKey) {
-    return { url: configuredUrl, publishableKey: configuredKey };
-  }
-
-  const origin = new URL(page.url()).origin;
-  const indexResponse = await fetch(origin);
-  if (!indexResponse.ok) {
-    throw new Error(`Unable to discover public Supabase config: HTTP ${indexResponse.status}`);
-  }
-  const indexHtml = await indexResponse.text();
-  const scriptSources = [...indexHtml.matchAll(/<script[^>]+src=["']([^"']+\.js)["']/gi)]
-    .map((match) => new URL(match[1], origin).toString());
-  const bundles = await Promise.all(
-    scriptSources.map(async (source) => {
-      const response = await fetch(source);
-      return response.ok ? response.text() : "";
-    }),
-  );
-  const publicBundles = [indexHtml, ...bundles].join("\n");
-  const url = publicBundles.match(/https:\/\/[a-z0-9-]+\.supabase\.co/i)?.[0] ?? "";
-  const publishableKey =
-    publicBundles.match(/sb_publishable_[A-Za-z0-9_-]+/)?.[0] ??
-    publicBundles.match(/eyJ[A-Za-z0-9_.-]{40,}/)?.[0] ??
-    "";
+  const url = operationalEnv.supabaseUrl?.trim() ?? "";
+  const publishableKey = operationalEnv.anonKey?.trim() ?? "";
 
   if (!url || !publishableKey) {
-    throw new Error("Unable to discover the public Supabase browser configuration from Production.");
+    throw new Error(
+      "Authenticated E2E requires explicit E2E_SUPABASE_URL and E2E_SUPABASE_PUBLISHABLE_KEY (or the canonical VITE public equivalents).",
+    );
   }
+
   return { url, publishableKey };
 }
 
@@ -145,7 +122,7 @@ export async function bootstrapFixtureSession(
   email: string,
   password: string,
 ) {
-  const { url, publishableKey } = await resolvePublicSupabaseConfig(page);
+  const { url, publishableKey } = resolvePublicSupabaseConfig();
 
   const client = createOperationalAnonClientForPublicConfig(
     url,

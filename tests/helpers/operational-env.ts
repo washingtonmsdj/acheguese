@@ -41,11 +41,11 @@ export interface OperationalEnv {
 }
 
 const ENV_LABELS: Record<keyof OperationalEnv, string> = {
-  anonKey: 'VITE_SUPABASE_PUBLISHABLE_KEY',
+  anonKey: 'E2E_SUPABASE_PUBLISHABLE_KEY or VITE_SUPABASE_PUBLISHABLE_KEY',
   driverEmail: 'E2E_USER_EMAIL or TEST_DRIVER_EMAIL',
   driverPassword: 'E2E_USER_PASSWORD or TEST_DRIVER_PASSWORD',
   serviceRoleKey: 'SUPABASE_SERVICE_ROLE_KEY or SUPABASE_SECRET_KEY',
-  supabaseUrl: 'VITE_SUPABASE_URL',
+  supabaseUrl: 'E2E_SUPABASE_URL or VITE_SUPABASE_URL',
 };
 const SAFE_MUTATION_TARGET_LABEL = 'approved isolated E2E mutation target';
 let operationalClientSequence = 0;
@@ -235,11 +235,14 @@ export function createOperationalAnonClientForPublicConfig(
 
 export function getOperationalEnv(): OperationalEnv {
   return {
-    anonKey: readEnv('VITE_SUPABASE_PUBLISHABLE_KEY') || readEnv('VITE_SUPABASE_ANON_KEY'),
+    anonKey:
+      readEnv('E2E_SUPABASE_PUBLISHABLE_KEY') ||
+      readEnv('VITE_SUPABASE_PUBLISHABLE_KEY') ||
+      readEnv('VITE_SUPABASE_ANON_KEY'),
     driverEmail: readEnv('E2E_USER_EMAIL') || readEnv('TEST_DRIVER_EMAIL'),
     driverPassword: readEnv('E2E_USER_PASSWORD') || readEnv('TEST_DRIVER_PASSWORD'),
     serviceRoleKey: readEnv('SUPABASE_SERVICE_ROLE_KEY') || readEnv('SUPABASE_SECRET_KEY'),
-    supabaseUrl: readEnv('VITE_SUPABASE_URL'),
+    supabaseUrl: readEnv('E2E_SUPABASE_URL') || readEnv('VITE_SUPABASE_URL'),
   };
 }
 
