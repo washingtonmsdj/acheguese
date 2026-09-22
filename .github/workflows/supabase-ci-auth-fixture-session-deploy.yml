@@ -144,7 +144,11 @@ jobs:
             'data.user?.app_metadata?.acheguese_fixture',
             'signInWithPassword',
             'rateLimitMiddleware',
-            'return unauthorized(req, "fixture_auth_failed")',
+            '"fixture_credentials_rejected"',
+            '"fixture_account_unavailable"',
+            '"auth_upstream_unavailable"',
+            '"fixture_auth_failed"',
+            'return fixtureAuthFailureResponse(req, failure)',
             'return unauthorized(req, "fixture_provenance_rejected")',
             'details: { reason: "github_oidc_rejected" }',
             'return unauthorized(req);'
