@@ -385,7 +385,7 @@ describe("MVP core module boundary", () => {
 
   it("keeps heavy aggregation rerun-safe and onboarding visuals deterministic", () => {
     expect(heavyPrWorkflow).toContain(".gate-status/mvp-architecture.success");
-    expect(heavyPrWorkflow).toContain(".gate-status/logout.success");
+    expect(heavyPrWorkflow).toContain(".gate-status/auth-session.success");
     expect(heavyPrWorkflow).toContain(".gate-status/regression.success");
     expect(heavyPrWorkflow).toContain(".gate-status/boundaries.success");
     expect(heavyPrWorkflow).toContain(".gate-status/public-e2e.success");
@@ -395,6 +395,24 @@ describe("MVP core module boundary", () => {
     expect(heavyPrWorkflow).not.toContain(
       "PUBLIC_OUTCOME: ${{ steps.public_e2e.outcome }}",
     );
+    expect(heavyPrWorkflow).not.toContain("E2E_USER_EMAIL");
+    expect(heavyPrWorkflow).not.toContain(
+      "tests/e2e/logout-authenticated.spec.ts",
+    );
+    expect(heavyPrWorkflow).not.toContain(
+      "tests/e2e/messaging-authenticated.spec.ts",
+    );
+    expect(heavyPrWorkflow).toContain(
+      "tests/regression/auth/logout.test.ts",
+    );
+    expect(heavyPrWorkflow).toContain(
+      "SessionService.initialization.spec.ts",
+    );
+    expect(heavyPrWorkflow).toContain("ProtectedRoute.spec.tsx");
+    expect(ssotWorkflow).toContain(
+      "Run authenticated Account and Business lifecycle E2E",
+    );
+    expect(ssotWorkflow).toContain("npm run test:e2e:account-authenticated");
     expect(heavyPrWorkflow).toContain(
       "github.event_name == 'pull_request' && github.event.pull_request.head.sha || github.sha",
     );
