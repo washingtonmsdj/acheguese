@@ -396,11 +396,11 @@ describe("MVP core module boundary", () => {
     expect(e2eAuthHelper).not.toContain(
       "Unable to discover the public Supabase browser configuration from Production.",
     );
-    expect(e2eAuthHelper).toContain("FIXTURE_AUTH_MAX_ATTEMPTS = 3");
-    expect(e2eAuthHelper).toContain("isTransientFixtureAuthError");
     expect(e2eAuthHelper).toContain(
       "signInFixtureWithPasswordGrant",
     );
+    expect(fixtureAuthPasswordGrant).toContain("maxAttempts = 3");
+    expect(fixtureAuthPasswordGrant).toContain("isTransientStatus");
     expect(e2eAuthHelper).toContain("client.auth.setSession");
     expect(e2eAuthHelper).not.toContain("client.auth.signInWithPassword");
     expect(fixtureAuthPasswordGrant).toContain(
