@@ -20,7 +20,7 @@ const COMMUNITY_MEMBERSHIP_REPOSITORY_PATH =
   "src/core/community-experience/repositories/CommunityMembershipRepository.ts";
 const COMMUNITY_ENTITY_LINK_REPOSITORY_PATH =
   "src/core/community-experience/repositories/CommunityEntityLinkRepository.ts";
-const APP_LAZY_IMPORTS_PATH = "src/app/routes/lazyImports.ts";
+const APP_LAZY_IMPORTS_PATH = "src/app/routes/activeLazyImports.ts";
 const APP_LAYOUT_ROUTES_PATH = "src/app/routes/sections/AppLayoutRoutes.tsx";
 const APP_LAYOUT_ROUTE_REGISTRY_PATH =
   "src/app/routes/sections/AppLayoutRouteRegistry.tsx";
@@ -162,10 +162,28 @@ const APP_LAYOUT_ROUTE_REGISTRY_MARKERS = [
 ] as const;
 const APP_LAYOUT_EXTRACTED_ROUTE_COMPONENTS = [
   "<P.TerritorialCategoryBusinessPage />",
-  "<P.TerritorialServicesPage />",
-  "<P.TerritorialClassificadosPage />",
-  "<P.TerritorialEventosPage />",
   "<P.TerritorialMapPage />",
+] as const;
+const ACTIVE_APP_ROUTE_FORBIDDEN_MARKERS = [
+  "DIRECT_PAUSED_ROUTES",
+  "LaunchPausedPage",
+  "launchElement(",
+  "CommunityTerritoryRoutes",
+  "mobilityRoutes",
+  "gastronomyPublicRoutes",
+  "professionalPublicRoutes",
+  "touristPointPublicRoutes",
+  '"../lazyImports"',
+] as const;
+const ACTIVE_APP_LAZY_FORBIDDEN_MARKERS = [
+  "createLaunchPausedRoute",
+  "LaunchPausedPage",
+  "@/modules/business/gastronomy",
+  "@/modules/professionals",
+  "@/modules/classifieds",
+  "@/modules/community-",
+  "@/modules/business/education",
+  "@/core/mobility",
 ] as const;
 const COMMUNITY_MODULE_EMPTY_FACADE_PATHS = [
   "src/modules/community-feed/index.ts",
@@ -456,6 +474,14 @@ function main() {
       `Shell de rotas da aplicacao ausente: ${APP_LAYOUT_ROUTES_PATH}`,
     );
   } else {
+    for (const forbiddenMarker of ACTIVE_APP_ROUTE_FORBIDDEN_MARKERS) {
+      if (appLayoutRoutes.includes(forbiddenMarker)) {
+        violations.push(
+          `${APP_LAYOUT_ROUTES_PATH} nao pode carregar fallback/inventario/owner pos-MVP no runtime ativo: ${forbiddenMarker}`,
+        );
+      }
+    }
+
     for (const marker of APP_LAYOUT_ROUTE_REGISTRY_MARKERS) {
       if (!appLayoutRoutes.includes(marker)) {
         violations.push(
@@ -494,6 +520,14 @@ function main() {
       `Registry de lazy imports ausente: ${APP_LAZY_IMPORTS_PATH}`,
     );
   } else {
+    for (const forbiddenMarker of ACTIVE_APP_LAZY_FORBIDDEN_MARKERS) {
+      if (lazyImports.includes(forbiddenMarker)) {
+        violations.push(
+          `${APP_LAZY_IMPORTS_PATH} nao pode carregar owner pos-MVP/fallback no grafo ativo: ${forbiddenMarker}`,
+        );
+      }
+    }
+
     for (const forbiddenImport of COMMUNITY_MODULE_EMPTY_FACADE_IMPORTS) {
       if (lazyImports.includes(forbiddenImport)) {
         violations.push(

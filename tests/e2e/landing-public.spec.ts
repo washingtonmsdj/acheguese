@@ -1,6 +1,6 @@
 import { expect, test } from '@playwright/test';
 import {
-  expectPausedLaunchSurface,
+  expectNotFoundPublicRoute,
   expectRouteReady,
   openPublicRoute,
   readBodyText,
@@ -47,18 +47,14 @@ test.describe('public landing routes', () => {
     await expect.poll(() => readTitle(page), { timeout: 30_000 }).toContain('Achegue-se');
   });
 
-  test('businesses and services root routes expose branded SEO and main content', async ({ page }) => {
+  test('business root stays active while Services is absent from the MVP router', async ({ page }) => {
     await openPublicRoute(page, '/empresas');
     await expectRouteReady(page, {
       readyPattern: /Empresas|Cadastrar Empresa|Localiza/i,
     });
     await expect.poll(() => readTitle(page), { timeout: 30_000 }).toBe('Empresas locais | Achegue-se');
 
-    await openPublicRoute(page, '/servicos');
-    await expectRouteReady(page, {
-      readyPattern: /Serviços|Servicos|Profissional|Eletricista/i,
-    });
-    await expect.poll(() => readTitle(page), { timeout: 30_000 }).toBe('Serviços locais | Achegue-se');
+    await expectNotFoundPublicRoute(page, '/servicos');
   });
 
   test('territorial business and services module routes use Salvador in SEO titles', async ({ page }) => {
@@ -70,13 +66,10 @@ test.describe('public landing routes', () => {
       .poll(() => readTitle(page), { timeout: 30_000 })
       .toBe('Achegue-se Complexo do Nordeste de Amaralina | Empresas em Salvador');
 
-    await openPublicRoute(page, '/servicos/ba/salvador/complexo-do-nordeste-de-amaralina');
-    await expectRouteReady(page, {
-      readyPattern: /Serviços|Servicos|Complexo do Nordeste de Amaralina|Profissional/i,
-    });
-    await expect
-      .poll(() => readTitle(page), { timeout: 30_000 })
-      .toBe('Achegue-se Complexo do Nordeste de Amaralina | Serviços em Salvador');
+    await expectNotFoundPublicRoute(
+      page,
+      '/servicos/ba/salvador/complexo-do-nordeste-de-amaralina',
+    );
   });
 
   test('businesses and services preserve the selected city or bairro context', async ({ page }) => {
@@ -84,7 +77,6 @@ test.describe('public landing routes', () => {
       { path: '/empresas/ba/salvador', text: /Empresas|Salvador/i },
       { path: '/empresas/ba/salvador/pituba', text: /Empresas|Pituba/i },
       { path: '/empresas/ba/salvador/valeria', text: /Empresas|Val[eé]ria/i },
-      { path: '/servicos/ba/salvador/pituba', text: /ServiÃ§os|Servicos|Pituba/i },
     ];
 
     for (const route of routes) {
@@ -105,8 +97,6 @@ test.describe('public landing routes', () => {
       { path: '/empresas/ba/salvador', text: /Empresas|Salvador/i },
       { path: '/empresas/ba/salvador/nordeste-de-amaralina', text: /Empresas|Nordeste de Amaralina/i },
       { path: '/empresas/ba/salvador/complexo-do-nordeste-de-amaralina', text: /Empresas|Complexo do Nordeste de Amaralina/i },
-      { path: '/comunidade/ba/salvador/feed', text: /Feed|Comunidade|Salvador/i },
-      { path: '/comunidade/ba/salvador/grupos', text: /Grupos|Comunidade|Salvador/i },
     ];
 
     for (const route of routes) {
@@ -121,8 +111,13 @@ test.describe('public landing routes', () => {
         .toBe(false);
     }
 
-    for (const path of ['/educacao/ba/salvador', '/educacao/ba/salvador/complexo-do-nordeste-de-amaralina']) {
-      await expectPausedLaunchSurface(page, path);
+    for (const path of [
+      '/comunidade/ba/salvador/feed',
+      '/comunidade/ba/salvador/grupos',
+      '/educacao/ba/salvador',
+      '/educacao/ba/salvador/complexo-do-nordeste-de-amaralina',
+    ]) {
+      await expectNotFoundPublicRoute(page, path);
     }
   });
 });

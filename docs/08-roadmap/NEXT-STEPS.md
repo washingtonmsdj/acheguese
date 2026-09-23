@@ -48,7 +48,7 @@ Regras:
 2. **Fechar rotas, navegação e prefetch**
    - navegação pública deve expor somente destinos do MVP e infraestrutura necessária;
    - módulo pausado não pode possuir rota funcional acessível, inclusive em Admin/Central;
-   - prefetch/warmup deve consultar lifecycle antes de carregar qualquer módulo;
+   - router, lazy barrel e prefetch/warmup do runtime ativo não podem conectar owner de módulo pausado; URL pausada/antiga sem contrato externo deve cair no 404 canônico;
    - não manter redirects de compatibilidade no corte MVP; URL antiga sem contrato externo comprovado deve ser removida e resultar em 404.
 
 3. **Limpar resíduos do escopo anterior**
@@ -107,7 +107,7 @@ Os PRs #310–#324 consolidaram o corte modular, as rotas canônicas, a gestão 
 - #323 aposentou `/splash` como superfície pública órfã, sem redirect, e ratcheou sua ausência no ownership de rotas.
 - #324 alinhou `/sobre` ao produto realmente ativo e estendeu o ratchet arquitetural para impedir claims de verticais pausadas como disponíveis.
 
-A `main` atual é `e50169c5b1f12154e7941c03478db40848b9e9eb` (merge de #324). O head `45f1396df3cc77b0486a576c80d35780799210e8` de #324 passou Security Check, Security Scan, SSOT Territorial, Heavy exact-SHA e SSOT Enforcement antes do merge; o merge SHA continua sendo um novo candidato e não herda automaticamente status de release. `/splash` permanece aposentado e `/sobre` agora descreve apenas o escopo ativo. O próximo trabalho independente deve continuar o censo de resíduos/owners e a certificação do núcleo, sem reabrir módulos pausados. O smoke autenticado continua bloqueado por #305 e a autoridade de deploy Supabase por #309.
+A base desta execução é a `main` `f380bf649a665ed39d8ea9dc12da921d9e33df0a` (merge de #326). O head `45f1396df3cc77b0486a576c80d35780799210e8` de #324 passou Security Check, Security Scan, SSOT Territorial, Heavy exact-SHA e SSOT Enforcement antes do merge; o merge SHA continua sendo um novo candidato e não herda automaticamente status de release. `/splash` permanece aposentado e `/sobre` agora descreve apenas o escopo ativo. O PR #327 (issue #325) implementa o corte active-only: `AppLayoutRoutes`/registry/barrel ativo passam a conter somente Business + capabilities/infra ativas; módulos pós-MVP permanecem versionados fora do grafo público e suas URLs caem no 404 canônico. O smoke autenticado continua bloqueado por #305 e a autoridade de deploy Supabase por #309.
 
 ### Blockers atuais do primeiro release
 

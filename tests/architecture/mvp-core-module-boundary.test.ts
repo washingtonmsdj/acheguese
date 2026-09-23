@@ -278,22 +278,26 @@ describe("MVP core module boundary", () => {
     );
   });
 
-  it("keeps active modules behind the same lifecycle gate used by paused modules", () => {
-    expect(appRoutes).toContain(
-      'element={launchElement("business", "Empresas", <P.EmpresasLandingPage />)}',
-    );
-    expect(appRoutes).toContain(
-      'element={launchElement("map", "Mapa", <P.MapaPage />)}',
-    );
-    expect(appRoutes).toContain(
-      'element={launchElement("nearby", "Perto de mim", <P.NearbyPage />)}',
-    );
-    expect(appRoutes).toContain('launchElement("search", "Busca"');
+  it("mounts only lifecycle-enabled MVP surfaces in the active AppLayout", () => {
+    expect(appRoutes).toContain('isProductModuleEnabled("business")');
+    expect(appRoutes).toContain('isPlatformCapabilityEnabled("map")');
+    expect(appRoutes).toContain('isPlatformCapabilityEnabled("nearby")');
+    expect(appRoutes).toContain('isPlatformCapabilityEnabled("search")');
+    expect(appRoutes).toContain('isPlatformCapabilityEnabled("messaging")');
+
+    expect(appRoutes).toContain('path="/empresas"');
     expect(appRoutes).toContain('path="/empresas/cadastrar"');
-    expect(appRoutes).toContain('"business"');
-    expect(appRoutes).toContain(
-      "protectedElement(<P.EmpresasCadastroLandingPage />)",
-    );
+    expect(appRoutes).toContain('path="/mapa"');
+    expect(appRoutes).toContain('path="/perto-de-mim"');
+    expect(appRoutes).toContain('path="/busca"');
+    expect(appRoutes).toContain('path="/mensagens"');
+
+    expect(appRoutes).not.toContain("LaunchPausedPage");
+    expect(appRoutes).not.toContain("DIRECT_PAUSED_ROUTES");
+    expect(appRoutes).not.toContain("launchElement(");
+    expect(appRoutes).not.toContain('path="/servicos"');
+    expect(appRoutes).not.toContain('path="/classificados"');
+    expect(appRoutes).not.toContain('path="/educacao"');
   });
 
   it("keeps paused route prefetches fail-closed before loading chunks", () => {

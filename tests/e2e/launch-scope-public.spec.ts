@@ -1,10 +1,10 @@
 import { expect, test } from '@playwright/test';
-import { expectPausedLaunchSurface } from './support/publicRouteAssertions';
+import { expectNotFoundPublicRoute } from './support/publicRouteAssertions';
 
 test.describe('public launch scope', () => {
   test.setTimeout(180_000);
 
-  test('global post-MVP routes render the launch isolation page', async ({ page }) => {
+  test('global post-MVP routes fall through to the canonical 404', async ({ page }) => {
     for (const path of [
       '/gastronomia',
       '/servicos',
@@ -22,7 +22,7 @@ test.describe('public launch scope', () => {
       '/problemas',
       '/achados-perdidos',
     ]) {
-      await expectPausedLaunchSurface(page, path);
+      await expectNotFoundPublicRoute(page, path);
     }
   });
 
@@ -37,7 +37,7 @@ test.describe('public launch scope', () => {
     await expect(page.getByRole('heading', { name: 'Procurar no bairro' })).toBeVisible();
   });
 
-  test('territorial post-MVP routes isolate before loading domain data', async ({ page }) => {
+  test('territorial post-MVP routes fall through before loading domain data', async ({ page }) => {
     for (const path of [
       '/gastronomia/ba/salvador',
       '/servicos/ba/salvador',
@@ -55,7 +55,7 @@ test.describe('public launch scope', () => {
       '/comunidade/ba/salvador/educacao',
       '/comunidade/ba/salvador/mobilidade',
     ]) {
-      await expectPausedLaunchSurface(page, path);
+      await expectNotFoundPublicRoute(page, path);
     }
   });
 });

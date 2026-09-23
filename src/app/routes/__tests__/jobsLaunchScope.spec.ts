@@ -13,41 +13,46 @@ function readProjectFile(path: string): string {
 }
 
 describe("jobs and work opportunities post-MVP boundary", () => {
-  it("keeps jobs paused through the single launch gate", () => {
+  it("keeps jobs absent from the active AppLayout graph", () => {
     expect(isLaunchSurfaceEnabled("jobs")).toBe(false);
 
     const appRoutesSource = readProjectFile(
       "src/app/routes/sections/AppLayoutRoutes.tsx",
     );
-    const communityRoutesSource = readProjectFile(
-      "src/app/routes/sections/CommunityTerritoryRoutes.tsx",
+    const activeLazySource = readProjectFile(
+      "src/app/routes/activeLazyImports.ts",
     );
 
-    expect(appRoutesSource).toMatch(
-      /path=\{JOB_ROUTES\.publish\}\s+element=\{launchElement\("jobs", "Vagas"/,
-    );
-    expect(appRoutesSource).toMatch(
-      /path="\/oportunidades"\s+element=\{launchElement\(\s*"jobs",\s*"Oportunidades"/,
-    );
+    for (const forbidden of [
+      "JOB_ROUTES",
+      'path="/oportunidades"',
+      'path="/oportunidades/:id"',
+      'path="/vagas',
+      '"jobs"',
+      "PublicarVagaPage",
+      "WorkOpportunitiesPage",
+      "VagasPublicPage",
+      "TerritorialVagasPage",
+    ]) {
+      expect(appRoutesSource).not.toContain(forbidden);
+      expect(activeLazySource).not.toContain(forbidden);
+    }
+
     expect(appRoutesSource).toContain(
-      'launchTerritorialLayout("jobs", "Vagas")',
+      '<Route path="*" element={<P.NotFound />} />',
     );
-
-    expect(communityRoutesSource).toContain('key: "jobs"');
-    expect(communityRoutesSource).toContain('launchSurface: "jobs"');
-    expect(communityRoutesSource).toContain('pausedModuleName: "Vagas"');
   });
 
   it("preserves the real jobs implementation for post-MVP integration", () => {
-    const lazyImportsSource = readProjectFile("src/app/routes/lazyImports.ts");
+    const preservedLazyImports = readProjectFile("src/app/routes/lazyImports.ts");
     const territorialModulesSource = readProjectFile(
       "src/app/routes/territorial/TerritorialModulePages.tsx",
     );
 
-    expect(lazyImportsSource).toContain(
+    expect(preservedLazyImports).toContain(
       'import("@/modules/classifieds/jobs/pages/VagasPublicPage")',
     );
-    expect(lazyImportsSource).toContain(
+    expect(preservedLazyImports).toContain(
       'import("@/modules/work-opportunities/pages/WorkOpportunitiesPage")',
     );
     expect(territorialModulesSource).toContain(

@@ -1,284 +1,131 @@
 import type { ReactNode } from "react";
 import { Route } from "react-router-dom";
+
 import {
-  isLaunchSurfaceEnabled,
-  type LaunchSurfaceKey,
-} from "@/app/config/launchScope";
-import { APP_MODULE_SLUGS } from "@/shared/config/moduleSlugs";
+  isPlatformCapabilityEnabled,
+  isProductModuleEnabled,
+} from "@/app/config/lifecycleRegistry";
+import type { PlatformCapabilityKey } from "@/app/config/platformCapabilityRegistry";
+import type { ProductModuleKey } from "@/app/config/productModuleRegistry";
 import {
   TERRITORIAL_ROUTE_PARAMS,
   TERRITORIAL_ROUTE_STATIC_SEGMENTS,
   buildTerritorialModuleRoutePath,
 } from "@/core/routing/config/territorialRoutePatterns";
-import { TerritorialLayout } from "@/core/routing/components/TerritorialLayout";
+import { APP_MODULE_SLUGS } from "@/shared/config/moduleSlugs";
 
-import * as P from "../lazyImports";
+import * as P from "../activeLazyImports";
 
 const TERRITORIAL_PARAMS = TERRITORIAL_ROUTE_PARAMS;
 const TERRITORIAL_STATIC = TERRITORIAL_ROUTE_STATIC_SEGMENTS;
 
+type RouteOwner =
+  | { readonly kind: "product"; readonly key: ProductModuleKey }
+  | { readonly kind: "capability"; readonly key: PlatformCapabilityKey };
+
 type AppLayoutRouteDescriptor = {
-  id: string;
-  path: string;
-  element: ReactNode;
-  indexElement?: ReactNode;
-  launchSurface?: LaunchSurfaceKey;
-  pausedModuleName?: string;
+  readonly id: string;
+  readonly path: string;
+  readonly element: ReactNode;
+  readonly indexElement?: ReactNode;
+  readonly owner: RouteOwner;
 };
 
-const APP_LAYOUT_BUSINESS_SERVICE_CLASSIFIED_ROUTES: readonly AppLayoutRouteDescriptor[] =
-  [
-    {
-      id: "business-detail",
-      launchSurface: "business",
-      pausedModuleName: "Empresas",
-      path: buildTerritorialModuleRoutePath(APP_MODULE_SLUGS.business, [
-        TERRITORIAL_PARAMS.district,
-        TERRITORIAL_PARAMS.slug,
-      ]),
-      element: (
-        <P.BusinessRouteResolver
-          BusinessDetailComponent={P.EmpresaDetailLandingPage}
-        />
-      ),
-    },
-    {
-      id: "business-category-city",
-      launchSurface: "business",
-      pausedModuleName: "Empresas",
-      path: buildTerritorialModuleRoutePath(APP_MODULE_SLUGS.business, [
-        TERRITORIAL_STATIC.category,
-        TERRITORIAL_PARAMS.category,
-      ]),
-      element: <TerritorialLayout />,
-      indexElement: <P.TerritorialCategoryBusinessPage />,
-    },
-    {
-      id: "business-category-district",
-      launchSurface: "business",
-      pausedModuleName: "Empresas",
-      path: buildTerritorialModuleRoutePath(APP_MODULE_SLUGS.business, [
-        TERRITORIAL_PARAMS.district,
-        TERRITORIAL_STATIC.category,
-        TERRITORIAL_PARAMS.category,
-      ]),
-      element: <TerritorialLayout />,
-      indexElement: <P.TerritorialCategoryBusinessPage />,
-    },
-    {
-      id: "business-district",
-      launchSurface: "business",
-      pausedModuleName: "Empresas",
-      path: buildTerritorialModuleRoutePath(APP_MODULE_SLUGS.business, [
-        TERRITORIAL_PARAMS.district,
-      ]),
-      element: <TerritorialLayout />,
-      indexElement: <P.EmpresasLandingPage />,
-    },
-    {
-      id: "business-city",
-      launchSurface: "business",
-      pausedModuleName: "Empresas",
-      path: buildTerritorialModuleRoutePath(APP_MODULE_SLUGS.business),
-      element: <TerritorialLayout />,
-      indexElement: <P.EmpresasLandingPage />,
-    },
-    {
-      id: "services-district",
-      launchSurface: "services",
-      pausedModuleName: "Serviços",
-      path: buildTerritorialModuleRoutePath(APP_MODULE_SLUGS.services, [
-        TERRITORIAL_PARAMS.district,
-      ]),
-      element: <TerritorialLayout />,
-      indexElement: <P.TerritorialServicesPage />,
-    },
-    {
-      id: "services-city",
-      launchSurface: "services",
-      pausedModuleName: "Serviços",
-      path: buildTerritorialModuleRoutePath(APP_MODULE_SLUGS.services),
-      element: <TerritorialLayout />,
-      indexElement: <P.TerritorialServicesPage />,
-    },
-    {
-      id: "classified-detail",
-      launchSurface: "classifieds",
-      pausedModuleName: "Classificados",
-      path: "/classificados/:uf/:cidade/:bairro/:categoria/:subcategoria/:slug/:publicId",
-      element: <P.ClassifiedCanonicalRoute />,
-    },
-    {
-      id: "classified-subcategory-district",
-      launchSurface: "classifieds",
-      pausedModuleName: "Classificados",
-      path: buildTerritorialModuleRoutePath(APP_MODULE_SLUGS.classifieds, [
-        TERRITORIAL_PARAMS.district,
-        TERRITORIAL_PARAMS.category,
-        TERRITORIAL_PARAMS.subcategory,
-      ]),
-      element: <TerritorialLayout />,
-      indexElement: <P.TerritorialClassificadosPage />,
-    },
-    {
-      id: "classified-category-district",
-      launchSurface: "classifieds",
-      pausedModuleName: "Classificados",
-      path: buildTerritorialModuleRoutePath(APP_MODULE_SLUGS.classifieds, [
-        TERRITORIAL_PARAMS.district,
-        TERRITORIAL_PARAMS.category,
-      ]),
-      element: <TerritorialLayout />,
-      indexElement: <P.TerritorialClassificadosPage />,
-    },
-    {
-      id: "classified-district",
-      launchSurface: "classifieds",
-      pausedModuleName: "Classificados",
-      path: buildTerritorialModuleRoutePath(APP_MODULE_SLUGS.classifieds, [
-        TERRITORIAL_PARAMS.district,
-      ]),
-      element: <TerritorialLayout />,
-      indexElement: <P.TerritorialClassificadosPage />,
-    },
-    {
-      id: "classified-city",
-      launchSurface: "classifieds",
-      pausedModuleName: "Classificados",
-      path: buildTerritorialModuleRoutePath(APP_MODULE_SLUGS.classifieds),
-      element: <TerritorialLayout />,
-      indexElement: <P.TerritorialClassificadosPage />,
-    },
-  ];
+function isRouteOwnerEnabled(owner: RouteOwner): boolean {
+  return owner.kind === "product"
+    ? isProductModuleEnabled(owner.key)
+    : isPlatformCapabilityEnabled(owner.key);
+}
 
-export const APP_LAYOUT_EVENT_TERRITORIAL_ROUTES: readonly AppLayoutRouteDescriptor[] =
-  [
-    {
-      id: "events-detail",
-      path: buildTerritorialModuleRoutePath(APP_MODULE_SLUGS.events, [
-        TERRITORIAL_STATIC.eventDetail,
-        TERRITORIAL_PARAMS.eventId,
-      ]),
-      launchSurface: "events",
-      pausedModuleName: "Eventos",
-      element: <TerritorialLayout />,
-      indexElement: (
-        <P.EventsErrorBoundary>
-          <P.EventDetailPage />
-        </P.EventsErrorBoundary>
-      ),
-    },
-    {
-      id: "events-favorites",
-      path: buildTerritorialModuleRoutePath(APP_MODULE_SLUGS.events, [
-        TERRITORIAL_STATIC.favorites,
-      ]),
-      launchSurface: "events",
-      pausedModuleName: "Eventos",
-      element: <TerritorialLayout />,
-      indexElement: (
-        <P.EventsErrorBoundary>
-          <P.EventsFavoritesPage />
-        </P.EventsErrorBoundary>
-      ),
-    },
-    {
-      id: "events-calendar",
-      path: buildTerritorialModuleRoutePath(APP_MODULE_SLUGS.events, [
-        TERRITORIAL_STATIC.calendar,
-      ]),
-      launchSurface: "events",
-      pausedModuleName: "Eventos",
-      element: <TerritorialLayout />,
-      indexElement: (
-        <P.EventsErrorBoundary>
-          <P.EventsCalendarPage />
-        </P.EventsErrorBoundary>
-      ),
-    },
-    {
-      id: "events-map",
-      path: buildTerritorialModuleRoutePath(APP_MODULE_SLUGS.events, [
-        TERRITORIAL_STATIC.map,
-      ]),
-      launchSurface: "events",
-      pausedModuleName: "Eventos",
-      element: <TerritorialLayout />,
-      indexElement: (
-        <P.EventsErrorBoundary>
-          <P.EventsMapPage />
-        </P.EventsErrorBoundary>
-      ),
-    },
-    {
-      id: "events-district",
-      path: buildTerritorialModuleRoutePath(APP_MODULE_SLUGS.events, [
-        TERRITORIAL_PARAMS.district,
-      ]),
-      launchSurface: "events",
-      pausedModuleName: "Eventos",
-      element: <TerritorialLayout />,
-      indexElement: <P.TerritorialEventosPage />,
-    },
-    {
-      id: "events-city",
-      path: buildTerritorialModuleRoutePath(APP_MODULE_SLUGS.events),
-      launchSurface: "events",
-      pausedModuleName: "Eventos",
-      element: <TerritorialLayout />,
-      indexElement: <P.TerritorialEventosPage />,
-    },
-  ];
+const APP_LAYOUT_BUSINESS_ROUTES: readonly AppLayoutRouteDescriptor[] = [
+  {
+    id: "business-detail",
+    owner: { kind: "product", key: "business" },
+    path: buildTerritorialModuleRoutePath(APP_MODULE_SLUGS.business, [
+      TERRITORIAL_PARAMS.district,
+      TERRITORIAL_PARAMS.slug,
+    ]),
+    element: (
+      <P.BusinessRouteResolver
+        BusinessDetailComponent={P.EmpresaDetailLandingPage}
+      />
+    ),
+  },
+  {
+    id: "business-category-city",
+    owner: { kind: "product", key: "business" },
+    path: buildTerritorialModuleRoutePath(APP_MODULE_SLUGS.business, [
+      TERRITORIAL_STATIC.category,
+      TERRITORIAL_PARAMS.category,
+    ]),
+    element: <P.ActiveTerritorialLayout />,
+    indexElement: <P.TerritorialCategoryBusinessPage />,
+  },
+  {
+    id: "business-category-district",
+    owner: { kind: "product", key: "business" },
+    path: buildTerritorialModuleRoutePath(APP_MODULE_SLUGS.business, [
+      TERRITORIAL_PARAMS.district,
+      TERRITORIAL_STATIC.category,
+      TERRITORIAL_PARAMS.category,
+    ]),
+    element: <P.ActiveTerritorialLayout />,
+    indexElement: <P.TerritorialCategoryBusinessPage />,
+  },
+  {
+    id: "business-district",
+    owner: { kind: "product", key: "business" },
+    path: buildTerritorialModuleRoutePath(APP_MODULE_SLUGS.business, [
+      TERRITORIAL_PARAMS.district,
+    ]),
+    element: <P.ActiveTerritorialLayout />,
+    indexElement: <P.EmpresasLandingPage />,
+  },
+  {
+    id: "business-city",
+    owner: { kind: "product", key: "business" },
+    path: buildTerritorialModuleRoutePath(APP_MODULE_SLUGS.business),
+    element: <P.ActiveTerritorialLayout />,
+    indexElement: <P.EmpresasLandingPage />,
+  },
+];
 
 const APP_LAYOUT_MAP_TERRITORIAL_ROUTES: readonly AppLayoutRouteDescriptor[] = [
   {
     id: "map-district",
-    launchSurface: "map",
-    pausedModuleName: "Mapa",
+    owner: { kind: "capability", key: "map" },
     path: buildTerritorialModuleRoutePath(APP_MODULE_SLUGS.map, [
       TERRITORIAL_PARAMS.district,
     ]),
-    element: <TerritorialLayout />,
+    element: <P.ActiveTerritorialLayout />,
     indexElement: <P.TerritorialMapPage />,
   },
   {
     id: "map-city",
-    launchSurface: "map",
-    pausedModuleName: "Mapa",
+    owner: { kind: "capability", key: "map" },
     path: buildTerritorialModuleRoutePath(APP_MODULE_SLUGS.map),
-    element: <TerritorialLayout />,
+    element: <P.ActiveTerritorialLayout />,
     indexElement: <P.TerritorialMapPage />,
   },
 ];
 
 export const APP_LAYOUT_TERRITORIAL_DOMAIN_ROUTES: readonly AppLayoutRouteDescriptor[] =
-  [
-    ...APP_LAYOUT_BUSINESS_SERVICE_CLASSIFIED_ROUTES,
-    ...APP_LAYOUT_EVENT_TERRITORIAL_ROUTES,
-    ...APP_LAYOUT_MAP_TERRITORIAL_ROUTES,
-  ];
+  [...APP_LAYOUT_BUSINESS_ROUTES, ...APP_LAYOUT_MAP_TERRITORIAL_ROUTES];
 
 export function renderAppLayoutRouteDescriptors(
   routes: readonly AppLayoutRouteDescriptor[],
 ): ReactNode[] {
-  return routes.map((route) => {
-    const isPaused =
-      route.launchSurface !== undefined &&
-      !isLaunchSurfaceEnabled(route.launchSurface);
-    const element = isPaused ? (
-      <P.LaunchPausedPage moduleName={route.pausedModuleName ?? "Módulo"} />
-    ) : (
-      route.element
-    );
+  return routes
+    .filter((route) => isRouteOwnerEnabled(route.owner))
+    .map((route) => {
+      if (!route.indexElement) {
+        return <Route key={route.id} path={route.path} element={route.element} />;
+      }
 
-    if (!route.indexElement || isPaused) {
-      return <Route key={route.id} path={route.path} element={element} />;
-    }
-
-    return (
-      <Route key={route.id} path={route.path} element={element}>
-        <Route index element={route.indexElement} />
-      </Route>
-    );
-  });
+      return (
+        <Route key={route.id} path={route.path} element={route.element}>
+          <Route index element={route.indexElement} />
+        </Route>
+      );
+    });
 }

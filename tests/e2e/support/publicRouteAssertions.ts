@@ -124,6 +124,28 @@ export async function expectRouteReady(page: Page, options: ExpectRouteReadyOpti
     .toBe(true);
 }
 
+export async function expectNotFoundPublicRoute(
+  page: Page,
+  path: string,
+  options: OpenRouteOptions = {},
+) {
+  await openPublicRoute(page, path, {
+    waitUntil: 'domcontentloaded',
+    dismissConsent: true,
+    ...options,
+  });
+
+  await expect
+    .poll(
+      async () => {
+        const text = await readBodyText(page);
+        return /404/.test(text) && /Page not found/i.test(text);
+      },
+      { timeout: DEFAULT_READY_TIMEOUT_MS },
+    )
+    .toBe(true);
+}
+
 export async function expectPausedLaunchSurface(page: Page, path: string, options: OpenRouteOptions = {}) {
   await openPublicRoute(page, path, {
     waitUntil: 'domcontentloaded',

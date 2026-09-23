@@ -99,3 +99,7 @@
 ## D-024 — Superfícies institucionais obedecem ao lifecycle
 
 **Decisão:** páginas institucionais públicas, SEO e copy de produto não constituem um segundo catálogo de funcionalidades. Elas devem descrever como disponível apenas o domínio/capabilities ativos no lifecycle canônico. Módulos `paused` podem ser citados somente de forma explícita como futuros, pausados ou indisponíveis. Rotas institucionais sem caller/contrato real devem ser aposentadas sem redirect de compatibilidade. O ratchet do MVP deve proteger essa truthfulness junto das fronteiras de runtime. **Referências:** `SCREEN-MAP.md`, `08-roadmap/NEXT-STEPS.md`, `tests/architecture/mvp-core-module-boundary.test.ts`.
+
+## D-025 — O shell público monta somente superfícies ativas
+
+**Decisão:** `AppLayoutRoutes.tsx` e `AppLayoutRouteRegistry.tsx` não mantêm rotas de módulos `paused` nem renderizam `LaunchPausedPage` para URLs públicas desses módulos. O shell importa apenas `activeLazyImports.ts`, contendo Business, capabilities horizontais ativas e infraestrutura necessária. Implementações pós-MVP permanecem versionadas nos seus bounded contexts/arquivos preservados, mas fora do grafo ativo. URL sem owner ativo cai no `NotFound` canônico; padrões territoriais genéricos também compõem esse NotFound quando a resolução territorial falha, sem blacklist de módulos. A reativação exige mudança formal de lifecycle + certificação + conexão explícita ao boundary ativo. **Referências:** issue #325, `SCREEN-MAP.md`, `src/app/routes/README.md`, `tests/architecture/app-layout-active-route-boundary.test.ts`.
