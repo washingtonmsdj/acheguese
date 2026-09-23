@@ -4,17 +4,18 @@
 **Data do checkpoint GitHub:** 2026-09-23  
 **Repositório:** `washingtonmsdj/acheguese`  
 **Linha ativa:** `main`  
-**Candidato atual:** branch `fix/mvp-active-central-only` sobre `main` `40ee0ac5ad4554ee7b10a90ccda9840f8a35e211` (merge de #327). O head só é certificável quando os gates aplicáveis do mesmo SHA concluírem verdes; merge posterior gera novo SHA.
+**Candidato atual:** branch `cleanup/mvp-retire-central-legacy-barrel` sobre `main` `be649be585a016de4eed1b78a5c4b620e22723f5` (merge de #329). O head só é certificável quando os gates aplicáveis do mesmo SHA concluírem verdes; merge posterior gera novo SHA.
 
 Este documento consolida ordem de execução, blockers e Definition of Done. Ele é um **registro operacional**, não uma fotografia autoritativa do que existe no produto. A fonte de verdade para decidir o que existe, o que está ativo e o que deve ser corrigido é sempre o **projeto real**: código da `main`, rotas, owners, serviços, schema/migrations, contratos, testes, deploy/runtime e comportamento observado.
 
 
 ## Estado operacional atual — 2026-09-23
 
-- `main` atual: `40ee0ac5ad4554ee7b10a90ccda9840f8a35e211` (merge de #327);
+- `main` atual: `be649be585a016de4eed1b78a5c4b620e22723f5` (merge de #329);
 - #327 / #325 removeu módulos pausados da árvore pública ativa, criou `activeLazyImports.ts` e fez URLs públicas sem owner ativo caírem no 404 canônico;
 - o head `fa747aa7c877d7a086b92277940681a27abba844` de #327 passou Dependency Lock, Security Check/Scan, Auth Concept, Visual Regression, SSOT Territorial, Heavy exact-SHA e SSOT Enforcement antes do merge;
-- #328 — Central active-only (em implementação): remover `LaunchPausedPage`/owners pós-MVP da árvore `/central/*`, manter somente Business/Empresas + infraestrutura e retirar queries ocultas de Billing/Gastronomia do shell Business;
+- #329 — Central active-only integrado: `/central/*` monta somente Business/Empresas + infraestrutura via `activeCentralLazyImports.ts`; módulos pausados ficam fora do grafo e URL sem owner cai no 404 canônico;
+- corte atual — aposentar `centralLazyImports.ts`, agora sem caller runtime, e fazer os ratchets provarem preservação pelos owners físicos/lifecycle em vez de um barrel artificial;
 - o merge SHA `40ee0ac5...` não herda certificação de release: qualquer promoção precisa certificar/deployar/smokar este SHA exato.
 
 ### Blockers atuais do primeiro release
@@ -1608,7 +1609,7 @@ Correção estrutural deste corte:
 - edição passa a `/central/empresas/:businessId/editar`;
 - `EditarEmpresaPage` fica sob o mesmo `BusinessAdminGuard` da empresa;
 - o editor sai do `AppLayoutRoutes` e do lazy barrel global e passa a ser
-  owned por `CentralRoutes`/`centralLazyImports`;
+  owned por `CentralRoutes`/`activeCentralLazyImports.ts`;
 - `businessManagementRoutes.edit()` é a única fonte para o destino de edição;
 - E2Es deixam de montar `/edit-business` manualmente;
 - `/create-business`, `/edit-business/:profileId` e
