@@ -90,7 +90,7 @@ Os hosted runners voltaram a executar steps e logs reais. O incidente histórico
 
 O contrato obrigatório do MVP inclui os ratchets recentes de lifecycle, Business, Search, Messaging, remoção de legado e rotas canônicas. `test:mvp:architecture` deve executar essas provas em todo candidato.
 
-Os PRs #310–#318 consolidaram o corte modular, as rotas canônicas, a gestão Business e a retirada dos bypasses DEV:
+Os PRs #310–#319 consolidaram o corte modular, as rotas canônicas, a gestão Business, a retirada dos bypasses DEV e o primeiro corte de resíduos SSOT de Gastronomia:
 
 - Business independente de verticais pausados;
 - navegação alinhada às capabilities ativas;
@@ -100,8 +100,9 @@ Os PRs #310–#318 consolidaram o corte modular, as rotas canônicas, a gestão 
 - ratchets recentes incorporados ao gate obrigatório;
 - gestão Business consolidada sob `/central/empresas/*`, sem rota concorrente/redirect legado;
 - #318 aposentou o bypass DEV `?concept-mock=1` e os cinco mocks/previews sem caller do runtime.
+- #319 aposentou a allowance morta de `gastronomy_establishments`/`GastronomyQueryService.ts` no checker SSOT após censo de owners/callers.
 
-Na `main` `ce680188dac0cb64e953354215c37c0524c48a13`, os gates determinísticos/públicos aplicáveis foram executados no candidato exact-SHA; o smoke autenticado continua bloqueado por #305. O censo de resíduos segue somente onde há evidência de owner/caller, sem remover facades com consumidores reais.
+A `main` atual é `2f21393c64f1d0e53fa7d4fa08dfdca5f707c6dc` (merge de #319). O head de #319 foi certificado antes do merge por SSOT Enforcement, Heavy exact-SHA, Security, lint/typecheck, unit, Runtime, E2E público e Regression; o merge SHA continua sendo um novo candidato e não herda automaticamente status de release. O corte em andamento remove o lint rule órfão `eslint-rules/no-direct-supabase-queries.js`, alinha o `SSOT_REGISTRY.md` a `gastronomy_profiles` + `GastronomyProfileService` e ratcheta essa aposentadoria no validador obrigatório de Gastronomia. O smoke autenticado continua bloqueado por #305 e a autoridade de deploy Supabase por #309.
 
 ### Blockers atuais do primeiro release
 
