@@ -13,6 +13,9 @@ describe("nearby MVP boundary", () => {
 
   it("uses location quality rather than fallback coordinates as personal proximity truth", () => {
     expect(page).toContain("const hasPreciseProximity = isGoodForProximity");
+    expect(page).toContain("useTerritorialContextOptional");
+    expect(page).toContain("territoryLocation: routeFallbackLocation");
+    expect(page).toContain("locationId: routeFallbackLocation?.id ?? activeLocation?.id");
     expect(page).toContain("showProximity={hasPreciseProximity}");
     expect(page).toContain(
       "O recorte usa o centro do território como referência; ative o GPS para ver distâncias pessoais.",
