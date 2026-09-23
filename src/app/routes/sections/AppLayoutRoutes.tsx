@@ -9,7 +9,6 @@ import {
 import TerritoryHomePage from "@/app/pages/TerritoryHomePage";
 import { ProtectedRoute } from "@/core/routing/components/ProtectedRoute";
 import { TerritorialIndexPage } from "@/core/routing/components/TerritorialIndexPage";
-import { TerritorialLayout } from "@/core/routing/components/TerritorialLayout";
 import {
   TERRITORIAL_ROUTE_PARAMS,
   TERRITORIAL_ROUTE_STATIC_SEGMENTS,
@@ -172,7 +171,7 @@ export function AppLayoutRoutes() {
           <>
             <Route
               path={buildTerritorialBareRoutePath([TERRITORIAL_PARAMS.district])}
-              element={<TerritorialLayout />}
+              element={<P.ActiveTerritorialLayout />}
             >
               <Route
                 index
@@ -185,7 +184,7 @@ export function AppLayoutRoutes() {
             </Route>
             <Route
               path={buildTerritorialBareRoutePath()}
-              element={<TerritorialLayout />}
+              element={<P.ActiveTerritorialLayout />}
             >
               <Route
                 index
