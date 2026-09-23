@@ -16,9 +16,11 @@ export const NearbyPage = lazy(() => import("@/core/nearby/pages/NearbyPage"));
 export const NotFound = lazy(() => import("@/app/pages/NotFound"));
 
 export const StateLandingPage = lazy(() =>
-  import("@/core/routing/components/StateLandingPage").then((module) => ({
-    default: module.StateLandingPage,
-  })),
+  import("@/app/routes/territorial/ActiveTerritorialModulePages").then(
+    (module) => ({
+      default: module.ActiveStateLandingPage,
+    }),
+  ),
 );
 export const CountryLandingPage = lazy(() =>
   import("@/core/routing/components/CountryLandingPage").then((module) => ({
