@@ -7,10 +7,6 @@ import {
   UserRound,
   type LucideIcon,
 } from "lucide-react";
-import {
-  APP_MODULE_SLUGS,
-  buildAppModulePath,
-} from "@/shared/config/moduleSlugs";
 import { parsePublicTerritoryPath } from "@/core/routing/utils/publicTerritoryPath";
 import {
   MODULE_SLUGS,
@@ -118,7 +114,7 @@ export function buildTerritoryNavigationModes({
     },
     {
       id: "nearby",
-      href: buildAppModulePath(APP_MODULE_SLUGS.nearby),
+      href: buildModuleTerritoryUrl(MODULE_SLUGS.nearby, territoryBase),
       label: "Perto",
       description: "Empresas perto de mim",
       icon: Navigation,
