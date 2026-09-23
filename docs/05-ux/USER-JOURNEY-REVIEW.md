@@ -1,7 +1,9 @@
 # USER JOURNEY REVIEW — Sprint JOURNEY.1
 
-Referência oficial de UX: Territory Home + Territory Feed + PostPage.
+Referência original de UX: Territory Home + Territory Feed + PostPage.
 Este documento não analisa telas isoladas. Analisa a **continuidade entre elas**.
+
+> **Atualização MVP — 2026-09-23:** Community/Feed/Post/Eventos descritos abaixo são jornadas históricas/pós-MVP e não integram o runtime ativo. A autoridade atual é o lifecycle executável + `NAVIGATION-MAPPING.md`. No MVP, a raiz `/` sempre apresenta `TerritoryEntryPage`; módulos pausados não aparecem na navegação e não recebem `LaunchPausedPage`.
 
 Critério: o usuário deve sentir que está dentro de **um único produto** — nunca em módulos diferentes.
 
@@ -26,7 +28,7 @@ Para cada jornada mapeamos:
 
 ## 1. Primeira visita
 
-- **Início:** `/` → `RootRouteEntry` → `TerritoryEntryPage` quando não há contexto anterior.
+- **Início:** `/` → `RootRouteEntry` → `TerritoryEntryPage`, inclusive quando existe território lembrado.
 - **Intenção:** entender o que é o Achegue-se.
 - **Cliques até valor:** 2 (selecionar cidade → ver bairro).
 - **Perdido:** o seletor de cidade é a home. O visitante não sabe se já está "dentro" ou "fora" do produto.
@@ -111,9 +113,9 @@ Para cada jornada mapeamos:
 
 - **Início:** Home → "Hoje na Pituba" (hoje pode ser um evento) ou módulo Eventos.
 - **Intenção:** ver o que acontece.
-- **Estado atual:** módulo Eventos pausado (`LaunchPausedPage`). Jornada **incompleta por design**.
-- **Perdido:** o usuário vê "Eventos" no bottom/menu e chega em página pausada. **Fricção alta.**
-- **Continuidade:** quebra total.
+- **Estado atual:** módulo Eventos pausado e fora do grafo ativo do MVP. Jornada preservada apenas como referência pós-MVP.
+- **Perdido:** não se aplica ao runtime atual: Eventos não aparece na navegação primária.
+- **Continuidade:** URL sem owner ativo termina no `NotFound` canônico; reativação futura exige lifecycle + certificação.
 
 ## 10. Trocar de bairro
 
