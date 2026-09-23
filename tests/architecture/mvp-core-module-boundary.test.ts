@@ -10,6 +10,7 @@ describe("MVP core module boundary", () => {
   const platformRegistry = read("src/app/config/platformCapabilityRegistry.ts");
   const lifecycleRegistry = read("src/app/config/lifecycleRegistry.ts");
   const launchScope = read("src/app/config/launchScope.ts");
+  const presentationModules = read("src/app/config/modules.ts");
   const domainMapping = read("docs/02-domain/DOMAIN-MAPPING.md");
   const entry = read("src/app/pages/TerritoryEntryPage.tsx");
   const rootEntry = read("src/app/routes/RootRouteEntry.tsx");
@@ -84,6 +85,13 @@ describe("MVP core module boundary", () => {
     expect(launchScope).toContain(
       'search: isPlatformCapabilityEnabled("search")',
     );
+
+    for (const activeTerritorialCapability of ["map", "nearby", "search"]) {
+      const moduleBlock = presentationModules.match(
+        new RegExp(`\\n  ${activeTerritorialCapability}: \\{[\\s\\S]*?\\n  \\},`),
+      )?.[0] ?? "";
+      expect(moduleBlock).toContain("isTerritorial: true");
+    }
   });
 
   it("keeps living Territory docs aligned with the domain/capability lifecycle split", () => {
