@@ -16,9 +16,10 @@ as rotas públicas continuam `launch-paused`.
   `public.education_analytics_events`;
 - `EducationObservabilityService`: observabilidade técnica sem persistência no
   funil de analytics;
-- rotas privadas: `centralLazyImports` / `CentralRoutes`;
-- rotas públicas: permanecem protegidas por
-  `createLaunchPausedRoute("Educacao")`.
+- owners privados permanecem em `src/modules/business/education/pages`, fora de
+  `activeCentralLazyImports.ts` e de `CentralRoutes` enquanto Education está pausado;
+- rotas públicas preservadas permanecem fora do grafo público ativo; o barrel
+  pós-MVP `lazyImports.ts` ainda mantém o kill-switch legado até o corte público correspondente.
 
 `tools/architecture/validate-education-module-boundaries.ts` e
 `tests/architecture/education-module-boundary-ratchet.test.ts` congelam essas
