@@ -19,7 +19,7 @@ Este documento consolida ordem de execução, blockers e Definition of Done. Ele
 - #323 aposentou `/splash` como superfície pública órfã, sem redirect, e ratcheou sua ausência;
 - #324 alinhou `/sobre` ao escopo ativo do MVP e ratcheou a truthfulness institucional;
 - #326 alinhou o SSOT operacional/documental ao estado pós-#324;
-- #325 — AppLayout público active-only (em implementação): remover `DIRECT_PAUSED_ROUTES`, `launchElement`/`LaunchPausedPage` do shell público, isolar owners pós-MVP fora de `activeLazyImports.ts` e deixar URLs sem owner ativo caírem no NotFound canônico;
+- #327 / #325 — AppLayout público active-only (em certificação): remover `DIRECT_PAUSED_ROUTES`, `launchElement`/`LaunchPausedPage` do shell público, isolar owners pós-MVP fora de `activeLazyImports.ts` e deixar URLs sem owner ativo caírem no NotFound canônico;
 - o head `45f1396df3cc77b0486a576c80d35780799210e8` de #324 passou Security Check, Security Scan, SSOT Territorial, Heavy exact-SHA e SSOT Enforcement antes do merge;
 - o merge SHA `e50169c5...` não herda certificação de release: qualquer promoção precisa certificar/deployar/smokar este SHA exato.
 
