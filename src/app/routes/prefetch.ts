@@ -1,10 +1,9 @@
 /**
  * Route prefetch helper
  *
- * Carrega chunks críticos de navegação sob demanda (hover/focus/touch),
- * reduzindo latência percebida no primeiro clique dos atalhos.
+ * Carrega apenas chunks alcançáveis pelo runtime ativo sob demanda
+ * (hover/focus/touch), reduzindo latência percebida no primeiro clique.
  */
-
 import {
   APP_MODULE_SLUGS,
   buildAppModulePath,
@@ -14,7 +13,6 @@ import {
   isLaunchSurfaceEnabled,
   type LaunchSurfaceKey,
 } from "@/app/config/launchScope";
-import { LAUNCH_URLS } from "@/core/routing/config/territory";
 
 const PREFETCHERS: Array<{
   test: (path: string) => boolean;
@@ -25,28 +23,6 @@ const PREFETCHERS: Array<{
     test: (path) => isAppModulePath(path, APP_MODULE_SLUGS.business),
     load: () => import("@/app/pages/EmpresasLandingPage"),
     surface: "business",
-  },
-  {
-    test: (path) => isAppModulePath(path, APP_MODULE_SLUGS.services),
-    load: () =>
-      import("@/modules/professionals/services/pages/ServicosLandingPage"),
-    surface: "services",
-  },
-  {
-    test: (path) => isAppModulePath(path, APP_MODULE_SLUGS.classifieds),
-    load: () => import("@/modules/classifieds/pages/ClassificadosPage"),
-    surface: "classifieds",
-  },
-  {
-    test: (path) => isAppModulePath(path, APP_MODULE_SLUGS.gastronomy),
-    load: () =>
-      import("@/modules/business/gastronomy/pages/GastronomyLandingPage"),
-    surface: "gastronomy",
-  },
-  {
-    test: (path) => isAppModulePath(path, APP_MODULE_SLUGS.community),
-    load: () => import("@/core/community-feed/pages/ComunidadePage"),
-    surface: "community",
   },
   {
     test: (path) => isAppModulePath(path, APP_MODULE_SLUGS.map),
@@ -64,11 +40,6 @@ const PREFETCHERS: Array<{
     surface: "search",
   },
   {
-    test: (path) => isAppModulePath(path, APP_MODULE_SLUGS.touristPoints),
-    load: () => import("@/modules/guide/pages/TouristPointsPage"),
-    surface: "touristPoints",
-  },
-  {
     test: (path) => path.startsWith("/notificacoes"),
     load: () => import("@/app/pages/NotificationsPage"),
   },
@@ -82,20 +53,9 @@ const IDLE_WARMUP_ROUTES: Array<{
   surface?: LaunchSurfaceKey;
 }> = [
   { href: buildAppModulePath(APP_MODULE_SLUGS.business), surface: "business" },
-  {
-    href: buildAppModulePath(APP_MODULE_SLUGS.gastronomy),
-    surface: "gastronomy",
-  },
-  {
-    href: buildAppModulePath(APP_MODULE_SLUGS.classifieds),
-    surface: "classifieds",
-  },
-  { href: LAUNCH_URLS.community, surface: "community" },
-  { href: buildAppModulePath(APP_MODULE_SLUGS.services), surface: "services" },
   { href: buildAppModulePath(APP_MODULE_SLUGS.map), surface: "map" },
   { href: buildAppModulePath(APP_MODULE_SLUGS.nearby), surface: "nearby" },
   { href: buildAppModulePath(APP_MODULE_SLUGS.search), surface: "search" },
-  { href: LAUNCH_URLS.touristPoints, surface: "touristPoints" },
   { href: "/notificacoes" },
 ];
 
@@ -143,7 +103,7 @@ function runIdle(callback: () => void): void {
 }
 
 /**
- * Aquece em idle os módulos de navegação mais usados.
+ * Aquece em idle somente as superfícies do MVP ativo.
  * Deve rodar uma única vez por sessão.
  */
 export function scheduleIdleRouteWarmup(): void {
