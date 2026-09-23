@@ -53,7 +53,7 @@ describe("MVP Central runtime without concept-mock router bypasses", () => {
     expect(activeLazy).not.toContain("DriverGuard");
     expect(activeLazy).not.toContain("CentralMotoboy");
     expect(activeLazy).not.toContain("CentralMotorista");
-    expect(registry).toContain('mobility: { status: "paused" }');
+    expect(registry).toMatch(/mobility:\s*{\s*status:\s*"paused"/);
     expect(existsSync(pathOf("src/modules/mobility"))).toBe(true);
   });
 });
