@@ -2,7 +2,7 @@
 
 Este arquivo é um resumo navegacional. O **SSOT operacional** permanece em [`EXECUCAO_MAIN_ONLY.md`](./EXECUCAO_MAIN_ONLY.md) e o lifecycle de módulos em [`PRODUCT_MODULE_LIFECYCLE.md`](../03-architecture/PRODUCT_MODULE_LIFECYCLE.md).
 
-## Decisão vigente — 2026-09-21
+## Decisão vigente — 2026-09-22
 
 O MVP público possui **um domínio de produto ativo: Empresas (`business`)**.
 
@@ -27,7 +27,7 @@ Regras:
 
 - não adicionar novos módulos ao MVP;
 - corrigir causas raiz, não sintomas;
-- não criar redirect, alias, fallback ou feature flag local para esconder arquitetura quebrada;
+- não criar redirect, alias, fallback ou feature flag local para esconder arquitetura quebrada; no MVP, redirects de compatibilidade são proibidos; guards de autenticação/autorização não contam como alias;
 - manter as autoridades de lifecycle separadas: `productModuleRegistry.ts` para domínios, `platformCapabilityRegistry.ts` para capabilities e `lifecycleRegistry.ts` como avaliador único;
 - remover código morto, duplicidades e dependências cruzadas que pertençam apenas ao runtime antigo;
 - manter código pós-MVP apenas quando houver owner claro, fronteira limpa e zero interferência no produto ativo;
@@ -48,7 +48,7 @@ Regras:
    - navegação pública deve expor somente destinos do MVP e infraestrutura necessária;
    - módulo pausado não pode possuir rota funcional acessível;
    - prefetch/warmup deve consultar lifecycle antes de carregar qualquer módulo;
-   - redirects só permanecem quando há mudança legítima de URL pública com compatibilidade externa real.
+   - não manter redirects de compatibilidade no corte MVP; URL antiga sem contrato externo comprovado deve ser removida e resultar em 404.
 
 3. **Limpar resíduos do escopo anterior**
    - remover componentes, services, helpers, facades, previews, aliases e imports sem caller real;
@@ -81,21 +81,31 @@ Regras:
    - corrigir regressões no núcleo antes de ampliar produto;
    - qualquer módulo futuro nasce/retorna `paused`, é certificado isoladamente e só então passa a `active`.
 
-## Estado do CI observado em 2026-09-21
+## Estado do CI e do release observado em 2026-09-22
 
-Os runners hospedados voltaram a executar steps reais no PR #292. A certificação atual deve ser julgada pelos resultados reais do mesmo SHA; failures antigos com `steps=null` permanecem apenas como histórico de infraestrutura.
+Os hosted runners voltaram a executar steps e logs reais. O incidente histórico de jobs vazios foi encerrado no issue #17; não tratar falhas futuras automaticamente como repetição daquele incidente.
 
-O contrato de certificação foi corrigido antes da próxima execução real:
+O contrato obrigatório do MVP inclui os ratchets recentes de lifecycle, Business, Search, Messaging, remoção de legado e rotas canônicas. `test:mvp:architecture` deve executar essas provas em todo candidato.
 
-- `test:mvp:architecture` prova registry de domínios, registry de capabilities, launch scope, Map -> Business, Nearby, Search, Messaging e fluxo público de Business;
-- `test:e2e:mvp` cobre raiz/Home + Empresas + Mapa + Perto de mim + Busca; Messaging possui testes de boundary/service e CTA Business;
-- o mesmo E2E inclui `launch-scope-public.spec.ts` para provar que módulos pós-MVP continuam isolados;
-- `certify-heavy.yml` permanece a autoridade exact-SHA e agora chama explicitamente essas provas;
-- o workflow automático de PR agrega o mesmo contrato, sem criar uma segunda definição de MVP.
+Os PRs #310–#314 fecharam verdes antes do merge e consolidaram:
 
-Os runners hospedados já executam os gates reais. No PR #292, Dependency Lock, Security Scan, Auth Regression, SSOT Territorial, SSOT Enforcement e Visual Regression já produziram execuções verdes em heads candidatos; Security Check e Heavy também passaram por execução real, não por jobs vazios. **A evidência final ainda precisa pertencer ao head exato que será mergeado**, porque qualquer correção documental gera novo SHA.
+- Business independente de verticais pausados;
+- navegação alinhada às capabilities ativas;
+- dashboard Business legado sem caller aposentado;
+- Search sem imports runtime top-level de domínios pausados;
+- Neighborhood mixed-domain stream callerless aposentado;
+- ratchets recentes incorporados ao gate obrigatório.
 
-A Vercel de Preview pode continuar sujeita a limite de builds. Isso não é regressão de código nem substitui o gate de produção: após o merge único na `main`, o SHA final precisa produzir deploy de produção e smoke público antes de receber `MVP READY`.
+No candidato `ff0c9b87...`, Vercel publicou o SHA exato e os gates públicos/arquiteturais passaram. O smoke autenticado falhou antes de emitir sessão com `HTTP 503 [auth_upstream_unavailable]` em Conta mobile/tablet/desktop e Mensagens.
+
+### Blockers atuais do primeiro release
+
+- **#305 — Supabase Auth upstream:** `auth.signInWithPassword()` retorna 5xx; SQL mínimo e Advisors do projeto também registraram `Connection terminated due to connection timeout`. Não mascarar com retry extra, fallback, troca de senha do fixture ou bypass OIDC.
+- **#309 — autoridade de deploy Supabase:** o PAT do GitHub Actions é válido, mas recebe 403 para atualizar Edge Functions. Rotacionar para PAT pertencente a identidade Supabase Developer/Admin/Owner; não usar `service_role` como substituto.
+
+O broker remoto v3 permanece ACTIVE e byte a byte igual ao source versionado da `main`; portanto #309 é problema de autoridade automática, não drift do runtime atual.
+
+**MVP READY continua bloqueado** até o mesmo SHA obter sessão autenticada real e o deploy automatizado exact-main recuperar autoridade.
 
 ## Pós-MVP
 

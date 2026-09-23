@@ -67,14 +67,14 @@ describe("Perfil e Conta no Território Vivo", () => {
     expect(layout).not.toContain('pathname.startsWith("/conta")');
   });
 
-  it("preserva o profileId ao resolver o alias legado de edição", () => {
+  it("mantém Conta como única superfície privada canônica de perfil", () => {
     const routes = read("src/app/routes/sections/AppLayoutRoutes.tsx");
 
-    expect(routes).toContain("function LegacyProfileEditRedirect()");
-    expect(routes).toContain("/conta/editar/${encodeURIComponent(profileId)}");
-    expect(routes).toMatch(
-      /path="\/perfil\/editar\/:profileId"[\s\S]*LegacyProfileEditRedirect/,
-    );
+    expect(routes).toContain('path="/conta"');
+    expect(routes).toContain('path="/conta/editar/:profileId"');
+    expect(routes).not.toContain('path="/perfil"');
+    expect(routes).not.toContain('path="/perfil/');
+    expect(routes).not.toContain("LegacyProfileEditRedirect");
   });
 
   it("não reabre a sidebar interna nem métricas decorativas no hub privado", () => {

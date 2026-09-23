@@ -1,10 +1,5 @@
 import { useEffect, useState, type ReactNode } from "react";
-import {
-  Navigate,
-  useLocation,
-  useNavigate,
-  useSearchParams,
-} from "react-router-dom";
+import { useLocation, useNavigate } from "react-router-dom";
 import { Helmet } from "react-helmet-async";
 import {
   Accessibility,
@@ -108,8 +103,6 @@ export default function ContaPreferenciasPage() {
   const navigate = useNavigate();
   const location = useLocation();
   const appUrls = useAppUrls();
-  const [searchParams] = useSearchParams();
-  const legacyTab = searchParams.get("tab");
   const accessibilityView = location.hash === "#acessibilidade";
   const {
     isHighContrast,
@@ -138,14 +131,6 @@ export default function ContaPreferenciasPage() {
     media.addEventListener("change", handleChange);
     return () => media.removeEventListener("change", handleChange);
   }, []);
-
-  if (
-    legacyTab === "privacy" ||
-    legacyTab === "links" ||
-    legacyTab === "members"
-  ) {
-    return <Navigate to={appUrls.profile.settings(legacyTab)} replace />;
-  }
 
   const resolveHref = (
     hrefKey: (typeof PREFERENCE_ROWS)[number]["hrefKey"],

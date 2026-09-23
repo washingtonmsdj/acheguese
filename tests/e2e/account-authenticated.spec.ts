@@ -16,11 +16,6 @@ const VIEWPORTS = [
 const ACCOUNT_ROUTES = [
   { path: "/conta", expected: /\/conta(?:\?|$)/, heading: /^Minha conta$/ },
   {
-    path: "/conta/editar",
-    expected: /\/conta\/editar\/[^/?#]+(?:\?|$)/,
-    heading: /Editar perfil/i,
-  },
-  {
     path: "/conta/preferencias",
     expected: /\/conta\/preferencias(?:\?|$)/,
     heading: /Preferências do aplicativo/i,
@@ -130,12 +125,7 @@ test.describe("Conta autenticada — fixture remota determinística", () => {
 
       for (const route of ACCOUNT_ROUTES) {
         await test.step(`abre ${route.path} sem mutation destrutiva`, async () => {
-          if (route.path === "/conta/editar") {
-            await page.goto("/conta", { waitUntil: "domcontentloaded" });
-            await page.getByRole("button", { name: /^Editar$/i }).click();
-          } else {
-            await page.goto(route.path, { waitUntil: "domcontentloaded" });
-          }
+          await page.goto(route.path, { waitUntil: "domcontentloaded" });
           await expect(page).toHaveURL(route.expected, { timeout: 30_000 });
           await expect(page.locator("main").first()).toBeVisible({
             timeout: 30_000,

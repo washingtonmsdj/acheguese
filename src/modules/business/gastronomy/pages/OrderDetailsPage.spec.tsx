@@ -109,10 +109,10 @@ describe('OrderDetailsPage', () => {
   it('renderiza evento financeiro no timeline com de/para e ator', () => {
     render(
       <HelmetProvider>
-        <MemoryRouter initialEntries={['/perfil/empresas/business-1/gastronomia/pedidos/order-1']}>
+        <MemoryRouter initialEntries={['/central/empresas/business-1/gastronomia/pedidos/order-1']}>
           <Routes>
             <Route
-              path="/perfil/empresas/:businessId/gastronomia/pedidos/:orderId"
+              path="/central/empresas/:businessId/gastronomia/pedidos/:orderId"
               element={<OrderDetailsPage />}
             />
           </Routes>

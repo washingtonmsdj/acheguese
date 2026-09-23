@@ -12,7 +12,7 @@ import {
 } from '../../helpers/education-setup';
 
 const businessId = '7ed16389-6768-4eda-904d-ebaec0d2f400';
-const programsUrl = `/perfil/empresas/${businessId}/education/programas`;
+const programsUrl = `/central/empresas/${businessId}/educacao/programas`;
 
 async function gotoAndWait(page: import('@playwright/test').Page, url: string) {
   // Navegar para a URL e aguardar carregamento completo

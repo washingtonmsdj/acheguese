@@ -7,7 +7,7 @@ import { gotoAuthenticated } from '../../helpers/education-auth-inject';
 const businessId = '7ed16389-6768-4eda-904d-ebaec0d2f400';
 
 test('debug - capture programs page content', async ({ page }) => {
-  await gotoAuthenticated(page, `/perfil/empresas/${businessId}/education/programas`, 5000);
+  await gotoAuthenticated(page, `/central/empresas/${businessId}/educacao/programas`, 5000);
 
   const url = page.url();
   console.log('URL:', url);

@@ -46,7 +46,7 @@
 
 ## D-011 — Perfis: modelo multi-perfil por usuário
 
-**Decisão:** um usuário pode ter vários perfis (pessoal / negócio / profissional). A superfície privada canônica é `/conta` e participa do shell global Território Vivo. Rotas `/perfil/*` são aliases legados preservados por compatibilidade. A apresentação pública pessoal permanece exclusiva em `/u/:username`, sem expor dados privados da conta.
+**Decisão:** um usuário pode ter vários perfis (pessoal / negócio / profissional). A superfície privada canônica e exclusiva é `/conta` e participa do shell global Território Vivo. Os aliases privados `/perfil/*` foram aposentados; não existe redirect de compatibilidade para eles. A apresentação pública pessoal permanece exclusiva em `/u/:username`, sem expor dados privados da conta. Edição privada usa somente `/conta/editar/:profileId`; a rota-resolver `/conta/editar` foi removida por não possuir caller real. Redirecionamentos só são aceitáveis para guards de autenticação/autorização ou para um contrato externo de URL pública comprovado — nunca para preservar arquitetura legada.
 
 ## D-012 — Cloud como backend padrão (Lovable Cloud / Supabase)
 

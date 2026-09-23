@@ -63,11 +63,6 @@ const MOBILE_AUTH_ROUTES = [
     expectedUrlPattern: /\/conta\?section=profiles$/i,
   },
   {
-    name: "conta editar perfil",
-    path: "/conta/editar",
-    expectedUrlPattern: /\/conta\/editar\/[^/?#]+(\?|$)/i,
-  },
-  {
     name: "conta enderecos",
     path: "/conta/enderecos",
     expectedUrlPattern: /\/conta\/enderecos(\?|$)/i,
@@ -106,11 +101,6 @@ const MOBILE_AUTH_ROUTES = [
     name: "conta perfil configuracoes",
     path: "/conta/perfil/configuracoes?tab=links",
     expectedUrlPattern: /\/conta\/perfil\/configuracoes\?tab=links$/i,
-  },
-  {
-    name: "legacy conta preferencias tab redireciona",
-    path: "/conta/preferencias?tab=privacy",
-    expectedUrlPattern: /\/conta\/perfil\/configuracoes(\?|$)/i,
   },
 ] as const;
 

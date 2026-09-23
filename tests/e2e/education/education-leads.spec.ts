@@ -14,7 +14,7 @@ import {
 import { gotoAuthenticated } from '../../helpers/education-auth-inject';
 
 const businessId = '7ed16389-6768-4eda-904d-ebaec0d2f400'; // profile_id do E2E business
-const leadsUrl = `/perfil/empresas/${businessId}/education/leads`;
+const leadsUrl = `/central/empresas/${businessId}/educacao/leads`;
 
 async function gotoAndWait(page: import('@playwright/test').Page, url: string) {
   await gotoAuthenticated(page, url, 3000);
