@@ -2,28 +2,54 @@ import { useMemo } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { BusinessService } from "@/core/business/services/BusinessService";
 import { BusinessUrlService } from "@/core/business/services/BusinessUrlService";
-import { useSpatialSearchByRadius } from "@/core/geospatial/hooks/useSpatialSearch";
+import {
+  useSpatialSearchByRadius,
+  useSpatialSearchHybrid,
+} from "@/core/geospatial/hooks/useSpatialSearch";
 import type { NearbyBusiness } from "../domain/types";
 
 export interface UseNearbyBusinessesOptions {
   radiusKm: number;
   center: { latitude: number; longitude: number } | null;
   locationId?: string;
+  locationIds?: string[];
   limit?: number;
 }
 
 export function useNearbyBusinesses(options: UseNearbyBusinessesOptions) {
   const center = options.center;
-  const spatial = useSpatialSearchByRadius({
+  const locationIds = useMemo(
+    () => [...new Set((options.locationIds ?? []).filter(Boolean))],
+    [options.locationIds],
+  );
+  const usesGroupFilter = locationIds.length > 1;
+  const effectiveLocationId =
+    options.locationId ?? (locationIds.length === 1 ? locationIds[0] : undefined);
+
+  const radiusSpatial = useSpatialSearchByRadius({
     center: center ?? { latitude: 0, longitude: 0 },
     radiusKm: options.radiusKm,
     entityType: "business",
-    locationId: options.locationId,
+    locationId: effectiveLocationId,
     limit: options.limit,
-    enabled: center !== null,
+    enabled: center !== null && !usesGroupFilter,
+  });
+  const groupSpatial = useSpatialSearchHybrid({
+    center: center ?? { latitude: 0, longitude: 0 },
+    radiusKm: options.radiusKm,
+    entityType: "business",
+    locationIds,
+    limit: options.limit,
+    enabled: center !== null && usesGroupFilter,
   });
 
-  const spatialResults = useMemo(() => spatial.data ?? [], [spatial.data]);
+  const spatialResults = useMemo(
+    () =>
+      usesGroupFilter
+        ? (groupSpatial.data ?? []).filter((item) => item.in_territory === true)
+        : (radiusSpatial.data ?? []),
+    [groupSpatial.data, radiusSpatial.data, usesGroupFilter],
+  );
   const ids = useMemo(
     () => [...new Set(spatialResults.map((item) => item.id))],
     [spatialResults],
@@ -74,7 +100,11 @@ export function useNearbyBusinesses(options: UseNearbyBusinessesOptions) {
 
   return {
     businesses,
-    isLoading: spatial.isLoading || (ids.length > 0 && details.isLoading),
-    isError: spatial.isError || details.isError,
+    isLoading:
+      (usesGroupFilter ? groupSpatial.isLoading : radiusSpatial.isLoading) ||
+      (ids.length > 0 && details.isLoading),
+    isError:
+      (usesGroupFilter ? groupSpatial.isError : radiusSpatial.isError) ||
+      details.isError,
   };
 }
