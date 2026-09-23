@@ -10,7 +10,7 @@ const RETIRED_PARALLEL_FILES = [
   "src/modules/classifieds/components/filters/AdvancedFilters.tsx",
 ] as const;
 
-const lazyImports = readFileSync("src/app/routes/lazyImports.ts", "utf8");
+const activeLazyImports = readFileSync("src/app/routes/activeLazyImports.ts", "utf8");
 const appLayoutRoutes = readFileSync(
   "src/app/routes/sections/AppLayoutRoutes.tsx",
   "utf8",
@@ -29,17 +29,13 @@ describe("classifieds public page ownership", () => {
     }
   });
 
-  it("routes global and territorial classifieds through ClassificadosPage", () => {
-    expect(lazyImports).toContain(
-      'import("@/modules/classifieds/pages/ClassificadosPage")',
-    );
-    expect(appLayoutRoutes).toContain(
-      '<Route path="/classificados" element={<P.ClassificadosPage />} />',
-    );
+  it("preserves ClassificadosPage outside the active public graph", () => {
+    expect(activeLazyImports).not.toContain("ClassificadosPage");
+    expect(appLayoutRoutes).not.toContain('path="/classificados"');
     expect(territorialPages).toContain(
       'import("@/modules/classifieds/pages/ClassificadosPage")',
     );
-    expect(lazyImports).not.toContain("ClassificadosLandingPage");
+    expect(activeLazyImports).not.toContain("ClassificadosLandingPage");
     expect(territorialPages).not.toContain("ClassificadosLandingPage");
   });
 });
