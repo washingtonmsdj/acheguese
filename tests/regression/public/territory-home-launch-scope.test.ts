@@ -39,7 +39,7 @@ describe("Territory Home launch-scope regression", () => {
 
     expect(source).toContain("MODULE_SLUGS.business");
     expect(source).toContain("MODULE_SLUGS.map");
-    expect(source).toContain("APP_MODULE_SLUGS.nearby");
+    expect(source).toContain("MODULE_SLUGS.nearby");
     expect(source).toContain("MODULE_SLUGS.search");
     expect(source).not.toContain("isLaunchSurfaceEnabled");
     expect(source).not.toContain("MODULE_SLUGS.community");
