@@ -27,7 +27,6 @@ const PROTECTED_TABLES = [
   'events',
   'reviews',
   'user_subscriptions',
-  'gastronomy_establishments',
   'menu_categories',
   'menu_items',
   'tourist_points',
@@ -62,10 +61,6 @@ const TABLE_SSOTS: Record<string, string[]> = {
   user_subscriptions: [
     'SubscriptionService.ts',
     'BusinessSubscriptionService.ts',
-  ],
-  gastronomy_establishments: [
-    'GastronomyService.ts',
-    'GastronomyQueryService.ts',
   ],
   menu_categories: ['MenuService.ts', 'MenuQueryService.ts'],
   menu_items: ['MenuService.ts', 'MenuQueryService.ts'],
@@ -158,7 +153,6 @@ function getSuggestedService(table: string): string {
     events: 'eventService',
     reviews: 'ReviewsService',
     user_subscriptions: 'BusinessSubscriptionService/SubscriptionService',
-    gastronomy_establishments: 'GastronomyService',
     menu_categories: 'MenuService',
     menu_items: 'MenuService',
     tourist_points: 'TouristPointService',

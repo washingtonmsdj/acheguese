@@ -55,6 +55,7 @@ Regras:
    - remover componentes, services, helpers, facades, previews, aliases e imports sem caller real;
    - não manter `concept-mock`, preview DEV ou query-string especial conectado ao router principal; protótipos devem viver fora do runtime de produto;
    - remover implementações paralelas e owners duplicados;
+   - remover allowances de SSOT que apontem para tabelas/owners já aposentados; o censo de Gastronomia confirmou que `gastronomy_establishments` e `GastronomyQueryService.ts` eram resíduos do grafo legado, enquanto a persistência atual usa `gastronomy_profiles`/`business_data` pelos owners em `src/core/business`;
    - manter migrations históricas somente quando necessárias à integridade/proveniência;
    - atualizar testes arquiteturais para impedir reintrodução do legado.
 
@@ -83,13 +84,13 @@ Regras:
    - corrigir regressões no núcleo antes de ampliar produto;
    - qualquer módulo futuro nasce/retorna `paused`, é certificado isoladamente e só então passa a `active`.
 
-## Estado do CI e do release observado em 2026-09-22
+## Estado do CI e do release observado em 2026-09-23
 
 Os hosted runners voltaram a executar steps e logs reais. O incidente histórico de jobs vazios foi encerrado no issue #17; não tratar falhas futuras automaticamente como repetição daquele incidente.
 
 O contrato obrigatório do MVP inclui os ratchets recentes de lifecycle, Business, Search, Messaging, remoção de legado e rotas canônicas. `test:mvp:architecture` deve executar essas provas em todo candidato.
 
-Os PRs #310–#316 consolidaram o corte modular, as rotas canônicas e a gestão Business:
+Os PRs #310–#318 consolidaram o corte modular, as rotas canônicas, a gestão Business e a retirada dos bypasses DEV:
 
 - Business independente de verticais pausados;
 - navegação alinhada às capabilities ativas;
@@ -98,16 +99,16 @@ Os PRs #310–#316 consolidaram o corte modular, as rotas canônicas e a gestão
 - Neighborhood mixed-domain stream callerless aposentado;
 - ratchets recentes incorporados ao gate obrigatório;
 - gestão Business consolidada sob `/central/empresas/*`, sem rota concorrente/redirect legado;
-- #318 aposenta o bypass DEV `?concept-mock=1` e os cinco mocks/previews sem caller do runtime.
+- #318 aposentou o bypass DEV `?concept-mock=1` e os cinco mocks/previews sem caller do runtime.
 
-Na `main` `4452f686b9eed06501c94a58fe432b8dddc1a43c`, Vercel, Dependency Lock, Auth Concept Regression, SSOT Enforcement, Heavy PR Certification, Security Check, E2E público fixture-backed, Phase Core, Runtime e Regression passaram. O único vermelho continua sendo o smoke autenticado: mobile/tablet/Mensagens retornaram `HTTP 503 [auth_upstream_unavailable]`; desktop teve uma ocorrência adicional de `GitHub OIDC token request failed: HTTP 503` antes do broker.
+Na `main` `ce680188dac0cb64e953354215c37c0524c48a13`, os gates determinísticos/públicos aplicáveis foram executados no candidato exact-SHA; o smoke autenticado continua bloqueado por #305. O censo de resíduos segue somente onde há evidência de owner/caller, sem remover facades com consumidores reais.
 
 ### Blockers atuais do primeiro release
 
 - **#305 — Supabase Auth upstream:** `auth.signInWithPassword()` retorna 5xx; SQL mínimo e Advisors do projeto também registraram `Connection terminated due to connection timeout`. Não mascarar com retry extra, fallback, troca de senha do fixture ou bypass OIDC.
 - **#309 — autoridade de deploy Supabase:** o PAT do GitHub Actions é válido, mas recebe 403 para atualizar Edge Functions. Rotacionar para PAT pertencente a identidade Supabase Developer/Admin/Owner; não usar `service_role` como substituto.
 
-O broker remoto v3 permanece ACTIVE e byte a byte igual ao source versionado da `main`; portanto #309 é problema de autoridade automática, não drift do runtime atual.
+O broker remoto v3 permanece ACTIVE e sem drift de source conhecido; portanto #309 é problema de autoridade automática, não justificativa para alterar frontend/runtime.
 
 **MVP READY continua bloqueado** até o mesmo SHA obter sessão autenticada real e o deploy automatizado exact-main recuperar autoridade. Não reabrir redirects, mocks DEV, aliases ou fallbacks para contornar esses blockers externos.
 

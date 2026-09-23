@@ -25,6 +25,7 @@ O fluxo implementado cobre cadastro gastronômico, cardápio, carrinho, checkout
 - `GastronomyStatus` deriva de `src/core/business/constants/gastronomyProfileStatus.ts`.
 - Leituras de negócios, activity, reviews, favoritos, runtime e menu pertencem a services em `src/core/business`.
 - `GastronomyProfileService` é o único writer/facade canônico do perfil gastronômico; APIs históricas de mutation foram removidas.
+- A persistência atual do perfil gastronômico usa `gastronomy_profiles` ligada a `business_data`; a antiga `gastronomy_establishments` pertence ao grafo legado já removido e não é SSOT, owner nem tabela autorizada pelo checker arquitetural.
 - `MenuService`, áreas de entrega e resolução de identificador gastronômico pertencem a `src/core/business/services`.
 - Contratos e persistence de versionamento de nichos pertencem a `src/core/business/niches`.
 - Contratos admin e persistence da pizzaria pertencem a `src/core/business/niches/pizzaria`.
