@@ -1,5 +1,5 @@
 import { useEffect, useState, type ReactNode } from "react";
-import { Navigate, useLocation } from "react-router-dom";
+import { Navigate } from "react-router-dom";
 import { Helmet } from "react-helmet-async";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import {
@@ -27,7 +27,6 @@ import {
   NotificationPreferencesService,
   type NotificationPreferences,
 } from "@/core/notifications/services";
-import { ACCOUNT_PATHS } from "@/core/routing/config/account";
 import { useAppUrls } from "@/core/routing/hooks/useAppUrls";
 import { AccountSettingsShell } from "@/modules/profile/components/AccountSettingsShell";
 import { Button } from "@/shared/components/ui/button";
@@ -103,7 +102,6 @@ function Surface({ children, className = "" }: { children: ReactNode; className?
 }
 
 export default function NotificationPreferencesPage() {
-  const location = useLocation();
   const appUrls = useAppUrls();
   const { user } = useAuth();
   const { toast } = useToast();
@@ -140,10 +138,6 @@ export default function NotificationPreferencesPage() {
       });
     },
   });
-
-  if (location.pathname === "/settings/notifications") {
-    return <Navigate to={ACCOUNT_PATHS.notifications} replace />;
-  }
 
   if (!user) return <Navigate to={appUrls.auth.login} replace />;
 

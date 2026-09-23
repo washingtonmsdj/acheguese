@@ -99,7 +99,7 @@ export function EmpresaDetailLayout({ children }: EmpresaDetailLayoutProps) {
             </Link>
             <button
               type="button"
-              onClick={() => navigate('/perfil')}
+              onClick={() => navigate('/conta')}
               className="inline-flex h-11 items-center gap-2 rounded-2xl border border-white/10 bg-white/[0.03] px-3 text-white/80 transition-colors hover:border-white/20 hover:bg-white/[0.05]"
               aria-label="Perfil"
             >

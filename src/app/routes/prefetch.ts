@@ -69,7 +69,7 @@ const PREFETCHERS: Array<{
     surface: "touristPoints",
   },
   {
-    test: (path) => path.startsWith("/notifications"),
+    test: (path) => path.startsWith("/notificacoes"),
     load: () => import("@/app/pages/NotificationsPage"),
   },
 ];
@@ -96,7 +96,7 @@ const IDLE_WARMUP_ROUTES: Array<{
   { href: buildAppModulePath(APP_MODULE_SLUGS.nearby), surface: "nearby" },
   { href: buildAppModulePath(APP_MODULE_SLUGS.search), surface: "search" },
   { href: LAUNCH_URLS.touristPoints, surface: "touristPoints" },
-  { href: "/notifications" },
+  { href: "/notificacoes" },
 ];
 
 export function getLaunchWarmupHrefs(): string[] {

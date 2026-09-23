@@ -5,7 +5,7 @@
  */
 
 import { lazy } from "react";
-import { Navigate, Route, Routes } from "react-router-dom";
+import { Route, Routes } from "react-router-dom";
 import { PRELAUNCH_LOCKDOWN_ENABLED } from "@/app/config/launchScope";
 import { AuthEntrySessionGate } from "@/app/routes/AuthEntrySessionGate";
 import { AUTH_PATHS } from "@/core/auth/constants/authFlow";
@@ -23,6 +23,7 @@ const QrResolverPage = lazy(() =>
 );
 const StatusPage = lazy(() => import("@/app/pages/StatusPage"));
 const SplashPage = lazy(() => import("@/app/pages/SplashPage"));
+const NotFoundPage = lazy(() => import("@/app/pages/NotFound"));
 const LoginPage = lazy(() => import("@/app/pages/LoginPage"));
 const EmailChangeConfirmationPage = lazy(
   () => import("@/app/pages/EmailChangeConfirmationPage"),
@@ -76,7 +77,7 @@ export function AppRoutes() {
         <Route path={AUTH_PATHS.termsAcceptance} element={<AceiteTermosPage />} />
         <Route path={AUTH_PATHS.passwordReset} element={<ResetPasswordPage />} />
         <Route path="/admin/*" element={<AdminRoutes />} />
-        <Route path="*" element={<Navigate to="/" replace />} />
+        <Route path="*" element={<NotFoundPage />} />
       </Routes>
     );
   }

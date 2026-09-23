@@ -116,11 +116,9 @@ export const DOMAIN_REGISTRY: DomainRegistryEntry[] = [
       "src/core/family/services/FamilyService.ts",
     ],
     routePrefixes: [
-      "/perfil",
-      "/perfil/editar/:profileId",
-      "/perfil/identidades",
-      "/perfil/conta",
-      "/perfil/familia",
+      "/conta",
+      "/conta/editar/:profileId",
+      "/conta/perfil/configuracoes",
       "/u/:username",
     ],
     adminRoutePrefixes: [

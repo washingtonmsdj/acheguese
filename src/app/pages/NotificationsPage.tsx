@@ -12,6 +12,7 @@ import { NotificationCenter } from '@/app/components/notifications/NotificationC
 import { Button } from '@/shared/components/ui/button';
 import { Settings } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
+import { ACCOUNT_PATHS } from '@/core/routing/config/account';
 
 export default function NotificationsPage() {
   const navigate = useNavigate();
@@ -28,7 +29,7 @@ export default function NotificationsPage() {
         </div>
         <Button
           variant="outline"
-          onClick={() => navigate('/settings/notifications')}
+          onClick={() => navigate(ACCOUNT_PATHS.notifications)}
         >
           <Settings className="h-4 w-4 mr-2" />
           Preferências

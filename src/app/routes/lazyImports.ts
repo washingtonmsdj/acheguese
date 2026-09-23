@@ -155,9 +155,6 @@ export const ContaPreferenciasPage = lazy(
 export const ContaEnderecosPage = lazy(
   () => import("@/modules/profile/pages/ContaEnderecosPage"),
 );
-export const ContaEditarPage = lazy(
-  () => import("@/modules/profile/pages/ContaEditarPage"),
-);
 
 // ============================================================
 // BILLING E ASSINATURAS

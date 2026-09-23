@@ -199,9 +199,9 @@ self.addEventListener('notificationclose', (event) => {
  * Get URL for notification click based on notification data
  */
 const PAUSED_NOTIFICATION_ROUTE_PATTERN =
-  /^\/(?:mobility|mobilidade|track|educacao|comunicacao|cupons|ranking|gamificacao|analytics|alertas|achados-perdidos|achados-e-perdidos|problemas|planos|checkout)(?:\/|$)|^\/settings\/subscription(?:\/|$)|^\/perfil\/familia(?:\/|$)/i;
+  /^\/(?:mobility|mobilidade|track|educacao|comunicacao|cupons|ranking|gamificacao|analytics|alertas|achados-perdidos|achados-e-perdidos|problemas|planos|checkout)(?:\/|$)|^\/settings\/subscription(?:\/|$)/i;
 
-function getLaunchSafeNotificationUrl(url, fallback = '/notifications') {
+function getLaunchSafeNotificationUrl(url, fallback = '/notificacoes') {
   if (!url) return fallback;
   const value = String(url);
   return PAUSED_NOTIFICATION_ROUTE_PATTERN.test(value) ? fallback : value;
@@ -213,7 +213,7 @@ function getNotificationUrl(data) {
   // Handle different notification types
   switch (data.type) {
     case 'message':
-      return '/notifications';
+      return '/notificacoes';
     
     case 'ride':
       return '/perto-de-mim';
@@ -247,7 +247,7 @@ function getActionUrl(action, data) {
       return getNotificationUrl(data);
     
     case 'reply':
-      return '/notifications';
+      return '/notificacoes';
     
     case 'accept':
       return getLaunchSafeNotificationUrl(data.acceptUrl, '/');

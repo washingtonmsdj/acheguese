@@ -1,6 +1,6 @@
 # SCREEN-MAP
 
-> **MVP atual — decisão de 2026-09-21:** **Business/Empresas** é o domínio público ativo. **Mapa, Perto de mim, Busca e Mensagens** são capabilities horizontais ativas.
+> **MVP atual — decisão consolidada em 2026-09-22:** **Business/Empresas** é o domínio público ativo. **Mapa, Perto de mim, Busca e Mensagens** são capabilities horizontais ativas.
 >
 > Lifecycle canônico: `productModuleRegistry.ts` + `platformCapabilityRegistry.ts`, avaliados por `lifecycleRegistry.ts`. `launchScope.ts` é compatibilidade de superfície.
 >
@@ -47,4 +47,11 @@ Ativar um módulo exige alterar o lifecycle no registry e satisfazer suas depend
 
 - `/empresas-landing` foi removida. Não existe redirect de compatibilidade.
 - `/conta/profissional` foi removida do shell público enquanto Serviços está pausado.
-- aliases privados de Conta/Perfil que ainda existirem só podem permanecer quando houver justificativa explícita de compatibilidade de conta; não devem ser usados para esconder módulos de produto.
+- `/perfil/*` foi aposentado como alias privado. Conta usa somente `/conta/*`; perfil público usa somente `/u/:username`.
+- edição de perfil usa somente `/conta/editar/:profileId`; `/conta/editar` sem identidade explícita foi removida.
+- `/settings/notifications` foi removida; preferências usam somente `/conta/notificacoes`.
+- `/notifications` foi removida; a Inbox usa somente `/notificacoes`.
+- `/conta/preferencias?tab=...` não redireciona para outras telas. Os destinos canônicos possuem URL própria.
+- rota desconhecida renderiza 404; não existe catch-all para `/`.
+
+Redirect de compatibilidade não é mecanismo de limpeza arquitetural. Guards de autenticação/autorização podem navegar para login ou para a superfície obrigatória correspondente porque isso representa controle de acesso, não alias legado.

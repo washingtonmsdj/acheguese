@@ -29,7 +29,7 @@ test('debug - access business dashboard', async ({ page }) => {
   });
 
   // Navegar para o dashboard
-  await page.goto(`/perfil/empresas/${businessId}/education/programas`, {
+  await page.goto(`/central/empresas/${businessId}/educacao/programas`, {
     waitUntil: 'domcontentloaded',
   });
   await page.waitForTimeout(5000);

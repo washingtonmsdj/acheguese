@@ -81,10 +81,10 @@ describe('GastronomyDashboardPage', () => {
     expect(mockedUseEntitlements).not.toHaveBeenCalled();
 
     render(
-      <MemoryRouter initialEntries={['/perfil/empresas/empresa-1/gastronomia']}>
+      <MemoryRouter initialEntries={['/central/empresas/empresa-1/gastronomia']}>
         <Routes>
           <Route
-            path="/perfil/empresas/:businessId/gastronomia"
+            path="/central/empresas/:businessId/gastronomia"
             element={<GastronomyDashboardPage />}
           />
         </Routes>

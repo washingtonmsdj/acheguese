@@ -2,7 +2,7 @@
 
 Sprint TERRITORY.2 — padronização de nomenclatura das páginas para refletir a arquitetura baseada em Territory.
 
-> Atualização 2026-09-21: o MVP público possui **Empresas + Mapa + Perto de mim
+> Atualização 2026-09-22: o MVP público possui **Empresas + Mapa + Perto de mim
 > + Busca**. Home/Território e Conta são plataforma. Community e demais módulos
 > pós-MVP permanecem `paused`. O lifecycle executável em
 > `productModuleRegistry.ts` prevalece sobre descrições históricas deste mapa.
@@ -172,9 +172,18 @@ Removidos após migração e prova de ausência de caller:
 
 Esses arquivos não são camadas de compatibilidade e não devem ser recriados.
 
+### Rotas privadas canônicas
+
+- Conta privada: `/conta/*`;
+- perfil público: `/u/:username`;
+- `/perfil/*` foi aposentado e não possui redirect;
+- preferências de notificações: `/conta/notificacoes`; `/settings/notifications` foi removida;
+- Inbox de notificações: `/notificacoes`; `/notifications` foi removida;
+- rota desconhecida termina em 404, nunca em redirect silencioso para `/`.
+
 ## Regras da migração
 
-1. Rota antiga só recebe redirect quando existe contrato externo legítimo de URL canônica; módulo pausado ou código quebrado não justifica redirect.
+1. O corte MVP não mantém redirect de compatibilidade. Rota antiga sem contrato externo público comprovado é removida e retorna 404. Navegação de guard para login/autorização é controle de acesso, não alias.
 2. Arquivo antigo só é removido após prova de ausência de import/caller ativo.
 3. Nova refatoração deve importar sempre o owner canônico (`TerritoryHomePage`, `TerritoryEntryPage`, etc.), nunca recriar alias como autoridade.
 4. A navegação global é adaptativa: bottom navigation no mobile, rail no tablet e sidebar no desktop; todos consomem o mesmo registry global.

@@ -1508,3 +1508,73 @@ Próximo gate obrigatório:
 - detalhes e evidências: `checkpoints/2026-09-20-mvp-launch-scope-route-governance.md`.
 
 **Gate permanece aberto:** não marcar release como certificado até lint/typecheck/security/test/build + deploy/smoke same-SHA executarem de verdade.
+
+
+### Checkpoint MVP — canonical routing sem redirects de compatibilidade (2026-09-22)
+
+Estado consolidado do MVP após os PRs #310–#314:
+
+- `business` permanece o único domínio de produto ativo;
+- `map`, `nearby`, `search` e `messaging` permanecem capabilities horizontais ativas;
+- Business não depende mais de Educação/Gastronomia pausadas para criação/certificação;
+- Mensagens segue `messaging`, não `communityCommunication`;
+- Perfil Profissional permanece fora da Central enquanto `services` estiver pausado;
+- dashboard Business legado sem rota/caller foi aposentado;
+- Search carrega services de módulos pausados somente por `import()` depois do launch gate;
+- Neighborhood mixed-domain stream sem caller foi aposentado;
+- ratchets arquiteturais dos cortes recentes integram `test:mvp:architecture`.
+
+Política de rotas do corte atual:
+
+- Conta privada usa somente `/conta/*`;
+- perfil público pessoal usa somente `/u/:username`;
+- `/perfil/*` foi aposentado e não possui redirect;
+- edição privada exige `/conta/editar/:profileId`; a rota-resolver `/conta/editar` foi removida;
+- Inbox usa somente `/notificacoes`; `/notifications` foi removida;
+- preferências de notificação usam somente `/conta/notificacoes`; `/settings/notifications` foi removida;
+- `/conta/preferencias?tab=...` não funciona como alias/redirect;
+- rota desconhecida renderiza 404 e não é enviada silenciosamente para `/`;
+- guards de autenticação/autorização podem encaminhar para Login ou superfície obrigatória porque representam controle de acesso, não compatibilidade de URL.
+
+Este corte implementa e ratcheta essa política também em callers, prefetch, service worker, robots, sitemap guard, registries e testes preservados de módulos pausados.
+
+### Certificação exact-SHA atual
+
+Candidato anterior: `ff0c9b8784f70c024661e191713af78e2e87d84c`.
+
+No mesmo SHA:
+
+- Vercel production: **success**;
+- Dependency Lock: **success**;
+- Auth Concept Regression: **success**;
+- Heavy PR Certification: **success**;
+- Runtime Tests: **success**;
+- E2E público fixture-backed: **success**;
+- Phase Core Gate: **success**;
+- Regression Check: **success**;
+- MVP unit tests / Maps / hardcoded credentials / lint / TypeScript: **success**.
+
+O smoke autenticado real falhou antes de emitir sessão em Conta mobile/tablet/desktop e Mensagens com:
+
+`HTTP 503; Authentication unavailable [auth_upstream_unavailable]`.
+
+Diagnóstico de raiz:
+
+- GitHub OIDC já foi aceito antes da falha;
+- broker v3 remoto está ACTIVE e byte-a-byte igual ao source versionado;
+- o 503 é classificado somente quando `auth.signInWithPassword()` retorna erro 5xx;
+- `select 1` read-only e Supabase Advisors também falharam com `Connection terminated due to connection timeout`;
+- não aumentar retry/timeout, não trocar senha do fixture sem evidência, não criar fallback de login e não enfraquecer OIDC.
+
+Blockers atuais do primeiro release:
+
+1. **#305 — Auth upstream/configuração remota do Supabase.**
+   - verificar Auth → Sessions → User Sessions → Timebox;
+   - se já válido/default, investigar Logs Explorer/Auth/Postgres do projeto;
+   - o repositório não versiona Timebox e não deve inventar patch local.
+2. **#309 — autoridade do deploy automático Supabase.**
+   - `SUPABASE_ACCESS_TOKEN` do GitHub recebe 403 para Edge Functions;
+   - substituir por PAT pertencente a identidade Developer/Admin/Owner;
+   - não usar `service_role` como PAT.
+
+**Regra de release:** não marcar `MVP READY` enquanto o mesmo SHA não obtiver sessão autenticada real e a autoridade exact-main de deploy não estiver restaurada.

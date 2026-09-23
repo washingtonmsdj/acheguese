@@ -6,7 +6,6 @@ User-agent: *
 Allow: /
 
 Disallow: /admin/
-Disallow: /perfil/
 Disallow: /conta/
 Disallow: /checkout/
 Disallow: /pagamento/

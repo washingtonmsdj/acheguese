@@ -8,7 +8,7 @@
  */
 
 import type { ReactNode } from "react";
-import { Navigate, Routes, Route, useParams } from "react-router-dom";
+import { Routes, Route } from "react-router-dom";
 import { AppLayoutSidebar } from "@/app/components/AppLayoutSidebar";
 import TerritoryHomePage from "@/app/pages/TerritoryHomePage";
 import { TerritorialIndexPage } from "@/core/routing/components/TerritorialIndexPage";
@@ -45,20 +45,6 @@ import {
 
 // Lazy imports organizados por dominio
 import * as P from "../lazyImports";
-
-function LegacyProfileEditRedirect() {
-  const { profileId } = useParams<{ profileId: string }>();
-  return (
-    <Navigate
-      to={
-        profileId
-          ? `/conta/editar/${encodeURIComponent(profileId)}`
-          : "/conta/editar"
-      }
-      replace
-    />
-  );
-}
 
 const TERRITORIAL_PARAMS = TERRITORIAL_ROUTE_PARAMS;
 const TERRITORIAL_STATIC = TERRITORIAL_ROUTE_STATIC_SEGMENTS;
@@ -412,16 +398,8 @@ export function AppLayoutRoutes() {
 
         {/* Rotas de Notificacoes */}
         <Route
-          path="/notifications"
-          element={protectedElement(<P.NotificationsPage />)}
-        />
-        <Route
           path="/notificacoes"
           element={protectedElement(<P.NotificationsPage />)}
-        />
-        <Route
-          path="/settings/notifications"
-          element={protectedElement(<P.NotificationPreferencesPage />)}
         />
         <Route
           path="/settings/email-logs"
@@ -547,10 +525,6 @@ export function AppLayoutRoutes() {
           element={protectedElement(<P.ContaEnderecosPage />)}
         />
         <Route
-          path="/conta/editar"
-          element={protectedElement(<P.ContaEditarPage />)}
-        />
-        <Route
           path="/conta/editar/:profileId"
           element={protectedElement(<P.ContaEditarPerfilPage />)}
         />
@@ -558,40 +532,6 @@ export function AppLayoutRoutes() {
           path="/conta"
           element={protectedElement(<P.ContaPage />)}
         />
-        <Route path="/perfil" element={<Navigate to="/conta" replace />} />
-        <Route
-          path="/perfil/editar"
-          element={<Navigate to="/conta/editar" replace />}
-        />
-        <Route
-          path="/perfil/editar/:profileId"
-          element={<LegacyProfileEditRedirect />}
-        />
-        <Route
-          path="/perfil/enderecos"
-          element={<Navigate to="/conta/enderecos" replace />}
-        />
-        <Route
-          path="/perfil/seguranca"
-          element={<Navigate to="/conta/seguranca" replace />}
-        />
-        <Route
-          path="/perfil/preferencias"
-          element={<Navigate to="/conta/preferencias" replace />}
-        />
-        <Route
-          path="/perfil/notificacoes"
-          element={<Navigate to="/conta/notificacoes" replace />}
-        />
-        <Route
-          path="/perfil/privacidade"
-          element={<Navigate to="/conta/privacidade" replace />}
-        />
-        <Route
-          path="/perfil/configuracoes"
-          element={<Navigate to="/conta/perfil/configuracoes" replace />}
-        />
-        <Route path="/perfil/*" element={<Navigate to="/conta" replace />} />
         <Route
           path="/gamificacao"
           element={launchElement(

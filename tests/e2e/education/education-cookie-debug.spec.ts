@@ -8,7 +8,7 @@ test('debug - check auth cookie', async ({ page, context }) => {
   const cookiesBefore = await context.cookies();
   console.log('Cookies before navigation:', cookiesBefore.map(c => `${c.name}=${c.value.substring(0, 20)}...`));
 
-  await page.goto('/perfil/empresas/7ed16389-6768-4eda-904d-ebaec0d2f400/education/programas', {
+  await page.goto('/central/empresas/7ed16389-6768-4eda-904d-ebaec0d2f400/educacao/programas', {
     waitUntil: 'domcontentloaded',
   });
   await page.waitForTimeout(3000);
