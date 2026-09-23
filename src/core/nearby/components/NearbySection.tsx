@@ -37,9 +37,9 @@ export function NearbySection({
   seeAllLabel = "Ver todos",
   children,
   isEmpty,
+  emptyMessage = "Nenhum resultado encontrado neste recorte.",
   isLoading,
 }: NearbySectionProps) {
-  if (isEmpty && !isLoading) return null;
 
   return (
     <motion.section
@@ -78,6 +78,10 @@ export function NearbySection({
             {Array.from({ length: 3 }).map((_, index) => (
               <div key={index} className="h-32 rounded-xl bg-muted/50 animate-pulse" />
             ))}
+          </div>
+        ) : isEmpty ? (
+          <div className="rounded-xl border border-dashed border-border/60 bg-muted/20 px-4 py-8 text-center text-sm text-muted-foreground">
+            {emptyMessage}
           </div>
         ) : (
           children
