@@ -104,8 +104,9 @@ Os PRs #310–#322 consolidaram o corte modular, as rotas canônicas, a gestão 
 - #320 removeu o lint rule órfão de direct-query, alinhou `SSOT_REGISTRY.md` a `gastronomy_profiles`/`GastronomyProfileService` e tornou essa aposentadoria um ratchet obrigatório.
 - #321 registrou a revalidação documental pós-#320 e reafirmou que o merge SHA não herda certificação de release.
 - #322 removeu inventários Admin paralelos, passou rota + sidebar para o lifecycle canônico e retirou aliases administrativos sem contrato.
+- #323 aposentou `/splash` como superfície pública órfã, sem redirect, e ratcheou sua ausência no ownership de rotas.
 
-A `main` atual é `2a6f0ae5539b28acd52ff7d4ed18ea6bb2a805a8` (merge de #322). O head `2de8d691b316b3eb36297a0ec678f4e26f075701` de #322 passou Security, SSOT Territorial, Heavy exact-SHA, Auth Concept, Visual Regression e SSOT Enforcement antes do merge; o merge SHA continua sendo um novo candidato e não herda automaticamente status de release. O corte em andamento aposenta a rota/página `/splash`, confirmada como superfície pública órfã sem caller real e com copy de módulos pausados. O smoke autenticado continua bloqueado por #305 e a autoridade de deploy Supabase por #309.
+A `main` atual é `987601528119a4fc02716adfcf954de2dcc3bf55` (merge de #323). O head `6d1fd44e563fe0fbaa1651865c3bf8ab054d1799` de #323 passou Security, SSOT Territorial, Heavy exact-SHA, Auth Concept e SSOT Enforcement antes do merge; o merge SHA continua sendo um novo candidato e não herda automaticamente status de release. O corte em andamento alinha a página institucional `/sobre` ao escopo ativo do MVP e ratcheta a ausência de claims que apresentem verticais pausadas como produto disponível. O smoke autenticado continua bloqueado por #305 e a autoridade de deploy Supabase por #309.
 
 ### Blockers atuais do primeiro release
 
