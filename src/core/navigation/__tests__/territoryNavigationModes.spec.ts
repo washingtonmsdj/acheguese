@@ -25,6 +25,7 @@ describe("territoryNavigationModes", () => {
       "map",
       "business",
       "nearby",
+      "search",
       "account",
     ]);
     expect(modes.find((mode) => mode.id === "home")?.href).toBe(COMPLEX_BASE);
@@ -35,7 +36,10 @@ describe("territoryNavigationModes", () => {
       `/empresas${COMPLEX_BASE}`,
     );
     expect(modes.find((mode) => mode.id === "nearby")?.href).toBe(
-      "/perto-de-mim",
+      `/perto-de-mim${COMPLEX_BASE}`,
+    );
+    expect(modes.find((mode) => mode.id === "search")?.href).toBe(
+      `/busca${COMPLEX_BASE}`,
     );
     expect(modes.some((mode) => mode.id === ("community" as never))).toBe(false);
     expect(modes.some((mode) => mode.id === ("explore" as never))).toBe(false);
