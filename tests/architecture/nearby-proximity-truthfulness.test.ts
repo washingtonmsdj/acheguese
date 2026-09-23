@@ -46,6 +46,9 @@ describe("nearby MVP boundary", () => {
     expect(card).toContain("showProximity &&");
     expect(card).toContain("business.distanceMeters > 0");
     expect(card).toContain("business.distanceMeters < 100000");
+    expect(card).toContain("em linha reta");
+    expect(card).not.toContain("getWalkingTime");
+    expect(card).not.toContain("<Clock");
     expect(filters).toContain(
       'showProximity ? "Raio:" : "Recorte a partir do centro:"',
     );
