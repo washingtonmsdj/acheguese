@@ -23,8 +23,7 @@ describe("MVP Business public flow", () => {
   });
 
   it("keeps Business CTAs inside the active MVP module set", () => {
-    expect(page).toContain("APP_MODULE_SLUGS.nearby");
-    expect(page).toContain("buildAppModulePath(APP_MODULE_SLUGS.nearby)");
+    expect(page).toContain("const nearbyHref = moduleUrls.nearby");
     expect(page).toContain('secondaryLabel="Perto de mim"');
     expect(page).not.toContain('"/recomendacoes/nova"');
     expect(page).not.toContain('secondaryLabel="Indicar negocio"');
