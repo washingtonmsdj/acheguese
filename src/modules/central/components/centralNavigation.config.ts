@@ -1,6 +1,7 @@
 import type { ElementType } from "react";
 import { Building2, Home } from "lucide-react";
 
+import { isProductModuleEnabled } from "@/app/config/lifecycleRegistry";
 import { businessManagementRoutes } from "@/core/business/utils/businessManagementRoutes";
 import { centralRoutes } from "@/modules/central/routes/centralRoutes";
 
@@ -26,6 +27,8 @@ export interface CentralNavSection {
  * Paused domains do not belong to this inventory. They return only after
  * lifecycle reactivation and certification, rather than being hidden locally.
  */
+const BUSINESS_ENABLED = isProductModuleEnabled("business");
+
 export const CENTRAL_NAV_SECTIONS: CentralNavSection[] = [
   {
     id: "overview",
@@ -40,19 +43,23 @@ export const CENTRAL_NAV_SECTIONS: CentralNavSection[] = [
       },
     ],
   },
-  {
-    id: "business",
-    label: "Empresas",
-    items: [
-      {
-        id: "business-list",
-        icon: Building2,
-        label: "Minhas Empresas",
-        href: businessManagementRoutes.list(),
-        description: "Gerenciar empresas",
-      },
-    ],
-  },
+  ...(BUSINESS_ENABLED
+    ? [
+        {
+          id: "business",
+          label: "Empresas",
+          items: [
+            {
+              id: "business-list",
+              icon: Building2,
+              label: "Minhas Empresas",
+              href: businessManagementRoutes.list(),
+              description: "Gerenciar empresas",
+            },
+          ],
+        },
+      ]
+    : []),
 ];
 
 export function getCentralPrimaryNavItems(): CentralNavItem[] {
