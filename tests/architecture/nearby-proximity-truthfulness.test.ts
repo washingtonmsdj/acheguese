@@ -9,6 +9,7 @@ describe("nearby MVP boundary", () => {
   const card = read("src/core/nearby/components/NearbyCard.tsx");
   const map = read("src/core/nearby/components/NearbyMiniMap.tsx");
   const filters = read("src/core/nearby/components/NearbyFilters.tsx");
+  const section = read("src/core/nearby/components/NearbySection.tsx");
 
   it("uses location quality rather than fallback coordinates as personal proximity truth", () => {
     expect(page).toContain("const hasPreciseProximity = isGoodForProximity");
@@ -45,11 +46,22 @@ describe("nearby MVP boundary", () => {
     expect(card).toContain("showProximity &&");
     expect(card).toContain("business.distanceMeters > 0");
     expect(card).toContain("business.distanceMeters < 100000");
+    expect(card).toContain("em linha reta");
+    expect(card).not.toContain("getWalkingTime");
+    expect(card).not.toContain("<Clock");
     expect(filters).toContain(
       'showProximity ? "Raio:" : "Recorte a partir do centro:"',
     );
     expect(map).toContain("enabled: showProximity");
     expect(map).toContain("autoAdd: showProximity");
+  });
+
+  it("keeps zero-result states explicit instead of hiding Nearby content", () => {
+    expect(section).toContain('emptyMessage = "Nenhum resultado encontrado neste recorte."');
+    expect(section).toContain("{emptyMessage}");
+    expect(section).not.toContain("if (isEmpty && !isLoading) return null");
+    expect(page).toContain("Nenhuma empresa encontrada em até ${radiusKm}km.");
+    expect(page).toContain("Nenhuma empresa encontrada ${territoryLabels.inTerritory}.");
   });
 
   it("does not retain fake cross-module category filters", () => {

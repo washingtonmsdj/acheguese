@@ -224,6 +224,11 @@ export default function NearbyPage() {
               iconColorClass="bg-blue-500/10 text-blue-500"
               count={businesses.length}
               isEmpty={businesses.length === 0}
+              emptyMessage={
+                hasPreciseProximity
+                  ? `Nenhuma empresa encontrada em até ${radiusKm}km. Amplie o raio ou abra Empresas.`
+                  : `Nenhuma empresa encontrada ${territoryLabels.inTerritory}. Abra Empresas para explorar o catálogo disponível.`
+              }
               isLoading={isLoading}
               onSeeAll={() => navigate(businessUrl)}
             >
