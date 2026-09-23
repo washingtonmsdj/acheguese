@@ -31,12 +31,12 @@ describe("MVP canonical routing without compatibility redirects", () => {
 
   it("requires an explicit profileId for private profile editing", () => {
     const routes = read("src/app/routes/sections/AppLayoutRoutes.tsx");
-    const lazyImports = read("src/app/routes/lazyImports.ts");
+    const activeLazyImports = read("src/app/routes/activeLazyImports.ts");
     const profileBarrel = read("src/modules/profile/index.ts");
 
     expect(routes).toContain('path="/conta/editar/:profileId"');
     expect(routes).not.toContain('path="/conta/editar"');
-    expect(lazyImports).not.toContain("ContaEditarPage");
+    expect(activeLazyImports).not.toContain("ContaEditarPage");
     expect(profileBarrel).not.toContain("ContaEditarPage");
     expect(
       existsSync(resolve(root, "src/modules/profile/pages/ContaEditarPage.tsx")),
