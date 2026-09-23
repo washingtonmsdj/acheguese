@@ -7,7 +7,7 @@
  * cannot be completed. No synthetic context is created at runtime.
  */
 
-import { useEffect } from "react";
+import { useEffect, type ComponentType } from "react";
 import { AlertTriangle, Loader2 } from "lucide-react";
 import { Link, Outlet, useLocation, useOutletContext, useParams } from "react-router-dom";
 import { ErrorBoundary } from "@/shared/components/errors/ErrorBoundary";
@@ -147,7 +147,13 @@ function TerritoryStatusMessage({
   );
 }
 
-export function TerritorialLayout() {
+interface TerritorialLayoutProps {
+  NotFoundComponent?: ComponentType;
+}
+
+export function TerritorialLayout({
+  NotFoundComponent,
+}: TerritorialLayoutProps = {}) {
   const { status, resolved, error } = useResolveTerritoryFromUrl();
   const { pathname } = useLocation();
   const params = useParams<{
@@ -184,7 +190,11 @@ export function TerritorialLayout() {
   }
 
   if (status === "not_found") {
-    return <TerritorialNotFound message={error ?? undefined} />;
+    return NotFoundComponent ? (
+      <NotFoundComponent />
+    ) : (
+      <TerritorialNotFound message={error ?? undefined} />
+    );
   }
 
   if (status === "inactive") {
@@ -209,7 +219,11 @@ export function TerritorialLayout() {
   }
 
   if (status === "error" || !resolved) {
-    return <TerritorialNotFound message={error ?? "Não foi possível resolver este território."} />;
+    return NotFoundComponent ? (
+      <NotFoundComponent />
+    ) : (
+      <TerritorialNotFound message={error ?? "Não foi possível resolver este território."} />
+    );
   }
 
   const effectiveAvailability: GroupModuleAvailability = resolved.kind === "group" ? availability : "full";

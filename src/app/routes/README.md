@@ -8,12 +8,13 @@ Este diretório define a fronteira canônica de navegação do Achegue-se. A reg
 src/app/routes/
 ├── AppRoutes.tsx                         # árvore raiz
 ├── RootRouteEntry.tsx                    # resolução da entrada `/`
-├── lazyImports.ts                        # páginas pertencentes ao AppLayout
+├── activeLazyImports.ts                  # imports alcançáveis pelo AppLayout do MVP
+├── lazyImports.ts                        # implementação preservada pós-MVP; fora do shell ativo
 ├── adminLazyImports.ts                   # imports da árvore administrativa
 ├── sections/
 │   ├── AppLayoutRoutes.tsx               # rotas que vivem no layout principal
-│   ├── AppLayoutRouteRegistry.tsx        # descritores territoriais/domínio
-│   ├── CommunityTerritoryRoutes.tsx      # portal/comunidade territorial
+│   ├── AppLayoutRouteRegistry.tsx        # descritores territoriais ativos (Business + Map)
+│   ├── CommunityTerritoryRoutes.tsx      # implementação pós-MVP preservada; não montada no shell
 │   ├── CentralRoutes.tsx                 # operação privada `/central/*`
 │   └── AdminRoutes.tsx                   # administração `/admin/*`
 └── README.md
@@ -40,20 +41,23 @@ Essas páginas usam `lazy()` diretamente em `AppRoutes`. **Não** devem voltar p
 
 ### `AppLayoutRoutes.tsx`
 
-É o owner das superfícies que pertencem à aplicação principal e/ou ao `AppLayoutSidebar`, incluindo:
+É o owner **somente** das superfícies ativas no lifecycle do MVP e da infraestrutura necessária ao shell:
 
-- `/inicio`;
-- conta privada (`/conta/*`);
-- mensagens, mapa, busca e módulos públicos;
-- vitrines territoriais;
-- eventos, vagas, educação, comunicação e outras superfícies sujeitas ao launch scope;
-- aliases de perfil mantidos apenas quando ainda fazem parte do contrato público atual.
+- conta/perfis/notificações;
+- Business/Empresas;
+- Mensagens (provider Business);
+- Mapa, Perto de mim e Busca;
+- território ativo e páginas legais.
 
-Rotas sujeitas a lançamento usam `isLaunchSurfaceEnabled()` / `launchElement()`. A árvore raiz não deve interceptá-las com um placeholder permanente.
+A inclusão é derivada diretamente de `lifecycleRegistry.ts`. Módulos `paused` não recebem `<Route>`, não usam `LaunchPausedPage` e não entram por `launchElement()`. URL pública sem owner ativo cai no `NotFound` canônico.
+
+### `activeLazyImports.ts`
+
+É o barrel exclusivo do `AppLayoutRoutes` do MVP. Só contém owners de Business, capabilities horizontais ativas e infraestrutura pública necessária. É proibido importar owners de módulos `paused`, `LaunchPausedPage` ou factories de placeholder.
 
 ### `lazyImports.ts`
 
-É um barrel exclusivo da árvore de `AppLayoutRoutes` e seus registries. Não contém novamente Login, Cadastro, Recuperação, Status, QR, páginas institucionais root-owned, catálogo público sem layout, mini-site premium nem páginas da árvore `/admin/*`. A administração pertence exclusivamente a `adminLazyImports.ts` + `AdminRoutes.tsx`.
+Permanece temporariamente como inventário de implementações preservadas pós-MVP e para contratos históricos de módulos. **Não é importado pelo shell ativo.** Quando um módulo for reativado formalmente, seus owners devem ser migrados para a fronteira ativa após certificação; nunca por exceção local.
 
 ## Conta e acesso
 
@@ -76,8 +80,8 @@ Rotas públicas territoriais devem ser construídas pelos helpers canônicos de 
 
 Princípios:
 
-- vitrines de módulo (`/empresas/...`, `/servicos/...`) são públicas/SEO;
-- `/comunidade/:communitySlug/...` representa experiência social/local;
+- vitrines territoriais ativas pertencem somente a Business e Map no MVP;
+- padrões preservados de Serviços/Community/etc. não constituem rotas públicas enquanto seus módulos estiverem `paused`;
 - detalhe público de empresa mantém sua URL canônica territorial;
 - `/p/:slug/*` é o mini-site premium e não substitui a URL pública canônica da empresa;
 - rotas operacionais ficam em `/central`;
@@ -88,7 +92,7 @@ Princípios:
 
 1. Defina primeiro o owner: raiz, AppLayout, Central ou Admin.
 2. Se for root-owned, faça o `lazy()` em `AppRoutes.tsx`.
-3. Se pertencer ao AppLayout, adicione o import a `lazyImports.ts` apenas se necessário e registre a rota em `AppLayoutRoutes`/registry apropriado.
+3. Se pertencer ao AppLayout, a superfície precisa estar `active` no lifecycle; então adicione o owner a `activeLazyImports.ts` e registre a rota/descriptor canônico. Não conecte módulo `paused`.
 4. Para autenticação, reutilize `AUTH_PATHS`/builders.
 5. Para território, reutilize os builders canônicos; não concatene padrões paralelos manualmente.
 6. Adicione um contrato quando a rota puder colidir com fallback territorial, alias ou outra árvore.
@@ -101,7 +105,7 @@ Uma mudança de rota não está concluída se:
 
 - a mesma URL existir em duas árvores;
 - uma página root-owned continuar exportada inutilmente por `lazyImports.ts`;
-- uma superfície launch-gated for bloqueada incondicionalmente acima do seu owner;
+- um módulo `paused` tiver rota, fallback ou import alcançável pelo shell público ativo;
 - um redirect de autenticação for montado fora dos builders canônicos;
 - um alias legado for mantido sem consumidor/contrato atual.
 

@@ -2,6 +2,7 @@ import { readFileSync } from "node:fs";
 import { resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import { describe, expect, it } from "vitest";
+
 import { isLaunchSurfaceEnabled } from "@/app/config/launchScope";
 
 const currentDir = resolve(fileURLToPath(import.meta.url), "..");
@@ -12,7 +13,8 @@ function readProjectFile(path: string): string {
 }
 
 describe("community launch scope routing", () => {
-  it("keeps alerts and issues paused until E2E and RLS validation are complete", () => {
+  it("keeps community surfaces paused until formal reactivation", () => {
+    expect(isLaunchSurfaceEnabled("community")).toBe(false);
     expect(isLaunchSurfaceEnabled("communityAlerts")).toBe(false);
     expect(isLaunchSurfaceEnabled("communityIssues")).toBe(false);
   });
@@ -24,24 +26,33 @@ describe("community launch scope routing", () => {
     expect(productionEnv).toMatch(/^VITE_FEATURE_COMMUNITY_ISSUES=false$/m);
   });
 
-  it("keeps global alert and issue routes behind launchElement", () => {
-    const routesSource = readProjectFile("src/app/routes/sections/AppLayoutRoutes.tsx");
-
-    expect(routesSource).toMatch(
-      /<Route\s+path="\/alertas"\s+element=\{launchElement\(\s*"communityAlerts"/,
-    );
-    expect(routesSource).toMatch(
-      /<Route\s+path="\/problemas"\s+element=\{launchElement\(\s*"communityIssues"/,
-    );
-  });
-
-  it("keeps territorial community issue routes behind launchSurface metadata", () => {
+  it("keeps paused community routes outside the active public tree", () => {
     const routesSource = readProjectFile(
-      "src/app/routes/sections/CommunityTerritoryRoutes.tsx",
+      "src/app/routes/sections/AppLayoutRoutes.tsx",
+    );
+    const activeLazySource = readProjectFile(
+      "src/app/routes/activeLazyImports.ts",
     );
 
-    expect(routesSource).toContain('key: "issues"');
-    expect(routesSource).toContain('launchSurface: "communityIssues"');
-    expect(routesSource).toContain('pausedModuleName: "Problemas"');
+    for (const forbidden of [
+      'path="/alertas"',
+      'path="/problemas"',
+      'path="/recomendacoes',
+      'path="/achados-perdidos',
+      "CommunityTerritoryRoutes",
+      "TerritorialCommunityPage",
+      "TerritorialCommunityIssuesPage",
+      "CommunityPersistentPortalLayout",
+      "CommunityAliasRoute",
+      "@/modules/community-",
+      "@/core/community-",
+    ]) {
+      expect(routesSource).not.toContain(forbidden);
+      expect(activeLazySource).not.toContain(forbidden);
+    }
+
+    expect(routesSource).toContain(
+      '<Route path="*" element={<P.NotFound />} />',
+    );
   });
 });

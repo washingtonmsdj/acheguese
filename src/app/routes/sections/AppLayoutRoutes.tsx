@@ -1,1046 +1,205 @@
-/**
- * AppRoutes - Configuracao Centralizada de Rotas
- *
- * Este componente contem todas as rotas da aplicacao,
- * separado do App.tsx para melhor organizacao e manutencao.
- *
- * @version 1.0.0
- */
-
 import type { ReactNode } from "react";
-import { Routes, Route } from "react-router-dom";
+import { Route, Routes } from "react-router-dom";
+
 import { AppLayoutSidebar } from "@/app/components/AppLayoutSidebar";
-import TerritoryHomePage from "@/app/pages/TerritoryHomePage";
-import { TerritorialIndexPage } from "@/core/routing/components/TerritorialIndexPage";
-import { TerritorialLayout } from "@/core/routing/components/TerritorialLayout";
-import { APP_MODULE_SLUGS, buildAppModulePath } from "@/shared/config/moduleSlugs";
-import { LAUNCH_CITY_PATH } from "@/core/routing/config/territory";
-import { mobilityRoutes } from "@/core/mobility/routes/mobilityRoutes";
 import {
-  isLaunchSurfaceEnabled,
-  type LaunchSurfaceKey,
-} from "@/app/config/launchScope";
+  isPlatformCapabilityEnabled,
+  isProductModuleEnabled,
+} from "@/app/config/lifecycleRegistry";
+import TerritoryHomePage from "@/app/pages/TerritoryHomePage";
+import { ProtectedRoute } from "@/core/routing/components/ProtectedRoute";
+import { TerritorialIndexPage } from "@/core/routing/components/TerritorialIndexPage";
 import {
   TERRITORIAL_ROUTE_PARAMS,
   TERRITORIAL_ROUTE_STATIC_SEGMENTS,
-  buildCommunityTerritoryRoutePath,
   buildTerritorialBareRoutePath,
   buildTerritorialModuleRoutePath,
   buildTerritorialRoutePath,
 } from "@/core/routing/config/territorialRoutePatterns";
+import { APP_MODULE_SLUGS } from "@/shared/config/moduleSlugs";
+
+import * as P from "../activeLazyImports";
 import {
-  GASTRONOMY_PUBLIC_ROUTE_PARAMS,
-  gastronomyPublicRoutes,
-} from "@/core/verticals/gastronomy/routes/gastronomyPublicRoutes";
-import { professionalPublicRoutes } from "@/core/professional/routes/professionalPublicRoutes";
-import { touristPointPublicRoutes } from "@/core/guide/tourist-points/routes/touristPointPublicRoutes";
-import { isFeatureEnabled } from "@/shared/utils/featureFlags";
-import { CommunityTerritoryRoutes } from "./CommunityTerritoryRoutes";
-import { ProtectedRoute } from "@/core/routing/components/ProtectedRoute";
-import {
-  APP_LAYOUT_EVENT_TERRITORIAL_ROUTES,
   APP_LAYOUT_TERRITORIAL_DOMAIN_ROUTES,
   renderAppLayoutRouteDescriptors,
 } from "./AppLayoutRouteRegistry";
 
-// Lazy imports organizados por dominio
-import * as P from "../lazyImports";
-
 const TERRITORIAL_PARAMS = TERRITORIAL_ROUTE_PARAMS;
 const TERRITORIAL_STATIC = TERRITORIAL_ROUTE_STATIC_SEGMENTS;
-const EVENT_ROUTES = {
-  home: buildAppModulePath(APP_MODULE_SLUGS.events),
-  favorites: buildAppModulePath(
-    APP_MODULE_SLUGS.events,
-    TERRITORIAL_STATIC.favorites,
-  ),
-  calendar: buildAppModulePath(
-    APP_MODULE_SLUGS.events,
-    TERRITORIAL_STATIC.calendar,
-  ),
-  map: buildAppModulePath(APP_MODULE_SLUGS.events, TERRITORIAL_STATIC.map),
-  detail: buildAppModulePath(
-    APP_MODULE_SLUGS.events,
-    `${TERRITORIAL_STATIC.eventDetail}/${TERRITORIAL_PARAMS.eventId}`,
-  ),
-  legacyDetail: buildAppModulePath(
-    APP_MODULE_SLUGS.events,
-    TERRITORIAL_PARAMS.eventId,
-  ),
-} as const;
-const JOB_ROUTES = {
-  home: buildAppModulePath(APP_MODULE_SLUGS.jobs),
-  publish: buildAppModulePath(
-    APP_MODULE_SLUGS.jobs,
-    TERRITORIAL_STATIC.publish,
-  ),
-} as const;
 
-type DirectPausedRoute = {
-  path: string;
-  surface: LaunchSurfaceKey;
-  moduleName: string;
-};
+const protectedElement = (element: ReactNode) => (
+  <ProtectedRoute>{element}</ProtectedRoute>
+);
 
-function buildCommunityPausedRoutes(
-  segments: readonly string[],
-  surface: LaunchSurfaceKey,
-  moduleName: string,
-): DirectPausedRoute[] {
-  return [
-    {
-      path: buildCommunityTerritoryRoutePath(segments),
-      surface,
-      moduleName,
-    },
-    {
-      path: buildCommunityTerritoryRoutePath([
-        TERRITORIAL_PARAMS.groupSlugOrDistrict,
-        ...segments,
-      ]),
-      surface,
-      moduleName,
-    },
-  ];
-}
-
-const DIRECT_PAUSED_ROUTES: DirectPausedRoute[] = [
-  { path: EVENT_ROUTES.home, surface: "events", moduleName: "Eventos" },
-  { path: EVENT_ROUTES.favorites, surface: "events", moduleName: "Eventos" },
-  { path: EVENT_ROUTES.calendar, surface: "events", moduleName: "Eventos" },
-  { path: EVENT_ROUTES.map, surface: "events", moduleName: "Eventos" },
-  { path: EVENT_ROUTES.detail, surface: "events", moduleName: "Eventos" },
-  { path: EVENT_ROUTES.legacyDetail, surface: "events", moduleName: "Eventos" },
-  { path: JOB_ROUTES.home, surface: "jobs", moduleName: "Vagas" },
-  { path: JOB_ROUTES.publish, surface: "jobs", moduleName: "Vagas" },
-  {
-    path: buildTerritorialModuleRoutePath(APP_MODULE_SLUGS.jobs),
-    surface: "jobs",
-    moduleName: "Vagas",
-  },
-  {
-    path: buildTerritorialModuleRoutePath(APP_MODULE_SLUGS.jobs, [
-      TERRITORIAL_PARAMS.slug,
-    ]),
-    surface: "jobs",
-    moduleName: "Vagas",
-  },
-  { path: "/oportunidades", surface: "jobs", moduleName: "Oportunidades" },
-  { path: "/oportunidades/:id", surface: "jobs", moduleName: "Oportunidades" },
-  { path: "/educacao", surface: "education", moduleName: "Educacao" },
-  {
-    path: buildTerritorialModuleRoutePath(APP_MODULE_SLUGS.education),
-    surface: "education",
-    moduleName: "Educacao",
-  },
-  {
-    path: buildTerritorialModuleRoutePath(APP_MODULE_SLUGS.education, [
-      TERRITORIAL_PARAMS.district,
-    ]),
-    surface: "education",
-    moduleName: "Educacao",
-  },
-  {
-    path: buildTerritorialModuleRoutePath(APP_MODULE_SLUGS.education, [
-      TERRITORIAL_PARAMS.district,
-      TERRITORIAL_PARAMS.slug,
-    ]),
-    surface: "education",
-    moduleName: "Educacao",
-  },
-  { path: "/comunicacao", surface: "communication", moduleName: "Comunicacao" },
-  {
-    path: "/comunicacao/solicitar",
-    surface: "communication",
-    moduleName: "Comunicacao",
-  },
-  {
-    path: "/comunicacao/empresa/:channelSlug",
-    surface: "communication",
-    moduleName: "Comunicacao",
-  },
-  {
-    path: "/comunicacao/agente/:channelSlug",
-    surface: "communication",
-    moduleName: "Comunicacao",
-  },
-  {
-    path: buildTerritorialRoutePath(TERRITORIAL_STATIC.communication),
-    surface: "communication",
-    moduleName: "Comunicacao",
-  },
-  {
-    path: buildTerritorialRoutePath(TERRITORIAL_STATIC.communication, [
-      TERRITORIAL_PARAMS.channelSlug,
-    ]),
-    surface: "communication",
-    moduleName: "Comunicacao",
-  },
-  { path: "/cupons", surface: "coupons", moduleName: "Cupons" },
-  { path: "/cupons/:id", surface: "coupons", moduleName: "Cupons" },
-  { path: "/analytics", surface: "publicAnalytics", moduleName: "Analytics" },
-  { path: mobilityRoutes.public.home, surface: "mobility", moduleName: "Mobilidade" },
-  {
-    path: mobilityRoutes.passageiro.home,
-    surface: "mobility",
-    moduleName: "Mobilidade",
-  },
-  {
-    path: mobilityRoutes.passageiro.buscandoPattern,
-    surface: "mobility",
-    moduleName: "Mobilidade",
-  },
-  {
-    path: mobilityRoutes.public.motorista,
-    surface: "mobility",
-    moduleName: "Mobilidade",
-  },
-  {
-    path: mobilityRoutes.public.motoboy,
-    surface: "mobility",
-    moduleName: "Mobilidade",
-  },
-  {
-    path: mobilityRoutes.public.motoristaProfile,
-    surface: "mobility",
-    moduleName: "Mobilidade",
-  },
-  {
-    path: mobilityRoutes.public.history,
-    surface: "mobility",
-    moduleName: "Mobilidade",
-  },
-  {
-    path: mobilityRoutes.public.emergencyContacts,
-    surface: "mobility",
-    moduleName: "Mobilidade",
-  },
-  { path: mobilityRoutes.public.trackPattern, surface: "mobility", moduleName: "Mobilidade" },
-  { path: "/ranking", surface: "gamification", moduleName: "Ranking" },
-  { path: "/gamificacao", surface: "gamification", moduleName: "Gamificacao" },
-  { path: "/alertas", surface: "communityAlerts", moduleName: "Alertas" },
-  { path: "/problemas", surface: "communityIssues", moduleName: "Problemas" },
-  {
-    path: "/achados-perdidos",
-    surface: "communityLostFound",
-    moduleName: "Achados e perdidos",
-  },
-  {
-    path: "/achados-perdidos/novo",
-    surface: "communityLostFound",
-    moduleName: "Achados e perdidos",
-  },
-  {
-    path: "/achados-perdidos/:id",
-    surface: "communityLostFound",
-    moduleName: "Achados e perdidos",
-  },
-  {
-    path: "/mensagens",
-    surface: "messaging",
-    moduleName: "Mensagens",
-  },
-  ...buildCommunityPausedRoutes([APP_MODULE_SLUGS.events], "events", "Eventos"),
-  ...buildCommunityPausedRoutes([APP_MODULE_SLUGS.jobs], "jobs", "Vagas"),
-  ...buildCommunityPausedRoutes(
-    [APP_MODULE_SLUGS.education],
-    "education",
-    "Educacao",
-  ),
-  ...buildCommunityPausedRoutes(
-    [APP_MODULE_SLUGS.mobility],
-    "mobility",
-    "Mobilidade",
-  ),
-  ...buildCommunityPausedRoutes(
-    [TERRITORIAL_STATIC.issues],
-    "communityIssues",
-    "Problemas",
-  ),
-  ...buildCommunityPausedRoutes(
-    [TERRITORIAL_STATIC.lostAndFound],
-    "communityLostFound",
-    "Achados e perdidos",
-  ),
-  ...buildCommunityPausedRoutes(
-    [TERRITORIAL_STATIC.communication],
-    "communityCommunication",
-    "Comunicacao",
-  ),
-];
-
+/**
+ * Active MVP route tree.
+ *
+ * Paused product modules are intentionally absent from this graph. Their code
+ * stays versioned in its bounded context for post-MVP work, while unmatched
+ * public URLs fall through to the canonical NotFound route.
+ */
 export function AppLayoutRoutes() {
-  const aiVirtualTryOnEnabled = isFeatureEnabled("AI_VIRTUAL_TRYON");
-  const launchElement = (
-    surface: LaunchSurfaceKey,
-    moduleName: string,
-    element: ReactNode,
-  ) =>
-    isLaunchSurfaceEnabled(surface) ? (
-      element
-    ) : (
-      <P.LaunchPausedPage moduleName={moduleName} />
-    );
-  const launchTerritorialLayout = (
-    surface: LaunchSurfaceKey,
-    moduleName: string,
-  ) => launchElement(surface, moduleName, <TerritorialLayout />);
-  const protectedElement = (element: ReactNode) => (
-    <ProtectedRoute>{element}</ProtectedRoute>
-  );
+  const businessEnabled = isProductModuleEnabled("business");
+
+  const profilesEnabled = isPlatformCapabilityEnabled("profiles");
+  const accountEnabled = isPlatformCapabilityEnabled("account");
+  const notificationsEnabled = isPlatformCapabilityEnabled("notifications");
+  const territoryEnabled = isPlatformCapabilityEnabled("territory");
+  const mapEnabled = isPlatformCapabilityEnabled("map");
+  const nearbyEnabled = isPlatformCapabilityEnabled("nearby");
+  const searchEnabled = isPlatformCapabilityEnabled("search");
+  const messagingEnabled = isPlatformCapabilityEnabled("messaging");
 
   return (
     <Routes>
-      {DIRECT_PAUSED_ROUTES.filter(
-        (route) => !isLaunchSurfaceEnabled(route.surface),
-      ).map((route) => (
-        <Route
-          key={route.path}
-          path={route.path}
-          element={<P.LaunchPausedPage moduleName={route.moduleName} />}
-        />
-      ))}
-
-      {/* EVENTS - Sistema de Eventos */}
-      <Route
-        path={EVENT_ROUTES.home}
-        element={launchElement(
-          "events",
-          "Eventos",
-          <P.EventsErrorBoundary>
-            <P.EventsListPage />
-          </P.EventsErrorBoundary>,
-        )}
-      />
-      <Route
-        path={EVENT_ROUTES.favorites}
-        element={launchElement(
-          "events",
-          "Eventos",
-          <P.EventsErrorBoundary>
-            <P.EventsFavoritesPage />
-          </P.EventsErrorBoundary>,
-        )}
-      />
-      <Route
-        path={EVENT_ROUTES.calendar}
-        element={launchElement(
-          "events",
-          "Eventos",
-          <P.EventsErrorBoundary>
-            <P.EventsCalendarPage />
-          </P.EventsErrorBoundary>,
-        )}
-      />
-      <Route
-        path={EVENT_ROUTES.map}
-        element={launchElement(
-          "events",
-          "Eventos",
-          <P.EventsErrorBoundary>
-            <P.EventsMapPage />
-          </P.EventsErrorBoundary>,
-        )}
-      />
-      <Route
-        path={EVENT_ROUTES.detail}
-        element={launchElement(
-          "events",
-          "Eventos",
-          <P.EventsErrorBoundary>
-            <P.EventDetailPage />
-          </P.EventsErrorBoundary>,
-        )}
-      />
-
-      {/* Event Detail - Deve vir depois das rotas especificas */}
-      <Route
-        path={EVENT_ROUTES.legacyDetail}
-        element={launchElement(
-          "events",
-          "Eventos",
-          <P.EventsErrorBoundary>
-            <P.EventDetailPage />
-          </P.EventsErrorBoundary>,
-        )}
-      />
-
       <Route element={<AppLayoutSidebar />}>
-        {/* Rotas de Billing e Assinaturas */}
-        <Route
-          path="/planos"
-          element={launchElement(
-            "billing",
-            "Planos",
-            protectedElement(<P.PricingPage />),
-          )}
-        />
-        <Route
-          path="/checkout/success"
-          element={launchElement(
-            "billing",
-            "Planos",
-            protectedElement(<P.CheckoutSuccessPage />),
-          )}
-        />
-        <Route
-          path="/checkout/cancel"
-          element={launchElement("billing", "Planos", <P.CheckoutCancelPage />)}
-        />
-        <Route
-          path="/settings/subscription"
-          element={launchElement(
-            "billing",
-            "Planos",
-            protectedElement(<P.SubscriptionManagementPage />),
-          )}
-        />
+        {notificationsEnabled ? (
+          <>
+            <Route
+              path="/notificacoes"
+              element={protectedElement(<P.NotificationsPage />)}
+            />
+            <Route
+              path="/settings/email-logs"
+              element={protectedElement(<P.EmailLogsPage />)}
+            />
+          </>
+        ) : null}
 
-        {/* Rotas de Notificacoes */}
-        <Route
-          path="/notificacoes"
-          element={protectedElement(<P.NotificationsPage />)}
-        />
-        <Route
-          path="/settings/email-logs"
-          element={protectedElement(<P.EmailLogsPage />)}
-        />
+        {profilesEnabled ? (
+          <Route path="/u/:username" element={<P.ProfilePublicRoute />} />
+        ) : null}
 
-        {/* Rotas globais */}
-        <Route
-          path="/u/:username"
-          element={launchElement(
-            "profiles",
-            "Perfis públicos",
-            <P.ProfilePublicRoute />,
-          )}
-        />
-        <Route
-          path="/c/:publicId"
-          element={launchElement(
-            "classifieds",
-            "Classificados",
-            <P.ClassifiedShortRoute />,
-          )}
-        />
-        <Route
-          path={JOB_ROUTES.publish}
-          element={launchElement("jobs", "Vagas", <P.PublicarVagaPage />)}
-        />
-        <Route
-          path="/oportunidades"
-          element={launchElement(
-            "jobs",
-            "Oportunidades",
-            <P.WorkOpportunitiesPage />,
-          )}
-        />
-        <Route
-          path="/oportunidades/:id"
-          element={launchElement(
-            "jobs",
-            "Oportunidades",
-            <P.WorkOpportunityDetailPage />,
-          )}
-        />
-        <Route
-          path="/servicos/cadastrar"
-          element={launchElement(
-            "services",
-            "Serviços",
-            protectedElement(<P.CadastrarServicoPage />),
-          )}
-        />
-        <Route
-          path="/servicos/:id/editar"
-          element={launchElement(
-            "services",
-            "Serviços",
-            protectedElement(<P.EditarServicoPage />),
-          )}
-        />
-        <Route
-          path="/servicos/orcamentos/:leadId"
-          element={launchElement(
-            "services",
-            "Serviços",
-            protectedElement(<P.ProfessionalLeadTrackingPage />),
-          )}
-        />
-        <Route
-          path="/classificados/novo"
-          element={launchElement(
-            "classifieds",
-            "Classificados",
-            protectedElement(<P.NovoClassificadoPage />),
-          )}
-        />
-        <Route
-          path="/classificados/editar/:id"
-          element={launchElement(
-            "classifieds",
-            "Classificados",
-            protectedElement(<P.EditarClassificadoPage />),
-          )}
-        />
-        <Route
-          path="/classificados/vendedor/:sellerId"
-          element={launchElement(
-            "classifieds",
-            "Classificados",
-            <P.VendedorPerfilPage />,
-          )}
-        />
+        {accountEnabled ? (
+          <>
+            <Route
+              path="/conta/preferencias"
+              element={protectedElement(<P.ContaPreferenciasPage />)}
+            />
+            <Route
+              path="/conta/notificacoes"
+              element={protectedElement(<P.NotificationPreferencesPage />)}
+            />
+            <Route
+              path="/conta/privacidade"
+              element={protectedElement(<P.PrivacySettingsPage />)}
+            />
+            <Route
+              path="/conta/perfil/configuracoes"
+              element={protectedElement(<P.ProfileSettingsPage />)}
+            />
+            <Route
+              path="/conta/seguranca"
+              element={protectedElement(<P.ContaSegurancaPage />)}
+            />
+            <Route
+              path="/conta/enderecos"
+              element={protectedElement(<P.ContaEnderecosPage />)}
+            />
+            <Route
+              path="/conta/editar/:profileId"
+              element={protectedElement(<P.ContaEditarPerfilPage />)}
+            />
+            <Route path="/conta" element={protectedElement(<P.ContaPage />)} />
+          </>
+        ) : null}
 
-        <Route
-          path="/cupons"
-          element={launchElement("coupons", "Cupons", <P.CuponsPage />)}
-        />
-        <Route
-          path="/cupons/:id"
-          element={launchElement("coupons", "Cupons", <P.CupomDetailPage />)}
-        />
-        <Route
-          path="/conta/preferencias"
-          element={protectedElement(<P.ContaPreferenciasPage />)}
-        />
-        <Route
-          path="/conta/notificacoes"
-          element={protectedElement(<P.NotificationPreferencesPage />)}
-        />
-        <Route
-          path="/conta/privacidade"
-          element={protectedElement(<P.PrivacySettingsPage />)}
-        />
-        <Route
-          path="/conta/perfil/configuracoes"
-          element={protectedElement(<P.ProfileSettingsPage />)}
-        />
-        <Route
-          path="/conta/seguranca"
-          element={protectedElement(<P.ContaSegurancaPage />)}
-        />
-        <Route
-          path="/conta/enderecos"
-          element={protectedElement(<P.ContaEnderecosPage />)}
-        />
-        <Route
-          path="/conta/editar/:profileId"
-          element={protectedElement(<P.ContaEditarPerfilPage />)}
-        />
-        <Route
-          path="/conta"
-          element={protectedElement(<P.ContaPage />)}
-        />
-        <Route
-          path="/gamificacao"
-          element={launchElement(
-            "gamification",
-            "Gamificação",
-            <P.GamificacaoPage />,
-          )}
-        />
-        <Route
-          path="/empresas"
-          element={launchElement("business", "Empresas", <P.EmpresasLandingPage />)}
-        />
-        <Route
-          path="/empresas/cadastrar"
-          element={launchElement(
-            "business",
-            "Empresas",
-            protectedElement(<P.EmpresasCadastroLandingPage />),
-          )}
-        />
-        <Route
-          path="/mensagens"
-          element={protectedElement(
-            launchElement(
-              "messaging",
-              "Mensagens",
-              <P.MensagensPage />,
-            ),
-          )}
-        />
-        <Route
-          path="/mensagens/:providerId/:threadId"
-          element={protectedElement(
-            launchElement(
-              "messaging",
-              "Mensagens",
-              <P.MensagensPage />,
-            ),
-          )}
-        />
-        <Route
-          path="/mapa"
-          element={launchElement("map", "Mapa", <P.MapaPage />)}
-        />
-        <Route
-          path="/perto-de-mim"
-          element={launchElement("nearby", "Perto de mim", <P.NearbyPage />)}
-        />
-        <Route
-          path="/analytics"
-          element={launchElement(
-            "publicAnalytics",
-            "Analytics",
-            <P.GeneralAnalyticsPage />,
-          )}
-        />
-        <Route
-          path="/alertas"
-          element={launchElement(
-            "communityAlerts",
-            "Alertas",
-            <P.TerritorialCommunityPage />,
-          )}
-        />
-        <Route
-          path="/problemas"
-          element={launchElement(
-            "communityIssues",
-            "Problemas",
-            <P.TerritorialCommunityIssuesPage />,
-          )}
-        />
-        <Route
-          path="/recomendacoes"
-          element={launchElement(
-            "community",
-            "Comunidade",
-            <P.RecomendacoesPage />,
-          )}
-        />
-        <Route
-          path="/recomendacoes/nova"
-          element={launchElement(
-            "community",
-            "Comunidade",
-            protectedElement(<P.NovaRecomendacaoPage />),
-          )}
-        />
-        <Route
-          path="/recomendacoes/:id"
-          element={launchElement(
-            "community",
-            "Comunidade",
-            <P.RecomendacaoDetailPage />,
-          )}
-        />
-        <Route
-          path="/achados-perdidos"
-          element={launchElement(
-            "communityLostFound",
-            "Achados e perdidos",
-            <P.AchadosPerdidosPage />,
-          )}
-        />
-        <Route
-          path="/achados-perdidos/novo"
-          element={protectedElement(
-            launchElement(
-              "communityLostFound",
-              "Achados e perdidos",
-              <P.NovoAchadoPerdidoPage />,
-            ),
-          )}
-        />
-        <Route
-          path="/achados-perdidos/:id"
-          element={launchElement(
-            "communityLostFound",
-            "Achados e perdidos",
-            <P.AchadoPerdidoDetailPage />,
-          )}
-        />
-        <Route
-          path="/ranking"
-          element={launchElement("gamification", "Ranking", <P.RankingPage />)}
-        />
-        <Route
-          path={mobilityRoutes.public.trackPattern}
-          element={launchElement("mobility", "Mobilidade", <P.TrackRidePage />)}
-        />
-        <Route
-          path="/novo-post"
-          element={launchElement(
-            "community",
-            "Comunidade",
-            protectedElement(<P.NovoPostPage />),
-          )}
-        />
-        <Route
-          path="/busca"
-          element={launchElement("search", "Busca", <P.BuscaPage />)}
-        />
-        <Route
-          path="/buscar"
-          element={launchElement("search", "Busca", <P.BuscarPage />)}
-        />
-        <Route
-          path={buildTerritorialModuleRoutePath(APP_MODULE_SLUGS.search)}
-          element={launchElement("search", "Busca", <P.BuscaPage />)}
-        />
-        <Route
-          path={buildTerritorialModuleRoutePath(APP_MODULE_SLUGS.search, [
-            TERRITORIAL_PARAMS.district,
-          ])}
-          element={launchElement("search", "Busca", <P.BuscaPage />)}
-        />
-        <Route
-          path={buildTerritorialRoutePath(TERRITORIAL_STATIC.searchAlias)}
-          element={launchElement("search", "Busca", <P.BuscarPage />)}
-        />
-        <Route
-          path={buildTerritorialRoutePath(TERRITORIAL_STATIC.searchAlias, [
-            TERRITORIAL_PARAMS.district,
-          ])}
-          element={launchElement("search", "Busca", <P.BuscarPage />)}
-        />
-        {aiVirtualTryOnEnabled && (
-          <Route path="/ai/virtual-try-on" element={<P.VirtualTryOnPage />} />
-        )}
+        {businessEnabled ? (
+          <>
+            <Route path="/empresas" element={<P.EmpresasLandingPage />} />
+            <Route
+              path="/empresas/cadastrar"
+              element={protectedElement(<P.EmpresasCadastroLandingPage />)}
+            />
+          </>
+        ) : null}
+
+        {messagingEnabled ? (
+          <>
+            <Route
+              path="/mensagens"
+              element={protectedElement(<P.MensagensPage />)}
+            />
+            <Route
+              path="/mensagens/:providerId/:threadId"
+              element={protectedElement(<P.MensagensPage />)}
+            />
+          </>
+        ) : null}
+
+        {mapEnabled ? <Route path="/mapa" element={<P.MapaPage />} /> : null}
+
+        {nearbyEnabled ? (
+          <Route path="/perto-de-mim" element={<P.NearbyPage />} />
+        ) : null}
+
+        {searchEnabled ? (
+          <>
+            <Route path="/busca" element={<P.BuscaPage />} />
+            <Route path="/buscar" element={<P.BuscarPage />} />
+            <Route
+              path={buildTerritorialModuleRoutePath(APP_MODULE_SLUGS.search)}
+              element={<P.BuscaPage />}
+            />
+            <Route
+              path={buildTerritorialModuleRoutePath(APP_MODULE_SLUGS.search, [
+                TERRITORIAL_PARAMS.district,
+              ])}
+              element={<P.BuscaPage />}
+            />
+            <Route
+              path={buildTerritorialRoutePath(TERRITORIAL_STATIC.searchAlias)}
+              element={<P.BuscarPage />}
+            />
+            <Route
+              path={buildTerritorialRoutePath(TERRITORIAL_STATIC.searchAlias, [
+                TERRITORIAL_PARAMS.district,
+              ])}
+              element={<P.BuscarPage />}
+            />
+          </>
+        ) : null}
+
         <Route path="/termos" element={<P.TermosPage />} />
         <Route path="/privacidade" element={<P.PrivacidadePage />} />
         <Route path="/offline-settings" element={<P.OfflineSettingsPage />} />
-
-        {/* LGPD / Privacidade */}
         <Route path="/dpo" element={<P.DPOContactPage />} />
-        {/* Rotas globais sem territorio */}
-        <Route
-          path="/educacao"
-          element={launchElement(
-            "education",
-            "Educação",
-            <P.EducationExplorerPage />,
-          )}
-        />
-        <Route
-          path="/comunicacao"
-          element={launchElement(
-            "communication",
-            "Comunicação",
-            <P.CommunicationLandingPage />,
-          )}
-        />
-        <Route
-          path="/comunicacao/solicitar"
-          element={launchElement(
-            "communication",
-            "Comunicação",
-            <P.CommunicationRequestPage />,
-          )}
-        />
-        <Route
-          path="/servicos"
-          element={launchElement("services", "Serviços", <P.ServicosLandingPage />)}
-        />
-        <Route
-          path="/classificados"
-          element={launchElement(
-            "classifieds",
-            "Classificados",
-            <P.ClassificadosPage />,
-          )}
-        />
-        <Route
-          path={mobilityRoutes.passageiro.home}
-          element={launchElement(
-            "mobility",
-            "Mobilidade",
-            <P.PassageiroPage />,
-          )}
-        />
-        <Route
-          path={mobilityRoutes.passageiro.buscandoPattern}
-          element={launchElement(
-            "mobility",
-            "Mobilidade",
-            <P.BuscandoMotoristaPage />,
-          )}
-        />
-        <Route
-          path={mobilityRoutes.public.motorista}
-          element={launchElement("mobility", "Mobilidade", <P.MotoristaPage />)}
-        />
-        <Route
-          path={mobilityRoutes.public.motoboy}
-          element={launchElement("mobility", "Mobilidade", <P.MotoboyPage />)}
-        />
-        <Route
-          path={mobilityRoutes.public.motoristaProfile}
-          element={launchElement(
-            "mobility",
-            "Mobilidade",
-            <P.DriverProfilePage />,
-          )}
-        />
-        <Route
-          path={mobilityRoutes.public.history}
-          element={launchElement("mobility", "Mobilidade", <P.HistoricoPage />)}
-        />
-        <Route
-          path={mobilityRoutes.public.emergencyContacts}
-          element={launchElement(
-            "mobility",
-            "Mobilidade",
-            <P.EmergencyContactsPage />,
-          )}
-        />
-        <Route
-          path={mobilityRoutes.public.home}
-          element={launchElement(
-            "mobility",
-            "Mobilidade",
-            <P.MobilidadePage />,
-          )}
-        />
-
-        {/* Rotas canonicas especificas - DEVEM VIR ANTES DAS TERRITORIAIS GENERICAS */}
-
-        {/* Rota publica de profissional: /servicos/:state/:city/profissional/:slug */}
-        <Route
-          path={professionalPublicRoutes.detailRoutePath()}
-          element={launchElement(
-            "services",
-            "Serviços",
-            <P.ProfissionalPublicPage />,
-          )}
-        />
-
-        {/* Comunicacao Territorial - rotas especificas antes das territoriais genericas */}
-        <Route
-          path={buildTerritorialRoutePath(TERRITORIAL_STATIC.communication, [
-            TERRITORIAL_PARAMS.channelSlug,
-          ])}
-          element={launchElement(
-            "communication",
-            "Comunicação",
-            <P.CommunicationChannelPage />,
-          )}
-        />
-        <Route
-          path="/comunicacao/empresa/:channelSlug"
-          element={launchElement(
-            "communication",
-            "Comunicação",
-            <P.CommunicationCompanyDetailsPage />,
-          )}
-        />
-        <Route
-          path="/comunicacao/agente/:channelSlug"
-          element={launchElement(
-            "communication",
-            "Comunicação",
-            <P.CommunicationAgentPage />,
-          )}
-        />
-        <Route
-          path={buildTerritorialRoutePath(TERRITORIAL_STATIC.communication)}
-          element={launchElement(
-            "communication",
-            "Comunicação",
-            <P.CommunicationCityPage />,
-          )}
-        />
-
-        {/* Modulo Pontos Turisticos - vertical tourism */}
-
-        {/* Detalhe com territorio (4 segmentos): /pontos-turisticos/:state/:city/:district/:slug */}
-        <Route
-          path={touristPointPublicRoutes.detailWithTerritoryRoutePath()}
-          element={launchTerritorialLayout("touristPoints", "Pontos turísticos")}
-        >
-          <Route index element={<P.GuideTouristPointDetailPage />} />
-        </Route>
-
-        {/* Rota territorial de 3 segmentos: listagem de distrito/grupo ou detalhe sem distrito */}
-        <Route
-          path={touristPointPublicRoutes.districtOrDetailRoutePath()}
-          element={launchTerritorialLayout("touristPoints", "Pontos turísticos")}
-        >
-          <Route index element={<P.TouristPointRouteResolver />} />
-        </Route>
-
-        {/* Listagem cidade (2 segmentos): /pontos-turisticos/:state/:city */}
-        <Route
-          path={touristPointPublicRoutes.cityRoutePath()}
-          element={launchTerritorialLayout("touristPoints", "Pontos turísticos")}
-        >
-          <Route index element={<P.GuideTouristPointsPage />} />
-        </Route>
-
-        {/* Rotas de comunidade e aliases curtos - antes das territoriais genericas */}
-        {CommunityTerritoryRoutes()}
-
-        {/* Rotas territoriais genericas - DEVEM VIR DEPOIS DAS ESPECIFICAS */}
-
-        {/* Landing territorial generico */}
-        <Route
-          path={buildTerritorialBareRoutePath([TERRITORIAL_PARAMS.district])}
-          element={<TerritorialLayout />}
-        >
-          <Route
-            index
-            element={
-              <TerritorialIndexPage CityLandingComponent={TerritoryHomePage} />
-            }
-          />
-        </Route>
-        <Route
-          path={buildTerritorialBareRoutePath()}
-          element={<TerritorialLayout />}
-        >
-          <Route
-            index
-            element={
-              <TerritorialIndexPage CityLandingComponent={TerritoryHomePage} />
-            }
-          />
-        </Route>
-
-        {/* Landing de estado - lista cidades ativas */}
-        <Route path="/:state" element={<P.StateLandingPage />} />
-
-        {/* Landing de pais - lista estados ativos */}
-        <Route path="/brasil" element={<P.BrasilShowcasePage />} />
-        <Route path="/br" element={<P.CountryLandingPage />} />
 
         {renderAppLayoutRouteDescriptors(APP_LAYOUT_TERRITORIAL_DOMAIN_ROUTES)}
 
-        {/* Rotas de gastronomia */}
-        <Route
-          path={gastronomyPublicRoutes.home()}
-          element={launchElement(
-            "gastronomy",
-            "Gastronomia",
-            <P.GastronomyLandingPage />,
-          )}
-        />
-        {/* Rotas publicas estaticas precisam vir antes das territoriais dinamicas. */}
-        <Route
-          path={gastronomyPublicRoutes.favorites()}
-          element={launchElement(
-            "gastronomy",
-            "Gastronomia",
-            <P.MyFavoritesPage />,
-          )}
-        />
-        <Route
-          path={gastronomyPublicRoutes.orderDetails(
-            GASTRONOMY_PUBLIC_ROUTE_PARAMS.orderId,
-          )}
-          element={launchElement(
-            "gastronomy",
-            "Gastronomia",
-            <P.OrderDetailsPage />,
-          )}
-        />
-
-        {/* Detalhe premium: /gastronomia-premium/:uf/:cidade/:bairro/:slug */}
-        <Route
-          path={buildTerritorialRoutePath(
-            TERRITORIAL_STATIC.gastronomyPremium,
-            [TERRITORIAL_PARAMS.district, TERRITORIAL_PARAMS.slug],
-          )}
-          element={launchTerritorialLayout("gastronomy", "Gastronomia")}
-        >
-          <Route index element={<P.GastronomyPremiumDetailPage />} />
-          <Route path="checkout" element={<P.GastronomyCheckoutPage />} />
-        </Route>
-
-        {/* Alias legado de detalhe; redireciona para URL publica da empresa */}
-        <Route
-          path={buildTerritorialModuleRoutePath(APP_MODULE_SLUGS.gastronomy, [
-            TERRITORIAL_PARAMS.district,
-            TERRITORIAL_PARAMS.slug,
-          ])}
-          element={launchTerritorialLayout("gastronomy", "Gastronomia")}
-        >
-          <Route index element={<P.GastronomyDetailPage />} />
-          <Route path="checkout" element={<P.GastronomyCheckoutPage />} />
-        </Route>
-
-        {/* Listagem bairro: /gastronomia/:uf/:cidade/:bairro */}
-        <Route
-          path={buildTerritorialModuleRoutePath(APP_MODULE_SLUGS.gastronomy, [
-            TERRITORIAL_PARAMS.district,
-          ])}
-          element={launchTerritorialLayout("gastronomy", "Gastronomia")}
-        >
-          <Route index element={<P.GastronomyLandingPage />} />
-        </Route>
-
-        {/* Listagem cidade: /gastronomia/:uf/:cidade */}
-        <Route
-          path={buildTerritorialModuleRoutePath(APP_MODULE_SLUGS.gastronomy)}
-          element={launchTerritorialLayout("gastronomy", "Gastronomia")}
-        >
-          <Route index element={<P.GastronomyLandingPage />} />
-        </Route>
-
-        {/* Rotas de Education - publicas territoriais (vitrine premium consolidada) */}
-        {/* Detalhe: /educacao/:uf/:cidade/:bairro/:slug */}
-        <Route
-          path={buildTerritorialModuleRoutePath(APP_MODULE_SLUGS.education, [
-            TERRITORIAL_PARAMS.district,
-            TERRITORIAL_PARAMS.slug,
-          ])}
-          element={launchTerritorialLayout("education", "Educação")}
-        >
-          <Route index element={<P.EducationDetailPage />} />
-        </Route>
-
-        {/* Listagem bairro: /educacao/:uf/:cidade/:bairro */}
-        <Route
-          path={buildTerritorialModuleRoutePath(APP_MODULE_SLUGS.education, [
-            TERRITORIAL_PARAMS.district,
-          ])}
-          element={launchTerritorialLayout("education", "Educação")}
-        >
-          <Route index element={<P.EducationExplorerPage />} />
-        </Route>
-
-        {/* Listagem cidade: /educacao/:uf/:cidade */}
-        <Route
-          path={buildTerritorialModuleRoutePath(APP_MODULE_SLUGS.education)}
-          element={launchTerritorialLayout("education", "Educação")}
-        >
-          <Route index element={<P.EducationExplorerPage />} />
-        </Route>
-
-        {/* Rotas de vagas */}
-
-        <Route
-          path={JOB_ROUTES.home}
-          element={launchElement("jobs", "Vagas", <P.VagasPublicPage />)}
-        />
-        {/* Detalhe canonico: /vagas/:uf/:cidade/:slug */}
-        <Route
-          path={buildTerritorialModuleRoutePath(APP_MODULE_SLUGS.jobs, [
-            TERRITORIAL_PARAMS.slug,
-          ])}
-          element={launchElement("jobs", "Vagas", <P.VagaDetailPublicPage />)}
-        />
-
-        {/* Listagem territorial: /vagas/:uf/:cidade/:bairro */}
-        <Route
-          path={buildTerritorialModuleRoutePath(APP_MODULE_SLUGS.jobs, [
-            TERRITORIAL_PARAMS.district,
-          ])}
-          element={launchTerritorialLayout("jobs", "Vagas")}
-        >
-          <Route index element={<P.TerritorialVagasPage />} />
-        </Route>
-
-        {/* Listagem territorial cidade: /vagas/:uf/:cidade */}
-        <Route
-          path={buildTerritorialModuleRoutePath(APP_MODULE_SLUGS.jobs)}
-          element={launchTerritorialLayout("jobs", "Vagas")}
-        >
-          <Route index element={<P.TerritorialVagasPage />} />
-        </Route>
+        {territoryEnabled ? (
+          <>
+            <Route
+              path={buildTerritorialBareRoutePath([TERRITORIAL_PARAMS.district])}
+              element={<P.ActiveTerritorialLayout />}
+            >
+              <Route
+                index
+                element={
+                  <TerritorialIndexPage
+                    CityLandingComponent={TerritoryHomePage}
+                  />
+                }
+              />
+            </Route>
+            <Route
+              path={buildTerritorialBareRoutePath()}
+              element={<P.ActiveTerritorialLayout />}
+            >
+              <Route
+                index
+                element={
+                  <TerritorialIndexPage
+                    CityLandingComponent={TerritoryHomePage}
+                  />
+                }
+              />
+            </Route>
+            <Route path="/:state" element={<P.StateLandingPage />} />
+            <Route path="/brasil" element={<P.BrasilShowcasePage />} />
+            <Route path="/br" element={<P.CountryLandingPage />} />
+          </>
+        ) : null}
       </Route>
 
       <Route path="*" element={<P.NotFound />} />

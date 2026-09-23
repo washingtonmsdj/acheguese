@@ -17,9 +17,10 @@ describe("public landing alias ownership", () => {
     expect(sidebar).not.toContain('pathname === "/empresas-landing"');
   });
 
-  it("does not keep an undocumented services landing alias", () => {
+  it("keeps paused Services out of the active public router", () => {
     expect(routes).not.toContain('path="/servicos-landing"');
-    expect(routes).toContain('path="/servicos"');
-    expect(routes).toContain('launchElement("services", "Serviços"');
+    expect(routes).not.toContain('path="/servicos"');
+    expect(routes).not.toContain('launchElement("services"');
+    expect(routes).not.toContain("LaunchPausedPage");
   });
 });

@@ -155,12 +155,13 @@ describe("public paused monetization boundary", () => {
   });
 
 
-  it("gates public pricing, checkout and subscription management at the router", () => {
-    expect(appLayoutRoutes).toContain('path="/planos"');
-    expect(appLayoutRoutes).toContain('path="/checkout/success"');
-    expect(appLayoutRoutes).toContain('path="/checkout/cancel"');
-    expect(appLayoutRoutes).toContain('path="/settings/subscription"');
-    expect(appLayoutRoutes.match(/launchElement\(\s*"billing"/g)?.length ?? 0).toBeGreaterThanOrEqual(4);
+  it("keeps paused Billing purchase routes out of the active public router", () => {
+    expect(appLayoutRoutes).not.toContain('path="/planos"');
+    expect(appLayoutRoutes).not.toContain('path="/checkout/success"');
+    expect(appLayoutRoutes).not.toContain('path="/checkout/cancel"');
+    expect(appLayoutRoutes).not.toContain('path="/settings/subscription"');
+    expect(appLayoutRoutes).not.toContain('launchElement("billing"');
+    expect(appLayoutRoutes).not.toContain("LaunchPausedPage");
   });
 
   it("keeps authenticated plan and upgrade entry points behind Billing launch scope", () => {

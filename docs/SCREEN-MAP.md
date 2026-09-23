@@ -22,7 +22,7 @@
 - Perto de mim consulta Business por proximidade e projeta as mesmas URLs canônicas de Empresas.
 - Busca consulta apenas providers cujas superfícies estão ativas; no corte atual, Business é o provider público principal.
 - Categoria de empresa não depende do lifecycle de uma vertical especializada. Uma escola pode aparecer em Empresas/Mapa/Perto de mim enquanto `education=false`.
-- Nenhum módulo pausado pode reaparecer por URL direta, navegação, preview, busca, mapa, Central ou Admin.
+- Nenhum módulo pausado pode reaparecer por URL direta, navegação, preview, busca, mapa, Central ou Admin. No shell público, módulo `paused` não tem rota/fallback próprio; URL sem owner ativo cai no 404 canônico.
 
 ## Infraestrutura pública
 
@@ -41,7 +41,11 @@ Estas superfícies/capabilities suportam o domínio Business e **não são domí
 
 Permanecem versionados e isolados até certificação individual: Comunidade, Gastronomia, Serviços profissionais, Classificados, Pontos Turísticos, Educação, Vagas/Oportunidades, Eventos, Comunicação territorial, Mobilidade, Cupons, Gamificação, Analytics público, Alertas, Issues, Achados e Perdidos, Safety familiar e Billing.
 
-Ativar um módulo exige alterar o lifecycle no registry e satisfazer suas dependências. O mesmo vale para sua superfície Admin: rota e navegação são derivadas de `adminSurfaceScope.ts`. Não é permitido reativar um módulo criando rota paralela, redirect, item manual de sidebar ou exceção local.
+Ativar um módulo exige alterar o lifecycle no registry, satisfazer suas dependências e só então conectar seus owners ao barrel/registry ativo. O mesmo vale para sua superfície Admin: rota e navegação são derivadas de `adminSurfaceScope.ts`. Não é permitido reativar um módulo criando rota paralela, redirect, item manual de sidebar ou exceção local.
+
+### Boundary do shell público
+
+`AppLayoutRoutes.tsx` importa somente `activeLazyImports.ts`. Código pós-MVP pode permanecer em `lazyImports.ts`/bounded contexts preservados, mas não integra o grafo público ativo. `LaunchPausedPage` não é o fallback de URL pública de módulo pausado.
 
 ## Rotas legadas
 

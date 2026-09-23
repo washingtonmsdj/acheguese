@@ -3,7 +3,7 @@ import type { User } from '@supabase/supabase-js';
 import { login, loginAsUser } from './helpers/auth';
 import { createOptionalOperationalAdminClient } from '../helpers/operational-env';
 import {
-  expectPausedLaunchSurface,
+  expectNotFoundPublicRoute,
   openPublicRoute,
 } from './support/publicRouteAssertions';
 
@@ -320,14 +320,14 @@ test.describe('communication territorial routes', () => {
     }
   });
 
-  test('public communication landing and request surfaces are paused', async ({ page }) => {
-    await expectPausedLaunchSurface(page, '/comunicacao');
-    await expectPausedLaunchSurface(page, '/comunicacao/solicitar');
+  test('public communication landing and request surfaces are outside the MVP router', async ({ page }) => {
+    await expectNotFoundPublicRoute(page, '/comunicacao');
+    await expectNotFoundPublicRoute(page, '/comunicacao/solicitar');
   });
 
-  test('city and channel public communication surfaces are paused', async ({ page }) => {
-    await expectPausedLaunchSurface(page, '/comunicacao/ba/salvador');
-    await expectPausedLaunchSurface(page, '/comunicacao/ba/salvador/canal-demo');
+  test('city and channel public communication surfaces are outside the MVP router', async ({ page }) => {
+    await expectNotFoundPublicRoute(page, '/comunicacao/ba/salvador');
+    await expectNotFoundPublicRoute(page, '/comunicacao/ba/salvador/canal-demo');
   });
 
   test('admin and central communication routes are stable', async ({ page }) => {
@@ -338,13 +338,13 @@ test.describe('communication territorial routes', () => {
     await expect(page).toHaveURL(/\/central\/comunicacao|\/login|\/auth/i);
   });
 
-  test('community communication surface stays paused inside the territorial shell', async ({ page }) => {
-    await expectPausedLaunchSurface(page, '/comunidade/ba/salvador/comunicacao');
+  test('community communication surface is outside the active territorial shell', async ({ page }) => {
+    await expectNotFoundPublicRoute(page, '/comunidade/ba/salvador/comunicacao');
   });
 
   test('community communication surface ignores distribution payloads while launch scope is paused', async ({ page }) => {
     await mockCommunicationDistribution(page);
-    await expectPausedLaunchSurface(page, '/comunidade/ba/salvador/comunicacao');
+    await expectNotFoundPublicRoute(page, '/comunidade/ba/salvador/comunicacao');
 
     await expect(page.getByText('Materia transacional do bairro')).toHaveCount(0);
     await expect(page.getByText('Postagem simples da radio')).toHaveCount(0);

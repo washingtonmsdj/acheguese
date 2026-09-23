@@ -6,7 +6,7 @@
  * Quando há apenas 1 cidade ativa, ainda mostra a landing (não redireciona).
  */
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, type ComponentType } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import {
   MapPin, Building2, ChevronRight, Loader2, Map,
@@ -23,7 +23,11 @@ interface CityItem {
   district_count: number;
 }
 
-export function StateLandingPage() {
+interface StateLandingPageProps {
+  NotFoundComponent?: ComponentType;
+}
+
+export function StateLandingPage({ NotFoundComponent }: StateLandingPageProps = {}) {
   const params = useParams<{ state?: string; communitySlug?: string }>();
   const state = params.state ?? params.communitySlug;
   const navigate = useNavigate();
@@ -86,6 +90,10 @@ export function StateLandingPage() {
   }
 
   if (notFound) {
+    if (NotFoundComponent) {
+      return <NotFoundComponent />;
+    }
+
     return (
       <div className="min-h-screen flex flex-col items-center justify-center gap-3 p-8 text-center">
         <Map className="h-12 w-12 text-muted-foreground" />
