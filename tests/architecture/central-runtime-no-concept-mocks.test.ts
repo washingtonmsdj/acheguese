@@ -21,7 +21,7 @@ describe("MVP Central runtime without concept-mock router bypasses", () => {
     }
 
     const routes = read("src/app/routes/sections/CentralRoutes.tsx");
-    const lazyImports = read("src/app/routes/centralLazyImports.ts");
+    const activeLazyImports = read("src/app/routes/activeCentralLazyImports.ts");
 
     expect(routes).not.toContain("concept-mock");
     expect(routes).not.toContain("import.meta.env.DEV");
@@ -38,18 +38,21 @@ describe("MVP Central runtime without concept-mock router bypasses", () => {
       "CentralMotoboyCadastroConceptMockPage",
       "CentralMotoboyGanhosConceptMockPage",
     ]) {
-      expect(lazyImports, retired).not.toContain(retired);
+      expect(activeLazyImports, retired).not.toContain(retired);
     }
   });
 
-  it("keeps paused Mobility behind the launch lifecycle instead of a DEV query bypass", () => {
+  it("keeps paused Mobility outside the active Central graph instead of a DEV query bypass", () => {
     const routes = read("src/app/routes/sections/CentralRoutes.tsx");
+    const activeLazy = read("src/app/routes/activeCentralLazyImports.ts");
+    const preservedLazy = read("src/app/routes/centralLazyImports.ts");
 
-    expect(routes).toContain(
-      'path="motoboy" element={launchElement("mobility", "Mobilidade", <P.DriverGuard service="motoboy" />)}',
-    );
-    expect(routes).toContain(
-      'path="motorista" element={launchElement("mobility", "Mobilidade", <P.DriverGuard service="motorista" />)}',
-    );
+    for (const pausedRoute of ['path="motoboy"', 'path="motorista"']) {
+      expect(routes).not.toContain(pausedRoute);
+    }
+    expect(activeLazy).not.toContain("DriverGuard");
+    expect(activeLazy).not.toContain("CentralMotoboy");
+    expect(activeLazy).not.toContain("CentralMotorista");
+    expect(preservedLazy).toContain('createLaunchPausedRoute("Mobilidade")');
   });
 });
