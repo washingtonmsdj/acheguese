@@ -15,6 +15,7 @@ describe("MVP core module boundary", () => {
   const rootEntry = read("src/app/routes/RootRouteEntry.tsx");
   const home = read("src/app/pages/TerritoryHomePage.tsx");
   const howItWorks = read("src/app/pages/ComoFuncionaPage.tsx");
+  const about = read("src/app/pages/AboutPage.tsx");
   const businessDetail = read("src/app/pages/EmpresaDetailLandingPage.tsx");
   const businessCtas = read("src/modules/business/company/sections/EmpresaCTAsSection.tsx");
   const businessSections = read("src/modules/business/company/sections/index.ts");
@@ -128,6 +129,22 @@ describe("MVP core module boundary", () => {
       "Perfil profissional",
     ]) {
       expect(howItWorks).not.toContain(paused);
+    }
+
+    for (const activeLabel of ["Empresas", "Mapa", "Perto de mim", "Busca"]) {
+      expect(about).toContain(activeLabel);
+    }
+    expect(about).toContain("Outros módulos permanecem pausados");
+
+    const normalizedAbout = about.toLowerCase();
+    for (const pausedClaim of [
+      "profissionais",
+      "classificados",
+      "gastronomia",
+      "comunidade operacional",
+      "vida comunitária",
+    ]) {
+      expect(normalizedAbout).not.toContain(pausedClaim);
     }
   });
 
