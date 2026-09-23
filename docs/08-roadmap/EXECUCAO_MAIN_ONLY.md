@@ -4,23 +4,23 @@
 **Data do checkpoint GitHub:** 2026-09-23  
 **Repositório:** `washingtonmsdj/acheguese`  
 **Linha ativa:** `main`  
-**Candidato atual:** PR #318 sobre a `main` `4452f686b9eed06501c94a58fe432b8dddc1a43c`. O head do PR é certificado apenas se todos os gates do mesmo SHA concluírem verdes.
+**Candidato atual:** branch `cleanup/mvp-ratchet-retired-gastronomy-ssot` sobre a `main` `2f21393c64f1d0e53fa7d4fa08dfdca5f707c6dc` (merge de #319). O head só é certificável quando os gates aplicáveis do mesmo SHA concluírem verdes; merge posterior gera novo SHA e nova obrigação de certificação.
 
 Este documento consolida ordem de execução, blockers e Definition of Done. Ele é um **registro operacional**, não uma fotografia autoritativa do que existe no produto. A fonte de verdade para decidir o que existe, o que está ativo e o que deve ser corrigido é sempre o **projeto real**: código da `main`, rotas, owners, serviços, schema/migrations, contratos, testes, deploy/runtime e comportamento observado.
 
 
 ## Estado operacional atual — 2026-09-23
 
-- `main` atual: `4452f686b9eed06501c94a58fe432b8dddc1a43c`;
-- Vercel publicou esse mesmo SHA com status **success**;
-- Dependency Lock, Auth Concept Regression, Heavy PR Certification, Security Check e SSOT Enforcement passaram nesse SHA;
-- Runtime Tests, E2E público, Phase Core Gate e Regression Check também passaram;
-- o único vermelho do SSOT Territorial continua sendo o smoke autenticado real;
-- três provas autenticadas retornaram `HTTP 503 [auth_upstream_unavailable]` no Supabase Auth;
-- uma prova adicional falhou antes do broker porque o pedido de token GitHub OIDC retornou HTTP 503;
+- `main` atual: `2f21393c64f1d0e53fa7d4fa08dfdca5f707c6dc` (merge de #319);
+- o head `5dd2f76a12c76bf9a5f2d0fdf0650108caeab52d` de #319 passou SSOT Enforcement, Heavy exact-SHA, Security, lint/typecheck, unit, Runtime, E2E público e Regression antes do merge;
+- o merge SHA `2f21393c...` é um novo candidato e não recebe status de release por herança;
+- #305 continua bloqueando sessão autenticada real por `HTTP 503 [auth_upstream_unavailable]` no Supabase Auth;
+- #309 continua bloqueando autoridade automática de deploy Supabase por PAT sem privilégio suficiente;
 - #315 removeu aliases/redirects de compatibilidade do MVP;
 - #316 consolidou gestão Business em rotas canônicas sob `/central/empresas/*`;
-- #318 remove o bypass DEV `?concept-mock=1` e aposenta cinco mocks/previews sem caller do runtime.
+- #318 removeu o bypass DEV `?concept-mock=1` e aposentou cinco mocks/previews sem caller do runtime;
+- #319 removeu a autorização SSOT morta de `gastronomy_establishments`/`GastronomyQueryService.ts` após censo de owners/callers;
+- o corte em andamento remove o lint rule órfão `eslint-rules/no-direct-supabase-queries.js`, corrige o `SSOT_REGISTRY.md` e ratcheta no gate obrigatório de Gastronomia a ausência da tabela/arquivo legado.
 
 ### Blockers atuais do primeiro release
 
