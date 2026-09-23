@@ -25,6 +25,9 @@ describe("unavailable surface ownership", () => {
   });
 
   it("keeps paused-module UI outside the active public route graph", () => {
+    expect(
+      existsSync("src/app/routes/sections/CommunityTerritoryRoutes.tsx"),
+    ).toBe(false);
     expect(appLayoutRoutes).not.toContain("LaunchPausedPage");
     expect(appLayoutRoutes).not.toContain("DIRECT_PAUSED_ROUTES");
     expect(appLayoutRoutes).not.toContain("CommunityTerritoryRoutes");
