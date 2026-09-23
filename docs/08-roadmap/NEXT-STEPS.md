@@ -90,7 +90,7 @@ Os hosted runners voltaram a executar steps e logs reais. O incidente histórico
 
 O contrato obrigatório do MVP inclui os ratchets recentes de lifecycle, Business, Search, Messaging, remoção de legado e rotas canônicas. `test:mvp:architecture` deve executar essas provas em todo candidato.
 
-Os PRs #310–#329 consolidaram o corte modular, as rotas canônicas, a gestão Business, a retirada dos bypasses DEV, a limpeza/ratchet SSOT de Gastronomia, o isolamento lifecycle-driven do Admin e a truthfulness das superfícies públicas:
+Os PRs #310–#330 consolidaram o corte modular, as rotas canônicas, a gestão Business, a retirada dos bypasses DEV, a limpeza/ratchet SSOT de Gastronomia, o isolamento lifecycle-driven do Admin e a truthfulness das superfícies públicas:
 
 - Business independente de verticais pausados;
 - navegação alinhada às capabilities ativas;
@@ -108,13 +108,14 @@ Os PRs #310–#329 consolidaram o corte modular, as rotas canônicas, a gestão 
 - #324 alinhou `/sobre` ao produto realmente ativo e estendeu o ratchet arquitetural para impedir claims de verticais pausadas como disponíveis.
 - #327 removeu módulos pausados do grafo público ativo: `AppLayoutRoutes` usa somente `activeLazyImports.ts` e URL pública sem owner ativo cai no 404 canônico.
 - #329 tornou a Central privada active-only: `CentralRoutes` usa somente `activeCentralLazyImports.ts`, Business/Empresas + infraestrutura ativa; módulos pausados permanecem fora do grafo.
+- #330 aposentou o barrel privado `centralLazyImports.ts`, sem caller runtime, e migrou os ratchets para owners físicos/lifecycle.
 
-A `main` atual é `be649be585a016de4eed1b78a5c4b620e22723f5` (merge de #329). O head `f853f650f2f49b2aedfc224e4380f7ad20b803df` de #329 passou Dependency Lock, Security Check/Scan, Auth Concept, Visual Regression, SSOT Territorial, Heavy exact-SHA e SSOT Enforcement antes do merge; o merge SHA continua sendo novo candidato e não herda automaticamente status de release. O corte em andamento aposenta `centralLazyImports.ts`, comprovadamente sem caller runtime após #329, preservando os owners pós-MVP nos bounded contexts e migrando ratchets para existência física/lifecycle. O smoke autenticado continua bloqueado por #305 e a autoridade de deploy Supabase por #309.
+A `main` atual é `d01662e75b554934a38bc57b9305f711ebff3ce0` (merge de #330). O head `4b5f727549db9184c99431e67ff7e7c14a289620` de #330 passou Security Check/Scan, SSOT Territorial, Heavy exact-SHA e SSOT Enforcement antes do merge; o merge SHA continua sendo novo candidato e não herda automaticamente status de release. O corte em andamento aposenta `CommunityTerritoryRoutes.tsx`, comprovadamente sem caller runtime, mantendo os builders canônicos de URL e os owners de Community nos bounded contexts. O smoke autenticado continua bloqueado por #305 e a autoridade de deploy Supabase por #309.
 
 ### Blockers atuais do primeiro release
 
-- **#305 — Supabase Auth upstream:** `auth.signInWithPassword()` retorna 5xx; SQL mínimo e Advisors do projeto também registraram `Connection terminated due to connection timeout`. Não mascarar com retry extra, fallback, troca de senha do fixture ou bypass OIDC.
-- **#309 — autoridade de deploy Supabase:** o PAT do GitHub Actions é válido, mas recebe 403 para atualizar Edge Functions. Rotacionar para PAT pertencente a identidade Supabase Developer/Admin/Owner; não usar `service_role` como substituto.
+- **#305 — conectividade Supabase/Postgres no caminho autenticado:** o projeto aparece `ACTIVE_HEALTHY`, mas `auth.signInWithPassword()` retorna 5xx e tanto `select 1` via API quanto Security Advisors reproduzem `Connection terminated due to connection timeout`. Não mascarar com retry extra, fallback, troca de senha do fixture ou bypass OIDC.
+- **#309 — autoridade de deploy Supabase:** o PAT do GitHub Actions recebe 403 para atualizar Edge Functions. Rotacionar para PAT scoped ao projeto/organização com `Edge Functions: Read-write` (`deploy_edge_function`); não usar `service_role` como substituto.
 
 O broker remoto v3 permanece ACTIVE e sem drift de source conhecido; portanto #309 é problema de autoridade automática, não justificativa para alterar frontend/runtime.
 
