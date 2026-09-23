@@ -15,11 +15,14 @@ describe("nearby MVP boundary", () => {
     expect(page).toContain("const hasPreciseProximity = isGoodForProximity");
     expect(page).toContain("useTerritorialContextOptional");
     expect(page).toContain("territoryLocation: routeFallbackLocation");
-    expect(page).toContain("locationId: routeFallbackLocation?.id ?? activeLocation?.id");
+    expect(page).toContain("const spatialLocationId = territorialContext");
+    expect(page).toContain("const routeCenterUnavailable =");
+    expect(page).toContain("center: spatialCenter");
     expect(page).toContain("showProximity={hasPreciseProximity}");
     expect(page).toContain(
       "O recorte usa o centro do território como referência; ative o GPS para ver distâncias pessoais.",
     );
+    expect(page).toContain("Não foi possível determinar o centro deste território; ative o GPS.");
   });
 
   it("integrates only with the Business public owner", () => {
