@@ -53,6 +53,7 @@ Regras:
 
 3. **Limpar resíduos do escopo anterior**
    - remover componentes, services, helpers, facades, previews, aliases e imports sem caller real;
+   - não manter `concept-mock`, preview DEV ou query-string especial conectado ao router principal; protótipos devem viver fora do runtime de produto;
    - remover implementações paralelas e owners duplicados;
    - manter migrations históricas somente quando necessárias à integridade/proveniência;
    - atualizar testes arquiteturais para impedir reintrodução do legado.
@@ -88,16 +89,18 @@ Os hosted runners voltaram a executar steps e logs reais. O incidente histórico
 
 O contrato obrigatório do MVP inclui os ratchets recentes de lifecycle, Business, Search, Messaging, remoção de legado e rotas canônicas. `test:mvp:architecture` deve executar essas provas em todo candidato.
 
-Os PRs #310–#315 consolidaram o corte modular e de rotas:
+Os PRs #310–#316 consolidaram o corte modular, as rotas canônicas e a gestão Business:
 
 - Business independente de verticais pausados;
 - navegação alinhada às capabilities ativas;
 - dashboard Business legado sem caller aposentado;
 - Search sem imports runtime top-level de domínios pausados;
 - Neighborhood mixed-domain stream callerless aposentado;
-- ratchets recentes incorporados ao gate obrigatório.
+- ratchets recentes incorporados ao gate obrigatório;
+- gestão Business consolidada sob `/central/empresas/*`, sem rota concorrente/redirect legado;
+- #318 aposenta o bypass DEV `?concept-mock=1` e os cinco mocks/previews sem caller do runtime.
 
-No SHA `c55eef91c22844a00ef872772927b26b862b88a2` (PR #315), Dependency Lock, Auth Concept Regression, SSOT Enforcement, Heavy PR Certification, Security Check, E2E público fixture-backed, Phase Core, Runtime e Regression passaram. O único vermelho foi novamente o smoke autenticado, que falhou antes de emitir sessão com `HTTP 503 [auth_upstream_unavailable]` em Conta mobile/tablet/desktop e Mensagens.
+Na `main` `4452f686b9eed06501c94a58fe432b8dddc1a43c`, Vercel, Dependency Lock, Auth Concept Regression, SSOT Enforcement, Heavy PR Certification, Security Check, E2E público fixture-backed, Phase Core, Runtime e Regression passaram. O único vermelho continua sendo o smoke autenticado: mobile/tablet/Mensagens retornaram `HTTP 503 [auth_upstream_unavailable]`; desktop teve uma ocorrência adicional de `GitHub OIDC token request failed: HTTP 503` antes do broker.
 
 ### Blockers atuais do primeiro release
 
@@ -106,7 +109,7 @@ No SHA `c55eef91c22844a00ef872772927b26b862b88a2` (PR #315), Dependency Lock, Au
 
 O broker remoto v3 permanece ACTIVE e byte a byte igual ao source versionado da `main`; portanto #309 é problema de autoridade automática, não drift do runtime atual.
 
-**MVP READY continua bloqueado** até o mesmo SHA obter sessão autenticada real e o deploy automatizado exact-main recuperar autoridade.
+**MVP READY continua bloqueado** até o mesmo SHA obter sessão autenticada real e o deploy automatizado exact-main recuperar autoridade. Não reabrir redirects, mocks DEV, aliases ou fallbacks para contornar esses blockers externos.
 
 ## Pós-MVP
 
