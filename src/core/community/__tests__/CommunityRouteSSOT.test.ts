@@ -1,21 +1,37 @@
+import { existsSync, readFileSync } from "node:fs";
 import { describe, expect, it } from "vitest";
-import { readFileSync } from "node:fs";
 
 describe("community route SSOT", () => {
-  it("keeps city-level community routes canonical and generated from routing SSOT", () => {
-    const routes = [
-      readFileSync("src/app/routes/AppRoutes.tsx", "utf8"),
-      readFileSync("src/app/routes/sections/CommunityTerritoryRoutes.tsx", "utf8"),
-    ].join("\n");
+  it("preserves canonical Community route patterns without a disconnected route tree", () => {
+    const patterns = readFileSync(
+      "src/core/routing/config/territorialRoutePatterns.ts",
+      "utf8",
+    );
+    const registry = readFileSync(
+      "src/app/config/productModuleRegistry.ts",
+      "utf8",
+    );
+    const appLayout = readFileSync(
+      "src/app/routes/sections/AppLayoutRoutes.tsx",
+      "utf8",
+    );
 
-    expect(routes).toContain("buildCommunityTerritoryRoutePath");
-    expect(routes).toContain("buildCommunityAliasRoutePath");
-    expect(routes).toContain("CommunityTerritorialShell");
-    expect(routes).not.toContain("buildCommunityRootAliasRoutePath");
-    expect(routes).not.toContain("CommunityShortAliasShellRoute");
-    expect(routes).not.toContain("CommunityShortEntityRoute");
-    expect(routes).not.toContain("buildCommunityLegacyAreaRoutePath");
-    expect(routes).not.toContain("CommunityAreaCanonicalRedirect");
-    expect(routes).not.toContain('path="/comunidade/:state/:city/:territorySlug"');
+    expect(patterns).toContain("buildCommunityTerritoryRoutePath");
+    expect(patterns).toContain("buildCommunityAliasRoutePath");
+    expect(registry).toMatch(/community:\s*{\s*status:\s*"paused"/);
+
+    expect(
+      existsSync("src/core/community-feed/pages/ComunidadePage.tsx"),
+    ).toBe(true);
+    expect(
+      existsSync("src/app/routes/sections/CommunityTerritoryRoutes.tsx"),
+    ).toBe(false);
+
+    expect(appLayout).not.toContain("CommunityTerritoryRoutes");
+    expect(appLayout).not.toContain("CommunityTerritorialShell");
+    expect(appLayout).not.toContain("CommunityPersistentPortalLayout");
+    expect(appLayout).not.toContain("CommunityAliasRoute");
+    expect(appLayout).not.toContain("buildCommunityLegacyAreaRoutePath");
+    expect(appLayout).not.toContain("CommunityAreaCanonicalRedirect");
   });
 });

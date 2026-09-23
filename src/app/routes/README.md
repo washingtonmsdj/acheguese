@@ -15,7 +15,6 @@ src/app/routes/
 ├── sections/
 │   ├── AppLayoutRoutes.tsx               # rotas que vivem no layout principal
 │   ├── AppLayoutRouteRegistry.tsx        # descritores territoriais ativos (Business + Map)
-│   ├── CommunityTerritoryRoutes.tsx      # implementação pós-MVP preservada; não montada no shell
 │   ├── CentralRoutes.tsx                 # operação privada `/central/*`
 │   └── AdminRoutes.tsx                   # administração `/admin/*`
 └── README.md
@@ -65,6 +64,8 @@ A inclusão é derivada diretamente de `lifecycleRegistry.ts`. Módulos `paused`
 ### `lazyImports.ts`
 
 Permanece temporariamente como inventário de implementações preservadas pós-MVP e para contratos históricos de módulos. **Não é importado pelo shell ativo.** Quando um módulo for reativado formalmente, seus owners devem ser migrados para a fronteira ativa após certificação; nunca por exceção local.
+
+Preservação de módulo não inclui manter árvores `<Route>` desconectadas. Os padrões de URL pós-MVP podem permanecer no SSOT de `core/routing` e os owners no bounded context, mas a composição de rotas só existe quando o lifecycle autoriza a superfície. `CommunityTerritoryRoutes.tsx` foi aposentado após censo provar ausência de caller runtime.
 
 ## Conta e acesso
 
