@@ -25,7 +25,6 @@ const NON_INDEXABLE_PREFIXES = [
   "/login",
   "/cadastro",
   "/modal-auth",
-  "/splash",
   "/onboarding",
   "/aceitar-termos",
   "/reset-password",
