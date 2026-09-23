@@ -1,4 +1,4 @@
-import { readFileSync } from "node:fs";
+import { existsSync, readFileSync } from "node:fs";
 import { resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import { describe, expect, it } from "vitest";
@@ -33,6 +33,12 @@ describe("community launch scope routing", () => {
     const activeLazySource = readProjectFile(
       "src/app/routes/activeLazyImports.ts",
     );
+
+    expect(
+      existsSync(
+        resolve(repoRoot, "src/app/routes/sections/CommunityTerritoryRoutes.tsx"),
+      ),
+    ).toBe(false);
 
     for (const forbidden of [
       'path="/alertas"',
