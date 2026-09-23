@@ -10,20 +10,22 @@ describe("G6 Education private/public launch separation", () => {
       join(ROOT, "src/app/config/launchScope.ts"),
       "utf8",
     );
-    const publicLazy = readFileSync(
-      join(ROOT, "src/app/routes/lazyImports.ts"),
+    const activeLazy = readFileSync(
+      join(ROOT, "src/app/routes/activeLazyImports.ts"),
       "utf8",
     );
 
     expect(launchScope).toContain(
       'education: isProductModuleEnabled("education")',
     );
-    expect(publicLazy).toContain(
-      'EducationExplorerPage = createLaunchPausedRoute("Educacao")',
-    );
-    expect(publicLazy).toContain(
-      'EducationDetailPage = createLaunchPausedRoute("Educacao")',
-    );
+    expect(activeLazy).not.toContain("EducationExplorerPage");
+    expect(activeLazy).not.toContain("EducationDetailPage");
+    expect(
+      existsSync(join(ROOT, "src/modules/business/education/pages/EducationExplorerPage.tsx")),
+    ).toBe(true);
+    expect(
+      existsSync(join(ROOT, "src/modules/business/education/pages/EducationDetailPage.tsx")),
+    ).toBe(true);
   });
 
   it("preserves authenticated Education owners outside the active Central graph", () => {

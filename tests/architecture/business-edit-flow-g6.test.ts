@@ -19,7 +19,7 @@ describe("Business edit flow (G6)", () => {
     const centralRoutes = read("src/app/routes/sections/CentralRoutes.tsx");
     const appRoutes = read("src/app/routes/sections/AppLayoutRoutes.tsx");
     const activeCentralLazy = read("src/app/routes/activeCentralLazyImports.ts");
-    const appLazy = read("src/app/routes/lazyImports.ts");
+    const activeAppLazy = read("src/app/routes/activeLazyImports.ts");
     const registry = read("tools/architecture/architecture-registry.ts");
     const profileRuntime = read(
       "src/core/profiles/contexts/multi-profile-runtime-context.tsx",
@@ -48,7 +48,7 @@ describe("Business edit flow (G6)", () => {
     expect(centralRoutes).not.toContain("launchElement");
     expect(activeCentralLazy).toContain("export const EditarEmpresaPage = lazy(");
     expect(appRoutes).not.toContain("/edit-business");
-    expect(appLazy).not.toContain("EditarEmpresaPage");
+    expect(activeAppLazy).not.toContain("EditarEmpresaPage");
     expect(profileRuntime).not.toContain("/edit-business");
 
     for (const retiredRoute of [

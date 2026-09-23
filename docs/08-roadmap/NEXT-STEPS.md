@@ -90,7 +90,7 @@ Os hosted runners voltaram a executar steps e logs reais. O incidente histórico
 
 O contrato obrigatório do MVP inclui os ratchets recentes de lifecycle, Business, Search, Messaging, remoção de legado e rotas canônicas. `test:mvp:architecture` deve executar essas provas em todo candidato.
 
-Os PRs #310–#330 consolidaram o corte modular, as rotas canônicas, a gestão Business, a retirada dos bypasses DEV, a limpeza/ratchet SSOT de Gastronomia, o isolamento lifecycle-driven do Admin e a truthfulness das superfícies públicas:
+Os PRs #310–#331 consolidaram o corte modular, as rotas canônicas, a gestão Business, a retirada dos bypasses DEV, a limpeza/ratchet SSOT de Gastronomia, o isolamento lifecycle-driven do Admin e a truthfulness das superfícies públicas:
 
 - Business independente de verticais pausados;
 - navegação alinhada às capabilities ativas;
@@ -109,8 +109,10 @@ Os PRs #310–#330 consolidaram o corte modular, as rotas canônicas, a gestão 
 - #327 removeu módulos pausados do grafo público ativo: `AppLayoutRoutes` usa somente `activeLazyImports.ts` e URL pública sem owner ativo cai no 404 canônico.
 - #329 tornou a Central privada active-only: `CentralRoutes` usa somente `activeCentralLazyImports.ts`, Business/Empresas + infraestrutura ativa; módulos pausados permanecem fora do grafo.
 - #330 aposentou o barrel privado `centralLazyImports.ts`, sem caller runtime, e migrou os ratchets para owners físicos/lifecycle.
+- #331 aposentou `CommunityTerritoryRoutes.tsx`, árvore pública desconectada sem caller runtime, preservando builders canônicos e owners Community nos bounded contexts.
+- #333 — remoção do grafo público legado: `lazyImports.ts`, `TerritorialModulePages.tsx`, `launchPausedComponent.ts` e `LaunchPausedPage.tsx` saem do runtime; `ActiveTerritorialModulePages.tsx` permanece como boundary territorial ativo.
 
-A `main` atual é `d01662e75b554934a38bc57b9305f711ebff3ce0` (merge de #330). O head `4b5f727549db9184c99431e67ff7e7c14a289620` de #330 passou Security Check/Scan, SSOT Territorial, Heavy exact-SHA e SSOT Enforcement antes do merge; o merge SHA continua sendo novo candidato e não herda automaticamente status de release. O corte em andamento aposenta `CommunityTerritoryRoutes.tsx`, comprovadamente sem caller runtime, mantendo os builders canônicos de URL e os owners de Community nos bounded contexts. O smoke autenticado continua bloqueado por #305 e a autoridade de deploy Supabase por #309.
+A `main` atual é `035a0ba77aaad235d92f25031dba3ccabe83e992` (merge de #331). O head `43d2275a7be2697003010b185e4950cbc2d6fd88` de #331 foi integrado após o corte de `CommunityTerritoryRoutes.tsx`; o merge SHA continua sendo novo candidato e não herda automaticamente status de release. O candidato #333 aposenta o barrel público `src/app/routes/lazyImports.ts` e completa a cadeia órfã removendo também `TerritorialModulePages.tsx`, `launchPausedComponent.ts` e `LaunchPausedPage.tsx`; owners pós-MVP permanecem nos bounded contexts, o boundary territorial ativo é `ActiveTerritorialModulePages.tsx` e os ratchets passam a provar existência física/lifecycle + ausência no grafo ativo. O smoke autenticado continua bloqueado por #305 e a autoridade de deploy Supabase por #309.
 
 ### Blockers atuais do primeiro release
 

@@ -26,14 +26,15 @@ const RETIRED_EDUCATION_PRESENTATION_COMPONENTS = [
 describe("Education module hardening ratchet", () => {
   it("does not advertise Education as production-ready while public routes are paused", () => {
     const readme = read("src/modules/business/education/README.md");
-    const lazyImports = read("src/app/routes/lazyImports.ts");
+    const activeLazy = read("src/app/routes/activeLazyImports.ts");
 
     expect(readme).toContain("HARDENING — NOT MVP CERTIFIED");
     expect(readme).not.toContain("✅ Production Ready");
     expect(readme).not.toContain("234/234");
-    expect(lazyImports).toContain(
-      'EducationExplorerPage = createLaunchPausedRoute("Educacao")',
-    );
+    expect(activeLazy).not.toContain("EducationExplorerPage");
+    expect(activeLazy).not.toContain("EducationDetailPage");
+    expect(exists("src/modules/business/education/pages/EducationExplorerPage.tsx")).toBe(true);
+    expect(exists("src/modules/business/education/pages/EducationDetailPage.tsx")).toBe(true);
   });
 
   it("keeps funnel persistence exclusive to EducationTrackingService", () => {
@@ -53,16 +54,12 @@ describe("Education module hardening ratchet", () => {
   });
 
   it("keeps private Education owners preserved outside the active Central graph", () => {
-    const lazyImports = read("src/app/routes/lazyImports.ts");
+    const activeLazy = read("src/app/routes/activeLazyImports.ts");
     const activeCentralLazy = read("src/app/routes/activeCentralLazyImports.ts");
     const centralRoutes = read("src/app/routes/sections/CentralRoutes.tsx");
 
-    expect(lazyImports).toContain(
-      'export const EducationExplorerPage = createLaunchPausedRoute("Educacao")',
-    );
-    expect(lazyImports).toContain(
-      'export const EducationDetailPage = createLaunchPausedRoute("Educacao")',
-    );
+    expect(activeLazy).not.toContain("EducationExplorerPage");
+    expect(activeLazy).not.toContain("EducationDetailPage");
 
     const privatePages = [
       ["EducationDashboardPage", "src/modules/business/education/pages/EducationDashboardPage.tsx"],
@@ -75,7 +72,6 @@ describe("Education module hardening ratchet", () => {
     ] as const;
 
     for (const [privatePage, ownerPath] of privatePages) {
-      expect(lazyImports).not.toContain(`export const ${privatePage}`);
       expect(activeCentralLazy).not.toContain(privatePage);
       expect(exists(ownerPath)).toBe(true);
     }

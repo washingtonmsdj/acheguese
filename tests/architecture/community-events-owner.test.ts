@@ -17,9 +17,13 @@ describe("G6 Community events ownership", () => {
     }
   });
 
-  it("keeps territorial event routing on the explicit community-events owner", () => {
-    const territorial = readFileSync(
-      join(ROOT, "src/app/routes/territorial/TerritorialModulePages.tsx"),
+  it("preserves the community-events owner outside the active MVP graph", () => {
+    const activeLazy = readFileSync(
+      join(ROOT, "src/app/routes/activeLazyImports.ts"),
+      "utf8",
+    );
+    const appRoutes = readFileSync(
+      join(ROOT, "src/app/routes/sections/AppLayoutRoutes.tsx"),
       "utf8",
     );
     const listPage = readFileSync(
@@ -34,9 +38,8 @@ describe("G6 Community events ownership", () => {
       "utf8",
     );
 
-    expect(territorial).toContain(
-      'import("@/modules/community-events/pages/EventsListPage")',
-    );
+    expect(activeLazy).not.toContain("EventsListPage");
+    expect(appRoutes).not.toContain('path="/eventos"');
     expect(listPage).toContain(
       "useEventTerritoryFilter(resolved, activeMemberIds)",
     );

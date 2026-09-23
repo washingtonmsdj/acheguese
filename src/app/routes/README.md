@@ -61,11 +61,13 @@ A inclusão é derivada diretamente de `lifecycleRegistry.ts`. Módulos `paused`
 
 `CentralRoutes.tsx` deve importar somente esse barrel. URL `/central/*` sem owner ativo cai no `NotFound` canônico; `LaunchPausedPage` não é fallback da Central.
 
-### `lazyImports.ts`
+### Preservação pós-MVP
 
-Permanece temporariamente como inventário de implementações preservadas pós-MVP e para contratos históricos de módulos. **Não é importado pelo shell ativo.** Quando um módulo for reativado formalmente, seus owners devem ser migrados para a fronteira ativa após certificação; nunca por exceção local.
+O antigo `lazyImports.ts` foi aposentado depois que `AppLayoutRoutes.tsx` passou a usar exclusivamente `activeLazyImports.ts` e o censo comprovou ausência de caller runtime. Preservar um módulo pós-MVP significa manter seus owners e contratos no bounded context correspondente, não manter um barrel de rota sem consumidor.
 
-Preservação de módulo não inclui manter árvores `<Route>` desconectadas. Os padrões de URL pós-MVP podem permanecer no SSOT de `core/routing` e os owners no bounded context, mas a composição de rotas só existe quando o lifecycle autoriza a superfície. `CommunityTerritoryRoutes.tsx` foi aposentado após censo provar ausência de caller runtime.
+Quando um módulo for reativado formalmente, seus owners certificados devem ser conectados explicitamente à fronteira ativa após mudança de lifecycle. Padrões de URL podem permanecer no SSOT de `core/routing`, mas composição de rota só existe quando o lifecycle autoriza a superfície. `CommunityTerritoryRoutes.tsx` também foi aposentado por ausência de caller runtime.
+
+A mesma regra vale para a antiga cadeia territorial pós-MVP: `TerritorialModulePages.tsx`, `launchPausedComponent.ts` e `LaunchPausedPage.tsx` foram removidos depois que perderam o último caller runtime. O boundary territorial público em produção é `ActiveTerritorialModulePages.tsx`; módulos pausados não recebem placeholder de rota e URLs sem owner ativo chegam ao `NotFound` canônico.
 
 ## Conta e acesso
 

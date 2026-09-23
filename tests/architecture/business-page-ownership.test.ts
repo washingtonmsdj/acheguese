@@ -16,7 +16,7 @@ describe("G6 Business page ownership", () => {
 
   it("keeps category routing on the canonical core owner", () => {
     const territorial = readFileSync(
-      join(ROOT, "src/app/routes/territorial/TerritorialModulePages.tsx"),
+      join(ROOT, "src/app/routes/territorial/ActiveTerritorialModulePages.tsx"),
       "utf8",
     );
     const moduleBarrel = readFileSync(

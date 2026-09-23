@@ -36,12 +36,12 @@ describe("Territory Home ownership", () => {
 
   it("does not keep stale route/import aliases for retired Home owners", () => {
     const prefetch = read("src/app/routes/prefetch.ts");
-    const lazyImports = read("src/app/routes/lazyImports.ts");
+    const activeLazyImports = read("src/app/routes/activeLazyImports.ts");
     const routes = read("src/app/routes/sections/AppLayoutRoutes.tsx");
 
     expect(prefetch).not.toContain("PublicCityLandingPage");
     expect(prefetch).not.toContain("TerritoryExplorerPage");
-    expect(lazyImports).not.toContain("NationalHubPage");
+    expect(activeLazyImports).not.toContain("NationalHubPage");
     expect(routes).not.toContain('path="/inicio"');
   });
 });

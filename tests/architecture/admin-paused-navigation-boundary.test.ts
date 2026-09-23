@@ -1,8 +1,8 @@
 import { readFileSync } from "node:fs";
 import { describe, expect, it } from "vitest";
 
-const appLazyImports = readFileSync(
-  "src/app/routes/lazyImports.ts",
+const activeAppLazyImports = readFileSync(
+  "src/app/routes/activeLazyImports.ts",
   "utf8",
 );
 const adminLazyImports = readFileSync(
@@ -28,8 +28,8 @@ const adminLayout = readFileSync(
 
 describe("admin paused navigation boundary", () => {
   it("keeps the admin tree owned only by adminLazyImports", () => {
-    expect(appLazyImports).not.toMatch(/export const Admin[A-Z]/);
-    expect(appLazyImports).not.toContain("LocationsAdminPage");
+    expect(activeAppLazyImports).not.toMatch(/export const Admin[A-Z]/);
+    expect(activeAppLazyImports).not.toContain("LocationsAdminPage");
     expect(adminLazyImports).toContain("export const AdminLayout");
     expect(adminLazyImports).toContain("export const LocationsAdminPage");
     expect(adminLazyImports).toContain("export const AdminGuideTouristPointsPage");

@@ -8,6 +8,7 @@ const routeRegistry = read(
   "src/app/routes/sections/AppLayoutRouteRegistry.tsx",
 );
 const activeLazyImports = read("src/app/routes/activeLazyImports.ts");
+const prefetch = read("src/app/routes/prefetch.ts");
 const activeTerritorialPages = read(
   "src/app/routes/territorial/ActiveTerritorialModulePages.tsx",
 );
@@ -17,6 +18,12 @@ describe("active AppLayout route boundary", () => {
     expect(
       existsSync("src/app/routes/sections/CommunityTerritoryRoutes.tsx"),
     ).toBe(false);
+    expect(existsSync("src/app/routes/lazyImports.ts")).toBe(false);
+    expect(
+      existsSync("src/app/routes/territorial/TerritorialModulePages.tsx"),
+    ).toBe(false);
+    expect(existsSync("src/app/routes/launchPausedComponent.ts")).toBe(false);
+    expect(existsSync("src/app/pages/LaunchPausedPage.tsx")).toBe(false);
 
     for (const forbidden of [
       "DIRECT_PAUSED_ROUTES",
@@ -76,6 +83,33 @@ describe("active AppLayout route boundary", () => {
     expect(appLayout).toContain('path="/perto-de-mim"');
     expect(appLayout).toContain('path="/busca"');
     expect(appLayout).toContain('path="/mensagens"');
+  });
+
+  it("keeps prefetch and idle warmup active-surface only", () => {
+    for (const forbidden of [
+      "@/modules/professionals",
+      "@/modules/classifieds",
+      "@/modules/business/gastronomy",
+      "@/core/community-feed",
+      "@/modules/guide",
+      "APP_MODULE_SLUGS.services",
+      "APP_MODULE_SLUGS.classifieds",
+      "APP_MODULE_SLUGS.gastronomy",
+      "APP_MODULE_SLUGS.community",
+      "APP_MODULE_SLUGS.touristPoints",
+    ]) {
+      expect(prefetch).not.toContain(forbidden);
+    }
+
+    for (const activeOwner of [
+      "@/app/pages/EmpresasLandingPage",
+      "@/core/maps/pages/MapaPageV4",
+      "@/core/nearby/pages/NearbyPage",
+      "@/app/pages/BuscaPage",
+      "@/app/pages/NotificationsPage",
+    ]) {
+      expect(prefetch).toContain(activeOwner);
+    }
   });
 
   it("keeps the active lazy graph free of post-MVP owners", () => {

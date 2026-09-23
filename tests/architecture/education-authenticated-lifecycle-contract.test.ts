@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { readFileSync } from "node:fs";
+import { existsSync, readFileSync } from "node:fs";
 import { join } from "node:path";
 
 const ROOT = process.cwd();
@@ -57,17 +57,19 @@ describe("G6 Education authenticated lifecycle gate", () => {
       join(ROOT, "src/app/config/launchScope.ts"),
       "utf8",
     );
-    const publicLazy = readFileSync(
-      join(ROOT, "src/app/routes/lazyImports.ts"),
+    const activeLazy = readFileSync(
+      join(ROOT, "src/app/routes/activeLazyImports.ts"),
       "utf8",
     );
 
     expect(launchScope).toContain("education: false");
-    expect(publicLazy).toContain(
-      'EducationExplorerPage = createLaunchPausedRoute("Educacao")',
-    );
-    expect(publicLazy).toContain(
-      'EducationDetailPage = createLaunchPausedRoute("Educacao")',
-    );
+    expect(activeLazy).not.toContain("EducationExplorerPage");
+    expect(activeLazy).not.toContain("EducationDetailPage");
+    expect(
+      existsSync(join(ROOT, "src/modules/business/education/pages/EducationExplorerPage.tsx")),
+    ).toBe(true);
+    expect(
+      existsSync(join(ROOT, "src/modules/business/education/pages/EducationDetailPage.tsx")),
+    ).toBe(true);
   });
 });
