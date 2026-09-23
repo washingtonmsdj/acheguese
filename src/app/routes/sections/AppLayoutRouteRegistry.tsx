@@ -7,7 +7,6 @@ import {
 } from "@/app/config/lifecycleRegistry";
 import type { PlatformCapabilityKey } from "@/app/config/platformCapabilityRegistry";
 import type { ProductModuleKey } from "@/app/config/productModuleRegistry";
-import { TerritorialLayout } from "@/core/routing/components/TerritorialLayout";
 import {
   TERRITORIAL_ROUTE_PARAMS,
   TERRITORIAL_ROUTE_STATIC_SEGMENTS,
@@ -59,7 +58,7 @@ const APP_LAYOUT_BUSINESS_ROUTES: readonly AppLayoutRouteDescriptor[] = [
       TERRITORIAL_STATIC.category,
       TERRITORIAL_PARAMS.category,
     ]),
-    element: <TerritorialLayout />,
+    element: <P.ActiveTerritorialLayout />,
     indexElement: <P.TerritorialCategoryBusinessPage />,
   },
   {
@@ -70,7 +69,7 @@ const APP_LAYOUT_BUSINESS_ROUTES: readonly AppLayoutRouteDescriptor[] = [
       TERRITORIAL_STATIC.category,
       TERRITORIAL_PARAMS.category,
     ]),
-    element: <TerritorialLayout />,
+    element: <P.ActiveTerritorialLayout />,
     indexElement: <P.TerritorialCategoryBusinessPage />,
   },
   {
@@ -79,14 +78,14 @@ const APP_LAYOUT_BUSINESS_ROUTES: readonly AppLayoutRouteDescriptor[] = [
     path: buildTerritorialModuleRoutePath(APP_MODULE_SLUGS.business, [
       TERRITORIAL_PARAMS.district,
     ]),
-    element: <TerritorialLayout />,
+    element: <P.ActiveTerritorialLayout />,
     indexElement: <P.EmpresasLandingPage />,
   },
   {
     id: "business-city",
     owner: { kind: "product", key: "business" },
     path: buildTerritorialModuleRoutePath(APP_MODULE_SLUGS.business),
-    element: <TerritorialLayout />,
+    element: <P.ActiveTerritorialLayout />,
     indexElement: <P.EmpresasLandingPage />,
   },
 ];
@@ -98,14 +97,14 @@ const APP_LAYOUT_MAP_TERRITORIAL_ROUTES: readonly AppLayoutRouteDescriptor[] = [
     path: buildTerritorialModuleRoutePath(APP_MODULE_SLUGS.map, [
       TERRITORIAL_PARAMS.district,
     ]),
-    element: <TerritorialLayout />,
+    element: <P.ActiveTerritorialLayout />,
     indexElement: <P.TerritorialMapPage />,
   },
   {
     id: "map-city",
     owner: { kind: "capability", key: "map" },
     path: buildTerritorialModuleRoutePath(APP_MODULE_SLUGS.map),
-    element: <TerritorialLayout />,
+    element: <P.ActiveTerritorialLayout />,
     indexElement: <P.TerritorialMapPage />,
   },
 ];
