@@ -8,13 +8,13 @@ const read = (path: string) => readFileSync(resolve(ROOT, path), "utf8");
 describe("G6 Community feed page ownership", () => {
   it("owns NovoPostPage and its spec only in core/community-feed", () => {
     const canonical = read("src/core/community-feed/pages/NovoPostPage.tsx");
-    const lazyImports = read("src/app/routes/lazyImports.ts");
+    const activeLazyImports = read("src/app/routes/activeLazyImports.ts");
 
     expect(canonical).toContain('from "@/core/community-feed/components/CreatePostModal"');
     expect(canonical).toContain('from "@/core/community-experience/access"');
     expect(canonical).not.toContain('@/core/community/components/composer/CreatePostModal');
     expect(canonical).not.toContain('from "@/core/community/access"');
-    expect(lazyImports).toContain('import("@/core/community-feed/pages/NovoPostPage")');
+    expect(activeLazyImports).not.toContain("NovoPostPage");
     expect(existsSync(resolve(ROOT, "src/core/community/pages/NovoPostPage.tsx"))).toBe(false);
     expect(existsSync(resolve(ROOT, "src/core/community-feed/pages/NovoPostPage.spec.tsx"))).toBe(true);
     expect(existsSync(resolve(ROOT, "src/core/community/pages/NovoPostPage.spec.tsx"))).toBe(false);
