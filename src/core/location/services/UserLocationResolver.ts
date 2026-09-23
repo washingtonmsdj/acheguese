@@ -79,25 +79,29 @@ class UserLocationResolverClass {
       : locationOverride;
 
     if (loc) {
-      const systemFallback = this.getSystemFallbackCenter();
+      const metaLat = Number(loc.metadata?.center_latitude);
+      const metaLng = Number(loc.metadata?.center_longitude);
+      const hasMetadataCenter =
+        Number.isFinite(metaLat) &&
+        Number.isFinite(metaLng) &&
+        metaLat >= -90 &&
+        metaLat <= 90 &&
+        metaLng >= -180 &&
+        metaLng <= 180 &&
+        !(Math.abs(metaLat) < 0.000001 && Math.abs(metaLng) < 0.000001);
 
-      const metaLat = loc.metadata?.center_latitude as number | undefined;
-      const metaLng = loc.metadata?.center_longitude as number | undefined;
-      const hasMetadataCenter = Number.isFinite(metaLat) && Number.isFinite(metaLng);
-
-      const lat = hasMetadataCenter ? metaLat : systemFallback.lat;
-      const lng = hasMetadataCenter ? metaLng : systemFallback.lng;
-
-      return {
-        entityType: "user_gps",
-        source: "territory_center",
-        latitude: lat,
-        longitude: lng,
-        accuracy: hasMetadataCenter ? 5000 : 10000,
-        locationId: loc.id,
-        locationName: loc.name,
-        confidence: "low",
-      };
+      if (hasMetadataCenter) {
+        return {
+          entityType: "user_gps",
+          source: "territory_center",
+          latitude: metaLat,
+          longitude: metaLng,
+          accuracy: 5000,
+          locationId: loc.id,
+          locationName: loc.name,
+          confidence: "low",
+        };
+      }
     }
 
     const fallback = this.getSystemFallbackCenter();
