@@ -1,7 +1,6 @@
 import { useNavigate } from "react-router-dom";
 import { ArrowUpRight, Building2, Shield, Sparkles } from "lucide-react";
 
-import { isProductModuleEnabled } from "@/app/config/lifecycleRegistry";
 import { businessManagementRoutes } from "@/core/business/utils/businessManagementRoutes";
 import { useProfileHub } from "@/core/profiles/hooks/useProfileHub";
 import { useSessionContext } from "@/core/session";
@@ -16,7 +15,13 @@ import {
   CardTitle,
 } from "@/shared/components/ui/card";
 
-export default function CentralHubPage() {
+interface CentralHubPageProps {
+  readonly businessEnabled: boolean;
+}
+
+export default function CentralHubPage({
+  businessEnabled,
+}: CentralHubPageProps) {
   const navigate = useNavigate();
   const { user } = useSessionContext();
   const profileHub = useProfileHub();
@@ -25,7 +30,6 @@ export default function CentralHubPage() {
     return null;
   }
 
-  const businessEnabled = isProductModuleEnabled("business");
   const hasBusinesses = businessEnabled && profileHub.businessModules.length > 0;
   const isAdmin = Boolean(
     (profileHub.identity?.reputation as
