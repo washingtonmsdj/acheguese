@@ -52,9 +52,9 @@ describe("Education module hardening ratchet", () => {
     expect(tracking).not.toContain("@/modules/business/education");
   });
 
-  it("keeps private Education routes owned by centralLazyImports only", () => {
+  it("keeps private Education owners preserved outside the active Central graph", () => {
     const lazyImports = read("src/app/routes/lazyImports.ts");
-    const centralLazyImports = read("src/app/routes/centralLazyImports.ts");
+    const activeCentralLazy = read("src/app/routes/activeCentralLazyImports.ts");
     const centralRoutes = read("src/app/routes/sections/CentralRoutes.tsx");
 
     expect(lazyImports).toContain(
@@ -65,37 +65,24 @@ describe("Education module hardening ratchet", () => {
     );
 
     const privatePages = [
-      "EducationDashboardPage",
-      "EducationSetupPage",
-      "EducationLeadsPage",
-      "EducationEventsPage",
-      "EducationProgramsPage",
-      "EducationAnalyticsPage",
-      "EducationPlansPage",
+      ["EducationDashboardPage", "src/modules/business/education/pages/EducationDashboardPage.tsx"],
+      ["EducationSetupPage", "src/modules/business/education/pages/EducationSetupPage.tsx"],
+      ["EducationLeadsPage", "src/modules/business/education/pages/EducationLeadsPage.tsx"],
+      ["EducationEventsPage", "src/modules/business/education/pages/EducationEventsPage.tsx"],
+      ["EducationProgramsPage", "src/modules/business/education/pages/EducationProgramsPage.tsx"],
+      ["EducationAnalyticsPage", "src/modules/business/education/pages/EducationAnalyticsPage.tsx"],
+      ["EducationPlansPage", "src/modules/business/education/pages/EducationPlansPage.tsx"],
     ] as const;
 
-    for (const privatePage of privatePages) {
+    for (const [privatePage, ownerPath] of privatePages) {
       expect(lazyImports).not.toContain(`export const ${privatePage}`);
-      expect(centralLazyImports).toContain(`export const ${privatePage} = lazy`);
-      expect(centralLazyImports).not.toContain(
-        `${privatePage} = createLaunchPausedRoute`,
-      );
+      expect(activeCentralLazy).not.toContain(privatePage);
+      expect(exists(ownerPath)).toBe(true);
     }
 
-    expect(centralRoutes).toContain('import * as P from "../centralLazyImports"');
-    expect(centralRoutes).not.toMatch(
-      /path="educacao[^"]*"[^\n]*launchElement\("education"/,
-    );
-
-    const dashboardShell = read(
-      "src/modules/business/dashboard/pages/BusinessDashboardShellPage.tsx",
-    );
-    expect(dashboardShell).toContain(
-      'isEligibleForVertical(\n    business.category,\n    "education",\n  )',
-    );
-    expect(dashboardShell).not.toContain(
-      'isLaunchSurfaceEnabled("education") && isEligibleForVertical',
-    );
+    expect(centralRoutes).toContain('from "../activeCentralLazyImports"');
+    expect(centralRoutes).not.toContain("Education");
+    expect(centralRoutes).not.toContain("launchElement");
   });
 
   it("keeps Education billing offer and operational limits on separate SSOTs", () => {
