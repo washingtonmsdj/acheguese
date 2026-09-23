@@ -16,12 +16,14 @@ import {
 } from "@/shared/services/GeolocationService";
 import { logger } from "@/shared/utils/logger";
 import { locationContextStore } from "../stores/LocationContextStore";
+import type { Location } from "../types";
 import type { ResolvedEntityLocation } from "../types/entityLocation";
 
 export interface UserLocationResolverOptions {
   tryGps?: boolean;
   gpsTimeout?: number;
   useCache?: boolean;
+  territoryLocation?: Location | null;
 }
 
 class UserLocationResolverClass {
@@ -37,6 +39,7 @@ class UserLocationResolverClass {
       tryGps = true,
       gpsTimeout = GEOLOCATION_RUNTIME.requestTimeoutMs,
       useCache = true,
+      territoryLocation,
     } = options;
 
     if (tryGps) {
@@ -67,14 +70,15 @@ class UserLocationResolverClass {
       }
     }
 
-    return this.resolveFromTerritory();
+    return this.resolveFromTerritory(territoryLocation);
   }
 
-  resolveFromTerritory(): ResolvedEntityLocation {
-    const territory = locationContextStore.getActiveTerritory();
+  resolveFromTerritory(locationOverride?: Location | null): ResolvedEntityLocation {
+    const loc = locationOverride === undefined
+      ? locationContextStore.getActiveTerritory()?.location ?? null
+      : locationOverride;
 
-    if (territory?.location) {
-      const loc = territory.location;
+    if (loc) {
       const systemFallback = this.getSystemFallbackCenter();
 
       const metaLat = loc.metadata?.center_latitude as number | undefined;
