@@ -137,7 +137,7 @@ describe("active AppLayout route boundary", () => {
     );
   });
 
-  it("keeps the territorial registry limited to Business and Map", () => {
+  it("keeps the territorial registry limited to active MVP product/capability owners", () => {
     for (const activeId of [
       "business-detail",
       "business-category-city",
@@ -146,6 +146,8 @@ describe("active AppLayout route boundary", () => {
       "business-city",
       "map-district",
       "map-city",
+      "nearby-district",
+      "nearby-city",
     ]) {
       expect(routeRegistry).toContain(`id: "${activeId}"`);
     }
