@@ -33,7 +33,7 @@ Estas superfícies/capabilities suportam o domínio Business e **não são domí
 | `/`, `/:uf/:cidade[/:territorio]` | resolução e contexto territorial |
 | Auth / Conta | login, cadastro, sessão, privacidade e preferências |
 | Mensagens | Inbox/Chat horizontal; Business é o provider ativo |
-| Institucional | termos, privacidade, DPO, contato/status quando aplicável |
+| Institucional | `/como-funciona`, `/sobre`, termos, privacidade, DPO, contato/status; conteúdo deve refletir somente o lifecycle ativo e pode mencionar módulos pausados apenas como futuros/indisponíveis |
 | Admin/Central | operação interna, RBAC e gestão estritamente necessária; Business usa `/central/empresas/*`; `AdminRoutes` e sidebar herdam o lifecycle por `adminSurfaceScope.ts`, sem lista paralela de módulos pausados |
 
 
@@ -45,6 +45,7 @@ Ativar um módulo exige alterar o lifecycle no registry e satisfazer suas depend
 
 ## Rotas legadas
 
+- `/splash` foi removida após censo comprovar ausência de caller real. Não existe redirect de compatibilidade.
 - `/empresas-landing` foi removida. Não existe redirect de compatibilidade.
 - `/conta/profissional` foi removida do shell público enquanto Serviços está pausado.
 - `/perfil/*` foi aposentado como alias privado. Conta usa somente `/conta/*`; perfil público usa somente `/u/:username`.
