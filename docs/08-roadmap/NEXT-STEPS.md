@@ -90,7 +90,7 @@ Os hosted runners voltaram a executar steps e logs reais. O incidente histórico
 
 O contrato obrigatório do MVP inclui os ratchets recentes de lifecycle, Business, Search, Messaging, remoção de legado e rotas canônicas. `test:mvp:architecture` deve executar essas provas em todo candidato.
 
-Os PRs #310–#322 consolidaram o corte modular, as rotas canônicas, a gestão Business, a retirada dos bypasses DEV, a limpeza/ratchet SSOT de Gastronomia e o isolamento lifecycle-driven do Admin:
+Os PRs #310–#324 consolidaram o corte modular, as rotas canônicas, a gestão Business, a retirada dos bypasses DEV, a limpeza/ratchet SSOT de Gastronomia, o isolamento lifecycle-driven do Admin e a truthfulness das superfícies públicas:
 
 - Business independente de verticais pausados;
 - navegação alinhada às capabilities ativas;
@@ -105,8 +105,9 @@ Os PRs #310–#322 consolidaram o corte modular, as rotas canônicas, a gestão 
 - #321 registrou a revalidação documental pós-#320 e reafirmou que o merge SHA não herda certificação de release.
 - #322 removeu inventários Admin paralelos, passou rota + sidebar para o lifecycle canônico e retirou aliases administrativos sem contrato.
 - #323 aposentou `/splash` como superfície pública órfã, sem redirect, e ratcheou sua ausência no ownership de rotas.
+- #324 alinhou `/sobre` ao produto realmente ativo e estendeu o ratchet arquitetural para impedir claims de verticais pausadas como disponíveis.
 
-A `main` atual é `987601528119a4fc02716adfcf954de2dcc3bf55` (merge de #323). O head `6d1fd44e563fe0fbaa1651865c3bf8ab054d1799` de #323 passou Security, SSOT Territorial, Heavy exact-SHA, Auth Concept e SSOT Enforcement antes do merge; o merge SHA continua sendo um novo candidato e não herda automaticamente status de release. O corte em andamento alinha a página institucional `/sobre` ao escopo ativo do MVP e ratcheta a ausência de claims que apresentem verticais pausadas como produto disponível. O smoke autenticado continua bloqueado por #305 e a autoridade de deploy Supabase por #309.
+A `main` atual é `e50169c5b1f12154e7941c03478db40848b9e9eb` (merge de #324). O head `45f1396df3cc77b0486a576c80d35780799210e8` de #324 passou Security Check, Security Scan, SSOT Territorial, Heavy exact-SHA e SSOT Enforcement antes do merge; o merge SHA continua sendo um novo candidato e não herda automaticamente status de release. `/splash` permanece aposentado e `/sobre` agora descreve apenas o escopo ativo. O próximo trabalho independente deve continuar o censo de resíduos/owners e a certificação do núcleo, sem reabrir módulos pausados. O smoke autenticado continua bloqueado por #305 e a autoridade de deploy Supabase por #309.
 
 ### Blockers atuais do primeiro release
 
