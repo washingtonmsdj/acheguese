@@ -36,7 +36,7 @@ export interface BusinessUrls {
   share: (ctx: BusinessUrlContext) => string;
   /** Criar empresa: /central/empresas/nova */
   create: string;
-  /** Editar empresa: /edit-business/{businessId} (global) */
+  /** Editar empresa: /central/empresas/{businessId}/editar */
   edit: (businessId: string) => string;
   /** Gestao da empresa: /central/empresas/{businessId} (global) */
   dashboard: (businessId: string) => string;

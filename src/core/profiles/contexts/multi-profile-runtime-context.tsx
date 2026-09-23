@@ -52,7 +52,6 @@ function clearStoredActiveProfileId(): void {
 
 const MODULE_ROUTES: Record<string, ProfileType> = {
   '/central/empresas/nova': 'business',
-  '/edit-business': 'business',
   '/empresas': 'business',  // rotas territoriais de empresas
   '/servicos/cadastrar': 'professional',
   '/servicos': 'professional',  // rotas territoriais de serviços

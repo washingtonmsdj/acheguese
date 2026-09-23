@@ -42,6 +42,7 @@ Regras:
    - provar `nearby -> map + location + business`;
    - provar `messaging -> auth + profiles + business` e provider Business-only;
    - manter Mapa consumindo Business por port público, sem conhecer schema/tabelas internas;
+   - manter toda gestão de Business sob `/central/empresas/*`, inclusive edição em `/:businessId/editar`;
    - eliminar imports e delegações do núcleo ativo para módulos pausados.
 
 2. **Fechar rotas, navegação e prefetch**
@@ -87,7 +88,7 @@ Os hosted runners voltaram a executar steps e logs reais. O incidente histórico
 
 O contrato obrigatório do MVP inclui os ratchets recentes de lifecycle, Business, Search, Messaging, remoção de legado e rotas canônicas. `test:mvp:architecture` deve executar essas provas em todo candidato.
 
-Os PRs #310–#314 fecharam verdes antes do merge e consolidaram:
+Os PRs #310–#315 consolidaram o corte modular e de rotas:
 
 - Business independente de verticais pausados;
 - navegação alinhada às capabilities ativas;
@@ -96,7 +97,7 @@ Os PRs #310–#314 fecharam verdes antes do merge e consolidaram:
 - Neighborhood mixed-domain stream callerless aposentado;
 - ratchets recentes incorporados ao gate obrigatório.
 
-No candidato `ff0c9b87...`, Vercel publicou o SHA exato e os gates públicos/arquiteturais passaram. O smoke autenticado falhou antes de emitir sessão com `HTTP 503 [auth_upstream_unavailable]` em Conta mobile/tablet/desktop e Mensagens.
+No SHA `c55eef91c22844a00ef872772927b26b862b88a2` (PR #315), Dependency Lock, Auth Concept Regression, SSOT Enforcement, Heavy PR Certification, Security Check, E2E público fixture-backed, Phase Core, Runtime e Regression passaram. O único vermelho foi novamente o smoke autenticado, que falhou antes de emitir sessão com `HTTP 503 [auth_upstream_unavailable]` em Conta mobile/tablet/desktop e Mensagens.
 
 ### Blockers atuais do primeiro release
 

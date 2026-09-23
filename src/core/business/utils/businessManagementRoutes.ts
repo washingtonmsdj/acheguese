@@ -14,7 +14,7 @@ export const businessManagementRoutes = {
   createByVerticalSlug: (verticalSlug: string) =>
     `${businessManagementRoutes.create()}/${cleanRouteSegment(verticalSlug, "slug vertical")}`,
   overview: (businessId: string) => `/central/empresas/${businessId}`,
-  edit: (businessId: string) => `/edit-business/${cleanRouteSegment(businessId, "business id")}`,
+  edit: (businessId: string) => `/central/empresas/${cleanRouteSegment(businessId, "business id")}/editar`,
   dados: (businessId: string) => `/central/empresas/${businessId}/dados`,
   gastronomia: (businessId: string) => `/central/empresas/${businessId}/gastronomia`,
   planos: (businessId: string) => `/central/empresas/${businessId}/planos`,

@@ -1578,3 +1578,35 @@ Blockers atuais do primeiro release:
    - não usar `service_role` como PAT.
 
 **Regra de release:** não marcar `MVP READY` enquanto o mesmo SHA não obtiver sessão autenticada real e a autoridade exact-main de deploy não estiver restaurada.
+
+
+### Checkpoint MVP — gestão Business sob árvore canônica da Central (2026-09-22)
+
+Censo de rotas operacionais encontrou uma inconsistência ainda ativa: o SSOT
+`businessManagementRoutes` concentrava quase toda a gestão em
+`/central/empresas/*`, mas `edit()` escapava para
+`/edit-business/:profileId`. O registry ainda listava também
+`/create-business` e `/dashboard/business/:profileId`, apesar de não
+existirem como rotas ativas.
+
+Correção estrutural deste corte:
+
+- edição passa a `/central/empresas/:businessId/editar`;
+- `EditarEmpresaPage` fica sob o mesmo `BusinessAdminGuard` da empresa;
+- o editor sai do `AppLayoutRoutes` e do lazy barrel global e passa a ser
+  owned por `CentralRoutes`/`centralLazyImports`;
+- `businessManagementRoutes.edit()` é a única fonte para o destino de edição;
+- E2Es deixam de montar `/edit-business` manualmente;
+- `/create-business`, `/edit-business/:profileId` e
+  `/dashboard/business/:profileId` saem do registry em vez de receber
+  redirects;
+- o ratchet `business-edit-flow-g6.test.ts` passa a integrar
+  `test:mvp:architecture`.
+
+Regra: gestão de Business no MVP tem uma única raiz operacional,
+`/central/empresas/*`. Não criar aliases paralelos para criação, dashboard ou
+edição.
+
+O blocker de release não muda: #305 continua sendo Auth upstream remoto e #309
+continua sendo autoridade do PAT para deploy automático Supabase. Nenhum deles
+deve ser contornado por rota, fallback ou credencial alternativa.

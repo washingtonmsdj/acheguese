@@ -992,7 +992,7 @@ test.describe.serial("Auth and business flow", () => {
       createdBusiness.slug!,
     );
 
-    await gotoApp(page, `/edit-business/${createdBusiness.profile_id}`);
+    await gotoApp(page, businessManagementRoutes.edit(createdBusiness.profile_id));
     await expect(
       page.getByRole("heading", { name: "Editar Empresa" }),
     ).toBeVisible({ timeout: 30_000 });

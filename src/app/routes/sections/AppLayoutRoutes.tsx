@@ -553,15 +553,6 @@ export function AppLayoutRoutes() {
           )}
         />
         <Route
-          path="/edit-business/:profileId"
-          element={launchElement(
-            "business",
-            "Empresas",
-            protectedElement(<P.EditarEmpresaPage />),
-          )}
-        />
-
-        <Route
           path="/mensagens"
           element={protectedElement(
             launchElement(

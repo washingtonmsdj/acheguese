@@ -34,7 +34,7 @@ Estas superfícies/capabilities suportam o domínio Business e **não são domí
 | Auth / Conta | login, cadastro, sessão, privacidade e preferências |
 | Mensagens | Inbox/Chat horizontal; Business é o provider ativo |
 | Institucional | termos, privacidade, DPO, contato/status quando aplicável |
-| Admin/Central | operação interna, RBAC e gestão estritamente necessária |
+| Admin/Central | operação interna, RBAC e gestão estritamente necessária; Business usa `/central/empresas/*` |
 
 
 ## Módulos pós-MVP
@@ -53,5 +53,6 @@ Ativar um módulo exige alterar o lifecycle no registry e satisfazer suas depend
 - `/notifications` foi removida; a Inbox usa somente `/notificacoes`.
 - `/conta/preferencias?tab=...` não redireciona para outras telas. Os destinos canônicos possuem URL própria.
 - rota desconhecida renderiza 404; não existe catch-all para `/`.
+- gestão de Business não possui raízes paralelas: `/create-business`, `/edit-business/:profileId` e `/dashboard/business/:profileId` foram aposentadas; criação/gestão/edição usam somente `/central/empresas/*`.
 
 Redirect de compatibilidade não é mecanismo de limpeza arquitetural. Guards de autenticação/autorização podem navegar para login ou para a superfície obrigatória correspondente porque isso representa controle de acesso, não alias legado.

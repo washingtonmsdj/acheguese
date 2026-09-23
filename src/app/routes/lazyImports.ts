@@ -196,9 +196,6 @@ export const CriarEmpresaPage = lazy(
 export const EmpresasCadastroLandingPage = lazy(
   () => import("@/modules/business/pages/EmpresasCadastroLandingPage"),
 );
-export const EditarEmpresaPage = lazy(
-  () => import("@/modules/business/pages/EditarEmpresaPage"),
-);
 export const BusinessDashboardShellPage = lazy(
   () => import("@/modules/business/dashboard/pages/BusinessDashboardShellPage"),
 );

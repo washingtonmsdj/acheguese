@@ -13,7 +13,7 @@ const businessCreateForm = read("tests/e2e/business-create-form.spec.ts");
 describe("MVP Business create vertical launch boundary", () => {
   it("keeps generic Business creation active and contextual vertical routes gated", () => {
     expect(centralRoutes).toContain(
-      'path="empresas/nova" element={<P.CriarEmpresaPage />}',
+      'path="empresas/nova" element={launchElement("business", "Empresas", <P.CriarEmpresaPage />)}',
     );
     expect(centralRoutes).not.toContain('path="empresas/nova/:verticalSlug"');
     expect(centralRoutes).toContain(
