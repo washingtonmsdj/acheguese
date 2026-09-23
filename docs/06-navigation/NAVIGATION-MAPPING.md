@@ -82,7 +82,7 @@ Não recriar uma segunda Home/Explorer monolítica.
 
 Regras adicionais:
 
-- a Home expõe somente Empresas, Mapa, Perto de mim e Busca no MVP;
+- a Home expõe somente Empresas, Mapa, Perto de mim e Busca no MVP; dentro de cidade/bairro, todos os quatro preservam o mesmo `baseUrl` territorial;
 - o lifecycle pertence a `productModuleRegistry.ts`;
 - módulos pausados não são consultados para preencher previews escondidos;
 - produção não substitui dados ausentes por conteúdo conceitual;
@@ -151,7 +151,7 @@ autoridade própria para ativar módulos.
 Regras:
 
 - um destino de módulo só aparece quando seu lifecycle efetivo está ativo;
-- `nearby` depende formalmente de `map + business`;
+- `nearby` depende formalmente de `map + business` e, quando há contexto territorial na URL, usa `/perto-de-mim/:uf/:cidade[/:bairro]` em vez de descartar esse contexto;
 - rotas não territoriais podem preservar o último território válido apenas como
   contexto, nunca como autorização para reativar módulo pausado;
 - Search aparece como módulo ativo; Community e demais módulos pós-MVP não aparecem na navegação primária;
