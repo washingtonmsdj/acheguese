@@ -256,7 +256,7 @@ export function TerritorialLayout({
     baseUrl,
     communityBaseUrl: buildCommunityTerritoryUrl(baseUrl),
     groupAvailability: effectiveAvailability,
-    activeMemberIds: resolved.kind === "group" ? active_member_ids : [],
+    activeMemberIds: resolved.kind === "group" ? (active_member_ids ?? []) : [],
   };
 
   return (
