@@ -34,7 +34,7 @@ Estas superfícies/capabilities suportam o domínio Business e **não são domí
 | Auth / Conta | login, cadastro, sessão, privacidade e preferências |
 | Mensagens | Inbox/Chat horizontal; Business é o provider ativo |
 | Institucional | `/como-funciona`, `/sobre`, termos, privacidade, DPO, contato/status; conteúdo deve refletir somente o lifecycle ativo e pode mencionar módulos pausados apenas como futuros/indisponíveis |
-| Admin/Central | operação interna, RBAC e gestão estritamente necessária; Business usa `/central/empresas/*`; `AdminRoutes` e sidebar herdam o lifecycle por `adminSurfaceScope.ts`, sem lista paralela de módulos pausados |
+| Admin/Central | operação interna, RBAC e gestão estritamente necessária; Admin deriva lifecycle por `adminSurfaceScope.ts`; Central ativa contém apenas Business/Empresas (`/central/empresas/*`) + infraestrutura, sem rotas/placeholders/queries de módulos pausados |
 
 
 ## Módulos pós-MVP
@@ -42,6 +42,12 @@ Estas superfícies/capabilities suportam o domínio Business e **não são domí
 Permanecem versionados e isolados até certificação individual: Comunidade, Gastronomia, Serviços profissionais, Classificados, Pontos Turísticos, Educação, Vagas/Oportunidades, Eventos, Comunicação territorial, Mobilidade, Cupons, Gamificação, Analytics público, Alertas, Issues, Achados e Perdidos, Safety familiar e Billing.
 
 Ativar um módulo exige alterar o lifecycle no registry, satisfazer suas dependências e só então conectar seus owners ao barrel/registry ativo. O mesmo vale para sua superfície Admin: rota e navegação são derivadas de `adminSurfaceScope.ts`. Não é permitido reativar um módulo criando rota paralela, redirect, item manual de sidebar ou exceção local.
+
+### Boundary da Central privada
+
+`CentralRoutes.tsx` importa somente `activeCentralLazyImports.ts`. No MVP, a Central monta hub, gestão canônica de Business/Empresas, edição/dados/configurações e infraestrutura de acesso. Eventos, Comunicação, Gastronomia, Educação, Serviços/Profissional, Mobilidade, Billing, Cupons e Analytics permanecem fora da árvore ativa. URL privada sem owner ativo cai no `NotFound` canônico, sem `LaunchPausedPage`, redirect ou alias.
+
+O shell de gestão Business também não pode consultar Billing/Gastronomia/verticais pausadas apenas para ocultar UI. Extensões pós-MVP permanecem preservadas fora do grafo ativo.
 
 ### Boundary do shell público
 
