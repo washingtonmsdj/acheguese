@@ -9,10 +9,6 @@ const activeLazyImports = readFileSync(
   "src/app/routes/activeLazyImports.ts",
   "utf8",
 );
-const launchPausedFactory = readFileSync(
-  "src/app/routes/launchPausedComponent.ts",
-  "utf8",
-);
 const territorialLayout = readFileSync(
   "src/core/routing/components/TerritorialLayout.tsx",
   "utf8",
@@ -35,12 +31,8 @@ describe("unavailable surface ownership", () => {
     expect(activeLazyImports).not.toContain("createLaunchPausedRoute");
     expect(appLayoutRoutes).toContain('<Route path="*" element={<P.NotFound />} />');
 
-    // The generic factory may remain for preserved post-MVP/private boundaries;
-    // it is not an owner of unavailable URLs in the active shell.
-    expect(launchPausedFactory).toContain(
-      'import LaunchPausedPage from "@/app/pages/LaunchPausedPage"',
-    );
-    expect(existsSync("src/app/pages/LaunchPausedPage.tsx")).toBe(true);
+    expect(existsSync("src/app/routes/launchPausedComponent.ts")).toBe(false);
+    expect(existsSync("src/app/pages/LaunchPausedPage.tsx")).toBe(false);
   });
 
   it("keeps inactive and restricted territory states fail-closed in TerritorialLayout", () => {

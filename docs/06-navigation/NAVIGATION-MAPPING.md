@@ -120,13 +120,13 @@ Regras adicionais:
 
 ## 6. Superfícies indisponíveis: contratos separados
 
-`LaunchPausedPage` é o owner canônico do **kill-switch de módulos**. Ele recebe `moduleName` e é renderizado pelos gates de `launchScope` quando uma superfície preservada está fora do lançamento.
+Módulos `paused` **não recebem placeholder de rota no runtime MVP**. O antigo `LaunchPausedPage` e a factory `launchPausedComponent.ts` foram aposentados quando perderam o último caller após a adoção do grafo active-only.
 
-`CommunityInterestPage` permanece como owner preservado do fluxo **`coming_soon`** de Community, mas não integra o MVP enquanto Community estiver `paused`. Quando o módulo for reativado, esse fluxo continua separado do kill-switch de módulos e só pode operar com identidade territorial persistida e inequívoca.
+`CommunityInterestPage` permanece apenas como owner preservado do fluxo **`coming_soon`** de Community para uma futura reativação formal; ele não integra o runtime enquanto Community estiver `paused`.
 
-`TerritoryUnavailablePage` foi aposentada: era apenas um re-export sem caller e misturava dois estados de produto diferentes. Não existe rota pública `/territory/unavailable`.
+`TerritoryUnavailablePage` também foi aposentada: era um re-export sem caller e misturava indisponibilidade territorial com lifecycle de módulo. Não existe rota pública `/territory/unavailable`.
 
-No estado atual, ocultar um módulo da navegação não é suficiente. Educação, Mobilidade e qualquer outra superfície pausada também precisam permanecer interceptadas por rota direta.
+No estado atual, módulo pausado precisa permanecer ausente de navegação, prefetch, lazy imports e composição `<Route>`. URL sem owner ativo cai no `NotFound` canônico; reativação futura exige mudança explícita de lifecycle + certificação + conexão ao boundary ativo.
 
 ---
 
