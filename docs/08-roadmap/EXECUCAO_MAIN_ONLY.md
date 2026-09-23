@@ -4,19 +4,22 @@
 **Data do checkpoint GitHub:** 2026-09-23  
 **Repositório:** `washingtonmsdj/acheguese`  
 **Linha ativa:** `main`  
-**Candidato atual:** branch `fix/mvp-admin-surface-lifecycle` sobre a `main` `0557db2bae6c6f96e850b3b7da0b71656097bb2e` (merge de #321). O head só é certificável quando os gates aplicáveis do mesmo SHA concluírem verdes; merge posterior gera novo SHA e nova obrigação de certificação.
+**Candidato atual:** `main` `e50169c5b1f12154e7941c03478db40848b9e9eb` (merge de #324). O merge SHA é um novo candidato e só recebe status de release após certificação/deploy/smoke do próprio SHA.
 
 Este documento consolida ordem de execução, blockers e Definition of Done. Ele é um **registro operacional**, não uma fotografia autoritativa do que existe no produto. A fonte de verdade para decidir o que existe, o que está ativo e o que deve ser corrigido é sempre o **projeto real**: código da `main`, rotas, owners, serviços, schema/migrations, contratos, testes, deploy/runtime e comportamento observado.
 
 
 ## Estado operacional atual — 2026-09-23
 
-- `main` atual: `0557db2bae6c6f96e850b3b7da0b71656097bb2e` (merge de #321);
-- o head `cc8d21f6b9c019856e03369f9f483a3d91d06f50` de #320 passou Security, SSOT Territorial, Heavy exact-SHA e SSOT Enforcement antes do merge;
-- #319 removeu a autorização SSOT morta de `gastronomy_establishments`/`GastronomyQueryService.ts` após censo de owners/callers;
-- #320 removeu o lint rule órfão, alinhou o registry a `gastronomy_profiles` + `GastronomyProfileService` e adicionou ratchet obrigatório;
-- #321 registrou a revalidação documental pós-#320 e reafirmou que o merge SHA não herda certificação de release;
-- o corte em andamento centraliza lifecycle das superfícies Admin em `adminSurfaceScope.ts`: `AdminRoutes` deixa de montar rotas de módulos pausados, a sidebar recebe inventário já filtrado e a antiga lista manual `ADMIN_PAUSED_NAV_ITEM_IDS` é removida.
+- `main` atual: `e50169c5b1f12154e7941c03478db40848b9e9eb` (merge de #324);
+- #319 removeu a autorização SSOT morta de `gastronomy_establishments`/`GastronomyQueryService.ts`;
+- #320 removeu tooling órfão de direct-query, alinhou o registry a `gastronomy_profiles` + `GastronomyProfileService` e adicionou ratchet obrigatório;
+- #321 registrou a revalidação documental pós-#320;
+- #322 fez rota + sidebar Admin herdarem o lifecycle canônico e removeu aliases administrativos sem contrato;
+- #323 aposentou `/splash` como superfície pública órfã, sem redirect, e ratcheou sua ausência;
+- #324 alinhou `/sobre` ao escopo ativo do MVP e ratcheou a truthfulness institucional;
+- o head `45f1396df3cc77b0486a576c80d35780799210e8` de #324 passou Security Check, Security Scan, SSOT Territorial, Heavy exact-SHA e SSOT Enforcement antes do merge;
+- o merge SHA `e50169c5...` não herda certificação de release: qualquer promoção precisa certificar/deployar/smokar este SHA exato.
 
 ### Blockers atuais do primeiro release
 

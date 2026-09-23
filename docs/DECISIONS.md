@@ -95,3 +95,7 @@
 ## D-023 — Admin herda o lifecycle canônico
 
 **Decisão:** superfícies administrativas não possuem um segundo inventário de módulos ativos/pausados. `adminSurfaceScope.ts` classifica cada superfície Admin e delega domínios a `productModuleRegistry.ts` e capabilities a `platformCapabilityRegistry.ts`; `AdminRoutes` só monta rotas habilitadas e o `AdminLayout` recebe a navegação já filtrada. Páginas pós-MVP permanecem versionadas como lazy chunks, mas fora da árvore de runtime enquanto pausadas. Não usar redirect, alias, placeholder funcional ou lista manual paralela para contornar o lifecycle. **Referências:** `SCREEN-MAP.md`, `08-roadmap/EXECUCAO_MAIN_ONLY.md`.
+
+## D-024 — Superfícies institucionais obedecem ao lifecycle
+
+**Decisão:** páginas institucionais públicas, SEO e copy de produto não constituem um segundo catálogo de funcionalidades. Elas devem descrever como disponível apenas o domínio/capabilities ativos no lifecycle canônico. Módulos `paused` podem ser citados somente de forma explícita como futuros, pausados ou indisponíveis. Rotas institucionais sem caller/contrato real devem ser aposentadas sem redirect de compatibilidade. O ratchet do MVP deve proteger essa truthfulness junto das fronteiras de runtime. **Referências:** `SCREEN-MAP.md`, `08-roadmap/NEXT-STEPS.md`, `tests/architecture/mvp-core-module-boundary.test.ts`.
