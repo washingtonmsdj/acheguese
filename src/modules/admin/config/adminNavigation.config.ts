@@ -189,7 +189,6 @@ export const ADMIN_NAV_SECTIONS: readonly AdminNavSection[] = [
       },
       { id: "verificacoes", to: "/admin/verificacoes", icon: ShieldCheck, label: "Verificacoes", section: "moderacao" },
       { id: "reivindicacoes", to: "/admin/reivindicacoes", icon: AlertTriangle, label: "Reivindicacoes", section: "moderacao" },
-      { id: "alertas", to: "/admin/alertas", icon: Bell, label: "Alertas Sistema", section: "moderacao" },
     ],
   },
   {
@@ -290,28 +289,3 @@ export const ADMIN_NAV_SECTIONS: readonly AdminNavSection[] = [
     ],
   },
 ];
-
-
-const ADMIN_PAUSED_NAV_ITEM_IDS = new Set([
-  "mobilidade",
-  "reports-passageiros",
-  "pontos-embarque",
-  "analytics-mobilidade",
-  "vagas",
-  "eventos",
-  "cupons",
-  "promocoes",
-  "mensagens",
-  "comunicacao",
-  "analytics",
-]);
-
-export const ADMIN_VISIBLE_NAV_SECTIONS: readonly AdminNavSection[] =
-  ADMIN_NAV_SECTIONS.map((section) => ({
-    ...section,
-    items: section.items.filter((item) => !ADMIN_PAUSED_NAV_ITEM_IDS.has(item.id)),
-  })).filter((section) => section.items.length > 0);
-
-export function getAdminNavItems(): readonly AdminNavItem[] {
-  return ADMIN_VISIBLE_NAV_SECTIONS.flatMap((section) => section.items);
-}

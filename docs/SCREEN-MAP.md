@@ -22,7 +22,7 @@
 - Perto de mim consulta Business por proximidade e projeta as mesmas URLs canônicas de Empresas.
 - Busca consulta apenas providers cujas superfícies estão ativas; no corte atual, Business é o provider público principal.
 - Categoria de empresa não depende do lifecycle de uma vertical especializada. Uma escola pode aparecer em Empresas/Mapa/Perto de mim enquanto `education=false`.
-- Nenhum módulo pausado pode reaparecer por URL direta, navegação, preview, busca, mapa ou Central.
+- Nenhum módulo pausado pode reaparecer por URL direta, navegação, preview, busca, mapa, Central ou Admin.
 
 ## Infraestrutura pública
 
@@ -34,14 +34,14 @@ Estas superfícies/capabilities suportam o domínio Business e **não são domí
 | Auth / Conta | login, cadastro, sessão, privacidade e preferências |
 | Mensagens | Inbox/Chat horizontal; Business é o provider ativo |
 | Institucional | termos, privacidade, DPO, contato/status quando aplicável |
-| Admin/Central | operação interna, RBAC e gestão estritamente necessária; Business usa `/central/empresas/*` |
+| Admin/Central | operação interna, RBAC e gestão estritamente necessária; Business usa `/central/empresas/*`; `AdminRoutes` e sidebar herdam o lifecycle por `adminSurfaceScope.ts`, sem lista paralela de módulos pausados |
 
 
 ## Módulos pós-MVP
 
 Permanecem versionados e isolados até certificação individual: Comunidade, Gastronomia, Serviços profissionais, Classificados, Pontos Turísticos, Educação, Vagas/Oportunidades, Eventos, Comunicação territorial, Mobilidade, Cupons, Gamificação, Analytics público, Alertas, Issues, Achados e Perdidos, Safety familiar e Billing.
 
-Ativar um módulo exige alterar o lifecycle no registry e satisfazer suas dependências. Não é permitido reativar um módulo criando rota paralela, redirect ou exceção local.
+Ativar um módulo exige alterar o lifecycle no registry e satisfazer suas dependências. O mesmo vale para sua superfície Admin: rota e navegação são derivadas de `adminSurfaceScope.ts`. Não é permitido reativar um módulo criando rota paralela, redirect, item manual de sidebar ou exceção local.
 
 ## Rotas legadas
 

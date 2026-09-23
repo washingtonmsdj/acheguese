@@ -448,7 +448,7 @@ export const DOMAIN_REGISTRY: DomainRegistryEntry[] = [
       "/comunidade/:state/:city/feed?tab=alertas",
       "/comunidade/:state/:city/:groupSlugOrDistrict/feed?tab=alertas",
     ],
-    adminRoutePrefixes: ["/admin/community-alerts", "/admin/alertas"],
+    adminRoutePrefixes: ["/admin/community-alerts"],
     criticality: "high",
     canonicalServiceBasenames: ["AlertService.ts", "CommunityAlertService.ts"],
     canonicalTypeBasenames: ["types.ts"],

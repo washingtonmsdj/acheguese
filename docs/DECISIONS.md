@@ -91,3 +91,7 @@
 ## D-022 — Community permanece fail-closed até reativação formal
 
 **Decisão:** Community está fora do MVP atual. Seu contrato interno continua preservado: `territory_communities.status` define identidade/estado e `module_rollouts` participa da habilitação operacional, mas nenhum deles pode contornar o `productModuleRegistry`. Somente após Community passar a `active` no lifecycle, com certificação própria, um perfil persistido `active` combinado com rollout efetivo poderá abrir overview/Feed. Até lá, rotas públicas, prefetch, navegação e queries do módulo permanecem isolados. **Referência:** `03-architecture/COMMUNITY_FIRST_ARCHITECTURE_SSOT.md`.
+
+## D-023 — Admin herda o lifecycle canônico
+
+**Decisão:** superfícies administrativas não possuem um segundo inventário de módulos ativos/pausados. `adminSurfaceScope.ts` classifica cada superfície Admin e delega domínios a `productModuleRegistry.ts` e capabilities a `platformCapabilityRegistry.ts`; `AdminRoutes` só monta rotas habilitadas e o `AdminLayout` recebe a navegação já filtrada. Páginas pós-MVP permanecem versionadas como lazy chunks, mas fora da árvore de runtime enquanto pausadas. Não usar redirect, alias, placeholder funcional ou lista manual paralela para contornar o lifecycle. **Referências:** `SCREEN-MAP.md`, `08-roadmap/EXECUCAO_MAIN_ONLY.md`.

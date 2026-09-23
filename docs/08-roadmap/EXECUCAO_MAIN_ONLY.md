@@ -4,23 +4,19 @@
 **Data do checkpoint GitHub:** 2026-09-23  
 **Repositório:** `washingtonmsdj/acheguese`  
 **Linha ativa:** `main`  
-**Candidato atual:** branch `cleanup/mvp-ratchet-retired-gastronomy-ssot` sobre a `main` `2f21393c64f1d0e53fa7d4fa08dfdca5f707c6dc` (merge de #319). O head só é certificável quando os gates aplicáveis do mesmo SHA concluírem verdes; merge posterior gera novo SHA e nova obrigação de certificação.
+**Candidato atual:** branch `fix/mvp-admin-surface-lifecycle` sobre a `main` `0557db2bae6c6f96e850b3b7da0b71656097bb2e` (merge de #321). O head só é certificável quando os gates aplicáveis do mesmo SHA concluírem verdes; merge posterior gera novo SHA e nova obrigação de certificação.
 
 Este documento consolida ordem de execução, blockers e Definition of Done. Ele é um **registro operacional**, não uma fotografia autoritativa do que existe no produto. A fonte de verdade para decidir o que existe, o que está ativo e o que deve ser corrigido é sempre o **projeto real**: código da `main`, rotas, owners, serviços, schema/migrations, contratos, testes, deploy/runtime e comportamento observado.
 
 
 ## Estado operacional atual — 2026-09-23
 
-- `main` atual: `2f21393c64f1d0e53fa7d4fa08dfdca5f707c6dc` (merge de #319);
-- o head `5dd2f76a12c76bf9a5f2d0fdf0650108caeab52d` de #319 passou SSOT Enforcement, Heavy exact-SHA, Security, lint/typecheck, unit, Runtime, E2E público e Regression antes do merge;
-- o merge SHA `2f21393c...` é um novo candidato e não recebe status de release por herança;
-- #305 continua bloqueando sessão autenticada real por `HTTP 503 [auth_upstream_unavailable]` no Supabase Auth;
-- #309 continua bloqueando autoridade automática de deploy Supabase por PAT sem privilégio suficiente;
-- #315 removeu aliases/redirects de compatibilidade do MVP;
-- #316 consolidou gestão Business em rotas canônicas sob `/central/empresas/*`;
-- #318 removeu o bypass DEV `?concept-mock=1` e aposentou cinco mocks/previews sem caller do runtime;
+- `main` atual: `0557db2bae6c6f96e850b3b7da0b71656097bb2e` (merge de #321);
+- o head `cc8d21f6b9c019856e03369f9f483a3d91d06f50` de #320 passou Security, SSOT Territorial, Heavy exact-SHA e SSOT Enforcement antes do merge;
 - #319 removeu a autorização SSOT morta de `gastronomy_establishments`/`GastronomyQueryService.ts` após censo de owners/callers;
-- o corte em andamento remove o lint rule órfão `eslint-rules/no-direct-supabase-queries.js`, corrige o `SSOT_REGISTRY.md` e ratcheta no gate obrigatório de Gastronomia a ausência da tabela/arquivo legado.
+- #320 removeu o lint rule órfão, alinhou o registry a `gastronomy_profiles` + `GastronomyProfileService` e adicionou ratchet obrigatório;
+- #321 registrou a revalidação documental pós-#320 e reafirmou que o merge SHA não herda certificação de release;
+- o corte em andamento centraliza lifecycle das superfícies Admin em `adminSurfaceScope.ts`: `AdminRoutes` deixa de montar rotas de módulos pausados, a sidebar recebe inventário já filtrado e a antiga lista manual `ADMIN_PAUSED_NAV_ITEM_IDS` é removida.
 
 ### Blockers atuais do primeiro release
 
@@ -45,7 +41,7 @@ A decisão definitiva de release de **2026-09-21** separa domínio de produto e 
 
 Mensagens é horizontal e, no MVP, registra **somente Business Direct Messaging**. Classificados e Community preservam seus agregados, mas não entram na Inbox enquanto seus domínios estiverem pausados.
 
-O lifecycle canônico pertence a `productModuleRegistry.ts` + `platformCapabilityRegistry.ts`, avaliados por `lifecycleRegistry.ts`. `launchScope.ts` é apenas compatibilidade derivada.
+O lifecycle canônico pertence a `productModuleRegistry.ts` + `platformCapabilityRegistry.ts`, avaliados por `lifecycleRegistry.ts`. `launchScope.ts` é apenas compatibilidade derivada. Superfícies administrativas são compostas por `adminSurfaceScope.ts`, que herda esses registries e não mantém uma segunda lista de módulos pausados.
 
 Ficam explicitamente **pós-MVP**, preservados e isolados até trabalho/certificação individual: Comunidade, Gastronomia, Serviços profissionais, Classificados, Pontos Turísticos, Educação, Vagas/Oportunidades, Eventos, Comunicação territorial, Mobilidade, Cupons, Gamificação, Analytics público, Alertas, Issues, Achados e Perdidos, Safety familiar e Billing.
 

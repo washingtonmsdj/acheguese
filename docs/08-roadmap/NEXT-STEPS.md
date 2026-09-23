@@ -47,7 +47,7 @@ Regras:
 
 2. **Fechar rotas, navegação e prefetch**
    - navegação pública deve expor somente destinos do MVP e infraestrutura necessária;
-   - módulo pausado não pode possuir rota funcional acessível;
+   - módulo pausado não pode possuir rota funcional acessível, inclusive em Admin/Central;
    - prefetch/warmup deve consultar lifecycle antes de carregar qualquer módulo;
    - não manter redirects de compatibilidade no corte MVP; URL antiga sem contrato externo comprovado deve ser removida e resultar em 404.
 
@@ -90,7 +90,7 @@ Os hosted runners voltaram a executar steps e logs reais. O incidente histórico
 
 O contrato obrigatório do MVP inclui os ratchets recentes de lifecycle, Business, Search, Messaging, remoção de legado e rotas canônicas. `test:mvp:architecture` deve executar essas provas em todo candidato.
 
-Os PRs #310–#319 consolidaram o corte modular, as rotas canônicas, a gestão Business, a retirada dos bypasses DEV e o primeiro corte de resíduos SSOT de Gastronomia:
+Os PRs #310–#320 consolidaram o corte modular, as rotas canônicas, a gestão Business, a retirada dos bypasses DEV e a limpeza/ratchet SSOT de Gastronomia:
 
 - Business independente de verticais pausados;
 - navegação alinhada às capabilities ativas;
@@ -101,8 +101,10 @@ Os PRs #310–#319 consolidaram o corte modular, as rotas canônicas, a gestão 
 - gestão Business consolidada sob `/central/empresas/*`, sem rota concorrente/redirect legado;
 - #318 aposentou o bypass DEV `?concept-mock=1` e os cinco mocks/previews sem caller do runtime.
 - #319 aposentou a allowance morta de `gastronomy_establishments`/`GastronomyQueryService.ts` no checker SSOT após censo de owners/callers.
+- #320 removeu o lint rule órfão de direct-query, alinhou `SSOT_REGISTRY.md` a `gastronomy_profiles`/`GastronomyProfileService` e tornou essa aposentadoria um ratchet obrigatório.
+- #321 registrou a revalidação documental pós-#320 e reafirmou que o merge SHA não herda certificação de release.
 
-A `main` atual é `2f21393c64f1d0e53fa7d4fa08dfdca5f707c6dc` (merge de #319). O head de #319 foi certificado antes do merge por SSOT Enforcement, Heavy exact-SHA, Security, lint/typecheck, unit, Runtime, E2E público e Regression; o merge SHA continua sendo um novo candidato e não herda automaticamente status de release. O corte em andamento remove o lint rule órfão `eslint-rules/no-direct-supabase-queries.js`, alinha o `SSOT_REGISTRY.md` a `gastronomy_profiles` + `GastronomyProfileService` e ratcheta essa aposentadoria no validador obrigatório de Gastronomia. O smoke autenticado continua bloqueado por #305 e a autoridade de deploy Supabase por #309.
+A `main` atual é `0557db2bae6c6f96e850b3b7da0b71656097bb2e` (merge de #321). O head `cc8d21f6b9c019856e03369f9f483a3d91d06f50` de #320 passou Security, SSOT Territorial, Heavy exact-SHA e SSOT Enforcement antes do merge; o merge SHA continua sendo um novo candidato e não herda automaticamente status de release. O corte em andamento elimina a lista manual de superfícies Admin pausadas e faz rota + navegação obedecerem ao lifecycle canônico via `adminSurfaceScope.ts`, mantendo páginas pós-MVP preservadas mas fora da árvore de runtime. O smoke autenticado continua bloqueado por #305 e a autoridade de deploy Supabase por #309.
 
 ### Blockers atuais do primeiro release
 

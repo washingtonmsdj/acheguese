@@ -10,9 +10,9 @@ import { AdminPageLoader } from "@/shared/components/loading/PageLoader";
 import { Button } from "@/shared/components/ui/button";
 import { cn } from "@/shared/utils/cn";
 import { logger } from "@/shared/utils/logger";
-import {
-  ADMIN_VISIBLE_NAV_SECTIONS,
-  type AdminNavBadge,
+import type {
+  AdminNavBadge,
+  AdminNavSection,
 } from "../config/adminNavigation.config";
 
 function getBadgeLabel(
@@ -26,7 +26,13 @@ function getBadgeLabel(
   return badge;
 }
 
-export default function AdminLayout() {
+interface AdminLayoutProps {
+  readonly navigationSections: readonly AdminNavSection[];
+}
+
+export default function AdminLayout({
+  navigationSections,
+}: AdminLayoutProps) {
   const { user, isLoading: sessionLoading } = useSessionContext();
   const navigate = useNavigate();
   const [mobileOpen, setMobileOpen] = useState(false);
@@ -138,7 +144,7 @@ export default function AdminLayout() {
       </div>
 
       <nav className="flex-1 overflow-y-auto p-2" aria-label="Administração">
-        {ADMIN_VISIBLE_NAV_SECTIONS.map((section) => (
+        {navigationSections.map((section) => (
           <div key={section.id} className="mb-3">
             {section.label ? (
               <p className="px-3 pb-1.5 pt-3 text-[10px] font-bold uppercase tracking-wider text-muted-foreground/70">

@@ -1,5 +1,4 @@
 import { lazy } from "react";
-import { createLaunchPausedRoute } from "./launchPausedComponent";
 
 export const AdminGuideTouristPointsPage = lazy(() =>
   import("@/modules/guide/pages/AdminTouristPointsPage"),
@@ -24,16 +23,16 @@ export const AdminClassificados = lazy(() =>
 export const AdminClassificadosDenuncias = lazy(() =>
   import("@/modules/admin/pages/AdminClassificadosDenuncias"),
 );
-export const AdminVagas = createLaunchPausedRoute("Vagas");
-export const AdminEventos = createLaunchPausedRoute("Eventos");
+export const AdminVagas = lazy(() => import("@/modules/admin/pages/AdminVagas"));
+export const AdminEventos = lazy(() => import("@/modules/admin/pages/AdminEventos"));
 export const AdminUsuarios = lazy(() => import("@/modules/admin/pages/AdminUsuarios"));
-export const AdminMotoristas = createLaunchPausedRoute("Mobilidade");
-export const AdminReportsPassageiros = createLaunchPausedRoute("Mobilidade");
-export const AdminPontosEmbarque = createLaunchPausedRoute("Mobilidade");
+export const AdminMotoristas = lazy(() => import("@/core/admin/drivers/pages/AdminMotoristasPage"));
+export const AdminReportsPassageiros = lazy(() => import("@/modules/admin/pages/AdminReportsPassageiros"));
+export const AdminPontosEmbarque = lazy(() => import("@/modules/admin/pages/AdminPontosEmbarque"));
 export const AdminVerificacoes = lazy(() =>
   import("@/core/verification/pages/AdminVerificationsPage"),
 );
-export const AdminAnalyticsMobilidade = createLaunchPausedRoute("Mobilidade");
+export const AdminAnalyticsMobilidade = lazy(() => import("@/modules/admin/pages/AdminAnalyticsMobilidade"));
 export const AdminRealtimeDashboard = lazy(() =>
   import("@/modules/admin/pages/AdminRealtimeDashboard"),
 );
@@ -42,16 +41,16 @@ export const AdminDataQuality = lazy(() => import("@/modules/admin/pages/AdminDa
 export const AdminPrivacyRequests = lazy(() =>
   import("@/modules/admin/pages/AdminPrivacyRequests"),
 );
-export const AdminAnalytics = createLaunchPausedRoute("Analytics");
-export const AdminCupons = createLaunchPausedRoute("Cupons");
-export const AdminPromocoes = createLaunchPausedRoute("Promocoes");
+export const AdminAnalytics = lazy(() => import("@/modules/admin/pages/AdminAnalytics"));
+export const AdminCupons = lazy(() => import("@/modules/admin/pages/AdminCupons"));
+export const AdminPromocoes = lazy(() => import("@/modules/admin/pages/AdminPromocoes"));
 export const AdminAssinaturas = lazy(() =>
   import("@/modules/admin/pages/AdminAssinaturas"),
 );
 export const AdminRoles = lazy(() => import("@/modules/admin/pages/AdminRoles"));
 export const AdminPricing = lazy(() => import("@/modules/admin/pages/AdminPricing"));
 export const AdminBranding = lazy(() => import("@/modules/admin/pages/AdminBranding"));
-export const AdminMensagens = createLaunchPausedRoute("Mensagens");
+export const AdminMensagens = lazy(() => import("@/modules/admin/pages/AdminMensagens"));
 export const AdminNotifications = lazy(() =>
   import("@/modules/admin/pages/AdminNotifications"),
 );
@@ -64,7 +63,7 @@ export const AdminCommunityIssues = lazy(() =>
 export const AdminCommunityInterest = lazy(() =>
   import("@/modules/admin/pages/AdminCommunityInterest"),
 );
-export const AdminComunicacao = createLaunchPausedRoute("Comunicacao");
+export const AdminComunicacao = lazy(() => import("@/modules/admin/pages/AdminComunicacao"));
 export const AdminIdentidade = lazy(() =>
   import("@/core/admin/identity/pages/AdminIdentidadePage"),
 );
@@ -75,7 +74,7 @@ export const AdminConfiguracoes = lazy(() =>
 export const AdminOperacoes = lazy(() =>
   import("@/modules/admin/pages/AdminOperacoes"),
 );
-export const AdminMotoboyOperations = createLaunchPausedRoute("Mobilidade");
+export const AdminMotoboyOperations = lazy(() => import("@/modules/admin/pages/AdminMotoboyOperations"));
 export const AdminReivindicacoes = lazy(() =>
   import("@/modules/admin/pages/AdminReivindicacoes"),
 );
