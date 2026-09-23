@@ -51,7 +51,7 @@ A migration `20260724120000_salvador_readiness_implementation_1.sql` registra a 
 - `src/core/rollout/hooks/useTerritoryModuleRollouts.ts`: leitura agregada do rollout efetivo sem alterar o contrato do dominio.
 - `src/core/rollout/services/RolloutService.ts`: inclui gastronomia, eventos e vagas na lista de modulos ativos.
 - `src/app/routes/territorial/TerritorialModulePages.tsx`: gate por Territory resolvido para os modulos publicos.
-- `src/app/routes/sections/AppLayoutRoutes.tsx` e `src/app/routes/lazyImports.ts`: busca territorial encaminhada ao gate.
+- `src/app/routes/sections/AppLayoutRoutes.tsx` e `src/app/routes/activeLazyImports.ts`: busca territorial encaminhada ao boundary ativo. O antigo `lazyImports.ts` foi aposentado após ficar sem caller runtime.
 - `supabase/migrations/20260724120000_salvador_readiness_implementation_1.sql`: limpeza SSOT e coordenadas canonicas.
 
 ## Validacao
