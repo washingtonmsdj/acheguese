@@ -47,8 +47,8 @@ describe("admin paused navigation boundary", () => {
     expect(adminSurfaceScope).toContain(
       'classificados: { kind: "product", module: "classifieds" }',
     );
-    expect(adminSurfaceScope).toContain(
-      'mensagens: {\n    kind: "paused"',
+    expect(adminSurfaceScope).toMatch(
+      /mensagens:\s*\{\s*kind:\s*"paused"/,
     );
 
     expect(adminRoutes).toContain("filterAdminNavigationSections");
