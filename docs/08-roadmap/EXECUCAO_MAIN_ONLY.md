@@ -17,7 +17,7 @@ Este documento consolida ordem de execução, blockers e Definition of Done. Ele
 - #329 — Central active-only integrado: `/central/*` monta somente Business/Empresas + infraestrutura via `activeCentralLazyImports.ts`; módulos pausados ficam fora do grafo e URL sem owner cai no 404 canônico;
 - #330 — `centralLazyImports.ts` aposentado após censo provar ausência de caller runtime; ratchets agora preservam owners físicos/lifecycle em vez de barrel artificial;
 - #331 — `CommunityTerritoryRoutes.tsx` aposentado após censo provar ausência de caller runtime; builders canônicos de URL e owners Community permanecem preservados nos bounded contexts;
-- corte atual — aposentar `src/app/routes/lazyImports.ts`, agora sem caller runtime, migrando ratchets para owners físicos/lifecycle e mantendo `activeLazyImports.ts` como único boundary lazy público;
+- corte atual (#333) — aposentar `src/app/routes/lazyImports.ts` e a cadeia órfã `TerritorialModulePages.tsx` → `launchPausedComponent.ts` → `LaunchPausedPage.tsx`, migrando ratchets para owners físicos/lifecycle; `activeLazyImports.ts` + `ActiveTerritorialModulePages.tsx` permanecem como boundaries públicos ativos;
 - o merge SHA `d01662e7...` não herda certificação de release: qualquer promoção precisa certificar/deployar/smokar este SHA exato.
 
 ### Blockers atuais do primeiro release

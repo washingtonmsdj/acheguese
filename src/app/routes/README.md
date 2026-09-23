@@ -67,6 +67,8 @@ O antigo `lazyImports.ts` foi aposentado depois que `AppLayoutRoutes.tsx` passou
 
 Quando um módulo for reativado formalmente, seus owners certificados devem ser conectados explicitamente à fronteira ativa após mudança de lifecycle. Padrões de URL podem permanecer no SSOT de `core/routing`, mas composição de rota só existe quando o lifecycle autoriza a superfície. `CommunityTerritoryRoutes.tsx` também foi aposentado por ausência de caller runtime.
 
+A mesma regra vale para a antiga cadeia territorial pós-MVP: `TerritorialModulePages.tsx`, `launchPausedComponent.ts` e `LaunchPausedPage.tsx` foram removidos depois que perderam o último caller runtime. O boundary territorial público em produção é `ActiveTerritorialModulePages.tsx`; módulos pausados não recebem placeholder de rota e URLs sem owner ativo chegam ao `NotFound` canônico.
+
 ## Conta e acesso
 
 Caminhos de autenticação vêm de `src/core/auth/constants/authFlow.ts`:

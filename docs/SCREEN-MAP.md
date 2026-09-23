@@ -51,7 +51,7 @@ O shell de gestão Business também não pode consultar Billing/Gastronomia/vert
 
 ### Boundary do shell público
 
-`AppLayoutRoutes.tsx` importa somente `activeLazyImports.ts`. O antigo `lazyImports.ts` foi aposentado após censo provar ausência de caller runtime; código pós-MVP permanece apenas nos bounded contexts/owners preservados, fora do grafo público ativo. `LaunchPausedPage` não é o fallback de URL pública de módulo pausado. `CommunityTerritoryRoutes.tsx` também foi aposentado após ficar sem caller runtime; os builders de URL de Community permanecem no SSOT de routing e os owners no bounded context, sem árvore `<Route>` ou barrel paralelo/desconectado.
+`AppLayoutRoutes.tsx` importa somente `activeLazyImports.ts`. O antigo `lazyImports.ts` e a cadeia órfã `TerritorialModulePages.tsx` → `launchPausedComponent.ts` → `LaunchPausedPage.tsx` foram aposentados após censo provar ausência de caller runtime. Código pós-MVP permanece nos bounded contexts/owners preservados, fora do grafo público ativo. O boundary territorial ativo é `ActiveTerritorialModulePages.tsx`; URL sem owner ativo cai naturalmente no `NotFound` canônico, sem placeholder, redirect ou fallback de módulo pausado.
 
 ## Rotas legadas
 

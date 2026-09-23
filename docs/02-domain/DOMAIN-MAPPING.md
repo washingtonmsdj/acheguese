@@ -21,12 +21,12 @@ No MVP atual, **Business/Empresas** é o único domínio de produto ativo. **Map
 |------------|---------------|--------|--------|--------------|-------------------|
 | `TerritoryEntryPage.tsx` | `TerritoryEntryPage` | ✅ Canônico | Entrada e resolução territorial pública. | `RootRouteEntry`, rota `/`. | Manter como implementação única. |
 | `TerritoryExplorerPage.tsx` | — | ✅ Removido | Alias sem caller de rota; descoberta pertence a Busca/Mapa e Home a `TerritoryHomePage`. | — | Não recriar. |
-| `TerritoryHomePage.tsx` | `TerritoryHomePage` | ✅ Canônico | Home oficial de qualquer território. | `TerritorialModulePages`. | Manter. |
+| `TerritoryHomePage.tsx` | `TerritoryHomePage` | ✅ Canônico | Home oficial de qualquer território. | `AppLayoutRoutes` / `TerritorialIndexPage`. | Manter. |
 | `TerritoryFeedPage.tsx` | — | ✅ Removido | Re-export sem caller; o owner runtime já era `core/community-feed/pages/ComunidadePage.tsx`. | — | Não recriar. |
 | `TerritoryUnavailablePage.tsx` | — | ✅ Removido | Re-export sem caller; misturava `coming_soon` territorial com kill-switch de módulo. | — | Não recriar. |
 | `PublicCityLandingPage.tsx` (+ `.css`) | — | ✅ Removido | Segunda Home sem caller runtime; removida em 2026-09-09. | — | Não recriar. |
 | `CidadeLandingPage.tsx` + família `CidadeLanding.*` | — | ✅ Removido | Shell pré-Territory sem responsabilidade no MVP modular. | — | Não recriar; Home/Business/Map/Nearby têm owners próprios. |
-| `LaunchPausedPage.tsx` | `LaunchPausedPage` | ✅ Canônico app-level | Kill-switch de superfícies fora do launch scope; não representa território `coming_soon`. | `launchScope` e factories de rota pausada. | Manter como owner único de módulo pausado. |
+| `LaunchPausedPage.tsx` | — | ✅ Removido | Placeholder app-level sem caller runtime após o corte active-only; módulos pausados preservam owners/lifecycle, não uma tela substituta. | — | Não recriar no runtime MVP; URL sem owner ativo cai no `NotFound` canônico. |
 | `ComunidadePage.tsx` (em `core/community-feed/pages`) | `ComunidadePage` | ⏸️ Owner preservado | Owner interno do domínio Community/Feed. O módulo está `paused` no MVP e não integra navegação, prefetch ou superfície pública ativa. | lifecycle + contratos internos de Community. | Preservar para pós-MVP; reativar somente após certificação e mudança explícita no registry. |
 | `EmpresasLandingPage.tsx`, `EmpresaDetailLandingPage.tsx` | superfícies públicas Business | ✅ Canônico no domínio Business | Pertence a Business e não ao domínio Territory. | rotas `/empresas`. | Territory fornece contexto; Business mantém ownership da entidade e URLs. |
 
@@ -90,7 +90,7 @@ No MVP atual, **Business/Empresas** é o único domínio de produto ativo. **Map
 A partir desta sprint, novos módulos, componentes e tipos **não podem** introduzir:
 
 - `Landing*` (usar `TerritoryExplorer*` ou `TerritorySelector*`)
-- `Launch*` dentro do domínio Territory; `LaunchPausedPage` é exceção app-level para kill-switch de launch scope
+- `Launch*` dentro do domínio Territory; placeholders app-level de módulo pausado não fazem parte do runtime MVP
 - `Home*` genérico sem prefixo (usar `TerritoryHome*`)
 - `City*`, `Cidade*`, `Neighborhood*`, `Bairro*`, `District*` como **tipos de domínio** (permitido apenas como *label* de UI ou valor de `TerritoryType`)
 - `Community*` sem estar sob o subdomínio `community/` de Territory

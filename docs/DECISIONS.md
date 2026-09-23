@@ -18,7 +18,7 @@
 
 ## D-004 — Nomenclatura canônica de telas
 
-`TerritoryEntryPage · TerritoryHomePage · BuscaPage · ComunidadePage · PostPage · CommunityInterestPage`. “Territory Feed” permanece o conceito de produto; o owner técnico é `ComunidadePage` em `core/community-feed`, sem um segundo arquivo de página. O alias `TerritoryExplorerPage` foi aposentado em 2026-09-09; descoberta ampla pertence a Busca/Mapa, não a uma segunda Home. `LaunchPausedPage` é uma superfície app-level de kill-switch, não uma tela territorial. **Ref.:** `06-navigation/NAVIGATION-MAPPING.md`.
+`TerritoryEntryPage · TerritoryHomePage · BuscaPage · ComunidadePage · PostPage · CommunityInterestPage`. “Territory Feed” permanece o conceito de produto; o owner técnico é `ComunidadePage` em `core/community-feed`, sem um segundo arquivo de página. O alias `TerritoryExplorerPage` foi aposentado em 2026-09-09; descoberta ampla pertence a Busca/Mapa, não a uma segunda Home. Superfícies pausadas não mantêm uma página app-level substituta; URL sem owner ativo chega ao `NotFound` canônico. **Ref.:** `06-navigation/NAVIGATION-MAPPING.md`.
 
 ## D-005 — Voz editorial consistente por superfície ativa
 
@@ -119,3 +119,8 @@
 ## D-029 — Preservação pública pós-MVP não usa lazy barrel morto
 
 **Decisão:** depois que o shell público passou a importar exclusivamente `activeLazyImports.ts`, o antigo `src/app/routes/lazyImports.ts` perdeu todo caller runtime e não deve ser mantido como inventário de módulos pausados. Preservação pós-MVP ocorre nos owners/contratos dos bounded contexts e no lifecycle canônico; reativação futura conecta explicitamente os owners certificados ao boundary ativo. Ratchets devem provar existência física do owner, status `paused` quando aplicável e ausência em `activeLazyImports.ts`/`AppLayoutRoutes.tsx`, não exigir exports em um barrel morto. **Referências:** D-025, D-027, D-028, `SCREEN-MAP.md`, `src/app/routes/README.md`, `tests/architecture/app-layout-active-route-boundary.test.ts`.
+
+
+## D-030 — Grafo pausado não preserva placeholders app-level
+
+**Decisão:** após `AppLayoutRoutes.tsx` e `activeLazyImports.ts` se tornarem o único grafo público ativo, `TerritorialModulePages.tsx`, `launchPausedComponent.ts` e `LaunchPausedPage.tsx` ficaram sem caller runtime e foram aposentados junto com o antigo `lazyImports.ts`. Módulos pós-MVP permanecem preservados pelos seus owners físicos, contratos e lifecycle; não por árvores de rota, factories ou placeholders desconectados. O owner territorial ativo de Map/Business é `ActiveTerritorialModulePages.tsx`, inclusive no `runtimeConfig` de Mapas. Ratchets devem impedir a recriação desses artefatos mortos. **Referências:** D-027, D-028, D-029, `src/app/routes/README.md`, `tests/architecture/app-layout-active-route-boundary.test.ts`.
