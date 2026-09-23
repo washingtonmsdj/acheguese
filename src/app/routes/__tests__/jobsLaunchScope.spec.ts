@@ -1,4 +1,4 @@
-import { readFileSync } from "node:fs";
+import { existsSync, readFileSync } from "node:fs";
 import { resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import { describe, expect, it } from "vitest";
@@ -43,20 +43,17 @@ describe("jobs and work opportunities post-MVP boundary", () => {
     );
   });
 
-  it("preserves the real jobs implementation for post-MVP integration", () => {
-    const preservedLazyImports = readProjectFile("src/app/routes/lazyImports.ts");
-    const territorialModulesSource = readProjectFile(
-      "src/app/routes/territorial/TerritorialModulePages.tsx",
+  it("preserves the real jobs owners outside the active public graph", () => {
+    const activeLazySource = readProjectFile(
+      "src/app/routes/activeLazyImports.ts",
     );
 
-    expect(preservedLazyImports).toContain(
-      'import("@/modules/classifieds/jobs/pages/VagasPublicPage")',
-    );
-    expect(preservedLazyImports).toContain(
-      'import("@/modules/work-opportunities/pages/WorkOpportunitiesPage")',
-    );
-    expect(territorialModulesSource).toContain(
-      'import("@/modules/classifieds/jobs/pages/VagasPublicPage")',
-    );
+    for (const [owner, ownerPath] of [
+      ["VagasPublicPage", "src/modules/classifieds/jobs/pages/VagasPublicPage.tsx"],
+      ["WorkOpportunitiesPage", "src/modules/work-opportunities/pages/WorkOpportunitiesPage.tsx"],
+    ] as const) {
+      expect(existsSync(resolve(repoRoot, ownerPath))).toBe(true);
+      expect(activeLazySource).not.toContain(owner);
+    }
   });
 });
