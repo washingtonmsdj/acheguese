@@ -19,9 +19,14 @@ import { useTheme } from "@/shared/hooks/useTheme";
 import { useSessionContext } from "@/core/session";
 import { getCentralPrimaryNavItems } from "./centralNavigation.config";
 
-const navItems = getCentralPrimaryNavItems();
+interface CentralNavigationProps {
+  readonly businessEnabled: boolean;
+}
 
-export function CentralNavigation() {
+export function CentralNavigation({
+  businessEnabled,
+}: CentralNavigationProps) {
+  const navItems = getCentralPrimaryNavItems({ businessEnabled });
   const { state } = useSidebar();
   const collapsed = state === "collapsed";
   const location = useLocation();
