@@ -34,7 +34,7 @@ describe("MVP Business dashboard legacy shell retirement", () => {
 
     expect(lazyImports).not.toContain("DashboardEmpresaPage");
     expect(centralRoutes).toContain(
-      '<Route path="empresas/:businessId" element={<P.BusinessAdminGuard />}>',
+      'path="empresas/:businessId" element={launchElement("business", "Empresas", <P.BusinessAdminGuard />)}>',
     );
     expect(centralRoutes).toContain("<P.BusinessDashboardShellPage />");
     expect(centralRoutes).toContain("<P.BusinessOverviewPage />");

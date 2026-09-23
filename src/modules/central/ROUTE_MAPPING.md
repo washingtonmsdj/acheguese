@@ -16,7 +16,8 @@ Este documento substitui os mapas de transicao antigos. O sistema esta em desenv
 - `/central/empresas`: lista operacional das empresas do usuario.
 - `/central/empresas/nova`: formulario real de criacao de empresa.
 - `/central/empresas/:businessId`: shell administrativo da empresa.
-- `/central/empresas/:businessId/dados`: dados cadastrais.
+- `/central/empresas/:businessId/editar`: editor completo de dados da empresa, protegido pelo mesmo `BusinessAdminGuard`.
+- `/central/empresas/:businessId/dados`: leitura/atalhos dos dados cadastrais.
 - `/central/empresas/:businessId/planos`: planos da empresa.
 - `/central/empresas/:businessId/link-premium`: site/link premium.
 - `/central/empresas/:businessId/analytics`: analytics geral.
@@ -42,6 +43,7 @@ Este documento substitui os mapas de transicao antigos. O sistema esta em desenv
 ## Politica de redirects
 
 - Sem redirects para rotas antigas nesta fase de desenvolvimento.
+- `/create-business`, `/edit-business/:profileId` e `/dashboard/business/:profileId` não fazem parte da árvore canônica e não devem ser recriados.
 - Links, CTAs, breadcrumbs e helpers devem apontar diretamente para as rotas canonicas.
 - O SSOT de rotas operacionais de empresa e `businessManagementRoutes`.
 - O SSOT de URLs resolvidas da empresa e `BusinessUrlService`.

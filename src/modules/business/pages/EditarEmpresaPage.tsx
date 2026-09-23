@@ -10,6 +10,7 @@ import { ArrowLeft, Loader2 } from "lucide-react";
 import { toast } from "sonner";
 import { useSessionContext } from "@/core/session";
 import { useBusinessById } from "@/core/business/hooks/useBusinessById";
+import { businessManagementRoutes } from "@/core/business/utils/businessManagementRoutes";
 import { useBusinessEdit, useBusinessImageUpload } from "@/modules/business/hooks/useBusinessEdit";
 import { updateBusinessSchema } from "@/shared/schemas/business/businessSchemas";
 import type {
@@ -68,7 +69,7 @@ function normalizeCategoryValue(rawCategory: unknown): BusinessCategory {
 
 export default function EditarEmpresaPage() {
   const navigate = useNavigate();
-  const { profileId } = useParams<{ profileId: string }>();
+  const { businessId } = useParams<{ businessId: string }>();
   const { user } = useSessionContext();
   const { setModuleContext, effectiveProfile } = useMultiProfileContext();
   const [currentStep, setCurrentStep] = useState(1);
@@ -92,11 +93,13 @@ export default function EditarEmpresaPage() {
     business,
     isLoading: loadingBusiness,
     isError,
-  } = useBusinessById(profileId);
+  } = useBusinessById(businessId);
 
   const { updateBusiness, isLoading: saving } = useBusinessEdit({
     onSuccess: () => {
-      navigate("/conta");
+      if (businessId) {
+        navigate(businessManagementRoutes.dados(businessId));
+      }
     },
   });
 
@@ -106,7 +109,7 @@ export default function EditarEmpresaPage() {
 
   const { logAttempt, logSuccess, logError } = useIdentitySaveLogger({
     entityType: 'business',
-    entityId: profileId!,
+    entityId: businessId!,
     userId: user?.id ?? "unknown-user",
     page: 'EditarEmpresaPage',
   });
@@ -168,13 +171,6 @@ export default function EditarEmpresaPage() {
       }
     }
   }, [business, form]);
-
-  useEffect(() => {
-    if (!user || !profileId) {
-      navigate("/login");
-      return;
-    }
-  }, [user, profileId, navigate]);
 
   const handleNextStep1 = () => {
     form.trigger(["name", "description", "category"]).then((isValid) => {
@@ -244,7 +240,7 @@ export default function EditarEmpresaPage() {
   };
 
   const doSave = form.handleSubmit(async (data) => {
-    if (!profileId) return;
+    if (!businessId) return;
 
     const isVerifiedOfficial = Boolean(business?.is_verified);
     if (
@@ -269,7 +265,7 @@ export default function EditarEmpresaPage() {
     }
 
     try {
-      await updateBusiness({ id: profileId, data: { ...data, slug } });
+      await updateBusiness({ id: businessId, data: { ...data, slug } });
       if (hasSlugChange) {
         logSuccess(originalSlug, slug);
       }
@@ -313,10 +309,10 @@ export default function EditarEmpresaPage() {
         <div className="text-center">
           <h2 className="text-xl font-semibold mb-2">Empresa não encontrada</h2>
           <button
-            onClick={() => navigate("/conta")}
+            onClick={() => navigate(businessManagementRoutes.list())}
             className="text-primary hover:underline"
           >
-            Voltar ao perfil
+            Voltar para empresas
           </button>
         </div>
       </div>
@@ -370,7 +366,7 @@ export default function EditarEmpresaPage() {
               <BusinessSlugSection
                 slug={slug}
                 onSlugChange={setSlug}
-                businessId={profileId}
+                businessId={businessId}
                 originalSlug={originalSlug}
                 businessName={form.watch("name") || business?.name || ""}
                 isVerifiedOfficial={Boolean(business?.is_verified)}

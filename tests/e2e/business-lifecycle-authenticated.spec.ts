@@ -1,4 +1,5 @@
 import { expect, test, type Locator, type Page } from "@playwright/test";
+import { businessManagementRoutes } from "@/core/business/utils/businessManagementRoutes";
 import {
   bootstrapFixtureSession,
   bootstrapProtectedPreviewAccess,
@@ -187,7 +188,7 @@ test.describe("Business lifecycle — fixture autenticada remota", () => {
         page.url().match(/\/central\/empresas\/([0-9a-f-]{36})(?:\/|\?|$)/i)?.[1];
       expect(profileId).toBeTruthy();
 
-      await page.goto(`/edit-business/${profileId}`, {
+      await page.goto(businessManagementRoutes.edit(profileId!), {
         waitUntil: "domcontentloaded",
       });
       await expect(

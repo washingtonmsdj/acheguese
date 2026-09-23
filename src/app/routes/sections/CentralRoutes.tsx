@@ -51,8 +51,8 @@ export function CentralRoutes() {
           <Route path="eventos/analytics/:eventId" element={launchElement("events", "Eventos", <P.EventsErrorBoundary><P.EventsOrganizerAnalyticsPage /></P.EventsErrorBoundary>)} />
           <Route path="comunicacao" element={launchElement("communication", "Comunicação", <P.CentralComunicacaoPage />)} />
           <Route path="comunicacao/:channelSlug" element={launchElement("communication", "Comunicação", <P.CommunicationAgentDashboard />)} />
-          <Route path="empresas" element={<P.CentralEmpresasPage />} />
-          <Route path="empresas/nova" element={<P.CriarEmpresaPage />} />
+          <Route path="empresas" element={launchElement("business", "Empresas", <P.CentralEmpresasPage />)} />
+          <Route path="empresas/nova" element={launchElement("business", "Empresas", <P.CriarEmpresaPage />)} />
           {Object.values(VERTICAL_CONFIGS).flatMap((vertical) =>
             vertical.createSlugs.map((slug) => (
               <Route
@@ -62,7 +62,8 @@ export function CentralRoutes() {
               />
             )),
           )}
-          <Route path="empresas/:businessId" element={<P.BusinessAdminGuard />}>
+          <Route path="empresas/:businessId" element={launchElement("business", "Empresas", <P.BusinessAdminGuard />)}>
+            <Route path="editar" element={<P.EditarEmpresaPage />} />
             <Route element={<P.BusinessDashboardShellPage />}>
               <Route index element={<P.BusinessOverviewPage />} />
               <Route path="dados" element={<P.BusinessDetailsPage />} />

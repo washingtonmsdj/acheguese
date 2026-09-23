@@ -10,15 +10,23 @@ function read(relativePath: string): string {
 }
 
 describe("Business edit flow (G6)", () => {
-  it("keeps the edit route in the business management SSOT", () => {
-    const routes = read("src/core/business/utils/businessManagementRoutes.ts");
+  it("keeps Business editing inside the canonical Central management tree", () => {
+    const routeSsot = read("src/core/business/utils/businessManagementRoutes.ts");
     const urls = read("src/core/business/hooks/useBusinessUrls.ts");
     const workspace = read(
       "src/core/profiles/services/profile.workspace.business-modules.ts",
     );
+    const centralRoutes = read("src/app/routes/sections/CentralRoutes.tsx");
+    const appRoutes = read("src/app/routes/sections/AppLayoutRoutes.tsx");
+    const centralLazy = read("src/app/routes/centralLazyImports.ts");
+    const appLazy = read("src/app/routes/lazyImports.ts");
+    const registry = read("tools/architecture/architecture-registry.ts");
+    const profileRuntime = read(
+      "src/core/profiles/contexts/multi-profile-runtime-context.tsx",
+    );
 
-    expect(routes).toContain(
-      'edit: (businessId: string) => `/edit-business/${cleanRouteSegment(businessId, "business id")}`',
+    expect(routeSsot).toContain(
+      'edit: (businessId: string) => `/central/empresas/${cleanRouteSegment(businessId, "business id")}/editar`',
     );
     expect(urls).toContain(
       "edit: (businessId: string) => businessManagementRoutes.edit(businessId)",
@@ -26,6 +34,45 @@ describe("Business edit flow (G6)", () => {
     expect(workspace).toContain(
       "editUrl: businessManagementRoutes.edit(business.id)",
     );
+
+    expect(centralRoutes).toContain(
+      '<Route path="editar" element={<P.EditarEmpresaPage />} />',
+    );
+    expect(centralRoutes).toContain(
+      'path="empresas" element={launchElement("business", "Empresas", <P.CentralEmpresasPage />)}',
+    );
+    expect(centralRoutes).toContain(
+      'path="empresas/nova" element={launchElement("business", "Empresas", <P.CriarEmpresaPage />)}',
+    );
+    expect(centralRoutes).toContain(
+      'path="empresas/:businessId" element={launchElement("business", "Empresas", <P.BusinessAdminGuard />)}',
+    );
+    expect(centralLazy).toContain("export const EditarEmpresaPage = lazy(");
+    expect(appRoutes).not.toContain("/edit-business");
+    expect(appLazy).not.toContain("EditarEmpresaPage");
+    expect(profileRuntime).not.toContain("/edit-business");
+
+    for (const retiredRoute of [
+      "/create-business",
+      "/edit-business/:profileId",
+      "/dashboard/business/:profileId",
+    ]) {
+      expect(registry, retiredRoute).not.toContain(retiredRoute);
+    }
+
+    expect(registry).toContain('"/central/empresas/:businessId/editar"');
+  });
+
+  it("keeps authenticated Business E2E on the route SSOT instead of retired literals", () => {
+    const authBusiness = read("tests/e2e/auth-business.spec.ts");
+    const lifecycle = read("tests/e2e/business-lifecycle-authenticated.spec.ts");
+
+    expect(authBusiness).toContain(
+      "businessManagementRoutes.edit(createdBusiness.profile_id)",
+    );
+    expect(lifecycle).toContain("businessManagementRoutes.edit(profileId!)");
+    expect(authBusiness).not.toContain("/edit-business/");
+    expect(lifecycle).not.toContain("/edit-business/");
   });
 
   it("routes dashboard edit CTAs to the real editor instead of the read-only details page", () => {

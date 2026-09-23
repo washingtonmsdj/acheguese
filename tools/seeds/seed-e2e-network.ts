@@ -297,7 +297,7 @@ async function run() {
 
   console.log('📋 Resumo:');
   console.log(`   Usuário:    ${SEED.USER_EMAIL}`);
-  console.log(`   Standalone: ${SEED.STANDALONE_SLUG} → dashboard: /dashboard/business/${standaloneProfileId}`);
+  console.log(`   Standalone: ${SEED.STANDALONE_SLUG} → dashboard: /central/empresas/${standaloneProfileId}`);
   console.log(`   Bairro 1:   ${loc1.name} (${loc1.geographic_path})`);
   console.log(`   Bairro 2:   ${loc2.name} (${loc2.geographic_path})`);
   console.log('\n✨ Seed concluído. Execute: npm run test:e2e:network\n');
