@@ -67,7 +67,7 @@ describe("gastronomy runtime boundaries", () => {
 
   it("keeps concept-only order screens out of the normal application router", () => {
     const appRoutes = read("src/app/routes/sections/AppLayoutRoutes.tsx");
-    const lazyImports = read("src/app/routes/lazyImports.ts");
+    const activeLazyImports = read("src/app/routes/activeLazyImports.ts");
     const retiredConceptPages = [
       "OrdersConceptMockPage",
       "OrderServiceConceptMockPage",
@@ -80,7 +80,7 @@ describe("gastronomy runtime boundaries", () => {
 
     for (const pageName of retiredConceptPages) {
       expect(appRoutes).not.toContain(pageName);
-      expect(lazyImports).not.toContain(pageName);
+      expect(activeLazyImports).not.toContain(pageName);
       expect(
         existsSync(
           resolve(
