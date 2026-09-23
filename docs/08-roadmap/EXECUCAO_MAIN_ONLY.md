@@ -4,20 +4,22 @@
 **Data do checkpoint GitHub:** 2026-09-23  
 **Repositório:** `washingtonmsdj/acheguese`  
 **Linha ativa:** `main`  
-**Candidato atual:** `main` `e50169c5b1f12154e7941c03478db40848b9e9eb` (merge de #324). O merge SHA é um novo candidato e só recebe status de release após certificação/deploy/smoke do próprio SHA.
+**Candidato atual:** branch `fix/mvp-active-app-layout-only` sobre `main` `f380bf649a665ed39d8ea9dc12da921d9e33df0a` (merge de #326). O head só é certificável quando os gates aplicáveis do mesmo SHA concluírem verdes; merge posterior gera novo SHA.
 
 Este documento consolida ordem de execução, blockers e Definition of Done. Ele é um **registro operacional**, não uma fotografia autoritativa do que existe no produto. A fonte de verdade para decidir o que existe, o que está ativo e o que deve ser corrigido é sempre o **projeto real**: código da `main`, rotas, owners, serviços, schema/migrations, contratos, testes, deploy/runtime e comportamento observado.
 
 
 ## Estado operacional atual — 2026-09-23
 
-- `main` atual: `e50169c5b1f12154e7941c03478db40848b9e9eb` (merge de #324);
+- base `main` atual desta execução: `f380bf649a665ed39d8ea9dc12da921d9e33df0a` (merge de #326);
 - #319 removeu a autorização SSOT morta de `gastronomy_establishments`/`GastronomyQueryService.ts`;
 - #320 removeu tooling órfão de direct-query, alinhou o registry a `gastronomy_profiles` + `GastronomyProfileService` e adicionou ratchet obrigatório;
 - #321 registrou a revalidação documental pós-#320;
 - #322 fez rota + sidebar Admin herdarem o lifecycle canônico e removeu aliases administrativos sem contrato;
 - #323 aposentou `/splash` como superfície pública órfã, sem redirect, e ratcheou sua ausência;
 - #324 alinhou `/sobre` ao escopo ativo do MVP e ratcheou a truthfulness institucional;
+- #326 alinhou o SSOT operacional/documental ao estado pós-#324;
+- #325 — AppLayout público active-only (em implementação): remover `DIRECT_PAUSED_ROUTES`, `launchElement`/`LaunchPausedPage` do shell público, isolar owners pós-MVP fora de `activeLazyImports.ts` e deixar URLs sem owner ativo caírem no NotFound canônico;
 - o head `45f1396df3cc77b0486a576c80d35780799210e8` de #324 passou Security Check, Security Scan, SSOT Territorial, Heavy exact-SHA e SSOT Enforcement antes do merge;
 - o merge SHA `e50169c5...` não herda certificação de release: qualquer promoção precisa certificar/deployar/smokar este SHA exato.
 
@@ -48,7 +50,7 @@ O lifecycle canônico pertence a `productModuleRegistry.ts` + `platformCapabilit
 
 Ficam explicitamente **pós-MVP**, preservados e isolados até trabalho/certificação individual: Comunidade, Gastronomia, Serviços profissionais, Classificados, Pontos Turísticos, Educação, Vagas/Oportunidades, Eventos, Comunicação territorial, Mobilidade, Cupons, Gamificação, Analytics público, Alertas, Issues, Achados e Perdidos, Safety familiar e Billing.
 
-A regra de modularidade é fail-closed: pausar um módulo no registry remove sua navegação, suas rotas públicas e seus loaders/discovery ativos. Reativação futura deve ocorrer pelo owner canônico e suas dependências, nunca por redirect, alias ou exceção local.
+A regra de modularidade é fail-closed: pausar um módulo no registry remove sua navegação, suas rotas públicas e seus loaders/discovery ativos. No shell público, módulo `paused` não possui `<Route>` nem placeholder; o owner permanece apenas no bounded context pós-MVP. Reativação futura deve ocorrer pelo owner canônico e suas dependências, nunca por redirect, alias ou exceção local.
 
 O primeiro release continua territorial. **Cobertura uniforme dos 170 bairros de Salvador não é critério do MVP**; expansão municipal e rollout bairro a bairro ficam para depois da estabilização do território inicial.
 
