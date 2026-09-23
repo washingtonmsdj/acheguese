@@ -1,7 +1,7 @@
 import { lazy, Suspense } from "react";
 
 import { StateLandingPage } from "@/core/routing/components/StateLandingPage";
-import { useTerritorialContext } from "@/core/routing/components/TerritorialLayout";
+import { TerritorialLayout, useTerritorialContext } from "@/core/routing/components/TerritorialLayout";
 import NotFound from "@/app/pages/NotFound";
 import { ModulePageLoader } from "@/shared/components/loading/PageLoader";
 
@@ -45,4 +45,8 @@ export function TerritorialMapPage() {
 
 export function ActiveStateLandingPage() {
   return <StateLandingPage NotFoundComponent={NotFound} />;
+}
+
+export function ActiveTerritorialLayout() {
+  return <TerritorialLayout NotFoundComponent={NotFound} />;
 }
