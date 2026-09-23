@@ -5,7 +5,7 @@ import { describe, expect, it } from "vitest";
 const ROOT = resolve(__dirname, "../..");
 const read = (path: string) => readFileSync(resolve(ROOT, path), "utf8");
 
-const lazyImports = read("src/app/routes/lazyImports.ts");
+const activeLazyImports = read("src/app/routes/activeLazyImports.ts");
 const prefetch = read("src/app/routes/prefetch.ts");
 const territorialModules = read("src/app/routes/territorial/TerritorialModulePages.tsx");
 
@@ -19,12 +19,12 @@ describe("G6 Community feed main page ownership", () => {
     expect(existsSync(resolve(ROOT, "src/app/pages/TerritoryFeedPage.tsx"))).toBe(false);
   });
 
-  it("routes and prefetches the canonical community-feed owner directly", () => {
+  it("preserves the canonical community-feed owner outside the active public graph", () => {
     const canonicalImport = "@/core/community-feed/pages/ComunidadePage";
-    expect(lazyImports).toContain(canonicalImport);
-    expect(prefetch).toContain(canonicalImport);
+    expect(activeLazyImports).not.toContain("ComunidadePage");
+    expect(prefetch).not.toContain(canonicalImport);
     expect(territorialModules).toContain(canonicalImport);
-    expect(lazyImports).not.toContain("TerritoryFeedPage");
+    expect(activeLazyImports).not.toContain("TerritoryFeedPage");
     expect(prefetch).not.toContain("TerritoryFeedPage");
     expect(territorialModules).not.toContain("TerritoryFeedPage");
   });
