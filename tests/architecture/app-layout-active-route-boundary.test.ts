@@ -1,4 +1,4 @@
-import { readFileSync } from "node:fs";
+import { existsSync, readFileSync } from "node:fs";
 import { describe, expect, it } from "vitest";
 
 const read = (path: string) => readFileSync(path, "utf8");
@@ -14,6 +14,10 @@ const activeTerritorialPages = read(
 
 describe("active AppLayout route boundary", () => {
   it("does not mount paused product modules or paused fallbacks", () => {
+    expect(
+      existsSync("src/app/routes/sections/CommunityTerritoryRoutes.tsx"),
+    ).toBe(false);
+
     for (const forbidden of [
       "DIRECT_PAUSED_ROUTES",
       "LaunchPausedPage",
