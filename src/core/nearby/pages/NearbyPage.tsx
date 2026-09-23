@@ -34,7 +34,7 @@ export default function NearbyPage() {
   const routeFallbackLocation = territorialContext
     ? resolved?.kind === "location"
       ? resolved.location
-      : resolved?.group.members.at(0) ?? null
+      : null
     : undefined;
   const businessUrl = territorialContext
     ? buildModuleTerritoryUrl(MODULE_SLUGS.business, territorialContext.baseUrl)
@@ -49,6 +49,7 @@ export default function NearbyPage() {
   const territoryLabels = useTerritoryLabels(resolved);
 
   const {
+    location: resolvedUserLocation,
     coords: userLocation,
     status: locationStatus,
     isGoodForProximity,
@@ -61,6 +62,18 @@ export default function NearbyPage() {
     territoryLocation: routeFallbackLocation,
   });
 
+  const routeCenterUnavailable =
+    Boolean(territorialContext) &&
+    resolvedUserLocation?.source === "territory_center" &&
+    !resolvedUserLocation.locationId;
+  const spatialCenter = routeCenterUnavailable ? null : userLocation;
+  const spatialLocationId = territorialContext
+    ? routeFallbackLocation?.id
+    : activeLocation?.id;
+  const effectiveSourceMessage = routeCenterUnavailable
+    ? "Não foi possível determinar o centro deste território; ative o GPS."
+    : sourceMessage;
+
   const [radiusKm, setRadiusKm] = useState(5);
   const [visibleCount, setVisibleCount] = useState(12);
 
@@ -70,8 +83,8 @@ export default function NearbyPage() {
     isError,
   } = useNearbyBusinesses({
     radiusKm,
-    center: userLocation,
-    locationId: routeFallbackLocation?.id ?? activeLocation?.id,
+    center: spatialCenter,
+    locationId: spatialLocationId,
     limit: 100,
   });
 
@@ -133,7 +146,7 @@ export default function NearbyPage() {
         />
 
         <div className="mx-auto flex max-w-7xl flex-col gap-3 border-b border-border/30 px-4 py-4 sm:flex-row sm:items-center sm:justify-between sm:px-6">
-          <div className="text-sm text-muted-foreground">{sourceMessage}</div>
+          <div className="text-sm text-muted-foreground">{effectiveSourceMessage}</div>
           {resolved ? <TerritoryIndicator resolved={resolved} /> : null}
         </div>
 
@@ -155,7 +168,7 @@ export default function NearbyPage() {
                     hasPreciseProximity ? "text-green-700" : "text-amber-700"
                   }
                 >
-                  {sourceMessage}
+                  {effectiveSourceMessage}
                 </span>
               </div>
               {!hasPreciseProximity ? (
