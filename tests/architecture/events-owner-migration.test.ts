@@ -36,13 +36,14 @@ describe("community Events canonical owner", () => {
     }
   });
 
-  it("keeps the territorial route on the canonical module", () => {
-    const route = read("src/app/routes/territorial/TerritorialModulePages.tsx");
+  it("preserves Events ownership while paused routes stay outside the active graph", () => {
+    const activeLazy = read("src/app/routes/activeLazyImports.ts");
+    const appRoutes = read("src/app/routes/sections/AppLayoutRoutes.tsx");
 
-    expect(route).toContain(
-      'import("@/modules/community-events/pages/EventsListPage")',
-    );
-    expect(route).not.toContain("@/features/events");
+    expect(exists("src/modules/community-events/pages/EventsListPage.tsx")).toBe(true);
+    expect(activeLazy).not.toContain("EventsListPage");
+    expect(appRoutes).not.toContain('path="/eventos"');
+    expect(appRoutes).not.toContain("@/features/events");
   });
 
   it("keeps paused Events out of MVP deploy readiness", () => {
