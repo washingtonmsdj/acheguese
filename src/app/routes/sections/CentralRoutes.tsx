@@ -16,9 +16,9 @@ export function CentralRoutes() {
 
   return (
     <Routes>
-      <Route element={<P.CentralLayout />}>
+      <Route element={<P.CentralLayout businessEnabled={businessEnabled} />}>
         <Route element={<P.CentralAccessGuard />}>
-          <Route index element={<P.CentralHubPage />} />
+          <Route index element={<P.CentralHubPage businessEnabled={businessEnabled} />} />
 
           {businessEnabled ? (
             <>
