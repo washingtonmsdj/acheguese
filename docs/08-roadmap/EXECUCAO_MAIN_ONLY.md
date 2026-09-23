@@ -1,12 +1,35 @@
 # Achegue-se — Execução `main`-only e prontidão MVP
 
 **Status:** ATIVO — SSOT OPERACIONAL  
-**Data do checkpoint GitHub:** 2026-09-20  
+**Data do checkpoint GitHub:** 2026-09-23  
 **Repositório:** `washingtonmsdj/acheguese`  
 **Linha ativa:** `main`  
-**Candidato atual:** PR #292. O SHA exato muda durante a correção dos últimos gates; somente o head final verde pode ser promovido à `main`.
+**Candidato atual:** PR #318 sobre a `main` `4452f686b9eed06501c94a58fe432b8dddc1a43c`. O head do PR é certificado apenas se todos os gates do mesmo SHA concluírem verdes.
 
 Este documento consolida ordem de execução, blockers e Definition of Done. Ele é um **registro operacional**, não uma fotografia autoritativa do que existe no produto. A fonte de verdade para decidir o que existe, o que está ativo e o que deve ser corrigido é sempre o **projeto real**: código da `main`, rotas, owners, serviços, schema/migrations, contratos, testes, deploy/runtime e comportamento observado.
+
+
+## Estado operacional atual — 2026-09-23
+
+- `main` atual: `4452f686b9eed06501c94a58fe432b8dddc1a43c`;
+- Vercel publicou esse mesmo SHA com status **success**;
+- Dependency Lock, Auth Concept Regression, Heavy PR Certification, Security Check e SSOT Enforcement passaram nesse SHA;
+- Runtime Tests, E2E público, Phase Core Gate e Regression Check também passaram;
+- o único vermelho do SSOT Territorial continua sendo o smoke autenticado real;
+- três provas autenticadas retornaram `HTTP 503 [auth_upstream_unavailable]` no Supabase Auth;
+- uma prova adicional falhou antes do broker porque o pedido de token GitHub OIDC retornou HTTP 503;
+- #315 removeu aliases/redirects de compatibilidade do MVP;
+- #316 consolidou gestão Business em rotas canônicas sob `/central/empresas/*`;
+- #318 remove o bypass DEV `?concept-mock=1` e aposenta cinco mocks/previews sem caller do runtime.
+
+### Blockers atuais do primeiro release
+
+1. **#305 — sessão autenticada real:** Supabase Auth continua retornando 5xx em `signInWithPassword()`; SQL mínimo e Advisors do mesmo projeto também registraram `Connection terminated due to connection timeout`. Não mascarar com retry extra, fallback, redirect, troca de fixture ou bypass OIDC.
+2. **#309 — autoridade automática de deploy Supabase:** o PAT do GitHub Actions é válido, mas recebe 403 ao atualizar Edge Functions. A correção correta é rotacionar para um PAT de identidade Developer/Admin/Owner; não usar `service_role` como substituto.
+3. **Exact-SHA pós-merge:** qualquer mudança, inclusive documentação, gera novo candidato. Security/lint/typecheck/tests/build/E2E/deploy/smoke precisam pertencer ao mesmo SHA final.
+
+O incidente antigo de hosted runners com jobs vazios foi encerrado no issue #17 e **não é blocker atual**. O limite diário antigo da Vercel também não representa o estado atual: o deploy do SHA `4452f686...` está verde.
+
 
 ## Corte de lançamento MVP — 2026-09-19
 
@@ -30,18 +53,13 @@ A regra de modularidade é fail-closed: pausar um módulo no registry remove sua
 
 O primeiro release continua territorial. **Cobertura uniforme dos 170 bairros de Salvador não é critério do MVP**; expansão municipal e rollout bairro a bairro ficam para depois da estabilização do território inicial.
 
-### Bloqueadores reais antes do release
+### Regras permanentes antes do release
 
-1. **Manter a convergência Git ↔ Supabase/runtime já fechada.** A cadeia ativa possui **673 migrations locais / 673 remotas / 673 identidades exatas / 0 local-only / 0 remote-only**. Os 13 hardenings de Mobilidade nunca aplicados foram preservados em `docs/09-reference/migrations-pending/` porque `mobility=false`; não executar `db push` nem promover módulo pausado apenas para alterar contagem.
-2. **Concluir um gate executável no SHA candidato.** O problema anterior de jobs GitHub-hosted com `runner_id=0`/`steps=[]` deixou de reproduzir no PR #292: Security, SSOT e E2E iniciaram jobs reais, com checkout/setup/install visíveis. Isso remove o antigo bloqueio de scheduler dos runners hospedados. O candidato ainda só avança quando esses jobs e os gates restantes concluírem com sucesso no mesmo SHA.
-3. **Completar proteção da `main`.** Force-push/deleção já estão bloqueados e o publisher canônico de tipos Supabase **já não escreve diretamente na `main`**: ele usa `automation/supabase-types-sync`, abre/atualiza PR e dispara os gates canônicos. O blocker restante é administrativo: exigir PR + checks que realmente executem e impedir bypass fora da release authority aprovada.
-4. **Preservar a prova de ledger/runtime no SHA candidato.** A auditoria de identidade já está em zero divergências; `validate:migrations`, `validate:migrations:provenance` e `validate:migrations:remote` ainda precisam executar de verdade no runner do candidato. Tipos gerados foram regenerados do runtime após os últimos DDLs.
-5. **Manter LGPD destrutivo fail-closed.** Delete/purge não pode ser habilitado enquanto `LGPD_PURGE_POLICY` não estiver pronto. Exportação também permanece desabilitada até certificação. O MVP pode lançar com essas capacidades indisponíveis, desde que a UI não prometa sucesso e nenhum caminho stale permaneça acessível.
-6. **Fechar segurança do que será exposto.** Priorizar Auth/Conta, Profile, território, Business e as capabilities Mapa, Perto de mim, Busca e Mensagens. Módulos pausados só bloqueiam o MVP quando compartilham uma boundary realmente usada por esse núcleo. Certificações especializadas de Educação, Gastronomia e Billing permanecem no ciclo próprio desses módulos e não são pré-requisito funcional do release atual; qualidade global (lint/typecheck/security/SSOT/Vitest) continua obrigatória.
-7. **Certificar o fluxo real das superfícies públicas.** Para cada item do escopo: rota/owner canônico, contrato DB/RPC, autorização positiva e negativa, loading/empty/error/auth, fluxo principal com dados reais, smoke mobile e E2E sem placeholder/paused contado como sucesso.
-8. **Provar deploy do mesmo SHA.** O SHA aprovado deve produzir build real no provider e smoke no domínio público, incluindo login/cadastro, troca/resolução territorial, Home, navegação do núcleo, mutações principais e logout.
-9. **Configuração legal/operacional mínima.** O verifier de deploy já exige origem pública HTTPS, contato e DPO válidos e foro configurado; políticas/textos falham fechado quando identidade pública não existe. O blocker restante é o provider fornecer valores válidos no build exact-SHA.
-10. **Sem dados conceituais em produção.** Mocks visuais podem existir apenas sob gate de desenvolvimento. O território inicial precisa renderizar dado real ou empty state explícito, nunca atividade inventada.
+- manter convergência Git ↔ Supabase/runtime e o ledger de migrations já fechado;
+- manter LGPD destrutivo fail-closed enquanto purge/export não estiverem certificados;
+- manter módulos pausados fora de navegação, rotas funcionais, prefetch, discovery, providers e loaders ativos;
+- não aceitar mocks conceituais, aliases ou redirects como substituto de owner/rota canônicos;
+- promover somente o SHA que tiver deploy real e smoke do mesmo commit.
 
 ### Correções de gate identificadas neste corte
 
@@ -56,6 +74,7 @@ O primeiro release continua territorial. **Cobertura uniforme dos 170 bairros de
 - [x] Eventos pagos falham fechado enquanto não há checkout habilitado; inscrições gratuitas continuam no fluxo real.
 - [x] Upsells Premium foram retirados das superfícies públicas enquanto Billing permanece pausado.
 - [x] Gastronomia removeu rotas/telas `concept-mock` do roteador normal e consolidou checkout/rastreamento nas implementações reais.
+- [x] Central/Business removeram o bypass DEV por `?concept-mock=1`; previews de gestão e mocks de Motoboy sem caller foram aposentados do runtime e do lazy barrel.
 - [x] Conta e Mensagens não possuem mais bypass DEV de `ProtectedRoute`; perfis/conversas demonstrativos foram removidos do runtime.
 - [x] Mensagens usa perfis da sessão e threads persistidas, limpa estado privado ao trocar perfil e não exibe controles sem ação real.
 - [x] O E2E de launch scope mantém `communityCommunication=false` e prova fail-closed para Community enquanto Messaging horizontal permanece independente e ativo com provider Business.
@@ -70,8 +89,8 @@ O primeiro release continua territorial. **Cobertura uniforme dos 170 bairros de
 - [x] Tipos Supabase foram revalidados no SHA auditado: Git e runtime têm 731731 caracteres normalizados e `exact=true`.
 - [x] O Supabase canônico mantém 60 Edge Functions implantadas e as 60 estão `ACTIVE`; as funções versionadas mas deliberadamente não implantadas continuam sujeitas ao rollout/authority próprio.
 - [~] Reconciliação de migrations avançou no PR #225 sem executar DDL. Após Safety G71/G72/G75–G80, o estado chegou a 683 locais, 666 remotas, 657 exatas, 26 local-only e 9 remote-only.
-- [~] CI hospedado está executável no PR #292: Security, Auth, SSOT, E2E e Heavy já rodaram em runners GitHub reais. O Heavy automático usa `windows-latest`; o workflow manual self-hosted permanece apenas como opção especial. Falta certificar o head final exato e o deploy de produção.
-- [ ] Vercel continua sem permitir nova prova de deploy por limite diário de builds; isso não conta como build aprovado.
+- [x] CI hospedado está operacional e executa steps/logs reais; o incidente #17 foi encerrado. PRs #310–#316 fecharam gates reais, e a `main` `4452f686...` mantém Security/Heavy/SSOT Enforcement verdes.
+- [x] Vercel publicou a `main` `4452f686...` com status `success`; o blocker de release não é mais build/deploy público, e sim a sessão autenticada real (#305).
 - [~] O ledger de migrations avançou sem executar DDL: G71/G72/G75–G80 foram alinhadas às oito identidades `reconcile_*` realmente registradas no Supabase após prova de equivalência token-a-token. Estado daquela etapa: 683 locais / 666 remotas / 657 exatas / 26 local-only / 9 remote-only.
 - [~] Quatro identidades adicionais de Mobilidade foram alinhadas após prova token-a-token: `remove_provisional_mobility_fare_floor`, `persist_mobility_cancellation_reason`, `enforce_server_owned_mobility_quotes` e `require_explicit_mobility_quote_id`. O bloco de preço terminal da entrega não foi alterado porque o SQL remoto é materialmente diferente.
 - [~] A cadeia terminal de entrega foi reconciliada como uma sequência de três migrations remotas canônicas (`make_delivery_final_price_server_owned`, `restore_atomic_delivery_completion_with_server_owned_price`, `ignore_client_final_price_in_delivery_wrapper`). Ao fim dessa etapa restavam apenas G42/G43 como remote-only; este corte fecha essas duas identidades.
