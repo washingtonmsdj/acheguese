@@ -54,9 +54,11 @@ describe("MVP launch-scope alignment", () => {
     expect(launchScope).toContain(
       'nearby: isPlatformCapabilityEnabled("nearby")',
     );
-    expect(appRoutes).toContain('launchElement("map", "Mapa"');
-    expect(appRoutes).toContain('launchElement("nearby", "Perto de mim"');
-    expect(appRoutes).toContain('launchElement("search", "Busca"');
+    expect(appRoutes).toContain('isPlatformCapabilityEnabled("map")');
+    expect(appRoutes).toContain('isPlatformCapabilityEnabled("nearby")');
+    expect(appRoutes).toContain('isPlatformCapabilityEnabled("search")');
+    expect(appRoutes).not.toContain("launchElement(");
+    expect(appRoutes).not.toContain("LaunchPausedPage");
   });
 
   it("limits global search providers to launch-enabled domains", () => {
@@ -106,7 +108,9 @@ describe("MVP launch-scope alignment", () => {
     expect(featureMap).not.toContain("messaging=false");
   });
 
-  it("keeps representative paused routes in the public isolation E2E", () => {
+  it("keeps representative paused routes in the public 404 E2E", () => {
+    expect(launchE2e).toContain("expectNotFoundPublicRoute");
+    expect(launchE2e).not.toContain("expectPausedLaunchSurface");
     for (const path of [
       "/gastronomia",
       "/servicos",
