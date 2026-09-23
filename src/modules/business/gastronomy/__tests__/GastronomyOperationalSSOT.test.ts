@@ -321,8 +321,8 @@ describe("gastronomy operational SSOT flow", () => {
     const nicheVersioningBarrelSource = readProjectFile(
       "src/modules/business/gastronomy/niches/versioning/index.ts",
     );
-    const centralLazyImportsSource = readProjectFile(
-      "src/app/routes/centralLazyImports.ts",
+    const activeCentralLazyImportsSource = readProjectFile(
+      "src/app/routes/activeCentralLazyImports.ts",
     );
     const appLazyImportsSource = readProjectFile(
       "src/app/routes/lazyImports.ts",
@@ -433,15 +433,9 @@ describe("gastronomy operational SSOT flow", () => {
       readProjectFile("src/modules/business/gastronomy/services/index.ts"),
     ).not.toContain("gastronomy.mutations");
 
-    expect(centralLazyImportsSource).toContain(
-      'export const DeliveryManagementPage = createLaunchPausedRoute("Entregas")',
-    );
-    expect(centralLazyImportsSource).toContain(
-      'export const AnalyticsPage = createLaunchPausedRoute("Analytics")',
-    );
-    expect(centralLazyImportsSource).toContain(
-      'export const GastronomyPromotionsPage = createLaunchPausedRoute("Promocoes")',
-    );
+    expect(activeCentralLazyImportsSource).not.toContain("DeliveryManagementPage");
+    expect(activeCentralLazyImportsSource).not.toContain("AnalyticsPage");
+    expect(activeCentralLazyImportsSource).not.toContain("GastronomyPromotionsPage");
     expect(appLazyImportsSource).toContain(
       'export const DeliveryManagementPage = createLaunchPausedRoute("Entregas")',
     );
@@ -464,12 +458,15 @@ describe("gastronomy operational SSOT flow", () => {
           `export const ${exportName}\\s*=\\s*createLaunchPausedRoute\\(\\s*"${pausedLabel}"\\s*,?\\s*\\)`,
         ),
       );
-      expect(centralLazyImportsSource).toContain(
-        `export const ${exportName} = lazy(() =>`,
-      );
-      expect(centralLazyImportsSource).toContain(
-        `@/modules/business/gastronomy/pages/${exportName}`,
-      );
+      expect(activeCentralLazyImportsSource).not.toContain(exportName);
+      expect(
+        existsSync(
+          resolve(
+            repoRoot,
+            `src/modules/business/gastronomy/pages/${exportName}.tsx`,
+          ),
+        ),
+      ).toBe(true);
     });
   });
 
