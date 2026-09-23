@@ -4,19 +4,20 @@
 **Data do checkpoint GitHub:** 2026-09-23  
 **Repositório:** `washingtonmsdj/acheguese`  
 **Linha ativa:** `main`  
-**Candidato atual:** branch `cleanup/mvp-retire-community-route-tree` sobre `main` `d01662e75b554934a38bc57b9305f711ebff3ce0` (merge de #330). O head só é certificável quando os gates aplicáveis do mesmo SHA concluírem verdes; merge posterior gera novo SHA.
+**Candidato atual:** branch `cleanup/mvp-retire-public-legacy-lazy-barrel` sobre `main` `035a0ba77aaad235d92f25031dba3ccabe83e992` (merge de #331). O head só é certificável quando os gates aplicáveis do mesmo SHA concluírem verdes; merge posterior gera novo SHA.
 
 Este documento consolida ordem de execução, blockers e Definition of Done. Ele é um **registro operacional**, não uma fotografia autoritativa do que existe no produto. A fonte de verdade para decidir o que existe, o que está ativo e o que deve ser corrigido é sempre o **projeto real**: código da `main`, rotas, owners, serviços, schema/migrations, contratos, testes, deploy/runtime e comportamento observado.
 
 
 ## Estado operacional atual — 2026-09-23
 
-- `main` atual: `d01662e75b554934a38bc57b9305f711ebff3ce0` (merge de #330);
+- `main` atual: `035a0ba77aaad235d92f25031dba3ccabe83e992` (merge de #331);
 - #327 / #325 removeu módulos pausados da árvore pública ativa, criou `activeLazyImports.ts` e fez URLs públicas sem owner ativo caírem no 404 canônico;
 - o head `fa747aa7c877d7a086b92277940681a27abba844` de #327 passou Dependency Lock, Security Check/Scan, Auth Concept, Visual Regression, SSOT Territorial, Heavy exact-SHA e SSOT Enforcement antes do merge;
 - #329 — Central active-only integrado: `/central/*` monta somente Business/Empresas + infraestrutura via `activeCentralLazyImports.ts`; módulos pausados ficam fora do grafo e URL sem owner cai no 404 canônico;
 - #330 — `centralLazyImports.ts` aposentado após censo provar ausência de caller runtime; ratchets agora preservam owners físicos/lifecycle em vez de barrel artificial;
-- corte atual — aposentar `CommunityTerritoryRoutes.tsx`, árvore `<Route>` pós-MVP sem caller runtime; preservar builders canônicos de URL e owners Community nos bounded contexts;
+- #331 — `CommunityTerritoryRoutes.tsx` aposentado após censo provar ausência de caller runtime; builders canônicos de URL e owners Community permanecem preservados nos bounded contexts;
+- corte atual — aposentar `src/app/routes/lazyImports.ts`, agora sem caller runtime, migrando ratchets para owners físicos/lifecycle e mantendo `activeLazyImports.ts` como único boundary lazy público;
 - o merge SHA `d01662e7...` não herda certificação de release: qualquer promoção precisa certificar/deployar/smokar este SHA exato.
 
 ### Blockers atuais do primeiro release
