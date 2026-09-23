@@ -12,14 +12,14 @@
 | --- | --- | --- | --- |
 | Empresas | `/empresas`, `/empresas/:uf/:cidade[/:bairro]`, detalhe canônico por slug | `core/business` + `EmpresasLandingPage` | ativo |
 | Mapa | `/mapa`, `/mapa/:uf/:cidade[/:bairro]` | `core/maps` | ativo |
-| Perto de mim | `/perto-de-mim` | `core/nearby` | ativo; depende de Mapa + Empresas |
+| Perto de mim | `/perto-de-mim`, `/perto-de-mim/:uf/:cidade[/:bairro]` | `core/nearby` | ativo; depende de Mapa + Empresas; rota territorial é autoridade quando presente |
 | Busca | `/busca`, `/busca/:uf/:cidade[/:bairro]`, `/buscar` | `core/search` + `BuscaPage`/`BuscarPage` | ativo; providers derivados do lifecycle |
 | Mensagens | `/mensagens`, `/mensagens/business/:threadId` | `core/messaging` + `modules/messaging` | ativo; provider Business no MVP |
 
 ### Contrato de integração
 
 - Mapa público renderiza somente layers de módulos ativos; no MVP, o layer de domínio é Business.
-- Perto de mim consulta Business por proximidade e projeta as mesmas URLs canônicas de Empresas.
+- Perto de mim consulta Business por proximidade e projeta as mesmas URLs canônicas de Empresas. Em rota territorial, o território resolvido pela URL prevalece sobre estado global lembrado; GPS real continua sendo a única fonte de distância pessoal.
 - Busca consulta apenas providers cujas superfícies estão ativas; no corte atual, Business é o provider público principal.
 - Categoria de empresa não depende do lifecycle de uma vertical especializada. Uma escola pode aparecer em Empresas/Mapa/Perto de mim enquanto `education=false`.
 - Nenhum módulo pausado pode reaparecer por URL direta, navegação, preview, busca, mapa, Central ou Admin. No shell público, módulo `paused` não tem rota/fallback próprio; URL sem owner ativo cai no 404 canônico.

@@ -1,6 +1,7 @@
 import { useCallback, useMemo, useState } from "react";
 import { Helmet } from "react-helmet-async";
 import { useNavigate } from "react-router-dom";
+import { useTerritorialContextOptional } from "@/core/routing/components/TerritorialLayout";
 import { AlertTriangle, Compass, Loader2, Map, Navigation, Store } from "lucide-react";
 import { CanonicalHero } from "@/shared/components/hero/CanonicalHero";
 import { Button } from "@/shared/components/ui/button";
@@ -12,6 +13,7 @@ import type { ResolvedTerritory } from "@/core/routing/hooks/useResolveTerritory
 import {
   MODULE_SLUGS,
   buildLocationModuleUrl,
+  buildModuleTerritoryUrl,
 } from "@/core/routing/utils/territoryUrls";
 import {
   APP_MODULE_SLUGS,
@@ -22,27 +24,61 @@ import { useNearbyBusinesses } from "../hooks/useNearbyBusinesses";
 
 export default function NearbyPage() {
   const navigate = useNavigate();
+  const territorialContext = useTerritorialContextOptional();
   const { activeLocation, activeTerritory } = useLocationContext();
 
-  const resolved: ResolvedTerritory | null = activeTerritory?.location
-    ? { kind: "location", location: activeTerritory.location }
-    : null;
-  const businessUrl = activeLocation
-    ? buildLocationModuleUrl(activeLocation, MODULE_SLUGS.business)
-    : buildAppModulePath(APP_MODULE_SLUGS.business);
-  const mapUrl = activeLocation
-    ? buildLocationModuleUrl(activeLocation, MODULE_SLUGS.map)
-    : buildAppModulePath(APP_MODULE_SLUGS.map);
+  const resolved: ResolvedTerritory | null = territorialContext?.resolved
+    ?? (activeTerritory?.location
+      ? { kind: "location", location: activeTerritory.location }
+      : null);
+  const routeFallbackLocation = territorialContext
+    ? resolved?.kind === "location"
+      ? resolved.location
+      : null
+    : undefined;
+  const businessUrl = territorialContext
+    ? buildModuleTerritoryUrl(MODULE_SLUGS.business, territorialContext.baseUrl)
+    : activeLocation
+      ? buildLocationModuleUrl(activeLocation, MODULE_SLUGS.business)
+      : buildAppModulePath(APP_MODULE_SLUGS.business);
+  const mapUrl = territorialContext
+    ? buildModuleTerritoryUrl(MODULE_SLUGS.map, territorialContext.baseUrl)
+    : activeLocation
+      ? buildLocationModuleUrl(activeLocation, MODULE_SLUGS.map)
+      : buildAppModulePath(APP_MODULE_SLUGS.map);
   const territoryLabels = useTerritoryLabels(resolved);
 
   const {
+    location: resolvedUserLocation,
     coords: userLocation,
     status: locationStatus,
     isGoodForProximity,
     sourceMessage,
     resolve: resolveLocation,
     isLoading: locationLoading,
-  } = useResolvedUserLocation({ autoResolve: true, tryGps: true });
+  } = useResolvedUserLocation({
+    autoResolve: true,
+    tryGps: true,
+    territoryLocation: routeFallbackLocation,
+  });
+
+  const routeCenterUnavailable =
+    Boolean(territorialContext) &&
+    resolvedUserLocation?.source === "territory_center" &&
+    !resolvedUserLocation.locationId;
+  const spatialCenter = routeCenterUnavailable ? null : userLocation;
+  const spatialLocationId = territorialContext
+    ? resolved?.kind === "location"
+      ? routeFallbackLocation?.id
+      : undefined
+    : activeLocation?.id;
+  const spatialLocationIds =
+    territorialContext && resolved?.kind === "group"
+      ? territorialContext.activeMemberIds
+      : undefined;
+  const effectiveSourceMessage = routeCenterUnavailable
+    ? "Não foi possível determinar o centro deste território; ative o GPS."
+    : sourceMessage;
 
   const [radiusKm, setRadiusKm] = useState(5);
   const [visibleCount, setVisibleCount] = useState(12);
@@ -53,8 +89,9 @@ export default function NearbyPage() {
     isError,
   } = useNearbyBusinesses({
     radiusKm,
-    center: userLocation,
-    locationId: activeLocation?.id,
+    center: spatialCenter,
+    locationId: spatialLocationId,
+    locationIds: spatialLocationIds,
     limit: 100,
   });
 
@@ -116,8 +153,8 @@ export default function NearbyPage() {
         />
 
         <div className="mx-auto flex max-w-7xl flex-col gap-3 border-b border-border/30 px-4 py-4 sm:flex-row sm:items-center sm:justify-between sm:px-6">
-          <div className="text-sm text-muted-foreground">{sourceMessage}</div>
-          {activeLocation ? <TerritoryIndicator resolved={resolved} /> : null}
+          <div className="text-sm text-muted-foreground">{effectiveSourceMessage}</div>
+          {resolved ? <TerritoryIndicator resolved={resolved} /> : null}
         </div>
 
         {locationStatus !== "idle" && locationStatus !== "resolving" ? (
@@ -138,7 +175,7 @@ export default function NearbyPage() {
                     hasPreciseProximity ? "text-green-700" : "text-amber-700"
                   }
                 >
-                  {sourceMessage}
+                  {effectiveSourceMessage}
                 </span>
               </div>
               {!hasPreciseProximity ? (

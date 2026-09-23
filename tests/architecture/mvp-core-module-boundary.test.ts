@@ -10,6 +10,7 @@ describe("MVP core module boundary", () => {
   const platformRegistry = read("src/app/config/platformCapabilityRegistry.ts");
   const lifecycleRegistry = read("src/app/config/lifecycleRegistry.ts");
   const launchScope = read("src/app/config/launchScope.ts");
+  const presentationModules = read("src/app/config/modules.ts");
   const domainMapping = read("docs/02-domain/DOMAIN-MAPPING.md");
   const entry = read("src/app/pages/TerritoryEntryPage.tsx");
   const rootEntry = read("src/app/routes/RootRouteEntry.tsx");
@@ -84,6 +85,13 @@ describe("MVP core module boundary", () => {
     expect(launchScope).toContain(
       'search: isPlatformCapabilityEnabled("search")',
     );
+
+    for (const activeTerritorialCapability of ["map", "nearby", "search"]) {
+      const moduleBlock = presentationModules.match(
+        new RegExp(`\\n  ${activeTerritorialCapability}: \\{[\\s\\S]*?\\n  \\},`),
+      )?.[0] ?? "";
+      expect(moduleBlock).toContain("isTerritorial: true");
+    }
   });
 
   it("keeps living Territory docs aligned with the domain/capability lifecycle split", () => {
@@ -151,7 +159,7 @@ describe("MVP core module boundary", () => {
   it("keeps the active Home limited to Business plus active horizontal capabilities", () => {
     expect(home).toContain("MODULE_SLUGS.business");
     expect(home).toContain("MODULE_SLUGS.map");
-    expect(home).toContain("APP_MODULE_SLUGS.nearby");
+    expect(home).toContain("MODULE_SLUGS.nearby");
     expect(home).toContain("MODULE_SLUGS.search");
 
     for (const forbidden of [
@@ -327,7 +335,7 @@ describe("MVP core module boundary", () => {
   it("keeps release E2E aligned with the active MVP lifecycle instead of the retired community-first contract", () => {
     expect(publicMvpE2e).toContain("/empresas/ba/salvador/pituba");
     expect(publicMvpE2e).toContain("/mapa/ba/salvador/pituba");
-    expect(publicMvpE2e).toContain("/perto-de-mim");
+    expect(publicMvpE2e).toContain("/perto-de-mim/ba/salvador/pituba");
     expect(publicMvpE2e).toContain("/busca/ba/salvador/pituba");
     expect(publicMvpE2e).toContain("HOME_BUSINESS");
     expect(publicMvpE2e).toContain("430m");

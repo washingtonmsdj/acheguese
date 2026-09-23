@@ -35,6 +35,7 @@ export interface FriendlyModuleUrls {
   touristPoints: string;
   ranking: string;
   map: string;
+  nearby: string;
   base: string;
   landing: string;
   territoryName: string | null;
@@ -147,6 +148,12 @@ function buildTerritorialUrls(
     }),
     map: buildContextualModuleUrl({
       module: MODULE_SLUGS.map,
+      territoryBaseUrl: basePath,
+      communityBaseUrl,
+      useCommunityScopedModules,
+    }),
+    nearby: buildContextualModuleUrl({
+      module: MODULE_SLUGS.nearby,
       territoryBaseUrl: basePath,
       communityBaseUrl,
       useCommunityScopedModules,

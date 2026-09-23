@@ -21,6 +21,9 @@ describe("territorial route patterns", () => {
     expect(buildTerritorialModuleRoutePath(APP_MODULE_SLUGS.business)).toBe(
       "/empresas/:state/:city",
     );
+    expect(buildTerritorialModuleRoutePath(APP_MODULE_SLUGS.nearby)).toBe(
+      "/perto-de-mim/:state/:city",
+    );
   });
 
   it("builds district and module suffix routes from shared params", () => {
@@ -71,6 +74,7 @@ describe("territorial route patterns", () => {
       "vagas",
       "gastronomia",
       "mapa",
+      "perto-de-mim",
       "pontos-turisticos",
     ]);
   });

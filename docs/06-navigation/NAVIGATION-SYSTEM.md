@@ -80,8 +80,13 @@ Exemplo:
 - troca para Barra;
 - continua em Empresas, agora no novo território.
 
-Perto de mim pode usar GPS real. Fallback territorial não pode ser apresentado
-como localização pessoal.
+Mapa, Empresas, Perto de mim e Busca possuem variantes territoriais canônicas e
+a navegação entre elas preserva o mesmo `baseUrl` quando o contexto está na URL.
+A entrada global `/perto-de-mim` continua válida.
+
+Perto de mim pode usar GPS real. A URL territorial é a autoridade do recorte
+quando presente; fallback territorial não pode ser apresentado como localização
+pessoal nem usar um território antigo do store para substituir a rota atual.
 
 ## Ações
 

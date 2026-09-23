@@ -76,7 +76,7 @@ No MVP atual, **Business/Empresas** é o único domínio de produto ativo. **Map
 | `/:uf/:city/:neighborhood` | ✅ Canônico | Home territorial de bairro/grupo resolvido. |
 | `/empresas/:uf/:city[/:neighborhood]` | ✅ Ativo | Módulo Business. |
 | `/mapa/:uf/:city[/:neighborhood]` | ✅ Ativo | Capability horizontal Map; consome apenas layers de domínios ativos. |
-| `/perto-de-mim` | ✅ Ativo | Capability horizontal Nearby; depende de Map + Location + Business. |
+| `/perto-de-mim[/:uf/:city[/:neighborhood]]` | ✅ Ativo | Capability horizontal Nearby; entrada global permanece válida e variantes territoriais preservam contexto explícito de URL. Depende de Map + Location + Business. |
 | `/busca[/:uf/:city[/:neighborhood]]` | ✅ Ativo | Search canônica; consulta somente providers habilitados pelo lifecycle. |
 | `/buscar[/:uf/:city[/:neighborhood]]` | ✅ Ativo | Experiência de busca assistida sob o mesmo lifecycle de Search. |
 | `/inicio` | ⛔ Legado | Não é entrada canônica nem deve aparecer no sitemap do MVP. |

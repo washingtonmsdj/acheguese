@@ -109,8 +109,31 @@ const APP_LAYOUT_MAP_TERRITORIAL_ROUTES: readonly AppLayoutRouteDescriptor[] = [
   },
 ];
 
+const APP_LAYOUT_NEARBY_TERRITORIAL_ROUTES: readonly AppLayoutRouteDescriptor[] = [
+  {
+    id: "nearby-district",
+    owner: { kind: "capability", key: "nearby" },
+    path: buildTerritorialModuleRoutePath(APP_MODULE_SLUGS.nearby, [
+      TERRITORIAL_PARAMS.district,
+    ]),
+    element: <P.ActiveTerritorialLayout />,
+    indexElement: <P.NearbyPage />,
+  },
+  {
+    id: "nearby-city",
+    owner: { kind: "capability", key: "nearby" },
+    path: buildTerritorialModuleRoutePath(APP_MODULE_SLUGS.nearby),
+    element: <P.ActiveTerritorialLayout />,
+    indexElement: <P.NearbyPage />,
+  },
+];
+
 export const APP_LAYOUT_TERRITORIAL_DOMAIN_ROUTES: readonly AppLayoutRouteDescriptor[] =
-  [...APP_LAYOUT_BUSINESS_ROUTES, ...APP_LAYOUT_MAP_TERRITORIAL_ROUTES];
+  [
+    ...APP_LAYOUT_BUSINESS_ROUTES,
+    ...APP_LAYOUT_MAP_TERRITORIAL_ROUTES,
+    ...APP_LAYOUT_NEARBY_TERRITORIAL_ROUTES,
+  ];
 
 export function renderAppLayoutRouteDescriptors(
   routes: readonly AppLayoutRouteDescriptor[],

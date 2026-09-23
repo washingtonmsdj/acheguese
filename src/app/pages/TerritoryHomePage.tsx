@@ -14,10 +14,6 @@ import {
   MODULE_SLUGS,
   buildModuleTerritoryUrl,
 } from "@/core/routing/utils/territoryUrls";
-import {
-  APP_MODULE_SLUGS,
-  buildAppModulePath,
-} from "@/shared/config/moduleSlugs";
 
 interface MvpModuleCardProps {
   title: string;
@@ -66,7 +62,7 @@ export default function TerritoryHomePage() {
 
   const businessUrl = buildModuleTerritoryUrl(MODULE_SLUGS.business, baseUrl);
   const mapUrl = buildModuleTerritoryUrl(MODULE_SLUGS.map, baseUrl);
-  const nearbyUrl = buildAppModulePath(APP_MODULE_SLUGS.nearby);
+  const nearbyUrl = buildModuleTerritoryUrl(MODULE_SLUGS.nearby, baseUrl);
   const searchUrl = buildModuleTerritoryUrl(MODULE_SLUGS.search, baseUrl);
 
   return (

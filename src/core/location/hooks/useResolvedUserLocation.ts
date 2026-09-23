@@ -12,6 +12,7 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 
 import { userLocationResolver } from '../services/UserLocationResolver';
+import type { Location } from '../types';
 import type { ResolvedEntityLocation } from '../types/entityLocation';
 import { useLocationContext } from './useLocationContext';
 
@@ -28,6 +29,8 @@ export interface UseResolvedUserLocationOptions {
   autoResolve?: boolean;
   /** Tentar GPS antes do fallback territorial. */
   tryGps?: boolean;
+  /** Território explícito da rota. undefined mantém o store como fallback. */
+  territoryLocation?: Location | null;
 }
 
 export interface UseResolvedUserLocationReturn {
@@ -52,7 +55,7 @@ export interface UseResolvedUserLocationReturn {
 export function useResolvedUserLocation(
   options: UseResolvedUserLocationOptions = {},
 ): UseResolvedUserLocationReturn {
-  const { autoResolve = true, tryGps = true } = options;
+  const { autoResolve = true, tryGps = true, territoryLocation } = options;
   const { activeTerritory } = useLocationContext();
 
   const [location, setLocation] = useState<ResolvedEntityLocation | null>(null);
@@ -65,7 +68,7 @@ export function useResolvedUserLocation(
     setStatus('resolving');
 
     try {
-      const result = await userLocationResolver.resolve({ tryGps });
+      const result = await userLocationResolver.resolve({ tryGps, territoryLocation });
       setLocation(result);
 
       if (result.source === 'gps') {
@@ -76,13 +79,13 @@ export function useResolvedUserLocation(
         setStatus('fallback');
       }
     } catch {
-      const fallback = userLocationResolver.resolveFromTerritory();
+      const fallback = userLocationResolver.resolveFromTerritory(territoryLocation);
       setLocation(fallback);
       setStatus('fallback');
     } finally {
       setIsLoading(false);
     }
-  }, [tryGps]);
+  }, [territoryLocation, tryGps]);
 
   useEffect(() => {
     if (autoResolve && !resolvedOnce.current) {
@@ -93,11 +96,10 @@ export function useResolvedUserLocation(
 
   useEffect(() => {
     if (status === 'territory' || status === 'fallback') {
-      const fallback = userLocationResolver.resolveFromTerritory();
+      const fallback = userLocationResolver.resolveFromTerritory(territoryLocation);
       setLocation(fallback);
     }
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [activeTerritory]);
+  }, [activeTerritory, status, territoryLocation]);
 
   const isGps = location?.source === 'gps';
   const isGoodForProximity = location ? userLocationResolver.isGoodForProximity(location) : false;
