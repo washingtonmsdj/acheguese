@@ -4,24 +4,18 @@
 **Data do checkpoint GitHub:** 2026-09-23  
 **Repositório:** `washingtonmsdj/acheguese`  
 **Linha ativa:** `main`  
-**Candidato atual:** branch `fix/mvp-active-app-layout-only` sobre `main` `f380bf649a665ed39d8ea9dc12da921d9e33df0a` (merge de #326). O head só é certificável quando os gates aplicáveis do mesmo SHA concluírem verdes; merge posterior gera novo SHA.
+**Candidato atual:** branch `fix/mvp-active-central-only` sobre `main` `40ee0ac5ad4554ee7b10a90ccda9840f8a35e211` (merge de #327). O head só é certificável quando os gates aplicáveis do mesmo SHA concluírem verdes; merge posterior gera novo SHA.
 
 Este documento consolida ordem de execução, blockers e Definition of Done. Ele é um **registro operacional**, não uma fotografia autoritativa do que existe no produto. A fonte de verdade para decidir o que existe, o que está ativo e o que deve ser corrigido é sempre o **projeto real**: código da `main`, rotas, owners, serviços, schema/migrations, contratos, testes, deploy/runtime e comportamento observado.
 
 
 ## Estado operacional atual — 2026-09-23
 
-- base `main` atual desta execução: `f380bf649a665ed39d8ea9dc12da921d9e33df0a` (merge de #326);
-- #319 removeu a autorização SSOT morta de `gastronomy_establishments`/`GastronomyQueryService.ts`;
-- #320 removeu tooling órfão de direct-query, alinhou o registry a `gastronomy_profiles` + `GastronomyProfileService` e adicionou ratchet obrigatório;
-- #321 registrou a revalidação documental pós-#320;
-- #322 fez rota + sidebar Admin herdarem o lifecycle canônico e removeu aliases administrativos sem contrato;
-- #323 aposentou `/splash` como superfície pública órfã, sem redirect, e ratcheou sua ausência;
-- #324 alinhou `/sobre` ao escopo ativo do MVP e ratcheou a truthfulness institucional;
-- #326 alinhou o SSOT operacional/documental ao estado pós-#324;
-- #327 / #325 — AppLayout público active-only (em certificação): remover `DIRECT_PAUSED_ROUTES`, `launchElement`/`LaunchPausedPage` do shell público, isolar owners pós-MVP fora de `activeLazyImports.ts` e deixar URLs sem owner ativo caírem no NotFound canônico;
-- o head `45f1396df3cc77b0486a576c80d35780799210e8` de #324 passou Security Check, Security Scan, SSOT Territorial, Heavy exact-SHA e SSOT Enforcement antes do merge;
-- o merge SHA `e50169c5...` não herda certificação de release: qualquer promoção precisa certificar/deployar/smokar este SHA exato.
+- `main` atual: `40ee0ac5ad4554ee7b10a90ccda9840f8a35e211` (merge de #327);
+- #327 / #325 removeu módulos pausados da árvore pública ativa, criou `activeLazyImports.ts` e fez URLs públicas sem owner ativo caírem no 404 canônico;
+- o head `fa747aa7c877d7a086b92277940681a27abba844` de #327 passou Dependency Lock, Security Check/Scan, Auth Concept, Visual Regression, SSOT Territorial, Heavy exact-SHA e SSOT Enforcement antes do merge;
+- #328 — Central active-only (em implementação): remover `LaunchPausedPage`/owners pós-MVP da árvore `/central/*`, manter somente Business/Empresas + infraestrutura e retirar queries ocultas de Billing/Gastronomia do shell Business;
+- o merge SHA `40ee0ac5...` não herda certificação de release: qualquer promoção precisa certificar/deployar/smokar este SHA exato.
 
 ### Blockers atuais do primeiro release
 
@@ -46,7 +40,7 @@ A decisão definitiva de release de **2026-09-21** separa domínio de produto e 
 
 Mensagens é horizontal e, no MVP, registra **somente Business Direct Messaging**. Classificados e Community preservam seus agregados, mas não entram na Inbox enquanto seus domínios estiverem pausados.
 
-O lifecycle canônico pertence a `productModuleRegistry.ts` + `platformCapabilityRegistry.ts`, avaliados por `lifecycleRegistry.ts`. `launchScope.ts` é apenas compatibilidade derivada. Superfícies administrativas são compostas por `adminSurfaceScope.ts`, que herda esses registries e não mantém uma segunda lista de módulos pausados.
+O lifecycle canônico pertence a `productModuleRegistry.ts` + `platformCapabilityRegistry.ts`, avaliados por `lifecycleRegistry.ts`. `launchScope.ts` é apenas compatibilidade derivada. Superfícies administrativas são compostas por `adminSurfaceScope.ts`, que herda esses registries e não mantém uma segunda lista de módulos pausados. A Central privada segue o mesmo fail-closed: somente Business/Empresas e infraestrutura ativa podem integrar seu grafo runtime; módulos pós-MVP não recebem rota/placeholder privado.
 
 Ficam explicitamente **pós-MVP**, preservados e isolados até trabalho/certificação individual: Comunidade, Gastronomia, Serviços profissionais, Classificados, Pontos Turísticos, Educação, Vagas/Oportunidades, Eventos, Comunicação territorial, Mobilidade, Cupons, Gamificação, Analytics público, Alertas, Issues, Achados e Perdidos, Safety familiar e Billing.
 

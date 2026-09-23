@@ -30,18 +30,18 @@ describe("MVP Business dashboard legacy shell retirement", () => {
   it("keeps routing on the canonical Business dashboard tree", () => {
     const lazyImports = read("src/app/routes/lazyImports.ts");
     const centralRoutes = read("src/app/routes/sections/CentralRoutes.tsx");
-    const centralLazyImports = read("src/app/routes/centralLazyImports.ts");
+    const activeCentralLazyImports = read("src/app/routes/activeCentralLazyImports.ts");
 
     expect(lazyImports).not.toContain("DashboardEmpresaPage");
-    expect(centralRoutes).toContain(
-      'path="empresas/:businessId" element={launchElement("business", "Empresas", <P.BusinessAdminGuard />)}>',
-    );
+    expect(centralRoutes).toContain('path="empresas/:businessId"');
+    expect(centralRoutes).toContain('element={<P.BusinessAdminGuard />}');
+    expect(centralRoutes).not.toContain("launchElement");
     expect(centralRoutes).toContain("<P.BusinessDashboardShellPage />");
     expect(centralRoutes).toContain("<P.BusinessOverviewPage />");
-    expect(centralLazyImports).toContain(
+    expect(activeCentralLazyImports).toContain(
       'import("@/modules/business/dashboard/pages/BusinessDashboardShellPage")',
     );
-    expect(centralLazyImports).toContain(
+    expect(activeCentralLazyImports).toContain(
       'import("@/modules/business/dashboard/pages/BusinessOverviewPage")',
     );
   });

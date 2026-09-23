@@ -90,7 +90,7 @@ Os hosted runners voltaram a executar steps e logs reais. O incidente histórico
 
 O contrato obrigatório do MVP inclui os ratchets recentes de lifecycle, Business, Search, Messaging, remoção de legado e rotas canônicas. `test:mvp:architecture` deve executar essas provas em todo candidato.
 
-Os PRs #310–#324 consolidaram o corte modular, as rotas canônicas, a gestão Business, a retirada dos bypasses DEV, a limpeza/ratchet SSOT de Gastronomia, o isolamento lifecycle-driven do Admin e a truthfulness das superfícies públicas:
+Os PRs #310–#327 consolidaram o corte modular, as rotas canônicas, a gestão Business, a retirada dos bypasses DEV, a limpeza/ratchet SSOT de Gastronomia, o isolamento lifecycle-driven do Admin e a truthfulness das superfícies públicas:
 
 - Business independente de verticais pausados;
 - navegação alinhada às capabilities ativas;
@@ -106,8 +106,9 @@ Os PRs #310–#324 consolidaram o corte modular, as rotas canônicas, a gestão 
 - #322 removeu inventários Admin paralelos, passou rota + sidebar para o lifecycle canônico e retirou aliases administrativos sem contrato.
 - #323 aposentou `/splash` como superfície pública órfã, sem redirect, e ratcheou sua ausência no ownership de rotas.
 - #324 alinhou `/sobre` ao produto realmente ativo e estendeu o ratchet arquitetural para impedir claims de verticais pausadas como disponíveis.
+- #327 removeu módulos pausados do grafo público ativo: `AppLayoutRoutes` usa somente `activeLazyImports.ts` e URL pública sem owner ativo cai no 404 canônico.
 
-A base desta execução é a `main` `f380bf649a665ed39d8ea9dc12da921d9e33df0a` (merge de #326). O head `45f1396df3cc77b0486a576c80d35780799210e8` de #324 passou Security Check, Security Scan, SSOT Territorial, Heavy exact-SHA e SSOT Enforcement antes do merge; o merge SHA continua sendo um novo candidato e não herda automaticamente status de release. `/splash` permanece aposentado e `/sobre` agora descreve apenas o escopo ativo. O PR #327 (issue #325) implementa o corte active-only: `AppLayoutRoutes`/registry/barrel ativo passam a conter somente Business + capabilities/infra ativas; módulos pós-MVP permanecem versionados fora do grafo público e suas URLs caem no 404 canônico. O smoke autenticado continua bloqueado por #305 e a autoridade de deploy Supabase por #309.
+A `main` atual é `40ee0ac5ad4554ee7b10a90ccda9840f8a35e211` (merge de #327). O head `fa747aa7c877d7a086b92277940681a27abba844` de #327 passou Dependency Lock, Security Check/Scan, Auth Concept, Visual Regression, SSOT Territorial, Heavy exact-SHA e SSOT Enforcement antes do merge; o merge SHA continua sendo novo candidato e não herda automaticamente status de release. O corte em andamento (#328) aplica o mesmo princípio active-only à Central privada: somente Business/Empresas + infraestrutura ativa permanecem em `/central/*`; rotas, lazy owners, CTAs e queries de módulos pausados saem do runtime ativo. O smoke autenticado continua bloqueado por #305 e a autoridade de deploy Supabase por #309.
 
 ### Blockers atuais do primeiro release
 

@@ -9,6 +9,7 @@ src/app/routes/
 ├── AppRoutes.tsx                         # árvore raiz
 ├── RootRouteEntry.tsx                    # resolução da entrada `/`
 ├── activeLazyImports.ts                  # imports alcançáveis pelo AppLayout do MVP
+├── activeCentralLazyImports.ts           # imports alcançáveis pela Central do MVP
 ├── lazyImports.ts                        # implementação preservada pós-MVP; fora do shell ativo
 ├── adminLazyImports.ts                   # imports da árvore administrativa
 ├── sections/
@@ -55,6 +56,12 @@ A inclusão é derivada diretamente de `lifecycleRegistry.ts`. Módulos `paused`
 
 É o barrel exclusivo do `AppLayoutRoutes` do MVP. Só contém owners de Business, capabilities horizontais ativas e infraestrutura pública necessária. É proibido importar owners de módulos `paused`, `LaunchPausedPage` ou factories de placeholder.
 
+### `activeCentralLazyImports.ts`
+
+É o barrel exclusivo da Central no MVP. Contém apenas layout/guards da Central e gestão ativa de Business/Empresas. Não importa owners de Eventos, Comunicação, Gastronomia, Educação, Serviços, Mobilidade, Billing ou Analytics enquanto seus módulos estiverem `paused`.
+
+`CentralRoutes.tsx` deve importar somente esse barrel. URL `/central/*` sem owner ativo cai no `NotFound` canônico; `LaunchPausedPage` não é fallback da Central.
+
 ### `lazyImports.ts`
 
 Permanece temporariamente como inventário de implementações preservadas pós-MVP e para contratos históricos de módulos. **Não é importado pelo shell ativo.** Quando um módulo for reativado formalmente, seus owners devem ser migrados para a fronteira ativa após certificação; nunca por exceção local.
@@ -90,7 +97,7 @@ Princípios:
 
 ## Como adicionar uma rota
 
-1. Defina primeiro o owner: raiz, AppLayout, Central ou Admin.
+1. Defina primeiro o owner: raiz, AppLayout, Central ou Admin. Para Central, o módulo/capability precisa estar ativo antes de entrar em `activeCentralLazyImports.ts`.
 2. Se for root-owned, faça o `lazy()` em `AppRoutes.tsx`.
 3. Se pertencer ao AppLayout, a superfície precisa estar `active` no lifecycle; então adicione o owner a `activeLazyImports.ts` e registre a rota/descriptor canônico. Não conecte módulo `paused`.
 4. Para autenticação, reutilize `AUTH_PATHS`/builders.
@@ -106,6 +113,7 @@ Uma mudança de rota não está concluída se:
 - a mesma URL existir em duas árvores;
 - uma página root-owned continuar exportada inutilmente por `lazyImports.ts`;
 - um módulo `paused` tiver rota, fallback ou import alcançável pelo shell público ativo;
+- um módulo `paused` tiver rota, placeholder, CTA ou import alcançável pela Central ativa;
 - um redirect de autenticação for montado fora dos builders canônicos;
 - um alias legado for mantido sem consumidor/contrato atual.
 

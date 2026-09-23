@@ -21,16 +21,20 @@ describe("Business extension identity boundary (G6)", () => {
 
     expect(mapper).toContain("id: data.profile_id || data.id");
     expect(mapper).toContain("business_data_id: data.id");
+
+    // The preserved post-MVP extension contract still distinguishes route
+    // profile identity from business_data identity.
     expect(dashboardContext).toContain("businessId: string");
     expect(dashboardContext).toContain("businessDataId: string");
-    expect(dashboard).toContain(
+
+    // The active MVP dashboard must not resolve or query extension identity
+    // while Billing/Gastronomy are paused.
+    expect(dashboard).not.toContain(
       "const businessDataId = business?.business_data_id",
     );
-    expect(dashboard).toContain("useBusinessSubscription(businessDataId)");
-    expect(dashboard).toContain(
-      'useGastronomyStatus(businessDataId || "", isGastronomyEligible)',
-    );
-    expect(dashboard).toContain("businessDataId,");
+    expect(dashboard).not.toContain("useBusinessSubscription");
+    expect(dashboard).not.toContain("useGastronomyStatus");
+    expect(dashboard).not.toContain("businessDataId,");
   });
 
   it("preserves both identities in the private profile workspace", () => {

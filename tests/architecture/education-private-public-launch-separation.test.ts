@@ -26,9 +26,13 @@ describe("G6 Education private/public launch separation", () => {
     );
   });
 
-  it("keeps authenticated Education management behind the launch gate", () => {
-    const centralLazy = readFileSync(
+  it("preserves authenticated Education owners outside the active Central graph", () => {
+    const preservedCentralLazy = readFileSync(
       join(ROOT, "src/app/routes/centralLazyImports.ts"),
+      "utf8",
+    );
+    const activeCentralLazy = readFileSync(
+      join(ROOT, "src/app/routes/activeCentralLazyImports.ts"),
       "utf8",
     );
     const centralRoutes = readFileSync(
@@ -36,23 +40,18 @@ describe("G6 Education private/public launch separation", () => {
       "utf8",
     );
 
-    expect(centralLazy).toContain(
-      'import("@/modules/business/education/pages/EducationSetupPage")',
-    );
-    expect(centralLazy).toContain(
-      'import("@/modules/business/education/pages/EducationProgramsPage")',
-    );
-    expect(centralLazy).toContain(
-      'import("@/modules/business/education/pages/EducationLeadsPage")',
-    );
-    expect(centralLazy).toContain(
-      'import("@/modules/business/education/pages/EducationEventsPage")',
-    );
-    expect(centralRoutes).toContain(
-      'path="educacao/setup" element={launchElement("education", "Educação", <P.EducationSetupPage />)}',
-    );
-    expect(centralRoutes).not.toContain(
-      'path="educacao/setup" element={<P.EducationSetupPage />}',
-    );
+    for (const owner of [
+      "EducationSetupPage",
+      "EducationProgramsPage",
+      "EducationLeadsPage",
+      "EducationEventsPage",
+    ]) {
+      expect(preservedCentralLazy).toContain(owner);
+      expect(activeCentralLazy).not.toContain(owner);
+    }
+
+    expect(centralRoutes).not.toContain('path="educacao/setup"');
+    expect(centralRoutes).not.toContain("EducationSetupPage");
+    expect(centralRoutes).toContain('path="*" element={<P.NotFound />}');
   });
 });

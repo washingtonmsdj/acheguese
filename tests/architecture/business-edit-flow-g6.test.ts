@@ -18,7 +18,7 @@ describe("Business edit flow (G6)", () => {
     );
     const centralRoutes = read("src/app/routes/sections/CentralRoutes.tsx");
     const appRoutes = read("src/app/routes/sections/AppLayoutRoutes.tsx");
-    const centralLazy = read("src/app/routes/centralLazyImports.ts");
+    const activeCentralLazy = read("src/app/routes/activeCentralLazyImports.ts");
     const appLazy = read("src/app/routes/lazyImports.ts");
     const registry = read("tools/architecture/architecture-registry.ts");
     const profileRuntime = read(
@@ -38,16 +38,15 @@ describe("Business edit flow (G6)", () => {
     expect(centralRoutes).toContain(
       '<Route path="editar" element={<P.EditarEmpresaPage />} />',
     );
-    expect(centralRoutes).toContain(
-      'path="empresas" element={launchElement("business", "Empresas", <P.CentralEmpresasPage />)}',
-    );
-    expect(centralRoutes).toContain(
-      'path="empresas/nova" element={launchElement("business", "Empresas", <P.CriarEmpresaPage />)}',
-    );
-    expect(centralRoutes).toContain(
-      'path="empresas/:businessId" element={launchElement("business", "Empresas", <P.BusinessAdminGuard />)}',
-    );
-    expect(centralLazy).toContain("export const EditarEmpresaPage = lazy(");
+    expect(centralRoutes).toContain('isProductModuleEnabled("business")');
+    expect(centralRoutes).toContain('path="empresas"');
+    expect(centralRoutes).toContain('element={<P.CentralEmpresasPage />}');
+    expect(centralRoutes).toContain('path="empresas/nova"');
+    expect(centralRoutes).toContain('element={<P.CriarEmpresaPage />}');
+    expect(centralRoutes).toContain('path="empresas/:businessId"');
+    expect(centralRoutes).toContain('element={<P.BusinessAdminGuard />}');
+    expect(centralRoutes).not.toContain("launchElement");
+    expect(activeCentralLazy).toContain("export const EditarEmpresaPage = lazy(");
     expect(appRoutes).not.toContain("/edit-business");
     expect(appLazy).not.toContain("EditarEmpresaPage");
     expect(profileRuntime).not.toContain("/edit-business");

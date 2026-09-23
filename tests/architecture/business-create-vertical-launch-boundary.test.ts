@@ -11,18 +11,14 @@ const businessLifecycle = read("tests/e2e/business-lifecycle-authenticated.spec.
 const businessCreateForm = read("tests/e2e/business-create-form.spec.ts");
 
 describe("MVP Business create vertical launch boundary", () => {
-  it("keeps generic Business creation active and contextual vertical routes gated", () => {
-    expect(centralRoutes).toContain(
-      'path="empresas/nova" element={launchElement("business", "Empresas", <P.CriarEmpresaPage />)}',
-    );
+  it("keeps generic Business creation active and contextual vertical routes out of the active Central graph", () => {
+    expect(centralRoutes).toContain('isProductModuleEnabled("business")');
+    expect(centralRoutes).toContain('path="empresas/nova"');
+    expect(centralRoutes).toContain('element={<P.CriarEmpresaPage />}');
     expect(centralRoutes).not.toContain('path="empresas/nova/:verticalSlug"');
-    expect(centralRoutes).toContain(
-      'import { VERTICAL_CONFIGS } from "@/core/verticals/config"',
-    );
-    expect(centralRoutes).toContain("vertical.createSlugs.map");
-    expect(centralRoutes).toContain(
-      "launchElement(vertical.key, vertical.label, <P.CriarEmpresaPage />)",
-    );
+    expect(centralRoutes).not.toContain("VERTICAL_CONFIGS");
+    expect(centralRoutes).not.toContain("vertical.createSlugs.map");
+    expect(centralRoutes).not.toContain("launchElement");
   });
 
   it("does not redirect generic Business creation into a paused vertical", () => {

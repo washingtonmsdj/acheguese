@@ -6,35 +6,20 @@ import {
   useNavigate,
   useParams,
 } from "react-router-dom";
-import {
-  ArrowLeft,
-  BarChart3,
-  Building2,
-  CreditCard,
-  GraduationCap,
-  Link as LinkIcon,
-  Megaphone,
-  Settings,
-  Store,
-  UtensilsCrossed,
-} from "lucide-react";
-import { Badge } from "@/shared/components/ui/badge";
-import { Button } from "@/shared/components/ui/button";
-import { Card, CardContent } from "@/shared/components/ui/card";
-import { Skeleton } from "@/shared/components/ui/skeleton";
+import { ArrowLeft, Building2, Settings, Store } from "lucide-react";
+
 import { useBusiness } from "@/core/business/hooks/useBusiness";
 import { useResolvedBusinessPublicUrl } from "@/core/business/hooks/useResolvedBusinessPublicUrl";
-import { useBusinessSubscription } from "@/core/billing/hooks/useBusinessSubscription";
-import { useGastronomyStatus } from "@/core/verticals/gastronomy/hooks/useGastronomyStatus";
-import { isEligibleForVertical } from "@/core/verticals/config";
 import {
   businessManagementRoutes,
   getBusinessManagementSectionLabel,
 } from "@/core/business/utils/businessManagementRoutes";
-import { buildBusinessPremiumUrl } from "@/core/business/utils/businessPublicUrls";
 import { useMultiProfileContext } from "@/core/profiles/contexts/multi-profile-runtime-context";
-import { isLaunchSurfaceEnabled } from "@/app/config/launchScope";
-import type { BusinessDashboardContextValue } from "@/modules/business/dashboard/businessDashboardContext";
+import type { ActiveBusinessDashboardContextValue } from "@/modules/business/dashboard/businessDashboardContext";
+import { Badge } from "@/shared/components/ui/badge";
+import { Button } from "@/shared/components/ui/button";
+import { Card, CardContent } from "@/shared/components/ui/card";
+import { Skeleton } from "@/shared/components/ui/skeleton";
 
 interface NavItem {
   label: string;
@@ -53,15 +38,7 @@ export default function BusinessDashboardShellPage() {
     return () => setModuleContext(null);
   }, [setModuleContext]);
 
-  const { business, isLoading: loadingBusiness } = useBusiness(businessId || "");
-  const businessDataId = business?.business_data_id;
-  const isGastronomyEligible = business
-    ? isEligibleForVertical(business.category, "gastronomy")
-    : false;
-  const { planTier, entitlements, isLoading: loadingSubscription } =
-    useBusinessSubscription(businessDataId);
-  const { status: gastronomyStatus, isLoading: loadingGastronomy } =
-    useGastronomyStatus(businessDataId || "", isGastronomyEligible);
+  const { business, isLoading } = useBusiness(businessId || "");
 
   const publicUrlContext = useMemo(() => {
     if (!business?.id || !business.slug || !business.geographic_path) return null;
@@ -71,10 +48,15 @@ export default function BusinessDashboardShellPage() {
       is_premium: business.is_premium,
       geographic_path: business.geographic_path,
     };
-  }, [business?.id, business?.slug, business?.is_premium, business?.geographic_path]);
+  }, [
+    business?.geographic_path,
+    business?.id,
+    business?.is_premium,
+    business?.slug,
+  ]);
   const { url: publicUrl } = useResolvedBusinessPublicUrl(publicUrlContext);
 
-  if (loadingBusiness || loadingSubscription || loadingGastronomy) {
+  if (isLoading) {
     return (
       <div className="container mx-auto max-w-7xl space-y-4 px-4 py-6">
         <Skeleton className="h-8 w-80" />
@@ -91,77 +73,27 @@ export default function BusinessDashboardShellPage() {
     return null;
   }
 
-  if (!businessDataId) {
-    return (
-      <div className="container mx-auto max-w-7xl px-4 py-6">
-        <Card>
-          <CardContent className="p-5 text-sm text-destructive">
-            Os dados canônicos desta empresa não foram carregados. A gestão de extensões foi bloqueada para evitar operar com um identificador incorreto.
-          </CardContent>
-        </Card>
-      </div>
-    );
-  }
-  const isEducationEligible = isEligibleForVertical(
-    business.category,
-    "education",
-  );
-  const isGastronomyActive = gastronomyStatus === "active";
-
-  const premiumUrl =
-    business.slug && entitlements.canUseShortPremiumLink
-      ? buildBusinessPremiumUrl(business.slug)
-      : null;
-
   const basePath = businessManagementRoutes.overview(businessId);
-  const showBilling = isLaunchSurfaceEnabled("billing");
-  const showPremiumManagement = showBilling || Boolean(premiumUrl);
   const navItems: NavItem[] = [
-    { label: "Visao geral", to: basePath, icon: Store },
-    { label: "Dados da empresa", to: businessManagementRoutes.dados(businessId), icon: Building2 },
-    ...(isGastronomyEligible
-      ? [
-          {
-            label: "Gastronomia",
-            to: businessManagementRoutes.gastronomia(businessId),
-            icon: UtensilsCrossed,
-          },
-        ]
-      : []),
-    ...(isEducationEligible
-      ? [
-          {
-            label: "Educacao",
-            to: businessManagementRoutes.education(businessId),
-            icon: GraduationCap,
-          },
-        ]
-      : []),
-    ...(showBilling
-      ? [{ label: "Planos", to: businessManagementRoutes.planos(businessId), icon: CreditCard }]
-      : []),
-    { label: "Anuncios", to: businessManagementRoutes.anuncios(businessId), icon: Megaphone },
-    ...(showPremiumManagement
-      ? [{ label: "Link premium", to: businessManagementRoutes.linkPremium(businessId), icon: LinkIcon }]
-      : []),
-    ...(isLaunchSurfaceEnabled("publicAnalytics")
-      ? [{ label: "Analytics", to: businessManagementRoutes.analytics(businessId), icon: BarChart3 }]
-      : []),
-    { label: "Configuracoes", to: businessManagementRoutes.configuracoes(businessId), icon: Settings },
+    { label: "Visão geral", to: basePath, icon: Store },
+    {
+      label: "Dados da empresa",
+      to: businessManagementRoutes.dados(businessId),
+      icon: Building2,
+    },
+    {
+      label: "Configurações",
+      to: businessManagementRoutes.configuracoes(businessId),
+      icon: Settings,
+    },
   ];
 
   const sectionLabel = getBusinessManagementSectionLabel(location.pathname);
 
-  const outletContext: BusinessDashboardContextValue = {
+  const outletContext: ActiveBusinessDashboardContextValue = {
     businessId,
-    businessDataId,
     business,
-    planTier,
-    entitlements,
-    isGastronomyEligible,
-    isGastronomyActive,
     publicUrl,
-    premiumUrl,
   };
 
   return (
@@ -173,7 +105,7 @@ export default function BusinessDashboardShellPage() {
         <span>/</span>
         <button
           className="hover:text-foreground"
-          onClick={() => navigate("/central/empresas")}
+          onClick={() => navigate(businessManagementRoutes.list())}
         >
           Empresas
         </button>
@@ -188,40 +120,35 @@ export default function BusinessDashboardShellPage() {
           <div className="flex flex-wrap items-start justify-between gap-4">
             <div className="space-y-2">
               <div className="flex items-center gap-2">
-                <h1 className="text-2xl font-semibold text-foreground">{business.name}</h1>
-                {showBilling && (
-                  <Badge variant="secondary">{planTier.toUpperCase()}</Badge>
-                )}
+                <h1 className="text-2xl font-semibold text-foreground">
+                  {business.name}
+                </h1>
                 <Badge variant="outline">{business.status}</Badge>
               </div>
-              <p className="text-sm text-muted-foreground capitalize">{business.category}</p>
+              <p className="text-sm capitalize text-muted-foreground">
+                {business.category}
+              </p>
             </div>
             <Button
               variant="outline"
               className="gap-2"
-              onClick={() => navigate("/central/empresas")}
+              onClick={() => navigate(businessManagementRoutes.list())}
             >
               <ArrowLeft className="h-4 w-4" />
               Voltar para empresas
             </Button>
           </div>
-          <div className="flex flex-wrap gap-2">
-            {publicUrl && (
-              <Button variant="outline" size="sm" onClick={() => navigate(publicUrl)}>
-                Pagina publica
+          {publicUrl ? (
+            <div className="flex flex-wrap gap-2">
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => navigate(publicUrl)}
+              >
+                Página pública
               </Button>
-            )}
-            {premiumUrl && (
-              <Button variant="outline" size="sm" onClick={() => navigate(premiumUrl)}>
-                Mini-site premium
-              </Button>
-            )}
-            {showBilling && (
-              <Button size="sm" onClick={() => navigate(businessManagementRoutes.planos(businessId))}>
-                Ver planos
-              </Button>
-            )}
-          </div>
+            </div>
+          ) : null}
         </CardContent>
       </Card>
 
@@ -246,9 +173,6 @@ export default function BusinessDashboardShellPage() {
                 {item.label}
               </NavLink>
             ))}
-            <div className="mt-3 rounded-md border border-dashed p-3 text-xs text-muted-foreground">
-              Verticais futuras ficam separadas para evolucao.
-            </div>
           </CardContent>
         </Card>
 

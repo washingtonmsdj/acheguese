@@ -2,13 +2,13 @@ import { useNavigate } from "react-router-dom";
 import { SettingsTab } from "@/core/business/components/SettingsTab";
 import { businessManagementRoutes } from "@/core/business/utils/businessManagementRoutes";
 import { ProfileMembersManager } from "@/core/profiles/components/ProfileMembersManager";
-import { useBusinessDashboardContext } from "@/modules/business/dashboard/businessDashboardContext";
+import { useActiveBusinessDashboardContext } from "@/modules/business/dashboard/businessDashboardContext";
 import { Card, CardContent, CardHeader, CardTitle } from "@/shared/components/ui/card";
 import { Users } from "lucide-react";
 
 export default function BusinessSettingsPage() {
   const navigate = useNavigate();
-  const { businessId, business } = useBusinessDashboardContext();
+  const { businessId, business } = useActiveBusinessDashboardContext();
 
   return (
     <div className="space-y-5">
