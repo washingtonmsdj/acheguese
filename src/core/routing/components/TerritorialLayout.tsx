@@ -46,6 +46,8 @@ export function useTerritorialContextOptional() {
 const SLUG_TO_MODULE_KEY: Record<string, ModuleKey> = {
   [MODULE_SLUGS.community]: ModuleKey.COMMUNITY,
   [MODULE_SLUGS.business]: ModuleKey.BUSINESS,
+  [MODULE_SLUGS.map]: ModuleKey.BUSINESS,
+  [MODULE_SLUGS.nearby]: ModuleKey.BUSINESS,
   [MODULE_SLUGS.education]: ModuleKey.BUSINESS,
   [MODULE_SLUGS.services]: ModuleKey.SERVICES,
   [MODULE_SLUGS.classifieds]: ModuleKey.CLASSIFIEDS,
@@ -226,7 +228,29 @@ export function TerritorialLayout({
     );
   }
 
+  if (resolved.kind === "group" && currentModuleKey && availabilityLoading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <Loader2 className="h-8 w-8 animate-spin text-primary" />
+      </div>
+    );
+  }
+
   const effectiveAvailability: GroupModuleAvailability = resolved.kind === "group" ? availability : "full";
+
+  if (
+    resolved.kind === "group" &&
+    currentModuleKey &&
+    effectiveAvailability === "none"
+  ) {
+    return (
+      <>
+        <TerritorialSEO resolved={resolved} baseUrl={baseUrl} />
+        <UnavailableModuleBanner />
+      </>
+    );
+  }
+
   const outletContext: TerritorialLayoutContext = {
     resolved,
     baseUrl,
