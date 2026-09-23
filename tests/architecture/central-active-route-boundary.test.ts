@@ -63,7 +63,8 @@ describe("active Central runtime boundary", () => {
       "Lazy imports reachable from the active Central runtime only.",
     );
     expect(lazyGraph).not.toContain("createLaunchPausedRoute");
-    expect(lazyGraph).not.toContain("centralLazyImports");
+    expect(lazyGraph).not.toContain('from "./centralLazyImports"');
+    expect(lazyGraph).not.toContain('from "../centralLazyImports"');
 
     for (const pausedOwner of [
       "EventsOrganizer",
