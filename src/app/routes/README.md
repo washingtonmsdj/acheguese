@@ -28,7 +28,6 @@ src/app/routes/
 - `/`;
 - `/q/:token`;
 - `/status`;
-- `/splash`;
 - Conta e acesso (`AUTH_PATHS`): Login, Cadastro, Confirmação, Primeiro acesso, Termos OAuth e Recuperação;
 - `/indicar-comunidade`, `/como-funciona`, `/sobre`, `/contato`, `/onboarding`;
 - `/empresas/:id/catalogo`;
@@ -54,7 +53,7 @@ Rotas sujeitas a lançamento usam `isLaunchSurfaceEnabled()` / `launchElement()`
 
 ### `lazyImports.ts`
 
-É um barrel exclusivo da árvore de `AppLayoutRoutes` e seus registries. Não contém novamente Login, Cadastro, Recuperação, Splash, Status, QR, páginas institucionais root-owned, catálogo público sem layout, mini-site premium nem páginas da árvore `/admin/*`. A administração pertence exclusivamente a `adminLazyImports.ts` + `AdminRoutes.tsx`.
+É um barrel exclusivo da árvore de `AppLayoutRoutes` e seus registries. Não contém novamente Login, Cadastro, Recuperação, Status, QR, páginas institucionais root-owned, catálogo público sem layout, mini-site premium nem páginas da árvore `/admin/*`. A administração pertence exclusivamente a `adminLazyImports.ts` + `AdminRoutes.tsx`.
 
 ## Conta e acesso
 
