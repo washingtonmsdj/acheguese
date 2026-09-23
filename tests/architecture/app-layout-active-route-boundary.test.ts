@@ -18,6 +18,7 @@ describe("active AppLayout route boundary", () => {
     expect(
       existsSync("src/app/routes/sections/CommunityTerritoryRoutes.tsx"),
     ).toBe(false);
+    expect(existsSync("src/app/routes/lazyImports.ts")).toBe(false);
 
     for (const forbidden of [
       "DIRECT_PAUSED_ROUTES",
