@@ -10,6 +10,7 @@ describe("nearby MVP boundary", () => {
   const map = read("src/core/nearby/components/NearbyMiniMap.tsx");
   const filters = read("src/core/nearby/components/NearbyFilters.tsx");
   const section = read("src/core/nearby/components/NearbySection.tsx");
+  const territorialLayout = read("src/core/routing/components/TerritorialLayout.tsx");
 
   it("uses location quality rather than fallback coordinates as personal proximity truth", () => {
     expect(page).toContain("const hasPreciseProximity = isGoodForProximity");
@@ -18,6 +19,7 @@ describe("nearby MVP boundary", () => {
     expect(page).toContain("const spatialLocationId = territorialContext");
     expect(page).toContain("const routeCenterUnavailable =");
     expect(page).toContain("center: spatialCenter");
+    expect(page).toContain("locationIds: spatialLocationIds");
     expect(page).toContain("showProximity={hasPreciseProximity}");
     expect(page).toContain(
       "O recorte usa o centro do território como referência; ative o GPS para ver distâncias pessoais.",
@@ -29,6 +31,10 @@ describe("nearby MVP boundary", () => {
     expect(hook).toContain('entityType: "business"');
     expect(hook).toContain("BusinessService.getBusinessesByIds(ids)");
     expect(hook).toContain("BusinessUrlService.getPublicCanonicalUrl");
+    expect(hook).toContain("useSpatialSearchHybrid");
+    expect(hook).toContain("item.in_territory === true");
+    expect(territorialLayout).toContain("[MODULE_SLUGS.map]: ModuleKey.BUSINESS");
+    expect(territorialLayout).toContain("[MODULE_SLUGS.nearby]: ModuleKey.BUSINESS");
     expect(hook).not.toContain('entityType: "event"');
     expect(hook).not.toContain('entityType: "alert"');
     expect(hook).not.toContain('entityType: "tourist_point"');
