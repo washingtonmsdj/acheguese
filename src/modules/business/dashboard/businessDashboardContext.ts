@@ -2,6 +2,13 @@ import { useOutletContext } from "react-router-dom";
 import type { Business } from "@/core/business/types/Business";
 import type { PlanTier, PlanEntitlements } from "@/core/billing/types";
 
+export interface ActiveBusinessDashboardContextValue {
+  /** Profile ID usado pela rota administrativa e pela autoridade multi-profile. */
+  businessId: string;
+  business: Business;
+  publicUrl: string | null;
+}
+
 export interface BusinessDashboardContextValue {
   /** Profile ID usado pela rota administrativa e pela autoridade multi-profile. */
   businessId: string;
@@ -24,3 +31,7 @@ export function useOptionalBusinessDashboardContext() {
   return useOutletContext<BusinessDashboardContextValue | null>();
 }
 
+
+export function useActiveBusinessDashboardContext() {
+  return useOutletContext<ActiveBusinessDashboardContextValue>();
+}
