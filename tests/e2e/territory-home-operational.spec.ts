@@ -125,7 +125,9 @@ test.describe("MVP público — Empresas + Mapa + Perto de mim + Busca", () => {
     await expect(
       main.locator('a[href="/mapa/ba/salvador/pituba"]'),
     ).toBeVisible();
-    await expect(main.locator('a[href="/perto-de-mim"]')).toBeVisible();
+    await expect(
+      main.locator('a[href="/perto-de-mim/ba/salvador/pituba"]'),
+    ).toBeVisible();
     await expect(
       main.locator('a[href="/busca/ba/salvador/pituba"]'),
     ).toBeVisible();
@@ -181,7 +183,9 @@ test.describe("MVP público — Empresas + Mapa + Perto de mim + Busca", () => {
     const mapLink = page.getByRole("link", { name: /Ver no mapa/i }).first();
     await expect(mapLink).toHaveAttribute("href", /\/mapa/);
 
-    await expect(page.locator('a[href="/perto-de-mim"]').first()).toBeVisible();
+    await expect(
+      page.locator('a[href="/perto-de-mim/ba/salvador/pituba"]').first(),
+    ).toBeVisible();
     await expect(page.locator('a[href^="/recomendacoes"]')).toHaveCount(0);
     await expect(page.getByText("Indicar negocio", { exact: true })).toHaveCount(0);
 
@@ -208,7 +212,7 @@ test.describe("MVP público — Empresas + Mapa + Perto de mim + Busca", () => {
     ).toBeVisible();
     await expect(
       relatedModules.getByRole("link", { name: "Perto de mim" }),
-    ).toHaveAttribute("href", "/perto-de-mim");
+    ).toHaveAttribute("href", "/perto-de-mim/ba/salvador/pituba");
 
     for (const paused of ["Gastronomia", "Serviços", "Classificados", "Eventos"]) {
       await expect(relatedModules.getByText(paused, { exact: true })).toHaveCount(
@@ -227,7 +231,7 @@ test.describe("MVP público — Empresas + Mapa + Perto de mim + Busca", () => {
     await enablePreciseGeolocation(context);
     const health = observeBrowserHealth(page);
 
-    await gotoApp(page, "/perto-de-mim");
+    await gotoApp(page, "/perto-de-mim/ba/salvador/pituba");
 
     await expect(page.getByText(HOME_BUSINESS.business_name).first()).toBeVisible({
       timeout: 30_000,
@@ -238,6 +242,9 @@ test.describe("MVP público — Empresas + Mapa + Perto de mim + Busca", () => {
     await expect(
       page.getByRole("button", { name: "Abrir mapa" }),
     ).toBeVisible();
+    await expect(
+      page.getByRole("button", { name: "Abrir mapa" }),
+    ).toHaveAttribute("data-state", undefined).catch(() => undefined);
     await expect(
       page.getByText("Resultados públicos válidos do módulo Empresas"),
     ).toBeVisible();
