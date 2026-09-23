@@ -68,8 +68,14 @@ export default function NearbyPage() {
     !resolvedUserLocation.locationId;
   const spatialCenter = routeCenterUnavailable ? null : userLocation;
   const spatialLocationId = territorialContext
-    ? routeFallbackLocation?.id
+    ? resolved?.kind === "location"
+      ? routeFallbackLocation?.id
+      : undefined
     : activeLocation?.id;
+  const spatialLocationIds =
+    territorialContext && resolved?.kind === "group"
+      ? territorialContext.activeMemberIds
+      : undefined;
   const effectiveSourceMessage = routeCenterUnavailable
     ? "Não foi possível determinar o centro deste território; ative o GPS."
     : sourceMessage;
@@ -85,6 +91,7 @@ export default function NearbyPage() {
     radiusKm,
     center: spatialCenter,
     locationId: spatialLocationId,
+    locationIds: spatialLocationIds,
     limit: 100,
   });
 
