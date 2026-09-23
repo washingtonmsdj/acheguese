@@ -53,15 +53,26 @@ describe("admin paused navigation boundary", () => {
 
     expect(adminRoutes).toContain("filterAdminNavigationSections");
     expect(adminRoutes).toContain("isAdminSurfaceEnabled");
-    expect(adminRoutes).toContain('adminRoute("gastronomia"');
-    expect(adminRoutes).toContain('adminRoute("services"');
-    expect(adminRoutes).toContain('adminRoute("classificados"');
-    expect(adminRoutes).toContain('adminRoute("vagas"');
-    expect(adminRoutes).toContain('adminRoute("eventos"');
-    expect(adminRoutes).toContain('adminRoute("motoristas"');
-    expect(adminRoutes).toContain('adminRoute("pontos-turisticos"');
-    expect(adminRoutes).toContain(
-      "navigationSections={adminNavigationSections}",
+
+    const routedSurfaces = new Set(
+      [...adminRoutes.matchAll(/adminRoute\(\s*"([^"]+)"/g)].map(
+        (match) => match[1],
+      ),
+    );
+    for (const surface of [
+      "gastronomia",
+      "services",
+      "classificados",
+      "vagas",
+      "eventos",
+      "motoristas",
+      "pontos-turisticos",
+    ]) {
+      expect(routedSurfaces).toContain(surface);
+    }
+
+    expect(adminRoutes).toMatch(
+      /navigationSections=\{adminNavigationSections\}/,
     );
     expect(adminRoutes).not.toContain('path="alertas"');
     expect(adminRoutes).not.toContain('path="community-interest"');
