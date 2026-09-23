@@ -97,7 +97,13 @@ Os PRs #310–#315 consolidaram o corte modular e de rotas:
 - Neighborhood mixed-domain stream callerless aposentado;
 - ratchets recentes incorporados ao gate obrigatório.
 
-No SHA `c55eef91c22844a00ef872772927b26b862b88a2` (PR #315), Dependency Lock, Auth Concept Regression, SSOT Enforcement, Heavy PR Certification, Security Check, E2E público fixture-backed, Phase Core, Runtime e Regression passaram. O único vermelho foi novamente o smoke autenticado, que falhou antes de emitir sessão com `HTTP 503 [auth_upstream_unavailable]` em Conta mobile/tablet/desktop e Mensagens.
+Na `main` atual `4452f686b9eed06501c94a58fe432b8dddc1a43c` (após os PRs #315 e #316), Vercel, Dependency Lock, Auth Concept Regression, Heavy PR Certification, SSOT Enforcement, E2E público fixture-backed, Phase Core, Runtime, Regression, testes MVP, Maps, hardcoded credentials, lint e TypeScript passaram. O único vermelho relevante ao release continua sendo o smoke autenticado. Nesta execução, 3 provas falharam antes da sessão com `HTTP 503 [auth_upstream_unavailable]` do Supabase Auth e 1 tentativa recebeu `GitHub OIDC token request failed: HTTP 503`.
+
+### O que ainda falta para o MVP
+
+1. **Recuperar a emissão real de sessão autenticada** no mesmo SHA de produção (#305). Enquanto Conta/Mensagens/Business não conseguirem sessão real, o release permanece bloqueado.
+2. **Restaurar o deploy automático exact-main da Edge Function** (#309) com PAT Supabase de identidade Developer/Admin/Owner.
+3. **Reexecutar a certificação final em um único SHA**, exigindo Vercel production + gates públicos + smoke autenticado verde. Não existe outra feature obrigatória de produto pendente para o corte atual.
 
 ### Blockers atuais do primeiro release
 
