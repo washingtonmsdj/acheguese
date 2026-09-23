@@ -4,24 +4,25 @@
 **Data do checkpoint GitHub:** 2026-09-23  
 **Repositório:** `washingtonmsdj/acheguese`  
 **Linha ativa:** `main`  
-**Candidato atual:** branch `cleanup/mvp-retire-central-legacy-barrel` sobre `main` `be649be585a016de4eed1b78a5c4b620e22723f5` (merge de #329). O head só é certificável quando os gates aplicáveis do mesmo SHA concluírem verdes; merge posterior gera novo SHA.
+**Candidato atual:** branch `cleanup/mvp-retire-community-route-tree` sobre `main` `d01662e75b554934a38bc57b9305f711ebff3ce0` (merge de #330). O head só é certificável quando os gates aplicáveis do mesmo SHA concluírem verdes; merge posterior gera novo SHA.
 
 Este documento consolida ordem de execução, blockers e Definition of Done. Ele é um **registro operacional**, não uma fotografia autoritativa do que existe no produto. A fonte de verdade para decidir o que existe, o que está ativo e o que deve ser corrigido é sempre o **projeto real**: código da `main`, rotas, owners, serviços, schema/migrations, contratos, testes, deploy/runtime e comportamento observado.
 
 
 ## Estado operacional atual — 2026-09-23
 
-- `main` atual: `be649be585a016de4eed1b78a5c4b620e22723f5` (merge de #329);
+- `main` atual: `d01662e75b554934a38bc57b9305f711ebff3ce0` (merge de #330);
 - #327 / #325 removeu módulos pausados da árvore pública ativa, criou `activeLazyImports.ts` e fez URLs públicas sem owner ativo caírem no 404 canônico;
 - o head `fa747aa7c877d7a086b92277940681a27abba844` de #327 passou Dependency Lock, Security Check/Scan, Auth Concept, Visual Regression, SSOT Territorial, Heavy exact-SHA e SSOT Enforcement antes do merge;
 - #329 — Central active-only integrado: `/central/*` monta somente Business/Empresas + infraestrutura via `activeCentralLazyImports.ts`; módulos pausados ficam fora do grafo e URL sem owner cai no 404 canônico;
-- corte atual — aposentar `centralLazyImports.ts`, agora sem caller runtime, e fazer os ratchets provarem preservação pelos owners físicos/lifecycle em vez de um barrel artificial;
-- o merge SHA `40ee0ac5...` não herda certificação de release: qualquer promoção precisa certificar/deployar/smokar este SHA exato.
+- #330 — `centralLazyImports.ts` aposentado após censo provar ausência de caller runtime; ratchets agora preservam owners físicos/lifecycle em vez de barrel artificial;
+- corte atual — aposentar `CommunityTerritoryRoutes.tsx`, árvore `<Route>` pós-MVP sem caller runtime; preservar builders canônicos de URL e owners Community nos bounded contexts;
+- o merge SHA `d01662e7...` não herda certificação de release: qualquer promoção precisa certificar/deployar/smokar este SHA exato.
 
 ### Blockers atuais do primeiro release
 
-1. **#305 — sessão autenticada real:** Supabase Auth continua retornando 5xx em `signInWithPassword()`; SQL mínimo e Advisors do mesmo projeto também registraram `Connection terminated due to connection timeout`. Não mascarar com retry extra, fallback, redirect, troca de fixture ou bypass OIDC.
-2. **#309 — autoridade automática de deploy Supabase:** o PAT do GitHub Actions é válido, mas recebe 403 ao atualizar Edge Functions. A correção correta é rotacionar para um PAT de identidade Developer/Admin/Owner; não usar `service_role` como substituto.
+1. **#305 — sessão autenticada real / conectividade Postgres:** o projeto canônico aparece `ACTIVE_HEALTHY`, mas Supabase Auth retorna 5xx e tanto `select 1` quanto Security Advisors reproduzem `Connection terminated due to connection timeout`. Investigar Observability/Supabase antes de alterar app. Não mascarar com retry extra, fallback, redirect, troca de fixture ou bypass OIDC.
+2. **#309 — autoridade automática de deploy Supabase:** o PAT do GitHub Actions recebe 403 ao atualizar Edge Functions. Rotacionar o secret para PAT scoped com `Edge Functions: Read-write` / `deploy_edge_function`; não usar `service_role` como substituto.
 3. **Exact-SHA pós-merge:** qualquer mudança, inclusive documentação, gera novo candidato. Security/lint/typecheck/tests/build/E2E/deploy/smoke precisam pertencer ao mesmo SHA final.
 
 O incidente antigo de hosted runners com jobs vazios foi encerrado no issue #17 e **não é blocker atual**. O limite diário antigo da Vercel também não representa o estado atual: o deploy do SHA `4452f686...` está verde.
