@@ -3,7 +3,9 @@
 Classificação dos pontos de atrito extraídos do `USER-JOURNEY-REVIEW.md`.
 Escala: **Crítico · Alto · Médio · Baixo**.
 
-Escopo de correção: **apenas jornada** — copy, rotas de retorno, nomes de CTA, continuidade visual. Sem alterar arquitetura, backend, banco, tokens ou funcionalidades.
+Escopo original: **apenas jornada** — copy, rotas de retorno, nomes de CTA, continuidade visual. Sem alterar arquitetura, backend, banco, tokens ou funcionalidades.
+
+> **Atualização MVP — 2026-09-23:** este mapa nasceu antes do corte active-only. A autoridade atual é o lifecycle executável + `NAVIGATION-MAPPING.md`. Community/Eventos permanecem pós-MVP; `/` sempre apresenta a entrada do produto; módulos pausados não recebem placeholder e URL sem owner ativo cai no `NotFound` canônico.
 
 ---
 
@@ -12,9 +14,9 @@ Escopo de correção: **apenas jornada** — copy, rotas de retorno, nomes de CT
 | # | Atrito | Jornada | Correção |
 |---|---|---|---|
 | C1 | `/busca` usa voz admin ("Busca inteligente / linguagem natural") e gradiente próprio, quebrando a continuidade com a Home. | 11 | Reescrever hero em voz editorial e alinhar à estética Home. |
-| C2 | Retorno ao app leva sempre para `/` (Selector), ignorando bairro salvo. | 13 | Se houver `activeLocation`, redirecionar `/` para a Territory Home. |
+| C2 | **Encerrado pelo contrato atual:** `/` é deliberadamente a entrada do MVP e não pula para o território salvo. | 13 | Preservar contexto territorial sem redirecionar silenciosamente a raiz. |
 | C3 | Três nomes coexistem para a mesma coisa: **bairro / comunidade / território**. | Todas | Padronizar user-facing em "bairro" (ou "cidade" quando cidade). |
-| C4 | Módulo Eventos leva a `LaunchPausedPage` sem contexto de continuidade. | 9 | Copy da página pausada deve soar como continuação do bairro, não como erro. |
+| C4 | **Encerrado pelo corte active-only:** Eventos está fora da navegação e do grafo público do MVP. | 9 | Manter o módulo pausado desconectado; URL sem owner ativo termina no `NotFound` canônico. |
 
 ## Alto
 
@@ -50,9 +52,9 @@ Escopo de correção: **apenas jornada** — copy, rotas de retorno, nomes de CT
 Aplicar somente estes itens agora, sem tocar em arquitetura:
 
 - **C1** — Reescrever hero de `/busca` na voz do bairro.
-- **C2** — Splash/Root redireciona para a Home do bairro ativo.
+- **C2** — Encerrado: Root permanece como entrada explícita; território lembrado é contexto, não redirect.
 - **C3** — Substituir "comunidade/território" por "bairro" em superfícies user-facing tocadas nesta sprint.
-- **C4** — Ajustar `LaunchPausedPage` para soar como continuidade.
+- **C4** — Encerrado: `LaunchPausedPage` foi aposentada; módulos pausados permanecem fora do grafo ativo.
 - **A5** — Unificar CTAs do Splash.
 
 Demais itens ficam mapeados como backlog priorizado — não são alterações de jornada isoladas de arquitetura.
