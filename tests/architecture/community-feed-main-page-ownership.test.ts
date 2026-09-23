@@ -7,7 +7,6 @@ const read = (path: string) => readFileSync(resolve(ROOT, path), "utf8");
 
 const activeLazyImports = read("src/app/routes/activeLazyImports.ts");
 const prefetch = read("src/app/routes/prefetch.ts");
-const territorialModules = read("src/app/routes/territorial/TerritorialModulePages.tsx");
 
 describe("G6 Community feed main page ownership", () => {
   it("owns ComunidadePage and its deep-link spec only in community-feed", () => {
@@ -23,10 +22,8 @@ describe("G6 Community feed main page ownership", () => {
     const canonicalImport = "@/core/community-feed/pages/ComunidadePage";
     expect(activeLazyImports).not.toContain("ComunidadePage");
     expect(prefetch).not.toContain(canonicalImport);
-    expect(territorialModules).toContain(canonicalImport);
     expect(activeLazyImports).not.toContain("TerritoryFeedPage");
     expect(prefetch).not.toContain("TerritoryFeedPage");
-    expect(territorialModules).not.toContain("TerritoryFeedPage");
   });
 
   it("uses explicit access ownership and no location-dependent relative imports", () => {

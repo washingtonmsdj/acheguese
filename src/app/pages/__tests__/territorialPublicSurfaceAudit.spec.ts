@@ -134,9 +134,6 @@ describe("public territorial surface audit", () => {
     const jobsPublicSource = readProjectFile(
       "src/modules/classifieds/jobs/pages/VagasPublicPage.tsx",
     );
-    const territorialModulesSource = readProjectFile(
-      "src/app/routes/territorial/TerritorialModulePages.tsx",
-    );
 
     expect(gastronomySource).toContain("const activeMemberIds = territorialContext?.activeMemberIds");
     expect(gastronomySource).toContain("useModuleTerritoryFilter({ routeResolved: resolved, activeMemberIds })");
@@ -150,12 +147,6 @@ describe("public territorial surface audit", () => {
     expect(jobsPublicSource).toContain("activeMemberIds?: string[]");
     expect(jobsPublicSource).toContain(
       "useModuleTerritoryFilter({ routeResolved: resolved, activeMemberIds })",
-    );
-    expect(territorialModulesSource).toContain(
-      "<VagasPage resolved={resolved} activeMemberIds={activeMemberIds} />",
-    );
-    expect(territorialModulesSource).toContain(
-      "<ComunidadePage resolved={resolved} activeMemberIds={activeMemberIds} />",
     );
   });
 

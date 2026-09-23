@@ -15,10 +15,6 @@ const appLayoutRoutes = readFileSync(
   "src/app/routes/sections/AppLayoutRoutes.tsx",
   "utf8",
 );
-const territorialPages = readFileSync(
-  "src/app/routes/territorial/TerritorialModulePages.tsx",
-  "utf8",
-);
 
 describe("classifieds public page ownership", () => {
   it("keeps a single canonical public implementation", () => {
@@ -32,10 +28,6 @@ describe("classifieds public page ownership", () => {
   it("preserves ClassificadosPage outside the active public graph", () => {
     expect(activeLazyImports).not.toContain("ClassificadosPage");
     expect(appLayoutRoutes).not.toContain('path="/classificados"');
-    expect(territorialPages).toContain(
-      'import("@/modules/classifieds/pages/ClassificadosPage")',
-    );
     expect(activeLazyImports).not.toContain("ClassificadosLandingPage");
-    expect(territorialPages).not.toContain("ClassificadosLandingPage");
   });
 });

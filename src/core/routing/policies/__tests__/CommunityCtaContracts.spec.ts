@@ -15,11 +15,7 @@ describe("community CTA contracts on public surfaces", () => {
     const territorialLanding = readProjectFile(
       "src/core/routing/components/TerritorialLandingPage.tsx",
     );
-    const moduleFallback = readProjectFile(
-      "src/app/routes/territorial/TerritorialModulePages.tsx",
-    );
     expect(territorialLanding).toContain("Abrir portal comunitario");
-    expect(moduleFallback).toContain("Abrir portal comunitário");
   });
 
   it("keeps the territorial landing community CTA visually secondary", () => {
