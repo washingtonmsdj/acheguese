@@ -1540,7 +1540,7 @@ Este corte implementa e ratcheta essa política também em callers, prefetch, se
 
 ### Certificação exact-SHA atual
 
-Candidato anterior: `ff0c9b8784f70c024661e191713af78e2e87d84c`.
+Candidato atual: `4452f686b9eed06501c94a58fe432b8dddc1a43c`.
 
 No mesmo SHA:
 
@@ -1548,21 +1548,23 @@ No mesmo SHA:
 - Dependency Lock: **success**;
 - Auth Concept Regression: **success**;
 - Heavy PR Certification: **success**;
+- SSOT Enforcement: **success**;
 - Runtime Tests: **success**;
 - E2E público fixture-backed: **success**;
 - Phase Core Gate: **success**;
 - Regression Check: **success**;
 - MVP unit tests / Maps / hardcoded credentials / lint / TypeScript: **success**.
 
-O smoke autenticado real falhou antes de emitir sessão em Conta mobile/tablet/desktop e Mensagens com:
+O smoke autenticado real continua falhando antes de emitir sessão. Nesta execução:
 
-`HTTP 503; Authentication unavailable [auth_upstream_unavailable]`.
+- 3 provas retornaram `HTTP 503; Authentication unavailable [auth_upstream_unavailable]` depois de `auth.signInWithPassword()`;
+- 1 tentativa retornou `GitHub OIDC token request failed: HTTP 503` antes de chegar ao broker.
 
-Diagnóstico de raiz:
+Diagnóstico de raiz atual:
 
-- GitHub OIDC já foi aceito antes da falha;
+- o padrão predominante continua sendo 5xx do Supabase Auth upstream;
+- houve também uma indisponibilidade transitória do endpoint OIDC do GitHub na execução mais recente;
 - broker v3 remoto está ACTIVE e byte-a-byte igual ao source versionado;
-- o 503 é classificado somente quando `auth.signInWithPassword()` retorna erro 5xx;
 - `select 1` read-only e Supabase Advisors também falharam com `Connection terminated due to connection timeout`;
 - não aumentar retry/timeout, não trocar senha do fixture sem evidência, não criar fallback de login e não enfraquecer OIDC.
 
@@ -1576,6 +1578,8 @@ Blockers atuais do primeiro release:
    - `SUPABASE_ACCESS_TOKEN` do GitHub recebe 403 para Edge Functions;
    - substituir por PAT pertencente a identidade Developer/Admin/Owner;
    - não usar `service_role` como PAT.
+
+**O que ainda falta para o MVP:** somente fechar #305 e #309 e então repetir a certificação exact-SHA completa. O corte funcional atual já contém Business, Mapa, Perto de mim, Busca, Mensagens Business, Conta/Auth, Território e Central; módulos pós-MVP permanecem pausados.
 
 **Regra de release:** não marcar `MVP READY` enquanto o mesmo SHA não obtiver sessão autenticada real e a autoridade exact-main de deploy não estiver restaurada.
 
