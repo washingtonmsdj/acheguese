@@ -5,6 +5,14 @@ import path from "node:path";
 
 const ROOT = process.cwd();
 const GASTRONOMY_ROOT = "src/modules/business/gastronomy";
+const SSOT_REGISTRY_PATH = "docs/architecture/SSOT_REGISTRY.md";
+const RETIRED_GASTRONOMY_TABLE = "gastronomy_establishments";
+const CANONICAL_GASTRONOMY_TABLE = "gastronomy_profiles";
+const CANONICAL_GASTRONOMY_PROFILE_SERVICE = "src/core/business/services/GastronomyProfileService.ts";
+
+const RETIRED_ORPHAN_FILES = new Set([
+  "eslint-rules/no-direct-supabase-queries.js",
+]);
 
 // Gastronomy runtime integration debt is expected to stay at zero.
 const ALLOWED_DIRECT_RUNTIME_INTEGRATION_FILES = new Set<string>();
@@ -89,6 +97,36 @@ function main(): void {
   const violations: string[] = [];
   const actualDirectRuntimeIntegrationFiles = new Set<string>();
 
+  for (const orphanFile of RETIRED_ORPHAN_FILES) {
+    if (fs.existsSync(path.join(ROOT, orphanFile))) {
+      violations.push(`${orphanFile}: callerless legacy lint rule was recreated; use the active eslint SSOT plugin and architecture validators instead.`);
+    }
+  }
+
+  const ssotRegistryPath = path.join(ROOT, SSOT_REGISTRY_PATH);
+  if (!fs.existsSync(ssotRegistryPath)) {
+    violations.push(`${SSOT_REGISTRY_PATH}: canonical SSOT registry is missing.`);
+  } else {
+    const ssotRegistry = fs.readFileSync(ssotRegistryPath, "utf8");
+    if (ssotRegistry.includes(RETIRED_GASTRONOMY_TABLE)) {
+      violations.push(`${SSOT_REGISTRY_PATH}: retired table ${RETIRED_GASTRONOMY_TABLE} must not be documented as a live Gastronomy SSOT.`);
+    }
+    if (!ssotRegistry.includes(CANONICAL_GASTRONOMY_TABLE)) {
+      violations.push(`${SSOT_REGISTRY_PATH}: canonical table ${CANONICAL_GASTRONOMY_TABLE} is missing from the Gastronomy SSOT contract.`);
+    }
+    if (!ssotRegistry.includes(CANONICAL_GASTRONOMY_PROFILE_SERVICE)) {
+      violations.push(`${SSOT_REGISTRY_PATH}: canonical Gastronomy profile service path is stale or missing.`);
+    }
+  }
+
+  for (const filePath of walk(path.join(ROOT, "src"))) {
+    const relative = normalize(path.relative(ROOT, filePath));
+    const content = fs.readFileSync(filePath, "utf8");
+    if (content.includes(RETIRED_GASTRONOMY_TABLE)) {
+      violations.push(`${relative}: retired table ${RETIRED_GASTRONOMY_TABLE} is forbidden in runtime source; use ${CANONICAL_GASTRONOMY_TABLE} through the canonical core owner.`);
+    }
+  }
+
   for (const filePath of walk(fullRoot)) {
     const relative = normalize(path.relative(ROOT, filePath));
     const content = fs.readFileSync(filePath, "utf8");
@@ -153,7 +191,7 @@ function main(): void {
     process.exit(1);
   }
 
-  console.log(`Gastronomy module boundary valid: ${actualDirectRuntimeIntegrationFiles.size} runtime integration files; ${REQUIRED_CORE_BRIDGES.size} pure bridges enforced; ${FORBIDDEN_COMPATIBILITY_IMPORTS.size} legacy caller imports forbidden; ${MODULE_LOCAL_CONTRACT_SURFACES.size} module contract surfaces preserved; retired bridges absent; type-only integration imports are not counted as runtime debt.`);
+  console.log(`Gastronomy module boundary valid: ${actualDirectRuntimeIntegrationFiles.size} runtime integration files; ${REQUIRED_CORE_BRIDGES.size} pure bridges enforced; ${FORBIDDEN_COMPATIBILITY_IMPORTS.size} legacy caller imports forbidden; ${MODULE_LOCAL_CONTRACT_SURFACES.size} module contract surfaces preserved; retired bridges/orphan rule/table absent; canonical SSOT registry aligned; type-only integration imports are not counted as runtime debt.`);
 }
 
 main();
