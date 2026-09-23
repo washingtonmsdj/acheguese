@@ -7,6 +7,7 @@ import {
 } from "@/core/search/config/searchConfig";
 import type {
   CommunityLinkedEntityIds,
+  SearchBucket,
   SearchCategory,
   SearchFilters,
   SearchHistoryScope,
@@ -58,6 +59,31 @@ function historyStorageKey(scope: SearchHistoryScope): string {
     ? "search_history"
     : `search_history:${scope}`;
 }
+
+const SEARCH_SUGGESTIONS_BY_BUCKET = {
+  communities: ["comunidade pituba"],
+  businesses: ["restaurantes", "salao de beleza", "pet shop", "farmacia"],
+  professionals: [
+    "pedreiro pituba",
+    "pizzaiolo",
+    "eletricista amaralina",
+    "encanador",
+  ],
+  opportunities: ["vagas perto de mim"],
+  classifieds: ["bicicleta usada"],
+  events: ["eventos hoje"],
+  posts: ["recomendacoes do bairro"],
+} as const satisfies Record<SearchBucket, readonly string[]>;
+
+const SEARCH_SUGGESTION_BUCKET_ORDER = [
+  "businesses",
+  "communities",
+  "professionals",
+  "classifieds",
+  "events",
+  "opportunities",
+  "posts",
+] as const satisfies readonly SearchBucket[];
 
 export class SearchService {
   private static readonly SLOW_SEARCH_THRESHOLD_MS = 450;
@@ -219,19 +245,11 @@ export class SearchService {
   }
 
   static getSearchSuggestions(): string[] {
-    return [
-      "comunidade pituba",
-      ...(isSearchBucketEnabled("events") ? ["eventos hoje"] : []),
-      "classificados bicicleta",
-      "pedreiro pituba",
-      "pizzaiolo",
-      "eletricista amaralina",
-      "restaurantes",
-      "salao de beleza",
-      "encanador",
-      "pet shop",
-      "farmacia",
-    ];
+    return SEARCH_SUGGESTION_BUCKET_ORDER.flatMap((bucket) =>
+      isSearchBucketEnabled(bucket)
+        ? [...SEARCH_SUGGESTIONS_BY_BUCKET[bucket]]
+        : [],
+    );
   }
 
   static saveSearchHistory(
