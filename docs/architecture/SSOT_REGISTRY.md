@@ -162,11 +162,11 @@ npx tsx tools/architecture/check-ssot-compliance.ts
 
 | | |
 |---|---|
-| **Arquivo** | `src/core/gastronomy/types.ts` |
-| **Service** | `src/core/gastronomy/GastronomyProfileService.ts` |
+| **Arquivo** | `src/core/business/types/gastronomy.ts` |
+| **Service** | `src/core/business/services/GastronomyProfileService.ts` |
 | **Responsabilidade** | Tipos canônicos do vertical gastronomia |
 | **Tipos principais** | `GastronomyProfile`, `PriceRange`, `GastronomyStatus` |
-| **Tabela** | `gastronomy_establishments` |
+| **Tabela** | `gastronomy_profiles` (extensão 1:1 de `business_data`) |
 
 ---
 
@@ -408,7 +408,7 @@ Tabelas que só podem ser acessadas através de services/owners autorizados. Ace
 | `community_direct_threads`, `community_direct_thread_participants`, `community_direct_messages`, `community_direct_message_reports` | `CommunityDirectMessagingService`; mutations pelos RPCs do agregado |
 | `notifications` | `NotificationService` para inbox self-state; outbox/RPC server-owned para criação |
 | `notification_preferences` | `NotificationPreferencesService` via RPCs canônicos |
-| `gastronomy_establishments` | `GastronomyService` |
+| `gastronomy_profiles` | `GastronomyProfileService` |
 | `menu_categories` | `MenuService` |
 | `menu_items` | `MenuService` |
 | `tourist_points` | `TouristPointService` |
