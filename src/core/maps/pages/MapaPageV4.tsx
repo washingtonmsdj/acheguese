@@ -61,10 +61,12 @@ function MvpMapHeader({
   territoryName,
   mapLabel,
   businessHref,
+  nearbyHref,
 }: {
   territoryName: string;
   mapLabel: string;
   businessHref: string;
+  nearbyHref: string;
 }) {
   return (
     <section className="rounded-[24px] border border-border bg-card px-4 py-4 shadow-sm sm:px-5">
@@ -92,7 +94,7 @@ function MvpMapHeader({
             Empresas
           </Link>
           <Link
-            to={NEARBY_URL}
+            to={nearbyHref}
             className="inline-flex min-h-10 items-center gap-2 rounded-xl border border-border px-3 text-sm font-semibold text-foreground transition-colors hover:bg-muted"
           >
             <Navigation className="h-4 w-4" aria-hidden="true" />
@@ -257,6 +259,30 @@ function resolvedCenterKey(resolved: ResolvedTerritory | null): string {
   if (!resolved) return 'none';
   if (resolved.kind === 'location') return `location:${resolved.location.id}`;
   return `group:${resolved.group.id}`;
+}
+
+function resolveNearbyUrl(resolved: ResolvedTerritory | null): string {
+  if (!resolved) return NEARBY_URL;
+
+  if (resolved.kind === 'location') {
+    return buildModuleTerritoryUrl(
+      MODULE_SLUGS.nearby,
+      geoPathToPublicUrl(resolved.location.geographic_path),
+    );
+  }
+
+  const firstMember = resolved.group.members.at(0);
+  if (!firstMember?.geographic_path) return NEARBY_URL;
+
+  const [country, state, city] = firstMember.geographic_path
+    .split("/")
+    .filter(Boolean);
+  if (!country || !state || !city) return NEARBY_URL;
+
+  return buildModuleTerritoryUrl(
+    MODULE_SLUGS.nearby,
+    buildGroupBaseUrl(resolved.group, `/${country}/${state}/${city}`),
+  );
 }
 
 function resolveBusinessListUrl(resolved: ResolvedTerritory | null): string {
@@ -433,6 +459,10 @@ export default function MapaPageV4({
   const territoryName = territoryLabels.name || publicBrowsingCity.city || 'Seu território';
   const businessListUrl = React.useMemo(
     () => resolveBusinessListUrl(effectiveResolved),
+    [effectiveResolved],
+  );
+  const nearbyUrl = React.useMemo(
+    () => resolveNearbyUrl(effectiveResolved),
     [effectiveResolved],
   );
 
@@ -646,6 +676,7 @@ export default function MapaPageV4({
         territoryName={territoryName}
         mapLabel={territoryLabels.mapLabel}
         businessHref={businessListUrl}
+        nearbyHref={nearbyUrl}
       />
       <section className="overflow-hidden rounded-[24px] border border-border bg-card shadow-sm">
         <div className="h-[68vh] min-h-[28rem]">
