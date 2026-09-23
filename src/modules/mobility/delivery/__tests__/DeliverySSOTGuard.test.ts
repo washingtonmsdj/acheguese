@@ -21,8 +21,8 @@ describe("delivery ssot guard", () => {
     const checkoutSource = readProjectFile(
       "src/modules/business/gastronomy/hooks/useGastronomyCheckout.ts",
     );
-    const centralLazyImportsSource = readProjectFile(
-      "src/app/routes/centralLazyImports.ts",
+    const activeCentralLazyImportsSource = readProjectFile(
+      "src/app/routes/activeCentralLazyImports.ts",
     );
     const notificationMigrationSource = readProjectFile(
       "supabase/migrations/20260714115000_migrate_mobility_admin_notifications.sql",
@@ -57,9 +57,15 @@ describe("delivery ssot guard", () => {
         ),
       ),
     ).toBe(false);
-    expect(centralLazyImportsSource).toContain(
-      'import("@/modules/mobility/delivery/pages/DeliveryManagementPage")',
-    );
+    expect(
+      existsSync(
+        resolve(
+          repoRoot,
+          "src/modules/mobility/delivery/pages/DeliveryManagementPage.tsx",
+        ),
+      ),
+    ).toBe(true);
+    expect(activeCentralLazyImportsSource).not.toContain("DeliveryManagementPage");
     expect(managementPageSource).toContain(
       "OrderDeliverySSOTService.listOrdersBySource",
     );

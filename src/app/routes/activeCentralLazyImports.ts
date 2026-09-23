@@ -3,9 +3,9 @@ import { lazy } from "react";
 /**
  * Lazy imports reachable from the active Central runtime only.
  *
- * Post-MVP domains remain versioned in their bounded contexts and in the
- * legacy centralLazyImports barrel, but they must not enter the MVP Central
- * route graph while their lifecycle is paused.
+ * Post-MVP domains remain versioned in their bounded contexts, but they must
+ * not enter the MVP Central route graph while their lifecycle is paused.
+ * Reativação exige conexão explícita a este boundary ativo.
  */
 export const CentralLayout = lazy(() =>
   import("@/modules/central/components/CentralLayout").then((module) => ({

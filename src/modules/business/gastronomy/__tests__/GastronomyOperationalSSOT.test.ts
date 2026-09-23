@@ -11,57 +11,51 @@ function readProjectFile(path: string): string {
 }
 
 describe("gastronomy operational SSOT flow", () => {
-  it("keeps merchant order details reachable as a nested Central route", () => {
+  it("keeps private Gastronomy order owners preserved outside the active Central graph", () => {
     const centralRoutesSource = readProjectFile(
       "src/app/routes/sections/CentralRoutes.tsx",
     );
-
-    const gastronomyRouteIndex = centralRoutesSource.indexOf(
-      '<Route path="gastronomia">',
-    );
-    const ordersRouteIndex = centralRoutesSource.indexOf(
-      '<Route path="pedidos">',
-      gastronomyRouteIndex,
-    );
-    const orderDetailsRouteIndex = centralRoutesSource.indexOf(
-      '<Route path=":orderId" element={<P.OrderDetailsPage />} />',
-      ordersRouteIndex,
+    const activeCentralLazySource = readProjectFile(
+      "src/app/routes/activeCentralLazyImports.ts",
     );
 
-    expect(gastronomyRouteIndex).toBeGreaterThanOrEqual(0);
-    expect(ordersRouteIndex).toBeGreaterThan(gastronomyRouteIndex);
-    expect(orderDetailsRouteIndex).toBeGreaterThan(ordersRouteIndex);
+    for (const owner of [
+      ["OrdersPage", "src/modules/business/gastronomy/pages/OrdersPage.tsx"],
+      ["OrderDetailsPage", "src/modules/business/gastronomy/pages/OrderDetailsPage.tsx"],
+    ] as const) {
+      expect(existsSync(resolve(repoRoot, owner[1]))).toBe(true);
+      expect(activeCentralLazySource).not.toContain(owner[0]);
+    }
+
+    expect(centralRoutesSource).not.toContain('path="gastronomia"');
+    expect(centralRoutesSource).not.toContain("OrderDetailsPage");
   });
 
-  it("keeps customer order details reachable outside merchant Central", () => {
+  it("keeps public Gastronomy order owners preserved outside the active AppLayout graph", () => {
     const routesSource = readProjectFile(
       "src/app/routes/sections/AppLayoutRoutes.tsx",
+    );
+    const activeLazySource = readProjectFile(
+      "src/app/routes/activeLazyImports.ts",
     );
     const notificationSource = readProjectFile(
       "supabase/migrations/20260714115000_migrate_mobility_admin_notifications.sql",
     );
 
-    expect(routesSource).toMatch(
-      /gastronomyPublicRoutes\.orderDetails\(\s*GASTRONOMY_PUBLIC_ROUTE_PARAMS\.orderId,?\s*\)/,
-    );
-    expect(routesSource).toContain("<P.OrderDetailsPage />");
-    expect(
-      routesSource.indexOf("gastronomyPublicRoutes.orderDetails("),
-    ).toBeLessThan(
-      routesSource.indexOf(
-        "buildTerritorialModuleRoutePath(APP_MODULE_SLUGS.gastronomy)",
-      ),
-    );
+    expect(existsSync(
+      resolve(repoRoot, "src/modules/business/gastronomy/pages/OrderDetailsPage.tsx"),
+    )).toBe(true);
+    expect(routesSource).not.toContain("gastronomyPublicRoutes.orderDetails");
+    expect(routesSource).not.toContain("OrderDetailsPage");
+    expect(activeLazySource).not.toContain("OrderDetailsPage");
+
+    // Historical notification migration remains provenance; runtime routing is
+    // governed by the active graph and does not reactivate Gastronomy.
     expect(notificationSource).toContain("v_customer_url");
     expect(notificationSource).toContain(
       "'/gastronomia/pedidos/' || NEW.id::TEXT",
     );
-    expect(notificationSource).toContain(
-      "CASE WHEN v_customer_url IS NOT NULL THEN 'Abrir pedido' ELSE NULL END",
-    );
-    expect(notificationSource).toContain("'/central/motoboy/entregas'");
     expect(notificationSource).toContain("v_idempotency_key");
-    expect(notificationSource).toContain("'event_label', v_event_label");
   });
 
   it("keeps order screens subscribed to canonical order and timeline updates", () => {
@@ -321,8 +315,8 @@ describe("gastronomy operational SSOT flow", () => {
     const nicheVersioningBarrelSource = readProjectFile(
       "src/modules/business/gastronomy/niches/versioning/index.ts",
     );
-    const centralLazyImportsSource = readProjectFile(
-      "src/app/routes/centralLazyImports.ts",
+    const activeCentralLazyImportsSource = readProjectFile(
+      "src/app/routes/activeCentralLazyImports.ts",
     );
     const appLazyImportsSource = readProjectFile(
       "src/app/routes/lazyImports.ts",
@@ -433,15 +427,9 @@ describe("gastronomy operational SSOT flow", () => {
       readProjectFile("src/modules/business/gastronomy/services/index.ts"),
     ).not.toContain("gastronomy.mutations");
 
-    expect(centralLazyImportsSource).toContain(
-      'export const DeliveryManagementPage = createLaunchPausedRoute("Entregas")',
-    );
-    expect(centralLazyImportsSource).toContain(
-      'export const AnalyticsPage = createLaunchPausedRoute("Analytics")',
-    );
-    expect(centralLazyImportsSource).toContain(
-      'export const GastronomyPromotionsPage = createLaunchPausedRoute("Promocoes")',
-    );
+    expect(activeCentralLazyImportsSource).not.toContain("DeliveryManagementPage");
+    expect(activeCentralLazyImportsSource).not.toContain("AnalyticsPage");
+    expect(activeCentralLazyImportsSource).not.toContain("GastronomyPromotionsPage");
     expect(appLazyImportsSource).toContain(
       'export const DeliveryManagementPage = createLaunchPausedRoute("Entregas")',
     );
@@ -464,12 +452,15 @@ describe("gastronomy operational SSOT flow", () => {
           `export const ${exportName}\\s*=\\s*createLaunchPausedRoute\\(\\s*"${pausedLabel}"\\s*,?\\s*\\)`,
         ),
       );
-      expect(centralLazyImportsSource).toContain(
-        `export const ${exportName} = lazy(() =>`,
-      );
-      expect(centralLazyImportsSource).toContain(
-        `@/modules/business/gastronomy/pages/${exportName}`,
-      );
+      expect(activeCentralLazyImportsSource).not.toContain(exportName);
+      expect(
+        existsSync(
+          resolve(
+            repoRoot,
+            `src/modules/business/gastronomy/pages/${exportName}.tsx`,
+          ),
+        ),
+      ).toBe(true);
     });
   });
 

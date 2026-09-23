@@ -47,7 +47,7 @@ Ativar um módulo exige alterar o lifecycle no registry, satisfazer suas depend�
 
 `CentralRoutes.tsx` importa somente `activeCentralLazyImports.ts`. No MVP, a Central monta hub, gestão canônica de Business/Empresas, edição/dados/configurações e infraestrutura de acesso. Eventos, Comunicação, Gastronomia, Educação, Serviços/Profissional, Mobilidade, Billing, Cupons e Analytics permanecem fora da árvore ativa. URL privada sem owner ativo cai no `NotFound` canônico, sem `LaunchPausedPage`, redirect ou alias.
 
-O shell de gestão Business também não pode consultar Billing/Gastronomia/verticais pausadas apenas para ocultar UI. Extensões pós-MVP permanecem preservadas fora do grafo ativo.
+O shell de gestão Business também não pode consultar Billing/Gastronomia/verticais pausadas apenas para ocultar UI. Extensões pós-MVP permanecem preservadas nos seus bounded contexts fora do grafo ativo. O antigo `centralLazyImports.ts` não é autoridade de preservação e foi aposentado após ficar sem caller runtime.
 
 ### Boundary do shell público
 

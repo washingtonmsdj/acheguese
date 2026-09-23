@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { readFileSync } from "node:fs";
+import { existsSync, readFileSync } from "node:fs";
 import { join } from "node:path";
 
 const ROOT = process.cwd();
@@ -27,10 +27,6 @@ describe("G6 Education private/public launch separation", () => {
   });
 
   it("preserves authenticated Education owners outside the active Central graph", () => {
-    const preservedCentralLazy = readFileSync(
-      join(ROOT, "src/app/routes/centralLazyImports.ts"),
-      "utf8",
-    );
     const activeCentralLazy = readFileSync(
       join(ROOT, "src/app/routes/activeCentralLazyImports.ts"),
       "utf8",
@@ -40,13 +36,14 @@ describe("G6 Education private/public launch separation", () => {
       "utf8",
     );
 
-    for (const owner of [
-      "EducationSetupPage",
-      "EducationProgramsPage",
-      "EducationLeadsPage",
-      "EducationEventsPage",
-    ]) {
-      expect(preservedCentralLazy).toContain(owner);
+    const preservedOwners = [
+      ["EducationSetupPage", "src/modules/business/education/pages/EducationSetupPage.tsx"],
+      ["EducationProgramsPage", "src/modules/business/education/pages/EducationProgramsPage.tsx"],
+      ["EducationLeadsPage", "src/modules/business/education/pages/EducationLeadsPage.tsx"],
+      ["EducationEventsPage", "src/modules/business/education/pages/EducationEventsPage.tsx"],
+    ] as const;
+    for (const [owner, ownerPath] of preservedOwners) {
+      expect(existsSync(join(ROOT, ownerPath))).toBe(true);
       expect(activeCentralLazy).not.toContain(owner);
     }
 

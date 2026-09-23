@@ -1,4 +1,4 @@
-import { readFileSync } from "node:fs";
+import { existsSync, readFileSync } from "node:fs";
 import { describe, expect, it } from "vitest";
 
 const read = (path: string) => readFileSync(path, "utf8");
@@ -65,6 +65,8 @@ describe("active Central runtime boundary", () => {
     expect(lazyGraph).not.toContain("createLaunchPausedRoute");
     expect(lazyGraph).not.toContain('from "./centralLazyImports"');
     expect(lazyGraph).not.toContain('from "../centralLazyImports"');
+
+    expect(existsSync("src/app/routes/centralLazyImports.ts")).toBe(false);
 
     for (const pausedOwner of [
       "EventsOrganizer",

@@ -45,7 +45,7 @@ describe("MVP Central runtime without concept-mock router bypasses", () => {
   it("keeps paused Mobility outside the active Central graph instead of a DEV query bypass", () => {
     const routes = read("src/app/routes/sections/CentralRoutes.tsx");
     const activeLazy = read("src/app/routes/activeCentralLazyImports.ts");
-    const preservedLazy = read("src/app/routes/centralLazyImports.ts");
+    const registry = read("src/app/config/productModuleRegistry.ts");
 
     for (const pausedRoute of ['path="motoboy"', 'path="motorista"']) {
       expect(routes).not.toContain(pausedRoute);
@@ -53,6 +53,7 @@ describe("MVP Central runtime without concept-mock router bypasses", () => {
     expect(activeLazy).not.toContain("DriverGuard");
     expect(activeLazy).not.toContain("CentralMotoboy");
     expect(activeLazy).not.toContain("CentralMotorista");
-    expect(preservedLazy).toContain('createLaunchPausedRoute("Mobilidade")');
+    expect(registry).toMatch(/mobility:\s*{\s*status:\s*"paused"/);
+    expect(existsSync(pathOf("src/modules/mobility"))).toBe(true);
   });
 });

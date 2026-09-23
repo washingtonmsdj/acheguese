@@ -1,4 +1,4 @@
-import { readFileSync } from "node:fs";
+import { existsSync, readFileSync } from "node:fs";
 import { join } from "node:path";
 import { describe, expect, it } from "vitest";
 
@@ -13,7 +13,6 @@ describe("MVP private launch-scope boundaries", () => {
     const launchScope = read("src/app/config/launchScope.ts");
     const routes = read("src/app/routes/sections/CentralRoutes.tsx");
     const activeLazy = read("src/app/routes/activeCentralLazyImports.ts");
-    const preservedLazy = read("src/app/routes/centralLazyImports.ts");
 
     expect(launchScope).toContain(
       'education: isProductModuleEnabled("education")',
@@ -31,17 +30,18 @@ describe("MVP private launch-scope boundaries", () => {
       expect(routes).not.toContain(educationRoute);
     }
 
-    for (const owner of [
-      "EducationDashboardPage",
-      "EducationSetupPage",
-      "EducationProgramsPage",
-      "EducationLeadsPage",
-      "EducationEventsPage",
-      "EducationAnalyticsPage",
-      "EducationPlansPage",
-    ]) {
+    const educationOwners = [
+      ["EducationDashboardPage", "src/modules/business/education/pages/EducationDashboardPage.tsx"],
+      ["EducationSetupPage", "src/modules/business/education/pages/EducationSetupPage.tsx"],
+      ["EducationProgramsPage", "src/modules/business/education/pages/EducationProgramsPage.tsx"],
+      ["EducationLeadsPage", "src/modules/business/education/pages/EducationLeadsPage.tsx"],
+      ["EducationEventsPage", "src/modules/business/education/pages/EducationEventsPage.tsx"],
+      ["EducationAnalyticsPage", "src/modules/business/education/pages/EducationAnalyticsPage.tsx"],
+      ["EducationPlansPage", "src/modules/business/education/pages/EducationPlansPage.tsx"],
+    ] as const;
+    for (const [owner, ownerPath] of educationOwners) {
       expect(activeLazy).not.toContain(owner);
-      expect(preservedLazy).toContain(owner);
+      expect(existsSync(join(ROOT, ownerPath))).toBe(true);
     }
 
     expect(routes).toContain('path="*" element={<P.NotFound />}');
@@ -51,7 +51,6 @@ describe("MVP private launch-scope boundaries", () => {
     const launchScope = read("src/app/config/launchScope.ts");
     const routes = read("src/app/routes/sections/CentralRoutes.tsx");
     const activeLazy = read("src/app/routes/activeCentralLazyImports.ts");
-    const preservedLazy = read("src/app/routes/centralLazyImports.ts");
     const profileNavigation = read(
       "src/modules/profile/utils/profileNavigation.ts",
     );
@@ -63,7 +62,9 @@ describe("MVP private launch-scope boundaries", () => {
     expect(routes).not.toContain('path="planos"');
     expect(routes).not.toContain("BusinessPlansPage");
     expect(activeLazy).not.toContain("BusinessPlansPage");
-    expect(preservedLazy).toContain("BusinessPlansPage");
+    expect(
+      existsSync(join(ROOT, "src/modules/business/dashboard/pages/BusinessPlansPage.tsx")),
+    ).toBe(true);
     expect(profileNavigation).toContain('planos: "billing"');
     expect(profileSummary).toContain(
       'const showBilling = isLaunchSurfaceEnabled("billing")',
@@ -78,7 +79,6 @@ describe("MVP private launch-scope boundaries", () => {
     );
     const centralRoutes = read("src/app/routes/sections/CentralRoutes.tsx");
     const activeLazy = read("src/app/routes/activeCentralLazyImports.ts");
-    const preservedLazy = read("src/app/routes/centralLazyImports.ts");
 
     expect(launchScope).toContain(
       'services: isProductModuleEnabled("services")',
@@ -87,6 +87,11 @@ describe("MVP private launch-scope boundaries", () => {
     expect(centralNavigation).not.toContain("professional");
     expect(centralRoutes).not.toContain('path="profissional"');
     expect(activeLazy).not.toContain("ProfessionalGuard");
-    expect(preservedLazy).toContain("ProfessionalGuard");
+    expect(
+      existsSync(join(ROOT, "src/modules/central/guards/ProfessionalGuard.tsx")),
+    ).toBe(true);
+    expect(
+      existsSync(join(ROOT, "src/modules/central/pages/CentralProfissionalPage.tsx")),
+    ).toBe(true);
   });
 });
