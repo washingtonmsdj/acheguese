@@ -1,6 +1,7 @@
 import { useNavigate } from "react-router-dom";
 import { ArrowUpRight, Building2, Shield, Sparkles } from "lucide-react";
 
+import { isProductModuleEnabled } from "@/app/config/lifecycleRegistry";
 import { businessManagementRoutes } from "@/core/business/utils/businessManagementRoutes";
 import { useProfileHub } from "@/core/profiles/hooks/useProfileHub";
 import { useSessionContext } from "@/core/session";
@@ -24,7 +25,8 @@ export default function CentralHubPage() {
     return null;
   }
 
-  const hasBusinesses = profileHub.businessModules.length > 0;
+  const businessEnabled = isProductModuleEnabled("business");
+  const hasBusinesses = businessEnabled && profileHub.businessModules.length > 0;
   const isAdmin = Boolean(
     (profileHub.identity?.reputation as
       | { is_moderator?: boolean }
@@ -106,7 +108,7 @@ export default function CentralHubPage() {
         </section>
       ) : null}
 
-      {!hasBusinesses ? (
+      {businessEnabled && !hasBusinesses ? (
         <section className="space-y-4">
           <h2 className="text-lg font-semibold">Comece a gerenciar</h2>
           <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
