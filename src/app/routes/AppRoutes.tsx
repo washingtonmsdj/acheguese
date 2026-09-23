@@ -22,7 +22,6 @@ const QrResolverPage = lazy(() =>
   })),
 );
 const StatusPage = lazy(() => import("@/app/pages/StatusPage"));
-const SplashPage = lazy(() => import("@/app/pages/SplashPage"));
 const NotFoundPage = lazy(() => import("@/app/pages/NotFound"));
 const LoginPage = lazy(() => import("@/app/pages/LoginPage"));
 const EmailChangeConfirmationPage = lazy(
@@ -88,7 +87,6 @@ export function AppRoutes() {
       <Route path="/q/:token" element={<QrResolverPage />} />
       <Route path="/status" element={<StatusPage />} />
 
-      <Route path="/splash" element={<SplashPage />} />
       <Route path={AUTH_PATHS.login} element={<LoginRoute />} />
       <Route
         path={AUTH_PATHS.emailChangeConfirmation}

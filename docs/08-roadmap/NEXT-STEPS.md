@@ -90,7 +90,7 @@ Os hosted runners voltaram a executar steps e logs reais. O incidente histórico
 
 O contrato obrigatório do MVP inclui os ratchets recentes de lifecycle, Business, Search, Messaging, remoção de legado e rotas canônicas. `test:mvp:architecture` deve executar essas provas em todo candidato.
 
-Os PRs #310–#320 consolidaram o corte modular, as rotas canônicas, a gestão Business, a retirada dos bypasses DEV e a limpeza/ratchet SSOT de Gastronomia:
+Os PRs #310–#322 consolidaram o corte modular, as rotas canônicas, a gestão Business, a retirada dos bypasses DEV, a limpeza/ratchet SSOT de Gastronomia e o isolamento lifecycle-driven do Admin:
 
 - Business independente de verticais pausados;
 - navegação alinhada às capabilities ativas;
@@ -103,8 +103,9 @@ Os PRs #310–#320 consolidaram o corte modular, as rotas canônicas, a gestão 
 - #319 aposentou a allowance morta de `gastronomy_establishments`/`GastronomyQueryService.ts` no checker SSOT após censo de owners/callers.
 - #320 removeu o lint rule órfão de direct-query, alinhou `SSOT_REGISTRY.md` a `gastronomy_profiles`/`GastronomyProfileService` e tornou essa aposentadoria um ratchet obrigatório.
 - #321 registrou a revalidação documental pós-#320 e reafirmou que o merge SHA não herda certificação de release.
+- #322 removeu inventários Admin paralelos, passou rota + sidebar para o lifecycle canônico e retirou aliases administrativos sem contrato.
 
-A `main` atual é `0557db2bae6c6f96e850b3b7da0b71656097bb2e` (merge de #321). O head `cc8d21f6b9c019856e03369f9f483a3d91d06f50` de #320 passou Security, SSOT Territorial, Heavy exact-SHA e SSOT Enforcement antes do merge; o merge SHA continua sendo um novo candidato e não herda automaticamente status de release. O corte em andamento elimina a lista manual de superfícies Admin pausadas e faz rota + navegação obedecerem ao lifecycle canônico via `adminSurfaceScope.ts`, mantendo páginas pós-MVP preservadas mas fora da árvore de runtime. O smoke autenticado continua bloqueado por #305 e a autoridade de deploy Supabase por #309.
+A `main` atual é `2a6f0ae5539b28acd52ff7d4ed18ea6bb2a805a8` (merge de #322). O head `2de8d691b316b3eb36297a0ec678f4e26f075701` de #322 passou Security, SSOT Territorial, Heavy exact-SHA, Auth Concept, Visual Regression e SSOT Enforcement antes do merge; o merge SHA continua sendo um novo candidato e não herda automaticamente status de release. O corte em andamento aposenta a rota/página `/splash`, confirmada como superfície pública órfã sem caller real e com copy de módulos pausados. O smoke autenticado continua bloqueado por #305 e a autoridade de deploy Supabase por #309.
 
 ### Blockers atuais do primeiro release
 

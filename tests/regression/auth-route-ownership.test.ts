@@ -1,4 +1,4 @@
-import { readFileSync } from "node:fs";
+import { existsSync, readFileSync } from "node:fs";
 import { resolve } from "node:path";
 import { describe, expect, it } from "vitest";
 
@@ -31,7 +31,6 @@ describe("auth/public route ownership", () => {
       'path="/cadastro/confirmacao"',
       'path="/reset-password"',
       'path="/conta/confirmar-email"',
-      'path="/splash"',
       'path="/sobre"',
       'path="/contato"',
       'path="/onboarding"',
@@ -44,6 +43,12 @@ describe("auth/public route ownership", () => {
         duplicateLiteral,
       );
     }
+
+    expect(root).not.toContain('path="/splash"');
+    expect(root).not.toContain("SplashPage");
+    expect(
+      existsSync(resolve(repoRoot, "src/app/pages/SplashPage.tsx")),
+    ).toBe(false);
 
     expect(appLayout).not.toContain("RootRouteEntry");
   });
@@ -59,7 +64,6 @@ describe("auth/public route ownership", () => {
       "ResetPasswordPage",
       "AboutPage",
       "ContactPage",
-      "SplashPage",
       "OnboardingPage",
       "StatusPage",
       "QrResolverPage",
