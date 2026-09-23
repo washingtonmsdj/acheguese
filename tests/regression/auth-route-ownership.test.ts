@@ -81,7 +81,11 @@ describe("auth/public route ownership", () => {
       ).not.toContain(`export const ${rootOwnedExport}`);
     }
 
-    expect(lazyImports).toContain("Rotas publicas sem layout pertencem diretamente a AppRoutes");
+    expect(lazyImports).toContain(
+      "Lazy imports reachable from the active AppLayout runtime only.",
+    );
+    expect(lazyImports).not.toContain('from "./lazyImports"');
+    expect(lazyImports).not.toContain('from "@/app/routes/lazyImports"');
   });
 
   it("keeps paused event routes out of the active public tree", () => {
