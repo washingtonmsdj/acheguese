@@ -2,10 +2,10 @@ import { Link } from "react-router-dom";
 import { Card, CardContent, CardHeader, CardTitle } from "@/shared/components/ui/card";
 import { Button } from "@/shared/components/ui/button";
 import { businessManagementRoutes } from "@/core/business/utils/businessManagementRoutes";
-import { useBusinessDashboardContext } from "@/modules/business/dashboard/businessDashboardContext";
+import { useActiveBusinessDashboardContext } from "@/modules/business/dashboard/businessDashboardContext";
 
 export default function BusinessDetailsPage() {
-  const { businessId, business } = useBusinessDashboardContext();
+  const { businessId, business } = useActiveBusinessDashboardContext();
 
   return (
     <div className="space-y-4">
@@ -20,7 +20,6 @@ export default function BusinessDetailsPage() {
           <Field label="Nome" value={business.name} />
           <Field label="Categoria" value={business.category} />
           <Field label="Status" value={business.status} />
-          <Field label="Plano premium" value={business.is_premium ? "Sim" : "Nao"} />
           <Field label="Telefone" value={business.phone || "Nao informado"} />
           <Field label="WhatsApp" value={business.whatsapp || "Nao informado"} />
           <Field label="Email" value={business.email || "Nao informado"} />
