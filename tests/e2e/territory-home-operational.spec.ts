@@ -239,17 +239,16 @@ test.describe("MVP público — Empresas + Mapa + Perto de mim + Busca", () => {
     await expect(page.getByText("430m")).toBeVisible();
     await expect(page.getByText("perto de você", { exact: true })).toBeVisible();
 
-    await expect(
-      page.getByRole("button", { name: "Abrir mapa" }),
-    ).toBeVisible();
-    await expect(
-      page.getByRole("button", { name: "Abrir mapa" }),
-    ).toHaveAttribute("data-state", undefined).catch(() => undefined);
+    const openMapButton = page.getByRole("button", { name: "Abrir mapa" });
+    await expect(openMapButton).toBeVisible();
     await expect(
       page.getByText("Resultados públicos válidos do módulo Empresas"),
     ).toBeVisible();
 
     await expectNoHorizontalOverflow(page);
     health.assertHealthy();
+
+    await openMapButton.click();
+    await expect(page).toHaveURL(/\/mapa\/ba\/salvador\/pituba$/);
   });
 });
