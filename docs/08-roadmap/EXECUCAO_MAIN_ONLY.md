@@ -4,29 +4,40 @@
 **Data do checkpoint GitHub:** 2026-09-23  
 **Repositório:** `washingtonmsdj/acheguese`  
 **Linha ativa:** `main`  
-**Candidato atual:** branch `cleanup/mvp-retire-public-legacy-lazy-barrel` sobre `main` `035a0ba77aaad235d92f25031dba3ccabe83e992` (merge de #331). O head só é certificável quando os gates aplicáveis do mesmo SHA concluírem verdes; merge posterior gera novo SHA.
+**Baseline operacional atual:** `main@42d91ea9454de0fe8c3250cc75d230cb1bceeb9c` (squash merge de #333). Esta branch documental registra o checkpoint; não promove um novo release. Qualquer merge posterior gera outro SHA e exige nova prova exact-SHA antes de promoção.
 
 Este documento consolida ordem de execução, blockers e Definition of Done. Ele é um **registro operacional**, não uma fotografia autoritativa do que existe no produto. A fonte de verdade para decidir o que existe, o que está ativo e o que deve ser corrigido é sempre o **projeto real**: código da `main`, rotas, owners, serviços, schema/migrations, contratos, testes, deploy/runtime e comportamento observado.
 
 
 ## Estado operacional atual — 2026-09-23
 
-- `main` atual: `035a0ba77aaad235d92f25031dba3ccabe83e992` (merge de #331);
+- `main` atual: `42d91ea9454de0fe8c3250cc75d230cb1bceeb9c` (squash merge de #333);
 - #327 / #325 removeu módulos pausados da árvore pública ativa, criou `activeLazyImports.ts` e fez URLs públicas sem owner ativo caírem no 404 canônico;
 - o head `fa747aa7c877d7a086b92277940681a27abba844` de #327 passou Dependency Lock, Security Check/Scan, Auth Concept, Visual Regression, SSOT Territorial, Heavy exact-SHA e SSOT Enforcement antes do merge;
 - #329 — Central active-only integrado: `/central/*` monta somente Business/Empresas + infraestrutura via `activeCentralLazyImports.ts`; módulos pausados ficam fora do grafo e URL sem owner cai no 404 canônico;
 - #330 — `centralLazyImports.ts` aposentado após censo provar ausência de caller runtime; ratchets agora preservam owners físicos/lifecycle em vez de barrel artificial;
 - #331 — `CommunityTerritoryRoutes.tsx` aposentado após censo provar ausência de caller runtime; builders canônicos de URL e owners Community permanecem preservados nos bounded contexts;
-- corte atual (#333) — aposentar `src/app/routes/lazyImports.ts` e a cadeia órfã `TerritorialModulePages.tsx` → `launchPausedComponent.ts` → `LaunchPausedPage.tsx`, migrando ratchets para owners físicos/lifecycle; `activeLazyImports.ts` + `ActiveTerritorialModulePages.tsx` permanecem como boundaries públicos ativos;
-- o merge SHA `d01662e7...` não herda certificação de release: qualquer promoção precisa certificar/deployar/smokar este SHA exato.
+- #333 integrado — `src/app/routes/lazyImports.ts` e a cadeia órfã `TerritorialModulePages.tsx` → `launchPausedComponent.ts` → `LaunchPausedPage.tsx` foram aposentados; ratchets agora preservam owners físicos/lifecycle e impedem recriação do grafo morto; `activeLazyImports.ts` + `ActiveTerritorialModulePages.tsx` permanecem como boundaries públicos ativos;
+- a `main@42d91ea...` foi reprovada novamente como candidato de release apenas no smoke autenticado remoto (#305), depois de Vercel publicar o SHA exato; SSOT Enforcement e Heavy exact-main fecharam verdes. Nenhum merge herda certificação anterior: qualquer promoção futura precisa certificar/deployar/smokar o novo SHA exato.
+
+### Evidência pós-#333 — exact-main `42d91ea...`
+
+- Vercel: **success** no mesmo SHA;
+- release identity: **exact**, deployed SHA = expected SHA = `42d91ea9454de0fe8c3250cc75d230cb1bceeb9c`;
+- SSOT Enforcement: **success**;
+- Heavy exact-main: **success**;
+- SSOT Territorial: Phase Core, Runtime, E2E público e Regression **success**;
+- smoke autenticado: **failure externa #305**, com quatro cenários interrompidos no broker por `HTTP 503 [auth_upstream_unavailable]` antes de validar as superfícies privadas;
+- run territorial: `35918986268`, job autenticado: `107377764638`;
+- logs Supabase da mesma janela: 504 em Auth token + 522 em múltiplas APIs PostgREST, provando indisponibilidade upstream mais ampla que o frontend.
 
 ### Blockers atuais do primeiro release
 
-1. **#305 — sessão autenticada real / conectividade Postgres:** o projeto canônico aparece `ACTIVE_HEALTHY`, mas Supabase Auth retorna 5xx e tanto `select 1` quanto Security Advisors reproduzem `Connection terminated due to connection timeout`. Investigar Observability/Supabase antes de alterar app. Não mascarar com retry extra, fallback, redirect, troca de fixture ou bypass OIDC.
+1. **#305 — indisponibilidade ampla do data plane Supabase:** o projeto canônico aparece `ACTIVE_HEALTHY`, porém no smoke exact-main `/auth/v1/token` produziu 12 × HTTP 504 e múltiplas rotas PostgREST independentes produziram HTTP 522 com ~19–20 s de origin time. O broker OIDC v3 recebe corretamente `repo:washingtonmsdj/acheguese:ref:refs/heads/main` e retorna `503 auth_upstream_unavailable` porque o upstream falha; consulta SQL simples também expira. Investigar infraestrutura/Observability/Supabase antes de alterar app. Não mascarar com retry/timeout maior, fallback, redirect, troca de fixture, RLS alternativo ou bypass OIDC.
 2. **#309 — autoridade automática de deploy Supabase:** o PAT do GitHub Actions recebe 403 ao atualizar Edge Functions. Rotacionar o secret para PAT scoped com `Edge Functions: Read-write` / `deploy_edge_function`; não usar `service_role` como substituto.
 3. **Exact-SHA pós-merge:** qualquer mudança, inclusive documentação, gera novo candidato. Security/lint/typecheck/tests/build/E2E/deploy/smoke precisam pertencer ao mesmo SHA final.
 
-O incidente antigo de hosted runners com jobs vazios foi encerrado no issue #17 e **não é blocker atual**. O limite diário antigo da Vercel também não representa o estado atual: o deploy do SHA `4452f686...` está verde.
+O incidente antigo de hosted runners com jobs vazios foi encerrado no issue #17 e **não é blocker atual**. Vercel publicou `main@42d91ea...` com status `success`; `release.json` passou de `035a...` para o SHA exato após a propagação. O deploy público não é o blocker atual.
 
 
 ## Corte de lançamento MVP — 2026-09-19
