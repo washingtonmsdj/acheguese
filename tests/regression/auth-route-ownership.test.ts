@@ -54,7 +54,7 @@ describe("auth/public route ownership", () => {
   });
 
   it("keeps root-owned screens out of the AppLayout lazy barrel", () => {
-    const lazyImports = read("src/app/routes/lazyImports.ts");
+    const lazyImports = read("src/app/routes/activeLazyImports.ts");
 
     for (const rootOwnedExport of [
       "LoginPage",
@@ -84,16 +84,16 @@ describe("auth/public route ownership", () => {
     expect(lazyImports).toContain("Rotas publicas sem layout pertencem diretamente a AppRoutes");
   });
 
-  it("does not let the root tree permanently pause launch-gated event routes", () => {
+  it("keeps paused event routes out of the active public tree", () => {
     const root = read("src/app/routes/AppRoutes.tsx");
     const appLayout = read("src/app/routes/sections/AppLayoutRoutes.tsx");
+    const activeLazy = read("src/app/routes/activeLazyImports.ts");
 
     expect(root).not.toContain("EVENT_ROUTES");
-    expect(root).not.toContain('moduleName="Eventos"');
-    expect(appLayout).toContain("EVENT_ROUTES.home");
-    expect(appLayout).toContain("EVENT_ROUTES.home");
-    expect(appLayout).toContain('launchElement(');
-    expect(appLayout).toContain('"events"');
-    expect(appLayout).toContain('surface: "events"');
+    expect(appLayout).not.toContain("EVENT_ROUTES");
+    expect(appLayout).not.toContain('"events"');
+    expect(appLayout).not.toContain("LaunchPausedPage");
+    expect(appLayout).toContain('<Route path="*" element={<P.NotFound />} />');
+    expect(activeLazy).not.toContain("community-events");
   });
 });
