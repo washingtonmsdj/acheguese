@@ -172,7 +172,7 @@ export default function BuscaPage() {
   const activeSearchBucketKey = activeSearchBuckets.join(",");
   const availableFilters = useMemo(
     () =>
-      availableFilters.filter(
+      FILTERS.filter(
         (filter) =>
           filter.id === "all" ||
           activeSearchBuckets.includes(filter.id as SearchBucket),
