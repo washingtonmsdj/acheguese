@@ -82,3 +82,12 @@ Search segue o mesmo boundary de providers:
 - `core/search` apenas registra/executa providers autorizados;
 - o core não importa `launchScope`, `productModuleRegistry` ou qualquer `app/config`;
 - sem buckets autorizados, a busca de domínio falha fechada.
+
+
+A Busca assistida (`/buscar`) segue a mesma fronteira:
+
+- `app/config/aiSearchIntentScope.ts` traduz o lifecycle em intents autorizadas;
+- `core/ai` apenas interpreta a consulta e executa handlers explicitamente autorizados pelo caller;
+- `core/ai` não importa `launchScope`, `productModuleRegistry` nem qualquer `app/config`;
+- no MVP atual, `business_search` está autorizada e `service_search` permanece pausada junto do domínio Services;
+- reativar Services altera o registry/lifecycle e o escopo composto na camada `app`, sem reescrever o orquestrador.

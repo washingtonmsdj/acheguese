@@ -1,5 +1,6 @@
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useParams, useSearchParams } from "react-router-dom";
+import { getActiveAISearchIntentTypes } from "@/app/config/aiSearchIntentScope";
 import { AISearchBox, AISearchResults, useAISearch } from "@/core/ai";
 import { useModuleTerritoryFilter } from "@/core/location/hooks/useModuleTerritoryFilter";
 import { useUserTerritory } from "@/core/location/hooks/useUserTerritory";
@@ -17,7 +18,13 @@ export default function BuscarPage() {
     routeResolved: territoryResolution.resolved,
   });
   const userTerritory = useUserTerritory();
-  const { result, loading, error, search } = useAISearch();
+  const activeAISearchIntentTypes = useMemo(
+    () => getActiveAISearchIntentTypes(),
+    [],
+  );
+  const { result, loading, error, search } = useAISearch({
+    allowedIntentTypes: activeAISearchIntentTypes,
+  });
   const [searchError, setSearchError] = useState<string | null>(null);
   const [appliedTerritoryLabel, setAppliedTerritoryLabel] = useState<string>(
     moduleTerritory.displayLabel,
@@ -123,7 +130,7 @@ export default function BuscarPage() {
             Procurar no bairro
           </h1>
           <p className="text-sm text-muted-foreground">
-            Escreva do seu jeito: pizza, chaveiro, feira de sábado, alguém que conserte bicicleta.
+            Escreva do seu jeito: pizza, mercado, farmácia, oficina ou empresa no meu bairro.
           </p>
           <p className="text-xs text-muted-foreground/80">
             Procurando em: {appliedTerritoryLabel}

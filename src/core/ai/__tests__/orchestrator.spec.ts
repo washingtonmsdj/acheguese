@@ -29,13 +29,15 @@ describe("AIOrchestratorService", () => {
     const result = await orchestrator.search({
       query: "me conte uma piada",
       context: {},
+      allowedIntentTypes: ["business_search"],
     });
 
     expect(result.intent.type).toBe("unknown");
     expect(result.items).toEqual([]);
     expect(execute).not.toHaveBeenCalled();
   });
-  it("nao executa handler de Services enquanto Services estiver pausado", async () => {
+
+  it("nao executa intent que o caller nao autorizou", async () => {
     const execute = vi.fn();
     const handler: IActionHandler = {
       type: "service_search",
@@ -53,10 +55,14 @@ describe("AIOrchestratorService", () => {
       override parse = vi.fn().mockResolvedValue(serviceIntent);
     }
 
-    const orchestrator = new AIOrchestratorService(new MockIntentParser(), [handler]);
+    const orchestrator = new AIOrchestratorService(
+      new MockIntentParser(),
+      [handler],
+    );
     const result = await orchestrator.search({
       query: "eletricista",
       context: {},
+      allowedIntentTypes: ["business_search"],
     });
 
     expect(result.items).toEqual([]);
@@ -64,7 +70,7 @@ describe("AIOrchestratorService", () => {
     expect(execute).not.toHaveBeenCalled();
   });
 
-  it("continua executando Business enquanto Business estiver ativo", async () => {
+  it("executa handler quando a intent foi autorizada", async () => {
     const execute = vi.fn().mockResolvedValue([]);
     const handler: IActionHandler = {
       type: "business_search",
@@ -82,13 +88,16 @@ describe("AIOrchestratorService", () => {
       override parse = vi.fn().mockResolvedValue(businessIntent);
     }
 
-    const orchestrator = new AIOrchestratorService(new MockIntentParser(), [handler]);
+    const orchestrator = new AIOrchestratorService(
+      new MockIntentParser(),
+      [handler],
+    );
     await orchestrator.search({
       query: "mercado",
       context: {},
+      allowedIntentTypes: ["business_search"],
     });
 
     expect(execute).toHaveBeenCalledTimes(1);
   });
-
 });

@@ -2,7 +2,11 @@ import { describe, expect, it } from "vitest";
 import { IntentParser } from "../intent/IntentParser";
 import { AIOrchestratorService } from "../orchestrator/AIOrchestratorService";
 import type { IActionHandler } from "../actions/IActionHandler";
-import type { AIActionResultItem, AIIntent } from "../domain/types";
+import {
+  AI_EXECUTABLE_INTENT_TYPES,
+  type AIActionResultItem,
+  type AIIntent,
+} from "../domain/types";
 
 const queries = [
   "pizzaria barata com delivery",
@@ -62,7 +66,11 @@ describe("Auditoria de fluxo /buscar (fase 1)", () => {
 
     const outputs = [];
     for (const query of queries) {
-      const output = await orchestrator.search({ query, context: { locationId: "loc-audit" } });
+      const output = await orchestrator.search({
+        query,
+        context: { locationId: "loc-audit" },
+        allowedIntentTypes: AI_EXECUTABLE_INTENT_TYPES,
+      });
       outputs.push({
         query,
         intent: output.intent.type,

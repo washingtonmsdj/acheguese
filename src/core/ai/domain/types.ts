@@ -10,6 +10,14 @@ export const AIIntentTypeSchema = z.enum([
 
 export type AIIntentType = z.infer<typeof AIIntentTypeSchema>;
 
+export const AI_EXECUTABLE_INTENT_TYPES = [
+  "business_search",
+  "service_search",
+] as const satisfies readonly AIIntentType[];
+
+export type AIExecutableIntentType =
+  (typeof AI_EXECUTABLE_INTENT_TYPES)[number];
+
 export const AIIntentFiltersSchema = z.object({
   category: z.string().optional(),
   tags: z.array(z.string()).default([]),
@@ -73,4 +81,5 @@ export interface AIActionResult {
 export interface AIOrchestratorSearchInput {
   query: string;
   context: AISearchContext;
+  allowedIntentTypes: readonly AIExecutableIntentType[];
 }
