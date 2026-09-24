@@ -15,6 +15,12 @@ const service = read(
 const provider = read(
   "src/core/messaging/providers/BusinessMessagingProvider.ts",
 );
+const messagingRoutes = read(
+  "src/core/messaging/routes/messagingRoutes.ts",
+);
+const businessEntry = read(
+  "src/core/messaging/services/openBusinessDirectConversation.ts",
+);
 const providerRegistry = read(
   "src/core/messaging/providers/messagingProviderRegistry.ts",
 );
@@ -27,6 +33,7 @@ const cta = read(
   "src/modules/business/company/sections/EmpresaCTAsSection.tsx",
 );
 const companyPage = read("src/app/pages/EmpresaDetailLandingPage.tsx");
+const appRoutes = read("src/app/routes/sections/AppLayoutRoutes.tsx");
 const platformRegistry = read(
   "src/app/config/platformCapabilityRegistry.ts",
 );
@@ -169,16 +176,30 @@ describe("Business Messaging MVP", () => {
     expect(inboxWrapper).toContain("getActiveMessagingProviderIds()");
     expect(provider).toContain('providerId: "business"');
     expect(inbox).toContain("providerIds");
-    expect(inbox).toContain('/mensagens/${thread.providerId}/${thread.threadId}');
+    expect(messagingRoutes).toContain('inbox: () => "/mensagens"');
+    expect(messagingRoutes).toContain(
+      'threadPattern: () => "/mensagens/:providerId/:threadId"',
+    );
+    expect(inbox).toContain("messagingRoutes.thread(");
+    expect(inbox).toContain("messagingRoutes.inbox()");
+    expect(appRoutes).toContain("messagingRoutes.inbox()");
+    expect(appRoutes).toContain("messagingRoutes.threadPattern()");
+    expect(inbox).not.toContain("/mensagens/${thread.providerId}/${thread.threadId}");
   });
 
   it("exposes a real internal message CTA from Business using business_data identity", () => {
     expect(cta).toContain('label="Mensagem"');
-    expect(companyPage).toContain("businessDirectMessagingService.createOrGetThread");
+    expect(companyPage).toContain("openBusinessDirectConversation");
     expect(companyPage).toContain("institutionalBusinessDataId");
     expect(companyPage).toContain("buildLoginPath(returnTo)");
-    expect(companyPage).toContain(
-      'navigate(`/mensagens/business/${threadId}`)',
+    expect(companyPage).toContain("navigate(threadPath)");
+    expect(companyPage).not.toContain("/mensagens/business/");
+    expect(businessEntry).toContain(
+      "businessDirectMessagingService.createOrGetThread",
     );
+    expect(businessEntry).toContain(
+      'messagingRoutes.thread("business", threadId)',
+    );
+    expect(businessEntry).not.toContain("/mensagens/business/");
   });
 });
