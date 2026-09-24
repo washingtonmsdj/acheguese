@@ -31,7 +31,7 @@ const PREFETCHERS: Array<{
   },
   {
     test: (path) => isAppModulePath(path, APP_MODULE_SLUGS.nearby),
-    load: () => import("@/core/nearby/pages/NearbyPage"),
+    load: () => import("@/app/pages/NearbyPage"),
     surface: "nearby",
   },
   {
