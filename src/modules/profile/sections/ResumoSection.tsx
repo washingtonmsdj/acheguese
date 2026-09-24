@@ -7,12 +7,10 @@
 import {
   Bell,
   Bookmark,
-  Briefcase,
   Building2,
   CreditCard,
   LayoutDashboard,
   MapPin,
-  MessageSquare,
   Settings2,
   Shield,
   Sparkles,
@@ -38,8 +36,9 @@ export function ResumoSection({
   navigate,
   appUrls,
 }: ResumoSectionProps) {
-  const totalPersonalActivity = operations.posts;
-  const totalOperationalAssets = operations.businesses + operations.services + operations.classifieds;
+  const showBusiness = isLaunchSurfaceEnabled("business");
+  const showMap = isLaunchSurfaceEnabled("map");
+  const totalOperationalAssets = showBusiness ? operations.businesses : 0;
   const showFamilySafetyLinks = isLaunchSurfaceEnabled("familySafety");
   const showBilling = isLaunchSurfaceEnabled("billing");
 
@@ -102,16 +101,10 @@ export function ResumoSection({
       >
         <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
           <DashboardMetricCard
-            icon={UserRound}
-            label="Atividade pessoal"
-            value={totalPersonalActivity}
-            description="Posts publicados"
-          />
-          <DashboardMetricCard
             icon={Building2}
-            label="Áreas vinculadas"
+            label="Empresas vinculadas"
             value={totalOperationalAssets}
-            description="Empresas, serviços e classificados"
+            description="Empresas administradas"
           />
           <DashboardMetricCard
             icon={Bell}
@@ -197,45 +190,39 @@ export function ResumoSection({
             description="Hub profissional com empresas e dashboards."
             onClick={() => navigate("/central")}
           />
-          <HubLinkCard
-            icon={Building2}
-            title="Empresas"
-            description="Gestão das empresas vinculadas ao usuário."
-            badge={operations.businesses > 0 ? `${operations.businesses}` : undefined}
-            onClick={() => navigate(appUrls.profile.businesses)}
-          />
+          {showBusiness ? (
+            <HubLinkCard
+              icon={Building2}
+              title="Empresas"
+              description="Gestão das empresas vinculadas ao usuário."
+              badge={operations.businesses > 0 ? `${operations.businesses}` : undefined}
+              onClick={() => navigate(appUrls.profile.businesses)}
+            />
+          ) : null}
         </div>
       </SectionFrame>
 
       <SectionFrame
         title="Descoberta pública"
-        description="Módulos públicos ficam separados da administração. Use estes atalhos para navegar como usuário."
+        description="Atalhos para as superfícies públicas ativas do MVP."
       >
         <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-4">
-          <HubLinkCard
-            icon={Building2}
-            title="Empresas públicas"
-            description="Descobrir empresas e catálogos publicados."
-            onClick={() => navigate(appUrls.business.list)}
-          />
-          <HubLinkCard
-            icon={Briefcase}
-            title="Serviços"
-            description="Encontrar profissionais e prestadores."
-            onClick={() => navigate(appUrls.services.list)}
-          />
-          <HubLinkCard
-            icon={MessageSquare}
-            title="Comunidade"
-            description="Posts, recomendações e alertas locais."
-            onClick={() => navigate(appUrls.community.feed)}
-          />
-          <HubLinkCard
-            icon={MapPin}
-            title="Mapa"
-            description="Explorar território e pontos próximos."
-            onClick={() => navigate(appUrls.map)}
-          />
+          {showBusiness ? (
+            <HubLinkCard
+              icon={Building2}
+              title="Empresas públicas"
+              description="Descobrir empresas e catálogos publicados."
+              onClick={() => navigate(appUrls.business.list)}
+            />
+          ) : null}
+          {showMap ? (
+            <HubLinkCard
+              icon={MapPin}
+              title="Mapa"
+              description="Explorar território e pontos próximos."
+              onClick={() => navigate(appUrls.map)}
+            />
+          ) : null}
         </div>
       </SectionFrame>
     </div>

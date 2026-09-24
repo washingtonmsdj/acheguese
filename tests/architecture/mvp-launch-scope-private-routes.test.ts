@@ -55,6 +55,9 @@ describe("MVP private launch-scope boundaries", () => {
       "src/modules/profile/utils/profileNavigation.ts",
     );
     const profileSummary = read("src/modules/profile/sections/ResumoSection.tsx");
+    const businessHub = read(
+      "src/core/profiles/components/hub/BusinessModulesSection.tsx",
+    );
 
     expect(launchScope).toContain(
       'billing: isProductModuleEnabled("billing")',
@@ -66,10 +69,40 @@ describe("MVP private launch-scope boundaries", () => {
       existsSync(join(ROOT, "src/modules/business/dashboard/pages/BusinessPlansPage.tsx")),
     ).toBe(true);
     expect(profileNavigation).toContain('planos: "billing"');
+    expect(profileNavigation).toContain("isLaunchSurfaceEnabled(surface)");
     expect(profileSummary).toContain(
       'const showBilling = isLaunchSurfaceEnabled("billing")',
     );
     expect(profileSummary).toContain("{showBilling ? (");
+    expect(profileSummary).not.toContain("appUrls.services.list");
+    expect(profileSummary).not.toContain("appUrls.community.feed");
+    expect(profileSummary).not.toContain("operations.services");
+    expect(profileSummary).not.toContain("operations.classifieds");
+    expect(profileSummary).not.toContain("Posts publicados");
+    expect(businessHub).not.toContain("business.gastronomy");
+    expect(businessHub).not.toContain('isProductModuleEnabled("mobility")');
+    expect(businessHub).not.toContain('isProductModuleEnabled("publicAnalytics")');
+    expect(businessHub).not.toContain("Ativar gastronomia");
+    expect(businessHub).not.toContain(">Gastronomia<");
+    expect(businessHub).not.toContain(">Delivery<");
+  });
+
+  it("keeps the active Account hook free of callerless paused-domain catalogs", () => {
+    const profileHub = read("src/core/profiles/hooks/useProfileHub.ts");
+
+    expect(profileHub).not.toContain("isLaunchSurfaceEnabled");
+    expect(profileHub).not.toContain("GLOBAL_MODULE_URLS");
+    expect(profileHub).not.toContain("ecosystemLinks");
+    expect(profileHub).not.toContain("operationalLinks");
+    expect(profileHub).not.toContain("useHomeCommunityHref");
+    expect(profileHub).not.toContain("APP_MODULE_SLUGS");
+    expect(profileHub).not.toContain("appUrls.services.list");
+    expect(profileHub).not.toContain("appUrls.community.feed");
+    expect(profileHub).not.toContain("gastronomyFavorites");
+    expect(profileHub).not.toContain("touristPoints");
+    expect(profileHub).toContain(
+      "Este perfil já pode entrar no fluxo de empresa e dashboard.",
+    );
   });
 
   it("keeps paused Services out of Central navigation and active routes", () => {
