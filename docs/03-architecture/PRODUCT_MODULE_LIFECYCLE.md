@@ -229,7 +229,7 @@ Estado do MVP em 2026-09-24:
 - Map: owner horizontal; layers de domínio são providers lifecycle-scoped e Business é o único provider ativo no MVP;
 - Nearby: owner horizontal, dependências estruturais Map + Location, provider Business de proximidade gated separadamente;
 - Search: owner horizontal; buckets de domínio são autorizados por `searchProviderScope.ts`; Business é o único provider ativo no MVP;
-- Notifications: owner horizontal; eventos podem vir de verticais, mas payload stale de vertical pausada não pode reabrir o domínio.
+- Notifications: owner horizontal; eventos podem vir de verticais, mas payload stale de vertical pausada não pode reabrir o domínio; ações da Inbox passam por `notificationActionScope.ts`.
 
 **Regra para próximas IAs/chats:** nunca inferir que “MVP focado em Empresas” significa desativar funcionalidades horizontais do site. Antes de alterar lifecycle, classificar a peça como vertical, horizontal ou provider.
 
@@ -259,3 +259,14 @@ No MVP, Business continua sendo o único provider tanto de layer do Mapa quanto 
 - `SearchService.search()` sem buckets autorizados executa zero providers (fail-closed);
 - providers de domínios pausados permanecem lazy e não carregam seus owners;
 - ativar um novo domínio pesquisável exige certificar a vertical e incluí-la no provider scope; não editar `SearchService` para criar branch por domínio.
+
+### Notifications action/lifecycle boundary
+
+- materialização e publicação cross-user continuam server-owned por `private.notification_outbox`, `private.enqueue_notification` e brokers de domínio;
+- `core/notifications` permanece owner horizontal de leitura, realtime, preferências e ack da Inbox;
+- `NotificationItem` não navega diretamente para `notification.action_url`; o app resolve o destino por `notificationActionScope.ts`;
+- ação interna de domínio/capability ativa preserva URL e label originais;
+- ação de vertical pausada ou rota aposentada cai em `/notificacoes` com label honesto, sem reabrir owner inativo;
+- notificações históricas podem continuar visíveis; lifecycle controla a ação, não apaga histórico;
+- URLs HTTPS externas continuam sujeitas ao `SafeLink`; a policy de lifecycle não substitui validação de segurança de URL;
+- reativar uma vertical deve permitir novamente seus destinos pelo lifecycle existente, sem editar `NotificationItem` por domínio.

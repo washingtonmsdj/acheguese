@@ -49,6 +49,12 @@ describe("MVP canonical routing without compatibility redirects", () => {
     const preferences = read("src/app/pages/NotificationPreferencesPage.tsx");
     const prefetch = read("src/app/routes/prefetch.ts");
     const serviceWorker = read("public/sw.js");
+    const notificationItem = read(
+      "src/app/components/notifications/NotificationItem.tsx",
+    );
+    const notificationActionScope = read(
+      "src/app/config/notificationActionScope.ts",
+    );
 
     expect(routes).toContain('path="/notificacoes"');
     expect(routes).not.toContain('path="/notifications"');
@@ -66,6 +72,13 @@ describe("MVP canonical routing without compatibility redirects", () => {
     expect(serviceWorker).toContain("getLaunchSafeNotificationUrl(");
     expect(serviceWorker).not.toContain("return `/gastronomia/pedidos/");
     expect(serviceWorker).not.toContain("return '/perto-de-mim';");
+    expect(notificationItem).toContain("resolveNotificationActionTarget");
+    expect(notificationItem).not.toContain("href={notification.action_url}");
+    expect(notificationActionScope).toContain(
+      'NOTIFICATION_INBOX_PATH = "/notificacoes"',
+    );
+    expect(notificationActionScope).toContain('surface: "gastronomy"');
+    expect(notificationActionScope).toContain('surface: "mobility"');
   });
 
   it("does not preserve query-param redirects for retired account navigation", () => {
