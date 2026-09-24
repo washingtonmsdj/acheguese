@@ -56,6 +56,37 @@ describe("buildBusinessModuleSnapshot", () => {
     expect(getShareUrl).not.toHaveBeenCalled();
   });
 
+  it("preserva entitlements e URLs factuais sem aplicar lifecycle de produto no core", async () => {
+    const getCanonicalUrl = vi.fn(async () => "/rio-vermelho/cafe-central");
+    const getShareUrl = vi.fn(() => "/p/cafe-central");
+
+    const snapshot = await buildBusinessModuleSnapshot({
+      business,
+      planTier: "premium",
+      subscription: null,
+      entitlements: {
+        ...entitlementDefaults,
+        canUseMotoboyNetwork: true,
+        canRequestDelivery: true,
+        canTrackDelivery: true,
+      },
+      gastronomyEligible: true,
+      gastronomyProfile: {
+        cuisine_type: "brasileira",
+        delivery_enabled: true,
+      },
+      qrCode: null,
+      getCanonicalUrl,
+      getShareUrl,
+    });
+
+    expect(snapshot.subscription.canUseMotoboyNetwork).toBe(true);
+    expect(snapshot.subscription.canRequestDelivery).toBe(true);
+    expect(snapshot.subscription.canTrackDelivery).toBe(true);
+    expect(snapshot.gastronomy.deliveriesUrl).toBeDefined();
+    expect(snapshot.gastronomy.analyticsUrl).toBeDefined();
+  });
+
   it("usa /p/:slug como shareUrl apenas quando o entitlement permitir", async () => {
     const getCanonicalUrl = vi.fn(async () => "/rio-vermelho/cafe-central");
     const getShareUrl = vi.fn(() => "/p/cafe-central");
