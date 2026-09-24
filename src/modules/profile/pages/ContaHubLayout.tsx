@@ -45,11 +45,6 @@ export interface ContaHubLayoutProps {
   readonly accountSnapshot: AccountSnapshot;
   readonly identity: Identity | null;
   readonly context: Context | null;
-  readonly notifications: {
-    readonly unread: number;
-    readonly highPriority: number;
-    readonly urgentPriority: number;
-  };
   readonly reputation?: {
     readonly score: number;
     readonly level: number;
@@ -108,7 +103,6 @@ export function ContaHubLayout({
   accountSnapshot,
   identity,
   context,
-  notifications,
   reputation,
   onAvatarChange,
   children,
@@ -155,7 +149,6 @@ export function ContaHubLayout({
               accountSnapshot={accountSnapshot}
               identity={identity}
               context={context}
-              notifications={notifications}
               isVerified={isVerified}
               canOpenPublicProfile={canOpenPublicProfile}
               handle={handle}
