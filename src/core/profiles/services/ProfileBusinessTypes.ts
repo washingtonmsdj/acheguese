@@ -9,7 +9,7 @@
  * - ProfileService.getPrivateWorkspace() for `businessModules`.
  * - useContaWorkspace and useProfileHub.
  * - FavoritesList and ContentTabsSection for associated businesses.
- * - BusinessOwnerQuickAccess and BusinessModulesSection for business modules.
+ * - BusinessModulesSection for active Business management views.
  */
 
 export interface ProfileAssociatedBusiness {
