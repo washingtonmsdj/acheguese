@@ -253,7 +253,7 @@ describe("MVP core module boundary", () => {
   });
 
   it("keeps Map horizontal while Business is a lifecycle-scoped layer provider", () => {
-    expect(map).toContain("providers = []");
+    expect(map).toContain("providers = EMPTY_MAP_PROVIDERS");
     expect(map).toContain("provider.createFetcher(runtimeTerritoryFilter)");
     expect(map).not.toContain("mapBusinessLayerRuntimeService");
     expect(map).not.toContain("makeBusinessFetcher");
