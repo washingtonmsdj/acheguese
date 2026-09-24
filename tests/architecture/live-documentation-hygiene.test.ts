@@ -65,6 +65,21 @@ describe("live documentation hygiene", () => {
     ).toEqual([]);
   });
 
+  it("keeps Business validation as a live contract instead of a release snapshot", () => {
+    const validation = readFileSync(
+      "src/modules/business/VALIDATION.md",
+      "utf8",
+    );
+
+    expect(validation).not.toMatch(/\b[0-9a-f]{40}\b/i);
+    expect(validation).not.toContain("Checkpoint tecnico");
+    expect(validation).not.toContain("G6 EM CERTIFICACAO");
+    expect(validation).toContain("contrato vivo do domínio Business");
+    expect(validation).toContain(
+      "docs/10-archive/architecture-checkpoints/G5_CLOSURE_G6_CONTINUATION_2026-09-04.md",
+    );
+  });
+
   it("keeps active source comments descriptive instead of migration logs", () => {
     const hook = readFileSync(
       "src/core/posts/hooks/usePostActions.ts",
