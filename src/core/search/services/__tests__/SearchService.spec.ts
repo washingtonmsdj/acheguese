@@ -437,6 +437,42 @@ describe("SearchService", () => {
     expect(mocks.getEventsPage).not.toHaveBeenCalled();
   });
 
+  it("exposes suggestions only from lifecycle-enabled search buckets", () => {
+    mocks.isLaunchSurfaceEnabled.mockImplementation(
+      (surface: string) => surface === "business",
+    );
+
+    expect(SearchService.getSearchSuggestions()).toEqual([
+      "restaurantes",
+      "salao de beleza",
+      "pet shop",
+      "farmacia",
+    ]);
+  });
+
+  it("adds provider-specific suggestions only when that provider is enabled", () => {
+    mocks.isLaunchSurfaceEnabled.mockImplementation(
+      (surface: string) => surface === "business" || surface === "services",
+    );
+
+    const suggestions = SearchService.getSearchSuggestions();
+
+    expect(suggestions).toEqual([
+      "restaurantes",
+      "salao de beleza",
+      "pet shop",
+      "farmacia",
+      "pedreiro pituba",
+      "pizzaiolo",
+      "eletricista amaralina",
+      "encanador",
+    ]);
+    expect(suggestions).not.toContain("comunidade pituba");
+    expect(suggestions).not.toContain("bicicleta usada");
+    expect(suggestions).not.toContain("eventos hoje");
+    expect(suggestions).not.toContain("vagas perto de mim");
+  });
+
   it("fails closed for community-scoped linked buckets without active links", async () => {
     mocks.listActiveByCommunity.mockResolvedValue([]);
     mocks.getBusinessesList.mockResolvedValue({

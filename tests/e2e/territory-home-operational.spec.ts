@@ -157,9 +157,24 @@ test.describe("MVP público — Empresas + Mapa + Perto de mim + Busca", () => {
       page.getByRole("heading", { name: "Busca", exact: true }),
     ).toBeVisible({ timeout: 30_000 });
     await expect(page.getByText("Negócios", { exact: true })).toBeVisible();
+    await expect(
+      page.getByRole("button", { name: "restaurantes", exact: true }),
+    ).toBeVisible();
 
     for (const paused of ["Comunidades", "Serviços", "Classificados", "Eventos", "Oportunidades", "Posts"]) {
       await expect(page.getByText(paused, { exact: true })).toHaveCount(0);
+    }
+
+    for (const pausedSuggestion of [
+      "comunidade pituba",
+      "pedreiro pituba",
+      "bicicleta usada",
+      "eventos hoje",
+      "vagas perto de mim",
+    ]) {
+      await expect(
+        page.getByRole("button", { name: pausedSuggestion, exact: true }),
+      ).toHaveCount(0);
     }
 
     await expectNoHorizontalOverflow(page);
