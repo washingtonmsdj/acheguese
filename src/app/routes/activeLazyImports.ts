@@ -76,7 +76,7 @@ export const BusinessRouteResolver = lazy(
 export const MensagensPage = lazy(
   () => import("@/app/pages/MessagingInboxPage"),
 );
-export const MapaPage = lazy(() => import("@/core/maps/pages/MapaPageV4"));
+export const MapaPage = lazy(() => import("@/app/pages/MapaPage"));
 
 export const TerritorialCategoryBusinessPage = lazy(() =>
   import("@/app/routes/territorial/ActiveTerritorialModulePages").then(

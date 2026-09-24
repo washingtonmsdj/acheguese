@@ -46,7 +46,6 @@ export function useTerritorialContextOptional() {
 const SLUG_TO_MODULE_KEY: Record<string, ModuleKey> = {
   [MODULE_SLUGS.community]: ModuleKey.COMMUNITY,
   [MODULE_SLUGS.business]: ModuleKey.BUSINESS,
-  [MODULE_SLUGS.map]: ModuleKey.BUSINESS,
   [MODULE_SLUGS.education]: ModuleKey.BUSINESS,
   [MODULE_SLUGS.services]: ModuleKey.SERVICES,
   [MODULE_SLUGS.classifieds]: ModuleKey.CLASSIFIEDS,
