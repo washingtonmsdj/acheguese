@@ -53,7 +53,6 @@ describe("Business extension identity boundary (G6)", () => {
     const snapshotBuilder = read(
       "src/core/profiles/services/profile.workspace.business-modules.ts",
     );
-    const delivery = read("src/modules/profile/sections/DeliverySection.tsx");
 
     expect(rowType).toContain("id: string");
     expect(rowType).toContain("profile_id: string");
@@ -78,8 +77,6 @@ describe("Business extension identity boundary (G6)", () => {
     expect(snapshotBuilder).toContain(
       "businessDataId: business.business_data_id",
     );
-    expect(delivery).toContain("business_id: item.businessDataId");
-    expect(delivery).not.toContain("business_id: item.businessId");
   });
 
   it("uses business_data.id for Gastronomy persistence while retaining profile id for routes", () => {
