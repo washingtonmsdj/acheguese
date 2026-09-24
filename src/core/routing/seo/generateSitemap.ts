@@ -11,7 +11,6 @@ import {
   SUPPORT_PATH,
   TERMS_OF_SERVICE_PATH,
 } from '@/shared/constants/legal';
-import { isLaunchSurfaceEnabled, type LaunchSurfaceKey } from '@/app/config/launchScope';
 import { APP_MODULE_SLUGS, buildAppModulePath } from '@/shared/config/moduleSlugs';
 import { territorialGroupService, type TerritorialGroupWithMembers } from '@/core/territorial';
 import {
@@ -47,6 +46,19 @@ export interface SitemapArtifact {
   urlCount: number;
 }
 
+export type SitemapSurfaceKey =
+  | 'business'
+  | 'gastronomy'
+  | 'services'
+  | 'classifieds'
+  | 'touristPoints'
+  | 'map'
+  | 'nearby';
+
+export interface SitemapSurfaceScope {
+  isEnabled(surface: SitemapSurfaceKey): boolean;
+}
+
 export interface GenerateAndSaveSitemapOptions {
   /**
    * Release-only resilience. A transient upstream/network failure may publish
@@ -54,6 +66,7 @@ export interface GenerateAndSaveSitemapOptions {
    * Schema/auth/application errors remain fatal.
    */
   allowTransientSourceFallback?: boolean;
+  surfaceScope: SitemapSurfaceScope;
 }
 
 interface SitemapInventory {
@@ -63,7 +76,7 @@ interface SitemapInventory {
 }
 
 interface TerritorySitemapModule {
-  surface: LaunchSurfaceKey;
+  surface: SitemapSurfaceKey;
   buildUrl: (territoryPath: string) => string;
 }
 
@@ -196,6 +209,7 @@ function generateTerritoryUrls(
   baseUrl: string,
   publicPath: string,
   isGroup: boolean,
+  surfaceScope: SitemapSurfaceScope,
 ): SitemapUrl[] {
   const urls: SitemapUrl[] = [
     {
@@ -205,7 +219,7 @@ function generateTerritoryUrls(
     },
   ];
 
-  TERRITORY_SITEMAP_MODULES.filter((module) => isLaunchSurfaceEnabled(module.surface)).forEach((module) => {
+  TERRITORY_SITEMAP_MODULES.filter((module) => surfaceScope.isEnabled(module.surface)).forEach((module) => {
     urls.push({
       loc: `${baseUrl}${module.buildUrl(publicPath)}`,
       changefreq: 'daily',
@@ -230,6 +244,7 @@ function collectSitemapUrls(
   locations: SitemapLocation[],
   groups: TerritorialGroupWithMembers[],
   baseUrl: string,
+  surfaceScope: SitemapSurfaceScope,
 ): SitemapUrl[] {
   const normalizedBaseUrl = resolveSitemapBaseUrl(baseUrl);
   const urls: SitemapUrl[] = [
@@ -242,7 +257,7 @@ function collectSitemapUrls(
 
   const staticPages = [
     { path: '/ba/salvador', priority: 0.95, changefreq: 'daily' as const },
-    ...(isLaunchSurfaceEnabled('nearby')
+    ...(surfaceScope.isEnabled('nearby')
       ? [
           {
             path: buildAppModulePath(APP_MODULE_SLUGS.nearby),
@@ -275,6 +290,7 @@ function collectSitemapUrls(
           normalizedBaseUrl,
           publicPath,
           false,
+          surfaceScope,
         ),
       );
     });
@@ -291,6 +307,7 @@ function collectSitemapUrls(
             normalizedBaseUrl,
             groupPath,
             true,
+            surfaceScope,
           ),
         );
       }
@@ -338,14 +355,18 @@ export function generateSitemap(
   locations: SitemapLocation[],
   groups: TerritorialGroupWithMembers[],
   baseUrl: string,
+  surfaceScope: SitemapSurfaceScope,
 ): string {
-  return renderSitemapUrlset(collectSitemapUrls(locations, groups, baseUrl));
+  return renderSitemapUrlset(
+    collectSitemapUrls(locations, groups, baseUrl, surfaceScope),
+  );
 }
 
 export function generateSitemapArtifacts(
   locations: SitemapLocation[],
   groups: TerritorialGroupWithMembers[],
   baseUrl: string,
+  surfaceScope: SitemapSurfaceScope,
   maxUrlsPerFile = SITEMAP_URL_CHUNK_SIZE,
 ): SitemapArtifact[] {
   if (
@@ -359,7 +380,12 @@ export function generateSitemapArtifacts(
   }
 
   const normalizedBaseUrl = resolveSitemapBaseUrl(baseUrl);
-  const urls = collectSitemapUrls(locations, groups, normalizedBaseUrl);
+  const urls = collectSitemapUrls(
+    locations,
+    groups,
+    normalizedBaseUrl,
+    surfaceScope,
+  );
 
   if (urls.length <= maxUrlsPerFile) {
     return [
@@ -413,6 +439,7 @@ export async function generateAndSaveSitemap(
     inventory.locations,
     inventory.groups,
     resolveSitemapBaseUrl(),
+    options.surfaceScope,
   );
 
   await removeStaleSitemapChunks(outputDirectory);
