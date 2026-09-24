@@ -50,6 +50,8 @@ describe("nearby MVP boundary", () => {
     expect(card).not.toContain("APP_MODULE_SLUGS");
     expect(card).not.toContain("useFriendlyModuleUrls");
     expect(map).toContain("url: business.canonicalUrl");
+    expect(map).toContain("navigate(business.canonicalUrl)");
+    expect(map).toContain("onMarkerClick={handleMarkerClick}");
     expect(map).toContain("projectBusiness");
   });
 
