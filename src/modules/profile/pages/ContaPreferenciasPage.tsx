@@ -3,7 +3,6 @@ import { useLocation, useNavigate } from "react-router-dom";
 import { Helmet } from "react-helmet-async";
 import {
   Accessibility,
-  Bell,
   CheckCircle2,
   ChevronRight,
   Eye,
@@ -26,12 +25,6 @@ import type { AccessibilityFontSize } from "@/shared/accessibility/preferences";
 import { cn } from "@/shared/utils/cn";
 
 const PREFERENCE_ROWS = [
-  {
-    title: "Notificações",
-    description: "Canais, frequência e horário silencioso.",
-    icon: Bell,
-    hrefKey: "notifications",
-  },
   {
     title: "Privacidade e dados",
     description: "Consentimentos, exportação e exclusão da conta.",
@@ -136,8 +129,6 @@ export default function ContaPreferenciasPage() {
     hrefKey: (typeof PREFERENCE_ROWS)[number]["hrefKey"],
   ) => {
     switch (hrefKey) {
-      case "notifications":
-        return ACCOUNT_PATHS.notifications;
       case "privacy":
         return ACCOUNT_PATHS.privacy;
       case "addresses":
