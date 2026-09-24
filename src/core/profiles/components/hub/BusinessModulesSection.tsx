@@ -12,7 +12,7 @@ import { Badge } from "@/shared/components/ui/badge";
 import { SectionFrame } from "./SectionFrame";
 import { EmptyPanel } from "./EmptyPanel";
 import { businessManagementRoutes } from "@/core/business/utils/businessManagementRoutes";
-import { isProductModuleEnabled } from "@/app/config/lifecycleRegistry";
+import { isLaunchSurfaceEnabled } from "@/app/config/launchScope";
 
 import type { ProfileBusinessModuleSnapshot } from "@/core/profiles/services/ProfileBusinessTypes";
 
@@ -130,7 +130,7 @@ function BusinessModuleCard({
   onNavigate: (url: string) => void;
   onCopy: (url: string, label: string) => void;
 }) {
-  const showBilling = isProductModuleEnabled("billing");
+  const showBilling = isLaunchSurfaceEnabled("billing");
   const hasPremiumLink =
     business.subscription.canUseShortPremiumLink && Boolean(business.shareUrl);
 
