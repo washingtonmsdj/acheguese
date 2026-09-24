@@ -1,4 +1,4 @@
-import { render, screen } from "@testing-library/react";
+import { fireEvent, render, screen } from "@testing-library/react";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { MemoryRouter, Route, Routes } from "react-router-dom";
 import { beforeEach, describe, expect, it, vi } from "vitest";
@@ -80,17 +80,33 @@ vi.mock("@/core/search/hooks/useGlobalSearch", () => ({
 vi.mock("@/app/components/territory-vivo/TerritoryMapPreview", () => ({
   default: ({
     featuredResult,
+    markers = [],
+    onMarkerClick,
   }: {
     featuredResult?: {
       href: string;
       actionLabel?: string;
     };
-  }) =>
-    featuredResult ? (
-      <a href={featuredResult.href}>
-        {featuredResult.actionLabel ?? "Ver resultado"}
-      </a>
-    ) : null,
+    markers?: Array<{ id: string }>;
+    onMarkerClick?: (id: string) => void;
+  }) => (
+    <>
+      {featuredResult ? (
+        <a href={featuredResult.href}>
+          {featuredResult.actionLabel ?? "Ver resultado"}
+        </a>
+      ) : null}
+      {markers.map((marker) => (
+        <button
+          key={marker.id}
+          type="button"
+          onClick={() => onMarkerClick?.(marker.id)}
+        >
+          {"Abrir marcador " + marker.id}
+        </button>
+      ))}
+    </>
+  ),
 }));
 
 
@@ -236,6 +252,72 @@ describe("BuscaPage", () => {
       "href",
       "/empresas/ba/salvador/pituba/pizzaria-central",
     );
+  });
+
+  it("opens a Business result marker through canonical navigation", async () => {
+    mocks.useGlobalSearch.mockImplementation(
+      (initialQuery, initialFilters, options) => ({
+        query: initialQuery,
+        setQuery: mocks.setQuery,
+        updateFilters: mocks.updateFilters,
+        results: {
+          documents: [
+            {
+              id: "business-1",
+              type: "business",
+              title: "Pizzaria Central",
+              subtitle: "restaurant",
+              url: "/empresas/ba/salvador/pituba/pizzaria-central",
+            },
+          ],
+          communities: [],
+          businesses: [
+            {
+              id: "business-1",
+              name: "Pizzaria Central",
+              category: "restaurant",
+              description: "Pizza no bairro",
+              logo_url: null,
+              location: { name: "Pituba" },
+              business_city: "Salvador",
+              address: {
+                latitude: -13.003,
+                longitude: -38.458,
+              },
+              rating: 4.8,
+            },
+          ],
+          professionals: [],
+          opportunities: [],
+          classifieds: [],
+          events: [],
+          posts: [],
+          coupons: [],
+          total: 1,
+        },
+        isLoading: false,
+        error: null,
+        clearQuery: vi.fn(),
+        suggestions: [],
+        history: [],
+        refetch: vi.fn(),
+        clearHistory: vi.fn(),
+        filters: initialFilters,
+        options,
+      }),
+    );
+
+    renderPage("/busca/ba/salvador/pituba?q=pizza");
+
+    fireEvent.click(
+      await screen.findByRole("button", {
+        name: "Abrir marcador business-business-1",
+      }),
+    );
+
+    expect(mocks.navigateToBusiness).toHaveBeenCalledWith({
+      id: "business-1",
+    });
   });
 
   it("does not render stale results from paused providers", () => {
