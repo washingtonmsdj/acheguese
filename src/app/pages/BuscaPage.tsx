@@ -80,6 +80,7 @@ interface FilterOption {
 interface BusinessSearchItem {
   id: string;
   name: string;
+  target_url?: string | null;
   logo_url?: string | null;
   category?: string | null;
   neighborhood?: string | null;
@@ -280,10 +281,19 @@ export default function BuscaPage() {
 
   const displayResults = useMemo<SearchResultsViewModel>(() => {
     const documents = results.documents.filter(isVisibleSearchDocument);
+    const businessDocumentUrls = new globalThis.Map(
+      documents
+        .filter(
+          (document) =>
+            document.type === "business" && Boolean(document.url),
+        )
+        .map((document) => [document.id, document.url] as const),
+    );
     const businesses = isLaunchSurfaceEnabled("business")
       ? results.businesses.map((business) => ({
           id: business.id,
           name: business.name,
+          target_url: businessDocumentUrls.get(business.id) ?? null,
           logo_url: business.logo_url,
           category: business.category,
           neighborhood: business.location?.name ?? business.business_city,
@@ -392,7 +402,7 @@ export default function BuscaPage() {
       return {
         title: business.name,
         subtitle: business.neighborhood ?? territoryName,
-        href: moduleUrls.business,
+        href: business.target_url ?? moduleUrls.business,
         imageUrl: business.logo_url,
         actionLabel: "Ver negócio",
       };
