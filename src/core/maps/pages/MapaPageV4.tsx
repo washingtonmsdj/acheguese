@@ -21,7 +21,6 @@ import { DEFAULT_TILE_STYLE } from '../providers/MapProvider';
 import { MAP_DEFAULT_BOUNDS, MAP_DEFAULT_ZOOM } from '../config/defaultCoordinates';
 import { usePublicBrowsingCity } from '@/core/location/hooks/usePublicBrowsingCity';
 import { useResolvedUserLocation } from '@/core/location/hooks/useResolvedUserLocation';
-import { territoryFilterKey } from '@/core/location/hooks/useTerritoryFilter';
 import { useModuleTerritoryFilter } from '@/core/location/hooks/useModuleTerritoryFilter';
 import { useTerritoryLabels } from '@/core/location/hooks/useTerritoryLabels';
 import { useTerritoryPolygon, type TerritoryPolygon } from '../hooks/useTerritoryPolygon';
@@ -56,6 +55,8 @@ const TILE_STYLE_URL = DEFAULT_TILE_STYLE.styleUrl;
 const NEARBY_URL = buildAppModulePath(APP_MODULE_SLUGS.nearby);
 const INITIAL_BOUNDS: BoundingBox = MAP_DEFAULT_BOUNDS;
 const INITIAL_ZOOM = MAP_DEFAULT_ZOOM;
+const EMPTY_MAP_LAYERS: readonly MapLayerKey[] = [];
+const EMPTY_MAP_PROVIDERS: readonly MapLayerProviderRuntime[] = [];
 
 function MvpMapHeader({
   territoryName,
@@ -304,8 +305,8 @@ export default function MapaPageV4({
   resolved,
   activeMemberIds = [],
   presentation = 'standalone',
-  initialLayers = [],
-  providers = [],
+  initialLayers = EMPTY_MAP_LAYERS,
+  providers = EMPTY_MAP_PROVIDERS,
   nearbyEnabled = true,
 }: MapaPageV4Props) {
   const adapterRef = useRef<MapLibreAdapterHandle>(null);
@@ -405,7 +406,6 @@ export default function MapaPageV4({
   );
 
   const {
-    coords: userLocation,
     isGps,
     status: locationStatus,
     sourceMessage,
@@ -438,9 +438,6 @@ export default function MapaPageV4({
     [effectiveResolved, nearbyEnabled],
   );
 
-  const filterKey = isFocusOnlyMode
-    ? 'focus-target'
-    : territoryFilterKey(territoryFilter);
   const fetchers = React.useMemo(() => {
     const next: Partial<Record<MapLayerKey, LayerFetcher>> = {};
 
@@ -450,7 +447,7 @@ export default function MapaPageV4({
     }
 
     return next;
-  }, [filterKey, providers, runtimeTerritoryFilter, visibleLayers]);
+  }, [providers, runtimeTerritoryFilter, visibleLayers]);
 
   const { layerData, loadingLayers, fetchByBounds, clearLayer } = useMapViewportFetch({
     fetchers,
