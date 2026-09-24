@@ -61,6 +61,7 @@ describe("account settings concept contract", () => {
       "Visão geral",
       "Dados de acesso",
       "Segurança",
+      "Notificações",
       "Privacidade e dados",
       "Meus perfis",
       "Preferências",
@@ -76,9 +77,9 @@ describe("account settings concept contract", () => {
     expect(shell).toContain('hashes: ["#acessibilidade"]');
     expect(shell).toContain('excludeHashes: ["#acessibilidade"]');
     expect(shell).toContain("dividerBefore: true");
-    expect(shell).not.toContain('label: "Notificações"');
-    expect(overview).not.toContain('title="Notificações"');
-    expect(preferences).not.toContain('title: "Notificações"');
+    expect(shell).toContain('label: "Notificações"');
+    expect(overview).toContain('title="Notificações"');
+    expect(overview).toContain("ACCOUNT_PATHS.notifications");
   });
 
   it("owns mobile safe areas, nested back targets and the real desktop identity", () => {

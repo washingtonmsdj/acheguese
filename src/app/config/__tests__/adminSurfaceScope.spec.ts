@@ -6,7 +6,7 @@ import {
 } from "../adminSurfaceScope";
 
 describe("adminSurfaceScope", () => {
-  it("inherits product and capability lifecycle for admin surfaces", () => {
+  it("inherits lifecycle except for explicitly uncertified admin-only surfaces", () => {
     expect(isAdminSurfaceEnabled("dashboard")).toBe(true);
     expect(isAdminSurfaceEnabled("empresas")).toBe(true);
     expect(isAdminSurfaceEnabled("mapa")).toBe(true);
@@ -22,8 +22,9 @@ describe("adminSurfaceScope", () => {
     expect(isAdminSurfaceEnabled("assinaturas")).toBe(false);
   });
 
-  it("keeps the uncertified admin messaging console paused independently", () => {
+  it("keeps uncertified admin consoles paused independently from horizontal capabilities", () => {
     expect(isAdminSurfaceEnabled("mensagens")).toBe(false);
+    expect(isAdminSurfaceEnabled("notifications")).toBe(false);
   });
 
   it("filters the full navigation inventory without a second paused list", () => {

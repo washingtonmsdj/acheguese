@@ -55,9 +55,7 @@ describe("active AppLayout route boundary", () => {
       'path="/achados-perdidos',
       'path="/ranking"',
       'path="/gamificacao"',
-      'path="/notificacoes"',
       'path="/settings/email-logs"',
-      'path="/conta/notificacoes"',
     ]) {
       expect(appLayout).not.toContain(pausedPath);
     }
@@ -70,6 +68,7 @@ describe("active AppLayout route boundary", () => {
     for (const capability of [
       "profiles",
       "account",
+      "notifications",
       "territory",
       "map",
       "nearby",
@@ -85,6 +84,8 @@ describe("active AppLayout route boundary", () => {
     expect(appLayout).toContain('path="/mapa"');
     expect(appLayout).toContain('path="/perto-de-mim"');
     expect(appLayout).toContain('path="/busca"');
+    expect(appLayout).toContain('path="/notificacoes"');
+    expect(appLayout).toContain('path="/conta/notificacoes"');
     expect(appLayout).toContain("messagingRoutes.inbox()");
     expect(appLayout).toContain("messagingRoutes.threadPattern()");
     expect(messagingRoutes).toContain('inbox: () => "/mensagens"');
@@ -102,8 +103,6 @@ describe("active AppLayout route boundary", () => {
       "APP_MODULE_SLUGS.gastronomy",
       "APP_MODULE_SLUGS.community",
       "APP_MODULE_SLUGS.touristPoints",
-      "@/app/pages/NotificationsPage",
-      "/notificacoes",
     ]) {
       expect(prefetch).not.toContain(forbidden);
     }
@@ -113,6 +112,8 @@ describe("active AppLayout route boundary", () => {
       "@/core/maps/pages/MapaPageV4",
       "@/core/nearby/pages/NearbyPage",
       "@/app/pages/BuscaPage",
+      "@/app/pages/NotificationsPage",
+      "/notificacoes",
     ]) {
       expect(prefetch).toContain(activeOwner);
     }
@@ -128,8 +129,6 @@ describe("active AppLayout route boundary", () => {
       "@/modules/community-",
       "@/modules/business/education",
       "@/core/mobility",
-      "NotificationsPage",
-      "NotificationPreferencesPage",
       "EmailLogsPage",
     ]) {
       expect(activeLazyImports).not.toContain(forbidden);
@@ -143,6 +142,12 @@ describe("active AppLayout route boundary", () => {
     );
     expect(activeLazyImports).toContain(
       'import("@/core/nearby/pages/NearbyPage")',
+    );
+    expect(activeLazyImports).toContain(
+      'import("@/app/pages/NotificationsPage")',
+    );
+    expect(activeLazyImports).toContain(
+      'import("@/app/pages/NotificationPreferencesPage")',
     );
   });
 
