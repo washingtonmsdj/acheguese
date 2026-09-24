@@ -51,7 +51,7 @@ export const DOMAIN_REGISTRY: DomainRegistryEntry[] = [
     ],
     docsPaths: [
       "docs/ARCHITECTURE.md",
-            "docs/GEOGRAPHIC_FOUNDATION.md",
+      "docs/GEOGRAPHIC_FOUNDATION.md",
       "docs/TERRITORIAL_FOUNDATION.md",
       "src/core/routing/README.md",
       "src/core/location/README.md",
