@@ -16,6 +16,7 @@ interface TerritoryTopbarProps {
   contextLabel: string;
   isAuthenticated: boolean;
   unreadCount?: number;
+  showNotifications?: boolean;
   /** Kept for callers that share the shell; publishing lives in the page/bottom nav. */
   canCreatePost?: boolean;
   searchHref?: string;
@@ -35,6 +36,7 @@ export function TerritoryTopbar({
   contextLabel,
   isAuthenticated,
   unreadCount = 0,
+  showNotifications = false,
   searchHref,
   searchLabel = "Buscar neste território",
   showMobileSearch = true,
@@ -150,22 +152,24 @@ export function TerritoryTopbar({
         </div>
 
         <div className="ml-auto flex items-center gap-1.5 lg:order-4 sm:gap-2">
-          <Link
-            to={isAuthenticated ? "/notificacoes" : "/login"}
-            className="relative flex h-10 w-10 items-center justify-center rounded-full text-white transition-colors hover:bg-white/10 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-territory-sun"
-            aria-label={
-              isAuthenticated && unreadCount > 0
-                ? `${unreadCount} notificações não lidas`
-                : "Notificações"
-            }
-          >
-            <Bell className="h-[1.125rem] w-[1.125rem]" aria-hidden="true" />
-            {isAuthenticated && unreadCount > 0 ? (
-              <span className="absolute -right-1 -top-1 flex h-4 min-w-4 items-center justify-center rounded-full bg-destructive px-1 text-[0.5625rem] font-bold text-destructive-foreground">
-                {unreadCount > 9 ? "9+" : unreadCount}
-              </span>
-            ) : null}
-          </Link>
+          {showNotifications ? (
+            <Link
+              to={isAuthenticated ? "/notificacoes" : "/login"}
+              className="relative flex h-10 w-10 items-center justify-center rounded-full text-white transition-colors hover:bg-white/10 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-territory-sun"
+              aria-label={
+                isAuthenticated && unreadCount > 0
+                  ? `${unreadCount} notificações não lidas`
+                  : "Notificações"
+              }
+            >
+              <Bell className="h-[1.125rem] w-[1.125rem]" aria-hidden="true" />
+              {isAuthenticated && unreadCount > 0 ? (
+                <span className="absolute -right-1 -top-1 flex h-4 min-w-4 items-center justify-center rounded-full bg-destructive px-1 text-[0.5625rem] font-bold text-destructive-foreground">
+                  {unreadCount > 9 ? "9+" : unreadCount}
+                </span>
+              ) : null}
+            </Link>
+          ) : null}
           <Link
             to={isAuthenticated ? messagesHref : "/login"}
             className="relative hidden h-10 w-10 items-center justify-center rounded-full text-white transition-colors hover:bg-white/10 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-territory-sun lg:flex"

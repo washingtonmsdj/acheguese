@@ -7,6 +7,7 @@ import { useSessionContext } from "@/core/session";
 import { AuthService } from "@/core/auth/services/AuthService";
 import { useAppUrls } from "@/core/routing/hooks/useAppUrls";
 import { isLaunchSurfaceEnabled } from "@/app/config/launchScope";
+import { isPlatformCapabilityEnabled } from "@/app/config/lifecycleRegistry";
 
 function getInitials(value?: string | null): string {
   if (!value) return "U";
@@ -29,6 +30,7 @@ export function AppTopbar() {
   const { activeProfile, user } = useSessionContext();
   const appUrls = useAppUrls();
   const showMessages = isLaunchSurfaceEnabled("messaging");
+  const showNotifications = isPlatformCapabilityEnabled("notifications");
   const showBilling = isLaunchSurfaceEnabled("billing");
 
   const handleLogout = async () => {
@@ -49,9 +51,11 @@ export function AppTopbar() {
         <Link to="/sobre" className="hidden text-xs text-muted-foreground transition-colors hover:text-foreground sm:inline">
           Sobre
         </Link>
-        <Link to={appUrls.notifications} className="relative text-muted-foreground transition-colors hover:text-foreground" aria-label="Notificações">
-          <Bell className="h-5 w-5" />
-        </Link>
+        {showNotifications ? (
+          <Link to={appUrls.notifications} className="relative text-muted-foreground transition-colors hover:text-foreground" aria-label="Notificações">
+            <Bell className="h-5 w-5" />
+          </Link>
+        ) : null}
         {showMessages ? (
           <Link to={appUrls.messages} className="relative text-muted-foreground transition-colors hover:text-foreground">
             <MessageCircle className="h-5 w-5" />

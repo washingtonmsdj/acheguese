@@ -7,6 +7,7 @@ import { useSessionContext } from "@/core/session";
 import { AuthService } from "@/core/auth/services/AuthService";
 import { buildPublicAbsoluteUrl } from "@/shared/config/publicAppOrigin";
 import { isLaunchSurfaceEnabled } from "@/app/config/launchScope";
+import { isPlatformCapabilityEnabled } from "@/app/config/lifecycleRegistry";
 
 /**
  * CentralHeader
@@ -16,6 +17,7 @@ import { isLaunchSurfaceEnabled } from "@/app/config/launchScope";
 export function CentralHeader() {
   const { activeProfile, user } = useSessionContext();
   const publicHomeUrl = buildPublicAbsoluteUrl("/");
+  const showNotifications = isPlatformCapabilityEnabled("notifications");
   const showBilling = isLaunchSurfaceEnabled("billing");
 
   const handleLogout = async () => {
@@ -44,9 +46,11 @@ export function CentralHeader() {
         <Link to="/sobre" className="hidden text-xs text-muted-foreground transition-colors hover:text-foreground sm:inline">
           Sobre
         </Link>
-        <Link to="/notificacoes" className="relative text-muted-foreground transition-colors hover:text-foreground" aria-label="Notificações">
-          <Bell className="h-5 w-5" />
-        </Link>
+        {showNotifications ? (
+          <Link to="/notificacoes" className="relative text-muted-foreground transition-colors hover:text-foreground" aria-label="Notificações">
+            <Bell className="h-5 w-5" />
+          </Link>
+        ) : null}
         <Link to="/conta">
           <Avatar className="h-8 w-8 border border-primary/30">
             <AvatarImage src={activeProfile?.avatarUrl || ""} />

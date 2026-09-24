@@ -44,6 +44,7 @@ import {
   isLaunchSurfaceEnabled,
   type LaunchSurfaceKey,
 } from "@/app/config/launchScope";
+import { isPlatformCapabilityEnabled } from "@/app/config/lifecycleRegistry";
 import { useModuleTerritoryFilter } from "@/core/location/hooks/useModuleTerritoryFilter";
 import { usePublicBrowsingCity } from "@/core/location/hooks/usePublicBrowsingCity";
 import type { TerritoryFilter } from "@/core/location/types";
@@ -516,6 +517,7 @@ export default function BuscaPage() {
         contextLabel={contextLabel}
         isAuthenticated={Boolean(user)}
         unreadCount={unreadCount}
+        showNotifications={isPlatformCapabilityEnabled("notifications")}
         searchHref={moduleUrls.search}
         searchLabel="O que você procura por aqui?"
         flushDesktop
