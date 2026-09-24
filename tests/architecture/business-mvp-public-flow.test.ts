@@ -22,6 +22,13 @@ describe("MVP Business public flow", () => {
     expect(page).toContain("realBusinesses.map(normalizeRealBusinessEntry)");
   });
 
+  it("keeps the hero map truthful when active filters return zero results", () => {
+    expect(page).toContain("businesses={filteredBusinesses}");
+    expect(page).not.toContain(
+      "filteredBusinesses.length > 0 ? filteredBusinesses : businessesToShow",
+    );
+  });
+
   it("keeps Business CTAs inside the active MVP module set", () => {
     expect(page).toContain("const nearbyHref = moduleUrls.nearby");
     expect(page).toContain('secondaryLabel="Perto de mim"');
