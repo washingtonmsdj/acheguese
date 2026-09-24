@@ -4,7 +4,7 @@
 **Data do checkpoint GitHub:** 2026-09-24  
 **Repositório:** `washingtonmsdj/acheguese`  
 **Linha ativa:** `main`  
-**Baseline operacional auditada:** `main@9afacdaaa61d66ef9755d606cc2f4f2bad773a36` (merge de #363). Este checkpoint registra o estado do código; não promove um novo release. Qualquer merge posterior gera outro SHA e exige nova prova exact-SHA antes de promoção.
+**Baseline operacional auditada:** `main@4668d0f3ac2092b463dd01de28280b9a08632a13` (merge de #365). Este checkpoint registra o estado do código; não promove um novo release. Qualquer merge posterior gera outro SHA e exige nova prova exact-SHA antes de promoção.
 
 Este documento consolida ordem de execução, blockers e Definition of Done. Ele é um **registro operacional**, não uma fotografia autoritativa do que existe no produto. A fonte de verdade para decidir o que existe, o que está ativo e o que deve ser corrigido é sempre o **projeto real**: código da `main`, rotas, owners, serviços, schema/migrations, contratos, testes, deploy/runtime e comportamento observado.
 
@@ -1748,3 +1748,19 @@ Correção deste corte:
 - `launchScope.ts` permanece apenas como fachada de compatibilidade para consumidores ainda não migrados; não é autoridade nova.
 
 Regra para próximas IAs/chats: em código novo ou ao tocar uma superfície ativa dentro de `src/app`, usar diretamente `lifecycleRegistry.ts`. Não adicionar novos consumidores de `isLaunchSurfaceEnabled` quando a chave já existe em `productModuleRegistry` ou `platformCapabilityRegistry`.
+
+### Checkpoint MVP — prefetch canonical lifecycle boundary (2026-09-24)
+
+Após #365 migrar a AppTopbar, `src/app/routes/prefetch.ts` ainda usava `LaunchSurfaceKey` + `isLaunchSurfaceEnabled` para decidir quais chunks poderiam ser carregados.
+
+Correção deste corte:
+
+- Business é gated diretamente por `isProductModuleEnabled("business")`;
+- Map, Nearby, Search e Notifications são gated por `isPlatformCapabilityEnabled(...)`;
+- o prefetch deixa de importar `launchScope.ts` e não usa mais `LaunchSurfaceKey`;
+- Notifications passa a ter gate explícito também no prefetch por hover/focus, não apenas no idle warmup;
+- o warmup canônico contém `/empresas`, `/mapa`, `/perto-de-mim`, `/busca` e `/notificacoes`;
+- o teste de prefetch passa a integrar `test:mvp:architecture`, impedindo regressão do alias aposentado `/notifications`;
+- loader de superfície pausada continua fail-closed antes de executar `import()`.
+
+Regra futura: prefetch/warmup é boundary ativo do app. Novas entradas devem declarar seu gate canônico de domínio ou capability diretamente; não reintroduzir `LaunchSurfaceKey`/`isLaunchSurfaceEnabled` nesse arquivo.
