@@ -6,17 +6,19 @@ import { Button } from "@/shared/components/ui/button";
 import { useSessionContext } from "@/core/session";
 import { AuthService } from "@/core/auth/services/AuthService";
 import { buildPublicAbsoluteUrl } from "@/shared/config/publicAppOrigin";
-import { isLaunchSurfaceEnabled } from "@/app/config/launchScope";
 
 /**
  * CentralHeader
  *
  * Header principal da Central.
  */
-export function CentralHeader() {
+interface CentralHeaderProps {
+  readonly billingEnabled: boolean;
+}
+
+export function CentralHeader({ billingEnabled }: CentralHeaderProps) {
   const { activeProfile, user } = useSessionContext();
   const publicHomeUrl = buildPublicAbsoluteUrl("/");
-  const showBilling = isLaunchSurfaceEnabled("billing");
 
   const handleLogout = async () => {
     await AuthService.signOut();
@@ -36,7 +38,7 @@ export function CentralHeader() {
           <Home className="h-4 w-4" />
           <span className="hidden sm:inline">Ver site</span>
         </a>
-        {showBilling ? (
+        {billingEnabled ? (
           <Link to="/planos" className="hidden text-xs text-muted-foreground transition-colors hover:text-foreground sm:inline">
             Planos
           </Link>
