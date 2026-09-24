@@ -62,6 +62,10 @@ describe("MVP canonical routing without compatibility redirects", () => {
     expect(prefetch).not.toContain('path.startsWith("/notifications")');
     expect(serviceWorker).toContain("fallback = '/notificacoes'");
     expect(serviceWorker).not.toContain("return '/notifications'");
+    expect(serviceWorker).toContain("gastronomia|servicos|services|classificados|classifieds");
+    expect(serviceWorker).toContain("getLaunchSafeNotificationUrl(");
+    expect(serviceWorker).not.toContain("return `/gastronomia/pedidos/");
+    expect(serviceWorker).not.toContain("return '/perto-de-mim';");
   });
 
   it("does not preserve query-param redirects for retired account navigation", () => {

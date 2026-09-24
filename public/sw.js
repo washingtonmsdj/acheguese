@@ -199,7 +199,7 @@ self.addEventListener('notificationclose', (event) => {
  * Get URL for notification click based on notification data
  */
 const PAUSED_NOTIFICATION_ROUTE_PATTERN =
-  /^\/(?:mobility|mobilidade|track|educacao|comunicacao|cupons|ranking|gamificacao|analytics|alertas|achados-perdidos|achados-e-perdidos|problemas|planos|checkout)(?:\/|$)|^\/settings\/subscription(?:\/|$)/i;
+  /^\/(?:community|comunidade|gastronomia|servicos|services|classificados|classifieds|pontos-turisticos|tourist-points|educacao|education|vagas|jobs|eventos|events|comunicacao|communication|mobility|mobilidade|track|cupons|coupons|ranking|gamificacao|gamification|analytics|alertas|achados-perdidos|achados-e-perdidos|problemas|planos|checkout)(?:\/|$)|^\/settings\/subscription(?:\/|$)/i;
 
 function getLaunchSafeNotificationUrl(url, fallback = '/notificacoes') {
   if (!url) return fallback;
@@ -216,10 +216,13 @@ function getNotificationUrl(data) {
       return '/notificacoes';
     
     case 'ride':
-      return '/perto-de-mim';
+      return getLaunchSafeNotificationUrl('/mobilidade', '/notificacoes');
     
     case 'order':
-      return `/gastronomia/pedidos/${data.orderId || ''}`;
+      return getLaunchSafeNotificationUrl(
+        `/gastronomia/pedidos/${data.orderId || ''}`,
+        '/notificacoes'
+      );
     
     case 'payment':
       return getLaunchSafeNotificationUrl('/settings/subscription');

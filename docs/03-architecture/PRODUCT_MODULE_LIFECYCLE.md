@@ -113,6 +113,19 @@ Regras:
 - payload stale de domínio pausado deve ser descartado também na apresentação;
 - Search não vira owner dos dados pesquisados.
 
+## Notifications
+
+Notifications é capability horizontal de plataforma.
+
+No MVP:
+
+- Inbox canônica: `/notificacoes`;
+- preferências canônicas: `/conta/notificacoes`;
+- o owner permanece em `core/notifications`, independente de Business, Mobility, Gastronomy ou outro vertical;
+- verticais publicam eventos de notificação por contratos/adapters, sem assumir ownership da Inbox;
+- uma notificação originada por domínio `paused` pode continuar existindo no histórico, mas seu clique não pode reabrir rota daquele domínio; o fallback seguro é a Inbox;
+- reativar uma vertical adiciona seu provider/adapter ao lifecycle sem exigir reconstruir Notifications.
+
 ## Messaging
 
 Messaging é capability horizontal.
