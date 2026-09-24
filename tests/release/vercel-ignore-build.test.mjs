@@ -65,7 +65,7 @@ describe("Vercel ignored build step", () => {
 
   it("skips only known non-deploy paths on the production branch", () => {
     const skippable = [
-      "docs/03-architecture/G5_LIVE_REVALIDATION_2026-08-30.md",
+      "docs/10-archive/architecture-checkpoints/G5_LIVE_REVALIDATION_2026-08-30.md",
       ".github/workflows/ssot-tests.yml",
       "tests/security/example.test.ts",
       "e2e/example.spec.ts",
