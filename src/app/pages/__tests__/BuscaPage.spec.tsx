@@ -7,6 +7,7 @@ import BuscaPage from "../BuscaPage";
 
 const mocks = vi.hoisted(() => ({
   isLaunchSurfaceEnabled: vi.fn(),
+  getActiveSearchProviderBuckets: vi.fn(),
   useGlobalSearch: vi.fn(),
   navigateToBusiness: vi.fn(),
   setQuery: vi.fn(),
@@ -15,6 +16,27 @@ const mocks = vi.hoisted(() => ({
 
 vi.mock("@/app/config/launchScope", () => ({
   isLaunchSurfaceEnabled: mocks.isLaunchSurfaceEnabled,
+}));
+
+vi.mock("@/app/config/searchProviderScope", () => ({
+  getActiveSearchProviderBuckets: mocks.getActiveSearchProviderBuckets,
+  isSearchDocumentTypeEnabled: (
+    type: string,
+    activeBuckets: readonly string[],
+  ) => {
+    const bucketByType: Record<string, string | null> = {
+      community: "communities",
+      business: "businesses",
+      professional: "professionals",
+      opportunity: "opportunities",
+      classified: "classifieds",
+      event: "events",
+      post: "posts",
+      coupon: null,
+    };
+    const bucket = bucketByType[type];
+    return bucket !== null && activeBuckets.includes(bucket);
+  },
 }));
 
 vi.mock("@/core/session", () => ({
@@ -128,6 +150,7 @@ function renderPage(path: string) {
 describe("BuscaPage", () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    mocks.getActiveSearchProviderBuckets.mockReturnValue(["businesses"]);
     mocks.isLaunchSurfaceEnabled.mockImplementation((surface: string) =>
       ["home", "business", "map", "nearby", "search", "messaging"].includes(
         surface,
@@ -187,7 +210,10 @@ describe("BuscaPage", () => {
           location_id: "loc-pituba",
         },
       },
-      { enabled: true },
+      {
+        enabled: true,
+        providerBuckets: ["businesses"],
+      },
     );
   });
 

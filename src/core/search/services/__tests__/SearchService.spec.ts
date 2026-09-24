@@ -3,7 +3,6 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 import { SearchService } from "../SearchService";
 
 const mocks = vi.hoisted(() => ({
-  isLaunchSurfaceEnabled: vi.fn(),
   searchPublicCommunities: vi.fn(),
   listActiveByCommunity: vi.fn(),
   getBusinessesList: vi.fn(),
@@ -22,10 +21,6 @@ const mocks = vi.hoisted(() => ({
     warn: vi.fn(),
     error: vi.fn(),
   },
-}));
-
-vi.mock("@/app/config/launchScope", () => ({
-  isLaunchSurfaceEnabled: mocks.isLaunchSurfaceEnabled,
 }));
 
 vi.mock("@/core/business", () => ({
@@ -103,6 +98,27 @@ const territoryFilter = {
   scope: "location" as const,
   location_id: "loc-pituba",
 };
+
+const ALL_PROVIDER_BUCKETS = [
+  "communities",
+  "businesses",
+  "professionals",
+  "opportunities",
+  "classifieds",
+  "events",
+  "posts",
+] as const;
+
+function searchAll(
+  query: string,
+  filters: Parameters<typeof SearchService.search>[1] = {},
+  options: Parameters<typeof SearchService.search>[2] = {},
+) {
+  return SearchService.search(query, filters, {
+    ...options,
+    providerBuckets: ALL_PROVIDER_BUCKETS,
+  });
+}
 
 const community = {
   id: "community-1",
@@ -279,7 +295,6 @@ describe("SearchService", () => {
   beforeEach(() => {
     vi.clearAllMocks();
 
-    mocks.isLaunchSurfaceEnabled.mockReturnValue(true);
     mocks.listActiveByCommunity.mockResolvedValue([]);
     mocks.searchPublicCommunities.mockResolvedValue([community]);
     mocks.getBusinessesList.mockResolvedValue({ businesses: [business] });
@@ -318,8 +333,21 @@ describe("SearchService", () => {
     expect(mocks.listActiveByCommunity).not.toHaveBeenCalled();
   });
 
-  it("federates canonical domain read models into SearchDocument results", async () => {
+  it("fails closed when the composition root omits provider authorization", async () => {
     const result = await SearchService.search("pizza", {
+      category: "all",
+      territoryFilter,
+    });
+
+    expect(result.total).toBe(0);
+    expect(result.documents).toEqual([]);
+    expect(mocks.getBusinessesList).not.toHaveBeenCalled();
+    expect(mocks.searchPublicCommunities).not.toHaveBeenCalled();
+    expect(mocks.searchProfessionals).not.toHaveBeenCalled();
+  });
+
+  it("federates canonical domain read models into SearchDocument results", async () => {
+    const result = await searchAll("pizza", {
       category: "all",
       territoryFilter,
     });
@@ -388,7 +416,7 @@ describe("SearchService", () => {
   });
 
   it("only queries the selected category bucket", async () => {
-    const result = await SearchService.search("pizza", {
+    const result = await searchAll("pizza", {
       category: "events",
       territoryFilter,
     });
@@ -405,15 +433,16 @@ describe("SearchService", () => {
     expect(mocks.searchPublicPosts).not.toHaveBeenCalled();
   });
 
-  it("does not query launch-paused buckets or expose them in suggestions", async () => {
-    mocks.isLaunchSurfaceEnabled.mockImplementation(
-      (surface: string) => surface !== "events" && surface !== "jobs",
+  it("runs only buckets explicitly authorized by the composition root", async () => {
+    const activeBuckets = ALL_PROVIDER_BUCKETS.filter(
+      (bucket) => bucket !== "events" && bucket !== "opportunities",
     );
 
-    const result = await SearchService.search("pizza", {
-      category: "all",
-      territoryFilter,
-    });
+    const result = await SearchService.search(
+      "pizza",
+      { category: "all", territoryFilter },
+      { providerBuckets: activeBuckets },
+    );
 
     expect(result.documents.map((document) => document.type)).toEqual([
       "community",
@@ -426,23 +455,22 @@ describe("SearchService", () => {
     expect(result.events).toHaveLength(0);
     expect(mocks.listPublicOpportunityCards).not.toHaveBeenCalled();
     expect(mocks.getEventsPage).not.toHaveBeenCalled();
-    expect(SearchService.getSearchSuggestions()).not.toContain("eventos hoje");
+    expect(SearchService.getSearchSuggestions(activeBuckets)).not.toContain(
+      "eventos hoje",
+    );
 
-    const explicitPausedResult = await SearchService.search("pizza", {
-      category: "events",
-      territoryFilter,
-    });
+    const explicitPausedResult = await SearchService.search(
+      "pizza",
+      { category: "events", territoryFilter },
+      { providerBuckets: activeBuckets },
+    );
 
     expect(explicitPausedResult.total).toBe(0);
     expect(mocks.getEventsPage).not.toHaveBeenCalled();
   });
 
-  it("exposes suggestions only from lifecycle-enabled search buckets", () => {
-    mocks.isLaunchSurfaceEnabled.mockImplementation(
-      (surface: string) => surface === "business",
-    );
-
-    expect(SearchService.getSearchSuggestions()).toEqual([
+  it("exposes suggestions only from explicitly authorized buckets", () => {
+    expect(SearchService.getSearchSuggestions(["businesses"])).toEqual([
       "restaurantes",
       "salao de beleza",
       "pet shop",
@@ -450,12 +478,11 @@ describe("SearchService", () => {
     ]);
   });
 
-  it("adds provider-specific suggestions only when that provider is enabled", () => {
-    mocks.isLaunchSurfaceEnabled.mockImplementation(
-      (surface: string) => surface === "business" || surface === "services",
-    );
-
-    const suggestions = SearchService.getSearchSuggestions();
+  it("adds provider-specific suggestions only when that bucket is authorized", () => {
+    const suggestions = SearchService.getSearchSuggestions([
+      "businesses",
+      "professionals",
+    ]);
 
     expect(suggestions).toEqual([
       "restaurantes",
@@ -479,7 +506,7 @@ describe("SearchService", () => {
       businesses: [business, unlinkedBusiness],
     });
 
-    const result = await SearchService.search("pizza", {
+    const result = await searchAll("pizza", {
       category: "businesses",
       territoryFilter,
       communityId: "community-1",
@@ -497,7 +524,7 @@ describe("SearchService", () => {
   });
 
   it("fails closed for community opportunities without canonical territory", async () => {
-    const result = await SearchService.search("pizza", {
+    const result = await searchAll("pizza", {
       category: "opportunities",
       communityId: "community-1",
     });
@@ -537,7 +564,7 @@ describe("SearchService", () => {
       { entity_type: "post", entity_id: "post-1" },
     ]);
 
-    const result = await SearchService.search("pizza", {
+    const result = await searchAll("pizza", {
       category: "all",
       territoryFilter,
       communityId: "community-1",
@@ -573,7 +600,7 @@ describe("SearchService", () => {
   it("isolates a failed provider without discarding healthy domain results", async () => {
     mocks.getBusinessesList.mockRejectedValueOnce(new Error("business unavailable"));
 
-    const result = await SearchService.search("pizza", {
+    const result = await searchAll("pizza", {
       category: "all",
       territoryFilter,
     });
@@ -591,7 +618,7 @@ describe("SearchService", () => {
     controller.abort(new DOMException("cancelled", "AbortError"));
 
     await expect(
-      SearchService.search("pizza", {}, { signal: controller.signal }),
+      searchAll("pizza", {}, { signal: controller.signal }),
     ).rejects.toMatchObject({ name: "AbortError" });
     expect(mocks.getBusinessesList).not.toHaveBeenCalled();
   });

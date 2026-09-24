@@ -9,6 +9,7 @@ describe("Federated Search ownership", () => {
   it("keeps SearchService as the only horizontal orchestrator", () => {
     const service = read("src/core/search/services/SearchService.ts");
     const providers = read("src/core/search/providers/searchProviders.ts");
+    const providerScope = read("src/app/config/searchProviderScope.ts");
 
     expect(service).toContain("export class SearchService");
     expect(service).toContain("getSearchProviders");
@@ -30,10 +31,13 @@ describe("Federated Search ownership", () => {
     expect(providers).not.toContain("public_professional_search");
   });
 
-  it("keeps paused domain runtimes lazy behind launch-enabled providers", () => {
+  it("keeps all domain runtimes lazy behind app-authorized provider buckets", () => {
     const providers = read("src/core/search/providers/searchProviders.ts");
+    const providerScope = read("src/app/config/searchProviderScope.ts");
 
-    expect(providers).toContain(
+    expect(providers).not.toContain("@/app/config");
+    expect(providers).not.toContain("isLaunchSurfaceEnabled");
+    expect(providers).not.toContain(
       'import { BusinessService } from "@/core/business";',
     );
 
@@ -51,6 +55,7 @@ describe("Federated Search ownership", () => {
     }
 
     for (const lazyModule of [
+      "@/core/business",
       "@/core/community-experience/services/CommunityExperienceService",
       "@/core/professional/services/ProfessionalService",
       "@/core/professional/services/ProfessionalUrlService",
@@ -64,12 +69,15 @@ describe("Federated Search ownership", () => {
     }
 
     expect(providers).toContain("await import(");
-    expect(providers).toContain('isEnabled: () => isLaunchSurfaceEnabled("business")');
-    expect(providers).toContain('isEnabled: () => isLaunchSurfaceEnabled("services")');
-    expect(providers).toContain('isEnabled: () => isLaunchSurfaceEnabled("classifieds")');
-    expect(providers).toContain('isEnabled: () => isLaunchSurfaceEnabled("events")');
-    expect(providers).toContain('isEnabled: () => isLaunchSurfaceEnabled("jobs")');
-    expect(providers).toContain('isEnabled: () => isLaunchSurfaceEnabled("community")');
+    expect(providers).toContain("providerBuckets");
+    expect(providerScope).toContain('isPlatformCapabilityEnabled("search")');
+    expect(providerScope).toContain("isProductModuleEnabled");
+    expect(providerScope).toContain('businesses: "business"');
+    expect(providerScope).toContain('professionals: "services"');
+    expect(providerScope).toContain('opportunities: "jobs"');
+    expect(providerScope).toContain('classifieds: "classifieds"');
+    expect(providerScope).toContain('events: "events"');
+    expect(providerScope).toContain('posts: "community"');
   });
 
   it("keeps domain read models owned by Business and Professional", () => {
@@ -116,6 +124,8 @@ describe("Federated Search ownership", () => {
     const hook = read("src/core/search/hooks/useGlobalSearch.ts");
 
     expect(hook).toContain("SearchService.search");
+    expect(hook).toContain("providerBuckets");
+    expect(hook).not.toContain("@/app/config");
     expect(hook).not.toContain("@/modules/");
   });
 

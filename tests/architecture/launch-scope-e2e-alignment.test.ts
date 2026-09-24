@@ -9,6 +9,7 @@ const read = (path: string) => readFileSync(resolve(root, path), "utf8");
 
 const launchScope = read("src/app/config/launchScope.ts");
 const nearbyProviderScope = read("src/app/config/nearbyProviderScope.ts");
+const searchProviderScope = read("src/app/config/searchProviderScope.ts");
 const launchE2e = read("tests/e2e/launch-scope-public.spec.ts");
 const appRoutes = read("src/app/routes/sections/AppLayoutRoutes.tsx");
 const searchProviders = read("src/core/search/providers/searchProviders.ts");
@@ -68,25 +69,23 @@ describe("MVP launch-scope alignment", () => {
     expect(appRoutes).not.toContain("LaunchPausedPage");
   });
 
-  it("limits global search providers to launch-enabled domains", () => {
-    expect(searchProviders).toContain(
-      'bucket: "professionals",\n  linkedEntityTypes: ["professional"],\n  isEnabled: () => isLaunchSurfaceEnabled("services")',
+  it("limits global search providers through the application lifecycle scope", () => {
+    expect(searchProviders).not.toContain("@/app/config");
+    expect(searchProviders).not.toContain("isLaunchSurfaceEnabled");
+    expect(searchProviders).toContain("providerBuckets");
+    expect(searchProviderScope).toContain(
+      'isPlatformCapabilityEnabled("search")',
     );
-    expect(searchProviders).toContain(
-      'bucket: "opportunities",\n  linkedEntityTypes: [],\n  isEnabled: () => isLaunchSurfaceEnabled("jobs")',
+    expect(searchProviderScope).toContain(
+      "isProductModuleEnabled",
     );
-    expect(searchProviders).toContain(
-      'bucket: "events",\n  linkedEntityTypes: ["event"],\n  isEnabled: () => isLaunchSurfaceEnabled("events")',
-    );
-    expect(searchProviders).toContain(
-      'bucket: "businesses",\n  linkedEntityTypes: ["business"],\n  isEnabled: () => isLaunchSurfaceEnabled("business")',
-    );
-
-    expect(searchPage).toContain('launchSurface: "community"');
-    expect(searchPage).toContain('launchSurface: "services"');
-    expect(searchPage).toContain('launchSurface: "classifieds"');
-    expect(searchPage).toContain('surface: "services"');
-    expect(searchPage).toContain('surface: "classifieds"');
+    expect(searchProviderScope).toContain('businesses: "business"');
+    expect(searchProviderScope).toContain('professionals: "services"');
+    expect(searchProviderScope).toContain('opportunities: "jobs"');
+    expect(searchProviderScope).toContain('classifieds: "classifieds"');
+    expect(searchProviderScope).toContain('events: "events"');
+    expect(searchPage).toContain("getActiveSearchProviderBuckets()");
+    expect(searchPage).toContain("providerBuckets: activeSearchBuckets");
   });
 
   it("keeps active documentation aligned with domain/capability lifecycle", () => {
