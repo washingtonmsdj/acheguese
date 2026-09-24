@@ -1,35 +1,46 @@
-# Checkpoint — lifecycle canônico no grafo privado ativo (2026-09-24)
+# Checkpoint — limpeza do grafo privado ativo (2026-09-24)
 
 ## Objetivo
 
-Remover dependências residuais da fachada `launchScope.ts` das superfícies privadas que fazem parte do MVP e impedir que verticais pausadas reapareçam na Conta/Central.
+Remover verticais pausadas da Conta/Central/gestão Business sem inverter a direção de dependências da arquitetura.
+
+## Fronteira de lifecycle
+
+O lifecycle canônico continua pertencendo a `src/app/config/productModuleRegistry.ts`,
+`platformCapabilityRegistry.ts` e `lifecycleRegistry.ts`.
+
+Arquivos dentro de `src/app` podem consumir esses owners diretamente. Já `core/*` e
+`modules/*` não podem importar `app/config/lifecycleRegistry`: quando ainda precisam
+consultar o estado de uma superfície, usam a projeção compatível `launchScope.ts` até que
+o estado seja composto/injetado pela camada `app`. O gate de dependências protege essa direção.
 
 ## Mudanças
 
-- `CentralHeader`, navegação da Conta, resumo da Conta, hub de Empresas e gestão de link premium usam os registries canônicos de lifecycle;
-- Billing, Family Safety, Mobility e Public Analytics continuam obedecendo `productModuleRegistry.ts`;
-- Mapa continua capability horizontal e é consultado por `platformCapabilityRegistry.ts`;
-- a Conta deixa de anunciar Serviços e Comunidade enquanto os módulos estão pausados;
-- o resumo da Conta deixa de apresentar Posts, Serviços e Classificados como áreas ativas;
-- o hub de Empresas deixa de expor Gastronomia, Delivery, Mobility e Analytics no grafo ativo;
-- `useProfileHub` aposenta catálogos `operationalLinks`/`ecosystemLinks`/`moduleUrls` sem caller, removendo imports e URLs de verticais pausadas do runtime da Conta;
-- recursos premium já concedidos podem continuar gerenciáveis sem reabrir compra/Billing.
+- a Conta deixa de anunciar Serviços e Comunidade enquanto esses domínios estão pausados;
+- o resumo legado da Conta deixa de apresentar Posts, Serviços e Classificados como áreas ativas;
+- o hub de Empresas deixa de expor Gastronomia, Delivery, Mobility e Public Analytics no grafo ativo;
+- `useProfileHub` aposenta catálogos `operationalLinks`, `ecosystemLinks` e `moduleUrls` sem caller,
+  removendo URLs/imports de verticais pausadas do runtime ativo da Conta;
+- Billing continua pausado; recursos premium já concedidos podem permanecer gerenciáveis sem
+  reabrir compra ou rota de planos;
+- nenhum módulo pós-MVP foi ativado.
 
 ## Ratchets
 
-Os testes privados agora impedem:
+Os testes privados impedem:
 
-- retorno de `isLaunchSurfaceEnabled` às superfícies privadas ativas;
-- links de Serviços/Comunidade na Conta com esses módulos pausados;
-- métricas de Posts/Serviços/Classificados no resumo ativo;
+- links de Serviços/Comunidade na Conta enquanto esses módulos estão pausados;
+- métricas de Posts/Serviços/Classificados no resumo do MVP;
 - referências a `business.gastronomy`, Mobility ou Public Analytics no hub Business ativo;
-- retorno dos catálogos órfãos de links pós-MVP pelo `useProfileHub`.
+- retorno dos catálogos órfãos de links pós-MVP pelo `useProfileHub`;
+- imports diretos de lifecycle de `app` por camadas `core/modules`, já cobertos pelo validator de dependências.
 
 ## Release
 
-Nenhum módulo pós-MVP foi ativado. Os blockers externos de release permanecem separados do frontend:
+Os blockers externos permanecem separados do frontend:
 
-- #305: conexão SQL/Data Plane Supabase ainda reproduz timeout;
-- #309: GitHub Actions ainda precisa de autoridade de deploy Edge Functions apropriada.
+- #305: o Data Plane/SQL do Supabase ainda reproduziu `Connection terminated due to connection timeout`
+  em 2026-09-24, apesar do projeto reportar `ACTIVE_HEALTHY`;
+- #309: o GitHub Actions ainda precisa de um PAT Supabase com autoridade de deploy de Edge Functions.
 
-Não criar fallback, redirect ou bypass para mascarar esses blockers.
+Não criar fallback, redirect, retry artificial ou bypass de segurança para mascarar esses blockers.
