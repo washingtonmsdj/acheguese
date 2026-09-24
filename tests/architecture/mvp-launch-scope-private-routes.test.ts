@@ -51,9 +51,6 @@ describe("MVP private launch-scope boundaries", () => {
     const launchScope = read("src/app/config/launchScope.ts");
     const routes = read("src/app/routes/sections/CentralRoutes.tsx");
     const activeLazy = read("src/app/routes/activeCentralLazyImports.ts");
-    const profileNavigation = read(
-      "src/modules/profile/utils/profileNavigation.ts",
-    );
     const businessHub = read(
       "src/core/profiles/components/hub/BusinessModulesSection.tsx",
     );
@@ -67,8 +64,9 @@ describe("MVP private launch-scope boundaries", () => {
     expect(
       existsSync(join(ROOT, "src/modules/business/dashboard/pages/BusinessPlansPage.tsx")),
     ).toBe(true);
-    expect(profileNavigation).toContain('planos: "billing"');
-    expect(profileNavigation).toContain("isLaunchSurfaceEnabled(surface)");
+    expect(
+      existsSync(join(ROOT, "src/modules/profile/utils/profileNavigation.ts")),
+    ).toBe(false);
     expect(businessHub).not.toContain("business.gastronomy");
     expect(businessHub).not.toContain('isProductModuleEnabled("mobility")');
     expect(businessHub).not.toContain('isProductModuleEnabled("publicAnalytics")');
