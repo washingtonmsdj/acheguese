@@ -19,7 +19,7 @@
 ### Contrato de integração
 
 - Mapa público renderiza somente layers de módulos ativos; no MVP, o layer de domínio é Business.
-- Perto de mim é owner horizontal. No MVP, o provider Business consulta proximidade e projeta as mesmas URLs canônicas de Empresas; providers futuros entram pelo registry/scope sem tomar ownership da capability. Em rota territorial, o território resolvido pela URL prevalece sobre estado global lembrado; GPS real continua sendo a única fonte de distância pessoal.
+- Perto de mim é owner horizontal. No MVP, o provider Business consulta proximidade e projeta as mesmas URLs canônicas de Empresas; providers futuros entram pelo registry/scope sem tomar ownership da capability. Em grupos territoriais, `activeMemberIds` é derivado dos rollout owners dos providers ativos e agregado por união; não existe mais `nearby -> Business` hardcoded no layout. Em rota territorial, o território resolvido pela URL prevalece sobre estado global lembrado; GPS real continua sendo a única fonte de distância pessoal.
 - Busca consulta apenas providers cujas superfícies estão ativas; no corte atual, Business é o provider público principal.
 - Categoria de empresa não depende do lifecycle de uma vertical especializada. Uma escola pode aparecer em Empresas/Mapa/Perto de mim enquanto `education=false`.
 - Nenhum módulo pausado pode reaparecer por URL direta, navegação, preview, busca, mapa, Central ou Admin. No shell público, módulo `paused` não tem rota/fallback próprio; URL sem owner ativo cai no 404 canônico.
