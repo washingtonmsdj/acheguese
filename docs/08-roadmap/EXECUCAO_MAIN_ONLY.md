@@ -4,7 +4,7 @@
 **Data do checkpoint GitHub:** 2026-09-24  
 **Repositório:** `washingtonmsdj/acheguese`  
 **Linha ativa:** `main`  
-**Baseline operacional auditada:** `main@2a630ab1a90deca07c2d5a84ca9cf5953c892003` (merge de #359). Este checkpoint registra o estado do código; não promove um novo release. Qualquer merge posterior gera outro SHA e exige nova prova exact-SHA antes de promoção.
+**Baseline operacional auditada:** `main@9afacdaaa61d66ef9755d606cc2f4f2bad773a36` (merge de #363). Este checkpoint registra o estado do código; não promove um novo release. Qualquer merge posterior gera outro SHA e exige nova prova exact-SHA antes de promoção.
 
 Este documento consolida ordem de execução, blockers e Definition of Done. Ele é um **registro operacional**, não uma fotografia autoritativa do que existe no produto. A fonte de verdade para decidir o que existe, o que está ativo e o que deve ser corrigido é sempre o **projeto real**: código da `main`, rotas, owners, serviços, schema/migrations, contratos, testes, deploy/runtime e comportamento observado.
 
@@ -1734,3 +1734,17 @@ Correção estrutural:
 - histórico permanece visível; somente a ação é fail-closed.
 
 Regra para próximas IAs/chats: não filtrar/apagar notificações antigas apenas porque a vertical está pausada e não permitir `href={notification.action_url}` direto na Inbox. O owner horizontal guarda o histórico; `notificationActionScope.ts` governa a navegação.
+
+### Checkpoint MVP — AppTopbar lifecycle boundary (2026-09-24)
+
+A auditoria pós-#363 encontrou `AppTopbar.tsx` ainda usando `launchScope.ts` para Messaging e Billing, apesar de ambos já possuírem owners canônicos no lifecycle.
+
+Correção deste corte:
+
+- `AppTopbar` usa `isPlatformCapabilityEnabled("messaging")` para Mensagens;
+- `AppTopbar` usa `isProductModuleEnabled("billing")` para Planos/Billing;
+- o componente ativo deixa de importar `launchScope.ts`;
+- ratchets de Messaging e monetização passam a exigir o lifecycle canônico;
+- `launchScope.ts` permanece apenas como fachada de compatibilidade para consumidores ainda não migrados; não é autoridade nova.
+
+Regra para próximas IAs/chats: em código novo ou ao tocar uma superfície ativa dentro de `src/app`, usar diretamente `lifecycleRegistry.ts`. Não adicionar novos consumidores de `isLaunchSurfaceEnabled` quando a chave já existe em `productModuleRegistry` ou `platformCapabilityRegistry`.
