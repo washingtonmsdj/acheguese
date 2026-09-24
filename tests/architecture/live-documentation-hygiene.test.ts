@@ -1,4 +1,4 @@
-import { existsSync, readFileSync } from "node:fs";
+import { existsSync, readFileSync, readdirSync } from "node:fs";
 import { describe, expect, it } from "vitest";
 
 describe("live documentation hygiene", () => {
@@ -56,6 +56,13 @@ describe("live documentation hygiene", () => {
     expect(docsIndex).not.toContain(
       "URGENTE_LEIA_PRIMEIRO_REORGANIZACAO_GLOBAL.md",
     );
+  });
+
+  it("keeps dated G5 checkpoints out of live architecture docs", () => {
+    const liveArchitectureFiles = readdirSync("docs/03-architecture");
+    expect(
+      liveArchitectureFiles.filter((name) => /^G5_.*2026-/.test(name)),
+    ).toEqual([]);
   });
 
   it("keeps active source comments descriptive instead of migration logs", () => {
