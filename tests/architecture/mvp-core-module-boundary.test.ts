@@ -129,6 +129,12 @@ describe("MVP core module boundary", () => {
     );
     expect(lifecycleRegistry).toContain("isProductModuleEnabled");
     expect(lifecycleRegistry).toContain("isPlatformCapabilityEnabled");
+    expect(presentationModules).not.toContain("launchScope");
+    expect(presentationModules).not.toContain("isLaunchSurfaceEnabled");
+    expect(presentationModules).toContain("isProductModuleEnabled('business')");
+    expect(presentationModules).toContain("isPlatformCapabilityEnabled('map')");
+    expect(presentationModules).toContain("isPlatformCapabilityEnabled('nearby')");
+    expect(presentationModules).toContain("isPlatformCapabilityEnabled('search')");
 
     expect(launchScope).toContain(
       'business: isProductModuleEnabled("business")',
