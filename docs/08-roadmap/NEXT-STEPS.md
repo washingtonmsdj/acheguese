@@ -168,4 +168,4 @@ Não acoplar uma capability horizontal ao único domínio ativo do momento. Para
 
 Nearby e Messaging são os padrões de referência desse modelo. Notifications segue a mesma regra para publicação e destino de eventos.
 
-Follow-up antes de habilitar um segundo provider Nearby: providerizar também a disponibilidade territorial de grupos hoje mapeada para Business em `TerritorialLayout.tsx`, preservando os filtros territoriais atuais durante a migração.
+Boundary territorial de Nearby: providerizado. Antes de habilitar um segundo provider, basta registrar seu lifecycle + rollout owner; a cobertura de grupos será agregada por união dos membros cobertos. Próxima auditoria equivalente: Map, que ainda projeta apenas Business no MVP e deve manter layer/rollout desacoplados quando receber um segundo domínio.

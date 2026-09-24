@@ -91,7 +91,7 @@ Exemplos atuais:
 
 - `notifications` depende de `auth`, não de um módulo vertical;
 - `messaging` depende de `auth` e `profiles`; os providers verticais são filtrados em `messagingProviderScope.ts`;
-- `nearby` ainda depende de `map`, `location` e `business` porque o provider certificado atual é Business; remover esse vínculo exige primeiro um registry de providers Nearby;
+- `nearby` depende estruturalmente de `map` + `location`; providers verticais são lifecycle-scoped e seus rollout keys territoriais são injetados pelo app no boundary territorial;
 - Gastronomy pode depender de Business quando for reativada;
 - Mobility pode depender de Map sem transformar Map em domínio Mobility.
 
@@ -230,3 +230,19 @@ Estado do MVP em 2026-09-24:
 - Notifications: owner horizontal; eventos podem vir de verticais, mas payload stale de vertical pausada não pode reabrir o domínio.
 
 **Regra para próximas IAs/chats:** nunca inferir que “MVP focado em Empresas” significa desativar funcionalidades horizontais do site. Antes de alterar lifecycle, classificar a peça como vertical, horizontal ou provider.
+
+## Cobertura territorial de capabilities com providers
+
+Uma capability horizontal não deve reutilizar silenciosamente o rollout de uma vertical como se fossem a mesma unidade.
+
+Para Nearby:
+
+- `nearbyProviderScope.ts` decide quais providers estão ativos;
+- cada provider ativo possui um `ModuleKey` de rollout territorial;
+- `ActiveTerritorialLayout` injeta esses keys no `TerritorialLayout`;
+- `TerritorialLayout` permanece em `core` e não importa `app/config`;
+- a cobertura de grupo é agregada com semântica **OR por membro**: um bairro participa da surface se pelo menos um provider ativo estiver liberado nele;
+- `activeMemberIds` é a união dos membros cobertos pelos providers ativos;
+- zero providers ou zero membros cobertos permanece fail-closed.
+
+No MVP, Business continua sendo o único provider Nearby, portanto o resultado observado é equivalente ao comportamento anterior, sem acoplamento estrutural.

@@ -38,6 +38,17 @@ export interface GroupAvailabilityResult {
   active_module_members: number;
 }
 
+export interface GroupSurfaceAvailabilityResult {
+  group_id: string;
+  /** Rollout owners que alimentam a surface horizontal. */
+  module_keys: ModuleKey[];
+  availability: GroupModuleAvailability;
+  /** União dos membros com pelo menos um provider/owner ativo. */
+  active_member_ids: string[];
+  total_active_members: number;
+  active_module_members: number;
+}
+
 // ── Operações administrativas ─────────────────────────────────────────────────
 
 export interface ActivateRolloutForGroupInput {

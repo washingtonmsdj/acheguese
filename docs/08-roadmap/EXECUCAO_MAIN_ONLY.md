@@ -4,7 +4,7 @@
 **Data do checkpoint GitHub:** 2026-09-24  
 **Repositório:** `washingtonmsdj/acheguese`  
 **Linha ativa:** `main`  
-**Baseline operacional auditada:** `main@ab7b4c6ccb8ead82388dd5862aa99e654a6dfe19` (merge de #350). Este checkpoint registra o estado do código; não promove um novo release. Qualquer merge posterior gera outro SHA e exige nova prova exact-SHA antes de promoção.
+**Baseline operacional auditada:** `main@f6968c3c90bfe1a1ca698cab50d63456167a9333` (merge de #356). Este checkpoint registra o estado do código; não promove um novo release. Qualquer merge posterior gera outro SHA e exige nova prova exact-SHA antes de promoção.
 
 Este documento consolida ordem de execução, blockers e Definition of Done. Ele é um **registro operacional**, não uma fotografia autoritativa do que existe no produto. A fonte de verdade para decidir o que existe, o que está ativo e o que deve ser corrigido é sempre o **projeto real**: código da `main`, rotas, owners, serviços, schema/migrations, contratos, testes, deploy/runtime e comportamento observado.
 
@@ -1663,4 +1663,21 @@ Antes de continuar o MVP, preservar esta regra:
 
 Ao iniciar um novo chat, auditar primeiro `productModuleRegistry.ts`, `platformCapabilityRegistry.ts`, os `*ProviderScope.ts`, `PRODUCT_MODULE_LIFECYCLE.md` e este checkpoint. Não reconstruir o escopo apenas a partir das telas visíveis.
 
-Pendência arquitetural controlada: a disponibilidade territorial de grupos ainda associa a rota Nearby a `ModuleKey.BUSINESS` em `TerritorialLayout.tsx`. Não remover esse mapeamento de forma ingênua, pois ele alimenta `activeMemberIds`; providerizá-lo antes de ativar um segundo provider Nearby.
+Pendência territorial de Nearby resolvida no corte seguinte a #356: `TerritorialLayout` não deve voltar a mapear `nearby -> ModuleKey.BUSINESS`. O app injeta os rollout keys dos providers Nearby ativos e o core agrega `activeMemberIds` por união. Para um segundo provider, registrar lifecycle + provider + rollout owner; não adicionar novo hardcode no layout.
+
+### Checkpoint MVP — Nearby territorial provider boundary (2026-09-24)
+
+Depois de #356 separar Nearby de Business no lifecycle, restava um acoplamento territorial: `TerritorialLayout.tsx` ainda tratava a rota `nearby` como `ModuleKey.BUSINESS` para calcular cobertura de grupos e `activeMemberIds`.
+
+Correção estrutural:
+
+- app/lifecycle resolve os providers Nearby ativos;
+- provider -> rollout owner fica no boundary de app, não no core routing;
+- `ActiveTerritorialLayout` injeta os rollout keys da surface;
+- `TerritorialLayout` consome keys genéricos e não conhece Business como owner de Nearby;
+- novo agregador territorial calcula cobertura por OR entre providers e deduplica `activeMemberIds`;
+- singleton preserva exatamente a semântica anterior;
+- nenhum provider ativo resulta em estado fail-closed;
+- testes ratchet impedem reintroduzir `[MODULE_SLUGS.nearby]: ModuleKey.BUSINESS`.
+
+Regra futura: adicionar Services/Tourism/Gastronomy/etc. a Nearby deve ser uma alteração localizada no provider scope/registry, sem refatorar `TerritorialLayout`.

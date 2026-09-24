@@ -3,7 +3,9 @@ import { lazy, Suspense } from "react";
 import { StateLandingPage } from "@/core/routing/components/StateLandingPage";
 import { TerritorialLayout, useTerritorialContext } from "@/core/routing/components/TerritorialLayout";
 import NotFound from "@/app/pages/NotFound";
+import { getActiveNearbyProviderRolloutModuleKeys } from "@/app/config/nearbyProviderScope";
 import { ModulePageLoader } from "@/shared/components/loading/PageLoader";
+import { MODULE_SLUGS } from "@/core/routing/utils/territoryUrls";
 
 const CategoryBusinessPage = lazy(
   () => import("@/core/business/pages/CategoryBusinessPage"),
@@ -48,5 +50,12 @@ export function ActiveStateLandingPage() {
 }
 
 export function ActiveTerritorialLayout() {
-  return <TerritorialLayout NotFoundComponent={NotFound} />;
+  return (
+    <TerritorialLayout
+      NotFoundComponent={NotFound}
+      moduleKeysBySlug={{
+        [MODULE_SLUGS.nearby]: getActiveNearbyProviderRolloutModuleKeys(),
+      }}
+    />
+  );
 }
