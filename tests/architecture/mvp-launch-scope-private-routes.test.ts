@@ -89,6 +89,24 @@ describe("MVP private launch-scope boundaries", () => {
     expect(businessHub).not.toContain(">Delivery<");
   });
 
+  it("keeps the active Account hook free of callerless paused-domain catalogs", () => {
+    const profileHub = read("src/core/profiles/hooks/useProfileHub.ts");
+
+    expect(profileHub).not.toContain("isLaunchSurfaceEnabled");
+    expect(profileHub).not.toContain("GLOBAL_MODULE_URLS");
+    expect(profileHub).not.toContain("ecosystemLinks");
+    expect(profileHub).not.toContain("operationalLinks");
+    expect(profileHub).not.toContain("useHomeCommunityHref");
+    expect(profileHub).not.toContain("APP_MODULE_SLUGS");
+    expect(profileHub).not.toContain("appUrls.services.list");
+    expect(profileHub).not.toContain("appUrls.community.feed");
+    expect(profileHub).not.toContain("gastronomyFavorites");
+    expect(profileHub).not.toContain("touristPoints");
+    expect(profileHub).toContain(
+      "Este perfil já pode entrar no fluxo de empresa e dashboard.",
+    );
+  });
+
   it("keeps paused Services out of Central navigation and active routes", () => {
     const launchScope = read("src/app/config/launchScope.ts");
     const centralNavigation = read(
