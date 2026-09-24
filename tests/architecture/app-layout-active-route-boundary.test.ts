@@ -25,6 +25,9 @@ describe("active AppLayout route boundary", () => {
     ).toBe(false);
     expect(existsSync("src/app/routes/launchPausedComponent.ts")).toBe(false);
     expect(existsSync("src/app/pages/LaunchPausedPage.tsx")).toBe(false);
+    expect(existsSync("src/core/navigation/publicHeaderNavigation.ts")).toBe(false);
+    expect(existsSync("src/core/navigation/publicHeaderNavigation.spec.ts")).toBe(false);
+    expect(existsSync("src/core/navigation/PublicHeaderMobileMenu.tsx")).toBe(false);
 
     for (const forbidden of [
       "DIRECT_PAUSED_ROUTES",
