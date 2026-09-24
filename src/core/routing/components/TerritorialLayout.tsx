@@ -11,7 +11,7 @@ import { useEffect, type ComponentType } from "react";
 import { AlertTriangle, Loader2 } from "lucide-react";
 import { Link, Outlet, useLocation, useOutletContext, useParams } from "react-router-dom";
 import { ErrorBoundary } from "@/shared/components/errors/ErrorBoundary";
-import { useGroupAvailability } from "@/core/territorial/hooks/useGroupAvailability";
+import { useGroupSurfaceAvailability } from "@/core/territorial/hooks/useGroupSurfaceAvailability";
 import type { GroupModuleAvailability } from "@/core/territorial/types";
 import { ModuleKey } from "@/core/rollout/types";
 import { lastTerritoryStore } from "../stores/LastTerritoryStore";
@@ -47,7 +47,6 @@ const SLUG_TO_MODULE_KEY: Record<string, ModuleKey> = {
   [MODULE_SLUGS.community]: ModuleKey.COMMUNITY,
   [MODULE_SLUGS.business]: ModuleKey.BUSINESS,
   [MODULE_SLUGS.map]: ModuleKey.BUSINESS,
-  [MODULE_SLUGS.nearby]: ModuleKey.BUSINESS,
   [MODULE_SLUGS.education]: ModuleKey.BUSINESS,
   [MODULE_SLUGS.services]: ModuleKey.SERVICES,
   [MODULE_SLUGS.classifieds]: ModuleKey.CLASSIFIEDS,
@@ -57,8 +56,19 @@ const SLUG_TO_MODULE_KEY: Record<string, ModuleKey> = {
   [MODULE_SLUGS.jobs]: ModuleKey.JOBS,
 };
 
-function resolveModuleKeyFromSlug(slug: string): ModuleKey | null {
-  return getRecordValue(SLUG_TO_MODULE_KEY, slug) ?? null;
+function resolveModuleKeysFromSlug(
+  slug: string,
+  moduleKeysBySlug?: Readonly<Record<string, readonly ModuleKey[]>>,
+): readonly ModuleKey[] {
+  if (
+    moduleKeysBySlug &&
+    Object.prototype.hasOwnProperty.call(moduleKeysBySlug, slug)
+  ) {
+    return moduleKeysBySlug[slug] ?? [];
+  }
+
+  const moduleKey = getRecordValue(SLUG_TO_MODULE_KEY, slug) ?? null;
+  return moduleKey ? [moduleKey] : [];
 }
 
 function PartialCoverageBanner({ activeCount, totalCount }: { activeCount: number; totalCount: number }) {
@@ -151,10 +161,12 @@ function TerritoryStatusMessage({
 
 interface TerritorialLayoutProps {
   NotFoundComponent?: ComponentType;
+  moduleKeysBySlug?: Readonly<Record<string, readonly ModuleKey[]>>;
 }
 
 export function TerritorialLayout({
   NotFoundComponent,
+  moduleKeysBySlug,
 }: TerritorialLayoutProps = {}) {
   const { status, resolved, error } = useResolveTerritoryFromUrl();
   const { pathname } = useLocation();
@@ -170,10 +182,14 @@ export function TerritorialLayout({
   const city = params.city;
   const slug = params.groupSlug ?? params.district ?? params.groupSlugOrDistrict;
   const currentModuleSlug = pathname.split("/").filter(Boolean)[0] ?? "";
-  const currentModuleKey = resolveModuleKeyFromSlug(currentModuleSlug);
+  const currentModuleKeys = resolveModuleKeysFromSlug(
+    currentModuleSlug,
+    moduleKeysBySlug,
+  );
+  const hasTerritorialRollout = currentModuleKeys.length > 0;
   const groupId = resolved?.kind === "group" ? resolved.group.id : null;
   const { availability, active_member_ids, result: availabilityResult, isLoading: availabilityLoading } =
-    useGroupAvailability(groupId, currentModuleKey);
+    useGroupSurfaceAvailability(groupId, currentModuleKeys);
   const baseUrl = resolveBaseUrl(resolved, { state, city, slug });
   const territoryName = resolved ? (resolved.kind === "group" ? resolved.group.name : resolved.location.name) : "";
 
@@ -228,7 +244,7 @@ export function TerritorialLayout({
     );
   }
 
-  if (resolved.kind === "group" && currentModuleKey && availabilityLoading) {
+  if (resolved.kind === "group" && hasTerritorialRollout && availabilityLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <Loader2 className="h-8 w-8 animate-spin text-primary" />
@@ -240,7 +256,7 @@ export function TerritorialLayout({
 
   if (
     resolved.kind === "group" &&
-    currentModuleKey &&
+    hasTerritorialRollout &&
     effectiveAvailability === "none"
   ) {
     return (
@@ -263,7 +279,7 @@ export function TerritorialLayout({
     <>
       <TerritorialSEO resolved={resolved} baseUrl={baseUrl} />
 
-      {resolved.kind === "group" && currentModuleKey && (
+      {resolved.kind === "group" && hasTerritorialRollout && (
         <>
           {effectiveAvailability === "partial" && availabilityResult && (
             <PartialCoverageBanner

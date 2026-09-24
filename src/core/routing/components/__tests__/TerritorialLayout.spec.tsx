@@ -14,8 +14,8 @@ vi.mock("@/core/routing/hooks/useResolveTerritoryFromUrl", () => ({
   useResolveTerritoryFromUrl: () => useResolveTerritoryFromUrlMock(),
 }));
 
-vi.mock("@/core/territorial/hooks/useGroupAvailability", () => ({
-  useGroupAvailability: () => ({
+vi.mock("@/core/territorial/hooks/useGroupSurfaceAvailability", () => ({
+  useGroupSurfaceAvailability: () => ({
     availability: "full",
     active_member_ids: [],
     result: null,

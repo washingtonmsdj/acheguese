@@ -7,6 +7,15 @@ describe("nearby MVP boundary", () => {
   const page = read("src/core/nearby/pages/NearbyPage.tsx");
   const routeWrapper = read("src/app/pages/NearbyPage.tsx");
   const providerScope = read("src/app/config/nearbyProviderScope.ts");
+  const activeTerritorialWrapper = read(
+    "src/app/routes/territorial/ActiveTerritorialModulePages.tsx",
+  );
+  const surfaceAvailabilityHook = read(
+    "src/core/territorial/hooks/useGroupSurfaceAvailability.ts",
+  );
+  const surfaceAvailability = read(
+    "src/core/territorial/groupSurfaceAvailability.ts",
+  );
   const providerRegistry = read("src/core/nearby/providers/registry.ts");
   const platformRegistry = read("src/app/config/platformCapabilityRegistry.ts");
   const hook = read("src/core/nearby/hooks/useNearbyBusinesses.ts");
@@ -49,7 +58,19 @@ describe("nearby MVP boundary", () => {
     expect(hook).toContain("useSpatialSearchHybrid");
     expect(hook).toContain("item.in_territory === true");
     expect(territorialLayout).toContain("[MODULE_SLUGS.map]: ModuleKey.BUSINESS");
-    expect(territorialLayout).toContain("[MODULE_SLUGS.nearby]: ModuleKey.BUSINESS");
+    expect(territorialLayout).not.toContain("[MODULE_SLUGS.nearby]: ModuleKey.BUSINESS");
+    expect(providerScope).toContain("PROVIDER_ROLLOUT_MODULE");
+    expect(providerScope).toContain("getActiveNearbyProviderRolloutModuleKeys");
+    expect(activeTerritorialWrapper).toContain("[MODULE_SLUGS.nearby]");
+    expect(activeTerritorialWrapper).toContain(
+      "getActiveNearbyProviderRolloutModuleKeys()",
+    );
+    expect(territorialLayout).toContain("moduleKeysBySlug");
+    expect(territorialLayout).toContain("useGroupSurfaceAvailability");
+    expect(surfaceAvailabilityHook).toContain('queryKey: ["group-availability"');
+    expect(surfaceAvailability).toContain(
+      "new Set(results.flatMap((result) => result.active_member_ids))",
+    );
     expect(hook).not.toContain('entityType: "event"');
     expect(hook).not.toContain('entityType: "alert"');
     expect(hook).not.toContain('entityType: "tourist_point"');

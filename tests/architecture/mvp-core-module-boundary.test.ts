@@ -10,6 +10,12 @@ describe("MVP core module boundary", () => {
   const platformRegistry = read("src/app/config/platformCapabilityRegistry.ts");
   const nearbyProviderScope = read("src/app/config/nearbyProviderScope.ts");
   const nearbyRouteWrapper = read("src/app/pages/NearbyPage.tsx");
+  const activeTerritorialWrapper = read(
+    "src/app/routes/territorial/ActiveTerritorialModulePages.tsx",
+  );
+  const territorialLayout = read(
+    "src/core/routing/components/TerritorialLayout.tsx",
+  );
   const lifecycleRegistry = read("src/app/config/lifecycleRegistry.ts");
   const launchScope = read("src/app/config/launchScope.ts");
   const presentationModules = read("src/app/config/modules.ts");
@@ -76,6 +82,13 @@ describe("MVP core module boundary", () => {
     expect(nearbyProviderScope).toContain('isPlatformCapabilityEnabled("nearby")');
     expect(nearbyProviderScope).toContain("isProductModuleEnabled(productModule)");
     expect(nearbyRouteWrapper).toContain("getActiveNearbyProviderIds()");
+    expect(nearbyProviderScope).toContain(
+      "getActiveNearbyProviderRolloutModuleKeys",
+    );
+    expect(activeTerritorialWrapper).toContain("[MODULE_SLUGS.nearby]");
+    expect(territorialLayout).not.toContain(
+      "[MODULE_SLUGS.nearby]: ModuleKey.BUSINESS",
+    );
     expect(lifecycleRegistry).toContain("isProductModuleEnabled");
     expect(lifecycleRegistry).toContain("isPlatformCapabilityEnabled");
 
