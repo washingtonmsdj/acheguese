@@ -12,7 +12,9 @@ Capabilities horizontais ativas no lançamento:
 2. **Perto de mim** (`nearby`);
 3. **Busca** (`search`);
 4. **Mensagens** (`messaging`, provider MVP = Business);
-5. Auth, Perfis/Conta, Território, Localização, Notificações e Central.
+5. Auth, Perfis/Conta, Território, Localização e Central.
+
+**Notificações (`notifications`) estão `paused` no corte atual.** Core, migrations e owners permanecem preservados para pós-MVP, mas não podem participar de rota, navegação, discovery, prefetch ou warmup ativos.
 
 `nearby` depende de Map + Location + Business. `messaging` depende de Auth +
 Perfis + Business e registra somente providers de domínios ativos.
@@ -84,7 +86,7 @@ Regras:
    - corrigir regressões no núcleo antes de ampliar produto;
    - qualquer módulo futuro nasce/retorna `paused`, é certificado isoladamente e só então passa a `active`.
 
-## Estado do CI e do release observado em 2026-09-23
+## Estado do CI e do release observado até 2026-09-24
 
 Os hosted runners voltaram a executar steps e logs reais. O incidente histórico de jobs vazios foi encerrado no issue #17; não tratar falhas futuras automaticamente como repetição daquele incidente.
 
@@ -112,7 +114,7 @@ Os PRs #310–#331 consolidaram o corte modular, as rotas canônicas, a gestão 
 - #331 aposentou `CommunityTerritoryRoutes.tsx`, árvore pública desconectada sem caller runtime, preservando builders canônicos e owners Community nos bounded contexts.
 - #333 — remoção do grafo público legado: `lazyImports.ts`, `TerritorialModulePages.tsx`, `launchPausedComponent.ts` e `LaunchPausedPage.tsx` saem do runtime; `ActiveTerritorialModulePages.tsx` permanece como boundary territorial ativo.
 
-A `main` atual é `42d91ea9454de0fe8c3250cc75d230cb1bceeb9c` (squash merge de #333). O head `e100a823e9f23ebe42f4c1931f2f60ad7c4f424d` de #333 foi certificado antes do merge e a nova `main` foi tratada corretamente como outro candidato exact-SHA. O runtime público agora não contém `lazyImports.ts`, `TerritorialModulePages.tsx`, `launchPausedComponent.ts` nem `LaunchPausedPage.tsx`; `activeLazyImports.ts` + `ActiveTerritorialModulePages.tsx` são os boundaries públicos ativos, enquanto owners pós-MVP permanecem preservados fora do grafo. Na `main@42d91ea...`, Vercel publicou o SHA exato e o release identity confirmou `mode=exact`; SSOT Enforcement e Heavy exact-main fecharam verdes, assim como Phase Core, Runtime, E2E público, Regression, lint/typecheck, Maps Architecture, credenciais e testes unitários. O SSOT Territorial ficou vermelho somente no smoke autenticado remoto: Conta mobile/tablet/desktop e Mensagens Business receberam `HTTP 503 auth_upstream_unavailable` do broker, coerente com #305.
+Na revalidação pós-#333, a `main` era `42d91ea9454de0fe8c3250cc75d230cb1bceeb9c`. O baseline auditado mais recente antes deste corte é `main@ab7b4c6ccb8ead82388dd5862aa99e654a6dfe19` (merge de #350), que também pausou Notificações no lifecycle ativo. O head `e100a823e9f23ebe42f4c1931f2f60ad7c4f424d` de #333 foi certificado antes do merge e a nova `main` foi tratada corretamente como outro candidato exact-SHA. O runtime público agora não contém `lazyImports.ts`, `TerritorialModulePages.tsx`, `launchPausedComponent.ts` nem `LaunchPausedPage.tsx`; `activeLazyImports.ts` + `ActiveTerritorialModulePages.tsx` são os boundaries públicos ativos, enquanto owners pós-MVP permanecem preservados fora do grafo. Na `main@42d91ea...`, Vercel publicou o SHA exato e o release identity confirmou `mode=exact`; SSOT Enforcement e Heavy exact-main fecharam verdes, assim como Phase Core, Runtime, E2E público, Regression, lint/typecheck, Maps Architecture, credenciais e testes unitários. O SSOT Territorial ficou vermelho somente no smoke autenticado remoto: Conta mobile/tablet/desktop e Mensagens Business receberam `HTTP 503 auth_upstream_unavailable` do broker, coerente com #305.
 
 ### Blockers atuais do primeiro release
 
