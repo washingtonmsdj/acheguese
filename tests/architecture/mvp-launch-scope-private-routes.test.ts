@@ -84,6 +84,8 @@ describe("MVP private launch-scope boundaries", () => {
       "PlanosSection.tsx",
       "NotificacoesSection.tsx",
       "PreferenciasSection.tsx",
+      "index.ts",
+      "types.ts",
     ]) {
       expect(
         existsSync(join(ROOT, "src/modules/profile/sections", retiredSection)),
