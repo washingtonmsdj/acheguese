@@ -48,6 +48,12 @@ describe("MVP canonical routing without compatibility redirects", () => {
     const activeLazyImports = read("src/app/routes/activeLazyImports.ts");
     const prefetch = read("src/app/routes/prefetch.ts");
     const serviceWorker = read("public/sw.js");
+    const appTopbar = read("src/app/components/navigation/AppTopbar.tsx");
+    const centralHeader = read("src/modules/central/components/CentralHeader.tsx");
+    const businessDetail = read(
+      "src/modules/business/company/pages/EmpresaDetailLayout.tsx",
+    );
+    const profileHub = read("src/core/profiles/hooks/useProfileHub.ts");
 
     for (const pausedPath of [
       'path="/notificacoes"',
@@ -68,6 +74,13 @@ describe("MVP canonical routing without compatibility redirects", () => {
     expect(serviceWorker).toContain("case 'settings':");
     expect(serviceWorker).toContain("return '/conta';");
     expect(serviceWorker).not.toContain("fallback = '/notificacoes'");
+
+    for (const activeSurface of [appTopbar, centralHeader, businessDetail]) {
+      expect(activeSurface).not.toContain('to="/notificacoes"');
+      expect(activeSurface).not.toContain("appUrls.notifications");
+    }
+    expect(profileHub).not.toContain("appUrls.profile.notifications");
+    expect(profileHub).not.toContain("Triar notificações pendentes");
   });
 
   it("does not preserve query-param redirects for retired account navigation", () => {
