@@ -69,7 +69,6 @@ describe("Vercel ignored build step", () => {
       ".github/workflows/ssot-tests.yml",
       "tests/security/example.test.ts",
       "e2e/example.spec.ts",
-      "URGENTE_LEIA_PRIMEIRO_REORGANIZACAO_GLOBAL.md",
     ];
 
     for (const path of skippable) {
