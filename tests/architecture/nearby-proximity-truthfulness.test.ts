@@ -57,11 +57,15 @@ describe("nearby MVP boundary", () => {
     expect(hook).toContain("BusinessUrlService.getPublicCanonicalUrl");
     expect(hook).toContain("useSpatialSearchHybrid");
     expect(hook).toContain("item.in_territory === true");
-    expect(territorialLayout).toContain("[MODULE_SLUGS.map]: ModuleKey.BUSINESS");
+    expect(territorialLayout).not.toContain("[MODULE_SLUGS.map]: ModuleKey.BUSINESS");
     expect(territorialLayout).not.toContain("[MODULE_SLUGS.nearby]: ModuleKey.BUSINESS");
     expect(providerScope).toContain("PROVIDER_ROLLOUT_MODULE");
     expect(providerScope).toContain("getActiveNearbyProviderRolloutModuleKeys");
+    expect(activeTerritorialWrapper).toContain("[MODULE_SLUGS.map]");
     expect(activeTerritorialWrapper).toContain("[MODULE_SLUGS.nearby]");
+    expect(activeTerritorialWrapper).toContain(
+      "getActiveMapLayerRolloutModuleKeys()",
+    );
     expect(activeTerritorialWrapper).toContain(
       "getActiveNearbyProviderRolloutModuleKeys()",
     );
