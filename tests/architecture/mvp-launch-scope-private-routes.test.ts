@@ -69,12 +69,10 @@ describe("MVP private launch-scope boundaries", () => {
       existsSync(join(ROOT, "src/modules/business/dashboard/pages/BusinessPlansPage.tsx")),
     ).toBe(true);
     expect(profileNavigation).toContain('planos: "billing"');
-    expect(profileNavigation).toContain("isProductModuleEnabled(productModule)");
-    expect(profileNavigation).not.toContain("isLaunchSurfaceEnabled");
+    expect(profileNavigation).toContain("isLaunchSurfaceEnabled(surface)");
     expect(profileSummary).toContain(
-      'const showBilling = isProductModuleEnabled("billing")',
+      'const showBilling = isLaunchSurfaceEnabled("billing")',
     );
-    expect(profileSummary).not.toContain("isLaunchSurfaceEnabled");
     expect(profileSummary).toContain("{showBilling ? (");
     expect(profileSummary).not.toContain("appUrls.services.list");
     expect(profileSummary).not.toContain("appUrls.community.feed");
