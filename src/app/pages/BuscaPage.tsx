@@ -411,6 +411,29 @@ export default function BuscaPage() {
     return undefined;
   }, [displayResults, moduleUrls.business, territoryName]);
 
+  const handleMapMarkerClick = (markerId: string) => {
+    if (markerId.startsWith("business-")) {
+      const businessId = markerId.slice("business-".length);
+      if (businessId) {
+        void navigateToBusiness({ id: businessId });
+      }
+      return;
+    }
+
+    if (markerId.startsWith("professional-")) {
+      const professionalId = markerId.slice("professional-".length);
+      const professional = displayResults.professionals.find(
+        (item) => item.id === professionalId,
+      );
+      if (professional) {
+        navigate(
+          professional.target_url || professionalPublicRoutes.home(),
+        );
+      }
+    }
+  };
+
+
   const collections = useMemo(() => {
     const items: Array<{
       label: string;
@@ -685,6 +708,7 @@ export default function BuscaPage() {
                 title="Resultados no mapa"
                 markers={resultMarkers}
                 featuredResult={featuredMapResult}
+                onMarkerClick={handleMapMarkerClick}
                 showNavigationControls
                 navigationControlPosition="top-right"
                 fitTerritoryBounds
