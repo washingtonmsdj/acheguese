@@ -15,23 +15,23 @@ describe("service worker launch-scope notification boundary", () => {
       /const PAUSED_NOTIFICATION_ROUTE_PATTERN =([\s\S]*?);\n\nfunction getLaunchSafeNotificationUrl/,
     )?.[1] ?? "";
 
-  it("does not suppress deep-links for launch-active communication, events or jobs", () => {
-    expect(pausedRouteBlock).not.toContain("messages");
-    expect(pausedRouteBlock).not.toContain("mensagens");
-    expect(pausedRouteBlock).not.toContain("chat");
-    expect(pausedRouteBlock).not.toContain("eventos");
-    expect(pausedRouteBlock).not.toContain("vagas");
-    expect(pausedRouteBlock).not.toContain("oportunidades");
+  it("keeps horizontal active routes available", () => {
+    for (const segment of ["mensagens", "notificacoes", "mapa", "perto-de-mim", "busca", "empresas"]) {
+      expect(pausedRouteBlock, segment).not.toContain(segment);
+    }
   });
 
-  it("keeps paused MVP surfaces fail-closed in notification deep-links", () => {
+  it("keeps paused vertical/product surfaces fail-closed in notification deep-links", () => {
     for (const segment of [
       "mobility",
       "mobilidade",
       "track",
+      "motorista",
+      "passageiro",
       "educacao",
       "comunicacao",
       "cupons",
+      "promocoes",
       "ranking",
       "gamificacao",
       "analytics",
@@ -41,6 +41,15 @@ describe("service worker launch-scope notification boundary", () => {
       "problemas",
       "planos",
       "checkout",
+      "gastronomia",
+      "servicos",
+      "classificados",
+      "pontos-turisticos",
+      "guia",
+      "comunidade",
+      "eventos",
+      "vagas",
+      "oportunidades",
       "settings\\/subscription",
       "perfil\\/familia",
     ]) {

@@ -131,6 +131,7 @@ Notifications é capability horizontal ativa.
 - preferências canônicas: `/conta/notificacoes`;
 - eventos de sistema/conta e Business podem alimentar a mesma Inbox;
 - uma vertical pausada não pode executar seu produtor de notificações nem criar links para rotas pausadas;
+- notificações persistidas anteriormente podem continuar visíveis, mas CTAs internos de owners pausados ficam fail-closed tanto na Inbox web quanto no Service Worker;
 - ativar uma nova vertical adiciona seu produtor/adapter após certificação, sem reativar a capability base.
 
 ## Ativar um domínio

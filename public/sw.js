@@ -199,7 +199,7 @@ self.addEventListener('notificationclose', (event) => {
  * Get URL for notification click based on notification data
  */
 const PAUSED_NOTIFICATION_ROUTE_PATTERN =
-  /^\/(?:mobility|mobilidade|track|educacao|comunicacao|cupons|ranking|gamificacao|analytics|alertas|achados-perdidos|achados-e-perdidos|problemas|planos|checkout)(?:\/|$)|^\/settings\/subscription(?:\/|$)/i;
+  /^\/(?:mobility|mobilidade|track|motorista|passageiro|educacao|comunicacao|cupons|promocoes|ranking|gamificacao|analytics|alertas|achados-perdidos|achados-e-perdidos|problemas|planos|checkout|gastronomia|servicos|classificados|pontos-turisticos|guia|comunidade|eventos|vagas|oportunidades)(?:\/|$)|^\/settings\/subscription(?:\/|$)|^\/perfil\/familia(?:\/|$)/i;
 
 function getLaunchSafeNotificationUrl(url, fallback = '/notificacoes') {
   if (!url) return fallback;

@@ -14,6 +14,7 @@ import { Card } from "@/shared/components/ui/card";
 import type { Notification } from "@/core/notifications";
 import { cn } from "@/shared/utils/cn";
 import { SafeLink } from "@/shared/components/security";
+import { isNotificationActionHrefEnabled } from "@/app/config/notificationActionScope";
 
 interface NotificationItemProps {
   notification: Notification;
@@ -37,6 +38,12 @@ export function NotificationItem({
   const handleDelete = async () => {
     await onDelete(notification.id);
   };
+
+  const showAction = Boolean(
+    notification.action_url &&
+      notification.action_label &&
+      isNotificationActionHrefEnabled(notification.action_url),
+  );
 
   const getIcon = () => {
     switch (notification.type) {
@@ -127,7 +134,7 @@ export function NotificationItem({
               </div>
             </div>
 
-            {notification.action_url && notification.action_label && (
+            {showAction && notification.action_url && notification.action_label && (
               <Button variant="outline" size="sm" className="mt-3" asChild>
                 <SafeLink href={notification.action_url} allowInternal>
                   {notification.action_label}
