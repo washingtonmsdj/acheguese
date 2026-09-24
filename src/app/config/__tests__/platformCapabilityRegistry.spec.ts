@@ -18,6 +18,7 @@ describe("platformCapabilityRegistry", () => {
         "profiles",
         "territory",
         "location",
+        "notifications",
         "central",
         "map",
         "nearby",
@@ -27,11 +28,14 @@ describe("platformCapabilityRegistry", () => {
     );
 
     expect(isPlatformCapabilityEnabled("messaging")).toBe(true);
-    expect(isPlatformCapabilityEnabled("notifications")).toBe(false);
+  });
+
+  it("keeps horizontal Notifications active independently of paused vertical modules", () => {
     expect(PLATFORM_CAPABILITY_REGISTRY.notifications).toEqual({
-      status: "paused",
+      status: "active",
       dependsOnCapabilities: ["auth"],
     });
+    expect(isPlatformCapabilityEnabled("notifications")).toBe(true);
   });
 
   it("keeps Nearby dependent on Map + Location + Business", () => {

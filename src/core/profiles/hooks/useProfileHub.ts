@@ -17,6 +17,7 @@ import {
   Wrench,
   UtensilsCrossed,
   Bookmark,
+  Bell,
 } from 'lucide-react';
 
 import { useAuth } from '@/core/auth/hooks/useAuth';
@@ -71,6 +72,7 @@ export function useProfileHub() {
     hasActiveRide,
     verificationStatus,
     verificationRejectionReason,
+    notifications,
     favorites,
     handleAvatarChange,
     refreshWorkspace,
@@ -195,6 +197,14 @@ export function useProfileHub() {
               },
             }
           : null,
+        notifications.unread > 0
+          ? {
+              title: 'Triar notificações pendentes',
+              description: `Existem ${notifications.unread} notificações não lidas aguardando ação.`,
+              actionLabel: 'Ver avisos',
+              onClick: () => navigate(appUrls.profile.notifications),
+            }
+          : null,
         showBusinessOnboarding
           ? {
               title: 'Ativar operação empresarial',
@@ -214,6 +224,7 @@ export function useProfileHub() {
     [
       territoryLabel,
       canOpenPublicProfile,
+      notifications.unread,
       showBusinessOnboarding,
       showBilling,
       activeProfileId,
@@ -288,6 +299,7 @@ export function useProfileHub() {
     verificationStatus,
     verificationRejectionReason,
 
+    notifications,
     favorites,
 
     operationalLinks,

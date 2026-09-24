@@ -37,6 +37,7 @@ export function useContaWorkspace() {
     hasActiveRide,
     verificationStatus,
     verificationRejectionReason,
+    notifications,
   } = workspace;
 
   const avatarUpload = useAvatarUpload(() => {
@@ -95,6 +96,7 @@ export function useContaWorkspace() {
     hasActiveRide,
     verificationStatus,
     verificationRejectionReason,
+    notifications,
     favorites,
     refreshWorkspace: refetchWorkspace,
     handleAvatarChange,

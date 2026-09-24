@@ -33,7 +33,7 @@ export const PLATFORM_CAPABILITY_REGISTRY: Record<
   account: { status: "active", dependsOnCapabilities: ["profiles"] },
   territory: { status: "active" },
   location: { status: "active" },
-  notifications: { status: "paused", dependsOnCapabilities: ["auth"] },
+  notifications: { status: "active", dependsOnCapabilities: ["auth"] },
   central: {
     status: "active",
     dependsOnCapabilities: ["auth", "profiles"],
