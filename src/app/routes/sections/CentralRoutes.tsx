@@ -30,7 +30,7 @@ export function CentralRoutes() {
 
           {businessEnabled ? (
             <>
-              <Route path="empresas" element={<P.CentralEmpresasPage />} />
+              <Route path="empresas" element={<P.CentralEmpresasPage billingEnabled={billingEnabled} />} />
               <Route path="empresas/nova" element={<P.CriarEmpresaPage />} />
 
               <Route
