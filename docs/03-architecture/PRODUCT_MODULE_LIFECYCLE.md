@@ -270,3 +270,13 @@ No MVP, Business continua sendo o único provider tanto de layer do Mapa quanto 
 - notificações históricas podem continuar visíveis; lifecycle controla a ação, não apaga histórico;
 - URLs HTTPS externas continuam sujeitas ao `SafeLink`; a policy de lifecycle não substitui validação de segurança de URL;
 - reativar uma vertical deve permitir novamente seus destinos pelo lifecycle existente, sem editar `NotificationItem` por domínio.
+
+## Boundary do shell ativo
+
+O shell público/horizontal também obedece ao lifecycle.
+
+- `AppLayoutSidebar.tsx` só pode manter comportamento especial para superfícies realmente ativas;
+- URLs de Community, Services, Gastronomy, Groups ou outra vertical pausada não recebem shell/layout especial para simular preservação de produto;
+- `navigation.config.ts` pode manter metadata declarativa filtrada pelo lifecycle, mas não pode importar owners/route services de verticais pausadas para montar o runtime ativo;
+- URL de vertical pausada ou rota antiga sem owner ativo segue para o `NotFound` canônico usando o shell ativo normal;
+- reativar uma vertical deve ocorrer pelo registry/route owner e então pelo shell ativo, não por condicionais antecipadas no layout.
