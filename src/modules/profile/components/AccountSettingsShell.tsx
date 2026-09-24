@@ -3,6 +3,7 @@ import { Link, useLocation, useNavigate } from "react-router-dom";
 import {
   Accessibility,
   ArrowLeft,
+  Bell,
   Home,
   KeyRound,
   LockKeyhole,
@@ -39,6 +40,7 @@ const settingsItems: readonly SettingsNavItem[] = [
   { label: "Visão geral", href: ACCOUNT_PATHS.home, icon: Home, exact: true, excludeSearch: "?section=profiles" },
   { label: "Dados de acesso", href: ACCOUNT_PATHS.access, icon: KeyRound, hashes: ["#acesso", "#email"] },
   { label: "Segurança", href: ACCOUNT_PATHS.security, icon: LockKeyhole, exact: true, excludeHashes: ["#acesso", "#email"] },
+  { label: "Notificações", href: ACCOUNT_PATHS.notifications, icon: Bell, exact: true },
   { label: "Privacidade e dados", href: ACCOUNT_PATHS.privacy, icon: Shield, exact: true },
   { label: "Meus perfis", href: ACCOUNT_PATHS.profiles, icon: UserRound, exact: true, search: "?section=profiles" },
   {

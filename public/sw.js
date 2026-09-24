@@ -201,7 +201,7 @@ self.addEventListener('notificationclose', (event) => {
 const PAUSED_NOTIFICATION_ROUTE_PATTERN =
   /^\/(?:mobility|mobilidade|track|educacao|comunicacao|cupons|ranking|gamificacao|analytics|alertas|achados-perdidos|achados-e-perdidos|problemas|planos|checkout)(?:\/|$)|^\/settings\/subscription(?:\/|$)/i;
 
-function getLaunchSafeNotificationUrl(url, fallback = '/') {
+function getLaunchSafeNotificationUrl(url, fallback = '/notificacoes') {
   if (!url) return fallback;
   const value = String(url);
   return PAUSED_NOTIFICATION_ROUTE_PATTERN.test(value) ? fallback : value;
@@ -219,7 +219,10 @@ function getNotificationUrl(data) {
       return '/perto-de-mim';
     
     case 'order':
-      return `/gastronomia/pedidos/${data.orderId || ''}`;
+      return getLaunchSafeNotificationUrl(
+        `/gastronomia/pedidos/${data.orderId || ''}`,
+        '/notificacoes'
+      );
     
     case 'payment':
       return getLaunchSafeNotificationUrl('/settings/subscription');
@@ -256,7 +259,7 @@ function getActionUrl(action, data) {
       return getLaunchSafeNotificationUrl(data.declineUrl, '/');
     
     case 'settings':
-      return '/conta';
+      return '/conta/notificacoes';
     
     default:
       return '/';
