@@ -13,7 +13,7 @@ describe("MVP canonical routing without compatibility redirects", () => {
 
     expect(routes).toContain('path="/conta"');
     expect(routes).toContain('path="/conta/editar/:profileId"');
-    expect(routes).toContain('path="/conta/notificacoes"');
+    expect(routes).not.toContain('path="/conta/notificacoes"');
 
     expect(routes).not.toContain('path="/perfil"');
     expect(routes).not.toContain('path="/perfil/');
@@ -43,25 +43,31 @@ describe("MVP canonical routing without compatibility redirects", () => {
     ).toBe(false);
   });
 
-  it("keeps notification inbox and preferences on one canonical route each", () => {
+  it("keeps paused notification surfaces out of the active route graph", () => {
     const routes = read("src/app/routes/sections/AppLayoutRoutes.tsx");
-    const notifications = read("src/app/pages/NotificationsPage.tsx");
-    const preferences = read("src/app/pages/NotificationPreferencesPage.tsx");
+    const activeLazyImports = read("src/app/routes/activeLazyImports.ts");
     const prefetch = read("src/app/routes/prefetch.ts");
     const serviceWorker = read("public/sw.js");
 
-    expect(routes).toContain('path="/notificacoes"');
-    expect(routes).not.toContain('path="/notifications"');
-    expect(routes).not.toContain('path="/settings/notifications"');
+    for (const pausedPath of [
+      'path="/notificacoes"',
+      'path="/conta/notificacoes"',
+      'path="/settings/email-logs"',
+    ]) {
+      expect(routes).not.toContain(pausedPath);
+    }
 
-    expect(notifications).toContain("navigate(ACCOUNT_PATHS.notifications)");
-    expect(notifications).not.toContain("/settings/notifications");
-    expect(preferences).not.toContain("/settings/notifications");
+    expect(activeLazyImports).not.toContain("NotificationsPage");
+    expect(activeLazyImports).not.toContain("NotificationPreferencesPage");
+    expect(activeLazyImports).not.toContain("EmailLogsPage");
+    expect(prefetch).not.toContain('path.startsWith("/notificacoes")');
+    expect(prefetch).not.toContain('{ href: "/notificacoes" }');
 
-    expect(prefetch).toContain('path.startsWith("/notificacoes")');
-    expect(prefetch).not.toContain('path.startsWith("/notifications")');
-    expect(serviceWorker).toContain("fallback = '/notificacoes'");
-    expect(serviceWorker).not.toContain("return '/notifications'");
+    expect(serviceWorker).toContain("case 'message':");
+    expect(serviceWorker).toContain("return '/mensagens';");
+    expect(serviceWorker).toContain("case 'settings':");
+    expect(serviceWorker).toContain("return '/conta';");
+    expect(serviceWorker).not.toContain("fallback = '/notificacoes'");
   });
 
   it("does not preserve query-param redirects for retired account navigation", () => {
