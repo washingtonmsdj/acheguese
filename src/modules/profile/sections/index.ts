@@ -1,19 +1,9 @@
 /**
- * Sections - Barrel export para sections legadas ainda mantidas.
+ * Profile section contracts.
  *
- * Segurança, privacidade e dados da conta já pertencem às superfícies
- * canônicas em /conta e não são reexportados por este barrel.
+ * Legacy rendered section components were retired from the runtime.
+ * Keep only shared types that still have real callers.
  */
-
-export { ResumoSection } from "./ResumoSection";
-export { DadosPessoaisSection } from "./DadosPessoaisSection";
-export { EmpresasSection } from "./EmpresasSection";
-export { MobilidadeSection } from "./MobilidadeSection";
-export { DeliverySection } from "./DeliverySection";
-export { PlanosSection } from "./PlanosSection";
-export { NotificacoesSection } from "./NotificacoesSection";
-export { PreferenciasSection } from "./PreferenciasSection";
-
 export type {
   ProfileSectionId,
   SectionPropsMap,
