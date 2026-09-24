@@ -237,8 +237,6 @@ const DOCUMENTATION_INDEX_REQUIRED_MARKERS = [
   "docs/03-architecture/COMMUNITY_FIRST_ARCHITECTURE_SSOT.md",
   "docs/03-architecture/CORE_LAYER_SSOT.md",
   "docs/architecture/PROJECT-MILESTONE-1.md",
-  "docs/01-product/STATUS.md | Product | SUBSTITUIDO",
-  "docs/03-architecture/CANONICAL_MAP.md | Architecture | SUBSTITUIDO",
   "docs/10-archive/**",
 ] as const;
 const COMMUNITY_FIRST_PLAN_STATUS_REQUIRED_MARKERS = [

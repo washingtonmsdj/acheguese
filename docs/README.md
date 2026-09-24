@@ -69,7 +69,6 @@ Alguns caminhos antigos ainda existem fora das pastas numeradas por compatibilid
 - [Arquitetura global](./03-architecture/ARCHITECTURE.md)
 - [Community architecture — contrato pós-MVP](./03-architecture/COMMUNITY_FIRST_ARCHITECTURE_SSOT.md) — preserva internals da capability; não é autoridade de ativação pública.
 - [Core Platform architecture SSOT](./03-architecture/CORE_PLATFORM_ARCHITECTURE_SSOT.md)
-- [Canonical map / ownership](./03-architecture/CANONICAL_MAP.md)
 - [Product & platform lifecycle](./03-architecture/PRODUCT_MODULE_LIFECYCLE.md) — regras para domínios e capabilities; owners executáveis em `productModuleRegistry.ts`, `platformCapabilityRegistry.ts` e `lifecycleRegistry.ts`.
 
 ### Segurança e governance
@@ -103,7 +102,7 @@ Alguns caminhos antigos ainda existem fora das pastas numeradas por compatibilid
 
 - Bounded contexts de código: [`../src/modules/README.md`](../src/modules/README.md)
 - Contratos transversais e de módulo em [`07-modules/`](./07-modules/)
-- [Posts/Feed SSOT atual](./07-modules/POSTS_FEED_SSOT.md) — `core/posts` é o owner; `core/community-feed` compõe a experiência territorial.
+- [Community First / Posts e Feed](./03-architecture/COMMUNITY_FIRST_ARCHITECTURE_SSOT.md) — `core/posts` é o owner de posts; `core/community-feed` compõe a experiência territorial preservada para pós-MVP.
 - Verticais empresariais oficiais são declaradas **somente** em [`src/core/verticals/config.ts`](../src/core/verticals/config.ts). No estado atual: `gastronomy` e `education`.
 
 ### Roadmap / execução

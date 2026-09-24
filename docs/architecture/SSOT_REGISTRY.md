@@ -108,7 +108,7 @@ npx tsx tools/architecture/check-ssot-compliance.ts
 | **Cache composition** | `src/core/feed/queryKeys.ts` |
 | **Responsabilidade** | Compor a experiência territorial sem recriar CRUD/SSOT paralelo; timeline usa `postService.getFeed()`, detalhe público usa `postService.getPublicPostById(..., TerritoryFilter)`. |
 
-> O antigo `FeedService`/`FeedRepository` foi removido após zero consumidores. `docs/feed/FEED-FREEZE.md` preserva invariantes históricas e não autoriza restaurar paths aposentados.
+> O antigo `FeedService`/`FeedRepository` foi removido após zero consumidores. O histórico dessa arquitetura permanece no Git; os owners executáveis atuais são `src/core/posts`, `src/core/community-feed` e os contratos transversais correspondentes.
 
 ---
 
