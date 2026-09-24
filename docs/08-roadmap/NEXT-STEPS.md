@@ -49,7 +49,7 @@ Regras:
 2. **Fechar rotas, navegação e prefetch**
    - navegação pública deve expor somente destinos do MVP e infraestrutura necessária;
    - módulo pausado não pode possuir rota funcional acessível, inclusive em Admin/Central;
-   - router, lazy barrel e prefetch/warmup do runtime ativo não podem conectar owner de módulo pausado; URL pausada/antiga sem contrato externo deve cair no 404 canônico;
+   - router, lazy barrel, shell, navegação e prefetch/warmup do runtime ativo não podem conectar owner de módulo pausado; URL pausada/antiga sem contrato externo deve cair no 404 canônico;
    - não manter redirects de compatibilidade no corte MVP; URL antiga sem contrato externo comprovado deve ser removida e resultar em 404.
 
 3. **Limpar resíduos do escopo anterior**

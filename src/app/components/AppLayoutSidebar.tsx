@@ -20,10 +20,7 @@ import { TerritoryMismatchBanner } from "@/core/location/components/TerritoryMis
 import { prefetchRouteByHref, scheduleIdleRouteWarmup } from "@/app/routes/prefetch";
 import { ACCOUNT_PATHS, ACCOUNT_SETTINGS_SHELL_PATHS } from "@/core/routing/config/account";
 import { isReservedSlug } from "@/core/routing/reservedSlugs";
-import {
-  MODULE_SLUGS,
-  isCommunityRouteSuffixSegment,
-} from "@/core/routing/utils/territoryUrls";
+import { MODULE_SLUGS } from "@/core/routing/utils/territoryUrls";
 
 export function AppLayoutSidebar() {
   const { pathname } = useLocation();
@@ -37,19 +34,6 @@ export function AppLayoutSidebar() {
     pathSegments.length <= 3 &&
     /^[a-z]{2}$/i.test(pathSegments[0] ?? "") &&
     !isReservedSlug(pathSegments[0] ?? "");
-  const isCommunityPublicLandingRoute =
-    pathSegments[0] === MODULE_SLUGS.community;
-  const isCommunityAliasPublicRoute =
-    pathSegments[0] === MODULE_SLUGS.community &&
-    Boolean(pathSegments[1]) &&
-    !/^[a-z]{2}$/i.test(pathSegments[1] ?? "");
-  const isShortCommunityRoute =
-    Boolean(pathSegments[0]) &&
-    !/^[a-z]{2}$/i.test(pathSegments[0] ?? "") &&
-    !isReservedSlug(pathSegments[0] ?? "") &&
-    (pathSegments.length === 1 ||
-      isCommunityRouteSuffixSegment(pathSegments[1]) ||
-      (pathSegments.length === 2 && !isReservedSlug(pathSegments[1] ?? "")));
   const isPublicBusinessLandingRoute =
     pathSegments[0] === MODULE_SLUGS.business &&
     pathSegments[1] !== "cadastrar";
@@ -64,59 +48,29 @@ export function AppLayoutSidebar() {
   const accountUsesSettingsShell = ACCOUNT_SETTINGS_SHELL_PATHS.has(pathname);
   const isPublicPersonalProfileRoute =
     pathSegments[0] === "u" && pathSegments.length === 2;
-  const isProfessionalPublicRoute =
-    pathSegments[0] === MODULE_SLUGS.services &&
-    pathSegments[3] === "profissional" &&
-    pathSegments.length >= 5;
-  const isGastronomyOrderTrackingRoute =
-    pathSegments[0] === MODULE_SLUGS.gastronomy &&
-    pathSegments[1] === "pedidos" &&
-    pathSegments.length === 3;
   const usesTerritoryVivoShell =
     isBarePublicTerritorialRoute ||
     isTerritoryVivoExploreRoute ||
-    isCommunityPublicLandingRoute ||
     isAccountRoute ||
-    isPublicPersonalProfileRoute ||
-    isProfessionalPublicRoute;
+    isPublicPersonalProfileRoute;
 
   // Ocultar sidebar na home e na página de perfil (que tem sua própria sidebar)
   const hideGlobalSidebar =
     pathname === "/" ||
     isBarePublicTerritorialRoute ||
     isTerritoryVivoExploreRoute ||
-    isCommunityPublicLandingRoute ||
-    isCommunityAliasPublicRoute ||
-    isShortCommunityRoute ||
-    isPublicBusinessLandingRoute ||
-    isGastronomyOrderTrackingRoute;
+    isPublicBusinessLandingRoute;
 
-  const isInternalGroupRoute =
-    pathSegments[0] === "grupos" && pathSegments.length >= 2;
   const isConversationRoute =
     pathSegments[0] === "mensagens" && pathSegments.length >= 3;
-  const isPublicEntityDetailRoute =
-    isShortCommunityRoute &&
-    pathSegments.length === 2 &&
-    !isReservedSlug(pathSegments[1] ?? "") &&
-    !isCommunityRouteSuffixSegment(pathSegments[1] ?? "");
   const useDocumentScrollPublicShell =
-    isPublicEntityDetailRoute ||
     pathname === "/" ||
     isBarePublicTerritorialRoute ||
-    isCommunityPublicLandingRoute ||
-    isCommunityAliasPublicRoute ||
-    isShortCommunityRoute ||
-    isPublicBusinessLandingRoute ||
-    isGastronomyOrderTrackingRoute;
+    isTerritoryVivoExploreRoute ||
+    isPublicBusinessLandingRoute;
   const hideMobileBottomNav =
     pathname === "/" ||
-    isInternalGroupRoute ||
-    isConversationRoute ||
-    isPublicEntityDetailRoute ||
-    isCommunityPublicLandingRoute ||
-    isCommunityAliasPublicRoute ||
-    isGastronomyOrderTrackingRoute;
+    isConversationRoute;
 
   const isMessagingRoute = pathSegments[0] === "mensagens";
 
@@ -151,10 +105,7 @@ export function AppLayoutSidebar() {
           </div>
         </div>
         <TerritoryAdaptiveNavigation
-          hideMobile={
-            isProfessionalPublicRoute ||
-            (accountUsesSettingsShell && !isAccountOverview)
-          }
+          hideMobile={accountUsesSettingsShell && !isAccountOverview}
           hideDesktop={accountUsesSettingsShell}
         />
       </>

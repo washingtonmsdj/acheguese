@@ -4,7 +4,7 @@
 **Data do checkpoint GitHub:** 2026-09-24  
 **Repositório:** `washingtonmsdj/acheguese`  
 **Linha ativa:** `main`  
-**Baseline operacional auditada:** `main@4668d0f3ac2092b463dd01de28280b9a08632a13` (merge de #365). Este checkpoint registra o estado do código; não promove um novo release. Qualquer merge posterior gera outro SHA e exige nova prova exact-SHA antes de promoção.
+**Baseline operacional auditada:** `main@227dcf926bb2e65b7615717413e1544927edc442` (merge de #366). Este checkpoint registra o estado do código; não promove um novo release. Qualquer merge posterior gera outro SHA e exige nova prova exact-SHA antes de promoção.
 
 Este documento consolida ordem de execução, blockers e Definition of Done. Ele é um **registro operacional**, não uma fotografia autoritativa do que existe no produto. A fonte de verdade para decidir o que existe, o que está ativo e o que deve ser corrigido é sempre o **projeto real**: código da `main`, rotas, owners, serviços, schema/migrations, contratos, testes, deploy/runtime e comportamento observado.
 
@@ -1764,3 +1764,20 @@ Correção deste corte:
 - loader de superfície pausada continua fail-closed antes de executar `import()`.
 
 Regra futura: prefetch/warmup é boundary ativo do app. Novas entradas devem declarar seu gate canônico de domínio ou capability diretamente; não reintroduzir `LaunchSurfaceKey`/`isLaunchSurfaceEnabled` nesse arquivo.
+
+### Checkpoint MVP — active shell paused-domain isolation (2026-09-24)
+
+Após providerizar Map/Search, endurecer Notifications e mover o prefetch para o lifecycle canônico, a auditoria do grafo ativo encontrou resíduos no shell:
+
+- `navigation.config.ts` importava `gastronomyPublicRoutes` mesmo com Gastronomy pausada;
+- `AppLayoutSidebar.tsx` mantinha tratamentos especiais para Community, Services/profissional, Gastronomy/pedidos e Groups, apesar de essas rotas não possuírem owner ativo no MVP.
+
+Correção deste corte:
+
+- navegação usa apenas builders genéricos + lifecycle filter; nenhum owner de vertical pausada entra no navigation config;
+- shell ativo não classifica nem estiliza URLs pausadas como se fossem superfícies funcionais;
+- comportamentos especiais permanecem somente para território, Search, Business, Conta, perfil público e Messaging;
+- rota pausada/órfã continua 404 canônico, sem redirect, placeholder ou shell legado;
+- o ratchet `active-shell-paused-domain-boundary.test.ts` integra `test:mvp:architecture`.
+
+Regra para próxima IA/chat: metadata declarativa de futura navegação pode existir para facilitar reativação, mas owner/import/runtime de vertical pausada não pertence ao shell ativo.

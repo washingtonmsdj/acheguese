@@ -28,7 +28,6 @@ import {
 import { APP_MODULE_SLUGS, buildAppModulePath } from '@/shared/config/moduleSlugs';
 import { LAUNCH_URLS } from '@/core/routing/config/territory';
 import { filterLaunchSections } from '@/app/config/launchScope';
-import { gastronomyPublicRoutes } from '@/core/verticals/gastronomy/routes/gastronomyPublicRoutes';
 
 export interface NavItem {
   id: string;
@@ -48,7 +47,7 @@ export interface NavSection {
 
 const NAV_MODULE_ROOTS = {
   business: buildAppModulePath(APP_MODULE_SLUGS.business),
-  gastronomy: gastronomyPublicRoutes.home(),
+  gastronomy: buildAppModulePath(APP_MODULE_SLUGS.gastronomy),
   services: buildAppModulePath(APP_MODULE_SLUGS.services),
   education: buildAppModulePath(APP_MODULE_SLUGS.education),
   classifieds: buildAppModulePath(APP_MODULE_SLUGS.classifieds),
