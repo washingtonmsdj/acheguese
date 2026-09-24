@@ -3,8 +3,8 @@
  *
  * Layout global unificado: sidebar completa com navegação integrada + topbar + bottom nav mobile.
  *
- * ✅ Sidebar contém: logo, território, navegação, mensagens, notificações, perfil, tema
- * ✅ Topbar com ações rápidas (notificações, mensagens, perfil, logout)
+ * ✅ Sidebar contém: logo, território, navegação, mensagens, perfil, tema
+ * ✅ Topbar com ações rápidas (mensagens, perfil, logout)
  * ✅ Bottom nav apenas no mobile
  * ✅ Estrutura idêntica à Central
  */
