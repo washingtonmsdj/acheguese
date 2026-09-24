@@ -1,21 +1,47 @@
 import {
-  isLaunchSurfaceEnabled,
-  type LaunchSurfaceKey,
-} from "./launchScope";
+  isPlatformCapabilityEnabled,
+  isProductModuleEnabled,
+} from "./lifecycleRegistry";
+import type { PlatformCapabilityKey } from "./platformCapabilityRegistry";
+import type { ProductModuleKey } from "./productModuleRegistry";
+
+type NotificationActionCapabilityKey = Extract<
+  PlatformCapabilityKey,
+  "map" | "nearby" | "search" | "messaging" | "profiles"
+>;
+
+export type NotificationActionSurfaceKey =
+  | ProductModuleKey
+  | NotificationActionCapabilityKey;
+
+function isNotificationActionSurfaceEnabled(
+  surface: NotificationActionSurfaceKey,
+): boolean {
+  switch (surface) {
+    case "map":
+    case "nearby":
+    case "search":
+    case "messaging":
+    case "profiles":
+      return isPlatformCapabilityEnabled(surface);
+    default:
+      return isProductModuleEnabled(surface);
+  }
+}
 
 export const NOTIFICATION_INBOX_PATH = "/notificacoes";
 export const NOTIFICATION_FALLBACK_ACTION_LABEL = "Abrir notificações";
 
 interface NotificationActionRouteRule {
   pattern: RegExp;
-  surface: LaunchSurfaceKey;
+  surface: NotificationActionSurfaceKey;
 }
 
 export interface NotificationActionTarget {
   href: string;
   label: string;
   isFallback: boolean;
-  surface?: LaunchSurfaceKey;
+  surface?: NotificationActionSurfaceKey;
 }
 
 const ROUTE_RULES: readonly NotificationActionRouteRule[] = [
@@ -90,7 +116,7 @@ const ROUTE_RULES: readonly NotificationActionRouteRule[] = [
 ];
 
 const COMMUNITY_EMBEDDED_SURFACES: Readonly<
-  Partial<Record<string, LaunchSurfaceKey>>
+  Partial<Record<string, NotificationActionSurfaceKey>>
 > = {
   alertas: "communityAlerts",
   problemas: "communityIssues",
@@ -104,7 +130,7 @@ const COMMUNITY_EMBEDDED_SURFACES: Readonly<
 
 function getCommunityEmbeddedSurface(
   pathname: string,
-): LaunchSurfaceKey | undefined {
+): NotificationActionSurfaceKey | undefined {
   const segments = pathname
     .split("/")
     .filter(Boolean)
@@ -163,7 +189,7 @@ export function resolveNotificationActionTarget(
   }
 
   const communitySurface = getCommunityEmbeddedSurface(pathname);
-  if (communitySurface && !isLaunchSurfaceEnabled(communitySurface)) {
+  if (communitySurface && !isNotificationActionSurfaceEnabled(communitySurface)) {
     return {
       href: NOTIFICATION_INBOX_PATH,
       label: NOTIFICATION_FALLBACK_ACTION_LABEL,
@@ -173,7 +199,7 @@ export function resolveNotificationActionTarget(
   }
 
   const routeRule = ROUTE_RULES.find((rule) => rule.pattern.test(pathname));
-  if (!routeRule || isLaunchSurfaceEnabled(routeRule.surface)) {
+  if (!routeRule || isNotificationActionSurfaceEnabled(routeRule.surface)) {
     return {
       href: actionUrl,
       label: actionLabel,
