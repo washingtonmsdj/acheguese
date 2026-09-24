@@ -13,6 +13,9 @@ describe('business map bounded read', () => {
   const businessService = readProjectFile(
     'src/core/business/services/BusinessMapQueryService.ts',
   );
+  const businessMapProvider = readProjectFile(
+    'src/core/maps/providers/businessMapLayerProvider.ts',
+  );
   const mapPage = readProjectFile(
     'src/core/maps/pages/MapaPageV4.tsx',
   );
@@ -38,9 +41,13 @@ describe('business map bounded read', () => {
     expect(mapAdapter).not.toContain('applyTerritoryFilter');
   });
 
-  it('keeps map surfaces on the bounded Business map boundary', () => {
-    expect(mapPage).toContain('mapBusinessLayerRuntimeService.getBusinessesByBounds(bounds');
-    expect(mapPage).not.toContain('BusinessService.getBusinesses(');
+  it('keeps the Business layer provider on the bounded Business map boundary', () => {
+    expect(businessMapProvider).toContain(
+      'mapBusinessLayerRuntimeService.getBusinessesByBounds(bounds',
+    );
+    expect(businessMapProvider).not.toContain('BusinessService.getBusinesses(');
+    expect(mapPage).not.toContain('mapBusinessLayerRuntimeService');
+    expect(mapPage).not.toContain('makeBusinessFetcher');
   });
 
   it('bounds result cardinality and rejects the retired businesses spatial table', () => {

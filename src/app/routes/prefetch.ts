@@ -26,7 +26,7 @@ const PREFETCHERS: Array<{
   },
   {
     test: (path) => isAppModulePath(path, APP_MODULE_SLUGS.map),
-    load: () => import("@/core/maps/pages/MapaPageV4"),
+    load: () => import("@/app/pages/MapaPage"),
     surface: "map",
   },
   {
