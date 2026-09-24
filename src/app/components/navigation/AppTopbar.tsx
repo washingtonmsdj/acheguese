@@ -6,7 +6,10 @@ import { Button } from "@/shared/components/ui/button";
 import { useSessionContext } from "@/core/session";
 import { AuthService } from "@/core/auth/services/AuthService";
 import { useAppUrls } from "@/core/routing/hooks/useAppUrls";
-import { isLaunchSurfaceEnabled } from "@/app/config/launchScope";
+import {
+  isPlatformCapabilityEnabled,
+  isProductModuleEnabled,
+} from "@/app/config/lifecycleRegistry";
 
 function getInitials(value?: string | null): string {
   if (!value) return "U";
@@ -28,8 +31,8 @@ function getInitials(value?: string | null): string {
 export function AppTopbar() {
   const { activeProfile, user } = useSessionContext();
   const appUrls = useAppUrls();
-  const showMessages = isLaunchSurfaceEnabled("messaging");
-  const showBilling = isLaunchSurfaceEnabled("billing");
+  const showMessages = isPlatformCapabilityEnabled("messaging");
+  const showBilling = isProductModuleEnabled("billing");
 
   const handleLogout = async () => {
     await AuthService.signOut();

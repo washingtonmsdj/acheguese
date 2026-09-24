@@ -61,11 +61,10 @@ describe("account and horizontal messaging real-data boundary", () => {
 
   it("keeps global Messaging navigation owned by the horizontal capability", () => {
     expect(appTopbar).toContain(
-      'const showMessages = isLaunchSurfaceEnabled("messaging")',
+      'const showMessages = isPlatformCapabilityEnabled("messaging")',
     );
-    expect(appTopbar).not.toContain(
-      'isLaunchSurfaceEnabled("communityCommunication")',
-    );
+    expect(appTopbar).not.toContain("isLaunchSurfaceEnabled");
+    expect(appTopbar).not.toContain('"communityCommunication"');
     expect(appTopbar).toContain("to={appUrls.messages}");
   });
 
