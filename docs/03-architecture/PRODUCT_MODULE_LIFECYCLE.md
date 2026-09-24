@@ -38,7 +38,7 @@ Dependências importantes:
 
 - `notifications -> auth`: capability horizontal, independente do estado dos verticais;
 - `messaging -> auth + profiles`: a capability permanece horizontal; providers Business/Classificados/Community são filtrados separadamente pelo lifecycle;
-- `nearby -> map + location`; Business é provider lifecycle-scoped ainda representa o adapter MVP atual, que hoje só possui provider Business certificado; a evolução correta é providerizar Nearby antes de retirar essa dependência;
+- `nearby -> map + location`: capability horizontal; providers de domínio são filtrados separadamente pelo lifecycle e Business é o provider MVP atual;
 - Search só executa providers de domínios/capabilities habilitados;
 - Map só projeta layers de domínios habilitados.
 
