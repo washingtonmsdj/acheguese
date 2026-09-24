@@ -30,6 +30,12 @@ const notificationService = read(
 const preferenceService = read(
   "src/core/notifications/services/NotificationPreferencesService.ts",
 );
+const notificationItem = read(
+  "src/app/components/notifications/NotificationItem.tsx",
+);
+const notificationActionScope = read(
+  "src/app/config/notificationActionScope.ts",
+);
 const authorityMigration = read(
   "supabase/migrations/20260829185546_harden_notification_inbox_write_authority.sql",
 );
@@ -56,6 +62,23 @@ describe("Notification inbox authority", () => {
     expect(notificationService).not.toContain("CreateNotificationInput");
     expect(notificationService).not.toMatch(
       /\.from(?:<[^;]{0,500}>)?\(\s*["']notifications["']\s*\)\s*\.insert\s*\(/m,
+    );
+  });
+
+  it("keeps inbox actions lifecycle-scoped at the app boundary", () => {
+    expect(notificationItem).toContain("resolveNotificationActionTarget");
+    expect(notificationItem).toContain("actionTarget.href");
+    expect(notificationItem).not.toContain(
+      "href={notification.action_url}",
+    );
+    expect(notificationActionScope).toContain("isLaunchSurfaceEnabled");
+    expect(notificationActionScope).toContain('surface: "gastronomy"');
+    expect(notificationActionScope).toContain('surface: "mobility"');
+    expect(notificationActionScope).toContain(
+      'NOTIFICATION_INBOX_PATH = "/notificacoes"',
+    );
+    expect(notificationActionScope).toContain(
+      "RETIRED_NOTIFICATION_ROUTE_PATTERNS",
     );
   });
 
