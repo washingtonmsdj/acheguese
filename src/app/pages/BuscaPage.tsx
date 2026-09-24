@@ -49,6 +49,7 @@ import { usePublicBrowsingCity } from "@/core/location/hooks/usePublicBrowsingCi
 import type { TerritoryFilter } from "@/core/location/types";
 import { mapEntityProjection } from "@/core/maps";
 import type { MapMarker } from "@/core/maps/types/core";
+import { useUnifiedNotifications } from "@/core/notifications/useUnifiedNotifications";
 import { professionalPublicRoutes } from "@/core/professional/routes/professionalPublicRoutes";
 import {
   TERRITORY_RESOLVE_STATUS,
@@ -188,6 +189,7 @@ export default function BuscaPage() {
   }>();
   const { active } = usePublicBrowsingCity();
   const { user } = useSessionContext();
+  const { unreadCount } = useUnifiedNotifications();
   const { navigateToBusiness } = useBusinessNavigation();
   const [activeFilter, setActiveFilter] = useState<SearchCategory>("all");
   const [sortOrder, setSortOrder] = useState<"relevance" | "name">(
@@ -510,6 +512,7 @@ export default function BuscaPage() {
         territoryName={territoryName}
         contextLabel={contextLabel}
         isAuthenticated={Boolean(user)}
+        unreadCount={unreadCount}
         searchHref={moduleUrls.search}
         searchLabel="O que você procura por aqui?"
         flushDesktop

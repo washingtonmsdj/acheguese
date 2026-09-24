@@ -55,9 +55,6 @@ describe("active AppLayout route boundary", () => {
       'path="/achados-perdidos',
       'path="/ranking"',
       'path="/gamificacao"',
-      'path="/notificacoes"',
-      'path="/settings/email-logs"',
-      'path="/conta/notificacoes"',
     ]) {
       expect(appLayout).not.toContain(pausedPath);
     }
@@ -70,6 +67,7 @@ describe("active AppLayout route boundary", () => {
     for (const capability of [
       "profiles",
       "account",
+      "notifications",
       "territory",
       "map",
       "nearby",
@@ -102,8 +100,6 @@ describe("active AppLayout route boundary", () => {
       "APP_MODULE_SLUGS.gastronomy",
       "APP_MODULE_SLUGS.community",
       "APP_MODULE_SLUGS.touristPoints",
-      "@/app/pages/NotificationsPage",
-      "/notificacoes",
     ]) {
       expect(prefetch).not.toContain(forbidden);
     }
@@ -113,6 +109,7 @@ describe("active AppLayout route boundary", () => {
       "@/core/maps/pages/MapaPageV4",
       "@/core/nearby/pages/NearbyPage",
       "@/app/pages/BuscaPage",
+      "@/app/pages/NotificationsPage",
     ]) {
       expect(prefetch).toContain(activeOwner);
     }
@@ -128,9 +125,6 @@ describe("active AppLayout route boundary", () => {
       "@/modules/community-",
       "@/modules/business/education",
       "@/core/mobility",
-      "NotificationsPage",
-      "NotificationPreferencesPage",
-      "EmailLogsPage",
     ]) {
       expect(activeLazyImports).not.toContain(forbidden);
     }

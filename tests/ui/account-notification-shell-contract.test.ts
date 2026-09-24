@@ -20,8 +20,10 @@ describe("account notification concept shell", () => {
   it("keeps canonical preference reads and writes while polishing presentation", () => {
     expect(source).toContain("NotificationPreferencesService.get()");
     expect(source).toContain("NotificationPreferencesService.patchAll(prefs)");
-    expect(source).toContain("Notificações push");
-    expect(source).toContain("Ative, teste ou remova os avisos deste navegador.");
+    expect(source).toContain("Neste dispositivo");
+    expect(source).toContain("Permissão e inscrição deste navegador.");
+    expect(source).toContain("Preferência de push da conta");
+    expect(source).toContain("Receber push");
     expect(source).toContain("Escolha se prefere avisos na hora ou em resumos.");
   });
 

@@ -24,7 +24,7 @@ Este documento consolida ordem de execução, blockers e Definition of Done. Ele
 - #341 integrado — pins de resultados da Busca passaram a executar navegação real; Business delega ao owner canônico e não reconstrói URL no mapa;
 - #342 integrado — pins do mini-mapa de Perto de mim passaram a abrir `business.canonicalUrl`, alinhando card e mapa ao mesmo owner público;
 - #343 integrado — o hero/mapa de Empresas agora respeita `filteredBusinesses` inclusive quando o resultado é zero, sem reexibir silenciosamente a coleção não filtrada;
-- #350 integrado — Notificações passou a `paused`; rotas, lazy imports, prefetch/warmup e entradas principais da Conta foram retirados do grafo ativo, mantendo core/migrations/owners preservados para pós-MVP;
+- #350/#351 foram reavaliados: pausar Notificações por causa do recorte de verticais misturava capability horizontal com módulo de produto. O PR #353 corrige essa classificação, reativa Notificações e preserva os verticais pausados fail-closed;
 - os heads finais de #337, #338, #339, #341, #342 e #343 passaram os gates aplicáveis de unit/runtime, lint/typecheck, arquitetura, segurança, E2E público, Regression, Heavy exact-SHA e SSOT Enforcement antes dos respectivos merges; isso certifica os PRs, mas não substitui prova pós-merge/deploy/smoke do SHA atual da `main`;
 - o blocker de release autenticado continua #305: o broker remoto está alinhado ao source e recebe OIDC válido, mas o upstream Supabase/Auth segue reproduzindo `503 auth_upstream_unavailable` / connection timeout; #309 continua separado como autoridade de deploy de Edge Functions. Nenhum merge herda certificação anterior: a `main@7a749254...` precisa de sua própria prova exact-SHA de deploy + smoke antes de promoção.
 
@@ -57,9 +57,9 @@ Este corte substitui, para fins de **prioridade de lançamento**, a ordem histó
 A decisão definitiva de release de **2026-09-21** separa domínio de produto e capabilities horizontais:
 
 - **Domínio ativo:** Empresas/Business;
-- **Capabilities ativas:** Mapa, Perto de mim, Busca e Mensagens;
+- **Capabilities ativas:** Mapa, Perto de mim, Busca, Mensagens e Notificações;
 - **Plataforma ativa:** Auth, Perfis/Conta, Território, Localização, Central, segurança, storage e observabilidade.
-- **Capability pausada neste corte:** Notificações; seus owners/core/migrations permanecem preservados, mas sem rota, navegação, discovery, prefetch ou warmup ativos.
+- **Regra de lifecycle:** pausar um vertical não pausa automaticamente uma capability horizontal. Notifications permanece ativa para Conta/Business e futuros providers; módulos verticais continuam isolados individualmente.
 
 Mensagens é horizontal e, no MVP, registra **somente Business Direct Messaging**. Classificados e Community preservam seus agregados, mas não entram na Inbox enquanto seus domínios estiverem pausados.
 
@@ -1567,7 +1567,7 @@ Política de rotas do corte atual:
 - perfil público pessoal usa somente `/u/:username`;
 - `/perfil/*` foi aposentado e não possui redirect;
 - edição privada exige `/conta/editar/:profileId`; a rota-resolver `/conta/editar` foi removida;
-- Notificações estão `paused`: Inbox, preferências e logs de e-mail não possuem rota ativa no MVP; `/notificacoes`, `/conta/notificacoes` e `/settings/email-logs` permanecem fora do grafo;
+- Notificações é capability horizontal ativa: Inbox usa `/notificacoes`, preferências usam `/conta/notificacoes` e o owner de logs mantém `/settings/email-logs`; aliases antigos continuam proibidos;
 - `/conta/preferencias?tab=...` não funciona como alias/redirect;
 - rota desconhecida renderiza 404 e não é enviada silenciosamente para `/`;
 - guards de autenticação/autorização podem encaminhar para Login ou superfície obrigatória porque representam controle de acesso, não compatibilidade de URL.

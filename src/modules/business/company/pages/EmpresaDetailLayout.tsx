@@ -9,7 +9,7 @@
  */
 
 import type { ReactNode } from 'react';
-import { ArrowLeft, Building2, Compass, Heart, Home, MapPin, Search, UserCircle2 } from 'lucide-react';
+import { ArrowLeft, Bell, Building2, Compass, Heart, Home, MapPin, Search, UserCircle2 } from 'lucide-react';
 import { Link, useNavigate } from 'react-router-dom';
 import { LAUNCH_URLS } from '@/core/routing/config/territory';
 
@@ -89,6 +89,13 @@ export function EmpresaDetailLayout({ children }: EmpresaDetailLayoutProps) {
               aria-label="Favoritos"
             >
               <Heart className="h-[18px] w-[18px]" />
+            </Link>
+            <Link
+              to="/notificacoes"
+              className="inline-flex h-11 w-11 items-center justify-center rounded-2xl border border-white/10 bg-white/[0.03] text-white/70 transition-colors hover:border-white/20 hover:bg-white/[0.05] hover:text-white"
+              aria-label="Notificacoes"
+            >
+              <Bell className="h-[18px] w-[18px]" />
             </Link>
             <button
               type="button"
