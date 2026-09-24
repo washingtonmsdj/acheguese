@@ -1,5 +1,9 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
+import type {
+  SearchFilters,
+  SearchRequestOptions,
+} from "../../contracts";
 import { SearchService } from "../SearchService";
 
 const mocks = vi.hoisted(() => ({
@@ -111,8 +115,8 @@ const ALL_PROVIDER_BUCKETS = [
 
 function searchAll(
   query: string,
-  filters: Parameters<typeof SearchService.search>[1] = {},
-  options: Parameters<typeof SearchService.search>[2] = {},
+  filters: SearchFilters = {},
+  options: SearchRequestOptions = {},
 ) {
   return SearchService.search(query, filters, {
     ...options,

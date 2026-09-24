@@ -228,6 +228,7 @@ Estado do MVP em 2026-09-24:
 - Messaging: owner horizontal + provider Business Direct Messaging;
 - Map: owner horizontal; layers de domínio são providers lifecycle-scoped e Business é o único provider ativo no MVP;
 - Nearby: owner horizontal, dependências estruturais Map + Location, provider Business de proximidade gated separadamente;
+- Search: owner horizontal; `searchProviderScope.ts` autoriza buckets pelos módulos ativos e Business é o único provider de domínio ativo no MVP;
 - Notifications: owner horizontal; eventos podem vir de verticais, mas payload stale de vertical pausada não pode reabrir o domínio.
 
 **Regra para próximas IAs/chats:** nunca inferir que “MVP focado em Empresas” significa desativar funcionalidades horizontais do site. Antes de alterar lifecycle, classificar a peça como vertical, horizontal ou provider.
@@ -249,3 +250,17 @@ Para Map e Nearby:
 - zero providers ou zero membros cobertos permanece fail-closed.
 
 No MVP, Business continua sendo o único provider tanto de layer do Mapa quanto de Nearby. O resultado público permanece equivalente ao comportamento anterior, mas `mapa -> Business` e `nearby -> Business` deixam de ser acoplamentos estruturais.
+
+## Boundary de providers da Busca
+
+`core/search` governa contratos, providers e federação; **não governa lifecycle de produto**.
+
+- `searchProviderScope.ts` em `app/config` deriva os buckets autorizados a partir de `platformCapabilityRegistry` + `productModuleRegistry`;
+- `SearchService.search()` recebe `providerBuckets` explicitamente;
+- omitir `providerBuckets` é fail-closed: nenhum provider de domínio executa;
+- `useGlobalSearch` inclui os buckets no cache key e repassa o scope ao service;
+- todos os services de domínio, inclusive Business, são carregados lazy dentro do provider;
+- provider de módulo `paused` não entra em query, suggestions, filtro nem projeção stale;
+- `core/search/providers` não pode importar `app/config`, `launchScope` ou outra autoridade de lifecycle.
+
+No MVP atual, o scope resolve somente `businesses`. Ativar Services, Jobs, Classifieds, Events ou Community deve habilitar seus buckets pelo lifecycle sem editar `SearchService`.

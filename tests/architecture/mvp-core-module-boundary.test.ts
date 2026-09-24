@@ -9,6 +9,10 @@ describe("MVP core module boundary", () => {
   const registry = read("src/app/config/productModuleRegistry.ts");
   const platformRegistry = read("src/app/config/platformCapabilityRegistry.ts");
   const nearbyProviderScope = read("src/app/config/nearbyProviderScope.ts");
+  const searchProviderScope = read("src/app/config/searchProviderScope.ts");
+  const searchProviders = read("src/core/search/providers/searchProviders.ts");
+  const searchHook = read("src/core/search/hooks/useGlobalSearch.ts");
+  const searchPage = read("src/app/pages/BuscaPage.tsx");
   const nearbyRouteWrapper = read("src/app/pages/NearbyPage.tsx");
   const mapLayerProviderScope = read("src/app/config/mapLayerProviderScope.ts");
   const mapRouteWrapper = read("src/app/pages/MapaPage.tsx");
@@ -85,6 +89,14 @@ describe("MVP core module boundary", () => {
     expect(platformRegistry).toContain('| "nearby"');
     expect(platformRegistry).toContain('| "search"');
     expect(platformRegistry).toContain('| "messaging"');
+    expect(searchProviderScope).toContain('isPlatformCapabilityEnabled("search")');
+    expect(searchProviderScope).toContain("isProductModuleEnabled");
+    expect(searchProviders).not.toContain("@/app/config");
+    expect(searchProviders).not.toContain("isLaunchSurfaceEnabled");
+    expect(searchProviders).toContain("providerBuckets");
+    expect(searchHook).toContain("providerBuckets");
+    expect(searchPage).toContain("getActiveSearchProviderBuckets()");
+    expect(searchPage).toContain("providerBuckets: activeSearchBuckets");
     expect(platformRegistry).toContain('dependsOnCapabilities: ["map", "location"]');
     expect(nearbyProviderScope).toContain('isPlatformCapabilityEnabled("nearby")');
     expect(nearbyProviderScope).toContain("isProductModuleEnabled(productModule)");

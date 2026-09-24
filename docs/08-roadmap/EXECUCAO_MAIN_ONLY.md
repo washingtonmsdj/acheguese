@@ -4,7 +4,7 @@
 **Data do checkpoint GitHub:** 2026-09-24  
 **Repositório:** `washingtonmsdj/acheguese`  
 **Linha ativa:** `main`  
-**Baseline operacional auditada:** `main@63f36cf165fb15b7b6e5692d790fc1e0a8f82154` (merge de #358). Este checkpoint registra o estado do código; não promove um novo release. Qualquer merge posterior gera outro SHA e exige nova prova exact-SHA antes de promoção.
+**Baseline operacional auditada:** `main@39a6865e52649a5fac1f4c8a488787ccae27a3a0` (merge de #361). Este checkpoint registra o estado do código; não promove um novo release. Qualquer merge posterior gera outro SHA e exige nova prova exact-SHA antes de promoção.
 
 Este documento consolida ordem de execução, blockers e Definition of Done. Ele é um **registro operacional**, não uma fotografia autoritativa do que existe no produto. A fonte de verdade para decidir o que existe, o que está ativo e o que deve ser corrigido é sempre o **projeto real**: código da `main`, rotas, owners, serviços, schema/migrations, contratos, testes, deploy/runtime e comportamento observado.
 
@@ -1700,3 +1700,19 @@ Correção estrutural do corte:
 - providers preservados de verticais pausadas não entram no grafo ativo até seu lifecycle ser certificado.
 
 Regra futura: adicionar Services, Gastronomy, Classifieds, Events, Tourist Points ou Mobility ao Mapa deve significar registrar/certificar uma layer provider e seu rollout owner, não editar o core da página para importar o domínio.
+
+### Checkpoint MVP — Search provider lifecycle boundary (2026-09-24)
+
+A auditoria apos Map/Nearby encontrou `core/search/providers/searchProviders.ts` importando `@/app/config/launchScope`. Isso invertia a dependencia: o owner horizontal Search decidia lifecycle de produto.
+
+Correcao estrutural:
+
+- `searchProviderScope.ts` em `app/config` e a autoridade de ativacao dos buckets de Search;
+- `core/search` mantem apenas contratos, provider inventory e federacao;
+- `SearchService.search()` exige `providerBuckets` autorizados; ausente/vazio = fail-closed;
+- `useGlobalSearch` propaga buckets e os inclui na identidade do cache;
+- todos os services de dominio, inclusive Business, sao lazy-loaded dentro do provider;
+- `BuscaPage` usa o mesmo scope para filtros, query e descarte de resultado stale;
+- `core/search` nao deve voltar a importar `app/config/launchScope` ou `isLaunchSurfaceEnabled`.
+
+Estado MVP: somente bucket `businesses` ativo. Reativar Services/Jobs/Classifieds/Events/Community deve alterar lifecycle/provider scope, nao `SearchService`.

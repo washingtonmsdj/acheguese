@@ -19,14 +19,14 @@ Cada dominio conserva:
 - formato mestre da entidade;
 - read models proprios quando necessarios.
 
-A composition root `src/core/search/providers/searchProviders.ts` registra os
-providers de Comunidades, Empresas, Profissionais, Oportunidades,
-Classificados, Eventos e Posts. Cada provider delega para o service canonico do
-dominio correspondente. No corte MVP, somente Business — dominio ativo — fica
-como dependencia runtime estatica de Search. Services de dominios pausados sao
-carregados por `import()` dentro do provider e somente quando o launch gate
-habilita esse provider. `SearchDocument` e somente um read model para
-apresentacao e descoberta; nunca substitui a entidade canonica.
+`src/core/search/providers/searchProviders.ts` registra os providers de
+Comunidades, Empresas, Profissionais, Oportunidades, Classificados, Eventos e
+Posts, mas nao decide quais estao ativos. A composition root de lifecycle fica
+em `src/app/config/searchProviderScope.ts`, que deriva os buckets autorizados
+dos registries canonicos. Todos os services de dominio — inclusive Business —
+sao carregados por `import()` somente quando o bucket foi explicitamente
+autorizado. `SearchDocument` e somente um read model para apresentacao e
+descoberta; nunca substitui a entidade canonica.
 
 ## 2. Fluxo canonico
 
@@ -101,11 +101,12 @@ Nenhum desses contratos substitui `SearchService`.
 - vinculos ativos carregados por busca: no maximo 100, igual ao teto do
   repositorio;
 - provider indisponivel retorna bucket vazio sem apagar providers saudaveis;
+- ausencia de `providerBuckets` autorizados e fail-closed e nao executa dominio algum;
 - cancelamento e cooperativo antes e depois das chamadas de dominio e o
   `AbortError` nunca e convertido em sucesso vazio;
-- launch gates impedem consultas e carregamento runtime dos services de
-  dominios pausados; Business permanece o unico provider de dominio carregado
-  estaticamente no MVP.
+- o app lifecycle impede consultas e carregamento runtime dos services de
+  dominios pausados; Business e o unico bucket de dominio autorizado no MVP,
+  mas tambem e carregado lazy.
 
 O contrato atual entrega um conjunto superior limitado e nao oferece
 paginacao. Adicionar cursor artificial sem ranking federado estavel nao e
@@ -142,8 +143,9 @@ do fechamento; nao existe segunda copia ativa do hook.
 
 - novos dominios entram por `SearchProvider`, nunca por branch em
   `SearchService`;
-- provider de dominio pausado nao pode introduzir import runtime top-level no
-  composition root; use carregamento lazy dentro do provider, depois do gate;
+- provider de dominio nao pode introduzir import runtime top-level no owner
+  Search; use carregamento lazy dentro do provider, depois da autorizacao do app;
+- `core/search` nao pode importar `app/config`, `launchScope` ou outra autoridade de lifecycle;
 - provider nao pode gravar nem tornar Search owner do dominio;
 - SearchService/providers nao podem acessar Supabase diretamente;
 - Search nao pode consultar `public_business_search` ou
