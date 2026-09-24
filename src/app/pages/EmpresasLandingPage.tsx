@@ -432,7 +432,7 @@ export default function EmpresasLandingPage({
       {presentation !== "embedded" ? (
       <EmpresasHeroSection
         territoryName={territoryName}
-        businesses={filteredBusinesses.length > 0 ? filteredBusinesses : businessesToShow}
+        businesses={filteredBusinesses}
         territoryPolygons={territoryPolygons}
         resolved={resolved}
         isLoadingBounds={isLoadingBounds}
