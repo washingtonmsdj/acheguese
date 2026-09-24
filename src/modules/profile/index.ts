@@ -16,5 +16,4 @@ export { default as ContaSegurancaPage } from "./pages/ContaSegurancaPage";
 
 // Module API
 export * from "./hooks";
-export * from "./sections";
 export * from "./types";
