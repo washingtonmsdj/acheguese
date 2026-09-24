@@ -26,10 +26,7 @@ import {
 import { DashboardMetricCard } from "@/modules/profile/components/cards";
 
 import type { ResumoSectionProps } from "./types";
-import {
-  isPlatformCapabilityEnabled,
-  isProductModuleEnabled,
-} from "@/app/config/lifecycleRegistry";
+import { isLaunchSurfaceEnabled } from "@/app/config/launchScope";
 
 export function ResumoSection({
   operations,
@@ -39,11 +36,11 @@ export function ResumoSection({
   navigate,
   appUrls,
 }: ResumoSectionProps) {
-  const showBusiness = isProductModuleEnabled("business");
-  const showMap = isPlatformCapabilityEnabled("map");
+  const showBusiness = isLaunchSurfaceEnabled("business");
+  const showMap = isLaunchSurfaceEnabled("map");
   const totalOperationalAssets = showBusiness ? operations.businesses : 0;
-  const showFamilySafetyLinks = isProductModuleEnabled("familySafety");
-  const showBilling = isProductModuleEnabled("billing");
+  const showFamilySafetyLinks = isLaunchSurfaceEnabled("familySafety");
+  const showBilling = isLaunchSurfaceEnabled("billing");
 
   return (
     <div className="space-y-6">
