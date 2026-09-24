@@ -1,7 +1,6 @@
 import { useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import {
-  Bell,
   Camera,
   CheckCircle2,
   Globe2,
@@ -43,11 +42,6 @@ interface ProfileHeaderCompactProps {
   accountSnapshot: AccountSnapshot;
   identity: Identity | null;
   context: Context | null;
-  notifications: {
-    unread: number;
-    highPriority: number;
-    urgentPriority: number;
-  };
   isVerified: boolean;
   canOpenPublicProfile: boolean;
   handle: string;
@@ -187,14 +181,7 @@ export function ProfileHeaderCompact(props: ProfileHeaderCompactProps) {
           <Users className="h-4 w-4 shrink-0 text-territory-brand" aria-hidden="true" />
           <span>{profileCount === 1 ? "1 perfil" : `${profileCount} perfis`}</span>
         </div>
-        <div className="flex min-h-11 items-center gap-2 text-territory-muted">
-          <Bell className="h-4 w-4 shrink-0 text-territory-brand" aria-hidden="true" />
-          <span>
-            {props.notifications.unread > 0
-              ? `${props.notifications.unread} não lidas`
-              : "Notificações em dia"}
-          </span>
-        </div>
+        
       </div>
 
       {completenessProfile ? (
