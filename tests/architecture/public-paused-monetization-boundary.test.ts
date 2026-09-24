@@ -3,6 +3,10 @@ import { describe, expect, it } from "vitest";
 
 describe("public paused monetization boundary", () => {
   const launchScope = readFileSync("src/app/config/launchScope.ts", "utf8");
+  const productRegistry = readFileSync(
+    "src/app/config/productModuleRegistry.ts",
+    "utf8",
+  );
   const jobsSalaryStep = readFileSync(
     "src/modules/classifieds/jobs/pages/steps/SalaryStep.tsx",
     "utf8",
@@ -112,8 +116,9 @@ describe("public paused monetization boundary", () => {
     "utf8",
   );
 
-  it("keeps Billing outside the MVP launch scope", () => {
-    expect(launchScope).toContain("billing: false");
+  it("keeps Billing paused through the canonical product lifecycle", () => {
+    expect(productRegistry).toContain('billing: { status: "paused" }');
+    expect(launchScope).toContain('billing: isProductModuleEnabled("billing")');
   });
 
   it("does not advertise paused premium placement in public publish flows", () => {
@@ -164,19 +169,13 @@ describe("public paused monetization boundary", () => {
     expect(appLayoutRoutes).not.toContain("LaunchPausedPage");
   });
 
-  it("keeps authenticated plan and upgrade entry points behind Billing launch scope", () => {
-    expect(businessShell).toContain(
-      'const showBilling = isLaunchSurfaceEnabled("billing")',
-    );
-    expect(businessShell).toContain("...(showBilling");
-    expect(businessShell).toContain("{showBilling && (");
-    expect(businessOverview).toContain(
-      'const showBilling = isLaunchSurfaceEnabled("billing")',
-    );
-    expect(businessOverview).toContain("{showBilling && (");
+  it("keeps active private monetization entry points on the canonical Billing lifecycle", () => {
+    expect(businessShell).not.toContain("isLaunchSurfaceEnabled");
+    expect(businessOverview).not.toContain("isLaunchSurfaceEnabled");
     expect(businessHub).toContain(
-      'const showBilling = isLaunchSurfaceEnabled("billing")',
+      'const showBilling = isProductModuleEnabled("billing")',
     );
+    expect(businessHub).not.toContain("isLaunchSurfaceEnabled");
     expect(businessHub).toContain("{showBilling ? (");
     expect(appTopbar).toContain(
       'const showBilling = isProductModuleEnabled("billing")',
@@ -184,9 +183,14 @@ describe("public paused monetization boundary", () => {
     expect(appTopbar).not.toContain("isLaunchSurfaceEnabled");
     expect(appTopbar).toContain("{showBilling ? (");
     expect(centralHeader).toContain(
-      'const showBilling = isLaunchSurfaceEnabled("billing")',
+      'const showBilling = isProductModuleEnabled("billing")',
     );
+    expect(centralHeader).not.toContain("isLaunchSurfaceEnabled");
     expect(centralHeader).toContain("{showBilling ? (");
+    expect(premiumSite).toContain(
+      'const showBilling = isProductModuleEnabled("billing")',
+    );
+    expect(premiumSite).not.toContain("isLaunchSurfaceEnabled");
   });
 
   it("preserves already-granted premium capabilities without exposing a purchase path", () => {
@@ -245,7 +249,8 @@ describe("public paused monetization boundary", () => {
   });
 
   it("keeps paused coupons and promotions out of active gastronomy surfaces", () => {
-    expect(launchScope).toContain("coupons: false");
+    expect(productRegistry).toContain('coupons: {\n    status: "paused",');
+    expect(launchScope).toContain('coupons: isProductModuleEnabled("coupons")');
     expect(gastronomyDetail).toContain(
       'const showCoupons = isLaunchSurfaceEnabled("coupons")',
     );
