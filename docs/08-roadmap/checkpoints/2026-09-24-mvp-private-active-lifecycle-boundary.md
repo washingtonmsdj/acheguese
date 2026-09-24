@@ -12,6 +12,7 @@ Remover dependências residuais da fachada `launchScope.ts` das superfícies pri
 - a Conta deixa de anunciar Serviços e Comunidade enquanto os módulos estão pausados;
 - o resumo da Conta deixa de apresentar Posts, Serviços e Classificados como áreas ativas;
 - o hub de Empresas deixa de expor Gastronomia, Delivery, Mobility e Analytics no grafo ativo;
+- `useProfileHub` aposenta catálogos `operationalLinks`/`ecosystemLinks`/`moduleUrls` sem caller, removendo imports e URLs de verticais pausadas do runtime da Conta;
 - recursos premium já concedidos podem continuar gerenciáveis sem reabrir compra/Billing.
 
 ## Ratchets
@@ -21,7 +22,8 @@ Os testes privados agora impedem:
 - retorno de `isLaunchSurfaceEnabled` às superfícies privadas ativas;
 - links de Serviços/Comunidade na Conta com esses módulos pausados;
 - métricas de Posts/Serviços/Classificados no resumo ativo;
-- referências a `business.gastronomy`, Mobility ou Public Analytics no hub Business ativo.
+- referências a `business.gastronomy`, Mobility ou Public Analytics no hub Business ativo;
+- retorno dos catálogos órfãos de links pós-MVP pelo `useProfileHub`.
 
 ## Release
 
