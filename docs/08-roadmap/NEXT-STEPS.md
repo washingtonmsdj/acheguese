@@ -14,7 +14,7 @@ Capabilities horizontais ativas no lançamento:
 4. **Mensagens** (`messaging`, provider MVP = Business);
 5. Auth, Perfis/Conta, Território, Localização, Notificações e Central.
 
-`nearby` depende estruturalmente de Map + Location; providers verticais são gated separadamente e Business é o provider MVP atual. `map` possui registry/scope próprio de layers e Business é a única layer de domínio ativa no MVP. `messaging` depende de Auth + Perfis e registra somente providers de domínios ativos.
+`nearby` depende estruturalmente de Map + Location; providers verticais são gated separadamente e Business é o provider MVP atual. `map` possui registry/scope próprio de layers. `search` recebe buckets autorizados de `searchProviderScope.ts` e não decide lifecycle no core. `messaging` depende de Auth + Perfis e registra somente providers de domínios ativos. No MVP, Business é o único provider de domínio ativo em Map/Nearby/Search/Messaging.
 
 Todos os demais módulos de produto permanecem **pausados e fail-closed** até certificação individual. Código preservado para pós-MVP não pode aparecer em navegação, rotas funcionais, prefetch, discovery, providers públicos ou layers do Mapa.
 
@@ -40,6 +40,7 @@ Regras:
    - manter `map`, `nearby`, `search` e `messaging` como capabilities ativas;
    - manter `nearby -> map + location`, com Business apenas como provider lifecycle-scoped;
    - manter `map` como capability horizontal e suas layers como providers lifecycle-scoped;
+   - manter `search` como capability horizontal; providers são selecionados em `app/config/searchProviderScope.ts` e o core falha fechado sem autorização;
    - provar `messaging -> auth + profiles`, com provider Business-only no MVP;
    - manter o provider Business do Mapa consumindo seu port público bounded, sem schema/tabelas internas no owner horizontal;
    - manter toda gestão de Business sob `/central/empresas/*`, inclusive edição em `/:businessId/editar`;

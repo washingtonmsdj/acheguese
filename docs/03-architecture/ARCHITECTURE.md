@@ -75,3 +75,10 @@ Database -> Service -> Hook -> Component
 - [COMMUNITY_FIRST_ARCHITECTURE_SSOT.md](./COMMUNITY_FIRST_ARCHITECTURE_SSOT.md) — contrato interno pos-MVP
 - [COMUNICACAO_TERRITORIAL_ARCHITECTURE.md](./COMUNICACAO_TERRITORIAL_ARCHITECTURE.md)
 - [MIGRATIONS.md](./MIGRATIONS.md)
+
+Search segue o mesmo boundary de providers:
+
+- `app/config/searchProviderScope.ts` decide buckets ativos pelo lifecycle;
+- `core/search` apenas registra/executa providers autorizados;
+- o core não importa `launchScope`, `productModuleRegistry` ou qualquer `app/config`;
+- sem buckets autorizados, a busca de domínio falha fechada.

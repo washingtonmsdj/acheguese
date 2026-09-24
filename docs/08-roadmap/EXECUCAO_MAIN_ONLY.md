@@ -4,7 +4,7 @@
 **Data do checkpoint GitHub:** 2026-09-24  
 **Repositório:** `washingtonmsdj/acheguese`  
 **Linha ativa:** `main`  
-**Baseline operacional auditada:** `main@63f36cf165fb15b7b6e5692d790fc1e0a8f82154` (merge de #358). Este checkpoint registra o estado do código; não promove um novo release. Qualquer merge posterior gera outro SHA e exige nova prova exact-SHA antes de promoção.
+**Baseline operacional auditada:** `main@2a630ab1a90deca07c2d5a84ca9cf5953c892003` (merge de #359). Este checkpoint registra o estado do código; não promove um novo release. Qualquer merge posterior gera outro SHA e exige nova prova exact-SHA antes de promoção.
 
 Este documento consolida ordem de execução, blockers e Definition of Done. Ele é um **registro operacional**, não uma fotografia autoritativa do que existe no produto. A fonte de verdade para decidir o que existe, o que está ativo e o que deve ser corrigido é sempre o **projeto real**: código da `main`, rotas, owners, serviços, schema/migrations, contratos, testes, deploy/runtime e comportamento observado.
 
@@ -1700,3 +1700,21 @@ Correção estrutural do corte:
 - providers preservados de verticais pausadas não entram no grafo ativo até seu lifecycle ser certificado.
 
 Regra futura: adicionar Services, Gastronomy, Classifieds, Events, Tourist Points ou Mobility ao Mapa deve significar registrar/certificar uma layer provider e seu rollout owner, não editar o core da página para importar o domínio.
+
+### Checkpoint MVP — Search provider/lifecycle boundary (2026-09-24)
+
+A auditoria após #359 encontrou o mesmo anti-pattern já removido de Map: `src/core/search/providers/searchProviders.ts` importava `app/config/launchScope` e cada provider decidia seu próprio `isEnabled()`.
+
+Correção estrutural:
+
+- `core/search` continua owner da federação, contratos, providers e merge de resultados;
+- `core/search` não importa `app/config` nem conhece lifecycle de produto;
+- `searchProviderScope.ts` no app resolve quais `SearchBucket`s estão autorizados a partir de `platformCapabilityRegistry` + `productModuleRegistry`;
+- `BuscaPage` injeta os buckets autorizados em `useGlobalSearch`;
+- `SearchService.search()` sem buckets autorizados executa zero providers;
+- sugestões também são derivadas somente dos buckets autorizados;
+- todos os owners de domínio, inclusive Business, são carregados lazy pelo provider;
+- no MVP, somente `businesses` é autorizado; Services, Jobs, Classifieds, Events, Community/Posts continuam pausados;
+- reativar uma vertical pesquisável deve alterar lifecycle/provider scope, não criar `isEnabled()` dentro do core.
+
+Regra para próxima IA/chat: nunca reintroduzir `isLaunchSurfaceEnabled` ou `productModuleRegistry` dentro de `core/search`. O app seleciona providers; Search apenas executa a lista autorizada.

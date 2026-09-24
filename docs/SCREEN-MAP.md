@@ -13,14 +13,14 @@
 | Empresas | `/empresas`, `/empresas/:uf/:cidade[/:bairro]`, detalhe canônico por slug | `core/business` + `EmpresasLandingPage` | ativo |
 | Mapa | `/mapa`, `/mapa/:uf/:cidade[/:bairro]` | `core/maps` | ativo |
 | Perto de mim | `/perto-de-mim`, `/perto-de-mim/:uf/:cidade[/:bairro]` | `core/nearby` | ativo; capability depende de Mapa + Localização; Business é provider MVP lifecycle-scoped; rota territorial é autoridade quando presente |
-| Busca | `/busca`, `/busca/:uf/:cidade[/:bairro]`, `/buscar` | `core/search` + `BuscaPage`/`BuscarPage` | ativo; providers derivados do lifecycle |
+| Busca | `/busca`, `/busca/:uf/:cidade[/:bairro]`, `/buscar` | `core/search` + `BuscaPage`/`BuscarPage` | ativo; buckets autorizados por `app/config/searchProviderScope.ts`; Business-only no MVP |
 | Mensagens | `/mensagens`, `/mensagens/business/:threadId` | `core/messaging` + `modules/messaging` | ativo; provider Business no MVP |
 
 ### Contrato de integração
 
 - Mapa é capability horizontal. O boundary `mapLayerProviderScope.ts` seleciona apenas layers de domínios ativos; no MVP, Business é a única layer de domínio. `MapaPageV4` recebe providers já autorizados e não decide lifecycle.
 - Perto de mim é owner horizontal. No MVP, o provider Business consulta proximidade e projeta as mesmas URLs canônicas de Empresas; providers futuros entram pelo registry/scope sem tomar ownership da capability. Em grupos territoriais, `activeMemberIds` é derivado dos rollout owners dos providers ativos e agregado por união; não existe mais `nearby -> Business` hardcoded no layout. Em rota territorial, o território resolvido pela URL prevalece sobre estado global lembrado; GPS real continua sendo a única fonte de distância pessoal.
-- Busca consulta apenas providers cujas superfícies estão ativas; no corte atual, Business é o provider público principal.
+- Busca é capability horizontal. `SearchService` não decide lifecycle; `BuscaPage` recebe de `searchProviderScope.ts` os buckets autorizados e os injeta no core. No corte atual, somente Business participa; ausência de buckets é fail-closed.
 - Em grupos territoriais, Mapa agrega `activeMemberIds` pelos rollout owners das layers ativas; não existe mais `mapa -> Business` hardcoded no `TerritorialLayout`.
 - Categoria de empresa não depende do lifecycle de uma vertical especializada. Uma escola pode aparecer em Empresas/Mapa/Perto de mim enquanto `education=false`.
 - Nenhum módulo pausado pode reaparecer por URL direta, navegação, preview, busca, mapa, Central ou Admin. No shell público, módulo `paused` não tem rota/fallback próprio; URL sem owner ativo cai no 404 canônico.

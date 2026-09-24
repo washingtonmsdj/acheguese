@@ -228,6 +228,7 @@ Estado do MVP em 2026-09-24:
 - Messaging: owner horizontal + provider Business Direct Messaging;
 - Map: owner horizontal; layers de domínio são providers lifecycle-scoped e Business é o único provider ativo no MVP;
 - Nearby: owner horizontal, dependências estruturais Map + Location, provider Business de proximidade gated separadamente;
+- Search: owner horizontal; buckets de domínio são autorizados por `searchProviderScope.ts`; Business é o único provider ativo no MVP;
 - Notifications: owner horizontal; eventos podem vir de verticais, mas payload stale de vertical pausada não pode reabrir o domínio.
 
 **Regra para próximas IAs/chats:** nunca inferir que “MVP focado em Empresas” significa desativar funcionalidades horizontais do site. Antes de alterar lifecycle, classificar a peça como vertical, horizontal ou provider.
@@ -249,3 +250,12 @@ Para Map e Nearby:
 - zero providers ou zero membros cobertos permanece fail-closed.
 
 No MVP, Business continua sendo o único provider tanto de layer do Mapa quanto de Nearby. O resultado público permanece equivalente ao comportamento anterior, mas `mapa -> Business` e `nearby -> Business` deixam de ser acoplamentos estruturais.
+
+### Search provider boundary
+
+- `core/search` registra providers e orquestra busca federada, mas **não decide lifecycle**;
+- `searchProviderScope.ts` em `app/config` converte módulos ativos em `SearchBucket`s autorizados;
+- `BuscaPage` injeta `providerBuckets` em `useGlobalSearch`;
+- `SearchService.search()` sem buckets autorizados executa zero providers (fail-closed);
+- providers de domínios pausados permanecem lazy e não carregam seus owners;
+- ativar um novo domínio pesquisável exige certificar a vertical e incluí-la no provider scope; não editar `SearchService` para criar branch por domínio.
