@@ -55,6 +55,9 @@ describe("MVP private launch-scope boundaries", () => {
       "src/modules/profile/utils/profileNavigation.ts",
     );
     const profileSummary = read("src/modules/profile/sections/ResumoSection.tsx");
+    const businessHub = read(
+      "src/core/profiles/components/hub/BusinessModulesSection.tsx",
+    );
 
     expect(launchScope).toContain(
       'billing: isProductModuleEnabled("billing")',
@@ -73,6 +76,17 @@ describe("MVP private launch-scope boundaries", () => {
     );
     expect(profileSummary).not.toContain("isLaunchSurfaceEnabled");
     expect(profileSummary).toContain("{showBilling ? (");
+    expect(profileSummary).not.toContain("appUrls.services.list");
+    expect(profileSummary).not.toContain("appUrls.community.feed");
+    expect(profileSummary).not.toContain("operations.services");
+    expect(profileSummary).not.toContain("operations.classifieds");
+    expect(profileSummary).not.toContain("Posts publicados");
+    expect(businessHub).not.toContain("business.gastronomy");
+    expect(businessHub).not.toContain('isProductModuleEnabled("mobility")');
+    expect(businessHub).not.toContain('isProductModuleEnabled("publicAnalytics")');
+    expect(businessHub).not.toContain("Ativar gastronomia");
+    expect(businessHub).not.toContain(">Gastronomia<");
+    expect(businessHub).not.toContain(">Delivery<");
   });
 
   it("keeps paused Services out of Central navigation and active routes", () => {
