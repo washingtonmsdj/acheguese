@@ -44,6 +44,10 @@ import {
   isLaunchSurfaceEnabled,
   type LaunchSurfaceKey,
 } from "@/app/config/launchScope";
+import {
+  getActiveSearchProviderBuckets,
+  isSearchDocumentTypeEnabled,
+} from "@/app/config/searchProviderScope";
 import { useModuleTerritoryFilter } from "@/core/location/hooks/useModuleTerritoryFilter";
 import { usePublicBrowsingCity } from "@/core/location/hooks/usePublicBrowsingCity";
 import type { TerritoryFilter } from "@/core/location/types";
@@ -59,7 +63,11 @@ import {
   buildModuleTerritoryUrl,
   MODULE_SLUGS,
 } from "@/core/routing/utils/territoryUrls";
-import type { SearchCategory, SearchDocument } from "@/core/search";
+import type {
+  SearchBucket,
+  SearchCategory,
+  SearchDocument,
+} from "@/core/search";
 import { useGlobalSearch } from "@/core/search/hooks/useGlobalSearch";
 import { useSessionContext } from "@/core/session";
 import { useBusinessNavigation } from "@/modules/business/hooks/useBusinessNavigation";
@@ -74,7 +82,6 @@ interface FilterOption {
   id: SearchCategory;
   label: string;
   icon: LucideIcon;
-  launchSurface?: LaunchSurfaceKey;
 }
 
 interface BusinessSearchItem {
@@ -112,49 +119,16 @@ interface SearchResultsViewModel {
   total: number;
 }
 
-const SEARCH_DOCUMENT_SURFACE: Record<
-  SearchDocument["type"],
-  LaunchSurfaceKey
-> = {
-  community: "community",
-  business: "business",
-  professional: "services",
-  opportunity: "jobs",
-  classified: "classifieds",
-  event: "events",
-  post: "community",
-  coupon: "coupons",
-};
-
-function isVisibleSearchDocument(document: SearchDocument): boolean {
-  return isLaunchSurfaceEnabled(SEARCH_DOCUMENT_SURFACE[document.type]);
-}
-
-const FILTERS: FilterOption[] = (
-  [
-    { id: "all", label: "Todos", icon: Search },
-    { id: "communities", label: "Comunidades", icon: Users, launchSurface: "community" },
-    { id: "businesses", label: "Negócios", icon: Store, launchSurface: "business" },
-    { id: "professionals", label: "Serviços", icon: Wrench, launchSurface: "services" },
-    {
-      id: "events",
-      label: "Eventos",
-      icon: CalendarDays,
-      launchSurface: "events",
-    },
-    { id: "classifieds", label: "Classificados", icon: Tag, launchSurface: "classifieds" },
-    {
-      id: "opportunities",
-      label: "Oportunidades",
-      icon: BriefcaseBusiness,
-      launchSurface: "jobs",
-    },
-    { id: "posts", label: "Posts", icon: MessageSquare, launchSurface: "community" },
-  ] satisfies FilterOption[]
-).filter(
-  (filter) =>
-    !filter.launchSurface || isLaunchSurfaceEnabled(filter.launchSurface),
-);
+const FILTERS: FilterOption[] = [
+  { id: "all", label: "Todos", icon: Search },
+  { id: "communities", label: "Comunidades", icon: Users },
+  { id: "businesses", label: "Negócios", icon: Store },
+  { id: "professionals", label: "Serviços", icon: Wrench },
+  { id: "events", label: "Eventos", icon: CalendarDays },
+  { id: "classifieds", label: "Classificados", icon: Tag },
+  { id: "opportunities", label: "Oportunidades", icon: BriefcaseBusiness },
+  { id: "posts", label: "Posts", icon: MessageSquare },
+];
 
 const PRIMARY_FILTER_IDS: SearchCategory[] = [
   "all",
@@ -191,6 +165,20 @@ export default function BuscaPage() {
   const { user } = useSessionContext();
   const { unreadCount } = useUnifiedNotifications();
   const { navigateToBusiness } = useBusinessNavigation();
+  const activeSearchBuckets = useMemo(
+    () => getActiveSearchProviderBuckets(),
+    [],
+  );
+  const activeSearchBucketKey = activeSearchBuckets.join(",");
+  const availableFilters = useMemo(
+    () =>
+      availableFilters.filter(
+        (filter) =>
+          filter.id === "all" ||
+          activeSearchBuckets.includes(filter.id as SearchBucket),
+      ),
+    [activeSearchBucketKey, activeSearchBuckets],
+  );
   const [activeFilter, setActiveFilter] = useState<SearchCategory>("all");
   const [sortOrder, setSortOrder] = useState<"relevance" | "name">(
     "relevance",
@@ -227,7 +215,10 @@ export default function BuscaPage() {
   } = useGlobalSearch(
     initialQuery,
     { category: activeFilter, territoryFilter: searchTerritoryFilter },
-    { enabled: searchEnabled },
+    {
+      enabled: searchEnabled,
+      providerBuckets: activeSearchBuckets,
+    },
   );
 
   useEffect(() => {
@@ -280,7 +271,9 @@ export default function BuscaPage() {
   );
 
   const displayResults = useMemo<SearchResultsViewModel>(() => {
-    const documents = results.documents.filter(isVisibleSearchDocument);
+    const documents = results.documents.filter((document) =>
+      isSearchDocumentTypeEnabled(document.type, activeSearchBuckets),
+    );
     const businessDocumentUrls = new globalThis.Map(
       documents
         .filter(
@@ -289,7 +282,7 @@ export default function BuscaPage() {
         )
         .map((document) => [document.id, document.url] as const),
     );
-    const businesses = isLaunchSurfaceEnabled("business")
+    const businesses = activeSearchBuckets.includes("businesses")
       ? results.businesses.map((business) => ({
           id: business.id,
           name: business.name,
@@ -303,7 +296,7 @@ export default function BuscaPage() {
           rating: business.rating,
         }))
       : [];
-    const professionals = isLaunchSurfaceEnabled("services")
+    const professionals = activeSearchBuckets.includes("professionals")
       ? results.professionals.map((professional) => ({
           id: professional.id,
           name: professional.name,
@@ -326,7 +319,7 @@ export default function BuscaPage() {
       professionals,
       total: documents.length + businesses.length + professionals.length,
     };
-  }, [results]);
+  }, [activeSearchBucketKey, activeSearchBuckets, results]);
 
   const resultMarkers = useMemo<MapMarker[]>(() => {
     const businessMarkers = displayResults.businesses.flatMap((business) => {
@@ -549,7 +542,7 @@ export default function BuscaPage() {
           aria-label="Categorias da busca"
         >
           <div className="flex gap-6 overflow-x-auto scrollbar-hide sm:gap-8">
-            {FILTERS.filter((filter) => PRIMARY_FILTER_IDS.includes(filter.id)).map(
+            {availableFilters.filter((filter) => PRIMARY_FILTER_IDS.includes(filter.id)).map(
               (filter) => (
                 <button
                   key={filter.id}
@@ -592,7 +585,7 @@ export default function BuscaPage() {
               onClick={handleClearFilters}
               className="inline-flex min-h-8 items-center gap-2 rounded-full bg-territory-brand/10 px-3 text-sm font-semibold text-territory-brand hover:bg-territory-brand/15"
             >
-              {FILTERS.find((filter) => filter.id === activeFilter)?.label}
+              {availableFilters.find((filter) => filter.id === activeFilter)?.label}
               <span aria-hidden="true">×</span>
             </button>
           ) : null}
@@ -624,7 +617,7 @@ export default function BuscaPage() {
             <div className="absolute left-0 top-12 z-20 w-full max-w-sm rounded-2xl border border-territory-border bg-territory-surface p-4 shadow-territory-highlight">
               <p className="text-sm font-bold text-territory-ink">Mais filtros</p>
               <div className="mt-3 flex flex-wrap gap-2">
-                {FILTERS.filter(
+                {availableFilters.filter(
                   (filter) => !PRIMARY_FILTER_IDS.includes(filter.id),
                 ).map((filter) => (
                   <button
