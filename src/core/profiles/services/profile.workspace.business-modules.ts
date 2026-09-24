@@ -1,5 +1,4 @@
 import { businessManagementRoutes } from "@/core/business/utils/businessManagementRoutes";
-import { isLaunchSurfaceEnabled } from "@/app/config/launchScope";
 import type { ProfileBusinessModuleSnapshot } from "./types";
 
 type BusinessWorkspaceInput = {
@@ -99,8 +98,6 @@ export async function buildBusinessModuleSnapshot(params: {
         })
       : publicUrl;
   const dashboardUrl = businessManagementRoutes.overview(business.id);
-  const showMobility = isLaunchSurfaceEnabled("mobility");
-  const showAnalytics = isLaunchSurfaceEnabled("publicAnalytics");
 
   return {
     businessId: business.id,
@@ -124,9 +121,9 @@ export async function buildBusinessModuleSnapshot(params: {
       canUseCustomQRCode: entitlements.canUseCustomQRCode,
       canReceiveInternalOrders: entitlements.canReceiveInternalOrders,
       canUseOrdersPanel: entitlements.canUseOrdersPanel,
-      canUseMotoboyNetwork: showMobility && entitlements.canUseMotoboyNetwork,
-      canRequestDelivery: showMobility && entitlements.canRequestDelivery,
-      canTrackDelivery: showMobility && entitlements.canTrackDelivery,
+      canUseMotoboyNetwork: entitlements.canUseMotoboyNetwork,
+      canRequestDelivery: entitlements.canRequestDelivery,
+      canTrackDelivery: entitlements.canTrackDelivery,
       canConfigureDeliveryArea: entitlements.canConfigureDeliveryArea,
       canSetDeliveryFees: entitlements.canSetDeliveryFees,
       canUseOwnDelivery: entitlements.canUseOwnDelivery,
@@ -155,13 +152,13 @@ export async function buildBusinessModuleSnapshot(params: {
       ordersUrl: gastronomyProfile
         ? businessManagementRoutes.gastronomyPedidos(business.id)
         : undefined,
-      deliveriesUrl: showMobility && gastronomyProfile
+      deliveriesUrl: gastronomyProfile
         ? businessManagementRoutes.gastronomyEntregas(business.id)
         : undefined,
       deliveryAreaUrl: gastronomyProfile
         ? businessManagementRoutes.gastronomyAreaEntrega(business.id)
         : undefined,
-      analyticsUrl: showAnalytics && gastronomyProfile
+      analyticsUrl: gastronomyProfile
         ? businessManagementRoutes.gastronomyAnalytics(business.id)
         : undefined,
       hoursUrl: gastronomyProfile
