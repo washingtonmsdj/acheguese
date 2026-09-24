@@ -8,6 +8,7 @@ const read = (path: string) => readFileSync(resolve(root, path), "utf8");
 const routes = read("src/app/routes/sections/AppLayoutRoutes.tsx");
 const messagingRoutes = read("src/core/messaging/routes/messagingRoutes.ts");
 const account = read("src/modules/profile/pages/ContaHubPage.tsx");
+const appUrls = read("src/core/routing/hooks/useAppUrls.ts");
 const appTopbar = read("src/app/components/navigation/AppTopbar.tsx");
 const inbox = read("src/modules/messaging/pages/MensagensPage.tsx");
 const providerRegistry = read(
@@ -35,6 +36,9 @@ describe("account and horizontal messaging real-data boundary", () => {
       'threadPattern: () => "/mensagens/:providerId/:threadId"',
     );
     expect(routes).not.toContain('path="/chat/:conversationId"');
+    expect(appUrls).not.toContain("chat: (conversationId");
+    expect(appUrls).not.toContain("/chat/");
+    expect(appUrls).toContain("messages: messagingRoutes.inbox()");
     expect(routes).toContain('"messaging"');
   });
 
