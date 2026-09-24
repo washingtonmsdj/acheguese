@@ -1,6 +1,14 @@
 import { useCallback, useState } from "react";
 import { aiOrchestratorService } from "../orchestrator/AIOrchestratorService";
-import type { AIActionResult, AISearchContext } from "../domain/types";
+import type {
+  AIActionResult,
+  AIExecutableIntentType,
+  AISearchContext,
+} from "../domain/types";
+
+interface UseAISearchOptions {
+  allowedIntentTypes: readonly AIExecutableIntentType[];
+}
 
 interface AISearchState {
   result: AIActionResult | null;
@@ -8,7 +16,7 @@ interface AISearchState {
   error: string | null;
 }
 
-export function useAISearch() {
+export function useAISearch({ allowedIntentTypes }: UseAISearchOptions) {
   const [state, setState] = useState<AISearchState>({
     result: null,
     loading: false,
@@ -22,7 +30,11 @@ export function useAISearch() {
     setState((current) => ({ ...current, loading: true, error: null }));
 
     try {
-      const result = await aiOrchestratorService.search({ query: trimmed, context });
+      const result = await aiOrchestratorService.search({
+        query: trimmed,
+        context,
+        allowedIntentTypes,
+      });
       setState({ result, loading: false, error: null });
     } catch (error) {
       setState({
@@ -31,7 +43,7 @@ export function useAISearch() {
         error: error instanceof Error ? error.message : "Erro inesperado na busca.",
       });
     }
-  }, []);
+  }, [allowedIntentTypes]);
 
   return {
     ...state,
