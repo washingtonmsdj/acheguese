@@ -177,8 +177,7 @@ Esses arquivos não são camadas de compatibilidade e não devem ser recriados.
 - Conta privada: `/conta/*`;
 - perfil público: `/u/:username`;
 - `/perfil/*` foi aposentado e não possui redirect;
-- preferências de notificações: `/conta/notificacoes`; `/settings/notifications` foi removida;
-- Inbox de notificações: `/notificacoes`; `/notifications` foi removida;
+- Notificações: capability `paused` no MVP; Inbox e preferências não possuem rota ativa. Os owners permanecem preservados para reativação futura pelo lifecycle.
 - rota desconhecida termina em 404, nunca em redirect silencioso para `/`.
 
 ## Regras da migração

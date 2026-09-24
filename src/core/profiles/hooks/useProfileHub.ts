@@ -8,13 +8,9 @@ import { useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { toast } from 'sonner';
 import {
-  User,
   Building2,
   Settings2,
-  Shield,
   Globe,
-  Bell,
-  KeyRound,
   MessageSquare,
   MapPin,
   Users,
@@ -67,7 +63,6 @@ export function useProfileHub() {
     account,
     stats,
     operations,
-    notifications,
     roles,
     businessModules,
     loading,
@@ -92,115 +87,6 @@ export function useProfileHub() {
   const hasBusinesses = businessModules.length > 0;
   const resolvedDriverProfile = null;
   const resolvedDriverProfileId = null;
-
-  const statsData = useMemo(
-    () => [
-      {
-        icon: User,
-        label: 'Posts',
-        value: operations.posts,
-        hint: 'Conteúdo autoral e presença na comunidade.',
-      },
-      {
-        icon: Building2,
-        label: 'Negócios',
-        value: operations.businesses,
-        hint: 'Empresas administradas ou operadas pelo usuário.',
-      },
-      {
-        icon: Bell,
-        label: 'Avisos',
-        value: notifications.unread,
-        hint: 'Notificações não lidas aguardando ação.',
-      },
-    ],
-    [operations, notifications],
-  );
-
-  const personalLinks = useMemo(
-    () => [
-      {
-        icon: User,
-        title: 'Editar perfil',
-        description: 'Atualize identidade, avatar, campos públicos e apresentação.',
-        onClick: () => {
-          if (!activeProfileId) return;
-          navigate(buildProfileEditUrl(activeProfileId));
-        },
-      },
-      {
-        icon: Users,
-        title: 'Identidades e perfis',
-        description: 'Troque, ative e gerencie perfis pessoal, empresa e profissional.',
-        badge: `${allProfiles.length}`,
-        onClick: () => navigate(appUrls.profile.manage),
-      },
-      {
-        icon: KeyRound,
-        title: 'Minha conta',
-        description: 'Senha, email de acesso e ações sensíveis da conta.',
-        onClick: () => navigate(appUrls.profile.account),
-      },
-      {
-        icon: Shield,
-        title: 'Privacidade do perfil',
-        description: 'Controle visibilidade, exposição pública e regras de privacidade.',
-        onClick: () => navigate(appUrls.profile.settings('privacy')),
-      },
-      {
-        icon: Globe,
-        title: 'Links e vínculos',
-        description: 'Gerencie conexões, vínculos e relações da identidade ativa.',
-        onClick: () => navigate(appUrls.profile.settings('links')),
-      },
-      ...(canManageProfileMembers
-        ? [
-            {
-              icon: Shield,
-              title: 'Membros do perfil',
-              description: 'Convide, revise acessos e governe membros do perfil operacional.',
-              onClick: () => navigate(appUrls.profile.settings('members')),
-            },
-          ]
-        : []),
-      {
-        icon: Settings2,
-        title: 'Configurações operacionais',
-        description: 'Residência, áreas de atuação e preferências operacionais do contexto atual.',
-        onClick: () => navigate(appUrls.profile.addresses),
-      },
-      {
-        icon: Bell,
-        title: 'Notificações',
-        description: 'Veja avisos recentes, não lidas e acessos do sistema.',
-        badge: notifications.unread > 0 ? `${notifications.unread}` : undefined,
-        onClick: () => navigate(appUrls.profile.notifications),
-      },
-      {
-        icon: Globe,
-        title: 'Perfil público',
-        description: 'Abra a versão pública da identidade ativa.',
-        badge: canOpenPublicProfile ? 'Ativo' : 'Indisponível',
-        onClick: () => {
-          if (!canOpenPublicProfile) {
-            toast.error('Perfil público indisponível para a identidade atual');
-            return;
-          }
-          navigate(buildPublicProfileUrl(handle));
-        },
-      },
-    ],
-    [
-      activeProfileId,
-      allProfiles.length,
-      canManageProfileMembers,
-      canOpenPublicProfile,
-      handle,
-      navigate,
-      notifications.unread,
-      appUrls,
-    ],
-  );
 
   const operationalLinks = useMemo(
     () => [
@@ -319,14 +205,6 @@ export function useProfileHub() {
               onClick: () => navigate(appUrls.business.create),
             }
           : null,
-        notifications.unread > 0
-          ? {
-              title: 'Triar notificações pendentes',
-              description: `Existem ${notifications.unread} notificações não lidas aguardando ação.`,
-              actionLabel: 'Ver avisos',
-              onClick: () => navigate(appUrls.profile.notifications),
-            }
-          : null,
       ].filter(Boolean) as Array<{
         title: string;
         description: string;
@@ -338,7 +216,6 @@ export function useProfileHub() {
       canOpenPublicProfile,
       showBusinessOnboarding,
       showBilling,
-      notifications.unread,
       activeProfileId,
       navigate,
       appUrls,
@@ -388,7 +265,6 @@ export function useProfileHub() {
 
     stats,
     operations,
-    notifications,
     roles,
 
     businessModules,
@@ -414,8 +290,6 @@ export function useProfileHub() {
 
     favorites,
 
-    statsData,
-    personalLinks,
     operationalLinks,
     ecosystemLinks,
     nextActions,

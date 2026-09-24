@@ -60,8 +60,8 @@ O shell de gestão Business também não pode consultar Billing/Gastronomia/vert
 - `/conta/profissional` foi removida do shell público enquanto Serviços está pausado.
 - `/perfil/*` foi aposentado como alias privado. Conta usa somente `/conta/*`; perfil público usa somente `/u/:username`.
 - edição de perfil usa somente `/conta/editar/:profileId`; `/conta/editar` sem identidade explícita foi removida.
-- `/settings/notifications` foi removida; preferências usam somente `/conta/notificacoes`.
-- `/notifications` foi removida; a Inbox usa somente `/notificacoes`.
+- Notificações estão `paused` no MVP: `/notificacoes`, `/conta/notificacoes`, `/settings/email-logs`, `/notifications` e `/settings/notifications` não integram o grafo ativo.
+- Core, preferências, migrations e owners de Notificações permanecem preservados para pós-MVP; reativação exige lifecycle explícito e reconexão ao boundary ativo.
 - `/conta/preferencias?tab=...` não redireciona para outras telas. Os destinos canônicos possuem URL própria.
 - rota desconhecida renderiza 404; não existe catch-all para `/`.
 - gestão de Business não possui raízes paralelas: `/create-business`, `/edit-business/:profileId` e `/dashboard/business/:profileId` foram aposentadas; criação/gestão/edição usam somente `/central/empresas/*`.

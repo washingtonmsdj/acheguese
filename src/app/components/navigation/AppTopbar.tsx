@@ -1,6 +1,6 @@
 import { SidebarTrigger } from "@/shared/components/ui/sidebar";
 import { Link } from "react-router-dom";
-import { Bell, LogOut, MessageCircle } from "lucide-react";
+import { LogOut, MessageCircle } from "lucide-react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/shared/components/ui/avatar";
 import { Button } from "@/shared/components/ui/button";
 import { useSessionContext } from "@/core/session";
@@ -48,9 +48,6 @@ export function AppTopbar() {
         ) : null}
         <Link to="/sobre" className="hidden text-xs text-muted-foreground transition-colors hover:text-foreground sm:inline">
           Sobre
-        </Link>
-        <Link to={appUrls.notifications} className="relative text-muted-foreground transition-colors hover:text-foreground">
-          <Bell className="h-5 w-5" />
         </Link>
         {showMessages ? (
           <Link to={appUrls.messages} className="relative text-muted-foreground transition-colors hover:text-foreground">
