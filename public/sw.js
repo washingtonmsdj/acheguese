@@ -201,7 +201,7 @@ self.addEventListener('notificationclose', (event) => {
 const PAUSED_NOTIFICATION_ROUTE_PATTERN =
   /^\/(?:mobility|mobilidade|track|educacao|comunicacao|cupons|ranking|gamificacao|analytics|alertas|achados-perdidos|achados-e-perdidos|problemas|planos|checkout)(?:\/|$)|^\/settings\/subscription(?:\/|$)/i;
 
-function getLaunchSafeNotificationUrl(url, fallback = '/notificacoes') {
+function getLaunchSafeNotificationUrl(url, fallback = '/') {
   if (!url) return fallback;
   const value = String(url);
   return PAUSED_NOTIFICATION_ROUTE_PATTERN.test(value) ? fallback : value;
@@ -213,7 +213,7 @@ function getNotificationUrl(data) {
   // Handle different notification types
   switch (data.type) {
     case 'message':
-      return '/notificacoes';
+      return '/mensagens';
     
     case 'ride':
       return '/perto-de-mim';
@@ -247,7 +247,7 @@ function getActionUrl(action, data) {
       return getNotificationUrl(data);
     
     case 'reply':
-      return '/notificacoes';
+      return '/mensagens';
     
     case 'accept':
       return getLaunchSafeNotificationUrl(data.acceptUrl, '/');
@@ -256,7 +256,7 @@ function getActionUrl(action, data) {
       return getLaunchSafeNotificationUrl(data.declineUrl, '/');
     
     case 'settings':
-      return '/conta/notificacoes';
+      return '/conta';
     
     default:
       return '/';
