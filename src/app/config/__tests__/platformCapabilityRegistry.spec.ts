@@ -47,12 +47,12 @@ describe("platformCapabilityRegistry", () => {
     expect(isPlatformCapabilityEnabled("nearby")).toBe(true);
   });
 
-  it("keeps Messaging horizontal and gated by identity + Business", () => {
+  it("keeps Messaging horizontal while vertical providers are lifecycle-scoped separately", () => {
     expect(PLATFORM_CAPABILITY_REGISTRY.messaging).toEqual({
       status: "active",
       dependsOnCapabilities: ["auth", "profiles"],
-      dependsOnProductModules: ["business"],
     });
+    expect(isPlatformCapabilityEnabled("messaging")).toBe(true);
   });
 
   it("references only declared capability dependencies and contains no capability cycle", () => {

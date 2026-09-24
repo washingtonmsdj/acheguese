@@ -36,8 +36,9 @@ e outros domínios quando forem certificados.
 
 Dependências importantes:
 
-- `nearby -> map + location + business`;
-- `messaging -> auth + profiles + business`;
+- `notifications -> auth`: capability horizontal, independente do estado dos verticais;
+- `messaging -> auth + profiles`: a capability permanece horizontal; providers Business/Classificados/Community são filtrados separadamente pelo lifecycle;
+- `nearby -> map + location + business` ainda representa o adapter MVP atual, que hoje só possui provider Business certificado; a evolução correta é providerizar Nearby antes de retirar essa dependência;
 - Search só executa providers de domínios/capabilities habilitados;
 - Map só projeta layers de domínios habilitados.
 
@@ -51,7 +52,10 @@ Exemplos:
 
 - Search pode pesquisar Business hoje e Classificados no futuro;
 - Messaging pode reunir Business, Classificados e Community sem pertencer a
-  nenhum desses domínios;
+  nenhum desses domínios; o provider Business estar ativo no MVP não transforma
+  Business em dependência estrutural da capability;
+- Notifications atende Conta, Business e futuros verticais sem pertencer a nenhum
+  deles; pausar um vertical não deve pausar Notifications;
 - Map pode projetar Business hoje e Turismo/Serviços depois;
 - Nearby pode descobrir diferentes entidades no futuro.
 
@@ -85,8 +89,9 @@ Dependências são declaradas nos registries, nunca em exceções locais.
 
 Exemplos atuais:
 
-- `nearby` depende de `map`, `location` e `business`;
-- `messaging` depende de `auth`, `profiles` e `business`;
+- `notifications` depende de `auth`, não de um módulo vertical;
+- `messaging` depende de `auth` e `profiles`; os providers verticais são filtrados em `messagingProviderScope.ts`;
+- `nearby` ainda depende de `map`, `location` e `business` porque o provider certificado atual é Business; remover esse vínculo exige primeiro um registry de providers Nearby;
 - Gastronomy pode depender de Business quando for reativada;
 - Mobility pode depender de Map sem transformar Map em domínio Mobility.
 

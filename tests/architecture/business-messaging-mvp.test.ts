@@ -164,8 +164,10 @@ describe("Business Messaging MVP", () => {
   it("composes Business into the horizontal Inbox without enabling paused domains", () => {
     expect(platformRegistry).toContain('messaging: {');
     expect(platformRegistry).toContain('status: "active"');
-    expect(platformRegistry).toContain(
-      'dependsOnProductModules: ["business"]',
+    expect(platformRegistry).toContain('messaging: {');
+    expect(platformRegistry).toContain('dependsOnCapabilities: ["auth", "profiles"]');
+    expect(platformRegistry).not.toContain(
+      'messaging: {\n    status: "active",\n    dependsOnCapabilities: ["auth", "profiles"],\n    dependsOnProductModules: ["business"]',
     );
 
     expect(providerRegistry).toContain("businessMessagingProvider");

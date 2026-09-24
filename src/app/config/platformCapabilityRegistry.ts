@@ -54,6 +54,5 @@ export const PLATFORM_CAPABILITY_REGISTRY: Record<
   messaging: {
     status: "active",
     dependsOnCapabilities: ["auth", "profiles"],
-    dependsOnProductModules: ["business"],
   },
 };
