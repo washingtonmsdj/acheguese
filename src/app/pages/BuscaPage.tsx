@@ -281,7 +281,7 @@ export default function BuscaPage() {
 
   const displayResults = useMemo<SearchResultsViewModel>(() => {
     const documents = results.documents.filter(isVisibleSearchDocument);
-    const businessDocumentUrls = new Map(
+    const businessDocumentUrls = new globalThis.Map(
       documents
         .filter(
           (document) =>
