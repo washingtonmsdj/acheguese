@@ -49,13 +49,6 @@ export const ContaEnderecosPage = lazy(
   () => import("@/modules/profile/pages/ContaEnderecosPage"),
 );
 
-export const NotificationsPage = lazy(
-  () => import("@/app/pages/NotificationsPage"),
-);
-export const NotificationPreferencesPage = lazy(
-  () => import("@/app/pages/NotificationPreferencesPage"),
-);
-export const EmailLogsPage = lazy(() => import("@/app/pages/EmailLogsPage"));
 export const ProfileSettingsPage = lazy(
   () => import("@/app/pages/ProfileSettingsPage"),
 );
