@@ -8,6 +8,7 @@ const root = process.cwd();
 const read = (path: string) => readFileSync(resolve(root, path), "utf8");
 
 const launchScope = read("src/app/config/launchScope.ts");
+const nearbyProviderScope = read("src/app/config/nearbyProviderScope.ts");
 const launchE2e = read("tests/e2e/launch-scope-public.spec.ts");
 const appRoutes = read("src/app/routes/sections/AppLayoutRoutes.tsx");
 const searchProviders = read("src/core/search/providers/searchProviders.ts");
@@ -41,9 +42,15 @@ describe("MVP launch-scope alignment", () => {
       "map",
       "location",
     ]);
-    expect(PLATFORM_CAPABILITY_REGISTRY.nearby.dependsOnProductModules).toEqual([
-      "business",
-    ]);
+    expect(
+      PLATFORM_CAPABILITY_REGISTRY.nearby.dependsOnProductModules,
+    ).toBeUndefined();
+    expect(nearbyProviderScope).toContain(
+      'isPlatformCapabilityEnabled("nearby")',
+    );
+    expect(nearbyProviderScope).toContain(
+      "isProductModuleEnabled(productModule)",
+    );
 
     expect(launchScope).toContain(
       'search: isPlatformCapabilityEnabled("search")',
