@@ -1646,3 +1646,21 @@ edição.
 O blocker de release não muda: #305 continua sendo Auth upstream remoto e #309
 continua sendo autoridade do PAT para deploy automático Supabase. Nenhum deles
 deve ser contornado por rota, fallback ou credencial alternativa.
+
+### Handoff obrigatório para qualquer próxima IA/chat — 2026-09-24
+
+Antes de continuar o MVP, preservar esta regra:
+
+- **Vertical de produto não é capability horizontal.**
+- Business/Empresas é a vertical ativa do MVP.
+- Map, Nearby/Perto de mim, Search/Busca, Messaging/Mensagens, Notifications/Notificações, Auth, Profiles/Account, Territory, Location e Central são capabilities de plataforma.
+- Reduzir o número de verticais ativas **não autoriza** desligar capabilities horizontais do site.
+- A ligação entre vertical e horizontal ocorre por **provider/adapter lifecycle-scoped**.
+- Pausar uma vertical retira somente seus providers; não transfere ownership nem pausa automaticamente a capability.
+- Reativar/adicionar vertical deve exigir mudança localizada: certificar owner, ativar registry e registrar providers. É proibido espalhar condicionais manuais, redirects, aliases ou imports de domínio pela UI.
+- PR #353 corrigiu Notifications/Messaging para esse modelo; PR #355 isolou cliques de Notifications de verticais pausadas.
+- Nearby passa a seguir o mesmo padrão: capability horizontal dependente de Map + Location; Business é provider do MVP, não dependência estrutural.
+
+Ao iniciar um novo chat, auditar primeiro `productModuleRegistry.ts`, `platformCapabilityRegistry.ts`, os `*ProviderScope.ts`, `PRODUCT_MODULE_LIFECYCLE.md` e este checkpoint. Não reconstruir o escopo apenas a partir das telas visíveis.
+
+Pendência arquitetural controlada: a disponibilidade territorial de grupos ainda associa a rota Nearby a `ModuleKey.BUSINESS` em `TerritorialLayout.tsx`. Não remover esse mapeamento de forma ingênua, pois ele alimenta `activeMemberIds`; providerizá-lo antes de ativar um segundo provider Nearby.

@@ -21,11 +21,17 @@ import {
 } from "@/shared/config/moduleSlugs";
 import { NearbyCard, NearbyFilters, NearbyMiniMap, NearbySection } from "../components";
 import { useNearbyBusinesses } from "../hooks/useNearbyBusinesses";
+import type { NearbyProviderId } from "../providers/registry";
 
-export default function NearbyPage() {
+interface NearbyPageProps {
+  providerIds: readonly NearbyProviderId[];
+}
+
+export default function NearbyPage({ providerIds }: NearbyPageProps) {
   const navigate = useNavigate();
   const territorialContext = useTerritorialContextOptional();
   const { activeLocation, activeTerritory } = useLocationContext();
+  const businessProviderEnabled = providerIds.includes("business");
 
   const resolved: ResolvedTerritory | null = territorialContext?.resolved
     ?? (activeTerritory?.location
@@ -88,6 +94,7 @@ export default function NearbyPage() {
     isLoading: businessesLoading,
     isError,
   } = useNearbyBusinesses({
+    enabled: businessProviderEnabled,
     radiusKm,
     center: spatialCenter,
     locationId: spatialLocationId,
@@ -111,6 +118,32 @@ export default function NearbyPage() {
   const proximityLabel = hasPreciseProximity
     ? "perto de você"
     : territoryLabels.inTerritory;
+
+  if (providerIds.length === 0) {
+    return (
+      <>
+        <Helmet>
+          <title>{territoryLabels.nearbyLabel} — sem fontes ativas</title>
+          <meta
+            name="description"
+            content="Perto de mim está disponível, mas nenhum domínio de produto ativo fornece resultados de proximidade neste momento."
+          />
+        </Helmet>
+        <div className="min-h-screen bg-background">
+          <CanonicalHero
+            moduleName={territoryLabels.nearbyLabel}
+            moduleIcon={Compass}
+            title="Perto de mim"
+            titleHighlight="sem fontes ativas"
+            subtitle="A capability continua disponível, mas nenhum provider de domínio está habilitado pelo lifecycle."
+          />
+          <div className="mx-auto max-w-3xl px-4 py-16 text-center text-muted-foreground sm:px-6">
+            Nenhum módulo ativo registrou um provider de proximidade. Ativar ou pausar um domínio não altera o owner de Perto de mim.
+          </div>
+        </div>
+      </>
+    );
+  }
 
   return (
     <>

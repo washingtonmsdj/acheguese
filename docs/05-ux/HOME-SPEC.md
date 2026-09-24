@@ -36,9 +36,9 @@ Capabilities horizontais ativas:
 | Capability | Estado | Dependências relevantes |
 | --- | --- | --- |
 | Mapa | `active` | Território; providers de domínios ativos |
-| Perto de mim | `active` | Mapa + Localização + Business |
+| Perto de mim | `active` | Mapa + Localização; providers de domínios ativos (Business no MVP) |
 | Busca | `active` | Território + providers de domínios ativos |
-| Mensagens | `active` | Auth + Perfis + Business; provider MVP = Business |
+| Mensagens | `active` | Auth + Perfis; providers de domínios ativos (Business no MVP) |
 
 As autoridades executáveis são `productModuleRegistry.ts`,
 `platformCapabilityRegistry.ts` e `lifecycleRegistry.ts`.
@@ -98,7 +98,7 @@ Direções esperadas:
 
 - Home -> URL/port público do módulo;
 - Mapa -> `businessMapQueryService` -> read model público de Business;
-- Perto de mim -> Business + Map pelas interfaces autorizadas;
+- Perto de mim -> provider registry lifecycle-scoped + Map/Location; Business é o provider ativo no MVP;
 - Busca -> Search providers -> owners ativos, sem acesso cruzado direto;
 - nunca Home/Mapa/Nearby -> tabela interna de módulo pausado.
 
@@ -110,12 +110,12 @@ Perto de mim é parte formal do MVP.
 
 Contratos obrigatórios:
 
-- buscar somente entidades Business do escopo ativo;
+- no corte atual, consultar somente o provider Business porque é o único domínio ativo certificado para Nearby;
 - integrar resultado ao Mapa;
 - usar URLs canônicas de Empresas;
 - distinguir localização GPS real de fallback territorial;
 - não fabricar distância pessoal quando não existe coordenada confiável;
-- falhar fechado se `map` ou `business` estiverem pausados;
+- falhar fechado se Map/Location estiverem indisponíveis; se uma vertical estiver `paused`, retirar somente seu provider e manter a capability horizontal coerente;
 - respeitar lifecycle também no prefetch/warmup.
 
 ## 8. Estados de UX
@@ -171,7 +171,7 @@ A Home do MVP está correta quando:
 
 - apresenta somente Business e as capabilities horizontais certificadas para o MVP;
 - nenhuma superfície pausada aparece por navegação, card, provider, prefetch ou layer;
-- `nearby` depende formalmente de Map + Location + Business;
+- `nearby` depende formalmente de Map + Location; Business é provider separado pelo lifecycle;
 - Mensagens usa somente o provider Business enquanto os demais domínios estão pausados;
 - Mapa acessa Business por port público;
 - a Home não contém agregador multi-domínio paralelo;

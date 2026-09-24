@@ -38,11 +38,10 @@ describe("platformCapabilityRegistry", () => {
     expect(isPlatformCapabilityEnabled("notifications")).toBe(true);
   });
 
-  it("keeps Nearby dependent on Map + Location + Business", () => {
+  it("keeps Nearby horizontal while product providers are lifecycle-scoped separately", () => {
     expect(PLATFORM_CAPABILITY_REGISTRY.nearby).toEqual({
       status: "active",
       dependsOnCapabilities: ["map", "location"],
-      dependsOnProductModules: ["business"],
     });
     expect(isPlatformCapabilityEnabled("nearby")).toBe(true);
   });

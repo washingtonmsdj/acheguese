@@ -8,6 +8,8 @@ const read = (path: string) => readFileSync(resolve(root, path), "utf8");
 describe("MVP core module boundary", () => {
   const registry = read("src/app/config/productModuleRegistry.ts");
   const platformRegistry = read("src/app/config/platformCapabilityRegistry.ts");
+  const nearbyProviderScope = read("src/app/config/nearbyProviderScope.ts");
+  const nearbyRouteWrapper = read("src/app/pages/NearbyPage.tsx");
   const lifecycleRegistry = read("src/app/config/lifecycleRegistry.ts");
   const launchScope = read("src/app/config/launchScope.ts");
   const presentationModules = read("src/app/config/modules.ts");
@@ -70,7 +72,10 @@ describe("MVP core module boundary", () => {
     expect(platformRegistry).toContain('| "nearby"');
     expect(platformRegistry).toContain('| "search"');
     expect(platformRegistry).toContain('| "messaging"');
-    expect(platformRegistry).toContain('dependsOnProductModules: ["business"]');
+    expect(platformRegistry).toContain('dependsOnCapabilities: ["map", "location"]');
+    expect(nearbyProviderScope).toContain('isPlatformCapabilityEnabled("nearby")');
+    expect(nearbyProviderScope).toContain("isProductModuleEnabled(productModule)");
+    expect(nearbyRouteWrapper).toContain("getActiveNearbyProviderIds()");
     expect(lifecycleRegistry).toContain("isProductModuleEnabled");
     expect(lifecycleRegistry).toContain("isPlatformCapabilityEnabled");
 
@@ -241,7 +246,7 @@ describe("MVP core module boundary", () => {
     }
   });
 
-  it("keeps Nearby as a Business proximity adapter instead of a second discovery platform", () => {
+  it("keeps Nearby horizontal while Business is the only active proximity provider", () => {
     expect(nearby).toContain("useNearbyBusinesses");
     expect(nearby).toContain("buildLocationModuleUrl");
     expect(nearby).toContain("MODULE_SLUGS.business");
@@ -318,7 +323,7 @@ describe("MVP core module boundary", () => {
     );
     expect(prefetch).toContain('APP_MODULE_SLUGS.nearby');
     expect(prefetch).toContain('surface: "nearby"');
-    expect(prefetch).toContain('import("@/core/nearby/pages/NearbyPage")');
+    expect(prefetch).toContain('import("@/app/pages/NearbyPage")');
     expect(prefetch).toContain("IDLE_WARMUP_ROUTES.filter(");
     expect(prefetch).toContain(
       "(entry) => !entry.surface || isLaunchSurfaceEnabled(entry.surface)",

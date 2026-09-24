@@ -45,7 +45,6 @@ export const PLATFORM_CAPABILITY_REGISTRY: Record<
   nearby: {
     status: "active",
     dependsOnCapabilities: ["map", "location"],
-    dependsOnProductModules: ["business"],
   },
   search: {
     status: "active",

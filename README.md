@@ -40,11 +40,11 @@ Estado do MVP:
 
 - domínio: `business: active`;
 - capabilities: `map`, `nearby`, `search`, `messaging`, Auth, Perfis/Conta, Território, Localização, Notificações e Central ativas;
-- `nearby` depende de Map + Location + Business;
-- `messaging` registra somente Business Direct Messaging;
+- `nearby` depende estruturalmente de Map + Location; Business é o provider de proximidade ativo no MVP e é filtrado separadamente pelo lifecycle;
+- `messaging` e `nearby` são capabilities horizontais; no MVP, Business é o provider de domínio ativo em ambas;
 - demais domínios de produto: `paused`.
 
-Domínio pausado pode continuar versionado para evolução pós-MVP, mas não participa de rota funcional, prefetch/warmup, provider de Busca/Mensagens ou layer do Mapa.
+Domínio pausado pode continuar versionado para evolução pós-MVP, mas não participa de rota funcional, prefetch/warmup, provider de Busca/Mensagens/Perto de mim, evento acionável de Notificações ou layer do Mapa.
 
 A política completa está em [docs/03-architecture/PRODUCT_MODULE_LIFECYCLE.md](./docs/03-architecture/PRODUCT_MODULE_LIFECYCLE.md).
 

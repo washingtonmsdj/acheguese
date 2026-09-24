@@ -51,9 +51,8 @@ Database -> Service -> Hook -> Component
   Notifications e Central estao ativos.
 - `lifecycleRegistry.ts` resolve dependencias cruzadas sem transformar
   capability horizontal em dominio.
-- Nearby depende de Map + Location + Business.
-- Messaging depende de Auth + Profiles + Business e registra apenas o provider
-  Business no MVP.
+- Nearby depende estruturalmente apenas de Map + Location; domínios entram por providers lifecycle-scoped. No MVP, Business é o único provider de proximidade certificado.
+- Messaging depende estruturalmente de Auth + Profiles; domínios entram por providers lifecycle-scoped. No MVP, Business Direct Messaging é o provider ativo.
 - Community e demais dominios pos-MVP continuam `paused` e fail-closed.
 - Regras completas: [PRODUCT_MODULE_LIFECYCLE.md](./PRODUCT_MODULE_LIFECYCLE.md).
 
@@ -63,8 +62,8 @@ Database -> Service -> Hook -> Component
 - `integrations/*`: detalhes de infraestrutura, nunca regra de negocio de dominio.
 
 ## Taxonomia oficial
-- `business`/`empresas` e o dominio base horizontal para entidades empresariais.
-- `business` nao e vertical.
+- No lifecycle de produto, `business`/`empresas` é um domínio/módulo vertical ativo. Ele não é capability horizontal.
+- Em documentação específica de taxonomia empresarial, o termo "vertical empresarial" pode designar especializações de Business (como Gastronomy/Education); isso não altera a classificação do lifecycle.
 - Verticais empresariais oficiais sao somente as chaves declaradas no contrato `src/core/verticals/config.ts`.
 - Estado atual do contrato executavel: `gastronomy` e `education` sao verticais oficialmente formalizadas; ambas permanecem pausadas no MVP.
 - Modulo existente em `src/modules/*` nao equivale automaticamente a vertical oficial.

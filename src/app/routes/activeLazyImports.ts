@@ -12,7 +12,7 @@ export const EmpresasLandingPage = lazy(
 );
 export const BuscaPage = lazy(() => import("@/app/pages/BuscaPage"));
 export const BuscarPage = lazy(() => import("@/app/pages/BuscarPage"));
-export const NearbyPage = lazy(() => import("@/core/nearby/pages/NearbyPage"));
+export const NearbyPage = lazy(() => import("@/app/pages/NearbyPage"));
 export const NotFound = lazy(() => import("@/app/pages/NotFound"));
 
 export const StateLandingPage = lazy(() =>
