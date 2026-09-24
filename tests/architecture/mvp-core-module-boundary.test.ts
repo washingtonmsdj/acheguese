@@ -135,6 +135,9 @@ describe("MVP core module boundary", () => {
     expect(presentationModules).toContain("isPlatformCapabilityEnabled('map')");
     expect(presentationModules).toContain("isPlatformCapabilityEnabled('nearby')");
     expect(presentationModules).toContain("isPlatformCapabilityEnabled('search')");
+    const profileBusinessSnapshot = read("src/core/profiles/services/profile.workspace.business-modules.ts");
+    expect(profileBusinessSnapshot).not.toContain("@/app/config");
+    expect(profileBusinessSnapshot).not.toContain("isLaunchSurfaceEnabled");
 
     expect(launchScope).toContain(
       'business: isProductModuleEnabled("business")',
