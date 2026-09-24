@@ -4,21 +4,28 @@
 **Data do checkpoint GitHub:** 2026-09-23  
 **Repositório:** `washingtonmsdj/acheguese`  
 **Linha ativa:** `main`  
-**Baseline operacional atual:** `main@42d91ea9454de0fe8c3250cc75d230cb1bceeb9c` (squash merge de #333). Esta branch documental registra o checkpoint; não promove um novo release. Qualquer merge posterior gera outro SHA e exige nova prova exact-SHA antes de promoção.
+**Baseline operacional atual:** `main@7a74925456f48412f4abcb1457afb5febb430c83` (squash merge de #343). Este checkpoint registra o estado do código; não promove um novo release. Qualquer merge posterior gera outro SHA e exige nova prova exact-SHA antes de promoção.
 
 Este documento consolida ordem de execução, blockers e Definition of Done. Ele é um **registro operacional**, não uma fotografia autoritativa do que existe no produto. A fonte de verdade para decidir o que existe, o que está ativo e o que deve ser corrigido é sempre o **projeto real**: código da `main`, rotas, owners, serviços, schema/migrations, contratos, testes, deploy/runtime e comportamento observado.
 
 
 ## Estado operacional atual — 2026-09-23
 
-- `main` atual: `42d91ea9454de0fe8c3250cc75d230cb1bceeb9c` (squash merge de #333);
+- `main` atual: `7a74925456f48412f4abcb1457afb5febb430c83` (squash merge de #343);
 - #327 / #325 removeu módulos pausados da árvore pública ativa, criou `activeLazyImports.ts` e fez URLs públicas sem owner ativo caírem no 404 canônico;
 - o head `fa747aa7c877d7a086b92277940681a27abba844` de #327 passou Dependency Lock, Security Check/Scan, Auth Concept, Visual Regression, SSOT Territorial, Heavy exact-SHA e SSOT Enforcement antes do merge;
 - #329 — Central active-only integrado: `/central/*` monta somente Business/Empresas + infraestrutura via `activeCentralLazyImports.ts`; módulos pausados ficam fora do grafo e URL sem owner cai no 404 canônico;
 - #330 — `centralLazyImports.ts` aposentado após censo provar ausência de caller runtime; ratchets agora preservam owners físicos/lifecycle em vez de barrel artificial;
 - #331 — `CommunityTerritoryRoutes.tsx` aposentado após censo provar ausência de caller runtime; builders canônicos de URL e owners Community permanecem preservados nos bounded contexts;
 - #333 integrado — `src/app/routes/lazyImports.ts` e a cadeia órfã `TerritorialModulePages.tsx` → `launchPausedComponent.ts` → `LaunchPausedPage.tsx` foram aposentados; ratchets agora preservam owners físicos/lifecycle e impedem recriação do grafo morto; `activeLazyImports.ts` + `ActiveTerritorialModulePages.tsx` permanecem como boundaries públicos ativos;
-- a `main@42d91ea...` foi reprovada novamente como candidato de release apenas no smoke autenticado remoto (#305), depois de Vercel publicar o SHA exato; SSOT Enforcement e Heavy exact-main fecharam verdes. Nenhum merge herda certificação anterior: qualquer promoção futura precisa certificar/deployar/smokar o novo SHA exato.
+- #337 integrado — Perto de mim passou a tratar a rota territorial como autoridade canônica, preservando contexto de território/grupo e boundaries de Business;
+- #338 integrado — sugestões da Busca agora são derivadas somente de providers lifecycle-enabled; módulos pausados deixaram de ser promovidos por sugestões hardcoded;
+- #339 integrado — o preview de mapa da Busca preserva a URL canônica de Business já produzida pelo Search Core no CTA destacado;
+- #341 integrado — pins de resultados da Busca passaram a executar navegação real; Business delega ao owner canônico e não reconstrói URL no mapa;
+- #342 integrado — pins do mini-mapa de Perto de mim passaram a abrir `business.canonicalUrl`, alinhando card e mapa ao mesmo owner público;
+- #343 integrado — o hero/mapa de Empresas agora respeita `filteredBusinesses` inclusive quando o resultado é zero, sem reexibir silenciosamente a coleção não filtrada;
+- os heads finais de #337, #338, #339, #341, #342 e #343 passaram os gates aplicáveis de unit/runtime, lint/typecheck, arquitetura, segurança, E2E público, Regression, Heavy exact-SHA e SSOT Enforcement antes dos respectivos merges; isso certifica os PRs, mas não substitui prova pós-merge/deploy/smoke do SHA atual da `main`;
+- o blocker de release autenticado continua #305: o broker remoto está alinhado ao source e recebe OIDC válido, mas o upstream Supabase/Auth segue reproduzindo `503 auth_upstream_unavailable` / connection timeout; #309 continua separado como autoridade de deploy de Edge Functions. Nenhum merge herda certificação anterior: a `main@7a749254...` precisa de sua própria prova exact-SHA de deploy + smoke antes de promoção.
 
 ### Evidência pós-#333 — exact-main `42d91ea...`
 
@@ -37,7 +44,7 @@ Este documento consolida ordem de execução, blockers e Definition of Done. Ele
 2. **#309 — autoridade automática de deploy Supabase:** o PAT do GitHub Actions recebe 403 ao atualizar Edge Functions. Rotacionar o secret para PAT scoped com `Edge Functions: Read-write` / `deploy_edge_function`; não usar `service_role` como substituto.
 3. **Exact-SHA pós-merge:** qualquer mudança, inclusive documentação, gera novo candidato. Security/lint/typecheck/tests/build/E2E/deploy/smoke precisam pertencer ao mesmo SHA final.
 
-O incidente antigo de hosted runners com jobs vazios foi encerrado no issue #17 e **não é blocker atual**. Vercel publicou `main@42d91ea...` com status `success`; `release.json` passou de `035a...` para o SHA exato após a propagação. O deploy público não é o blocker atual.
+O incidente antigo de hosted runners com jobs vazios foi encerrado no issue #17. O diagnóstico mais recente de alocação intermitente permanece rastreado em #89 e não autoriza workaround de workflow; os PRs #342 e #343 receberam runner real e concluíram Heavy exact-SHA com sucesso. O blocker comprovado do release autenticado continua #305, com #309 separado para autoridade automática de deploy Supabase.
 
 
 ## Corte de lançamento MVP — 2026-09-19
@@ -123,7 +130,7 @@ O primeiro release continua territorial. **Cobertura uniforme dos 170 bairros de
 - 74 branches são heads intactos de PRs já mergeados e 3 branches sem PR estão completamente contidas na `main`: **77 são candidatas seguras à remoção física do ref**;
 - 72 branches sem PR mergeado conhecido ainda possuem commits exclusivos; duas branches alteradas depois de merge (`cleanup/active-compat-facades-20260919` e `codex/identidade-visual-achegue-se`) também carregam delta exclusivo. Preservar todas até prova de supersessão;
 - `cleanup/active-compat-facades-20260919` foi alterada após o PR mergeado e mantém delta adicional; preservar até análise específica;
-- enquanto a exclusão automática não puder ser habilitada pela integração atual, a frente urgente reutiliza `work/mvp-urgent` em vez de criar uma branch nova por micro-PR;
+- não reutilizar branch apenas para reduzir contagem quando ela estiver divergida da `main`: no checkpoint atual, `work/mvp-urgent` está 45 commits à frente e 79 atrás da `main`, com delta exclusivo; preservar até reconciliação própria. Trabalho urgente novo deve partir do SHA exato da `main` quando a branch existente não puder ser comprovadamente reutilizada sem carregar histórico/delta estranho;
 - regra: branch só pode ser apagada automaticamente quando o PR correspondente foi mergeado e o head não foi alterado depois, ou quando a branch é comprovadamente contida na `main`; demais casos exigem comparação de conteúdo/provenance.
 - a integração GitHub disponível neste chat não expõe `DELETE ref` nem alteração de `delete_branch_on_merge`; portanto não mascarar a limpeza movendo refs antigas para `main`. A exclusão física deve usar GitHub CLI/API autenticada ou autoridade administrativa equivalente, aplicando a classificação segura já registrada.
 - [x] `tools/github/cleanup-merged-branches.mjs` + `npm run maintenance:branches` materializam essa política: dry-run por padrão, `--apply` explícito, revalidação de SHA/proteção/PR aberto antes de cada DELETE e novo compare para branches classificadas por contenção. Checkpoint: `docs/08-roadmap/checkpoints/2026-09-20-branch-hygiene.md`.

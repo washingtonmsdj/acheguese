@@ -18,6 +18,7 @@ import { useNavigate, useParams } from "react-router-dom";
 import {
   getMessagingProvider,
   isMessagingProviderId,
+  messagingRoutes,
   type MessagingInboxMessage,
   type MessagingInboxProvider,
   type MessagingInboxThread,
@@ -49,10 +50,6 @@ function initials(value: string): string {
     .slice(0, 2)
     .map((part) => part.charAt(0).toUpperCase())
     .join("");
-}
-
-function threadRoute(thread: MessagingInboxThread): string {
-  return `/mensagens/${thread.providerId}/${thread.threadId}`;
 }
 
 export interface MensagensPageProps {
@@ -151,7 +148,7 @@ export default function MensagensPage({ providerIds }: MensagensPageProps) {
     }
 
     if (!activeProvider) {
-      navigate("/mensagens", { replace: true });
+      navigate(messagingRoutes.inbox(), { replace: true });
       return;
     }
 
@@ -352,7 +349,7 @@ export default function MensagensPage({ providerIds }: MensagensPageProps) {
                   <button
                     key={`${thread.providerId}:${thread.threadId}`}
                     type="button"
-                    onClick={() => navigate(threadRoute(thread))}
+                    onClick={() => navigate(messagingRoutes.thread(thread.providerId, thread.threadId))}
                     className={cn(
                       "flex w-full gap-3 p-4 text-left transition hover:bg-accent/60",
                       selectedThread?.threadId === thread.threadId &&
@@ -427,7 +424,7 @@ export default function MensagensPage({ providerIds }: MensagensPageProps) {
                   variant="ghost"
                   size="icon"
                   className="md:hidden"
-                  onClick={() => navigate("/mensagens")}
+                  onClick={() => navigate(messagingRoutes.inbox())}
                   aria-label="Voltar para conversas"
                 >
                   <ArrowLeft className="h-4 w-4" />

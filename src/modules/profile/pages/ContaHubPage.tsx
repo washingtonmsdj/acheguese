@@ -219,7 +219,7 @@ function ContaHubLivePage() {
               icon={MessageCircle}
               title="Mensagens"
               description="Conversas privadas com empresas e outros providers habilitados."
-              onClick={() => navigate("/mensagens")}
+              onClick={() => navigate(data.appUrls.messages)}
             />
             <AccountAction
               icon={SlidersHorizontal}

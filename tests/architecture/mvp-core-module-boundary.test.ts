@@ -32,6 +32,7 @@ describe("MVP core module boundary", () => {
     "src/core/navigation/territoryNavigationModes.ts",
   );
   const appRoutes = read("src/app/routes/sections/AppLayoutRoutes.tsx");
+  const messagingRoutes = read("src/core/messaging/routes/messagingRoutes.ts");
   const rootRoutes = read("src/app/routes/AppRoutes.tsx");
   const publicMvpE2e = read("tests/e2e/territory-home-operational.spec.ts");
   const packageJson = read("package.json");
@@ -298,7 +299,9 @@ describe("MVP core module boundary", () => {
     expect(appRoutes).toContain('path="/mapa"');
     expect(appRoutes).toContain('path="/perto-de-mim"');
     expect(appRoutes).toContain('path="/busca"');
-    expect(appRoutes).toContain('path="/mensagens"');
+    expect(appRoutes).toContain("messagingRoutes.inbox()");
+    expect(appRoutes).toContain("messagingRoutes.threadPattern()");
+    expect(messagingRoutes).toContain('inbox: () => "/mensagens"');
 
     expect(appRoutes).not.toContain("LaunchPausedPage");
     expect(appRoutes).not.toContain("DIRECT_PAUSED_ROUTES");

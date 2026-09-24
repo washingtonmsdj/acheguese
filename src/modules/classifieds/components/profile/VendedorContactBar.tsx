@@ -16,8 +16,8 @@ import {
 import { toast } from "sonner";
 import { useAuth } from "@/core/auth";
 import { useSessionContext } from "@/core/session";
+import { messagingRoutes } from "@/core/messaging";
 import { classifiedMessagingService } from "@/core/messaging/services/ClassifiedMessagingService";
-import { useAppUrls } from "@/core/routing/hooks/useAppUrls";
 import { buildWhatsAppUrl } from "@/shared/utils/contactLinks";
 import { openSafeExternalUrl } from "@/shared/utils/safeRedirect";
 import { isLaunchSurfaceEnabled } from "@/app/config/launchScope";
@@ -37,7 +37,6 @@ export function VendedorContactBar({
   const { user } = useAuth();
   const { activeProfile } = useSessionContext();
   const navigate = useNavigate();
-  const appUrls = useAppUrls();
   const [chatOpen, setChatOpen] = useState(false);
   const [message, setMessage] = useState("");
   const showInternalChat = isLaunchSurfaceEnabled("communityCommunication");
@@ -95,7 +94,7 @@ export function VendedorContactBar({
       toast.success("Mensagem enviada com sucesso.");
       setMessage("");
       setChatOpen(false);
-      navigate(appUrls.chat(conversation.id));
+      navigate(messagingRoutes.thread("classifieds", conversation.id));
     } catch {
       toast.error("Erro ao enviar mensagem. Tente novamente.");
     }

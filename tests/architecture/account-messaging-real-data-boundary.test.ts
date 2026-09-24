@@ -6,7 +6,9 @@ const root = process.cwd();
 const read = (path: string) => readFileSync(resolve(root, path), "utf8");
 
 const routes = read("src/app/routes/sections/AppLayoutRoutes.tsx");
+const messagingRoutes = read("src/core/messaging/routes/messagingRoutes.ts");
 const account = read("src/modules/profile/pages/ContaHubPage.tsx");
+const appUrls = read("src/core/routing/hooks/useAppUrls.ts");
 const appTopbar = read("src/app/components/navigation/AppTopbar.tsx");
 const inbox = read("src/modules/messaging/pages/MensagensPage.tsx");
 const providerRegistry = read(
@@ -27,9 +29,16 @@ describe("account and horizontal messaging real-data boundary", () => {
     expect(routes).not.toContain('get("concept-mock")');
     expect(routes).toContain('path="/conta"');
     expect(routes).toContain("protectedElement(<P.ContaPage />)");
-    expect(routes).toContain('path="/mensagens"');
-    expect(routes).toContain('path="/mensagens/:providerId/:threadId"');
+    expect(routes).toContain("messagingRoutes.inbox()");
+    expect(routes).toContain("messagingRoutes.threadPattern()");
+    expect(messagingRoutes).toContain('inbox: () => "/mensagens"');
+    expect(messagingRoutes).toContain(
+      'threadPattern: () => "/mensagens/:providerId/:threadId"',
+    );
     expect(routes).not.toContain('path="/chat/:conversationId"');
+    expect(appUrls).not.toContain("chat: (conversationId");
+    expect(appUrls).not.toContain("/chat/");
+    expect(appUrls).toContain("messages: messagingRoutes.inbox()");
     expect(routes).toContain('"messaging"');
   });
 
@@ -47,7 +56,7 @@ describe("account and horizontal messaging real-data boundary", () => {
     expect(account).not.toContain("if (data.loading) {");
     expect(account).toContain("data.allProfiles");
     expect(account).toContain('title="Mensagens"');
-    expect(account).toContain('navigate("/mensagens")');
+    expect(account).toContain("navigate(data.appUrls.messages)");
   });
 
   it("keeps global Messaging navigation owned by the horizontal capability", () => {

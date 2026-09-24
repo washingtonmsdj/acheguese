@@ -7,6 +7,7 @@ import {
   isProductModuleEnabled,
 } from "@/app/config/lifecycleRegistry";
 import TerritoryHomePage from "@/app/pages/TerritoryHomePage";
+import { messagingRoutes } from "@/core/messaging";
 import { ProtectedRoute } from "@/core/routing/components/ProtectedRoute";
 import { TerritorialIndexPage } from "@/core/routing/components/TerritorialIndexPage";
 import {
@@ -99,11 +100,11 @@ export function AppLayoutRoutes() {
         {messagingEnabled ? (
           <>
             <Route
-              path="/mensagens"
+              path={messagingRoutes.inbox()}
               element={protectedElement(<P.MensagensPage />)}
             />
             <Route
-              path="/mensagens/:providerId/:threadId"
+              path={messagingRoutes.threadPattern()}
               element={protectedElement(<P.MensagensPage />)}
             />
           </>
