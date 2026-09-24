@@ -54,7 +54,6 @@ describe("MVP private launch-scope boundaries", () => {
     const profileNavigation = read(
       "src/modules/profile/utils/profileNavigation.ts",
     );
-    const profileSummary = read("src/modules/profile/sections/ResumoSection.tsx");
     const businessHub = read(
       "src/core/profiles/components/hub/BusinessModulesSection.tsx",
     );
@@ -70,21 +69,26 @@ describe("MVP private launch-scope boundaries", () => {
     ).toBe(true);
     expect(profileNavigation).toContain('planos: "billing"');
     expect(profileNavigation).toContain("isLaunchSurfaceEnabled(surface)");
-    expect(profileSummary).toContain(
-      'const showBilling = isLaunchSurfaceEnabled("billing")',
-    );
-    expect(profileSummary).toContain("{showBilling ? (");
-    expect(profileSummary).not.toContain("appUrls.services.list");
-    expect(profileSummary).not.toContain("appUrls.community.feed");
-    expect(profileSummary).not.toContain("operations.services");
-    expect(profileSummary).not.toContain("operations.classifieds");
-    expect(profileSummary).not.toContain("Posts publicados");
     expect(businessHub).not.toContain("business.gastronomy");
     expect(businessHub).not.toContain('isProductModuleEnabled("mobility")');
     expect(businessHub).not.toContain('isProductModuleEnabled("publicAnalytics")');
     expect(businessHub).not.toContain("Ativar gastronomia");
     expect(businessHub).not.toContain(">Gastronomia<");
     expect(businessHub).not.toContain(">Delivery<");
+    for (const retiredSection of [
+      "ResumoSection.tsx",
+      "DadosPessoaisSection.tsx",
+      "EmpresasSection.tsx",
+      "MobilidadeSection.tsx",
+      "DeliverySection.tsx",
+      "PlanosSection.tsx",
+      "NotificacoesSection.tsx",
+      "PreferenciasSection.tsx",
+    ]) {
+      expect(
+        existsSync(join(ROOT, "src/modules/profile/sections", retiredSection)),
+      ).toBe(false);
+    }
   });
 
   it("keeps the active Account hook free of callerless paused-domain catalogs", () => {
