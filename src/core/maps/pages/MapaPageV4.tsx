@@ -4,8 +4,7 @@
  * SSoTs respeitados:
  * - Território   → useModuleTerritoryFilter({ routeResolved, activeMemberIds })
  * - Focus target → URL com lat/lng explicita, sem herdar filtro territorial artificial
- * - Businesses   → MapBusinessLayerRuntimeService com bounds + territoryFilter no banco
- * - Projeção     → mapEntityProjection (MapEntityProjectionService)
+ * - Layers       → providers injetados pelo boundary de aplicação
  * - Viewport     → useMapViewportFetch + MapLibreAdapter
  * - Geoloc GPS   → MapLibreAdapter.controls.location (via MapLocationControl → useRobustGeolocation → GeolocationService)
  *
@@ -14,15 +13,12 @@
 
 import React, { useRef, useCallback, useEffect, useMemo, useState } from 'react';
 import { Link, useNavigate, useSearchParams } from 'react-router-dom';
-import { Building2, Navigation } from 'lucide-react';
+import { Layers3, Navigation } from 'lucide-react';
 import { MapLibreAdapter, type MapLibreAdapterHandle } from '../components/v3/MapLibreAdapter';
 import { MapMarkerPopup } from '../components/v3/MapMarkerPopup';
-import { useMapViewportFetch } from '../hooks/useMapViewportFetch';
-import { mapEntityProjection } from '../services/MapEntityProjectionService';
+import { useMapViewportFetch, type LayerFetcher } from '../hooks/useMapViewportFetch';
 import { DEFAULT_TILE_STYLE } from '../providers/MapProvider';
 import { MAP_DEFAULT_BOUNDS, MAP_DEFAULT_ZOOM } from '../config/defaultCoordinates';
-import { MAP_PUBLIC_RUNTIME_LAYER_KEYS } from '../config/runtimeConfig';
-import { mapBusinessLayerRuntimeService } from '@/core/maps/services/MapBusinessLayerRuntimeService';
 import { usePublicBrowsingCity } from '@/core/location/hooks/usePublicBrowsingCity';
 import { useResolvedUserLocation } from '@/core/location/hooks/useResolvedUserLocation';
 import { territoryFilterKey } from '@/core/location/hooks/useTerritoryFilter';
@@ -39,20 +35,24 @@ import {
   geoPathToPublicUrl,
 } from '@/core/routing/utils/territoryUrls';
 import { boundaryService } from '@/core/geospatial';
-import { EntityStatus } from '@/shared/types/enums';
 import type { BoundingBox, MapLayerKey, MapMarker, MapViewport } from '../types/core';
-import { LocationStatus, type Location, type TerritoryFilter } from '@/core/location/types';
+import { LocationStatus, type Location } from '@/core/location/types';
 import type { ResolvedTerritory } from '@/core/routing/hooks/useResolveTerritoryFromUrl';
+import type {
+  MapLayerProviderRuntime,
+  MapProviderBrowseLink,
+} from '../providers/types';
 
-interface MapaPageV4Props {
+export interface MapaPageV4Props {
   resolved?: ResolvedTerritory | null;
   activeMemberIds?: string[];
   presentation?: 'standalone' | 'embedded';
   initialLayers?: readonly MapLayerKey[];
+  providers?: readonly MapLayerProviderRuntime[];
+  nearbyEnabled?: boolean;
 }
 
 const TILE_STYLE_URL = DEFAULT_TILE_STYLE.styleUrl;
-const BUSINESS_MAP_BASE_URL = buildAppModulePath(APP_MODULE_SLUGS.business);
 const NEARBY_URL = buildAppModulePath(APP_MODULE_SLUGS.nearby);
 const INITIAL_BOUNDS: BoundingBox = MAP_DEFAULT_BOUNDS;
 const INITIAL_ZOOM = MAP_DEFAULT_ZOOM;
@@ -60,13 +60,13 @@ const INITIAL_ZOOM = MAP_DEFAULT_ZOOM;
 function MvpMapHeader({
   territoryName,
   mapLabel,
-  businessHref,
+  providerLinks,
   nearbyHref,
 }: {
   territoryName: string;
   mapLabel: string;
-  businessHref: string;
-  nearbyHref: string;
+  providerLinks: readonly MapProviderBrowseLink[];
+  nearbyHref: string | null;
 }) {
   return (
     <section className="rounded-[24px] border border-border bg-card px-4 py-4 shadow-sm sm:px-5">
@@ -79,40 +79,52 @@ function MvpMapHeader({
             {mapLabel}
           </h1>
           <p className="mt-1 max-w-2xl text-sm text-muted-foreground">
-            Visualize empresas públicas válidas no território e abra o detalhe canônico de cada estabelecimento.
+            Visualize informações públicas disponíveis no território e abra as fontes canônicas dos providers ativos.
           </p>
         </div>
-        <nav
-          className="flex shrink-0 flex-wrap gap-2"
-          aria-label="Módulos relacionados ao mapa"
-        >
-          <Link
-            to={businessHref}
-            className="inline-flex min-h-10 items-center gap-2 rounded-xl border border-border px-3 text-sm font-semibold text-foreground transition-colors hover:bg-muted"
+        {(providerLinks.length > 0 || nearbyHref) && (
+          <nav
+            className="flex shrink-0 flex-wrap gap-2"
+            aria-label="Superfícies relacionadas ao mapa"
           >
-            <Building2 className="h-4 w-4" aria-hidden="true" />
-            Empresas
-          </Link>
-          <Link
-            to={nearbyHref}
-            className="inline-flex min-h-10 items-center gap-2 rounded-xl border border-border px-3 text-sm font-semibold text-foreground transition-colors hover:bg-muted"
-          >
-            <Navigation className="h-4 w-4" aria-hidden="true" />
-            Perto de mim
-          </Link>
-        </nav>
+            {providerLinks.map((link) => (
+              <Link
+                key={`${link.label}:${link.href}`}
+                to={link.href}
+                className="inline-flex min-h-10 items-center gap-2 rounded-xl border border-border px-3 text-sm font-semibold text-foreground transition-colors hover:bg-muted"
+              >
+                <Layers3 className="h-4 w-4" aria-hidden="true" />
+                {link.label}
+              </Link>
+            ))}
+            {nearbyHref && (
+              <Link
+                to={nearbyHref}
+                className="inline-flex min-h-10 items-center gap-2 rounded-xl border border-border px-3 text-sm font-semibold text-foreground transition-colors hover:bg-muted"
+              >
+                <Navigation className="h-4 w-4" aria-hidden="true" />
+                Perto de mim
+              </Link>
+            )}
+          </nav>
+        )}
       </div>
     </section>
   );
 }
 
-function createInitialVisibleLayers(): Partial<Record<MapLayerKey, boolean>> {
+function createInitialVisibleLayers(
+  layerKeys: readonly MapLayerKey[],
+): Partial<Record<MapLayerKey, boolean>> {
   return Object.fromEntries(
-    MAP_PUBLIC_RUNTIME_LAYER_KEYS.map((layer) => [layer, true]),
+    layerKeys.map((layer) => [layer, true]),
   ) as Partial<Record<MapLayerKey, boolean>>;
 }
 
-function parseLayerQuery(searchParams: URLSearchParams): MapLayerKey[] {
+function parseLayerQuery(
+  searchParams: URLSearchParams,
+  layerKeys: readonly MapLayerKey[],
+): MapLayerKey[] {
   const rawValues = [
     ...searchParams.getAll('layer'),
     ...searchParams.getAll('layers'),
@@ -124,15 +136,18 @@ function parseLayerQuery(searchParams: URLSearchParams): MapLayerKey[] {
     .filter(Boolean);
 
   return requested.filter((value): value is MapLayerKey =>
-    MAP_PUBLIC_RUNTIME_LAYER_KEYS.includes(value as MapLayerKey),
+    layerKeys.includes(value as MapLayerKey),
   );
 }
 
-function createFocusedVisibleLayers(layers: readonly MapLayerKey[]): Partial<Record<MapLayerKey, boolean>> {
-  if (layers.length === 0) return createInitialVisibleLayers();
+function createFocusedVisibleLayers(
+  layers: readonly MapLayerKey[],
+  layerKeys: readonly MapLayerKey[],
+): Partial<Record<MapLayerKey, boolean>> {
+  if (layers.length === 0) return createInitialVisibleLayers(layerKeys);
   const activeLayers = new Set(layers);
   return Object.fromEntries(
-    MAP_PUBLIC_RUNTIME_LAYER_KEYS.map((layer) => [layer, activeLayers.has(layer)]),
+    layerKeys.map((layer) => [layer, activeLayers.has(layer)]),
   ) as Partial<Record<MapLayerKey, boolean>>;
 }
 
@@ -285,77 +300,30 @@ function resolveNearbyUrl(resolved: ResolvedTerritory | null): string {
   );
 }
 
-function resolveBusinessListUrl(resolved: ResolvedTerritory | null): string {
-  if (!resolved) return BUSINESS_MAP_BASE_URL;
-
-  if (resolved.kind === 'location') {
-    return buildModuleTerritoryUrl(
-      MODULE_SLUGS.business,
-      geoPathToPublicUrl(resolved.location.geographic_path),
-    );
-  }
-
-  const firstMember = resolved.group.members.at(0);
-  if (!firstMember?.geographic_path) return BUSINESS_MAP_BASE_URL;
-
-  const [country, state, city] = firstMember.geographic_path
-    .split("/")
-    .filter(Boolean);
-  if (!country || !state || !city) return BUSINESS_MAP_BASE_URL;
-
-  return buildModuleTerritoryUrl(
-    MODULE_SLUGS.business,
-    buildGroupBaseUrl(resolved.group, `/${country}/${state}/${city}`),
-  );
-}
-
-function makeBusinessFetcher(territoryFilter: TerritoryFilter | undefined) {
-  return async (bounds: BoundingBox): Promise<MapMarker[]> => {
-    try {
-      const businesses = await mapBusinessLayerRuntimeService.getBusinessesByBounds(bounds, {
-        territoryFilter,
-        limit: 200,
-      });
-
-      return mapEntityProjection.projectEntities(
-        businesses.map((business) => ({
-          id: business.id,
-          name: business.name,
-          latitude: business.latitude,
-          longitude: business.longitude,
-          status: EntityStatus.ACTIVE,
-          slug: business.slug ?? undefined,
-          url: business.canonical_url,
-          is_premium: business.is_premium,
-          is_verified: business.is_verified,
-          rating: business.rating,
-          category: business.category,
-          map_layer_key: 'businesses',
-        })),
-        'business',
-        { includeMetadata: true, calculateScore: true },
-      );
-    } catch {
-      return [];
-    }
-  };
-}
-
 export default function MapaPageV4({
   resolved,
   activeMemberIds = [],
   presentation = 'standalone',
   initialLayers = [],
+  providers = [],
+  nearbyEnabled = true,
 }: MapaPageV4Props) {
   const adapterRef = useRef<MapLibreAdapterHandle>(null);
+  const runtimeLayerKeys = React.useMemo(
+    () => providers.map((provider) => provider.layerKey),
+    [providers],
+  );
   const [selectedMarker, setSelectedMarker] = useState<MapMarker | null>(null);
   const [visibleLayers, setVisibleLayers] = useState<Partial<Record<MapLayerKey, boolean>>>(() =>
-    createFocusedVisibleLayers(initialLayers),
+    createFocusedVisibleLayers(initialLayers, runtimeLayerKeys),
   );
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const { active: publicBrowsingCity } = usePublicBrowsingCity();
-  const requestedLayers = React.useMemo(() => parseLayerQuery(searchParams), [searchParams]);
+  const requestedLayers = React.useMemo(
+    () => parseLayerQuery(searchParams, runtimeLayerKeys),
+    [searchParams, runtimeLayerKeys],
+  );
   const requestedLayersKey = React.useMemo(() => requestedLayers.join(','), [requestedLayers]);
 
   const focusTarget = React.useMemo(() => {
@@ -457,30 +425,32 @@ export default function MapaPageV4({
   const { polygons: territoryPolygons } = useTerritoryPolygon(effectiveResolved);
   const territoryLabels = useTerritoryLabels(effectiveResolved);
   const territoryName = territoryLabels.name || publicBrowsingCity.city || 'Seu território';
-  const businessListUrl = React.useMemo(
-    () => resolveBusinessListUrl(effectiveResolved),
-    [effectiveResolved],
+  const providerLinks = React.useMemo(
+    () =>
+      providers.flatMap((provider) => {
+        const link = provider.getBrowseLink?.(effectiveResolved) ?? null;
+        return link ? [link] : [];
+      }),
+    [effectiveResolved, providers],
   );
   const nearbyUrl = React.useMemo(
-    () => resolveNearbyUrl(effectiveResolved),
-    [effectiveResolved],
+    () => (nearbyEnabled ? resolveNearbyUrl(effectiveResolved) : null),
+    [effectiveResolved, nearbyEnabled],
   );
-
-  const businessesLayerVisible = visibleLayers.businesses !== false;
 
   const filterKey = isFocusOnlyMode
     ? 'focus-target'
     : territoryFilterKey(territoryFilter);
-  const fetchers = React.useMemo(
-    () => ({
-      ...(businessesLayerVisible
-        ? { businesses: makeBusinessFetcher(runtimeTerritoryFilter) }
-        : {}),
-    }),
-    // territoryFilterKey is the stable identity used by the fetcher closure.
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-    [filterKey, businessesLayerVisible],
-  );
+  const fetchers = React.useMemo(() => {
+    const next: Partial<Record<MapLayerKey, LayerFetcher>> = {};
+
+    for (const provider of providers) {
+      if (visibleLayers[provider.layerKey] === false) continue;
+      next[provider.layerKey] = provider.createFetcher(runtimeTerritoryFilter);
+    }
+
+    return next;
+  }, [filterKey, providers, runtimeTerritoryFilter, visibleLayers]);
 
   const { layerData, loadingLayers, fetchByBounds, clearLayer } = useMapViewportFetch({
     fetchers,
@@ -489,7 +459,7 @@ export default function MapaPageV4({
   });
 
   const handleLayerToggle = useCallback((key: string, visible: boolean) => {
-    if (!MAP_PUBLIC_RUNTIME_LAYER_KEYS.includes(key as MapLayerKey)) return;
+    if (!runtimeLayerKeys.includes(key as MapLayerKey)) return;
 
     setVisibleLayers((prev) => ({
       ...prev,
@@ -497,17 +467,19 @@ export default function MapaPageV4({
     }));
 
     if (!visible) clearLayer(key as MapLayerKey);
-  }, [clearLayer]);
+  }, [clearLayer, runtimeLayerKeys]);
 
   useEffect(() => {
     if (requestedLayers.length > 0) {
-      setVisibleLayers(createFocusedVisibleLayers(requestedLayers));
+      setVisibleLayers(
+        createFocusedVisibleLayers(requestedLayers, runtimeLayerKeys),
+      );
       return;
     }
-    if (initialLayers.length > 0) {
-      setVisibleLayers(createFocusedVisibleLayers(initialLayers));
-    }
-  }, [initialLayers, requestedLayers, requestedLayersKey]);
+    setVisibleLayers(
+      createFocusedVisibleLayers(initialLayers, runtimeLayerKeys),
+    );
+  }, [initialLayers, requestedLayers, requestedLayersKey, runtimeLayerKeys]);
 
   useEffect(() => {
     fetchByBounds(INITIAL_BOUNDS, INITIAL_ZOOM);
@@ -535,20 +507,19 @@ export default function MapaPageV4({
   const focusMarkers = React.useMemo(() => {
     if (!focusTarget) return [] as MapMarker[];
 
-    return mapEntityProjection.projectEntities(
-      [
-        {
-          id: 'focus-target',
-          name: focusTarget.name,
+    return [
+      {
+        id: 'focus-target',
+        type: 'user_location',
+        coordinates: {
           latitude: focusTarget.latitude,
           longitude: focusTarget.longitude,
-          status: EntityStatus.ACTIVE,
-          map_layer_key: 'businesses',
         },
-      ],
-      'business',
-      { includeMetadata: true, calculateScore: true, baseUrl: BUSINESS_MAP_BASE_URL },
-    );
+        title: focusTarget.name,
+        status: 'active',
+        metadata: { focusTarget: true },
+      },
+    ] satisfies MapMarker[];
   }, [focusTarget]);
 
   const markers = React.useMemo(
@@ -598,9 +569,9 @@ export default function MapaPageV4({
               autoFlyTo: true,
             },
             layers: {
-              enabled: MAP_PUBLIC_RUNTIME_LAYER_KEYS.length > 1,
+              enabled: runtimeLayerKeys.length > 1,
               position: 'bottom-left',
-              layers: MAP_PUBLIC_RUNTIME_LAYER_KEYS,
+              layers: runtimeLayerKeys,
               layout: 'vertical',
               visibleLayers,
               onLayerToggle: handleLayerToggle,
@@ -675,7 +646,7 @@ export default function MapaPageV4({
       <MvpMapHeader
         territoryName={territoryName}
         mapLabel={territoryLabels.mapLabel}
-        businessHref={businessListUrl}
+        providerLinks={providerLinks}
         nearbyHref={nearbyUrl}
       />
       <section className="overflow-hidden rounded-[24px] border border-border bg-card shadow-sm">
