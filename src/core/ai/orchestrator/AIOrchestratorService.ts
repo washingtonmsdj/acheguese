@@ -3,7 +3,6 @@ import { SearchServicesActionHandler } from "../actions/SearchServicesActionHand
 import type { IActionHandler } from "../actions/IActionHandler";
 import type {
   AIActionResult,
-  AIIntentType,
   AIOrchestratorSearchInput,
 } from "../domain/types";
 import { IntentParser } from "../intent/IntentParser";
