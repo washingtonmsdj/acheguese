@@ -13,9 +13,9 @@ describe("Territory Home ownership", () => {
     const appRoutes = read("src/app/routes/AppRoutes.tsx");
     const layoutRoutes = read("src/app/routes/sections/AppLayoutRoutes.tsx");
 
-    expect(layoutRoutes).toContain(
-      "CityLandingComponent={TerritoryHomePage}",
-    );
+    expect(layoutRoutes).toContain("element={<TerritoryHomePage />}");
+    expect(layoutRoutes).not.toContain("TerritorialIndexPage");
+    expect(layoutRoutes).not.toContain("CityLandingComponent");
     expect(appRoutes).toContain(
       '<Route path="/" element={<RootRouteEntry />} />',
     );
