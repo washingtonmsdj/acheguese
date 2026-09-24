@@ -1718,3 +1718,19 @@ Correção estrutural:
 - reativar uma vertical pesquisável deve alterar lifecycle/provider scope, não criar `isEnabled()` dentro do core.
 
 Regra para próxima IA/chat: nunca reintroduzir `isLaunchSurfaceEnabled` ou `productModuleRegistry` dentro de `core/search`. O app seleciona providers; Search apenas executa a lista autorizada.
+
+### Checkpoint MVP — Notification Inbox action lifecycle boundary (2026-09-24)
+
+Após #355 proteger cliques de Push/service worker, a auditoria encontrou a mesma classe de vazamento na Inbox web: `NotificationItem` usava `notification.action_url` diretamente via `SafeLink`. `SafeLink` valida segurança/protocolo, mas não conhece lifecycle; portanto uma notificação histórica poderia reabrir Gastronomy, Services, Mobility, Classifieds ou outra vertical pausada.
+
+Correção estrutural:
+
+- novo `notificationActionScope.ts` em `app/config` resolve destinos internos pelo lifecycle;
+- Business, Map, Nearby, Search, Messaging e Profiles ativos preservam seus destinos;
+- verticais pausadas e subrotas privadas conhecidas (`/central/profissional`, `/central/motorista`, `/central/motoboy`, Gastronomy dentro de `/central/empresas/:id/...`) caem em `/notificacoes`;
+- rotas aposentadas de notificações/perfil/Business também caem na Inbox em vez de reviver aliases;
+- URL HTTPS externa continua passando por `SafeLink`; lifecycle e URL safety permanecem responsabilidades separadas;
+- `core/notifications` não importa `app/config`; a policy fica no componente/boundary de app;
+- histórico permanece visível; somente a ação é fail-closed.
+
+Regra para próximas IAs/chats: não filtrar/apagar notificações antigas apenas porque a vertical está pausada e não permitir `href={notification.action_url}` direto na Inbox. O owner horizontal guarda o histórico; `notificationActionScope.ts` governa a navegação.

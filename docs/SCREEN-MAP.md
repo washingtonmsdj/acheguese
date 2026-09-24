@@ -23,6 +23,7 @@
 - Busca é capability horizontal. `SearchService` não decide lifecycle; `BuscaPage` recebe de `searchProviderScope.ts` os buckets autorizados e os injeta no core. No corte atual, somente Business participa; ausência de buckets é fail-closed.
 - Em grupos territoriais, Mapa agrega `activeMemberIds` pelos rollout owners das layers ativas; não existe mais `mapa -> Business` hardcoded no `TerritorialLayout`.
 - Categoria de empresa não depende do lifecycle de uma vertical especializada. Uma escola pode aparecer em Empresas/Mapa/Perto de mim enquanto `education=false`.
+- Notificações históricas de módulos pausados podem permanecer na Inbox, mas suas ações internas são resolvidas por `notificationActionScope.ts` e caem em `/notificacoes` enquanto o owner estiver inativo.
 - Nenhum módulo pausado pode reaparecer por URL direta, navegação, preview, busca, mapa, Central ou Admin. No shell público, módulo `paused` não tem rota/fallback próprio; URL sem owner ativo cai no 404 canônico.
 
 ## Infraestrutura pública
@@ -34,7 +35,7 @@ Estas superfícies/capabilities suportam o domínio Business e **não são domí
 | `/`, `/:uf/:cidade[/:territorio]` | resolução e contexto territorial |
 | Auth / Conta | login, cadastro, sessão, privacidade e preferências |
 | Mensagens | Inbox/Chat horizontal; Business é o provider ativo |
-| Notificações | Inbox/preferências horizontais; eventos de verticais entram por contratos/adapters e não transferem ownership |
+| Notificações | Inbox/preferências horizontais; eventos de verticais entram por contracts/adapters; ações internas passam por lifecycle scope e não reabrem vertical pausada |
 | Institucional | `/como-funciona`, `/sobre`, termos, privacidade, DPO, contato/status; conteúdo deve refletir somente o lifecycle ativo e pode mencionar módulos pausados apenas como futuros/indisponíveis |
 | Admin/Central | operação interna, RBAC e gestão estritamente necessária; Admin deriva lifecycle por `adminSurfaceScope.ts`; Central ativa contém apenas Business/Empresas (`/central/empresas/*`) + infraestrutura, sem rotas/placeholders/queries de módulos pausados |
 

@@ -168,6 +168,14 @@ Não acoplar uma capability horizontal ao único domínio ativo do momento. Para
 4. deixar o lifecycle decidir se o provider participa;
 5. provar por teste que provider pausado não vaza por rota, query, prefetch, mapa, busca, Inbox ou notificação.
 
-Nearby e Messaging são os padrões de referência desse modelo. Notifications segue a mesma regra para publicação e destino de eventos.
+Nearby, Map, Search e Messaging são padrões de referência desse modelo. Notifications segue a mesma regra: publicação server-owned por brokers/outbox e destino de ação lifecycle-scoped no app.
 
 Boundaries territoriais de Nearby e Map: providerizados. Antes de habilitar um segundo provider/layer, registrar lifecycle + rollout owner; a cobertura de grupos é agregada por união dos membros cobertos. Não adicionar hardcode de domínio em `TerritorialLayout`.
+
+### Boundary da Inbox de Notificações
+
+- manter histórico de notificações mesmo quando uma vertical for pausada;
+- nunca usar a existência de uma notificação antiga como autorização para abrir rota inativa;
+- `notificationActionScope.ts` é a policy canônica de destino para ações da Inbox;
+- Push/service worker e Inbox devem convergir na mesma semântica fail-closed para verticais pausadas;
+- ao reativar uma vertical, não criar exceção no componente: o lifecycle existente deve liberar o destino.
