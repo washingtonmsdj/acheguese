@@ -87,7 +87,7 @@ function MvpMapHeader({
         {(providerLinks.length > 0 || nearbyHref) && (
           <nav
             className="flex shrink-0 flex-wrap gap-2"
-            aria-label="Superfícies relacionadas ao mapa"
+            aria-label="Módulos relacionados ao mapa"
           >
             {providerLinks.map((link) => (
               <Link
