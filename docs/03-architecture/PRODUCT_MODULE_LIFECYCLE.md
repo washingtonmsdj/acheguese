@@ -37,7 +37,7 @@ e outros domínios quando forem certificados.
 Dependências importantes:
 
 - `nearby -> map + location + business`;
-- `messaging -> auth + profiles + business`;
+- `messaging -> auth + profiles`; providers individuais continuam condicionados ao lifecycle de seus domínios;
 - Search só executa providers de domínios/capabilities habilitados;
 - Map só projeta layers de domínios habilitados.
 
@@ -45,7 +45,9 @@ No MVP, Messaging registra somente o provider **Business Direct Messaging**.
 
 ## Por que separar domínio de capability
 
-Não tratar Search, Messaging, Map ou Nearby como “módulos verticais”.
+Não tratar Search, Messaging, Notifications, Map ou Nearby como “módulos verticais”.
+
+A disponibilidade de uma capability horizontal não deve ser usada como proxy para o lifecycle de um provider. Pausar Gastronomy, Mobility ou Classifieds pausa seus adapters/produtores/providers, não a Inbox de Notificações, o mecanismo de Mensagens ou a infraestrutura comum.
 
 Exemplos:
 
@@ -110,7 +112,7 @@ Regras:
 
 ## Messaging
 
-Messaging é capability horizontal.
+Messaging é capability horizontal. Seu lifecycle depende de Auth + Profiles; a presença de Business, Classifieds ou Community é resolvida no registry de providers.
 
 No MVP:
 
@@ -120,6 +122,16 @@ No MVP:
 - Community e Classifieds mantêm agregados próprios, mas sem provider ativo;
 - compartilhar Inbox não obriga compartilhar tabela;
 - writes Business passam por RPCs server-owned, com RLS e realtime do agregado.
+
+## Notifications
+
+Notifications é capability horizontal ativa.
+
+- Inbox canônica: `/notificacoes`;
+- preferências canônicas: `/conta/notificacoes`;
+- eventos de sistema/conta e Business podem alimentar a mesma Inbox;
+- uma vertical pausada não pode executar seu produtor de notificações nem criar links para rotas pausadas;
+- ativar uma nova vertical adiciona seu produtor/adapter após certificação, sem reativar a capability base.
 
 ## Ativar um domínio
 

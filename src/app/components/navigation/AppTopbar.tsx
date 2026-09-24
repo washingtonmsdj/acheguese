@@ -1,6 +1,6 @@
 import { SidebarTrigger } from "@/shared/components/ui/sidebar";
 import { Link } from "react-router-dom";
-import { LogOut, MessageCircle } from "lucide-react";
+import { Bell, LogOut, MessageCircle } from "lucide-react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/shared/components/ui/avatar";
 import { Button } from "@/shared/components/ui/button";
 import { useSessionContext } from "@/core/session";
@@ -29,6 +29,7 @@ export function AppTopbar() {
   const { activeProfile, user } = useSessionContext();
   const appUrls = useAppUrls();
   const showMessages = isLaunchSurfaceEnabled("messaging");
+  const showNotifications = isLaunchSurfaceEnabled("notifications");
   const showBilling = isLaunchSurfaceEnabled("billing");
 
   const handleLogout = async () => {
@@ -49,6 +50,15 @@ export function AppTopbar() {
         <Link to="/sobre" className="hidden text-xs text-muted-foreground transition-colors hover:text-foreground sm:inline">
           Sobre
         </Link>
+        {showNotifications ? (
+          <Link
+            to={appUrls.notifications}
+            className="relative text-muted-foreground transition-colors hover:text-foreground"
+            aria-label="Notificações"
+          >
+            <Bell className="h-5 w-5" />
+          </Link>
+        ) : null}
         {showMessages ? (
           <Link to={appUrls.messages} className="relative text-muted-foreground transition-colors hover:text-foreground">
             <MessageCircle className="h-5 w-5" />

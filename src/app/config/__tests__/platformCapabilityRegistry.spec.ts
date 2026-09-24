@@ -18,6 +18,7 @@ describe("platformCapabilityRegistry", () => {
         "profiles",
         "territory",
         "location",
+        "notifications",
         "central",
         "map",
         "nearby",
@@ -27,9 +28,9 @@ describe("platformCapabilityRegistry", () => {
     );
 
     expect(isPlatformCapabilityEnabled("messaging")).toBe(true);
-    expect(isPlatformCapabilityEnabled("notifications")).toBe(false);
+    expect(isPlatformCapabilityEnabled("notifications")).toBe(true);
     expect(PLATFORM_CAPABILITY_REGISTRY.notifications).toEqual({
-      status: "paused",
+      status: "active",
       dependsOnCapabilities: ["auth"],
     });
   });
@@ -43,11 +44,10 @@ describe("platformCapabilityRegistry", () => {
     expect(isPlatformCapabilityEnabled("nearby")).toBe(true);
   });
 
-  it("keeps Messaging horizontal and gated by identity + Business", () => {
+  it("keeps Messaging horizontal while providers are gated separately", () => {
     expect(PLATFORM_CAPABILITY_REGISTRY.messaging).toEqual({
       status: "active",
       dependsOnCapabilities: ["auth", "profiles"],
-      dependsOnProductModules: ["business"],
     });
   });
 

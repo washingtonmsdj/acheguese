@@ -63,6 +63,7 @@ export function useProfileHub() {
     account,
     stats,
     operations,
+    notifications,
     roles,
     businessModules,
     loading,
@@ -265,6 +266,7 @@ export function useProfileHub() {
 
     stats,
     operations,
+    notifications,
     roles,
 
     businessModules,

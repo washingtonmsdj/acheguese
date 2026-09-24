@@ -39,6 +39,11 @@ const PREFETCHERS: Array<{
     load: () => import("@/app/pages/BuscaPage"),
     surface: "search",
   },
+  {
+    test: (path) => path.startsWith("/notificacoes"),
+    load: () => import("@/app/pages/NotificationsPage"),
+    surface: "notifications",
+  },
 ];
 
 const prefetchedPaths = new Set<string>();
@@ -52,6 +57,7 @@ const IDLE_WARMUP_ROUTES: Array<{
   { href: buildAppModulePath(APP_MODULE_SLUGS.map), surface: "map" },
   { href: buildAppModulePath(APP_MODULE_SLUGS.nearby), surface: "nearby" },
   { href: buildAppModulePath(APP_MODULE_SLUGS.search), surface: "search" },
+  { href: "/notificacoes", surface: "notifications" },
 ];
 
 export function getLaunchWarmupHrefs(): string[] {

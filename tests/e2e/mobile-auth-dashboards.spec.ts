@@ -78,6 +78,11 @@ const MOBILE_AUTH_ROUTES = [
     expectedUrlPattern: /\/conta\/preferencias#acessibilidade$/i,
   },
   {
+    name: "conta notificacoes",
+    path: "/conta/notificacoes",
+    expectedUrlPattern: /\/conta\/notificacoes(\?|$)/i,
+  },
+  {
     name: "conta privacidade",
     path: "/conta/privacidade",
     expectedUrlPattern: /\/conta\/privacidade(\?|$)/i,

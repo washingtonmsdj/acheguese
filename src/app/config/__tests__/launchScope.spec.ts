@@ -25,7 +25,7 @@ describe("launchScope", () => {
   it("keeps Business active as domain and the MVP platform capabilities active", () => {
     expect(getActiveProductModules()).toEqual(["business"]);
     expect(getActivePlatformCapabilities()).toEqual(
-      expect.arrayContaining(["profiles", "map", "nearby", "search", "messaging"]),
+      expect.arrayContaining(["profiles", "map", "nearby", "search", "messaging", "notifications"]),
     );
     expect(PLATFORM_CAPABILITY_REGISTRY.nearby).toEqual({
       status: "active",
@@ -43,6 +43,7 @@ describe("launchScope", () => {
       "nearby",
       "search",
       "messaging",
+      "notifications",
     ] as const) {
       expect(isLaunchSurfaceEnabled(enabled)).toBe(true);
     }
@@ -80,6 +81,7 @@ describe("launchScope", () => {
     expect(isLaunchNavItemEnabled("classifieds")).toBe(false);
     expect(isLaunchNavItemEnabled("community")).toBe(false);
     expect(isLaunchNavItemEnabled("messaging")).toBe(true);
+    expect(isLaunchNavItemEnabled("notifications")).toBe(true);
 
     expect(
       filterLaunchItems([

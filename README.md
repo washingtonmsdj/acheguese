@@ -4,7 +4,7 @@ Plataforma hiperlocal com arquitetura modular orientada a território.
 
 > **MVP atual (2026-09-21):** **Business/Empresas** é o domínio de produto ativo.
 >
-> **Capabilities horizontais ativas:** Mapa, Perto de mim, Busca, Mensagens (provider Business), Auth, Perfis/Conta, Território, Localização e Central.
+> **Capabilities horizontais ativas:** Mapa, Perto de mim, Busca, Mensagens (provider Business), Notificações, Auth, Perfis/Conta, Território, Localização e Central.
 >
 > Community, Classificados, Serviços, Gastronomia, Eventos, Educação, Mobilidade e demais domínios permanecem pausados até certificação individual.
 
@@ -39,10 +39,10 @@ As autoridades executáveis são:
 Estado do MVP:
 
 - domínio: `business: active`;
-- capabilities: `map`, `nearby`, `search`, `messaging`, Auth, Perfis/Conta, Território, Localização e Central ativas;
-- `notifications: paused`; core, migrations e owners permanecem preservados para pós-MVP, fora de rota, navegação, discovery, prefetch e warmup ativos;
-- `nearby` depende de Map + Location + Business;
-- `messaging` registra somente Business Direct Messaging;
+- capabilities: `map`, `nearby`, `search`, `messaging`, `notifications`, Auth, Perfis/Conta, Território, Localização e Central ativas;
+- `notifications` é capability global: Inbox, preferências, push e Admin não pertencem a uma vertical específica;
+- `nearby` ainda depende de Map + Location + Business porque o provider atual é Business-only; a futura federação deve ocorrer por registry próprio, não removendo essa dependência artificialmente;
+- `messaging` depende apenas de Auth + Profiles; o registry de providers habilita somente Business Direct Messaging no MVP;
 - demais domínios de produto: `paused`.
 
 Domínio pausado pode continuar versionado para evolução pós-MVP, mas não participa de rota funcional, prefetch/warmup, provider de Busca/Mensagens ou layer do Mapa.

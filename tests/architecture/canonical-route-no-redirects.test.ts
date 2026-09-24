@@ -13,7 +13,7 @@ describe("MVP canonical routing without compatibility redirects", () => {
 
     expect(routes).toContain('path="/conta"');
     expect(routes).toContain('path="/conta/editar/:profileId"');
-    expect(routes).not.toContain('path="/conta/notificacoes"');
+    expect(routes).toContain('path="/conta/notificacoes"');
 
     expect(routes).not.toContain('path="/perfil"');
     expect(routes).not.toContain('path="/perfil/');
@@ -43,7 +43,7 @@ describe("MVP canonical routing without compatibility redirects", () => {
     ).toBe(false);
   });
 
-  it("keeps paused notification surfaces out of the active route graph", () => {
+  it("keeps notification inbox and preferences horizontal and canonical", () => {
     const routes = read("src/app/routes/sections/AppLayoutRoutes.tsx");
     const activeLazyImports = read("src/app/routes/activeLazyImports.ts");
     const prefetch = read("src/app/routes/prefetch.ts");
@@ -53,34 +53,30 @@ describe("MVP canonical routing without compatibility redirects", () => {
     const businessDetail = read(
       "src/modules/business/company/pages/EmpresaDetailLayout.tsx",
     );
-    const profileHub = read("src/core/profiles/hooks/useProfileHub.ts");
+    const account = read("src/modules/profile/pages/ContaHubPage.tsx");
 
-    for (const pausedPath of [
-      'path="/notificacoes"',
-      'path="/conta/notificacoes"',
-      'path="/settings/email-logs"',
-    ]) {
-      expect(routes).not.toContain(pausedPath);
-    }
+    expect(routes).toContain('path="/notificacoes"');
+    expect(routes).toContain('path="/conta/notificacoes"');
+    expect(routes).not.toContain('path="/notifications"');
+    expect(routes).not.toContain('path="/settings/notifications"');
+    expect(routes).not.toContain('path="/settings/email-logs"');
 
-    expect(activeLazyImports).not.toContain("NotificationsPage");
-    expect(activeLazyImports).not.toContain("NotificationPreferencesPage");
+    expect(activeLazyImports).toContain("NotificationsPage");
+    expect(activeLazyImports).toContain("NotificationPreferencesPage");
     expect(activeLazyImports).not.toContain("EmailLogsPage");
-    expect(prefetch).not.toContain('path.startsWith("/notificacoes")');
-    expect(prefetch).not.toContain('{ href: "/notificacoes" }');
+    expect(prefetch).toContain('path.startsWith("/notificacoes")');
+    expect(prefetch).toContain('{ href: "/notificacoes", surface: "notifications" }');
 
     expect(serviceWorker).toContain("case 'message':");
     expect(serviceWorker).toContain("return '/mensagens';");
     expect(serviceWorker).toContain("case 'settings':");
-    expect(serviceWorker).toContain("return '/conta';");
-    expect(serviceWorker).not.toContain("fallback = '/notificacoes'");
+    expect(serviceWorker).toContain("return '/conta/notificacoes';");
+    expect(serviceWorker).toContain("fallback = '/notificacoes'");
 
-    for (const activeSurface of [appTopbar, centralHeader, businessDetail]) {
-      expect(activeSurface).not.toContain('to="/notificacoes"');
-      expect(activeSurface).not.toContain("appUrls.notifications");
-    }
-    expect(profileHub).not.toContain("appUrls.profile.notifications");
-    expect(profileHub).not.toContain("Triar notificações pendentes");
+    expect(appTopbar).toContain("appUrls.notifications");
+    expect(centralHeader).toContain('to="/notificacoes"');
+    expect(businessDetail).toContain('to="/notificacoes"');
+    expect(account).toContain("appUrls.profile.notifications");
   });
 
   it("does not preserve query-param redirects for retired account navigation", () => {

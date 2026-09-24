@@ -165,7 +165,7 @@ describe("Business Messaging MVP", () => {
     expect(platformRegistry).toContain('messaging: {');
     expect(platformRegistry).toContain('status: "active"');
     expect(platformRegistry).toContain(
-      'dependsOnProductModules: ["business"]',
+      'messaging: {\n    status: "active",\n    dependsOnCapabilities: ["auth", "profiles"],\n  }',
     );
 
     expect(providerRegistry).toContain("businessMessagingProvider");

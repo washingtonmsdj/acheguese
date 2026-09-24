@@ -1,6 +1,6 @@
 import { SidebarTrigger } from "@/shared/components/ui/sidebar";
 import { Link } from "react-router-dom";
-import { Home, LogOut } from "lucide-react";
+import { Bell, Home, LogOut } from "lucide-react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/shared/components/ui/avatar";
 import { Button } from "@/shared/components/ui/button";
 import { useSessionContext } from "@/core/session";
@@ -17,6 +17,7 @@ export function CentralHeader() {
   const { activeProfile, user } = useSessionContext();
   const publicHomeUrl = buildPublicAbsoluteUrl("/");
   const showBilling = isLaunchSurfaceEnabled("billing");
+  const showNotifications = isLaunchSurfaceEnabled("notifications");
 
   const handleLogout = async () => {
     await AuthService.signOut();
@@ -44,6 +45,15 @@ export function CentralHeader() {
         <Link to="/sobre" className="hidden text-xs text-muted-foreground transition-colors hover:text-foreground sm:inline">
           Sobre
         </Link>
+        {showNotifications ? (
+          <Link
+            to="/notificacoes"
+            className="relative text-muted-foreground transition-colors hover:text-foreground"
+            aria-label="Notificações"
+          >
+            <Bell className="h-5 w-5" />
+          </Link>
+        ) : null}
         <Link to="/conta">
           <Avatar className="h-8 w-8 border border-primary/30">
             <AvatarImage src={activeProfile?.avatarUrl || ""} />

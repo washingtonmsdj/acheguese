@@ -24,6 +24,7 @@ export type LaunchSurfaceKey =
   | "nearby"
   | "search"
   | "messaging"
+  | "notifications"
   | "education"
   | "jobs"
   | "events"
@@ -53,6 +54,7 @@ export const PUBLIC_LAUNCH_SURFACES: Record<LaunchSurfaceKey, boolean> = {
   nearby: isPlatformCapabilityEnabled("nearby"),
   search: isPlatformCapabilityEnabled("search"),
   messaging: isPlatformCapabilityEnabled("messaging"),
+  notifications: isPlatformCapabilityEnabled("notifications"),
   education: isProductModuleEnabled("education"),
   jobs: isProductModuleEnabled("jobs"),
   events: isProductModuleEnabled("events"),
@@ -87,6 +89,8 @@ const NAV_ITEM_SURFACES: Partial<Record<string, LaunchSurfaceKey>> = {
   messaging: "messaging",
   messages: "messaging",
   conversations: "messaging",
+  notifications: "notifications",
+  activity: "notifications",
 };
 
 const CLASSIFIED_CATEGORY_SURFACES: Partial<Record<string, LaunchSurfaceKey>> = {

@@ -9,9 +9,10 @@
  */
 
 import type { ReactNode } from 'react';
-import { ArrowLeft, Building2, Compass, Heart, Home, MapPin, Search, UserCircle2 } from 'lucide-react';
+import { ArrowLeft, Bell, Building2, Compass, Heart, Home, MapPin, Search, UserCircle2 } from 'lucide-react';
 import { Link, useNavigate } from 'react-router-dom';
 import { LAUNCH_URLS } from '@/core/routing/config/territory';
+import { isLaunchSurfaceEnabled } from '@/app/config/launchScope';
 
 interface EmpresaDetailLayoutProps {
   readonly children: ReactNode;
@@ -19,6 +20,7 @@ interface EmpresaDetailLayoutProps {
 
 export function EmpresaDetailLayout({ children }: EmpresaDetailLayoutProps) {
   const navigate = useNavigate();
+  const showNotifications = isLaunchSurfaceEnabled('notifications');
   const shellGutterClass = 'w-full px-4 sm:px-6 xl:px-[clamp(32px,2.4vw,52px)] 2xl:px-[clamp(40px,2.8vw,72px)]';
 
   return (
@@ -90,6 +92,15 @@ export function EmpresaDetailLayout({ children }: EmpresaDetailLayoutProps) {
             >
               <Heart className="h-[18px] w-[18px]" />
             </Link>
+            {showNotifications ? (
+              <Link
+                to="/notificacoes"
+                className="inline-flex h-11 w-11 items-center justify-center rounded-2xl border border-white/10 bg-white/[0.03] text-white/70 transition-colors hover:border-white/20 hover:bg-white/[0.05] hover:text-white"
+                aria-label="Notificações"
+              >
+                <Bell className="h-[18px] w-[18px]" />
+              </Link>
+            ) : null}
             <button
               type="button"
               onClick={() => navigate('/conta')}

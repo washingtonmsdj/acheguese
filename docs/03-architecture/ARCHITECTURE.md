@@ -52,8 +52,8 @@ Database -> Service -> Hook -> Component
 - `lifecycleRegistry.ts` resolve dependencias cruzadas sem transformar
   capability horizontal em dominio.
 - Nearby depende de Map + Location + Business.
-- Messaging depende de Auth + Profiles + Business e registra apenas o provider
-  Business no MVP.
+- Messaging depende de Auth + Profiles. O lifecycle da capability não depende
+  de Business; o registry de providers registra apenas Business no MVP.
 - Community e demais dominios pos-MVP continuam `paused` e fail-closed.
 - Regras completas: [PRODUCT_MODULE_LIFECYCLE.md](./PRODUCT_MODULE_LIFECYCLE.md).
 

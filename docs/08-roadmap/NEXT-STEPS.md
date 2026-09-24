@@ -12,12 +12,12 @@ Capabilities horizontais ativas no lançamento:
 2. **Perto de mim** (`nearby`);
 3. **Busca** (`search`);
 4. **Mensagens** (`messaging`, provider MVP = Business);
-5. Auth, Perfis/Conta, Território, Localização e Central.
+5. **Notificações** (`notifications`);
+6. Auth, Perfis/Conta, Território, Localização e Central.
 
-**Notificações (`notifications`) estão `paused` no corte atual.** Core, migrations e owners permanecem preservados para pós-MVP, mas não podem participar de rota, navegação, discovery, prefetch ou warmup ativos.
+`notifications` é infraestrutura compartilhada do produto, não uma vertical. Ela pode receber eventos de Business hoje e de novas verticais quando cada provider/produtor for certificado.
 
-`nearby` depende de Map + Location + Business. `messaging` depende de Auth +
-Perfis + Business e registra somente providers de domínios ativos.
+`nearby` depende de Map + Location + Business enquanto seu adapter público continuar Business-only. `messaging` depende somente de Auth + Perfis; o registry de providers registra apenas domínios ativos, hoje Business.
 
 Todos os demais módulos de produto permanecem **pausados e fail-closed** até certificação individual. Código preservado para pós-MVP não pode aparecer em navegação, rotas funcionais, prefetch, discovery, providers públicos ou layers do Mapa.
 

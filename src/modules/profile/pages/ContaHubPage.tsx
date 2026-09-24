@@ -1,6 +1,7 @@
 import { useEffect, type ReactNode } from "react";
 import { useNavigate } from "react-router-dom";
 import {
+  Bell,
   Building2,
   ChevronRight,
   CircleAlert,
@@ -181,6 +182,7 @@ function ContaHubLivePage() {
       }
       identity={data.identity}
       context={data.context}
+      notifications={data.notifications}
       onAvatarChange={data.handleAvatarChange}
     >
       <div className="grid gap-4 lg:grid-cols-[minmax(0,1.35fr)_minmax(18rem,0.65fr)] lg:items-start">
@@ -214,6 +216,17 @@ function ContaHubLivePage() {
               description="Endereço privado e contexto territorial autorizado."
               meta={data.territoryLabel || "Pendente"}
               onClick={() => navigate(data.appUrls.profile.addresses)}
+            />
+            <AccountAction
+              icon={Bell}
+              title="Notificações"
+              description="Avisos do Achegue-se, da sua conta e dos módulos habilitados."
+              meta={
+                data.notifications.unread > 0
+                  ? `${data.notifications.unread} não lidas`
+                  : "Em dia"
+              }
+              onClick={() => navigate(data.appUrls.profile.notifications)}
             />
             <AccountAction
               icon={MessageCircle}
