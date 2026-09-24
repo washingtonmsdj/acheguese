@@ -43,7 +43,6 @@ export function AppLayoutRoutes() {
 
   const profilesEnabled = isPlatformCapabilityEnabled("profiles");
   const accountEnabled = isPlatformCapabilityEnabled("account");
-  const notificationsEnabled = isPlatformCapabilityEnabled("notifications");
   const territoryEnabled = isPlatformCapabilityEnabled("territory");
   const mapEnabled = isPlatformCapabilityEnabled("map");
   const nearbyEnabled = isPlatformCapabilityEnabled("nearby");
@@ -53,19 +52,6 @@ export function AppLayoutRoutes() {
   return (
     <Routes>
       <Route element={<AppLayoutSidebar />}>
-        {notificationsEnabled ? (
-          <>
-            <Route
-              path="/notificacoes"
-              element={protectedElement(<P.NotificationsPage />)}
-            />
-            <Route
-              path="/settings/email-logs"
-              element={protectedElement(<P.EmailLogsPage />)}
-            />
-          </>
-        ) : null}
-
         {profilesEnabled ? (
           <Route path="/u/:username" element={<P.ProfilePublicRoute />} />
         ) : null}
@@ -75,10 +61,6 @@ export function AppLayoutRoutes() {
             <Route
               path="/conta/preferencias"
               element={protectedElement(<P.ContaPreferenciasPage />)}
-            />
-            <Route
-              path="/conta/notificacoes"
-              element={protectedElement(<P.NotificationPreferencesPage />)}
             />
             <Route
               path="/conta/privacidade"
