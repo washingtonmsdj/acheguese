@@ -37,33 +37,6 @@ const ROUTE_RULES: readonly NotificationActionRouteRule[] = [
   { pattern: /^\/central\/motoboy(?:\/|$)/i, surface: "mobility" },
   { pattern: /^\/central\/empresas(?:\/|$)/i, surface: "business" },
 
-  // Community embedded sub-surfaces precede the general Community owner.
-  {
-    pattern: /^\/comunidade(?:\/[^/]+)*\/alertas(?:\/|$)/i,
-    surface: "communityAlerts",
-  },
-  {
-    pattern: /^\/comunidade(?:\/[^/]+)*\/problemas(?:\/|$)/i,
-    surface: "communityIssues",
-  },
-  {
-    pattern:
-      /^\/comunidade(?:\/[^/]+)*\/(?:achados-perdidos|achados-e-perdidos)(?:\/|$)/i,
-    surface: "communityLostFound",
-  },
-  {
-    pattern: /^\/comunidade(?:\/[^/]+)*\/comunicacao(?:\/|$)/i,
-    surface: "communityCommunication",
-  },
-  {
-    pattern: /^\/comunidade(?:\/[^/]+)*\/eventos(?:\/|$)/i,
-    surface: "events",
-  },
-  {
-    pattern: /^\/comunidade(?:\/[^/]+)*\/(?:oportunidades|vagas)(?:\/|$)/i,
-    surface: "jobs",
-  },
-
   { pattern: /^\/empresas(?:\/|$)/i, surface: "business" },
   { pattern: /^\/comunidade(?:\/|$)/i, surface: "community" },
   { pattern: /^\/gastronomia(?:\/|$)/i, surface: "gastronomy" },
@@ -116,6 +89,37 @@ const ROUTE_RULES: readonly NotificationActionRouteRule[] = [
   { pattern: /^\/u(?:\/|$)/i, surface: "profiles" },
 ];
 
+const COMMUNITY_EMBEDDED_SURFACES: Readonly<
+  Partial<Record<string, LaunchSurfaceKey>>
+> = {
+  alertas: "communityAlerts",
+  problemas: "communityIssues",
+  "achados-perdidos": "communityLostFound",
+  "achados-e-perdidos": "communityLostFound",
+  comunicacao: "communityCommunication",
+  eventos: "events",
+  oportunidades: "jobs",
+  vagas: "jobs",
+};
+
+function getCommunityEmbeddedSurface(
+  pathname: string,
+): LaunchSurfaceKey | undefined {
+  const segments = pathname
+    .split("/")
+    .filter(Boolean)
+    .map((segment) => segment.toLocaleLowerCase("pt-BR"));
+
+  if (segments[0] !== "comunidade") return undefined;
+
+  for (const segment of segments.slice(1)) {
+    const surface = COMMUNITY_EMBEDDED_SURFACES[segment];
+    if (surface) return surface;
+  }
+
+  return undefined;
+}
+
 const RETIRED_NOTIFICATION_ROUTE_PATTERNS: readonly RegExp[] = [
   /^\/notifications(?:\/|$)/i,
   /^\/settings\/notifications(?:\/|$)/i,
@@ -155,6 +159,16 @@ export function resolveNotificationActionTarget(
       href: NOTIFICATION_INBOX_PATH,
       label: NOTIFICATION_FALLBACK_ACTION_LABEL,
       isFallback: true,
+    };
+  }
+
+  const communitySurface = getCommunityEmbeddedSurface(pathname);
+  if (communitySurface && !isLaunchSurfaceEnabled(communitySurface)) {
+    return {
+      href: NOTIFICATION_INBOX_PATH,
+      label: NOTIFICATION_FALLBACK_ACTION_LABEL,
+      isFallback: true,
+      surface: communitySurface,
     };
   }
 
