@@ -173,9 +173,8 @@ describe("public paused monetization boundary", () => {
     expect(businessShell).not.toContain("isLaunchSurfaceEnabled");
     expect(businessOverview).not.toContain("isLaunchSurfaceEnabled");
     expect(businessHub).toContain(
-      'const showBilling = isProductModuleEnabled("billing")',
+      'const showBilling = isLaunchSurfaceEnabled("billing")',
     );
-    expect(businessHub).not.toContain("isLaunchSurfaceEnabled");
     expect(businessHub).toContain("{showBilling ? (");
     expect(appTopbar).toContain(
       'const showBilling = isProductModuleEnabled("billing")',
@@ -183,14 +182,12 @@ describe("public paused monetization boundary", () => {
     expect(appTopbar).not.toContain("isLaunchSurfaceEnabled");
     expect(appTopbar).toContain("{showBilling ? (");
     expect(centralHeader).toContain(
-      'const showBilling = isProductModuleEnabled("billing")',
+      'const showBilling = isLaunchSurfaceEnabled("billing")',
     );
-    expect(centralHeader).not.toContain("isLaunchSurfaceEnabled");
     expect(centralHeader).toContain("{showBilling ? (");
     expect(premiumSite).toContain(
-      'const showBilling = isProductModuleEnabled("billing")',
+      'const showBilling = isLaunchSurfaceEnabled("billing")',
     );
-    expect(premiumSite).not.toContain("isLaunchSurfaceEnabled");
   });
 
   it("preserves already-granted premium capabilities without exposing a purchase path", () => {
