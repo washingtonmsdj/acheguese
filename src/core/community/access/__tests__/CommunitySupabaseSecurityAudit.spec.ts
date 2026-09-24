@@ -252,15 +252,9 @@ describe("community supabase security audit", () => {
     expect(architecture).toContain("CommunityEntityLinkRepository.ts");
   });
 
-  it("wires community entity links into public discovery without bypassing the SSOT", () => {
+  it("keeps preserved Community discovery on the entity-link SSOT while the public module is paused", () => {
     const landingFeatured = readProjectFile(
       "src/core/landing/services/LandingFeaturedService.ts",
-    );
-    const landingHook = readProjectFile(
-      "src/core/landing/hooks/useLandingFeatured.ts",
-    );
-    const territorialLanding = readProjectFile(
-      "src/core/routing/components/TerritorialLandingPage.tsx",
     );
     const communityOverview = readProjectFile(
       "src/core/community-feed/components/CommunityOverviewSurface.tsx",
@@ -278,14 +272,6 @@ describe("community supabase security audit", () => {
     expect(landingFeatured).toContain("getCommunityFeaturedClassifieds");
     expect(landingFeatured).toContain("getGastronomyBusinessesByIds");
     expect(landingFeatured).toContain("orderGastronomyByLinkedBusinessIds");
-    expect(landingHook).toContain("communityId");
-    expect(landingHook).toContain("getCommunityFeaturedBusinesses");
-    expect(landingHook).toContain("getCommunityFeaturedGastronomyBusinesses");
-    expect(territorialLanding).toContain("useCommunityProfile");
-    expect(territorialLanding).toContain("isPersistedCommunityId");
-    expect(territorialLanding).toContain("useLandingFeatured(filter, {");
-    expect(territorialLanding).toContain("gastronomy.length > 0");
-    expect(territorialLanding).not.toContain(".filter(b => ['restaurante'");
     expect(communityOverview).toContain("getCommunityFeaturedBusinesses");
     expect(communityOverview).not.toContain("BusinessService.getBusinessesList");
     expect(communityPage).toContain("linkedCommunityId");
