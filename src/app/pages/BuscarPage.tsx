@@ -1,5 +1,6 @@
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useParams, useSearchParams } from "react-router-dom";
+import { getActiveAISearchIntentTypes } from "@/app/config/aiSearchIntentScope";
 import { AISearchBox, AISearchResults, useAISearch } from "@/core/ai";
 import { useModuleTerritoryFilter } from "@/core/location/hooks/useModuleTerritoryFilter";
 import { useUserTerritory } from "@/core/location/hooks/useUserTerritory";
@@ -17,7 +18,13 @@ export default function BuscarPage() {
     routeResolved: territoryResolution.resolved,
   });
   const userTerritory = useUserTerritory();
-  const { result, loading, error, search } = useAISearch();
+  const activeAISearchIntentTypes = useMemo(
+    () => getActiveAISearchIntentTypes(),
+    [],
+  );
+  const { result, loading, error, search } = useAISearch({
+    allowedIntentTypes: activeAISearchIntentTypes,
+  });
   const [searchError, setSearchError] = useState<string | null>(null);
   const [appliedTerritoryLabel, setAppliedTerritoryLabel] = useState<string>(
     moduleTerritory.displayLabel,
