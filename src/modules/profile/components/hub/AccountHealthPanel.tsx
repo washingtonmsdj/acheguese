@@ -10,7 +10,7 @@ import { getProfileTypeLabel } from "@/core/profiles/utils/profileDomainRules";
 
 import type { MultiProfileRecord } from "@/core/profiles/services/multi-profile/types";
 import type { ProfileAccountSnapshot } from "@/core/profiles/views/ProfileAccountSnapshot";
-import type { Context, Identity } from "@/modules/profile/sections/types";
+import type { Context, Identity } from "@/modules/profile/types/account";
 
 type EffectivePermission = {
   key: string;
