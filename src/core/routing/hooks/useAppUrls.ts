@@ -27,6 +27,7 @@ import { buildGroupBaseUrl, buildModuleTerritoryUrl, geoPathToPublicUrl, MODULE_
 import { ACCOUNT_PATHS } from '@/core/routing/config/account';
 import { jobPublicRoutes } from '@/core/work-opportunities/routes/jobPublicRoutes';
 import { LAUNCH_URLS } from '@/core/routing/config/territory';
+import { messagingRoutes } from '@/core/messaging';
 import { classifiedUrlService, type ClassifiedUrlContext } from '@/core/classifieds/services';
 
 export interface AppUrls {
@@ -233,7 +234,7 @@ export function useAppUrls(routeResolved?: ResolvedTerritory | null): AppUrls {
     // Globais
     home: '/',
     settings: ACCOUNT_PATHS.preferences,
-    messages: '/mensagens',
+    messages: messagingRoutes.inbox(),
     chat: (conversationId: string) => `/chat/${conversationId}`,
     map: `/mapa${cityBase}`,
     ranking: '/ranking',

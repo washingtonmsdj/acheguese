@@ -4,6 +4,7 @@ import { describe, expect, it } from "vitest";
 const read = (path: string) => readFileSync(path, "utf8");
 
 const appLayout = read("src/app/routes/sections/AppLayoutRoutes.tsx");
+const messagingRoutes = read("src/core/messaging/routes/messagingRoutes.ts");
 const routeRegistry = read(
   "src/app/routes/sections/AppLayoutRouteRegistry.tsx",
 );
@@ -82,7 +83,9 @@ describe("active AppLayout route boundary", () => {
     expect(appLayout).toContain('path="/mapa"');
     expect(appLayout).toContain('path="/perto-de-mim"');
     expect(appLayout).toContain('path="/busca"');
-    expect(appLayout).toContain('path="/mensagens"');
+    expect(appLayout).toContain("messagingRoutes.inbox()");
+    expect(appLayout).toContain("messagingRoutes.threadPattern()");
+    expect(messagingRoutes).toContain('inbox: () => "/mensagens"');
   });
 
   it("keeps prefetch and idle warmup active-surface only", () => {

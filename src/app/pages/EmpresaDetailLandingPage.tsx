@@ -10,7 +10,7 @@ import BranchNetworkBlock from "@/core/business/components/BranchNetworkBlock";
 import { BusinessService } from "@/core/business/services/BusinessService";
 import { BusinessUrlService } from "@/core/business/services/BusinessUrlService";
 import { BusinessHoursService } from "@/core/business";
-import { businessDirectMessagingService } from "@/core/messaging";
+import { openBusinessDirectConversation } from "@/core/messaging";
 import { buildLoginPath } from "@/core/auth/constants/authFlow";
 import { useSessionContext } from "@/core/session/hooks/useSessionContext";
 import { isPlatformCapabilityEnabled } from "@/app/config/lifecycleRegistry";
@@ -420,11 +420,11 @@ export default function EmpresaDetailLandingPage(
 
     setMessageLoading(true);
     try {
-      const threadId = await businessDirectMessagingService.createOrGetThread({
+      const threadPath = await openBusinessDirectConversation({
         profileId: activeProfile.id,
         businessId: institutionalBusinessDataId,
       });
-      navigate(`/mensagens/business/${threadId}`);
+      navigate(threadPath);
     } catch {
       toast.error("Não foi possível iniciar a conversa.");
     } finally {

@@ -63,3 +63,11 @@ export type {
   MessagingSendInput,
   MessagingThreadCursor,
 } from "./inboxTypes";
+
+export { messagingRoutes } from "./routes/messagingRoutes";
+export {
+  openBusinessDirectConversation,
+} from "./services/openBusinessDirectConversation";
+export type {
+  OpenBusinessDirectConversationInput,
+} from "./services/openBusinessDirectConversation";
