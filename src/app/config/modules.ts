@@ -21,7 +21,10 @@ import {
   GraduationCap,
 } from 'lucide-react';
 import { APP_MODULE_SLUGS } from '@/shared/config/moduleSlugs';
-import { isLaunchSurfaceEnabled } from './launchScope';
+import {
+  isPlatformCapabilityEnabled,
+  isProductModuleEnabled,
+} from './lifecycleRegistry';
 
 export interface ModuleConfig {
   /** Identificador único do módulo */
@@ -54,7 +57,7 @@ export interface ModuleConfig {
 
 /**
  * Catálogo centralizado de metadados dos módulos.
- * O status efetivo sempre é derivado do registry de produto via launchScope.
+ * O status efetivo é derivado diretamente dos registries canônicos de lifecycle.
  */
 export const MODULES: Record<string, ModuleConfig> = {
   communityFeed: {
@@ -65,7 +68,7 @@ export const MODULES: Record<string, ModuleConfig> = {
     contextMessage: 'Comunidade de',
     color: 'hsl(var(--primary))',
     isTerritorial: true,
-    isActive: isLaunchSurfaceEnabled('community'),
+    isActive: isProductModuleEnabled('community'),
     order: 1,
   },
 
@@ -77,7 +80,7 @@ export const MODULES: Record<string, ModuleConfig> = {
     contextMessage: 'Alertas de',
     color: 'hsl(var(--primary))',
     isTerritorial: true,
-    isActive: isLaunchSurfaceEnabled('communityAlerts'),
+    isActive: isProductModuleEnabled('communityAlerts'),
     order: 2,
   },
 
@@ -89,7 +92,7 @@ export const MODULES: Record<string, ModuleConfig> = {
     contextMessage: 'Problemas de',
     color: 'hsl(var(--primary))',
     isTerritorial: true,
-    isActive: isLaunchSurfaceEnabled('communityIssues'),
+    isActive: isProductModuleEnabled('communityIssues'),
     order: 3,
   },
 
@@ -101,7 +104,7 @@ export const MODULES: Record<string, ModuleConfig> = {
     contextMessage: 'Grupos de',
     color: 'hsl(var(--primary))',
     isTerritorial: true,
-    isActive: isLaunchSurfaceEnabled('community'),
+    isActive: isProductModuleEnabled('community'),
     order: 4,
   },
 
@@ -113,7 +116,7 @@ export const MODULES: Record<string, ModuleConfig> = {
     contextMessage: 'Recomendações de',
     color: 'hsl(var(--primary))',
     isTerritorial: true,
-    isActive: isLaunchSurfaceEnabled('community'),
+    isActive: isProductModuleEnabled('community'),
     order: 5,
   },
 
@@ -125,7 +128,7 @@ export const MODULES: Record<string, ModuleConfig> = {
     contextMessage: 'Achados e perdidos de',
     color: 'hsl(var(--primary))',
     isTerritorial: true,
-    isActive: isLaunchSurfaceEnabled('communityLostFound'),
+    isActive: isProductModuleEnabled('communityLostFound'),
     order: 6,
   },
   
@@ -137,7 +140,7 @@ export const MODULES: Record<string, ModuleConfig> = {
     contextMessage: 'Exibindo empresas de',
     color: 'hsl(var(--primary))',
     isTerritorial: true,
-    isActive: isLaunchSurfaceEnabled('business'),
+    isActive: isProductModuleEnabled('business'),
     order: 7,
   },
   
@@ -149,7 +152,7 @@ export const MODULES: Record<string, ModuleConfig> = {
     contextMessage: 'Exibindo serviços de',
     color: 'hsl(var(--primary))',
     isTerritorial: true,
-    isActive: isLaunchSurfaceEnabled('services'),
+    isActive: isProductModuleEnabled('services'),
     order: 8,
   },
   
@@ -161,7 +164,7 @@ export const MODULES: Record<string, ModuleConfig> = {
     contextMessage: 'Exibindo anúncios de',
     color: 'hsl(var(--primary))',
     isTerritorial: true,
-    isActive: isLaunchSurfaceEnabled('classifieds'),
+    isActive: isProductModuleEnabled('classifieds'),
     order: 9,
   },
   
@@ -173,7 +176,7 @@ export const MODULES: Record<string, ModuleConfig> = {
     contextMessage: 'Exibindo eventos de',
     color: 'hsl(var(--primary))',
     isTerritorial: true,
-    isActive: isLaunchSurfaceEnabled('events'),
+    isActive: isProductModuleEnabled('events'),
     order: 10,
   },
   
@@ -185,7 +188,7 @@ export const MODULES: Record<string, ModuleConfig> = {
     contextMessage: 'Exibindo vagas de',
     color: 'hsl(var(--primary))',
     isTerritorial: true,
-    isActive: isLaunchSurfaceEnabled('jobs'),
+    isActive: isProductModuleEnabled('jobs'),
     order: 11,
   },
   
@@ -197,7 +200,7 @@ export const MODULES: Record<string, ModuleConfig> = {
     contextMessage: 'Gastronomia de',
     color: 'hsl(var(--primary))',
     isTerritorial: true,
-    isActive: isLaunchSurfaceEnabled('gastronomy'),
+    isActive: isProductModuleEnabled('gastronomy'),
     order: 12,
   },
   
@@ -209,7 +212,7 @@ export const MODULES: Record<string, ModuleConfig> = {
     contextMessage: 'Pontos turísticos de',
     color: 'hsl(var(--primary))',
     isTerritorial: true,
-    isActive: isLaunchSurfaceEnabled('touristPoints'),
+    isActive: isProductModuleEnabled('touristPoints'),
     order: 18,
   },
   
@@ -221,7 +224,7 @@ export const MODULES: Record<string, ModuleConfig> = {
     contextMessage: 'Mobilidade em',
     color: 'hsl(var(--primary))',
     isTerritorial: true,
-    isActive: isLaunchSurfaceEnabled('mobility'),
+    isActive: isProductModuleEnabled('mobility'),
     order: 14,
   },
 
@@ -233,7 +236,7 @@ export const MODULES: Record<string, ModuleConfig> = {
     contextMessage: 'Educação em',
     color: 'hsl(var(--primary))',
     isTerritorial: true,
-    isActive: isLaunchSurfaceEnabled('education'),
+    isActive: isProductModuleEnabled('education'),
     order: 15,
   },
 
@@ -245,7 +248,7 @@ export const MODULES: Record<string, ModuleConfig> = {
     contextMessage: 'Mapa de',
     color: 'hsl(var(--primary))',
     isTerritorial: true,
-    isActive: isLaunchSurfaceEnabled('map'),
+    isActive: isPlatformCapabilityEnabled('map'),
     order: 16,
   },
 
@@ -257,7 +260,7 @@ export const MODULES: Record<string, ModuleConfig> = {
     contextMessage: 'Perto de',
     color: 'hsl(var(--primary))',
     isTerritorial: true,
-    isActive: isLaunchSurfaceEnabled('nearby'),
+    isActive: isPlatformCapabilityEnabled('nearby'),
     order: 17,
   },
 
@@ -269,7 +272,7 @@ export const MODULES: Record<string, ModuleConfig> = {
     contextMessage: 'Buscar em',
     color: 'hsl(var(--primary))',
     isTerritorial: true,
-    isActive: isLaunchSurfaceEnabled('search'),
+    isActive: isPlatformCapabilityEnabled('search'),
     order: 18,
   },
 
@@ -281,7 +284,7 @@ export const MODULES: Record<string, ModuleConfig> = {
     contextMessage: 'Ranking de',
     color: 'hsl(var(--primary))',
     isTerritorial: true,
-    isActive: isLaunchSurfaceEnabled('gamification'),
+    isActive: isProductModuleEnabled('gamification'),
     order: 13,
   },
 } as const;
