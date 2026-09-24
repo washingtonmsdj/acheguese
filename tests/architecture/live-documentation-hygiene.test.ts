@@ -1,4 +1,4 @@
-import { existsSync, readFileSync } from "node:fs";
+import { existsSync, readFileSync, readdirSync } from "node:fs";
 import { describe, expect, it } from "vitest";
 
 describe("live documentation hygiene", () => {
@@ -31,6 +31,53 @@ describe("live documentation hygiene", () => {
     );
     expect(readme).toContain("docs/08-roadmap/EXECUCAO_MAIN_ONLY.md");
     expect(readme).not.toContain("PRODUCTION_AUDIT.md");
+  });
+
+  it("keeps live roadmap docs free of stale commit snapshots", () => {
+    const execution = readFileSync(
+      "docs/08-roadmap/EXECUCAO_MAIN_ONLY.md",
+      "utf8",
+    );
+    const nextSteps = readFileSync(
+      "docs/08-roadmap/NEXT-STEPS.md",
+      "utf8",
+    );
+    const docsIndex = readFileSync("docs/README.md", "utf8");
+
+    for (const content of [execution, nextSteps]) {
+      expect(content).not.toMatch(/\b[0-9a-f]{40}\b/i);
+      expect(content).not.toContain("A `main` atual é");
+      expect(content).not.toContain("PRs #");
+    }
+
+    expect(
+      existsSync("URGENTE_LEIA_PRIMEIRO_REORGANIZACAO_GLOBAL.md"),
+    ).toBe(false);
+    expect(docsIndex).not.toContain(
+      "URGENTE_LEIA_PRIMEIRO_REORGANIZACAO_GLOBAL.md",
+    );
+  });
+
+  it("keeps dated G5 checkpoints out of live architecture docs", () => {
+    const liveArchitectureFiles = readdirSync("docs/03-architecture");
+    expect(
+      liveArchitectureFiles.filter((name) => /^G5_.*2026-/.test(name)),
+    ).toEqual([]);
+  });
+
+  it("keeps Business validation as a live contract instead of a release snapshot", () => {
+    const validation = readFileSync(
+      "src/modules/business/VALIDATION.md",
+      "utf8",
+    );
+
+    expect(validation).not.toMatch(/\b[0-9a-f]{40}\b/i);
+    expect(validation).not.toContain("Checkpoint tecnico");
+    expect(validation).not.toContain("G6 EM CERTIFICACAO");
+    expect(validation).toContain("contrato vivo do domínio Business");
+    expect(validation).toContain(
+      "docs/10-archive/architecture-checkpoints/G5_CLOSURE_G6_CONTINUATION_2026-09-04.md",
+    );
   });
 
   it("keeps active source comments descriptive instead of migration logs", () => {
