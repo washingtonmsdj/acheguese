@@ -9,6 +9,7 @@ describe("MVP core module boundary", () => {
   const registry = read("src/app/config/productModuleRegistry.ts");
   const platformRegistry = read("src/app/config/platformCapabilityRegistry.ts");
   const nearbyProviderScope = read("src/app/config/nearbyProviderScope.ts");
+  const searchProviderScope = read("src/app/config/searchProviderScope.ts");
   const nearbyRouteWrapper = read("src/app/pages/NearbyPage.tsx");
   const mapLayerProviderScope = read("src/app/config/mapLayerProviderScope.ts");
   const mapRouteWrapper = read("src/app/pages/MapaPage.tsx");
@@ -89,6 +90,9 @@ describe("MVP core module boundary", () => {
     expect(nearbyProviderScope).toContain('isPlatformCapabilityEnabled("nearby")');
     expect(nearbyProviderScope).toContain("isProductModuleEnabled(productModule)");
     expect(nearbyRouteWrapper).toContain("getActiveNearbyProviderIds()");
+    expect(searchProviderScope).toContain('isPlatformCapabilityEnabled("search")');
+    expect(searchProviderScope).toContain("isProductModuleEnabled(productModule)");
+    expect(searchProviderScope).toContain('businesses: "business"');
     expect(mapLayerProviderScope).toContain('isPlatformCapabilityEnabled("map")');
     expect(mapLayerProviderScope).toContain("isProductModuleEnabled(productModule)");
     expect(mapRouteWrapper).toContain("getActiveMapLayerProviderIds()");
@@ -250,6 +254,21 @@ describe("MVP core module boundary", () => {
     expect(businessSectionTypes).not.toContain("RatingDistributionProps");
     expect(businessIndex).not.toContain("hasGastronomyProfile");
     expect(businessIndex).not.toContain("gastronomy.queries");
+  });
+
+  it("keeps Search horizontal while domain providers are lifecycle-scoped in app", () => {
+    const searchProviders = read("src/core/search/providers/searchProviders.ts");
+    const searchService = read("src/core/search/services/SearchService.ts");
+    const searchHook = read("src/core/search/hooks/useGlobalSearch.ts");
+    const searchPage = read("src/app/pages/BuscaPage.tsx");
+
+    expect(searchProviders).not.toContain("@/app/config");
+    expect(searchProviders).not.toContain("isLaunchSurfaceEnabled");
+    expect(searchProviders).toContain("SEARCH_PROVIDER_BUCKET_ORDER");
+    expect(searchService).toContain("options.providerBuckets ?? []");
+    expect(searchHook).toContain("providerBuckets");
+    expect(searchPage).toContain("getActiveSearchProviderBuckets()");
+    expect(searchPage).toContain("providerBuckets: activeSearchProviderBuckets");
   });
 
   it("keeps Map horizontal while Business is a lifecycle-scoped layer provider", () => {

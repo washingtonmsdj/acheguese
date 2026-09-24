@@ -9,6 +9,7 @@ const read = (path: string) => readFileSync(resolve(root, path), "utf8");
 
 const launchScope = read("src/app/config/launchScope.ts");
 const nearbyProviderScope = read("src/app/config/nearbyProviderScope.ts");
+const searchProviderScope = read("src/app/config/searchProviderScope.ts");
 const launchE2e = read("tests/e2e/launch-scope-public.spec.ts");
 const appRoutes = read("src/app/routes/sections/AppLayoutRoutes.tsx");
 const searchProviders = read("src/core/search/providers/searchProviders.ts");
@@ -68,23 +69,28 @@ describe("MVP launch-scope alignment", () => {
     expect(appRoutes).not.toContain("LaunchPausedPage");
   });
 
-  it("limits global search providers to launch-enabled domains", () => {
-    expect(searchProviders).toContain(
-      'bucket: "professionals",\n  linkedEntityTypes: ["professional"],\n  isEnabled: () => isLaunchSurfaceEnabled("services")',
+  it("limits global search providers through the app lifecycle scope", () => {
+    expect(searchProviders).not.toContain("@/app/config/launchScope");
+    expect(searchProviders).not.toContain("isLaunchSurfaceEnabled");
+    expect(searchProviders).toContain("SEARCH_PROVIDER_BUCKET_ORDER");
+    expect(searchProviderScope).toContain(
+      'isPlatformCapabilityEnabled("search")',
     );
-    expect(searchProviders).toContain(
-      'bucket: "opportunities",\n  linkedEntityTypes: [],\n  isEnabled: () => isLaunchSurfaceEnabled("jobs")',
+    expect(searchProviderScope).toContain(
+      "isProductModuleEnabled(productModule)",
     );
-    expect(searchProviders).toContain(
-      'bucket: "events",\n  linkedEntityTypes: ["event"],\n  isEnabled: () => isLaunchSurfaceEnabled("events")',
-    );
-    expect(searchProviders).toContain(
-      'bucket: "businesses",\n  linkedEntityTypes: ["business"],\n  isEnabled: () => isLaunchSurfaceEnabled("business")',
-    );
+    expect(searchProviderScope).toContain('businesses: "business"');
+    expect(searchProviderScope).toContain('professionals: "services"');
+    expect(searchProviderScope).toContain('opportunities: "jobs"');
+    expect(searchProviderScope).toContain('events: "events"');
+    expect(searchProviderScope).toContain('posts: "community"');
 
-    expect(searchPage).toContain('launchSurface: "community"');
-    expect(searchPage).toContain('launchSurface: "services"');
-    expect(searchPage).toContain('launchSurface: "classifieds"');
+    expect(searchPage).toContain("getActiveSearchProviderBuckets()");
+    expect(searchPage).toContain(
+      "providerBuckets: activeSearchProviderBuckets",
+    );
+    expect(searchPage).toContain('providerBucket: "businesses"');
+    expect(searchPage).toContain('providerBucket: "professionals"');
     expect(searchPage).toContain('surface: "services"');
     expect(searchPage).toContain('surface: "classifieds"');
   });

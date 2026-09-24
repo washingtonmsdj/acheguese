@@ -7,6 +7,7 @@ describe("MVP Business discovery launch boundary", () => {
   const launchScope = read("src/app/config/launchScope.ts");
   const businessQueries = read("src/core/business/services/business.queries.ts");
   const searchProviders = read("src/core/search/providers/searchProviders.ts");
+  const searchProviderScope = read("src/app/config/searchProviderScope.ts");
   const landing = read("src/core/landing/services/LandingFeaturedService.ts");
   const map = read("src/core/maps/services/MapBusinessLayerRuntimeService.ts");
   const businessMap = read("src/core/business/services/BusinessMapQueryService.ts");
@@ -24,6 +25,8 @@ describe("MVP Business discovery launch boundary", () => {
 
   it("keeps canonical Business discovery independent from vertical lifecycle", () => {
     expect(searchProviders).toContain("BusinessService.getBusinessesList");
+    expect(searchProviders).toContain('await import("@/core/business")');
+    expect(searchProviderScope).toContain('businesses: "business"');
     expect(businessQueries).toContain('.from("public_business_search")');
     expect(businessQueries).toContain("query = query.range(");
     expect(landing).toContain('isLaunchSurfaceEnabled("education")');

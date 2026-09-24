@@ -30,12 +30,16 @@ describe("Federated Search ownership", () => {
     expect(providers).not.toContain("public_professional_search");
   });
 
-  it("keeps paused domain runtimes lazy behind launch-enabled providers", () => {
+  it("keeps domain runtimes lazy behind caller-authorized providers", () => {
     const providers = read("src/core/search/providers/searchProviders.ts");
+    const scope = read("src/app/config/searchProviderScope.ts");
 
-    expect(providers).toContain(
+    expect(providers).not.toContain("@/app/config");
+    expect(providers).not.toContain("isLaunchSurfaceEnabled");
+    expect(providers).not.toContain(
       'import { BusinessService } from "@/core/business";',
     );
+    expect(providers).toContain('await import("@/core/business")');
 
     for (const forbiddenStaticImport of [
       'import { ClassifiedUrlService',
@@ -64,12 +68,14 @@ describe("Federated Search ownership", () => {
     }
 
     expect(providers).toContain("await import(");
-    expect(providers).toContain('isEnabled: () => isLaunchSurfaceEnabled("business")');
-    expect(providers).toContain('isEnabled: () => isLaunchSurfaceEnabled("services")');
-    expect(providers).toContain('isEnabled: () => isLaunchSurfaceEnabled("classifieds")');
-    expect(providers).toContain('isEnabled: () => isLaunchSurfaceEnabled("events")');
-    expect(providers).toContain('isEnabled: () => isLaunchSurfaceEnabled("jobs")');
-    expect(providers).toContain('isEnabled: () => isLaunchSurfaceEnabled("community")');
+    expect(providers).toContain("SEARCH_PROVIDER_BUCKET_ORDER");
+    expect(providers).toContain("authorizedBuckets.has(provider.bucket)");
+    expect(scope).toContain('isPlatformCapabilityEnabled("search")');
+    expect(scope).toContain("isProductModuleEnabled(productModule)");
+    expect(scope).toContain('businesses: "business"');
+    expect(scope).toContain('professionals: "services"');
+    expect(scope).toContain('events: "events"');
+    expect(scope).toContain('posts: "community"');
   });
 
   it("keeps domain read models owned by Business and Professional", () => {
@@ -141,7 +147,7 @@ describe("Federated Search ownership", () => {
     expect(config).toContain("COMMUNITY_CANDIDATE_MULTIPLIER: 5");
     expect(config).toContain("COMMUNITY_LINK_MULTIPLIER: 5");
     expect(hook).toContain("queryFn: ({ signal })");
-    expect(hook).toContain("{ signal }");
+    expect(hook).toContain("providerBuckets");
     expect(service).toContain("throwIfAborted(options.signal)");
     expect(service).toContain('trackPerformance("search.federated.duration"');
   });
