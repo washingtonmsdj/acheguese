@@ -16,7 +16,7 @@ import { Badge } from "@/shared/components/ui/badge";
 import { SectionFrame } from "./SectionFrame";
 import { EmptyPanel } from "./EmptyPanel";
 import { businessManagementRoutes } from "@/core/business/utils/businessManagementRoutes";
-import { isLaunchSurfaceEnabled } from "@/app/config/launchScope";
+import { isProductModuleEnabled } from "@/app/config/lifecycleRegistry";
 
 import type { ProfileBusinessModuleSnapshot } from "@/core/profiles/services/ProfileBusinessTypes";
 
@@ -54,7 +54,7 @@ export function BusinessModulesSection({
   onNavigate,
   onCopy,
 }: BusinessModulesSectionProps) {
-  const showBilling = isLaunchSurfaceEnabled("billing");
+  const showBilling = isProductModuleEnabled("billing");
   const businessSummary = {
     premium: businessModules.filter((item) => item.isPremium).length,
     gastronomy: businessModules.filter((item) => item.gastronomy.active).length,
@@ -142,9 +142,9 @@ function BusinessModuleCard({
   onNavigate: (url: string) => void;
   onCopy: (url: string, label: string) => void;
 }) {
-  const showMobility = isLaunchSurfaceEnabled("mobility");
-  const showPublicAnalytics = isLaunchSurfaceEnabled("publicAnalytics");
-  const showBilling = isLaunchSurfaceEnabled("billing");
+  const showMobility = isProductModuleEnabled("mobility");
+  const showPublicAnalytics = isProductModuleEnabled("publicAnalytics");
+  const showBilling = isProductModuleEnabled("billing");
   const hasPremiumLink =
     business.subscription.canUseShortPremiumLink && Boolean(business.shareUrl);
 
