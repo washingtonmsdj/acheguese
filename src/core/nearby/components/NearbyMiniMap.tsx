@@ -1,5 +1,6 @@
 import { useMemo, useRef } from "react";
 import { MapPin } from "lucide-react";
+import { useNavigate } from "react-router-dom";
 import { mapEntityProjection } from "@/core/maps";
 import { MapLibreAdapter } from "@/core/maps/components/v3/MapLibreAdapter";
 import { MAP_DEFAULT_COORDINATES } from "@/core/maps/config/defaultCoordinates";
@@ -24,6 +25,7 @@ export function NearbyMiniMap({
   className = "",
 }: NearbyMiniMapProps) {
   const adapterRef = useRef(null);
+  const navigate = useNavigate();
 
   const markers = useMemo<MapMarker[]>(() => {
     return businesses
@@ -52,6 +54,13 @@ export function NearbyMiniMap({
       )
       .filter((marker): marker is MapMarker => marker !== null);
   }, [businesses, showProximity]);
+
+  const handleMarkerClick = (businessId: string) => {
+    const business = businesses.find((item) => item.id === businessId);
+    if (business) {
+      navigate(business.canonicalUrl);
+    }
+  };
 
   const center = useMemo(() => {
     if (userLocation) {
@@ -94,6 +103,7 @@ export function NearbyMiniMap({
         styleUrl={DEFAULT_TILE_STYLE.styleUrl}
         initialViewport={{ center, zoom }}
         markers={markers}
+        onMarkerClick={handleMarkerClick}
         userLocationMarker={{
           enabled: showProximity,
           autoAdd: showProximity,
