@@ -22,13 +22,11 @@ describe("territorial public stats truthfulness", () => {
     expect(landingStats).toContain('.eq("status", "published")');
   });
 
-  it("does not reuse school count as bus-line count", () => {
-    const landing = read(
-      "src/core/routing/components/TerritorialLandingPage.tsx",
-    );
+  it("keeps the active territorial home free of fabricated legacy counters", () => {
+    const home = read("src/app/pages/TerritoryHomePage.tsx");
 
-    expect(landing).toContain("stats.schools ?? '—'");
-    expect(landing).not.toContain("territoryStats?.schools");
-    expect(landing).toContain(">Linhas</p>");
+    expect(home).not.toContain("stats.schools");
+    expect(home).not.toContain("territoryStats");
+    expect(home).not.toContain(">Linhas</p>");
   });
 });

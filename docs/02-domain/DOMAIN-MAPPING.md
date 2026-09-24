@@ -1,6 +1,6 @@
 # DOMAIN-MAPPING.md — Territory / lifecycle atual
 
-> **Atualizado em 2026-09-21.** Este documento descreve o mapeamento conceitual do domínio Territory, mas não possui autoridade para ativar domínio ou capability pública. O lifecycle executável pertence a `src/app/config/productModuleRegistry.ts`, `src/app/config/platformCapabilityRegistry.ts` e ao avaliador `src/app/config/lifecycleRegistry.ts`.
+> **Atualizado em 2026-09-24.** Este documento descreve o mapeamento conceitual do domínio Territory, mas não possui autoridade para ativar domínio ou capability pública. O lifecycle executável pertence a `src/app/config/productModuleRegistry.ts`, `src/app/config/platformCapabilityRegistry.ts` e ao avaliador `src/app/config/lifecycleRegistry.ts`.
 
 No MVP atual, **Business/Empresas** é o único domínio de produto ativo. **Mapa, Perto de mim, Busca e Mensagens (provider Business)** são capabilities horizontais ativas, junto de Auth, Perfis/Conta, Território, Localização, Notificações e Central. Community e os demais domínios de produto permanecem `paused`.
 
@@ -21,7 +21,7 @@ No MVP atual, **Business/Empresas** é o único domínio de produto ativo. **Map
 |------------|---------------|--------|--------|--------------|-------------------|
 | `TerritoryEntryPage.tsx` | `TerritoryEntryPage` | ✅ Canônico | Entrada e resolução territorial pública. | `RootRouteEntry`, rota `/`. | Manter como implementação única. |
 | `TerritoryExplorerPage.tsx` | — | ✅ Removido | Alias sem caller de rota; descoberta pertence a Busca/Mapa e Home a `TerritoryHomePage`. | — | Não recriar. |
-| `TerritoryHomePage.tsx` | `TerritoryHomePage` | ✅ Canônico | Home oficial de qualquer território. | `AppLayoutRoutes` / `TerritorialIndexPage`. | Manter. |
+| `TerritoryHomePage.tsx` | `TerritoryHomePage` | ✅ Canônico | Home oficial de qualquer território. | `AppLayoutRoutes`, sem facade/fallback intermediário. | Manter como owner único da Home territorial do MVP. |
 | `TerritoryFeedPage.tsx` | — | ✅ Removido | Re-export sem caller; o owner runtime já era `core/community-feed/pages/ComunidadePage.tsx`. | — | Não recriar. |
 | `TerritoryUnavailablePage.tsx` | — | ✅ Removido | Re-export sem caller; misturava `coming_soon` territorial com kill-switch de módulo. | — | Não recriar. |
 | `PublicCityLandingPage.tsx` (+ `.css`) | — | ✅ Removido | Segunda Home sem caller runtime; removida em 2026-09-09. | — | Não recriar. |
@@ -101,6 +101,6 @@ A partir desta sprint, novos módulos, componentes e tipos **não podem** introd
 
 1. **DOMAIN.2** — Introduzir re-exports `Territory = Location`, `TerritoryType = LocationType` em `core/location/index.ts`.
 2. **DOMAIN.3** — Fundir `core/territorial` em `core/location` sob o namespace `territory/`.
-3. **DOMAIN.4** — Continuar removendo aliases restantes; `AchegueSeHomePage`, `PublicCityLandingPage`, `TerritoryUnavailablePage` e `TerritoryFeedPage` já foram aposentados. `ComunidadePage` permanece owner interno preservado, mas Community continua `paused` no MVP.
+3. **DOMAIN.4** — Continuar removendo aliases restantes; `AchegueSeHomePage`, `PublicCityLandingPage`, `TerritoryUnavailablePage` e `TerritoryFeedPage` já foram aposentados. `ComunidadePage` permanece owner interno preservado, mas Community continua `paused` no MVP. `TerritorialIndexPage`, `TerritorialLandingPage` e o hook `useLandingFeatured` foram aposentados em 2026-09-24 porque não tinham caller runtime no grafo ativo e mantinham dependências de verticais pausadas.
 4. **DOMAIN.5** — Redirecionar rotas legadas reais (`/cidade/*`) sem inventar aliases de indisponibilidade.
 5. **DOMAIN.6** — Deprecar `core/city`, `core/landing`, `core/community-*` movendo para subpastas canônicas.
