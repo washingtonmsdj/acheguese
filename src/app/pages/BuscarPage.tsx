@@ -130,7 +130,7 @@ export default function BuscarPage() {
             Procurar no bairro
           </h1>
           <p className="text-sm text-muted-foreground">
-            Escreva do seu jeito: pizza, chaveiro, feira de sábado, alguém que conserte bicicleta.
+            Escreva do seu jeito: pizza, mercado, farmácia, oficina ou empresa no meu bairro.
           </p>
           <p className="text-xs text-muted-foreground/80">
             Procurando em: {appliedTerritoryLabel}
