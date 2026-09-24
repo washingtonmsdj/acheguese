@@ -17,12 +17,8 @@ import { ModulePageLoader } from "@/shared/components/loading/PageLoader";
 async function loadActiveProviders(
   providerIds: ReturnType<typeof getActiveMapLayerProviderIds>,
 ): Promise<MapLayerProviderRuntime[]> {
-  const settled = await Promise.allSettled(
+  return Promise.all(
     providerIds.map((providerId) => loadMapLayerProvider(providerId)),
-  );
-
-  return settled.flatMap((result) =>
-    result.status === "fulfilled" ? [result.value] : [],
   );
 }
 
