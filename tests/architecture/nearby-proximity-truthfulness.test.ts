@@ -35,6 +35,8 @@ describe("nearby MVP boundary", () => {
     expect(platformRegistry).toContain('dependsOnCapabilities: ["map", "location"]');
     expect(platformRegistry).not.toContain('dependsOnProductModules: ["business"]');
     expect(providerRegistry).toContain('export type NearbyProviderId = "business"');
+    expect(providerRegistry).toContain("territoryModuleKey: ModuleKey.BUSINESS");
+    expect(providerRegistry).toContain("getNearbyTerritoryModuleKey");
     expect(providerScope).toContain('isPlatformCapabilityEnabled("nearby")');
     expect(providerScope).toContain("isProductModuleEnabled(productModule)");
     expect(routeWrapper).toContain("getActiveNearbyProviderIds()");
@@ -49,7 +51,8 @@ describe("nearby MVP boundary", () => {
     expect(hook).toContain("useSpatialSearchHybrid");
     expect(hook).toContain("item.in_territory === true");
     expect(territorialLayout).toContain("[MODULE_SLUGS.map]: ModuleKey.BUSINESS");
-    expect(territorialLayout).toContain("[MODULE_SLUGS.nearby]: ModuleKey.BUSINESS");
+    expect(territorialLayout).toContain('getNearbyTerritoryModuleKey("business")');
+    expect(territorialLayout).not.toContain("[MODULE_SLUGS.nearby]: ModuleKey.BUSINESS");
     expect(hook).not.toContain('entityType: "event"');
     expect(hook).not.toContain('entityType: "alert"');
     expect(hook).not.toContain('entityType: "tourist_point"');
