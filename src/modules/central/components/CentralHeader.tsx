@@ -6,7 +6,7 @@ import { Button } from "@/shared/components/ui/button";
 import { useSessionContext } from "@/core/session";
 import { AuthService } from "@/core/auth/services/AuthService";
 import { buildPublicAbsoluteUrl } from "@/shared/config/publicAppOrigin";
-import { isProductModuleEnabled } from "@/app/config/lifecycleRegistry";
+import { isLaunchSurfaceEnabled } from "@/app/config/launchScope";
 
 /**
  * CentralHeader
@@ -16,7 +16,7 @@ import { isProductModuleEnabled } from "@/app/config/lifecycleRegistry";
 export function CentralHeader() {
   const { activeProfile, user } = useSessionContext();
   const publicHomeUrl = buildPublicAbsoluteUrl("/");
-  const showBilling = isProductModuleEnabled("billing");
+  const showBilling = isLaunchSurfaceEnabled("billing");
 
   const handleLogout = async () => {
     await AuthService.signOut();
