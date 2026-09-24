@@ -10,7 +10,7 @@ A visão pós-MVP pode incorporar Comunidade, Classificados, Profissionais/Servi
 
 ## Autoridade e precedência
 
-> O arquivo `/URGENTE_LEIA_PRIMEIRO_REORGANIZACAO_GLOBAL.md` é somente um **ponteiro de compatibilidade da raiz**. Ele não supera este índice nem o roadmap ativo.
+A raiz documental permanente contém apenas `README.md` e `SECURITY.md`. Planos substituídos, ponteiros temporários e snapshots não são autoridades vivas.
 
 Quando houver conflito, aplicar esta ordem:
 
