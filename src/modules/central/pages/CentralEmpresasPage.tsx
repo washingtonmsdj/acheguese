@@ -13,7 +13,13 @@ import { navigateToSafeRedirect } from "@/shared/utils/safeRedirect";
  * Página lista de empresas na Central (/central/empresas).
  * Lista empresas do usuário com CTAs para acessar painel e criar nova empresa.
  */
-export default function CentralEmpresasPage() {
+interface CentralEmpresasPageProps {
+  readonly billingEnabled: boolean;
+}
+
+export default function CentralEmpresasPage({
+  billingEnabled,
+}: CentralEmpresasPageProps) {
   const navigate = useNavigate();
   const profileHub = useProfileHub();
   const appUrls = useAppUrls();
@@ -96,6 +102,7 @@ export default function CentralEmpresasPage() {
 
       <BusinessModulesSection
         businessModules={profileHub.businessModules}
+        billingEnabled={billingEnabled}
         showOnboarding={profileHub.showBusinessOnboarding}
         onCreateBusiness={handleCreateBusiness}
         onNavigate={handleNavigate}
