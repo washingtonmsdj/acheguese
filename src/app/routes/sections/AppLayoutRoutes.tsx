@@ -9,7 +9,6 @@ import {
 import TerritoryHomePage from "@/app/pages/TerritoryHomePage";
 import { messagingRoutes } from "@/core/messaging";
 import { ProtectedRoute } from "@/core/routing/components/ProtectedRoute";
-import { TerritorialIndexPage } from "@/core/routing/components/TerritorialIndexPage";
 import {
   TERRITORIAL_ROUTE_PARAMS,
   TERRITORIAL_ROUTE_STATIC_SEGMENTS,
@@ -176,11 +175,7 @@ export function AppLayoutRoutes() {
             >
               <Route
                 index
-                element={
-                  <TerritorialIndexPage
-                    CityLandingComponent={TerritoryHomePage}
-                  />
-                }
+                element={<TerritoryHomePage />}
               />
             </Route>
             <Route
@@ -189,11 +184,7 @@ export function AppLayoutRoutes() {
             >
               <Route
                 index
-                element={
-                  <TerritorialIndexPage
-                    CityLandingComponent={TerritoryHomePage}
-                  />
-                }
+                element={<TerritoryHomePage />}
               />
             </Route>
             <Route path="/:state" element={<P.StateLandingPage />} />
