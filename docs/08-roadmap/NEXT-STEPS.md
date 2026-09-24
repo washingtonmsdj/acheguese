@@ -14,8 +14,7 @@ Capabilities horizontais ativas no lançamento:
 4. **Mensagens** (`messaging`, provider MVP = Business);
 5. Auth, Perfis/Conta, Território, Localização, Notificações e Central.
 
-`nearby` depende de Map + Location + Business. `messaging` depende de Auth +
-Perfis + Business e registra somente providers de domínios ativos.
+`nearby` depende estruturalmente de Map + Location; providers verticais são gated separadamente e Business é o provider MVP atual. `messaging` depende de Auth + Perfis e registra somente providers de domínios ativos.
 
 Todos os demais módulos de produto permanecem **pausados e fail-closed** até certificação individual. Código preservado para pós-MVP não pode aparecer em navegação, rotas funcionais, prefetch, discovery, providers públicos ou layers do Mapa.
 
@@ -156,3 +155,17 @@ O release só recebe **MVP READY** quando **Business + Mapa + Perto de mim + Bus
 - nenhum erro crítico recorrente.
 
 Módulos pausados não precisam ser concluídos para o primeiro release. Precisam permanecer realmente fora do produto ativo.
+
+### Regra de expansão modular para os próximos trabalhos
+
+Não acoplar uma capability horizontal ao único domínio ativo do momento. Para Mobility, Services, Gastronomy, Tourist Points, Classifieds ou qualquer nova vertical:
+
+1. manter o owner horizontal intacto;
+2. certificar e ativar a vertical;
+3. registrar seu provider/adapter no boundary da capability;
+4. deixar o lifecycle decidir se o provider participa;
+5. provar por teste que provider pausado não vaza por rota, query, prefetch, mapa, busca, Inbox ou notificação.
+
+Nearby e Messaging são os padrões de referência desse modelo. Notifications segue a mesma regra para publicação e destino de eventos.
+
+Follow-up antes de habilitar um segundo provider Nearby: providerizar também a disponibilidade territorial de grupos hoje mapeada para Business em `TerritorialLayout.tsx`, preservando os filtros territoriais atuais durante a migração.

@@ -38,7 +38,7 @@ Dependências importantes:
 
 - `notifications -> auth`: capability horizontal, independente do estado dos verticais;
 - `messaging -> auth + profiles`: a capability permanece horizontal; providers Business/Classificados/Community são filtrados separadamente pelo lifecycle;
-- `nearby -> map + location + business` ainda representa o adapter MVP atual, que hoje só possui provider Business certificado; a evolução correta é providerizar Nearby antes de retirar essa dependência;
+- `nearby -> map + location`; Business é provider lifecycle-scoped ainda representa o adapter MVP atual, que hoje só possui provider Business certificado; a evolução correta é providerizar Nearby antes de retirar essa dependência;
 - Search só executa providers de domínios/capabilities habilitados;
 - Map só projeta layers de domínios habilitados.
 
@@ -203,3 +203,30 @@ Regra central:
 > **Domínio pausado pode existir no repositório, mas não no produto ativo.
 > Capability horizontal ativa só pode consumir providers/layers de owners
 > efetivamente habilitados.**
+
+## Regra obrigatória — vertical != capability horizontal != provider
+
+Esta separação é um **invariante arquitetural**, não uma preferência de implementação.
+
+1. **Domínio/módulo vertical** (`PRODUCT_MODULE_REGISTRY`): Business, Mobility, Gastronomy, Services, Classifieds, Community, Events, Jobs, Education, Tourist Points e demais produtos.
+2. **Capability horizontal** (`PLATFORM_CAPABILITY_REGISTRY`): Auth, Profiles/Account, Territory, Location, Map, Nearby, Search, Messaging, Notifications e Central.
+3. **Provider/adapter**: integração de um domínio vertical com uma capability horizontal.
+
+Consequências obrigatórias:
+
+- pausar uma vertical **não pausa** automaticamente Notifications, Messaging, Nearby, Search, Map ou outra capability horizontal;
+- uma capability horizontal não deve depender estruturalmente de uma única vertical só porque ela é o único provider do MVP;
+- providers são filtrados pelo lifecycle do domínio; provider de domínio `paused` não pode consultar, renderizar, prefetchar, navegar nem publicar resultado acionável pela capability;
+- reativar uma vertical significa certificar seu owner, mudar `paused -> active`, habilitar/registrar seus providers e executar os ratchets; não reescrever a capability;
+- se nenhum provider estiver ativo, a capability deve falhar fechado com estado vazio/indisponível honesto, sem abrir domínio pausado;
+- código preservado de vertical pausada pode permanecer no repositório, mas fora do grafo runtime ativo.
+
+Estado do MVP em 2026-09-24:
+
+- vertical ativa: `business`;
+- horizontais ativas incluem Map, Nearby, Search, Messaging e Notifications;
+- Messaging: owner horizontal + provider Business Direct Messaging;
+- Nearby: owner horizontal, dependências estruturais Map + Location, provider Business de proximidade gated separadamente;
+- Notifications: owner horizontal; eventos podem vir de verticais, mas payload stale de vertical pausada não pode reabrir o domínio.
+
+**Regra para próximas IAs/chats:** nunca inferir que “MVP focado em Empresas” significa desativar funcionalidades horizontais do site. Antes de alterar lifecycle, classificar a peça como vertical, horizontal ou provider.
