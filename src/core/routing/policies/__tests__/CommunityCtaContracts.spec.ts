@@ -11,20 +11,20 @@ function readProjectFile(path: string): string {
 }
 
 describe("community CTA contracts on public surfaces", () => {
-  it("labels public-surface community CTAs as portal entry points", () => {
-    const territorialLanding = readProjectFile(
-      "src/core/routing/components/TerritorialLandingPage.tsx",
-    );
-    expect(territorialLanding).toContain("Abrir portal comunitario");
+  it("keeps Community CTAs out of the active territorial home while Community is paused", () => {
+    const territoryHome = readProjectFile("src/app/pages/TerritoryHomePage.tsx");
+
+    expect(territoryHome).not.toContain("MODULE_SLUGS.community");
+    expect(territoryHome).not.toContain("Abrir portal comunitario");
+    expect(territoryHome).not.toContain("Entrar na comunidade");
   });
 
-  it("keeps the territorial landing community CTA visually secondary", () => {
-    const territorialLanding = readProjectFile(
-      "src/core/routing/components/TerritorialLandingPage.tsx",
-    );
+  it("keeps the active home focused on the MVP discovery capabilities", () => {
+    const territoryHome = readProjectFile("src/app/pages/TerritoryHomePage.tsx");
 
-    expect(territorialLanding).toContain("border border-teal-500/35");
-    expect(territorialLanding).toContain("bg-transparent");
-    expect(territorialLanding).not.toContain("Entrar na comunidade");
+    expect(territoryHome).toContain("Empresas");
+    expect(territoryHome).toContain("Mapa");
+    expect(territoryHome).toContain("Perto de mim");
+    expect(territoryHome).toContain("Busca");
   });
 });
