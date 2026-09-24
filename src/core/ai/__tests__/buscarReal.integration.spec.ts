@@ -1,4 +1,5 @@
 import { describe, expect, it } from "vitest";
+import { AI_EXECUTABLE_INTENT_TYPES } from "../domain/types";
 import { AIOrchestratorService } from "../orchestrator/AIOrchestratorService";
 
 const queries = [
@@ -22,6 +23,7 @@ describe("Fluxo real do orquestrador /buscar (integration)", () => {
           locationId: undefined,
           coordinates: undefined,
         },
+        allowedIntentTypes: AI_EXECUTABLE_INTENT_TYPES,
       });
       outputs.push({
         query,
