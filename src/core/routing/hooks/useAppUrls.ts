@@ -121,7 +121,6 @@ export interface AppUrls {
   home: string;
   settings: string;
   messages: string;
-  chat: (conversationId: string) => string;
   map: string;
   ranking: string;
   gamification: string;
@@ -235,7 +234,6 @@ export function useAppUrls(routeResolved?: ResolvedTerritory | null): AppUrls {
     home: '/',
     settings: ACCOUNT_PATHS.preferences,
     messages: messagingRoutes.inbox(),
-    chat: (conversationId: string) => `/chat/${conversationId}`,
     map: `/mapa${cityBase}`,
     ranking: '/ranking',
     gamification: '/gamificacao',
