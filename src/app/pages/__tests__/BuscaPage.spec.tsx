@@ -17,6 +17,10 @@ vi.mock("@/app/config/launchScope", () => ({
   isLaunchSurfaceEnabled: mocks.isLaunchSurfaceEnabled,
 }));
 
+vi.mock("@/app/config/searchProviderScope", () => ({
+  getActiveSearchProviderBuckets: () => ["businesses"],
+}));
+
 vi.mock("@/core/session", () => ({
   useSessionContext: () => ({ user: null }),
 }));
@@ -187,7 +191,10 @@ describe("BuscaPage", () => {
           location_id: "loc-pituba",
         },
       },
-      { enabled: true },
+      {
+        enabled: true,
+        providerBuckets: ["businesses"],
+      },
     );
   });
 

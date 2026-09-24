@@ -12,6 +12,7 @@ export {
   truncateSearchDescription,
 } from "./services/SearchDocumentMapper";
 export type {
+  SearchBucket,
   SearchCategory,
   SearchDocument,
   SearchDocumentType,

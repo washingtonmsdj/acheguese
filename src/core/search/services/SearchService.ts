@@ -21,7 +21,6 @@ import {
   createProviderInput,
   getLinkedEntityTypes,
   getSearchProviders,
-  isSearchBucketEnabled,
 } from "@/core/search/providers/searchProviders";
 import { trackError, trackPerformance } from "@/shared/utils/errorTracking";
 import { logger } from "@/shared/utils/logger";
@@ -31,6 +30,7 @@ export type {
   EventSearchResult,
   PostSearchResult,
   ProfessionalSearchResult,
+  SearchBucket,
   SearchCategory,
   SearchDocument,
   SearchDocumentType,
@@ -117,7 +117,10 @@ export class SearchService {
       throwIfAborted(options.signal);
 
       const category: SearchCategory = filters.category ?? "all";
-      const providers = getSearchProviders(category);
+      const providers = getSearchProviders(
+        options.providerBuckets ?? [],
+        category,
+      );
       const linkedEntityIds = await this.getCommunityLinkedEntityIds(
         filters.communityId,
         providers,
@@ -244,9 +247,12 @@ export class SearchService {
     };
   }
 
-  static getSearchSuggestions(): string[] {
+  static getSearchSuggestions(
+    providerBuckets: readonly SearchBucket[] = [],
+  ): string[] {
+    const authorizedBuckets = new Set(providerBuckets);
     return SEARCH_SUGGESTION_BUCKET_ORDER.flatMap((bucket) =>
-      isSearchBucketEnabled(bucket)
+      authorizedBuckets.has(bucket)
         ? [...SEARCH_SUGGESTIONS_BY_BUCKET[bucket]]
         : [],
     );

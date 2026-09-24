@@ -44,6 +44,7 @@ import {
   isLaunchSurfaceEnabled,
   type LaunchSurfaceKey,
 } from "@/app/config/launchScope";
+import { getActiveSearchProviderBuckets } from "@/app/config/searchProviderScope";
 import { useModuleTerritoryFilter } from "@/core/location/hooks/useModuleTerritoryFilter";
 import { usePublicBrowsingCity } from "@/core/location/hooks/usePublicBrowsingCity";
 import type { TerritoryFilter } from "@/core/location/types";
@@ -59,7 +60,11 @@ import {
   buildModuleTerritoryUrl,
   MODULE_SLUGS,
 } from "@/core/routing/utils/territoryUrls";
-import type { SearchCategory, SearchDocument } from "@/core/search";
+import type {
+  SearchBucket,
+  SearchCategory,
+  SearchDocument,
+} from "@/core/search";
 import { useGlobalSearch } from "@/core/search/hooks/useGlobalSearch";
 import { useSessionContext } from "@/core/session";
 import { useBusinessNavigation } from "@/modules/business/hooks/useBusinessNavigation";
@@ -74,7 +79,7 @@ interface FilterOption {
   id: SearchCategory;
   label: string;
   icon: LucideIcon;
-  launchSurface?: LaunchSurfaceKey;
+  providerBucket?: SearchBucket;
 }
 
 interface BusinessSearchItem {
@@ -112,49 +117,38 @@ interface SearchResultsViewModel {
   total: number;
 }
 
-const SEARCH_DOCUMENT_SURFACE: Record<
+const SEARCH_DOCUMENT_BUCKET: Record<
   SearchDocument["type"],
-  LaunchSurfaceKey
+  SearchBucket | null
 > = {
-  community: "community",
-  business: "business",
-  professional: "services",
-  opportunity: "jobs",
+  community: "communities",
+  business: "businesses",
+  professional: "professionals",
+  opportunity: "opportunities",
   classified: "classifieds",
   event: "events",
-  post: "community",
-  coupon: "coupons",
+  post: "posts",
+  coupon: null,
 };
 
-function isVisibleSearchDocument(document: SearchDocument): boolean {
-  return isLaunchSurfaceEnabled(SEARCH_DOCUMENT_SURFACE[document.type]);
+function isVisibleSearchDocument(
+  document: SearchDocument,
+  activeBuckets: ReadonlySet<SearchBucket>,
+): boolean {
+  const bucket = SEARCH_DOCUMENT_BUCKET[document.type];
+  return bucket !== null && activeBuckets.has(bucket);
 }
 
-const FILTERS: FilterOption[] = (
-  [
-    { id: "all", label: "Todos", icon: Search },
-    { id: "communities", label: "Comunidades", icon: Users, launchSurface: "community" },
-    { id: "businesses", label: "Negócios", icon: Store, launchSurface: "business" },
-    { id: "professionals", label: "Serviços", icon: Wrench, launchSurface: "services" },
-    {
-      id: "events",
-      label: "Eventos",
-      icon: CalendarDays,
-      launchSurface: "events",
-    },
-    { id: "classifieds", label: "Classificados", icon: Tag, launchSurface: "classifieds" },
-    {
-      id: "opportunities",
-      label: "Oportunidades",
-      icon: BriefcaseBusiness,
-      launchSurface: "jobs",
-    },
-    { id: "posts", label: "Posts", icon: MessageSquare, launchSurface: "community" },
-  ] satisfies FilterOption[]
-).filter(
-  (filter) =>
-    !filter.launchSurface || isLaunchSurfaceEnabled(filter.launchSurface),
-);
+const FILTER_DEFINITIONS: readonly FilterOption[] = [
+  { id: "all", label: "Todos", icon: Search },
+  { id: "communities", label: "Comunidades", icon: Users, providerBucket: "communities" },
+  { id: "businesses", label: "Negócios", icon: Store, providerBucket: "businesses" },
+  { id: "professionals", label: "Serviços", icon: Wrench, providerBucket: "professionals" },
+  { id: "events", label: "Eventos", icon: CalendarDays, providerBucket: "events" },
+  { id: "classifieds", label: "Classificados", icon: Tag, providerBucket: "classifieds" },
+  { id: "opportunities", label: "Oportunidades", icon: BriefcaseBusiness, providerBucket: "opportunities" },
+  { id: "posts", label: "Posts", icon: MessageSquare, providerBucket: "posts" },
+];
 
 const PRIMARY_FILTER_IDS: SearchCategory[] = [
   "all",
@@ -196,6 +190,23 @@ export default function BuscaPage() {
     "relevance",
   );
   const [isFilterMenuOpen, setIsFilterMenuOpen] = useState(false);
+  const activeSearchProviderBuckets = useMemo(
+    () => getActiveSearchProviderBuckets(),
+    [],
+  );
+  const activeSearchBucketSet = useMemo(
+    () => new Set(activeSearchProviderBuckets),
+    [activeSearchProviderBuckets],
+  );
+  const filters = useMemo(
+    () =>
+      FILTER_DEFINITIONS.filter(
+        (filter) =>
+          !filter.providerBucket ||
+          activeSearchBucketSet.has(filter.providerBucket),
+      ),
+    [activeSearchBucketSet],
+  );
   const initialQuery = searchParams.get("q")?.trim() ?? "";
   const territoryResolution = useResolveTerritoryFromUrl();
   const moduleTerritory = useModuleTerritoryFilter({
@@ -227,7 +238,10 @@ export default function BuscaPage() {
   } = useGlobalSearch(
     initialQuery,
     { category: activeFilter, territoryFilter: searchTerritoryFilter },
-    { enabled: searchEnabled },
+    {
+      enabled: searchEnabled,
+      providerBuckets: activeSearchProviderBuckets,
+    },
   );
 
   useEffect(() => {
@@ -280,7 +294,9 @@ export default function BuscaPage() {
   );
 
   const displayResults = useMemo<SearchResultsViewModel>(() => {
-    const documents = results.documents.filter(isVisibleSearchDocument);
+    const documents = results.documents.filter((document) =>
+      isVisibleSearchDocument(document, activeSearchBucketSet),
+    );
     const businessDocumentUrls = new globalThis.Map(
       documents
         .filter(
@@ -289,7 +305,7 @@ export default function BuscaPage() {
         )
         .map((document) => [document.id, document.url] as const),
     );
-    const businesses = isLaunchSurfaceEnabled("business")
+    const businesses = activeSearchBucketSet.has("businesses")
       ? results.businesses.map((business) => ({
           id: business.id,
           name: business.name,
@@ -303,7 +319,7 @@ export default function BuscaPage() {
           rating: business.rating,
         }))
       : [];
-    const professionals = isLaunchSurfaceEnabled("services")
+    const professionals = activeSearchBucketSet.has("professionals")
       ? results.professionals.map((professional) => ({
           id: professional.id,
           name: professional.name,
@@ -326,7 +342,7 @@ export default function BuscaPage() {
       professionals,
       total: documents.length + businesses.length + professionals.length,
     };
-  }, [results]);
+  }, [activeSearchBucketSet, results]);
 
   const resultMarkers = useMemo<MapMarker[]>(() => {
     const businessMarkers = displayResults.businesses.flatMap((business) => {
@@ -549,7 +565,7 @@ export default function BuscaPage() {
           aria-label="Categorias da busca"
         >
           <div className="flex gap-6 overflow-x-auto scrollbar-hide sm:gap-8">
-            {FILTERS.filter((filter) => PRIMARY_FILTER_IDS.includes(filter.id)).map(
+            {filters.filter((filter) => PRIMARY_FILTER_IDS.includes(filter.id)).map(
               (filter) => (
                 <button
                   key={filter.id}
@@ -592,7 +608,7 @@ export default function BuscaPage() {
               onClick={handleClearFilters}
               className="inline-flex min-h-8 items-center gap-2 rounded-full bg-territory-brand/10 px-3 text-sm font-semibold text-territory-brand hover:bg-territory-brand/15"
             >
-              {FILTERS.find((filter) => filter.id === activeFilter)?.label}
+              {filters.find((filter) => filter.id === activeFilter)?.label}
               <span aria-hidden="true">×</span>
             </button>
           ) : null}
@@ -624,7 +640,7 @@ export default function BuscaPage() {
             <div className="absolute left-0 top-12 z-20 w-full max-w-sm rounded-2xl border border-territory-border bg-territory-surface p-4 shadow-territory-highlight">
               <p className="text-sm font-bold text-territory-ink">Mais filtros</p>
               <div className="mt-3 flex flex-wrap gap-2">
-                {FILTERS.filter(
+                {filters.filter(
                   (filter) => !PRIMARY_FILTER_IDS.includes(filter.id),
                 ).map((filter) => (
                   <button
