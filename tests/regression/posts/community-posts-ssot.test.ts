@@ -95,21 +95,15 @@ describe("posts vs community_posts SSOT", () => {
       /community_posts.*nao deve ser consultada por runtime/i,
     );
 
-    const postsArchitecture = readProjectFile(
-      "docs/07-modules/ARQUITETURA_POSTS_SSOT.md",
-    );
-    expect(postsArchitecture).toMatch(/community_questions/);
-    expect(postsArchitecture).toMatch(/question_answers/);
-    expect(postsArchitecture).not.toMatch(
-      /CommunityQAService[\s\S]{0,160}community_posts/,
-    );
-
     const communityArchitecture = readProjectFile(
       "docs/03-architecture/COMMUNITY_FIRST_ARCHITECTURE_SSOT.md",
     );
     expect(communityArchitecture).toMatch(/Posts\/feed: `posts`/);
     expect(communityArchitecture).toMatch(
       /community_questions[\s\S]*question_answers/,
+    );
+    expect(communityArchitecture).toMatch(
+      /community_posts[\s\S]*nao e runtime SSOT/,
     );
   });
 });
