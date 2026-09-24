@@ -1,9 +1,9 @@
 # Core Notifications
 
-**Status:** G4 SSOT SOURCE EM FECHAMENTO — NAO MVP CERTIFICADO  
-**Data do checkpoint:** 2026-08-29
+**Status:** CAPABILITY HORIZONTAL ATIVA NO MVP — certificação continua exact-SHA  
+**Data do checkpoint:** 2026-09-24
 
-Ownership canonico da caixa de entrada, preferencias e entrega de notificacoes.
+Ownership canonico da caixa de entrada, preferencias e entrega de notificacoes. Notifications pertence à plataforma: verticais ativos ou pausados apenas produzem eventos; não controlam o lifecycle da capability.
 
 ## SSOT
 
