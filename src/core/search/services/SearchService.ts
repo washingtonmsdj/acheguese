@@ -30,6 +30,7 @@ export type {
   EventSearchResult,
   PostSearchResult,
   ProfessionalSearchResult,
+  SearchBucket,
   SearchCategory,
   SearchDocument,
   SearchDocumentType,
