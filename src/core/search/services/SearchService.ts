@@ -117,7 +117,8 @@ export class SearchService {
       throwIfAborted(options.signal);
 
       const category: SearchCategory = filters.category ?? "all";
-      const providers = getSearchProviders(category);
+      const providerBuckets = options.providerBuckets ?? [];
+      const providers = getSearchProviders(category, providerBuckets);
       const linkedEntityIds = await this.getCommunityLinkedEntityIds(
         filters.communityId,
         providers,
@@ -244,9 +245,11 @@ export class SearchService {
     };
   }
 
-  static getSearchSuggestions(): string[] {
+  static getSearchSuggestions(
+    providerBuckets: readonly SearchBucket[] = [],
+  ): string[] {
     return SEARCH_SUGGESTION_BUCKET_ORDER.flatMap((bucket) =>
-      isSearchBucketEnabled(bucket)
+      isSearchBucketEnabled(bucket, providerBuckets)
         ? [...SEARCH_SUGGESTIONS_BY_BUCKET[bucket]]
         : [],
     );

@@ -2,15 +2,19 @@ import { useCallback, useEffect, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 
 import type {
+  SearchBucket,
   SearchFilters,
   SearchHistoryScope,
   SearchResults,
 } from "../contracts";
 import { SearchService } from "../services/SearchService";
 
+const EMPTY_PROVIDER_BUCKETS: readonly SearchBucket[] = [];
+
 interface UseGlobalSearchOptions {
   enabled?: boolean;
   historyScope?: SearchHistoryScope;
+  providerBuckets?: readonly SearchBucket[];
 }
 
 export function useGlobalSearch(
@@ -22,6 +26,8 @@ export function useGlobalSearch(
   const [debouncedQuery, setDebouncedQuery] = useState(initialQuery);
   const [filters, setFilters] = useState<SearchFilters>(initialFilters);
   const historyScope = options.historyScope ?? "global";
+  const providerBuckets = options.providerBuckets ?? EMPTY_PROVIDER_BUCKETS;
+  const providerBucketKey = providerBuckets.join(",");
   const [history, setHistory] = useState<string[]>(() =>
     SearchService.getSearchHistory(historyScope),
   );
@@ -49,14 +55,17 @@ export function useGlobalSearch(
     error,
     refetch,
   } = useQuery({
-    queryKey: ["global-search", debouncedQuery, filters],
+    queryKey: ["global-search", debouncedQuery, filters, providerBucketKey],
     queryFn: ({ signal }) =>
-      SearchService.search(debouncedQuery, filters, { signal }),
+      SearchService.search(debouncedQuery, filters, {
+        signal,
+        providerBuckets,
+      }),
     enabled: (options.enabled ?? true) && debouncedQuery.length >= 2,
     staleTime: 5 * 60 * 1000,
   });
 
-  const suggestions = SearchService.getSearchSuggestions();
+  const suggestions = SearchService.getSearchSuggestions(providerBuckets);
 
   const clearQuery = useCallback(() => {
     setQuery("");

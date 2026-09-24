@@ -1,8 +1,6 @@
-import { BusinessService } from "@/core/business";
 import type { Business } from "@/core/business/types/Business";
 import type { Professional } from "@/core/professional/types";
 import type { WorkOpportunityCard } from "@/core/work-opportunities";
-import { isLaunchSurfaceEnabled } from "@/app/config/launchScope";
 import {
   getCommunitySearchCandidateLimit,
   SEARCH_RESULT_LIMITS,
@@ -93,7 +91,6 @@ function toOpportunity(card: WorkOpportunityCard): WorkOpportunitySearchResult {
 const communitiesProvider: SearchProvider = {
   bucket: "communities",
   linkedEntityTypes: [],
-  isEnabled: () => isLaunchSurfaceEnabled("community"),
   async search({ query, filters, signal }) {
     throwIfAborted(signal);
     const { CommunityExperienceService } = await import(
@@ -116,8 +113,9 @@ const communitiesProvider: SearchProvider = {
 const businessesProvider: SearchProvider = {
   bucket: "businesses",
   linkedEntityTypes: ["business"],
-  isEnabled: () => isLaunchSurfaceEnabled("business"),
   async search({ query, filters, linkedEntityIds, signal }) {
+    throwIfAborted(signal);
+    const { BusinessService } = await import("@/core/business");
     throwIfAborted(signal);
     const page = await BusinessService.getBusinessesList({
       searchQuery: query,
@@ -140,7 +138,6 @@ const businessesProvider: SearchProvider = {
 const professionalsProvider: SearchProvider = {
   bucket: "professionals",
   linkedEntityTypes: ["professional"],
-  isEnabled: () => isLaunchSurfaceEnabled("services"),
   async search({ query, filters, linkedEntityIds, signal }) {
     throwIfAborted(signal);
     const [{ ProfessionalService }, { ProfessionalUrlService }] =
@@ -180,7 +177,6 @@ const professionalsProvider: SearchProvider = {
 const opportunitiesProvider: SearchProvider = {
   bucket: "opportunities",
   linkedEntityTypes: [],
-  isEnabled: () => isLaunchSurfaceEnabled("jobs"),
   async search({ query, filters, signal }) {
     throwIfAborted(signal);
     if (filters.communityId && !filters.territoryFilter) {
@@ -211,7 +207,6 @@ const opportunitiesProvider: SearchProvider = {
 const classifiedsProvider: SearchProvider = {
   bucket: "classifieds",
   linkedEntityTypes: ["classified"],
-  isEnabled: () => isLaunchSurfaceEnabled("classifieds"),
   async search({ query, filters, linkedEntityIds, signal }) {
     throwIfAborted(signal);
     const { ClassifiedUrlService, searchClassifieds } = await import(
@@ -245,7 +240,6 @@ const classifiedsProvider: SearchProvider = {
 const eventsProvider: SearchProvider = {
   bucket: "events",
   linkedEntityTypes: ["event"],
-  isEnabled: () => isLaunchSurfaceEnabled("events"),
   async search({ query, filters, linkedEntityIds, signal }) {
     throwIfAborted(signal);
     const [{ eventsReadService }, { eventPublicRoutes }] = await Promise.all([
@@ -280,7 +274,6 @@ const eventsProvider: SearchProvider = {
 const postsProvider: SearchProvider = {
   bucket: "posts",
   linkedEntityTypes: ["post"],
-  isEnabled: () => isLaunchSurfaceEnabled("community"),
   async search({ query, filters, linkedEntityIds, signal }) {
     throwIfAborted(signal);
     const { searchPublicPosts } = await import("@/core/posts/services");
@@ -312,10 +305,17 @@ const SEARCH_PROVIDERS: readonly SearchProvider[] = [
   postsProvider,
 ];
 
-export function getSearchProviders(category: SearchFilters["category"] = "all") {
+export const SEARCH_PROVIDER_BUCKET_ORDER: readonly SearchBucket[] =
+  SEARCH_PROVIDERS.map((provider) => provider.bucket);
+
+export function getSearchProviders(
+  category: SearchFilters["category"] = "all",
+  providerBuckets: readonly SearchBucket[] = [],
+) {
+  const allowed = new Set(providerBuckets);
   return SEARCH_PROVIDERS.filter(
     (provider) =>
-      provider.isEnabled() &&
+      allowed.has(provider.bucket) &&
       (category === "all" || category === provider.bucket),
   );
 }
@@ -328,10 +328,11 @@ export function getLinkedEntityTypes(
   );
 }
 
-export function isSearchBucketEnabled(bucket: SearchBucket): boolean {
-  return SEARCH_PROVIDERS.some(
-    (provider) => provider.bucket === bucket && provider.isEnabled(),
-  );
+export function isSearchBucketEnabled(
+  bucket: SearchBucket,
+  providerBuckets: readonly SearchBucket[] = [],
+): boolean {
+  return providerBuckets.includes(bucket);
 }
 
 export function createProviderInput(

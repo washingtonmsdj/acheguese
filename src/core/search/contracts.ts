@@ -43,6 +43,11 @@ export interface SearchFilters {
 
 export interface SearchRequestOptions {
   signal?: AbortSignal;
+  /**
+   * Buckets authorized by the application composition root.
+   * Omitted/empty is fail-closed: no domain provider runs.
+   */
+  providerBuckets?: readonly SearchBucket[];
 }
 
 export type SearchHistoryScope =
@@ -139,6 +144,5 @@ export interface SearchProviderResult {
 export interface SearchProvider {
   bucket: SearchBucket;
   linkedEntityTypes: readonly SearchLinkedEntityType[];
-  isEnabled(): boolean;
   search(input: SearchProviderInput): Promise<SearchProviderResult>;
 }
