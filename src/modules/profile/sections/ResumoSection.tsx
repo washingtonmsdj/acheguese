@@ -28,7 +28,7 @@ import {
 import { DashboardMetricCard } from "@/modules/profile/components/cards";
 
 import type { ResumoSectionProps } from "./types";
-import { isLaunchSurfaceEnabled } from "@/app/config/launchScope";
+import { isProductModuleEnabled } from "@/app/config/lifecycleRegistry";
 
 export function ResumoSection({
   operations,
@@ -40,8 +40,8 @@ export function ResumoSection({
 }: ResumoSectionProps) {
   const totalPersonalActivity = operations.posts;
   const totalOperationalAssets = operations.businesses + operations.services + operations.classifieds;
-  const showFamilySafetyLinks = isLaunchSurfaceEnabled("familySafety");
-  const showBilling = isLaunchSurfaceEnabled("billing");
+  const showFamilySafetyLinks = isProductModuleEnabled("familySafety");
+  const showBilling = isProductModuleEnabled("billing");
 
   return (
     <div className="space-y-6">
