@@ -98,7 +98,11 @@ export const ADMIN_SURFACE_SCOPE: Record<AdminSurfaceKey, AdminSurfacePolicy> = 
     kind: "paused",
     reason: "Admin messaging console is not part of the certified MVP messaging surface.",
   },
-  notifications: { kind: "capability", capability: "notifications" },
+  notifications: {
+    kind: "paused",
+    reason:
+      "The end-user Notifications capability is active, but the admin notification console is not part of the certified MVP admin surface.",
+  },
   "community-alerts": { kind: "product", module: "communityAlerts" },
   "community-issues": { kind: "product", module: "communityIssues" },
   "community-interest": { kind: "product", module: "community" },
