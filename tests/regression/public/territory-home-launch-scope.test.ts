@@ -23,7 +23,6 @@ describe("Territory Home launch-scope regression", () => {
     expect(PLATFORM_CAPABILITY_REGISTRY.nearby).toEqual({
       status: "active",
       dependsOnCapabilities: ["map", "location"],
-      dependsOnProductModules: ["business"],
     });
 
     expect(isLaunchSurfaceEnabled("business")).toBe(true);
