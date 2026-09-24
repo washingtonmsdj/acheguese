@@ -71,7 +71,11 @@ describe("Notification inbox authority", () => {
     expect(notificationItem).not.toContain(
       "href={notification.action_url}",
     );
-    expect(notificationActionScope).toContain("isLaunchSurfaceEnabled");
+    expect(notificationActionScope).toContain("isProductModuleEnabled");
+    expect(notificationActionScope).toContain("isPlatformCapabilityEnabled");
+    expect(notificationActionScope).toContain("isNotificationActionSurfaceEnabled");
+    expect(notificationActionScope).not.toContain("launchScope");
+    expect(notificationActionScope).not.toContain("isLaunchSurfaceEnabled");
     expect(notificationActionScope).toContain('surface: "gastronomy"');
     expect(notificationActionScope).toContain('surface: "mobility"');
     expect(notificationActionScope).toContain(
