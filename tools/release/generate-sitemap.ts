@@ -1,3 +1,4 @@
+import type { SitemapSurfaceKey } from "@/core/routing/seo/generateSitemap";
 import dotenv from "dotenv";
 
 dotenv.config({ path: ".env.local", override: true });
@@ -38,12 +39,28 @@ function allowTransientSourceFallback(): boolean {
 async function main() {
   configureSitemapBaseUrl();
 
-  const [{ generateAndSaveSitemap }, { logger }] = await Promise.all([
+  const [
+    { generateAndSaveSitemap },
+    { logger },
+    { isPlatformCapabilityEnabled, isProductModuleEnabled },
+  ] = await Promise.all([
     import("@/core/routing/seo/generateSitemap"),
     import("@/shared/utils/logger"),
+    import("@/app/config/lifecycleRegistry"),
   ]);
+
+  const isSitemapSurfaceEnabled = (surface: SitemapSurfaceKey): boolean => {
+    if (surface === "map" || surface === "nearby") {
+      return isPlatformCapabilityEnabled(surface);
+    }
+    return isProductModuleEnabled(surface);
+  };
+
   await generateAndSaveSitemap({
     allowTransientSourceFallback: allowTransientSourceFallback(),
+    surfaceScope: {
+      isEnabled: isSitemapSurfaceEnabled,
+    },
   });
 
   logger.info("scripts.generate-sitemap.success");
