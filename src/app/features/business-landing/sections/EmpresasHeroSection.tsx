@@ -225,7 +225,6 @@ export function EmpresasHeroSection({
                 }}
                 markerPresentation="compact"
                 fitTerritoryBounds
-                userLocationMarker={{ enabled: true, autoAdd: true }}
                 className="h-full w-full"
               />
             </div>

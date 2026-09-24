@@ -44,6 +44,21 @@ describe("browser geolocation SSOT boundary", () => {
     expect(source).toContain('value={address.longitude ?? ""}');
   });
 
+  it("keeps the public Business hero GPS lazy and user-triggered", () => {
+    const hero = readFileSync(
+      resolve(
+        repoRoot,
+        "src/app/features/business-landing/sections/EmpresasHeroSection.tsx",
+      ),
+      "utf8",
+    );
+
+    expect(hero).toContain("location: {");
+    expect(hero).toContain("enabled: true");
+    expect(hero).not.toContain("userLocationMarker={{ enabled: true, autoAdd: true }}");
+    expect(hero).not.toContain("autoAdd: true");
+  });
+
   it("keeps interactive ride and delivery GPS precise and without IP fallback", () => {
     const ride = readFileSync(
       resolve(repoRoot, "src/modules/mobility/components/CreateRideModal.tsx"),
