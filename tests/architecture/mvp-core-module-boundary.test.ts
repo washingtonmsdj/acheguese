@@ -10,6 +10,12 @@ describe("MVP core module boundary", () => {
   const platformRegistry = read("src/app/config/platformCapabilityRegistry.ts");
   const nearbyProviderScope = read("src/app/config/nearbyProviderScope.ts");
   const searchProviderScope = read("src/app/config/searchProviderScope.ts");
+  const aiSearchIntentScope = read("src/app/config/aiSearchIntentScope.ts");
+  const aiOrchestrator = read(
+    "src/core/ai/orchestrator/AIOrchestratorService.ts",
+  );
+  const aiSearchHook = read("src/core/ai/hooks/useAISearch.ts");
+  const assistedSearchPage = read("src/app/pages/BuscarPage.tsx");
   const nearbyRouteWrapper = read("src/app/pages/NearbyPage.tsx");
   const mapLayerProviderScope = read("src/app/config/mapLayerProviderScope.ts");
   const mapRouteWrapper = read("src/app/pages/MapaPage.tsx");
@@ -277,6 +283,25 @@ describe("MVP core module boundary", () => {
     expect(searchHook).toContain("providerBuckets");
     expect(searchPage).toContain("getActiveSearchProviderBuckets()");
     expect(searchPage).toContain("providerBuckets: activeSearchProviderBuckets");
+  });
+
+  it("keeps assisted Search lifecycle-scoped at the app boundary", () => {
+    expect(aiOrchestrator).not.toContain("@/app/config");
+    expect(aiOrchestrator).not.toContain("isLaunchSurfaceEnabled");
+    expect(aiOrchestrator).toContain("input.allowedIntentTypes");
+    expect(aiSearchHook).toContain("allowedIntentTypes");
+    expect(aiSearchIntentScope).toContain(
+      'isPlatformCapabilityEnabled("search")',
+    );
+    expect(aiSearchIntentScope).toContain(
+      "isProductModuleEnabled(INTENT_PRODUCT_MODULE[intentType])",
+    );
+    expect(aiSearchIntentScope).toContain('business_search: "business"');
+    expect(aiSearchIntentScope).toContain('service_search: "services"');
+    expect(assistedSearchPage).toContain("getActiveAISearchIntentTypes()");
+    expect(assistedSearchPage).toContain(
+      "allowedIntentTypes: activeAISearchIntentTypes",
+    );
   });
 
   it("keeps Map horizontal while Business is a lifecycle-scoped layer provider", () => {
