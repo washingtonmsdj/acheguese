@@ -11,6 +11,7 @@ import { useEffect, type ComponentType } from "react";
 import { AlertTriangle, Loader2 } from "lucide-react";
 import { Link, Outlet, useLocation, useOutletContext, useParams } from "react-router-dom";
 import { ErrorBoundary } from "@/shared/components/errors/ErrorBoundary";
+import { getNearbyTerritoryModuleKey } from "@/core/nearby/providers/registry";
 import { useGroupAvailability } from "@/core/territorial/hooks/useGroupAvailability";
 import type { GroupModuleAvailability } from "@/core/territorial/types";
 import { ModuleKey } from "@/core/rollout/types";
@@ -47,7 +48,6 @@ const SLUG_TO_MODULE_KEY: Record<string, ModuleKey> = {
   [MODULE_SLUGS.community]: ModuleKey.COMMUNITY,
   [MODULE_SLUGS.business]: ModuleKey.BUSINESS,
   [MODULE_SLUGS.map]: ModuleKey.BUSINESS,
-  [MODULE_SLUGS.nearby]: ModuleKey.BUSINESS,
   [MODULE_SLUGS.education]: ModuleKey.BUSINESS,
   [MODULE_SLUGS.services]: ModuleKey.SERVICES,
   [MODULE_SLUGS.classifieds]: ModuleKey.CLASSIFIEDS,
@@ -58,6 +58,10 @@ const SLUG_TO_MODULE_KEY: Record<string, ModuleKey> = {
 };
 
 function resolveModuleKeyFromSlug(slug: string): ModuleKey | null {
+  if (slug === MODULE_SLUGS.nearby) {
+    return getNearbyTerritoryModuleKey("business");
+  }
+
   return getRecordValue(SLUG_TO_MODULE_KEY, slug) ?? null;
 }
 
