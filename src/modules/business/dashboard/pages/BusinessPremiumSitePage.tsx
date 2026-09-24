@@ -6,14 +6,14 @@ import { Badge } from "@/shared/components/ui/badge";
 import { Button } from "@/shared/components/ui/button";
 import { QrImageGenerator } from "@/core/qr";
 import { useBusinessDashboardContext } from "@/modules/business/dashboard/businessDashboardContext";
-import { isLaunchSurfaceEnabled } from "@/app/config/launchScope";
+import { isProductModuleEnabled } from "@/app/config/lifecycleRegistry";
 
 export default function BusinessPremiumSitePage() {
   const { business, premiumUrl, publicUrl, entitlements } = useBusinessDashboardContext();
   const [isGeneratingQr, setIsGeneratingQr] = useState(false);
 
   const isPremiumEnabled = Boolean(premiumUrl && entitlements.canUseShortPremiumLink);
-  const showBilling = isLaunchSurfaceEnabled("billing");
+  const showBilling = isProductModuleEnabled("billing");
 
   const getAbsolutePremiumUrl = (): string | null => {
     if (!premiumUrl) return null;
