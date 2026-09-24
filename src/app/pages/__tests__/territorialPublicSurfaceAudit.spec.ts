@@ -74,16 +74,19 @@ describe("public territorial surface audit", () => {
     expect(detailSource).not.toContain("useTerritoryFilter(");
   });
 
-  it("keeps the territorial landing URL-first through module territory resolution", () => {
-    const landingSource = readProjectFile(
-      "src/core/routing/components/TerritorialLandingPage.tsx",
-    );
+  it("keeps the canonical territorial home limited to active MVP surfaces", () => {
+    const homeSource = readProjectFile("src/app/pages/TerritoryHomePage.tsx");
 
-    expect(landingSource).toContain("useModuleTerritoryFilter(");
-    expect(landingSource).toContain("routeResolved: resolved");
-    expect(landingSource).toContain("activeMemberIds");
-    expect(landingSource).toContain("const filter = moduleTerritory.territoryFilter");
-    expect(landingSource).not.toContain("useTerritoryFilter(");
+    for (const activeSlug of ["business", "map", "nearby", "search"]) {
+      expect(homeSource).toContain(`MODULE_SLUGS.${activeSlug}`);
+    }
+
+    for (const pausedSlug of ["services", "gastronomy", "classifieds", "community"]) {
+      expect(homeSource).not.toContain(`MODULE_SLUGS.${pausedSlug}`);
+    }
+
+    expect(homeSource).not.toContain("useLandingFeatured");
+    expect(homeSource).not.toContain("useCommunityProfile");
   });
 
   it("keeps events and community surfaces anchored to module territory at the page boundary", () => {
