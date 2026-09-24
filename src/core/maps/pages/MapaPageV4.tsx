@@ -35,6 +35,7 @@ import {
 } from '@/core/routing/utils/territoryUrls';
 import { boundaryService } from '@/core/geospatial';
 import type { BoundingBox, MapLayerKey, MapMarker, MapViewport } from '../types/core';
+import { EntityStatus } from '@/shared/types/enums';
 import { LocationStatus, type Location } from '@/core/location/types';
 import type { ResolvedTerritory } from '@/core/routing/hooks/useResolveTerritoryFromUrl';
 import type {
@@ -513,7 +514,7 @@ export default function MapaPageV4({
           longitude: focusTarget.longitude,
         },
         title: focusTarget.name,
-        status: 'active',
+        status: EntityStatus.ACTIVE,
         metadata: { focusTarget: true },
       },
     ] satisfies MapMarker[];
