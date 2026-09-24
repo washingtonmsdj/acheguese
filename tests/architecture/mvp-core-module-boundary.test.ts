@@ -72,6 +72,14 @@ describe("MVP core module boundary", () => {
   const onboardingVisualState = read(
     "tests/e2e/support/onboardingVisualState.ts",
   );
+  const cityHooksIndex = read("src/core/city/hooks/index.ts");
+
+  it("keeps callerless City featured discovery retired from the active core", () => {
+    expect(
+      existsSync(resolve(root, "src/core/city/hooks/useCityFeatured.ts")),
+    ).toBe(false);
+    expect(cityHooksIndex).not.toContain("useCityFeatured");
+  });
 
   it("keeps domain modules separate from horizontal platform capabilities", () => {
     expect(registry).toContain('business: { status: "active" }');
