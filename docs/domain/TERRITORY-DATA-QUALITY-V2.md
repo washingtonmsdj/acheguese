@@ -3,7 +3,7 @@
 **Sprint:** TERRITORY.DATA-QUALITY.V2
 **Status:** padrão oficial de governança de qualidade territorial
 **Escopo:** domínio Territory e readiness territorial-operacional
-**Base:** `TERRITORY-DATA-QUALITY.md`, `TERRITORY-DATA-QUALITY-REVIEW.md`, `TERRITORY-GOVERNANCE.md`
+**Base:** `TERRITORY-GOVERNANCE.md` e histórico de revisão preservado no Git
 **Regra:** este documento é especificação de governança. Não implementa código, banco, migrations, contratos ou arquitetura.
 
 ## 1. Decisão central
@@ -669,14 +669,10 @@ Toda auditoria deve produzir uma linha por entidade auditada.
 | `audited_at` | Timestamp da auditoria. |
 | `valid_until` | Validade da auditoria. |
 
-## 14. Documentos substituídos
+## 14. Precedência histórica
 
-Esta V2 substitui como referência de governança:
+Esta V2 substitui integralmente a antiga V1 e a revisão que levou à mudança do modelo. Esses documentos não permanecem na árvore ativa; seu histórico está preservado no Git.
 
-- `docs/domain/TERRITORY-DATA-QUALITY.md`;
-- a decisão final de `docs/domain/TERRITORY-DATA-QUALITY-REVIEW.md`.
-
-O review permanece como histórico e justificativa técnica da mudança. A V1 permanece como histórico, mas não deve ser usada como padrão de decisão.
 
 Esta V2 complementa, mas não substitui:
 
