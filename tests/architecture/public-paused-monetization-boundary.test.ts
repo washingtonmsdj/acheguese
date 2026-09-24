@@ -181,10 +181,9 @@ describe("public paused monetization boundary", () => {
     );
     expect(appTopbar).not.toContain("isLaunchSurfaceEnabled");
     expect(appTopbar).toContain("{showBilling ? (");
-    expect(centralHeader).toContain(
-      'const showBilling = isLaunchSurfaceEnabled("billing")',
-    );
-    expect(centralHeader).toContain("{showBilling ? (");
+    expect(centralHeader).not.toContain("isLaunchSurfaceEnabled");
+    expect(centralHeader).not.toContain("@/app/config");
+    expect(centralHeader).toContain("{billingEnabled ? (");
     expect(premiumSite).toContain(
       'const showBilling = isLaunchSurfaceEnabled("billing")',
     );

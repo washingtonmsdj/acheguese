@@ -13,10 +13,18 @@ import * as P from "../activeCentralLazyImports";
  */
 export function CentralRoutes() {
   const businessEnabled = isProductModuleEnabled("business");
+  const billingEnabled = isProductModuleEnabled("billing");
 
   return (
     <Routes>
-      <Route element={<P.CentralLayout businessEnabled={businessEnabled} />}>
+      <Route
+        element={
+          <P.CentralLayout
+            businessEnabled={businessEnabled}
+            billingEnabled={billingEnabled}
+          />
+        }
+      >
         <Route element={<P.CentralAccessGuard />}>
           <Route index element={<P.CentralHubPage businessEnabled={businessEnabled} />} />
 

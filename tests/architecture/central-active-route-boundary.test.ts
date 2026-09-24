@@ -23,9 +23,8 @@ describe("active Central runtime boundary", () => {
   it("keeps paused domains out of the active Central route graph", () => {
     expect(routes).toContain('from "../activeCentralLazyImports"');
     expect(routes).toContain('isProductModuleEnabled("business")');
-    expect(routes).toContain(
-      "CentralLayout businessEnabled={businessEnabled}",
-    );
+    expect(routes).toContain('isProductModuleEnabled("billing")');
+    expect(routes).toContain("billingEnabled={billingEnabled}");
     expect(routes).toContain(
       "CentralHubPage businessEnabled={businessEnabled}",
     );
@@ -106,6 +105,12 @@ describe("active Central runtime boundary", () => {
     expect(hub).toContain("businessEnabled");
     expect(navigation).not.toContain("@/app/config");
     expect(hub).not.toContain("@/app/config");
+    const layout = read("src/modules/central/components/CentralLayout.tsx");
+    const header = read("src/modules/central/components/CentralHeader.tsx");
+    expect(layout).not.toContain("@/app/config");
+    expect(header).not.toContain("@/app/config");
+    expect(layout).toContain("billingEnabled={billingEnabled}");
+    expect(header).toContain("billingEnabled");
   });
 
   it("keeps the active Business dashboard independent from paused extensions", () => {

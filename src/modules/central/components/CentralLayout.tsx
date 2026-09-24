@@ -12,10 +12,12 @@ import { BottomNav } from "@/core/navigation/BottomNav";
  */
 interface CentralLayoutProps {
   readonly businessEnabled: boolean;
+  readonly billingEnabled: boolean;
 }
 
 export function CentralLayout({
   businessEnabled,
+  billingEnabled,
 }: CentralLayoutProps) {
   return (
     <>
@@ -26,7 +28,7 @@ export function CentralLayout({
       <div className="min-h-screen flex w-full bg-background">
         <CentralNavigation businessEnabled={businessEnabled} />
         <div className="flex-1 flex flex-col min-w-0 w-full">
-          <CentralHeader />
+          <CentralHeader billingEnabled={billingEnabled} />
           <main className="flex-1 p-4 md:p-6 pb-20 md:pb-6 w-full">
             <Outlet />
           </main>
