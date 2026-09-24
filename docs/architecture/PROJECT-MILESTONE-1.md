@@ -22,8 +22,6 @@ Documentos de referencia principais:
 - `docs/feed/FEED-MILESTONE-1-HARDENING.md`
 - `docs/feed/FEED-FREEZE-AUDIT.md`
 - `docs/feed/FEED-FREEZE-AUDIT-2.md`
-- `docs/feed/FEED-FREEZE.md`
-- `docs/feed/FEED-FREEZE-CHANGELOG.md`
 - `docs/architecture/SSOT_REGISTRY.md`
 - `docs/03-architecture/COMMUNITY_FIRST_ARCHITECTURE_SSOT.md`
 - `docs/03-architecture/COMMUNITY_PORTAL_PUBLIC_ENTITY_SSOT.md`
