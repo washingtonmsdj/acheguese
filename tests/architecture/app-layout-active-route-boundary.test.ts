@@ -107,7 +107,7 @@ describe("active AppLayout route boundary", () => {
     for (const activeOwner of [
       "@/app/pages/EmpresasLandingPage",
       "@/core/maps/pages/MapaPageV4",
-      "@/core/nearby/pages/NearbyPage",
+      "@/app/pages/NearbyPage",
       "@/app/pages/BuscaPage",
       "@/app/pages/NotificationsPage",
     ]) {
@@ -136,7 +136,7 @@ describe("active AppLayout route boundary", () => {
       'import("@/core/maps/pages/MapaPageV4")',
     );
     expect(activeLazyImports).toContain(
-      'import("@/core/nearby/pages/NearbyPage")',
+      'import("@/app/pages/NearbyPage")',
     );
   });
 

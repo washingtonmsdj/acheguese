@@ -5,6 +5,10 @@ const read = (path: string) => readFileSync(path, "utf8");
 
 describe("nearby MVP boundary", () => {
   const page = read("src/core/nearby/pages/NearbyPage.tsx");
+  const routeWrapper = read("src/app/pages/NearbyPage.tsx");
+  const providerScope = read("src/app/config/nearbyProviderScope.ts");
+  const providerRegistry = read("src/core/nearby/providers/registry.ts");
+  const platformRegistry = read("src/app/config/platformCapabilityRegistry.ts");
   const hook = read("src/core/nearby/hooks/useNearbyBusinesses.ts");
   const card = read("src/core/nearby/components/NearbyCard.tsx");
   const map = read("src/core/nearby/components/NearbyMiniMap.tsx");
@@ -27,7 +31,18 @@ describe("nearby MVP boundary", () => {
     expect(page).toContain("Não foi possível determinar o centro deste território; ative o GPS.");
   });
 
-  it("integrates only with the Business public owner", () => {
+  it("keeps Nearby horizontal and gates the current Business provider separately", () => {
+    expect(platformRegistry).toContain('dependsOnCapabilities: ["map", "location"]');
+    expect(platformRegistry).not.toContain('dependsOnProductModules: ["business"]');
+    expect(providerRegistry).toContain('export type NearbyProviderId = "business"');
+    expect(providerScope).toContain('isPlatformCapabilityEnabled("nearby")');
+    expect(providerScope).toContain("isProductModuleEnabled(productModule)");
+    expect(routeWrapper).toContain("getActiveNearbyProviderIds()");
+    expect(page).toContain('providerIds.includes("business")');
+    expect(page).toContain("providerIds.length === 0");
+    expect(hook).toContain("providerEnabled && center !== null");
+    expect(hook).toContain('import("@/core/business/services/BusinessService")');
+    expect(hook).not.toContain('import { BusinessService } from');
     expect(hook).toContain('entityType: "business"');
     expect(hook).toContain("BusinessService.getBusinessesByIds(ids)");
     expect(hook).toContain("BusinessUrlService.getPublicCanonicalUrl");

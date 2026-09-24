@@ -30,7 +30,6 @@ describe("launchScope", () => {
     expect(PLATFORM_CAPABILITY_REGISTRY.nearby).toEqual({
       status: "active",
       dependsOnCapabilities: ["map", "location"],
-      dependsOnProductModules: ["business"],
     });
 
     expect(PRODUCT_MODULE_REGISTRY.business.status).toBe("active");
