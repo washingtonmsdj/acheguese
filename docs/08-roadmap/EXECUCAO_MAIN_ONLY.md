@@ -4,14 +4,14 @@
 **Data do checkpoint GitHub:** 2026-09-24  
 **Repositório:** `washingtonmsdj/acheguese`  
 **Linha ativa:** `main`  
-**Baseline operacional auditada:** `main@ab7b4c6ccb8ead82388dd5862aa99e654a6dfe19` (merge de #350). Este checkpoint registra o estado do código; não promove um novo release. Qualquer merge posterior gera outro SHA e exige nova prova exact-SHA antes de promoção.
+**Baseline operacional auditada:** `main@ab5631f7aeeb577bdaeed0dbdd64dbfa428191b7` (merge de #351). Este checkpoint registra o estado do código; não promove um novo release. Qualquer merge posterior gera outro SHA e exige nova prova exact-SHA antes de promoção.
 
 Este documento consolida ordem de execução, blockers e Definition of Done. Ele é um **registro operacional**, não uma fotografia autoritativa do que existe no produto. A fonte de verdade para decidir o que existe, o que está ativo e o que deve ser corrigido é sempre o **projeto real**: código da `main`, rotas, owners, serviços, schema/migrations, contratos, testes, deploy/runtime e comportamento observado.
 
 
 ## Estado operacional atual — 2026-09-23
 
-- `main` auditada: `ab7b4c6ccb8ead82388dd5862aa99e654a6dfe19` (merge de #350);
+- `main` auditada: `ab5631f7aeeb577bdaeed0dbdd64dbfa428191b7` (merge de #351);
 - #327 / #325 removeu módulos pausados da árvore pública ativa, criou `activeLazyImports.ts` e fez URLs públicas sem owner ativo caírem no 404 canônico;
 - o head `fa747aa7c877d7a086b92277940681a27abba844` de #327 passou Dependency Lock, Security Check/Scan, Auth Concept, Visual Regression, SSOT Territorial, Heavy exact-SHA e SSOT Enforcement antes do merge;
 - #329 — Central active-only integrado: `/central/*` monta somente Business/Empresas + infraestrutura via `activeCentralLazyImports.ts`; módulos pausados ficam fora do grafo e URL sem owner cai no 404 canônico;
@@ -24,7 +24,7 @@ Este documento consolida ordem de execução, blockers e Definition of Done. Ele
 - #341 integrado — pins de resultados da Busca passaram a executar navegação real; Business delega ao owner canônico e não reconstrói URL no mapa;
 - #342 integrado — pins do mini-mapa de Perto de mim passaram a abrir `business.canonicalUrl`, alinhando card e mapa ao mesmo owner público;
 - #343 integrado — o hero/mapa de Empresas agora respeita `filteredBusinesses` inclusive quando o resultado é zero, sem reexibir silenciosamente a coleção não filtrada;
-- #350 integrado — Notificações passou a `paused`; rotas, lazy imports, prefetch/warmup e entradas principais da Conta foram retirados do grafo ativo, mantendo core/migrations/owners preservados para pós-MVP;
+- #350/#351 registraram um corte temporário que tratou Notificações como pausada; a decisão arquitetural subsequente corrige esse ponto: Notificações é capability horizontal de plataforma e deve permanecer ativa independentemente das verticais pausadas, com Inbox/preferências próprias e fail-closed para destinos verticais;
 - os heads finais de #337, #338, #339, #341, #342 e #343 passaram os gates aplicáveis de unit/runtime, lint/typecheck, arquitetura, segurança, E2E público, Regression, Heavy exact-SHA e SSOT Enforcement antes dos respectivos merges; isso certifica os PRs, mas não substitui prova pós-merge/deploy/smoke do SHA atual da `main`;
 - o blocker de release autenticado continua #305: o broker remoto está alinhado ao source e recebe OIDC válido, mas o upstream Supabase/Auth segue reproduzindo `503 auth_upstream_unavailable` / connection timeout; #309 continua separado como autoridade de deploy de Edge Functions. Nenhum merge herda certificação anterior: a `main@7a749254...` precisa de sua própria prova exact-SHA de deploy + smoke antes de promoção.
 
@@ -57,9 +57,9 @@ Este corte substitui, para fins de **prioridade de lançamento**, a ordem histó
 A decisão definitiva de release de **2026-09-21** separa domínio de produto e capabilities horizontais:
 
 - **Domínio ativo:** Empresas/Business;
-- **Capabilities ativas:** Mapa, Perto de mim, Busca e Mensagens;
+- **Capabilities ativas:** Mapa, Perto de mim, Busca, Mensagens e Notificações;
 - **Plataforma ativa:** Auth, Perfis/Conta, Território, Localização, Central, segurança, storage e observabilidade.
-- **Capability pausada neste corte:** Notificações; seus owners/core/migrations permanecem preservados, mas sem rota, navegação, discovery, prefetch ou warmup ativos.
+- **Boundary de Notificações:** Inbox/preferências/push são horizontais; console Admin e logs técnicos têm lifecycle próprio; eventos de verticais pausadas não podem reabrir suas rotas.
 
 Mensagens é horizontal e, no MVP, registra **somente Business Direct Messaging**. Classificados e Community preservam seus agregados, mas não entram na Inbox enquanto seus domínios estiverem pausados.
 

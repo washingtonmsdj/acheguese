@@ -67,7 +67,7 @@ describe("MVP canonical routing without compatibility redirects", () => {
     expect(serviceWorker).toContain("return '/mensagens';");
     expect(serviceWorker).toContain("return '/conta/notificacoes';");
     expect(serviceWorker).toContain("getLaunchSafeNotificationUrl(");
-    expect(serviceWorker).toContain("'/gastronomia/pedidos/");
+    expect(serviceWorker).toContain("/gastronomia/pedidos/");
 
     expect(appTopbar).toContain("appUrls.notifications");
     expect(centralHeader).toContain('to="/notificacoes"');

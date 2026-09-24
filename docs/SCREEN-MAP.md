@@ -1,6 +1,6 @@
 # SCREEN-MAP
 
-> **MVP atual — decisão consolidada em 2026-09-22:** **Business/Empresas** é o domínio público ativo. **Mapa, Perto de mim, Busca e Mensagens** são capabilities horizontais ativas.
+> **MVP atual — decisão consolidada em 2026-09-24:** **Business/Empresas** é o domínio público ativo. **Mapa, Perto de mim, Busca, Mensagens e Notificações** são capabilities horizontais ativas.
 >
 > Lifecycle canônico: `productModuleRegistry.ts` + `platformCapabilityRegistry.ts`, avaliados por `lifecycleRegistry.ts`. `launchScope.ts` é compatibilidade de superfície.
 >
@@ -15,6 +15,7 @@
 | Perto de mim | `/perto-de-mim`, `/perto-de-mim/:uf/:cidade[/:bairro]` | `core/nearby` | ativo; depende de Mapa + Empresas; rota territorial é autoridade quando presente |
 | Busca | `/busca`, `/busca/:uf/:cidade[/:bairro]`, `/buscar` | `core/search` + `BuscaPage`/`BuscarPage` | ativo; providers derivados do lifecycle |
 | Mensagens | `/mensagens`, `/mensagens/business/:threadId` | `core/messaging` + `modules/messaging` | ativo; provider Business no MVP |
+| Notificações | `/notificacoes`, `/conta/notificacoes` | `core/notifications` | ativo; Inbox e preferências horizontais; Admin/logs técnicos separados |
 
 ### Contrato de integração
 
@@ -33,6 +34,7 @@ Estas superfícies/capabilities suportam o domínio Business e **não são domí
 | `/`, `/:uf/:cidade[/:territorio]` | resolução e contexto territorial |
 | Auth / Conta | login, cadastro, sessão, privacidade e preferências |
 | Mensagens | Inbox/Chat horizontal; Business é o provider ativo |
+| Notificações | Inbox, preferências e push horizontais; verticais pausadas não são reativadas por links/eventos |
 | Institucional | `/como-funciona`, `/sobre`, termos, privacidade, DPO, contato/status; conteúdo deve refletir somente o lifecycle ativo e pode mencionar módulos pausados apenas como futuros/indisponíveis |
 | Admin/Central | operação interna, RBAC e gestão estritamente necessária; Admin deriva lifecycle por `adminSurfaceScope.ts`; Central ativa contém apenas Business/Empresas (`/central/empresas/*`) + infraestrutura, sem rotas/placeholders/queries de módulos pausados |
 
@@ -60,8 +62,8 @@ O shell de gestão Business também não pode consultar Billing/Gastronomia/vert
 - `/conta/profissional` foi removida do shell público enquanto Serviços está pausado.
 - `/perfil/*` foi aposentado como alias privado. Conta usa somente `/conta/*`; perfil público usa somente `/u/:username`.
 - edição de perfil usa somente `/conta/editar/:profileId`; `/conta/editar` sem identidade explícita foi removida.
-- Notificações estão `paused` no MVP: `/notificacoes`, `/conta/notificacoes`, `/settings/email-logs`, `/notifications` e `/settings/notifications` não integram o grafo ativo.
-- Core, preferências, migrations e owners de Notificações permanecem preservados para pós-MVP; reativação exige lifecycle explícito e reconexão ao boundary ativo.
+- Notificações estão `active` como capability horizontal: `/notificacoes` e `/conta/notificacoes` são as rotas canônicas.
+- `/notifications`, `/settings/notifications` e `/settings/email-logs` permanecem fora do grafo ativo; aliases antigos e logs técnicos não são reativados junto com a capability de usuário.
 - `/conta/preferencias?tab=...` não redireciona para outras telas. Os destinos canônicos possuem URL própria.
 - rota desconhecida renderiza 404; não existe catch-all para `/`.
 - gestão de Business não possui raízes paralelas: `/create-business`, `/edit-business/:profileId` e `/dashboard/business/:profileId` foram aposentadas; criação/gestão/edição usam somente `/central/empresas/*`.

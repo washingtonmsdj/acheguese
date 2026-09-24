@@ -4,7 +4,7 @@ Plataforma hiperlocal com arquitetura modular orientada a território.
 
 > **MVP atual (2026-09-21):** **Business/Empresas** é o domínio de produto ativo.
 >
-> **Capabilities horizontais ativas:** Mapa, Perto de mim, Busca, Mensagens (provider Business), Auth, Perfis/Conta, Território, Localização e Central.
+> **Capabilities horizontais ativas:** Mapa, Perto de mim, Busca, Mensagens (provider Business), Notificações, Auth, Perfis/Conta, Território, Localização e Central.
 >
 > Community, Classificados, Serviços, Gastronomia, Eventos, Educação, Mobilidade e demais domínios permanecem pausados até certificação individual.
 
@@ -39,8 +39,8 @@ As autoridades executáveis são:
 Estado do MVP:
 
 - domínio: `business: active`;
-- capabilities: `map`, `nearby`, `search`, `messaging`, Auth, Perfis/Conta, Território, Localização e Central ativas;
-- `notifications: paused`; core, migrations e owners permanecem preservados para pós-MVP, fora de rota, navegação, discovery, prefetch e warmup ativos;
+- capabilities: `map`, `nearby`, `search`, `messaging`, `notifications`, Auth, Perfis/Conta, Território, Localização e Central ativas;
+- capability horizontal ativa não reativa vertical pausada: Notificações permanece independente de Gastronomia, Mobilidade, Community e demais domínios, e destinos de verticais pausadas falham fechado;
 - `nearby` depende de Map + Location + Business;
 - `messaging` registra somente Business Direct Messaging;
 - demais domínios de produto: `paused`.

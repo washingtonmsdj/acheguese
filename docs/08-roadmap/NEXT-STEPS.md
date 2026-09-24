@@ -12,9 +12,10 @@ Capabilities horizontais ativas no lançamento:
 2. **Perto de mim** (`nearby`);
 3. **Busca** (`search`);
 4. **Mensagens** (`messaging`, provider MVP = Business);
-5. Auth, Perfis/Conta, Território, Localização e Central.
+5. **Notificações** (`notifications`, Inbox + preferências + entrega horizontal);
+6. Auth, Perfis/Conta, Território, Localização e Central.
 
-**Notificações (`notifications`) estão `paused` no corte atual.** Core, migrations e owners permanecem preservados para pós-MVP, mas não podem participar de rota, navegação, discovery, prefetch ou warmup ativos.
+Notificações pertence à plataforma, não a uma vertical. Gastronomia, Mobilidade, Community e demais domínios podem permanecer `paused` sem desligar Inbox, preferências ou push; qualquer destino pertencente a vertical pausada deve falhar fechado.
 
 `nearby` depende de Map + Location + Business. `messaging` depende de Auth +
 Perfis + Business e registra somente providers de domínios ativos.
@@ -40,7 +41,7 @@ Regras:
 
 1. **Concluir o corte modular**
    - manter `business` como domínio ativo;
-   - manter `map`, `nearby`, `search` e `messaging` como capabilities ativas;
+   - manter `map`, `nearby`, `search`, `messaging` e `notifications` como capabilities ativas;
    - provar `nearby -> map + location + business`;
    - provar `messaging -> auth + profiles + business` e provider Business-only;
    - manter Mapa consumindo Business por port público, sem conhecer schema/tabelas internas;
@@ -67,6 +68,7 @@ Regras:
    - Perto de mim;
    - Busca;
    - Mensagens/Business Direct Messaging;
+   - Notificações/Inbox/Preferências;
    - contratos de plataforma utilizados diretamente pelo domínio e capabilities;
    - truthfulness de localização/distância;
    - boundary Map -> Business;

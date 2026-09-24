@@ -39,7 +39,8 @@ Dependências importantes:
 - `nearby -> map + location + business`;
 - `messaging -> auth + profiles + business`;
 - Search só executa providers de domínios/capabilities habilitados;
-- Map só projeta layers de domínios habilitados.
+- Map só projeta layers de domínios habilitados;
+- Notifications permanece horizontal: Inbox, preferências e entrega podem ficar ativas mesmo com verticais pausadas, mas nenhum evento pode reabrir uma rota vertical desabilitada.
 
 No MVP, Messaging registra somente o provider **Business Direct Messaging**.
 
@@ -107,6 +108,19 @@ Regras:
 - Business é o provider público ativo no MVP;
 - payload stale de domínio pausado deve ser descartado também na apresentação;
 - Search não vira owner dos dados pesquisados.
+
+## Notifications
+
+Notifications é capability horizontal de plataforma.
+
+No MVP:
+
+- Inbox canônica: `/notificacoes`;
+- preferências canônicas: `/conta/notificacoes`;
+- o owner é `core/notifications`, não Business, Mobility ou Gastronomy;
+- verticais futuras publicam eventos/entregas por contratos, sem tomar ownership da Inbox;
+- destino de notificação pertencente a domínio `paused` deve falhar fechado para uma superfície horizontal segura;
+- console Admin e logs técnicos possuem lifecycle próprio e podem permanecer pausados mesmo com a capability de usuário ativa.
 
 ## Messaging
 
