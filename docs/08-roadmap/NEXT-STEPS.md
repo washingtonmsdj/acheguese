@@ -14,7 +14,7 @@ Capabilities horizontais ativas no lançamento:
 4. **Mensagens** (`messaging`, provider MVP = Business);
 5. Auth, Perfis/Conta, Território, Localização, Notificações e Central.
 
-`nearby` depende estruturalmente de Map + Location; providers verticais são gated separadamente e Business é o provider MVP atual. `messaging` depende de Auth + Perfis e registra somente providers de domínios ativos.
+`nearby` depende estruturalmente de Map + Location; providers verticais são gated separadamente e Business é o provider MVP atual. `map` possui registry/scope próprio de layers e Business é a única layer de domínio ativa no MVP. `messaging` depende de Auth + Perfis e registra somente providers de domínios ativos.
 
 Todos os demais módulos de produto permanecem **pausados e fail-closed** até certificação individual. Código preservado para pós-MVP não pode aparecer em navegação, rotas funcionais, prefetch, discovery, providers públicos ou layers do Mapa.
 
@@ -38,9 +38,10 @@ Regras:
 1. **Concluir o corte modular**
    - manter `business` como domínio ativo;
    - manter `map`, `nearby`, `search` e `messaging` como capabilities ativas;
-   - provar `nearby -> map + location + business`;
-   - provar `messaging -> auth + profiles + business` e provider Business-only;
-   - manter Mapa consumindo Business por port público, sem conhecer schema/tabelas internas;
+   - manter `nearby -> map + location`, com Business apenas como provider lifecycle-scoped;
+   - manter `map` como capability horizontal e suas layers como providers lifecycle-scoped;
+   - provar `messaging -> auth + profiles`, com provider Business-only no MVP;
+   - manter o provider Business do Mapa consumindo seu port público bounded, sem schema/tabelas internas no owner horizontal;
    - manter toda gestão de Business sob `/central/empresas/*`, inclusive edição em `/:businessId/editar`;
    - eliminar imports e delegações do núcleo ativo para módulos pausados.
 
@@ -168,4 +169,4 @@ Não acoplar uma capability horizontal ao único domínio ativo do momento. Para
 
 Nearby e Messaging são os padrões de referência desse modelo. Notifications segue a mesma regra para publicação e destino de eventos.
 
-Boundary territorial de Nearby: providerizado. Antes de habilitar um segundo provider, basta registrar seu lifecycle + rollout owner; a cobertura de grupos será agregada por união dos membros cobertos. Próxima auditoria equivalente: Map, que ainda projeta apenas Business no MVP e deve manter layer/rollout desacoplados quando receber um segundo domínio.
+Boundaries territoriais de Nearby e Map: providerizados. Antes de habilitar um segundo provider/layer, registrar lifecycle + rollout owner; a cobertura de grupos é agregada por união dos membros cobertos. Não adicionar hardcode de domínio em `TerritorialLayout`.

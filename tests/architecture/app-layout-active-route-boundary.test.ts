@@ -106,7 +106,7 @@ describe("active AppLayout route boundary", () => {
 
     for (const activeOwner of [
       "@/app/pages/EmpresasLandingPage",
-      "@/core/maps/pages/MapaPageV4",
+      "@/app/pages/MapaPage",
       "@/app/pages/NearbyPage",
       "@/app/pages/BuscaPage",
       "@/app/pages/NotificationsPage",
@@ -133,7 +133,7 @@ describe("active AppLayout route boundary", () => {
       'import("@/app/pages/EmpresasLandingPage")',
     );
     expect(activeLazyImports).toContain(
-      'import("@/core/maps/pages/MapaPageV4")',
+      'import("@/app/pages/MapaPage")',
     );
     expect(activeLazyImports).toContain(
       'import("@/app/pages/NearbyPage")',
@@ -171,7 +171,7 @@ describe("active AppLayout route boundary", () => {
 
   it("keeps active territorial wrappers free of post-MVP imports", () => {
     expect(activeTerritorialPages).toContain("CategoryBusinessPage");
-    expect(activeTerritorialPages).toContain("MapaPageV4");
+    expect(activeTerritorialPages).toContain("@/app/pages/MapaPage");
 
     for (const pausedImport of [
       "community-feed",

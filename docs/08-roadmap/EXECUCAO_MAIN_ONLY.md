@@ -4,7 +4,7 @@
 **Data do checkpoint GitHub:** 2026-09-24  
 **Repositório:** `washingtonmsdj/acheguese`  
 **Linha ativa:** `main`  
-**Baseline operacional auditada:** `main@f6968c3c90bfe1a1ca698cab50d63456167a9333` (merge de #356). Este checkpoint registra o estado do código; não promove um novo release. Qualquer merge posterior gera outro SHA e exige nova prova exact-SHA antes de promoção.
+**Baseline operacional auditada:** `main@63f36cf165fb15b7b6e5692d790fc1e0a8f82154` (merge de #358). Este checkpoint registra o estado do código; não promove um novo release. Qualquer merge posterior gera outro SHA e exige nova prova exact-SHA antes de promoção.
 
 Este documento consolida ordem de execução, blockers e Definition of Done. Ele é um **registro operacional**, não uma fotografia autoritativa do que existe no produto. A fonte de verdade para decidir o que existe, o que está ativo e o que deve ser corrigido é sempre o **projeto real**: código da `main`, rotas, owners, serviços, schema/migrations, contratos, testes, deploy/runtime e comportamento observado.
 
@@ -1681,3 +1681,22 @@ Correção estrutural:
 - testes ratchet impedem reintroduzir `[MODULE_SLUGS.nearby]: ModuleKey.BUSINESS`.
 
 Regra futura: adicionar Services/Tourism/Gastronomy/etc. a Nearby deve ser uma alteração localizada no provider scope/registry, sem refatorar `TerritorialLayout`.
+
+### Checkpoint MVP — Map layer/provider boundary (2026-09-24)
+
+Após providerizar Nearby, a auditoria encontrou dois acoplamentos residuais do Mapa: `core/maps/config/runtimeConfig.ts` importava `app/config/launchScope`, e `TerritorialLayout.tsx` tratava `mapa` como `ModuleKey.BUSINESS`.
+
+Correção estrutural do corte:
+
+- Mapa permanece capability horizontal ativa;
+- `mapLayerProviderScope.ts` em `app/config` decide quais providers/layers podem participar do runtime;
+- `core/maps/providers/registry.ts` descreve providers e lazy-loads, sem decidir lifecycle;
+- `MapaPage` no boundary de app carrega somente providers ativos e os injeta em `MapaPageV4`;
+- `MapaPageV4` fica provider-agnostic e não conhece Business, Services, Gastronomy ou Classifieds como lifecycle;
+- Business mantém o adapter bounded em `businessMapLayerProvider.ts` e continua sendo a única layer de domínio do MVP;
+- `ActiveTerritorialLayout` injeta os rollout owners das layers ativas para `MODULE_SLUGS.map`;
+- `TerritorialLayout` não deve voltar a mapear `mapa -> ModuleKey.BUSINESS`;
+- foco por `?lat=&lng=` é marcador neutro de localização, sem assumir domínio Business;
+- providers preservados de verticais pausadas não entram no grafo ativo até seu lifecycle ser certificado.
+
+Regra futura: adicionar Services, Gastronomy, Classifieds, Events, Tourist Points ou Mobility ao Mapa deve significar registrar/certificar uma layer provider e seu rollout owner, não editar o core da página para importar o domínio.

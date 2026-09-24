@@ -226,6 +226,7 @@ Estado do MVP em 2026-09-24:
 - vertical ativa: `business`;
 - horizontais ativas incluem Map, Nearby, Search, Messaging e Notifications;
 - Messaging: owner horizontal + provider Business Direct Messaging;
+- Map: owner horizontal; layers de domínio são providers lifecycle-scoped e Business é o único provider ativo no MVP;
 - Nearby: owner horizontal, dependências estruturais Map + Location, provider Business de proximidade gated separadamente;
 - Notifications: owner horizontal; eventos podem vir de verticais, mas payload stale de vertical pausada não pode reabrir o domínio.
 
@@ -235,14 +236,16 @@ Estado do MVP em 2026-09-24:
 
 Uma capability horizontal não deve reutilizar silenciosamente o rollout de uma vertical como se fossem a mesma unidade.
 
-Para Nearby:
+Para Map e Nearby:
 
-- `nearbyProviderScope.ts` decide quais providers estão ativos;
+- `mapLayerProviderScope.ts` decide quais layers/providers do Mapa estão ativos;
+- `nearbyProviderScope.ts` decide quais providers Nearby estão ativos;
 - cada provider ativo possui um `ModuleKey` de rollout territorial;
+- `core/maps` mantém contratos/registry de providers, mas não importa `app/config` nem decide lifecycle;
 - `ActiveTerritorialLayout` injeta esses keys no `TerritorialLayout`;
 - `TerritorialLayout` permanece em `core` e não importa `app/config`;
 - a cobertura de grupo é agregada com semântica **OR por membro**: um bairro participa da surface se pelo menos um provider ativo estiver liberado nele;
 - `activeMemberIds` é a união dos membros cobertos pelos providers ativos;
 - zero providers ou zero membros cobertos permanece fail-closed.
 
-No MVP, Business continua sendo o único provider Nearby, portanto o resultado observado é equivalente ao comportamento anterior, sem acoplamento estrutural.
+No MVP, Business continua sendo o único provider tanto de layer do Mapa quanto de Nearby. O resultado público permanece equivalente ao comportamento anterior, mas `mapa -> Business` e `nearby -> Business` deixam de ser acoplamentos estruturais.

@@ -10,6 +10,13 @@ describe("MVP core module boundary", () => {
   const platformRegistry = read("src/app/config/platformCapabilityRegistry.ts");
   const nearbyProviderScope = read("src/app/config/nearbyProviderScope.ts");
   const nearbyRouteWrapper = read("src/app/pages/NearbyPage.tsx");
+  const mapLayerProviderScope = read("src/app/config/mapLayerProviderScope.ts");
+  const mapRouteWrapper = read("src/app/pages/MapaPage.tsx");
+  const mapProviderRegistry = read("src/core/maps/providers/registry.ts");
+  const mapBusinessProvider = read(
+    "src/core/maps/providers/businessMapLayerProvider.ts",
+  );
+  const mapRuntimeConfig = read("src/core/maps/config/runtimeConfig.ts");
   const activeTerritorialWrapper = read(
     "src/app/routes/territorial/ActiveTerritorialModulePages.tsx",
   );
@@ -82,10 +89,23 @@ describe("MVP core module boundary", () => {
     expect(nearbyProviderScope).toContain('isPlatformCapabilityEnabled("nearby")');
     expect(nearbyProviderScope).toContain("isProductModuleEnabled(productModule)");
     expect(nearbyRouteWrapper).toContain("getActiveNearbyProviderIds()");
+    expect(mapLayerProviderScope).toContain('isPlatformCapabilityEnabled("map")');
+    expect(mapLayerProviderScope).toContain("isProductModuleEnabled(productModule)");
+    expect(mapRouteWrapper).toContain("getActiveMapLayerProviderIds()");
+    expect(mapRouteWrapper).toContain("loadMapLayerProvider");
+    expect(mapProviderRegistry).toContain('business: {');
+    expect(mapProviderRegistry).toContain('layerKey: "businesses"');
     expect(nearbyProviderScope).toContain(
       "getActiveNearbyProviderRolloutModuleKeys",
     );
+    expect(activeTerritorialWrapper).toContain("[MODULE_SLUGS.map]");
     expect(activeTerritorialWrapper).toContain("[MODULE_SLUGS.nearby]");
+    expect(activeTerritorialWrapper).toContain(
+      "getActiveMapLayerRolloutModuleKeys()",
+    );
+    expect(territorialLayout).not.toContain(
+      "[MODULE_SLUGS.map]: ModuleKey.BUSINESS",
+    );
     expect(territorialLayout).not.toContain(
       "[MODULE_SLUGS.nearby]: ModuleKey.BUSINESS",
     );
@@ -232,13 +252,23 @@ describe("MVP core module boundary", () => {
     expect(businessIndex).not.toContain("gastronomy.queries");
   });
 
-  it("keeps Map independent from paused product owners", () => {
-    expect(map).toContain("mapBusinessLayerRuntimeService");
-    expect(map).toContain("makeBusinessFetcher");
+  it("keeps Map horizontal while Business is a lifecycle-scoped layer provider", () => {
+    expect(map).toContain("providers = []");
+    expect(map).toContain("provider.createFetcher(runtimeTerritoryFilter)");
+    expect(map).not.toContain("mapBusinessLayerRuntimeService");
+    expect(map).not.toContain("makeBusinessFetcher");
+    expect(map).not.toContain("MODULE_SLUGS.business");
+    expect(mapRouteWrapper).toContain("getActiveMapLayerProviderIds()");
+    expect(mapLayerProviderScope).toContain("getActiveMapLayerRolloutModuleKeys");
+    expect(mapBusinessProvider).toContain(
+      "mapBusinessLayerRuntimeService.getBusinessesByBounds(bounds",
+    );
     expect(mapBusinessAdapter).toContain("businessMapQueryService.getBusinessesByBounds");
     expect(mapBusinessAdapter).not.toContain("public_business_search");
     expect(mapBusinessAdapter).not.toContain("@/integrations/supabase");
     expect(businessMapQuery).toContain('from<BusinessMapRow>("public_business_search")');
+    expect(mapRuntimeConfig).not.toContain("@/app/config/launchScope");
+    expect(mapRuntimeConfig).not.toContain("isLaunchSurfaceEnabled");
 
     for (const forbidden of [
       "mapGastronomyLayerRuntimeService",
