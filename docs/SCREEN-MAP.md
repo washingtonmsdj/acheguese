@@ -13,14 +13,14 @@
 | Empresas | `/empresas`, `/empresas/:uf/:cidade[/:bairro]`, detalhe canônico por slug | `core/business` + `EmpresasLandingPage` | ativo |
 | Mapa | `/mapa`, `/mapa/:uf/:cidade[/:bairro]` | `core/maps` | ativo |
 | Perto de mim | `/perto-de-mim`, `/perto-de-mim/:uf/:cidade[/:bairro]` | `core/nearby` | ativo; depende de Mapa + Empresas; rota territorial é autoridade quando presente |
-| Busca | `/busca`, `/busca/:uf/:cidade[/:bairro]`, `/buscar` | `core/search` + `BuscaPage`/`BuscarPage` | ativo; providers derivados do lifecycle |
+| Busca | `/busca`, `/busca/:uf/:cidade[/:bairro]`, `/buscar` | `core/search` + `BuscaPage`/`BuscarPage` | ativo; providers e sugestões derivados do lifecycle; preview de Business preserva a URL canônica do documento |
 | Mensagens | `/mensagens`, `/mensagens/business/:threadId` | `core/messaging` + `modules/messaging` | ativo; provider Business no MVP |
 
 ### Contrato de integração
 
 - Mapa público renderiza somente layers de módulos ativos; no MVP, o layer de domínio é Business.
 - Perto de mim consulta Business por proximidade e projeta as mesmas URLs canônicas de Empresas. Em rota territorial, o território resolvido pela URL prevalece sobre estado global lembrado; GPS real continua sendo a única fonte de distância pessoal.
-- Busca consulta apenas providers cujas superfícies estão ativas; no corte atual, Business é o provider público principal.
+- Busca consulta apenas providers cujas superfícies estão ativas; no corte atual, Business é o provider público principal. Sugestões também obedecem ao lifecycle e não promovem providers pausados. O preview de mapa reutiliza `SearchDocument.url` para abrir a empresa específica; não reimplementa a regra de URL.
 - Categoria de empresa não depende do lifecycle de uma vertical especializada. Uma escola pode aparecer em Empresas/Mapa/Perto de mim enquanto `education=false`.
 - Nenhum módulo pausado pode reaparecer por URL direta, navegação, preview, busca, mapa, Central ou Admin. No shell público, módulo `paused` não tem rota/fallback próprio; URL sem owner ativo cai no 404 canônico.
 
@@ -35,7 +35,6 @@ Estas superfícies/capabilities suportam o domínio Business e **não são domí
 | Mensagens | Inbox/Chat horizontal; Business é o provider ativo |
 | Institucional | `/como-funciona`, `/sobre`, termos, privacidade, DPO, contato/status; conteúdo deve refletir somente o lifecycle ativo e pode mencionar módulos pausados apenas como futuros/indisponíveis |
 | Admin/Central | operação interna, RBAC e gestão estritamente necessária; Admin deriva lifecycle por `adminSurfaceScope.ts`; Central ativa contém apenas Business/Empresas (`/central/empresas/*`) + infraestrutura, sem rotas/placeholders/queries de módulos pausados |
-
 
 ## Módulos pós-MVP
 
