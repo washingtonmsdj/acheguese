@@ -60,12 +60,6 @@ const BACK_CASES: readonly BackCase[] = [
     label: "Voltar para Preferências",
     expected: /\/conta\/preferencias$/,
   },
-  {
-    name: "notificações volta para Minha conta",
-    from: "/conta/notificacoes",
-    label: "Voltar para Minha conta",
-    expected: /\/conta$/,
-  },
 ] as const;
 
 test.setTimeout(120_000);

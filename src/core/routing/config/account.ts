@@ -19,7 +19,6 @@ export const ACCOUNT_PATHS = {
 export const ACCOUNT_SETTINGS_SHELL_PATHS = new Set<string>([
   ACCOUNT_PATHS.home,
   ACCOUNT_PATHS.security,
-  ACCOUNT_PATHS.notifications,
   ACCOUNT_PATHS.privacy,
   ACCOUNT_PATHS.preferences,
   ACCOUNT_PATHS.addresses,

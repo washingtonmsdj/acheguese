@@ -18,7 +18,6 @@ describe("platformCapabilityRegistry", () => {
         "profiles",
         "territory",
         "location",
-        "notifications",
         "central",
         "map",
         "nearby",
@@ -28,6 +27,11 @@ describe("platformCapabilityRegistry", () => {
     );
 
     expect(isPlatformCapabilityEnabled("messaging")).toBe(true);
+    expect(isPlatformCapabilityEnabled("notifications")).toBe(false);
+    expect(PLATFORM_CAPABILITY_REGISTRY.notifications).toEqual({
+      status: "paused",
+      dependsOnCapabilities: ["auth"],
+    });
   });
 
   it("keeps Nearby dependent on Map + Location + Business", () => {
