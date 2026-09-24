@@ -33,6 +33,31 @@ describe("live documentation hygiene", () => {
     expect(readme).not.toContain("PRODUCTION_AUDIT.md");
   });
 
+  it("keeps live roadmap docs free of stale commit snapshots", () => {
+    const execution = readFileSync(
+      "docs/08-roadmap/EXECUCAO_MAIN_ONLY.md",
+      "utf8",
+    );
+    const nextSteps = readFileSync(
+      "docs/08-roadmap/NEXT-STEPS.md",
+      "utf8",
+    );
+    const docsIndex = readFileSync("docs/README.md", "utf8");
+
+    for (const content of [execution, nextSteps]) {
+      expect(content).not.toMatch(/\b[0-9a-f]{40}\b/i);
+      expect(content).not.toContain("A `main` atual é");
+      expect(content).not.toContain("PRs #");
+    }
+
+    expect(
+      existsSync("URGENTE_LEIA_PRIMEIRO_REORGANIZACAO_GLOBAL.md"),
+    ).toBe(false);
+    expect(docsIndex).not.toContain(
+      "URGENTE_LEIA_PRIMEIRO_REORGANIZACAO_GLOBAL.md",
+    );
+  });
+
   it("keeps active source comments descriptive instead of migration logs", () => {
     const hook = readFileSync(
       "src/core/posts/hooks/usePostActions.ts",
