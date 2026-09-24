@@ -113,6 +113,10 @@ describe("active AppLayout route boundary", () => {
     ]) {
       expect(prefetch).toContain(activeOwner);
     }
+
+    expect(prefetch).not.toContain("@/app/config/launchScope");
+    expect(prefetch).toContain('isProductModuleEnabled("business")');
+    expect(prefetch).toContain('isPlatformCapabilityEnabled("notifications")');
   });
 
   it("keeps the active lazy graph free of post-MVP owners", () => {

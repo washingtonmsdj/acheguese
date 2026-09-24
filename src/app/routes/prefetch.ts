@@ -3,6 +3,9 @@
  *
  * Carrega apenas chunks alcançáveis pelo runtime ativo sob demanda
  * (hover/focus/touch), reduzindo latência percebida no primeiro clique.
+ *
+ * Lifecycle é resolvido neste boundary de app; loaders não conhecem
+ * launchScope nem decidem estado de domínio/capability por conta própria.
  */
 import {
   APP_MODULE_SLUGS,
@@ -10,38 +13,43 @@ import {
   isAppModulePath,
 } from "@/shared/config/moduleSlugs";
 import {
-  isLaunchSurfaceEnabled,
-  type LaunchSurfaceKey,
-} from "@/app/config/launchScope";
+  isPlatformCapabilityEnabled,
+  isProductModuleEnabled,
+} from "@/app/config/lifecycleRegistry";
 
-const PREFETCHERS: Array<{
+type PrefetchLifecycleGate = () => boolean;
+
+interface PrefetchEntry {
   test: (path: string) => boolean;
   load: () => Promise<unknown>;
-  surface?: LaunchSurfaceKey;
-}> = [
+  enabled: PrefetchLifecycleGate;
+}
+
+const PREFETCHERS: PrefetchEntry[] = [
   {
     test: (path) => isAppModulePath(path, APP_MODULE_SLUGS.business),
     load: () => import("@/app/pages/EmpresasLandingPage"),
-    surface: "business",
+    enabled: () => isProductModuleEnabled("business"),
   },
   {
     test: (path) => isAppModulePath(path, APP_MODULE_SLUGS.map),
     load: () => import("@/app/pages/MapaPage"),
-    surface: "map",
+    enabled: () => isPlatformCapabilityEnabled("map"),
   },
   {
     test: (path) => isAppModulePath(path, APP_MODULE_SLUGS.nearby),
     load: () => import("@/app/pages/NearbyPage"),
-    surface: "nearby",
+    enabled: () => isPlatformCapabilityEnabled("nearby"),
   },
   {
     test: (path) => isAppModulePath(path, APP_MODULE_SLUGS.search),
     load: () => import("@/app/pages/BuscaPage"),
-    surface: "search",
+    enabled: () => isPlatformCapabilityEnabled("search"),
   },
   {
     test: (path) => path.startsWith("/notificacoes"),
     load: () => import("@/app/pages/NotificationsPage"),
+    enabled: () => isPlatformCapabilityEnabled("notifications"),
   },
 ];
 
@@ -50,19 +58,34 @@ let idleWarmupScheduled = false;
 
 const IDLE_WARMUP_ROUTES: Array<{
   href: string;
-  surface?: LaunchSurfaceKey;
+  enabled: PrefetchLifecycleGate;
 }> = [
-  { href: buildAppModulePath(APP_MODULE_SLUGS.business), surface: "business" },
-  { href: buildAppModulePath(APP_MODULE_SLUGS.map), surface: "map" },
-  { href: buildAppModulePath(APP_MODULE_SLUGS.nearby), surface: "nearby" },
-  { href: buildAppModulePath(APP_MODULE_SLUGS.search), surface: "search" },
-  { href: "/notificacoes" },
+  {
+    href: buildAppModulePath(APP_MODULE_SLUGS.business),
+    enabled: () => isProductModuleEnabled("business"),
+  },
+  {
+    href: buildAppModulePath(APP_MODULE_SLUGS.map),
+    enabled: () => isPlatformCapabilityEnabled("map"),
+  },
+  {
+    href: buildAppModulePath(APP_MODULE_SLUGS.nearby),
+    enabled: () => isPlatformCapabilityEnabled("nearby"),
+  },
+  {
+    href: buildAppModulePath(APP_MODULE_SLUGS.search),
+    enabled: () => isPlatformCapabilityEnabled("search"),
+  },
+  {
+    href: "/notificacoes",
+    enabled: () => isPlatformCapabilityEnabled("notifications"),
+  },
 ];
 
-export function getLaunchWarmupHrefs(): string[] {
-  return IDLE_WARMUP_ROUTES.filter(
-    (entry) => !entry.surface || isLaunchSurfaceEnabled(entry.surface),
-  ).map((entry) => entry.href);
+export function getActiveWarmupHrefs(): string[] {
+  return IDLE_WARMUP_ROUTES.filter((entry) => entry.enabled()).map(
+    (entry) => entry.href,
+  );
 }
 
 function normalizePath(href: string): string {
@@ -75,8 +98,7 @@ export function prefetchRouteByHref(href: string): void {
   if (!path || prefetchedPaths.has(path)) return;
 
   const candidate = PREFETCHERS.find((entry) => entry.test(path));
-  if (!candidate) return;
-  if (candidate.surface && !isLaunchSurfaceEnabled(candidate.surface)) return;
+  if (!candidate || !candidate.enabled()) return;
 
   prefetchedPaths.add(path);
   void candidate.load().catch(() => {
@@ -111,6 +133,6 @@ export function scheduleIdleRouteWarmup(): void {
   idleWarmupScheduled = true;
 
   runIdle(() => {
-    getLaunchWarmupHrefs().forEach((href) => prefetchRouteByHref(href));
+    getActiveWarmupHrefs().forEach((href) => prefetchRouteByHref(href));
   });
 }

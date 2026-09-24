@@ -380,16 +380,25 @@ describe("MVP core module boundary", () => {
 
   it("keeps paused route prefetches fail-closed before loading chunks", () => {
     const prefetch = read("src/app/routes/prefetch.ts");
-    expect(prefetch).toContain(
-      "if (candidate.surface && !isLaunchSurfaceEnabled(candidate.surface)) return;",
-    );
+    expect(prefetch).not.toContain("@/app/config/launchScope");
+    expect(prefetch).not.toContain("isLaunchSurfaceEnabled");
+    expect(prefetch).not.toContain("LaunchSurfaceKey");
+    expect(prefetch).toContain('isProductModuleEnabled("business")');
+    for (const capability of [
+      "map",
+      "nearby",
+      "search",
+      "notifications",
+    ]) {
+      expect(prefetch).toContain(
+        `isPlatformCapabilityEnabled("${capability}")`,
+      );
+    }
     expect(prefetch).toContain('APP_MODULE_SLUGS.nearby');
-    expect(prefetch).toContain('surface: "nearby"');
     expect(prefetch).toContain('import("@/app/pages/NearbyPage")');
-    expect(prefetch).toContain("IDLE_WARMUP_ROUTES.filter(");
-    expect(prefetch).toContain(
-      "(entry) => !entry.surface || isLaunchSurfaceEnabled(entry.surface)",
-    );
+    expect(prefetch).toContain("if (!candidate || !candidate.enabled()) return;");
+    expect(prefetch).toContain("IDLE_WARMUP_ROUTES.filter((entry) => entry.enabled())");
+    expect(prefetch).toContain('href: "/notificacoes"');
   });
 
   it("keeps primary territorial navigation on the MVP core", () => {

@@ -1,14 +1,15 @@
 import { describe, expect, it } from "vitest";
 
-import { getLaunchWarmupHrefs } from "../prefetch";
+import { getActiveWarmupHrefs } from "../prefetch";
 
-describe("route prefetch launch scope", () => {
-  it("warms only the active MVP product modules plus infrastructure", () => {
-    expect(getLaunchWarmupHrefs()).toEqual([
+describe("route prefetch canonical lifecycle", () => {
+  it("warms only the active MVP domain and horizontal capabilities", () => {
+    expect(getActiveWarmupHrefs()).toEqual([
       "/empresas",
       "/mapa",
       "/perto-de-mim",
-      "/notifications",
+      "/busca",
+      "/notificacoes",
     ]);
   });
 });
