@@ -1,13 +1,9 @@
 /**
- * BusinessModulesSection - Secao de modulos empresariais
+ * BusinessModulesSection - gestão das empresas vinculadas ao perfil.
  *
- * Exibe empresas do usuario com seus modulos e funcionalidades.
- *
- * FASE 6 - P2: Badges visuais ja resolvidos no backend.
- * - business.subscription.canUse* vem de ProfileService
- * - ProfileService usa EntitlementResolver para popular subscription
- * - Componente apenas exibe, nao calcula elegibilidade
- * - Aceitavel para P2 (baixo risco - apenas visual)
+ * O runtime ativo do MVP expõe somente Business. Recursos pós-MVP podem
+ * permanecer no snapshot/contratos preservados, mas não entram nesta UI
+ * enquanto seus módulos estiverem pausados.
  */
 
 import { Sparkles } from "lucide-react";
@@ -54,18 +50,14 @@ export function BusinessModulesSection({
   onNavigate,
   onCopy,
 }: BusinessModulesSectionProps) {
-  const showBilling = isProductModuleEnabled("billing");
-  const businessSummary = {
-    premium: businessModules.filter((item) => item.isPremium).length,
-    gastronomy: businessModules.filter((item) => item.gastronomy.active).length,
-    delivery: businessModules.filter((item) => item.gastronomy.deliveryEnabled).length,
-    qrReady: businessModules.filter((item) => item.qrCode.hasActive).length,
-  };
+  const verifiedCount = businessModules.filter((item) => item.verified).length;
+  const premiumCount = businessModules.filter((item) => item.isPremium).length;
+  const qrReadyCount = businessModules.filter((item) => item.qrCode.hasActive).length;
 
   return (
     <SectionFrame
-      title="Negócios, módulos e dashboards"
-      description="Operação empresarial consolidada com dashboard, imagens, produtos e delivery."
+      title="Empresas e gestão"
+      description="Gestão das empresas vinculadas, páginas públicas e recursos já habilitados."
       action={
         <Button className="gap-2" onClick={onCreateBusiness}>
           <Sparkles className="h-4 w-4" />
@@ -77,11 +69,7 @@ export function BusinessModulesSection({
         showOnboarding ? (
           <EmptyPanel
             title="Nenhuma empresa ativa vinculada"
-            description={
-              showBilling
-                ? "A plataforma já tem dashboard empresarial, vertical gastronômica, QR e billing. Falta apenas uma empresa sua entrar nesse fluxo."
-                : "A plataforma já tem dashboard empresarial e vertical gastronômica. Falta apenas uma empresa sua entrar nesse fluxo."
-            }
+            description="Crie ou vincule uma empresa para começar a usar a gestão empresarial do Achegue-se."
             actionLabel="Criar empresa"
             onAction={onCreateBusiness}
           />
@@ -93,28 +81,10 @@ export function BusinessModulesSection({
       ) : (
         <div className="space-y-4">
           <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
-            <div className="rounded-2xl border border-border bg-background p-4">
-              <p className="text-xs uppercase tracking-wide text-muted-foreground">Empresas</p>
-              <p className="mt-2 text-xl font-semibold text-foreground">{businessModules.length}</p>
-              <p className="mt-1 text-xs text-muted-foreground">Operação empresarial total</p>
-            </div>
-            <div className="rounded-2xl border border-border bg-background p-4">
-              <p className="text-xs uppercase tracking-wide text-muted-foreground">Gastronomia</p>
-              <p className="mt-2 text-xl font-semibold text-foreground">{businessSummary.gastronomy}</p>
-              <p className="mt-1 text-xs text-muted-foreground">Verticais gastronômicas ativas</p>
-            </div>
-            <div className="rounded-2xl border border-border bg-background p-4">
-              <p className="text-xs uppercase tracking-wide text-muted-foreground">Delivery</p>
-              <p className="mt-2 text-xl font-semibold text-foreground">{businessSummary.delivery}</p>
-              <p className="mt-1 text-xs text-muted-foreground">Operações com delivery ligado</p>
-            </div>
-            <div className="rounded-2xl border border-border bg-background p-4">
-              <p className="text-xs uppercase tracking-wide text-muted-foreground">QR / premium</p>
-              <p className="mt-2 text-xl font-semibold text-foreground">
-                {businessSummary.qrReady}/{businessSummary.premium}
-              </p>
-              <p className="mt-1 text-xs text-muted-foreground">QR pronto / negócios premium</p>
-            </div>
+            <SummaryCard label="Empresas" value={businessModules.length} description="Vinculadas ao perfil" />
+            <SummaryCard label="Verificadas" value={verifiedCount} description="Com verificação ativa" />
+            <SummaryCard label="Premium" value={premiumCount} description="Recursos já habilitados" />
+            <SummaryCard label="QR pronto" value={qrReadyCount} description="Empresas com QR ativo" />
           </div>
 
           <div className="space-y-4">
@@ -133,6 +103,24 @@ export function BusinessModulesSection({
   );
 }
 
+function SummaryCard({
+  label,
+  value,
+  description,
+}: {
+  label: string;
+  value: number;
+  description: string;
+}) {
+  return (
+    <div className="rounded-2xl border border-border bg-background p-4">
+      <p className="text-xs uppercase tracking-wide text-muted-foreground">{label}</p>
+      <p className="mt-2 text-xl font-semibold text-foreground">{value}</p>
+      <p className="mt-1 text-xs text-muted-foreground">{description}</p>
+    </div>
+  );
+}
+
 function BusinessModuleCard({
   business,
   onNavigate,
@@ -142,8 +130,6 @@ function BusinessModuleCard({
   onNavigate: (url: string) => void;
   onCopy: (url: string, label: string) => void;
 }) {
-  const showMobility = isProductModuleEnabled("mobility");
-  const showPublicAnalytics = isProductModuleEnabled("publicAnalytics");
   const showBilling = isProductModuleEnabled("billing");
   const hasPremiumLink =
     business.subscription.canUseShortPremiumLink && Boolean(business.shareUrl);
@@ -151,31 +137,7 @@ function BusinessModuleCard({
   const featureBadges = [
     hasPremiumLink ? "Link premium" : null,
     business.qrCode.hasActive ? "QR pronto" : null,
-    business.gastronomy.active ? "Gastronomia ativa" : null,
-    business.gastronomy.deliveryEnabled ? "Delivery ativo" : null,
-    showMobility && business.subscription.canUseMotoboyNetwork ? "Rede motoboy" : null,
   ].filter(Boolean) as string[];
-
-  const gastronomyOwnerActions = [
-    business.gastronomy.dashboardUrl
-      ? { label: "Painel gastro", url: business.gastronomy.dashboardUrl }
-      : null,
-    showPublicAnalytics && business.gastronomy.analyticsUrl
-      ? { label: "Analytics", url: business.gastronomy.analyticsUrl }
-      : null,
-    business.gastronomy.menuUrl
-      ? { label: "Produtos / cardápio", url: business.gastronomy.menuUrl }
-      : null,
-    business.gastronomy.ordersUrl
-      ? { label: "Pedidos", url: business.gastronomy.ordersUrl }
-      : null,
-    showMobility && business.gastronomy.deliveriesUrl
-      ? { label: "Entregas", url: business.gastronomy.deliveriesUrl }
-      : null,
-    !business.gastronomy.active && business.gastronomy.setupUrl
-      ? { label: "Ativar gastronomia", url: business.gastronomy.setupUrl }
-      : null,
-  ].filter((item): item is { label: string; url: string } => Boolean(item?.url));
 
   return (
     <div className="rounded-2xl border border-border bg-background p-4">
@@ -197,13 +159,15 @@ function BusinessModuleCard({
               </Badge>
             ) : null}
             {showBilling ? (
-              <Badge variant="secondary" className="h-5 text-[10px]">
-                Plano {formatPlanLabel(business.subscription.planTier)}
-              </Badge>
+              <>
+                <Badge variant="secondary" className="h-5 text-[10px]">
+                  Plano {formatPlanLabel(business.subscription.planTier)}
+                </Badge>
+                <Badge variant="outline" className="h-5 text-[10px]">
+                  {business.subscription.status}
+                </Badge>
+              </>
             ) : null}
-            <Badge variant="outline" className="h-5 text-[10px]">
-              {business.subscription.status}
-            </Badge>
           </div>
 
           <p className="mt-2 text-xs text-muted-foreground">
@@ -220,7 +184,7 @@ function BusinessModuleCard({
               ))
             ) : (
               <Badge variant="outline" className="text-[10px] text-muted-foreground">
-                Sem módulos extras configurados
+                Gestão empresarial ativa
               </Badge>
             )}
           </div>
@@ -238,16 +202,6 @@ function BusinessModuleCard({
               onClick={() => onNavigate(businessManagementRoutes.planos(business.businessId))}
             >
               Planos
-            </Button>
-          ) : null}
-          {business.gastronomy.dashboardUrl ? (
-            <Button
-              size="sm"
-              variant="outline"
-              className="gap-1.5"
-              onClick={() => onNavigate(business.gastronomy.dashboardUrl)}
-            >
-              Gastronomia
             </Button>
           ) : null}
           {showBilling || hasPremiumLink ? (
@@ -300,27 +254,6 @@ function BusinessModuleCard({
           ) : null}
         </div>
       </div>
-
-      {gastronomyOwnerActions.length > 0 ? (
-        <div className="mt-4 border-t border-border/70 pt-4">
-          <p className="mb-2 text-[11px] uppercase tracking-wide text-muted-foreground">
-            Gestão operacional
-          </p>
-          <div className="flex flex-wrap gap-2">
-            {gastronomyOwnerActions.map((action) => (
-              <Button
-                key={`${business.businessId}-${action.label}`}
-                size="sm"
-                variant="outline"
-                className="gap-1.5"
-                onClick={() => onNavigate(action.url)}
-              >
-                {action.label}
-              </Button>
-            ))}
-          </div>
-        </div>
-      ) : null}
     </div>
   );
 }
