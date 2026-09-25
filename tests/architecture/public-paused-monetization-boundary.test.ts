@@ -172,10 +172,9 @@ describe("public paused monetization boundary", () => {
   it("keeps active private monetization entry points on the canonical Billing lifecycle", () => {
     expect(businessShell).not.toContain("isLaunchSurfaceEnabled");
     expect(businessOverview).not.toContain("isLaunchSurfaceEnabled");
-    expect(businessHub).toContain(
-      'const showBilling = isLaunchSurfaceEnabled("billing")',
-    );
-    expect(businessHub).toContain("{showBilling ? (");
+    expect(businessHub).not.toContain("isLaunchSurfaceEnabled");
+    expect(businessHub).not.toContain("@/app/config");
+    expect(businessHub).toContain("{billingEnabled ? (");
     expect(appTopbar).toContain(
       'const showBilling = isProductModuleEnabled("billing")',
     );

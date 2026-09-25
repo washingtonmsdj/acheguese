@@ -14,7 +14,6 @@ export { SectionFrame } from './SectionFrame';
 export { HubLinkCard } from './HubLinkCard';
 export { EmptyPanel } from './EmptyPanel';
 export { NextActionsPanel } from './NextActionsPanel';
-export { BusinessModulesSection } from './BusinessModulesSection';
 export { ContentTabsSection } from './ContentTabsSection';
 export { NotificationsPanel } from './NotificationsPanel';
 export { AccountHealthPanel } from './AccountHealthPanel';

@@ -49,6 +49,7 @@ describe("active Central runtime boundary", () => {
     }
 
     expect(routes).toContain('path="empresas"');
+    expect(routes).toContain("CentralEmpresasPage billingEnabled={billingEnabled}");
     expect(routes).toContain('path="empresas/nova"');
     expect(routes).toContain('path="empresas/:businessId"');
     expect(routes).toContain('path="editar"');
