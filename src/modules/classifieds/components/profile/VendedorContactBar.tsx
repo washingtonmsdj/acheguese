@@ -20,26 +20,27 @@ import { messagingRoutes } from "@/core/messaging";
 import { classifiedMessagingService } from "@/core/messaging/services/ClassifiedMessagingService";
 import { buildWhatsAppUrl } from "@/shared/utils/contactLinks";
 import { openSafeExternalUrl } from "@/shared/utils/safeRedirect";
-import { isLaunchSurfaceEnabled } from "@/app/config/launchScope";
 import { useVisibleProfileContact } from "@/core/profiles";
 
 interface VendedorContactBarProps {
   vendedorId: string;
   vendedorName: string;
   initialClassifiedId?: string | null;
+  internalMessagingEnabled?: boolean;
 }
 
 export function VendedorContactBar({
   vendedorId,
   vendedorName,
   initialClassifiedId,
+  internalMessagingEnabled = false,
 }: VendedorContactBarProps) {
   const { user } = useAuth();
   const { activeProfile } = useSessionContext();
   const navigate = useNavigate();
   const [chatOpen, setChatOpen] = useState(false);
   const [message, setMessage] = useState("");
-  const showInternalChat = isLaunchSurfaceEnabled("communityCommunication");
+  const showInternalChat = internalMessagingEnabled;
   const { contact } = useVisibleProfileContact(vendedorId);
 
   const whatsappNumber = contact?.whatsapp || contact?.phone;
