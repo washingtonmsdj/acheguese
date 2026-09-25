@@ -1,4 +1,4 @@
-import { readFileSync } from "node:fs";
+import { existsSync, readFileSync } from "node:fs";
 import { resolve } from "node:path";
 import { describe, expect, it } from "vitest";
 
@@ -7,9 +7,6 @@ function readProjectFile(path: string): string {
 }
 
 describe("G135 bounded ride lookup boundary", () => {
-  const legacyImpl = readProjectFile(
-    "src/core/mobility/services/MobilityService.impl.ts",
-  );
   const authorization = readProjectFile(
     "src/core/mobility/services/MotoboyAuthorizationService.ts",
   );
@@ -18,8 +15,7 @@ describe("G135 bounded ride lookup boundary", () => {
   );
 
   it("retires the temporary static ride lookup wrapper", () => {
-    expect(legacyImpl).not.toContain("static async getRideById");
-    expect(legacyImpl).not.toContain("RideOperationalContextReadService");
+    expect(existsSync(resolve(process.cwd(), "src/core/mobility/services/MobilityService.impl.ts"))).toBe(false);
   });
 
   it("keeps motoboy cancellation authorization on the bounded lifecycle reader", () => {
