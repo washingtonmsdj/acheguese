@@ -9,10 +9,10 @@ function readProjectFile(relativePath: string): string {
 describe("Mobility driver authority", () => {
   it("keeps driver verification and ride offers outside direct browser writes", () => {
     const authorityMigration = readProjectFile(
-      "supabase/migrations/20260909154500_harden_mobility_driver_authority_g7.sql",
+      "supabase/migrations/20260909160213_harden_mobility_driver_authority_g7.sql",
     );
     const creationMigration = readProjectFile(
-      "supabase/migrations/20260910003000_domain_owned_profile_creation_g36.sql",
+      "supabase/migrations/20260910064706_domain_owned_profile_creation_g36.sql",
     );
     const contractMigration = readProjectFile(
       "supabase/migrations/20260920101836_retire_legacy_profile_creation_bridges_g36.sql",
