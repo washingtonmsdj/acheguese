@@ -14,6 +14,9 @@ const launchE2e = read("tests/e2e/launch-scope-public.spec.ts");
 const appRoutes = read("src/app/routes/sections/AppLayoutRoutes.tsx");
 const searchProviders = read("src/core/search/providers/searchProviders.ts");
 const searchPage = read("src/app/pages/BuscaPage.tsx");
+const publicCitySelector = read(
+  "src/app/components/navigation/PublicCitySelector.tsx",
+);
 const screenMap = read("docs/SCREEN-MAP.md");
 const featureMap = read("docs/FEATURE-MAP.md");
 const homeInventory = read("docs/05-ux/HOME-INVENTORY.md");
@@ -93,6 +96,17 @@ describe("MVP launch-scope alignment", () => {
     expect(searchPage).toContain('providerBucket: "professionals"');
     expect(searchPage).toContain('surface: "services"');
     expect(searchPage).toContain('surface: "classifieds"');
+    expect(searchPage).toContain("isProductModuleEnabled(item.surface)");
+    expect(searchPage).toContain('isProductModuleEnabled("education")');
+    expect(searchPage).not.toContain("@/app/config/launchScope");
+    expect(searchPage).not.toContain("isLaunchSurfaceEnabled");
+
+    expect(publicCitySelector).toContain("isProductModuleEnabled(entry.surface)");
+    expect(publicCitySelector).toContain(
+      "isPlatformCapabilityEnabled(entry.surface)",
+    );
+    expect(publicCitySelector).not.toContain("@/app/config/launchScope");
+    expect(publicCitySelector).not.toContain("isLaunchSurfaceEnabled");
   });
 
   it("keeps active documentation aligned with domain/capability lifecycle", () => {

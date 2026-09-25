@@ -6,15 +6,15 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 import BuscaPage from "../BuscaPage";
 
 const mocks = vi.hoisted(() => ({
-  isLaunchSurfaceEnabled: vi.fn(),
+  isProductModuleEnabled: vi.fn(),
   useGlobalSearch: vi.fn(),
   navigateToBusiness: vi.fn(),
   setQuery: vi.fn(),
   updateFilters: vi.fn(),
 }));
 
-vi.mock("@/app/config/launchScope", () => ({
-  isLaunchSurfaceEnabled: mocks.isLaunchSurfaceEnabled,
+vi.mock("@/app/config/lifecycleRegistry", () => ({
+  isProductModuleEnabled: mocks.isProductModuleEnabled,
 }));
 
 vi.mock("@/app/config/searchProviderScope", () => ({
@@ -132,10 +132,8 @@ function renderPage(path: string) {
 describe("BuscaPage", () => {
   beforeEach(() => {
     vi.clearAllMocks();
-    mocks.isLaunchSurfaceEnabled.mockImplementation((surface: string) =>
-      ["home", "business", "map", "nearby", "search", "messaging"].includes(
-        surface,
-      ),
+    mocks.isProductModuleEnabled.mockImplementation(
+      (surface: string) => surface === "business",
     );
     mocks.useGlobalSearch.mockImplementation(
       (initialQuery, initialFilters, options) => ({
