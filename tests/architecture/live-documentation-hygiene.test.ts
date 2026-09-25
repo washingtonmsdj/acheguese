@@ -1,4 +1,4 @@
-import { existsSync, readFileSync } from "node:fs";
+import { existsSync, readFileSync, readdirSync } from "node:fs";
 import { describe, expect, it } from "vitest";
 
 describe("live documentation hygiene", () => {
@@ -66,6 +66,24 @@ describe("live documentation hygiene", () => {
     expect(validation).not.toContain("Checkpoint tecnico");
     expect(validation).not.toContain("G6 EM CERTIFICACAO");
     expect(validation).toContain("deploy exact-SHA");
+  });
+
+  it("keeps the retired root pointer absent from live documentation", () => {
+    expect(
+      existsSync("URGENTE_LEIA_PRIMEIRO_REORGANIZACAO_GLOBAL.md"),
+    ).toBe(false);
+
+    const docsIndex = readFileSync("docs/README.md", "utf8");
+    expect(docsIndex).not.toContain(
+      "URGENTE_LEIA_PRIMEIRO_REORGANIZACAO_GLOBAL.md",
+    );
+  });
+
+  it("keeps dated G5 checkpoints out of live architecture docs", () => {
+    const liveArchitectureFiles = readdirSync("docs/03-architecture");
+    expect(
+      liveArchitectureFiles.filter((name) => /^G5_.*2026-/.test(name)),
+    ).toEqual([]);
   });
 
   it("keeps active source comments descriptive instead of migration logs", () => {
