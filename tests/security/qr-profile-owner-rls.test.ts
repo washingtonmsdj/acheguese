@@ -8,7 +8,7 @@ const migration = readFileSync(
     ROOT,
     "supabase",
     "migrations",
-    "20260916101000_fix_qr_profile_owner_rls.sql",
+    "20260916100135_fix_qr_profile_owner_rls.sql",
   ),
   "utf8",
 );
