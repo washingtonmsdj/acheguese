@@ -68,7 +68,7 @@
 ### GPS e minimização
 
 - leitura precisa de `driver_locations` pelo passageiro só ocorre durante estados live autorizados;
-- `20260916133000_minimize_idle_driver_gps.sql` foi aplicada no projeto Supabase canônico;
+- `20260916232906_minimize_idle_driver_gps.sql` foi aplicada no projeto Supabase canônico;
 - motorista offline/indisponível sem corrida não conserva `current_lat/current_lng/last_location_update`;
 - snapshot correspondente em `driver_locations` é removido;
 - gravação de GPS fora de necessidade operacional é rejeitada;
