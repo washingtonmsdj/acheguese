@@ -108,6 +108,34 @@ describe("live documentation hygiene", () => {
     ).toBe(true);
   });
 
+  it("keeps stale parallel Territory planning out of live documentation", () => {
+    expect(existsSync("docs/domain")).toBe(false);
+    expect(
+      existsSync("docs/10-archive/territory/TERRITORY-GOVERNANCE.md"),
+    ).toBe(true);
+    expect(
+      existsSync("docs/10-archive/territory/TERRITORY-ROADMAP.md"),
+    ).toBe(true);
+    expect(
+      existsSync("docs/10-archive/territory/TERRITORY-DATA-QUALITY-V2.md"),
+    ).toBe(true);
+  });
+
+  it("keeps migration forensics archived while executable audit baselines remain live", () => {
+    expect(
+      existsSync("docs/audits/MIGRATION_HISTORY_FALSE_REMOTE_ONLY_47_2026-08-10.csv"),
+    ).toBe(false);
+    expect(
+      existsSync("docs/audits/MIGRATION_HISTORY_FORENSICS_2026-08-10.csv"),
+    ).toBe(false);
+    expect(
+      existsSync("docs/audits/architecture-boundaries-incremental-baseline.json"),
+    ).toBe(true);
+    expect(
+      existsSync("docs/audits/module-integration-runtime-allowlist.json"),
+    ).toBe(true);
+  });
+
   it("keeps dated G5 checkpoints out of live architecture docs", () => {
     const liveArchitectureFiles = readdirSync("docs/03-architecture");
     expect(
