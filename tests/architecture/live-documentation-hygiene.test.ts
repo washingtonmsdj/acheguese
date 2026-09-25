@@ -79,6 +79,12 @@ describe("live documentation hygiene", () => {
     );
   });
 
+  it("keeps retired Feed delivery planning out of live documentation", () => {
+    expect(existsSync("docs/feed")).toBe(false);
+    expect(existsSync("docs/10-archive/feed/FEED-GOVERNANCE.md")).toBe(true);
+    expect(existsSync("docs/10-archive/feed/FEED-P1.C-REVIEW.md")).toBe(true);
+  });
+
   it("keeps dated G5 checkpoints out of live architecture docs", () => {
     const liveArchitectureFiles = readdirSync("docs/03-architecture");
     expect(

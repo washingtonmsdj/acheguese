@@ -487,6 +487,9 @@ describe("MVP core module boundary", () => {
     );
     expect(heavyPrWorkflow).toContain("push:");
     expect(heavyPrWorkflow).toContain("- main");
+    expect(heavyPrWorkflow).toContain("paths-ignore:");
+    expect(heavyPrWorkflow).toContain('- "docs/**"');
+    expect(heavyPrWorkflow).toContain('- "**/*.md"');
     expect(heavyPrWorkflow).toContain("github.event_name == 'push'");
     expect(heavyPrWorkflow).toContain("github.sha");
     expect(heavyPrWorkflow).toContain(
