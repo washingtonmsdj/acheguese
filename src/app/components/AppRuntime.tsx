@@ -1,6 +1,6 @@
 import { lazy, Suspense, useEffect, useLayoutEffect, useState } from "react";
 
-import { PRELAUNCH_LOCKDOWN_ENABLED } from "@/app/config/launchScope";
+import { PRELAUNCH_LOCKDOWN_ENABLED } from "@/app/config/releaseMode";
 import RootRouteEntry from "@/app/routes/RootRouteEntry";
 import { hasAuthCallbackMarker } from "@/core/auth/utils/authCallback";
 import {
