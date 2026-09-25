@@ -12,7 +12,7 @@ describe("Mobility driver coverage authority", () => {
       "supabase/migrations/20260717140000_consolidate_coverage_commands.sql",
     );
     const pointCommand = readProjectFile(
-      "supabase/migrations/20260909202000_add_point_coverage_command_g14.sql",
+      "supabase/migrations/20260909173026_add_point_coverage_command_g14.sql",
     );
     const semanticGuard = readProjectFile(
       "supabase/migrations/20260909203000_enforce_coverage_location_semantics_g14.sql",
