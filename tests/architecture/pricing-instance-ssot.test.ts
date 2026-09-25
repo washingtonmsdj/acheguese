@@ -36,12 +36,12 @@ describe("pricing instance SSOT", () => {
   });
 
   it("keeps the raw pricing implementation out of public barrels", () => {
-    const servicesBarrel = read("src/core/pricing/services/index.ts");
     const pricingBarrel = read("src/core/pricing/index.ts");
     const instance = read("src/core/pricing/instance.ts");
 
-    expect(servicesBarrel).not.toContain("PricingService");
-    expect(servicesBarrel).not.toContain("pricingService");
+    expect(
+      fs.existsSync(path.resolve(PROJECT_ROOT, "src/core/pricing/services/index.ts")),
+    ).toBe(false);
     expect(pricingBarrel).not.toContain("export * from './services'");
     expect(pricingBarrel).not.toContain("export * from './hooks'");
     expect(pricingBarrel).toContain("export { pricingService } from './instance';");

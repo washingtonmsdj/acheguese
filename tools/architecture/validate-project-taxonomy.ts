@@ -361,7 +361,15 @@ function main() {
   const emptyModuleIndexes = walkFiles("src/modules")
     .map((filePath) => normalize(path.relative(ROOT, filePath)))
     .filter((relative) => relative.endsWith("/index.ts"))
-    .filter((relative) => readText(relative)?.trim() === "export {};");
+    .filter((relative) => {
+      const source = readText(relative);
+      if (!source) return false;
+      const executable = source
+        .replace(/\/\*[\s\S]*?\*\//g, "")
+        .replace(/\/\/.*$/gm, "")
+        .trim();
+      return executable === "export {};";
+    });
 
   for (const emptyIndex of emptyModuleIndexes) {
     violations.push(
