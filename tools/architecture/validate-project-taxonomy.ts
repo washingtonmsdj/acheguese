@@ -6,7 +6,6 @@ import path from "path";
 const ROOT = process.cwd();
 const MODULES_README_PATH = "src/modules/README.md";
 const DOCUMENTATION_ENTRY_PATH = "docs/README.md";
-const PROJECT_MILESTONE_PATH = "docs/architecture/PROJECT-MILESTONE-1.md";
 const CORE_LAYER_SSOT_PATH = "docs/03-architecture/CORE_LAYER_SSOT.md";
 const COMMUNITY_FIRST_ARCHITECTURE_DOC_PATH =
   "docs/03-architecture/COMMUNITY_FIRST_ARCHITECTURE_SSOT.md";
@@ -134,16 +133,6 @@ const COMMUNITY_FIRST_DOC_MARKERS = [
   "`docs/10-archive/plans/COMMUNITY_FIRST_ARCHITECTURE_PLAN.md`",
 ] as const;
 
-const PROJECT_MILESTONE_COMMUNITY_MARKERS = [
-  "### 3.3 Community",
-  "`docs/03-architecture/COMMUNITY_FIRST_ARCHITECTURE_SSOT.md`",
-  "`territory_communities`",
-  "`community_public_aliases`",
-  "`community_memberships`",
-  "`community_entity_links`",
-  "`src/core/community-experience`",
-] as const;
-
 const COMMUNITY_EXPERIENCE_TABLE_ACCESS_RE =
   /\.from\(\s*["'](?:territory_communities|community_public_aliases|community_memberships|community_entity_links)["']/;
 const COMMUNITY_EXPERIENCE_TABLE_SSOT_PATHS = new Set([
@@ -221,7 +210,7 @@ const COMMUNITY_MODULE_EMPTY_FACADE_IMPORTS = [
 const ACTIVE_COMMUNITY_DOCS_WITHOUT_LEGACY_AGGREGATOR = [
   DOCUMENTATION_ENTRY_PATH,
   CORE_LAYER_SSOT_PATH,
-  PROJECT_MILESTONE_PATH,
+  COMMUNITY_FIRST_ARCHITECTURE_DOC_PATH,
 ] as const;
 const ACTIVE_COMMUNITY_DOC_FORBIDDEN_MARKERS = [
   "src/modules/community/README.md",
@@ -539,21 +528,6 @@ function main() {
       violations.push(
         `Facade vazia comunitaria proibida: ${compatPath}. Rotas e testes devem apontar para owners canonicos explicitos, e modules deve manter apenas boundary de produto quando houver implementacao real.`,
       );
-    }
-  }
-
-  const projectMilestone = readText(PROJECT_MILESTONE_PATH);
-  if (!projectMilestone) {
-    violations.push(
-      `Marco arquitetural atual ausente: ${PROJECT_MILESTONE_PATH}`,
-    );
-  } else {
-    for (const marker of PROJECT_MILESTONE_COMMUNITY_MARKERS) {
-      if (!projectMilestone.includes(marker)) {
-        violations.push(
-          `${PROJECT_MILESTONE_PATH} sem marcador Community First "${marker}".`,
-        );
-      }
     }
   }
 
