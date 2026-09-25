@@ -9,7 +9,12 @@ import {
 } from "@/shared/components/ui/popover";
 import { Input } from "@/shared/components/ui/input";
 import { APP_MODULE_SLUGS, buildAppModulePath, type AppModuleSlug } from "@/shared/config/moduleSlugs";
-import { isLaunchSurfaceEnabled, type LaunchSurfaceKey } from "@/app/config/launchScope";
+import {
+  isPlatformCapabilityEnabled,
+  isProductModuleEnabled,
+} from "@/app/config/lifecycleRegistry";
+import type { PlatformCapabilityKey } from "@/app/config/platformCapabilityRegistry";
+import type { ProductModuleKey } from "@/app/config/productModuleRegistry";
 import { useLocations } from "@/core/location/hooks/useLocations";
 import { usePublicBrowsingCity } from "@/core/location/hooks/usePublicBrowsingCity";
 import { useCityMetadataList } from "@/core/city/hooks/useCityMetadataList";
@@ -22,24 +27,36 @@ function buildModulePath(module: string, state: string, city: string): string {
     : buildAppModulePath(module as AppModuleSlug, territoryPath);
 }
 
+type PublicCityLifecycleSurface =
+  | { kind: "product"; surface: ProductModuleKey }
+  | { kind: "capability"; surface: PlatformCapabilityKey };
+
 const PUBLIC_CITY_MODULE_SURFACES = {
-  [APP_MODULE_SLUGS.business]: "business",
-  [APP_MODULE_SLUGS.services]: "services",
-  [APP_MODULE_SLUGS.gastronomy]: "gastronomy",
-  [APP_MODULE_SLUGS.events]: "events",
-  [APP_MODULE_SLUGS.classifieds]: "classifieds",
-  [APP_MODULE_SLUGS.jobs]: "jobs",
-  [APP_MODULE_SLUGS.search]: "search",
-  buscar: "search",
-  [APP_MODULE_SLUGS.map]: "map",
-  [APP_MODULE_SLUGS.education]: "education",
-  [APP_MODULE_SLUGS.touristPoints]: "touristPoints",
-  [APP_MODULE_SLUGS.community]: "community",
-} as const satisfies Record<string, LaunchSurfaceKey>;
+  [APP_MODULE_SLUGS.business]: { kind: "product", surface: "business" },
+  [APP_MODULE_SLUGS.services]: { kind: "product", surface: "services" },
+  [APP_MODULE_SLUGS.gastronomy]: { kind: "product", surface: "gastronomy" },
+  [APP_MODULE_SLUGS.events]: { kind: "product", surface: "events" },
+  [APP_MODULE_SLUGS.classifieds]: { kind: "product", surface: "classifieds" },
+  [APP_MODULE_SLUGS.jobs]: { kind: "product", surface: "jobs" },
+  [APP_MODULE_SLUGS.search]: { kind: "capability", surface: "search" },
+  buscar: { kind: "capability", surface: "search" },
+  [APP_MODULE_SLUGS.map]: { kind: "capability", surface: "map" },
+  [APP_MODULE_SLUGS.education]: { kind: "product", surface: "education" },
+  [APP_MODULE_SLUGS.touristPoints]: { kind: "product", surface: "touristPoints" },
+  [APP_MODULE_SLUGS.community]: { kind: "product", surface: "community" },
+} as const satisfies Record<string, PublicCityLifecycleSurface>;
+
+function isPublicCitySurfaceEnabled(
+  entry: PublicCityLifecycleSurface,
+): boolean {
+  return entry.kind === "product"
+    ? isProductModuleEnabled(entry.surface)
+    : isPlatformCapabilityEnabled(entry.surface);
+}
 
 const PUBLIC_CITY_MODULE_SET = new Set<string>(
   Object.entries(PUBLIC_CITY_MODULE_SURFACES)
-    .filter(([, surface]) => isLaunchSurfaceEnabled(surface))
+    .filter(([, entry]) => isPublicCitySurfaceEnabled(entry))
     .map(([module]) => module),
 );
 
