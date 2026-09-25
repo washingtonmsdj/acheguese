@@ -14,10 +14,9 @@ describe("MVP Neighborhood stream legacy retirement", () => {
       ),
     ).toBe(false);
 
-    const services = read("src/core/landing/services/index.ts");
-    expect(services).not.toContain("buildNeighborhoodStreamItems");
-    expect(services).not.toContain("getNeighborhoodStreamMoreConfig");
-    expect(services).not.toContain("NeighborhoodStreamModelService");
+    expect(
+      existsSync(pathOf("src/core/landing/services/index.ts")),
+    ).toBe(false);
   });
 
   it("removes contracts that existed only for the retired stream", () => {

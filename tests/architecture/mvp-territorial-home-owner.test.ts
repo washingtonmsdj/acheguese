@@ -22,12 +22,10 @@ describe("MVP territorial home ownership", () => {
       "src/core/landing/hooks/createLandingFeaturedService.ts",
       "src/app/features/landing/index.ts",
       "src/app/features/landing/services/index.ts",
+      "src/core/landing/index.ts",
+      "src/core/landing/services/index.ts",
     ]) {
       expect(existsSync(resolve(root, retired))).toBe(false);
     }
-
-    const coreLanding = read("src/core/landing/index.ts");
-    expect(coreLanding).not.toContain("useLandingFeatured");
-    expect(coreLanding).not.toContain("createLandingFeaturedService");
   });
 });
