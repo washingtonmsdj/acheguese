@@ -1,4 +1,4 @@
-import { readFileSync } from "node:fs";
+import { existsSync, readFileSync } from "node:fs";
 import { resolve } from "node:path";
 import { describe, expect, it } from "vitest";
 
@@ -9,9 +9,6 @@ function readProjectFile(path: string): string {
 describe("G145 driver activity read ownership", () => {
   const activity = readProjectFile(
     "src/core/mobility/services/DriverActivityStatsService.ts",
-  );
-  const staticService = readProjectFile(
-    "src/core/mobility/services/MobilityService.impl.ts",
   );
 
   it("owns the bounded ride-session read in DriverActivityStatsService", () => {
@@ -27,7 +24,7 @@ describe("G145 driver activity read ownership", () => {
   });
 
   it("retires the static compatibility session reader", () => {
-    expect(staticService).not.toContain("getDriverRideSessions(");
+    expect(existsSync(resolve(process.cwd(), "src/core/mobility/services/MobilityService.impl.ts"))).toBe(false);
     expect(activity).not.toContain("MobilityService.getDriverRideSessions");
   });
 });
