@@ -85,6 +85,29 @@ describe("live documentation hygiene", () => {
     expect(existsSync("docs/10-archive/feed/FEED-P1.C-REVIEW.md")).toBe(true);
   });
 
+  it("keeps duplicate concept roots retired in favor of the design catalog", () => {
+    expect(existsSync("docs/concepts")).toBe(false);
+    for (const retired of [
+      "docs/CONCEITO-CONTA-E-ACESSO.md",
+      "docs/CONCEITO-MINHA-CONTA-SEGURANCA.md",
+      "docs/ENTREGAS-TRES-MODALIDADES-CONCEITO.md",
+      "docs/ENTREGADOR-VINCULADO-E-COMPROVANTE.md",
+    ]) {
+      expect(existsSync(retired), retired).toBe(false);
+    }
+
+    expect(
+      existsSync(
+        "docs/04-design/catalogo-conceitos/24-conta-acesso/documentos-originais/CONCEITO-CONTA-E-ACESSO.md",
+      ),
+    ).toBe(true);
+    expect(
+      existsSync(
+        "docs/04-design/catalogo-conceitos/25-minha-conta/documentos-originais/CONCEITO-MINHA-CONTA-SEGURANCA.md",
+      ),
+    ).toBe(true);
+  });
+
   it("keeps dated G5 checkpoints out of live architecture docs", () => {
     const liveArchitectureFiles = readdirSync("docs/03-architecture");
     expect(
