@@ -2,7 +2,7 @@
 
 Este arquivo é um resumo navegacional. O **SSOT operacional** permanece em [`EXECUCAO_MAIN_ONLY.md`](./EXECUCAO_MAIN_ONLY.md) e o lifecycle de módulos em [`PRODUCT_MODULE_LIFECYCLE.md`](../03-architecture/PRODUCT_MODULE_LIFECYCLE.md).
 
-## Decisão vigente — 2026-09-22
+## Decisão vigente
 
 O MVP público possui **um domínio de produto ativo: Empresas (`business`)**.
 
@@ -85,44 +85,25 @@ Regras:
    - corrigir regressões no núcleo antes de ampliar produto;
    - qualquer módulo futuro nasce/retorna `paused`, é certificado isoladamente e só então passa a `active`.
 
-## Estado do CI e do release observado em 2026-09-23
+## Estado atual do release
 
-Os hosted runners voltaram a executar steps e logs reais. O incidente histórico de jobs vazios foi encerrado no issue #17; não tratar falhas futuras automaticamente como repetição daquele incidente.
+A estrutura do MVP está suficientemente fechada para que o trabalho restante seja de **certificação e infraestrutura**, não de reabrir escopo.
 
-O contrato obrigatório do MVP inclui os ratchets recentes de lifecycle, Business, Search, Messaging, remoção de legado e rotas canônicas. `test:mvp:architecture` deve executar essas provas em todo candidato.
+Já está consolidado:
 
-Os PRs #310–#331 consolidaram o corte modular, as rotas canônicas, a gestão Business, a retirada dos bypasses DEV, a limpeza/ratchet SSOT de Gastronomia, o isolamento lifecycle-driven do Admin e a truthfulness das superfícies públicas:
+- Business é o único domínio ativo;
+- Map/Nearby/Search/Messaging/Notifications permanecem capabilities horizontais;
+- navegação, Busca, Notificações, sitemap, Central e criação de Business usam composição de lifecycle nos boundaries corretos;
+- Billing e verticais pós-MVP continuam pausados e não entram no grafo ativo;
+- os gates hospedados de PR executam testes reais, incluindo Security, SSOT Territorial, SSOT Enforcement e Heavy Certification.
 
-- Business independente de verticais pausados;
-- navegação alinhada às capabilities ativas;
-- dashboard Business legado sem caller aposentado;
-- Search sem imports runtime top-level de domínios pausados;
-- Neighborhood mixed-domain stream callerless aposentado;
-- ratchets recentes incorporados ao gate obrigatório;
-- gestão Business consolidada sob `/central/empresas/*`, sem rota concorrente/redirect legado;
-- #318 aposentou o bypass DEV `?concept-mock=1` e os cinco mocks/previews sem caller do runtime.
-- #319 aposentou a allowance morta de `gastronomy_establishments`/`GastronomyQueryService.ts` no checker SSOT após censo de owners/callers.
-- #320 removeu o lint rule órfão de direct-query, alinhou `SSOT_REGISTRY.md` a `gastronomy_profiles`/`GastronomyProfileService` e tornou essa aposentadoria um ratchet obrigatório.
-- #321 registrou a revalidação documental pós-#320 e reafirmou que o merge SHA não herda certificação de release.
-- #322 removeu inventários Admin paralelos, passou rota + sidebar para o lifecycle canônico e retirou aliases administrativos sem contrato.
-- #323 aposentou `/splash` como superfície pública órfã, sem redirect, e ratcheou sua ausência no ownership de rotas.
-- #324 alinhou `/sobre` ao produto realmente ativo e estendeu o ratchet arquitetural para impedir claims de verticais pausadas como disponíveis.
-- #327 removeu módulos pausados do grafo público ativo: `AppLayoutRoutes` usa somente `activeLazyImports.ts` e URL pública sem owner ativo cai no 404 canônico.
-- #329 tornou a Central privada active-only: `CentralRoutes` usa somente `activeCentralLazyImports.ts`, Business/Empresas + infraestrutura ativa; módulos pausados permanecem fora do grafo.
-- #330 aposentou o barrel privado `centralLazyImports.ts`, sem caller runtime, e migrou os ratchets para owners físicos/lifecycle.
-- #331 aposentou `CommunityTerritoryRoutes.tsx`, árvore pública desconectada sem caller runtime, preservando builders canônicos e owners Community nos bounded contexts.
-- #333 — remoção do grafo público legado: `lazyImports.ts`, `TerritorialModulePages.tsx`, `launchPausedComponent.ts` e `LaunchPausedPage.tsx` saem do runtime; `ActiveTerritorialModulePages.tsx` permanece como boundary territorial ativo.
+Blockers reais:
 
-A `main` atual é `42d91ea9454de0fe8c3250cc75d230cb1bceeb9c` (squash merge de #333). O head `e100a823e9f23ebe42f4c1931f2f60ad7c4f424d` de #333 foi certificado antes do merge e a nova `main` foi tratada corretamente como outro candidato exact-SHA. O runtime público agora não contém `lazyImports.ts`, `TerritorialModulePages.tsx`, `launchPausedComponent.ts` nem `LaunchPausedPage.tsx`; `activeLazyImports.ts` + `ActiveTerritorialModulePages.tsx` são os boundaries públicos ativos, enquanto owners pós-MVP permanecem preservados fora do grafo. Na `main@42d91ea...`, Vercel publicou o SHA exato e o release identity confirmou `mode=exact`; SSOT Enforcement e Heavy exact-main fecharam verdes, assim como Phase Core, Runtime, E2E público, Regression, lint/typecheck, Maps Architecture, credenciais e testes unitários. O SSOT Territorial ficou vermelho somente no smoke autenticado remoto: Conta mobile/tablet/desktop e Mensagens Business receberam `HTTP 503 auth_upstream_unavailable` do broker, coerente com #305.
+- **#305:** Supabase/Auth/data plane continua reproduzindo timeout até em consulta SQL mínima; isso impede certificar Conta + Mensagens autenticadas em produção;
+- **#309:** GitHub Actions ainda precisa de PAT Supabase com autoridade mínima para deploy de Edge Functions;
+- **exact-SHA final:** após o último merge do candidato, o mesmo SHA precisa ser deployado e passar smoke público + autenticado.
 
-### Blockers atuais do primeiro release
-
-- **#305 — indisponibilidade ampla do data plane Supabase:** o control plane mostra o projeto como `ACTIVE_HEALTHY`, mas a janela do smoke exact-main registrou `/auth/v1/token` com 12 × HTTP 504 (~5 s de origin), além de HTTP 522 (~19–20 s) em superfícies PostgREST independentes como `locations`, `catalog_item`, `user_subscriptions`, `function_audit`, `tourist_points` e `posts`. O broker OIDC v3 recebe corretamente o subject da `main`, porém devolve `503 auth_upstream_unavailable` porque o upstream falha. Uma consulta SQL simples via control plane também encerra por connection timeout. Não mascarar com retry/timeout maior, fallback, troca de fixture, bypass OIDC ou mudança de RLS.
-- **#309 — autoridade de deploy Supabase:** o PAT do GitHub Actions recebe 403 para atualizar Edge Functions. Rotacionar para PAT scoped ao projeto/organização com `Edge Functions: Read-write` (`deploy_edge_function`); não usar `service_role` como substituto.
-
-O broker remoto v3 permanece ACTIVE e sem drift de source conhecido; portanto #309 é problema de autoridade automática, não justificativa para alterar frontend/runtime.
-
-**MVP READY continua bloqueado** até o mesmo SHA obter sessão autenticada real e o deploy automatizado exact-main recuperar autoridade. Não reabrir redirects, mocks DEV, aliases ou fallbacks para contornar esses blockers externos.
+Não criar código de contorno para nenhum desses três itens. Em especial: sem redirects, aliases, login alternativo, retries ilimitados, timeouts inflados, bypass de RLS/OIDC ou reativação temporária de módulo pausado.
 
 ## Pós-MVP
 
