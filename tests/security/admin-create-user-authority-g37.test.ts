@@ -12,7 +12,7 @@ describe("G37 admin user creation authority", () => {
       "supabase/migrations/20260420000000_fix_auth_triggers_schema_drift.sql",
     );
     const profileOwner = read(
-      "supabase/migrations/20260909222500_broker_owned_profile_self_service_g36.sql",
+      "supabase/migrations/20260909230042_broker_owned_profile_self_service_g36.sql",
     );
 
     expect(authTrigger).toContain("CREATE OR REPLACE FUNCTION handle_new_user()");
