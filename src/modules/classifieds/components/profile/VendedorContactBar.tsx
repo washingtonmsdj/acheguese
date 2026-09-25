@@ -16,8 +16,7 @@ import {
 import { toast } from "sonner";
 import { useAuth } from "@/core/auth";
 import { useSessionContext } from "@/core/session";
-import { messagingRoutes } from "@/core/messaging";
-import { classifiedMessagingService } from "@/core/messaging/services/ClassifiedMessagingService";
+import { classifiedMessagingService, messagingRoutes } from "@/core/messaging";
 import { buildWhatsAppUrl } from "@/shared/utils/contactLinks";
 import { openSafeExternalUrl } from "@/shared/utils/safeRedirect";
 import { useVisibleProfileContact } from "@/core/profiles";
