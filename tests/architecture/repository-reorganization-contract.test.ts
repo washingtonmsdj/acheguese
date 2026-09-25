@@ -3,7 +3,6 @@ import path from "node:path";
 import { describe, expect, it } from "vitest";
 
 const ROOT = process.cwd();
-const COMPATIBILITY_ENTRYPOINT = "URGENTE_LEIA_PRIMEIRO_REORGANIZACAO_GLOBAL.md";
 const CANONICAL_SOURCE_ROOTS = [
   "app",
   "assets",
@@ -131,16 +130,12 @@ function listFilesRecursively(relativePath: string): string[] {
 }
 
 describe("global repository reorganization contract", () => {
-  it("keeps the legacy urgent path only as a compatibility pointer", () => {
-    const entrypointPath = path.join(ROOT, COMPATIBILITY_ENTRYPOINT);
-    expect(fs.existsSync(entrypointPath)).toBe(true);
-
-    const content = fs.readFileSync(entrypointPath, "utf8");
-    expect(content).toContain("SUBSTITUÍDO COMO AUTORIDADE");
-    expect(content).toContain("docs/README.md");
-    expect(content).toContain("docs/08-roadmap/EXECUCAO_MAIN_ONLY.md");
-    expect(content).not.toContain("ARQUIVO PERMANENTE DA RAIZ");
-    expect(content).not.toContain("G7 — Repository / MVP Certification");
+  it("keeps the retired urgent root pointer absent", () => {
+    expect(
+      fs.existsSync(
+        path.join(ROOT, "URGENTE_LEIA_PRIMEIRO_REORGANIZACAO_GLOBAL.md"),
+      ),
+    ).toBe(false);
   });
 
   it("freezes top-level src directories to the canonical architecture taxonomy", () => {
