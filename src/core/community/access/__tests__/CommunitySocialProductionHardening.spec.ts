@@ -185,7 +185,7 @@ const canonicalReportDialog = readFileSync(
   "utf8",
 );
 const postCommentsPanel = readFileSync(
-  join(root, "src/core/community/components/comments/PostCommentsPanel.tsx"),
+  join(root, "src/core/community-feed/components/comments/PostCommentsPanel.tsx"),
   "utf8",
 );
 const commentQueries = readFileSync(
@@ -280,15 +280,15 @@ const qaService = readFileSync(
   "utf8",
 );
 const qaCreateHook = readFileSync(
-  join(root, "src/core/community/hooks/useNovaRecomendacao.ts"),
+  join(root, "src/core/community-recommendations/hooks/useNovaRecomendacao.ts"),
   "utf8",
 );
 const qaDetailHook = readFileSync(
-  join(root, "src/core/community/hooks/useRecomendacaoDetail.ts"),
+  join(root, "src/core/community-recommendations/hooks/useRecomendacaoDetail.ts"),
   "utf8",
 );
 const qaListHook = readFileSync(
-  join(root, "src/core/community/hooks/useRecomendacoes.ts"),
+  join(root, "src/core/community-recommendations/hooks/useRecomendacoes.ts"),
   "utf8",
 );
 const issueService = readFileSync(
