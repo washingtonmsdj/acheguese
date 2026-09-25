@@ -227,4 +227,4 @@
 
 **Estes 4 itens não são novos requisitos.** São violações concretas das regras que a própria GOVERNANCE estabeleceu como invioláveis. Foram descobertos porque as auditorias anteriores focaram no domínio central (`core/location`, `core/geospatial`, `core/routing`) e não varreram os módulos consumidores em profundidade.
 
-**Próximo passo**: Atualizar `TERRITORY-P0-EXECUTION-PLAN.md` para incluir P0.8-P0.11, ou criar um documento `TERRITORY-P0-EXPANDED.md` com o plano revisado de 11 itens. Após execução completa dos 11 P0, o domínio poderá ser congelado.
+**Próximo passo**: Atualizar `docs/10-archive/territory/TERRITORY-P0-EXECUTION-PLAN.md` para incluir P0.8-P0.11, ou criar um documento `TERRITORY-P0-EXPANDED.md` com o plano revisado de 11 itens. Após execução completa dos 11 P0, o domínio poderá ser congelado.

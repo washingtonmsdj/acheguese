@@ -15,7 +15,7 @@ Documentos de referencia principais:
 - `docs/domain/TERRITORY-GOVERNANCE.md`
 - `docs/domain/TERRITORY-ROADMAP.md`
 - `docs/domain/TERRITORY-DATA-QUALITY-V2.md`
-- `docs/domain/TERRITORY-FREEZE-AUDIT.md`
+- `docs/10-archive/territory/TERRITORY-FREEZE-AUDIT.md`
 - `docs/10-archive/territory/SALVADOR-IMPLEMENTATION-1-REPORT.md`
 - `docs/feed/FEED-GOVERNANCE.md`
 - `docs/feed/FEED-MILESTONE-1.md`

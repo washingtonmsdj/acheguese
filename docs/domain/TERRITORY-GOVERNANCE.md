@@ -8,7 +8,7 @@
 **Documentos base**:
 - `docs/02-domain/TERRITORY-DOMAIN.md` — modelo conceitual do domínio
 - `docs/02-domain/DOMAIN-MAPPING.md` — mapeamento de nomes legados → canônicos
-- `docs/domain/TERRITORY-ENTERPRISE-AUDIT.md` — auditoria arquitetural (29 findings)
+- `docs/10-archive/territory/TERRITORY-ENTERPRISE-AUDIT.md` — auditoria arquitetural (29 findings)
 - `docs/domain/TERRITORY-ROADMAP.md` — backlog priorizado P0-P3
 
 ---

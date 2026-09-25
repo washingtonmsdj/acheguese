@@ -1,6 +1,6 @@
 # TERRITORY.ROADMAP.md — Plano de Execução do Domínio Territory
 
-**Origem**: `docs/domain/TERRITORY-ENTERPRISE-AUDIT.md` (Sprint TERRITORY.AUDIT.2)
+**Origem**: `docs/10-archive/territory/TERRITORY-ENTERPRISE-AUDIT.md` (Sprint TERRITORY.AUDIT.2)
 **Data**: 2026-07-23
 **Estado**: Backlog priorizado de 29 itens, agrupados por fase de execução.
 
