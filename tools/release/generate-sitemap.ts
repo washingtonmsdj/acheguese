@@ -38,11 +38,34 @@ function allowTransientSourceFallback(): boolean {
 async function main() {
   configureSitemapBaseUrl();
 
-  const [{ generateAndSaveSitemap }, { logger }] = await Promise.all([
+  const [
+    { generateAndSaveSitemap },
+    { logger },
+    { isProductModuleEnabled, isPlatformCapabilityEnabled },
+  ] = await Promise.all([
     import("@/core/routing/seo/generateSitemap"),
     import("@/shared/utils/logger"),
+    import("@/app/config/lifecycleRegistry"),
   ]);
+
+  const isSurfaceEnabled = (surface: string): boolean => {
+    switch (surface) {
+      case "business":
+      case "gastronomy":
+      case "services":
+      case "classifieds":
+      case "touristPoints":
+        return isProductModuleEnabled(surface);
+      case "map":
+      case "nearby":
+        return isPlatformCapabilityEnabled(surface);
+      default:
+        return false;
+    }
+  };
+
   await generateAndSaveSitemap({
+    isSurfaceEnabled,
     allowTransientSourceFallback: allowTransientSourceFallback(),
   });
 
