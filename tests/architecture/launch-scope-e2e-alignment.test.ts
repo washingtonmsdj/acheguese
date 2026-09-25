@@ -89,6 +89,9 @@ describe("MVP launch-scope alignment", () => {
     expect(searchPage).toContain(
       "providerBuckets: activeSearchProviderBuckets",
     );
+    expect(searchPage).not.toContain("@/app/config/launchScope");
+    expect(searchPage).not.toContain("isLaunchSurfaceEnabled");
+    expect(searchPage).toContain("isProductModuleEnabled");
     expect(searchPage).toContain('providerBucket: "businesses"');
     expect(searchPage).toContain('providerBucket: "professionals"');
     expect(searchPage).toContain('surface: "services"');
