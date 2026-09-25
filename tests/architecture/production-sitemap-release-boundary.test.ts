@@ -89,16 +89,23 @@ describe("production sitemap release boundary", () => {
     expect(sitemap).not.toContain("{ path: '/contato'");
   });
 
-  it("indexes only lifecycle-enabled product surfaces and includes Nearby", () => {
-    const launchScope = read("src/app/config/launchScope.ts");
+  it("indexes only lifecycle-enabled product surfaces and keeps lifecycle outside core routing", () => {
     const releaseSitemap = read("src/core/routing/seo/generateSitemap.ts");
+    const releaseScript = read("tools/release/generate-sitemap.ts");
 
-    expect(launchScope).toContain('nearby: isPlatformCapabilityEnabled("nearby")');
-    expect(releaseSitemap).toContain(
-      "TERRITORY_SITEMAP_MODULES.filter((module) => isLaunchSurfaceEnabled(module.surface))",
-    );
-    expect(releaseSitemap).toContain("isLaunchSurfaceEnabled('nearby')");
+    expect(releaseSitemap).not.toContain("@/app/config");
+    expect(releaseSitemap).not.toContain("isLaunchSurfaceEnabled");
+    expect(releaseSitemap).not.toContain("GenerateAndSaveSitemapOptions = {}");
+    expect(releaseSitemap).toContain("isSurfaceEnabled(module.surface)");
+    expect(releaseSitemap).toContain("isSurfaceEnabled('nearby')");
     expect(releaseSitemap).toContain("APP_MODULE_SLUGS.nearby");
+
+    expect(releaseScript).toContain('import("@/app/config/lifecycleRegistry")');
+    expect(releaseScript).toContain("SitemapSurfaceKey");
+    expect(releaseScript).toContain('isProductModuleEnabled(surface)');
+    expect(releaseScript).toContain('isPlatformCapabilityEnabled(surface)');
+    expect(releaseScript).toContain("isSurfaceEnabled,");
+
     expect(releaseSitemap).not.toContain("{ path: '/inicio'");
   });
 

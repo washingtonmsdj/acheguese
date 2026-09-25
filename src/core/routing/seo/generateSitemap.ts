@@ -11,7 +11,6 @@ import {
   SUPPORT_PATH,
   TERMS_OF_SERVICE_PATH,
 } from '@/shared/constants/legal';
-import { isLaunchSurfaceEnabled, type LaunchSurfaceKey } from '@/app/config/launchScope';
 import { APP_MODULE_SLUGS, buildAppModulePath } from '@/shared/config/moduleSlugs';
 import { territorialGroupService, type TerritorialGroupWithMembers } from '@/core/territorial';
 import {
@@ -47,7 +46,23 @@ export interface SitemapArtifact {
   urlCount: number;
 }
 
+export type SitemapSurfaceKey =
+  | 'business'
+  | 'gastronomy'
+  | 'services'
+  | 'classifieds'
+  | 'touristPoints'
+  | 'map'
+  | 'nearby';
+
+export type SitemapSurfacePredicate = (surface: SitemapSurfaceKey) => boolean;
+
 export interface GenerateAndSaveSitemapOptions {
+  /**
+   * Lifecycle is resolved by the release/app composition boundary.
+   * Core routing must not import app/config or own product activation state.
+   */
+  isSurfaceEnabled: SitemapSurfacePredicate;
   /**
    * Release-only resilience. A transient upstream/network failure may publish
    * the deterministic static sitemap instead of blocking the frontend build.
@@ -63,7 +78,7 @@ interface SitemapInventory {
 }
 
 interface TerritorySitemapModule {
-  surface: LaunchSurfaceKey;
+  surface: SitemapSurfaceKey;
   buildUrl: (territoryPath: string) => string;
 }
 
@@ -196,6 +211,7 @@ function generateTerritoryUrls(
   baseUrl: string,
   publicPath: string,
   isGroup: boolean,
+  isSurfaceEnabled: SitemapSurfacePredicate,
 ): SitemapUrl[] {
   const urls: SitemapUrl[] = [
     {
@@ -205,7 +221,7 @@ function generateTerritoryUrls(
     },
   ];
 
-  TERRITORY_SITEMAP_MODULES.filter((module) => isLaunchSurfaceEnabled(module.surface)).forEach((module) => {
+  TERRITORY_SITEMAP_MODULES.filter((module) => isSurfaceEnabled(module.surface)).forEach((module) => {
     urls.push({
       loc: `${baseUrl}${module.buildUrl(publicPath)}`,
       changefreq: 'daily',
@@ -230,6 +246,7 @@ function collectSitemapUrls(
   locations: SitemapLocation[],
   groups: TerritorialGroupWithMembers[],
   baseUrl: string,
+  isSurfaceEnabled: SitemapSurfacePredicate,
 ): SitemapUrl[] {
   const normalizedBaseUrl = resolveSitemapBaseUrl(baseUrl);
   const urls: SitemapUrl[] = [
@@ -242,7 +259,7 @@ function collectSitemapUrls(
 
   const staticPages = [
     { path: '/ba/salvador', priority: 0.95, changefreq: 'daily' as const },
-    ...(isLaunchSurfaceEnabled('nearby')
+    ...(isSurfaceEnabled('nearby')
       ? [
           {
             path: buildAppModulePath(APP_MODULE_SLUGS.nearby),
@@ -275,6 +292,7 @@ function collectSitemapUrls(
           normalizedBaseUrl,
           publicPath,
           false,
+          isSurfaceEnabled,
         ),
       );
     });
@@ -291,6 +309,7 @@ function collectSitemapUrls(
             normalizedBaseUrl,
             groupPath,
             true,
+            isSurfaceEnabled,
           ),
         );
       }
@@ -338,14 +357,18 @@ export function generateSitemap(
   locations: SitemapLocation[],
   groups: TerritorialGroupWithMembers[],
   baseUrl: string,
+  isSurfaceEnabled: SitemapSurfacePredicate,
 ): string {
-  return renderSitemapUrlset(collectSitemapUrls(locations, groups, baseUrl));
+  return renderSitemapUrlset(
+    collectSitemapUrls(locations, groups, baseUrl, isSurfaceEnabled),
+  );
 }
 
 export function generateSitemapArtifacts(
   locations: SitemapLocation[],
   groups: TerritorialGroupWithMembers[],
   baseUrl: string,
+  isSurfaceEnabled: SitemapSurfacePredicate,
   maxUrlsPerFile = SITEMAP_URL_CHUNK_SIZE,
 ): SitemapArtifact[] {
   if (
@@ -359,7 +382,12 @@ export function generateSitemapArtifacts(
   }
 
   const normalizedBaseUrl = resolveSitemapBaseUrl(baseUrl);
-  const urls = collectSitemapUrls(locations, groups, normalizedBaseUrl);
+  const urls = collectSitemapUrls(
+    locations,
+    groups,
+    normalizedBaseUrl,
+    isSurfaceEnabled,
+  );
 
   if (urls.length <= maxUrlsPerFile) {
     return [
@@ -405,7 +433,7 @@ async function removeStaleSitemapChunks(outputDirectory: string): Promise<void> 
 }
 
 export async function generateAndSaveSitemap(
-  options: GenerateAndSaveSitemapOptions = {},
+  options: GenerateAndSaveSitemapOptions,
 ) {
   const inventory = await loadSitemapInventory(options);
   const outputDirectory = resolve(process.cwd(), 'public');
@@ -413,6 +441,7 @@ export async function generateAndSaveSitemap(
     inventory.locations,
     inventory.groups,
     resolveSitemapBaseUrl(),
+    options.isSurfaceEnabled,
   );
 
   await removeStaleSitemapChunks(outputDirectory);

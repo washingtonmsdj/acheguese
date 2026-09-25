@@ -8,6 +8,9 @@ import {
   SITEMAP_URL_CHUNK_SIZE,
 } from "../generateSitemap";
 
+const mvpSurfaceEnabled = (surface: string): boolean =>
+  ["business", "map", "nearby"].includes(surface);
+
 describe("generateSitemap", () => {
   it("gera URLs publicas canonicas sem portal comunitario nem legado /area/", () => {
     const sitemap = generateSitemap(
@@ -30,6 +33,7 @@ describe("generateSitemap", () => {
         },
       ] as never,
       "https://acheguese.com.br",
+      mvpSurfaceEnabled,
     );
 
     expect(sitemap).not.toContain("/area/");
@@ -68,6 +72,7 @@ describe("generateSitemap", () => {
       ] as never,
       [],
       "https://acheguese.com.br",
+      mvpSurfaceEnabled,
     );
 
     const salvadorLocations =
@@ -92,6 +97,7 @@ describe("generateSitemap", () => {
       ] as never,
       [],
       "https://acheguese.com.br",
+      mvpSurfaceEnabled,
       5,
     );
 
