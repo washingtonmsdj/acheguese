@@ -12,7 +12,7 @@ describe("Ride rating and Trust authority", () => {
       "supabase/migrations/20260715109000_consolidate_trust_commands.sql",
     );
     const privacyGate = readProjectFile(
-      "supabase/migrations/20260909194500_scope_ride_rating_public_summary_g13.sql",
+      "supabase/migrations/20260909171313_scope_ride_rating_public_summary_g13.sql",
     );
     const ratingService = readProjectFile(
       "src/core/mobility/services/RideRatingService.ts",
