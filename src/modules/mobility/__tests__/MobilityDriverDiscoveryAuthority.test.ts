@@ -9,7 +9,7 @@ function readProjectFile(relativePath: string): string {
 describe("Mobility ride-scoped driver discovery authority", () => {
   it("requires a concrete ride and keeps candidate discovery server-owned", () => {
     const migration = readProjectFile(
-      "supabase/migrations/20260909181500_broker_available_driver_discovery_g11.sql",
+      "supabase/migrations/20260909165308_broker_available_driver_discovery_g11.sql",
     );
     const broker = readProjectFile("supabase/functions/mobility-rpc/index.ts");
     const rpcService = readProjectFile(
