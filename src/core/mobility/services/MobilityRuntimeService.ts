@@ -11,8 +11,6 @@ import { logger } from "@/shared/utils/logger";
 import { sanitizeDriverSelfServiceUpdate } from "./driverDataSelfService";
 import { DriverEarningsReadService } from "./DriverEarningsReadService";
 import { MobilityRpcService } from "./MobilityRpcService";
-import { getRideWithAddresses as readRideSearchSnapshot } from "./mobility.ride-read-queries";
-import type { RideSearchSnapshotRow } from "./RideSearchSnapshotReadModel";
 
 type ErrorLike = { message?: string | null; code?: string | null } | null;
 
@@ -307,15 +305,6 @@ class MobilityServiceInstance {
     }
   }
 
-  // -- Ride ---------------------------------------------------------------
-
-  /**
-   * Temporary UI compatibility facade. The bounded query and DB ownership live
-   * in mobility.ride-read-queries; new consumers must import that owner directly.
-   */
-  async getRideWithAddresses(rideId: string): Promise<RideSearchSnapshotRow | null> {
-    return readRideSearchSnapshot(rideId);
-  }
 }
 
 export const mobilityService = new MobilityServiceInstance();

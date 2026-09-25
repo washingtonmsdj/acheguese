@@ -25,10 +25,23 @@ function filesContaining(pattern: string): string[] {
     .sort();
 }
 
-describe("remaining compatibility facade caller budget", () => {
-  it("keeps the paused Mobility runtime forwarding method at one UI caller", () => {
-    expect(filesContaining("mobilityService.getRideWithAddresses")).toEqual([
-      "src/modules/mobility/pages/BuscandoMotoristaPage.tsx",
-    ]);
+describe("runtime compatibility facade budget", () => {
+  it("keeps runtime compatibility forwarding facades at zero", () => {
+    expect(filesContaining("mobilityService.getRideWithAddresses")).toEqual([]);
+
+    const runtime = fs.readFileSync(
+      path.join(ROOT, "src/core/mobility/services/MobilityRuntimeService.ts"),
+      "utf8",
+    );
+    const searchPage = fs.readFileSync(
+      path.join(ROOT, "src/modules/mobility/pages/BuscandoMotoristaPage.tsx"),
+      "utf8",
+    );
+
+    expect(runtime).not.toContain("getRideWithAddresses(");
+    expect(searchPage).toContain(
+      '@/core/mobility/services/mobility.ride-read-queries',
+    );
+    expect(searchPage).toContain("getRideWithAddresses(rideId!)");
   });
 });

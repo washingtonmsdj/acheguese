@@ -1,14 +1,14 @@
 # Compatibility Bridges Registry
 
-Status: CANONICAL — structural root cleanup closed; one paused-module runtime facade remains  
-Reviewed: 2026-09-19  
+Status: CANONICAL — runtime compatibility debt closed  
+Reviewed: 2026-09-25  
 Operational authority: `docs/08-roadmap/EXECUCAO_MAIN_ONLY.md`
 
 ## Purpose
 
 This file is the current compatibility-debt ledger. It records only compatibility surfaces that still exist in active source and the guardrails for recently retired ones. Detailed historical retirement evidence remains in Git history and `docs/10-archive/**`.
 
-Do not infer “zero compatibility debt” from the completed physical reorganization. The retired global roots are still gone, but a small number of caller-backed facades remain and must be migrated atomically before deletion.
+Runtime compatibility debt is currently zero. New compatibility facades are not extension points and must not be introduced without an explicit, time-bounded migration reason.
 
 ## Rules
 
@@ -22,13 +22,9 @@ Do not infer “zero compatibility debt” from the completed physical reorganiz
 
 ## Live compatibility debt
 
-These are the currently proven live facades. They are not new extension points.
+**None.**
 
-| Compatibility surface | Canonical owner | Current caller evidence | Removal gate |
-| --- | --- | --- | --- |
-| `MobilityRuntimeService.getRideWithAddresses()` | `src/core/mobility/services/mobility.ride-read-queries.ts` | `BuscandoMotoristaPage` | Mobility is paused for MVP; migrate the page to the bounded read owner and remove the forwarding method before re-enabling the module |
-
-No partial migration is considered closure. If a large caller cannot be safely rewritten in the current tooling session, the facade stays explicit here rather than being hidden behind another alias.
+Canonical owners are consumed directly. Any future temporary facade must be documented here with a current caller, canonical replacement and removal gate before it is accepted.
 
 ## Retired module bridges — 2026-09-14
 
@@ -80,10 +76,10 @@ Business extension persistence belongs to `src/core/business/services/business.p
 
 ### Mobility
 
-`getRideWithAddresses()` is owned by `mobility.ride-read-queries.ts`. `MobilityRuntimeService` still exposes one temporary UI forwarding method used by `BuscandoMotoristaPage`; new callers must import the bounded read owner directly.
+`getRideWithAddresses()` is owned by `mobility.ride-read-queries.ts`. `BuscandoMotoristaPage` consumes that bounded read owner directly; the temporary `MobilityRuntimeService` forwarding method is retired.
 
 ## Closure criteria
 
-Guide and Profile/Business compatibility debt is closed and ratcheted. Compatibility debt reaches zero only when the remaining paused Mobility forwarding facade is removed without replacement before Mobility is re-enabled.
+Guide, Profile/Business and Mobility compatibility debt is closed and ratcheted. Runtime compatibility debt remains at zero unless a new migration bridge is explicitly registered with a removal gate.
 
 Hosted build/test certification is a separate concern. Provider rate limits, runner failures, or missing logs are not source PASS evidence and do not change the bridge inventory.

@@ -16,7 +16,7 @@ import { ArrowLeft, Navigation, X, Car } from "lucide-react";
 import { Button } from "@/shared/components/ui/button";
 import { useMobilidade } from "@/modules/mobility/hooks/useMobilidade";
 import type { RideSearchStatus } from "@/modules/mobility/hooks/useRideSearch";
-import { mobilityService } from "@/core/mobility/services/MobilityService";
+import { getRideWithAddresses } from "@/core/mobility/services/mobility.ride-read-queries";
 import { mobilityRoutes } from "@/core/mobility/routes/mobilityRoutes";
 import { DEFAULT_CAMERA, DEFAULT_TILE_STYLE } from "@/core/maps/providers/MapProvider";
 import { loadMapLibreRuntime } from "@/core/maps/runtime/loadMapLibreRuntime";
@@ -289,7 +289,7 @@ export default function BuscandoMotoristaPage() {
 
   const { data: ride } = useQuery({
     queryKey: MOBILITY_QUERY_KEYS.rideBuscando(rideId!),
-    queryFn: () => mobilityService.getRideWithAddresses(rideId!),
+    queryFn: () => getRideWithAddresses(rideId!),
     enabled: !!rideId,
     staleTime: TIMEOUTS.CACHE_STALE_TIME_MEDIUM,
   });
