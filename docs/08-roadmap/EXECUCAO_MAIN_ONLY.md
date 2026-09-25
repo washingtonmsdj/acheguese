@@ -1,52 +1,42 @@
 # Achegue-se — Execução `main`-only e prontidão MVP
 
 **Status:** ATIVO — SSOT OPERACIONAL  
-**Data do checkpoint GitHub:** 2026-09-24  
+**Atualizado:** 2026-09-25  
 **Repositório:** `washingtonmsdj/acheguese`  
 **Linha ativa:** `main`  
-**Baseline operacional auditada:** `main@227dcf926bb2e65b7615717413e1544927edc442` (merge de #366). Este checkpoint registra o estado do código; não promove um novo release. Qualquer merge posterior gera outro SHA e exige nova prova exact-SHA antes de promoção.
+**Baseline operacional:** a `main` corrente. Este documento não fixa um SHA como “atual”, porque qualquer merge o tornaria obsoleto. O SHA só é autoridade quando citado como evidência de uma certificação exact-SHA específica.
 
 Este documento consolida ordem de execução, blockers e Definition of Done. Ele é um **registro operacional**, não uma fotografia autoritativa do que existe no produto. A fonte de verdade para decidir o que existe, o que está ativo e o que deve ser corrigido é sempre o **projeto real**: código da `main`, rotas, owners, serviços, schema/migrations, contratos, testes, deploy/runtime e comportamento observado.
 
 
-## Estado operacional atual — 2026-09-23
+## Estado operacional atual
 
-- `main` auditada: `ab7b4c6ccb8ead82388dd5862aa99e654a6dfe19` (merge de #350);
-- #327 / #325 removeu módulos pausados da árvore pública ativa, criou `activeLazyImports.ts` e fez URLs públicas sem owner ativo caírem no 404 canônico;
-- o head `fa747aa7c877d7a086b92277940681a27abba844` de #327 passou Dependency Lock, Security Check/Scan, Auth Concept, Visual Regression, SSOT Territorial, Heavy exact-SHA e SSOT Enforcement antes do merge;
-- #329 — Central active-only integrado: `/central/*` monta somente Business/Empresas + infraestrutura via `activeCentralLazyImports.ts`; módulos pausados ficam fora do grafo e URL sem owner cai no 404 canônico;
-- #330 — `centralLazyImports.ts` aposentado após censo provar ausência de caller runtime; ratchets agora preservam owners físicos/lifecycle em vez de barrel artificial;
-- #331 — `CommunityTerritoryRoutes.tsx` aposentado após censo provar ausência de caller runtime; builders canônicos de URL e owners Community permanecem preservados nos bounded contexts;
-- #333 integrado — `src/app/routes/lazyImports.ts` e a cadeia órfã `TerritorialModulePages.tsx` → `launchPausedComponent.ts` → `LaunchPausedPage.tsx` foram aposentados; ratchets agora preservam owners físicos/lifecycle e impedem recriação do grafo morto; `activeLazyImports.ts` + `ActiveTerritorialModulePages.tsx` permanecem como boundaries públicos ativos;
-- #337 integrado — Perto de mim passou a tratar a rota territorial como autoridade canônica, preservando contexto de território/grupo e boundaries de Business;
-- #338 integrado — sugestões da Busca agora são derivadas somente de providers lifecycle-enabled; módulos pausados deixaram de ser promovidos por sugestões hardcoded;
-- #339 integrado — o preview de mapa da Busca preserva a URL canônica de Business já produzida pelo Search Core no CTA destacado;
-- #341 integrado — pins de resultados da Busca passaram a executar navegação real; Business delega ao owner canônico e não reconstrói URL no mapa;
-- #342 integrado — pins do mini-mapa de Perto de mim passaram a abrir `business.canonicalUrl`, alinhando card e mapa ao mesmo owner público;
-- #343 integrado — o hero/mapa de Empresas agora respeita `filteredBusinesses` inclusive quando o resultado é zero, sem reexibir silenciosamente a coleção não filtrada;
-- #350/#351 foram reavaliados: pausar Notificações por causa do recorte de verticais misturava capability horizontal com módulo de produto. O PR #353 corrige essa classificação, reativa Notificações e preserva os verticais pausados fail-closed;
-- os heads finais de #337, #338, #339, #341, #342 e #343 passaram os gates aplicáveis de unit/runtime, lint/typecheck, arquitetura, segurança, E2E público, Regression, Heavy exact-SHA e SSOT Enforcement antes dos respectivos merges; isso certifica os PRs, mas não substitui prova pós-merge/deploy/smoke do SHA atual da `main`;
-- o blocker de release autenticado continua #305: o broker remoto está alinhado ao source e recebe OIDC válido, mas o upstream Supabase/Auth segue reproduzindo `503 auth_upstream_unavailable` / connection timeout; #309 continua separado como autoridade de deploy de Edge Functions. Nenhum merge herda certificação anterior: a `main@7a749254...` precisa de sua própria prova exact-SHA de deploy + smoke antes de promoção.
+O corte estrutural do MVP está concentrado e fail-closed:
 
-### Evidência pós-#333 — exact-main `42d91ea...`
+- **domínio de produto ativo:** Business/Empresas;
+- **capabilities horizontais ativas:** Mapa, Perto de mim, Busca, Mensagens e Notificações;
+- **plataforma ativa:** Auth, Perfis/Conta, Território, Localização e Central;
+- módulos pós-MVP permanecem versionados, mas fora de rotas, navegação, prefetch, discovery e providers ativos;
+- `launchScope.ts` não é uma segunda autoridade de lifecycle: em superfícies ativas do `app`, a composição vem diretamente de `lifecycleRegistry.ts`; projeções de compatibilidade só permanecem em boundaries inferiores ainda não migrados.
 
-- Vercel: **success** no mesmo SHA;
-- release identity: **exact**, deployed SHA = expected SHA = `42d91ea9454de0fe8c3250cc75d230cb1bceeb9c`;
-- SSOT Enforcement: **success**;
-- Heavy exact-main: **success**;
-- SSOT Territorial: Phase Core, Runtime, E2E público e Regression **success**;
-- smoke autenticado: **failure externa #305**, com quatro cenários interrompidos no broker por `HTTP 503 [auth_upstream_unavailable]` antes de validar as superfícies privadas;
-- run territorial: `35918986268`, job autenticado: `107377764638`;
-- logs Supabase da mesma janela: 504 em Auth token + 522 em múltiplas APIs PostgREST, provando indisponibilidade upstream mais ampla que o frontend.
+Cortes recentes que consolidam essa regra:
+
+- #383 moveu o lifecycle do sitemap para o boundary de release;
+- #384 moveu ações de Notificações para o lifecycle canônico;
+- #386 moveu Busca e seletor público de cidade para o lifecycle canônico;
+- #387 moveu a navegação ativa para o lifecycle canônico e removeu helpers órfãos;
+- #388 passou Billing como scope explícito para Business sem religar Billing ao MVP;
+- #390 passou as verticais Business habilitadas pelo boundary do `app`, removendo a decisão de lançamento de dentro de `CriarEmpresaPage`.
+
+Nenhum desses cortes reativa Gastronomia, Educação, Billing ou outro domínio pausado.
 
 ### Blockers atuais do primeiro release
 
-1. **#305 — indisponibilidade ampla do data plane Supabase:** o projeto canônico aparece `ACTIVE_HEALTHY`, porém no smoke exact-main `/auth/v1/token` produziu 12 × HTTP 504 e múltiplas rotas PostgREST independentes produziram HTTP 522 com ~19–20 s de origin time. O broker OIDC v3 recebe corretamente `repo:washingtonmsdj/acheguese:ref:refs/heads/main` e retorna `503 auth_upstream_unavailable` porque o upstream falha; consulta SQL simples também expira. Investigar infraestrutura/Observability/Supabase antes de alterar app. Não mascarar com retry/timeout maior, fallback, redirect, troca de fixture, RLS alternativo ou bypass OIDC.
-2. **#309 — autoridade automática de deploy Supabase:** o PAT do GitHub Actions recebe 403 ao atualizar Edge Functions. Rotacionar o secret para PAT scoped com `Edge Functions: Read-write` / `deploy_edge_function`; não usar `service_role` como substituto.
-3. **Exact-SHA pós-merge:** qualquer mudança, inclusive documentação, gera novo candidato. Security/lint/typecheck/tests/build/E2E/deploy/smoke precisam pertencer ao mesmo SHA final.
+1. **#305 — data plane Supabase indisponível/intermitente:** o projeto pode aparecer saudável no control plane, porém consultas mínimas como `select 1` continuam reproduzindo `Connection terminated due to connection timeout`. O smoke autenticado deve permanecer fail-closed. Não mascarar com retry artificial, timeout maior, fallback de login, bypass OIDC, troca de fixture ou alteração de RLS sem evidência.
+2. **#309 — autoridade automática de deploy Supabase:** o token do GitHub Actions não possui a permissão necessária para atualizar Edge Functions. Corrigir com PAT scoped para `Edge Functions: Read-write` / `deploy_edge_function`; não usar `service_role` como substituto.
+3. **Certificação final exact-SHA:** depois do último merge de código/docs do candidato, o mesmo SHA precisa passar security, lint, typecheck, testes, build, E2E, deploy e smoke autenticado. Certificação de PR não é certificação do merge SHA.
 
-O incidente antigo de hosted runners com jobs vazios foi encerrado no issue #17. O diagnóstico mais recente de alocação intermitente permanece rastreado em #89 e não autoriza workaround de workflow; os PRs #342 e #343 receberam runner real e concluíram Heavy exact-SHA com sucesso. O blocker comprovado do release autenticado continua #305, com #309 separado para autoridade automática de deploy Supabase.
-
+O incidente histórico de hosted runners vazios não é blocker atual: os gates de PR voltaram a executar steps reais. Se um runner falhar no futuro, diagnosticar a execução observada em vez de presumir repetição do incidente antigo.
 
 ## Corte de lançamento MVP — 2026-09-19
 
