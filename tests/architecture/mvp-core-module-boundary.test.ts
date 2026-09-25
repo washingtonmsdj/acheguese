@@ -577,16 +577,16 @@ describe("MVP core module boundary", () => {
       'await page.goto("/conta", { waitUntil: "domcontentloaded" })',
     );
 
-    for (const workflow of [
-      ssotWorkflow,
-      heavyPrWorkflow,
-      heavyExactShaWorkflow,
-    ]) {
+    for (const workflow of [ssotWorkflow, heavyExactShaWorkflow]) {
       expect(workflow).toContain(
         "group: acheguese-authenticated-e2e-fixture",
       );
       expect(workflow).toContain("cancel-in-progress: false");
     }
+
+    expect(heavyPrWorkflow).not.toContain(
+      "group: acheguese-authenticated-e2e-fixture",
+    );
   });
 
   it("keeps heavy aggregation rerun-safe and onboarding visuals deterministic", () => {
