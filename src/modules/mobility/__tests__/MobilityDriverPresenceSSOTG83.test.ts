@@ -59,7 +59,7 @@ const availabilityReadPolicy = readProjectFile(
   "supabase/migrations/20260825214750_harden_driver_availability_read_privacy.sql",
 );
 const availabilityAuthority = readProjectFile(
-  "supabase/migrations/20260909162500_harden_driver_availability_authority_g8.sql",
+  "supabase/migrations/20260909162108_harden_driver_availability_authority_g8.sql",
 );
 
 describe("G83 driver presence SSOT", () => {
