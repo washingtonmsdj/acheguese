@@ -115,7 +115,7 @@ describe("profile rpc broker security", () => {
 
   it("server-owns professional_data mutations without premature table-grant cutover", () => {
     const migration = readProjectFile(
-      "supabase/migrations/20260909214000_server_own_professional_data_mutations_g35.sql",
+      "supabase/migrations/20260909222928_server_own_professional_data_mutations_g35.sql",
     );
 
     for (const signature of [
@@ -146,7 +146,7 @@ describe("profile rpc broker security", () => {
 
   it("enforces exactly one professional extension per Profile", () => {
     const migration = readProjectFile(
-      "supabase/migrations/20260909215500_enforce_unique_professional_profile_extension_g35.sql",
+      "supabase/migrations/20260909223338_enforce_unique_professional_profile_extension_g35.sql",
     );
 
     expect(migration).toContain("tmp_professional_dedupe");
@@ -163,7 +163,7 @@ describe("profile rpc broker security", () => {
 
   it("brokers owner profile edits and separates admin/mobility authorities", () => {
     const migration = readProjectFile(
-      "supabase/migrations/20260909222500_broker_owned_profile_self_service_g36.sql",
+      "supabase/migrations/20260909230042_broker_owned_profile_self_service_g36.sql",
     );
     const edge = readProjectFile("supabase/functions/profile-rpc/index.ts");
     const broker = readProjectFile("src/core/profiles/services/ProfileRpcService.ts");
@@ -273,7 +273,7 @@ describe("profile rpc broker security", () => {
 
   it("server-owns the general Business lifecycle without duplicating Network authority", () => {
     const migration = readProjectFile(
-      "supabase/migrations/20260909234000_broker_owned_business_lifecycle_g36.sql",
+      "supabase/migrations/20260909232757_broker_owned_business_lifecycle_g36.sql",
     );
     const edge = readProjectFile("supabase/functions/profile-rpc/index.ts");
     const broker = readProjectFile("src/core/profiles/services/ProfileRpcService.ts");
@@ -344,7 +344,7 @@ describe("profile rpc broker security", () => {
 
   it("separates Personal and Driver creation by domain authority", () => {
     const migration = readProjectFile(
-      "supabase/migrations/20260910003000_domain_owned_profile_creation_g36.sql",
+      "supabase/migrations/20260910064706_domain_owned_profile_creation_g36.sql",
     );
     const profileEdge = readProjectFile("supabase/functions/profile-rpc/index.ts");
     const profileBroker = readProjectFile("src/core/profiles/services/ProfileRpcService.ts");
