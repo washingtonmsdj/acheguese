@@ -96,7 +96,6 @@ Documentos em `docs/10-archive/` são históricos e **nunca** substituem uma fon
 A raiz mantém somente documentos de entrada e governança transversal:
 
 - `README.md`;
-- `SECURITY.md`;
-- `URGENTE_LEIA_PRIMEIRO_REORGANIZACAO_GLOBAL.md` temporariamente como ponteiro de compatibilidade, sem autoridade própria.
+- `SECURITY.md`.
 
-Planos, arquitetura, status e histórico pertencem a `docs/` e devem estar referenciados pelo índice canônico.
+Planos, arquitetura, status e histórico pertencem a `docs/` e devem estar referenciados pelo índice canônico. Ponteiros temporários e planos substituídos não permanecem na raiz.
