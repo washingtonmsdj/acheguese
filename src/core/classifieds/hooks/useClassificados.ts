@@ -12,7 +12,6 @@ import {
 import type { ResolvedTerritory } from "@/core/routing/hooks/useResolveTerritoryFromUrl";
 import type { ClassifiedData } from "../services/types";
 import type { TerritoryFilter } from "@/core/location/types";
-import { isLaunchClassifiedCategoryEnabled } from "@/app/config/launchScope";
 export interface ClassificadoWithVendedor {
   id: string;
   public_id: string;
@@ -87,8 +86,8 @@ export function useClassificados(options: UseClassificadosOptions = {}) {
         // Passa o filtro territorial para o service — query real no backend
         const data = await ClassifiedsService.queries.getAllClassifieds(filter);
 
-        // Filtros locais de UI (categoria, busca, preço)
-        let filtered = data.filter((item) => isLaunchClassifiedCategoryEnabled(item.category));
+        // Filtros locais do domínio. Lifecycle é composto pela camada app.
+        let filtered = data;
 
         if (filters?.category) {
           filtered = filtered.filter((item) => item.category === filters.category);

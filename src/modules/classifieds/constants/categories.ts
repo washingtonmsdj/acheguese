@@ -3,7 +3,6 @@ import {
   CLASSIFIED_CATEGORY_LABELS,
   type ClassifiedCategory,
 } from "@/core/taxonomy/categories";
-import { isLaunchClassifiedCategoryEnabled } from "@/app/config/launchScope";
 
 export interface ClassifiedCategoryOption {
   id: ClassifiedCategory | "todos";
@@ -12,12 +11,10 @@ export interface ClassifiedCategoryOption {
 
 export const CLASSIFIED_CATEGORIES: readonly ClassifiedCategoryOption[] = [
   { id: "todos", label: "Todos" },
-  ...Object.entries(CLASSIFIED_CATEGORY_LABELS)
-    .filter(([id]) => isLaunchClassifiedCategoryEnabled(id))
-    .map(([id, label]) => ({
-      id: id as ClassifiedCategory,
-      label,
-    })),
+  ...Object.entries(CLASSIFIED_CATEGORY_LABELS).map(([id, label]) => ({
+    id: id as ClassifiedCategory,
+    label,
+  })),
 ];
 
 export const CLASSIFIED_FORM_CATEGORIES: readonly ClassifiedCategoryOption[] =
@@ -33,8 +30,7 @@ export function getCategoryLabel(categoryId: string): string {
 }
 
 export function isValidCategory(categoryId: string): categoryId is ClassifiedCategory {
-  return (
-    Object.values(CLASSIFIED_CATEGORY_VALUES).includes(categoryId as ClassifiedCategory) &&
-    isLaunchClassifiedCategoryEnabled(categoryId)
+  return Object.values(CLASSIFIED_CATEGORY_VALUES).includes(
+    categoryId as ClassifiedCategory,
   );
 }

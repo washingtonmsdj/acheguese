@@ -12,7 +12,6 @@ import {
   getActiveProductModules,
 } from "../lifecycleRegistry";
 import {
-  isLaunchClassifiedCategoryEnabled,
   isLaunchCommunityFeedChannelEnabled,
   isLaunchCommunityPostEnabled,
   isLaunchSurfaceEnabled,
@@ -112,9 +111,6 @@ describe("launchScope", () => {
   });
 
   it("fails closed for helpers owned by paused parent modules", () => {
-    expect(isLaunchClassifiedCategoryEnabled("vagas")).toBe(false);
-    expect(isLaunchClassifiedCategoryEnabled("imoveis")).toBe(false);
-
     expect(isLaunchCommunityFeedChannelEnabled("geral")).toBe(false);
     expect(isLaunchCommunityFeedChannelEnabled("eventos")).toBe(false);
     expect(isLaunchCommunityPostEnabled({ content_intent: "duvida" })).toBe(false);
