@@ -69,26 +69,6 @@ export const PUBLIC_LAUNCH_SURFACES: Record<LaunchSurfaceKey, boolean> = {
   familySafety: isProductModuleEnabled("familySafety"),
 };
 
-const NAV_ITEM_SURFACES: Partial<Record<string, LaunchSurfaceKey>> = {
-  home: "home",
-  neighborhood: "community",
-  community: "community",
-  business: "business",
-  gastronomy: "gastronomy",
-  services: "services",
-  education: "education",
-  classifieds: "classifieds",
-  jobs: "jobs",
-  events: "events",
-  nearby: "nearby",
-  map: "map",
-  mobility: "mobility",
-  search: "search",
-  messaging: "messaging",
-  messages: "messaging",
-  conversations: "messaging",
-};
-
 const CLASSIFIED_CATEGORY_SURFACES: Partial<Record<string, LaunchSurfaceKey>> = {
   vagas: "jobs",
 };
@@ -157,22 +137,3 @@ export function isLaunchCommunityPostEnabled(post: {
   return (post.distribution_channels ?? []).every(isLaunchCommunityFeedChannelEnabled);
 }
 
-export function isLaunchNavItemEnabled(id: string): boolean {
-  const surface = NAV_ITEM_SURFACES[id];
-  return surface ? isLaunchSurfaceEnabled(surface) : true;
-}
-
-export function filterLaunchItems<T extends { id: string }>(items: readonly T[]): T[] {
-  return items.filter((item) => isLaunchNavItemEnabled(item.id));
-}
-
-export function filterLaunchSections<T extends { items: readonly { id: string }[] }>(
-  sections: readonly T[],
-): T[] {
-  return sections
-    .map((section) => ({
-      ...section,
-      items: filterLaunchItems(section.items),
-    }))
-    .filter((section) => section.items.length > 0) as T[];
-}
