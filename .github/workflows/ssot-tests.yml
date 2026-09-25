@@ -4,6 +4,11 @@ on:
   workflow_dispatch:
   push:
     branches: [main]
+    # Documentation-only changes are validated by focused SSOT/docs workflows.
+    # Do not spend Production Auth/DB capacity on browser smoke with no runtime delta.
+    paths-ignore:
+      - "docs/**"
+      - "**/*.md"
   pull_request:
     branches: [main, develop]
     paths:

@@ -20,6 +20,10 @@ on:
   push:
     branches:
       - main
+    # Docs-only main updates do not need heavyweight runtime/browser certification.
+    paths-ignore:
+      - "docs/**"
+      - "**/*.md"
 
 permissions:
   contents: read
