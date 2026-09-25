@@ -73,6 +73,11 @@ describe("MVP private launch-scope boundaries", () => {
     expect(businessHub).not.toContain("Ativar gastronomia");
     expect(businessHub).not.toContain(">Gastronomia<");
     expect(businessHub).not.toContain(">Delivery<");
+    expect(businessHub).not.toContain("isLaunchSurfaceEnabled");
+    expect(businessHub).not.toContain("@/app/config");
+    expect(
+      existsSync(join(ROOT, "src/modules/profile/components/hub/BusinessModulesSection.tsx")),
+    ).toBe(false);
     for (const retiredSection of [
       "ResumoSection.tsx",
       "DadosPessoaisSection.tsx",
