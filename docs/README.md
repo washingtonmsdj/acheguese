@@ -10,8 +10,6 @@ A visão pós-MVP pode incorporar Comunidade, Classificados, Profissionais/Servi
 
 ## Autoridade e precedência
 
-> O arquivo `/URGENTE_LEIA_PRIMEIRO_REORGANIZACAO_GLOBAL.md` é somente um **ponteiro de compatibilidade da raiz**. Ele não supera este índice nem o roadmap ativo.
-
 Quando houver conflito, aplicar esta ordem:
 
 1. contrato executável/versionado (`src/`, migrations, manifests e validators);
@@ -53,7 +51,7 @@ Alguns caminhos antigos ainda existem fora das pastas numeradas por compatibilid
 - [Feature map](./FEATURE-MAP.md) — funcionalidades públicas ativas/pausadas;
 - [Screen map](./SCREEN-MAP.md) — rotas e superfícies vigentes.
 
-`architecture/PROJECT-MILESTONE-1.md` registra um marco arquitetural histórico de julho e não representa o status atual. `01-product/STATUS.md` está **SUBSTITUÍDO**. O antigo `PROJECT-SCORE.md` foi arquivado em `10-archive/product/`.
+`architecture/PROJECT-MILESTONE-1.md` registra um marco arquitetural histórico de julho e não representa o status atual. O antigo `PROJECT-SCORE.md` foi arquivado em `10-archive/product/`.
 
 ### Domínio
 
