@@ -24,6 +24,10 @@ describe("active Central runtime boundary", () => {
     expect(routes).toContain('from "../activeCentralLazyImports"');
     expect(routes).toContain('isProductModuleEnabled("business")');
     expect(routes).toContain('isProductModuleEnabled("billing")');
+    expect(routes).toContain("getActiveBusinessVerticalKeys()");
+    expect(routes).toContain(
+      "enabledVerticalKeys={activeBusinessVerticalKeys}",
+    );
     expect(routes).toContain("billingEnabled={billingEnabled}");
     expect(routes).toContain(
       "CentralHubPage businessEnabled={businessEnabled}",
