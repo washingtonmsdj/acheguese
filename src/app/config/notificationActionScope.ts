@@ -1,96 +1,200 @@
 import {
-  isLaunchSurfaceEnabled,
-  type LaunchSurfaceKey,
-} from "./launchScope";
+  isPlatformCapabilityEnabled,
+  isProductModuleEnabled,
+} from "./lifecycleRegistry";
+import type { PlatformCapabilityKey } from "./platformCapabilityRegistry";
+import type { ProductModuleKey } from "./productModuleRegistry";
 
 export const NOTIFICATION_INBOX_PATH = "/notificacoes";
 export const NOTIFICATION_FALLBACK_ACTION_LABEL = "Abrir notificações";
 
-interface NotificationActionRouteRule {
-  pattern: RegExp;
-  surface: LaunchSurfaceKey;
-}
+type NotificationLifecycleSurfaceKey =
+  | ProductModuleKey
+  | PlatformCapabilityKey;
+
+type NotificationActionRouteRule =
+  | {
+      pattern: RegExp;
+      kind: "product";
+      surface: ProductModuleKey;
+    }
+  | {
+      pattern: RegExp;
+      kind: "capability";
+      surface: PlatformCapabilityKey;
+    };
 
 export interface NotificationActionTarget {
   href: string;
   label: string;
   isFallback: boolean;
-  surface?: LaunchSurfaceKey;
+  surface?: NotificationLifecycleSurfaceKey;
 }
 
 const ROUTE_RULES: readonly NotificationActionRouteRule[] = [
   // Nested/private owners must be evaluated before their broader parent.
   {
     pattern: /^\/central\/empresas\/[^/]+\/gastronomia(?:\/|$)/i,
+    kind: "product",
     surface: "gastronomy",
   },
   {
     pattern: /^\/central\/empresas\/[^/]+\/educacao(?:\/|$)/i,
+    kind: "product",
     surface: "education",
   },
   {
     pattern: /^\/central\/empresas\/[^/]+\/cupons(?:\/|$)/i,
+    kind: "product",
     surface: "coupons",
   },
-  { pattern: /^\/central\/profissional(?:\/|$)/i, surface: "services" },
-  { pattern: /^\/central\/motorista(?:\/|$)/i, surface: "mobility" },
-  { pattern: /^\/central\/motoboy(?:\/|$)/i, surface: "mobility" },
-  { pattern: /^\/central\/empresas(?:\/|$)/i, surface: "business" },
+  {
+    pattern: /^\/central\/profissional(?:\/|$)/i,
+    kind: "product",
+    surface: "services",
+  },
+  {
+    pattern: /^\/central\/motorista(?:\/|$)/i,
+    kind: "product",
+    surface: "mobility",
+  },
+  {
+    pattern: /^\/central\/motoboy(?:\/|$)/i,
+    kind: "product",
+    surface: "mobility",
+  },
+  {
+    pattern: /^\/central\/empresas(?:\/|$)/i,
+    kind: "product",
+    surface: "business",
+  },
 
-  { pattern: /^\/empresas(?:\/|$)/i, surface: "business" },
-  { pattern: /^\/comunidade(?:\/|$)/i, surface: "community" },
-  { pattern: /^\/gastronomia(?:\/|$)/i, surface: "gastronomy" },
-  { pattern: /^\/(?:servicos|services)(?:\/|$)/i, surface: "services" },
+  {
+    pattern: /^\/empresas(?:\/|$)/i,
+    kind: "product",
+    surface: "business",
+  },
+  {
+    pattern: /^\/comunidade(?:\/|$)/i,
+    kind: "product",
+    surface: "community",
+  },
+  {
+    pattern: /^\/gastronomia(?:\/|$)/i,
+    kind: "product",
+    surface: "gastronomy",
+  },
+  {
+    pattern: /^\/(?:servicos|services)(?:\/|$)/i,
+    kind: "product",
+    surface: "services",
+  },
   {
     pattern: /^\/(?:classificados|classifieds|classificado)(?:\/|$)/i,
+    kind: "product",
     surface: "classifieds",
   },
   {
     pattern: /^\/(?:pontos-turisticos|tourist-points)(?:\/|$)/i,
+    kind: "product",
     surface: "touristPoints",
   },
-  { pattern: /^\/(?:educacao|education)(?:\/|$)/i, surface: "education" },
-  { pattern: /^\/(?:vagas|jobs)(?:\/|$)/i, surface: "jobs" },
-  { pattern: /^\/(?:eventos|events)(?:\/|$)/i, surface: "events" },
+  {
+    pattern: /^\/(?:educacao|education)(?:\/|$)/i,
+    kind: "product",
+    surface: "education",
+  },
+  {
+    pattern: /^\/(?:vagas|jobs)(?:\/|$)/i,
+    kind: "product",
+    surface: "jobs",
+  },
+  {
+    pattern: /^\/(?:eventos|events)(?:\/|$)/i,
+    kind: "product",
+    surface: "events",
+  },
   {
     pattern: /^\/(?:comunicacao|communication)(?:\/|$)/i,
+    kind: "product",
     surface: "communication",
   },
   {
     pattern: /^\/(?:mobilidade|mobility|track|historico)(?:\/|$)/i,
+    kind: "product",
     surface: "mobility",
   },
-  { pattern: /^\/(?:cupons|coupons)(?:\/|$)/i, surface: "coupons" },
+  {
+    pattern: /^\/(?:cupons|coupons)(?:\/|$)/i,
+    kind: "product",
+    surface: "coupons",
+  },
   {
     pattern: /^\/(?:ranking|gamificacao|gamification)(?:\/|$)/i,
+    kind: "product",
     surface: "gamification",
   },
-  { pattern: /^\/analytics(?:\/|$)/i, surface: "publicAnalytics" },
-  { pattern: /^\/alertas(?:\/|$)/i, surface: "communityAlerts" },
-  { pattern: /^\/problemas(?:\/|$)/i, surface: "communityIssues" },
+  {
+    pattern: /^\/analytics(?:\/|$)/i,
+    kind: "product",
+    surface: "publicAnalytics",
+  },
+  {
+    pattern: /^\/alertas(?:\/|$)/i,
+    kind: "product",
+    surface: "communityAlerts",
+  },
+  {
+    pattern: /^\/problemas(?:\/|$)/i,
+    kind: "product",
+    surface: "communityIssues",
+  },
   {
     pattern: /^\/(?:achados-perdidos|achados-e-perdidos)(?:\/|$)/i,
+    kind: "product",
     surface: "communityLostFound",
   },
   {
     pattern: /^\/(?:planos|checkout)(?:\/|$)/i,
+    kind: "product",
     surface: "billing",
   },
   {
     pattern: /^\/settings\/subscription(?:\/|$)/i,
+    kind: "product",
     surface: "billing",
   },
 
   // Horizontal/active surfaces are lifecycle-scoped too.
-  { pattern: /^\/mapa(?:\/|$)/i, surface: "map" },
-  { pattern: /^\/perto-de-mim(?:\/|$)/i, surface: "nearby" },
-  { pattern: /^\/(?:busca|buscar)(?:\/|$)/i, surface: "search" },
-  { pattern: /^\/mensagens(?:\/|$)/i, surface: "messaging" },
-  { pattern: /^\/u(?:\/|$)/i, surface: "profiles" },
+  {
+    pattern: /^\/mapa(?:\/|$)/i,
+    kind: "capability",
+    surface: "map",
+  },
+  {
+    pattern: /^\/perto-de-mim(?:\/|$)/i,
+    kind: "capability",
+    surface: "nearby",
+  },
+  {
+    pattern: /^\/(?:busca|buscar)(?:\/|$)/i,
+    kind: "capability",
+    surface: "search",
+  },
+  {
+    pattern: /^\/mensagens(?:\/|$)/i,
+    kind: "capability",
+    surface: "messaging",
+  },
+  {
+    pattern: /^\/u(?:\/|$)/i,
+    kind: "capability",
+    surface: "profiles",
+  },
 ];
 
 const COMMUNITY_EMBEDDED_SURFACES: Readonly<
-  Partial<Record<string, LaunchSurfaceKey>>
+  Partial<Record<string, ProductModuleKey>>
 > = {
   alertas: "communityAlerts",
   problemas: "communityIssues",
@@ -104,7 +208,7 @@ const COMMUNITY_EMBEDDED_SURFACES: Readonly<
 
 function getCommunityEmbeddedSurface(
   pathname: string,
-): LaunchSurfaceKey | undefined {
+): ProductModuleKey | undefined {
   const segments = pathname
     .split("/")
     .filter(Boolean)
@@ -118,6 +222,14 @@ function getCommunityEmbeddedSurface(
   }
 
   return undefined;
+}
+
+function isNotificationRouteRuleEnabled(
+  routeRule: NotificationActionRouteRule,
+): boolean {
+  return routeRule.kind === "product"
+    ? isProductModuleEnabled(routeRule.surface)
+    : isPlatformCapabilityEnabled(routeRule.surface);
 }
 
 const RETIRED_NOTIFICATION_ROUTE_PATTERNS: readonly RegExp[] = [
@@ -163,7 +275,7 @@ export function resolveNotificationActionTarget(
   }
 
   const communitySurface = getCommunityEmbeddedSurface(pathname);
-  if (communitySurface && !isLaunchSurfaceEnabled(communitySurface)) {
+  if (communitySurface && !isProductModuleEnabled(communitySurface)) {
     return {
       href: NOTIFICATION_INBOX_PATH,
       label: NOTIFICATION_FALLBACK_ACTION_LABEL,
@@ -173,7 +285,7 @@ export function resolveNotificationActionTarget(
   }
 
   const routeRule = ROUTE_RULES.find((rule) => rule.pattern.test(pathname));
-  if (!routeRule || isLaunchSurfaceEnabled(routeRule.surface)) {
+  if (!routeRule || isNotificationRouteRuleEnabled(routeRule)) {
     return {
       href: actionUrl,
       label: actionLabel,
