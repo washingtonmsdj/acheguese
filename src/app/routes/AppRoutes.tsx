@@ -6,7 +6,7 @@
 
 import { lazy } from "react";
 import { Route, Routes } from "react-router-dom";
-import { PRELAUNCH_LOCKDOWN_ENABLED } from "@/app/config/launchScope";
+import { PRELAUNCH_LOCKDOWN_ENABLED } from "@/app/config/releaseMode";
 import { AuthEntrySessionGate } from "@/app/routes/AuthEntrySessionGate";
 import { AUTH_PATHS } from "@/core/auth/constants/authFlow";
 
