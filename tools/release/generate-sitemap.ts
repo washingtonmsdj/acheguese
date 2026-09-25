@@ -1,5 +1,7 @@
 import dotenv from "dotenv";
 
+import type { SitemapSurfaceKey } from "@/core/routing/seo/generateSitemap";
+
 dotenv.config({ path: ".env.local", override: true });
 dotenv.config({ path: ".env", override: false });
 
@@ -48,7 +50,7 @@ async function main() {
     import("@/app/config/lifecycleRegistry"),
   ]);
 
-  const isSurfaceEnabled = (surface: string): boolean => {
+  const isSurfaceEnabled = (surface: SitemapSurfaceKey): boolean => {
     switch (surface) {
       case "business":
       case "gastronomy":
