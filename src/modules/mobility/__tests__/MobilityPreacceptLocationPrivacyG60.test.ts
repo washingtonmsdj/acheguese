@@ -7,7 +7,7 @@ function readProjectFile(relativePath: string): string {
 }
 
 const broker = readProjectFile(
-  "supabase/migrations/20260909173500_broker_driver_offer_read_model_g10.sql",
+  "supabase/migrations/20260909163814_broker_driver_offer_read_model_g10.sql",
 );
 const g60 = readProjectFile(
   "docs/09-reference/migrations-pending/20260911220000_redact_preaccept_offer_location_g60.sql",
