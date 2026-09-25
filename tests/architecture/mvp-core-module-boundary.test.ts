@@ -295,6 +295,9 @@ describe("MVP core module boundary", () => {
     expect(searchHook).toContain("providerBuckets");
     expect(searchPage).toContain("getActiveSearchProviderBuckets()");
     expect(searchPage).toContain("providerBuckets: activeSearchProviderBuckets");
+    expect(searchPage).not.toContain("@/app/config/launchScope");
+    expect(searchPage).not.toContain("isLaunchSurfaceEnabled");
+    expect(searchPage).toContain("isProductModuleEnabled");
   });
 
   it("keeps assisted Search lifecycle-scoped at the app boundary", () => {
