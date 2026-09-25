@@ -3,7 +3,7 @@
 **Data da auditoria:** 2026-07-25
 **Escopo:** 170 bairros municipais oficiais de Salvador
 **Base normativa:** `docs/domain/TERRITORY-GOVERNANCE.md`
-**Base anterior:** `docs/domain/SALVADOR-READINESS-REPORT.md` e `docs/domain/SALVADOR-IMPLEMENTATION-1-REPORT.md`
+**Base anterior:** `docs/10-archive/territory/SALVADOR-READINESS-REPORT.md` e `docs/10-archive/territory/SALVADOR-IMPLEMENTATION-1-REPORT.md`
 **Natureza:** auditoria somente leitura. Nenhum boundary foi importado e nenhuma arquitetura, tabela ou contrato foi alterado.
 
 ## Resumo executivo

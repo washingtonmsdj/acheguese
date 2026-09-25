@@ -1,7 +1,7 @@
 # SALVADOR.READINESS.IMPLEMENTATION.1
 
 **Data:** 2026-07-24
-**Base:** `SALVADOR-READINESS-REPORT.md` e `TERRITORY-GOVERNANCE.md`
+**Base:** `docs/10-archive/territory/SALVADOR-READINESS-REPORT.md` e `TERRITORY-GOVERNANCE.md`
 **Escopo:** eliminacao dos bloqueios P0 da Home, rollout publico e residuos SSOT. A importacao dos 170 boundaries ficou fora desta sprint.
 
 ## Resultado executivo
