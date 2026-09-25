@@ -1,6 +1,7 @@
 import type { FixtureAuthPasswordGrantSession } from "./fixtureAuthPasswordGrant";
 
 export const GITHUB_OIDC_AUDIENCE = "acheguese-supabase-ci-auth";
+export const CI_AUTH_FUNCTION_REGION = "us-west-2";
 const CI_AUTH_FUNCTION = "ci-auth-fixture-session";
 const MAX_ATTEMPTS = 3;
 
@@ -184,6 +185,7 @@ export async function signInFixtureViaGithubOidcBroker({
           Accept: "application/json",
           Authorization: `Bearer ${oidcToken}`,
           "Content-Type": "application/json",
+          "x-region": CI_AUTH_FUNCTION_REGION,
         },
         body: JSON.stringify({
           email,

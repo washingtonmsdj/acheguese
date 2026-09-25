@@ -1,5 +1,6 @@
 import { describe, expect, it, vi } from "vitest";
 import {
+  CI_AUTH_FUNCTION_REGION,
   GITHUB_OIDC_AUDIENCE,
   resolveGithubOidcEnvironment,
   signInFixtureViaGithubOidcBroker,
@@ -81,6 +82,8 @@ describe("GitHub OIDC fixture auth broker", () => {
         );
         const headers = new Headers(init?.headers);
         expect(headers.get("Authorization")).toBe(`Bearer ${oidcToken}`);
+        expect(headers.get("x-region")).toBe(CI_AUTH_FUNCTION_REGION);
+        expect(CI_AUTH_FUNCTION_REGION).toBe("us-west-2");
         expect(JSON.parse(String(init?.body))).toEqual({
           email: base.email,
           password: base.password,

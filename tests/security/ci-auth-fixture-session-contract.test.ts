@@ -102,6 +102,8 @@ describe("CI Auth fixture session boundary", () => {
     expect(oidcBroker).toContain("RUNNER_ENVIRONMENT");
     expect(oidcBroker).toContain("GitHub OIDC token claim mismatch");
     expect(oidcBroker).toContain("ci-auth-fixture-session");
+    expect(oidcBroker).toContain('CI_AUTH_FUNCTION_REGION = "us-west-2"');
+    expect(oidcBroker).toContain('"x-region": CI_AUTH_FUNCTION_REGION');
   });
 
   it("keeps the no-JWT exception explicitly governed as an external OIDC broker", () => {
