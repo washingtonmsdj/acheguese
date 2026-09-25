@@ -9,7 +9,7 @@ function readProjectFile(relativePath: string): string {
 describe("Mobility availability authority", () => {
   it("keeps presence intent brokered and busy state server-owned", () => {
     const migration = readProjectFile(
-      "supabase/migrations/20260909162500_harden_driver_availability_authority_g8.sql",
+      "supabase/migrations/20260909162108_harden_driver_availability_authority_g8.sql",
     );
     const broker = readProjectFile("supabase/functions/mobility-rpc/index.ts");
     const rpcService = readProjectFile(
