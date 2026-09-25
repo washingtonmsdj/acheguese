@@ -1,4 +1,4 @@
-import { readFileSync } from "node:fs";
+import { existsSync, readFileSync } from "node:fs";
 import { resolve } from "node:path";
 import { describe, expect, it } from "vitest";
 
@@ -7,9 +7,6 @@ function readProjectFile(path: string): string {
 }
 
 describe("G136 source-linked ride pricing boundary", () => {
-  const mobilityImpl = readProjectFile(
-    "src/core/mobility/services/MobilityService.impl.ts",
-  );
   const deliveryReader = readProjectFile(
     "src/core/mobility/delivery/services/OrderDeliveryLinkReadService.ts",
   );
@@ -18,8 +15,7 @@ describe("G136 source-linked ride pricing boundary", () => {
   );
 
   it("retires the legacy static source-linked pricing compatibility lookup", () => {
-    expect(mobilityImpl).not.toContain("static async getLatestRideBySource(");
-    expect(mobilityImpl).not.toContain("interface SourceLinkedRidePricingRow");
+    expect(existsSync(resolve(process.cwd(), "src/core/mobility/services/MobilityService.impl.ts"))).toBe(false);
   });
 
   it("keeps the dedicated order pricing lookup pricing-only", () => {
