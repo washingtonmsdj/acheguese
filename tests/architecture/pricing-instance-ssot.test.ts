@@ -48,16 +48,10 @@ describe("pricing instance SSOT", () => {
     expect(instance).toContain("export const pricingService = new Proxy");
   });
 
-  it("does not expose retired client-side mobility fare hooks", () => {
-    const hooksBarrel = read("src/core/pricing/hooks/index.ts");
-    const retiredHook = path.resolve(
-      PROJECT_ROOT,
-      "src/core/pricing/hooks/usePriceEstimate.ts",
-    );
-
-    expect(fs.existsSync(retiredHook)).toBe(false);
-    expect(hooksBarrel).not.toContain("usePriceEstimate");
-    expect(hooksBarrel).not.toContain("useQuickPriceEstimate");
+  it("keeps the retired client-side mobility fare hook namespace absent", () => {
+    expect(
+      fs.existsSync(path.resolve(PROJECT_ROOT, "src/core/pricing/hooks")),
+    ).toBe(false);
   });
 
   it("physically removes the historical local fare engine", () => {
