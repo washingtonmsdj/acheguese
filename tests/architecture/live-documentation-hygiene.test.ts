@@ -33,6 +33,41 @@ describe("live documentation hygiene", () => {
     expect(readme).not.toContain("PRODUCTION_AUDIT.md");
   });
 
+  it("keeps live MVP roadmap docs free of stale commit snapshots", () => {
+    const execution = readFileSync(
+      "docs/08-roadmap/EXECUCAO_MAIN_ONLY.md",
+      "utf8",
+    );
+    const nextSteps = readFileSync(
+      "docs/08-roadmap/NEXT-STEPS.md",
+      "utf8",
+    );
+
+    for (const content of [execution, nextSteps]) {
+      expect(content).not.toMatch(/\b[0-9a-f]{40}\b/i);
+      expect(content).not.toContain("A `main` atual é");
+      expect(content).not.toContain("Baseline operacional auditada:");
+    }
+
+    expect(execution).toContain("SSOT OPERACIONAL");
+    expect(execution).toContain("#305");
+    expect(execution).toContain("#309");
+    expect(nextSteps).toContain("Business / Empresas");
+  });
+
+  it("keeps Business validation as a living domain contract", () => {
+    const validation = readFileSync(
+      "src/modules/business/VALIDATION.md",
+      "utf8",
+    );
+
+    expect(validation).toContain("contrato vivo do domínio Business");
+    expect(validation).not.toMatch(/\b[0-9a-f]{40}\b/i);
+    expect(validation).not.toContain("Checkpoint tecnico");
+    expect(validation).not.toContain("G6 EM CERTIFICACAO");
+    expect(validation).toContain("deploy exact-SHA");
+  });
+
   it("keeps active source comments descriptive instead of migration logs", () => {
     const hook = readFileSync(
       "src/core/posts/hooks/usePostActions.ts",
