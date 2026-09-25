@@ -1,4 +1,4 @@
-import { readFileSync } from "node:fs";
+import { existsSync, readFileSync } from "node:fs";
 import { resolve } from "node:path";
 import { describe, expect, it } from "vitest";
 
@@ -7,9 +7,6 @@ function readProjectFile(path: string): string {
 }
 
 describe("G107 driver reader consolidation", () => {
-  const staticImpl = readProjectFile(
-    "src/core/mobility/services/MobilityService.impl.ts",
-  );
   const runtime = readProjectFile(
     "src/core/mobility/services/MobilityRuntimeService.ts",
   );
@@ -18,10 +15,7 @@ describe("G107 driver reader consolidation", () => {
   );
 
   it("does not keep duplicate driver-directory readers in static/runtime services", () => {
-    expect(staticImpl).not.toContain("static async getDriverProfiles(");
-    expect(staticImpl).not.toContain("static async getTopDrivers(");
-    expect(staticImpl).not.toContain("static async getDriverCompleteProfile(");
-    expect(staticImpl).not.toContain("driver_complete_profile");
+    expect(existsSync(resolve(process.cwd(), "src/core/mobility/services/MobilityService.impl.ts"))).toBe(false);
 
     expect(runtime).not.toContain("async getDriverProfiles(");
     expect(runtime).not.toContain("DriverCompleteProfileRecord");
