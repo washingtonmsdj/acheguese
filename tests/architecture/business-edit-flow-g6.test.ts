@@ -42,7 +42,10 @@ describe("Business edit flow (G6)", () => {
     expect(centralRoutes).toContain('path="empresas"');
     expect(centralRoutes).toContain("CentralEmpresasPage billingEnabled={billingEnabled}");
     expect(centralRoutes).toContain('path="empresas/nova"');
-    expect(centralRoutes).toContain('element={<P.CriarEmpresaPage />}');
+    expect(centralRoutes).toContain("<P.CriarEmpresaPage");
+    expect(centralRoutes).toContain(
+      "enabledVerticalKeys={activeBusinessVerticalKeys}",
+    );
     expect(centralRoutes).toContain('path="empresas/:businessId"');
     expect(centralRoutes).toContain('element={<P.BusinessAdminGuard />}');
     expect(centralRoutes).not.toContain("launchElement");
