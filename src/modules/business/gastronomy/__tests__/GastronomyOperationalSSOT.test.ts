@@ -318,9 +318,9 @@ describe("gastronomy operational SSOT flow", () => {
     const activeCentralLazyImportsSource = readProjectFile(
       "src/app/routes/activeCentralLazyImports.ts",
     );
-    const appLazyImportsSource = readProjectFile(
-      "src/app/routes/lazyImports.ts",
-    );
+    expect(
+      existsSync(resolve(repoRoot, "src/app/routes/lazyImports.ts")),
+    ).toBe(false);
 
     [
       "src/modules/business/gastronomy/pages/DeliveryManagementPage.tsx",
@@ -430,28 +430,13 @@ describe("gastronomy operational SSOT flow", () => {
     expect(activeCentralLazyImportsSource).not.toContain("DeliveryManagementPage");
     expect(activeCentralLazyImportsSource).not.toContain("AnalyticsPage");
     expect(activeCentralLazyImportsSource).not.toContain("GastronomyPromotionsPage");
-    expect(appLazyImportsSource).toContain(
-      'export const DeliveryManagementPage = createLaunchPausedRoute("Entregas")',
-    );
-    expect(appLazyImportsSource).toContain(
-      'export const AnalyticsPage = createLaunchPausedRoute("Analytics")',
-    );
-    expect(appLazyImportsSource).toContain(
-      'export const GastronomyPromotionsPage = createLaunchPausedRoute("Promocoes")',
-    );
-
     [
-      ["GastronomySetupPage", "Gastronomia operacional"],
-      ["GastronomyDashboardPage", "Gastronomia operacional"],
-      ["MenuManagementPage", "Gastronomia operacional"],
-      ["BusinessHoursPage", "Gastronomia operacional"],
-      ["DeliveryAreaPage", "Gastronomia operacional"],
-    ].forEach(([exportName, pausedLabel]) => {
-      expect(appLazyImportsSource).toMatch(
-        new RegExp(
-          `export const ${exportName}\\s*=\\s*createLaunchPausedRoute\\(\\s*"${pausedLabel}"\\s*,?\\s*\\)`,
-        ),
-      );
+      "GastronomySetupPage",
+      "GastronomyDashboardPage",
+      "MenuManagementPage",
+      "BusinessHoursPage",
+      "DeliveryAreaPage",
+    ].forEach((exportName) => {
       expect(activeCentralLazyImportsSource).not.toContain(exportName);
       expect(
         existsSync(
