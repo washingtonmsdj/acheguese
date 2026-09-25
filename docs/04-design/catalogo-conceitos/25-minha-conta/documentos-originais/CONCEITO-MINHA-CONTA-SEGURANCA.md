@@ -39,6 +39,6 @@ Preferências do aplicativo é ponto de navegação para opções realmente supo
 
 Produzidas com imagegen nativo, usando prompts para quatro telas mobile de conta/acesso/segurança/notificações; quatro telas mobile de privacidade/MFA/exportação/exclusão solicitada; quatro telas desktop de segurança/notificações/privacidade/confirmação de exclusão. Paleta petróleo, solar e marfim, tipografia estilo Plus Jakarta Sans. Imagens são referências, textos e botões obedecem às regras acima.
 
-- `concepts/minha-conta/01-mobile-conta.png`
-- `concepts/minha-conta/02-mobile-privacidade.png`
-- `concepts/minha-conta/03-desktop.png`
+- `../pranchas/068-minha-conta-mobile.png`
+- `../pranchas/070-privacidade-mobile.png`
+- `../pranchas/071-minha-conta-desktop.png`

@@ -43,4 +43,4 @@ O desafio anti-bot é condicional e deve ficar antes do envio no formulário cor
 
 Imagens produzidas com a ferramenta nativa imagegen. Prompts: prancha mobile de entrada/cadastro/confirmação/primeiro acesso; prancha mobile de recuperação/reenvio/nova senha/link expirado; prancha desktop dos quatro fluxos principais. Direção comum: petróleo, amarelo solar, marfim, tipografia Plus Jakarta Sans, campos legíveis e ações com espaço confortável para toque.
 
-Arquivos em `docs/concepts/conta-e-acesso/`: `01-mobile-acesso.png`, `02-mobile-recuperacao.png`, `03-desktop.png`.
+Pranchas canônicas: `../pranchas/064-acesso-mobile.png`, `../pranchas/065-recuperacao-mobile.png`, `../pranchas/067-acesso-desktop.png`.
