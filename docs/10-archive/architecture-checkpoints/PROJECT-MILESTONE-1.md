@@ -12,9 +12,9 @@ Regra de escopo: este documento não ativa módulos, não define prontidão de r
 
 Documentos de referencia principais:
 
-- `docs/domain/TERRITORY-GOVERNANCE.md`
-- `docs/domain/TERRITORY-ROADMAP.md`
-- `docs/domain/TERRITORY-DATA-QUALITY-V2.md`
+- `docs/10-archive/territory/TERRITORY-GOVERNANCE.md`
+- `docs/10-archive/territory/TERRITORY-ROADMAP.md`
+- `docs/10-archive/territory/TERRITORY-DATA-QUALITY-V2.md`
 - `docs/10-archive/territory/TERRITORY-FREEZE-AUDIT.md`
 - `docs/10-archive/territory/SALVADOR-IMPLEMENTATION-1-REPORT.md`
 - `docs/10-archive/feed/FEED-GOVERNANCE.md`
