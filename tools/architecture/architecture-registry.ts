@@ -761,8 +761,8 @@ export const CRITICAL_SHARED_COMPONENTS = [
 ];
 
 export const DOC_OBSERVATIONS = [
-  "docs/README.md e docs/DOCUMENTATION-INDEX.md devem permanecer sincronizados como entrada documental.",
-  "docs/CURRENT_RULES.md e o contrato vigente para fronteiras, SSOT e schema.",
+  "docs/README.md e a unica entrada documental canonica; registries tecnicos nao devem recriar um segundo indice.",
+  "docs/03-architecture/CURRENT_RULES.md e o contrato vigente para fronteiras, SSOT e schema.",
   "Documentacao de dominio continua misturada entre docs/, src/*/README.md e src/*/docs/, sem indice unico por dominio.",
   "Documentacao historica deve permanecer explicitamente sob docs/10-archive e nunca ser tratada como contrato executavel atual.",
 ];

@@ -26,7 +26,7 @@ src/
   integrations/   adaptadores externos
 ```
 
-`src/features` é namespace legado e não recebe código novo. Resíduos ainda preservados devem ser consolidados no owner de domínio correspondente antes de qualquer reativação.
+`src/features` foi aposentado e não deve ser recriado. Código novo deve entrar diretamente no owner canônico em `app`, `core`, `modules`, `shared` ou `integrations`.
 
 ## Lifecycle de módulos
 

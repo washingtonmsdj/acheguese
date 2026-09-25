@@ -28,7 +28,6 @@ docs/
 ├── FEATURE-MAP.md       ← funcionalidades e acesso do usuário
 ├── SCREEN-MAP.md        ← telas/rotas e propósito
 ├── DECISIONS.md         ← decisões válidas hoje
-├── 01-product/          produto e saúde
 ├── 02-domain/           território, taxonomia e geografia
 ├── 03-architecture/     regras e owners arquiteturais
 ├── 04-design/           design system
@@ -65,6 +64,8 @@ Alguns caminhos antigos ainda existem fora das pastas numeradas por compatibilid
 
 - [Regras vigentes](./03-architecture/CURRENT_RULES.md)
 - [Arquitetura global](./03-architecture/ARCHITECTURE.md)
+- [Registry técnico de SSOT](./architecture/SSOT_REGISTRY.md) — catálogo técnico de owners; não é um segundo índice documental.
+- [Core Layer SSOT](./03-architecture/CORE_LAYER_SSOT.md)
 - [Community architecture — contrato pós-MVP](./03-architecture/COMMUNITY_FIRST_ARCHITECTURE_SSOT.md) — preserva internals da capability; não é autoridade de ativação pública.
 - [Core Platform architecture SSOT](./03-architecture/CORE_PLATFORM_ARCHITECTURE_SSOT.md)
 - [Product & platform lifecycle](./03-architecture/PRODUCT_MODULE_LIFECYCLE.md) — regras para domínios e capabilities; owners executáveis em `productModuleRegistry.ts`, `platformCapabilityRegistry.ts` e `lifecycleRegistry.ts`.
@@ -117,7 +118,7 @@ Tudo em [`10-archive/`](./10-archive/) foi consolidado, superado ou é snapshot.
 ## Regras documentais
 
 1. Não criar documento novo sem verificar se já existe owner equivalente.
-2. Uma única fonte de verdade por assunto; este índice registra a autoridade.
+2. Uma única fonte de verdade por assunto; este índice registra a autoridade. Não criar nem manter um segundo índice documental paralelo.
 3. A raiz do repositório mantém apenas `README.md` e `SECURITY.md`.
 4. Toda funcionalidade de usuário deve estar no `FEATURE-MAP.md`.
 5. Toda rota deve estar no `SCREEN-MAP.md`.
