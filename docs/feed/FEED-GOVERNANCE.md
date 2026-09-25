@@ -6,7 +6,7 @@ Status: constituicao oficial do dominio Feed
 
 Base obrigatoria:
 
-- `docs/feed/FEED-AUDIT.md`
+- `docs/10-archive/feed/FEED-AUDIT.md`
 - `docs/domain/TERRITORY-GOVERNANCE.md`
 - `docs/domain/TERRITORY-DATA-QUALITY-V2.md`
 
@@ -405,4 +405,4 @@ Se qualquer resposta for "nao", a mudanca viola a governanca do dominio Feed.
 
 O dominio Feed possui governanca oficial definida neste documento.
 
-A implementacao atual ainda precisa ser adaptada para cumprir esta governanca, conforme findings de `docs/feed/FEED-AUDIT.md`.
+A implementacao atual ainda precisa ser adaptada para cumprir esta governanca, conforme findings de `docs/10-archive/feed/FEED-AUDIT.md`.

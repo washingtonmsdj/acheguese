@@ -6,7 +6,7 @@ Status: plano oficial de implementacao do dominio Feed
 
 Base obrigatoria:
 
-- `docs/feed/FEED-AUDIT.md`
+- `docs/10-archive/feed/FEED-AUDIT.md`
 - `docs/feed/FEED-GOVERNANCE.md`
 
 Regra de escopo: este documento transforma os findings da auditoria e a governanca oficial em backlog executavel. Nao implementa codigo, nao altera banco, nao cria migrations, nao adiciona requisitos novos e nao define refactors opcionais.

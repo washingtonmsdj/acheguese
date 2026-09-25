@@ -19,7 +19,7 @@ Regra aplicada:
 ## Base obrigatoria
 
 - `docs/feed/FEED-GOVERNANCE.md`
-- `docs/feed/FEED-P0.D.1-REVIEW.md`
+- `docs/10-archive/feed/FEED-P0.D.1-REVIEW.md`
 - `docs/10-archive/architecture-checkpoints/PROJECT-MILESTONE-1.md`
 
 ## Arquivos auditados
