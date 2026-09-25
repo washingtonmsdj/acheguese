@@ -45,7 +45,7 @@ describe("admin profile moderation authority", () => {
 
   it("revalidates admin authority and audits every affected profile in Postgres", () => {
     const migration = read(
-      "supabase/migrations/20260910001000_broker_admin_profile_suspension_g36.sql",
+      "supabase/migrations/20260910001344_broker_admin_profile_suspension_g36.sql",
     );
 
     expect(migration).toContain("private.admin_set_profile_suspension");
