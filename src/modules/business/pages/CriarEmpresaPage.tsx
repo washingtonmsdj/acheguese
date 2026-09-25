@@ -27,8 +27,11 @@ import { BusinessSlugSection } from "@/modules/business/components/identity/Busi
 import { Button } from "@/shared/components/ui/button";
 import { useMultiProfileContext } from "@/core/profiles/contexts/multi-profile-runtime-context";
 import { ActiveProfileBadge } from "@/core/profiles/components/ActiveProfileBadge";
-import { getEligibleVerticals, getVerticalByCreateSlug } from "@/core/verticals/config";
-import { isLaunchSurfaceEnabled } from "@/app/config/launchScope";
+import {
+  getEligibleVerticals,
+  getVerticalByCreateSlug,
+  type VerticalKey,
+} from "@/core/verticals/config";
 import { businessManagementRoutes } from "@/core/business/utils/businessManagementRoutes";
 import { EntityStatus } from "@/shared/types/enums";
 import { locationContextStore } from "@/core/location/stores/LocationContextStore";
@@ -80,10 +83,17 @@ const STEP2_FIELDS = [
   "modos_atendimento",
 ] as const;
 
-function getLaunchEligibleVerticals(category: BusinessCategory) {
+function getEnabledVerticals(
+  category: BusinessCategory,
+  enabledVerticalKeys: ReadonlySet<VerticalKey>,
+) {
   return getEligibleVerticals(category).filter((vertical) =>
-    isLaunchSurfaceEnabled(vertical.key),
+    enabledVerticalKeys.has(vertical.key),
   );
+}
+
+interface CriarEmpresaPageProps {
+  enabledVerticalKeys?: readonly VerticalKey[];
 }
 
 function getStepErrorMessages(
@@ -126,7 +136,9 @@ function useObjectUrl(file: File | null) {
   return url;
 }
 
-export default function CriarEmpresaPage() {
+export default function CriarEmpresaPage({
+  enabledVerticalKeys = [],
+}: CriarEmpresaPageProps) {
   const navigate = useNavigate();
   const { verticalSlug } = useParams<{ verticalSlug?: string }>();
   const [searchParams] = useSearchParams();
@@ -141,6 +153,10 @@ export default function CriarEmpresaPage() {
 
   const logoPreview = useObjectUrl(logoFile);
   const bannerPreview = useObjectUrl(bannerFile);
+  const enabledVerticalKeySet = useMemo(
+    () => new Set(enabledVerticalKeys),
+    [enabledVerticalKeys],
+  );
   const activeLocation = locationContextStore.getActiveLocation();
   const fallbackTerritory = useMemo<TerritoryFallback | null>(() => {
     const path = activeLocation?.geographic_path;
@@ -160,8 +176,8 @@ export default function CriarEmpresaPage() {
     const vertical = getVerticalByCreateSlug(
       verticalSlug ?? searchParams.get("vertical"),
     );
-    return vertical && isLaunchSurfaceEnabled(vertical.key) ? vertical : null;
-  }, [searchParams, verticalSlug]);
+    return vertical && enabledVerticalKeySet.has(vertical.key) ? vertical : null;
+  }, [enabledVerticalKeySet, searchParams, verticalSlug]);
 
   useEffect(() => {
     setModuleContext("business");
@@ -179,7 +195,7 @@ export default function CriarEmpresaPage() {
       const category = form.getValues("category");
       const eligibleVerticals = createVertical
         ? [createVertical]
-        : getLaunchEligibleVerticals(category);
+        : getEnabledVerticals(category, enabledVerticalKeySet);
 
       if (eligibleVerticals.length > 0) {
         navigate(eligibleVerticals[0].setupRoute(result.profile_id));
@@ -223,8 +239,8 @@ export default function CriarEmpresaPage() {
 
   const selectedCategory = form.watch("category");
   const eligibleVerticals = useMemo(
-    () => getLaunchEligibleVerticals(selectedCategory),
-    [selectedCategory],
+    () => getEnabledVerticals(selectedCategory, enabledVerticalKeySet),
+    [enabledVerticalKeySet, selectedCategory],
   );
 
   useEffect(() => {
