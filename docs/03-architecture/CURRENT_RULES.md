@@ -2,7 +2,7 @@
 
 Data-base: 2026-09-21  
 Status: ATIVO / CANONICO  
-Versao documental: 5.5
+Versao documental: 5.6
 
 Este documento define regras arquiteturais globais. Contratos detalhados de domínio permanecem nos owners executáveis e nos documentos específicos listados em `docs/README.md`; este arquivo não deve duplicar implementação.
 
@@ -47,6 +47,7 @@ Regras:
 - `src/app/config/platformCapabilityRegistry.ts` é o owner do lifecycle de **capabilities horizontais** como Map, Nearby, Search e Messaging.
 - `src/app/config/lifecycleRegistry.ts` é o único avaliador das dependências cruzadas domínio ↔ capability.
 - `src/app/config/launchScope.ts` é projeção/compatibilidade de superfície derivada desses owners; não mantém uma segunda decisão independente de lifecycle.
+- `src/app/config/releaseMode.ts` é o owner da interpretação de flags globais de release como `VITE_PRELAUNCH_LOCKDOWN`; lifecycle de módulo não deve absorver configuração de release.
 - módulo `paused` falha fechado: não participa de navegação pública, rota funcional, prefetch/warmup, discovery, provider público ou layer de Mapa. Reativação ocorre pelo owner de lifecycle após certificação; exceção local, alias ou redirect não substituem esse contrato.
 - páginas/componentes não acessam Supabase diretamente; acesso fica em services/repositories, migrations, scripts e Edge Functions conforme o boundary aplicável.
 - páginas e hooks orquestram estado/fetch/render; regra de negócio pertence ao owner de domínio.
@@ -162,7 +163,7 @@ Regra: este documento não replica lifecycle, tabelas, RPCs ou allowlists desses
 - entidade pública possui namespace canônico único; alias legado não cria segunda superfície oficial.
 - contexto `/comunidade/...` é explícito e não deve sequestrar automaticamente uma URL pública de entidade.
 - contexto de lançamento da `/` vem de `TERRITORY_CONFIG`/`LAUNCH_URLS`; a entrada não cria segundo owner local de estado, cidade, slug ou nome do território de launch.
-- `src/app/config/productModuleRegistry.ts` é o owner do lifecycle de produto e dependências. `src/app/config/launchScope.ts` projeta esse lifecycle para superfícies públicas e continua sendo o owner da interpretação de `VITE_PRELAUNCH_LOCKDOWN`; consumidores usam `PRELAUNCH_LOCKDOWN_ENABLED` e não reinterpretam a env.
+- `src/app/config/productModuleRegistry.ts` é o owner do lifecycle de produto e dependências. `src/app/config/launchScope.ts` projeta esse lifecycle para superfícies públicas. `src/app/config/releaseMode.ts` interpreta `VITE_PRELAUNCH_LOCKDOWN`; consumidores usam `PRELAUNCH_LOCKDOWN_ENABLED` e não reinterpretam a env.
 - `src/core/community/config/communityLaunch.ts` é somente projeção do rollout Community sobre o território/configuração de lançamento; não mantém lista própria de bairros, slug paralelo de grupo ou alias territorial escondido.
 - membros de grupo e slugs territoriais vêm do owner territorial. Rótulo público curto pode existir como metadata de apresentação sem alterar nome/slug geográfico canônico.
 - ações comunitárias mutáveis exigem autenticação/Profile e autorização territorial conforme o backend.
@@ -222,7 +223,7 @@ Mudanças de segurança/schema executam adicionalmente os gates indicados em `SE
 - não duplicar paths/query keys/classificação de callback de Auth em páginas/bootstrap quando `authFlow.ts`/`authCallback.ts` atendem o caso;
 - não tratar hash/âncora ordinária como retorno de autenticação apenas por ser não vazio;
 - não duplicar chaves/parser/aplicação de preferências de acessibilidade fora de `src/shared/accessibility/preferences.ts`;
-- não reinterpretar `VITE_PRELAUNCH_LOCKDOWN` fora de `launchScope.ts` nem recriar listas/slugs de rollout Community paralelos ao território resolvido;
+- não reinterpretar `VITE_PRELAUNCH_LOCKDOWN` fora de `releaseMode.ts` nem recriar listas/slugs de rollout Community paralelos ao território resolvido;
 - não usar placeholder, `paused`, fallback vazio ou retorno antecipado como prova de módulo funcional;
 - não declarar `MVP READY` sem cumprir o DoD de `docs/08-roadmap/EXECUCAO_MAIN_ONLY.md`;
 - não reduzir gate de segurança/CI para obter status verde.
