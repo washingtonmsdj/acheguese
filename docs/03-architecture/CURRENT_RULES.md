@@ -35,8 +35,8 @@ Regras:
 
 ## 3. Fronteiras arquiteturais
 
-- `src/app` contém shell, rotas, providers e fluxos de aplicação.
-- `src/app/features` contém fluxos/landings que não são bounded contexts.
+- `src/app` contém shell, rotas, providers, páginas de entrada e fluxos de aplicação.
+- fluxos/landings app-level permanecem sob `src/app`; o antigo subroot `src/app/features` não é uma taxonomia obrigatória e não deve virar owner paralelo.
 - `src/modules` contém bounded contexts de produto; a lista oficial está em `src/modules/README.md`.
 - `src/core` contém contratos/capacidades transversais e não importa nem reexporta implementação de `src/modules`.
 - `src/integrations` contém adapters de infraestrutura/provedores.
@@ -62,7 +62,7 @@ Regras:
 
 ### 4.1 Empresas e verticais
 
-- `business`/Empresas é domínio horizontal base; **não é vertical**.
+- `business`/Empresas é o domínio de produto base para entidades empresariais; **não é vertical nem capability horizontal**.
 - vertical empresarial oficial existe somente quando declarada em `src/core/verticals/config.ts`.
 - Estado oficial atual: `gastronomy` e `education`.
 - capacidade implementada em outro namespace não se torna vertical por conveniência documental.

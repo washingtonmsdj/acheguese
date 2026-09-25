@@ -10,10 +10,11 @@ Eventos, Gastronomia, Mobilidade, Perfis e dominios futuros.
 O Achegue-se tera um `Core Platform`, mas ele nao sera um modulo central que
 concentra toda a regra do produto.
 
-- O core domain do produto continua sendo `Comunidade Local`, conforme a
-  arquitetura Community First.
-- Empresa, Classificado, Evento, Pedido e Corrida continuam independentes e
-  donos de suas regras.
+- O Core Platform e neutro ao lifecycle de produto. No MVP atual, `business`
+  e o unico dominio de produto `active`; Community permanece `paused` e conserva
+  apenas seus contratos internos para reativacao futura.
+- Empresa, Community, Classificado, Evento, Pedido e Corrida continuam
+  independentes e donos de suas regras.
 - O Core Platform possui contratos e infraestrutura realmente reutilizaveis:
   identidade, autorizacao, midia, notificacoes, busca, realtime, auditoria e
   primitivas sociais aprovadas.

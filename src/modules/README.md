@@ -1,6 +1,6 @@
 # Product Modules (SSOT)
 
-`src/modules` contains only product bounded contexts.
+`src/modules` contains product/UI bounded-context packages. Physical presence in this tree does not imply an active product lifecycle.
 
 ## Canonical top-level modules
 
@@ -25,11 +25,11 @@
 
 ## Taxonomy rules
 
-- `business` is the horizontal base domain for business entities.
-- `business` is **not** a vertical.
+- `business` is the base product domain for business entities.
+- `business` is **not** a vertical or a horizontal platform capability.
 - Official business verticals are declared only in `src/core/verticals/config.ts`.
 - Current official vertical state: `gastronomy` and `education`.
-- Community First core domain is `Comunidade Local`.
+- The preserved Community bounded context is centered on `Comunidade Local`; Community is `paused` in the MVP lifecycle.
 - Local Community identity belongs to `src/core/community-experience`, not to a
   top-level aggregate module.
 
@@ -51,7 +51,7 @@
 : `classifieds/jobs`
 - Services capability stays consolidated in `professionals`.
 : `professionals/services`
-- Private inbox/chat UI is a horizontal product module.
+- Private inbox/chat UI is the module-side surface of the horizontal `messaging` platform capability.
 : `messaging`
   It consumes contracts/facades from `src/core/messaging`; Business,
   Classifieds, Community and future domains provide their own messaging
@@ -60,7 +60,7 @@
 ## Out of `src/modules`
 
 App-level flows and landings do not belong to domain modules.
-They live in `src/app/features` (for example: onboarding, dashboard, landings).
+They live under `src/app` (for example: onboarding, dashboard and landings); do not recreate a parallel `src/features` taxonomy.
 
 ## Boundary rules
 

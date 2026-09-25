@@ -3,7 +3,7 @@
 Data de referencia original: 2026-07-09  
 Status de produto: **PAUSED no MVP desde 2026-09-21**
 
-> Este documento preserva o contrato interno da capability Community para uma futura reativacao.
+> Este documento preserva o contrato interno do dominio Community para uma futura reativacao.
 > Ele **nao** e autoridade de lifecycle publico. A ativacao pertence exclusivamente a
 > `src/app/config/productModuleRegistry.ts`, onde Community permanece `paused`.
 
@@ -12,7 +12,7 @@ O plano detalhado de implementacao incremental permanece preservado em
 
 ## Decisao Oficial do modulo
 
-O core domain **da capability Community** e:
+A entidade central **do dominio Community** e:
 
 **Comunidade Local**
 
@@ -194,15 +194,15 @@ mais comunidades sem copiar seus dados mestres:
 
 ### Busca E Descoberta
 
-Search é um bounded context ativo e independente de Community:
+Search é uma capability horizontal ativa e independente de Community:
 
 - `src/core/search`;
 - `SearchService`;
 - `SearchDocumentMapper`;
 - `searchProviders`.
 
-No MVP de 2026-09-21, `search` está `active` no
-`src/app/config/productModuleRegistry.ts`. Search continua sendo um
+No MVP atual, `search` está `active` no
+`src/app/config/platformCapabilityRegistry.ts`. Search continua sendo um
 orquestrador: consome ports dos domínios donos e não passa a possuir Business,
 Community, Events, Classifieds, Professional ou Jobs.
 
@@ -269,9 +269,11 @@ por `adDeliveryService`. Conteudo organico de empresas, profissionais,
 classificados ou fallback editorial nao pode receber selo `Patrocinado`. Sem
 campanha elegivel, o painel de anuncios deve renderizar estado vazio.
 
-A Home Community First e a porta publica de descoberta do ecossistema. Ela pode
-organizar hero, comunidades em destaque, atividades, modulos locais, ranking,
-sugestoes e anuncios, mas essas secoes devem ser derivadas de contratos de
+Quando Community for certificada e reativada, sua Home podera atuar como porta
+publica de descoberta do ecossistema e organizar hero, comunidades em destaque,
+atividades, modulos locais, ranking, sugestoes e anuncios. Enquanto o dominio
+estiver `paused`, nenhuma dessas superficies participa do MVP. Quando ativa,
+essas secoes devem ser derivadas de contratos de
 landing/search/routing ou de configuracao editorial explicita de lancamento.
 Ela nao deve virar SSOT de comunidade, empresa, evento, classificado,
 gastronomia, servico, territorio, perfil ou permissao.
@@ -378,7 +380,7 @@ Estado oficial atual:
 - `gastronomy`
 - `education`
 
-`business` e dominio horizontal base, nao vertical.
+`business` e dominio de produto base para entidades empresariais; nao e vertical nem capability horizontal.
 
 ## Regras Para Novos Modulos
 

@@ -2,8 +2,8 @@
  * VERTICAL CONFIG - SSOT de taxonomia vertical.
  *
  * Regras oficiais:
- * - `business`/`empresas` é domínio base horizontal de entidades empresariais.
- * - `business` não é vertical.
+ * - `business`/`empresas` é o domínio de produto base de entidades empresariais.
+ * - `business` não é vertical nem capability horizontal de plataforma.
  * - Apenas chaves presentes em `VerticalKey` são verticais oficiais.
  * - Estado atual: `gastronomy` e `education` são verticais oficiais.
  * - Verticais futuros só existem quando declarados neste arquivo.
