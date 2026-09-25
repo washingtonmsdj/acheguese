@@ -48,7 +48,7 @@ Escopo: `src/core`
 | geospatial | core transversal legítimo | manter em `src/core/geospatial` |
 | governance | core transversal legítimo | manter em `src/core/governance` |
 | interaction | facade duplicada em retirada | migrar consumidores para owners tipados conforme Core Platform SSOT |
-| landing | composição app/rota/página | **migrado** para `src/app/features/landing` |
+| landing | leitura territorial/nacional em core + composição de rota em app | manter owner em `src/core/landing`; não recriar facade `src/app/features/landing` |
 | location | core transversal legítimo | manter em `src/core/location` |
 | lostfound | domínio de produto | owner explicito em `src/core/community-lost-found`; modulo transversal em `src/modules/community-lost-found` |
 | maps | core transversal legítimo | manter em `src/core/maps` |
@@ -106,8 +106,9 @@ Escopo: `src/core`
     e `src/modules/community-lost-found`
   - `src/core/tourist-points` -> `src/modules/guide/tourist-points`
   - `src/core/civic` removido sem recriar agregador `src/modules/community`
-- Removido de `core` e consolidado em `app`:
-  - `src/core/landing` -> `src/app/features/landing`
+- Landing consolidado no owner canônico de dados:
+  - `src/core/landing` permanece como SSOT de leitura nacional/estadual;
+  - composição de rota/página fica na camada `app`, sem facade duplicada em `src/app/features/landing`.
 - Supabase retirado de `core`:
   - removido `src/core/supabase`
   - canônico em `src/integrations/supabase`

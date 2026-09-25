@@ -312,8 +312,9 @@ SSOTs de features verticais e superfícies de aplicação. O owner pode estar em
 
 | | |
 |---|---|
-| **Arquivo** | `src/app/features/landing/services/types.ts` |
-| **Responsabilidade** | Landing pages nacionais e estaduais |
+| **Arquivo** | `src/core/landing/services/LandingService.ts` |
+| **Tipos** | `src/core/landing/services/types.ts` |
+| **Responsabilidade** | Leitura canônica para landings nacionais e estaduais; composição de página/rota permanece na camada app |
 
 ---
 

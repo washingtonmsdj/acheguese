@@ -46,7 +46,6 @@ export const DOMAIN_REGISTRY: DomainRegistryEntry[] = [
       "src/core/city",
       "src/core/territorial",
       "src/core/governance",
-      "src/app/features/landing",
       "src/core/landing",
     ],
     docsPaths: [
@@ -88,11 +87,11 @@ export const DOMAIN_REGISTRY: DomainRegistryEntry[] = [
     ],
     canonicalTypeBasenames: ["types.ts", "index.ts"],
     adminSummary:
-      "Parcial. Ha superfícies de locations e territorio no admin, mas a governanca de identidade publica e de roteamento ainda esta espalhada entre core e app/features/landing.",
+      "Parcial. Ha superfícies de locations e territorio no admin, mas a governanca de identidade publica e de roteamento ainda esta espalhada entre owners de core.",
     docsSummary:
       "Parcial. Location e public-identity possuem docs proprias, mas routing, landing e fundamentos geograficos ainda se sobrepoem e parte das referencias aponta para caminhos antigos.",
     ssotSummary:
-      "SSOT fragmentado entre core/location, core/routing, core/public-identity e app/features/landing. O ownership conceitual esta em core, mas a leitura nacional/landing ainda depende de composicao em app.",
+      "SSOT concentrado nos owners de core/location, core/routing, core/public-identity e core/landing. A composicao de rota permanece na camada app, sem facade duplicada de landing.",
   },
   {
     id: "profile",

@@ -95,7 +95,6 @@ const REQUIRED_NESTED_PATHS = [
   "src/modules/mobility/delivery",
   "src/modules/classifieds/jobs",
   "src/modules/professionals/services",
-  "src/app/features/landing",
   "src/app/features/business-landing",
   "src/app/features/onboarding",
 ] as const;
