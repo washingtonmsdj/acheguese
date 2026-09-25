@@ -433,7 +433,7 @@ async function removeStaleSitemapChunks(outputDirectory: string): Promise<void> 
 }
 
 export async function generateAndSaveSitemap(
-  options: GenerateAndSaveSitemapOptions = {},
+  options: GenerateAndSaveSitemapOptions,
 ) {
   const inventory = await loadSitemapInventory(options);
   const outputDirectory = resolve(process.cwd(), 'public');
