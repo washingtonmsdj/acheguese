@@ -58,7 +58,7 @@ import { openSafeExternalUrl } from "@/shared/utils/safeRedirect";
 import { formatBrlNoCents } from "@/shared/utils/currency";
 import { formatDistanceToNow } from "date-fns";
 import { ptBR } from "@/shared/utils/dateLocale";
-import { classifiedMessagingService } from "@/core/messaging/services/ClassifiedMessagingService";
+import { classifiedMessagingService, messagingRoutes } from "@/core/messaging";
 import { useVisibleProfileContact } from "@/core/profiles";
 
 interface ClassificadoDetailPageProps {
@@ -201,7 +201,7 @@ export default function ClassificadoDetailPage({
       const conversation =
         await classifiedMessagingService.findOrCreateConversation(id);
       if (!conversation) throw new Error("Conversation was not created");
-      navigate(`/chat/${conversation.id}`);
+      navigate(messagingRoutes.thread("classifieds", conversation.id));
     } catch (error) {
       toast({
         title: "Não foi possível abrir o chat",
