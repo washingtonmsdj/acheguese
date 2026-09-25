@@ -136,6 +136,55 @@ describe("live documentation hygiene", () => {
     ).toBe(true);
   });
 
+  it("keeps living taxonomy aligned with the executable MVP lifecycle", () => {
+    const taxonomy = readFileSync("docs/02-domain/TAXONOMY_SSOT.md", "utf8");
+    const currentRules = readFileSync(
+      "docs/03-architecture/CURRENT_RULES.md",
+      "utf8",
+    );
+    const corePlatform = readFileSync(
+      "docs/03-architecture/CORE_PLATFORM_ARCHITECTURE_SSOT.md",
+      "utf8",
+    );
+    const modulesReadme = readFileSync("src/modules/README.md", "utf8");
+    const communityContract = readFileSync(
+      "docs/03-architecture/COMMUNITY_FIRST_ARCHITECTURE_SSOT.md",
+      "utf8",
+    );
+
+    for (const owner of [
+      "src/app/config/productModuleRegistry.ts",
+      "src/app/config/platformCapabilityRegistry.ts",
+      "src/app/config/lifecycleRegistry.ts",
+    ]) {
+      expect(taxonomy).toContain(owner);
+    }
+
+    expect(taxonomy).toContain(
+      "docs/10-archive/plans/COMMUNITY_FIRST_ARCHITECTURE_PLAN.md",
+    );
+    expect(taxonomy).not.toContain("docs/tasks");
+    expect(taxonomy).not.toContain("dominio horizontal base");
+    expect(taxonomy).not.toContain(
+      "O core domain do produto e `Comunidade Local`",
+    );
+
+    expect(currentRules).not.toContain("domínio horizontal base");
+    expect(corePlatform).not.toContain(
+      "core domain do produto continua sendo `Comunidade Local`",
+    );
+    expect(modulesReadme).not.toContain(
+      "Community First core domain is `Comunidade Local`",
+    );
+
+    expect(communityContract).toContain(
+      "src/app/config/platformCapabilityRegistry.ts",
+    );
+    expect(communityContract).not.toContain(
+      "search` está `active` no\n`src/app/config/productModuleRegistry.ts`",
+    );
+  });
+
   it("keeps dated G5 checkpoints out of live architecture docs", () => {
     const liveArchitectureFiles = readdirSync("docs/03-architecture");
     expect(
