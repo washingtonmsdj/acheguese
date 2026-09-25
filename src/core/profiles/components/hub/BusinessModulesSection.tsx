@@ -12,12 +12,12 @@ import { Badge } from "@/shared/components/ui/badge";
 import { SectionFrame } from "./SectionFrame";
 import { EmptyPanel } from "./EmptyPanel";
 import { businessManagementRoutes } from "@/core/business/utils/businessManagementRoutes";
-import { isLaunchSurfaceEnabled } from "@/app/config/launchScope";
 
 import type { ProfileBusinessModuleSnapshot } from "@/core/profiles/services/ProfileBusinessTypes";
 
 interface BusinessModulesSectionProps {
   businessModules: readonly ProfileBusinessModuleSnapshot[];
+  billingEnabled: boolean;
   showOnboarding: boolean;
   onCreateBusiness: () => void;
   onNavigate: (url: string) => void;
@@ -45,6 +45,7 @@ function formatPlanLabel(value?: string | null): string {
 
 export function BusinessModulesSection({
   businessModules,
+  billingEnabled,
   showOnboarding,
   onCreateBusiness,
   onNavigate,
@@ -92,6 +93,7 @@ export function BusinessModulesSection({
               <BusinessModuleCard
                 key={business.businessId}
                 business={business}
+                billingEnabled={billingEnabled}
                 onNavigate={onNavigate}
                 onCopy={onCopy}
               />
@@ -123,14 +125,15 @@ function SummaryCard({
 
 function BusinessModuleCard({
   business,
+  billingEnabled,
   onNavigate,
   onCopy,
 }: {
   business: ProfileBusinessModuleSnapshot;
+  billingEnabled: boolean;
   onNavigate: (url: string) => void;
   onCopy: (url: string, label: string) => void;
 }) {
-  const showBilling = isLaunchSurfaceEnabled("billing");
   const hasPremiumLink =
     business.subscription.canUseShortPremiumLink && Boolean(business.shareUrl);
 
@@ -158,7 +161,7 @@ function BusinessModuleCard({
                 Premium
               </Badge>
             ) : null}
-            {showBilling ? (
+            {billingEnabled ? (
               <>
                 <Badge variant="secondary" className="h-5 text-[10px]">
                   Plano {formatPlanLabel(business.subscription.planTier)}
@@ -194,7 +197,7 @@ function BusinessModuleCard({
           <Button size="sm" className="gap-1.5" onClick={() => onNavigate(business.dashboardUrl)}>
             Gerenciar empresa
           </Button>
-          {showBilling ? (
+          {billingEnabled ? (
             <Button
               size="sm"
               variant="outline"
@@ -204,7 +207,7 @@ function BusinessModuleCard({
               Planos
             </Button>
           ) : null}
-          {showBilling || hasPremiumLink ? (
+          {billingEnabled || hasPremiumLink ? (
             <Button
               size="sm"
               variant="outline"
