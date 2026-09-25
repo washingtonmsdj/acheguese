@@ -1,4 +1,4 @@
-import { readFileSync } from "node:fs";
+import { existsSync, readFileSync } from "node:fs";
 import { resolve } from "node:path";
 import { describe, expect, it } from "vitest";
 
@@ -12,9 +12,6 @@ describe("G149 admin motoboy count ownership", () => {
   );
   const adminService = readProjectFile(
     "src/core/admin/services/AdminService.ts",
-  );
-  const mobilityImpl = readProjectFile(
-    "src/core/mobility/services/MobilityService.impl.ts",
   );
 
   it("owns delivered counts in the admin motoboy reader", () => {
@@ -35,7 +32,6 @@ describe("G149 admin motoboy count ownership", () => {
   });
 
   it("retires delivered-count compatibility wrappers", () => {
-    expect(mobilityImpl).not.toContain("static async countDeliveredBySource(");
-    expect(mobilityImpl).not.toContain("static async countDeliveredMotoboyRides(");
+    expect(existsSync(resolve(process.cwd(), "src/core/mobility/services/MobilityService.impl.ts"))).toBe(false);
   });
 });
