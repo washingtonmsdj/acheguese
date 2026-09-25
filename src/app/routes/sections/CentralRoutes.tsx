@@ -1,5 +1,6 @@
 import { Route, Routes } from "react-router-dom";
 
+import { getActiveBusinessVerticalKeys } from "@/app/config/businessVerticalScope";
 import { isProductModuleEnabled } from "@/app/config/lifecycleRegistry";
 
 import * as P from "../activeCentralLazyImports";
@@ -14,6 +15,7 @@ import * as P from "../activeCentralLazyImports";
 export function CentralRoutes() {
   const businessEnabled = isProductModuleEnabled("business");
   const billingEnabled = isProductModuleEnabled("billing");
+  const activeBusinessVerticalKeys = getActiveBusinessVerticalKeys();
 
   return (
     <Routes>
@@ -31,7 +33,14 @@ export function CentralRoutes() {
           {businessEnabled ? (
             <>
               <Route path="empresas" element={<P.CentralEmpresasPage billingEnabled={billingEnabled} />} />
-              <Route path="empresas/nova" element={<P.CriarEmpresaPage />} />
+              <Route
+                path="empresas/nova"
+                element={
+                  <P.CriarEmpresaPage
+                    enabledVerticalKeys={activeBusinessVerticalKeys}
+                  />
+                }
+              />
 
               <Route
                 path="empresas/:businessId"
