@@ -44,7 +44,7 @@ describe("Posts and Feed ownership", () => {
   it("does not expose unused feed contexts or compatibility item adapters", () => {
     const postTypes = read("src/core/posts/types.ts");
     const communityHook = read(
-      "src/core/community/hooks/feed/useCommunityFeed.ts",
+      "src/core/community-feed/hooks/useCommunityFeed.ts",
     );
 
     expect(postTypes).not.toMatch(/FeedContext|context\?:/);
