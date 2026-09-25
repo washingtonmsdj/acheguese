@@ -1,4 +1,4 @@
-import { readFileSync } from "node:fs";
+import { existsSync, readFileSync } from "node:fs";
 import { resolve } from "node:path";
 import { describe, expect, it } from "vitest";
 
@@ -10,9 +10,6 @@ describe("G144 boarding point read ownership", () => {
   const boarding = readProjectFile(
     "src/core/mobility/services/BoardingPointService.ts",
   );
-  const staticService = readProjectFile(
-    "src/core/mobility/services/MobilityService.impl.ts",
-  );
 
   it("owns the recent pickup projection inside BoardingPointService", () => {
     expect(boarding).toContain('.from("ride_requests")');
@@ -23,7 +20,7 @@ describe("G144 boarding point read ownership", () => {
   });
 
   it("retires the static compatibility reader", () => {
-    expect(staticService).not.toContain("listRecentRidePickupLocations(");
+    expect(existsSync(resolve(process.cwd(), "src/core/mobility/services/MobilityService.impl.ts"))).toBe(false);
     expect(boarding).not.toContain("MobilityService.listRecentRidePickupLocations");
   });
 });
