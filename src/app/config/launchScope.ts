@@ -62,10 +62,6 @@ export const PUBLIC_LAUNCH_SURFACES: Record<LaunchSurfaceKey, boolean> = {
   familySafety: isProductModuleEnabled("familySafety"),
 };
 
-const CLASSIFIED_CATEGORY_SURFACES: Partial<Record<string, LaunchSurfaceKey>> = {
-  vagas: "jobs",
-};
-
 const COMMUNITY_FEED_CHANNEL_SURFACES: Partial<Record<string, LaunchSurfaceKey>> = {
   alertas: "communityAlerts",
   eventos: "events",
@@ -92,12 +88,6 @@ const COMMUNITY_POST_FORMAT_SURFACES: Partial<Record<string, LaunchSurfaceKey>> 
 
 export function isLaunchSurfaceEnabled(surface: LaunchSurfaceKey): boolean {
   return PUBLIC_LAUNCH_SURFACES[surface];
-}
-
-export function isLaunchClassifiedCategoryEnabled(categoryId: string): boolean {
-  if (!isLaunchSurfaceEnabled("classifieds")) return false;
-  const surface = CLASSIFIED_CATEGORY_SURFACES[categoryId];
-  return surface ? isLaunchSurfaceEnabled(surface) : true;
 }
 
 export function isLaunchCommunityFeedChannelEnabled(channelId: string): boolean {
