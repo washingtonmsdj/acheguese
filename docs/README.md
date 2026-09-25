@@ -50,7 +50,7 @@ Alguns caminhos antigos ainda existem fora das pastas numeradas por compatibilid
 - [Feature map](./FEATURE-MAP.md) — funcionalidades públicas ativas/pausadas;
 - [Screen map](./SCREEN-MAP.md) — rotas e superfícies vigentes.
 
-`architecture/PROJECT-MILESTONE-1.md` registra um marco arquitetural histórico de julho e não representa o status atual. O antigo `PROJECT-SCORE.md` foi arquivado em `10-archive/product/`.
+`10-archive/architecture-checkpoints/PROJECT-MILESTONE-1.md` preserva o marco arquitetural histórico de julho e não representa o status atual. O antigo `PROJECT-SCORE.md` foi arquivado em `10-archive/product/`.
 
 ### Domínio
 

@@ -11,7 +11,7 @@ Status: o dominio Feed ainda nao pode entrar em Freeze.
 - `docs/feed/FEED-ROADMAP.md`
 - `docs/feed/FEED-EXECUTION-PLAN.md`
 - `docs/feed/FEED-MILESTONE-1.md`
-- `docs/architecture/PROJECT-MILESTONE-1.md`
+- `docs/10-archive/architecture-checkpoints/PROJECT-MILESTONE-1.md`
 - relatorios P0.A, P0.B, P0.C, P0.D.1, P0.D.2, P0.D.3 e P0.E, incluindo reviews e hardenings existentes.
 
 ## Metodo

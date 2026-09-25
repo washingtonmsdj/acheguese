@@ -23,7 +23,7 @@ Nao foram realizadas alteracoes de codigo, runtime, arquitetura, GOVERNANCE ou R
 - `docs/feed/FEED-ROADMAP.md`
 - `docs/feed/FEED-EXECUTION-PLAN.md`
 - `docs/feed/FEED-MILESTONE-1.md`
-- `docs/architecture/PROJECT-MILESTONE-1.md`
+- `docs/10-archive/architecture-checkpoints/PROJECT-MILESTONE-1.md`
 - `docs/feed/FEED-FREEZE-AUDIT.md`
 - `docs/feed/FEED-P1.A-REPORT.md`
 - `docs/feed/FEED-P1.A-REVIEW.md`
