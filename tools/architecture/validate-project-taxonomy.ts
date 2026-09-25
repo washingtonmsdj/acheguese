@@ -115,10 +115,6 @@ const FORBIDDEN_LEGACY_PATH_LITERALS = [
   "src/modules/verification",
 ] as const;
 
-const LEGACY_SCAN_IGNORE_FILES = new Set([
-  "scripts/validate-project-taxonomy.ts",
-]);
-
 const COMMUNITY_FIRST_DOC_MARKERS = [
   "**Comunidade Local**",
   "`locations`",
@@ -569,10 +565,7 @@ function main() {
     }
   }
 
-  const scannedSourceFiles = [
-    ...walkFiles("src"),
-    ...walkFiles("scripts"),
-  ].filter((filePath) => {
+  const scannedSourceFiles = walkFiles("src").filter((filePath) => {
     const normalized = normalize(filePath);
     return (
       normalized.endsWith(".ts") ||
@@ -584,10 +577,6 @@ function main() {
 
   for (const filePath of scannedSourceFiles) {
     const relative = normalize(path.relative(ROOT, filePath));
-    if (LEGACY_SCAN_IGNORE_FILES.has(relative)) {
-      continue;
-    }
-
     const content = fs.readFileSync(filePath, "utf8");
     if (
       relative.startsWith("src/core/") &&
