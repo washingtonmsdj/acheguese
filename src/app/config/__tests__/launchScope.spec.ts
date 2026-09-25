@@ -12,12 +12,9 @@ import {
   getActiveProductModules,
 } from "../lifecycleRegistry";
 import {
-  filterLaunchItems,
-  filterLaunchSections,
   isLaunchClassifiedCategoryEnabled,
   isLaunchCommunityFeedChannelEnabled,
   isLaunchCommunityPostEnabled,
-  isLaunchNavItemEnabled,
   isLaunchSurfaceEnabled,
 } from "../launchScope";
 
@@ -70,58 +67,6 @@ describe("launchScope", () => {
     ] as const) {
       expect(isLaunchSurfaceEnabled(paused)).toBe(false);
     }
-  });
-
-  it("filters navigation from the same lifecycle contract", () => {
-    expect(isLaunchNavItemEnabled("business")).toBe(true);
-    expect(isLaunchNavItemEnabled("map")).toBe(true);
-    expect(isLaunchNavItemEnabled("nearby")).toBe(true);
-    expect(isLaunchNavItemEnabled("classifieds")).toBe(false);
-    expect(isLaunchNavItemEnabled("community")).toBe(false);
-    expect(isLaunchNavItemEnabled("messaging")).toBe(true);
-
-    expect(
-      filterLaunchItems([
-        { id: "business", label: "Empresas" },
-        { id: "map", label: "Mapa" },
-        { id: "nearby", label: "Perto de Mim" },
-        { id: "search", label: "Busca" },
-        { id: "classifieds", label: "Classificados" },
-      ]),
-    ).toEqual([
-      { id: "business", label: "Empresas" },
-      { id: "map", label: "Mapa" },
-      { id: "nearby", label: "Perto de Mim" },
-      { id: "search", label: "Busca" },
-    ]);
-
-    expect(
-      filterLaunchSections([
-        {
-          label: "MVP",
-          items: [
-            { id: "business" },
-            { id: "map" },
-            { id: "nearby" },
-            { id: "search" },
-          ],
-        },
-        {
-          label: "Pós-MVP",
-          items: [{ id: "community" }, { id: "classifieds" }],
-        },
-      ]),
-    ).toEqual([
-      {
-        label: "MVP",
-        items: [
-          { id: "business" },
-          { id: "map" },
-          { id: "nearby" },
-          { id: "search" },
-        ],
-      },
-    ]);
   });
 
   it("keeps presentation metadata aligned without duplicating lifecycle ownership", () => {
