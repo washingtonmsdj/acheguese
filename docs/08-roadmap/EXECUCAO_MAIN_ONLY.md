@@ -60,6 +60,8 @@ O corte estrutural do MVP está consolidado:
 - Notifications mantém histórico horizontal e governa ações pela policy de lifecycle;
 - rotas e prefetch ativos não montam módulos pausados;
 - a Central/Conta não anuncia verticais pausadas;
+- `CentralRoutes` compõe o lifecycle de Billing e das verticais Business; `CriarEmpresaPage` recebe `enabledVerticalKeys` e não consulta `launchScope`;
+- componentes Business/Profile ativos recebem escopo de lifecycle pela camada `app`, em vez de importar `app/config` para decidir produto;
 - Busca assistida autoriza intents explicitamente na camada `app`;
 - URLs sem owner ativo chegam ao 404 canônico, sem redirect de compatibilidade.
 
