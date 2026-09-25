@@ -1,7 +1,15 @@
-import { existsSync, readFileSync } from "node:fs";
+import { existsSync, readFileSync, readdirSync } from "node:fs";
 import { describe, expect, it } from "vitest";
 
 describe("live documentation hygiene", () => {
+  it("keeps dated G5 checkpoints out of live architecture docs", () => {
+    const liveArchitectureDocs = readdirSync("docs/03-architecture");
+
+    expect(
+      liveArchitectureDocs.filter((name) => /^G5_.*\.md$/.test(name)),
+    ).toEqual([]);
+  });
+
   it("keeps the profile identity contract on current session owners", () => {
     const contract = readFileSync(
       "src/core/profiles/docs/CONTRACT_AUDIT_USERID_PROFILEID.md",
