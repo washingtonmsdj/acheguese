@@ -69,7 +69,7 @@ function findMigration(matchers: RegExp[]): { filePath: string; content: string 
 describe('Fase 0 - Correcoes imediatas', () => {
   it('CommunityQAService importa de @/core/community-recommendations/qa-types', () => {
     const content = read('src/core/community-recommendations/services/CommunityQAService.ts');
-    expect(content).toMatch(/@\/core\/community\/qa-types/);
+    expect(content).toMatch(/@\/core\/community-recommendations\/qa-types/);
     expect(content).not.toMatch(/services\/community-qa\/types/);
   });
 
@@ -181,13 +181,13 @@ describe('Fase 2 - Q&A territorial', () => {
   });
 
   it('useRecomendacoes usa useTerritoryFilter', () => {
-    const content = read('src/core/community/hooks/useRecomendacoes.ts');
+    const content = read('src/core/community-recommendations/hooks/useRecomendacoes.ts');
     expect(content).toMatch(/useTerritoryFilter/);
     expect(content).toMatch(/activeTerritoryFilter\.scope/);
   });
 
   it('useRecomendacoes passa location_id ou location_ids para getQuestions', () => {
-    const content = read('src/core/community/hooks/useRecomendacoes.ts');
+    const content = read('src/core/community-recommendations/hooks/useRecomendacoes.ts');
     expect(content).toMatch(/location_id.*activeTerritoryFilter|activeTerritoryFilter.*location_id/);
     expect(content).toMatch(/location_ids.*activeTerritoryFilter|activeTerritoryFilter.*location_ids/);
   });
