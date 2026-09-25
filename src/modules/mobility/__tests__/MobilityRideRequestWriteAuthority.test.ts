@@ -79,16 +79,17 @@ describe("ride_requests browser write authority", () => {
   it("does not expose the retired generic ride update helpers", () => {
     const mutations = read("src/core/mobility/services/mobility.mutations.ts");
     const facade = read("src/core/mobility/services/MobilityService.ts");
-    const staticService = read("src/core/mobility/services/MobilityService.impl.ts");
+    expect(
+      fs.existsSync(path.resolve(process.cwd(), "src/core/mobility/services/MobilityService.impl.ts")),
+    ).toBe(false);
     const runtime = read("src/core/mobility/services/MobilityRuntimeService.ts");
 
-    for (const source of [mutations, facade, staticService, runtime]) {
+    for (const source of [mutations, facade, runtime]) {
       expect(source).not.toContain("updateRideWithGuards");
       expect(source).not.toContain("updateRideIfStatusIn");
     }
 
     expect(mutations).not.toMatch(/export\s+async\s+function\s+updateRide\s*\(/);
-    expect(staticService).not.toMatch(/static\s+async\s+updateRide\s*\(/);
   });
 
   it("keeps database INSERT authority quote-owned and server-only", () => {
