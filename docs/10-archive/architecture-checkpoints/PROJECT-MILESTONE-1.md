@@ -17,7 +17,7 @@ Documentos de referencia principais:
 - `docs/domain/TERRITORY-DATA-QUALITY-V2.md`
 - `docs/10-archive/territory/TERRITORY-FREEZE-AUDIT.md`
 - `docs/10-archive/territory/SALVADOR-IMPLEMENTATION-1-REPORT.md`
-- `docs/feed/FEED-GOVERNANCE.md`
+- `docs/10-archive/feed/FEED-GOVERNANCE.md`
 - `docs/10-archive/feed/FEED-MILESTONE-1.md`
 - `docs/10-archive/feed/FEED-MILESTONE-1-HARDENING.md`
 - `docs/10-archive/feed/FEED-FREEZE-AUDIT.md`
@@ -34,8 +34,8 @@ Documentos de referencia principais:
 
 Evidencias historicas preservadas, sem autoridade operacional pos-Freeze:
 
-- `docs/feed/FEED-ROADMAP.md`
-- `docs/feed/FEED-EXECUTION-PLAN.md`
+- `docs/10-archive/feed/FEED-ROADMAP.md`
+- `docs/10-archive/feed/FEED-EXECUTION-PLAN.md`
 
 ## 2. Estado executivo
 
