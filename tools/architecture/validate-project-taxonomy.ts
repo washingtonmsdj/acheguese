@@ -9,8 +9,6 @@ const DOCUMENTATION_ENTRY_PATH = "docs/README.md";
 const CORE_LAYER_SSOT_PATH = "docs/03-architecture/CORE_LAYER_SSOT.md";
 const COMMUNITY_FIRST_ARCHITECTURE_DOC_PATH =
   "docs/03-architecture/COMMUNITY_FIRST_ARCHITECTURE_SSOT.md";
-const COMMUNITY_FIRST_PLAN_PATH =
-  "docs/10-archive/plans/COMMUNITY_FIRST_ARCHITECTURE_PLAN.md";
 const ARCHITECTURE_REGISTRY_PATH = "tools/architecture/architecture-registry.ts";
 const VERTICAL_CONFIG_PATH = "src/core/verticals/config.ts";
 const COMMUNITY_EXPERIENCE_REPOSITORY_PATH =
@@ -227,22 +225,6 @@ const DOCUMENTATION_ENTRY_REQUIRED_MARKERS = [
   "./03-architecture/CORE_LAYER_SSOT.md",
   "./10-archive/",
 ] as const;
-const COMMUNITY_FIRST_PLAN_STATUS_REQUIRED_MARKERS = [
-  "Status: concluido em 2026-07-09",
-  "Implementacao: concluida para o escopo arquitetural Community First",
-  "Status: concluida em 2026-07-09 para contrato backend/RLS, services e consumo",
-  "Status: concluida em 2026-07-09 para contrato federado de busca/Home.",
-  "Indice denormalizado/RPC de busca fica adiado para fase futura condicionada por",
-  "Status: concluida em 2026-07-09 para SSOT, launch gates e testes.",
-  "Status: concluida em 2026-07-09 para limpeza de duplicacoes, docs ativos e gates finais.",
-  "Status: concluido em 2026-07-09 para o escopo arquitetural Community First.",
-] as const;
-const COMMUNITY_FIRST_PLAN_STATUS_FORBIDDEN_MARKERS = [
-  "- [ ] criar indice denormalizado/RPC de busca quando escala e ranking exigirem",
-  "Status: ativo",
-  "Status: em andamento",
-  "Implementacao: em andamento incremental",
-] as const;
 
 function pathExists(relativePath: string): boolean {
   return fs.existsSync(path.join(ROOT, relativePath));
@@ -425,31 +407,6 @@ function main() {
         violations.push(
           `Contrato Community First sem marcador obrigatorio "${marker}" em ${COMMUNITY_FIRST_ARCHITECTURE_DOC_PATH}`,
         );
-      }
-    }
-  }
-
-  if (!pathExists(COMMUNITY_FIRST_PLAN_PATH)) {
-    violations.push(
-      `Plano Community First ausente: ${COMMUNITY_FIRST_PLAN_PATH}`,
-    );
-  } else {
-    const communityFirstPlan = readText(COMMUNITY_FIRST_PLAN_PATH);
-    if (communityFirstPlan) {
-      for (const marker of COMMUNITY_FIRST_PLAN_STATUS_REQUIRED_MARKERS) {
-        if (!communityFirstPlan.includes(marker)) {
-          violations.push(
-            `${COMMUNITY_FIRST_PLAN_PATH} deve refletir o fechamento das fases Community First ja implementadas; falta marcador "${marker}".`,
-          );
-        }
-      }
-
-      for (const marker of COMMUNITY_FIRST_PLAN_STATUS_FORBIDDEN_MARKERS) {
-        if (communityFirstPlan.includes(marker)) {
-          violations.push(
-            `${COMMUNITY_FIRST_PLAN_PATH} ainda contem pendencia fora de escopo como tarefa aberta: "${marker}".`,
-          );
-        }
       }
     }
   }
