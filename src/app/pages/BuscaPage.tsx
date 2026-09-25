@@ -40,10 +40,8 @@ import {
   TerritorySurface,
   TerritoryTopbar,
 } from "@/app/components/territory-vivo";
-import {
-  isLaunchSurfaceEnabled,
-  type LaunchSurfaceKey,
-} from "@/app/config/launchScope";
+import { isProductModuleEnabled } from "@/app/config/lifecycleRegistry";
+import type { ProductModuleKey } from "@/app/config/productModuleRegistry";
 import { getActiveSearchProviderBuckets } from "@/app/config/searchProviderScope";
 import { useModuleTerritoryFilter } from "@/core/location/hooks/useModuleTerritoryFilter";
 import { usePublicBrowsingCity } from "@/core/location/hooks/usePublicBrowsingCity";
@@ -457,7 +455,7 @@ export default function BuscaPage() {
       href: string;
       icon: LucideIcon;
       tone: string;
-      surface?: LaunchSurfaceKey;
+      surface?: ProductModuleKey;
     }> = [
       {
         label: "Empresas",
@@ -508,7 +506,7 @@ export default function BuscaPage() {
       },
     ];
     return items.filter(
-      (item) => !item.surface || isLaunchSurfaceEnabled(item.surface),
+      (item) => !item.surface || isProductModuleEnabled(item.surface),
     );
   }, [moduleUrls]);
 
@@ -582,7 +580,7 @@ export default function BuscaPage() {
                 </button>
               ),
             )}
-            {isLaunchSurfaceEnabled("education") ? (
+            {isProductModuleEnabled("education") ? (
               <Link
                 to={moduleUrls.education}
                 className="relative hidden min-h-10 shrink-0 items-center whitespace-nowrap px-0.5 text-sm font-medium text-territory-muted transition-colors hover:text-territory-ink md:inline-flex"
