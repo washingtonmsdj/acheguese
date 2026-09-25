@@ -3,7 +3,7 @@
  * Validate documentation placement in repository root.
  *
  * Policy (docs/DECISIONS.md D-013):
- * - Allow only README.md, SECURITY.md and the temporary compatibility pointer in root.
+ * - Allow only README.md and SECURITY.md in root.
  * - All other markdown files must live under docs/ or module folders.
  */
 
@@ -15,7 +15,6 @@ const rootDir = process.cwd();
 const ALLOWED_ROOT_MARKDOWN = new Set([
   "README.md",
   "SECURITY.md",
-  "URGENTE_LEIA_PRIMEIRO_REORGANIZACAO_GLOBAL.md",
 ]);
 const MARKDOWN_EXTENSIONS = new Set([".md", ".mdx"]);
 
@@ -48,7 +47,7 @@ function main(): void {
   }
 
   console.error(
-    "\nAllowed in root: README.md, SECURITY.md, URGENTE_LEIA_PRIMEIRO_REORGANIZACAO_GLOBAL.md",
+    "\nAllowed in root: README.md, SECURITY.md",
   );
   console.error("Move active markdown files to docs/ or to the owning module folder.");
   process.exit(1);

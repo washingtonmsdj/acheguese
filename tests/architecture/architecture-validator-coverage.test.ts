@@ -15,8 +15,6 @@ const WORKFLOW_PATH = path.join(
   "ssot-enforcement.yml",
 );
 const PACKAGE_PATH = path.join(ROOT, "package.json");
-const ROOT_COMPAT_POINTER = "URGENTE_LEIA_PRIMEIRO_REORGANIZACAO_GLOBAL.md";
-
 const NON_BLOCKING_VALIDATORS = new Map([
   [
     "tools/architecture/validate-maps-integration.sh",
@@ -112,12 +110,14 @@ describe("G3 architecture validator coverage", () => {
     }
   });
 
-  it("keeps the canonical root-doc validator aligned with permanent-plan governance", () => {
+  it("keeps the canonical root-doc validator strict", () => {
     const docsValidator = fs.readFileSync(
       path.join(ARCHITECTURE_DIR, "validate-docs-structure.ts"),
       "utf8",
     );
 
-    expect(docsValidator).toContain(ROOT_COMPAT_POINTER);
+    expect(docsValidator).toContain('"README.md"');
+    expect(docsValidator).toContain('"SECURITY.md"');
+    expect(docsValidator).not.toContain("URGENTE_LEIA_PRIMEIRO_REORGANIZACAO_GLOBAL.md");
   });
 });
