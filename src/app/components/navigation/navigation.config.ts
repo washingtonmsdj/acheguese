@@ -25,15 +25,26 @@ import {
   LayoutGrid,
   type LucideIcon,
 } from 'lucide-react';
-import { APP_MODULE_SLUGS, buildAppModulePath } from '@/shared/config/moduleSlugs';
+import {
+  isPlatformCapabilityEnabled,
+  isProductModuleEnabled,
+} from '@/app/config/lifecycleRegistry';
+import type { PlatformCapabilityKey } from '@/app/config/platformCapabilityRegistry';
+import type { ProductModuleKey } from '@/app/config/productModuleRegistry';
 import { LAUNCH_URLS } from '@/core/routing/config/territory';
-import { filterLaunchSections } from '@/app/config/launchScope';
+import { APP_MODULE_SLUGS, buildAppModulePath } from '@/shared/config/moduleSlugs';
+
+type NavigationLifecycle =
+  | { kind: 'always' }
+  | { kind: 'product'; key: ProductModuleKey }
+  | { kind: 'capability'; key: PlatformCapabilityKey };
 
 export interface NavItem {
   id: string;
   icon: LucideIcon;
   label: string;
   href: string;
+  lifecycle: NavigationLifecycle;
   description?: string;
   requiresAuth?: boolean;
   badge?: string;
@@ -71,6 +82,7 @@ const RAW_NAV_SECTIONS: NavSection[] = [
     items: [
       {
         id: 'home',
+        lifecycle: { kind: 'always' },
         icon: Home,
         label: 'Hoje',
         href: '/',
@@ -78,6 +90,7 @@ const RAW_NAV_SECTIONS: NavSection[] = [
       },
       {
         id: 'neighborhood',
+        lifecycle: { kind: 'product', key: 'community' },
         icon: Users,
         label: 'Meu Bairro',
         href: LAUNCH_URLS.community,
@@ -86,6 +99,7 @@ const RAW_NAV_SECTIONS: NavSection[] = [
       },
       {
         id: 'business',
+        lifecycle: { kind: 'product', key: 'business' },
         icon: Building2,
         label: 'Empresas',
         href: NAV_MODULE_ROOTS.business,
@@ -93,6 +107,7 @@ const RAW_NAV_SECTIONS: NavSection[] = [
       },
       {
         id: 'gastronomy',
+        lifecycle: { kind: 'product', key: 'gastronomy' },
         icon: UtensilsCrossed,
         label: 'Gastronomia',
         href: NAV_MODULE_ROOTS.gastronomy,
@@ -100,6 +115,7 @@ const RAW_NAV_SECTIONS: NavSection[] = [
       },
       {
         id: 'services',
+        lifecycle: { kind: 'product', key: 'services' },
         icon: Wrench,
         label: 'Serviços',
         href: NAV_MODULE_ROOTS.services,
@@ -107,6 +123,7 @@ const RAW_NAV_SECTIONS: NavSection[] = [
       },
       {
         id: 'education',
+        lifecycle: { kind: 'product', key: 'education' },
         icon: GraduationCap,
         label: 'Educação',
         href: NAV_MODULE_ROOTS.education,
@@ -114,6 +131,7 @@ const RAW_NAV_SECTIONS: NavSection[] = [
       },
       {
         id: 'classifieds',
+        lifecycle: { kind: 'product', key: 'classifieds' },
         icon: Tag,
         label: 'Classificados',
         href: NAV_MODULE_ROOTS.classifieds,
@@ -127,6 +145,7 @@ const RAW_NAV_SECTIONS: NavSection[] = [
     items: [
       {
         id: 'central',
+        lifecycle: { kind: 'capability', key: 'central' },
         icon: LayoutGrid,
         label: 'Central',
         href: '/central',
@@ -141,6 +160,7 @@ const RAW_NAV_SECTIONS: NavSection[] = [
     items: [
       {
         id: 'jobs',
+        lifecycle: { kind: 'product', key: 'jobs' },
         icon: Briefcase,
         label: 'Vagas',
         href: NAV_MODULE_ROOTS.jobs,
@@ -148,6 +168,7 @@ const RAW_NAV_SECTIONS: NavSection[] = [
       },
       {
         id: 'events',
+        lifecycle: { kind: 'product', key: 'events' },
         icon: Calendar,
         label: 'Eventos',
         href: NAV_MODULE_ROOTS.events,
@@ -161,6 +182,7 @@ const RAW_NAV_SECTIONS: NavSection[] = [
     items: [
       {
         id: 'nearby',
+        lifecycle: { kind: 'capability', key: 'nearby' },
         icon: MapPin,
         label: 'Perto de Mim',
         href: NAV_MODULE_ROOTS.nearby,
@@ -168,6 +190,7 @@ const RAW_NAV_SECTIONS: NavSection[] = [
       },
       {
         id: 'map',
+        lifecycle: { kind: 'capability', key: 'map' },
         icon: Map,
         label: 'Mapa',
         href: NAV_MODULE_ROOTS.map,
@@ -175,6 +198,7 @@ const RAW_NAV_SECTIONS: NavSection[] = [
       },
       {
         id: 'mobility',
+        lifecycle: { kind: 'product', key: 'mobility' },
         icon: Car,
         label: 'Mobilidade',
         href: NAV_MODULE_ROOTS.mobility,
@@ -182,6 +206,7 @@ const RAW_NAV_SECTIONS: NavSection[] = [
       },
       {
         id: 'search',
+        lifecycle: { kind: 'capability', key: 'search' },
         icon: Search,
         label: 'Busca',
         href: '/busca',
@@ -191,4 +216,27 @@ const RAW_NAV_SECTIONS: NavSection[] = [
   },
 ];
 
-export const NAV_SECTIONS: NavSection[] = filterLaunchSections(RAW_NAV_SECTIONS);
+function isNavigationItemEnabled(item: NavItem): boolean {
+  switch (item.lifecycle.kind) {
+    case 'always':
+      return true;
+    case 'product':
+      return isProductModuleEnabled(item.lifecycle.key);
+    case 'capability':
+      return isPlatformCapabilityEnabled(item.lifecycle.key);
+  }
+}
+
+function filterNavigationSections(
+  sections: readonly NavSection[],
+): NavSection[] {
+  return sections
+    .map((section) => ({
+      ...section,
+      items: section.items.filter(isNavigationItemEnabled),
+    }))
+    .filter((section) => section.items.length > 0);
+}
+
+export const NAV_SECTIONS: NavSection[] =
+  filterNavigationSections(RAW_NAV_SECTIONS);
