@@ -9,7 +9,7 @@ function readProjectFile(relativePath: string): string {
 describe("Mobility driver offer authority", () => {
   it("keeps offer discovery territorial, brokered and on the canonical schedule field", () => {
     const migration = readProjectFile(
-      "supabase/migrations/20260909173500_broker_driver_offer_read_model_g10.sql",
+      "supabase/migrations/20260909163814_broker_driver_offer_read_model_g10.sql",
     );
     const broker = readProjectFile("supabase/functions/mobility-rpc/index.ts");
     const rpcService = readProjectFile(
