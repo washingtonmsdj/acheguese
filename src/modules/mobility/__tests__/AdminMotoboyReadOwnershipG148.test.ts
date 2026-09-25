@@ -1,4 +1,4 @@
-import { readFileSync } from "node:fs";
+import { existsSync, readFileSync } from "node:fs";
 import { resolve } from "node:path";
 import { describe, expect, it } from "vitest";
 
@@ -12,9 +12,6 @@ describe("G148 admin motoboy read ownership", () => {
   );
   const operations = readProjectFile(
     "src/core/admin/services/AdminMotoboyOperationsService.ts",
-  );
-  const mobilityImpl = readProjectFile(
-    "src/core/mobility/services/MobilityService.impl.ts",
   );
 
   it("routes admin motoboy lists through the dedicated admin reader", () => {
@@ -42,7 +39,6 @@ describe("G148 admin motoboy read ownership", () => {
   });
 
   it("retires the generic compatibility wrappers", () => {
-    expect(mobilityImpl).not.toContain("static async listMotoboyDeliveries(");
-    expect(mobilityImpl).not.toContain("static async listMotoboyStatsRows(");
+    expect(existsSync(resolve(process.cwd(), "src/core/mobility/services/MobilityService.impl.ts"))).toBe(false);
   });
 });
