@@ -1,4 +1,4 @@
-import MensagensPage from "@/modules/messaging/pages/MensagensPage";
+import { MensagensPage } from "@/modules/messaging";
 import { getActiveMessagingProviderIds } from "@/app/config/messagingProviderScope";
 
 export default function MessagingInboxPage() {
