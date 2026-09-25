@@ -40,7 +40,7 @@ describe("Business edit flow (G6)", () => {
     );
     expect(centralRoutes).toContain('isProductModuleEnabled("business")');
     expect(centralRoutes).toContain('path="empresas"');
-    expect(centralRoutes).toContain('element={<P.CentralEmpresasPage />}');
+    expect(centralRoutes).toContain("CentralEmpresasPage billingEnabled={billingEnabled}");
     expect(centralRoutes).toContain('path="empresas/nova"');
     expect(centralRoutes).toContain('element={<P.CriarEmpresaPage />}');
     expect(centralRoutes).toContain('path="empresas/:businessId"');
