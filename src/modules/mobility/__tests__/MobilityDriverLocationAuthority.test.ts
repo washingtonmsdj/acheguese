@@ -9,7 +9,7 @@ function readProjectFile(relativePath: string): string {
 describe("Mobility driver location authority", () => {
   it("keeps driver GPS writes brokered and read-only to browser clients", () => {
     const migration = readProjectFile(
-      "supabase/migrations/20260909165500_broker_driver_location_writes_g9.sql",
+      "supabase/migrations/20260909162552_broker_driver_location_writes_g9.sql",
     );
     const broker = readProjectFile("supabase/functions/mobility-rpc/index.ts");
     const rpcService = readProjectFile(
@@ -57,7 +57,7 @@ describe("Mobility driver location authority", () => {
 
   it("retains exact GPS only while operationally required", () => {
     const minimization = readProjectFile(
-      "supabase/migrations/20260916133000_minimize_idle_driver_gps.sql",
+      "supabase/migrations/20260916232906_minimize_idle_driver_gps.sql",
     );
 
     expect(minimization).toContain(
