@@ -1,4 +1,4 @@
-import { readFileSync } from "node:fs";
+import { existsSync, readFileSync } from "node:fs";
 import { resolve } from "node:path";
 import { describe, expect, it } from "vitest";
 
@@ -9,11 +9,12 @@ function readProjectFile(path: string): string {
 describe("G130 global ride scan retirement", () => {
   const facade = readProjectFile("src/core/mobility/services/MobilityService.ts");
   const queries = readProjectFile("src/core/mobility/services/mobility.queries.ts");
-  const legacyImpl = readProjectFile("src/core/mobility/services/MobilityService.impl.ts");
   const validation = readProjectFile("tools/maintenance/validate-mobility-dispatch.ts");
 
   it("does not expose generic global ride readers", () => {
-    for (const source of [facade, queries, legacyImpl]) {
+    expect(existsSync(resolve(process.cwd(), "src/core/mobility/services/MobilityService.impl.ts"))).toBe(false);
+
+    for (const source of [facade, queries]) {
       expect(source).not.toContain("getAllRideRequests");
       expect(source).not.toContain("getActiveRides");
     }
