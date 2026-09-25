@@ -148,6 +148,16 @@ describe("global repository reorganization contract", () => {
     }
   });
 
+  it("does not teach architecture tooling to classify retired src/features as a live layer", () => {
+    const reportGenerator = fs.readFileSync(
+      path.join(ROOT, "tools/architecture/generate-hardening-architecture-report.ts"),
+      "utf8",
+    );
+
+    expect(reportGenerator).not.toContain('startsWith("src/features/")');
+    expect(reportGenerator).not.toContain('return "features"');
+  });
+
   it("does not recreate retired source files", () => {
     for (const relativePath of RETIRED_SOURCE_FILES) {
       expect(fs.existsSync(path.join(ROOT, relativePath)), relativePath).toBe(false);

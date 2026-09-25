@@ -68,7 +68,6 @@ function getLayer(relativePath: string): string {
   if (relativePath.startsWith("src/core/")) return "core";
   if (relativePath.startsWith("src/shared/")) return "shared";
   if (relativePath.startsWith("src/integrations/")) return "integrations";
-  if (relativePath.startsWith("src/features/")) return "features";
   return "other";
 }
 
