@@ -1,117 +1,250 @@
 # TAXONOMY SSOT
 
-Data de referencia: 2026-04-22
+**Atualizado:** 2026-09-25  
+**Status:** canônico para organização física e classificação arquitetural.
 
-Atualizacao Community First: 2026-07-08
+Este documento define como classificar código e documentação. Ele **não ativa**
+funcionalidades. O lifecycle executável pertence a:
 
-## 1. Objetivo
-Definir uma taxonomia unica e oficial do projeto, separando com clareza:
-- dominio de produto,
-- subdominio,
-- vertical derivado,
-- transversal/core,
-- infraestrutura,
-- pagina/rota,
-- legado/historico.
+- `src/app/config/productModuleRegistry.ts` — domínios de produto;
+- `src/app/config/platformCapabilityRegistry.ts` — capabilities horizontais;
+- `src/app/config/lifecycleRegistry.ts` — resolução de dependências.
 
-## 2. Camadas oficiais do projeto
+## 1. Unidades arquiteturais
+
+### 1.1 Domínio de produto
+
+Responsabilidade de negócio com lifecycle próprio.
+
+No primeiro release, somente `business` está `active`. Os demais domínios
+de produto declarados em `PRODUCT_MODULE_REGISTRY` permanecem `paused`.
+
+Código de domínio pausado pode continuar versionado, mas não pode participar do
+runtime ativo por rota, navegação, prefetch, query, provider, layer ou CTA.
+
+### 1.2 Capability horizontal
+
+Capacidade de plataforma que pode servir mais de um domínio de produto.
+
+Capabilities ativas no MVP:
+
+- `auth`;
+- `profiles`;
+- `account`;
+- `territory`;
+- `location`;
+- `notifications`;
+- `central`;
+- `map`;
+- `nearby`;
+- `search`;
+- `messaging`.
+
+Map, Nearby, Search, Messaging e Notifications **não são verticais de
+Business**. Elas mantêm owners horizontais e recebem providers/adapters de
+domínios habilitados.
+
+### 1.3 Provider / adapter
+
+Integra um domínio de produto a uma capability horizontal.
+
+Exemplos do MVP:
+
+- Business -> Map;
+- Business -> Nearby;
+- Business -> Search;
+- Business -> Messaging.
+
+Provider não transfere ownership. Pausar um domínio remove seus providers sem
+pausar automaticamente a capability.
+
+### 1.4 Vertical de Business
+
+Vertical é uma especialização de Business declarada em
+`src/core/verticals/config.ts`.
+
+Verticais oficiais atualmente declaradas:
+
+- `gastronomy`;
+- `education`.
+
+A declaração de uma vertical **não significa ativação pública**. Gastronomy e
+Education permanecem `paused` no `PRODUCT_MODULE_REGISTRY`.
+
+## 2. Camadas físicas do source
+
+A árvore canônica de `src/` é:
+
+- `app`;
+- `assets`;
+- `core`;
+- `integrations`;
+- `modules`;
+- `shared`;
+- `styles`.
+
+Arquivos de bootstrap podem existir diretamente em `src/`.
 
 ### 2.1 `src/app`
-- Papel: shell da aplicacao, roteamento, composicao de fluxo e paginas.
-- Classificacao: pagina/rota.
-- Regra: fluxos de app (landing, onboarding, dashboard) ficam aqui, em `app/features/*`.
+
+Shell, composição, roteamento, páginas de entrada e lifecycle.
+
+Regras:
+
+- lifecycle e composição entre domínio/capability pertencem aqui;
+- provider scopes ficam em `src/app/config`;
+- `src/app` pode compor owners, mas não deve duplicar regra de domínio;
+- o root aposentado `src/features` não deve voltar.
 
 ### 2.2 `src/modules`
-- Papel: bounded contexts de produto.
-- Classificacao: dominio principal e subdominio de produto.
-- Topo canonico:
-  - `admin`
-  - `ai`
-  - `business`
-  - `central`
-  - `classifieds`
-  - `communication-territorial`
-  - `community-events`
-  - `community-feed`
-  - `community-groups`
-  - `community-issues`
-  - `community-lost-found`
-  - `community-recommendations`
-  - `guide`
-  - `mobility`
-  - `professionals`
-  - `profile`
-  - `work-opportunities`
+
+Superfícies de produto, páginas, componentes e hooks de bounded contexts.
+
+A existência física de um diretório **não define estado de lifecycle**.
+Packages pós-MVP podem permanecer aqui com owner claro mesmo quando pausados.
+
+Não inferir ativação pela lista de pastas.
 
 ### 2.3 `src/core`
-- Papel: capacidades transversais, contratos canonicos, servicos centrais.
-- Classificacao: transversal/core.
-- Regra: `core` nao compete com taxonomia de produto; ele estabiliza contratos entre dominios.
+
+Contratos canônicos, services, repositories, read models e capabilities
+reutilizadas entre superfícies.
+
+Regras:
+
+- Core não importa implementação interna de `src/modules`;
+- persistência reutilizável deve ter owner real em Core;
+- Core não decide lifecycle de produto;
+- contrato reutilizado por múltiplos módulos sobe para um owner canônico, não
+  para facade duplicada.
 
 ### 2.4 `src/shared`
-- Papel: primitivas reutilizaveis agnosticas de dominio.
-- Classificacao: transversal/core.
+
+Primitivas agnósticas de domínio: UI base, utilities, config transversal e
+tipos realmente compartilhados.
 
 ### 2.5 `src/integrations`
-- Papel: adaptadores com provedores externos (maps, supabase, etc.).
-- Classificacao: infraestrutura.
 
-### 2.6 `docs`
-- Papel: SSOT documental ativo.
-- Classificacao:
-  - ativo: `docs/`, `docs/architecture`, `docs/audits`, `docs/tasks`
+Adaptadores de provedores externos, como Supabase e mapas.
 
-### 2.7 `scripts`
-- Papel: validacao, governanca, migracoes, automacao.
-- Classificacao: infraestrutura de engenharia.
+UI/module não cria segunda autoridade de integração quando já existe adapter
+canônico.
 
-## 3. Regras oficiais de vertical x horizontal
-- `business`/`empresas` e dominio horizontal base.
-- `business` nao e vertical.
-- Vertical oficial empresarial existe somente por declaracao em `src/core/verticals/config.ts`.
-- Estado atual oficial: `gastronomy` e `education`.
+### 2.6 `src/assets` e `src/styles`
 
-## 3.1 Regras oficiais Community First
-- O core domain do produto e `Comunidade Local`.
-- O SSOT territorial continua em `locations`, `territorial_groups`,
-  `src/core/location` e `src/core/territorial`.
-- Comunidade Local nao substitui Territorio; ela e a experiencia social
-  ancorada no territorio.
-- O SSOT atual de Comunidade Local fica em `territory_communities`,
-  `community_public_aliases`, `community_memberships`,
-  `community_entity_links` e `src/core/community-experience`.
-- Empresas, gastronomia, servicos, classificados, eventos, usuarios e posts sao
-  entidades independentes; comunidades guardam contexto, vinculo, destaque,
-  moderacao e descoberta, nao copias dos dados mestres.
-- O contrato vivo dessa decisao esta em
-  `docs/architecture/COMMUNITY_FIRST_ARCHITECTURE_SSOT.md`.
-- O plano incremental esta em
-  `plans/COMMUNITY_FIRST_ARCHITECTURE_PLAN.md`.
+Assets estáticos e estilos globais/canônicos. Não contêm regra de domínio nem
+lifecycle.
 
-## 4. Regras de fronteira
-- subdominio fica dentro do dominio base, nao no topo.
-- modulo transversal nao ocupa topo de `modules`.
-- fluxo de app nao fica em `modules`.
-- aliases legados de modulo sao proibidos no estado atual.
-- `src/core` nao importa nem reexporta `src/modules`; contratos reutilizados por
-  mais de um modulo devem subir para um owner real em `core`.
-- Nao existe allowlist `src/core -> src/modules`. UI e hooks compartilhados de
-  Mobility usados pela Central pertencem a `src/core/mobility`, com caminhos
-  antigos em `src/modules/mobility` apenas como reexports de compatibilidade.
+## 3. Fronteiras obrigatórias
 
-## 5. Guardrails obrigatorios
-- `npm run validate:taxonomy`
-- `npm run validate:architecture:governance`
-- `npm run validate:ssot`
-- `npm run validate:docs-structure`
+1. Domínio de produto, capability horizontal e provider são categorias
+   diferentes.
+2. Pausar domínio não pausa capability horizontal.
+3. Provider de domínio `paused` não consulta, renderiza, prefetcha nem navega.
+4. `src/core` não importa nem reexporta implementação de `src/modules`.
+5. `src/modules` não acessa integração/persistência diretamente quando existe
+   owner canônico em Core.
+6. Lifecycle não é decidido em `core`, `modules` ou componente visual.
+7. URL sem owner ativo cai no 404 canônico; redirect/fallback não substitui
+   lifecycle.
+8. Facade, barrel ou bridge sem caller deve ser removido quando o censo provar
+   ausência de dependência viva.
+9. Migrations históricas necessárias ao ledger permanecem imutáveis.
+10. Código pós-MVP preservado deve permanecer fora do grafo runtime ativo.
 
-## 6. Observacao de governanca
-Alguns nomes em `src/core` ainda coexistem por historico (`services/service-areas/professional/vagas`, `admin/admin-identidade/admin-motoristas`). Isso deve ser tratado por fases de consolidacao de `core`, sem quebrar contratos publicos. `src/core/profile` foi consolidado em `src/core/profiles` e nao deve voltar.
+## 4. Territory e Community
 
-## 7. Consolidacao de vertical oficial
-- consolidacao detalhada da vertical oficial `gastronomy`:
-  - `docs/architecture/GASTRONOMY_CONSOLIDATION_SSOT.md`
-- essa consolidacao e normativa para caminhos, ownership e blindagem anti-regressao.
-- `education` ja e vertical oficial em `src/core/verticals/config.ts`; qualquer
-  abertura publica ampla precisa respeitar o mesmo padrao de SSOT, ownership e
-  validacao antes de sair do modo controlado.
+Territory é capability/fundação horizontal ativa e continua ancorado nos owners
+canônicos de Location/Territorial.
+
+Community é domínio de produto `paused` no MVP.
+
+O contrato pós-MVP preservado de Community está em
+`docs/03-architecture/COMMUNITY_FIRST_ARCHITECTURE_SSOT.md`. O plano
+incremental antigo está arquivado em
+`docs/10-archive/plans/COMMUNITY_FIRST_ARCHITECTURE_PLAN.md`.
+
+Esses documentos preservam invariantes internos e histórico; não têm autoridade
+para reativar Community.
+
+## 5. Documentação
+
+Prosa canônica viva usa a taxonomia numerada:
+
+- `docs/02-domain/`;
+- `docs/03-architecture/`;
+- `docs/04-design/`;
+- `docs/05-ux/`;
+- `docs/06-navigation/`;
+- `docs/07-modules/`;
+- `docs/08-roadmap/`;
+- `docs/09-reference/`.
+
+Exceções técnicas intencionais:
+
+- `docs/architecture/` — registry/manifests executáveis consumidos por tooling;
+- `docs/audits/` — baselines/allowlists executáveis consumidos por validators.
+
+Histórico, snapshots, planos encerrados e auditorias substituídas ficam em
+`docs/10-archive/` e não são normativos.
+
+Roots paralelos aposentados, como `docs/feed`, `docs/domain` e
+`docs/concepts`, não devem ser recriados.
+
+## 6. Estado físico de `src/modules`
+
+A árvore pode conter packages ativos, horizontais/internos e pós-MVP. O estado
+runtime não é derivado daqui.
+
+Diretórios físicos observados e permitidos atualmente incluem:
+
+- `admin`;
+- `ai`;
+- `business`;
+- `central`;
+- `classifieds`;
+- `communication-territorial`;
+- `community-events`;
+- `community-feed`;
+- `community-groups`;
+- `community-issues`;
+- `community-lost-found`;
+- `community-recommendations`;
+- `guide`;
+- `messaging`;
+- `mobility`;
+- `professionals`;
+- `profile`;
+- `work-opportunities`.
+
+Essa lista descreve organização física, **não** produtos ativos.
+
+## 7. Guardrails
+
+Executar:
+
+- `npm run validate:taxonomy`;
+- `npm run validate:architecture:governance`;
+- `npm run validate:ssot`;
+- `npm run validate:docs-structure`.
+
+Ratchets relevantes também vivem em `tests/architecture/`.
+
+## 8. Regra para futuras mudanças
+
+Antes de criar, mover, ativar ou pausar qualquer unidade, classificar
+explicitamente:
+
+1. domínio de produto;
+2. capability horizontal;
+3. provider/adapter;
+4. vertical de Business;
+5. owner Core;
+6. superfície de módulo;
+7. integração;
+8. histórico/documentação.
+
+Se a classificação não estiver clara, não criar novo owner paralelo.
+
+A autoridade de ativação continua sendo exclusivamente os registries de
+lifecycle em `src/app/config`.
