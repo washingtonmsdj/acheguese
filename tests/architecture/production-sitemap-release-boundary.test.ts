@@ -95,11 +95,13 @@ describe("production sitemap release boundary", () => {
 
     expect(releaseSitemap).not.toContain("@/app/config");
     expect(releaseSitemap).not.toContain("isLaunchSurfaceEnabled");
+    expect(releaseSitemap).not.toContain("GenerateAndSaveSitemapOptions = {}");
     expect(releaseSitemap).toContain("isSurfaceEnabled(module.surface)");
     expect(releaseSitemap).toContain("isSurfaceEnabled('nearby')");
     expect(releaseSitemap).toContain("APP_MODULE_SLUGS.nearby");
 
     expect(releaseScript).toContain('import("@/app/config/lifecycleRegistry")');
+    expect(releaseScript).toContain("SitemapSurfaceKey");
     expect(releaseScript).toContain('isProductModuleEnabled(surface)');
     expect(releaseScript).toContain('isPlatformCapabilityEnabled(surface)');
     expect(releaseScript).toContain("isSurfaceEnabled,");
