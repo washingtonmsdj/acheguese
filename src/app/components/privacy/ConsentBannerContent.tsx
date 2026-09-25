@@ -1,7 +1,7 @@
 import { lazy, Suspense, useEffect, useState } from "react";
 import { Cookie, Shield, X } from "lucide-react";
 
-import { PRELAUNCH_LOCKDOWN_ENABLED } from "@/app/config/launchScope";
+import { PRELAUNCH_LOCKDOWN_ENABLED } from "@/app/config/releaseMode";
 import { AUTH_PATHS } from "@/core/auth/constants/authFlow";
 import { ConsentService } from "@/core/privacy/services/ConsentService";
 import { useSessionUserId } from "@/core/session/hooks/useSessionUserId";

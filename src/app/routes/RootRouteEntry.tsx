@@ -8,7 +8,7 @@
  * capabilities horizontais. Não encaminha para domínios pausados.
  */
 import { lazy, Suspense } from "react";
-import { PRELAUNCH_LOCKDOWN_ENABLED } from "@/app/config/launchScope";
+import { PRELAUNCH_LOCKDOWN_ENABLED } from "@/app/config/releaseMode";
 import TerritoryEntryPage from "@/app/pages/TerritoryEntryPage";
 
 const LazyPreLaunchLandingPage = lazy(() =>
