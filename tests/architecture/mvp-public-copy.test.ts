@@ -3,6 +3,7 @@ import { describe, expect, it } from "vitest";
 
 const PUBLIC_COPY_FILES = [
   "src/app/pages/TerritoryEntryPage.tsx",
+  "src/app/pages/TerritoryHomePage.tsx",
   "src/app/pages/ComoFuncionaPage.tsx",
   "src/app/pages/BuscaPage.tsx",
   "src/core/navigation/territoryNavigationModes.ts",
@@ -31,6 +32,7 @@ describe("MVP public copy", () => {
       "owner de Perto de mim",
       "módulo Empresas",
       "referência territorial sem fabricar distância pessoal",
+      "Procurar no bairro",
     ]) {
       expect(content).not.toContain(internalPhrase);
     }
