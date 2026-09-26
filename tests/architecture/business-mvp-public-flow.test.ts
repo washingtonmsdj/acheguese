@@ -80,7 +80,7 @@ describe("MVP Business public flow", () => {
     expect(relatedSection).not.toContain("Empresas proximas");
   });
 
-  it("does not offer route actions without a real location target", () => {
+  it("does not offer route or contact actions without a real target", () => {
     expect(addressCard).toContain("const hasRouteTarget = Boolean(");
     expect(addressCard).toContain("'Endereço não informado'");
     expect(addressCard).not.toContain("addressText || locationText || business.name");
@@ -88,6 +88,10 @@ describe("MVP Business public flow", () => {
     expect(ctasSection).toContain(
       "<RouteOptions show={hasRouteTarget && showRouteOptions}",
     );
+    expect(ctasSection).toContain("const whatsAppUrl = buildWhatsAppUrl(business.whatsapp)");
+    expect(ctasSection).toContain("const phoneUrl = buildTelUrl(business.phone)");
+    expect(ctasSection).toContain("{whatsAppUrl ? (");
+    expect(ctasSection).toContain("{phoneUrl ? (");
   });
 
   it("keeps Business CTAs inside the active MVP module set", () => {
