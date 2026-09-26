@@ -10,6 +10,14 @@ const heroSection = readFileSync(
   "src/app/features/business-landing/sections/EmpresasHeroSection.tsx",
   "utf8",
 );
+const filtersSection = readFileSync(
+  "src/app/features/business-landing/sections/EmpresasFiltrosSection.tsx",
+  "utf8",
+);
+const relatedSection = readFileSync(
+  "src/modules/business/company/sections/EmpresaProximasSection.tsx",
+  "utf8",
+);
 const constants = readFileSync(
   "src/app/features/business-landing/utils/landing.constants.ts",
   "utf8",
@@ -46,9 +54,22 @@ describe("MVP Business public flow", () => {
     );
   });
 
-  it("keeps Business CTAs inside the active MVP module set", () => {
+  it("keeps personal proximity owned by Perto de mim", () => {
+    expect(filtersSection).toContain(
+      '.filter(([value]) => value !== "distance")',
+    );
     expect(page).toContain("const nearbyHref = moduleUrls.nearby");
     expect(page).toContain('secondaryLabel="Perto de mim"');
+  });
+
+  it("labels category-similar businesses as related, not geographically near", () => {
+    expect(detailPage).toContain("BusinessService.getSimilarBusinesses(");
+    expect(detailPage).toContain(">Relacionadas</TabsTrigger>");
+    expect(relatedSection).toContain("Empresas relacionadas");
+    expect(relatedSection).not.toContain("Empresas proximas");
+  });
+
+  it("keeps Business CTAs inside the active MVP module set", () => {
     expect(page).not.toContain('"/recomendacoes/nova"');
     expect(page).not.toContain('secondaryLabel="Indicar negocio"');
   });
