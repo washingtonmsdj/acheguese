@@ -133,6 +133,35 @@ describe("live documentation hygiene", () => {
     expect(docsIndex).not.toContain("05-ux/UX-IMPROVEMENTS.md");
   });
 
+  it("keeps superseded Home and Journey sprint docs out of live UX", () => {
+    for (const retired of [
+      "docs/05-ux/HOME-REVIEW.md",
+      "docs/05-ux/HOME-UI-REVIEW.md",
+      "docs/05-ux/HOME-CONTENT.md",
+      "docs/05-ux/USER-JOURNEY-REVIEW.md",
+      "docs/05-ux/FRICTION-MAP.md",
+    ]) {
+      expect(existsSync(retired), retired).toBe(false);
+    }
+
+    expect(
+      existsSync("docs/10-archive/post-mvp/home-journey-sprints/README.md"),
+    ).toBe(true);
+
+    const docsIndex = readFileSync("docs/README.md", "utf8");
+    for (const retiredRef of [
+      "05-ux/HOME-REVIEW.md",
+      "05-ux/HOME-UI-REVIEW.md",
+      "05-ux/HOME-CONTENT.md",
+      "05-ux/USER-JOURNEY-REVIEW.md",
+      "05-ux/FRICTION-MAP.md",
+    ]) {
+      expect(docsIndex).not.toContain(retiredRef);
+    }
+    expect(docsIndex).toContain("05-ux/HOME-SPEC.md");
+    expect(docsIndex).toContain("05-ux/HOME-INVENTORY.md");
+  });
+
   it("keeps duplicate concept roots retired in favor of the design catalog", () => {
     expect(existsSync("docs/concepts")).toBe(false);
     for (const retired of [
