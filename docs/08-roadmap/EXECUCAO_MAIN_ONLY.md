@@ -77,8 +77,11 @@ A convergência visual das superfícies ativas está em fase final:
 - Perto de mim repaginado e sem o hero legado;
 - Busca com copy pública humanizada;
 - criação e edição de empresa alinhadas em três etapas: Identidade → Contato e local → Apresentação;
-- horário noturno que atravessa meia-noite já é tratado no helper do catálogo;
-- ainda deve ser removido o cálculo duplicado de aberto/fechado que permanece no container do detalhe público, fazendo-o consumir o SSOT de Business Hours.
+- horário noturno que atravessa meia-noite é tratado no helper do catálogo;
+- detalhe público deixou de recalcular aberto/fechado localmente e agora consome `BusinessHoursService.getStatus()` + `getOperationConfig()`, usando o snapshot apenas como fallback de apresentação;
+- teste arquitetural impede a reintrodução de aritmética manual de horários no detalhe.
+
+O restante do Frontend Finish é acabamento de shell e consistência visual das superfícies ativas; não há nova feature de produto prevista para o corte do MVP.
 
 ### Higiene documental/repositório
 
@@ -123,8 +126,7 @@ A sequência de prova quando o upstream voltar é:
 ## Ordem de execução até MVP READY
 
 1. **Fechar Frontend Finish e higiene final**
-   - remover a duplicação de status aberto/fechado no detalhe público;
-   - terminar revisão visual das superfícies ativas sem reabrir módulo pausado;
+   - concluir shell geral de Criar/Editar e última revisão de consistência das superfícies ativas;
    - remover código/documento comprovadamente obsoleto;
    - manter histórico somente em checkpoints/archive/Git;
    - não apagar base pós-MVP com owner legítimo.
