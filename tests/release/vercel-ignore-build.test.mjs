@@ -91,6 +91,7 @@ describe("Vercel ignored build step", () => {
       "vercel.json",
       ".vercelignore",
       "docs/architecture/core-platform-ownership.json",
+      "docs/08-roadmap/EXECUCAO_MAIN_ONLY.md",
       "docs/09-reference/governance/security/EDGE_FUNCTION_AUTH_POLICY.json",
     ];
 
