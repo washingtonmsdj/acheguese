@@ -10,6 +10,10 @@ const heroSection = readFileSync(
   "src/app/features/business-landing/sections/EmpresasHeroSection.tsx",
   "utf8",
 );
+const companyHeroSection = readFileSync(
+  "src/modules/business/company/sections/EmpresaHeroSection.tsx",
+  "utf8",
+);
 const filtersSection = readFileSync(
   "src/app/features/business-landing/sections/EmpresasFiltrosSection.tsx",
   "utf8",
@@ -97,6 +101,10 @@ describe("MVP Business public flow", () => {
     expect(ctasSection).toContain(
       "<RouteOptions show={hasRouteTarget && showRouteOptions}",
     );
+    expect(companyHeroSection).toContain("const hasRouteTarget = Boolean(");
+    expect(companyHeroSection).toContain("business.business_address?.trim()");
+    expect(companyHeroSection).toContain("business.address?.street?.trim()");
+    expect(companyHeroSection).toContain("{onRoute && hasRouteTarget ? (");
     expect(ctasSection).toContain("const whatsAppUrl = buildWhatsAppUrl(business.whatsapp)");
     expect(ctasSection).toContain("const phoneUrl = buildTelUrl(business.phone)");
     expect(ctasSection).toContain("{whatsAppUrl ? (");
