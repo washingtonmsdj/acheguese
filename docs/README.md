@@ -57,7 +57,7 @@ docs/
 ├── 03-architecture/     arquitetura viva e lifecycle
 ├── 04-design/           design system e tokens
 ├── 05-ux/               UX do produto ativo e auditorias vigentes
-├── 06-navigation/       navegação e arquitetura da informação
+├── 06-navigation/       navegação executável e mapa de owners
 ├── 07-modules/          contratos por domínio
 ├── 08-roadmap/          somente execução/plano ainda vigente
 ├── 09-reference/        segurança, migrations e governance
@@ -121,9 +121,10 @@ Sprints antigas de Home, Journey, Feed/Post e planos de UX que não representam 
 
 ### Navegação
 
-- [`06-navigation/NAVIGATION-MAPPING.md`](./06-navigation/NAVIGATION-MAPPING.md)
-- [`06-navigation/NAVIGATION-SYSTEM.md`](./06-navigation/NAVIGATION-SYSTEM.md)
-- [`06-navigation/INFORMATION-ARCHITECTURE.md`](./06-navigation/INFORMATION-ARCHITECTURE.md)
+- [`06-navigation/NAVIGATION-SYSTEM.md`](./06-navigation/NAVIGATION-SYSTEM.md) — contrato vigente de apresentação e lifecycle
+- [`06-navigation/NAVIGATION-MAPPING.md`](./06-navigation/NAVIGATION-MAPPING.md) — mapa de páginas, owners e migrações canônicas
+
+Visões de arquitetura da informação declaradas como pós-MVP ou não executáveis ficam no arquivo histórico e não competem com a navegação ativa.
 
 ### Módulos
 
