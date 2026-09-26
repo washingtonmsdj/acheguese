@@ -83,16 +83,16 @@ export default function TerritoryHomePage() {
               {territoryName}
             </div>
             <h1 className="mt-4 max-w-3xl text-3xl font-semibold tracking-tight text-foreground sm:text-4xl">
-              Descubra empresas e lugares ao seu redor.
+              Encontre empresas em {territoryName}.
             </h1>
             <p className="mt-3 max-w-2xl text-base leading-7 text-muted-foreground">
-              Empresas, mapa e lugares perto de você, sempre dentro de
-              {` ${territoryName}`}.
+              Pesquise empresas, veja onde ficam no mapa e use sua localização para
+              descobrir o que está próximo de você.
             </p>
 
             <Link
               to={searchUrl}
-              aria-label={`Procurar algo em ${territoryName}`}
+              aria-label={`Procurar empresas em ${territoryName}`}
               className="group mt-7 flex w-full max-w-2xl items-center gap-3 rounded-2xl border border-border bg-background px-4 py-4 text-left shadow-sm transition-colors hover:border-primary/35 hover:bg-muted/30 sm:px-5"
             >
               <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-primary/10 text-primary">
@@ -100,10 +100,10 @@ export default function TerritoryHomePage() {
               </span>
               <span className="min-w-0 flex-1">
                 <span className="block text-sm font-semibold text-foreground">
-                  Procurar no bairro
+                  Procurar em {territoryName}
                 </span>
                 <span className="mt-0.5 block truncate text-sm text-muted-foreground">
-                  mercado, farmácia, oficina, empresa...
+                  mercado, farmácia, oficina, loja...
                 </span>
               </span>
               <ArrowRight
