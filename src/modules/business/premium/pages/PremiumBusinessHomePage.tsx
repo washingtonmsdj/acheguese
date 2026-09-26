@@ -145,7 +145,7 @@ export default function PremiumBusinessHomePage() {
 
           <Card>
             <CardHeader>
-              <CardTitle className="text-base">Módulos ativos</CardTitle>
+              <CardTitle className="text-base">Experiências disponíveis</CardTitle>
             </CardHeader>
             <CardContent className="space-y-2 text-sm text-muted-foreground">
               {businessSnapshot.verticals.activeVerticals.length ? (
@@ -157,7 +157,7 @@ export default function PremiumBusinessHomePage() {
                   ))}
                 </div>
               ) : (
-                <p>Sem módulos ativos.</p>
+                <p>Nenhuma experiência adicional disponível.</p>
               )}
             </CardContent>
           </Card>
