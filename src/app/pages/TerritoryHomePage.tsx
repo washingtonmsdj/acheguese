@@ -83,7 +83,7 @@ export default function TerritoryHomePage() {
               {territoryName}
             </div>
             <h1 className="mt-4 max-w-3xl text-3xl font-semibold tracking-tight text-foreground sm:text-4xl">
-              Encontre o que você precisa por aqui.
+              Descubra empresas e lugares ao seu redor.
             </h1>
             <p className="mt-3 max-w-2xl text-base leading-7 text-muted-foreground">
               Empresas, mapa e lugares perto de você, sempre dentro de
