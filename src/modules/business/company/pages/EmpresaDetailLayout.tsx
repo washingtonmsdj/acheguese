@@ -1,11 +1,8 @@
 /**
  * EmpresaDetailLayout
- * 
+ *
  * Layout wrapper para EmpresaDetailLandingPage.
- * Fornece estrutura de espaçamento e footer consistente.
- * 
- * SSOT: Layout reutilizável
- * Sem gambiarras: Componente focado apenas em layout
+ * Mantém o detalhe público na mesma régua visual do catálogo de Empresas.
  */
 
 import type { ReactNode } from 'react';
@@ -19,7 +16,7 @@ interface EmpresaDetailLayoutProps {
 
 export function EmpresaDetailLayout({ children }: EmpresaDetailLayoutProps) {
   const navigate = useNavigate();
-  const shellGutterClass = 'w-full px-4 sm:px-6 xl:px-[clamp(32px,2.4vw,52px)] 2xl:px-[clamp(40px,2.8vw,72px)]';
+  const shellGutterClass = 'mx-auto w-full max-w-7xl px-4 sm:px-6';
 
   return (
     <div className="flex min-h-screen w-full flex-col overflow-x-hidden bg-[#071017] text-white">
@@ -53,7 +50,7 @@ export function EmpresaDetailLayout({ children }: EmpresaDetailLayoutProps) {
               className="inline-flex min-h-11 shrink-0 items-center gap-2 rounded-[18px] border border-white/10 bg-white/[0.03] px-4 text-sm font-medium text-white/78 transition-colors hover:border-white/20 hover:bg-white/[0.05]"
             >
               <MapPin className="h-4 w-4 text-teal-300" />
-              Empresas locais
+              Empresas do bairro
             </Link>
             <Link
               to="/buscar"
