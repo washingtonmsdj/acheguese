@@ -252,7 +252,12 @@ test.describe("MVP público — Empresas + Mapa + Perto de mim + Busca", () => {
       timeout: 30_000,
     });
     await expect(page.getByText("430m")).toBeVisible();
-    await expect(page.getByText("perto de você", { exact: true })).toBeVisible();
+    await expect(
+      page.getByRole("heading", {
+        name: "Empresas perto de você",
+        exact: true,
+      }),
+    ).toBeVisible();
 
     const openMapButton = page.getByRole("button", { name: "Abrir mapa" });
     await expect(openMapButton).toBeVisible();
