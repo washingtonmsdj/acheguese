@@ -6,6 +6,7 @@ const PUBLIC_COPY_FILES = [
   "src/app/pages/TerritoryHomePage.tsx",
   "src/app/pages/ComoFuncionaPage.tsx",
   "src/app/pages/BuscaPage.tsx",
+  "src/core/maps/pages/MapaPageV4.tsx",
   "src/core/navigation/territoryNavigationModes.ts",
   "src/core/nearby/pages/NearbyPage.tsx",
 ] as const;
@@ -33,6 +34,8 @@ describe("MVP public copy", () => {
       "módulo Empresas",
       "referência territorial sem fabricar distância pessoal",
       "Procurar no bairro",
+      "fontes canônicas dos providers ativos",
+      "Módulos relacionados ao mapa",
     ]) {
       expect(content).not.toContain(internalPhrase);
     }
