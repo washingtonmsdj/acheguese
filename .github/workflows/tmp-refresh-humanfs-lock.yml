@@ -1,0 +1,77 @@
+name: Temporary humanfs lock refresh
+
+on:
+  push:
+    branches:
+      - security/refresh-humanfs-lock-20260926
+    paths:
+      - .github/workflows/tmp-refresh-humanfs-lock.yml
+
+permissions:
+  contents: write
+
+concurrency:
+  group: tmp-refresh-humanfs-lock-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  refresh-lock:
+    if: github.repository == 'washingtonmsdj/acheguese' && github.ref == 'refs/heads/security/refresh-humanfs-lock-20260926'
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Checkout exact branch commit
+        uses: actions/checkout@v6
+        with:
+          ref: ${{ github.sha }}
+          fetch-depth: 1
+
+      - name: Setup Node 24
+        uses: actions/setup-node@v6
+        with:
+          node-version: '24.x'
+          cache: npm
+
+      - name: Match repository npm version
+        shell: bash
+        run: npm install --global npm@11.17.0
+
+      - name: Regenerate transitive lock dependency
+        shell: bash
+        run: |
+          set -euo pipefail
+          npm update @humanfs/node --package-lock-only --ignore-scripts
+          node - <<'NODE'
+          const lock = require('./package-lock.json');
+          const pkg = lock.packages?.['node_modules/@humanfs/node'];
+          if (!pkg?.version) throw new Error('@humanfs/node missing from lockfile');
+          const [major, minor, patch] = pkg.version.split('.').map(Number);
+          if (major !== 0 || minor !== 16 || patch < 8) {
+            throw new Error(`@humanfs/node remains vulnerable: ${pkg.version}`);
+          }
+          console.log(`Validated @humanfs/node ${pkg.version}`);
+          NODE
+
+      - name: Verify clean install and audit
+        shell: bash
+        run: |
+          set -euo pipefail
+          npm ci --ignore-scripts
+          npm audit --audit-level=moderate
+
+      - name: Commit lockfile only
+        shell: bash
+        run: |
+          set -euo pipefail
+          test -z "$(git status --porcelain -- package.json)"
+          if git diff --quiet -- package-lock.json; then
+            echo "::error::npm produced no package-lock change."
+            exit 1
+          fi
+          git diff --check -- package-lock.json
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add package-lock.json
+          test "$(git diff --cached --name-only)" = "package-lock.json"
+          git commit -m "chore(deps): refresh @humanfs/node lock"
+          git push origin HEAD:security/refresh-humanfs-lock-20260926
