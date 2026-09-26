@@ -173,6 +173,7 @@ jobs:
     name: Full Monorepo Test Diagnostics
     if: github.event_name != 'pull_request'
     runs-on: ubuntu-latest
+    timeout-minutes: 30
     continue-on-error: true
 
     steps:
